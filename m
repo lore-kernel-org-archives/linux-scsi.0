@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE750C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 May 2022 14:12:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7237CC4321E
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 May 2022 14:12:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239480AbiE3OJt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 May 2022 10:09:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54738 "EHLO
+        id S239539AbiE3OJ5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 May 2022 10:09:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54724 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240064AbiE3OG2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 May 2022 10:06:28 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4791633EBA;
-        Mon, 30 May 2022 06:41:49 -0700 (PDT)
+        with ESMTP id S238873AbiE3OEx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 May 2022 10:04:53 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C54B0CE5E8;
+        Mon, 30 May 2022 06:40:49 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 6ED7AB80DA8;
-        Mon, 30 May 2022 13:41:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF923C385B8;
-        Mon, 30 May 2022 13:41:44 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6084960F74;
+        Mon, 30 May 2022 13:40:49 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9333CC3411F;
+        Mon, 30 May 2022 13:40:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653918106;
-        bh=BjFaylm2xoDLRTc7SGKPyPcDshefYIMRBwxyeQM9sWs=;
+        s=k20201202; t=1653918048;
+        bh=cmZKyuLkuhoQx8U8SjA9Ah7lmHkMh8mv8BlTxKgphtc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=YL7oPS2hdDYuybU9y6KiHRbRUpjR7+RCNyKasAKO/jxG3RZBC3/hcODj4F2KxEBjm
-         mnUxD+G/2cbMSzrOpgsJJISrHBotS658vHVqMCR3X14gS5HpaeHKNqKVZnbeUzS6kT
-         0PSf4uT8Pg4P6YfTHEhssnp5Fjj4tCQBXQeR2upFcqMmcjB+EKbXMJNaEzVpG9MIS3
-         Hv0xNCBJYCEqEi1eQhfWT2PRblnCtimWOMlpHhESpamWyV9Q3yX9axdh39oj1z8HvG
-         /q2bdPnbr3JDzz1VcAHAsRVqmLFuU0E3FygaoWWG7RwqQZhu03nOCUv+tsSB0Qa/ye
-         mGrk4vft2T6Zw==
+        b=TvjUuXrjt6o7mW7hG4Sf0AM96Wyw9C6Sl1m/rKxPIhvL80zOKmQvwBUZGvpKc1t43
+         mlY4wXExamFD3EVg7iQfk0GSQKsWMPmZmDbNKjEBsprqvEms/8Uy6CdjuxgZFO22yN
+         cf/+Uz2fm1R3gc/QT8PCLaG3fIKZM0k6BFqLATFyDfb6PZeqfqGPwgfme4Hs1oJpTj
+         sbDappHUo4Pzhymfmf8Fx674aM66Yesg/fsqIuohdp4U72CXIkdeMQXDGK9f9RkRSS
+         FdGNPguuKQ1On/CgxiqzFWS3EqCQgKMkBeOfquvBtay+1Dby95XzRutIL2L8vwjcd1
+         b+kexyFQFjq/Q==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
@@ -39,9 +39,9 @@ Cc:     James Smart <jsmart2021@gmail.com>,
         Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
         dick.kennedy@broadcom.com, jejb@linux.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 063/109] scsi: lpfc: Alter FPIN stat accounting logic
-Date:   Mon, 30 May 2022 09:37:39 -0400
-Message-Id: <20220530133825.1933431-63-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 042/109] scsi: lpfc: Fix resource leak in lpfc_sli4_send_seq_to_ulp()
+Date:   Mon, 30 May 2022 09:37:18 -0400
+Message-Id: <20220530133825.1933431-42-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220530133825.1933431-1-sashal@kernel.org>
 References: <20220530133825.1933431-1-sashal@kernel.org>
@@ -55,170 +55,60 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit e6f51041450282a8668af3a8fc5c7744e81a447c ]
+[ Upstream commit 646db1a560f44236b7278b822ca99a1d3b6ea72c ]
 
-When configuring CMF management based on signals instead of FPINs, FPIN
-alarm and warning statistics are not tracked.
+If no handler is found in lpfc_complete_unsol_iocb() to match the rctl of a
+received frame, the frame is dropped and resources are leaked.
 
-Change the behavior so that FPIN alarms and warnings are always tracked
-regardless of the configured mode.
+Fix by returning resources when discarding an unhandled frame type.  Update
+lpfc_fc_frame_check() handling of NOP basic link service.
 
-Similar changes are made in the CMF signal stat accounting logic.  Upon
-receipt of a signal, only track signaled alarms and warnings. FPIN stats
-should not be incremented upon receipt of a signal.
-
-Link: https://lore.kernel.org/r/20220506035519.50908-11-jsmart2021@gmail.com
+Link: https://lore.kernel.org/r/20220426181419.9154-1-jsmart2021@gmail.com
 Co-developed-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_els.c  | 49 +++++++++++------------------------
- drivers/scsi/lpfc/lpfc_init.c | 22 ++--------------
- 2 files changed, 17 insertions(+), 54 deletions(-)
+ drivers/scsi/lpfc/lpfc_sli.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 886006ad12a2..ce28c4a30460 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -3777,9 +3777,6 @@ lpfc_least_capable_settings(struct lpfc_hba *phba,
- {
- 	u32 rsp_sig_cap = 0, drv_sig_cap = 0;
- 	u32 rsp_sig_freq_cyc = 0, rsp_sig_freq_scale = 0;
--	struct lpfc_cgn_info *cp;
--	u32 crc;
--	u16 sig_freq;
- 
- 	/* Get rsp signal and frequency capabilities.  */
- 	rsp_sig_cap = be32_to_cpu(pcgd->xmt_signal_capability);
-@@ -3835,25 +3832,7 @@ lpfc_least_capable_settings(struct lpfc_hba *phba,
- 		}
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 68d8e55c1205..d8d26cde70b6 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -18455,7 +18455,6 @@ lpfc_fc_frame_check(struct lpfc_hba *phba, struct fc_frame_header *fc_hdr)
+ 	case FC_RCTL_ELS_REP:	/* extended link services reply */
+ 	case FC_RCTL_ELS4_REQ:	/* FC-4 ELS request */
+ 	case FC_RCTL_ELS4_REP:	/* FC-4 ELS reply */
+-	case FC_RCTL_BA_NOP:  	/* basic link service NOP */
+ 	case FC_RCTL_BA_ABTS: 	/* basic link service abort */
+ 	case FC_RCTL_BA_RMC: 	/* remove connection */
+ 	case FC_RCTL_BA_ACC:	/* basic accept */
+@@ -18476,6 +18475,7 @@ lpfc_fc_frame_check(struct lpfc_hba *phba, struct fc_frame_header *fc_hdr)
+ 		fc_vft_hdr = (struct fc_vft_header *)fc_hdr;
+ 		fc_hdr = &((struct fc_frame_header *)fc_vft_hdr)[1];
+ 		return lpfc_fc_frame_check(phba, fc_hdr);
++	case FC_RCTL_BA_NOP:	/* basic link service NOP */
+ 	default:
+ 		goto drop;
  	}
+@@ -19288,12 +19288,14 @@ lpfc_sli4_send_seq_to_ulp(struct lpfc_vport *vport,
+ 	if (!lpfc_complete_unsol_iocb(phba,
+ 				      phba->sli4_hba.els_wq->pring,
+ 				      iocbq, fc_hdr->fh_r_ctl,
+-				      fc_hdr->fh_type))
++				      fc_hdr->fh_type)) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
+ 				"2540 Ring %d handler: unexpected Rctl "
+ 				"x%x Type x%x received\n",
+ 				LPFC_ELS_RING,
+ 				fc_hdr->fh_r_ctl, fc_hdr->fh_type);
++		lpfc_in_buf_free(phba, &seq_dmabuf->dbuf);
++	}
  
--	if (!phba->cgn_i)
--		return;
--
--	/* Update signal frequency in congestion info buffer */
--	cp = (struct lpfc_cgn_info *)phba->cgn_i->virt;
--
--	/* Frequency (in ms) Signal Warning/Signal Congestion Notifications
--	 * are received by the HBA
--	 */
--	sig_freq = phba->cgn_sig_freq;
--
--	if (phba->cgn_reg_signal == EDC_CG_SIG_WARN_ONLY)
--		cp->cgn_warn_freq = cpu_to_le16(sig_freq);
--	if (phba->cgn_reg_signal == EDC_CG_SIG_WARN_ALARM) {
--		cp->cgn_alarm_freq = cpu_to_le16(sig_freq);
--		cp->cgn_warn_freq = cpu_to_le16(sig_freq);
--	}
--	crc = lpfc_cgn_calc_crc32(cp, LPFC_CGN_INFO_SZ, LPFC_CGN_CRC32_SEED);
--	cp->cgn_info_crc = cpu_to_le32(crc);
-+	/* We are NOT recording signal frequency in congestion info buffer */
- 	return;
- 
- out_no_support:
-@@ -9584,11 +9563,14 @@ lpfc_els_rcv_fpin_cgn(struct lpfc_hba *phba, struct fc_tlv_desc *tlv)
- 			/* Take action here for an Alarm event */
- 			if (phba->cmf_active_mode != LPFC_CFG_OFF) {
- 				if (phba->cgn_reg_fpin & LPFC_CGN_FPIN_ALARM) {
--					/* Track of alarm cnt for cgn_info */
--					atomic_inc(&phba->cgn_fabric_alarm_cnt);
- 					/* Track of alarm cnt for SYNC_WQE */
- 					atomic_inc(&phba->cgn_sync_alarm_cnt);
- 				}
-+				/* Track alarm cnt for cgn_info regardless
-+				 * of whether CMF is configured for Signals
-+				 * or FPINs.
-+				 */
-+				atomic_inc(&phba->cgn_fabric_alarm_cnt);
- 				goto cleanup;
- 			}
- 			break;
-@@ -9596,11 +9578,14 @@ lpfc_els_rcv_fpin_cgn(struct lpfc_hba *phba, struct fc_tlv_desc *tlv)
- 			/* Take action here for a Warning event */
- 			if (phba->cmf_active_mode != LPFC_CFG_OFF) {
- 				if (phba->cgn_reg_fpin & LPFC_CGN_FPIN_WARN) {
--					/* Track of warning cnt for cgn_info */
--					atomic_inc(&phba->cgn_fabric_warn_cnt);
- 					/* Track of warning cnt for SYNC_WQE */
- 					atomic_inc(&phba->cgn_sync_warn_cnt);
- 				}
-+				/* Track warning cnt and freq for cgn_info
-+				 * regardless of whether CMF is configured for
-+				 * Signals or FPINs.
-+				 */
-+				atomic_inc(&phba->cgn_fabric_warn_cnt);
- cleanup:
- 				/* Save frequency in ms */
- 				phba->cgn_fpin_frequency =
-@@ -9609,14 +9594,10 @@ lpfc_els_rcv_fpin_cgn(struct lpfc_hba *phba, struct fc_tlv_desc *tlv)
- 				if (phba->cgn_i) {
- 					cp = (struct lpfc_cgn_info *)
- 						phba->cgn_i->virt;
--					if (phba->cgn_reg_fpin &
--						LPFC_CGN_FPIN_ALARM)
--						cp->cgn_alarm_freq =
--							cpu_to_le16(value);
--					if (phba->cgn_reg_fpin &
--						LPFC_CGN_FPIN_WARN)
--						cp->cgn_warn_freq =
--							cpu_to_le16(value);
-+					cp->cgn_alarm_freq =
-+						cpu_to_le16(value);
-+					cp->cgn_warn_freq =
-+						cpu_to_le16(value);
- 					crc = lpfc_cgn_calc_crc32
- 						(cp,
- 						LPFC_CGN_INFO_SZ,
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index ce103c1f8062..a2694fb32b5d 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -5795,21 +5795,8 @@ lpfc_cgn_save_evt_cnt(struct lpfc_hba *phba)
- 
- 	/* Use the frequency found in the last rcv'ed FPIN */
- 	value = phba->cgn_fpin_frequency;
--	if (phba->cgn_reg_fpin & LPFC_CGN_FPIN_WARN)
--		cp->cgn_warn_freq = cpu_to_le16(value);
--	if (phba->cgn_reg_fpin & LPFC_CGN_FPIN_ALARM)
--		cp->cgn_alarm_freq = cpu_to_le16(value);
--
--	/* Frequency (in ms) Signal Warning/Signal Congestion Notifications
--	 * are received by the HBA
--	 */
--	value = phba->cgn_sig_freq;
--
--	if (phba->cgn_reg_signal == EDC_CG_SIG_WARN_ONLY ||
--	    phba->cgn_reg_signal == EDC_CG_SIG_WARN_ALARM)
--		cp->cgn_warn_freq = cpu_to_le16(value);
--	if (phba->cgn_reg_signal == EDC_CG_SIG_WARN_ALARM)
--		cp->cgn_alarm_freq = cpu_to_le16(value);
-+	cp->cgn_warn_freq = cpu_to_le16(value);
-+	cp->cgn_alarm_freq = cpu_to_le16(value);
- 
- 	lvalue = lpfc_cgn_calc_crc32(cp, LPFC_CGN_INFO_SZ,
- 				     LPFC_CGN_CRC32_SEED);
-@@ -6493,9 +6480,6 @@ lpfc_sli4_async_sli_evt(struct lpfc_hba *phba, struct lpfc_acqe_sli *acqe_sli)
- 		/* Alarm overrides warning, so check that first */
- 		if (cgn_signal->alarm_cnt) {
- 			if (phba->cgn_reg_signal == EDC_CG_SIG_WARN_ALARM) {
--				/* Keep track of alarm cnt for cgn_info */
--				atomic_add(cgn_signal->alarm_cnt,
--					   &phba->cgn_fabric_alarm_cnt);
- 				/* Keep track of alarm cnt for CMF_SYNC_WQE */
- 				atomic_add(cgn_signal->alarm_cnt,
- 					   &phba->cgn_sync_alarm_cnt);
-@@ -6504,8 +6488,6 @@ lpfc_sli4_async_sli_evt(struct lpfc_hba *phba, struct lpfc_acqe_sli *acqe_sli)
- 			/* signal action needs to be taken */
- 			if (phba->cgn_reg_signal == EDC_CG_SIG_WARN_ONLY ||
- 			    phba->cgn_reg_signal == EDC_CG_SIG_WARN_ALARM) {
--				/* Keep track of warning cnt for cgn_info */
--				atomic_add(cnt, &phba->cgn_fabric_warn_cnt);
- 				/* Keep track of warning cnt for CMF_SYNC_WQE */
- 				atomic_add(cnt, &phba->cgn_sync_warn_cnt);
- 			}
+ 	/* Free iocb created in lpfc_prep_seq */
+ 	list_for_each_entry_safe(curr_iocb, next_iocb,
 -- 
 2.35.1
 
