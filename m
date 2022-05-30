@@ -2,46 +2,45 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A9BAC433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 May 2022 13:31:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57A2EC433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 May 2022 13:31:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237052AbiE3NbR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 May 2022 09:31:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59318 "EHLO
+        id S237059AbiE3NbV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 May 2022 09:31:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58810 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237277AbiE3NaR (ORCPT
+        with ESMTP id S237268AbiE3NaR (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 May 2022 09:30:17 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1296287208;
-        Mon, 30 May 2022 06:27:04 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EE7F85EF6;
+        Mon, 30 May 2022 06:27:03 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 67CD9B80D84;
-        Mon, 30 May 2022 13:27:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23EDDC385B8;
+        by ams.source.kernel.org (Postfix) with ESMTPS id E6549B80B3A;
         Mon, 30 May 2022 13:27:01 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4D4DC3411C;
+        Mon, 30 May 2022 13:26:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653917222;
-        bh=uBJsSL0dyV/euH9wSsRXymgQdHcQOPUzRb7f6NJVMeA=;
+        s=k20201202; t=1653917220;
+        bh=8fyaHLfs66JSD8DWARG4Vmw9VaXoP4pQwZnrSrmzxME=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Y0ZjrlJBr+3Ob+hWgA86CeCLU0bjPZtBqrbz7T1tNZi4+CkvlqvJzfri+cCfZOQKt
-         fmeRmV0srv0e5VULollSnxKqkF/JRayHjzmoDkmDKhHdxZsUIehof+2Urke+41JX80
-         SsO6A2LgFpoZToA8nwSyzXgePybCZLbmYltVk28bNmmGjReUoolGjPiXxK1D5Xi09n
-         3w44quNhCDDzdq4CBkQdghGzXKhnn5Bd84Z3GcEjcWLOodbzgxOme83x7aU68krp3q
-         g3sdh0jsdzqWnDqHRRs4ydSy36B+u45m6qnBlVDtP18RQwKqlMT1MloMTxMwoiNt/r
-         MRL9KjxWQ6jEw==
+        b=ezBnmvEPfFbP4CdMD6WkG5RVb8IXGa5dtA+A/EL3LJzrDLgp7F4vRTP21CJ5UQmTG
+         mHJpAifBxV9CK9SsNxKxnrpJoN+rW3qIf1q0Y1t+1H40FbI244/wOE53lI4k4v29lw
+         vuNW5M6EIoAn3NdbNwtz1vMWsIBZMr5J2cX7fXciQUB0uKkACvOru4GDcZ2ejuCUXM
+         ZHdRW7bmvkSfC3f8NZxtlhjLYqhyRONGGENs4aqOMm95UT0CWbDsCsKOEUZmkq3Pmr
+         YlUr8Ko8n8Zndk9heVSQiTAcQY6Uw3C1VQYCbE9+89UsMEvkYMVPiUl8CzmhftQKmg
+         XKNPSMCh7/1Gg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Justin Tee <justin.tee@broadcom.com>,
+Cc:     Minghao Chi <chi.minghao@zte.com.cn>,
+        Zeal Robot <zealci@zte.com.cn>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.18 061/159] scsi: lpfc: Fix resource leak in lpfc_sli4_send_seq_to_ulp()
-Date:   Mon, 30 May 2022 09:22:46 -0400
-Message-Id: <20220530132425.1929512-61-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.18 060/159] scsi: ufs: Use pm_runtime_resume_and_get() instead of pm_runtime_get_sync()
+Date:   Mon, 30 May 2022 09:22:45 -0400
+Message-Id: <20220530132425.1929512-60-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220530132425.1929512-1-sashal@kernel.org>
 References: <20220530132425.1929512-1-sashal@kernel.org>
@@ -53,62 +52,41 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Minghao Chi <chi.minghao@zte.com.cn>
 
-[ Upstream commit 646db1a560f44236b7278b822ca99a1d3b6ea72c ]
+[ Upstream commit 75b8715e20a20bc7b4844835e4035543a2674200 ]
 
-If no handler is found in lpfc_complete_unsol_iocb() to match the rctl of a
-received frame, the frame is dropped and resources are leaked.
+Using pm_runtime_resume_and_get() to replace pm_runtime_get_sync() and
+pm_runtime_put_noidle(). This change is just to simplify the code, no
+actual functional changes.
 
-Fix by returning resources when discarding an unhandled frame type.  Update
-lpfc_fc_frame_check() handling of NOP basic link service.
-
-Link: https://lore.kernel.org/r/20220426181419.9154-1-jsmart2021@gmail.com
-Co-developed-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+Link: https://lore.kernel.org/r/20220420090353.2588804-1-chi.minghao@zte.com.cn
+Reported-by: Zeal Robot <zealci@zte.com.cn>
+Signed-off-by: Minghao Chi <chi.minghao@zte.com.cn>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/ufs/ti-j721e-ufs.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 09a45f8ecf3f..a174e06bd96e 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -18124,7 +18124,6 @@ lpfc_fc_frame_check(struct lpfc_hba *phba, struct fc_frame_header *fc_hdr)
- 	case FC_RCTL_ELS_REP:	/* extended link services reply */
- 	case FC_RCTL_ELS4_REQ:	/* FC-4 ELS request */
- 	case FC_RCTL_ELS4_REP:	/* FC-4 ELS reply */
--	case FC_RCTL_BA_NOP:  	/* basic link service NOP */
- 	case FC_RCTL_BA_ABTS: 	/* basic link service abort */
- 	case FC_RCTL_BA_RMC: 	/* remove connection */
- 	case FC_RCTL_BA_ACC:	/* basic accept */
-@@ -18145,6 +18144,7 @@ lpfc_fc_frame_check(struct lpfc_hba *phba, struct fc_frame_header *fc_hdr)
- 		fc_vft_hdr = (struct fc_vft_header *)fc_hdr;
- 		fc_hdr = &((struct fc_frame_header *)fc_vft_hdr)[1];
- 		return lpfc_fc_frame_check(phba, fc_hdr);
-+	case FC_RCTL_BA_NOP:	/* basic link service NOP */
- 	default:
- 		goto drop;
- 	}
-@@ -18959,12 +18959,14 @@ lpfc_sli4_send_seq_to_ulp(struct lpfc_vport *vport,
- 	if (!lpfc_complete_unsol_iocb(phba,
- 				      phba->sli4_hba.els_wq->pring,
- 				      iocbq, fc_hdr->fh_r_ctl,
--				      fc_hdr->fh_type))
-+				      fc_hdr->fh_type)) {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
- 				"2540 Ring %d handler: unexpected Rctl "
- 				"x%x Type x%x received\n",
- 				LPFC_ELS_RING,
- 				fc_hdr->fh_r_ctl, fc_hdr->fh_type);
-+		lpfc_in_buf_free(phba, &seq_dmabuf->dbuf);
-+	}
+diff --git a/drivers/scsi/ufs/ti-j721e-ufs.c b/drivers/scsi/ufs/ti-j721e-ufs.c
+index eafe0db98d54..122d650d0810 100644
+--- a/drivers/scsi/ufs/ti-j721e-ufs.c
++++ b/drivers/scsi/ufs/ti-j721e-ufs.c
+@@ -29,11 +29,9 @@ static int ti_j721e_ufs_probe(struct platform_device *pdev)
+ 		return PTR_ERR(regbase);
  
- 	/* Free iocb created in lpfc_prep_seq */
- 	list_for_each_entry_safe(curr_iocb, next_iocb,
+ 	pm_runtime_enable(dev);
+-	ret = pm_runtime_get_sync(dev);
+-	if (ret < 0) {
+-		pm_runtime_put_noidle(dev);
++	ret = pm_runtime_resume_and_get(dev);
++	if (ret < 0)
+ 		goto disable_pm;
+-	}
+ 
+ 	/* Select MPHY refclk frequency */
+ 	clk = devm_clk_get(dev, NULL);
 -- 
 2.35.1
 
