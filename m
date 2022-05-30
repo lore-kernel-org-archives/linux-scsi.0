@@ -2,201 +2,468 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FF19C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 May 2022 16:39:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29DF2C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 May 2022 20:08:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240199AbiE3QjY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 May 2022 12:39:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50836 "EHLO
+        id S242871AbiE3UIj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 May 2022 16:08:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36912 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240164AbiE3QjW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 May 2022 12:39:22 -0400
-Received: from de-smtp-delivery-102.mimecast.com (de-smtp-delivery-102.mimecast.com [194.104.111.102])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD7F56B031
-        for <linux-scsi@vger.kernel.org>; Mon, 30 May 2022 09:39:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=mimecast20200619;
-        t=1653928758;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=lo8rrvOFCtoWmbh4QQ7mgPpYWqpf7GRnNq5Zq0a8Sjo=;
-        b=YvakSq/DQJJWhP1BO0qnnP+Qt8vjfpAdUwJdfgSgScutARH0z5izhe8MNtd22gqNbkSh4W
-        B4DCx+2EAi9H/eMkgi52NA2LiXTPMjPzcw2vfcN9mOKV7APSQRDywxxIH6+wpxygbu7MVH
-        X8h8xchX1JE6a9uPw9i2hsso0bdFM2U=
-Received: from EUR03-VE1-obe.outbound.protection.outlook.com
- (mail-ve1eur03lp2054.outbound.protection.outlook.com [104.47.9.54]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- de-mta-38-L5f0fecoM4213Lkw-XwzOw-1; Mon, 30 May 2022 18:39:16 +0200
-X-MC-Unique: L5f0fecoM4213Lkw-XwzOw-1
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=REi6Ue1A3Jg+yQoIQNhDofte+REXafl+llUZgomQITiPFspFPdQ+B/QiS5GdLBax/BCwnP2lQu+W+yUhxe5Tx7NIrfTjm2cId/ZnOyby9AMpAtjf+EVmL6zAkJHqcWS5AqiKlJ85KYN7T0NS6Y++FpT0+gVrtbwoZ5gg9bUXkbaGWNqKjkIw6kEZEatppZ41pZxv8U3+R9sIcRFF712DECvgsYEZxO8hc85aalIrKdvSFcLSX7CXvOU6sQp44Zo9p+61fmm2fn67XjtpYT0pSTxjxyCSRjb22u3dZe9QaZcFGGQ0J66XCcLobl3xrB3wYWR8z/5kb++tpLl6c71oWw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=lo8rrvOFCtoWmbh4QQ7mgPpYWqpf7GRnNq5Zq0a8Sjo=;
- b=mkr3WEfPD1KBcE5hMoKZ+K+fXQl69RnucmqdPEgZfHi3JU/UA3CJxBZw4e6WDFh5l7CLa+VTBG+GpIvfPeQv2WSvAm8WbEbKS2xCkLA0zws1pGUJ3JWseQyCEPp/Ayw20UJKgDk4CW6ZIidhKG2TLF3Uz5PhNqA6qEhmjb9zD+CneAAOJF9T3oy6Fb/jwiWRPvOHlIA58v2x/12x8upehWr++PhqqblqSk6bjenI7oJivzL/spJoBQIj3gtDGj5DGxXh7qm5aaRFjgf511FiWnHPxLdFVBSficBcyKSMlHhbYK9jy9ziFQmlJxkoqg1Ob2c45wwPM2/XfeoelQyDWA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
- dkim=pass header.d=suse.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=suse.com;
-Received: from AM5PR04MB3089.eurprd04.prod.outlook.com (2603:10a6:206:b::28)
- by AM7PR04MB7189.eurprd04.prod.outlook.com (2603:10a6:20b:116::23) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5293.19; Mon, 30 May
- 2022 16:39:15 +0000
-Received: from AM5PR04MB3089.eurprd04.prod.outlook.com
- ([fe80::c49a:9069:bf85:6d47]) by AM5PR04MB3089.eurprd04.prod.outlook.com
- ([fe80::c49a:9069:bf85:6d47%7]) with mapi id 15.20.5293.019; Mon, 30 May 2022
- 16:39:15 +0000
-Message-ID: <e49b3faa-cdac-3e57-4a7f-be2a899ec2af@suse.com>
-Date:   Mon, 30 May 2022 09:39:10 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.0
-Subject: Re: [PATCH] drivers: scsi: Directly use ida_alloc()/free()
-Content-Language: en-US
-To:     keliu <liuke94@huawei.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, cleech@redhat.com,
-        michael.christie@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, open-iscsi@googlegroups.com
-References: <20220527083049.2552526-1-liuke94@huawei.com>
-From:   Lee Duncan <lduncan@suse.com>
-In-Reply-To: <20220527083049.2552526-1-liuke94@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: AM6PR0502CA0042.eurprd05.prod.outlook.com
- (2603:10a6:20b:56::19) To AM5PR04MB3089.eurprd04.prod.outlook.com
- (2603:10a6:206:b::28)
+        with ESMTP id S237845AbiE3UIg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 May 2022 16:08:36 -0400
+Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 211FB506EC;
+        Mon, 30 May 2022 13:08:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1653941314; x=1685477314;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=u5DFuxeEQiZmsoL4z9TA7tFfoxem4NM9RkhVc6mpE1o=;
+  b=l0JPJ7aoCAEn0zKaYZHO3kENfPGgp9ICbAr+HSEIZ0NWQmD7ICW4rvb0
+   GwR78gJYSWH0CmbGuz/TiHbyUqGP/gfHkt+eqDmr2lYXN4MlA8zDuohd0
+   K1/OSyxQB+xMrAKMgzm3KHNKHjBomSCHLzSUwHqRIHjEh/YpMnDSQELIm
+   aZ9Rym3uaqtWvCj7jzpt8GF6kmeXG7zsiGEIgkdbexjFAZxZFN+mc5ljo
+   ANVcwTMkk34Pce9Vy0uhnEjs0GSNCPurjOctxk9Gdq/uAq2xeK03kIOcV
+   MCSAjhlGQePyoInhwpBBhHa50Q8qRzjU0InbDi7zju6ifYBULKkyrUEfH
+   g==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10363"; a="254945851"
+X-IronPort-AV: E=Sophos;i="5.91,263,1647327600"; 
+   d="scan'208";a="254945851"
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 May 2022 13:08:33 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.91,263,1647327600"; 
+   d="scan'208";a="562032414"
+Received: from lkp-server01.sh.intel.com (HELO 60dabacc1df6) ([10.239.97.150])
+  by orsmga002.jf.intel.com with ESMTP; 30 May 2022 13:08:30 -0700
+Received: from kbuild by 60dabacc1df6 with local (Exim 4.95)
+        (envelope-from <lkp@intel.com>)
+        id 1nvlgj-0001xe-SX;
+        Mon, 30 May 2022 20:08:29 +0000
+Date:   Tue, 31 May 2022 04:08:06 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Haowen Bai <baihaowen@meizu.com>,
+        Don Brace <don.brace@microchip.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org,
+        Haowen Bai <baihaowen@meizu.com>, storagedev@microchip.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: hpsa: Fix pointer dereferenced before checking
+Message-ID: <202205310427.9CgPG9aD-lkp@intel.com>
+References: <1653899188-26544-1-git-send-email-baihaowen@meizu.com>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 9306a4b2-612b-488f-2e7c-08da425aeede
-X-MS-TrafficTypeDiagnostic: AM7PR04MB7189:EE_
-X-Microsoft-Antispam-PRVS: <AM7PR04MB718920CF01A93D8C9A12D850DADD9@AM7PR04MB7189.eurprd04.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: LsbFcBT4Ne35KOa42oV+48nVeazDZ9lZ4Ylv5S3dY8kAzRI8aj73XJY30xs/eXqlWhoD1Yi9tYtL+qXZV+TAN2p17HskYpA67RWAI/AjI9Dcouf7sh6M13cRrVPtJP8DB3543jM+sREfap7A052Px2BrLAjBcnGaoB5wEaFgCHYQm+RxsXJgvUWsBFY/6QzdyjqjbCSie5XcwAJC4bpg23xfwQH3hm2EF+u9R077O5RA5UfgbL/ONE4XC5yc9BgJ/VKPe+BVg4AVLIg7Gtpc/Th/e1FsmdLlXvSO8RIF1K7OV8g84YmsmwSKX2SXIXsa7NNGEerPds72brXNmkHg5tt1qdEJkFMIK4vYaY2xleJsyTwOUBT3wz61gR8dqa6hlcawKZ6hIOCTEWF6Sb9HHwsZSvVrc9/NxDkndGZt0HthSxVRPETJclogWM89ZDceZnHmtMtkgHedVjS5TD+0PuHhsfCYr1Vd8DEcVNRHVG11zQ6ob6MnkxZ+ewNzsF7oBJKDD73/V6gR4CgFdb8Xx2pPXpsw5FheQxu0Z74LZ7DUz/PiW3w0geUqjMgkomqOCPyyrqzjUd5AjSFi1+UmK8YGcTZawgM3X/ZV4ht2RxVHug+3nCjI23OuzuhzSeU/5KJdMrJkvaCvtIu4yVDbnFLb1cCdb+If9+a0eTWW50ZNtTf6mVMGscEE3jZ6e2cmwT7PUVfBsiXeBSNkPUlP2wxyA1I7U6Ich/FnTHtQYd4=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM5PR04MB3089.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(5660300002)(508600001)(66946007)(66476007)(66556008)(8676002)(6486002)(31696002)(186003)(86362001)(8936002)(83380400001)(26005)(6512007)(38100700002)(2616005)(6506007)(53546011)(6666004)(2906002)(31686004)(36756003)(316002)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?Tzk5WUZFUWdlSmNad3VabHpJUWIrdWx4OEw5RCsyYTlEZTU2ZG9qTzlVSmdT?=
- =?utf-8?B?dHRhbXRic0s0WHIwRnhKQ0pSTFdwemxON2REZVFpZmtQNUtNSXhVR0g5dGJD?=
- =?utf-8?B?S2YvWWsvZmJNd0kzQTNBaE4yYWI1QVBHMTBmS0FCd2tlRk1iak82aWs0UnlH?=
- =?utf-8?B?QVdNdk15ZCtabndsRzBnRkpsaXBaUXZ1V3BOSElILy9mWFg5VzkrK1hsc3ow?=
- =?utf-8?B?OWdGUDdqdUFLOHVmTXkybmVaaDBjWW9hRXBLRE1lM1FIMkVUbjFtMGlQU2dX?=
- =?utf-8?B?WWRQdlA4OVJiM0ErRTN4ZWlKVTF2T1duUFkrUEI2OEw0ZVRkK2Y1Nk5hVEpx?=
- =?utf-8?B?Q1UwRkg1eTgxTWE5RG9mVVV6eTNueXAzcGtZUjFzMDErK3JkOEhzUE5rMExG?=
- =?utf-8?B?bGZXbHRHL0JNRFR4bFpDZjBLY2U0ZGRPaGpzMDd2cEpOWmpUSlk3U3JaVzhm?=
- =?utf-8?B?dm1TbXp5L2JQYzNPay9UU2RhSWcxNkZhWlNvT1hqbnlqNWdDaDU0UjhiSkJ6?=
- =?utf-8?B?TEMydnBtb0tjeWJRRWFMYTZ6REJXcU9jUVBiTjF2QW1jME92cTZiR1Radmtq?=
- =?utf-8?B?R0txbmZWbjN3dmY1RkE1ek42bmRBa1kyRFV6a21sTnk5RkkxTVZXRkNKMUVm?=
- =?utf-8?B?bXFtcUw2R0pRT1VHeTlrTHYvckd1b0RKZ2hiQjR5MmRlaFRmcEYxM2dyczJk?=
- =?utf-8?B?VXZXTVJ3akdzQVNkVEM1TFRRV2hZeEpsVmdlbGhEejVFYnE3R2Q5cmk5c1hZ?=
- =?utf-8?B?U3ZNTTdhb1JDek15N0dmSTEzL2dhb05jcTZwNlI2bm1SMFVGOVdzejlwV3da?=
- =?utf-8?B?MjBoa0UzeFFWakJtb1RONzliWTNYRDUweGNxSU9PZHpNRml4MkNyR25Kemlz?=
- =?utf-8?B?TlpURUN2SENxZHBZMnBzNmtKQk5jOVcwWjZ5cERQWVBNQXlaSHhveUVMZW10?=
- =?utf-8?B?UVBkT2lRSWY0QkZwOTFhTnNVVEthZkF0WUY1WVdNSjZTNnFZZE04dU5DVEYw?=
- =?utf-8?B?SWlibjh5cFpKZC9wT2ladTR1SjFMVTk4SW94d0phc3o4ZXI0Z2l2UVprSWtR?=
- =?utf-8?B?b2dDVXYxZk1MYlg5MlNRcUI2TU9RdW9pNkJMSldnQmxjVjVBTzBFdTFRZVVO?=
- =?utf-8?B?S3NRTkJ0MWVkRGJza3d3azllbmE5bERQcjlxQkx6ZWF3aTdQdDJ3Wkx6alhF?=
- =?utf-8?B?K2lsdW96ZlhFb3N3RDFBVTM4N3dUaGNkdHFmYjg2U3EvSWZ0K0FuUFlBclFN?=
- =?utf-8?B?YnBFdjFyeVhOLyt1cm16RmxCSGMwR1lvUmc0OGYzcHl3Wm12anBWdDlWU0JF?=
- =?utf-8?B?VS9lOHFMemxWSExJb2JrdllwTk1GV0dJT0M2ZllWVlBVUzdmRklDY2Y1cWtW?=
- =?utf-8?B?SnNPRFJ3ZmlIamdaL1dvSHRqOVpVRUpXeWpQMWNRMkUwWEVXTFJ5eFRnUERV?=
- =?utf-8?B?azRGazFZUUlZOVRDckdtaVVKQmNOc0ppcWJCT09vemZPZ09ZeUdwRTdseXZ0?=
- =?utf-8?B?TnQ5UzV3V1M3c3RPbVVOeFRUYWJsZ1Z0Z2g5K0tjYlNEMXYyL3Q3Q1hxUWhn?=
- =?utf-8?B?K2c2d1dTWklaTkZjWE9qOFhqb0YxaDJWcXF1bFAwNmZuNVR0cW1SdHJGdFRs?=
- =?utf-8?B?eDI0eTJPNnNiOFd3dU5lS2tHeUdIdDl2OVVZSXNxRkdTWHZrK1ZDeTE0eTBZ?=
- =?utf-8?B?NTV3cVhOSUR6TVhCeHQ3aU4yMnBsVU82cGQ3bXFXOHRmVlhrRXRtbiszWlp5?=
- =?utf-8?B?WlR3TXppTlV2Vk9ycVc3M3p0S3ZlZ3lPVHF6OVdSUGEyQjZlczgwNHNuQUUw?=
- =?utf-8?B?czR5d0VsNUxGcVlubXdlcWc1alZYb0kyZVZRczByMWVNS2loTlNoSWF2NzJu?=
- =?utf-8?B?TGNWREhZV0hJNndUN093ZmhVUWpyU0RoSWNEMlRhWTBIbk9ZVk91KzZicnlV?=
- =?utf-8?B?cW1Sd3N0MkZFdm1EVGUrQmpwUjJyeFQxV29CWEJDNmxnT2tZdWdPSUdEWEtl?=
- =?utf-8?B?YVpzSHRkYmI2SU9GUEpLR1RESzkrWDJVbGJWRnBjbkJBd3lIbk1QaWJQaE41?=
- =?utf-8?B?bGpFcU1qZUNJajRVNktyVmxSclVwcjN1OTQveXh5aVVLU1VDV2JLek5UNU9P?=
- =?utf-8?B?ZWhLVGZiWXdrMW9peUZLa1NHUUpCbGw2Qk1oUmdPaHZleWlLZ2JMMnNEWVBp?=
- =?utf-8?B?MmFXN3dleEJVVzBodjIxM2hiVVdIS1c0YzI3TGYzcENCem4yM2RsMXBBeE9j?=
- =?utf-8?B?TXIyd24vRHI2WTVvdUdDcEZsMjB1NGVkUzIwazZnVGhGdkJCVDV0ZDYwUnNV?=
- =?utf-8?B?bVAxZlBnb0RTd1hRdFpmaFp0amdpeVhmbmhMTmFrZjR1R0toSGp6dz09?=
-X-OriginatorOrg: suse.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9306a4b2-612b-488f-2e7c-08da425aeede
-X-MS-Exchange-CrossTenant-AuthSource: AM5PR04MB3089.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 May 2022 16:39:15.0718
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: ZZL+pQLwL69VYj5C9iwBsraSkYAHl1SjuZ6dPD+MbQlmJGNGX4VkCNCVPkZVogDytL0sGHrg7Jxd3FEugEdibw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM7PR04MB7189
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1653899188-26544-1-git-send-email-baihaowen@meizu.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/27/22 01:30, keliu wrote:
-> Use ida_alloc()/ida_free() instead of deprecated
-> ida_simple_get()/ida_simple_remove() .
-> 
-> Signed-off-by: keliu <liuke94@huawei.com>
-> ---
->   drivers/scsi/hosts.c                | 4 ++--
->   drivers/scsi/scsi_transport_iscsi.c | 6 +++---
->   2 files changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-> index f69b77cbf538..ec16cfad034e 100644
-> --- a/drivers/scsi/hosts.c
-> +++ b/drivers/scsi/hosts.c
-> @@ -350,7 +350,7 @@ static void scsi_host_dev_release(struct device *dev)
->   
->   	kfree(shost->shost_data);
->   
-> -	ida_simple_remove(&host_index_ida, shost->host_no);
-> +	ida_free(&host_index_ida, shost->host_no);
->   
->   	if (shost->shost_state != SHOST_CREATED)
->   		put_device(parent);
-> @@ -395,7 +395,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
->   	init_waitqueue_head(&shost->host_wait);
->   	mutex_init(&shost->scan_mutex);
->   
-> -	index = ida_simple_get(&host_index_ida, 0, 0, GFP_KERNEL);
-> +	index = ida_alloc(&host_index_ida, GFP_KERNEL);
->   	if (index < 0) {
->   		kfree(shost);
->   		return NULL;
-> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-> index 2c0dd64159b0..2578db4c095d 100644
-> --- a/drivers/scsi/scsi_transport_iscsi.c
-> +++ b/drivers/scsi/scsi_transport_iscsi.c
-> @@ -1975,7 +1975,7 @@ static void __iscsi_unbind_session(struct work_struct *work)
->   	scsi_remove_target(&session->dev);
->   
->   	if (session->ida_used)
-> -		ida_simple_remove(&iscsi_sess_ida, target_id);
-> +		ida_free(&iscsi_sess_ida, target_id);
->   
->   unbind_session_exit:
->   	iscsi_session_event(session, ISCSI_KEVENT_UNBIND_SESSION);
-> @@ -2044,7 +2044,7 @@ int iscsi_add_session(struct iscsi_cls_session *session, unsigned int target_id)
->   		return -ENOMEM;
->   
->   	if (target_id == ISCSI_MAX_TARGET) {
-> -		id = ida_simple_get(&iscsi_sess_ida, 0, 0, GFP_KERNEL);
-> +		id = ida_alloc(&iscsi_sess_ida, GFP_KERNEL);
->   
->   		if (id < 0) {
->   			iscsi_cls_session_printk(KERN_ERR, session,
-> @@ -2083,7 +2083,7 @@ int iscsi_add_session(struct iscsi_cls_session *session, unsigned int target_id)
->   	device_del(&session->dev);
->   release_ida:
->   	if (session->ida_used)
-> -		ida_simple_remove(&iscsi_sess_ida, session->target_id);
-> +		ida_free(&iscsi_sess_ida, session->target_id);
->   destroy_wq:
->   	destroy_workqueue(session->workq);
->   	return err;
+Hi Haowen,
 
-Reviewed-by: Lee Duncan <lduncan@suse.com>
+Thank you for the patch! Perhaps something to improve:
 
+[auto build test WARNING on jejb-scsi/for-next]
+[also build test WARNING on mkp-scsi/for-next v5.18 next-20220527]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Haowen-Bai/scsi-hpsa-Fix-pointer-dereferenced-before-checking/20220530-162826
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+config: arm-randconfig-r002-20220530 (https://download.01.org/0day-ci/archive/20220531/202205310427.9CgPG9aD-lkp@intel.com/config)
+compiler: clang version 15.0.0 (https://github.com/llvm/llvm-project 0776c48f9b7e69fa447bee57c7c0985caa856be9)
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # install arm cross compiling tool for clang build
+        # apt-get install binutils-arm-linux-gnueabi
+        # https://github.com/intel-lab-lkp/linux/commit/9a3105487f3b609149219bdb8adcb2b4f0108c74
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Haowen-Bai/scsi-hpsa-Fix-pointer-dereferenced-before-checking/20220530-162826
+        git checkout 9a3105487f3b609149219bdb8adcb2b4f0108c74
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=arm SHELL=/bin/bash drivers/scsi/
+
+If you fix the issue, kindly add following tag where applicable
+Reported-by: kernel test robot <lkp@intel.com>
+
+All warnings (new ones prefixed by >>):
+
+>> drivers/scsi/hpsa.c:5108:35: warning: variable 'map' is uninitialized when used here [-Wuninitialized]
+           struct raid_map_disk_data *dd = &map->data[0];
+                                            ^~~
+   drivers/scsi/hpsa.c:5107:27: note: initialize the variable 'map' to silence this warning
+           struct raid_map_data *map;
+                                    ^
+                                     = NULL
+   drivers/scsi/hpsa.c:9485:16: warning: variable 'transMethod' set but not used [-Wunused-but-set-variable]
+           unsigned long transMethod = CFGTBL_Trans_Performant |
+                         ^
+   2 warnings generated.
+
+
+vim +/map +5108 drivers/scsi/hpsa.c
+
+6b80b18fe51540 Scott Teel          2014-02-18  5098  
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5099  /*
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5100   * Attempt to perform offload RAID mapping for a logical volume I/O.
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5101   */
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5102  static int hpsa_scsi_ioaccel_raid_map(struct ctlr_info *h,
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5103  	struct CommandList *c)
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5104  {
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5105  	struct scsi_cmnd *cmd = c->scsi_cmd;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5106  	struct hpsa_scsi_dev_t *dev = cmd->device->hostdata;
+9a3105487f3b60 Haowen Bai          2022-05-30  5107  	struct raid_map_data *map;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18 @5108  	struct raid_map_disk_data *dd = &map->data[0];
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5109  	int is_write = 0;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5110  	u32 map_index;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5111  	u64 first_block, last_block;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5112  	u32 block_cnt;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5113  	u32 blocks_per_row;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5114  	u64 first_row, last_row;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5115  	u32 first_row_offset, last_row_offset;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5116  	u32 first_column, last_column;
+6b80b18fe51540 Scott Teel          2014-02-18  5117  	u64 r0_first_row, r0_last_row;
+6b80b18fe51540 Scott Teel          2014-02-18  5118  	u32 r5or6_blocks_per_row;
+6b80b18fe51540 Scott Teel          2014-02-18  5119  	u64 r5or6_first_row, r5or6_last_row;
+6b80b18fe51540 Scott Teel          2014-02-18  5120  	u32 r5or6_first_row_offset, r5or6_last_row_offset;
+6b80b18fe51540 Scott Teel          2014-02-18  5121  	u32 r5or6_first_column, r5or6_last_column;
+6b80b18fe51540 Scott Teel          2014-02-18  5122  	u32 total_disks_per_row;
+6b80b18fe51540 Scott Teel          2014-02-18  5123  	u32 stripesize;
+6b80b18fe51540 Scott Teel          2014-02-18  5124  	u32 first_group, last_group, current_group;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5125  	u32 map_row;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5126  	u32 disk_handle;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5127  	u64 disk_block;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5128  	u32 disk_block_cnt;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5129  	u8 cdb[16];
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5130  	u8 cdb_len;
+2b08b3e9d9dad9 Don Brace           2015-01-23  5131  	u16 strip_size;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5132  #if BITS_PER_LONG == 32
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5133  	u64 tmpdiv;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5134  #endif
+6b80b18fe51540 Scott Teel          2014-02-18  5135  	int offload_to_mirror;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5136  
+45e596cd6ead1c Don Brace           2016-09-09  5137  	if (!dev)
+45e596cd6ead1c Don Brace           2016-09-09  5138  		return -1;
+45e596cd6ead1c Don Brace           2016-09-09  5139  
+9a3105487f3b60 Haowen Bai          2022-05-30  5140  	map = &dev->raid_map;
+9a3105487f3b60 Haowen Bai          2022-05-30  5141  
+c5dfd106414f3e Don Brace           2019-05-07  5142  	if (dev->in_reset)
+c5dfd106414f3e Don Brace           2019-05-07  5143  		return -1;
+c5dfd106414f3e Don Brace           2019-05-07  5144  
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5145  	/* check for valid opcode, get LBA and block count */
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5146  	switch (cmd->cmnd[0]) {
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5147  	case WRITE_6:
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5148  		is_write = 1;
+df561f6688fef7 Gustavo A. R. Silva 2020-08-23  5149  		fallthrough;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5150  	case READ_6:
+abbada7175999f Mahesh Rajashekhara 2016-09-16  5151  		first_block = (((cmd->cmnd[1] & 0x1F) << 16) |
+abbada7175999f Mahesh Rajashekhara 2016-09-16  5152  				(cmd->cmnd[2] << 8) |
+abbada7175999f Mahesh Rajashekhara 2016-09-16  5153  				cmd->cmnd[3]);
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5154  		block_cnt = cmd->cmnd[4];
+3fa89a04e064e5 Stephen M. Cameron  2014-07-03  5155  		if (block_cnt == 0)
+3fa89a04e064e5 Stephen M. Cameron  2014-07-03  5156  			block_cnt = 256;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5157  		break;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5158  	case WRITE_10:
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5159  		is_write = 1;
+df561f6688fef7 Gustavo A. R. Silva 2020-08-23  5160  		fallthrough;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5161  	case READ_10:
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5162  		first_block =
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5163  			(((u64) cmd->cmnd[2]) << 24) |
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5164  			(((u64) cmd->cmnd[3]) << 16) |
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5165  			(((u64) cmd->cmnd[4]) << 8) |
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5166  			cmd->cmnd[5];
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5167  		block_cnt =
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5168  			(((u32) cmd->cmnd[7]) << 8) |
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5169  			cmd->cmnd[8];
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5170  		break;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5171  	case WRITE_12:
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5172  		is_write = 1;
+df561f6688fef7 Gustavo A. R. Silva 2020-08-23  5173  		fallthrough;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5174  	case READ_12:
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5175  		first_block =
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5176  			(((u64) cmd->cmnd[2]) << 24) |
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5177  			(((u64) cmd->cmnd[3]) << 16) |
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5178  			(((u64) cmd->cmnd[4]) << 8) |
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5179  			cmd->cmnd[5];
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5180  		block_cnt =
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5181  			(((u32) cmd->cmnd[6]) << 24) |
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5182  			(((u32) cmd->cmnd[7]) << 16) |
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5183  			(((u32) cmd->cmnd[8]) << 8) |
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5184  		cmd->cmnd[9];
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5185  		break;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5186  	case WRITE_16:
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5187  		is_write = 1;
+df561f6688fef7 Gustavo A. R. Silva 2020-08-23  5188  		fallthrough;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5189  	case READ_16:
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5190  		first_block =
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5191  			(((u64) cmd->cmnd[2]) << 56) |
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5192  			(((u64) cmd->cmnd[3]) << 48) |
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5193  			(((u64) cmd->cmnd[4]) << 40) |
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5194  			(((u64) cmd->cmnd[5]) << 32) |
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5195  			(((u64) cmd->cmnd[6]) << 24) |
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5196  			(((u64) cmd->cmnd[7]) << 16) |
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5197  			(((u64) cmd->cmnd[8]) << 8) |
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5198  			cmd->cmnd[9];
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5199  		block_cnt =
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5200  			(((u32) cmd->cmnd[10]) << 24) |
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5201  			(((u32) cmd->cmnd[11]) << 16) |
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5202  			(((u32) cmd->cmnd[12]) << 8) |
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5203  			cmd->cmnd[13];
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5204  		break;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5205  	default:
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5206  		return IO_ACCEL_INELIGIBLE; /* process via normal I/O path */
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5207  	}
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5208  	last_block = first_block + block_cnt - 1;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5209  
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5210  	/* check for write to non-RAID-0 */
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5211  	if (is_write && dev->raid_level != 0)
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5212  		return IO_ACCEL_INELIGIBLE;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5213  
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5214  	/* check for invalid block or wraparound */
+2b08b3e9d9dad9 Don Brace           2015-01-23  5215  	if (last_block >= le64_to_cpu(map->volume_blk_cnt) ||
+2b08b3e9d9dad9 Don Brace           2015-01-23  5216  		last_block < first_block)
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5217  		return IO_ACCEL_INELIGIBLE;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5218  
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5219  	/* calculate stripe information for the request */
+2b08b3e9d9dad9 Don Brace           2015-01-23  5220  	blocks_per_row = le16_to_cpu(map->data_disks_per_row) *
+2b08b3e9d9dad9 Don Brace           2015-01-23  5221  				le16_to_cpu(map->strip_size);
+2b08b3e9d9dad9 Don Brace           2015-01-23  5222  	strip_size = le16_to_cpu(map->strip_size);
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5223  #if BITS_PER_LONG == 32
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5224  	tmpdiv = first_block;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5225  	(void) do_div(tmpdiv, blocks_per_row);
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5226  	first_row = tmpdiv;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5227  	tmpdiv = last_block;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5228  	(void) do_div(tmpdiv, blocks_per_row);
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5229  	last_row = tmpdiv;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5230  	first_row_offset = (u32) (first_block - (first_row * blocks_per_row));
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5231  	last_row_offset = (u32) (last_block - (last_row * blocks_per_row));
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5232  	tmpdiv = first_row_offset;
+2b08b3e9d9dad9 Don Brace           2015-01-23  5233  	(void) do_div(tmpdiv, strip_size);
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5234  	first_column = tmpdiv;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5235  	tmpdiv = last_row_offset;
+2b08b3e9d9dad9 Don Brace           2015-01-23  5236  	(void) do_div(tmpdiv, strip_size);
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5237  	last_column = tmpdiv;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5238  #else
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5239  	first_row = first_block / blocks_per_row;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5240  	last_row = last_block / blocks_per_row;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5241  	first_row_offset = (u32) (first_block - (first_row * blocks_per_row));
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5242  	last_row_offset = (u32) (last_block - (last_row * blocks_per_row));
+2b08b3e9d9dad9 Don Brace           2015-01-23  5243  	first_column = first_row_offset / strip_size;
+2b08b3e9d9dad9 Don Brace           2015-01-23  5244  	last_column = last_row_offset / strip_size;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5245  #endif
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5246  
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5247  	/* if this isn't a single row/column then give to the controller */
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5248  	if ((first_row != last_row) || (first_column != last_column))
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5249  		return IO_ACCEL_INELIGIBLE;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5250  
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5251  	/* proceeding with driver mapping */
+2b08b3e9d9dad9 Don Brace           2015-01-23  5252  	total_disks_per_row = le16_to_cpu(map->data_disks_per_row) +
+2b08b3e9d9dad9 Don Brace           2015-01-23  5253  				le16_to_cpu(map->metadata_disks_per_row);
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5254  	map_row = ((u32)(first_row >> map->parity_rotation_shift)) %
+2b08b3e9d9dad9 Don Brace           2015-01-23  5255  				le16_to_cpu(map->row_cnt);
+6b80b18fe51540 Scott Teel          2014-02-18  5256  	map_index = (map_row * total_disks_per_row) + first_column;
+6b80b18fe51540 Scott Teel          2014-02-18  5257  
+6b80b18fe51540 Scott Teel          2014-02-18  5258  	switch (dev->raid_level) {
+6b80b18fe51540 Scott Teel          2014-02-18  5259  	case HPSA_RAID_0:
+6b80b18fe51540 Scott Teel          2014-02-18  5260  		break; /* nothing special to do */
+6b80b18fe51540 Scott Teel          2014-02-18  5261  	case HPSA_RAID_1:
+6b80b18fe51540 Scott Teel          2014-02-18  5262  		/* Handles load balance across RAID 1 members.
+6b80b18fe51540 Scott Teel          2014-02-18  5263  		 * (2-drive R1 and R10 with even # of drives.)
+6b80b18fe51540 Scott Teel          2014-02-18  5264  		 * Appropriate for SSDs, not optimal for HDDs
+3e16e83a62edac Don Brace           2020-03-20  5265  		 * Ensure we have the correct raid_map.
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5266  		 */
+3e16e83a62edac Don Brace           2020-03-20  5267  		if (le16_to_cpu(map->layout_map_count) != 2) {
+3e16e83a62edac Don Brace           2020-03-20  5268  			hpsa_turn_off_ioaccel_for_device(dev);
+3e16e83a62edac Don Brace           2020-03-20  5269  			return IO_ACCEL_INELIGIBLE;
+3e16e83a62edac Don Brace           2020-03-20  5270  		}
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5271  		if (dev->offload_to_mirror)
+2b08b3e9d9dad9 Don Brace           2015-01-23  5272  			map_index += le16_to_cpu(map->data_disks_per_row);
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5273  		dev->offload_to_mirror = !dev->offload_to_mirror;
+6b80b18fe51540 Scott Teel          2014-02-18  5274  		break;
+6b80b18fe51540 Scott Teel          2014-02-18  5275  	case HPSA_RAID_ADM:
+6b80b18fe51540 Scott Teel          2014-02-18  5276  		/* Handles N-way mirrors  (R1-ADM)
+6b80b18fe51540 Scott Teel          2014-02-18  5277  		 * and R10 with # of drives divisible by 3.)
+3e16e83a62edac Don Brace           2020-03-20  5278  		 * Ensure we have the correct raid_map.
+6b80b18fe51540 Scott Teel          2014-02-18  5279  		 */
+3e16e83a62edac Don Brace           2020-03-20  5280  		if (le16_to_cpu(map->layout_map_count) != 3) {
+3e16e83a62edac Don Brace           2020-03-20  5281  			hpsa_turn_off_ioaccel_for_device(dev);
+3e16e83a62edac Don Brace           2020-03-20  5282  			return IO_ACCEL_INELIGIBLE;
+3e16e83a62edac Don Brace           2020-03-20  5283  		}
+6b80b18fe51540 Scott Teel          2014-02-18  5284  
+6b80b18fe51540 Scott Teel          2014-02-18  5285  		offload_to_mirror = dev->offload_to_mirror;
+6b80b18fe51540 Scott Teel          2014-02-18  5286  		raid_map_helper(map, offload_to_mirror,
+6b80b18fe51540 Scott Teel          2014-02-18  5287  				&map_index, &current_group);
+6b80b18fe51540 Scott Teel          2014-02-18  5288  		/* set mirror group to use next time */
+6b80b18fe51540 Scott Teel          2014-02-18  5289  		offload_to_mirror =
+2b08b3e9d9dad9 Don Brace           2015-01-23  5290  			(offload_to_mirror >=
+2b08b3e9d9dad9 Don Brace           2015-01-23  5291  			le16_to_cpu(map->layout_map_count) - 1)
+6b80b18fe51540 Scott Teel          2014-02-18  5292  			? 0 : offload_to_mirror + 1;
+6b80b18fe51540 Scott Teel          2014-02-18  5293  		dev->offload_to_mirror = offload_to_mirror;
+6b80b18fe51540 Scott Teel          2014-02-18  5294  		/* Avoid direct use of dev->offload_to_mirror within this
+6b80b18fe51540 Scott Teel          2014-02-18  5295  		 * function since multiple threads might simultaneously
+6b80b18fe51540 Scott Teel          2014-02-18  5296  		 * increment it beyond the range of dev->layout_map_count -1.
+6b80b18fe51540 Scott Teel          2014-02-18  5297  		 */
+6b80b18fe51540 Scott Teel          2014-02-18  5298  		break;
+6b80b18fe51540 Scott Teel          2014-02-18  5299  	case HPSA_RAID_5:
+6b80b18fe51540 Scott Teel          2014-02-18  5300  	case HPSA_RAID_6:
+2b08b3e9d9dad9 Don Brace           2015-01-23  5301  		if (le16_to_cpu(map->layout_map_count) <= 1)
+6b80b18fe51540 Scott Teel          2014-02-18  5302  			break;
+6b80b18fe51540 Scott Teel          2014-02-18  5303  
+6b80b18fe51540 Scott Teel          2014-02-18  5304  		/* Verify first and last block are in same RAID group */
+6b80b18fe51540 Scott Teel          2014-02-18  5305  		r5or6_blocks_per_row =
+2b08b3e9d9dad9 Don Brace           2015-01-23  5306  			le16_to_cpu(map->strip_size) *
+2b08b3e9d9dad9 Don Brace           2015-01-23  5307  			le16_to_cpu(map->data_disks_per_row);
+3e16e83a62edac Don Brace           2020-03-20  5308  		if (r5or6_blocks_per_row == 0) {
+3e16e83a62edac Don Brace           2020-03-20  5309  			hpsa_turn_off_ioaccel_for_device(dev);
+3e16e83a62edac Don Brace           2020-03-20  5310  			return IO_ACCEL_INELIGIBLE;
+3e16e83a62edac Don Brace           2020-03-20  5311  		}
+2b08b3e9d9dad9 Don Brace           2015-01-23  5312  		stripesize = r5or6_blocks_per_row *
+2b08b3e9d9dad9 Don Brace           2015-01-23  5313  			le16_to_cpu(map->layout_map_count);
+6b80b18fe51540 Scott Teel          2014-02-18  5314  #if BITS_PER_LONG == 32
+6b80b18fe51540 Scott Teel          2014-02-18  5315  		tmpdiv = first_block;
+6b80b18fe51540 Scott Teel          2014-02-18  5316  		first_group = do_div(tmpdiv, stripesize);
+6b80b18fe51540 Scott Teel          2014-02-18  5317  		tmpdiv = first_group;
+6b80b18fe51540 Scott Teel          2014-02-18  5318  		(void) do_div(tmpdiv, r5or6_blocks_per_row);
+6b80b18fe51540 Scott Teel          2014-02-18  5319  		first_group = tmpdiv;
+6b80b18fe51540 Scott Teel          2014-02-18  5320  		tmpdiv = last_block;
+6b80b18fe51540 Scott Teel          2014-02-18  5321  		last_group = do_div(tmpdiv, stripesize);
+6b80b18fe51540 Scott Teel          2014-02-18  5322  		tmpdiv = last_group;
+6b80b18fe51540 Scott Teel          2014-02-18  5323  		(void) do_div(tmpdiv, r5or6_blocks_per_row);
+6b80b18fe51540 Scott Teel          2014-02-18  5324  		last_group = tmpdiv;
+6b80b18fe51540 Scott Teel          2014-02-18  5325  #else
+6b80b18fe51540 Scott Teel          2014-02-18  5326  		first_group = (first_block % stripesize) / r5or6_blocks_per_row;
+6b80b18fe51540 Scott Teel          2014-02-18  5327  		last_group = (last_block % stripesize) / r5or6_blocks_per_row;
+6b80b18fe51540 Scott Teel          2014-02-18  5328  #endif
+000ff7c25a1513 Stephen M. Cameron  2014-03-13  5329  		if (first_group != last_group)
+6b80b18fe51540 Scott Teel          2014-02-18  5330  			return IO_ACCEL_INELIGIBLE;
+6b80b18fe51540 Scott Teel          2014-02-18  5331  
+6b80b18fe51540 Scott Teel          2014-02-18  5332  		/* Verify request is in a single row of RAID 5/6 */
+6b80b18fe51540 Scott Teel          2014-02-18  5333  #if BITS_PER_LONG == 32
+6b80b18fe51540 Scott Teel          2014-02-18  5334  		tmpdiv = first_block;
+6b80b18fe51540 Scott Teel          2014-02-18  5335  		(void) do_div(tmpdiv, stripesize);
+6b80b18fe51540 Scott Teel          2014-02-18  5336  		first_row = r5or6_first_row = r0_first_row = tmpdiv;
+6b80b18fe51540 Scott Teel          2014-02-18  5337  		tmpdiv = last_block;
+6b80b18fe51540 Scott Teel          2014-02-18  5338  		(void) do_div(tmpdiv, stripesize);
+6b80b18fe51540 Scott Teel          2014-02-18  5339  		r5or6_last_row = r0_last_row = tmpdiv;
+6b80b18fe51540 Scott Teel          2014-02-18  5340  #else
+6b80b18fe51540 Scott Teel          2014-02-18  5341  		first_row = r5or6_first_row = r0_first_row =
+6b80b18fe51540 Scott Teel          2014-02-18  5342  						first_block / stripesize;
+6b80b18fe51540 Scott Teel          2014-02-18  5343  		r5or6_last_row = r0_last_row = last_block / stripesize;
+6b80b18fe51540 Scott Teel          2014-02-18  5344  #endif
+6b80b18fe51540 Scott Teel          2014-02-18  5345  		if (r5or6_first_row != r5or6_last_row)
+6b80b18fe51540 Scott Teel          2014-02-18  5346  			return IO_ACCEL_INELIGIBLE;
+6b80b18fe51540 Scott Teel          2014-02-18  5347  
+6b80b18fe51540 Scott Teel          2014-02-18  5348  
+6b80b18fe51540 Scott Teel          2014-02-18  5349  		/* Verify request is in a single column */
+6b80b18fe51540 Scott Teel          2014-02-18  5350  #if BITS_PER_LONG == 32
+6b80b18fe51540 Scott Teel          2014-02-18  5351  		tmpdiv = first_block;
+6b80b18fe51540 Scott Teel          2014-02-18  5352  		first_row_offset = do_div(tmpdiv, stripesize);
+6b80b18fe51540 Scott Teel          2014-02-18  5353  		tmpdiv = first_row_offset;
+6b80b18fe51540 Scott Teel          2014-02-18  5354  		first_row_offset = (u32) do_div(tmpdiv, r5or6_blocks_per_row);
+6b80b18fe51540 Scott Teel          2014-02-18  5355  		r5or6_first_row_offset = first_row_offset;
+6b80b18fe51540 Scott Teel          2014-02-18  5356  		tmpdiv = last_block;
+6b80b18fe51540 Scott Teel          2014-02-18  5357  		r5or6_last_row_offset = do_div(tmpdiv, stripesize);
+6b80b18fe51540 Scott Teel          2014-02-18  5358  		tmpdiv = r5or6_last_row_offset;
+6b80b18fe51540 Scott Teel          2014-02-18  5359  		r5or6_last_row_offset = do_div(tmpdiv, r5or6_blocks_per_row);
+6b80b18fe51540 Scott Teel          2014-02-18  5360  		tmpdiv = r5or6_first_row_offset;
+6b80b18fe51540 Scott Teel          2014-02-18  5361  		(void) do_div(tmpdiv, map->strip_size);
+6b80b18fe51540 Scott Teel          2014-02-18  5362  		first_column = r5or6_first_column = tmpdiv;
+6b80b18fe51540 Scott Teel          2014-02-18  5363  		tmpdiv = r5or6_last_row_offset;
+6b80b18fe51540 Scott Teel          2014-02-18  5364  		(void) do_div(tmpdiv, map->strip_size);
+6b80b18fe51540 Scott Teel          2014-02-18  5365  		r5or6_last_column = tmpdiv;
+6b80b18fe51540 Scott Teel          2014-02-18  5366  #else
+6b80b18fe51540 Scott Teel          2014-02-18  5367  		first_row_offset = r5or6_first_row_offset =
+6b80b18fe51540 Scott Teel          2014-02-18  5368  			(u32)((first_block % stripesize) %
+6b80b18fe51540 Scott Teel          2014-02-18  5369  						r5or6_blocks_per_row);
+6b80b18fe51540 Scott Teel          2014-02-18  5370  
+6b80b18fe51540 Scott Teel          2014-02-18  5371  		r5or6_last_row_offset =
+6b80b18fe51540 Scott Teel          2014-02-18  5372  			(u32)((last_block % stripesize) %
+6b80b18fe51540 Scott Teel          2014-02-18  5373  						r5or6_blocks_per_row);
+6b80b18fe51540 Scott Teel          2014-02-18  5374  
+6b80b18fe51540 Scott Teel          2014-02-18  5375  		first_column = r5or6_first_column =
+2b08b3e9d9dad9 Don Brace           2015-01-23  5376  			r5or6_first_row_offset / le16_to_cpu(map->strip_size);
+6b80b18fe51540 Scott Teel          2014-02-18  5377  		r5or6_last_column =
+2b08b3e9d9dad9 Don Brace           2015-01-23  5378  			r5or6_last_row_offset / le16_to_cpu(map->strip_size);
+6b80b18fe51540 Scott Teel          2014-02-18  5379  #endif
+6b80b18fe51540 Scott Teel          2014-02-18  5380  		if (r5or6_first_column != r5or6_last_column)
+6b80b18fe51540 Scott Teel          2014-02-18  5381  			return IO_ACCEL_INELIGIBLE;
+6b80b18fe51540 Scott Teel          2014-02-18  5382  
+6b80b18fe51540 Scott Teel          2014-02-18  5383  		/* Request is eligible */
+6b80b18fe51540 Scott Teel          2014-02-18  5384  		map_row = ((u32)(first_row >> map->parity_rotation_shift)) %
+2b08b3e9d9dad9 Don Brace           2015-01-23  5385  			le16_to_cpu(map->row_cnt);
+6b80b18fe51540 Scott Teel          2014-02-18  5386  
+6b80b18fe51540 Scott Teel          2014-02-18  5387  		map_index = (first_group *
+2b08b3e9d9dad9 Don Brace           2015-01-23  5388  			(le16_to_cpu(map->row_cnt) * total_disks_per_row)) +
+6b80b18fe51540 Scott Teel          2014-02-18  5389  			(map_row * total_disks_per_row) + first_column;
+6b80b18fe51540 Scott Teel          2014-02-18  5390  		break;
+6b80b18fe51540 Scott Teel          2014-02-18  5391  	default:
+6b80b18fe51540 Scott Teel          2014-02-18  5392  		return IO_ACCEL_INELIGIBLE;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5393  	}
+6b80b18fe51540 Scott Teel          2014-02-18  5394  
+07543e0c05de17 Stephen Cameron     2015-01-23  5395  	if (unlikely(map_index >= RAID_MAP_MAX_ENTRIES))
+07543e0c05de17 Stephen Cameron     2015-01-23  5396  		return IO_ACCEL_INELIGIBLE;
+07543e0c05de17 Stephen Cameron     2015-01-23  5397  
+03383736348bb7 Don Brace           2015-01-23  5398  	c->phys_disk = dev->phys_disk[map_index];
+c3390df4751177 Don Brace           2016-02-23  5399  	if (!c->phys_disk)
+c3390df4751177 Don Brace           2016-02-23  5400  		return IO_ACCEL_INELIGIBLE;
+03383736348bb7 Don Brace           2015-01-23  5401  
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5402  	disk_handle = dd[map_index].ioaccel_handle;
+2b08b3e9d9dad9 Don Brace           2015-01-23  5403  	disk_block = le64_to_cpu(map->disk_starting_blk) +
+2b08b3e9d9dad9 Don Brace           2015-01-23  5404  			first_row * le16_to_cpu(map->strip_size) +
+2b08b3e9d9dad9 Don Brace           2015-01-23  5405  			(first_row_offset - first_column *
+2b08b3e9d9dad9 Don Brace           2015-01-23  5406  			le16_to_cpu(map->strip_size));
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5407  	disk_block_cnt = block_cnt;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5408  
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5409  	/* handle differing logical/physical block sizes */
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5410  	if (map->phys_blk_shift) {
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5411  		disk_block <<= map->phys_blk_shift;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5412  		disk_block_cnt <<= map->phys_blk_shift;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5413  	}
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5414  	BUG_ON(disk_block_cnt > 0xffff);
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5415  
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5416  	/* build the new CDB for the physical disk I/O */
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5417  	if (disk_block > 0xffffffff) {
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5418  		cdb[0] = is_write ? WRITE_16 : READ_16;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5419  		cdb[1] = 0;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5420  		cdb[2] = (u8) (disk_block >> 56);
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5421  		cdb[3] = (u8) (disk_block >> 48);
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5422  		cdb[4] = (u8) (disk_block >> 40);
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5423  		cdb[5] = (u8) (disk_block >> 32);
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5424  		cdb[6] = (u8) (disk_block >> 24);
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5425  		cdb[7] = (u8) (disk_block >> 16);
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5426  		cdb[8] = (u8) (disk_block >> 8);
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5427  		cdb[9] = (u8) (disk_block);
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5428  		cdb[10] = (u8) (disk_block_cnt >> 24);
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5429  		cdb[11] = (u8) (disk_block_cnt >> 16);
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5430  		cdb[12] = (u8) (disk_block_cnt >> 8);
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5431  		cdb[13] = (u8) (disk_block_cnt);
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5432  		cdb[14] = 0;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5433  		cdb[15] = 0;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5434  		cdb_len = 16;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5435  	} else {
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5436  		cdb[0] = is_write ? WRITE_10 : READ_10;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5437  		cdb[1] = 0;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5438  		cdb[2] = (u8) (disk_block >> 24);
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5439  		cdb[3] = (u8) (disk_block >> 16);
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5440  		cdb[4] = (u8) (disk_block >> 8);
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5441  		cdb[5] = (u8) (disk_block);
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5442  		cdb[6] = 0;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5443  		cdb[7] = (u8) (disk_block_cnt >> 8);
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5444  		cdb[8] = (u8) (disk_block_cnt);
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5445  		cdb[9] = 0;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5446  		cdb_len = 10;
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5447  	}
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5448  	return hpsa_scsi_ioaccel_queue_command(h, c, disk_handle, cdb, cdb_len,
+03383736348bb7 Don Brace           2015-01-23  5449  						dev->scsi3addr,
+03383736348bb7 Don Brace           2015-01-23  5450  						dev->phys_disk[map_index]);
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5451  }
+283b4a9b98b192 Stephen M. Cameron  2014-02-18  5452  
+
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
