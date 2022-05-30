@@ -2,87 +2,225 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AEC7C433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 May 2022 14:32:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BE21C4332F
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 May 2022 15:57:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238248AbiE3Obz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 May 2022 10:31:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56164 "EHLO
+        id S240912AbiE3P5k (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 May 2022 11:57:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51286 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242490AbiE3ObO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 May 2022 10:31:14 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5C29EBA9F;
-        Mon, 30 May 2022 06:53:03 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 4549BCE1024;
-        Mon, 30 May 2022 13:52:42 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7067CC3411C;
-        Mon, 30 May 2022 13:52:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653918760;
-        bh=493NnMb0m3jXFaC9Qo/ThcPB1+4sJ7bhd1oanoqWjbQ=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=oEmL5Ka13BFL8PxJxMyMRJvDnZozmtYpkVjnM6zAPl3YN2Qfb5mYgLvCTLklpqGN+
-         py+vxmM6eTq9bsugxtqbV+WGahp03Wvx3WLxnPveT/qgBN+mP24GVwDvj0uwfnKUFN
-         X9aTTx6HnbFpz67mfqD7nn+m21jrU/0fqv/iqy5yO8fbPuyhhQmfCM1hlgkAkNY44f
-         UjzlQPWc0d5pLHGPtBgbJtghMi8tcCxERrjMMmPc3ZV4GUxGaVmIAWzIfE+sbobwvN
-         3OTaWuOmCbFr87miNEDuNmVOIgOkPbxURjtK/CEAL+US1pPXdD14KOJg0XYiTgfBj1
-         ZpZkhw+4FcA4w==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Lv Ruyi <lv.ruyi@zte.com.cn>, Zeal Robot <zealci@zte.com.cn>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, kashyap.desai@broadcom.com,
-        sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com,
-        jejb@linux.ibm.com, megaraidlinux.pdl@broadcom.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 11/24] scsi: megaraid: Fix error check return value of register_chrdev()
-Date:   Mon, 30 May 2022 09:51:58 -0400
-Message-Id: <20220530135211.1937674-11-sashal@kernel.org>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220530135211.1937674-1-sashal@kernel.org>
-References: <20220530135211.1937674-1-sashal@kernel.org>
+        with ESMTP id S240072AbiE3P51 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 May 2022 11:57:27 -0400
+Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3FA371DB9;
+        Mon, 30 May 2022 08:47:15 -0700 (PDT)
+Received: by mail-ed1-x530.google.com with SMTP id t5so14085870edc.2;
+        Mon, 30 May 2022 08:47:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=i89MiZL7FoctGZprJstd/24FsFM1pBOpq1jT2psM2/w=;
+        b=Pmm6R7ODryNSQKhU+4ZGAn1mJ5EFoZcivG4zihjy/MrAg0/tKmpyJbEk9n5H+s3SHe
+         rjZjan0NLlitgoPBP7DcHkuYLmJ5Fi7n6Ap9eFuJR/iSkn0nILK10DElcyrV3TwOA3oa
+         16RTsZ3OjxQ79jnEjWo843Qr097RupRvU6dPxgefJzyfRCj9PXAg8REAY2vssjWtfDa4
+         Oj9sjEsGWSsqGCk4cbO8wpgB24FANIFEiQDt4l6eubYueR+MeKadjwvSWoXVVETvqfRG
+         +9+3XKYVka2VGAZS2K85AIb5XqWQWHZHKImY7HGuokWGpi3fS3ljK8IjAR0MoNlqQPi8
+         acRg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=i89MiZL7FoctGZprJstd/24FsFM1pBOpq1jT2psM2/w=;
+        b=F0IiiWYOjTw4KxnmJVSMFJobGI0t+e2O4z3ED9bGR+ImLEDzVYnXW65S7Eac7EMnae
+         Ty+X5ib66ZnUFXaIWyRpqnWNMEyIONp2bc4BjlCb/zL2OQgGhzlD79AJ2Cl9rAAmBeIi
+         IV7J2zSX5+11OAXn03uR0h3EMHucK1wepSraLsesgzmstaW9in6er6ZY6fs8T7LpFHjV
+         5VDwjFd3eABOg8qhhxgf7D1hBxhaAKrNQlfvPj1p7RbKzVDApohZWCJuPnudJN7+wxRG
+         1q+2Wzo0e2V8LOvnE18+vprRbn6dqcUBT9mwIngupofeCyUjRFbOYKrDNd+3Bfnbkiud
+         hgLw==
+X-Gm-Message-State: AOAM533KAsibzjMPU71si6UI/jBvuv22zh3HcUwSCgmblJCO5AInPL1r
+        MGlC14HEovppcz/NKCTMeNLr4JVSGllGVw==
+X-Google-Smtp-Source: ABdhPJxEXlNrQ7YReCEUVjXaOToLbotp+0keekiWM9uAtwUQmOqsR3pScuMyzv0b8iWjSwaCg2e2iw==
+X-Received: by 2002:a05:6402:14c1:b0:42d:d6f1:ac3d with SMTP id f1-20020a05640214c100b0042dd6f1ac3dmr3289957edx.223.1653925634248;
+        Mon, 30 May 2022 08:47:14 -0700 (PDT)
+Received: from [192.168.178.40] (ipbcc1cfad.dynamic.kabel-deutschland.de. [188.193.207.173])
+        by smtp.gmail.com with ESMTPSA id b89-20020a509f62000000b0042dd7e13391sm913080edf.45.2022.05.30.08.47.13
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 30 May 2022 08:47:13 -0700 (PDT)
+Message-ID: <12bb8139-be66-4e08-47be-909b0042926c@gmail.com>
+Date:   Mon, 30 May 2022 17:47:12 +0200
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.9.1
+Subject: Re: [PATCH AUTOSEL 5.18 074/159] scsi: target: tcmu: Fix possible
+ data corruption
+Content-Language: en-US
+To:     Sasha Levin <sashal@kernel.org>, linux-kernel@vger.kernel.org,
+        stable@vger.kernel.org
+Cc:     Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+References: <20220530132425.1929512-1-sashal@kernel.org>
+ <20220530132425.1929512-74-sashal@kernel.org>
+From:   Bodo Stroesser <bostroesser@gmail.com>
+In-Reply-To: <20220530132425.1929512-74-sashal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Lv Ruyi <lv.ruyi@zte.com.cn>
+Sasha,
 
-[ Upstream commit c5acd61dbb32b6bda0f3a354108f2b8dcb788985 ]
+the below patch introduces a new bug, which is fixed by commit
+   325d5c5fb216 ("scsi: target: tcmu: Avoid holding XArray lock when calling lock_page")
+Please consider adding this further fix.
 
-If major equals 0, register_chrdev() returns an error code when it fails.
-This function dynamically allocates a major and returns its number on
-success, so we should use "< 0" to check it instead of "!".
+For my understanding: commit 325d5c5fb216 contains a "Fixes:"
+tag. So I'd expect it to be added automatically.
+Is there still something missing in the commit?
 
-Link: https://lore.kernel.org/r/20220418105755.2558828-1-lv.ruyi@zte.com.cn
-Reported-by: Zeal Robot <zealci@zte.com.cn>
-Signed-off-by: Lv Ruyi <lv.ruyi@zte.com.cn>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/megaraid.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thank you,
+Bodo
 
-diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
-index 2cbfec6a7466..2f7132edcd3f 100644
---- a/drivers/scsi/megaraid.c
-+++ b/drivers/scsi/megaraid.c
-@@ -4705,7 +4705,7 @@ static int __init megaraid_init(void)
- 	 * major number allocation.
- 	 */
- 	major = register_chrdev(0, "megadev_legacy", &megadev_fops);
--	if (!major) {
-+	if (major < 0) {
- 		printk(KERN_WARNING
- 				"megaraid: failed to register char device\n");
- 	}
--- 
-2.35.1
 
+On 30.05.22 15:22, Sasha Levin wrote:
+> From: Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
+> 
+> [ Upstream commit bb9b9eb0ae2e9d3f6036f0ad907c3a83dcd43485 ]
+> 
+> When tcmu_vma_fault() gets a page successfully, before the current context
+> completes page fault procedure, find_free_blocks() may run and call
+> unmap_mapping_range() to unmap the page. Assume that when
+> find_free_blocks() initially completes and the previous page fault
+> procedure starts to run again and completes, then one truncated page has
+> been mapped to userspace. But note that tcmu_vma_fault() has gotten a
+> refcount for the page so any other subsystem won't be able to use the page
+> unless the userspace address is unmapped later.
+> 
+> If another command subsequently runs and needs to extend dbi_thresh it may
+> reuse the corresponding slot for the previous page in data_bitmap. Then
+> though we'll allocate new page for this slot in data_area, no page fault
+> will happen because we have a valid map and the real request's data will be
+> lost.
+> 
+> Filesystem implementations will also run into this issue but they usually
+> lock the page when vm_operations_struct->fault gets a page and unlock the
+> page after finish_fault() completes. For truncate filesystems lock pages in
+> truncate_inode_pages() to protect against racing wrt. page faults.
+> 
+> To fix this possible data corruption scenario we can apply a method similar
+> to the filesystems.  For pages that are to be freed, tcmu_blocks_release()
+> locks and unlocks. Make tcmu_vma_fault() also lock found page under
+> cmdr_lock. At the same time, since tcmu_vma_fault() gets an extra page
+> refcount, tcmu_blocks_release() won't free pages if pages are in page fault
+> procedure, which means it is safe to call tcmu_blocks_release() before
+> unmap_mapping_range().
+> 
+> With these changes tcmu_blocks_release() will wait for all page faults to
+> be completed before calling unmap_mapping_range(). And later, if
+> unmap_mapping_range() is called, it will ensure stale mappings are removed.
+> 
+> Link: https://lore.kernel.org/r/20220421023735.9018-1-xiaoguang.wang@linux.alibaba.com
+> Reviewed-by: Bodo Stroesser <bostroesser@gmail.com>
+> Signed-off-by: Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> Signed-off-by: Sasha Levin <sashal@kernel.org>
+> ---
+>   drivers/target/target_core_user.c | 40 ++++++++++++++++++++++++++++---
+>   1 file changed, 37 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+> index fd7267baa707..b1fd06edea59 100644
+> --- a/drivers/target/target_core_user.c
+> +++ b/drivers/target/target_core_user.c
+> @@ -20,6 +20,7 @@
+>   #include <linux/configfs.h>
+>   #include <linux/mutex.h>
+>   #include <linux/workqueue.h>
+> +#include <linux/pagemap.h>
+>   #include <net/genetlink.h>
+>   #include <scsi/scsi_common.h>
+>   #include <scsi/scsi_proto.h>
+> @@ -1667,6 +1668,26 @@ static u32 tcmu_blocks_release(struct tcmu_dev *udev, unsigned long first,
+>   	xas_lock(&xas);
+>   	xas_for_each(&xas, page, (last + 1) * udev->data_pages_per_blk - 1) {
+>   		xas_store(&xas, NULL);
+> +		/*
+> +		 * While reaching here there may be page faults occurring on
+> +		 * the to-be-released pages. A race condition may occur if
+> +		 * unmap_mapping_range() is called before page faults on these
+> +		 * pages have completed; a valid but stale map is created.
+> +		 *
+> +		 * If another command subsequently runs and needs to extend
+> +		 * dbi_thresh, it may reuse the slot corresponding to the
+> +		 * previous page in data_bitmap. Though we will allocate a new
+> +		 * page for the slot in data_area, no page fault will happen
+> +		 * because we have a valid map. Therefore the command's data
+> +		 * will be lost.
+> +		 *
+> +		 * We lock and unlock pages that are to be released to ensure
+> +		 * all page faults have completed. This way
+> +		 * unmap_mapping_range() can ensure stale maps are cleanly
+> +		 * removed.
+> +		 */
+> +		lock_page(page);
+> +		unlock_page(page);
+>   		__free_page(page);
+>   		pages_freed++;
+>   	}
+> @@ -1822,6 +1843,7 @@ static struct page *tcmu_try_get_data_page(struct tcmu_dev *udev, uint32_t dpi)
+>   	page = xa_load(&udev->data_pages, dpi);
+>   	if (likely(page)) {
+>   		get_page(page);
+> +		lock_page(page);
+>   		mutex_unlock(&udev->cmdr_lock);
+>   		return page;
+>   	}
+> @@ -1863,6 +1885,7 @@ static vm_fault_t tcmu_vma_fault(struct vm_fault *vmf)
+>   	struct page *page;
+>   	unsigned long offset;
+>   	void *addr;
+> +	vm_fault_t ret = 0;
+>   
+>   	int mi = tcmu_find_mem_index(vmf->vma);
+>   	if (mi < 0)
+> @@ -1887,10 +1910,11 @@ static vm_fault_t tcmu_vma_fault(struct vm_fault *vmf)
+>   		page = tcmu_try_get_data_page(udev, dpi);
+>   		if (!page)
+>   			return VM_FAULT_SIGBUS;
+> +		ret = VM_FAULT_LOCKED;
+>   	}
+>   
+>   	vmf->page = page;
+> -	return 0;
+> +	return ret;
+>   }
+>   
+>   static const struct vm_operations_struct tcmu_vm_ops = {
+> @@ -3205,12 +3229,22 @@ static void find_free_blocks(void)
+>   			udev->dbi_max = block;
+>   		}
+>   
+> +		/*
+> +		 * Release the block pages.
+> +		 *
+> +		 * Also note that since tcmu_vma_fault() gets an extra page
+> +		 * refcount, tcmu_blocks_release() won't free pages if pages
+> +		 * are mapped. This means it is safe to call
+> +		 * tcmu_blocks_release() before unmap_mapping_range() which
+> +		 * drops the refcount of any pages it unmaps and thus releases
+> +		 * them.
+> +		 */
+> +		pages_freed = tcmu_blocks_release(udev, start, end - 1);
+> +
+>   		/* Here will truncate the data area from off */
+>   		off = udev->data_off + (loff_t)start * udev->data_blk_size;
+>   		unmap_mapping_range(udev->inode->i_mapping, off, 0, 1);
+>   
+> -		/* Release the block pages */
+> -		pages_freed = tcmu_blocks_release(udev, start, end - 1);
+>   		mutex_unlock(&udev->cmdr_lock);
+>   
+>   		total_pages_freed += pages_freed;
