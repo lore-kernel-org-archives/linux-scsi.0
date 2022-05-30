@@ -2,145 +2,158 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 888F3C43217
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 May 2022 07:51:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC424C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 May 2022 08:22:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234076AbiE3HvP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 May 2022 03:51:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60162 "EHLO
+        id S233640AbiE3IWO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 May 2022 04:22:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39180 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234125AbiE3HvE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 May 2022 03:51:04 -0400
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D98872230
-        for <linux-scsi@vger.kernel.org>; Mon, 30 May 2022 00:51:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1653897063; x=1685433063;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=HaPGZSTF+M/Vie2GoNQv9Xg6rkhuwxNkYlYU8WtzlzY=;
-  b=qdwu1eRrJcLBOKMccEHbipo3H1xno5QoGasxXalZGpOcQfXTYNCLkfV0
-   HvYE/fiKX/SGhIrshzgQIS1TUPpseyD5mFfSz9a3oxlrZCVjjSnkQ4zzG
-   atB7sgS/Y5lSSsQEEE3ziNf+kctEzFRWXvWA9fh9SvIjS0OIfutJmT3Qg
-   fJm0A0R4doMQ9OAUQudS/OGnrPjdnDKg2Ddy4EqC4Q+NKphc2zuXEeCwe
-   OKSsvEDmi9O+5ZXYRBrJ135s1TDnjVFoyg0cZYpjG7gzeyCqPuoXEiwKX
-   u2VPjyzfflFQEdsaKTcVWOCbGhz/opGtWmCKaQzuuK3d8mJb7fcKKqcDJ
-   A==;
-X-IronPort-AV: E=Sophos;i="5.91,262,1647273600"; 
-   d="scan'208";a="200542483"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 30 May 2022 15:51:01 +0800
-IronPort-SDR: soGMaMRQswmZJYq4wkK8NpuxAq+w0yKrmoAGflnjyBdAdL8/JFInSkKbB/DEGHUQ9AecRA6M4D
- JNYCCsEI417oA5LRgolNtg1Kmk+KmuywkT+OmYidSapa0YH88PKjrB+oJ54A4pHFiueGJpHRnE
- 4iWsC3Oc6+wW64gDqy/Gq8veFI6gwrwPQGZ82LMNOmwTNLjVPT5R7vGR8ZDOR0ndHHg8Np+tyg
- PMSvjiEb2gHJyweGhVl6t8zwdfJPKO/YInp6MPl6ckeuo74HX6zDr9i6tcpth7gYulUKVVHZ8l
- V+XIWkb9XMey6kvV/dguTEsj
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 May 2022 00:14:49 -0700
-IronPort-SDR: VxYCbiwLJsfHqutlTfYpKeu+ckC0DPUVBHu63139mV6swy7cMRnQ+rWJRxceJrk+VUdAPj0vhd
- tl5JdCyFiMV2yimUa6a3cv1RadX6bexzPwVhzhbdDyDyZVrJ9f3yc8a9RHfQZZI7uV6pDJS9Vq
- +7f3v5pIbp3nPmVI2uXX3O83vDlYVRL6Ew6gCcFZauNmi/ZIRJfTlQNMdRH9DyUBqGepUh9YM+
- 6opO1qUgiD13uYqYdpI/r+8B1rogzk3I+4YZJrbcAGbVG138yYcJvtRlMPiOsZwDPGlUvrX9xh
- PhQ=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 May 2022 00:51:01 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LBSJh3Tbkz1Rvlx
-        for <linux-scsi@vger.kernel.org>; Mon, 30 May 2022 00:51:00 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1653897060; x=1656489061; bh=HaPGZSTF+M/Vie2GoNQv9Xg6rkhuwxNkYlY
-        U8WtzlzY=; b=Pub0ljuCQn5TJ/uw8ZxgV0ngkgqGFT7XWz0ooLHQw8Wjjil3BsJ
-        MKHqCRK/kImnZyl7Rnn/QSbbJ94ESupdem8G6MTJc7yj//PIVPum2VsBKtzcEwiE
-        naUEr7nmaIJGwGd0x2prT+7WucxEDbCtLpHNSwFd7sU7cQI6vL5q2ZfrAHenjWf8
-        kdRrMmbSmYo8sZXEo52fbkXrqtVP2Ie8QUlFc0EuZkMv0o017K0bSuNNfP6GZlmP
-        dwYa96gmeqvd85NnwvYLJzMAxtS23rryxkFznwm0kZD3D4M93Db6Vp1WL0s0vECs
-        r5DfODYsdmnuPSATiaZadZZVpE8lIdCJLwA==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id D6hVkFZVR2l7 for <linux-scsi@vger.kernel.org>;
-        Mon, 30 May 2022 00:51:00 -0700 (PDT)
-Received: from [10.225.163.61] (unknown [10.225.163.61])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LBSJg2J6Xz1Rvlc;
-        Mon, 30 May 2022 00:50:59 -0700 (PDT)
-Message-ID: <1f873c7a-d0cc-b413-f4e9-90d5c5c3faa5@opensource.wdc.com>
-Date:   Mon, 30 May 2022 16:50:57 +0900
+        with ESMTP id S233812AbiE3IVt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 May 2022 04:21:49 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A122C264E;
+        Mon, 30 May 2022 01:21:37 -0700 (PDT)
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24U7tgiJ032624;
+        Mon, 30 May 2022 08:20:57 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=corp-2021-07-09;
+ bh=8W/Qr7GW+a5noC4Ymc+o5KHLvWFwOSj/ipiDYV1VxbQ=;
+ b=RwBo4mv5bkT/jBO11H1WjHUFKof/vzWlPXV1IKaDAooKJipCO7oVvlqAiuT1jdEcP+Z+
+ Aa4OtCkzYxUO8R/QKtodj7GTrQygqgKWleejSrC3AkInU5wTq+b6723QoiIe9HNBABQl
+ OUop+E7y67++78LBXzlyu4n4Qyu1qo71KPZ+PMGNo0PN+ZLE/DbzkxXiBUwUKY67YM+E
+ /yYPqGCjBeN1fSFTXW2rJJWf3EXSksRFwjbaa2sZHfAvNR7Ip+xfK7/L+MjM26yAP4sX
+ uS+Ulxa0a5ZYwlDsrjgW0C1mmFaF+T1C4kHbwkcy+NbWG/80JBmJ8kTbp30Pjl+UQIon 7A== 
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3gbcahjd26-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 30 May 2022 08:20:57 +0000
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 24U8BMKB011450;
+        Mon, 30 May 2022 08:20:55 GMT
+Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2101.outbound.protection.outlook.com [104.47.70.101])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3gc8jvysmu-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 30 May 2022 08:20:55 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Ahq19epU6OmrPSMXqyTKI26gWsp6q5daGQfI4qLqZWafF59XeCVELLAEKtE8zD+k7GlSrQwWEgWd2hnwHfugFkyaz3SMVNuE9ofaoPdof4e/EC/3C/uCFkeOacgaj8IWw/30Fu+FkprQsj0YujyED074dggHd0YQVhkrx4o+Io/9KPxp3OBUfszgYOoKR0gDAdsvaOchT2xecnfFTx9hdtZECeXz9FFIJ8DLq71QSUeepWYmoKmVJFO9MAgFkQrgdJv9ujGdZp/pCu7OSbdkXBWmKY8eqmpYYl31Dky8nPmYM1bQyY/AN1rnpZDDmNbkDkHvpkqPHrZdBI04UxYeDA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=8W/Qr7GW+a5noC4Ymc+o5KHLvWFwOSj/ipiDYV1VxbQ=;
+ b=EDVCJF17YGDBcSVLkt91TSQrOjzMmWHtpn7zsAa5jL7iUVWJL4GF/tI6wRXbTRlY7YGd+71Cx4d0yVnPh155wK3sGcjy6OtQonGbAwyqsTfc69r1QuilyPCt6VbddaVPY4KnDPVEstF8F4OAveMt4dVbWN2YVM0dyxWMnhNQfnW+MhXJyFrSIUlA6dY7PHmJ8/bmR4zJaLyd7mFTUXcqwoF47YfkM8/EzkcL92/9nzrnsRi+sxeNdtAgjhLN3RDtyxNBNBhyrfo7heOsV+DjQJ/2uCvNcSuUHobdzZXnCFBkxUKitWIH8iIOOanJwxsPxhZJP2gttoJt7H8mIEc+bg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=8W/Qr7GW+a5noC4Ymc+o5KHLvWFwOSj/ipiDYV1VxbQ=;
+ b=sAKXPZ8gb0n7Ym2OVkEkZEO93iX+IZvCLZ1ix9qVTFQ7QpPRWgnOFAAENWKIzn4RIPhzc1ZCIparSqxHjOYPEgev1ciitMIuuBfs1c6IfEetXs23gkNBsZeya6X/IGu7qlewcPLgWQhyh2WnOpONk9TblG0apUO8ICMucta2qIY=
+Received: from MWHPR1001MB2365.namprd10.prod.outlook.com
+ (2603:10b6:301:2d::28) by CO1PR10MB4404.namprd10.prod.outlook.com
+ (2603:10b6:303:90::8) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5293.13; Mon, 30 May
+ 2022 08:20:53 +0000
+Received: from MWHPR1001MB2365.namprd10.prod.outlook.com
+ ([fe80::86f:81ba:9951:5a7e]) by MWHPR1001MB2365.namprd10.prod.outlook.com
+ ([fe80::86f:81ba:9951:5a7e%2]) with mapi id 15.20.5293.019; Mon, 30 May 2022
+ 08:20:53 +0000
+Date:   Mon, 30 May 2022 11:20:34 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     Chengguang Xu <cgxu519@mykernel.net>
+Cc:     netdev@vger.kernel.org, linux-staging@lists.linux.dev,
+        linux-scsi@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+        linux-media@vger.kernel.org
+Subject: Re: [PATCH 0/6] fix a common error of while loop condition in error
+ path
+Message-ID: <20220530082034.GN2146@kadam>
+References: <20220529153456.4183738-1-cgxu519@mykernel.net>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220529153456.4183738-1-cgxu519@mykernel.net>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-ClientProxiedBy: JNAP275CA0010.ZAFP275.PROD.OUTLOOK.COM (2603:1086:0:4c::15)
+ To MWHPR1001MB2365.namprd10.prod.outlook.com (2603:10b6:301:2d::28)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.1
-Subject: Re: [PATCH 2/2] scsi: sd_zbc: prevent zone information memory leak
-Content-Language: en-US
-To:     Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Dongliang Mu <mudongliangabcd@gmail.com>
-References: <20220530014341.115427-1-damien.lemoal@opensource.wdc.com>
- <20220530014341.115427-3-damien.lemoal@opensource.wdc.com>
- <PH0PR04MB74163AD6E7785C0F842592229BDD9@PH0PR04MB7416.namprd04.prod.outlook.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <PH0PR04MB74163AD6E7785C0F842592229BDD9@PH0PR04MB7416.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: be4967f9-59bd-48f9-e1c8-08da42155056
+X-MS-TrafficTypeDiagnostic: CO1PR10MB4404:EE_
+X-Microsoft-Antispam-PRVS: <CO1PR10MB4404B2C276DB6CF65084F8CD8EDD9@CO1PR10MB4404.namprd10.prod.outlook.com>
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: UVkcQLK5Z0qUg2W9QghhczkPkwcH9T0ZvHwupks5+Gg7aRb9vSCecDpnxprUrGa+xoL2PuXJGKNMAAWVs/j+8qtziyotx5Mnj/Y5bfYdfsRJ4zYnxqZM6hY4cWjziWSzRiTReecfQfSkfSvzjp4yfflVJrQelZ5yausWqhAbaDxqOpkf7AI7uYnG2qNdENvPkSweFausdyJMw/xuaxjhHnAJ6Bb4QQhgTZ45xSEN0Cpc9ecEjUSQDmq3sH3RG/TTBWHtn4Cq/UzQSPw7E2HA40Y6KPah7BB5XaUXmF40MYFsbpLntrBqlKjW0aWyt6p/89eTE27bmOQD8awfLN0eqJ4rqS72sIlGBvAuudd7aF2f1MeAWHL6wE66/b6uAEbzZzq907RNcIwlsDr3cUjJEH8pqZC8w09RrsDxkIP91Y67H3kwgBvPWHCQBrJbcwrMJ8NJjWfo4s9HdXrvfntSgNuM98pVkdtSw+r7v2wbA6XH2oco2UZvmFFhd42TzOU7oTzazKE4LHQHCARI1KK0uyAwYHdNXiCGMua4hrtOTR+DrxJscNh1gbpvYZT/irZS8696aAzgnN4PlG2IBlqFTc4znVK2k8iBY4i8zWIR+1TmDOjeYZ8fTEg/tL5hFF9Zyk22jFh5pkwUyVKpTrLCW2FivNARyJAmK2BFmjagapkeslIN4Ce1tRULr0UsO3HP+Ev2QM+K0blSGqwoYkaArQ==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR1001MB2365.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(7916004)(366004)(6506007)(2906002)(86362001)(186003)(1076003)(26005)(4744005)(38350700002)(5660300002)(38100700002)(316002)(33656002)(44832011)(6512007)(8936002)(4326008)(8676002)(33716001)(66476007)(66556008)(508600001)(66946007)(6666004)(6486002)(6916009)(52116002)(9686003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?W0DneNdmu1ae6Vo+eh2nYbGh5qZLGrMsRpkxod2fulVvoKF3CwIzvY3sNRr2?=
+ =?us-ascii?Q?jlNDKjsmlcMSsxJG1mfi7qZUO3PxAOiP5DPwy3jyQ4EuZKoWFES/a8djPZLE?=
+ =?us-ascii?Q?EzWI+oKyodyQZgLOYxhRblbLl1sj267siBzkuZYvyW3YV1wDGEIio3RNEGL5?=
+ =?us-ascii?Q?lP29sjhytyPBjb4SSsqis8VPR+04dnxxknFstq39lWI2Y5Ctr29gWAgm37Sg?=
+ =?us-ascii?Q?ghDo43FteT/ATA1rZ8UC2ph4/b+DOf2hZ9lM6dcktth28rW8FvI6XQ85emSL?=
+ =?us-ascii?Q?Mdth1Q01qKSTkHzkjHVogaFbapW85ahWPRQisTM0IkjUhFR7l4DUksaQZckg?=
+ =?us-ascii?Q?m8UZvv0NztztTxXsubf2CGASPQtKFY+rYkhmpp3QJv2VLUY8RjPhwyJGFLQD?=
+ =?us-ascii?Q?QEh2XfgV2hbdQvelp5hiqTu2mKrtqxZFc0o8j6lZDph7yMqQm/dFwSXUE2ID?=
+ =?us-ascii?Q?6d04pCm1l+/jzMBAPYq9vUYwb/kHO5/OI606r06bClxTxmqT5DGZKQPxzZmK?=
+ =?us-ascii?Q?VfcvJpTh5Mdvx6nKmUJMcAshr3zMlTysGYYy/rXt+iHMEwg9Ky81Q5ZiCq0W?=
+ =?us-ascii?Q?Y7vXkqPK1VdaxNWy3qWfTeFBZ9Bk60y3yVjvWP0caIoekdTFjH+kAj5BDXyL?=
+ =?us-ascii?Q?NN+cBehYR/bQ3xDPqIeT3b+UsYv7JicDOdzyOJeyYZAcCbwxSt4CcrVr4CrL?=
+ =?us-ascii?Q?uYag5fcqMU54yAiZpU97aWHy4zjVUdpOSlGErvmPgiX+BYSjyE3gj0QlhA/o?=
+ =?us-ascii?Q?UNBiXFNPSVgAnAe7Hllt3Pbz62j8WaW8aze7CBrYUE00/Hl6jjXcKxVZoZOf?=
+ =?us-ascii?Q?ptHOgvlYYXtcYeKFfhJM57JYN/7YaXLORmxjUXKq/vMUDSt51X+DOvrtNYox?=
+ =?us-ascii?Q?/4GRPEeI0cTzKTHB0k/CUnMXV9RTbAwpq1pySvCAe+MqykLtbcYgv/rKBh9Q?=
+ =?us-ascii?Q?JpAZWjDqwboRn8dvePZ8SoyXVLaQCtGp4r0a8HK4Rgt7ICGbPQKMqJlM2LfK?=
+ =?us-ascii?Q?kEF+hzy5t94Kbwv2bHXzYCOiSDMVnDvys0DC4hGl8thkMYyoUoxVExHq6o37?=
+ =?us-ascii?Q?y80qWke+61aERKZuZLvZoPVSMoB3NOkJ5ETMiuLTay7CwcNUqr4JuwPViXG9?=
+ =?us-ascii?Q?999svY0HRQ/BSrzFMB/ht11pLhMBpRrmDAYceaXZUZ+jCtyC1bHVIGie/yiY?=
+ =?us-ascii?Q?HM63rxYufjICo9DEQ2DPZW8c5dkyN9usD1dGRih4ttqlF2JB2m21kJUMBPWQ?=
+ =?us-ascii?Q?Q/zD2FypXA0WPCx14Wk9/j2w9tCdHxNLOg9PlruJb6bM/XDF8ZRNTwsvTRQ1?=
+ =?us-ascii?Q?fmNof4fZ3OJlVnWUrUnFXqxAdCln0EPMToQFJsdpze2zhJHTHdTSyYrllXqu?=
+ =?us-ascii?Q?HUSn35xPVc0D1r+snXjlYdWZk/nST8czstD6yaP0M3Kw2pJgmgm0FW0bcJgw?=
+ =?us-ascii?Q?Dy6ERrqr9s2XGbgzwo5CmW05ueEHcipTiiKN7rSd5ZT1CIsGth3CFOnlcTDX?=
+ =?us-ascii?Q?VE52CF4IEa3rdYAM5LhE6BrDU4YNc22sJQN4yWrGdbtI2/VKtMR997qseBPk?=
+ =?us-ascii?Q?+X08IHK40yw0IrtnLA8xC5QQbRoRQs1t3dcRchpqNVu6LjZ/sQs/NyI8HNO/?=
+ =?us-ascii?Q?MfIHwD2zSdPt2IL1FyvBaE9y0+PWg9tlnvMHPG/9hiEPU9H19YvdOAJjy+CP?=
+ =?us-ascii?Q?XllP8hHoE7cWIdn4V22vXyDmYn1+Qpvt6E9z3m43NyVpKPqPuwARi1MjpcH5?=
+ =?us-ascii?Q?k4wzOYK0ciQuUlfxS6qlKeojuNUfSSo=3D?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: be4967f9-59bd-48f9-e1c8-08da42155056
+X-MS-Exchange-CrossTenant-AuthSource: MWHPR1001MB2365.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 May 2022 08:20:53.7838
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: nZe/IiG0f1I2UhhfQ0dKiwx1OuXLRE0oEmKm3yHHIgzCD+zWONFYQeo4Z8geE726a2sP//LE292D22li4Gv2rRwZI6OeAdZA9bpYZxIPsKw=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO1PR10MB4404
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.486,18.0.874
+ definitions=2022-05-30_02:2022-05-27,2022-05-30 signatures=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=939 mlxscore=0
+ suspectscore=0 spamscore=0 phishscore=0 malwarescore=0 bulkscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2204290000 definitions=main-2205300043
+X-Proofpoint-ORIG-GUID: vvcZqiDtZAHMnPQOVgOu699pf8QYdcJC
+X-Proofpoint-GUID: vvcZqiDtZAHMnPQOVgOu699pf8QYdcJC
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/30/22 16:48, Johannes Thumshirn wrote:
-> On 30/05/2022 03:43, Damien Le Moal wrote:
->> Make sure to always clear a scsi disk zone information, even for regular
->> disks. This ensures that there is no memory leak, even in the case of a
->> zoned disk changing type to a regular disk (e.g. with a reformat using
->> the FORMAT WITH PRESET command or other vendor proprietary command).
->>
->> This change also makes sure that the sdkp rev_mutex is never used while
->> not being initialized by gating sd_zbc_clear_zone_info() cleanup code
->> with a check on the zone_wp_update_buf field which is never NULL when
->> rev_mutex has been initialized.
->>
->> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
->> ---
->>  drivers/scsi/sd_zbc.c | 15 ++++++++++-----
->>  1 file changed, 10 insertions(+), 5 deletions(-)
->>
->> diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
->> index 5b9fad70aa88..6245205b1159 100644
->> --- a/drivers/scsi/sd_zbc.c
->> +++ b/drivers/scsi/sd_zbc.c
->> @@ -788,6 +788,9 @@ static int sd_zbc_init_disk(struct scsi_disk *sdkp)
->>  
->>  static void sd_zbc_clear_zone_info(struct scsi_disk *sdkp)
->>  {
->> +	if (!sdkp->zone_wp_update_buf)
->> +		return;
->> +
->>  	/* Serialize against revalidate zones */
->>  	mutex_lock(&sdkp->rev_mutex);
->>  
->> @@ -804,8 +807,7 @@ static void sd_zbc_clear_zone_info(struct scsi_disk *sdkp)
->>  
->>  void sd_zbc_release_disk(struct scsi_disk *sdkp)
->>  {
->> -	if (sd_is_zoned(sdkp))
->> -		sd_zbc_clear_zone_info(sdkp);
->> +	sd_zbc_clear_zone_info(sdkp);
->>  }
+On Sun, May 29, 2022 at 11:34:50PM +0800, Chengguang Xu wrote:
+> There is a common error of while loop condition which misses
+> the case '(--i) == 0' in error path. This patch series just
+> tries to fix it in several driver's code.
 > 
-> Now sd_zbc_release_disk() has become a simple rename of sd_zbc_clear_zone_info().
-> I think it can go and we can use sd_zbc_clear_zone_info() in the callers instead.
+> Note: I'm not specialist of specific drivers so just compile tested
+> for the fixes.
 
-Yes, I thought of that, but I wanted to keep the name to make it clear
-that the "main" caller is scsi_disk_release(). But if you insist, we can
-get rid of it :)
+These are all correct.  Thank you.
 
--- 
-Damien Le Moal
-Western Digital Research
+Reviewed-by: Dan Carpenter <dan.carpenter@oracle.com>
+
+regards,
+dan carpenter
+
+
