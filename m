@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EEEF5C4332F
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 May 2022 13:28:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A9BAC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 May 2022 13:31:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236960AbiE3N24 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 May 2022 09:28:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58284 "EHLO
+        id S237052AbiE3NbR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 May 2022 09:31:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59318 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236959AbiE3N2F (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 May 2022 09:28:05 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A5F68A055;
-        Mon, 30 May 2022 06:26:06 -0700 (PDT)
+        with ESMTP id S237277AbiE3NaR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 May 2022 09:30:17 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1296287208;
+        Mon, 30 May 2022 06:27:04 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7085960ED7;
-        Mon, 30 May 2022 13:25:52 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C67D3C385B8;
-        Mon, 30 May 2022 13:25:50 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 67CD9B80D84;
+        Mon, 30 May 2022 13:27:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23EDDC385B8;
+        Mon, 30 May 2022 13:27:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653917151;
-        bh=NQr4DnHVulh4RbREC1iNFCv8RKjtbaKcjTm0ZM5tSvU=;
+        s=k20201202; t=1653917222;
+        bh=uBJsSL0dyV/euH9wSsRXymgQdHcQOPUzRb7f6NJVMeA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=nw+2E8UMYNOOogM7+uLYuW1TurdH3v55iPI5rp0tV4AAMpbB2NLTUHM/Tie9B3QNk
-         hyg8qjNrfNyDljFAYswwkbx7k1XxKB3005VPeB68zkZ07JlfTHgONyKyBQg0WYtLP1
-         KqWNDQQmlICcfRA5PldUpy63aaeRSodYZUBfidXbsqnBiVGeITeR33Lz7oozFEwovx
-         iwjrR+FU5U3Lnf006YF/jignqzbNZ6iB7f4rpcyQy3a5WpI9X86Iaa1dtJQoWhHqYN
-         MXZzdBxdUQTirZya7NaQtBwj0FnzKsaQLH38f3jNLFCzvV0vzDzPujoMHK7LsfBLVY
-         7ybNk3/mx9OXg==
+        b=Y0ZjrlJBr+3Ob+hWgA86CeCLU0bjPZtBqrbz7T1tNZi4+CkvlqvJzfri+cCfZOQKt
+         fmeRmV0srv0e5VULollSnxKqkF/JRayHjzmoDkmDKhHdxZsUIehof+2Urke+41JX80
+         SsO6A2LgFpoZToA8nwSyzXgePybCZLbmYltVk28bNmmGjReUoolGjPiXxK1D5Xi09n
+         3w44quNhCDDzdq4CBkQdghGzXKhnn5Bd84Z3GcEjcWLOodbzgxOme83x7aU68krp3q
+         g3sdh0jsdzqWnDqHRRs4ydSy36B+u45m6qnBlVDtP18RQwKqlMT1MloMTxMwoiNt/r
+         MRL9KjxWQ6jEw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
@@ -39,9 +39,9 @@ Cc:     James Smart <jsmart2021@gmail.com>,
         Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
         dick.kennedy@broadcom.com, jejb@linux.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.18 039/159] scsi: lpfc: Fix call trace observed during I/O with CMF enabled
-Date:   Mon, 30 May 2022 09:22:24 -0400
-Message-Id: <20220530132425.1929512-39-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.18 061/159] scsi: lpfc: Fix resource leak in lpfc_sli4_send_seq_to_ulp()
+Date:   Mon, 30 May 2022 09:22:46 -0400
+Message-Id: <20220530132425.1929512-61-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220530132425.1929512-1-sashal@kernel.org>
 References: <20220530132425.1929512-1-sashal@kernel.org>
@@ -55,57 +55,60 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit d6d45f67a11136cb88a70a29ab22ea6db8ae6bd5 ]
+[ Upstream commit 646db1a560f44236b7278b822ca99a1d3b6ea72c ]
 
-The following was seen with CMF enabled:
+If no handler is found in lpfc_complete_unsol_iocb() to match the rctl of a
+received frame, the frame is dropped and resources are leaked.
 
-BUG: using smp_processor_id() in preemptible
-code: systemd-udevd/31711
-kernel: caller is lpfc_update_cmf_cmd+0x214/0x420  [lpfc]
-kernel: CPU: 12 PID: 31711 Comm: systemd-udevd
-kernel: Call Trace:
-kernel: <TASK>
-kernel: dump_stack_lvl+0x44/0x57
-kernel: check_preemption_disabled+0xbf/0xe0
-kernel: lpfc_update_cmf_cmd+0x214/0x420 [lpfc]
-kernel: lpfc_nvme_fcp_io_submit+0x23b4/0x4df0 [lpfc]
+Fix by returning resources when discarding an unhandled frame type.  Update
+lpfc_fc_frame_check() handling of NOP basic link service.
 
-this_cpu_ptr() calls smp_processor_id() in a preemptible context.
-
-Fix by using per_cpu_ptr() with raw_smp_processor_id() instead.
-
-Link: https://lore.kernel.org/r/20220412222008.126521-16-jsmart2021@gmail.com
+Link: https://lore.kernel.org/r/20220426181419.9154-1-jsmart2021@gmail.com
 Co-developed-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_scsi.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_sli.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index c4fa7d68fe03..f617a2ef6b0f 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -3835,7 +3835,7 @@ lpfc_update_cmf_cmpl(struct lpfc_hba *phba,
- 		else
- 			time = div_u64(time + 500, 1000); /* round it */
- 
--		cgs = this_cpu_ptr(phba->cmf_stat);
-+		cgs = per_cpu_ptr(phba->cmf_stat, raw_smp_processor_id());
- 		atomic64_add(size, &cgs->rcv_bytes);
- 		atomic64_add(time, &cgs->rx_latency);
- 		atomic_inc(&cgs->rx_io_cnt);
-@@ -3879,7 +3879,7 @@ lpfc_update_cmf_cmd(struct lpfc_hba *phba, uint32_t size)
- 			atomic_set(&phba->rx_max_read_cnt, size);
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 09a45f8ecf3f..a174e06bd96e 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -18124,7 +18124,6 @@ lpfc_fc_frame_check(struct lpfc_hba *phba, struct fc_frame_header *fc_hdr)
+ 	case FC_RCTL_ELS_REP:	/* extended link services reply */
+ 	case FC_RCTL_ELS4_REQ:	/* FC-4 ELS request */
+ 	case FC_RCTL_ELS4_REP:	/* FC-4 ELS reply */
+-	case FC_RCTL_BA_NOP:  	/* basic link service NOP */
+ 	case FC_RCTL_BA_ABTS: 	/* basic link service abort */
+ 	case FC_RCTL_BA_RMC: 	/* remove connection */
+ 	case FC_RCTL_BA_ACC:	/* basic accept */
+@@ -18145,6 +18144,7 @@ lpfc_fc_frame_check(struct lpfc_hba *phba, struct fc_frame_header *fc_hdr)
+ 		fc_vft_hdr = (struct fc_vft_header *)fc_hdr;
+ 		fc_hdr = &((struct fc_frame_header *)fc_vft_hdr)[1];
+ 		return lpfc_fc_frame_check(phba, fc_hdr);
++	case FC_RCTL_BA_NOP:	/* basic link service NOP */
+ 	default:
+ 		goto drop;
  	}
+@@ -18959,12 +18959,14 @@ lpfc_sli4_send_seq_to_ulp(struct lpfc_vport *vport,
+ 	if (!lpfc_complete_unsol_iocb(phba,
+ 				      phba->sli4_hba.els_wq->pring,
+ 				      iocbq, fc_hdr->fh_r_ctl,
+-				      fc_hdr->fh_type))
++				      fc_hdr->fh_type)) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
+ 				"2540 Ring %d handler: unexpected Rctl "
+ 				"x%x Type x%x received\n",
+ 				LPFC_ELS_RING,
+ 				fc_hdr->fh_r_ctl, fc_hdr->fh_type);
++		lpfc_in_buf_free(phba, &seq_dmabuf->dbuf);
++	}
  
--	cgs = this_cpu_ptr(phba->cmf_stat);
-+	cgs = per_cpu_ptr(phba->cmf_stat, raw_smp_processor_id());
- 	atomic64_add(size, &cgs->total_bytes);
- 	return 0;
- }
+ 	/* Free iocb created in lpfc_prep_seq */
+ 	list_for_each_entry_safe(curr_iocb, next_iocb,
 -- 
 2.35.1
 
