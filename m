@@ -2,92 +2,102 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5179C433F5
-	for <linux-scsi@archiver.kernel.org>; Sun, 29 May 2022 23:04:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E13FEC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 May 2022 01:43:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231858AbiE2XEG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 29 May 2022 19:04:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41456 "EHLO
+        id S232153AbiE3Bns (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 29 May 2022 21:43:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58390 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230417AbiE2XEE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 29 May 2022 19:04:04 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8C94F31370
-        for <linux-scsi@vger.kernel.org>; Sun, 29 May 2022 16:04:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1653865442;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=QfA6UHdmD6AfDXf89CPlsdUhs1JGy6QuSQscvfoYwvU=;
-        b=VJFKs/KG8b6/SiOCOF+AgrVd86VGoq2uBoKZMdEAm+1y30eiAXURr7IBAt+itLfvxhtMkU
-        Rp09cP0hy83DvCoTkcdz8WlxdIpmc2InCLRkhgcd6RnhPZOGFmNZWfee1U54BfDA5Uog3A
-        t9W4QfBw4DZBTvNRa0kNpWu/eOf6n1I=
-Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
- [209.85.128.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-138-3L_bWk3yNb-avLnUQunGng-1; Sun, 29 May 2022 19:04:00 -0400
-X-MC-Unique: 3L_bWk3yNb-avLnUQunGng-1
-Received: by mail-wm1-f71.google.com with SMTP id k16-20020a7bc310000000b0038e6cf00439so6051792wmj.0
-        for <linux-scsi@vger.kernel.org>; Sun, 29 May 2022 16:03:59 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=QfA6UHdmD6AfDXf89CPlsdUhs1JGy6QuSQscvfoYwvU=;
-        b=VhWcSN83K+IqrG79HS13e8V9ShH6vqaaa6/jFZQao7u3hlbj91nozeO7B6REAlK6e3
-         wgwzD/ncEUD+tcPaYaGMceG542JDP4OsuBmEoGKG3oAzIalto+axaLzApYE6sh5XnvMV
-         swbANGbN6oXcB0WnN9cWYVGBsDClGC3qKnop2IUppFs/E1zljrZ+NBI2OWZ2m9B3CAkU
-         o9eyQQEVSEhyWQpuV586iBPdpnqryvuXK4gExVrXYsNtRgAv1uZPcD0huSiGb/B6mL5L
-         YjGPiO4KbyFr9zenQ6wX4M1+XmPia6nJaIkJWbacxvRaH9IjGCeZHNsNx8fte+TzqZZ2
-         Yozw==
-X-Gm-Message-State: AOAM531bzscZO3U5jBvMchJF4jwK7EuTkLd+dxOiJ1KUZxZbrVxBjCcs
-        Ad46jYO4bPOZdnapJKYug1qOdBom3nemCryvYssOhH9nhelS2/AMM22sBye7AbfsfevCVicyT55
-        nXhupLQd5AJPd10my5TOm9w==
-X-Received: by 2002:a05:600c:c5:b0:39c:1396:b489 with SMTP id u5-20020a05600c00c500b0039c1396b489mr399592wmm.146.1653865438996;
-        Sun, 29 May 2022 16:03:58 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxqRZXyAmmQh2eZzD7j1relm4FzT2zt1M4JHI7qlma3IXTujk/tbky1ZdtkzPHV4VR3uBskNw==
-X-Received: by 2002:a05:600c:c5:b0:39c:1396:b489 with SMTP id u5-20020a05600c00c500b0039c1396b489mr399590wmm.146.1653865438794;
-        Sun, 29 May 2022 16:03:58 -0700 (PDT)
-Received: from [192.168.0.106] (ip4-83-240-118-160.cust.nbox.cz. [83.240.118.160])
-        by smtp.gmail.com with ESMTPSA id ay5-20020a05600c1e0500b0039765a7add4sm8701735wmb.29.2022.05.29.16.03.57
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 29 May 2022 16:03:57 -0700 (PDT)
-Message-ID: <2004629b-4da6-8499-ea3f-709468178b42@redhat.com>
-Date:   Mon, 30 May 2022 01:03:56 +0200
+        with ESMTP id S230337AbiE3Bnq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 29 May 2022 21:43:46 -0400
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81EEADEB2
+        for <linux-scsi@vger.kernel.org>; Sun, 29 May 2022 18:43:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1653875025; x=1685411025;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=WGDF8pTgROvIz7CZgLQAsZl4nvuWWS5NNaqv5feSwTk=;
+  b=IRi5755NGYV3eh0YC5zW86P4CBRSqlgfaAtgHwxerxOvHit0Y5cjrn9X
+   /zzvRHO70hB2aqP5hxsAvJ0/y0bFsUj9MROHTfSyLW+cSrOtZ0ymHvv9G
+   B+JR4uZhCHm2TuXy54mIStNLsWufQQi1gBGrunIozowjQY2yetkmZhbXO
+   sapmSY92GJg5XbDxnoUkySjgZodOfn8QLlzksDDslgXWRsmXQ784Jy9xc
+   vGN2tepHtDt0lvLvBgUC+CGjfqHZEdTHxd6mYreT+vsLL2P2g10ooUZD3
+   MWBc0S7OKf9trwN63JlkkJyAPbdvg+VavmsxBHnUsjnVJ8uJZdWpCBIET
+   A==;
+X-IronPort-AV: E=Sophos;i="5.91,261,1647273600"; 
+   d="scan'208";a="313773995"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 30 May 2022 09:43:44 +0800
+IronPort-SDR: pTYv0c+mBjbHLNi2+QzyqkM8+HtpYxqajykVyaIvTqdvV/Z9zshMhbwCAlPMHwQ87IMZmgAHw2
+ oj3EyAMck93rGIsjalyfjOIeFFAZfPtXQG+rh74o4d6OoVWJPn2Ra7JTXj80rAkJOo4QBDftUK
+ sMEBK97bWifnA5tFLVF9siIj10r1G8kCyPzUFeNb7eTT/11Eq7IkW2llngj3WbT5k8JKdQPyE/
+ kz6+KlkgenIPMRgfgOhtGkJ6z1I1t1TiprxVRCIBAPuJ+8tkXi6GtwwNWOm5Tov3no8N3Q2BXd
+ cJ32JEDHPN2290BBXHUw7t26
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 29 May 2022 18:03:10 -0700
+IronPort-SDR: vcQR27NAUUotB0DodqXuji6SoMZCQJ2fjkgJglhT4QHXw9ViK4AMSAfePJG9EWb2C6TwzI5+kL
+ 1DWalDQYEzFpKQYz6PRlRTYkIuLQ67JShYgWd4exK/kRGVsixXbH0Y5O4gkk8u4UQue2JKUlmg
+ lYxnD4Qo4j/2BQ8MpM0he335whE7HBp0lhpIyuWbfpazSOTFLhT/DIHZ62OXOdBZ+7kihzm6ta
+ IEM+MulUMCbaesrK/BK2yPh12U15O+n8Z6kQ06DCL41XCpHvo6FgCT9XyYZ/1Bebu7/N/9WYkR
+ y/8=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 29 May 2022 18:43:45 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LBJ8w2MZhz1Rwrw
+        for <linux-scsi@vger.kernel.org>; Sun, 29 May 2022 18:43:44 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:mime-version
+        :x-mailer:message-id:date:subject:to:from; s=dkim; t=1653875024;
+         x=1656467025; bh=WGDF8pTgROvIz7CZgLQAsZl4nvuWWS5NNaqv5feSwTk=; b=
+        qQluK83achYXUhRke5TlE/AamJKJnWL73odGxB+qC5Nqfl8uUM1KbY/3yqvQzufl
+        Seys8NNXRErwAAzv1oXTDsECAusgDkm47iGAn0R4fMavKjpBfRRPuRnNDsoT9IhW
+        OfVmyYt4n4cnPwm5nGyfiNji+BaKVr2jV0b/RZqUMLGyB0hiCj3rOGdG1qtnp0sI
+        UvUn05ba1vDymojGXblQe6vJo5JpM1yK4yrg2cO3otxJnhHD6fHcQJzHbtNOlvE2
+        uLn2C4z2BYxIicASsK6xckd0+V38kmIZcz0/GdTMlpmoGQWQMBFNiaKje4G5lIj7
+        nw1qQbTiAQF6hWOvWyuMlA==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id Kr2G8RS_AZBF for <linux-scsi@vger.kernel.org>;
+        Sun, 29 May 2022 18:43:44 -0700 (PDT)
+Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LBJ8v2c1cz1Rvlc;
+        Sun, 29 May 2022 18:43:43 -0700 (PDT)
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+To:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Dongliang Mu <mudongliangabcd@gmail.com>
+Subject: [PATCH 0/2] sd_zbc fixes
+Date:   Mon, 30 May 2022 10:43:39 +0900
+Message-Id: <20220530014341.115427-1-damien.lemoal@opensource.wdc.com>
+X-Mailer: git-send-email 2.36.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.0
-Subject: Re: [PATCH] mpi3mr: rework mrioc->bsg_device model to fix up smatch
- warnings
-Content-Language: en-US
-To:     Sumit Saxena <sumit.saxena@broadcom.com>,
-        linux-scsi@vger.kernel.org
-Cc:     martin.petersen@oracle.com,
-        Dan Carpenter <dan.carpenter@oracle.com>
-References: <20220526170157.58274-1-sumit.saxena@broadcom.com>
-From:   Tomas Henzl <thenzl@redhat.com>
-In-Reply-To: <20220526170157.58274-1-sumit.saxena@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/26/22 19:01, Sumit Saxena wrote:
-> During driver unload, "mrioc->bsg_device" reference count becomes negative.
-> Also, as reported in [1], driver's bsg_device model had few more 
-> bugs so reworked it to fix up them.
->
-> [1] https://marc.info/?l=linux-scsi&m=165183971411991&w=2
->
-> Fixes: 4268fa751365 ("scsi: mpi3mr: Add bsg device support")
-> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-> Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
+A couple of patches to fix 2 issues with the zbc code:
+* A potential NULL pointer dereference in sd_is_zoned(), if that
+  function is called when sdkp->device is not yet set (e.g. if an error
+  happen early in sd_probe()).
+* Make sure that sdkp zone information memory is never leaked.
 
-I've been seeing the issue when rmmod the driver, with this patch it's gone.
+Damien Le Moal (2):
+  scsi: sd: Fix potential NULL pointer dereference
+  scsi: sd_zbc: prevent zone information memory leak
 
-Tested-by: Tomas Henzl <thenzl@redhat.com>
+ drivers/scsi/sd.h     |  3 ++-
+ drivers/scsi/sd_zbc.c | 15 ++++++++++-----
+ 2 files changed, 12 insertions(+), 6 deletions(-)
+
+--=20
+2.36.1
 
