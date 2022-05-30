@@ -2,45 +2,46 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EFDE0C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 May 2022 13:48:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD36DC433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 May 2022 13:48:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238175AbiE3NsX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 May 2022 09:48:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41076 "EHLO
+        id S238189AbiE3NsZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 May 2022 09:48:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49234 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239035AbiE3NqX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 May 2022 09:46:23 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 671E2A2065;
-        Mon, 30 May 2022 06:34:05 -0700 (PDT)
+        with ESMTP id S238371AbiE3NpU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 May 2022 09:45:20 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 378989CF09;
+        Mon, 30 May 2022 06:32:54 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id E6634B80DAD;
-        Mon, 30 May 2022 13:34:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D6F7C385B8;
-        Mon, 30 May 2022 13:34:02 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 158B760F3E;
+        Mon, 30 May 2022 13:32:54 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 43E26C3411A;
+        Mon, 30 May 2022 13:32:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653917643;
-        bh=8fyaHLfs66JSD8DWARG4Vmw9VaXoP4pQwZnrSrmzxME=;
+        s=k20201202; t=1653917573;
+        bh=6c21A1kbnXmKe8tly4EAnWS1CNBZxBOYlSwgTiYeW1Q=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=qfsFsKjX5tc48XTtNBeRkJWPmVVVSI/LHB+7sNZ2Ma5nOSF2biCSOd0kUns22cqVV
-         wJUBzeeQgmwuVERMpGC7DN5UwybnicDRlFTzAKOSIGW4oIqF8onEV57lsavtekB5ny
-         9WGJBsb8aCEWCHqCu8l06CCi1IED1keWue50VvCcXc1pKtlluP8h6EbX24gYHr7pzr
-         o+AX6W4JLmOXDN0/qUs7dyEAxRU0wiRQZ+upWD6rq6Iga/98t9tDfKYPBMSLRfvcwQ
-         KagKttH5biq4j+gUeQOLOVTES/jOSzkWjKE922SRIW64t5XvY2LiaOP3ikn+tgM+UI
-         dEFGgaTfCXWcA==
+        b=MNjrRnpJGLcoxPwf0vItyu+4jlVNUx/GrwEhhBil8RYTALJJ7ICNboz3eBlwQ3BYs
+         rDoMyGQhYV/fXKV5u+Y5VOZi7brbdIZVmOEJE61WJxBgrelIkwG3vuPtISrakVILqR
+         75D2YTJmub5+bTxLCdTIWOSbkKOWA6krobrq/E4eQzmT0Gt84Gogq8uHLNsqbWOhh7
+         HRogH9LrDfWPUrH1nL3M61RVUSzPieIAU/unW99cgaYRkxQw72NOwexP3Bp2hzCTna
+         IvY4fqOt/5y5WWak2y9LBQJApM5xrejVjCppb7R84sGs5rxfm1cpopZZ0yGnBSGbSW
+         DyP3h69k0PFNQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Minghao Chi <chi.minghao@zte.com.cn>,
-        Zeal Robot <zealci@zte.com.cn>,
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Justin Tee <justin.tee@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
+        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.17 050/135] scsi: ufs: Use pm_runtime_resume_and_get() instead of pm_runtime_get_sync()
-Date:   Mon, 30 May 2022 09:30:08 -0400
-Message-Id: <20220530133133.1931716-50-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.17 032/135] scsi: lpfc: Fix call trace observed during I/O with CMF enabled
+Date:   Mon, 30 May 2022 09:29:50 -0400
+Message-Id: <20220530133133.1931716-32-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220530133133.1931716-1-sashal@kernel.org>
 References: <20220530133133.1931716-1-sashal@kernel.org>
@@ -52,41 +53,59 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Minghao Chi <chi.minghao@zte.com.cn>
+From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit 75b8715e20a20bc7b4844835e4035543a2674200 ]
+[ Upstream commit d6d45f67a11136cb88a70a29ab22ea6db8ae6bd5 ]
 
-Using pm_runtime_resume_and_get() to replace pm_runtime_get_sync() and
-pm_runtime_put_noidle(). This change is just to simplify the code, no
-actual functional changes.
+The following was seen with CMF enabled:
 
-Link: https://lore.kernel.org/r/20220420090353.2588804-1-chi.minghao@zte.com.cn
-Reported-by: Zeal Robot <zealci@zte.com.cn>
-Signed-off-by: Minghao Chi <chi.minghao@zte.com.cn>
+BUG: using smp_processor_id() in preemptible
+code: systemd-udevd/31711
+kernel: caller is lpfc_update_cmf_cmd+0x214/0x420  [lpfc]
+kernel: CPU: 12 PID: 31711 Comm: systemd-udevd
+kernel: Call Trace:
+kernel: <TASK>
+kernel: dump_stack_lvl+0x44/0x57
+kernel: check_preemption_disabled+0xbf/0xe0
+kernel: lpfc_update_cmf_cmd+0x214/0x420 [lpfc]
+kernel: lpfc_nvme_fcp_io_submit+0x23b4/0x4df0 [lpfc]
+
+this_cpu_ptr() calls smp_processor_id() in a preemptible context.
+
+Fix by using per_cpu_ptr() with raw_smp_processor_id() instead.
+
+Link: https://lore.kernel.org/r/20220412222008.126521-16-jsmart2021@gmail.com
+Co-developed-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ufs/ti-j721e-ufs.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/scsi/lpfc/lpfc_scsi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ti-j721e-ufs.c b/drivers/scsi/ufs/ti-j721e-ufs.c
-index eafe0db98d54..122d650d0810 100644
---- a/drivers/scsi/ufs/ti-j721e-ufs.c
-+++ b/drivers/scsi/ufs/ti-j721e-ufs.c
-@@ -29,11 +29,9 @@ static int ti_j721e_ufs_probe(struct platform_device *pdev)
- 		return PTR_ERR(regbase);
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index 6cc94fae01b8..d9a8e3a59d94 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -3936,7 +3936,7 @@ lpfc_update_cmf_cmpl(struct lpfc_hba *phba,
+ 		else
+ 			time = div_u64(time + 500, 1000); /* round it */
  
- 	pm_runtime_enable(dev);
--	ret = pm_runtime_get_sync(dev);
--	if (ret < 0) {
--		pm_runtime_put_noidle(dev);
-+	ret = pm_runtime_resume_and_get(dev);
-+	if (ret < 0)
- 		goto disable_pm;
--	}
+-		cgs = this_cpu_ptr(phba->cmf_stat);
++		cgs = per_cpu_ptr(phba->cmf_stat, raw_smp_processor_id());
+ 		atomic64_add(size, &cgs->rcv_bytes);
+ 		atomic64_add(time, &cgs->rx_latency);
+ 		atomic_inc(&cgs->rx_io_cnt);
+@@ -3980,7 +3980,7 @@ lpfc_update_cmf_cmd(struct lpfc_hba *phba, uint32_t size)
+ 			atomic_set(&phba->rx_max_read_cnt, size);
+ 	}
  
- 	/* Select MPHY refclk frequency */
- 	clk = devm_clk_get(dev, NULL);
+-	cgs = this_cpu_ptr(phba->cmf_stat);
++	cgs = per_cpu_ptr(phba->cmf_stat, raw_smp_processor_id());
+ 	atomic64_add(size, &cgs->total_bytes);
+ 	return 0;
+ }
 -- 
 2.35.1
 
