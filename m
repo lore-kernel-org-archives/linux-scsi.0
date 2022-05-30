@@ -2,45 +2,46 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F572C4332F
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 May 2022 13:52:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B21F0C4321E
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 May 2022 13:53:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238539AbiE3Nw0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 May 2022 09:52:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33804 "EHLO
+        id S238600AbiE3NxH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 May 2022 09:53:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34776 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238355AbiE3Nt1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 May 2022 09:49:27 -0400
+        with ESMTP id S239203AbiE3NvU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 May 2022 09:51:20 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E910EA7E17;
-        Mon, 30 May 2022 06:34:47 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BDA1D915BC;
+        Mon, 30 May 2022 06:35:27 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 42F1460F24;
-        Mon, 30 May 2022 13:34:46 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3B89C3411A;
-        Mon, 30 May 2022 13:34:44 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id BA9E360F27;
+        Mon, 30 May 2022 13:35:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 099AFC341C6;
+        Mon, 30 May 2022 13:35:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653917685;
-        bh=tgODfi+gRHj0Fd3l9puJo3xP/s51i+HPf2rAmZCL/Kc=;
+        s=k20201202; t=1653917726;
+        bh=N03/B74u7sn+A4NVcosFTHskafhEW/CGOihApCtGW9Y=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=isYJbEXO21/NStSDfypiqUuyTTPFO8fLUXDsSwMKVqRffePNLe+AqRPcL0rMgHijG
-         3PKOOXr1DPlE7T0NcUPCEDJ6jh4OLgS3/nk1y7QfMZcvNhBW/yjOz2fwsb0Aa1EYAa
-         IPSjgGRxOoY1wPnWx+kh/u8vqnqj+HQio51BolXKiid2Ur7p5LBWXqzfG6JuVVGe9N
-         STgCKwMWWwBSxhnwbgy77gfc/W7kcYfYZf5yJU16hLWQN7j8lMYBciEvihVliORszq
-         TDa64I+kQSGdPV57Yk0qceHufmBS/ReUULN6EHi9ck9FQgh8IuO66in4NhgU+Ix8up
-         hiks2lwUI+Hrg==
+        b=Rj5jfc+9doM4HPXS4Hxl2oLB2wFMDRxQGYt5i4nHb7kREAf0NIsgKqItV9c2hNP12
+         7fvk8cMZmbVfp+dWRh+TMK1nB5GHnYrt9L+gINeEjCxvxdXryPAHsaQJgEDA6tmEQ8
+         93L9whc8ahvj6sj7n4hmdwY6q9RrI2mWOdvk4XDKc5QZOJwIpEA48xG8IQOIBtfCQ1
+         JWRcHM51IIQe5q0IwE+ZzY5c75RgNpCFavCSd4Z69Eo5AT6+70d/1lu5YjfsKS8UJe
+         gG6Xh/P4BRRgf7VAFFU4REoFlHnuZgLpB2aWbULYfw8aG/uGZik4zbU7C7zc2RfrbL
+         rjq3cBn6YZ+FQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>,
-        Bodo Stroesser <bostroesser@gmail.com>,
+Cc:     Xiang Chen <chenxiang66@hisilicon.com>,
+        Yihang Li <liyihang6@hisilicon.com>,
+        John Garry <john.garry@huawei.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.17 062/135] scsi: target: tcmu: Fix possible data corruption
-Date:   Mon, 30 May 2022 09:30:20 -0400
-Message-Id: <20220530133133.1931716-62-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.17 076/135] scsi: hisi_sas: Undo RPM resume for failed notify phy event for v3 HW
+Date:   Mon, 30 May 2022 09:30:34 -0400
+Message-Id: <20220530133133.1931716-76-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220530133133.1931716-1-sashal@kernel.org>
 References: <20220530133133.1931716-1-sashal@kernel.org>
@@ -52,144 +53,46 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-[ Upstream commit bb9b9eb0ae2e9d3f6036f0ad907c3a83dcd43485 ]
+[ Upstream commit 9b5387fe5af38116b452259d87cd66594b6277c1 ]
 
-When tcmu_vma_fault() gets a page successfully, before the current context
-completes page fault procedure, find_free_blocks() may run and call
-unmap_mapping_range() to unmap the page. Assume that when
-find_free_blocks() initially completes and the previous page fault
-procedure starts to run again and completes, then one truncated page has
-been mapped to userspace. But note that tcmu_vma_fault() has gotten a
-refcount for the page so any other subsystem won't be able to use the page
-unless the userspace address is unmapped later.
+If we fail to notify the phy up event then undo the RPM resume, as the phy
+up notify event handling pairs with that RPM resume.
 
-If another command subsequently runs and needs to extend dbi_thresh it may
-reuse the corresponding slot for the previous page in data_bitmap. Then
-though we'll allocate new page for this slot in data_area, no page fault
-will happen because we have a valid map and the real request's data will be
-lost.
-
-Filesystem implementations will also run into this issue but they usually
-lock the page when vm_operations_struct->fault gets a page and unlock the
-page after finish_fault() completes. For truncate filesystems lock pages in
-truncate_inode_pages() to protect against racing wrt. page faults.
-
-To fix this possible data corruption scenario we can apply a method similar
-to the filesystems.  For pages that are to be freed, tcmu_blocks_release()
-locks and unlocks. Make tcmu_vma_fault() also lock found page under
-cmdr_lock. At the same time, since tcmu_vma_fault() gets an extra page
-refcount, tcmu_blocks_release() won't free pages if pages are in page fault
-procedure, which means it is safe to call tcmu_blocks_release() before
-unmap_mapping_range().
-
-With these changes tcmu_blocks_release() will wait for all page faults to
-be completed before calling unmap_mapping_range(). And later, if
-unmap_mapping_range() is called, it will ensure stale mappings are removed.
-
-Link: https://lore.kernel.org/r/20220421023735.9018-1-xiaoguang.wang@linux.alibaba.com
-Reviewed-by: Bodo Stroesser <bostroesser@gmail.com>
-Signed-off-by: Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
+Link: https://lore.kernel.org/r/1651839939-101188-1-git-send-email-john.garry@huawei.com
+Reported-by: Yihang Li <liyihang6@hisilicon.com>
+Tested-by: Yihang Li <liyihang6@hisilicon.com>
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/target_core_user.c | 40 ++++++++++++++++++++++++++++---
- 1 file changed, 37 insertions(+), 3 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index 06a5c4086551..f26767a55d38 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -20,6 +20,7 @@
- #include <linux/configfs.h>
- #include <linux/mutex.h>
- #include <linux/workqueue.h>
-+#include <linux/pagemap.h>
- #include <net/genetlink.h>
- #include <scsi/scsi_common.h>
- #include <scsi/scsi_proto.h>
-@@ -1666,6 +1667,26 @@ static u32 tcmu_blocks_release(struct tcmu_dev *udev, unsigned long first,
- 	xas_lock(&xas);
- 	xas_for_each(&xas, page, (last + 1) * udev->data_pages_per_blk - 1) {
- 		xas_store(&xas, NULL);
-+		/*
-+		 * While reaching here there may be page faults occurring on
-+		 * the to-be-released pages. A race condition may occur if
-+		 * unmap_mapping_range() is called before page faults on these
-+		 * pages have completed; a valid but stale map is created.
-+		 *
-+		 * If another command subsequently runs and needs to extend
-+		 * dbi_thresh, it may reuse the slot corresponding to the
-+		 * previous page in data_bitmap. Though we will allocate a new
-+		 * page for the slot in data_area, no page fault will happen
-+		 * because we have a valid map. Therefore the command's data
-+		 * will be lost.
-+		 *
-+		 * We lock and unlock pages that are to be released to ensure
-+		 * all page faults have completed. This way
-+		 * unmap_mapping_range() can ensure stale maps are cleanly
-+		 * removed.
-+		 */
-+		lock_page(page);
-+		unlock_page(page);
- 		__free_page(page);
- 		pages_freed++;
- 	}
-@@ -1821,6 +1842,7 @@ static struct page *tcmu_try_get_data_page(struct tcmu_dev *udev, uint32_t dpi)
- 	page = xa_load(&udev->data_pages, dpi);
- 	if (likely(page)) {
- 		get_page(page);
-+		lock_page(page);
- 		mutex_unlock(&udev->cmdr_lock);
- 		return page;
- 	}
-@@ -1862,6 +1884,7 @@ static vm_fault_t tcmu_vma_fault(struct vm_fault *vmf)
- 	struct page *page;
- 	unsigned long offset;
- 	void *addr;
-+	vm_fault_t ret = 0;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 52089538e9de..b309a9d0f5b7 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -1561,9 +1561,15 @@ static irqreturn_t phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
  
- 	int mi = tcmu_find_mem_index(vmf->vma);
- 	if (mi < 0)
-@@ -1886,10 +1909,11 @@ static vm_fault_t tcmu_vma_fault(struct vm_fault *vmf)
- 		page = tcmu_try_get_data_page(udev, dpi);
- 		if (!page)
- 			return VM_FAULT_SIGBUS;
-+		ret = VM_FAULT_LOCKED;
- 	}
+ 	phy->port_id = port_id;
  
- 	vmf->page = page;
--	return 0;
-+	return ret;
- }
+-	/* Call pm_runtime_put_sync() with pairs in hisi_sas_phyup_pm_work() */
++	/*
++	 * Call pm_runtime_get_noresume() which pairs with
++	 * hisi_sas_phyup_pm_work() -> pm_runtime_put_sync().
++	 * For failure call pm_runtime_put() as we are in a hardirq context.
++	 */
+ 	pm_runtime_get_noresume(dev);
+-	hisi_sas_notify_phy_event(phy, HISI_PHYE_PHY_UP_PM);
++	res = hisi_sas_notify_phy_event(phy, HISI_PHYE_PHY_UP_PM);
++	if (!res)
++		pm_runtime_put(dev);
  
- static const struct vm_operations_struct tcmu_vm_ops = {
-@@ -3152,12 +3176,22 @@ static void find_free_blocks(void)
- 			udev->dbi_max = block;
- 		}
+ 	res = IRQ_HANDLED;
  
-+		/*
-+		 * Release the block pages.
-+		 *
-+		 * Also note that since tcmu_vma_fault() gets an extra page
-+		 * refcount, tcmu_blocks_release() won't free pages if pages
-+		 * are mapped. This means it is safe to call
-+		 * tcmu_blocks_release() before unmap_mapping_range() which
-+		 * drops the refcount of any pages it unmaps and thus releases
-+		 * them.
-+		 */
-+		pages_freed = tcmu_blocks_release(udev, start, end - 1);
-+
- 		/* Here will truncate the data area from off */
- 		off = udev->data_off + (loff_t)start * udev->data_blk_size;
- 		unmap_mapping_range(udev->inode->i_mapping, off, 0, 1);
- 
--		/* Release the block pages */
--		pages_freed = tcmu_blocks_release(udev, start, end - 1);
- 		mutex_unlock(&udev->cmdr_lock);
- 
- 		total_pages_freed += pages_freed;
 -- 
 2.35.1
 
