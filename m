@@ -2,46 +2,46 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7237CC4321E
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAEC0C3526F
 	for <linux-scsi@archiver.kernel.org>; Mon, 30 May 2022 14:12:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239539AbiE3OJ5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 May 2022 10:09:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54724 "EHLO
+        id S239659AbiE3OKD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 May 2022 10:10:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41042 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238873AbiE3OEx (ORCPT
+        with ESMTP id S238863AbiE3OEx (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 May 2022 10:04:53 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C54B0CE5E8;
-        Mon, 30 May 2022 06:40:49 -0700 (PDT)
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35DFD994EA;
+        Mon, 30 May 2022 06:40:33 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6084960F74;
-        Mon, 30 May 2022 13:40:49 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9333CC3411F;
-        Mon, 30 May 2022 13:40:47 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id D5585B80D86;
+        Mon, 30 May 2022 13:40:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5006EC3411F;
+        Mon, 30 May 2022 13:40:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653918048;
-        bh=cmZKyuLkuhoQx8U8SjA9Ah7lmHkMh8mv8BlTxKgphtc=;
+        s=k20201202; t=1653918030;
+        bh=Ow6M4ULs7W4f93rXHxWgT7eJhCkKFS4V4mUHz2rkBzU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=TvjUuXrjt6o7mW7hG4Sf0AM96Wyw9C6Sl1m/rKxPIhvL80zOKmQvwBUZGvpKc1t43
-         mlY4wXExamFD3EVg7iQfk0GSQKsWMPmZmDbNKjEBsprqvEms/8Uy6CdjuxgZFO22yN
-         cf/+Uz2fm1R3gc/QT8PCLaG3fIKZM0k6BFqLATFyDfb6PZeqfqGPwgfme4Hs1oJpTj
-         sbDappHUo4Pzhymfmf8Fx674aM66Yesg/fsqIuohdp4U72CXIkdeMQXDGK9f9RkRSS
-         FdGNPguuKQ1On/CgxiqzFWS3EqCQgKMkBeOfquvBtay+1Dby95XzRutIL2L8vwjcd1
-         b+kexyFQFjq/Q==
+        b=gefLLr7T35C+YQz3IfpmnoJJjf+DxwkLZGMH6+QMIEwhnwgXFdh4R9gCT7FUezRVV
+         8H2GhZksJE43JM239zOhH4dLxA8yyk3g8t9i+vXKBeP8f6vx+byMZYo9IydNqpCNWP
+         dxeLogbVLZ38P8hbDzmjoStGjIcEzZt6tcjKchRd425JhAO2H7X+w/m55BwL6MJkZE
+         uSq3XPwfiPN93DzY/ggF/8T68RemKvOUeV2GyXuUnBfqYCOpf3FCQ9e24R4MGb4HRG
+         QMeE2kcPiMufT2IA6NzyHK9LInpl7mhL6LMv2pLZCa3XZZpBT1C5EOikQXtPaWk6Iv
+         xN4sOzYFnpE1A==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Justin Tee <justin.tee@broadcom.com>,
+Cc:     Lv Ruyi <lv.ruyi@zte.com.cn>, Zeal Robot <zealci@zte.com.cn>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        Sasha Levin <sashal@kernel.org>, kashyap.desai@broadcom.com,
+        sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com,
+        jejb@linux.ibm.com, megaraidlinux.pdl@broadcom.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 042/109] scsi: lpfc: Fix resource leak in lpfc_sli4_send_seq_to_ulp()
-Date:   Mon, 30 May 2022 09:37:18 -0400
-Message-Id: <20220530133825.1933431-42-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 039/109] scsi: megaraid: Fix error check return value of register_chrdev()
+Date:   Mon, 30 May 2022 09:37:15 -0400
+Message-Id: <20220530133825.1933431-39-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220530133825.1933431-1-sashal@kernel.org>
 References: <20220530133825.1933431-1-sashal@kernel.org>
@@ -53,62 +53,36 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Lv Ruyi <lv.ruyi@zte.com.cn>
 
-[ Upstream commit 646db1a560f44236b7278b822ca99a1d3b6ea72c ]
+[ Upstream commit c5acd61dbb32b6bda0f3a354108f2b8dcb788985 ]
 
-If no handler is found in lpfc_complete_unsol_iocb() to match the rctl of a
-received frame, the frame is dropped and resources are leaked.
+If major equals 0, register_chrdev() returns an error code when it fails.
+This function dynamically allocates a major and returns its number on
+success, so we should use "< 0" to check it instead of "!".
 
-Fix by returning resources when discarding an unhandled frame type.  Update
-lpfc_fc_frame_check() handling of NOP basic link service.
-
-Link: https://lore.kernel.org/r/20220426181419.9154-1-jsmart2021@gmail.com
-Co-developed-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+Link: https://lore.kernel.org/r/20220418105755.2558828-1-lv.ruyi@zte.com.cn
+Reported-by: Zeal Robot <zealci@zte.com.cn>
+Signed-off-by: Lv Ruyi <lv.ruyi@zte.com.cn>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/megaraid.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 68d8e55c1205..d8d26cde70b6 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -18455,7 +18455,6 @@ lpfc_fc_frame_check(struct lpfc_hba *phba, struct fc_frame_header *fc_hdr)
- 	case FC_RCTL_ELS_REP:	/* extended link services reply */
- 	case FC_RCTL_ELS4_REQ:	/* FC-4 ELS request */
- 	case FC_RCTL_ELS4_REP:	/* FC-4 ELS reply */
--	case FC_RCTL_BA_NOP:  	/* basic link service NOP */
- 	case FC_RCTL_BA_ABTS: 	/* basic link service abort */
- 	case FC_RCTL_BA_RMC: 	/* remove connection */
- 	case FC_RCTL_BA_ACC:	/* basic accept */
-@@ -18476,6 +18475,7 @@ lpfc_fc_frame_check(struct lpfc_hba *phba, struct fc_frame_header *fc_hdr)
- 		fc_vft_hdr = (struct fc_vft_header *)fc_hdr;
- 		fc_hdr = &((struct fc_frame_header *)fc_vft_hdr)[1];
- 		return lpfc_fc_frame_check(phba, fc_hdr);
-+	case FC_RCTL_BA_NOP:	/* basic link service NOP */
- 	default:
- 		goto drop;
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index 56910e94dbf2..7dd6dd74d2bc 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -4628,7 +4628,7 @@ static int __init megaraid_init(void)
+ 	 * major number allocation.
+ 	 */
+ 	major = register_chrdev(0, "megadev_legacy", &megadev_fops);
+-	if (!major) {
++	if (major < 0) {
+ 		printk(KERN_WARNING
+ 				"megaraid: failed to register char device\n");
  	}
-@@ -19288,12 +19288,14 @@ lpfc_sli4_send_seq_to_ulp(struct lpfc_vport *vport,
- 	if (!lpfc_complete_unsol_iocb(phba,
- 				      phba->sli4_hba.els_wq->pring,
- 				      iocbq, fc_hdr->fh_r_ctl,
--				      fc_hdr->fh_type))
-+				      fc_hdr->fh_type)) {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
- 				"2540 Ring %d handler: unexpected Rctl "
- 				"x%x Type x%x received\n",
- 				LPFC_ELS_RING,
- 				fc_hdr->fh_r_ctl, fc_hdr->fh_type);
-+		lpfc_in_buf_free(phba, &seq_dmabuf->dbuf);
-+	}
- 
- 	/* Free iocb created in lpfc_prep_seq */
- 	list_for_each_entry_safe(curr_iocb, next_iocb,
 -- 
 2.35.1
 
