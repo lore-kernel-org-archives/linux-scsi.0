@@ -2,67 +2,116 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D333C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 May 2022 02:27:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A8DAC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 May 2022 07:42:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232224AbiE3C1I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 29 May 2022 22:27:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58690 "EHLO
+        id S233734AbiE3Hmu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 May 2022 03:42:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51044 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230488AbiE3C1H (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 29 May 2022 22:27:07 -0400
-Received: from smtpbg.qq.com (smtpbg136.qq.com [106.55.201.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05F426362;
-        Sun, 29 May 2022 19:27:01 -0700 (PDT)
-X-QQ-mid: bizesmtp81t1653877550tla6dmdm
-Received: from localhost.localdomain ( [125.70.163.149])
-        by bizesmtp.qq.com (ESMTP) with 
-        id ; Mon, 30 May 2022 10:25:29 +0800 (CST)
-X-QQ-SSF: 01000000000000B0G000000A0000000
-X-QQ-FEAT: 5wH7dOxX7oR+WXYlG5sJme5jIR7Dy0nt12sqSwKbXTeKaacCe1o+hwWb/90rH
-        kzXdQ7Ah0BU6Rdn2/uHj1CzdnHdkKDLmVVo8C/55Zppy9Od5Ifmedml4vJM17pCmc82vz94
-        PFSm8kT1Gbg9T4j7D3PVrnWqJYk8Dmdr+cOTSO8nJTCV84xREm2nnZDVEAVwFetiUNun+Ze
-        b4fMi0+E6nbQzOEzB8d0HgD/XA1z800DoInSRH/1AeXzBj5ARaQx2EFDOOUoaQDqcrTezi0
-        KsLCnHY1vVKKzjS50q4vdsGljriFMYGnY1aTMOYRqylTxfz98fcGilKn1Qk672bpL90+CjX
-        gMH3TSi
-X-QQ-GoodBg: 0
-From:   Xiang wangx <wangxiang@cdjrlc.com>
-To:     jejb@linux.ibm.com
-Cc:     martin.petersen@oracle.com, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Xiang wangx <wangxiang@cdjrlc.com>
-Subject: [PATCH] scsi: lpfc: Fix warning in using sizeof
-Date:   Mon, 30 May 2022 10:25:23 +0800
-Message-Id: <20220530022523.21402-1-wangxiang@cdjrlc.com>
-X-Mailer: git-send-email 2.36.1
+        with ESMTP id S233732AbiE3Hmc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 May 2022 03:42:32 -0400
+Received: from mail-wm1-x333.google.com (mail-wm1-x333.google.com [IPv6:2a00:1450:4864:20::333])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C46825EAF
+        for <linux-scsi@vger.kernel.org>; Mon, 30 May 2022 00:42:30 -0700 (PDT)
+Received: by mail-wm1-x333.google.com with SMTP id y24so5818977wmq.5
+        for <linux-scsi@vger.kernel.org>; Mon, 30 May 2022 00:42:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=tDRiL7T1D2xh8IqjQ4J9GQ/82u6rcAgsmar4+giEo/c=;
+        b=DyT3t+1nyG9y4HN64kgP299uQMuwvYQw3UXLpbawcwaWR/Jqerrg29FeN0CWFMCYbo
+         wYFK+RTScfJC11jD7p12SBCHM6cnrVn02ZhrexSayH9QhoKjl2Fki9rOWgd4xZEPrdKW
+         FAsewudhQ2ax1Og0wls9gcytEW/VAX4IZe534jNFQORswYITHyoUjmlqAURly9zdzHRC
+         swS5xuL9QRfIpzLsOkyIdTkIgzHaIrsc2BdcHDRVSj7MXk3v4dQKr/VuBNGhpnRtifDJ
+         dicKc83acHjeI51wuiYAKK2AwU7sn0qjvC8PnR1L+d9/YmVy0Nj7Pvpd+13OkuHk7uw2
+         pA8Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=tDRiL7T1D2xh8IqjQ4J9GQ/82u6rcAgsmar4+giEo/c=;
+        b=lGvgvhF+oIb/RL+xwcz8J+NCSUY+VZpDv8F/XLr0Snbymm+nuxUjDPRrdzF8CN+ATk
+         e5nH348SkHcp+GQRFqSYAezJR1yJYKr7ebhm4AnaV2YfhNPmnhEf3tUETrvyut3OVcKG
+         tzPyY0vcjsGvDg1+Hp/5+6vbh5HNDl/xY18yGnEE1t+Go/USu4eNTmw9S/jYQB1t3TRD
+         gHYVymHh+HsR/aFsTVL84nSAa80QlRMTyOnk5xssTWGk62vAR2fKy/kU5OIyoBlSIWM7
+         Ul378N3VNeLo1kofpZuqojtSlfRa6D21b/6Qa7u+uSt70d9I3qIjsvxHKHtZxP/uDbpR
+         f7Ng==
+X-Gm-Message-State: AOAM531BIYbILmZ4BQ4XQ02iZVPS3NlRkZLQL41ec87yJ6jVhGkYokfK
+        Ws2wP9czNZTBU29CmFqsVEhAtA==
+X-Google-Smtp-Source: ABdhPJwoeX8AFnrofXaPRVEbqd1WcQ2GzDw7JV+PLebAOLW2qA5bkbyquUytImzShJhd5/S7esV1wA==
+X-Received: by 2002:a05:600c:2305:b0:397:44a4:d3cb with SMTP id 5-20020a05600c230500b0039744a4d3cbmr17393978wmo.115.1653896549076;
+        Mon, 30 May 2022 00:42:29 -0700 (PDT)
+Received: from [192.168.0.179] (xdsl-188-155-176-92.adslplus.ch. [188.155.176.92])
+        by smtp.gmail.com with ESMTPSA id h19-20020a05600c351300b0039456fb80b3sm9966481wmq.43.2022.05.30.00.42.27
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 30 May 2022 00:42:28 -0700 (PDT)
+Message-ID: <fb007f9f-b2bc-9221-64d1-48de8fdb25f0@linaro.org>
+Date:   Mon, 30 May 2022 09:42:27 +0200
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-QQ-SENDSIZE: 520
-Feedback-ID: bizesmtp:cdjrlc.com:qybgspam:qybgspam7
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.9.1
+Subject: Re: [PATCH v3 4/7] arm64: dts: qcom: sdm845: control RPMHPD
+ performance states with UFS
+Content-Language: en-US
+To:     Viresh Kumar <viresh.kumar@linaro.org>
+Cc:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Taniya Das <tdas@codeaurora.org>,
+        linux-arm-msm@vger.kernel.org, linux-clk@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+References: <20220513061347.46480-1-krzysztof.kozlowski@linaro.org>
+ <20220513061347.46480-5-krzysztof.kozlowski@linaro.org>
+ <20220525071630.irrz24rs73l3ke4o@vireshk-i7>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+In-Reply-To: <20220525071630.irrz24rs73l3ke4o@vireshk-i7>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Sizeof fc_host_symbolic_name should be sizeof(fc_host_symbolic_name).
+On 25/05/2022 09:16, Viresh Kumar wrote:
+> On 13-05-22, 08:13, Krzysztof Kozlowski wrote:
+>> +			ufs_opp_table: opp-table {
+>> +				compatible = "operating-points-v2";
+>> +
+>> +				opp-50000000 {
+>> +					opp-hz = /bits/ 64 <50000000
+>> +						 0
+>> +						 0
+>> +						 37500000
+>> +						 0
+>> +						 0
+>> +						 0
+>> +						 0
+>> +						 // FIXME: value 0 copied from freq-table-hz
+>> +						 0>;
+> 
+> One general comment, I think this should follow how we specify
+> multiple voltages or other fields and so each frequency should be part
+> of a different < > braces. Like: opp-hz = /bits/ 64 <5000000>, <0>, ....
+> 
+> Whatever is there between < > seems to be connected, like
+> min/max/target for voltage.
+> 
+> The code will process both in a similar way though eventually.
 
-Signed-off-by: Xiang wangx <wangxiang@cdjrlc.com>
----
- drivers/scsi/lpfc/lpfc_attr.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+OK, I can change to such format.
 
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index dd4c51b6ef4e..7d0c3aa0ae5e 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -6822,7 +6822,7 @@ lpfc_get_host_symbolic_name(struct Scsi_Host *shost)
- 	struct lpfc_vport *vport = (struct lpfc_vport *)shost->hostdata;
- 
- 	lpfc_vport_symbolic_node_name(vport, fc_host_symbolic_name(shost),
--				      sizeof fc_host_symbolic_name(shost));
-+				      sizeof(fc_host_symbolic_name(shost)));
- }
- 
- /**
--- 
-2.36.1
-
+Best regards,
+Krzysztof
