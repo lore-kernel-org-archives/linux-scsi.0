@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E300FC433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 May 2022 14:31:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AEC7C433FE
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 May 2022 14:32:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240809AbiE3O3z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 May 2022 10:29:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44832 "EHLO
+        id S238248AbiE3Obz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 May 2022 10:31:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56164 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242267AbiE3O2C (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 May 2022 10:28:02 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9844124;
-        Mon, 30 May 2022 06:51:31 -0700 (PDT)
+        with ESMTP id S242490AbiE3ObO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 May 2022 10:31:14 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5C29EBA9F;
+        Mon, 30 May 2022 06:53:03 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1EBD660F24;
-        Mon, 30 May 2022 13:51:31 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 465A9C3411F;
-        Mon, 30 May 2022 13:51:29 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 4549BCE1024;
+        Mon, 30 May 2022 13:52:42 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7067CC3411C;
+        Mon, 30 May 2022 13:52:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653918690;
-        bh=l+X116IPdIcDhimPMpbxyK/QJ3o3fL8KICaWCEnn5fo=;
+        s=k20201202; t=1653918760;
+        bh=493NnMb0m3jXFaC9Qo/ThcPB1+4sJ7bhd1oanoqWjbQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ebJrRcBo9isWFFD8iz0kETrgRHlxPvkNZx5NerQ1oAAxh3c4tV4syJtBywq/rO/FY
-         M1wjZC8V/zX4vskdpV7ATBRWu0nhUcAEo/ehieLnuKqriaHDwy3uEvk4TRaMks/tFr
-         RUz09mmJpwtuI4mSusC/ZkfVT78AImLlPq2DDS+qR/IX+5RPW/8FNNnj0ztSDVy8qK
-         w9YODCAJ/m0lFfExkJV93mQ26iiqPbNJi/2+/N2y73LzXTv3VaioFk8OFQT0TWqisW
-         Ll1F8QxPl4l1qYH0y7ugATpTAmQX3qkO550rRbjcaa8Sk137RgpJv8x9WwaxmjYH8X
-         zLnMbvzt42RwQ==
+        b=oEmL5Ka13BFL8PxJxMyMRJvDnZozmtYpkVjnM6zAPl3YN2Qfb5mYgLvCTLklpqGN+
+         py+vxmM6eTq9bsugxtqbV+WGahp03Wvx3WLxnPveT/qgBN+mP24GVwDvj0uwfnKUFN
+         X9aTTx6HnbFpz67mfqD7nn+m21jrU/0fqv/iqy5yO8fbPuyhhQmfCM1hlgkAkNY44f
+         UjzlQPWc0d5pLHGPtBgbJtghMi8tcCxERrjMMmPc3ZV4GUxGaVmIAWzIfE+sbobwvN
+         3OTaWuOmCbFr87miNEDuNmVOIgOkPbxURjtK/CEAL+US1pPXdD14KOJg0XYiTgfBj1
+         ZpZkhw+4FcA4w==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Lv Ruyi <lv.ruyi@zte.com.cn>, Zeal Robot <zealci@zte.com.cn>,
@@ -39,12 +39,12 @@ Cc:     Lv Ruyi <lv.ruyi@zte.com.cn>, Zeal Robot <zealci@zte.com.cn>,
         sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com,
         jejb@linux.ibm.com, megaraidlinux.pdl@broadcom.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 13/29] scsi: megaraid: Fix error check return value of register_chrdev()
-Date:   Mon, 30 May 2022 09:50:40 -0400
-Message-Id: <20220530135057.1937286-13-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 11/24] scsi: megaraid: Fix error check return value of register_chrdev()
+Date:   Mon, 30 May 2022 09:51:58 -0400
+Message-Id: <20220530135211.1937674-11-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220530135057.1937286-1-sashal@kernel.org>
-References: <20220530135057.1937286-1-sashal@kernel.org>
+In-Reply-To: <20220530135211.1937674-1-sashal@kernel.org>
+References: <20220530135211.1937674-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -71,10 +71,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
-index f5c09bbf9374..eed6d45b8025 100644
+index 2cbfec6a7466..2f7132edcd3f 100644
 --- a/drivers/scsi/megaraid.c
 +++ b/drivers/scsi/megaraid.c
-@@ -4707,7 +4707,7 @@ static int __init megaraid_init(void)
+@@ -4705,7 +4705,7 @@ static int __init megaraid_init(void)
  	 * major number allocation.
  	 */
  	major = register_chrdev(0, "megadev_legacy", &megadev_fops);
