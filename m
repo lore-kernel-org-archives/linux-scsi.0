@@ -2,81 +2,133 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EED6AC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 31 May 2022 15:31:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 542E6C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 31 May 2022 17:52:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345743AbiEaPbo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 31 May 2022 11:31:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48292 "EHLO
+        id S239789AbiEaRwl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 31 May 2022 13:52:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54720 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239001AbiEaPbn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 May 2022 11:31:43 -0400
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54793271
-        for <linux-scsi@vger.kernel.org>; Tue, 31 May 2022 08:31:41 -0700 (PDT)
-Date:   Tue, 31 May 2022 17:31:38 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1654011100;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=7FREbcwOrqto74ZUT8TXex2Yk5yLeYzeDM3FJWSDdjA=;
-        b=kvDOJ6dDu14wIG8t01rGaRnyEpB3cnqTw4XbDadtE6U3NpZJ1JtldJlC8X1+kbxMdGkGPF
-        RPJT9vB51fw3p+0pGI20x9md4qgo1YI9c/6jrSURQF8mJ8rOeyKPK4TcoSTLPHC299Qq1U
-        CkL5CjiTEBdV1q6OLGDZD6MaP+kLv+Qx1uBSVEqTw/Cm6rJyuL+JJVmLHahdYCh/H2xIxz
-        eWur2Qm1RxQ/MClqGeoTW/cAytDs4kn8jxOas/hGmBYOj4vDzadxghQM5ap7omTNYyhaK5
-        qec2blypoEIRcQJ/tBXVrs0bKknucJBrb+aNEiErwQoGqFqPPLAV77dgUoyfiw==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1654011100;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=7FREbcwOrqto74ZUT8TXex2Yk5yLeYzeDM3FJWSDdjA=;
-        b=RBrBx0m6Pk3Pb0KU7UdWvhnfmRLjkwha7sBwlF64y4TLtbH+lviDRMX1A5+u1UOpAQHKV0
-        PDQgwwLMQi7j7HCQ==
-From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To:     John Garry <john.garry@huawei.com>
-Cc:     Davidlohr Bueso <dave@stgolabs.net>, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, ejb@linux.ibm.com, tglx@linutronix.de
-Subject: Re: [PATCH 01/10] scsi/mvsas: Kill CONFIG_SCSI_MVSAS_TASKLET
-Message-ID: <YpY02u8XaF2BljiS@linutronix.de>
-References: <20220530231512.9729-1-dave@stgolabs.net>
- <20220530231512.9729-2-dave@stgolabs.net>
- <17747966-ea44-ebe5-3d79-df7c33b6a16e@huawei.com>
- <20220531145231.opypdzrlrg23ihil@offworld>
- <5d28e848-0b9d-2aaa-e00e-7888342d25a7@huawei.com>
- <YpYxfSYDbCJEh9PG@linutronix.de>
- <0ebd951e-f047-1930-4ace-f5199921bf9a@huawei.com>
+        with ESMTP id S1346698AbiEaRwd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 May 2022 13:52:33 -0400
+X-Greylist: delayed 62 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 31 May 2022 10:52:32 PDT
+Received: from esa.hc4959-67.iphmx.com (esa.hc4959-67.iphmx.com [216.71.153.94])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 654F95BE65;
+        Tue, 31 May 2022 10:52:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=seagate.com; i=@seagate.com; q=dns/txt; s=stxiport;
+  t=1654019552; x=1685555552;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=GbN3L71MpgJGmm3dULdhJiSFt9GSMZiq4yWrKPCs+8w=;
+  b=HSghhnA59nB5gbSJt/0GRpeQpucgd2RZkIFWPzkXk0PmVix8ipcIXVGT
+   lcN3ZQaMxlfHKZD+BOJErSYE4fU5Ey0dukMIum3/hJwQISstQVzPa2VyJ
+   ScelDUogKGnNcV+72qfsMjpLG2NJqG7ixqXRZ+Ey+bET3PvpjRIYM+ZbF
+   o=;
+Received: from mail-dm6nam08lp2042.outbound.protection.outlook.com (HELO NAM04-DM6-obe.outbound.protection.outlook.com) ([104.47.73.42])
+  by ob1.hc4959-67.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2022 10:51:29 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=TgEYBzn2q5pK0iEgXTFxQohVL+L4QY9pl9uFEb0BV3ctDYjvUU/ALsbcAvZi4S+9WlQ8XviJIMy2soRaeWyx6NENmkQ6rRDgg09h2k3kudU6dGmmlj3e+M9cgfNEkMs8+/w0Dxe/vVNo+5eUf9OoA1f/WWXBtSG737BRj3UevXt2VQfEBlx1rimJgArz6tTza6Qk66gsi9e6Qas0a94fHpHMH2k+GOfW5RlWM17E7Kz7Fp2FKmT1vysOZN933GgozshE24hvhhThePNaxhZjlhuEaEh6G2atQx8oobCrERcENGLUWZMUCg+hPctuMFWrY1kUfIBLxW04Pl6Eqc428Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=RRLj6wKCiSiFFKSLBFnw8fyjcuglBJHxeBxUBBhFpG8=;
+ b=cN6Ek57WO+iM8X6gPunL9BhHgx3cvw51JJzrPvo8TGalWc4u4on02ZGN3Zuid/gGdAeSE9FFsdqnzuHmPD/gci6gjQB6J1lXv/gUjoHXqW6BDkwx2Uz4qsdxt70iJRpKP+Nrct+aJ+nKyD1YCBeuXze5VEJLxRQaLC7Pxd6EBJfwQUU/5R/X27dVHF1SLiKRagYFbrzfcMkkvLUtYRcWw6JiJvSd7LThZX/oZpMJB3lCxLEpIDPk7Nvrlj0DjzMbb6jFXXXdCHwnTRYZFM8TWY5edfqXg9SkHCjYAaS3wtZrBELZcLAR3WSREpGX2/mCV9wvhhRqaDjD/ok6YfejbQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=softfail (sender ip
+ is 192.55.16.50) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=seagate.com;
+ dmarc=fail (p=reject sp=reject pct=100) action=oreject
+ header.from=seagate.com; dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=seagate.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=RRLj6wKCiSiFFKSLBFnw8fyjcuglBJHxeBxUBBhFpG8=;
+ b=LSgFHVNXxDbD5ZQW+C/SwSIslAvi1SSboT0b5VZbHehSxatyoAYNF36ECODUwMs8XqqXuIsxsk/jCWCPcxrEVg3oCOweaOGd0QDbVkfJO0lUAOmFJT9+zzcaFV6s5tqHqX+8AvtlNSuDMSAXhWfu+KR4LWL88ls2i9Xql51bX+k=
+Received: from CO2PR04CA0141.namprd04.prod.outlook.com (2603:10b6:104::19) by
+ DS7PR20MB4782.namprd20.prod.outlook.com (2603:10b6:8:9a::14) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.5314.12; Tue, 31 May 2022 17:51:27 +0000
+Received: from MW2NAM10FT050.eop-nam10.prod.protection.outlook.com
+ (2603:10b6:104:0:cafe::6c) by CO2PR04CA0141.outlook.office365.com
+ (2603:10b6:104::19) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5314.12 via Frontend
+ Transport; Tue, 31 May 2022 17:51:27 +0000
+X-MS-Exchange-Authentication-Results: spf=softfail (sender IP is 192.55.16.50)
+ smtp.mailfrom=seagate.com; dkim=none (message not signed)
+ header.d=none;dmarc=fail action=oreject header.from=seagate.com;
+Received: from sgspzesaa001.seagate.com (192.55.16.50) by
+ MW2NAM10FT050.mail.protection.outlook.com (10.13.155.13) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.5314.12 via Frontend Transport; Tue, 31 May 2022 17:51:26 +0000
+Received: from sgspiesaa001.seagate.com ([10.4.144.52])
+  by sgspzesaa001.seagate.com with ESMTP; 31 May 2022 10:51:44 -0700
+X-IronPort-AV: E=Sophos;i="5.91,266,1647327600"; 
+   d="scan'208";a="63170335"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+STX-Internal-Mailhost: TRUE
+Received: from unknown (HELO COL-U500816L003.ad.seagate.com) ([10.4.50.11])
+  by sgspiesaa001.seagate.com with ESMTP; 31 May 2022 10:44:20 -0700
+From:   Tyler Erickson <tyler.erickson@seagate.com>
+To:     damien.lemoal@opensource.wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+        muhammad.ahmad@seagate.com, tyler.erickson@seagate.com
+Subject: [PATCH 0/2] ata,sd: Fix reading concurrent positioning ranges
+Date:   Tue, 31 May 2022 11:50:07 -0600
+Message-Id: <20220531175009.850-1-tyler.erickson@seagate.com>
+X-Mailer: git-send-email 2.36.0.windows.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <0ebd951e-f047-1930-4ace-f5199921bf9a@huawei.com>
+Content-Transfer-Encoding: 8bit
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+Content-Type: text/plain
+X-MS-Office365-Filtering-Correlation-Id: 6a9cd91b-3a7b-4871-916a-08da432e2f87
+X-MS-TrafficTypeDiagnostic: DS7PR20MB4782:EE_
+X-Microsoft-Antispam-PRVS: <DS7PR20MB4782822830A28FE432E6613589DC9@DS7PR20MB4782.namprd20.prod.outlook.com>
+STX-Hosted-IronPort-Oubound: True
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: KptogStZJYhi3VYJs27a8H9Z+dXEGC+DisQHvqkLAGdUrqpZL9z3iJwYPEZ2Qm3Y45jOmcnZMlcXy4zcy+ivj9dbgntis1qf0JNuTCaVUDQIPSA8ZjQxvjlNT1VJ5N5nUDI9Bc0JX1PhcLlkofKe/sykGlM2DCFw+UqLoD2uIlEWXXvM59a/fS2OE9BzTUUxAxYxRFgbvfi1mFz02P1am6g0VVbKThA6q9dH1KXWnpTayIt4eGqlU+33pQqWxlOFNcUS1Ko+lIa99BAK/xCTABbCVG7X50p5BAqzSZ8hobGQh5/5TmP0WyYdQvHh2wJy8QqfO/WVhGl/AzqVmvpwh4UF7VhfKZPVnPmdKWWAvFOccu4daUJNvNaCR1a0S7ih3uPQrlbki8kaG/a5byGVmxAsY1LuriKsSyKF2bIlcnDVPW7F9ciWgSIU/Uvt9MN9q0q7PebEme4uRbsQ/cldxf0icqtSNY+A8ZS8cSBh53n/jbEW/8O2QcSegeEsQKA1NO1sNzgIo4iJIGXqSwgcfZKfqh7EJ25ef9s+W/0eFbHoTNP8rgYETcdAZUUJErqyqblSP/iAqeAX3+WiASTcr1L0Z/GInHCeyXvckFAXgLrF7rCWs1Y+WgHkTpnnmf8alV1N7BViW4jL6hCg/kHBTKoc6Zo4mYBicDT8c0q8paBPTRQFyCrv3K6bTkgDHHhnE3Dhp8pdWT2htzUHp8tW3w==
+X-Forefront-Antispam-Report: CIP:192.55.16.50;CTRY:SG;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:sgspzesaa001.seagate.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230001)(40470700004)(46966006)(36840700001)(8676002)(316002)(450100002)(70586007)(186003)(107886003)(8936002)(4744005)(81166007)(36860700001)(2616005)(86362001)(83380400001)(426003)(5660300002)(40460700003)(26005)(356005)(70206006)(4326008)(336012)(44832011)(82310400005)(7696005)(6666004)(47076005)(1076003)(36756003)(508600001)(2906002)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: seagate.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 May 2022 17:51:26.3036
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6a9cd91b-3a7b-4871-916a-08da432e2f87
+X-MS-Exchange-CrossTenant-Id: d466216a-c643-434a-9c2e-057448c17cbe
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=d466216a-c643-434a-9c2e-057448c17cbe;Ip=[192.55.16.50];Helo=[sgspzesaa001.seagate.com]
+X-MS-Exchange-CrossTenant-AuthSource: MW2NAM10FT050.eop-nam10.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR20MB4782
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2022-05-31 16:26:26 [+0100], John Garry wrote:
-> On 31/05/2022 16:17, Sebastian Andrzej Siewior wrote:
-> > > Sorry, maybe I was not clear, but I was just asking if there was a good
-> > > reason to disable interrupts at source while handling the interrupt, and not
-> > > the change to stop using a tasklet.
-> > Without reading the patch first: You need to disable the interrupt
-> > source while the tasklet/ threaded interrupt is handled. Otherwise the
-> > interrupt will keep coming and the tasklet/ threaded interrupt will have
-> > no chance to make progress. So the box will lock up. This is often
-> > overseen on fast machines because the interrupt needs a few usecs to
-> > trigger and so the CPU is able to make a little bit of progress between
-> > each trigger.
-> > 
-> 
-> ah, so we would need IRQF_ONESHOT flag set to keep the interrupt line
-> disabled until the threaded part completes, right?
+This patch series fixes reading the concurrent positioning ranges.
 
-This is one way of doing it and this is what threaded irqs do. However
-this requires all handler to specify that option which is not very
-compatible with shared handler.
+The first patch fixes reading this in libata, where it was reading
+more data than a drive necessarily supports, resulting in a 
+command abort. There was also a change to the SCSI translated
+data to put the VPD page length in the correct starting byte.
 
-> Thanks,
-> John
+In sd, the fix is adding 4 instead of 3 for the header length.
+Using 3 will always result in an error and was likely used incorrectly
+as T10 specifications list all tables starting at byte 0, and byte 3 is
+the page length, which would mean there are 4 total bytes before the
+remaining data that contains the ranges and other information.
 
-Sebastian
+Tyler Erickson (2):
+  libata: fix reading concurrent positioning ranges log
+  sd: Fixing interpretation of VPD B9h length
+
+ drivers/ata/libata-core.c | 21 +++++++++++++--------
+ drivers/ata/libata-scsi.c |  2 +-
+ drivers/scsi/sd.c         |  2 +-
+ 3 files changed, 15 insertions(+), 10 deletions(-)
+
+
+base-commit: af2d861d4cd2a4da5137f795ee3509e6f944a25b
+-- 
+2.25.1
+
