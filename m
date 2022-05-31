@@ -2,84 +2,72 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C47FFC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 31 May 2022 01:42:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E781C433FE
+	for <linux-scsi@archiver.kernel.org>; Tue, 31 May 2022 03:44:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243443AbiEaBmP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 May 2022 21:42:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54500 "EHLO
+        id S243710AbiEaDoI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 May 2022 23:44:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48384 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232076AbiEaBmO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 May 2022 21:42:14 -0400
-Received: from mail.meizu.com (edge05.meizu.com [157.122.146.251])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1BE642A19;
-        Mon, 30 May 2022 18:42:12 -0700 (PDT)
-Received: from IT-EXMB-1-125.meizu.com (172.16.1.125) by mz-mail12.meizu.com
- (172.16.1.108) with Microsoft SMTP Server (TLS) id 14.3.487.0; Tue, 31 May
- 2022 09:40:23 +0800
-Received: from [172.16.137.70] (172.16.137.70) by IT-EXMB-1-125.meizu.com
- (172.16.1.125) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.14; Tue, 31 May
- 2022 09:40:21 +0800
-Message-ID: <0578e737-86de-610b-038f-4bdada7f962e@meizu.com>
-Date:   Tue, 31 May 2022 09:40:20 +0800
+        with ESMTP id S232208AbiEaDoG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 May 2022 23:44:06 -0400
+Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C206B2FE63;
+        Mon, 30 May 2022 20:44:05 -0700 (PDT)
+Received: by mail-pg1-f180.google.com with SMTP id e66so11657158pgc.8;
+        Mon, 30 May 2022 20:44:05 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=GAS4if3QmSgkBQk84oxb36i3hcj+BJ5KC+SnP5v10YI=;
+        b=oxVUc2YeIKj55OK3bSrYZyu+jQu96K9bdywykN4HY6vFIMGd4c/V4H3EgVcLovpKDo
+         3xcyN++XcrKzcfcmFyeh21s/GjAzjgdEOTNIbOVlOSvodjFJa2+wl2HnNMTdG0g90KJ6
+         HCoFVxJojSVmA1tPAuvEhC3ARd+nOPTFIFHB9+MssDwVZNP9QjruQNmO3PxPmB8qm9rG
+         RSlIboOP/MOd3UhTj0K5VxjIlV6kHqgp3sNzyTtYJOjA70cYseUXMS24CGNzbsCeCYhz
+         WDoENiqX6L8fRxtTETQIWRcf+8vObjA78aWWfwfM1gAjLhcazsHw6x7rrDHiBp8IntZC
+         bX0Q==
+X-Gm-Message-State: AOAM532WTKWEBTM47iKMwQGSl6MAiHB954pHmFa7okipdxlIV5zG7OLl
+        ZJJeKIF3JrjAz8bhLI44MTY=
+X-Google-Smtp-Source: ABdhPJy3R+SEKpYof3apU+H/Lqu9cLFpPv2T1M1iRnABqADktJfJvoRXA+aytj78uxglaVYgQTUAQQ==
+X-Received: by 2002:a63:234d:0:b0:3fc:20f0:ec42 with SMTP id u13-20020a63234d000000b003fc20f0ec42mr6335327pgm.239.1653968645183;
+        Mon, 30 May 2022 20:44:05 -0700 (PDT)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id z6-20020a170903018600b0015e8d4eb25bsm10067380plg.165.2022.05.30.20.44.03
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 30 May 2022 20:44:04 -0700 (PDT)
+Message-ID: <8be31be0-8766-061c-2544-25e296048528@acm.org>
+Date:   Mon, 30 May 2022 20:44:02 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.9.1
-Subject: Re: [PATCH] scsi: hpsa: Fix pointer dereferenced before checking
-To:     Don Brace <don.brace@microchip.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     <storagedev@microchip.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-References: <1653899188-26544-1-git-send-email-baihaowen@meizu.com>
-From:   baihaowen <baihaowen@meizu.com>
-In-Reply-To: <1653899188-26544-1-git-send-email-baihaowen@meizu.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [172.16.137.70]
-X-ClientProxiedBy: IT-EXMB-1-126.meizu.com (172.16.1.126) To
- IT-EXMB-1-125.meizu.com (172.16.1.125)
+Subject: Re: [PATCH 1/6] dt-bindings: phy: Add FSD UFS PHY bindings
+Content-Language: en-US
+To:     Alim Akhtar <alim.akhtar@samsung.com>,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-phy@lists.infradead.org
+Cc:     devicetree@vger.kernel.org, robh+dt@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org, vkoul@kernel.org,
+        avri.altman@wdc.com, martin.petersen@oracle.com,
+        chanho61.park@samsung.com, pankaj.dubey@samsung.com,
+        linux-fsd@tesla.com, Bharat Uppal <bharat.uppal@samsung.com>
+References: <20220531012220.80563-1-alim.akhtar@samsung.com>
+ <CGME20220531012336epcas5p2fcafe14c90ad3e3a0901fccd62d15437@epcas5p2.samsung.com>
+ <20220531012220.80563-2-alim.akhtar@samsung.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20220531012220.80563-2-alim.akhtar@samsung.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-在 2022/5/30 下午4:26, Haowen Bai 写道:
-> The dev->raid_map is dereferencing before null checking, so move
->  it after checking.
->
-> Signed-off-by: Haowen Bai <baihaowen@meizu.com>
-> ---
->  drivers/scsi/hpsa.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index a47bcce3c9c7..fa785f60b1e6 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -5104,7 +5104,7 @@ static int hpsa_scsi_ioaccel_raid_map(struct ctlr_info *h,
->  {
->  	struct scsi_cmnd *cmd = c->scsi_cmd;
->  	struct hpsa_scsi_dev_t *dev = cmd->device->hostdata;
-> -	struct raid_map_data *map = &dev->raid_map;
-> +	struct raid_map_data *map;
->  	struct raid_map_disk_data *dd = &map->data[0];
->  	int is_write = 0;
->  	u32 map_index;
-> @@ -5137,6 +5137,8 @@ static int hpsa_scsi_ioaccel_raid_map(struct ctlr_info *h,
->  	if (!dev)
->  		return -1;
->  
-> +	map = &dev->raid_map;
-> +
->  	if (dev->in_reset)
->  		return -1;
->  
+On 5/30/22 18:22, Alim Akhtar wrote:
+> Adds tesla,fsd-ufs-phy compatible for Tesla FSD SoC
 
-Sorry, plz ignore this patch.
+What does FSD stand for? Please clarify this in the patch description.
 
-dev->raid_map is dereferenced, &dev->raid_map is just a pointer math for pointer address offset, so it would not cause a bug(dereferencing null pointer).
+Thanks,
 
--- 
-Haowen Bai
-
+Bart.
