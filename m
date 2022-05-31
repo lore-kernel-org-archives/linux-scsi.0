@@ -2,38 +2,38 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92366C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 31 May 2022 20:53:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D41AC4332F
+	for <linux-scsi@archiver.kernel.org>; Tue, 31 May 2022 21:25:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240467AbiEaUxj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 31 May 2022 16:53:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51332 "EHLO
+        id S1347995AbiEaVZf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 31 May 2022 17:25:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51556 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229598AbiEaUxi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 May 2022 16:53:38 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 399139CF6C;
-        Tue, 31 May 2022 13:53:36 -0700 (PDT)
+        with ESMTP id S1348012AbiEaVZb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 May 2022 17:25:31 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEFF69E9E2;
+        Tue, 31 May 2022 14:25:26 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id BD66361323;
-        Tue, 31 May 2022 20:53:35 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CFD5BC3411C;
-        Tue, 31 May 2022 20:53:34 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 2C5C4CE1689;
+        Tue, 31 May 2022 21:25:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 64DF7C385A9;
+        Tue, 31 May 2022 21:25:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654030415;
-        bh=Omau7Iujh3SBXH38YaZtA++1lnNyLLiJqRL7Ib/B9uc=;
+        s=k20201202; t=1654032323;
+        bh=JUWh9GAZfGjxtaad+vcDc6URL4qo6s3Tkd4XGZQtLcs=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=AX2/Q1m71wsiKUH4EqNImGLGUFIS7wUgtI+mW9BZTxGWTgZ+dBHke8Wo2Dzh09yHH
-         3Y9OCoutiibNWDinpQesOaQQxS+TsvrAX7/xWuiT/A5bn6o/06PPulnxtEwwe6gY8f
-         WGPVpsAGlT8OO41eXjHHexz7BkU1eisoMComzlZUJ9Gn8ub7+G4VHCs7mrEtYbHnVf
-         Lmgfz6wFm1954JcD2oI262mhxZrlaeWaD3K77r6VOhnaNzHLa1SmXsJC1n8BQiTLc9
-         SSNZBh4O2CkDDfjdxGd9jSskj+/+5CUSapgR93AcrsplNQOb6F/rKRZJm2PRehwy16
-         QWEnfe20zauMA==
-Date:   Tue, 31 May 2022 13:53:33 -0700
-From:   Jaegeuk Kim <jaegeuk@kernel.org>
-To:     Eric Biggers <ebiggers@kernel.org>
+        b=W48BBuzdlXEGSJYM0LKQwJLXIXj6kIR9i6gKrQ+APabTcg600neSFlie9CgvS9WNj
+         iIxuechCFZxFuxmBWtw0ZaR/ekQK4B++eLC7Y2FZoyG3n0+Lte06Wg8oRyk7gcXUUp
+         RjfA3SlC6eLPtZggV//YNyHMvfldwO3PJuX6CYHHouurWTyvq+5+bFy6AxmxeboF6+
+         mwV+gMVJ4ESZimo692LFs7bKe3mrT7vpgDMSw49FtnOgA2ju8BVamQlSIiimkOgueJ
+         gLV+xuG1wRugZAOtMKM0z4C/pCNF0xSIJBn1uirjT+CBx098p9FQWDLRPX5ZBBgg0J
+         deT2dIAkSaBbQ==
+Date:   Tue, 31 May 2022 21:25:21 +0000
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Jaegeuk Kim <jaegeuk@kernel.org>
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Bart Van Assche <bvanassche@acm.org>,
@@ -44,75 +44,26 @@ Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         Stanley Chu <stanley.chu@mediatek.com>,
         Can Guo <cang@codeaurora.org>
 Subject: Re: [PATCH] scsi: ufs: add a quirk to disable FUA support
-Message-ID: <YpaATWTiipNERoVF@google.com>
+Message-ID: <YpaHwds1zYRwua3+@gmail.com>
 References: <20220531201053.3300018-1-jaegeuk@kernel.org>
  <YpZ71MU7+DRedq5S@gmail.com>
+ <YpaATWTiipNERoVF@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YpZ71MU7+DRedq5S@gmail.com>
+In-Reply-To: <YpaATWTiipNERoVF@google.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 05/31, Eric Biggers wrote:
-> On Tue, May 31, 2022 at 01:10:53PM -0700, Jaegeuk Kim wrote:
-> > UFS stack shows very low performance of FUA comparing to write and cache_flush.
-> > Let's add a quirk to adjust it.
-> > 
-> > E.g., average latency according to the chunk size of write
-> > 
-> > Write(us/KB)	4	64	256	1024	2048
-> > FUA		873.792	754.604	995.624	1011.67	1067.99
-> > CACHE_FLUSH	824.703	712.98	800.307	1019.5	1037.37
-> > 
-> > Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
-> > ---
-> >  drivers/scsi/ufs/ufshcd.c | 3 +++
-> >  drivers/scsi/ufs/ufshcd.h | 5 +++++
-> >  2 files changed, 8 insertions(+)
-> > 
-> > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> > index 3f9caafa91bf..811f3467879c 100644
-> > --- a/drivers/scsi/ufs/ufshcd.c
-> > +++ b/drivers/scsi/ufs/ufshcd.c
-> > @@ -5035,6 +5035,9 @@ static int ufshcd_slave_configure(struct scsi_device *sdev)
-> >  	 */
-> >  	sdev->silence_suspend = 1;
-> >  
-> > +	if (hba->quirks & UFSHCD_QUIRK_BROKEN_FUA)
-> > +		sdev->broken_fua = 1;
-> > +
-> >  	ufshcd_crypto_register(hba, q);
-> >  
-> >  	return 0;
-> > diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> > index 94f545be183a..6c480c6741d6 100644
-> > --- a/drivers/scsi/ufs/ufshcd.h
-> > +++ b/drivers/scsi/ufs/ufshcd.h
-> > @@ -602,6 +602,11 @@ enum ufshcd_quirks {
-> >  	 * support physical host configuration.
-> >  	 */
-> >  	UFSHCD_QUIRK_SKIP_PH_CONFIGURATION		= 1 << 16,
-> > +
-> > +	/*
-> > +	 * This quirk disables FUA support.
-> > +	 */
-> > +	UFSHCD_QUIRK_BROKEN_FUA				= 1 << 17,
-> >  };
+On Tue, May 31, 2022 at 01:53:33PM -0700, Jaegeuk Kim wrote:
+> > Also, this patch does nothing by itself.  Which UFS host driver(s) need this
+> > quirk bit?  Can you update them to use it?  Or do they all need this, in which
+> > case a quirk bit would be unnecessary?
 > 
-> "Broken" is ambiguous.  IIUC, the issue is that FUA performance is very bad, not
-> that it doesn't work.  Can you clarify the intent in the comment?
+> Likewise other quick bits, using this is up to SoC or UFS vendors. I
+> think that combination is up to OEMs who is building the product.
 
-My intent is FUA was supposed to be better than write+cache_flush.
+Of the UFS host drivers in the upstream kernel, which ones actually need this?
 
-> 
-> Also, this patch does nothing by itself.  Which UFS host driver(s) need this
-> quirk bit?  Can you update them to use it?  Or do they all need this, in which
-> case a quirk bit would be unnecessary?
-
-Likewise other quick bits, using this is up to SoC or UFS vendors. I
-think that combination is up to OEMs who is building the product.
-
-> 
-> - Eric
+- Eric
