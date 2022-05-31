@@ -2,137 +2,226 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93F26C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 31 May 2022 07:58:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97DB1C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 31 May 2022 08:05:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244630AbiEaH6E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 31 May 2022 03:58:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47826 "EHLO
+        id S240222AbiEaIFu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 31 May 2022 04:05:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56956 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237514AbiEaH6D (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 May 2022 03:58:03 -0400
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 503C154681
-        for <linux-scsi@vger.kernel.org>; Tue, 31 May 2022 00:58:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1653983882; x=1685519882;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
-  b=IlX/dQXfEmYpTWNx38b8GHRnPSs/x7pMaJBMcyXU6iLHpU9AGT5mvo9K
-   t2E79ICpTWhF7ld/13PsnkHdwjqcXUld8vctQxdYD2qcMKMa4MIyiB1hw
-   GA8V05UThkaHvQ3iMmb346/Ux6P20VmI7SRjo/zHLfrX8Ppt5DvQm7CFH
-   64F5fiKCEGtfrwZ/r2xmIHyYGS7jO0NQo/djilAGNoLtETQhClHX1CYik
-   rsG/YXXYcPMOeZvYu+Li3/qNI/xoN/rMLOn/BhY/LUcZgp6qHHrS2hvVC
-   s7Q0wTMtqklv1UodL2iy5pYmw3bjcOpkUTLToZbNDUKu+GWikwkXmd/aA
-   w==;
-X-IronPort-AV: E=Sophos;i="5.91,264,1647273600"; 
-   d="scan'208";a="306104204"
-Received: from mail-dm6nam10lp2100.outbound.protection.outlook.com (HELO NAM10-DM6-obe.outbound.protection.outlook.com) ([104.47.58.100])
-  by ob1.hgst.iphmx.com with ESMTP; 31 May 2022 15:57:37 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=UjUCBDp+q+LUx6VOFMM/INhM6o6iZBNbs2AuREsO10dmF4ZB6efvjPmvgUfdLPWhlfqhgzarXWZnN2Q06adP7+EHr0U/UJLdfU4YCOfMSlPiMXhiI559HnOO8kLrxfYNM3bx+K1+y5rsE7tvmGj2/MaPQzxHsZuR92agpUarYMQJm1abqqDkYvUAlM+hImaJG4ZlrnDILEOYcSUQLL2YnghjY/KG1Rucepq+1uQvEQ8U/OyyNnInWpGLp/d0nTCiNibtQxi5HicOV/D9JRKOUn6EYUJPP+eSlehy3llrb/Cfph9UqWlUjfENoMnwLiXbnlvkmmyn/2SNuJy56RYIHQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
- b=D8Fdx4cWHzahxIWpeGyzG+CEYBATlmVLbpalOIsL47G7KdMQszH/2JTMUhDw1Nqz4iJKVl/DSU0C30XHQFmHmkg9dGLS3lUbPYYBVIO7BQvuhoKS0qhQBA5m0h4lDbiUjaYJLGdiFheWjwK4HTj49cWSMEAZBHFTds8w+kUDe5YywhD68wVeOQvc7C1kgOZ8972GzSIc37JD9LdKrlKhtUOdKWmP5h7Cl8Dpzvpv5sSuccyuTSZ4+oDoywmv+UnTPU0bLMwdNR2x/pE9bt2iPZ6LzHNop8pKu4gK+k/6ivgD6+i1CYDw/2aFzKOZ8xALU9bs5qMzbkWrXkAeGiV+9g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
- b=awP+uU0QY28p7dUrZy5Cgc/tYHIKu+oKLb2+/LgDq5kpEPXiEQHYVKMAYxkLu0Ft0IN/n84mYe2ZshbFNY711Z7MCQ0KPeW60+xgiwWxidiHNIEEziemayQgiCKeMrnsjI04kizKlaxbBz3ae2ZktRQ5wIP4P26f+vQhD5hPp/s=
-Received: from PH0PR04MB7416.namprd04.prod.outlook.com (2603:10b6:510:12::17)
- by DM6PR04MB5884.namprd04.prod.outlook.com (2603:10b6:5:163::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5293.13; Tue, 31 May
- 2022 07:57:36 +0000
-Received: from PH0PR04MB7416.namprd04.prod.outlook.com
- ([fe80::81de:9644:6159:cb38]) by PH0PR04MB7416.namprd04.prod.outlook.com
- ([fe80::81de:9644:6159:cb38%4]) with mapi id 15.20.5293.019; Tue, 31 May 2022
- 07:57:36 +0000
-From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-CC:     Dongliang Mu <mudongliangabcd@gmail.com>
-Subject: Re: [PATCH v2 2/2] scsi: sd_zbc: prevent zone information memory leak
-Thread-Topic: [PATCH v2 2/2] scsi: sd_zbc: prevent zone information memory
- leak
-Thread-Index: AQHYdIVccbC4BUNflECNs0aJ1nktKA==
-Date:   Tue, 31 May 2022 07:57:36 +0000
-Message-ID: <PH0PR04MB741680C12F4AD51CBEA125E99BDC9@PH0PR04MB7416.namprd04.prod.outlook.com>
-References: <20220531002812.527368-1-damien.lemoal@opensource.wdc.com>
- <20220531002812.527368-3-damien.lemoal@opensource.wdc.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 88334fa2-f449-4e44-057a-08da42db39cf
-x-ms-traffictypediagnostic: DM6PR04MB5884:EE_
-x-microsoft-antispam-prvs: <DM6PR04MB58842AD34144C3911AD50A309BDC9@DM6PR04MB5884.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: r1Nppv8JJU5rZuV1BchaVFFMildjeW+BzLqzFwXWWutKAdmZU2IEUjtonvqyjBEXLczqLtkduO+mWM2T6yueNFPuSNHprw0LZ/E72lyN1jDefuXaKkHzU6SuMQaxHhXuZDYh9I1vZJnaDJsuZm3sYegkITqvW3w1cnrmhqkljgGOdoH0BypV83+UxxH7g4CvE/6+aAvjpuqKdpb6CXX1JgYAxd9wEOgSZ1LVL2SVTIc0whK83NYcbthGB9UFMmNZw3H4/gBzCc46MimWy5N81zezBePKu2I2iq2DAR5gHyfcBVDDAV9dM+PJfjPEbEzrBPovtaKIl5VkIlPJr0EDJI0mKLj6Tmuj6+aYzYV3X64rPATfCmb2QHrplLW9j11m5JODRdb3KwN/P0mWMJ/4Q+LGti8ZZ/bPS5E90AaIyUVf+QOWyiTu0uV4ezduVCBz0gCMUQGlArmcSBT/g8ZWmdXv3l2rSFh/PEGRhFCWh3ZjAIRx8UOoxJdGxh89T9KYXikhA9KeKxYyItmLFpiTZ/zsdIkOAdW8XDwDfx+fEynFZHNQGOmdKNsFbe3i9zBzAc7DeJGoXl8VHXcV3Ex1dQstT5DxHpsPmzEFm3qWEUMhHfyK7kIJQiMtcPCNzADa6F2iAU/h0j3GLaiXp9BrXGQ/1zo5oD/aL6VRICQZlYqe0Tis6pXfmAF9VB1Ypxg5JiSAIPS5RPvGPLvW+yLkQw==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR04MB7416.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(38100700002)(316002)(82960400001)(186003)(19618925003)(5660300002)(33656002)(9686003)(7696005)(8676002)(110136005)(122000001)(558084003)(38070700005)(6506007)(8936002)(71200400001)(66446008)(64756008)(66556008)(52536014)(66476007)(4326008)(66946007)(91956017)(76116006)(86362001)(2906002)(55016003)(508600001)(4270600006);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 2
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?UAi7sl1gW+jT3hvnE/hIyT6WB9vKAd0G8rEAall+Jod5/wXsv0oyhK0PYyqm?=
- =?us-ascii?Q?hXiP7IG/slNj850smKtsKSS8djS563zkaKDiz3Oc66ygFZW26wK1jSgCsbSS?=
- =?us-ascii?Q?qOdwO/RMroIdUUj15IjPtGNk983Imi3B58rD50Kht1q9mW0+RNjzBaaw++3l?=
- =?us-ascii?Q?pwvQH1cDC6rr/riA4p4aU85m6Z/H7G8v43lPJc3sHLRwXDiImbEfGzxBVZrg?=
- =?us-ascii?Q?CskNvBlQ+4G7hUnt/vmBPheI59Ls2JDexyIeL8EmGbnJv8gtlGaqBnX6kN8h?=
- =?us-ascii?Q?EsDmOm+lFUclhIw5uTMP7bFm7YdXr/fTaoHOrE1AslIT+7thGXiZoxHExYUx?=
- =?us-ascii?Q?4Zmc+VisV7DFHQ69XnzPDUNwezNT2/nrQTgO/JyDUVQSRnc88gA0e1O7mtkK?=
- =?us-ascii?Q?BOkBFINFK+Qd4qXC6fV5wUxZX4JjBvjrcDivifMRXZhM6U7aufimZQRJU4Vl?=
- =?us-ascii?Q?ErPFiuVJeerXs8yPYCplFqOmfAFpR9ue6F/uMHDgJiMog/94jzE/t628VF+L?=
- =?us-ascii?Q?Zy+n8z1Uz+qVrI1pa+UbKL+MzHMwMcinOiE63Dh8RPr83bIAa/mxjh8Zkvln?=
- =?us-ascii?Q?HAxywEb4fqjZ5cV/oDLOKcEYvcuIaAmnUh5XzLkKqDJ/6RPrWFdXYWXxjIvB?=
- =?us-ascii?Q?zZNlC4wukouN7008XLnp4D59UO4oc1N+yYE4Cj1GheQWRf7XmoTIiUVx19od?=
- =?us-ascii?Q?VIXRzxYA5RcQ9MAPHk1MHEb7xqBdCxYZ4q2xidXZU3fA0ENQ5rrVm4eA/AJD?=
- =?us-ascii?Q?OisCREZVIMKwFAoOmvB+m3N1Uy75hQTdd6NIdJByTR4z2OhaOJ7VDecF8JXo?=
- =?us-ascii?Q?pYDCKmtN9S1XZuNaqhDpVhILvO0mSfw+gFl3Xddy/XWb4IngkV54sLlpoM4c?=
- =?us-ascii?Q?gnIuOhAUqnb8qRANYBWN77fu6k4txo3ummzTLovamkPYp7IUNB9NgT0OKn1h?=
- =?us-ascii?Q?XLQTv8K83UaGyaIt6TU74iAgW1M9eZWM0qBgXiShSavfZ82ZghDEprG03IzX?=
- =?us-ascii?Q?OBglByscSN6vnXcodH4JB4ZSmim82NwaBPD7msdnexbCwGPaNZmKDVQbhSeZ?=
- =?us-ascii?Q?WwOpvLRdSfgx7fgZqF3KCbYj/QAz0qOX2UdK6V5nPkVnqC8KjijbHIuxtSKb?=
- =?us-ascii?Q?l9rjpz41tzNFoXpfgE2tCYfHYCHDRovMm2jgucDywYk4HH28Qa89vZXyRfHQ?=
- =?us-ascii?Q?ss1Mth3uPBsg8izUt+N/o7AoGuhKeY9/t2uNZ7T/qoVZrivZIxQQ+Ynr4uNf?=
- =?us-ascii?Q?B2X9Kuscd2ks5x0bYsfTEFo6aaZXJOwSoiLXYsqnrDhd0Q31XtRdRnQGWDLv?=
- =?us-ascii?Q?zMrRo66PhrbYm/FnaVZCZX2dItJn0KpqoVrD14sRx4RecBS+7HVne19C48Q4?=
- =?us-ascii?Q?kxzABf98OFZg4CSAQ4thXXQh6A0WzAbl/rnraUXl1+tLukjGxp78l1gEHnp3?=
- =?us-ascii?Q?GMxAzfxaO/LXuZNh0L33QAc63McoUveUlEJcgshPRHdhi/AUOFexqdUgp2Fv?=
- =?us-ascii?Q?HCpL3lG6klcptzm5jU6ctiGf/ZmNqWXbEUjZLnVnr5mcJsAB1/LsYw8FaycH?=
- =?us-ascii?Q?HAyK3M8Kr9lcVjrWS6VyoghIvqA8vyqsZ1uP1eDZ/x0UTcnTYIX7RRELibzH?=
- =?us-ascii?Q?wIIVqtjc78fOlI3DtaG1JC1kIhyuw/XH9eZWlGFpFtLeCdayt+3X9cb118OL?=
- =?us-ascii?Q?zyNeQFnFl+s23OhYZuVT6yxA8MzNaTzw1zb+lAYdBYU8hW/9+cod5yggsT44?=
- =?us-ascii?Q?KaV8X6LeWSOP+pwT6Ic+eeoz/+435Z2sZPCefoEDdVsdikG4iu2ulSlqWkW4?=
-x-ms-exchange-antispam-messagedata-1: FNn9vWvjQXtY5xT39eJ9hDFUUqRSyjnZIJJPrFMcFmnlgvprWitX5LHA
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S237948AbiEaIFs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 May 2022 04:05:48 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AAF7091559
+        for <linux-scsi@vger.kernel.org>; Tue, 31 May 2022 01:05:46 -0700 (PDT)
+Received: from fraeml735-chm.china.huawei.com (unknown [172.18.147.206])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LC4VB0X8Tz67xZG;
+        Tue, 31 May 2022 16:01:22 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml735-chm.china.huawei.com (10.206.15.216) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Tue, 31 May 2022 10:05:44 +0200
+Received: from [10.47.88.115] (10.47.88.115) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Tue, 31 May
+ 2022 09:05:43 +0100
+Message-ID: <17747966-ea44-ebe5-3d79-df7c33b6a16e@huawei.com>
+Date:   Tue, 31 May 2022 09:05:42 +0100
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR04MB7416.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 88334fa2-f449-4e44-057a-08da42db39cf
-X-MS-Exchange-CrossTenant-originalarrivaltime: 31 May 2022 07:57:36.1329
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: B3rnR/BwskLqSjLoGwsyvpNTEcGYrOfrMHNQ9UYxDc8a4z07GjuOBYwpkUb1cYV3yLXce1SsHqGzzXZj0USBdd5uHYW6Hkwj77No9vGofFQ=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR04MB5884
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH 01/10] scsi/mvsas: Kill CONFIG_SCSI_MVSAS_TASKLET
+To:     Davidlohr Bueso <dave@stgolabs.net>, <linux-scsi@vger.kernel.org>
+CC:     <martin.petersen@oracle.com>, <ejb@linux.ibm.com>,
+        <bigeasy@linutronix.de>, <tglx@linutronix.de>
+References: <20220530231512.9729-1-dave@stgolabs.net>
+ <20220530231512.9729-2-dave@stgolabs.net>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <20220530231512.9729-2-dave@stgolabs.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.88.115]
+X-ClientProxiedBy: lhreml730-chm.china.huawei.com (10.201.108.81) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Looks good,=0A=
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>=0A=
+On 31/05/2022 00:15, Davidlohr Bueso wrote:
+> Tasklets have long been deprecated as being too heavy on the system
+> by running in irq context - and this is not a performance critical
+> path. If a higher priority process wants to run, it must wait for
+> the tasklet to finish before doing so. A more suitable equivalent
+> is to converted to threaded irq instead.
+
+/s/converted/convert/
+
+> 
+> As such remove CONFIG_SCSI_MVSAS_TASKLET (which is horrible to begin
+> with) and continue to do the async work, unconditionally now, just
+> in task context. Just as with the tasklet version, device interrupts
+> (MVS_IRQ_SAS_A/B) continues to be disabled from when the work was
+
+/s/continues/continue/
+
+> putted until it is actually complete. 
+
+Question: Can there be any good reason to do this?
+
+> Because there are no guarantees
+> vs ksoftirqd, if this is broken for threaded irqs, then they are
+> also broken for tasklets.
+> 
+> Signed-off-by: Davidlohr Bueso <dave@stgolabs.net>
+
+Apart some comments/nits:
+
+Reviewed-by: John Garry <john.garry@huawei.com>
+
+> ---
+>   drivers/scsi/mvsas/Kconfig   |  7 ------
+>   drivers/scsi/mvsas/mv_init.c | 44 ++++++------------------------------
+>   drivers/scsi/mvsas/mv_sas.h  |  1 -
+>   3 files changed, 7 insertions(+), 45 deletions(-)
+> 
+> diff --git a/drivers/scsi/mvsas/Kconfig b/drivers/scsi/mvsas/Kconfig
+> index 79812b80743b..e9dd8dc84b1c 100644
+> --- a/drivers/scsi/mvsas/Kconfig
+> +++ b/drivers/scsi/mvsas/Kconfig
+> @@ -23,10 +23,3 @@ config SCSI_MVSAS_DEBUG
+>   	help
+>   		Compiles the 88SE64XX/88SE94XX driver in debug mode.  In debug mode,
+>   		the driver prints some messages to the console.
+> -config SCSI_MVSAS_TASKLET
+> -	bool "Support for interrupt tasklet"
+> -	default n
+> -	depends on SCSI_MVSAS
+> -	help
+> -		Compiles the 88SE64xx/88SE94xx driver in interrupt tasklet mode.In this mode,
+> -		the interrupt will schedule a tasklet.
+> diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+> index 2fde496fff5f..f36b270ba502 100644
+> --- a/drivers/scsi/mvsas/mv_init.c
+> +++ b/drivers/scsi/mvsas/mv_init.c
+> @@ -146,12 +146,10 @@ static void mvs_free(struct mvs_info *mvi)
+>   	kfree(mvi);
+>   }
+>   
+> -#ifdef CONFIG_SCSI_MVSAS_TASKLET
+> -static void mvs_tasklet(unsigned long opaque)
+> +static irqreturn_t mvs_async(int irq, void *opaque)
+>   {
+>   	u32 stat;
+>   	u16 core_nr, i = 0;
+> -
+>   	struct mvs_info *mvi;
+>   	struct sas_ha_struct *sha = (struct sas_ha_struct *)opaque;
+
+nit: you could have dropped this cast
+
+>   
+> @@ -172,46 +170,29 @@ static void mvs_tasklet(unsigned long opaque)
+>   out:
+>   	MVS_CHIP_DISP->interrupt_enable(mvi);
+>   
+> +	return IRQ_HANDLED;
+>   }
+> -#endif
+>   
+>   static irqreturn_t mvs_interrupt(int irq, void *opaque)
+>   {
+>   	u32 stat;
+>   	struct mvs_info *mvi;
+>   	struct sas_ha_struct *sha = opaque;
+> -#ifndef CONFIG_SCSI_MVSAS_TASKLET
+> -	u32 i;
+> -	u32 core_nr;
+> -
+> -	core_nr = ((struct mvs_prv_info *)sha->lldd_ha)->n_host;
+> -#endif
+>   
+>   	mvi = ((struct mvs_prv_info *)sha->lldd_ha)->mvi[0];
+>   
+>   	if (unlikely(!mvi))
+>   		return IRQ_NONE;
+> -#ifdef CONFIG_SCSI_MVSAS_TASKLET
+> +
+>   	MVS_CHIP_DISP->interrupt_disable(mvi);
+> -#endif
+>   
+>   	stat = MVS_CHIP_DISP->isr_status(mvi, irq);
+>   	if (!stat) {
+> -	#ifdef CONFIG_SCSI_MVSAS_TASKLET
+>   		MVS_CHIP_DISP->interrupt_enable(mvi);
+> -	#endif
+>   		return IRQ_NONE;
+>   	}
+>   
+> -#ifdef CONFIG_SCSI_MVSAS_TASKLET
+> -	tasklet_schedule(&((struct mvs_prv_info *)sha->lldd_ha)->mv_tasklet);
+> -#else
+> -	for (i = 0; i < core_nr; i++) {
+> -		mvi = ((struct mvs_prv_info *)sha->lldd_ha)->mvi[i];
+> -		MVS_CHIP_DISP->isr(mvi, irq, stat);
+> -	}
+> -#endif
+> -	return IRQ_HANDLED;
+> +	return IRQ_WAKE_THREAD;
+>   }
+>   
+>   static int mvs_alloc(struct mvs_info *mvi, struct Scsi_Host *shost)
+> @@ -557,14 +538,6 @@ static int mvs_pci_init(struct pci_dev *pdev, const struct pci_device_id *ent)
+>   		}
+>   		nhost++;
+>   	} while (nhost < chip->n_host);
+> -#ifdef CONFIG_SCSI_MVSAS_TASKLET
+> -	{
+> -	struct mvs_prv_info *mpi = SHOST_TO_SAS_HA(shost)->lldd_ha;
+> -
+> -	tasklet_init(&(mpi->mv_tasklet), mvs_tasklet,
+> -		     (unsigned long)SHOST_TO_SAS_HA(shost));
+> -	}
+> -#endif
+>   
+>   	mvs_post_sas_ha_init(shost, chip);
+>   
+> @@ -575,8 +548,9 @@ static int mvs_pci_init(struct pci_dev *pdev, const struct pci_device_id *ent)
+>   	rc = sas_register_ha(SHOST_TO_SAS_HA(shost));
+>   	if (rc)
+>   		goto err_out_shost;
+> -	rc = request_irq(pdev->irq, irq_handler, IRQF_SHARED,
+> -		DRV_NAME, SHOST_TO_SAS_HA(shost));
+> +	rc = request_threaded_irq(pdev->irq, irq_handler, mvs_async,
+
+any reason not to use devm version?
+
+> +				  IRQF_SHARED, DRV_NAME,
+> +				  SHOST_TO_SAS_HA(shost));
+>   	if (rc)
+>   		goto err_not_sas;
+>   
+> @@ -607,10 +581,6 @@ static void mvs_pci_remove(struct pci_dev *pdev)
+>   	core_nr = ((struct mvs_prv_info *)sha->lldd_ha)->n_host;
+>   	mvi = ((struct mvs_prv_info *)sha->lldd_ha)->mvi[0];
+>   
+> -#ifdef CONFIG_SCSI_MVSAS_TASKLET
+> -	tasklet_kill(&((struct mvs_prv_info *)sha->lldd_ha)->mv_tasklet);
+> -#endif
+> -
+>   	sas_unregister_ha(sha);
+>   	sas_remove_host(mvi->shost);
+>   
+> diff --git a/drivers/scsi/mvsas/mv_sas.h b/drivers/scsi/mvsas/mv_sas.h
+> index 509d8f32a04f..a0e87fdab98a 100644
+> --- a/drivers/scsi/mvsas/mv_sas.h
+> +++ b/drivers/scsi/mvsas/mv_sas.h
+> @@ -403,7 +403,6 @@ struct mvs_prv_info{
+>   	u8 scan_finished;
+>   	u8 reserve;
+>   	struct mvs_info *mvi[2];
+> -	struct tasklet_struct mv_tasklet;
+>   };
+>   
+>   struct mvs_wq {
+
