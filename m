@@ -2,186 +2,352 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12CB5C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 31 May 2022 07:30:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90DE7C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 31 May 2022 07:37:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244516AbiEaHaN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 31 May 2022 03:30:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41102 "EHLO
+        id S244555AbiEaHhb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 31 May 2022 03:37:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58572 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244525AbiEaH36 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 May 2022 03:29:58 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 891A4939A8;
-        Tue, 31 May 2022 00:29:57 -0700 (PDT)
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24V11hU9019288;
-        Tue, 31 May 2022 07:29:52 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : content-type : mime-version; s=corp-2021-07-09;
- bh=WRJ7gVoOS2lJAM/1dtCehdfHgaaGNUWwa3v4t36H2DQ=;
- b=npe624ETvJEPf9snP7sRQBDvAKF3M1Gc94o51MFYcxnfZo4NAgT5/v7eq9wXYcS6uUTR
- kafg17qWocq5pyvL6uzZNDL+hc+oIvrZqa+eTG2hHr7loJIOxl0jlDPDVzgiTip3Wc+L
- wS1kGY+gMYPh5wzq+0k7v+vs0fngKfVOr2A0WV49z3JULtrGWbSeqRdP7SGsy56ANtk4
- xz4bu5Zv6plnGsBl44a7VlP6IeT1bMfw2ni5Z8fMiiUqaGjYZvulnejGmVfQE/jdoa5h
- kY5eSLXMJlqfXjG6Sc4bpH96yE0+puH6Jpwbfen+aEe0QaW6joDdneQxjkXZa/QiiUSv IQ== 
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3gbcahm9ph-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 31 May 2022 07:29:52 +0000
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 24V7A694002115;
-        Tue, 31 May 2022 07:29:51 GMT
-Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2175.outbound.protection.outlook.com [104.47.55.175])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3gc8p1awd1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 31 May 2022 07:29:51 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=nNMzLCYUp9uBE3fFCi6BCO39qdYJgWS2rxJytWQA6yTG0JZ1nvqydzcSAIZFbaGOoCOFtWYMDGCaU2dq+RLqb9Xe4drktzF55y5HK/Twrcsilg3FG/pMn4FThP125u+HBFvevG8MVlXpXVDcAdDjZw9DqnSAlyWdGXSOT4edwN4tFdf38rfzn8ttu2Fon9yk7KnGrmaq75kQ3uLxgeU0k2ABsKu6kAwnQRIl58pAmcwWGpl2w75fRpRmzu0kuY02l1SOoeQY4VdXF+bbmekrVbxXg4/cmtzlPyIxl73WF2a2YJvT0euBPZSRjIAi3ySQjgnx3VRYUpExkkMzQzDhow==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=WRJ7gVoOS2lJAM/1dtCehdfHgaaGNUWwa3v4t36H2DQ=;
- b=OUTWYhDwy3uplMub/2WexvA5qtKNvjQzD4yY/t68ouj/H19FrYMLACom8S8Vxd0D4yKsL2O0HXU2n76M2Fiwlu3xJLClyBYicJfSRjqj9cOchlpCpT1I4gzcS+HblZw6gv9pViviJVCjESiaDoyEGdmSj9nr7my+R58upubLmXZdnkOtOh46sHAlhcHKQlxEsgHyjPKDqLN+PlwOjhYulFP1ZS1Cnum7HT/fhG9f/6JTX5WSN+8SutkQrU0dwDy4V6FYUSMcB2M9MNfRx+CwwBU0HCLImlEb/T2I/frb4R2hzGDMSCCa9+Y+sfiBGpCiIgVAjblQUsyALiGYGhRdDg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=WRJ7gVoOS2lJAM/1dtCehdfHgaaGNUWwa3v4t36H2DQ=;
- b=veK0MYKLd8KiTRunfXM4uzMzHOBwo0FaZ7mfsu4wqyej3yiK5vTiGzcViwzm9p0gWiEGiBx5/eYDlS02750kW277+cckjOZ73xbIMKmFly66imWgTbBiN0gn8yAHLUKEh2ZDZdHMqeXC4tv3fsUdYdwy/96AAs5/HfzAZwp6L1g=
-Received: from MWHPR1001MB2365.namprd10.prod.outlook.com
- (2603:10b6:301:2d::28) by DM5PR1001MB2204.namprd10.prod.outlook.com
- (2603:10b6:4:2e::22) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.22; Tue, 31 May
- 2022 07:29:49 +0000
-Received: from MWHPR1001MB2365.namprd10.prod.outlook.com
- ([fe80::86f:81ba:9951:5a7e]) by MWHPR1001MB2365.namprd10.prod.outlook.com
- ([fe80::86f:81ba:9951:5a7e%2]) with mapi id 15.20.5293.019; Tue, 31 May 2022
- 07:29:49 +0000
-Date:   Tue, 31 May 2022 10:29:38 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Bart Van Assche <bvanassche@acm.org>
-Cc:     Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        Bean Huo <beanhuo@micron.com>, linux-scsi@vger.kernel.org,
-        kernel-janitors@vger.kernel.org
-Subject: [PATCH] scsi: ufs: clean up ufshpb_check_hpb_reset_query()
-Message-ID: <YpXD4nLc4iCxpw91@kili>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Mailer: git-send-email haha only kidding
-X-ClientProxiedBy: ZR0P278CA0111.CHEP278.PROD.OUTLOOK.COM
- (2603:10a6:910:20::8) To MWHPR1001MB2365.namprd10.prod.outlook.com
- (2603:10b6:301:2d::28)
+        with ESMTP id S244533AbiEaHha (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 May 2022 03:37:30 -0400
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 530E432EC2
+        for <linux-scsi@vger.kernel.org>; Tue, 31 May 2022 00:37:26 -0700 (PDT)
+Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20220531073720epoutp043d9697e89cb0d8b1fcb39ca0bff2082a~0IHLGnJ6r3092630926epoutp04g
+        for <linux-scsi@vger.kernel.org>; Tue, 31 May 2022 07:37:20 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20220531073720epoutp043d9697e89cb0d8b1fcb39ca0bff2082a~0IHLGnJ6r3092630926epoutp04g
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1653982640;
+        bh=mSG4SRps0dzzOXpIJuEmtx59pBt9ay4W1NpocBn3UAI=;
+        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+        b=DxcFzAFAG0FqUY3/jjCK4ZnP2Q7n7C/WiUWnBKSgYAQqCN5NR7qygTBgMueY6Ei9G
+         3bKZgoxfd/eI88MWyWSdtPCiHocSYUcG5IKKTBDkXE6ojjSzbJdp2dOUFlDKvo0goD
+         wDpXVWUa2S7vtQYJiRj4vBMn1zjZZ9h/iCyroLQY=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas2p2.samsung.com (KnoxPortal) with ESMTP id
+        20220531073719epcas2p218a08a6703c9f22ee285214f6470ac57~0IHKbYwzG2219922199epcas2p2c;
+        Tue, 31 May 2022 07:37:19 +0000 (GMT)
+Received: from epsmges2p1.samsung.com (unknown [182.195.36.101]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4LC3yP1rkdz4x9QG; Tue, 31 May
+        2022 07:37:17 +0000 (GMT)
+Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
+        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        E6.09.10069.8A5C5926; Tue, 31 May 2022 16:37:12 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
+        20220531073711epcas2p31d3d49dd8db03e7ff9f48e16ccf112f8~0IHDGrJvw2250122501epcas2p3R;
+        Tue, 31 May 2022 07:37:11 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20220531073711epsmtrp25bdbbb1fef8971f793459d6525472ed2~0IHDFnO9w1812818128epsmtrp2U;
+        Tue, 31 May 2022 07:37:11 +0000 (GMT)
+X-AuditID: b6c32a45-2a50fa8000002755-2b-6295c5a81bec
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        62.D9.11276.7A5C5926; Tue, 31 May 2022 16:37:11 +0900 (KST)
+Received: from KORCO082417 (unknown [10.229.8.121]) by epsmtip1.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20220531073711epsmtip12e5ef4f762ee298b5bf3ec1110b9b11d~0IHC1bgEj1610816108epsmtip1h;
+        Tue, 31 May 2022 07:37:11 +0000 (GMT)
+From:   "Chanho Park" <chanho61.park@samsung.com>
+To:     "'Alim Akhtar'" <alim.akhtar@samsung.com>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux-phy@lists.infradead.org>
+Cc:     <devicetree@vger.kernel.org>, <robh+dt@kernel.org>,
+        <krzysztof.kozlowski+dt@linaro.org>, <vkoul@kernel.org>,
+        <avri.altman@wdc.com>, <bvanassche@acm.org>,
+        <martin.petersen@oracle.com>, <pankaj.dubey@samsung.com>,
+        <linux-fsd@tesla.com>, "'Bharat Uppal'" <bharat.uppal@samsung.com>
+In-Reply-To: <20220531012220.80563-6-alim.akhtar@samsung.com>
+Subject: RE: [PATCH 5/6] ufs: host: ufs-exynos: add support for fsd ufs hci
+Date:   Tue, 31 May 2022 16:37:11 +0900
+Message-ID: <001101d874c1$3d850eb0$b88f2c10$@samsung.com>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 841a959f-5ecd-460c-4995-08da42d75800
-X-MS-TrafficTypeDiagnostic: DM5PR1001MB2204:EE_
-X-Microsoft-Antispam-PRVS: <DM5PR1001MB220415CF32051935B88EB7518EDC9@DM5PR1001MB2204.namprd10.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: d+g6nvWhb2rMMt+imTO45tjweC9Kvw9jWsmbvMhXoIG9Jen6rTnvMpRZ/Z2h4XSVhCmhYqvaDv+lDszpjj+G+dF5ZtZl4+ygsdlinBpsEvKtz3dK2H+PJUK27PaAej1CIg7aal4cfBBIf7I4x2KauJgzcySllizPUXRbKt88hLFCnolIQgXACSYALBgzfFiYEZhpBSJ4f73Ux9GvpRIqJcBPkNRc3zlombZ68nLIxFqPRpSUyzlfA/gJLk8KvKugmg1Ok2M1mu4Sjsyzq/fE8zsmFDHOVcoczKO/FjM6CaQz6FmAlb0EkrnxTBVHbcMDzfjYFdHZEIXoSuL4u9SXp7OOXIE0RiKaQOhOYNQ7INUK00QAjXidfARFiZPjNMiCIvZRQHCatIxOLbOJkJPZVOVXMVmvVQfNdcOej+9VdbDMsd/2d5yHgSVulAJZ53pKQpuEtEzj8ydyb71gM+zyC3nXkgRyvsfQBstsFZ6AkzVwD0O88D6UMhzXPeoXQE7xFM9rO2VmNixAxMC+VzffXxCeeOl6fukj31HUHN3dxvQF3WwNs4HzTS24/CVlLYsslEKhRJl5jOkXOmYGQGC7GWXmVWKiV6sb/Mq8mq1WnOkhiDwC8p48Ed9y+cYmnLcbfmkYZv85a2N2BCLDybcMW0JegrChl8AEHedVWHYvH8Id4Z0r3ydKUPeuJSlYpErPA4SV0e/yPX16QhJcxNxh8A==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR1001MB2365.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(7916004)(366004)(44832011)(186003)(5660300002)(508600001)(83380400001)(6486002)(6666004)(316002)(6506007)(66946007)(4744005)(86362001)(33716001)(8936002)(2906002)(66476007)(66556008)(8676002)(26005)(52116002)(110136005)(38350700002)(38100700002)(9686003)(6512007)(54906003)(4326008);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?la8wL9wkMepAZN5tZIiYJUeJ93n4TWP7M91wHWVpMGv3HdtWx3IVDQj5mdAC?=
- =?us-ascii?Q?jQ186PmPRElpqcvBcNJwEBufQVgjeVxwBIN5CO4Qxa/RTP8oczq004vq/0R0?=
- =?us-ascii?Q?eD6BDZwzyVihIo1QxZPeoNQ2uM71xib1H86yeNNr11UOKEIOMJsAari31fWe?=
- =?us-ascii?Q?yHMQsdxzLRfgQrLgfF7pv/UWtSsG7zGMgUkE+HCcTQ01YLCXLI+E2SXbUYA4?=
- =?us-ascii?Q?ztYhl4Niwy/ECR+3+kEhPlmF/ZRxYa3srIg/+yWNbotU2ugV2xRfzZeBMMxr?=
- =?us-ascii?Q?QnLTnS8+/7xwVrSEM3Qijy4TRmzszf0EA76ODrS1qP6f1QPQf+QUaqZVWTRB?=
- =?us-ascii?Q?oW8oA2dG8+CK9CVwE6gvOvLWljCvnbt1Jn8pdKubI7O20Oi+RAiuVK5+AND1?=
- =?us-ascii?Q?HzwugI6PyILinaqRbezVrSds9/L0F+vjS+EKTbASuws50kjyjNZKLDyqHm5p?=
- =?us-ascii?Q?/10DDpwctBU8xkznM6fselTvb/Y+LTE5p8KScdLDA/mYKNJJYiMkUcLB8RxZ?=
- =?us-ascii?Q?d6YlKzXVkwu9Cf4EK1x/87o0HLK8ywuo6M3Ym4UmT3qmqXXE2oUPh2xfoqwf?=
- =?us-ascii?Q?7YhoocMUvYIt8MIEK4RlGZpF5SpgYolrnGt8VzbPuSIeAI3ZZOOEOAu2wlFZ?=
- =?us-ascii?Q?QvKKXCBJU7V2co7/MwkF8UGlF7pb2JsnZ/yb5iN+vnd2cJHPKrpF8P1jYP9B?=
- =?us-ascii?Q?QPnpGT4xD0npiJOWQG20SkNaooDZCdCtpsAZr/S3BnEx0WlJUz+9JLztaYnS?=
- =?us-ascii?Q?wf4Y2hGlgSg4zwGhwAK58mAvCa3c0NV8qhrM0KnWV2iIGviuVsVTroDuAI4J?=
- =?us-ascii?Q?XDNhu2EWFYpIYXcvjmt7/kprO5mNsgsMFeU2H7XwxmD5RqF6CXvPyrhYK+Su?=
- =?us-ascii?Q?j+Up6S0Lrh/dH+/uL4NNBxF8c7M6oZWsjrs2gLy0WHyMVoDxkjAIoMMaBfCQ?=
- =?us-ascii?Q?KFFGeKAL4h2mPGPpGXRKDLra3apUzqjx9y13URZQjPQSdWoDapvWRoLVQJ8u?=
- =?us-ascii?Q?c9ase37n1WKqkkRXEOiDKbxUkJXbbTeXvatoBErTDkiq6aQT0aiLUbW6kdVm?=
- =?us-ascii?Q?Wd7ewClHhT3dk2yPCST+fhMw3gcfesFHj0JbLfwtIIu8VFlfOfgg/2d1YdmK?=
- =?us-ascii?Q?KMDafk+JTERDSWkT0ByAfd/4LYWec8oLfbH9E38kHwGvNqXUY0zZlXe9OI4z?=
- =?us-ascii?Q?FQs+TLTMpVlV6FS8k+DwywtwflFyDtv+LSj5hqB9MVS5r6EyjndJ97S5wSex?=
- =?us-ascii?Q?pT+vxobaPJanxR0wgc8+RgjCfInZuiotcDHhL+CNMlbSW115NTQAn8bjZeAC?=
- =?us-ascii?Q?FIEd/P9K0PgylKlXWSbUTBNLVyZeLMOcu/Lsrs9pCvlgSO1ZDs+dhpMt+PQl?=
- =?us-ascii?Q?VJtIr5A3DTulr5GPvvZiUr7o2S2ZUqKhDYyPHJobagYX+USZiVGykKVxcOaw?=
- =?us-ascii?Q?ZdQJSST3VdoHaz7WCo5gHjG55L6S6M/VGTsrt3huC1mGmQynVBNOOer1AUQH?=
- =?us-ascii?Q?JE3ym8i+eZ72ORaeE39ECOEb8b5WiXbXsAHQl1ANBrZ7pjmflFhbOciIJQtO?=
- =?us-ascii?Q?uJyk1WVoGmqqh4NFi6vF3w2RIhHPAA9NKBWDreOptl1VBZC5P/zgCIyuMlmo?=
- =?us-ascii?Q?K4SQX4OXF+61najXDFOpV8MnR3C/4pEfKjke5e9Z9CiVDChesMcBN7/WRg5H?=
- =?us-ascii?Q?4b+eF6MBboFJb1NW6dk+qqDfQSVyE3RzqIYrkmdT5zSrz2yYeFlWPvLqgnq0?=
- =?us-ascii?Q?7bu1HF7y2KW6LDV0Iwp8knP2joXKZuY=3D?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 841a959f-5ecd-460c-4995-08da42d75800
-X-MS-Exchange-CrossTenant-AuthSource: MWHPR1001MB2365.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 May 2022 07:29:49.1130
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: ZZ9f110hjojePetE/uX0ccjINsskyuuUNAFvdi9armLCoDPjpnFwSEiQdcw5DyfRHp7QAM3fgdGS0cEmVCXVmu3k9aq3olf5X9vrA/GeVZc=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR1001MB2204
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.517,18.0.874
- definitions=2022-05-31_02:2022-05-30,2022-05-31 signatures=0
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlogscore=999
- phishscore=0 suspectscore=0 malwarescore=0 mlxscore=0 adultscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2204290000 definitions=main-2205310037
-X-Proofpoint-ORIG-GUID: yybVq4gQqMmgL2hvlrYKHC-pP6MxvGuD
-X-Proofpoint-GUID: yybVq4gQqMmgL2hvlrYKHC-pP6MxvGuD
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQEGJiXAXdobboEKZTBkhZkj5AOCHwHAGN/eAYoUDxmuwuGnsA==
+Content-Language: ko
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrMJsWRmVeSWpSXmKPExsWy7bCmhe6Ko1OTDP5PkrZ4MG8bm8XLn1fZ
+        LK69vMBuMe3DT2aL+UfOsVr0vXjIbLHp8TVWi4evwi0u75rDZjFh1TcWi+7rO9gslh//x2Sx
+        aOsXdovWvUfYLXbeOcHswO9x+Yq3x6ZVnWwed67tYfPYvKTe4+PTWywefVtWMXr8a5rL7vF5
+        k5xH+4FupgDOqGybjNTElNQihdS85PyUzLx0WyXv4HjneFMzA0NdQ0sLcyWFvMTcVFslF58A
+        XbfMHKD7lRTKEnNKgUIBicXFSvp2NkX5pSWpChn5xSW2SqkFKTkF5gV6xYm5xaV56Xp5qSVW
+        hgYGRqZAhQnZGUe+/mUq2OFS0dSykrWBcbZFFyMnh4SAicSna1dZuhi5OIQEdjBKnNi9kQnC
+        +cQosXLjDGYI5xujRG/vARaYlrWvfrBDJPYySrT/ngHlvGCUWHGojw2kik1AX+JlxzZWkIQI
+        yODPKz6BbWEWWMQk0XTpG1gVp4CtxNP7S1hBbGEBb4nuGV+ZQWwWAVWJ09P2gtm8ApYSF2aA
+        rACxBSVOznwCdgezgLbEsoWvmSFuUpD4+XQZ2BwRASeJvqm7WSFqRCRmd7aBPSEh8IJD4szW
+        p1BPuEg82jiBHcIWlnh1fAuULSXx+d1eNgi7WGLprE9MEM0NjBKXt/2CShhLzHrWztjFyAG0
+        QVNi/S59EFNCQFniyC2o2/gkOg7/ZYcI80p0tAlBNKpLHNg+HeoCWYnuOZ9ZJzAqzULy2Swk
+        n81C8sEshF0LGFlWMYqlFhTnpqcWGxUYwuM7OT93EyM4dWu57mCc/PaD3iFGJg7GQ4wSHMxK
+        Irwlu6YmCfGmJFZWpRblxxeV5qQWH2I0BYb1RGYp0eR8YPbIK4k3NLE0MDEzMzQ3MjUwVxLn
+        9UrZkCgkkJ5YkpqdmlqQWgTTx8TBKdXAtCL26Kl/6WYV1wwNalNvZ2+IEml0ldVmqJz8LGDW
+        C/aIAO0ftSJdup2vxU3veBRGqPvtncWvc/eo0Lcg49Rd6ivctrzVsHq86UhI5sKsDXK2pytP
+        S5qzPr288/S8DZMPXpDYWL9oQ/CxqDOasdfaC8v3HVrjb6gicfWouVKqvW6OhPx/Vjsj3mdS
+        HqoVa015qq6d7+Tv4XqkkLw4X1l37pE5C+oVa+adlnjuwbG+3/ON7PwrHxoL+Qo47Et4l602
+        rLQ6rycW5zv9+9LIpCk7VvuU7em5m8M7S3G58OUbP30Sd6W+zDtsxfD/2tkpp5otTGqDU2cy
+        Xbv99X7ypCvSV6sbPV41B73U/CZ4i9lDiaU4I9FQi7moOBEAyYPxZGYEAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrPIsWRmVeSWpSXmKPExsWy7bCSnO7yo1OTDA606Fo8mLeNzeLlz6ts
+        FtdeXmC3mPbhJ7PF/CPnWC36Xjxkttj0+BqrxcNX4RaXd81hs5iw6huLRff1HWwWy4//Y7JY
+        tPULu0Xr3iPsFjvvnGB24Pe4fMXbY9OqTjaPO9f2sHlsXlLv8fHpLRaPvi2rGD3+Nc1l9/i8
+        Sc6j/UA3UwBnFJdNSmpOZllqkb5dAlfGqYMXmQteO1WsP3yPrYHxjFkXIyeHhICJxNpXP9i7
+        GLk4hAR2M0qsmv+SGSIhK/Hs3Q52CFtY4n7LEVaIomeMEudfv2EFSbAJ6Eu87NgGlhAR2MMo
+        0TbvFNgoZoE1TBI3J19lhmjZzyhxrb8BbBangK3E0/tLwNqFBbwlumd8BdvHIqAqcXraXjCb
+        V8BS4sKMGewQtqDEyZlPWEBsZgFtid6HrYww9rKFr6FuVZD4+XQZ2EwRASeJvqm7WSFqRCRm
+        d7YxT2AUnoVk1Cwko2YhGTULScsCRpZVjJKpBcW56bnFhgWGeanlesWJucWleel6yfm5mxjB
+        cayluYNx+6oPeocYmTgYDzFKcDArifCW7JqaJMSbklhZlVqUH19UmpNafIhRmoNFSZz3QtfJ
+        eCGB9MSS1OzU1ILUIpgsEwenVAPTcv0OXVe3zidVb7k2T6tWq8y5mfv7OEeeTi3ne4UErVp3
+        13V8e/ymPIl1LFlwp0xk9896raJJC51mtsy8zmkw1WZ2Z0mn6tm7E7/OSmiqqtuZphy6dFHi
+        KRvfvJ3nN0/6Zr1A4NW8377BMZKBTcd8Hpo/FeuYZCC1wexSsV/HnSdmd/v3sxSKWVbNj5/u
+        GnNP4KTgpNe9PaFLTGX/L5l9snD7K7+mj2vl1l1aEF6e0tpmZvP/MIuOmtmzF6Yi66N0NBun
+        /LjaPNv6zuTa1onvTgX3rL+mIHPqWZF9e4le1cPbXs/Ppi9fU1p0ttPiis4Zuzurz2k/mfh/
+        hr2l8mOtM7ua1frOz0+72aeePe+IEktxRqKhFnNRcSIAa2+VF1IDAAA=
+X-CMS-MailID: 20220531073711epcas2p31d3d49dd8db03e7ff9f48e16ccf112f8
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20220531012356epcas5p3cd6638d4d3eccb28a28d064c9f585a4f
+References: <20220531012220.80563-1-alim.akhtar@samsung.com>
+        <CGME20220531012356epcas5p3cd6638d4d3eccb28a28d064c9f585a4f@epcas5p3.samsung.com>
+        <20220531012220.80563-6-alim.akhtar@samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Smatch complains that the if (flag_res) is not required:
+Hi,
 
-    drivers/ufs/core/ufshpb.c:2306 ufshpb_check_hpb_reset_query()
-    warn: duplicate check 'flag_res' (previous on line 2301)
+> -----Original Message-----
+> From: Alim Akhtar <alim.akhtar=40samsung.com>
+> Sent: Tuesday, May 31, 2022 10:22 AM
+> To: linux-arm-kernel=40lists.infradead.org; linux-kernel=40vger.kernel.or=
+g;
+> linux-scsi=40vger.kernel.org; linux-phy=40lists.infradead.org
+> Cc: devicetree=40vger.kernel.org; robh+dt=40kernel.org;
+> krzysztof.kozlowski+dt=40linaro.org; vkoul=40kernel.org; avri.altman=40wd=
+c.com;
+> bvanassche=40acm.org; martin.petersen=40oracle.com; chanho61.park=40samsu=
+ng.com;
+> pankaj.dubey=40samsung.com; Alim Akhtar <alim.akhtar=40samsung.com>; linu=
+x-
+> fsd=40tesla.com; Bharat Uppal <bharat.uppal=40samsung.com>
+> Subject: =5BPATCH 5/6=5D ufs: host: ufs-exynos: add support for fsd ufs h=
+ci
+>=20
+> Adds support of UFS HCI which is found in Tesla FSD SoC. FSD also have an
+> addition bit for MPHY APB clock which was not there (was reserved) for
+> previous exynos SoC.
+>=20
+> Cc: linux-fsd=40tesla.com
+> Signed-off-by: Bharat Uppal <bharat.uppal=40samsung.com>
+> Signed-off-by: Alim Akhtar <alim.akhtar=40samsung.com>
+> ---
+>  drivers/ufs/host/ufs-exynos.c =7C 143 +++++++++++++++++++++++++++++++++-
+>  1 file changed, 142 insertions(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.=
+c
+> index a81d8cbd542f..b3efdc4caca2 100644
+> --- a/drivers/ufs/host/ufs-exynos.c
+> +++ b/drivers/ufs/host/ufs-exynos.c
+> =40=40 -52,11 +52,12 =40=40
+>  =23define HCI_ERR_EN_DME_LAYER	0x88
+>  =23define HCI_CLKSTOP_CTRL	0xB0
+>  =23define REFCLKOUT_STOP		BIT(4)
+> +=23define MPHY_APBCLK_STOP        BIT(3)
+>  =23define REFCLK_STOP		BIT(2)
+>  =23define UNIPRO_MCLK_STOP	BIT(1)
+>  =23define UNIPRO_PCLK_STOP	BIT(0)
+>  =23define CLK_STOP_MASK		(REFCLKOUT_STOP =7C REFCLK_STOP =7C=5C
+> -				 UNIPRO_MCLK_STOP =7C=5C
+> +				 UNIPRO_MCLK_STOP =7C MPHY_APBCLK_STOP=7C=5C
 
-Re-write the "if (flag_res)" checking to be more clear.
+Please make this change into a separate patch of this series.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
----
- drivers/ufs/core/ufshpb.c | 14 ++++++--------
- 1 file changed, 6 insertions(+), 8 deletions(-)
+>  				 UNIPRO_PCLK_STOP)
+>  =23define HCI_MISC		0xB4
+>  =23define REFCLK_CTRL_EN		BIT(7)
+> =40=40 -386,6 +387,104 =40=40 static int exynos7_ufs_post_pwr_change(stru=
+ct
+> exynos_ufs *ufs,
+>  	return 0;
+>  =7D
+>=20
+> +static inline int fsd_ufs_pre_link(struct exynos_ufs *ufs) =7B
+> +	int i;
+> +	struct ufs_hba *hba =3D ufs->hba;
+> +
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(0x9514), 1000000000L / ufs-
+> >mclk_rate);
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(0x201), 0x12);
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(0x200), 0x40);
+> +
+> +	for_each_ufs_tx_lane(ufs, i) =7B
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0xAA, i), 1000000000L /
+> ufs->mclk_rate);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x8F, i), 0x3F);
+> +	=7D
+> +
+> +	for_each_ufs_rx_lane(ufs, i) =7B
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x12, i), 1000000000L /
+> ufs->mclk_rate);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x5C, i), 0x38);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x0F, i), 0x0);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x65, i), 0x1);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x69, i), 0x1);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x21, i), 0x0);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x22, i), 0x0);
+> +	=7D
+> +
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(0x200), 0x0);
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(0x9536), 0x4E20);
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(0x9564), 0x2e820183);
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(0x155E), 0x0);
 
-diff --git a/drivers/ufs/core/ufshpb.c b/drivers/ufs/core/ufshpb.c
-index fb122eaed28b..95b501b824df 100644
---- a/drivers/ufs/core/ufshpb.c
-+++ b/drivers/ufs/core/ufshpb.c
-@@ -2299,17 +2299,15 @@ static bool ufshpb_check_hpb_reset_query(struct ufs_hba *hba)
- 		}
- 
- 		if (!flag_res)
--			goto out;
-+			return false;
- 
- 		usleep_range(1000, 1100);
- 	}
--	if (flag_res) {
--		dev_err(hba->dev,
--			"%s fHpbReset was not cleared by the device\n",
--			__func__);
--	}
--out:
--	return flag_res;
-+
-+	dev_err(hba->dev,
-+		"%s fHpbReset was not cleared by the device\n",
-+		__func__);
-+	return true;
- }
- 
- /**
--- 
-2.35.1
+Use PA_LOCAL_TX_LCC_ENABLE instead of 0x155E. I think you can find more val=
+ues from unipro.h.
+Please try to use as much as possible :)
+
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(0x3000), 0x0);
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(0x3001), 0x1);
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(0x4021), 0x1);
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(0x4020), 0x1);
+
+They can be set from exynos_ufs_establish_connt.
+
+> +
+> +	return 0;
+> +=7D
+> +
+> +static inline int fsd_ufs_post_link(struct exynos_ufs *ufs) =7B
+> +	int i;
+> +	struct ufs_hba *hba =3D ufs->hba;
+> +	u32 hw_cap_min_tactivate;
+> +	u32 peer_rx_min_actv_time_cap;
+> +	u32 max_rx_hibern8_time_cap;
+> +
+> +	ufshcd_dme_get(hba, UIC_ARG_MIB_SEL(0x8F, 4),
+> +			&hw_cap_min_tactivate); /* HW Capability of
+> MIN_TACTIVATE */
+> +	ufshcd_dme_get(hba, UIC_ARG_MIB(0x15A8),
+> +			&peer_rx_min_actv_time_cap);    /* PA_TActivate */
+> +	ufshcd_dme_get(hba, UIC_ARG_MIB(0x15A7),
+> +			&max_rx_hibern8_time_cap);      /* PA_Hibern8Time */
+> +
+> +	if (peer_rx_min_actv_time_cap >=3D hw_cap_min_tactivate)
+> +		ufshcd_dme_peer_set(hba, UIC_ARG_MIB(0x15A8),
+> +					peer_rx_min_actv_time_cap + 1);
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(0x15A7), max_rx_hibern8_time_cap +
+> 1);
+> +
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(0x9529), 0x01);
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(0x15A4), 0xFA);
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(0x9529), 0x00);
+> +
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(0x200), 0x40);
+> +
+> +	for_each_ufs_rx_lane(ufs, i) =7B
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x35, i), 0x05);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x73, i), 0x01);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x41, i), 0x02);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x42, i), 0xAC);
+> +	=7D
+> +
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(0x200), 0x0);
+> +
+> +	return 0;
+> +=7D
+> +
+> +static inline int fsd_ufs_pre_pwr_change(struct exynos_ufs *ufs,
+> +					struct ufs_pa_layer_attr *pwr)
+> +=7B
+> +	struct ufs_hba *hba =3D ufs->hba;
+> +
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(0x1569), 0x1);
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(0x1584), 0x1);
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(0x2041), 8064);
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(0x2042), 28224);
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(0x2043), 20160);
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(0x15B0), 12000);
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(0x15B1), 32000);
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(0x15B2), 16000);
+> +
+> +	unipro_writel(ufs, 8064, 0x7888);
+> +	unipro_writel(ufs, 28224, 0x788C);
+> +	unipro_writel(ufs, 20160, 0x7890);
+> +	unipro_writel(ufs, 12000, 0x78B8);
+> +	unipro_writel(ufs, 32000, 0x78BC);
+> +	unipro_writel(ufs, 16000, 0x78C0);
+> +
+> +	return 0;
+> +=7D
+> +
+>  /*
+>   * exynos_ufs_auto_ctrl_hcc - HCI core clock control by h/w
+>   * Control should be disabled in the below cases =40=40 -1595,6 +1694,46=
+ =40=40
+> static struct exynos_ufs_drv_data exynos_ufs_drvs =3D =7B
+>  	.post_pwr_change	=3D exynos7_ufs_post_pwr_change,
+>  =7D;
+>=20
+> +static struct exynos_ufs_uic_attr fsd_uic_attr =3D =7B
+> +	.tx_trailingclks		=3D 0x10,
+> +	.tx_dif_p_nsec			=3D 3000000,	/* unit: ns */
+> +	.tx_dif_n_nsec			=3D 1000000,	/* unit: ns */
+> +	.tx_high_z_cnt_nsec		=3D 20000,	/* unit: ns */
+> +	.tx_base_unit_nsec		=3D 100000,	/* unit: ns */
+> +	.tx_gran_unit_nsec		=3D 4000,		/* unit: ns */
+> +	.tx_sleep_cnt			=3D 1000,		/* unit: ns */
+> +	.tx_min_activatetime		=3D 0xa,
+> +	.rx_filler_enable		=3D 0x2,
+> +	.rx_dif_p_nsec			=3D 1000000,	/* unit: ns */
+> +	.rx_hibern8_wait_nsec		=3D 4000000,	/* unit: ns */
+> +	.rx_base_unit_nsec		=3D 100000,	/* unit: ns */
+> +	.rx_gran_unit_nsec		=3D 4000,		/* unit: ns */
+> +	.rx_sleep_cnt			=3D 1280,		/* unit: ns */
+> +	.rx_stall_cnt			=3D 320,		/* unit: ns */
+> +	.rx_hs_g1_sync_len_cap		=3D SYNC_LEN_COARSE(0xf),
+> +	.rx_hs_g2_sync_len_cap		=3D SYNC_LEN_COARSE(0xf),
+> +	.rx_hs_g3_sync_len_cap		=3D SYNC_LEN_COARSE(0xf),
+> +	.rx_hs_g1_prep_sync_len_cap	=3D PREP_LEN(0xf),
+> +	.rx_hs_g2_prep_sync_len_cap	=3D PREP_LEN(0xf),
+> +	.rx_hs_g3_prep_sync_len_cap	=3D PREP_LEN(0xf),
+> +	.pa_dbg_option_suite		=3D 0x2E820183,
+> +=7D;
+> +
+> +struct exynos_ufs_drv_data fsd_ufs_drvs =3D =7B
+> +	.uic_attr               =3D &fsd_uic_attr,
+> +	.quirks                 =3D UFSHCD_QUIRK_PRDT_BYTE_GRAN =7C
+> +				  UFSHCI_QUIRK_BROKEN_REQ_LIST_CLR =7C
+> +				  UFSHCD_QUIRK_BROKEN_OCS_FATAL_ERROR =7C
+> +				  UFSHCI_QUIRK_SKIP_RESET_INTR_AGGR,
+> +	.opts                   =3D EXYNOS_UFS_OPT_HAS_APB_CLK_CTRL =7C
+> +				  EXYNOS_UFS_OPT_BROKEN_AUTO_CLK_CTRL =7C
+> +				  EXYNOS_UFS_OPT_SKIP_CONFIG_PHY_ATTR =7C
+> +				  EXYNOS_UFS_OPT_BROKEN_RX_SEL_IDX,
+> +	.pre_link               =3D fsd_ufs_pre_link,
+> +	.post_link              =3D fsd_ufs_post_link,
+> +	.pre_pwr_change         =3D fsd_ufs_pre_pwr_change,
+> +=7D;
+> +
+>  static const struct of_device_id exynos_ufs_of_match=5B=5D =3D =7B
+>  	=7B .compatible =3D =22samsung,exynos7-ufs=22,
+>  	  .data	      =3D &exynos_ufs_drvs =7D,
+> =40=40 -1602,6 +1741,8 =40=40 static const struct of_device_id
+> exynos_ufs_of_match=5B=5D =3D =7B
+>  	  .data	      =3D &exynosauto_ufs_drvs =7D,
+>  	=7B .compatible =3D =22samsung,exynosautov9-ufs-vh=22,
+>  	  .data	      =3D &exynosauto_ufs_vh_drvs =7D,
+> +	=7B .compatible =3D =22tesla,fsd-ufs=22,
+> +	  .data       =3D &fsd_ufs_drvs =7D,
+>  	=7B=7D,
+>  =7D;
+>=20
+> --
+> 2.25.1
+
 
