@@ -2,38 +2,37 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 542E6C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 31 May 2022 17:52:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EAC75C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 31 May 2022 17:52:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239789AbiEaRwl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 31 May 2022 13:52:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54720 "EHLO
+        id S1346693AbiEaRwm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 31 May 2022 13:52:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55508 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346698AbiEaRwd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 May 2022 13:52:33 -0400
-X-Greylist: delayed 62 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 31 May 2022 10:52:32 PDT
+        with ESMTP id S1346696AbiEaRwj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 May 2022 13:52:39 -0400
 Received: from esa.hc4959-67.iphmx.com (esa.hc4959-67.iphmx.com [216.71.153.94])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 654F95BE65;
-        Tue, 31 May 2022 10:52:31 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19E5063505;
+        Tue, 31 May 2022 10:52:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=seagate.com; i=@seagate.com; q=dns/txt; s=stxiport;
-  t=1654019552; x=1685555552;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=GbN3L71MpgJGmm3dULdhJiSFt9GSMZiq4yWrKPCs+8w=;
-  b=HSghhnA59nB5gbSJt/0GRpeQpucgd2RZkIFWPzkXk0PmVix8ipcIXVGT
-   lcN3ZQaMxlfHKZD+BOJErSYE4fU5Ey0dukMIum3/hJwQISstQVzPa2VyJ
-   ScelDUogKGnNcV+72qfsMjpLG2NJqG7ixqXRZ+Ey+bET3PvpjRIYM+ZbF
-   o=;
-Received: from mail-dm6nam08lp2042.outbound.protection.outlook.com (HELO NAM04-DM6-obe.outbound.protection.outlook.com) ([104.47.73.42])
-  by ob1.hc4959-67.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2022 10:51:29 -0700
+  t=1654019557; x=1685555557;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=apvAm9cdEzHrOqB6wduo8MjCfAVwoTdoxPRQfEeWumI=;
+  b=iOA77rETzeIN14orv0A1g4P8NXvHYjSfMpxi4CJqcbQevpxDhaqd+xAM
+   Ak5yGQCLs3uzivom6uCTkIt4H3KTJh13Phkd+/XTdLJ8CdKXvJR2u/KEZ
+   5RJ4P7I7OxveufDZunqf/N0UDgYjYZlMLFmLtJKPuQo0Fp8uCSkiJp4BT
+   E=;
+Received: from mail-dm6nam11lp2170.outbound.protection.outlook.com (HELO NAM11-DM6-obe.outbound.protection.outlook.com) ([104.47.57.170])
+  by ob1.hc4959-67.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2022 10:51:33 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=TgEYBzn2q5pK0iEgXTFxQohVL+L4QY9pl9uFEb0BV3ctDYjvUU/ALsbcAvZi4S+9WlQ8XviJIMy2soRaeWyx6NENmkQ6rRDgg09h2k3kudU6dGmmlj3e+M9cgfNEkMs8+/w0Dxe/vVNo+5eUf9OoA1f/WWXBtSG737BRj3UevXt2VQfEBlx1rimJgArz6tTza6Qk66gsi9e6Qas0a94fHpHMH2k+GOfW5RlWM17E7Kz7Fp2FKmT1vysOZN933GgozshE24hvhhThePNaxhZjlhuEaEh6G2atQx8oobCrERcENGLUWZMUCg+hPctuMFWrY1kUfIBLxW04Pl6Eqc428Q==
+ b=PTW7HE5gnMMgk3R+/JS95upaOWdRanWytb//cb2kdp8AJWOlWl8uwC6qYjpQ1V3WQmRRusWAkyl0bOJ1N4BKYDAZ7gwAd4qWUVdWcXkXxYriYlDaHUrDiavX3HvzcIeDBd4GjofOMRJf+zyUbCv9UFj82NXpvlXvl0VkZhV9OS6vvsFkFrE4JRJUbK8sjpoVwWKGtP1esEfDXI44hzfp8B9kJixJMsOSIzpUeM52h483IeFa+5MkiuBSksjNE574ja3GPiqxHfsdR4L37I31ppwmRKKXaVFm2ORi7RvXX+SmqaC0esLGZhUL6Zwb7co9ExctGIX3AwGEi9aR7LvXqg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=RRLj6wKCiSiFFKSLBFnw8fyjcuglBJHxeBxUBBhFpG8=;
- b=cN6Ek57WO+iM8X6gPunL9BhHgx3cvw51JJzrPvo8TGalWc4u4on02ZGN3Zuid/gGdAeSE9FFsdqnzuHmPD/gci6gjQB6J1lXv/gUjoHXqW6BDkwx2Uz4qsdxt70iJRpKP+Nrct+aJ+nKyD1YCBeuXze5VEJLxRQaLC7Pxd6EBJfwQUU/5R/X27dVHF1SLiKRagYFbrzfcMkkvLUtYRcWw6JiJvSd7LThZX/oZpMJB3lCxLEpIDPk7Nvrlj0DjzMbb6jFXXXdCHwnTRYZFM8TWY5edfqXg9SkHCjYAaS3wtZrBELZcLAR3WSREpGX2/mCV9wvhhRqaDjD/ok6YfejbQ==
+ bh=eOcYzUr5gTPWkcPCIzwMQc8UsXUwkDKxAR+DIiWwSh0=;
+ b=OWsVWD6O8JsaHGOduKzeG+dmHw/8lGIEmKu2NFgK5rJGz7Kcn2HQdJ/lOcdCMltDX1uSAEpIH6cpy33XKr93kzRw+zm4wHPfGIlJGqe0yojdsOe33Tm/qq7Y0Kugzaay3GeYqTPGj91cURmQuceX5uY6SL9uupotoxbVq+xwHA8Oznhgc81m6vOH+qu9IKrg5glwaP3FnN/R6UZPie7CE8xOIx53AMwdsufamHn6Mkr1W+yJJsbFBdfDKFdIcKwn4JW9OOkUqsI+GgGc4rSKrEzoSr+cPpZiOQsgppSf+3ntzm7BzxtmEsovQU5mTsiR120SF9jnrhEvvEazZjp7Ng==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=softfail (sender ip
  is 192.55.16.50) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=seagate.com;
  dmarc=fail (p=reject sp=reject pct=100) action=oreject
@@ -41,94 +40,155 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=softfail (sender ip
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=seagate.com;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=RRLj6wKCiSiFFKSLBFnw8fyjcuglBJHxeBxUBBhFpG8=;
- b=LSgFHVNXxDbD5ZQW+C/SwSIslAvi1SSboT0b5VZbHehSxatyoAYNF36ECODUwMs8XqqXuIsxsk/jCWCPcxrEVg3oCOweaOGd0QDbVkfJO0lUAOmFJT9+zzcaFV6s5tqHqX+8AvtlNSuDMSAXhWfu+KR4LWL88ls2i9Xql51bX+k=
-Received: from CO2PR04CA0141.namprd04.prod.outlook.com (2603:10b6:104::19) by
- DS7PR20MB4782.namprd20.prod.outlook.com (2603:10b6:8:9a::14) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5314.12; Tue, 31 May 2022 17:51:27 +0000
+ bh=eOcYzUr5gTPWkcPCIzwMQc8UsXUwkDKxAR+DIiWwSh0=;
+ b=RqrUJsQjvwmWsdV9fk/BvjXbES1+x1nysGGbC7aYn4pKeQiqVr6ewRxZocf5FilfGUSDJ3rSLw/6unt/G383rg7aJnpighD+bgmjKSi9ufBUt4i6OIcqFORRNmM76MClZnrqAwPYM4G0d9XKjuZVPhju6zDjLeVo2Fuk9HnXODw=
+Received: from CO2PR04CA0142.namprd04.prod.outlook.com (2603:10b6:104::20) by
+ MN2PR20MB3432.namprd20.prod.outlook.com (2603:10b6:208:262::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5314.12; Tue, 31 May
+ 2022 17:51:29 +0000
 Received: from MW2NAM10FT050.eop-nam10.prod.protection.outlook.com
- (2603:10b6:104:0:cafe::6c) by CO2PR04CA0141.outlook.office365.com
- (2603:10b6:104::19) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5314.12 via Frontend
- Transport; Tue, 31 May 2022 17:51:27 +0000
+ (2603:10b6:104:0:cafe::79) by CO2PR04CA0142.outlook.office365.com
+ (2603:10b6:104::20) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5293.13 via Frontend
+ Transport; Tue, 31 May 2022 17:51:29 +0000
 X-MS-Exchange-Authentication-Results: spf=softfail (sender IP is 192.55.16.50)
  smtp.mailfrom=seagate.com; dkim=none (message not signed)
  header.d=none;dmarc=fail action=oreject header.from=seagate.com;
 Received: from sgspzesaa001.seagate.com (192.55.16.50) by
  MW2NAM10FT050.mail.protection.outlook.com (10.13.155.13) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5314.12 via Frontend Transport; Tue, 31 May 2022 17:51:26 +0000
+ 15.20.5314.12 via Frontend Transport; Tue, 31 May 2022 17:51:28 +0000
 Received: from sgspiesaa001.seagate.com ([10.4.144.52])
-  by sgspzesaa001.seagate.com with ESMTP; 31 May 2022 10:51:44 -0700
+  by sgspzesaa001.seagate.com with ESMTP; 31 May 2022 10:51:48 -0700
 X-IronPort-AV: E=Sophos;i="5.91,266,1647327600"; 
-   d="scan'208";a="63170335"
+   d="scan'208";a="63170337"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 STX-Internal-Mailhost: TRUE
 Received: from unknown (HELO COL-U500816L003.ad.seagate.com) ([10.4.50.11])
-  by sgspiesaa001.seagate.com with ESMTP; 31 May 2022 10:44:20 -0700
+  by sgspiesaa001.seagate.com with ESMTP; 31 May 2022 10:44:23 -0700
 From:   Tyler Erickson <tyler.erickson@seagate.com>
 To:     damien.lemoal@opensource.wdc.com, jejb@linux.ibm.com,
         martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
-        muhammad.ahmad@seagate.com, tyler.erickson@seagate.com
-Subject: [PATCH 0/2] ata,sd: Fix reading concurrent positioning ranges
-Date:   Tue, 31 May 2022 11:50:07 -0600
-Message-Id: <20220531175009.850-1-tyler.erickson@seagate.com>
+        muhammad.ahmad@seagate.com, tyler.erickson@seagate.com,
+        Tyler Erickson <tyler.j.erickson@seagate.com>,
+        Michael English <michael.english@seagate.com>
+Subject: [PATCH 1/2] [PATCH v1 1/2] libata: fix reading concurrent positioning ranges log
+Date:   Tue, 31 May 2022 11:50:08 -0600
+Message-Id: <20220531175009.850-2-tyler.erickson@seagate.com>
 X-Mailer: git-send-email 2.36.0.windows.1
+In-Reply-To: <20220531175009.850-1-tyler.erickson@seagate.com>
+References: <20220531175009.850-1-tyler.erickson@seagate.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
 Content-Type: text/plain
-X-MS-Office365-Filtering-Correlation-Id: 6a9cd91b-3a7b-4871-916a-08da432e2f87
-X-MS-TrafficTypeDiagnostic: DS7PR20MB4782:EE_
-X-Microsoft-Antispam-PRVS: <DS7PR20MB4782822830A28FE432E6613589DC9@DS7PR20MB4782.namprd20.prod.outlook.com>
+X-MS-Office365-Filtering-Correlation-Id: e2f936d3-5b08-4692-ba34-08da432e30b8
+X-MS-TrafficTypeDiagnostic: MN2PR20MB3432:EE_
+X-Microsoft-Antispam-PRVS: <MN2PR20MB343287231B2F4E6BEF8F6CF689DC9@MN2PR20MB3432.namprd20.prod.outlook.com>
 STX-Hosted-IronPort-Oubound: True
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: KptogStZJYhi3VYJs27a8H9Z+dXEGC+DisQHvqkLAGdUrqpZL9z3iJwYPEZ2Qm3Y45jOmcnZMlcXy4zcy+ivj9dbgntis1qf0JNuTCaVUDQIPSA8ZjQxvjlNT1VJ5N5nUDI9Bc0JX1PhcLlkofKe/sykGlM2DCFw+UqLoD2uIlEWXXvM59a/fS2OE9BzTUUxAxYxRFgbvfi1mFz02P1am6g0VVbKThA6q9dH1KXWnpTayIt4eGqlU+33pQqWxlOFNcUS1Ko+lIa99BAK/xCTABbCVG7X50p5BAqzSZ8hobGQh5/5TmP0WyYdQvHh2wJy8QqfO/WVhGl/AzqVmvpwh4UF7VhfKZPVnPmdKWWAvFOccu4daUJNvNaCR1a0S7ih3uPQrlbki8kaG/a5byGVmxAsY1LuriKsSyKF2bIlcnDVPW7F9ciWgSIU/Uvt9MN9q0q7PebEme4uRbsQ/cldxf0icqtSNY+A8ZS8cSBh53n/jbEW/8O2QcSegeEsQKA1NO1sNzgIo4iJIGXqSwgcfZKfqh7EJ25ef9s+W/0eFbHoTNP8rgYETcdAZUUJErqyqblSP/iAqeAX3+WiASTcr1L0Z/GInHCeyXvckFAXgLrF7rCWs1Y+WgHkTpnnmf8alV1N7BViW4jL6hCg/kHBTKoc6Zo4mYBicDT8c0q8paBPTRQFyCrv3K6bTkgDHHhnE3Dhp8pdWT2htzUHp8tW3w==
-X-Forefront-Antispam-Report: CIP:192.55.16.50;CTRY:SG;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:sgspzesaa001.seagate.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230001)(40470700004)(46966006)(36840700001)(8676002)(316002)(450100002)(70586007)(186003)(107886003)(8936002)(4744005)(81166007)(36860700001)(2616005)(86362001)(83380400001)(426003)(5660300002)(40460700003)(26005)(356005)(70206006)(4326008)(336012)(44832011)(82310400005)(7696005)(6666004)(47076005)(1076003)(36756003)(508600001)(2906002)(36900700001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: OvXaElhWgQ1sW7wibiYWnsCyahAFpfr0X9k66h/RTJ3SymIZhGdr5LcfJ80ua5DEDX9CEW9Rw6ywTRTxXnh5EQXM2dq8/VD6ILqoNpgmBzBIxUiHzvxrZXlCpJKJJ/3F0NiainNzMPGdVeMUkwzbujR6hronyQH93Qv4qlZ1arI036RtBCP4LUpCNSXjtlHmZpbdqkko4PuXcuUmfF94GrhNNH9M0GeN43wLDdXPgsum0ogPAQRzuyQGJDVpe1gfFXVaZaiWZKdUI6TPLTRHu8t5ogRrGfu5iufonMN7LHtHDYwhLcO4iWrXtnBDQy+z/i/2GxjN795IGNBvTHuLNkvNR62YlC31hiFauj5fzqN0ktXErei4dNvSbJFoseJVWzGjoWzxGx9a/rz10uwjI47m+UESbKBgA/v2fFwV+35Za1HhBqf3FAMNLfJpwY/4kKo157XLNJ1nAECFkrSErpe3k3oju45pThE/hw0RlU+NHH8miUhVIZZiItAUw4cEs2Ag5QVhIl8eTPlwbnOPDwZ4GGWPUgTciwP2kz8YHTGHRq3A3vtmNzqL4LDP2QYrAYBhTH4lTu+cNJJ+nYqK4p5zIVcysrY3w+NDuWu6/CvhQeJLuzEO8Koc5oTDF0en0YD4HGB+RSEm5I+9xN8Wa1gKRWpih/fdlYQYESDbMer8W2JQQqVt6TwZf7Ziru3G2tNbUtX/G3oJf/qVmYNorg==
+X-Forefront-Antispam-Report: CIP:192.55.16.50;CTRY:SG;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:sgspzesaa001.seagate.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230001)(36840700001)(46966006)(40470700004)(47076005)(36756003)(1076003)(7696005)(6666004)(2906002)(508600001)(8936002)(107886003)(36860700001)(81166007)(450100002)(316002)(8676002)(186003)(70586007)(356005)(70206006)(40460700003)(44832011)(82310400005)(336012)(4326008)(54906003)(26005)(5660300002)(426003)(2616005)(86362001)(36900700001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: seagate.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 May 2022 17:51:26.3036
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 May 2022 17:51:28.3191
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6a9cd91b-3a7b-4871-916a-08da432e2f87
+X-MS-Exchange-CrossTenant-Network-Message-Id: e2f936d3-5b08-4692-ba34-08da432e30b8
 X-MS-Exchange-CrossTenant-Id: d466216a-c643-434a-9c2e-057448c17cbe
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=d466216a-c643-434a-9c2e-057448c17cbe;Ip=[192.55.16.50];Helo=[sgspzesaa001.seagate.com]
 X-MS-Exchange-CrossTenant-AuthSource: MW2NAM10FT050.eop-nam10.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR20MB4782
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR20MB3432
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch series fixes reading the concurrent positioning ranges.
+From: Tyler Erickson <tyler.j.erickson@seagate.com>
 
-The first patch fixes reading this in libata, where it was reading
-more data than a drive necessarily supports, resulting in a 
-command abort. There was also a change to the SCSI translated
-data to put the VPD page length in the correct starting byte.
+The concurrent positioning ranges log is not a fixed size and may depend
+on how many ranges are supported by the device. This patch uses the size
+reported in the GPL directory to determine the number of pages supported
+by the device before attempting to read this log page.
 
-In sd, the fix is adding 4 instead of 3 for the header length.
-Using 3 will always result in an error and was likely used incorrectly
-as T10 specifications list all tables starting at byte 0, and byte 3 is
-the page length, which would mean there are 4 total bytes before the
-remaining data that contains the ranges and other information.
+Also fixing the page length in the SCSI translation for the concurrent
+positioning ranges VPD page.
 
-Tyler Erickson (2):
-  libata: fix reading concurrent positioning ranges log
-  sd: Fixing interpretation of VPD B9h length
+This resolves this error from the dmesg output:
+    ata6.00: Read log 0x47 page 0x00 failed, Emask 0x1
 
- drivers/ata/libata-core.c | 21 +++++++++++++--------
- drivers/ata/libata-scsi.c |  2 +-
- drivers/scsi/sd.c         |  2 +-
- 3 files changed, 15 insertions(+), 10 deletions(-)
+Signed-off-by: Tyler Erickson <tyler.j.erickson@seagate.com>
+Reviewed-by: Muhammad Ahmad <muhammad.ahmad@seagate.com>
+Tested-by: Michael English <michael.english@seagate.com>
 
-
-base-commit: af2d861d4cd2a4da5137f795ee3509e6f944a25b
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index ca64837641be..3d57fa84e2be 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -2003,16 +2003,16 @@ unsigned int ata_read_log_page(struct ata_device *dev, u8 log,
+ 	return err_mask;
+ }
+ 
+-static bool ata_log_supported(struct ata_device *dev, u8 log)
++static int ata_log_supported(struct ata_device *dev, u8 log)
+ {
+ 	struct ata_port *ap = dev->link->ap;
+ 
+ 	if (dev->horkage & ATA_HORKAGE_NO_LOG_DIR)
+-		return false;
++		return 0;
+ 
+ 	if (ata_read_log_page(dev, ATA_LOG_DIRECTORY, 0, ap->sector_buf, 1))
+-		return false;
+-	return get_unaligned_le16(&ap->sector_buf[log * 2]) ? true : false;
++		return 0;
++	return get_unaligned_le16(&ap->sector_buf[log * 2]);
+ }
+ 
+ static bool ata_identify_page_supported(struct ata_device *dev, u8 page)
+@@ -2448,15 +2448,20 @@ static void ata_dev_config_cpr(struct ata_device *dev)
+ 	struct ata_cpr_log *cpr_log = NULL;
+ 	u8 *desc, *buf = NULL;
+ 
+-	if (ata_id_major_version(dev->id) < 11 ||
+-	    !ata_log_supported(dev, ATA_LOG_CONCURRENT_POSITIONING_RANGES))
++	if (ata_id_major_version(dev->id) < 11)
++		goto out;
++
++	buf_len = ata_log_supported(dev, ATA_LOG_CONCURRENT_POSITIONING_RANGES);
++	if (buf_len == 0)
+ 		goto out;
+ 
+ 	/*
+ 	 * Read the concurrent positioning ranges log (0x47). We can have at
+-	 * most 255 32B range descriptors plus a 64B header.
++	 * most 255 32B range descriptors plus a 64B header. This log varies in
++	 * size, so use the size reported in the GPL directory. Reading beyond
++	 * the supported length will result in an error.
+ 	 */
+-	buf_len = (64 + 255 * 32 + 511) & ~511;
++	buf_len <<= 9;
+ 	buf = kzalloc(buf_len, GFP_KERNEL);
+ 	if (!buf)
+ 		goto out;
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 06c9d90238d9..0ea9c3115529 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2101,7 +2101,7 @@ static unsigned int ata_scsiop_inq_b9(struct ata_scsi_args *args, u8 *rbuf)
+ 
+ 	/* SCSI Concurrent Positioning Ranges VPD page: SBC-5 rev 1 or later */
+ 	rbuf[1] = 0xb9;
+-	put_unaligned_be16(64 + (int)cpr_log->nr_cpr * 32 - 4, &rbuf[3]);
++	put_unaligned_be16(64 + (int)cpr_log->nr_cpr * 32 - 4, &rbuf[2]);
+ 
+ 	for (i = 0; i < cpr_log->nr_cpr; i++, desc += 32) {
+ 		desc[0] = cpr_log->cpr[i].num;
 -- 
 2.25.1
 
