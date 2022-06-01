@@ -2,91 +2,61 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB7F7C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Jun 2022 12:59:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EAEFCC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Jun 2022 15:26:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353094AbiFAM7h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Jun 2022 08:59:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43902 "EHLO
+        id S1355379AbiFAP0M (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Jun 2022 11:26:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40374 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232460AbiFAM7f (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Jun 2022 08:59:35 -0400
-Received: from mx0a-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73ECF11162;
-        Wed,  1 Jun 2022 05:59:34 -0700 (PDT)
-Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 251C1ME9017371;
-        Wed, 1 Jun 2022 12:59:19 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
- mime-version : subject : to : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=pp1;
- bh=66cj72qWa420n6emi4QsTozK10KFr6QW/aMACc/IsC4=;
- b=k0PE2oVRwYewMMl4r6pCh7MAesrPiH9lRca2UeyBjzgp5ci7Wa3uqkAPiEDQXEvBgvEu
- 4yfWXnlY5ta0DPt2Wjr/YSTr5jCnwz9i+a0o3rDtggOTHZ54DeXQusWcf61tDQcfgwYB
- 7N9HZBXN4/zjRCNqaeeC0VDGOn23xlfVohO+WB+EJWLOJzK4/gnYrbarR/SB3ph0f9IW
- 42b5y9me3cTlW1YqdXkT5ypuEXOKRKmQVfZ4CspHa6MB7oFfy+rBZJMntNEnGVNDDkOE
- dp2XhMxAbarrVPNtU1rAfIgXhakNHJ6Xvc51keCJVXXHXfE+fy3U/khAWilQRa/2bvjF lg== 
-Received: from ppma02dal.us.ibm.com (a.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.10])
-        by mx0b-001b2d01.pphosted.com (PPS) with ESMTPS id 3ge5aevc8x-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 01 Jun 2022 12:59:18 +0000
-Received: from pps.filterd (ppma02dal.us.ibm.com [127.0.0.1])
-        by ppma02dal.us.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 251CoiPA021220;
-        Wed, 1 Jun 2022 12:59:18 GMT
-Received: from b01cxnp22036.gho.pok.ibm.com (b01cxnp22036.gho.pok.ibm.com [9.57.198.26])
-        by ppma02dal.us.ibm.com with ESMTP id 3gd1ad0au9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 01 Jun 2022 12:59:18 +0000
-Received: from b01ledav002.gho.pok.ibm.com (b01ledav002.gho.pok.ibm.com [9.57.199.107])
-        by b01cxnp22036.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 251CxHO67013306
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 1 Jun 2022 12:59:17 GMT
-Received: from b01ledav002.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 4BCE1124058;
-        Wed,  1 Jun 2022 12:59:17 +0000 (GMT)
-Received: from b01ledav002.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id B12AD124053;
-        Wed,  1 Jun 2022 12:59:16 +0000 (GMT)
-Received: from [9.211.56.150] (unknown [9.211.56.150])
-        by b01ledav002.gho.pok.ibm.com (Postfix) with ESMTP;
-        Wed,  1 Jun 2022 12:59:16 +0000 (GMT)
-Message-ID: <d4ee8702-46c7-2419-40f7-b8d9709741df@linux.vnet.ibm.com>
-Date:   Wed, 1 Jun 2022 07:59:16 -0500
+        with ESMTP id S1354236AbiFAP0L (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Jun 2022 11:26:11 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CEF258BD1F
+        for <linux-scsi@vger.kernel.org>; Wed,  1 Jun 2022 08:26:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=E77/WXWOyqWzZHMuvqn6u4ViSJAIoDEYBKBzEd54GKE=; b=kUJiKMeoHpdvUSd9mZ1Id2uKRY
+        oxYkVN6g/b2sCh7/B93/uR4ikZrex9It03Si1rRQq6ikZwUbx7JtLYIqMvwaNozfHZLWsQJPtZ6WH
+        TLCeSPyHO0fKWoCfhPVca7uEbEWpX8ldGHuquGTp2kOO94nPj5v8WxQSH0qAFTKfS24I5hGo2AgNQ
+        2rPp5IeVJhAmSVPs1mK9Ggltj1vOwo/1mClCXZZINtzLmbRR+NrV74Ab7H+syCFz6sbKWgZeMM3S4
+        +54KAVcT3FFOuZNzUfn1eBHYWP0uN0LAke5JSPKgXHJJq21vNWba7yX2xuwq4sIQK+nGPg8Enbbip
+        n7rtRExg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nwQEa-00Gsjr-FX; Wed, 01 Jun 2022 15:26:08 +0000
+Date:   Wed, 1 Jun 2022 08:26:08 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Dongliang Mu <mudongliangabcd@gmail.com>
+Subject: Re: [PATCH v3 1/2] scsi: sd: Fix potential NULL pointer dereference
+Message-ID: <YpeFEMWC48tPISK1@infradead.org>
+References: <20220601062544.905141-1-damien.lemoal@opensource.wdc.com>
+ <20220601062544.905141-2-damien.lemoal@opensource.wdc.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.0
-Subject: Re: [PATCH 3/6] scsi: ipr: fix missing/incorrect resource cleanup in
- error case
-Content-Language: en-US
-To:     Chengguang Xu <cgxu519@mykernel.net>, netdev@vger.kernel.org,
-        linux-staging@lists.linux.dev, linux-scsi@vger.kernel.org,
-        linux-samsung-soc@vger.kernel.org, linux-media@vger.kernel.org
-References: <20220529153456.4183738-1-cgxu519@mykernel.net>
- <20220529153456.4183738-4-cgxu519@mykernel.net>
-From:   Brian King <brking@linux.vnet.ibm.com>
-In-Reply-To: <20220529153456.4183738-4-cgxu519@mykernel.net>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: 2erhlMD9EfkOHm_SO_Xt_703KUfPLYW3
-X-Proofpoint-ORIG-GUID: 2erhlMD9EfkOHm_SO_Xt_703KUfPLYW3
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.874,Hydra:6.0.517,FMLib:17.11.64.514
- definitions=2022-06-01_03,2022-06-01_01,2022-02-23_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 clxscore=1011
- malwarescore=0 lowpriorityscore=0 bulkscore=0 spamscore=0 phishscore=0
- adultscore=0 impostorscore=0 priorityscore=1501 mlxlogscore=944
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2204290000 definitions=main-2206010057
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220601062544.905141-2-damien.lemoal@opensource.wdc.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Acked-by: Brian King <brking@linux.vnet.ibm.com>
+On Wed, Jun 01, 2022 at 03:25:43PM +0900, Damien Le Moal wrote:
+> If sd_probe() sees an early error before sdkp->device is initialized,
+> sd_zbc_release_disk() is called. This causes a NULL pointer dereference
+> when sd_is_zoned() is called inside that function. Avoid this by
+> removing the call to sd_zbc_release_disk() in sd_probe() error path.
+> 
+> This chnage is safe and does not result in zone information memory
+> leakage because the zone information for a zoned disk is allocated only
+> when sd_revalidate_disk() is called, at which point sdkp->disk_dev is
+> fully set, resulting in sd_disk_release() being called when needed to
+> cleanup a disk zone information using sd_zbc_release_disk().
 
+Looks good:
 
--- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
