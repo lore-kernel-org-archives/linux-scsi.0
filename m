@@ -2,116 +2,122 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7251BC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Jun 2022 01:17:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53445C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Jun 2022 05:24:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348960AbiFABRg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 31 May 2022 21:17:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33310 "EHLO
+        id S243479AbiFAFYp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Jun 2022 01:24:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41484 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240650AbiFABRf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 May 2022 21:17:35 -0400
-Received: from beige.elm.relay.mailchannels.net (beige.elm.relay.mailchannels.net [23.83.212.16])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA4236AA47
-        for <linux-scsi@vger.kernel.org>; Tue, 31 May 2022 18:17:33 -0700 (PDT)
-X-Sender-Id: dreamhost|x-authsender|dave@stgolabs.net
-Received: from relay.mailchannels.net (localhost [127.0.0.1])
-        by relay.mailchannels.net (Postfix) with ESMTP id 770C76C0B6B;
-        Wed,  1 Jun 2022 01:17:32 +0000 (UTC)
-Received: from pdx1-sub0-mail-a312.dreamhost.com (unknown [127.0.0.6])
-        (Authenticated sender: dreamhost)
-        by relay.mailchannels.net (Postfix) with ESMTPA id 00FC76C1F8C;
-        Wed,  1 Jun 2022 01:17:31 +0000 (UTC)
-ARC-Seal: i=1; s=arc-2022; d=mailchannels.net; t=1654046252; a=rsa-sha256;
-        cv=none;
-        b=L8rMjzQzvh1m8NioFteABavyfkEpAGlOANnCm622kZKWlMmLkaEqXbry5deFyu1A7Fh+Kz
-        XfihPXQt6lcM7nX04IfBd3XEBdqBLq9/+6Ey0fYQ1DSxHlET6uTSo5HI0fd97o4QDEck3y
-        XmDoVY6GkJ/nMjQGJZiWZOjsx6q2ou7JVJLmiT03LFRlypjzsg8Z3jX+u5xWtY73X3JAhT
-        KtJ/SUvN4yVoP+f5ORlb4Md1Kr5Xe9ti6FtD1siv9hxTpNxcwqomLKHJQ+s8UbWiKZsmxX
-        ORuk9NARE+A8jR3NmBb386h7JIe6S6Xwv5khMgxYJASjbpZEsrRlu8VYk8tkhw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed;
- d=mailchannels.net;
-        s=arc-2022; t=1654046252;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references:dkim-signature;
-        bh=67QV2syKHfujLqDY+ow0Q8tEmOltRA1ZVBk3hYSQpeg=;
-        b=AM5OEmbT/zkkB+Ip4E5NyO35Y0RGx+116ccxhhu345YW5A6LwbMQQF/AaAS/F3eWUL4rSB
-        FEqLdz2D+iZyxzc3+fsEkPWAdhmscfnmUY4oHcFMZOM1Iowq6LGNeXan5F3HJZYy25K/Kj
-        Ozbp5vUVm04ChDcQ56iEx4qsRY7fb84r9Cq7rkuribVBeuYqCAmN7po+gAjwiqA/FZagfG
-        54dzLf7xbDk6SMcopgNjwnUazrVQND5632Bunkq8k0VbsIWuykNFwOk45YBKerCK6GuJK8
-        oKM5NMxiXo9JUvpM0Gy0BTPPgElUuGLvqo1pcVnssWo8czwytcqdsTLMQSvBJQ==
-ARC-Authentication-Results: i=1;
-        rspamd-77f9f854d9-b48pf;
-        auth=pass smtp.auth=dreamhost smtp.mailfrom=dave@stgolabs.net
-X-Sender-Id: dreamhost|x-authsender|dave@stgolabs.net
-X-MC-Relay: Neutral
-X-MailChannels-SenderId: dreamhost|x-authsender|dave@stgolabs.net
-X-MailChannels-Auth-Id: dreamhost
-X-Minister-Tank: 2b880eed2c6af33a_1654046252278_305331953
-X-MC-Loop-Signature: 1654046252278:2946322889
-X-MC-Ingress-Time: 1654046252278
-Received: from pdx1-sub0-mail-a312.dreamhost.com (pop.dreamhost.com
- [64.90.62.162])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384)
-        by 100.124.238.93 (trex/6.7.1);
-        Wed, 01 Jun 2022 01:17:32 +0000
-Received: from offworld (unknown [104.36.31.105])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: dave@stgolabs.net)
-        by pdx1-sub0-mail-a312.dreamhost.com (Postfix) with ESMTPSA id 4LCWTk6xp9z3H;
-        Tue, 31 May 2022 18:17:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=stgolabs.net;
-        s=dreamhost; t=1654046251;
-        bh=67QV2syKHfujLqDY+ow0Q8tEmOltRA1ZVBk3hYSQpeg=;
-        h=Date:From:To:Cc:Subject:Content-Type;
-        b=cijgYHKX1/SO5ka0O6E4UNpWZN3PoGgf9VrysAaQnNUHsxwV9C4Tc7MVWEhcnZshX
-         YrQSOyLWDejJF0llOZQTTCzhXaZSAHEBclzTaYNReeinUcCTgpKBkMvTZnQuar9GzG
-         VwkH2gMH/puJaaufEDxGEJhTx3OAqQdOi+EM9AwQySF69jGkj+HsYQyMr7wzLwNKqX
-         0s1Ew9sj4KJAiYr4Th13iz0Lzbql9VjP15bqwDnSIq2xT8aS+9aXywYdWfMWMkLyRi
-         AE73paoKvtHj+a3rMUpidS4Jq7WhJeSxkxjVuejqmdlw+7+d67JIDLqG845rkr4VSP
-         3R9YObSxDu7tQ==
-Date:   Tue, 31 May 2022 18:04:07 -0700
-From:   Davidlohr Bueso <dave@stgolabs.net>
-To:     Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc:     John Garry <john.garry@huawei.com>, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, ejb@linux.ibm.com, tglx@linutronix.de
-Subject: Re: [PATCH 01/10] scsi/mvsas: Kill CONFIG_SCSI_MVSAS_TASKLET
-Message-ID: <20220601010407.kar45dc75pqcuhhl@offworld>
-References: <20220530231512.9729-1-dave@stgolabs.net>
- <20220530231512.9729-2-dave@stgolabs.net>
- <17747966-ea44-ebe5-3d79-df7c33b6a16e@huawei.com>
- <20220531145231.opypdzrlrg23ihil@offworld>
- <5d28e848-0b9d-2aaa-e00e-7888342d25a7@huawei.com>
- <YpYxfSYDbCJEh9PG@linutronix.de>
+        with ESMTP id S233773AbiFAFYp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Jun 2022 01:24:45 -0400
+Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 615CC9808E;
+        Tue, 31 May 2022 22:24:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1654061084; x=1685597084;
+  h=message-id:date:mime-version:subject:to:references:from:
+   in-reply-to:content-transfer-encoding;
+  bh=xQX06L/jjtHWDY6RNz/MSNPKBx6FjSI+BucvNOskFdQ=;
+  b=WNGmPGOiy8HZnVKi5EgYf2dEGDICid/2pP52DOoxVHl3P71nH1C4qRqm
+   zlxTAQ27/AoS5Et8lE2Pp2TlU9KXT/0bGyST10+v58VfzmY5adMY7KcQ+
+   Et6Qi5Xw71fHfr0LXzJsEypZQsY43I7aZlModN82LXavXpPxLlGh4uMoA
+   o2UhyXCQEjH0pQqNn0x6kEvigrHPS78UxWahgoYJ1CqIT1dUvuJDaeC9e
+   ILyzryrp8etSr0ufvoI5/GlgI+qfzddOPvBhR8VvhIGJolWShRlHzZI7a
+   sycGHzU6kTUt3++60NCj8sgddAM8o9WzQFrXgEekKYY0yn9OVtD6bijGS
+   g==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10364"; a="275556165"
+X-IronPort-AV: E=Sophos;i="5.91,266,1647327600"; 
+   d="scan'208";a="275556165"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2022 22:24:44 -0700
+X-IronPort-AV: E=Sophos;i="5.91,266,1647327600"; 
+   d="scan'208";a="606070502"
+Received: from ahunter6-mobl1.ger.corp.intel.com (HELO [10.0.2.15]) ([10.252.44.223])
+  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2022 22:24:40 -0700
+Message-ID: <d3038c9e-c9ec-16e9-bad4-8b1de5e23ba6@intel.com>
+Date:   Wed, 1 Jun 2022 08:24:36 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <YpYxfSYDbCJEh9PG@linutronix.de>
-User-Agent: NeoMutt/20220429
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Firefox/91.0 Thunderbird/91.9.1
+Subject: Re: [PATCH] scsi: ufs: add a quirk to disable FUA support
+Content-Language: en-US
+To:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Can Guo <cang@codeaurora.org>
+References: <20220531201053.3300018-1-jaegeuk@kernel.org>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+In-Reply-To: <20220531201053.3300018-1-jaegeuk@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 31 May 2022, Sebastian Andrzej Siewior wrote:
+On 31/05/22 23:10, Jaegeuk Kim wrote:
+> UFS stack shows very low performance of FUA comparing to write and cache_flush.
+> Let's add a quirk to adjust it.
+> 
+> E.g., average latency according to the chunk size of write
+> 
+> Write(us/KB)	4	64	256	1024	2048
+> FUA		873.792	754.604	995.624	1011.67	1067.99
+> CACHE_FLUSH	824.703	712.98	800.307	1019.5	1037.37
 
->On 2022-05-31 16:12:05 [+0100], John Garry wrote:
->> Sorry, maybe I was not clear, but I was just asking if there was a good
->> reason to disable interrupts at source while handling the interrupt, and not
->> the change to stop using a tasklet.
->
->Without reading the patch first: You need to disable the interrupt
->source while the tasklet/ threaded interrupt is handled. Otherwise the
->interrupt will keep coming and the tasklet/ threaded interrupt will have
->no chance to make progress. So the box will lock up. This is often
->overseen on fast machines because the interrupt needs a few usecs to
->trigger and so the CPU is able to make a little bit of progress between
->each trigger.
+Wouldn't it depend on how much data might be in the cache?
+Do you have real-world use-cases where the difference is measurable?
 
-In addition it keeps current semantics wrt ksoftirqd, so no guarantees
-this runs in irq context in the first place.
+> 
+> Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 3 +++
+>  drivers/scsi/ufs/ufshcd.h | 5 +++++
+>  2 files changed, 8 insertions(+)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 3f9caafa91bf..811f3467879c 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -5035,6 +5035,9 @@ static int ufshcd_slave_configure(struct scsi_device *sdev)
+>  	 */
+>  	sdev->silence_suspend = 1;
+>  
+> +	if (hba->quirks & UFSHCD_QUIRK_BROKEN_FUA)
+> +		sdev->broken_fua = 1;
+> +
+>  	ufshcd_crypto_register(hba, q);
+>  
+>  	return 0;
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index 94f545be183a..6c480c6741d6 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -602,6 +602,11 @@ enum ufshcd_quirks {
+>  	 * support physical host configuration.
+>  	 */
+>  	UFSHCD_QUIRK_SKIP_PH_CONFIGURATION		= 1 << 16,
+> +
+> +	/*
+> +	 * This quirk disables FUA support.
+> +	 */
+> +	UFSHCD_QUIRK_BROKEN_FUA				= 1 << 17,
 
-Thanks,
-Davidlohr
+Wouldn't it be more appropriate to make it a UFS_DEVICE_QUIRK_
+since it presumably depends on the UFS device not the host controller?
+
+Also, as already commented by others, there needs to be a user of
+the quirk
+
+>  };
+>  
+>  enum ufshcd_caps {
+
