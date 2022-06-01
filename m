@@ -2,145 +2,127 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E03FC433F5
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Jun 2022 10:44:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1D56C433FE
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Jun 2022 11:24:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350053AbiFAKo2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Jun 2022 06:44:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49076 "EHLO
+        id S1352797AbiFALYN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Jun 2022 07:24:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37258 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242018AbiFAKoX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Jun 2022 06:44:23 -0400
-X-Greylist: delayed 903 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 01 Jun 2022 03:44:20 PDT
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB6727CB4E;
-        Wed,  1 Jun 2022 03:44:20 -0700 (PDT)
-Received: from [192.168.1.103] (31.173.86.38) by msexch01.omp.ru (10.188.4.12)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Wed, 1 Jun 2022
- 13:29:11 +0300
-Subject: Re: [PATCH 1/2] [PATCH v1 1/2] libata: fix reading concurrent
- positioning ranges log
-To:     Tyler Erickson <tyler.erickson@seagate.com>,
-        <damien.lemoal@opensource.wdc.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-ide@vger.kernel.org>,
-        <muhammad.ahmad@seagate.com>,
-        Tyler Erickson <tyler.j.erickson@seagate.com>,
-        Michael English <michael.english@seagate.com>
-References: <20220531175009.850-1-tyler.erickson@seagate.com>
- <20220531175009.850-2-tyler.erickson@seagate.com>
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <1051b626-63a5-5a97-e3c5-4d89e1f7a229@omp.ru>
-Date:   Wed, 1 Jun 2022 13:29:06 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S1352816AbiFALX7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Jun 2022 07:23:59 -0400
+Received: from mail-ed1-x52c.google.com (mail-ed1-x52c.google.com [IPv6:2a00:1450:4864:20::52c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 737D95E77B
+        for <linux-scsi@vger.kernel.org>; Wed,  1 Jun 2022 04:23:11 -0700 (PDT)
+Received: by mail-ed1-x52c.google.com with SMTP id er5so1690898edb.12
+        for <linux-scsi@vger.kernel.org>; Wed, 01 Jun 2022 04:23:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=EmX78kZDbpi7zDJcl5NRBNnxEqWkEcLfuWB3zLytvQ4=;
+        b=r55wWxDb8gLLLDShPuOiJjmUz1D5Xgin/ldr6b/Tnulo5/FyaoiTrGCFmJK10iRxpl
+         /b5twD1DES3+6TJftiXJLlEH5MTxw6tzyqTXWS49/e4fUXACwFeWmyPUdl79bB1ZMm28
+         1EQZtIGbcpDoxuCn3othqQWKg+D6efafEyLZYTIBuSeyngpnqUPZSWp0zb/eRJWQMD+4
+         W6q5xcRyZJBNbHcwT564fW1iOCfBexrbxseQQNfQI9zG+QVQGtdYMM8Iugx4ALnbLNtu
+         EfIQzbvmIUrpisGyxuU8pS95ihIaVEMR2VjCfh69jDHQWuXdYfHfC7+QL1vDtMre9YvW
+         WOjA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=EmX78kZDbpi7zDJcl5NRBNnxEqWkEcLfuWB3zLytvQ4=;
+        b=Dbnm0YRnMmbqVIXIYdPijU2uLHvJVjH4icSbi0UKUS0AuxIg1uLo2mHBEy0XURN3VX
+         E048edjpCyZxlQs/MRRd3OL8GtpEcfrMj8YLyJANOOgIwpOJFHTG8RmedJ27okjDRLkg
+         BP5oft03TBDmBgKlGCN2DOqBwDLUx9lYTgDS1K4bbwMfeU+asRl2/99OFg4ZuXyppdVB
+         GsIEibSGt81XHjdKd7XsXzO5cmf4xfWrWUbgWQDX7xwS+bb/LOeAz6wRl7bjCy2QZVEi
+         kog5utUfwxLjNhCPC6gOsfm8WY566ZD+epAuyxQ9mKquI+7r5q98OBE/wS7lFg/V8+Ch
+         +EdA==
+X-Gm-Message-State: AOAM531aOLrapqAkVtA6Hf9gzQkht19PRXou8t3K3j64cAd42NSAlBUb
+        ZdoGJrVtvqUUnmZd75qmfu5TfA==
+X-Google-Smtp-Source: ABdhPJzOJxGalCbiJf1Q2Q8zI2vrTUHr2z0fwXYzl5tTyez6dQrB/mI0xzVPeI2IOWLC/p/Lwqsvsw==
+X-Received: by 2002:a05:6402:1907:b0:42d:e90e:337 with SMTP id e7-20020a056402190700b0042de90e0337mr7327648edz.405.1654082589971;
+        Wed, 01 Jun 2022 04:23:09 -0700 (PDT)
+Received: from [192.168.0.179] (xdsl-188-155-176-92.adslplus.ch. [188.155.176.92])
+        by smtp.gmail.com with ESMTPSA id p19-20020a056402155300b0042617ba638esm823008edx.24.2022.06.01.04.23.08
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 01 Jun 2022 04:23:09 -0700 (PDT)
+Message-ID: <7a66f2e2-1a2a-a262-138c-f535499984ae@linaro.org>
+Date:   Wed, 1 Jun 2022 13:23:08 +0200
 MIME-Version: 1.0
-In-Reply-To: <20220531175009.850-2-tyler.erickson@seagate.com>
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.9.1
+Subject: Re: [RFC PATCH v2 4/6] PM: opp: allow control of multiple clocks
 Content-Language: en-US
+To:     Viresh Kumar <viresh.kumar@linaro.org>
+Cc:     Stephen Boyd <sboyd@kernel.org>, Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Taniya Das <tdas@codeaurora.org>,
+        linux-arm-msm@vger.kernel.org, linux-clk@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+References: <20220411154347.491396-1-krzysztof.kozlowski@linaro.org>
+ <20220411154347.491396-5-krzysztof.kozlowski@linaro.org>
+ <20220425072710.v6gwo4gu3aouezg4@vireshk-i7>
+ <dea39b1f-0091-2690-7f07-108d07ef9f3c@linaro.org>
+ <20220510044053.ykn6ygnbeokhzrsa@vireshk-i7>
+ <1e533194-7047-8342-b426-f607fddbfaa3@linaro.org>
+ <20220511050643.hd5tcrojb3wkbg7t@vireshk-i7>
+ <20220518235708.1A04CC385A9@smtp.kernel.org>
+ <65a4c28d-6702-3a9f-f837-1ea69a428777@linaro.org>
+ <20220531103029.ntoypaafnd6447ag@vireshk-i7>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+In-Reply-To: <20220531103029.ntoypaafnd6447ag@vireshk-i7>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [31.173.86.38]
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 06/01/2022 10:09:49
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 19
-X-KSE-AntiSpam-Info: Lua profiles 170829 [Jun 01 2022]
-X-KSE-AntiSpam-Info: Version: 5.9.20.0
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 480 480 261f383ad0914b4f7c346116c50b8459e26206b6
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.86.38 in (user)
- b.barracudacentral.org}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.86.38 in (user) dbl.spamhaus.org}
-X-KSE-AntiSpam-Info: 127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;omp.ru:7.1.1
-X-KSE-AntiSpam-Info: {fromrtbl complete}
-X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.86.38
-X-KSE-AntiSpam-Info: Rate: 19
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=none header.from=omp.ru;spf=none
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 06/01/2022 10:12:00
-X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 6/1/2022 8:40:00 AM
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello!
-
-On 5/31/22 8:50 PM, Tyler Erickson wrote:
-
-> From: Tyler Erickson <tyler.j.erickson@seagate.com>
+On 31/05/2022 12:30, Viresh Kumar wrote:
+> On 19-05-22, 10:03, Krzysztof Kozlowski wrote:
+>> Yes, true. The clock frequencies are still changed with each gear, but
+>> in general the UFS indeed operates on gear concept.
 > 
-> The concurrent positioning ranges log is not a fixed size and may depend
-> on how many ranges are supported by the device. This patch uses the size
-> reported in the GPL directory to determine the number of pages supported
-> by the device before attempting to read this log page.
+> Hi Krzysztof,
 > 
-> Also fixing the page length in the SCSI translation for the concurrent
-> positioning ranges VPD page.
+> I have redesigned the OPP core a bit (two patchsets until now) to make
+> it easier to add multiple clock support going forward. I need some
+> inputs from you before moving forward with it now. Will this work for
+> your use case:
 > 
-> This resolves this error from the dmesg output:
->     ata6.00: Read log 0x47 page 0x00 failed, Emask 0x1
+> - Add support for multiple clocks, where none of them is primary.
 > 
-> Signed-off-by: Tyler Erickson <tyler.j.erickson@seagate.com>
-> Reviewed-by: Muhammad Ahmad <muhammad.ahmad@seagate.com>
-> Tested-by: Michael English <michael.english@seagate.com>
+> - Which means you won't be able to use dev_pm_opp_set_rate() but will
+>   need something like dev_pm_opp_set_level(), will add it.
 > 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index ca64837641be..3d57fa84e2be 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -2003,16 +2003,16 @@ unsigned int ata_read_log_page(struct ata_device *dev, u8 log,
->  	return err_mask;
->  }
->  
-> -static bool ata_log_supported(struct ata_device *dev, u8 log)
-> +static int ata_log_supported(struct ata_device *dev, u8 log)
+> - That is, your OPP table will need to implement levels (I think of
+>   them as UFS gears) and then call dev_pm_opp_set_level() instead.
+> 
+> - This new API will work just like dev_pm_opp_set_rate(), except that
+>   it will find the target OPP based on level instead of freq and
+>   support configuration of multiple clock frequencies.
+> 
+> - Of course both these APIs will share most of the code.
 
-   Maybe *unsigned int*? The 'buf_len' variable below is 'size_t' which is *unsigned* type...
+Hi Viresh,
 
->  {
->  	struct ata_port *ap = dev->link->ap;
->  
->  	if (dev->horkage & ATA_HORKAGE_NO_LOG_DIR)
-> -		return false;
-> +		return 0;
->  
->  	if (ata_read_log_page(dev, ATA_LOG_DIRECTORY, 0, ap->sector_buf, 1))
-> -		return false;
-> -	return get_unaligned_le16(&ap->sector_buf[log * 2]) ? true : false;
-> +		return 0;
-> +	return get_unaligned_le16(&ap->sector_buf[log * 2]);
->  }
->  
->  static bool ata_identify_page_supported(struct ata_device *dev, u8 page)
-> @@ -2448,15 +2448,20 @@ static void ata_dev_config_cpr(struct ata_device *dev)
->  	struct ata_cpr_log *cpr_log = NULL;
->  	u8 *desc, *buf = NULL;
->  
-> -	if (ata_id_major_version(dev->id) < 11 ||
-> -	    !ata_log_supported(dev, ATA_LOG_CONCURRENT_POSITIONING_RANGES))
-> +	if (ata_id_major_version(dev->id) < 11)
-> +		goto out;
-> +
-> +	buf_len = ata_log_supported(dev, ATA_LOG_CONCURRENT_POSITIONING_RANGES);
-> +	if (buf_len == 0)
->  		goto out;
-[...]
+In general this looks reasonable and matches how the UFS gears should be
+modeled. It does not match how UFS drivers implemented the clock
+scaling, but that's the internal problem of UFS drivers. They scale the
+clocks only max or min, even though there are multiple gears in between.
+The new approach looks therefore appropriate.
 
-MBR, Sergey
+Best regards,
+Krzysztof
