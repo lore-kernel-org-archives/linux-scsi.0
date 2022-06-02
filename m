@@ -2,83 +2,99 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D53B6C43334
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jun 2022 16:47:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B606C43334
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jun 2022 16:55:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237260AbiFBQrm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Jun 2022 12:47:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58912 "EHLO
+        id S237262AbiFBQzU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Jun 2022 12:55:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35008 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237255AbiFBQrk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jun 2022 12:47:40 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DBD311C36
-        for <linux-scsi@vger.kernel.org>; Thu,  2 Jun 2022 09:47:39 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id C26DAB82042
-        for <linux-scsi@vger.kernel.org>; Thu,  2 Jun 2022 16:47:37 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 7F6CEC385A5
-        for <linux-scsi@vger.kernel.org>; Thu,  2 Jun 2022 16:47:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654188456;
-        bh=SDfnUUWAHwT7p+S9l+ptsKUFn3q0NGh9p3/XFaZESvs=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=AXqHhoOwd1kEsUQVcJtiPdZSDIeiQ3c4BkLa0h3JzjTwj8L/BoGni/bNEE4a6T9kD
-         wUXRAI/zJpy/or5y49qyTDeiwlB1DQ429HDCpIbIn0khBn0t8gl2CbncYyJ225rqLL
-         iSkIiJWd/KnQOJvt9sNyN0ijI9JwD/Oz9hpksuHSrBJjAboTrBqcqk89RpUMa3wiyr
-         f+y/YOjPiFjMbNvY4ACDGE/2zFhy94xPoFU6IgptGJXvFFmflqlskJBJ8V3phhEZi0
-         w85X9dLNBFuCKmIS4JiBuhoyFNpsVT9IIeubEFTAl9yUyCFd53TBOnA1qdoE0uKDU8
-         nqM5Ms3fXF8zQ==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 6A2C0CAC6E2; Thu,  2 Jun 2022 16:47:36 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 216059] Scsi host number of Adaptec RAID controller changes
- upon a PCIe hotplug and re-insert
-Date:   Thu, 02 Jun 2022 16:47:36 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: Other
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: bjorn@helgaas.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: cc component assigned_to product
-Message-ID: <bug-216059-11613-xKX7KIohMi@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-216059-11613@https.bugzilla.kernel.org/>
-References: <bug-216059-11613@https.bugzilla.kernel.org/>
+        with ESMTP id S237395AbiFBQzS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jun 2022 12:55:18 -0400
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BE0E280B04;
+        Thu,  2 Jun 2022 09:55:17 -0700 (PDT)
+Received: from pps.filterd (m0187473.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 252ElSe0030355;
+        Thu, 2 Jun 2022 16:55:14 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
+ from : reply-to : to : cc : date : in-reply-to : references : content-type
+ : mime-version : content-transfer-encoding; s=pp1;
+ bh=3QGpyi15ADQCpJqFxbfSJxJ4l8rD4MAyDEb7SZzXCj8=;
+ b=LKVwfCdR/gdDCMqaYq7lGuc0q3jIodDSqDS17Av/8LOX0k26neKYHdEZZYT86kQ13EVV
+ o1bPU6o43rpEPpx3H6gLLEIZ2RFXp5JjLxv/kSKTmDejIlSap0EKOpM1dp0gHAz8vSZ1
+ xxLp1s5jBhFVPm7P0Jtf6kXust9njJxC9iFPt7nyYDcFSoDcp/ZXRysbxXZcS/3sJsCw
+ mnZq9fNGveojqhVjSBlC18ZUK+ZtChNztizaVYqZzdIyXiaJLPExGB8kOfzw75J/I4zu
+ v/v0WEAxmJbv2uvbosXoneMMFakosbff7bLfnzhOEs3jvLUYegbPZnsXs1NDRkF2+l30 Jg== 
+Received: from ppma01dal.us.ibm.com (83.d6.3fa9.ip4.static.sl-reverse.com [169.63.214.131])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3gey95aa8b-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 02 Jun 2022 16:55:13 +0000
+Received: from pps.filterd (ppma01dal.us.ibm.com [127.0.0.1])
+        by ppma01dal.us.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 252Gq6jH003656;
+        Thu, 2 Jun 2022 16:55:12 GMT
+Received: from b03cxnp07029.gho.boulder.ibm.com (b03cxnp07029.gho.boulder.ibm.com [9.17.130.16])
+        by ppma01dal.us.ibm.com with ESMTP id 3gcxt5urq9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 02 Jun 2022 16:55:12 +0000
+Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
+        by b03cxnp07029.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 252GtBWd32833926
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 2 Jun 2022 16:55:11 GMT
+Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 7D82678072;
+        Thu,  2 Jun 2022 16:55:11 +0000 (GMT)
+Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id BFC957806B;
+        Thu,  2 Jun 2022 16:55:10 +0000 (GMT)
+Received: from [IPv6:2601:5c4:4300:c551:a71:90ff:fec2:f05b] (unknown [9.211.86.50])
+        by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
+        Thu,  2 Jun 2022 16:55:10 +0000 (GMT)
+Message-ID: <575d1720aa070bf46097510a6c29c2e91276ff7d.camel@linux.ibm.com>
+Subject: Re: Fwd: [Bug 216059] New: Scsi host number of Adaptec RAID
+ controller changes upon a PCIe hotplug and re-insert
+From:   James Bottomley <jejb@linux.ibm.com>
+Reply-To: jejb@linux.ibm.com
+To:     bjorn@helgaas.com,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Linux PCI <linux-pci@vger.kernel.org>,
+        sagar.biradar@microchip.com
+Date:   Thu, 02 Jun 2022 12:55:09 -0400
+In-Reply-To: <CABhMZUXf1hD-phj5p2BB62WC9eK9SRZUOutsfSinUKf_bWCC2g@mail.gmail.com>
+References: <bug-216059-41252@https.bugzilla.kernel.org/>
+         <CABhMZUXf1hD-phj5p2BB62WC9eK9SRZUOutsfSinUKf_bWCC2g@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: 1RauoihfGJJue41cmpYcEBvCBbb67pAz
+X-Proofpoint-ORIG-GUID: 1RauoihfGJJue41cmpYcEBvCBbb67pAz
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.874,Hydra:6.0.517,FMLib:17.11.64.514
+ definitions=2022-06-02_05,2022-06-02_01,2022-02-23_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
+ lowpriorityscore=0 impostorscore=0 mlxlogscore=999 spamscore=0
+ clxscore=1011 adultscore=0 bulkscore=0 mlxscore=0 phishscore=0
+ priorityscore=1501 suspectscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2204290000 definitions=main-2206020068
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D216059
+On Thu, 2022-06-02 at 11:46 -0500, Bjorn Helgaas wrote:
+> From bugzilla.  Reported against PCI, but I think the SCSI host
+> number is determined by SCSI, not by PCI, so I don't see a PCI issue
+> here.
 
-Bjorn Helgaas (bjorn@helgaas.com) changed:
+Agree this is SCSI.  However, can we be clear about what the
+expectation is?  Host Number looks like it should be expected to change
+on hot plug/hot unplug, so what is the actual problem?
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |bjorn@helgaas.com
-          Component|PCI                         |Other
-           Assignee|drivers_pci@kernel-bugs.osd |scsi_drivers-other@kernel-b
-                   |l.org                       |ugs.osdl.org
-            Product|Drivers                     |SCSI Drivers
+I get that the driver not releasing the host is causing this, but even
+if it did do instant release, when you hot plug two SCSI devices, you
+stand a good chance of getting a different host number anyway.
 
---=20
-You may reply to this email to add a comment.
+James
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+
