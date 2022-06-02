@@ -2,204 +2,135 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56096C43334
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jun 2022 19:00:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 051B9C43334
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jun 2022 22:46:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238312AbiFBTAr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Jun 2022 15:00:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41026 "EHLO
+        id S239738AbiFBWqD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Jun 2022 18:46:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51230 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238334AbiFBTAo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jun 2022 15:00:44 -0400
-Received: from mail-lf1-x12e.google.com (mail-lf1-x12e.google.com [IPv6:2a00:1450:4864:20::12e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7508218B
-        for <linux-scsi@vger.kernel.org>; Thu,  2 Jun 2022 12:00:42 -0700 (PDT)
-Received: by mail-lf1-x12e.google.com with SMTP id h23so9227273lfe.4
-        for <linux-scsi@vger.kernel.org>; Thu, 02 Jun 2022 12:00:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=purestorage.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=bLXqpZqUpjmLtDJLdYDDgRERBZs8x5eg23gMXRE2O2I=;
-        b=dr78rjNQlaLH6J7W/s+cvsrN8F6fedE+eFge26685r0DNnsuE/D41GDCJm4wx64lEo
-         C1Xrmmayy9fx0wKO+3A4jecFcZLRAZybR0+HNsyUoqJUphOAmEZToPPkTaojPMHZH4E/
-         WyIrDm8IDqEhNL9aqf50DiGSVHXGTXnJ46pZc=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=bLXqpZqUpjmLtDJLdYDDgRERBZs8x5eg23gMXRE2O2I=;
-        b=4cCyylw1vexwDPf7ZEEink0CclCVckl+JPsNf4qC4WUAaGvWQSxEsI5Y0T/unMv4yK
-         Ft8mA6aiLD422FsWNWenpGJSNYHHdr0jDHw5e3Pgxidqzq45jhSDEDubrvN+g3qz3aGJ
-         hY3wz6Nup7sK6SeUZyzIUtdTkmDqgMKf9AtB0067NuCYF5wa09SYDBjPLRreXGTA3EWd
-         M2l3eXXZJFfYA/bblDwQfy7Jk9RQz3sGc1XKafUnpo6WpqSl+dcTyoWBB/gDY+rV+wt+
-         yc/jOD9WNdd7f10psi254284t3+nB0t3PzkxkIEDMp2q9yBzaAq7aWPkMK/XI+ZwEC8s
-         ARjA==
-X-Gm-Message-State: AOAM533HD2ebFFRlDdmcBsrijjdCHPCMn7SVNO8lqGF/F3zmCcWhN67r
-        LtuHhZnme0I2cej3OTREeNhAXObc8CyRoGu5zD1fFqFXVb1NTw==
-X-Google-Smtp-Source: ABdhPJycdpow/f52aXXEG2UlzWrKJNIDuhpykCxvmNIp0xbY7jcDjB+7pKGmbdJ4E7jAef5zdToIU29goQ8lDxLmDF0=
-X-Received: by 2002:a05:6512:687:b0:478:d7ba:6a7c with SMTP id
- t7-20020a056512068700b00478d7ba6a7cmr4410545lfe.556.1654196441050; Thu, 02
- Jun 2022 12:00:41 -0700 (PDT)
+        with ESMTP id S237041AbiFBWqC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jun 2022 18:46:02 -0400
+Received: from esa.hc4959-67.iphmx.com (esa.hc4959-67.iphmx.com [139.138.35.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 465ED344D3;
+        Thu,  2 Jun 2022 15:46:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=seagate.com; i=@seagate.com; q=dns/txt; s=stxiport;
+  t=1654209961; x=1685745961;
+  h=from:to:cc:subject:date:message-id:mime-version;
+  bh=OvYfV4KBsfweQ9t7i1V+hQSHTXoBitwN8bBZ/Gs/TzY=;
+  b=rNOzI526W06kMrmnu8+WTuPMiddG584FTJPYpoiJCePNK69jsB8xNQ5O
+   BOM4hBK0WCAciyKo7QbrndF7g8r+pkao8aoEVbRDJl7YnHZ30m7d7oqBg
+   O6Cas04MfN5yBkIAQm6c1ILzP42ggJyFZG/N2ETN87P5JJW4y3DOCk5Qs
+   Y=;
+Received: from mail-bn8nam04lp2040.outbound.protection.outlook.com (HELO NAM04-BN8-obe.outbound.protection.outlook.com) ([104.47.74.40])
+  by ob1.hc4959-67.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jun 2022 15:45:59 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=DCaYl5m02W0kuIn89Je0amURQwd5Ah/tMMVJ3MDBmHibE+bGDLJ0yTWUf1nAM3UgSuV9MHo9y4OuI8KEx4mFcx+LeO0wMsqTq7kZsZxo5srCX+eTN8P+9FZZPyQLkpe5YKws/PZn6XF6lHHXIaonNPgSnkGT32lJhLFKNc5MHzdzKkIc+Mb6EcEHizMUPL1ZpinZOfpGr2IvhR+ZCdGMkiJb+boR2S9EN+nomtFDsmkMNPn7PrqwWM9SOWaJ1u9XCvHn4o/6UDWy4z92wEaUDt/VhsJIDE2UiBCvFKr30lx2ljbqTiMI7egoW4URUIQR/1U+HKkO+ySnAqSYUnp61Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=imlVvGS984rlhIW9reTser89ku7OpBGjPj8D3a3Jaso=;
+ b=XxPep0i/St3/ApWiXqKhgYMRCMG9TafPn2YED8rrtpfQFJaQtFlSFnCHKP1fn9CauUHPEzz0y4ya/3z+wpjApJnkC23MBjsUYt1NQhGiRBYKr4ensJqDSQ4ZF6jeoh6jhZovaxm66zHAhMl3tEfSv/hMNnUr82uppl4ksejXeZsas0Q6+jX/iHGR2B9uzX1Kg7EsG4HEqtJPOSXr9JYTRzcL7BmBPGvUyCityIKPdqWX46adKeiFIPhQ2uiXqxRbJymUyaG268eldyIuGIX3FZRuZtym/Jo4pSm4wMjiVEORxVc5ZPyAPDD0rc1fRD0k3E1TUdUa7nUxgJg8Salvyw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=softfail (sender ip
+ is 192.55.16.51) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=seagate.com;
+ dmarc=fail (p=reject sp=reject pct=100) action=oreject
+ header.from=seagate.com; dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=seagate.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=imlVvGS984rlhIW9reTser89ku7OpBGjPj8D3a3Jaso=;
+ b=IX4nlcHwrI+rIMY4jANj3mpeLKHE47KwHaoW6KNBGnD44OzTDv8SKqFne4bXD1Tp0xSkXidROr2/XpBLo+aNC3WmyCZPn6eHKu3RLYeMq92vkVhxDaGv9Uw7AkWa/JqGlTx77AYbsoer0iD5sXXu4O706/g63TYd/seScKwWaiw=
+Received: from DM6PR02CA0135.namprd02.prod.outlook.com (2603:10b6:5:1b4::37)
+ by SA0PR20MB3341.namprd20.prod.outlook.com (2603:10b6:806:72::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5314.13; Thu, 2 Jun
+ 2022 22:45:58 +0000
+Received: from DM6NAM10FT031.eop-nam10.prod.protection.outlook.com
+ (2603:10b6:5:1b4:cafe::50) by DM6PR02CA0135.outlook.office365.com
+ (2603:10b6:5:1b4::37) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5314.12 via Frontend
+ Transport; Thu, 2 Jun 2022 22:45:58 +0000
+X-MS-Exchange-Authentication-Results: spf=softfail (sender IP is 192.55.16.51)
+ smtp.mailfrom=seagate.com; dkim=none (message not signed)
+ header.d=none;dmarc=fail action=oreject header.from=seagate.com;
+Received: from sgspzesaa002.seagate.com (192.55.16.51) by
+ DM6NAM10FT031.mail.protection.outlook.com (10.13.152.157) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.5314.12 via Frontend Transport; Thu, 2 Jun 2022 22:45:56 +0000
+Received: from sgspiesaa002.seagate.com ([10.4.144.53])
+  by sgspzesaa002.seagate.com with ESMTP; 02 Jun 2022 15:48:31 -0700
+X-IronPort-AV: E=Sophos;i="5.91,272,1647327600"; 
+   d="scan'208";a="62195110"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+STX-Internal-Mailhost: TRUE
+Received: from unknown (HELO tyler-ubuntu.colo.seagate.com) ([10.4.50.15])
+  by sgspiesaa002.seagate.com with ESMTP; 02 Jun 2022 15:33:27 -0700
+From:   Tyler Erickson <tyler.erickson@seagate.com>
+To:     damien.lemoal@opensource.wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+        muhammad.ahmad@seagate.com, tyler.erickson@seagate.com
+Subject: [PATCH v2 0/3] ata,sd: Fix reading concurrent positioning ranges
+Date:   Thu,  2 Jun 2022 16:51:10 -0600
+Message-Id: <20220602225113.10218-1-tyler.erickson@seagate.com>
+X-Mailer: git-send-email 2.17.1
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
 MIME-Version: 1.0
-References: <CAHZQxyKMcCaquQ9n8pJ9tNb3HRZ2e14iXXojYS3C4=dB6NpUKQ@mail.gmail.com>
- <YpjTek7u+7+zFXzM@infradead.org>
-In-Reply-To: <YpjTek7u+7+zFXzM@infradead.org>
-From:   Brian Bunker <brian@purestorage.com>
-Date:   Thu, 2 Jun 2022 12:00:30 -0700
-Message-ID: <CAHZQxyL9km19F+Pyv3DBeP7NHgg-m-zxNcw9gB97DTfeg_F=hA@mail.gmail.com>
-Subject: Re: [PATCH] scsi_lib: allow the ALUA transitioning state time to complete
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+X-MS-Office365-Filtering-Correlation-Id: 81dbb009-eaab-4d96-69bb-08da44e9a8fa
+X-MS-TrafficTypeDiagnostic: SA0PR20MB3341:EE_
+X-Microsoft-Antispam-PRVS: <SA0PR20MB334121DF1C95728E2DD9964289DE9@SA0PR20MB3341.namprd20.prod.outlook.com>
+STX-Hosted-IronPort-Oubound: True
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 9nempM2CJhLo5Deod6nNIM11L62mpYqYHG8en/bbUGgqWLqGK6i21+V1AfPkza+mzYGaZUF1UlUWgfi1t48K6Of3bbwtdDE0nIF7qtFoI6owU1CYKaHrmKOkSVGvum8ATtCechK1aPdEuzKdaLaKFtAze/4RYQoHFgMCvcu8cTQDA7iKfEnjRbkhiE8jej4lCiAc8Ahx/VEmeWnDbCPFY+JM/O8RrSIaHuY5t2adYLA2bDOxXzcH97SlMVyE2cGQQfIkKgIsIg1NglsNapdN6yc1fPUxltq7l7eK1ztNj1uw5aZEK3fIa+vth7bRwkykmBFaZAbR8cdqihfyvGHU3CHNp778g11TAsoT2QRf40Dx32L9uVcMR74c2ebqf8yrXnxM4OlothLifWncZgAB2AZbJzsVKyBBinzBrbZgrwNlfthP6Zt4G7bCRFNREFzedaScS0+JzjzHZTYS7q8DK6DaQKWyXXb9aJfxG85I82XsDxpX2OUzOOoOzpmPGwO1PAGW53BEbSNJB+77szugyeRFty945XiCPCEpGcEX0f24F253RmpxmAvqvcfJpoc33dwN17FJYclbzq/Yi2oAfSOxq5wKIcMrMcsAaVrvx5iAdgYpPO87nxyvOH/IpK7d6rYYvd8OPZ5pwPPajh12f2lv1H3Ml3bIC52hRg51hrxDf7w2q+eizTegxp4zx0Dweq5noWWQnt9tUAOeTBuHRA==
+X-Forefront-Antispam-Report: CIP:192.55.16.51;CTRY:SG;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:sgspzesaa002.seagate.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230001)(36840700001)(40470700004)(46966006)(26005)(44832011)(8936002)(2906002)(83380400001)(450100002)(47076005)(36756003)(4326008)(82310400005)(81166007)(8676002)(5660300002)(70586007)(70206006)(186003)(336012)(316002)(107886003)(86362001)(36860700001)(426003)(356005)(2616005)(508600001)(6666004)(7696005)(1076003)(40460700003)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: seagate.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Jun 2022 22:45:56.9243
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 81dbb009-eaab-4d96-69bb-08da44e9a8fa
+X-MS-Exchange-CrossTenant-Id: d466216a-c643-434a-9c2e-057448c17cbe
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=d466216a-c643-434a-9c2e-057448c17cbe;Ip=[192.55.16.51];Helo=[sgspzesaa002.seagate.com]
+X-MS-Exchange-CrossTenant-AuthSource: DM6NAM10FT031.eop-nam10.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA0PR20MB3341
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jun 2, 2022 at 8:12 AM Christoph Hellwig <hch@infradead.org> wrote:
->
-> On Thu, Jun 02, 2022 at 08:10:28AM -0700, Brian Bunker wrote:
-> >  static void scsi_io_completion_reprep(struct scsi_cmnd *cmd,
-> > -                                     struct request_queue *q)
-> > +                                     struct request_queue *q,
-> > unsigned long msecs)
-> >  {
-> >         /* A new command will be prepared and issued. */
-> > -       scsi_mq_requeue_cmd(cmd);
-> > +       scsi_mq_requeue_cmd(cmd, msecs);
->
-> q is unused.  But I think it is better if we just kill this pointless
-> wrapper anyway.
->
-> > +       case ACTION_DELAYED_REPREP:
-> > +               scsi_io_completion_reprep(cmd, q, ALUA_TRANSITION_REPREP_DELAY);
->
-> This is using spaces where it should use tabs.
->
+This patch series fixes reading the concurrent positioning ranges.
 
-Like this then:
+The first patch fixes reading this in libata, where it was reading
+more data than a drive necessarily supports, resulting in a 
+command abort. 
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index e9db7da0c79c..e16a129fb064 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -118,7 +118,7 @@ scsi_set_blocked(struct scsi_cmnd *cmd, int
-reason)
-        }
- }
+The second patch fixes the SCSI translated data to put the VPD page
+length in the correct starting byte.
 
--static void scsi_mq_requeue_cmd(struct scsi_cmnd *cmd)
-+static void scsi_mq_requeue_cmd(struct scsi_cmnd *cmd, unsigned long
-msecs)
- {
-        struct request *rq = scsi_cmd_to_rq(cmd);
+The third patch in sd, the fix is adding 4 instead of 3 for the header
+length. Using 3 will always result in an error and was likely used
+incorrectly as T10 specifications list all tables starting at byte 0,
+and byte 3 is the page length, which would mean there are 4 total
+bytes before the remaining data that contains the ranges and other
+information.
 
-@@ -128,7 +128,12 @@ static void scsi_mq_requeue_cmd(struct scsi_cmnd
-*cmd)
-        } else {
-                WARN_ON_ONCE(true);
-        }
--       blk_mq_requeue_request(rq, true);
-+
-+       if (msecs) {
-+               blk_mq_requeue_request(rq, false);
-+               blk_mq_delay_kick_requeue_list(rq->q, msecs);
-+       } else
-+               blk_mq_requeue_request(rq, true);
- }
+Tyler Erickson (3):
+  libata: fix reading concurrent positioning ranges log
+  libata: fix translation of concurrent positioning ranges
+  scsi: sd: Fix interpretation of VPD B9h length
 
- /**
-@@ -658,14 +663,6 @@ static unsigned int scsi_rq_err_bytes(const
-struct request                            *rq)
-        return bytes;
- }
-
--/* Helper for scsi_io_completion() when "reprep" action required. */
--static void scsi_io_completion_reprep(struct scsi_cmnd *cmd,
--                                     struct request_queue *q)
--{
--       /* A new command will be prepared and issued. */
--       scsi_mq_requeue_cmd(cmd);
--}
--
- static bool scsi_cmd_runtime_exceeced(struct scsi_cmnd *cmd)
- {
-        struct request *req = scsi_cmd_to_rq(cmd);
-@@ -683,14 +680,22 @@ static bool scsi_cmd_runtime_exceeced(struct
-scsi_cmnd *cm                           d)
-        return false;
- }
-
-+/*
-+ * When ALUA transition state is returned, reprep the cmd to
-+ * use the ALUA handlers transition timeout. Delay the reprep
-+ * 1 sec to avoid aggressive retries of the target in that
-+ * state.
-+ */
-+#define ALUA_TRANSITION_REPREP_DELAY   1000
-+
- /* Helper for scsi_io_completion() when special action required. */
- static void scsi_io_completion_action(struct scsi_cmnd *cmd, int result)
- {
-        struct request_queue *q = cmd->device->request_queue;
-        struct request *req = scsi_cmd_to_rq(cmd);
-        int level = 0;
--       enum {ACTION_FAIL, ACTION_REPREP, ACTION_RETRY,
--             ACTION_DELAYED_RETRY} action;
-+       enum {ACTION_FAIL, ACTION_REPREP, ACTION_DELAYED_REPREP,
-+             ACTION_RETRY, ACTION_DELAYED_RETRY} action;
-        struct scsi_sense_hdr sshdr;
-        bool sense_valid;
-        bool sense_current = true;      /* false implies "deferred sense" */
-@@ -779,8 +784,8 @@ static void scsi_io_completion_action(struct
-scsi_cmnd *cmd, int result)
-                                        action = ACTION_DELAYED_RETRY;
-                                        break;
-                                case 0x0a: /* ALUA state transition */
--                                       blk_stat = BLK_STS_AGAIN;
--                                       fallthrough;
-+                                       action = ACTION_DELAYED_REPREP;
-+                                       break;
-                                default:
-                                        action = ACTION_FAIL;
-                                        break;
-@@ -839,7 +844,10 @@ static void scsi_io_completion_action(struct
-scsi_cmnd *cmd, int result)
-                        return;
-                fallthrough;
-        case ACTION_REPREP:
--               scsi_io_completion_reprep(cmd, q);
-+               scsi_mq_requeue_cmd(cmd, 0);
-+               break;
-+       case ACTION_DELAYED_REPREP:
-+               scsi_mq_requeue_cmd(cmd, msecs);
-                break;
-        case ACTION_RETRY:
-                /* Retry the same command immediately */
-@@ -933,7 +941,7 @@ static int scsi_io_completion_nz_result(struct
-scsi_cmnd *cmd, int result,
-  * command block will be released and the queue function will be goosed. If we
-  * are not done then we have to figure out what to do next:
-  *
-- *   a) We can call scsi_io_completion_reprep().  The request will be
-+ *   a) We can call scsi_mq_requeue_cmd().  The request will be
-  *     unprepared and put back on the queue.  Then a new command will
-  *     be created for it.  This should be used if we made forward
-  *     progress, or if we want to switch from READ(10) to READ(6) for
-@@ -986,7 +994,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd,
-unsigned int good_bytes)
-         * request just queue the command up again.
-         */
-        if (likely(result == 0))
--               scsi_io_completion_reprep(cmd, q);
-+               scsi_mq_requeue_cmd(cmd, 0);
-        else
-                scsi_io_completion_action(cmd, result);
- }
+ drivers/ata/libata-core.c | 21 +++++++++++++--------
+ drivers/ata/libata-scsi.c |  2 +-
+ drivers/scsi/sd.c         |  2 +-
+ 3 files changed, 15 insertions(+), 10 deletions(-)
 
 
+base-commit: 700170bf6b4d773e328fa54ebb70ba444007c702
 -- 
+2.17.1
 
-Brian Bunker
-PURE Storage, Inc.
-brian@purestorage.com
