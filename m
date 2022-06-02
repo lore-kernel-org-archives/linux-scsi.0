@@ -2,83 +2,74 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47061CCA47D
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jun 2022 17:09:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BB14C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jun 2022 18:20:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237390AbiFBRJS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Jun 2022 13:09:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58828 "EHLO
+        id S238137AbiFBSUQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Jun 2022 14:20:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44580 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236798AbiFBRJR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jun 2022 13:09:17 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B082464BD6
-        for <linux-scsi@vger.kernel.org>; Thu,  2 Jun 2022 10:09:16 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 2A273B82051
-        for <linux-scsi@vger.kernel.org>; Thu,  2 Jun 2022 17:09:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id E1488C3411C
-        for <linux-scsi@vger.kernel.org>; Thu,  2 Jun 2022 17:09:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654189753;
-        bh=ECZWxcLosJjf5ayG4p5y2iK3S7H4ELtIppinKVWXw2M=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=AtnKH3RCZLZvXXUNjkOF9PtG1YZhfdMzU/C6QkNtma5yOUupR9SwnieOl4HTPPapW
-         239wzb2A3g1Gtmf20wBLBuO91SjQGvj9rBMQ3Ohyd5mivYxIMeyqSzlZX3BkGVzwq3
-         WZIdPUkysYXBYunFKzLMsa39Juy+hV6A/cQlyMq7m/JU1psJsacRRdKOlwywRj2QWB
-         swnexShhWopJDKnVCK+s9+DpPlfmSPNrl6xpLfZzUKktWB+YdSvZtjToQRVZydjiJZ
-         X0b4UxqCgcOGhvCCEXDmns0RRpMQSjm7iqMvzq35NYqV2NnLLrJaSMMwBkwYKdmFU5
-         YWsbisq/0uQHQ==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id D00D1C05FD5; Thu,  2 Jun 2022 17:09:13 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 216059] Scsi host number of Adaptec RAID controller changes
- upon a PCIe hotplug and re-insert
-Date:   Thu, 02 Jun 2022 17:09:13 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: Other
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: sagar.biradar@microchip.com
-X-Bugzilla-Status: RESOLVED
-X-Bugzilla-Resolution: INVALID
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: bug_status resolution
-Message-ID: <bug-216059-11613-OMUJcm0Iyg@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-216059-11613@https.bugzilla.kernel.org/>
-References: <bug-216059-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        with ESMTP id S238218AbiFBSUD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jun 2022 14:20:03 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DF4D66AF7
+        for <linux-scsi@vger.kernel.org>; Thu,  2 Jun 2022 11:19:31 -0700 (PDT)
+Date:   Thu, 2 Jun 2022 20:19:27 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1654193969;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=1XuDDRg2dH+R5Xxazle86pFNfiu1pe7OcD0NLwonodw=;
+        b=ZhYsvABSPhM7yT1FRMIxxXYPMKiHf2uYpP2xaKiv2t3GKbbxrelqLsW9WanDARayUlC5u6
+        yN36BT1haKvTGZ5vJ3H4gWHPPZq+sBZbUM8R6b46fHDExHHWTqTfH6BMWIJGHta7drHa/I
+        73YtDPiBi/ICh0YTdURxNrQm+ROGJCh0p50hjgsdYbcnMySBg/oGden6bo1uCkEG6Vn5sd
+        QSxca4g84kbr2Tb8vdg/ZJFPqWfpW/xre5wKxBfYqzjEnGin4Ki0dB8UHW7/EKslA+VM57
+        nQ7/wvob4o1UkOp8zNEYaY19H5/emGHbZano06S3qHXC5L+XWYVuG0Yrld4Csg==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1654193969;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=1XuDDRg2dH+R5Xxazle86pFNfiu1pe7OcD0NLwonodw=;
+        b=YAQE+yEfPfX+almCfwUulmh3iTSJSQP8UwcL6B6l7FluRpl3qx0OH2VFSRxu8ngsSymltg
+        Zq+zJLMTSiNGZXCw==
+From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To:     Davidlohr Bueso <dave@stgolabs.net>
+Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        ejb@linux.ibm.com, tglx@linutronix.de,
+        Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Subject: Re: [PATCH 05/10] scsi/isci: Replace completion_tasklet with
+ threaded irq
+Message-ID: <Ypj/L3ySOSWqQUNu@linutronix.de>
+References: <20220530231512.9729-1-dave@stgolabs.net>
+ <20220530231512.9729-6-dave@stgolabs.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20220530231512.9729-6-dave@stgolabs.net>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D216059
+On 2022-05-30 16:15:07 [-0700], Davidlohr Bueso wrote:
+> Tasklets have long been deprecated as being too heavy on the system
+> by running in irq context - and this is not a performance critical
+> path. If a higher priority process wants to run, it must wait for
+> the tasklet to finish before doing so. A more suitable equivalent
+> is to converted to threaded irq instead and run in regular task
+> context.
 
-Sagar (sagar.biradar@microchip.com) changed:
+The convert looks okay. This driver even disables the interrupt source
+before scheduling the tasklet :) However the whole routine
+(sci_controller_completion_handler()) runs with disabled interrupt so it
+makes no sense to use tasklets for completion or threaded interrupts=E2=80=
+=A6
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-         Resolution|---                         |INVALID
+> Cc: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+> Signed-off-by: Davidlohr Bueso <dave@stgolabs.net>
 
---- Comment #2 from Sagar (sagar.biradar@microchip.com) ---
-This issue can be ignored. I have filed another BZ instead. . .
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+Sebastian
