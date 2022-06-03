@@ -2,199 +2,151 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9E3AC43334
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jun 2022 01:31:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1795C43334
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jun 2022 01:31:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240957AbiFCBbC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Jun 2022 21:31:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53242 "EHLO
+        id S240963AbiFCBbe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Jun 2022 21:31:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53942 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240879AbiFCBat (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jun 2022 21:30:49 -0400
-Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F9752D1D6
-        for <linux-scsi@vger.kernel.org>; Thu,  2 Jun 2022 18:30:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1654219807; x=1685755807;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=02VpAnCfqzi7odbGgq08OOJ0oK0HghFe2lymWFBlMpw=;
-  b=H/F5dblsxeEYRJ5/GCP4EfDH1WhDrhATzqaSkbM89XFvBBcH0hOwOppd
-   5X9SSZ2/9ahT5gwX4IhlzZ4SRLtSaGr3xag62iuzL9NRUFzVRKxbEEkBB
-   j/ub3DWxGiQ89cS/lm7vlcSyilgu7uUDqK9IxFPwnOc7MBjiqO6NneS6A
-   2MDmrG4L+8nKQVwpt1S0SAFwSytA5VRjHepcz7lJZZu9I0Z0qQ5o5LrwW
-   RJWHkTrQgvKS6Kl9ck7ZOYtn+Bqe5SOp40zz8FShJ1m4EuboOLmO06JUE
-   8EFaF9uIMXoi+ZnHTekpw/4y0udKu4cw0kpTunIFwf9NX+geowGbL49GU
-   g==;
-X-IronPort-AV: E=Sophos;i="5.91,273,1647273600"; 
-   d="scan'208";a="202156607"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 03 Jun 2022 09:30:07 +0800
-IronPort-SDR: EHjrn7pzOserhOe9Ddrxhe5EWibuba6m9c42vInSusx5txcgWkUUQqNs+jLbkeOwig/g9u75Ra
- +fO7YuAXvWupxL2wiQCN1oe45O7Q8dZLKbutQyaKDEp7hMU4Po5WMgt2Uupfd6dgfmg2MwbChW
- LLT5r1AACeLbukj13zM5lC5owIeU7gTXolZbgcThyurlmQ9HAY6CRqhzopEUakNpcklZnsHnk/
- yPqRszn1Rvs49rcrd2S9hoR0ZtRrTGuyeGotc4MXb/eYeAwv8Np0FqLIwtNAU6yiEWIOpkCLtK
- bBUY4meojz7p60iMeNYFhKT9
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 02 Jun 2022 17:49:16 -0700
-IronPort-SDR: nzXZiNeHq7454hV/kVtIaagsy8ygNExSDXcF45WrzTeZ+D58v5FhSRRn8iQuke43Vf+7jpzGvg
- eDHOAZPrCytgbsVWwsCcrOllPcuXnWJiP16r1zEvYfAlbxCwHLj5E4gvyq86XjXXMGjdGZPQxv
- 81J8jNHrOgO/40B0wnubA5K9bJN1luBCJ0r4K6TBUvPpjStxcCEclrfYXVclsGxWYYDmNswbZE
- vA2PHSCkul5MJNVYZBGHZJHhkW23cLesauwqSV1mUU7WzrHfiUJmIxpW51pjXmEKZcuSCD4xBf
- QFA=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 02 Jun 2022 18:30:09 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LDlgN1WgBz1SHwl
-        for <linux-scsi@vger.kernel.org>; Thu,  2 Jun 2022 18:30:08 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1654219807; x=1656811808; bh=02VpAnCfqzi7odbGgq08OOJ0oK0HghFe2ly
-        mWFBlMpw=; b=e+2rJU8iu/s7Xj+0YysrwP5WNB7UKwb2iuCyGlL5OwsQ2IVU53Q
-        mbQiUL3jECaLeC8tmgW+O5YgzFMy1Rko77ps8EJ4zRenNC/9uNlXtMvv26UKnY1+
-        AIstCwvSXkoU6zv8Z7EQAD0iMo8yLsRQsj4LhPll47QOG2zXhRhN5pvusovEuB1y
-        TaB+knCg1N/OdQy50KkWG/uQdImHRzP/vJvUcaPvttLic4lS9wml4e3FavVj/Fsn
-        F7kadGDjk6oIX9yTTBqAY7mAWaFlROPYh+HRWwCcH/sB5TMZGean5hfqDyqtIdOx
-        SN7kviwRHHMxNFsQXeLi75U0/XyWIB6sz1w==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id 8LWJ0S4kMxpf for <linux-scsi@vger.kernel.org>;
-        Thu,  2 Jun 2022 18:30:07 -0700 (PDT)
-Received: from [10.225.163.63] (unknown [10.225.163.63])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LDlgL23jJz1Rvlc;
-        Thu,  2 Jun 2022 18:30:06 -0700 (PDT)
-Message-ID: <d3cc3cff-b483-b2dd-b6eb-131500b97d54@opensource.wdc.com>
-Date:   Fri, 3 Jun 2022 10:30:04 +0900
+        with ESMTP id S241066AbiFCBbY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jun 2022 21:31:24 -0400
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0D193C714
+        for <linux-scsi@vger.kernel.org>; Thu,  2 Jun 2022 18:30:35 -0700 (PDT)
+Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20220603013033epoutp01ea82d45e0a1277684adb12924bf48379~0_CyHqRTr1978619786epoutp01H
+        for <linux-scsi@vger.kernel.org>; Fri,  3 Jun 2022 01:30:33 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20220603013033epoutp01ea82d45e0a1277684adb12924bf48379~0_CyHqRTr1978619786epoutp01H
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1654219833;
+        bh=KAlW9Mg2SV+Y+9GmK+nv61aX3d7K7ijxAt8lKiuDNI8=;
+        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+        b=PjaZQmpeJiW6kz6hdWNNvZf/UOVgx6URvrdJg60DPUc0i2y94fx1I0MMHOULtOdzQ
+         tj+zrad+NZj0+FaPYeNh6ss4mYMeGmSA6hDUJfZuqSvdNuPBMIDYRXlk3T1RPvi2JM
+         dsBgMl5pPCL8S6LU6wC77YJkvZe3RPQuLBNNMuaw=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas5p4.samsung.com (KnoxPortal) with ESMTP id
+        20220603013032epcas5p4bf5e345546aa22810e3318d3c5c88671~0_Cw_OuLt2383523835epcas5p4j;
+        Fri,  3 Jun 2022 01:30:32 +0000 (GMT)
+Received: from epsmges5p2new.samsung.com (unknown [182.195.38.178]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4LDlgm70g9z4x9Q8; Fri,  3 Jun
+        2022 01:30:28 +0000 (GMT)
+Received: from epcas5p3.samsung.com ( [182.195.41.41]) by
+        epsmges5p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        A0.ED.09827.33469926; Fri,  3 Jun 2022 10:30:27 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
+        20220603013027epcas5p43b34202e1fe71e2678d2ab7916280860~0_Csmo2Nd2383523835epcas5p4Y;
+        Fri,  3 Jun 2022 01:30:27 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20220603013027epsmtrp2b5cd7d1b6fb3bc5ceafbdc3985f522de~0_Csk5SR11902819028epsmtrp2D;
+        Fri,  3 Jun 2022 01:30:27 +0000 (GMT)
+X-AuditID: b6c32a4a-b3bff70000002663-69-629964333fb7
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        7E.81.11276.33469926; Fri,  3 Jun 2022 10:30:27 +0900 (KST)
+Received: from alimakhtar03 (unknown [107.122.12.5]) by epsmtip1.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20220603013024epsmtip170a321cd0900079d1e6be24d280004e6~0_Cp5cZXc0460604606epsmtip18;
+        Fri,  3 Jun 2022 01:30:24 +0000 (GMT)
+From:   "Alim Akhtar" <alim.akhtar@samsung.com>
+To:     "'Krzysztof Kozlowski'" <krzysztof.kozlowski@linaro.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux-phy@lists.infradead.org>
+Cc:     <devicetree@vger.kernel.org>, <robh+dt@kernel.org>,
+        <krzysztof.kozlowski+dt@linaro.org>, <vkoul@kernel.org>,
+        <avri.altman@wdc.com>, <bvanassche@acm.org>,
+        <martin.petersen@oracle.com>, <chanho61.park@samsung.com>,
+        <pankaj.dubey@samsung.com>, <linux-fsd@tesla.com>,
+        "'Bharat Uppal'" <bharat.uppal@samsung.com>
+In-Reply-To: <cd71f427-8db5-e908-bf25-0154e3006568@linaro.org>
+Subject: RE: [PATCH 1/6] dt-bindings: phy: Add FSD UFS PHY bindings
+Date:   Fri, 3 Jun 2022 07:00:23 +0530
+Message-ID: <000a01d876e9$8103ff50$830bfdf0$@samsung.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.1
-Subject: Re: [PATCH v2 0/3] ata,sd: Fix reading concurrent positioning ranges
-Content-Language: en-US
-To:     Tyler Erickson <tyler.erickson@seagate.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
-        muhammad.ahmad@seagate.com
-References: <20220602225113.10218-1-tyler.erickson@seagate.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <20220602225113.10218-1-tyler.erickson@seagate.com>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQEGJiXAXdobboEKZTBkhZkj5AOCHwEV9a8PAbDHaMoCLFgQga657fBQ
+Content-Language: en-us
+X-Brightmail-Tracker: H4sIAAAAAAAAA01TfUwbZRz27V2vx0znUbrspRNX6zZtXaGFgocCm2Fh57ZEmDFbNBMOegEs
+        XJt+TDeTbWURJwxCM0RpWDRjg6w6m3RlY+jJh2WMaSazUBLS6KrAgAHyJQ5wKOWY8t/z/t7n
+        eX6/5/3AEUkfJsMLWStjZukiBbYBvfa9UqlO0NfmargQSY4u9GFkYLRHRNZMLSCkv/VF8nPf
+        HSFZORJCSO5Bk4j0/B4QkqGxQ6S/pQ4jq1zzKFne34yRjV3LAvJC05yI/JDzicgbwVvIboLy
+        9+6nPK6PMSoY+Bajrl48SU0PDaBUpdcFqOWS8yJq1vMM9VFbuSAz4i1DSgFD6xmznGHzjPpC
+        Nj9Vsf+N7PTsxCSNVq1NJl9SyFm6mElV7DmQqc4oLFrJoJAfpYtsK6VM2mJRxKWlmI02KyMv
+        MFqsqQrGpC8y6UyxFrrYYmPzY1nG+rJWo4lPXCHmGAr6hxNMnOj9z+w/C0+BbqwMROCQ0MEO
+        h0NQBjbgEuIbAKeC0xi/mAHwut0HwiwJMQ+gkzM/VgR/PSvkSRyAjsm/EH4xCmDX5Vurvhih
+        hs31patWUqILwNbTrcLwBkK0CmDpuKYM4HgEkQbP9XwQLkcR6XAi4BCFMUpsg5zLveojJpLh
+        tZs/CXkcCbtrB1HeZiu8PlGH8BPJ4cJQwypHSmRArml4rdVmONrpE4VngMQcDs8HxgAv2AMv
+        X/1UxOMoONblXcMyODvJYeHZIEHBC3/L+HIBnGh0r0l3wbbeOjRMQQgldLfE8a02woqlQQGv
+        FMMzpRKevR2enuxDebwFOsrLhTymYM9kP1IFnnWuC+ZcF8y5LoDz/2ZfANQFohmTpTifsSSa
+        4lnmvf9uO89Y7AGr71u1rxmE7k3FdgABDjoAxBGFVGxt+SRXItbTx44zZmO22VbEWDpA4spp
+        OxDZpjzjygdhrdlaXbJGl5SUpEtOSNIqNouJf+y5EiKftjIGhjEx5sc6AR4hOyVIfxAZo6r2
+        2drtOaik4c9Duhcicy799sOOqTt67evS+SenzVhje+xzIZPyaeFtnTli34kn3qXxkoqvmo8f
+        +XK2Xpv5qFKT1R4cWe5clHa1Z5zpNg6PzYSK0xe3z22s9xbeuCsYmNt0cOvuudrn/e9kRWPH
+        qMGGpV/kr1y8n+a0K40PZ6i3E0L3/AfcnYtXtnBtB9PY+PGsS9KBu5PoycOBHTWsy7Tt66ny
+        pWCc99xE7c4/alJONLoM3phqJjvS81oKZzjiHlHuvV2hKVGVHLXZH135US3ERw5/V7XLwOzE
+        9r45lFIf0j2kzqpv+sQa1f3eseWY5vHoPpJhq1+NUj0lU6CWAlqrQswW+l9b4GXXaAQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrAIsWRmVeSWpSXmKPExsWy7bCSnK5xyswkg0eX+Sxe/rzKZnHt5QV2
+        i2kffjJbXN6vbTH/yDlWi74XD5kt9r7eym6x6fE1VouHr8ItLu+aw2YxYdU3Fovu6zvYLJYf
+        /8dksWjrF3aL1r1H2C123jnB7CDgcfmKt8emVZ1sHneu7WHz2Lyk3uPj01ssHn1bVjF6/Gua
+        y+7xeZOcR/uBbqYAzigum5TUnMyy1CJ9uwSujOvPjAv2slfMaLzE2sB4kq2LkZNDQsBE4s79
+        HtYuRi4OIYHdjBLzDj9mh0hIS1zfOAHKFpZY+e85O0TRc0aJ+TOXgSXYBHQldixuYwNJiAic
+        ZpTYtOceE4jDLHCaSeLD0VfMIFVCAh8ZJY71hncxcnBwCthJTL5QDRIWFnCWeHttItggFgEV
+        ib2r1oOdxCtgKbHt2HlWCFtQ4uTMJywgNrOAtsTTm0+hbHmJ7W/nMENcpyDx8+kysHoRATeJ
+        vVufsULUiEu8PHqEfQKj8Cwko2YhGTULyahZSFoWMLKsYpRMLSjOTc8tNiwwzEst1ytOzC0u
+        zUvXS87P3cQIjmQtzR2M21d90DvEyMTBeIhRgoNZSYS3ZNfUJCHelMTKqtSi/Pii0pzU4kOM
+        0hwsSuK8F7pOxgsJpCeWpGanphakFsFkmTg4pRqYdBfqv90YF6lx/enMxjcTRI9O9S58mPQ1
+        TT7x8kzdI27Fh94tKnysE/8tX+naZabJrAbOid4aXQt/JjUvtBMVa6xbvD936YSjL/uubZ91
+        tFVizvPAXscJ/NLRRpPz68SMmBJ0Za+rS7VZ/GB1EPV9n5is7rrris9a844D62WeM/w57vb6
+        bMHic6dXmipsV3gze8FGT+PwlY45umlHfQwajzNdv33HeIp2xJJHsm+fzuVNNPq/1GnXxiOh
+        AukxFT1cFg7J023O5usbBkWaPTjQfdOFS0XnWbjSv8KzeuyRvPqznPRXz4namS93e77sIcuN
+        Bk4J1a7yB+VcE8MqDv5RO57IWfIvXX36zY5CpyIlluKMREMt5qLiRADS8kimUwMAAA==
+X-CMS-MailID: 20220603013027epcas5p43b34202e1fe71e2678d2ab7916280860
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20220531012336epcas5p2fcafe14c90ad3e3a0901fccd62d15437
+References: <20220531012220.80563-1-alim.akhtar@samsung.com>
+        <CGME20220531012336epcas5p2fcafe14c90ad3e3a0901fccd62d15437@epcas5p2.samsung.com>
+        <20220531012220.80563-2-alim.akhtar@samsung.com>
+        <cd71f427-8db5-e908-bf25-0154e3006568@linaro.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/3/22 07:51, Tyler Erickson wrote:
-> This patch series fixes reading the concurrent positioning ranges.
-> 
-> The first patch fixes reading this in libata, where it was reading
-> more data than a drive necessarily supports, resulting in a 
-> command abort. 
-> 
-> The second patch fixes the SCSI translated data to put the VPD page
-> length in the correct starting byte.
-> 
-> The third patch in sd, the fix is adding 4 instead of 3 for the header
-> length. Using 3 will always result in an error and was likely used
-> incorrectly as T10 specifications list all tables starting at byte 0,
-> and byte 3 is the page length, which would mean there are 4 total
-> bytes before the remaining data that contains the ranges and other
-> information.
-> 
-> Tyler Erickson (3):
->   libata: fix reading concurrent positioning ranges log
->   libata: fix translation of concurrent positioning ranges
->   scsi: sd: Fix interpretation of VPD B9h length
-> 
->  drivers/ata/libata-core.c | 21 +++++++++++++--------
->  drivers/ata/libata-scsi.c |  2 +-
->  drivers/scsi/sd.c         |  2 +-
->  3 files changed, 15 insertions(+), 10 deletions(-)
-> 
-> 
-> base-commit: 700170bf6b4d773e328fa54ebb70ba444007c702
 
-Looks all good to me. I tested this and really wonder how I did not catch
-these mistakes earlier :)
 
-Using a tcmu emulator for various concurrent positioning range configs to
-test, I got a lockdep splat when unplugging the drive:
+>-----Original Message-----
+>From: Krzysztof Kozlowski [mailto:krzysztof.kozlowski@linaro.org]
+>Sent: Tuesday, May 31, 2022 2:47 PM
+>To: Alim Akhtar <alim.akhtar@samsung.com>; linux-arm-
+>kernel@lists.infradead.org; linux-kernel@vger.kernel.org; linux-
+>scsi@vger.kernel.org; linux-phy@lists.infradead.org
+>Cc: devicetree@vger.kernel.org; robh+dt@kernel.org;
+>krzysztof.kozlowski+dt@linaro.org; vkoul@kernel.org; avri.altman@wdc.com;
+>bvanassche@acm.org; martin.petersen@oracle.com;
+>chanho61.park@samsung.com; pankaj.dubey@samsung.com; linux-
+>fsd@tesla.com; Bharat Uppal <bharat.uppal@samsung.com>
+>Subject: Re: [PATCH 1/6] dt-bindings: phy: Add FSD UFS PHY bindings
+>
+>On 31/05/2022 03:22, Alim Akhtar wrote:
+>> Adds tesla,fsd-ufs-phy compatible for Tesla FSD SoC
+>
+>s/Adds/Add/
+>and a full stop at the end, please.
+>
+Noted
 
-[  760.702859] ======================================================
-[  760.702863] WARNING: possible circular locking dependency detected
-[  760.702868] 5.18.0+ #1509 Not tainted
-[  760.702875] ------------------------------------------------------
-[...]
-[  760.702966] the existing dependency chain (in reverse order) is:
-[  760.702969]
-[  760.702969] -> #1 (&q->sysfs_lock){+.+.}-{3:3}:
-[  760.702982]        __mutex_lock+0x15b/0x1480
-[  760.702998]        blk_ia_range_sysfs_show+0x41/0xc0
-[  760.703010]        sysfs_kf_seq_show+0x1f2/0x360
-[  760.703022]        seq_read_iter+0x40f/0x1130
-[  760.703036]        new_sync_read+0x2d8/0x520
-[  760.703049]        vfs_read+0x31a/0x450
-[  760.703060]        ksys_read+0xf7/0x1d0
-[  760.703070]        do_syscall_64+0x34/0x80
-[  760.703081]        entry_SYSCALL_64_after_hwframe+0x46/0xb0
-[  760.703093]
-[  760.703093] -> #0 (kn->active#385){++++}-{0:0}:
-[  760.703108]        __lock_acquire+0x2ba6/0x6a20
-[  760.703125]        lock_acquire+0x19f/0x510
-[  760.703136]        __kernfs_remove+0x739/0x940
-[  760.703145]        kernfs_remove_by_name_ns+0x90/0xe0
-[  760.703154]        remove_files+0x8c/0x1a0
-[  760.703165]        sysfs_remove_group+0x77/0x150
-[  760.703175]        sysfs_remove_groups+0x4f/0x90
-[  760.703186]        __kobject_del+0x7d/0x1b0
-[  760.703196]        kobject_del+0x31/0x50
-[  760.703203]        disk_unregister_independent_access_ranges+0x153/0x290
-[  760.703214]        blk_unregister_queue+0x166/0x210
-[  760.703226]        del_gendisk+0x2f8/0x7c0
-[  760.703233]        sd_remove+0x5e/0xb0 [sd_mod]
-[  760.703252]        device_release_driver_internal+0x3ad/0x750
-[  760.703262]        bus_remove_device+0x2a6/0x570
-[  760.703269]        device_del+0x48f/0xb50
-[  760.703280]        __scsi_remove_device+0x21b/0x2b0 [scsi_mod]
-[  760.703339]        scsi_remove_device+0x3a/0x50 [scsi_mod]
-[  760.703391]        tcm_loop_port_unlink+0xca/0x160 [tcm_loop]
-[  760.703407]        target_fabric_port_unlink+0xd5/0x120 [target_core_mod]
-[  760.703494]        configfs_unlink+0x37f/0x7a0
-[  760.703502]        vfs_unlink+0x295/0x800
-[  760.703514]        do_unlinkat+0x2d9/0x560
-[  760.703520]        __x64_sys_unlink+0xa5/0xf0
-[  760.703528]        do_syscall_64+0x34/0x80
-[  760.703537]        entry_SYSCALL_64_after_hwframe+0x46/0xb0
-[  760.703548]
-[  760.703548] other info that might help us debug this:
-[  760.703548]
-[  760.703551]  Possible unsafe locking scenario:
-[  760.703551]
-[  760.703554]        CPU0                    CPU1
-[  760.703556]        ----                    ----
-[  760.703558]   lock(&q->sysfs_lock);
-[  760.703565]                                lock(kn->active#385);
-[  760.703573]                                lock(&q->sysfs_lock);
-[  760.703579]   lock(kn->active#385);
-[  760.703587]
-[  760.703587]  *** DEADLOCK ***
+>Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+>
+Thanks
 
-This needs to be checked too, but that is not related to your fixes.
+>Best regards,
+>Krzysztof
 
-I will queue the libata patches for rc1 update.
-
-Martin,
-
-Do you want to take patch 3 or should I just take it ?
-
--- 
-Damien Le Moal
-Western Digital Research
