@@ -2,166 +2,199 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E79FC43334
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jun 2022 01:22:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9E3AC43334
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jun 2022 01:31:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242290AbiFCBWF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Jun 2022 21:22:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50770 "EHLO
+        id S240957AbiFCBbC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Jun 2022 21:31:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53242 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242236AbiFCBVt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jun 2022 21:21:49 -0400
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCD7A3BA4C
-        for <linux-scsi@vger.kernel.org>; Thu,  2 Jun 2022 18:21:41 -0700 (PDT)
-Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20220603012137epoutp01c99c1adb56c51b61dd638cb26dca1548~096-eI8Ub0979709797epoutp01g
-        for <linux-scsi@vger.kernel.org>; Fri,  3 Jun 2022 01:21:37 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20220603012137epoutp01c99c1adb56c51b61dd638cb26dca1548~096-eI8Ub0979709797epoutp01g
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1654219297;
-        bh=cAJUvtp9fsUwOe9dByAEQ7CN40+vY4FA10IItqIXf2w=;
-        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-        b=MQMVUQY6RZXIuQRHMiH2FGfR/yKere4XUDQzGiE98eDtEHLAUDeQqSqWlfoKd001o
-         JsKp432VzxMhrE/4M5XPG2A9YQfpsmVSXlbp4NB9eygGARUXVJsvpdYAe7DgeUPMFk
-         ByqnRRLqIMMBo393SLW6HBswjqYtbAbx1WXzhaGs=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas5p2.samsung.com (KnoxPortal) with ESMTP id
-        20220603012137epcas5p2012ccc4e63172be6c4e02b042d0188a5~096_y5nd10248402484epcas5p2j;
-        Fri,  3 Jun 2022 01:21:37 +0000 (GMT)
-Received: from epsmges5p3new.samsung.com (unknown [182.195.38.178]) by
-        epsnrtp4.localdomain (Postfix) with ESMTP id 4LDlTV5LXQz4x9Q9; Fri,  3 Jun
-        2022 01:21:34 +0000 (GMT)
-Received: from epcas5p3.samsung.com ( [182.195.41.41]) by
-        epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        9C.28.09762.E1269926; Fri,  3 Jun 2022 10:21:34 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
-        20220603012133epcas5p4361ce239d339c6d9790e96a3c7d6f0c6~0967O4Bmu2578825788epcas5p4C;
-        Fri,  3 Jun 2022 01:21:33 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20220603012133epsmtrp1a3fe7c0a21d2c488612ee7673d89bc95~0967NGIrp2031820318epsmtrp1s;
-        Fri,  3 Jun 2022 01:21:33 +0000 (GMT)
-X-AuditID: b6c32a4b-213ff70000002622-01-6299621ef640
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        D9.0F.11276.D1269926; Fri,  3 Jun 2022 10:21:33 +0900 (KST)
-Received: from alimakhtar03 (unknown [107.122.12.5]) by epsmtip1.samsung.com
-        (KnoxPortal) with ESMTPA id
-        20220603012130epsmtip1533d158f544644e0fa2967c0f67df991~0965C9gRA0396703967epsmtip19;
-        Fri,  3 Jun 2022 01:21:30 +0000 (GMT)
-From:   "Alim Akhtar" <alim.akhtar@samsung.com>
-To:     "'Bart Van Assche'" <bvanassche@acm.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux-phy@lists.infradead.org>
-Cc:     <devicetree@vger.kernel.org>, <robh+dt@kernel.org>,
-        <krzysztof.kozlowski+dt@linaro.org>, <vkoul@kernel.org>,
-        <avri.altman@wdc.com>, <martin.petersen@oracle.com>,
-        <chanho61.park@samsung.com>, <pankaj.dubey@samsung.com>,
-        <linux-fsd@tesla.com>, "'Bharat Uppal'" <bharat.uppal@samsung.com>
-In-Reply-To: <f4e1d900-5755-c57f-029a-eade78a17476@acm.org>
-Subject: RE: [PATCH 3/6] phy: samsung-ufs: add support for FSD ufs phy
- driver
-Date:   Fri, 3 Jun 2022 06:51:29 +0530
-Message-ID: <000801d876e8$42aaf520$c800df60$@samsung.com>
+        with ESMTP id S240879AbiFCBat (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jun 2022 21:30:49 -0400
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F9752D1D6
+        for <linux-scsi@vger.kernel.org>; Thu,  2 Jun 2022 18:30:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1654219807; x=1685755807;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=02VpAnCfqzi7odbGgq08OOJ0oK0HghFe2lymWFBlMpw=;
+  b=H/F5dblsxeEYRJ5/GCP4EfDH1WhDrhATzqaSkbM89XFvBBcH0hOwOppd
+   5X9SSZ2/9ahT5gwX4IhlzZ4SRLtSaGr3xag62iuzL9NRUFzVRKxbEEkBB
+   j/ub3DWxGiQ89cS/lm7vlcSyilgu7uUDqK9IxFPwnOc7MBjiqO6NneS6A
+   2MDmrG4L+8nKQVwpt1S0SAFwSytA5VRjHepcz7lJZZu9I0Z0qQ5o5LrwW
+   RJWHkTrQgvKS6Kl9ck7ZOYtn+Bqe5SOp40zz8FShJ1m4EuboOLmO06JUE
+   8EFaF9uIMXoi+ZnHTekpw/4y0udKu4cw0kpTunIFwf9NX+geowGbL49GU
+   g==;
+X-IronPort-AV: E=Sophos;i="5.91,273,1647273600"; 
+   d="scan'208";a="202156607"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 03 Jun 2022 09:30:07 +0800
+IronPort-SDR: EHjrn7pzOserhOe9Ddrxhe5EWibuba6m9c42vInSusx5txcgWkUUQqNs+jLbkeOwig/g9u75Ra
+ +fO7YuAXvWupxL2wiQCN1oe45O7Q8dZLKbutQyaKDEp7hMU4Po5WMgt2Uupfd6dgfmg2MwbChW
+ LLT5r1AACeLbukj13zM5lC5owIeU7gTXolZbgcThyurlmQ9HAY6CRqhzopEUakNpcklZnsHnk/
+ yPqRszn1Rvs49rcrd2S9hoR0ZtRrTGuyeGotc4MXb/eYeAwv8Np0FqLIwtNAU6yiEWIOpkCLtK
+ bBUY4meojz7p60iMeNYFhKT9
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 02 Jun 2022 17:49:16 -0700
+IronPort-SDR: nzXZiNeHq7454hV/kVtIaagsy8ygNExSDXcF45WrzTeZ+D58v5FhSRRn8iQuke43Vf+7jpzGvg
+ eDHOAZPrCytgbsVWwsCcrOllPcuXnWJiP16r1zEvYfAlbxCwHLj5E4gvyq86XjXXMGjdGZPQxv
+ 81J8jNHrOgO/40B0wnubA5K9bJN1luBCJ0r4K6TBUvPpjStxcCEclrfYXVclsGxWYYDmNswbZE
+ vA2PHSCkul5MJNVYZBGHZJHhkW23cLesauwqSV1mUU7WzrHfiUJmIxpW51pjXmEKZcuSCD4xBf
+ QFA=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 02 Jun 2022 18:30:09 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LDlgN1WgBz1SHwl
+        for <linux-scsi@vger.kernel.org>; Thu,  2 Jun 2022 18:30:08 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1654219807; x=1656811808; bh=02VpAnCfqzi7odbGgq08OOJ0oK0HghFe2ly
+        mWFBlMpw=; b=e+2rJU8iu/s7Xj+0YysrwP5WNB7UKwb2iuCyGlL5OwsQ2IVU53Q
+        mbQiUL3jECaLeC8tmgW+O5YgzFMy1Rko77ps8EJ4zRenNC/9uNlXtMvv26UKnY1+
+        AIstCwvSXkoU6zv8Z7EQAD0iMo8yLsRQsj4LhPll47QOG2zXhRhN5pvusovEuB1y
+        TaB+knCg1N/OdQy50KkWG/uQdImHRzP/vJvUcaPvttLic4lS9wml4e3FavVj/Fsn
+        F7kadGDjk6oIX9yTTBqAY7mAWaFlROPYh+HRWwCcH/sB5TMZGean5hfqDyqtIdOx
+        SN7kviwRHHMxNFsQXeLi75U0/XyWIB6sz1w==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id 8LWJ0S4kMxpf for <linux-scsi@vger.kernel.org>;
+        Thu,  2 Jun 2022 18:30:07 -0700 (PDT)
+Received: from [10.225.163.63] (unknown [10.225.163.63])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LDlgL23jJz1Rvlc;
+        Thu,  2 Jun 2022 18:30:06 -0700 (PDT)
+Message-ID: <d3cc3cff-b483-b2dd-b6eb-131500b97d54@opensource.wdc.com>
+Date:   Fri, 3 Jun 2022 10:30:04 +0900
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQEGJiXAXdobboEKZTBkhZkj5AOCHwGM2PWHAqlwyH0BABfpD6630Qnw
-Content-Language: en-us
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrAJsWRmVeSWpSXmKPExsWy7bCmpq5c0swkg0ebNC1e/rzKZnHt5QV2
-        i2kffjJbXN6vbTH/yDlWi74XD5ktNj2+xmrx8FW4xeVdc9gsJqz6xmLRfX0Hm8Xy4/+YLBZt
-        /cJu0br3CLvFzjsnmB34PS5f8fbYtKqTzePOtT1sHpuX1Ht8fHqLxaNvyypGj39Nc9k9Pm+S
-        82g/0M0UwBmVbZORmpiSWqSQmpecn5KZl26r5B0c7xxvamZgqGtoaWGupJCXmJtqq+TiE6Dr
-        lpkDdL6SQlliTilQKCCxuFhJ386mKL+0JFUhI7+4xFYptSAlp8CkQK84Mbe4NC9dLy+1xMrQ
-        wMDIFKgwITvjzbYzrAUHuCrW72hjbmD8z9HFyMEhIWAisfOcfBcjF4eQwG5GiYV3TjFDOJ8Y
-        Jd43rWGCcL4xSryddICti5ETrOPk9uvsEIm9jBKv796FannJKDH/+38WkCo2AV2JHYvbwDpE
-        BLYzSvTtDwSxmQVWMkmsm2oHYnMKWEt8bO0FqxEW8Jd4OXcbK4jNIqAice3XEUYQm1fAUuL2
-        gytMELagxMmZT1gg5mhLLFv4mhniIgWJn0+XsYL8IyLgJvH+lBlEibjEy6NHwA6VEHjCIfHw
-        0k9WiHoXiX3rDkPZwhKvjm9hh7ClJF72t7FDwsVDYtEfKYhwhsTb5esZIWx7iQNX5rCAlDAL
-        aEqs36UPsYpPovf3EyaITl6JjjYhiGpVieZ3V1kgbGmJid3dUEs9JJq79jFOYFScheSvWUj+
-        moXkgVkIyxYwsqxilEwtKM5NTy02LTDOSy2Hx3Zyfu4mRnDS1vLewfjowQe9Q4xMHIyHGCU4
-        mJVEeEt2TU0S4k1JrKxKLcqPLyrNSS0+xGgKDOyJzFKiyfnAvJFXEm9oYmlgYmZmZmJpbGao
-        JM4r8L8xSUggPbEkNTs1tSC1CKaPiYNTqoHp+E57vanX9mw5Ue9ZOG9nlLXzjx2H+YVVw7a4
-        /7Bf7BjnIvlNLIHtadt+Af1Dz/79Ut865Yeo6iEVzmPx/rW3X9cFBD7/ruEw+drCN2sitrHJ
-        uOwvPpuQ3CH6smFtq0+5t/zzifkat39ozzktcHuK2cbVb3YJT4mw+3Ev07d3zY3yiv5MVeUe
-        Y12jO1sda5+FMGm1x5bOVWg12J3tm6uQLpF+pn73GyVht8CtjYba2/cvEPm7+Q332udSlil2
-        10Kv5hn0P86PWqKpqlVex/V7akgw+yKVNfOUQ85UBTrP3SFUEiunLn3qmeBErYYXR7wTZSKW
-        M1yS3bTtwSQFYRYzJ6cJ//okdmXukXRU7FRiKc5INNRiLipOBABRkQU3YwQAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrNIsWRmVeSWpSXmKPExsWy7bCSnK5s0swkg9+LOC1e/rzKZnHt5QV2
-        i2kffjJbXN6vbTH/yDlWi74XD5ktNj2+xmrx8FW4xeVdc9gsJqz6xmLRfX0Hm8Xy4/+YLBZt
-        /cJu0br3CLvFzjsnmB34PS5f8fbYtKqTzePOtT1sHpuX1Ht8fHqLxaNvyypGj39Nc9k9Pm+S
-        82g/0M0UwBnFZZOSmpNZllqkb5fAlbHhWjt7QQ9XxYblkxkbGE9zdDFyckgImEic3H6dvYuR
-        i0NIYDejxPnepWwQCWmJ6xsnsEPYwhIr/z2HKnrOKNF14hRYEZuArsSOxW1sIAkRkO6XZ1+C
-        JZgFNjNJ7N2gDGILCbxjlNh/IRXE5hSwlvjY2gtWIyzgK3F+xTEwm0VAReLaryOMIDavgKXE
-        7QdXmCBsQYmTM5+wQMzUlnh68ymcvWzha2aI6xQkfj5dxtrFyAF0hJvE+1NmECXiEi+PHmGf
-        wCg8C8mkWUgmzUIyaRaSlgWMLKsYJVMLinPTc4sNCwzzUsv1ihNzi0vz0vWS83M3MYLjV0tz
-        B+P2VR/0DjEycTAeYpTgYFYS4S3ZNTVJiDclsbIqtSg/vqg0J7X4EKM0B4uSOO+FrpPxQgLp
-        iSWp2ampBalFMFkmDk6pBqYjYmWvdx39b3PmZdHanL0+u797TO/wjP55lOG0+JojLNkfrZxf
-        8ldssA0+27tIs9E2WWnjzJe2+9KsP1i/PhRi3FgecmfSu0W3Px+4sfh71UmHKolbxUUx1xyV
-        ijo3yn4LqWhPOJbUFhXzTGy58PRihotTTJb/n9hTctFmGsvzmT8nTJw3QWLBjlvVgpUfpj6e
-        JrJKz6icVXTN7v5jjUl+0xTm/zof9O783IPNq7t+vN+dY97Y0sJ5+7h3//YXF2z+m3gE2z+q
-        nzBpQUD80ZbUEDFrF9brIsonnWw/OM6LPyOzt6jFbgurzj++g63yVVcSnm2tj977797a+a+N
-        Pj3Mmbqo+ZqhyOYpV07qhuziUWIpzkg01GIuKk4EAMn4G1NOAwAA
-X-CMS-MailID: 20220603012133epcas5p4361ce239d339c6d9790e96a3c7d6f0c6
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20220531012347epcas5p48262cae18c75bb6ed029f7cd920800b4
-References: <20220531012220.80563-1-alim.akhtar@samsung.com>
-        <CGME20220531012347epcas5p48262cae18c75bb6ed029f7cd920800b4@epcas5p4.samsung.com>
-        <20220531012220.80563-4-alim.akhtar@samsung.com>
-        <f4e1d900-5755-c57f-029a-eade78a17476@acm.org>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.9.1
+Subject: Re: [PATCH v2 0/3] ata,sd: Fix reading concurrent positioning ranges
+Content-Language: en-US
+To:     Tyler Erickson <tyler.erickson@seagate.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+        muhammad.ahmad@seagate.com
+References: <20220602225113.10218-1-tyler.erickson@seagate.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <20220602225113.10218-1-tyler.erickson@seagate.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 6/3/22 07:51, Tyler Erickson wrote:
+> This patch series fixes reading the concurrent positioning ranges.
+> 
+> The first patch fixes reading this in libata, where it was reading
+> more data than a drive necessarily supports, resulting in a 
+> command abort. 
+> 
+> The second patch fixes the SCSI translated data to put the VPD page
+> length in the correct starting byte.
+> 
+> The third patch in sd, the fix is adding 4 instead of 3 for the header
+> length. Using 3 will always result in an error and was likely used
+> incorrectly as T10 specifications list all tables starting at byte 0,
+> and byte 3 is the page length, which would mean there are 4 total
+> bytes before the remaining data that contains the ranges and other
+> information.
+> 
+> Tyler Erickson (3):
+>   libata: fix reading concurrent positioning ranges log
+>   libata: fix translation of concurrent positioning ranges
+>   scsi: sd: Fix interpretation of VPD B9h length
+> 
+>  drivers/ata/libata-core.c | 21 +++++++++++++--------
+>  drivers/ata/libata-scsi.c |  2 +-
+>  drivers/scsi/sd.c         |  2 +-
+>  3 files changed, 15 insertions(+), 10 deletions(-)
+> 
+> 
+> base-commit: 700170bf6b4d773e328fa54ebb70ba444007c702
 
+Looks all good to me. I tested this and really wonder how I did not catch
+these mistakes earlier :)
 
->-----Original Message-----
->From: Bart Van Assche =5Bmailto:bvanassche=40acm.org=5D
->Sent: Tuesday, May 31, 2022 9:18 AM
->To: Alim Akhtar <alim.akhtar=40samsung.com>; linux-arm-
->kernel=40lists.infradead.org; linux-kernel=40vger.kernel.org; linux-
->scsi=40vger.kernel.org; linux-phy=40lists.infradead.org
->Cc: devicetree=40vger.kernel.org; robh+dt=40kernel.org;
->krzysztof.kozlowski+dt=40linaro.org; vkoul=40kernel.org; avri.altman=40wdc=
-.com;
->martin.petersen=40oracle.com; chanho61.park=40samsung.com;
->pankaj.dubey=40samsung.com; linux-fsd=40tesla.com; Bharat Uppal
-><bharat.uppal=40samsung.com>
->Subject: Re: =5BPATCH 3/6=5D phy: samsung-ufs: add support for FSD ufs phy=
- driver
->
->On 5/30/22 18:22, Alim Akhtar wrote:
->> diff --git a/drivers/phy/samsung/phy-fsd-ufs.c b/drivers/phy/samsung/phy=
--
->fsd-ufs.c
->> new file mode 100644
->> index 000000000000..a03656006093
->> --- /dev/null
->> +++ b/drivers/phy/samsung/phy-fsd-ufs.c
->> =40=40 -0,0 +1,63 =40=40
->> +// SPDX-License-Identifier: GPL-2.0-only
->> +/*
->> + * UFS PHY driver data for FSD SoC
->> + *
->> + * Copyright (C) 2022 Samsung Electronics Co., Ltd.
->> + *
->> + */
->> +=23ifndef _PHY_FSD_UFS_H_
->> +=23define _PHY_FSD_UFS_H_
->
->Please do not use header file guards in a .c file.
-Noted.
-Thanks for point it out.
+Using a tcmu emulator for various concurrent positioning range configs to
+test, I got a lockdep splat when unplugging the drive:
 
->
->Thanks,
->
->Bart.
+[  760.702859] ======================================================
+[  760.702863] WARNING: possible circular locking dependency detected
+[  760.702868] 5.18.0+ #1509 Not tainted
+[  760.702875] ------------------------------------------------------
+[...]
+[  760.702966] the existing dependency chain (in reverse order) is:
+[  760.702969]
+[  760.702969] -> #1 (&q->sysfs_lock){+.+.}-{3:3}:
+[  760.702982]        __mutex_lock+0x15b/0x1480
+[  760.702998]        blk_ia_range_sysfs_show+0x41/0xc0
+[  760.703010]        sysfs_kf_seq_show+0x1f2/0x360
+[  760.703022]        seq_read_iter+0x40f/0x1130
+[  760.703036]        new_sync_read+0x2d8/0x520
+[  760.703049]        vfs_read+0x31a/0x450
+[  760.703060]        ksys_read+0xf7/0x1d0
+[  760.703070]        do_syscall_64+0x34/0x80
+[  760.703081]        entry_SYSCALL_64_after_hwframe+0x46/0xb0
+[  760.703093]
+[  760.703093] -> #0 (kn->active#385){++++}-{0:0}:
+[  760.703108]        __lock_acquire+0x2ba6/0x6a20
+[  760.703125]        lock_acquire+0x19f/0x510
+[  760.703136]        __kernfs_remove+0x739/0x940
+[  760.703145]        kernfs_remove_by_name_ns+0x90/0xe0
+[  760.703154]        remove_files+0x8c/0x1a0
+[  760.703165]        sysfs_remove_group+0x77/0x150
+[  760.703175]        sysfs_remove_groups+0x4f/0x90
+[  760.703186]        __kobject_del+0x7d/0x1b0
+[  760.703196]        kobject_del+0x31/0x50
+[  760.703203]        disk_unregister_independent_access_ranges+0x153/0x290
+[  760.703214]        blk_unregister_queue+0x166/0x210
+[  760.703226]        del_gendisk+0x2f8/0x7c0
+[  760.703233]        sd_remove+0x5e/0xb0 [sd_mod]
+[  760.703252]        device_release_driver_internal+0x3ad/0x750
+[  760.703262]        bus_remove_device+0x2a6/0x570
+[  760.703269]        device_del+0x48f/0xb50
+[  760.703280]        __scsi_remove_device+0x21b/0x2b0 [scsi_mod]
+[  760.703339]        scsi_remove_device+0x3a/0x50 [scsi_mod]
+[  760.703391]        tcm_loop_port_unlink+0xca/0x160 [tcm_loop]
+[  760.703407]        target_fabric_port_unlink+0xd5/0x120 [target_core_mod]
+[  760.703494]        configfs_unlink+0x37f/0x7a0
+[  760.703502]        vfs_unlink+0x295/0x800
+[  760.703514]        do_unlinkat+0x2d9/0x560
+[  760.703520]        __x64_sys_unlink+0xa5/0xf0
+[  760.703528]        do_syscall_64+0x34/0x80
+[  760.703537]        entry_SYSCALL_64_after_hwframe+0x46/0xb0
+[  760.703548]
+[  760.703548] other info that might help us debug this:
+[  760.703548]
+[  760.703551]  Possible unsafe locking scenario:
+[  760.703551]
+[  760.703554]        CPU0                    CPU1
+[  760.703556]        ----                    ----
+[  760.703558]   lock(&q->sysfs_lock);
+[  760.703565]                                lock(kn->active#385);
+[  760.703573]                                lock(&q->sysfs_lock);
+[  760.703579]   lock(kn->active#385);
+[  760.703587]
+[  760.703587]  *** DEADLOCK ***
 
+This needs to be checked too, but that is not related to your fixes.
+
+I will queue the libata patches for rc1 update.
+
+Martin,
+
+Do you want to take patch 3 or should I just take it ?
+
+-- 
+Damien Le Moal
+Western Digital Research
