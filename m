@@ -2,94 +2,112 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C186FC43334
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jun 2022 05:15:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9EF0C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jun 2022 05:23:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240163AbiFCFPD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Jun 2022 01:15:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60166 "EHLO
+        id S240351AbiFCFXp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Jun 2022 01:23:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53144 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234392AbiFCFO5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jun 2022 01:14:57 -0400
-Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 188E01DA7A
-        for <linux-scsi@vger.kernel.org>; Thu,  2 Jun 2022 22:14:57 -0700 (PDT)
-Received: by mail-pl1-f177.google.com with SMTP id o6so1031944plg.2
-        for <linux-scsi@vger.kernel.org>; Thu, 02 Jun 2022 22:14:57 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=hoUPzzig0R6NiWGQTQAqogz5hc7rd8EyuLc04Iz3ogs=;
-        b=Rt1wKJSO6FOBOJM7KNMKxIoQ9K3Vx9GRvzIK0i0x4/ClH86xqO800RtLRfjua74LGN
-         nQaHKZT8F32PUupz0OUkhOoZb/+cxHF1i37qVLlXQaH2vYRH6LuLANQHv0eg5H/jKBCy
-         tqu0/SHiHzB4IP7G1m4DeIszYObZfBiuP89D9vPjJkld0aayZ9BCxQoalJ1TCOw0v9Zf
-         QVijQ5qIcPaxwBTflty3rLCV2yWAMKmq4+x1BZBXWhPvdk96jETz4AuA2Nvqk62M8JDB
-         UPShawdIaOrFjYT5dzXNavAW8vFCho/Od+Pcyxi/3JGlvJlvlUb0BCFgo6b3gI/q7TNS
-         5d4w==
-X-Gm-Message-State: AOAM532WKK3ovuRFT5Gi6uOmJVQpXuX32ODI2veFLtpl1KwV/PqW4pyk
-        tALiTqCGHjrlH9LzUEy05aY=
-X-Google-Smtp-Source: ABdhPJy6gbCvQR+JeWSJAx76vSOR5ki3q1h4k8UpGd5m9QNf5zHTgkhJdwzCKLdntmGXahirPo3diQ==
-X-Received: by 2002:a17:90b:1d06:b0:1e6:7a84:3c6e with SMTP id on6-20020a17090b1d0600b001e67a843c6emr9302202pjb.202.1654233296439;
-        Thu, 02 Jun 2022 22:14:56 -0700 (PDT)
-Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id 205-20020a6216d6000000b0050dc76281f0sm4395602pfw.202.2022.06.02.22.14.54
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 02 Jun 2022 22:14:55 -0700 (PDT)
-Message-ID: <993827cb-47be-6579-83b2-ad3bf4c52500@acm.org>
-Date:   Thu, 2 Jun 2022 22:14:54 -0700
+        with ESMTP id S230358AbiFCFXo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jun 2022 01:23:44 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C14752BC2;
+        Thu,  2 Jun 2022 22:23:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=hMNctlx+C66dPDqtUr9DILwv+HtGnQVmz4/en1tCu3E=; b=me3pRb2Oetizv3pqhXyy556Bt9
+        shNgHObeiTTHcnogYnbEjnVLmya3FVfkGq16GfT2+FkARAcDV479AE57ik/mye1ySwhOojq6LY5sT
+        lUmSkn+7HCEJPWTzz9Z3ilSkMSK1J4ueT/kBbTllD3L+QtzYj1UE72lYhcwesZ8+Ler8GE+/8/tcB
+        HDR0VCO2g3HfcdIa061k3v663g1l0JJKkD7GNYiV+hVf5+A3RmmQWrsqof8XrDcQx2zi2pUuWEVI+
+        0G+lXpthYpz0A0A+TlGOVbbNHQ3r/S9kWJT9IpUTrL6VSCbld6PCJBDlnH2UM3dGEUyMFfurzLrOT
+        2Dcrx5XA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nwzmd-005tSF-L0; Fri, 03 Jun 2022 05:23:39 +0000
+Date:   Thu, 2 Jun 2022 22:23:39 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Tyler Erickson <tyler.erickson@seagate.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-ide@vger.kernel.org, muhammad.ahmad@seagate.com
+Subject: Re: [PATCH v2 0/3] ata,sd: Fix reading concurrent positioning ranges
+Message-ID: <Ypma2xNMaHYJflNx@infradead.org>
+References: <20220602225113.10218-1-tyler.erickson@seagate.com>
+ <d3cc3cff-b483-b2dd-b6eb-131500b97d54@opensource.wdc.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.1
-Subject: Re: [PATCH] scsi: ufs: Split struct ufs_hba
-Content-Language: en-US
-To:     keosung.park@samsung.com,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        cpgsproxy2 <cpgsproxy2@samsung.com>,
-        cpgsproxy3 <cpgsproxy3@samsung.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Eric Biggers <ebiggers@google.com>
-References: <CGME20220531035501epcas2p33ef286ea964e39f45a0696edf2d8ae32@epcms2p3>
- <1891546521.01654139701937.JavaMail.epsvc@epcpadp3>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <1891546521.01654139701937.JavaMail.epsvc@epcpadp3>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <d3cc3cff-b483-b2dd-b6eb-131500b97d54@opensource.wdc.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/1/22 20:13, Keoseong Park wrote:
->> diff --git a/drivers/ufs/core/ufs-debugfs.c b/drivers/ufs/core/ufs-debugfs.c
->> index e3baed6c70bd..12ff7bdf84aa 100644
->> --- a/drivers/ufs/core/ufs-debugfs.c
->> +++ b/drivers/ufs/core/ufs-debugfs.c
->> @@ -34,7 +34,8 @@ void ufs_debugfs_exit(void)
->> static int ufs_debugfs_stats_show(struct seq_file *s, void *data)
->> {
->>          struct ufs_hba *hba = hba_from_file(s->file);
->> -        struct ufs_event_hist *e = hba->ufs_stats.event;
->> +        struct ufs_hba_priv *priv = container_of(hba, typeof(*priv), hba);
+On Fri, Jun 03, 2022 at 10:30:04AM +0900, Damien Le Moal wrote:
+> Looks all good to me. I tested this and really wonder how I did not catch
+> these mistakes earlier :)
 > 
-> How about functionalizing container_of in ufshcd-priv.h like below?
-> 
-> static inline struct ufs_hba_priv *hba_to_hba_priv(struct ufs_hba *hba)
-> {
->          return container_of(hba, struct ufs_hba_priv, hba);
-> }
-> 
-> I think it will be easy to understand.
+> Using a tcmu emulator for various concurrent positioning range configs to
+> test, I got a lockdep splat when unplugging the drive:
 
-Hi Keoseong,
+You probably want something like this:
 
-That's an interesting suggestion. I will look into this.
+---
+From 4340b85be3532149310326b5f0caf329e1f4c748 Mon Sep 17 00:00:00 2001
+From: Christoph Hellwig <hch@lst.de>
+Date: Mon, 23 May 2022 09:18:44 +0200
+Subject: block: don't take sysfs_lock in blk_ia_range_sysfs_show
 
-Thanks,
+sysfs already synchronizes internally against kobject removal, so remove
+the extra lock.
 
-Bart.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ block/blk-ia-ranges.c  | 8 +-------
+ include/linux/blkdev.h | 1 -
+ 2 files changed, 1 insertion(+), 8 deletions(-)
+
+diff --git a/block/blk-ia-ranges.c b/block/blk-ia-ranges.c
+index 853be76b9808b..e9e7ebf02737f 100644
+--- a/block/blk-ia-ranges.c
++++ b/block/blk-ia-ranges.c
+@@ -54,13 +54,8 @@ static ssize_t blk_ia_range_sysfs_show(struct kobject *kobj,
+ 		container_of(attr, struct blk_ia_range_sysfs_entry, attr);
+ 	struct blk_independent_access_range *iar =
+ 		container_of(kobj, struct blk_independent_access_range, kobj);
+-	ssize_t ret;
+ 
+-	mutex_lock(&iar->queue->sysfs_lock);
+-	ret = entry->show(iar, buf);
+-	mutex_unlock(&iar->queue->sysfs_lock);
+-
+-	return ret;
++	return entry->show(iar, buf);
+ }
+ 
+ static const struct sysfs_ops blk_ia_range_sysfs_ops = {
+@@ -149,7 +144,6 @@ int disk_register_independent_access_ranges(struct gendisk *disk,
+ 	}
+ 
+ 	for (i = 0; i < iars->nr_ia_ranges; i++) {
+-		iars->ia_range[i].queue = q;
+ 		ret = kobject_init_and_add(&iars->ia_range[i].kobj,
+ 					   &blk_ia_range_ktype, &iars->kobj,
+ 					   "%d", i);
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index a72203ed25454..0ceb85ca52af4 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -348,7 +348,6 @@ static inline int blkdev_zone_mgmt_ioctl(struct block_device *bdev,
+  */
+ struct blk_independent_access_range {
+ 	struct kobject		kobj;
+-	struct request_queue	*queue;
+ 	sector_t		sector;
+ 	sector_t		nr_sectors;
+ };
+-- 
+2.30.2
+
