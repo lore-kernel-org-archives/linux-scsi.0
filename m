@@ -2,136 +2,169 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66C7FC433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jun 2022 01:31:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2378AC43334
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jun 2022 01:32:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240788AbiFCBbp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Jun 2022 21:31:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52402 "EHLO
+        id S240927AbiFCBcV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Jun 2022 21:32:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53184 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240781AbiFCBbK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jun 2022 21:31:10 -0400
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1FC83C490
-        for <linux-scsi@vger.kernel.org>; Thu,  2 Jun 2022 18:30:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1654219827; x=1685755827;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=4/XRBVJlrbde9LFq9lEMFNDMZHqrnKfROAx+/nN8uZw=;
-  b=gcA539ksgjsT9mbEypGYhxZrC2aYMsBSAKSqTi0mq8STY+8aOLaXcWl5
-   RrduPyUiyFpYKo4ewd6MxFmAW7omdIwknTsSYWjqngV5Tb8g9eYo9AkA1
-   zdksry8ydgHUFOdVa8w6lr00JiFcmFMX7HHNd1/CscSn6nmGwC9z3NxoH
-   H2j3hPhc7tTXTdmRlxmZc3uM3uZtXf5LJwutHtR/uI//ogA8JlDCwHjiM
-   D/ABHVlacmyg5S6DfU2AocWqzr+GbZVV6qt4H4xzJ958lerSIop1ErjpX
-   RJ+52u2a/jl5Zl8j2wYwcZsXfjcSMB+Pou2HE07hT173zOrCuVQzVuYrC
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.91,273,1647273600"; 
-   d="scan'208";a="202947957"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 03 Jun 2022 09:30:18 +0800
-IronPort-SDR: o8y3To35/aokIf4kSeagovz38G/fpS8pjkSOJlGP1qOFL3CUjkmmQuPS1LS57dedfUaJCW3SUV
- q0att4lW93ttzAtKCsSVJy7ZSsnyacc/30iTAgbebTfQZ1e4K50ESUpusopVEX7DyEl0QLw5x8
- B7hFmPkrTNoZ+RrthqfykuLwuf+WrkeAA43YGXdYeHp7tlNWXssuwTSGzE0wguyYcYxLTazcCm
- x8atG/kf+Zc8uOjqebnPPH2O/Iavuvpuenu45gsFmumVI5cB5yIjCdLTMJlc4hWv6y5cq5SPxX
- xuNjwnJLaUPSGC59FScKFpa1
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 02 Jun 2022 17:53:53 -0700
-IronPort-SDR: ncq7vEkgj+nT85iUyIzcoMZFR6XfnZ+0/MOLV39RwXm6y+NeE51W6ORLcf3JIwI/mwFUUoym5m
- hjp9YOGcln0xYQkPqR6wBX7qmvGmFG6tPfffLiOkhBD6Iy6gl1fxOApwkPeP6GOm2atDaTtAYL
- zMpCwBSi7ZgaPE9F5kr4kTNW0TepR+ZvQ6cGVW0R67TziIhBZZpLTsZiHB7Ak7MSVpcI9/nrN6
- I5YU0/1B7D9d4VOMIjhorZnm+7XBQhq7G23LINBIqqplHTba9EjZGIXJgtxyPmRmXi3hUwW8w/
- wxA=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 02 Jun 2022 18:30:18 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LDlgY2Bfjz1SVp1
-        for <linux-scsi@vger.kernel.org>; Thu,  2 Jun 2022 18:30:17 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1654219816; x=1656811817; bh=4/XRBVJlrbde9LFq9lEMFNDMZHqrnKfROAx
-        +/nN8uZw=; b=eBY8VQn1azy3OxgTB0joSiNzuxnCa56ZCh3ZD/Qab7XLle0sgEM
-        TmIh/nKOxOkgDQAMwlaktPb94XXAUK982Rv0wJhPM2aygGbYtQiBT6HZnDRiPRCT
-        fpSCREdQ/rlUqdPv2Id3L4NJa8jL6BCuqwbQSR1UuR8Pr2x8dSOXXANVRoqdoIuR
-        09G84gMZyL0QtN4wVAQsiD+69MJA4NVHqcgqU+Q6+gfyh7xA4rQymnWmHBBn5F9W
-        eoJFPZdmgTFF59YFnBaeh8kEB8ZnrQuLXq40HcsQRK5Al6mCAkLV0GBRns7GZUlk
-        lV/wkMW1BWJAbpJYUnZYBfGBj7jEL4138sA==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id yF1lX0yDnzpM for <linux-scsi@vger.kernel.org>;
-        Thu,  2 Jun 2022 18:30:16 -0700 (PDT)
-Received: from [10.225.163.63] (unknown [10.225.163.63])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LDlgW4xkbz1Rvlc;
-        Thu,  2 Jun 2022 18:30:15 -0700 (PDT)
-Message-ID: <fcef5536-a4aa-f6f2-5e9a-c39708a74a50@opensource.wdc.com>
-Date:   Fri, 3 Jun 2022 10:30:14 +0900
+        with ESMTP id S240910AbiFCBcK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jun 2022 21:32:10 -0400
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 204873BBF5
+        for <linux-scsi@vger.kernel.org>; Thu,  2 Jun 2022 18:31:18 -0700 (PDT)
+Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20220603013116epoutp02edd12525c306989a8877107fd33e43a9~0_DaFbYO_1020610206epoutp02S
+        for <linux-scsi@vger.kernel.org>; Fri,  3 Jun 2022 01:31:16 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20220603013116epoutp02edd12525c306989a8877107fd33e43a9~0_DaFbYO_1020610206epoutp02S
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1654219876;
+        bh=t5IuCCi9iX8N/w6cn5YeEppR7RVRvs2ts9SZ99V9yH0=;
+        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+        b=Eql7neFuzwkjHPH44MBRAyC/qM731KQtyLbDzwJerJ4eYX4HBqF7dq6fXgmUMw2UJ
+         soUBu4wQ/DF8ZmS384HYeBd/MA2RSbR3z1KYV2rf7tfp8b++Ho3pD+WsF5MmZci0jP
+         O4khlTnLRc5bDasNdW6feNJAoL2ztBV01P9C+S7w=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        epcas5p4.samsung.com (KnoxPortal) with ESMTP id
+        20220603013115epcas5p41f437187f1f078814c6ec6c963aca1b5~0_DZeJ8-H1745617456epcas5p4E;
+        Fri,  3 Jun 2022 01:31:15 +0000 (GMT)
+Received: from epsmges5p3new.samsung.com (unknown [182.195.38.180]) by
+        epsnrtp4.localdomain (Postfix) with ESMTP id 4LDlhc60vxz4x9Q2; Fri,  3 Jun
+        2022 01:31:12 +0000 (GMT)
+Received: from epcas5p3.samsung.com ( [182.195.41.41]) by
+        epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        8E.3A.09762.06469926; Fri,  3 Jun 2022 10:31:12 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
+        20220603013112epcas5p425a5044bbb08c2ea9ea97cf0afca7ded~0_DWd9Mou3118831188epcas5p4e;
+        Fri,  3 Jun 2022 01:31:12 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20220603013112epsmtrp1351712f2599aca8eaaabb52812d8ca30~0_DWcDH242663326633epsmtrp10;
+        Fri,  3 Jun 2022 01:31:12 +0000 (GMT)
+X-AuditID: b6c32a4b-213ff70000002622-7c-629964603aa5
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        76.B1.11276.06469926; Fri,  3 Jun 2022 10:31:12 +0900 (KST)
+Received: from alimakhtar03 (unknown [107.122.12.5]) by epsmtip2.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20220603013109epsmtip2ad6f570469ae077fa4692ef8ea0267a0~0_DTw6iuD1079110791epsmtip2B;
+        Fri,  3 Jun 2022 01:31:09 +0000 (GMT)
+From:   "Alim Akhtar" <alim.akhtar@samsung.com>
+To:     "'Krzysztof Kozlowski'" <krzysztof.kozlowski@linaro.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux-phy@lists.infradead.org>
+Cc:     <devicetree@vger.kernel.org>, <robh+dt@kernel.org>,
+        <krzysztof.kozlowski+dt@linaro.org>, <vkoul@kernel.org>,
+        <avri.altman@wdc.com>, <bvanassche@acm.org>,
+        <martin.petersen@oracle.com>, <chanho61.park@samsung.com>,
+        <pankaj.dubey@samsung.com>, <linux-fsd@tesla.com>,
+        "'Bharat Uppal'" <bharat.uppal@samsung.com>
+In-Reply-To: <e92618c0-056c-5854-9bb3-5fba90a82d96@linaro.org>
+Subject: RE: [PATCH 2/6] phy: samsung-ufs: move cdr offset to drvdata
+Date:   Fri, 3 Jun 2022 07:01:08 +0530
+Message-ID: <000b01d876e9$9bd36690$d37a33b0$@samsung.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.1
-Subject: Re: [PATCH v2 3/3] scsi: sd: Fix interpretation of VPD B9h length
-Content-Language: en-US
-To:     Tyler Erickson <tyler.erickson@seagate.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
-        muhammad.ahmad@seagate.com, stable@vger.kernel.org
-References: <20220602225113.10218-1-tyler.erickson@seagate.com>
- <20220602225113.10218-4-tyler.erickson@seagate.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <20220602225113.10218-4-tyler.erickson@seagate.com>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQEGJiXAXdobboEKZTBkhZkj5AOCHwHY2vLkAdBvZpoC7O2Ypa6s1ROQ
+Content-Language: en-us
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrKJsWRmVeSWpSXmKPExsWy7bCmpm5CyswkgyundS1e/rzKZnHt5QV2
+        i2kffjJbXN6vbTH/yDlWi74XD5kt9r7eym6x6fE1VouHr8ItLu+aw2YxYdU3Fovu6zvYLJYf
+        /8dksWjrF3aL1r1H2C123jnB7CDgcfmKt8emVZ1sHneu7WHz2Lyk3uPj01ssHn1bVjF6/Gua
+        y+7xeZOcR/uBbqYAzqhsm4zUxJTUIoXUvOT8lMy8dFsl7+B453hTMwNDXUNLC3MlhbzE3FRb
+        JRefAF23zBygH5QUyhJzSoFCAYnFxUr6djZF+aUlqQoZ+cUltkqpBSk5BSYFesWJucWleel6
+        eaklVoYGBkamQIUJ2Rnt3w6xF7ziq+j8vJelgfEFTxcjJ4eEgInEnyW32UFsIYHdjBLT1jB1
+        MXIB2Z8YJVbtnArlfGOUWDy3kxGmY3vTOVaIxF5GiYMfj0NVvWSU2Nuzlhmkik1AV2LH4jY2
+        kISIwHFGif3N+1lBEswC+5kk2t4YgNicAnYSj5bNBRsrLOAq8fneLbAaFgEViZWLz4EN4hWw
+        lFh49BsrhC0ocXLmExaIOfIS29/OYYY4SUHi59NlYDUiAm4S8+efZoeoEZd4efQIO0TNBw6J
+        vheqELaLxLbb06HeEZZ4dXwLVI2UxMv+NiCbA8j2kFj0RwoinCHxdvl6qHJ7iQNX5rCAlDAL
+        aEqs36UPsYlPovf3EyaITl6JjjYhiGpVieZ3V1kgbGmJid3drDDDb/0Xm8CoOAvJW7OQvDUL
+        yfmzEHYtYGRZxSiZWlCcm55abFpgnJdaDo/t5PzcTYzg9K3lvYPx0YMPeocYmTgYDzFKcDAr
+        ifCW7JqaJMSbklhZlVqUH19UmpNafIjRFBjWE5mlRJPzgRkkryTe0MTSwMTMzMzE0tjMUEmc
+        V+B/Y5KQQHpiSWp2ampBahFMHxMHp1QD05PNf3h3x4iwZ0sLFe6xDl/RKWd2U8lU/PGeA4WT
+        WXZdYj5255Ve3XPvft8tTNYLk78pnFD8eN8594P4igtzp6uVFJalHKzOW7K5IzKK60H1VKEU
+        4YSKjHfTL3xtur//hOkXU4vE2N3Z9rfS2VvPa//suzJHXXaLi9pyBw7dnlVH0nqm/6upW5Ow
+        3qqtkntTbuBpqzm7ChLDGOatPv30bkd6z7SyD8eLH8iLXFt1vvLl8196KnNTJ396Pl2tkOPp
+        ulP73nBrL9p64PTBJxYmB52Eqxv/6QnOOXFn7qNjQn9ae0T8H29PatJcr89vYa/NdZI/gr9r
+        zd9Qpglsdcs64zKXV13h09zTXyHs+y19uhJLcUaioRZzUXEiAHBTDuJoBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrEIsWRmVeSWpSXmKPExsWy7bCSvG5Cyswkg741vBYvf15ls7j28gK7
+        xbQPP5ktLu/Xtph/5ByrRd+Lh8wWe19vZbfY9Pgaq8XDV+EWl3fNYbOYsOobi0X39R1sFsuP
+        /2OyWLT1C7tF694j7BY775xgdhDwuHzF22PTqk42jzvX9rB5bF5S7/Hx6S0Wj74tqxg9/jXN
+        Zff4vEnOo/1AN1MAZxSXTUpqTmZZapG+XQJXRvu3Q+wFr/gqOj/vZWlgfMHTxcjJISFgIrG9
+        6RwriC0ksJtRYtKEWoi4tMT1jRPYIWxhiZX/ngPZXEA1zxklzu55yQaSYBPQldixuI0NJCEi
+        cJpRYtOee0wgDrPAaSaJD0dfMUO0fGSUmPj1LtgOTgE7iUfL5jKC2MICrhKf790Ci7MIqEis
+        XHyOGcTmFbCUWHj0GyuELShxcuYTFhCbWUBb4unNp1C2vMT2t3OYIe5TkPj5dBlYvYiAm8T8
+        +afZIWrEJV4ePcI+gVF4FpJRs5CMmoVk1CwkLQsYWVYxSqYWFOem5xYbFhjmpZbrFSfmFpfm
+        pesl5+duYgRHs5bmDsbtqz7oHWJk4mA8xCjBwawkwluya2qSEG9KYmVValF+fFFpTmrxIUZp
+        DhYlcd4LXSfjhQTSE0tSs1NTC1KLYLJMHJxSDUzmHA+33T7jfGLq49X3mrTUV7i+KOL8N/Vg
+        08zt2vXuYfn2E3jXh5qIr2VhYisxUPu40581LTLZOtmtcc1kQ50U6a3LdFfU2fZl1d3Ul6hR
+        Zpi+l1uvi2ey8mXH2wLLdcR7OlhfsK+fVTHzTkKU+eVNNZbL3gi/5DOcmK3RnGkYY9BZNdOM
+        X32N5vIE39efZe5JHgrbZ+49L6VQpWx9qeVUwXChesPLLf5bd/xau/iZ/mT/Lye2VLcJXPM1
+        7yjP/K++XOB/TQXrBDanFyXed2SlrHXKXm1SfVBt0ZamwcTSZFz0fyHT5qmcWr1Gq2YvzOt2
+        bjk20f3Y5vhZATaf+ayPdk/jshB+tUv08JzzSizFGYmGWsxFxYkAoR0TJFUDAAA=
+X-CMS-MailID: 20220603013112epcas5p425a5044bbb08c2ea9ea97cf0afca7ded
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20220531012341epcas5p19b15b4916b210687ab6b46d6da0b2273
+References: <20220531012220.80563-1-alim.akhtar@samsung.com>
+        <CGME20220531012341epcas5p19b15b4916b210687ab6b46d6da0b2273@epcas5p1.samsung.com>
+        <20220531012220.80563-3-alim.akhtar@samsung.com>
+        <e92618c0-056c-5854-9bb3-5fba90a82d96@linaro.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/3/22 07:51, Tyler Erickson wrote:
-> Fixing the interpretation of the length of the B9h VPD page
-> (concurrent positioning ranges). Adding 4 is necessary as
-> the first 4 bytes of the page is the header with page number
-> and length information. Adding 3 was likely a misinterpretation
-> of the SBC-5 specification which sets all offsets starting at zero.
-> 
-> This fixes the error in dmesg:
-> [ 9.014456] sd 1:0:0:0: [sda] Invalid Concurrent Positioning Ranges VPD page
-> 
-> Cc: stable@vger.kernel.org
-> Fixes: e815d36548f0 ("scsi: sd: add concurrent positioning ranges support")
-> Signed-off-by: Tyler Erickson <tyler.erickson@seagate.com>
-> Reviewed-by: Muhammad Ahmad <muhammad.ahmad@seagate.com>
-> Tested-by: Michael English <michael.english@seagate.com>
-> ---
->  drivers/scsi/sd.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 749316462075..f25b0cc5dd21 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -3072,7 +3072,7 @@ static void sd_read_cpr(struct scsi_disk *sdkp)
->  		goto out;
->  
->  	/* We must have at least a 64B header and one 32B range descriptor */
-> -	vpd_len = get_unaligned_be16(&buffer[2]) + 3;
-> +	vpd_len = get_unaligned_be16(&buffer[2]) + 4;
->  	if (vpd_len > buf_len || vpd_len < 64 + 32 || (vpd_len & 31)) {
->  		sd_printk(KERN_ERR, sdkp,
->  			  "Invalid Concurrent Positioning Ranges VPD page\n");
 
-Martin,
 
-If you take this one:
+>-----Original Message-----
+>From: Krzysztof Kozlowski [mailto:krzysztof.kozlowski@linaro.org]
+>Sent: Tuesday, May 31, 2022 3:26 PM
+>To: Alim Akhtar <alim.akhtar@samsung.com>; linux-arm-
+>kernel@lists.infradead.org; linux-kernel@vger.kernel.org; linux-
+>scsi@vger.kernel.org; linux-phy@lists.infradead.org
+>Cc: devicetree@vger.kernel.org; robh+dt@kernel.org;
+>krzysztof.kozlowski+dt@linaro.org; vkoul@kernel.org; avri.altman@wdc.com;
+>bvanassche@acm.org; martin.petersen@oracle.com;
+>chanho61.park@samsung.com; pankaj.dubey@samsung.com; linux-
+>fsd@tesla.com; Bharat Uppal <bharat.uppal@samsung.com>
+>Subject: Re: [PATCH 2/6] phy: samsung-ufs: move cdr offset to drvdata
+>
+>On 31/05/2022 03:22, Alim Akhtar wrote:
+>> Move CDR lock offset to drv data so that it can be extended for other
+>> SoCs which are having CDR lock at different register offset.
+>>
+>> Cc: linux-fsd@tesla.com
+>> Signed-off-by: Bharat Uppal <bharat.uppal@samsung.com>
+>> Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
+>> ---
+>>  drivers/phy/samsung/phy-exynos7-ufs.c      | 3 +++
+>>  drivers/phy/samsung/phy-exynosautov9-ufs.c | 2 ++
+>>  drivers/phy/samsung/phy-samsung-ufs.c      | 3 ++-
+>>  drivers/phy/samsung/phy-samsung-ufs.h      | 2 +-
+>>  4 files changed, 8 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/phy/samsung/phy-exynos7-ufs.c
+>> b/drivers/phy/samsung/phy-exynos7-ufs.c
+>> index 7c9008e163db..d1a37273cb1f 100644
+>> --- a/drivers/phy/samsung/phy-exynos7-ufs.c
+>> +++ b/drivers/phy/samsung/phy-exynos7-ufs.c
+>> @@ -11,6 +11,8 @@
+>>  #define EXYNOS7_EMBEDDED_COMBO_PHY_CTRL_MASK	0x1
+>>  #define EXYNOS7_EMBEDDED_COMBO_PHY_CTRL_EN	BIT(0)
+>>
+>> +#define PHY_CDR_LOCK_STATUS    0x5e
+>
+>This should be now renamed to match other defines here, so
+>EXYNOS7_EMBEDDED_COMBO_PHY_CDR_LOCK_STATUS
+>
+Sure, will update in next version
+>
+>Best regards,
+>Krzysztof
 
-Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-
--- 
-Damien Le Moal
-Western Digital Research
