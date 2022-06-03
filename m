@@ -2,24 +2,24 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 120CFCCA482
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jun 2022 11:05:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76FCFCCA473
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jun 2022 11:05:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243949AbiFCLFy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Jun 2022 07:05:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52202 "EHLO
+        id S243966AbiFCLF4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Jun 2022 07:05:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52204 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243938AbiFCLFm (ORCPT
+        with ESMTP id S243939AbiFCLFm (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jun 2022 07:05:42 -0400
-Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A352C3BFB8;
+Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A77AF3BFBB;
         Fri,  3 Jun 2022 04:05:40 -0700 (PDT)
 X-IronPort-AV: E=Sophos;i="5.91,274,1647270000"; 
-   d="scan'208";a="121822517"
+   d="scan'208";a="123226934"
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie5.idc.renesas.com with ESMTP; 03 Jun 2022 20:05:38 +0900
+  by relmlie6.idc.renesas.com with ESMTP; 03 Jun 2022 20:05:38 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 6BAB442849B3;
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 132CF42849B7;
         Fri,  3 Jun 2022 20:05:38 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     alim.akhtar@samsung.com, avri.altman@wdc.com, robh+dt@kernel.org,
@@ -27,11 +27,10 @@ To:     alim.akhtar@samsung.com, avri.altman@wdc.com, robh+dt@kernel.org,
 Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
         linux-renesas-soc@vger.kernel.org,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: [PATCH v6 6/7] arm64: dts: renesas: r8a779f0: Add UFS node
-Date:   Fri,  3 Jun 2022 20:05:23 +0900
-Message-Id: <20220603110524.1997825-7-yoshihiro.shimoda.uh@renesas.com>
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v6 3/7] ufs: add UFSHCD_QUIRK_HIBERN_FASTAUTO
+Date:   Fri,  3 Jun 2022 20:05:20 +0900
+Message-Id: <20220603110524.1997825-4-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220603110524.1997825-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20220603110524.1997825-1-yoshihiro.shimoda.uh@renesas.com>
@@ -41,51 +40,52 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add UFS node for R-Car S4-8 (r8a779f0).
+Add UFSHCD_QUIRK_HIBERN_FASTAUTO for a broken host controller of
+the auto-hibernate capability but it's FASTAUTO only.
 
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
 ---
- arch/arm64/boot/dts/renesas/r8a779f0.dtsi | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+ drivers/ufs/core/ufshcd.c | 9 +++++++--
+ include/ufs/ufshcd.h      | 6 ++++++
+ 2 files changed, 13 insertions(+), 2 deletions(-)
 
-diff --git a/arch/arm64/boot/dts/renesas/r8a779f0.dtsi b/arch/arm64/boot/dts/renesas/r8a779f0.dtsi
-index df46fb87cffc..155a7ee8dae4 100644
---- a/arch/arm64/boot/dts/renesas/r8a779f0.dtsi
-+++ b/arch/arm64/boot/dts/renesas/r8a779f0.dtsi
-@@ -40,6 +40,13 @@ extalr_clk: extalr {
- 		clock-frequency = <0>;
- 	};
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 88e567c3ba0b..bb6cbd514a69 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -4260,8 +4260,13 @@ static int ufshcd_get_max_pwr_mode(struct ufs_hba *hba)
+ 	if (hba->max_pwr_info.is_valid)
+ 		return 0;
  
-+	ufs30_clk: ufs30-clk {
-+		compatible = "fixed-clock";
-+		#clock-cells = <0>;
-+		/* This value must be overridden by the board */
-+		clock-frequency = <0>;
-+	};
-+
- 	pmu_a55 {
- 		compatible = "arm,cortex-a55-pmu";
- 		interrupts-extended = <&gic GIC_PPI 7 IRQ_TYPE_LEVEL_LOW>;
-@@ -259,6 +266,18 @@ i2c5: i2c@e66e0000 {
- 			status = "disabled";
- 		};
+-	pwr_info->pwr_tx = FAST_MODE;
+-	pwr_info->pwr_rx = FAST_MODE;
++	if (hba->quirks & UFSHCD_QUIRK_HIBERN_FASTAUTO) {
++		pwr_info->pwr_tx = FASTAUTO_MODE;
++		pwr_info->pwr_rx = FASTAUTO_MODE;
++	} else {
++		pwr_info->pwr_tx = FAST_MODE;
++		pwr_info->pwr_rx = FAST_MODE;
++	}
+ 	pwr_info->hs_rate = PA_HS_MODE_B;
  
-+		ufs: ufs@e6860000 {
-+			compatible = "renesas,r8a779f0-ufs";
-+			reg = <0 0xe6860000 0 0x100>;
-+			interrupts = <GIC_SPI 235 IRQ_TYPE_LEVEL_HIGH>;
-+			clocks = <&cpg CPG_MOD 1514>, <&ufs30_clk>;
-+			clock-names = "fck", "ref_clk";
-+			freq-table-hz = <200000000 200000000>, <38400000 38400000>;
-+			power-domains = <&sysc R8A779F0_PD_ALWAYS_ON>;
-+			resets = <&cpg 1514>;
-+			status = "disabled";
-+		};
+ 	/* Get the connected lane count */
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index 795c8951341d..991aea081ec7 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -583,6 +583,12 @@ enum ufshcd_quirks {
+ 	 * 64-bit addressing supported capability but it doesn't work.
+ 	 */
+ 	UFSHCD_QUIRK_BROKEN_64BIT_ADDRESS		= 1 << 17,
 +
- 		scif3: serial@e6c50000 {
- 			compatible = "renesas,scif-r8a779f0",
- 				     "renesas,rcar-gen4-scif", "renesas,scif";
++	/*
++	 * This quirk needs to be enabled if the host controller has
++	 * auto-hibernate capability but it's FASTAUTO only.
++	 */
++	UFSHCD_QUIRK_HIBERN_FASTAUTO			= 1 << 18,
+ };
+ 
+ enum ufshcd_caps {
 -- 
 2.25.1
 
