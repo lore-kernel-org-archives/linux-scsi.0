@@ -2,129 +2,69 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D397CCCA47B
-	for <linux-scsi@archiver.kernel.org>; Sun,  5 Jun 2022 09:42:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59098C43334
+	for <linux-scsi@archiver.kernel.org>; Sun,  5 Jun 2022 13:17:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245175AbiFEJmV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 5 Jun 2022 05:42:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59318 "EHLO
+        id S1343918AbiFENRD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 5 Jun 2022 09:17:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38508 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245150AbiFEJmS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Jun 2022 05:42:18 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A126727CE7;
-        Sun,  5 Jun 2022 02:42:14 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        with ESMTP id S233026AbiFENRC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Jun 2022 09:17:02 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0AAB4D7A;
+        Sun,  5 Jun 2022 06:16:57 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 2062E21AD4;
-        Sun,  5 Jun 2022 09:42:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1654422133; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=RaLJYAd4oEhVZDqfrmbQ/dgmr8LRQdaNIkATz4hlO4Y=;
-        b=PmxlIut8p3liEaDaCZfpYIWx5R/v+Q8A2F/WFhnhHX2FS2sskuzwNTad17iEPd5X0X/Nt+
-        O4R37gp/Rg2SozaLdDqtVXWieF70Xjv6dxHxj+54jovQ2LQBK/ifWhPgeK884TQU5KErv6
-        tYZKAO1btc7TRK0dTH1tyDz9gK+YTyM=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1654422133;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=RaLJYAd4oEhVZDqfrmbQ/dgmr8LRQdaNIkATz4hlO4Y=;
-        b=4P3iWlWdwO7hFfy30jEdsL0++hPQnA+sNKsGvWddBZwGZFAery4Xi3vzcfIGoERkzmImJl
-        RyWDG2leXZIUmRDA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id AEA2713A90;
-        Sun,  5 Jun 2022 09:42:12 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id wPj5InR6nGJRdwAAMHmgww
-        (envelope-from <hare@suse.de>); Sun, 05 Jun 2022 09:42:12 +0000
-Message-ID: <b612013c-46e4-d1c3-81f8-b28a026240e6@suse.de>
-Date:   Sun, 5 Jun 2022 11:42:11 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.0
-Subject: Re: [PATCH 09/11] block, nvme: Add error for reservation conflicts.
-Content-Language: en-US
-To:     michael.christie@oracle.com, Keith Busch <kbusch@kernel.org>
-Cc:     linux-block@vger.kernel.org, dm-devel@redhat.com,
-        snitzer@kernel.org, hch@lst.de, axboe@kernel.dk,
-        martin.petersen@oracle.com, james.bottomley@hansenpartnership.com,
+        by ams.source.kernel.org (Postfix) with ESMTPS id 95AF0B80B1B;
+        Sun,  5 Jun 2022 13:16:56 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1F6EBC385A5;
+        Sun,  5 Jun 2022 13:16:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1654435015;
+        bh=F6wwIuaJOs8q469GaToXANOtJ2igdQBRHipQBFQXKnE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=GI9SyNFhvjfJ2HWJo2BaaEn/cPMwbik5qg6LQ2ULOgOKhUQWXAQ5n55qHeP6POnQ+
+         XFbvVb219MM6Bip4Ib0BsOdvLAYINmsOv0mrktAU+fYcwlttGRIEmumh0MhpxzkgFw
+         uPf+iaZzNqeHkheri+eJcu4FQcE+ZXtu0Ow8DDEPS+WfGi2d9OiSN/G3e+RDAHR8pF
+         ChRGSop3IbwNIOgA5YP4rUEe4XPXFv7QM+NXDiXO6bUpoQd5SIdEtBR60RvHsL7YcN
+         pMTq583688Ew3kaeYcOFitdSaZ4adjRm3m9Hr4b7WM1SGSHw5v5tOtu4lzLBlHA5Tp
+         SMZsjN9YUA8eA==
+Date:   Sun, 5 Jun 2022 09:16:53 -0400
+From:   Sasha Levin <sashal@kernel.org>
+To:     Bodo Stroesser <bostroesser@gmail.com>
+Cc:     linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+        Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-References: <20220603065536.5641-1-michael.christie@oracle.com>
- <20220603065536.5641-10-michael.christie@oracle.com>
- <Yppkz4HIPVxr54hn@kbusch-mbp.dhcp.thefacebook.com>
- <fdd77f3b-691a-a9bf-b31f-0aa845e68e59@suse.de>
- <6cc818cf-fac4-d485-ea9d-0b8597f24a33@oracle.com>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <6cc818cf-fac4-d485-ea9d-0b8597f24a33@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH AUTOSEL 5.18 074/159] scsi: target: tcmu: Fix possible
+ data corruption
+Message-ID: <YpysxYs68FI2n19B@sashalap>
+References: <20220530132425.1929512-1-sashal@kernel.org>
+ <20220530132425.1929512-74-sashal@kernel.org>
+ <12bb8139-be66-4e08-47be-909b0042926c@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+In-Reply-To: <12bb8139-be66-4e08-47be-909b0042926c@gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/4/22 19:13, michael.christie@oracle.com wrote:
-> On 6/4/22 2:38 AM, Hannes Reinecke wrote:
->> On 6/3/22 21:45, Keith Busch wrote:
->>> On Fri, Jun 03, 2022 at 01:55:34AM -0500, Mike Christie wrote:
->>>> @@ -171,6 +171,7 @@ static const struct {
->>>>        /* zone device specific errors */
->>>>        [BLK_STS_ZONE_OPEN_RESOURCE]    = { -ETOOMANYREFS, "open zones exceeded" },
->>>>        [BLK_STS_ZONE_ACTIVE_RESOURCE]    = { -EOVERFLOW, "active zones exceeded" },
->>>> +    [BLK_STS_RSV_CONFLICT]    = { -EBADE,    "resevation conflict" },
->>>
->>> You misspelled "reservation". :)
->>>
->>> And since you want a different error, why reuse EBADE for the errno? That is
->>> already used for BLK_STS_NEXUS that you're trying to differentiate from, right?
->>> At least for nvme, this error code is returned when the host lacks sufficient
->>> rights, so something like EACCESS might make sense.
->>>
->>> Looks good otherwise.
->>
->> Welll ... BLK_STS_NEXUS _is_ the reservation error.
-> 
-> I was not sure of xen/virtio scsi uses of BLK_STS_NEXUS/DID_NEXUS_FAILURE.
-> The virtio spec's description for VIRTIO_SCSI_S_NEXUS_FAILURE:
-> 
->      if the nexus is suffering a failure but retrying on other paths might
->      yield a different result.
-> 
-> looks like the description for DID_NEXUS_FAILURE in scsi_status.h.
-> To me the the description sounded generic where it could used for
-> other errors like the endpoint/port for the I_T is removed.
-> 
-> However, the qemu code only uses VIRTIO_SCSI_S_NEXUS_FAILURE for
-> reservation conflicts. If we are saying that is always the case in
-> other virt implementations, I don't even need this patch :) and we
-> can do what you requested and do more of a rename.
+On Mon, May 30, 2022 at 05:47:12PM +0200, Bodo Stroesser wrote:
+>Sasha,
+>
+>the below patch introduces a new bug, which is fixed by commit
+>  325d5c5fb216 ("scsi: target: tcmu: Avoid holding XArray lock when calling lock_page")
+>Please consider adding this further fix.
+>
+>For my understanding: commit 325d5c5fb216 contains a "Fixes:"
+>tag. So I'd expect it to be added automatically.
+>Is there still something missing in the commit?
 
-Well ... we tried to find a generic error for reservation failure, as we 
-thought that reservation failure was too SCSI specific.
-And we wanted the error to describe what the resulting handling should 
-be, not what the cause was. Hence we ended up with BLK_STS_NEXUS.
+I'll make sure it's added along with this one, thanks!
 
-But turns out that our initial assumption wasn't valid, and that 
-reservations are a general concept. So by all means, rename 
-BLK_STS_NEXUS to BLK_STS_RSV_CONFLICT to make it clear what this error 
-is about.
-
-Cheers,
-
-Hannes
 -- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
-Myers, Andrew McDonald, Martje Boudien Moerman
+Thanks,
+Sasha
