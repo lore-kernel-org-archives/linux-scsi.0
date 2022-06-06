@@ -2,75 +2,98 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 118E3C43334
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jun 2022 10:40:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73045C43334
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jun 2022 13:16:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234052AbiFFKk0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Jun 2022 06:40:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48828 "EHLO
+        id S238668AbiFFNQZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Jun 2022 09:16:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37924 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234047AbiFFKkZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jun 2022 06:40:25 -0400
-Received: from angie.orcam.me.uk (angie.orcam.me.uk [78.133.224.34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E0EF62AC5D;
-        Mon,  6 Jun 2022 03:40:23 -0700 (PDT)
-Received: by angie.orcam.me.uk (Postfix, from userid 500)
-        id 9DC8C92009C; Mon,  6 Jun 2022 12:40:21 +0200 (CEST)
-Received: from localhost (localhost [127.0.0.1])
-        by angie.orcam.me.uk (Postfix) with ESMTP id 9686692009B;
-        Mon,  6 Jun 2022 11:40:21 +0100 (BST)
-Date:   Mon, 6 Jun 2022 11:40:21 +0100 (BST)
-From:   "Maciej W. Rozycki" <macro@orcam.me.uk>
-To:     Arnd Bergmann <arnd@kernel.org>
-cc:     Arnd Bergmann <arnd@arndb.de>, Jakub Kicinski <kuba@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        iommu@lists.linux-foundation.org,
-        Khalid Aziz <khalid@gonehiking.org>,
-        linux-scsi@vger.kernel.org,
-        Manohar Vanga <manohar.vanga@gmail.com>,
-        Martyn Welch <martyn@welchs.me.uk>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linuxppc-dev@lists.ozlabs.org, linux-arch@vger.kernel.org,
-        linux-alpha@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
-        linux-parisc@vger.kernel.org, Denis Efremov <efremov@linux.com>,
-        Matt Wang <wwentao@vmware.com>
-Subject: Re: [PATCH 5/6] scsi: remove stale BusLogic driver
-In-Reply-To: <20220606084109.4108188-6-arnd@kernel.org>
-Message-ID: <alpine.DEB.2.21.2206061057060.19680@angie.orcam.me.uk>
-References: <20220606084109.4108188-1-arnd@kernel.org> <20220606084109.4108188-6-arnd@kernel.org>
-User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+        with ESMTP id S238656AbiFFNQY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jun 2022 09:16:24 -0400
+Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3A2337A9E;
+        Mon,  6 Jun 2022 06:16:23 -0700 (PDT)
+Received: by mail-pj1-f52.google.com with SMTP id d12-20020a17090abf8c00b001e2eb431ce4so12559517pjs.1;
+        Mon, 06 Jun 2022 06:16:23 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=haH1xGwhj/wZTEqY+orLGoeCGd0tL/KLJasnsNbhTtE=;
+        b=jdjkMrbtmFWn6pBFRLcUYvSZ7ufVSrB6PkFz8aJmJXo35hzO/heuTJOebe4JKhlIkX
+         XqGOmuGd82PYYYTiWb/YokVeVp9bMORP2y2WktgvrVdrzNIcOKpY41UxMLMZufsZuBJa
+         lp5u+oDwoqoAgny4Ubs1ej6Bp5r0z1DtT7wIFUpGQb7Xbp22CXhytMCN4hagfQweEjlD
+         pwAGqQniu6vEOESbJgbEEvUAI/Vf+CZOAUExqFkbKLfOUYbGQk8kohZuLGUQ0TSGATbo
+         D5R6a6S/K0EdtHF7JuJFoegI8Ecf9IlNaT6G5TEu/9MyjKLa/IqorwXsZTZbI92+Uu91
+         qE1A==
+X-Gm-Message-State: AOAM532sgX0ZOVKDpyB5OEdlOEedKClChojfqs4ikZxAZwOAsCtuAPX/
+        SWbNcOT5wF5XsIicmxGK30U=
+X-Google-Smtp-Source: ABdhPJzllokqDgNkPKCfrAp7djJclpbLsYrv65dsb7FFR7bMvYPum2ICUju4mffaQ35qoAmnj7c7yQ==
+X-Received: by 2002:a17:90b:4b0f:b0:1e8:53ac:ec51 with SMTP id lx15-20020a17090b4b0f00b001e853acec51mr13717685pjb.78.1654521382753;
+        Mon, 06 Jun 2022 06:16:22 -0700 (PDT)
+Received: from [192.168.51.14] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id bf7-20020a170902b90700b00163c6ac211fsm10478642plb.111.2022.06.06.06.16.20
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 06 Jun 2022 06:16:21 -0700 (PDT)
+Message-ID: <2677b02e-b2a3-7c79-2e62-acf1acbc8ff0@acm.org>
+Date:   Mon, 6 Jun 2022 06:16:20 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [RESEND PATCH] scsi: ufs: sysfs: support writing boot_lun attr
+Content-Language: en-US
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Avri Altman <Avri.Altman@wdc.com>,
+        Caleb Connolly <caleb.connolly@linaro.org>,
+        "a5b6@riseup.net" <a5b6@riseup.net>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc:     "~postmarketos/upstreaming@lists.sr.ht" 
+        <~postmarketos/upstreaming@lists.sr.ht>,
+        "phone-devel@vger.kernel.org" <phone-devel@vger.kernel.org>
+References: <20220525164013.93748-1-a5b6@riseup.net>
+ <DM6PR04MB65750969ACD36EEEB48374DFFCD69@DM6PR04MB6575.namprd04.prod.outlook.com>
+ <8d25171a-5d86-9acc-0f94-1a3c6efdb360@riseup.net>
+ <DM6PR04MB65752422396C86EAD4591701FCD89@DM6PR04MB6575.namprd04.prod.outlook.com>
+ <a7f46ad1-6d9e-a38e-31cc-29fddfa2b496@linaro.org>
+ <DM6PR04MB65751A3B1D0BA4467CADDA93FCDF9@DM6PR04MB6575.namprd04.prod.outlook.com>
+ <a4746c67-fa74-8af1-3f2d-7853e9fae8a6@acm.org>
+ <3c400db6-d251-c4bd-b019-b9dc1d807212@opensource.wdc.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <3c400db6-d251-c4bd-b019-b9dc1d807212@opensource.wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 6 Jun 2022, Arnd Bergmann wrote:
-
-> This was in turn fixed in commit 56f396146af2 ("scsi: BusLogic: Fix
-> 64-bit system enumeration error for Buslogic"), 8 years later.
+On 6/5/22 19:48, Damien Le Moal wrote:
+> On 6/5/22 12:55, Bart Van Assche wrote:
+>> On 6/1/22 10:05, Avri Altman wrote:
+>>> As a design rule, sysfs attribute files should not be used to make
+>>> persistent modifications to a device configuration. This rule applies
+>>> to all subsystems and ufs is no different.
+>>
+>> Hmm ... where does that rule come from? I can't find it in
+>> Documentation/admin-guide/sysfs-rules.rst. Did I perhaps overlook something?
 > 
-> The fact that this was found at all is an indication that there are
-> users, and it seems that Maciej, Matt and Khalid all have access to
-> this hardware, but if it took eight years to find the problem,
-> it's likely that nobody actually relies on it.
+> I am not aware of any writable sysfs attribute file that can be used to
+> make persistent device configuration changes, at least in storage area.
+> I know of plenty that do change a device setting, but without saving this
+> setting to maintain it across power cycles. Do you know of any such
+> attribute ? I was under the impression that sysfs should not be used to
+> persistently reconfigure a device...
 
- Umm, I use it with a 32-bit system, so it would be quite an issue for me 
-to discover a problem with 64-bit configurations.  And I quite rely on 
-this system for various stuff too!
+I don't think the above is sufficient as an argument to reject a new 
+patch that introduces a sysfs attribute that changes the device 
+configuration.
 
-> Remove it as part of the global virt_to_bus()/bus_to_virt() removal.
-> If anyone is still interested in keeping this driver, the alternative
-> is to stop it from using bus_to_virt(), possibly along the lines of
-> how dpt_i2o gets around the same issue.
+Thanks,
 
- Thanks for the pointer and for cc-ing me.  Please refrain from removing 
-the driver at least for this release cycle and let me fix it.  It should 
-be easy to mimic what I did for the defza driver: all bus addresses in the 
-DMA API come associated with virtual addresses, so it is just a matter of 
-recording those somewhere for later use rather than trying to mess up with 
-bus addresses to figure out a reverse mapping.
+Bart.
 
-  Maciej
