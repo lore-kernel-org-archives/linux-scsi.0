@@ -2,82 +2,71 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D478C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jun 2022 09:37:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B72BC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jun 2022 10:24:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232997AbiFFJhL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Jun 2022 05:37:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48780 "EHLO
+        id S233885AbiFFKY3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Jun 2022 06:24:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44330 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232923AbiFFJhD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jun 2022 05:37:03 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15EFA1BFECD;
-        Mon,  6 Jun 2022 02:36:50 -0700 (PDT)
-Received: from fraeml743-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LGpJD26gVz67M0J;
-        Mon,  6 Jun 2022 17:35:40 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml743-chm.china.huawei.com (10.206.15.224) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Mon, 6 Jun 2022 11:36:48 +0200
-Received: from localhost.localdomain (10.69.192.58) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Mon, 6 Jun 2022 10:36:43 +0100
-From:   John Garry <john.garry@huawei.com>
-To:     <damien.lemoal@opensource.wdc.com>, <joro@8bytes.org>,
-        <will@kernel.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <hch@lst.de>,
-        <m.szyprowski@samsung.com>, <robin.murphy@arm.com>
-CC:     <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-ide@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
-        <linux-scsi@vger.kernel.org>, <liyihang6@hisilicon.com>,
-        <chenxiang66@hisilicon.com>, <thunder.leizhen@huawei.com>,
-        John Garry <john.garry@huawei.com>
-Subject: [PATCH v3 4/4] libata-scsi: Cap ata_device->max_sectors according to shost->max_sectors
-Date:   Mon, 6 Jun 2022 17:30:22 +0800
-Message-ID: <1654507822-168026-5-git-send-email-john.garry@huawei.com>
-X-Mailer: git-send-email 2.8.1
-In-Reply-To: <1654507822-168026-1-git-send-email-john.garry@huawei.com>
-References: <1654507822-168026-1-git-send-email-john.garry@huawei.com>
+        with ESMTP id S233975AbiFFKY1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jun 2022 06:24:27 -0400
+Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2BFF11D315
+        for <linux-scsi@vger.kernel.org>; Mon,  6 Jun 2022 03:24:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1654511065; x=1686047065;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=nBGhhEbBFxVusIpBEHH8++r1sfJROZ0nXUk9EhiNcmY=;
+  b=ThPto13iatuXVr9PoRJ/rjhHbRc4O1h1R23jjDzBYlevu6ODyqNvKhEs
+   UVajejh/ALCWjz5ncIWcegOKich++KbKlcCp03VF/3fDet+XQdIvceQnO
+   QXUYnVcePrUz/TGk6+tQakO+Bzp5WLtK0ZPmy9LUWlxJZ8MFopzCrCKWn
+   GmcJyIvW+hH6pqTAJ6sZPUYLvwyUORTOCMNlXtq/egh6w6GHQxqqXXkeB
+   nSZ7LVsl92YICY4rMmtUWr/7ERQibiQJOfp1NqTBW0ASTSM377uSGSz/G
+   y5G7oOoysphaEQlgBdS2QNnB480UPScEGUhtuxqlTfdg24G2jtJG3trYa
+   A==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10369"; a="362987992"
+X-IronPort-AV: E=Sophos;i="5.91,280,1647327600"; 
+   d="scan'208";a="362987992"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jun 2022 03:24:24 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.91,280,1647327600"; 
+   d="scan'208";a="669426991"
+Received: from apaszkie-desk.igk.intel.com (HELO [10.102.102.225]) ([10.102.102.225])
+  by FMSMGA003.fm.intel.com with ESMTP; 06 Jun 2022 03:24:23 -0700
+Message-ID: <c15b98e3-f1e5-79c9-3581-6b015b476cad@intel.com>
+Date:   Mon, 6 Jun 2022 12:24:22 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Firefox/91.0 Thunderbird/91.9.0
+Subject: Re: [PATCH 05/10] scsi/isci: Replace completion_tasklet with threaded
+ irq
+Content-Language: en-US
+To:     Davidlohr Bueso <dave@stgolabs.net>, linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, ejb@linux.ibm.com,
+        bigeasy@linutronix.de, tglx@linutronix.de
+References: <20220530231512.9729-1-dave@stgolabs.net>
+ <20220530231512.9729-6-dave@stgolabs.net>
+From:   Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+In-Reply-To: <20220530231512.9729-6-dave@stgolabs.net>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-ATA devices (struct ata_device) have a max_sectors field which is
-configured internally in libata. This is then used to (re)configure the
-associated sdev request queue max_sectors value from how it is earlier set
-in __scsi_init_queue(). In __scsi_init_queue() the max_sectors value is set
-according to shost limits, which includes host DMA mapping limits.
+On 31.05.2022 01:15, Davidlohr Bueso wrote:
+> Tasklets have long been deprecated as being too heavy on the system
+> by running in irq context - and this is not a performance critical
+> path. If a higher priority process wants to run, it must wait for
+> the tasklet to finish before doing so. A more suitable equivalent
+> is to converted to threaded irq instead and run in regular task
+> context.
+> 
+> Cc: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+> Signed-off-by: Davidlohr Bueso <dave@stgolabs.net>
 
-Cap the ata_device max_sectors according to shost->max_sectors to respect
-this shost limit.
-
-Signed-off-by: John Garry <john.garry@huawei.com>
-Acked-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
----
- drivers/ata/libata-scsi.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 42cecf95a4e5..8b4b318f378d 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1060,6 +1060,7 @@ int ata_scsi_dev_config(struct scsi_device *sdev, struct ata_device *dev)
- 		dev->flags |= ATA_DFLAG_NO_UNLOAD;
- 
- 	/* configure max sectors */
-+	dev->max_sectors = min(dev->max_sectors, sdev->host->max_sectors);
- 	blk_queue_max_hw_sectors(q, dev->max_sectors);
- 
- 	if (dev->class == ATA_DEV_ATAPI) {
--- 
-2.26.2
-
+Acked-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
