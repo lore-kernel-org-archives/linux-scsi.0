@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD7D0C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jun 2022 08:42:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA800CCA47E
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jun 2022 08:43:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232310AbiFFIlz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Jun 2022 04:41:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56686 "EHLO
+        id S232258AbiFFInl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Jun 2022 04:43:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57614 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232573AbiFFIld (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jun 2022 04:41:33 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62ABFD80B9;
-        Mon,  6 Jun 2022 01:41:26 -0700 (PDT)
+        with ESMTP id S232650AbiFFImS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jun 2022 04:42:18 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 370E1DC805;
+        Mon,  6 Jun 2022 01:41:58 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6ADF56120D;
-        Mon,  6 Jun 2022 08:41:25 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 35532C34119;
-        Mon,  6 Jun 2022 08:41:21 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id EB385CE1712;
+        Mon,  6 Jun 2022 08:41:38 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9DA3DC34119;
+        Mon,  6 Jun 2022 08:41:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654504884;
-        bh=sDOLXYQR0wOt3J1gNTtbMOI7sGHc/kgPyuM8RXutK6o=;
-        h=From:To:Cc:Subject:Date:From;
-        b=SkDVuZeDrFJ5adNIjdWczP7EVnrZrEp+b8yU8nbse1AbBTmXLuujgQXqukIPdpKP3
-         jSZ31jnOZ/+J/T/tRB28RAeo8NGiBd/TKqQnFCLbG+oG/dtT3GCqi/W3IS2bDK+hNi
-         i0jDa5e9iaXrvGUPpvloldIKntp4YGFDBwTdkXFsEdbaMrGtGPlL0fuvuGwxCMBdVV
-         76gpV0DFczhbrMGSff3e/ZOmlqAnKy+kOhfKLgF12HFzcDvn0yARasaaVFnbObBUAl
-         uX74CL7XSW/CloOp4Tr2E8Z8nhD9gE9XMoP2apFoo0WvB+vAsfa8d7hBmEvkZ2XDcE
-         aSXARa3ZlYuZg==
+        s=k20201202; t=1654504897;
+        bh=D+RdnsGxCjpna2nFhDsPH8yn1kQWXeuteyiCbSjG4Ok=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=nqkhvRnQT5TdcQzFwYUC5t6BbcwuV7Wpx2G1o5hTpanlR8yXaV4ODVU7ew7jL8DvO
+         l3JTVw7DKobxXEKQZ3heVLvDfhUmjB940bcalu6UvoP2LwHrYPpKg12kYzTLQS6pKT
+         kf317YxZeSp6jD/5DgCpKbSN6CjRhym31MHdvdZtORbIwmeGN1epari6VDm6Zv3KZl
+         sRRdHvKbw8lAF0HX5L+i6MurK8fE/6XIhEVBIspfhVP5cePJ7g5c65vcGINxSZpFqa
+         vlwgUpxU3YlmZrSSRp2xN6dqcrwPKgCERmeHhrZ2pBVMMXljYfaBR5K2rCGXZ4IYSq
+         D/00l/vISah5w==
 From:   Arnd Bergmann <arnd@kernel.org>
 Cc:     Arnd Bergmann <arnd@arndb.de>, Jakub Kicinski <kuba@kernel.org>,
         Christoph Hellwig <hch@infradead.org>,
@@ -45,10 +45,12 @@ Cc:     Arnd Bergmann <arnd@arndb.de>, Jakub Kicinski <kuba@kernel.org>,
         linuxppc-dev@lists.ozlabs.org, linux-arch@vger.kernel.org,
         linux-alpha@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
         linux-parisc@vger.kernel.org, Denis Efremov <efremov@linux.com>
-Subject: [PATCH 0/6] phase out CONFIG_VIRT_TO_BUS
-Date:   Mon,  6 Jun 2022 10:41:03 +0200
-Message-Id: <20220606084109.4108188-1-arnd@kernel.org>
+Subject: [PATCH 3/6] media: sta2x11: remove VIRT_TO_BUS dependency
+Date:   Mon,  6 Jun 2022 10:41:06 +0200
+Message-Id: <20220606084109.4108188-4-arnd@kernel.org>
 X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20220606084109.4108188-1-arnd@kernel.org>
+References: <20220606084109.4108188-1-arnd@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 To:     unlisted-recipients:; (no To-header on input)
@@ -58,133 +60,38 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Arnd Bergmann <arnd@arndb.de>
 
-The virt_to_bus/bus_to_virt interface has been deprecated for
-decades. After Jakub Kicinski put a lot of work into cleaning out the
-network drivers using them, there are only a couple of other drivers
-left, which can all be removed or otherwise cleaned up, to remove the
-old interface for good.
+This driver does not use the virt_to_bus() function, though it
+depends on x86 specific fixups in the swiotlb code, which was
+last rewritten in commit e380a0394c36 ("x86/PCI: sta2x11: use
+default DMA address translation").
 
-Any out of tree drivers using virt_to_bus() should be converted to
-using the dma-mapping interfaces, typically dma_alloc_coherent()
-or dma_map_single()).
+It is possible that the driver still fails to build on some
+architectures that are missing CONFIG_VIRT_TO_BUS, but it is
+always set on x86 machines with the STA2X11 platform enabled.
 
-There are a few m68k and ppc32 specific drivers that keep using the
-interfaces, but these are all guarded with architecture-specific
-Kconfig dependencies, and are not actually broken.
+More likely though is that it was never meant to depend on
+CONFIG_VIRT_TO_BUS, and the Kconfig dependency was kept from
+an out-of-tree version when the driver was originally merged.
 
-There are still a number of drivers that are using virt_to_phys()
-and phys_to_virt() in place of dma-mapping operations, and these
-are often broken, but they are out of scope for this series.
+Fixes: efeb98b4e2b2 ("[media] STA2X11 VIP: new V4L2 driver")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/media/pci/sta2x11/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-      Arnd
-
-Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org> # dma-mapping
-Cc: Marek Szyprowski <m.szyprowski@samsung.com> # dma-mapping
-Cc: Robin Murphy <robin.murphy@arm.com> # dma-mapping
-Cc: iommu@lists.linux-foundation.org
-Cc: Khalid Aziz <khalid@gonehiking.org> # buslogic
-Cc: linux-scsi@vger.kernel.org
-Cc: Manohar Vanga <manohar.vanga@gmail.com> # vme
-Cc: Martyn Welch <martyn@welchs.me.uk> # vme
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org> # vme
-Cc: linuxppc-dev@lists.ozlabs.org
-Cc: linux-arch@vger.kernel.org
-Cc: linux-alpha@vger.kernel.org
-Cc: linux-m68k@lists.linux-m68k.org
-Cc: linux-parisc@vger.kernel.org
-Cc: Denis Efremov <efremov@linux.com> # floppy
-
-Arnd Bergmann (6):
-  vme: remove ca91cx42 Universe-II support
-  vme: move back to staging
-  media: sta2x11: remove VIRT_TO_BUS dependency
-  scsi: dpt_i2o: drop stale VIRT_TO_BUS dependency
-  scsi: remove stale BusLogic driver
-  arch/*/: remove CONFIG_VIRT_TO_BUS
-
- .../core-api/bus-virt-phys-mapping.rst        |  220 -
- Documentation/core-api/dma-api-howto.rst      |   14 -
- Documentation/core-api/index.rst              |    1 -
- Documentation/driver-api/vme.rst              |    4 +-
- Documentation/scsi/BusLogic.rst               |  581 --
- Documentation/scsi/FlashPoint.rst             |  176 -
- .../translations/zh_CN/core-api/index.rst     |    1 -
- MAINTAINERS                                   |   11 +-
- arch/alpha/Kconfig                            |    1 -
- arch/alpha/include/asm/floppy.h               |    2 +-
- arch/alpha/include/asm/io.h                   |    8 +-
- arch/ia64/Kconfig                             |    1 -
- arch/ia64/include/asm/io.h                    |    8 -
- arch/m68k/Kconfig                             |    1 -
- arch/m68k/include/asm/virtconvert.h           |    4 +-
- arch/microblaze/Kconfig                       |    1 -
- arch/microblaze/include/asm/io.h              |    2 -
- arch/mips/Kconfig                             |    1 -
- arch/mips/include/asm/io.h                    |    9 -
- arch/parisc/Kconfig                           |    1 -
- arch/parisc/include/asm/floppy.h              |    4 +-
- arch/parisc/include/asm/io.h                  |    2 -
- arch/powerpc/Kconfig                          |    1 -
- arch/powerpc/include/asm/io.h                 |    2 -
- arch/riscv/include/asm/page.h                 |    1 -
- arch/x86/Kconfig                              |    1 -
- arch/x86/include/asm/io.h                     |    9 -
- arch/xtensa/Kconfig                           |    1 -
- arch/xtensa/include/asm/io.h                  |    3 -
- drivers/Kconfig                               |    2 -
- drivers/Makefile                              |    1 -
- drivers/media/pci/sta2x11/Kconfig             |    2 +-
- drivers/scsi/BusLogic.c                       | 3727 --------
- drivers/scsi/BusLogic.h                       | 1284 ---
- drivers/scsi/FlashPoint.c                     | 7560 -----------------
- drivers/scsi/Kconfig                          |   26 +-
- drivers/scsi/dpt_i2o.c                        |    4 +-
- drivers/staging/vme_user/Kconfig              |   27 +
- drivers/staging/vme_user/Makefile             |    3 +
- drivers/{vme => staging/vme_user}/vme.c       |    2 +-
- .../linux => drivers/staging/vme_user}/vme.h  |    0
- .../{vme => staging/vme_user}/vme_bridge.h    |    2 +-
- .../bridges => staging/vme_user}/vme_fake.c   |    4 +-
- .../bridges => staging/vme_user}/vme_tsi148.c |    4 +-
- .../bridges => staging/vme_user}/vme_tsi148.h |    0
- drivers/staging/vme_user/vme_user.c           |    2 +-
- drivers/vme/Kconfig                           |   18 -
- drivers/vme/Makefile                          |    8 -
- drivers/vme/boards/Kconfig                    |   10 -
- drivers/vme/boards/Makefile                   |    6 -
- drivers/vme/boards/vme_vmivme7805.c           |  106 -
- drivers/vme/boards/vme_vmivme7805.h           |   33 -
- drivers/vme/bridges/Kconfig                   |   24 -
- drivers/vme/bridges/Makefile                  |    4 -
- drivers/vme/bridges/vme_ca91cx42.c            | 1928 -----
- drivers/vme/bridges/vme_ca91cx42.h            |  579 --
- include/asm-generic/io.h                      |   14 -
- mm/Kconfig                                    |    8 -
- 58 files changed, 54 insertions(+), 16405 deletions(-)
- delete mode 100644 Documentation/core-api/bus-virt-phys-mapping.rst
- delete mode 100644 Documentation/scsi/BusLogic.rst
- delete mode 100644 Documentation/scsi/FlashPoint.rst
- delete mode 100644 drivers/scsi/BusLogic.c
- delete mode 100644 drivers/scsi/BusLogic.h
- delete mode 100644 drivers/scsi/FlashPoint.c
- rename drivers/{vme => staging/vme_user}/vme.c (99%)
- rename {include/linux => drivers/staging/vme_user}/vme.h (100%)
- rename drivers/{vme => staging/vme_user}/vme_bridge.h (99%)
- rename drivers/{vme/bridges => staging/vme_user}/vme_fake.c (99%)
- rename drivers/{vme/bridges => staging/vme_user}/vme_tsi148.c (99%)
- rename drivers/{vme/bridges => staging/vme_user}/vme_tsi148.h (100%)
- delete mode 100644 drivers/vme/Kconfig
- delete mode 100644 drivers/vme/Makefile
- delete mode 100644 drivers/vme/boards/Kconfig
- delete mode 100644 drivers/vme/boards/Makefile
- delete mode 100644 drivers/vme/boards/vme_vmivme7805.c
- delete mode 100644 drivers/vme/boards/vme_vmivme7805.h
- delete mode 100644 drivers/vme/bridges/Kconfig
- delete mode 100644 drivers/vme/bridges/Makefile
- delete mode 100644 drivers/vme/bridges/vme_ca91cx42.c
- delete mode 100644 drivers/vme/bridges/vme_ca91cx42.h
-
+diff --git a/drivers/media/pci/sta2x11/Kconfig b/drivers/media/pci/sta2x11/Kconfig
+index a96e170ab04e..118b922c08c3 100644
+--- a/drivers/media/pci/sta2x11/Kconfig
++++ b/drivers/media/pci/sta2x11/Kconfig
+@@ -1,7 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0-only
+ config STA2X11_VIP
+ 	tristate "STA2X11 VIP Video For Linux"
+-	depends on PCI && VIDEO_DEV && VIRT_TO_BUS && I2C
++	depends on PCI && VIDEO_DEV && I2C
+ 	depends on STA2X11 || COMPILE_TEST
+ 	select GPIOLIB if MEDIA_SUBDRV_AUTOSELECT
+ 	select VIDEO_ADV7180 if MEDIA_SUBDRV_AUTOSELECT
 -- 
 2.29.2
 
