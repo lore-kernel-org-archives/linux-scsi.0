@@ -2,82 +2,111 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39F0DCCA473
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jun 2022 15:02:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F76FC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jun 2022 16:41:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240182AbiFFPCG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Jun 2022 11:02:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49518 "EHLO
+        id S241832AbiFFQlH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Jun 2022 12:41:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38194 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240149AbiFFPCF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jun 2022 11:02:05 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C660644E9;
-        Mon,  6 Jun 2022 08:02:03 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B020C614BF;
-        Mon,  6 Jun 2022 15:02:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D169C3411F;
-        Mon,  6 Jun 2022 15:02:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654527722;
-        bh=q53e8R7rif+9VorkencnO96O5zseGyAcQ5tiTh4wb5o=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=Apz8+ZKOfRfLg28N7czbQCp5u1APChOU6nUGQX9FaMmYF1sAaX/E+Ib6PkoNMTzP7
-         8jDO0yt1/l7zDqKQc6tX4/clq/6HkX/3W3KZ8nM3wihQ+jMlDOK9ZA4eyqtiXknfW8
-         nDehGJBGcME9NWhLnKjuKwi1RHsvWVfiUTSGjzwMBXLmNypEOY8dRiUMaB2ZPKhMqN
-         +sCEMynb2DFl+FqYA+WAgVaik3iEnEQyHuNJCcowrCU57ufs9pWJIioY3E4DJJPNzW
-         kpZWUqqFJEO2bKuHGgUG6lR6HDAoCyo7pL/NzPacNwyF3UCEA3Cxsbw6IvBn5Rr2+E
-         lkYasSc/0weOA==
-Received: by mail-yb1-f180.google.com with SMTP id a64so26124912ybg.11;
-        Mon, 06 Jun 2022 08:02:02 -0700 (PDT)
-X-Gm-Message-State: AOAM532H7slSnILqDUuT68S0daa3jaBXMJTfMmCiLc97ck0ID3SMi7Im
-        ROIBG7R+um0wGCbY179Wlh+pDKh738zc5oi623U=
-X-Google-Smtp-Source: ABdhPJzbUSlIedBRNZiWpM9ElJ4TvjZNZhTiqJfwPbhlO6M7rgoOI9pHprJDL1o+SM/GSywwOf+ElbD7ZGPkUhXAozo=
-X-Received: by 2002:a25:db8a:0:b0:65c:b04a:f612 with SMTP id
- g132-20020a25db8a000000b0065cb04af612mr24920915ybf.106.1654527721136; Mon, 06
- Jun 2022 08:02:01 -0700 (PDT)
+        with ESMTP id S241861AbiFFQk7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jun 2022 12:40:59 -0400
+X-Greylist: delayed 323 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 06 Jun 2022 09:40:55 PDT
+Received: from mailout.easymail.ca (mailout.easymail.ca [64.68.200.34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F9F914642F;
+        Mon,  6 Jun 2022 09:40:54 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+        by mailout.easymail.ca (Postfix) with ESMTP id F0673E0E57;
+        Mon,  6 Jun 2022 16:35:29 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at emo08-pco.easydns.vpn
+Received: from mailout.easymail.ca ([127.0.0.1])
+        by localhost (emo08-pco.easydns.vpn [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id hhyNN48mX6Hb; Mon,  6 Jun 2022 16:35:29 +0000 (UTC)
+Received: from mail.gonehiking.org (unknown [38.15.45.1])
+        by mailout.easymail.ca (Postfix) with ESMTPA id 87721E0E2D;
+        Mon,  6 Jun 2022 16:35:29 +0000 (UTC)
+Received: from [192.168.1.4] (internal [192.168.1.4])
+        by mail.gonehiking.org (Postfix) with ESMTP id 689583EF5B;
+        Mon,  6 Jun 2022 10:35:28 -0600 (MDT)
+Message-ID: <d39fc9bb-07c1-ad74-1e89-d2aa80578cd4@gonehiking.org>
+Date:   Mon, 6 Jun 2022 10:35:28 -0600
 MIME-Version: 1.0
-References: <20220606084109.4108188-1-arnd@kernel.org> <Yp3ID86TBFxl7qyL@kroah.com>
-In-Reply-To: <Yp3ID86TBFxl7qyL@kroah.com>
-From:   Arnd Bergmann <arnd@kernel.org>
-Date:   Mon, 6 Jun 2022 17:01:44 +0200
-X-Gmail-Original-Message-ID: <CAK8P3a15RuR3VOPLPV3SfdBAGuoyor6o7JMs3kC5dNB5nfDuKA@mail.gmail.com>
-Message-ID: <CAK8P3a15RuR3VOPLPV3SfdBAGuoyor6o7JMs3kC5dNB5nfDuKA@mail.gmail.com>
-Subject: Re: [PATCH 0/6] phase out CONFIG_VIRT_TO_BUS
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.9.1
+Reply-To: khalid@gonehiking.org
+Subject: Re: [PATCH 5/6] scsi: remove stale BusLogic driver
+Content-Language: en-US
+To:     Arnd Bergmann <arnd@kernel.org>
 Cc:     Arnd Bergmann <arnd@arndb.de>, Jakub Kicinski <kuba@kernel.org>,
         Christoph Hellwig <hch@infradead.org>,
         Marek Szyprowski <m.szyprowski@samsung.com>,
         Robin Murphy <robin.murphy@arm.com>,
-        "open list:IOMMU DRIVERS" <iommu@lists.linux-foundation.org>,
-        Khalid Aziz <khalid@gonehiking.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
+        iommu@lists.linux-foundation.org, linux-scsi@vger.kernel.org,
         Manohar Vanga <manohar.vanga@gmail.com>,
         Martyn Welch <martyn@welchs.me.uk>,
-        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-        linux-arch <linux-arch@vger.kernel.org>,
-        alpha <linux-alpha@vger.kernel.org>,
-        linux-m68k <linux-m68k@lists.linux-m68k.org>,
-        Parisc List <linux-parisc@vger.kernel.org>,
-        Denis Efremov <efremov@linux.com>
-Content-Type: text/plain; charset="UTF-8"
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linuxppc-dev@lists.ozlabs.org, linux-arch@vger.kernel.org,
+        linux-alpha@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
+        linux-parisc@vger.kernel.org, Denis Efremov <efremov@linux.com>,
+        "Maciej W . Rozycki" <macro@orcam.me.uk>,
+        Matt Wang <wwentao@vmware.com>
+References: <20220606084109.4108188-1-arnd@kernel.org>
+ <20220606084109.4108188-6-arnd@kernel.org>
+From:   Khalid Aziz <khalid@gonehiking.org>
+In-Reply-To: <20220606084109.4108188-6-arnd@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Jun 6, 2022 at 11:25 AM Greg Kroah-Hartman
-<gregkh@linuxfoundation.org> wrote:
->
-> I'll take patches 1 and 2 right now through my staging tree if that's
-> ok.
+On 6/6/22 02:41, Arnd Bergmann wrote:
+> From: Arnd Bergmann<arnd@arndb.de>
+> 
+> The BusLogic driver is the last remaining driver that relies on the
+> deprecated bus_to_virt() function, which in turn only works on a few
+> architectures, and is incompatible with both swiotlb and iommu support.
+> 
+> Before commit 391e2f25601e ("[SCSI] BusLogic: Port driver to 64-bit."),
+> the driver had a dependency on x86-32, presumably because of this
+> problem. However, the change introduced another bug that made it still
+> impossible to use the driver on any 64-bit machine.
+> 
+> This was in turn fixed in commit 56f396146af2 ("scsi: BusLogic: Fix
+> 64-bit system enumeration error for Buslogic"), 8 years later.
+> 
+> The fact that this was found at all is an indication that there are
+> users, and it seems that Maciej, Matt and Khalid all have access to
+> this hardware, but if it took eight years to find the problem,
+> it's likely that nobody actually relies on it.
+> 
+> Remove it as part of the global virt_to_bus()/bus_to_virt() removal.
+> If anyone is still interested in keeping this driver, the alternative
+> is to stop it from using bus_to_virt(), possibly along the lines of
+> how dpt_i2o gets around the same issue.
+> 
+> Cc: Maciej W. Rozycki<macro@orcam.me.uk>
+> Cc: Matt Wang<wwentao@vmware.com>
+> Cc: Khalid Aziz<khalid@gonehiking.org>
+> Signed-off-by: Arnd Bergmann<arnd@arndb.de>
+> ---
+>   Documentation/scsi/BusLogic.rst   |  581 ---
+>   Documentation/scsi/FlashPoint.rst |  176 -
+>   MAINTAINERS                       |    7 -
+>   drivers/scsi/BusLogic.c           | 3727 --------------
+>   drivers/scsi/BusLogic.h           | 1284 -----
+>   drivers/scsi/FlashPoint.c         | 7560 -----------------------------
+>   drivers/scsi/Kconfig              |   24 -
+>   7 files changed, 13359 deletions(-)
+>   delete mode 100644 Documentation/scsi/BusLogic.rst
+>   delete mode 100644 Documentation/scsi/FlashPoint.rst
+>   delete mode 100644 drivers/scsi/BusLogic.c
+>   delete mode 100644 drivers/scsi/BusLogic.h
+>   delete mode 100644 drivers/scsi/FlashPoint.c
 
-Yes, that's perfect, as there are no actual interdependencies with the
-other drivers -- applying the last patch first would just hide the driver
-I'm removing here.
+I would say no to removing BusLogic driver. Virtualbox is another 
+consumer of this driver. This driver is very old but I would rather fix 
+the issues than remove it until we do not have any users.
 
 Thanks,
-
-      Arnd
+Khalid
