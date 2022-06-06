@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C769FC43334
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jun 2022 08:44:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 870DFC43334
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jun 2022 08:50:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232277AbiFFIoD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Jun 2022 04:44:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37640 "EHLO
+        id S234426AbiFFIsu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Jun 2022 04:48:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59160 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232741AbiFFInO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jun 2022 04:43:14 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E18913B2C6;
-        Mon,  6 Jun 2022 01:42:11 -0700 (PDT)
+        with ESMTP id S232630AbiFFIlv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jun 2022 04:41:51 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8480EE3DC2;
+        Mon,  6 Jun 2022 01:41:42 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 610B36120D;
-        Mon,  6 Jun 2022 08:41:51 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3ADBEC3411C;
-        Mon,  6 Jun 2022 08:41:47 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 6339CB81243;
+        Mon,  6 Jun 2022 08:41:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C3CEC3411C;
+        Mon,  6 Jun 2022 08:41:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654504910;
-        bh=UIqE/6faozMGQe4HUTq+WQl4y6kG5UOK3cHlJo7Tg50=;
+        s=k20201202; t=1654504889;
+        bh=7VjOuSvhYoJQ3x9fL3wGU5JeLgUybKjoQzY7CEPV7zw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=o0ibFtYvZ2PPehimhQOqZZlv80b1kmwPPpPBRoGJwpTr9u04Vdp54lb6cITNSZf9z
-         lfvzRas2P6VGxsW+l1Qo+RB/o/2dyHb0caSSgcEvjVT391bliMzFZ4lnG+aLqAB/gQ
-         E5OuOGw4rmYPdxvxVU3ahNHH2SoeQVvc7sh3WhiiKbpkpLOp/6QdpGJGLGZZ6oieLD
-         gT6v2Y1a6BFTIBzI3Bo/FhD0FNbebnup3fYy3K1GQqbLITyVPFyDzW+cCkYo5r5m5w
-         bBWuTX55nnwmsA6o2RBSMG75xbJPyNc6QsI+4AkyzUUFHj2IuXpdXZx7/HJ07Ja7nk
-         MB67tVmnXOr+w==
+        b=TrR1b6ikGpdbEHR5/CGweClkkpzApF46CNBwvDS+oOIs2H2R4rL9hPrLOrHItW/gc
+         iv+tmGvtKfiCBkiwIIItKfykccrUK4z1niALt8LB1InzWAmcVVsDtce5H3Q3vMqerz
+         /KRuzfWBDNLLvlmrV0wqadA0uZhEVfX63pV0WhMp2otRgOIIzrTHHmFFtVFp5VNi71
+         /Ec93A3M18IcjOL0Oe92IAKvq7Pa1GdCkJrIegAE4p5zayH4U8rSvJYBVnNwmf/Xyr
+         bABMrTEpT3mtbXd8xWz4fDNg1enIJNjhr5Hon8YM4uJq3Ld7jQIC5lFoc1OjPR0fhn
+         XiIyIYacrS1uQ==
 From:   Arnd Bergmann <arnd@kernel.org>
 Cc:     Arnd Bergmann <arnd@arndb.de>, Jakub Kicinski <kuba@kernel.org>,
         Christoph Hellwig <hch@infradead.org>,
@@ -45,9 +45,9 @@ Cc:     Arnd Bergmann <arnd@arndb.de>, Jakub Kicinski <kuba@kernel.org>,
         linuxppc-dev@lists.ozlabs.org, linux-arch@vger.kernel.org,
         linux-alpha@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
         linux-parisc@vger.kernel.org, Denis Efremov <efremov@linux.com>
-Subject: [PATCH 6/6] arch/*/: remove CONFIG_VIRT_TO_BUS
-Date:   Mon,  6 Jun 2022 10:41:09 +0200
-Message-Id: <20220606084109.4108188-7-arnd@kernel.org>
+Subject: [PATCH 1/6] vme: remove ca91cx42 Universe-II support
+Date:   Mon,  6 Jun 2022 10:41:04 +0200
+Message-Id: <20220606084109.4108188-2-arnd@kernel.org>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20220606084109.4108188-1-arnd@kernel.org>
 References: <20220606084109.4108188-1-arnd@kernel.org>
@@ -60,693 +60,2789 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Arnd Bergmann <arnd@arndb.de>
 
-All architecture-independent users of virt_to_bus() and bus_to_virt()
-have been fixed to use the dma mapping interfaces or have been
-removed now.  This means the definitions on most architectures, and the
-CONFIG_VIRT_TO_BUS symbol are now obsolete and can be removed.
+This is one of four remaining drivers using the ancient
+virt_to_bus() interface instead of the dma-mapping interface,
+making it incompatible with most modern machines.
 
-The only exceptions to this are a few network and scsi drivers for m68k
-Amiga and VME machines and ppc32 Macintosh. These drivers work correctly
-with the old interfaces and are probably not worth changing.
+As nobody has cleaned this up, there is a high chance that this
+driver has no actual users. The chip was introduced in 1997 and
+only supports 32-bit legacy PCI. It was replaced by TSI148 in
+2004, but that chip has since been discontinued, while a version
+of the older Universe II remains in production after 25 years.
 
-On alpha and parisc, virt_to_bus() were still used in asm/floppy.h.
-alpha can use isa_virt_to_bus() like x86 does, and parisc can just
-open-code the virt_to_phys() here, as this is architecture specific
-code.
+The vme_vmivme7805 board uses Universe-II, so this also gets
+removed in the process, but PCI add-on cards based on TSI148
+can still work in theory.
 
-I tried updating the bus-virt-phys-mapping.rst documentation, which
-started as an email from Linus to explain some details of the Linux-2.0
-driver interfaces. The bits about virt_to_bus() were declared obsolete
-backin 2000, and the rest is not all that relevant any more, so in the
-end I just decided to remove the file completely.
+If there are users of the Universe-II driver after all, it is
+of course possible to revert this patch and fix it to use the
+dma-mapping interface like the tsi148 driver does.
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- .../core-api/bus-virt-phys-mapping.rst        | 220 ------------------
- Documentation/core-api/dma-api-howto.rst      |  14 --
- Documentation/core-api/index.rst              |   1 -
- .../translations/zh_CN/core-api/index.rst     |   1 -
- arch/alpha/Kconfig                            |   1 -
- arch/alpha/include/asm/floppy.h               |   2 +-
- arch/alpha/include/asm/io.h                   |   8 +-
- arch/ia64/Kconfig                             |   1 -
- arch/ia64/include/asm/io.h                    |   8 -
- arch/m68k/Kconfig                             |   1 -
- arch/m68k/include/asm/virtconvert.h           |   4 +-
- arch/microblaze/Kconfig                       |   1 -
- arch/microblaze/include/asm/io.h              |   2 -
- arch/mips/Kconfig                             |   1 -
- arch/mips/include/asm/io.h                    |   9 -
- arch/parisc/Kconfig                           |   1 -
- arch/parisc/include/asm/floppy.h              |   4 +-
- arch/parisc/include/asm/io.h                  |   2 -
- arch/powerpc/Kconfig                          |   1 -
- arch/powerpc/include/asm/io.h                 |   2 -
- arch/riscv/include/asm/page.h                 |   1 -
- arch/x86/Kconfig                              |   1 -
- arch/x86/include/asm/io.h                     |   9 -
- arch/xtensa/Kconfig                           |   1 -
- arch/xtensa/include/asm/io.h                  |   3 -
- include/asm-generic/io.h                      |  14 --
- mm/Kconfig                                    |   8 -
- 27 files changed, 10 insertions(+), 311 deletions(-)
- delete mode 100644 Documentation/core-api/bus-virt-phys-mapping.rst
+ drivers/vme/Kconfig                 |    2 -
+ drivers/vme/Makefile                |    1 -
+ drivers/vme/boards/Kconfig          |   10 -
+ drivers/vme/boards/Makefile         |    6 -
+ drivers/vme/boards/vme_vmivme7805.c |  106 --
+ drivers/vme/boards/vme_vmivme7805.h |   33 -
+ drivers/vme/bridges/Kconfig         |    7 -
+ drivers/vme/bridges/Makefile        |    1 -
+ drivers/vme/bridges/vme_ca91cx42.c  | 1928 ---------------------------
+ drivers/vme/bridges/vme_ca91cx42.h  |  579 --------
+ 10 files changed, 2673 deletions(-)
+ delete mode 100644 drivers/vme/boards/Kconfig
+ delete mode 100644 drivers/vme/boards/Makefile
+ delete mode 100644 drivers/vme/boards/vme_vmivme7805.c
+ delete mode 100644 drivers/vme/boards/vme_vmivme7805.h
+ delete mode 100644 drivers/vme/bridges/vme_ca91cx42.c
+ delete mode 100644 drivers/vme/bridges/vme_ca91cx42.h
 
-diff --git a/Documentation/core-api/bus-virt-phys-mapping.rst b/Documentation/core-api/bus-virt-phys-mapping.rst
+diff --git a/drivers/vme/Kconfig b/drivers/vme/Kconfig
+index c13dd9d2a604..26feabba19d2 100644
+--- a/drivers/vme/Kconfig
++++ b/drivers/vme/Kconfig
+@@ -13,6 +13,4 @@ if VME_BUS
+ 
+ source "drivers/vme/bridges/Kconfig"
+ 
+-source "drivers/vme/boards/Kconfig"
+-
+ endif # VME
+diff --git a/drivers/vme/Makefile b/drivers/vme/Makefile
+index 8bfe4b370c41..2dfb929a23de 100644
+--- a/drivers/vme/Makefile
++++ b/drivers/vme/Makefile
+@@ -5,4 +5,3 @@
+ obj-$(CONFIG_VME_BUS)		+= vme.o
+ 
+ obj-y				+= bridges/
+-obj-y				+= boards/
+diff --git a/drivers/vme/boards/Kconfig b/drivers/vme/boards/Kconfig
 deleted file mode 100644
-index c72b24a7d52c..000000000000
---- a/Documentation/core-api/bus-virt-phys-mapping.rst
+index 7a255f72980b..000000000000
+--- a/drivers/vme/boards/Kconfig
 +++ /dev/null
-@@ -1,220 +0,0 @@
--==========================================================
--How to access I/O mapped memory from within device drivers
--==========================================================
+@@ -1,10 +0,0 @@
+-# SPDX-License-Identifier: GPL-2.0-only
+-comment "VME Board Drivers"
 -
--:Author: Linus
--
--.. warning::
--
--	The virt_to_bus() and bus_to_virt() functions have been
--	superseded by the functionality provided by the PCI DMA interface
--	(see Documentation/core-api/dma-api-howto.rst).  They continue
--	to be documented below for historical purposes, but new code
--	must not use them. --davidm 00/12/12
--
--::
--
--  [ This is a mail message in response to a query on IO mapping, thus the
--    strange format for a "document" ]
--
--The AHA-1542 is a bus-master device, and your patch makes the driver give the
--controller the physical address of the buffers, which is correct on x86
--(because all bus master devices see the physical memory mappings directly). 
--
--However, on many setups, there are actually **three** different ways of looking
--at memory addresses, and in this case we actually want the third, the
--so-called "bus address". 
--
--Essentially, the three ways of addressing memory are (this is "real memory",
--that is, normal RAM--see later about other details): 
--
-- - CPU untranslated.  This is the "physical" address.  Physical address 
--   0 is what the CPU sees when it drives zeroes on the memory bus.
--
-- - CPU translated address. This is the "virtual" address, and is 
--   completely internal to the CPU itself with the CPU doing the appropriate
--   translations into "CPU untranslated". 
--
-- - bus address. This is the address of memory as seen by OTHER devices, 
--   not the CPU. Now, in theory there could be many different bus 
--   addresses, with each device seeing memory in some device-specific way, but
--   happily most hardware designers aren't actually actively trying to make
--   things any more complex than necessary, so you can assume that all 
--   external hardware sees the memory the same way. 
--
--Now, on normal PCs the bus address is exactly the same as the physical
--address, and things are very simple indeed. However, they are that simple
--because the memory and the devices share the same address space, and that is
--not generally necessarily true on other PCI/ISA setups. 
--
--Now, just as an example, on the PReP (PowerPC Reference Platform), the 
--CPU sees a memory map something like this (this is from memory)::
--
--	0-2 GB		"real memory"
--	2 GB-3 GB	"system IO" (inb/out and similar accesses on x86)
--	3 GB-4 GB 	"IO memory" (shared memory over the IO bus)
--
--Now, that looks simple enough. However, when you look at the same thing from
--the viewpoint of the devices, you have the reverse, and the physical memory
--address 0 actually shows up as address 2 GB for any IO master.
--
--So when the CPU wants any bus master to write to physical memory 0, it 
--has to give the master address 0x80000000 as the memory address.
--
--So, for example, depending on how the kernel is actually mapped on the 
--PPC, you can end up with a setup like this::
--
-- physical address:	0
-- virtual address:	0xC0000000
-- bus address:		0x80000000
--
--where all the addresses actually point to the same thing.  It's just seen 
--through different translations..
--
--Similarly, on the Alpha, the normal translation is::
--
-- physical address:	0
-- virtual address:	0xfffffc0000000000
-- bus address:		0x40000000
--
--(but there are also Alphas where the physical address and the bus address
--are the same). 
--
--Anyway, the way to look up all these translations, you do::
--
--	#include <asm/io.h>
--
--	phys_addr = virt_to_phys(virt_addr);
--	virt_addr = phys_to_virt(phys_addr);
--	 bus_addr = virt_to_bus(virt_addr);
--	virt_addr = bus_to_virt(bus_addr);
--
--Now, when do you need these?
--
--You want the **virtual** address when you are actually going to access that
--pointer from the kernel. So you can have something like this::
--
--	/*
--	 * this is the hardware "mailbox" we use to communicate with
--	 * the controller. The controller sees this directly.
--	 */
--	struct mailbox {
--		__u32 status;
--		__u32 bufstart;
--		__u32 buflen;
--		..
--	} mbox;
--
--		unsigned char * retbuffer;
--
--		/* get the address from the controller */
--		retbuffer = bus_to_virt(mbox.bufstart);
--		switch (retbuffer[0]) {
--			case STATUS_OK:
--				...
--
--on the other hand, you want the bus address when you have a buffer that 
--you want to give to the controller::
--
--	/* ask the controller to read the sense status into "sense_buffer" */
--	mbox.bufstart = virt_to_bus(&sense_buffer);
--	mbox.buflen = sizeof(sense_buffer);
--	mbox.status = 0;
--	notify_controller(&mbox);
--
--And you generally **never** want to use the physical address, because you can't
--use that from the CPU (the CPU only uses translated virtual addresses), and
--you can't use it from the bus master. 
--
--So why do we care about the physical address at all? We do need the physical
--address in some cases, it's just not very often in normal code.  The physical
--address is needed if you use memory mappings, for example, because the
--"remap_pfn_range()" mm function wants the physical address of the memory to
--be remapped as measured in units of pages, a.k.a. the pfn (the memory
--management layer doesn't know about devices outside the CPU, so it
--shouldn't need to know about "bus addresses" etc).
--
--.. note::
--
--	The above is only one part of the whole equation. The above
--	only talks about "real memory", that is, CPU memory (RAM).
--
--There is a completely different type of memory too, and that's the "shared
--memory" on the PCI or ISA bus. That's generally not RAM (although in the case
--of a video graphics card it can be normal DRAM that is just used for a frame
--buffer), but can be things like a packet buffer in a network card etc. 
--
--This memory is called "PCI memory" or "shared memory" or "IO memory" or
--whatever, and there is only one way to access it: the readb/writeb and
--related functions. You should never take the address of such memory, because
--there is really nothing you can do with such an address: it's not
--conceptually in the same memory space as "real memory" at all, so you cannot
--just dereference a pointer. (Sadly, on x86 it **is** in the same memory space,
--so on x86 it actually works to just deference a pointer, but it's not
--portable). 
--
--For such memory, you can do things like:
--
-- - reading::
--
--	/*
--	 * read first 32 bits from ISA memory at 0xC0000, aka
--	 * C000:0000 in DOS terms
--	 */
--	unsigned int signature = isa_readl(0xC0000);
--
-- - remapping and writing::
--
--	/*
--	 * remap framebuffer PCI memory area at 0xFC000000,
--	 * size 1MB, so that we can access it: We can directly
--	 * access only the 640k-1MB area, so anything else
--	 * has to be remapped.
--	 */
--	void __iomem *baseptr = ioremap(0xFC000000, 1024*1024);
--
--	/* write a 'A' to the offset 10 of the area */
--	writeb('A',baseptr+10);
--
--	/* unmap when we unload the driver */
--	iounmap(baseptr);
--
-- - copying and clearing::
--
--	/* get the 6-byte Ethernet address at ISA address E000:0040 */
--	memcpy_fromio(kernel_buffer, 0xE0040, 6);
--	/* write a packet to the driver */
--	memcpy_toio(0xE1000, skb->data, skb->len);
--	/* clear the frame buffer */
--	memset_io(0xA0000, 0, 0x10000);
--
--OK, that just about covers the basics of accessing IO portably.  Questions?
--Comments? You may think that all the above is overly complex, but one day you
--might find yourself with a 500 MHz Alpha in front of you, and then you'll be
--happy that your driver works ;)
--
--Note that kernel versions 2.0.x (and earlier) mistakenly called the
--ioremap() function "vremap()".  ioremap() is the proper name, but I
--didn't think straight when I wrote it originally.  People who have to
--support both can do something like::
-- 
--	/* support old naming silliness */
--	#if LINUX_VERSION_CODE < 0x020100
--	#define ioremap vremap
--	#define iounmap vfree                                                     
--	#endif
-- 
--at the top of their source files, and then they can use the right names
--even on 2.0.x systems. 
--
--And the above sounds worse than it really is.  Most real drivers really
--don't do all that complex things (or rather: the complexity is not so
--much in the actual IO accesses as in error handling and timeouts etc). 
--It's generally not hard to fix drivers, and in many cases the code
--actually looks better afterwards::
--
--	unsigned long signature = *(unsigned int *) 0xC0000;
--		vs
--	unsigned long signature = readl(0xC0000);
--
--I think the second version actually is more readable, no?
-diff --git a/Documentation/core-api/dma-api-howto.rst b/Documentation/core-api/dma-api-howto.rst
-index 358d495456d1..828846804e25 100644
---- a/Documentation/core-api/dma-api-howto.rst
-+++ b/Documentation/core-api/dma-api-howto.rst
-@@ -707,20 +707,6 @@ to use the dma_sync_*() interfaces::
- 		}
- 	}
- 
--Drivers converted fully to this interface should not use virt_to_bus() any
--longer, nor should they use bus_to_virt(). Some drivers have to be changed a
--little bit, because there is no longer an equivalent to bus_to_virt() in the
--dynamic DMA mapping scheme - you have to always store the DMA addresses
--returned by the dma_alloc_coherent(), dma_pool_alloc(), and dma_map_single()
--calls (dma_map_sg() stores them in the scatterlist itself if the platform
--supports dynamic DMA mapping in hardware) in your driver structures and/or
--in the card registers.
--
--All drivers should be using these interfaces with no exceptions.  It
--is planned to completely remove virt_to_bus() and bus_to_virt() as
--they are entirely deprecated.  Some ports already do not provide these
--as it is impossible to correctly support them.
--
- Handling Errors
- ===============
- 
-diff --git a/Documentation/core-api/index.rst b/Documentation/core-api/index.rst
-index dedd4d853329..726065a3095e 100644
---- a/Documentation/core-api/index.rst
-+++ b/Documentation/core-api/index.rst
-@@ -41,7 +41,6 @@ Library functionality that is used throughout the kernel.
-    rbtree
-    generic-radix-tree
-    packing
--   bus-virt-phys-mapping
-    this_cpu_ops
-    timekeeping
-    errseq
-diff --git a/Documentation/translations/zh_CN/core-api/index.rst b/Documentation/translations/zh_CN/core-api/index.rst
-index 26d9913fc8b6..c52175fc1b61 100644
---- a/Documentation/translations/zh_CN/core-api/index.rst
-+++ b/Documentation/translations/zh_CN/core-api/index.rst
-@@ -52,7 +52,6 @@ Todolist:
-    circular-buffers
-    generic-radix-tree
-    packing
--   bus-virt-phys-mapping
-    this_cpu_ops
-    timekeeping
-    errseq
-diff --git a/arch/alpha/Kconfig b/arch/alpha/Kconfig
-index 7d0d26b5b3f5..97fce7386b00 100644
---- a/arch/alpha/Kconfig
-+++ b/arch/alpha/Kconfig
-@@ -17,7 +17,6 @@ config ALPHA
- 	select HAVE_PERF_EVENTS
- 	select NEED_DMA_MAP_STATE
- 	select NEED_SG_DMA_LENGTH
--	select VIRT_TO_BUS
- 	select GENERIC_IRQ_PROBE
- 	select GENERIC_PCI_IOMAP
- 	select AUTO_IRQ_AFFINITY if SMP
-diff --git a/arch/alpha/include/asm/floppy.h b/arch/alpha/include/asm/floppy.h
-index 588758685439..64b42d9591fc 100644
---- a/arch/alpha/include/asm/floppy.h
-+++ b/arch/alpha/include/asm/floppy.h
-@@ -20,7 +20,7 @@
- #define fd_free_dma()           free_dma(FLOPPY_DMA)
- #define fd_clear_dma_ff()       clear_dma_ff(FLOPPY_DMA)
- #define fd_set_dma_mode(mode)   set_dma_mode(FLOPPY_DMA,mode)
--#define fd_set_dma_addr(addr)   set_dma_addr(FLOPPY_DMA,virt_to_bus(addr))
-+#define fd_set_dma_addr(addr)   set_dma_addr(FLOPPY_DMA,isa_virt_to_bus(addr))
- #define fd_set_dma_count(count) set_dma_count(FLOPPY_DMA,count)
- #define fd_enable_irq()         enable_irq(FLOPPY_IRQ)
- #define fd_disable_irq()        disable_irq(FLOPPY_IRQ)
-diff --git a/arch/alpha/include/asm/io.h b/arch/alpha/include/asm/io.h
-index c9cb554fbe54..d277189b2677 100644
---- a/arch/alpha/include/asm/io.h
-+++ b/arch/alpha/include/asm/io.h
-@@ -106,15 +106,15 @@ static inline void * phys_to_virt(unsigned long address)
- extern unsigned long __direct_map_base;
- extern unsigned long __direct_map_size;
- 
--static inline unsigned long __deprecated virt_to_bus(volatile void *address)
-+static inline unsigned long __deprecated isa_virt_to_bus(volatile void *address)
- {
- 	unsigned long phys = virt_to_phys(address);
- 	unsigned long bus = phys + __direct_map_base;
- 	return phys <= __direct_map_size ? bus : 0;
- }
--#define isa_virt_to_bus virt_to_bus
-+#define isa_virt_to_bus isa_virt_to_bus
- 
--static inline void * __deprecated bus_to_virt(unsigned long address)
-+static inline void * __deprecated isa_bus_to_virt(unsigned long address)
- {
- 	void *virt;
- 
-@@ -125,7 +125,7 @@ static inline void * __deprecated bus_to_virt(unsigned long address)
- 	virt = phys_to_virt(address);
- 	return (long)address <= 0 ? NULL : virt;
- }
--#define isa_bus_to_virt bus_to_virt
-+#define isa_bus_to_virt isa_bus_to_virt
- 
- /*
-  * There are different chipsets to interface the Alpha CPUs to the world.
-diff --git a/arch/ia64/Kconfig b/arch/ia64/Kconfig
-index cb93769a9f2a..26ac8ea15a9e 100644
---- a/arch/ia64/Kconfig
-+++ b/arch/ia64/Kconfig
-@@ -39,7 +39,6 @@ config IA64
- 	select HAVE_FUNCTION_DESCRIPTORS
- 	select HAVE_VIRT_CPU_ACCOUNTING
- 	select HUGETLB_PAGE_SIZE_VARIABLE if HUGETLB_PAGE
--	select VIRT_TO_BUS
- 	select GENERIC_IRQ_PROBE
- 	select GENERIC_PENDING_IRQ if SMP
- 	select GENERIC_IRQ_SHOW
-diff --git a/arch/ia64/include/asm/io.h b/arch/ia64/include/asm/io.h
-index 6d93b923b379..ce66dfc0e719 100644
---- a/arch/ia64/include/asm/io.h
-+++ b/arch/ia64/include/asm/io.h
-@@ -96,14 +96,6 @@ extern u64 kern_mem_attribute (unsigned long phys_addr, unsigned long size);
- extern int valid_phys_addr_range (phys_addr_t addr, size_t count); /* efi.c */
- extern int valid_mmap_phys_addr_range (unsigned long pfn, size_t count);
- 
--/*
-- * The following two macros are deprecated and scheduled for removal.
-- * Please use the PCI-DMA interface defined in <asm/pci.h> instead.
-- */
--#define bus_to_virt	phys_to_virt
--#define virt_to_bus	virt_to_phys
--#define page_to_bus	page_to_phys
--
- # endif /* KERNEL */
- 
- /*
-diff --git a/arch/m68k/Kconfig b/arch/m68k/Kconfig
-index 936cce42ae9a..b06faf6c0b27 100644
---- a/arch/m68k/Kconfig
-+++ b/arch/m68k/Kconfig
-@@ -30,7 +30,6 @@ config M68K
- 	select OLD_SIGACTION
- 	select OLD_SIGSUSPEND3
- 	select UACCESS_MEMCPY if !MMU
--	select VIRT_TO_BUS
- 	select ZONE_DMA
- 
- config CPU_BIG_ENDIAN
-diff --git a/arch/m68k/include/asm/virtconvert.h b/arch/m68k/include/asm/virtconvert.h
-index ca91b32dc6ef..0a27905b0036 100644
---- a/arch/m68k/include/asm/virtconvert.h
-+++ b/arch/m68k/include/asm/virtconvert.h
-@@ -33,9 +33,11 @@ static inline void *phys_to_virt(unsigned long address)
- 
- /*
-  * IO bus memory addresses are 1:1 with the physical address,
-+ * deprecated globally but still used on two machines.
-  */
-+#if defined(CONFIG_AMIGA) || defined(CONFIG_VME)
- #define virt_to_bus virt_to_phys
--#define bus_to_virt phys_to_virt
-+#endif
- 
- #endif
- #endif
-diff --git a/arch/microblaze/Kconfig b/arch/microblaze/Kconfig
-index 8cf429ad1c84..415182eeb082 100644
---- a/arch/microblaze/Kconfig
-+++ b/arch/microblaze/Kconfig
-@@ -38,7 +38,6 @@ config MICROBLAZE
- 	select OF_EARLY_FLATTREE
- 	select PCI_DOMAINS_GENERIC if PCI
- 	select PCI_SYSCALL if PCI
--	select VIRT_TO_BUS
- 	select CPU_NO_EFFICIENT_FFS
- 	select MMU_GATHER_NO_RANGE
- 	select SPARSE_IRQ
-diff --git a/arch/microblaze/include/asm/io.h b/arch/microblaze/include/asm/io.h
-index b6a57f8468f0..c1d78b8977a6 100644
---- a/arch/microblaze/include/asm/io.h
-+++ b/arch/microblaze/include/asm/io.h
-@@ -30,8 +30,6 @@ extern resource_size_t isa_mem_base;
- #define PCI_IOBASE	((void __iomem *)_IO_BASE)
- #define IO_SPACE_LIMIT (0xFFFFFFFF)
- 
--#define page_to_bus(page)	(page_to_phys(page))
--
- extern void iounmap(volatile void __iomem *addr);
- 
- extern void __iomem *ioremap(phys_addr_t address, unsigned long size);
-diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
-index db09d45d59ec..ff0c76dfbbad 100644
---- a/arch/mips/Kconfig
-+++ b/arch/mips/Kconfig
-@@ -100,7 +100,6 @@ config MIPS
- 	select RTC_LIB
- 	select SYSCTL_EXCEPTION_TRACE
- 	select TRACE_IRQFLAGS_SUPPORT
--	select VIRT_TO_BUS
- 	select ARCH_HAS_ELFCORE_COMPAT
- 	select HAVE_ARCH_KCSAN if 64BIT
- 
-diff --git a/arch/mips/include/asm/io.h b/arch/mips/include/asm/io.h
-index 6f5c86d2bab4..cd9168f34fb7 100644
---- a/arch/mips/include/asm/io.h
-+++ b/arch/mips/include/asm/io.h
-@@ -147,15 +147,6 @@ static inline void *isa_bus_to_virt(unsigned long address)
- 	return phys_to_virt(address);
- }
- 
--/*
-- * However PCI ones are not necessarily 1:1 and therefore these interfaces
-- * are forbidden in portable PCI drivers.
-- *
-- * Allow them for x86 for legacy drivers, though.
-- */
--#define virt_to_bus virt_to_phys
--#define bus_to_virt phys_to_virt
--
- /*
-  * Change "struct page" to physical address.
-  */
-diff --git a/arch/parisc/Kconfig b/arch/parisc/Kconfig
-index 5f2448dc5a2b..b0d68e9e2df0 100644
---- a/arch/parisc/Kconfig
-+++ b/arch/parisc/Kconfig
-@@ -43,7 +43,6 @@ config PARISC
- 	select SYSCTL_ARCH_UNALIGN_ALLOW
- 	select SYSCTL_EXCEPTION_TRACE
- 	select HAVE_MOD_ARCH_SPECIFIC
--	select VIRT_TO_BUS
- 	select MODULES_USE_ELF_RELA
- 	select CLONE_BACKWARDS
- 	select TTY # Needed for pdc_cons.c
-diff --git a/arch/parisc/include/asm/floppy.h b/arch/parisc/include/asm/floppy.h
-index 762cfe7778c0..b318a7df52f6 100644
---- a/arch/parisc/include/asm/floppy.h
-+++ b/arch/parisc/include/asm/floppy.h
-@@ -179,7 +179,7 @@ static void _fd_chose_dma_mode(char *addr, unsigned long size)
- {
- 	if(can_use_virtual_dma == 2) {
- 		if((unsigned int) addr >= (unsigned int) high_memory ||
--		   virt_to_bus(addr) >= 0x1000000 ||
-+		   virt_to_phys(addr) >= 0x1000000 ||
- 		   _CROSS_64KB(addr, size, 0))
- 			use_virtual_dma = 1;
- 		else
-@@ -215,7 +215,7 @@ static int hard_dma_setup(char *addr, unsigned long size, int mode, int io)
- 	doing_pdma = 0;
- 	clear_dma_ff(FLOPPY_DMA);
- 	set_dma_mode(FLOPPY_DMA,mode);
--	set_dma_addr(FLOPPY_DMA,virt_to_bus(addr));
-+	set_dma_addr(FLOPPY_DMA,virt_to_phys(addr));
- 	set_dma_count(FLOPPY_DMA,size);
- 	enable_dma(FLOPPY_DMA);
- 	return 0;
-diff --git a/arch/parisc/include/asm/io.h b/arch/parisc/include/asm/io.h
-index 837ddddbac6a..42ffb60a6ea9 100644
---- a/arch/parisc/include/asm/io.h
-+++ b/arch/parisc/include/asm/io.h
-@@ -7,8 +7,6 @@
- 
- #define virt_to_phys(a) ((unsigned long)__pa(a))
- #define phys_to_virt(a) __va(a)
--#define virt_to_bus virt_to_phys
--#define bus_to_virt phys_to_virt
- 
- static inline unsigned long isa_bus_to_virt(unsigned long addr) {
- 	BUG();
-diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
-index be68c1f02b79..48e1aa0536b6 100644
---- a/arch/powerpc/Kconfig
-+++ b/arch/powerpc/Kconfig
-@@ -277,7 +277,6 @@ config PPC
- 	select SYSCTL_EXCEPTION_TRACE
- 	select THREAD_INFO_IN_TASK
- 	select TRACE_IRQFLAGS_SUPPORT
--	select VIRT_TO_BUS			if !PPC64
- 	#
- 	# Please keep this list sorted alphabetically.
- 	#
-diff --git a/arch/powerpc/include/asm/io.h b/arch/powerpc/include/asm/io.h
-index c5a5f7c9b231..73fcd5cdb662 100644
---- a/arch/powerpc/include/asm/io.h
-+++ b/arch/powerpc/include/asm/io.h
-@@ -985,8 +985,6 @@ static inline void * bus_to_virt(unsigned long address)
- }
- #define bus_to_virt bus_to_virt
- 
--#define page_to_bus(page)	(page_to_phys(page) + PCI_DRAM_OFFSET)
--
- #endif /* CONFIG_PPC32 */
- 
- /* access ports */
-diff --git a/arch/riscv/include/asm/page.h b/arch/riscv/include/asm/page.h
-index 1526e410e802..ac70b0fd9a9a 100644
---- a/arch/riscv/include/asm/page.h
-+++ b/arch/riscv/include/asm/page.h
-@@ -167,7 +167,6 @@ extern phys_addr_t __phys_addr_symbol(unsigned long x);
- #define page_to_virt(page)	(pfn_to_virt(page_to_pfn(page)))
- 
- #define page_to_phys(page)	(pfn_to_phys(page_to_pfn(page)))
--#define page_to_bus(page)	(page_to_phys(page))
- #define phys_to_page(paddr)	(pfn_to_page(phys_to_pfn(paddr)))
- 
- #define sym_to_pfn(x)           __phys_to_pfn(__pa_symbol(x))
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 9783ebc4e021..d0018d4352f1 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -278,7 +278,6 @@ config X86
- 	select THREAD_INFO_IN_TASK
- 	select TRACE_IRQFLAGS_SUPPORT
- 	select USER_STACKTRACE_SUPPORT
--	select VIRT_TO_BUS
- 	select HAVE_ARCH_KCSAN			if X86_64
- 	select X86_FEATURE_NAMES		if PROC_FS
- 	select PROC_PID_ARCH_STATUS		if PROC_FS
-diff --git a/arch/x86/include/asm/io.h b/arch/x86/include/asm/io.h
-index 1870b99c3356..e9025640f634 100644
---- a/arch/x86/include/asm/io.h
-+++ b/arch/x86/include/asm/io.h
-@@ -169,15 +169,6 @@ static inline unsigned int isa_virt_to_bus(volatile void *address)
- }
- #define isa_bus_to_virt		phys_to_virt
- 
--/*
-- * However PCI ones are not necessarily 1:1 and therefore these interfaces
-- * are forbidden in portable PCI drivers.
-- *
-- * Allow them on x86 for legacy drivers, though.
-- */
--#define virt_to_bus virt_to_phys
--#define bus_to_virt phys_to_virt
--
- /*
-  * The default ioremap() behavior is non-cached; if you need something
-  * else, you probably want one of the following.
-diff --git a/arch/xtensa/Kconfig b/arch/xtensa/Kconfig
-index 0b0f0172cced..92a24ed738a5 100644
---- a/arch/xtensa/Kconfig
-+++ b/arch/xtensa/Kconfig
-@@ -50,7 +50,6 @@ config XTENSA
- 	select MODULES_USE_ELF_RELA
- 	select PERF_USE_VMALLOC
- 	select TRACE_IRQFLAGS_SUPPORT
--	select VIRT_TO_BUS
- 	help
- 	  Xtensa processors are 32-bit RISC machines designed by Tensilica
- 	  primarily for embedded systems.  These processors are both
-diff --git a/arch/xtensa/include/asm/io.h b/arch/xtensa/include/asm/io.h
-index 54188e69b988..a5b707e1c0f4 100644
---- a/arch/xtensa/include/asm/io.h
-+++ b/arch/xtensa/include/asm/io.h
-@@ -63,9 +63,6 @@ static inline void iounmap(volatile void __iomem *addr)
- 		xtensa_iounmap(addr);
- }
- 
--#define virt_to_bus     virt_to_phys
--#define bus_to_virt     phys_to_virt
--
- #endif /* CONFIG_MMU */
- 
- #include <asm-generic/io.h>
-diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
-index 7ce93aaf69f8..f57015eaed73 100644
---- a/include/asm-generic/io.h
-+++ b/include/asm-generic/io.h
-@@ -1059,20 +1059,6 @@ static inline void unxlate_dev_mem_ptr(phys_addr_t phys, void *addr)
- }
- #endif
- 
--#ifdef CONFIG_VIRT_TO_BUS
--#ifndef virt_to_bus
--static inline unsigned long virt_to_bus(void *address)
--{
--	return (unsigned long)address;
--}
--
--static inline void *bus_to_virt(unsigned long address)
--{
--	return (void *)address;
--}
--#endif
--#endif
--
- #ifndef memset_io
- #define memset_io memset_io
- /**
-diff --git a/mm/Kconfig b/mm/Kconfig
-index 169e64192e48..b7a44b17c79f 100644
---- a/mm/Kconfig
-+++ b/mm/Kconfig
-@@ -639,14 +639,6 @@ config BOUNCE
- 	  memory available to the CPU. Enabled by default when HIGHMEM is
- 	  selected, but you may say n to override this.
- 
--config VIRT_TO_BUS
--	bool
+-config VMIVME_7805
+-	tristate "VMIVME-7805"
 -	help
--	  An architecture should select this if it implements the
--	  deprecated interface virt_to_bus().  All new architectures
--	  should probably not select this.
+-	  If you say Y here you get support for the VMIVME-7805 board.
+-	  This board has an additional control interface to the Universe II
+-	  chip. This driver has to be included if you want to access VME bus
+-	  with VMIVME-7805 board.
+diff --git a/drivers/vme/boards/Makefile b/drivers/vme/boards/Makefile
+deleted file mode 100644
+index 87122381452c..000000000000
+--- a/drivers/vme/boards/Makefile
++++ /dev/null
+@@ -1,6 +0,0 @@
+-# SPDX-License-Identifier: GPL-2.0-only
+-#
+-# Makefile for the VME board drivers.
+-#
+-
+-obj-$(CONFIG_VMIVME_7805)	+= vme_vmivme7805.o
+diff --git a/drivers/vme/boards/vme_vmivme7805.c b/drivers/vme/boards/vme_vmivme7805.c
+deleted file mode 100644
+index 51e056bae943..000000000000
+--- a/drivers/vme/boards/vme_vmivme7805.c
++++ /dev/null
+@@ -1,106 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0-or-later
+-/*
+- * Support for the VMIVME-7805 board access to the Universe II bridge.
+- *
+- * Author: Arthur Benilov <arthur.benilov@iba-group.com>
+- * Copyright 2010 Ion Beam Application, Inc.
+- */
+-
+-#include <linux/module.h>
+-#include <linux/types.h>
+-#include <linux/errno.h>
+-#include <linux/pci.h>
+-#include <linux/poll.h>
+-#include <linux/io.h>
+-
+-#include "vme_vmivme7805.h"
+-
+-static int vmic_probe(struct pci_dev *, const struct pci_device_id *);
+-static void vmic_remove(struct pci_dev *);
+-
+-/** Base address to access FPGA register */
+-static void __iomem *vmic_base;
+-
+-static const char driver_name[] = "vmivme_7805";
+-
+-static const struct pci_device_id vmic_ids[] = {
+-	{ PCI_DEVICE(PCI_VENDOR_ID_VMIC, PCI_DEVICE_ID_VTIMR) },
+-	{ },
+-};
+-
+-static struct pci_driver vmic_driver = {
+-	.name = driver_name,
+-	.id_table = vmic_ids,
+-	.probe = vmic_probe,
+-	.remove = vmic_remove,
+-};
+-
+-static int vmic_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+-{
+-	int retval;
+-	u32 data;
+-
+-	/* Enable the device */
+-	retval = pci_enable_device(pdev);
+-	if (retval) {
+-		dev_err(&pdev->dev, "Unable to enable device\n");
+-		goto err;
+-	}
+-
+-	/* Map Registers */
+-	retval = pci_request_regions(pdev, driver_name);
+-	if (retval) {
+-		dev_err(&pdev->dev, "Unable to reserve resources\n");
+-		goto err_resource;
+-	}
+-
+-	/* Map registers in BAR 0 */
+-	vmic_base = ioremap(pci_resource_start(pdev, 0), 16);
+-	if (!vmic_base) {
+-		dev_err(&pdev->dev, "Unable to remap CRG region\n");
+-		retval = -EIO;
+-		goto err_remap;
+-	}
+-
+-	/* Clear the FPGA VME IF contents */
+-	iowrite32(0, vmic_base + VME_CONTROL);
+-
+-	/* Clear any initial BERR  */
+-	data = ioread32(vmic_base + VME_CONTROL) & 0x00000FFF;
+-	data |= BM_VME_CONTROL_BERRST;
+-	iowrite32(data, vmic_base + VME_CONTROL);
+-
+-	/* Enable the vme interface and byte swapping */
+-	data = ioread32(vmic_base + VME_CONTROL) & 0x00000FFF;
+-	data = data | BM_VME_CONTROL_MASTER_ENDIAN |
+-			BM_VME_CONTROL_SLAVE_ENDIAN |
+-			BM_VME_CONTROL_ABLE |
+-			BM_VME_CONTROL_BERRI |
+-			BM_VME_CONTROL_BPENA |
+-			BM_VME_CONTROL_VBENA;
+-	iowrite32(data, vmic_base + VME_CONTROL);
+-
+-	return 0;
+-
+-err_remap:
+-	pci_release_regions(pdev);
+-err_resource:
+-	pci_disable_device(pdev);
+-err:
+-	return retval;
+-}
+-
+-static void vmic_remove(struct pci_dev *pdev)
+-{
+-	iounmap(vmic_base);
+-	pci_release_regions(pdev);
+-	pci_disable_device(pdev);
+-
+-}
+-
+-module_pci_driver(vmic_driver);
+-
+-MODULE_DESCRIPTION("VMIVME-7805 board support driver");
+-MODULE_AUTHOR("Arthur Benilov <arthur.benilov@iba-group.com>");
+-MODULE_LICENSE("GPL");
+-
+diff --git a/drivers/vme/boards/vme_vmivme7805.h b/drivers/vme/boards/vme_vmivme7805.h
+deleted file mode 100644
+index c2c5e3053d3f..000000000000
+--- a/drivers/vme/boards/vme_vmivme7805.h
++++ /dev/null
+@@ -1,33 +0,0 @@
+-/* SPDX-License-Identifier: GPL-2.0-or-later */
+-/*
+- * vmivme_7805.h
+- *
+- * Support for the VMIVME-7805 board access to the Universe II bridge.
+- *
+- * Author: Arthur Benilov <arthur.benilov@iba-group.com>
+- * Copyright 2010 Ion Beam Application, Inc.
+- */
 -
 -
- config MMU_NOTIFIER
- 	bool
- 	select SRCU
+-#ifndef _VMIVME_7805_H
+-#define _VMIVME_7805_H
+-
+-#ifndef PCI_VENDOR_ID_VMIC
+-#define PCI_VENDOR_ID_VMIC		0x114A
+-#endif
+-
+-#ifndef PCI_DEVICE_ID_VTIMR
+-#define PCI_DEVICE_ID_VTIMR		0x0004
+-#endif
+-
+-#define VME_CONTROL			0x0000
+-#define BM_VME_CONTROL_MASTER_ENDIAN	0x0001
+-#define BM_VME_CONTROL_SLAVE_ENDIAN	0x0002
+-#define BM_VME_CONTROL_ABLE		0x0004
+-#define BM_VME_CONTROL_BERRI		0x0040
+-#define BM_VME_CONTROL_BERRST		0x0080
+-#define BM_VME_CONTROL_BPENA		0x0400
+-#define BM_VME_CONTROL_VBENA		0x0800
+-
+-#endif /* _VMIVME_7805_H */
+-
+diff --git a/drivers/vme/bridges/Kconfig b/drivers/vme/bridges/Kconfig
+index cb3baed64914..9493b22b5276 100644
+--- a/drivers/vme/bridges/Kconfig
++++ b/drivers/vme/bridges/Kconfig
+@@ -1,13 +1,6 @@
+ # SPDX-License-Identifier: GPL-2.0-only
+ comment "VME Bridge Drivers"
+ 
+-config VME_CA91CX42
+-	tristate "Universe II"
+-	depends on VIRT_TO_BUS
+-	help
+-	 If you say Y here you get support for the Tundra CA91C142
+-	 (Universe II) VME bridge chip.
+-
+ config VME_TSI148
+ 	tristate "Tempe"
+ 	depends on HAS_DMA
+diff --git a/drivers/vme/bridges/Makefile b/drivers/vme/bridges/Makefile
+index 0a6cf843438a..043f9cd7a510 100644
+--- a/drivers/vme/bridges/Makefile
++++ b/drivers/vme/bridges/Makefile
+@@ -1,4 +1,3 @@
+ # SPDX-License-Identifier: GPL-2.0-only
+-obj-$(CONFIG_VME_CA91CX42)	+= vme_ca91cx42.o
+ obj-$(CONFIG_VME_TSI148)	+= vme_tsi148.o
+ obj-$(CONFIG_VME_FAKE)		+= vme_fake.o
+diff --git a/drivers/vme/bridges/vme_ca91cx42.c b/drivers/vme/bridges/vme_ca91cx42.c
+deleted file mode 100644
+index 439b0edeca08..000000000000
+--- a/drivers/vme/bridges/vme_ca91cx42.c
++++ /dev/null
+@@ -1,1928 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0-or-later
+-/*
+- * Support for the Tundra Universe I/II VME-PCI Bridge Chips
+- *
+- * Author: Martyn Welch <martyn.welch@ge.com>
+- * Copyright 2008 GE Intelligent Platforms Embedded Systems, Inc.
+- *
+- * Based on work by Tom Armistead and Ajit Prem
+- * Copyright 2004 Motorola Inc.
+- *
+- * Derived from ca91c042.c by Michael Wyrick
+- */
+-
+-#include <linux/module.h>
+-#include <linux/mm.h>
+-#include <linux/types.h>
+-#include <linux/errno.h>
+-#include <linux/pci.h>
+-#include <linux/dma-mapping.h>
+-#include <linux/poll.h>
+-#include <linux/interrupt.h>
+-#include <linux/spinlock.h>
+-#include <linux/sched.h>
+-#include <linux/slab.h>
+-#include <linux/time.h>
+-#include <linux/io.h>
+-#include <linux/uaccess.h>
+-#include <linux/vme.h>
+-
+-#include "../vme_bridge.h"
+-#include "vme_ca91cx42.h"
+-
+-static int ca91cx42_probe(struct pci_dev *, const struct pci_device_id *);
+-static void ca91cx42_remove(struct pci_dev *);
+-
+-/* Module parameters */
+-static int geoid;
+-
+-static const char driver_name[] = "vme_ca91cx42";
+-
+-static const struct pci_device_id ca91cx42_ids[] = {
+-	{ PCI_DEVICE(PCI_VENDOR_ID_TUNDRA, PCI_DEVICE_ID_TUNDRA_CA91C142) },
+-	{ },
+-};
+-
+-MODULE_DEVICE_TABLE(pci, ca91cx42_ids);
+-
+-static struct pci_driver ca91cx42_driver = {
+-	.name = driver_name,
+-	.id_table = ca91cx42_ids,
+-	.probe = ca91cx42_probe,
+-	.remove = ca91cx42_remove,
+-};
+-
+-static u32 ca91cx42_DMA_irqhandler(struct ca91cx42_driver *bridge)
+-{
+-	wake_up(&bridge->dma_queue);
+-
+-	return CA91CX42_LINT_DMA;
+-}
+-
+-static u32 ca91cx42_LM_irqhandler(struct ca91cx42_driver *bridge, u32 stat)
+-{
+-	int i;
+-	u32 serviced = 0;
+-
+-	for (i = 0; i < 4; i++) {
+-		if (stat & CA91CX42_LINT_LM[i]) {
+-			/* We only enable interrupts if the callback is set */
+-			bridge->lm_callback[i](bridge->lm_data[i]);
+-			serviced |= CA91CX42_LINT_LM[i];
+-		}
+-	}
+-
+-	return serviced;
+-}
+-
+-/* XXX This needs to be split into 4 queues */
+-static u32 ca91cx42_MB_irqhandler(struct ca91cx42_driver *bridge, int mbox_mask)
+-{
+-	wake_up(&bridge->mbox_queue);
+-
+-	return CA91CX42_LINT_MBOX;
+-}
+-
+-static u32 ca91cx42_IACK_irqhandler(struct ca91cx42_driver *bridge)
+-{
+-	wake_up(&bridge->iack_queue);
+-
+-	return CA91CX42_LINT_SW_IACK;
+-}
+-
+-static u32 ca91cx42_VERR_irqhandler(struct vme_bridge *ca91cx42_bridge)
+-{
+-	int val;
+-	struct ca91cx42_driver *bridge;
+-
+-	bridge = ca91cx42_bridge->driver_priv;
+-
+-	val = ioread32(bridge->base + DGCS);
+-
+-	if (!(val & 0x00000800)) {
+-		dev_err(ca91cx42_bridge->parent, "ca91cx42_VERR_irqhandler DMA "
+-			"Read Error DGCS=%08X\n", val);
+-	}
+-
+-	return CA91CX42_LINT_VERR;
+-}
+-
+-static u32 ca91cx42_LERR_irqhandler(struct vme_bridge *ca91cx42_bridge)
+-{
+-	int val;
+-	struct ca91cx42_driver *bridge;
+-
+-	bridge = ca91cx42_bridge->driver_priv;
+-
+-	val = ioread32(bridge->base + DGCS);
+-
+-	if (!(val & 0x00000800))
+-		dev_err(ca91cx42_bridge->parent, "ca91cx42_LERR_irqhandler DMA "
+-			"Read Error DGCS=%08X\n", val);
+-
+-	return CA91CX42_LINT_LERR;
+-}
+-
+-
+-static u32 ca91cx42_VIRQ_irqhandler(struct vme_bridge *ca91cx42_bridge,
+-	int stat)
+-{
+-	int vec, i, serviced = 0;
+-	struct ca91cx42_driver *bridge;
+-
+-	bridge = ca91cx42_bridge->driver_priv;
+-
+-
+-	for (i = 7; i > 0; i--) {
+-		if (stat & (1 << i)) {
+-			vec = ioread32(bridge->base +
+-				CA91CX42_V_STATID[i]) & 0xff;
+-
+-			vme_irq_handler(ca91cx42_bridge, i, vec);
+-
+-			serviced |= (1 << i);
+-		}
+-	}
+-
+-	return serviced;
+-}
+-
+-static irqreturn_t ca91cx42_irqhandler(int irq, void *ptr)
+-{
+-	u32 stat, enable, serviced = 0;
+-	struct vme_bridge *ca91cx42_bridge;
+-	struct ca91cx42_driver *bridge;
+-
+-	ca91cx42_bridge = ptr;
+-
+-	bridge = ca91cx42_bridge->driver_priv;
+-
+-	enable = ioread32(bridge->base + LINT_EN);
+-	stat = ioread32(bridge->base + LINT_STAT);
+-
+-	/* Only look at unmasked interrupts */
+-	stat &= enable;
+-
+-	if (unlikely(!stat))
+-		return IRQ_NONE;
+-
+-	if (stat & CA91CX42_LINT_DMA)
+-		serviced |= ca91cx42_DMA_irqhandler(bridge);
+-	if (stat & (CA91CX42_LINT_LM0 | CA91CX42_LINT_LM1 | CA91CX42_LINT_LM2 |
+-			CA91CX42_LINT_LM3))
+-		serviced |= ca91cx42_LM_irqhandler(bridge, stat);
+-	if (stat & CA91CX42_LINT_MBOX)
+-		serviced |= ca91cx42_MB_irqhandler(bridge, stat);
+-	if (stat & CA91CX42_LINT_SW_IACK)
+-		serviced |= ca91cx42_IACK_irqhandler(bridge);
+-	if (stat & CA91CX42_LINT_VERR)
+-		serviced |= ca91cx42_VERR_irqhandler(ca91cx42_bridge);
+-	if (stat & CA91CX42_LINT_LERR)
+-		serviced |= ca91cx42_LERR_irqhandler(ca91cx42_bridge);
+-	if (stat & (CA91CX42_LINT_VIRQ1 | CA91CX42_LINT_VIRQ2 |
+-			CA91CX42_LINT_VIRQ3 | CA91CX42_LINT_VIRQ4 |
+-			CA91CX42_LINT_VIRQ5 | CA91CX42_LINT_VIRQ6 |
+-			CA91CX42_LINT_VIRQ7))
+-		serviced |= ca91cx42_VIRQ_irqhandler(ca91cx42_bridge, stat);
+-
+-	/* Clear serviced interrupts */
+-	iowrite32(serviced, bridge->base + LINT_STAT);
+-
+-	return IRQ_HANDLED;
+-}
+-
+-static int ca91cx42_irq_init(struct vme_bridge *ca91cx42_bridge)
+-{
+-	int result, tmp;
+-	struct pci_dev *pdev;
+-	struct ca91cx42_driver *bridge;
+-
+-	bridge = ca91cx42_bridge->driver_priv;
+-
+-	/* Need pdev */
+-	pdev = to_pci_dev(ca91cx42_bridge->parent);
+-
+-	/* Disable interrupts from PCI to VME */
+-	iowrite32(0, bridge->base + VINT_EN);
+-
+-	/* Disable PCI interrupts */
+-	iowrite32(0, bridge->base + LINT_EN);
+-	/* Clear Any Pending PCI Interrupts */
+-	iowrite32(0x00FFFFFF, bridge->base + LINT_STAT);
+-
+-	result = request_irq(pdev->irq, ca91cx42_irqhandler, IRQF_SHARED,
+-			driver_name, ca91cx42_bridge);
+-	if (result) {
+-		dev_err(&pdev->dev, "Can't get assigned pci irq vector %02X\n",
+-		       pdev->irq);
+-		return result;
+-	}
+-
+-	/* Ensure all interrupts are mapped to PCI Interrupt 0 */
+-	iowrite32(0, bridge->base + LINT_MAP0);
+-	iowrite32(0, bridge->base + LINT_MAP1);
+-	iowrite32(0, bridge->base + LINT_MAP2);
+-
+-	/* Enable DMA, mailbox & LM Interrupts */
+-	tmp = CA91CX42_LINT_MBOX3 | CA91CX42_LINT_MBOX2 | CA91CX42_LINT_MBOX1 |
+-		CA91CX42_LINT_MBOX0 | CA91CX42_LINT_SW_IACK |
+-		CA91CX42_LINT_VERR | CA91CX42_LINT_LERR | CA91CX42_LINT_DMA;
+-
+-	iowrite32(tmp, bridge->base + LINT_EN);
+-
+-	return 0;
+-}
+-
+-static void ca91cx42_irq_exit(struct ca91cx42_driver *bridge,
+-	struct pci_dev *pdev)
+-{
+-	struct vme_bridge *ca91cx42_bridge;
+-
+-	/* Disable interrupts from PCI to VME */
+-	iowrite32(0, bridge->base + VINT_EN);
+-
+-	/* Disable PCI interrupts */
+-	iowrite32(0, bridge->base + LINT_EN);
+-	/* Clear Any Pending PCI Interrupts */
+-	iowrite32(0x00FFFFFF, bridge->base + LINT_STAT);
+-
+-	ca91cx42_bridge = container_of((void *)bridge, struct vme_bridge,
+-				       driver_priv);
+-	free_irq(pdev->irq, ca91cx42_bridge);
+-}
+-
+-static int ca91cx42_iack_received(struct ca91cx42_driver *bridge, int level)
+-{
+-	u32 tmp;
+-
+-	tmp = ioread32(bridge->base + LINT_STAT);
+-
+-	if (tmp & (1 << level))
+-		return 0;
+-	else
+-		return 1;
+-}
+-
+-/*
+- * Set up an VME interrupt
+- */
+-static void ca91cx42_irq_set(struct vme_bridge *ca91cx42_bridge, int level,
+-	int state, int sync)
+-
+-{
+-	struct pci_dev *pdev;
+-	u32 tmp;
+-	struct ca91cx42_driver *bridge;
+-
+-	bridge = ca91cx42_bridge->driver_priv;
+-
+-	/* Enable IRQ level */
+-	tmp = ioread32(bridge->base + LINT_EN);
+-
+-	if (state == 0)
+-		tmp &= ~CA91CX42_LINT_VIRQ[level];
+-	else
+-		tmp |= CA91CX42_LINT_VIRQ[level];
+-
+-	iowrite32(tmp, bridge->base + LINT_EN);
+-
+-	if ((state == 0) && (sync != 0)) {
+-		pdev = to_pci_dev(ca91cx42_bridge->parent);
+-
+-		synchronize_irq(pdev->irq);
+-	}
+-}
+-
+-static int ca91cx42_irq_generate(struct vme_bridge *ca91cx42_bridge, int level,
+-	int statid)
+-{
+-	u32 tmp;
+-	struct ca91cx42_driver *bridge;
+-
+-	bridge = ca91cx42_bridge->driver_priv;
+-
+-	/* Universe can only generate even vectors */
+-	if (statid & 1)
+-		return -EINVAL;
+-
+-	mutex_lock(&bridge->vme_int);
+-
+-	tmp = ioread32(bridge->base + VINT_EN);
+-
+-	/* Set Status/ID */
+-	iowrite32(statid << 24, bridge->base + STATID);
+-
+-	/* Assert VMEbus IRQ */
+-	tmp = tmp | (1 << (level + 24));
+-	iowrite32(tmp, bridge->base + VINT_EN);
+-
+-	/* Wait for IACK */
+-	wait_event_interruptible(bridge->iack_queue,
+-				 ca91cx42_iack_received(bridge, level));
+-
+-	/* Return interrupt to low state */
+-	tmp = ioread32(bridge->base + VINT_EN);
+-	tmp = tmp & ~(1 << (level + 24));
+-	iowrite32(tmp, bridge->base + VINT_EN);
+-
+-	mutex_unlock(&bridge->vme_int);
+-
+-	return 0;
+-}
+-
+-static int ca91cx42_slave_set(struct vme_slave_resource *image, int enabled,
+-	unsigned long long vme_base, unsigned long long size,
+-	dma_addr_t pci_base, u32 aspace, u32 cycle)
+-{
+-	unsigned int i, addr = 0, granularity;
+-	unsigned int temp_ctl = 0;
+-	unsigned int vme_bound, pci_offset;
+-	struct vme_bridge *ca91cx42_bridge;
+-	struct ca91cx42_driver *bridge;
+-
+-	ca91cx42_bridge = image->parent;
+-
+-	bridge = ca91cx42_bridge->driver_priv;
+-
+-	i = image->number;
+-
+-	switch (aspace) {
+-	case VME_A16:
+-		addr |= CA91CX42_VSI_CTL_VAS_A16;
+-		break;
+-	case VME_A24:
+-		addr |= CA91CX42_VSI_CTL_VAS_A24;
+-		break;
+-	case VME_A32:
+-		addr |= CA91CX42_VSI_CTL_VAS_A32;
+-		break;
+-	case VME_USER1:
+-		addr |= CA91CX42_VSI_CTL_VAS_USER1;
+-		break;
+-	case VME_USER2:
+-		addr |= CA91CX42_VSI_CTL_VAS_USER2;
+-		break;
+-	case VME_A64:
+-	case VME_CRCSR:
+-	case VME_USER3:
+-	case VME_USER4:
+-	default:
+-		dev_err(ca91cx42_bridge->parent, "Invalid address space\n");
+-		return -EINVAL;
+-		break;
+-	}
+-
+-	/*
+-	 * Bound address is a valid address for the window, adjust
+-	 * accordingly
+-	 */
+-	vme_bound = vme_base + size;
+-	pci_offset = pci_base - vme_base;
+-
+-	if ((i == 0) || (i == 4))
+-		granularity = 0x1000;
+-	else
+-		granularity = 0x10000;
+-
+-	if (vme_base & (granularity - 1)) {
+-		dev_err(ca91cx42_bridge->parent, "Invalid VME base "
+-			"alignment\n");
+-		return -EINVAL;
+-	}
+-	if (vme_bound & (granularity - 1)) {
+-		dev_err(ca91cx42_bridge->parent, "Invalid VME bound "
+-			"alignment\n");
+-		return -EINVAL;
+-	}
+-	if (pci_offset & (granularity - 1)) {
+-		dev_err(ca91cx42_bridge->parent, "Invalid PCI Offset "
+-			"alignment\n");
+-		return -EINVAL;
+-	}
+-
+-	/* Disable while we are mucking around */
+-	temp_ctl = ioread32(bridge->base + CA91CX42_VSI_CTL[i]);
+-	temp_ctl &= ~CA91CX42_VSI_CTL_EN;
+-	iowrite32(temp_ctl, bridge->base + CA91CX42_VSI_CTL[i]);
+-
+-	/* Setup mapping */
+-	iowrite32(vme_base, bridge->base + CA91CX42_VSI_BS[i]);
+-	iowrite32(vme_bound, bridge->base + CA91CX42_VSI_BD[i]);
+-	iowrite32(pci_offset, bridge->base + CA91CX42_VSI_TO[i]);
+-
+-	/* Setup address space */
+-	temp_ctl &= ~CA91CX42_VSI_CTL_VAS_M;
+-	temp_ctl |= addr;
+-
+-	/* Setup cycle types */
+-	temp_ctl &= ~(CA91CX42_VSI_CTL_PGM_M | CA91CX42_VSI_CTL_SUPER_M);
+-	if (cycle & VME_SUPER)
+-		temp_ctl |= CA91CX42_VSI_CTL_SUPER_SUPR;
+-	if (cycle & VME_USER)
+-		temp_ctl |= CA91CX42_VSI_CTL_SUPER_NPRIV;
+-	if (cycle & VME_PROG)
+-		temp_ctl |= CA91CX42_VSI_CTL_PGM_PGM;
+-	if (cycle & VME_DATA)
+-		temp_ctl |= CA91CX42_VSI_CTL_PGM_DATA;
+-
+-	/* Write ctl reg without enable */
+-	iowrite32(temp_ctl, bridge->base + CA91CX42_VSI_CTL[i]);
+-
+-	if (enabled)
+-		temp_ctl |= CA91CX42_VSI_CTL_EN;
+-
+-	iowrite32(temp_ctl, bridge->base + CA91CX42_VSI_CTL[i]);
+-
+-	return 0;
+-}
+-
+-static int ca91cx42_slave_get(struct vme_slave_resource *image, int *enabled,
+-	unsigned long long *vme_base, unsigned long long *size,
+-	dma_addr_t *pci_base, u32 *aspace, u32 *cycle)
+-{
+-	unsigned int i, granularity = 0, ctl = 0;
+-	unsigned long long vme_bound, pci_offset;
+-	struct ca91cx42_driver *bridge;
+-
+-	bridge = image->parent->driver_priv;
+-
+-	i = image->number;
+-
+-	if ((i == 0) || (i == 4))
+-		granularity = 0x1000;
+-	else
+-		granularity = 0x10000;
+-
+-	/* Read Registers */
+-	ctl = ioread32(bridge->base + CA91CX42_VSI_CTL[i]);
+-
+-	*vme_base = ioread32(bridge->base + CA91CX42_VSI_BS[i]);
+-	vme_bound = ioread32(bridge->base + CA91CX42_VSI_BD[i]);
+-	pci_offset = ioread32(bridge->base + CA91CX42_VSI_TO[i]);
+-
+-	*pci_base = (dma_addr_t)*vme_base + pci_offset;
+-	*size = (unsigned long long)((vme_bound - *vme_base) + granularity);
+-
+-	*enabled = 0;
+-	*aspace = 0;
+-	*cycle = 0;
+-
+-	if (ctl & CA91CX42_VSI_CTL_EN)
+-		*enabled = 1;
+-
+-	if ((ctl & CA91CX42_VSI_CTL_VAS_M) == CA91CX42_VSI_CTL_VAS_A16)
+-		*aspace = VME_A16;
+-	if ((ctl & CA91CX42_VSI_CTL_VAS_M) == CA91CX42_VSI_CTL_VAS_A24)
+-		*aspace = VME_A24;
+-	if ((ctl & CA91CX42_VSI_CTL_VAS_M) == CA91CX42_VSI_CTL_VAS_A32)
+-		*aspace = VME_A32;
+-	if ((ctl & CA91CX42_VSI_CTL_VAS_M) == CA91CX42_VSI_CTL_VAS_USER1)
+-		*aspace = VME_USER1;
+-	if ((ctl & CA91CX42_VSI_CTL_VAS_M) == CA91CX42_VSI_CTL_VAS_USER2)
+-		*aspace = VME_USER2;
+-
+-	if (ctl & CA91CX42_VSI_CTL_SUPER_SUPR)
+-		*cycle |= VME_SUPER;
+-	if (ctl & CA91CX42_VSI_CTL_SUPER_NPRIV)
+-		*cycle |= VME_USER;
+-	if (ctl & CA91CX42_VSI_CTL_PGM_PGM)
+-		*cycle |= VME_PROG;
+-	if (ctl & CA91CX42_VSI_CTL_PGM_DATA)
+-		*cycle |= VME_DATA;
+-
+-	return 0;
+-}
+-
+-/*
+- * Allocate and map PCI Resource
+- */
+-static int ca91cx42_alloc_resource(struct vme_master_resource *image,
+-	unsigned long long size)
+-{
+-	unsigned long long existing_size;
+-	int retval = 0;
+-	struct pci_dev *pdev;
+-	struct vme_bridge *ca91cx42_bridge;
+-
+-	ca91cx42_bridge = image->parent;
+-
+-	/* Find pci_dev container of dev */
+-	if (!ca91cx42_bridge->parent) {
+-		dev_err(ca91cx42_bridge->parent, "Dev entry NULL\n");
+-		return -EINVAL;
+-	}
+-	pdev = to_pci_dev(ca91cx42_bridge->parent);
+-
+-	existing_size = (unsigned long long)(image->bus_resource.end -
+-		image->bus_resource.start);
+-
+-	/* If the existing size is OK, return */
+-	if (existing_size == (size - 1))
+-		return 0;
+-
+-	if (existing_size != 0) {
+-		iounmap(image->kern_base);
+-		image->kern_base = NULL;
+-		kfree(image->bus_resource.name);
+-		release_resource(&image->bus_resource);
+-		memset(&image->bus_resource, 0, sizeof(image->bus_resource));
+-	}
+-
+-	if (!image->bus_resource.name) {
+-		image->bus_resource.name = kmalloc(VMENAMSIZ+3, GFP_ATOMIC);
+-		if (!image->bus_resource.name) {
+-			retval = -ENOMEM;
+-			goto err_name;
+-		}
+-	}
+-
+-	sprintf((char *)image->bus_resource.name, "%s.%d",
+-		ca91cx42_bridge->name, image->number);
+-
+-	image->bus_resource.start = 0;
+-	image->bus_resource.end = (unsigned long)size;
+-	image->bus_resource.flags = IORESOURCE_MEM;
+-
+-	retval = pci_bus_alloc_resource(pdev->bus,
+-		&image->bus_resource, size, 0x10000, PCIBIOS_MIN_MEM,
+-		0, NULL, NULL);
+-	if (retval) {
+-		dev_err(ca91cx42_bridge->parent, "Failed to allocate mem "
+-			"resource for window %d size 0x%lx start 0x%lx\n",
+-			image->number, (unsigned long)size,
+-			(unsigned long)image->bus_resource.start);
+-		goto err_resource;
+-	}
+-
+-	image->kern_base = ioremap(
+-		image->bus_resource.start, size);
+-	if (!image->kern_base) {
+-		dev_err(ca91cx42_bridge->parent, "Failed to remap resource\n");
+-		retval = -ENOMEM;
+-		goto err_remap;
+-	}
+-
+-	return 0;
+-
+-err_remap:
+-	release_resource(&image->bus_resource);
+-err_resource:
+-	kfree(image->bus_resource.name);
+-	memset(&image->bus_resource, 0, sizeof(image->bus_resource));
+-err_name:
+-	return retval;
+-}
+-
+-/*
+- * Free and unmap PCI Resource
+- */
+-static void ca91cx42_free_resource(struct vme_master_resource *image)
+-{
+-	iounmap(image->kern_base);
+-	image->kern_base = NULL;
+-	release_resource(&image->bus_resource);
+-	kfree(image->bus_resource.name);
+-	memset(&image->bus_resource, 0, sizeof(image->bus_resource));
+-}
+-
+-
+-static int ca91cx42_master_set(struct vme_master_resource *image, int enabled,
+-	unsigned long long vme_base, unsigned long long size, u32 aspace,
+-	u32 cycle, u32 dwidth)
+-{
+-	int retval = 0;
+-	unsigned int i, granularity = 0;
+-	unsigned int temp_ctl = 0;
+-	unsigned long long pci_bound, vme_offset, pci_base;
+-	struct vme_bridge *ca91cx42_bridge;
+-	struct ca91cx42_driver *bridge;
+-
+-	ca91cx42_bridge = image->parent;
+-
+-	bridge = ca91cx42_bridge->driver_priv;
+-
+-	i = image->number;
+-
+-	if ((i == 0) || (i == 4))
+-		granularity = 0x1000;
+-	else
+-		granularity = 0x10000;
+-
+-	/* Verify input data */
+-	if (vme_base & (granularity - 1)) {
+-		dev_err(ca91cx42_bridge->parent, "Invalid VME Window "
+-			"alignment\n");
+-		retval = -EINVAL;
+-		goto err_window;
+-	}
+-	if (size & (granularity - 1)) {
+-		dev_err(ca91cx42_bridge->parent, "Invalid VME Window "
+-			"alignment\n");
+-		retval = -EINVAL;
+-		goto err_window;
+-	}
+-
+-	spin_lock(&image->lock);
+-
+-	/*
+-	 * Let's allocate the resource here rather than further up the stack as
+-	 * it avoids pushing loads of bus dependent stuff up the stack
+-	 */
+-	retval = ca91cx42_alloc_resource(image, size);
+-	if (retval) {
+-		spin_unlock(&image->lock);
+-		dev_err(ca91cx42_bridge->parent, "Unable to allocate memory "
+-			"for resource name\n");
+-		retval = -ENOMEM;
+-		goto err_res;
+-	}
+-
+-	pci_base = (unsigned long long)image->bus_resource.start;
+-
+-	/*
+-	 * Bound address is a valid address for the window, adjust
+-	 * according to window granularity.
+-	 */
+-	pci_bound = pci_base + size;
+-	vme_offset = vme_base - pci_base;
+-
+-	/* Disable while we are mucking around */
+-	temp_ctl = ioread32(bridge->base + CA91CX42_LSI_CTL[i]);
+-	temp_ctl &= ~CA91CX42_LSI_CTL_EN;
+-	iowrite32(temp_ctl, bridge->base + CA91CX42_LSI_CTL[i]);
+-
+-	/* Setup cycle types */
+-	temp_ctl &= ~CA91CX42_LSI_CTL_VCT_M;
+-	if (cycle & VME_BLT)
+-		temp_ctl |= CA91CX42_LSI_CTL_VCT_BLT;
+-	if (cycle & VME_MBLT)
+-		temp_ctl |= CA91CX42_LSI_CTL_VCT_MBLT;
+-
+-	/* Setup data width */
+-	temp_ctl &= ~CA91CX42_LSI_CTL_VDW_M;
+-	switch (dwidth) {
+-	case VME_D8:
+-		temp_ctl |= CA91CX42_LSI_CTL_VDW_D8;
+-		break;
+-	case VME_D16:
+-		temp_ctl |= CA91CX42_LSI_CTL_VDW_D16;
+-		break;
+-	case VME_D32:
+-		temp_ctl |= CA91CX42_LSI_CTL_VDW_D32;
+-		break;
+-	case VME_D64:
+-		temp_ctl |= CA91CX42_LSI_CTL_VDW_D64;
+-		break;
+-	default:
+-		spin_unlock(&image->lock);
+-		dev_err(ca91cx42_bridge->parent, "Invalid data width\n");
+-		retval = -EINVAL;
+-		goto err_dwidth;
+-		break;
+-	}
+-
+-	/* Setup address space */
+-	temp_ctl &= ~CA91CX42_LSI_CTL_VAS_M;
+-	switch (aspace) {
+-	case VME_A16:
+-		temp_ctl |= CA91CX42_LSI_CTL_VAS_A16;
+-		break;
+-	case VME_A24:
+-		temp_ctl |= CA91CX42_LSI_CTL_VAS_A24;
+-		break;
+-	case VME_A32:
+-		temp_ctl |= CA91CX42_LSI_CTL_VAS_A32;
+-		break;
+-	case VME_CRCSR:
+-		temp_ctl |= CA91CX42_LSI_CTL_VAS_CRCSR;
+-		break;
+-	case VME_USER1:
+-		temp_ctl |= CA91CX42_LSI_CTL_VAS_USER1;
+-		break;
+-	case VME_USER2:
+-		temp_ctl |= CA91CX42_LSI_CTL_VAS_USER2;
+-		break;
+-	case VME_A64:
+-	case VME_USER3:
+-	case VME_USER4:
+-	default:
+-		spin_unlock(&image->lock);
+-		dev_err(ca91cx42_bridge->parent, "Invalid address space\n");
+-		retval = -EINVAL;
+-		goto err_aspace;
+-		break;
+-	}
+-
+-	temp_ctl &= ~(CA91CX42_LSI_CTL_PGM_M | CA91CX42_LSI_CTL_SUPER_M);
+-	if (cycle & VME_SUPER)
+-		temp_ctl |= CA91CX42_LSI_CTL_SUPER_SUPR;
+-	if (cycle & VME_PROG)
+-		temp_ctl |= CA91CX42_LSI_CTL_PGM_PGM;
+-
+-	/* Setup mapping */
+-	iowrite32(pci_base, bridge->base + CA91CX42_LSI_BS[i]);
+-	iowrite32(pci_bound, bridge->base + CA91CX42_LSI_BD[i]);
+-	iowrite32(vme_offset, bridge->base + CA91CX42_LSI_TO[i]);
+-
+-	/* Write ctl reg without enable */
+-	iowrite32(temp_ctl, bridge->base + CA91CX42_LSI_CTL[i]);
+-
+-	if (enabled)
+-		temp_ctl |= CA91CX42_LSI_CTL_EN;
+-
+-	iowrite32(temp_ctl, bridge->base + CA91CX42_LSI_CTL[i]);
+-
+-	spin_unlock(&image->lock);
+-	return 0;
+-
+-err_aspace:
+-err_dwidth:
+-	ca91cx42_free_resource(image);
+-err_res:
+-err_window:
+-	return retval;
+-}
+-
+-static int __ca91cx42_master_get(struct vme_master_resource *image,
+-	int *enabled, unsigned long long *vme_base, unsigned long long *size,
+-	u32 *aspace, u32 *cycle, u32 *dwidth)
+-{
+-	unsigned int i, ctl;
+-	unsigned long long pci_base, pci_bound, vme_offset;
+-	struct ca91cx42_driver *bridge;
+-
+-	bridge = image->parent->driver_priv;
+-
+-	i = image->number;
+-
+-	ctl = ioread32(bridge->base + CA91CX42_LSI_CTL[i]);
+-
+-	pci_base = ioread32(bridge->base + CA91CX42_LSI_BS[i]);
+-	vme_offset = ioread32(bridge->base + CA91CX42_LSI_TO[i]);
+-	pci_bound = ioread32(bridge->base + CA91CX42_LSI_BD[i]);
+-
+-	*vme_base = pci_base + vme_offset;
+-	*size = (unsigned long long)(pci_bound - pci_base);
+-
+-	*enabled = 0;
+-	*aspace = 0;
+-	*cycle = 0;
+-	*dwidth = 0;
+-
+-	if (ctl & CA91CX42_LSI_CTL_EN)
+-		*enabled = 1;
+-
+-	/* Setup address space */
+-	switch (ctl & CA91CX42_LSI_CTL_VAS_M) {
+-	case CA91CX42_LSI_CTL_VAS_A16:
+-		*aspace = VME_A16;
+-		break;
+-	case CA91CX42_LSI_CTL_VAS_A24:
+-		*aspace = VME_A24;
+-		break;
+-	case CA91CX42_LSI_CTL_VAS_A32:
+-		*aspace = VME_A32;
+-		break;
+-	case CA91CX42_LSI_CTL_VAS_CRCSR:
+-		*aspace = VME_CRCSR;
+-		break;
+-	case CA91CX42_LSI_CTL_VAS_USER1:
+-		*aspace = VME_USER1;
+-		break;
+-	case CA91CX42_LSI_CTL_VAS_USER2:
+-		*aspace = VME_USER2;
+-		break;
+-	}
+-
+-	/* XXX Not sure howto check for MBLT */
+-	/* Setup cycle types */
+-	if (ctl & CA91CX42_LSI_CTL_VCT_BLT)
+-		*cycle |= VME_BLT;
+-	else
+-		*cycle |= VME_SCT;
+-
+-	if (ctl & CA91CX42_LSI_CTL_SUPER_SUPR)
+-		*cycle |= VME_SUPER;
+-	else
+-		*cycle |= VME_USER;
+-
+-	if (ctl & CA91CX42_LSI_CTL_PGM_PGM)
+-		*cycle = VME_PROG;
+-	else
+-		*cycle = VME_DATA;
+-
+-	/* Setup data width */
+-	switch (ctl & CA91CX42_LSI_CTL_VDW_M) {
+-	case CA91CX42_LSI_CTL_VDW_D8:
+-		*dwidth = VME_D8;
+-		break;
+-	case CA91CX42_LSI_CTL_VDW_D16:
+-		*dwidth = VME_D16;
+-		break;
+-	case CA91CX42_LSI_CTL_VDW_D32:
+-		*dwidth = VME_D32;
+-		break;
+-	case CA91CX42_LSI_CTL_VDW_D64:
+-		*dwidth = VME_D64;
+-		break;
+-	}
+-
+-	return 0;
+-}
+-
+-static int ca91cx42_master_get(struct vme_master_resource *image, int *enabled,
+-	unsigned long long *vme_base, unsigned long long *size, u32 *aspace,
+-	u32 *cycle, u32 *dwidth)
+-{
+-	int retval;
+-
+-	spin_lock(&image->lock);
+-
+-	retval = __ca91cx42_master_get(image, enabled, vme_base, size, aspace,
+-		cycle, dwidth);
+-
+-	spin_unlock(&image->lock);
+-
+-	return retval;
+-}
+-
+-static ssize_t ca91cx42_master_read(struct vme_master_resource *image,
+-	void *buf, size_t count, loff_t offset)
+-{
+-	ssize_t retval;
+-	void __iomem *addr = image->kern_base + offset;
+-	unsigned int done = 0;
+-	unsigned int count32;
+-
+-	if (count == 0)
+-		return 0;
+-
+-	spin_lock(&image->lock);
+-
+-	/* The following code handles VME address alignment. We cannot use
+-	 * memcpy_xxx here because it may cut data transfers in to 8-bit
+-	 * cycles when D16 or D32 cycles are required on the VME bus.
+-	 * On the other hand, the bridge itself assures that the maximum data
+-	 * cycle configured for the transfer is used and splits it
+-	 * automatically for non-aligned addresses, so we don't want the
+-	 * overhead of needlessly forcing small transfers for the entire cycle.
+-	 */
+-	if ((uintptr_t)addr & 0x1) {
+-		*(u8 *)buf = ioread8(addr);
+-		done += 1;
+-		if (done == count)
+-			goto out;
+-	}
+-	if ((uintptr_t)(addr + done) & 0x2) {
+-		if ((count - done) < 2) {
+-			*(u8 *)(buf + done) = ioread8(addr + done);
+-			done += 1;
+-			goto out;
+-		} else {
+-			*(u16 *)(buf + done) = ioread16(addr + done);
+-			done += 2;
+-		}
+-	}
+-
+-	count32 = (count - done) & ~0x3;
+-	while (done < count32) {
+-		*(u32 *)(buf + done) = ioread32(addr + done);
+-		done += 4;
+-	}
+-
+-	if ((count - done) & 0x2) {
+-		*(u16 *)(buf + done) = ioread16(addr + done);
+-		done += 2;
+-	}
+-	if ((count - done) & 0x1) {
+-		*(u8 *)(buf + done) = ioread8(addr + done);
+-		done += 1;
+-	}
+-out:
+-	retval = count;
+-	spin_unlock(&image->lock);
+-
+-	return retval;
+-}
+-
+-static ssize_t ca91cx42_master_write(struct vme_master_resource *image,
+-	void *buf, size_t count, loff_t offset)
+-{
+-	ssize_t retval;
+-	void __iomem *addr = image->kern_base + offset;
+-	unsigned int done = 0;
+-	unsigned int count32;
+-
+-	if (count == 0)
+-		return 0;
+-
+-	spin_lock(&image->lock);
+-
+-	/* Here we apply for the same strategy we do in master_read
+-	 * function in order to assure the correct cycles.
+-	 */
+-	if ((uintptr_t)addr & 0x1) {
+-		iowrite8(*(u8 *)buf, addr);
+-		done += 1;
+-		if (done == count)
+-			goto out;
+-	}
+-	if ((uintptr_t)(addr + done) & 0x2) {
+-		if ((count - done) < 2) {
+-			iowrite8(*(u8 *)(buf + done), addr + done);
+-			done += 1;
+-			goto out;
+-		} else {
+-			iowrite16(*(u16 *)(buf + done), addr + done);
+-			done += 2;
+-		}
+-	}
+-
+-	count32 = (count - done) & ~0x3;
+-	while (done < count32) {
+-		iowrite32(*(u32 *)(buf + done), addr + done);
+-		done += 4;
+-	}
+-
+-	if ((count - done) & 0x2) {
+-		iowrite16(*(u16 *)(buf + done), addr + done);
+-		done += 2;
+-	}
+-	if ((count - done) & 0x1) {
+-		iowrite8(*(u8 *)(buf + done), addr + done);
+-		done += 1;
+-	}
+-out:
+-	retval = count;
+-
+-	spin_unlock(&image->lock);
+-
+-	return retval;
+-}
+-
+-static unsigned int ca91cx42_master_rmw(struct vme_master_resource *image,
+-	unsigned int mask, unsigned int compare, unsigned int swap,
+-	loff_t offset)
+-{
+-	u32 result;
+-	uintptr_t pci_addr;
+-	struct ca91cx42_driver *bridge;
+-	struct device *dev;
+-
+-	bridge = image->parent->driver_priv;
+-	dev = image->parent->parent;
+-
+-	/* Find the PCI address that maps to the desired VME address */
+-
+-	/* Locking as we can only do one of these at a time */
+-	mutex_lock(&bridge->vme_rmw);
+-
+-	/* Lock image */
+-	spin_lock(&image->lock);
+-
+-	pci_addr = (uintptr_t)image->kern_base + offset;
+-
+-	/* Address must be 4-byte aligned */
+-	if (pci_addr & 0x3) {
+-		dev_err(dev, "RMW Address not 4-byte aligned\n");
+-		result = -EINVAL;
+-		goto out;
+-	}
+-
+-	/* Ensure RMW Disabled whilst configuring */
+-	iowrite32(0, bridge->base + SCYC_CTL);
+-
+-	/* Configure registers */
+-	iowrite32(mask, bridge->base + SCYC_EN);
+-	iowrite32(compare, bridge->base + SCYC_CMP);
+-	iowrite32(swap, bridge->base + SCYC_SWP);
+-	iowrite32(pci_addr, bridge->base + SCYC_ADDR);
+-
+-	/* Enable RMW */
+-	iowrite32(CA91CX42_SCYC_CTL_CYC_RMW, bridge->base + SCYC_CTL);
+-
+-	/* Kick process off with a read to the required address. */
+-	result = ioread32(image->kern_base + offset);
+-
+-	/* Disable RMW */
+-	iowrite32(0, bridge->base + SCYC_CTL);
+-
+-out:
+-	spin_unlock(&image->lock);
+-
+-	mutex_unlock(&bridge->vme_rmw);
+-
+-	return result;
+-}
+-
+-static int ca91cx42_dma_list_add(struct vme_dma_list *list,
+-	struct vme_dma_attr *src, struct vme_dma_attr *dest, size_t count)
+-{
+-	struct ca91cx42_dma_entry *entry, *prev;
+-	struct vme_dma_pci *pci_attr;
+-	struct vme_dma_vme *vme_attr;
+-	dma_addr_t desc_ptr;
+-	int retval = 0;
+-	struct device *dev;
+-
+-	dev = list->parent->parent->parent;
+-
+-	/* XXX descriptor must be aligned on 64-bit boundaries */
+-	entry = kmalloc(sizeof(*entry), GFP_KERNEL);
+-	if (!entry) {
+-		retval = -ENOMEM;
+-		goto err_mem;
+-	}
+-
+-	/* Test descriptor alignment */
+-	if ((unsigned long)&entry->descriptor & CA91CX42_DCPP_M) {
+-		dev_err(dev, "Descriptor not aligned to 16 byte boundary as "
+-			"required: %p\n", &entry->descriptor);
+-		retval = -EINVAL;
+-		goto err_align;
+-	}
+-
+-	memset(&entry->descriptor, 0, sizeof(entry->descriptor));
+-
+-	if (dest->type == VME_DMA_VME) {
+-		entry->descriptor.dctl |= CA91CX42_DCTL_L2V;
+-		vme_attr = dest->private;
+-		pci_attr = src->private;
+-	} else {
+-		vme_attr = src->private;
+-		pci_attr = dest->private;
+-	}
+-
+-	/* Check we can do fulfill required attributes */
+-	if ((vme_attr->aspace & ~(VME_A16 | VME_A24 | VME_A32 | VME_USER1 |
+-		VME_USER2)) != 0) {
+-
+-		dev_err(dev, "Unsupported cycle type\n");
+-		retval = -EINVAL;
+-		goto err_aspace;
+-	}
+-
+-	if ((vme_attr->cycle & ~(VME_SCT | VME_BLT | VME_SUPER | VME_USER |
+-		VME_PROG | VME_DATA)) != 0) {
+-
+-		dev_err(dev, "Unsupported cycle type\n");
+-		retval = -EINVAL;
+-		goto err_cycle;
+-	}
+-
+-	/* Check to see if we can fulfill source and destination */
+-	if (!(((src->type == VME_DMA_PCI) && (dest->type == VME_DMA_VME)) ||
+-		((src->type == VME_DMA_VME) && (dest->type == VME_DMA_PCI)))) {
+-
+-		dev_err(dev, "Cannot perform transfer with this "
+-			"source-destination combination\n");
+-		retval = -EINVAL;
+-		goto err_direct;
+-	}
+-
+-	/* Setup cycle types */
+-	if (vme_attr->cycle & VME_BLT)
+-		entry->descriptor.dctl |= CA91CX42_DCTL_VCT_BLT;
+-
+-	/* Setup data width */
+-	switch (vme_attr->dwidth) {
+-	case VME_D8:
+-		entry->descriptor.dctl |= CA91CX42_DCTL_VDW_D8;
+-		break;
+-	case VME_D16:
+-		entry->descriptor.dctl |= CA91CX42_DCTL_VDW_D16;
+-		break;
+-	case VME_D32:
+-		entry->descriptor.dctl |= CA91CX42_DCTL_VDW_D32;
+-		break;
+-	case VME_D64:
+-		entry->descriptor.dctl |= CA91CX42_DCTL_VDW_D64;
+-		break;
+-	default:
+-		dev_err(dev, "Invalid data width\n");
+-		return -EINVAL;
+-	}
+-
+-	/* Setup address space */
+-	switch (vme_attr->aspace) {
+-	case VME_A16:
+-		entry->descriptor.dctl |= CA91CX42_DCTL_VAS_A16;
+-		break;
+-	case VME_A24:
+-		entry->descriptor.dctl |= CA91CX42_DCTL_VAS_A24;
+-		break;
+-	case VME_A32:
+-		entry->descriptor.dctl |= CA91CX42_DCTL_VAS_A32;
+-		break;
+-	case VME_USER1:
+-		entry->descriptor.dctl |= CA91CX42_DCTL_VAS_USER1;
+-		break;
+-	case VME_USER2:
+-		entry->descriptor.dctl |= CA91CX42_DCTL_VAS_USER2;
+-		break;
+-	default:
+-		dev_err(dev, "Invalid address space\n");
+-		return -EINVAL;
+-		break;
+-	}
+-
+-	if (vme_attr->cycle & VME_SUPER)
+-		entry->descriptor.dctl |= CA91CX42_DCTL_SUPER_SUPR;
+-	if (vme_attr->cycle & VME_PROG)
+-		entry->descriptor.dctl |= CA91CX42_DCTL_PGM_PGM;
+-
+-	entry->descriptor.dtbc = count;
+-	entry->descriptor.dla = pci_attr->address;
+-	entry->descriptor.dva = vme_attr->address;
+-	entry->descriptor.dcpp = CA91CX42_DCPP_NULL;
+-
+-	/* Add to list */
+-	list_add_tail(&entry->list, &list->entries);
+-
+-	/* Fill out previous descriptors "Next Address" */
+-	if (entry->list.prev != &list->entries) {
+-		prev = list_entry(entry->list.prev, struct ca91cx42_dma_entry,
+-			list);
+-		/* We need the bus address for the pointer */
+-		desc_ptr = virt_to_bus(&entry->descriptor);
+-		prev->descriptor.dcpp = desc_ptr & ~CA91CX42_DCPP_M;
+-	}
+-
+-	return 0;
+-
+-err_cycle:
+-err_aspace:
+-err_direct:
+-err_align:
+-	kfree(entry);
+-err_mem:
+-	return retval;
+-}
+-
+-static int ca91cx42_dma_busy(struct vme_bridge *ca91cx42_bridge)
+-{
+-	u32 tmp;
+-	struct ca91cx42_driver *bridge;
+-
+-	bridge = ca91cx42_bridge->driver_priv;
+-
+-	tmp = ioread32(bridge->base + DGCS);
+-
+-	if (tmp & CA91CX42_DGCS_ACT)
+-		return 0;
+-	else
+-		return 1;
+-}
+-
+-static int ca91cx42_dma_list_exec(struct vme_dma_list *list)
+-{
+-	struct vme_dma_resource *ctrlr;
+-	struct ca91cx42_dma_entry *entry;
+-	int retval;
+-	dma_addr_t bus_addr;
+-	u32 val;
+-	struct device *dev;
+-	struct ca91cx42_driver *bridge;
+-
+-	ctrlr = list->parent;
+-
+-	bridge = ctrlr->parent->driver_priv;
+-	dev = ctrlr->parent->parent;
+-
+-	mutex_lock(&ctrlr->mtx);
+-
+-	if (!(list_empty(&ctrlr->running))) {
+-		/*
+-		 * XXX We have an active DMA transfer and currently haven't
+-		 *     sorted out the mechanism for "pending" DMA transfers.
+-		 *     Return busy.
+-		 */
+-		/* Need to add to pending here */
+-		mutex_unlock(&ctrlr->mtx);
+-		return -EBUSY;
+-	} else {
+-		list_add(&list->list, &ctrlr->running);
+-	}
+-
+-	/* Get first bus address and write into registers */
+-	entry = list_first_entry(&list->entries, struct ca91cx42_dma_entry,
+-		list);
+-
+-	bus_addr = virt_to_bus(&entry->descriptor);
+-
+-	mutex_unlock(&ctrlr->mtx);
+-
+-	iowrite32(0, bridge->base + DTBC);
+-	iowrite32(bus_addr & ~CA91CX42_DCPP_M, bridge->base + DCPP);
+-
+-	/* Start the operation */
+-	val = ioread32(bridge->base + DGCS);
+-
+-	/* XXX Could set VMEbus On and Off Counters here */
+-	val &= (CA91CX42_DGCS_VON_M | CA91CX42_DGCS_VOFF_M);
+-
+-	val |= (CA91CX42_DGCS_CHAIN | CA91CX42_DGCS_STOP | CA91CX42_DGCS_HALT |
+-		CA91CX42_DGCS_DONE | CA91CX42_DGCS_LERR | CA91CX42_DGCS_VERR |
+-		CA91CX42_DGCS_PERR);
+-
+-	iowrite32(val, bridge->base + DGCS);
+-
+-	val |= CA91CX42_DGCS_GO;
+-
+-	iowrite32(val, bridge->base + DGCS);
+-
+-	retval = wait_event_interruptible(bridge->dma_queue,
+-					  ca91cx42_dma_busy(ctrlr->parent));
+-
+-	if (retval) {
+-		val = ioread32(bridge->base + DGCS);
+-		iowrite32(val | CA91CX42_DGCS_STOP_REQ, bridge->base + DGCS);
+-		/* Wait for the operation to abort */
+-		wait_event(bridge->dma_queue,
+-			   ca91cx42_dma_busy(ctrlr->parent));
+-		retval = -EINTR;
+-		goto exit;
+-	}
+-
+-	/*
+-	 * Read status register, this register is valid until we kick off a
+-	 * new transfer.
+-	 */
+-	val = ioread32(bridge->base + DGCS);
+-
+-	if (val & (CA91CX42_DGCS_LERR | CA91CX42_DGCS_VERR |
+-		CA91CX42_DGCS_PERR)) {
+-
+-		dev_err(dev, "ca91c042: DMA Error. DGCS=%08X\n", val);
+-		val = ioread32(bridge->base + DCTL);
+-		retval = -EIO;
+-	}
+-
+-exit:
+-	/* Remove list from running list */
+-	mutex_lock(&ctrlr->mtx);
+-	list_del(&list->list);
+-	mutex_unlock(&ctrlr->mtx);
+-
+-	return retval;
+-
+-}
+-
+-static int ca91cx42_dma_list_empty(struct vme_dma_list *list)
+-{
+-	struct list_head *pos, *temp;
+-	struct ca91cx42_dma_entry *entry;
+-
+-	/* detach and free each entry */
+-	list_for_each_safe(pos, temp, &list->entries) {
+-		list_del(pos);
+-		entry = list_entry(pos, struct ca91cx42_dma_entry, list);
+-		kfree(entry);
+-	}
+-
+-	return 0;
+-}
+-
+-/*
+- * All 4 location monitors reside at the same base - this is therefore a
+- * system wide configuration.
+- *
+- * This does not enable the LM monitor - that should be done when the first
+- * callback is attached and disabled when the last callback is removed.
+- */
+-static int ca91cx42_lm_set(struct vme_lm_resource *lm,
+-	unsigned long long lm_base, u32 aspace, u32 cycle)
+-{
+-	u32 temp_base, lm_ctl = 0;
+-	int i;
+-	struct ca91cx42_driver *bridge;
+-	struct device *dev;
+-
+-	bridge = lm->parent->driver_priv;
+-	dev = lm->parent->parent;
+-
+-	/* Check the alignment of the location monitor */
+-	temp_base = (u32)lm_base;
+-	if (temp_base & 0xffff) {
+-		dev_err(dev, "Location monitor must be aligned to 64KB "
+-			"boundary");
+-		return -EINVAL;
+-	}
+-
+-	mutex_lock(&lm->mtx);
+-
+-	/* If we already have a callback attached, we can't move it! */
+-	for (i = 0; i < lm->monitors; i++) {
+-		if (bridge->lm_callback[i]) {
+-			mutex_unlock(&lm->mtx);
+-			dev_err(dev, "Location monitor callback attached, "
+-				"can't reset\n");
+-			return -EBUSY;
+-		}
+-	}
+-
+-	switch (aspace) {
+-	case VME_A16:
+-		lm_ctl |= CA91CX42_LM_CTL_AS_A16;
+-		break;
+-	case VME_A24:
+-		lm_ctl |= CA91CX42_LM_CTL_AS_A24;
+-		break;
+-	case VME_A32:
+-		lm_ctl |= CA91CX42_LM_CTL_AS_A32;
+-		break;
+-	default:
+-		mutex_unlock(&lm->mtx);
+-		dev_err(dev, "Invalid address space\n");
+-		return -EINVAL;
+-		break;
+-	}
+-
+-	if (cycle & VME_SUPER)
+-		lm_ctl |= CA91CX42_LM_CTL_SUPR;
+-	if (cycle & VME_USER)
+-		lm_ctl |= CA91CX42_LM_CTL_NPRIV;
+-	if (cycle & VME_PROG)
+-		lm_ctl |= CA91CX42_LM_CTL_PGM;
+-	if (cycle & VME_DATA)
+-		lm_ctl |= CA91CX42_LM_CTL_DATA;
+-
+-	iowrite32(lm_base, bridge->base + LM_BS);
+-	iowrite32(lm_ctl, bridge->base + LM_CTL);
+-
+-	mutex_unlock(&lm->mtx);
+-
+-	return 0;
+-}
+-
+-/* Get configuration of the callback monitor and return whether it is enabled
+- * or disabled.
+- */
+-static int ca91cx42_lm_get(struct vme_lm_resource *lm,
+-	unsigned long long *lm_base, u32 *aspace, u32 *cycle)
+-{
+-	u32 lm_ctl, enabled = 0;
+-	struct ca91cx42_driver *bridge;
+-
+-	bridge = lm->parent->driver_priv;
+-
+-	mutex_lock(&lm->mtx);
+-
+-	*lm_base = (unsigned long long)ioread32(bridge->base + LM_BS);
+-	lm_ctl = ioread32(bridge->base + LM_CTL);
+-
+-	if (lm_ctl & CA91CX42_LM_CTL_EN)
+-		enabled = 1;
+-
+-	if ((lm_ctl & CA91CX42_LM_CTL_AS_M) == CA91CX42_LM_CTL_AS_A16)
+-		*aspace = VME_A16;
+-	if ((lm_ctl & CA91CX42_LM_CTL_AS_M) == CA91CX42_LM_CTL_AS_A24)
+-		*aspace = VME_A24;
+-	if ((lm_ctl & CA91CX42_LM_CTL_AS_M) == CA91CX42_LM_CTL_AS_A32)
+-		*aspace = VME_A32;
+-
+-	*cycle = 0;
+-	if (lm_ctl & CA91CX42_LM_CTL_SUPR)
+-		*cycle |= VME_SUPER;
+-	if (lm_ctl & CA91CX42_LM_CTL_NPRIV)
+-		*cycle |= VME_USER;
+-	if (lm_ctl & CA91CX42_LM_CTL_PGM)
+-		*cycle |= VME_PROG;
+-	if (lm_ctl & CA91CX42_LM_CTL_DATA)
+-		*cycle |= VME_DATA;
+-
+-	mutex_unlock(&lm->mtx);
+-
+-	return enabled;
+-}
+-
+-/*
+- * Attach a callback to a specific location monitor.
+- *
+- * Callback will be passed the monitor triggered.
+- */
+-static int ca91cx42_lm_attach(struct vme_lm_resource *lm, int monitor,
+-	void (*callback)(void *), void *data)
+-{
+-	u32 lm_ctl, tmp;
+-	struct ca91cx42_driver *bridge;
+-	struct device *dev;
+-
+-	bridge = lm->parent->driver_priv;
+-	dev = lm->parent->parent;
+-
+-	mutex_lock(&lm->mtx);
+-
+-	/* Ensure that the location monitor is configured - need PGM or DATA */
+-	lm_ctl = ioread32(bridge->base + LM_CTL);
+-	if ((lm_ctl & (CA91CX42_LM_CTL_PGM | CA91CX42_LM_CTL_DATA)) == 0) {
+-		mutex_unlock(&lm->mtx);
+-		dev_err(dev, "Location monitor not properly configured\n");
+-		return -EINVAL;
+-	}
+-
+-	/* Check that a callback isn't already attached */
+-	if (bridge->lm_callback[monitor]) {
+-		mutex_unlock(&lm->mtx);
+-		dev_err(dev, "Existing callback attached\n");
+-		return -EBUSY;
+-	}
+-
+-	/* Attach callback */
+-	bridge->lm_callback[monitor] = callback;
+-	bridge->lm_data[monitor] = data;
+-
+-	/* Enable Location Monitor interrupt */
+-	tmp = ioread32(bridge->base + LINT_EN);
+-	tmp |= CA91CX42_LINT_LM[monitor];
+-	iowrite32(tmp, bridge->base + LINT_EN);
+-
+-	/* Ensure that global Location Monitor Enable set */
+-	if ((lm_ctl & CA91CX42_LM_CTL_EN) == 0) {
+-		lm_ctl |= CA91CX42_LM_CTL_EN;
+-		iowrite32(lm_ctl, bridge->base + LM_CTL);
+-	}
+-
+-	mutex_unlock(&lm->mtx);
+-
+-	return 0;
+-}
+-
+-/*
+- * Detach a callback function forn a specific location monitor.
+- */
+-static int ca91cx42_lm_detach(struct vme_lm_resource *lm, int monitor)
+-{
+-	u32 tmp;
+-	struct ca91cx42_driver *bridge;
+-
+-	bridge = lm->parent->driver_priv;
+-
+-	mutex_lock(&lm->mtx);
+-
+-	/* Disable Location Monitor and ensure previous interrupts are clear */
+-	tmp = ioread32(bridge->base + LINT_EN);
+-	tmp &= ~CA91CX42_LINT_LM[monitor];
+-	iowrite32(tmp, bridge->base + LINT_EN);
+-
+-	iowrite32(CA91CX42_LINT_LM[monitor],
+-		 bridge->base + LINT_STAT);
+-
+-	/* Detach callback */
+-	bridge->lm_callback[monitor] = NULL;
+-	bridge->lm_data[monitor] = NULL;
+-
+-	/* If all location monitors disabled, disable global Location Monitor */
+-	if ((tmp & (CA91CX42_LINT_LM0 | CA91CX42_LINT_LM1 | CA91CX42_LINT_LM2 |
+-			CA91CX42_LINT_LM3)) == 0) {
+-		tmp = ioread32(bridge->base + LM_CTL);
+-		tmp &= ~CA91CX42_LM_CTL_EN;
+-		iowrite32(tmp, bridge->base + LM_CTL);
+-	}
+-
+-	mutex_unlock(&lm->mtx);
+-
+-	return 0;
+-}
+-
+-static int ca91cx42_slot_get(struct vme_bridge *ca91cx42_bridge)
+-{
+-	u32 slot = 0;
+-	struct ca91cx42_driver *bridge;
+-
+-	bridge = ca91cx42_bridge->driver_priv;
+-
+-	if (!geoid) {
+-		slot = ioread32(bridge->base + VCSR_BS);
+-		slot = ((slot & CA91CX42_VCSR_BS_SLOT_M) >> 27);
+-	} else
+-		slot = geoid;
+-
+-	return (int)slot;
+-
+-}
+-
+-static void *ca91cx42_alloc_consistent(struct device *parent, size_t size,
+-	dma_addr_t *dma)
+-{
+-	struct pci_dev *pdev;
+-
+-	/* Find pci_dev container of dev */
+-	pdev = to_pci_dev(parent);
+-
+-	return dma_alloc_coherent(&pdev->dev, size, dma, GFP_KERNEL);
+-}
+-
+-static void ca91cx42_free_consistent(struct device *parent, size_t size,
+-	void *vaddr, dma_addr_t dma)
+-{
+-	struct pci_dev *pdev;
+-
+-	/* Find pci_dev container of dev */
+-	pdev = to_pci_dev(parent);
+-
+-	dma_free_coherent(&pdev->dev, size, vaddr, dma);
+-}
+-
+-/*
+- * Configure CR/CSR space
+- *
+- * Access to the CR/CSR can be configured at power-up. The location of the
+- * CR/CSR registers in the CR/CSR address space is determined by the boards
+- * Auto-ID or Geographic address. This function ensures that the window is
+- * enabled at an offset consistent with the boards geopgraphic address.
+- */
+-static int ca91cx42_crcsr_init(struct vme_bridge *ca91cx42_bridge,
+-	struct pci_dev *pdev)
+-{
+-	unsigned int crcsr_addr;
+-	int tmp, slot;
+-	struct ca91cx42_driver *bridge;
+-
+-	bridge = ca91cx42_bridge->driver_priv;
+-
+-	slot = ca91cx42_slot_get(ca91cx42_bridge);
+-
+-	/* Write CSR Base Address if slot ID is supplied as a module param */
+-	if (geoid)
+-		iowrite32(geoid << 27, bridge->base + VCSR_BS);
+-
+-	dev_info(&pdev->dev, "CR/CSR Offset: %d\n", slot);
+-	if (slot == 0) {
+-		dev_err(&pdev->dev, "Slot number is unset, not configuring "
+-			"CR/CSR space\n");
+-		return -EINVAL;
+-	}
+-
+-	/* Allocate mem for CR/CSR image */
+-	bridge->crcsr_kernel = dma_alloc_coherent(&pdev->dev,
+-						  VME_CRCSR_BUF_SIZE,
+-						  &bridge->crcsr_bus, GFP_KERNEL);
+-	if (!bridge->crcsr_kernel) {
+-		dev_err(&pdev->dev, "Failed to allocate memory for CR/CSR "
+-			"image\n");
+-		return -ENOMEM;
+-	}
+-
+-	crcsr_addr = slot * (512 * 1024);
+-	iowrite32(bridge->crcsr_bus - crcsr_addr, bridge->base + VCSR_TO);
+-
+-	tmp = ioread32(bridge->base + VCSR_CTL);
+-	tmp |= CA91CX42_VCSR_CTL_EN;
+-	iowrite32(tmp, bridge->base + VCSR_CTL);
+-
+-	return 0;
+-}
+-
+-static void ca91cx42_crcsr_exit(struct vme_bridge *ca91cx42_bridge,
+-	struct pci_dev *pdev)
+-{
+-	u32 tmp;
+-	struct ca91cx42_driver *bridge;
+-
+-	bridge = ca91cx42_bridge->driver_priv;
+-
+-	/* Turn off CR/CSR space */
+-	tmp = ioread32(bridge->base + VCSR_CTL);
+-	tmp &= ~CA91CX42_VCSR_CTL_EN;
+-	iowrite32(tmp, bridge->base + VCSR_CTL);
+-
+-	/* Free image */
+-	iowrite32(0, bridge->base + VCSR_TO);
+-
+-	dma_free_coherent(&pdev->dev, VME_CRCSR_BUF_SIZE,
+-			  bridge->crcsr_kernel, bridge->crcsr_bus);
+-}
+-
+-static int ca91cx42_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+-{
+-	int retval, i;
+-	u32 data;
+-	struct list_head *pos = NULL, *n;
+-	struct vme_bridge *ca91cx42_bridge;
+-	struct ca91cx42_driver *ca91cx42_device;
+-	struct vme_master_resource *master_image;
+-	struct vme_slave_resource *slave_image;
+-	struct vme_dma_resource *dma_ctrlr;
+-	struct vme_lm_resource *lm;
+-
+-	/* We want to support more than one of each bridge so we need to
+-	 * dynamically allocate the bridge structure
+-	 */
+-	ca91cx42_bridge = kzalloc(sizeof(*ca91cx42_bridge), GFP_KERNEL);
+-	if (!ca91cx42_bridge) {
+-		retval = -ENOMEM;
+-		goto err_struct;
+-	}
+-	vme_init_bridge(ca91cx42_bridge);
+-
+-	ca91cx42_device = kzalloc(sizeof(*ca91cx42_device), GFP_KERNEL);
+-	if (!ca91cx42_device) {
+-		retval = -ENOMEM;
+-		goto err_driver;
+-	}
+-
+-	ca91cx42_bridge->driver_priv = ca91cx42_device;
+-
+-	/* Enable the device */
+-	retval = pci_enable_device(pdev);
+-	if (retval) {
+-		dev_err(&pdev->dev, "Unable to enable device\n");
+-		goto err_enable;
+-	}
+-
+-	/* Map Registers */
+-	retval = pci_request_regions(pdev, driver_name);
+-	if (retval) {
+-		dev_err(&pdev->dev, "Unable to reserve resources\n");
+-		goto err_resource;
+-	}
+-
+-	/* map registers in BAR 0 */
+-	ca91cx42_device->base = ioremap(pci_resource_start(pdev, 0),
+-		4096);
+-	if (!ca91cx42_device->base) {
+-		dev_err(&pdev->dev, "Unable to remap CRG region\n");
+-		retval = -EIO;
+-		goto err_remap;
+-	}
+-
+-	/* Check to see if the mapping worked out */
+-	data = ioread32(ca91cx42_device->base + CA91CX42_PCI_ID) & 0x0000FFFF;
+-	if (data != PCI_VENDOR_ID_TUNDRA) {
+-		dev_err(&pdev->dev, "PCI_ID check failed\n");
+-		retval = -EIO;
+-		goto err_test;
+-	}
+-
+-	/* Initialize wait queues & mutual exclusion flags */
+-	init_waitqueue_head(&ca91cx42_device->dma_queue);
+-	init_waitqueue_head(&ca91cx42_device->iack_queue);
+-	mutex_init(&ca91cx42_device->vme_int);
+-	mutex_init(&ca91cx42_device->vme_rmw);
+-
+-	ca91cx42_bridge->parent = &pdev->dev;
+-	strcpy(ca91cx42_bridge->name, driver_name);
+-
+-	/* Setup IRQ */
+-	retval = ca91cx42_irq_init(ca91cx42_bridge);
+-	if (retval != 0) {
+-		dev_err(&pdev->dev, "Chip Initialization failed.\n");
+-		goto err_irq;
+-	}
+-
+-	/* Add master windows to list */
+-	for (i = 0; i < CA91C142_MAX_MASTER; i++) {
+-		master_image = kmalloc(sizeof(*master_image), GFP_KERNEL);
+-		if (!master_image) {
+-			retval = -ENOMEM;
+-			goto err_master;
+-		}
+-		master_image->parent = ca91cx42_bridge;
+-		spin_lock_init(&master_image->lock);
+-		master_image->locked = 0;
+-		master_image->number = i;
+-		master_image->address_attr = VME_A16 | VME_A24 | VME_A32 |
+-			VME_CRCSR | VME_USER1 | VME_USER2;
+-		master_image->cycle_attr = VME_SCT | VME_BLT | VME_MBLT |
+-			VME_SUPER | VME_USER | VME_PROG | VME_DATA;
+-		master_image->width_attr = VME_D8 | VME_D16 | VME_D32 | VME_D64;
+-		memset(&master_image->bus_resource, 0,
+-		       sizeof(master_image->bus_resource));
+-		master_image->kern_base  = NULL;
+-		list_add_tail(&master_image->list,
+-			&ca91cx42_bridge->master_resources);
+-	}
+-
+-	/* Add slave windows to list */
+-	for (i = 0; i < CA91C142_MAX_SLAVE; i++) {
+-		slave_image = kmalloc(sizeof(*slave_image), GFP_KERNEL);
+-		if (!slave_image) {
+-			retval = -ENOMEM;
+-			goto err_slave;
+-		}
+-		slave_image->parent = ca91cx42_bridge;
+-		mutex_init(&slave_image->mtx);
+-		slave_image->locked = 0;
+-		slave_image->number = i;
+-		slave_image->address_attr = VME_A24 | VME_A32 | VME_USER1 |
+-			VME_USER2;
+-
+-		/* Only windows 0 and 4 support A16 */
+-		if (i == 0 || i == 4)
+-			slave_image->address_attr |= VME_A16;
+-
+-		slave_image->cycle_attr = VME_SCT | VME_BLT | VME_MBLT |
+-			VME_SUPER | VME_USER | VME_PROG | VME_DATA;
+-		list_add_tail(&slave_image->list,
+-			&ca91cx42_bridge->slave_resources);
+-	}
+-
+-	/* Add dma engines to list */
+-	for (i = 0; i < CA91C142_MAX_DMA; i++) {
+-		dma_ctrlr = kmalloc(sizeof(*dma_ctrlr), GFP_KERNEL);
+-		if (!dma_ctrlr) {
+-			retval = -ENOMEM;
+-			goto err_dma;
+-		}
+-		dma_ctrlr->parent = ca91cx42_bridge;
+-		mutex_init(&dma_ctrlr->mtx);
+-		dma_ctrlr->locked = 0;
+-		dma_ctrlr->number = i;
+-		dma_ctrlr->route_attr = VME_DMA_VME_TO_MEM |
+-			VME_DMA_MEM_TO_VME;
+-		INIT_LIST_HEAD(&dma_ctrlr->pending);
+-		INIT_LIST_HEAD(&dma_ctrlr->running);
+-		list_add_tail(&dma_ctrlr->list,
+-			&ca91cx42_bridge->dma_resources);
+-	}
+-
+-	/* Add location monitor to list */
+-	lm = kmalloc(sizeof(*lm), GFP_KERNEL);
+-	if (!lm) {
+-		retval = -ENOMEM;
+-		goto err_lm;
+-	}
+-	lm->parent = ca91cx42_bridge;
+-	mutex_init(&lm->mtx);
+-	lm->locked = 0;
+-	lm->number = 1;
+-	lm->monitors = 4;
+-	list_add_tail(&lm->list, &ca91cx42_bridge->lm_resources);
+-
+-	ca91cx42_bridge->slave_get = ca91cx42_slave_get;
+-	ca91cx42_bridge->slave_set = ca91cx42_slave_set;
+-	ca91cx42_bridge->master_get = ca91cx42_master_get;
+-	ca91cx42_bridge->master_set = ca91cx42_master_set;
+-	ca91cx42_bridge->master_read = ca91cx42_master_read;
+-	ca91cx42_bridge->master_write = ca91cx42_master_write;
+-	ca91cx42_bridge->master_rmw = ca91cx42_master_rmw;
+-	ca91cx42_bridge->dma_list_add = ca91cx42_dma_list_add;
+-	ca91cx42_bridge->dma_list_exec = ca91cx42_dma_list_exec;
+-	ca91cx42_bridge->dma_list_empty = ca91cx42_dma_list_empty;
+-	ca91cx42_bridge->irq_set = ca91cx42_irq_set;
+-	ca91cx42_bridge->irq_generate = ca91cx42_irq_generate;
+-	ca91cx42_bridge->lm_set = ca91cx42_lm_set;
+-	ca91cx42_bridge->lm_get = ca91cx42_lm_get;
+-	ca91cx42_bridge->lm_attach = ca91cx42_lm_attach;
+-	ca91cx42_bridge->lm_detach = ca91cx42_lm_detach;
+-	ca91cx42_bridge->slot_get = ca91cx42_slot_get;
+-	ca91cx42_bridge->alloc_consistent = ca91cx42_alloc_consistent;
+-	ca91cx42_bridge->free_consistent = ca91cx42_free_consistent;
+-
+-	data = ioread32(ca91cx42_device->base + MISC_CTL);
+-	dev_info(&pdev->dev, "Board is%s the VME system controller\n",
+-		(data & CA91CX42_MISC_CTL_SYSCON) ? "" : " not");
+-	dev_info(&pdev->dev, "Slot ID is %d\n",
+-		ca91cx42_slot_get(ca91cx42_bridge));
+-
+-	if (ca91cx42_crcsr_init(ca91cx42_bridge, pdev))
+-		dev_err(&pdev->dev, "CR/CSR configuration failed.\n");
+-
+-	/* Need to save ca91cx42_bridge pointer locally in link list for use in
+-	 * ca91cx42_remove()
+-	 */
+-	retval = vme_register_bridge(ca91cx42_bridge);
+-	if (retval != 0) {
+-		dev_err(&pdev->dev, "Chip Registration failed.\n");
+-		goto err_reg;
+-	}
+-
+-	pci_set_drvdata(pdev, ca91cx42_bridge);
+-
+-	return 0;
+-
+-err_reg:
+-	ca91cx42_crcsr_exit(ca91cx42_bridge, pdev);
+-err_lm:
+-	/* resources are stored in link list */
+-	list_for_each_safe(pos, n, &ca91cx42_bridge->lm_resources) {
+-		lm = list_entry(pos, struct vme_lm_resource, list);
+-		list_del(pos);
+-		kfree(lm);
+-	}
+-err_dma:
+-	/* resources are stored in link list */
+-	list_for_each_safe(pos, n, &ca91cx42_bridge->dma_resources) {
+-		dma_ctrlr = list_entry(pos, struct vme_dma_resource, list);
+-		list_del(pos);
+-		kfree(dma_ctrlr);
+-	}
+-err_slave:
+-	/* resources are stored in link list */
+-	list_for_each_safe(pos, n, &ca91cx42_bridge->slave_resources) {
+-		slave_image = list_entry(pos, struct vme_slave_resource, list);
+-		list_del(pos);
+-		kfree(slave_image);
+-	}
+-err_master:
+-	/* resources are stored in link list */
+-	list_for_each_safe(pos, n, &ca91cx42_bridge->master_resources) {
+-		master_image = list_entry(pos, struct vme_master_resource,
+-			list);
+-		list_del(pos);
+-		kfree(master_image);
+-	}
+-
+-	ca91cx42_irq_exit(ca91cx42_device, pdev);
+-err_irq:
+-err_test:
+-	iounmap(ca91cx42_device->base);
+-err_remap:
+-	pci_release_regions(pdev);
+-err_resource:
+-	pci_disable_device(pdev);
+-err_enable:
+-	kfree(ca91cx42_device);
+-err_driver:
+-	kfree(ca91cx42_bridge);
+-err_struct:
+-	return retval;
+-
+-}
+-
+-static void ca91cx42_remove(struct pci_dev *pdev)
+-{
+-	struct list_head *pos = NULL, *n;
+-	struct vme_master_resource *master_image;
+-	struct vme_slave_resource *slave_image;
+-	struct vme_dma_resource *dma_ctrlr;
+-	struct vme_lm_resource *lm;
+-	struct ca91cx42_driver *bridge;
+-	struct vme_bridge *ca91cx42_bridge = pci_get_drvdata(pdev);
+-
+-	bridge = ca91cx42_bridge->driver_priv;
+-
+-
+-	/* Turn off Ints */
+-	iowrite32(0, bridge->base + LINT_EN);
+-
+-	/* Turn off the windows */
+-	iowrite32(0x00800000, bridge->base + LSI0_CTL);
+-	iowrite32(0x00800000, bridge->base + LSI1_CTL);
+-	iowrite32(0x00800000, bridge->base + LSI2_CTL);
+-	iowrite32(0x00800000, bridge->base + LSI3_CTL);
+-	iowrite32(0x00800000, bridge->base + LSI4_CTL);
+-	iowrite32(0x00800000, bridge->base + LSI5_CTL);
+-	iowrite32(0x00800000, bridge->base + LSI6_CTL);
+-	iowrite32(0x00800000, bridge->base + LSI7_CTL);
+-	iowrite32(0x00F00000, bridge->base + VSI0_CTL);
+-	iowrite32(0x00F00000, bridge->base + VSI1_CTL);
+-	iowrite32(0x00F00000, bridge->base + VSI2_CTL);
+-	iowrite32(0x00F00000, bridge->base + VSI3_CTL);
+-	iowrite32(0x00F00000, bridge->base + VSI4_CTL);
+-	iowrite32(0x00F00000, bridge->base + VSI5_CTL);
+-	iowrite32(0x00F00000, bridge->base + VSI6_CTL);
+-	iowrite32(0x00F00000, bridge->base + VSI7_CTL);
+-
+-	vme_unregister_bridge(ca91cx42_bridge);
+-
+-	ca91cx42_crcsr_exit(ca91cx42_bridge, pdev);
+-
+-	/* resources are stored in link list */
+-	list_for_each_safe(pos, n, &ca91cx42_bridge->lm_resources) {
+-		lm = list_entry(pos, struct vme_lm_resource, list);
+-		list_del(pos);
+-		kfree(lm);
+-	}
+-
+-	/* resources are stored in link list */
+-	list_for_each_safe(pos, n, &ca91cx42_bridge->dma_resources) {
+-		dma_ctrlr = list_entry(pos, struct vme_dma_resource, list);
+-		list_del(pos);
+-		kfree(dma_ctrlr);
+-	}
+-
+-	/* resources are stored in link list */
+-	list_for_each_safe(pos, n, &ca91cx42_bridge->slave_resources) {
+-		slave_image = list_entry(pos, struct vme_slave_resource, list);
+-		list_del(pos);
+-		kfree(slave_image);
+-	}
+-
+-	/* resources are stored in link list */
+-	list_for_each_safe(pos, n, &ca91cx42_bridge->master_resources) {
+-		master_image = list_entry(pos, struct vme_master_resource,
+-			list);
+-		list_del(pos);
+-		kfree(master_image);
+-	}
+-
+-	ca91cx42_irq_exit(bridge, pdev);
+-
+-	iounmap(bridge->base);
+-
+-	pci_release_regions(pdev);
+-
+-	pci_disable_device(pdev);
+-
+-	kfree(ca91cx42_bridge);
+-}
+-
+-module_pci_driver(ca91cx42_driver);
+-
+-MODULE_PARM_DESC(geoid, "Override geographical addressing");
+-module_param(geoid, int, 0);
+-
+-MODULE_DESCRIPTION("VME driver for the Tundra Universe II VME bridge");
+-MODULE_LICENSE("GPL");
+diff --git a/drivers/vme/bridges/vme_ca91cx42.h b/drivers/vme/bridges/vme_ca91cx42.h
+deleted file mode 100644
+index 34a8c25de613..000000000000
+--- a/drivers/vme/bridges/vme_ca91cx42.h
++++ /dev/null
+@@ -1,579 +0,0 @@
+-/* SPDX-License-Identifier: GPL-2.0-or-later */
+-/*
+- * ca91c042.h
+- *
+- * Support for the Tundra Universe 1 and Universe II VME bridge chips
+- *
+- * Author: Tom Armistead
+- * Updated by Ajit Prem
+- * Copyright 2004 Motorola Inc.
+- *
+- * Further updated by Martyn Welch <martyn.welch@ge.com>
+- * Copyright 2009 GE Intelligent Platforms Embedded Systems, Inc.
+- *
+- * Derived from ca91c042.h by Michael Wyrick
+- */
+-
+-#ifndef _CA91CX42_H
+-#define _CA91CX42_H
+-
+-#ifndef	PCI_VENDOR_ID_TUNDRA
+-#define	PCI_VENDOR_ID_TUNDRA 0x10e3
+-#endif
+-
+-#ifndef	PCI_DEVICE_ID_TUNDRA_CA91C142
+-#define	PCI_DEVICE_ID_TUNDRA_CA91C142 0x0000
+-#endif
+-
+-/*
+- *  Define the number of each that the CA91C142 supports.
+- */
+-#define CA91C142_MAX_MASTER		8	/* Max Master Windows */
+-#define CA91C142_MAX_SLAVE		8	/* Max Slave Windows */
+-#define CA91C142_MAX_DMA		1	/* Max DMA Controllers */
+-#define CA91C142_MAX_MAILBOX		4	/* Max Mail Box registers */
+-
+-/* Structure used to hold driver specific information */
+-struct ca91cx42_driver {
+-	void __iomem *base;	/* Base Address of device registers */
+-	wait_queue_head_t dma_queue;
+-	wait_queue_head_t iack_queue;
+-	wait_queue_head_t mbox_queue;
+-	void (*lm_callback[4])(void *);	/* Called in interrupt handler */
+-	void *lm_data[4];
+-	void *crcsr_kernel;
+-	dma_addr_t crcsr_bus;
+-	struct mutex vme_rmw;		/* Only one RMW cycle at a time */
+-	struct mutex vme_int;		/*
+-					 * Only one VME interrupt can be
+-					 * generated at a time, provide locking
+-					 */
+-};
+-
+-/* See Page 2-77 in the Universe User Manual */
+-struct ca91cx42_dma_descriptor {
+-	unsigned int dctl;      /* DMA Control */
+-	unsigned int dtbc;      /* Transfer Byte Count */
+-	unsigned int dla;       /* PCI Address */
+-	unsigned int res1;      /* Reserved */
+-	unsigned int dva;       /* Vme Address */
+-	unsigned int res2;      /* Reserved */
+-	unsigned int dcpp;      /* Pointer to Numed Cmd Packet with rPN */
+-	unsigned int res3;      /* Reserved */
+-};
+-
+-struct ca91cx42_dma_entry {
+-	struct ca91cx42_dma_descriptor descriptor;
+-	struct list_head list;
+-};
+-
+-/* Universe Register Offsets */
+-/* general PCI configuration registers */
+-#define CA91CX42_PCI_ID		0x000
+-#define CA91CX42_PCI_CSR	0x004
+-#define CA91CX42_PCI_CLASS	0x008
+-#define CA91CX42_PCI_MISC0	0x00C
+-#define CA91CX42_PCI_BS		0x010
+-#define CA91CX42_PCI_MISC1	0x03C
+-
+-#define LSI0_CTL		0x0100
+-#define LSI0_BS			0x0104
+-#define LSI0_BD			0x0108
+-#define LSI0_TO			0x010C
+-
+-#define LSI1_CTL		0x0114
+-#define LSI1_BS			0x0118
+-#define LSI1_BD			0x011C
+-#define LSI1_TO			0x0120
+-
+-#define LSI2_CTL		0x0128
+-#define LSI2_BS			0x012C
+-#define LSI2_BD			0x0130
+-#define LSI2_TO			0x0134
+-
+-#define LSI3_CTL		0x013C
+-#define LSI3_BS			0x0140
+-#define LSI3_BD			0x0144
+-#define LSI3_TO			0x0148
+-
+-#define LSI4_CTL		0x01A0
+-#define LSI4_BS			0x01A4
+-#define LSI4_BD			0x01A8
+-#define LSI4_TO			0x01AC
+-
+-#define LSI5_CTL		0x01B4
+-#define LSI5_BS			0x01B8
+-#define LSI5_BD			0x01BC
+-#define LSI5_TO			0x01C0
+-
+-#define LSI6_CTL		0x01C8
+-#define LSI6_BS			0x01CC
+-#define LSI6_BD			0x01D0
+-#define LSI6_TO			0x01D4
+-
+-#define LSI7_CTL		0x01DC
+-#define LSI7_BS			0x01E0
+-#define LSI7_BD			0x01E4
+-#define LSI7_TO			0x01E8
+-
+-static const int CA91CX42_LSI_CTL[] = { LSI0_CTL, LSI1_CTL, LSI2_CTL, LSI3_CTL,
+-				LSI4_CTL, LSI5_CTL, LSI6_CTL, LSI7_CTL };
+-
+-static const int CA91CX42_LSI_BS[] = { LSI0_BS, LSI1_BS, LSI2_BS, LSI3_BS,
+-				LSI4_BS, LSI5_BS, LSI6_BS, LSI7_BS };
+-
+-static const int CA91CX42_LSI_BD[] = { LSI0_BD, LSI1_BD, LSI2_BD, LSI3_BD,
+-				LSI4_BD, LSI5_BD, LSI6_BD, LSI7_BD };
+-
+-static const int CA91CX42_LSI_TO[] = { LSI0_TO, LSI1_TO, LSI2_TO, LSI3_TO,
+-				LSI4_TO, LSI5_TO, LSI6_TO, LSI7_TO };
+-
+-#define SCYC_CTL		0x0170
+-#define SCYC_ADDR		0x0174
+-#define SCYC_EN			0x0178
+-#define SCYC_CMP		0x017C
+-#define SCYC_SWP		0x0180
+-#define LMISC			0x0184
+-#define SLSI		        0x0188
+-#define L_CMDERR		0x018C
+-#define LAERR		        0x0190
+-
+-#define DCTL		        0x0200
+-#define DTBC		        0x0204
+-#define DLA			0x0208
+-#define DVA			0x0210
+-#define DCPP		        0x0218
+-#define DGCS		        0x0220
+-#define D_LLUE			0x0224
+-
+-#define LINT_EN			0x0300
+-#define LINT_STAT		0x0304
+-#define LINT_MAP0		0x0308
+-#define LINT_MAP1		0x030C
+-#define VINT_EN			0x0310
+-#define VINT_STAT		0x0314
+-#define VINT_MAP0		0x0318
+-#define VINT_MAP1		0x031C
+-#define STATID			0x0320
+-
+-#define V1_STATID		0x0324
+-#define V2_STATID		0x0328
+-#define V3_STATID		0x032C
+-#define V4_STATID		0x0330
+-#define V5_STATID		0x0334
+-#define V6_STATID		0x0338
+-#define V7_STATID		0x033C
+-
+-static const int CA91CX42_V_STATID[8] = { 0, V1_STATID, V2_STATID, V3_STATID,
+-					V4_STATID, V5_STATID, V6_STATID,
+-					V7_STATID };
+-
+-#define LINT_MAP2		0x0340
+-#define VINT_MAP2		0x0344
+-
+-#define MBOX0			0x0348
+-#define MBOX1			0x034C
+-#define MBOX2			0x0350
+-#define MBOX3			0x0354
+-#define SEMA0			0x0358
+-#define SEMA1			0x035C
+-
+-#define MAST_CTL		0x0400
+-#define MISC_CTL		0x0404
+-#define MISC_STAT		0x0408
+-#define USER_AM			0x040C
+-
+-#define VSI0_CTL		0x0F00
+-#define VSI0_BS			0x0F04
+-#define VSI0_BD			0x0F08
+-#define VSI0_TO			0x0F0C
+-
+-#define VSI1_CTL		0x0F14
+-#define VSI1_BS			0x0F18
+-#define VSI1_BD			0x0F1C
+-#define VSI1_TO			0x0F20
+-
+-#define VSI2_CTL		0x0F28
+-#define VSI2_BS			0x0F2C
+-#define VSI2_BD			0x0F30
+-#define VSI2_TO			0x0F34
+-
+-#define VSI3_CTL		0x0F3C
+-#define VSI3_BS			0x0F40
+-#define VSI3_BD			0x0F44
+-#define VSI3_TO			0x0F48
+-
+-#define LM_CTL			0x0F64
+-#define LM_BS			0x0F68
+-
+-#define VRAI_CTL		0x0F70
+-
+-#define VRAI_BS			0x0F74
+-#define VCSR_CTL		0x0F80
+-#define VCSR_TO			0x0F84
+-#define V_AMERR			0x0F88
+-#define VAERR			0x0F8C
+-
+-#define VSI4_CTL		0x0F90
+-#define VSI4_BS			0x0F94
+-#define VSI4_BD			0x0F98
+-#define VSI4_TO			0x0F9C
+-
+-#define VSI5_CTL		0x0FA4
+-#define VSI5_BS			0x0FA8
+-#define VSI5_BD			0x0FAC
+-#define VSI5_TO			0x0FB0
+-
+-#define VSI6_CTL		0x0FB8
+-#define VSI6_BS			0x0FBC
+-#define VSI6_BD			0x0FC0
+-#define VSI6_TO			0x0FC4
+-
+-#define VSI7_CTL		0x0FCC
+-#define VSI7_BS			0x0FD0
+-#define VSI7_BD			0x0FD4
+-#define VSI7_TO			0x0FD8
+-
+-static const int CA91CX42_VSI_CTL[] = { VSI0_CTL, VSI1_CTL, VSI2_CTL, VSI3_CTL,
+-				VSI4_CTL, VSI5_CTL, VSI6_CTL, VSI7_CTL };
+-
+-static const int CA91CX42_VSI_BS[] = { VSI0_BS, VSI1_BS, VSI2_BS, VSI3_BS,
+-				VSI4_BS, VSI5_BS, VSI6_BS, VSI7_BS };
+-
+-static const int CA91CX42_VSI_BD[] = { VSI0_BD, VSI1_BD, VSI2_BD, VSI3_BD,
+-				VSI4_BD, VSI5_BD, VSI6_BD, VSI7_BD };
+-
+-static const int CA91CX42_VSI_TO[] = { VSI0_TO, VSI1_TO, VSI2_TO, VSI3_TO,
+-				VSI4_TO, VSI5_TO, VSI6_TO, VSI7_TO };
+-
+-#define VCSR_CLR		0x0FF4
+-#define VCSR_SET		0x0FF8
+-#define VCSR_BS			0x0FFC
+-
+-/*
+- * PCI Class Register
+- * offset 008
+- */
+-#define CA91CX42_BM_PCI_CLASS_BASE          0xFF000000
+-#define CA91CX42_OF_PCI_CLASS_BASE          24
+-#define CA91CX42_BM_PCI_CLASS_SUB           0x00FF0000
+-#define CA91CX42_OF_PCI_CLASS_SUB           16
+-#define CA91CX42_BM_PCI_CLASS_PROG          0x0000FF00
+-#define CA91CX42_OF_PCI_CLASS_PROG          8
+-#define CA91CX42_BM_PCI_CLASS_RID           0x000000FF
+-#define CA91CX42_OF_PCI_CLASS_RID           0
+-
+-#define CA91CX42_OF_PCI_CLASS_RID_UNIVERSE_I 0
+-#define CA91CX42_OF_PCI_CLASS_RID_UNIVERSE_II 1
+-
+-/*
+- * PCI Misc Register
+- * offset 00C
+- */
+-#define CA91CX42_BM_PCI_MISC0_BISTC         0x80000000
+-#define CA91CX42_BM_PCI_MISC0_SBIST         0x60000000
+-#define CA91CX42_BM_PCI_MISC0_CCODE         0x0F000000
+-#define CA91CX42_BM_PCI_MISC0_MFUNCT        0x00800000
+-#define CA91CX42_BM_PCI_MISC0_LAYOUT        0x007F0000
+-#define CA91CX42_BM_PCI_MISC0_LTIMER        0x0000FF00
+-#define CA91CX42_OF_PCI_MISC0_LTIMER        8
+-
+-
+-/*
+- * LSI Control Register
+- * offset  100
+- */
+-#define CA91CX42_LSI_CTL_EN		(1<<31)
+-#define CA91CX42_LSI_CTL_PWEN		(1<<30)
+-
+-#define CA91CX42_LSI_CTL_VDW_M		(3<<22)
+-#define CA91CX42_LSI_CTL_VDW_D8		0
+-#define CA91CX42_LSI_CTL_VDW_D16	(1<<22)
+-#define CA91CX42_LSI_CTL_VDW_D32	(1<<23)
+-#define CA91CX42_LSI_CTL_VDW_D64	(3<<22)
+-
+-#define CA91CX42_LSI_CTL_VAS_M		(7<<16)
+-#define CA91CX42_LSI_CTL_VAS_A16	0
+-#define CA91CX42_LSI_CTL_VAS_A24	(1<<16)
+-#define CA91CX42_LSI_CTL_VAS_A32	(1<<17)
+-#define CA91CX42_LSI_CTL_VAS_CRCSR	(5<<16)
+-#define CA91CX42_LSI_CTL_VAS_USER1	(3<<17)
+-#define CA91CX42_LSI_CTL_VAS_USER2	(7<<16)
+-
+-#define CA91CX42_LSI_CTL_PGM_M		(1<<14)
+-#define CA91CX42_LSI_CTL_PGM_DATA	0
+-#define CA91CX42_LSI_CTL_PGM_PGM	(1<<14)
+-
+-#define CA91CX42_LSI_CTL_SUPER_M	(1<<12)
+-#define CA91CX42_LSI_CTL_SUPER_NPRIV	0
+-#define CA91CX42_LSI_CTL_SUPER_SUPR	(1<<12)
+-
+-#define CA91CX42_LSI_CTL_VCT_M		(1<<8)
+-#define CA91CX42_LSI_CTL_VCT_BLT	(1<<8)
+-#define CA91CX42_LSI_CTL_VCT_MBLT	(1<<8)
+-#define CA91CX42_LSI_CTL_LAS		(1<<0)
+-
+-/*
+- * SCYC_CTL Register
+- * offset 178
+- */
+-#define CA91CX42_SCYC_CTL_LAS_PCIMEM	0
+-#define CA91CX42_SCYC_CTL_LAS_PCIIO	(1<<2)
+-
+-#define CA91CX42_SCYC_CTL_CYC_M		(3<<0)
+-#define CA91CX42_SCYC_CTL_CYC_RMW	(1<<0)
+-#define CA91CX42_SCYC_CTL_CYC_ADOH	(1<<1)
+-
+-/*
+- * LMISC Register
+- * offset  184
+- */
+-#define CA91CX42_BM_LMISC_CRT               0xF0000000
+-#define CA91CX42_OF_LMISC_CRT               28
+-#define CA91CX42_BM_LMISC_CWT               0x0F000000
+-#define CA91CX42_OF_LMISC_CWT               24
+-
+-/*
+- * SLSI Register
+- * offset  188
+- */
+-#define CA91CX42_BM_SLSI_EN                 0x80000000
+-#define CA91CX42_BM_SLSI_PWEN               0x40000000
+-#define CA91CX42_BM_SLSI_VDW                0x00F00000
+-#define CA91CX42_OF_SLSI_VDW                20
+-#define CA91CX42_BM_SLSI_PGM                0x0000F000
+-#define CA91CX42_OF_SLSI_PGM                12
+-#define CA91CX42_BM_SLSI_SUPER              0x00000F00
+-#define CA91CX42_OF_SLSI_SUPER              8
+-#define CA91CX42_BM_SLSI_BS                 0x000000F6
+-#define CA91CX42_OF_SLSI_BS                 2
+-#define CA91CX42_BM_SLSI_LAS                0x00000003
+-#define CA91CX42_OF_SLSI_LAS                0
+-#define CA91CX42_BM_SLSI_RESERVED           0x3F0F0000
+-
+-/*
+- * DCTL Register
+- * offset 200
+- */
+-#define CA91CX42_DCTL_L2V		(1<<31)
+-#define CA91CX42_DCTL_VDW_M		(3<<22)
+-#define CA91CX42_DCTL_VDW_D8		0
+-#define CA91CX42_DCTL_VDW_D16		(1<<22)
+-#define CA91CX42_DCTL_VDW_D32		(1<<23)
+-#define CA91CX42_DCTL_VDW_D64		(3<<22)
+-
+-#define CA91CX42_DCTL_VAS_M		(7<<16)
+-#define CA91CX42_DCTL_VAS_A16		0
+-#define CA91CX42_DCTL_VAS_A24		(1<<16)
+-#define CA91CX42_DCTL_VAS_A32		(1<<17)
+-#define CA91CX42_DCTL_VAS_USER1		(3<<17)
+-#define CA91CX42_DCTL_VAS_USER2		(7<<16)
+-
+-#define CA91CX42_DCTL_PGM_M		(1<<14)
+-#define CA91CX42_DCTL_PGM_DATA		0
+-#define CA91CX42_DCTL_PGM_PGM		(1<<14)
+-
+-#define CA91CX42_DCTL_SUPER_M		(1<<12)
+-#define CA91CX42_DCTL_SUPER_NPRIV	0
+-#define CA91CX42_DCTL_SUPER_SUPR	(1<<12)
+-
+-#define CA91CX42_DCTL_VCT_M		(1<<8)
+-#define CA91CX42_DCTL_VCT_BLT		(1<<8)
+-#define CA91CX42_DCTL_LD64EN		(1<<7)
+-
+-/*
+- * DCPP Register
+- * offset 218
+- */
+-#define CA91CX42_DCPP_M			0xf
+-#define CA91CX42_DCPP_NULL		(1<<0)
+-
+-/*
+- * DMA General Control/Status Register (DGCS)
+- * offset 220
+- */
+-#define CA91CX42_DGCS_GO		(1<<31)
+-#define CA91CX42_DGCS_STOP_REQ		(1<<30)
+-#define CA91CX42_DGCS_HALT_REQ		(1<<29)
+-#define CA91CX42_DGCS_CHAIN		(1<<27)
+-
+-#define CA91CX42_DGCS_VON_M		(7<<20)
+-
+-#define CA91CX42_DGCS_VOFF_M		(0xf<<16)
+-
+-#define CA91CX42_DGCS_ACT		(1<<15)
+-#define CA91CX42_DGCS_STOP		(1<<14)
+-#define CA91CX42_DGCS_HALT		(1<<13)
+-#define CA91CX42_DGCS_DONE		(1<<11)
+-#define CA91CX42_DGCS_LERR		(1<<10)
+-#define CA91CX42_DGCS_VERR		(1<<9)
+-#define CA91CX42_DGCS_PERR		(1<<8)
+-#define CA91CX42_DGCS_INT_STOP		(1<<6)
+-#define CA91CX42_DGCS_INT_HALT		(1<<5)
+-#define CA91CX42_DGCS_INT_DONE		(1<<3)
+-#define CA91CX42_DGCS_INT_LERR		(1<<2)
+-#define CA91CX42_DGCS_INT_VERR		(1<<1)
+-#define CA91CX42_DGCS_INT_PERR		(1<<0)
+-
+-/*
+- * PCI Interrupt Enable Register
+- * offset  300
+- */
+-#define CA91CX42_LINT_LM3		0x00800000
+-#define CA91CX42_LINT_LM2		0x00400000
+-#define CA91CX42_LINT_LM1		0x00200000
+-#define CA91CX42_LINT_LM0		0x00100000
+-#define CA91CX42_LINT_MBOX3		0x00080000
+-#define CA91CX42_LINT_MBOX2		0x00040000
+-#define CA91CX42_LINT_MBOX1		0x00020000
+-#define CA91CX42_LINT_MBOX0		0x00010000
+-#define CA91CX42_LINT_ACFAIL		0x00008000
+-#define CA91CX42_LINT_SYSFAIL		0x00004000
+-#define CA91CX42_LINT_SW_INT		0x00002000
+-#define CA91CX42_LINT_SW_IACK		0x00001000
+-
+-#define CA91CX42_LINT_VERR		0x00000400
+-#define CA91CX42_LINT_LERR		0x00000200
+-#define CA91CX42_LINT_DMA		0x00000100
+-#define CA91CX42_LINT_VIRQ7		0x00000080
+-#define CA91CX42_LINT_VIRQ6		0x00000040
+-#define CA91CX42_LINT_VIRQ5		0x00000020
+-#define CA91CX42_LINT_VIRQ4		0x00000010
+-#define CA91CX42_LINT_VIRQ3		0x00000008
+-#define CA91CX42_LINT_VIRQ2		0x00000004
+-#define CA91CX42_LINT_VIRQ1		0x00000002
+-#define CA91CX42_LINT_VOWN		0x00000001
+-
+-static const int CA91CX42_LINT_VIRQ[] = { 0, CA91CX42_LINT_VIRQ1,
+-				CA91CX42_LINT_VIRQ2, CA91CX42_LINT_VIRQ3,
+-				CA91CX42_LINT_VIRQ4, CA91CX42_LINT_VIRQ5,
+-				CA91CX42_LINT_VIRQ6, CA91CX42_LINT_VIRQ7 };
+-
+-#define CA91CX42_LINT_MBOX		0x000F0000
+-
+-static const int CA91CX42_LINT_LM[] = { CA91CX42_LINT_LM0, CA91CX42_LINT_LM1,
+-					CA91CX42_LINT_LM2, CA91CX42_LINT_LM3 };
+-
+-/*
+- * MAST_CTL Register
+- * offset  400
+- */
+-#define CA91CX42_BM_MAST_CTL_MAXRTRY        0xF0000000
+-#define CA91CX42_OF_MAST_CTL_MAXRTRY        28
+-#define CA91CX42_BM_MAST_CTL_PWON           0x0F000000
+-#define CA91CX42_OF_MAST_CTL_PWON           24
+-#define CA91CX42_BM_MAST_CTL_VRL            0x00C00000
+-#define CA91CX42_OF_MAST_CTL_VRL            22
+-#define CA91CX42_BM_MAST_CTL_VRM            0x00200000
+-#define CA91CX42_BM_MAST_CTL_VREL           0x00100000
+-#define CA91CX42_BM_MAST_CTL_VOWN           0x00080000
+-#define CA91CX42_BM_MAST_CTL_VOWN_ACK       0x00040000
+-#define CA91CX42_BM_MAST_CTL_PABS           0x00001000
+-#define CA91CX42_BM_MAST_CTL_BUS_NO         0x0000000F
+-#define CA91CX42_OF_MAST_CTL_BUS_NO         0
+-
+-/*
+- * MISC_CTL Register
+- * offset  404
+- */
+-#define CA91CX42_MISC_CTL_VBTO           0xF0000000
+-#define CA91CX42_MISC_CTL_VARB           0x04000000
+-#define CA91CX42_MISC_CTL_VARBTO         0x03000000
+-#define CA91CX42_MISC_CTL_SW_LRST        0x00800000
+-#define CA91CX42_MISC_CTL_SW_SRST        0x00400000
+-#define CA91CX42_MISC_CTL_BI             0x00100000
+-#define CA91CX42_MISC_CTL_ENGBI          0x00080000
+-#define CA91CX42_MISC_CTL_RESCIND        0x00040000
+-#define CA91CX42_MISC_CTL_SYSCON         0x00020000
+-#define CA91CX42_MISC_CTL_V64AUTO        0x00010000
+-#define CA91CX42_MISC_CTL_RESERVED       0x0820FFFF
+-
+-#define CA91CX42_OF_MISC_CTL_VARBTO         24
+-#define CA91CX42_OF_MISC_CTL_VBTO           28
+-
+-/*
+- * MISC_STAT Register
+- * offset  408
+- */
+-#define CA91CX42_BM_MISC_STAT_ENDIAN        0x80000000
+-#define CA91CX42_BM_MISC_STAT_LCLSIZE       0x40000000
+-#define CA91CX42_BM_MISC_STAT_DY4AUTO       0x08000000
+-#define CA91CX42_BM_MISC_STAT_MYBBSY        0x00200000
+-#define CA91CX42_BM_MISC_STAT_DY4DONE       0x00080000
+-#define CA91CX42_BM_MISC_STAT_TXFE          0x00040000
+-#define CA91CX42_BM_MISC_STAT_RXFE          0x00020000
+-#define CA91CX42_BM_MISC_STAT_DY4AUTOID     0x0000FF00
+-#define CA91CX42_OF_MISC_STAT_DY4AUTOID     8
+-
+-/*
+- * VSI Control Register
+- * offset  F00
+- */
+-#define CA91CX42_VSI_CTL_EN		(1<<31)
+-#define CA91CX42_VSI_CTL_PWEN		(1<<30)
+-#define CA91CX42_VSI_CTL_PREN		(1<<29)
+-
+-#define CA91CX42_VSI_CTL_PGM_M		(3<<22)
+-#define CA91CX42_VSI_CTL_PGM_DATA	(1<<22)
+-#define CA91CX42_VSI_CTL_PGM_PGM	(1<<23)
+-
+-#define CA91CX42_VSI_CTL_SUPER_M	(3<<20)
+-#define CA91CX42_VSI_CTL_SUPER_NPRIV	(1<<20)
+-#define CA91CX42_VSI_CTL_SUPER_SUPR	(1<<21)
+-
+-#define CA91CX42_VSI_CTL_VAS_M		(7<<16)
+-#define CA91CX42_VSI_CTL_VAS_A16	0
+-#define CA91CX42_VSI_CTL_VAS_A24	(1<<16)
+-#define CA91CX42_VSI_CTL_VAS_A32	(1<<17)
+-#define CA91CX42_VSI_CTL_VAS_USER1	(3<<17)
+-#define CA91CX42_VSI_CTL_VAS_USER2	(7<<16)
+-
+-#define CA91CX42_VSI_CTL_LD64EN		(1<<7)
+-#define CA91CX42_VSI_CTL_LLRMW		(1<<6)
+-
+-#define CA91CX42_VSI_CTL_LAS_M		(3<<0)
+-#define CA91CX42_VSI_CTL_LAS_PCI_MS	0
+-#define CA91CX42_VSI_CTL_LAS_PCI_IO	(1<<0)
+-#define CA91CX42_VSI_CTL_LAS_PCI_CONF	(1<<1)
+-
+-/* LM_CTL Register
+- * offset  F64
+- */
+-#define CA91CX42_LM_CTL_EN		(1<<31)
+-#define CA91CX42_LM_CTL_PGM		(1<<23)
+-#define CA91CX42_LM_CTL_DATA		(1<<22)
+-#define CA91CX42_LM_CTL_SUPR		(1<<21)
+-#define CA91CX42_LM_CTL_NPRIV		(1<<20)
+-#define CA91CX42_LM_CTL_AS_M		(7<<16)
+-#define CA91CX42_LM_CTL_AS_A16		0
+-#define CA91CX42_LM_CTL_AS_A24		(1<<16)
+-#define CA91CX42_LM_CTL_AS_A32		(1<<17)
+-
+-/*
+- * VRAI_CTL Register
+- * offset  F70
+- */
+-#define CA91CX42_BM_VRAI_CTL_EN             0x80000000
+-#define CA91CX42_BM_VRAI_CTL_PGM            0x00C00000
+-#define CA91CX42_OF_VRAI_CTL_PGM            22
+-#define CA91CX42_BM_VRAI_CTL_SUPER          0x00300000
+-#define CA91CX42_OF_VRAI_CTL_SUPER          20
+-#define CA91CX42_BM_VRAI_CTL_VAS            0x00030000
+-#define CA91CX42_OF_VRAI_CTL_VAS            16
+-
+-/* VCSR_CTL Register
+- * offset F80
+- */
+-#define CA91CX42_VCSR_CTL_EN		(1<<31)
+-
+-#define CA91CX42_VCSR_CTL_LAS_M		(3<<0)
+-#define CA91CX42_VCSR_CTL_LAS_PCI_MS	0
+-#define CA91CX42_VCSR_CTL_LAS_PCI_IO	(1<<0)
+-#define CA91CX42_VCSR_CTL_LAS_PCI_CONF	(1<<1)
+-
+-/* VCSR_BS Register
+- * offset FFC
+- */
+-#define CA91CX42_VCSR_BS_SLOT_M		(0x1F<<27)
+-
+-#endif /* _CA91CX42_H */
 -- 
 2.29.2
 
