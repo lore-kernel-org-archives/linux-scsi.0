@@ -2,98 +2,115 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73045C43334
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jun 2022 13:16:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56E3CCCA473
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jun 2022 15:00:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238668AbiFFNQZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Jun 2022 09:16:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37924 "EHLO
+        id S240190AbiFFPAm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Jun 2022 11:00:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43868 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238656AbiFFNQY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jun 2022 09:16:24 -0400
-Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3A2337A9E;
-        Mon,  6 Jun 2022 06:16:23 -0700 (PDT)
-Received: by mail-pj1-f52.google.com with SMTP id d12-20020a17090abf8c00b001e2eb431ce4so12559517pjs.1;
-        Mon, 06 Jun 2022 06:16:23 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=haH1xGwhj/wZTEqY+orLGoeCGd0tL/KLJasnsNbhTtE=;
-        b=jdjkMrbtmFWn6pBFRLcUYvSZ7ufVSrB6PkFz8aJmJXo35hzO/heuTJOebe4JKhlIkX
-         XqGOmuGd82PYYYTiWb/YokVeVp9bMORP2y2WktgvrVdrzNIcOKpY41UxMLMZufsZuBJa
-         lp5u+oDwoqoAgny4Ubs1ej6Bp5r0z1DtT7wIFUpGQb7Xbp22CXhytMCN4hagfQweEjlD
-         pwAGqQniu6vEOESbJgbEEvUAI/Vf+CZOAUExqFkbKLfOUYbGQk8kohZuLGUQ0TSGATbo
-         D5R6a6S/K0EdtHF7JuJFoegI8Ecf9IlNaT6G5TEu/9MyjKLa/IqorwXsZTZbI92+Uu91
-         qE1A==
-X-Gm-Message-State: AOAM532sgX0ZOVKDpyB5OEdlOEedKClChojfqs4ikZxAZwOAsCtuAPX/
-        SWbNcOT5wF5XsIicmxGK30U=
-X-Google-Smtp-Source: ABdhPJzllokqDgNkPKCfrAp7djJclpbLsYrv65dsb7FFR7bMvYPum2ICUju4mffaQ35qoAmnj7c7yQ==
-X-Received: by 2002:a17:90b:4b0f:b0:1e8:53ac:ec51 with SMTP id lx15-20020a17090b4b0f00b001e853acec51mr13717685pjb.78.1654521382753;
-        Mon, 06 Jun 2022 06:16:22 -0700 (PDT)
-Received: from [192.168.51.14] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id bf7-20020a170902b90700b00163c6ac211fsm10478642plb.111.2022.06.06.06.16.20
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 06 Jun 2022 06:16:21 -0700 (PDT)
-Message-ID: <2677b02e-b2a3-7c79-2e62-acf1acbc8ff0@acm.org>
-Date:   Mon, 6 Jun 2022 06:16:20 -0700
+        with ESMTP id S240227AbiFFPAh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jun 2022 11:00:37 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59E7F3202E0;
+        Mon,  6 Jun 2022 08:00:36 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 113B3B81A7D;
+        Mon,  6 Jun 2022 15:00:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C323AC3411C;
+        Mon,  6 Jun 2022 15:00:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1654527633;
+        bh=tFvHiguChguydwXgPPk94DDRc3Gna/VqX+wPqkO+GTs=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=JA16jqbQeuWcQ2BdBv+Na1yw2Fsv4ZNsgyX0Rir5y0HP5v8ayb+DbcrlkdEodaQHA
+         p5mVtsR0j5VssOuJq1SuTacSyYnh9FuWA7MuF+LpD4B/1NPTEyhQEMmpNVLQQcrRkm
+         U2oDsmygP0mrNelWLqRVw+a46FbnSUaK6OXCijFA2qXWJTMua6Yk019a2K1ckpmqw6
+         r3a9iBGJ/qoKmfY5S0H8iPxHqsHuzCugiFQwVIbANF//xPXt1pHymPJGdfeCGSHFC8
+         2jWVp9Out3KIzaXURE3QhE/Hlijm7XMMwmZKLO4AZsYhWDtxtBR5/CLwG39yZO+OFL
+         rj3ILMq9jcjfg==
+Received: by mail-yw1-f178.google.com with SMTP id 00721157ae682-30c1c9b9b6cso145534197b3.13;
+        Mon, 06 Jun 2022 08:00:33 -0700 (PDT)
+X-Gm-Message-State: AOAM531X2ycY+QdFep2znvfDFXOHKkr0uVcHvUqbMu6HWKPsn3bM8y6k
+        V+C3ufxUQxX2XIbSEZcDyYFYPupVVm+IVJ5MREk=
+X-Google-Smtp-Source: ABdhPJyPD1+vFTL7zI7MOAWlVQpzZfCC/ogYQOnb9fs+BnJ9OUYDclIzyORrk2d04n90LZcBaiPMBu6CLlPqCKGn2dQ=
+X-Received: by 2002:a81:ad7:0:b0:2e6:84de:3223 with SMTP id
+ 206-20020a810ad7000000b002e684de3223mr26970693ywk.209.1654527628777; Mon, 06
+ Jun 2022 08:00:28 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.0
-Subject: Re: [RESEND PATCH] scsi: ufs: sysfs: support writing boot_lun attr
-Content-Language: en-US
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Avri Altman <Avri.Altman@wdc.com>,
-        Caleb Connolly <caleb.connolly@linaro.org>,
-        "a5b6@riseup.net" <a5b6@riseup.net>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc:     "~postmarketos/upstreaming@lists.sr.ht" 
-        <~postmarketos/upstreaming@lists.sr.ht>,
-        "phone-devel@vger.kernel.org" <phone-devel@vger.kernel.org>
-References: <20220525164013.93748-1-a5b6@riseup.net>
- <DM6PR04MB65750969ACD36EEEB48374DFFCD69@DM6PR04MB6575.namprd04.prod.outlook.com>
- <8d25171a-5d86-9acc-0f94-1a3c6efdb360@riseup.net>
- <DM6PR04MB65752422396C86EAD4591701FCD89@DM6PR04MB6575.namprd04.prod.outlook.com>
- <a7f46ad1-6d9e-a38e-31cc-29fddfa2b496@linaro.org>
- <DM6PR04MB65751A3B1D0BA4467CADDA93FCDF9@DM6PR04MB6575.namprd04.prod.outlook.com>
- <a4746c67-fa74-8af1-3f2d-7853e9fae8a6@acm.org>
- <3c400db6-d251-c4bd-b019-b9dc1d807212@opensource.wdc.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <3c400db6-d251-c4bd-b019-b9dc1d807212@opensource.wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20220606084109.4108188-1-arnd@kernel.org> <20220606084109.4108188-6-arnd@kernel.org>
+ <alpine.DEB.2.21.2206061057060.19680@angie.orcam.me.uk>
+In-Reply-To: <alpine.DEB.2.21.2206061057060.19680@angie.orcam.me.uk>
+From:   Arnd Bergmann <arnd@kernel.org>
+Date:   Mon, 6 Jun 2022 17:00:11 +0200
+X-Gmail-Original-Message-ID: <CAK8P3a0pqQHMucGgZDcLpoWMhoyU5yppXK=8y4Wsn0QL7=uD0g@mail.gmail.com>
+Message-ID: <CAK8P3a0pqQHMucGgZDcLpoWMhoyU5yppXK=8y4Wsn0QL7=uD0g@mail.gmail.com>
+Subject: Re: [PATCH 5/6] scsi: remove stale BusLogic driver
+To:     "Maciej W. Rozycki" <macro@orcam.me.uk>
+Cc:     Arnd Bergmann <arnd@arndb.de>, Jakub Kicinski <kuba@kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        "open list:IOMMU DRIVERS" <iommu@lists.linux-foundation.org>,
+        Khalid Aziz <khalid@gonehiking.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Manohar Vanga <manohar.vanga@gmail.com>,
+        Martyn Welch <martyn@welchs.me.uk>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        linux-arch <linux-arch@vger.kernel.org>,
+        alpha <linux-alpha@vger.kernel.org>,
+        linux-m68k <linux-m68k@lists.linux-m68k.org>,
+        Parisc List <linux-parisc@vger.kernel.org>,
+        Denis Efremov <efremov@linux.com>,
+        Matt Wang <wwentao@vmware.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/5/22 19:48, Damien Le Moal wrote:
-> On 6/5/22 12:55, Bart Van Assche wrote:
->> On 6/1/22 10:05, Avri Altman wrote:
->>> As a design rule, sysfs attribute files should not be used to make
->>> persistent modifications to a device configuration. This rule applies
->>> to all subsystems and ufs is no different.
->>
->> Hmm ... where does that rule come from? I can't find it in
->> Documentation/admin-guide/sysfs-rules.rst. Did I perhaps overlook something?
-> 
-> I am not aware of any writable sysfs attribute file that can be used to
-> make persistent device configuration changes, at least in storage area.
-> I know of plenty that do change a device setting, but without saving this
-> setting to maintain it across power cycles. Do you know of any such
-> attribute ? I was under the impression that sysfs should not be used to
-> persistently reconfigure a device...
+On Mon, Jun 6, 2022 at 12:40 PM Maciej W. Rozycki <macro@orcam.me.uk> wrote:
+>
+> On Mon, 6 Jun 2022, Arnd Bergmann wrote:
+>
+> > This was in turn fixed in commit 56f396146af2 ("scsi: BusLogic: Fix
+> > 64-bit system enumeration error for Buslogic"), 8 years later.
+> >
+> > The fact that this was found at all is an indication that there are
+> > users, and it seems that Maciej, Matt and Khalid all have access to
+> > this hardware, but if it took eight years to find the problem,
+> > it's likely that nobody actually relies on it.
+>
+>  Umm, I use it with a 32-bit system, so it would be quite an issue for me
+> to discover a problem with 64-bit configurations.  And I quite rely on
+> this system for various stuff too!
 
-I don't think the above is sufficient as an argument to reject a new 
-patch that introduces a sysfs attribute that changes the device 
-configuration.
+Ok, good to know.
 
-Thanks,
+> > Remove it as part of the global virt_to_bus()/bus_to_virt() removal.
+> > If anyone is still interested in keeping this driver, the alternative
+> > is to stop it from using bus_to_virt(), possibly along the lines of
+> > how dpt_i2o gets around the same issue.
+>
+>  Thanks for the pointer and for cc-ing me.  Please refrain from removing
+> the driver at least for this release cycle and let me fix it.
 
-Bart.
+Sure, no problem. It looks like I forgot to actually Cc you on the series
+as I had meant to, glad it reached you anyway.
 
+> It should be easy to mimic what I did for the defza driver: all bus addresses in
+> the DMA API come associated with virtual addresses, so it is just a matter of
+> recording those somewhere for later use rather than trying to mess up with
+> bus addresses to figure out a reverse mapping.
+
+I looked at the defza driver and that one appears simpler to me, as you
+can look up the virtual address from an index, but it's possible I missed
+what you do here. I meant specifically the calculation added by commit
+67af2b060e02 ("[SCSI] dpt_i2o: move from virt_to_bus/bus_to_virt
+to dma_alloc_coherent") in the dpt_i2o driver that can be used to
+compute the virtual address. If something simpler works as well, that
+is of course better.
+
+        Arnd
