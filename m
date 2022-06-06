@@ -2,82 +2,150 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 072E7CCA485
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jun 2022 09:25:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77FBBCCA481
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jun 2022 09:36:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232823AbiFFJZo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Jun 2022 05:25:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58248 "EHLO
+        id S232917AbiFFJgm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Jun 2022 05:36:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46384 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232856AbiFFJZk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jun 2022 05:25:40 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 284F19418A;
-        Mon,  6 Jun 2022 02:25:39 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A1CA261323;
-        Mon,  6 Jun 2022 09:25:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84FA8C385A9;
-        Mon,  6 Jun 2022 09:25:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1654507538;
-        bh=SGyOc8QTUXhFBU0FK2dbWFATxGIrz/5ZeL4pH3h6UnI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=o5+R3V8oO4+EAgAGTpyjUIQqB3KNAeJts/jhrJSGEBRzH1PN9a+gCBfvBwaJfsi0j
-         S+xDAbHwdHZEgYXeWMOFMcC/5op2p7s+cMgBf8QSuvMTb6YuVTYwduPx5uxc+DOYFd
-         fr4c0yZ5gapUx5x3IKS7vTtcG+YZNWc9Hh4gX5Rc=
-Date:   Mon, 6 Jun 2022 11:25:35 +0200
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Arnd Bergmann <arnd@kernel.org>
-Cc:     Arnd Bergmann <arnd@arndb.de>, Jakub Kicinski <kuba@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        iommu@lists.linux-foundation.org,
-        Khalid Aziz <khalid@gonehiking.org>,
-        linux-scsi@vger.kernel.org,
-        Manohar Vanga <manohar.vanga@gmail.com>,
-        Martyn Welch <martyn@welchs.me.uk>,
-        linuxppc-dev@lists.ozlabs.org, linux-arch@vger.kernel.org,
-        linux-alpha@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
-        linux-parisc@vger.kernel.org, Denis Efremov <efremov@linux.com>
-Subject: Re: [PATCH 0/6] phase out CONFIG_VIRT_TO_BUS
-Message-ID: <Yp3ID86TBFxl7qyL@kroah.com>
-References: <20220606084109.4108188-1-arnd@kernel.org>
+        with ESMTP id S232897AbiFFJgi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jun 2022 05:36:38 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02FA41BF177;
+        Mon,  6 Jun 2022 02:36:37 -0700 (PDT)
+Received: from fraeml702-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LGpHz1CYzz67M0J;
+        Mon,  6 Jun 2022 17:35:27 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml702-chm.china.huawei.com (10.206.15.51) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2375.24; Mon, 6 Jun 2022 11:36:34 +0200
+Received: from localhost.localdomain (10.69.192.58) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Mon, 6 Jun 2022 10:36:30 +0100
+From:   John Garry <john.garry@huawei.com>
+To:     <damien.lemoal@opensource.wdc.com>, <joro@8bytes.org>,
+        <will@kernel.org>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <hch@lst.de>,
+        <m.szyprowski@samsung.com>, <robin.murphy@arm.com>
+CC:     <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
+        <linux-scsi@vger.kernel.org>, <liyihang6@hisilicon.com>,
+        <chenxiang66@hisilicon.com>, <thunder.leizhen@huawei.com>,
+        John Garry <john.garry@huawei.com>
+Subject: [PATCH v3 1/4] dma-mapping: Add dma_opt_mapping_size()
+Date:   Mon, 6 Jun 2022 17:30:19 +0800
+Message-ID: <1654507822-168026-2-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
+In-Reply-To: <1654507822-168026-1-git-send-email-john.garry@huawei.com>
+References: <1654507822-168026-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220606084109.4108188-1-arnd@kernel.org>
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Jun 06, 2022 at 10:41:03AM +0200, Arnd Bergmann wrote:
-> From: Arnd Bergmann <arnd@arndb.de>
-> 
-> The virt_to_bus/bus_to_virt interface has been deprecated for
-> decades. After Jakub Kicinski put a lot of work into cleaning out the
-> network drivers using them, there are only a couple of other drivers
-> left, which can all be removed or otherwise cleaned up, to remove the
-> old interface for good.
-> 
-> Any out of tree drivers using virt_to_bus() should be converted to
-> using the dma-mapping interfaces, typically dma_alloc_coherent()
-> or dma_map_single()).
-> 
-> There are a few m68k and ppc32 specific drivers that keep using the
-> interfaces, but these are all guarded with architecture-specific
-> Kconfig dependencies, and are not actually broken.
-> 
-> There are still a number of drivers that are using virt_to_phys()
-> and phys_to_virt() in place of dma-mapping operations, and these
-> are often broken, but they are out of scope for this series.
+Streaming DMA mapping involving an IOMMU may be much slower for larger
+total mapping size. This is because every IOMMU DMA mapping requires an
+IOVA to be allocated and freed. IOVA sizes above a certain limit are not
+cached, which can have a big impact on DMA mapping performance.
 
-I'll take patches 1 and 2 right now through my staging tree if that's
-ok.
+Provide an API for device drivers to know this "optimal" limit, such that
+they may try to produce mapping which don't exceed it.
 
-thanks,
+Signed-off-by: John Garry <john.garry@huawei.com>
+Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+---
+ Documentation/core-api/dma-api.rst |  9 +++++++++
+ include/linux/dma-map-ops.h        |  1 +
+ include/linux/dma-mapping.h        |  5 +++++
+ kernel/dma/mapping.c               | 12 ++++++++++++
+ 4 files changed, 27 insertions(+)
 
-greg k-h
+diff --git a/Documentation/core-api/dma-api.rst b/Documentation/core-api/dma-api.rst
+index 6d6d0edd2d27..b3cd9763d28b 100644
+--- a/Documentation/core-api/dma-api.rst
++++ b/Documentation/core-api/dma-api.rst
+@@ -204,6 +204,15 @@ Returns the maximum size of a mapping for the device. The size parameter
+ of the mapping functions like dma_map_single(), dma_map_page() and
+ others should not be larger than the returned value.
+ 
++::
++
++	size_t
++	dma_opt_mapping_size(struct device *dev);
++
++Returns the maximum optimal size of a mapping for the device. Mapping large
++buffers may take longer so device drivers are advised to limit total DMA
++streaming mappings length to the returned value.
++
+ ::
+ 
+ 	bool
+diff --git a/include/linux/dma-map-ops.h b/include/linux/dma-map-ops.h
+index 0d5b06b3a4a6..98ceba6fa848 100644
+--- a/include/linux/dma-map-ops.h
++++ b/include/linux/dma-map-ops.h
+@@ -69,6 +69,7 @@ struct dma_map_ops {
+ 	int (*dma_supported)(struct device *dev, u64 mask);
+ 	u64 (*get_required_mask)(struct device *dev);
+ 	size_t (*max_mapping_size)(struct device *dev);
++	size_t (*opt_mapping_size)(void);
+ 	unsigned long (*get_merge_boundary)(struct device *dev);
+ };
+ 
+diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
+index dca2b1355bb1..fe3849434b2a 100644
+--- a/include/linux/dma-mapping.h
++++ b/include/linux/dma-mapping.h
+@@ -144,6 +144,7 @@ int dma_set_mask(struct device *dev, u64 mask);
+ int dma_set_coherent_mask(struct device *dev, u64 mask);
+ u64 dma_get_required_mask(struct device *dev);
+ size_t dma_max_mapping_size(struct device *dev);
++size_t dma_opt_mapping_size(struct device *dev);
+ bool dma_need_sync(struct device *dev, dma_addr_t dma_addr);
+ unsigned long dma_get_merge_boundary(struct device *dev);
+ struct sg_table *dma_alloc_noncontiguous(struct device *dev, size_t size,
+@@ -266,6 +267,10 @@ static inline size_t dma_max_mapping_size(struct device *dev)
+ {
+ 	return 0;
+ }
++static inline size_t dma_opt_mapping_size(struct device *dev)
++{
++	return 0;
++}
+ static inline bool dma_need_sync(struct device *dev, dma_addr_t dma_addr)
+ {
+ 	return false;
+diff --git a/kernel/dma/mapping.c b/kernel/dma/mapping.c
+index db7244291b74..1bfe11b1edb6 100644
+--- a/kernel/dma/mapping.c
++++ b/kernel/dma/mapping.c
+@@ -773,6 +773,18 @@ size_t dma_max_mapping_size(struct device *dev)
+ }
+ EXPORT_SYMBOL_GPL(dma_max_mapping_size);
+ 
++size_t dma_opt_mapping_size(struct device *dev)
++{
++	const struct dma_map_ops *ops = get_dma_ops(dev);
++	size_t size = SIZE_MAX;
++
++	if (ops && ops->opt_mapping_size)
++		size = ops->opt_mapping_size();
++
++	return min(dma_max_mapping_size(dev), size);
++}
++EXPORT_SYMBOL_GPL(dma_opt_mapping_size);
++
+ bool dma_need_sync(struct device *dev, dma_addr_t dma_addr)
+ {
+ 	const struct dma_map_ops *ops = get_dma_ops(dev);
+-- 
+2.26.2
+
