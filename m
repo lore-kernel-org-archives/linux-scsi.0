@@ -2,113 +2,59 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F610CCA47E
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jun 2022 07:30:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 065D5C43334
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jun 2022 09:13:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237676AbiFGHaU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Jun 2022 03:30:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57176 "EHLO
+        id S238824AbiFGJNN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Jun 2022 05:13:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60832 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237673AbiFGH37 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jun 2022 03:29:59 -0400
-Received: from mail-qt1-f173.google.com (mail-qt1-f173.google.com [209.85.160.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C589753E33;
-        Tue,  7 Jun 2022 00:29:52 -0700 (PDT)
-Received: by mail-qt1-f173.google.com with SMTP id hf10so12032907qtb.7;
-        Tue, 07 Jun 2022 00:29:52 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=/vvSp91df5DXi30Fd3pExmyOkjiZTMAg5zYSvB9bVbM=;
-        b=eiLVg12zzPiX72BjdOPhRaANtE+XgsbxcszNXFToB/g+H0ddcx5Kv7z31zVrPMQvC5
-         34JoXFomujkj3W7R19Z68M8H8ykwBW5rwf7MOPq5LBKmKw7woSlay3VbOGD5VDDlNOnJ
-         GCj3cG97x7xbZ9nMftvX6Oca2yeFk85W1AGH1nPTLTZr7UycofpqYMzKaurrE14YVaB8
-         rJ8RycPKTxyZjGnkNiMbPIHFXFn9yrbUNctajckt780aBp0xgdmGGUGJoAmLTeeD6g18
-         w7DiyzfUwBNMAtmYGEw9jwoF/OTI+KeBJrlUkMBX+rpt3xMOzvTRe6j5vf0rTc4CvQ7m
-         3m3g==
-X-Gm-Message-State: AOAM531hkkBCDypBgorofVpvwAgqmZEEAuXldx40jzwuvr0F5wSAKH6R
-        4mY1FW8bQpe3kqjTfIePlvjR08JyKZRvCQ==
-X-Google-Smtp-Source: ABdhPJy6/LxYiJvYw6lGXpLiwInrJxNS2/wS/j/jDf1hCzWVUK1aU4p+sy/+LTZGnAZILTzM8KYJ+g==
-X-Received: by 2002:a05:622a:1903:b0:2f3:ddac:436d with SMTP id w3-20020a05622a190300b002f3ddac436dmr20876961qtc.25.1654586990718;
-        Tue, 07 Jun 2022 00:29:50 -0700 (PDT)
-Received: from mail-yb1-f180.google.com (mail-yb1-f180.google.com. [209.85.219.180])
-        by smtp.gmail.com with ESMTPSA id v1-20020a05620a0f0100b006a6a6f148e6sm8902896qkl.17.2022.06.07.00.29.49
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 07 Jun 2022 00:29:50 -0700 (PDT)
-Received: by mail-yb1-f180.google.com with SMTP id e184so29684808ybf.8;
-        Tue, 07 Jun 2022 00:29:49 -0700 (PDT)
-X-Received: by 2002:a25:7307:0:b0:65c:b98a:f592 with SMTP id
- o7-20020a257307000000b0065cb98af592mr28407064ybc.380.1654586989616; Tue, 07
- Jun 2022 00:29:49 -0700 (PDT)
+        with ESMTP id S233281AbiFGJNL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jun 2022 05:13:11 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC64C2E68D
+        for <linux-scsi@vger.kernel.org>; Tue,  7 Jun 2022 02:13:10 -0700 (PDT)
+Date:   Tue, 7 Jun 2022 11:13:07 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1654593188;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=B87XTuKK3j1OKxYFVDvK33/vzcRJ4EbSUl4Gjz7S2ao=;
+        b=bF9xKsfwee82Y+/BEzA/TdITYAs7YrJ6u2990oJ2pKC7Z0d25niZ2dVn9Ll29GqRZf00OC
+        MEOTw0qtsqNwtD4JIN7NNL9P+pxD+WhsbalmIZVcUHYznBWWQBZkpLsw5+kgMc9pzUevFP
+        eDi2hLYAouSnuYHwTuq+AfzOVc/h5/A3QTd3vVs7dZ4eTS6SiFobBMXg4LKQWEekbIAZJV
+        20xCATkB+0+QOMLHxbtA9XhIpWq3kk1canXPs7sKsOXZ1w+/4D0WSa8BGeBWrfjr90BtBm
+        x1Oy5AHzA3nVvalxxp2qAtkG563rTlrhZkrCuHLU/nZG1KOkKnn9FeV9wYz1CQ==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1654593188;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=B87XTuKK3j1OKxYFVDvK33/vzcRJ4EbSUl4Gjz7S2ao=;
+        b=xGKMC9zRRo7L7wK3Z5eKH286gwI9wjxHn0B++4OJ8OUcg14UAvlrFHsV14y8+zBiYeCsFn
+        P0AYaRWIBjDNa5CQ==
+From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To:     Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc:     Davidlohr Bueso <dave@stgolabs.net>, linux-scsi@vger.kernel.org,
+        martin.petersen@oracle.com, ejb@linux.ibm.com, tglx@linutronix.de
+Subject: Re: [PATCH 05/10] scsi/isci: Replace completion_tasklet with
+ threaded irq
+Message-ID: <Yp8Wo/w3l6XtC/MU@linutronix.de>
+References: <20220530231512.9729-1-dave@stgolabs.net>
+ <20220530231512.9729-6-dave@stgolabs.net>
+ <c15b98e3-f1e5-79c9-3581-6b015b476cad@intel.com>
 MIME-Version: 1.0
-References: <20220606084109.4108188-1-arnd@kernel.org> <20220606084109.4108188-7-arnd@kernel.org>
-In-Reply-To: <20220606084109.4108188-7-arnd@kernel.org>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Tue, 7 Jun 2022 09:29:38 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdXi2LkrWSs9=D9tSfhz+YDHB+638F6JdmgQ7V8Gj1ehqQ@mail.gmail.com>
-Message-ID: <CAMuHMdXi2LkrWSs9=D9tSfhz+YDHB+638F6JdmgQ7V8Gj1ehqQ@mail.gmail.com>
-Subject: Re: [PATCH 6/6] arch/*/: remove CONFIG_VIRT_TO_BUS
-To:     Arnd Bergmann <arnd@kernel.org>
-Cc:     Arnd Bergmann <arnd@arndb.de>, Jakub Kicinski <kuba@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Linux IOMMU <iommu@lists.linux-foundation.org>,
-        Khalid Aziz <khalid@gonehiking.org>,
-        scsi <linux-scsi@vger.kernel.org>,
-        Manohar Vanga <manohar.vanga@gmail.com>,
-        Martyn Welch <martyn@welchs.me.uk>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-        Linux-Arch <linux-arch@vger.kernel.org>,
-        alpha <linux-alpha@vger.kernel.org>,
-        linux-m68k <linux-m68k@lists.linux-m68k.org>,
-        Parisc List <linux-parisc@vger.kernel.org>,
-        Denis Efremov <efremov@linux.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <c15b98e3-f1e5-79c9-3581-6b015b476cad@intel.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Jun 6, 2022 at 11:10 AM Arnd Bergmann <arnd@kernel.org> wrote:
-> From: Arnd Bergmann <arnd@arndb.de>
->
-> All architecture-independent users of virt_to_bus() and bus_to_virt()
-> have been fixed to use the dma mapping interfaces or have been
-> removed now.  This means the definitions on most architectures, and the
-> CONFIG_VIRT_TO_BUS symbol are now obsolete and can be removed.
->
-> The only exceptions to this are a few network and scsi drivers for m68k
-> Amiga and VME machines and ppc32 Macintosh. These drivers work correctly
-> with the old interfaces and are probably not worth changing.
->
-> On alpha and parisc, virt_to_bus() were still used in asm/floppy.h.
-> alpha can use isa_virt_to_bus() like x86 does, and parisc can just
-> open-code the virt_to_phys() here, as this is architecture specific
-> code.
->
-> I tried updating the bus-virt-phys-mapping.rst documentation, which
-> started as an email from Linus to explain some details of the Linux-2.0
-> driver interfaces. The bits about virt_to_bus() were declared obsolete
-> backin 2000, and the rest is not all that relevant any more, so in the
-> end I just decided to remove the file completely.
->
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+On 2022-06-06 12:24:22 [+0200], Artur Paszkiewicz wrote:
+> Acked-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 
->  arch/m68k/Kconfig                             |   1 -
->  arch/m68k/include/asm/virtconvert.h           |   4 +-
+Did you see my reply?
 
-Reviewed-by: Geert Uytterhoeven <geert@linux-m68k.org>
-Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Sebastian
