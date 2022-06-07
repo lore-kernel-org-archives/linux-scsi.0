@@ -2,70 +2,79 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BC59C43334
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jun 2022 16:20:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C8AAC43334
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jun 2022 16:45:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344928AbiFGQUy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Jun 2022 12:20:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50586 "EHLO
+        id S1345160AbiFGQp6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Jun 2022 12:45:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56130 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345046AbiFGQU2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jun 2022 12:20:28 -0400
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B49AF101712
-        for <linux-scsi@vger.kernel.org>; Tue,  7 Jun 2022 09:20:27 -0700 (PDT)
-Date:   Tue, 7 Jun 2022 18:20:24 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1654618825;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=J9waIUo2weNXhnQCuvQRDnDISX8b6nBt1JtdasxDEus=;
-        b=jtpFAb+JkMsxQ/hjh4dsksb2yfWeplYfa92DrMBWycNsFjsRonNdrDZVPVAt2QmIckZMUc
-        07akcGtq90/P7uKIEIqKjzzvJYHDGX1f+QxTfcum2bEUPi/2Rrf+sEDZRbDQWr6X6Fg9kv
-        jhEpkizQ2t8rlCIdjPNAaEnTWz8zA7+MGkVX5l/O+5QRpaJIWU2lD6V9v1JZp3XWu3FUZB
-        DG2fESDhTjOMuzpJQdoRpLEPMsaWjPdq0CxjwGzdhgVOiVTkLRtgDQbtJGSsQ+Zz6hSbW4
-        P4cEAFXNeHx177HSOAaTtuFUOu/yty426jZz94oSIBrYovMTjvPpw7Q8ulIwaA==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1654618825;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=J9waIUo2weNXhnQCuvQRDnDISX8b6nBt1JtdasxDEus=;
-        b=U+KEkZwoAl6WD5tMVFqnsMf4l6FanZIiUI0r4YG/FdQBhZ7HBkF1Vn3zgulhvMI/GO5Wqw
-        y5g4ziJn3Qj/3nBQ==
-From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To:     Davidlohr Bueso <dave@stgolabs.net>
-Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        ejb@linux.ibm.com, tglx@linutronix.de
-Subject: Re: [PATCH 00/10] scsi: Replace tasklets as BH
-Message-ID: <Yp96yKc0zhXbN3cp@linutronix.de>
-References: <20220530231512.9729-1-dave@stgolabs.net>
- <YphtdGbu2rhx4RaQ@linutronix.de>
- <20220607155918.i5f7pkqadeiuaqpn@offworld>
+        with ESMTP id S243262AbiFGQp5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jun 2022 12:45:57 -0400
+Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6301F504E;
+        Tue,  7 Jun 2022 09:45:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1654620356; x=1686156356;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=ctq6LVQOfjVVOtYv+AplzA6gCINpMNCuS0OiKyvIDb0=;
+  b=rFi5n/FBQqwxD1WLRGhtmdiq5aL9xeboWPV2IHPisjxDlZAfnJBNF5VQ
+   Of8Le1sKSBU5UraVnRSujwysD6kvL+P+V5kY74Pz/ZGqI1jRcTzVvAtsM
+   1K4TqukzYsHWXXP7kvoCmLVNo0h1O/UC/fZn8cnxnDNR5pTa+Pap5jLcO
+   c=;
+Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
+  by alexa-out-sd-01.qualcomm.com with ESMTP; 07 Jun 2022 09:45:56 -0700
+X-QCInternal: smtphost
+Received: from unknown (HELO nasanex01a.na.qualcomm.com) ([10.52.223.231])
+  by ironmsg-SD-alpha.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Jun 2022 09:45:55 -0700
+Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
+ nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Tue, 7 Jun 2022 09:45:55 -0700
+Date:   Tue, 7 Jun 2022 09:45:55 -0700
+From:   Asutosh Das <quic_asutoshd@quicinc.com>
+To:     Eric Biggers <ebiggers@kernel.org>
+CC:     Jaegeuk Kim <jaegeuk@kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Can Guo <cang@codeaurora.org>
+Subject: Re: [PATCH] scsi: ufs: add a quirk to disable FUA support
+Message-ID: <20220607164555.GA30890@asutoshd-linux1.qualcomm.com>
+References: <20220531201053.3300018-1-jaegeuk@kernel.org>
+ <YpZ71MU7+DRedq5S@gmail.com>
+ <YpaATWTiipNERoVF@google.com>
+ <YpaHwds1zYRwua3+@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-In-Reply-To: <20220607155918.i5f7pkqadeiuaqpn@offworld>
+In-Reply-To: <YpaHwds1zYRwua3+@gmail.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2022-06-07 08:59:18 [-0700], Davidlohr Bueso wrote:
->=20
-> Thanks for the careful reviewing and feedback. I'll address
-> them in a v2 as soon as I get a chance.
+On Tue, May 31 2022 at 14:25 -0700, Eric Biggers wrote:
+>On Tue, May 31, 2022 at 01:53:33PM -0700, Jaegeuk Kim wrote:
+>> > Also, this patch does nothing by itself.  Which UFS host driver(s) need this
+>> > quirk bit?  Can you update them to use it?  Or do they all need this, in which
+>> > case a quirk bit would be unnecessary?
+>>
+>> Likewise other quick bits, using this is up to SoC or UFS vendors. I
+>> think that combination is up to OEMs who is building the product.
+>
+>Of the UFS host drivers in the upstream kernel, which ones actually need this?
+>
 
-I didn't get through the whole series as of now but I guess you can
-apply what I said so far also to the remaining part ;)
-
-The series actually reminding me that I have a be2iscsi patch hiding
-somewhere asking to get reposted=E2=80=A6
-
-> Thanks,
-> Davidlohr
-
-Sebastian
+Qualcomm UFSHC would need this.
+>- Eric
