@@ -2,47 +2,47 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5094CCA498
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jun 2022 18:37:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8A75C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jun 2022 18:48:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352589AbiFGSey (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Jun 2022 14:34:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58414 "EHLO
+        id S1353920AbiFGSsv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Jun 2022 14:48:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43262 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352328AbiFGSdh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jun 2022 14:33:37 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54F9D147823;
-        Tue,  7 Jun 2022 10:57:35 -0700 (PDT)
+        with ESMTP id S1354431AbiFGSrC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jun 2022 14:47:02 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5ADDA44749;
+        Tue,  7 Jun 2022 11:01:12 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id B474CB8236C;
-        Tue,  7 Jun 2022 17:57:33 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58FDBC3411F;
-        Tue,  7 Jun 2022 17:57:31 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E97DF616B6;
+        Tue,  7 Jun 2022 18:01:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53DD0C3411C;
+        Tue,  7 Jun 2022 18:01:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654624652;
-        bh=shILPyh39w0dy8dd5dmEgIEAHhtfM2jGyeflTqQGd6Q=;
+        s=k20201202; t=1654624871;
+        bh=Th3DUZqFk8+1/xRoOYXgybjrLnW/ivzgL1Rlj1RfciY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=L0i2hZ0bgarLSU+UFLIXFsht1TKdza4KNXZAQsHlX9kR12b1Tqb5/ozVmdBiGEkb3
-         G3jcWenXmlAx3q83i/6mLrn8H1l3/pgmrrw/xUw8i0RyIeBXpOCqqZ4BpOE0DRJzRl
-         nc2rrtPiuHP1KmgGwMVsqbn7ObGzVF9R2VOrKzfLwsxuCE01LAJUQge4PQIWX3sA4c
-         dNjrDwtuX9u68EqrKv7kMy5wbeLp9nSR2E9EMImw8CaAkCG/PJOfBnEUJ9fuq9IB3T
-         xzxjU/t/c2BzpvCOwdIyg/BxH8GeXvlkIilqmRJilNY/OgNz9gs+Uny44dXwxmHSEV
-         bRjAzIw6cy7cg==
+        b=bLE/JclFbYmZ5ZSHsjv2g2QrJAAQJ+1R8g0rDS8xdFmU3EsdOWQYVc2w3G/c+jQCD
+         enuq65DounycUIBRNN1zMjapoUP67q3Y8jY/UoEt08f6fsbqgw4JH94eVT54Fdxg4P
+         lr3QGicdi3WFDSE8fxfBjphnw/nlMKdyebXBpfn66P2GJQyF62zg0Cy8DMMnjYyhSp
+         NuJ9eLqhAttKsnHUFXvLEOcYXNwcNeW67lX2d2Z3MMTUza2nC2lpkGEFDFsF4+BswX
+         IcjfHfjEjPRsQfzrspgtRVqCm4dattSIvKKewbRz4aW68Vq6ay41YLzTKX9w+u0xx7
+         XTJrd/uwofvtA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Hannes Reinecke <hare@suse.de>, Zheyu Ma <zheyuma97@gmail.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, hare@kernel.org,
         jejb@linux.ibm.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 33/51] scsi: myrb: Fix up null pointer access on myrb_cleanup()
-Date:   Tue,  7 Jun 2022 13:55:32 -0400
-Message-Id: <20220607175552.479948-33-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 23/34] scsi: myrb: Fix up null pointer access on myrb_cleanup()
+Date:   Tue,  7 Jun 2022 13:59:58 -0400
+Message-Id: <20220607180011.481266-23-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220607175552.479948-1-sashal@kernel.org>
-References: <20220607175552.479948-1-sashal@kernel.org>
+In-Reply-To: <20220607180011.481266-1-sashal@kernel.org>
+References: <20220607180011.481266-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -71,10 +71,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 8 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/myrb.c b/drivers/scsi/myrb.c
-index a4a88323e020..386256369dfc 100644
+index 539ac8ce4fcd..35b32920a94a 100644
 --- a/drivers/scsi/myrb.c
 +++ b/drivers/scsi/myrb.c
-@@ -1239,7 +1239,8 @@ static void myrb_cleanup(struct myrb_hba *cb)
+@@ -1241,7 +1241,8 @@ static void myrb_cleanup(struct myrb_hba *cb)
  	myrb_unmap(cb);
  
  	if (cb->mmio_base) {
@@ -84,7 +84,7 @@ index a4a88323e020..386256369dfc 100644
  		iounmap(cb->mmio_base);
  	}
  	if (cb->irq)
-@@ -3409,9 +3410,13 @@ static struct myrb_hba *myrb_detect(struct pci_dev *pdev,
+@@ -3516,9 +3517,13 @@ static struct myrb_hba *myrb_detect(struct pci_dev *pdev,
  	mutex_init(&cb->dcmd_mutex);
  	mutex_init(&cb->dma_mutex);
  	cb->pdev = pdev;
