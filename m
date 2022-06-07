@@ -2,104 +2,95 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AF41CCA483
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jun 2022 18:48:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BEB42C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jun 2022 00:42:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353952AbiFGSsy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Jun 2022 14:48:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58130 "EHLO
+        id S1348797AbiFHAiw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Jun 2022 20:38:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35262 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353941AbiFGSqT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jun 2022 14:46:19 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C56FF18DAD1;
-        Tue,  7 Jun 2022 10:59:50 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id CF150617C4;
-        Tue,  7 Jun 2022 17:59:49 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4EC8CC34115;
-        Tue,  7 Jun 2022 17:59:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654624789;
-        bh=hN7LPJ4e0xE9JtyyG9UniMZ4fjLVO2/rkl8KphTwKpo=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Wv9IVnGqJ0oPLOo3uVwzw/L8Poc4jJVamcj9nPZIW09tBaJnhjxtxnV+kIKV1PlIi
-         +LwEK+tm+I/EWYTOq/f34FyHK4hJJhiybUZROdLzIuXshvra7jx2C+pJounhrVJJO+
-         uZq+M2+dKQEuPW3akhI3KVvR8A/TnGND2g67FrvgTB0NmSqO9hF9avl5cttkxnl0w+
-         dPy17Cniw+7slsIRXbQBavrFhMGM/F3aSZFfOZlbWitRYIoPD2XkKHOHj9boGMZrnu
-         YHLx2t6ElKrN9yB8CNhZzZWaDXy4JhyETnqD1Ypbt1PkJkF0P+KJEnFvymNKXnCIzr
-         cV0vCkc5Pnlmw==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Hannes Reinecke <hare@suse.de>, Zheyu Ma <zheyuma97@gmail.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, hare@kernel.org,
-        jejb@linux.ibm.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 26/38] scsi: myrb: Fix up null pointer access on myrb_cleanup()
-Date:   Tue,  7 Jun 2022 13:58:21 -0400
-Message-Id: <20220607175835.480735-26-sashal@kernel.org>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220607175835.480735-1-sashal@kernel.org>
-References: <20220607175835.480735-1-sashal@kernel.org>
+        with ESMTP id S1587310AbiFGXxC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jun 2022 19:53:02 -0400
+Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C4FB2945E5;
+        Tue,  7 Jun 2022 15:44:00 -0700 (PDT)
+Received: by mail-pj1-f43.google.com with SMTP id k5-20020a17090a404500b001e8875e6242so5942877pjg.5;
+        Tue, 07 Jun 2022 15:44:00 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=w8NDUBo3z6UDbWsc/XByX6YF7c4oG4yuYC7oAUnBsYY=;
+        b=wmJNHrZm8vt1N3Fna/3p1FnnVcRuFZZyEy/21hgX49HizjQ9yvZQ53zCvdetoUatVE
+         432zbmPjCUDVtLHXgY6WF2Ivztymj8hl6NqWHXa0mPQ4iQOpCLXwCcnMrFzcSmNGbQaj
+         8ofK7SluYbs2cnAC1+h/0f/MXzhSLGBygpi5nXuTQMwJyBfiHKPPiBpWunGlpXEtGtHq
+         Rj6CYPjj+W1C3sn6g3YobF9ktE01x9ja+yy1MBf2Hf8VGzfoWRBGu6EGXIHFUpNPOUZC
+         IvqdeEoJTm/U1gyCG1ieunVWZO9WkxDZuNEbPl8v7osYuJMLlkesJi5fx4Ju5P8WT+2m
+         +kWQ==
+X-Gm-Message-State: AOAM532+nFS/mMnENlXByKy9Bdh+4jxEPPf5bKLS8/I9CvOyGLk/OQUm
+        aN3qzw6VPJeJUd3HbFFRT3Q=
+X-Google-Smtp-Source: ABdhPJyerYGytLfJP4UmMuvbsKpIxNlss+3u6Myd9djlsW8ZEBq2xQNYIWDPe/Kqg6qSLUHDPa8PZg==
+X-Received: by 2002:a17:902:7088:b0:167:78c0:e05e with SMTP id z8-20020a170902708800b0016778c0e05emr13533905plk.149.1654641824895;
+        Tue, 07 Jun 2022 15:43:44 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:e794:fbe6:94b0:435b? ([2620:15c:211:201:e794:fbe6:94b0:435b])
+        by smtp.gmail.com with ESMTPSA id v11-20020a62a50b000000b0051ba97b788bsm13451064pfm.27.2022.06.07.15.43.43
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 07 Jun 2022 15:43:44 -0700 (PDT)
+Message-ID: <3e2324dc-2ab1-6a35-46ab-72d970cc466c@acm.org>
+Date:   Tue, 7 Jun 2022 15:43:42 -0700
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [PATCH v3 0/4] DMA mapping changes for SCSI core
+Content-Language: en-US
+To:     John Garry <john.garry@huawei.com>,
+        damien.lemoal@opensource.wdc.com, joro@8bytes.org, will@kernel.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, hch@lst.de,
+        m.szyprowski@samsung.com, robin.murphy@arm.com
+Cc:     linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, iommu@lists.linux-foundation.org,
+        linux-scsi@vger.kernel.org, liyihang6@hisilicon.com,
+        chenxiang66@hisilicon.com, thunder.leizhen@huawei.com
+References: <1654507822-168026-1-git-send-email-john.garry@huawei.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <1654507822-168026-1-git-send-email-john.garry@huawei.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Hannes Reinecke <hare@suse.de>
+On 6/6/22 02:30, John Garry wrote:
+> As reported in [0], DMA mappings whose size exceeds the IOMMU IOVA caching
+> limit may see a big performance hit.
+> 
+> This series introduces a new DMA mapping API, dma_opt_mapping_size(), so
+> that drivers may know this limit when performance is a factor in the
+> mapping.
+> 
+> Robin didn't like using dma_max_mapping_size() for this [1].
+> 
+> The SCSI core code is modified to use this limit.
+> 
+> I also added a patch for libata-scsi as it does not currently honour the
+> shost max_sectors limit.
+> 
+> Note: Christoph has previously kindly offered to take this series via the
+>        dma-mapping tree, so I think that we just need an ack from the
+>        IOMMU guys now.
+> 
+> [0] https://lore.kernel.org/linux-iommu/20210129092120.1482-1-thunder.leizhen@huawei.com/
+> [1] https://lore.kernel.org/linux-iommu/f5b78c9c-312e-70ab-ecbb-f14623a4b6e3@arm.com/
 
-[ Upstream commit f9f0a46141e2e39bedb4779c88380d1b5f018c14 ]
+Regarding [0], that patch reverts commit 4e89dce72521 ("iommu/iova: 
+Retry from last rb tree node if iova search fails"). Reading the 
+description of that patch, it seems to me that the iova allocator can be 
+improved. Shouldn't the iova allocator be improved such that we don't 
+need this patch series? There are algorithms that handle fragmentation 
+much better than the current iova allocator algorithm, e.g. the 
+https://en.wikipedia.org/wiki/Buddy_memory_allocation algorithm.
 
-When myrb_probe() fails the callback might not be set, so we need to
-validate the 'disable_intr' callback in myrb_cleanup() to not cause a null
-pointer exception. And while at it do not call myrb_cleanup() if we cannot
-enable the PCI device at all.
+Thanks,
 
-Link: https://lore.kernel.org/r/20220523120244.99515-1-hare@suse.de
-Reported-by: Zheyu Ma <zheyuma97@gmail.com>
-Tested-by: Zheyu Ma <zheyuma97@gmail.com>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/myrb.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/myrb.c b/drivers/scsi/myrb.c
-index 5fa0f4ed6565..ad17c2beaaca 100644
---- a/drivers/scsi/myrb.c
-+++ b/drivers/scsi/myrb.c
-@@ -1241,7 +1241,8 @@ static void myrb_cleanup(struct myrb_hba *cb)
- 	myrb_unmap(cb);
- 
- 	if (cb->mmio_base) {
--		cb->disable_intr(cb->io_base);
-+		if (cb->disable_intr)
-+			cb->disable_intr(cb->io_base);
- 		iounmap(cb->mmio_base);
- 	}
- 	if (cb->irq)
-@@ -3515,9 +3516,13 @@ static struct myrb_hba *myrb_detect(struct pci_dev *pdev,
- 	mutex_init(&cb->dcmd_mutex);
- 	mutex_init(&cb->dma_mutex);
- 	cb->pdev = pdev;
-+	cb->host = shost;
- 
--	if (pci_enable_device(pdev))
--		goto failure;
-+	if (pci_enable_device(pdev)) {
-+		dev_err(&pdev->dev, "Failed to enable PCI device\n");
-+		scsi_host_put(shost);
-+		return NULL;
-+	}
- 
- 	if (privdata->hw_init == DAC960_PD_hw_init ||
- 	    privdata->hw_init == DAC960_P_hw_init) {
--- 
-2.35.1
-
+Bart.
