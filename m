@@ -2,47 +2,47 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3631BC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jun 2022 18:23:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3936CCA481
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jun 2022 18:27:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351446AbiFGSXc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Jun 2022 14:23:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51590 "EHLO
+        id S1350095AbiFGS1q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Jun 2022 14:27:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40328 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352220AbiFGSQ6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jun 2022 14:16:58 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D43333CFD6;
-        Tue,  7 Jun 2022 10:51:10 -0700 (PDT)
+        with ESMTP id S1352467AbiFGS0N (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jun 2022 14:26:13 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 080A41406F5;
+        Tue,  7 Jun 2022 10:54:47 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 84DA6B8234C;
-        Tue,  7 Jun 2022 17:51:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30D32C3411C;
-        Tue,  7 Jun 2022 17:51:07 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id C7C17CE2423;
+        Tue,  7 Jun 2022 17:54:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 217CAC3411C;
+        Tue,  7 Jun 2022 17:54:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654624268;
+        s=k20201202; t=1654624468;
         bh=1NDrccUNSF/6uv2W+MpiyQ8aIC7EHlmxH2OYdzZod1U=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=V8ALIV7kDmNHZn0GgOJ+i9yYnJKtfa+sjl8Mdn15CVzRovL5R8qpw6dYfR1jhhN6R
-         iE7SBOsAb5lKyQp3Izi49K47Sw8TpMcyzVuKOsSkiam+lbbFB/FZFAEtG/scKSAR8u
-         Sm8rmJfj7jwCyXe0K1KWg8aDxzCiJdvs8bQmEfpYGpPponuzoQCcAoyoOUUkBfV1qP
-         b+YIrCYdBQy7kqfErBGqriE+amzc1NHJwH1i0aBI9CsH/EESnsOnmtSNl4p0kn2R+z
-         +22mvvTcbCuVbiUWiIGrttG9C4ai5gUxGCNIaewQ1TOijJIxWXDB2BZsusNymlCqKe
-         BoQE5u83rXu9w==
+        b=oU8Full4XzMQ5r5wkME0Ohj8MCmkOO+/o1MK9/+LysTyo/e3JKdUEkOUYhrYZm+bu
+         9U9v118hqm6XEEPbagVfBnS0f+Cbf7FpmQP0S4hiLo7APrFaMsA76/WxcbBPCqGOQM
+         EXU/q12zzK+gzYGq0y6e/yppWdgJ/n37P1HAN0fNYnMJ1RiTbsWlPBoRe4aIMdAK70
+         E1gYSxEH1avtEnAJmzWlb6dHUeWxKnUQ8syaLX6GzM+s7HybumQbx7VYv98RHYqDRr
+         9h6ck+w8T604d1qHwm8t8/PwXVfiDfEaU5+OJdNMxQKXrG2UgWMJjesOTfn+QLekyv
+         q1mIuOQbmPUEA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Hannes Reinecke <hare@suse.de>, Zheyu Ma <zheyuma97@gmail.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, hare@kernel.org,
         jejb@linux.ibm.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.18 38/68] scsi: myrb: Fix up null pointer access on myrb_cleanup()
-Date:   Tue,  7 Jun 2022 13:48:04 -0400
-Message-Id: <20220607174846.477972-38-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.17 35/60] scsi: myrb: Fix up null pointer access on myrb_cleanup()
+Date:   Tue,  7 Jun 2022 13:52:32 -0400
+Message-Id: <20220607175259.478835-35-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220607174846.477972-1-sashal@kernel.org>
-References: <20220607174846.477972-1-sashal@kernel.org>
+In-Reply-To: <20220607175259.478835-1-sashal@kernel.org>
+References: <20220607175259.478835-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
