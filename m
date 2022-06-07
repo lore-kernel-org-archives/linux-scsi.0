@@ -2,47 +2,47 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8A75C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jun 2022 18:48:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AF41CCA483
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jun 2022 18:48:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353920AbiFGSsv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Jun 2022 14:48:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43262 "EHLO
+        id S1353952AbiFGSsy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Jun 2022 14:48:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58130 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354431AbiFGSrC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jun 2022 14:47:02 -0400
+        with ESMTP id S1353941AbiFGSqT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jun 2022 14:46:19 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5ADDA44749;
-        Tue,  7 Jun 2022 11:01:12 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C56FF18DAD1;
+        Tue,  7 Jun 2022 10:59:50 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E97DF616B6;
-        Tue,  7 Jun 2022 18:01:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53DD0C3411C;
-        Tue,  7 Jun 2022 18:01:10 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id CF150617C4;
+        Tue,  7 Jun 2022 17:59:49 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4EC8CC34115;
+        Tue,  7 Jun 2022 17:59:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654624871;
-        bh=Th3DUZqFk8+1/xRoOYXgybjrLnW/ivzgL1Rlj1RfciY=;
+        s=k20201202; t=1654624789;
+        bh=hN7LPJ4e0xE9JtyyG9UniMZ4fjLVO2/rkl8KphTwKpo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=bLE/JclFbYmZ5ZSHsjv2g2QrJAAQJ+1R8g0rDS8xdFmU3EsdOWQYVc2w3G/c+jQCD
-         enuq65DounycUIBRNN1zMjapoUP67q3Y8jY/UoEt08f6fsbqgw4JH94eVT54Fdxg4P
-         lr3QGicdi3WFDSE8fxfBjphnw/nlMKdyebXBpfn66P2GJQyF62zg0Cy8DMMnjYyhSp
-         NuJ9eLqhAttKsnHUFXvLEOcYXNwcNeW67lX2d2Z3MMTUza2nC2lpkGEFDFsF4+BswX
-         IcjfHfjEjPRsQfzrspgtRVqCm4dattSIvKKewbRz4aW68Vq6ay41YLzTKX9w+u0xx7
-         XTJrd/uwofvtA==
+        b=Wv9IVnGqJ0oPLOo3uVwzw/L8Poc4jJVamcj9nPZIW09tBaJnhjxtxnV+kIKV1PlIi
+         +LwEK+tm+I/EWYTOq/f34FyHK4hJJhiybUZROdLzIuXshvra7jx2C+pJounhrVJJO+
+         uZq+M2+dKQEuPW3akhI3KVvR8A/TnGND2g67FrvgTB0NmSqO9hF9avl5cttkxnl0w+
+         dPy17Cniw+7slsIRXbQBavrFhMGM/F3aSZFfOZlbWitRYIoPD2XkKHOHj9boGMZrnu
+         YHLx2t6ElKrN9yB8CNhZzZWaDXy4JhyETnqD1Ypbt1PkJkF0P+KJEnFvymNKXnCIzr
+         cV0vCkc5Pnlmw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Hannes Reinecke <hare@suse.de>, Zheyu Ma <zheyuma97@gmail.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, hare@kernel.org,
         jejb@linux.ibm.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 23/34] scsi: myrb: Fix up null pointer access on myrb_cleanup()
-Date:   Tue,  7 Jun 2022 13:59:58 -0400
-Message-Id: <20220607180011.481266-23-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 26/38] scsi: myrb: Fix up null pointer access on myrb_cleanup()
+Date:   Tue,  7 Jun 2022 13:58:21 -0400
+Message-Id: <20220607175835.480735-26-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220607180011.481266-1-sashal@kernel.org>
-References: <20220607180011.481266-1-sashal@kernel.org>
+In-Reply-To: <20220607175835.480735-1-sashal@kernel.org>
+References: <20220607175835.480735-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -71,7 +71,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 8 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/myrb.c b/drivers/scsi/myrb.c
-index 539ac8ce4fcd..35b32920a94a 100644
+index 5fa0f4ed6565..ad17c2beaaca 100644
 --- a/drivers/scsi/myrb.c
 +++ b/drivers/scsi/myrb.c
 @@ -1241,7 +1241,8 @@ static void myrb_cleanup(struct myrb_hba *cb)
@@ -84,7 +84,7 @@ index 539ac8ce4fcd..35b32920a94a 100644
  		iounmap(cb->mmio_base);
  	}
  	if (cb->irq)
-@@ -3516,9 +3517,13 @@ static struct myrb_hba *myrb_detect(struct pci_dev *pdev,
+@@ -3515,9 +3516,13 @@ static struct myrb_hba *myrb_detect(struct pci_dev *pdev,
  	mutex_init(&cb->dcmd_mutex);
  	mutex_init(&cb->dma_mutex);
  	cb->pdev = pdev;
