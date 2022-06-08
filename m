@@ -2,141 +2,119 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41E44CCA47B
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jun 2022 11:59:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7FABC43334
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jun 2022 14:16:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238503AbiFHL73 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Jun 2022 07:59:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57202 "EHLO
+        id S241002AbiFHOQu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Jun 2022 10:16:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58968 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238501AbiFHL7P (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jun 2022 07:59:15 -0400
-Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F408F24CC9B
-        for <linux-scsi@vger.kernel.org>; Wed,  8 Jun 2022 04:59:13 -0700 (PDT)
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 2581X4Nj020925
-        for <linux-scsi@vger.kernel.org>; Wed, 8 Jun 2022 04:59:13 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0220; bh=Cq9IHdeSoYBhNHDMVLEhc8GXGr7u13Tu03niAhAWyEc=;
- b=RoQgaMTekWiW+nlMWebY6+9zIG/pYiZWt7bSwjW4XtOQEzcCIp98HQYPfihd+rchAXOn
- 7CW1MPWKOkbRGDSAIx0l9yKxQAt5LNbBsfTBhAQC/0v1yFTXViccuKu4eh4HVkuQiCU6
- HfBO6G1h+LbkErRorDjMqENsiPjf1j9i2MAlwlhJtXEdgpPkfNhRLHM/daD0FYPCBv3N
- EGYrUp7A7ffjqX6bfYslmSeHE/McfQrr3KqYGNNplqB0WcDr3v1FnJVMfeP73fwn0Mn5
- oKpP0+o17coQ5eeIT3vE+tDPSSyQ0IEc6ev7PpVRbX8e2wfFG9UHo+go5dVLwLaDIsca 4w== 
-Received: from dc5-exch02.marvell.com ([199.233.59.182])
-        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3gjb7pbsag-10
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Jun 2022 04:59:13 -0700
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Wed, 8 Jun
- 2022 04:58:56 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 8 Jun 2022 04:58:56 -0700
-Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id B92333F7086;
-        Wed,  8 Jun 2022 04:58:56 -0700 (PDT)
-From:   Nilesh Javali <njavali@marvell.com>
-To:     <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: [PATCH 09/10] qla2xxx: edif: Fix slow session tear down
-Date:   Wed, 8 Jun 2022 04:58:48 -0700
-Message-ID: <20220608115849.16693-10-njavali@marvell.com>
-X-Mailer: git-send-email 2.12.0
-In-Reply-To: <20220608115849.16693-1-njavali@marvell.com>
-References: <20220608115849.16693-1-njavali@marvell.com>
+        with ESMTP id S239694AbiFHOQt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jun 2022 10:16:49 -0400
+Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 305482DABF
+        for <linux-scsi@vger.kernel.org>; Wed,  8 Jun 2022 07:16:47 -0700 (PDT)
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 2DB234249F;
+        Wed,  8 Jun 2022 14:16:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        mime-version:content-transfer-encoding:content-type:content-type
+        :content-language:accept-language:in-reply-to:references
+        :message-id:date:date:subject:subject:from:from:received
+        :received:received:received:received; s=mta-01; t=1654697804; x=
+        1656512205; bh=RSlwQpEqCXhbZZ9ImsVUexNsLzWcERQTmbLCHIGg1/k=; b=L
+        RxsVnkbus3PjFnnUVEX4VPdNtyeiplpWWJN0aXup9ljrbdCriooGzAK350oyiYf1
+        A2uZu7U80kLpmgWdCGnmdy9rvTW93JxUX1LEIFPTbdo5yt13IlnkFxi2A1gablk4
+        v9p7akcEL+v8yK8e8IYDjkMPyw7mGGx2/quHlq9GFg=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id yD-QAnHORcPL; Wed,  8 Jun 2022 17:16:44 +0300 (MSK)
+Received: from T-EXCH-01.corp.yadro.com (t-exch-01.corp.yadro.com [172.17.10.101])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 5038D424A1;
+        Wed,  8 Jun 2022 17:16:42 +0300 (MSK)
+Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
+ T-EXCH-01.corp.yadro.com (172.17.10.101) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
+ 15.1.669.32; Wed, 8 Jun 2022 17:16:42 +0300
+Received: from T-EXCH-09.corp.yadro.com (172.17.11.59) by
+ T-EXCH-08.corp.yadro.com (172.17.11.58) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Wed, 8 Jun 2022 17:16:41 +0300
+Received: from T-EXCH-09.corp.yadro.com ([fe80::d9f:e165:8a50:d450]) by
+ T-EXCH-09.corp.yadro.com ([fe80::d9f:e165:8a50:d450%4]) with mapi id
+ 15.02.0986.022; Wed, 8 Jun 2022 17:16:41 +0300
+From:   Dmitriy Bogdanov <d.bogdanov@yadro.com>
+To:     Mike Christie <michael.christie@oracle.com>,
+        Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>
+CC:     "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux@yadro.com" <linux@yadro.com>,
+        Konstantin Shelekhin <k.shelekhin@yadro.com>
+Subject: RE: [PATCH] scsi: iscsi: prefer xmit of DataOut before new cmd
+Thread-Topic: [PATCH] scsi: iscsi: prefer xmit of DataOut before new cmd
+Thread-Index: AQHYenFLnkgrMqHdCEim3M4HDVs6OK1D5uuAgAAC6wCAAXQf4A==
+Date:   Wed, 8 Jun 2022 14:16:41 +0000
+Message-ID: <e5c2ab5b4de8428495efe85865980133@yadro.com>
+References: <20220607131953.11584-1-d.bogdanov@yadro.com>
+ <769c3acb-b515-7fd8-2450-4b6206436fde@oracle.com>
+ <6a58acb4-e29e-e8c7-d85c-fe474670dad7@oracle.com>
+In-Reply-To: <6a58acb4-e29e-e8c7-d85c-fe474670dad7@oracle.com>
+Accept-Language: ru-RU, en-US
+Content-Language: ru-RU
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [10.199.18.20]
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-GUID: lAY4dCrJ93v93212M6f8ADe0t9GOIf_n
-X-Proofpoint-ORIG-GUID: lAY4dCrJ93v93212M6f8ADe0t9GOIf_n
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.874,Hydra:6.0.517,FMLib:17.11.64.514
- definitions=2022-06-08_03,2022-06-07_02,2022-02-23_01
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Quinn Tran <qutran@marvell.com>
-
-User experience slow recovery when target device went through
-a stop/start of the authentication application (app_stop/app_start).
-
-Between the period of app_stop and app_start on the target device,
-target device choose to send ELS Reject for any receive AUTH ELS command.
-At this time, authentication application does not do els reject
-if it encounters error.
-
-Therefore, AUTH ELS reject signify authentication application
-is not running. If driver pass up the AUTH ELS Reject to the
-authentication application, then it would result in authentication
-application retrying/resending the same AUTH ELS command again + delay.
-
-As a work around, driver would trigger a session tear down where
-it tell the local authentication application to also tear down.
-At the next relogin, both side would be synchronize.
-
-Signed-off-by: Quinn Tran <qutran@marvell.com>
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
----
- drivers/scsi/qla2xxx/qla_isr.c | 34 ++++++++++++++++++++--------------
- 1 file changed, 20 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 8e6831953e7c..d87c53bc014b 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -2245,9 +2245,9 @@ qla24xx_els_ct_entry(scsi_qla_host_t *v, struct req_que *req,
- 				res = DID_ERROR << 16;
- 			}
- 
--			if (logit) {
--				if (sp->remap.remapped &&
--				    ((u8 *)sp->remap.rsp.buf)[0] == ELS_LS_RJT) {
-+			if (sp->remap.remapped &&
-+			    ((u8 *)sp->remap.rsp.buf)[0] == ELS_LS_RJT) {
-+				if (logit) {
- 					ql_dbg(ql_dbg_user, vha, 0x503f,
- 					    "%s IOCB Done LS_RJT hdl=%x comp_status=0x%x\n",
- 					    type, sp->handle, comp_status);
-@@ -2259,18 +2259,24 @@ qla24xx_els_ct_entry(scsi_qla_host_t *v, struct req_que *req,
- 						pkt)->total_byte_count),
- 					    e->s_id[0], e->s_id[2], e->s_id[1],
- 					    e->d_id[2], e->d_id[1], e->d_id[0]);
--				} else {
--					ql_log(ql_log_info, vha, 0x503f,
--					    "%s IOCB Done hdl=%x comp_status=0x%x\n",
--					    type, sp->handle, comp_status);
--					ql_log(ql_log_info, vha, 0x503f,
--					    "subcode 1=0x%x subcode 2=0x%x bytes=0x%x %02x%02x%02x -> %02x%02x%02x\n",
--					    fw_status[1], fw_status[2],
--					    le32_to_cpu(((struct els_sts_entry_24xx *)
--						pkt)->total_byte_count),
--					    e->s_id[0], e->s_id[2], e->s_id[1],
--					    e->d_id[2], e->d_id[1], e->d_id[0]);
- 				}
-+				if (sp->fcport && sp->fcport->flags & FCF_FCSP_DEVICE &&
-+				    sp->type == SRB_ELS_CMD_HST_NOLOGIN) {
-+					ql_dbg(ql_dbg_edif, vha, 0x911e,
-+					    "%s rcv reject. Sched delete\n", __func__);
-+					qlt_schedule_sess_for_deletion(sp->fcport);
-+				}
-+			} else if (logit) {
-+				ql_log(ql_log_info, vha, 0x503f,
-+				    "%s IOCB Done hdl=%x comp_status=0x%x\n",
-+				    type, sp->handle, comp_status);
-+				ql_log(ql_log_info, vha, 0x503f,
-+				    "subcode 1=0x%x subcode 2=0x%x bytes=0x%x %02x%02x%02x -> %02x%02x%02x\n",
-+				    fw_status[1], fw_status[2],
-+				    le32_to_cpu(((struct els_sts_entry_24xx *)
-+				    pkt)->total_byte_count),
-+				    e->s_id[0], e->s_id[2], e->s_id[1],
-+				    e->d_id[2], e->d_id[1], e->d_id[0]);
- 			}
- 		}
- 		goto els_ct_done;
--- 
-2.19.0.rc0
-
+SGkgTWlrZSwNCg0KPk9uIDYvNy8yMiAxMDo1NSBBTSwgTWlrZSBDaHJpc3RpZSB3cm90ZToNCj4+
+IE9uIDYvNy8yMiA4OjE5IEFNLCBEbWl0cnkgQm9nZGFub3Ygd3JvdGU6DQo+Pj4gSW4gZnVuY3Rp
+b24gaXNjc2lfZGF0YV94bWl0IChUWCB3b3JrZXIpIHRoZXJlIGlzIHdhbGtpbmcgdGhyb3VnaCB0
+aGUNCj4+PiBxdWV1ZSBvZiBuZXcgU0NTSSBjb21tYW5kcyB0aGF0IGlzIHJlcGxlbmlzaGVkIGlu
+IHBhcmFsbGVsbC4gQW5kIG9ubHkNCj4+PiBhZnRlciB0aGF0IHF1ZXVlIGdvdCBlbXB0aWVkIHRo
+ZSBmdW5jdGlvbiB3aWxsIHN0YXJ0IHNlbmRpbmcgcGVuZGluZw0KPj4+IERhdGFPdXQgUERVcy4g
+VGhhdCBsZWFkIHRvIERhdGFPdXQgdGltZXIgdGltZSBvdXQgb24gdGFyZ2V0IHNpZGUgYW5kDQo+
+Pj4gdG8gY29ubmVjdGlvbiByZWluc3RhdG1lbnQuDQo+Pj4NCj4+PiBUaGlzIHBhdGNoIHN3YXBz
+IHdhbGtpbmcgdGhyb3VnaCB0aGUgbmV3IGNvbW1hbmRzIHF1ZXVlIGFuZCB0aGUgcGVuZGluZw0K
+Pj4+IERhdGFPdXQgcXVldWUuIFRvIG1ha2UgYSBwcmVmZXJlbmNlIHRvIG9uZ29pbmcgY29tbWFu
+ZHMgb3ZlciBuZXcgb25lcy4NCj4+Pg0KPj4NCj4+IC4uLg0KPj4NCj4+PiAgICAgICAgICAgICAg
+dGFzayA9IGxpc3RfZW50cnkoY29ubi0+Y21kcXVldWUubmV4dCwgc3RydWN0IGlzY3NpX3Rhc2ss
+DQo+Pj4gQEAgLTE1OTQsMjggKzE2MTYsMTAgQEAgc3RhdGljIGludCBpc2NzaV9kYXRhX3htaXQo
+c3RydWN0IGlzY3NpX2Nvbm4gKmNvbm4pDQo+Pj4gICAgICAgICAgICAgICAqLw0KPj4+ICAgICAg
+ICAgICAgICBpZiAoIWxpc3RfZW1wdHkoJmNvbm4tPm1nbXRxdWV1ZSkpDQo+Pj4gICAgICAgICAg
+ICAgICAgICAgICAgZ290byBjaGVja19tZ210Ow0KPj4+ICsgICAgICAgICAgICBpZiAoIWxpc3Rf
+ZW1wdHkoJmNvbm4tPnJlcXVldWUpKQ0KPj4+ICsgICAgICAgICAgICAgICAgICAgIGdvdG8gY2hl
+Y2tfcmVxdWV1ZTsNCj4+DQo+Pg0KPj4NCj4+IEhleSwgSSd2ZSBiZWVuIHBvc3RpbmcgYSBzaW1p
+bGFyIHBhdGNoOg0KPj4NCj4+IGh0dHBzOi8vd3d3LnNwaW5pY3MubmV0L2xpc3RzL2xpbnV4LXNj
+c2kvbXNnMTU2OTM5Lmh0bWwNCj4+DQo+PiBBIHByb2JsZW0gSSBoaXQgaXMgYSBwb3NzaWJsZSBw
+cmVmIHJlZ3Jlc3Npb24gc28gSSB0cmllZCB0byBhbGxvdw0KPj4gdXMgdG8gc3RhcnQgdXAgYSBi
+dXJzdCBvZiBjbWRzIGluIHBhcmFsbGVsLiBJdCdzIHByZXR0eSBzaW1wbGUgd2hlcmUNCj4+IHdl
+IGFsbG93IHVwIHRvIGEgcXVldWUncyB3b3J0aCBvZiBjbWRzIHRvIHN0YXJ0LiBJdCBkb2Vzbid0
+IHRyeSB0bw0KPj4gY2hlY2sgdGhhdCBhbGwgY21kcyBhcmUgZnJvbSB0aGUgc2FtZSBxdWV1ZSBv
+ciBhbnl0aGluZyBmYW5jeSB0byB0cnkNCj4+IGFuZCBrZWVwIHRoZSBjb2RlIHNpbXBsZS4gTW9z
+dGx5IGp1c3QgYXNzdW1pbmcgdXNlcnMgbWlnaHQgdHJ5IHRvIGJ1bmNoDQo+PiBjbWRzIHRvZ2V0
+aGVyIGR1cmluZyBzdWJtaXNzaW9uIG9yIHRoZXkgbWlnaHQgaGl0IHRoZSBxdWV1ZSBwbHVnZ2lu
+Zw0KPj4gY29kZS4NCj4+DQo+PiBXaGF0IGRvIHlvdSB0aGluaz8NCj4NCj5PaCB5ZWFoLCB3aGF0
+IGFib3V0IGEgbW9kcGFyYW0gYmF0Y2hfbGltaXQ/IEl0J3MgYmV0d2VlbiAwIGFuZCBjbWRfcGVy
+X2x1bi4NCj4wIHdvdWxkIGNoZWNrIGFmdGVyIGV2ZXJ5IHRyYW5zbWlzc2lvbiBsaWtlIGFib3Zl
+Lg0KDQogRGlkIHlvdSByZWFsbHkgZmFjZSB3aXRoIGEgcGVyZiByZWdyZXNzaW9uPyBJIGNvdWxk
+IG5vdCBpbWFnaW5lIGhvdyBpdCBpcw0KcG9zc2libGUuDQpEYXRhT3V0IFBEVSBjb250YWlucyBh
+IGRhdGEgdG9vLCBzbyBhIHRocm91Z2hwdXQgcGVyZm9ybWFuY2UgY2Fubm90IGJlDQpkZWNyZWFz
+ZWQgYnkgc2VuZGluZyBEYXRhT3V0IFBEVXMuDQoNCiBUaGUgb25seSB0aGluZyBpcyBhIGxhdGVu
+Y3kgcGVyZm9ybWFuY2UuIEJ1dCB0aGF0IGlzIG5vdCBhbiBlYXN5IHF1ZXN0aW9uLg0KSU1ITywg
+YSBzeXN0ZW0gc2hvdWxkIHN0cml2ZSB0byByZWR1Y2UgYSBtYXhpbXVtIHZhbHVlIG9mIHRoZSBs
+YXRlbmN5IGFsbW9zdA0Kd2l0aG91dCBpbXBhY3Rpbmcgb2YgYSBtaW5pbXVtIHZhbHVlIChwcmVm
+ZXIgY3VycmVudCBjb21tYW5kcykgaW5zdGVhZCBvZg0KdG8gcmVkdWNlIGEgbWluaW11bSB2YWx1
+ZSBvZiB0aGUgbGF0ZW5jeSB0byB0aGUgZGV0cmltZW50IG9mIG1heGltdW0gdmFsdWUNCihwcmVm
+ZXIgbmV3IGNvbW1hbmRzKS4NCg0KIEFueSBwcmVmZXJlbmNlIG9mIG5ldyBjb21tYW5kcyBvdmVy
+IGN1cnJlbnQgb25lcyBsb29rcyBsaWtlIGFuIGlvIHNjaGVkdWxlcg0KZnVuY3Rpb25hbGl0eSwg
+YnV0IG9uIHVuZGVybHlpbmcgbGF5ZXIsIHNvIHRvIHNheSBhIEJVUyBsYXllci4NCkkgdGhpbmsg
+aXMgYSBtYXR0ZXIgb2YgZnV0dXJlIGludmVzdGlnYXRpb24vZGV2ZWxvcG1lbnQuDQoNCkJSLA0K
+IERtaXRyeQ0K
