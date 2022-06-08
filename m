@@ -2,152 +2,136 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18101C43334
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jun 2022 04:29:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7136CCA47B
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jun 2022 04:30:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229892AbiFHE32 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Jun 2022 00:29:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50434 "EHLO
+        id S232554AbiFHEaA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Jun 2022 00:30:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50330 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232000AbiFHE23 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jun 2022 00:28:29 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7971B38558D;
-        Tue,  7 Jun 2022 18:58:38 -0700 (PDT)
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 25806CkN010581;
-        Wed, 8 Jun 2022 01:58:25 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : content-type :
- mime-version; s=corp-2021-07-09;
- bh=LMS5+jmGOMU+IIpc3hAlR7tTB96gOLA9Smex3vfXoR0=;
- b=096mEbwm1qtItpDqR3EdTnsyzRPFB948NHgJAPZgtoPI7LZl6lxM/fjRn39PF/lvYjsh
- quGxEYCpIbfvNC1GzHwy8vU3ubi9iOTnFcyq7eXcqFTIoPW5UlMiTeByQmVo44Wkevvk
- vUiIc2hZ1sNKBMuA5Dw+yIpbkmnLeOvObtuvdqDaWNjNqFRCO6m9YqmF0O7zGHxgrQoH
- MBwRPr2s0zd/0uLuH5+xX45rjcRrG2LEDvIC2/+i77TPPuo74/14mmVbPYvD2ZJjIQ0k
- u/8aBbfA7meXE6lPYbS5Wy0kNFa371StqjlWdqILopXH8UhCUGxZrx7oPQKq2S8Z5GyB lQ== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3ghvs3an30-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 08 Jun 2022 01:58:25 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 2581uXea019306;
-        Wed, 8 Jun 2022 01:58:24 GMT
-Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2169.outbound.protection.outlook.com [104.47.58.169])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3gfwu33qhx-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 08 Jun 2022 01:58:24 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=YmL5HvV7KZwZItJs3U/EhnY2CYhKCxG8VOsZ7mwbKzAo7Z5x0gBeufaQmp6JweqjWXninoac/lw2l5Nqns32mphYs9oO/6qnlTJtAz+81fgnGNKxxZE5qmE0NuUtHne5xi8oYclSeC53qVASU7VrEW4i8vdGHcYhMnPQo3eQcHtS1t99fwyFQ7X/lrcXU/ONBGDEC+qiES1GyAEpZF2HM/tHAWx6GrNAs2EHTwyYiEX9hbOpOI3OGfUajUJcMxyx5S1/7N6/JnGM/gu51TSGofHMRgsmm1o1dZYmO+eGQPcHtnraDHdbvA+aChpODNuRMe07UnFYaAmGvMzJp0VgVg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=LMS5+jmGOMU+IIpc3hAlR7tTB96gOLA9Smex3vfXoR0=;
- b=W2D3g1dduCaNuto3ovwVt2TyCid59f66FBBhhXwvn05SnxZQZg7vbOlw+oQRUIoXuhUmvm3N8mTXxhXr11yn+W3+ReNz/Iagrphp2Vek4x5dydn3ROTpprw+KuPIvNtkaIuG4HRG9koCMjyMeJ2E5ErpLve0PWKHy8pQOC7hFesLoZhjQqOqFBlDu5yQjuyQkjYoc90xdKJlAa8/E3zxAOTLZHg61dscIYUKtv7eUomVJFU+Lvu5A1u8Og/1KSnIu6iPwr76oMu1J/jt6Hi2wxMb/BqmX/43dYEAi5rk3+OZgvVFdgiVk4BS8KLweW6ogquti43YBdDUSHRk65g0Gw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=LMS5+jmGOMU+IIpc3hAlR7tTB96gOLA9Smex3vfXoR0=;
- b=KAh2Zr69l6ZJIaPVdIbOS9xOu+gg1uTqEFtXwrq8QTGmSN8JbI8Y4MUGcSC69CUh/+BcP9f1W9f9FkS7pLXpCgIQMl4GZWRa3rdTTTUzfCxEGO2iR+16sEXWLvHmdC+XbiV9e/TcggiK9ZhMhab94m1gH+9ak4Ss4PbrpwtQGlw=
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
- by DM4PR10MB5943.namprd10.prod.outlook.com (2603:10b6:8:ac::9) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5314.19; Wed, 8 Jun 2022 01:58:22 +0000
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::d1db:de4e:9b71:3192]) by PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::d1db:de4e:9b71:3192%9]) with mapi id 15.20.5314.019; Wed, 8 Jun 2022
- 01:58:22 +0000
-To:     keliu <liuke94@huawei.com>
-Cc:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <lduncan@suse.com>, <cleech@redhat.com>,
-        <michael.christie@oracle.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <open-iscsi@googlegroups.com>
-Subject: Re: [PATCH] drivers: scsi: Directly use ida_alloc()/free()
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq1v8tbykzw.fsf@ca-mkp.ca.oracle.com>
-References: <20220527083049.2552526-1-liuke94@huawei.com>
-Date:   Tue, 07 Jun 2022 21:58:20 -0400
-In-Reply-To: <20220527083049.2552526-1-liuke94@huawei.com> (keliu's message of
-        "Fri, 27 May 2022 08:30:49 +0000")
-Content-Type: text/plain
-X-ClientProxiedBy: MN2PR02CA0011.namprd02.prod.outlook.com
- (2603:10b6:208:fc::24) To PH0PR10MB4759.namprd10.prod.outlook.com
- (2603:10b6:510:3d::12)
+        with ESMTP id S234840AbiFHEZY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jun 2022 00:25:24 -0400
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31D98368910
+        for <linux-scsi@vger.kernel.org>; Tue,  7 Jun 2022 18:51:29 -0700 (PDT)
+Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20220608015116epoutp0463f384351f2e987810906b23e9553aef~2gjS_ndHc1062710627epoutp04J
+        for <linux-scsi@vger.kernel.org>; Wed,  8 Jun 2022 01:51:16 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20220608015116epoutp0463f384351f2e987810906b23e9553aef~2gjS_ndHc1062710627epoutp04J
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1654653076;
+        bh=eqVZTWJikI4gYPv3bln85g86ovAiigWULV7IEgDDaj4=;
+        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+        b=fpfFl96wb6AAbf21EKNDg2zyIZc04ihhdvsCg+1uG2+U6+vj15Tue9cdkvO1R/Whp
+         2r4OlRoCuGFW6jeZL5zMoGT+b94a09HuTygncKVqvDOXeXnQ1rl7DtRF2R1sjv2cPl
+         +kwpXx/v0fnkuLdqVOWpfwuvP3+CtD9LGFhrH0bM=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+        20220608015115epcas2p469ca3c7f538ce71f93fd09d5821241c2~2gjSYUHOH1745117451epcas2p4G;
+        Wed,  8 Jun 2022 01:51:15 +0000 (GMT)
+Received: from epsmges2p4.samsung.com (unknown [182.195.36.100]) by
+        epsnrtp2.localdomain (Postfix) with ESMTP id 4LHqvQ4tKsz4x9QC; Wed,  8 Jun
+        2022 01:51:14 +0000 (GMT)
+Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
+        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
+        CE.B0.09694.29000A26; Wed,  8 Jun 2022 10:51:14 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas2p1.samsung.com (KnoxPortal) with ESMTPA id
+        20220608015114epcas2p1d0083ce0c3163c230092aeefd95d4d9e~2gjRCB8eD1873318733epcas2p1Y;
+        Wed,  8 Jun 2022 01:51:14 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20220608015114epsmtrp22f428656ec91664e445a95dc55dd1d58~2gjRBLo2r2437124371epsmtrp2U;
+        Wed,  8 Jun 2022 01:51:14 +0000 (GMT)
+X-AuditID: b6c32a48-495ff700000025de-a6-62a00092a365
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        5C.E4.11276.19000A26; Wed,  8 Jun 2022 10:51:13 +0900 (KST)
+Received: from KORCO082417 (unknown [10.229.8.121]) by epsmtip2.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20220608015113epsmtip237805aa8c2e8e25efd5271e852be0acc~2gjQ25ma40673506735epsmtip2n;
+        Wed,  8 Jun 2022 01:51:13 +0000 (GMT)
+From:   "Chanho Park" <chanho61.park@samsung.com>
+To:     "'Alim Akhtar'" <alim.akhtar@samsung.com>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux-phy@lists.infradead.org>
+Cc:     <devicetree@vger.kernel.org>, <robh+dt@kernel.org>,
+        <krzysztof.kozlowski+dt@linaro.org>, <vkoul@kernel.org>,
+        <avri.altman@wdc.com>, <bvanassche@acm.org>,
+        <martin.petersen@oracle.com>, <pankaj.dubey@samsung.com>
+In-Reply-To: <20220603154714.30532-6-alim.akhtar@samsung.com>
+Subject: RE: [PATCH v2 5/7] ufs: ufs-exynos:  add mphy apb clock mask
+Date:   Wed, 8 Jun 2022 10:51:13 +0900
+Message-ID: <002e01d87ada$3c3b0630$b4b11290$@samsung.com>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: b3039eb0-465e-4368-a309-08da48f25e09
-X-MS-TrafficTypeDiagnostic: DM4PR10MB5943:EE_
-X-Microsoft-Antispam-PRVS: <DM4PR10MB594380E054A2C4771D5F0CE58EA49@DM4PR10MB5943.namprd10.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: xS1HgI+QW71DukY5zuCp1C1fQEX6pIyux4iLwD7HXG1d12XVsl1QFAP3iD9j8U3M7meN6H/x8V0s/sAXu0pBrAjzNqvTLHQg68d3cf99akqYuLPSAedRCzbtJHQEVVq8CJAIeLU6lSMr3AjdF/uRxY9V34gQPeEyvCKHsjfbmGaPQK12kOW+bG2uKatbQwkNHGsminMrBb8fhdvr2zqRbKedhaN7TVGvWn8XxWKWrbMd02TOiNDls22Nxb+7OqQ6Y5HgVFVRsP3wQ8hXAiUK2VYETEW5WzjBMV3MAxBd99kcQPcrzULP5ifW7QMpnvDEqgxgxlCJfpH4zSip/HHAWwAXQW9kIlpH1DP8sivhWdBNxnFmxP+/QEtNYLR2TYAJ0mKLzRNg15mF4VNMnFQY+TViRld8A7x5kImq52AGf0PqTy9w2bFhK8NQSpSi6tEmT5OaUk1MK97O9EVRGGDnWA9NXSIk0QNnq7gwgafyZTlDPpoO9xJubu8KhxRYLyBRgMfYOMTmNNpdzuDd9472ZSlGB7EpVpxGDCIDou4OFY6jLqFMHq2CDa5budUHaO032AXJjmxTXCI3Kxt3e0VyBTxs9Bf27MFWPoqwo6DLqJofT3829SyfTKsaTzH85/p+CFd+o+1m7FGKUIwkVs3Cv0+E5C/O4OYwJo28iViJa51cFNPZ+8aM+V6KOurgd+mQA03wPSaH1UtHFe4aaQMnCg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(54906003)(26005)(66476007)(4326008)(5660300002)(66946007)(38100700002)(316002)(66556008)(8676002)(508600001)(186003)(558084003)(36916002)(8936002)(2906002)(38350700002)(6916009)(6506007)(6486002)(52116002)(86362001)(6512007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?bIpmiyI+9XOJ4Pat8+nMG6SdPl9fwpMqFya64UKMf/zeNnZ1aBnoHoglNbxX?=
- =?us-ascii?Q?4j/Ios4GOBtkXIrTmkV09TnRexoRbCi8XCrfW2O9Uqt+qujcd1vv4M8LTPfN?=
- =?us-ascii?Q?/3BuN1CO/w5PGAxcJVWBif/poFocjtbaXtAy6+g5vhiOemrjVY5qvxbm5DPi?=
- =?us-ascii?Q?PQuuWWhCm/TKo8PzfilNm940crt9/HeIhucRz6rdfY5E875UvZOOb0A0MQ6A?=
- =?us-ascii?Q?tNc5auMIaZlrqq8s8WoBiro/ugDBq2mWVBcZDFPOprwRHDhZLugjvogXTGrB?=
- =?us-ascii?Q?yODXNsMTIC3/eFWRB5uMCCQw07jwX8Y9UK81lV1H9DZqfEYGt3EfAtUjmwfP?=
- =?us-ascii?Q?9xKIKGmq2B69SPIUNAhFj0cWtPMhyK2JO2q0JDuB7ThKyp8pQs9ZPy6I9gVP?=
- =?us-ascii?Q?E71MfB0cg+dPlsHlabsi6v3IhdPYNhdZfRGt4W+AZW8LjBIjVD1X6WKXGjcF?=
- =?us-ascii?Q?fxevFk1szaIXs4y0vVDjoCWXUkfK2Vihb1J3wSRSexJ1dXo/8kdyL0eceLc0?=
- =?us-ascii?Q?apv0mseJhhsR5AspcL1kOtV1EBZUFfN8AcwoYId3RohOM9QU+Hg75uOrsfyr?=
- =?us-ascii?Q?Eacf3lVMAK+yX+sBz+voeA+ymuZnVrNYu3NCFHqmOENkIuZTcuog0zIEMQ2E?=
- =?us-ascii?Q?44bxLqtQC6DINTb9+dW4g5hLKYuJHipFurBRgp+HOToyeGj+yp3P9KFwYVtK?=
- =?us-ascii?Q?promNb0pmnuqwuOlBKnhN6lcBgu4OIm3N6iryACNHrrSgmx9YFfv1PePK/Jn?=
- =?us-ascii?Q?hcPiBDeKK9hDmymfaN7Y2TUZ45w3h63FYDOAPIdqBKX+nApnefps4xWZo0iB?=
- =?us-ascii?Q?xQ3XQy/x2mYREwuLwLPdpvSjOMoWBLgV/VXgVCo98BiCIyz8dycmSzre6X2x?=
- =?us-ascii?Q?P+8fvKdgid7oCUbrdYQRdOJUQ2bELF1+szoIFMZywRFzC6WwWJ/A3BqLTwhC?=
- =?us-ascii?Q?m05tbrLHe15HIKUXlWB/WcV9dfauEHKrSGQwY73UR1OV+xMi47Q58LylES7y?=
- =?us-ascii?Q?n+Tn+nGjSH5MPmACXc7C8UVffkNkem9ZepartxOklXxrMqi6WLGjwrVnSVrl?=
- =?us-ascii?Q?Lj9FMx/HMxCH1epJYSdM5S7Vl2dJ/v3hMhmQqD3/jDtF6dgEIs7I53mPtY9x?=
- =?us-ascii?Q?HY/Mk4xy/7O/6s3V6s6nz27iNfG+z4BqHo2eDC1gtSd7nhapUkpKfnhwFvW1?=
- =?us-ascii?Q?DMoHfLTDqPyqoSpazaUNKrzlz/AUW19UcLnz8axAOpgD/jrSNf2BhcMq5InT?=
- =?us-ascii?Q?XksEOOZI594rJZ1haVQFSPQpvduSej2lMfm7zQJe4cvTbbhPQ5TQ23AaLm/K?=
- =?us-ascii?Q?0UtPjJg5yfe7leTLooPJ4Aksrj66NRr8KSBJeQhc6p8qekPg2b6euHzZjZ1o?=
- =?us-ascii?Q?LZkFGbKzuW0NbwZiYKiRT3Y49MDbzRzoU6+HfvU/uyWYEBgaPDSEocSeAOCL?=
- =?us-ascii?Q?hST7OmXasygyCezAF98UviSknLZZtV3Hw2VvCfP8xkKVwBwKR5FozdEjvaK+?=
- =?us-ascii?Q?FtbmEYUORQFTwXGAtjdO9pra5u3G2uA+Yuhd/IDNAUJxUAj4sPQt2pw7E3jD?=
- =?us-ascii?Q?hbyQ41x96nKo+upVaMezGgDSLfqMA85r+Skrw6rkTO+nOKwppSwkiYm4Ynpz?=
- =?us-ascii?Q?ACBnT2uvdEO9ObY0YTqL2jBLv0BVfWMN0fy7tGkSW4E5QV2fk/RgNWdofwd5?=
- =?us-ascii?Q?mIZ7NuA8zucoKH+Sb3KPahUMx3Kgn6pWum4Rk0F6JiEjiIbpYq5ufHKgOhXV?=
- =?us-ascii?Q?LRcft1p69OW50LLKf9O2rmH9fIVZ83Q=3D?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b3039eb0-465e-4368-a309-08da48f25e09
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Jun 2022 01:58:22.5028
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: YguiMJIYBuZiToofWBto1OwJpqzYVGq67W4lUHAASSYCKgffHkFxIOPmq+liVWU7COBabnto86g43IevBtS11nISkfc4xxE3WmNsvbibxe0=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR10MB5943
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.517,18.0.874
- definitions=2022-06-07_11:2022-06-07,2022-06-07 signatures=0
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=303 spamscore=0
- adultscore=0 suspectscore=0 malwarescore=0 phishscore=0 bulkscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2204290000 definitions=main-2206080007
-X-Proofpoint-ORIG-GUID: WBO-A4piivP7fcQ3y2Fwq1v2nVjYPsKC
-X-Proofpoint-GUID: WBO-A4piivP7fcQ3y2Fwq1v2nVjYPsKC
+Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Content-Language: ko
+Thread-Index: AQFSBQ9Zoh1+pG8sApsbls4ebot9jgLM1fJbAg0k7wKuKtiDAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrEJsWRmVeSWpSXmKPExsWy7bCmhe4khgVJBiffKFk8mLeNzeLlz6ts
+        FtM+/GS2mH/kHKtF34uHzBabHl9jtbi8aw6bxYRV31gsuq/vYLNYfvwfk8WirV/YLVr3HmG3
+        2HnnBLMDr8flK94em1Z1snncubaHzWPzknqPj09vsXj0bVnF6PF5k5xH+4FupgCOqGybjNTE
+        lNQihdS85PyUzLx0WyXv4HjneFMzA0NdQ0sLcyWFvMTcVFslF58AXbfMHKCLlRTKEnNKgUIB
+        icXFSvp2NkX5pSWpChn5xSW2SqkFKTkF5gV6xYm5xaV56Xp5qSVWhgYGRqZAhQnZGd3HbjIX
+        fGeu6Fzcw9LAOJe5i5GTQ0LAROLb23bWLkYuDiGBHYwSEzoOsEM4nxgl9p74wQhSJSTwjVHi
+        UwMPTMf8uQ0sEEV7GSU+LnzKDOG8AGrfspoFpIpNQF/iZcc2sLkiIHM/r/gElmAWuMMosX2H
+        IIjNKWAr8WnLISYQW1jAVaLv7iGwGhYBFYmDb46AHcgrYCnx8MxnKFtQ4uTMJ1Bz5CW2v50D
+        9YSCxM+ny1gh4iISszvbwOIiAk4Sa6ceg6q5wiHx4KkIhO0icWoxyJ8gtrDEq+NboGwpic/v
+        9rJB2MUSS2d9YgJ5QEKggVHi8rZfUAljiVnP2oHhwgG0TFNi/S59EFNCQFniyC2o0/gkOg7/
+        ZYcI80p0tAlBNKpLHNg+nQXClpXonvOZdQKj0iwkj81C8tgsJM/MQti1gJFlFaNYakFxbnpq
+        sVGBCTyyk/NzNzGCE7OWxw7G2W8/6B1iZOJgPMQowcGsJMIrGT4/SYg3JbGyKrUoP76oNCe1
+        +BCjKTCoJzJLiSbnA3NDXkm8oYmlgYmZmaG5kamBuZI4r1fKhkQhgfTEktTs1NSC1CKYPiYO
+        TqkGpkl13E+XeJ6YMutr8MyMlhK1f4fudkmnsJRwp3dO05ujkahZH/+1pfaYflPD6gVOT2al
+        Vn6dUj99y83G4+ff/pM5Wn7k5WGGee8UBQTEbr48pvdqmoTRRIe/t+LNzzzSWXjPZy3rgpad
+        /42PB9WejeXw/v/xAbPaAnFPLr1rE5WYfZN0mdomMb8O/vf37Yv0nofnNt/hkhVJVuGuXxp1
+        WPj9dLP/+/N8i/cxGOpcvu2wwjmi7mhz4BtDvh1M35rj6xPuvGfaYOWsKL7PS5zP8/O0L1fm
+        idmFBDziE+syXcbRvuzL+sTtJud1zsxZNSd8n+WfSS1cZW9nHDfiOj7XlTEv2PBJM7tT07qZ
+        MpK8MUosxRmJhlrMRcWJAB6x5C5VBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrPIsWRmVeSWpSXmKPExsWy7bCSvO4khgVJBld4LB7M28Zm8fLnVTaL
+        aR9+MlvMP3KO1aLvxUNmi02Pr7FaXN41h81iwqpvLBbd13ewWSw//o/JYtHWL+wWrXuPsFvs
+        vHOC2YHX4/IVb49NqzrZPO5c28PmsXlJvcfHp7dYPPq2rGL0+LxJzqP9QDdTAEcUl01Kak5m
+        WWqRvl0CV0b3sZvMBd+ZKzoX97A0MM5l7mLk5JAQMJGYP7eBpYuRi0NIYDejxIavn9ghErIS
+        z97tgLKFJe63HGEFsYUEnjFKnGnVBbHZBPQlXnZsYwVpFhHYwyjRNu8UO4jDLPCEUeJcTzMr
+        xNj9jBL/bl0E28cpYCvxacshJhBbWMBVou/uIRYQm0VAReLgmyNgNbwClhIPz3yGsgUlTs58
+        AlbDLKAt0fuwlRHClpfY/nYO1A8KEj+fLmOFiItIzO5sA4uLCDhJrJ16jHkCo/AsJKNmIRk1
+        C8moWUjaFzCyrGKUTC0ozk3PLTYsMMxLLdcrTswtLs1L10vOz93ECI5TLc0djNtXfdA7xMjE
+        wXiIUYKDWUmEVzJ8fpIQb0piZVVqUX58UWlOavEhRmkOFiVx3gtdJ+OFBNITS1KzU1MLUotg
+        skwcnFINTAx/uOXvlHH/tFF69e1H+aN1yu7xNlf8GtNP7dgmfuV7ikH1ovatRs/aJ75gtj7R
+        GtuxmK1wsiZ3dNB7V541yy7+snbWnzZ7n6y3leP9T2k705TdDT97zug9IH6PNzUqbq2WAc/8
+        C6zWcS9EXDR1P4d+KvlytLzdRLi7tHKyrP6Ed4vrApMObrNYsOWQCvOC6Xt3OXdr/Lc9O/VL
+        w6J7l+53FZX/F41kUDxxbvEilo6Syqpnqxd+V8+zUdq7JZdvzuxnGeofW1Xma7w981MipXhL
+        bKKvVcQhjcD0lbeOxJur1Ww1u3LpMSuryJG/V7dHfy94viK0lzdlpZMIn/OG02zqc+OcCzKe
+        n6pv3TTLSomlOCPRUIu5qDgRANzBRMNCAwAA
+X-CMS-MailID: 20220608015114epcas2p1d0083ce0c3163c230092aeefd95d4d9e
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20220603154904epcas5p21615dfab6f57f563889230c81a717835
+References: <20220603154714.30532-1-alim.akhtar@samsung.com>
+        <CGME20220603154904epcas5p21615dfab6f57f563889230c81a717835@epcas5p2.samsung.com>
+        <20220603154714.30532-6-alim.akhtar@samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+> Subject: [PATCH v2 5/7] ufs: ufs-exynos: add mphy apb clock mask
+> 
+> Bit[3] of HCI_CLKSTOP_CTRL register is for enabling/disabling MPHY APB
+> clock. Lets add it to CLK_STOP_MASK, so that the same can be controlled
+> during clock masking/unmasking.
+> 
+> Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
 
-keliu,
+Reviewed-by: Chanho Park <chanho61.park@samsung.com>
 
-> Use ida_alloc()/ida_free() instead of deprecated
-> ida_simple_get()/ida_simple_remove() .
+And tested on my ExynosAutov9 SADK board.
 
-Applied to 5.20/scsi-staging, thanks!
+Tested-by: Chanho Park <chanho61.park@samsung.com>
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Best Regards,
+Chanho Park
+
