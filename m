@@ -2,83 +2,87 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BF7EC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jun 2022 17:50:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E8EAC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jun 2022 17:58:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232952AbiFHRul (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Jun 2022 13:50:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33300 "EHLO
+        id S233661AbiFHR6l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Jun 2022 13:58:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44370 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232964AbiFHRuh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jun 2022 13:50:37 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C8F957985;
-        Wed,  8 Jun 2022 10:50:34 -0700 (PDT)
-Received: from fraeml713-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LJF8r2xCyz67VbM;
-        Thu,  9 Jun 2022 01:49:16 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml713-chm.china.huawei.com (10.206.15.32) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Wed, 8 Jun 2022 19:50:31 +0200
-Received: from [10.47.90.54] (10.47.90.54) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Wed, 8 Jun
- 2022 18:50:30 +0100
-Message-ID: <31417477-953d-283e-808e-cf8701e820a8@huawei.com>
-Date:   Wed, 8 Jun 2022 18:50:29 +0100
+        with ESMTP id S233584AbiFHR6h (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jun 2022 13:58:37 -0400
+X-Greylist: delayed 358 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 08 Jun 2022 10:58:36 PDT
+Received: from mp-relay-01.fibernetics.ca (mp-relay-01.fibernetics.ca [208.85.217.136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6AD7A14FCB6
+        for <linux-scsi@vger.kernel.org>; Wed,  8 Jun 2022 10:58:36 -0700 (PDT)
+Received: from mailpool-fe-01.fibernetics.ca (mailpool-fe-01.fibernetics.ca [208.85.217.144])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mp-relay-01.fibernetics.ca (Postfix) with ESMTPS id 162BEE0E88;
+        Wed,  8 Jun 2022 17:52:37 +0000 (UTC)
+Received: from localhost (mailpool-mx-02.fibernetics.ca [208.85.217.141])
+        by mailpool-fe-01.fibernetics.ca (Postfix) with ESMTP id 0F9674FE2F;
+        Wed,  8 Jun 2022 17:52:37 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at 
+Received: from mailpool-fe-01.fibernetics.ca ([208.85.217.144])
+        by localhost (mail-mx-02.fibernetics.ca [208.85.217.141]) (amavisd-new, port 10024)
+        with ESMTP id 8hkYqcO5Kh3t; Wed,  8 Jun 2022 17:52:36 +0000 (UTC)
+Received: from [10.16.26.45] (unknown [62.97.234.74])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: dgilbert@interlog.com)
+        by mail.ca.inter.net (Postfix) with ESMTPSA id D8EC04AD78;
+        Wed,  8 Jun 2022 17:52:35 +0000 (UTC)
+Message-ID: <01ac6434-3b06-5e9d-3036-660785752741@interlog.com>
+Date:   Wed, 8 Jun 2022 19:52:33 +0200
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH v3 3/4] scsi: core: Cap shost max_sectors according to DMA
- optimum mapping limits
-To:     Bart Van Assche <bvanassche@acm.org>,
-        <damien.lemoal@opensource.wdc.com>, <joro@8bytes.org>,
-        <will@kernel.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <hch@lst.de>,
-        <m.szyprowski@samsung.com>, <robin.murphy@arm.com>
-CC:     <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-ide@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
-        <linux-scsi@vger.kernel.org>, <liyihang6@hisilicon.com>,
-        <chenxiang66@hisilicon.com>, <thunder.leizhen@huawei.com>
-References: <1654507822-168026-1-git-send-email-john.garry@huawei.com>
- <1654507822-168026-4-git-send-email-john.garry@huawei.com>
- <fe365aa8-00d5-153d-ceb2-f887a71a6927@acm.org>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <fe365aa8-00d5-153d-ceb2-f887a71a6927@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.47.90.54]
-X-ClientProxiedBy: lhreml744-chm.china.huawei.com (10.201.108.194) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Reply-To: dgilbert@interlog.com
+Subject: Re: [PATCH v2] scsi: scsi_debug: fix zone transition to full
+ condition
+Content-Language: en-CA
+To:     Niklas Cassel <Niklas.Cassel@wdc.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+References: <20220608011302.92061-1-damien.lemoal@opensource.wdc.com>
+ <YqAA5ywNC4kdRWXz@x1-carbon>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+In-Reply-To: <YqAA5ywNC4kdRWXz@x1-carbon>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 08/06/2022 18:33, Bart Van Assche wrote:
-> On 6/6/22 02:30, John Garry wrote:
->> +    if (dma_dev->dma_mask) {
->> +        shost->max_sectors = min_t(unsigned int, shost->max_sectors,
->> +                dma_opt_mapping_size(dma_dev) >> SECTOR_SHIFT);
->> +    }
+On 2022-06-08 03:52, Niklas Cassel wrote:
+> On Wed, Jun 08, 2022 at 10:13:02AM +0900, Damien Le Moal wrote:
+>> When a write command to a sequential write required or sequential write
+>> preferred zone result in the zone write pointer reaching the end of the
+>> zone, the zone condition must be set to full AND the number of
+>> implicitly or explicitly open zones updated to have a correct accounting
+>> for zone resources. However, the function zbc_inc_wp() only sets the
+>> zone condition to full without updating the open zone counters,
+>> resulting in a zone state machine breakage.
+>>
+>> Introduce the helper function zbc_set_zone_full() and use it in
+>> zbc_inc_wp() to correctly transition zones to the full condition.
+>>
+>> Fixes: 0d1cf9378bd4 ("scsi: scsi_debug: Add ZBC zone commands")
+>> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+>> ---
+>> Changes from v1:
+>> * Simplify the patch to not modify the zbc_finish_zone() function and
+>>    not use the CLOSED zone condition as an intermediate state in
+>>    zbc_set_zone_full(). Cleanups to remove the use of the closed
+>>    condition as an intermediate state will be sent later.
+>>
+>>   drivers/scsi/scsi_debug.c | 22 ++++++++++++++++++++--
+>>   1 file changed, 20 insertions(+), 2 deletions(-)
 > 
-> Since IOVA_RANGE_CACHE_MAX_SIZE = 6 this limits max_sectors to 2**6 * 
-> PAGE_SIZE or 256 KiB if the page size is 4 KiB.
+> Reviewed-by: Niklas Cassel <niklas.cassel@wdc.com>
 
-It's actually 128K for 4K page size, as any IOVA size is roundup to 
-power-of-2 when testing if we may cache it, which means anything >128K 
-would roundup to 256K and cannot be cached.
-
-> I think that's too 
-> small. Some (SRP) storage arrays require much larger transfers to 
-> achieve optimal performance.
-
-Have you tried this achieve this optimal performance with an IOMMU enabled?
-
-Please note that this limit only applies if we have an IOMMU enabled for 
-the scsi host dma device. Otherwise we are limited by dma direct or 
-swiotlb max mapping size, as before.
-
-Thanks,
-John
+Acked-by: Douglas Gilbert <dgilbert@interlog.com>
