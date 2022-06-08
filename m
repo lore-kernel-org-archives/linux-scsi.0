@@ -2,57 +2,109 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2155CCA47B
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jun 2022 09:23:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B8C7CCA47B
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jun 2022 10:24:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234783AbiFHJXM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Jun 2022 05:23:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50018 "EHLO
+        id S236918AbiFHKY5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Jun 2022 06:24:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52408 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234800AbiFHJWj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jun 2022 05:22:39 -0400
-X-Greylist: delayed 2220 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 08 Jun 2022 01:43:24 PDT
-Received: from mail.puregrowthonline.pl (mail.puregrowthonline.pl [51.38.124.91])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1F3010E3
-        for <linux-scsi@vger.kernel.org>; Wed,  8 Jun 2022 01:43:23 -0700 (PDT)
-Received: by mail.puregrowthonline.pl (Postfix, from userid 1002)
-        id 91D0EA2B55; Wed,  8 Jun 2022 08:05:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=puregrowthonline.pl;
-        s=mail; t=1654675561;
-        bh=CSKXLMgcdpWkXuTgJn5+jsCVobtU9JEF4vCnS5z6McM=;
-        h=Date:From:To:Subject:From;
-        b=o7VxJPQcvcJCzhNT9tSpnTn32uCuo8idm/N4EaPJa7diuTz4LWYjdMW2JUWBc0BY3
-         z/rdNq7I8dKHIwcX+px0FUzcoiD+vRhxI7ENUeMHqdKHFBGRk7RgHB+RcwvotO0EhE
-         ID8iDLFHtHyU7foIuu9Qop5Wz1p9SulJ+aPrkKlqbuM56X4cksWk6jpBx7rvaFFtS0
-         H+jscLMu28NsYJuZdBsrTZ2wRn8dvoFw+1GtHHk56NVOCEcPJEyrC2XQV1jKo5SnnL
-         EWoCU4PZDZL1LSVoCmCAyvGznFQNL52u1zKYOCmPCnG1u8ru//1l2m27Ui7eOAa084
-         RXkotF0vBHVfQ==
-Received: by mail.puregrowthonline.pl for <linux-scsi@vger.kernel.org>; Wed,  8 Jun 2022 08:05:19 GMT
-Message-ID: <20220608064500-0.1.41.cy37.0.t56ph08jmc@puregrowthonline.pl>
-Date:   Wed,  8 Jun 2022 08:05:19 GMT
-From:   "Wiktor Nurek" <wiktor.nurek@puregrowthonline.pl>
-To:     <linux-scsi@vger.kernel.org>
-Subject: =?UTF-8?Q?Nap=C5=82yw_Klient=C3=B3w_ze_strony?=
-X-Mailer: mail.puregrowthonline.pl
+        with ESMTP id S237373AbiFHKYT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jun 2022 06:24:19 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5BB0C142A8D;
+        Wed,  8 Jun 2022 03:14:12 -0700 (PDT)
+Received: from fraeml739-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LJ32H3WYkz6H6pv;
+        Wed,  8 Jun 2022 18:12:55 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml739-chm.china.huawei.com (10.206.15.220) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Wed, 8 Jun 2022 12:14:09 +0200
+Received: from [10.47.90.54] (10.47.90.54) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Wed, 8 Jun
+ 2022 11:14:08 +0100
+Message-ID: <202f1969-41e4-5f9a-3ff6-0009757434f5@huawei.com>
+Date:   Wed, 8 Jun 2022 11:14:07 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+From:   John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH v3 0/4] DMA mapping changes for SCSI core
+To:     Bart Van Assche <bvanassche@acm.org>,
+        <damien.lemoal@opensource.wdc.com>, <joro@8bytes.org>,
+        <will@kernel.org>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <hch@lst.de>,
+        <m.szyprowski@samsung.com>, <robin.murphy@arm.com>
+CC:     <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
+        <linux-scsi@vger.kernel.org>, <liyihang6@hisilicon.com>,
+        <chenxiang66@hisilicon.com>, <thunder.leizhen@huawei.com>
+References: <1654507822-168026-1-git-send-email-john.garry@huawei.com>
+ <3e2324dc-2ab1-6a35-46ab-72d970cc466c@acm.org>
+In-Reply-To: <3e2324dc-2ab1-6a35-46ab-72d970cc466c@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.47.90.54]
+X-ClientProxiedBy: lhreml744-chm.china.huawei.com (10.201.108.194) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Dzie=C5=84 dobry,
+On 07/06/2022 23:43, Bart Van Assche wrote:
+> On 6/6/22 02:30, John Garry wrote:
+>> As reported in [0], DMA mappings whose size exceeds the IOMMU IOVA 
+>> caching
+>> limit may see a big performance hit.
+>>
+>> This series introduces a new DMA mapping API, dma_opt_mapping_size(), so
+>> that drivers may know this limit when performance is a factor in the
+>> mapping.
+>>
+>> Robin didn't like using dma_max_mapping_size() for this [1].
+>>
+>> The SCSI core code is modified to use this limit.
+>>
+>> I also added a patch for libata-scsi as it does not currently honour the
+>> shost max_sectors limit.
+>>
+>> Note: Christoph has previously kindly offered to take this series via the
+>>        dma-mapping tree, so I think that we just need an ack from the
+>>        IOMMU guys now.
+>>
+>> [0] 
+>> https://lore.kernel.org/linux-iommu/20210129092120.1482-1-thunder.leizhen@huawei.com/ 
+>>
+>> [1] 
+>> https://lore.kernel.org/linux-iommu/f5b78c9c-312e-70ab-ecbb-f14623a4b6e3@arm.com/ 
+>>
+> 
+> Regarding [0], that patch reverts commit 4e89dce72521 ("iommu/iova: 
+> Retry from last rb tree node if iova search fails"). Reading the 
+> description of that patch, it seems to me that the iova allocator can be 
+> improved. Shouldn't the iova allocator be improved such that we don't 
+> need this patch series? There are algorithms that handle fragmentation 
+> much better than the current iova allocator algorithm, e.g. the 
+> https://en.wikipedia.org/wiki/Buddy_memory_allocation algorithm.
 
-chcia=C5=82bym poinformowa=C4=87 Pa=C5=84stwa o mo=C5=BCliwo=C5=9Bci pozy=
-skania nowych zlece=C5=84 ze strony www.
+Regardless of whether the IOVA allocator can be improved - which it 
+probably can be - this series is still useful. That is due to the IOVA 
+rcache - that is a cache of pre-allocated IOVAs which can be quickly 
+used in the DMA mapping. The rache contains IOVAs up to certain fixed 
+size. In this series we limit the DMA mapping length to the rcache size 
+upper limit to always bypass the allocator (when we have a cached IOVA 
+available) - see alloc_iova_fast().
 
-Widzimy zainteresowanie potencjalnych Klient=C3=B3w Pa=C5=84stwa firm=C4=85=
-, dlatego ch=C4=99tnie pomo=C5=BCemy Pa=C5=84stwu dotrze=C4=87 z ofert=C4=
-=85 do wi=C4=99kszego grona odbiorc=C3=B3w poprzez efektywne metody pozyc=
-jonowania strony w Google.
+Even if the IOVA allocator were greatly optimised for speed, there would 
+still be an overhead in the alloc and free for those larger IOVAs which 
+would outweigh the advantage of having larger DMA mappings. But is there 
+even an advantage in very large streaming DMA mappings? Maybe for iotlb 
+efficiency. But some say it's better to have the DMA engine start 
+processing the data ASAP and not wait for larger lists to be built.
 
-Czy m=C3=B3g=C5=82bym liczy=C4=87 na kontakt zwrotny?
+Thanks,
+John
 
-
-Pozdrawiam serdecznie,
-Wiktor Nurek
