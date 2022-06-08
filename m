@@ -2,42 +2,42 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CEBFCCA486
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jun 2022 07:18:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCAE7C43334
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jun 2022 07:21:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233548AbiFHHPu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Jun 2022 03:15:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59692 "EHLO
+        id S232556AbiFHHSr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Jun 2022 03:18:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44750 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241331AbiFHGui (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jun 2022 02:50:38 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD10F16837B
-        for <linux-scsi@vger.kernel.org>; Tue,  7 Jun 2022 23:39:31 -0700 (PDT)
+        with ESMTP id S1347114AbiFHGNC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jun 2022 02:13:02 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0200196A9D
+        for <linux-scsi@vger.kernel.org>; Tue,  7 Jun 2022 22:36:50 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id D84E0B825A0
-        for <linux-scsi@vger.kernel.org>; Wed,  8 Jun 2022 06:39:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 741C9C3411D
-        for <linux-scsi@vger.kernel.org>; Wed,  8 Jun 2022 06:39:28 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B5B766198D
+        for <linux-scsi@vger.kernel.org>; Wed,  8 Jun 2022 05:36:04 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 1CCA6C385A5
+        for <linux-scsi@vger.kernel.org>; Wed,  8 Jun 2022 05:36:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654670368;
-        bh=9h1pr4VTUOSe+TSZxTXYfFCl3bVqAaVcO6njibrrgns=;
+        s=k20201202; t=1654666564;
+        bh=zP4gQh6GvhRseDfs4cYtFBOrL8fq0wXj3xZ8ynDjLHg=;
         h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=rSYiHTlCWyf2XEUpffXH21wPnIXCQLsattCI8cIf92L6aj0TKTErHntYLYxfg6/Y8
-         hO9ZtAUGLi51LKpusXT7oKJDSgzsm+hVEUDdqTvnQ4jrGFRPkVXCMv4Vdk10hh0uFf
-         MKnXg3Oq7oxNWZgA7taeBc3OWeVggRCvNhMCew4VJQsGcrXGv3/M7g4uhzDnz/nI7V
-         Y+BJyGlApcC0wO/LE+nF7MpMBB9K3iPaHAe7Y3uxZhlY9qzjrEc9hr/5XDmtXvG3Q+
-         hmGajofaGf7sW3cJzh/Kgb68qbSKOMcrCYHF1AomMIenG5AB5leuetNrOBSKGSm159
-         3BmH16SXFOjww==
+        b=FBcMrKiDB0jkGxugGszv2U+ipo2ehvBqZYGfyMtgCkYi4j1bYEOD58nWYneGiANUt
+         IX6A2yU73L3Xz4eTfsVCEy3iOrqMTDqLXBaqDAABjaN4ks/i6Q9YpKmABBAyjIRHmy
+         wwIthbcpA2qG6OmBvaCmoh5YJ4qPc+iZzQC+NL2z3MqJSrDTn42KoadHe6u/6xgkKt
+         WctikFrZS8QJJklaZ6TirFOz9zOM/lJqKT/c1VlnL+0nGZsQ38aKBDINYV9tDHKjJp
+         SftEnCQc8sL90oNqRrcGCScJw0pHsT2NbjuQS80mG1Xc9x6EXLgN9z8oeIjaB4ym1u
+         f6I/tlXDvoOZg==
 Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 5D59DC05FD5; Wed,  8 Jun 2022 06:39:28 +0000 (UTC)
+        id F2741CC13B1; Wed,  8 Jun 2022 05:36:03 +0000 (UTC)
 From:   bugzilla-daemon@kernel.org
 To:     linux-scsi@vger.kernel.org
 Subject: [Bug 215943] UBSAN: array-index-out-of-bounds in
  drivers/scsi/megaraid/megaraid_sas_fp.c:103:32
-Date:   Wed, 08 Jun 2022 06:39:26 +0000
+Date:   Wed, 08 Jun 2022 05:36:03 +0000
 X-Bugzilla-Reason: AssignedTo
 X-Bugzilla-Type: changed
 X-Bugzilla-Watch-Reason: None
@@ -46,14 +46,14 @@ X-Bugzilla-Component: SCSI
 X-Bugzilla-Version: 2.5
 X-Bugzilla-Keywords: 
 X-Bugzilla-Severity: normal
-X-Bugzilla-Who: darren.armstrong85@gmail.com
+X-Bugzilla-Who: torbjorn@jansson.tech
 X-Bugzilla-Status: NEW
 X-Bugzilla-Resolution: 
 X-Bugzilla-Priority: P1
 X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
 X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-215943-11613-xxyWUMXM0G@https.bugzilla.kernel.org/>
+X-Bugzilla-Changed-Fields: cc
+Message-ID: <bug-215943-11613-aRpG0RXLVv@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-215943-11613@https.bugzilla.kernel.org/>
 References: <bug-215943-11613@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
@@ -67,16 +67,27 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 https://bugzilla.kernel.org/show_bug.cgi?id=3D215943
 
---- Comment #5 from darren.armstrong85@gmail.com ---
-That makes sense, the code path I saw this on was loading state from firmwa=
-re.
+torbjorn@jansson.tech changed:
 
-I guess we need to resolve whether/how we can safely "spill over" into the
-array in this manner. As above there's some assumptions implicitly behind m=
-ade
-about the layout of the ldTgtIdToLd map that the zero-th entry in ldSpanMap=
- is
-special.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |torbjorn@jansson.tech
+
+--- Comment #4 from torbjorn@jansson.tech ---
+i have started seeing exactly the same problem in the log as well.
+i only noticed after the controller for some odd reason gave up and the ker=
+nel
+obviously started complaining about all my sas disks and not able to access
+them.
+
+after reboot i checked dmesg and then found this UBSAN
+array-index-out-of-bounds
+
+in my case i a 9361-8i and a Supermicro C7X99-OCE-F/C7X99-OCE-F, BIOS 2.1a
+06/15/2018 mainboard.
+i'm running kernel 5.15.35
+
+the UBSAN messages happened directly at boot
 
 --=20
 You may reply to this email to add a comment.
