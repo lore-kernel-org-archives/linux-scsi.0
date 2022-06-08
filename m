@@ -2,85 +2,85 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 219E6CCA482
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jun 2022 06:01:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B884C43334
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jun 2022 06:02:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234832AbiFHGBk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Jun 2022 02:01:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33898 "EHLO
+        id S234938AbiFHGBz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Jun 2022 02:01:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44714 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238601AbiFHFv5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jun 2022 01:51:57 -0400
+        with ESMTP id S238717AbiFHFwB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jun 2022 01:52:01 -0400
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B7E0113A11;
-        Tue,  7 Jun 2022 20:34:43 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E750AFAED;
+        Tue,  7 Jun 2022 20:35:49 -0700 (PDT)
 Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 257NUv1w014268;
-        Wed, 8 Jun 2022 02:28:04 GMT
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 257NfeKx014363;
+        Wed, 8 Jun 2022 02:28:01 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=UnmqXkpiTAP51sDtRl4BUGeSYwx+BbIJjn7jP9GGSSA=;
- b=cil1gp1W3a6YoNE7HWm1YZZQyC8N/J7S/LFm0XrvqvB81u8XyLtVNu8gfR0HUh2lxPy5
- JCjH7I9nbGnx9H1bR1XMGDPpnclO96silMrZpftTCf6k0S/ys2nuQfO6PQBTfk8PozDa
- CyHLer0bPO04K2iea7qXgbD92Sm8C+jDqFP/e9v7ruomzWzLfJh0XDZ2M4SUE+pXp0XG
- Tr6arrxFm+lZzi9Ln16wpOeSIHT/1VjHtH15nAgOzQPt5VbKVc5yELm4zVpMbqmTacU9
- kEujsaiqyfv76wXKA1tQMVviZljmLXFJQBfcQ6oX3D5BHKc62mUp8AJdZb0gMX4eM7SV BA== 
+ bh=tzFAQqmTFkqGsbHjDHQsRsNbCV384tWaHO9lvOcIrVs=;
+ b=Ye+YGeenYcBmScBViqtGQxdm8aYdrLc1wFf4SWxFxyM9LDqk7CgodqnhhtPMD8AGjrBP
+ ZOyb10NoJv1+xYfcVuhBBfIuPl18rTGGpRrZNwbOJoeHXK+Lt+R7pOqjie+yXcmmAbjF
+ s/JNFhHDkaSqfY446cIx2gs5DrmtM+QRAcprkntZZti3vYGorY+8NQlI/93/Apx0DmJc
+ qZczfSQlOacWc7e4w3xarGhw9uFKFxcdKJc2/8eQSogzOWZl/JFUVkVFRCU67qdyz4Oh
+ H0ZugGbLmfu1Hd3aTo9JhrhAXrIbxa8OZuND3cDzv3qLvrE6OPgPg68VbtLaUc5TCXoN Kg== 
 Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3ggvxmwffa-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3ggvxmwff6-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 08 Jun 2022 02:28:03 +0000
+        Wed, 08 Jun 2022 02:28:00 +0000
 Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 2582ATsj037982;
-        Wed, 8 Jun 2022 02:28:03 GMT
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 2582ATYg037917;
+        Wed, 8 Jun 2022 02:28:00 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3gfwu334ae-1
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3gfwu3349h-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 08 Jun 2022 02:28:03 +0000
+        Wed, 08 Jun 2022 02:27:59 +0000
 Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 2582RxlV032073;
-        Wed, 8 Jun 2022 02:28:02 GMT
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 2582RxlP032073;
+        Wed, 8 Jun 2022 02:27:59 GMT
 Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3gfwu33499-4;
-        Wed, 08 Jun 2022 02:28:02 +0000
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3gfwu33499-1;
+        Wed, 08 Jun 2022 02:27:59 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     jejb@linux.ibm.com, damien.lemoal@opensource.wdc.com,
-        Tyler Erickson <tyler.erickson@seagate.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-ide@vger.kernel.org, muhammad.ahmad@seagate.com,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v2 0/3] ata,sd: Fix reading concurrent positioning ranges
-Date:   Tue,  7 Jun 2022 22:27:56 -0400
-Message-Id: <165465514542.8982.625569084964110654.b4-ty@oracle.com>
+To:     linux-staging@lists.linux.dev, netdev@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+        Chengguang Xu <cgxu519@mykernel.net>,
+        linux-media@vger.kernel.org
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 0/6] fix a common error of while loop condition in error path
+Date:   Tue,  7 Jun 2022 22:27:53 -0400
+Message-Id: <165465514543.8982.16992682001018007600.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.35.2
-In-Reply-To: <20220602225113.10218-1-tyler.erickson@seagate.com>
-References: <20220602225113.10218-1-tyler.erickson@seagate.com>
+In-Reply-To: <20220529153456.4183738-1-cgxu519@mykernel.net>
+References: <20220529153456.4183738-1-cgxu519@mykernel.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: qRnPzEOXv_0mWC_6WnAvzLhqJ_6rCYex
-X-Proofpoint-ORIG-GUID: qRnPzEOXv_0mWC_6WnAvzLhqJ_6rCYex
+X-Proofpoint-GUID: 41BhbBr77pfcU9Yr9dVAy-63i_lQGxSG
+X-Proofpoint-ORIG-GUID: 41BhbBr77pfcU9Yr9dVAy-63i_lQGxSG
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 2 Jun 2022 16:51:10 -0600, Tyler Erickson wrote:
+On Sun, 29 May 2022 23:34:50 +0800, Chengguang Xu wrote:
 
-> This patch series fixes reading the concurrent positioning ranges.
+> There is a common error of while loop condition which misses
+> the case '(--i) == 0' in error path. This patch series just
+> tries to fix it in several driver's code.
 > 
-> The first patch fixes reading this in libata, where it was reading
-> more data than a drive necessarily supports, resulting in a
-> command abort.
-> 
-> The second patch fixes the SCSI translated data to put the VPD page
-> length in the correct starting byte.
+> Note: I'm not specialist of specific drivers so just compile tested
+> for the fixes.
 > 
 > [...]
 
 Applied to 5.19/scsi-fixes, thanks!
 
-[3/3] scsi: sd: Fix interpretation of VPD B9h length
-      https://git.kernel.org/mkp/scsi/c/f92de9d11042
+[3/6] scsi: ipr: fix missing/incorrect resource cleanup in error case
+      https://git.kernel.org/mkp/scsi/c/d64c49191132
+[5/6] scsi: pmcraid: fix missing resource cleanup in error case
+      https://git.kernel.org/mkp/scsi/c/ec1e8adcbdf6
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
