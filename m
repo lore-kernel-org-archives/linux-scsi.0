@@ -2,48 +2,50 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 173B2C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jun 2022 17:39:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BF7EC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jun 2022 17:50:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232536AbiFHRjX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Jun 2022 13:39:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40386 "EHLO
+        id S232952AbiFHRul (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Jun 2022 13:50:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33300 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232517AbiFHRjR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jun 2022 13:39:17 -0400
+        with ESMTP id S232964AbiFHRuh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jun 2022 13:50:37 -0400
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43D942AD1;
-        Wed,  8 Jun 2022 10:39:15 -0700 (PDT)
-Received: from fraeml734-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LJDqk4F4Cz6884T;
-        Thu,  9 Jun 2022 01:34:26 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C8F957985;
+        Wed,  8 Jun 2022 10:50:34 -0700 (PDT)
+Received: from fraeml713-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LJF8r2xCyz67VbM;
+        Thu,  9 Jun 2022 01:49:16 +0800 (CST)
 Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml734-chm.china.huawei.com (10.206.15.215) with Microsoft SMTP Server
+ fraeml713-chm.china.huawei.com (10.206.15.32) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Wed, 8 Jun 2022 19:39:12 +0200
+ 15.1.2375.24; Wed, 8 Jun 2022 19:50:31 +0200
 Received: from [10.47.90.54] (10.47.90.54) by lhreml724-chm.china.huawei.com
  (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Wed, 8 Jun
- 2022 18:39:11 +0100
-Message-ID: <ffc15010-3283-7761-c534-7b226f46d79a@huawei.com>
-Date:   Wed, 8 Jun 2022 18:39:10 +0100
+ 2022 18:50:30 +0100
+Message-ID: <31417477-953d-283e-808e-cf8701e820a8@huawei.com>
+Date:   Wed, 8 Jun 2022 18:50:29 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.6.1
-Subject: Re: [PATCH v3 2/4] dma-iommu: Add iommu_dma_opt_mapping_size()
+Subject: Re: [PATCH v3 3/4] scsi: core: Cap shost max_sectors according to DMA
+ optimum mapping limits
 To:     Bart Van Assche <bvanassche@acm.org>,
         <damien.lemoal@opensource.wdc.com>, <joro@8bytes.org>,
         <will@kernel.org>, <jejb@linux.ibm.com>,
         <martin.petersen@oracle.com>, <hch@lst.de>,
         <m.szyprowski@samsung.com>, <robin.murphy@arm.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <liyihang6@hisilicon.com>, <linux-kernel@vger.kernel.org>,
-        <linux-ide@vger.kernel.org>, <iommu@lists.linux-foundation.org>
+CC:     <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
+        <linux-scsi@vger.kernel.org>, <liyihang6@hisilicon.com>,
+        <chenxiang66@hisilicon.com>, <thunder.leizhen@huawei.com>
 References: <1654507822-168026-1-git-send-email-john.garry@huawei.com>
- <1654507822-168026-3-git-send-email-john.garry@huawei.com>
- <d7a72f92-15c9-1d58-c711-83c47444094e@acm.org>
+ <1654507822-168026-4-git-send-email-john.garry@huawei.com>
+ <fe365aa8-00d5-153d-ceb2-f887a71a6927@acm.org>
 From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <d7a72f92-15c9-1d58-c711-83c47444094e@acm.org>
+In-Reply-To: <fe365aa8-00d5-153d-ceb2-f887a71a6927@acm.org>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
 X-Originating-IP: [10.47.90.54]
@@ -54,20 +56,29 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 08/06/2022 18:26, Bart Van Assche wrote:
-> On 6/6/22 02:30, John Garry via iommu wrote:
->> +unsigned long iova_rcache_range(void)
->> +{
->> +    return PAGE_SIZE << (IOVA_RANGE_CACHE_MAX_SIZE - 1);
->> +}
+On 08/06/2022 18:33, Bart Van Assche wrote:
+> On 6/6/22 02:30, John Garry wrote:
+>> +    if (dma_dev->dma_mask) {
+>> +        shost->max_sectors = min_t(unsigned int, shost->max_sectors,
+>> +                dma_opt_mapping_size(dma_dev) >> SECTOR_SHIFT);
+>> +    }
 > 
-> My understanding is that iova cache entries may be smaller than 
-> IOVA_RANGE_CACHE_MAX_SIZE and hence that even if code that uses the DMA 
-> mapping API respects this limit that a cache miss can still happen.
+> Since IOVA_RANGE_CACHE_MAX_SIZE = 6 this limits max_sectors to 2**6 * 
+> PAGE_SIZE or 256 KiB if the page size is 4 KiB.
 
-Sure, a cache miss may still happen - however once we have stressed the 
-system for a while then the rcaches fill up and don't fail often, or 
-often enough to be noticeable compared to not having a cached IOVAs at all.
+It's actually 128K for 4K page size, as any IOVA size is roundup to 
+power-of-2 when testing if we may cache it, which means anything >128K 
+would roundup to 256K and cannot be cached.
+
+> I think that's too 
+> small. Some (SRP) storage arrays require much larger transfers to 
+> achieve optimal performance.
+
+Have you tried this achieve this optimal performance with an IOMMU enabled?
+
+Please note that this limit only applies if we have an IOMMU enabled for 
+the scsi host dma device. Otherwise we are limited by dma direct or 
+swiotlb max mapping size, as before.
 
 Thanks,
-john
+John
