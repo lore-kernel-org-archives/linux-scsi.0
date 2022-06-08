@@ -2,85 +2,84 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B884C43334
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jun 2022 06:02:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CEBFCCA486
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jun 2022 07:18:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234938AbiFHGBz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Jun 2022 02:01:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44714 "EHLO
+        id S233548AbiFHHPu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Jun 2022 03:15:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59692 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238717AbiFHFwB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jun 2022 01:52:01 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E750AFAED;
-        Tue,  7 Jun 2022 20:35:49 -0700 (PDT)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 257NfeKx014363;
-        Wed, 8 Jun 2022 02:28:01 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=tzFAQqmTFkqGsbHjDHQsRsNbCV384tWaHO9lvOcIrVs=;
- b=Ye+YGeenYcBmScBViqtGQxdm8aYdrLc1wFf4SWxFxyM9LDqk7CgodqnhhtPMD8AGjrBP
- ZOyb10NoJv1+xYfcVuhBBfIuPl18rTGGpRrZNwbOJoeHXK+Lt+R7pOqjie+yXcmmAbjF
- s/JNFhHDkaSqfY446cIx2gs5DrmtM+QRAcprkntZZti3vYGorY+8NQlI/93/Apx0DmJc
- qZczfSQlOacWc7e4w3xarGhw9uFKFxcdKJc2/8eQSogzOWZl/JFUVkVFRCU67qdyz4Oh
- H0ZugGbLmfu1Hd3aTo9JhrhAXrIbxa8OZuND3cDzv3qLvrE6OPgPg68VbtLaUc5TCXoN Kg== 
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3ggvxmwff6-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 08 Jun 2022 02:28:00 +0000
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 2582ATYg037917;
-        Wed, 8 Jun 2022 02:28:00 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3gfwu3349h-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 08 Jun 2022 02:27:59 +0000
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 2582RxlP032073;
-        Wed, 8 Jun 2022 02:27:59 GMT
-Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3gfwu33499-1;
-        Wed, 08 Jun 2022 02:27:59 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     linux-staging@lists.linux.dev, netdev@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-        Chengguang Xu <cgxu519@mykernel.net>,
-        linux-media@vger.kernel.org
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/6] fix a common error of while loop condition in error path
-Date:   Tue,  7 Jun 2022 22:27:53 -0400
-Message-Id: <165465514543.8982.16992682001018007600.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.35.2
-In-Reply-To: <20220529153456.4183738-1-cgxu519@mykernel.net>
-References: <20220529153456.4183738-1-cgxu519@mykernel.net>
+        with ESMTP id S241331AbiFHGui (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jun 2022 02:50:38 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD10F16837B
+        for <linux-scsi@vger.kernel.org>; Tue,  7 Jun 2022 23:39:31 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id D84E0B825A0
+        for <linux-scsi@vger.kernel.org>; Wed,  8 Jun 2022 06:39:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 741C9C3411D
+        for <linux-scsi@vger.kernel.org>; Wed,  8 Jun 2022 06:39:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1654670368;
+        bh=9h1pr4VTUOSe+TSZxTXYfFCl3bVqAaVcO6njibrrgns=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=rSYiHTlCWyf2XEUpffXH21wPnIXCQLsattCI8cIf92L6aj0TKTErHntYLYxfg6/Y8
+         hO9ZtAUGLi51LKpusXT7oKJDSgzsm+hVEUDdqTvnQ4jrGFRPkVXCMv4Vdk10hh0uFf
+         MKnXg3Oq7oxNWZgA7taeBc3OWeVggRCvNhMCew4VJQsGcrXGv3/M7g4uhzDnz/nI7V
+         Y+BJyGlApcC0wO/LE+nF7MpMBB9K3iPaHAe7Y3uxZhlY9qzjrEc9hr/5XDmtXvG3Q+
+         hmGajofaGf7sW3cJzh/Kgb68qbSKOMcrCYHF1AomMIenG5AB5leuetNrOBSKGSm159
+         3BmH16SXFOjww==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 5D59DC05FD5; Wed,  8 Jun 2022 06:39:28 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 215943] UBSAN: array-index-out-of-bounds in
+ drivers/scsi/megaraid/megaraid_sas_fp.c:103:32
+Date:   Wed, 08 Jun 2022 06:39:26 +0000
+X-Bugzilla-Reason: AssignedTo
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: None
+X-Bugzilla-Product: IO/Storage
+X-Bugzilla-Component: SCSI
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: darren.armstrong85@gmail.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-215943-11613-xxyWUMXM0G@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-215943-11613@https.bugzilla.kernel.org/>
+References: <bug-215943-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: 41BhbBr77pfcU9Yr9dVAy-63i_lQGxSG
-X-Proofpoint-ORIG-GUID: 41BhbBr77pfcU9Yr9dVAy-63i_lQGxSG
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, 29 May 2022 23:34:50 +0800, Chengguang Xu wrote:
+https://bugzilla.kernel.org/show_bug.cgi?id=3D215943
 
-> There is a common error of while loop condition which misses
-> the case '(--i) == 0' in error path. This patch series just
-> tries to fix it in several driver's code.
-> 
-> Note: I'm not specialist of specific drivers so just compile tested
-> for the fixes.
-> 
-> [...]
+--- Comment #5 from darren.armstrong85@gmail.com ---
+That makes sense, the code path I saw this on was loading state from firmwa=
+re.
 
-Applied to 5.19/scsi-fixes, thanks!
+I guess we need to resolve whether/how we can safely "spill over" into the
+array in this manner. As above there's some assumptions implicitly behind m=
+ade
+about the layout of the ldTgtIdToLd map that the zero-th entry in ldSpanMap=
+ is
+special.
 
-[3/6] scsi: ipr: fix missing/incorrect resource cleanup in error case
-      https://git.kernel.org/mkp/scsi/c/d64c49191132
-[5/6] scsi: pmcraid: fix missing resource cleanup in error case
-      https://git.kernel.org/mkp/scsi/c/ec1e8adcbdf6
+--=20
+You may reply to this email to add a comment.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+You are receiving this mail because:
+You are the assignee for the bug.=
