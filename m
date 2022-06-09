@@ -2,29 +2,29 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B77F2CCA47E
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jun 2022 10:37:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21412CCA480
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jun 2022 10:37:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243171AbiFIKhS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Jun 2022 06:37:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58638 "EHLO
+        id S243153AbiFIKh0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Jun 2022 06:37:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34632 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243090AbiFIKgx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jun 2022 06:36:53 -0400
+        with ESMTP id S243156AbiFIKhD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jun 2022 06:37:03 -0400
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D3DD215659;
-        Thu,  9 Jun 2022 03:36:31 -0700 (PDT)
-Received: from fraeml711-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LJgTW6TRpz67bS0;
-        Thu,  9 Jun 2022 18:35:11 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B1DA217601;
+        Thu,  9 Jun 2022 03:36:44 -0700 (PDT)
+Received: from fraeml706-chm.china.huawei.com (unknown [172.18.147.206])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LJgR84zmYz67yc5;
+        Thu,  9 Jun 2022 18:33:08 +0800 (CST)
 Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml711-chm.china.huawei.com (10.206.15.60) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Thu, 9 Jun 2022 12:36:29 +0200
+ fraeml706-chm.china.huawei.com (10.206.15.55) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2375.24; Thu, 9 Jun 2022 12:36:42 +0200
 Received: from localhost.localdomain (10.69.192.58) by
  lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Thu, 9 Jun 2022 11:36:26 +0100
+ 15.1.2375.24; Thu, 9 Jun 2022 11:36:39 +0100
 From:   John Garry <john.garry@huawei.com>
 To:     <axboe@kernel.dk>, <damien.lemoal@opensource.wdc.com>,
         <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
@@ -32,9 +32,9 @@ To:     <axboe@kernel.dk>, <damien.lemoal@opensource.wdc.com>,
 CC:     <linux-block@vger.kernel.org>, <linux-ide@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
         <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
-Subject: [PATCH RFC v2 10/18] libata/scsi: libsas: Add sas_queuecommand_internal()
-Date:   Thu, 9 Jun 2022 18:29:11 +0800
-Message-ID: <1654770559-101375-11-git-send-email-john.garry@huawei.com>
+Subject: [PATCH RFC v2 14/18] scsi: libsas: Queue SMP commands as requests
+Date:   Thu, 9 Jun 2022 18:29:15 +0800
+Message-ID: <1654770559-101375-15-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1654770559-101375-1-git-send-email-john.garry@huawei.com>
 References: <1654770559-101375-1-git-send-email-john.garry@huawei.com>
@@ -48,107 +48,99 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add a callback for sht reserved_queuecommand callback. We need to add
-libata helper ata_is_scmd_ata_internal() as it is difficult to know
-whether the request should be queued as an ATA internal command.
+Send SMP commands through the block layer so that each command gets a
+unique tag associated.
 
-We will store the sas_task in the scsi_cmnd payload also in future.
+In future we can now also take advantage of the block layer request
+timeout handling.
+
+Function sas_task_complete_internal() is what the LLDD calls to signal
+that the CQ is complete and this calls into the SCSI midlayer. And then
+sas_blk_end_sync_rq() is called when the request completes.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/ata/libata-core.c           |  8 ++++++++
- drivers/scsi/libsas/sas_scsi_host.c | 21 +++++++++++++++++++++
- include/linux/libata.h              |  1 +
- include/scsi/libsas.h               |  8 ++++++++
- 4 files changed, 38 insertions(+)
+ drivers/scsi/libsas/sas_expander.c  | 13 +++----------
+ drivers/scsi/libsas/sas_internal.h  |  3 +++
+ drivers/scsi/libsas/sas_scsi_host.c | 16 ++++++++++++++++
+ 3 files changed, 22 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 6b1aaeccb253..a9645951a0f0 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -1454,6 +1454,14 @@ static void ata_internal_end_rq(struct request *rq, blk_status_t error)
- 	complete(waiting);
- }
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index b833de062f88..d0bf63286b7d 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -66,20 +66,13 @@ static int smp_execute_task_sg(struct domain_device *dev,
+ 		task->task_proto = dev->tproto;
+ 		task->smp_task.smp_req = *req;
+ 		task->smp_task.smp_resp = *resp;
+-
+-		task->task_done = sas_task_internal_done;
++		task->task_done = sas_task_complete_internal;
  
-+bool ata_is_scmd_ata_internal(struct scsi_cmnd *scmd)
-+{
-+	struct request *rq = scsi_cmd_to_rq(scmd);
+ 		task->slow_task->timer.function = sas_task_internal_timedout;
+ 		task->slow_task->timer.expires = jiffies + SMP_TIMEOUT*HZ;
+ 		add_timer(&task->slow_task->timer);
+-
+-		res = i->dft->lldd_execute_task(task, GFP_KERNEL);
+-
+-		if (res) {
+-			del_timer(&task->slow_task->timer);
+-			pr_notice("executing SMP task failed:%d\n", res);
+-			break;
+-		}
++		rq->end_io = sas_blk_end_sync_rq;
++		blk_execute_rq_nowait(rq, true);
+ 
+ 		wait_for_completion(&task->slow_task->completion);
+ 		res = -ECOMM;
+diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
+index 13d0ffaada93..52cfa75d432b 100644
+--- a/drivers/scsi/libsas/sas_internal.h
++++ b/drivers/scsi/libsas/sas_internal.h
+@@ -99,6 +99,9 @@ int sas_execute_tmf(struct domain_device *device, void *parameter,
+ 		    int para_len, int force_phy_id,
+ 		    struct sas_tmf_task *tmf);
+ 
++void sas_task_complete_internal(struct sas_task *task);
++void sas_blk_end_sync_rq(struct request *rq, blk_status_t error);
 +
-+	return rq->end_io == ata_internal_end_rq;
-+}
-+EXPORT_SYMBOL_GPL(ata_is_scmd_ata_internal);
-+
- /**
-  *	ata_exec_internal_sg - execute libata internal command
-  *	@dev: Device to which the command is sent
+ #ifdef CONFIG_SCSI_SAS_HOST_SMP
+ extern void sas_smp_host_handler(struct bsg_job *job, struct Scsi_Host *shost);
+ #else
 diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 9c82e5dc4fcc..42279a6d6b06 100644
+index 3abb1d622a32..f0566f4512b2 100644
 --- a/drivers/scsi/libsas/sas_scsi_host.c
 +++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -158,6 +158,27 @@ static struct sas_task *sas_create_task(struct scsi_cmnd *cmd,
- 	return task;
+@@ -926,6 +926,16 @@ void sas_task_internal_done(struct sas_task *task)
+ 	complete(&task->slow_task->completion);
  }
  
-+int sas_queuecommand_internal(struct Scsi_Host *shost, struct scsi_cmnd *cmnd)
++void sas_task_complete_internal(struct sas_task *task)
 +{
-+	struct sas_ha_struct *ha = SHOST_TO_SAS_HA(shost);
-+	struct sas_internal *i = to_sas_internal(ha->core.shost->transportt);
-+	struct request *rq = scsi_cmd_to_rq(cmnd);
-+
-+	if (ata_is_scmd_ata_internal(cmnd)) {
-+		struct ata_queued_cmd *qc = (struct ata_queued_cmd *)cmnd->host_scribble;
-+		struct ata_port *ap = qc->ap;
-+		int res;
-+
-+		spin_lock_irq(ap->lock);
-+		res = ata_sas_queuecmd(cmnd, ap);
-+		spin_unlock_irq(ap->lock);
-+		return res;
-+	}
-+
-+	return i->dft->lldd_execute_task(sas_rq_to_task(rq), GFP_KERNEL);
-+}
-+EXPORT_SYMBOL_GPL(sas_queuecommand_internal);
-+
- int sas_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- {
- 	struct sas_internal *i = to_sas_internal(host->transportt);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 5fa6f56bba81..6cb7a5bcb308 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1238,6 +1238,7 @@ extern int ata_sas_slave_configure(struct scsi_device *, struct ata_port *);
- extern int ata_sas_queuecmd(struct scsi_cmnd *cmd, struct ata_port *ap);
- extern void ata_tf_to_fis(const struct ata_taskfile *tf,
- 			  u8 pmp, int is_cmd, u8 *fis);
-+extern bool ata_is_scmd_ata_internal(struct scsi_cmnd *scmd);
- extern void ata_tf_from_fis(const u8 *fis, struct ata_taskfile *tf);
- extern int ata_qc_complete_multiple(struct ata_port *ap, u64 qc_active);
- extern bool sata_lpm_ignore_phy_events(struct ata_link *link);
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index ff04eb6d250b..261169ffdca6 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -725,6 +725,7 @@ int  sas_discover_sata(struct domain_device *);
- int  sas_discover_end_dev(struct domain_device *);
- 
- void sas_unregister_dev(struct asd_sas_port *port, struct domain_device *);
-+int sas_queuecommand_internal(struct Scsi_Host *shost, struct scsi_cmnd *cmnd);
- 
- void sas_init_dev(struct domain_device *);
- 
-@@ -756,4 +757,11 @@ void sas_notify_port_event(struct asd_sas_phy *phy, enum port_event event,
- void sas_notify_phy_event(struct asd_sas_phy *phy, enum phy_event event,
- 			   gfp_t gfp_flags);
- 
-+static inline struct sas_task *sas_rq_to_task(struct request *rq)
-+{
++	struct request *rq = sas_rq_from_task(task);
 +	struct scsi_cmnd *scmd = blk_mq_rq_to_pdu(rq);
 +
-+	return (struct sas_task *)(scmd + 1);
++	del_timer(&task->slow_task->timer);
++
++	scsi_done(scmd);
 +}
 +
- #endif /* _SASLIB_H_ */
+ void sas_task_internal_timedout(struct timer_list *t)
+ {
+ 	struct sas_task_slow *slow = from_timer(slow, t, timer);
+@@ -947,6 +957,12 @@ void sas_task_internal_timedout(struct timer_list *t)
+ #define TASK_TIMEOUT			(20 * HZ)
+ #define TASK_RETRY			3
+ 
++void sas_blk_end_sync_rq(struct request *rq, blk_status_t error)
++{
++	struct sas_task *task = sas_rq_to_task(rq);
++	complete(&task->slow_task->completion);
++}
++
+ static int sas_execute_internal_abort(struct domain_device *device,
+ 				      enum sas_internal_abort type, u16 tag,
+ 				      unsigned int qid, void *data)
 -- 
 2.26.2
 
