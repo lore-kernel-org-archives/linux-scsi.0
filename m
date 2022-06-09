@@ -2,74 +2,153 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FC4EC433EF
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jun 2022 12:07:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2463CCA473
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jun 2022 12:14:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245043AbiFIMH5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Jun 2022 08:07:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54036 "EHLO
+        id S245212AbiFIMOV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Jun 2022 08:14:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56632 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245106AbiFIMHz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jun 2022 08:07:55 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD42B264DC8
-        for <linux-scsi@vger.kernel.org>; Thu,  9 Jun 2022 05:07:54 -0700 (PDT)
-Received: from fraeml712-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LJjVy75gTz67Psy;
-        Thu,  9 Jun 2022 20:06:34 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml712-chm.china.huawei.com (10.206.15.61) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Thu, 9 Jun 2022 14:07:52 +0200
-Received: from [10.47.88.201] (10.47.88.201) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Thu, 9 Jun
- 2022 13:07:51 +0100
-Message-ID: <d8739294-b561-ec24-f148-dda4ceb4e9a0@huawei.com>
-Date:   Thu, 9 Jun 2022 13:07:50 +0100
+        with ESMTP id S242744AbiFIMOU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jun 2022 08:14:20 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9051512F35A
+        for <linux-scsi@vger.kernel.org>; Thu,  9 Jun 2022 05:14:19 -0700 (PDT)
+Date:   Thu, 9 Jun 2022 14:14:15 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1654776857;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=5uWL1ArULPDWUS6tOuTA5hN3EW/IJt7+aM/VeD92KAA=;
+        b=BaeuivrlpxmL6t7PcuRp6hHe/Pb1DTIl2m54aOGO2tr7Kzu9Zscm44aiQQLn6gFEwG/PHO
+        DWjwVWE9QlG0Aj2q39rXGXAugr8gI2PX2SprWDtR7D+87zp1Hdogx/V3ekPMN9MqXJyaNP
+        lvLCXAw/NdeyQeAn0285TdXAkLQu3OQoRWr0RpbGpIGsaU7VLtucWO72QjJFK8pv/N51zj
+        36j0cekeAtDNm82lzkGS27yLkt2ugCbHyq9v1JnXb2JR0O1ac+RHHYaPgO06CIDOaMHsC9
+        Rj8QdNduDk45qsttHTyAxXdXnZkVPFRtvrJUriYTKPEWXvnYfauy4nNtOmMIkA==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1654776857;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=5uWL1ArULPDWUS6tOuTA5hN3EW/IJt7+aM/VeD92KAA=;
+        b=126RNnEEsUdRbOjuk5N0W3GuztEhGJFgm/EEhnRtGOTk2hnlCIMKA0kjgAm/9T3Apo9erN
+        NC5MH4s7fUwaKhDg==
+From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To:     Davidlohr Bueso <dave@stgolabs.net>
+Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        ejb@linux.ibm.com, tglx@linutronix.de,
+        Bradley Grove <linuxdrivers@attotech.com>
+Subject: Re: [PATCH 07/10] scsi/esas2r: Replace tasklet with workqueue
+Message-ID: <YqHkF+bJWNhsQa1N@linutronix.de>
+References: <20220530231512.9729-1-dave@stgolabs.net>
+ <20220530231512.9729-8-dave@stgolabs.net>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH 2/3] scsi: libsas: introduce struct smp_rg_resp
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-References: <20220609022456.409087-1-damien.lemoal@opensource.wdc.com>
- <20220609022456.409087-3-damien.lemoal@opensource.wdc.com>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <20220609022456.409087-3-damien.lemoal@opensource.wdc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.47.88.201]
-X-ClientProxiedBy: lhreml727-chm.china.huawei.com (10.201.108.78) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20220530231512.9729-8-dave@stgolabs.net>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 09/06/2022 03:24, Damien Le Moal wrote:
-> When compiling with gcc 12, several warnings are thrown by gcc when
-> compiling drivers/scsi/libsas/sas_expander.c, e.g.:
-> 
-> In function ‘sas_get_ex_change_count’,
->      inlined from ‘sas_find_bcast_dev’ at
->      drivers/scsi/libsas/sas_expander.c:1816:8:
-> drivers/scsi/libsas/sas_expander.c:1781:20: warning: array subscript
-> ‘struct smp_resp[0]’ is partly outside array bounds of ‘unsigned
-> char[32]’ [-Warray-bounds]
->   1781 |         if (rg_resp->result != SMP_RESP_FUNC_ACC) {
->        |             ~~~~~~~^~~~~~~~
-> 
-> This is due to the use of the struct smp_resp to aggregate all possible
-> response types using a union but allocating a response buffer with a
-> size exactly equal to the size of the response type needed. This leads
-> to access to fields of struct smp_resp from an allocated memory area
-> that is smaller than the size of struct smp_resp.
-> 
-> Fix this by defining struct smp_rg_resp for sas report general
-> responses.
-> 
-> Signed-off-by: Damien Le Moal<damien.lemoal@opensource.wdc.com>
+On 2022-05-30 16:15:09 [-0700], Davidlohr Bueso wrote:
+> diff --git a/drivers/scsi/esas2r/esas2r_int.c b/drivers/scsi/esas2r/esas2r_int.c
+> index 5281d9356327..1b1b8b65539d 100644
+> --- a/drivers/scsi/esas2r/esas2r_int.c
+> +++ b/drivers/scsi/esas2r/esas2r_int.c
+> @@ -86,7 +86,7 @@ void esas2r_polled_interrupt(struct esas2r_adapter *a)
+>  
+>  /*
+>   * Legacy and MSI interrupt handlers.  Note that the legacy interrupt handler
+> - * schedules a TASKLET to process events, whereas the MSI handler just
+> + * schedules work to process events, whereas the MSI handler just
+>   * processes interrupt events directly.
 
-Reviewed-by: John Garry <john.garry@huawei.com>
+Yeah, and why? What is special about the legacy vs MSI that different
+behaviour is needed. Why not do the tasklet/workqueue thingy for MSI,
+too?
+
+>   */
+>  irqreturn_t esas2r_interrupt(int irq, void *dev_id)
+> diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
+> index 7a4eadad23d7..abe45a934cce 100644
+> --- a/drivers/scsi/esas2r/esas2r_main.c
+> +++ b/drivers/scsi/esas2r/esas2r_main.c
+> @@ -1540,10 +1550,10 @@ void esas2r_complete_request_cb(struct esas2r_adapter *a,
+>  	esas2r_free_request(a, rq);
+>  }
+>  
+> -/* Run tasklet to handle stuff outside of interrupt context. */
+> -void esas2r_adapter_tasklet(unsigned long context)
+> +/* Handle stuff outside of interrupt context. */
+> +void esas2r_adapter_work(struct work_struct *work)
+>  {
+> -	struct esas2r_adapter *a = (struct esas2r_adapter *)context;
+> +	struct esas2r_adapter *a = (struct esas2r_adapter *)work;
+
+container_of()
+
+>  
+>  	if (unlikely(test_bit(AF2_TIMER_TICK, &a->flags2))) {
+>  		clear_bit(AF2_TIMER_TICK, &a->flags2);
+> @@ -1555,16 +1565,16 @@ void esas2r_adapter_tasklet(unsigned long context)
+>  		esas2r_adapter_interrupt(a);
+>  	}
+>  
+> -	if (esas2r_is_tasklet_pending(a))
+> -		esas2r_do_tasklet_tasks(a);
+> +	if (esas2r_is_work_pending(a))
+> +		esas2r_do_work_tasks(a);
+>  
+> -	if (esas2r_is_tasklet_pending(a)
+> +	if (esas2r_is_work_pending(a)
+>  	    || (test_bit(AF2_INT_PENDING, &a->flags2))
+>  	    || (test_bit(AF2_TIMER_TICK, &a->flags2))) {
+> -		clear_bit(AF_TASKLET_SCHEDULED, &a->flags);
+> -		esas2r_schedule_tasklet(a);
+> +		clear_bit(AF_WORK_SCHEDULED, &a->flags);
+> +		esas2r_schedule_work(a);
+
+This AF_TASKLET_SCHEDULED bit is odd and shouldn't be needed. What you
+usually do is set_bit() + schedule_tasklet() and clear_bit() within the
+tasklet. If the tasklet is already running then it will be scheduled
+again which is intended. If it is not yet running then it will run once.
+
+>  	} else {
+> -		clear_bit(AF_TASKLET_SCHEDULED, &a->flags);
+> +		clear_bit(AF_WORK_SCHEDULED, &a->flags);
+>  	}
+>  }
+>  
+> @@ -1586,7 +1596,7 @@ static void esas2r_timer_callback(struct timer_list *t)
+>  
+>  	set_bit(AF2_TIMER_TICK, &a->flags2);
+>  
+> -	esas2r_schedule_tasklet(a);
+> +	esas2r_schedule_work(a);
+>  
+>  	esas2r_kickoff_timer(a);
+
+It appears that the timer is always scheduled (except in degraded
+mode) and the timer re-arms itself and schedules the tasklet. The timer
+and the tasklet are synchronized and the tasklet will always after the
+timer and one can not interrupt the other. But with the workqueue you
+can get the following depending on how much the workqueue was delayed:
+
+       worker                                                timer
+   esas2r_adapter_work();
+    -> test_bit(AF2_TIMER_TICK, &a->flags2) -> false
+                                                            esas2r_timer_callback
+                                                            set_bit(AF2_TIMER_TICK, &a->flags2);
+                                                            esas2r_schedule_tasklet()
+                                                            -> if (!test_and_set_bit(AF_TASKLET_SCHEDULED, &a->flags)) (bit set)
+                                                               no schedule since bit was set
+                                                            esas2r_kickoff_timer();
+       clear_bit(AF_TASKLET_SCHEDULED, &a->flags);
+
+No more tasklets. So another reason to get rid of this
+AF_TASKLET_SCHEDULED bit ;)
+
+>  }
+
+Sebastian
