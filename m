@@ -2,76 +2,66 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F328C43334
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jun 2022 13:27:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FB27C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jun 2022 15:02:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234782AbiFIN1A (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Jun 2022 09:27:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58850 "EHLO
+        id S234872AbiFIPCy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Jun 2022 11:02:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38466 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238373AbiFIN07 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jun 2022 09:26:59 -0400
-Received: from www262.sakura.ne.jp (www262.sakura.ne.jp [202.181.97.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 751F59D4CD
-        for <linux-scsi@vger.kernel.org>; Thu,  9 Jun 2022 06:26:58 -0700 (PDT)
-Received: from fsav414.sakura.ne.jp (fsav414.sakura.ne.jp [133.242.250.113])
-        by www262.sakura.ne.jp (8.15.2/8.15.2) with ESMTP id 259DQmZt006077;
-        Thu, 9 Jun 2022 22:26:48 +0900 (JST)
-        (envelope-from penguin-kernel@I-love.SAKURA.ne.jp)
-Received: from www262.sakura.ne.jp (202.181.97.72)
- by fsav414.sakura.ne.jp (F-Secure/fsigk_smtp/550/fsav414.sakura.ne.jp);
- Thu, 09 Jun 2022 22:26:48 +0900 (JST)
-X-Virus-Status: clean(F-Secure/fsigk_smtp/550/fsav414.sakura.ne.jp)
-Received: from [192.168.1.9] (M106072142033.v4.enabler.ne.jp [106.72.142.33])
-        (authenticated bits=0)
-        by www262.sakura.ne.jp (8.15.2/8.15.2) with ESMTPSA id 259DQmPE006072
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NO);
-        Thu, 9 Jun 2022 22:26:48 +0900 (JST)
-        (envelope-from penguin-kernel@I-love.SAKURA.ne.jp)
-Message-ID: <f3b97c7c-1094-4e46-20d8-4321716d6f3f@I-love.SAKURA.ne.jp>
-Date:   Thu, 9 Jun 2022 22:26:48 +0900
+        with ESMTP id S231807AbiFIPCx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jun 2022 11:02:53 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A03E614B67A
+        for <linux-scsi@vger.kernel.org>; Thu,  9 Jun 2022 08:02:52 -0700 (PDT)
+Date:   Thu, 9 Jun 2022 17:02:49 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1654786970;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=rsv9agcb7AdhLP1srXUy5ncNQtch/vDr6u6vmLWao2w=;
+        b=BKUSuWB/KmoHcHKcJnNQtVcpblcVCQ8GBsGICPRbx5UNwamrAA2o8DCHyE7WwNSpa/LvN6
+        bsTZqUp1C8bF7xeNzMpiHbyMeJ6AVEsFBn/uhF4y47zyEYPrBwNr9Rvn+mYFkp381bgWDh
+        ltzyfMG4/X+sQOrJzQ9v6EuxLRD6mkMcuglvNHrQanhxtmWOcVVl88UOciUonrOoc4zQDf
+        4Uav6tqyWPWC+u65VsvdTJ7o1ZAHkUF1SWtp8b8y9n0YYJaw569HawQwMzfe/eSH0yJdgn
+        kk10mA7QBRaZOObPL770b32AE9Omh/lB1VJNm9CeA2Hm0hq1XTM1pbWfA9ot4w==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1654786970;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=rsv9agcb7AdhLP1srXUy5ncNQtch/vDr6u6vmLWao2w=;
+        b=vvuxQZEA1uPGaBJ79e2W7phxX23trtU+OPmEU+bcwiSrqBkZXi0XOGMsqYNzvwEBL0t3xd
+        X0vzmUkgd7AM6yAg==
+From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To:     Davidlohr Bueso <dave@stgolabs.net>
+Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        ejb@linux.ibm.com, tglx@linutronix.de,
+        Tyrel Datwyler <tyreld@linux.ibm.com>,
+        linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH 09/10] scsi/ibmvscsi: Replace srp tasklet with work
+Message-ID: <YqILmd/WnNT/zYrf@linutronix.de>
+References: <20220530231512.9729-1-dave@stgolabs.net>
+ <20220530231512.9729-10-dave@stgolabs.net>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Content-Language: en-US
-To:     Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-From:   Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Subject: [PATCH] scsi: mpt3sas: Remove flush_scheduled_work() call.
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20220530231512.9729-10-dave@stgolabs.net>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-It seems to me that mpt3sas driver is using dedicated workqueues and
-is not calling schedule{,_delayed}_work{,_on}(). Then, there will be
-no work to flush using flush_scheduled_work().
+On 2022-05-30 16:15:11 [-0700], Davidlohr Bueso wrote:
+> Tasklets have long been deprecated as being too heavy on the system
+> by running in irq context - and this is not a performance critical
+> path. If a higher priority process wants to run, it must wait for
+> the tasklet to finish before doing so.
+> 
+> Process srps asynchronously in process context in a dedicated
+> single threaded workqueue.
 
-Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
----
-Please see commit c4f135d643823a86 ("workqueue: Wrap flush_workqueue()
-using a macro") for background.
+I would suggest threaded interrupts instead. The pattern here is the
+same as in the previous driver except here is less locking.
 
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index b519f4b59d30..9ee27add839a 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -12409,7 +12409,6 @@ scsih_suspend(struct device *dev)
- 		return rc;
- 
- 	mpt3sas_base_stop_watchdog(ioc);
--	flush_scheduled_work();
- 	scsi_block_requests(shost);
- 	_scsih_nvme_shutdown(ioc);
- 	ioc_info(ioc, "pdev=0x%p, slot=%s, entering operating state\n",
--- 
-2.18.4
+Sebastian
