@@ -2,29 +2,29 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D614DCCA47E
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jun 2022 10:37:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AA50C43334
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jun 2022 10:37:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243132AbiFIKhD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Jun 2022 06:37:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33582 "EHLO
+        id S242163AbiFIKhG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Jun 2022 06:37:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58870 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242914AbiFIKgt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jun 2022 06:36:49 -0400
+        with ESMTP id S243075AbiFIKgx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jun 2022 06:36:53 -0400
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73AA3213A2B;
-        Thu,  9 Jun 2022 03:36:18 -0700 (PDT)
-Received: from fraeml713-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LJgQf4zxwz68967;
-        Thu,  9 Jun 2022 18:32:42 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2565B215A42;
+        Thu,  9 Jun 2022 03:36:28 -0700 (PDT)
+Received: from fraeml712-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LJgQr35Vbz67sRl;
+        Thu,  9 Jun 2022 18:32:52 +0800 (CST)
 Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml713-chm.china.huawei.com (10.206.15.32) with Microsoft SMTP Server
+ fraeml712-chm.china.huawei.com (10.206.15.61) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Thu, 9 Jun 2022 12:36:16 +0200
+ 15.1.2375.24; Thu, 9 Jun 2022 12:36:26 +0200
 Received: from localhost.localdomain (10.69.192.58) by
  lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Thu, 9 Jun 2022 11:36:13 +0100
+ 15.1.2375.24; Thu, 9 Jun 2022 11:36:22 +0100
 From:   John Garry <john.garry@huawei.com>
 To:     <axboe@kernel.dk>, <damien.lemoal@opensource.wdc.com>,
         <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
@@ -32,9 +32,9 @@ To:     <axboe@kernel.dk>, <damien.lemoal@opensource.wdc.com>,
 CC:     <linux-block@vger.kernel.org>, <linux-ide@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
         <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
-Subject: [PATCH RFC v2 06/18] libata-scsi: Add ata_scsi_queue_internal()
-Date:   Thu, 9 Jun 2022 18:29:07 +0800
-Message-ID: <1654770559-101375-7-git-send-email-john.garry@huawei.com>
+Subject: [PATCH RFC v2 09/18] scsi: ipr: Support reserved commands
+Date:   Thu, 9 Jun 2022 18:29:10 +0800
+Message-ID: <1654770559-101375-10-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1654770559-101375-1-git-send-email-john.garry@huawei.com>
 References: <1654770559-101375-1-git-send-email-john.garry@huawei.com>
@@ -48,106 +48,57 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add a function to handle queued ATA internal SCSI cmnds - does much the
-same as ata_exec_internal_sg() does (which will be fixed up later to
-actually queue internal cmnds through this function).
+Support a single reserved command for ATA internal commands. We also
+add SHT reserved_queuecommand callback to support queueing those internal
+commands.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/ata/libata-scsi.c | 47 ++++++++++++++++++++++++++++++++++++++-
- include/linux/libata.h    |  6 +++++
- 2 files changed, 52 insertions(+), 1 deletion(-)
+ drivers/scsi/ipr.c | 17 ++++++++++++++++-
+ 1 file changed, 16 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 42cecf95a4e5..baac35dd17ca 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3963,6 +3963,49 @@ static inline ata_xlat_func_t ata_get_xlat_func(struct ata_device *dev, u8 cmd)
- 	return NULL;
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 256ec6d08c16..4f4cf39cd2bc 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -6740,6 +6740,19 @@ static const char *ipr_ioa_info(struct Scsi_Host *host)
+ 	return buffer;
  }
  
-+static unsigned int ata_scsi_queue_internal(struct scsi_cmnd *scmd,
-+					    struct ata_device *dev)
++static int ipr_reserved_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
 +{
-+	struct ata_link *link = dev->link;
-+	struct ata_port *ap = link->ap;
-+	struct ata_queued_cmd *qc;
++	struct ata_queued_cmd *qc = (struct ata_queued_cmd *)scmd->host_scribble;
++	struct ata_port *ap = qc->ap;
++	int ret;
 +
-+	/* no internal command while frozen */
-+	if (ap->pflags & ATA_PFLAG_FROZEN)
-+		goto did_err;
-+
-+	/* initialize internal qc */
-+	qc = __ata_qc_from_tag(ap, ATA_TAG_INTERNAL);
-+	link->preempted_tag = link->active_tag;
-+	link->preempted_sactive = link->sactive;
-+	ap->preempted_qc_active = ap->qc_active;
-+	ap->preempted_nr_active_links = ap->nr_active_links;
-+	link->active_tag = ATA_TAG_POISON;
-+	link->sactive = 0;
-+	ap->qc_active = 0;
-+	ap->nr_active_links = 0;
-+
-+	if (qc->dma_dir != DMA_NONE) {
-+		int n_elem;
-+
-+		n_elem = 1;
-+		qc->n_elem = n_elem;
-+		qc->sg = scsi_sglist(scmd);
-+		qc->nbytes = qc->sg->length;
-+		ata_sg_init(qc, qc->sg, n_elem);
-+	}
-+
-+	scmd->submitter = SUBMITTED_BY_BLOCK_LAYER;
-+
-+	ata_qc_issue(qc);
-+
-+	return 0;
-+did_err:
-+	scmd->result = (DID_ERROR << 16);
-+	scsi_done(scmd);
-+	return 0;
++	/* We're only going to be seeing ATA internal commands */
++	spin_lock_irq(ap->lock);
++	ret = ata_sas_queuecmd(scmd, ap);
++	spin_unlock_irq(ap->lock);
++	return ret;
 +}
 +
- int __ata_scsi_queuecmd(struct scsi_cmnd *scmd, struct ata_device *dev)
- {
- 	u8 scsi_op = scmd->cmnd[0];
-@@ -3971,7 +4014,9 @@ int __ata_scsi_queuecmd(struct scsi_cmnd *scmd, struct ata_device *dev)
- 	if (unlikely(!scmd->cmd_len))
- 		goto bad_cdb_len;
- 
--	if (dev->class == ATA_DEV_ATA || dev->class == ATA_DEV_ZAC) {
-+	if (scsi_is_reserved_cmd(scmd)) {
-+		return ata_scsi_queue_internal(scmd, dev);
-+	} else if (dev->class == ATA_DEV_ATA || dev->class == ATA_DEV_ZAC) {
- 		if (unlikely(scmd->cmd_len > dev->cdb_len))
- 			goto bad_cdb_len;
- 
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 732de9014626..43f4bcfe9a5f 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -767,7 +767,9 @@ struct ata_link {
- 
- 	struct device		tdev;
- 	unsigned int		active_tag;	/* active tag on this link */
-+	unsigned int		preempted_tag;
- 	u32			sactive;	/* active NCQ commands */
-+	u32			preempted_sactive;
- 
- 	unsigned int		flags;		/* ATA_LFLAG_xxx */
- 
-@@ -861,6 +863,10 @@ struct ata_port {
- #ifdef CONFIG_ATA_ACPI
- 	struct ata_acpi_gtm	__acpi_init_gtm; /* use ata_acpi_init_gtm() */
+ static struct scsi_host_template driver_template = {
+ 	.module = THIS_MODULE,
+ 	.name = "IPR",
+@@ -6749,6 +6762,7 @@ static struct scsi_host_template driver_template = {
+ 	.compat_ioctl = ipr_ioctl,
  #endif
-+
-+	u64 preempted_qc_active;
-+	int preempted_nr_active_links;
-+
- 	/* owned by EH */
- 	u8			sector_buf[ATA_SECT_SIZE] ____cacheline_aligned;
- };
+ 	.queuecommand = ipr_queuecommand,
++	.reserved_queuecommand = ipr_reserved_queuecommand,
+ 	.dma_need_drain = ata_scsi_dma_need_drain,
+ 	.eh_abort_handler = ipr_eh_abort,
+ 	.eh_device_reset_handler = ipr_eh_dev_reset,
+@@ -9991,7 +10005,8 @@ static void ipr_init_ioa_cfg(struct ipr_ioa_cfg *ioa_cfg,
+ 
+ 	host->unique_id = host->host_no;
+ 	host->max_cmd_len = IPR_MAX_CDB_LEN;
+-	host->can_queue = ioa_cfg->max_cmds;
++	host->can_queue = ioa_cfg->max_cmds - 1;
++	host->nr_reserved_cmds = 1;
+ 	pci_set_drvdata(pdev, ioa_cfg);
+ 
+ 	for (i = 0; i < ARRAY_SIZE(ioa_cfg->hrrq); i++) {
 -- 
 2.26.2
 
