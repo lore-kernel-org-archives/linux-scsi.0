@@ -2,88 +2,95 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 126BFC433EF
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jun 2022 15:46:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB075CCA47E
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jun 2022 17:18:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344661AbiFIPqP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Jun 2022 11:46:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34518 "EHLO
+        id S1344426AbiFIRSs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Jun 2022 13:18:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60890 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236403AbiFIPqN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jun 2022 11:46:13 -0400
-Received: from eu-smtp-delivery-151.mimecast.com (eu-smtp-delivery-151.mimecast.com [185.58.86.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8287D4AE03
-        for <linux-scsi@vger.kernel.org>; Thu,  9 Jun 2022 08:46:08 -0700 (PDT)
-Received: from AcuMS.aculab.com (156.67.243.121 [156.67.243.121]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- uk-mta-243-Is8WKNGQOX6dncctkojYSw-1; Thu, 09 Jun 2022 16:46:05 +0100
-X-MC-Unique: Is8WKNGQOX6dncctkojYSw-1
-Received: from AcuMS.Aculab.com (fd9f:af1c:a25b:0:994c:f5c2:35d6:9b65) by
- AcuMS.aculab.com (fd9f:af1c:a25b:0:994c:f5c2:35d6:9b65) with Microsoft SMTP
- Server (TLS) id 15.0.1497.36; Thu, 9 Jun 2022 16:46:04 +0100
-Received: from AcuMS.Aculab.com ([fe80::994c:f5c2:35d6:9b65]) by
- AcuMS.aculab.com ([fe80::994c:f5c2:35d6:9b65%12]) with mapi id
- 15.00.1497.036; Thu, 9 Jun 2022 16:46:04 +0100
-From:   David Laight <David.Laight@ACULAB.COM>
-To:     'Sebastian Andrzej Siewior' <bigeasy@linutronix.de>,
-        Davidlohr Bueso <dave@stgolabs.net>
-CC:     Tyrel Datwyler <tyreld@linux.ibm.com>,
-        "ejb@linux.ibm.com" <ejb@linux.ibm.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "tglx@linutronix.de" <tglx@linutronix.de>,
-        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
-Subject: RE: [PATCH 09/10] scsi/ibmvscsi: Replace srp tasklet with work
-Thread-Topic: [PATCH 09/10] scsi/ibmvscsi: Replace srp tasklet with work
-Thread-Index: AQHYfBIQ5eC55mb1HE+HVpd+R7cwqq1HLyyA
-Date:   Thu, 9 Jun 2022 15:46:04 +0000
-Message-ID: <7faa88aaf7554545a60561d73597dc4f@AcuMS.aculab.com>
-References: <20220530231512.9729-1-dave@stgolabs.net>
- <20220530231512.9729-10-dave@stgolabs.net> <YqILmd/WnNT/zYrf@linutronix.de>
-In-Reply-To: <YqILmd/WnNT/zYrf@linutronix.de>
-Accept-Language: en-GB, en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [10.202.205.107]
+        with ESMTP id S243030AbiFIRSr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jun 2022 13:18:47 -0400
+Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5789F138938;
+        Thu,  9 Jun 2022 10:18:44 -0700 (PDT)
+Received: by mail-pj1-f54.google.com with SMTP id q12-20020a17090a304c00b001e2d4fb0eb4so27206472pjl.4;
+        Thu, 09 Jun 2022 10:18:44 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=dBDuOA7Ag4D41J0FVo2zI0CMf8MV1Q4H90cDsiRjqs0=;
+        b=lvd2WtunFm7PTxdOOx+1cdHHnKJI+zVMW6XuM/KZatIF+jJ5lTGmQJnNt6Xqo/Kcb/
+         ykJjMIi2piK4AqszO3kk5QDvRgxUeM6Iv3LnHDRP5vmsJfLcjGFiUO5DWbRYJ+4VKTV+
+         muenkBirnx6Al2heILHjrHww+IYcat++Bh/8P/VWQ38OIjjhByVJij+apIcomL0/68a8
+         y7ngR/cGGbqYj7kuWbg839R+7lWe4Q0HufCMxuvKlE9LmiNiUcNNULETL17Ko5kjSNYc
+         1xYQOv1XUtY0yU7Vwc/e8rNgyUzOc1GadbJxTlSiYtrH+BPtBEtseIwsCI7giQFLMmpm
+         mq+A==
+X-Gm-Message-State: AOAM533C2mi8YNC1cbpDzE+qbySemANHKME7t7Vysg2PXGWK3P1RO0SY
+        r0q87M+fCv11PMA+LZs2c0o=
+X-Google-Smtp-Source: ABdhPJxSk2cA7JFtd6Y65O6LCndnGyH7rcIrk4lhHhvjln2O2sPxd9TjLkzxezsdsn9gL7KtW74Jsg==
+X-Received: by 2002:a17:902:d409:b0:167:7425:caa8 with SMTP id b9-20020a170902d40900b001677425caa8mr23376154ple.72.1654795123675;
+        Thu, 09 Jun 2022 10:18:43 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:8a44:a3e:c994:3f4b? ([2620:15c:211:201:8a44:a3e:c994:3f4b])
+        by smtp.gmail.com with ESMTPSA id p8-20020a170902780800b001645730e71bsm17115350pll.59.2022.06.09.10.18.41
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 09 Jun 2022 10:18:42 -0700 (PDT)
+Message-ID: <a2585983-75d7-c627-13ba-38a464cf716e@acm.org>
+Date:   Thu, 9 Jun 2022 10:18:40 -0700
 MIME-Version: 1.0
-Authentication-Results: relay.mimecast.com;
-        auth=pass smtp.auth=C51A453 smtp.mailfrom=david.laight@aculab.com
-X-Mimecast-Spam-Score: 0
-X-Mimecast-Originator: aculab.com
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [PATCH v3 3/4] scsi: core: Cap shost max_sectors according to DMA
+ optimum mapping limits
 Content-Language: en-US
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: base64
+To:     John Garry <john.garry@huawei.com>,
+        damien.lemoal@opensource.wdc.com, joro@8bytes.org, will@kernel.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, hch@lst.de,
+        m.szyprowski@samsung.com, robin.murphy@arm.com
+Cc:     linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, iommu@lists.linux-foundation.org,
+        linux-scsi@vger.kernel.org, liyihang6@hisilicon.com,
+        chenxiang66@hisilicon.com, thunder.leizhen@huawei.com
+References: <1654507822-168026-1-git-send-email-john.garry@huawei.com>
+ <1654507822-168026-4-git-send-email-john.garry@huawei.com>
+ <fe365aa8-00d5-153d-ceb2-f887a71a6927@acm.org>
+ <31417477-953d-283e-808e-cf8701e820a8@huawei.com>
+ <bccbcc9b-4750-a1a7-130f-69eeea5dcb23@acm.org>
+ <5b214e95-dd95-551a-496e-a2139a74e8eb@huawei.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <5b214e95-dd95-551a-496e-a2139a74e8eb@huawei.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-RnJvbTogU2ViYXN0aWFuIEFuZHJ6ZWogU2lld2lvcg0KPiBTZW50OiAwOSBKdW5lIDIwMjIgMTY6
-MDMNCj4gDQo+IE9uIDIwMjItMDUtMzAgMTY6MTU6MTEgWy0wNzAwXSwgRGF2aWRsb2hyIEJ1ZXNv
-IHdyb3RlOg0KPiA+IFRhc2tsZXRzIGhhdmUgbG9uZyBiZWVuIGRlcHJlY2F0ZWQgYXMgYmVpbmcg
-dG9vIGhlYXZ5IG9uIHRoZSBzeXN0ZW0NCj4gPiBieSBydW5uaW5nIGluIGlycSBjb250ZXh0IC0g
-YW5kIHRoaXMgaXMgbm90IGEgcGVyZm9ybWFuY2UgY3JpdGljYWwNCj4gPiBwYXRoLiBJZiBhIGhp
-Z2hlciBwcmlvcml0eSBwcm9jZXNzIHdhbnRzIHRvIHJ1biwgaXQgbXVzdCB3YWl0IGZvcg0KPiA+
-IHRoZSB0YXNrbGV0IHRvIGZpbmlzaCBiZWZvcmUgZG9pbmcgc28uDQo+ID4NCj4gPiBQcm9jZXNz
-IHNycHMgYXN5bmNocm9ub3VzbHkgaW4gcHJvY2VzcyBjb250ZXh0IGluIGEgZGVkaWNhdGVkDQo+
-ID4gc2luZ2xlIHRocmVhZGVkIHdvcmtxdWV1ZS4NCj4gDQo+IEkgd291bGQgc3VnZ2VzdCB0aHJl
-YWRlZCBpbnRlcnJ1cHRzIGluc3RlYWQuIFRoZSBwYXR0ZXJuIGhlcmUgaXMgdGhlDQo+IHNhbWUg
-YXMgaW4gdGhlIHByZXZpb3VzIGRyaXZlciBleGNlcHQgaGVyZSBpcyBsZXNzIGxvY2tpbmcuDQoN
-CkhvdyBsb25nIGRvIHRoZXNlIGFjdGlvbnMgcnVucyBmb3IsIGFuZCB3aGF0IGlzIHdhaXRpbmcg
-Zm9yDQp0aGVtIHRvIGZpbmlzaD8NCg0KVGhlc2UgY2hhbmdlcyBzZWVtIHRvIGRyb3AgdGhlIHBy
-aW9yaXR5IGZyb20gYWJvdmUgdGhhdCBvZiB0aGUNCmhpZ2hlc3QgcHJpb3JpdHkgUlQgcHJvY2Vz
-cyBkb3duIHRvIHRoYXQgb2YgYSBkZWZhdWx0IHByaW9yaXR5DQp1c2VyIHByb2Nlc3MuDQpUaGVy
-ZSBpcyBubyByZWFsIGd1YXJhbnRlZSB0aGF0IHRoZSBsYXR0ZXIgd2lsbCBydW4gJ2FueSB0aW1l
-IHNvb24nLg0KDQpDb25zaWRlciBzb21lIHdvcmtsb2FkcyBJJ20gc2V0dGluZyB1cCB3aGVyZSBt
-b3N0IG9mIHRoZSBjcHUgYXJlDQpsaWtlbHkgdG8gc3BlbmQgOTAlKyBvZiB0aGUgdGltZSBydW5u
-aW5nIHByb2Nlc3NlcyB1bmRlciB0aGUgUlQNCnNjaGVkdWxlciB0aGF0IGFyZSBwcm9jZXNzaW5n
-IGF1ZGlvLg0KDQpJdCBpcyBxdWl0ZSBsaWtlbHkgdGhhdCBhIG5vbi1SVCB0aHJlYWQgKGVzcGVj
-aWFsbHkgb25lIGJvdW5kDQp0byBhIHNwZWNpZmljIGNwdSkgd29uJ3QgcnVuIGZvciBzZXZlcmFs
-IG1pbGxpc2Vjb25kcy4NCihXZSBoYXZlIHRvIGdvIHRocm91Z2ggJ2hvb3BzJyB0byBhdm9pZCBk
-cm9wcGluZyBldGhlcm5ldCBmcmFtZXMuKQ0KDQpJJ2QgaGF2ZSB0aG91Z2h0IHRoYXQgc29tZSBv
-ZiB0aGVzZSBrZXJuZWwgdGhyZWFkcyByZWFsbHkNCm5lZWQgdG8gcnVuIGF0IGEgJ21pZGRsaW5n
-JyBSVCBwcmlvcml0eS4NCg0KCURhdmlkDQoNCi0NClJlZ2lzdGVyZWQgQWRkcmVzcyBMYWtlc2lk
-ZSwgQnJhbWxleSBSb2FkLCBNb3VudCBGYXJtLCBNaWx0b24gS2V5bmVzLCBNSzEgMVBULCBVSw0K
-UmVnaXN0cmF0aW9uIE5vOiAxMzk3Mzg2IChXYWxlcykNCg==
+On 6/9/22 01:00, John Garry wrote:
+> On 08/06/2022 22:07, Bart Van Assche wrote:
+>> On 6/8/22 10:50, John Garry wrote:
+>>> Please note that this limit only applies if we have an IOMMU enabled 
+>>> for the scsi host dma device. Otherwise we are limited by dma direct 
+>>> or swiotlb max mapping size, as before.
+>>
+>> SCSI host bus adapters that support 64-bit DMA may support much larger 
+>> transfer sizes than 128 KiB.
+> 
+> Indeed, and that is my problem today, as my storage controller is 
+> generating DMA mapping lengths which exceeds 128K and they slow 
+> everything down.
+> 
+> If you say that SRP enjoys best peformance with larger transfers then 
+> can you please test this with an IOMMU enabled (iommu group type DMA or 
+> DMA-FQ)?
 
+Hmm ... what exactly do you want me to test? Do you perhaps want me to 
+measure how much performance drops with an IOMMU enabled? I don't have 
+access anymore to the SRP setup I referred to in my previous email. But 
+I do have access to devices that boot from UFS storage. For these 
+devices we need to transfer 2 MiB per request to achieve full bandwidth.
+
+Thanks,
+
+Bart.
