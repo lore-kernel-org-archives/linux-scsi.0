@@ -2,153 +2,108 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06105C43334
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jun 2022 12:19:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7BCDC433EF
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jun 2022 12:30:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245340AbiFIMTI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Jun 2022 08:19:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49378 "EHLO
+        id S241818AbiFIMaY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Jun 2022 08:30:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38896 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244432AbiFIMTH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jun 2022 08:19:07 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 27F641B586F
-        for <linux-scsi@vger.kernel.org>; Thu,  9 Jun 2022 05:19:06 -0700 (PDT)
-Received: from fraeml740-chm.china.huawei.com (unknown [172.18.147.226])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LJjlt2S1Rz67x3s;
-        Thu,  9 Jun 2022 20:17:46 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml740-chm.china.huawei.com (10.206.15.221) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Thu, 9 Jun 2022 14:19:04 +0200
-Received: from [10.47.88.201] (10.47.88.201) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Thu, 9 Jun
- 2022 13:19:03 +0100
-Message-ID: <bacd4a39-7098-ccc6-b6c3-560b3f63e8f8@huawei.com>
-Date:   Thu, 9 Jun 2022 13:19:02 +0100
+        with ESMTP id S237974AbiFIMaX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jun 2022 08:30:23 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E227514005
+        for <linux-scsi@vger.kernel.org>; Thu,  9 Jun 2022 05:30:21 -0700 (PDT)
+Date:   Thu, 9 Jun 2022 14:30:17 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1654777819;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Rx20vBwQrFJxboggEamckdADOxqPZbwTBqK3xGl2Ggw=;
+        b=EoGAG3LeCifcc2wJNJfa2mGGcUsVm1+REYwAzKBDYfLoQT+uhikwHPu0fKWD7+kE4+IVRx
+        debRveVAReWChn28q93/jAS/SKhYjXW1wzH2zB6AQ3/qpgFzpF2vECmRt5HydwUrBmSqXM
+        zKnJxKlpAzjjNl/UV31YKatU9TpSKHcTKGgvC9pabVYcCNNw2FX9IaiJPVsQCD9XQOI6UN
+        S6V+YqBfyIGkehTmsqGk42bpMew3Tnkxe+/H3rWf5PmfM1/OshSI3dBeYWQvrr7EfbqgKg
+        rUspljf2odJCelvyz9S2Kv6grCLvfrLX567s5IjRILvCnM9BEOIdJtbZyPjQOw==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1654777819;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Rx20vBwQrFJxboggEamckdADOxqPZbwTBqK3xGl2Ggw=;
+        b=VeE8mygK3kPVkG5+l69zYa30HBaVnhwn5vTRFwiqjcLaffU0jLclXF5nEyWpX/CwCzisRd
+        wFjBimEIePkkVgBQ==
+From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To:     Davidlohr Bueso <dave@stgolabs.net>
+Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        ejb@linux.ibm.com, tglx@linutronix.de,
+        Tyrel Datwyler <tyreld@linux.ibm.com>,
+        linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH 08/10] scsi/ibmvfc: Replace tasklet with work
+Message-ID: <YqHn2Rn5nePSJ0PG@linutronix.de>
+References: <20220530231512.9729-1-dave@stgolabs.net>
+ <20220530231512.9729-9-dave@stgolabs.net>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH 3/3] scsi: libsas: introduce struct smp_rps_resp
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-References: <20220609022456.409087-1-damien.lemoal@opensource.wdc.com>
- <20220609022456.409087-4-damien.lemoal@opensource.wdc.com>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <20220609022456.409087-4-damien.lemoal@opensource.wdc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.88.201]
-X-ClientProxiedBy: lhreml727-chm.china.huawei.com (10.201.108.78) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20220530231512.9729-9-dave@stgolabs.net>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 09/06/2022 03:24, Damien Le Moal wrote:
-> Similarly to sas report general and discovery responses, define the
-> structure struct smp_rps_resp to handle SATA PHY report responses
+On 2022-05-30 16:15:10 [-0700], Davidlohr Bueso wrote:
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvf=
+c.c
+> index d0eab5700dc5..31b1900489e7 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+> @@ -891,7 +891,7 @@ static void ibmvfc_release_crq_queue(struct ibmvfc_ho=
+st *vhost)
+> =20
+>  	ibmvfc_dbg(vhost, "Releasing CRQ\n");
+>  	free_irq(vdev->irq, vhost);
+> -	tasklet_kill(&vhost->tasklet);
+> +        cancel_work_sync(&vhost->work);
+s/ {8}/\t/
 
-nit: name smp_rps_resp is a bit cryptic to me. Is 
-smp_report_phy_sata_resp just too long? I always come up with verbatim 
-names ....
+is there a reason not to use threaded interrupts? The workqueue _might_
+migrate to another CPU. The locking ensures that nothing bad happens but
+ibmvfc_tasklet() has this piece:
 
-> using a structure with a size that is exactly equal to the sas defined
-> response size.
-> 
-> With this change, struct smp_resp becomes unused and is removed.
-> 
-> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Reviewed-by: John Garry <john.garry@huawei.com>
+|         spin_lock_irqsave(vhost->host->host_lock, flags);
+=E2=80=A6
+|                 while ((async =3D ibmvfc_next_async_crq(vhost)) !=3D NULL=
+) {
+|                         ibmvfc_handle_async(async, vhost);
+|                         async->valid =3D 0;
+|                         wmb();
+|                 }
+=E2=80=A6
+|                 vio_enable_interrupts(vdev);
+potentially enables interrupts which fires right away.
 
-> ---
->   drivers/scsi/aic94xx/aic94xx_dev.c | 2 +-
->   drivers/scsi/libsas/sas_expander.c | 4 ++--
->   drivers/scsi/libsas/sas_internal.h | 2 +-
->   include/scsi/libsas.h              | 2 +-
->   include/scsi/sas.h                 | 8 ++------
->   5 files changed, 7 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/scsi/aic94xx/aic94xx_dev.c b/drivers/scsi/aic94xx/aic94xx_dev.c
-> index 73506a459bf8..91d196f26b76 100644
-> --- a/drivers/scsi/aic94xx/aic94xx_dev.c
-> +++ b/drivers/scsi/aic94xx/aic94xx_dev.c
-> @@ -159,7 +159,7 @@ static int asd_init_target_ddb(struct domain_device *dev)
->   		flags |= OPEN_REQUIRED;
->   		if ((dev->dev_type == SAS_SATA_DEV) ||
->   		    (dev->tproto & SAS_PROTOCOL_STP)) {
-> -			struct smp_resp *rps_resp = &dev->sata_dev.rps_resp;
-> +			struct smp_rps_resp *rps_resp = &dev->sata_dev.rps_resp;
->   			if (rps_resp->frame_type == SMP_RESPONSE &&
->   			    rps_resp->function == SMP_REPORT_PHY_SATA &&
->   			    rps_resp->result == SMP_RESP_FUNC_ACC) {
-> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-> index 78a38980636e..fa2209080cc2 100644
-> --- a/drivers/scsi/libsas/sas_expander.c
-> +++ b/drivers/scsi/libsas/sas_expander.c
-> @@ -676,10 +676,10 @@ int sas_smp_get_phy_events(struct sas_phy *phy)
->   #ifdef CONFIG_SCSI_SAS_ATA
->   
->   #define RPS_REQ_SIZE  16
-> -#define RPS_RESP_SIZE 60
-> +#define RPS_RESP_SIZE sizeof(struct smp_rps_resp)
->   
->   int sas_get_report_phy_sata(struct domain_device *dev, int phy_id,
-> -			    struct smp_resp *rps_resp)
-> +			    struct smp_rps_resp *rps_resp)
->   {
->   	int res;
->   	u8 *rps_req = alloc_smp_req(RPS_REQ_SIZE);
-> diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
-> index 13d0ffaada93..8d0ad3abc7b5 100644
-> --- a/drivers/scsi/libsas/sas_internal.h
-> +++ b/drivers/scsi/libsas/sas_internal.h
-> @@ -83,7 +83,7 @@ struct domain_device *sas_find_dev_by_rphy(struct sas_rphy *rphy);
->   struct domain_device *sas_ex_to_ata(struct domain_device *ex_dev, int phy_id);
->   int sas_ex_phy_discover(struct domain_device *dev, int single);
->   int sas_get_report_phy_sata(struct domain_device *dev, int phy_id,
-> -			    struct smp_resp *rps_resp);
-> +			    struct smp_rps_resp *rps_resp);
->   int sas_try_ata_reset(struct asd_sas_phy *phy);
->   void sas_hae_reset(struct work_struct *work);
->   
-> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-> index ff04eb6d250b..2dbead74a2af 100644
-> --- a/include/scsi/libsas.h
-> +++ b/include/scsi/libsas.h
-> @@ -145,7 +145,7 @@ struct sata_device {
->   
->   	struct ata_port *ap;
->   	struct ata_host *ata_host;
-> -	struct smp_resp rps_resp ____cacheline_aligned; /* report_phy_sata_resp */
-> +	struct smp_rps_resp rps_resp ____cacheline_aligned; /* report_phy_sata_resp */
->   	u8     fis[ATA_RESP_FIS_SIZE];
->   };
->   
-> diff --git a/include/scsi/sas.h b/include/scsi/sas.h
-> index a8f9743ed6fc..71b749bed3b0 100644
-> --- a/include/scsi/sas.h
-> +++ b/include/scsi/sas.h
-> @@ -712,16 +712,12 @@ struct smp_disc_resp {
->   	struct discover_resp disc;
->   } __attribute__ ((packed));
->   
-> -struct smp_resp {
-> +struct smp_rps_resp {
->   	u8    frame_type;
->   	u8    function;
->   	u8    result;
->   	u8    reserved;
-> -	union {
-> -		struct report_general_resp  rg;
-> -		struct discover_resp        disc;
-> -		struct report_phy_sata_resp rps;
-> -	};
-> +	struct report_phy_sata_resp rps;
->   } __attribute__ ((packed));
->   
->   #endif /* _SAS_H_ */
+|                 if ((async =3D ibmvfc_next_async_crq(vhost)) !=3D NULL) {
+|                         vio_disable_interrupts(vdev);
 
+disables it again.
+
+|         }
+|=20
+|         spin_unlock(vhost->crq.q_lock);
+|         spin_unlock_irqrestore(vhost->host->host_lock, flags);
+
+If the worker runs on another CPU then the CPU servicing the interrupt
+will be blocked on the lock which is not nice.
+
+My guess is that you could enable interrupts right before unlocking but
+is a different story.
+
+>  	do {
+>  		if (rc)
+>  			msleep(100);
+
+Sebastian
