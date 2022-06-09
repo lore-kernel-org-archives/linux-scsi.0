@@ -2,258 +2,136 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FFCBC43334
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jun 2022 11:57:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9142BC43334
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jun 2022 11:59:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235413AbiFIL5Y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Jun 2022 07:57:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36668 "EHLO
+        id S242926AbiFIL7t (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Jun 2022 07:59:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47722 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244867AbiFIL5W (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jun 2022 07:57:22 -0400
-Received: from www262.sakura.ne.jp (www262.sakura.ne.jp [202.181.97.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 409CA614A
-        for <linux-scsi@vger.kernel.org>; Thu,  9 Jun 2022 04:57:20 -0700 (PDT)
-Received: from fsav314.sakura.ne.jp (fsav314.sakura.ne.jp [153.120.85.145])
-        by www262.sakura.ne.jp (8.15.2/8.15.2) with ESMTP id 259Bv9KD069512;
-        Thu, 9 Jun 2022 20:57:09 +0900 (JST)
-        (envelope-from penguin-kernel@I-love.SAKURA.ne.jp)
-Received: from www262.sakura.ne.jp (202.181.97.72)
- by fsav314.sakura.ne.jp (F-Secure/fsigk_smtp/550/fsav314.sakura.ne.jp);
- Thu, 09 Jun 2022 20:57:09 +0900 (JST)
-X-Virus-Status: clean(F-Secure/fsigk_smtp/550/fsav314.sakura.ne.jp)
-Received: from [192.168.1.9] (M106072142033.v4.enabler.ne.jp [106.72.142.33])
-        (authenticated bits=0)
-        by www262.sakura.ne.jp (8.15.2/8.15.2) with ESMTPSA id 259Bv8f5069508
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NO);
-        Thu, 9 Jun 2022 20:57:09 +0900 (JST)
-        (envelope-from penguin-kernel@I-love.SAKURA.ne.jp)
-Message-ID: <b4a96c07-76ef-c7ac-6a73-a64bba32d26f@I-love.SAKURA.ne.jp>
-Date:   Thu, 9 Jun 2022 20:57:08 +0900
+        with ESMTP id S242174AbiFIL7s (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jun 2022 07:59:48 -0400
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EDDF466236
+        for <linux-scsi@vger.kernel.org>; Thu,  9 Jun 2022 04:59:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1654775985; x=1686311985;
+  h=message-id:date:mime-version:subject:to:references:from:
+   in-reply-to:content-transfer-encoding;
+  bh=k6GMqgdfQiuwSMvo4xH5m3X/fWOrNnZneMsbYB8++Cw=;
+  b=dcNLA9gftyDs3HPtCNn4bI1sZjiBB6IP/0C/PBRuPBEfESLYrUH7ZaZy
+   kSRhXSQP7EUo2HRkZ6YfU3uj4p4HpTNVQMn7ZmisIz60ICNEfrgohvYYQ
+   S3eo7OB3frlerilODOamUCbJ6j6eGkR06wM0mJyoEORy7FgIcn8gzrV+Q
+   VooH3cTOohOPA54DEpw5abnjnKS6fsS5xTmbieGpGNYlsgQ5J+BdHjkO+
+   8AQY0WX42ZS/cNYCZATeGMId7S3ZZTCN57Vtd8l8iyZEdFWjFPIyDWGXL
+   EXx9zCVJMIb63Y7Zs47Va7qdzXN1jHr8yIczGdDd6y1b6aZFtQga8Rl2p
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.91,287,1647273600"; 
+   d="scan'208";a="207547584"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 09 Jun 2022 19:59:44 +0800
+IronPort-SDR: spb9Y2de8V6c+kpPifF/AHAJs2FOgrDYHnxjS9pDb/P3wJZqlc2rGexKbwllH07dbwPLFMlA+s
+ Kx93tV42mNuS9dKBxcioPGM+hLnZCXirPif0yW/nq/zBdcKj5aHhu2Aqj1cbKN3TA4Q2ztDPVV
+ OfBQy8XWky2hoMALuQ0hr5Uj0w88nG0Rz3sNZF7mf+W6mituOPUNrkp9Pr7wayB6CFbbRoAqOn
+ kj3ttLr1IBETKL0XQN/nVf4ptR9ToATgpx3Ht4PA4XoiDAlvl8oVav72jj7RYpfEBQHxwmLzum
+ 3GvmY3KJ2ro1h72W802J8J4j
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 09 Jun 2022 04:18:33 -0700
+IronPort-SDR: QHxa4wYTm0LFukwmG3NLp7oSXK+CmFcwoC0GUs525ZlVjSa7/JjP99dZeZovEG/1rv1dCuAkz3
+ jRXl4zqgiN3fYXMHAwi8GRuJ8OcoabpCZeCoPwQQjcu23uzK61HdxJZvr9F45SM6gGdlxtKvf/
+ ZO0fk/VPV/5kUBg48QO4EHa/7FB+vImamdRPeIZ9trBrl5F2waxTKJyItdTYkzUjIcUSrEMbGs
+ ug/H4v/pGroEbjrQ0lOwmTnzXi+6OJRW9ncGgLrNfJP1Cb4I+bjJh3DAd6gUawF2l1nn5nxPNl
+ R6E=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 09 Jun 2022 04:59:47 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LJjM55YqYz1Rwrw
+        for <linux-scsi@vger.kernel.org>; Thu,  9 Jun 2022 04:59:45 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1654775985; x=1657367986; bh=k6GMqgdfQiuwSMvo4xH5m3X/fWOrNnZneMs
+        bYB8++Cw=; b=JqjbDSXAvhgUPpsAXwLQNARaPazoZOablATIX1MkRFBnMS1z9dc
+        Sa9qVTN0SIPJvpqsHUo/QPNX4BB2Xog1L7Itw9Wg9fZ9X4DN1VtDQGLVZ/xtOFwT
+        klzg4FcNIvwjtw6gI0b259gmQ3sjsFVgGdD2+Q/5VlWONJUcP75GPNeru3cFa1TL
+        DsHpvv/PC6nybrrwKsmdwUUSUkt3OZJADuJrvBC9b/EXSD4EBHWuEq6Z//QyfGLL
+        siO6aUrdGa87d3u7dzlMwldRGPr1XWNKS/iPUN8PXKYXUuWmuJ7m5La7dowumZT9
+        40/ZARMcTh2kn7dxtZvRc6TfCkZZiQPAtkQ==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id w498JCBzuHIH for <linux-scsi@vger.kernel.org>;
+        Thu,  9 Jun 2022 04:59:45 -0700 (PDT)
+Received: from [10.225.163.72] (unknown [10.225.163.72])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LJjM46Pssz1Rvlc;
+        Thu,  9 Jun 2022 04:59:44 -0700 (PDT)
+Message-ID: <3a1ded4f-140e-57b7-732c-8c14a62e37eb@opensource.wdc.com>
+Date:   Thu, 9 Jun 2022 20:59:43 +0900
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:91.0) Gecko/20100101
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.10.0
+Subject: Re: [PATCH 1/3] scsi: libsas: introduce struct smp_disc_resp
 Content-Language: en-US
-To:     Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org
-From:   Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Subject: [PATCH] scsi: qla2xxx: avoid flush_scheduled_work() usage
+To:     John Garry <john.garry@huawei.com>, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+References: <20220609022456.409087-1-damien.lemoal@opensource.wdc.com>
+ <20220609022456.409087-2-damien.lemoal@opensource.wdc.com>
+ <9a4612db-7cc2-398d-f882-4190bc5d7759@huawei.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <9a4612db-7cc2-398d-f882-4190bc5d7759@huawei.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Replace system_wq with qla2xxx_wq in files which will be compiled as
-qla2xxx.o, in order to avoid flush_scheduled_work() usage.
+On 6/9/22 17:43, John Garry wrote:
+> 
+>>   #define DISCOVER_REQ_SIZE  16
+>> -#define DISCOVER_RESP_SIZE 56
+>> +#define DISCOVER_RESP_SIZE sizeof(struct smp_disc_resp)
+> 
+> I feel that it would be nice to get rid of these.
+> 
+> Maybe something like:
+> 
+> #define smp_execute_task_wrap(dev, req, resp)\
+> smp_execute_task(dev, req, sizeof(*req), resp, DISCOVER_REQ_SIZE)
+> 
+> 
+> static int sas_ex_phy_discover_helper(struct domain_device *dev, u8 
+> *disc_req, struct smp_disc_resp *disc_resp, int single)
+> {
+> 	res = smp_execute_task_wrap(dev, disc_req, disc_resp);
+> 
+> We could even introduce a smp req struct to get rid of DISCOVER_REQ_SIZE 
+> - the (current) code would be a bit less cryptic then.
 
-Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
----
-Please see commit c4f135d643823a86 ("workqueue: Wrap flush_workqueue()
-using a macro") for background.
+Yes, I think the req size needs a similar treatment too, and we can remove
+all these REQ/RESP_SIZE macros. But for now, the req side does not bother
+gcc and I do not see any warning, so I left it. This series is really
+about getting rid of the warnings so that we can use CONFIG_WERROR.
+There are some xfs warnings that needs to be taken care of too to be able
+to use that one again though.
 
-This is a blind conversion, for I don't know whether qlt_stop_phase1()
-needs to wait all works. If qlt_stop_phase1() needs to wait only works
-scheduled via qlt_sched_sess_work(), can we use flush_work() instead of
-introducing dedicated qla2xxx_wq ?
+> 
+> But no big deal. Looks ok apart from that.
 
-Well, it seems to me that currently qlt_sess_work_fn() is racy with regard
-to flush_scheduled_work() from qlt_stop_phase1(), for flush_scheduled_work()
-will not be called if list_empty() == true due to qlt_sess_work_fn() already
-called list_del(). That won't be fixed by replacing flush_scheduled_work()
-with flush_work(&tgt->sess_work)... What do you want to do? Just call
-drain_workqueue(qla2xxx_wq) unconditionally?
+If you agree to do the req cleanup as a followup series, can you send a
+formal review please ?
 
- drivers/scsi/qla2xxx/qla_def.h    |  2 ++
- drivers/scsi/qla2xxx/qla_gs.c     |  4 ++--
- drivers/scsi/qla2xxx/qla_init.c   |  2 +-
- drivers/scsi/qla2xxx/qla_nvme.c   |  6 +++---
- drivers/scsi/qla2xxx/qla_os.c     | 16 ++++++++++++++--
- drivers/scsi/qla2xxx/qla_target.c |  9 ++++-----
- 6 files changed, 26 insertions(+), 13 deletions(-)
+> 
+> Thanks,
+> John
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index e8f69c486be1..1051296617ac 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -35,6 +35,8 @@
- 
- #include <uapi/scsi/fc/fc_els.h>
- 
-+extern struct workqueue_struct *qla2xxx_wq;
-+
- /* Big endian Fibre Channel S_ID (source ID) or D_ID (destination ID). */
- typedef struct {
- 	uint8_t domain;
-diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
-index e811de2f6a25..2f659be133cd 100644
---- a/drivers/scsi/qla2xxx/qla_gs.c
-+++ b/drivers/scsi/qla2xxx/qla_gs.c
-@@ -3947,7 +3947,7 @@ static int qla24xx_async_gnnft(scsi_qla_host_t *vha, struct srb *sp,
- 		ql_dbg(ql_dbg_disc, vha, 0xffff,
- 		    "%s: schedule\n", __func__);
- 		vha->scan.scan_flags |= SF_QUEUED;
--		schedule_delayed_work(&vha->scan.scan_work, 5);
-+		queue_delayed_work(qla2xxx_wq, &vha->scan.scan_work, 5);
- 	}
- 	spin_unlock_irqrestore(&vha->work_lock, flags);
- 
-@@ -4113,7 +4113,7 @@ int qla24xx_async_gpnft(scsi_qla_host_t *vha, u8 fc4_type, srb_t *sp)
- 		ql_dbg(ql_dbg_disc + ql_dbg_verbose, vha, 0xffff,
- 		    "%s: Scan scheduled.\n", __func__);
- 		vha->scan.scan_flags |= SF_QUEUED;
--		schedule_delayed_work(&vha->scan.scan_work, 5);
-+		queue_delayed_work(qla2xxx_wq, &vha->scan.scan_work, 5);
- 	}
- 	spin_unlock_irqrestore(&vha->work_lock, flags);
- 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 3f3417a3e891..ca3a5be4c0b1 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -1886,7 +1886,7 @@ void qla2x00_handle_rscn(scsi_qla_host_t *vha, struct event_arg *ea)
- 	if (vha->scan.scan_flags == 0) {
- 		ql_dbg(ql_dbg_disc, vha, 0xffff, "%s: schedule\n", __func__);
- 		vha->scan.scan_flags |= SF_QUEUED;
--		schedule_delayed_work(&vha->scan.scan_work, 5);
-+		queue_delayed_work(qla2xxx_wq, &vha->scan.scan_work, 5);
- 	}
- 	spin_unlock_irqrestore(&vha->work_lock, flags);
- }
-diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
-index 87c9404aa401..866d0b410b8e 100644
---- a/drivers/scsi/qla2xxx/qla_nvme.c
-+++ b/drivers/scsi/qla2xxx/qla_nvme.c
-@@ -230,7 +230,7 @@ static void qla_nvme_sp_ls_done(srb_t *sp, int res)
- 
- 	priv->comp_status = res;
- 	INIT_WORK(&priv->ls_work, qla_nvme_ls_complete);
--	schedule_work(&priv->ls_work);
-+	queue_work(qla2xxx_wq, &priv->ls_work);
- }
- 
- /* it assumed that QPair lock is held. */
-@@ -324,7 +324,7 @@ static void qla_nvme_ls_abort(struct nvme_fc_local_port *lport,
- 	spin_unlock_irqrestore(&priv->cmd_lock, flags);
- 
- 	INIT_WORK(&priv->abort_work, qla_nvme_abort_work);
--	schedule_work(&priv->abort_work);
-+	queue_work(qla2xxx_wq, &priv->abort_work);
- }
- 
- static int qla_nvme_ls_req(struct nvme_fc_local_port *lport,
-@@ -411,7 +411,7 @@ static void qla_nvme_fcp_abort(struct nvme_fc_local_port *lport,
- 	spin_unlock_irqrestore(&priv->cmd_lock, flags);
- 
- 	INIT_WORK(&priv->abort_work, qla_nvme_abort_work);
--	schedule_work(&priv->abort_work);
-+	queue_work(qla2xxx_wq, &priv->abort_work);
- }
- 
- static inline int qla2x00_start_nvme_mq(srb_t *sp)
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 73073fb08369..86a66da928c8 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -45,6 +45,8 @@ module_param(ql2xenforce_iocb_limit, int, S_IRUGO | S_IWUSR);
- MODULE_PARM_DESC(ql2xenforce_iocb_limit,
- 		 "Enforce IOCB throttling, to avoid FW congestion. (default: 1)");
- 
-+struct workqueue_struct *qla2xxx_wq;
-+
- /*
-  * CT6 CTX allocation cache
-  */
-@@ -5341,7 +5343,7 @@ void qla24xx_create_new_sess(struct scsi_qla_host *vha, struct qla_work_evt *e)
- 				}
- 				fcport->fw_login_state = 0;
- 
--				schedule_delayed_work(&vha->scan.scan_work, 5);
-+				queue_delayed_work(qla2xxx_wq, &vha->scan.scan_work, 5);
- 			} else {
- 				qla24xx_fcport_handle_login(vha, fcport);
- 			}
-@@ -8123,10 +8125,16 @@ qla2x00_module_init(void)
- 		return -ENOMEM;
- 	}
- 
-+	qla2xxx_wq = alloc_workqueue("qla2xxx_wq", 0, 0);
-+	if (!qla2xxx_wq) {
-+		ret = -ENOMEM;
-+		goto destroy_cache;
-+	}
-+
- 	/* Initialize target kmem_cache and mem_pools */
- 	ret = qlt_init();
- 	if (ret < 0) {
--		goto destroy_cache;
-+		goto destroy_wq;
- 	} else if (ret > 0) {
- 		/*
- 		 * If initiator mode is explictly disabled by qlt_init(),
-@@ -8190,6 +8198,9 @@ qla2x00_module_init(void)
- qlt_exit:
- 	qlt_exit();
- 
-+destroy_wq:
-+	destroy_workqueue(qla2xxx_wq);
-+
- destroy_cache:
- 	kmem_cache_destroy(srb_cachep);
- 	return ret;
-@@ -8209,6 +8220,7 @@ qla2x00_module_exit(void)
- 		unregister_chrdev(apidev_major, QLA2XXX_APIDEV);
- 	fc_release_transport(qla2xxx_transport_template);
- 	qlt_exit();
-+	destroy_workqueue(qla2xxx_wq);
- 	kmem_cache_destroy(srb_cachep);
- }
- 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index cb97f625970d..aff5cb01c601 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -262,7 +262,7 @@ static void qlt_queue_unknown_atio(scsi_qla_host_t *vha,
- 	list_add_tail(&u->cmd_list, &vha->unknown_atio_list);
- 	spin_unlock_irqrestore(&vha->cmd_list_lock, flags);
- 
--	schedule_delayed_work(&vha->unknown_atio_work, 1);
-+	queue_delayed_work(qla2xxx_wq, &vha->unknown_atio_work, 1);
- 
- out:
- 	return;
-@@ -307,8 +307,7 @@ static void qlt_try_to_dequeue_unknown_atios(struct scsi_qla_host *vha,
- 			    "Reschedule u %p, vha %p, host %p\n", u, vha, host);
- 			if (!queued) {
- 				queued = 1;
--				schedule_delayed_work(&vha->unknown_atio_work,
--				    1);
-+				queue_delayed_work(qla2xxx_wq, &vha->unknown_atio_work, 1);
- 			}
- 			continue;
- 		}
-@@ -1556,7 +1555,7 @@ int qlt_stop_phase1(struct qla_tgt *tgt)
- 	spin_lock_irqsave(&tgt->sess_work_lock, flags);
- 	while (!list_empty(&tgt->sess_works_list)) {
- 		spin_unlock_irqrestore(&tgt->sess_work_lock, flags);
--		flush_scheduled_work();
-+		flush_workqueue(qla2xxx_wq);
- 		spin_lock_irqsave(&tgt->sess_work_lock, flags);
- 	}
- 	spin_unlock_irqrestore(&tgt->sess_work_lock, flags);
-@@ -1696,7 +1695,7 @@ static int qlt_sched_sess_work(struct qla_tgt *tgt, int type,
- 	list_add_tail(&prm->sess_works_list_entry, &tgt->sess_works_list);
- 	spin_unlock_irqrestore(&tgt->sess_work_lock, flags);
- 
--	schedule_work(&tgt->sess_work);
-+	queue_work(qla2xxx_wq, &tgt->sess_work);
- 
- 	return 0;
- }
+
 -- 
-2.18.4
-
-
+Damien Le Moal
+Western Digital Research
