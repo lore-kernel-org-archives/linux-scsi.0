@@ -2,80 +2,112 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9B38C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jun 2022 15:38:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E3F4C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jun 2022 16:37:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240929AbiFJPiF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 10 Jun 2022 11:38:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41288 "EHLO
+        id S1349369AbiFJQhZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 10 Jun 2022 12:37:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44840 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233903AbiFJPiD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Jun 2022 11:38:03 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0938326562F;
-        Fri, 10 Jun 2022 08:37:58 -0700 (PDT)
-Received: from fraeml739-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LKQ2n144hz689ML;
-        Fri, 10 Jun 2022 23:33:05 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml739-chm.china.huawei.com (10.206.15.220) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Fri, 10 Jun 2022 17:37:56 +0200
-Received: from [10.47.88.201] (10.47.88.201) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Fri, 10 Jun
- 2022 16:37:55 +0100
-Message-ID: <f7872ebc-dfe5-d977-c51f-91b73e6d1fbb@huawei.com>
-Date:   Fri, 10 Jun 2022 16:37:54 +0100
+        with ESMTP id S1344890AbiFJQhP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Jun 2022 12:37:15 -0400
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 94EFF56FB8;
+        Fri, 10 Jun 2022 09:37:14 -0700 (PDT)
+Received: by linux.microsoft.com (Postfix, from userid 1127)
+        id 57D1220BE67F; Fri, 10 Jun 2022 09:37:14 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 57D1220BE67F
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+        s=default; t=1654879034;
+        bh=rcPTYQEFoo7Vpv208s+mxB/YH8/TY4Eoz0CP7fKKexY=;
+        h=Date:From:To:Subject:References:In-Reply-To:From;
+        b=QT0TtHGeWPhHDKEmXk4NtsdSizTmD2Ik/G9PK/mGF8lDnJnFWBlRLJtPnuenDTTeL
+         sNvg4ykbiwTTb4Fmm/F5sApOJKdWDpsB35YU8UphKatpWKBPqa2Gk+7kfOGZR4UgXc
+         U+oCAZLDuyzTmMfs4ZwzxPHNiJTBAjH+hX6HEF1g=
+Date:   Fri, 10 Jun 2022 09:37:14 -0700
+From:   Saurabh Singh Sengar <ssengar@linux.microsoft.com>
+To:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        wei.liu@kernel.org, decui@microsoft.com,
+        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ssengar@microsoft.com, mikelley@microsoft.com,
+        linux-scsi@vger.kernel.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Subject: Re: [PATCH] scsi: storvsc: Correct sysfs parameters as per Hyper-V
+ storvsc requirement
+Message-ID: <20220610163714.GA25982@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
+References: <1654878824-25691-1-git-send-email-ssengar@linux.microsoft.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH v3 3/4] scsi: core: Cap shost max_sectors according to DMA
- optimum mapping limits
-To:     Bart Van Assche <bvanassche@acm.org>,
-        <damien.lemoal@opensource.wdc.com>, <joro@8bytes.org>,
-        <will@kernel.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <hch@lst.de>,
-        <m.szyprowski@samsung.com>, <robin.murphy@arm.com>
-CC:     <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-ide@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
-        <linux-scsi@vger.kernel.org>, <liyihang6@hisilicon.com>,
-        <chenxiang66@hisilicon.com>, <thunder.leizhen@huawei.com>
-References: <1654507822-168026-1-git-send-email-john.garry@huawei.com>
- <1654507822-168026-4-git-send-email-john.garry@huawei.com>
- <fe365aa8-00d5-153d-ceb2-f887a71a6927@acm.org>
- <31417477-953d-283e-808e-cf8701e820a8@huawei.com>
- <bccbcc9b-4750-a1a7-130f-69eeea5dcb23@acm.org>
- <5b214e95-dd95-551a-496e-a2139a74e8eb@huawei.com>
- <a2585983-75d7-c627-13ba-38a464cf716e@acm.org>
- <9b1d155e-28cc-08dc-5a5a-8580132575e7@huawei.com>
- <23bf4427-41c3-bf1d-903a-75928bb47627@acm.org>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <23bf4427-41c3-bf1d-903a-75928bb47627@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.88.201]
-X-ClientProxiedBy: lhreml727-chm.china.huawei.com (10.201.108.78) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1654878824-25691-1-git-send-email-ssengar@linux.microsoft.com>
+User-Agent: Mutt/1.5.21 (2010-09-15)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 09/06/2022 21:34, Bart Van Assche wrote:
-> On 6/9/22 10:54, John Garry wrote:
->> ok, but do you have a system where the UFS host controller is behind 
->> an IOMMU? I had the impression that UFS controllers would be mostly 
->> found in embedded systems and IOMMUs are not as common on there.
+CC : linux-scsi@vger.kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com
+
+On Fri, Jun 10, 2022 at 09:33:44AM -0700, Saurabh Sengar wrote:
+> This patch corrects 3 parameters:
+> 1. Correct the sysfs entry for maximum hardware transfer limit of single
+>    transfer (max_hw_sectors_kb) by setting max_sectors, this was set to
+>    default value 512kb before.
+> 2. Correct SGL memory offset alignment as per Hyper-V page size.
+> 3. Correct sg_tablesize which accounts for max SGL segments entries in a
+>    single SGL.
 > 
-> Modern phones have an IOMMU. Below one can find an example from a Pixel 
-> 6 phone. The UFS storage controller is not controller by the IOMMU as 
-> far as I can see but I wouldn't be surprised if the security team would 
-> ask us one day to enable the IOMMU for the UFS controller.
-
-OK, then unfortunately it seems that you have no method to test. I might 
-be able to test USB MSC but I am not even sure if I can even get DMA 
-mappings who length exceeds the IOVA rcache limit there.
-
-Thanks,
-John
+> Signed-off-by: Saurabh Sengar <ssengar@linux.microsoft.com>
+> ---
+>  drivers/scsi/storvsc_drv.c | 28 ++++++++++++++++++++++++----
+>  1 file changed, 24 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index ca3530982e52..3e032660ae36 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -1844,7 +1844,7 @@ static struct scsi_host_template scsi_driver = {
+>  	.cmd_per_lun =		2048,
+>  	.this_id =		-1,
+>  	/* Ensure there are no gaps in presented sgls */
+> -	.virt_boundary_mask =	PAGE_SIZE-1,
+> +	.virt_boundary_mask =	HV_HYP_PAGE_SIZE - 1,
+>  	.no_write_same =	1,
+>  	.track_queue_depth =	1,
+>  	.change_queue_depth =	storvsc_change_queue_depth,
+> @@ -1969,11 +1969,31 @@ static int storvsc_probe(struct hv_device *device,
+>  	/* max cmd length */
+>  	host->max_cmd_len = STORVSC_MAX_CMD_LEN;
+>  
+> +	/* max_hw_sectors_kb */
+> +	host->max_sectors = (stor_device->max_transfer_bytes) >> 9;
+>  	/*
+> -	 * set the table size based on the info we got
+> -	 * from the host.
+> +	 * There are 2 requirements for Hyper-V storvsc sgl segments,
+> +	 * based on which the below calculation for max segments is
+> +	 * done:
+> +	 *
+> +	 * 1. Except for the first and last sgl segment, all sgl segments
+> +	 *    should be align to HV_HYP_PAGE_SIZE, that also means the
+> +	 *    maximum number of segments in a sgl can be calculated by
+> +	 *    dividing the total max transfer length by HV_HYP_PAGE_SIZE.
+> +	 *
+> +	 * 2. Except for the first and last, each entry in the SGL must
+> +	 *    have an offset that is a multiple of HV_HYP_PAGE_SIZE,
+> +	 *    whereas the complete length of transfer may not be aligned
+> +	 *    to HV_HYP_PAGE_SIZE always. This can result in 2 cases:
+> +	 *    Example for unaligned case: Let's say the total transfer
+> +	 *    length is 6 KB, the max segments will be 3 (1,4,1).
+> +	 *    Example for aligned case: Let's say the total transfer length
+> +	 *    is 8KB, then max segments will still be 3(2,4,2) and not 4.
+> +	 *    4 (read next higher value) segments will only be required
+> +	 *    once the length is at least 2 bytes more then 8KB (read any
+> +	 *    HV_HYP_PAGE_SIZE aligned length).
+>  	 */
+> -	host->sg_tablesize = (stor_device->max_transfer_bytes >> PAGE_SHIFT);
+> +	host->sg_tablesize = ((stor_device->max_transfer_bytes - 2) >> HV_HYP_PAGE_SHIFT) + 2;
+>  	/*
+>  	 * For non-IDE disks, the host supports multiple channels.
+>  	 * Set the number of HW queues we are supporting.
+> -- 
+> 2.25.1
