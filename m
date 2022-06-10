@@ -2,87 +2,80 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 634E6C43334
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jun 2022 14:48:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9B38C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jun 2022 15:38:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345957AbiFJOsr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 10 Jun 2022 10:48:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55172 "EHLO
+        id S240929AbiFJPiF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 10 Jun 2022 11:38:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41288 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349684AbiFJOr5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Jun 2022 10:47:57 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88A1B712D8;
-        Fri, 10 Jun 2022 07:47:41 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 4B96AB8360F;
-        Fri, 10 Jun 2022 14:47:40 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B0CDC34114;
-        Fri, 10 Jun 2022 14:47:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654872459;
-        bh=1G/kKmnPuQ1+bfxE++tWRK/QGRB9Ib5YyobZ1xQvME0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=NiinhiVfxa3+BNyJJbeXiwbniXz/YHopf92NhbJtOQtFSK+B/p4Hxv3EXkryys/j2
-         VLQvB2G1Oysi77kecifFhRPz7qKlcPslRapbJgUDEcCHXWqUuSzuSL4/w5lIIeI/RB
-         LdBI8tzU3HFJ7jHdntGsOqwJcv8kVFG4Mn0IBYySqGOrSlaPwMM9hE+Ri+OzWsAdag
-         sbmw7wcBwB+xmYDscdX1Aasox5fBEsSRuTdIiIekly8r3vkmGytMPZ7WU5p2lEjwsL
-         LXcw0nIzS35MNtI0PXsQCxIzD0kOtPLRF7SGskKBkIlC/Iw2WCpF3Qu++iV6xKp/Zw
-         Zbagt/xnpSadw==
-Date:   Fri, 10 Jun 2022 08:47:36 -0600
-From:   Keith Busch <kbusch@kernel.org>
-To:     Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Cc:     Chaitanya Kulkarni <chaitanyak@nvidia.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: Re: blktests failures with v5.19-rc1
-Message-ID: <YqNZiMw+rH5gyZDI@kbusch-mbp.dhcp.thefacebook.com>
-References: <20220609235329.4jbz4wr3eg2nmzqa@shindev>
- <717734c9-c633-fb48-499e-7e3e15113020@nvidia.com>
- <19d09611-42cc-5a81-d676-c5375865c14c@nvidia.com>
- <20220610122517.6pt5y63hcosk5mes@shindev>
+        with ESMTP id S233903AbiFJPiD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Jun 2022 11:38:03 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0938326562F;
+        Fri, 10 Jun 2022 08:37:58 -0700 (PDT)
+Received: from fraeml739-chm.china.huawei.com (unknown [172.18.147.207])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LKQ2n144hz689ML;
+        Fri, 10 Jun 2022 23:33:05 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml739-chm.china.huawei.com (10.206.15.220) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Fri, 10 Jun 2022 17:37:56 +0200
+Received: from [10.47.88.201] (10.47.88.201) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Fri, 10 Jun
+ 2022 16:37:55 +0100
+Message-ID: <f7872ebc-dfe5-d977-c51f-91b73e6d1fbb@huawei.com>
+Date:   Fri, 10 Jun 2022 16:37:54 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220610122517.6pt5y63hcosk5mes@shindev>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH v3 3/4] scsi: core: Cap shost max_sectors according to DMA
+ optimum mapping limits
+To:     Bart Van Assche <bvanassche@acm.org>,
+        <damien.lemoal@opensource.wdc.com>, <joro@8bytes.org>,
+        <will@kernel.org>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <hch@lst.de>,
+        <m.szyprowski@samsung.com>, <robin.murphy@arm.com>
+CC:     <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
+        <linux-scsi@vger.kernel.org>, <liyihang6@hisilicon.com>,
+        <chenxiang66@hisilicon.com>, <thunder.leizhen@huawei.com>
+References: <1654507822-168026-1-git-send-email-john.garry@huawei.com>
+ <1654507822-168026-4-git-send-email-john.garry@huawei.com>
+ <fe365aa8-00d5-153d-ceb2-f887a71a6927@acm.org>
+ <31417477-953d-283e-808e-cf8701e820a8@huawei.com>
+ <bccbcc9b-4750-a1a7-130f-69eeea5dcb23@acm.org>
+ <5b214e95-dd95-551a-496e-a2139a74e8eb@huawei.com>
+ <a2585983-75d7-c627-13ba-38a464cf716e@acm.org>
+ <9b1d155e-28cc-08dc-5a5a-8580132575e7@huawei.com>
+ <23bf4427-41c3-bf1d-903a-75928bb47627@acm.org>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <23bf4427-41c3-bf1d-903a-75928bb47627@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.88.201]
+X-ClientProxiedBy: lhreml727-chm.china.huawei.com (10.201.108.78) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Jun 10, 2022 at 12:25:17PM +0000, Shinichiro Kawasaki wrote:
-> On Jun 10, 2022 / 09:32, Chaitanya Kulkarni wrote:
-> > >> #6: nvme/032: Failed at the first run after system reboot.
-> > >>                 Used QEMU NVME device as TEST_DEV.
-> > >>
-> > 
-> > ofcourse we need to fix this issue but can you also
-> > try it with the real H/W ?
+On 09/06/2022 21:34, Bart Van Assche wrote:
+> On 6/9/22 10:54, John Garry wrote:
+>> ok, but do you have a system where the UFS host controller is behind 
+>> an IOMMU? I had the impression that UFS controllers would be mostly 
+>> found in embedded systems and IOMMUs are not as common on there.
 > 
-> Hi Chaitanya, thank you for looking into the failures. I have just run the test
-> case nvme/032 with real NVME device and observed the exactly same symptom as
-> QEMU NVME device.
+> Modern phones have an IOMMU. Below one can find an example from a Pixel 
+> 6 phone. The UFS storage controller is not controller by the IOMMU as 
+> far as I can see but I wouldn't be surprised if the security team would 
+> ask us one day to enable the IOMMU for the UFS controller.
 
-QEMU is perfectly fine for this test. There's no need to bring in "real"
-hardware for this.
+OK, then unfortunately it seems that you have no method to test. I might 
+be able to test USB MSC but I am not even sure if I can even get DMA 
+mappings who length exceeds the IOVA rcache limit there.
 
-And I am not even sure this is real. I don't know yet why this is showing up
-only now, but this should fix it:
-
----
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index fc804e08e3cb..bebd816c11e6 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -476,7 +476,7 @@ static ssize_t dev_rescan_store(struct device *dev,
- 	}
- 	return count;
- }
--static struct device_attribute dev_attr_dev_rescan = __ATTR(rescan, 0200, NULL,
-+static struct device_attribute dev_attr_dev_rescan = __ATTR_IGNORE_LOCKDEP(rescan, 0200, NULL,
- 							    dev_rescan_store);
- 
- static ssize_t remove_store(struct device *dev, struct device_attribute *attr,
---
+Thanks,
+John
