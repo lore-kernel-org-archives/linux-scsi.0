@@ -2,98 +2,155 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B1CDC433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jun 2022 10:12:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93DCDC433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jun 2022 10:47:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347555AbiFJKM1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 10 Jun 2022 06:12:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39934 "EHLO
+        id S1348299AbiFJKr5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 10 Jun 2022 06:47:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44664 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347523AbiFJKMZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Jun 2022 06:12:25 -0400
-Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4152EEC30A
-        for <linux-scsi@vger.kernel.org>; Fri, 10 Jun 2022 03:12:23 -0700 (PDT)
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 37A5E424DC;
-        Fri, 10 Jun 2022 10:12:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        mime-version:content-transfer-encoding:content-type:content-type
-        :content-language:accept-language:in-reply-to:references
-        :message-id:date:date:subject:subject:from:from:received
-        :received:received:received:received; s=mta-01; t=1654855941; x=
-        1656670342; bh=6kmg8CZw3aJJuIkR5ofArRH2u89rx0rjRAJD4FMJW50=; b=o
-        b3vzHQMdGZHu5QcEBw9ZYJ2AjklVkrHokblX/yNQnr54Xd1ZmpMVueDayHYvbUt4
-        OJWwaKoRZLkReOGNaiBZtEV8DQ3YP06N4IdTstrVuRjJ1MsRQXN6/taMwL02irvx
-        JIvqfWTQJGo/isOYZt1Amd8GKCAWBR6wH4IcUK8kEs=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id mCX-yjIITKsv; Fri, 10 Jun 2022 13:12:21 +0300 (MSK)
-Received: from T-EXCH-01.corp.yadro.com (t-exch-01.corp.yadro.com [172.17.10.101])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id B0E9142497;
-        Fri, 10 Jun 2022 13:12:20 +0300 (MSK)
-Received: from T-EXCH-07.corp.yadro.com (172.17.11.57) by
- T-EXCH-01.corp.yadro.com (172.17.10.101) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
- 15.1.669.32; Fri, 10 Jun 2022 13:12:20 +0300
-Received: from T-EXCH-09.corp.yadro.com (172.17.11.59) by
- T-EXCH-07.corp.yadro.com (172.17.11.57) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.2.986.22; Fri, 10 Jun 2022 13:12:20 +0300
-Received: from T-EXCH-09.corp.yadro.com ([fe80::d9f:e165:8a50:d450]) by
- T-EXCH-09.corp.yadro.com ([fe80::d9f:e165:8a50:d450%4]) with mapi id
- 15.02.0986.022; Fri, 10 Jun 2022 13:12:20 +0300
-From:   Dmitriy Bogdanov <d.bogdanov@yadro.com>
-To:     Ulrich Windl <Ulrich.Windl@rz.uni-regensburg.de>,
-        Chris Leech <cleech@redhat.com>, Lee Duncan <lduncan@suse.com>
-CC:     open-iscsi <open-iscsi@googlegroups.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Konstantin Shelekhin <k.shelekhin@yadro.com>,
-        "linux@yadro.com" <linux@yadro.com>
-Subject: RE: Antw: [EXT] Re: [PATCH] scsi: iscsi: prefer xmit of DataOut
- before new cmd
-Thread-Topic: Antw: [EXT] Re: [PATCH] scsi: iscsi: prefer xmit of DataOut
- before new cmd
-Thread-Index: AQHYenFLnkgrMqHdCEim3M4HDVs6OK1D5uuAgAAC6wCAAXQf4IAAFcyAgAFR6oCAAJqUgIAAmiMAgABeVFA=
-Date:   Fri, 10 Jun 2022 10:12:19 +0000
-Message-ID: <09cecc56ea2041dd8ccfafcba180f907@yadro.com>
-References: <20220607131953.11584-1-d.bogdanov@yadro.com>
- <769c3acb-b515-7fd8-2450-4b6206436fde@oracle.com>
- <6a58acb4-e29e-e8c7-d85c-fe474670dad7@oracle.com>
- <e5c2ab5b4de8428495efe85865980133@yadro.com>
- <48af6f5f-c3b6-ac65-836d-518153ab2dd5@oracle.com>
- <ffc1f4910d2b414c93dfa5d331436a53@yadro.com>
- <d3277470-9ef0-9a1a-974d-e80250bd35ac@oracle.com>
- <62A2E054020000A10004ACA8@gwsmtp.uni-regensburg.de>
-In-Reply-To: <62A2E054020000A10004ACA8@gwsmtp.uni-regensburg.de>
-Accept-Language: ru-RU, en-US
-Content-Language: ru-RU
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [10.199.18.20]
+        with ESMTP id S1343647AbiFJKrS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Jun 2022 06:47:18 -0400
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75EEE214835
+        for <linux-scsi@vger.kernel.org>; Fri, 10 Jun 2022 03:43:47 -0700 (PDT)
+Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20220610104343epoutp0465171c067c415e353be40d30a0de19ac~3PGxI9ZH_0100801008epoutp04z
+        for <linux-scsi@vger.kernel.org>; Fri, 10 Jun 2022 10:43:43 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20220610104343epoutp0465171c067c415e353be40d30a0de19ac~3PGxI9ZH_0100801008epoutp04z
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1654857823;
+        bh=hZydefGMCXXwJQLGPq6/KgCxy9AqlRGtqjW7pmdoKH4=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=fTceMiu0FZPTKYSwS0vVOCgH3su889maoKY9ZfomZBveAUeD11OWMbw14N38J9Qps
+         POB7V+HmQ1YXEWv/5fjiiXeMVgNrH+6iFvN0i+3BkY9O+ag/d5SN5ltRcDHTLNAq10
+         eCXXx/Q6wtfTkIfnAf/Fz4fAjkTQ5pLVcmBCwr4g=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas5p2.samsung.com (KnoxPortal) with ESMTP id
+        20220610104343epcas5p2705f3fe5701edcbc6cc4f15d8850efc5~3PGwoxVhb1105611056epcas5p2E;
+        Fri, 10 Jun 2022 10:43:43 +0000 (GMT)
+Received: from epsmges5p3new.samsung.com (unknown [182.195.38.182]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4LKHcr42GHz4x9Pp; Fri, 10 Jun
+        2022 10:43:40 +0000 (GMT)
+Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
+        epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        C2.6A.09762.C5023A26; Fri, 10 Jun 2022 19:43:40 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
+        20220610104340epcas5p1d6cee31aba4dc2952ef09003c9e67863~3PGtjz07z0424004240epcas5p1q;
+        Fri, 10 Jun 2022 10:43:40 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20220610104339epsmtrp114e7b0ec0528601f0ca731b699451577~3PGtizm7u1337313373epsmtrp1J;
+        Fri, 10 Jun 2022 10:43:39 +0000 (GMT)
+X-AuditID: b6c32a4b-1fdff70000002622-b2-62a3205c993d
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        0B.B0.11276.B5023A26; Fri, 10 Jun 2022 19:43:39 +0900 (KST)
+Received: from Jaguar.sa.corp.samsungelectronics.net (unknown
+        [107.108.73.139]) by epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20220610104337epsmtip1b8444ff1d5df918c359b3d34762459f1~3PGrrJWs91361013610epsmtip1F;
+        Fri, 10 Jun 2022 10:43:37 +0000 (GMT)
+From:   Alim Akhtar <alim.akhtar@samsung.com>
+To:     linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-phy@lists.infradead.org
+Cc:     devicetree@vger.kernel.org, robh+dt@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org, vkoul@kernel.org,
+        avri.altman@wdc.com, bvanassche@acm.org,
+        martin.petersen@oracle.com, chanho61.park@samsung.com,
+        pankaj.dubey@samsung.com, Alim Akhtar <alim.akhtar@samsung.com>
+Subject: [PATCH v4 0/6] Add support for UFS controller found in FSD SoC
+Date:   Fri, 10 Jun 2022 16:11:13 +0530
+Message-Id: <20220610104119.66401-1-alim.akhtar@samsung.com>
+X-Mailer: git-send-email 2.17.1
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrKKsWRmVeSWpSXmKPExsWy7bCmum6MwuIkg/U/pSwezNvGZvHy51U2
+        i2kffjJbXN6vbTH/yDlWi74XD5ktNj2+xmpxedccNosJq76xWHRf38Fmsfz4PyaLRVu/sFu0
+        7j3CbrHzzglmBz6Py1e8PTat6mTzuHNtD5vH5iX1Hh+f3mLx6NuyitHj8yY5j/YD3UwBHFHZ
+        NhmpiSmpRQqpecn5KZl56bZK3sHxzvGmZgaGuoaWFuZKCnmJuam2Si4+AbpumTlAVysplCXm
+        lAKFAhKLi5X07WyK8ktLUhUy8otLbJVSC1JyCkwK9IoTc4tL89L18lJLrAwNDIxMgQoTsjN+
+        zt3NXDCXt2LCnX6WBsbJXF2MnBwSAiYSndtXMYPYQgK7GSXmbsvqYuQCsj8B2TdPskM43xgl
+        Xi24xwjTse3QVxaIxF5GiQvvd0BVtTBJPJ3wmAWkik1AW+Lu9C1MIAkRgWZGiYMdu8AcZoE+
+        Joklt2+zglQJC7hL7Pr8D6yDRUBV4lRbK9AODg5eARuJQ8udINbJS6zecIAZpFdC4Ce7xK6W
+        Z8wQCReJiTP/QdnCEq+Ob2GHsKUkXva3sYPMkRDwkFj0RwoinCHxdvl6qBfsJQ5cmcMCUsIs
+        oCmxfpc+SJhZgE+i9/cTJohOXomONiGIalWJ5ndXWSBsaYmJ3d2sELaHxM+vyxkhQRcr0fFi
+        AdsERplZCEMXMDKuYpRMLSjOTU8tNi0wzksth8dNcn7uJkZw+tPy3sH46MEHvUOMTByMhxgl
+        OJiVRHgDbi9KEuJNSaysSi3Kjy8qzUktPsRoCgykicxSosn5wAScVxJvaGJpYGJmZmZiaWxm
+        qCTOK/C/MUlIID2xJDU7NbUgtQimj4mDU6qBiXe6gcvfzw+T11yrO3lmq3vSZFWTDbdt3BUj
+        Ty8w7b/RbitpUX5J5NoVZoN/kUfCdPNEf2XP2lY+23nizisRbg9izXQFvx/uj3f2K/uidPzy
+        8Rmb8+f/25m4+tfqynsGRxVMp8p/uMmV0WK9q3+rtqWwbfDzpJQJvTkZ71IOCHo9a+VzbNws
+        H5f6cE1r8/8M318CCiZFqqocOhk3L36+p5u9cM2PzWWth03OPLTYqqZ165G2QOzrpF0nT7zY
+        sumXekr+lHm3ZvQe4nq+wSSY873isbdxs2JkUk1ZPUUZAsJOaX4p8r564u+fsntrphgWXWDV
+        2+BiuvzS2Y0fez7wi1icecG2aN+Fzyc7b7vzqSixFGckGmoxFxUnAgDkF8zJCAQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrLLMWRmVeSWpSXmKPExsWy7bCSnG60wuIkg33zzS0ezNvGZvHy51U2
+        i2kffjJbXN6vbTH/yDlWi74XD5ktNj2+xmpxedccNosJq76xWHRf38Fmsfz4PyaLRVu/sFu0
+        7j3CbrHzzglmBz6Py1e8PTat6mTzuHNtD5vH5iX1Hh+f3mLx6NuyitHj8yY5j/YD3UwBHFFc
+        NimpOZllqUX6dglcGT/n7mYumMtbMeFOP0sD42SuLkZODgkBE4lth76ydDFycQgJ7GaUmNd1
+        lB0iIS1xfeMEKFtYYuW/52C2kEATk8SHg4EgNpuAtsTd6VuYQGwRgXZGifvb2UAGMQvMYpJ4
+        P+kJI0hCWMBdYtfnfywgNouAqsSptlagOAcHr4CNxKHlThDz5SVWbzjAPIGRZwEjwypGydSC
+        4tz03GLDAsO81HK94sTc4tK8dL3k/NxNjOAQ1dLcwbh91Qe9Q4xMHIyHGCU4mJVEeANuL0oS
+        4k1JrKxKLcqPLyrNSS0+xCjNwaIkznuh62S8kEB6YklqdmpqQWoRTJaJg1Oqgenwqd6DsvfS
+        39c2qZa2Lbw6s99ultGPQubldz1qStVOfDgQ5Xy/dPYSuXcxfspCKlUvVjZn7KzSODDD+GGz
+        Kv+cB3MybC4VSG78VfFwi9DUkpylkxJ2V825tEuGZ0qSgOftk8kW57cdlt/YspL501fW7VLR
+        urMYXG8yKPEcCQtx4vy4NOx2plaO866152UtzXYITwszVfXUe5YYM1Otbwf3hiPHtWx+8xzU
+        l9N9sD4y3Xz3hOpAmeeuU9kjN8+9Wl6qFhD89LPnjZn3KxyYz3KX7OuzUpBuq7gbdYevZg3j
+        qgNWQuI/p6w5XfTJOio1bwPX4YVnm0Iz5gcVrrzcfvuoYqjinpv9Rer+mb/vFiuxFGckGmox
+        FxUnAgAU8W1DwAIAAA==
+X-CMS-MailID: 20220610104340epcas5p1d6cee31aba4dc2952ef09003c9e67863
+X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-MIME-Version: 1.0
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20220610104340epcas5p1d6cee31aba4dc2952ef09003c9e67863
+References: <CGME20220610104340epcas5p1d6cee31aba4dc2952ef09003c9e67863@epcas5p1.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SGkgVWxyaWNoLA0KDQo+IEluIG15IHByaW1pdGl2ZSBwb2ludCBvZiB2aWV3IGlTQ1NJIGlzIGp1
-c3QgImFub3RoZXIgdHlwZSBvZiBjYWJsZSIsIG1ha2luZyBtZSB3b25kZXI6DQo+IElzIGlTQ1NJ
-IGFsbG93ZWQgdG8gcmVvcmRlciB0aGUgcmVxdWVzdHMgYXQgYWxsPyBTaG91bGRuJ3QgdGhlIGJs
-b2NrIGxheWVyIG9yIGluaXRpYXRvciBkbw0KPiBzbywgb3IgdGhlIHRhcmdldCBkb2luZyBvdXQt
-b2Ygb3JkZXIgcHJvY2Vzc2luZyAodGFnZ2VkIHF1ZXVlaW5nKT8NCg0KaVNDU0kgUkZDIGRvZXMg
-bm90IHJlcXVpcmUgdG8gc2VyaWFsaXplIGEgY29tbWFuZHMgZmxvdy4gSXQncyBqdXN0IGFuICJp
-U0NTSSB1c2VyIiBmZWF0dXJlIC0NCnRvIHNlbmQgc29tZSBzZXQgb2YgU0NTSSBjb21tYW5kcyBp
-biBhbiB1bmJyZWFrYWJsZSBiYXRjaCB0byBhIGRldmljZS4NCkJ1dCwgYXMgZmFyIGFzIEkgdW5k
-ZXJzdG9vZCwgdGhlIHByb2JsZW0sIE1pa2UgZGVzY3JpYmVkLCBpcyBub3QgYSByZW9yZGVyIGJ1
-dCBhbiBpbmNyZWFzaW5nDQpvZiB0aW1lIGJldHdlZW4gZnVsbCBkYXRhIHRyYW5zbWlzc2lvbiBv
-ZiB0aGUgY29tbWFuZHMgZnJvbSB0aGUgYmF0Y2guDQoNCj4gSSBtZWFuOiBJZiB0aGVyZSBpcyBh
-IHByb2JsZW0gdGhhdCBvY2N1cnMgZXZlbiB3aXRob3V0IHVzaW5nIGlTQ1NJLCBzaG91bGQgaVND
-U0kgdHJ5IHRvIGZpeCBpdD8NClNpbmNlIHRoYXQgaXMgc29mdHdhcmUgaVNDU0kgc3BlY2lmaWMg
-aXNzdWUgaXQgY291bGQgYmUgZml4ZWQvaW1wcm92ZWQgaW4gc29mdHdhcmUuIEhvdyBpdCdzIGhh
-bmRsZWQgaW4NCkhXIG9mZmxvYWRlZCBpbXBsZW1lbnRhdGlvbiBpcyB1bmtub3duIGZvciBtZS4N
-Cg0KQlIsDQogRG1pdHJ5DQo=
+
+This series adds support for UFS controller found in FSD SoC.
+The HCI is almost same as found on other Exynos SoCs with minor
+differences. This also adds the required UFS-PHY driver changes.
+
+Patch 2/6: common change to handle different CDR offsets
+
+*Changes since v3:
+- Addressed review comments on patch 6/6 from Chanho
+
+*Changes since v2:
+- Addressed review comments from Chanho
+- collected reviewed-by, tested-by tags
+- rebased on next-20220609
+
+*Changes since v1:
+- Addressed review comments from Bart, Krzysztof, Chanho
+- collected Ack-by tags
+- rebased on next-20220602
+
+
+Alim Akhtar (6):
+  dt-bindings: phy: Add FSD UFS PHY bindings
+  phy: samsung-ufs: move cdr offset to drvdata
+  phy: samsung-ufs: add support for FSD ufs phy driver
+  dt-bindings: ufs: exynos-ufs: add fsd compatible
+  ufs: host: ufs-exynos: add mphy apb clock mask
+  ufs: host: ufs-exynos: add support for fsd ufs hci
+
+ .../bindings/phy/samsung,ufs-phy.yaml         |   1 +
+ .../bindings/ufs/samsung,exynos-ufs.yaml      |   1 +
+ drivers/phy/samsung/Makefile                  |   1 +
+ drivers/phy/samsung/phy-exynos7-ufs.c         |   3 +
+ drivers/phy/samsung/phy-exynosautov9-ufs.c    |   2 +
+ drivers/phy/samsung/phy-fsd-ufs.c             |  58 +++++++
+ drivers/phy/samsung/phy-samsung-ufs.c         |   7 +-
+ drivers/phy/samsung/phy-samsung-ufs.h         |   3 +-
+ drivers/ufs/host/ufs-exynos.c                 | 143 +++++++++++++++++-
+ drivers/ufs/host/ufs-exynos.h                 |   1 +
+ 10 files changed, 217 insertions(+), 3 deletions(-)
+ create mode 100644 drivers/phy/samsung/phy-fsd-ufs.c
+
+
+base-commit: ff539ac73ea559a8c146d99ab14bfcaddd30547a
+-- 
+2.25.1
+
