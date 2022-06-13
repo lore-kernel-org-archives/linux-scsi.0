@@ -2,36 +2,36 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CF2AC433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jun 2022 09:31:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06A53C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jun 2022 09:37:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234462AbiFMJbm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Jun 2022 05:31:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47678 "EHLO
+        id S240781AbiFMJho (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Jun 2022 05:37:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56632 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234476AbiFMJbk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jun 2022 05:31:40 -0400
+        with ESMTP id S240304AbiFMJhm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jun 2022 05:37:42 -0400
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64D89186D8;
-        Mon, 13 Jun 2022 02:31:37 -0700 (PDT)
-Received: from fraeml734-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LM5p33Dsxz67bVy;
-        Mon, 13 Jun 2022 17:27:55 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A52C1275F;
+        Mon, 13 Jun 2022 02:37:41 -0700 (PDT)
+Received: from fraeml704-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LM5vX2ft9z67PMv;
+        Mon, 13 Jun 2022 17:32:40 +0800 (CST)
 Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml734-chm.china.huawei.com (10.206.15.215) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Mon, 13 Jun 2022 11:31:34 +0200
+ fraeml704-chm.china.huawei.com (10.206.15.53) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2375.24; Mon, 13 Jun 2022 11:37:39 +0200
 Received: from [10.195.33.253] (10.195.33.253) by
  lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Mon, 13 Jun 2022 10:31:33 +0100
-Message-ID: <53fa2856-54f2-c075-2eed-4f05c3459597@huawei.com>
-Date:   Mon, 13 Jun 2022 10:34:41 +0100
+ 15.1.2375.24; Mon, 13 Jun 2022 10:37:38 +0100
+Message-ID: <04540488-ec07-3bc2-a997-b7f64b0ba606@huawei.com>
+Date:   Mon, 13 Jun 2022 10:40:46 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.6.1
-Subject: Re: [PATCH RFC v2 03/18] scsi: core: Implement reserved command
- handling
+Subject: Re: [PATCH RFC v2 04/18] scsi: core: Add support to send reserved
+ commands
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         <axboe@kernel.dk>, <jejb@linux.ibm.com>,
         <martin.petersen@oracle.com>, <brking@us.ibm.com>, <hare@suse.de>,
@@ -40,12 +40,10 @@ CC:     <linux-block@vger.kernel.org>, <linux-ide@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
         <chenxiang66@hisilicon.com>
 References: <1654770559-101375-1-git-send-email-john.garry@huawei.com>
- <1654770559-101375-4-git-send-email-john.garry@huawei.com>
- <b4a0ede5-95a3-4388-e808-7627b5484d01@opensource.wdc.com>
- <7f80f3b6-84f6-de48-4e69-4562c96e62c5@huawei.com>
- <e4b108ba-cbc9-5237-f873-2fcea94f2b85@opensource.wdc.com>
+ <1654770559-101375-5-git-send-email-john.garry@huawei.com>
+ <3f519a72-bb43-b1f0-c85d-a2ea4596f2f2@opensource.wdc.com>
 From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <e4b108ba-cbc9-5237-f873-2fcea94f2b85@opensource.wdc.com>
+In-Reply-To: <3f519a72-bb43-b1f0-c85d-a2ea4596f2f2@opensource.wdc.com>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [10.195.33.253]
@@ -56,57 +54,77 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 13/06/2022 10:06, Damien Le Moal wrote:
->>> We cannot have more than 32 tags.
->> We may have 32 regular tags and 1 reserved tag for SATA.
-> Right. But that is the messy part though. That extra 1 tag is actually not
-> a tag since all internal commands are non-NCQ commands that do not need a
-> tag...
+On 13/06/2022 08:03, Damien Le Moal wrote:
+>> +	if (shost->nr_reserved_cmds && !sht->reserved_queuecommand) {
+>> +		shost_printk(KERN_ERR, shost,
+>> +			"nr_reserved_cmds set but no method to queue\n");
+>> +		goto fail;
+> This would be a driver implementation bug.
 
-But apart from SATA, libsas LLDDs do need a real tag for the libata 
-internal command.
+It would be a driver bug, but it probably makes the driver utterly 
+useless and there is no point in continuing (to try to add). If the 
+driver supports reserved commands then they are prob essential to make 
+the driver function.
 
-> 
-> I am working on command duration limits support currently. This feature
-> set has a new horrendous "improvement": a command can be aborted by the
-> device if it fails its duration limit, but the abort is done with a good
-> status + sense data available bit set so that the device queue is not
-> aborted entirely like with a regular NCQ command error.
-> 
-> For such aborted commands, the command sense data is set to
-> "COMPLETED/DATA UNAVAILABLE". In this case, the host needs to go read the
-> new "successful NCQ sense data log" to check that the command sense is
-> indeed "COMPLETED/DATA UNAVAILABLE". And to go read that log page without
-> stalling the device queue, we would need an internal NCQ (queuable) command.
-> 
-> Currently, that is not possible to do cleanly as there are no guarantees
-> we can get a free tag (there is a race between block layer tag allocation
-> and libata internal tag counting). So a reserved tag for that would be
-> nice. We would end up with 31 IO tags at most + 1 reserved tag for NCQ
-> commands + ATA_TAG_INTERNAL for non-NCQ. That last one would be rendered
-> rather useless. But that also means that we kind-of go back to the days
-> when Linux showed ATA drives max QD of 31...
+> So what about a WARN() here ?
 
-So must the ATA_TAG_INTERNAL qc always be available for non-NCQ action 
-like EH, and that is why you cannot reuse for this internal NCQ 
-(queuable) command?
+Maybe but I really do not see a point in continuing
 
 > 
-> I am still struggling with this particular use case and trying to make it
-> fit with your series. Trying out different things right now.
-> 
+>> +	}
+>> +
+>>   	/* Use min_t(int, ...) in case shost->can_queue exceeds SHRT_MAX */
+>>   	shost->cmd_per_lun = min_t(int, shost->cmd_per_lun,
+>>   				   shost->can_queue);
+>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+>> index f6e53c6d913c..8c8b4c6767d9 100644
+>> --- a/drivers/scsi/scsi_lib.c
+>> +++ b/drivers/scsi/scsi_lib.c
+>> @@ -1422,6 +1422,16 @@ static void scsi_complete(struct request *rq)
+>>   	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
+>>   	enum scsi_disposition disposition;
+>>   
+>> +	if (scsi_is_reserved_cmd(cmd)) {
+>> +		struct scsi_device *sdev = cmd->device;
+>> +
+>> +		scsi_mq_uninit_cmd(cmd);
+>> +		scsi_device_unbusy(sdev, cmd);
+>> +		__blk_mq_end_request(rq, 0);
+>> +
+>> +		return;
+>> +	}
+>> +
+>>   	INIT_LIST_HEAD(&cmd->eh_entry);
+>>   
+>>   	atomic_inc(&cmd->device->iodone_cnt);
+>> @@ -1706,6 +1716,28 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+>>   
+>>   	WARN_ON_ONCE(cmd->budget_token < 0);
+>>   
+>> +	if (scsi_is_reserved_cmd(cmd)) {
+>> +		unsigned char *host_scribble = cmd->host_scribble;
+>> +
+>> +		if (!(req->rq_flags & RQF_DONTPREP)) {
+>> +			ret = scsi_prepare_cmd(req);
+>> +			if (ret != BLK_STS_OK) {
+>> +
+> Stray blank line.
 
 ok
 
 > 
->>> I think keeping can_queue as the max queue depth with at most
->>> nr_reserved_cmds tags reserved is better.
->> Maybe the wording in the comment can be improved as it originally
->> focused on SAS HBAs where there are no special rules for tagset depth or
->> how the tagset should be carved up to handle regular and reserved commands.
-> Indeed. And that would be for HBAs that do*not*  use libsas/libata.
-> Otherwise, the NCQ vs non-NCQ reserved tag mess is there.
+>> +				goto out_dec_host_busy;
+>> +			}
+> No need for the curly brackets here.
+
+ok
+
 > 
+>> +
+>> +			req->rq_flags |= RQF_DONTPREP;
+>> +		} else {
+>> +			clear_bit(SCMD_STATE_COMPLETE, &cmd->state);
+>> +		}
 
 Thanks,
 John
