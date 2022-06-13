@@ -2,124 +2,127 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC38BC43334
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jun 2022 10:14:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 738EFCCA47F
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jun 2022 11:52:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241690AbiFMKOw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Jun 2022 06:14:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58118 "EHLO
+        id S1356221AbiFMLwn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Jun 2022 07:52:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57056 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241564AbiFMKOh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jun 2022 06:14:37 -0400
-Received: from mail-ej1-x635.google.com (mail-ej1-x635.google.com [IPv6:2a00:1450:4864:20::635])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 687B7CE0D
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Jun 2022 03:14:34 -0700 (PDT)
-Received: by mail-ej1-x635.google.com with SMTP id kq6so10163251ejb.11
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Jun 2022 03:14:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=M46PCkjJ2OifC0xaqwZJ7l8A4H9uAcmd8SjFaU1ZI3o=;
-        b=RY32gASyfk41ROBUhtm7wusGacyUTe5+H8ZMqeHzaR2h7UknN9RbikleB7Vzgo5/aN
-         qHO37sPTq+UUwbHnakGMJafJ/JOPPxwhitAGUBF7n3OFEe8P/NIS8p3OKqL8wv5L2GIm
-         6pmPjIwLKMU/A/b+7TQ7do/4KVOWgOcRYxiDNnXKTC7AbDxvfdT7qkwHZZCd9Da5M9tm
-         Pg5VYi16kYv/RuHVaWdSDEDq6EYXAVHufR0D7nSyMF0Bs8vEl4bfLQR3ROEeR8UyOydk
-         edovqXodfaCVZd4CRsKBjgskDrH+K/lf4hbinJJ9aGdKVUvI8n9islLSU7QV7+kJXNWP
-         4c0g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=M46PCkjJ2OifC0xaqwZJ7l8A4H9uAcmd8SjFaU1ZI3o=;
-        b=UiGsHGAbWzW+H/oCWdVzaEOOCDYeH7wY2egFf90/exuhHC4TBjXjWShjLH2/vpUlxW
-         niQOgLeQGPwvc2q+xLFdkwfqzP1fE6RU7Nd1zJ9Ljm1i3+e0uQhnSMCqClafRzAOZ8rV
-         b0+j4rVQDxcArlUuJlDCL39J6Y6DNW8ff5KaLLp6hvUDrogL2Y/Z22MacKf0HVajXVQx
-         lLUtc96Lvn9LZtJG9JjCt0uQ8VnNFRPdryyedYVxrP0JgcSzoMOWuq3kDUma/p92qjHJ
-         EDd1ht2LkieoGWiycHfNeYm1eGfEZ7p8ig6BJ5XvbHjIdT/iql0EnAIWuBRaoGX8Skhh
-         n4dA==
-X-Gm-Message-State: AOAM531B46CJgfPrnz+yVNWtQboBr65mXqE4YarfQjNL6O6uYLnGpb4d
-        2hTGugh0Hp50jVqFT5sNPYQ25tI76Dr12g==
-X-Google-Smtp-Source: ABdhPJw63RL7dYHdoDbusyEcWLmssYal+r5BY4+7+lRfm3Z0XJfoRLsIaSNcWuOfIbK+EpvPFW1/aQ==
-X-Received: by 2002:a17:907:6e8f:b0:710:865b:9c90 with SMTP id sh15-20020a1709076e8f00b00710865b9c90mr39900307ejc.27.1655115272913;
-        Mon, 13 Jun 2022 03:14:32 -0700 (PDT)
-Received: from krzk-bin.monzoon.net (80-254-69-65.dynamic.monzoon.net. [80.254.69.65])
-        by smtp.gmail.com with ESMTPSA id y9-20020a170906524900b006fec69696a0sm3639863ejm.220.2022.06.13.03.14.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Jun 2022 03:14:32 -0700 (PDT)
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: ufs: exynos: constify driver data
-Date:   Mon, 13 Jun 2022 12:14:29 +0200
-Message-Id: <20220613101429.114449-1-krzysztof.kozlowski@linaro.org>
-X-Mailer: git-send-email 2.34.1
+        with ESMTP id S1356509AbiFMLuh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jun 2022 07:50:37 -0400
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C32569FEA
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Jun 2022 03:54:16 -0700 (PDT)
+Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20220613105410epoutp0158e3c5feb58911f4cde7cf422217e0e5~4KLvyEzty2586925869epoutp01P
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Jun 2022 10:54:10 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20220613105410epoutp0158e3c5feb58911f4cde7cf422217e0e5~4KLvyEzty2586925869epoutp01P
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1655117650;
+        bh=+nj5AOzfaDd4gy6kMk2RwizYSlfgTYYWEbpWjFZL4W0=;
+        h=From:To:In-Reply-To:Subject:Date:References:From;
+        b=bqilPCBvl3BDHlNWdBMvit/mBxawDO6UV12bchT21D8kIKAKtfw2dxZGpXlluaeRk
+         RJOJVf2vEkEz5eGvKutkX6MIBeWvzu7jMHVc6g+7A7N6fKu/lK3ZHSxXE4fVPtVeWW
+         rTR6hOJ2yrjMRBNkDA/My080ZIDL+r0bq8k/qdE4=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
+        20220613105410epcas2p1108ba36ef4ae24f4cc588ad62010b71e~4KLvOEt3b0041000410epcas2p1C;
+        Mon, 13 Jun 2022 10:54:10 +0000 (GMT)
+Received: from epsmges2p1.samsung.com (unknown [182.195.36.88]) by
+        epsnrtp2.localdomain (Postfix) with ESMTP id 4LM7jY3gyLz4x9Pv; Mon, 13 Jun
+        2022 10:54:09 +0000 (GMT)
+Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
+        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        25.8B.10069.15717A26; Mon, 13 Jun 2022 19:54:09 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
+        20220613105409epcas2p3a0a215c6f61e9e74beb2914008f83d9e~4KLuYcEdN1007910079epcas2p3I;
+        Mon, 13 Jun 2022 10:54:09 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20220613105409epsmtrp1cc70d118a4aeb1c7ecde88e20e73a52e~4KLuXxBq50101501015epsmtrp1V;
+        Mon, 13 Jun 2022 10:54:09 +0000 (GMT)
+X-AuditID: b6c32a45-a79ff70000002755-79-62a7175113ba
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        48.8C.11276.15717A26; Mon, 13 Jun 2022 19:54:09 +0900 (KST)
+Received: from KORCO082417 (unknown [10.229.8.121]) by epsmtip2.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20220613105409epsmtip241a8f2e96587de027afe33d09c86e90d~4KLuNSBDy0082900829epsmtip2Q;
+        Mon, 13 Jun 2022 10:54:09 +0000 (GMT)
+From:   "Chanho Park" <chanho61.park@samsung.com>
+To:     "'Krzysztof Kozlowski'" <krzysztof.kozlowski@linaro.org>,
+        "'James E.J. Bottomley'" <jejb@linux.ibm.com>,
+        "'Martin K. Petersen'" <martin.petersen@oracle.com>,
+        "'Alim Akhtar'" <alim.akhtar@samsung.com>,
+        <linux-scsi@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-samsung-soc@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+In-Reply-To: <20220613101429.114449-1-krzysztof.kozlowski@linaro.org>
+Subject: RE: [PATCH] scsi: ufs: exynos: constify driver data
+Date:   Mon, 13 Jun 2022 19:54:09 +0900
+Message-ID: <01a201d87f13$e8a1e5a0$b9e5b0e0$@samsung.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQHfouchLXpE80q66AS+13OTtn+wNgNPyHnQrSRi/KA=
+Content-Language: ko
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrEJsWRmVeSWpSXmKPExsWy7bCmhW6g+PIkgwm7ZSwezNvGZrHoxjYm
+        i72vt7JbbHp8jdXi8q45bBYzzu9jsui+voPNYvnxf0wOHB53ru1h85iw6ACjx+Yl9R4fn95i
+        8ejbsorR4/MmuQC2qGybjNTElNQihdS85PyUzLx0WyXv4HjneFMzA0NdQ0sLcyWFvMTcVFsl
+        F58AXbfMHKB7lBTKEnNKgUIBicXFSvp2NkX5pSWpChn5xSW2SqkFKTkF5gV6xYm5xaV56Xp5
+        qSVWhgYGRqZAhQnZGVf+/2cq2MtUcef2RsYGxhamLkZODgkBE4kTkx+xdTFycQgJ7GCUuPG+
+        ix3C+cQo0df+hBHC+cYocWzyW7iWy/8OsUIk9jJKvJx6mwXCecEoMf9wNzNIFZuAvsTLjm1g
+        VSIC95gk+q/tBktwCrhKvGy+zwJiCwvYSFxvfcEIYrMIqEp8nn+aFcTmFbCUuPm1iwXCFpQ4
+        OfMJmM0sIC+x/e0cZogzFCR+Pl0GVi8iYCXxtesNE0SNiMTszjZmkMUSAjM5JF6dOAHV4CKx
+        7thEFghbWOLV8S3sELaUxMv+Nii7WGLprE9MEM0NjBKXt/1ig0gYS8x61g50KQfQBk2J9bv0
+        QUwJAWWJI7egbuOT6Dj8lx0izCvR0SYE0agucWD7dKitshLdcz6zQtgeEo/WXmGdwKg4C8mX
+        s5B8OQvJN7MQ9i5gZFnFKJZaUJybnlpsVGAIj+7k/NxNjODEquW6g3Hy2w96hxiZOBgPMUpw
+        MCuJ8E6+uCxJiDclsbIqtSg/vqg0J7X4EKMpMNwnMkuJJucDU3teSbyhiaWBiZmZobmRqYG5
+        kjivV8qGRCGB9MSS1OzU1ILUIpg+Jg5OqQam9rRrulnhqw5wFKpwXLBxuMZfLb2GpSREPebD
+        H367pmNsRxi9fvUL/1scbnIyaq3g71D2WpP2vqdMSX/l7M+WqF+av6Hh+pYK1y2vY1iFjq67
+        xxQmsea4ycv08yWJz5wMvCzr3P5Pvuap43q+wNRB47eV8eZtj5nyPMRPFi9bz3dy9+Lm0894
+        9q+2eMqQoa6v/TW8XK0jIlvjjFRqrhCvwe08lkX7XiUECte/XhmhclHo7Vz/fhEh9rZ/eU+4
+        vq/586xt829nj3/nHszO3MmxP+9bxXdza+2Pz6Yne94smqvaO8/zkLj369aKmsMfcjQXfenk
+        WnLnIWezlcM5h/MpKZm56Yvv89cXCnvcfK3EUpyRaKjFXFScCABeqLmCNQQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpgkeLIzCtJLcpLzFFi42LZdlhJXjdQfHmSwYbtXBYP5m1js1h0YxuT
+        xd7XW9ktNj2+xmpxedccNosZ5/cxWXRf38Fmsfz4PyYHDo871/aweUxYdIDRY/OSeo+PT2+x
+        ePRtWcXo8XmTXABbFJdNSmpOZllqkb5dAlfGlf//mQr2MlXcub2RsYGxhamLkZNDQsBE4vK/
+        Q6xdjFwcQgK7GSX+LWpkg0jISjx7t4MdwhaWuN9yBKroGaPE7xPvwYrYBPQlXnZsA0uICDxh
+        krh/7yQbRNU0RolPbYvAdnAKuEq8bL7PAmILC9hIXG99wQhiswioSnyef5oVxOYVsJS4+bWL
+        BcIWlDg58wmQzcHBLKAn0bYRrJxZQF5i+9s5zBAXKUj8fLoMrFVEwEria9cbJogaEYnZnW3M
+        ExiFZiGZNAth0iwkk2Yh6VjAyLKKUTK1oDg3PbfYsMAwL7Vcrzgxt7g0L10vOT93EyM4krQ0
+        dzBuX/VB7xAjEwfjIUYJDmYlEd7JF5clCfGmJFZWpRblxxeV5qQWH2KU5mBREue90HUyXkgg
+        PbEkNTs1tSC1CCbLxMEp1cA07dr3Kd2NXqa/dBVUlDh8Bd7GpBX8Y3dYz80zVf6C0TKjqLnT
+        FnRuO8W8c8byZWJ/VPtlFkQrMhXEOZ3wmGj3XVcrVinzgpKN2/L9l8Qiru7ft193Q63Yi8Oe
+        69xeGixodnD6reHVsUQoIG270xdN4WtKvxO3miYFq5d/UwwO3/G2QH2Z1r1IVtGfF8SzdB6t
+        2Ojv7pv+z+/Rh3hDNu0DRqxXVkf5nl5oyipy+2p/P6fPH7Wnz+YoXu+vyPp6X6ljC9eFBNaf
+        Lqa3z1skmSy1Ktjx2+r2sWbenbPs3CMdrjzc/8/vrQLD/VkfXH+/kCs7zz01ZvLObQuXXXvK
+        FrVE2ljrzRS+Q+GlvyYa7r+nxFKckWioxVxUnAgA6POuahMDAAA=
+X-CMS-MailID: 20220613105409epcas2p3a0a215c6f61e9e74beb2914008f83d9e
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20220613101459epcas2p3ebbea864e0fe67f083127696028b1d75
+References: <CGME20220613101459epcas2p3ebbea864e0fe67f083127696028b1d75@epcas2p3.samsung.com>
+        <20220613101429.114449-1-krzysztof.kozlowski@linaro.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Constify the drv data because it should not be modified (used by
-multiple devices).
+> Subject: [PATCH] scsi: ufs: exynos: constify driver data
+> 
+> Constify the drv data because it should not be modified (used by multiple
+> devices).
+> 
+> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 
-Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
----
- drivers/ufs/host/ufs-exynos.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+Reviewed-by: Chanho Park <chanho61.park@samsung.com>
 
-diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
-index a81d8cbd542f..9fef706d896e 100644
---- a/drivers/ufs/host/ufs-exynos.c
-+++ b/drivers/ufs/host/ufs-exynos.c
-@@ -157,7 +157,6 @@ enum {
- 
- #define CNTR_DIV_VAL 40
- 
--static struct exynos_ufs_drv_data exynos_ufs_drvs;
- static void exynos_ufs_auto_ctrl_hcc(struct exynos_ufs *ufs, bool en);
- static void exynos_ufs_ctrl_clkstop(struct exynos_ufs *ufs, bool en);
- 
-@@ -1473,7 +1472,7 @@ static int exynosauto_ufs_vh_init(struct ufs_hba *hba)
- 	return 0;
- }
- 
--static struct ufs_hba_variant_ops ufs_hba_exynos_ops = {
-+static const struct ufs_hba_variant_ops ufs_hba_exynos_ops = {
- 	.name				= "exynos_ufs",
- 	.init				= exynos_ufs_init,
- 	.hce_enable_notify		= exynos_ufs_hce_enable_notify,
-@@ -1545,7 +1544,7 @@ static struct exynos_ufs_uic_attr exynos7_uic_attr = {
- 	.pa_dbg_option_suite		= 0x30103,
- };
- 
--static struct exynos_ufs_drv_data exynosauto_ufs_drvs = {
-+static const struct exynos_ufs_drv_data exynosauto_ufs_drvs = {
- 	.uic_attr		= &exynos7_uic_attr,
- 	.quirks			= UFSHCD_QUIRK_PRDT_BYTE_GRAN |
- 				  UFSHCI_QUIRK_SKIP_RESET_INTR_AGGR |
-@@ -1561,7 +1560,7 @@ static struct exynos_ufs_drv_data exynosauto_ufs_drvs = {
- 	.post_pwr_change	= exynosauto_ufs_post_pwr_change,
- };
- 
--static struct exynos_ufs_drv_data exynosauto_ufs_vh_drvs = {
-+static const struct exynos_ufs_drv_data exynosauto_ufs_vh_drvs = {
- 	.vops			= &ufs_hba_exynosauto_vh_ops,
- 	.quirks			= UFSHCD_QUIRK_PRDT_BYTE_GRAN |
- 				  UFSHCI_QUIRK_SKIP_RESET_INTR_AGGR |
-@@ -1573,7 +1572,7 @@ static struct exynos_ufs_drv_data exynosauto_ufs_vh_drvs = {
- 	.opts			= EXYNOS_UFS_OPT_BROKEN_RX_SEL_IDX,
- };
- 
--static struct exynos_ufs_drv_data exynos_ufs_drvs = {
-+static const struct exynos_ufs_drv_data exynos_ufs_drvs = {
- 	.uic_attr		= &exynos7_uic_attr,
- 	.quirks			= UFSHCD_QUIRK_PRDT_BYTE_GRAN |
- 				  UFSHCI_QUIRK_BROKEN_REQ_LIST_CLR |
--- 
-2.34.1
+Best Regards,
+Chanho Park
 
