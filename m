@@ -2,194 +2,132 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30CDBC43334
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jun 2022 18:47:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6ECE7C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jun 2022 19:25:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344791AbiFMSrL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Jun 2022 14:47:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51874 "EHLO
+        id S1349230AbiFMTZ1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Jun 2022 15:25:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54124 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241922AbiFMSqw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jun 2022 14:46:52 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9219357127;
-        Mon, 13 Jun 2022 08:11:51 -0700 (PDT)
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 25DDYMPP013212;
-        Mon, 13 Jun 2022 15:11:47 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2021-07-09;
- bh=k2cGdegRka22JgRYEruPY16EG/kHNxE8wyXSk7ocZRg=;
- b=VH2UckBgU2SUUVjdtYpEAE0w0ZfqOTQsmb6fLYQTsjr0PjJ1xdX3QE+re6g3GXVR80Um
- F2Yp9CqeLjofie27isbzHka/bLz6wNndzFInF59uOrqV1daMdgbH4FS2LQeA6py+ElPu
- K3QWIX4lUSgKemO2t7n58gnVXO/C5Dq6F4CC5VefHsJNpkaD8aM61m2hfmEw6quRx4HQ
- r+12bS0Zjdjwv2eR31kRjfTsOzwoCYP0BIPlkW8It72P0d7GY8WHc/psPanmBwzOPNGd
- JsMWU6tygc2nL45SP1aTPCD44qmPW6O7PNzPNPZR9l3qruToxrCYuJaa/YJlhrT3F7+i gQ== 
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3gmhu2kdxm-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 13 Jun 2022 15:11:47 +0000
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 25DF7s0I001868;
-        Mon, 13 Jun 2022 15:11:45 GMT
-Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2106.outbound.protection.outlook.com [104.47.55.106])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3gp7bts28q-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 13 Jun 2022 15:11:45 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ff7Nbh7gPyGiVi3v8MUJxfSuYXY0da7zaActah/+8WXV9fqCX3LTDMB79KtUqG0CgjIL5NAimj45WGqiwIBDOKPk8J7iLKwSo8g168RULoQ5xsUvmXURz1QrYjLrgNpQTTCgxznF32vwOYgfwyiSqCUsNDjNJZhJ/JZzFfWs9VdeAX+Moa9NO5TpDIHdoEbtkcdAW7/oE75Q9011Hpin6Srs6wETh5lQrY+vjuZ/EWdncAxgQ2VL8pXowmVpR0FPJz/Cgw/fQEpPkeqQGpps9r5VRwGLjNPgYtgTofujYXm6kV70cp0AxM1qyscK27zSlvqlSq9U+HjfJbPyE3hDBw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=k2cGdegRka22JgRYEruPY16EG/kHNxE8wyXSk7ocZRg=;
- b=C/vKljbPEUXF5sIsNxFpTDQ/WJuVjCO3Tey+AdZW3/EeOdvZ8V6shBKj2955lz4kiqwmzwuuwCttZX342pEJP7sqse/Jcrn5zLl1JsRcGeHVqJ5VeaRfNO3xInFp4glxWdECQoXTdiD+6KuuaOl7HtCEBs7+yU+Mh4B5mINq9If4GzM4pWMS4syeLf8nFDNlJmt72PttfmI8VtNkzjiloiHk8d/l3cr4R5cB2pV/rvc9+MHwcwyvc87n8LTv5ltqyQJckxHtn13Q39wKIPEanvTpU4JPl+HXiOxc/ZR7aw6VEPihPQBTs7xEH02uoWGyuRo7MCNUVE1PD0O5ePulTw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=k2cGdegRka22JgRYEruPY16EG/kHNxE8wyXSk7ocZRg=;
- b=RjhCBzZ/XXXlwjoPVMM+daidEkuNMAkLzRcKHBfPBbkrT/y5l7dSJIFfm/4jafK6LzcVqgZvUSCaMiCOHntOq5sBmCEkgfd968wyY9W8hlpabSPdgPUXrK577VgRJCBGbdnB78X82guvyiXGCfIyP4+KuIhMnZwaJdxQhJ4o+fA=
-Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
- CY4PR1001MB2293.namprd10.prod.outlook.com (2603:10b6:910:44::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5314.19; Mon, 13 Jun
- 2022 15:11:20 +0000
-Received: from DM5PR10MB1466.namprd10.prod.outlook.com
- ([fe80::f81d:b8ef:c5a4:9c9b]) by DM5PR10MB1466.namprd10.prod.outlook.com
- ([fe80::f81d:b8ef:c5a4:9c9b%3]) with mapi id 15.20.5332.016; Mon, 13 Jun 2022
- 15:11:20 +0000
-Message-ID: <390b38f7-462a-bfad-5e46-21b4e72f8a39@oracle.com>
-Date:   Mon, 13 Jun 2022 10:11:17 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.10.0
-Subject: Re: [PATCH -next] scsi: target: iscsi: Fix NULL pointer dereference
- in iscsi_conn_auth_required()
-Content-Language: en-US
-To:     Yang Li <yang.lee@linux.alibaba.com>, martin.petersen@oracle.com,
-        Dmitry Bogdanov <d.bogdanov@yadro.com>
-Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Abaci Robot <abaci@linux.alibaba.com>
-References: <20220613014321.107045-1-yang.lee@linux.alibaba.com>
-From:   michael.christie@oracle.com
-In-Reply-To: <20220613014321.107045-1-yang.lee@linux.alibaba.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: DS7P222CA0007.NAMP222.PROD.OUTLOOK.COM (2603:10b6:8:2e::24)
- To DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7)
+        with ESMTP id S1349243AbiFMTZN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jun 2022 15:25:13 -0400
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E990D38790;
+        Mon, 13 Jun 2022 10:41:40 -0700 (PDT)
+Received: from linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net (linux.microsoft.com [13.77.154.182])
+        by linux.microsoft.com (Postfix) with ESMTPSA id 8A73220C28A2;
+        Mon, 13 Jun 2022 10:41:40 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 8A73220C28A2
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+        s=default; t=1655142100;
+        bh=O+F8BlTbN+pAhHpDZpkKrVVMTdsPZdsLp7LznEJHvpc=;
+        h=From:To:Subject:Date:From;
+        b=CtlP3O8MV4MUNxdtuwngW0OSjmjgc4DBZRZEMgnOD0z/NipOGr5/4zcyNBrO5knav
+         L8EeMRKp3tPjMhdex8lZ7fNsoQcbL2qmohRXWq2LyU7WNLXuidSJEC9iJOpTrjEgRP
+         De/8G7piFjspU9WeFDa0QZbiTq7FrRNUI4ARx1hs=
+From:   Saurabh Sengar <ssengar@linux.microsoft.com>
+To:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        wei.liu@kernel.org, decui@microsoft.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-hyperv@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ssengar@microsoft.com, mikelley@microsoft.com
+Subject: [PATCH v2] scsi: storvsc: Correct reporting of Hyper-V I/O size limits
+Date:   Mon, 13 Jun 2022 10:41:36 -0700
+Message-Id: <1655142096-3591-1-git-send-email-ssengar@linux.microsoft.com>
+X-Mailer: git-send-email 1.8.3.1
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 0855a896-fd3c-4f58-e09c-08da4d4ef8ac
-X-MS-TrafficTypeDiagnostic: CY4PR1001MB2293:EE_
-X-Microsoft-Antispam-PRVS: <CY4PR1001MB22935F5F49A68D0CA31D2B5EF1AB9@CY4PR1001MB2293.namprd10.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 5j4mNOwFOKO5zetdXtSFe5GuU/gLyT9ov8LXXmExjjbxPTpLMMPe82srgYfhiLRmCgpWrAAcBgteq4y9nBPjk6iJpxx0MAKYCIgeeK27uSsfynUSBs61RP8ndkrnnMGYGlsS587q0ieWL6Yh2E+YcU8TfvXcQP9hnMIj25KYOr8q74hTMybG7a/574TGPv6YHNFJSIcFH8yg+iTpZtLyGtNXpeJysPM5u/UAMhXIyLFgL8rTwtBbGCYB3+sM0m3NzBwtXGPJdvFWCuNv3nMNpFR9xv61NTHJ4Yq+lTXH3j1f4JdxklJOEWMADtkliRdgJxYxO9O7UdoVli+kgP8R4+bBNhTUdipLuXgXxXgIUUl6DP8MyCwsD4bWSWKFnhVRasrEEgQ0ch2LgPqYM0zp+vX3q8eTTwBrWNzBs2UOYAV9XRhiHYWOKCAjom0bJ2OSgm5ixSd5hgSlDXCpoCvnk6HRJBe2QBkWxs72G6HiiHwVrGavNjg3J/nJ3BTEyDqIPVzdf+xpO2D1++hsDPcKsZCsLWF8/F9Bt+XkWBTWzauU17iQWCBakeTBMlW9u80dewivKn2zYLfh/jNWBUC/7ccAj9x/d4lkT2yuBjRfkt335Bw0TWnBU/5EX79pc0XgJOA528b9kxIvX6X5/SEDZgJkFnIR3zYc+O2TUjALrTarPAa1Vx9ynAA+lziCNW+M0SfNdZBG3AUums7PWQ/N9A==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(366004)(6486002)(508600001)(8936002)(316002)(110136005)(53546011)(83380400001)(6666004)(5660300002)(86362001)(6512007)(31696002)(186003)(9686003)(4326008)(6506007)(66556008)(8676002)(66476007)(31686004)(36756003)(2616005)(66946007)(26005)(2906002)(38100700002)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?UHAzQnFSYkVSaTZ6STJzR1A2T3c5d0hiMFBRYXZRS20rZzl1OVN5SGRCaWc4?=
- =?utf-8?B?Z1RiamVrZXVCTEhQbWVaemttL2VLMzZFZWk3V0xFekNmaXZ1M1ZFemVtR0hS?=
- =?utf-8?B?Nzh3MWJocE1WejM4aVZybEdYQXZTbDhxSGFucHJJQm0rclZuRlRwNmpCTFox?=
- =?utf-8?B?Q3hOb1pPOUZMd0oxS2hnSXdMSjArMDlsOW1QaHdxN0gzSmlzTWhiRHk0WFV5?=
- =?utf-8?B?dDVaRE15T2ZycEFNUVcvNmRETXdiVXhnRG5DSWNXdnlhVzRuMjFJVzVLcEN3?=
- =?utf-8?B?Sm5WenljdVFDOVhFUEgyS1RCZlNaalJrSnFtaklzSE1OT3p0aVk1Q1AvZktx?=
- =?utf-8?B?aWM1RythVW9yS1hYSkJhRDhOZTRmR3Y0K29oMmE2UHZnZFYrbnlwTjkzRUdv?=
- =?utf-8?B?S1g5dWNZcDFqK0VCbTZGRHlYRldHc1FLYnhBcnI0KythOFlURnVXazY2QzF6?=
- =?utf-8?B?VldjMDQxUElNSWQvTFhtdC9QZ1dwdis5TU56VG1Qd2hjSW5lZWxxZUY1Nzlh?=
- =?utf-8?B?UEdvU1lZdU53MDFId0pBL0U1K0Y1dEllWTRHb1oyc1YwMmR2a2tqYVZvVVhs?=
- =?utf-8?B?MEFFd2x6M0xSR1p0ZGZ4bjlmbjI2Zm1vT05WRldOdFdCekhjNEIxK0FEM3Q0?=
- =?utf-8?B?NU4zZGtxZGQ0b1YvTnFHa0c0eWhvYXROUGpEckZ0U1BOZkJ6bFJ2a0Y3SHZ0?=
- =?utf-8?B?NEJ1UmNSTEtyZGQvQi9RZDFuVmtrcFI2Qlp2NVRZbFpjbVovSXpNdmFjUXgw?=
- =?utf-8?B?Yk44bktJVmk1UldPaUVadXF5MUV3UVNNQ0dOMFJRdTNFbTQ1NkhuaHFOMVZw?=
- =?utf-8?B?RWtDakphWmVidzBJaFBjRXlBQXFFbjR1aC9GbHlZZ1kwSVhucjhIZWZsZjhs?=
- =?utf-8?B?b2FRNk5JcXRqWCtFbWhscDBxZTJVb0p1Vk1yR3l2TkxjRFRHSlpVaWowcHR0?=
- =?utf-8?B?WlhDTXcyS21pOFFidUdybGtpeVpTVm5aVXlUZ2RXaENveGpOMWVRVmNVMWN0?=
- =?utf-8?B?ODExMWZMeXRSYW1tOSswdHlMbXY5YndOU2ZDdzd6YnZnanJBWi9Gd2tJRm9o?=
- =?utf-8?B?d2JFSzVNUnJjc1JoWTFYRDJCMVBKRUJTaUx4WmRvMkRnUm5neDJ6YzBCaGZL?=
- =?utf-8?B?TzNRQmlHZ2dxT1pmZDNyd0ZlYUlrWUlzTytncmdXa1dRTzBrekpuWW9udFdU?=
- =?utf-8?B?QjVqSGgrY0xVaUZPanRjcmJ1Z0c2dy9mRjQyRXg2b0xwNmxveFRoQUxFYnBI?=
- =?utf-8?B?WlhKd2xuZU9sRXRlZ2NSSkZJVVU5aHVaNWxnT2p4MFJYZkFFNEhSR3B6RGVh?=
- =?utf-8?B?UmtFRUZLWnZLc2VEbzVKZmVNTkg5S1hwM09obEcraC9FRXhoeW90RmxQbDln?=
- =?utf-8?B?dEQzS3BCMXhjajRGcFc0aE1Zdktmck1acFgydUxDY3hLWTBRSVZnakFpNm5N?=
- =?utf-8?B?YzNPVlYzczJDZWNHRHdnNTF6Z2lQanYvanoxSUZTd0RBZCtNV2xXUGMzV3c5?=
- =?utf-8?B?Q3gyNGkwZFNCVG5YQ1NnWmRPRHZjWnprY3I4dkZwYUdBaDlKR0FndXNBZndw?=
- =?utf-8?B?WGIrcjF4Y3puL1hTODRCK1JLSnh0bExScUFITm11RytZODhXMDdnbDdSL3p2?=
- =?utf-8?B?bTA3WWhVTFR5UjdiZlZaaWNjVlMxVWZreXFqcVJXaTUvT1JDcDJFOUF1NVZz?=
- =?utf-8?B?STBKOGJZU216dDlVa2xabUxOcEs3ZURiNmRXdUVQTFRvemtmRTdLL1FZRmlP?=
- =?utf-8?B?aWsvR2hSWHBtN2NCODhIbXNlWEJJWHBDZ2hEVEJpUVlLZUxQVTJLWVFFUzVT?=
- =?utf-8?B?UjlRaHVhckt2dnBDbVhzK1p0VysrWkhaVUlQNTFFWnd6OUlBQ1hsMHNwYTdy?=
- =?utf-8?B?Tno3c3NUdkRPa2VsbmorUk51MjF4Z2ZlK25iV1pBWVpmaVpZb0JoVDM3KzZE?=
- =?utf-8?B?N08yVHY1Ui9NNFZlUnFZbUxnd0lDVzNyZ2dKR1BSalhxdC9SMW52VHFFTmJm?=
- =?utf-8?B?Wm0yelZnbXJVZGlXN0JkNWFjSFlMUFAzKzVLNWlmZlFIOEVEVXp2SGRvWDln?=
- =?utf-8?B?cDhHUGRyV2tDTVB3WFdkdEFxZStEUDY2ZWJvOWYzZjZscXlsV3JtcUxUVHhw?=
- =?utf-8?B?d2RGYkthZHhiWkVBcnNFY3pqQ0g1dDZHVXhQZXJFZXU4RWh0NUxsY3hhYjlD?=
- =?utf-8?B?SUVxdGlyeW1nZyt4cWVKN04yaEd5MFlmeUFJemI2UlNrU0VVMWxnK251eDJB?=
- =?utf-8?B?bEFkY2Zkc3Q3ZGJJcVRzV01PbVEvWCtzckJOWWUxM2Rqay9HMm1xZWtmWUsy?=
- =?utf-8?B?WU43VHV2eGtjRjF3YVhvNW92Y3dyeXBmemhPMU90STkxQmlsajh2NmJ2VGYz?=
- =?utf-8?Q?oEj6LUCG9ihmhib4=3D?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0855a896-fd3c-4f58-e09c-08da4d4ef8ac
-X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Jun 2022 15:11:20.2619
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: PiWjusdd/i/tanyswqNMdwZUkEnSFKu30K9x7vAlo46f/ZXB7EbnaaSJbKoJHLL+BMwp7auvY3I0KfPPHIuO79pfMy50gNMzmjdU1Oda284=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR1001MB2293
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.517,18.0.874
- definitions=2022-06-13_06:2022-06-13,2022-06-13 signatures=0
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 adultscore=0 spamscore=0
- mlxlogscore=999 mlxscore=0 bulkscore=0 malwarescore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2204290000
- definitions=main-2206130068
-X-Proofpoint-GUID: MTu0k6tcsZzTkOKKr-65RSWk7cIpWZpd
-X-Proofpoint-ORIG-GUID: MTu0k6tcsZzTkOKKr-65RSWk7cIpWZpd
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/12/22 8:43 PM, Yang Li wrote:
-> Fix following coccicheck error:
-> ./drivers/target/iscsi/iscsi_target_nego.c:831:13-26: ERROR: se_nacl is
-> NULL but dereferenced.
-> 
-> Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-> Signed-off-by: Yang Li <yang.lee@linux.alibaba.com>
+Current code is based on the idea that the max number of SGL entries
+also determines the max size of an I/O request.  While this idea was
+true in older versions of the storvsc driver when SGL entry length
+was limited to 4 Kbytes, commit 3d9c3dcc58e9 ("scsi: storvsc: Enable
+scatterlist entry lengths > 4Kbytes") removed that limitation. It's
+now theoretically possible for the block layer to send requests that
+exceed the maximum size supported by Hyper-V. This problem doesn't
+currently happen in practice because the block layer defaults to a
+512 Kbyte maximum, while Hyper-V in Azure supports 2 Mbyte I/O sizes.
+But some future configuration of Hyper-V could have a smaller max I/O
+size, and the block layer could exceed that max.
 
-This was just added in Martin's 5.20 tree in:
+Fix this by correctly setting max_sectors as well as sg_tablesize to
+reflect the maximum I/O size that Hyper-V reports. While allowing
+I/O sizes larger than the block layer default of 512 Kbytes doesn’t
+provide any noticeable performance benefit in the tests we ran, it's
+still appropriate to report the correct underlying Hyper-V capabilities
+to the Linux block layer.
 
-a75fcb0912a549c6c1da8395f33271ce06e84acd
+Also tweak the virt_boundary_mask to reflect that the required
+alignment derives from Hyper-V communication using a 4 Kbyte page size,
+and not on the guest page size, which might be bigger (eg. ARM64).
 
-scsi: target: iscsi: Extract auth functions
+Fixes: '3d9c3dcc58e9 ("scsi: storvsc: Enable scatter list entry lengths > 4Kbytes")'
+Signed-off-by: Saurabh Sengar <ssengar@linux.microsoft.com>
+---
+V2
+ - More descriptive commit subject and message
+ - Better logic by considering max_transfer_bytes aligning to HV_HYP_PAGE_SIZE
 
-Do we need a Fixes or should the original patch be fixed?
+ drivers/scsi/storvsc_drv.c | 26 +++++++++++++++++++++-----
+ 1 file changed, 21 insertions(+), 5 deletions(-)
 
-Patch looks ok to me, so if we just add it:
-
-Reviewed-by: Mike Christie <michael.christie@oracle.com>
-
-> ---
->  drivers/target/iscsi/iscsi_target_nego.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
-> index 9ce35a59962b..fb93a1173954 100644
-> --- a/drivers/target/iscsi/iscsi_target_nego.c
-> +++ b/drivers/target/iscsi/iscsi_target_nego.c
-> @@ -827,8 +827,7 @@ static bool iscsi_conn_auth_required(struct iscsit_conn *conn)
->  	 */
->  	se_nacl = conn->sess->se_sess->se_node_acl;
->  	if (!se_nacl) {
-> -		pr_debug("Unknown ACL %s is trying to connect\n",
-> -			 se_nacl->initiatorname);
-> +		pr_debug("Unknown ACL is trying to connect\n");
->  		return true;
->  	}
->  
-
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index ca3530982e52..99d3be1b6089 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1844,7 +1844,7 @@ static struct scsi_host_template scsi_driver = {
+ 	.cmd_per_lun =		2048,
+ 	.this_id =		-1,
+ 	/* Ensure there are no gaps in presented sgls */
+-	.virt_boundary_mask =	PAGE_SIZE-1,
++	.virt_boundary_mask =	HV_HYP_PAGE_SIZE - 1,
+ 	.no_write_same =	1,
+ 	.track_queue_depth =	1,
+ 	.change_queue_depth =	storvsc_change_queue_depth,
+@@ -1895,6 +1895,7 @@ static int storvsc_probe(struct hv_device *device,
+ 	int target = 0;
+ 	struct storvsc_device *stor_device;
+ 	int max_sub_channels = 0;
++	u32 max_tx_bytes;
+ 
+ 	/*
+ 	 * We support sub-channels for storage on SCSI and FC controllers.
+@@ -1968,12 +1969,27 @@ static int storvsc_probe(struct hv_device *device,
+ 	}
+ 	/* max cmd length */
+ 	host->max_cmd_len = STORVSC_MAX_CMD_LEN;
+-
++	/* Any reasonable Hyper-V configuration should provide
++	 * max_transfer_bytes value aligning to HV_HYP_PAGE_SIZE,
++	 * protecting it from any weird value.
++	 */
++	max_tx_bytes = round_down(stor_device->max_transfer_bytes, HV_HYP_PAGE_SIZE);
++	/* max_hw_sectors_kb */
++	host->max_sectors = max_tx_bytes >> 9;
+ 	/*
+-	 * set the table size based on the info we got
+-	 * from the host.
++	 * There are 2 requirements for Hyper-V storvsc sgl segments,
++	 * based on which the below calculation for max segments is
++	 * done:
++	 *
++	 * 1. Except for the first and last sgl segment, all sgl segments
++	 *    should be align to HV_HYP_PAGE_SIZE, that also means the
++	 *    maximum number of segments in a sgl can be calculated by
++	 *    dividing the total max transfer length by HV_HYP_PAGE_SIZE.
++	 *
++	 * 2. Except for the first and last, each entry in the SGL must
++	 *    have an offset that is a multiple of HV_HYP_PAGE_SIZE.
+ 	 */
+-	host->sg_tablesize = (stor_device->max_transfer_bytes >> PAGE_SHIFT);
++	host->sg_tablesize = (max_tx_bytes >> HV_HYP_PAGE_SHIFT) + 1;
+ 	/*
+ 	 * For non-IDE disks, the host supports multiple channels.
+ 	 * Set the number of HW queues we are supporting.
+-- 
+2.25.1
 
