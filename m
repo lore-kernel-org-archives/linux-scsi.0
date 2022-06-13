@@ -2,53 +2,53 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD657C43334
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jun 2022 07:16:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C086C43334
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jun 2022 07:23:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234895AbiFMHQ1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Jun 2022 03:16:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41290 "EHLO
+        id S239229AbiFMHXC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Jun 2022 03:23:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52418 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231841AbiFMHQ0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jun 2022 03:16:26 -0400
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D0291A834
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Jun 2022 00:16:25 -0700 (PDT)
+        with ESMTP id S239189AbiFMHW7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jun 2022 03:22:59 -0400
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 469821AF3C
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Jun 2022 00:22:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1655104585; x=1686640585;
+  t=1655104976; x=1686640976;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=EPDBR3zIPt7rRmwu4Ziipqqlcg4evRJWn7liFflbhis=;
-  b=BhkT0PaO6LSA5xhOdSRTTiFVgUZcXKlEhcdBq8DUT6Mz37ZzcKARKkpI
-   vMEnNY1ANa0HzvoWdp6snctmG8T5wT14SCW0pUnBbtW0Jp3YiFEfBYkrk
-   FBaNz1zNn/5SrIfrjf2pd8sHyzDp2pPcTR3Rg6ogJFEN/7HsGQV5ZRFt/
-   zNQKFwwDf2cvEMvcN/lArNw5M+Ht/sE3em+sw5RyVaBEZCUDCjIoVpIdg
-   Ro1Fw8OZGQxfl2T0SvbF3BedPh+pCtfyKa+xUC1CN+sjlJMNAxlU+jS8x
-   Jy+Za/UYzkK/B88llP3yuqoV1673yweJIlnqoneSiSc2raP8qVs2HkEjT
-   w==;
+  bh=KRf8Nx4WWfj1E8H1UaCkxU+OW/prlnMmWW8uAdir3Ps=;
+  b=a4cui+DPdPq91ZOiaC6fHMi03QWHbBgwGj8OWA/UWeX9R9TZopAKK+4Y
+   /nH7grLherJZLclaTkh8MC+73wKWLm+pxoLTfyzNH431M9WsTi/fdc1fD
+   9Y/m54004Cum1AM/BC5ippUBxQHUAbwFp8j2JCDwcXkEj2rKoPM5v0dNc
+   KO2IYpoioXTiyEDIREBKaQQ2qgilk875JSOPh9CuqZku1WPmXlIDKBPLS
+   5OS3rjps4S8KStmmWgokRLRKWIhCzrrfvtxk/3Z6+h/cujW/t3FafES9y
+   7ukeYEbABMPG/WjVQOfILnLbwsFknB0bCAFekpzaYI5wCgWShaagp94rv
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.91,296,1647273600"; 
-   d="scan'208";a="207826632"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 13 Jun 2022 15:16:24 +0800
-IronPort-SDR: AXARZq8NcIfQb21JOY20+UxCYmZUWDet1RV+VQKIL9yzcaeQ+kB9/53YB1v6NGBqhuvSWJ3mw0
- GsqHF4P1O/ZfKXGYIIVII+d3tuIRs1WYMdAkhtbGX169ey+sAGRz+5R/omXUx2HAdNB1w1G1GQ
- ACNbzQCGY+dxmSNLKsmkf/TYRH5x7T51Jo0ZblCiXzf+sTAAEWCSiTC1C344IbLJqkLdZA1tJB
- TRv5oKxAjzg5Q9hyYFocl+7vdu5wvRnfynsH2vj42PuSE4ogzQppx6z0/Wns4jVK4HKAeC0hY0
- oEoUvQdzsZQnOVVNPeEITGYY
+   d="scan'208";a="203742702"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 13 Jun 2022 15:22:52 +0800
+IronPort-SDR: nma7b5RORz/xh8XYDbKXlzUA7+2gLehHFGUs8xMhIUB8H47/W4k5PWzFYnYLdUAOOIfYdjLz+R
+ yco/w1XvoM0O+5YZbtyR97pmPEEGIA4eri9juaXjlWyo+10q6aTK9qPRMM+yXvKOBWpRAGRPnU
+ E0fU++5+OlDHfXnxRoNtPICFXPmmF4fqMEj/NC3nWGqHjMvDNs14AnVRfob6YacQaaSAIXLJyU
+ +wXZlR9P3+kY1t8Cp0bheeB2bG//zFD9cUEZxIDB/JTr/BaEh+Juo0D8BzAJNZstoY7SSDXodn
+ 3fTgkzfn+oyZWdVkFCtZWitc
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 12 Jun 2022 23:35:04 -0700
-IronPort-SDR: CDK9o5y5PF0XpgdQryfUs3Bsag2f/KL4eNe7AImIqJzsxc50RNevNlsVAklVbUKT+9XpZevFIE
- X24Uco6N4e7+rq0DJ+dHGcw+o7GHCTn/Pj2KJDh8mJsr1veA3OOl5VzYS4ERUhrw12WxlfG4wO
- njzdOJg5A3xaNHyqyNY1jELYHYV7XK1A6DHyYFTc8o8puxuDyniZFdRBkynsuFUgtTrio2wP3Y
- dfGJMeOXgo0dIpzEnLzosZrDhJhaqbwYIKBK/RRIDJBtKaW4vuG0z5DIulOeHT2icdViRx3G/s
- CFY=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 12 Jun 2022 23:41:31 -0700
+IronPort-SDR: QvCscBGemlpUvLW+hRLu7jNPWwM/0wfvvrmc/pJ9bxgo+WsbHwsB2VIWX6XFVZ8DjdSzPaCNyK
+ UhLotrN4aTBa7k6/K1RL7cjExnVnpjBFSlrOv4AI2mnKPi7t56MoLlz/XSpWet/rrfqhUt0luG
+ bx8AWu86FBsw1BJTdLDYshColuzXzCiBbIXzQCMOLrTAh+vRbjSQILCszwWrY5S0QRlj9oIqbP
+ J+/u9vXNTkxtNf4ghk10b3Y8FmHHA0Zt8wo8uzh/bZqNclysTqgQRMD/FonofnfGvOwER2rbQV
+ Hrs=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 13 Jun 2022 00:16:25 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 13 Jun 2022 00:22:50 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LM2tH4LqLz1SVp1
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Jun 2022 00:16:23 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LM31k4b5Zz1SVny
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Jun 2022 00:22:50 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,27 +56,28 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1655104582; x=1657696583; bh=EPDBR3zIPt7rRmwu4Ziipqqlcg4evRJWn7l
-        iFflbhis=; b=asnsycXMe2O7nEaoOSKFhaEb/fGGHjM6sQ1v9FwCaWqickekIqW
-        Xl6d3mwryF0wayMxgZNpplbVmTS8bqVaw9zy8uJY1qQoi3KeFHuJ/uz7ilFpwn8T
-        KINnWGct9IkE5dfqwhKm3PKgCsPQBLHG2xvPbUIHxzGX8VX6YnVg0FXNZAOjSB1o
-        4BAfUqJ01NU/e/Of29wmDbdChiWIkK9Jjch64B4+XxTL5WsbzLb4Bby2/uXhuP4r
-        yBV2soUlIAHn386SoJbhoHrFgsq9ng9mcJ1h1UsoxSEaDD0m40za+rsx988T67sO
-        xyRMhfAMgBMLpAQSLcx3Ehg26/1lR4hrjtw==
+        1655104969; x=1657696970; bh=KRf8Nx4WWfj1E8H1UaCkxU+OW/prlnMmWW8
+        uAdir3Ps=; b=P9htuM/mt818zD5f2wj3iPLOEgN1cTV77qh91MA22JWJud8ApO6
+        8DRqgN+uHmRoWO/3OPfpDye1Nc1eRdPYe0nuEZO9GQ8611OlWOXAbx+vQnbgcL8e
+        ZUsmh1iEI8O6c1w+Z8AXVU6WlUyKTDL36VVrV0qp3cxVnKNjnaHwcfpo4vGeufD4
+        27FfjeySZojqOHuTa1H4GFFTEf8LaOEHQUVZ3T2CcTmqFlF0inxLmsOTVN3EulCz
+        vdYxTXYeF9Gezj0cmmcFukjRlf3ch5LhWZHAtiG/SADHIt8pfh3yN/c8zkeU3N+Q
+        Rkc1vcBvXgImeFSwZhba+DlyvwGxkL/c9iw==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id dChOjFGQpyKD for <linux-scsi@vger.kernel.org>;
-        Mon, 13 Jun 2022 00:16:22 -0700 (PDT)
+        with ESMTP id NwK1UeznkqDO for <linux-scsi@vger.kernel.org>;
+        Mon, 13 Jun 2022 00:22:49 -0700 (PDT)
 Received: from [10.225.163.77] (unknown [10.225.163.77])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LM2tD5tDrz1Rvlc;
-        Mon, 13 Jun 2022 00:16:20 -0700 (PDT)
-Message-ID: <da6a77ff-0dde-b0b4-4d6c-047eab48d595@opensource.wdc.com>
-Date:   Mon, 13 Jun 2022 16:16:19 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LM31f1VWnz1Rvlc;
+        Mon, 13 Jun 2022 00:22:45 -0700 (PDT)
+Message-ID: <502b2148-ca81-9fc8-c6b3-0cc25bf354a6@opensource.wdc.com>
+Date:   Mon, 13 Jun 2022 16:22:44 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.10.0
-Subject: Re: [PATCH RFC v2 07/18] libata-scsi: Add ata_internal_queuecommand()
+Subject: Re: [PATCH RFC v2 08/18] libata: Queue ATA internal commands as
+ requests
 Content-Language: en-US
 To:     John Garry <john.garry@huawei.com>, axboe@kernel.dk,
         jejb@linux.ibm.com, martin.petersen@oracle.com, brking@us.ibm.com,
@@ -85,10 +86,10 @@ Cc:     linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         chenxiang66@hisilicon.com
 References: <1654770559-101375-1-git-send-email-john.garry@huawei.com>
- <1654770559-101375-8-git-send-email-john.garry@huawei.com>
+ <1654770559-101375-9-git-send-email-john.garry@huawei.com>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <1654770559-101375-8-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1654770559-101375-9-git-send-email-john.garry@huawei.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -96,81 +97,276 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 6/9/22 19:29, John Garry wrote:
-> Add callback to queue reserved commands - call it "internal" as this is
-> what libata uses.
+> Follow the normal path for requests and queue through the block layer.
 > 
-> Also add it to the base ATA SHT, and set nr_reserved_cmds = 1, which
-> matches tag ATA_TAG_INTERNAL.
+> We hold the qc pointer in the scmd host scribble, which is less than
+> ideal. In future we can hold the ata_queued_cmd in the scmd priv_data,
+> allowing for easy lookup.
+> 
+> We need to use the shost sdev to queue these requests. That is because we
+> initially do not have the target disk scsi_device allocated yet when
+> queueing internal commands. This is less than ideal, and makes it hard for
+> libsas to know when queueing an internal command whether it is a ATA
+> internal command or not.
+> 
+> Also make ata_exec_internal_sg() static - there are no users outside
+> libata-core.c
 > 
 > Signed-off-by: John Garry <john.garry@huawei.com>
 > ---
->  drivers/ata/libata-scsi.c | 14 ++++++++++++++
->  include/linux/libata.h    |  6 +++++-
->  2 files changed, 19 insertions(+), 1 deletion(-)
+>  drivers/ata/libata-core.c | 137 +++++++++++++++++++++-----------------
+>  drivers/ata/libata-sata.c |   5 +-
+>  drivers/ata/libata.h      |   4 --
+>  3 files changed, 80 insertions(+), 66 deletions(-)
 > 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index baac35dd17ca..b2702ab0183b 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -1114,6 +1114,20 @@ int ata_scsi_dev_config(struct scsi_device *sdev, struct ata_device *dev)
->  	return 0;
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 40e816419f48..6b1aaeccb253 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -1438,9 +1438,18 @@ unsigned long ata_id_xfermask(const u16 *id)
 >  }
+>  EXPORT_SYMBOL_GPL(ata_id_xfermask);
 >  
-> +int ata_internal_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
-
-ata_scsi_internal_queuecommand()
-
-But given that this is used for the .reserved_queuecommand() method, I
-would call it ata_scsi_reserved_queuecommand().
-
-> +{
-> +	struct ata_port *ap;
-> +	int res;
+> -static void ata_qc_complete_internal(struct ata_queued_cmd *qc)
+> +void ata_qc_complete_internal(struct ata_queued_cmd *qc)
+>  {
+> -	struct completion *waiting = qc->private_data;
+> +	struct scsi_cmnd *scmd = qc->scsicmd;
 > +
-> +	ap = ata_shost_to_port(shost);
+> +	scsi_done(scmd);
+> +}
+> +
+> +static void ata_internal_end_rq(struct request *rq, blk_status_t error)
+> +{
+> +	struct completion *waiting = rq->end_io_data;
+> +
+> +	rq->end_io_data = (void *)(uintptr_t)error;
+>  
+>  	complete(waiting);
+>  }
+> @@ -1467,52 +1476,74 @@ static void ata_qc_complete_internal(struct ata_queued_cmd *qc)
+>   *	RETURNS:
+>   *	Zero on success, AC_ERR_* mask on failure
+>   */
+> -unsigned ata_exec_internal_sg(struct ata_device *dev,
+> +static unsigned ata_exec_internal_sg(struct ata_device *dev,
+>  			      struct ata_taskfile *tf, const u8 *cdb,
+> -			      int dma_dir, struct scatterlist *sgl,
+> -			      unsigned int n_elem, unsigned long timeout)
+> +			      int dma_dir, void *buf, unsigned int buflen,
+> +			      unsigned long timeout)
+>  {
+>  	struct ata_link *link = dev->link;
+>  	struct ata_port *ap = link->ap;
+> +	struct Scsi_Host *scsi_host = ap->scsi_host;
+> +	struct scsi_device *sdev = scsi_host->sdev;
+>  	u8 command = tf->command;
+>  	int auto_timeout = 0;
+>  	struct ata_queued_cmd *qc;
+> -	unsigned int preempted_tag;
+> -	u32 preempted_sactive;
+> -	u64 preempted_qc_active;
+> -	int preempted_nr_active_links;
+>  	DECLARE_COMPLETION_ONSTACK(wait);
+>  	unsigned long flags;
+>  	unsigned int err_mask;
+> +	struct scsi_cmnd *scmd;
+> +	struct request *req;
+>  	int rc;
+>  
+> -	spin_lock_irqsave(ap->lock, flags);
+> +	/*
+> +	 * We only support a single reserved command, so this guarantees
+> +	 * serialization. However the code already assumed that (we are
+> +	 * serialized here per-port).
+> +	 */
+> +	req = scsi_alloc_request(sdev->request_queue,
+> +			dma_dir == DMA_TO_DEVICE ?
+> +			REQ_OP_DRV_OUT : REQ_OP_DRV_IN,
+> +			BLK_MQ_REQ_RESERVED);
+> +	if (IS_ERR(req))
+> +		return AC_ERR_OTHER;
+>  
+> -	/* no internal command while frozen */
+> -	if (ap->pflags & ATA_PFLAG_FROZEN) {
+> -		spin_unlock_irqrestore(ap->lock, flags);
+> -		return AC_ERR_SYSTEM;
+> +
+> +	if (!timeout) {
+> +		if (ata_probe_timeout)
+> +			timeout = ata_probe_timeout * 1000;
+> +		else {
+> +			timeout = ata_internal_cmd_timeout(dev, command);
+> +			auto_timeout = 1;
+> +		}
+>  	}
+>  
+> -	/* initialize internal qc */
+> +	scmd = blk_mq_rq_to_pdu(req);
+> +	scmd->allowed = 0;
+> +	req->timeout = timeout;
+> +	//TODO: Hook up timeout handler
+> +	req->rq_flags |= RQF_QUIET;
+> +	scmd->device = sdev;
+>  	qc = __ata_qc_from_tag(ap, ATA_TAG_INTERNAL);
+>  
+> +	/* Do this until we can hold ata_queued_cmd in the SCMD priv data */
+> +	scmd->host_scribble = (unsigned char *)qc;
+> +
+> +	if (buflen) {
+> +		int ret = blk_rq_map_kern(sdev->request_queue, req,
+> +					  buf, buflen, GFP_NOIO);
+> +		if (ret) {
+> +			blk_mq_free_request(req);
+> +			return AC_ERR_OTHER;
+> +		}
+> +	}
+> +
+>  	qc->tag = ATA_TAG_INTERNAL;
+>  	qc->hw_tag = 0;
+> -	qc->scsicmd = NULL;
+> +	qc->scsicmd = scmd;
+>  	qc->ap = ap;
+>  	qc->dev = dev;
+>  	ata_qc_reinit(qc);
+>  
+> -	preempted_tag = link->active_tag;
+> -	preempted_sactive = link->sactive;
+> -	preempted_qc_active = ap->qc_active;
+> -	preempted_nr_active_links = ap->nr_active_links;
+> -	link->active_tag = ATA_TAG_POISON;
+> -	link->sactive = 0;
+> -	ap->qc_active = 0;
+> -	ap->nr_active_links = 0;
+> -
+>  	/* prepare & issue qc */
+>  	qc->tf = *tf;
+>  	if (cdb)
+> @@ -1525,32 +1556,14 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
+>  
+>  	qc->flags |= ATA_QCFLAG_RESULT_TF;
+>  	qc->dma_dir = dma_dir;
+> -	if (dma_dir != DMA_NONE) {
+> -		unsigned int i, buflen = 0;
+> -		struct scatterlist *sg;
+> -
+> -		for_each_sg(sgl, sg, n_elem, i)
+> -			buflen += sg->length;
+> -
+> -		ata_sg_init(qc, sgl, n_elem);
+> -		qc->nbytes = buflen;
+> -	}
+>  
+> -	qc->private_data = &wait;
+> +	qc->private_data = ap;
+>  	qc->complete_fn = ata_qc_complete_internal;
+>  
+> -	ata_qc_issue(qc);
+> -
+> -	spin_unlock_irqrestore(ap->lock, flags);
+> +	req->end_io_data = &wait;
+> +	req->end_io = ata_internal_end_rq;
+>  
+> -	if (!timeout) {
+> -		if (ata_probe_timeout)
+> -			timeout = ata_probe_timeout * 1000;
+> -		else {
+> -			timeout = ata_internal_cmd_timeout(dev, command);
+> -			auto_timeout = 1;
+> -		}
+> -	}
+> +	blk_execute_rq_nowait(req, true);
 
-You can move this to ap declaration.
+How do you get guarantee that this req ends up being issued with
+ATA_TAG_INTERNAL as the tag ? Because you have the reserved commands *in
+addition to can queue* ? I can see how that works if can_queue is indeed
+32, but what if the user changes the max qd ? That breaks, no ?
 
-	struct ata_port *ap = ata_shost_to_port(shost);
-
-> +	spin_lock_irq(ap->lock);
-
-spin_lock_irqsave() ?
-
-> +	res = ata_sas_queuecmd(scmd, ap);
-> +	spin_unlock_irq(ap->lock);
+>  
+>  	if (ap->ops->error_handler)
+>  		ata_eh_release(ap);
+> @@ -1610,13 +1623,15 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
+>  	err_mask = qc->err_mask;
+>  
+>  	ata_qc_free(qc);
+> -	link->active_tag = preempted_tag;
+> -	link->sactive = preempted_sactive;
+> -	ap->qc_active = preempted_qc_active;
+> -	ap->nr_active_links = preempted_nr_active_links;
+> +	link->active_tag = link->preempted_tag;
+> +	link->sactive = link->preempted_sactive;
+> +	ap->qc_active = ap->preempted_qc_active;
+> +	ap->nr_active_links = ap->preempted_nr_active_links;
+>  
+>  	spin_unlock_irqrestore(ap->lock, flags);
+>  
+> +	blk_mq_free_request(req);
+> +
+>  	if ((err_mask & AC_ERR_TIMEOUT) && auto_timeout)
+>  		ata_internal_cmd_timed_out(dev, command);
+>  
+> @@ -1647,18 +1662,20 @@ unsigned ata_exec_internal(struct ata_device *dev,
+>  			   int dma_dir, void *buf, unsigned int buflen,
+>  			   unsigned long timeout)
+>  {
+> -	struct scatterlist *psg = NULL, sg;
+> -	unsigned int n_elem = 0;
+> +	/* buf may not be aligned, so copy to/from an aligned buffer */
+> +	void *tmpbuf = kmemdup(buf, buflen, GFP_KERNEL);
+> +	unsigned res;
+>  
+> -	if (dma_dir != DMA_NONE) {
+> -		WARN_ON(!buf);
+> -		sg_init_one(&sg, buf, buflen);
+> -		psg = &sg;
+> -		n_elem++;
+> -	}
+> +	if (!tmpbuf)
+> +		return AC_ERR_OTHER;
+>  
+> -	return ata_exec_internal_sg(dev, tf, cdb, dma_dir, psg, n_elem,
+> +	res = ata_exec_internal_sg(dev, tf, cdb, dma_dir, tmpbuf, buflen,
+>  				    timeout);
+> +
+> +	memcpy(buf, tmpbuf, buflen);
+> +	kfree(tmpbuf);
 > +
 > +	return res;
-> +}
-> +EXPORT_SYMBOL_GPL(ata_internal_queuecommand);
-> +
->  /**
->   *	ata_scsi_slave_config - Set SCSI device attributes
->   *	@sdev: SCSI device to examine
-> diff --git a/include/linux/libata.h b/include/linux/libata.h
-> index 43f4bcfe9a5f..5fa6f56bba81 100644
-> --- a/include/linux/libata.h
-> +++ b/include/linux/libata.h
-> @@ -1141,6 +1141,8 @@ extern int ata_std_bios_param(struct scsi_device *sdev,
->  			      sector_t capacity, int geom[]);
->  extern void ata_scsi_unlock_native_capacity(struct scsi_device *sdev);
->  extern int ata_scsi_slave_config(struct scsi_device *sdev);
-> +extern int ata_internal_queuecommand(struct Scsi_Host *shost,
-> +				struct scsi_cmnd *scmd);
->  extern void ata_scsi_slave_destroy(struct scsi_device *sdev);
->  extern int ata_scsi_change_queue_depth(struct scsi_device *sdev,
->  				       int queue_depth);
-> @@ -1390,7 +1392,9 @@ extern const struct attribute_group *ata_common_sdev_groups[];
->  	.proc_name		= drv_name,			\
->  	.slave_destroy		= ata_scsi_slave_destroy,	\
->  	.bios_param		= ata_std_bios_param,		\
-> -	.unlock_native_capacity	= ata_scsi_unlock_native_capacity
-> +	.unlock_native_capacity	= ata_scsi_unlock_native_capacity,\
-> +	.nr_reserved_cmds = 1,\
-> +	.reserved_queuecommand = ata_internal_queuecommand
+>  }
 >  
->  #define ATA_SUBBASE_SHT(drv_name)				\
->  	__ATA_BASE_SHT(drv_name),				\
+>  /**
+> diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+> index 7a5fe41aa5ae..3cecc45d54ab 100644
+> --- a/drivers/ata/libata-sata.c
+> +++ b/drivers/ata/libata-sata.c
+> @@ -1258,9 +1258,10 @@ int ata_sas_queuecmd(struct scsi_cmnd *cmd, struct ata_port *ap)
+>  {
+>  	int rc = 0;
+>  
+> -	if (likely(ata_dev_enabled(ap->link.device)))
+> +	if (likely(ata_dev_enabled(ap->link.device)) ||
+> +		scsi_is_reserved_cmd(cmd)) {
+>  		rc = __ata_scsi_queuecmd(cmd, ap->link.device);
+> -	else {
+> +	} else {
+>  		cmd->result = (DID_BAD_TARGET << 16);
+>  		scsi_done(cmd);
+>  	}
+> diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+> index 926a7f41303d..1446a482835d 100644
+> --- a/drivers/ata/libata.h
+> +++ b/drivers/ata/libata.h
+> @@ -53,10 +53,6 @@ extern unsigned ata_exec_internal(struct ata_device *dev,
+>  				  struct ata_taskfile *tf, const u8 *cdb,
+>  				  int dma_dir, void *buf, unsigned int buflen,
+>  				  unsigned long timeout);
+> -extern unsigned ata_exec_internal_sg(struct ata_device *dev,
+> -				     struct ata_taskfile *tf, const u8 *cdb,
+> -				     int dma_dir, struct scatterlist *sg,
+> -				     unsigned int n_elem, unsigned long timeout);
+>  extern int ata_wait_ready(struct ata_link *link, unsigned long deadline,
+>  			  int (*check_ready)(struct ata_link *link));
+>  extern int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
 
 
 -- 
