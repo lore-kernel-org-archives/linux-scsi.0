@@ -2,90 +2,87 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0535EC43334
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jun 2022 09:48:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54B42C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jun 2022 10:03:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241052AbiFMJsE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Jun 2022 05:48:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43362 "EHLO
+        id S241337AbiFMKDD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Jun 2022 06:03:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40386 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241038AbiFMJr4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jun 2022 05:47:56 -0400
-Received: from mail-wr1-x429.google.com (mail-wr1-x429.google.com [IPv6:2a00:1450:4864:20::429])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C547A19C1F
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Jun 2022 02:47:54 -0700 (PDT)
-Received: by mail-wr1-x429.google.com with SMTP id q15so6358258wrc.11
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Jun 2022 02:47:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=ZVDWXyhPhCXrdQGEcNHxhh8HhuL/NBNEFLkEQfvm5p0=;
-        b=gdhbV6lSda6rqgbGzWHdOWH4WWs0+gOK9aMOW6u6jwTJI0VZuPJK8+rKHyFSpSp4Ng
-         pqleDKgIiuMXXLztRhxkj7YHkUE9QWoSUJiTVB9V8CoBwACGNIrHjxMVqSNwgOIEzmLw
-         B7Gl2n/0EPVdoiqx7tOIjg2b6hVEBtGeTTu8qcvG3Vj4+4eYKyMLOSiNb3Hur8dw/WTb
-         w7+BS5uLm3hgaeFGrlEkvYwynALa5WKh95u9DwOgDmSoe4qEpEHa4Wf8RO1LAt3j2P1U
-         EllID+OOw81g3b9t2s3zqupDh47S7pUwDQj5hm6/LcUJlX+3pkOaE35DpYvEhWHomcXM
-         AVOw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=ZVDWXyhPhCXrdQGEcNHxhh8HhuL/NBNEFLkEQfvm5p0=;
-        b=KdtdbLZ+N84VypwLgczsTv1+D2ZPodYLYCc0X+QJQFN2Bsh52envVYQaT/imJ2liB6
-         vUQhDtEGVtQrKeLF6Xh/oeb4UjOloIi0oTStpkAaSImTodpoKiuXg6yxmhRRVfwKKh3c
-         q65kTT5FVZlFLCDnLCe34utt9qUYl6RYpln/Tp60S7ajzoJq48pC7RgTKV+SYIPSu3LY
-         mxdHaZo/BN21nqvTbwjKWHJVVy/Oz1skFJbsrWmuW7zfqbOjyQclK1EdaWSujEVwvPmZ
-         5BOk7XGmqqO8ESSr/P25dFUqN5u8nqwpyVra94KLNxveDlInFXVLXh34JM3cOYYaGibS
-         iJEA==
-X-Gm-Message-State: AOAM533z/Guqoj/HSjtJLELZDTtUSinYqsaYZ+Lp71ecyofooiik9RIn
-        gvujajZ2tEgKohr9+FbJ8Ojqpw==
-X-Google-Smtp-Source: ABdhPJwPDCW6nEnGMnnReym2Ekgk+1u7LttLdpWDuxseqRriQQtptnJyoMYlHioW/xfucYl3IyywEA==
-X-Received: by 2002:adf:e7cf:0:b0:215:8dea:d67 with SMTP id e15-20020adfe7cf000000b002158dea0d67mr47764360wrn.532.1655113673258;
-        Mon, 13 Jun 2022 02:47:53 -0700 (PDT)
-Received: from [10.227.148.193] (80-254-69-65.dynamic.monzoon.net. [80.254.69.65])
-        by smtp.gmail.com with ESMTPSA id b2-20020a056000054200b0020c5253d8dcsm8005192wrf.40.2022.06.13.02.47.52
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 13 Jun 2022 02:47:52 -0700 (PDT)
-Message-ID: <d2a334d4-8454-5b0a-222d-6820b9c30aa3@linaro.org>
-Date:   Mon, 13 Jun 2022 11:47:51 +0200
+        with ESMTP id S241439AbiFMKCb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jun 2022 06:02:31 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD4F710A7;
+        Mon, 13 Jun 2022 03:02:28 -0700 (PDT)
+Received: from fraeml738-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LM6Tf4bCNz682DK;
+        Mon, 13 Jun 2022 17:58:46 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml738-chm.china.huawei.com (10.206.15.219) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Mon, 13 Jun 2022 12:02:26 +0200
+Received: from [10.195.33.253] (10.195.33.253) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Mon, 13 Jun 2022 11:02:25 +0100
+Message-ID: <5a2047e3-5e71-141a-ec3a-2e22749d3c49@huawei.com>
+Date:   Mon, 13 Jun 2022 11:05:33 +0100
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH v4 5/6] ufs: host: ufs-exynos: add mphy apb clock mask
-Content-Language: en-US
-To:     Alim Akhtar <alim.akhtar@samsung.com>,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-phy@lists.infradead.org
-Cc:     devicetree@vger.kernel.org, robh+dt@kernel.org,
-        krzysztof.kozlowski+dt@linaro.org, vkoul@kernel.org,
-        avri.altman@wdc.com, bvanassche@acm.org,
-        martin.petersen@oracle.com, chanho61.park@samsung.com,
-        pankaj.dubey@samsung.com
-References: <20220610104119.66401-1-alim.akhtar@samsung.com>
- <CGME20220610104356epcas5p4343acd45f6677723a1b44534fcc4e289@epcas5p4.samsung.com>
- <20220610104119.66401-6-alim.akhtar@samsung.com>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <20220610104119.66401-6-alim.akhtar@samsung.com>
-Content-Type: text/plain; charset=UTF-8
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH RFC v2 03/18] scsi: core: Implement reserved command
+ handling
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <axboe@kernel.dk>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <brking@us.ibm.com>, <hare@suse.de>,
+        <hch@lst.de>
+CC:     <linux-block@vger.kernel.org>, <linux-ide@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <chenxiang66@hisilicon.com>
+References: <1654770559-101375-1-git-send-email-john.garry@huawei.com>
+ <1654770559-101375-4-git-send-email-john.garry@huawei.com>
+ <b4a0ede5-95a3-4388-e808-7627b5484d01@opensource.wdc.com>
+ <7f80f3b6-84f6-de48-4e69-4562c96e62c5@huawei.com>
+ <e4b108ba-cbc9-5237-f873-2fcea94f2b85@opensource.wdc.com>
+ <53fa2856-54f2-c075-2eed-4f05c3459597@huawei.com>
+ <d2e452cd-6a91-f25d-748e-94f560deb1bb@opensource.wdc.com>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <d2e452cd-6a91-f25d-748e-94f560deb1bb@opensource.wdc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.195.33.253]
+X-ClientProxiedBy: lhreml746-chm.china.huawei.com (10.201.108.196) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/06/2022 12:41, Alim Akhtar wrote:
-> Bit[3] of HCI_CLKSTOP_CTRL register is for enabling/disabling MPHY APB
-> clock. Lets add it to CLK_STOP_MASK, so that the same can be controlled
-> during clock masking/unmasking.
+On 13/06/2022 10:43, Damien Le Moal wrote:
+>>> Currently, that is not possible to do cleanly as there are no guarantees
+>>> we can get a free tag (there is a race between block layer tag allocation
+>>> and libata internal tag counting). So a reserved tag for that would be
+>>> nice. We would end up with 31 IO tags at most + 1 reserved tag for NCQ
+>>> commands + ATA_TAG_INTERNAL for non-NCQ. That last one would be rendered
+>>> rather useless. But that also means that we kind-of go back to the days
+>>> when Linux showed ATA drives max QD of 31...
+>> So must the ATA_TAG_INTERNAL qc always be available for non-NCQ action
+>> like EH, and that is why you cannot reuse for this internal NCQ
+>> (queuable) command?
+> Currently, ATA_TAG_INTERNAL is always used for non-NCQ commands. Seeing a
+> qc with that tag means it is*not*  NCQ.
 > 
-> Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
-> Reviewed-by: Chanho Park <chanho61.park@samsung.com>
-> Tested-by: Chanho Park <chanho61.park@samsung.com>
+> I am trying to see if I can reuse the tag from one of the commands that
+> completed with that weird good status/sense data available. The problem
+> though is that this all needs to be done*before*  calling
+> qc->complete_fn() which will free the tag. So we endup with 2 qcs that
+> have the same tag, the second one (for the read log command) temporarily
+> using the tag but still going through the same completion path without the
+> original command fully completed yet. It is a real mess.
+> 
 
+Reusing tags seems really messy, but then reserving an NCQ command seems 
+wasteful.
 
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-
-
-Best regards,
-Krzysztof
+Thanks,
+John
