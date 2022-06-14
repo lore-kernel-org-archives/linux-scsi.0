@@ -2,34 +2,34 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84C2BCCA47A
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jun 2022 14:17:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30996C43334
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jun 2022 14:17:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244423AbiFNORS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jun 2022 10:17:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59784 "EHLO
+        id S244553AbiFNORU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jun 2022 10:17:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59794 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242805AbiFNORJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jun 2022 10:17:09 -0400
+        with ESMTP id S242997AbiFNORK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jun 2022 10:17:10 -0400
 Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 698D333369;
-        Tue, 14 Jun 2022 07:17:04 -0700 (PDT)
-X-UUID: 9bdeb8cf82224fa88ebdc55213eae61c-20220614
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E76B2F3A9;
+        Tue, 14 Jun 2022 07:17:06 -0700 (PDT)
+X-UUID: 1dbe14a68fbf40b59377d840aafa4a37-20220614
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.6,REQID:ef9afaee-d021-4391-9e66-faa2c14dfb84,OB:30,L
-        OB:30,IP:0,URL:0,TC:0,Content:-5,EDM:0,RT:0,SF:95,FILE:0,RULE:Release_Ham,
-        ACTION:release,TS:90
-X-CID-INFO: VERSION:1.1.6,REQID:ef9afaee-d021-4391-9e66-faa2c14dfb84,OB:30,LOB
-        :30,IP:0,URL:0,TC:0,Content:-5,EDM:0,RT:0,SF:95,FILE:0,RULE:Spam_GS981B3D,
-        ACTION:quarantine,TS:90
-X-CID-META: VersionHash:b14ad71,CLOUDID:47766cc5-c67b-4a73-9b18-726dd8f2eb58,C
+X-CID-O-INFO: VERSION:1.1.6,REQID:b61bd225-519f-4293-a73b-f73dd6043595,OB:0,LO
+        B:0,IP:0,URL:0,TC:0,Content:-5,EDM:0,RT:0,SF:95,FILE:0,RULE:Release_Ham,AC
+        TION:release,TS:90
+X-CID-INFO: VERSION:1.1.6,REQID:b61bd225-519f-4293-a73b-f73dd6043595,OB:0,LOB:
+        0,IP:0,URL:0,TC:0,Content:-5,EDM:0,RT:0,SF:95,FILE:0,RULE:Spam_GS981B3D,AC
+        TION:quarantine,TS:90
+X-CID-META: VersionHash:b14ad71,CLOUDID:388d9407-b57a-4a25-a071-bc7b4972bc68,C
         OID:2e28f976cb89,Recheck:0,SF:28|17|19|48,TC:nil,Content:0,EDM:-3,IP:nil,U
         RL:0,File:nil,QS:nil,BEC:nil,COL:0
-X-UUID: 9bdeb8cf82224fa88ebdc55213eae61c-20220614
+X-UUID: 1dbe14a68fbf40b59377d840aafa4a37-20220614
 Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw02.mediatek.com
         (envelope-from <stanley.chu@mediatek.com>)
         (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 36876832; Tue, 14 Jun 2022 22:16:57 +0800
+        with ESMTP id 1958384240; Tue, 14 Jun 2022 22:16:57 +0800
 Received: from mtkmbs11n1.mediatek.inc (172.21.101.186) by
  mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
@@ -49,12 +49,10 @@ CC:     <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
         <tun-yu.yu@mediatek.com>, <cc.chou@mediatek.com>,
         <chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
         <stanley.chu@mediatek.com>
-Subject: [PATCH v3 04/10] scsi: ufs-mediatek: Fix the timing of configuring device regulators
-Date:   Tue, 14 Jun 2022 22:16:49 +0800
-Message-ID: <20220614141655.14409-5-stanley.chu@mediatek.com>
+Subject: [PATCH v3 00/10] scsi: ufs: Fix PMC and low-power mode on MediaTek UFS platforms
+Date:   Tue, 14 Jun 2022 22:16:45 +0800
+Message-ID: <20220614141655.14409-1-stanley.chu@mediatek.com>
 X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20220614141655.14409-1-stanley.chu@mediatek.com>
-References: <20220614141655.14409-1-stanley.chu@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-MTK:  N
@@ -62,112 +60,51 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Po-Wen Kao <powen.kao@mediatek.com>
+Hi Martin,
 
-Currently the LPM configurations of device regulators
-may not work since VCC is not disabled yet while
-ufs_mtk_vreg_set_lpm() is executed.
+This series provides some fixes on MediaTek UFS platforms, please consider this patch series for kernel v5.20.
 
-Fix it by changing the timing of invoking
-ufs_mtk_vreg_set_lpm().
+Sorry to change this patch series so frequently since we have to post and backport these patches to Android kernel recently.
 
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
-Signed-off-by: Po-Wen Kao <powen.kao@mediatek.com>
-Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
----
- drivers/ufs/host/ufs-mediatek.c | 60 ++++++++++++++++++++++++++++++---
- 1 file changed, 55 insertions(+), 5 deletions(-)
+- Provide workaround for power mode change for HS-G5
+- Fix and provide regulator features
 
-diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index 21d591925dc4..3b3fe5470b71 100755
---- a/drivers/ufs/host/ufs-mediatek.c
-+++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -1082,7 +1082,6 @@ static int ufs_mtk_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
- 		 * ufshcd_suspend() re-enabling regulators while vreg is still
- 		 * in low-power mode.
- 		 */
--		ufs_mtk_vreg_set_lpm(hba, true);
- 		err = ufs_mtk_mphy_power_on(hba, false);
- 		if (err)
- 			goto fail;
-@@ -1106,12 +1105,13 @@ static int ufs_mtk_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- {
- 	int err;
- 
-+	if (hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL)
-+		ufs_mtk_vreg_set_lpm(hba, false);
-+
- 	err = ufs_mtk_mphy_power_on(hba, true);
- 	if (err)
- 		goto fail;
- 
--	ufs_mtk_vreg_set_lpm(hba, false);
--
- 	if (ufshcd_is_link_hibern8(hba)) {
- 		err = ufs_mtk_link_set_hpm(hba);
- 		if (err)
-@@ -1276,9 +1276,59 @@ static int ufs_mtk_remove(struct platform_device *pdev)
- 	return 0;
- }
- 
-+int ufs_mtk_system_suspend(struct device *dev)
-+{
-+	int ret = 0;
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	ret = ufshcd_system_suspend(dev);
-+
-+	if (!ret)
-+		ufs_mtk_vreg_set_lpm(hba, true);
-+
-+	return ret;
-+}
-+
-+int ufs_mtk_system_resume(struct device *dev)
-+{
-+	int ret = 0;
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	ufs_mtk_vreg_set_lpm(hba, false);
-+
-+	ret = ufshcd_system_resume(dev);
-+
-+	return ret;
-+}
-+
-+int ufs_mtk_runtime_suspend(struct device *dev)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	int ret = 0;
-+
-+	ret = ufshcd_runtime_suspend(dev);
-+
-+	if (!ret)
-+		ufs_mtk_vreg_set_lpm(hba, true);
-+
-+	return ret;
-+}
-+
-+int ufs_mtk_runtime_resume(struct device *dev)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	int ret = 0;
-+
-+	ufs_mtk_vreg_set_lpm(hba, false);
-+
-+	ret = ufshcd_runtime_resume(dev);
-+
-+	return ret;
-+}
-+
- static const struct dev_pm_ops ufs_mtk_pm_ops = {
--	SET_SYSTEM_SLEEP_PM_OPS(ufshcd_system_suspend, ufshcd_system_resume)
--	SET_RUNTIME_PM_OPS(ufshcd_runtime_suspend, ufshcd_runtime_resume, NULL)
-+	SET_SYSTEM_SLEEP_PM_OPS(ufs_mtk_system_suspend, ufs_mtk_system_resume)
-+	SET_RUNTIME_PM_OPS(ufs_mtk_runtime_suspend, ufs_mtk_runtime_resume, NULL)
- 	.prepare	 = ufshcd_suspend_prepare,
- 	.complete	 = ufshcd_resume_complete,
- };
+Changes compared to v2:
+- Add patches to support multiple VCC sources
+
+Changes compared to v1:
+- Add patches to fix and provide VCCQx low-power support
+
+Alice Chao (1):
+  scsi: ufs-mediatek: Support flexible parameters for smc calls
+
+CC Chou (1):
+  scsi: ufs-mediatek: Introduce workaround for power mode change
+
+Peter Wang (1):
+  scsi: ufs-mediatek: Support low-power mode for VCCQ
+
+Po-Wen Kao (2):
+  scsi: ufs-mediatek: Fix the timing of configuring device regulators
+  scsi: ufs-mediatek: Prevent device regulators setting as LPM
+    incorrectly
+
+Stanley Chu (5):
+  scsi: ufs: Export ufshcd_uic_change_pwr_mode()
+  scsi: ufs: Fix ADAPT logic for HS-G5
+  scsi: ufs-mediatek: Support low-power mode for parents of VCCQx
+  scsi: ufs: Export regulator functions
+  scsi: ufs-mediatek: Support multiple VCC sources
+
+ drivers/ufs/core/ufshcd.c        |   8 +-
+ drivers/ufs/host/ufs-mediatek.c  | 232 ++++++++++++++++++++++++++-----
+ drivers/ufs/host/ufs-mediatek.h  |  75 ++++++++++
+ drivers/ufs/host/ufshcd-pltfrm.c |   3 +-
+ drivers/ufs/host/ufshcd-pltfrm.h |   2 +
+ include/ufs/ufshcd.h             |   3 +
+ include/ufs/unipro.h             |   1 +
+ 7 files changed, 289 insertions(+), 35 deletions(-)
+
 -- 
 2.18.0
 
