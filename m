@@ -2,80 +2,134 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9DB3C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jun 2022 06:51:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50226C43334
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jun 2022 07:06:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352499AbiFNGvH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jun 2022 02:51:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54760 "EHLO
+        id S1352203AbiFNHGB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jun 2022 03:06:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38754 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352435AbiFNGvG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jun 2022 02:51:06 -0400
-Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1994393E8
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Jun 2022 23:51:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1655189465; x=1686725465;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=FOoaOvPi5+rG2N5vn2NsCr5QRa/BEiXDizQKWM1udqw=;
-  b=oBLiRWfitvjg4V3ZT/kGYmsbEkfP3/+WLCJh3xu0kX9CNCeCVqV6yk+s
-   TpQqXlYQpHmHfWTmH52LaGtndRRVFvHY7SdMeJ2ZQRByv7vj7ccrWRcas
-   L05j7AZqzH6Hs7N0F5R+Ta+0v2mrTM5Zla8SKI53x2wjWXH/DygZRajjH
-   eR/H56Y83HGv4zSPweOeBIncxgQvk1Je1kaifOOWy6YdqEdnhz4D5xf+B
-   suDPNNBsuxd6Ji86962LkxZq0cP4xLXAFGsOgNWM4jD2nQP9QEZtjtu04
-   gUwJLJ4ffbNaPxAL3p/lDIr+k1ZqEtd5bOMhtyAyjxQt14Ecc/EPtdT6t
-   g==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10377"; a="258977115"
-X-IronPort-AV: E=Sophos;i="5.91,299,1647327600"; 
-   d="scan'208";a="258977115"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jun 2022 23:51:05 -0700
-X-IronPort-AV: E=Sophos;i="5.91,299,1647327600"; 
-   d="scan'208";a="640178754"
-Received: from ahunter6-mobl1.ger.corp.intel.com (HELO [10.0.2.15]) ([10.252.32.89])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jun 2022 23:51:03 -0700
-Message-ID: <3ca1d28b-2998-3cc5-7bf9-eb78a80e9430@intel.com>
-Date:   Tue, 14 Jun 2022 09:51:00 +0300
+        with ESMTP id S231504AbiFNHGB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jun 2022 03:06:01 -0400
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 462C3252B0;
+        Tue, 14 Jun 2022 00:06:00 -0700 (PDT)
+Received: from linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net (linux.microsoft.com [13.77.154.182])
+        by linux.microsoft.com (Postfix) with ESMTPSA id E161F20C29E6;
+        Tue, 14 Jun 2022 00:05:59 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com E161F20C29E6
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+        s=default; t=1655190359;
+        bh=+3/54BhUR1W1pwPgw+oEYfy2SbEZH8TjXALpQuOqiIw=;
+        h=From:To:Subject:Date:From;
+        b=iC7d5RxcZxM6pDwfI6AUbnj8lG9co9+2yaTpyTf2Runnz7aYgwMCV1FbKs3dkidmG
+         hLZKPLkEtBdSOfkngpeFBwBYqh0OC1MV8+RtCKnyS2D3iTWUNr4nwiasLwnzFAwmzu
+         J4u9pSZVTwnDYk7o6vkMFVUGU+N4O9rbaErrmjF8=
+From:   Saurabh Sengar <ssengar@linux.microsoft.com>
+To:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        wei.liu@kernel.org, decui@microsoft.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-hyperv@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ssengar@microsoft.com, mikelley@microsoft.com
+Subject: [PATCH v3] scsi: storvsc: Correct reporting of Hyper-V I/O size limits
+Date:   Tue, 14 Jun 2022 00:05:55 -0700
+Message-Id: <1655190355-28722-1-git-send-email-ssengar@linux.microsoft.com>
+X-Mailer: git-send-email 1.8.3.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Firefox/91.0 Thunderbird/91.9.1
-Subject: Re: [PATCH v2 0/3] ufs: Fix a race between the interrupt handler and
- the reset handler
-Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org
-References: <20220613214442.212466-1-bvanassche@acm.org>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-In-Reply-To: <20220613214442.212466-1-bvanassche@acm.org>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 14/06/22 00:44, Bart Van Assche wrote:
-> Hi Martin,
-> 
-> This patch series is version two of a fix between the UFS interrupt handler and
-> reset handlers. Please consider this patch series for kernel v5.20.
-> 
-> Changes compared to v1:
-> - Converted a single patch into three patches.
-> - Modified patch 3/3 such that only cleared requests are completed.
-> 
-> Bart Van Assche (3):
->   scsi: ufs: Simplify ufshcd_clear_cmd()
->   scsi: ufs: Support clearing multiple commands at once
->   scsi: ufs: Fix a race between the interrupt handler and the reset
->     handler
-> 
->  drivers/ufs/core/ufshcd.c | 76 ++++++++++++++++++++++++---------------
->  1 file changed, 48 insertions(+), 28 deletions(-)
-> 
+Current code is based on the idea that the max number of SGL entries
+also determines the max size of an I/O request.  While this idea was
+true in older versions of the storvsc driver when SGL entry length
+was limited to 4 Kbytes, commit 3d9c3dcc58e9 ("scsi: storvsc: Enable
+scatterlist entry lengths > 4Kbytes") removed that limitation. It's
+now theoretically possible for the block layer to send requests that
+exceed the maximum size supported by Hyper-V. This problem doesn't
+currently happen in practice because the block layer defaults to a
+512 Kbyte maximum, while Hyper-V in Azure supports 2 Mbyte I/O sizes.
+But some future configuration of Hyper-V could have a smaller max I/O
+size, and the block layer could exceed that max.
 
-Reviewed-by: Adrian Hunter <adrian.hunter@intel.com>
+Fix this by correctly setting max_sectors as well as sg_tablesize to
+reflect the maximum I/O size that Hyper-V reports. While allowing
+I/O sizes larger than the block layer default of 512 Kbytes doesn’t
+provide any noticeable performance benefit in the tests we ran, it's
+still appropriate to report the correct underlying Hyper-V capabilities
+to the Linux block layer.
+
+Also tweak the virt_boundary_mask to reflect that the required
+alignment derives from Hyper-V communication using a 4 Kbyte page size,
+and not on the guest page size, which might be bigger (eg. ARM64).
+
+Fixes: 3d9c3dcc58e9 ("scsi: storvsc: Enable scatter list entry lengths > 4Kbytes")
+Signed-off-by: Saurabh Sengar <ssengar@linux.microsoft.com>
+---
+V3
+  - Remove single quotes around the 'Fixes' tag
+  - max_tx_bytes -> max_xfer_bytes
+  - Added empty line at start of comment
+
+ drivers/scsi/storvsc_drv.c | 27 ++++++++++++++++++++++-----
+ 1 file changed, 22 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index ca35309..fe000da 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1844,7 +1844,7 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
+ 	.cmd_per_lun =		2048,
+ 	.this_id =		-1,
+ 	/* Ensure there are no gaps in presented sgls */
+-	.virt_boundary_mask =	PAGE_SIZE-1,
++	.virt_boundary_mask =	HV_HYP_PAGE_SIZE - 1,
+ 	.no_write_same =	1,
+ 	.track_queue_depth =	1,
+ 	.change_queue_depth =	storvsc_change_queue_depth,
+@@ -1895,6 +1895,7 @@ static int storvsc_probe(struct hv_device *device,
+ 	int target = 0;
+ 	struct storvsc_device *stor_device;
+ 	int max_sub_channels = 0;
++	u32 max_xfer_bytes;
+ 
+ 	/*
+ 	 * We support sub-channels for storage on SCSI and FC controllers.
+@@ -1968,12 +1969,28 @@ static int storvsc_probe(struct hv_device *device,
+ 	}
+ 	/* max cmd length */
+ 	host->max_cmd_len = STORVSC_MAX_CMD_LEN;
+-
+ 	/*
+-	 * set the table size based on the info we got
+-	 * from the host.
++	 * Any reasonable Hyper-V configuration should provide
++	 * max_transfer_bytes value aligning to HV_HYP_PAGE_SIZE,
++	 * protecting it from any weird value.
++	 */
++	max_xfer_bytes = round_down(stor_device->max_transfer_bytes, HV_HYP_PAGE_SIZE);
++	/* max_hw_sectors_kb */
++	host->max_sectors = max_xfer_bytes >> 9;
++	/*
++	 * There are 2 requirements for Hyper-V storvsc sgl segments,
++	 * based on which the below calculation for max segments is
++	 * done:
++	 *
++	 * 1. Except for the first and last sgl segment, all sgl segments
++	 *    should be align to HV_HYP_PAGE_SIZE, that also means the
++	 *    maximum number of segments in a sgl can be calculated by
++	 *    dividing the total max transfer length by HV_HYP_PAGE_SIZE.
++	 *
++	 * 2. Except for the first and last, each entry in the SGL must
++	 *    have an offset that is a multiple of HV_HYP_PAGE_SIZE.
+ 	 */
+-	host->sg_tablesize = (stor_device->max_transfer_bytes >> PAGE_SHIFT);
++	host->sg_tablesize = (max_xfer_bytes >> HV_HYP_PAGE_SHIFT) + 1;
+ 	/*
+ 	 * For non-IDE disks, the host supports multiple channels.
+ 	 * Set the number of HW queues we are supporting.
+-- 
+1.8.3.1
+
