@@ -2,49 +2,48 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F053C43334
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jun 2022 02:15:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD0CCC43334
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jun 2022 02:16:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353152AbiFNCPU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Jun 2022 22:15:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57144 "EHLO
+        id S1353762AbiFNCQu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Jun 2022 22:16:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56778 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353488AbiFNCNu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jun 2022 22:13:50 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DECCF393F4;
-        Mon, 13 Jun 2022 19:07:56 -0700 (PDT)
+        with ESMTP id S1352980AbiFNCPy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jun 2022 22:15:54 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60FAE3DDD2;
+        Mon, 13 Jun 2022 19:09:25 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id DEA98B8169E;
-        Tue, 14 Jun 2022 02:07:51 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8FCC6C36B00;
-        Tue, 14 Jun 2022 02:07:49 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id ADEA361120;
+        Tue, 14 Jun 2022 02:09:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D7CFC385A2;
+        Tue, 14 Jun 2022 02:09:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1655172470;
-        bh=EwoD3EBUTWMcZKTaDFWmwe7rbaU+vmxyU8ePWDHD1CU=;
+        s=k20201202; t=1655172564;
+        bh=gwmf6peLKhueY78cBZXQsHDQ+B2rOr5tX1pQlxSjuXc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=JmWS23oEc0Wu+Dp/XrMAxRBUsclxecsVeW0sdmYFpCVIcBoKPajb9JWG5Tmr0UGhs
-         mXed2qZBjDccvlmAuHteiJWunVTg3sQoM6m2/iRxHqTLOWe2KXU4NTi2hJ4lOP/7dO
-         XOu+SqGTqCrn1OnaRV/ujQlbDKxO8KVTY/LIjPpRUDp46uCLXYNXMrHRAOaiosSvdg
-         kMvmrlHNNFa+WrkKm1/El5GzbI3Vlcu9KDw8FKoXke18exEO0iD3G0MZDQMwfpO+Kz
-         +WDNpT2SeFKHX+K+QzRqkqT2GyZE47JkbAV+hYJdiz+MVXbrzkrlpUct51kITX1Aiy
-         UMhWm5BiKwSKw==
+        b=qy0FDVHfgbr1dbLzsrFJY3oopZBDh6A8CXML7JUMKAda7pcnH+Yzsx/q+5FSWmp/c
+         Z92MSMaWhpEqMBYu6ibkwDedoWUUfj5G18CP0B+wLb47itSqpV46BGRoaXXtCXKLqn
+         4B2z6QbOHXB4q8XDwW4W+6WFOefO4HR6KpzUt7r2zRMViSQjVyu1dtHrrr11sD0G2v
+         L1RPxNgWTaiCX8K+DpQv6nsM1P52Oq+bFlidb5ZIkIwGUDWWm6SAkMCvVA1h0zfKHj
+         7DPFlhqZZlkwxWEAqL5Yjg5f0sZAm2YwTR70mx3SV72/KswwNbakkvrXJ7hDxY4XDD
+         zIF6NGvrpZC6w==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Chengguang Xu <cgxu519@mykernel.net>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        Brian King <brking@linux.vnet.ibm.com>,
+Cc:     Wentao Wang <wwentao@vmware.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, jejb@linux.vnet.ibm.com,
+        Sasha Levin <sashal@kernel.org>, jgill@vmware.com,
+        pv-drivers@vmware.com, jejb@linux.vnet.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 25/41] scsi: ipr: Fix missing/incorrect resource cleanup in error case
-Date:   Mon, 13 Jun 2022 22:06:50 -0400
-Message-Id: <20220614020707.1099487-25-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 13/23] scsi: vmw_pvscsi: Expand vcpuHint to 16 bits
+Date:   Mon, 13 Jun 2022 22:08:49 -0400
+Message-Id: <20220614020900.1100401-13-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220614020707.1099487-1-sashal@kernel.org>
-References: <20220614020707.1099487-1-sashal@kernel.org>
+In-Reply-To: <20220614020900.1100401-1-sashal@kernel.org>
+References: <20220614020900.1100401-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -53,47 +52,38 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Chengguang Xu <cgxu519@mykernel.net>
+From: Wentao Wang <wwentao@vmware.com>
 
-[ Upstream commit d64c491911322af1dcada98e5b9ee0d87e8c8fee ]
+[ Upstream commit cf71d59c2eceadfcde0fb52e237990a0909880d7 ]
 
-Fix missing resource cleanup (when '(--i) == 0') for error case in
-ipr_alloc_mem() and skip incorrect resource cleanup (when '(--i) == 0') for
-error case in ipr_request_other_msi_irqs() because variable i started from
-1.
+vcpuHint has been expanded to 16 bit on host to enable routing to more
+CPUs. Guest side should align with the change. This change has been tested
+with hosts with 8-bit and 16-bit vcpuHint, on both platforms host side can
+get correct value.
 
-Link: https://lore.kernel.org/r/20220529153456.4183738-4-cgxu519@mykernel.net
-Reviewed-by: Dan Carpenter <dan.carpenter@oracle.com>
-Acked-by: Brian King <brking@linux.vnet.ibm.com>
-Signed-off-by: Chengguang Xu <cgxu519@mykernel.net>
+Link: https://lore.kernel.org/r/EF35F4D5-5DCC-42C5-BCC4-29DF1729B24C@vmware.com
+Signed-off-by: Wentao Wang <wwentao@vmware.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ipr.c | 4 ++--
+ drivers/scsi/vmw_pvscsi.h | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 5d78f7e939a3..56b8a2d6ffe4 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -9791,7 +9791,7 @@ static int ipr_alloc_mem(struct ipr_ioa_cfg *ioa_cfg)
- 					GFP_KERNEL);
+diff --git a/drivers/scsi/vmw_pvscsi.h b/drivers/scsi/vmw_pvscsi.h
+index 75966d3f326e..d87c12324c03 100644
+--- a/drivers/scsi/vmw_pvscsi.h
++++ b/drivers/scsi/vmw_pvscsi.h
+@@ -333,8 +333,8 @@ struct PVSCSIRingReqDesc {
+ 	u8	tag;
+ 	u8	bus;
+ 	u8	target;
+-	u8	vcpuHint;
+-	u8	unused[59];
++	u16	vcpuHint;
++	u8	unused[58];
+ } __packed;
  
- 		if (!ioa_cfg->hrrq[i].host_rrq)  {
--			while (--i > 0)
-+			while (--i >= 0)
- 				dma_free_coherent(&pdev->dev,
- 					sizeof(u32) * ioa_cfg->hrrq[i].size,
- 					ioa_cfg->hrrq[i].host_rrq,
-@@ -10064,7 +10064,7 @@ static int ipr_request_other_msi_irqs(struct ipr_ioa_cfg *ioa_cfg,
- 			ioa_cfg->vectors_info[i].desc,
- 			&ioa_cfg->hrrq[i]);
- 		if (rc) {
--			while (--i >= 0)
-+			while (--i > 0)
- 				free_irq(pci_irq_vector(pdev, i),
- 					&ioa_cfg->hrrq[i]);
- 			return rc;
+ /*
 -- 
 2.35.1
 
