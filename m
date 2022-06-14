@@ -2,46 +2,45 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80CE8C43334
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jun 2022 02:17:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B09CFCCA47B
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jun 2022 02:17:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353618AbiFNCRl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Jun 2022 22:17:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57222 "EHLO
+        id S1353964AbiFNCRq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Jun 2022 22:17:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39318 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353628AbiFNCQN (ORCPT
+        with ESMTP id S1353623AbiFNCQN (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jun 2022 22:16:13 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B32053DA4E;
-        Mon, 13 Jun 2022 19:09:30 -0700 (PDT)
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 533DE3E0F4;
+        Mon, 13 Jun 2022 19:09:32 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id E428EB816AA;
-        Tue, 14 Jun 2022 02:09:28 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61F19C3411E;
-        Tue, 14 Jun 2022 02:09:26 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id D8FA6B8169E;
+        Tue, 14 Jun 2022 02:09:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1E9EC3411B;
+        Tue, 14 Jun 2022 02:09:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1655172567;
-        bh=gpkYebRH4SEsKpxmhmXzkbXxcODhpgm2UHDw0rYNRNc=;
+        s=k20201202; t=1655172570;
+        bh=nP9i1+rEQjQRHfrlgE3xHFNg4YpgFbPf5Seq91ii+60=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=H11DYm5IqifFD7ac1YjvRQ83odK1kWpahUNsY6PfalhJQz6LWkAJdn5qad1wYGKOs
-         AiMnLQj1AeCvC9pwhSJK+0YdLot/9SJvnbcRYBzsiJ5u14QmcE0QXu49yteM+9IU4y
-         mqMoC1fY6yHquQkjQr0s/0JivRyNaH7V0RCG/sruKLyARcZqaNZV41df1CQuNODOyk
-         YqY7pGbwdUB+Ngb+M7sGAbWBS9gjvAYBCwP0E7oetsmT0bf2Jqg+7eGAAs/2vQfBPC
-         XWWu6pZ1dzNmjtC+8/FU8cpy4tgOp2HIh+VlJ8dLqsAdIUTURKJIVx94zcYX4Z8vxW
-         O3psl0G733GSw==
+        b=W8FfRMo8rXtl5SyYEZ0yK8K2kvd/zI1nhVbSzUbU3xCaTt7VWsE0QXW98QePKrlfY
+         fd9HQUDtBWI0Pas4VJppG/B5QoxNe9VV2uxeFM0iM5nIRXJkx1e+Ee/qYvjtn5938R
+         RlF5cAZe1gLw0dZrO0bz4nRc+u4kBBh/qfiY7ouyNgA8vrlaabsl5jleTgXcC+Te4g
+         dkzN+VVF6CEU+cIFbZ01TtAuxVuxbBF+xPoCUVcdKeCsv3kQrLOHIbFQqu7MsPXNhz
+         0GupukNZJmG5KtX5uBsVv/wYhL7DBoNrb+MCaM+lNjRHGKxlY/8Mh3sIQh05HuH/qQ
+         6ezq94R9qxg1Q==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Justin Tee <justin.tee@broadcom.com>,
+Cc:     Chengguang Xu <cgxu519@mykernel.net>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, james.smart@avagotech.com,
-        dick.kennedy@avagotech.com, jejb@linux.vnet.ibm.com,
+        Sasha Levin <sashal@kernel.org>, jejb@linux.vnet.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 15/23] scsi: lpfc: Allow reduced polling rate for nvme_admin_async_event cmd completion
-Date:   Mon, 13 Jun 2022 22:08:51 -0400
-Message-Id: <20220614020900.1100401-15-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 17/23] scsi: pmcraid: Fix missing resource cleanup in error case
+Date:   Mon, 13 Jun 2022 22:08:53 -0400
+Message-Id: <20220614020900.1100401-17-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220614020900.1100401-1-sashal@kernel.org>
 References: <20220614020900.1100401-1-sashal@kernel.org>
@@ -53,71 +52,35 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Chengguang Xu <cgxu519@mykernel.net>
 
-[ Upstream commit 2e7e9c0c1ec05f18d320ecc8a31eec59d2af1af9 ]
+[ Upstream commit ec1e8adcbdf661c57c395bca342945f4f815add7 ]
 
-NVMe Asynchronous Event Request commands have no command timeout value per
-specifications.
+Fix missing resource cleanup (when '(--i) == 0') for error case in
+pmcraid_register_interrupt_handler().
 
-Set WQE option to allow a reduced FLUSH polling rate for I/O error
-detection specifically for nvme_admin_async_event commands.
-
-Link: https://lore.kernel.org/r/20220603174329.63777-9-jsmart2021@gmail.com
-Co-developed-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+Link: https://lore.kernel.org/r/20220529153456.4183738-6-cgxu519@mykernel.net
+Reviewed-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Chengguang Xu <cgxu519@mykernel.net>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_hw4.h  |  3 +++
- drivers/scsi/lpfc/lpfc_nvme.c | 11 +++++++++--
- 2 files changed, 12 insertions(+), 2 deletions(-)
+ drivers/scsi/pmcraid.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
-index b8a772f80d6c..cbea3e0c1a7d 100644
---- a/drivers/scsi/lpfc/lpfc_hw4.h
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h
-@@ -4249,6 +4249,9 @@ struct wqe_common {
- #define wqe_sup_SHIFT         6
- #define wqe_sup_MASK          0x00000001
- #define wqe_sup_WORD          word11
-+#define wqe_ffrq_SHIFT         6
-+#define wqe_ffrq_MASK          0x00000001
-+#define wqe_ffrq_WORD          word11
- #define wqe_wqec_SHIFT        7
- #define wqe_wqec_MASK         0x00000001
- #define wqe_wqec_WORD         word11
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index 5a86a1ee0de3..193c1a81cac0 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -1202,7 +1202,8 @@ lpfc_nvme_prep_io_cmd(struct lpfc_vport *vport,
- {
- 	struct lpfc_hba *phba = vport->phba;
- 	struct nvmefc_fcp_req *nCmd = lpfc_ncmd->nvmeCmd;
--	struct lpfc_iocbq *pwqeq = &(lpfc_ncmd->cur_iocbq);
-+	struct nvme_common_command *sqe;
-+	struct lpfc_iocbq *pwqeq = &lpfc_ncmd->cur_iocbq;
- 	union lpfc_wqe128 *wqe = &pwqeq->wqe;
- 	uint32_t req_len;
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index 398d2af60832..f95a970db8fd 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -4532,7 +4532,7 @@ pmcraid_register_interrupt_handler(struct pmcraid_instance *pinstance)
+ 	return 0;
  
-@@ -1258,8 +1259,14 @@ lpfc_nvme_prep_io_cmd(struct lpfc_vport *vport,
- 		cstat->control_requests++;
- 	}
- 
--	if (pnode->nlp_nvme_info & NLP_NVME_NSLER)
-+	if (pnode->nlp_nvme_info & NLP_NVME_NSLER) {
- 		bf_set(wqe_erp, &wqe->generic.wqe_com, 1);
-+		sqe = &((struct nvme_fc_cmd_iu *)
-+			nCmd->cmdaddr)->sqe.common;
-+		if (sqe->opcode == nvme_admin_async_event)
-+			bf_set(wqe_ffrq, &wqe->generic.wqe_com, 1);
-+	}
-+
- 	/*
- 	 * Finish initializing those WQE fields that are independent
- 	 * of the nvme_cmnd request_buffer
+ out_unwind:
+-	while (--i > 0)
++	while (--i >= 0)
+ 		free_irq(pci_irq_vector(pdev, i), &pinstance->hrrq_vector[i]);
+ 	pci_free_irq_vectors(pdev);
+ 	return rc;
 -- 
 2.35.1
 
