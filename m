@@ -2,194 +2,88 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02B56CCA47B
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jun 2022 01:17:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6759DC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jun 2022 02:06:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345626AbiFNBRH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Jun 2022 21:17:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53136 "EHLO
+        id S1351129AbiFNCGL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Jun 2022 22:06:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41922 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343543AbiFNBQ6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jun 2022 21:16:58 -0400
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 846642D1CC;
-        Mon, 13 Jun 2022 18:16:53 -0700 (PDT)
-X-UUID: 9ba52f8d4b5a425f9fe6655086fd5055-20220614
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.6,REQID:d8fbfaa5-6b9f-407c-a6b2-6aa06f3e7e8f,OB:0,LO
-        B:0,IP:0,URL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,RULE:Release_Ham,ACT
-        ION:release,TS:-5
-X-CID-META: VersionHash:b14ad71,CLOUDID:1f619b37-84c0-4f9a-9fbd-acd4a0e9ad0f,C
-        OID:IGNORED,Recheck:0,SF:nil,TC:nil,Content:0,EDM:-3,IP:nil,URL:0,File:nil
-        ,QS:nil,BEC:nil,COL:0
-X-UUID: 9ba52f8d4b5a425f9fe6655086fd5055-20220614
-Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw01.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1678278686; Tue, 14 Jun 2022 09:16:46 +0800
-Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
- mtkmbs11n1.mediatek.inc (172.21.101.185) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.792.3;
- Tue, 14 Jun 2022 09:16:42 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.792.3 via Frontend Transport; Tue, 14 Jun 2022 09:16:42 +0800
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
-        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>,
-        <bvanassche@acm.org>
-CC:     <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <alice.chao@mediatek.com>, <powen.kao@mediatek.com>,
-        <mason.zhang@mediatek.com>, <qilin.tan@mediatek.com>,
-        <lin.gui@mediatek.com>, <eddie.huang@mediatek.com>,
-        <tun-yu.yu@mediatek.com>, <cc.chou@mediatek.com>,
-        <chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
-        <stanley.chu@mediatek.com>
-Subject: [PATCH v2 8/8] scsi: ufs-mediatek: Support low-power mode for parents of VCCQx
-Date:   Tue, 14 Jun 2022 09:16:39 +0800
-Message-ID: <20220614011639.2825-9-stanley.chu@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20220614011639.2825-1-stanley.chu@mediatek.com>
-References: <20220614011639.2825-1-stanley.chu@mediatek.com>
+        with ESMTP id S1351368AbiFNCFx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jun 2022 22:05:53 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C79A233EAF;
+        Mon, 13 Jun 2022 19:05:24 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 7B255B8168A;
+        Tue, 14 Jun 2022 02:05:23 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1BF03C341C7;
+        Tue, 14 Jun 2022 02:05:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1655172322;
+        bh=fc7MFvLBl5S0Dpre7Mc7IFBpLtZ3FB1t+p8Ol2drvI4=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=YMShvgracqHBPrJNzNLDhkrHa4kmpu4SApy4XIZ/K1NgsnSZUJYNym5Tdy00lOnoi
+         AaOjow0JD4UpxKpjiNH6mUyo+vScwzmNUjoKjY+fMwJRWc8TwrujM4I7trAXsyZLRh
+         LgOx2jEQb+NB/nfkG0yBQeBY6qH0tgl60ricdlUFeW+QVum1Q4ZHmstGI84THRn7Ae
+         xEHNiJ0y5BfzPtJWwDu7zTOFSoc21LYXwmsR/FksEZYa/POqqsZx6xVhJOMcVsxPBQ
+         ulGxwjvpd+jfEd3mLuoE/EK1z7qxej7yBeSz8TkoBLnKE6mQLxMIo/JiQUWNLOyD6G
+         DZacSab6H9EIg==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Wentao Wang <wwentao@vmware.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, jgill@vmware.com,
+        pv-drivers@vmware.com, jejb@linux.vnet.ibm.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.18 23/47] scsi: vmw_pvscsi: Expand vcpuHint to 16 bits
+Date:   Mon, 13 Jun 2022 22:04:16 -0400
+Message-Id: <20220614020441.1098348-23-sashal@kernel.org>
+X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20220614020441.1098348-1-sashal@kernel.org>
+References: <20220614020441.1098348-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Provide the facility to configure parents of VCCQx power rails
-as low-power or full-power mode in MediaTek UFS platforms.
+From: Wentao Wang <wwentao@vmware.com>
 
-Signed-off-by: Alice Chao <alice.chao@mediatek.com>
-Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+[ Upstream commit cf71d59c2eceadfcde0fb52e237990a0909880d7 ]
+
+vcpuHint has been expanded to 16 bit on host to enable routing to more
+CPUs. Guest side should align with the change. This change has been tested
+with hosts with 8-bit and 16-bit vcpuHint, on both platforms host side can
+get correct value.
+
+Link: https://lore.kernel.org/r/EF35F4D5-5DCC-42C5-BCC4-29DF1729B24C@vmware.com
+Signed-off-by: Wentao Wang <wwentao@vmware.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/ufs/host/ufs-mediatek.c | 45 +++++++++++++++++++++++----------
- drivers/ufs/host/ufs-mediatek.h |  4 +++
- 2 files changed, 36 insertions(+), 13 deletions(-)
+ drivers/scsi/vmw_pvscsi.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index 9337ce27329b..2c1e55f8d7c6 100755
---- a/drivers/ufs/host/ufs-mediatek.c
-+++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -1013,10 +1013,29 @@ static int ufs_mtk_link_set_lpm(struct ufs_hba *hba)
- 	return 0;
- }
- 
--static void ufs_mtk_vreg_set_lpm(struct ufs_hba *hba, bool lpm)
-+static void ufs_mtk_vccqx_set_lpm(struct ufs_hba *hba, bool lpm)
- {
- 	struct ufs_vreg *vccqx = NULL;
- 
-+	if (hba->vreg_info.vccq)
-+		vccqx = hba->vreg_info.vccq;
-+	else
-+		vccqx = hba->vreg_info.vccq2;
-+
-+	regulator_set_mode(vccqx->reg,
-+		lpm ? REGULATOR_MODE_IDLE : REGULATOR_MODE_NORMAL);
-+}
-+
-+static void ufs_mtk_vsx_set_lpm(struct ufs_hba *hba, bool lpm)
-+{
-+	struct arm_smccc_res res;
-+
-+	ufs_mtk_device_pwr_ctrl(!lpm,
-+		(unsigned long)hba->dev_info.wspecversion, res);
-+}
-+
-+static void ufs_mtk_dev_vreg_set_lpm(struct ufs_hba *hba, bool lpm)
-+{
- 	if (!hba->vreg_info.vccq && !hba->vreg_info.vccq2)
- 		return;
- 
-@@ -1032,13 +1051,13 @@ static void ufs_mtk_vreg_set_lpm(struct ufs_hba *hba, bool lpm)
- 	if (lpm && hba->vreg_info.vcc->enabled)
- 		return;
- 
--	if (hba->vreg_info.vccq)
--		vccqx = hba->vreg_info.vccq;
--	else
--		vccqx = hba->vreg_info.vccq2;
--
--	regulator_set_mode(vccqx->reg,
--		lpm ? REGULATOR_MODE_IDLE : REGULATOR_MODE_NORMAL);
-+	if (lpm) {
-+		ufs_mtk_vccqx_set_lpm(hba, lpm);
-+		ufs_mtk_vsx_set_lpm(hba, lpm);
-+	} else {
-+		ufs_mtk_vsx_set_lpm(hba, lpm);
-+		ufs_mtk_vccqx_set_lpm(hba, lpm);
-+	}
- }
- 
- static void ufs_mtk_auto_hibern8_disable(struct ufs_hba *hba)
-@@ -1105,7 +1124,7 @@ static int ufs_mtk_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 	int err;
- 
- 	if (hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL)
--		ufs_mtk_vreg_set_lpm(hba, false);
-+		ufs_mtk_dev_vreg_set_lpm(hba, false);
- 
- 	err = ufs_mtk_mphy_power_on(hba, true);
- 	if (err)
-@@ -1283,7 +1302,7 @@ int ufs_mtk_system_suspend(struct device *dev)
- 	ret = ufshcd_system_suspend(dev);
- 
- 	if (!ret)
--		ufs_mtk_vreg_set_lpm(hba, true);
-+		ufs_mtk_dev_vreg_set_lpm(hba, true);
- 
- 	return ret;
- }
-@@ -1293,7 +1312,7 @@ int ufs_mtk_system_resume(struct device *dev)
- 	int ret = 0;
- 	struct ufs_hba *hba = dev_get_drvdata(dev);
- 
--	ufs_mtk_vreg_set_lpm(hba, false);
-+	ufs_mtk_dev_vreg_set_lpm(hba, false);
- 
- 	ret = ufshcd_system_resume(dev);
- 
-@@ -1308,7 +1327,7 @@ int ufs_mtk_runtime_suspend(struct device *dev)
- 	ret = ufshcd_runtime_suspend(dev);
- 
- 	if (!ret)
--		ufs_mtk_vreg_set_lpm(hba, true);
-+		ufs_mtk_dev_vreg_set_lpm(hba, true);
- 
- 	return ret;
- }
-@@ -1318,7 +1337,7 @@ int ufs_mtk_runtime_resume(struct device *dev)
- 	struct ufs_hba *hba = dev_get_drvdata(dev);
- 	int ret = 0;
- 
--	ufs_mtk_vreg_set_lpm(hba, false);
-+	ufs_mtk_dev_vreg_set_lpm(hba, false);
- 
- 	ret = ufshcd_runtime_resume(dev);
- 
-diff --git a/drivers/ufs/host/ufs-mediatek.h b/drivers/ufs/host/ufs-mediatek.h
-index 9117427ca6c4..eb26306a719f 100755
---- a/drivers/ufs/host/ufs-mediatek.h
-+++ b/drivers/ufs/host/ufs-mediatek.h
-@@ -83,6 +83,7 @@ enum {
- #define UFS_MTK_SIP_DEVICE_RESET          BIT(1)
- #define UFS_MTK_SIP_CRYPTO_CTRL           BIT(2)
- #define UFS_MTK_SIP_REF_CLK_NOTIFICATION  BIT(3)
-+#define UFS_MTK_SIP_DEVICE_PWR_CTRL       BIT(7)
+diff --git a/drivers/scsi/vmw_pvscsi.h b/drivers/scsi/vmw_pvscsi.h
+index 51a82f7803d3..9d16cf925483 100644
+--- a/drivers/scsi/vmw_pvscsi.h
++++ b/drivers/scsi/vmw_pvscsi.h
+@@ -331,8 +331,8 @@ struct PVSCSIRingReqDesc {
+ 	u8	tag;
+ 	u8	bus;
+ 	u8	target;
+-	u8	vcpuHint;
+-	u8	unused[59];
++	u16	vcpuHint;
++	u8	unused[58];
+ } __packed;
  
  /*
-  * VS_DEBUGCLOCKENABLE
-@@ -199,4 +200,7 @@ struct ufs_mtk_host {
- #define ufs_mtk_device_reset_ctrl(high, res) \
- 	ufs_mtk_smc(UFS_MTK_SIP_DEVICE_RESET, res, high)
- 
-+#define ufs_mtk_device_pwr_ctrl(on, ufs_ver, res) \
-+	ufs_mtk_smc(UFS_MTK_SIP_DEVICE_PWR_CTRL, res, on, ufs_ver)
-+
- #endif /* !_UFS_MEDIATEK_H */
 -- 
-2.18.0
+2.35.1
 
