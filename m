@@ -2,108 +2,81 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DAC9C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jun 2022 08:06:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BCEDC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jun 2022 09:26:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355572AbiFNIGk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jun 2022 04:06:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56702 "EHLO
+        id S238904AbiFNJ0P (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jun 2022 05:26:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38142 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1355344AbiFNIGc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jun 2022 04:06:32 -0400
-Received: from mail-qv1-f51.google.com (mail-qv1-f51.google.com [209.85.219.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5ACD38DA7;
-        Tue, 14 Jun 2022 01:06:30 -0700 (PDT)
-Received: by mail-qv1-f51.google.com with SMTP id p31so4809192qvp.5;
-        Tue, 14 Jun 2022 01:06:30 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=nM18gvUSvYfy4DDyIOtyYW8MzMYh3/ri7inx/AlLLP4=;
-        b=s4EvGhfyUExslsn09i+wq5QbHnnIRTT2xeR8cx64KkiYTVZZ+go2k0AjoD38fyfSR1
-         Mh8D8feZE8npN0/Q5zgEijBMKUQ7rzAxW3eJs2/PvwDA338H4EXmuMMVfxldoNv4PesZ
-         y61sNaKAnsyM6YHsrWaZOGpWEEROY3iQK4FL305NVzoRWcybPml/QC0auZ8sCNDFpO6p
-         HA5UuKGpFh515UhTDQGDr3kkibhfLDKtMJR9tJGJE1yzDvKOhzZX+r4BPdqgWLBuvkF+
-         UEDb4fnmI0Sl5LeEo4lf0bMD+8+4h+jx7Oy4A5c0KCa6IplTQFgD03li9LUuPpazKDQE
-         QF+A==
-X-Gm-Message-State: AJIora+t1I5YS0nDhjVQfi2MStIYY7xzzvvzchB8cM7Pqcsyicvl15xc
-        80dV5aaTzFMx45V3rEvms36wbC/rGgfS+Q==
-X-Google-Smtp-Source: AGRyM1s1I+MLIjMwTPItgh5PW89IsD9JXZAmcCiwjuF54C7OshqLqMkQxROljnvmBEH3b2XN6bHi0A==
-X-Received: by 2002:a05:6214:a0c:b0:467:d578:4934 with SMTP id dw12-20020a0562140a0c00b00467d5784934mr2456725qvb.50.1655193989917;
-        Tue, 14 Jun 2022 01:06:29 -0700 (PDT)
-Received: from mail-yb1-f172.google.com (mail-yb1-f172.google.com. [209.85.219.172])
-        by smtp.gmail.com with ESMTPSA id h127-20020a37b785000000b006a3325fd985sm8569754qkf.13.2022.06.14.01.06.28
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 14 Jun 2022 01:06:29 -0700 (PDT)
-Received: by mail-yb1-f172.google.com with SMTP id r3so13883605ybr.6;
-        Tue, 14 Jun 2022 01:06:28 -0700 (PDT)
-X-Received: by 2002:a25:7307:0:b0:65c:b98a:f592 with SMTP id
- o7-20020a257307000000b0065cb98af592mr3584597ybc.380.1655193988430; Tue, 14
- Jun 2022 01:06:28 -0700 (PDT)
+        with ESMTP id S230352AbiFNJ0O (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jun 2022 05:26:14 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D98A5B7FC;
+        Tue, 14 Jun 2022 02:26:12 -0700 (PDT)
+Received: from fraeml742-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LMjjW2RRcz67vDG;
+        Tue, 14 Jun 2022 17:26:07 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml742-chm.china.huawei.com (10.206.15.223) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Tue, 14 Jun 2022 11:26:10 +0200
+Received: from [10.195.33.253] (10.195.33.253) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Tue, 14 Jun 2022 10:26:09 +0100
+Message-ID: <3aee8ffe-d8c6-71b2-8725-028406efef5c@huawei.com>
+Date:   Tue, 14 Jun 2022 10:29:16 +0100
 MIME-Version: 1.0
-References: <20220603110524.1997825-1-yoshihiro.shimoda.uh@renesas.com> <20220603110524.1997825-8-yoshihiro.shimoda.uh@renesas.com>
-In-Reply-To: <20220603110524.1997825-8-yoshihiro.shimoda.uh@renesas.com>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Tue, 14 Jun 2022 10:06:16 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdXiVds4Yd+p=6WfUDX6VGr4nrLiZeN=atQ7NqeFoTFEsA@mail.gmail.com>
-Message-ID: <CAMuHMdXiVds4Yd+p=6WfUDX6VGr4nrLiZeN=atQ7NqeFoTFEsA@mail.gmail.com>
-Subject: Re: [PATCH v6 7/7] arm64: dts: renesas: r8a779f0: spider-cpu: Enable
- UFS device
-To:     Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>, avri.altman@wdc.com,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        scsi <linux-scsi@vger.kernel.org>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
-        Geert Uytterhoeven <geert+renesas@glider.be>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH RFC v2 01/18] blk-mq: Add a flag for reserved requests
+To:     Christoph Hellwig <hch@lst.de>
+CC:     <axboe@kernel.dk>, <damien.lemoal@opensource.wdc.com>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <brking@us.ibm.com>, <hare@suse.de>, <linux-block@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <chenxiang66@hisilicon.com>
+References: <1654770559-101375-1-git-send-email-john.garry@huawei.com>
+ <1654770559-101375-2-git-send-email-john.garry@huawei.com>
+ <20220614064303.GA31683@lst.de>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <20220614064303.GA31683@lst.de>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.195.33.253]
+X-ClientProxiedBy: lhreml746-chm.china.huawei.com (10.201.108.196) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Shimoda-san,
+On 14/06/2022 07:43, Christoph Hellwig wrote:
+> On Thu, Jun 09, 2022 at 06:29:02PM +0800, John Garry wrote:
+>> Add a flag for reserved requests so that drivers may know this for any
+>> special handling.
+>>
+>> The 'reserved' argument in blk_mq_ops.timeout callback could now be
+>> replaced by using this flag.
+> And we should probably do that ASAP, independent of the rest of this
+> series. 
 
-On Fri, Jun 3, 2022 at 1:05 PM Yoshihiro Shimoda
-<yoshihiro.shimoda.uh@renesas.com> wrote:
-> Enable UFS device for R-Car S4-8 Spider CPU board.
->
-> Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-> Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+We only have 2x users of the 'reserved' arg for 11x implementations of 
+blk_mq_ops.timeout:
+- mtip32xx.c
+- scsi_lib.c
 
-> --- a/arch/arm64/boot/dts/renesas/r8a779f0-spider-cpu.dtsi
-> +++ b/arch/arm64/boot/dts/renesas/r8a779f0-spider-cpu.dtsi
-> @@ -82,3 +82,11 @@ &scif3 {
->  &scif_clk {
->         clock-frequency = <24000000>;
->  };
-> +
-> +&ufs {
-> +       status = "okay";
-> +};
-> +
-> +&ufs30_clk {
-> +       clock-frequency = <38400000>;
-> +};
+scsi_lib.c is dubious as currently scsi does use reserved commands. So 
+we really only have 1x.
 
-Given this relies on either the boot loader setting up ufs30_clk,
-like is usually done for the PCIe bus clock, or on adding a proper
-clock driver to Linux, I think this patch should be postponed.
+I'd be happy to take any spin-off series to make this one more 
+manageable, but is just removing an arg a strong enough reason for that? 
+That reserved arg is passed around a lot in the blk-mq iter functions, 
+so probably yes.
 
-Or perhaps the latest firmware stack has fixed the issue?
-Thanks!
+> Otherwise looks good:
+> 
+> Reviewed-by: Christoph Hellwig<hch@lst.de>
 
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Thanks
