@@ -2,104 +2,140 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86BB6CCA47A
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jun 2022 18:27:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19176C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jun 2022 19:33:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354997AbiFNS1T (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jun 2022 14:27:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46576 "EHLO
+        id S237256AbiFNTdP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jun 2022 15:33:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43196 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353350AbiFNS1S (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jun 2022 14:27:18 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CD8B46C9E;
-        Tue, 14 Jun 2022 11:27:16 -0700 (PDT)
-Received: from fraeml708-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LMxdc2MYlz67Zjl;
-        Wed, 15 Jun 2022 02:23:32 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml708-chm.china.huawei.com (10.206.15.36) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 14 Jun 2022 20:27:13 +0200
-Received: from [10.195.33.253] (10.195.33.253) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 14 Jun 2022 19:27:12 +0100
-Message-ID: <bc567212-af8c-6aba-30ab-fb1b2390e2e4@huawei.com>
-Date:   Tue, 14 Jun 2022 19:30:20 +0100
+        with ESMTP id S229676AbiFNTdN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jun 2022 15:33:13 -0400
+Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64B9819F8D;
+        Tue, 14 Jun 2022 12:33:11 -0700 (PDT)
+Received: by mail-pj1-f51.google.com with SMTP id v11-20020a17090a4ecb00b001e2c5b837ccso12745973pjl.3;
+        Tue, 14 Jun 2022 12:33:11 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=0yuY33WdxMB76iynhvTSZPcdcuymbepOOB6v4k/PQOY=;
+        b=jbB+qjSucecXj/HEgCIw1t9EsXmppQ+DavJNYSpUNrariNuH3b/MN6vnNGUdupzrv7
+         Ts0oisAV493ABkX7o5r7XccRpuoTotG9aYWaLeuZGI5NEEZXg5xfH8Etn/oGwBlELKIw
+         TwFDZQIkZR1UsNS3pH4oJd13pgkrt18JLVnTkjk4bOcTyHifJQa2WUIi1z0Kl8sYWRpJ
+         MgV5Npe92Yhbs0SFQkMYx1XllUWHvxta87xXoEo8DX4zVvAgCFprz/61JCFbRLimYkZm
+         0TJQNlQbQOd+0rkt+/RR5M9wFXZg/BRG7CbluA+SR9ofD3E8XaLaWoUvQr6afvSgr/zb
+         jlJw==
+X-Gm-Message-State: AJIora8eDAXkXliL2whctKXAYlQ8Lf1nlHvLBa3mSBrA2fNN3yX/Z7Wy
+        N/cfMLZaKfOSc3sJ38NCO019JbLPqIk=
+X-Google-Smtp-Source: AGRyM1s5w76ZfqYj/+26pMyhfynVA754uE8tmVNVmVHD3j64emOukGeeDvplcoiOLZ4wwUSbu4tMLA==
+X-Received: by 2002:a17:90a:e50c:b0:1ea:14c1:2236 with SMTP id t12-20020a17090ae50c00b001ea14c12236mr6274836pjy.2.1655235190627;
+        Tue, 14 Jun 2022 12:33:10 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:ab60:e1ea:e2eb:c1b6? ([2620:15c:211:201:ab60:e1ea:e2eb:c1b6])
+        by smtp.gmail.com with ESMTPSA id kv18-20020a17090b169200b001ea629a431bsm7969640pjb.8.2022.06.14.12.33.08
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 14 Jun 2022 12:33:09 -0700 (PDT)
+Message-ID: <b61d3687-70ea-1ab7-63e1-44e381d36012@acm.org>
+Date:   Tue, 14 Jun 2022 12:33:07 -0700
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH RFC v2 01/18] blk-mq: Add a flag for reserved requests
-To:     Bart Van Assche <bvanassche@acm.org>, <axboe@kernel.dk>,
-        <damien.lemoal@opensource.wdc.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <brking@us.ibm.com>, <hare@suse.de>,
-        <hch@lst.de>
-CC:     <linux-block@vger.kernel.org>, <linux-ide@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <chenxiang66@hisilicon.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [PATCH RFC v2 02/18] scsi: core: Resurrect
+ scsi_{get,free}_host_dev()
+Content-Language: en-US
+To:     John Garry <john.garry@huawei.com>, axboe@kernel.dk,
+        damien.lemoal@opensource.wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, brking@us.ibm.com, hare@suse.de,
+        hch@lst.de
+Cc:     linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        chenxiang66@hisilicon.com
 References: <1654770559-101375-1-git-send-email-john.garry@huawei.com>
- <1654770559-101375-2-git-send-email-john.garry@huawei.com>
- <1f8e7891-a557-bd8e-221a-6cb14770ea8b@acm.org>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <1f8e7891-a557-bd8e-221a-6cb14770ea8b@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+ <1654770559-101375-3-git-send-email-john.garry@huawei.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <1654770559-101375-3-git-send-email-john.garry@huawei.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.195.33.253]
-X-ClientProxiedBy: lhreml746-chm.china.huawei.com (10.201.108.196) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 14/06/2022 19:00, Bart Van Assche wrote:
-> On 6/9/22 03:29, John Garry wrote:
->> Add a flag for reserved requests so that drivers may know this for any
->> special handling.
->>
->> The 'reserved' argument in blk_mq_ops.timeout callback could now be
->> replaced by using this flag.
-> 
-> Why not to combine that change into this patch?
-> 
+On 6/9/22 03:29, John Garry wrote:
+> +/**
+> + * scsi_get_host_dev - Create a scsi_device that points to the host adapter itself
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+What does this mean? That part of the function description is not
+clear to me.
 
-If we remove the 'reserved' argument in blk_mq_ops.timeout callback then 
-we can also remove the 'reserved' member of busy_tag_iter_fn. I gave 
-that all a try and the diffstat looks like this:
+> + * @shost: Host that needs a scsi_device
+                               ^^^^^^^^^^^^^
+This is not detailed enough. Consider changing "a scsi_device" into
+"a scsi device for allocating reserved commands from".
 
-  block/blk-mq-debugfs.c              |  2 +-
-  block/blk-mq-tag.c                  | 13 +++++--------
-  block/blk-mq.c                      | 22 +++++++++++++---------
-  block/bsg-lib.c                     |  2 +-
-  drivers/block/mtip32xx/mtip32xx.c   | 11 +++++------
-  drivers/block/nbd.c                 |  5 ++---
-  drivers/block/null_blk/main.c       |  2 +-
-  drivers/infiniband/ulp/srp/ib_srp.c |  3 +--
-  drivers/mmc/core/queue.c            |  3 +--
-  drivers/nvme/host/apple.c           |  3 +--
-  drivers/nvme/host/core.c            |  2 +-
-  drivers/nvme/host/fc.c              |  6 ++----
-  drivers/nvme/host/nvme.h            |  2 +-
-  drivers/nvme/host/pci.c             |  2 +-
-  drivers/nvme/host/rdma.c            |  3 +--
-  drivers/nvme/host/tcp.c             |  3 +--
-  drivers/s390/block/dasd.c           |  2 +-
-  drivers/scsi/aacraid/comminit.c     |  2 +-
-  drivers/scsi/aacraid/linit.c        |  2 +-
-  drivers/scsi/hosts.c                | 14 ++++++--------
-  drivers/scsi/mpi3mr/mpi3mr_os.c     | 15 ++++-----------
-  drivers/scsi/scsi_lib.c             | 12 ++----------
-  include/linux/blk-mq.h              | 10 ++++++++--
-  include/scsi/scsi_host.h            |  2 +-
-  24 files changed, 62 insertions(+), 81 deletions(-)
+> + *
+> + * Lock status: None assumed.
+> + *
+> + * Returns:     The scsi_device or NULL
+> + *
+> + * Notes:
+> + *	Attach a single scsi_device to the Scsi_Host - this should
+> + *	be made to look like a "pseudo-device" that points to the
+> + *	HA itself.
+> + *
+> + *	Note - this device is not accessible from any high-level
+> + *	drivers (including generics), which is probably not
+> + *	optimal.  We can add hooks later to attach.
 
-It would seem sensible to send that all separately and break it down a 
-bit - this series is already almost unmanageable.
+The "which is probably not optimal. We can add hooks later to attach."
+part probably should be moved to the patch description.
 
-> Anyway:
-> 
-> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-> .
+> + */
+> +struct scsi_device *scsi_get_host_dev(struct Scsi_Host *shost)
+> +{
+> +	struct scsi_device *sdev = NULL;
+> +	struct scsi_target *starget;
+> +
+> +	mutex_lock(&shost->scan_mutex);
+> +	if (!scsi_host_scan_allowed(shost))
+> +		goto out;
+> +	starget = scsi_alloc_target(&shost->shost_gendev, 0, shost->this_id);
+                                                           ^^^^^^^^^^^^^^^^^^
+Is it guaranteed that this channel / id combination will not be used for
+any other SCSI device?
 
-Thanks
+What if shost->this_id == -1?
+
+> +	if (!starget)
+> +		goto out;
+> +
+> +	sdev = scsi_alloc_sdev(starget, 0, NULL);
+> +	if (sdev)
+> +		sdev->borken = 0;
+> +	else
+> +		scsi_target_reap(starget);
+> +	put_device(&starget->dev);
+> + out:
+> +	mutex_unlock(&shost->scan_mutex);
+> +	return sdev;
+> +}
+> +EXPORT_SYMBOL(scsi_get_host_dev);
+
+Elsewhere in the SCSI core "get..dev" means increment the reference count of
+a SCSI device. Maybe scsi_alloc_host_dev() is a better name?
+
+> +/*
+> + * These two functions are used to allocate and free a pseudo device
+> + * which will connect to the host adapter itself rather than any
+> + * physical device.  You must deallocate when you are done with the
+> + * thing.  This physical pseudo-device isn't real and won't be available
+> + * from any high-level drivers.
+> + */
+
+Please keep function comments in .c files because that makes it more likely
+that the comment and the implementation will remain in sync.
+
+Thanks,
+
+Bart.
