@@ -2,46 +2,45 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C94AC43334
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jun 2022 02:15:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 753D3C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jun 2022 02:15:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352702AbiFNCPR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Jun 2022 22:15:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57722 "EHLO
+        id S1352966AbiFNCPS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Jun 2022 22:15:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55192 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354430AbiFNCOo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jun 2022 22:14:44 -0400
+        with ESMTP id S1354376AbiFNCOm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jun 2022 22:14:42 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1FD573BF93;
-        Mon, 13 Jun 2022 19:08:45 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A88203BBDB;
+        Mon, 13 Jun 2022 19:08:41 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id CEA4360B65;
-        Tue, 14 Jun 2022 02:08:45 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45AAFC36AFE;
-        Tue, 14 Jun 2022 02:08:44 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 88D2860EE1;
+        Tue, 14 Jun 2022 02:08:41 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EC834C36AFE;
+        Tue, 14 Jun 2022 02:08:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1655172525;
-        bh=STcHVfGlkdlIUxt4dFjTPdJR8pkhbJtec94GCXE1ClE=;
+        s=k20201202; t=1655172521;
+        bh=gwmf6peLKhueY78cBZXQsHDQ+B2rOr5tX1pQlxSjuXc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=dDx9/lJGamTHxBfAqWwg5QnYP+4pp9BRS963cGegypIf8r+ACsCsDBxU9IOKVQvlx
-         4CHssKFDqk66Gzt3GyLiYaam7Z4wcDPCb6nXos+qUuwZ8HmDT9YKZrXTtpjgIBA7mg
-         mYPVKH5+HeB+m952aD0nk8idD/Fqwm7yO14Go3e4XyUmk23igPce3pQzx/Jrw/eHgm
-         fd114XBTuSGvq2krKl+3ZGw3DUbMlcFJ0wS4mggNYYxXWXy2k2MoYSWNR5yRO4zs0i
-         A1NEKygPhKzJpJ37Bcw1t08y5x1M/atAkuootWQIZT2skEurSN8YOwTMDrU+dKyjtB
-         ElKGaaUYxI6OA==
+        b=uw9doquibiEsWKTuw6nhWRjxSfAX/g2LqiozT+LWb56hk0uAbXaK1reaDMVbhVEpE
+         6keda2RewnWHRyWrDPScgLmD5oPWNUykx/bWx7EGINLpH4PQYR0mtA/m+1mmSY9+9R
+         4pQa7UqO+DYYP08b0uVZIcnr+POQVUrQ9TVQOQDC7Tamr8hN4QA6cnQqwPF7+PkEK2
+         SKCRv25qQwDwPoqdJB7e/saaxTjJNhUn4QpbgpJZMkMNVa/gHjYcUhKnL8/KS0a3IK
+         1047sO5pnDg9yoz8oG1D8ljRhrtMk9gHgO1ZQN4WAYWsmdhiPam1xUrfqY3UUW7PGu
+         M4bQrloueK0bQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Chengguang Xu <cgxu519@mykernel.net>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        Brian King <brking@linux.vnet.ibm.com>,
+Cc:     Wentao Wang <wwentao@vmware.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, jejb@linux.vnet.ibm.com,
+        Sasha Levin <sashal@kernel.org>, jgill@vmware.com,
+        pv-drivers@vmware.com, jejb@linux.vnet.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 19/29] scsi: ipr: Fix missing/incorrect resource cleanup in error case
-Date:   Mon, 13 Jun 2022 22:08:05 -0400
-Message-Id: <20220614020815.1099999-19-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 16/29] scsi: vmw_pvscsi: Expand vcpuHint to 16 bits
+Date:   Mon, 13 Jun 2022 22:08:02 -0400
+Message-Id: <20220614020815.1099999-16-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220614020815.1099999-1-sashal@kernel.org>
 References: <20220614020815.1099999-1-sashal@kernel.org>
@@ -53,47 +52,38 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Chengguang Xu <cgxu519@mykernel.net>
+From: Wentao Wang <wwentao@vmware.com>
 
-[ Upstream commit d64c491911322af1dcada98e5b9ee0d87e8c8fee ]
+[ Upstream commit cf71d59c2eceadfcde0fb52e237990a0909880d7 ]
 
-Fix missing resource cleanup (when '(--i) == 0') for error case in
-ipr_alloc_mem() and skip incorrect resource cleanup (when '(--i) == 0') for
-error case in ipr_request_other_msi_irqs() because variable i started from
-1.
+vcpuHint has been expanded to 16 bit on host to enable routing to more
+CPUs. Guest side should align with the change. This change has been tested
+with hosts with 8-bit and 16-bit vcpuHint, on both platforms host side can
+get correct value.
 
-Link: https://lore.kernel.org/r/20220529153456.4183738-4-cgxu519@mykernel.net
-Reviewed-by: Dan Carpenter <dan.carpenter@oracle.com>
-Acked-by: Brian King <brking@linux.vnet.ibm.com>
-Signed-off-by: Chengguang Xu <cgxu519@mykernel.net>
+Link: https://lore.kernel.org/r/EF35F4D5-5DCC-42C5-BCC4-29DF1729B24C@vmware.com
+Signed-off-by: Wentao Wang <wwentao@vmware.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ipr.c | 4 ++--
+ drivers/scsi/vmw_pvscsi.h | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index b0aa58d117cc..90e8a538b078 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -9792,7 +9792,7 @@ static int ipr_alloc_mem(struct ipr_ioa_cfg *ioa_cfg)
- 					GFP_KERNEL);
+diff --git a/drivers/scsi/vmw_pvscsi.h b/drivers/scsi/vmw_pvscsi.h
+index 75966d3f326e..d87c12324c03 100644
+--- a/drivers/scsi/vmw_pvscsi.h
++++ b/drivers/scsi/vmw_pvscsi.h
+@@ -333,8 +333,8 @@ struct PVSCSIRingReqDesc {
+ 	u8	tag;
+ 	u8	bus;
+ 	u8	target;
+-	u8	vcpuHint;
+-	u8	unused[59];
++	u16	vcpuHint;
++	u8	unused[58];
+ } __packed;
  
- 		if (!ioa_cfg->hrrq[i].host_rrq)  {
--			while (--i > 0)
-+			while (--i >= 0)
- 				dma_free_coherent(&pdev->dev,
- 					sizeof(u32) * ioa_cfg->hrrq[i].size,
- 					ioa_cfg->hrrq[i].host_rrq,
-@@ -10065,7 +10065,7 @@ static int ipr_request_other_msi_irqs(struct ipr_ioa_cfg *ioa_cfg,
- 			ioa_cfg->vectors_info[i].desc,
- 			&ioa_cfg->hrrq[i]);
- 		if (rc) {
--			while (--i >= 0)
-+			while (--i > 0)
- 				free_irq(pci_irq_vector(pdev, i),
- 					&ioa_cfg->hrrq[i]);
- 			return rc;
+ /*
 -- 
 2.35.1
 
