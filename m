@@ -2,140 +2,141 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19176C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jun 2022 19:33:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5376DC43334
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jun 2022 23:44:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237256AbiFNTdP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jun 2022 15:33:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43196 "EHLO
+        id S233619AbiFNXoq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jun 2022 19:44:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36948 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229676AbiFNTdN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jun 2022 15:33:13 -0400
-Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64B9819F8D;
-        Tue, 14 Jun 2022 12:33:11 -0700 (PDT)
-Received: by mail-pj1-f51.google.com with SMTP id v11-20020a17090a4ecb00b001e2c5b837ccso12745973pjl.3;
-        Tue, 14 Jun 2022 12:33:11 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=0yuY33WdxMB76iynhvTSZPcdcuymbepOOB6v4k/PQOY=;
-        b=jbB+qjSucecXj/HEgCIw1t9EsXmppQ+DavJNYSpUNrariNuH3b/MN6vnNGUdupzrv7
-         Ts0oisAV493ABkX7o5r7XccRpuoTotG9aYWaLeuZGI5NEEZXg5xfH8Etn/oGwBlELKIw
-         TwFDZQIkZR1UsNS3pH4oJd13pgkrt18JLVnTkjk4bOcTyHifJQa2WUIi1z0Kl8sYWRpJ
-         MgV5Npe92Yhbs0SFQkMYx1XllUWHvxta87xXoEo8DX4zVvAgCFprz/61JCFbRLimYkZm
-         0TJQNlQbQOd+0rkt+/RR5M9wFXZg/BRG7CbluA+SR9ofD3E8XaLaWoUvQr6afvSgr/zb
-         jlJw==
-X-Gm-Message-State: AJIora8eDAXkXliL2whctKXAYlQ8Lf1nlHvLBa3mSBrA2fNN3yX/Z7Wy
-        N/cfMLZaKfOSc3sJ38NCO019JbLPqIk=
-X-Google-Smtp-Source: AGRyM1s5w76ZfqYj/+26pMyhfynVA754uE8tmVNVmVHD3j64emOukGeeDvplcoiOLZ4wwUSbu4tMLA==
-X-Received: by 2002:a17:90a:e50c:b0:1ea:14c1:2236 with SMTP id t12-20020a17090ae50c00b001ea14c12236mr6274836pjy.2.1655235190627;
-        Tue, 14 Jun 2022 12:33:10 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:ab60:e1ea:e2eb:c1b6? ([2620:15c:211:201:ab60:e1ea:e2eb:c1b6])
-        by smtp.gmail.com with ESMTPSA id kv18-20020a17090b169200b001ea629a431bsm7969640pjb.8.2022.06.14.12.33.08
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 14 Jun 2022 12:33:09 -0700 (PDT)
-Message-ID: <b61d3687-70ea-1ab7-63e1-44e381d36012@acm.org>
-Date:   Tue, 14 Jun 2022 12:33:07 -0700
+        with ESMTP id S1345811AbiFNXnq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jun 2022 19:43:46 -0400
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F17754BFD9
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Jun 2022 16:43:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1655250224; x=1686786224;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=BGwa4gt3lsrX6CmPrlwJtniUfIkDciPU/F/Ed6lDhtM=;
+  b=cnhDkbcOpVjp2bbPvW3LmCyCtnuZr9x8TKBg3VLD4iiIPE8AvND009XE
+   MNoBzhkM0FIJk2CZrJRcDRFQUPeDvBkyhCXGVcxaaL08zNwOO7/pjls3N
+   GXdR7hweAq0cxxrbGcweOZqqMOYgNMcUO9fPAoK6LmiwF9LJPCY01lsXt
+   aJNd2quaHxJ95mJvAOMH3GLHhQrQirvGYBSkHOv3UU5G7p+7qf+lhtAl6
+   3df25AhNCLJC/g4/274FeD/RIfSifurp4/c3WybJ26+RbRo4RF3Hc0ZGH
+   zd2mhgsKlw8trQESv53nqEUMPMt2e/j4QuLSkPb43NSl7+LOf0mf2MWtJ
+   A==;
+X-IronPort-AV: E=Sophos;i="5.91,300,1647273600"; 
+   d="scan'208";a="203166658"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 15 Jun 2022 07:43:42 +0800
+IronPort-SDR: AIQbhyp/SnPsTqR5Jw6H5v2j5dDTlAUYoDzFlY4fnBCKRHhWM9VZzkWNGDluYo9hdu7C6Th0ct
+ 6xaKyNvQDkQGNUACRbVyvFzmR5a9IMIBcoPU7QK6wXIRpdDtjxLtR1LWLO7+iDWsqWzgS63DQs
+ m7MVpb2VO6l4Ve4JyM9ZktnqdhEbi6JmzaYwGXvedErOfPK+KWsIYS10yi2pwRC7HdInrsaGje
+ YZOpRBEenn8G297pT17ugNLRomacK7K1oV8Z0SSqwsX/+ngYaah7h4Vqf15zfVzITYoZlJhmqb
+ dYsmRovIQkCHLOFyWyj9VZs/
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 14 Jun 2022 16:02:18 -0700
+IronPort-SDR: vLXTDEP0OKjTb0JO/N3yGxAv2UKDWuTh6W/7PZHAs4RSgj7i07P7FatiRJNvm+YKAkD9iyq52l
+ pIB+m3KundhL5YnHQ790C9Nr+D4cC0KT3kcx79WQrAIp2QkHyQiJFOgjx9i4ykJJsMJAdgoxuZ
+ Ov9vIxbLAO8QAHOXUkMXsQ4fAGeYVPUp/kPMN6ZG5LWvfzGJj0OQul3KpRIVBOAeen89iXfjTP
+ i2hHeiXUjIZM/PKmiEax3cdVfBKFtNQBa+HZf++l+99aX6FQVjv/5qRX+8zHsN9YErO+labLro
+ Uts=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 14 Jun 2022 16:43:44 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LN4l34Nwvz1SVp3
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Jun 2022 16:43:43 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1655250223; x=1657842224; bh=BGwa4gt3lsrX6CmPrlwJtniUfIkDciPU/F/
+        Ed6lDhtM=; b=OkGVH4FCLA92mLoNpUkCBUX+TI5SgnG6FXXGNhqotYEwl8NGoVA
+        WbeUTp37w0LuwxBWJx4HUiloGLisn4DroOSw/dufIv4nLykk6F3nvwLYA3qWMnnK
+        G2GwviFTrTjGmDIQyPMktq2iypx4DXa95BpFdchan611KQSDTdE7UBbAJdlxBcsD
+        Kdh7ZHr7vZpAsGgt3n8q/LUEX6L68oWslEDnMSPeugC2BtyHu79NqQtRqG13e91m
+        Uuidp+27MZ5mArLeIMyeQjvSWZMhAjVRYzxyF/pqhIF4iDsbhrjWE7GW6s0Vm6GY
+        MBWaniTTQzZLlaF+a9IKVMRq5I1MmGZAcgg==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id fP7jNiIFaT0Z for <linux-scsi@vger.kernel.org>;
+        Tue, 14 Jun 2022 16:43:43 -0700 (PDT)
+Received: from [10.225.163.81] (unknown [10.225.163.81])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LN4l057nKz1Rvlc;
+        Tue, 14 Jun 2022 16:43:40 -0700 (PDT)
+Message-ID: <e36bba7e-d78d-27b4-a0e2-9d921bc82f5d@opensource.wdc.com>
+Date:   Wed, 15 Jun 2022 08:43:39 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.0
-Subject: Re: [PATCH RFC v2 02/18] scsi: core: Resurrect
- scsi_{get,free}_host_dev()
+ Thunderbird/91.10.0
+Subject: Re: [PATCH RFC v2 03/18] scsi: core: Implement reserved command
+ handling
 Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>, axboe@kernel.dk,
-        damien.lemoal@opensource.wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, brking@us.ibm.com, hare@suse.de,
-        hch@lst.de
+To:     Bart Van Assche <bvanassche@acm.org>,
+        John Garry <john.garry@huawei.com>, axboe@kernel.dk,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, brking@us.ibm.com,
+        hare@suse.de, hch@lst.de
 Cc:     linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         chenxiang66@hisilicon.com
 References: <1654770559-101375-1-git-send-email-john.garry@huawei.com>
- <1654770559-101375-3-git-send-email-john.garry@huawei.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <1654770559-101375-3-git-send-email-john.garry@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+ <1654770559-101375-4-git-send-email-john.garry@huawei.com>
+ <b4a0ede5-95a3-4388-e808-7627b5484d01@opensource.wdc.com>
+ <9e89360d-3325-92af-0436-b34df748f3e2@acm.org>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <9e89360d-3325-92af-0436-b34df748f3e2@acm.org>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/9/22 03:29, John Garry wrote:
-> +/**
-> + * scsi_get_host_dev - Create a scsi_device that points to the host adapter itself
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-What does this mean? That part of the function description is not
-clear to me.
+On 6/15/22 03:20, Bart Van Assche wrote:
+> On 6/13/22 00:01, Damien Le Moal wrote:
+>> On 6/9/22 19:29, John Garry wrote:
+>>> +	/*
+>>> +	 * This determines how many commands the HBA will set aside
+>>> +	 * for internal commands. This number will be added to
+>>> +	 * @can_queue to calcumate the maximum number of simultaneous
+>>
+>> s/calcumate/calculate
+>>
+>> But this is weird. For SATA, can_queue is 32. Having reserved commands,
+>> that number needs to stay the same. We cannot have more than 32 tags.
+>> I think keeping can_queue as the max queue depth with at most
+>> nr_reserved_cmds tags reserved is better.
+>>
+>>> +	 * commands sent to the host.
+>>> +	 */
+>>> +	int nr_reserved_cmds;
+> 
+> +1 for Damien's request. I also prefer to keep can_queue as the maximum
+> queue depth, whether or not nr_reserved_cmds has been set.
 
-> + * @shost: Host that needs a scsi_device
-                               ^^^^^^^^^^^^^
-This is not detailed enough. Consider changing "a scsi_device" into
-"a scsi device for allocating reserved commands from".
+For non SATA drives, I still think that is a good idea. However, for SATA,
+we always have the internal tag command that is special. With John's
+change, it would have to be reserved but that means we are down to 31 max
+QD, so going backward several years... That internal tag for ATA does not
+need to be reserved since this command is always used when the drive is
+idle and no other NCQ commands are on-going.
 
-> + *
-> + * Lock status: None assumed.
-> + *
-> + * Returns:     The scsi_device or NULL
-> + *
-> + * Notes:
-> + *	Attach a single scsi_device to the Scsi_Host - this should
-> + *	be made to look like a "pseudo-device" that points to the
-> + *	HA itself.
-> + *
-> + *	Note - this device is not accessible from any high-level
-> + *	drivers (including generics), which is probably not
-> + *	optimal.  We can add hooks later to attach.
+So the solution to all this is a likely a little more complicated if we
+want to keep ATA max QD to 32.
 
-The "which is probably not optimal. We can add hooks later to attach."
-part probably should be moved to the patch description.
+> 
+> Thanks,
+> 
+> Bart.
 
-> + */
-> +struct scsi_device *scsi_get_host_dev(struct Scsi_Host *shost)
-> +{
-> +	struct scsi_device *sdev = NULL;
-> +	struct scsi_target *starget;
-> +
-> +	mutex_lock(&shost->scan_mutex);
-> +	if (!scsi_host_scan_allowed(shost))
-> +		goto out;
-> +	starget = scsi_alloc_target(&shost->shost_gendev, 0, shost->this_id);
-                                                           ^^^^^^^^^^^^^^^^^^
-Is it guaranteed that this channel / id combination will not be used for
-any other SCSI device?
 
-What if shost->this_id == -1?
-
-> +	if (!starget)
-> +		goto out;
-> +
-> +	sdev = scsi_alloc_sdev(starget, 0, NULL);
-> +	if (sdev)
-> +		sdev->borken = 0;
-> +	else
-> +		scsi_target_reap(starget);
-> +	put_device(&starget->dev);
-> + out:
-> +	mutex_unlock(&shost->scan_mutex);
-> +	return sdev;
-> +}
-> +EXPORT_SYMBOL(scsi_get_host_dev);
-
-Elsewhere in the SCSI core "get..dev" means increment the reference count of
-a SCSI device. Maybe scsi_alloc_host_dev() is a better name?
-
-> +/*
-> + * These two functions are used to allocate and free a pseudo device
-> + * which will connect to the host adapter itself rather than any
-> + * physical device.  You must deallocate when you are done with the
-> + * thing.  This physical pseudo-device isn't real and won't be available
-> + * from any high-level drivers.
-> + */
-
-Please keep function comments in .c files because that makes it more likely
-that the comment and the implementation will remain in sync.
-
-Thanks,
-
-Bart.
+-- 
+Damien Le Moal
+Western Digital Research
