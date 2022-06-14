@@ -2,49 +2,48 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4036FC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jun 2022 02:25:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12792C43334
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jun 2022 02:25:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354394AbiFNCZA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Jun 2022 22:25:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57016 "EHLO
+        id S1354559AbiFNCZG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Jun 2022 22:25:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53536 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354688AbiFNCXl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jun 2022 22:23:41 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9F8D40A08;
+        with ESMTP id S1354716AbiFNCXm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jun 2022 22:23:42 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22BF540933;
         Mon, 13 Jun 2022 19:10:38 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 12CEC60B76;
-        Tue, 14 Jun 2022 02:10:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 96F34C36AFF;
-        Tue, 14 Jun 2022 02:10:09 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id D4148B80AC1;
+        Tue, 14 Jun 2022 02:10:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE113C3411E;
+        Tue, 14 Jun 2022 02:10:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1655172610;
-        bh=e+leZ6zhrBvbbyf5uKQq5Da8htGpVpjP3Bj5RpkC16U=;
+        s=k20201202; t=1655172634;
+        bh=WXzatfo1Gdzn71E2kMuzfXun5GozS4HNJ2f2i7o2MU8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=fbtakEZS97LpWwPqmiRbRI71NQtnE1S5ygbeWyNbpTA9gUBTXi3FgQlgk0Dcdqf1D
-         JXe+U3h1RgqmbqmBLLGqviGGwajZSuF6y76VdhnFOUP0youZaBgY/z1PqYD3qXJCAw
-         +BRx2Yl90KmBeBQI2N8nOPmQQk0nsF6bC10nNzJ+L7pjS1VRe2m8WSLvJdlsOf7MpQ
-         XEKED9AKNm5s9vQTF7wrJvopNAABmWYqW2mhODfYXB1ACaZNM19Ds0SRZ8gESXmdIb
-         H5N3Jktniq8mc/BzPIJ2/G59TbfcbQL+DdV72rKg3f2qWHyuHF3iFk1nHWbElruOMK
-         4y6L4pnNaXomw==
+        b=KGeQYonL61Phkqid0Y0rXyqxM3psHCsN370t7NwcwnVkWaIlx+SwPzxz1zsQoMdJC
+         v0ZwzLjcKL3yLlc3LmKj6+3rHrXnKoadjVPbroBWcbI3nIe7zwJJxgBKqNAZvRUlT0
+         Pc1K+m85b6rVsxPUd7qTbrG6oP3w/wndh6eEaswd9EefdZJTDq+OINosy/qV2Ql9wD
+         laJMx7jL4xeLQNsM1+j7RcSzYSdjaAm3mooKrL2iKebAmV/STdFQEgBz4jBDf2f5RV
+         6ohjHFQ9rHTnUaX/uVsyiVmvbjQDIdm2WJAN/fThNZKtnnQe14XP731d/A8YdJNhxy
+         EaClvJDA5PKLA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Chengguang Xu <cgxu519@mykernel.net>,
         Dan Carpenter <dan.carpenter@oracle.com>,
-        Brian King <brking@linux.vnet.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, jejb@linux.vnet.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 12/18] scsi: ipr: Fix missing/incorrect resource cleanup in error case
-Date:   Mon, 13 Jun 2022 22:09:35 -0400
-Message-Id: <20220614020941.1100702-12-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 10/14] scsi: pmcraid: Fix missing resource cleanup in error case
+Date:   Mon, 13 Jun 2022 22:10:15 -0400
+Message-Id: <20220614021019.1100929-10-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220614020941.1100702-1-sashal@kernel.org>
-References: <20220614020941.1100702-1-sashal@kernel.org>
+In-Reply-To: <20220614021019.1100929-1-sashal@kernel.org>
+References: <20220614021019.1100929-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -55,45 +54,33 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Chengguang Xu <cgxu519@mykernel.net>
 
-[ Upstream commit d64c491911322af1dcada98e5b9ee0d87e8c8fee ]
+[ Upstream commit ec1e8adcbdf661c57c395bca342945f4f815add7 ]
 
 Fix missing resource cleanup (when '(--i) == 0') for error case in
-ipr_alloc_mem() and skip incorrect resource cleanup (when '(--i) == 0') for
-error case in ipr_request_other_msi_irqs() because variable i started from
-1.
+pmcraid_register_interrupt_handler().
 
-Link: https://lore.kernel.org/r/20220529153456.4183738-4-cgxu519@mykernel.net
+Link: https://lore.kernel.org/r/20220529153456.4183738-6-cgxu519@mykernel.net
 Reviewed-by: Dan Carpenter <dan.carpenter@oracle.com>
-Acked-by: Brian King <brking@linux.vnet.ibm.com>
 Signed-off-by: Chengguang Xu <cgxu519@mykernel.net>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ipr.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/pmcraid.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 1b04a8223eb0..c6cde552b995 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -9783,7 +9783,7 @@ static int ipr_alloc_mem(struct ipr_ioa_cfg *ioa_cfg)
- 					GFP_KERNEL);
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index b4d6cd8cd1ad..d27ae937ff68 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -4601,7 +4601,7 @@ pmcraid_register_interrupt_handler(struct pmcraid_instance *pinstance)
+ 	return 0;
  
- 		if (!ioa_cfg->hrrq[i].host_rrq)  {
--			while (--i > 0)
-+			while (--i >= 0)
- 				dma_free_coherent(&pdev->dev,
- 					sizeof(u32) * ioa_cfg->hrrq[i].size,
- 					ioa_cfg->hrrq[i].host_rrq,
-@@ -10056,7 +10056,7 @@ static int ipr_request_other_msi_irqs(struct ipr_ioa_cfg *ioa_cfg,
- 			ioa_cfg->vectors_info[i].desc,
- 			&ioa_cfg->hrrq[i]);
- 		if (rc) {
--			while (--i >= 0)
-+			while (--i > 0)
- 				free_irq(pci_irq_vector(pdev, i),
- 					&ioa_cfg->hrrq[i]);
- 			return rc;
+ out_unwind:
+-	while (--i > 0)
++	while (--i >= 0)
+ 		free_irq(pci_irq_vector(pdev, i), &pinstance->hrrq_vector[i]);
+ 	pci_free_irq_vectors(pdev);
+ 	return rc;
 -- 
 2.35.1
 
