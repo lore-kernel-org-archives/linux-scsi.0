@@ -2,38 +2,41 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE2D0C43334
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jun 2022 14:17:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B66ADC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jun 2022 14:17:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243902AbiFNORO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jun 2022 10:17:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59782 "EHLO
+        id S244091AbiFNORQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jun 2022 10:17:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59796 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242601AbiFNORJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jun 2022 10:17:09 -0400
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50F9132EF0;
-        Tue, 14 Jun 2022 07:17:04 -0700 (PDT)
-X-UUID: fa2dd805fa0c45a982b0000dc4f7d7ca-20220614
+        with ESMTP id S243055AbiFNORK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jun 2022 10:17:10 -0400
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33DB42FE5C;
+        Tue, 14 Jun 2022 07:17:07 -0700 (PDT)
+X-UUID: 77e360800411483481d43a57f2ebc64a-20220614
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.6,REQID:bf7a8c1c-2689-437e-9a7d-e57d18e07545,OB:0,LO
-        B:0,IP:0,URL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,RULE:Release_Ham,ACTI
-        ON:release,TS:0
-X-CID-META: VersionHash:b14ad71,CLOUDID:1a8d9407-b57a-4a25-a071-bc7b4972bc68,C
-        OID:IGNORED,Recheck:0,SF:nil,TC:nil,Content:0,EDM:-3,IP:nil,URL:0,File:nil
-        ,QS:nil,BEC:nil,COL:0
-X-UUID: fa2dd805fa0c45a982b0000dc4f7d7ca-20220614
-Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw01.mediatek.com
+X-CID-O-INFO: VERSION:1.1.6,REQID:668eb4e8-e297-4b2f-96c9-fe28e09550ba,OB:10,L
+        OB:10,IP:0,URL:5,TC:0,Content:0,EDM:0,RT:0,SF:95,FILE:0,RULE:Release_Ham,A
+        CTION:release,TS:100
+X-CID-INFO: VERSION:1.1.6,REQID:668eb4e8-e297-4b2f-96c9-fe28e09550ba,OB:10,LOB
+        :10,IP:0,URL:5,TC:0,Content:0,EDM:0,RT:0,SF:95,FILE:0,RULE:Spam_GS981B3D,A
+        CTION:quarantine,TS:100
+X-CID-META: VersionHash:b14ad71,CLOUDID:45766cc5-c67b-4a73-9b18-726dd8f2eb58,C
+        OID:2e28f976cb89,Recheck:0,SF:28|17|19|48,TC:nil,Content:0,EDM:-3,IP:nil,U
+        RL:1,File:nil,QS:nil,BEC:nil,COL:0
+X-UUID: 77e360800411483481d43a57f2ebc64a-20220614
+Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw02.mediatek.com
         (envelope-from <stanley.chu@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 2100335153; Tue, 14 Jun 2022 22:16:57 +0800
-Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
- mtkmbs11n1.mediatek.inc (172.21.101.185) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.792.3;
- Tue, 14 Jun 2022 22:16:56 +0800
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 269494206; Tue, 14 Jun 2022 22:16:57 +0800
+Received: from mtkmbs11n1.mediatek.inc (172.21.101.186) by
+ mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.792.15; Tue, 14 Jun 2022 22:16:57 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
  mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.792.3 via Frontend Transport; Tue, 14 Jun 2022 22:16:56 +0800
+ 15.2.792.3 via Frontend Transport; Tue, 14 Jun 2022 22:16:57 +0800
 From:   Stanley Chu <stanley.chu@mediatek.com>
 To:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
@@ -46,9 +49,9 @@ CC:     <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
         <tun-yu.yu@mediatek.com>, <cc.chou@mediatek.com>,
         <chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
         <stanley.chu@mediatek.com>
-Subject: [PATCH v3 02/10] scsi: ufs: Fix ADAPT logic for HS-G5
-Date:   Tue, 14 Jun 2022 22:16:47 +0800
-Message-ID: <20220614141655.14409-3-stanley.chu@mediatek.com>
+Subject: [PATCH v3 06/10] scsi: ufs-mediatek: Support low-power mode for VCCQ
+Date:   Tue, 14 Jun 2022 22:16:51 +0800
+Message-ID: <20220614141655.14409-7-stanley.chu@mediatek.com>
 X-Mailer: git-send-email 2.18.0
 In-Reply-To: <20220614141655.14409-1-stanley.chu@mediatek.com>
 References: <20220614141655.14409-1-stanley.chu@mediatek.com>
@@ -59,27 +62,58 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-ADAPT now is added not only for HS Gear4 mode but also higher gears.
-Fix the logic for higher gears.
+From: Peter Wang <peter.wang@mediatek.com>
 
+Also allow VCCQ to enter low-power mode, and meanwhile
+remove the restriction of VCC because VCCQ/VCCQ2 can
+be changed to low-power mode even if VCC keeps on while
+the device is not in active power mode.
+
+Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+Signed-off-by: Peter Wang <peter.wang@mediatek.com>
 Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
 ---
- drivers/ufs/core/ufshcd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/ufs/host/ufs-mediatek.c | 19 +++++++++++++------
+ 1 file changed, 13 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 19e17c898319..0d16739c67bb 100755
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -3802,7 +3802,7 @@ int ufshcd_dme_configure_adapt(struct ufs_hba *hba,
+diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
+index c9afe373437c..178043ab837c 100755
+--- a/drivers/ufs/host/ufs-mediatek.c
++++ b/drivers/ufs/host/ufs-mediatek.c
+@@ -1031,7 +1031,13 @@ static int ufs_mtk_link_set_lpm(struct ufs_hba *hba)
+ 
+ static void ufs_mtk_vreg_set_lpm(struct ufs_hba *hba, bool lpm)
  {
- 	int ret;
+-	if (!hba->vreg_info.vccq2 || !hba->vreg_info.vcc)
++	struct ufs_vreg *vccqx = NULL;
++
++	if (!hba->vreg_info.vccq && !hba->vreg_info.vccq2)
++		return;
++
++	/* Skip if VCC is assumed always-on */
++	if (!hba->vreg_info.vcc)
+ 		return;
  
--	if (agreed_gear != UFS_HS_G4)
-+	if (agreed_gear < UFS_HS_G4)
- 		adapt_val = PA_NO_ADAPT;
+ 	/* Bypass LPM when device is still active */
+@@ -1042,12 +1048,13 @@ static void ufs_mtk_vreg_set_lpm(struct ufs_hba *hba, bool lpm)
+ 	if (lpm && hba->vreg_info.vcc->enabled)
+ 		return;
  
- 	ret = ufshcd_dme_set(hba,
+-	if (lpm)
+-		regulator_set_mode(hba->vreg_info.vccq2->reg,
+-				   REGULATOR_MODE_IDLE);
++	if (hba->vreg_info.vccq)
++		vccqx = hba->vreg_info.vccq;
+ 	else
+-		regulator_set_mode(hba->vreg_info.vccq2->reg,
+-				   REGULATOR_MODE_NORMAL);
++		vccqx = hba->vreg_info.vccq2;
++
++	regulator_set_mode(vccqx->reg,
++		lpm ? REGULATOR_MODE_IDLE : REGULATOR_MODE_NORMAL);
+ }
+ 
+ static void ufs_mtk_auto_hibern8_disable(struct ufs_hba *hba)
 -- 
 2.18.0
 
