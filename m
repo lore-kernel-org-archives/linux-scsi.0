@@ -2,158 +2,152 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57144CCA473
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jun 2022 13:41:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08134C43334
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jun 2022 15:34:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349241AbiFONlx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Jun 2022 09:41:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49268 "EHLO
+        id S1349421AbiFOPeQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Jun 2022 11:34:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58806 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232167AbiFONlw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jun 2022 09:41:52 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 051F037A3A;
-        Wed, 15 Jun 2022 06:41:51 -0700 (PDT)
-Received: from fraeml735-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LNRFp14TFz688JQ;
-        Wed, 15 Jun 2022 21:38:06 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml735-chm.china.huawei.com (10.206.15.216) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Wed, 15 Jun 2022 15:41:48 +0200
-Received: from [10.202.227.197] (10.202.227.197) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Wed, 15 Jun 2022 14:41:47 +0100
-Message-ID: <56cd28b3-da05-7737-c053-3c28459581e4@huawei.com>
-Date:   Wed, 15 Jun 2022 14:44:54 +0100
+        with ESMTP id S1348953AbiFOPeJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jun 2022 11:34:09 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F166F240AC;
+        Wed, 15 Jun 2022 08:34:08 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 897066177F;
+        Wed, 15 Jun 2022 15:34:08 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85DDDC3411E;
+        Wed, 15 Jun 2022 15:34:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1655307248;
+        bh=z9LrTbvvJ5Eymb0jlmwcsw1/gttmexAT5SOlw8klJDw=;
+        h=From:To:Cc:Subject:Date:From;
+        b=demf7YwIokMBz2NXpw3lFImGtf9FPJzSCkzAcSCXdo9Z/7iQXDqTj130sUHFvTU4Q
+         c51lA0GBaIamuWSSKuAECiRfIDrEv0+PRYZfOXdFteAf+HAGN8qypyhJSt3gq/bXai
+         dsKWZN5Nn8QbOwT8pJ05xPIsJggeyP3jM386Hom+mBXuuY4y4ESlIORfbIarsEji1m
+         3GLQjLKMqFaDe0eBtE/HCkO0t3GFyy/D2SjSEWswv+2izGkJIz2jTMjs2A4SQ77313
+         UXK81SYPRWVEDFTJQb6oZx4qeMSV89YtZY741hRlbhQ2CvyyFoO+HjKNlw+aTCgUz1
+         sEJPeDoTJm7OA==
+From:   Chao Yu <chao@kernel.org>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        chao@kernel.org
+Subject: [PATCH v3] scsi: support packing multi-segment in UNMAP command
+Date:   Wed, 15 Jun 2022 23:34:02 +0800
+Message-Id: <20220615153402.2233825-1-chao@kernel.org>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-From:   John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH RFC v2 02/18] scsi: core: Resurrect
- scsi_{get,free}_host_dev()
-To:     Bart Van Assche <bvanassche@acm.org>, <axboe@kernel.dk>,
-        <damien.lemoal@opensource.wdc.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <brking@us.ibm.com>, <hare@suse.de>,
-        <hch@lst.de>
-CC:     <linux-block@vger.kernel.org>, <linux-ide@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <chenxiang66@hisilicon.com>
-References: <1654770559-101375-1-git-send-email-john.garry@huawei.com>
- <1654770559-101375-3-git-send-email-john.garry@huawei.com>
- <b61d3687-70ea-1ab7-63e1-44e381d36012@acm.org>
-In-Reply-To: <b61d3687-70ea-1ab7-63e1-44e381d36012@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.202.227.197]
-X-ClientProxiedBy: lhreml722-chm.china.huawei.com (10.201.108.73) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 14/06/2022 20:33, Bart Van Assche wrote:
+As SCSI SBC4 specification section 5.30.2 describes that it can
+support unmapping one or more LBA range in single UNMAP command,
+however, previously we only pack one LBA range in UNMAP command
+by default no matter device gives the block limits that says it
+can support in-batch UNMAP.
 
-Hi Bart,
+This patch tries to set max_discard_segments config according to
+block limits of device, and supports in-batch UNMAP.
 
-> On 6/9/22 03:29, John Garry wrote:
->> +/**
->> + * scsi_get_host_dev - Create a scsi_device that points to the host 
->> adapter itself
->                                                 
-> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> What does this mean? That part of the function description is not
-> clear to me.
-> 
+Signed-off-by: Chao Yu <chao@kernel.org>
+---
+v3:
+- update commit message.
+- clean up codes.
+ drivers/scsi/sd.c | 31 ++++++++++++++++++++-----------
+ drivers/scsi/sd.h |  1 +
+ 2 files changed, 21 insertions(+), 11 deletions(-)
 
-Agreed, this text is just as it was before (it was originally deleted) 
-but I can fix it up to make sense.
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 895b56c8f25e..ab543f027640 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -790,6 +790,7 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
+ 	q->limits.discard_granularity =
+ 		max(sdkp->physical_block_size,
+ 		    sdkp->unmap_granularity * logical_block_size);
++	blk_queue_max_discard_segments(q, sdkp->max_block_desc_count);
+ 	sdkp->provisioning_mode = mode;
+ 
+ 	switch (mode) {
+@@ -836,9 +837,10 @@ static blk_status_t sd_setup_unmap_cmnd(struct scsi_cmnd *cmd)
+ 	struct scsi_device *sdp = cmd->device;
+ 	struct request *rq = scsi_cmd_to_rq(cmd);
+ 	struct scsi_disk *sdkp = scsi_disk(rq->q->disk);
+-	u64 lba = sectors_to_logical(sdp, blk_rq_pos(rq));
+-	u32 nr_blocks = sectors_to_logical(sdp, blk_rq_sectors(rq));
+-	unsigned int data_len = 24;
++	unsigned short segments = blk_rq_nr_discard_segments(rq);
++	unsigned int data_len = 8 + 16 * segments;
++	unsigned int data_offset = 8;
++	struct bio *bio;
+ 	char *buf;
+ 
+ 	rq->special_vec.bv_page = mempool_alloc(sd_page_pool, GFP_ATOMIC);
+@@ -851,13 +853,20 @@ static blk_status_t sd_setup_unmap_cmnd(struct scsi_cmnd *cmd)
+ 
+ 	cmd->cmd_len = 10;
+ 	cmd->cmnd[0] = UNMAP;
+-	cmd->cmnd[8] = 24;
++	cmd->cmnd[8] = data_len;
+ 
+ 	buf = bvec_virt(&rq->special_vec);
+-	put_unaligned_be16(6 + 16, &buf[0]);
+-	put_unaligned_be16(16, &buf[2]);
+-	put_unaligned_be64(lba, &buf[8]);
+-	put_unaligned_be32(nr_blocks, &buf[16]);
++	put_unaligned_be16(6 + 16 * segments, &buf[0]);
++	put_unaligned_be16(16 * segments, &buf[2]);
++
++	__rq_for_each_bio(bio, rq) {
++		u64 lba = sectors_to_logical(sdp, bio->bi_iter.bi_sector);
++		u32 nr_blocks = sectors_to_logical(sdp, bio_sectors(bio));
++
++		put_unaligned_be64(lba, &buf[data_offset]);
++		put_unaligned_be32(nr_blocks, &buf[data_offset + 8]);
++		data_offset += 16;
++	}
+ 
+ 	cmd->allowed = sdkp->max_retries;
+ 	cmd->transfersize = data_len;
+@@ -2862,7 +2871,7 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
+ 	sdkp->opt_xfer_blocks = get_unaligned_be32(&vpd->data[12]);
+ 
+ 	if (vpd->len >= 64) {
+-		unsigned int lba_count, desc_count;
++		unsigned int lba_count;
+ 
+ 		sdkp->max_ws_blocks = (u32)get_unaligned_be64(&vpd->data[36]);
+ 
+@@ -2870,9 +2879,9 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
+ 			goto out;
+ 
+ 		lba_count = get_unaligned_be32(&vpd->data[20]);
+-		desc_count = get_unaligned_be32(&vpd->data[24]);
++		sdkp->max_block_desc_count = get_unaligned_be32(&vpd->data[24]);
+ 
+-		if (lba_count && desc_count)
++		if (lba_count && sdkp->max_block_desc_count)
+ 			sdkp->max_unmap_blocks = lba_count;
+ 
+ 		sdkp->unmap_granularity = get_unaligned_be32(&vpd->data[28]);
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 5eea762f84d1..bda9db5e2322 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -119,6 +119,7 @@ struct scsi_disk {
+ 	u32		opt_xfer_blocks;
+ 	u32		max_ws_blocks;
+ 	u32		max_unmap_blocks;
++	u32		max_block_desc_count;
+ 	u32		unmap_granularity;
+ 	u32		unmap_alignment;
+ 	u32		index;
+-- 
+2.25.1
 
->> + * @shost: Host that needs a scsi_device
->                                ^^^^^^^^^^^^^
-> This is not detailed enough. Consider changing "a scsi_device" into
-> "a scsi device for allocating reserved commands from".
-> 
->> + *
->> + * Lock status: None assumed.
->> + *
->> + * Returns:     The scsi_device or NULL
->> + *
->> + * Notes:
->> + *    Attach a single scsi_device to the Scsi_Host - this should
->> + *    be made to look like a "pseudo-device" that points to the
->> + *    HA itself.
->> + *
->> + *    Note - this device is not accessible from any high-level
->> + *    drivers (including generics), which is probably not
->> + *    optimal.  We can add hooks later to attach.
-> 
-> The "which is probably not optimal. We can add hooks later to attach."
-> part probably should be moved to the patch description.
-
-ok
-
-> 
->> + */
->> +struct scsi_device *scsi_get_host_dev(struct Scsi_Host *shost)
->> +{
->> +    struct scsi_device *sdev = NULL;
->> +    struct scsi_target *starget;
->> +
->> +    mutex_lock(&shost->scan_mutex);
->> +    if (!scsi_host_scan_allowed(shost))
->> +        goto out;
->> +    starget = scsi_alloc_target(&shost->shost_gendev, 0, 
->> shost->this_id);
->                                                            
-> ^^^^^^^^^^^^^^^^^^
-> Is it guaranteed that this channel / id combination will not be used for
-> any other SCSI device?
-
-Does it matter if the parent device is different?
-
-> 
-> What if shost->this_id == -1?
-> 
->> +    if (!starget)
->> +        goto out;
->> +
->> +    sdev = scsi_alloc_sdev(starget, 0, NULL);
->> +    if (sdev)
->> +        sdev->borken = 0;
->> +    else
->> +        scsi_target_reap(starget);
->> +    put_device(&starget->dev);
->> + out:
->> +    mutex_unlock(&shost->scan_mutex);
->> +    return sdev;
->> +}
->> +EXPORT_SYMBOL(scsi_get_host_dev);
-> 
-> Elsewhere in the SCSI core "get..dev" means increment the reference 
-> count of
-> a SCSI device. Maybe scsi_alloc_host_dev() is a better name?
-
-I think that the intention is to only use this once for a shost, i.e. 
-get or allocate that scsi_device once and use it for the lifetime of the 
-shost. But I can rename if you think it's better.
-
-> 
->> +/*
->> + * These two functions are used to allocate and free a pseudo device
->> + * which will connect to the host adapter itself rather than any
->> + * physical device.  You must deallocate when you are done with the
->> + * thing.  This physical pseudo-device isn't real and won't be available
->> + * from any high-level drivers.
->> + */
-> 
-> Please keep function comments in .c files because that makes it more likely
-> that the comment and the implementation will remain in sync.
-> 
-
-fine, I can relocate this.
-
-Thanks,
-John
