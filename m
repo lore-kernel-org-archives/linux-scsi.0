@@ -2,115 +2,96 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E283DCCA47D
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jun 2022 03:52:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 801D4CCA473
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jun 2022 07:20:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352156AbiFODwR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jun 2022 23:52:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32826 "EHLO
+        id S242088AbiFOHUz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Jun 2022 03:20:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32836 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244518AbiFODv4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jun 2022 23:51:56 -0400
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FA1E5005E;
-        Tue, 14 Jun 2022 20:51:55 -0700 (PDT)
-X-UUID: 6da093a912f34a91b69678f47be0baf4-20220615
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.6,REQID:b5310148-119a-4f24-84b7-7ec94e8d2fe6,OB:0,LO
-        B:0,IP:0,URL:5,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,RULE:Release_Ham,ACTI
-        ON:release,TS:5
-X-CID-META: VersionHash:b14ad71,CLOUDID:503b42f6-e099-41ba-a32c-13b8bfe63214,C
-        OID:IGNORED,Recheck:0,SF:nil,TC:nil,Content:0,EDM:-3,IP:nil,URL:1,File:nil
-        ,QS:nil,BEC:nil,COL:0
-X-UUID: 6da093a912f34a91b69678f47be0baf4-20220615
-Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw01.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1469923884; Wed, 15 Jun 2022 11:51:49 +0800
-Received: from mtkcas11.mediatek.inc (172.21.101.40) by
- mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.2.792.15; Wed, 15 Jun 2022 11:51:48 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas11.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 15 Jun 2022 11:51:47 +0800
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
-        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>,
-        <bvanassche@acm.org>
-CC:     <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <alice.chao@mediatek.com>, <powen.kao@mediatek.com>,
-        <mason.zhang@mediatek.com>, <qilin.tan@mediatek.com>,
-        <lin.gui@mediatek.com>, <eddie.huang@mediatek.com>,
-        <tun-yu.yu@mediatek.com>, <cc.chou@mediatek.com>,
-        <chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
-        <stanley.chu@mediatek.com>
-Subject: [PATCH v4 06/10] scsi: ufs-mediatek: Support low-power mode for VCCQ
-Date:   Wed, 15 Jun 2022 11:51:42 +0800
-Message-ID: <20220615035146.20964-7-stanley.chu@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20220615035146.20964-1-stanley.chu@mediatek.com>
-References: <20220615035146.20964-1-stanley.chu@mediatek.com>
+        with ESMTP id S239815AbiFOHUy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jun 2022 03:20:54 -0400
+Received: from mail-qk1-f179.google.com (mail-qk1-f179.google.com [209.85.222.179])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60F0A43AC3;
+        Wed, 15 Jun 2022 00:20:53 -0700 (PDT)
+Received: by mail-qk1-f179.google.com with SMTP id d23so8166785qke.0;
+        Wed, 15 Jun 2022 00:20:53 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=IZrgGy//qiNvpo0QiFkOVNBs87FgtEm52Qgjyjrw9DQ=;
+        b=eLYFNRbSkngvX9cT9qKYJiog9ols/+BultjfnLFLokwdOmNsfq51q7Hx4cDmsqWA8K
+         fYSj/yh4jzD8c2UpLc5KEf9hMT6qa3PefqFiZ5BAEdk8KxGroLE41H9Xt2+PtMxG06QR
+         nwY2IgWOjiQWeYIWhb1kd6OmzRNXO6eO/GW3AuaZBcedFNEMyrAZnD3UaEa/84JHC+N8
+         mussj/TGMAUx2cfGDV+/mt26HW/YeKisNoDs4z6+GM+dFkyuKZE5LjEz/xGVFU0VgxGb
+         IgEbz0FpgW8iQM9hfn/UFGhJJxJ9K0PsqcXVFtWPNGyqZvagefOkVwZgQSW3NJK1BCYw
+         nx+g==
+X-Gm-Message-State: AOAM532XbTpjWKCCEn/ulEEn5CZQDPpUYXDmwr9CcPF4ZVBYSaaMSiaz
+        e9jUJl1dnoeaqR9Gs5TEn8vzDbaIQX3cLw==
+X-Google-Smtp-Source: ABdhPJyfKji0R8TUKNkLqgxnO2bQ5ni5SYp/lhgx+0thb8SfT/HgK1WZU261Pflc4Qs3BOV/I2VjAQ==
+X-Received: by 2002:a37:7d5:0:b0:6a7:7ea0:87be with SMTP id 204-20020a3707d5000000b006a77ea087bemr7225798qkh.458.1655277652325;
+        Wed, 15 Jun 2022 00:20:52 -0700 (PDT)
+Received: from mail-yb1-f170.google.com (mail-yb1-f170.google.com. [209.85.219.170])
+        by smtp.gmail.com with ESMTPSA id bj25-20020a05620a191900b006a69d7f390csm11538409qkb.103.2022.06.15.00.20.51
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 15 Jun 2022 00:20:51 -0700 (PDT)
+Received: by mail-yb1-f170.google.com with SMTP id w2so18996993ybi.7;
+        Wed, 15 Jun 2022 00:20:51 -0700 (PDT)
+X-Received: by 2002:a25:818c:0:b0:664:a584:fafd with SMTP id
+ p12-20020a25818c000000b00664a584fafdmr8856194ybk.543.1655277651264; Wed, 15
+ Jun 2022 00:20:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+References: <20220603110524.1997825-1-yoshihiro.shimoda.uh@renesas.com>
+ <CAMuHMdWY7OpB=F3sUoBEpMyJx9U=+YJBFrVd59y=wdsEvN=4JA@mail.gmail.com> <yq11qvqskps.fsf@ca-mkp.ca.oracle.com>
+In-Reply-To: <yq11qvqskps.fsf@ca-mkp.ca.oracle.com>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Wed, 15 Jun 2022 09:20:40 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdVR2=VHUxfDTukDt7rSOPBYCFr3qXQzZNTdkw9Z-jEBkg@mail.gmail.com>
+Message-ID: <CAMuHMdVR2=VHUxfDTukDt7rSOPBYCFr3qXQzZNTdkw9Z-jEBkg@mail.gmail.com>
+Subject: Re: [PATCH v6 0/7] treewide: ufs: Add support for Renesas R-Car UFS controller
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>, avri.altman@wdc.com,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        scsi <linux-scsi@vger.kernel.org>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Peter Wang <peter.wang@mediatek.com>
+Hi Martin,
 
-Also allow VCCQ to enter low-power mode, and meanwhile
-remove the restriction of VCC because VCCQ/VCCQ2 can
-be changed to low-power mode even if VCC keeps on while
-the device is not in active power mode.
+On Wed, Jun 15, 2022 at 4:54 AM Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+> > I see you have applied this series, including the DTS parts, to your
+> > for-next tree. Please never apply DTS patches to the SCSI tree, as
+> > they are meant to go in through the soc tree.
+>
+> OK. Just queued it up in for-next to see what would break. It's not in
+> the actual queue for 5.20.
 
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
-Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
----
- drivers/ufs/host/ufs-mediatek.c | 19 +++++++++++++------
- 1 file changed, 13 insertions(+), 6 deletions(-)
+IC. How will I know when they are queued for real?
 
-diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index 03762ecaaaf8..65a2a4185ef6 100755
---- a/drivers/ufs/host/ufs-mediatek.c
-+++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -1031,7 +1031,13 @@ static int ufs_mtk_link_set_lpm(struct ufs_hba *hba)
- 
- static void ufs_mtk_vreg_set_lpm(struct ufs_hba *hba, bool lpm)
- {
--	if (!hba->vreg_info.vccq2 || !hba->vreg_info.vcc)
-+	struct ufs_vreg *vccqx = NULL;
-+
-+	if (!hba->vreg_info.vccq && !hba->vreg_info.vccq2)
-+		return;
-+
-+	/* Skip if VCC is assumed always-on */
-+	if (!hba->vreg_info.vcc)
- 		return;
- 
- 	/* Bypass LPM when device is still active */
-@@ -1042,12 +1048,13 @@ static void ufs_mtk_vreg_set_lpm(struct ufs_hba *hba, bool lpm)
- 	if (lpm && hba->vreg_info.vcc->enabled)
- 		return;
- 
--	if (lpm)
--		regulator_set_mode(hba->vreg_info.vccq2->reg,
--				   REGULATOR_MODE_IDLE);
-+	if (hba->vreg_info.vccq)
-+		vccqx = hba->vreg_info.vccq;
- 	else
--		regulator_set_mode(hba->vreg_info.vccq2->reg,
--				   REGULATOR_MODE_NORMAL);
-+		vccqx = hba->vreg_info.vccq2;
-+
-+	regulator_set_mode(vccqx->reg,
-+			   lpm ? REGULATOR_MODE_IDLE : REGULATOR_MODE_NORMAL);
- }
- 
- static void ufs_mtk_auto_hibern8_disable(struct ufs_hba *hba)
--- 
-2.18.0
+> > Can you please drop the last two patches from your tree?
+>
+> Sure. I can also wait with the rest if you prefer?
 
+No need to wait with the rest, unless you are not happy with it yet?
+Thanks!
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
