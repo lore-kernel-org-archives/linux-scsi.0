@@ -2,128 +2,136 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50914C43334
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jun 2022 16:21:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DFFBC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jun 2022 16:42:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355054AbiFOQVa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Jun 2022 12:21:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53902 "EHLO
+        id S1344080AbiFOQmM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Jun 2022 12:42:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45316 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232224AbiFOQVa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jun 2022 12:21:30 -0400
-Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AAC139FD1;
-        Wed, 15 Jun 2022 09:21:29 -0700 (PDT)
-Received: by mail-pg1-f172.google.com with SMTP id 184so11791181pga.12;
-        Wed, 15 Jun 2022 09:21:29 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=oxwx2XCF+I1I4h/9eZc3yiqrH4E8gBYoc+9xhREdn5Y=;
-        b=CQhOQWWT+uBu3d7WHmxmNP04saC5VYeoZRnt5DSxhUjwBgW4j2GN/R+QbksL63Ide3
-         TwPgeRJJc96pzgmnsyW3y/FBD/JfFodYW9iAzbAOsS+oshqfNEkxxUZvAHSXsiLqoK3H
-         ITyWTSz3oarmdtBfoQn47beZy4X8p6jQdlMwEJDzoA87Wc3c3yua98e+tNtpZWTyPz37
-         dL6gzV8gvSp5WDcV5BAdA21VuCXXRfK6SLDuJglnH6VkuUtF7dpg6rxzVDAsoyaE55jA
-         ijJ5PBSN5meNQ4LDtZtb7tEL7Fsb9uSP5OcnuqR894OXsXhr7NyOSCXdb9wSohUZQsni
-         LnLQ==
-X-Gm-Message-State: AJIora8czxyHRqfXmnQXzfwYMD1tWNj3DK6z7+TQex1ZmFIZLqhQnpD6
-        o/IqLowrf7M8F30pgu0Q35M=
-X-Google-Smtp-Source: AGRyM1voI3CsDZUvl6kUayV5lUz/OC0ud0TYUc7dOhuNQy/iTKJCGRND7+ozOR8158DkbFk6UxzRxg==
-X-Received: by 2002:a05:6a00:4504:b0:51b:f04e:a130 with SMTP id cw4-20020a056a00450400b0051bf04ea130mr409348pfb.52.1655310088948;
-        Wed, 15 Jun 2022 09:21:28 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:36ac:cabd:84b2:80f6? ([2620:15c:211:201:36ac:cabd:84b2:80f6])
-        by smtp.gmail.com with ESMTPSA id m17-20020a056a00081100b0051b9c0af43dsm10224124pfk.155.2022.06.15.09.21.27
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 15 Jun 2022 09:21:28 -0700 (PDT)
-Message-ID: <1c422582-b074-c15e-a2d2-94bddf089974@acm.org>
-Date:   Wed, 15 Jun 2022 09:21:27 -0700
+        with ESMTP id S234430AbiFOQmM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jun 2022 12:42:12 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E92444C41C
+        for <linux-scsi@vger.kernel.org>; Wed, 15 Jun 2022 09:42:10 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id A928921C42;
+        Wed, 15 Jun 2022 16:42:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1655311329; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=JtVso2c2YfrsPnpkaBKgLB81I55VTuSJFvCfPnC3iq4=;
+        b=e3k2WTMBIKBZSKNSgXyIf4uoxR0sJEynNisf+erU0zFrppxs3gIPKQclpWJeKaou8t0ecl
+        19FS8R58yzLAmmKnyxNKkQLB+QgcpMkKxZFofMnBUbSApx8FjRU0dCGihE1Ks9opzs6svE
+        Hm9AWdAWidcoEAqlJZTE5qcubpLd+3M=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 6C9AA139F3;
+        Wed, 15 Jun 2022 16:42:09 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id OIbdGOELqmKIcwAAMHmgww
+        (envelope-from <mwilck@suse.com>); Wed, 15 Jun 2022 16:42:09 +0000
+From:   mwilck@suse.com
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
+        Hannes Reinecke <hare@suse.de>, Ming Lei <ming.lei@redhat.com>,
+        Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: [PATCH 1/2] scsi: add BLIST_RETRY_SCAN to ignore errors during scanning
+Date:   Wed, 15 Jun 2022 18:41:48 +0200
+Message-Id: <20220615164149.3092-2-mwilck@suse.com>
+X-Mailer: git-send-email 2.36.1
+In-Reply-To: <20220615164149.3092-1-mwilck@suse.com>
+References: <20220615164149.3092-1-mwilck@suse.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.0
-Subject: Re: [PATCH v3] scsi: support packing multi-segment in UNMAP command
-Content-Language: en-US
-To:     Chao Yu <chao@kernel.org>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20220615153402.2233825-1-chao@kernel.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220615153402.2233825-1-chao@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/15/22 08:34, Chao Yu wrote:
-> As SCSI SBC4 specification section 5.30.2 describes that it can
-> support unmapping one or more LBA range in single UNMAP command,
-> however, previously we only pack one LBA range in UNMAP command
-> by default no matter device gives the block limits that says it
-> can support in-batch UNMAP.
+From: Hannes Reinecke <hare@suse.de>
 
-The above sentence is too long. Please split it.
+On flaky connections the INQUIRY command might run into a timeout,
+but as we already have performed a REPORT LUNS command we know that
+a LUN should be present. So ignore errors for the INQUIRY commands,
+and retry until we exhaust the number of retries.
 
-> This patch tries to set max_discard_segments config according to
-              ^^^^^^^^^^^^
-Consider changing "tries to set" into "sets".
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Martin Wilck <mwilck@suse.com>
+---
+ drivers/scsi/scsi_scan.c    | 12 +++++++++---
+ include/scsi/scsi_devinfo.h |  4 +++-
+ 2 files changed, 12 insertions(+), 4 deletions(-)
 
-> block limits of device, and supports in-batch UNMAP.
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 91ac901a6682..b9b851ce1b72 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -649,8 +649,6 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 	int pass, count, result;
+ 	struct scsi_sense_hdr sshdr;
+ 
+-	*bflags = 0;
+-
+ 	/* Perform up to 3 passes.  The first pass uses a conservative
+ 	 * transfer length of 36 unless sdev->inquiry_len specifies a
+ 	 * different value. */
+@@ -697,6 +695,11 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 				    (sshdr.ascq == 0))
+ 					continue;
+ 			}
++			if (*bflags & BLIST_RETRY_SCAN) {
++				SCSI_LOG_SCAN_BUS(3, sdev_printk(KERN_INFO, sdev,
++						"scsi scan: retry inquiry after REPORT LUNs\n"));
++				continue;
++			}
+ 		} else if (result == 0) {
+ 			/*
+ 			 * if nothing was transferred, we try
+@@ -709,6 +712,8 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 		break;
+ 	}
+ 
++	*bflags = 0;
++
+ 	if (result == 0) {
+ 		scsi_sanitize_inquiry_string(&inq_result[8], 8);
+ 		scsi_sanitize_inquiry_string(&inq_result[16], 16);
+@@ -1531,9 +1536,10 @@ static int scsi_report_lun_scan(struct scsi_target *starget, blist_flags_t bflag
+ 				    " allowed by the host adapter\n", lun);
+ 		} else {
+ 			int res;
++			blist_flags_t bflags = BLIST_RETRY_SCAN;
+ 
+ 			res = scsi_probe_and_add_lun(starget,
+-				lun, NULL, NULL, rescan, NULL);
++				lun, &bflags, NULL, rescan, NULL);
+ 			if (res == SCSI_SCAN_NO_RESPONSE) {
+ 				/*
+ 				 * Got some results, but now none, abort.
+diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h
+index 5d14adae21c7..e74a228d73d1 100644
+--- a/include/scsi/scsi_devinfo.h
++++ b/include/scsi/scsi_devinfo.h
+@@ -68,8 +68,10 @@
+ #define BLIST_RETRY_ITF		((__force blist_flags_t)(1ULL << 32))
+ /* Always retry ABORTED_COMMAND with ASC 0xc1 */
+ #define BLIST_RETRY_ASC_C1	((__force blist_flags_t)(1ULL << 33))
++/* Retry errors during scanning */
++#define BLIST_RETRY_SCAN	((__force blist_flags_t)(1ULL << 34))
+ 
+-#define __BLIST_LAST_USED BLIST_RETRY_ASC_C1
++#define __BLIST_LAST_USED BLIST_RETRY_SCAN
+ 
+ #define __BLIST_HIGH_UNUSED (~(__BLIST_LAST_USED | \
+ 			       (__force blist_flags_t) \
+-- 
+2.36.1
 
-Consider changing "in-batch UNMAP" into "unmapping multiple LBA ranges 
-with a single UNMAP command".
-
-> +	blk_queue_max_discard_segments(q, sdkp->max_block_desc_count);
-
-sdkp->max_block_desc_count is 32 bits wide while 
-blk_queue_max_discard_segments() accepts an unsigned short as second 
-argument. So the value 0x10002 will be converted into 2, which is not 
-correct. Consider changing the second argument into min(U16_MAX, 
-sdkp->max_block_desc_count).
-
->   	sdkp->provisioning_mode = mode;
->   
->   	switch (mode) {
-> @@ -836,9 +837,10 @@ static blk_status_t sd_setup_unmap_cmnd(struct scsi_cmnd *cmd)
->   	struct scsi_device *sdp = cmd->device;
->   	struct request *rq = scsi_cmd_to_rq(cmd);
->   	struct scsi_disk *sdkp = scsi_disk(rq->q->disk);
-> -	u64 lba = sectors_to_logical(sdp, blk_rq_pos(rq));
-> -	u32 nr_blocks = sectors_to_logical(sdp, blk_rq_sectors(rq));
-> -	unsigned int data_len = 24;
-> +	unsigned short segments = blk_rq_nr_discard_segments(rq);
-> +	unsigned int data_len = 8 + 16 * segments;
-> +	unsigned int data_offset = 8;
-
-Please rename 'data_offset' into 'descriptor_offset' to match the SBC-4 
-terminology.
-
-> @@ -2870,9 +2879,9 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
->   			goto out;
->   
->   		lba_count = get_unaligned_be32(&vpd->data[20]);
-> -		desc_count = get_unaligned_be32(&vpd->data[24]);
-> +		sdkp->max_block_desc_count = get_unaligned_be32(&vpd->data[24]);
-
-Consider adding /* Extract the MAXIMUM UNMAP BLOCK DESCRIPTOR COUNT. */ 
-above the above statement.
-
-> diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-> index 5eea762f84d1..bda9db5e2322 100644
-> --- a/drivers/scsi/sd.h
-> +++ b/drivers/scsi/sd.h
-> @@ -119,6 +119,7 @@ struct scsi_disk {
->   	u32		opt_xfer_blocks;
->   	u32		max_ws_blocks;
->   	u32		max_unmap_blocks;
-> +	u32		max_block_desc_count;
-
-I do not agree with the choice of the name of this member variable. The 
-name used in SBC-4 is "MAXIMUM UNMAP BLOCK DESCRIPTOR COUNT". Leaving 
-out "unmap" when abbreviating that description into a member name makes 
-it impossible to guess what the purpose of that member variable is.
-
-Thanks,
-
-Bart.
