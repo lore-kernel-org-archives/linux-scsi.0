@@ -2,313 +2,150 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3EA1C43334
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jun 2022 12:15:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDC06C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jun 2022 13:29:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347751AbiFOMP0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Jun 2022 08:15:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46840 "EHLO
+        id S238254AbiFON3Y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Jun 2022 09:29:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35882 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347023AbiFOMPV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jun 2022 08:15:21 -0400
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3C863F8A1
-        for <linux-scsi@vger.kernel.org>; Wed, 15 Jun 2022 05:15:19 -0700 (PDT)
-Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20220615121518epoutp03e41bea899fb8cab4d7c0d61159abdfd9~4ylJo_3yO0235402354epoutp03q
-        for <linux-scsi@vger.kernel.org>; Wed, 15 Jun 2022 12:15:18 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20220615121518epoutp03e41bea899fb8cab4d7c0d61159abdfd9~4ylJo_3yO0235402354epoutp03q
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1655295318;
-        bh=5Ilj0JrS2l1vwaLwafYqmPNBBHc2ZRo4XhqkSS78FAk=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=osa61Gktx/kc+raXmb7jVwDL4avr6wK/UvfwpRN6tQuX4uOydM53giC+TEG1dM2iI
-         8PhcrNTxU7HJjV9TaOWZp3fAtlYChjeeq7KmO+9Vl5Az7UaI1TnUSGn2B02nScTaFL
-         jNp0eWSXUN28uVaI5qkzNiv4PUBMDLLkhtk+Aedc=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-        epcas5p2.samsung.com (KnoxPortal) with ESMTP id
-        20220615121517epcas5p280fdc7a2e89eddd66da2605099d5120a~4ylJGHZGP0983109831epcas5p25;
-        Wed, 15 Jun 2022 12:15:17 +0000 (GMT)
-Received: from epsmges5p1new.samsung.com (unknown [182.195.38.174]) by
-        epsnrtp1.localdomain (Postfix) with ESMTP id 4LNPQC6s4nz4x9Pr; Wed, 15 Jun
-        2022 12:15:15 +0000 (GMT)
-Received: from epcas5p4.samsung.com ( [182.195.41.42]) by
-        epsmges5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        D7.E9.10063.35DC9A26; Wed, 15 Jun 2022 21:15:15 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
-        20220615121515epcas5p29fd5c0b2e215047926cb92507a9919c9~4ylGi3Lia0984109841epcas5p27;
-        Wed, 15 Jun 2022 12:15:15 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20220615121515epsmtrp18047fc871b18343fa2930f72177b2099~4ylGiEylU3132631326epsmtrp1e;
-        Wed, 15 Jun 2022 12:15:15 +0000 (GMT)
-X-AuditID: b6c32a49-4cbff7000000274f-53-62a9cd53a9f4
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        71.17.11276.25DC9A26; Wed, 15 Jun 2022 21:15:14 +0900 (KST)
-Received: from Jaguar.sa.corp.samsungelectronics.net (unknown
-        [107.108.73.139]) by epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20220615121512epsmtip24e1d46f7348c490c44fc68e88acf5099~4ylEWFLKO0846808468epsmtip20;
-        Wed, 15 Jun 2022 12:15:12 +0000 (GMT)
-From:   Alim Akhtar <alim.akhtar@samsung.com>
-To:     linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-phy@lists.infradead.org
-Cc:     beanhuo@micron.com, krzysztof.kozlowski+dt@linaro.org,
-        avri.altman@wdc.com, bvanassche@acm.org,
-        martin.petersen@oracle.com, chanho61.park@samsung.com,
-        linux-samsung-soc@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>
-Subject: [PATCH 3/3] include: ufs: re-arrange addresses in increasing order
-Date:   Wed, 15 Jun 2022 17:42:04 +0530
-Message-Id: <20220615121204.16642-3-alim.akhtar@samsung.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20220615121204.16642-1-alim.akhtar@samsung.com>
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrKKsWRmVeSWpSXmKPExsWy7bCmlm7w2ZVJBpNemVg8mLeNzeLlz6ts
-        FgcfdrJYTPvwk9ni8n5ti74XD5ktNj2+xmpxedccNosJq76xWMw4v4/Jovv6DjaL5cf/MTnw
-        eFy+4u1x59oeNo/NS+o9vq/vYPP4+PQWi0ffllWMHp83yXm0H+hmCuCIyrbJSE1MSS1SSM1L
-        zk/JzEu3VfIOjneONzUzMNQ1tLQwV1LIS8xNtVVy8QnQdcvMAbpVSaEsMacUKBSQWFyspG9n
-        U5RfWpKqkJFfXGKrlFqQklNgUqBXnJhbXJqXrpeXWmJlaGBgZApUmJCdsf+vS8Et04rWi31M
-        DYzndLsYOTkkBEwkLi3+y9zFyMUhJLCbUeLj3UvsEM4nRol9iyaxQjjfgJxNu5i6GDnAWnYe
-        qYGI72WUmPr8HSOE08Ik8WzXV1aQuWwC2hJ3p29hAkmICDQzShzs2AXmMAu8ZJRof3KBEaRK
-        WMBbYsPOBywgNouAqsS9xqdMIDavgI3Er41XGCEulJdYveEAM8hqTgFbiTMPLSDCjRwS7U0C
-        EBe5SHTtUYIIC0u8Or6FHcKWknjZ38YOUeIhseiPFEQ4Q+Lt8vVQw+0lDlyZwwJSwiygKbF+
-        lz5ImFmAT6L39xOod3klOtqEIKpVJZrfXWWBsKUlJnZ3s0LYHhL3P1+DBtUERolJlyezTGCU
-        nYUwdQEj4ypGydSC4tz01GLTAsO81HJ4LCXn525iBKc/Lc8djHcffNA7xMjEwXiIUYKDWUmE
-        1yx4ZZIQb0piZVVqUX58UWlOavEhRlNgeE1klhJNzgcm4LySeEMTSwMTMzMzE0tjM0MlcV6B
-        /41JQgLpiSWp2ampBalFMH1MHJxSDUxRXccffzAS6LisonbHY87uArP4ytJNs2Rf52z7Okcv
-        LFHDzfkdm5m02DxRprwXqlvnVnV4+qmGnv96/n5rS6aTdSRzRpRC8yJL3p9u+ya9XCXC9kBt
-        7+4vGx94F6ocSPy9s31Zye7VHi6zdRt+73zw79jXNilZRf/vDlu/fuaJzlg623vTWQlzFaUT
-        Pl+Wvgn3fi8t2GIZNH3Z9qqD9Rpv92RlP3wYM+O00o1XHwpmiqz+1Xbd0PffZrnkeO7s/Lsq
-        R6yOtedZrNE7WlxluYL3stcGrdtvrKzu6K/eELflsba9m+j6jalW+yNn/k1L12j9ekpGXldp
-        p/7JljMX06qW/fzFL/jj2/8rDx2KWBcosRRnJBpqMRcVJwIAUgfpLggEAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrFLMWRmVeSWpSXmKPExsWy7bCSvG7Q2ZVJBvd2m1k8mLeNzeLlz6ts
-        FgcfdrJYTPvwk9ni8n5ti74XD5ktNj2+xmpxedccNosJq76xWMw4v4/Jovv6DjaL5cf/MTnw
-        eFy+4u1x59oeNo/NS+o9vq/vYPP4+PQWi0ffllWMHp83yXm0H+hmCuCI4rJJSc3JLEst0rdL
-        4MrY/9el4JZpRevFPqYGxnO6XYwcHBICJhI7j9R0MXJxCAnsZpTYvvAiUxcjJ1BcWuL6xgns
-        ELawxMp/z9khipqYJNauXMkCkmAT0Ja4O30LWIOIQDujxP3tbCBFzAIfGSVedi9hBEkIC3hL
-        bNj5AKyBRUBV4l7jU7AGXgEbiV8brzBCbJCXWL3hADPIRZwCthJnHlqAhIWASu4+ecA2gZFv
-        ASPDKkbJ1ILi3PTcYsMCw7zUcr3ixNzi0rx0veT83E2M4ODV0tzBuH3VB71DjEwcjIcYJTiY
-        lUR4zYJXJgnxpiRWVqUW5ccXleakFh9ilOZgURLnvdB1Ml5IID2xJDU7NbUgtQgmy8TBKdXA
-        tP5Xct2eoD+nNn5Yy+7lHye98+omo8vXVpgExTzli3+xrkwm/OifD5btrxYdZnmwWfPchNz2
-        OjM+h6gC0T+rDyS27bHPVgj9dKpz1U1XMa+qxsjJclnvY+skZqqrdul5/4hZfsj4R9blvmq7
-        5LsfxH5d7Y2MrZ09ZdHCF8fdvwnbfdJxOnT8Trxgn/eSxXZtoVYp38MXq2u8c+xbIb6jXfBf
-        l1ldq6hJdrfKm2Jex826kV5ph0Lm1LTGFns5K8+/Fip7Rv6iL3NoTT17isCE9cKO3z9PjQ+Z
-        dEY8KShzUc1zcS4NLc/nfy1de2bai+yc2Vu0y8HBIZatc2370+ezc+tUn10L9i5Y5jm7zkSJ
-        pTgj0VCLuag4EQDFo/wozQIAAA==
-X-CMS-MailID: 20220615121515epcas5p29fd5c0b2e215047926cb92507a9919c9
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20220615121515epcas5p29fd5c0b2e215047926cb92507a9919c9
-References: <20220615121204.16642-1-alim.akhtar@samsung.com>
-        <CGME20220615121515epcas5p29fd5c0b2e215047926cb92507a9919c9@epcas5p2.samsung.com>
+        with ESMTP id S1352214AbiFON25 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jun 2022 09:28:57 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2BE1860F3;
+        Wed, 15 Jun 2022 06:28:56 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id BC6ED619E4;
+        Wed, 15 Jun 2022 13:28:55 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8FFADC3411C;
+        Wed, 15 Jun 2022 13:28:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1655299735;
+        bh=S+lkWBMeibl/wRB+W+22IKyiUIA6vhzXK2JHutJeaMQ=;
+        h=From:To:Cc:Subject:Date:From;
+        b=Mdkc/dapTOik9/cI6wxdBJtwsiBsWK+VlAwwI454s8XhAYKYRyliDiKHid9FgusGs
+         5jzOkk1h/qoAsdMqGN/LZl9x1by2P6Z/+9m910A4gynyBqcSOceU7mUmeOTnVxOep/
+         fQzx+8waRtjdSC2sIdy+DfKhAxyYsd2sVjrBrnSPyYBjmN3iDrBwu2XRwkd62gMiXI
+         v5pDZj1XGElf6mlypLRI5pHPVVAhsxBbOK9rRv7gh0W8qgQ2aKdC+Jph6lZZsSBGZF
+         Asd4rpqkEh2GJRV+DNyk/RARMIzd7I6M+OO2PSH5N/Fm0qtvNaBHLGYbvsXvDNxZ7e
+         fQNvrEzajJyuw==
+From:   Chao Yu <chao@kernel.org>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        chao@kernel.org
+Subject: [PATCH v2] scsi: support packing multi-segment in UNMAP command
+Date:   Wed, 15 Jun 2022 21:28:46 +0800
+Message-Id: <20220615132846.2232920-1-chao@kernel.org>
+X-Mailer: git-send-email 2.25.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Rearrange all the unipro and mphy addresses in their increasing order.
+As SPEC describes that it can support unmapping one or more LBA range
+in single UNMAP command, however, previously we only pack one LBA
+range in UNMAP command by default no matter device gives the block
+limits that says it can support in-batch UNMAP.
 
-Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
+This patch tries to set max_discard_segments config according to block
+limits of device, and supports in-batch UNMAP.
+
+Signed-off-by: Chao Yu <chao@kernel.org>
 ---
- include/ufs/unipro.h | 102 +++++++++++++++++++++----------------------
- 1 file changed, 51 insertions(+), 51 deletions(-)
+v2:
+- rebase the code.
+ drivers/scsi/sd.c | 30 +++++++++++++++++++-----------
+ drivers/scsi/sd.h |  1 +
+ 2 files changed, 20 insertions(+), 11 deletions(-)
 
-diff --git a/include/ufs/unipro.h b/include/ufs/unipro.h
-index ade92e8d3676..4cbfe9272787 100644
---- a/include/ufs/unipro.h
-+++ b/include/ufs/unipro.h
-@@ -38,6 +38,18 @@
- /*
-  * M-RX Configuration Attributes
-  */
-+#define RX_HS_G1_SYNC_LENGTH_CAP		0x008B
-+#define RX_HS_G1_PREP_LENGTH_CAP		0x008C
-+#define RX_MIN_ACTIVATETIME_CAPABILITY		0x008F
-+#define RX_HIBERN8TIME_CAPABILITY		0x0092
-+#define RX_HS_G2_SYNC_LENGTH_CAP		0x0094
-+#define RX_HS_G3_SYNC_LENGTH_CAP		0x0095
-+#define RX_HS_G2_PREP_LENGTH_CAP		0x0096
-+#define RX_HS_G3_PREP_LENGTH_CAP		0x0097
-+#define RX_ADV_GRANULARITY_CAP			0x0098
-+#define RX_HIBERN8TIME_CAP			0x0092
-+#define RX_ADV_HIBERN8TIME_CAP			0x0099
-+#define RX_ADV_MIN_ACTIVATETIME_CAP		0x009A
- #define RX_MODE					0x00A1
- #define RX_HSRATE_SERIES			0x00A2
- #define RX_HSGEAR				0x00A3
-@@ -47,31 +59,19 @@
- #define RX_ENTER_HIBERN8			0x00A7
- #define RX_BYPASS_8B10B_ENABLE			0x00A8
- #define RX_TERMINATION_FORCE_ENABLE		0x00A9
--#define RX_MIN_ACTIVATETIME_CAPABILITY		0x008F
--#define RX_HIBERN8TIME_CAPABILITY		0x0092
-+#define RXCALCTRL				0x00B4
-+#define RXSQCTRL				0x00B5
-+#define CFGRXCDR8				0x00BA
-+#define CFGRXOVR8				0x00BD
-+#define CFGRXOVR6				0x00BF
-+#define RXDIRECTCTRL2				0x00C7
-+#define CFGRXOVR4				0x00E9
- #define RX_REFCLKFREQ				0x00EB
- #define	RX_CFGCLKFREQVAL			0x00EC
- #define CFGWIDEINLN				0x00F0
--#define CFGRXCDR8				0x00BA
- #define ENARXDIRECTCFG4				0x00F2
--#define CFGRXOVR8				0x00BD
--#define RXDIRECTCTRL2				0x00C7
- #define ENARXDIRECTCFG3				0x00F3
--#define RXCALCTRL				0x00B4
- #define ENARXDIRECTCFG2				0x00F4
--#define CFGRXOVR4				0x00E9
--#define RXSQCTRL				0x00B5
--#define CFGRXOVR6				0x00BF
--#define RX_HS_G1_SYNC_LENGTH_CAP		0x008B
--#define RX_HS_G1_PREP_LENGTH_CAP		0x008C
--#define RX_HS_G2_SYNC_LENGTH_CAP		0x0094
--#define RX_HS_G3_SYNC_LENGTH_CAP		0x0095
--#define RX_HS_G2_PREP_LENGTH_CAP		0x0096
--#define RX_HS_G3_PREP_LENGTH_CAP		0x0097
--#define RX_ADV_GRANULARITY_CAP			0x0098
--#define RX_HIBERN8TIME_CAP			0x0092
--#define RX_ADV_HIBERN8TIME_CAP			0x0099
--#define RX_ADV_MIN_ACTIVATETIME_CAP		0x009A
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 895b56c8f25e..143b4eecf657 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -790,6 +790,7 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
+ 	q->limits.discard_granularity =
+ 		max(sdkp->physical_block_size,
+ 		    sdkp->unmap_granularity * logical_block_size);
++	blk_queue_max_discard_segments(q, sdkp->max_block_desc_count);
+ 	sdkp->provisioning_mode = mode;
  
+ 	switch (mode) {
+@@ -835,10 +836,10 @@ static blk_status_t sd_setup_unmap_cmnd(struct scsi_cmnd *cmd)
+ {
+ 	struct scsi_device *sdp = cmd->device;
+ 	struct request *rq = scsi_cmd_to_rq(cmd);
++	struct bio *bio;
+ 	struct scsi_disk *sdkp = scsi_disk(rq->q->disk);
+-	u64 lba = sectors_to_logical(sdp, blk_rq_pos(rq));
+-	u32 nr_blocks = sectors_to_logical(sdp, blk_rq_sectors(rq));
+-	unsigned int data_len = 24;
++	unsigned short segments = blk_rq_nr_discard_segments(rq);
++	unsigned int data_len = 8 + 16 * segments, i = 0;
+ 	char *buf;
  
- #define is_mphy_tx_attr(attr)			(attr < RX_MODE)
-@@ -102,47 +102,50 @@
- /*
-  * PHY Adapter attributes
-  */
--#define PA_ACTIVETXDATALANES	0x1560
--#define PA_ACTIVERXDATALANES	0x1580
--#define PA_TXTRAILINGCLOCKS	0x1564
- #define PA_PHY_TYPE		0x1500
- #define PA_AVAILTXDATALANES	0x1520
--#define PA_AVAILRXDATALANES	0x1540
--#define PA_MINRXTRAILINGCLOCKS	0x1543
--#define PA_TXPWRSTATUS		0x1567
--#define PA_RXPWRSTATUS		0x1582
--#define PA_TXFORCECLOCK		0x1562
--#define PA_TXPWRMODE		0x1563
--#define PA_LEGACYDPHYESCDL	0x1570
- #define PA_MAXTXSPEEDFAST	0x1521
- #define PA_MAXTXSPEEDSLOW	0x1522
- #define PA_MAXRXSPEEDFAST	0x1541
- #define PA_MAXRXSPEEDSLOW	0x1542
- #define PA_TXLINKSTARTUPHS	0x1544
-+#define PA_AVAILRXDATALANES	0x1540
-+#define PA_MINRXTRAILINGCLOCKS	0x1543
- #define PA_LOCAL_TX_LCC_ENABLE	0x155E
-+#define PA_ACTIVETXDATALANES	0x1560
-+#define PA_CONNECTEDTXDATALANES	0x1561
-+#define PA_TXFORCECLOCK		0x1562
-+#define PA_TXPWRMODE		0x1563
-+#define PA_TXTRAILINGCLOCKS	0x1564
- #define PA_TXSPEEDFAST		0x1565
- #define PA_TXSPEEDSLOW		0x1566
--#define PA_REMOTEVERINFO	0x15A0
-+#define PA_TXPWRSTATUS		0x1567
- #define PA_TXGEAR		0x1568
- #define PA_TXTERMINATION	0x1569
- #define PA_HSSERIES		0x156A
-+#define PA_LEGACYDPHYESCDL	0x1570
- #define PA_PWRMODE		0x1571
-+#define PA_ACTIVERXDATALANES	0x1580
-+#define PA_CONNECTEDRXDATALANES	0x1581
-+#define PA_RXPWRSTATUS		0x1582
- #define PA_RXGEAR		0x1583
- #define PA_RXTERMINATION	0x1584
- #define PA_MAXRXPWMGEAR		0x1586
- #define PA_MAXRXHSGEAR		0x1587
-+#define PA_PACPREQTIMEOUT	0x1590
-+#define PA_PACPREQEOBTIMEOUT	0x1591
-+#define PA_REMOTEVERINFO	0x15A0
-+#define PA_LOGICALLANEMAP	0x15A1
-+#define PA_SLEEPNOCONFIGTIME	0x15A2
-+#define PA_STALLNOCONFIGTIME	0x15A3
-+#define PA_SAVECONFIGTIME	0x15A4
- #define PA_RXHSUNTERMCAP	0x15A5
- #define PA_RXLSTERMCAP		0x15A6
- #define PA_GRANULARITY		0x15AA
--#define PA_PACPREQTIMEOUT	0x1590
--#define PA_PACPREQEOBTIMEOUT	0x1591
- #define PA_HIBERN8TIME		0x15A7
- #define PA_LOCALVERINFO		0x15A9
- #define PA_GRANULARITY		0x15AA
- #define PA_TACTIVATE		0x15A8
--#define PA_PACPFRAMECOUNT	0x15C0
--#define PA_PACPERRORCOUNT	0x15C1
--#define PA_PHYTESTCONTROL	0x15C2
- #define PA_PWRMODEUSERDATA0	0x15B0
- #define PA_PWRMODEUSERDATA1	0x15B1
- #define PA_PWRMODEUSERDATA2	0x15B2
-@@ -155,12 +158,9 @@
- #define PA_PWRMODEUSERDATA9	0x15B9
- #define PA_PWRMODEUSERDATA10	0x15BA
- #define PA_PWRMODEUSERDATA11	0x15BB
--#define PA_CONNECTEDTXDATALANES	0x1561
--#define PA_CONNECTEDRXDATALANES	0x1581
--#define PA_LOGICALLANEMAP	0x15A1
--#define PA_SLEEPNOCONFIGTIME	0x15A2
--#define PA_STALLNOCONFIGTIME	0x15A3
--#define PA_SAVECONFIGTIME	0x15A4
-+#define PA_PACPFRAMECOUNT	0x15C0
-+#define PA_PACPERRORCOUNT	0x15C1
-+#define PA_PHYTESTCONTROL	0x15C2
- #define PA_TXHSADAPTTYPE       0x15D4
+ 	rq->special_vec.bv_page = mempool_alloc(sd_page_pool, GFP_ATOMIC);
+@@ -851,13 +852,20 @@ static blk_status_t sd_setup_unmap_cmnd(struct scsi_cmnd *cmd)
  
- /* Adpat type for PA_TXHSADAPTTYPE attribute */
-@@ -172,9 +172,9 @@
- #define PA_HIBERN8_TIME_UNIT_US		100
+ 	cmd->cmd_len = 10;
+ 	cmd->cmnd[0] = UNMAP;
+-	cmd->cmnd[8] = 24;
++	cmd->cmnd[8] = data_len;
  
- /*Other attributes*/
-+#define VS_POWERSTATE		0xD083
- #define VS_MPHYCFGUPDT		0xD085
- #define VS_DEBUGOMC		0xD09E
--#define VS_POWERSTATE		0xD083
+ 	buf = bvec_virt(&rq->special_vec);
+-	put_unaligned_be16(6 + 16, &buf[0]);
+-	put_unaligned_be16(16, &buf[2]);
+-	put_unaligned_be64(lba, &buf[8]);
+-	put_unaligned_be32(nr_blocks, &buf[16]);
++	put_unaligned_be16(6 + 16 * segments, &buf[0]);
++	put_unaligned_be16(16 * segments, &buf[2]);
++
++	__rq_for_each_bio(bio, rq) {
++		u64 lba = sectors_to_logical(sdp, bio->bi_iter.bi_sector);
++		u32 nr_blocks = sectors_to_logical(sdp, bio_sectors(bio));
++
++		put_unaligned_be64(lba, &buf[8 + 16 * i]);
++		put_unaligned_be32(nr_blocks, &buf[8 + 16 * i + 8]);
++		i++;
++	}
  
- #define PA_GRANULARITY_MIN_VAL	1
- #define PA_GRANULARITY_MAX_VAL	6
-@@ -245,27 +245,27 @@ enum ufs_unipro_ver {
- /*
-  * Data Link Layer Attributes
-  */
-+#define DL_TXPREEMPTIONCAP	0x2000
-+#define DL_TC0TXMAXSDUSIZE	0x2001
-+#define DL_TC0RXINITCREDITVAL	0x2002
-+#define DL_TC1TXMAXSDUSIZE	0x2003
-+#define DL_TC1RXINITCREDITVAL	0x2004
-+#define DL_TC0TXBUFFERSIZE	0x2005
-+#define DL_TC1TXBUFFERSIZE	0x2006
- #define DL_TC0TXFCTHRESHOLD	0x2040
- #define DL_FC0PROTTIMEOUTVAL	0x2041
- #define DL_TC0REPLAYTIMEOUTVAL	0x2042
- #define DL_AFC0REQTIMEOUTVAL	0x2043
- #define DL_AFC0CREDITTHRESHOLD	0x2044
- #define DL_TC0OUTACKTHRESHOLD	0x2045
-+#define DL_PEERTC0PRESENT	0x2046
-+#define DL_PEERTC0RXINITCREVAL	0x2047
- #define DL_TC1TXFCTHRESHOLD	0x2060
- #define DL_FC1PROTTIMEOUTVAL	0x2061
- #define DL_TC1REPLAYTIMEOUTVAL	0x2062
- #define DL_AFC1REQTIMEOUTVAL	0x2063
- #define DL_AFC1CREDITTHRESHOLD	0x2064
- #define DL_TC1OUTACKTHRESHOLD	0x2065
--#define DL_TXPREEMPTIONCAP	0x2000
--#define DL_TC0TXMAXSDUSIZE	0x2001
--#define DL_TC0RXINITCREDITVAL	0x2002
--#define DL_TC0TXBUFFERSIZE	0x2005
--#define DL_PEERTC0PRESENT	0x2046
--#define DL_PEERTC0RXINITCREVAL	0x2047
--#define DL_TC1TXMAXSDUSIZE	0x2003
--#define DL_TC1RXINITCREDITVAL	0x2004
--#define DL_TC1TXBUFFERSIZE	0x2006
- #define DL_PEERTC1PRESENT	0x2066
- #define DL_PEERTC1RXINITCREVAL	0x2067
+ 	cmd->allowed = sdkp->max_retries;
+ 	cmd->transfersize = data_len;
+@@ -2862,7 +2870,7 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
+ 	sdkp->opt_xfer_blocks = get_unaligned_be32(&vpd->data[12]);
  
+ 	if (vpd->len >= 64) {
+-		unsigned int lba_count, desc_count;
++		unsigned int lba_count;
+ 
+ 		sdkp->max_ws_blocks = (u32)get_unaligned_be64(&vpd->data[36]);
+ 
+@@ -2870,9 +2878,9 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
+ 			goto out;
+ 
+ 		lba_count = get_unaligned_be32(&vpd->data[20]);
+-		desc_count = get_unaligned_be32(&vpd->data[24]);
++		sdkp->max_block_desc_count = get_unaligned_be32(&vpd->data[24]);
+ 
+-		if (lba_count && desc_count)
++		if (lba_count && sdkp->max_block_desc_count)
+ 			sdkp->max_unmap_blocks = lba_count;
+ 
+ 		sdkp->unmap_granularity = get_unaligned_be32(&vpd->data[28]);
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 5eea762f84d1..bda9db5e2322 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -119,6 +119,7 @@ struct scsi_disk {
+ 	u32		opt_xfer_blocks;
+ 	u32		max_ws_blocks;
+ 	u32		max_unmap_blocks;
++	u32		max_block_desc_count;
+ 	u32		unmap_granularity;
+ 	u32		unmap_alignment;
+ 	u32		index;
 -- 
 2.25.1
 
