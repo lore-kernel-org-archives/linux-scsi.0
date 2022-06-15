@@ -2,92 +2,69 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C2B8C43334
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jun 2022 16:42:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4A96C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jun 2022 16:44:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344720AbiFOQmP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Jun 2022 12:42:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45326 "EHLO
+        id S1344363AbiFOQoZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Jun 2022 12:44:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47700 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243553AbiFOQmM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jun 2022 12:42:12 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 495CC4C79D
-        for <linux-scsi@vger.kernel.org>; Wed, 15 Jun 2022 09:42:11 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 012D921C47;
-        Wed, 15 Jun 2022 16:42:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1655311330; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Gu6YqYR40mZp80M1+u0HwlJhLM3b7TyZHvOeANbGHGM=;
-        b=hikxZ0K6k6cM8X8MOsL7EAE+Um+WDzEWfKT+VEwfRDkRev8x+PJ1dBuZ8Zr+RBL75nwGYD
-        vCBj65FwmK14/msz9GhJ4s9Qw0XjYpps2NBILZKtlosdLEO/2b5SxV3BKIrnQrQLG+B86i
-        1o0Bg6TFwNXa5xZE7QO+7vvzsjfY6kM=
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id B4884139F3;
-        Wed, 15 Jun 2022 16:42:09 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id mDtmKuELqmKIcwAAMHmgww
-        (envelope-from <mwilck@suse.com>); Wed, 15 Jun 2022 16:42:09 +0000
-From:   mwilck@suse.com
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>, Ming Lei <ming.lei@redhat.com>,
-        Bart Van Assche <Bart.VanAssche@sandisk.com>,
-        Martin Wilck <mwilck@suse.com>
-Subject: [PATCH 2/2] scsi: scan: retry INQUIRY after timeout
-Date:   Wed, 15 Jun 2022 18:41:49 +0200
-Message-Id: <20220615164149.3092-3-mwilck@suse.com>
-X-Mailer: git-send-email 2.36.1
-In-Reply-To: <20220615164149.3092-1-mwilck@suse.com>
-References: <20220615164149.3092-1-mwilck@suse.com>
+        with ESMTP id S244316AbiFOQoV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jun 2022 12:44:21 -0400
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41E1F2252D;
+        Wed, 15 Jun 2022 09:44:19 -0700 (PDT)
+Received: by mail-pl1-f178.google.com with SMTP id o17so10887784pla.6;
+        Wed, 15 Jun 2022 09:44:19 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=tdRf9f++mZXtmPEhEjfIm1j3U3xYTZByZyIU4ArniOc=;
+        b=XxT0S2+N7pS29ShTdW0xTdwdwATP5kLzAEO8dVQNwvGQd47mBaiPQ45A3Qoztg24Cm
+         yZFNHJY0c9K0iahJOJIQWwqW5XoNaxJWVhTLS9uLvt1jNvrnvHu7nN905AxaSgOd39Z0
+         7WoLCakexLr9aUNiOxlhKO93tpmyFbWUr9jpL1JyK3dXTNMIxGbphq1KfBlvROxGaFLa
+         kTaLug9pBk0iuYMHL+ewPDwjfPvuE6dKNOPyFbPaRrsiaoZPI7s5N+8GphhfvKPPX1+T
+         6y89JhJrjWn1p00r6DDu5pe4+ikNsXT/1gG09RMqSeMEZThVGbZMZeC9kqwjUU8UcDj+
+         GuvQ==
+X-Gm-Message-State: AJIora/4VETPE+97XV6Ut8z6Do3CoYr+FLrK92BScjWpnmhmMOVpNuiJ
+        AbfjYKA2ELGXm2/tEJQmxCk=
+X-Google-Smtp-Source: AGRyM1ueDDeJzheH+6xxWOLQ9qGtgWUGLv8fNJ7P27DvendO/0ji2AGZfpfFMCqajAGHQKULCkCJow==
+X-Received: by 2002:a17:902:f608:b0:168:e92b:47e8 with SMTP id n8-20020a170902f60800b00168e92b47e8mr500761plg.115.1655311458607;
+        Wed, 15 Jun 2022 09:44:18 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:36ac:cabd:84b2:80f6? ([2620:15c:211:201:36ac:cabd:84b2:80f6])
+        by smtp.gmail.com with ESMTPSA id h6-20020a170902eec600b001641a68f1c7sm9494972plb.273.2022.06.15.09.44.16
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 15 Jun 2022 09:44:17 -0700 (PDT)
+Message-ID: <a24cdcae-8195-e3ab-0d36-c9e35c671639@acm.org>
+Date:   Wed, 15 Jun 2022 09:44:15 -0700
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [PATCH v4 01/10] scsi: ufs: Export ufshcd_uic_change_pwr_mode()
+Content-Language: en-US
+To:     Stanley Chu <stanley.chu@mediatek.com>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, martin.petersen@oracle.com,
+        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com
+Cc:     peter.wang@mediatek.com, chun-hung.wu@mediatek.com,
+        alice.chao@mediatek.com, powen.kao@mediatek.com,
+        mason.zhang@mediatek.com, qilin.tan@mediatek.com,
+        lin.gui@mediatek.com, eddie.huang@mediatek.com,
+        tun-yu.yu@mediatek.com, cc.chou@mediatek.com,
+        chaotian.jing@mediatek.com, jiajie.hao@mediatek.com
+References: <20220615035146.20964-1-stanley.chu@mediatek.com>
+ <20220615035146.20964-2-stanley.chu@mediatek.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20220615035146.20964-2-stanley.chu@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Martin Wilck <mwilck@suse.com>
+On 6/14/22 20:51, Stanley Chu wrote:
+> Export ufshcd_uic_change_pwr_mode() to allow vendors to
+> use it for SoC-specific power mode change design limitation.
 
-The SCSI mid layer doesn't retry commands after DID_TIME_OUT (see
-scsi_noretry_cmd()). Packet loss in the fabric can cause spurious timeouts
-during SCSI device probing, causing device probing to fail. This has been
-observed in FCoE uplink failover tests, for example.
-
-This patch fixes the issue by retrying the INQUIRY up to 3 times (in practice,
-we never observed more than a single retry),
-
-Signed-off-by: Martin Wilck <mwilck@suse.com>
----
- drivers/scsi/scsi_scan.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index b9b851ce1b72..f0a248bd1cd3 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -700,6 +700,11 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 						"scsi scan: retry inquiry after REPORT LUNs\n"));
- 				continue;
- 			}
-+			if (host_byte(result) == DID_TIME_OUT) {
-+				SCSI_LOG_SCAN_BUS(3, sdev_printk(KERN_INFO, sdev,
-+						"scsi scan: retry inquiry after timeout\n"));
-+				continue;
-+			}
- 		} else if (result == 0) {
- 			/*
- 			 * if nothing was transferred, we try
--- 
-2.36.1
-
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
