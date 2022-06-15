@@ -2,96 +2,117 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 801D4CCA473
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jun 2022 07:20:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AD3BC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jun 2022 07:32:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242088AbiFOHUz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Jun 2022 03:20:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32836 "EHLO
+        id S238107AbiFOHcC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Jun 2022 03:32:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39424 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239815AbiFOHUy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jun 2022 03:20:54 -0400
-Received: from mail-qk1-f179.google.com (mail-qk1-f179.google.com [209.85.222.179])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60F0A43AC3;
-        Wed, 15 Jun 2022 00:20:53 -0700 (PDT)
-Received: by mail-qk1-f179.google.com with SMTP id d23so8166785qke.0;
-        Wed, 15 Jun 2022 00:20:53 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=IZrgGy//qiNvpo0QiFkOVNBs87FgtEm52Qgjyjrw9DQ=;
-        b=eLYFNRbSkngvX9cT9qKYJiog9ols/+BultjfnLFLokwdOmNsfq51q7Hx4cDmsqWA8K
-         fYSj/yh4jzD8c2UpLc5KEf9hMT6qa3PefqFiZ5BAEdk8KxGroLE41H9Xt2+PtMxG06QR
-         nwY2IgWOjiQWeYIWhb1kd6OmzRNXO6eO/GW3AuaZBcedFNEMyrAZnD3UaEa/84JHC+N8
-         mussj/TGMAUx2cfGDV+/mt26HW/YeKisNoDs4z6+GM+dFkyuKZE5LjEz/xGVFU0VgxGb
-         IgEbz0FpgW8iQM9hfn/UFGhJJxJ9K0PsqcXVFtWPNGyqZvagefOkVwZgQSW3NJK1BCYw
-         nx+g==
-X-Gm-Message-State: AOAM532XbTpjWKCCEn/ulEEn5CZQDPpUYXDmwr9CcPF4ZVBYSaaMSiaz
-        e9jUJl1dnoeaqR9Gs5TEn8vzDbaIQX3cLw==
-X-Google-Smtp-Source: ABdhPJyfKji0R8TUKNkLqgxnO2bQ5ni5SYp/lhgx+0thb8SfT/HgK1WZU261Pflc4Qs3BOV/I2VjAQ==
-X-Received: by 2002:a37:7d5:0:b0:6a7:7ea0:87be with SMTP id 204-20020a3707d5000000b006a77ea087bemr7225798qkh.458.1655277652325;
-        Wed, 15 Jun 2022 00:20:52 -0700 (PDT)
-Received: from mail-yb1-f170.google.com (mail-yb1-f170.google.com. [209.85.219.170])
-        by smtp.gmail.com with ESMTPSA id bj25-20020a05620a191900b006a69d7f390csm11538409qkb.103.2022.06.15.00.20.51
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 15 Jun 2022 00:20:51 -0700 (PDT)
-Received: by mail-yb1-f170.google.com with SMTP id w2so18996993ybi.7;
-        Wed, 15 Jun 2022 00:20:51 -0700 (PDT)
-X-Received: by 2002:a25:818c:0:b0:664:a584:fafd with SMTP id
- p12-20020a25818c000000b00664a584fafdmr8856194ybk.543.1655277651264; Wed, 15
- Jun 2022 00:20:51 -0700 (PDT)
+        with ESMTP id S231258AbiFOHcA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jun 2022 03:32:00 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A2E2473A0;
+        Wed, 15 Jun 2022 00:31:58 -0700 (PDT)
+Received: from fraeml711-chm.china.huawei.com (unknown [172.18.147.206])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LNH7B4jvmz6GD9p;
+        Wed, 15 Jun 2022 15:31:50 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml711-chm.china.huawei.com (10.206.15.60) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Wed, 15 Jun 2022 09:31:55 +0200
+Received: from [10.195.33.253] (10.195.33.253) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Wed, 15 Jun 2022 08:31:54 +0100
+Message-ID: <3a27b6ff-e495-8f11-6925-1487c9d14fa9@huawei.com>
+Date:   Wed, 15 Jun 2022 08:35:02 +0100
 MIME-Version: 1.0
-References: <20220603110524.1997825-1-yoshihiro.shimoda.uh@renesas.com>
- <CAMuHMdWY7OpB=F3sUoBEpMyJx9U=+YJBFrVd59y=wdsEvN=4JA@mail.gmail.com> <yq11qvqskps.fsf@ca-mkp.ca.oracle.com>
-In-Reply-To: <yq11qvqskps.fsf@ca-mkp.ca.oracle.com>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Wed, 15 Jun 2022 09:20:40 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdVR2=VHUxfDTukDt7rSOPBYCFr3qXQzZNTdkw9Z-jEBkg@mail.gmail.com>
-Message-ID: <CAMuHMdVR2=VHUxfDTukDt7rSOPBYCFr3qXQzZNTdkw9Z-jEBkg@mail.gmail.com>
-Subject: Re: [PATCH v6 0/7] treewide: ufs: Add support for Renesas R-Car UFS controller
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>, avri.altman@wdc.com,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        scsi <linux-scsi@vger.kernel.org>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH RFC v2 03/18] scsi: core: Implement reserved command
+ handling
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>, <axboe@kernel.dk>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <brking@us.ibm.com>, <hare@suse.de>, <hch@lst.de>
+CC:     <linux-block@vger.kernel.org>, <linux-ide@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <chenxiang66@hisilicon.com>
+References: <1654770559-101375-1-git-send-email-john.garry@huawei.com>
+ <1654770559-101375-4-git-send-email-john.garry@huawei.com>
+ <b4a0ede5-95a3-4388-e808-7627b5484d01@opensource.wdc.com>
+ <9e89360d-3325-92af-0436-b34df748f3e2@acm.org>
+ <e36bba7e-d78d-27b4-a0e2-9d921bc82f5d@opensource.wdc.com>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <e36bba7e-d78d-27b4-a0e2-9d921bc82f5d@opensource.wdc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.195.33.253]
+X-ClientProxiedBy: lhreml746-chm.china.huawei.com (10.201.108.196) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Martin,
+On 15/06/2022 00:43, Damien Le Moal wrote:
+> On 6/15/22 03:20, Bart Van Assche wrote:
+>> On 6/13/22 00:01, Damien Le Moal wrote:
+>>> On 6/9/22 19:29, John Garry wrote:
+>>>> +	/*
+>>>> +	 * This determines how many commands the HBA will set aside
+>>>> +	 * for internal commands. This number will be added to
+>>>> +	 * @can_queue to calcumate the maximum number of simultaneous
+>>>
+>>> s/calcumate/calculate
+>>>
+>>> But this is weird. For SATA, can_queue is 32. Having reserved commands,
+>>> that number needs to stay the same. We cannot have more than 32 tags.
+>>> I think keeping can_queue as the max queue depth with at most
+>>> nr_reserved_cmds tags reserved is better.
+>>>
+>>>> +	 * commands sent to the host.
+>>>> +	 */
+>>>> +	int nr_reserved_cmds;
+>>
+>> +1 for Damien's request. I also prefer to keep can_queue as the maximum
+>> queue depth, whether or not nr_reserved_cmds has been set.
+> 
+> For non SATA drives, I still think that is a good idea. However, for SATA,
+> we always have the internal tag command that is special. With John's
+> change, it would have to be reserved but that means we are down to 31 max
+> QD,
 
-On Wed, Jun 15, 2022 at 4:54 AM Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
-> > I see you have applied this series, including the DTS parts, to your
-> > for-next tree. Please never apply DTS patches to the SCSI tree, as
-> > they are meant to go in through the soc tree.
->
-> OK. Just queued it up in for-next to see what would break. It's not in
-> the actual queue for 5.20.
+My intention is to keep regular tag depth at 32 for SATA. We add an 
+extra tag as a reserved tag. Indeed, this is called a 'tag', but it's 
+just really the placeholder for what will be the ATA_TAG_INTERNAL request.
 
-IC. How will I know when they are queued for real?
+About how we set scsi_host.can_queue, in this series we set .can_queue 
+as max regular tags, and the handling is as follows:
 
-> > Can you please drop the last two patches from your tree?
->
-> Sure. I can also wait with the rest if you prefer?
+scsi_mq_setup_tags():
+tag_set->queue_depth = shost->can_queue + shost->nr_reserved_cmds
+tag_set->reserved_tags = shost->nr_reserved_cmds
 
-No need to wait with the rest, unless you are not happy with it yet?
-Thanks!
+So we honour the rule that blk_mq_tag_set.queue_depth is the total tag 
+depth, including reserved.
 
-Gr{oetje,eeting}s,
+Incidentally I think Christoph prefers to keep .can_queue at total max 
+tags including reserved:
+https://lore.kernel.org/linux-scsi/337339b7-6f4a-a25c-f11c-7f701b42d6a8@suse.de/
 
-                        Geert
+> so going backward several years... That internal tag for ATA does not
+> need to be reserved since this command is always used when the drive is
+> idle and no other NCQ commands are on-going.
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+So do you mean that ATA_TAG_INTERNAL qc is used for other commands apart 
+from internal commands?
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+> 
+> So the solution to all this is a likely a little more complicated if we
+> want to keep ATA max QD to 32.
+> 
+
+thanks,
+John
