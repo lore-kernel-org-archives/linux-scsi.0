@@ -2,117 +2,106 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AD3BC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jun 2022 07:32:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4534CCA473
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jun 2022 08:02:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238107AbiFOHcC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Jun 2022 03:32:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39424 "EHLO
+        id S240340AbiFOICE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Jun 2022 04:02:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39406 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231258AbiFOHcA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jun 2022 03:32:00 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A2E2473A0;
-        Wed, 15 Jun 2022 00:31:58 -0700 (PDT)
-Received: from fraeml711-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LNH7B4jvmz6GD9p;
-        Wed, 15 Jun 2022 15:31:50 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml711-chm.china.huawei.com (10.206.15.60) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Wed, 15 Jun 2022 09:31:55 +0200
-Received: from [10.195.33.253] (10.195.33.253) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Wed, 15 Jun 2022 08:31:54 +0100
-Message-ID: <3a27b6ff-e495-8f11-6925-1487c9d14fa9@huawei.com>
-Date:   Wed, 15 Jun 2022 08:35:02 +0100
+        with ESMTP id S229460AbiFOICD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jun 2022 04:02:03 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64B2A4578B;
+        Wed, 15 Jun 2022 01:02:01 -0700 (PDT)
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out1.suse.de (Postfix) with ESMTP id EB64B21B27;
+        Wed, 15 Jun 2022 08:01:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1655280119; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=DaM9M2rnjrvdQGQ7RvZB3kRvN0KL8OK3uY7jsfFlhwM=;
+        b=qRtiw/EwzIsZzY7D7oh0BeOfU6iIQ38xDbUtfQXTtdaPPWK3B2vJeEb6IIHEt7MxZ3zKcC
+        dfyx4Mc4tIb/eF0FliF28q8hNk+hU2TEYFUekYuM8cDMqgo0Awx7lmNgOzPGeK/9Q2qhBN
+        CjKBFgcYgu+XVY7XBl81AW22w0F/oCg=
+Received: from suse.cz (unknown [10.100.201.202])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by relay2.suse.de (Postfix) with ESMTPS id E39D82C142;
+        Wed, 15 Jun 2022 08:01:57 +0000 (UTC)
+Date:   Wed, 15 Jun 2022 10:01:57 +0200
+From:   Petr Mladek <pmladek@suse.com>
+To:     Kees Cook <keescook@chromium.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Maninder Singh <maninder1.s@samsung.com>, bcain@quicinc.com,
+        mpe@ellerman.id.au, benh@kernel.crashing.org, paulus@samba.org,
+        hca@linux.ibm.com, gor@linux.ibm.com, agordeev@linux.ibm.com,
+        borntraeger@linux.ibm.com, svens@linux.ibm.com, satishkh@cisco.com,
+        sebaddel@cisco.com, kartilak@cisco.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, mcgrof@kernel.org,
+        jason.wessel@windriver.com, daniel.thompson@linaro.org,
+        dianders@chromium.org, naveen.n.rao@linux.ibm.com,
+        anil.s.keshavamurthy@intel.com, davem@davemloft.net,
+        mhiramat@kernel.org, peterz@infradead.org, mingo@redhat.com,
+        will@kernel.org, longman@redhat.com, boqun.feng@gmail.com,
+        rostedt@goodmis.org, senozhatsky@chromium.org,
+        andriy.shevchenko@linux.intel.com, linux@rasmusvillemoes.dk,
+        akpm@linux-foundation.org, arnd@arndb.de,
+        linux-hexagon@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-modules@vger.kernel.org,
+        kgdb-bugreport@lists.sourceforge.net, v.narang@samsung.com,
+        onkarnath.1@samsung.com
+Subject: Re: [PATCH 0/5] kallsyms: make kallsym APIs more safe with scnprintf
+Message-ID: <YqmR9ZeiwMQLyKDu@alley>
+References: <CGME20220520083715epcas5p400b11adef4d540756c985feb20ba29bc@epcas5p4.samsung.com>
+ <20220520083701.2610975-1-maninder1.s@samsung.com>
+ <YonTOL4zC4CytVrn@infradead.org>
+ <202205231238.FAF6D28@keescook>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH RFC v2 03/18] scsi: core: Implement reserved command
- handling
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>, <axboe@kernel.dk>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <brking@us.ibm.com>, <hare@suse.de>, <hch@lst.de>
-CC:     <linux-block@vger.kernel.org>, <linux-ide@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <chenxiang66@hisilicon.com>
-References: <1654770559-101375-1-git-send-email-john.garry@huawei.com>
- <1654770559-101375-4-git-send-email-john.garry@huawei.com>
- <b4a0ede5-95a3-4388-e808-7627b5484d01@opensource.wdc.com>
- <9e89360d-3325-92af-0436-b34df748f3e2@acm.org>
- <e36bba7e-d78d-27b4-a0e2-9d921bc82f5d@opensource.wdc.com>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <e36bba7e-d78d-27b4-a0e2-9d921bc82f5d@opensource.wdc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.195.33.253]
-X-ClientProxiedBy: lhreml746-chm.china.huawei.com (10.201.108.196) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <202205231238.FAF6D28@keescook>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 15/06/2022 00:43, Damien Le Moal wrote:
-> On 6/15/22 03:20, Bart Van Assche wrote:
->> On 6/13/22 00:01, Damien Le Moal wrote:
->>> On 6/9/22 19:29, John Garry wrote:
->>>> +	/*
->>>> +	 * This determines how many commands the HBA will set aside
->>>> +	 * for internal commands. This number will be added to
->>>> +	 * @can_queue to calcumate the maximum number of simultaneous
->>>
->>> s/calcumate/calculate
->>>
->>> But this is weird. For SATA, can_queue is 32. Having reserved commands,
->>> that number needs to stay the same. We cannot have more than 32 tags.
->>> I think keeping can_queue as the max queue depth with at most
->>> nr_reserved_cmds tags reserved is better.
->>>
->>>> +	 * commands sent to the host.
->>>> +	 */
->>>> +	int nr_reserved_cmds;
->>
->> +1 for Damien's request. I also prefer to keep can_queue as the maximum
->> queue depth, whether or not nr_reserved_cmds has been set.
+On Mon 2022-05-23 12:39:12, Kees Cook wrote:
+> On Sat, May 21, 2022 at 11:07:52PM -0700, Christoph Hellwig wrote:
+> > On Fri, May 20, 2022 at 02:06:56PM +0530, Maninder Singh wrote:
+> > > kallsyms functionality depends on KSYM_NAME_LEN directly.
+> > > but if user passed array length lesser than it, sprintf
+> > > can cause issues of buffer overflow attack.
+> > > 
+> > > So changing *sprint* and *lookup* APIs in this patch set
+> > > to have buffer size as an argument and replacing sprintf with
+> > > scnprintf.
+> > 
+> > This is still a pretty horrible API.  Passing something like
+> > a struct seq_buf seems like the much better API here.  Also with
+> > the amount of arguments and by reference passing it might be worth
+> > to pass them as a structure while you're at it.
 > 
-> For non SATA drives, I still think that is a good idea. However, for SATA,
-> we always have the internal tag command that is special. With John's
-> change, it would have to be reserved but that means we are down to 31 max
-> QD,
+> Yeah, I agree. It really seems like seq_buf would be nicer.
 
-My intention is to keep regular tag depth at 32 for SATA. We add an 
-extra tag as a reserved tag. Indeed, this is called a 'tag', but it's 
-just really the placeholder for what will be the ATA_TAG_INTERNAL request.
+There is a new patchset that is trying to use this kind of buffer
+in vsprintf.
 
-About how we set scsi_host.can_queue, in this series we set .can_queue 
-as max regular tags, and the handling is as follows:
+It introduces another buffer struct because vsprintf() needs a bit
+different semantic than the one used in seq_buf. But it actually
+replaces seq_buf() in the end. I am not sure if this is the right
+approach.
 
-scsi_mq_setup_tags():
-tag_set->queue_depth = shost->can_queue + shost->nr_reserved_cmds
-tag_set->reserved_tags = shost->nr_reserved_cmds
+Anyway, the initial API is very simple, see
+https://lore.kernel.org/r/20220604193042.1674951-2-kent.overstreet@gmail.com
 
-So we honour the rule that blk_mq_tag_set.queue_depth is the total tag 
-depth, including reserved.
+And it makes the internal vsprintf() API more sane, see
+https://lore.kernel.org/r/20220604193042.1674951-4-kent.overstreet@gmail.com
 
-Incidentally I think Christoph prefers to keep .can_queue at total max 
-tags including reserved:
-https://lore.kernel.org/linux-scsi/337339b7-6f4a-a25c-f11c-7f701b42d6a8@suse.de/
+It would eventually solve also concerns about the kallsysms API.
+Any comments on the new printbuf API are much appreaciated.
 
-> so going backward several years... That internal tag for ATA does not
-> need to be reserved since this command is always used when the drive is
-> idle and no other NCQ commands are on-going.
-
-So do you mean that ATA_TAG_INTERNAL qc is used for other commands apart 
-from internal commands?
-
-> 
-> So the solution to all this is a likely a little more complicated if we
-> want to keep ATA max QD to 32.
-> 
-
-thanks,
-John
+Best Regards,
+Petr
