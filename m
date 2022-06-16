@@ -2,63 +2,161 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A6DACCA473
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jun 2022 01:21:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58411C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jun 2022 01:36:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344915AbiFPBVv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Jun 2022 21:21:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55498 "EHLO
+        id S1350881AbiFPBg3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Jun 2022 21:36:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236585AbiFPBVu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jun 2022 21:21:50 -0400
-Received: from out30-45.freemail.mail.aliyun.com (out30-45.freemail.mail.aliyun.com [115.124.30.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15F4E57166;
-        Wed, 15 Jun 2022 18:21:48 -0700 (PDT)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R141e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018046051;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=8;SR=0;TI=SMTPD_---0VGUqOBE_1655342495;
-Received: from localhost(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0VGUqOBE_1655342495)
-          by smtp.aliyun-inc.com;
-          Thu, 16 Jun 2022 09:21:46 +0800
-From:   Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-To:     njavali@marvell.com
-Cc:     GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
-        Abaci Robot <abaci@linux.alibaba.com>
-Subject: [PATCH] scsi: qla2xxx: Simplify the calculation of variables
-Date:   Thu, 16 Jun 2022 09:21:18 +0800
-Message-Id: <20220616012118.90822-1-jiapeng.chong@linux.alibaba.com>
-X-Mailer: git-send-email 2.20.1.7.g153144c
+        with ESMTP id S243323AbiFPBg2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jun 2022 21:36:28 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 675CC21E08;
+        Wed, 15 Jun 2022 18:36:27 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by sin.source.kernel.org (Postfix) with ESMTPS id C3BF9CE23E4;
+        Thu, 16 Jun 2022 01:36:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E87FEC3411A;
+        Thu, 16 Jun 2022 01:36:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1655343384;
+        bh=0eEyDqWuRe8MsiL/MntwKceuSKqyojnXbxruqir2b/I=;
+        h=From:To:Cc:Subject:Date:From;
+        b=TnLbX+y6CHfl+yJv6Ir9GrZUWeEv+nMNSdzT9JCUY1z+iyiE59fZEv1AlC7/o40UK
+         Q6u790wtsqsdIzuTilO+obMEIHTwucdmzt/fwzKipisnTUNQUsoGNhMfC6tHm96OyU
+         fls883PLaT7HFaHBbmd2mYgzAnnZh8/7lEzSgJ6lzrhiDD9By8R5DmDNe1yMqM8a4f
+         P9uQHBvWrf1U1VR5M+esQqoC5+fmNQ6Lwephyf4jDoSuemdLt/6pXDA1bGAUWN+tGE
+         yF+0yqNPMQfldx2OJJcQfe2SI97MqyzlG9xVdjkfrvK15C+L+KQuH2ARqa5ihyrHPq
+         ja+ki3y2YMZDg==
+From:   Chao Yu <chao@kernel.org>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        chao@kernel.org, hch@infradead.org, bvanassche@acm.org
+Subject: [PATCH v4] scsi: support packing multi-segment in UNMAP command
+Date:   Thu, 16 Jun 2022 09:36:17 +0800
+Message-Id: <20220616013617.2284341-1-chao@kernel.org>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This was found by coccicheck:
+As SCSI SBC4 specification section 5.30.2 describes that it can
+support unmapping one or more LBA range in single UNMAP command.
 
-./drivers/scsi/qla2xxx/qla_target.c:1031:20-22: WARNING !A || A && B is equivalent to !A || B.
+However, previously we only pack one LBA range in UNMAP command
+by default no matter device gives the block limits that says it
+can support unmapping multiple LBA ranges with a single UNMAP
+command.
 
-Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+This patch sets max_discard_segments config according to block
+limits of device, and supports unmapping multiple LBA ranges with
+a single UNMAP command.
+
+Signed-off-by: Chao Yu <chao@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_target.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+v4:
+- clean up commit message.
+- fix to avoid truncating .max_unmap_block_desc_count during type cast.
+- add comments and clean up codes.
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 2b2f68288375..0dc9ca3c9509 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1028,8 +1028,7 @@ void qlt_free_session_done(struct work_struct *work)
- 		}
+ drivers/scsi/sd.c | 35 ++++++++++++++++++++++++-----------
+ drivers/scsi/sd.h |  1 +
+ 2 files changed, 25 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 895b56c8f25e..114f61c3ccd3 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -790,6 +790,8 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
+ 	q->limits.discard_granularity =
+ 		max(sdkp->physical_block_size,
+ 		    sdkp->unmap_granularity * logical_block_size);
++	blk_queue_max_discard_segments(q, min_t(u32, U16_MAX,
++				sdkp->max_unmap_block_desc_count));
+ 	sdkp->provisioning_mode = mode;
  
- 		if (ha->flags.edif_enabled &&
--		    (!own || (own &&
--			      own->iocb.u.isp24.status_subcode == ELS_PLOGI))) {
-+		    (!own || own->iocb.u.isp24.status_subcode == ELS_PLOGI)) {
- 			sess->edif.authok = 0;
- 			if (!ha->flags.host_shutting_down) {
- 				ql_dbg(ql_dbg_edif, vha, 0x911e,
+ 	switch (mode) {
+@@ -836,9 +838,10 @@ static blk_status_t sd_setup_unmap_cmnd(struct scsi_cmnd *cmd)
+ 	struct scsi_device *sdp = cmd->device;
+ 	struct request *rq = scsi_cmd_to_rq(cmd);
+ 	struct scsi_disk *sdkp = scsi_disk(rq->q->disk);
+-	u64 lba = sectors_to_logical(sdp, blk_rq_pos(rq));
+-	u32 nr_blocks = sectors_to_logical(sdp, blk_rq_sectors(rq));
+-	unsigned int data_len = 24;
++	unsigned short segments = blk_rq_nr_discard_segments(rq);
++	unsigned int data_len = 8 + 16 * segments;
++	unsigned int descriptor_offset = 8;
++	struct bio *bio;
+ 	char *buf;
+ 
+ 	rq->special_vec.bv_page = mempool_alloc(sd_page_pool, GFP_ATOMIC);
+@@ -851,13 +854,20 @@ static blk_status_t sd_setup_unmap_cmnd(struct scsi_cmnd *cmd)
+ 
+ 	cmd->cmd_len = 10;
+ 	cmd->cmnd[0] = UNMAP;
+-	cmd->cmnd[8] = 24;
++	cmd->cmnd[8] = data_len;
+ 
+ 	buf = bvec_virt(&rq->special_vec);
+-	put_unaligned_be16(6 + 16, &buf[0]);
+-	put_unaligned_be16(16, &buf[2]);
+-	put_unaligned_be64(lba, &buf[8]);
+-	put_unaligned_be32(nr_blocks, &buf[16]);
++	put_unaligned_be16(6 + 16 * segments, &buf[0]);
++	put_unaligned_be16(16 * segments, &buf[2]);
++
++	__rq_for_each_bio(bio, rq) {
++		u64 lba = sectors_to_logical(sdp, bio->bi_iter.bi_sector);
++		u32 nr_blocks = sectors_to_logical(sdp, bio_sectors(bio));
++
++		put_unaligned_be64(lba, &buf[descriptor_offset]);
++		put_unaligned_be32(nr_blocks, &buf[descriptor_offset + 8]);
++		descriptor_offset += 16;
++	}
+ 
+ 	cmd->allowed = sdkp->max_retries;
+ 	cmd->transfersize = data_len;
+@@ -2862,7 +2872,7 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
+ 	sdkp->opt_xfer_blocks = get_unaligned_be32(&vpd->data[12]);
+ 
+ 	if (vpd->len >= 64) {
+-		unsigned int lba_count, desc_count;
++		unsigned int lba_count;
+ 
+ 		sdkp->max_ws_blocks = (u32)get_unaligned_be64(&vpd->data[36]);
+ 
+@@ -2870,9 +2880,12 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
+ 			goto out;
+ 
+ 		lba_count = get_unaligned_be32(&vpd->data[20]);
+-		desc_count = get_unaligned_be32(&vpd->data[24]);
+ 
+-		if (lba_count && desc_count)
++		/* Extract the MAXIMUM UNMAP BLOCK DESCRIPTOR COUNT. */
++		sdkp->max_unmap_block_desc_count =
++					get_unaligned_be32(&vpd->data[24]);
++
++		if (lba_count && sdkp->max_unmap_block_desc_count)
+ 			sdkp->max_unmap_blocks = lba_count;
+ 
+ 		sdkp->unmap_granularity = get_unaligned_be32(&vpd->data[28]);
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 5eea762f84d1..e7c51d23395b 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -119,6 +119,7 @@ struct scsi_disk {
+ 	u32		opt_xfer_blocks;
+ 	u32		max_ws_blocks;
+ 	u32		max_unmap_blocks;
++	u32		max_unmap_block_desc_count;
+ 	u32		unmap_granularity;
+ 	u32		unmap_alignment;
+ 	u32		index;
 -- 
-2.20.1.7.g153144c
+2.25.1
 
