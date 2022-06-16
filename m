@@ -2,191 +2,202 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29287C43334
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jun 2022 02:47:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1EEFC43334
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jun 2022 04:42:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350464AbiFPCrQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Jun 2022 22:47:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48810 "EHLO
+        id S1350136AbiFPEmR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Jun 2022 00:42:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45516 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348150AbiFPCrO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jun 2022 22:47:14 -0400
+        with ESMTP id S242840AbiFPEmP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jun 2022 00:42:15 -0400
 Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0C9B47561
-        for <linux-scsi@vger.kernel.org>; Wed, 15 Jun 2022 19:47:13 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E1F558E72;
+        Wed, 15 Jun 2022 21:42:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1655347633; x=1686883633;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=V39QHtDc8ZGDX6evTrJaCU7/qqstpDRwkxEs8NSe5TQ=;
-  b=XCgcmj7uUx0YqdmbgMfWGn/KmTqXmKDe3dCoxpfI9X8oEKLCcHX78xCG
-   x1oJn6FOfQJ3XrZgfWYX4R8ZwDFcKw5fMe3HUeJzn5wh1XpHPs2QkZGP0
-   KUUl2qfVmFzUuR3vK3xE/xkB2pkNrNx/y6p3d/YhAdyWOJeWJQUoKBQM3
-   00t7kNnEGksPn2Jxc2cH9obcXsxy1/sCGAk+5LRpqA7rNrSGzOR+YsJQG
-   7QJALf3S5Bu1KULSGN0sgetbKdhg9JhQj4CyCiQZ5nPLOj+K9tg1GoE1K
-   k3kCZMvBSVcH3BY02+HXV/PkVIgYTm1UTg8rWogO00wk6ipOoyKy5YOCO
-   A==;
-X-IronPort-AV: E=Sophos;i="5.91,302,1647273600"; 
-   d="scan'208";a="315364294"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 16 Jun 2022 10:47:09 +0800
-IronPort-SDR: jfT7bcs2PHjCeQc6JacVrPkZYaVxcP4XVWEoT4JiHrngC2z+LT3EVdRlj1tsXKRIRKfg0raFTk
- r6IWQVZNGvRCJ3D0TZ6CXZpy2ILWkZBEbnmB6NoWeqzmU09OEYuCnnrRI+Dsi1qNNMapZ/wV5S
- N/Xm/hKYrRHzPrRg2pyd1c0v6UCuoJe0UDmbPkRxd1WRs7pA4bEj2E5eocvlItZR/xVyzoWo/K
- auIH3a3muzxq9KqYq6yHEZa1NBWpVvtAwZWokVxC5axCUEynlkbLQiFGQ5X9BPBmtnbqcUqAFm
- aFY6ev5paAQDEzUWKhQakkA9
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 15 Jun 2022 19:09:59 -0700
-IronPort-SDR: nUn1HsfUA2f3pEfFAYhks1d/3SGX1Lf5nTxolgvkedmtQ/TviOSBFk40QNLOTKeNq3IqdL997m
- KGPlP71i7noVDFms2aghQXJXAhqWT5/Of7YFMteMu4geeaoc0Y/3ZrYpIJ6LFF1RqECR2FsuXG
- 9aQlbG9XiqwPkJtWUar0KTMNLU/x2pKmt0YVdzBueViMO4jMV24udv0NBZOG1wb+3EjIrOHb/O
- H65cUv1VJe/zRvo7JppWQWX2QQjS9v5zv9iH+iQb96n4cNbMceZ7UvFyR7uWKd814WueEx6Ojc
- 1ZE=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 15 Jun 2022 19:47:09 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LNmmD3dYGz1SVp6
-        for <linux-scsi@vger.kernel.org>; Wed, 15 Jun 2022 19:47:08 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1655347627; x=1657939628; bh=V39QHtDc8ZGDX6evTrJaCU7/qqstpDRwkxE
-        s8NSe5TQ=; b=qyf84KIgbeM9gHqxzGhqEchppSklzUAsS48UHw/vSFoMxpem7f1
-        MJkvZ2RLdbrLGAghTnzYpw0sghTNZp55aqKDASg8JQnA9SPzOfkPxjNGqPaoAU5z
-        YIj4WpTWCPshSrgGUudeUuyCpkjrvpjEp8QG6PW289e0GS461+krfSa8LtqYIR7l
-        TRZazRy8rV+VmYv7zpsUtV06fKTHu+dS1iFEngax+9nLg9Kr/Sb+62/QKqXzHDXi
-        VzjRjzzuDWcBWU7kfDlHKJl8yQ7UsjGRAwO2uvU2EAG0lWJzyFuryATBhuvGcDdv
-        JEG16aBJrtXTevSTn3F+9dY8/x/xaDTqeaQ==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id ZiSQn3zimxgT for <linux-scsi@vger.kernel.org>;
-        Wed, 15 Jun 2022 19:47:07 -0700 (PDT)
-Received: from [10.149.53.254] (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LNmm91mxvz1Rvlc;
-        Wed, 15 Jun 2022 19:47:05 -0700 (PDT)
-Message-ID: <c702f06e-b7da-92be-3c4f-5dd405600235@opensource.wdc.com>
-Date:   Thu, 16 Jun 2022 11:47:03 +0900
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH RFC v2 03/18] scsi: core: Implement reserved command
- handling
+  t=1655354534; x=1686890534;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-id:content-transfer-encoding:
+   mime-version;
+  bh=mQexh/Q+rUR17C/DfzsMoG+835+OPPq80Bu+WwVIQ2I=;
+  b=qLyqPApR+0xpXQrUo+89e0cjo/h8ZJj3BelIHqHWryFALYSLQlNWKnjr
+   aX0s8YzYeCGWdMhFFrw/PXUKhiVNrgSlvOffGHQoSn9F3bcsL/XZQgbNn
+   Zi56BWwbNfss/23/IgeDy3uO1d9q1U6wJXRLx5r97JQLNYkH5Frh3CoRo
+   jmK9rRa+LKllJHNPwT+35BV4gGF3DymfkvCCbPJwG0kHF8tMGvpCMp90t
+   vzJ18OZTUJvj2yAJ+ZwIxlQ3vr7bk1Ai84bK+QIyMIfRi4UroXBnTOvR4
+   0Q1sp5a9bOWXBZk0G/51ogqjOzZEQYeSrbwZlWsLK15V7VZzBntO97pnD
+   w==;
+X-IronPort-AV: E=Sophos;i="5.91,304,1647273600"; 
+   d="scan'208";a="315371935"
+Received: from mail-dm6nam11lp2171.outbound.protection.outlook.com (HELO NAM11-DM6-obe.outbound.protection.outlook.com) ([104.47.57.171])
+  by ob1.hgst.iphmx.com with ESMTP; 16 Jun 2022 12:42:13 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Q9CmfYf8DPjjKcr2VG73CeC29ajV9H0sXlgbfEk5nGm9RgiiMXOQiBt4LSp+m8EJOsdX9EbM39HnpStNVeTTyKgwNacY6VXshkCBv5qaBFZMlCvSFJF2So7uknw387eK12U5JS4A6L19SARdcVm3escIT08/LgpQJvCZhlZRodTThRUTyTI+0OuT8dg5MoYZdL9besPPABYBu6Pl4sdAJ2lRD2GpdgzcY37FzsHf4UKmurBj4LkRKgCf5YrkP5+98pZ5t+uM/POhiaVSFJZkSXLmclP5qtAcFMzD+lJbNo/0ugkAerbb5tPajYwqXfZzBgV4HmaPrjTdiju12gwcUw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=mQexh/Q+rUR17C/DfzsMoG+835+OPPq80Bu+WwVIQ2I=;
+ b=jboFqmmUV1XJcScaEea/OYvZEKfP2vksG84fIzz4A2JBLxp7/QEO88VsYQrcH8zNKSlDCFeocSg+geEeTlo4ql+7yWwZXwpEGQowPHwAJbUNlm2WUiZOOjWr3o5Rm9oqSlsJEpsvKJcAf+9C6M7OlzGWE4VUTKTuqj6/4bq1R+U5okr7WPRAbIy5l/+LJbqH0va5DagTlYY/c1gF1Lcy2Wq+m78+7ZsbApYz1uFX43q/E30V39elVVHxk0V88Il0K1iaymO9RmKXC4pLLs4KSCLvWVBQ2uPpSlIbIOmLILb5ZEvRV/DUUtCfajgTgJ2hYJ61xFka/FbhG/zJFLnSZA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=mQexh/Q+rUR17C/DfzsMoG+835+OPPq80Bu+WwVIQ2I=;
+ b=opE2RCL3Vvr5rEfmQpsL616tR8COPfbtPlB7IHWJ3VQLIY3MNo2nI/nxMAZZOTwrMI+jkc8JLnMRYcFh1De2YuPMA/Tw3/g7sjxDnkPfEF1SRlXyU1fF2X9lHkrbeofNFwjE0YaT4JWeL+YB7QTBaKDM8eRHoUmrRDzufMNtmzQ=
+Received: from DM8PR04MB8037.namprd04.prod.outlook.com (2603:10b6:8:f::6) by
+ DM6PR04MB5291.namprd04.prod.outlook.com (2603:10b6:5:105::18) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.5332.15; Thu, 16 Jun 2022 04:42:12 +0000
+Received: from DM8PR04MB8037.namprd04.prod.outlook.com
+ ([fe80::39dc:d3d:686a:9e7]) by DM8PR04MB8037.namprd04.prod.outlook.com
+ ([fe80::39dc:d3d:686a:9e7%3]) with mapi id 15.20.5332.022; Thu, 16 Jun 2022
+ 04:42:12 +0000
+From:   Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+To:     Yi Zhang <yi.zhang@redhat.com>
+CC:     Chaitanya Kulkarni <chaitanyak@nvidia.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        Keith Busch <kbusch@kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "mstowe@redhat.com" <mstowe@redhat.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: blktests failures with v5.19-rc1
+Thread-Topic: blktests failures with v5.19-rc1
+Thread-Index: AQHYfFwe8PMwMXtEZEqIJFDj8WJWFa1IXnmAgAACxQCAADBSgIAAJ8QAgAEp9oCABDqugIAAFNGAgAAEQoCAABbgAIACmtiAgAAlfQCAABQHgIAAW+OA
+Date:   Thu, 16 Jun 2022 04:42:12 +0000
+Message-ID: <20220616044211.3c3yspyxfnay5q2i@shindev>
+References: <20220615194727.GA1022614@bhelgaas>
+ <cfaee02b-0390-6e1c-e26c-fa0ba3689704@nvidia.com>
+ <CAHj4cs88gLYMMefQVrH_+kSsrZhV+VJa5yapEaYXc1Cjnd2w_Q@mail.gmail.com>
+In-Reply-To: <CAHj4cs88gLYMMefQVrH_+kSsrZhV+VJa5yapEaYXc1Cjnd2w_Q@mail.gmail.com>
+Accept-Language: en-US
 Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>,
-        Bart Van Assche <bvanassche@acm.org>, axboe@kernel.dk,
-        jejb@linux.ibm.com, martin.petersen@oracle.com, brking@us.ibm.com,
-        hare@suse.de, hch@lst.de
-Cc:     linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        chenxiang66@hisilicon.com
-References: <1654770559-101375-1-git-send-email-john.garry@huawei.com>
- <1654770559-101375-4-git-send-email-john.garry@huawei.com>
- <b4a0ede5-95a3-4388-e808-7627b5484d01@opensource.wdc.com>
- <9e89360d-3325-92af-0436-b34df748f3e2@acm.org>
- <e36bba7e-d78d-27b4-a0e2-9d921bc82f5d@opensource.wdc.com>
- <3a27b6ff-e495-8f11-6925-1487c9d14fa9@huawei.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <3a27b6ff-e495-8f11-6925-1487c9d14fa9@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: b06b2a00-10fa-48ca-8d1f-08da4f529462
+x-ms-traffictypediagnostic: DM6PR04MB5291:EE_
+x-microsoft-antispam-prvs: <DM6PR04MB5291DAF9C95D4746F6C5FFFCEDAC9@DM6PR04MB5291.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: E6ZXxG3qviOLjvB/F+XpOQ0GoiX9t2lovBjxxcxzylndh0E+KjfaYaRPqjFreTGyjpGlHq1vvZofBbfNEKptUH3wAksFWEbHmiTqqxmvZElwrtxSYr8juHiBsDmmehIhE6waBNFu/pBZY/hVWiylX/lb6AEHukuWm8cAoV++KpjE1r7bu7U244VuhsqNzCNQT+KWbIOBLUPtZkiZ9156pI2YjNj2ZFGEngub8eC6vO5zKMuQcBN3ODTzwpXMAKHKQiiQwtuCybUzQvoTG+gnoJ3ClhgAoqPxtDFPQP71o6OqP8PMn7qDL5weU6g2BixJNgTReflAQdyEa+xUIAuxN6iIXZJHK+9O9RtFTsTXW06ZwUazklfo1IQXfhXCf9K+h7TxbjU4giDB378K/LM6COcGD8Bxc/f8E1JJhXlvQLBzbwQp40ekIosIgvs1+qMh5szaAUySuveVBvGNSgE1HStdSVzwJpsvg7idfO53EWZxsqBA+S3sSuP0sz0qbbjY+q2b+czMBhXYHdQJSReh90r9bevNK+IO8PumHbmnQtGeI4zGTFWjiZ23CvAkR8V+MbXoDsw7IjZ/mvtSSt5QtAP+Dmj9cxtS9fp9R2SiqaEuB1pH+QhR2EP+FfHA07IIWEl7Y+wrudEicT7FOClx6FCTGqmlYJou4Ran5Y69W4NRY7NZNWT+KfvPUa0afKkNuDjePZ+nJxXzA7SsaoRDrg==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM8PR04MB8037.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(7916004)(4636009)(366004)(186003)(6506007)(1076003)(53546011)(26005)(83380400001)(6512007)(2906002)(38100700002)(33716001)(316002)(38070700005)(8676002)(66946007)(122000001)(82960400001)(64756008)(66446008)(6916009)(54906003)(9686003)(508600001)(44832011)(8936002)(91956017)(76116006)(6486002)(4326008)(66476007)(66556008)(5660300002)(86362001)(71200400001);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?ePFrhAmb6XfHvF0GEzbzE+otwQLZDWR+itDstIQh1kJOI/q34bdr9fWK5CqZ?=
+ =?us-ascii?Q?/DujtLMH0bNqbzCFYjKr8nr4fKY2h0K9mppfmIAC4qPA87R+ct7Cl5/j4ko8?=
+ =?us-ascii?Q?qRNAzjIwAI/7xT1yICnJk6i6z0RFW6w4lnVJ3Ue8k8UOWHRiKlSTDFAeyDCb?=
+ =?us-ascii?Q?8BQlluhH7K2mECy6qDm57JYyIMkFZ/9TusD1JdKBlcEEh8YD3Jj4gpVUHv32?=
+ =?us-ascii?Q?2MzNw9NZpW/tmJ/ZfchGvg4srQzK1xKOJJyVELzSo+REzqjHAnnkXGO4qsNW?=
+ =?us-ascii?Q?GcFLrQoRO8aFOA7eE0OJy9v1B0gEjKKy5Fx+v1IyP5OdWPwEujhUfLFKEiGF?=
+ =?us-ascii?Q?HapLovMYLHkVHKGGmIZ24K7whFfjTy+XCaVsI84BGlKmv/tzeXZXPSohmX+d?=
+ =?us-ascii?Q?MDo7+09Px5RNpWDnV5ED75XoVdLjqOOpQejBqB03BfMrdw67bow0WbCAriZR?=
+ =?us-ascii?Q?u7GfOWG0PZnJEUd8QbKgVbwBbjP6VDuojfLpEAc6TnZeKskNZVge5oYAZFkY?=
+ =?us-ascii?Q?oLyn1b0eTeyvNHz4zeL4JDMPCzmh78D/qYIzUkKGRlX/l0ulEqc+ZARcPzbj?=
+ =?us-ascii?Q?gVj+QxDWbSaFDaDpd7GtIE+W/+UiROtHJhEjVlk4h5k0xLKdaRIcIR7as/qd?=
+ =?us-ascii?Q?DmTiDaKsTpqYwFkZ/h7ur23fqZkiSV3B+uIgWAcEM9/Om7PPGOSL193a+50n?=
+ =?us-ascii?Q?IVHS0uHBAv4tyYVYBje8htlQNiM8k5mvMSgPUNyPRfBjAjofYQs23TcyZHbA?=
+ =?us-ascii?Q?QwISc8PSWO6PqixT/4eRLDsxW4O7XcU0QWr2tBuDz56wow8jiDsQB+2V7KRF?=
+ =?us-ascii?Q?y1gqD70sNEHSBKYvc22Ru6bushI0qPbhT+xEO/rSoF4/RcKjQv6goihaJ9hK?=
+ =?us-ascii?Q?F2O0OUREpVSJZl/vBIRzyt3QozmytmzEv2zmzDPGD6jY6H1b+2gjL6AcYaGf?=
+ =?us-ascii?Q?WYXYTlawaLkiH9G8IRLTd6V6WT74Mb4eu0PAtWFhpugVFS4oFZMIEH+ONls5?=
+ =?us-ascii?Q?F9puKinY5Ttc9KQpNm4m08u8pgUJwjzeHmCrg6V4bXEEUBUFD1a3zBPbVTnE?=
+ =?us-ascii?Q?K4WFwkvRyHpfUu8gYTVMKFNt1IsMyMfTEUgyz/cOFrswTH40DlWCSerjNBuU?=
+ =?us-ascii?Q?YKcZKQ2wKMTr3W12cOH+qyq7joUVkwrFCEfeqUeH/D2uDVDsgX2gvKKmF9bj?=
+ =?us-ascii?Q?L4TDjI3XwxOjN082CZssZNd4P1B24wPWKSfQ8tWzEpTb2ANrT+oo8a5Y0nHd?=
+ =?us-ascii?Q?OlsRAx2cAgdEp/ZHzNC+zv+lOGHX0vlOBM2kTgsZ4zB70pZqaktvVOuw831B?=
+ =?us-ascii?Q?wsmuDc7YLIbfiL9QnhlFx/j1C9elXoMjcS514RNnJtqXxKu2YY8JyEDQz4p4?=
+ =?us-ascii?Q?Feg5q1LiFoO1gipsVKKgorRml4JyfQBmkm6C0/6PpNJ/dsZ6OvmDZbwBrLz0?=
+ =?us-ascii?Q?VQ5CPGk8CjOnZPpC4sMTaAW7OSZLOER88M+E7CSr+OMUIVsnr/TJpkPVoE9Z?=
+ =?us-ascii?Q?Fu1q3bockBu4kwwChyYjj8kNk3wkEPAy0xixRcZ5ul4owJQWQL+LVbWw/3DN?=
+ =?us-ascii?Q?MReezGHU7rIvWrD/KDRL7FAiCTJ0tBAcNuJOmRjf4g6ho9WSnm4O+iRqXHzp?=
+ =?us-ascii?Q?JYgwB3CwIJMSPNYmBtx3r4ZVhsniPVqVlJVZ8AxnBp+oNh535G7tu17aj/Sf?=
+ =?us-ascii?Q?Y+5ER/PpDmmzlEVw1lT9U2E5kb5hZ4eqhNVf6jO7Hl7rY4v15tVyuJpCW9s3?=
+ =?us-ascii?Q?u+djNbS0yE7e53JV8JuRMR1fobnOu/V+zF+lqWcYaIQTATYDh51Z?=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <462E6719A86A9846B6AC6A969E95033A@namprd04.prod.outlook.com>
 Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM8PR04MB8037.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: b06b2a00-10fa-48ca-8d1f-08da4f529462
+X-MS-Exchange-CrossTenant-originalarrivaltime: 16 Jun 2022 04:42:12.1277
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: dYT5TSoCUAyOkunp/lXI18wzxQfaueyHniZzGFGfc8yKxhn4wX+ZTcRSeVKjRx3JHd82P/bc3U3NwCX2UdRuwn/nzZ1U5qQxrfzTunZ6RtA=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR04MB5291
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/15/22 16:35, John Garry wrote:
-> On 15/06/2022 00:43, Damien Le Moal wrote:
->> On 6/15/22 03:20, Bart Van Assche wrote:
->>> On 6/13/22 00:01, Damien Le Moal wrote:
->>>> On 6/9/22 19:29, John Garry wrote:
->>>>> +=C2=A0=C2=A0=C2=A0 /*
->>>>> +=C2=A0=C2=A0=C2=A0=C2=A0 * This determines how many commands the H=
-BA will set aside
->>>>> +=C2=A0=C2=A0=C2=A0=C2=A0 * for internal commands. This number will=
- be added to
->>>>> +=C2=A0=C2=A0=C2=A0=C2=A0 * @can_queue to calcumate the maximum num=
-ber of simultaneous
->>>>
->>>> s/calcumate/calculate
->>>>
->>>> But this is weird. For SATA, can_queue is 32. Having reserved comman=
-ds,
->>>> that number needs to stay the same. We cannot have more than 32 tags=
-.
->>>> I think keeping can_queue as the max queue depth with at most
->>>> nr_reserved_cmds tags reserved is better.
->>>>
->>>>> +=C2=A0=C2=A0=C2=A0=C2=A0 * commands sent to the host.
->>>>> +=C2=A0=C2=A0=C2=A0=C2=A0 */
->>>>> +=C2=A0=C2=A0=C2=A0 int nr_reserved_cmds;
->>>
->>> +1 for Damien's request. I also prefer to keep can_queue as the maxim=
-um
->>> queue depth, whether or not nr_reserved_cmds has been set.
->>
->> For non SATA drives, I still think that is a good idea. However, for=20
->> SATA,
->> we always have the internal tag command that is special. With John's
->> change, it would have to be reserved but that means we are down to 31 =
-max
->> QD,
->=20
-> My intention is to keep regular tag depth at 32 for SATA. We add an=20
-> extra tag as a reserved tag. Indeed, this is called a 'tag', but it's=20
-> just really the placeholder for what will be the ATA_TAG_INTERNAL reque=
-st.
->=20
-> About how we set scsi_host.can_queue, in this series we set .can_queue=20
-> as max regular tags, and the handling is as follows:
->=20
-> scsi_mq_setup_tags():
-> tag_set->queue_depth =3D shost->can_queue + shost->nr_reserved_cmds
-> tag_set->reserved_tags =3D shost->nr_reserved_cmds
->=20
-> So we honour the rule that blk_mq_tag_set.queue_depth is the total tag=20
-> depth, including reserved.
->=20
-> Incidentally I think Christoph prefers to keep .can_queue at total max=20
-> tags including reserved:
-> https://lore.kernel.org/linux-scsi/337339b7-6f4a-a25c-f11c-7f701b42d6a8=
-@suse.de/=20
->=20
->=20
->> so going backward several years... That internal tag for ATA does not
->> need to be reserved since this command is always used when the drive i=
-s
->> idle and no other NCQ commands are on-going.
->=20
-> So do you mean that ATA_TAG_INTERNAL qc is used for other commands apar=
-t=20
-> from internal commands?
+On Jun 16, 2022 / 07:13, Yi Zhang wrote:
+> On Thu, Jun 16, 2022 at 6:01 AM Chaitanya Kulkarni
+> <chaitanyak@nvidia.com> wrote:
+> >
+> > On 6/15/22 12:47, Bjorn Helgaas wrote:
+> > > On Tue, Jun 14, 2022 at 04:00:45AM +0000, Shinichiro Kawasaki wrote:
+> > >> On Jun 14, 2022 / 02:38, Chaitanya Kulkarni wrote:
+> > >>> Shinichiro,
 
-No. It is used only for internal commands. What I meant to say is that=20
-currently, internal commands are issued only on device scan, device=20
-revalidate and error handling. All of these phases are done with the=20
-device under EH with the issuing path stopped and all commands=20
-completed, so no regular commands can be issued. Only internal ones, non=20
-NCQ, using the ATA_TAG_INTERNAL. So strictly speaking, we should not=20
-need to reserve that internal tag at all.
+[snip]
 
+> > >>> I think it is worth adding a testcase to blktests to make sure
+> > >>> these future releases will test this.
+> > >>
+> > >> Yeah, this WARN is confusing for us then it would be valuable to
+> > >> test by blktests not to repeat it. One point I wonder is: which test
+> > >> group the test case will it fall in? The nvme group could be the
+> > >> group to add, probably.
+> > >>
+> >
+> > since this issue been discovered with nvme rescan and revmoe,
+> > it should be added to the nvme category.
 >=20
->>
->> So the solution to all this is a likely a little more complicated if w=
-e
->> want to keep ATA max QD to 32.
->>
->=20
-> thanks,
-> John
+> We already have nvme/032 which tests nvme rescan/reset/remove and the
+> issue was reported by running this one, do we still need one more?
 
+That is a point. Current nvme/032 checks nvme pci adapter rescan/reset/remo=
+ve
+during I/O to catch problems in nvme driver and block layer, but actually i=
+t
+can catch the problem in pci sub-system also. I think Chaitanya's motivatio=
+n
+for the new test case is to distinguish those two.
+
+If we have the new test case, its code will be similar and duplicated as
+nvme/032 code. To avoid such duplication, it would be good to improve nvme/=
+032
+to have two steps. The 1st step checks that nvme pci adapter rescan/reset/r=
+emove
+without I/O causes no kernel WARN (or any other unexpected kernel messages)=
+. Any
+issue found in this step is reported as a pci sub-system issue. The 2nd ste=
+p
+checks nvme pci adapter rescan/reset/remove during I/O, as the current nvme=
+/032
+does. With this, we don't need the new test case, but still we can distingu=
+ish
+the problems in nvme/block sub-system and pci sub-system.
+
+> > >> Another point I wonder is other kernel test suite than blktests.
+> > >> Don't we have more appropriate test suite to check PCI device
+> > >> rescan/remove race ? Such a test sounds more like a PCI bus
+> > >> sub-system test than block/storage test.
+> >
+> > I don't think so we could have caught it long time back,
+> > but we clearly did not.
+
+I see, then it looks that blktests is the test suite to test it.
 
 --=20
-Damien Le Moal
-Western Digital Research
+Shin'ichiro Kawasaki=
