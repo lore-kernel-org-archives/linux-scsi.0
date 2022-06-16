@@ -2,307 +2,251 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 976D9C43334
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jun 2022 19:12:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD367C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jun 2022 19:23:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1378205AbiFPTL7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Jun 2022 15:11:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33170 "EHLO
+        id S1349272AbiFPTXJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Jun 2022 15:23:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43484 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1378136AbiFPTLs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jun 2022 15:11:48 -0400
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1BFCD54BD4;
-        Thu, 16 Jun 2022 12:11:46 -0700 (PDT)
-Received: from pps.filterd (m0127361.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 25GHIPZ7013013;
-        Thu, 16 Jun 2022 19:11:39 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding; s=pp1;
- bh=7qq35SNtCx6//gOGORfeQ5P725tLQLSMQqiYbs6pQ2s=;
- b=ASmWvp2WNDv1efG4wzAF9eG0nHlKCsfL0wFh1v/R/pkeRnoL5pPywzoWJ5wUL8EGXjxe
- B/K26i+XXZczW+3SSl7TTpbiiM0Jor0YNJb71HpVidYJe+guTI7SrBpSMF3n17W4nzk9
- p3TxXqVd0eSzNnMoBpj94ZnpSyODX+zDWsIiMxOTIGKzjV4oVOnyFJYZ4DKy1BkFTV1/
- KtjhICwAW/xQX3HDRd7lzloRBX8GvMlQIwR+wugcQLDGTk7tXa3bkdogVtChxfPf3gVk
- V35Zm0VOWgVLS6PIGhbYOktwB+SYOt6EbaQzq0zpFm1XLuon/08CVOutzD8cTmp4RBi4 3Q== 
-Received: from ppma03wdc.us.ibm.com (ba.79.3fa9.ip4.static.sl-reverse.com [169.63.121.186])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3gqr2purdr-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 16 Jun 2022 19:11:39 +0000
-Received: from pps.filterd (ppma03wdc.us.ibm.com [127.0.0.1])
-        by ppma03wdc.us.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 25GJ6x8w017258;
-        Thu, 16 Jun 2022 19:11:38 GMT
-Received: from b03cxnp07029.gho.boulder.ibm.com (b03cxnp07029.gho.boulder.ibm.com [9.17.130.16])
-        by ppma03wdc.us.ibm.com with ESMTP id 3gmjp9uqjb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 16 Jun 2022 19:11:38 +0000
-Received: from b03ledav002.gho.boulder.ibm.com (b03ledav002.gho.boulder.ibm.com [9.17.130.233])
-        by b03cxnp07029.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 25GJBbmo20971950
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 16 Jun 2022 19:11:37 GMT
-Received: from b03ledav002.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 3FFF713605D;
-        Thu, 16 Jun 2022 19:11:37 +0000 (GMT)
-Received: from b03ledav002.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id A2C2F13604F;
-        Thu, 16 Jun 2022 19:11:35 +0000 (GMT)
-Received: from li-37e927cc-2b02-11b2-a85c-931637a79255.ibm.com.com (unknown [9.160.59.133])
-        by b03ledav002.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Thu, 16 Jun 2022 19:11:35 +0000 (GMT)
-From:   Tyrel Datwyler <tyreld@linux.ibm.com>
-To:     james.bottomley@hansenpartnership.com
-Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-        brking@linux.ibm.com, Tyrel Datwyler <tyreld@linux.ibm.com>,
-        stable@vger.kernel.org, Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH] ibmvfc: alloc/free queue resource only during probe/remove
-Date:   Thu, 16 Jun 2022 12:11:26 -0700
-Message-Id: <20220616191126.1281259-3-tyreld@linux.ibm.com>
-X-Mailer: git-send-email 2.35.3
-In-Reply-To: <20220616191126.1281259-1-tyreld@linux.ibm.com>
-References: <20220616191126.1281259-1-tyreld@linux.ibm.com>
+        with ESMTP id S1378415AbiFPTWw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jun 2022 15:22:52 -0400
+Received: from mail-qk1-x734.google.com (mail-qk1-x734.google.com [IPv6:2607:f8b0:4864:20::734])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0288562FC
+        for <linux-scsi@vger.kernel.org>; Thu, 16 Jun 2022 12:22:16 -0700 (PDT)
+Received: by mail-qk1-x734.google.com with SMTP id p63so1706194qkd.10
+        for <linux-scsi@vger.kernel.org>; Thu, 16 Jun 2022 12:22:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=px+zQB2QIe/Sc5BaXEKHEw8B2vAxzFzKAk+Qqh0TdWQ=;
+        b=ZRUSgbgyboiffTJL2svIbN0fV/PAcCmgaLRu9DQZZnmruyBzU914IVgWUtYYqe1YUs
+         ydhhVxWO6wjM3oJdMNXgZxW8kev0RGzt+5vqGMKEh04LJyEC+e5mAQ1PS8TTyjuw4N28
+         +DC6hvhASFekAQ6T8dNJLCtJ/e2QmjoB6LQthkp1Ut4++/xhPNlmUgIuw+U22i/xAsGB
+         j7ZUyn7SLuJop4Fzb8P5OV/mAOU/A1YbtxmbTwVvVRO7PQgbCqwKu24ILSCA90ik2w/8
+         bxYafFz6mO8bPuZ9yQeda5EmFI65bAQpAAOUnV6Y0t87ujZqLRQjh8DJYdZ+rO0sBj56
+         dd2w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=px+zQB2QIe/Sc5BaXEKHEw8B2vAxzFzKAk+Qqh0TdWQ=;
+        b=MDSL//Brq7hl9Yxt58aw7k+U2EXaw6Xf7OYxNlidDAxPO4COsnOaCcSPlqJqfp2+BY
+         OSNSS/fIml/H31u8obSJ9RW4FmwfhDEwfgkPY6XVW2+vFDGhYQn8E2PUPn+a23fJemUv
+         eGsXi23xIk977K+8p8hqqWC1bMgqzhNNxnV2Big3MxyI0wRfsITuiqwmWvK1Qg3B0R1l
+         WNEYtgwv/znJZB0K/oUBegBZ+b+lPbRhhCHHenL/9pdTJ2MRwdxXxnzD49wJHZTFhdY4
+         ggOPo8mRljmJeILfGoO7wcrvyhqJk1/LtSibreTWFDc86Etx3ptVuu4kK++kKYYUH/FJ
+         u2og==
+X-Gm-Message-State: AJIora+4cWZePgg1UPiX6rNtVpu2X23uh3+Tp0jBjvX9xXSvyMOSRjnv
+        wTeLHgBHaN6G8GZa68i2BagWscR0qV5gNYR65Xo=
+X-Google-Smtp-Source: AGRyM1uaQ8kl+lyTCVmMeI0Uq6kC0kZXEpQj5QKlPurp5ZUCgrKagZ+gdcPsyL+SfHXLL/xNHF1cJA==
+X-Received: by 2002:a05:620a:4714:b0:6a7:2f11:d04f with SMTP id bs20-20020a05620a471400b006a72f11d04fmr4770202qkb.688.1655407335698;
+        Thu, 16 Jun 2022 12:22:15 -0700 (PDT)
+Received: from mail-yw1-f180.google.com (mail-yw1-f180.google.com. [209.85.128.180])
+        by smtp.gmail.com with ESMTPSA id f5-20020a05620a280500b006a6a6f148e6sm2341887qkp.17.2022.06.16.12.22.13
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 16 Jun 2022 12:22:14 -0700 (PDT)
+Received: by mail-yw1-f180.google.com with SMTP id 00721157ae682-30fdbe7467cso23198237b3.1;
+        Thu, 16 Jun 2022 12:22:13 -0700 (PDT)
+X-Received: by 2002:a81:ad7:0:b0:2e6:84de:3223 with SMTP id
+ 206-20020a810ad7000000b002e684de3223mr7472185ywk.209.1655407332919; Thu, 16
+ Jun 2022 12:22:12 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: cRQmyEpACOF1p-FmQT6G6tJZUAOumVbe
-X-Proofpoint-ORIG-GUID: cRQmyEpACOF1p-FmQT6G6tJZUAOumVbe
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.64.514
- definitions=2022-06-16_17,2022-06-16_01,2022-02-23_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 adultscore=0
- spamscore=0 impostorscore=0 priorityscore=1501 suspectscore=0 bulkscore=0
- malwarescore=0 mlxlogscore=999 phishscore=0 mlxscore=0 lowpriorityscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2204290000
- definitions=main-2206160077
+References: <20220405093759.1126835-1-alex.bennee@linaro.org> <20220405093759.1126835-3-alex.bennee@linaro.org>
+In-Reply-To: <20220405093759.1126835-3-alex.bennee@linaro.org>
+From:   Arnd Bergmann <arnd@linaro.org>
+Date:   Thu, 16 Jun 2022 21:21:56 +0200
+X-Gmail-Original-Message-ID: <CAK8P3a1xC5jVT9dE7GTtMhE5siFzOkgb5uBEC-ZCt5GPW09u+g@mail.gmail.com>
+Message-ID: <CAK8P3a1xC5jVT9dE7GTtMhE5siFzOkgb5uBEC-ZCt5GPW09u+g@mail.gmail.com>
+Subject: Re: [PATCH v2 2/4] char: rpmb: provide a user space interface
+To:     =?UTF-8?B?QWxleCBCZW5uw6ll?= <alex.bennee@linaro.org>
+Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Maxim Uvarov <maxim.uvarov@linaro.org>,
+        Joakim Bech <joakim.bech@linaro.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Ilias Apalodimas <ilias.apalodimas@linaro.org>,
+        Ruchika Gupta <ruchika.gupta@linaro.org>,
+        "Winkler, Tomas" <tomas.winkler@intel.com>,
+        "Huang, Yang" <yang.huang@intel.com>,
+        "Zhu, Bing" <bing.zhu@intel.com>, Matti.Moell@opensynergy.com,
+        hmo@opensynergy.com, linux-mmc <linux-mmc@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Arnd Bergmann <arnd.bergmann@linaro.org>,
+        Alexander Usyskin <alexander.usyskin@intel.com>,
+        Avri Altman <avri.altman@sandisk.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Currently, the sub-queues and event pool resources are alloc/free'd
-for every CRQ connection event such as reset and LPM. This exposes the driver to
-a couple issues. First the inefficiency of freeing and reallocating memory that
-can simply be resued after being sanitized. Further, a system under memory
-pressue runs the risk of allocation failures that could result in a cripled
-driver. Finally, there is a race window where command submission/compeletion can
-try to pull/return elements from/to an event pool that is being deleted or
-already has been deleted due to the lack of host state around freeing/allocating
-resources. The following is an example of list corruption following a live
-partition migration (LPM):
+On Tue, Apr 5, 2022 at 11:37 AM Alex Benn=C3=A9e <alex.bennee@linaro.org> w=
+rote:
 
-Oops: Exception in kernel mode, sig: 5 [#1]
-LE PAGE_SIZE=64K MMU=Hash SMP NR_CPUS=2048 NUMA pSeries
-Modules linked in: vfat fat isofs cdrom ext4 mbcache jbd2 nft_counter nft_compat nf_tables nfnetlink rpadlpar_io rpaphp xsk_diag nfsv3 nfs_acl nfs lockd grace fscache netfs rfkill bonding tls sunrpc pseries_rng drm drm_panel_orientation_quirks xfs libcrc32c dm_service_time sd_mod t10_pi sg ibmvfc scsi_transport_fc ibmveth vmx_crypto dm_multipath dm_mirror dm_region_hash dm_log dm_mod ipmi_devintf ipmi_msghandler fuse
-CPU: 0 PID: 2108 Comm: ibmvfc_0 Kdump: loaded Not tainted 5.14.0-70.9.1.el9_0.ppc64le #1
-NIP: c0000000007c4bb0 LR: c0000000007c4bac CTR: 00000000005b9a10
-REGS: c00000025c10b760 TRAP: 0700  Not tainted (5.14.0-70.9.1.el9_0.ppc64le)
-MSR: 800000000282b033 <SF,VEC,VSX,EE,FP,ME,IR,DR,RI,LE> CR: 2800028f XER: 0000000f
-CFAR: c0000000001f55bc IRQMASK: 0
-        GPR00: c0000000007c4bac c00000025c10ba00 c000000002a47c00 000000000000004e
-        GPR04: c0000031e3006f88 c0000031e308bd00 c00000025c10b768 0000000000000027
-        GPR08: 0000000000000000 c0000031e3009dc0 00000031e0eb0000 0000000000000000
-        GPR12: c0000031e2ffffa8 c000000002dd0000 c000000000187108 c00000020fcee2c0
-        GPR16: 0000000000000000 0000000000000000 0000000000000000 0000000000000000
-        GPR20: 0000000000000000 0000000000000000 0000000000000000 c008000002f81300
-        GPR24: 5deadbeef0000100 5deadbeef0000122 c000000263ba6910 c00000024cc88000
-        GPR28: 000000000000003c c0000002430a0000 c0000002430ac300 000000000000c300
-NIP [c0000000007c4bb0] __list_del_entry_valid+0x90/0x100
-LR [c0000000007c4bac] __list_del_entry_valid+0x8c/0x100
-Call Trace:
-[c00000025c10ba00] [c0000000007c4bac] __list_del_entry_valid+0x8c/0x100 (unreliable)
-[c00000025c10ba60] [c008000002f42284] ibmvfc_free_queue+0xec/0x210 [ibmvfc]
-[c00000025c10bb10] [c008000002f4246c] ibmvfc_deregister_scsi_channel+0xc4/0x160 [ibmvfc]
-[c00000025c10bba0] [c008000002f42580] ibmvfc_release_sub_crqs+0x78/0x130 [ibmvfc]
-[c00000025c10bc20] [c008000002f4f6cc] ibmvfc_do_work+0x5c4/0xc70 [ibmvfc]
-[c00000025c10bce0] [c008000002f4fdec] ibmvfc_work+0x74/0x1e8 [ibmvfc]
-[c00000025c10bda0] [c0000000001872b8] kthread+0x1b8/0x1c0
-[c00000025c10be10] [c00000000000cd64] ret_from_kernel_thread+0x5c/0x64
-Instruction dump:
-40820034 38600001 38210060 4e800020 7c0802a6 7c641b78 3c62fe7a 7d254b78
-3863b590 f8010070 4ba309cd 60000000 <0fe00000> 7c0802a6 3c62fe7a 3863b640
----[ end trace 11a2b65a92f8b66c ]---
-ibmvfc 30000003: Send warning. Receive queue closed, will retry.
+> +static int rpmb_open(struct inode *inode, struct file *fp)
+> +{
+> +       struct rpmb_dev *rdev;
+> +
+> +       rdev =3D container_of(inode->i_cdev, struct rpmb_dev, cdev);
+> +       if (!rdev)
+> +               return -ENODEV;
+> +
+> +       /* the rpmb is single open! */
+> +       if (test_and_set_bit(RPMB_DEV_OPEN, &rdev->status))
+> +               return -EBUSY;
+> +
+> +       mutex_lock(&rdev->lock);
+> +
+> +       fp->private_data =3D rdev;
+> +
+> +       mutex_unlock(&rdev->lock);
 
-Add registration/deregistartion helpers that are called instead during
-connection resets to sanitize and reconfigure the queues.
+The mutex here doesn't really do anything, as the file structure is not
+reachable from any other context.
 
-Fixes: 3034ebe26389 ("scsi: ibmvfc: Add alloc/dealloc routines for SCSI Sub-CRQ Channels")
-Cc: stable@vger.kernel.org
-Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
-Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
----
- drivers/scsi/ibmvscsi/ibmvfc.c | 79 ++++++++++++++++++++++++++--------
- 1 file changed, 62 insertions(+), 17 deletions(-)
+I'm not sure the single-open protection gains you anything either,
+as it does not prevent the file structure to be shared between
+processes.
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index 9fc0ffda6ae8..00684e11976b 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -160,8 +160,8 @@ static void ibmvfc_npiv_logout(struct ibmvfc_host *);
- static void ibmvfc_tgt_implicit_logout_and_del(struct ibmvfc_target *);
- static void ibmvfc_tgt_move_login(struct ibmvfc_target *);
- 
--static void ibmvfc_release_sub_crqs(struct ibmvfc_host *);
--static void ibmvfc_init_sub_crqs(struct ibmvfc_host *);
-+static void ibmvfc_dereg_sub_crqs(struct ibmvfc_host *);
-+static void ibmvfc_reg_sub_crqs(struct ibmvfc_host *);
- 
- static const char *unknown_error = "unknown error";
- 
-@@ -917,7 +917,7 @@ static int ibmvfc_reenable_crq_queue(struct ibmvfc_host *vhost)
- 	struct vio_dev *vdev = to_vio_dev(vhost->dev);
- 	unsigned long flags;
- 
--	ibmvfc_release_sub_crqs(vhost);
-+	ibmvfc_dereg_sub_crqs(vhost);
- 
- 	/* Re-enable the CRQ */
- 	do {
-@@ -936,7 +936,7 @@ static int ibmvfc_reenable_crq_queue(struct ibmvfc_host *vhost)
- 	spin_unlock(vhost->crq.q_lock);
- 	spin_unlock_irqrestore(vhost->host->host_lock, flags);
- 
--	ibmvfc_init_sub_crqs(vhost);
-+	ibmvfc_reg_sub_crqs(vhost);
- 
- 	return rc;
- }
-@@ -955,7 +955,7 @@ static int ibmvfc_reset_crq(struct ibmvfc_host *vhost)
- 	struct vio_dev *vdev = to_vio_dev(vhost->dev);
- 	struct ibmvfc_queue *crq = &vhost->crq;
- 
--	ibmvfc_release_sub_crqs(vhost);
-+	ibmvfc_dereg_sub_crqs(vhost);
- 
- 	/* Close the CRQ */
- 	do {
-@@ -988,7 +988,7 @@ static int ibmvfc_reset_crq(struct ibmvfc_host *vhost)
- 	spin_unlock(vhost->crq.q_lock);
- 	spin_unlock_irqrestore(vhost->host->host_lock, flags);
- 
--	ibmvfc_init_sub_crqs(vhost);
-+	ibmvfc_reg_sub_crqs(vhost);
- 
- 	return rc;
- }
-@@ -5759,9 +5759,6 @@ static int ibmvfc_register_scsi_channel(struct ibmvfc_host *vhost,
- 
- 	ENTER;
- 
--	if (ibmvfc_alloc_queue(vhost, scrq, IBMVFC_SUB_CRQ_FMT))
--		return -ENOMEM;
--
- 	rc = h_reg_sub_crq(vdev->unit_address, scrq->msg_token, PAGE_SIZE,
- 			   &scrq->cookie, &scrq->hw_irq);
- 
-@@ -5801,7 +5798,6 @@ static int ibmvfc_register_scsi_channel(struct ibmvfc_host *vhost,
- 		rc = plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address, scrq->cookie);
- 	} while (rtas_busy_delay(rc));
- reg_failed:
--	ibmvfc_free_queue(vhost, scrq);
- 	LEAVE;
- 	return rc;
- }
-@@ -5827,12 +5823,50 @@ static void ibmvfc_deregister_scsi_channel(struct ibmvfc_host *vhost, int index)
- 	if (rc)
- 		dev_err(dev, "Failed to free sub-crq[%d]: rc=%ld\n", index, rc);
- 
--	ibmvfc_free_queue(vhost, scrq);
-+	/* Clean out the queue */
-+	memset(scrq->msgs.crq, 0, PAGE_SIZE);
-+	scrq->cur = 0;
-+
-+	LEAVE;
-+}
-+
-+static void ibmvfc_reg_sub_crqs(struct ibmvfc_host *vhost)
-+{
-+	int i, j;
-+
-+	ENTER;
-+	if (!vhost->mq_enabled || !vhost->scsi_scrqs.scrqs)
-+		return;
-+
-+	for (i = 0; i < nr_scsi_hw_queues; i++) {
-+		if (ibmvfc_register_scsi_channel(vhost, i)) {
-+			for (j = i; j > 0; j--)
-+				ibmvfc_deregister_scsi_channel(vhost, j - 1);
-+			vhost->do_enquiry = 0;
-+			return;
-+		}
-+	}
-+
-+	LEAVE;
-+}
-+
-+static void ibmvfc_dereg_sub_crqs(struct ibmvfc_host *vhost)
-+{
-+	int i;
-+
-+	ENTER;
-+	if (!vhost->mq_enabled || !vhost->scsi_scrqs.scrqs)
-+		return;
-+
-+	for (i = 0; i < nr_scsi_hw_queues; i++)
-+		ibmvfc_deregister_scsi_channel(vhost, i);
-+
- 	LEAVE;
- }
- 
- static void ibmvfc_init_sub_crqs(struct ibmvfc_host *vhost)
- {
-+	struct ibmvfc_queue *scrq;
- 	int i, j;
- 
- 	ENTER;
-@@ -5848,30 +5882,41 @@ static void ibmvfc_init_sub_crqs(struct ibmvfc_host *vhost)
- 	}
- 
- 	for (i = 0; i < nr_scsi_hw_queues; i++) {
--		if (ibmvfc_register_scsi_channel(vhost, i)) {
--			for (j = i; j > 0; j--)
--				ibmvfc_deregister_scsi_channel(vhost, j - 1);
-+		scrq = &vhost->scsi_scrqs.scrqs[i];
-+		if (ibmvfc_alloc_queue(vhost, scrq, IBMVFC_SUB_CRQ_FMT)) {
-+			for (j = i; j > 0; j--) {
-+				scrq = &vhost->scsi_scrqs.scrqs[j - 1];
-+				ibmvfc_free_queue(vhost, scrq);
-+			}
- 			kfree(vhost->scsi_scrqs.scrqs);
- 			vhost->scsi_scrqs.scrqs = NULL;
- 			vhost->scsi_scrqs.active_queues = 0;
- 			vhost->do_enquiry = 0;
--			break;
-+			vhost->mq_enabled = 0;
-+			return;
- 		}
- 	}
- 
-+	ibmvfc_reg_sub_crqs(vhost);
-+
- 	LEAVE;
- }
- 
- static void ibmvfc_release_sub_crqs(struct ibmvfc_host *vhost)
- {
-+	struct ibmvfc_queue *scrq;
- 	int i;
- 
- 	ENTER;
- 	if (!vhost->scsi_scrqs.scrqs)
- 		return;
- 
--	for (i = 0; i < nr_scsi_hw_queues; i++)
--		ibmvfc_deregister_scsi_channel(vhost, i);
-+	ibmvfc_dereg_sub_crqs(vhost);
-+
-+	for (i = 0; i < nr_scsi_hw_queues; i++) {
-+		scrq = &vhost->scsi_scrqs.scrqs[i];
-+		ibmvfc_free_queue(vhost, scrq);
-+	}
- 
- 	kfree(vhost->scsi_scrqs.scrqs);
- 	vhost->scsi_scrqs.scrqs = NULL;
--- 
-2.35.3
+> +static long rpmb_ioctl_ver_cmd(struct rpmb_dev *rdev,
+> +                              struct rpmb_ioc_ver_cmd __user *ptr)
+> +{
+> +       struct rpmb_ioc_ver_cmd ver =3D {
+> +               .api_version =3D RPMB_API_VERSION,
+> +       };
+> +
+> +       return copy_to_user(ptr, &ver, sizeof(ver)) ? -EFAULT : 0;
+> +}
 
+API version ioctls are generally a bad idea, I think this should be skipped=
+.
+The way to handle incompatible API changes is to introduce new ioctl
+commands.
+
+> +static const struct file_operations rpmb_fops =3D {
+> +       .open           =3D rpmb_open,
+> +       .release        =3D rpmb_release,
+> +       .unlocked_ioctl =3D rpmb_ioctl,
+
+
+
+> diff --git a/drivers/rpmb/rpmb-cdev.h b/drivers/rpmb/rpmb-cdev.h
+> new file mode 100644
+> index 000000000000..e59ff0c05e9d
+> --- /dev/null
+> +++ b/drivers/rpmb/rpmb-cdev.h
+> @@ -0,0 +1,17 @@
+> +/* SPDX-License-Identifier: BSD-3-Clause OR GPL-2.0 */
+> +/*
+> + * Copyright (C) 2015-2018 Intel Corp. All rights reserved
+> + */
+> +#ifdef CONFIG_RPMB_INTF_DEV
+> +int __init rpmb_cdev_init(void);
+> +void __exit rpmb_cdev_exit(void);
+> +void rpmb_cdev_prepare(struct rpmb_dev *rdev);
+> +void rpmb_cdev_add(struct rpmb_dev *rdev);
+> +void rpmb_cdev_del(struct rpmb_dev *rdev);
+> +#else
+> +static inline int __init rpmb_cdev_init(void) { return 0; }
+> +static inline void __exit rpmb_cdev_exit(void) {}
+> +static inline void rpmb_cdev_prepare(struct rpmb_dev *rdev) {}
+> +static inline void rpmb_cdev_add(struct rpmb_dev *rdev) {}
+> +static inline void rpmb_cdev_del(struct rpmb_dev *rdev) {}
+> +#endif /* CONFIG_RPMB_INTF_DEV */
+
+What is the purpose of the fallback? Would you ever build the code without
+the interface?
+
+> +/**
+> + * struct rpmb_ioc_ver_cmd - rpmb api version
+> + *
+> + * @api_version: rpmb API version.
+> + */
+> +struct rpmb_ioc_ver_cmd {
+> +       __u32 api_version;
+> +} __packed;
+
+Best remove this completely.
+
+> +enum rpmb_auth_method {
+> +       RPMB_HMAC_ALGO_SHA_256 =3D 0,
+> +};
+> +
+> +/**
+> + * struct rpmb_ioc_cap_cmd - rpmb capabilities
+> + *
+> + * @target: rpmb target/region within RPMB partition.
+> + * @capacity: storage capacity (in units of 128K)
+> + * @block_size: storage data block size (in units of 256B)
+> + * @wr_cnt_max: maximal number of block that can be written in a single =
+request.
+> + * @rd_cnt_max: maximal number of block that can be read in a single req=
+uest.
+> + * @auth_method: authentication method: currently always HMAC_SHA_256
+> + * @reserved: reserved to align to 4 bytes.
+> + */
+> +struct rpmb_ioc_cap_cmd {
+> +       __u16 target;
+> +       __u16 capacity;
+> +       __u16 block_size;
+> +       __u16 wr_cnt_max;
+> +       __u16 rd_cnt_max;
+> +       __u16 auth_method;
+> +       __u16 reserved;
+> +} __packed;
+
+I would remove the __packed attribute here. If you want to keep it, then
+it needs to have a __aligned() attribute as well.
+
+It seems strange to have an odd number of 16-bit fields in this, maybe
+make it two reserved fields to have a multiple of 32-bit.
+
+> + * struct rpmb_ioc_reqresp_cmd - general purpose reqresp
+> + *
+> + * Most RPMB operations consist of a set of request frames and an
+> + * optional response frame. If a response is requested the user must
+> + * allocate enough space for the response, otherwise the fields should
+> + * be set to 0/NULL.
+> + *
+> + * It is used for programming the key, reading the counter and writing
+> + * blocks to the device. If the frames are malformed they may be
+> + * rejected by the underlying driver or the device itself.
+> + *
+> + * Assuming the transaction succeeds it is still up to user space to
+> + * validate the response and check MAC values correspond to the
+> + * programmed keys.
+> + *
+> + * @len: length of write counter request
+> + * @request: ptr to device specific request frame
+> + * @rlen: length of response frame
+> + * @resp: ptr to device specific response frame
+> + */
+> +struct rpmb_ioc_reqresp_cmd {
+> +       __u32 len;
+> +       __u8 __user *request;
+> +       __u32 rlen;
+> +       __u8 __user *response;
+> +} __packed;
+
+Try to avoid indirect pointers in ioctl structures, they break
+compatibility with
+32-bit processes. I think you can do this with a variable-length structure =
+that
+has the two length fields followed by the actual data. If there is a reason=
+able
+upper bound for the length, it could also just be a fixed-length buffer.
+
+If you end up having to use a pointer, make it a __u64 value and cast betwe=
+en
+that and the actual pointer value.
+
+Whatever you do though, don't use misaligned pointers or implicit padding i=
+n the
+structure. You can have explicit padding by adding an extra __u32 before
+a __u64 pointer value, and then remove the __packed attribute, or reorder t=
+he
+members so each pointer is naturally aligned.
+
+       Arnd
