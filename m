@@ -2,94 +2,117 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33E61C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jun 2022 01:37:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1549C43334
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jun 2022 01:38:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1356763AbiFPBhZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Jun 2022 21:37:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40984 "EHLO
+        id S1357678AbiFPBin (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Jun 2022 21:38:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44452 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347985AbiFPBhX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jun 2022 21:37:23 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C185421E08;
-        Wed, 15 Jun 2022 18:37:20 -0700 (PDT)
+        with ESMTP id S1350363AbiFPBif (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jun 2022 21:38:35 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABF7C56C10;
+        Wed, 15 Jun 2022 18:38:33 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5DB7D61CC8;
-        Thu, 16 Jun 2022 01:37:20 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52BC2C3411A;
-        Thu, 16 Jun 2022 01:37:18 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 2DD4FCE229A;
+        Thu, 16 Jun 2022 01:38:32 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3514BC3411A;
+        Thu, 16 Jun 2022 01:38:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1655343439;
-        bh=ujpHNITXakGv3AFhCLT/p17jcWhMfXKiaRZLtkA/Y18=;
+        s=k20201202; t=1655343510;
+        bh=d2MR8JbAHuYboCeL5LA8OVqbDSui4vBHdBkzOiJFe0Q=;
         h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=mKV2g3cVPknlB8Uv0bifMNAz90CBxvPaBmNkJr86o9Zln8Gg6RGwF/avlrPMKME55
-         /3cg8BMJ6btV3D7P/vk+3ZIB/7uS5NAWWfEwM92grgi9OxPvWTCvEQbCtzCjobCnqm
-         OoLZgpalBQ9OkKGWorjM4c2tGAI5XD5ZLgVuObrFXq2ihSecHco5ZjuMcncfedlAUn
-         x8vf8DMHhUis94Tlyr7vUjLCvSGyeDDN7W2Ronst4/jHsTVpvIFWzNmIZxDJ+l/Alc
-         9di1/KnsyC1wPD/smpnNs7SqVsqhc443I7DXgtnTAGee7ZuB6MhH57s6Vc9Symk0HH
-         VObkAvlmsjfQw==
-Message-ID: <f3aa27cb-f018-f056-6899-f635b4b6b728@kernel.org>
-Date:   Thu, 16 Jun 2022 09:37:15 +0800
+        b=m6sK9YN9ILtIsQcvKAHlSE3QS3ouzgUtU/8JiVmCFWZDAYzQ55Czrg4PxHXWF9WB7
+         7yRPq98AHuZuwf2OBKZpVgx0R/ppyddT+LffzHvEYroAk0IZ2FoqE03QljNEiiwKvv
+         TS4boBJ2pkphKEpltduDS4IiaYwPSG6jqTw/85TxHKtzUbYa5lQyZmxMG4bB3bORjm
+         JdzaH12t5x1g+QKkpo7KQlqfPjJnC7Cy5X5ujUkxbsj08htOgZl17CY4g7g0UKhKcB
+         +mhd2r1UGBq+3DWji8NA/2y6jY+YBiGPDqPu/Vv8V5sK+Ocs5OmbVBKnVyHjOyl5Wx
+         mIahRrJ6A2roQ==
+Message-ID: <7a446f83-8a32-7131-adb4-4dfcbb79a8d9@kernel.org>
+Date:   Thu, 16 Jun 2022 09:38:27 +0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.10.0
-Subject: Re: [PATCH v2] scsi: support packing multi-segment in UNMAP command
+Subject: Re: [PATCH v3] scsi: support packing multi-segment in UNMAP command
 Content-Language: en-US
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20220615132846.2232920-1-chao@kernel.org>
- <YqngKHnfVIzq7Pgr@infradead.org>
+To:     Bart Van Assche <bvanassche@acm.org>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20220615153402.2233825-1-chao@kernel.org>
+ <1c422582-b074-c15e-a2d2-94bddf089974@acm.org>
 From:   Chao Yu <chao@kernel.org>
-In-Reply-To: <YqngKHnfVIzq7Pgr@infradead.org>
+In-Reply-To: <1c422582-b074-c15e-a2d2-94bddf089974@acm.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2022/6/15 21:35, Christoph Hellwig wrote:
-> On Wed, Jun 15, 2022 at 09:28:46PM +0800, Chao Yu wrote:
->> As SPEC describes that it can support unmapping one or more LBA range
+On 2022/6/16 0:21, Bart Van Assche wrote:
+> On 6/15/22 08:34, Chao Yu wrote:
+>> As SCSI SBC4 specification section 5.30.2 describes that it can
+>> support unmapping one or more LBA range in single UNMAP command,
+>> however, previously we only pack one LBA range in UNMAP command
+>> by default no matter device gives the block limits that says it
+>> can support in-batch UNMAP.
 > 
-> s/SPEC/<insert SPC reference here>/
+> The above sentence is too long. Please split it.
 > 
->>   {
->>   	struct scsi_device *sdp = cmd->device;
->>   	struct request *rq = scsi_cmd_to_rq(cmd);
->> +	struct bio *bio;
->>   	struct scsi_disk *sdkp = scsi_disk(rq->q->disk);
->> +	unsigned short segments = blk_rq_nr_discard_segments(rq);
->> +	unsigned int data_len = 8 + 16 * segments, i = 0;
->>   	char *buf;
+>> This patch tries to set max_discard_segments config according to
+>               ^^^^^^^^^^^^
+> Consider changing "tries to set" into "sets".
 > 
-> Nit: for readability I'd move the bio declaration just above the buf
-> line.
+>> block limits of device, and supports in-batch UNMAP.
 > 
->> +
->> +	__rq_for_each_bio(bio, rq) {
->> +		u64 lba = sectors_to_logical(sdp, bio->bi_iter.bi_sector);
->> +		u32 nr_blocks = sectors_to_logical(sdp, bio_sectors(bio));
->> +
->> +		put_unaligned_be64(lba, &buf[8 + 16 * i]);
->> +		put_unaligned_be32(nr_blocks, &buf[8 + 16 * i + 8]);
+> Consider changing "in-batch UNMAP" into "unmapping multiple LBA ranges with a single UNMAP command".
 > 
-> Can we have a local variable here?
+>> +    blk_queue_max_discard_segments(q, sdkp->max_block_desc_count);
 > 
-> 	unsigned int data_offset = 8;
+> sdkp->max_block_desc_count is 32 bits wide while blk_queue_max_discard_segments() accepts an unsigned short as second argument. So the value 0x10002 will be converted into 2, which is not correct. Consider changing the second argument into min(U16_MAX, sdkp->max_block_desc_count).
 > 
-> 	....
+>>       sdkp->provisioning_mode = mode;
+>>       switch (mode) {
+>> @@ -836,9 +837,10 @@ static blk_status_t sd_setup_unmap_cmnd(struct scsi_cmnd *cmd)
+>>       struct scsi_device *sdp = cmd->device;
+>>       struct request *rq = scsi_cmd_to_rq(cmd);
+>>       struct scsi_disk *sdkp = scsi_disk(rq->q->disk);
+>> -    u64 lba = sectors_to_logical(sdp, blk_rq_pos(rq));
+>> -    u32 nr_blocks = sectors_to_logical(sdp, blk_rq_sectors(rq));
+>> -    unsigned int data_len = 24;
+>> +    unsigned short segments = blk_rq_nr_discard_segments(rq);
+>> +    unsigned int data_len = 8 + 16 * segments;
+>> +    unsigned int data_offset = 8;
 > 
+> Please rename 'data_offset' into 'descriptor_offset' to match the SBC-4 terminology.
+> 
+>> @@ -2870,9 +2879,9 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
+>>               goto out;
+>>           lba_count = get_unaligned_be32(&vpd->data[20]);
+>> -        desc_count = get_unaligned_be32(&vpd->data[24]);
+>> +        sdkp->max_block_desc_count = get_unaligned_be32(&vpd->data[24]);
+> 
+> Consider adding /* Extract the MAXIMUM UNMAP BLOCK DESCRIPTOR COUNT. */ above the above statement.
+> 
+>> diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+>> index 5eea762f84d1..bda9db5e2322 100644
+>> --- a/drivers/scsi/sd.h
+>> +++ b/drivers/scsi/sd.h
+>> @@ -119,6 +119,7 @@ struct scsi_disk {
+>>       u32        opt_xfer_blocks;
+>>       u32        max_ws_blocks;
+>>       u32        max_unmap_blocks;
+>> +    u32        max_block_desc_count;
+> 
+> I do not agree with the choice of the name of this member variable. The name used in SBC-4 is "MAXIMUM UNMAP BLOCK DESCRIPTOR COUNT". Leaving out "unmap" when abbreviating that description into a member name makes it impossible to guess what the purpose of that member variable is.
 
-Thanks for the review, I've updated the patch.
+Agreed, thanks for the review. I've updated the patch as you suggested.
 
 Thanks,
 
-> 		put_unaligned_be64(lba, &buf[data_offset]);
-> 		put_unaligned_be64(lba, &buf[data_offset + 8]);
-> 		data_offset += 16;
-> 	}
 > 
+> Thanks,
+> 
+> Bart.
