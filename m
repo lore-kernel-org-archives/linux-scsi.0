@@ -2,45 +2,41 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F9D3C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jun 2022 13:32:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8007CC43334
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jun 2022 15:09:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233105AbiFPNcj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Jun 2022 09:32:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36938 "EHLO
+        id S1377850AbiFPPJP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Jun 2022 11:09:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48330 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232449AbiFPNch (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jun 2022 09:32:37 -0400
-X-Greylist: delayed 1166 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 16 Jun 2022 06:32:34 PDT
-Received: from refb01.tmes.trendmicro.eu (refb01.tmes.trendmicro.eu [18.185.115.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6595F4D
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Jun 2022 06:32:34 -0700 (PDT)
-Received: from 104.47.14.59_.trendmicro.com (unknown [172.21.19.56])
-        by refb01.tmes.trendmicro.eu (Postfix) with ESMTPS id 6804C10566E4E
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Jun 2022 13:13:09 +0000 (UTC)
-Received: from 104.47.14.59_.trendmicro.com (unknown [172.21.196.58])
-        by repost01.tmes.trendmicro.eu (Postfix) with SMTP id 5B54A10000C5A;
-        Thu, 16 Jun 2022 13:13:07 +0000 (UTC)
-X-TM-MAIL-RECEIVED-TIME: 1655385186.217000
-X-TM-MAIL-UUID: 1ea404bf-4bda-4b7a-8368-1a4c928dc36b
-Received: from EUR04-VI1-obe.outbound.protection.outlook.com (unknown [104.47.14.59])
-        by repre01.tmes.trendmicro.eu (Trend Micro Email Security) with ESMTPS id 354AE100010A0;
-        Thu, 16 Jun 2022 13:13:06 +0000 (UTC)
+        with ESMTP id S1376878AbiFPPJO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jun 2022 11:09:14 -0400
+Received: from repost01.tmes.trendmicro.eu (repost01.tmes.trendmicro.eu [18.185.115.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AB1D403D0;
+        Thu, 16 Jun 2022 08:09:11 -0700 (PDT)
+Received: from 104.47.12.51_.trendmicro.com (unknown [172.21.167.194])
+        by repost01.tmes.trendmicro.eu (Postfix) with SMTP id F198B10000629;
+        Thu, 16 Jun 2022 15:09:09 +0000 (UTC)
+X-TM-MAIL-RECEIVED-TIME: 1655392147.867000
+X-TM-MAIL-UUID: c4c88b1c-4293-4143-95a2-ded176a585db
+Received: from EUR04-DB3-obe.outbound.protection.outlook.com (unknown [104.47.12.51])
+        by repre01.tmes.trendmicro.eu (Trend Micro Email Security) with ESMTPS id D3E0210002186;
+        Thu, 16 Jun 2022 15:09:07 +0000 (UTC)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=NEsjoNqbtDJz/hez477bI9sKIZyVLDccs0Sx0A8EinkTkC8zXEGUTOfLzcBcvIL5Xj6KT9waMQIacxOKTil7AXOdDHYNE4QQ6TJiBG5bN7EIKNEXB40D+Z3wz46JHdifk//CbaoRAtdvGY58JaL/DYOVJZ7l9Sk8lBmWCG2MIK+P5w5hcaSf+jw5OEw9oDgeMI8eZmHoVBTsKFr+iZsdVb/QtXtJX7xZHty8NzBYA8GPvOH+CnDzrTs6dhZvf8aIrt0OJD/f02tk3a1/yFz9p8b7Fba/cih7vcJcjZBf1fr6TY4T5gxx6WNtWbIhia4Wjesiy5rW/nMSm21GtkfhdQ==
+ b=Ui+WtvJZX/f1HdhCX5FvmiDfwDLqcYXEaYyC1LExS9A+atupTVjHIc/uat/S10xsga9Ex2ToGt+/zoynFsviKa/UsZ4unKwoBhihqbc2x0xsayGmOBFELa6ovGp/tSDwqpNK+zxpFbqZJjtJkCDqaW4Ihru6N0nNxosW+JFL4eXvovSt8oJcLuLV8xLmv3QWqqWlbpeoRO54jfkvXtuF5WgtZUQlAR5wOqt9+53A3nt+8y7rHO7XHJwUgR05Was77j4gG6rE7iq1g0E32Q/vj5tAgCJnoyFrTzG8R+3PgsI+pWBq+CZCuZEN9qGs9JG6/LVZE5JZe8DYMMS/vghWsg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=j8dxx98kvbQ+XCxejUt0hj1klHQuupHMJ5US9lDZY90=;
- b=dl0yp9Fh5rr+94kLA14zNvgfRuV9gi5ej/m2tfj6oPIEr0E0+o5N6Ll+Pgx/hUYJmG06knG+1GWUXhXS3CYYOvjAnbcg/AXLPfJl/d1rzZFoZOKqoiPxInI6ywNjRNAW7NZOwLqs9O+JRjQ7yDPeD7SR6tG/HaGcB4pQpKTkxBM+F76lqeLE32HDV0AMwiumLl/KE43kCyk37mOEuqMPBqb9nOckOjN0y2yjLVOnrj7i/fkqUHwtkiqomGPefsEdGYeUBrP/1CGYPn57sj8ajbQtSUanOCbFrg5RKodDTuZGjJoYuWB6UGWoLuvDK/qZAUQ54FQ0qDkPSD70el686Q==
+ bh=kGlXuOP4R2yAE8t6h5fM3M74kZjhZ536rYGyuRuwzHc=;
+ b=jsM0LI5GHk0txaZEqJZvKl7Y3UFrL4ilxG/hXoY8Maamtk5US9wO3uo5s9l/yZzXH0q+gaHS/9lcax3H3SoHhWkv7rQEQZ4EvJki/+MMX155vD9fiPSqG8tLX3/jbe3eJPrRPwazSQrXeJKwKkz9NgYaDDKltOZkCieZ+/LW41pjTQ2kuHgo6kUqZdxjHrJouYHvMfl+M603U3wsiQCMTWg+yiFcQuIxhmxV388Zg4MX10bMYdpyp1lz9L3S4YZKiu3/Lith8HjfO9eeEjjC0XypGdO33VA+N9XFiKd8QfrRQlOTRtV04A5dUnD5oqFAYqfpsmnKEkb/Gj0vAfSk7g==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=opensynergy.com; dmarc=pass action=none
  header.from=opensynergy.com; dkim=pass header.d=opensynergy.com; arc=none
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=opensynergy.com;
-Message-ID: <c72a13b3-d3c9-7502-07fe-ebb76cb0bb3d@opensynergy.com>
-Date:   Thu, 16 Jun 2022 15:13:02 +0200
-Subject: Re: [PATCH v2 4/4] tools rpmb: add RPBM access tool
+Message-ID: <0222bc88-e3d1-243b-ffb1-111ba6bcd764@opensynergy.com>
+Date:   Thu, 16 Jun 2022 17:09:04 +0200
+Subject: Re: [PATCH v2 2/4] char: rpmb: provide a user space interface
 Content-Language: en-US
 To:     =?UTF-8?Q?Alex_Benn=c3=a9e?= <alex.bennee@linaro.org>,
         linux-kernel@vger.kernel.org
@@ -50,101 +46,102 @@ Cc:     maxim.uvarov@linaro.org, joakim.bech@linaro.org,
         yang.huang@intel.com, bing.zhu@intel.com,
         Matti.Moell@opensynergy.com, linux-mmc@vger.kernel.org,
         linux-scsi@vger.kernel.org,
-        Alexander Usyskin <alexander.usyskin@intel.com>
+        Linus Walleij <linus.walleij@linaro.org>,
+        Arnd Bergmann <arnd.bergmann@linaro.org>,
+        Alexander Usyskin <alexander.usyskin@intel.com>,
+        Avri Altman <avri.altman@sandisk.com>
 References: <20220405093759.1126835-1-alex.bennee@linaro.org>
- <20220405093759.1126835-5-alex.bennee@linaro.org>
+ <20220405093759.1126835-3-alex.bennee@linaro.org>
 From:   Harald Mommer <hmo@opensynergy.com>
-In-Reply-To: <20220405093759.1126835-5-alex.bennee@linaro.org>
+In-Reply-To: <20220405093759.1126835-3-alex.bennee@linaro.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: AS8PR04CA0044.eurprd04.prod.outlook.com
- (2603:10a6:20b:312::19) To DB9PR04MB9627.eurprd04.prod.outlook.com
+X-ClientProxiedBy: AM0PR02CA0215.eurprd02.prod.outlook.com
+ (2603:10a6:20b:28f::22) To DB9PR04MB9627.eurprd04.prod.outlook.com
  (2603:10a6:10:30a::13)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 172b03f7-0553-4cdb-aa7c-08da4f99f2d2
-X-MS-TrafficTypeDiagnostic: DU2PR04MB8759:EE_
-X-Microsoft-Antispam-PRVS: <DU2PR04MB87590CB9A575516D70079FDBE5AC9@DU2PR04MB8759.eurprd04.prod.outlook.com>
+X-MS-Office365-Filtering-Correlation-Id: 35ee185e-b5e8-4cfb-7ef3-08da4faa2809
+X-MS-TrafficTypeDiagnostic: DB7PR04MB4729:EE_
+X-Microsoft-Antispam-PRVS: <DB7PR04MB47290A12BF79CB12FE873747E5AC9@DB7PR04MB4729.eurprd04.prod.outlook.com>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: uCv+zWfgtnv9sbPbrIlBLCu3avT0Qn6su63reDMooE83vY/Zl7nGk7VuQ1yXfKVLSyDu27Q5XrRLEsEVmy+sHWVbD2lxotFfSywc+ucNO5t1FGXLDcINr+uxExQH3Wizeq43r3ORDocGfIQJoRGHKHimvN6RGyIi72npJjEPgYynAbHrWLVcNPZCJjY0BcyPsDho8Wadh+OiTIPnHN7IW1m5sphYLRcRFObPP8bvRlqJUy3mkKVoF103NNuvKuVQ0q0fsg/X0qYPvucDtI91L1+GDk7F68bSR9tha8HI4aGm6W59UHkwm2DWIWNRRmPsi3JEx9wdj9oGjacmGNqSddrgpi/rYAqVwpvnO/gF/aWldd5uU7wtRRzxu+SDKNTs6mX2DE0kUsg/yrp4h00zxOLCxAGvEzZHaVQcwIn8BW6V0FnHANc0jcKVOBFyDcL5zrtojslMJqoHaa+swRhen10C1cNx9L84nhRv/vibaiYzizXsPFm/0KF6vtCS5njDeuxgMmNF3hn8/Ka4DmPfpXmhqI60I7++GEyinPwhNJxfKfZwLz27h7cUQQPmbdW4tNCjmWNsy9uKX8SyVnC4ldhoTNj4W8sXGWClKVVmZeBfm8KEqef4Tw0064VGIW+zTZfZGlPYY5LDrLQQO2vTMlKfCddmjH8jHfIFVwnbLcMjsNEc0wSao63n5mIZD/Nmlm4FDz+U4UDuLteTC5AyhCZA50exo6n5azUqmgPBPVQ=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DB9PR04MB9627.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(366004)(2906002)(31686004)(42186006)(316002)(38100700002)(36756003)(83380400001)(15974865002)(66574015)(2616005)(66946007)(66556008)(66476007)(5660300002)(7416002)(8936002)(26005)(508600001)(186003)(53546011)(4326008)(8676002)(31696002);DIR:OUT;SFP:1102;
+X-Microsoft-Antispam-Message-Info: IUuPvxvD83vujkDcy7vll8O9p73t/a6JTnBViIRjOMX8NKKgi5nz/9PubjGfgR3eSQ++erz6UrFwuDsyDCN3bZwhA84jFgFXr4q/a3PoGx61wg/F27FL5/mjqIs7Hd79aPS7NV4DPNc0UKTOjnDn9w3FHnTTjmaBPeC3b7CcX7iyVVB1hqV0PZ+hM896OeyE9Kw8ofD896OvVV2WXKNG1NzxVP7iAckANoNvPCkyqCCXgamZ87VKNLVSqdfS0VuiqljT58rpsKqfuLFugA8loK8ErqvT6XqasGNtkWGt7HJ4RYmJGBjmN8GfnU6ISsvEEJSO+GJkT7zvUhm6nRjw3igGuiTBNaor9zfUohFhsT825zv8TNDCxxIQozd24g7bVUuXQo3HwqXCs3CSQq8deuveX+8CpLtfl7ZEFBxC9WGpRenP7ARQWxdvMexSpdQJgfrKioPa9Sde5gHdCHMBXHneS9C+5nhqQeWxRovTX5sjlyho9H9GdSeI/JnhTrl5B1HSYU6XNURqoifspKMdK/IagzOMN/KhxlfPGTmfy0BoZ8djuuiv7Fdnw+NhaWSXz5uoTDs8EiNf67jWsndF3Sxqwwsl2UmvORG69WEWUmOmzm6/jM9YO5HqD/8108b4xEDMG/udVicshrZkn2cb2882ZhwERzm0hPTtwokl/dXGOWl2U92tAPSpdo+p9qqqtXOaRq93aURJCw7q40q2A0q1DHksvGGdLi2SnZqp6LU=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DB9PR04MB9627.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(366004)(7416002)(54906003)(2906002)(66556008)(42186006)(4326008)(316002)(66946007)(186003)(8936002)(8676002)(31696002)(508600001)(36756003)(66476007)(5660300002)(15974865002)(31686004)(38100700002)(26005)(2616005)(66574015)(83380400001)(53546011);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?ZnFBTE42QlprVytiR0xDVG15Y2hJcm1CM0ptbjJwUlREbVRiQ1JhZGtHS0dF?=
- =?utf-8?B?TXRLOVU1WW1VZUphZG5EWkpwOXgzZUoxZlNteEdlWWMwdFpnSnh3T25hdjZN?=
- =?utf-8?B?ZXlmUi91STYveGpRVGRkK1lpZURwOUp2bXlZbDVKRGxIRUJTU00zS0dkVFBQ?=
- =?utf-8?B?Ni9JQ2ZQd1ZvL1ZlWThTcmozUFNCTWVtbGZTUUMzR3FaV0tCbmhERHdjRnZT?=
- =?utf-8?B?MkUrL2QxWDdTa2hwK3FDd2lPUzQxWUZiSFExa0NWNnExSE5jd3cydTRiRERs?=
- =?utf-8?B?OVpqVUdWdUgxVlBjTHdUZC8zUWRxZ3FMTEZlT3VoTGE1NndtRW5KUGpZRU83?=
- =?utf-8?B?Vk0yL1dGTUV4dmhXeXZFMnN6TWx2c0paK2M2SitmVndIN3FhdW1iWC90WHQ3?=
- =?utf-8?B?V04wWUtRUFNDTlYrS1JOTUVxNFVqZGFoREErL1Q5YlFCVlRGa2lLMTV3NURq?=
- =?utf-8?B?R096Q1hOR0FmYmdadEFLMEhzelYzL3oyaEFFenFZdVB6T2l5MjFRL1VOZldl?=
- =?utf-8?B?TVNvdmVNWHhTSVc2dDlDRWJYSUgyM05ibXRpeEwyL3lQRGpoRWRmOW1KMU9z?=
- =?utf-8?B?L21nRkJyQVNOTkNUQ0NJNktPQndiWTZrMStxOUI5VCtRLzdXcFIrbHkxOGpC?=
- =?utf-8?B?ZlovbjFGNFJkT2c4eElLZWRkaDh5QUUxMksvd0R5TFZzdGtSdklqREJ2MmJ6?=
- =?utf-8?B?TXBhemtCeXdHWC9LWUJ6NG56MDBzWEwrem1POGgzSWtuQStEZ3dibS9WVWlt?=
- =?utf-8?B?Q05HRzVlRzdqaDJ6RHJzUy9iYXNWdyt1clI2YVhZdWhOTSt2VlJjOHZBeDhP?=
- =?utf-8?B?aENxY3R4K0lCdno3eXE2WkpOT09lSzFqelB0b0IwUEhIQ05iZHQvRHVLMjda?=
- =?utf-8?B?N1lHRnFETlVBUlZ4cGlTMGVmTFVrM0JsOWx1ZnA5ajdrSWZuemUySkFzVVhl?=
- =?utf-8?B?aGk3WExGS3pZeTIrMm5WVzh2aEYwWmI3Tk0ybXBmcnkzNTlUT0trQ0N3em5W?=
- =?utf-8?B?YUFvOURiMkJCMWtwa0F1WDNINkVwNTVicEh2M2dOT3RzRW41bFY2cUh5dnZP?=
- =?utf-8?B?ejIrUFc3M3VpRlV4ayszODEwZG5KM0ZMUWxIczlyUFdjQldHRWJDVUZmTDJn?=
- =?utf-8?B?S3pDNnNFc1ZrU1BLYkkzRXpOREdnaUFnOFJvSWhCU2pyQmdTU3NINElMWmhh?=
- =?utf-8?B?ZVgwOEl1ajR3ZEtRS1RtcWJpQW9GSG1mZ3lIdkhTQkNYaXJ3REtHVlZPNEU3?=
- =?utf-8?B?UCt4Y3BkZ2FMQnM0RWRZWXVmQlRSUUxhaVd5SkZQSjBDc0dJU3JXTHoxUnho?=
- =?utf-8?B?Wk1LWGNGUDE0UHVGR0hVODk5Wlk1U2NSR09HOU45dGVMNklyZ01JZ3VVekwy?=
- =?utf-8?B?UjRsSnFJcDlhTjFmSTYwMWZpYkMvVjJhTE9NN3ZoQUovbnovcHJxbkc4ai9a?=
- =?utf-8?B?Nm0wTVBJQnY5bUhOUmc3V3pVczM2SHpHUmtKRnlMNWxUSmhpbno5MTlpbTR1?=
- =?utf-8?B?THo3Z3JaTit2eVRQQnhjSUxDTjNUZVdoeDVydCtISWVIZWdUUmdqZXl0eGJP?=
- =?utf-8?B?bHdTZzl2N1NCM2pxQ1l5VHlKUlJ3UW4yZTcrcSsxYk1halZvVGVFTjJqc2xU?=
- =?utf-8?B?U0JHYWs4L2J6STNkYzJEb0l4c2RqdEEyOWFydGxjQ2lQM1ZpeTVjNDZGemlm?=
- =?utf-8?B?Si9rVWI1UUhsTCtNcDVkWkVwN1dZQWp4VlkzUHVjWHFLVjhhU2dKRVRNTVZ5?=
- =?utf-8?B?ekdHWFBYNmw4RTdieVYwaDhTU2hIVitZeTB1cXlXVnBhVmlBM2JXKzhsYTNk?=
- =?utf-8?B?dDlBWHM5TVUvbEhucUlpZENtTTliT0JlWXpDNm83V29HNytRQUZ4bGpHbkps?=
- =?utf-8?B?K1J1NUxaWW1zbUQ0UCtsSmFzWGFtUVJ4NE4ydzFJNlRFV1BSZWs3SWpsQzI4?=
- =?utf-8?B?S0lScG5sdDhpdEJKazl5bkdIRXY1S25XRzgyYUZ5aDRvUlVZQWt3a1h3Kysr?=
- =?utf-8?B?aEMvSkYrTi9pL2pGK1JQSEVSUHZkR003OXBsdXllaGo5cEttWFZlQ0xjeWZI?=
- =?utf-8?B?R0lwTkJSeHdpbWF0eUY5dVZoSEpDS1VTeDd0ZW1TMHVrT1l2T2UxUGlYQjJU?=
- =?utf-8?B?WEJGeEVZM1FSUG9OS05UUjdBZjF3akI2VkpSbmhWY1J4cjR5UXNCOVZjTk5h?=
- =?utf-8?B?cUR2MU11UHpRdldGU3NxcGIybi9LNk5oTjF5aE95Y0dFV0FyVm4xMWs4ZExq?=
- =?utf-8?B?OEY1a2JWc1BHMHgzQmtCZzhoNWxJakJFd0tMUkFGVTJVTS9xeUJ4QlEwYlVW?=
- =?utf-8?B?c2g4M3NtRG5FaGpaWGRzaXAwSUtlS2JlMjY3S3RuWXg3VHpCNUU4Zz09?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?bGl1TUpLa3lGSzFYSmN6YlJnMWsreHFpN2wyRFVQcEE1aGlHdnBRUlVTTEh4?=
+ =?utf-8?B?aUhTM1J1VzNpMGNhdWZKaElJMlcvZDZXTUd5enBQeFoxME1PY3ltSHI4bUxv?=
+ =?utf-8?B?dFRsTmNCRGFMZU4rTzZPUmFua1FaWDFIeGJLT2tkNzhXMDFYbUN1d3R4dDFk?=
+ =?utf-8?B?R1R2Zkgzb1Ayck5yOTNvUUZ5SzExTGplN0t3emgxTDI2T3htd1VPaXpiS0VB?=
+ =?utf-8?B?MEFHQ09GdGNjS0QyRkxyOElLM1o1RDB2VWUwd2RNTGtpTVFZb0pEU1FyY1kx?=
+ =?utf-8?B?N2pncDRIZTF6cjFNM2Q3Qks0UEhxRjJCZUJqbjRSWWNnenRLSHpzN01ZNkJs?=
+ =?utf-8?B?OE5ocElSdzNqTnRzelpaUTdPZEQ3M3pqNTFMQUgxdnd6OTNsWXJZcXh4K2l3?=
+ =?utf-8?B?ZEYxMkhkTVJjZkZFSDBzS3NqSjVWdWpDdHlsVUQzcXY5VEFhN3NjWGN0clVj?=
+ =?utf-8?B?QXplYUp3cnVEKzFHVi93WHNEZFlFdkxtYjl1Szl2bGVTemZjVmVSSHI3M3Ja?=
+ =?utf-8?B?c1RNN0pNL2tsSXRROVlraDU5TnRLeVNwNThCMkR2Y2pLcmhCZGx6RTgrR2lP?=
+ =?utf-8?B?aXh4NVMxMDI3aEFzVWxmOEd1Z2VFZDJjZDgzVHhFMGsrakxxTWhCYnlBb0ZV?=
+ =?utf-8?B?Ync5WFZKOHFwYUVTWlBGam9Gc21WWkxUVmtXdGNqL3lLQ0ZZQkFGZU5aVzU5?=
+ =?utf-8?B?bjByampONE1hcDd3dlk3ckJhYXZUTWkvK0RSM09nczJVdmZSaU4wbU1HYjY3?=
+ =?utf-8?B?b0xsTUJQZ280UlZUVlZBSFVkNlRkaUJhRnd2bUxVSGwxak1oRU9Lais5UDVF?=
+ =?utf-8?B?MDJkdDMwSGdrRVo5eEJlNGowQ2VFMld0d09WbEdBZld5aHU1d08xdUJ3RHFS?=
+ =?utf-8?B?dmZocGJHN2t3SWt3ZXBwRkt3OGNtUGNSeThmTkk5azJLWVFSOFUvNzFWSXFL?=
+ =?utf-8?B?WFJZR3RkQ2JyNDJOa3N1T2ZWeGpvUzQ3clZKd0c5V1J3Z2VYTXZTSWtBVXBh?=
+ =?utf-8?B?NHM0QUl2V3NWQTRKS3VJMnUrRU1NZEQ4aHFXTEFaeGs4dTQ5WlZXT3FaQU9U?=
+ =?utf-8?B?MXpjODdEUmZESTl4aTlsZ2ZWYkhjR2lKczhjTWoxZmJNUWdVdTJ2bVZOMmwx?=
+ =?utf-8?B?aEh5dnJaWjllT2JkMTQrRUNDNFdOTDg5S1N3bkNCdXp5Z21SZDh0VlR4QXpi?=
+ =?utf-8?B?NE1CYllIOHIyWUhJZXJJcXYwTU9udFYrV2h6Y1Uwc0VIejRtQitXc1Z5L2I2?=
+ =?utf-8?B?VUYwZHpYeHJONkNSNjJ5YTV2cFpWb2VyandVWGswT0F5R3lnYWt1emNzci95?=
+ =?utf-8?B?Tm1QOFdNOGZZU0pwSUlXeXJSUU5nK0g1dDFOMzM2bnhJaVlVeThiUkVXcGZ6?=
+ =?utf-8?B?eXV5eCtQbjc1TWRaNWhxWmJnTXZXVUtpVVZJZEJmZWx2bDF0SnJGT0dsV3hY?=
+ =?utf-8?B?cG5kOXdhc2JqdmxRUGJQbDNMNTNmL2g1K0pLRUd1cHNXMldyTFhITTZMT1JJ?=
+ =?utf-8?B?R1dVZ3FLWlhZL00zQlRBVHRLV1BvdStOc0FFMVhzaWNMQnRMN1Q3SlhqczJv?=
+ =?utf-8?B?dmQyWElIZnZBZ1BzSzh5eXExQzJLaTJ5T2ZjTEl3K2xseG8ydU9zUTI1bW9W?=
+ =?utf-8?B?endTenk3dkhkMzh0QlNBdzJGYjVZQWVHSk4rdUJuNFVKeWFGcnN1RkdBbG12?=
+ =?utf-8?B?eEVEZ2hkUnI2S1lhK3B3ZHU2YzI4Z09lMU9Gdk9ZTDF4aHBQL3R2SGxtVm8r?=
+ =?utf-8?B?UUloa3IzeHJiN1pZOUFPdHdXREtNMXdLNStsYytRMWdXRFoxMDI5OVFiOTg1?=
+ =?utf-8?B?d2hrWmpyWi92d2FERDErdHdkR3laK2Y3UUFIMTBWQmtSWlVRR3RLUytOMWR3?=
+ =?utf-8?B?RVZJd2pFalppMmI5SWc1bEl5VVZ6bEo2WDR0YkR4cElETklZVjNIdXVDTFov?=
+ =?utf-8?B?cGVWWXdVTU52YWJtNFpqcUt4amxLVjkrUWNjbkMxU3lXS0tadktRcGNwUlpH?=
+ =?utf-8?B?dkFMMzZNalJsSjl3NzdPSDdlY1ZBVWoybHNZc3NoSEU5RjczTXUwYlBrMktR?=
+ =?utf-8?B?NVFtNmx5Q1daem1MNE1vSituUGVqaXJwV3BMYkV5Q2JlQjlpeGd2WlZRdDB0?=
+ =?utf-8?B?L0hxalBaNnp1d3U0MGhjcHZaanFIdktsQ2hKNWtIc242WWxBVkppSDFNQW9W?=
+ =?utf-8?B?WU51cWIwM0hBdkdaZTh6SXdoMHNtWjhuY3ZKM25DdjYybFUxMlMzMTRPYmdD?=
+ =?utf-8?B?R2xpaU91WGRKUlhJRVNlSmtKREZuQUtKUXpKcWN2T1EwWDF2TnFEbHQvdG5t?=
+ =?utf-8?B?OWhURVhtcmNIbEllL0pyZDMxSWxML3lXZEFKN0NYNFlqRVRjSWNpQT09?=
 X-OriginatorOrg: opensynergy.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 172b03f7-0553-4cdb-aa7c-08da4f99f2d2
+X-MS-Exchange-CrossTenant-Network-Message-Id: 35ee185e-b5e8-4cfb-7ef3-08da4faa2809
 X-MS-Exchange-CrossTenant-AuthSource: DB9PR04MB9627.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Jun 2022 13:13:05.0548
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Jun 2022 15:09:06.2355
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 800fae25-9b1b-4edc-993d-c939c4e84a64
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 3m3dGi75+Us8/DvGwgjJnmpHPnYP3OYwWmNK++dywi0Zke2c+WtqmT9TTPJM88fb7UBfr1hivzNG0gAia5NCXw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DU2PR04MB8759
-X-TM-AS-ERS: 104.47.14.59-0.0.0.0
+X-MS-Exchange-CrossTenant-UserPrincipalName: MVCMXhsh6f1L1rz/4oGcn84h+LiIH+umCX5dzUYyNIWYlav9B206AnVckg6jvRE2HqRCCdmBk330oc7eF3Up1Q==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB7PR04MB4729
+X-TM-AS-ERS: 104.47.12.51-0.0.0.0
 X-TMASE-Version: StarCloud-1.3-9.0.1004-26958.007
-X-TMASE-Result: 10--26.276000-4.000000
-X-TMASE-MatchedRID: Jm7Yxmmj9On/9O/B1c/Qy65i3jK3KDOoC/ExpXrHizyOD/YpR7I+IoPc
-        XuILVCbaT+Ssx+cLRQOrlQnbB6G4NwzMLoYOQzD/U+SCBkL7836OQOsE4nDCdEBJWZqYnN7avjN
-        9OkaN1trzgfRAkJS4G34oUWpcKNWpGU9P+A3Ax1VIK2DGByysypki3iIBA3o/UV7F0kclfoKB97
-        pzpMZ9Yb5wpZVCbFHLGf8/5qsa+aR/4m4yZXmXb3V7tdtvoiba4SkIdSwphga6pZ/o2Hu2YcvQs
-        fAE10p3PhG3C4bJ9uelztAS7WpJHPnU8bWnyOtNVV4ZZmbE3YzQxDD776KHL44sT3VHmSnEwisn
-        IbO8h0PhJoKhz+mVIpc1ZBri4zqQtfKsnmadsBx+njGZQKtC7ypykp1AmBYaF2J2qC/34DsgaVH
-        62KJz2wx+wXfgJ2JXPfRUVBjvSwtMnMwEhENCNHAnLUK6q8ZUDVuL2vYqrd4bWHktq2pLiYVYrc
-        Ipy8T8/XVOP8FVfqJftuJwrFEhTbew1twePJJB3QfwsVk0Ubv+efAnnZBiL6nKAIYoU8L4F5iXm
-        5LZACA=
-X-TMASE-XGENCLOUD: cec9833c-9309-4bad-8708-4decebf359ac-0-0-200-0
-X-TM-Deliver-Signature: 940ACE03D6EF652DAF1FB987B2A911AB
+X-TMASE-Result: 10--21.186000-4.000000
+X-TMASE-MatchedRID: xcONGPdDH5oMek0ClnpVp/HkpkyUphL9jkDrBOJwwnQ8JmmJxjOaQXvU
+        CoLZpk+xqpuQqy2q8hMNXG08J6BRwgHBiEj907KSEVuC0eNRYvJZDdHiTk9OcGkdgYWZtIXp+JA
+        7jYabDQ4JrYom7Vk1LlQMkg6i1g2R6RQOyyexTiEmZusHWPhfCgFkGmUzEj/OVz8J52OVy+R+7G
+        CmVnLE9WB9JqWQXWHoh+/2Gl63OaywQEC6hpSorxmCYUYerLHrjlRp8uau9oYUoJOBFYW8Jo16N
+        b+wd14QKuWrqthYmDN8MjflxuzQKyfdCFu+J/OI9k5nZzZVBSCEDRWMikvPr9Mlpj54hDxPzrlB
+        6ufbD0LKeuGCarp3g4iEKUa2WZLOptmPmlZc5SIrCLswi3NpjcXAGOt+hSbWGoWeWvFzM8yAZb4
+        2KeiTPG09bk+1wFrPModguxHirQu/WXZS/HqJ2lZ0V5tYhzdWxEHRux+uk8jpP8tMOyYmaA==
+X-TMASE-XGENCLOUD: 97fbeb1c-e7fd-4fc9-9c17-ae806a74a0bf-0-0-200-0
+X-TM-Deliver-Signature: 163CA7077BFDA0181113BC5171B7E660
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=opensynergy.com;
-        s=TM-DKIM-20210503141657; t=1655385187;
-        bh=rGGj5KwhUAKraeSfQ6WqjHJfUhEtPuAp0E019tCI2wE=; l=5490;
+        s=TM-DKIM-20210503141657; t=1655392149;
+        bh=N9XEpuPidboXaSRNXj4dR4lGdAUVSnplf7M5dJGL61c=; l=2852;
         h=Date:To:From;
-        b=lTA6sD6nFivxDl3lFIXdsp7oZG9mdce/zbYYoUojMC49opzCnUXXe0X0vwmt5UsR3
-         8C6l8wbDQPM+q7BW4IIAIPF6XKIM0IobAt8VYhF7Sd6P7DPMexdAQtAoxlRgsFOyBl
-         jH8IDDg0YDwtRoAP2NXlzxpayxeNjjfdy35ni62b2nHyij1twMUS/kK4+DoFVVrNqh
-         fpkHNEfQIX6Y/77CRgfpVVotedYAYNvdKalVb5Ar67hMaN9+Ukt93D1wRcu1LALe5G
-         1t+xBFPkf9a/Ly1AZOfK0g2EEZE0MGD/EXLfPFvG5SbsadIpZN0YrGy72kEypMsJli
-         8FwphdLgbsj0w==
+        b=GpSLhBG0gWSZ8DpF+tYx4yhcBSvIUK0mDjmOmaJNLjO1OS8t+mL/WNhnTtuKEopnU
+         J3ibbFU/mNgxfSBS4dZB6SjaPmz/kEwLfcG6/+H54exy2kQR9oqq5+OOYIhbsm8YnL
+         +S65u/XLUojVqt/SDGcpqvrGwGPz+948v+i8UvOy25pif6yJpatT6fbYJm7+G3fgMT
+         tJkdTkyoZvnMtyb7MwcAN2vsgi6sMRHfQ8vpbCYlqve3by3DsVbOf3E4LFv9uc9ZyN
+         7BpyYrLNyhQqci+A/SCvpD0UL9C4aVL6b2J9x7W0jQ/d4iZqGG9CWJ67BWt168Jbb/
+         GKunvIcg5u11A==
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -152,170 +149,66 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 Hello,
 
 On 05.04.22 11:37, Alex Bennée wrote:
-> +/*
-> + * Utility functions
-> + */
-> +static int open_dev_file(const char *devfile, struct rpmb_ioc_cap_cmd *cap)
-> +{
-> ...
-> +	rpmb_dbg("RPMB rpmb_target = %d\n", cap->target);
-> +	rpmb_dbg("RPMB capacity    = %d\n", cap->capacity);
-> +	rpmb_dbg("RPMB block_size  = %d\n", cap->block_size);
-> +	rpmb_dbg("RPMB wr_cnt_max  = %d\n", cap->wr_cnt_max);
-> +	rpmb_dbg("RPMB rd_cnt_max  = %d\n", cap->rd_cnt_max);
-> +	rpmb_dbg("RPMB auth_method = %d\n", cap->auth_method);
-
-The previously present device_type has already gone. Do we loose an 
-opportunity to inform the user about anything which may not be virtio 
-RPMB in the future or is this intentional? A new device type VIRTIO_RPMB 
-instead and keeping the door open for UFS, NVMe, eMMC etc.?
-
-And if the removal was intentional: rpmb_target, block_size, 
-auth_method: Still needed and if so for what is it good for?
-
-> ...
-> +}
-> +
-> +static struct virtio_rpmb_frame * vrpmb_alloc_frames(int n)
-> +{
-> +	struct virtio_rpmb_frame *frames;
-> +
-> +	frames = calloc(n, sizeof(struct virtio_rpmb_frame));
-> +	if (frames)
-> +		memset(frames, 0, n *  sizeof(struct virtio_rpmb_frame));
-Very minor: calloc() already zeroes.
-> +	return frames;
-> +}
-> +
-
-/*
-+ * To read blocks we receive a bunch of frames from the vrpmb device
-+ * which we need to validate and extract the actual data into
-+ * requested buffer.
-+ */
-+static int vrpmb_read_blocks(int dev_fd, void *key, int addr, int count, void *data, int len)
-+{
-+...
-+	ret = ioctl(dev_fd, RPMB_IOC_RBLOCKS_CMD, &cmd);
-+	if (ret < 0) {
-+		rpmb_err("rblocks ioctl failure %d: %s.\n", ret,
-+			 strerror(errno));
-+		goto out;
-+	}
-
-The (older) rpmb tool always puzzles me with complaining about the mismatch MAC when there was also a result != VIRTIO_RPMB_RES_OK.
-I guess the ioctl() returns 0 if the ioctl() as such succeeded but there is an error code indicated in the frame.
-Consider adding to print the result if it indicated a problem.
-
-I can remember the old tool used the result of the last frame for this purpose which was probably not a good choice, not sure why this was that way, probably the first frame would be a better choice.
-
-+	for (i = 0; i < count; i++) {
-+		struct virtio_rpmb_frame *f = &frames[i];
-+
-+		vrpmb_dump_frame("block data", f);
-+
-+		if (key) {
-+			ret = vrpmb_check_mac(key, f, 1);
-+			if (ret) {
-+				rpmb_err("%s: check mac error frame %d/%d\n", __func__, i, ret);
-+				break;
-+			}
-+		}
-+
-+		memcpy(data, &f->data, RPMB_BLOCK_SIZE);
-+		data += RPMB_BLOCK_SIZE;
-+	}
-+	ret = 0;
-+
-+ out:
-+	free(frames);
-+	return ret;
-+}
-+
-+
-+static void *read_key(const char *path)
-+{
-+	int key_fd = open_rd_file(path, "key file");
-+	void *key;
-+
-+	if (key_fd < 0)
-+		return NULL;
-+
-+	key = malloc(RPMB_KEY_SIZE);
-
-Very minor: There's not a single free() for key in the code. Plays no 
-role here as the program runs only for a fraction of a second, just saw 
-it. You are making your life harder as necessary by using dynamic memory 
-when it can be avoided, all those NULL pointer checks and the free(s) 
-which have to be done...
-> +
-> +	if (!key) {
-> +		rpmb_err("out of memory for key\n");
-> +		return NULL;
-> +	}
-> +
-> +	if (read(key_fd, key, RPMB_KEY_SIZE) != RPMB_KEY_SIZE) {
-> +		rpmb_err("couldn't read key (%s)\n", strerror(errno));
-> +		return NULL;
-> +	}
-> +
-> +	close(key_fd);
-> +	return key;
-> +}
-> +
+> The user space API is achieved via a number of synchronous IOCTLs.
 >
+>    * RPMB_IOC_VER_CMD - simple versioning API
+>    * RPMB_IOC_CAP_CMD - query of underlying capabilities
+>    * RPMB_IOC_PKEY_CMD - one time programming of access key
+>    * RPMB_IOC_COUNTER_CMD - query the write counter
+>    * RPMB_IOC_WBLOCKS_CMD - write blocks to device
+>    * RPMB_IOC_RBLOCKS_CMD - read blocks from device
+>
+> The operations which require authenticated frames or will respond with
+> MAC hashes of nonce filled frames that userspace will need to verify
+> share a common command frame format. The other operations can be
+> considered generic and allow for common handling.
+>
+> [AJB: here the are key difference is the avoiding a single ioctl where
+> all the frame data is put together by user space. User space is still
+> the only place where certain operations can be verified due to the
+> need of a secret key]
+I have less problems to understand this reworked ioctl() interface as I 
+had with the older one. Nice.
+> diff --git a/drivers/rpmb/cdev.c b/drivers/rpmb/cdev.c
+> ...
+> +static long rpmb_ioctl_cap_cmd(struct rpmb_dev *rdev,
+> +			       struct rpmb_ioc_cap_cmd __user *ptr)
+> +{
+> +	struct rpmb_ioc_cap_cmd cap;
 > +
-> +static const struct rpmb_cmd cmds[] = {
-> +	{
-> +		"get-info",
-> +		op_get_info,
-> +		"<RPMB_DEVICE>",
-> +		"    Get RPMB device info\n",
-> +	},
-> +	{
-> +		"program-key",
-> +		op_rpmb_program_key,
-> +		"<RPMB_DEVICE> <KEYFILE>",
-> +		"    Program authentication KEYFILE\n"
-> +		"    NOTE: This is a one-time programmable irreversible change.\n",
-> +	},
-> +	{
-> +		"write-counter",
-> +		op_rpmb_get_write_counter,
-> +		"<RPMB_DEVICE>",
-> +		"    Rertrive write counter value from the <RPMB_DEVICE> to stdout.\n"
-
-Optional parameter explanation [KEYFILE] got lost in write-counter.
-
-> +	},
-> +	{
-> +		"write-blocks",
-> +		op_rpmb_write_blocks,
-> +		"<RPMB_DEVICE> <address> <block_count> <DATA_FILE> <KEYID>",
-> +		"    <block count> of 256 bytes will be written from the DATA_FILE\n"
-> +		"    to the <RPMB_DEVICE> at block offset <address>.\n"
-> +		"    When DATA_FILE is -, read from standard input.\n",
-Puzzling naming change. The KEYID is indeed the <KEYFILE>.
-> +	},
-> +	{
-> +		"read-blocks",
-> +		op_rpmb_read_blocks,
-> +		"<RPMB_DEVICE> <address> <blocks count> <OUTPUT_FILE>",
-> +		"    <block count> of 256 bytes will be read from <RPMB_DEVICE>\n"
-> +		"    to the OUTPUT_FILE\n"
-> +		"    When OUTPUT_FILE is -, write to standard output\n",
-
-Here also the optional parameter explanation [KEYFILE] got lost in 
-read-blocks.
-
-For people not knowing the tool trying to get into RPMB a complete and 
-consistent help is helpful I can still remember when I was in the 
-situation to understand more playing around with the (older) tool.
-
-> +	},
+> +	cap.target      = rdev->target;
+> +	cap.block_size  = rdev->ops->block_size;
+> +	cap.wr_cnt_max  = rdev->ops->wr_cnt_max;
+> +	cap.rd_cnt_max  = rdev->ops->rd_cnt_max;
+> +	cap.capacity    = rpmb_get_capacity(rdev);
+> +	cap.reserved    = 0;
+auth_method is still part of the structure but not set. Means arbitrary 
+data from the stack is copied to user land.
 > +
-> +	{ NULL, NULL, NULL, NULL }
-> +};
+> +	return copy_to_user(ptr, &cap, sizeof(cap)) ? -EFAULT : 0;
+> +}
+> ...
+> +/**
+> + * struct rpmb_ioc_cap_cmd - rpmb capabilities
+> + *
+> + * @target: rpmb target/region within RPMB partition.
+> + * @capacity: storage capacity (in units of 128K)
+> + * @block_size: storage data block size (in units of 256B)
+> + * @wr_cnt_max: maximal number of block that can be written in a single request.
+> + * @rd_cnt_max: maximal number of block that can be read in a single request.
+> + * @auth_method: authentication method: currently always HMAC_SHA_256
+> + * @reserved: reserved to align to 4 bytes.
+> + */
+> +struct rpmb_ioc_cap_cmd {
+> +	__u16 target;
+> +	__u16 capacity;
+> +	__u16 block_size;
+> +	__u16 wr_cnt_max;
+> +	__u16 rd_cnt_max;
+> +	__u16 auth_method;
+> +	__u16 reserved;
+> +} __packed;
+> ...+
 
 -- 
 Dipl.-Ing. Harald Mommer
@@ -332,4 +225,5 @@ www.opensynergy.com
 
 Handelsregister: Amtsgericht Charlottenburg, HRB 108616B
 Geschäftsführer/Managing Director: Regis Adjamah
+
 
