@@ -2,94 +2,103 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95530C43334
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jun 2022 10:12:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B50DDCCA481
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jun 2022 11:01:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1381697AbiFQKMy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Jun 2022 06:12:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59164 "EHLO
+        id S1382116AbiFQLBn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Jun 2022 07:01:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56622 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1381689AbiFQKMx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jun 2022 06:12:53 -0400
-Received: from mail.nfschina.com (unknown [IPv6:2400:dd01:100f:2:72e2:84ff:fe10:5f45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id EF55F10FD9;
-        Fri, 17 Jun 2022 03:12:49 -0700 (PDT)
-Received: from localhost (unknown [127.0.0.1])
-        by mail.nfschina.com (Postfix) with ESMTP id 932341E80D72;
-        Fri, 17 Jun 2022 18:11:02 +0800 (CST)
-X-Virus-Scanned: amavisd-new at test.com
-Received: from mail.nfschina.com ([127.0.0.1])
-        by localhost (mail.nfschina.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 9FD_6Uz1XKnf; Fri, 17 Jun 2022 18:10:59 +0800 (CST)
-Received: from localhost.localdomain (unknown [39.144.44.120])
-        (Authenticated sender: jiaming@nfschina.com)
-        by mail.nfschina.com (Postfix) with ESMTPA id 69D9C1E80D66;
-        Fri, 17 Jun 2022 18:10:57 +0800 (CST)
-From:   Zhang Jiaming <jiaming@nfschina.com>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
-        suganath-prabu.subramani@broadcom.com,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, liqiong@nfschina.com,
-        Zhang Jiaming <jiaming@nfschina.com>
-Subject: [PATCH] scsi: mpt3sas: Fix space and spelling mistake
-Date:   Fri, 17 Jun 2022 18:11:03 +0800
-Message-Id: <20220617101103.3162-1-jiaming@nfschina.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S233957AbiFQLBk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jun 2022 07:01:40 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56D026C0DF;
+        Fri, 17 Jun 2022 04:01:37 -0700 (PDT)
+Received: from fraeml714-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LPbfJ20Xgz6H6l9;
+        Fri, 17 Jun 2022 18:59:52 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml714-chm.china.huawei.com (10.206.15.33) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Fri, 17 Jun 2022 13:01:34 +0200
+Received: from localhost.localdomain (10.69.192.58) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Fri, 17 Jun 2022 12:01:30 +0100
+From:   John Garry <john.garry@huawei.com>
+To:     <axboe@kernel.dk>, <damien.lemoal@opensource.wdc.com>,
+        <bvanassche@acm.org>, <hch@lst.de>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <hare@suse.de>, <satishkh@cisco.com>,
+        <sebaddel@cisco.com>, <kartilak@cisco.com>
+CC:     <linux-rdma@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
+        <linux-nvme@lists.infradead.org>, <linux-s390@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <mpi3mr-linuxdrv.pdl@broadcom.com>,
+        <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <nbd@other.debian.org>, John Garry <john.garry@huawei.com>
+Subject: [PATCH 0/5] blk-mq: Add a flag for reserved requests series
+Date:   Fri, 17 Jun 2022 18:55:15 +0800
+Message-ID: <1655463320-241202-1-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-There is a splling mistake in _base_sas_ioc_info. Change 'cant' to 'can't'.
-There are 3 space mistakes. Remove blank space before ','.
+In [0] I included "blk-mq: Add a flag for reserved requests" to identify
+if a request is 'reserved' for special handling. Doing this is easier than
+passing a 'reserved' arg to the blk_mq_ops callbacks. Indeed, only 1x
+timeout implementation or blk-mq iter function actually uses the
+'reserved' arg (or 3x if you count SCSI core and FNIC SCSI driver). So
+this series drops the 'reserved' arg for these timeout and iter functions.
+Christoph suggested that I try to upstream now.
 
-Signed-off-by: Zhang Jiaming <jiaming@nfschina.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+About the SCSI changes, I can leave them in place if people prefer.
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 9a1ae52bb621..565339a0811d 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -873,7 +873,7 @@ mpt3sas_base_stop_watchdog(struct MPT3SAS_ADAPTER *ioc)
-  * @fault_code: fault code
-  */
- void
--mpt3sas_base_fault_info(struct MPT3SAS_ADAPTER *ioc , u16 fault_code)
-+mpt3sas_base_fault_info(struct MPT3SAS_ADAPTER *ioc, u16 fault_code)
- {
- 	ioc_err(ioc, "fault_state(0x%04x)!\n", fault_code);
- }
-@@ -1057,7 +1057,7 @@ _base_sas_ioc_info(struct MPT3SAS_ADAPTER *ioc, MPI2DefaultReply_t *mpi_reply,
- 		desc = "config no defaults";
- 		break;
- 	case MPI2_IOCSTATUS_CONFIG_CANT_COMMIT:
--		desc = "config cant commit";
-+		desc = "config can't commit";
- 		break;
- 
- /****************************************************************************
-@@ -1321,7 +1321,7 @@ _base_display_event_data(struct MPT3SAS_ADAPTER *ioc,
-  * @log_info: log info
-  */
- static void
--_base_sas_log_info(struct MPT3SAS_ADAPTER *ioc , u32 log_info)
-+_base_sas_log_info(struct MPT3SAS_ADAPTER *ioc, u32 log_info)
- {
- 	union loginfo_type {
- 		u32	loginfo;
-@@ -1393,7 +1393,7 @@ _base_display_reply_info(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
- 
- 	if ((ioc_status & MPI2_IOCSTATUS_MASK) &&
- 	    (ioc->logging_level & MPT_DEBUG_REPLY)) {
--		_base_sas_ioc_info(ioc , mpi_reply,
-+		_base_sas_ioc_info(ioc, mpi_reply,
- 		   mpt3sas_base_get_msg_frame(ioc, smid));
- 	}
- 
+Based on following:
+c13794dbe936 (block/for-5.20/block) block: Directly use ida_alloc()/free()
+
+[0] https://lore.kernel.org/linux-scsi/1654770559-101375-1-git-send-email-john.garry@huawei.com/T/#m22aa9f89e55835edc2e650d43f7e3219a3a1a324
+
+John Garry (5):
+  scsi: core: Remove reserved request time-out handling
+  blk-mq: Add a flag for reserved requests
+  blk-mq: Drop blk_mq_ops.timeout 'reserved' arg
+  scsi: fnic: Drop reserved request handling
+  blk-mq: Drop 'reserved' member of busy_tag_iter_fn
+
+ block/blk-mq-debugfs.c              |  2 +-
+ block/blk-mq-tag.c                  | 13 +++++--------
+ block/blk-mq.c                      | 22 +++++++++++++---------
+ block/bsg-lib.c                     |  2 +-
+ drivers/block/mtip32xx/mtip32xx.c   | 11 +++++------
+ drivers/block/nbd.c                 |  5 ++---
+ drivers/block/null_blk/main.c       |  2 +-
+ drivers/infiniband/ulp/srp/ib_srp.c |  3 +--
+ drivers/mmc/core/queue.c            |  3 +--
+ drivers/nvme/host/apple.c           |  3 +--
+ drivers/nvme/host/core.c            |  2 +-
+ drivers/nvme/host/fc.c              |  6 ++----
+ drivers/nvme/host/nvme.h            |  2 +-
+ drivers/nvme/host/pci.c             |  2 +-
+ drivers/nvme/host/rdma.c            |  3 +--
+ drivers/nvme/host/tcp.c             |  3 +--
+ drivers/s390/block/dasd.c           |  2 +-
+ drivers/s390/block/dasd_int.h       |  2 +-
+ drivers/scsi/aacraid/comminit.c     |  2 +-
+ drivers/scsi/aacraid/linit.c        |  2 +-
+ drivers/scsi/fnic/fnic_scsi.c       | 14 ++++----------
+ drivers/scsi/hosts.c                | 14 ++++++--------
+ drivers/scsi/mpi3mr/mpi3mr_os.c     | 16 ++++------------
+ drivers/scsi/scsi_lib.c             | 12 ++----------
+ include/linux/blk-mq.h              | 10 ++++++++--
+ include/scsi/scsi_host.h            |  2 +-
+ 26 files changed, 67 insertions(+), 93 deletions(-)
+
 -- 
-2.25.1
+2.35.3
 
