@@ -2,54 +2,111 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26FCCC433EF
-	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jun 2022 06:29:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A923C43334
+	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jun 2022 11:56:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232316AbiFSG3z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 19 Jun 2022 02:29:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51054 "EHLO
+        id S235114AbiFSL4S (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 19 Jun 2022 07:56:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41004 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229791AbiFSG3y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Jun 2022 02:29:54 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9965ADFC2;
-        Sat, 18 Jun 2022 23:29:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=yfv0/9JXUJSHjLjMcbE910TOTsgGVBbY7XlaNVCKNrk=; b=bkjUfiHoq7toqQo1dP5NZyW31r
-        OfsxtetWp66iHJIRKY4RHIWmgWBuu0fe4kPBP3B3n/y1IMf8jri/n5SrUfTk3rTeJH1cymso/9Ktl
-        ALgYFND8dR1aaJPjs1QOOb3P9SHPbjr6RNejVDuMehr2If4fZeuUYo+qG8WKiHGV5JSt+N1wW88ko
-        QNusgo0ZoUzaSebLdSXPGUl6IOaz5xgOku9bK7QwGIWQ0xmCOEBDQXMYxQrb3BWMMOB/fbmyFkQtp
-        bGbsYmVD2mgI1JdO6sxoB+/qBX8vvhrt1FOrvuxo3WLBhggliiU5RNSaDRSzebh1S58oG5HE+XQhU
-        BEVrlBPQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1o2oRT-00DLtI-0K; Sun, 19 Jun 2022 06:29:51 +0000
-Date:   Sat, 18 Jun 2022 23:29:50 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Mike Christie <michael.christie@oracle.com>
-Cc:     martin.petersen@oracle.com, james.bottomley@hansenpartnership.com,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Subject: Re: [PATCH 4/4] scsi: target: Detect unmap support post configuration
-Message-ID: <Yq7CXsFo4810SVJj@infradead.org>
-References: <20220617030440.116427-1-michael.christie@oracle.com>
- <20220617030440.116427-5-michael.christie@oracle.com>
+        with ESMTP id S231256AbiFSL4R (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Jun 2022 07:56:17 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D4E8120A4;
+        Sun, 19 Jun 2022 04:56:14 -0700 (PDT)
+Received: from dggpeml500022.china.huawei.com (unknown [172.30.72.53])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4LQrm05PZ0zhYQZ;
+        Sun, 19 Jun 2022 19:54:08 +0800 (CST)
+Received: from dggpeml500008.china.huawei.com (7.185.36.147) by
+ dggpeml500022.china.huawei.com (7.185.36.66) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Sun, 19 Jun 2022 19:56:12 +0800
+Received: from huawei.com (10.67.175.34) by dggpeml500008.china.huawei.com
+ (7.185.36.147) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Sun, 19 Jun
+ 2022 19:56:12 +0800
+From:   Ren Zhijie <renzhijie2@huawei.com>
+To:     <stanley.chu@mediatek.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <matthias.bgg@gmail.com>,
+        <powen.kao@mediatek.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        "Ren Zhijie" <renzhijie2@huawei.com>
+Subject: [PATCH -next] scsi: ufs: ufs-mediatek: Fix build error and type unmatch
+Date:   Sun, 19 Jun 2022 19:54:32 +0800
+Message-ID: <20220619115432.205504-1-renzhijie2@huawei.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220617030440.116427-5-michael.christie@oracle.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.67.175.34]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ dggpeml500008.china.huawei.com (7.185.36.147)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jun 16, 2022 at 10:04:39PM -0500, Mike Christie wrote:
-> On our backend we can do something similar to LIO where we can enable and
-> disable unmap support on the fly. In the scsi/block layer we can detect
-> this by just doing a rescan. However, LIO cannot detect this change
-> because we only check during the initial configuration. This patch
-> allows unmap detection to also happen when the user tries to turn it on.
+If CONFIG_PM_SLEEP is not set.
 
-Please also call the new callback from the generic code during initial
-setup instead of leaving that to the backends.
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-, will be failed, like this:
+
+drivers/ufs/host/ufs-mediatek.c: In function ‘ufs_mtk_vreg_fix_vcc’:
+drivers/ufs/host/ufs-mediatek.c:688:46: warning: format ‘%u’ expects argument of type ‘unsigned int’, but argument 4 has type ‘long unsigned int’ [-Wformat=]
+    snprintf(vcc_name, MAX_VCC_NAME, "vcc-opt%u", res.a1);
+                                             ~^   ~~~~~~
+                                             %lu
+drivers/ufs/host/ufs-mediatek.c: In function ‘ufs_mtk_system_suspend’:
+drivers/ufs/host/ufs-mediatek.c:1371:8: error: implicit declaration of function ‘ufshcd_system_suspend’; did you mean ‘ufs_mtk_system_suspend’? [-Werror=implicit-function-declaration]
+  ret = ufshcd_system_suspend(dev);
+        ^~~~~~~~~~~~~~~~~~~~~
+        ufs_mtk_system_suspend
+drivers/ufs/host/ufs-mediatek.c: In function ‘ufs_mtk_system_resume’:
+drivers/ufs/host/ufs-mediatek.c:1386:9: error: implicit declaration of function ‘ufshcd_system_resume’; did you mean ‘ufs_mtk_system_resume’? [-Werror=implicit-function-declaration]
+  return ufshcd_system_resume(dev);
+         ^~~~~~~~~~~~~~~~~~~~
+         ufs_mtk_system_resume
+cc1: some warnings being treated as errors
+
+The declaration of func "ufshcd_system_suspend()" is depended on CONFIG_PM_SLEEP, so the function wrapper "ufs_mtk_system_suspend()" should warpped by CONFIG_PM_SLEEP too.
+
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Fixes: 3fd23b8dfb54("scsi: ufs: ufs-mediatek: Fix the timing of configuring device regulators")
+Signed-off-by: Ren Zhijie <renzhijie2@huawei.com>
+---
+ drivers/ufs/host/ufs-mediatek.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
+index bfe04a4d1dce..4f1b30bf0c27 100644
+--- a/drivers/ufs/host/ufs-mediatek.c
++++ b/drivers/ufs/host/ufs-mediatek.c
+@@ -685,7 +685,7 @@ static int ufs_mtk_vreg_fix_vcc(struct ufs_hba *hba)
+ 	if (of_property_read_bool(np, "mediatek,ufs-vcc-by-num")) {
+ 		ufs_mtk_get_vcc_num(res);
+ 		if (res.a1 > UFS_VCC_NONE && res.a1 < UFS_VCC_MAX)
+-			snprintf(vcc_name, MAX_VCC_NAME, "vcc-opt%u", res.a1);
++			snprintf(vcc_name, MAX_VCC_NAME, "vcc-opt%lu", res.a1);
+ 		else
+ 			return -ENODEV;
+ 	} else if (of_property_read_bool(np, "mediatek,ufs-vcc-by-ver")) {
+@@ -1363,6 +1363,7 @@ static int ufs_mtk_remove(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_PM_SLEEP
+ int ufs_mtk_system_suspend(struct device *dev)
+ {
+ 	struct ufs_hba *hba = dev_get_drvdata(dev);
+@@ -1385,6 +1386,7 @@ int ufs_mtk_system_resume(struct device *dev)
+ 
+ 	return ufshcd_system_resume(dev);
+ }
++#endif
+ 
+ int ufs_mtk_runtime_suspend(struct device *dev)
+ {
+-- 
+2.17.1
+
