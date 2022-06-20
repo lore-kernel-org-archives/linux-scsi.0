@@ -2,70 +2,124 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C330C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jun 2022 06:53:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB94AC43334
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jun 2022 06:56:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238890AbiFTGxP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Jun 2022 02:53:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40066 "EHLO
+        id S237430AbiFTG45 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Jun 2022 02:56:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41280 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238034AbiFTGxN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jun 2022 02:53:13 -0400
-Received: from mail-ed1-x532.google.com (mail-ed1-x532.google.com [IPv6:2a00:1450:4864:20::532])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F2D9FF0
-        for <linux-scsi@vger.kernel.org>; Sun, 19 Jun 2022 23:53:12 -0700 (PDT)
-Received: by mail-ed1-x532.google.com with SMTP id e2so2766343edv.3
-        for <linux-scsi@vger.kernel.org>; Sun, 19 Jun 2022 23:53:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=M7viZKPAV4Udgzu930yRnMV9UFvypFU/FwQw+uEjxc4=;
-        b=eVmT7ZV+vM2II32DTtz5GqubTfh3OndN6nOFEooR0Kf91HSg1bUq5g6LKqo6OGrf65
-         1RyBEaxsOyjajY5ncLzu2E5cFg4vjEXyqj/A/4iXxmokDVwjmlTpIyP7l64t8E1aJiIh
-         Q939pmf4PKCf+YJgTzMstsfQaQNe25FUknT6U7exaNMRU4FtS9zwQh48UeCcWv7ZOe6k
-         cy4Y373g0yoLzxg/Cu+r16/0U7sqYAeBe/xex5pMRDx2aTNMDyqyGZLXctR9CfEkTduc
-         cwHnFhfvD2dVHwmUcDI5qK7yBGK0o4Qzbxst+rb9fkUI9CBwdrGgCrT7meKWRQsLK+sL
-         /2pw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=M7viZKPAV4Udgzu930yRnMV9UFvypFU/FwQw+uEjxc4=;
-        b=FgI01lnaa3Cesy54gnQg6Wu2oaiZaYN4W8ofUM7gVMwfyqIcns7VaslUDK5M0LIj/d
-         PWqo/5fjtI94RVi0DRuL5EI0HDrHldLrMUgOmThqkcZW3o9jnwsSh2FDFbSJFLZgrWvx
-         0iln08ijCYvoFWGfX/Ep+vWYwCkJd10JhauB1LuaazIrV6e2Gowh7nNRjpV0n0DOAAUY
-         gNfZl/5F9hYkcwfrYPB2d15mcdqtdTemb2SYPIYB8WMHgl+CAmahjuqnX0wsWriPoqga
-         eOEQjB5ulqlh/0yKWAhG9ZK3ysD8BokaCTgPHtYAJ9+WaxJrmIzXPoVz6M8DWjmkhsRJ
-         0PXA==
-X-Gm-Message-State: AJIora+z1ufqn4zia3Dl+rMSkQPMe3bGsbeNTUQKZqalEHtZHnYnyxaW
-        9Vb9n127sODHAfUewXfWtoomPWcxwUSldoOH4q6HIg==
-X-Google-Smtp-Source: AGRyM1tX+kIwSZtiyS5mINPLo+SLQ7bV4Fy/nrzz8/+LACEiu9IMg/gg6HtQuLdC2A872rohhFpuBSFF//aG02QfXFw=
-X-Received: by 2002:a05:6402:3688:b0:42d:d3ba:4725 with SMTP id
- ej8-20020a056402368800b0042dd3ba4725mr28112661edb.212.1655707991145; Sun, 19
- Jun 2022 23:53:11 -0700 (PDT)
+        with ESMTP id S231197AbiFTG44 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jun 2022 02:56:56 -0400
+Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [IPv6:2a01:488:42:1000:50ed:8234::])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABA985FCA;
+        Sun, 19 Jun 2022 23:56:55 -0700 (PDT)
+Received: from [2a02:8108:963f:de38:eca4:7d19:f9a2:22c5]; authenticated
+        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        id 1o3BL9-000466-Of; Mon, 20 Jun 2022 08:56:51 +0200
+Message-ID: <5bcb5963-9da0-fd59-45c5-d27af02e7748@leemhuis.info>
+Date:   Mon, 20 Jun 2022 08:56:50 +0200
 MIME-Version: 1.0
-References: <1654879602-33497-1-git-send-email-john.garry@huawei.com>
- <1654879602-33497-4-git-send-email-john.garry@huawei.com> <303bbfad-edde-1197-679e-4a09175fb1f3@suse.de>
- <594ac0c9-a55b-bec7-77e3-a6c7e9525f6b@opensource.wdc.com>
-In-Reply-To: <594ac0c9-a55b-bec7-77e3-a6c7e9525f6b@opensource.wdc.com>
-From:   Jinpu Wang <jinpu.wang@ionos.com>
-Date:   Mon, 20 Jun 2022 08:53:00 +0200
-Message-ID: <CAMGffEm8qgRzs8epMgBiJ-Ma2AGEynwXc0dSTB8k5cj2+1GhCA@mail.gmail.com>
-Subject: Re: [PATCH 3/4] scsi: pm8001: Use non-atomic bitmap ops for tag alloc
- + free
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Hannes Reinecke <hare@suse.de>, John Garry <john.garry@huawei.com>,
-        jinpu.wang@ionos.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Ajish.Koshy@microchip.com
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Content-Language: en-US
+To:     Arun Easi <aeasi@marvell.com>,
+        Tony Battersby <tonyb@cybernetics.com>
+Cc:     Saurav Kashyap <skashyap@marvell.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, regressions@lists.linux.dev
+References: <baef87c3-5dad-3b47-44c1-6914bfc90108@cybernetics.com>
+ <alpine.LRH.2.21.9999.2205271524460.4730@mvluser05.qlc.com>
+From:   Thorsten Leemhuis <regressions@leemhuis.info>
+Subject: Re: [REGRESSION] qla2xxx: tape drive not removed after unplug FC
+ cable
+In-Reply-To: <alpine.LRH.2.21.9999.2205271524460.4730@mvluser05.qlc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1655708215;9d5f6de7;
+X-HE-SMSGID: 1o3BL9-000466-Of
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->
-> After the patch, spinlock guarantees atomicity for both alloc and free.
->
-> Not sure there is any gain from this.
-+1
+Hi!
+
+On 28.05.22 02:27, Arun Easi wrote:
+> Hi Tony,
+> 
+> Thanks for reporting the issue. We are trying to recreate this issue in 
+> house. I will reach out to you for logs, if we cannot repro. Typically, we 
+> get sufficient context to the issue when the problem is reproduced with 
+> module parameter "ql2xextended_error_logging=1".
+> 
+> Anyway, I will let you know the status.
+
+What's the status here? Tony, did you provide the info Arun asked for=
+Or was some progress made somehow without it?
+
+Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+
+P.S.: As the Linux kernel's regression tracker I deal with a lot of
+reports and sometimes miss something important when writing mails like
+this. If that's the case here, don't hesitate to tell me in a public
+reply, it's in everyone's interest to set the public record straight.
+
+> On Wed, 25 May 2022, 3:03pm, Tony Battersby wrote:
+> 
+>> #regzbot introduced: 44c57f205876
+>>
+>> I have several different QLogic FC HBAs (8, 16, 32 Gbps) and several
+>> different FC LTO tape drives (IBM Ultrium 8 & 9).  When I plug in the FC
+>> cable, the tape drive shows up as a SCSI device as expected.  With older
+>> kernels, when I unplug the FC cable, the tape drive SCSI device would
+>> disappear after about 30 seconds.  But with newer kernels (including
+>> 5.18), when I unplug the FC cable, the tape drive SCSI device never
+>> disappears.  I have bisected the change in behavior to the following
+>> commit in kernel 5.15:
+>>
+>> 44c57f205876 ("scsi: qla2xxx: Changes to support FCP2 Target")
+>>
+>> This commit has been backported to various -stable kernels, so they are
+>> also affected.
+>>
+>> When testing with two different tape drives:
+>> 1) Plug FC cable into tape drive A.  Tape drive A shows up as a SCSI device.
+>> 2) Unplug FC cable; wait 60 seconds.  Tape drive A does not disappear.
+>> 3) Plug FC cable into tape drive B.  Tape drive A disappears 30 seconds
+>> later, but tape drive B does not show up.
+>> 4) Unplug FC cable and plug it back into tape drive B.  Tape drive B
+>> shows up as a SCSI device.
+>>
+>> So I can actually make a tape drive disappear by plugging the cable into
+>> a different tape drive, but then I have to reseat the cable again to
+>> make the new tape drive show up.
+>>
+>> lspci -n
+>> 83:00.0 0c04: 1077:2031 (rev 02)
+>> 83:00.1 0c04: 1077:2031 (rev 02)
+>>
+>> When plugging in cable:
+>> qla2xxx [0000:83:00.1]-500a:7: LOOP UP detected (8 Gbps).
+>>
+>> When unplugging cable with old kernel:
+>> qla2xxx [0000:83:00.1]-500b:7: LOOP DOWN detected (2 7 0 0).
+>> rport-7:0-2: blocked FC remote port time out: removing target and saving binding
+>>
+>> When unplugging cable with new kernel:
+>> qla2xxx [0000:83:00.1]-500b:7: LOOP DOWN detected (2 7 0 0).
+>>
+>> /sys/class/fc_remote_ports/rport-*/
+>> dev_loss_tmo: 30
+>> supported_classes: Class 3
+>> port_state: Online
+>> (port_state remains Online even when FC cable unplugged)
+>>
+>> /proc/scsi/scsi
+>> Host: scsi7 Channel: 00 Id: 01 Lun: 00
+>>   Vendor: IBM      Model: ULTRIUM-HH8      Rev: K4K1
+>>   Type:   Sequential-Access                ANSI  SCSI revision: 06
+>>
+>> Tony Battersby
+>> Cybernetics
+>>
