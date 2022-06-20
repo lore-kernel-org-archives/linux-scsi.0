@@ -2,50 +2,47 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B386CCCA481
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jun 2022 07:37:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5916BC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jun 2022 07:40:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239391AbiFTHhf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Jun 2022 03:37:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38010 "EHLO
+        id S239458AbiFTHku (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Jun 2022 03:40:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40470 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231954AbiFTHhc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jun 2022 03:37:32 -0400
+        with ESMTP id S238483AbiFTHks (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jun 2022 03:40:48 -0400
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28E30EE32;
-        Mon, 20 Jun 2022 00:37:31 -0700 (PDT)
-Received: from fraeml708-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LRLzF1D8vz6H6l9;
-        Mon, 20 Jun 2022 15:35:37 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7AADFD12;
+        Mon, 20 Jun 2022 00:40:47 -0700 (PDT)
+Received: from fraeml701-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LRM323lT0z6H7t5;
+        Mon, 20 Jun 2022 15:38:54 +0800 (CST)
 Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml708-chm.china.huawei.com (10.206.15.36) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Mon, 20 Jun 2022 09:37:28 +0200
+ fraeml701-chm.china.huawei.com (10.206.15.50) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2375.24; Mon, 20 Jun 2022 09:40:45 +0200
 Received: from [10.195.35.72] (10.195.35.72) by lhreml724-chm.china.huawei.com
  (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Mon, 20 Jun
- 2022 08:37:26 +0100
-Message-ID: <b033027d-2600-0c7a-a74a-133bda610f2c@huawei.com>
-Date:   Mon, 20 Jun 2022 08:37:25 +0100
+ 2022 08:40:44 +0100
+Message-ID: <13b24b09-aebd-4cfc-c45a-a08ec6ead2cf@huawei.com>
+Date:   Mon, 20 Jun 2022 08:40:43 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.6.1
-Subject: Re: [PATCH 1/5] scsi: core: Remove reserved request time-out handling
-To:     Christoph Hellwig <hch@lst.de>
-CC:     <axboe@kernel.dk>, <damien.lemoal@opensource.wdc.com>,
-        <bvanassche@acm.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <hare@suse.de>, <satishkh@cisco.com>,
-        <sebaddel@cisco.com>, <kartilak@cisco.com>,
-        <linux-rdma@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-        <linux-nvme@lists.infradead.org>, <linux-s390@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>, <mpi3mr-linuxdrv.pdl@broadcom.com>,
-        <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <nbd@other.debian.org>
-References: <1655463320-241202-1-git-send-email-john.garry@huawei.com>
- <1655463320-241202-2-git-send-email-john.garry@huawei.com>
- <20220620055828.GA10192@lst.de>
+Subject: Re: [PATCH 3/4] scsi: pm8001: Use non-atomic bitmap ops for tag alloc
+ + free
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Hannes Reinecke <hare@suse.de>, <jinpu.wang@cloud.ionos.com>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <Ajish.Koshy@microchip.com>
+References: <1654879602-33497-1-git-send-email-john.garry@huawei.com>
+ <1654879602-33497-4-git-send-email-john.garry@huawei.com>
+ <303bbfad-edde-1197-679e-4a09175fb1f3@suse.de>
+ <594ac0c9-a55b-bec7-77e3-a6c7e9525f6b@opensource.wdc.com>
 From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <20220620055828.GA10192@lst.de>
+In-Reply-To: <594ac0c9-a55b-bec7-77e3-a6c7e9525f6b@opensource.wdc.com>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [10.195.35.72]
@@ -56,28 +53,59 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 20/06/2022 06:58, Christoph Hellwig wrote:
-> On Fri, Jun 17, 2022 at 06:55:16PM +0800, John Garry wrote:
->> The SCSI code does not currently support reserved commands. As such,
->> requests which time-out would never be reserved, and scsi_timeout()
->> 'reserved' arg should never be set.
->>
->> Remove handling for reserved requests and drop wrapper scsi_timeout() as
->> it now just calls scsi_times_out() always.
+On 20/06/2022 07:07, Damien Le Moal wrote:
+> On 6/20/22 15:00, Hannes Reinecke wrote:
+>> On 6/10/22 18:46, John Garry wrote:
+>>> In pm8001_tag_alloc() we don't require atomic set_bit() as we are already
+>>> in atomic context. In pm8001_tag_free() we should use the same host
+>>> spinlock to protect clearing the tag (and then don't require the atomic
+>>> clear_bit()).
+>>>
+>>> Signed-off-by: John Garry <john.garry@huawei.com>
+>>> ---
+>>>    drivers/scsi/pm8001/pm8001_sas.c | 10 +++++++---
+>>>    1 file changed, 7 insertions(+), 3 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+>>> index 3a863d776724..8e3f2f9ddaac 100644
+>>> --- a/drivers/scsi/pm8001/pm8001_sas.c
+>>> +++ b/drivers/scsi/pm8001/pm8001_sas.c
+>>> @@ -66,7 +66,11 @@ static int pm8001_find_tag(struct sas_task *task, u32 *tag)
+>>>    void pm8001_tag_free(struct pm8001_hba_info *pm8001_ha, u32 tag)
+>>>    {
+>>>    	void *bitmap = pm8001_ha->tags;
+>>> -	clear_bit(tag, bitmap);
+>>> +	unsigned long flags;
+>>> +
+>>> +	spin_lock_irqsave(&pm8001_ha->bitmap_lock, flags);
+>>> +	__clear_bit(tag, bitmap);
+>>> +	spin_unlock_irqrestore(&pm8001_ha->bitmap_lock, flags);
+>>>    }
+>>>    
+>> This spin lock is pretty much pointless; clear_bit() is always atomic.
 > 
-> Please rename scsi_times_out to scsi_timeout so it still matches the
-> method name.
->
-
-ok, note that some code comments and Documentation reference 
-scsi_times_out() so I will need to fix them up also.
-
-
-> Otherwise looks good:
+> But __clear_bit() is not atomic. I think it was the point of this patch,
+> to not use atomics and use the spinlock instead to protect bitmap.
 > 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> .
+> Before the patch, pm8001_tag_alloc() takes the spinlock *and* use the
+> atomic set_bit(), which is an overkill. pm8001_tag_free() only clears the
+> bit using the the atomic clear_bit().
 
-Cheers,
+Right, so I could change to use __set_bit() in pm8001_find_tag(), but 
+rather use spinlock always.
+
+> 
+> After the patch, spinlock guarantees atomicity for both alloc and free.
+> 
+> Not sure there is any gain from this.
+
+A few more points to note:
+- On architectures which do not support atomic operations natively, they 
+have to use global spinlocks to create atomic context before doing 
+non-atomic bit clearing - see atomic64.c . As such, it's better to use 
+the already available pm8001_ha->bitmap_lock.
+- spinlock does more than create atomic context, but also has barrier 
+semantics, so proper to use consistently for protecting the same region.
+
+Thanks,
 John
