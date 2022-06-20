@@ -2,75 +2,130 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC0CECCA481
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jun 2022 11:14:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 883FFCCA479
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jun 2022 11:24:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241670AbiFTLOn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Jun 2022 07:14:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33714 "EHLO
+        id S240183AbiFTLY5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Jun 2022 07:24:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47760 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241874AbiFTLO1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jun 2022 07:14:27 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D562175A9;
-        Mon, 20 Jun 2022 04:13:17 -0700 (PDT)
-Received: from fraeml704-chm.china.huawei.com (unknown [172.18.147.226])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LRRlt2yjBz6H6lq;
-        Mon, 20 Jun 2022 19:11:06 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml704-chm.china.huawei.com (10.206.15.53) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2375.24; Mon, 20 Jun 2022 13:12:58 +0200
-Received: from [10.195.35.72] (10.195.35.72) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Mon, 20 Jun
- 2022 12:12:57 +0100
-Message-ID: <b98ad03b-e599-6023-3b34-ebefb590bf8c@huawei.com>
-Date:   Mon, 20 Jun 2022 12:12:55 +0100
+        with ESMTP id S232170AbiFTLY4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jun 2022 07:24:56 -0400
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DFE1015A34
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Jun 2022 04:24:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1655724294; x=1687260294;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=oxhVRJ6tOkVNNCJSnJSYC9k+6zLYgkj6GgwGyEKrNWc=;
+  b=YZQ0MjJK/Yab3p+6NaQ0aXnvjNCb7BkU1988mVj7bRQL4kJNXvI8vk6O
+   ImEjnKkocIrEX694lBauAgbRUjyoXJWAVmQ2ppyJSenfbb1eRMfceVTVL
+   H5CIpNlfl+TKUiYNNKQmHGHUmIS2/oEKgPIbc/V+0e1/ua1rmutUN8Tg2
+   6o4TxBuDY4zBPTWaBK7HJb6rHESo8cQyclczJ5LPIN2KqUA46z/FrgzVN
+   Oc3rOS9zck5QhoODDAfgFQjCwjZo/4L6x3l1NSii3XChvcKOBnT2W3uHW
+   wreEyrN5wkhOr6BF9K7743Tza3IlPx0joQfUDIpU8h/S6/XtWVzyj9a89
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.92,306,1650902400"; 
+   d="scan'208";a="208478721"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 20 Jun 2022 19:24:51 +0800
+IronPort-SDR: rvmxPmXZj7L4CxuPHbA97ZeS1n1g3xpzDBEJ6n3NzGqCL4OHFeeVppKiu8dSOLjn4qzFnX+dfs
+ UibnSQBBdcyicd1VnmKDhjFUYuTm4cCc7llq2edK+SvzwJFQQLVoetIQ3xxqs79cf9wMDgVCFl
+ 8qmERwEYk9qBPgX39Zxd13k4/6ohxc6ip0R2OLEYMgNc0gOtMFP71nJ077Su/pmxDX8mhtT5Km
+ kD2Rro2dEXV9k4YvmN9eUwM7A2DmZR914LRhba1bJEkhU+kv7EZZAoIjusauKqv+KI+UlViKtf
+ umbI0bZmUx6fClaz90JEsQ0v
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 20 Jun 2022 03:43:02 -0700
+IronPort-SDR: 5UqOoTdiV2hkHo8HHtGAmi7m2uJGObKu4XKeWlyA4Rt+ASI8xpcL7g/MzAfqPm6psoLaepPmD5
+ nRh+BV2XiJLJh7SZC5E7+hG2Ea9jcFP/XOPp7C8qs5rW51529byztHJm8NmZPnQ7U4kx/CkhpF
+ +wVMdm/33mTurBIoe/md76WTRK9LEJTJlU4rds3i3/81x2FPjnlxybcKF2ztIOmrpBa+Ch1Cw8
+ qnUz+YR+ehhhnfH97y7NJ7+++PSDkvgjcWGbgCQItoFkhxu6fmr3XmTZ65XuRHA0XzAo+FZCSp
+ m3k=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 20 Jun 2022 04:24:53 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LRS3m2r8qz1SVp3
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Jun 2022 04:24:52 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1655724291; x=1658316292; bh=oxhVRJ6tOkVNNCJSnJSYC9k+6zLYgkj6Ggw
+        GyEKrNWc=; b=ts0IFfQwD5Ix0HxpEyjed/zuPEgJWH7rwbIKA9DOhvCJ+JH+g8g
+        OrwqwcaIvmZkyZY6I3/jiYdxx/ExoQgCuyvCoObqNlwj79U5sZeyezUibP2KHNGJ
+        ao9O5FhXUlrCa8S4n5lFBTSlN2C88uzG0Xa0VqhPVdNLHlzohIfV5LdjI4mAweju
+        6VYJNIA9KHaC3zhOay0ZF1+UmE1xSIF8etAsm/E7/XtXoZaRGDQAmYXNyV0ijtWB
+        G0r0NKHaBCJ87szoRqzhfuGl7rNJzj1ZfOUGvUEznCWoDLNZ8Sxc20NTC1bZiMVM
+        +3rSJWEYnnvOydUJ9B808GUCfI3HdR33Q4A==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id 1NwIue4s2W0b for <linux-scsi@vger.kernel.org>;
+        Mon, 20 Jun 2022 04:24:51 -0700 (PDT)
+Received: from [10.225.163.87] (unknown [10.225.163.87])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LRS3j3PyMz1Rvlc;
+        Mon, 20 Jun 2022 04:24:49 -0700 (PDT)
+Message-ID: <41fa0f12-cdcf-f2c4-7366-1abd04312f1f@opensource.wdc.com>
+Date:   Mon, 20 Jun 2022 20:24:48 +0900
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH 5/5] blk-mq: Drop 'reserved' member of busy_tag_iter_fn
-To:     Bart Van Assche <bvanassche@acm.org>, <axboe@kernel.dk>,
-        <damien.lemoal@opensource.wdc.com>, <hch@lst.de>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>, <hare@suse.de>,
-        <satishkh@cisco.com>, <sebaddel@cisco.com>, <kartilak@cisco.com>
-CC:     <linux-rdma@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-        <linux-nvme@lists.infradead.org>, <linux-s390@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>, <mpi3mr-linuxdrv.pdl@broadcom.com>,
-        <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <nbd@other.debian.org>
-References: <1655463320-241202-1-git-send-email-john.garry@huawei.com>
- <1655463320-241202-6-git-send-email-john.garry@huawei.com>
- <017cae1e-b45f-04fd-d34c-22ae736b28e5@acm.org>
- <a18fa379-5a9b-ff45-3be4-b253efd96a50@huawei.com>
- <c6a0eb8d-ad51-01b1-bc17-758acc37f216@acm.org>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <c6a0eb8d-ad51-01b1-bc17-758acc37f216@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH RFC v2 03/18] scsi: core: Implement reserved command
+ handling
+Content-Language: en-US
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Hannes Reinecke <hare@suse.de>, John Garry <john.garry@huawei.com>,
+        Bart Van Assche <bvanassche@acm.org>, axboe@kernel.dk,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, brking@us.ibm.com,
+        linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        chenxiang66@hisilicon.com
+References: <1654770559-101375-4-git-send-email-john.garry@huawei.com>
+ <b4a0ede5-95a3-4388-e808-7627b5484d01@opensource.wdc.com>
+ <9e89360d-3325-92af-0436-b34df748f3e2@acm.org>
+ <e36bba7e-d78d-27b4-a0e2-9d921bc82f5d@opensource.wdc.com>
+ <3a27b6ff-e495-8f11-6925-1487c9d14fa9@huawei.com>
+ <c702f06e-b7da-92be-3c4f-5dd405600235@opensource.wdc.com>
+ <ecfb0694-21b8-55b4-c9b8-5e738f59ce8d@huawei.com>
+ <98fa010d-3555-a82b-e960-f47aeeb38151@opensource.wdc.com>
+ <7b046321-fdb3-33f0-94a0-78a25cbbe02e@suse.de>
+ <9de5ed1b-e874-28ac-0532-cd5420892064@opensource.wdc.com>
+ <20220620090543.GA13643@lst.de>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <20220620090543.GA13643@lst.de>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.195.35.72]
-X-ClientProxiedBy: lhreml744-chm.china.huawei.com (10.201.108.194) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 17/06/2022 17:55, Bart Van Assche wrote:
->>
->> It's not totally necessary. Since local variable 'reserved' would now 
->> only be used once I thought it was better to get rid of it.
->>
->> I can keep it if you really think that is better.
+On 6/20/22 18:05, Christoph Hellwig wrote:
+> On Mon, Jun 20, 2022 at 06:02:30PM +0900, Damien Le Moal wrote:
+>> So reserving a tag/req to be able to do NCQ at the cost of max qd being 31
+>> works for that. We could keep max qd at 32 by creating one more "fake" tag
+>> and having a request for it, that is, having the fake tag visible to the
+>> block layer as a reserved tag, as John's series is doing, but for the
+>> reserved tags, we actually need to use an effective tag (qc->hw_tag) when
+>> issuing the commands. And for that, we can reuse the tag of one of the
+>> failed commands.
 > 
-> I'd prefer that these changes are either left out or that these are 
-> moved into a separate patch. I think that will make this patch series 
-> easier to review.
+> Take a look at the magic flush request in blk-flush.c, which is
+> preallocated but borrows a tag from the request that wants a pre- or
+> post-flush.  The logic is rather ugly, but maybe it might actually
+> become cleaner by generalizing it a bit.
 
-Personally I think that this is a trivial change and does not merit a 
-separate patch. Other reviewers seem to agree. Anyway, if you feel 
-strongly about this then I can put in another patch.
+Thanks. Will check.
+I am also looking at scsi_unjam_host() and scsi_eh_get_sense(). These
+reuse a scsi command to do eh operations. So I could use that too, modulo
+making it work outside of eh context to keep the command flow intact.
 
-Thanks,
-John
+-- 
+Damien Le Moal
+Western Digital Research
