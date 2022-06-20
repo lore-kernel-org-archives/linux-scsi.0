@@ -2,124 +2,106 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB94AC43334
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jun 2022 06:56:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8961C43334
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jun 2022 07:03:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237430AbiFTG45 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Jun 2022 02:56:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41280 "EHLO
+        id S239046AbiFTHDx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Jun 2022 03:03:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45450 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231197AbiFTG44 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jun 2022 02:56:56 -0400
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [IPv6:2a01:488:42:1000:50ed:8234::])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABA985FCA;
-        Sun, 19 Jun 2022 23:56:55 -0700 (PDT)
-Received: from [2a02:8108:963f:de38:eca4:7d19:f9a2:22c5]; authenticated
-        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        id 1o3BL9-000466-Of; Mon, 20 Jun 2022 08:56:51 +0200
-Message-ID: <5bcb5963-9da0-fd59-45c5-d27af02e7748@leemhuis.info>
-Date:   Mon, 20 Jun 2022 08:56:50 +0200
+        with ESMTP id S234071AbiFTHDw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jun 2022 03:03:52 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5007AF75;
+        Mon, 20 Jun 2022 00:03:51 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 0DEC921BDE;
+        Mon, 20 Jun 2022 07:03:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1655708630; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=3H0q16aW3kW6fA8kDkHl20jQtDM1dBpQuVhUTEIizdo=;
+        b=V6T2dTKjkLceY7I3m7AS1zeyrKzHlkZ9INvM0Kls8dGXwdzOWLJiriTPp1yCJ2hStCsu6M
+        uUWC3J9mWoZtlwC6iI7jCuOe7sM9AnutT5bxhYMgXgqoPwIDXF3x0bn93baPeEi+ehyGBs
+        P30bghw/ONtNOd8pDUAWXDdjEsrgRi4=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1655708630;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=3H0q16aW3kW6fA8kDkHl20jQtDM1dBpQuVhUTEIizdo=;
+        b=BsrLKLG69OQGGSXaQr7EPXGS0C1nG9EcaAGRKyp3XBa7WM9yvgZbXaLu2GJ2mOJw590uk1
+        hE8/X9o0CKKP84Cw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id BA17D134CA;
+        Mon, 20 Jun 2022 07:03:48 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id zmdkKtQbsGKtegAAMHmgww
+        (envelope-from <hare@suse.de>); Mon, 20 Jun 2022 07:03:48 +0000
+Message-ID: <2ea41701-8be5-f981-d178-0d8e703962e0@suse.de>
+Date:   Mon, 20 Jun 2022 09:03:47 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
+ Thunderbird/91.4.0
+Subject: Re: [PATCH RFC v2 03/18] scsi: core: Implement reserved command
+ handling
 Content-Language: en-US
-To:     Arun Easi <aeasi@marvell.com>,
-        Tony Battersby <tonyb@cybernetics.com>
-Cc:     Saurav Kashyap <skashyap@marvell.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, regressions@lists.linux.dev
-References: <baef87c3-5dad-3b47-44c1-6914bfc90108@cybernetics.com>
- <alpine.LRH.2.21.9999.2205271524460.4730@mvluser05.qlc.com>
-From:   Thorsten Leemhuis <regressions@leemhuis.info>
-Subject: Re: [REGRESSION] qla2xxx: tape drive not removed after unplug FC
- cable
-In-Reply-To: <alpine.LRH.2.21.9999.2205271524460.4730@mvluser05.qlc.com>
-Content-Type: text/plain; charset=UTF-8
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        John Garry <john.garry@huawei.com>, axboe@kernel.dk,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, brking@us.ibm.com,
+        linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        chenxiang66@hisilicon.com
+References: <1654770559-101375-1-git-send-email-john.garry@huawei.com>
+ <1654770559-101375-4-git-send-email-john.garry@huawei.com>
+ <b4a0ede5-95a3-4388-e808-7627b5484d01@opensource.wdc.com>
+ <88d192b5-741b-7104-7f72-0178aa18bafb@suse.de>
+ <20220620062828.GA10753@lst.de>
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20220620062828.GA10753@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1655708215;9d5f6de7;
-X-HE-SMSGID: 1o3BL9-000466-Of
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi!
-
-On 28.05.22 02:27, Arun Easi wrote:
-> Hi Tony,
+On 6/20/22 08:28, Christoph Hellwig wrote:
+> On Mon, Jun 20, 2022 at 08:24:24AM +0200, Hannes Reinecke wrote:
+>> So my idea for SATA is simply _not_ to use reserved tags.
+>> Any TMF functions (or the equivalent thereof) should always be sent as
+>> non-NCQ commands. And when doing so we're back to QD=1 on SATA anyway, so
+>> there _must_ be tags available. Consequently the main reason for having
+>> reserved tags (namely to guarantee that tags are available for TMF) doesn't
+>> apply here.
 > 
-> Thanks for reporting the issue. We are trying to recreate this issue in 
-> house. I will reach out to you for logs, if we cannot repro. Typically, we 
-> get sufficient context to the issue when the problem is reproduced with 
-> module parameter "ql2xextended_error_logging=1".
-> 
-> Anyway, I will let you know the status.
+> At least in the non-elevator case (which includes all passthrough I/O)
+> request have tags assigned as soon as they are allocated.  So, we
+> absolutely can have all tags allocated and then need to do a TMF.
 
-What's the status here? Tony, did you provide the info Arun asked for=
-Or was some progress made somehow without it?
+SATA internals may come to the rescue here; if there's an error all NCQ 
+commands are aborted. So we'll get at least one command tag back.
+As for the command duration limits I'm still waiting for clarification
+from Damien if we can reuse tags there.
 
-Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+But I do agree it's ugly.
 
-P.S.: As the Linux kernel's regression tracker I deal with a lot of
-reports and sometimes miss something important when writing mails like
-this. If that's the case here, don't hesitate to tell me in a public
-reply, it's in everyone's interest to set the public record straight.
+Cheers,
 
-> On Wed, 25 May 2022, 3:03pm, Tony Battersby wrote:
-> 
->> #regzbot introduced: 44c57f205876
->>
->> I have several different QLogic FC HBAs (8, 16, 32 Gbps) and several
->> different FC LTO tape drives (IBM Ultrium 8 & 9).  When I plug in the FC
->> cable, the tape drive shows up as a SCSI device as expected.  With older
->> kernels, when I unplug the FC cable, the tape drive SCSI device would
->> disappear after about 30 seconds.  But with newer kernels (including
->> 5.18), when I unplug the FC cable, the tape drive SCSI device never
->> disappears.  I have bisected the change in behavior to the following
->> commit in kernel 5.15:
->>
->> 44c57f205876 ("scsi: qla2xxx: Changes to support FCP2 Target")
->>
->> This commit has been backported to various -stable kernels, so they are
->> also affected.
->>
->> When testing with two different tape drives:
->> 1) Plug FC cable into tape drive A.  Tape drive A shows up as a SCSI device.
->> 2) Unplug FC cable; wait 60 seconds.  Tape drive A does not disappear.
->> 3) Plug FC cable into tape drive B.  Tape drive A disappears 30 seconds
->> later, but tape drive B does not show up.
->> 4) Unplug FC cable and plug it back into tape drive B.  Tape drive B
->> shows up as a SCSI device.
->>
->> So I can actually make a tape drive disappear by plugging the cable into
->> a different tape drive, but then I have to reseat the cable again to
->> make the new tape drive show up.
->>
->> lspci -n
->> 83:00.0 0c04: 1077:2031 (rev 02)
->> 83:00.1 0c04: 1077:2031 (rev 02)
->>
->> When plugging in cable:
->> qla2xxx [0000:83:00.1]-500a:7: LOOP UP detected (8 Gbps).
->>
->> When unplugging cable with old kernel:
->> qla2xxx [0000:83:00.1]-500b:7: LOOP DOWN detected (2 7 0 0).
->> rport-7:0-2: blocked FC remote port time out: removing target and saving binding
->>
->> When unplugging cable with new kernel:
->> qla2xxx [0000:83:00.1]-500b:7: LOOP DOWN detected (2 7 0 0).
->>
->> /sys/class/fc_remote_ports/rport-*/
->> dev_loss_tmo: 30
->> supported_classes: Class 3
->> port_state: Online
->> (port_state remains Online even when FC cable unplugged)
->>
->> /proc/scsi/scsi
->> Host: scsi7 Channel: 00 Id: 01 Lun: 00
->>   Vendor: IBM      Model: ULTRIUM-HH8      Rev: K4K1
->>   Type:   Sequential-Access                ANSI  SCSI revision: 06
->>
->> Tony Battersby
->> Cybernetics
->>
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
+Myers, Andrew McDonald, Martje Boudien Moerman
