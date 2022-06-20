@@ -2,572 +2,256 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02816C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jun 2022 14:59:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C0F7CCA479
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jun 2022 15:08:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241048AbiFTO7p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Jun 2022 10:59:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57292 "EHLO
+        id S242503AbiFTPH7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Jun 2022 11:07:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33450 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241215AbiFTO7Z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jun 2022 10:59:25 -0400
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5041D14000;
-        Mon, 20 Jun 2022 07:24:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1655735049;
-        bh=mqwk42X40zW8zNvpTM2nfy3vsakf+Ef44fCi2/yrgPo=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=ANGxP0uZ+kjJmFpcesOLQyw/wxuxlRjdbs7Om23fTujlpM3YZhWlk52tDJxrVeKij
-         vv6IJBEAqb+Su6mLiKPKfxHWkcAqhluMVPw5IIRcc18Tng38x2/0wiJ4ujnufRHETG
-         BDTh3J/4gXJEW4QvV8tpku7ETFKbV1tY2sgpYlOw=
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 0EC5E128692D;
-        Mon, 20 Jun 2022 10:24:09 -0400 (EDT)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id ER6VUdcEzv1q; Mon, 20 Jun 2022 10:24:08 -0400 (EDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1655735048;
-        bh=mqwk42X40zW8zNvpTM2nfy3vsakf+Ef44fCi2/yrgPo=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=NaqFKCdvaHVohJ77IHEvLFOOXoLRP99AbZovwK1mNJWCyqbRrrd6GpJ/I37Or/K/W
-         IjzPmNoIo9hD6MhJ7JBbGX5fn/8MYRrxBJFynTQ6RJY3nE6cN5hBcwTkWVi/xnyM5y
-         0E+RrnxA8hrUiDhq36XSTzqqPeLJ7jV1dM4vFYWU=
-Received: from lingrow.int.hansenpartnership.com (c-67-166-174-65.hsd1.va.comcast.net [67.166.174.65])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 2E514128691A;
-        Mon, 20 Jun 2022 10:24:08 -0400 (EDT)
-Message-ID: <151c2749ac4ca8ca853d36f0f6899b009c1db518.camel@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 5.19-rc3
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Date:   Mon, 20 Jun 2022 10:24:06 -0400
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.4 
+        with ESMTP id S242850AbiFTPHb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jun 2022 11:07:31 -0400
+X-Greylist: delayed 787 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 20 Jun 2022 07:47:01 PDT
+Received: from mail.cybernetics.com (mail.cybernetics.com [173.71.130.66])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56AB12CDF7
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Jun 2022 07:47:01 -0700 (PDT)
+X-ASG-Debug-ID: 1655735631-1cf43917f34590c0001-ziuLRu
+Received: from cybernetics.com ([10.10.4.126]) by mail.cybernetics.com with ESMTP id rNTjWzLE3XOW6cDI; Mon, 20 Jun 2022 10:33:51 -0400 (EDT)
+X-Barracuda-Envelope-From: tonyb@cybernetics.com
+X-ASG-Whitelist: Client
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cybernetics.com; s=mail;
+        bh=NyOBabcM6HAlwTl1JjR0XgckKmX0BhrhtQCHxztObkw=;
+        h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:References:Cc:To:
+        Content-Language:Subject:MIME-Version:Date:Message-ID; b=DA8qGE40RlmQr6pbL9qx
+        /yR4uAijBdwoP1qIlS2aZf0sbyXaMUs3AAdxt7lV7AXtPNmyGyl832BiLjrWRUzNxxDrGjc8l8lTq
+        JbhEHCwwBAaiaT75R7BOcnblcJc9FlnsszJxK7nVf6nft+305g7KEhLjk6uBpgghugBTXmgvdU=
+Received: from [10.157.2.224] (HELO [192.168.200.1])
+  by cybernetics.com (CommuniGate Pro SMTP 7.1.1)
+  with ESMTPS id 11936878; Mon, 20 Jun 2022 10:33:51 -0400
+Message-ID: <178e4e7a-64fc-a442-cdda-45100eaebda0@cybernetics.com>
+Date:   Mon, 20 Jun 2022 10:33:51 -0400
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.9.1
+Subject: Re: [REGRESSION] qla2xxx: tape drive not removed after unplug FC
+ cable
+Content-Language: en-US
+X-ASG-Orig-Subj: Re: [REGRESSION] qla2xxx: tape drive not removed after unplug FC
+ cable
+To:     Thorsten Leemhuis <regressions@leemhuis.info>,
+        Arun Easi <aeasi@marvell.com>
+Cc:     Saurav Kashyap <skashyap@marvell.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, regressions@lists.linux.dev
+References: <baef87c3-5dad-3b47-44c1-6914bfc90108@cybernetics.com>
+ <alpine.LRH.2.21.9999.2205271524460.4730@mvluser05.qlc.com>
+ <5bcb5963-9da0-fd59-45c5-d27af02e7748@leemhuis.info>
+From:   Tony Battersby <tonyb@cybernetics.com>
+In-Reply-To: <5bcb5963-9da0-fd59-45c5-d27af02e7748@leemhuis.info>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-Barracuda-Connect: UNKNOWN[10.10.4.126]
+X-Barracuda-Start-Time: 1655735631
+X-Barracuda-URL: https://10.10.4.122:443/cgi-mod/mark.cgi
+X-Barracuda-BRTS-Status: 1
+X-Virus-Scanned: by bsmtpd at cybernetics.com
+X-Barracuda-Scan-Msg-Size: 14121
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Eight fixes, all in drivers (ufs, scsi_debug, storvsc, iscsi, ibmvfc). 
-Apart from the ufs command clearing updates, these are mostly minor and
-obvious fixes.
+On 6/20/22 02:56, Thorsten Leemhuis wrote:
+> Hi!
+>
+> On 28.05.22 02:27, Arun Easi wrote:
+>> Hi Tony,
+>>
+>> Thanks for reporting the issue. We are trying to recreate this issue in 
+>> house. I will reach out to you for logs, if we cannot repro. Typically, we 
+>> get sufficient context to the issue when the problem is reproduced with 
+>> module parameter "ql2xextended_error_logging=1".
+>>
+>> Anyway, I will let you know the status.
+> What's the status here? Tony, did you provide the info Arun asked for=
+> Or was some progress made somehow without it?
+>
+I was waiting for them to reproduce the problem, or ask for logs. 
+Anyway, here are the logs they said they might want:
 
-The patch is available here:
+modprobe qla2xxx ql2xextended_error_logging=1
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Jun 20 13:51:46 tony13 kern.warn kernel: qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA Driver: 10.02.07.400-k-debug.
+Jun 20 13:51:46 tony13 kern.warn kernel: qla2xxx [0000:00:00.0]-011c: : MSI-X vector count: 32.
+Jun 20 13:51:46 tony13 kern.warn kernel: qla2xxx [0000:00:00.0]-001d: : Found an ISP2031 irq 37 iobase 0x00000000875338f3.
+Jun 20 13:51:46 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-00c6:6: MSI-X: Using 26 vectors
+Jun 20 13:51:47 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-0075:6: ZIO mode 6 enabled; timer delay (200 us).
+Jun 20 13:51:47 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-ffff:6: FC4 priority set to NVMe
+Jun 20 13:51:48 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-507b:6: SFP detect: Short-Range SFP  (nvr=0 ll=40 lr=0 lrd=0).
+Jun 20 13:51:50 tony13 kern.info kernel: scsi host6: qla2xxx
+Jun 20 13:51:50 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-4000:6: DPC handler sleeping.
+Jun 20 13:51:51 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-400f:6: Loop resync scheduled.
+Jun 20 13:51:55 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-00fb:6: QLogic QLE2672 - QLE2672 QLogic 2-port 16Gb Fibre Channel Adapter.
+Jun 20 13:51:55 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-00fc:6: ISP2031: PCIe (8.0GT/s x8) @ 0000:83:00.0 hdma- host#=6 fw=8.07.12 (d0d5).
+Jun 20 13:51:55 tony13 kern.warn kernel: qla2xxx [0000:00:00.0]-011c: : MSI-X vector count: 32.
+Jun 20 13:51:55 tony13 kern.warn kernel: qla2xxx [0000:00:00.0]-001d: : Found an ISP2031 irq 135 iobase 0x000000007cfbf1eb.
+Jun 20 13:51:55 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-00c6:7: MSI-X: Using 26 vectors
+Jun 20 13:51:55 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-0075:7: ZIO mode 6 enabled; timer delay (200 us).
+Jun 20 13:51:55 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-ffff:7: FC4 priority set to NVMe
+Jun 20 13:51:57 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-507b:7: SFP detect: Short-Range SFP  (nvr=0 ll=40 lr=0 lrd=0).
+Jun 20 13:51:58 tony13 kern.info kernel: scsi host7: qla2xxx
+Jun 20 13:51:58 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-4000:7: DPC handler sleeping.
+Jun 20 13:51:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-400f:7: Loop resync scheduled.
+Jun 20 13:52:03 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-00fb:7: QLogic QLE2672 - QLE2672 QLogic 2-port 16Gb Fibre Channel Adapter.
+Jun 20 13:52:03 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-00fc:7: ISP2031: PCIe (8.0GT/s x8) @ 0000:83:00.1 hdma- host#=7 fw=8.07.12 (d0d5).
+Jun 20 13:52:11 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-8038:6: Cable is unplugged...
+Jun 20 13:52:11 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-803a:6: fw_state=4 (7, 141, 0, 800 0) curr time=ffffc764.
+Jun 20 13:52:11 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-206c:6: qla2x00_loop_resync *** FAILED ***.
+Jun 20 13:52:11 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-4010:6: Loop resync end.
+Jun 20 13:52:11 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-4000:6: DPC handler sleeping.
+Jun 20 13:52:20 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-8038:7: Cable is unplugged...
+Jun 20 13:52:20 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-803a:7: fw_state=4 (7, 141, 0, 800 0) curr time=ffffcaac.
+Jun 20 13:52:20 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-206c:7: qla2x00_loop_resync *** FAILED ***.
+Jun 20 13:52:20 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-4010:7: Loop resync end.
+Jun 20 13:52:20 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-4000:7: DPC handler sleeping.
 
-The short changelog is:
+Plug in cable
 
-Bart Van Assche (3):
-      scsi: ufs: Fix a race between the interrupt handler and the reset handler
-      scsi: ufs: Support clearing multiple commands at once
-      scsi: ufs: Simplify ufshcd_clear_cmd()
+Jun 20 13:52:56 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-5009:7: LIP occurred (0).
+Jun 20 13:52:56 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-10b7:7: Format 0 : Number of VPs setup 254, number of VPs acquired 1.
+Jun 20 13:52:56 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-10b8:7: Primary port id 0000ef.
+Jun 20 13:52:58 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-500a:7: LOOP UP detected (8 Gbps).
+Jun 20 13:52:58 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-5012:7: Port database changed ffff 0006 0000.
+Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-400f:7: Loop resync scheduled.
+Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-8037:7: F/W Ready - OK.
+Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-803a:7: fw_state=3 (7, 141, 0, 800 0) curr time=ffffd9e8.
+Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-200b:7: HBA in NL topology.
+Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-2014:7: Configure loop -- dpc flags = 0x112e0.
+Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-2011:7: Entries in ID list (1).
+Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-20d8:7: qla24xx_fcport_handle_login 50:00:e1:11:c5:27:f0:70 DS 0 LS 7 P 0 fl 0 confl 0000000000000000 rscn 0|0 login 0 lid 0 scan 2 fc4type 0
+Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-307b:7: qla_chk_n2n_b4_login 50:00:e1:11:c5:27:f0:70 DS 0 LS 7 lid 0 retries=30
+Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-20bf:7: qla_chk_n2n_b4_login 1628 50:00:e1:11:c5:27:f0:70 post login
+Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-2069:7: LOOP READY.
+Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-206b:7: qla2x00_configure_loop: exiting normally. local port wwpn 2100000e1e2227a1 id 0000ef)
+Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-4010:7: Loop resync end.
+Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-2134:7: FCPort 50:00:e1:11:c5:27:f0:70 disc_state transition: DELETED to LOGIN_PEND - portid=000026.
+Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-2072:7: Async-login - 50:00:e1:11:c5:27:f0:70 hdl=2, loopid=0 portid=000026 retries=29 .
+Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-4000:7: DPC handler sleeping.
+Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-5036:7: Async-login complete: handle=2 pid=000026 wwpn=50:00:e1:11:c5:27:f0:70 iop0=312
+Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-20dd:7: qla2x00_async_login_sp_done 50:00:e1:11:c5:27:f0:70 res 0 
+Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-ffff:7: qla24xx_handle_plogi_done_event 50:00:e1:11:c5:27:f0:70 DS 3 LS 7 rc 0 login 0|0 rscn 0|0 data 4000|0 iop 0|0
+Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-20ea:7: qla24xx_handle_plogi_done_event 2232 50:00:e1:11:c5:27:f0:70 LoopID 0x0 in use with 000026. post gpdb
+Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-2134:7: FCPort 50:00:e1:11:c5:27:f0:70 disc_state transition: LOGIN_PEND to GPDB - portid=000026.
+Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-20dc:7: Async-gpdb 50:00:e1:11:c5:27:f0:70 hndl 0 opt 0
+Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-20db:7: Async done-gpdb res 0, WWPN 50:00:e1:11:c5:27:f0:70 mb[1]=0 mb[2]=ffdd 
+Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-20d2:7: qla24xx_handle_gpdb_event 50:00:e1:11:c5:27:f0:70 DS 5 LS 6 fc4_type 0 rc 0
+Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-2062:7: 50:00:e1:11:c5:27:f0:70 SVC Param w3 0312
+Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-2134:7: FCPort 50:00:e1:11:c5:27:f0:70 disc_state transition: GPDB to UPD_FCPORT - portid=000026.
+Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-20ef:7: qla2x00_update_fcport 50:00:e1:11:c5:27:f0:70
+Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-2134:7: FCPort 50:00:e1:11:c5:27:f0:70 disc_state transition: UPD_FCPORT to UPD_FCPORT - portid=000026.
+Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-207d:7: FCPort 50:00:e1:11:c5:27:f0:70 state transitioned from UNCONFIGURED to ONLINE - portid=000026.
+Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-20ee:7: qla2x00_reg_remote_port: 5000e111c527f070. rport 7:0:0 (00000000bd175424) is tgt mode
+Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-2134:7: FCPort 50:00:e1:11:c5:27:f0:70 disc_state transition: UPD_FCPORT to LOGIN_COMPLETE - portid=000026.
+Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-911e:7: qla_register_fcport_fn rscn gen 0/0 next DS 0
+Jun 20 13:52:59 tony13 kern.notice kernel: scsi 7:0:0:0: Sequential-Access IBM      ULTRIUM-HH8      K4K1 PQ: 0 ANSI: 6
+Jun 20 13:52:59 tony13 kern.notice kernel: scsi 7:0:0:0: Attached scsi generic sg1 type 1
+Jun 20 13:52:59 tony13 kern.info kernel: st: Version 20160209, fixed bufsize 32768, s/g segs 256
+Jun 20 13:52:59 tony13 kern.notice kernel: st 7:0:0:0: Attached scsi tape st0
+Jun 20 13:52:59 tony13 kern.info kernel: st 7:0:0:0: st0: try direct i/o: yes (alignment 8 B)
 
-Damien Le Moal (1):
-      scsi: scsi_debug: Fix zone transition to full condition
+Unplug cable
 
-Saurabh Sengar (1):
-      scsi: storvsc: Correct reporting of Hyper-V I/O size limits
+Jun 20 13:54:03 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-500b:7: LOOP DOWN detected (2 7 0 0).
+Jun 20 13:54:03 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-20f1:7: Mark all dev lost
 
-Sergey Gorenko (1):
-      scsi: iscsi: Exclude zero from the endpoint ID range
+sleep 180
 
-Tyrel Datwyler (2):
-      scsi: ibmvfc: Store vhost pointer during subcrq allocation
-      scsi: ibmvfc: Allocate/free queue resource only during probe/remove
+cat /proc/scsi/scsi 
+Attached devices:
+Host: scsi7 Channel: 00 Id: 00 Lun: 00
+  Vendor: IBM      Model: ULTRIUM-HH8      Rev: K4K1
+  Type:   Sequential-Access                ANSI  SCSI revision: 06
 
-And the diffstat:
+rmmod qla2xxx
 
- drivers/scsi/ibmvscsi/ibmvfc.c      | 82 +++++++++++++++++++++++++++++--------
- drivers/scsi/ibmvscsi/ibmvfc.h      |  2 +-
- drivers/scsi/scsi_debug.c           | 22 +++++++++-
- drivers/scsi/scsi_transport_iscsi.c |  7 +++-
- drivers/scsi/storvsc_drv.c          | 27 +++++++++---
- drivers/ufs/core/ufshcd.c           | 76 +++++++++++++++++++++-------------
- 6 files changed, 161 insertions(+), 55 deletions(-)
+Jun 20 14:00:18 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-211a:7: Delaying session delete for FCP2 flags 0x4 port_type = 0x4 port_id=000026 50
+Jun 20 14:00:18 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-b079:7: Removing driver
+Jun 20 14:00:18 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-00af:7: Performing ISP error recovery - ha=00000000c584070c.
+Jun 20 14:00:18 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-20f1:7: Mark all dev lost
+Jun 20 14:00:28 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-211a:7: Delaying session delete for FCP2 flags 0x4 port_type = 0x4 port_id=000026 50
+Jun 20 14:00:28 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-4011:7: DPC handler exiting.
+Jun 20 14:00:28 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-207d:7: FCPort 50:00:e1:11:c5:27:f0:70 state transitioned from ONLINE to DEAD - portid=000026.
+Jun 20 14:00:28 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-b079:6: Removing driver
+Jun 20 14:00:28 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-00af:6: Performing ISP error recovery - ha=000000008a8560d1.
+Jun 20 14:00:28 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-20f1:6: Mark all dev lost
+Jun 20 14:00:28 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-4011:6: DPC handler exiting.
 
-With full diff below.
+Tony Battersby
+Cybernetics
 
-James
-
----
-
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index d0eab5700dc5..00684e11976b 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -160,8 +160,8 @@ static void ibmvfc_npiv_logout(struct ibmvfc_host *);
- static void ibmvfc_tgt_implicit_logout_and_del(struct ibmvfc_target *);
- static void ibmvfc_tgt_move_login(struct ibmvfc_target *);
- 
--static void ibmvfc_release_sub_crqs(struct ibmvfc_host *);
--static void ibmvfc_init_sub_crqs(struct ibmvfc_host *);
-+static void ibmvfc_dereg_sub_crqs(struct ibmvfc_host *);
-+static void ibmvfc_reg_sub_crqs(struct ibmvfc_host *);
- 
- static const char *unknown_error = "unknown error";
- 
-@@ -917,7 +917,7 @@ static int ibmvfc_reenable_crq_queue(struct ibmvfc_host *vhost)
- 	struct vio_dev *vdev = to_vio_dev(vhost->dev);
- 	unsigned long flags;
- 
--	ibmvfc_release_sub_crqs(vhost);
-+	ibmvfc_dereg_sub_crqs(vhost);
- 
- 	/* Re-enable the CRQ */
- 	do {
-@@ -936,7 +936,7 @@ static int ibmvfc_reenable_crq_queue(struct ibmvfc_host *vhost)
- 	spin_unlock(vhost->crq.q_lock);
- 	spin_unlock_irqrestore(vhost->host->host_lock, flags);
- 
--	ibmvfc_init_sub_crqs(vhost);
-+	ibmvfc_reg_sub_crqs(vhost);
- 
- 	return rc;
- }
-@@ -955,7 +955,7 @@ static int ibmvfc_reset_crq(struct ibmvfc_host *vhost)
- 	struct vio_dev *vdev = to_vio_dev(vhost->dev);
- 	struct ibmvfc_queue *crq = &vhost->crq;
- 
--	ibmvfc_release_sub_crqs(vhost);
-+	ibmvfc_dereg_sub_crqs(vhost);
- 
- 	/* Close the CRQ */
- 	do {
-@@ -988,7 +988,7 @@ static int ibmvfc_reset_crq(struct ibmvfc_host *vhost)
- 	spin_unlock(vhost->crq.q_lock);
- 	spin_unlock_irqrestore(vhost->host->host_lock, flags);
- 
--	ibmvfc_init_sub_crqs(vhost);
-+	ibmvfc_reg_sub_crqs(vhost);
- 
- 	return rc;
- }
-@@ -5682,6 +5682,8 @@ static int ibmvfc_alloc_queue(struct ibmvfc_host *vhost,
- 	queue->cur = 0;
- 	queue->fmt = fmt;
- 	queue->size = PAGE_SIZE / fmt_size;
-+
-+	queue->vhost = vhost;
- 	return 0;
- }
- 
-@@ -5757,9 +5759,6 @@ static int ibmvfc_register_scsi_channel(struct ibmvfc_host *vhost,
- 
- 	ENTER;
- 
--	if (ibmvfc_alloc_queue(vhost, scrq, IBMVFC_SUB_CRQ_FMT))
--		return -ENOMEM;
--
- 	rc = h_reg_sub_crq(vdev->unit_address, scrq->msg_token, PAGE_SIZE,
- 			   &scrq->cookie, &scrq->hw_irq);
- 
-@@ -5790,7 +5789,6 @@ static int ibmvfc_register_scsi_channel(struct ibmvfc_host *vhost,
- 	}
- 
- 	scrq->hwq_id = index;
--	scrq->vhost = vhost;
- 
- 	LEAVE;
- 	return 0;
-@@ -5800,7 +5798,6 @@ static int ibmvfc_register_scsi_channel(struct ibmvfc_host *vhost,
- 		rc = plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address, scrq->cookie);
- 	} while (rtas_busy_delay(rc));
- reg_failed:
--	ibmvfc_free_queue(vhost, scrq);
- 	LEAVE;
- 	return rc;
- }
-@@ -5826,12 +5823,50 @@ static void ibmvfc_deregister_scsi_channel(struct ibmvfc_host *vhost, int index)
- 	if (rc)
- 		dev_err(dev, "Failed to free sub-crq[%d]: rc=%ld\n", index, rc);
- 
--	ibmvfc_free_queue(vhost, scrq);
-+	/* Clean out the queue */
-+	memset(scrq->msgs.crq, 0, PAGE_SIZE);
-+	scrq->cur = 0;
-+
-+	LEAVE;
-+}
-+
-+static void ibmvfc_reg_sub_crqs(struct ibmvfc_host *vhost)
-+{
-+	int i, j;
-+
-+	ENTER;
-+	if (!vhost->mq_enabled || !vhost->scsi_scrqs.scrqs)
-+		return;
-+
-+	for (i = 0; i < nr_scsi_hw_queues; i++) {
-+		if (ibmvfc_register_scsi_channel(vhost, i)) {
-+			for (j = i; j > 0; j--)
-+				ibmvfc_deregister_scsi_channel(vhost, j - 1);
-+			vhost->do_enquiry = 0;
-+			return;
-+		}
-+	}
-+
-+	LEAVE;
-+}
-+
-+static void ibmvfc_dereg_sub_crqs(struct ibmvfc_host *vhost)
-+{
-+	int i;
-+
-+	ENTER;
-+	if (!vhost->mq_enabled || !vhost->scsi_scrqs.scrqs)
-+		return;
-+
-+	for (i = 0; i < nr_scsi_hw_queues; i++)
-+		ibmvfc_deregister_scsi_channel(vhost, i);
-+
- 	LEAVE;
- }
- 
- static void ibmvfc_init_sub_crqs(struct ibmvfc_host *vhost)
- {
-+	struct ibmvfc_queue *scrq;
- 	int i, j;
- 
- 	ENTER;
-@@ -5847,30 +5882,41 @@ static void ibmvfc_init_sub_crqs(struct ibmvfc_host *vhost)
- 	}
- 
- 	for (i = 0; i < nr_scsi_hw_queues; i++) {
--		if (ibmvfc_register_scsi_channel(vhost, i)) {
--			for (j = i; j > 0; j--)
--				ibmvfc_deregister_scsi_channel(vhost, j - 1);
-+		scrq = &vhost->scsi_scrqs.scrqs[i];
-+		if (ibmvfc_alloc_queue(vhost, scrq, IBMVFC_SUB_CRQ_FMT)) {
-+			for (j = i; j > 0; j--) {
-+				scrq = &vhost->scsi_scrqs.scrqs[j - 1];
-+				ibmvfc_free_queue(vhost, scrq);
-+			}
- 			kfree(vhost->scsi_scrqs.scrqs);
- 			vhost->scsi_scrqs.scrqs = NULL;
- 			vhost->scsi_scrqs.active_queues = 0;
- 			vhost->do_enquiry = 0;
--			break;
-+			vhost->mq_enabled = 0;
-+			return;
- 		}
- 	}
- 
-+	ibmvfc_reg_sub_crqs(vhost);
-+
- 	LEAVE;
- }
- 
- static void ibmvfc_release_sub_crqs(struct ibmvfc_host *vhost)
- {
-+	struct ibmvfc_queue *scrq;
- 	int i;
- 
- 	ENTER;
- 	if (!vhost->scsi_scrqs.scrqs)
- 		return;
- 
--	for (i = 0; i < nr_scsi_hw_queues; i++)
--		ibmvfc_deregister_scsi_channel(vhost, i);
-+	ibmvfc_dereg_sub_crqs(vhost);
-+
-+	for (i = 0; i < nr_scsi_hw_queues; i++) {
-+		scrq = &vhost->scsi_scrqs.scrqs[i];
-+		ibmvfc_free_queue(vhost, scrq);
-+	}
- 
- 	kfree(vhost->scsi_scrqs.scrqs);
- 	vhost->scsi_scrqs.scrqs = NULL;
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvfc.h
-index 3718406e0988..c39a245f43d0 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.h
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.h
-@@ -789,6 +789,7 @@ struct ibmvfc_queue {
- 	spinlock_t _lock;
- 	spinlock_t *q_lock;
- 
-+	struct ibmvfc_host *vhost;
- 	struct ibmvfc_event_pool evt_pool;
- 	struct list_head sent;
- 	struct list_head free;
-@@ -797,7 +798,6 @@ struct ibmvfc_queue {
- 	union ibmvfc_iu cancel_rsp;
- 
- 	/* Sub-CRQ fields */
--	struct ibmvfc_host *vhost;
- 	unsigned long cookie;
- 	unsigned long vios_cookie;
- 	unsigned long hw_irq;
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 1f423f723d06..b8a76b89f85a 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -2826,6 +2826,24 @@ static void zbc_open_zone(struct sdebug_dev_info *devip,
- 	}
- }
- 
-+static inline void zbc_set_zone_full(struct sdebug_dev_info *devip,
-+				     struct sdeb_zone_state *zsp)
-+{
-+	switch (zsp->z_cond) {
-+	case ZC2_IMPLICIT_OPEN:
-+		devip->nr_imp_open--;
-+		break;
-+	case ZC3_EXPLICIT_OPEN:
-+		devip->nr_exp_open--;
-+		break;
-+	default:
-+		WARN_ONCE(true, "Invalid zone %llu condition %x\n",
-+			  zsp->z_start, zsp->z_cond);
-+		break;
-+	}
-+	zsp->z_cond = ZC5_FULL;
-+}
-+
- static void zbc_inc_wp(struct sdebug_dev_info *devip,
- 		       unsigned long long lba, unsigned int num)
- {
-@@ -2838,7 +2856,7 @@ static void zbc_inc_wp(struct sdebug_dev_info *devip,
- 	if (zsp->z_type == ZBC_ZTYPE_SWR) {
- 		zsp->z_wp += num;
- 		if (zsp->z_wp >= zend)
--			zsp->z_cond = ZC5_FULL;
-+			zbc_set_zone_full(devip, zsp);
- 		return;
- 	}
- 
-@@ -2857,7 +2875,7 @@ static void zbc_inc_wp(struct sdebug_dev_info *devip,
- 			n = num;
- 		}
- 		if (zsp->z_wp >= zend)
--			zsp->z_cond = ZC5_FULL;
-+			zbc_set_zone_full(devip, zsp);
- 
- 		num -= n;
- 		lba += n;
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 2c0dd64159b0..5d21f07456c6 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -212,7 +212,12 @@ iscsi_create_endpoint(int dd_size)
- 		return NULL;
- 
- 	mutex_lock(&iscsi_ep_idr_mutex);
--	id = idr_alloc(&iscsi_ep_idr, ep, 0, -1, GFP_NOIO);
-+
-+	/*
-+	 * First endpoint id should be 1 to comply with user space
-+	 * applications (iscsid).
-+	 */
-+	id = idr_alloc(&iscsi_ep_idr, ep, 1, -1, GFP_NOIO);
- 	if (id < 0) {
- 		mutex_unlock(&iscsi_ep_idr_mutex);
- 		printk(KERN_ERR "Could not allocate endpoint ID. Error %d.\n",
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index ca3530982e52..fe000da11332 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1844,7 +1844,7 @@ static struct scsi_host_template scsi_driver = {
- 	.cmd_per_lun =		2048,
- 	.this_id =		-1,
- 	/* Ensure there are no gaps in presented sgls */
--	.virt_boundary_mask =	PAGE_SIZE-1,
-+	.virt_boundary_mask =	HV_HYP_PAGE_SIZE - 1,
- 	.no_write_same =	1,
- 	.track_queue_depth =	1,
- 	.change_queue_depth =	storvsc_change_queue_depth,
-@@ -1895,6 +1895,7 @@ static int storvsc_probe(struct hv_device *device,
- 	int target = 0;
- 	struct storvsc_device *stor_device;
- 	int max_sub_channels = 0;
-+	u32 max_xfer_bytes;
- 
- 	/*
- 	 * We support sub-channels for storage on SCSI and FC controllers.
-@@ -1968,12 +1969,28 @@ static int storvsc_probe(struct hv_device *device,
- 	}
- 	/* max cmd length */
- 	host->max_cmd_len = STORVSC_MAX_CMD_LEN;
--
- 	/*
--	 * set the table size based on the info we got
--	 * from the host.
-+	 * Any reasonable Hyper-V configuration should provide
-+	 * max_transfer_bytes value aligning to HV_HYP_PAGE_SIZE,
-+	 * protecting it from any weird value.
-+	 */
-+	max_xfer_bytes = round_down(stor_device->max_transfer_bytes, HV_HYP_PAGE_SIZE);
-+	/* max_hw_sectors_kb */
-+	host->max_sectors = max_xfer_bytes >> 9;
-+	/*
-+	 * There are 2 requirements for Hyper-V storvsc sgl segments,
-+	 * based on which the below calculation for max segments is
-+	 * done:
-+	 *
-+	 * 1. Except for the first and last sgl segment, all sgl segments
-+	 *    should be align to HV_HYP_PAGE_SIZE, that also means the
-+	 *    maximum number of segments in a sgl can be calculated by
-+	 *    dividing the total max transfer length by HV_HYP_PAGE_SIZE.
-+	 *
-+	 * 2. Except for the first and last, each entry in the SGL must
-+	 *    have an offset that is a multiple of HV_HYP_PAGE_SIZE.
- 	 */
--	host->sg_tablesize = (stor_device->max_transfer_bytes >> PAGE_SHIFT);
-+	host->sg_tablesize = (max_xfer_bytes >> HV_HYP_PAGE_SHIFT) + 1;
- 	/*
- 	 * For non-IDE disks, the host supports multiple channels.
- 	 * Set the number of HW queues we are supporting.
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 01fb4bad86be..ce86d1b790c0 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -748,17 +748,28 @@ static enum utp_ocs ufshcd_get_tr_ocs(struct ufshcd_lrb *lrbp)
- }
- 
- /**
-- * ufshcd_utrl_clear - Clear a bit in UTRLCLR register
-+ * ufshcd_utrl_clear() - Clear requests from the controller request list.
-  * @hba: per adapter instance
-- * @pos: position of the bit to be cleared
-+ * @mask: mask with one bit set for each request to be cleared
-  */
--static inline void ufshcd_utrl_clear(struct ufs_hba *hba, u32 pos)
-+static inline void ufshcd_utrl_clear(struct ufs_hba *hba, u32 mask)
- {
- 	if (hba->quirks & UFSHCI_QUIRK_BROKEN_REQ_LIST_CLR)
--		ufshcd_writel(hba, (1 << pos), REG_UTP_TRANSFER_REQ_LIST_CLEAR);
--	else
--		ufshcd_writel(hba, ~(1 << pos),
--				REG_UTP_TRANSFER_REQ_LIST_CLEAR);
-+		mask = ~mask;
-+	/*
-+	 * From the UFSHCI specification: "UTP Transfer Request List CLear
-+	 * Register (UTRLCLR): This field is bit significant. Each bit
-+	 * corresponds to a slot in the UTP Transfer Request List, where bit 0
-+	 * corresponds to request slot 0. A bit in this field is set to ‘0’
-+	 * by host software to indicate to the host controller that a transfer
-+	 * request slot is cleared. The host controller
-+	 * shall free up any resources associated to the request slot
-+	 * immediately, and shall set the associated bit in UTRLDBR to ‘0’. The
-+	 * host software indicates no change to request slots by setting the
-+	 * associated bits in this field to ‘1’. Bits in this field shall only
-+	 * be set ‘1’ or ‘0’ by host software when UTRLRSR is set to ‘1’."
-+	 */
-+	ufshcd_writel(hba, ~mask, REG_UTP_TRANSFER_REQ_LIST_CLEAR);
- }
- 
- /**
-@@ -2863,27 +2874,26 @@ static int ufshcd_compose_dev_cmd(struct ufs_hba *hba,
- 	return ufshcd_compose_devman_upiu(hba, lrbp);
- }
- 
--static int
--ufshcd_clear_cmd(struct ufs_hba *hba, int tag)
-+/*
-+ * Clear all the requests from the controller for which a bit has been set in
-+ * @mask and wait until the controller confirms that these requests have been
-+ * cleared.
-+ */
-+static int ufshcd_clear_cmds(struct ufs_hba *hba, u32 mask)
- {
--	int err = 0;
- 	unsigned long flags;
--	u32 mask = 1 << tag;
- 
- 	/* clear outstanding transaction before retry */
- 	spin_lock_irqsave(hba->host->host_lock, flags);
--	ufshcd_utrl_clear(hba, tag);
-+	ufshcd_utrl_clear(hba, mask);
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 
- 	/*
- 	 * wait for h/w to clear corresponding bit in door-bell.
- 	 * max. wait is 1 sec.
- 	 */
--	err = ufshcd_wait_for_register(hba,
--			REG_UTP_TRANSFER_REQ_DOOR_BELL,
--			mask, ~mask, 1000, 1000);
--
--	return err;
-+	return ufshcd_wait_for_register(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL,
-+					mask, ~mask, 1000, 1000);
- }
- 
- static int
-@@ -2963,7 +2973,7 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
- 		err = -ETIMEDOUT;
- 		dev_dbg(hba->dev, "%s: dev_cmd request timedout, tag %d\n",
- 			__func__, lrbp->task_tag);
--		if (!ufshcd_clear_cmd(hba, lrbp->task_tag))
-+		if (!ufshcd_clear_cmds(hba, 1U << lrbp->task_tag))
- 			/* successfully cleared the command, retry if needed */
- 			err = -EAGAIN;
- 		/*
-@@ -6958,14 +6968,14 @@ int ufshcd_exec_raw_upiu_cmd(struct ufs_hba *hba,
- }
- 
- /**
-- * ufshcd_eh_device_reset_handler - device reset handler registered to
-- *                                    scsi layer.
-+ * ufshcd_eh_device_reset_handler() - Reset a single logical unit.
-  * @cmd: SCSI command pointer
-  *
-  * Returns SUCCESS/FAILED
-  */
- static int ufshcd_eh_device_reset_handler(struct scsi_cmnd *cmd)
- {
-+	unsigned long flags, pending_reqs = 0, not_cleared = 0;
- 	struct Scsi_Host *host;
- 	struct ufs_hba *hba;
- 	u32 pos;
-@@ -6984,14 +6994,24 @@ static int ufshcd_eh_device_reset_handler(struct scsi_cmnd *cmd)
- 	}
- 
- 	/* clear the commands that were pending for corresponding LUN */
--	for_each_set_bit(pos, &hba->outstanding_reqs, hba->nutrs) {
--		if (hba->lrb[pos].lun == lun) {
--			err = ufshcd_clear_cmd(hba, pos);
--			if (err)
--				break;
--			__ufshcd_transfer_req_compl(hba, 1U << pos);
--		}
-+	spin_lock_irqsave(&hba->outstanding_lock, flags);
-+	for_each_set_bit(pos, &hba->outstanding_reqs, hba->nutrs)
-+		if (hba->lrb[pos].lun == lun)
-+			__set_bit(pos, &pending_reqs);
-+	hba->outstanding_reqs &= ~pending_reqs;
-+	spin_unlock_irqrestore(&hba->outstanding_lock, flags);
-+
-+	if (ufshcd_clear_cmds(hba, pending_reqs) < 0) {
-+		spin_lock_irqsave(&hba->outstanding_lock, flags);
-+		not_cleared = pending_reqs &
-+			ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-+		hba->outstanding_reqs |= not_cleared;
-+		spin_unlock_irqrestore(&hba->outstanding_lock, flags);
-+
-+		dev_err(hba->dev, "%s: failed to clear requests %#lx\n",
-+			__func__, not_cleared);
- 	}
-+	__ufshcd_transfer_req_compl(hba, pending_reqs & ~not_cleared);
- 
- out:
- 	hba->req_abort_count = 0;
-@@ -7088,7 +7108,7 @@ static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag)
- 		goto out;
- 	}
- 
--	err = ufshcd_clear_cmd(hba, tag);
-+	err = ufshcd_clear_cmds(hba, 1U << tag);
- 	if (err)
- 		dev_err(hba->dev, "%s: Failed clearing cmd at tag %d, err %d\n",
- 			__func__, tag, err);
-
+> Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+>
+> P.S.: As the Linux kernel's regression tracker I deal with a lot of
+> reports and sometimes miss something important when writing mails like
+> this. If that's the case here, don't hesitate to tell me in a public
+> reply, it's in everyone's interest to set the public record straight.
+>
+>> On Wed, 25 May 2022, 3:03pm, Tony Battersby wrote:
+>>
+>>> #regzbot introduced: 44c57f205876
+>>>
+>>> I have several different QLogic FC HBAs (8, 16, 32 Gbps) and several
+>>> different FC LTO tape drives (IBM Ultrium 8 & 9).  When I plug in the FC
+>>> cable, the tape drive shows up as a SCSI device as expected.  With older
+>>> kernels, when I unplug the FC cable, the tape drive SCSI device would
+>>> disappear after about 30 seconds.  But with newer kernels (including
+>>> 5.18), when I unplug the FC cable, the tape drive SCSI device never
+>>> disappears.  I have bisected the change in behavior to the following
+>>> commit in kernel 5.15:
+>>>
+>>> 44c57f205876 ("scsi: qla2xxx: Changes to support FCP2 Target")
+>>>
+>>> This commit has been backported to various -stable kernels, so they are
+>>> also affected.
+>>>
+>>> When testing with two different tape drives:
+>>> 1) Plug FC cable into tape drive A.  Tape drive A shows up as a SCSI device.
+>>> 2) Unplug FC cable; wait 60 seconds.  Tape drive A does not disappear.
+>>> 3) Plug FC cable into tape drive B.  Tape drive A disappears 30 seconds
+>>> later, but tape drive B does not show up.
+>>> 4) Unplug FC cable and plug it back into tape drive B.  Tape drive B
+>>> shows up as a SCSI device.
+>>>
+>>> So I can actually make a tape drive disappear by plugging the cable into
+>>> a different tape drive, but then I have to reseat the cable again to
+>>> make the new tape drive show up.
+>>>
+>>> lspci -n
+>>> 83:00.0 0c04: 1077:2031 (rev 02)
+>>> 83:00.1 0c04: 1077:2031 (rev 02)
+>>>
+>>> When plugging in cable:
+>>> qla2xxx [0000:83:00.1]-500a:7: LOOP UP detected (8 Gbps).
+>>>
+>>> When unplugging cable with old kernel:
+>>> qla2xxx [0000:83:00.1]-500b:7: LOOP DOWN detected (2 7 0 0).
+>>> rport-7:0-2: blocked FC remote port time out: removing target and saving binding
+>>>
+>>> When unplugging cable with new kernel:
+>>> qla2xxx [0000:83:00.1]-500b:7: LOOP DOWN detected (2 7 0 0).
+>>>
+>>> /sys/class/fc_remote_ports/rport-*/
+>>> dev_loss_tmo: 30
+>>> supported_classes: Class 3
+>>> port_state: Online
+>>> (port_state remains Online even when FC cable unplugged)
+>>>
+>>> /proc/scsi/scsi
+>>> Host: scsi7 Channel: 00 Id: 01 Lun: 00
+>>>   Vendor: IBM      Model: ULTRIUM-HH8      Rev: K4K1
+>>>   Type:   Sequential-Access                ANSI  SCSI revision: 06
+>>>
+>>> Tony Battersby
+>>> Cybernetics
+>>>
 
