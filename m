@@ -2,68 +2,70 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F8C3C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jun 2022 06:45:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C330C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jun 2022 06:53:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238947AbiFTGpY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Jun 2022 02:45:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35778 "EHLO
+        id S238890AbiFTGxP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Jun 2022 02:53:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40066 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238318AbiFTGpX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jun 2022 02:45:23 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 660DBC72;
-        Sun, 19 Jun 2022 23:45:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=VGZXQMA4RswyIvF0+1zx63xq3BMHhvUQ2lzlFp39NoQ=; b=MpiJzwEBNoGmvBFXN7t6HGxQIG
-        PT2tOSqawZtR/raFUG/cM6wL7Jszf8x5ZvIIqY3/hUpBTpxcf8KOEeZcaQw9bM4QdXqyIN0mLLaZj
-        DAonbfse1K5YwvH4Bgms1lv+Sfxpd0WHx1MIbHuuPFovIrpd7yqemPwC11W6rVQQGjse7QeBiZ3AZ
-        ZQTFOoiPnUP0bZmxlSvsA31Hse+191vODKwum4Q0I4Kvekt7+Di3uVRZ0vCoKpTtwS2LsNMZbshRG
-        v/b9nFFdIxBLebNwCacfiN+vOPkioqsf8F+IYomglxVvbfkEumd4kqUj/rEZ/7r4waKgSOzX07r6O
-        nsCSKH6A==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1o3B9p-00GTrD-9r; Mon, 20 Jun 2022 06:45:09 +0000
-Date:   Sun, 19 Jun 2022 23:45:09 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     michael.christie@oracle.com
-Cc:     Christoph Hellwig <hch@infradead.org>, martin.petersen@oracle.com,
-        james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: Re: [PATCH 1/4] scsi: target: Fix WRITE_SAME NDOB size check
-Message-ID: <YrAXdTWu4/xsdWgq@infradead.org>
-References: <20220617030440.116427-1-michael.christie@oracle.com>
- <20220617030440.116427-2-michael.christie@oracle.com>
- <Yq7AmRBWtkyqzt0g@infradead.org>
- <b154e89c-6b83-2d8d-0505-06fc3615e8a7@oracle.com>
+        with ESMTP id S238034AbiFTGxN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jun 2022 02:53:13 -0400
+Received: from mail-ed1-x532.google.com (mail-ed1-x532.google.com [IPv6:2a00:1450:4864:20::532])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F2D9FF0
+        for <linux-scsi@vger.kernel.org>; Sun, 19 Jun 2022 23:53:12 -0700 (PDT)
+Received: by mail-ed1-x532.google.com with SMTP id e2so2766343edv.3
+        for <linux-scsi@vger.kernel.org>; Sun, 19 Jun 2022 23:53:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ionos.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=M7viZKPAV4Udgzu930yRnMV9UFvypFU/FwQw+uEjxc4=;
+        b=eVmT7ZV+vM2II32DTtz5GqubTfh3OndN6nOFEooR0Kf91HSg1bUq5g6LKqo6OGrf65
+         1RyBEaxsOyjajY5ncLzu2E5cFg4vjEXyqj/A/4iXxmokDVwjmlTpIyP7l64t8E1aJiIh
+         Q939pmf4PKCf+YJgTzMstsfQaQNe25FUknT6U7exaNMRU4FtS9zwQh48UeCcWv7ZOe6k
+         cy4Y373g0yoLzxg/Cu+r16/0U7sqYAeBe/xex5pMRDx2aTNMDyqyGZLXctR9CfEkTduc
+         cwHnFhfvD2dVHwmUcDI5qK7yBGK0o4Qzbxst+rb9fkUI9CBwdrGgCrT7meKWRQsLK+sL
+         /2pw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=M7viZKPAV4Udgzu930yRnMV9UFvypFU/FwQw+uEjxc4=;
+        b=FgI01lnaa3Cesy54gnQg6Wu2oaiZaYN4W8ofUM7gVMwfyqIcns7VaslUDK5M0LIj/d
+         PWqo/5fjtI94RVi0DRuL5EI0HDrHldLrMUgOmThqkcZW3o9jnwsSh2FDFbSJFLZgrWvx
+         0iln08ijCYvoFWGfX/Ep+vWYwCkJd10JhauB1LuaazIrV6e2Gowh7nNRjpV0n0DOAAUY
+         gNfZl/5F9hYkcwfrYPB2d15mcdqtdTemb2SYPIYB8WMHgl+CAmahjuqnX0wsWriPoqga
+         eOEQjB5ulqlh/0yKWAhG9ZK3ysD8BokaCTgPHtYAJ9+WaxJrmIzXPoVz6M8DWjmkhsRJ
+         0PXA==
+X-Gm-Message-State: AJIora+z1ufqn4zia3Dl+rMSkQPMe3bGsbeNTUQKZqalEHtZHnYnyxaW
+        9Vb9n127sODHAfUewXfWtoomPWcxwUSldoOH4q6HIg==
+X-Google-Smtp-Source: AGRyM1tX+kIwSZtiyS5mINPLo+SLQ7bV4Fy/nrzz8/+LACEiu9IMg/gg6HtQuLdC2A872rohhFpuBSFF//aG02QfXFw=
+X-Received: by 2002:a05:6402:3688:b0:42d:d3ba:4725 with SMTP id
+ ej8-20020a056402368800b0042dd3ba4725mr28112661edb.212.1655707991145; Sun, 19
+ Jun 2022 23:53:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <b154e89c-6b83-2d8d-0505-06fc3615e8a7@oracle.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+References: <1654879602-33497-1-git-send-email-john.garry@huawei.com>
+ <1654879602-33497-4-git-send-email-john.garry@huawei.com> <303bbfad-edde-1197-679e-4a09175fb1f3@suse.de>
+ <594ac0c9-a55b-bec7-77e3-a6c7e9525f6b@opensource.wdc.com>
+In-Reply-To: <594ac0c9-a55b-bec7-77e3-a6c7e9525f6b@opensource.wdc.com>
+From:   Jinpu Wang <jinpu.wang@ionos.com>
+Date:   Mon, 20 Jun 2022 08:53:00 +0200
+Message-ID: <CAMGffEm8qgRzs8epMgBiJ-Ma2AGEynwXc0dSTB8k5cj2+1GhCA@mail.gmail.com>
+Subject: Re: [PATCH 3/4] scsi: pm8001: Use non-atomic bitmap ops for tag alloc
+ + free
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Hannes Reinecke <hare@suse.de>, John Garry <john.garry@huawei.com>,
+        jinpu.wang@ionos.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Ajish.Koshy@microchip.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, Jun 19, 2022 at 11:25:33AM -0500, michael.christie@oracle.com wrote:
-> sg_write_same allows it. We found the bug because some user just decided
-> to do:
-> 
-> sg_write_same ... -nbod .. /dev/sdb
-> 
-> and it crashed the box.
-
-Oh.
-
-> I didn't know about the MI_REPORT_SUPPORTED_OPERATION_CODES part of it.
-> I don't need support for the feature. I just want to fix the crash.
-> I prefer just returning failure since nothing ever has ever used it if
-> other people prefer that as well.
-
-I think the feature is generally useful, and I know Martin had patches
-to use it in Linux.  But I think a minimal fix for the remotely
-exploitable crash has the highest priority.  Where does it crash?
-Maybe we just need a better sanity check somewhere if a command
-claims to transfer data but has not payload?
+>
+> After the patch, spinlock guarantees atomicity for both alloc and free.
+>
+> Not sure there is any gain from this.
++1
