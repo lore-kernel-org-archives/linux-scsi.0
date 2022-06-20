@@ -2,110 +2,192 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93132C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jun 2022 18:16:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4592C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jun 2022 20:26:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245177AbiFTSQN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Jun 2022 14:16:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60186 "EHLO
+        id S1344067AbiFTU0k (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Jun 2022 16:26:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60242 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243978AbiFTSQM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jun 2022 14:16:12 -0400
-Received: from mout.gmx.net (mout.gmx.net [212.227.15.15])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC96F19C1F;
-        Mon, 20 Jun 2022 11:16:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net;
-        s=badeba3b8450; t=1655748957;
-        bh=IRsReQcPvKjGuOiWZ/naJXtB5sl9AWyUBgzpYTxhbu4=;
-        h=X-UI-Sender-Class:Date:Subject:To:Cc:References:From:In-Reply-To;
-        b=MpChZBAWOnKxGAjsdfSCjFh/gS+GTAFDKiwYXwYJAlHPLUPaZG6FHf3igR/s9RvC0
-         JmkGFg2SzjQNrBff06GdWIu9DFQjbxDT6i9M3n5t3dgNSZTHH+rxsTE6i07afeLq0p
-         KPBapCFQaZDQpD1B14JLAelnUzGIrkOc/6PhXWx0=
-X-UI-Sender-Class: 01bb95c1-4bf8-414a-932a-4f6e2808ef9c
-Received: from [192.168.20.60] ([92.116.174.149]) by mail.gmx.net (mrgmx004
- [212.227.17.190]) with ESMTPSA (Nemesis) id 1N5VDE-1nbB703cd8-016vo0; Mon, 20
- Jun 2022 20:15:56 +0200
-Message-ID: <4bf0f587-e03f-60bb-806d-383cdab8f67a@gmx.de>
-Date:   Mon, 20 Jun 2022 20:15:32 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH 1/4] video: fbdev: offb: Include missing
- linux/platform_device.h
-Content-Language: en-US
-To:     Christophe Leroy <christophe.leroy@csgroup.eu>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Michael Ellerman <mpe@ellerman.id.au>, manoj@linux.ibm.com,
-        mrochs@linux.ibm.com, ukrishn@linux.ibm.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, tzimmermann@suse.de
-Cc:     linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org,
-        dri-devel@lists.freedesktop.org
-References: <a1dfa936043eeed715e8cda7f8690fe553ba7c1a.1654966253.git.christophe.leroy@csgroup.eu>
-From:   Helge Deller <deller@gmx.de>
-In-Reply-To: <a1dfa936043eeed715e8cda7f8690fe553ba7c1a.1654966253.git.christophe.leroy@csgroup.eu>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:oJ9D9uGth3QBUylu+JFhLcVTIwUeAyZlFlYU4v/OPaS0ZpMihid
- tFsd2Tanp1YkXXsADmZD7gloGpa+E8c77bFVGDTOIbSoHVGGXqjDnhlG9X2kTmyAlcnkiUl
- YaAKGLHLr/7Cwe1Lwdry13RBpDCqRwRDdC+6HA3J7Kwgih+MFmqOSJeeQQotfiAjelWovxP
- NrTUJ0YmY4qRCYYTkWkIA==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:3vwy0K/BsAQ=:mVmzG3FTCEVF3YJX5VmLFq
- Kbv0n9xBZ6oUg98dEQxL4XTvzFNHHEGeN3hcL6indwAgqvhjioXSbhbKWULn00ypejKFc1iXd
- JOslbeYH6NjU8rKb0MOlREPzpm3pqldRQiGRb/oOkVvf11r6NeKbHvT5Ae49+2NT5r5gXGpRS
- eWlFFRvp/ZrxeWFs85bNA241DQbVyAEWidEJXm9VoLHEx9iEm+G/Je3W1TvgHUJEyE9cxZ3NX
- 3zLLLHjPv0Llp5WKUlkxtPMVqsOwMRF9lA96B0oPljvv/u0yfM7BJEoasOA+b60Wt9c6QVX37
- QhuQNtCKZD38TlS5W3KzUCz2HqFl8hSFaZx1qpL3mjJlcqlvvc234e7nparz+irI/oyK9dcWM
- ZetxeGVX79OIMe8HkkKVu1XZTHU0KwCdMHLgMo5XX4JflfFMifb1v1V2G+oO666w7H20jAend
- I8p7k78nHtJNJ+7pf/3fUF28i0tNq6gzXwFVffQzK7lmML9K/dfQJJ+uL4nt4yo3ba52/awdR
- yH8ge1cIV9TSL4D9wyXN02o1d++3z57DXeW/qZXGzve0MQyhLWLafNsa9jvpzAK85hcXwzaNl
- ieRnoqKRsknQDnbVwPPoIALxDUhUYu0kwIZC+nsX6CiTxjRfBKeDH0/WWuUjG1JQzu2kBcJ09
- bdiuWvYdpgDF+bute0DrVmYipy4qLrBo+1xsP5SVLeZYa4LgQvPTFbz2PfOsulplzlYxeZ4/Y
- hlW2ILy5JIyow4X1B5T4uryx4ZAPsJuWVlsD31x6HqOLtqkc49D2nYiIaCN8yN5iO76fdtsHh
- SuZ7lMlmo3UmIVLzhh8dy/TJvIJ91eW+jhA3hwV6fqnIpzTuuaXiNvozdUzfeSdws/2kfanWx
- k8Rc6XE8UTjCH/8nv8IR4kBcd+W3aTJCTXY/ocolP5FuGgw/RJAuLetxI+lpCtU1es/cJmgIi
- i/duuVuvcwrWKTHqLJNNTizAP8Cpm9VTyZlmn0C+FpT0vu3CAFMtFSshelmvdS5OKdxI/C+00
- Gnv4LClT5oFI0QNeO8MI6jnR51W6lHXSXswDav1aKaHZwiAzNIlYuAzEsKrhho5aJ5t2IdziY
- 62A5GzemI0vJpp5H5uncv1hbDRM7FWxSZquInJjY6wCVwRD8+5eLTsdoA==
+        with ESMTP id S244958AbiFTU0j (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jun 2022 16:26:39 -0400
+Received: from mail-pf1-x449.google.com (mail-pf1-x449.google.com [IPv6:2607:f8b0:4864:20::449])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A32D61705E
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Jun 2022 13:26:27 -0700 (PDT)
+Received: by mail-pf1-x449.google.com with SMTP id 11-20020aa7914b000000b00524db3e97e5so3300995pfi.10
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Jun 2022 13:26:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=5iQ5VRceLe2ANQLnXWJx9ZD5zDnLXszAF4Y85650zgU=;
+        b=Y8+6+muCIJn6owuUt+U4Z/CX+GXRq6IdcSs0gbHJ3ZEhVaT6gDuPs+MqBOTn3fsyt+
+         bpi9TKegvezlcg7qNoGd72E/HfHLW1p27Jfd7tQ8n5tP8/J3mL+3H4heUMa5ITlkPD2q
+         ZYV4dUmfsS9z2zFTz+gEvX/lZvtTcB9TdCz0LbrAtxNBd+rRcT8dWMJNggemMhZyvTbh
+         6CDq76eLwSi/yR+borqUflKULlr680JDYF0jnGVmn+/pcGLfr6fl1zJJxoM8qal7irnt
+         WfgnTCsvCSrp4l4u8f7a47iapf+EzmHfxHNVVrxC6cwhr6E+s3aDZ/KPLhwHFoUyg47T
+         bzkg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:message-id:mime-version:subject:from:to:cc;
+        bh=5iQ5VRceLe2ANQLnXWJx9ZD5zDnLXszAF4Y85650zgU=;
+        b=vK2avszQPwtOU+baX+vii5R1K8KUd9f0FgDrr9PmYoTXQtGfS9seSNwPX8vojSUFYK
+         P0OxvuxsGegzG0Xpc4imOBaCdIs4GQ2igJOz9Sd4847OfKHJpfVKbcQYuZBnLH78CJGO
+         bhzi5UB4p7dvVq/ha/7ktr/5doCeG+sRQIqjBI0ziKDgxQrVrbJWPavXMk5o11Vj1YUf
+         drdr/hh+1Rucr7vWskW7bWJROCAKL4d9UbO/Y+0n/MhY0/2mAI+v/QNhmSuK46zPjdJe
+         2Tj9y/tU0GneUuWe7iXa8blPViRAQk/7yaQ8sAxQeu+eRAQGjDc5ToOrYERI8zguucHQ
+         qQgg==
+X-Gm-Message-State: AJIora+A6I+376B3ZsM1+636i1P1QVPYwztm46XWyB5IHLFwvI19DGFr
+        QXZznRwzNu80X76jMaMO1nnXcl9Q1Q8TVbXX
+X-Google-Smtp-Source: AGRyM1uZtNofEgefbou6U5chFdJvzCJNQ6HDBAkS0CMXSxl1yJoJWmnbP9Z6Krt+s1rLzw4VYng1SslcdIUbSb72
+X-Received: from changyuanl.c.googlers.com ([fda3:e722:ac3:cc00:7f:e700:c0a8:5c46])
+ (user=changyuanl job=sendgmr) by 2002:a17:90a:738d:b0:1ea:c598:20b3 with SMTP
+ id j13-20020a17090a738d00b001eac59820b3mr38391618pjg.88.1655756787096; Mon,
+ 20 Jun 2022 13:26:27 -0700 (PDT)
+Date:   Mon, 20 Jun 2022 20:26:02 +0000
+Message-Id: <20220620202602.2805912-1-changyuanl@google.com>
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.37.0.rc0.104.g0611611a94-goog
+Subject: [PATCH] trace: events: scsi: Print driver_tag and scheduler_tag in
+ SCSI trace
+From:   Changyuan Lyu <changyuanl@google.com>
+To:     Steven Rostedt <rostedt@goodmis.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Bart van Assche <bvanassche@acm.org>,
+        Rajat Jain <rajatja@google.com>
+Cc:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        Changyuan Lyu <changyuanl@google.com>,
+        Vishakha Channapattan <vishakhavc@google.com>,
+        Jolly Shah <jollys@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/11/22 18:50, Christophe Leroy wrote:
-> A lot of drivers were getting platform and of headers
-> indirectly via headers like asm/pci.h or asm/prom.h
->
-> Most of them were fixed during 5.19 cycle but a newissue was
-> introduced by commit 52b1b46c39ae ("of: Create platform devices
-> for OF framebuffers")
->
-> Include missing platform_device.h to allow cleaning asm/pci.h
->
-> Cc: Thomas Zimmermann <tzimmermann@suse.de>
-> Fixes: 52b1b46c39ae ("of: Create platform devices for OF framebuffers")
-> Signed-off-by: Christophe Leroy <christophe.leroy@csgroup.eu>
+Traces like scsi_dispatch_cmd_start and scsi_dispatch_cmd_done are
+useful for tracking a command thoughout its lifetime. But for some ATA
+passthrough commands, the information printed in current logs are not
+enough to identify and match them. For example, if two threads send
+SMART cmd to the same disk at the same time, their trace logs may
+look the same, which makes it hard to match scsi_dispatch_cmd_done and
+scsi_dispatch_cmd_start. Printing tags can help us solve the problem.
+Further, if a command failed for some reason and then retried, its
+driver_tag will change. So scheduler_tag is also included such that we
+can track the retries of a command.
 
-Acked-by: Helge Deller <deller@gmx.de>
+Reviewed-by: Vishakha Channapattan <vishakhavc@google.com>
+Reviewed-by: Jolly Shah <jollys@google.com>
+Signed-off-by: Changyuan Lyu <changyuanl@google.com>
+---
+ include/trace/events/scsi.h | 35 ++++++++++++++++++++++++-----------
+ 1 file changed, 24 insertions(+), 11 deletions(-)
 
-I assume you take this through the linuxppc git tree?
-
-Helge
-
-> ---
->  drivers/video/fbdev/offb.c | 1 +
->  1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/video/fbdev/offb.c b/drivers/video/fbdev/offb.c
-> index b1acb1ebebe9..91001990e351 100644
-> --- a/drivers/video/fbdev/offb.c
-> +++ b/drivers/video/fbdev/offb.c
-> @@ -26,6 +26,7 @@
->  #include <linux/init.h>
->  #include <linux/ioport.h>
->  #include <linux/pci.h>
-> +#include <linux/platform_device.h>
->  #include <asm/io.h>
->
->  #ifdef CONFIG_PPC32
+diff --git a/include/trace/events/scsi.h b/include/trace/events/scsi.h
+index 370ade0d4093..a2c7befd451a 100644
+--- a/include/trace/events/scsi.h
++++ b/include/trace/events/scsi.h
+@@ -166,6 +166,8 @@ TRACE_EVENT(scsi_dispatch_cmd_start,
+ 		__field( unsigned int,	lun	)
+ 		__field( unsigned int,	opcode	)
+ 		__field( unsigned int,	cmd_len )
++		__field( int,	driver_tag)
++		__field( int,	scheduler_tag)
+ 		__field( unsigned int,	data_sglen )
+ 		__field( unsigned int,	prot_sglen )
+ 		__field( unsigned char,	prot_op )
+@@ -179,6 +181,8 @@ TRACE_EVENT(scsi_dispatch_cmd_start,
+ 		__entry->lun		= cmd->device->lun;
+ 		__entry->opcode		= cmd->cmnd[0];
+ 		__entry->cmd_len	= cmd->cmd_len;
++		__entry->driver_tag	= scsi_cmd_to_rq(cmd)->tag;
++		__entry->scheduler_tag	= scsi_cmd_to_rq(cmd)->internal_tag;
+ 		__entry->data_sglen	= scsi_sg_count(cmd);
+ 		__entry->prot_sglen	= scsi_prot_sg_count(cmd);
+ 		__entry->prot_op	= scsi_get_prot_op(cmd);
+@@ -186,11 +190,11 @@ TRACE_EVENT(scsi_dispatch_cmd_start,
+ 	),
+ 
+ 	TP_printk("host_no=%u channel=%u id=%u lun=%u data_sgl=%u prot_sgl=%u" \
+-		  " prot_op=%s cmnd=(%s %s raw=%s)",
++		  " prot_op=%s driver_tag=%d scheduler_tag=%d cmnd=(%s %s raw=%s)",
+ 		  __entry->host_no, __entry->channel, __entry->id,
+ 		  __entry->lun, __entry->data_sglen, __entry->prot_sglen,
+-		  show_prot_op_name(__entry->prot_op),
+-		  show_opcode_name(__entry->opcode),
++		  show_prot_op_name(__entry->prot_op), __entry->driver_tag,
++		  __entry->scheduler_tag, show_opcode_name(__entry->opcode),
+ 		  __parse_cdb(__get_dynamic_array(cmnd), __entry->cmd_len),
+ 		  __print_hex(__get_dynamic_array(cmnd), __entry->cmd_len))
+ );
+@@ -209,6 +213,8 @@ TRACE_EVENT(scsi_dispatch_cmd_error,
+ 		__field( int,		rtn	)
+ 		__field( unsigned int,	opcode	)
+ 		__field( unsigned int,	cmd_len )
++		__field( int,	driver_tag)
++		__field( int,	scheduler_tag)
+ 		__field( unsigned int,	data_sglen )
+ 		__field( unsigned int,	prot_sglen )
+ 		__field( unsigned char,	prot_op )
+@@ -223,6 +229,8 @@ TRACE_EVENT(scsi_dispatch_cmd_error,
+ 		__entry->rtn		= rtn;
+ 		__entry->opcode		= cmd->cmnd[0];
+ 		__entry->cmd_len	= cmd->cmd_len;
++		__entry->driver_tag	= scsi_cmd_to_rq(cmd)->tag;
++		__entry->scheduler_tag	= scsi_cmd_to_rq(cmd)->internal_tag;
+ 		__entry->data_sglen	= scsi_sg_count(cmd);
+ 		__entry->prot_sglen	= scsi_prot_sg_count(cmd);
+ 		__entry->prot_op	= scsi_get_prot_op(cmd);
+@@ -230,11 +238,12 @@ TRACE_EVENT(scsi_dispatch_cmd_error,
+ 	),
+ 
+ 	TP_printk("host_no=%u channel=%u id=%u lun=%u data_sgl=%u prot_sgl=%u" \
+-		  " prot_op=%s cmnd=(%s %s raw=%s) rtn=%d",
++		  " prot_op=%s driver_tag=%d scheduler_tag=%d cmnd=(%s %s raw=%s)" \
++		  " rtn=%d",
+ 		  __entry->host_no, __entry->channel, __entry->id,
+ 		  __entry->lun, __entry->data_sglen, __entry->prot_sglen,
+-		  show_prot_op_name(__entry->prot_op),
+-		  show_opcode_name(__entry->opcode),
++		  show_prot_op_name(__entry->prot_op), __entry->driver_tag,
++		  __entry->scheduler_tag, show_opcode_name(__entry->opcode),
+ 		  __parse_cdb(__get_dynamic_array(cmnd), __entry->cmd_len),
+ 		  __print_hex(__get_dynamic_array(cmnd), __entry->cmd_len),
+ 		  __entry->rtn)
+@@ -254,6 +263,8 @@ DECLARE_EVENT_CLASS(scsi_cmd_done_timeout_template,
+ 		__field( int,		result	)
+ 		__field( unsigned int,	opcode	)
+ 		__field( unsigned int,	cmd_len )
++		__field( int,	driver_tag)
++		__field( int,	scheduler_tag)
+ 		__field( unsigned int,	data_sglen )
+ 		__field( unsigned int,	prot_sglen )
+ 		__field( unsigned char,	prot_op )
+@@ -268,19 +279,21 @@ DECLARE_EVENT_CLASS(scsi_cmd_done_timeout_template,
+ 		__entry->result		= cmd->result;
+ 		__entry->opcode		= cmd->cmnd[0];
+ 		__entry->cmd_len	= cmd->cmd_len;
++		__entry->driver_tag	= scsi_cmd_to_rq(cmd)->tag;
++		__entry->scheduler_tag	= scsi_cmd_to_rq(cmd)->internal_tag;
+ 		__entry->data_sglen	= scsi_sg_count(cmd);
+ 		__entry->prot_sglen	= scsi_prot_sg_count(cmd);
+ 		__entry->prot_op	= scsi_get_prot_op(cmd);
+ 		memcpy(__get_dynamic_array(cmnd), cmd->cmnd, cmd->cmd_len);
+ 	),
+ 
+-	TP_printk("host_no=%u channel=%u id=%u lun=%u data_sgl=%u " \
+-		  "prot_sgl=%u prot_op=%s cmnd=(%s %s raw=%s) result=(driver=" \
+-		  "%s host=%s message=%s status=%s)",
++	TP_printk("host_no=%u channel=%u id=%u lun=%u data_sgl=%u prot_sgl=%u " \
++		  "prot_op=%s driver_tag=%d scheduler_tag=%d cmnd=(%s %s raw=%s) " \
++		  "result=(driver=%s host=%s message=%s status=%s)",
+ 		  __entry->host_no, __entry->channel, __entry->id,
+ 		  __entry->lun, __entry->data_sglen, __entry->prot_sglen,
+-		  show_prot_op_name(__entry->prot_op),
+-		  show_opcode_name(__entry->opcode),
++		  show_prot_op_name(__entry->prot_op), __entry->driver_tag,
++		  __entry->scheduler_tag, show_opcode_name(__entry->opcode),
+ 		  __parse_cdb(__get_dynamic_array(cmnd), __entry->cmd_len),
+ 		  __print_hex(__get_dynamic_array(cmnd), __entry->cmd_len),
+ 		  "DRIVER_OK",
+-- 
+2.37.0.rc0.104.g0611611a94-goog
 
