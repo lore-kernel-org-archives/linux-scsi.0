@@ -2,115 +2,204 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D36FECCA483
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jun 2022 21:05:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8299C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jun 2022 22:04:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355541AbiFUVFO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Jun 2022 17:05:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50768 "EHLO
+        id S1355216AbiFUWEO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Jun 2022 18:04:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43706 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1356211AbiFUVD4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jun 2022 17:03:56 -0400
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 022113585B;
-        Tue, 21 Jun 2022 13:53:27 -0700 (PDT)
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 25LK3XOr024830;
-        Tue, 21 Jun 2022 20:52:22 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
- mime-version : subject : from : to : references : in-reply-to :
- content-type : content-transfer-encoding; s=pp1;
- bh=l2WbDNq6sdrdY3ONOHicSbBuRhEnS9WPbcWjZaiMTmk=;
- b=B2FEPkgDLQfsCcuoqtu2OjAYIlmDqgD6i41nLxCRrDc4Y2vsmih7Nd5tqLIsuemjN4p0
- MT+xUmTk7YJDuHsH7n43W8NYc5Z6ugbiBA/OZmHCd3O2MiLv9zwImkYTFzJQZIKSxe2s
- bQZbQlUDDsIqjlGHjb4DOCxXctweTY6Fdka3L4pq57XZ/Y78VS98y4uJZ1B6Q8c8Pk9q
- y/E/UE6rQ0xsHLHrn+FPZkniFHLaErdnDXrOI0u83BXwNsVpjgJo5NIzuwpKdmYEyjFs
- 3JnW6nxaq44QObgtqkN7nRFYbEzW2iZK+EBcJrz22HDFl2c3SnRQIShtmownjq7iSVlo Fw== 
-Received: from ppma04dal.us.ibm.com (7a.29.35a9.ip4.static.sl-reverse.com [169.53.41.122])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3gumpm19a2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 21 Jun 2022 20:52:21 +0000
-Received: from pps.filterd (ppma04dal.us.ibm.com [127.0.0.1])
-        by ppma04dal.us.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 25LKpuUe012653;
-        Tue, 21 Jun 2022 20:52:21 GMT
-Received: from b01cxnp22033.gho.pok.ibm.com (b01cxnp22033.gho.pok.ibm.com [9.57.198.23])
-        by ppma04dal.us.ibm.com with ESMTP id 3gs6b9v7ge-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 21 Jun 2022 20:52:21 +0000
-Received: from b01ledav003.gho.pok.ibm.com (b01ledav003.gho.pok.ibm.com [9.57.199.108])
-        by b01cxnp22033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 25LKqKC422020484
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 21 Jun 2022 20:52:20 GMT
-Received: from b01ledav003.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 65C4EB2064;
-        Tue, 21 Jun 2022 20:52:20 +0000 (GMT)
-Received: from b01ledav003.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id DCCA1B205F;
-        Tue, 21 Jun 2022 20:52:19 +0000 (GMT)
-Received: from [9.211.124.46] (unknown [9.211.124.46])
-        by b01ledav003.gho.pok.ibm.com (Postfix) with ESMTP;
-        Tue, 21 Jun 2022 20:52:19 +0000 (GMT)
-Message-ID: <be79092f-fdd6-9f0f-4ffa-95ffc4b778c5@linux.vnet.ibm.com>
-Date:   Tue, 21 Jun 2022 15:52:19 -0500
+        with ESMTP id S235648AbiFUWEN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jun 2022 18:04:13 -0400
+X-Greylist: delayed 431 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 21 Jun 2022 15:04:12 PDT
+Received: from mailout.easymail.ca (mailout.easymail.ca [64.68.200.34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC1FE2D1D0;
+        Tue, 21 Jun 2022 15:04:11 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+        by mailout.easymail.ca (Postfix) with ESMTP id C97F261DF6;
+        Tue, 21 Jun 2022 21:56:59 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at emo09-pco.easydns.vpn
+Received: from mailout.easymail.ca ([127.0.0.1])
+        by localhost (emo09-pco.easydns.vpn [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id FLc2uL2Ic0RZ; Tue, 21 Jun 2022 21:56:59 +0000 (UTC)
+Received: from mail.gonehiking.org (unknown [38.15.45.1])
+        by mailout.easymail.ca (Postfix) with ESMTPA id 45ED161DF5;
+        Tue, 21 Jun 2022 21:56:59 +0000 (UTC)
+Received: from [192.168.1.4] (internal [192.168.1.4])
+        by mail.gonehiking.org (Postfix) with ESMTP id C716D3EF14;
+        Tue, 21 Jun 2022 15:56:58 -0600 (MDT)
+Message-ID: <7a6df2da-95e8-b2fd-7565-e4b7a51c5b63@gonehiking.org>
+Date:   Tue, 21 Jun 2022 15:56:58 -0600
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.1
-Subject: Re: Do we still need the scsi IPR driver ?
+ Thunderbird/91.10.0
+Reply-To: khalid@gonehiking.org
+Subject: Re: [PATCH v2 2/3] scsi: BusLogic remove bus_to_virt
 Content-Language: en-US
-From:   Brian King <brking@linux.vnet.ibm.com>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Brian King <brking@us.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
-References: <a5a3527c-d662-5bd1-e1dd-ad4930d10b3a@opensource.wdc.com>
- <3dbd9ae4-a101-e55d-79c8-9b3a96ab5b17@linux.vnet.ibm.com>
-In-Reply-To: <3dbd9ae4-a101-e55d-79c8-9b3a96ab5b17@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=UTF-8
+To:     Arnd Bergmann <arnd@kernel.org>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     Arnd Bergmann <arnd@arndb.de>, Jakub Kicinski <kuba@kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        iommu@lists.linux-foundation.org,
+        "Maciej W . Rozycki" <macro@orcam.me.uk>,
+        Matt Wang <wwentao@vmware.com>,
+        Miquel van Smoorenburg <mikevs@xs4all.net>,
+        Mark Salyzyn <salyzyn@android.com>,
+        linuxppc-dev@lists.ozlabs.org, linux-arch@vger.kernel.org,
+        linux-alpha@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
+        linux-parisc@vger.kernel.org, Denis Efremov <efremov@linux.com>
+References: <20220617125750.728590-1-arnd@kernel.org>
+ <20220617125750.728590-3-arnd@kernel.org>
+From:   Khalid Aziz <khalid@gonehiking.org>
+In-Reply-To: <20220617125750.728590-3-arnd@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: oc0I6NpZB01zGH688zD-XOKWPfUQuj3d
-X-Proofpoint-ORIG-GUID: oc0I6NpZB01zGH688zD-XOKWPfUQuj3d
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.64.514
- definitions=2022-06-21_09,2022-06-21_01,2022-02-23_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 clxscore=1015
- mlxlogscore=999 malwarescore=0 spamscore=0 lowpriorityscore=0
- suspectscore=0 bulkscore=0 impostorscore=0 phishscore=0 priorityscore=1501
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2204290000 definitions=main-2206210086
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/21/22 3:36 PM, Brian King wrote:
-> On 6/19/22 11:48 PM, Damien Le Moal wrote:
->>
->> Polling people here: Do we still need the scsi IPR driver for IBM Power
->> Linux RAID adapters (IBM iSeries: 5702, 5703, 2780, 5709, 570A, 570B
->> adapters) ?
->>
->> The reason I am asking is because this driver is the *only* libsas/ata
->> driver that does not define a ->error_handler port operation. If this
->> driver is removed, or if it is modified to use a ->error_handler operation
->> to handle failed commands, then a lot of code simplification can be done
->> in libata, which I am trying to do to facilitate the processing of some
->> special error completion for commands using a command duration limit.
+On 6/17/22 06:57, Arnd Bergmann wrote:
+> From: Arnd Bergmann <arnd@arndb.de>
 > 
-> We still need it around for now. IBM still sells these adapters
-> and they can still be ordered even on our latest Power 10 systems.
+> The BusLogic driver is the last remaining driver that relies on the
+> deprecated bus_to_virt() function, which in turn only works on a few
+> architectures, and is incompatible with both swiotlb and iommu support.
+> 
+> Before commit 391e2f25601e ("[SCSI] BusLogic: Port driver to 64-bit."),
+> the driver had a dependency on x86-32, presumably because of this
+> problem. However, the change introduced another bug that made it still
+> impossible to use the driver on any 64-bit machine.
+> 
+> This was in turn fixed in commit 56f396146af2 ("scsi: BusLogic: Fix
+> 64-bit system enumeration error for Buslogic"), 8 years later, which
+> shows that there are not a lot of users.
+> 
+> Maciej is still using the driver on 32-bit hardware, and Khalid mentioned
+> that the driver works with the device emulation used in VirtualBox
+> and VMware. Both of those only emulate it for Windows 2000 and older
+> operating systems that did not ship with the better LSI logic driver.
+> 
+> Do a minimum fix that searches through the list of descriptors to find
+> one that matches the bus address. This is clearly as inefficient as
+> was indicated in the code comment about the lack of a bus_to_virt()
+> replacement. A better fix would likely involve changing out the entire
+> descriptor allocation for a simpler one, but that would be much
+> more invasive.
+> 
+> Cc: Maciej W. Rozycki <macro@orcam.me.uk>
+> Cc: Matt Wang <wwentao@vmware.com>
+> Cc: Khalid Aziz <khalid@gonehiking.org>
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>   drivers/scsi/BusLogic.c | 27 ++++++++++++++++-----------
+>   drivers/scsi/Kconfig    |  2 +-
+>   2 files changed, 17 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
+> index a897c8f914cf..d057abfcdd5c 100644
+> --- a/drivers/scsi/BusLogic.c
+> +++ b/drivers/scsi/BusLogic.c
+> @@ -2515,12 +2515,26 @@ static int blogic_resultcode(struct blogic_adapter *adapter,
+>   	return (hoststatus << 16) | tgt_status;
+>   }
+>   
+> +/*
+> + * turn the dma address from an inbox into a ccb pointer
+> + * This is rather inefficient.
+> + */
+> +static struct blogic_ccb *
+> +blogic_inbox_to_ccb(struct blogic_adapter *adapter, struct blogic_inbox *inbox)
+> +{
+> +	struct blogic_ccb *ccb;
+> +
+> +	for (ccb = adapter->all_ccbs; ccb; ccb = ccb->next_all)
+> +		if (inbox->ccb == ccb->dma_handle)
+> +			break;
+> +
+> +	return ccb;
+> +}
+>   
+>   /*
+>     blogic_scan_inbox scans the Incoming Mailboxes saving any
+>     Incoming Mailbox entries for completion processing.
+>   */
+> -
+>   static void blogic_scan_inbox(struct blogic_adapter *adapter)
+>   {
+>   	/*
+> @@ -2540,16 +2554,7 @@ static void blogic_scan_inbox(struct blogic_adapter *adapter)
+>   	enum blogic_cmplt_code comp_code;
+>   
+>   	while ((comp_code = next_inbox->comp_code) != BLOGIC_INBOX_FREE) {
+> -		/*
+> -		   We are only allowed to do this because we limit our
+> -		   architectures we run on to machines where bus_to_virt(
+> -		   actually works.  There *needs* to be a dma_addr_to_virt()
+> -		   in the new PCI DMA mapping interface to replace
+> -		   bus_to_virt() or else this code is going to become very
+> -		   innefficient.
+> -		 */
+> -		struct blogic_ccb *ccb =
+> -			(struct blogic_ccb *) bus_to_virt(next_inbox->ccb);
+> +		struct blogic_ccb *ccb = blogic_inbox_to_ccb(adapter, adapter->next_inbox);
 
-At one point I did look into modifying ipr to use an ->error_handler.
-I recall I ran into some issues that resulted in this getting put
-on the shelf, but its been a while. I'll go dig that code up and
-see what it looks like.
+This change looks good enough as workaround to not use bus_to_virt() for 
+now. There are two problems I see though. One, I do worry about 
+blogic_inbox_to_ccb() returning NULL for ccb which should not happen 
+unless the mailbox pointer was corrupted which would indicate a bigger 
+problem. Nevertheless a NULL pointer causing kernel panic concerns me. 
+How about adding a check before we dereference ccb?
+
+Second, with this patch applied, I am seeing errors from the driver:
+
+=====================
+[ 1623.902685]  sdb: sdb1 sdb2
+[ 1623.903245] sd 2:0:0:0: [sdb] Attached SCSI disk
+[ 1623.911000] scsi2: Illegal CCB #76 status 2 in Incoming Mailbox
+[ 1623.911005] scsi2: Illegal CCB #76 status 2 in Incoming Mailbox
+[ 1623.911070] scsi2: Illegal CCB #79 status 2 in Incoming Mailbox
+[ 1651.458008] scsi2: Warning: Partition Table appears to have Geometry 
+256/63 which is
+[ 1651.458013] scsi2: not compatible with current BusLogic Host Adapter 
+Geometry 255/63
+[ 1658.797609] scsi2: Resetting BusLogic BT-958D Failed
+[ 1659.533208] sd 2:0:0:0: Device offlined - not ready after error recovery
+[ 1659.533331] sd 2:0:0:0: Device offlined - not ready after error recovery
+[ 1659.533333] sd 2:0:0:0: Device offlined - not ready after error recovery
+[ 1659.533342] sd 2:0:0:0: [sdb] tag#101 FAILED Result: 
+hostbyte=DID_TIME_OUT driverbyte=DRIVER_OK cmd_age=35s
+[ 1659.533345] sd 2:0:0:0: [sdb] tag#101 CDB: Read(10) 28 00 00 00 00 28 
+00 00 10 00
+[ 1659.533346] I/O error, dev sdb, sector 40 op 0x0:(READ) flags 0x80700 
+phys_seg 1 prio class 0
+
+=================
+
+This is on VirtualBox using emulated BusLogic adapter.
+
+This patch needs more refinement.
 
 Thanks,
+Khalid
 
-Brian
 
 
--- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
+>   		if (comp_code != BLOGIC_Cn erroneousMD_NOTFOUND) {
+>   			if (ccb->status == BLOGIC_CCB_ACTIVE ||
+>   					ccb->status == BLOGIC_CCB_RESET) {
+> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+> index cf75588a2587..56bdc08d0b77 100644
+> --- a/drivers/scsi/Kconfig
+> +++ b/drivers/scsi/Kconfig
+> @@ -513,7 +513,7 @@ config SCSI_HPTIOP
+>   
+>   config SCSI_BUSLOGIC
+>   	tristate "BusLogic SCSI support"
+> -	depends on PCI && SCSI && VIRT_TO_BUS
+> +	depends on PCI && SCSI
+>   	help
+>   	  This is support for BusLogic MultiMaster and FlashPoint SCSI Host
+>   	  Adapters. Consult the SCSI-HOWTO, available from
 
