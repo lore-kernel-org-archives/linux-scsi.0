@@ -2,68 +2,76 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4431FC43334
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jun 2022 14:25:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E83BBC43334
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jun 2022 14:47:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351517AbiFUOZI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Jun 2022 10:25:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37326 "EHLO
+        id S1350998AbiFUOrX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Jun 2022 10:47:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53238 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349421AbiFUOZI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jun 2022 10:25:08 -0400
-Received: from smtpbg.qq.com (smtpbg139.qq.com [175.27.65.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C56515FCC;
-        Tue, 21 Jun 2022 07:25:03 -0700 (PDT)
-X-QQ-mid: bizesmtp80t1655821432tiv9c18h
-Received: from ubuntu.localdomain ( [106.117.99.68])
-        by bizesmtp.qq.com (ESMTP) with 
-        id ; Tue, 21 Jun 2022 22:23:48 +0800 (CST)
-X-QQ-SSF: 0100000000700060B000D00A0000000
-X-QQ-FEAT: rCzLTtzQ0gcnji6xLlhDR/w4nX/P79abYLkOaTRlAZW+wnQmI3CnF4k3BiJRn
-        /FybuJcViTGqzAXrxQh6GT/w8faNPbGatL4ajOsZR0bFL2y824RF+sfVSbDPa94jEZxoOfo
-        W/g5/kSspCQDaYsuy/Icf4UNTpHN4/SQylFw8RjnTxGEmLZFqfbGQN+i0B37Wq8w/N8/z5/
-        McUbIzwztGBFmE6gaFiBExFsjR+9jOPfijNQ/RDPjACnRi1Hv51ciXyYlf0gdUfvE+Rh8Wf
-        tAsr2VLekeGarmlD6sYi35h0z9cr3EbOtqjzWCHliMYtuFPIOb7q5c25I9cwcqKOAqU+oHo
-        6Os9Pok+VvaiJ0y8TgnXX9TSG/dIg==
-X-QQ-GoodBg: 0
-From:   Jiang Jian <jiangjian@cdjrlc.com>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     aacraid@microsemi.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jiang Jian <jiangjian@cdjrlc.com>
-Subject: [PATCH] scsi: aacraid: Remove duplicate 'the' in two places.
-Date:   Tue, 21 Jun 2022 22:23:46 +0800
-Message-Id: <20220621142346.6429-1-jiangjian@cdjrlc.com>
-X-Mailer: git-send-email 2.17.1
-X-QQ-SENDSIZE: 520
-Feedback-ID: bizesmtp:cdjrlc.com:qybgspam:qybgspam6
+        with ESMTP id S1350526AbiFUOrW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jun 2022 10:47:22 -0400
+Received: from mail.zeus03.de (www.zeus03.de [194.117.254.33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6666C24F06
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Jun 2022 07:47:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple; d=sang-engineering.com; h=
+        from:to:cc:subject:date:message-id:mime-version
+        :content-transfer-encoding; s=k1; bh=oHTCCv5/X/lta9hsJSyCndv/MFD
+        1kIrGhr6jtZIV+zM=; b=djVxJnvrGaHDxeNMk/8YHE5IHfZzgYhAURgz26VR9Cu
+        5qUUItGT6AXZFbKpw2GdGpWQ4J+222YjEaWpyG2FLSC1sIRWgCrXAuwYA8Qdaed6
+        /Jl9xex9Pb/mp39naVBes32t3WM3+BvtgBvTcWT3UNOCL0SSZlj3CNtgOdzODr2s
+        =
+Received: (qmail 193593 invoked from network); 21 Jun 2022 16:47:15 +0200
+Received: by mail.zeus03.de with ESMTPSA (TLS_AES_256_GCM_SHA384 encrypted, authenticated); 21 Jun 2022 16:47:15 +0200
+X-UD-Smtp-Session: l3s3148p1@ntLnS/bhJDlZD+65
+From:   Wolfram Sang <wsa+renesas@sang-engineering.com>
+To:     linux-renesas-soc@vger.kernel.org
+Cc:     Wolfram Sang <wsa+renesas@sang-engineering.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] ufs: core: fix typos in error messages
+Date:   Tue, 21 Jun 2022 16:46:53 +0200
+Message-Id: <20220621144653.62630-1-wsa+renesas@sang-engineering.com>
+X-Mailer: git-send-email 2.35.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-file: drivers/scsi/aacraid/aachba.c
-line: 1053
-* The LSB is the the end.
-chaned to
-* The LSB is the end.
+Should be "retries" instead of "retires".
 
-Signed-off-by: Jiang Jian <jiangjian@cdjrlc.com>
+Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
 ---
- drivers/scsi/aacraid/aachba.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/ufs/core/ufshcd.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index 81462f4ddb90..4d4cb47b3846 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -1050,7 +1050,7 @@ static void get_container_serial_callback(void *context, struct fib * fibptr)
- 				vpdpage83data.type1.productid));
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index bb6cbd514a69..288f20dcb2b2 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -3065,7 +3065,7 @@ static int ufshcd_query_flag_retry(struct ufs_hba *hba,
  
- 			/* Convert to ascii based serial number.
--			 * The LSB is the the end.
-+			 * The LSB is the end.
- 			 */
- 			for (i = 0; i < 8; i++) {
- 				u8 temp =
+ 	if (ret)
+ 		dev_err(hba->dev,
+-			"%s: query attribute, opcode %d, idn %d, failed with error %d after %d retires\n",
++			"%s: query attribute, opcode %d, idn %d, failed with error %d after %d retries\n",
+ 			__func__, opcode, idn, ret, retries);
+ 	return ret;
+ }
+@@ -3233,7 +3233,7 @@ int ufshcd_query_attr_retry(struct ufs_hba *hba,
+ 
+ 	if (ret)
+ 		dev_err(hba->dev,
+-			"%s: query attribute, idn %d, failed with error %d after %d retires\n",
++			"%s: query attribute, idn %d, failed with error %d after %d retries\n",
+ 			__func__, idn, ret, QUERY_REQ_RETRIES);
+ 	return ret;
+ }
 -- 
-2.17.1
+2.35.1
 
