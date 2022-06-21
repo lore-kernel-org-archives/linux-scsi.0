@@ -2,204 +2,348 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8299C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jun 2022 22:04:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3500BC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jun 2022 22:05:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355216AbiFUWEO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Jun 2022 18:04:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43706 "EHLO
+        id S1354788AbiFUWFl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Jun 2022 18:05:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44634 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235648AbiFUWEN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jun 2022 18:04:13 -0400
-X-Greylist: delayed 431 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 21 Jun 2022 15:04:12 PDT
-Received: from mailout.easymail.ca (mailout.easymail.ca [64.68.200.34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC1FE2D1D0;
-        Tue, 21 Jun 2022 15:04:11 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-        by mailout.easymail.ca (Postfix) with ESMTP id C97F261DF6;
-        Tue, 21 Jun 2022 21:56:59 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at emo09-pco.easydns.vpn
-Received: from mailout.easymail.ca ([127.0.0.1])
-        by localhost (emo09-pco.easydns.vpn [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id FLc2uL2Ic0RZ; Tue, 21 Jun 2022 21:56:59 +0000 (UTC)
-Received: from mail.gonehiking.org (unknown [38.15.45.1])
-        by mailout.easymail.ca (Postfix) with ESMTPA id 45ED161DF5;
-        Tue, 21 Jun 2022 21:56:59 +0000 (UTC)
-Received: from [192.168.1.4] (internal [192.168.1.4])
-        by mail.gonehiking.org (Postfix) with ESMTP id C716D3EF14;
-        Tue, 21 Jun 2022 15:56:58 -0600 (MDT)
-Message-ID: <7a6df2da-95e8-b2fd-7565-e4b7a51c5b63@gonehiking.org>
-Date:   Tue, 21 Jun 2022 15:56:58 -0600
+        with ESMTP id S1354158AbiFUWFj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jun 2022 18:05:39 -0400
+Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4FD0E2EA0C;
+        Tue, 21 Jun 2022 15:05:37 -0700 (PDT)
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 25LLW0MX024435;
+        Tue, 21 Jun 2022 15:05:25 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=date : from : to :
+ cc : subject : in-reply-to : message-id : references : mime-version :
+ content-type; s=pfpt0220; bh=2bknUX5O7965J6L2q5e6pSLs4WQggrL4P2+DDTObS3U=;
+ b=ZNsEK5V9aLLkByMnCo75C81RXJWVxY0jGHF09ZfIHCpmluYFLYX/mz2VjE86GGKE8eLY
+ Nja6Jrbn8vL1THMIuUPrimq9QLUj2Rj+VMKTeL1tzKjJfbV38LG9csBtX3ujiOmn64zr
+ GeFUpUVeqO5NStViY6K3si4VGdnYNArB4kmM3O2k2tf9xtkAf5cLVz6C7/3r+btYkDZc
+ D/Un4fDQw+JmbM84Vq3k3cNp2kF3Pxsv80uM7g5+2XqEq3h/X156GFA+OmGz8wqLb9Ie
+ T8A+yNBiJWQEgIvhwnMHxZpXvAbyH3QLnEwbcRmt3ZK1aVvsLiOvfZKJjIPdL8dT22KM 9A== 
+Received: from dc5-exch01.marvell.com ([199.233.59.181])
+        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3gse7np37f-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Tue, 21 Jun 2022 15:05:24 -0700
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 21 Jun
+ 2022 15:05:22 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.18 via Frontend
+ Transport; Tue, 21 Jun 2022 15:05:22 -0700
+Received: from mvluser05.qlc.com (unknown [10.112.10.135])
+        by maili.marvell.com (Postfix) with ESMTP id BFF3A3F7066;
+        Tue, 21 Jun 2022 15:05:22 -0700 (PDT)
+Received: from localhost (aeasi@localhost)
+        by mvluser05.qlc.com (8.14.4/8.14.4/Submit) with ESMTP id 25LM5Kls014586;
+        Tue, 21 Jun 2022 15:05:21 -0700
+X-Authentication-Warning: mvluser05.qlc.com: aeasi owned process doing -bs
+Date:   Tue, 21 Jun 2022 15:05:20 -0700
+From:   Arun Easi <aeasi@marvell.com>
+X-X-Sender: aeasi@mvluser05.qlc.com
+To:     Tony Battersby <tonyb@cybernetics.com>
+CC:     Thorsten Leemhuis <regressions@leemhuis.info>,
+        Saurav Kashyap <skashyap@marvell.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        <GR-QLogic-Storage-Upstream@marvell.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <regressions@lists.linux.dev>
+Subject: Re: [EXT] Re: [REGRESSION] qla2xxx: tape drive not removed after
+ unplug FC cable
+In-Reply-To: <178e4e7a-64fc-a442-cdda-45100eaebda0@cybernetics.com>
+Message-ID: <alpine.LRH.2.21.9999.2206211156470.4730@mvluser05.qlc.com>
+References: <baef87c3-5dad-3b47-44c1-6914bfc90108@cybernetics.com>
+ <alpine.LRH.2.21.9999.2205271524460.4730@mvluser05.qlc.com>
+ <5bcb5963-9da0-fd59-45c5-d27af02e7748@leemhuis.info>
+ <178e4e7a-64fc-a442-cdda-45100eaebda0@cybernetics.com>
+User-Agent: Alpine 2.21.9999 (LRH 334 2019-03-29)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Reply-To: khalid@gonehiking.org
-Subject: Re: [PATCH v2 2/3] scsi: BusLogic remove bus_to_virt
-Content-Language: en-US
-To:     Arnd Bergmann <arnd@kernel.org>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     Arnd Bergmann <arnd@arndb.de>, Jakub Kicinski <kuba@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        iommu@lists.linux-foundation.org,
-        "Maciej W . Rozycki" <macro@orcam.me.uk>,
-        Matt Wang <wwentao@vmware.com>,
-        Miquel van Smoorenburg <mikevs@xs4all.net>,
-        Mark Salyzyn <salyzyn@android.com>,
-        linuxppc-dev@lists.ozlabs.org, linux-arch@vger.kernel.org,
-        linux-alpha@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
-        linux-parisc@vger.kernel.org, Denis Efremov <efremov@linux.com>
-References: <20220617125750.728590-1-arnd@kernel.org>
- <20220617125750.728590-3-arnd@kernel.org>
-From:   Khalid Aziz <khalid@gonehiking.org>
-In-Reply-To: <20220617125750.728590-3-arnd@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+        boundary="1879738122-1695936884-1655849122=:4730"
+X-Proofpoint-GUID: FizcLzr81MGexsAvP8-eymxfFXPYcrGH
+X-Proofpoint-ORIG-GUID: FizcLzr81MGexsAvP8-eymxfFXPYcrGH
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.64.514
+ definitions=2022-06-21_09,2022-06-21_01,2022-02-23_01
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/17/22 06:57, Arnd Bergmann wrote:
-> From: Arnd Bergmann <arnd@arndb.de>
+--1879738122-1695936884-1655849122=:4730
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8BIT
+
+Hi Tony,
+
+Apologies for the delay. This was not forgotten, there were repro attempts 
+and discussions happening internally.
+
+See further comments inline..
+
+On Mon, 20 Jun 2022, 7:33am, Tony Battersby wrote:
+
 > 
-> The BusLogic driver is the last remaining driver that relies on the
-> deprecated bus_to_virt() function, which in turn only works on a few
-> architectures, and is incompatible with both swiotlb and iommu support.
+> ----------------------------------------------------------------------
+> On 6/20/22 02:56, Thorsten Leemhuis wrote:
+> > Hi!
+> >
+> > On 28.05.22 02:27, Arun Easi wrote:
+> >> Hi Tony,
+> >>
+> >> Thanks for reporting the issue. We are trying to recreate this issue in 
+> >> house. I will reach out to you for logs, if we cannot repro. Typically, we 
+> >> get sufficient context to the issue when the problem is reproduced with 
+> >> module parameter "ql2xextended_error_logging=1".
+> >>
+> >> Anyway, I will let you know the status.
+> > What's the status here? Tony, did you provide the info Arun asked for=
+> > Or was some progress made somehow without it?
+> >
+> I was waiting for them to reproduce the problem, or ask for logs. 
+> Anyway, here are the logs they said they might want:
 > 
-> Before commit 391e2f25601e ("[SCSI] BusLogic: Port driver to 64-bit."),
-> the driver had a dependency on x86-32, presumably because of this
-> problem. However, the change introduced another bug that made it still
-> impossible to use the driver on any 64-bit machine.
+> modprobe qla2xxx ql2xextended_error_logging=1
 > 
-> This was in turn fixed in commit 56f396146af2 ("scsi: BusLogic: Fix
-> 64-bit system enumeration error for Buslogic"), 8 years later, which
-> shows that there are not a lot of users.
+> Jun 20 13:51:46 tony13 kern.warn kernel: qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA Driver: 10.02.07.400-k-debug.
+> Jun 20 13:51:46 tony13 kern.warn kernel: qla2xxx [0000:00:00.0]-011c: : MSI-X vector count: 32.
+> Jun 20 13:51:46 tony13 kern.warn kernel: qla2xxx [0000:00:00.0]-001d: : Found an ISP2031 irq 37 iobase 0x00000000875338f3.
+> Jun 20 13:51:46 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-00c6:6: MSI-X: Using 26 vectors
+> Jun 20 13:51:47 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-0075:6: ZIO mode 6 enabled; timer delay (200 us).
+> Jun 20 13:51:47 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-ffff:6: FC4 priority set to NVMe
+> Jun 20 13:51:48 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-507b:6: SFP detect: Short-Range SFP  (nvr=0 ll=40 lr=0 lrd=0).
+> Jun 20 13:51:50 tony13 kern.info kernel: scsi host6: qla2xxx
+> Jun 20 13:51:50 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-4000:6: DPC handler sleeping.
+> Jun 20 13:51:51 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-400f:6: Loop resync scheduled.
+> Jun 20 13:51:55 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-00fb:6: QLogic QLE2672 - QLE2672 QLogic 2-port 16Gb Fibre Channel Adapter.
+> Jun 20 13:51:55 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-00fc:6: ISP2031: PCIe (8.0GT/s x8) @ 0000:83:00.0 hdma- host#=6 fw=8.07.12 (d0d5).
+> Jun 20 13:51:55 tony13 kern.warn kernel: qla2xxx [0000:00:00.0]-011c: : MSI-X vector count: 32.
+> Jun 20 13:51:55 tony13 kern.warn kernel: qla2xxx [0000:00:00.0]-001d: : Found an ISP2031 irq 135 iobase 0x000000007cfbf1eb.
+> Jun 20 13:51:55 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-00c6:7: MSI-X: Using 26 vectors
+> Jun 20 13:51:55 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-0075:7: ZIO mode 6 enabled; timer delay (200 us).
+> Jun 20 13:51:55 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-ffff:7: FC4 priority set to NVMe
+> Jun 20 13:51:57 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-507b:7: SFP detect: Short-Range SFP  (nvr=0 ll=40 lr=0 lrd=0).
+> Jun 20 13:51:58 tony13 kern.info kernel: scsi host7: qla2xxx
+> Jun 20 13:51:58 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-4000:7: DPC handler sleeping.
+> Jun 20 13:51:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-400f:7: Loop resync scheduled.
+> Jun 20 13:52:03 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-00fb:7: QLogic QLE2672 - QLE2672 QLogic 2-port 16Gb Fibre Channel Adapter.
+> Jun 20 13:52:03 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-00fc:7: ISP2031: PCIe (8.0GT/s x8) @ 0000:83:00.1 hdma- host#=7 fw=8.07.12 (d0d5).
+> Jun 20 13:52:11 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-8038:6: Cable is unplugged...
+> Jun 20 13:52:11 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-803a:6: fw_state=4 (7, 141, 0, 800 0) curr time=ffffc764.
+> Jun 20 13:52:11 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-206c:6: qla2x00_loop_resync *** FAILED ***.
+> Jun 20 13:52:11 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-4010:6: Loop resync end.
+> Jun 20 13:52:11 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-4000:6: DPC handler sleeping.
+> Jun 20 13:52:20 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-8038:7: Cable is unplugged...
+> Jun 20 13:52:20 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-803a:7: fw_state=4 (7, 141, 0, 800 0) curr time=ffffcaac.
+> Jun 20 13:52:20 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-206c:7: qla2x00_loop_resync *** FAILED ***.
+> Jun 20 13:52:20 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-4010:7: Loop resync end.
+> Jun 20 13:52:20 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-4000:7: DPC handler sleeping.
 > 
-> Maciej is still using the driver on 32-bit hardware, and Khalid mentioned
-> that the driver works with the device emulation used in VirtualBox
-> and VMware. Both of those only emulate it for Windows 2000 and older
-> operating systems that did not ship with the better LSI logic driver.
+> Plug in cable
 > 
-> Do a minimum fix that searches through the list of descriptors to find
-> one that matches the bus address. This is clearly as inefficient as
-> was indicated in the code comment about the lack of a bus_to_virt()
-> replacement. A better fix would likely involve changing out the entire
-> descriptor allocation for a simpler one, but that would be much
-> more invasive.
+> Jun 20 13:52:56 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-5009:7: LIP occurred (0).
+> Jun 20 13:52:56 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-10b7:7: Format 0 : Number of VPs setup 254, number of VPs acquired 1.
+> Jun 20 13:52:56 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-10b8:7: Primary port id 0000ef.
+> Jun 20 13:52:58 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-500a:7: LOOP UP detected (8 Gbps).
+> Jun 20 13:52:58 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-5012:7: Port database changed ffff 0006 0000.
+> Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-400f:7: Loop resync scheduled.
+> Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-8037:7: F/W Ready - OK.
+> Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-803a:7: fw_state=3 (7, 141, 0, 800 0) curr time=ffffd9e8.
+> Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-200b:7: HBA in NL topology.
+> Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-2014:7: Configure loop -- dpc flags = 0x112e0.
+> Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-2011:7: Entries in ID list (1).
+> Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-20d8:7: qla24xx_fcport_handle_login 50:00:e1:11:c5:27:f0:70 DS 0 LS 7 P 0 fl 0 confl 0000000000000000 rscn 0|0 login 0 lid 0 scan 2 fc4type 0
+> Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-307b:7: qla_chk_n2n_b4_login 50:00:e1:11:c5:27:f0:70 DS 0 LS 7 lid 0 retries=30
+> Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-20bf:7: qla_chk_n2n_b4_login 1628 50:00:e1:11:c5:27:f0:70 post login
+> Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-2069:7: LOOP READY.
+> Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-206b:7: qla2x00_configure_loop: exiting normally. local port wwpn 2100000e1e2227a1 id 0000ef)
+> Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-4010:7: Loop resync end.
+> Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-2134:7: FCPort 50:00:e1:11:c5:27:f0:70 disc_state transition: DELETED to LOGIN_PEND - portid=000026.
+> Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-2072:7: Async-login - 50:00:e1:11:c5:27:f0:70 hdl=2, loopid=0 portid=000026 retries=29 .
+> Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-4000:7: DPC handler sleeping.
+> Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-5036:7: Async-login complete: handle=2 pid=000026 wwpn=50:00:e1:11:c5:27:f0:70 iop0=312
+> Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-20dd:7: qla2x00_async_login_sp_done 50:00:e1:11:c5:27:f0:70 res 0 
+> Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-ffff:7: qla24xx_handle_plogi_done_event 50:00:e1:11:c5:27:f0:70 DS 3 LS 7 rc 0 login 0|0 rscn 0|0 data 4000|0 iop 0|0
+> Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-20ea:7: qla24xx_handle_plogi_done_event 2232 50:00:e1:11:c5:27:f0:70 LoopID 0x0 in use with 000026. post gpdb
+> Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-2134:7: FCPort 50:00:e1:11:c5:27:f0:70 disc_state transition: LOGIN_PEND to GPDB - portid=000026.
+> Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-20dc:7: Async-gpdb 50:00:e1:11:c5:27:f0:70 hndl 0 opt 0
+> Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-20db:7: Async done-gpdb res 0, WWPN 50:00:e1:11:c5:27:f0:70 mb[1]=0 mb[2]=ffdd 
+> Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-20d2:7: qla24xx_handle_gpdb_event 50:00:e1:11:c5:27:f0:70 DS 5 LS 6 fc4_type 0 rc 0
+> Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-2062:7: 50:00:e1:11:c5:27:f0:70 SVC Param w3 0312
+> Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-2134:7: FCPort 50:00:e1:11:c5:27:f0:70 disc_state transition: GPDB to UPD_FCPORT - portid=000026.
+> Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-20ef:7: qla2x00_update_fcport 50:00:e1:11:c5:27:f0:70
+> Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-2134:7: FCPort 50:00:e1:11:c5:27:f0:70 disc_state transition: UPD_FCPORT to UPD_FCPORT - portid=000026.
+> Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-207d:7: FCPort 50:00:e1:11:c5:27:f0:70 state transitioned from UNCONFIGURED to ONLINE - portid=000026.
+> Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-20ee:7: qla2x00_reg_remote_port: 5000e111c527f070. rport 7:0:0 (00000000bd175424) is tgt mode
+> Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-2134:7: FCPort 50:00:e1:11:c5:27:f0:70 disc_state transition: UPD_FCPORT to LOGIN_COMPLETE - portid=000026.
+> Jun 20 13:52:59 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-911e:7: qla_register_fcport_fn rscn gen 0/0 next DS 0
+> Jun 20 13:52:59 tony13 kern.notice kernel: scsi 7:0:0:0: Sequential-Access IBM      ULTRIUM-HH8      K4K1 PQ: 0 ANSI: 6
+> Jun 20 13:52:59 tony13 kern.notice kernel: scsi 7:0:0:0: Attached scsi generic sg1 type 1
+> Jun 20 13:52:59 tony13 kern.info kernel: st: Version 20160209, fixed bufsize 32768, s/g segs 256
+> Jun 20 13:52:59 tony13 kern.notice kernel: st 7:0:0:0: Attached scsi tape st0
+> Jun 20 13:52:59 tony13 kern.info kernel: st 7:0:0:0: st0: try direct i/o: yes (alignment 8 B)
 > 
-> Cc: Maciej W. Rozycki <macro@orcam.me.uk>
-> Cc: Matt Wang <wwentao@vmware.com>
-> Cc: Khalid Aziz <khalid@gonehiking.org>
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->   drivers/scsi/BusLogic.c | 27 ++++++++++++++++-----------
->   drivers/scsi/Kconfig    |  2 +-
->   2 files changed, 17 insertions(+), 12 deletions(-)
+> Unplug cable
 > 
-> diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
-> index a897c8f914cf..d057abfcdd5c 100644
-> --- a/drivers/scsi/BusLogic.c
-> +++ b/drivers/scsi/BusLogic.c
-> @@ -2515,12 +2515,26 @@ static int blogic_resultcode(struct blogic_adapter *adapter,
->   	return (hoststatus << 16) | tgt_status;
->   }
->   
-> +/*
-> + * turn the dma address from an inbox into a ccb pointer
-> + * This is rather inefficient.
-> + */
-> +static struct blogic_ccb *
-> +blogic_inbox_to_ccb(struct blogic_adapter *adapter, struct blogic_inbox *inbox)
-> +{
-> +	struct blogic_ccb *ccb;
-> +
-> +	for (ccb = adapter->all_ccbs; ccb; ccb = ccb->next_all)
-> +		if (inbox->ccb == ccb->dma_handle)
-> +			break;
-> +
-> +	return ccb;
-> +}
->   
->   /*
->     blogic_scan_inbox scans the Incoming Mailboxes saving any
->     Incoming Mailbox entries for completion processing.
->   */
-> -
->   static void blogic_scan_inbox(struct blogic_adapter *adapter)
->   {
->   	/*
-> @@ -2540,16 +2554,7 @@ static void blogic_scan_inbox(struct blogic_adapter *adapter)
->   	enum blogic_cmplt_code comp_code;
->   
->   	while ((comp_code = next_inbox->comp_code) != BLOGIC_INBOX_FREE) {
-> -		/*
-> -		   We are only allowed to do this because we limit our
-> -		   architectures we run on to machines where bus_to_virt(
-> -		   actually works.  There *needs* to be a dma_addr_to_virt()
-> -		   in the new PCI DMA mapping interface to replace
-> -		   bus_to_virt() or else this code is going to become very
-> -		   innefficient.
-> -		 */
-> -		struct blogic_ccb *ccb =
-> -			(struct blogic_ccb *) bus_to_virt(next_inbox->ccb);
-> +		struct blogic_ccb *ccb = blogic_inbox_to_ccb(adapter, adapter->next_inbox);
+> Jun 20 13:54:03 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-500b:7: LOOP DOWN detected (2 7 0 0).
+> Jun 20 13:54:03 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-20f1:7: Mark all dev lost
+> 
+> sleep 180
+> 
+> cat /proc/scsi/scsi 
+> Attached devices:
+> Host: scsi7 Channel: 00 Id: 00 Lun: 00
+>   Vendor: IBM      Model: ULTRIUM-HH8      Rev: K4K1
+>   Type:   Sequential-Access                ANSI  SCSI revision: 06
 
-This change looks good enough as workaround to not use bus_to_virt() for 
-now. There are two problems I see though. One, I do worry about 
-blogic_inbox_to_ccb() returning NULL for ccb which should not happen 
-unless the mailbox pointer was corrupted which would indicate a bigger 
-problem. Nevertheless a NULL pointer causing kernel panic concerns me. 
-How about adding a check before we dereference ccb?
+Thanks for the info. Just to reiterate, you've reported two issues (though 
+this log was showing only 1 of them).
 
-Second, with this patch applied, I am seeing errors from the driver:
+Issue 1 - Tape device never disappears when removed
+Issue 2 - When a direct connected tape 1 was replaced with tape 2, tape 2 
+          was not discovered.
 
-=====================
-[ 1623.902685]  sdb: sdb1 sdb2
-[ 1623.903245] sd 2:0:0:0: [sdb] Attached SCSI disk
-[ 1623.911000] scsi2: Illegal CCB #76 status 2 in Incoming Mailbox
-[ 1623.911005] scsi2: Illegal CCB #76 status 2 in Incoming Mailbox
-[ 1623.911070] scsi2: Illegal CCB #79 status 2 in Incoming Mailbox
-[ 1651.458008] scsi2: Warning: Partition Table appears to have Geometry 
-256/63 which is
-[ 1651.458013] scsi2: not compatible with current BusLogic Host Adapter 
-Geometry 255/63
-[ 1658.797609] scsi2: Resetting BusLogic BT-958D Failed
-[ 1659.533208] sd 2:0:0:0: Device offlined - not ready after error recovery
-[ 1659.533331] sd 2:0:0:0: Device offlined - not ready after error recovery
-[ 1659.533333] sd 2:0:0:0: Device offlined - not ready after error recovery
-[ 1659.533342] sd 2:0:0:0: [sdb] tag#101 FAILED Result: 
-hostbyte=DID_TIME_OUT driverbyte=DRIVER_OK cmd_age=35s
-[ 1659.533345] sd 2:0:0:0: [sdb] tag#101 CDB: Read(10) 28 00 00 00 00 28 
-00 00 10 00
-[ 1659.533346] I/O error, dev sdb, sector 40 op 0x0:(READ) flags 0x80700 
-phys_seg 1 prio class 0
+For Issue-2, please try the attached patch. This may not be the final fix, 
+but wanted to check if that would fix the issue for you.
 
-=================
+For Issue-1, the behavior was intentional, though that behavior needs 
+refinement. These tape drives support something called FC sequence level 
+error recovery (added in FCP-2), which can make tape I/Os survive even 
+across a short cable pull. This is not a simple retry of the I/O, rather a 
+retry done at the FC sequence level that gives the IO a better chance of
+revival. In other words, the said patch that caused regression, while 
+introduces an incorrect reporting of the state of the device, makes backup 
+more resilient.
 
-This is on VirtualBox using emulated BusLogic adapter.
+Now, onto the behavior when device state is reported immediately. What we 
+have observed, at least with one tape drive from a major vendor, is that, 
+across a device loss and device back case with both the events reported to 
+upper layers, the backup operation was getting failed. This is due to a 
+REPORT LUNS command being issued during device reappearance reporting 
+(fc_remote_port_add -> SCSI scan), which the tape drive was not expecting 
+and caused the backup to fail.
 
-This patch needs more refinement.
+I know that some tape drives do not support multiple commands to it at the 
+same time, but not sure if that is still the norm these days.
 
-Thanks,
-Khalid
+So, perhaps one way to make the behavior better, is to either report the 
+disappearing device a bit delayed or have intelligence added in SCSI scan 
+to detect ongoing tape IO operations and delay/avoid the REPORT LUNs. 
+Former is a more contained (in the LLD) fix.
 
+Regards,
+-Arun
 
+> 
+> rmmod qla2xxx
+> 
+> Jun 20 14:00:18 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-211a:7: Delaying session delete for FCP2 flags 0x4 port_type = 0x4 port_id=000026 50
+> Jun 20 14:00:18 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-b079:7: Removing driver
+> Jun 20 14:00:18 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-00af:7: Performing ISP error recovery - ha=00000000c584070c.
+> Jun 20 14:00:18 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-20f1:7: Mark all dev lost
+> Jun 20 14:00:28 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-211a:7: Delaying session delete for FCP2 flags 0x4 port_type = 0x4 port_id=000026 50
+> Jun 20 14:00:28 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-4011:7: DPC handler exiting.
+> Jun 20 14:00:28 tony13 kern.warn kernel: qla2xxx [0000:83:00.1]-207d:7: FCPort 50:00:e1:11:c5:27:f0:70 state transitioned from ONLINE to DEAD - portid=000026.
+> Jun 20 14:00:28 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-b079:6: Removing driver
+> Jun 20 14:00:28 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-00af:6: Performing ISP error recovery - ha=000000008a8560d1.
+> Jun 20 14:00:28 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-20f1:6: Mark all dev lost
+> Jun 20 14:00:28 tony13 kern.warn kernel: qla2xxx [0000:83:00.0]-4011:6: DPC handler exiting.
+> 
+--1879738122-1695936884-1655849122=:4730
+Content-Type: text/plain; charset="US-ASCII";
+	name="0001-qla2xxx-Fix-discovery-issues-in-FC-AL-topology.patch"
+Content-Transfer-Encoding: BASE64
+Content-ID: <alpine.LRH.2.21.9999.2206211505200.4730@mvluser05.qlc.com>
+Content-Description: 
+Content-Disposition: attachment;
+	filename="0001-qla2xxx-Fix-discovery-issues-in-FC-AL-topology.patch"
 
->   		if (comp_code != BLOGIC_Cn erroneousMD_NOTFOUND) {
->   			if (ccb->status == BLOGIC_CCB_ACTIVE ||
->   					ccb->status == BLOGIC_CCB_RESET) {
-> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-> index cf75588a2587..56bdc08d0b77 100644
-> --- a/drivers/scsi/Kconfig
-> +++ b/drivers/scsi/Kconfig
-> @@ -513,7 +513,7 @@ config SCSI_HPTIOP
->   
->   config SCSI_BUSLOGIC
->   	tristate "BusLogic SCSI support"
-> -	depends on PCI && SCSI && VIRT_TO_BUS
-> +	depends on PCI && SCSI
->   	help
->   	  This is support for BusLogic MultiMaster and FlashPoint SCSI Host
->   	  Adapters. Consult the SCSI-HOWTO, available from
+RnJvbSBhZjU4MzczYzZhNjFmNzRiM2IxOTBlMTczMzNiM2IxZTRkMTUxOTE5
+IE1vbiBTZXAgMTcgMDA6MDA6MDAgMjAwMQ0KRnJvbTogQXJ1biBFYXNpIDxh
+ZWFzaUBtYXJ2ZWxsLmNvbT4NCkRhdGU6IFRodSwgMTYgSnVuIDIwMjIgMTc6
+MzE6NDMgLTA3MDANClN1YmplY3Q6IFtQQVRDSF0gcWxhMnh4eDogRml4IGRp
+c2NvdmVyeSBpc3N1ZXMgaW4gRkMtQUwgdG9wb2xvZ3kNCg0KVG9wb2xvZ3k6
+IEFyYml0cmF0ZWQgbG9vcA0KRGV2aWNlOiBUYXBlIChGQ1AtMiBkZXZpY2Up
+DQpJc3N1ZToNCiAgMS4gQ29ubmVjdCBUYXBlLUEgZGlyZWN0bHkgdG8gdGhl
+IEhCQSBwb3J0DQogIDIuIERpc2Nvbm5lY3QgaXQgYW5kIGNvbm5lY3QgVGFw
+ZS1CDQogIDMuIFRhcGUtQiBpcyBub3QgZGlzY292ZXJlZCBieSB0aGUgSEJB
+IGRyaXZlcg0KICA0LiBXaGVuIFRhcGUtQiBpcyBkaXNjb25uZWN0ZWQgYW5k
+IGNvbm5lY3RlZCBiYWNrLCBpdCBzaG93cyB1cA0KDQpUbyBmaXggdGhpcywg
+d2hlbiBHZXQgSUQgTGlzdCByZXBvcnRzIG5vIGRldmljZXMgYW5kIGxvb3Ag
+bWFwDQpyZXBvcnRzIHRoZXJlIGFyZSBkZXZpY2VzLCBpc3N1ZSBhIHJlLWlu
+aXQgc28gdGhhdCBkZXZpY2UgbG9naW4NCmNvdWxkIGJlIHBlcmZvcm1lZCBk
+dXJpbmcgbmV4dCBsaW5rIGluaXRpYWxpemF0aW9uLg0KDQpSZXBvcnRlZC1i
+eTogVG9ueSBCYXR0ZXJzYnkgPHRvbnliQGN5YmVybmV0aWNzLmNvbT4NClNp
+Z25lZC1vZmYtYnk6IEFydW4gRWFzaSA8YWVhc2lAbWFydmVsbC5jb20+DQot
+LS0NCiBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfZ2JsLmggIHwgIDMgKyst
+DQogZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2luaXQuYyB8IDI5ICsrKysr
+KysrKysrKysrKysrKysrKysrKysrKysrDQogZHJpdmVycy9zY3NpL3FsYTJ4
+eHgvcWxhX21ieC5jICB8ICA1ICsrKystDQogMyBmaWxlcyBjaGFuZ2VkLCAz
+NSBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQ0KDQpkaWZmIC0tZ2l0
+IGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2dibC5oIGIvZHJpdmVycy9z
+Y3NpL3FsYTJ4eHgvcWxhX2dibC5oDQppbmRleCBkYWMyN2I1Li5iOWYxMDZh
+IDEwMDY0NA0KLS0tIGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2dibC5o
+DQorKysgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfZ2JsLmgNCkBAIC00
+MzMsNyArNDMzLDggQEAgZXh0ZXJuIGludA0KIHFsYTJ4MDBfZ2V0X3Jlc291
+cmNlX2NudHMoc2NzaV9xbGFfaG9zdF90ICopOw0KIA0KIGV4dGVybiBpbnQN
+Ci1xbGEyeDAwX2dldF9mY2FsX3Bvc2l0aW9uX21hcChzY3NpX3FsYV9ob3N0
+X3QgKmhhLCBjaGFyICpwb3NfbWFwKTsNCitxbGEyeDAwX2dldF9mY2FsX3Bv
+c2l0aW9uX21hcChzY3NpX3FsYV9ob3N0X3QgKmhhLCBjaGFyICpwb3NfbWFw
+LA0KKwkJdTggKm51bV9lbnRyaWVzKTsNCiANCiBleHRlcm4gaW50DQogcWxh
+MngwMF9nZXRfbGlua19zdGF0dXMoc2NzaV9xbGFfaG9zdF90ICosIHVpbnQx
+Nl90LCBzdHJ1Y3QgbGlua19zdGF0aXN0aWNzICosDQpkaWZmIC0tZ2l0IGEv
+ZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2luaXQuYyBiL2RyaXZlcnMvc2Nz
+aS9xbGEyeHh4L3FsYV9pbml0LmMNCmluZGV4IDNmMzQxN2EuLjNkZWZiZWEg
+MTAwNjQ0DQotLS0gYS9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaW5pdC5j
+DQorKysgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaW5pdC5jDQpAQCAt
+NTQ4OCw2ICs1NDg4LDIyIEBAIHN0YXRpYyBpbnQgcWxhMngwMF9jb25maWd1
+cmVfbjJuX2xvb3Aoc2NzaV9xbGFfaG9zdF90ICp2aGEpDQogCXJldHVybiBR
+TEFfRlVOQ1RJT05fRkFJTEVEOw0KIH0NCiANCitzdGF0aWMgdm9pZA0KK3Fs
+YV9yZWluaXRpYWxpemVfbGluayhzY3NpX3FsYV9ob3N0X3QgKnZoYSkNCit7
+DQorCWludCBydmFsOw0KKw0KKwlhdG9taWNfc2V0KCZ2aGEtPmxvb3Bfc3Rh
+dGUsIExPT1BfRE9XTik7DQorCWF0b21pY19zZXQoJnZoYS0+bG9vcF9kb3du
+X3RpbWVyLCBMT09QX0RPV05fVElNRSk7DQorCXJ2YWwgPSBxbGEyeDAwX2Z1
+bGxfbG9naW5fbGlwKHZoYSk7DQorCWlmIChydmFsID09IFFMQV9TVUNDRVNT
+KSB7DQorCQlxbF9kYmcocWxfZGJnX2Rpc2MsIHZoYSwgMHhkMDUwLCAiTGlu
+ayByZWluaXRpYWxpemVkXG4iKTsNCisJfSBlbHNlIHsNCisJCXFsX2RiZyhx
+bF9kYmdfZGlzYywgdmhhLCAweGQwNTEsDQorCQkJIkxpbmsgcmVpbml0aWFs
+aXphdGlvbiBmYWlsZWQgKCVkKVxuIiwgcnZhbCk7DQorCX0NCit9DQorDQog
+LyoNCiAgKiBxbGEyeDAwX2NvbmZpZ3VyZV9sb2NhbF9sb29wDQogICoJVXBk
+YXRlcyBGaWJyZSBDaGFubmVsIERldmljZSBEYXRhYmFzZSB3aXRoIGxvY2Fs
+IGxvb3AgZGV2aWNlcy4NCkBAIC01NTM5LDYgKzU1NTUsMTkgQEAgcWxhMngw
+MF9jb25maWd1cmVfbG9jYWxfbG9vcChzY3NpX3FsYV9ob3N0X3QgKnZoYSkN
+CiAJCXNwaW5fdW5sb2NrX2lycXJlc3RvcmUoJnZoYS0+d29ya19sb2NrLCBm
+bGFncyk7DQogDQogCQlpZiAodmhhLT5zY2FuLnNjYW5fcmV0cnkgPCBNQVhf
+U0NBTl9SRVRSSUVTKSB7DQorCQkJdTggbG9vcF9tYXBfZW50cmllcyA9IDA7
+DQorCQkJaW50IHJjOw0KKw0KKwkJCXJjID0gcWxhMngwMF9nZXRfZmNhbF9w
+b3NpdGlvbl9tYXAodmhhLCBOVUxMLA0KKwkJCQkJCSZsb29wX21hcF9lbnRy
+aWVzKTsNCisJCQlpZiAocmMgPT0gUUxBX1NVQ0NFU1MgJiYgbG9vcF9tYXBf
+ZW50cmllcyA+IDEpIHsNCisJCQkJLyoNCisJCQkJICogVGhlcmUgYXJlIGRl
+dmljZXMgdGhhdCBhcmUgc3RpbGwgbm90IGxvZ2dlZA0KKwkJCQkgKiBpbi4g
+UmVpbml0aWFsaXplIHRvIGdpdmUgdGhlbSBhIGNoYW5jZS4NCisJCQkJICov
+DQorCQkJCXFsYV9yZWluaXRpYWxpemVfbGluayh2aGEpOw0KKwkJCQlyZXR1
+cm4gUUxBX0ZVTkNUSU9OX0ZBSUxFRDsNCisJCQl9DQogCQkJc2V0X2JpdChM
+T0NBTF9MT09QX1VQREFURSwgJnZoYS0+ZHBjX2ZsYWdzKTsNCiAJCQlzZXRf
+Yml0KExPT1BfUkVTWU5DX05FRURFRCwgJnZoYS0+ZHBjX2ZsYWdzKTsNCiAJ
+CX0NCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfbWJ4
+LmMgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfbWJ4LmMNCmluZGV4IDg5
+MmNhZjIuLjRhMzM4NzQgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3Njc2kvcWxh
+Mnh4eC9xbGFfbWJ4LmMNCisrKyBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3Fs
+YV9tYnguYw0KQEAgLTMwNjYsNyArMzA2Niw4IEBAIHFsYTJ4MDBfZ2V0X3Jl
+c291cmNlX2NudHMoc2NzaV9xbGFfaG9zdF90ICp2aGEpDQogICoJS2VybmVs
+IGNvbnRleHQuDQogICovDQogaW50DQotcWxhMngwMF9nZXRfZmNhbF9wb3Np
+dGlvbl9tYXAoc2NzaV9xbGFfaG9zdF90ICp2aGEsIGNoYXIgKnBvc19tYXAp
+DQorcWxhMngwMF9nZXRfZmNhbF9wb3NpdGlvbl9tYXAoc2NzaV9xbGFfaG9z
+dF90ICp2aGEsIGNoYXIgKnBvc19tYXAsDQorCQl1OCAqbnVtX2VudHJpZXMp
+DQogew0KIAlpbnQgcnZhbDsNCiAJbWJ4X2NtZF90IG1jOw0KQEAgLTMxMDYs
+NiArMzEwNyw4IEBAIHFsYTJ4MDBfZ2V0X2ZjYWxfcG9zaXRpb25fbWFwKHNj
+c2lfcWxhX2hvc3RfdCAqdmhhLCBjaGFyICpwb3NfbWFwKQ0KIA0KIAkJaWYg
+KHBvc19tYXApDQogCQkJbWVtY3B5KHBvc19tYXAsIHBtYXAsIEZDQUxfTUFQ
+X1NJWkUpOw0KKwkJaWYgKG51bV9lbnRyaWVzKQ0KKwkJCSpudW1fZW50cmll
+cyA9IHBtYXBbMF07DQogCX0NCiAJZG1hX3Bvb2xfZnJlZShoYS0+c19kbWFf
+cG9vbCwgcG1hcCwgcG1hcF9kbWEpOw0KIA0KLS0gDQoyLjkuNQ0KDQo=
 
+--1879738122-1695936884-1655849122=:4730--
