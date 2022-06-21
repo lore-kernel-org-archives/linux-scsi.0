@@ -2,194 +2,68 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B64EC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jun 2022 08:46:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E8F1C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jun 2022 10:32:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230354AbiFUIp7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Jun 2022 04:45:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32836 "EHLO
+        id S229660AbiFUKcm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Jun 2022 06:32:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33306 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230456AbiFUIpz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jun 2022 04:45:55 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4AB9D26553;
-        Tue, 21 Jun 2022 01:45:54 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 0974F1F966;
-        Tue, 21 Jun 2022 08:45:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1655801153; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=7pouBC4i764FgZXOuJ6SFkbk2xa1PZt6dSFI3XEoLes=;
-        b=BxLNshCDBQRc4XmBU9sLjI5ynrIOKZzeUOi0zGyby68AWR+NLDKh1gQWWSjQmyLNWRb+W0
-        dy0bLKDuzMCdi110ykiH+iFiyHYjXJJ9LzLM8QxvKgjLk/ggBpz5iUtfZUkwmUxpm4jxDI
-        CIeoXXpEVaSAUBtAywORVhvrAqEkhoM=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1655801153;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=7pouBC4i764FgZXOuJ6SFkbk2xa1PZt6dSFI3XEoLes=;
-        b=k6ybPuTnlEi+J6ckMb+UuqBX0ObNoZVxlTDbFsuZr7WGvkpdlP8i7LXSwEWQ9sn0i6kP5E
-        tdUC8b/eV67CtfCQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id D3B6C13A88;
-        Tue, 21 Jun 2022 08:45:52 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id qHp9M0CFsWJvEAAAMHmgww
-        (envelope-from <hare@suse.de>); Tue, 21 Jun 2022 08:45:52 +0000
-Message-ID: <cc1028ad-bd51-dea7-9f3d-fb954416b9fa@suse.de>
-Date:   Tue, 21 Jun 2022 10:45:52 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.0
-Subject: Re: [PATCH v2 2/3] scsi: BusLogic remove bus_to_virt
-Content-Language: en-US
-To:     Arnd Bergmann <arnd@kernel.org>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     Arnd Bergmann <arnd@arndb.de>, Jakub Kicinski <kuba@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        iommu@lists.linux-foundation.org,
-        Khalid Aziz <khalid@gonehiking.org>,
-        "Maciej W . Rozycki" <macro@orcam.me.uk>,
-        Matt Wang <wwentao@vmware.com>,
-        Miquel van Smoorenburg <mikevs@xs4all.net>,
-        Mark Salyzyn <salyzyn@android.com>,
-        linuxppc-dev@lists.ozlabs.org, linux-arch@vger.kernel.org,
-        linux-alpha@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
-        linux-parisc@vger.kernel.org, Denis Efremov <efremov@linux.com>
-References: <20220617125750.728590-1-arnd@kernel.org>
- <20220617125750.728590-3-arnd@kernel.org>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20220617125750.728590-3-arnd@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+        with ESMTP id S229464AbiFUKcl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jun 2022 06:32:41 -0400
+Received: from smtpbg.qq.com (smtpbg138.qq.com [106.55.201.18])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D411A28735;
+        Tue, 21 Jun 2022 03:32:36 -0700 (PDT)
+X-QQ-mid: bizesmtp69t1655807486tz9qxx2r
+Received: from ubuntu.localdomain ( [106.117.99.68])
+        by bizesmtp.qq.com (ESMTP) with 
+        id ; Tue, 21 Jun 2022 18:31:22 +0800 (CST)
+X-QQ-SSF: 0100000000700030B000B00A0000000
+X-QQ-FEAT: 12WmTNdz4A2GoaWCvcCF9Kah1F9MRC/IaBdPf9aTvkOpMYtufAJDkWffRNh3h
+        qrqNocBrembt7PJ0yWatRyXwzsXs0qCSM0hrPTn/jfF+kafDyFygUK8AGq9mpV7vrPV8qjL
+        4hva569l3L4icTGQ/kUN+/4wk9Sc5CYFyipqVMGWugUim9qlWSUtHoM0uAeH8nlJLi2gs/n
+        X+woROn6C21lOVJw1FHlDFDCNmJwZXP3o2zuCeyXJ9NlJg1VonDYFeFA9NdPnG/43w0lhxP
+        40hVxY8ZI6xCqkg0nRrm6CXS62Zb9cb5sCamXhFUyQQD4Dd7Gv5Uk0u7YeTj58IRJjt2DnF
+        p0EyJ7BfOwdz7N/ukLjXj6xFpViEg==
+X-QQ-GoodBg: 0
+From:   Jiang Jian <jiangjian@cdjrlc.com>
+To:     sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
+        suganath-prabu.subramani@broadcom.com
+Cc:     MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, jiangjian@cdjrlc.com
+Subject: [PATCH] scsi: message: fusion: drop unexpected word "the"
+Date:   Tue, 21 Jun 2022 18:31:19 +0800
+Message-Id: <20220621103119.91492-1-jiangjian@cdjrlc.com>
+X-Mailer: git-send-email 2.17.1
+X-QQ-SENDSIZE: 520
+Feedback-ID: bizesmtp:cdjrlc.com:qybgspam:qybgspam10
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/17/22 14:57, Arnd Bergmann wrote:
-> From: Arnd Bergmann <arnd@arndb.de>
-> 
-> The BusLogic driver is the last remaining driver that relies on the
-> deprecated bus_to_virt() function, which in turn only works on a few
-> architectures, and is incompatible with both swiotlb and iommu support.
-> 
-> Before commit 391e2f25601e ("[SCSI] BusLogic: Port driver to 64-bit."),
-> the driver had a dependency on x86-32, presumably because of this
-> problem. However, the change introduced another bug that made it still
-> impossible to use the driver on any 64-bit machine.
-> 
-> This was in turn fixed in commit 56f396146af2 ("scsi: BusLogic: Fix
-> 64-bit system enumeration error for Buslogic"), 8 years later, which
-> shows that there are not a lot of users.
-> 
-> Maciej is still using the driver on 32-bit hardware, and Khalid mentioned
-> that the driver works with the device emulation used in VirtualBox
-> and VMware. Both of those only emulate it for Windows 2000 and older
-> operating systems that did not ship with the better LSI logic driver.
-> 
-> Do a minimum fix that searches through the list of descriptors to find
-> one that matches the bus address. This is clearly as inefficient as
-> was indicated in the code comment about the lack of a bus_to_virt()
-> replacement. A better fix would likely involve changing out the entire
-> descriptor allocation for a simpler one, but that would be much
-> more invasive.
-> 
-> Cc: Maciej W. Rozycki <macro@orcam.me.uk>
-> Cc: Matt Wang <wwentao@vmware.com>
-> Cc: Khalid Aziz <khalid@gonehiking.org>
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->   drivers/scsi/BusLogic.c | 27 ++++++++++++++++-----------
->   drivers/scsi/Kconfig    |  2 +-
->   2 files changed, 17 insertions(+), 12 deletions(-)
-> 
-> diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
-> index a897c8f914cf..d057abfcdd5c 100644
-> --- a/drivers/scsi/BusLogic.c
-> +++ b/drivers/scsi/BusLogic.c
-> @@ -2515,12 +2515,26 @@ static int blogic_resultcode(struct blogic_adapter *adapter,
->   	return (hoststatus << 16) | tgt_status;
->   }
->   
-> +/*
-> + * turn the dma address from an inbox into a ccb pointer
-> + * This is rather inefficient.
-> + */
-> +static struct blogic_ccb *
-> +blogic_inbox_to_ccb(struct blogic_adapter *adapter, struct blogic_inbox *inbox)
-> +{
-> +	struct blogic_ccb *ccb;
-> +
-> +	for (ccb = adapter->all_ccbs; ccb; ccb = ccb->next_all)
-> +		if (inbox->ccb == ccb->dma_handle)
-> +			break;
-> +
-> +	return ccb;
-> +}
->   
->   /*
->     blogic_scan_inbox scans the Incoming Mailboxes saving any
->     Incoming Mailbox entries for completion processing.
->   */
-> -
->   static void blogic_scan_inbox(struct blogic_adapter *adapter)
->   {
->   	/*
-> @@ -2540,16 +2554,7 @@ static void blogic_scan_inbox(struct blogic_adapter *adapter)
->   	enum blogic_cmplt_code comp_code;
->   
->   	while ((comp_code = next_inbox->comp_code) != BLOGIC_INBOX_FREE) {
-> -		/*
-> -		   We are only allowed to do this because we limit our
-> -		   architectures we run on to machines where bus_to_virt(
-> -		   actually works.  There *needs* to be a dma_addr_to_virt()
-> -		   in the new PCI DMA mapping interface to replace
-> -		   bus_to_virt() or else this code is going to become very
-> -		   innefficient.
-> -		 */
-> -		struct blogic_ccb *ccb =
-> -			(struct blogic_ccb *) bus_to_virt(next_inbox->ccb);
-> +		struct blogic_ccb *ccb = blogic_inbox_to_ccb(adapter, adapter->next_inbox);
->   		if (comp_code != BLOGIC_CMD_NOTFOUND) {
->   			if (ccb->status == BLOGIC_CCB_ACTIVE ||
->   					ccb->status == BLOGIC_CCB_RESET) {
-> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-> index cf75588a2587..56bdc08d0b77 100644
-> --- a/drivers/scsi/Kconfig
-> +++ b/drivers/scsi/Kconfig
-> @@ -513,7 +513,7 @@ config SCSI_HPTIOP
->   
->   config SCSI_BUSLOGIC
->   	tristate "BusLogic SCSI support"
-> -	depends on PCI && SCSI && VIRT_TO_BUS
-> +	depends on PCI && SCSI
->   	help
->   	  This is support for BusLogic MultiMaster and FlashPoint SCSI Host
->   	  Adapters. Consult the SCSI-HOWTO, available from
+there is an unexpected word "the" in the comments that need to be dropped
 
-CCB handling in the driver is ugly anyway, so that'll be good enough.
+>-   *  Update the target negotiation parameters based on the the Inquiry
+>+   *  Update the target negotiation parameters based on the Inquiry
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Jiang Jian <jiangjian@cdjrlc.com>
+---
+ drivers/message/fusion/mptspi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Cheers,
-
-Hannes
+diff --git a/drivers/message/fusion/mptspi.c b/drivers/message/fusion/mptspi.c
+index 388675cc1765..4c87a6b986f6 100644
+--- a/drivers/message/fusion/mptspi.c
++++ b/drivers/message/fusion/mptspi.c
+@@ -101,7 +101,7 @@ static u8	mptspiInternalCtx = MPT_MAX_PROTOCOL_DRIVERS; /* Used only for interna
+  *	@target: per target private data
+  *	@sdev: SCSI device
+  *
+- * 	Update the target negotiation parameters based on the the Inquiry
++ * 	Update the target negotiation parameters based on the Inquiry
+  *	data, adapter capabilities, and NVRAM settings.
+  **/
+ static void
 -- 
-Dr. Hannes Reinecke		           Kernel Storage Architect
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
+2.17.1
+
