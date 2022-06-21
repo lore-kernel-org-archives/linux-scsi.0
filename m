@@ -2,98 +2,68 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4B29C43334
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jun 2022 11:23:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1139CCA481
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jun 2022 14:20:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349701AbiFULXB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Jun 2022 07:23:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37218 "EHLO
+        id S1351259AbiFUOUc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Jun 2022 10:20:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33948 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349242AbiFULWj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jun 2022 07:22:39 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2BE8C2A435;
-        Tue, 21 Jun 2022 04:22:35 -0700 (PDT)
-Received: from fraeml740-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LS3wQ0Twwz6H6r5;
-        Tue, 21 Jun 2022 19:20:38 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml740-chm.china.huawei.com (10.206.15.221) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 21 Jun 2022 13:22:33 +0200
-Received: from localhost.localdomain (10.69.192.58) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 21 Jun 2022 12:22:27 +0100
-From:   John Garry <john.garry@huawei.com>
-To:     <axboe@kernel.dk>, <damien.lemoal@opensource.wdc.com>,
-        <bvanassche@acm.org>, <hch@lst.de>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <hare@suse.de>, <satishkh@cisco.com>,
-        <sebaddel@cisco.com>, <kartilak@cisco.com>
-CC:     <linux-doc@vger.kernel.org>, <linux-rdma@vger.kernel.org>,
-        <linux-mmc@vger.kernel.org>, <linux-nvme@lists.infradead.org>,
-        <linux-s390@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <mpi3mr-linuxdrv.pdl@broadcom.com>, <linux-block@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <nbd@other.debian.org>,
-        John Garry <john.garry@huawei.com>
-Subject: [PATCH v2 6/6] blk-mq: Drop local variable for reserved tag
-Date:   Tue, 21 Jun 2022 19:15:43 +0800
-Message-ID: <1655810143-67784-7-git-send-email-john.garry@huawei.com>
-X-Mailer: git-send-email 2.8.1
-In-Reply-To: <1655810143-67784-1-git-send-email-john.garry@huawei.com>
-References: <1655810143-67784-1-git-send-email-john.garry@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+        with ESMTP id S1350589AbiFUOUa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jun 2022 10:20:30 -0400
+Received: from smtpbg.qq.com (smtpbg136.qq.com [106.55.201.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCCD3140CD;
+        Tue, 21 Jun 2022 07:20:24 -0700 (PDT)
+X-QQ-mid: bizesmtp87t1655821217tp8rfu89
+Received: from ubuntu.localdomain ( [106.117.99.68])
+        by bizesmtp.qq.com (ESMTP) with 
+        id ; Tue, 21 Jun 2022 22:20:14 +0800 (CST)
+X-QQ-SSF: 0100000000700060B000D00A0000000
+X-QQ-FEAT: RKCwGdK8Yfg7VxFNpIqXTE0grhkMICdJ+CsRucJlPWC1m9niPrQ9sW1JDn21B
+        6RVWkPULMyA/QOh2SXDdLb5c5nsd57IznTuJp+KlQQSK1mMN2Q7CH4qBzNESwVJBhjZzszS
+        ohr8bxrhRIpGGB7C/dzy+qZxuZez1M3lsbWqFr6kslf8id1tlcR4HmieH/7m8UJ9GZiJxJr
+        grdKtzMY044sVBLe32+AgVqH4/XVbADzGod32P/xhv9yM8EL56RWml8LwjTVXWGlPRjLi+9
+        aI/XUUueipg2mveaL7x5iayAAXH7GvMkNHmp7AqhM0jSF9k0c0F6SoQxr+YtmHRL3CENm0c
+        AMjcxG7iCyEBL3m1l2BwXNDMfqD7a2dWWR/eeI0
+X-QQ-GoodBg: 0
+From:   Jiang Jian <jiangjian@cdjrlc.com>
+To:     martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Jiang Jian <jiangjian@cdjrlc.com>
+Subject: [PATCH] scsi: target: Remove duplicate 'the' in two places.
+Date:   Tue, 21 Jun 2022 22:20:12 +0800
+Message-Id: <20220621142012.4622-1-jiangjian@cdjrlc.com>
+X-Mailer: git-send-email 2.17.1
+X-QQ-SENDSIZE: 520
+Feedback-ID: bizesmtp:cdjrlc.com:qybgspam:qybgspam7
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The local variable is now only referenced once so drop it.
+file: drivers/target/target_core_alua.c
+line: 388
+ * the Target Port in question for the the incoming
+changed to
+ * the Target Port in question for the incoming
 
-Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Jiang Jian <jiangjian@cdjrlc.com>
 ---
- block/blk-mq-tag.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/target/target_core_alua.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
-index 509c35f080a9..b8cc8b41553f 100644
---- a/block/blk-mq-tag.c
-+++ b/block/blk-mq-tag.c
-@@ -266,7 +266,6 @@ static bool bt_iter(struct sbitmap *bitmap, unsigned int bitnr, void *data)
- 	struct blk_mq_hw_ctx *hctx = iter_data->hctx;
- 	struct request_queue *q = iter_data->q;
- 	struct blk_mq_tag_set *set = q->tag_set;
--	bool reserved = iter_data->reserved;
- 	struct blk_mq_tags *tags;
- 	struct request *rq;
- 	bool ret = true;
-@@ -276,7 +275,7 @@ static bool bt_iter(struct sbitmap *bitmap, unsigned int bitnr, void *data)
- 	else
- 		tags = hctx->tags;
+diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
+index b56ef8af66e7..58df0145e8d0 100644
+--- a/drivers/target/target_core_alua.c
++++ b/drivers/target/target_core_alua.c
+@@ -385,7 +385,7 @@ target_emulate_set_target_port_groups(struct se_cmd *cmd)
  
--	if (!reserved)
-+	if (!iter_data->reserved)
- 		bitnr += tags->nr_reserved_tags;
- 	/*
- 	 * We can hit rq == NULL here, because the tagging functions
-@@ -337,12 +336,11 @@ static bool bt_tags_iter(struct sbitmap *bitmap, unsigned int bitnr, void *data)
- {
- 	struct bt_tags_iter_data *iter_data = data;
- 	struct blk_mq_tags *tags = iter_data->tags;
--	bool reserved = iter_data->flags & BT_TAG_ITER_RESERVED;
- 	struct request *rq;
- 	bool ret = true;
- 	bool iter_static_rqs = !!(iter_data->flags & BT_TAG_ITER_STATIC_RQS);
- 
--	if (!reserved)
-+	if (!(iter_data->flags & BT_TAG_ITER_RESERVED))
- 		bitnr += tags->nr_reserved_tags;
- 
- 	/*
+ 			/*
+ 			 * Extract the RELATIVE TARGET PORT IDENTIFIER to identify
+-			 * the Target Port in question for the the incoming
++			 * the Target Port in question for the incoming
+ 			 * SET_TARGET_PORT_GROUPS op.
+ 			 */
+ 			rtpi = get_unaligned_be16(ptr + 2);
 -- 
-2.25.1
+2.17.1
 
