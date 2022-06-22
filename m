@@ -2,74 +2,129 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AF1AC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jun 2022 11:15:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A189C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jun 2022 11:16:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355611AbiFVLPc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Jun 2022 07:15:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54924 "EHLO
+        id S1357163AbiFVLQe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Jun 2022 07:16:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55802 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354579AbiFVLP3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jun 2022 07:15:29 -0400
-Received: from smtpbg.qq.com (smtpbg138.qq.com [106.55.201.18])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B78F23A71C;
-        Wed, 22 Jun 2022 04:15:23 -0700 (PDT)
-X-QQ-mid: bizesmtp82t1655896451ts8iyooo
-Received: from ubuntu.localdomain ( [223.104.103.173])
-        by bizesmtp.qq.com (ESMTP) with 
-        id ; Wed, 22 Jun 2022 19:14:05 +0800 (CST)
-X-QQ-SSF: 01000000008000B0B000B00A0000000
-X-QQ-FEAT: DHpJGCbtM4nBmAWYzX6NaNhkYQbXDPKYhFBXaRdc/3+DB0CP/7je1x84gYVPy
-        6m1CPCTdb9SUh05FKda9aw9kDH+CbglNQIiAeCaVryjitrnkAHUW3NuFHoJ31r/qhUVJ5a9
-        Mno3k2Tnuer41AKg21GHAnF9cmMApZK257xypaCzBh3neGfNnAmi6S6Q2OPRl8wdSyVjFVc
-        X2iZIerPtDBK4g2vTyA0VCyXJwFcCDB5Q26cpDggz7+c0IfyMtL5p8nF7WdSPxGNDjIv1Ve
-        RIUE02YsHgRJQrAs7ZmyvzQDYFMzlaO+3ExhOTIFqMlcqTsa46LmjvaXP8Lt3MkNJ13D2/Q
-        rPAzoG9OIhi3xWUjrhixrBGRkI3ag==
-X-QQ-GoodBg: 0
-From:   Jiang Jian <jiangjian@cdjrlc.com>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     james.smart@broadcom.com, dick.kennedy@broadcom.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jiang Jian <jiangjian@cdjrlc.com>
-Subject: [PATCH] scsi: lpfc: drop unexpected word "the" in the comments
-Date:   Wed, 22 Jun 2022 19:14:03 +0800
-Message-Id: <20220622111403.11203-1-jiangjian@cdjrlc.com>
-X-Mailer: git-send-email 2.17.1
-X-QQ-SENDSIZE: 520
-Feedback-ID: bizesmtp:cdjrlc.com:qybgspam:qybgspam10
+        with ESMTP id S1357187AbiFVLQ0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jun 2022 07:16:26 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FAAB3A72E;
+        Wed, 22 Jun 2022 04:16:21 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by sin.source.kernel.org (Postfix) with ESMTPS id BB3CECE1EE0;
+        Wed, 22 Jun 2022 11:16:19 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5FCCEC34114;
+        Wed, 22 Jun 2022 11:16:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1655896578;
+        bh=tMTA9meN2czeIclIiOAgShr7yIKAOgnCpTndOYpqW5M=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=pUATFC9kpVwIRTdzsbji6glLE0TrGPunoayWozO3r2+04fGy49+1jX4EbPLczZvwx
+         IrAo95I2n30GbTI/BW0MXtrJLVZEdj1sGl6ybAyRufHgYMhvfD1hl/hibhes3jYnW8
+         RkpupOOmMIlceXGm0l7xDDLo2gdAuSwVulOqIl4YW4ANPJj+y8mwmUTXmWfVYSRCiS
+         x9puLv+b+0K7dw8xV0zgypHrtCqjqFvf9N+uIC8qBdItC5iTYonNYbmgj0qQnEj9eD
+         4H2mXvciaOm9kZlUL+kRxLGq4OreCsWRwKZx0OMw3IlYM8GI9AjSadFUg9KDNYQoFT
+         30lUbSVZvXUiQ==
+Date:   Wed, 22 Jun 2022 13:16:13 +0200
+From:   Wolfram Sang <wsa@kernel.org>
+To:     Avri Altman <Avri.Altman@wdc.com>
+Cc:     Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "krzk+dt@kernel.org" <krzk+dt@kernel.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-renesas-soc@vger.kernel.org" 
+        <linux-renesas-soc@vger.kernel.org>,
+        Geert Uytterhoeven <geert+renesas@glider.be>
+Subject: Re: [PATCH v6 7/7] arm64: dts: renesas: r8a779f0: spider-cpu: Enable
+ UFS device
+Message-ID: <YrL5/ZN5qU2w+uRK@shikoro>
+Mail-Followup-To: Wolfram Sang <wsa@kernel.org>,
+        Avri Altman <Avri.Altman@wdc.com>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "krzk+dt@kernel.org" <krzk+dt@kernel.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-renesas-soc@vger.kernel.org" <linux-renesas-soc@vger.kernel.org>,
+        Geert Uytterhoeven <geert+renesas@glider.be>
+References: <20220603110524.1997825-1-yoshihiro.shimoda.uh@renesas.com>
+ <20220603110524.1997825-8-yoshihiro.shimoda.uh@renesas.com>
+ <YrHgOptQ56woMAeO@shikoro>
+ <DM6PR04MB6575D7C91E0925B5D498ABF3FCB29@DM6PR04MB6575.namprd04.prod.outlook.com>
+ <YrLU6/jAZ5lGnL3p@shikoro>
+ <DM6PR04MB6575FD5AEE828A184B3713D8FCB29@DM6PR04MB6575.namprd04.prod.outlook.com>
+ <DM6PR04MB6575DA24CCF398A890129C78FCB29@DM6PR04MB6575.namprd04.prod.outlook.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="UMw3NYlBKlieYLVM"
+Content-Disposition: inline
+In-Reply-To: <DM6PR04MB6575DA24CCF398A890129C78FCB29@DM6PR04MB6575.namprd04.prod.outlook.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-there is an unexpected word "the" in the comments that need to be dropped
 
-file: drivers/scsi/lpfc/lpfc_attr.c
-line: 2463
+--UMw3NYlBKlieYLVM
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-  * @phba: pointer the the adapter structure.
+Hi Avri,
 
-changed to:
+> > > which leads me to this call in ufshpb_get_dev_info():
+> > >
+> > > 2622         ret = ufshcd_query_attr_retry(hba,
+> > > UPIU_QUERY_OPCODE_READ_ATTR,
+> > > 2623                 QUERY_ATTR_IDN_MAX_HPB_SINGLE_CMD, 0, 0,
+> > > &max_single_cmd);
+> > >
+> > > And from here on, I miss the UFS experience to debug further. But I
+> > > will happily provide more information if people give me pointers.
+> > Ah ok.
+> > That's cool - HPB is enable on your platform.
+> > For some reason JEDEC didn't merge the HPB amendment into UFS4.0 - and I
+> > forgot all about that attribute.
+> And the source of this error is that your device does not support HPB2.0,
+> Which is fine, because HPB2.0 support was removed a while ago.
 
-  * @phba: pointer the adapter structure.
+As I understand, the UFS core needs an update then? If you CC me on
+patches, I will test them right away.
 
-Signed-off-by: Jiang Jian <jiangjian@cdjrlc.com>
----
- drivers/scsi/lpfc/lpfc_attr.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Happy hacking,
 
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index 3caaa7c4af48..fc8133b0ba9a 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -2460,7 +2460,7 @@ lpfc_sriov_hw_max_virtfn_show(struct device *dev,
- 
- /**
-  * lpfc_enable_bbcr_set: Sets an attribute value.
-- * @phba: pointer the the adapter structure.
-+ * @phba: pointer the adapter structure.
-  * @val: integer attribute value.
-  *
-  * Description:
--- 
-2.17.1
+   Wolfram
 
+
+--UMw3NYlBKlieYLVM
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEOZGx6rniZ1Gk92RdFA3kzBSgKbYFAmKy+f0ACgkQFA3kzBSg
+KbZC/BAAr5WOTjNVprF5QAvo3KROFxn0Rr0jwxY+lUUR0mGYSzzfYTCrxLAZ5NwW
+dsgGT/wEQkYqEyQy7cQYyX338QnIV5rmEyXfWJG/VvYMJSXoxGyKk7eyuFHKdFlN
+tSMBLsJUfMItpPLkvfGZl0gcLMAo94O1Ndxf68G6MUJkR2gvbUdVdjA8WBPWuJAk
+QAObulCAHK8W2vKxERPkmvC6GE323+Af8DSF2rEXEIGCBCrmqFu7y5AKHvMEnjcc
+9UcIUc1M+yuWZmtx40Mjw69Cc01KEf076cP2FxwO9R+h7l2ihjojAepUAabLFcjI
+DbuKaXJ5aKILY6B5ngJsiOc8RVOlPK04c+fSQ9TDq4wG5S8gRejq8wP1prI9Twuq
+tfPeyVw6DUZy0yvH4xO0UBlPn/C+ZOV+/qRwYbHMB90cXTsIeeckleFTdMiZBII2
+B6Gx5D1ldEt4Sv8o4PDUMV8AWV2pRsqk0C8oQMuKf7s6NhrZpA2kVkK8mnNWNE+d
+9abLFBir/Pjpcgz7QA8KCF0rcIyO22XOt4Ny9cyGQRG1QLR38lH8EP3ht/SRSsIY
+GdGEZ9+Jtvjvk+y/7FkrP/wYF9/eQDzxEim9ypUN17yQ9ZCY3jnrJ/AKExIxsP+P
+X1f28fEdLJmIv+FGSv6yXWKHh8m0WpdHv/NC5p38ZmDIKSeZt8c=
+=drAy
+-----END PGP SIGNATURE-----
+
+--UMw3NYlBKlieYLVM--
