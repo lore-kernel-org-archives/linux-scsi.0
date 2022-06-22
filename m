@@ -2,89 +2,122 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70FD6C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jun 2022 08:17:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2860C43334
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jun 2022 08:23:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240157AbiFVIRS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Jun 2022 04:17:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42784 "EHLO
+        id S232239AbiFVIXE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Jun 2022 04:23:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47204 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242231AbiFVIQ6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jun 2022 04:16:58 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 82D7C37BEC
-        for <linux-scsi@vger.kernel.org>; Wed, 22 Jun 2022 01:16:56 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        with ESMTP id S229989AbiFVIXD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jun 2022 04:23:03 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C47BD6478;
+        Wed, 22 Jun 2022 01:23:02 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 01DC61F9F9;
-        Wed, 22 Jun 2022 08:16:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1655885815; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=59LeELaPTffMej3LhzMmKJquQLmznld84T8hOrCAnqg=;
-        b=s6ys7RKP2YvtBFcm/f0ylVl2AsRsrbrygDEfArp7SyedI9l/4SvDxoRcvKbugV4WaMqwT0
-        pfMC+tzjoD6ieRByPN7qtVib1oP2N+nKKZ/vm1P7FMMp17T3gcR5HNL84sSxtqK3wX1muk
-        fZBABeixtB4PDfEHC9FJYEfCz4POISs=
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id B87B913A5D;
-        Wed, 22 Jun 2022 08:16:54 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id Y6RWK/bPsmJCAgAAMHmgww
-        (envelope-from <mwilck@suse.com>); Wed, 22 Jun 2022 08:16:54 +0000
-Message-ID: <d409f1856e46c3df951eaac9eed14844c66961fa.camel@suse.com>
-Subject: Re: [PATCH 1/2] scsi: add BLIST_RETRY_SCAN to ignore errors during
- scanning
-From:   Martin Wilck <mwilck@suse.com>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.de>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
-        Ming Lei <ming.lei@redhat.com>,
-        Bart Van Assche <Bart.VanAssche@sandisk.com>
-Date:   Wed, 22 Jun 2022 10:16:54 +0200
-In-Reply-To: <yq15yktjw77.fsf@ca-mkp.ca.oracle.com>
-References: <20220615164149.3092-1-mwilck@suse.com>
-         <20220615164149.3092-2-mwilck@suse.com>
-         <yq15yktjw77.fsf@ca-mkp.ca.oracle.com>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.2 
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5D1CD6185C;
+        Wed, 22 Jun 2022 08:23:02 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA9DDC3411D;
+        Wed, 22 Jun 2022 08:23:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1655886181;
+        bh=P5mdURKMr+mRkZVjrQMgOzOhTCZmcsEXIdG+fjI0jTw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=fdTUSaf4cpnmn+fEVbYhHTt7niysFro6D1GYt8LUZ6msmpcDMJrC1WVf5c42FtkPx
+         gNxq1Q2asjSHeajMz/CM4K1femcsvw6rlUZ1pKtARiJodYYR4PC9pGzOH1VqFixIGa
+         vKsM4IvE+NGvSwnMNiB0puo6FKRDbA/lhMdDTKW+YkllUkMr9odjJxBMxWZfXDUtLU
+         lk6Y6DAhdOZ6KrOYaUlA+tx+fZIIKbIqWHTNJ26P8ZYonklI0c8b01vGWQYmdYITlx
+         PUQaNYY51EQKI2hK7hIxWWzchCJnfPZLCO7uA5SHk5wvWrvxjtMha4KNj2QATota84
+         k4prYbuF0fjyw==
+Date:   Wed, 22 Jun 2022 10:22:52 +0200
+From:   Wolfram Sang <wsa@kernel.org>
+To:     Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Cc:     "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "krzk+dt@kernel.org" <krzk+dt@kernel.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-renesas-soc@vger.kernel.org" 
+        <linux-renesas-soc@vger.kernel.org>,
+        Geert Uytterhoeven <geert+renesas@glider.be>
+Subject: Re: [PATCH v6 7/7] arm64: dts: renesas: r8a779f0: spider-cpu: Enable
+ UFS device
+Message-ID: <YrLRXMSZvTdLNkDQ@shikoro>
+Mail-Followup-To: Wolfram Sang <wsa@kernel.org>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "krzk+dt@kernel.org" <krzk+dt@kernel.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-renesas-soc@vger.kernel.org" <linux-renesas-soc@vger.kernel.org>,
+        Geert Uytterhoeven <geert+renesas@glider.be>
+References: <20220603110524.1997825-1-yoshihiro.shimoda.uh@renesas.com>
+ <20220603110524.1997825-8-yoshihiro.shimoda.uh@renesas.com>
+ <YrHgOptQ56woMAeO@shikoro>
+ <TYBPR01MB53410E99F2A9D783FAFD42DBD8B29@TYBPR01MB5341.jpnprd01.prod.outlook.com>
 MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="Jr88FrY4P3CI52rY"
+Content-Disposition: inline
+In-Reply-To: <TYBPR01MB53410E99F2A9D783FAFD42DBD8B29@TYBPR01MB5341.jpnprd01.prod.outlook.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 2022-06-21 at 22:02 -0400, Martin K. Petersen wrote:
->=20
-> Martin,
->=20
-> > @@ -1531,9 +1536,10 @@ static int scsi_report_lun_scan(struct
-> > scsi_target *starget, blist_flags_t bflag
-> > =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 " allowed by the host
-> > adapter\n", lun);
-> > =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0} else {
-> > =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0int res;
-> > +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0b=
-list_flags_t bflags =3D BLIST_RETRY_SCAN;
->=20
-> I'm not a big fan of using the bflag as carrier of "I was reported
-> and
-> therefore must exist".
->=20
-> Also: Why isn't patch #2 sufficient?
 
-I think it is. I can resubmit just #2 if you prefer and Hannes agrees.
+--Jr88FrY4P3CI52rY
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Regards,
-Martin
+Hi Shimoda-san,
+
+> Hmm, my environment [1] could not reproduce this error messages.=20
+
+Interesting. I will add some debug output to provide more information.
+
+> based on renesas-drivers-2022-05-24-v5.18 which I made the patches.
+> Perhaps, should I test on the latest kernel?
+> Which kernel version did you test?
+
+renesas-drivers-2022-06-07-v5.19-rc1 with my Thermal, HSCIF, and your
+UFS patches on top. I pushed it here:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/wsa/linux.git renesas/s4/ufs-=
+experimental
+
+I'll be back soon,
+
+   Wolfram
 
 
+--Jr88FrY4P3CI52rY
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEOZGx6rniZ1Gk92RdFA3kzBSgKbYFAmKy0VgACgkQFA3kzBSg
+KbYqYxAApd8+WuAKHQsQuwhjDcF1HQ5argTIjceKBbQASp1lfI31BOiLO7UJ/kcD
+4XNGQzvrKaeZcPImu418PagFPpRnjM01k9aQo9p4DyKdIzshfkFIfIbmhMgqAfFQ
+9wCGDDFZT4KVGVxKBvTLOqgabm4wM1qxOVz7hTD+I2uX0E67A6LVg4HWfB0wXRFC
+Ml7bXy+XjAVNX8Bjtu/Clmpg7QAf1GaJt2wPkVF45PL7POncxlyUTi1dLMNWvDtJ
+surrOJ8sc5XBJDtbKBcyYfHCOuK3tQhjYQa72hSC5ePtTDT743xearc7y+Xdaay2
+W3jNbFqREz/taAQsxc0H4vcr4EIcFpiiDhJrSZcTbLvWfHbRa5y0Q7idCJ4l6HPB
+7bH8a+GAUcsQsrsUo3y6K98PtMsRdfMz/5QclwMVANnj+46iFjTKsNOpVt5tV0ME
+M9Ir1Ai9zcmUVLcPMHgaHvXP5kAGQEktaS/CNCi8ojkxJqEvEke6W/OD7DljLbJG
+Y4MPpbb2JFGfUSN7tsIt49JQeN8qXLjM1upHgj0Pww/dwUR0w84s2zbl1Cxwq58E
+/UM753fcKfNryKMU72mBuCQD+zWbATvPwVN1MB1tyO6P3LzmAd+rH4QHT+47/MP2
+2AFo4Nrlct9BQ+UYJ5ytJPzOgZI+57YmeVJS8UXrCc3OVrLf9uY=
+=cyYy
+-----END PGP SIGNATURE-----
+
+--Jr88FrY4P3CI52rY--
