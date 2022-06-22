@@ -2,41 +2,41 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFEDBCCA47A
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jun 2022 07:37:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AB96C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jun 2022 07:37:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353433AbiFVHhj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Jun 2022 03:37:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39720 "EHLO
+        id S1353461AbiFVHhl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Jun 2022 03:37:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39718 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353239AbiFVHhg (ORCPT
+        with ESMTP id S1353238AbiFVHhg (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jun 2022 03:37:36 -0400
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C91D377D7;
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2C0F377DC;
         Wed, 22 Jun 2022 00:37:28 -0700 (PDT)
-X-UUID: 33390577362f44b1918c08e13730463c-20220622
+X-UUID: a0c07be0e83843498b1475e59c031ef6-20220622
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.6,REQID:c476df90-9efa-4320-a5fa-d976b431f0bb,OB:30,L
-        OB:30,IP:0,URL:5,TC:0,Content:-5,EDM:0,RT:0,SF:95,FILE:0,RULE:Release_Ham,
-        ACTION:release,TS:95
-X-CID-INFO: VERSION:1.1.6,REQID:c476df90-9efa-4320-a5fa-d976b431f0bb,OB:30,LOB
-        :30,IP:0,URL:5,TC:0,Content:-5,EDM:0,RT:0,SF:95,FILE:0,RULE:Spam_GS981B3D,
-        ACTION:quarantine,TS:95
-X-CID-META: VersionHash:b14ad71,CLOUDID:86a1ba2d-1756-4fa3-be7f-474a6e4be921,C
-        OID:d1d2169eb362,Recheck:0,SF:28|17|19|48,TC:nil,Content:0,EDM:-3,IP:nil,U
-        RL:1,File:nil,QS:nil,BEC:nil,COL:0
-X-UUID: 33390577362f44b1918c08e13730463c-20220622
-Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw01.mediatek.com
+X-CID-O-INFO: VERSION:1.1.6,REQID:d4bf5cc2-30ef-44c5-a898-c29d15e42452,OB:0,LO
+        B:10,IP:0,URL:0,TC:0,Content:-5,EDM:0,RT:0,SF:95,FILE:0,RULE:Release_Ham,A
+        CTION:release,TS:90
+X-CID-INFO: VERSION:1.1.6,REQID:d4bf5cc2-30ef-44c5-a898-c29d15e42452,OB:0,LOB:
+        10,IP:0,URL:0,TC:0,Content:-5,EDM:0,RT:0,SF:95,FILE:0,RULE:Spam_GS981B3D,A
+        CTION:quarantine,TS:90
+X-CID-META: VersionHash:b14ad71,CLOUDID:c9272738-5e4b-44d7-80b2-bb618cb09d29,C
+        OID:5488c44df5a1,Recheck:0,SF:28|17|19|48,TC:nil,Content:0,EDM:-3,IP:nil,U
+        RL:0,File:nil,QS:nil,BEC:nil,COL:0
+X-UUID: a0c07be0e83843498b1475e59c031ef6-20220622
+Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw02.mediatek.com
         (envelope-from <stanley.chu@mediatek.com>)
         (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1132763863; Wed, 22 Jun 2022 15:37:22 +0800
+        with ESMTP id 1276742694; Wed, 22 Jun 2022 15:37:21 +0800
 Received: from mtkmbs11n1.mediatek.inc (172.21.101.186) by
  mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.792.3;
- Wed, 22 Jun 2022 15:37:21 +0800
+ Wed, 22 Jun 2022 15:37:20 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
  mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.792.3 via Frontend Transport; Wed, 22 Jun 2022 15:37:21 +0800
+ 15.2.792.3 via Frontend Transport; Wed, 22 Jun 2022 15:37:20 +0800
 From:   Stanley Chu <stanley.chu@mediatek.com>
 To:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
@@ -49,9 +49,9 @@ CC:     <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
         <tun-yu.yu@mediatek.com>, <cc.chou@mediatek.com>,
         <chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
         <stanley.chu@mediatek.com>
-Subject: [PATCH v1 4/7] scsi: ufs-mediatek: Add stage information for ref-clk control
-Date:   Wed, 22 Jun 2022 15:37:16 +0800
-Message-ID: <20220622073719.21599-5-stanley.chu@mediatek.com>
+Subject: [PATCH v1 1/7] scsi: ufs-mediatek: Fix build warnings
+Date:   Wed, 22 Jun 2022 15:37:13 +0800
+Message-ID: <20220622073719.21599-2-stanley.chu@mediatek.com>
 X-Mailer: git-send-email 2.18.0
 In-Reply-To: <20220622073719.21599-1-stanley.chu@mediatek.com>
 References: <20220622073719.21599-1-stanley.chu@mediatek.com>
@@ -62,70 +62,76 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Peter Wang <peter.wang@mediatek.com>
+Fix build warnings as below,
+1.
+../drivers/ufs/host/ufs-mediatek.c:1375:5: error: no previous prototype for function 'ufs_mtk_system_suspend' [-Werror,-Wmissing-prototypes]
+int ufs_mtk_system_suspend(struct device *dev)
+    ^
+../drivers/ufs/host/ufs-mediatek.c:1375:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+int ufs_mtk_system_suspend(struct device *dev)
+^
+static
 
-Add "PRE_CHANGE" and "POST_CHANGE" information for
-ref-clk control to precisely configure the low-power
-state of the parent of ref-clk.
+2.
+../drivers/ufs/host/ufs-mediatek.c:702:50: error: format specifies type 'unsigned long' but the argument has type 'int' [-Werror,-Wformat]
+                snprintf(vcc_name, MAX_VCC_NAME, "vcc-ufs%lu", ver);
+                                                         ~~~   ^~~
+                                                         %d
 
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
 Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
 ---
- drivers/ufs/host/ufs-mediatek.c | 9 +++++----
- drivers/ufs/host/ufs-mediatek.h | 4 ++--
- 2 files changed, 7 insertions(+), 6 deletions(-)
+ drivers/ufs/host/ufs-mediatek.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index d6b2734e7f81..8184e871ff8e 100755
+index 3ee27f2bcdfc..d970c6607b4a 100755
 --- a/drivers/ufs/host/ufs-mediatek.c
 +++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -244,8 +244,9 @@ static int ufs_mtk_setup_ref_clk(struct ufs_hba *hba, bool on)
- 	if (host->ref_clk_enabled == on)
- 		return 0;
- 
-+	ufs_mtk_ref_clk_notify(on, PRE_CHANGE, res);
-+
- 	if (on) {
--		ufs_mtk_ref_clk_notify(on, res);
- 		ufshcd_writel(hba, REFCLK_REQUEST, REG_UFS_REFCLK_CTRL);
+@@ -690,7 +690,7 @@ static int ufs_mtk_vreg_fix_vcc(struct ufs_hba *hba)
+ 			return -ENODEV;
+ 	} else if (of_property_read_bool(np, "mediatek,ufs-vcc-by-ver")) {
+ 		ver = (hba->dev_info.wspecversion & 0xF00) >> 8;
+-		snprintf(vcc_name, MAX_VCC_NAME, "vcc-ufs%lu", ver);
++		snprintf(vcc_name, MAX_VCC_NAME, "vcc-ufs%d", ver);
  	} else {
- 		ufshcd_delay_us(host->ref_clk_gating_wait_us, 10);
-@@ -267,7 +268,7 @@ static int ufs_mtk_setup_ref_clk(struct ufs_hba *hba, bool on)
+ 		return 0;
+ 	}
+@@ -1364,7 +1364,7 @@ static int ufs_mtk_remove(struct platform_device *pdev)
+ }
  
- 	dev_err(hba->dev, "missing ack of refclk req, reg: 0x%x\n", value);
- 
--	ufs_mtk_ref_clk_notify(host->ref_clk_enabled, res);
-+	ufs_mtk_ref_clk_notify(host->ref_clk_enabled, POST_CHANGE, res);
- 
- 	return -ETIMEDOUT;
- 
-@@ -275,8 +276,8 @@ static int ufs_mtk_setup_ref_clk(struct ufs_hba *hba, bool on)
- 	host->ref_clk_enabled = on;
- 	if (on)
- 		ufshcd_delay_us(host->ref_clk_ungating_wait_us, 10);
--	else
--		ufs_mtk_ref_clk_notify(on, res);
-+
-+	ufs_mtk_ref_clk_notify(on, POST_CHANGE, res);
- 
+ #ifdef CONFIG_PM_SLEEP
+-int ufs_mtk_system_suspend(struct device *dev)
++static int ufs_mtk_system_suspend(struct device *dev)
+ {
+ 	struct ufs_hba *hba = dev_get_drvdata(dev);
+ 	int ret;
+@@ -1378,7 +1378,7 @@ int ufs_mtk_system_suspend(struct device *dev)
  	return 0;
  }
-diff --git a/drivers/ufs/host/ufs-mediatek.h b/drivers/ufs/host/ufs-mediatek.h
-index f5c1c643dd52..c12ceb4d941f 100755
---- a/drivers/ufs/host/ufs-mediatek.h
-+++ b/drivers/ufs/host/ufs-mediatek.h
-@@ -189,8 +189,8 @@ static void _ufs_mtk_smc(struct ufs_mtk_smc_arg s)
- #define ufs_mtk_crypto_ctrl(res, enable) \
- 	ufs_mtk_smc(UFS_MTK_SIP_CRYPTO_CTRL, &(res), enable)
  
--#define ufs_mtk_ref_clk_notify(on, res) \
--	ufs_mtk_smc(UFS_MTK_SIP_REF_CLK_NOTIFICATION, &(res), on)
-+#define ufs_mtk_ref_clk_notify(on, stage, res) \
-+	ufs_mtk_smc(UFS_MTK_SIP_REF_CLK_NOTIFICATION, &(res), on, stage)
+-int ufs_mtk_system_resume(struct device *dev)
++static int ufs_mtk_system_resume(struct device *dev)
+ {
+ 	struct ufs_hba *hba = dev_get_drvdata(dev);
  
- #define ufs_mtk_device_reset_ctrl(high, res) \
- 	ufs_mtk_smc(UFS_MTK_SIP_DEVICE_RESET, &(res), high)
+@@ -1388,7 +1388,7 @@ int ufs_mtk_system_resume(struct device *dev)
+ }
+ #endif
+ 
+-int ufs_mtk_runtime_suspend(struct device *dev)
++static int ufs_mtk_runtime_suspend(struct device *dev)
+ {
+ 	struct ufs_hba *hba = dev_get_drvdata(dev);
+ 	int ret = 0;
+@@ -1402,7 +1402,7 @@ int ufs_mtk_runtime_suspend(struct device *dev)
+ 	return 0;
+ }
+ 
+-int ufs_mtk_runtime_resume(struct device *dev)
++static int ufs_mtk_runtime_resume(struct device *dev)
+ {
+ 	struct ufs_hba *hba = dev_get_drvdata(dev);
+ 
 -- 
 2.18.0
 
