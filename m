@@ -2,73 +2,92 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 184F2C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jun 2022 15:47:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F4054CCA47D
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jun 2022 16:05:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1359476AbiFVPrU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Jun 2022 11:47:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46340 "EHLO
+        id S1376461AbiFVQFh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Jun 2022 12:05:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39292 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1359452AbiFVPrS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jun 2022 11:47:18 -0400
-Received: from smtpbg.qq.com (smtpbg139.qq.com [175.27.65.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1BC573A5DF;
-        Wed, 22 Jun 2022 08:47:12 -0700 (PDT)
-X-QQ-mid: bizesmtp82t1655912818tj316vfu
-Received: from ubuntu.localdomain ( [106.117.78.84])
-        by bizesmtp.qq.com (ESMTP) with 
-        id ; Wed, 22 Jun 2022 23:46:51 +0800 (CST)
-X-QQ-SSF: 01000000008000B0C000E00A0000000
-X-QQ-FEAT: lC5HeAtE+ybpWJvPlMY4q+X7QecgsK1KuqPmyqv0LOZQcv9VGoNS9n96zZdZD
-        QEKJJ2XnB00imctSCSEZ9Z438q0rgDVeTTXcMNqwAxyIw38UeIutPE+4mbmYKBbkTYbJPTb
-        gKj066SldrajjKYMvN8+Zi03xM/7WywXDleNm4gUxfQ/gM1wOTtEG3sDXYPOgtHKmNyHW/i
-        ryP+ZSQHy34i2+mcqkuUs8krONJCGc6td3h5w53JNCsGDNOhLw14DyALFvuipAQ3WCwpHHK
-        F9VLMklTJfyDeeqZi1LHRZjMWJ4FKBc3ybIqiCvKhPzy098T/rmvxbS5/REDQ5+i7nxCFbA
-        qZM+sAoXMKAw2RjDsFXUwemvjvWGdbqmMsMXwVH
-X-QQ-GoodBg: 0
-From:   Jiang Jian <jiangjian@cdjrlc.com>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     jiangjian@cdjrlc.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: aic94xx: fix typos in comments
-Date:   Wed, 22 Jun 2022 23:46:49 +0800
-Message-Id: <20220622154649.6979-1-jiangjian@cdjrlc.com>
-X-Mailer: git-send-email 2.17.1
-X-QQ-SENDSIZE: 520
-Feedback-ID: bizesmtp:cdjrlc.com:qybgspam:qybgspam6
+        with ESMTP id S1376524AbiFVQFD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jun 2022 12:05:03 -0400
+Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 386FC3FD89;
+        Wed, 22 Jun 2022 09:04:50 -0700 (PDT)
+Received: by mail-pl1-f173.google.com with SMTP id o18so8721714plg.2;
+        Wed, 22 Jun 2022 09:04:50 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=y/E0abu7nd+/n02vnB39JPI2fjZU0lLiv9Lz90V/yI8=;
+        b=DG6H2RxjC77+zYNJkQ4hNU8Hq+CGxYN1n4mJbtkU6F00pY+elv8MeE+aZr6RwxGn8b
+         AtE26HNTgsnOQYo56FIEWUIHKZObZa1BaDoWe59xl8j/YfDfO5DiuqX4GG5qx3CT1p0C
+         V9y1of9JZe775dRVUjoz6CmKjCPhz8pGcdG5K/Eqt8OFpzPso/K8xD4CGSsyeWgYNNAJ
+         1okpkzx4auNwoMpDUj2V2aaGOyfQME1cYbA1ljTRM9C+k45C6meYvipWsUwKMhupEV1Z
+         jce9dro7ag2nOLMTSesSIO0AaaZP/WGnHOhoKdtN0m/evCKIVIwq8Gs9EwZkpD6FvB58
+         XLaw==
+X-Gm-Message-State: AJIora8zI9JDfXRPYpHsGSTk0Nw/d6dGHuPwq8o3NAe8eEOnuSmLhAKq
+        FNhskhCGMEP/rSiyXAZ07tcLmKq90ws=
+X-Google-Smtp-Source: AGRyM1un/hCrO1Tux3G/1uw1RBOiuwd/JmRMKGmDWPGwnzJT+Mu6fFivFjUZXD11KEGMwOQSTkDsww==
+X-Received: by 2002:a17:90a:eace:b0:1ec:b2a6:c9cf with SMTP id ev14-20020a17090aeace00b001ecb2a6c9cfmr15834261pjb.26.1655913889342;
+        Wed, 22 Jun 2022 09:04:49 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:9497:eb13:222f:4e4d? ([2620:15c:211:201:9497:eb13:222f:4e4d])
+        by smtp.gmail.com with ESMTPSA id bx5-20020a17090af48500b001e0899052f1sm14603842pjb.3.2022.06.22.09.04.48
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 22 Jun 2022 09:04:48 -0700 (PDT)
+Message-ID: <4355e287-11e3-dfb2-f35e-5c991c57b85a@acm.org>
+Date:   Wed, 22 Jun 2022 09:04:46 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH] scsi: sg: Fix typo in comments
+Content-Language: en-US
+To:     Jiang Jian <jiangjian@cdjrlc.com>, dgilbert@interlog.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20220622153029.4137-1-jiangjian@cdjrlc.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20220622153029.4137-1-jiangjian@cdjrlc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Replace 'is' with 'it'
+On 6/22/22 08:30, Jiang Jian wrote:
+> there is an unexpected word 'is' in the comments that need to be dropped
+> 
+> file: drivers/scsi/sg.c
+> line: 697
+> 
+> * but is is possible that the app intended SG_DXFER_TO_DEV, because there
+> 
+> changed to:
+> 
+> * but is possible that the app intended SG_DXFER_TO_DEV, because there
+> 
+> Signed-off-by: Jiang Jian <jiangjian@cdjrlc.com>
+> ---
+>   drivers/scsi/sg.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+> index 118c7b4a8af2..047761f62b23 100644
+> --- a/drivers/scsi/sg.c
+> +++ b/drivers/scsi/sg.c
+> @@ -694,7 +694,7 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
+>   	}
+>   	/*
+>   	 * SG_DXFER_TO_FROM_DEV is functionally equivalent to SG_DXFER_FROM_DEV,
+> -	 * but is is possible that the app intended SG_DXFER_TO_DEV, because there
+> +	 * but is possible that the app intended SG_DXFER_TO_DEV, because there
+>   	 * is a non-zero input_size, so emit a warning.
+>   	 */
+>   	if (hp->dxfer_direction == SG_DXFER_TO_FROM_DEV) {
 
-file: drivers/scsi/aic94xx/aic94xx_scb.c
-line: 624
+I do not agree with this change since the author of that comment 
+probably wanted to write "[...] but it is possible [...]"
 
-*  - if no device is connected to the LED, is is dimmed (off).
-
-changed to:
-
-*  - if no device is connected to the LED, it is dimmed (off).
-
-Signed-off-by: Jiang Jian <jiangjian@cdjrlc.com>
----
- drivers/scsi/aic94xx/aic94xx_scb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/aic94xx/aic94xx_scb.c b/drivers/scsi/aic94xx/aic94xx_scb.c
-index 68214a58b160..86cadb80bb02 100644
---- a/drivers/scsi/aic94xx/aic94xx_scb.c
-+++ b/drivers/scsi/aic94xx/aic94xx_scb.c
-@@ -621,7 +621,7 @@ int asd_init_post_escbs(struct asd_ha_struct *asd_ha)
-  * A note on LEDs:
-  *  - an LED blinks if there is IO though it,
-  *  - if a device is connected to the LED, it is lit,
-- *  - if no device is connected to the LED, is is dimmed (off).
-+ *  - if no device is connected to the LED, it is dimmed (off).
-  */
- static void control_phy_tasklet_complete(struct asd_ascb *ascb,
- 					 struct done_list_struct *dl)
--- 
-2.17.1
-
+Bart.
