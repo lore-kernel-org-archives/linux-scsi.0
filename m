@@ -2,41 +2,41 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2AD4C19F28
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Aug 2022 16:30:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5D4FC19F29
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Aug 2022 16:30:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238365AbiHCQaD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 Aug 2022 12:30:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50878 "EHLO
+        id S236989AbiHCQaF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 Aug 2022 12:30:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50952 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238377AbiHCQ3e (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Aug 2022 12:29:34 -0400
+        with ESMTP id S238388AbiHCQ3h (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Aug 2022 12:29:37 -0400
 Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B20FF48EAA;
-        Wed,  3 Aug 2022 09:29:32 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2BCE4DEDB;
+        Wed,  3 Aug 2022 09:29:35 -0700 (PDT)
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 62655412DE;
-        Wed,  3 Aug 2022 16:29:31 +0000 (UTC)
+        by mta-01.yadro.com (Postfix) with ESMTP id D426041239;
+        Wed,  3 Aug 2022 16:29:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received:received; s=
-        mta-01; t=1659544169; x=1661358570; bh=ZtkUYIiT6/VUOQLgeQB4CnRUx
-        cqaT5oWQY8y1mEYyMw=; b=iqMknBiXmhWWjQIYeiBNKlLD84tE+P+625Eh35RHU
-        NoMyYicWMpkURDqWoEaYhc4GiAwU+AHbTZ4qpau/B+eY6lTCxz+fUFTwuer0EKzi
-        cydN66u8IGI5gia/d/tN83MguwLDYg1oz4XASveKtwmbGtSB4+ztyu/2JN5iaUZE
-        kk=
+        mta-01; t=1659544171; x=1661358572; bh=I3rp/BgsyFIeH4WQjR1Cm+2Hz
+        +cW1bhj18c1hoF+Dr0=; b=NzMzlWtrJxthWjPtN4tvsX7O2lmfcERwDsg0l0Oks
+        eUJ386ziM5my1bhinFZVdGCG8JQMOrIPY2YvFbML//7KsFbPy7Twnekm3q3Ur/fx
+        Vmhq8wx+WF0ja2pmxQTuXPvfiRemqvXSJAxIDnzSsimcw6bW81n+1xjvWAwcqUIf
+        EQ=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id SNVQ2N-9_AQQ; Wed,  3 Aug 2022 19:29:29 +0300 (MSK)
-Received: from T-EXCH-01.corp.yadro.com (t-exch-01.corp.yadro.com [172.17.10.101])
+        with ESMTP id JLQjFTxNaGVO; Wed,  3 Aug 2022 19:29:31 +0300 (MSK)
+Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 3D3E041239;
+        by mta-01.yadro.com (Postfix) with ESMTPS id 81905412C9;
         Wed,  3 Aug 2022 19:29:19 +0300 (MSK)
 Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
- T-EXCH-01.corp.yadro.com (172.17.10.101) with Microsoft SMTP Server
+ T-EXCH-02.corp.yadro.com (172.17.10.102) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
  15.1.669.32; Wed, 3 Aug 2022 19:29:19 +0300
 Received: from NB-591.corp.yadro.com (10.199.18.20) by
@@ -48,9 +48,9 @@ To:     Martin Petersen <martin.petersen@oracle.com>,
         <target-devel@vger.kernel.org>
 CC:     <linux-scsi@vger.kernel.org>, <linux@yadro.com>,
         Dmitry Bogdanov <d.bogdanov@yadro.com>
-Subject: [RFC PATCH 25/48] target: core: pr: have Transport ID stored
-Date:   Wed, 27 Jul 2022 19:21:02 +0300
-Message-ID: <20220803162857.27770-26-d.bogdanov@yadro.com>
+Subject: [RFC PATCH 26/48] target: core: pr: remove se_tpg from pr_reg
+Date:   Wed, 22 Jun 2022 13:25:24 +0300
+Message-ID: <20220803162857.27770-27-d.bogdanov@yadro.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220803162857.27770-1-d.bogdanov@yadro.com>
 References: <20220803162857.27770-1-d.bogdanov@yadro.com>
@@ -64,371 +64,509 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Store TransportID in pr_reg at its creation.
+Undepend pr_reg from se_tpg.
+Use RTPI at PR creation.
 
 Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
 ---
- drivers/target/target_core_fabric_lib.c | 130 +++++++++---------------
- drivers/target/target_core_internal.h   |   9 +-
- drivers/target/target_core_pr.c         |  19 ++--
- include/target/target_core_base.h       |   2 +
- 4 files changed, 68 insertions(+), 92 deletions(-)
+ drivers/target/target_core_configfs.c        |  47 ++++---
+ drivers/target/target_core_fabric_configfs.c |   2 +-
+ drivers/target/target_core_internal.h        |   1 +
+ drivers/target/target_core_pr.c              | 126 ++++++++-----------
+ drivers/target/target_core_pr.h              |   2 +-
+ drivers/target/target_core_tpg.c             |  17 ++-
+ include/target/target_core_base.h            |   1 -
+ 7 files changed, 104 insertions(+), 92 deletions(-)
 
-diff --git a/drivers/target/target_core_fabric_lib.c b/drivers/target/target_core_fabric_lib.c
-index cd1360095036..32c2afbb3033 100644
---- a/drivers/target/target_core_fabric_lib.c
-+++ b/drivers/target/target_core_fabric_lib.c
-@@ -33,14 +33,14 @@
- 
- 
- static int sas_get_pr_transport_id(
--	struct t10_pr_registration *pr_reg,
--	int *format_code,
-+	const char *initiatorname,
- 	unsigned char *buf)
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index f469cfde3f1e..0978279bd5e3 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -1736,6 +1736,8 @@ static ssize_t target_core_dev_pr_show_spc3_res(struct se_device *dev,
+ 		char *page)
  {
- 	int ret;
+ 	struct t10_pr_registration *pr_reg;
++	struct se_portal_group *se_tpg;
++	const char *fabric_name = "Unknown";
+ 	char i_buf[PR_REG_ISID_ID_LEN] = { };
  
-+	buf[0] = SCSI_PROTOCOL_SAS;
- 	/* Skip over 'naa. prefix */
--	ret = hex2bin(&buf[4], &pr_reg->pr_iport[4], 8);
-+	ret = hex2bin(&buf[4], &initiatorname[4], 8);
- 	if (ret) {
- 		pr_debug("%s: invalid hex string\n", __func__);
- 		return ret;
-@@ -50,19 +50,19 @@ static int sas_get_pr_transport_id(
- }
+ 	pr_reg = dev->dev_pr_res_holder;
+@@ -1744,9 +1746,12 @@ static ssize_t target_core_dev_pr_show_spc3_res(struct se_device *dev,
  
- static int fc_get_pr_transport_id(
--	struct t10_pr_registration *pr_reg,
--	int *format_code,
-+	const char *initiatorname,
- 	unsigned char *buf)
- {
--	unsigned char *ptr;
-+	const char *ptr;
- 	int i, ret;
- 	u32 off = 8;
+ 	core_pr_dump_initiator_port(pr_reg, i_buf, PR_REG_ISID_ID_LEN);
  
-+	buf[0] = SCSI_PROTOCOL_FCP;
- 	/*
- 	 * We convert the ASCII formatted N Port name into a binary
- 	 * encoded TransportID.
- 	 */
--	ptr = &pr_reg->pr_iport[0];
-+	ptr = &initiatorname[0];
- 	for (i = 0; i < 23; ) {
- 		if (!strncmp(&ptr[i], ":", 1)) {
- 			i++;
-@@ -82,13 +82,14 @@ static int fc_get_pr_transport_id(
- }
- 
- static int sbp_get_pr_transport_id(
--	struct t10_pr_registration *pr_reg,
--	int *format_code,
-+	const char *initiatorname,
- 	unsigned char *buf)
- {
- 	int ret;
- 
--	ret = hex2bin(&buf[8], pr_reg->pr_iport, 8);
-+	buf[0] = SCSI_PROTOCOL_SBP;
++	se_tpg = core_get_tpg_by_rtpi(pr_reg->tg_pt_sep_rtpi);
++	if (se_tpg)
++		fabric_name = se_tpg->se_tpg_tfo->fabric_name;
 +
-+	ret = hex2bin(&buf[8], initiatorname, 8);
- 	if (ret) {
- 		pr_debug("%s: invalid hex string\n", __func__);
- 		return ret;
-@@ -98,15 +99,16 @@ static int sbp_get_pr_transport_id(
+ 	return sprintf(page, "SPC-3 Reservation: %s Initiator: %s%s\n",
+-		pr_reg->se_tpg->se_tpg_tfo->fabric_name,
+-		pr_reg->pr_iport, i_buf);
++		fabric_name, pr_reg->pr_iport, i_buf);
  }
  
- static int srp_get_pr_transport_id(
--	struct t10_pr_registration *pr_reg,
--	int *format_code,
-+	const char *initiatorname,
- 	unsigned char *buf)
- {
- 	const char *p;
- 	unsigned len, count, leading_zero_bytes;
- 	int rc;
- 
--	p = pr_reg->pr_iport;
-+	buf[0] = SCSI_PROTOCOL_SRP;
-+
-+	p = initiatorname;
- 	if (strncasecmp(p, "0x", 2) == 0)
- 		p += 2;
- 	len = strlen(p);
-@@ -126,14 +128,16 @@ static int srp_get_pr_transport_id(
- }
- 
- static int iscsi_get_pr_transport_id(
--	struct t10_pr_registration *pr_reg,
--	int *format_code,
-+	const char *initiatorname,
-+	unsigned char *isid,
- 	unsigned char *buf)
- {
- 	u32 off = 4, padding = 0;
- 	int isid_len;
- 	u16 len = 0;
- 
-+	buf[0] = SCSI_PROTOCOL_ISCSI;
-+
- 	/*
- 	 * Only null terminate the last field.
- 	 *
-@@ -149,9 +153,9 @@ static int iscsi_get_pr_transport_id(
- 	 * length of the iSCSI TransportID or the contents of the ADDITIONAL
- 	 * LENGTH field.
- 	 */
--	len = sprintf(&buf[off], "%s", pr_reg->pr_iport);
-+	len = sprintf(&buf[off], "%s", initiatorname);
- 	off += len;
--	if ((*format_code == 1) && (pr_reg->isid_present_at_reg)) {
-+	if (isid) {
- 		/*
- 		 * Set FORMAT CODE 01b for iSCSI Initiator port TransportID
- 		 * format.
-@@ -185,7 +189,7 @@ static int iscsi_get_pr_transport_id(
- 		buf[off++] = 0x78; /* ASCII Character: "x" */
- 		len += 5;
- 
--		isid_len = sprintf(buf + off, "%s", pr_reg->pr_reg_isid);
-+		isid_len = sprintf(buf + off, "%s", isid);
- 		off += isid_len;
- 		len += isid_len;
+ static ssize_t target_core_dev_pr_show_spc2_res(struct se_device *dev,
+@@ -1838,18 +1843,24 @@ static ssize_t target_pr_res_pr_holder_tg_port_show(struct config_item *item,
+ 		goto out_unlock;
  	}
-@@ -210,47 +214,6 @@ static int iscsi_get_pr_transport_id(
+ 
+-	se_tpg = pr_reg->se_tpg;
+-	tfo = se_tpg->se_tpg_tfo;
+-
+-	len += sprintf(page+len, "SPC-3 Reservation: %s"
+-		" Target Node Endpoint: %s\n", tfo->fabric_name,
+-		tfo->tpg_get_wwn(se_tpg));
+-	len += sprintf(page+len, "SPC-3 Reservation: Relative Port"
+-		" Identifier Tag: %hu %s Portal Group Tag: %hu"
+-		" %s Logical Unit: %llu\n", pr_reg->tg_pt_sep_rtpi,
+-		tfo->fabric_name, tfo->tpg_get_tag(se_tpg),
+-		tfo->fabric_name, pr_reg->pr_aptpl_target_lun);
++	se_tpg = core_get_tpg_by_rtpi(pr_reg->tg_pt_sep_rtpi);
++	if (se_tpg) {
++		tfo = se_tpg->se_tpg_tfo;
+ 
++		len += sprintf(page+len, "SPC-3 Reservation: %s Target Node Endpoint: %s\n",
++			tfo->fabric_name, tfo->tpg_get_wwn(se_tpg));
++		len += sprintf(page+len, "SPC-3 Reservation: Relative Port Identifier Tag: %hu %s Portal Group Tag: %hu %s Logical Unit: %llu\n",
++			pr_reg->tg_pt_sep_rtpi,
++			tfo->fabric_name, tfo->tpg_get_tag(se_tpg),
++			tfo->fabric_name, pr_reg->pr_aptpl_target_lun);
++	} else {
++		len += sprintf(page+len, "SPC-3 Reservation: %s Target Node Endpoint: %s\n",
++			"Unknown", "Unknown");
++		len += sprintf(page+len, "SPC-3 Reservation: Relative Port Identifier Tag: %hu %s Portal Group Tag: %hu %s Logical Unit: %llu\n",
++			pr_reg->tg_pt_sep_rtpi,
++			"Unknown", 0,
++			"Unknown", pr_reg->pr_aptpl_target_lun);
++	}
+ out_unlock:
+ 	spin_unlock(&dev->dev_reservation_lock);
  	return len;
- }
- 
--static int iscsi_get_pr_transport_id_len(
--	struct t10_pr_registration *pr_reg,
--	int *format_code)
--{
--	u32 len = 0, padding = 0;
--
--	len = strlen(pr_reg->pr_iport);
--	/*
--	 * Add extra byte for NULL terminator
--	 */
--	len++;
--	/*
--	 * If there is ISID present with the registration, use format code:
--	 * 01b: iSCSI Initiator port TransportID format
--	 *
--	 * If there is not an active iSCSI session, use format code:
--	 * 00b: iSCSI Initiator device TransportID format
--	 */
--	if (pr_reg->isid_present_at_reg) {
--		len += 5; /* For ",i,0x" ASCII separator */
--		len += strlen(pr_reg->pr_reg_isid);
--		*format_code = 1;
--	} else
--		*format_code = 0;
--	/*
--	 * The ADDITIONAL LENGTH field specifies the number of bytes that follow
--	 * in the TransportID. The additional length shall be at least 20 and
--	 * shall be a multiple of four.
--	 */
--	padding = ((-len) & 3);
--	if (padding != 0)
--		len += padding;
--	/*
--	 * Increment value for total payload + header length for
--	 * full status descriptor
--	 */
--	len += 4;
--
--	return len;
--}
--
- static char *iscsi_parse_pr_out_transport_id(
- 	struct se_portal_group *se_tpg,
- 	char *buf,
-@@ -336,47 +299,54 @@ static char *iscsi_parse_pr_out_transport_id(
- 	return &buf[4];
- }
- 
--int target_get_pr_transport_id_len(
--		struct t10_pr_registration *pr_reg, int *format_code)
-+int target_get_pr_transport_id_len(struct t10_pr_registration *pr_reg)
+@@ -1860,8 +1871,9 @@ static ssize_t target_pr_res_pr_registered_i_pts_show(struct config_item *item,
+ 		char *page)
  {
--	switch (pr_reg->se_tpg->proto_id) {
-+	switch (pr_reg->pr_tid[0] & 0xF) {
- 	case SCSI_PROTOCOL_FCP:
- 	case SCSI_PROTOCOL_SBP:
- 	case SCSI_PROTOCOL_SRP:
- 	case SCSI_PROTOCOL_SAS:
--		break;
-+		return 24;
- 	case SCSI_PROTOCOL_ISCSI:
--		return iscsi_get_pr_transport_id_len(pr_reg, format_code);
-+		return get_unaligned_be16(&pr_reg->pr_tid[2]) + 4;
- 	default:
--		pr_err("Unknown proto_id: 0x%02x\n", pr_reg->se_tpg->proto_id);
-+		WARN(1, "Unknown proto_id: %#x\n", pr_reg->pr_tid[0] & 0xF);
- 		return -EINVAL;
- 	}
--
--	/*
--	 * Most transports use a fixed length 24 byte identifier.
--	 */
--	*format_code = 0;
--	return 24;
- }
+ 	struct se_device *dev = pr_to_dev(item);
+-	const struct target_core_fabric_ops *tfo;
+ 	struct t10_pr_registration *pr_reg;
++	const char *fabric_name = "Unknown";
++	struct se_portal_group *se_tpg;
+ 	unsigned char buf[384];
+ 	char i_buf[PR_REG_ISID_ID_LEN];
+ 	ssize_t len = 0;
+@@ -1875,11 +1887,14 @@ static ssize_t target_pr_res_pr_registered_i_pts_show(struct config_item *item,
  
- int target_get_pr_transport_id(
--		struct t10_pr_registration *pr_reg, int *format_code,
-+		struct t10_pr_registration *pr_reg,
- 		unsigned char *buf)
- {
--	switch (pr_reg->se_tpg->proto_id) {
-+	int len =  target_get_pr_transport_id_len(pr_reg);
+ 		memset(buf, 0, 384);
+ 		memset(i_buf, 0, PR_REG_ISID_ID_LEN);
+-		tfo = pr_reg->se_tpg->se_tpg_tfo;
++		se_tpg = core_get_tpg_by_rtpi(pr_reg->tg_pt_sep_rtpi);
++		if (se_tpg)
++			fabric_name = se_tpg->se_tpg_tfo->fabric_name;
 +
-+	if (len > 0)
-+		memcpy(buf, pr_reg->pr_tid, len);
-+
-+	return  len;
-+}
-+
-+int target_gen_pr_transport_id(
-+	struct t10_pr_registration *pr_reg,
-+	int proto_id,
-+	const char *initiatorname,
-+	unsigned char *isid)
-+{
-+
-+	switch (proto_id) {
- 	case SCSI_PROTOCOL_SAS:
--		return sas_get_pr_transport_id(pr_reg, format_code, buf);
-+		return sas_get_pr_transport_id(initiatorname, pr_reg->pr_tid);
- 	case SCSI_PROTOCOL_SBP:
--		return sbp_get_pr_transport_id(pr_reg, format_code, buf);
-+		return sbp_get_pr_transport_id(initiatorname, pr_reg->pr_tid);
- 	case SCSI_PROTOCOL_SRP:
--		return srp_get_pr_transport_id(pr_reg, format_code, buf);
-+		return srp_get_pr_transport_id(initiatorname, pr_reg->pr_tid);
- 	case SCSI_PROTOCOL_FCP:
--		return fc_get_pr_transport_id(pr_reg, format_code, buf);
-+		return fc_get_pr_transport_id(initiatorname, pr_reg->pr_tid);
- 	case SCSI_PROTOCOL_ISCSI:
--		return iscsi_get_pr_transport_id(pr_reg, format_code,
--				buf);
-+		return iscsi_get_pr_transport_id(initiatorname, isid, pr_reg->pr_tid);
- 	default:
--		pr_err("Unknown proto_id: 0x%02x\n", pr_reg->se_tpg->proto_id);
-+		pr_err("Unknown proto_id: 0x%02x\n", proto_id);
- 		return -EINVAL;
- 	}
- }
+ 		core_pr_dump_initiator_port(pr_reg, i_buf,
+ 					PR_REG_ISID_ID_LEN);
+ 		sprintf(buf, "%s Node: %s%s Key: 0x%016Lx PRgen: 0x%08x\n",
+-			tfo->fabric_name,
++			fabric_name,
+ 			pr_reg->pr_iport, i_buf, pr_reg->pr_res_key,
+ 			pr_reg->pr_res_generation);
+ 
+diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
+index fc1b8f54fb54..fd8f3b4c4bf8 100644
+--- a/drivers/target/target_core_fabric_configfs.c
++++ b/drivers/target/target_core_fabric_configfs.c
+@@ -871,7 +871,7 @@ static ssize_t target_fabric_tpg_base_enable_store(struct config_item *item,
+ 	spin_lock(&g_tpg_lock);
+ 
+ 	if (op) {
+-		tpg = core_get_tpg_by_rtpi(se_tpg->tpg_rtpi);
++		tpg = _core_get_tpg_by_rtpi(se_tpg->tpg_rtpi);
+ 		if (tpg) {
+ 			spin_unlock(&g_tpg_lock);
+ 
 diff --git a/drivers/target/target_core_internal.h b/drivers/target/target_core_internal.h
-index b32ac78a26b0..95d5add73578 100644
+index 95d5add73578..51c0151c05c2 100644
 --- a/drivers/target/target_core_internal.h
 +++ b/drivers/target/target_core_internal.h
-@@ -98,10 +98,13 @@ void	target_setup_backend_cits(struct target_backend *);
- int	target_fabric_setup_cits(struct target_fabric_configfs *);
+@@ -136,6 +136,7 @@ void core_tpg_remove_lun(struct se_portal_group *, struct se_lun *);
+ struct se_node_acl *core_tpg_add_initiator_node_acl(struct se_portal_group *tpg,
+ 		const char *initiatorname);
+ void core_tpg_del_initiator_node_acl(struct se_node_acl *acl);
++struct se_portal_group *_core_get_tpg_by_rtpi(u16 rtpi);
+ struct se_portal_group *core_get_tpg_by_rtpi(u16 rtpi);
  
- /* target_core_fabric_lib.c */
--int	target_get_pr_transport_id_len(struct t10_pr_registration *pr_reg,
--				       int *format_code);
-+int	target_get_pr_transport_id_len(struct t10_pr_registration *pr_reg);
- int	target_get_pr_transport_id(struct t10_pr_registration *pr_reg,
--				   int *format_code, unsigned char *buf);
-+				   unsigned char *buf);
-+int target_gen_pr_transport_id(struct t10_pr_registration *pr_reg,
-+			       int proto_id,
-+			       const char *initiatorname,
-+			       unsigned char *isid);
- const char *target_parse_pr_out_transport_id(struct se_portal_group *tpg,
- 		char *buf, u32 *out_tid_len, char **port_nexus_ptr);
- 
+ /* target_core_transport.c */
 diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-index 1f19bfd0fa00..d9e7d177b65a 100644
+index d9e7d177b65a..c4ee6999cf96 100644
 --- a/drivers/target/target_core_pr.c
 +++ b/drivers/target/target_core_pr.c
-@@ -716,6 +716,10 @@ static struct t10_pr_registration *__core_scsi3_alloc_registration(
- 						    aptpl);
- 	if (!pr_reg)
- 		return NULL;
-+
-+	target_gen_pr_transport_id(pr_reg, nacl->se_tpg->proto_id,
-+				   nacl->initiatorname, isid);
-+
- 	/*
- 	 * Return pointer to pr_reg for ALL_TG_PT=0
+@@ -612,7 +612,7 @@ struct t10_pr_registration *__core_scsi3_do_alloc_registration(
+ 	struct se_node_acl *nacl,
+ 	const char *initiatorname,
+ 	u64 unpacked_lun,
+-	struct se_portal_group *se_tpg,
++	u16 rtpi,
+ 	struct se_dev_entry *dest_deve,
+ 	u64 mapped_lun,
+ 	unsigned char *isid,
+@@ -661,8 +661,7 @@ struct t10_pr_registration *__core_scsi3_do_alloc_registration(
+ 	}
+ 	pr_reg->pr_res_mapped_lun = mapped_lun;
+ 	pr_reg->pr_aptpl_target_lun = unpacked_lun;
+-	pr_reg->tg_pt_sep_rtpi = se_tpg->tpg_rtpi;
+-	pr_reg->se_tpg = se_tpg;
++	pr_reg->tg_pt_sep_rtpi = rtpi;
+ 	pr_reg->pr_res_key = sa_res_key;
+ 	pr_reg->pr_reg_all_tg_pt = all_tg_pt;
+ 	pr_reg->pr_reg_aptpl = aptpl;
+@@ -710,7 +709,7 @@ static struct t10_pr_registration *__core_scsi3_alloc_registration(
  	 */
-@@ -802,6 +806,9 @@ static struct t10_pr_registration *__core_scsi3_alloc_registration(
- 				core_scsi3_lunacl_undepend_item(deve_tmp);
- 				goto out;
- 			}
-+			target_gen_pr_transport_id(pr_reg_atp,
-+						   nacl_tmp->se_tpg->proto_id,
-+						   nacl_tmp->initiatorname, isid);
+ 	pr_reg = __core_scsi3_do_alloc_registration(dev, nacl,
+ 						    nacl->initiatorname, lun->unpacked_lun,
+-						    lun->lun_tpg,
++						    lun->lun_tpg->tpg_rtpi,
+ 						    deve, mapped_lun,
+ 						    isid, sa_res_key, all_tg_pt,
+ 						    aptpl);
+@@ -797,7 +796,7 @@ static struct t10_pr_registration *__core_scsi3_alloc_registration(
+ 						nacl_tmp,
+ 						nacl_tmp->initiatorname,
+ 						dest_lun->unpacked_lun,
+-						lun->lun_tpg,
++						lun->lun_tpg->tpg_rtpi,
+ 						deve_tmp,
+ 						deve_tmp->mapped_lun, NULL,
+ 						sa_res_key, all_tg_pt, aptpl);
+@@ -1011,30 +1010,25 @@ int core_scsi3_check_aptpl_registration(
+ }
  
- 			list_add_tail(&pr_reg_atp->pr_reg_atp_mem_list,
- 				      &pr_reg->pr_reg_atp_list);
-@@ -3829,13 +3836,12 @@ static sense_reason_t
- core_scsi3_pri_read_full_status(struct se_cmd *cmd)
+ static void __core_scsi3_dump_registration(
+-	const struct target_core_fabric_ops *tfo,
+ 	struct se_device *dev,
+ 	struct t10_pr_registration *pr_reg,
+ 	enum register_type register_type)
  {
- 	struct se_device *dev = cmd->se_dev;
--	struct se_portal_group *se_tpg;
- 	struct t10_pr_registration *pr_reg, *pr_reg_tmp;
+-	struct se_portal_group *se_tpg = pr_reg->se_tpg;
+ 	char i_buf[PR_REG_ISID_ID_LEN] = { };
+ 
+ 	core_pr_dump_initiator_port(pr_reg, i_buf, PR_REG_ISID_ID_LEN);
+ 
+-	pr_debug("SPC-3 PR [%s] Service Action: REGISTER%s Initiator"
+-		" Node: %s%s\n", tfo->fabric_name, (register_type == REGISTER_AND_MOVE) ?
++	pr_debug("SPC-3 PR Service Action: REGISTER%s Initiator Node: %s%s\n",
++		(register_type == REGISTER_AND_MOVE) ?
+ 		"_AND_MOVE" : (register_type == REGISTER_AND_IGNORE_EXISTING_KEY) ?
+ 		"_AND_IGNORE_EXISTING_KEY" : "", pr_reg->pr_iport,
+ 		i_buf);
+-	pr_debug("SPC-3 PR [%s] registration on Target Port: %s,0x%04x\n",
+-		 tfo->fabric_name, tfo->tpg_get_wwn(se_tpg),
+-		tfo->tpg_get_tag(se_tpg));
+-	pr_debug("SPC-3 PR [%s] for %s TCM Subsystem %s Object Target"
+-		" Port(s)\n",  tfo->fabric_name,
++	pr_debug("SPC-3 PR registration on Target Port: %d\n",
++		 pr_reg->tg_pt_sep_rtpi);
++	pr_debug("SPC-3 PR for %s TCM Subsystem %s Object Target Port(s)\n",
+ 		(pr_reg->pr_reg_all_tg_pt) ? "ALL" : "SINGLE",
+ 		dev->transport->name);
+-	pr_debug("SPC-3 PR [%s] SA Res Key: 0x%016Lx PRgeneration:"
+-		" 0x%08x  APTPL: %d\n", tfo->fabric_name,
++	pr_debug("SPC-3 PR SA Res Key: 0x%016llx PRgeneration: 0x%08x  APTPL: %d\n",
+ 		pr_reg->pr_res_key, pr_reg->pr_res_generation,
+ 		pr_reg->pr_reg_aptpl);
+ }
+@@ -1046,7 +1040,6 @@ static void __core_scsi3_add_registration(
+ 	enum register_type register_type,
+ 	int register_move)
+ {
+-	const struct target_core_fabric_ops *tfo = nacl->se_tpg->se_tpg_tfo;
+ 	struct t10_pr_registration *pr_reg_tmp, *pr_reg_tmp_safe;
  	struct t10_reservation *pr_tmpl = &dev->t10_pr;
- 	unsigned char *buf;
- 	u32 add_desc_len = 0, add_len = 0;
- 	u32 off = 8; /* off into first Full Status descriptor */
--	int format_code = 0, pr_res_type = 0, pr_res_scope = 0;
-+	int pr_res_type = 0, pr_res_scope = 0;
- 	int exp_desc_len, desc_len;
- 	bool all_reg = false;
+ 	struct se_dev_entry *deve;
+@@ -1060,7 +1053,7 @@ static void __core_scsi3_add_registration(
+ 	spin_lock(&pr_tmpl->registration_lock);
+ 	list_add_tail(&pr_reg->pr_reg_list, &pr_tmpl->registration_list);
  
-@@ -3868,7 +3874,6 @@ core_scsi3_pri_read_full_status(struct se_cmd *cmd)
- 	list_for_each_entry_safe(pr_reg, pr_reg_tmp,
- 			&pr_tmpl->registration_list, pr_reg_list) {
+-	__core_scsi3_dump_registration(tfo, dev, pr_reg, register_type);
++	__core_scsi3_dump_registration(dev, pr_reg, register_type);
+ 	spin_unlock(&pr_tmpl->registration_lock);
+ 	/*
+ 	 * Skip extra processing for ALL_TG_PT=0 or REGISTER_AND_MOVE.
+@@ -1081,8 +1074,7 @@ static void __core_scsi3_add_registration(
+ 		list_add_tail(&pr_reg_tmp->pr_reg_list,
+ 			      &pr_tmpl->registration_list);
  
--		se_tpg = pr_reg->se_tpg;
- 		add_desc_len = 0;
- 
- 		atomic_inc_mb(&pr_reg->pr_res_holders);
-@@ -3877,8 +3882,7 @@ core_scsi3_pri_read_full_status(struct se_cmd *cmd)
- 		 * Determine expected length of $FABRIC_MOD specific
- 		 * TransportID full status descriptor..
- 		 */
--		exp_desc_len = target_get_pr_transport_id_len(pr_reg,
--					&format_code);
-+		exp_desc_len = target_get_pr_transport_id_len(pr_reg);
- 		if (exp_desc_len < 0 ||
- 		    exp_desc_len + add_len > cmd->data_length) {
- 			pr_warn("SPC-3 PRIN READ_FULL_STATUS ran"
-@@ -3938,13 +3942,10 @@ core_scsi3_pri_read_full_status(struct se_cmd *cmd)
- 		} else
- 			off += 2; /* Skip over RELATIVE TARGET PORT IDENTIFIER */
- 
--		buf[off+4] = se_tpg->proto_id;
--
+-		__core_scsi3_dump_registration(tfo, dev, pr_reg_tmp,
+-					       register_type);
++		__core_scsi3_dump_registration(dev, pr_reg_tmp, register_type);
+ 		spin_unlock(&pr_tmpl->registration_lock);
  		/*
- 		 * Now, have the $FABRIC_MOD fill in the transport ID.
- 		 */
--		desc_len = target_get_pr_transport_id(pr_reg,
--				&format_code, &buf[off+4]);
-+		desc_len = target_get_pr_transport_id(pr_reg, &buf[off+4]);
+ 		 * Drop configfs group dependency reference and deve->pr_kref
+@@ -1262,8 +1254,6 @@ void __core_scsi3_free_registration(
+ 	__releases(&pr_tmpl->registration_lock)
+ 	__acquires(&pr_tmpl->registration_lock)
+ {
+-	const struct target_core_fabric_ops *tfo =
+-			pr_reg->se_tpg->se_tpg_tfo;
+ 	struct t10_reservation *pr_tmpl = &dev->t10_pr;
+ 	struct se_node_acl *nacl = pr_reg->pr_reg_nacl;
+ 	struct se_dev_entry *deve;
+@@ -1290,8 +1280,7 @@ void __core_scsi3_free_registration(
+ 	 * count back to zero, and we release *pr_reg.
+ 	 */
+ 	while (atomic_read(&pr_reg->pr_res_holders) != 0) {
+-		pr_debug("SPC-3 PR [%s] waiting for pr_res_holders\n",
+-				tfo->fabric_name);
++		pr_debug("SPC-3 PR waiting for pr_res_holders\n");
+ 		cpu_relax();
+ 	}
  
- 		spin_lock(&pr_tmpl->registration_lock);
- 		atomic_dec_mb(&pr_reg->pr_res_holders);
+@@ -1302,15 +1291,13 @@ void __core_scsi3_free_registration(
+ 	rcu_read_unlock();
+ 
+ 	spin_lock(&pr_tmpl->registration_lock);
+-	pr_debug("SPC-3 PR [%s] Service Action: UNREGISTER Initiator"
+-		" Node: %s%s\n", tfo->fabric_name,
+-		pr_reg->pr_iport, i_buf);
+-	pr_debug("SPC-3 PR [%s] for %s TCM Subsystem %s Object Target"
+-		" Port(s)\n", tfo->fabric_name,
++	pr_debug("SPC-3 PR Service Action: UNREGISTER Initiator Node: %s%s\n",
++		 pr_reg->pr_iport, i_buf);
++	pr_debug("SPC-3 PR for %s TCM Subsystem %s Object Target Port(s)\n",
+ 		(pr_reg->pr_reg_all_tg_pt) ? "ALL" : "SINGLE",
+ 		dev->transport->name);
+-	pr_debug("SPC-3 PR [%s] SA Res Key: 0x%016Lx PRgeneration:"
+-		" 0x%08x\n", tfo->fabric_name, pr_reg->pr_res_key,
++	pr_debug("SPC-3 PR SA Res Key: 0x%016llx PRgeneration: 0x%08x\n",
++		pr_reg->pr_res_key,
+ 		pr_reg->pr_res_generation);
+ 
+ 	if (!preempt_and_abort_list) {
+@@ -1830,7 +1817,9 @@ static int core_scsi3_update_aptpl_buf(
+ 
+ 		tmp[0] = '\0';
+ 		isid_buf[0] = '\0';
+-		tpg = pr_reg->se_tpg;
++
++		tpg = core_get_tpg_by_rtpi(pr_reg->tg_pt_sep_rtpi);
++
+ 		/*
+ 		 * Write out any ISID value to APTPL metadata that was included
+ 		 * in the original registration.
+@@ -1874,13 +1863,21 @@ static int core_scsi3_update_aptpl_buf(
+ 		/*
+ 		 * Include information about the associated SCSI target port.
+ 		 */
+-		snprintf(tmp, 512, "target_node=%s\n"
+-			"tpgt=%hu\nport_rtpi=%hu\ntarget_lun=%llu\nPR_REG_END: %d\n",
+-			tpg->se_tpg_tfo->tpg_get_wwn(tpg),
+-			tpg->se_tpg_tfo->tpg_get_tag(tpg),
+-			pr_reg->tg_pt_sep_rtpi, pr_reg->pr_aptpl_target_lun,
+-			reg_count);
+-
++		if (tpg) {
++			snprintf(tmp, 512, "target_node=%s\n"
++				"tpgt=%hu\nport_rtpi=%hu\ntarget_lun=%llu\nPR_REG_END: %d\n",
++				tpg->se_tpg_tfo->tpg_get_wwn(tpg),
++				tpg->se_tpg_tfo->tpg_get_tag(tpg),
++				pr_reg->tg_pt_sep_rtpi, pr_reg->pr_aptpl_target_lun,
++				reg_count);
++		} else {
++			snprintf(tmp, 512, "target_node=%s\n"
++				"tpgt=%hu\nport_rtpi=%hu\ntarget_lun=%llu\nPR_REG_END: %d\n",
++				"",
++				0,
++				pr_reg->tg_pt_sep_rtpi, pr_reg->pr_aptpl_target_lun,
++				reg_count);
++		}
+ 		if ((len + strlen(tmp) >= pr_aptpl_buf_len)) {
+ 			pr_err("Unable to update renaming APTPL metadata,"
+ 			       " reallocating larger buffer\n");
+@@ -2224,12 +2221,10 @@ void __core_scsi3_set_reservation(struct se_device *dev,
+ 	dev->dev_pr_res_holder = pr_reg;
+ 	core_pr_dump_initiator_port(pr_reg, i_buf, PR_REG_ISID_ID_LEN);
+ 
+-	pr_debug("SPC-3 PR [%s] Service Action: RESERVE created new reservation holder TYPE: %s ALL_TG_PT: %d\n",
+-		pr_reg->se_tpg->se_tpg_tfo->fabric_name,
++	pr_debug("SPC-3 PR Service Action: RESERVE created new reservation holder TYPE: %s ALL_TG_PT: %d\n",
+ 		core_scsi3_pr_dump_type(type),
+ 		(pr_reg->pr_reg_all_tg_pt) ? 1 : 0);
+-	pr_debug("SPC-3 PR [%s] RESERVE Node: %s%s\n",
+-			pr_reg->se_tpg->se_tpg_tfo->fabric_name,
++	pr_debug("SPC-3 PR RESERVE Node: %s%s\n",
+ 			pr_reg->pr_iport,
+ 			i_buf);
+ }
+@@ -2308,12 +2303,10 @@ core_scsi3_pro_reserve(struct se_cmd *cmd, int type, int scope, u64 res_key)
+ 		 * RESERVATION CONFLICT status.
+ 		 */
+ 		if (!is_reservation_holder(pr_res_holder, pr_reg)) {
+-			pr_err("SPC-3 PR: Attempted RESERVE from"
+-				" [%s]: %s while reservation already held by"
+-				" [%s]: %s, returning RESERVATION_CONFLICT\n",
+-				cmd->se_tfo->fabric_name,
++			pr_err("SPC-3 PR: Attempted RESERVE from [%d]: %s while reservation already held by [%d]: %s, returning RESERVATION_CONFLICT\n",
++				cmd->se_lun->lun_tpg->tpg_rtpi,
+ 				se_sess->se_node_acl->initiatorname,
+-				pr_res_holder->se_tpg->se_tpg_tfo->fabric_name,
++				pr_res_holder->tg_pt_sep_rtpi,
+ 				pr_res_holder->pr_iport);
+ 
+ 			spin_unlock(&dev->dev_reservation_lock);
+@@ -2329,13 +2322,10 @@ core_scsi3_pro_reserve(struct se_cmd *cmd, int type, int scope, u64 res_key)
+ 		 */
+ 		if ((pr_res_holder->pr_res_type != type) ||
+ 		    (pr_res_holder->pr_res_scope != scope)) {
+-			pr_err("SPC-3 PR: Attempted RESERVE from"
+-				" [%s]: %s trying to change TYPE and/or SCOPE,"
+-				" while reservation already held by [%s]: %s,"
+-				" returning RESERVATION_CONFLICT\n",
+-				cmd->se_tfo->fabric_name,
++			pr_err("SPC-3 PR: Attempted RESERVE from [%d]: %s trying to change TYPE and/or SCOPE, while reservation already held by [%d]: %s, returning RESERVATION_CONFLICT\n",
++				cmd->se_lun->lun_tpg->tpg_rtpi,
+ 				se_sess->se_node_acl->initiatorname,
+-				pr_res_holder->se_tpg->se_tpg_tfo->fabric_name,
++				pr_res_holder->tg_pt_sep_rtpi,
+ 				pr_res_holder->pr_iport);
+ 
+ 			spin_unlock(&dev->dev_reservation_lock);
+@@ -2397,7 +2387,6 @@ void __core_scsi3_complete_pro_release(
+ 	int explicit,
+ 	int unreg)
+ {
+-	const struct target_core_fabric_ops *tfo = pr_reg->se_tpg->se_tpg_tfo;
+ 	char i_buf[PR_REG_ISID_ID_LEN] = { };
+ 	int pr_res_type = 0, pr_res_scope = 0;
+ 
+@@ -2442,15 +2431,14 @@ void __core_scsi3_complete_pro_release(
+ 	spin_unlock(&dev->t10_pr.registration_lock);
+ out:
+ 	if (!dev->dev_pr_res_holder) {
+-		pr_debug("SPC-3 PR [%s] Service Action: %s RELEASE cleared"
++		pr_debug("SPC-3 PR Service Action: %s RELEASE cleared"
+ 			" reservation holder TYPE: %s ALL_TG_PT: %d\n",
+-			tfo->fabric_name, (explicit) ? "explicit" :
++			(explicit) ? "explicit" :
+ 			"implicit", core_scsi3_pr_dump_type(pr_res_type),
+ 			(pr_reg->pr_reg_all_tg_pt) ? 1 : 0);
+ 	}
+-	pr_debug("SPC-3 PR [%s] RELEASE Node: %s%s\n",
+-		tfo->fabric_name, pr_reg->pr_iport,
+-		i_buf);
++	pr_debug("SPC-3 PR RELEASE Node: %s%s\n",
++		 pr_reg->pr_iport, i_buf);
+ 	/*
+ 	 * Clear TYPE and SCOPE for the next PROUT Service Action: RESERVE
+ 	 */
+@@ -2542,13 +2530,10 @@ core_scsi3_emulate_pro_release(struct se_cmd *cmd, int type, int scope,
+ 	 */
+ 	if ((pr_res_holder->pr_res_type != type) ||
+ 	    (pr_res_holder->pr_res_scope != scope)) {
+-		pr_err("SPC-3 PR RELEASE: Attempted to release"
+-			" reservation from [%s]: %s with different TYPE "
+-			"and/or SCOPE  while reservation already held by"
+-			" [%s]: %s, returning RESERVATION_CONFLICT\n",
+-			cmd->se_tfo->fabric_name,
++		pr_err("SPC-3 PR RELEASE: Attempted to release reservation from [%d]: %s with different TYPE and/or SCOPE  while reservation already held by [%d]: %s, returning RESERVATION_CONFLICT\n",
++			cmd->se_lun->lun_tpg->tpg_rtpi,
+ 			se_sess->se_node_acl->initiatorname,
+-			pr_res_holder->se_tpg->se_tpg_tfo->fabric_name,
++			pr_res_holder->tg_pt_sep_rtpi,
+ 			pr_res_holder->pr_iport);
+ 
+ 		spin_unlock(&dev->dev_reservation_lock);
+@@ -2701,7 +2686,6 @@ static void __core_scsi3_complete_pro_preempt(
+ 	int scope,
+ 	enum preempt_type preempt_type)
+ {
+-	const struct target_core_fabric_ops *tfo = pr_reg->se_tpg->se_tpg_tfo;
+ 	char i_buf[PR_REG_ISID_ID_LEN] = { };
+ 
+ 	lockdep_assert_held(&dev->dev_reservation_lock);
+@@ -2718,13 +2702,13 @@ static void __core_scsi3_complete_pro_preempt(
+ 	pr_reg->pr_res_type = type;
+ 	pr_reg->pr_res_scope = scope;
+ 
+-	pr_debug("SPC-3 PR [%s] Service Action: PREEMPT%s created new"
++	pr_debug("SPC-3 PR Service Action: PREEMPT%s created new"
+ 		" reservation holder TYPE: %s ALL_TG_PT: %d\n",
+-		tfo->fabric_name, (preempt_type == PREEMPT_AND_ABORT) ? "_AND_ABORT" : "",
++		(preempt_type == PREEMPT_AND_ABORT) ? "_AND_ABORT" : "",
+ 		core_scsi3_pr_dump_type(type),
+ 		(pr_reg->pr_reg_all_tg_pt) ? 1 : 0);
+-	pr_debug("SPC-3 PR [%s] PREEMPT%s from Node: %s%s\n",
+-		tfo->fabric_name, (preempt_type == PREEMPT_AND_ABORT) ? "_AND_ABORT" : "",
++	pr_debug("SPC-3 PR PREEMPT%s from Node: %s%s\n",
++		(preempt_type == PREEMPT_AND_ABORT) ? "_AND_ABORT" : "",
+ 		pr_reg->pr_iport, i_buf);
+ 	/*
+ 	 * For PREEMPT_AND_ABORT, add the preempting reservation's
+diff --git a/drivers/target/target_core_pr.h b/drivers/target/target_core_pr.h
+index e4bdabfc4b31..954b0dff32bf 100644
+--- a/drivers/target/target_core_pr.h
++++ b/drivers/target/target_core_pr.h
+@@ -86,7 +86,7 @@ struct t10_pr_registration *__core_scsi3_do_alloc_registration(
+ 					struct se_node_acl *nacl,
+ 					const char *initiatorname,
+ 					u64 unpacked_lun,
+-					struct se_portal_group *se_tpg,
++					u16 rtpi,
+ 					struct se_dev_entry *dest_deve,
+ 					u64 mapped_lun,
+ 					unsigned char *isid,
+diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
+index 5a81d592530f..bdcd65ce0f62 100644
+--- a/drivers/target/target_core_tpg.c
++++ b/drivers/target/target_core_tpg.c
+@@ -738,8 +738,9 @@ static ssize_t core_tpg_rtpi_show(struct config_item *item, char *page)
+ 	return sprintf(page, "%#x\n", se_tpg->tpg_rtpi);
+ }
+ 
++
+ struct se_portal_group *
+-core_get_tpg_by_rtpi(u16 rtpi)
++_core_get_tpg_by_rtpi(u16 rtpi)
+ {
+ 	struct se_portal_group *tpg;
+ 
+@@ -753,6 +754,18 @@ core_get_tpg_by_rtpi(u16 rtpi)
+ 	return NULL;
+ }
+ 
++struct se_portal_group *
++core_get_tpg_by_rtpi(u16 rtpi)
++{
++	struct se_portal_group *tpg;
++
++	spin_lock(&g_tpg_lock);
++	tpg = _core_get_tpg_by_rtpi(rtpi);
++	spin_unlock(&g_tpg_lock);
++
++	return tpg;
++}
++
+ static ssize_t core_tpg_rtpi_store(struct config_item *item,
+ 				   const char *page, size_t count)
+ {
+@@ -773,7 +786,7 @@ static ssize_t core_tpg_rtpi_store(struct config_item *item,
+ 	spin_lock(&g_tpg_lock);
+ 
+ 	if (se_tpg->enabled) {
+-		tpg = core_get_tpg_by_rtpi(val);
++		tpg = _core_get_tpg_by_rtpi(val);
+ 		if (tpg) {
+ 			spin_unlock(&g_tpg_lock);
+ 			pr_err("TARGET_CORE[%s]->TPG[%u] - RTPI %#x conflicts with TARGET_CORE[%s]->TPG[%u]\n",
 diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 095b96cb3557..64cb943b5d3a 100644
+index 64cb943b5d3a..5378e2d3825f 100644
 --- a/include/target/target_core_base.h
 +++ b/include/target/target_core_base.h
-@@ -347,6 +347,8 @@ struct t10_pr_registration {
- 	/* Used during APTPL metadata reading */
- #define PR_APTPL_MAX_IPORT_LEN			256
- 	unsigned char pr_iport[PR_APTPL_MAX_IPORT_LEN];
-+#define PR_REG_TID_LEN				228
-+	char pr_tid[PR_REG_TID_LEN];
- 	/* Reservation effects all target ports */
- 	int pr_reg_all_tg_pt;
- 	/* Activate Persistence across Target Power Loss */
+@@ -366,7 +366,6 @@ struct t10_pr_registration {
+ 	u64 pr_res_key;
+ 	atomic_t pr_res_holders;
+ 	struct se_node_acl *pr_reg_nacl;
+-	struct se_portal_group *se_tpg;
+ 	/* Used by ALL_TG_PT=1 registration with deve->pr_ref taken */
+ 	struct se_dev_entry *pr_reg_deve;
+ 	struct list_head pr_reg_list;
 -- 
 2.25.1
 
