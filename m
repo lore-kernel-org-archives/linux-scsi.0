@@ -2,37 +2,38 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56394C43334
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jun 2022 11:02:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AF1AC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jun 2022 11:15:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241236AbiFVLCG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Jun 2022 07:02:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44766 "EHLO
+        id S1355611AbiFVLPc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Jun 2022 07:15:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54924 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234590AbiFVLCF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jun 2022 07:02:05 -0400
+        with ESMTP id S1354579AbiFVLP3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jun 2022 07:15:29 -0400
 Received: from smtpbg.qq.com (smtpbg138.qq.com [106.55.201.18])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7BA9139166;
-        Wed, 22 Jun 2022 04:01:58 -0700 (PDT)
-X-QQ-mid: bizesmtp89t1655895704tlz2roqm
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B78F23A71C;
+        Wed, 22 Jun 2022 04:15:23 -0700 (PDT)
+X-QQ-mid: bizesmtp82t1655896451ts8iyooo
 Received: from ubuntu.localdomain ( [223.104.103.173])
         by bizesmtp.qq.com (ESMTP) with 
-        id ; Wed, 22 Jun 2022 19:01:39 +0800 (CST)
+        id ; Wed, 22 Jun 2022 19:14:05 +0800 (CST)
 X-QQ-SSF: 01000000008000B0B000B00A0000000
-X-QQ-FEAT: 12WmTNdz4A2AySGFjMf1nLtEWLIUTiBdBK8GGy3alLtapAVa/Z0Vq8r4sVVAP
-        ihaj4Ww3x5h7E8Je5xL4n7iyrfePzH9urEmVAqW8B1xA9jqo/FyAPGtQ1flRMUa5Ltweo9F
-        ciBf3tJxoWlydWKAULwbHibBCwa30JfIA6vZufICh3QoOBJkYYwV36f8Op39Rse9nqLku0v
-        kaSeX0T6ylnGXLts9J/aWREJBZV8IEEiKUfjL0slFNbBSNBBl7L0Vvb/Ho/pfEHpjt+vIhm
-        jsw82BsKHmgO0xDS05hlMKu4qmmn3gmyf3FYtqNOO6Rycjk6fU1MiVzGlAM+p/xF/D9PKem
-        JL9MNKpLo9fKLHbkpEx7djQU2/rKUQq+twcMqCH
+X-QQ-FEAT: DHpJGCbtM4nBmAWYzX6NaNhkYQbXDPKYhFBXaRdc/3+DB0CP/7je1x84gYVPy
+        6m1CPCTdb9SUh05FKda9aw9kDH+CbglNQIiAeCaVryjitrnkAHUW3NuFHoJ31r/qhUVJ5a9
+        Mno3k2Tnuer41AKg21GHAnF9cmMApZK257xypaCzBh3neGfNnAmi6S6Q2OPRl8wdSyVjFVc
+        X2iZIerPtDBK4g2vTyA0VCyXJwFcCDB5Q26cpDggz7+c0IfyMtL5p8nF7WdSPxGNDjIv1Ve
+        RIUE02YsHgRJQrAs7ZmyvzQDYFMzlaO+3ExhOTIFqMlcqTsa46LmjvaXP8Lt3MkNJ13D2/Q
+        rPAzoG9OIhi3xWUjrhixrBGRkI3ag==
 X-QQ-GoodBg: 0
 From:   Jiang Jian <jiangjian@cdjrlc.com>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     jinpu.wang@cloud.ionos.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jiang Jian <jiangjian@cdjrlc.com>
-Subject: [PATCH] scsi: pm8001: drop unexpected word "the" in the comments
-Date:   Wed, 22 Jun 2022 19:01:37 +0800
-Message-Id: <20220622110137.10033-1-jiangjian@cdjrlc.com>
+Cc:     james.smart@broadcom.com, dick.kennedy@broadcom.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jiang Jian <jiangjian@cdjrlc.com>
+Subject: [PATCH] scsi: lpfc: drop unexpected word "the" in the comments
+Date:   Wed, 22 Jun 2022 19:14:03 +0800
+Message-Id: <20220622111403.11203-1-jiangjian@cdjrlc.com>
 X-Mailer: git-send-email 2.17.1
 X-QQ-SENDSIZE: 520
 Feedback-ID: bizesmtp:cdjrlc.com:qybgspam:qybgspam10
@@ -42,33 +43,33 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 there is an unexpected word "the" in the comments that need to be dropped
 
-file: drivers/scsi/pm8001/pm8001_hwi.c
-line: 3141
+file: drivers/scsi/lpfc/lpfc_attr.c
+line: 2463
 
-  * the sas toplogy has formed, please discover the the whole sas domain,
+  * @phba: pointer the the adapter structure.
 
 changed to:
 
-  * the sas toplogy has formed, please discover the whole sas domain,
+  * @phba: pointer the adapter structure.
 
 Signed-off-by: Jiang Jian <jiangjian@cdjrlc.com>
 ---
- drivers/scsi/pm8001/pm8001_hwi.c | 2 +-
+ drivers/scsi/lpfc/lpfc_attr.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index a37595621d51..6a3c4c347061 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -3138,7 +3138,7 @@ int pm8001_mpi_local_phy_ctl(struct pm8001_hba_info *pm8001_ha, void *piomb)
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index 3caaa7c4af48..fc8133b0ba9a 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -2460,7 +2460,7 @@ lpfc_sriov_hw_max_virtfn_show(struct device *dev,
+ 
+ /**
+  * lpfc_enable_bbcr_set: Sets an attribute value.
+- * @phba: pointer the the adapter structure.
++ * @phba: pointer the adapter structure.
+  * @val: integer attribute value.
   *
-  * when HBA driver received the identify done event or initiate FIS received
-  * event(for SATA), it will invoke this function to notify the sas layer that
-- * the sas toplogy has formed, please discover the the whole sas domain,
-+ * the sas toplogy has formed, please discover the whole sas domain,
-  * while receive a broadcast(change) primitive just tell the sas
-  * layer to discover the changed domain rather than the whole domain.
-  */
+  * Description:
 -- 
 2.17.1
 
