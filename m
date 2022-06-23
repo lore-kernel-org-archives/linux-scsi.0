@@ -2,281 +2,355 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE43FC43334
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jun 2022 10:29:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B659C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jun 2022 12:35:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230381AbiFWK3S (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Jun 2022 06:29:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59424 "EHLO
+        id S231237AbiFWMfl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Jun 2022 08:35:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48052 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229790AbiFWK3R (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jun 2022 06:29:17 -0400
-Received: from www262.sakura.ne.jp (www262.sakura.ne.jp [202.181.97.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A0B34A3C8
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Jun 2022 03:29:16 -0700 (PDT)
-Received: from fsav114.sakura.ne.jp (fsav114.sakura.ne.jp [27.133.134.241])
-        by www262.sakura.ne.jp (8.15.2/8.15.2) with ESMTP id 25NAT2s5063220;
-        Thu, 23 Jun 2022 19:29:02 +0900 (JST)
-        (envelope-from penguin-kernel@I-love.SAKURA.ne.jp)
-Received: from www262.sakura.ne.jp (202.181.97.72)
- by fsav114.sakura.ne.jp (F-Secure/fsigk_smtp/550/fsav114.sakura.ne.jp);
- Thu, 23 Jun 2022 19:29:02 +0900 (JST)
-X-Virus-Status: clean(F-Secure/fsigk_smtp/550/fsav114.sakura.ne.jp)
-Received: from [192.168.1.9] (M106072142033.v4.enabler.ne.jp [106.72.142.33])
-        (authenticated bits=0)
-        by www262.sakura.ne.jp (8.15.2/8.15.2) with ESMTPSA id 25NAT1qr063208
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NO);
-        Thu, 23 Jun 2022 19:29:01 +0900 (JST)
-        (envelope-from penguin-kernel@I-love.SAKURA.ne.jp)
-Message-ID: <46629616-be04-9a53-b9d8-b2b947adf9d0@I-love.SAKURA.ne.jp>
-Date:   Thu, 23 Jun 2022 19:29:00 +0900
+        with ESMTP id S230220AbiFWMfk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jun 2022 08:35:40 -0400
+Received: from mail-oi1-x22c.google.com (mail-oi1-x22c.google.com [IPv6:2607:f8b0:4864:20::22c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D94F941987
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Jun 2022 05:35:37 -0700 (PDT)
+Received: by mail-oi1-x22c.google.com with SMTP id y77so767633oia.3
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Jun 2022 05:35:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=9C2GQ9Ulp1b6YnCrEsaBjrJIIvHLrjIzeIsR+q3+W/4=;
+        b=uWwKxXBkCKRdx3iYwLJ/8ZDvrYVoB+1GHBLAzaHcLIFDftA2voxjLWE9fOvlF7hbWf
+         V+RwaoZPlnBsfdKY8Vdj2DVWDnkjakZVkXl3OXUYsLvIyXCIGjxF8xk8sEYHPVbaxvfX
+         eP/6ABzpV+q1emtfZ9G1ACl5C5E3nM3X7Vy6CZaB1Wev1WP22+6Zuf1I/NNfu8WF6nmX
+         qGCLzFghklGXlb7vsEmczfxpG6SLdNpMt1wSiiiP7wCpaJKyb7L7LSbDcecxHU+lr2Hz
+         y4NFkZSVH9FwZ+tfLwliZaH6dNe4puApGNDUTMLT9gRn32wTabaVFBbaBvGWWun6wVi7
+         zkBQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=9C2GQ9Ulp1b6YnCrEsaBjrJIIvHLrjIzeIsR+q3+W/4=;
+        b=V9LS1g+v3P+Z2HIby2Mufv4s/ntR/oKfMGin6smLlu9ikPSV/1C+lDzd11ySal+etz
+         z0KXpt1z/kkSWhmkPsEfiIRndQSDznvCJtj2OPN4CQ/sMjeJxu2irCgHbm3LJI4fes0+
+         Q5EHcAszmrebgKN5VU+LiuLiw5Yh/QQOLQBGNl4Su/oka/qgy95TOSZesUckqoElCNRq
+         i1ort7NxZC8eGCe3sVR0KiTgOKx1W5NTrhNKuEdfzxYs1O21FG1zTb+9KEFbSyM7mMSv
+         jexVlCkXYYVyPnY/f5n32+FOS3XhOkylrBxULrxws61poqKGz9xTxKvGJvsMP2lz01gO
+         R/uw==
+X-Gm-Message-State: AJIora/4sExPCEAqKx3lpxTnNBSC1rAAZbruPfLIUNBj22LDZ2on4128
+        +O651iAK5cdseDD46gfxdBD1c+t448i7pMmvRShuGg==
+X-Google-Smtp-Source: AGRyM1secqzIdgl7cxbYNYLOKT6GhxiDbyKH487w1NGSVALpBPVoYlvm20+0dnzElQ/psyzuKl8Fae9I+yA8danUhUU=
+X-Received: by 2002:a05:6808:1a06:b0:32f:1a3b:69d6 with SMTP id
+ bk6-20020a0568081a0600b0032f1a3b69d6mr2015631oib.202.1655987737098; Thu, 23
+ Jun 2022 05:35:37 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: [PATCH 2/2] scsi: qla2xxx: avoid flush_scheduled_work() usage
-Content-Language: en-US
-From:   Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-To:     Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org
-References: <b4a96c07-76ef-c7ac-6a73-a64bba32d26f@I-love.SAKURA.ne.jp>
-In-Reply-To: <b4a96c07-76ef-c7ac-6a73-a64bba32d26f@I-love.SAKURA.ne.jp>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <1655810143-67784-1-git-send-email-john.garry@huawei.com> <1655810143-67784-4-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1655810143-67784-4-git-send-email-john.garry@huawei.com>
+From:   Ulf Hansson <ulf.hansson@linaro.org>
+Date:   Thu, 23 Jun 2022 14:35:00 +0200
+Message-ID: <CAPDyKFqRzOceWJUODP0YEu348S4=OHdQA-3c3tEMAJshCQN+Qg@mail.gmail.com>
+Subject: Re: [PATCH v2 3/6] blk-mq: Drop blk_mq_ops.timeout 'reserved' arg
+To:     John Garry <john.garry@huawei.com>
+Cc:     axboe@kernel.dk, damien.lemoal@opensource.wdc.com,
+        bvanassche@acm.org, hch@lst.de, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, hare@suse.de, satishkh@cisco.com,
+        sebaddel@cisco.com, kartilak@cisco.com, linux-doc@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
+        linux-scsi@vger.kernel.org, mpi3mr-linuxdrv.pdl@broadcom.com,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        nbd@other.debian.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-As per commit c4f135d643823a86 ("workqueue: Wrap flush_workqueue() using
-a macro") says, remove flush_scheduled_work() call from qla2xxx driver.
+On Tue, 21 Jun 2022 at 13:22, John Garry <john.garry@huawei.com> wrote:
+>
+> With new API blk_mq_is_reserved_rq() we can tell if a request is from
+> the reserved pool, so stop passing 'reserved' arg. There is actually
+> only a single user of that arg for all the callback implementations, which
+> can use blk_mq_is_reserved_rq() instead.
+>
+> This will also allow us to stop passing the same 'reserved' around the
+> blk-mq iter functions next.
+>
+> Signed-off-by: John Garry <john.garry@huawei.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Although qla2xxx driver is calling schedule_{,delayed}_work() from 10
-locations, I assume that flush_scheduled_work() from qlt_stop_phase1()
-needs to flush only works scheduled by qlt_sched_sess_work(), for
-flush_scheduled_work() from qlt_stop_phase1() is called only when
-"struct qla_tgt"->sess_works_list is not empty.
+Acked-by: Ulf Hansson <ulf.hansson@linaro.org> # For MMC
 
-Currently qlt_stop_phase1() may fail to call flush_scheduled_work(), for
-list_empty() may return true as soon as qlt_sess_work_fn() called
-list_del(). In order to close this race window while removing
-flush_scheduled_work() call, replace sess_* fields in "struct qla_tgt"
-with a workqueue and unconditionally call flush_workqueue().
+Kind regards
+Uffe
 
-Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
----
-This patch is only compile tested.
 
-Changes in v2:
-  Use per "struct qla_tgt" workqueue.
-
- drivers/scsi/qla2xxx/qla_dbg.c    |  2 +-
- drivers/scsi/qla2xxx/qla_target.c | 79 ++++++++++++-------------------
- drivers/scsi/qla2xxx/qla_target.h |  7 +--
- 3 files changed, 35 insertions(+), 53 deletions(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index 7cf1f78cbaee..35a17bb6512d 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -10,7 +10,7 @@
-  * ----------------------------------------------------------------------
-  * |             Level            |   Last Value Used  |     Holes	|
-  * ----------------------------------------------------------------------
-- * | Module Init and Probe        |       0x0199       |                |
-+ * | Module Init and Probe        |       0x019a       |                |
-  * | Mailbox commands             |       0x1206       | 0x11a5-0x11ff	|
-  * | Device Discovery             |       0x2134       | 0x210e-0x2115  |
-  * |                              |                    | 0x211c-0x2128  |
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index d9e0e7ffe130..d08e50779f73 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -126,6 +126,8 @@ static void qlt_send_busy(struct qla_qpair *, struct atio_from_isp *,
- static int qlt_check_reserve_free_req(struct qla_qpair *qpair, uint32_t);
- static inline uint32_t qlt_make_handle(struct qla_qpair *);
- 
-+static void qlt_sess_work_fn(struct work_struct *work);
-+
- /*
-  * Global Variables
-  */
-@@ -1529,7 +1531,6 @@ int qlt_stop_phase1(struct qla_tgt *tgt)
- {
- 	struct scsi_qla_host *vha = tgt->vha;
- 	struct qla_hw_data *ha = tgt->ha;
--	unsigned long flags;
- 
- 	mutex_lock(&ha->optrom_mutex);
- 	mutex_lock(&qla_tgt_mutex);
-@@ -1556,13 +1557,7 @@ int qlt_stop_phase1(struct qla_tgt *tgt)
- 
- 	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf009,
- 	    "Waiting for sess works (tgt %p)", tgt);
--	spin_lock_irqsave(&tgt->sess_work_lock, flags);
--	while (!list_empty(&tgt->sess_works_list)) {
--		spin_unlock_irqrestore(&tgt->sess_work_lock, flags);
--		flush_scheduled_work();
--		spin_lock_irqsave(&tgt->sess_work_lock, flags);
--	}
--	spin_unlock_irqrestore(&tgt->sess_work_lock, flags);
-+	flush_workqueue(tgt->wq);
- 
- 	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf00a,
- 	    "Waiting for tgt %p: sess_count=%d\n", tgt, tgt->sess_count);
-@@ -1669,6 +1664,7 @@ static void qlt_release(struct qla_tgt *tgt)
- 	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf00d,
- 	    "Release of tgt %p finished\n", tgt);
- 
-+	destroy_workqueue(tgt->wq);
- 	kfree(tgt);
- }
- 
-@@ -1677,7 +1673,6 @@ static int qlt_sched_sess_work(struct qla_tgt *tgt, int type,
- 	const void *param, unsigned int param_size)
- {
- 	struct qla_tgt_sess_work_param *prm;
--	unsigned long flags;
- 
- 	prm = kzalloc(sizeof(*prm), GFP_ATOMIC);
- 	if (!prm) {
-@@ -1695,11 +1690,9 @@ static int qlt_sched_sess_work(struct qla_tgt *tgt, int type,
- 	prm->type = type;
- 	memcpy(&prm->tm_iocb, param, param_size);
- 
--	spin_lock_irqsave(&tgt->sess_work_lock, flags);
--	list_add_tail(&prm->sess_works_list_entry, &tgt->sess_works_list);
--	spin_unlock_irqrestore(&tgt->sess_work_lock, flags);
--
--	schedule_work(&tgt->sess_work);
-+	prm->tgt = tgt;
-+	INIT_WORK(&prm->work, qlt_sess_work_fn);
-+	queue_work(tgt->wq, &prm->work);
- 
- 	return 0;
- }
-@@ -6399,43 +6392,25 @@ static void qlt_tmr_work(struct qla_tgt *tgt,
- 
- static void qlt_sess_work_fn(struct work_struct *work)
- {
--	struct qla_tgt *tgt = container_of(work, struct qla_tgt, sess_work);
-+	struct qla_tgt_sess_work_param *prm =
-+		container_of(work, struct qla_tgt_sess_work_param, work);
-+	struct qla_tgt *tgt = prm->tgt;
- 	struct scsi_qla_host *vha = tgt->vha;
--	unsigned long flags;
- 
- 	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf000, "Sess work (tgt %p)", tgt);
- 
--	spin_lock_irqsave(&tgt->sess_work_lock, flags);
--	while (!list_empty(&tgt->sess_works_list)) {
--		struct qla_tgt_sess_work_param *prm = list_entry(
--		    tgt->sess_works_list.next, typeof(*prm),
--		    sess_works_list_entry);
--
--		/*
--		 * This work can be scheduled on several CPUs at time, so we
--		 * must delete the entry to eliminate double processing
--		 */
--		list_del(&prm->sess_works_list_entry);
--
--		spin_unlock_irqrestore(&tgt->sess_work_lock, flags);
--
--		switch (prm->type) {
--		case QLA_TGT_SESS_WORK_ABORT:
--			qlt_abort_work(tgt, prm);
--			break;
--		case QLA_TGT_SESS_WORK_TM:
--			qlt_tmr_work(tgt, prm);
--			break;
--		default:
--			BUG_ON(1);
--			break;
--		}
--
--		spin_lock_irqsave(&tgt->sess_work_lock, flags);
--
--		kfree(prm);
-+	switch (prm->type) {
-+	case QLA_TGT_SESS_WORK_ABORT:
-+		qlt_abort_work(tgt, prm);
-+		break;
-+	case QLA_TGT_SESS_WORK_TM:
-+		qlt_tmr_work(tgt, prm);
-+		break;
-+	default:
-+		BUG_ON(1);
-+		break;
- 	}
--	spin_unlock_irqrestore(&tgt->sess_work_lock, flags);
-+	kfree(prm);
- }
- 
- /* Must be called under tgt_host_action_mutex */
-@@ -6465,11 +6440,19 @@ int qlt_add_target(struct qla_hw_data *ha, struct scsi_qla_host *base_vha)
- 		    "Unable to allocate struct qla_tgt\n");
- 		return -ENOMEM;
- 	}
-+	tgt->wq = alloc_workqueue("qla2xxx_wq", 0, 0);
-+	if (!tgt->wq) {
-+		kfree(tgt);
-+		ql_log(ql_log_warn, base_vha, 0x019a,
-+		       "Unable to allocate workqueue.\n");
-+		return -ENOMEM;
-+	}
- 
- 	tgt->qphints = kcalloc(ha->max_qpairs + 1,
- 			       sizeof(struct qla_qpair_hint),
- 			       GFP_KERNEL);
- 	if (!tgt->qphints) {
-+		destroy_workqueue(tgt->wq);
- 		kfree(tgt);
- 		ql_log(ql_log_warn, base_vha, 0x0197,
- 		    "Unable to allocate qpair hints.\n");
-@@ -6482,6 +6465,7 @@ int qlt_add_target(struct qla_hw_data *ha, struct scsi_qla_host *base_vha)
- 	rc = btree_init64(&tgt->lun_qpair_map);
- 	if (rc) {
- 		kfree(tgt->qphints);
-+		destroy_workqueue(tgt->wq);
- 		kfree(tgt);
- 		ql_log(ql_log_info, base_vha, 0x0198,
- 			"Unable to initialize lun_qpair_map btree\n");
-@@ -6512,9 +6496,6 @@ int qlt_add_target(struct qla_hw_data *ha, struct scsi_qla_host *base_vha)
- 	tgt->ha = ha;
- 	tgt->vha = base_vha;
- 	init_waitqueue_head(&tgt->waitQ);
--	spin_lock_init(&tgt->sess_work_lock);
--	INIT_WORK(&tgt->sess_work, qlt_sess_work_fn);
--	INIT_LIST_HEAD(&tgt->sess_works_list);
- 	atomic_set(&tgt->tgt_global_resets_count, 0);
- 
- 	base_vha->vha_tgt.qla_tgt = tgt;
-diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index e899e13696e9..02fbffd8248a 100644
---- a/drivers/scsi/qla2xxx/qla_target.h
-+++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -813,9 +813,8 @@ struct qla_tgt {
- 	/* Count of sessions refering qla_tgt. Protected by hardware_lock. */
- 	int sess_count;
- 
--	spinlock_t sess_work_lock;
--	struct list_head sess_works_list;
--	struct work_struct sess_work;
-+	/* Workqueue for processing session work. */
-+	struct workqueue_struct *wq;
- 
- 	struct imm_ntfy_from_isp link_reinit_iocb;
- 	wait_queue_head_t waitQ;
-@@ -950,6 +949,8 @@ struct qla_tgt_sess_work_param {
- 		struct imm_ntfy_from_isp tm_iocb;
- 		struct atio_from_isp tm_iocb2;
- 	};
-+	struct qla_tgt *tgt;
-+	struct work_struct work;
- };
- 
- struct qla_tgt_mgmt_cmd {
--- 
-2.18.4
-
+> ---
+>  block/blk-mq.c                    | 6 +++---
+>  block/bsg-lib.c                   | 2 +-
+>  drivers/block/mtip32xx/mtip32xx.c | 5 ++---
+>  drivers/block/nbd.c               | 3 +--
+>  drivers/block/null_blk/main.c     | 2 +-
+>  drivers/mmc/core/queue.c          | 3 +--
+>  drivers/nvme/host/apple.c         | 3 +--
+>  drivers/nvme/host/fc.c            | 3 +--
+>  drivers/nvme/host/pci.c           | 2 +-
+>  drivers/nvme/host/rdma.c          | 3 +--
+>  drivers/nvme/host/tcp.c           | 3 +--
+>  drivers/s390/block/dasd.c         | 2 +-
+>  drivers/s390/block/dasd_int.h     | 2 +-
+>  drivers/scsi/scsi_error.c         | 3 +--
+>  drivers/scsi/scsi_priv.h          | 3 +--
+>  include/linux/blk-mq.h            | 2 +-
+>  16 files changed, 19 insertions(+), 28 deletions(-)
+>
+> diff --git a/block/blk-mq.c b/block/blk-mq.c
+> index d38c97fe89f5..81bd39e36e49 100644
+> --- a/block/blk-mq.c
+> +++ b/block/blk-mq.c
+> @@ -1426,13 +1426,13 @@ bool blk_mq_queue_inflight(struct request_queue *q)
+>  }
+>  EXPORT_SYMBOL_GPL(blk_mq_queue_inflight);
+>
+> -static void blk_mq_rq_timed_out(struct request *req, bool reserved)
+> +static void blk_mq_rq_timed_out(struct request *req)
+>  {
+>         req->rq_flags |= RQF_TIMED_OUT;
+>         if (req->q->mq_ops->timeout) {
+>                 enum blk_eh_timer_return ret;
+>
+> -               ret = req->q->mq_ops->timeout(req, reserved);
+> +               ret = req->q->mq_ops->timeout(req);
+>                 if (ret == BLK_EH_DONE)
+>                         return;
+>                 WARN_ON_ONCE(ret != BLK_EH_RESET_TIMER);
+> @@ -1481,7 +1481,7 @@ static bool blk_mq_check_expired(struct request *rq, void *priv, bool reserved)
+>          * from blk_mq_check_expired().
+>          */
+>         if (blk_mq_req_expired(rq, next))
+> -               blk_mq_rq_timed_out(rq, reserved);
+> +               blk_mq_rq_timed_out(rq);
+>         return true;
+>  }
+>
+> diff --git a/block/bsg-lib.c b/block/bsg-lib.c
+> index acfe1357bf6c..9570c77b9fe3 100644
+> --- a/block/bsg-lib.c
+> +++ b/block/bsg-lib.c
+> @@ -331,7 +331,7 @@ void bsg_remove_queue(struct request_queue *q)
+>  }
+>  EXPORT_SYMBOL_GPL(bsg_remove_queue);
+>
+> -static enum blk_eh_timer_return bsg_timeout(struct request *rq, bool reserved)
+> +static enum blk_eh_timer_return bsg_timeout(struct request *rq)
+>  {
+>         struct bsg_set *bset =
+>                 container_of(rq->q->tag_set, struct bsg_set, tag_set);
+> diff --git a/drivers/block/mtip32xx/mtip32xx.c b/drivers/block/mtip32xx/mtip32xx.c
+> index 27386a572ba4..d5767215840c 100644
+> --- a/drivers/block/mtip32xx/mtip32xx.c
+> +++ b/drivers/block/mtip32xx/mtip32xx.c
+> @@ -3487,12 +3487,11 @@ static int mtip_init_cmd(struct blk_mq_tag_set *set, struct request *rq,
+>         return 0;
+>  }
+>
+> -static enum blk_eh_timer_return mtip_cmd_timeout(struct request *req,
+> -                                                               bool reserved)
+> +static enum blk_eh_timer_return mtip_cmd_timeout(struct request *req)
+>  {
+>         struct driver_data *dd = req->q->queuedata;
+>
+> -       if (reserved) {
+> +       if (blk_mq_is_reserved_rq(req)) {
+>                 struct mtip_cmd *cmd = blk_mq_rq_to_pdu(req);
+>
+>                 cmd->status = BLK_STS_TIMEOUT;
+> diff --git a/drivers/block/nbd.c b/drivers/block/nbd.c
+> index 07f3c139a3d7..166303716560 100644
+> --- a/drivers/block/nbd.c
+> +++ b/drivers/block/nbd.c
+> @@ -393,8 +393,7 @@ static u32 req_to_nbd_cmd_type(struct request *req)
+>         }
+>  }
+>
+> -static enum blk_eh_timer_return nbd_xmit_timeout(struct request *req,
+> -                                                bool reserved)
+> +static enum blk_eh_timer_return nbd_xmit_timeout(struct request *req)
+>  {
+>         struct nbd_cmd *cmd = blk_mq_rq_to_pdu(req);
+>         struct nbd_device *nbd = cmd->nbd;
+> diff --git a/drivers/block/null_blk/main.c b/drivers/block/null_blk/main.c
+> index 6b67088f4ea7..2d815d1eba25 100644
+> --- a/drivers/block/null_blk/main.c
+> +++ b/drivers/block/null_blk/main.c
+> @@ -1578,7 +1578,7 @@ static int null_poll(struct blk_mq_hw_ctx *hctx, struct io_comp_batch *iob)
+>         return nr;
+>  }
+>
+> -static enum blk_eh_timer_return null_timeout_rq(struct request *rq, bool res)
+> +static enum blk_eh_timer_return null_timeout_rq(struct request *rq)
+>  {
+>         struct blk_mq_hw_ctx *hctx = rq->mq_hctx;
+>         struct nullb_cmd *cmd = blk_mq_rq_to_pdu(rq);
+> diff --git a/drivers/mmc/core/queue.c b/drivers/mmc/core/queue.c
+> index fa5324ceeebe..17236340dbd2 100644
+> --- a/drivers/mmc/core/queue.c
+> +++ b/drivers/mmc/core/queue.c
+> @@ -116,8 +116,7 @@ static enum blk_eh_timer_return mmc_cqe_timed_out(struct request *req)
+>         }
+>  }
+>
+> -static enum blk_eh_timer_return mmc_mq_timed_out(struct request *req,
+> -                                                bool reserved)
+> +static enum blk_eh_timer_return mmc_mq_timed_out(struct request *req)
+>  {
+>         struct request_queue *q = req->q;
+>         struct mmc_queue *mq = q->queuedata;
+> diff --git a/drivers/nvme/host/apple.c b/drivers/nvme/host/apple.c
+> index d702d7d60235..495118ce958a 100644
+> --- a/drivers/nvme/host/apple.c
+> +++ b/drivers/nvme/host/apple.c
+> @@ -862,8 +862,7 @@ static void apple_nvme_disable(struct apple_nvme *anv, bool shutdown)
+>         }
+>  }
+>
+> -static enum blk_eh_timer_return apple_nvme_timeout(struct request *req,
+> -                                                  bool reserved)
+> +static enum blk_eh_timer_return apple_nvme_timeout(struct request *req)
+>  {
+>         struct apple_nvme_iod *iod = blk_mq_rq_to_pdu(req);
+>         struct apple_nvme_queue *q = iod->q;
+> diff --git a/drivers/nvme/host/fc.c b/drivers/nvme/host/fc.c
+> index 3c778bb0c294..a166c0b1cc33 100644
+> --- a/drivers/nvme/host/fc.c
+> +++ b/drivers/nvme/host/fc.c
+> @@ -2565,8 +2565,7 @@ nvme_fc_error_recovery(struct nvme_fc_ctrl *ctrl, char *errmsg)
+>         nvme_reset_ctrl(&ctrl->ctrl);
+>  }
+>
+> -static enum blk_eh_timer_return
+> -nvme_fc_timeout(struct request *rq, bool reserved)
+> +static enum blk_eh_timer_return nvme_fc_timeout(struct request *rq)
+>  {
+>         struct nvme_fc_fcp_op *op = blk_mq_rq_to_pdu(rq);
+>         struct nvme_fc_ctrl *ctrl = op->ctrl;
+> diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+> index c7012e85d035..83b1229a4e36 100644
+> --- a/drivers/nvme/host/pci.c
+> +++ b/drivers/nvme/host/pci.c
+> @@ -1344,7 +1344,7 @@ static void nvme_warn_reset(struct nvme_dev *dev, u32 csts)
+>                  "Try \"nvme_core.default_ps_max_latency_us=0 pcie_aspm=off\" and report a bug\n");
+>  }
+>
+> -static enum blk_eh_timer_return nvme_timeout(struct request *req, bool reserved)
+> +static enum blk_eh_timer_return nvme_timeout(struct request *req)
+>  {
+>         struct nvme_iod *iod = blk_mq_rq_to_pdu(req);
+>         struct nvme_queue *nvmeq = iod->nvmeq;
+> diff --git a/drivers/nvme/host/rdma.c b/drivers/nvme/host/rdma.c
+> index f2a5e1ea508a..d2fb8651e49d 100644
+> --- a/drivers/nvme/host/rdma.c
+> +++ b/drivers/nvme/host/rdma.c
+> @@ -2013,8 +2013,7 @@ static void nvme_rdma_complete_timed_out(struct request *rq)
+>         nvmf_complete_timed_out_request(rq);
+>  }
+>
+> -static enum blk_eh_timer_return
+> -nvme_rdma_timeout(struct request *rq, bool reserved)
+> +static enum blk_eh_timer_return nvme_rdma_timeout(struct request *rq)
+>  {
+>         struct nvme_rdma_request *req = blk_mq_rq_to_pdu(rq);
+>         struct nvme_rdma_queue *queue = req->queue;
+> diff --git a/drivers/nvme/host/tcp.c b/drivers/nvme/host/tcp.c
+> index bb67538d241b..f21f7b0140f9 100644
+> --- a/drivers/nvme/host/tcp.c
+> +++ b/drivers/nvme/host/tcp.c
+> @@ -2321,8 +2321,7 @@ static void nvme_tcp_complete_timed_out(struct request *rq)
+>         nvmf_complete_timed_out_request(rq);
+>  }
+>
+> -static enum blk_eh_timer_return
+> -nvme_tcp_timeout(struct request *rq, bool reserved)
+> +static enum blk_eh_timer_return nvme_tcp_timeout(struct request *rq)
+>  {
+>         struct nvme_tcp_request *req = blk_mq_rq_to_pdu(rq);
+>         struct nvme_ctrl *ctrl = &req->queue->ctrl->ctrl;
+> diff --git a/drivers/s390/block/dasd.c b/drivers/s390/block/dasd.c
+> index ba6d78789660..35d6f62ed515 100644
+> --- a/drivers/s390/block/dasd.c
+> +++ b/drivers/s390/block/dasd.c
+> @@ -3145,7 +3145,7 @@ static blk_status_t do_dasd_request(struct blk_mq_hw_ctx *hctx,
+>   * BLK_EH_DONE if the request is handled or terminated
+>   *                   by the driver.
+>   */
+> -enum blk_eh_timer_return dasd_times_out(struct request *req, bool reserved)
+> +enum blk_eh_timer_return dasd_times_out(struct request *req)
+>  {
+>         struct dasd_block *block = req->q->queuedata;
+>         struct dasd_device *device;
+> diff --git a/drivers/s390/block/dasd_int.h b/drivers/s390/block/dasd_int.h
+> index 83b918b84b4a..333a399f754e 100644
+> --- a/drivers/s390/block/dasd_int.h
+> +++ b/drivers/s390/block/dasd_int.h
+> @@ -795,7 +795,7 @@ void dasd_free_device(struct dasd_device *);
+>  struct dasd_block *dasd_alloc_block(void);
+>  void dasd_free_block(struct dasd_block *);
+>
+> -enum blk_eh_timer_return dasd_times_out(struct request *req, bool reserved);
+> +enum blk_eh_timer_return dasd_times_out(struct request *req);
+>
+>  void dasd_enable_device(struct dasd_device *);
+>  void dasd_set_target_state(struct dasd_device *, int);
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index a8b71b73a5a5..266ce414589c 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -318,7 +318,6 @@ void scsi_eh_scmd_add(struct scsi_cmnd *scmd)
+>  /**
+>   * scsi_timeout - Timeout function for normal scsi commands.
+>   * @req:       request that is timing out.
+> - * @reserved:  whether the request is a reserved request.
+>   *
+>   * Notes:
+>   *     We do not need to lock this.  There is the potential for a race
+> @@ -326,7 +325,7 @@ void scsi_eh_scmd_add(struct scsi_cmnd *scmd)
+>   *     normal completion function determines that the timer has already
+>   *     fired, then it mustn't do anything.
+>   */
+> -enum blk_eh_timer_return scsi_timeout(struct request *req, bool reserved)
+> +enum blk_eh_timer_return scsi_timeout(struct request *req)
+>  {
+>         struct scsi_cmnd *scmd = blk_mq_rq_to_pdu(req);
+>         enum blk_eh_timer_return rtn = BLK_EH_DONE;
+> diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+> index 695d0c83ffe0..6eeaa0a7f86d 100644
+> --- a/drivers/scsi/scsi_priv.h
+> +++ b/drivers/scsi/scsi_priv.h
+> @@ -72,8 +72,7 @@ extern void scsi_exit_devinfo(void);
+>
+>  /* scsi_error.c */
+>  extern void scmd_eh_abort_handler(struct work_struct *work);
+> -extern enum blk_eh_timer_return scsi_timeout(struct request *req,
+> -                                            bool reserved);
+> +extern enum blk_eh_timer_return scsi_timeout(struct request *req);
+>  extern int scsi_error_handler(void *host);
+>  extern enum scsi_disposition scsi_decide_disposition(struct scsi_cmnd *cmd);
+>  extern void scsi_eh_wakeup(struct Scsi_Host *shost);
+> diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+> index 6d81fe10e850..fbb08bdd4618 100644
+> --- a/include/linux/blk-mq.h
+> +++ b/include/linux/blk-mq.h
+> @@ -575,7 +575,7 @@ struct blk_mq_ops {
+>         /**
+>          * @timeout: Called on request timeout.
+>          */
+> -       enum blk_eh_timer_return (*timeout)(struct request *, bool);
+> +       enum blk_eh_timer_return (*timeout)(struct request *);
+>
+>         /**
+>          * @poll: Called to poll for completion of a specific tag.
+> --
+> 2.25.1
+>
