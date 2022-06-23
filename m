@@ -2,136 +2,73 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E937CCA47C
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jun 2022 08:38:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C84AC43334
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jun 2022 09:59:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230299AbiFWIiM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Jun 2022 04:38:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49214 "EHLO
+        id S230344AbiFWJ74 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Jun 2022 05:59:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33130 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229838AbiFWIiL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jun 2022 04:38:11 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD75A1FCEB;
-        Thu, 23 Jun 2022 01:38:09 -0700 (PDT)
-Received: from fraeml702-chm.china.huawei.com (unknown [172.18.147.226])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LTD9f6t10z67wtW;
-        Thu, 23 Jun 2022 16:36:06 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml702-chm.china.huawei.com (10.206.15.51) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2375.24; Thu, 23 Jun 2022 10:38:07 +0200
-Received: from [10.195.245.183] (10.195.245.183) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
- 15.1.2375.24; Thu, 23 Jun 2022 09:38:06 +0100
-Message-ID: <ebe0ce98-4a02-1e94-d21b-ccb010abfd2d@huawei.com>
-Date:   Thu, 23 Jun 2022 09:38:05 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH v3 2/4] dma-iommu: Add iommu_dma_opt_mapping_size()
-From:   John Garry <john.garry@huawei.com>
-To:     <joro@8bytes.org>, <will@kernel.org>, <robin.murphy@arm.com>
-CC:     <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-ide@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
-        <linux-scsi@vger.kernel.org>, <liyihang6@hisilicon.com>,
-        <chenxiang66@hisilicon.com>, <thunder.leizhen@huawei.com>,
-        <damien.lemoal@opensource.wdc.com>, <m.szyprowski@samsung.com>,
-        <martin.petersen@oracle.com>, <jejb@linux.ibm.com>, <hch@lst.de>
-References: <1654507822-168026-1-git-send-email-john.garry@huawei.com>
- <1654507822-168026-3-git-send-email-john.garry@huawei.com>
- <4a3ab043-f609-22cb-895f-e67c8dd8f6ab@huawei.com>
-In-Reply-To: <4a3ab043-f609-22cb-895f-e67c8dd8f6ab@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.195.245.183]
-X-ClientProxiedBy: lhreml705-chm.china.huawei.com (10.201.108.54) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+        with ESMTP id S230009AbiFWJ74 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jun 2022 05:59:56 -0400
+Received: from smtpbg.qq.com (smtpbg136.qq.com [106.55.201.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF6D248E7F;
+        Thu, 23 Jun 2022 02:59:51 -0700 (PDT)
+X-QQ-mid: bizesmtp81t1655978372tuh6nrgm
+Received: from ubuntu.localdomain ( [106.117.99.68])
+        by bizesmtp.qq.com (ESMTP) with 
+        id ; Thu, 23 Jun 2022 17:59:28 +0800 (CST)
+X-QQ-SSF: 01000000008000B0C000B00A0000000
+X-QQ-FEAT: 3uawQE1sH+2f1013LW7NDUvhD5nitFHiWU9+7JLKgy188gCFOYzyMkSUotYzW
+        ehfQtAdp1GDRZmZGmXW+sJ69XFawhcFNDYvfV9eg5blW931eIdSo84lGJKct8nvLWbJlr8B
+        AaAxbDeKpcwyjSDulTa8XAM305s1qYz3/6XxeAo8d/RMeeFNYMxnn8xh1RkNPyWOY3gs7gt
+        GBOl7iYfqiTA5OcdCUlQpVahGwtvKgKIdz9rrVY97nH1RPVoUgDna9vouK4wUHwAhN5qigF
+        5amZqs9sK99qPNIn1oRm9x+w47EJ+W5tvojSr4jmwBwVmVRlpp81h9pK5J3uYxx7bnLy75L
+        l0CmpHqjiB7C3K0RKdMBRtTIpiKlg==
+X-QQ-GoodBg: 0
+From:   Jiang Jian <jiangjian@cdjrlc.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     artur.paszkiewicz@intel.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Jiang Jian <jiangjian@cdjrlc.com>
+Subject: [PATCH] scsi: isci: drop unexpected word 'for' in comments
+Date:   Thu, 23 Jun 2022 17:59:26 +0800
+Message-Id: <20220623095926.23910-1-jiangjian@cdjrlc.com>
+X-Mailer: git-send-email 2.17.1
+X-QQ-SENDSIZE: 520
+Feedback-ID: bizesmtp:cdjrlc.com:qybgspam:qybgspam7
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 14/06/2022 14:12, John Garry wrote:
-> On 06/06/2022 10:30, John Garry wrote:
->> Add the IOMMU callback for DMA mapping API dma_opt_mapping_size(), which
->> allows the drivers to know the optimal mapping limit and thus limit the
->> requested IOVA lengths.
->>
->> This value is based on the IOVA rcache range limit, as IOVAs allocated
->> above this limit must always be newly allocated, which may be quite slow.
->>
-> 
-> Can I please get some sort of ack from the IOMMU people on this one?
-> 
+there is an unexpected word 'for' in the comments that need to be dropped
 
-Another request for an ack please.
+file - drivers/scsi/isci/remote_device.h
+line - 214
 
-Thanks,
-john
+ * @SCI_STP_DEV_CMD: This is the command state for for the STP remote
 
-> 
->> Signed-off-by: John Garry <john.garry@huawei.com>
->> Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
->> ---
->>   drivers/iommu/dma-iommu.c | 6 ++++++
->>   drivers/iommu/iova.c      | 5 +++++
->>   include/linux/iova.h      | 2 ++
->>   3 files changed, 13 insertions(+)
->>
->> diff --git a/drivers/iommu/dma-iommu.c b/drivers/iommu/dma-iommu.c
->> index f90251572a5d..9e1586447ee8 100644
->> --- a/drivers/iommu/dma-iommu.c
->> +++ b/drivers/iommu/dma-iommu.c
->> @@ -1459,6 +1459,11 @@ static unsigned long 
->> iommu_dma_get_merge_boundary(struct device *dev)
->>       return (1UL << __ffs(domain->pgsize_bitmap)) - 1;
->>   }
->> +static size_t iommu_dma_opt_mapping_size(void)
->> +{
->> +    return iova_rcache_range();
->> +}
->> +
->>   static const struct dma_map_ops iommu_dma_ops = {
->>       .alloc            = iommu_dma_alloc,
->>       .free            = iommu_dma_free,
->> @@ -1479,6 +1484,7 @@ static const struct dma_map_ops iommu_dma_ops = {
->>       .map_resource        = iommu_dma_map_resource,
->>       .unmap_resource        = iommu_dma_unmap_resource,
->>       .get_merge_boundary    = iommu_dma_get_merge_boundary,
->> +    .opt_mapping_size    = iommu_dma_opt_mapping_size,
->>   };
->>   /*
->> diff --git a/drivers/iommu/iova.c b/drivers/iommu/iova.c
->> index db77aa675145..9f00b58d546e 100644
->> --- a/drivers/iommu/iova.c
->> +++ b/drivers/iommu/iova.c
->> @@ -26,6 +26,11 @@ static unsigned long iova_rcache_get(struct 
->> iova_domain *iovad,
->>   static void free_cpu_cached_iovas(unsigned int cpu, struct 
->> iova_domain *iovad);
->>   static void free_iova_rcaches(struct iova_domain *iovad);
->> +unsigned long iova_rcache_range(void)
->> +{
->> +    return PAGE_SIZE << (IOVA_RANGE_CACHE_MAX_SIZE - 1);
->> +}
->> +
->>   static int iova_cpuhp_dead(unsigned int cpu, struct hlist_node *node)
->>   {
->>       struct iova_domain *iovad;
->> diff --git a/include/linux/iova.h b/include/linux/iova.h
->> index 320a70e40233..c6ba6d95d79c 100644
->> --- a/include/linux/iova.h
->> +++ b/include/linux/iova.h
->> @@ -79,6 +79,8 @@ static inline unsigned long iova_pfn(struct 
->> iova_domain *iovad, dma_addr_t iova)
->>   int iova_cache_get(void);
->>   void iova_cache_put(void);
->> +unsigned long iova_rcache_range(void);
->> +
->>   void free_iova(struct iova_domain *iovad, unsigned long pfn);
->>   void __free_iova(struct iova_domain *iovad, struct iova *iova);
->>   struct iova *alloc_iova(struct iova_domain *iovad, unsigned long size,
-> 
+changed to:
+
+ * @SCI_STP_DEV_CMD: This is the command state for the STP remote
+
+Signed-off-by: Jiang Jian <jiangjian@cdjrlc.com>
+---
+ drivers/scsi/isci/remote_device.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/isci/remote_device.h b/drivers/scsi/isci/remote_device.h
+index 3ad681c4c20a..268a3c851cb0 100644
+--- a/drivers/scsi/isci/remote_device.h
++++ b/drivers/scsi/isci/remote_device.h
+@@ -211,7 +211,7 @@ enum sci_status sci_remote_device_reset_complete(
+  * device.  When there are no active IO for the device it is is in this
+  * state.
+  *
+- * @SCI_STP_DEV_CMD: This is the command state for for the STP remote
++ * @SCI_STP_DEV_CMD: This is the command state for the STP remote
+  * device.  This state is entered when the device is processing a
+  * non-NCQ command.  The device object will fail any new start IO
+  * requests until this command is complete.
+-- 
+2.17.1
 
