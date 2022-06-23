@@ -2,134 +2,159 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C412C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jun 2022 23:04:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD416C43334
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jun 2022 01:45:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1359475AbiFVXEY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Jun 2022 19:04:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55338 "EHLO
+        id S1357515AbiFWBpm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Jun 2022 21:45:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33118 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233622AbiFVXEX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jun 2022 19:04:23 -0400
-Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04EDD3BA72;
-        Wed, 22 Jun 2022 16:04:19 -0700 (PDT)
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 25MFx9RJ005129;
-        Wed, 22 Jun 2022 16:04:02 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=date : from : to :
- cc : subject : in-reply-to : message-id : references : mime-version :
- content-type; s=pfpt0220; bh=Vret8gLknIlhome6Bj5k2433lbzdAz5ReX4y6f/lSS8=;
- b=KXsL1gE/1qUqt5IN/s71ZtD7QOpGGwK9x7roJJJkeXsUMM9yFbaKYhPXtP8j1EOojk36
- kLHznkFFHI4lIIdnrDNRkiWQWINQSDo+dvA8AWCQRxVgoJ7kihNGki0bRATL9HbKj7v9
- V8QwjNAhw4U6YwuZ+Wt5Us+EGZs8j1esy1+fJ0Xj/8NAV01rCc/fp7C7bb9yEYqpyfpA
- QqWAjYUB5i4PeYvkcrJ2kafXcOI2N6FNEj8oJf5tfbJL9YQC+ThmU8nUOlkTpHF/1oLB
- s/7AhD9ZZcJfhagu7j1Wz0Yf0jbDL84M4ZwQOCOpXkEJjOt1SrnkEOaPPNH0JDnHzWgj yg== 
-Received: from dc5-exch01.marvell.com ([199.233.59.181])
-        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3guye7v1gs-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Wed, 22 Jun 2022 16:04:02 -0700
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 22 Jun
- 2022 16:04:00 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 22 Jun 2022 16:04:00 -0700
-Received: from mvluser05.qlc.com (unknown [10.112.10.135])
-        by maili.marvell.com (Postfix) with ESMTP id D36E63F70DC;
-        Wed, 22 Jun 2022 16:03:50 -0700 (PDT)
-Received: from localhost (aeasi@localhost)
-        by mvluser05.qlc.com (8.14.4/8.14.4/Submit) with ESMTP id 25MN3nEA021837;
-        Wed, 22 Jun 2022 16:03:49 -0700
-X-Authentication-Warning: mvluser05.qlc.com: aeasi owned process doing -bs
-Date:   Wed, 22 Jun 2022 16:03:49 -0700
-From:   Arun Easi <aeasi@marvell.com>
-X-X-Sender: aeasi@mvluser05.qlc.com
-To:     Tony Battersby <tonyb@cybernetics.com>
-CC:     Thorsten Leemhuis <regressions@leemhuis.info>,
-        Saurav Kashyap <skashyap@marvell.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        <GR-QLogic-Storage-Upstream@marvell.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <regressions@lists.linux.dev>
-Subject: Re: [EXT] Re: [REGRESSION] qla2xxx: tape drive not removed after
- unplug FC cable
-In-Reply-To: <d41671b4-8d29-b940-da37-b8dbe81f4d72@cybernetics.com>
-Message-ID: <alpine.LRH.2.21.9999.2206221557150.4730@mvluser05.qlc.com>
-References: <baef87c3-5dad-3b47-44c1-6914bfc90108@cybernetics.com>
- <alpine.LRH.2.21.9999.2205271524460.4730@mvluser05.qlc.com>
- <5bcb5963-9da0-fd59-45c5-d27af02e7748@leemhuis.info>
- <178e4e7a-64fc-a442-cdda-45100eaebda0@cybernetics.com>
- <alpine.LRH.2.21.9999.2206211156470.4730@mvluser05.qlc.com>
- <d41671b4-8d29-b940-da37-b8dbe81f4d72@cybernetics.com>
-User-Agent: Alpine 2.21.9999 (LRH 334 2019-03-29)
+        with ESMTP id S231915AbiFWBpl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jun 2022 21:45:41 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BEE24349D;
+        Wed, 22 Jun 2022 18:45:40 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by sin.source.kernel.org (Postfix) with ESMTPS id DE464CE2228;
+        Thu, 23 Jun 2022 01:45:38 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2DEFC3411B;
+        Thu, 23 Jun 2022 01:45:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1655948736;
+        bh=+dzhrrPjFPK9MWWwlBMRMR5OjTceYx9uVWofGx/2gqE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ClJrvWe2560UsI+RE2mw5IuPiOA7a52sWTyBIy4yIqIoo2wo5DgddUJzi2Wn9wjqq
+         G1FA/2HJX4S1xiUN6AYLHy/jwNCX+F2svMDpA0/vg/WmWcpcyd8EPOSFbWs4+v5XuT
+         8P8qYfJfWhwYLR2o03rtNQJII+FQPuoLDXr/I9rV+xS++ca3Pla1Nkv4rBO88JIllH
+         in5wvWCnHTchLt2quFe8nuyyRyt0oGZb+R8QNpEWZhbZ0MENmseCokAQitXfzMA3A8
+         fFhtwCJcrAAxA77rUmjOgyXYbzVixjAe7YCQb6pW8YNVlWx3rO5t0RsymvYnrhTJY2
+         jB4jOz7r4bDBA==
+Date:   Thu, 23 Jun 2022 03:45:33 +0200
+From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
+To:     Kees Cook <keescook@chromium.org>
+Cc:     linux-kernel@vger.kernel.org,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-hardening@vger.kernel.org
+Subject: Re: [PATCH v2 3/4][next] scsi: megaraid_sas: Replace one-element
+ array with flexible-array member in MR_DRV_RAID_MAP
+Message-ID: <20220623014533.GA7132@embeddedor>
+References: <cover.1628136510.git.gustavoars@kernel.org>
+ <b43d4083d9788bb746dc0b2205d6a67ebb609b0d.1628136510.git.gustavoars@kernel.org>
+ <202206221457.1A12D768EF@keescook>
 MIME-Version: 1.0
-Content-Type: multipart/mixed;
-        boundary="1879738122-1333578364-1655939030=:4730"
-X-Proofpoint-GUID: M9G7T-WcRHLfZ2tM46pAgif6uF0_ZHqW
-X-Proofpoint-ORIG-GUID: M9G7T-WcRHLfZ2tM46pAgif6uF0_ZHqW
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
- definitions=2022-06-22_08,2022-06-22_03,2022-06-22_01
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <202206221457.1A12D768EF@keescook>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---1879738122-1333578364-1655939030=:4730
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-
-Hi Tony,
-
-On Wed, 22 Jun 2022, 7:56am, Tony Battersby wrote:
-
-> On 6/21/22 18:05, Arun Easi wrote:
-> > Thanks for the info. Just to reiterate, you've reported two issues (though 
-> > this log was showing only 1 of them).
-> >
-> > Issue 1 - Tape device never disappears when removed
-> > Issue 2 - When a direct connected tape 1 was replaced with tape 2, tape 2 
-> >           was not discovered.
-> >
-> > For Issue-2, please try the attached patch. This may not be the final fix, 
-> > but wanted to check if that would fix the issue for you.
-> >
-> > For Issue-1, the behavior was intentional, though that behavior needs 
-> > refinement. These tape drives support something called FC sequence level 
-> > error recovery (added in FCP-2), which can make tape I/Os survive even 
-> > across a short cable pull. This is not a simple retry of the I/O, rather a 
-> > retry done at the FC sequence level that gives the IO a better chance of
-> > revival. In other words, the said patch that caused regression, while 
-> > introduces an incorrect reporting of the state of the device, makes backup 
-> > more resilient.
-> >
-> > Now, onto the behavior when device state is reported immediately. What we 
-> > have observed, at least with one tape drive from a major vendor, is that, 
-> > across a device loss and device back case with both the events reported to 
-> > upper layers, the backup operation was getting failed. This is due to a 
-> > REPORT LUNS command being issued during device reappearance reporting 
-> > (fc_remote_port_add -> SCSI scan), which the tape drive was not expecting 
-> > and caused the backup to fail.
-> >
-> > I know that some tape drives do not support multiple commands to it at the 
-> > same time, but not sure if that is still the norm these days.
-> >
-> > So, perhaps one way to make the behavior better, is to either report the 
-> > disappearing device a bit delayed or have intelligence added in SCSI scan 
-> > to detect ongoing tape IO operations and delay/avoid the REPORT LUNs. 
-> > Former is a more contained (in the LLD) fix.
-> >
-> > Regards,
-> > -Arun
+On Wed, Jun 22, 2022 at 03:26:38PM -0700, Kees Cook wrote:
+> On Wed, Aug 04, 2021 at 11:20:04PM -0500, Gustavo A. R. Silva wrote:
+> > Replace one-element array with a flexible-array member in struct
+> > MR_DRV_RAID_MAP and use the flex_array_size() helper.
+> > 
+> > This helps with the ongoing efforts to globally enable -Warray-bounds
+> > and get us closer to being able to tighten the FORTIFY_SOURCE routines
+> > on memcpy().
+> > 
+> > Link: https://en.wikipedia.org/wiki/Flexible_array_member
+> > Link: https://www.kernel.org/doc/html/v5.10/process/deprecated.html#zero-length-and-one-element-arrays
+> > Link: https://github.com/KSPP/linux/issues/79
+> > Link: https://github.com/KSPP/linux/issues/109
+> > Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 > 
-> Your patch does fix Issue-2 for me.  For Issue-1, it would be fine with
-> me if qla2xxx reported device removal to the upper level a bit delayed,
-> as you said.
+> I'd really like to see this fixed. :) I'm running into this 1-element
+> array problem now with UBSAN_BOUNDS:
+
+Wow; another forgoten patch from the times we didn't have Patchwork. :) 
+
 > 
+> [   10.011173] UBSAN: array-index-out-of-bounds in /build/linux-WLUive/linux-5.15.0/drivers/scsi/megaraid/megaraid_sas_fp.c:103:32
+> [   10.087824] index 1 is out of range for type 'MR_LD_SPAN_MAP [1]'
+> 
+> and I'm not the only one:
+> 
+> https://bugzilla.kernel.org/show_bug.cgi?id=215943
 
-Thanks for testing and verifying the patch. We will post the patch 
-upstream after due testing.
+It's actually great that other people are running into these issues now.
+That could only means that we should fixed ASAP. :)
 
-Regards,
--Arun
---1879738122-1333578364-1655939030=:4730--
+We also have this other series that hasn't been applied yet:
+
+https://lore.kernel.org/linux-hardening/cover.1645513670.git.gustavoars@kernel.org/
+
+> 
+> > ---
+> > Changes in v2:
+> >  - None.
+> > 
+> >  drivers/scsi/megaraid/megaraid_sas_fp.c     | 6 +++---
+> >  drivers/scsi/megaraid/megaraid_sas_fusion.h | 2 +-
+> >  2 files changed, 4 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
+> > index da1cad1ee123..9cb36ef96c2c 100644
+> > --- a/drivers/scsi/megaraid/megaraid_sas_fp.c
+> > +++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
+> > @@ -229,8 +229,8 @@ static int MR_PopulateDrvRaidMap(struct megasas_instance *instance, u64 map_id)
+> >  					le32_to_cpu(desc_table->raid_map_desc_offset));
+> >  				memcpy(pDrvRaidMap->ldSpanMap,
+> >  				       fw_map_dyn->ld_span_map,
+> > -				       sizeof(struct MR_LD_SPAN_MAP) *
+> > -				       le32_to_cpu(desc_table->raid_map_desc_elements));
+> > +				       flex_array_size(pDrvRaidMap, ldSpanMap,
+> > +				       le32_to_cpu(desc_table->raid_map_desc_elements)));
+> >  			break;
+> >  			default:
+> >  				dev_dbg(&instance->pdev->dev, "wrong number of desctableElements %d\n",
+> > @@ -254,7 +254,7 @@ static int MR_PopulateDrvRaidMap(struct megasas_instance *instance, u64 map_id)
+> >  			pDrvRaidMap->ldTgtIdToLd[i] =
+> >  				(u16)fw_map_ext->ldTgtIdToLd[i];
+> >  		memcpy(pDrvRaidMap->ldSpanMap, fw_map_ext->ldSpanMap,
+> > -		       sizeof(struct MR_LD_SPAN_MAP) * ld_count);
+> > +		       flex_array_size(pDrvRaidMap, ldSpanMap, ld_count));
+> >  		memcpy(pDrvRaidMap->arMapInfo, fw_map_ext->arMapInfo,
+> >  		       sizeof(struct MR_ARRAY_INFO) * MAX_API_ARRAYS_EXT);
+> >  		memcpy(pDrvRaidMap->devHndlInfo, fw_map_ext->devHndlInfo,
+> > diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+> > index 9adb8b30f422..5fe2f7a6eebe 100644
+> > --- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
+> > +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+> > @@ -1182,7 +1182,7 @@ struct MR_DRV_RAID_MAP {
+> >  		devHndlInfo[MAX_RAIDMAP_PHYSICAL_DEVICES_DYN];
+> >  	u16 ldTgtIdToLd[MAX_LOGICAL_DRIVES_DYN];
+> >  	struct MR_ARRAY_INFO arMapInfo[MAX_API_ARRAYS_DYN];
+> > -	struct MR_LD_SPAN_MAP      ldSpanMap[1];
+> > +	struct MR_LD_SPAN_MAP      ldSpanMap[];
+> >  
+> >  };
+> >  
+> 
+> I think this patch is incomplete, and the wrapping struct needs to be
+> adjusted too:
+> 
+> @@ -1193,7 +1193,7 @@ struct MR_DRV_RAID_MAP {
+>  struct MR_DRV_RAID_MAP_ALL {
+>  
+>         struct MR_DRV_RAID_MAP raidMap;
+> -       struct MR_LD_SPAN_MAP ldSpanMap[MAX_LOGICAL_DRIVES_DYN - 1];
+> +       struct MR_LD_SPAN_MAP ldSpanMap[MAX_LOGICAL_DRIVES_DYN];
+>  } __packed;
+>  
+> With that added, I get zero changes to the executable code.
+> 
+> I assume the others need adjustment too.
+
+Interesting... OK, let me refresh my memory about the whole thing
+and be back in a minute.
+
+--
+Gustavo
