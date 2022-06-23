@@ -2,74 +2,101 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4831FC43334
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jun 2022 08:04:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69406CCA481
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jun 2022 08:36:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230465AbiFWIEK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Jun 2022 04:04:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48666 "EHLO
+        id S230165AbiFWIgW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Jun 2022 04:36:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47454 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230123AbiFWIEJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jun 2022 04:04:09 -0400
-Received: from smtpbg.qq.com (smtpbg139.qq.com [175.27.65.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1BC072C679;
-        Thu, 23 Jun 2022 01:04:03 -0700 (PDT)
-X-QQ-mid: bizesmtp76t1655971425tv9azafg
-Received: from ubuntu.localdomain ( [106.117.99.68])
-        by bizesmtp.qq.com (ESMTP) with 
-        id ; Thu, 23 Jun 2022 16:03:41 +0800 (CST)
-X-QQ-SSF: 01000000008000B0C000B00A0000000
-X-QQ-FEAT: q+RiK5VMyhdrKJTkFlW0S+gkbfUgGEBuJY3t2hG/RuFQ0pZpdgkRM9NkAdhT8
-        UmZADEHOOe7AbKBf4IDeNomGUu4qp12Ffh7OXllETIRS43ifue/vnVs9R6DdcD+TXG2XTpz
-        wGS/cp8Zkf6/KLcd3dWsiL/I+Jf/maR1gdk6YmYJ7z3LJWMv36T0EHjOfkfqPiIxPkgAA7z
-        AWlpK/jOhX7ToxU2n5B1nxvGDykXGFjAmD/6Ra44DZeJDrrFWOxikAOwu4DraSlSjev9Om+
-        9rxp1v/7DdSYGlNb41gWGlikWhg381rmYzOF9xbGSMaeNvH0Q1PEtf51VASeh7u/xOO++qN
-        kBl3vct4tZMKXjVh6AhvTcVd2FMHLAp/FRSR/be
-X-QQ-GoodBg: 0
-From:   Jiang Jian <jiangjian@cdjrlc.com>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     anil.gurumurthy@qlogic.com, sudarsana.kalluru@qlogic.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jiang Jian <jiangjian@cdjrlc.com>
-Subject: [PATCH] scsi: bfa: drop unexpected word 'are' in comments
-Date:   Thu, 23 Jun 2022 16:03:39 +0800
-Message-Id: <20220623080339.21087-1-jiangjian@cdjrlc.com>
-X-Mailer: git-send-email 2.17.1
-X-QQ-SENDSIZE: 520
-Feedback-ID: bizesmtp:cdjrlc.com:qybgspam:qybgspam6
+        with ESMTP id S229910AbiFWIgT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jun 2022 04:36:19 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2A6048E57;
+        Thu, 23 Jun 2022 01:36:17 -0700 (PDT)
+Received: from fraeml704-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LTD9H0dZ7z684wN;
+        Thu, 23 Jun 2022 16:35:47 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml704-chm.china.huawei.com (10.206.15.53) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2375.24; Thu, 23 Jun 2022 10:36:14 +0200
+Received: from [10.195.245.183] (10.195.245.183) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
+ 15.1.2375.24; Thu, 23 Jun 2022 09:36:13 +0100
+Message-ID: <c973c0d1-49a4-e0d5-2d2e-4eefeb91099f@huawei.com>
+Date:   Thu, 23 Jun 2022 09:36:12 +0100
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH v3 3/4] scsi: core: Cap shost max_sectors according to DMA
+ optimum mapping limits
+To:     Bart Van Assche <bvanassche@acm.org>,
+        <damien.lemoal@opensource.wdc.com>, <joro@8bytes.org>,
+        <will@kernel.org>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <hch@lst.de>,
+        <m.szyprowski@samsung.com>, <robin.murphy@arm.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <liyihang6@hisilicon.com>, <linux-kernel@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>, <iommu@lists.linux-foundation.org>
+References: <1654507822-168026-1-git-send-email-john.garry@huawei.com>
+ <1654507822-168026-4-git-send-email-john.garry@huawei.com>
+ <fe365aa8-00d5-153d-ceb2-f887a71a6927@acm.org>
+ <31417477-953d-283e-808e-cf8701e820a8@huawei.com>
+ <bccbcc9b-4750-a1a7-130f-69eeea5dcb23@acm.org>
+ <5b214e95-dd95-551a-496e-a2139a74e8eb@huawei.com>
+ <a2585983-75d7-c627-13ba-38a464cf716e@acm.org>
+ <9b1d155e-28cc-08dc-5a5a-8580132575e7@huawei.com>
+ <23bf4427-41c3-bf1d-903a-75928bb47627@acm.org>
+ <f7872ebc-dfe5-d977-c51f-91b73e6d1fbb@huawei.com>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <f7872ebc-dfe5-d977-c51f-91b73e6d1fbb@huawei.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.195.245.183]
+X-ClientProxiedBy: lhreml705-chm.china.huawei.com (10.201.108.54) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-there is an unexpected word 'are' in the comments that need to be dropped
+On 10/06/2022 16:37, John Garry via iommu wrote:
+> 
+>> On 6/9/22 10:54, John Garry wrote:
+>>> ok, but do you have a system where the UFS host controller is behind 
+>>> an IOMMU? I had the impression that UFS controllers would be mostly 
+>>> found in embedded systems and IOMMUs are not as common on there.
+>>
+>> Modern phones have an IOMMU. Below one can find an example from a 
+>> Pixel 6 phone. The UFS storage controller is not controller by the 
+>> IOMMU as far as I can see but I wouldn't be surprised if the security 
+>> team would ask us one day to enable the IOMMU for the UFS controller.
+> 
+> OK, then unfortunately it seems that you have no method to test. I might 
+> be able to test USB MSC but I am not even sure if I can even get DMA 
+> mappings who length exceeds the IOVA rcache limit there.
 
-file - drivers/scsi/bfa/bfa_fcpim.h
-line - 70
+I was able to do some testing on USB MSC for an XHCI controller. The 
+result is that limiting the max HW sectors there does not affect 
+performance in normal conditions.
 
-/* Buckets are are 512 bytes to 2MB */
+However if I hack the USB driver and fiddle with request queue settings 
+then it can:
+- lift max_sectors limit in usb_stor_host_template 120KB -> 256KB
+- lift request queue read_ahead_kb 128KB -> 256KB
 
-changed to:
+In this scenario I can get 42.5MB/s read throughput, as opposed to 
+39.5MB/s in normal conditions. Since .can_queue=1 for that host it would 
+not fall foul of some issues I experience in IOVA allocator performance, 
+so limiting max_sectors would not be required for that reason.
 
-/* Buckets are 512 bytes to 2MB */
+So this is an artificial test, but it may be worth considering only 
+applying this DMA mapping optimal max_sectors limit to SAS controllers 
+which I know can benefit.
 
-Signed-off-by: Jiang Jian <jiangjian@cdjrlc.com>
----
- drivers/scsi/bfa/bfa_fcpim.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Christoph, any opinion?
 
-diff --git a/drivers/scsi/bfa/bfa_fcpim.h b/drivers/scsi/bfa/bfa_fcpim.h
-index 8bf09433549b..a9eae709da39 100644
---- a/drivers/scsi/bfa/bfa_fcpim.h
-+++ b/drivers/scsi/bfa/bfa_fcpim.h
-@@ -67,7 +67,7 @@ void bfa_fcp_res_recfg(struct bfa_s *bfa, u16 num_ioim_fw, u16 max_ioim_fw);
- #define BFA_IOIM_IOTAG_MASK 0x07ff /* 2K IOs */
- #define BFA_IOIM_RETRY_MAX 7
- 
--/* Buckets are are 512 bytes to 2MB */
-+/* Buckets are 512 bytes to 2MB */
- static inline u32
- bfa_ioim_get_index(u32 n) {
- 	int pos = 0;
--- 
-2.17.1
-
+thanks,
+John
