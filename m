@@ -2,75 +2,74 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 125C5C43334
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jun 2022 07:04:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5AE3C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jun 2022 07:07:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229818AbiFWHE0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Jun 2022 03:04:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55108 "EHLO
+        id S229904AbiFWHHo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Jun 2022 03:07:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58178 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229571AbiFWHEZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jun 2022 03:04:25 -0400
-Received: from smtpbg.qq.com (smtpbg139.qq.com [175.27.65.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E97044A38;
-        Thu, 23 Jun 2022 00:04:16 -0700 (PDT)
-X-QQ-mid: bizesmtp88t1655967776tzr1mrq4
+        with ESMTP id S229483AbiFWHHn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jun 2022 03:07:43 -0400
+Received: from smtpbg.qq.com (smtpbg138.qq.com [106.55.201.18])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 027D945516;
+        Thu, 23 Jun 2022 00:07:36 -0700 (PDT)
+X-QQ-mid: bizesmtp78t1655968019ta68ekx6
 Received: from ubuntu.localdomain ( [106.117.99.68])
         by bizesmtp.qq.com (ESMTP) with 
-        id ; Thu, 23 Jun 2022 15:02:51 +0800 (CST)
+        id ; Thu, 23 Jun 2022 15:06:53 +0800 (CST)
 X-QQ-SSF: 01000000008000B0C000B00A0000000
-X-QQ-FEAT: F3yR32iATbg+ZZLfMDZrCgBHXrXDQgig7yVhup0661i+Yv0IN9rThYTKTNS0Z
-        5UaiDUCgvzGu0RAEiysLVEATxfp7Z6gZw1oHIesbxMKp0WWft+law+Pid9as6Pq3Ksz+paj
-        0BQlyGTl3Dl7BDYy3tzccq/Msm5h/k3cgznvB1HjU95HCuU6wT6TeuEdm1trAxV7VrNAFVt
-        EAh48GxXs6C5vwDpkW8aAPqcBGG3khh/DnskBYRE+vKUcLK5VABOFgsH7htwxP+TPgMZXBh
-        Q5UcMOaC9OJCBrp6PGXZnx+iDwCdC9ktLEfrchoEK6LKx9W9o8XAr/BVvwIY50SqBCxNdy/
-        CcLmR8ulbanDy5c50/wNSpxGO9qTw==
+X-QQ-FEAT: UldK9Jsj7VOmQ2cIaotYCceBjTzflJSXNO/wOhM2BXMXKEBCGfYWRj7Workzo
+        MCXEcszpizkMWAwOtIiKvv91EDmfTQ94AX/qJrl0DFVmb3fRLcscz+AevmF3LRt0IHXJCVd
+        K4kVAx2SGRPZUat6b6g+s0lbQbPrjaHVOYkWJNY3PyTjWGC2LXth799Rw8Bh+Ovzg5QVTZ1
+        BGG1nh2ZZzchZdP6rKr73Ambk+jgWsbsfackfV5EPvizmpsYIx3bEiXEq0s2yaQOkdJRpRW
+        Ub7aJgeayeKRYVibFkGSc0s2fsGysJPy58lLOXZtVr0hZpUwBNX1bi2vBHwGGoS7yjzxcXk
+        MQ9n7C6e88n+/0nShyNjZsrILs2Xw==
 X-QQ-GoodBg: 0
 From:   Jiang Jian <jiangjian@cdjrlc.com>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
-        suganath-prabu.subramani@broadcom.com,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jiang Jian <jiangjian@cdjrlc.com>
-Subject: [PATCH] scsi: mpt3sas: drop unexpected word 'a' in comments
-Date:   Thu, 23 Jun 2022 15:02:49 +0800
-Message-Id: <20220623070249.9977-1-jiangjian@cdjrlc.com>
+Cc:     manoj@linux.ibm.com, mrochs@linux.ibm.com, ukrishn@linux.ibm.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jiang Jian <jiangjian@cdjrlc.com>
+Subject: [PATCH] scsi: cxlflash: drop unexpected word 'a' in comments
+Date:   Thu, 23 Jun 2022 15:06:52 +0800
+Message-Id: <20220623070652.11136-1-jiangjian@cdjrlc.com>
 X-Mailer: git-send-email 2.17.1
 X-QQ-SENDSIZE: 520
-Feedback-ID: bizesmtp:cdjrlc.com:qybgspam:qybgspam6
+Feedback-ID: bizesmtp:cdjrlc.com:qybgspam:qybgspam10
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 there is an unexpected word 'a' in the comments that need to be dropped
 
-file - drivers/scsi/mpt3sas/mpt3sas_base.c
-line - 535
+file - drivers/scsi/cxlflash/superpipe.c
+line - 741
 
-* FIXME: this relies on a a zero
+* This routine is safe to be called with a a non-initialized context.
 
 changed to:
 
-* FIXME: this relies on a a zero
+* This routine is safe to be called with a non-initialized context.
 
 Signed-off-by: Jiang Jian <jiangjian@cdjrlc.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 2 +-
+ drivers/scsi/cxlflash/superpipe.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 9a1ae52bb621..af41ea53aa7d 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -532,7 +532,7 @@ static void _clone_sg_entries(struct MPT3SAS_ADAPTER *ioc,
- 					    (le32_to_cpu(sgel->FlagsLength) &
- 					    0x00ffffff));
- 					/*
--					 * FIXME: this relies on a a zero
-+					 * FIXME: this relies on a zero
- 					 * PCI mem_offset.
- 					 */
- 					sgel->Address =
+diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
+index df0ebabbf387..fc8526f7f036 100644
+--- a/drivers/scsi/cxlflash/superpipe.c
++++ b/drivers/scsi/cxlflash/superpipe.c
+@@ -738,7 +738,7 @@ int cxlflash_disk_release(struct scsi_device *sdev,
+  * @cfg:	Internal structure associated with the host.
+  * @ctxi:	Context to release.
+  *
+- * This routine is safe to be called with a a non-initialized context.
++ * This routine is safe to be called with a non-initialized context.
+  * Also note that the routine conditionally checks for the existence
+  * of the context control map before clearing the RHT registers and
+  * context capabilities because it is possible to destroy a context
 -- 
 2.17.1
 
