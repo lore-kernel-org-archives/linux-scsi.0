@@ -2,89 +2,66 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6761C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jun 2022 01:19:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9E22C43334
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jun 2022 01:23:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229604AbiFXBTC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Jun 2022 21:19:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33028 "EHLO
+        id S229838AbiFXBXs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Jun 2022 21:23:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37002 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230317AbiFXBS7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jun 2022 21:18:59 -0400
-Received: from heian.cn.fujitsu.com (mail.cn.fujitsu.com [183.91.158.132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 06C8D60C4B;
-        Thu, 23 Jun 2022 18:18:51 -0700 (PDT)
-IronPort-Data: =?us-ascii?q?A9a23=3ApbAfHaljoqFHtTYw4PSAE1Do5gxsJERdPkR7XQ2?=
- =?us-ascii?q?eYbTBsI5bp2EAnTMaW2iEOK6DZTH3L9kiYNu+oRhV6JXdmINnTgM/+CA2RRqmi?=
- =?us-ascii?q?+KfW43BcR2Y0wB+jyH7ZBs+qZ1YM7EsFehsJpPnjkrrYuiJQUVUj/nSHOKmULe?=
- =?us-ascii?q?cY0ideCc/IMsfoUM68wIGqt4w6TSJK1vlVeLa+6UzCnf8s9JHGj58B5a4lf9al?=
- =?us-ascii?q?K+aVAX0EbAJTasjUFf2zxH5BX+ETE27ByOQroJ8RoZWSwtfpYxV8F81/z91Yj+?=
- =?us-ascii?q?kur39NEMXQL/OJhXIgX1TM0SgqkEa4HVsjeBgb7xBAatUo2zhc9RZzNRftZ2yS?=
- =?us-ascii?q?A4vFqPRmuUBSAQeGCZ7VUFD0OadfCbj75POkyUqdFOpmZ2CFnoeP4Aa8M5zAGd?=
- =?us-ascii?q?T5boZIjVLZReG78qzyainS+8qnsk/IdPwMYU3vWtpxjXUS/0hRPjrR6TM+M8d3?=
- =?us-ascii?q?zoqgM1KNejRatBfajd1ahnEJRpVNT8/DJM4gfftnXLkchVGp1+P46k6+W7eyEp?=
- =?us-ascii?q?2yreFDTZ/UrRmXu0MxgDB+D2ApD+/X3kn2BWk4WLt2hqRaiXnxEsXgL4vKYA?=
- =?us-ascii?q?=3D?=
-IronPort-HdrOrdr: =?us-ascii?q?A9a23=3A5LRtAat2LEvGqXJKbbGtEzcB7skDntV00zEX?=
- =?us-ascii?q?/kB9WHVpmszxra6TdZMgpHvJYVcqKRYdcL+7WJVoLUmxyXcX2/h1AV7BZniEhI?=
- =?us-ascii?q?LAFugLhuGO/9SKIUzDH4BmupuIC5IOauEYE2IK9vrS0U2pFco62tmb/OSNjefa?=
- =?us-ascii?q?9X1kSgZncMhbnn5EIzfeAktrXxNHGJZ8MJKd4/BMrz2mdW9SQd+8AhA+LpD+ju?=
- =?us-ascii?q?yOhJT7egQHGhJizAGPiAmj4Ln8HwPd/jp2aUIo/Ysf?=
-X-IronPort-AV: E=Sophos;i="5.88,333,1635177600"; 
-   d="scan'208";a="125646754"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 24 Jun 2022 09:18:51 +0800
-Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
-        by cn.fujitsu.com (Postfix) with ESMTP id CDBF54D1719F;
-        Fri, 24 Jun 2022 09:18:48 +0800 (CST)
-Received: from G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) by
- G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
- (TLS) id 15.0.1497.23; Fri, 24 Jun 2022 09:18:48 +0800
-Received: from localhost.localdomain (10.167.225.141) by
- G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.23 via Frontend Transport; Fri, 24 Jun 2022 09:18:48 +0800
-From:   Li Zhijian <lizhijian@fujitsu.com>
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>
-CC:     <linux-kernel@vger.kernel.org>, Li Zhijian <lizhijian@fujitsu.com>
-Subject: [PATCH] scsi: Enlarge log buffer length to 256
-Date:   Fri, 24 Jun 2022 09:25:42 +0800
-Message-ID: <20220624012542.1384858-1-lizhijian@fujitsu.com>
+        with ESMTP id S229553AbiFXBXr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jun 2022 21:23:47 -0400
+X-Greylist: delayed 123 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 23 Jun 2022 18:23:46 PDT
+Received: from unicom146.biz-email.net (unicom146.biz-email.net [210.51.26.146])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CEDC51E49
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Jun 2022 18:23:46 -0700 (PDT)
+Received: from ([60.208.111.195])
+        by unicom146.biz-email.net ((D)) with ASMTP (SSL) id SXT00038;
+        Fri, 24 Jun 2022 09:21:38 +0800
+Received: from localhost.localdomain (10.200.104.82) by
+ jtjnmail201612.home.langchao.com (10.100.2.12) with Microsoft SMTP Server id
+ 15.1.2308.27; Fri, 24 Jun 2022 09:21:38 +0800
+From:   Deming Wang <wangdeming@inspur.com>
+To:     <hare@suse.de>, <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Deming Wang <wangdeming@inspur.com>
+Subject: [PATCH] scsi: fcoe: Modify function description
+Date:   Thu, 23 Jun 2022 21:21:36 -0400
+Message-ID: <20220624012136.1824-1-wangdeming@inspur.com>
 X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: CDBF54D1719F.AF85B
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: lizhijian@fujitsu.com
+X-Originating-IP: [10.200.104.82]
+tUid:   20226240921385fbf5f4e61cf2720b3f2231ebd89348c
+X-Abuse-Reports-To: service@corp-email.com
+Abuse-Reports-To: service@corp-email.com
+X-Complaints-To: service@corp-email.com
+X-Report-Abuse-To: service@corp-email.com
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-scsi_report_sense() is possble to print messages exceeding 128 bytes:
-[  475.156955] sd 9:0:0:0: Warning! Received an indication that the LUN assignments on this target have changed. The Linux SCSI layer does not automatical
+Delete duplicate words of "the".
 
-Signed-off-by: Li Zhijian <lizhijian@fujitsu.com>
+Signed-off-by: Deming Wang <wangdeming@inspur.com>
 ---
- drivers/scsi/scsi_logging.c | 2 +-
+ drivers/scsi/fcoe/fcoe_ctlr.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_logging.c b/drivers/scsi/scsi_logging.c
-index b02af340c2d3..edc3fe8c7e0f 100644
---- a/drivers/scsi/scsi_logging.c
-+++ b/drivers/scsi/scsi_logging.c
-@@ -17,7 +17,7 @@
- 
- static char *scsi_log_reserve_buffer(size_t *len)
- {
--	*len = 128;
-+	*len = 256;
- 	return kmalloc(*len, GFP_ATOMIC);
- }
- 
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index 39e16eab47aa..c9fa1bf98505 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -689,7 +689,7 @@ static int fcoe_ctlr_encaps(struct fcoe_ctlr *fip, struct fc_lport *lport,
+  *
+  * The caller must check that the length is a multiple of 4.
+  * The SKB must have enough headroom (28 bytes) and tailroom (8 bytes).
+- * The the skb must also be an fc_frame.
++ * The skb must also be an fc_frame.
+  *
+  * This is called from the lower-level driver with spinlocks held,
+  * so we must not take a mutex here.
 -- 
-2.31.1
-
-
+2.27.0
 
