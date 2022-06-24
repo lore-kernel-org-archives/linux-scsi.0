@@ -2,112 +2,393 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F521C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jun 2022 01:39:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 941C5C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jun 2022 06:48:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230378AbiFXBjm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Jun 2022 21:39:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47934 "EHLO
+        id S229961AbiFXGsp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Jun 2022 02:48:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229476AbiFXBjl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jun 2022 21:39:41 -0400
-Received: from out2-smtp.messagingengine.com (out2-smtp.messagingengine.com [66.111.4.26])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E06CF56C17;
-        Thu, 23 Jun 2022 18:39:39 -0700 (PDT)
-Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
-        by mailout.nyi.internal (Postfix) with ESMTP id 81E815C0186;
-        Thu, 23 Jun 2022 21:39:37 -0400 (EDT)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute5.internal (MEProxy); Thu, 23 Jun 2022 21:39:37 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:date:date:feedback-id
-        :feedback-id:from:from:in-reply-to:in-reply-to:message-id
-        :mime-version:references:reply-to:sender:subject:subject:to:to
-        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-        fm2; t=1656034777; x=1656121177; bh=565TWR/uy2A0QxlobJCGVdPrSxTk
-        rfuJfZYcREIrUeo=; b=MZYy8O0KJEwXEMZ8aazL1zILdov7ZnG7azysEGnZ1lJr
-        A68IPbgIjmhkShae+eeUEqKjFVR5mtejFtrivBmUnHvJUK3vERL9pOxyHiphins6
-        UW9YvO+DBkjXR1kryvZwVwonpA3azs5fz+BKUIJim53PZ5IDLChEIUInWEP3XP19
-        0ix3Gl+ePef4Ajr14gN8aHzS3bU/2rCQvClkSY0ZT1Zjy7uyT7sIBNitnGUQLM5q
-        QslErpMB8aEQ45M7sAbLrqaBZKLvxXY6UjX4ZHp4KOjhSeL9gfH+62TiG03cjLZD
-        UaCflCv7JbgyTqvgokDq9gn7j3sKVH3ddwCG816U3Q==
-X-ME-Sender: <xms:2BW1Yss5qOFzkveUYaHLOnJyv2WYI8p5lLB1OoK46yoKaEPj5_qZxA>
-    <xme:2BW1YpcZp9HFGfyL2jxkIuicetclo5QcVYC2TSZaXILGOYz9PIlYud3_n26eAA1Fo
-    UBY-CUYwPlvlnLzEEQ>
-X-ME-Received: <xmr:2BW1Ynznt-XacYUM81g7-TPI-oS7DfMT48B4LDAMfGwvVcF9MbNOiIJgEUV2dL-o3V32HkuRiFaiiUnnN2dNr8pe6XOjMfDBf4g>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvfedrudefkedghedtucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepfffhvfevufgjkfhfgggtsehttdertddttddvnecuhfhrohhmpefhihhnnhcu
-    vfhhrghinhcuoehfthhhrghinheslhhinhhugidqmheikehkrdhorhhgqeenucggtffrrg
-    htthgvrhhnpeelueehleehkefgueevtdevteejkefhffekfeffffdtgfejveekgeefvdeu
-    heeuleenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
-    hfthhhrghinheslhhinhhugidqmheikehkrdhorhhg
-X-ME-Proxy: <xmx:2BW1YvNjejz_WbriN67i723QUHpb2L833EWVjnkHc5OsMYi-DQAa1w>
-    <xmx:2BW1Ys-kMNBJN1hxheCcvQPmEgLC3-VJTngErheCtKSwHetoaXQC6Q>
-    <xmx:2BW1YnXCgkqmH5za3KLHjLuhzF2Mqa6FHiza7AaycOJZx5i8a346ow>
-    <xmx:2RW1YuLcVyxAgeNVzou6YI6HOPe0F-Hdp6_vs2DuiTcwlczapd5BCw>
-Feedback-ID: i58a146ae:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
- 23 Jun 2022 21:39:34 -0400 (EDT)
-Date:   Fri, 24 Jun 2022 11:39:32 +1000 (AEST)
-From:   Finn Thain <fthain@linux-m68k.org>
-To:     Li Zhijian <lizhijian@fujitsu.com>
-cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: Enlarge log buffer length to 256
-In-Reply-To: <20220624012542.1384858-1-lizhijian@fujitsu.com>
-Message-ID: <9831381e-f9c7-f7af-e6da-a757a76f34@linux-m68k.org>
-References: <20220624012542.1384858-1-lizhijian@fujitsu.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+        with ESMTP id S229699AbiFXGso (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Jun 2022 02:48:44 -0400
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5D714DF72
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Jun 2022 23:48:41 -0700 (PDT)
+Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20220624064838epoutp02fb7b43102a30803e14d2e5c44abbdfbc~7e7gaoRfb2485324853epoutp021
+        for <linux-scsi@vger.kernel.org>; Fri, 24 Jun 2022 06:48:38 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20220624064838epoutp02fb7b43102a30803e14d2e5c44abbdfbc~7e7gaoRfb2485324853epoutp021
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1656053318;
+        bh=9FoUPkEwHiudPdR4HoXMM3C6AwVfUb8mHuNiKPJapog=;
+        h=Subject:Reply-To:From:To:Date:References:From;
+        b=FTqhLetZr0xGew7nwJ337+dRdaz7JEQ/6kT8yoh29qXe9ebcultCUNCOkClD5cBd7
+         PCv9z+4Yn9zK8qseleXwJKKKhxJnwLw7IiWz01Jzu7nP81Hym5RiVp+W4ekKefQeIO
+         7F5wiTrCKN4P/9pxl6nUuMRO1UdOI3nxm8oizQtA=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
+        20220624064838epcas2p3504427893ac1272a504f7d78f9c24f41~7e7f2f5NJ1745717457epcas2p31;
+        Fri, 24 Jun 2022 06:48:38 +0000 (GMT)
+Received: from epsmges2p2.samsung.com (unknown [182.195.36.91]) by
+        epsnrtp2.localdomain (Postfix) with ESMTP id 4LTnl94y1Kz4x9Q7; Fri, 24 Jun
+        2022 06:48:37 +0000 (GMT)
+X-AuditID: b6c32a46-0a3ff700000025b2-1b-62b55e45e2a1
+Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
+        epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        73.F4.09650.54E55B26; Fri, 24 Jun 2022 15:48:37 +0900 (KST)
+Mime-Version: 1.0
+Subject: [PATCH v2] scsi: ufs: wb: Add Manual Flush sysfs and cleanup toggle
+ functions
+Reply-To: j-young.choi@samsung.com
+Sender: Jinyoung CHOI <j-young.choi@samsung.com>
+From:   Jinyoung CHOI <j-young.choi@samsung.com>
+To:     ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20220624064837epcms2p8f8589cd0fe02ae50cb4d81538c629363@epcms2p8>
+Date:   Fri, 24 Jun 2022 15:48:37 +0900
+X-CMS-MailID: 20220624064837epcms2p8f8589cd0fe02ae50cb4d81538c629363
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+CMS-TYPE: 102P
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrJJsWRmVeSWpSXmKPExsWy7bCmua5r3NYkg1935C1OPlnDZvFg3jY2
+        i5c/r7JZHHzYyWIx7cNPZouXhzQtHt1+xmjR27+VzWLRjW1MFpd3zWGz6L6+g81i+fF/TA48
+        HpeveHss3vOSyWPCogOMHt/Xd7B5fHx6i8Wjb8sqRo/Pm+Q82g90MwVwRGXbZKQmpqQWKaTm
+        JeenZOal2yp5B8c7x5uaGRjqGlpamCsp5CXmptoqufgE6Lpl5gAdq6RQlphTChQKSCwuVtK3
+        synKLy1JVcjILy6xVUotSMkpMC/QK07MLS7NS9fLSy2xMjQwMDIFKkzIzuhpm85WsMev4vGD
+        vUwNjG8cuhg5OSQETCRe/VzE2sXIxSEksINR4vre2+xdjBwcvAKCEn93CIPUCAtESMw5fZkV
+        xBYSUJI4t2YWI0iJsICBxK1ec5Awm4CexM8lM9hAxogInGWWWPhwChPEfF6JGe1PWSBsaYnt
+        y7cyQtgaEj+W9TJD2KISN1e/ZYex3x+bD1UjItF67yxUjaDEg5+7oeKSEocOfWUDuUFCIF9i
+        w4FAiHCNxNvlB6BK9CWudWwEW8sr4CvR9PgImM0ioCrxvr8ZapWLxLRXS8HizALyEtvfzmEG
+        GcksoCmxfpc+xHRliSO3WGAeadj4mx2dzSzAJ9Fx+C9cfMe8J0wQrWoSi5qMIMIyEl8Pz4cq
+        8ZB40LibaQKj4ixEKM9CcsIshBMWMDKvYhRLLSjOTU8tNiowgkdscn7uJkZwmtVy28E45e0H
+        vUOMTByMhxglOJiVRHhf/N+cJMSbklhZlVqUH19UmpNafIjRFOj5icxSosn5wESfVxJvaGJp
+        YGJmZmhuZGpgriTO65WyIVFIID2xJDU7NbUgtQimj4mDU6qBKabkbSVD9jPFlTFFmza+/bVz
+        Ca/LTu0Ow0T7e09XpMdKF5xIcZ90t1lz+hM3tg/3V7MKqCao7Ei/vmtD2rHylD+fwvetK9uW
+        tvhu55+V4i8+urh9O9CYeOXvq2urGkz8Tur0hf7WXF95w+Ts/c8WJ59u2V1+wV7m/dODHDZm
+        6zjuKQc9jJKPmMqiLvrJd0L/5tUm81O2LbuseuNfl7NtrlTS+d+nkqVsMzs/X3VoXiy281h8
+        491tmdN3+odHl+t9CjJ/WhpVk5xTdmiLRvDqxH97q4ybnz1305A+wDU7M/b+5U1mS7QNA1ZF
+        5Nyxevz7mp6XqkHNqp2Vu01Yfqqu/Hco//VFMc+l7IkB3K21cUosxRmJhlrMRcWJADTDcbQ8
+        BAAA
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20220624064837epcms2p8f8589cd0fe02ae50cb4d81538c629363
+References: <CGME20220624064837epcms2p8f8589cd0fe02ae50cb4d81538c629363@epcms2p8>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+There is the following quirk to bypass "WB Manual Flush" in Write Booster.
 
-On Fri, 24 Jun 2022, Li Zhijian wrote:
+	- UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL
 
-> scsi_report_sense() is possble to print messages exceeding 128 bytes:
-> [  475.156955] sd 9:0:0:0: Warning! Received an indication that the LUN assignments on this target have changed. The Linux SCSI layer does not automatical
-> 
-> Signed-off-by: Li Zhijian <lizhijian@fujitsu.com>
-> ---
->  drivers/scsi/scsi_logging.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/scsi_logging.c b/drivers/scsi/scsi_logging.c
-> index b02af340c2d3..edc3fe8c7e0f 100644
-> --- a/drivers/scsi/scsi_logging.c
-> +++ b/drivers/scsi/scsi_logging.c
-> @@ -17,7 +17,7 @@
->  
->  static char *scsi_log_reserve_buffer(size_t *len)
->  {
-> -	*len = 128;
-> +	*len = 256;
->  	return kmalloc(*len, GFP_ATOMIC);
->  }
->  
+If this quirk is not set, there is no knob that can control "WB Manual Flush".
 
-Perhaps it's better to waste fewer words (both kinds). E.g.
+There are three flags that control Write Booster Feature.
+	1. WB ON/OFF
+	2. WB Hibern Flush ON/OFF
+	3. WB Flush ON/OFF
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 49ef864df581..e7283bf23db3 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -463,13 +463,11 @@ static void scsi_report_sense(struct scsi_device *sdev,
- 			evt_type = SDEV_EVT_LUN_CHANGE_REPORTED;
- 			scsi_report_lun_change(sdev);
- 			sdev_printk(KERN_WARNING, sdev,
--				    "Warning! Received an indication that the "
- 				    "LUN assignments on this target have "
- 				    "changed. The Linux SCSI layer does not "
- 				    "automatically remap LUN assignments.\n");
- 		} else if (sshdr->asc == 0x3f)
- 			sdev_printk(KERN_WARNING, sdev,
--				    "Warning! Received an indication that the "
- 				    "operating parameters on this target have "
- 				    "changed. The Linux SCSI layer does not "
- 				    "automatically adjust these parameters.\n");
+The sysfs that controls the WB was implemented. (1)
+
+In the case of "Hibern Flush", it is always good to turn on.
+Control may not be required. (2)
+
+Finally, "Manual flush" may be necessary because the Auto-Hibern8 is not
+supported in a specific environment.
+So the sysfs that controls this is necessary. (3)
+
+In addition, toggle functions for controlling the above flags are cleaned.
+
+V2:
+	- modify commit message
+	- move & modify err messages
+	- remove unnesscessary debug messages
+
+Signed-off-by: Jinyoung Choi <j-young.choi@samsung.com>
+---
+ drivers/ufs/core/ufs-sysfs.c | 46 +++++++++++++++++++++++-
+ drivers/ufs/core/ufshcd.c    | 69 +++++++++++++++++-------------------
+ include/ufs/ufshcd.h         |  7 ++++
+ 3 files changed, 84 insertions(+), 38 deletions(-)
+
+diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
+index 0a088b47d557..b1c51d8df9f4 100644
+--- a/drivers/ufs/core/ufs-sysfs.c
++++ b/drivers/ufs/core/ufs-sysfs.c
+@@ -230,7 +230,7 @@ static ssize_t wb_on_store(struct device *dev, struct device_attribute *attr,
+ 		 * If the platform supports UFSHCD_CAP_CLK_SCALING, turn WB
+ 		 * on/off will be done while clock scaling up/down.
+ 		 */
+-		dev_warn(dev, "To control WB through wb_on is not allowed!\n");
++		dev_warn(dev, "It is not allowed to control WB!\n");
+ 		return -EOPNOTSUPP;
+ 	}
+ 
+@@ -254,6 +254,48 @@ static ssize_t wb_on_store(struct device *dev, struct device_attribute *attr,
+ 	return res < 0 ? res : count;
+ }
+ 
++static ssize_t wb_buf_flush_en_show(struct device *dev,
++				    struct device_attribute *attr,
++				    char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++
++	return sysfs_emit(buf, "%d\n", hba->dev_info.wb_buf_flush_enabled);
++}
++
++static ssize_t wb_buf_flush_en_store(struct device *dev,
++				     struct device_attribute *attr,
++				     const char *buf, size_t count)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++	unsigned int wb_buf_flush_en;
++	ssize_t res;
++
++	if (!ufshcd_is_wb_buf_flush_allowed(hba)) {
++		dev_warn(dev, "It is not allowed to control WB buf flush!\n");
++		return -EOPNOTSUPP;
++	}
++
++	if (kstrtouint(buf, 0, &wb_buf_flush_en))
++		return -EINVAL;
++
++	if (wb_buf_flush_en != 0 && wb_buf_flush_en != 1)
++		return -EINVAL;
++
++	down(&hba->host_sem);
++	if (!ufshcd_is_user_access_allowed(hba)) {
++		res = -EBUSY;
++		goto out;
++	}
++
++	ufshcd_rpm_get_sync(hba);
++	res = ufshcd_wb_toggle_buf_flush(hba, wb_buf_flush_en);
++	ufshcd_rpm_put_sync(hba);
++out:
++	up(&hba->host_sem);
++	return res < 0 ? res : count;
++}
++
+ static DEVICE_ATTR_RW(rpm_lvl);
+ static DEVICE_ATTR_RO(rpm_target_dev_state);
+ static DEVICE_ATTR_RO(rpm_target_link_state);
+@@ -262,6 +304,7 @@ static DEVICE_ATTR_RO(spm_target_dev_state);
+ static DEVICE_ATTR_RO(spm_target_link_state);
+ static DEVICE_ATTR_RW(auto_hibern8);
+ static DEVICE_ATTR_RW(wb_on);
++static DEVICE_ATTR_RW(wb_buf_flush_en);
+ 
+ static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
+ 	&dev_attr_rpm_lvl.attr,
+@@ -272,6 +315,7 @@ static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
+ 	&dev_attr_spm_target_link_state.attr,
+ 	&dev_attr_auto_hibern8.attr,
+ 	&dev_attr_wb_on.attr,
++	&dev_attr_wb_buf_flush_en.attr,
+ 	NULL
+ };
+ 
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index f5d5dde497ac..439f6cb15084 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -268,8 +268,7 @@ static int ufshcd_setup_vreg(struct ufs_hba *hba, bool on);
+ static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
+ 					 struct ufs_vreg *vreg);
+ static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag);
+-static void ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set);
+-static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable);
++static void ufshcd_wb_toggle_buf_flush_during_h8(struct ufs_hba *hba, bool set);
+ static void ufshcd_hba_vreg_set_lpm(struct ufs_hba *hba);
+ static void ufshcd_hba_vreg_set_hpm(struct ufs_hba *hba);
+ 
+@@ -289,16 +288,16 @@ static inline void ufshcd_disable_irq(struct ufs_hba *hba)
+ 	}
+ }
+ 
+-static inline void ufshcd_wb_config(struct ufs_hba *hba)
++static void ufshcd_wb_set_default_flags(struct ufs_hba *hba)
+ {
+ 	if (!ufshcd_is_wb_allowed(hba))
+ 		return;
+ 
+ 	ufshcd_wb_toggle(hba, true);
++	ufshcd_wb_toggle_buf_flush_during_h8(hba, true);
+ 
+-	ufshcd_wb_toggle_flush_during_h8(hba, true);
+-	if (!(hba->quirks & UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL))
+-		ufshcd_wb_toggle_flush(hba, true);
++	if (ufshcd_is_wb_buf_flush_allowed(hba))
++		ufshcd_wb_toggle_buf_flush(hba, true);
+ }
+ 
+ static void ufshcd_scsi_unblock_requests(struct ufs_hba *hba)
+@@ -1289,9 +1288,10 @@ static int ufshcd_devfreq_scale(struct ufs_hba *hba, bool scale_up)
+ 		}
+ 	}
+ 
+-	/* Enable Write Booster if we have scaled up else disable it */
+ 	downgrade_write(&hba->clk_scaling_lock);
+ 	is_writelock = false;
++
++	/* Enable Write Booster if we have scaled up else disable it */
+ 	ufshcd_wb_toggle(hba, scale_up);
+ 
+ out_unprepare:
+@@ -5714,6 +5714,9 @@ static int __ufshcd_wb_toggle(struct ufs_hba *hba, bool set, enum flag_idn idn)
+ 	enum query_opcode opcode = set ? UPIU_QUERY_OPCODE_SET_FLAG :
+ 				   UPIU_QUERY_OPCODE_CLEAR_FLAG;
+ 
++	if (!ufshcd_is_wb_allowed(hba))
++		return -EPERM;
++
+ 	index = ufshcd_wb_get_query_index(hba);
+ 	return ufshcd_query_flag_retry(hba, opcode, idn, index, NULL);
+ }
+@@ -5722,60 +5725,50 @@ int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable)
+ {
+ 	int ret;
+ 
+-	if (!ufshcd_is_wb_allowed(hba))
+-		return 0;
+-
+-	if (!(enable ^ hba->dev_info.wb_enabled))
++	if (hba->dev_info.wb_enabled == enable)
+ 		return 0;
+ 
+ 	ret = __ufshcd_wb_toggle(hba, enable, QUERY_FLAG_IDN_WB_EN);
+ 	if (ret) {
+-		dev_err(hba->dev, "%s Write Booster %s failed %d\n",
++		dev_err(hba->dev, "%s: failed to %s WB %d\n",
+ 			__func__, enable ? "enable" : "disable", ret);
+ 		return ret;
+ 	}
+ 
+ 	hba->dev_info.wb_enabled = enable;
+-	dev_info(hba->dev, "%s Write Booster %s\n",
+-			__func__, enable ? "enabled" : "disabled");
+ 
+ 	return ret;
+ }
+ 
+-static void ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set)
++static void ufshcd_wb_toggle_buf_flush_during_h8(struct ufs_hba *hba,
++						 bool enable)
+ {
+ 	int ret;
+ 
+-	ret = __ufshcd_wb_toggle(hba, set,
+-			QUERY_FLAG_IDN_WB_BUFF_FLUSH_DURING_HIBERN8);
+-	if (ret) {
+-		dev_err(hba->dev, "%s: WB-Buf Flush during H8 %s failed: %d\n",
+-			__func__, set ? "enable" : "disable", ret);
+-		return;
+-	}
+-	dev_dbg(hba->dev, "%s WB-Buf Flush during H8 %s\n",
+-			__func__, set ? "enabled" : "disabled");
++	ret = __ufshcd_wb_toggle(hba, enable,
++				 QUERY_FLAG_IDN_WB_BUFF_FLUSH_DURING_HIBERN8);
++	if (ret)
++		dev_err(hba->dev, "%s: failed to %s WB buf flush during H8 %d\n",
++			__func__, enable ? "enable" : "disable", ret);
+ }
+ 
+-static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable)
++int ufshcd_wb_toggle_buf_flush(struct ufs_hba *hba, bool enable)
+ {
+ 	int ret;
+ 
+-	if (!ufshcd_is_wb_allowed(hba) ||
+-	    hba->dev_info.wb_buf_flush_enabled == enable)
+-		return;
++	if (hba->dev_info.wb_buf_flush_enabled == enable)
++		return 0;
+ 
+ 	ret = __ufshcd_wb_toggle(hba, enable, QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN);
+ 	if (ret) {
+-		dev_err(hba->dev, "%s WB-Buf Flush %s failed %d\n", __func__,
+-			enable ? "enable" : "disable", ret);
+-		return;
++		dev_err(hba->dev, "%s: failed to %s WB buf flush %d\n",
++			__func__, enable ? "enable" : "disable", ret);
++		return ret;
+ 	}
+ 
+ 	hba->dev_info.wb_buf_flush_enabled = enable;
+ 
+-	dev_dbg(hba->dev, "%s WB-Buf Flush %s\n",
+-			__func__, enable ? "enabled" : "disabled");
++	return ret;
+ }
+ 
+ static bool ufshcd_wb_presrv_usrspc_keep_vcc_on(struct ufs_hba *hba,
+@@ -5806,10 +5799,10 @@ static bool ufshcd_wb_presrv_usrspc_keep_vcc_on(struct ufs_hba *hba,
+ 
+ static void ufshcd_wb_force_disable(struct ufs_hba *hba)
+ {
+-	if (!(hba->quirks & UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL))
+-		ufshcd_wb_toggle_flush(hba, false);
++	if (ufshcd_is_wb_buf_flush_allowed(hba))
++		ufshcd_wb_toggle_buf_flush(hba, false);
+ 
+-	ufshcd_wb_toggle_flush_during_h8(hba, false);
++	ufshcd_wb_toggle_buf_flush_during_h8(hba, false);
+ 	ufshcd_wb_toggle(hba, false);
+ 	hba->caps &= ~UFSHCD_CAP_WB_EN;
+ 
+@@ -8195,7 +8188,9 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool init_dev_params)
+ 	 */
+ 	ufshcd_set_active_icc_lvl(hba);
+ 
+-	ufshcd_wb_config(hba);
++	/* Enable UFS Write Booster if supported */
++	ufshcd_wb_set_default_flags(hba);
++
+ 	if (hba->ee_usr_mask)
+ 		ufshcd_write_ee_control(hba);
+ 	/* Enable Auto-Hibernate if configured */
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index b5c9064a11d9..8c9461d45606 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -1017,6 +1017,12 @@ static inline bool ufshcd_is_wb_allowed(struct ufs_hba *hba)
+ 	return hba->caps & UFSHCD_CAP_WB_EN;
+ }
+ 
++static inline bool ufshcd_is_wb_buf_flush_allowed(struct ufs_hba *hba)
++{
++	return ufshcd_is_wb_allowed(hba) &&
++		!(hba->quirks & UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL);
++}
++
+ #define ufshcd_writel(hba, val, reg)	\
+ 	writel((val), (hba)->mmio_base + (reg))
+ #define ufshcd_readl(hba, reg)	\
+@@ -1211,6 +1217,7 @@ int ufshcd_exec_raw_upiu_cmd(struct ufs_hba *hba,
+ 			     enum query_opcode desc_op);
+ 
+ int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable);
++int ufshcd_wb_toggle_buf_flush(struct ufs_hba *hba, bool enable);
+ int ufshcd_suspend_prepare(struct device *dev);
+ int __ufshcd_suspend_prepare(struct device *dev, bool rpm_ok_for_spm);
+ void ufshcd_resume_complete(struct device *dev);
+-- 
+2.25.1
