@@ -2,393 +2,144 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 941C5C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jun 2022 06:48:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21C80CCA47E
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jun 2022 09:12:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229961AbiFXGsp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 24 Jun 2022 02:48:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54996 "EHLO
+        id S231499AbiFXJMG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Jun 2022 05:12:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56672 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229699AbiFXGso (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Jun 2022 02:48:44 -0400
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5D714DF72
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Jun 2022 23:48:41 -0700 (PDT)
-Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20220624064838epoutp02fb7b43102a30803e14d2e5c44abbdfbc~7e7gaoRfb2485324853epoutp021
-        for <linux-scsi@vger.kernel.org>; Fri, 24 Jun 2022 06:48:38 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20220624064838epoutp02fb7b43102a30803e14d2e5c44abbdfbc~7e7gaoRfb2485324853epoutp021
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1656053318;
-        bh=9FoUPkEwHiudPdR4HoXMM3C6AwVfUb8mHuNiKPJapog=;
-        h=Subject:Reply-To:From:To:Date:References:From;
-        b=FTqhLetZr0xGew7nwJ337+dRdaz7JEQ/6kT8yoh29qXe9ebcultCUNCOkClD5cBd7
-         PCv9z+4Yn9zK8qseleXwJKKKhxJnwLw7IiWz01Jzu7nP81Hym5RiVp+W4ekKefQeIO
-         7F5wiTrCKN4P/9pxl6nUuMRO1UdOI3nxm8oizQtA=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
-        20220624064838epcas2p3504427893ac1272a504f7d78f9c24f41~7e7f2f5NJ1745717457epcas2p31;
-        Fri, 24 Jun 2022 06:48:38 +0000 (GMT)
-Received: from epsmges2p2.samsung.com (unknown [182.195.36.91]) by
-        epsnrtp2.localdomain (Postfix) with ESMTP id 4LTnl94y1Kz4x9Q7; Fri, 24 Jun
-        2022 06:48:37 +0000 (GMT)
-X-AuditID: b6c32a46-0a3ff700000025b2-1b-62b55e45e2a1
-Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
-        epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        73.F4.09650.54E55B26; Fri, 24 Jun 2022 15:48:37 +0900 (KST)
-Mime-Version: 1.0
-Subject: [PATCH v2] scsi: ufs: wb: Add Manual Flush sysfs and cleanup toggle
- functions
-Reply-To: j-young.choi@samsung.com
-Sender: Jinyoung CHOI <j-young.choi@samsung.com>
-From:   Jinyoung CHOI <j-young.choi@samsung.com>
-To:     ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20220624064837epcms2p8f8589cd0fe02ae50cb4d81538c629363@epcms2p8>
-Date:   Fri, 24 Jun 2022 15:48:37 +0900
-X-CMS-MailID: 20220624064837epcms2p8f8589cd0fe02ae50cb4d81538c629363
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrJJsWRmVeSWpSXmKPExsWy7bCmua5r3NYkg1935C1OPlnDZvFg3jY2
-        i5c/r7JZHHzYyWIx7cNPZouXhzQtHt1+xmjR27+VzWLRjW1MFpd3zWGz6L6+g81i+fF/TA48
-        HpeveHss3vOSyWPCogOMHt/Xd7B5fHx6i8Wjb8sqRo/Pm+Q82g90MwVwRGXbZKQmpqQWKaTm
-        JeenZOal2yp5B8c7x5uaGRjqGlpamCsp5CXmptoqufgE6Lpl5gAdq6RQlphTChQKSCwuVtK3
-        synKLy1JVcjILy6xVUotSMkpMC/QK07MLS7NS9fLSy2xMjQwMDIFKkzIzuhpm85WsMev4vGD
-        vUwNjG8cuhg5OSQETCRe/VzE2sXIxSEksINR4vre2+xdjBwcvAKCEn93CIPUCAtESMw5fZkV
-        xBYSUJI4t2YWI0iJsICBxK1ec5Awm4CexM8lM9hAxogInGWWWPhwChPEfF6JGe1PWSBsaYnt
-        y7cyQtgaEj+W9TJD2KISN1e/ZYex3x+bD1UjItF67yxUjaDEg5+7oeKSEocOfWUDuUFCIF9i
-        w4FAiHCNxNvlB6BK9CWudWwEW8sr4CvR9PgImM0ioCrxvr8ZapWLxLRXS8HizALyEtvfzmEG
-        GcksoCmxfpc+xHRliSO3WGAeadj4mx2dzSzAJ9Fx+C9cfMe8J0wQrWoSi5qMIMIyEl8Pz4cq
-        8ZB40LibaQKj4ixEKM9CcsIshBMWMDKvYhRLLSjOTU8tNiowgkdscn7uJkZwmtVy28E45e0H
-        vUOMTByMhxglOJiVRHhf/N+cJMSbklhZlVqUH19UmpNafIjRFOj5icxSosn5wESfVxJvaGJp
-        YGJmZmhuZGpgriTO65WyIVFIID2xJDU7NbUgtQimj4mDU6qBKabkbSVD9jPFlTFFmza+/bVz
-        Ca/LTu0Ow0T7e09XpMdKF5xIcZ90t1lz+hM3tg/3V7MKqCao7Ei/vmtD2rHylD+fwvetK9uW
-        tvhu55+V4i8+urh9O9CYeOXvq2urGkz8Tur0hf7WXF95w+Ts/c8WJ59u2V1+wV7m/dODHDZm
-        6zjuKQc9jJKPmMqiLvrJd0L/5tUm81O2LbuseuNfl7NtrlTS+d+nkqVsMzs/X3VoXiy281h8
-        491tmdN3+odHl+t9CjJ/WhpVk5xTdmiLRvDqxH97q4ybnz1305A+wDU7M/b+5U1mS7QNA1ZF
-        5Nyxevz7mp6XqkHNqp2Vu01Yfqqu/Hco//VFMc+l7IkB3K21cUosxRmJhlrMRcWJADTDcbQ8
-        BAAA
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20220624064837epcms2p8f8589cd0fe02ae50cb4d81538c629363
-References: <CGME20220624064837epcms2p8f8589cd0fe02ae50cb4d81538c629363@epcms2p8>
+        with ESMTP id S231473AbiFXJLf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Jun 2022 05:11:35 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B783274E7D;
+        Fri, 24 Jun 2022 02:11:08 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4C7D86207A;
+        Fri, 24 Jun 2022 09:11:08 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 729F7C385A5;
+        Fri, 24 Jun 2022 09:11:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1656061867;
+        bh=QZAJaXcIRADU/xKJ+9ztqTuLJLuzfPWx4kL+CXKUusE=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=DujAp35gBkJI0ojh8Z4cz2WNMnPVa8X09AjvGzpyvg1W3zpRtikVU8S1p5YzkeFQn
+         lyqUI2IK/TRwsZ6Fphm5Gnrx8o8G+PE51sAvsFnYOkkSigRwkL7Ti34QY5mgrVlD4K
+         q87W/nor5rNmj3N+qIRXTKGiC0CtdvN0KmhO4zeDIsbYYD8QC1BFTaduxwig96j3Pp
+         tKSojB4iYnI/xdxLhYubiYytYTgX6J2RKt1/59qilMZK37CJaHmf49rGGpZzrmzm5C
+         vXPE3OAWpxbhgHGBmdLEkg9vKAPO5+PD+s0ZO+euAV2nmh7i/+PPY0rPFj46LXVDDi
+         0tE0Cc0wwED0w==
+Received: by mail-yb1-f169.google.com with SMTP id r3so3464415ybr.6;
+        Fri, 24 Jun 2022 02:11:07 -0700 (PDT)
+X-Gm-Message-State: AJIora+g6+pn4g1YKubxybFU+jUYIV4PSTejiz+uzDBkwxlGCxAibBTO
+        d8vamCRz5fxg6xHyVU+wSBfBjn1uVOU/WBi811w=
+X-Google-Smtp-Source: AGRyM1thOWm6xvviAmnNqulTm+G1aNh8sMElBL34hFaSX/cB93p4OtnA8uz/osirQ5xn1zAs3G7Hy/thW2fsxExc9gs=
+X-Received: by 2002:a05:6902:120f:b0:668:2228:9627 with SMTP id
+ s15-20020a056902120f00b0066822289627mr14111407ybu.134.1656061866469; Fri, 24
+ Jun 2022 02:11:06 -0700 (PDT)
+MIME-Version: 1.0
+References: <20220617125750.728590-1-arnd@kernel.org> <20220617125750.728590-4-arnd@kernel.org>
+ <6ba86afe-bf9f-1aca-7af1-d0d348d75ffc@gmail.com>
+In-Reply-To: <6ba86afe-bf9f-1aca-7af1-d0d348d75ffc@gmail.com>
+From:   Arnd Bergmann <arnd@kernel.org>
+Date:   Fri, 24 Jun 2022 11:10:49 +0200
+X-Gmail-Original-Message-ID: <CAK8P3a1XfwkTOV7qOs1fTxf4vthNBRXKNu8A5V7TWnHT081NGA@mail.gmail.com>
+Message-ID: <CAK8P3a1XfwkTOV7qOs1fTxf4vthNBRXKNu8A5V7TWnHT081NGA@mail.gmail.com>
+Subject: Re: [PATCH v2 3/3] arch/*/: remove CONFIG_VIRT_TO_BUS
+To:     Michael Schmitz <schmitzmic@gmail.com>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        "open list:IOMMU DRIVERS" <iommu@lists.linux-foundation.org>,
+        Khalid Aziz <khalid@gonehiking.org>,
+        "Maciej W . Rozycki" <macro@orcam.me.uk>,
+        Matt Wang <wwentao@vmware.com>,
+        Miquel van Smoorenburg <mikevs@xs4all.net>,
+        Mark Salyzyn <salyzyn@android.com>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        linux-arch <linux-arch@vger.kernel.org>,
+        alpha <linux-alpha@vger.kernel.org>,
+        linux-m68k <linux-m68k@lists.linux-m68k.org>,
+        Parisc List <linux-parisc@vger.kernel.org>,
+        Denis Efremov <efremov@linux.com>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Michael Ellerman <mpe@ellerman.id.au>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-There is the following quirk to bypass "WB Manual Flush" in Write Booster.
+On Sat, Jun 18, 2022 at 3:06 AM Michael Schmitz <schmitzmic@gmail.com> wrote:
+> Am 18.06.2022 um 00:57 schrieb Arnd Bergmann:
+> >
+> > All architecture-independent users of virt_to_bus() and bus_to_virt()
+> > have been fixed to use the dma mapping interfaces or have been
+> > removed now.  This means the definitions on most architectures, and the
+> > CONFIG_VIRT_TO_BUS symbol are now obsolete and can be removed.
+> >
+> > The only exceptions to this are a few network and scsi drivers for m68k
+> > Amiga and VME machines and ppc32 Macintosh. These drivers work correctly
+> > with the old interfaces and are probably not worth changing.
+>
+> The Amiga SCSI drivers are all old WD33C93 ones, and replacing
+> virt_to_bus by virt_to_phys in the dma_setup() function there would
+> cause no functional change at all.
 
-	- UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL
+Ok, thanks for taking a look here.
 
-If this quirk is not set, there is no knob that can control "WB Manual Flush".
+> drivers/vme/bridges/vme_ca91cx42.c hasn't been used at all on m68k (it
+> is a PCI-to-VME bridge chipset driver that would be needed on
+> architectures that natively use a PCI bus). I haven't found anything
+> that selects that driver, so not sure it is even still in use??
 
-There are three flags that control Write Booster Feature.
-	1. WB ON/OFF
-	2. WB Hibern Flush ON/OFF
-	3. WB Flush ON/OFF
+It's gone now, Greg has already taken my patches for this through
+the staging tree.
 
-The sysfs that controls the WB was implemented. (1)
+> That would allow you to drop the remaining virt_to_bus define from
+> arch/m68k/include/asm/virtconvert.h.
+>
+> I could submit a patch to convert the Amiga SCSI drivers to use
+> virt_to_phys if Geert and the SCSI maintainers think it's worth the churn.
 
-In the case of "Hibern Flush", it is always good to turn on.
-Control may not be required. (2)
+I don't think using virt_to_phys() is an improvement here, as
+virt_to_bus() was originally meant as a better abstraction to
+replace the use of virt_to_phys() to make drivers portable, before
+it got replaced by the dma-mapping interface in turn.
 
-Finally, "Manual flush" may be necessary because the Auto-Hibern8 is not
-supported in a specific environment.
-So the sysfs that controls this is necessary. (3)
+It looks like the Amiga SCSI drivers have an open-coded version of
+what dma_map_single() does, to do bounce buffering and cache
+management. The ideal solution would be to convert the drivers
+actually use the appropriate dma-mapping interfaces and remove
+this custom code.
 
-In addition, toggle functions for controlling the above flags are cleaned.
+The same could be done for the two vme drivers (scsi/mvme147.c
+and ethernet/82596.c), which do the cache management but
+apparently don't need swiotlb bounce buffering.
 
-V2:
-	- modify commit message
-	- move & modify err messages
-	- remove unnesscessary debug messages
+Rewriting the drivers to modern APIs is of course non-trivial,
+and if you want a shortcut here, I would suggest introducing
+platform specific helpers similar to isa_virt_to_bus() and call
+them amiga_virt_to_bus() and vme_virt_to_bus, respectively.
 
-Signed-off-by: Jinyoung Choi <j-young.choi@samsung.com>
----
- drivers/ufs/core/ufs-sysfs.c | 46 +++++++++++++++++++++++-
- drivers/ufs/core/ufshcd.c    | 69 +++++++++++++++++-------------------
- include/ufs/ufshcd.h         |  7 ++++
- 3 files changed, 84 insertions(+), 38 deletions(-)
+Putting these into a platform specific header file at least helps
+clarify that both the helper functions and the drivers using them
+are non-portable.
 
-diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
-index 0a088b47d557..b1c51d8df9f4 100644
---- a/drivers/ufs/core/ufs-sysfs.c
-+++ b/drivers/ufs/core/ufs-sysfs.c
-@@ -230,7 +230,7 @@ static ssize_t wb_on_store(struct device *dev, struct device_attribute *attr,
- 		 * If the platform supports UFSHCD_CAP_CLK_SCALING, turn WB
- 		 * on/off will be done while clock scaling up/down.
- 		 */
--		dev_warn(dev, "To control WB through wb_on is not allowed!\n");
-+		dev_warn(dev, "It is not allowed to control WB!\n");
- 		return -EOPNOTSUPP;
- 	}
- 
-@@ -254,6 +254,48 @@ static ssize_t wb_on_store(struct device *dev, struct device_attribute *attr,
- 	return res < 0 ? res : count;
- }
- 
-+static ssize_t wb_buf_flush_en_show(struct device *dev,
-+				    struct device_attribute *attr,
-+				    char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	return sysfs_emit(buf, "%d\n", hba->dev_info.wb_buf_flush_enabled);
-+}
-+
-+static ssize_t wb_buf_flush_en_store(struct device *dev,
-+				     struct device_attribute *attr,
-+				     const char *buf, size_t count)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	unsigned int wb_buf_flush_en;
-+	ssize_t res;
-+
-+	if (!ufshcd_is_wb_buf_flush_allowed(hba)) {
-+		dev_warn(dev, "It is not allowed to control WB buf flush!\n");
-+		return -EOPNOTSUPP;
-+	}
-+
-+	if (kstrtouint(buf, 0, &wb_buf_flush_en))
-+		return -EINVAL;
-+
-+	if (wb_buf_flush_en != 0 && wb_buf_flush_en != 1)
-+		return -EINVAL;
-+
-+	down(&hba->host_sem);
-+	if (!ufshcd_is_user_access_allowed(hba)) {
-+		res = -EBUSY;
-+		goto out;
-+	}
-+
-+	ufshcd_rpm_get_sync(hba);
-+	res = ufshcd_wb_toggle_buf_flush(hba, wb_buf_flush_en);
-+	ufshcd_rpm_put_sync(hba);
-+out:
-+	up(&hba->host_sem);
-+	return res < 0 ? res : count;
-+}
-+
- static DEVICE_ATTR_RW(rpm_lvl);
- static DEVICE_ATTR_RO(rpm_target_dev_state);
- static DEVICE_ATTR_RO(rpm_target_link_state);
-@@ -262,6 +304,7 @@ static DEVICE_ATTR_RO(spm_target_dev_state);
- static DEVICE_ATTR_RO(spm_target_link_state);
- static DEVICE_ATTR_RW(auto_hibern8);
- static DEVICE_ATTR_RW(wb_on);
-+static DEVICE_ATTR_RW(wb_buf_flush_en);
- 
- static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
- 	&dev_attr_rpm_lvl.attr,
-@@ -272,6 +315,7 @@ static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
- 	&dev_attr_spm_target_link_state.attr,
- 	&dev_attr_auto_hibern8.attr,
- 	&dev_attr_wb_on.attr,
-+	&dev_attr_wb_buf_flush_en.attr,
- 	NULL
- };
- 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index f5d5dde497ac..439f6cb15084 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -268,8 +268,7 @@ static int ufshcd_setup_vreg(struct ufs_hba *hba, bool on);
- static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
- 					 struct ufs_vreg *vreg);
- static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag);
--static void ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set);
--static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable);
-+static void ufshcd_wb_toggle_buf_flush_during_h8(struct ufs_hba *hba, bool set);
- static void ufshcd_hba_vreg_set_lpm(struct ufs_hba *hba);
- static void ufshcd_hba_vreg_set_hpm(struct ufs_hba *hba);
- 
-@@ -289,16 +288,16 @@ static inline void ufshcd_disable_irq(struct ufs_hba *hba)
- 	}
- }
- 
--static inline void ufshcd_wb_config(struct ufs_hba *hba)
-+static void ufshcd_wb_set_default_flags(struct ufs_hba *hba)
- {
- 	if (!ufshcd_is_wb_allowed(hba))
- 		return;
- 
- 	ufshcd_wb_toggle(hba, true);
-+	ufshcd_wb_toggle_buf_flush_during_h8(hba, true);
- 
--	ufshcd_wb_toggle_flush_during_h8(hba, true);
--	if (!(hba->quirks & UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL))
--		ufshcd_wb_toggle_flush(hba, true);
-+	if (ufshcd_is_wb_buf_flush_allowed(hba))
-+		ufshcd_wb_toggle_buf_flush(hba, true);
- }
- 
- static void ufshcd_scsi_unblock_requests(struct ufs_hba *hba)
-@@ -1289,9 +1288,10 @@ static int ufshcd_devfreq_scale(struct ufs_hba *hba, bool scale_up)
- 		}
- 	}
- 
--	/* Enable Write Booster if we have scaled up else disable it */
- 	downgrade_write(&hba->clk_scaling_lock);
- 	is_writelock = false;
-+
-+	/* Enable Write Booster if we have scaled up else disable it */
- 	ufshcd_wb_toggle(hba, scale_up);
- 
- out_unprepare:
-@@ -5714,6 +5714,9 @@ static int __ufshcd_wb_toggle(struct ufs_hba *hba, bool set, enum flag_idn idn)
- 	enum query_opcode opcode = set ? UPIU_QUERY_OPCODE_SET_FLAG :
- 				   UPIU_QUERY_OPCODE_CLEAR_FLAG;
- 
-+	if (!ufshcd_is_wb_allowed(hba))
-+		return -EPERM;
-+
- 	index = ufshcd_wb_get_query_index(hba);
- 	return ufshcd_query_flag_retry(hba, opcode, idn, index, NULL);
- }
-@@ -5722,60 +5725,50 @@ int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable)
- {
- 	int ret;
- 
--	if (!ufshcd_is_wb_allowed(hba))
--		return 0;
--
--	if (!(enable ^ hba->dev_info.wb_enabled))
-+	if (hba->dev_info.wb_enabled == enable)
- 		return 0;
- 
- 	ret = __ufshcd_wb_toggle(hba, enable, QUERY_FLAG_IDN_WB_EN);
- 	if (ret) {
--		dev_err(hba->dev, "%s Write Booster %s failed %d\n",
-+		dev_err(hba->dev, "%s: failed to %s WB %d\n",
- 			__func__, enable ? "enable" : "disable", ret);
- 		return ret;
- 	}
- 
- 	hba->dev_info.wb_enabled = enable;
--	dev_info(hba->dev, "%s Write Booster %s\n",
--			__func__, enable ? "enabled" : "disabled");
- 
- 	return ret;
- }
- 
--static void ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set)
-+static void ufshcd_wb_toggle_buf_flush_during_h8(struct ufs_hba *hba,
-+						 bool enable)
- {
- 	int ret;
- 
--	ret = __ufshcd_wb_toggle(hba, set,
--			QUERY_FLAG_IDN_WB_BUFF_FLUSH_DURING_HIBERN8);
--	if (ret) {
--		dev_err(hba->dev, "%s: WB-Buf Flush during H8 %s failed: %d\n",
--			__func__, set ? "enable" : "disable", ret);
--		return;
--	}
--	dev_dbg(hba->dev, "%s WB-Buf Flush during H8 %s\n",
--			__func__, set ? "enabled" : "disabled");
-+	ret = __ufshcd_wb_toggle(hba, enable,
-+				 QUERY_FLAG_IDN_WB_BUFF_FLUSH_DURING_HIBERN8);
-+	if (ret)
-+		dev_err(hba->dev, "%s: failed to %s WB buf flush during H8 %d\n",
-+			__func__, enable ? "enable" : "disable", ret);
- }
- 
--static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable)
-+int ufshcd_wb_toggle_buf_flush(struct ufs_hba *hba, bool enable)
- {
- 	int ret;
- 
--	if (!ufshcd_is_wb_allowed(hba) ||
--	    hba->dev_info.wb_buf_flush_enabled == enable)
--		return;
-+	if (hba->dev_info.wb_buf_flush_enabled == enable)
-+		return 0;
- 
- 	ret = __ufshcd_wb_toggle(hba, enable, QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN);
- 	if (ret) {
--		dev_err(hba->dev, "%s WB-Buf Flush %s failed %d\n", __func__,
--			enable ? "enable" : "disable", ret);
--		return;
-+		dev_err(hba->dev, "%s: failed to %s WB buf flush %d\n",
-+			__func__, enable ? "enable" : "disable", ret);
-+		return ret;
- 	}
- 
- 	hba->dev_info.wb_buf_flush_enabled = enable;
- 
--	dev_dbg(hba->dev, "%s WB-Buf Flush %s\n",
--			__func__, enable ? "enabled" : "disabled");
-+	return ret;
- }
- 
- static bool ufshcd_wb_presrv_usrspc_keep_vcc_on(struct ufs_hba *hba,
-@@ -5806,10 +5799,10 @@ static bool ufshcd_wb_presrv_usrspc_keep_vcc_on(struct ufs_hba *hba,
- 
- static void ufshcd_wb_force_disable(struct ufs_hba *hba)
- {
--	if (!(hba->quirks & UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL))
--		ufshcd_wb_toggle_flush(hba, false);
-+	if (ufshcd_is_wb_buf_flush_allowed(hba))
-+		ufshcd_wb_toggle_buf_flush(hba, false);
- 
--	ufshcd_wb_toggle_flush_during_h8(hba, false);
-+	ufshcd_wb_toggle_buf_flush_during_h8(hba, false);
- 	ufshcd_wb_toggle(hba, false);
- 	hba->caps &= ~UFSHCD_CAP_WB_EN;
- 
-@@ -8195,7 +8188,9 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool init_dev_params)
- 	 */
- 	ufshcd_set_active_icc_lvl(hba);
- 
--	ufshcd_wb_config(hba);
-+	/* Enable UFS Write Booster if supported */
-+	ufshcd_wb_set_default_flags(hba);
-+
- 	if (hba->ee_usr_mask)
- 		ufshcd_write_ee_control(hba);
- 	/* Enable Auto-Hibernate if configured */
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index b5c9064a11d9..8c9461d45606 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1017,6 +1017,12 @@ static inline bool ufshcd_is_wb_allowed(struct ufs_hba *hba)
- 	return hba->caps & UFSHCD_CAP_WB_EN;
- }
- 
-+static inline bool ufshcd_is_wb_buf_flush_allowed(struct ufs_hba *hba)
-+{
-+	return ufshcd_is_wb_allowed(hba) &&
-+		!(hba->quirks & UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL);
-+}
-+
- #define ufshcd_writel(hba, val, reg)	\
- 	writel((val), (hba)->mmio_base + (reg))
- #define ufshcd_readl(hba, reg)	\
-@@ -1211,6 +1217,7 @@ int ufshcd_exec_raw_upiu_cmd(struct ufs_hba *hba,
- 			     enum query_opcode desc_op);
- 
- int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable);
-+int ufshcd_wb_toggle_buf_flush(struct ufs_hba *hba, bool enable);
- int ufshcd_suspend_prepare(struct device *dev);
- int __ufshcd_suspend_prepare(struct device *dev, bool rpm_ok_for_spm);
- void ufshcd_resume_complete(struct device *dev);
--- 
-2.25.1
+> 32bit powerpc is a different matter though.
+
+It's similar, but unrelated. The two apple ethernet drivers
+(bmac and mace) can again either get changed to use the
+dma-mapping interfaces, or get a custom pmac_virt_to_bus()/
+pmac_bus_to_virt() helper.
+
+There is also drivers/tty/serial/cpm_uart/cpm_uart_cpm2.c,
+which I think just needs a trivial change, but I'm not sure
+how to do it correctly.
+
+      Arnd
