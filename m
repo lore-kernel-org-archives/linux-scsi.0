@@ -2,79 +2,109 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68653C43334
-	for <linux-scsi@archiver.kernel.org>; Sat, 25 Jun 2022 22:24:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFF78C43334
+	for <linux-scsi@archiver.kernel.org>; Sun, 26 Jun 2022 04:07:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233351AbiFYWYq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 25 Jun 2022 18:24:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48070 "EHLO
+        id S230506AbiFZEHE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 26 Jun 2022 00:07:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58542 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230246AbiFYWYp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 25 Jun 2022 18:24:45 -0400
-X-Greylist: delayed 301 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sat, 25 Jun 2022 15:24:44 PDT
-Received: from mout.perfora.net (mout.perfora.net [74.208.4.196])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7AB2B13D51
-        for <linux-scsi@vger.kernel.org>; Sat, 25 Jun 2022 15:24:44 -0700 (PDT)
-Received: from [192.168.0.212] ([108.168.115.3]) by mrelay.perfora.net
- (mreueus004 [74.208.5.2]) with ESMTPSA (Nemesis) id 1N63qG-1ncbNW1egq-016M2g
- for <linux-scsi@vger.kernel.org>; Sun, 26 Jun 2022 00:19:42 +0200
-Message-ID: <0a7c3531-94f7-745e-020c-14b7bec7cef6@mdevsys.com>
-Date:   Sat, 25 Jun 2022 18:19:39 -0400
+        with ESMTP id S229999AbiFZEHD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Jun 2022 00:07:03 -0400
+X-Greylist: delayed 440 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sat, 25 Jun 2022 21:07:00 PDT
+Received: from adrastea.uberspace.de (adrastea.uberspace.de [185.26.156.139])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E22E11C05
+        for <linux-scsi@vger.kernel.org>; Sat, 25 Jun 2022 21:07:00 -0700 (PDT)
+Received: (qmail 19077 invoked by uid 990); 26 Jun 2022 03:59:37 -0000
+Authentication-Results: adrastea.uberspace.de;
+        auth=pass (plain)
+From:   Manuel Jacob <me@manueljacob.de>
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Cc:     Manuel Jacob <me@manueljacob.de>
+Subject: [PATCH] scsi: sd: Calculate discard limits after block size is known
+Date:   Sun, 26 Jun 2022 05:59:13 +0200
+Message-Id: <20220626035913.99519-1-me@manueljacob.de>
+X-Mailer: git-send-email 2.36.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-To:     linux-scsi@vger.kernel.org
-Reply-To: tomkcpr@mdevsys.com
-Content-Language: en-US
-From:   TomK <tomkcpr@mdevsys.com>
-Subject: Qlogic Cards : LIO support
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Provags-ID: V03:K1:f4qdiVCZQM/B2jkrmIGND6h84sNt9z9thcmyEe9aidNXg2rrccf
- 1+DITBWFQjWgsESocYGUFd42bcGpxvURCkvwtXMN6zDNjmdbveTsj9OphsLmAXw+pv/aIHQ
- nvdFb9AiYM5tmTwmj5kAzwfbAIp4Ywd/dSO8PrpReePhBqCbiLORyCi3qJd1xjIwOig7fgD
- SYO8RayQ3T/jelHjPMrWQ==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:9A3uyjo1upI=:PWO2+kmY3/LdQgV6MZjygN
- Tm1t2M6MDFDbwqYu+IIvrNmmJME4h+D+CG2hpB3pQ3RrFNS1tkIZVRL7jH6pyvqBXGbQwrdTy
- eqkcwIO3fArN6gzvxbL6Hr6kAp9+Q8UP1LPaqvNsgNjlDzQGK6k6jWNXcPavZcicZUZXaBqxw
- BS5GJqsNdCR/S3jImNXa5ZNhIkeypEt2OIMervw8Is1w4+578z1pJffEg5b5szJf63AWnEuLc
- 3HqPgejH0/sPxjob8BsxhFbPgen1dFE7eo09R+M/tJInKxUyQ9mjb76jOm2m9tEPDYREMv8jD
- h+yrb9kMcylCMdgp91cUI1je90J7eLY3eUt0PuYknBqXmoUg9YCZpFeLfICIQJAhDikHlsb31
- YosDCFLajYlmATeWXN4x9HxDVFdJ/iXZK9S4n03hHXfMOig8o4+VTu9qeVzlhYFFHck7fC+l7
- r5ePsE0Gk7aJVPbSdIDWc1wE8tSZIQ1R1wuwXCA+jl8JEMD+KaqjD8v1GuhAaruZeIWGNpKVE
- qd/1GzwyYOpXU3GW93W4MpDwhwbcND3YMDo2MtkKSE9cDV/x6fHNdhzNsFRb+xSI3Ug+Y8ayJ
- 0By9oqqxLUqbR77xCgUOMTey+NZVY9OmVOBvEqClDn8i1OJqH4i8oWeFW/LLKoPxbuoH+xQBe
- nQqo+tStHzrrxi989ZDpE0/zWOetT6OXHS23tFbNv0qMPHTKYgUZS0aJlH4DAWCyGU4bnp+rz
- 0pYGIj2JxFYPXBx6359Z4SH87OwElD7BN3yWtA==
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Rspamd-Bar: /
+X-Rspamd-Report: MIME_GOOD(-0.1) MID_CONTAINS_FROM(1) BAYES_HAM(-1.691243)
+X-Rspamd-Score: -0.791243
+Received: from unknown (HELO unkown) (::1)
+        by adrastea.uberspace.de (Haraka/2.8.28) with ESMTPSA; Sun, 26 Jun 2022 05:59:37 +0200
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hey There,
+Previously, the discard_alignment and discard_granularity attributes of
+queue->limits were calculated in sd_config_discard(). However, it uses
+the logical block size, physical block size, unmap alignment and unmap
+granularity, which were not necessarily already known (and therefore set
+to 0) at that point. Instead, the calculations should be done after
+these values are known.
 
-Been using LIO with with a few 4GB Qlogic cards.  They have been working 
-very well. However, these are non-branded Qlogic cards.
+The reason for finding this bug was the following observable behavior:
 
-Trying to purchase a couple Qlogic 8GB cards but noticing some are IBM, 
-HP, EMC, Dell, NetApp etc.
+I use an external SSD which supports the unmap command but sets lbpme=0.
+To make the kernel send the unmap command, I added the following udev
+rule:
+ACTION=="add|change", ATTRS{idVendor}=="0634", ATTRS{idProduct}=="5600", SUBSYSTEM=="scsi_disk", ATTR{provisioning_mode}="unmap"
 
-Now I'm looking for a genuine non-branded 8GB Qlogic card.  Not all 
-sellers declare them as branded or not however.
+When running blkdiscard on the disk after plugging it in, it still
+failed. In dmesg, an error “Error: discard_granularity is 0.” was shown.
+Setting provisioning_mode=unmap again fixed the error.
 
-Is there a way to tell from the serial numbers, such us by LFD or RFD 
-prefixes if a card is branded or not branded?  Is there an online tool 
-to determine branded vs non-branded cards?
+Looking at the code, I saw that the discard_granularity can be 0 only if
+sdkp->physical_block_size is 0. Therefore, I concluded that the physical
+block size was not yet known (set to 0) at the point when udev set
+provisioning_mode=unmap, which calls sd_config_discard(). The block
+sizes are set in sd_read_capacity() and the unmap alignment and
+granularity are set in sd_read_block_limits(). Therefore, I moved the
+calculations after control flow after calling these functions joined.
 
-Some examples:
+The moved code sets the attributes even if the disk doesn’t support
+discard at all. Before, this happened only if sd_config_discard() was
+called (even if to disable discard). Now, it’s always set if media is
+present. So before and after this change, the attributes could not be
+used to determine whether discard is enabled or not.
 
-LFD1139T91853
+Signed-off-by: Manuel Jacob <me@manueljacob.de>
+---
+ drivers/scsi/sd.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-LFD1032E51241
-
-LFD1039H03190
-
-RFD1210Y96605
-
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index a1a2ac09066f..526e4c93ceb4 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -785,11 +785,6 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
+ 	unsigned int logical_block_size = sdkp->device->sector_size;
+ 	unsigned int max_blocks = 0;
+ 
+-	q->limits.discard_alignment =
+-		sdkp->unmap_alignment * logical_block_size;
+-	q->limits.discard_granularity =
+-		max(sdkp->physical_block_size,
+-		    sdkp->unmap_granularity * logical_block_size);
+ 	sdkp->provisioning_mode = mode;
+ 
+ 	switch (mode) {
+@@ -3260,6 +3255,12 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 
+ 		sd_print_capacity(sdkp, old_capacity);
+ 
++		q->limits.discard_alignment =
++			sdkp->unmap_alignment * sdkp->device->sector_size;
++		q->limits.discard_granularity =
++			max(sdkp->physical_block_size,
++				sdkp->unmap_granularity * sdkp->device->sector_size);
++
+ 		sd_read_write_protect_flag(sdkp, buffer);
+ 		sd_read_cache_type(sdkp, buffer);
+ 		sd_read_app_tag_own(sdkp, buffer);
 -- 
-Thx,
-TK.
+2.36.1
+
