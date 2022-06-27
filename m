@@ -2,139 +2,130 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F2A0CCA47F
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jun 2022 19:54:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CACDCCA47B
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jun 2022 21:12:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241326AbiF0TyM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Jun 2022 15:54:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36106 "EHLO
+        id S241012AbiF0VMs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Jun 2022 17:12:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53866 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241274AbiF0Txv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jun 2022 15:53:51 -0400
-Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D53291AF1C
-        for <linux-scsi@vger.kernel.org>; Mon, 27 Jun 2022 12:53:47 -0700 (PDT)
-Received: by mail-pg1-x532.google.com with SMTP id 9so10052420pgd.7
-        for <linux-scsi@vger.kernel.org>; Mon, 27 Jun 2022 12:53:47 -0700 (PDT)
+        with ESMTP id S237906AbiF0VMq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jun 2022 17:12:46 -0400
+Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C76F6DFFF;
+        Mon, 27 Jun 2022 14:12:44 -0700 (PDT)
+Received: by mail-pf1-x42e.google.com with SMTP id 65so10104663pfw.11;
+        Mon, 27 Jun 2022 14:12:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=networkplumber-org.20210112.gappssmtp.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=k/l4LcE4w+6LYrCo6/Ek+44r04gbnpHm9yyPA0qKR6A=;
-        b=ryYp2naL1201DMNfPmSbpexCs+zqiLsBQDBXHc9esFHxBJ8Ep2LLrsgHtxJtosu2+J
-         1iBYfvQQXv6NYwKQ2qXQCc4mHXYQGPYeeUC3hu2OgPUPjZXH+3Hi6Zqo5SyTeGerBVQA
-         p1Bh5daOuP6Q9UMRPxlj6vxZpUjBpxOPEYhjttl3pP6gtksJnO1wA5G3ERXmm3iOhFrs
-         MlyYmEaZt8I/cdZ0xlE1RQA9V/oE3k4e+iV7r8nrUlXmSvlRImOQktUmXD254MFh7ceV
-         2zbWTxt+/QD0MTYLBrv8xqePAliI2A59OkEqXOPrksIatTeOcW53aiRz+65e7KopsoX+
-         3osw==
+        d=gmail.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=Oa0Pw8WRwWFDk13UOTNU8r4Zj28fKsbMsHZJFWhjWbI=;
+        b=UuI0dBFgPO4diTfHy/9LPAgfpBMcc774BorzXErxQR5b8AL+fMoTv1/RUwCaUUs5Wz
+         wZ41GicoS5ofRiqUMfzJSjLcsa3Lrxfcq7QsnrIjny3YpmiuCR7VENM6FYB8xkBQFZxV
+         /SvrqOuGEaAsBy3VjIJv2hWBCfpevI/Qjf6b6TAcBGWsZyeAXg1pQFprfgEMNNGBMg2o
+         tYBcjNK8DJCwca5jr2WTeEiIenBQUcRBZixJW3S/qcpsfVeN23O6kRkqiR3GcuTz6FFB
+         bxC1nlLwsXhKrEY7yB3vYz/3Q3omwcdSNomhexVJsFmeYGEIJmGjE/zTpXa346zjItic
+         z0yg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=k/l4LcE4w+6LYrCo6/Ek+44r04gbnpHm9yyPA0qKR6A=;
-        b=eHO/UJ5kPnib2hYec+QdMMJcmHhOdG9l9/OL4KcRZFKS/D4qsTdMocxrKeHZCPRcKq
-         c8xYtftCdmx3TYqmHNpUu+UaNn32x2IbpysXFnsAeoJ8LCJvBCzy0JMPgONo2GUXSudJ
-         adFTlCT9g+hAowSsYmbqIiZIUgwLdXKUN7xkjm/fsOj4PNOOwYIaMjArknVsJCfzzDKA
-         w0i95Y9Lc2WM60V2VYHMAJkegkj7Z3GGv2REbf5rCQuNnMAY5rj1F/twtvWKxtCjiqTp
-         URS+zNxc9RT0QSfPN4S1kRI0gvOILBHzvSShNYFayqFuDFBs0PHu7vwDRFYG0gDN77m+
-         ZhfQ==
-X-Gm-Message-State: AJIora+sTkRycZfx/vHsk3AKWQcwWgOM8wL/aTtwARQz7HJteBUBEA5U
-        r8K6LhuvxMpJN/F3ER97Jhj5Ig==
-X-Google-Smtp-Source: AGRyM1ssDeW6Ux1oaY9ixgaaapzXMFszbxcRVeOWaHAYiiaVMZ4HUYtPzqxXzR6I8+fqeJNf8u9hpg==
-X-Received: by 2002:a63:7a5d:0:b0:40c:fcbe:4799 with SMTP id j29-20020a637a5d000000b0040cfcbe4799mr14428539pgn.297.1656359626928;
-        Mon, 27 Jun 2022 12:53:46 -0700 (PDT)
-Received: from hermes.local (204-195-112-199.wavecable.com. [204.195.112.199])
-        by smtp.gmail.com with ESMTPSA id c16-20020a056a00009000b0051c1b445094sm7821510pfj.7.2022.06.27.12.53.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 27 Jun 2022 12:53:46 -0700 (PDT)
-Date:   Mon, 27 Jun 2022 12:53:43 -0700
-From:   Stephen Hemminger <stephen@networkplumber.org>
-To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Cc:     Kees Cook <keescook@chromium.org>, linux-kernel@vger.kernel.org,
-        x86@kernel.org, dm-devel@redhat.com,
-        linux-m68k@lists.linux-m68k.org, linux-mips@vger.kernel.org,
-        linux-s390@vger.kernel.org, kvm@vger.kernel.org,
-        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        netdev@vger.kernel.org, bpf@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, linux-can@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        linux1394-devel@lists.sourceforge.net, io-uring@vger.kernel.org,
-        lvs-devel@vger.kernel.org, linux-mtd@lists.infradead.org,
-        kasan-dev@googlegroups.com, linux-mmc@vger.kernel.org,
-        nvdimm@lists.linux.dev, netfilter-devel@vger.kernel.org,
-        coreteam@netfilter.org, linux-perf-users@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-sctp@vger.kernel.org,
-        linux-stm32@st-md-mailman.stormreply.com,
-        linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        v9fs-developer@lists.sourceforge.net, linux-rdma@vger.kernel.org,
-        alsa-devel@alsa-project.org, linux-hardening@vger.kernel.org
-Subject: Re: [PATCH][next] treewide: uapi: Replace zero-length arrays with
- flexible-array members
-Message-ID: <20220627125343.44e24c41@hermes.local>
-In-Reply-To: <20220627180432.GA136081@embeddedor>
-References: <20220627180432.GA136081@embeddedor>
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=Oa0Pw8WRwWFDk13UOTNU8r4Zj28fKsbMsHZJFWhjWbI=;
+        b=ggrIRs5NxUdbE3UQDLmv7HW65aasUG/2OIT6fHQYjEF6YyvD8580r98QK+hd8E80Yx
+         LhgoPU7HogDLUOQe/CcOFIi0LqkCV4JBRm9CzR5sK8HaUHXrAuoVb5ia4NZAKwZngGG5
+         P2cdStQoM+c2hC/SP6GlUFREtfAjdxw3nVeWa4JnsVPHl3cdQHEvEhXbGLpJSVshEa+O
+         LRHX2QPvtX2u/vHB1oKW4pEZYawtNgaRkcOqOtin/ubyGCEw8S17wKAmEPl2pdS7fGRn
+         0zAypo+bVA9IZj7tBOQ6mPKyAX+cXsy75BjSkJc/5z4ybe780/vD6vq7mw8/FzrUuyYT
+         Yb4w==
+X-Gm-Message-State: AJIora/AUk+/01RCo+ecfVBGj+eyFFFXhl6WFsHBwcSBOdGKzGnA9uPP
+        mRK7/3K88ZW23giQDatBHoU=
+X-Google-Smtp-Source: AGRyM1uTPLx0FmbccmLLTUeOwpDtfjfY9meoJGws1yrh1VdVD8/6CKl+WA5aLqzWBJfSXBuzMThY8A==
+X-Received: by 2002:a05:6a00:2311:b0:4e1:52bf:e466 with SMTP id h17-20020a056a00231100b004e152bfe466mr16676782pfh.77.1656364364243;
+        Mon, 27 Jun 2022 14:12:44 -0700 (PDT)
+Received: from ?IPV6:2001:df0:0:200c:310d:de36:ea8e:ce87? ([2001:df0:0:200c:310d:de36:ea8e:ce87])
+        by smtp.gmail.com with ESMTPSA id v11-20020a17090a6b0b00b001ece55b938asm9847689pjj.32.2022.06.27.14.12.36
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 27 Jun 2022 14:12:43 -0700 (PDT)
+Message-ID: <b4e5a1c9-e375-63fb-ec7c-abb7384a6d59@gmail.com>
+Date:   Tue, 28 Jun 2022 09:12:33 +1200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.9.1
+Subject: Re: [PATCH v2 3/3] arch/*/: remove CONFIG_VIRT_TO_BUS
+Content-Language: en-US
+To:     Geert Uytterhoeven <geert@linux-m68k.org>
+Cc:     Arnd Bergmann <arnd@kernel.org>, scsi <linux-scsi@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Linux IOMMU <iommu@lists.linux-foundation.org>,
+        Khalid Aziz <khalid@gonehiking.org>,
+        "Maciej W . Rozycki" <macro@orcam.me.uk>,
+        Matt Wang <wwentao@vmware.com>,
+        Miquel van Smoorenburg <mikevs@xs4all.net>,
+        Mark Salyzyn <salyzyn@android.com>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        Linux-Arch <linux-arch@vger.kernel.org>,
+        alpha <linux-alpha@vger.kernel.org>,
+        linux-m68k <linux-m68k@lists.linux-m68k.org>,
+        Parisc List <linux-parisc@vger.kernel.org>,
+        Denis Efremov <efremov@linux.com>,
+        Michael Ellerman <mpe@ellerman.id.au>
+References: <20220617125750.728590-1-arnd@kernel.org>
+ <20220617125750.728590-4-arnd@kernel.org>
+ <6ba86afe-bf9f-1aca-7af1-d0d348d75ffc@gmail.com>
+ <CAMuHMdVewn0OYA9oJfStk0-+vCKAUou+4Mvd5H2kmrSks1p5jg@mail.gmail.com>
+From:   Michael Schmitz <schmitzmic@gmail.com>
+In-Reply-To: <CAMuHMdVewn0OYA9oJfStk0-+vCKAUou+4Mvd5H2kmrSks1p5jg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 27 Jun 2022 20:04:32 +0200
-"Gustavo A. R. Silva" <gustavoars@kernel.org> wrote:
+Hi Geert,
 
-> There is a regular need in the kernel to provide a way to declare
-> having a dynamically sized set of trailing elements in a structure.
-> Kernel code should always use =E2=80=9Cflexible array members=E2=80=9D[1]=
- for these
-> cases. The older style of one-element or zero-length arrays should
-> no longer be used[2].
->=20
-> This code was transformed with the help of Coccinelle:
-> (linux-5.19-rc2$ spatch --jobs $(getconf _NPROCESSORS_ONLN) --sp-file scr=
-ipt.cocci --include-headers --dir . > output.patch)
->=20
-> @@
-> identifier S, member, array;
-> type T1, T2;
-> @@
->=20
-> struct S {
->   ...
->   T1 member;
->   T2 array[
-> - 0
->   ];
-> };
->=20
-> -fstrict-flex-arrays=3D3 is coming and we need to land these changes
-> to prevent issues like these in the short future:
->=20
-> ../fs/minix/dir.c:337:3: warning: 'strcpy' will always overflow; destinat=
-ion buffer has size 0,
-> but the source string has length 2 (including NUL byte) [-Wfortify-source]
-> 		strcpy(de3->name, ".");
-> 		^
->=20
-> Since these are all [0] to [] changes, the risk to UAPI is nearly zero. If
-> this breaks anything, we can use a union with a new member name.
->=20
-> [1] https://en.wikipedia.org/wiki/Flexible_array_member
-> [2] https://www.kernel.org/doc/html/v5.16/process/deprecated.html#zero-le=
-ngth-and-one-element-arrays
->=20
-> Link: https://github.com/KSPP/linux/issues/78
-> Build-tested-by: https://lore.kernel.org/lkml/62b675ec.wKX6AOZ6cbE71vtF%2=
-5lkp@intel.com/
-> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+On 27/06/22 20:26, Geert Uytterhoeven wrote:
+> Hi Michael,
+>
+> On Sat, Jun 18, 2022 at 3:06 AM Michael Schmitz <schmitzmic@gmail.com> wrote:
+>> Am 18.06.2022 um 00:57 schrieb Arnd Bergmann:
+>>> From: Arnd Bergmann <arnd@arndb.de>
+>>>
+>>> All architecture-independent users of virt_to_bus() and bus_to_virt()
+>>> have been fixed to use the dma mapping interfaces or have been
+>>> removed now.  This means the definitions on most architectures, and the
+>>> CONFIG_VIRT_TO_BUS symbol are now obsolete and can be removed.
+>>>
+>>> The only exceptions to this are a few network and scsi drivers for m68k
+>>> Amiga and VME machines and ppc32 Macintosh. These drivers work correctly
+>>> with the old interfaces and are probably not worth changing.
+>> The Amiga SCSI drivers are all old WD33C93 ones, and replacing
+>> virt_to_bus by virt_to_phys in the dma_setup() function there would
+>> cause no functional change at all.
+> FTR, the sgiwd93 driver use dma_map_single().
 
-Thanks this fixes warning with gcc-12 in iproute2.
-In function =E2=80=98xfrm_algo_parse=E2=80=99,
-    inlined from =E2=80=98xfrm_state_modify.constprop=E2=80=99 at xfrm_stat=
-e.c:573:5:
-xfrm_state.c:162:32: warning: writing 1 byte into a region of size 0 [-Wstr=
-ingop-overflow=3D]
-  162 |                         buf[j] =3D val;
-      |                         ~~~~~~~^~~~~
+Thanks! From what I see, it doesn't have to deal with bounce buffers 
+though?
+
+Cheers,
+
+     Michael
+
+
+>
+> Gr{oetje,eeting}s,
+>
+>                          Geert
+>
+> --
+> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+>
+> In personal conversations with technical people, I call myself a hacker. But
+> when I'm talking to journalists I just say "programmer" or something like that.
+>                                  -- Linus Torvalds
