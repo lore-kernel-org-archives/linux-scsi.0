@@ -2,134 +2,177 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71431C43334
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jun 2022 23:24:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C530C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jun 2022 23:59:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242046AbiF0XYS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Jun 2022 19:24:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35548 "EHLO
+        id S239135AbiF0X7e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Jun 2022 19:59:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38522 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241922AbiF0XYQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jun 2022 19:24:16 -0400
-Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F6F323163
-        for <linux-scsi@vger.kernel.org>; Mon, 27 Jun 2022 16:24:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1656372254; x=1687908254;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=S8N+p0moc3MloWqEEauJLXVpb/5eTV2AD6EVivHGR+Q=;
-  b=OI0edh33Da6Kr4vDJdjyVE+HOpOLwVJxXtDJRqKZ/PFgQ9lyvBqJX126
-   wjmzbAI/B6A8EaXC+LwyDiz6gJu5ZoToC2IyOww9yJ8bJduuFtKj40qsx
-   kK98GfLegK6WSN0MI4PxfRjQsUZJ8PlQKGRpeSkgmDcRFoopPMCz/xjlc
-   TowN2YWrCd9XjBC/tsaRns7aFlHejEei2IqfuO96wpKNyzbEuHgrvN4O4
-   XoorNgNHlbzFot8O4XX68lO/NEmGXlzioR1yG6hIlGvEbErpcO1/fFgrB
-   n02DCbwKWzA0ksPRvX46zlzgXmjJ1byFRcyDxJXJbZ7S+aZ01SPJx7u9C
-   A==;
-X-IronPort-AV: E=Sophos;i="5.92,227,1650902400"; 
-   d="scan'208";a="204233392"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 28 Jun 2022 07:24:13 +0800
-IronPort-SDR: i/9nzX5wbJh7PHmBsZxDUBnbCBjvTcS4fm3N16cVLxv25Wea9K62u3pvdJglSr8b/yGY0Zxqid
- K3NDx1W2aBJYVPn8pdfBrhW7giB8HOCYTnvG0t4YDPmlhrCSlE6XQ2xBcYJgUteTOhqj1kgWr6
- FcwBLeuzBtNzy7BGJS21suwClm2ldz2zf9kDnRSvI+Rzk13KjyGAIrL0kZ25WPI9hRjfNTpYrw
- P4NbZb2KQ6gkVcbvuT/t4VJJ/PUkwhBhnI9lotFe6v3+hwBS1dpLFglWIcSz2rRDfMwEI+R9FV
- mXhczXpt0nNXMuAvr5uwuOZU
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Jun 2022 15:46:36 -0700
-IronPort-SDR: YTFBsmrCG3NdkKcnBUPARb4wHW8iq5UP9rq7iDZrLe8Dg/jXcO1v1c2PKhI1UM9OfH2J7VwhRu
- 3r3fDNpIw1b0tNU5iNLthcuejrJ6jEDXzdzxP/tPz6U2HXsL1ua7iMb4uLnezFPSGtQGNJnfWJ
- 8i+btTWOJTJ888tTThSTsDjKosqM2Me5xxcer7fzUSk9APxkZ8zkj3Bca+Z/bCDlZJPjd8L5gE
- J4775rS5Wdhk4EVUw3UW0LHnDeWQObX6w0aKoIGsjPeg+lsgVZ6URll9kgKi5mDhnUmIX9NwWp
- Qg4=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Jun 2022 16:24:14 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LX3hY42sfz1Rwqy
-        for <linux-scsi@vger.kernel.org>; Mon, 27 Jun 2022 16:24:13 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1656372252; x=1658964253; bh=S8N+p0moc3MloWqEEauJLXVpb/5eTV2AD6E
-        VivHGR+Q=; b=DOmB0q+yumadQfEfKMysp6ZcnZ0HtW72qJdwM5m8B0Kc9Tad+dF
-        7gDs0OfNHqCTGeSJfqD9/6sW1evo3sq7cfUvTRWVJIHK1cvpn/iA0skUc9IIKiE8
-        KNmo/tqZYLCa5cn5qWD0Ryij/7qx8e/kumjGMwTGlY2HfYRxOMPtvr9WNC/dUNhF
-        menESGNdXZJXjqA+MtrgYPevYEFlhkjHja7G3apSDEhYWjiRMEr2hwIPvwtYRb3G
-        oGa6nySA/D6iv8hrxLg69E36edryEq45dv95ZCgDqaDMBUQ/0rXQ/5OSFkcyN4S3
-        m/oYW8SWIyUKCVcIwEf/+kyLjCcbBjt44xA==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id tjnZ2X_0VUXH for <linux-scsi@vger.kernel.org>;
-        Mon, 27 Jun 2022 16:24:12 -0700 (PDT)
-Received: from [10.225.163.99] (unknown [10.225.163.99])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LX3hV0cq4z1RtVk;
-        Mon, 27 Jun 2022 16:24:09 -0700 (PDT)
-Message-ID: <b69c6112-98b7-3890-9d11-bb321a7c877a@opensource.wdc.com>
-Date:   Tue, 28 Jun 2022 08:24:08 +0900
+        with ESMTP id S229512AbiF0X7d (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jun 2022 19:59:33 -0400
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B814F10FE4
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Jun 2022 16:59:30 -0700 (PDT)
+Received: from epcas1p1.samsung.com (unknown [182.195.41.45])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20220627235927epoutp035c45a362e4ec2be5cd5c7c566a8ca8f0~8n7Ymtcin0725707257epoutp033
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Jun 2022 23:59:27 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20220627235927epoutp035c45a362e4ec2be5cd5c7c566a8ca8f0~8n7Ymtcin0725707257epoutp033
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1656374367;
+        bh=fvM+cjBDTIYSiPCr0Gh8EdwWb+A+rG3lJlXsLHxv94I=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=pa1CdZxLVKVxzfadsa0Q1ae5vbl9DYr4EvS/rIdqRvaZECBOi3oijgJP99HCKb9/T
+         FCfKb7A8fnDL13utIdzj0Mx4u38UgmlQBkbUeeor12f8+PeZh65+F9erv6GcvweZJS
+         qitrpQMQVp5Qo9YzITp3O4J8jOyWqay1XzLWbkL4=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas1p4.samsung.com (KnoxPortal) with ESMTP id
+        20220627235927epcas1p41903dacce5e7952a7f7950cb34c2076d~8n7YOQKyu3186231862epcas1p4G;
+        Mon, 27 Jun 2022 23:59:27 +0000 (GMT)
+Received: from epsmges1p5.samsung.com (unknown [182.195.38.248]) by
+        epsnrtp2.localdomain (Postfix) with ESMTP id 4LX4TB6N3Rz4x9Q9; Mon, 27 Jun
+        2022 23:59:26 +0000 (GMT)
+Received: from epcas1p4.samsung.com ( [182.195.41.48]) by
+        epsmges1p5.samsung.com (Symantec Messaging Gateway) with SMTP id
+        DF.CB.09678.E544AB26; Tue, 28 Jun 2022 08:59:26 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas1p2.samsung.com (KnoxPortal) with ESMTPA id
+        20220627235926epcas1p22a6327d6c47f48012e853aec3c8b2fe3~8n7XjDjzy0118401184epcas1p2h;
+        Mon, 27 Jun 2022 23:59:26 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20220627235926epsmtrp2cbf759496e5d08e80becd486d2dc00fb~8n7XiJbBR1326113261epsmtrp2Z;
+        Mon, 27 Jun 2022 23:59:26 +0000 (GMT)
+X-AuditID: b6c32a39-e51ff700000025ce-c8-62ba445e5d5f
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        F8.1E.08905.E544AB26; Tue, 28 Jun 2022 08:59:26 +0900 (KST)
+Received: from localhost.localdomain (unknown [10.253.100.232]) by
+        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20220627235926epsmtip1f839b91009bbb2ba6d2085921a0708f1~8n7XXvNtg1748417484epsmtip1x;
+        Mon, 27 Jun 2022 23:59:26 +0000 (GMT)
+From:   Chanwoo Lee <cw9316.lee@samsung.com>
+To:     agross@kernel.org, bjorn.andersson@linaro.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc:     grant.jung@samsung.com, jt77.jang@samsung.com,
+        dh0421.hwang@samsung.com, sh043.lee@samsung.com,
+        ChanWoo Lee <cw9316.lee@samsung.com>
+Subject: [PATCH] scsi: ufs-qcom: Remove unneeded code
+Date:   Tue, 28 Jun 2022 08:55:45 +0900
+Message-Id: <20220627235545.16943-1-cw9316.lee@samsung.com>
+X-Mailer: git-send-email 2.29.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH v4 5/5] libata-scsi: Cap ata_device->max_sectors according
- to shost->max_sectors
-Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>, joro@8bytes.org,
-        will@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        hch@lst.de, m.szyprowski@samsung.com, robin.murphy@arm.com
-Cc:     linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org, iommu@lists.linux-foundation.org,
-        iommu@lists.linux.dev, linux-scsi@vger.kernel.org,
-        linuxarm@huawei.com
-References: <1656343521-62897-1-git-send-email-john.garry@huawei.com>
- <1656343521-62897-6-git-send-email-john.garry@huawei.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <1656343521-62897-6-git-send-email-john.garry@huawei.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprKJsWRmVeSWpSXmKPExsWy7bCmgW6cy64kg4W/jCzOPf7NYnF6/zsW
+        ixmn2lgt9l07yW7x6+96dotFN7YxWex4fobdovv6DjaL5cf/MVk0/dnH4sDlsWlVJ5vHnWt7
+        2DwmLDrA6PHx6S0Wj74tqxg9Pm+SC2CLyrbJSE1MSS1SSM1Lzk/JzEu3VfIOjneONzUzMNQ1
+        tLQwV1LIS8xNtVVy8QnQdcvMATpNSaEsMacUKBSQWFyspG9nU5RfWpKqkJFfXGKrlFqQklNg
+        VqBXnJhbXJqXrpeXWmJlaGBgZApUmJCdcev4daaCI/wVL6adY2tgfM/TxcjJISFgIjGj9RJj
+        FyMXh5DADkaJq+ea2CCcT4wS3VNeQGW+MUqsmTSRFablxrxjrBCJvYwSq+cvY4JwvjBKnNy8
+        n7mLkYODTUBL4vYxb5AGEYF6iWULHjCD1DALdDFK/DrYxQKSEBYwlfi/vIMdxGYRUJVY/OoT
+        WC+vgLXEwvNQ98lL/Lnfwwxi8woISpyc+QSslRko3rx1NthMCYGv7BKT5r+Eus5F4sXNWYwQ
+        trDEq+Nb2CFsKYnP7/ayQTQ0M0ps+3qJCcLpYJTY2PoCqsNY4tPnz4wgVzALaEqs36UPEVaU
+        2Pl7LiPEZj6Jd197WEFKJAR4JTrahCBKVCTmdJ1jg9n18cZjqHs8JK62HAeLCwnESkxY9ptt
+        AqP8LCT/zELyzyyExQsYmVcxiqUWFOempxYbFpjCozU5P3cTIzh9alnuYJz+9oPeIUYmDsZD
+        jBIczEoivAvP7EwS4k1JrKxKLcqPLyrNSS0+xGgKDOCJzFKiyfnABJ5XEm9oYmlgYmZkYmFs
+        aWymJM67atrpRCGB9MSS1OzU1ILUIpg+Jg5OqQamtIe7FY9+eDXJyfJv8v/0yIsx1XUu5156
+        CDd+SBPLNV+j5L1cSeWNwybuVKdDumfeJx2OP+2RV8xo5Lvs9uL9M/kcbiWXsaxiyWybc0nF
+        oVM9au57+9CHvCfiLkyNef9hp+WNO382Mp6pXSG3/HfmhrbIV6Wy95c+sLXs5RGbrruXLcEv
+        tOTUEgWrwMZDUskOiVM+nX/IedLqONPP9OxAj6vc6kp7en0Wuxrpts9c+8bQuV7l9VvWvVPa
+        5lgwRnA8fRDcJHpLf6NfZUJAn/2T2ItlXx4wvb3n+rS+3zVyuuobXtHlxU17Sp0s3jGtfDK9
+        bXXW5QKfy0uEksrehLZuPf+b3UU17lHY623tzyYpsRRnJBpqMRcVJwIA7F8TUSgEAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrELMWRmVeSWpSXmKPExsWy7bCSnG6cy64kgyUbpCzOPf7NYnF6/zsW
+        ixmn2lgt9l07yW7x6+96dotFN7YxWex4fobdovv6DjaL5cf/MVk0/dnH4sDlsWlVJ5vHnWt7
+        2DwmLDrA6PHx6S0Wj74tqxg9Pm+SC2CL4rJJSc3JLEst0rdL4Mq4dfw6U8ER/ooX086xNTC+
+        5+li5OSQEDCRuDHvGGsXIxeHkMBuRonfzx4yQiSkJHbvP8/WxcgBZAtLHD5cDFHziVHi/Yxr
+        YHE2AS2J28e8QeIiAq2MEmtbm5hBHGaBCYwSi6+8ZQYZJCxgKvF/eQc7iM0ioCqx+NUnZpBm
+        XgFriYXnoY6Ql/hzvwesnFdAUOLkzCcsIDYzULx562zmCYx8s5CkZiFJLWBkWsUomVpQnJue
+        W2xYYJiXWq5XnJhbXJqXrpecn7uJERzMWpo7GLev+qB3iJGJg/EQowQHs5II78IzO5OEeFMS
+        K6tSi/Lji0pzUosPMUpzsCiJ817oOhkvJJCeWJKanZpakFoEk2Xi4JRqYOIR2nwvwT6qkeFj
+        C9viGSs9/7Y9EzXd6PKlT8Y16Lj05teqMT4fdk7/t7SraDXz5kMPLWKidR//1niSO+Fp2sLD
+        8636Z8hPv/wmjo23jLnkcvH8cwcMlq7dVRLw50yFlfkLmVv/Nc59ucNmt+tGdfWR6lMvDUtX
+        crxZ63XcQG1uYHzkn0NvF+zdF/0wqiM4XSRBVOwAb92vxXe8pxw/mqBguuSqU/K0xRfnx5/x
+        PSJx5q+8ZOPfP1nuUi7Xb+zeN3NW1pKQL4fnxZ6adVk/ecH9yrXT3/3N4bh1rTT7VniH6tUp
+        e8RsnIzfCKeFPGjjmu1ltv7ykZtZsdda1/c2fn/PljB57/Mf09Qqbp95vDnLVomlOCPRUIu5
+        qDgRALubLYrVAgAA
+X-CMS-MailID: 20220627235926epcas1p22a6327d6c47f48012e853aec3c8b2fe3
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: SVC_REQ_APPROVE
+CMS-TYPE: 101P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20220627235926epcas1p22a6327d6c47f48012e853aec3c8b2fe3
+References: <CGME20220627235926epcas1p22a6327d6c47f48012e853aec3c8b2fe3@epcas1p2.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/28/22 00:25, John Garry wrote:
-> ATA devices (struct ata_device) have a max_sectors field which is
-> configured internally in libata. This is then used to (re)configure the
-> associated sdev request queue max_sectors value from how it is earlier set
-> in __scsi_init_queue(). In __scsi_init_queue() the max_sectors value is set
-> according to shost limits, which includes host DMA mapping limits.
-> 
-> Cap the ata_device max_sectors according to shost->max_sectors to respect
-> this shost limit.
-> 
-> Signed-off-by: John Garry <john.garry@huawei.com>
-> Acked-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+From: ChanWoo Lee <cw9316.lee@samsung.com>
 
-Nit: please change the patch title to "ata: libata-scsi: Cap ..."
+Checks information about tx_lanes, but is not used.
 
-> ---
->  drivers/ata/libata-scsi.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index 86dbb1cdfabd..24a43d540d9f 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -1060,6 +1060,7 @@ int ata_scsi_dev_config(struct scsi_device *sdev, struct ata_device *dev)
->  		dev->flags |= ATA_DFLAG_NO_UNLOAD;
->  
->  	/* configure max sectors */
-> +	dev->max_sectors = min(dev->max_sectors, sdev->host->max_sectors);
->  	blk_queue_max_hw_sectors(q, dev->max_sectors);
->  
->  	if (dev->class == ATA_DEV_ATAPI) {
+Since the commit below is applied, tx_lanes is deprecated.
+ 'commit 1e1e465c6d23
+  ("scsi/ufs: qcom: Remove ufs_qcom_phy_*() calls from host")'
 
+As a result,
+ufs_qcom_link_startup_notify -> POST_CHANGE action does nothing.
+If it is not going to be updated, it looks like it can be removed.
 
+Signed-off-by: ChanWoo Lee <cw9316.lee@samsung.com>
+---
+ drivers/ufs/host/ufs-qcom.c | 23 -----------------------
+ 1 file changed, 23 deletions(-)
+
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index f10d4668814c..473fad83701e 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -58,19 +58,6 @@ static void ufs_qcom_dump_regs_wrapper(struct ufs_hba *hba, int offset, int len,
+ 	ufshcd_dump_regs(hba, offset, len * 4, prefix);
+ }
+ 
+-static int ufs_qcom_get_connected_tx_lanes(struct ufs_hba *hba, u32 *tx_lanes)
+-{
+-	int err = 0;
+-
+-	err = ufshcd_dme_get(hba,
+-			UIC_ARG_MIB(PA_CONNECTEDTXDATALANES), tx_lanes);
+-	if (err)
+-		dev_err(hba->dev, "%s: couldn't read PA_CONNECTEDTXDATALANES %d\n",
+-				__func__, err);
+-
+-	return err;
+-}
+-
+ static int ufs_qcom_host_clk_get(struct device *dev,
+ 		const char *name, struct clk **clk_out, bool optional)
+ {
+@@ -194,13 +181,6 @@ static int ufs_qcom_init_lane_clks(struct ufs_qcom_host *host)
+ 	return err;
+ }
+ 
+-static int ufs_qcom_link_startup_post_change(struct ufs_hba *hba)
+-{
+-	u32 tx_lanes;
+-
+-	return ufs_qcom_get_connected_tx_lanes(hba, &tx_lanes);
+-}
+-
+ static int ufs_qcom_check_hibern8(struct ufs_hba *hba)
+ {
+ 	int err;
+@@ -569,9 +549,6 @@ static int ufs_qcom_link_startup_notify(struct ufs_hba *hba,
+ 		if (ufshcd_get_local_unipro_ver(hba) != UFS_UNIPRO_VER_1_41)
+ 			err = ufshcd_disable_host_tx_lcc(hba);
+ 
+-		break;
+-	case POST_CHANGE:
+-		ufs_qcom_link_startup_post_change(hba);
+ 		break;
+ 	default:
+ 		break;
 -- 
-Damien Le Moal
-Western Digital Research
+2.29.0
+
