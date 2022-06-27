@@ -2,108 +2,107 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B297CCA473
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jun 2022 08:26:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07B89C43334
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jun 2022 15:31:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233537AbiF0I04 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Jun 2022 04:26:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53364 "EHLO
+        id S238276AbiF0Pbn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Jun 2022 11:31:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51396 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233445AbiF0I0y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jun 2022 04:26:54 -0400
-Received: from mail-qv1-f53.google.com (mail-qv1-f53.google.com [209.85.219.53])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1725617A;
-        Mon, 27 Jun 2022 01:26:53 -0700 (PDT)
-Received: by mail-qv1-f53.google.com with SMTP id t16so13792356qvh.1;
-        Mon, 27 Jun 2022 01:26:53 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=Ir7A3VG3rQ4e3U1bE1FV/pPr5VS7k4YiEaqfUpRXgys=;
-        b=IJ/ker2OztbJ6Y9amS9jpZJVZjrNwaCbvU7EONtHRurGva4phx1A2Vz5fxtGN0yZsA
-         TR1sYSnVi+/V0MXk4MqXo0SASB/Uw2uFsOVcvFPVguB+a2HLNqnUzalfWFG2yYwXK/qF
-         NmtOTqWa1cBkFPKEhFtzBI6YMI0t+NCK2yi3yQc6a3Dr6BeSU8Z3Pkamt/adCD1cs0nx
-         1gqv8CRD77DOzFqTdWNsVKzd1XKGOLikBxmMx3IInATouWFhQQyoNTXtJDhuk+ugiVaR
-         M6NCqh9vZn0yK5eFQgfBee37uGMtyAzD04nqvwb/eO0laJmRYajuNgNWugdSfnTDeJvt
-         WRiA==
-X-Gm-Message-State: AJIora8RvMF9qKR7n4Ab/++axdpQcYPngCMxpkIM0w7gRaRGIgrgeUvE
-        hiwKKJsE9Zo2Nl2+e9OPXCivO8YRY1AR0A==
-X-Google-Smtp-Source: AGRyM1vHhDLOj+YR67X6R5xmjl5UZpyqZlzepweNOBfzLHP+pW893g5tK/bnuEQLeWEDWMAu/+/d9w==
-X-Received: by 2002:a05:6214:21c4:b0:470:4aa8:1eba with SMTP id d4-20020a05621421c400b004704aa81ebamr7746704qvh.125.1656318411789;
-        Mon, 27 Jun 2022 01:26:51 -0700 (PDT)
-Received: from mail-yw1-f175.google.com (mail-yw1-f175.google.com. [209.85.128.175])
-        by smtp.gmail.com with ESMTPSA id ay41-20020a05620a17a900b006af0d99c7fesm4807183qkb.132.2022.06.27.01.26.50
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 27 Jun 2022 01:26:51 -0700 (PDT)
-Received: by mail-yw1-f175.google.com with SMTP id 00721157ae682-2ef5380669cso77766197b3.9;
-        Mon, 27 Jun 2022 01:26:50 -0700 (PDT)
-X-Received: by 2002:a81:a092:0:b0:318:5c89:a935 with SMTP id
- x140-20020a81a092000000b003185c89a935mr14193176ywg.383.1656318410280; Mon, 27
- Jun 2022 01:26:50 -0700 (PDT)
+        with ESMTP id S238187AbiF0Pbg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jun 2022 11:31:36 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2F9619C24;
+        Mon, 27 Jun 2022 08:31:34 -0700 (PDT)
+Received: from fraeml745-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LWs6X2L4Gz67VxZ;
+        Mon, 27 Jun 2022 23:27:32 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml745-chm.china.huawei.com (10.206.15.226) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Mon, 27 Jun 2022 17:31:32 +0200
+Received: from localhost.localdomain (10.69.192.58) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Mon, 27 Jun 2022 16:31:28 +0100
+From:   John Garry <john.garry@huawei.com>
+To:     <damien.lemoal@opensource.wdc.com>, <joro@8bytes.org>,
+        <will@kernel.org>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <hch@lst.de>,
+        <m.szyprowski@samsung.com>, <robin.murphy@arm.com>
+CC:     <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
+        <iommu@lists.linux.dev>, <linux-scsi@vger.kernel.org>,
+        <linuxarm@huawei.com>, John Garry <john.garry@huawei.com>
+Subject: [PATCH v4 0/5] DMA mapping changes for SCSI core
+Date:   Mon, 27 Jun 2022 23:25:16 +0800
+Message-ID: <1656343521-62897-1-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
 MIME-Version: 1.0
-References: <20220617125750.728590-1-arnd@kernel.org> <20220617125750.728590-4-arnd@kernel.org>
- <6ba86afe-bf9f-1aca-7af1-d0d348d75ffc@gmail.com>
-In-Reply-To: <6ba86afe-bf9f-1aca-7af1-d0d348d75ffc@gmail.com>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Mon, 27 Jun 2022 10:26:37 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdVewn0OYA9oJfStk0-+vCKAUou+4Mvd5H2kmrSks1p5jg@mail.gmail.com>
-Message-ID: <CAMuHMdVewn0OYA9oJfStk0-+vCKAUou+4Mvd5H2kmrSks1p5jg@mail.gmail.com>
-Subject: Re: [PATCH v2 3/3] arch/*/: remove CONFIG_VIRT_TO_BUS
-To:     Michael Schmitz <schmitzmic@gmail.com>
-Cc:     Arnd Bergmann <arnd@kernel.org>, scsi <linux-scsi@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Linux IOMMU <iommu@lists.linux-foundation.org>,
-        Khalid Aziz <khalid@gonehiking.org>,
-        "Maciej W . Rozycki" <macro@orcam.me.uk>,
-        Matt Wang <wwentao@vmware.com>,
-        Miquel van Smoorenburg <mikevs@xs4all.net>,
-        Mark Salyzyn <salyzyn@android.com>,
-        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-        Linux-Arch <linux-arch@vger.kernel.org>,
-        alpha <linux-alpha@vger.kernel.org>,
-        linux-m68k <linux-m68k@lists.linux-m68k.org>,
-        Parisc List <linux-parisc@vger.kernel.org>,
-        Denis Efremov <efremov@linux.com>,
-        Michael Ellerman <mpe@ellerman.id.au>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Michael,
+As reported in [0], DMA mappings whose size exceeds the IOMMU IOVA caching
+limit may see a big performance hit.
 
-On Sat, Jun 18, 2022 at 3:06 AM Michael Schmitz <schmitzmic@gmail.com> wrote:
-> Am 18.06.2022 um 00:57 schrieb Arnd Bergmann:
-> > From: Arnd Bergmann <arnd@arndb.de>
-> >
-> > All architecture-independent users of virt_to_bus() and bus_to_virt()
-> > have been fixed to use the dma mapping interfaces or have been
-> > removed now.  This means the definitions on most architectures, and the
-> > CONFIG_VIRT_TO_BUS symbol are now obsolete and can be removed.
-> >
-> > The only exceptions to this are a few network and scsi drivers for m68k
-> > Amiga and VME machines and ppc32 Macintosh. These drivers work correctly
-> > with the old interfaces and are probably not worth changing.
->
-> The Amiga SCSI drivers are all old WD33C93 ones, and replacing
-> virt_to_bus by virt_to_phys in the dma_setup() function there would
-> cause no functional change at all.
+This series introduces a new DMA mapping API, dma_opt_mapping_size(), so
+that drivers may know this limit when performance is a factor in the
+mapping.
 
-FTR, the sgiwd93 driver use dma_map_single().
+The SCSI SAS transport code is modified only to use this limit. For now I
+did not want to touch other hosts as I have a concern that this change
+could cause a performance regression.
 
-Gr{oetje,eeting}s,
+I also added a patch for libata-scsi as it does not currently honour the
+shost max_sectors limit.
 
-                        Geert
+[0] https://lore.kernel.org/linux-iommu/20210129092120.1482-1-thunder.leizhen@huawei.com/
+[1] https://lore.kernel.org/linux-iommu/f5b78c9c-312e-70ab-ecbb-f14623a4b6e3@arm.com/
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+Changes since v3:
+- Apply max DMA optimial limit to SAS hosts only
+  Note: Even though "scsi: core: Cap shost max_sectors only once when
+  adding" is a subset of a previous patch I did not transfer the RB tags
+- Rebase on v5.19-rc4
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Changes since v2:
+- Rebase on v5.19-rc1
+- Add Damien's tag to 2/4 (thanks)
+
+Changes since v1:
+- Relocate scsi_add_host_with_dma() dma_dev check (Reported by Dan)
+- Add tags from Damien and Martin (thanks)
+  - note: I only added Martin's tag to the SCSI patch
+
+John Garry (5):
+  dma-mapping: Add dma_opt_mapping_size()
+  dma-iommu: Add iommu_dma_opt_mapping_size()
+  scsi: core: Cap shost max_sectors according to DMA mapping limits only
+    once
+  scsi: scsi_transport_sas: Cap shost max_sectors according to DMA
+    optimal mapping limit
+  libata-scsi: Cap ata_device->max_sectors according to
+    shost->max_sectors
+
+ Documentation/core-api/dma-api.rst |  9 +++++++++
+ drivers/ata/libata-scsi.c          |  1 +
+ drivers/iommu/dma-iommu.c          |  6 ++++++
+ drivers/iommu/iova.c               |  5 +++++
+ drivers/scsi/hosts.c               |  5 +++++
+ drivers/scsi/scsi_lib.c            |  4 ----
+ drivers/scsi/scsi_transport_sas.c  |  6 ++++++
+ include/linux/dma-map-ops.h        |  1 +
+ include/linux/dma-mapping.h        |  5 +++++
+ include/linux/iova.h               |  2 ++
+ kernel/dma/mapping.c               | 12 ++++++++++++
+ 11 files changed, 52 insertions(+), 4 deletions(-)
+
+-- 
+2.35.3
+
