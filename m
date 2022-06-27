@@ -2,187 +2,139 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9385BC433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jun 2022 18:40:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F2A0CCA47F
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jun 2022 19:54:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229688AbiF0Sk0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Jun 2022 14:40:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35456 "EHLO
+        id S241326AbiF0TyM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Jun 2022 15:54:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36106 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240206AbiF0Sgb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jun 2022 14:36:31 -0400
-Received: from mail.cybernetics.com (mail.cybernetics.com [173.71.130.66])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E9BB18E16
-        for <linux-scsi@vger.kernel.org>; Mon, 27 Jun 2022 11:31:47 -0700 (PDT)
-X-ASG-Debug-ID: 1656354704-1cf43917f34b7230001-ziuLRu
-Received: from cybernetics.com ([10.10.4.126]) by mail.cybernetics.com with ESMTP id naijEmfSrSuv1xxb; Mon, 27 Jun 2022 14:31:44 -0400 (EDT)
-X-Barracuda-Envelope-From: tonyb@cybernetics.com
-X-ASG-Whitelist: Client
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cybernetics.com; s=mail;
-        bh=AZIOqz9a50o71eUeYVPVnDbfZ4G9lvqHTKKJssasw3I=;
-        h=Content-Transfer-Encoding:Content-Type:Cc:Subject:From:To:Content-Language:
-        MIME-Version:Date:Message-ID; b=SU5IiUYbKyhgGmCg3JZu8LqPRgiqv0EGiWV9hQxslwDAI
-        vXs30bN5AFstLK5JjbPOmhtA7e6BZU4z5mkJCCUWi3HOMw2LtCRM3PyfygCEmt/z2/vXG5hUFDw66
-        WRSOvr00wz4Se6zieMK6+fbT2FfBQRSOoPzGIe0OHhMA/sfqg=
-Received: from [10.157.2.224] (HELO [192.168.200.1])
-  by cybernetics.com (CommuniGate Pro SMTP 7.1.1)
-  with ESMTPS id 11973830; Mon, 27 Jun 2022 14:31:44 -0400
-Message-ID: <2e713f6f-063d-0fcd-6fcc-05378aa8d08f@cybernetics.com>
-Date:   Mon, 27 Jun 2022 14:31:44 -0400
+        with ESMTP id S241274AbiF0Txv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jun 2022 15:53:51 -0400
+Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D53291AF1C
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Jun 2022 12:53:47 -0700 (PDT)
+Received: by mail-pg1-x532.google.com with SMTP id 9so10052420pgd.7
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Jun 2022 12:53:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=networkplumber-org.20210112.gappssmtp.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=k/l4LcE4w+6LYrCo6/Ek+44r04gbnpHm9yyPA0qKR6A=;
+        b=ryYp2naL1201DMNfPmSbpexCs+zqiLsBQDBXHc9esFHxBJ8Ep2LLrsgHtxJtosu2+J
+         1iBYfvQQXv6NYwKQ2qXQCc4mHXYQGPYeeUC3hu2OgPUPjZXH+3Hi6Zqo5SyTeGerBVQA
+         p1Bh5daOuP6Q9UMRPxlj6vxZpUjBpxOPEYhjttl3pP6gtksJnO1wA5G3ERXmm3iOhFrs
+         MlyYmEaZt8I/cdZ0xlE1RQA9V/oE3k4e+iV7r8nrUlXmSvlRImOQktUmXD254MFh7ceV
+         2zbWTxt+/QD0MTYLBrv8xqePAliI2A59OkEqXOPrksIatTeOcW53aiRz+65e7KopsoX+
+         3osw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=k/l4LcE4w+6LYrCo6/Ek+44r04gbnpHm9yyPA0qKR6A=;
+        b=eHO/UJ5kPnib2hYec+QdMMJcmHhOdG9l9/OL4KcRZFKS/D4qsTdMocxrKeHZCPRcKq
+         c8xYtftCdmx3TYqmHNpUu+UaNn32x2IbpysXFnsAeoJ8LCJvBCzy0JMPgONo2GUXSudJ
+         adFTlCT9g+hAowSsYmbqIiZIUgwLdXKUN7xkjm/fsOj4PNOOwYIaMjArknVsJCfzzDKA
+         w0i95Y9Lc2WM60V2VYHMAJkegkj7Z3GGv2REbf5rCQuNnMAY5rj1F/twtvWKxtCjiqTp
+         URS+zNxc9RT0QSfPN4S1kRI0gvOILBHzvSShNYFayqFuDFBs0PHu7vwDRFYG0gDN77m+
+         ZhfQ==
+X-Gm-Message-State: AJIora+sTkRycZfx/vHsk3AKWQcwWgOM8wL/aTtwARQz7HJteBUBEA5U
+        r8K6LhuvxMpJN/F3ER97Jhj5Ig==
+X-Google-Smtp-Source: AGRyM1ssDeW6Ux1oaY9ixgaaapzXMFszbxcRVeOWaHAYiiaVMZ4HUYtPzqxXzR6I8+fqeJNf8u9hpg==
+X-Received: by 2002:a63:7a5d:0:b0:40c:fcbe:4799 with SMTP id j29-20020a637a5d000000b0040cfcbe4799mr14428539pgn.297.1656359626928;
+        Mon, 27 Jun 2022 12:53:46 -0700 (PDT)
+Received: from hermes.local (204-195-112-199.wavecable.com. [204.195.112.199])
+        by smtp.gmail.com with ESMTPSA id c16-20020a056a00009000b0051c1b445094sm7821510pfj.7.2022.06.27.12.53.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 27 Jun 2022 12:53:46 -0700 (PDT)
+Date:   Mon, 27 Jun 2022 12:53:43 -0700
+From:   Stephen Hemminger <stephen@networkplumber.org>
+To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Cc:     Kees Cook <keescook@chromium.org>, linux-kernel@vger.kernel.org,
+        x86@kernel.org, dm-devel@redhat.com,
+        linux-m68k@lists.linux-m68k.org, linux-mips@vger.kernel.org,
+        linux-s390@vger.kernel.org, kvm@vger.kernel.org,
+        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        netdev@vger.kernel.org, bpf@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-can@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org,
+        linux1394-devel@lists.sourceforge.net, io-uring@vger.kernel.org,
+        lvs-devel@vger.kernel.org, linux-mtd@lists.infradead.org,
+        kasan-dev@googlegroups.com, linux-mmc@vger.kernel.org,
+        nvdimm@lists.linux.dev, netfilter-devel@vger.kernel.org,
+        coreteam@netfilter.org, linux-perf-users@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-sctp@vger.kernel.org,
+        linux-stm32@st-md-mailman.stormreply.com,
+        linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        v9fs-developer@lists.sourceforge.net, linux-rdma@vger.kernel.org,
+        alsa-devel@alsa-project.org, linux-hardening@vger.kernel.org
+Subject: Re: [PATCH][next] treewide: uapi: Replace zero-length arrays with
+ flexible-array members
+Message-ID: <20220627125343.44e24c41@hermes.local>
+In-Reply-To: <20220627180432.GA136081@embeddedor>
+References: <20220627180432.GA136081@embeddedor>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.1
-Content-Language: en-US
-To:     Doug Gilbert <dgilbert@interlog.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-From:   Tony Battersby <tonyb@cybernetics.com>
-Subject: [PATCH] sg: allow waiting for commands to complete on removed device
-Cc:     linux-scsi@vger.kernel.org
-X-ASG-Orig-Subj: [PATCH] sg: allow waiting for commands to complete on removed device
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Barracuda-Connect: UNKNOWN[10.10.4.126]
-X-Barracuda-Start-Time: 1656354704
-X-Barracuda-URL: https://10.10.4.122:443/cgi-mod/mark.cgi
-X-Barracuda-BRTS-Status: 1
-X-Virus-Scanned: by bsmtpd at cybernetics.com
-X-Barracuda-Scan-Msg-Size: 5035
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When a SCSI device is removed while in active use, currently sg will
-immediately return -ENODEV on any attempt to wait for active commands
-that were sent before the removal.  This is problematic for commands
-that use SG_FLAG_DIRECT_IO since the data buffer may still be in use by
-the kernel when userspace frees or reuses it after getting ENODEV,
-leading to corrupted userspace memory (in the case of READ-type
-commands) or corrupted data being sent to the device (in the case of
-WRITE-type commands).  This has been seen in practice when logging out
-of a iscsi_tcp session, where the iSCSI driver may still be processing
-commands after the device has been marked for removal.
+On Mon, 27 Jun 2022 20:04:32 +0200
+"Gustavo A. R. Silva" <gustavoars@kernel.org> wrote:
 
-So change the policy to allow userspace to wait for active sg commands
-even when the device is being removed.  Return -ENODEV only when there
-are no more responses to read.
+> There is a regular need in the kernel to provide a way to declare
+> having a dynamically sized set of trailing elements in a structure.
+> Kernel code should always use =E2=80=9Cflexible array members=E2=80=9D[1]=
+ for these
+> cases. The older style of one-element or zero-length arrays should
+> no longer be used[2].
+>=20
+> This code was transformed with the help of Coccinelle:
+> (linux-5.19-rc2$ spatch --jobs $(getconf _NPROCESSORS_ONLN) --sp-file scr=
+ipt.cocci --include-headers --dir . > output.patch)
+>=20
+> @@
+> identifier S, member, array;
+> type T1, T2;
+> @@
+>=20
+> struct S {
+>   ...
+>   T1 member;
+>   T2 array[
+> - 0
+>   ];
+> };
+>=20
+> -fstrict-flex-arrays=3D3 is coming and we need to land these changes
+> to prevent issues like these in the short future:
+>=20
+> ../fs/minix/dir.c:337:3: warning: 'strcpy' will always overflow; destinat=
+ion buffer has size 0,
+> but the source string has length 2 (including NUL byte) [-Wfortify-source]
+> 		strcpy(de3->name, ".");
+> 		^
+>=20
+> Since these are all [0] to [] changes, the risk to UAPI is nearly zero. If
+> this breaks anything, we can use a union with a new member name.
+>=20
+> [1] https://en.wikipedia.org/wiki/Flexible_array_member
+> [2] https://www.kernel.org/doc/html/v5.16/process/deprecated.html#zero-le=
+ngth-and-one-element-arrays
+>=20
+> Link: https://github.com/KSPP/linux/issues/78
+> Build-tested-by: https://lore.kernel.org/lkml/62b675ec.wKX6AOZ6cbE71vtF%2=
+5lkp@intel.com/
+> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
----
- drivers/scsi/sg.c | 53 +++++++++++++++++++++++++++++------------------
- 1 file changed, 33 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 118c7b4a8af2..340b050ad28d 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -195,7 +195,7 @@ static void sg_link_reserve(Sg_fd * sfp, Sg_request * srp, int size);
- static void sg_unlink_reserve(Sg_fd * sfp, Sg_request * srp);
- static Sg_fd *sg_add_sfp(Sg_device * sdp);
- static void sg_remove_sfp(struct kref *);
--static Sg_request *sg_get_rq_mark(Sg_fd * sfp, int pack_id);
-+static Sg_request *sg_get_rq_mark(Sg_fd * sfp, int pack_id, bool *busy);
- static Sg_request *sg_add_request(Sg_fd * sfp);
- static int sg_remove_request(Sg_fd * sfp, Sg_request * srp);
- static Sg_device *sg_get_dev(int dev);
-@@ -444,6 +444,7 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
- 	Sg_fd *sfp;
- 	Sg_request *srp;
- 	int req_pack_id = -1;
-+	bool busy;
- 	sg_io_hdr_t *hp;
- 	struct sg_header *old_hdr;
- 	int retval;
-@@ -466,20 +467,16 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
- 	if (retval)
- 		return retval;
- 
--	srp = sg_get_rq_mark(sfp, req_pack_id);
-+	srp = sg_get_rq_mark(sfp, req_pack_id, &busy);
- 	if (!srp) {		/* now wait on packet to arrive */
--		if (atomic_read(&sdp->detaching))
--			return -ENODEV;
- 		if (filp->f_flags & O_NONBLOCK)
- 			return -EAGAIN;
- 		retval = wait_event_interruptible(sfp->read_wait,
--			(atomic_read(&sdp->detaching) ||
--			(srp = sg_get_rq_mark(sfp, req_pack_id))));
--		if (atomic_read(&sdp->detaching))
--			return -ENODEV;
--		if (retval)
--			/* -ERESTARTSYS as signal hit process */
--			return retval;
-+			((srp = sg_get_rq_mark(sfp, req_pack_id, &busy)) ||
-+			(!busy && atomic_read(&sdp->detaching))));
-+		if (!srp)
-+			/* signal or detaching */
-+			return retval ? retval : -ENODEV;
- 	}
- 	if (srp->header.interface_id != '\0')
- 		return sg_new_read(sfp, buf, count, srp);
-@@ -940,9 +937,7 @@ sg_ioctl_common(struct file *filp, Sg_device *sdp, Sg_fd *sfp,
- 		if (result < 0)
- 			return result;
- 		result = wait_event_interruptible(sfp->read_wait,
--			(srp_done(sfp, srp) || atomic_read(&sdp->detaching)));
--		if (atomic_read(&sdp->detaching))
--			return -ENODEV;
-+			srp_done(sfp, srp));
- 		write_lock_irq(&sfp->rq_list_lock);
- 		if (srp->done) {
- 			srp->done = 2;
-@@ -2079,19 +2074,28 @@ sg_unlink_reserve(Sg_fd * sfp, Sg_request * srp)
- }
- 
- static Sg_request *
--sg_get_rq_mark(Sg_fd * sfp, int pack_id)
-+sg_get_rq_mark(Sg_fd * sfp, int pack_id, bool *busy)
- {
- 	Sg_request *resp;
- 	unsigned long iflags;
- 
-+	*busy = false;
- 	write_lock_irqsave(&sfp->rq_list_lock, iflags);
- 	list_for_each_entry(resp, &sfp->rq_list, entry) {
--		/* look for requests that are ready + not SG_IO owned */
--		if ((1 == resp->done) && (!resp->sg_io_owned) &&
-+		/* look for requests that are not SG_IO owned */
-+		if ((!resp->sg_io_owned) &&
- 		    ((-1 == pack_id) || (resp->header.pack_id == pack_id))) {
--			resp->done = 2;	/* guard against other readers */
--			write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
--			return resp;
-+			switch (resp->done) {
-+			case 0: /* request active */
-+				*busy = true;
-+				break;
-+			case 1: /* request done; response ready to return */
-+				resp->done = 2;	/* guard against other readers */
-+				write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
-+				return resp;
-+			case 2: /* response already being returned */
-+				break;
-+			}
- 		}
- 	}
- 	write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
-@@ -2145,6 +2149,15 @@ sg_remove_request(Sg_fd * sfp, Sg_request * srp)
- 		res = 1;
- 	}
- 	write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
-+
-+	/*
-+	 * If the device is detaching, wakeup any readers in case we just
-+	 * removed the last response, which would leave nothing for them to
-+	 * return other than -ENODEV.
-+	 */
-+	if (unlikely(atomic_read(&sfp->parentdp->detaching)))
-+		wake_up_interruptible_all(&sfp->read_wait);
-+
- 	return res;
- }
- 
--- 
-2.25.1
-
+Thanks this fixes warning with gcc-12 in iproute2.
+In function =E2=80=98xfrm_algo_parse=E2=80=99,
+    inlined from =E2=80=98xfrm_state_modify.constprop=E2=80=99 at xfrm_stat=
+e.c:573:5:
+xfrm_state.c:162:32: warning: writing 1 byte into a region of size 0 [-Wstr=
+ingop-overflow=3D]
+  162 |                         buf[j] =3D val;
+      |                         ~~~~~~~^~~~~
