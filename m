@@ -2,86 +2,84 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B0E4CCA482
-	for <linux-scsi@archiver.kernel.org>; Sun, 26 Jun 2022 13:59:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E0E1C43334
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jun 2022 04:09:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234528AbiFZN7C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 26 Jun 2022 09:59:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41272 "EHLO
+        id S229793AbiF0EJK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Jun 2022 00:09:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46876 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230497AbiFZN7A (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Jun 2022 09:59:00 -0400
-Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 82DE9DEF1;
-        Sun, 26 Jun 2022 06:58:59 -0700 (PDT)
-Received: by mail-wr1-f52.google.com with SMTP id v14so9497042wra.5;
-        Sun, 26 Jun 2022 06:58:59 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=2AbSkeFZUioPAQ3a70nNyeL3mIPEJabq4zioJ0USaqA=;
-        b=geSJHIbg5t3jd54nRzJoLOR/s7fT7SkWRtJuYJnPsWfbEZyqK4XKlBl3ZvBskPd2oj
-         k/soBnos/N0cL8mZfrCw6KqM7WOgIyQzDzmP9esNMGls56ISU6KAGcithnhQnqvmBlRz
-         wjrFKNY5pvcjCBvfS4Ieron3r35hz1SP8j7aNwuBcUFA4SV+Ik7OChn9qc3++2EUzzs1
-         miSJsOflGOYxku9ZqzRgrbdcdDq78z/EjEmt3o1By8yXjKw9uottB0Nl1j1B9PsOLh5T
-         4ZGjMsfNctiLedXxhlTrwnPNpy8PmrVDvEb8aiUMiKcK5cj8ubAowDLWjrsYHD9IRpw2
-         PTog==
-X-Gm-Message-State: AJIora9lifaGOyMShuRarCPnfspoj6gOeu5wlIVQUn0lNDkCtTMAMvJ7
-        RdRMC7ybQnQAMkBmnLQqQOw=
-X-Google-Smtp-Source: AGRyM1tsNjy9pUQ2/KlwB69wacP4xwTylLY6Td/+6NMMtK1xKOX8O1lC5Yu/j8LwK2/38EbSaAC5PA==
-X-Received: by 2002:adf:f102:0:b0:21b:8bba:5025 with SMTP id r2-20020adff102000000b0021b8bba5025mr8255000wro.174.1656251938109;
-        Sun, 26 Jun 2022 06:58:58 -0700 (PDT)
-Received: from [192.168.64.180] (bzq-219-42-90.isdn.bezeqint.net. [62.219.42.90])
-        by smtp.gmail.com with ESMTPSA id l16-20020adffe90000000b0021b9a4a75e2sm7723716wrr.30.2022.06.26.06.58.56
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 26 Jun 2022 06:58:57 -0700 (PDT)
-Message-ID: <bb9ba2df-ca20-1126-4393-d2f1e6ba6a1b@grimberg.me>
-Date:   Sun, 26 Jun 2022 16:58:55 +0300
+        with ESMTP id S229538AbiF0EJJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jun 2022 00:09:09 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43C882BF8
+        for <linux-scsi@vger.kernel.org>; Sun, 26 Jun 2022 21:09:08 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id DA301611F2
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Jun 2022 04:09:07 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 46E85C341D1
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Jun 2022 04:09:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1656302947;
+        bh=YALdEG7QlShkoJxxd/15AAVvYU4w5UJYhzYZY64KnJQ=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=TcCO1gEuD65k2h4OuLOOJmh0xKatp3udQhgR6DkO39QD2JK2aI2SZUQP5wbJjsviX
+         Wdo6J5cRW5TqPGBDIDjTeJMlxlD6PnA5qwYyDQ843Rd4OwANcW0WPiN+lUz9EXMHaU
+         aoXvlyDY4mVueE4OeBrJn8LQWcGwMZI8yASG1UZ/hi8lyYQF2QBM0aYMvylOl497hW
+         9N4XYLCDzNmblGUzQKhGEhB7uLXd3S0HXmgpb1DfC6PHimlOILkuinHCnB3PYP0NzP
+         N2mtCJhVslhYTENVCyNTsZE80mmTnkVmdYeoam0aLfnp24z1SJDvl2/p3dbi3yZFNV
+         G6pcwvewaA+Rg==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 36F57C05FD2; Mon, 27 Jun 2022 04:09:07 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 215880] Resume process hangs for 5-6 seconds starting sometime
+ in 5.16
+Date:   Mon, 27 Jun 2022 04:09:06 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: Other
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: rui.zhang@intel.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: cc component rep_platform assigned_to product
+Message-ID: <bug-215880-11613-sE4jYCAb2b@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-215880-11613@https.bugzilla.kernel.org/>
+References: <bug-215880-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.1
-Subject: Re: [PATCH v2 5/6] blk-mq: Drop 'reserved' arg of busy_tag_iter_fn
-Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>, axboe@kernel.dk,
-        damien.lemoal@opensource.wdc.com, bvanassche@acm.org, hch@lst.de,
-        jejb@linux.ibm.com, martin.petersen@oracle.com, hare@suse.de,
-        satishkh@cisco.com, sebaddel@cisco.com, kartilak@cisco.com
-Cc:     linux-doc@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        mpi3mr-linuxdrv.pdl@broadcom.com, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, nbd@other.debian.org
-References: <1655810143-67784-1-git-send-email-john.garry@huawei.com>
- <1655810143-67784-6-git-send-email-john.garry@huawei.com>
-From:   Sagi Grimberg <sagi@grimberg.me>
-In-Reply-To: <1655810143-67784-6-git-send-email-john.garry@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=3D215880
 
+Zhang Rui (rui.zhang@intel.com) changed:
 
-On 6/21/22 14:15, John Garry wrote:
-> We no longer use the 'reserved' arg in busy_tag_iter_fn for any iter
-> function so it may be dropped.
-> 
-> Signed-off-by: John Garry <john.garry@huawei.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Hannes Reinecke <hare@suse.de>
-> ---
->   block/blk-mq-debugfs.c              |  2 +-
->   block/blk-mq-tag.c                  |  7 +++----
->   block/blk-mq.c                      | 10 ++++------
->   drivers/block/mtip32xx/mtip32xx.c   |  6 +++---
->   drivers/block/nbd.c                 |  2 +-
->   drivers/infiniband/ulp/srp/ib_srp.c |  3 +--
->   drivers/nvme/host/core.c            |  2 +-
->   drivers/nvme/host/fc.c              |  3 +--
->   drivers/nvme/host/nvme.h            |  2 +-
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |rui.zhang@intel.com
+          Component|Hibernation/Suspend         |Other
+           Hardware|All                         |AMD
+           Assignee|rjw@rjwysocki.net           |scsi_drivers-other@kernel-b
+                   |                            |ugs.osdl.org
+            Product|Power Management            |SCSI Drivers
 
-for the nvme bits:
-Reviewed-by: Sagi Grimberg <sagi@grimberg.me>
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
