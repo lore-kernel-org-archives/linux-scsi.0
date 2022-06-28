@@ -2,247 +2,166 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23AD4C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jun 2022 00:03:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9ED6CCA488
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jun 2022 00:41:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239221AbiF1ADp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Jun 2022 20:03:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40232 "EHLO
+        id S241825AbiF1AlA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Jun 2022 20:41:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38632 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229512AbiF1ADn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jun 2022 20:03:43 -0400
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE51860F5
-        for <linux-scsi@vger.kernel.org>; Mon, 27 Jun 2022 17:03:41 -0700 (PDT)
-Received: from epcas1p3.samsung.com (unknown [182.195.41.47])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20220628000336epoutp01a94c120f2448032cbcfe6ca77bd382f4~8n-AzajiT3028130281epoutp019
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Jun 2022 00:03:36 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20220628000336epoutp01a94c120f2448032cbcfe6ca77bd382f4~8n-AzajiT3028130281epoutp019
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1656374617;
-        bh=y0P7p7LdrO9okqEe8nQlKVrQA8fmmMryIq8P6vYPAwg=;
-        h=From:To:Cc:Subject:Date:References:From;
-        b=d7u/5GZg8zAAwMtq9N6sKyu1kYl8nMbiSBiQr+3+m4RDd0xYjwTvQLSpEmZXHq0md
-         jx30siEZR8os5LTLc5jqS4HM/AKhbRIk5WJozFJRJekDo1jwvTLwHZTb6F7o0XDzjI
-         x5nP0ziZFiZouFzNU8g4cEu9Oqb5onEAK2J7yn48=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-        epcas1p2.samsung.com (KnoxPortal) with ESMTP id
-        20220628000336epcas1p2f9ef524785bd68b3c4a3b98780d3ace2~8n-ASihX50261302613epcas1p2n;
-        Tue, 28 Jun 2022 00:03:36 +0000 (GMT)
-Received: from epsmges1p3.samsung.com (unknown [182.195.36.224]) by
-        epsnrtp2.localdomain (Postfix) with ESMTP id 4LX4Yz5r1Yz4x9Pt; Tue, 28 Jun
-        2022 00:03:35 +0000 (GMT)
-Received: from epcas1p2.samsung.com ( [182.195.41.46]) by
-        epsmges1p3.samsung.com (Symantec Messaging Gateway) with SMTP id
-        FD.20.09661.7554AB26; Tue, 28 Jun 2022 09:03:35 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas1p1.samsung.com (KnoxPortal) with ESMTPA id
-        20220628000334epcas1p115ab4932e8dc7c6072a8e960a4d9ad3f~8n__4j_6_2758327583epcas1p1x;
-        Tue, 28 Jun 2022 00:03:34 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20220628000334epsmtrp1569b606dd8a70138b8e7d0e967599adf~8n__3ZzUr1688516885epsmtrp1-;
-        Tue, 28 Jun 2022 00:03:34 +0000 (GMT)
-X-AuditID: b6c32a37-2cfff700000025bd-f3-62ba4557186d
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        CE.AE.08905.6554AB26; Tue, 28 Jun 2022 09:03:34 +0900 (KST)
-Received: from localhost.localdomain (unknown [10.253.100.232]) by
-        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20220628000334epsmtip1c241a8264859e47a580af16e5f7f2794~8n__owGqY1751617516epsmtip1g;
-        Tue, 28 Jun 2022 00:03:34 +0000 (GMT)
-From:   Chanwoo Lee <cw9316.lee@samsung.com>
-To:     alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com, beanhuo@micron.com,
-        adrian.hunter@intel.com, daejun7.park@samsung.com,
-        linux-scsi@vger.kernel.org
-Cc:     grant.jung@samsung.com, jt77.jang@samsung.com,
-        dh0421.hwang@samsung.com, sh043.lee@samsung.com,
-        ChanWoo Lee <cw9316.lee@samsung.com>
-Subject: [PATCH] scsi: ufs: Add colon to separate function name and message
-Date:   Tue, 28 Jun 2022 08:59:50 +0900
-Message-Id: <20220627235950.17218-1-cw9316.lee@samsung.com>
-X-Mailer: git-send-email 2.29.0
+        with ESMTP id S241460AbiF1Ak6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jun 2022 20:40:58 -0400
+Received: from mail-qk1-x72a.google.com (mail-qk1-x72a.google.com [IPv6:2607:f8b0:4864:20::72a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E60FBBF7E
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Jun 2022 17:40:55 -0700 (PDT)
+Received: by mail-qk1-x72a.google.com with SMTP id b133so8573350qkc.6
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Jun 2022 17:40:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=nrCjPCGAs4MTUiLBt7Ijf/MJPuIyH6lM8yqPhdyhJD8=;
+        b=QGfGz2XeyaJLxS6IycR7jteyzbs2f9vu4fQQcftWhoNW5sUtbyuMKwRS5XXshn3Hg2
+         yZubOZXW72TGsXoMKBc9lhqncUYMSH0Z6bymz383cNPRRHeF7rKM5RXMNm4Eaw5tsGTg
+         BQX0bHWNlf6m2F5J4oWG32dxQT2CTBmnGX6tl+1lipYgts8fc/1uUmHwN5t3zZzoA6Qn
+         DTeDwoNVOxWo0hy32OR9hFE/UO0/97qh5eo+5ewqu/iIRVMFQ1AIctopaFBuZOm9BPLs
+         HAx/pGMXLvvVO6Cb9sesF2T5smUMb44u7gsx78px69APS8fFzY4PmSgo/WM3D328ZbRr
+         X/FA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=nrCjPCGAs4MTUiLBt7Ijf/MJPuIyH6lM8yqPhdyhJD8=;
+        b=RmbN6xvEC2s2WLHevmolg7qZcI5JwqsF2xJHTCPiiw+kH6zv+T6MzO5m2e5m91/32g
+         xQKylWUAHqxoRHdMoPk0LkUfc3mlGvbPhBIUGG+iCF62GkJXEw5ruXlK1o11ftCnh0J7
+         etCoSvdna48yzwImk/OAbyg7r7cc5FA4Iw5Uv5Hisr6e9yGuqJRsZS3qVgddhM+duhoC
+         izMzngx5PIwKDvXYWVfLYc9scJxGlezHSWIYeCUA1qMn/CaMj3Tt9iCSjOiDkli97hVg
+         3jxCqUup7+vyMz80IMPFqYkoRG01YeJFbk4AjO0o/PFnt+ZojFys7dtOYESmfdQq2hBE
+         ukZA==
+X-Gm-Message-State: AJIora9usWnB/oq6zI6bL/yeo36dBbNrZtsCuCfV7lzZe9yXBZPhZRWv
+        aYzhKKBZlr8/exeammreFCeAYA==
+X-Google-Smtp-Source: AGRyM1vTCFcIzhygOqc0dfz0XQz9dolsiNFu6n34Zw7Kl9e9LRh00tD6U1uaxZUOgaZBY5Ks0qTgkA==
+X-Received: by 2002:a05:620a:1450:b0:6af:1999:5f4c with SMTP id i16-20020a05620a145000b006af19995f4cmr7538467qkl.301.1656376854703;
+        Mon, 27 Jun 2022 17:40:54 -0700 (PDT)
+Received: from ziepe.ca (hlfxns017vw-142-162-113-129.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.162.113.129])
+        by smtp.gmail.com with ESMTPSA id x11-20020a05620a448b00b006a768c699adsm10335849qkp.125.2022.06.27.17.40.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 27 Jun 2022 17:40:53 -0700 (PDT)
+Received: from jgg by mlx with local (Exim 4.94)
+        (envelope-from <jgg@ziepe.ca>)
+        id 1o5zHg-002iu4-9Z; Mon, 27 Jun 2022 21:40:52 -0300
+Date:   Mon, 27 Jun 2022 21:40:52 -0300
+From:   Jason Gunthorpe <jgg@ziepe.ca>
+To:     Daniel Borkmann <daniel@iogearbox.net>
+Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Kees Cook <keescook@chromium.org>,
+        linux-kernel@vger.kernel.org, x86@kernel.org, dm-devel@redhat.com,
+        linux-m68k@lists.linux-m68k.org, linux-mips@vger.kernel.org,
+        linux-s390@vger.kernel.org, kvm@vger.kernel.org,
+        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        netdev@vger.kernel.org, bpf@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-can@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org,
+        linux1394-devel@lists.sourceforge.net, io-uring@vger.kernel.org,
+        lvs-devel@vger.kernel.org, linux-mtd@lists.infradead.org,
+        kasan-dev@googlegroups.com, linux-mmc@vger.kernel.org,
+        nvdimm@lists.linux.dev, netfilter-devel@vger.kernel.org,
+        coreteam@netfilter.org, linux-perf-users@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-sctp@vger.kernel.org,
+        linux-stm32@st-md-mailman.stormreply.com,
+        linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        v9fs-developer@lists.sourceforge.net, linux-rdma@vger.kernel.org,
+        alsa-devel@alsa-project.org, linux-hardening@vger.kernel.org
+Subject: Re: [PATCH][next] treewide: uapi: Replace zero-length arrays with
+ flexible-array members
+Message-ID: <20220628004052.GM23621@ziepe.ca>
+References: <20220627180432.GA136081@embeddedor>
+ <6bc1e94c-ce1d-a074-7d0c-8dbe6ce22637@iogearbox.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrHJsWRmVeSWpSXmKPExsWy7bCmnm64664kg9eX9S1OPlnDZvFg3jY2
-        i5c/r7JZHHzYyWIx7cNPZosZp9pYLVY9CLfYd+0ku8Wvv+vZLRbd2MZkseP5GXaL7us72CyW
-        H//HZNH0Zx+LA5/H5SveHov3vGTymLDoAKPH9/UdbB4fn95i8ejbsorR4/MmOY/2A91MARxR
-        2TYZqYkpqUUKqXnJ+SmZeem2St7B8c7xpmYGhrqGlhbmSgp5ibmptkouPgG6bpk5QGcrKZQl
-        5pQChQISi4uV9O1sivJLS1IVMvKLS2yVUgtScgrMCvSKE3OLS/PS9fJSS6wMDQyMTIEKE7Iz
-        rl2ew1pwRbXi29qD7A2Mv2W7GDk4JARMJN7tke9i5OIQEtjBKLHl3GfGLkZOIOcTo8SEd/kQ
-        9jdGiVXNwSA2SP2hud8YIRr2MkpcXvQRquELo8Sj/xogQ9kEtCRuH/MGqRERuMsosenjY1YQ
-        h1mgi1Hi18EuFpAGYQFvicvvXrCDNLAIqEpsvmsLEuYVsJY40zKTBWKZvMSf+z3MEHFBiZMz
-        n4DFmYHizVtnM4PMlBCYyyGxtGk+K0SDi8TLHSfYIWxhiVfHt0DZUhIv+9vYIRqaGSW2fb3E
-        BOF0MEpsbH3BCFFlLPHpM8j/HEArNCXW79KHCCtK7Pw9lxFiM5/Eu689rJCg45XoaBOCKFGR
-        mNN1jg1m18cbj6Hu8ZD4tbaJBRJAsRL7VnQzTmCUn4Xkn1lI/pmFsHgBI/MqRrHUguLc9NRi
-        wwJjeJwm5+duYgQnXC3zHYzT3n7QO8TIxMF4iFGCg1lJhHfhmZ1JQrwpiZVVqUX58UWlOanF
-        hxhNgQE8kVlKNDkfmPLzSuINTSwNTMyMTCyMLY3NlMR5V007nSgkkJ5YkpqdmlqQWgTTx8TB
-        KdXAVCb55NBmp1dHpJMMS07uE3NbtEalK67fgjn7ia3CbS/m6ceuXJj9/jpHfuLu9Cbz/PaV
-        LXekrnEYVOTdKtnyuvea5k8X39O8U0o+rr+nPZu5yWbxnETdGxuXCz6Km/GWwfHZu6U5+Xo7
-        iu6HLE1M2lUz6+9pD59ajcnmctIsn1pnRpZy3OB7Hzb746nkyaFXfepuWsncfBPT2/35wrGZ
-        ZRe3XH6/QJjZa1uulfKZ6tJFZkdtLmk0da19c9n+19+7oSoPvHOes7xb5BYoYf78yG9xQ+X/
-        GyS0006Yf7pydut+y1mHuWp4z1sXSbbqX9+4z2hm0q94j0tXOWvKpS0sBXdv7Jr4bNLDyuh1
-        lrP+HFNiKc5INNRiLipOBAC4soXoQQQAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrHLMWRmVeSWpSXmKPExsWy7bCSnG6Y664kg837DSxOPlnDZvFg3jY2
-        i5c/r7JZHHzYyWIx7cNPZosZp9pYLVY9CLfYd+0ku8Wvv+vZLRbd2MZkseP5GXaL7us72CyW
-        H//HZNH0Zx+LA5/H5SveHov3vGTymLDoAKPH9/UdbB4fn95i8ejbsorR4/MmOY/2A91MARxR
-        XDYpqTmZZalF+nYJXBnXLs9hLbiiWvFt7UH2Bsbfsl2MnBwSAiYSh+Z+Y+xi5OIQEtjNKPH2
-        3zRWiISUxO7959m6GDmAbGGJw4eLIWo+MUr8n7sbLM4moCVx+5g3SFxE4DmjxJ3+68wgDrPA
-        BEaJxVfeMoMMEhbwlrj87gU7SAOLgKrE5ru2IGFeAWuJMy0zWSB2yUv8ud/DDBEXlDg58wlY
-        nBko3rx1NvMERr5ZSFKzkKQWMDKtYpRMLSjOTc8tNiwwzEst1ytOzC0uzUvXS87P3cQIjgIt
-        zR2M21d90DvEyMTBeIhRgoNZSYR34ZmdSUK8KYmVValF+fFFpTmpxYcYpTlYlMR5L3SdjBcS
-        SE8sSc1OTS1ILYLJMnFwSjUwzWV7/fu7wYNX6bymXzIs1EycyhvZD1RzzTzYqip0IGa/1oPV
-        T9/U/D291v1d2CT1+y8/fmLgXaxk+P5b2OeYYysZuNtTfllqT+rid0upzL0xLYv3tOSHjZU6
-        h69bixX5cPMuFA+Yb/rl9g7W+g/NbY9NdHtMnPdeyD145o/v2odrRB+zHcr1/er/Kkv9SX73
-        jK66ZwoVav/VXJSvPa9QqnVo72DaL7b8xZHNb4pm3GENe2YkOUNyxrbPa3b4Hfh/71NP7MaT
-        rOxX+hwEVP9P+TfvgNNXyyWHtu9T64mYreM4+WP0rr4LawQ7Dl2zNfJQjNgy58XdC1vq7nCF
-        dbFkJn22nOG9Zmn6tsPWZku//1ZiKc5INNRiLipOBAB22a6r8QIAAA==
-X-CMS-MailID: 20220628000334epcas1p115ab4932e8dc7c6072a8e960a4d9ad3f
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: SVC_REQ_APPROVE
-CMS-TYPE: 101P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20220628000334epcas1p115ab4932e8dc7c6072a8e960a4d9ad3f
-References: <CGME20220628000334epcas1p115ab4932e8dc7c6072a8e960a4d9ad3f@epcas1p1.samsung.com>
+In-Reply-To: <6bc1e94c-ce1d-a074-7d0c-8dbe6ce22637@iogearbox.net>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: ChanWoo Lee <cw9316.lee@samsung.com>
+On Mon, Jun 27, 2022 at 08:27:37PM +0200, Daniel Borkmann wrote:
+> On 6/27/22 8:04 PM, Gustavo A. R. Silva wrote:
+> > There is a regular need in the kernel to provide a way to declare
+> > having a dynamically sized set of trailing elements in a structure.
+> > Kernel code should always use “flexible array members”[1] for these
+> > cases. The older style of one-element or zero-length arrays should
+> > no longer be used[2].
+> > 
+> > This code was transformed with the help of Coccinelle:
+> > (linux-5.19-rc2$ spatch --jobs $(getconf _NPROCESSORS_ONLN) --sp-file script.cocci --include-headers --dir . > output.patch)
+> > 
+> > @@
+> > identifier S, member, array;
+> > type T1, T2;
+> > @@
+> > 
+> > struct S {
+> >    ...
+> >    T1 member;
+> >    T2 array[
+> > - 0
+> >    ];
+> > };
+> > 
+> > -fstrict-flex-arrays=3 is coming and we need to land these changes
+> > to prevent issues like these in the short future:
+> > 
+> > ../fs/minix/dir.c:337:3: warning: 'strcpy' will always overflow; destination buffer has size 0,
+> > but the source string has length 2 (including NUL byte) [-Wfortify-source]
+> > 		strcpy(de3->name, ".");
+> > 		^
+> > 
+> > Since these are all [0] to [] changes, the risk to UAPI is nearly zero. If
+> > this breaks anything, we can use a union with a new member name.
+> > 
+> > [1] https://en.wikipedia.org/wiki/Flexible_array_member
+> > [2] https://www.kernel.org/doc/html/v5.16/process/deprecated.html#zero-length-and-one-element-arrays
+> > 
+> > Link: https://github.com/KSPP/linux/issues/78
+> > Build-tested-by: https://lore.kernel.org/lkml/62b675ec.wKX6AOZ6cbE71vtF%25lkp@intel.com/
+> > Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+> > ---
+> > Hi all!
+> > 
+> > JFYI: I'm adding this to my -next tree. :)
+> 
+> Fyi, this breaks BPF CI:
+> 
+> https://github.com/kernel-patches/bpf/runs/7078719372?check_suite_focus=true
+> 
+>   [...]
+>   progs/map_ptr_kern.c:314:26: error: field 'trie_key' with variable sized type 'struct bpf_lpm_trie_key' not at the end of a struct or class is a GNU extension [-Werror,-Wgnu-variable-sized-type-not-at-end]
+>           struct bpf_lpm_trie_key trie_key;
+>                                   ^
 
-If the function name and message are long,
-The output will be as below, and it is difficult to check the log.
-- ufshcd_wb_toggle_flush_during_h8 WB-Buf Flush during H8 enabled
+This will break the rdma-core userspace as well, with a similar
+error:
 
-Separate the function name and message to make it easier to check the log.
+/usr/bin/clang-13 -DVERBS_DEBUG -Dibverbs_EXPORTS -Iinclude -I/usr/include/libnl3 -I/usr/include/drm -g -O2 -fdebug-prefix-map=/__w/1/s=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -Wmissing-prototypes -Wmissing-declarations -Wwrite-strings -Wformat=2 -Wcast-function-type -Wformat-nonliteral -Wdate-time -Wnested-externs -Wshadow -Wstrict-prototypes -Wold-style-definition -Werror -Wredundant-decls -g -fPIC   -std=gnu11 -MD -MT libibverbs/CMakeFiles/ibverbs.dir/cmd_flow.c.o -MF libibverbs/CMakeFiles/ibverbs.dir/cmd_flow.c.o.d -o libibverbs/CMakeFiles/ibverbs.dir/cmd_flow.c.o   -c ../libibverbs/cmd_flow.c
+In file included from ../libibverbs/cmd_flow.c:33:
+In file included from include/infiniband/cmd_write.h:36:
+In file included from include/infiniband/cmd_ioctl.h:41:
+In file included from include/infiniband/verbs.h:48:
+In file included from include/infiniband/verbs_api.h:66:
+In file included from include/infiniband/ib_user_ioctl_verbs.h:38:
+include/rdma/ib_user_verbs.h:436:34: error: field 'base' with variable sized type 'struct ib_uverbs_create_cq_resp' not at the end of a struct or class is a GNU extension [-Werror,-Wgnu-variable-sized-type-not-at-end]
+        struct ib_uverbs_create_cq_resp base;
+                                        ^
+include/rdma/ib_user_verbs.h:644:34: error: field 'base' with variable sized type 'struct ib_uverbs_create_qp_resp' not at the end of a struct or class is a GNU extension [-Werror,-Wgnu-variable-sized-type-not-at-end]
+        struct ib_uverbs_create_qp_resp base;
 
-Signed-off-by: ChanWoo Lee <cw9316.lee@samsung.com>
----
- drivers/ufs/core/ufshcd.c | 20 ++++++++++----------
- drivers/ufs/core/ufshpb.c |  6 +++---
- 2 files changed, 13 insertions(+), 13 deletions(-)
+Which is why I gave up trying to change these..
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 1c6136040bbe..ac5a24beb7a1 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -4455,7 +4455,7 @@ static int ufshcd_complete_dev_init(struct ufs_hba *hba)
- 		QUERY_FLAG_IDN_FDEVICEINIT, 0, NULL);
- 	if (err) {
- 		dev_err(hba->dev,
--			"%s setting fDeviceInit flag failed with error %d\n",
-+			"%s: setting fDeviceInit flag failed with error %d\n",
- 			__func__, err);
- 		goto out;
- 	}
-@@ -4472,11 +4472,11 @@ static int ufshcd_complete_dev_init(struct ufs_hba *hba)
- 
- 	if (err) {
- 		dev_err(hba->dev,
--				"%s reading fDeviceInit flag failed with error %d\n",
-+				"%s: reading fDeviceInit flag failed with error %d\n",
- 				__func__, err);
- 	} else if (flag_res) {
- 		dev_err(hba->dev,
--				"%s fDeviceInit was not cleared by the device\n",
-+				"%s: fDeviceInit was not cleared by the device\n",
- 				__func__);
- 		err = -EBUSY;
- 	}
-@@ -5740,13 +5740,13 @@ int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable)
- 
- 	ret = __ufshcd_wb_toggle(hba, enable, QUERY_FLAG_IDN_WB_EN);
- 	if (ret) {
--		dev_err(hba->dev, "%s Write Booster %s failed %d\n",
-+		dev_err(hba->dev, "%s: Write Booster %s failed %d\n",
- 			__func__, enable ? "enable" : "disable", ret);
- 		return ret;
- 	}
- 
- 	hba->dev_info.wb_enabled = enable;
--	dev_info(hba->dev, "%s Write Booster %s\n",
-+	dev_info(hba->dev, "%s: Write Booster %s\n",
- 			__func__, enable ? "enabled" : "disabled");
- 
- 	return ret;
-@@ -5763,7 +5763,7 @@ static void ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set)
- 			__func__, set ? "enable" : "disable", ret);
- 		return;
- 	}
--	dev_dbg(hba->dev, "%s WB-Buf Flush during H8 %s\n",
-+	dev_dbg(hba->dev, "%s: WB-Buf Flush during H8 %s\n",
- 			__func__, set ? "enabled" : "disabled");
- }
- 
-@@ -5777,14 +5777,14 @@ static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable)
- 
- 	ret = __ufshcd_wb_toggle(hba, enable, QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN);
- 	if (ret) {
--		dev_err(hba->dev, "%s WB-Buf Flush %s failed %d\n", __func__,
-+		dev_err(hba->dev, "%s: WB-Buf Flush %s failed %d\n", __func__,
- 			enable ? "enable" : "disable", ret);
- 		return;
- 	}
- 
- 	hba->dev_info.wb_buf_flush_enabled = enable;
- 
--	dev_dbg(hba->dev, "%s WB-Buf Flush %s\n",
-+	dev_dbg(hba->dev, "%s: WB-Buf Flush %s\n",
- 			__func__, enable ? "enabled" : "disabled");
- }
- 
-@@ -5800,7 +5800,7 @@ static bool ufshcd_wb_presrv_usrspc_keep_vcc_on(struct ufs_hba *hba,
- 					      QUERY_ATTR_IDN_CURR_WB_BUFF_SIZE,
- 					      index, 0, &cur_buf);
- 	if (ret) {
--		dev_err(hba->dev, "%s dCurWriteBoosterBufferSize read failed %d\n",
-+		dev_err(hba->dev, "%s: dCurWriteBoosterBufferSize read failed %d\n",
- 			__func__, ret);
- 		return false;
- 	}
-@@ -5885,7 +5885,7 @@ static bool ufshcd_wb_need_flush(struct ufs_hba *hba)
- 				      QUERY_ATTR_IDN_AVAIL_WB_BUFF_SIZE,
- 				      index, 0, &avail_buf);
- 	if (ret) {
--		dev_warn(hba->dev, "%s dAvailableWriteBoosterBufferSize read failed %d\n",
-+		dev_warn(hba->dev, "%s: dAvailableWriteBoosterBufferSize read failed %d\n",
- 			 __func__, ret);
- 		return false;
- 	}
-diff --git a/drivers/ufs/core/ufshpb.c b/drivers/ufs/core/ufshpb.c
-index de2bb8401bc4..c18147d85eb2 100644
---- a/drivers/ufs/core/ufshpb.c
-+++ b/drivers/ufs/core/ufshpb.c
-@@ -2286,7 +2286,7 @@ static bool ufshpb_check_hpb_reset_query(struct ufs_hba *hba)
- 	/* wait for the device to complete HPB reset query */
- 	for (try = 0; try < HPB_RESET_REQ_RETRIES; try++) {
- 		dev_dbg(hba->dev,
--			"%s start flag reset polling %d times\n",
-+			"%s: start flag reset polling %d times\n",
- 			__func__, try);
- 
- 		/* Poll fHpbReset flag to be cleared */
-@@ -2295,7 +2295,7 @@ static bool ufshpb_check_hpb_reset_query(struct ufs_hba *hba)
- 
- 		if (err) {
- 			dev_err(hba->dev,
--				"%s reading fHpbReset flag failed with error %d\n",
-+				"%s: reading fHpbReset flag failed with error %d\n",
- 				__func__, err);
- 			return flag_res;
- 		}
-@@ -2307,7 +2307,7 @@ static bool ufshpb_check_hpb_reset_query(struct ufs_hba *hba)
- 	}
- 	if (flag_res) {
- 		dev_err(hba->dev,
--			"%s fHpbReset was not cleared by the device\n",
-+			"%s: fHpbReset was not cleared by the device\n",
- 			__func__);
- 	}
- out:
--- 
-2.29.0
+Though maybe we could just switch off -Wgnu-variable-sized-type-not-at-end  during configuration ?
 
+Jason
