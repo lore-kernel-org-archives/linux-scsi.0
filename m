@@ -2,122 +2,73 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB0CBCCA479
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jun 2022 21:55:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C072C43334
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jun 2022 22:24:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230163AbiF1Vzi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Jun 2022 17:55:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55794 "EHLO
+        id S232348AbiF1WY5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 28 Jun 2022 18:24:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53498 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229548AbiF1Vzh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Jun 2022 17:55:37 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A35E21AF1A;
-        Tue, 28 Jun 2022 14:55:36 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3E70E618C7;
-        Tue, 28 Jun 2022 21:55:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 97E13C341CD;
-        Tue, 28 Jun 2022 21:55:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1656453335;
-        bh=Ih9a5Om/MmEIX4v6ClfaGsYY95Thx/a8Y6asrG6fwXg=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=b9uS1y9zZH5shNehIU788hla2D3cqHzEuOf4ntBz7MxqozEJwfWJnE7Ks7x80vJUW
-         8kv3pqmsjiCee09PX0yvTGcEx2Cut7rd5VUEPi1Ok/r71Li89UIa9lEeJs5lir3L9G
-         dn4sMp8EjadD8vyN158bB9WMKMo5ug00j2hr3Rw0LFCkWa1OVhmADFgMiyWCAjhqeq
-         2pPGkYfNIcwUIJa/2IbGbgiBIvXriXV6e543WcMEwsN7/jAf15mGlk3t/07+apGlTT
-         9sZR5rPOipfKd8HT5ntaMBYuQG73aLI/777pK3YIaE2zifWvCB2udwOFws1KKx4vlJ
-         kWfB059WXYR2A==
-Received: by mail-yb1-f177.google.com with SMTP id i7so24496795ybe.11;
-        Tue, 28 Jun 2022 14:55:35 -0700 (PDT)
-X-Gm-Message-State: AJIora/FxTrjp0wIzxv6CQDTIDEof8qJpvgfGJARNat5PBxKqZStB2k0
-        Eb7uLbyCYFvIS7xTc9tMDmlYP486ikdYzdZjPfw=
-X-Google-Smtp-Source: AGRyM1tb4BjbkpD5w5tudBkGYRK/cIE8Bb7XiI/EYhHGbLLjj5dThHoetSIfSlMkV4AlJod7kkGZlzoBKXhTY7DLP7I=
-X-Received: by 2002:a05:6902:120f:b0:668:2228:9627 with SMTP id
- s15-20020a056902120f00b0066822289627mr22801646ybu.134.1656453334640; Tue, 28
- Jun 2022 14:55:34 -0700 (PDT)
+        with ESMTP id S232335AbiF1WYk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Jun 2022 18:24:40 -0400
+Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B18C3AA7C
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Jun 2022 15:21:38 -0700 (PDT)
+Received: by mail-pf1-f180.google.com with SMTP id x4so13288574pfq.2
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Jun 2022 15:21:38 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=LXE0Tl9IpQfUvs65BlqtnZmrs4l9TCVt6e7+LjXJTIc=;
+        b=o5fCm12a94NcqFqaGemC7fsugdEfu0etGVM42/69fjyXvUdkDEbBTC4AlKibDTtVdg
+         ZLMGphm7K2hTId1tOA9KBvB1NA3CadR0edY/mrbKK0kEZYg2wQW/uVAHHfMLXh+mpPH1
+         lVam6zGpe18F3EBkJVi9aw0pVBHlzLqhmNbK5s+ZVs+iLJWmVZEMiCFWeNSbyGzW1aSm
+         0Kd/spTY8/1iHM43Aik9DUmtOyjOibLubVV3WThPKIg/mrYp0p6pKmOS/UE4DQuTDDG5
+         i+FvZzm2KSASeK5ZjBxYrUmNpOAz/iWGG77i5Q4i6ulY2kVeUE9AvyLH2Kvuhv1OSnzB
+         JMRQ==
+X-Gm-Message-State: AJIora9S1aBf+wbEOlurzFizXR1nVoBNzrZOFjinbH905dhB4Ihjzd64
+        omqKDwVlm5VNP2ZeeQJPNO4=
+X-Google-Smtp-Source: AGRyM1uS/lYAZuWVAWpiiTuS2u0stoOoc+gb967k66ovS1UHvDgeMosQEuhO4zMvccvc5wczYexCJw==
+X-Received: by 2002:a65:6e9b:0:b0:3fc:587a:6dcd with SMTP id bm27-20020a656e9b000000b003fc587a6dcdmr144070pgb.200.1656454897258;
+        Tue, 28 Jun 2022 15:21:37 -0700 (PDT)
+Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id x9-20020a17090a294900b001eaae89de5fsm413599pjf.1.2022.06.28.15.21.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 28 Jun 2022 15:21:36 -0700 (PDT)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH 0/3] Reduce ATA disk resume time
+Date:   Tue, 28 Jun 2022 15:21:28 -0700
+Message-Id: <20220628222131.14780-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.36.1
 MIME-Version: 1.0
-References: <20220617125750.728590-1-arnd@kernel.org> <20220617125750.728590-4-arnd@kernel.org>
- <6ba86afe-bf9f-1aca-7af1-d0d348d75ffc@gmail.com> <CAMuHMdVewn0OYA9oJfStk0-+vCKAUou+4Mvd5H2kmrSks1p5jg@mail.gmail.com>
- <b4e5a1c9-e375-63fb-ec7c-abb7384a6d59@gmail.com> <9289fd82-285c-035f-5355-4d70ce4f87b0@gmail.com>
- <CAK8P3a1ivqYB38c_QTjG8e85ZBnCB6HEa-6LR1HDc8shG1Pwmw@mail.gmail.com> <b1edec96-ccb2-49d6-323b-1abc0dc37a50@gmail.com>
-In-Reply-To: <b1edec96-ccb2-49d6-323b-1abc0dc37a50@gmail.com>
-From:   Arnd Bergmann <arnd@kernel.org>
-Date:   Tue, 28 Jun 2022 23:55:17 +0200
-X-Gmail-Original-Message-ID: <CAK8P3a2jvFQBvKfdR5ivDBECN5tEej6Ja4=7Loze646hrQ5wzg@mail.gmail.com>
-Message-ID: <CAK8P3a2jvFQBvKfdR5ivDBECN5tEej6Ja4=7Loze646hrQ5wzg@mail.gmail.com>
-Subject: Re: [PATCH v2 3/3] arch/*/: remove CONFIG_VIRT_TO_BUS
-To:     Michael Schmitz <schmitzmic@gmail.com>
-Cc:     Geert Uytterhoeven <geert@linux-m68k.org>,
-        scsi <linux-scsi@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Linux IOMMU <iommu@lists.linux-foundation.org>,
-        Khalid Aziz <khalid@gonehiking.org>,
-        "Maciej W . Rozycki" <macro@orcam.me.uk>,
-        Matt Wang <wwentao@vmware.com>,
-        Miquel van Smoorenburg <mikevs@xs4all.net>,
-        Mark Salyzyn <salyzyn@android.com>,
-        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-        Linux-Arch <linux-arch@vger.kernel.org>,
-        alpha <linux-alpha@vger.kernel.org>,
-        linux-m68k <linux-m68k@lists.linux-m68k.org>,
-        Parisc List <linux-parisc@vger.kernel.org>,
-        Denis Efremov <efremov@linux.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Jun 28, 2022 at 11:38 PM Michael Schmitz <schmitzmic@gmail.com> wrote:
-> On 28/06/22 19:08, Arnd Bergmann wrote:
-> > I see two other problems with your patch though:
-> >
-> > a) you still duplicate the cache handling: the cache_clear()/cache_push()
-> > is supposed to already be done by dma_map_single() when the device
-> > is not cache-coherent.
->
-> That's one of the 'liberties' I alluded to. The reason I left these in
-> is that I'm none too certain what device feature the DMA API uses to
-> decide a device isn't cache-coherent. If it's dev->coherent_dma_mask,
-> the way I set up the device in the a3000 driver should leave the
-> coherent mask unchanged. For the Zorro drivers, devices are set up to
-> use the same storage to store normal and coherent masks - something we
-> most likely want to change. I need to think about the ramifications of
-> that.
->
-> Note that zorro_esp.c uses dma_sync_single_for_device() and uses a 32
-> bit coherent DMA mask which does work OK. I might  ask Adrian to test a
-> change to only set dev->dma_mask, and drop the
-> dma_sync_single_for_device() calls if there's any doubt on this aspect.
+Hi Martin,
 
-The "coherent_mask" is independent of the cache flushing. On some
-architectures, a device can indicate whether it needs cache management
-or not to guarantee coherency, but on m68k it appears that we always
-assume it does, see arch/m68k/kernel/dma.c
+Recently it was reported that patch "scsi: core: pm: Rely on the device driver
+core for async power management" causes resuming to take longer if an ATA disk
+is present. This patch series fixes that regression. Please consider this
+patch series for kernel v5.20.
 
-> > b) The bounce buffer is never mapped here, instead you have the
-> > virt_to_phys() here, which is not the same. I think you need to map
-> > the pointer that actually gets passed down to the device after deciding
-> > to use a bouce buffer or not.
->
-> I hadn't realized that I can map the bounce buffer just as it's done for
-> the SCp data buffer. Should have been obvious, but I'm still learning
-> about the DMA API.
->
-> I've updated the patch now, will re-send as part of a complete series
-> once done.
+Thanks,
 
-I suppose you can just drop the bounce buffer if this just comes
-from kmalloc().
+Bart.
 
-       Arnd
+Bart Van Assche (3):
+  scsi: core: Move the definition of SCSI_QUEUE_DELAY
+  scsi: core: Retry after a delay if the device is becoming ready
+  scsi: sd: Rework asynchronous resume support
+
+ drivers/scsi/scsi_error.c |  4 +-
+ drivers/scsi/scsi_lib.c   | 14 +++----
+ drivers/scsi/sd.c         | 79 ++++++++++++++++++++++++++++++---------
+ drivers/scsi/sd.h         |  5 +++
+ 4 files changed, 75 insertions(+), 27 deletions(-)
+
