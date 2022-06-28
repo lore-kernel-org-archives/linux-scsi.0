@@ -2,30 +2,30 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7847ACCA479
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jun 2022 10:56:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C25EC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jun 2022 11:23:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345066AbiF1K44 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Jun 2022 06:56:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54058 "EHLO
+        id S1343814AbiF1LXL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 28 Jun 2022 07:23:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49670 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231682AbiF1K4z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Jun 2022 06:56:55 -0400
+        with ESMTP id S243672AbiF1LXJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Jun 2022 07:23:09 -0400
 Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4DE2D31DC0;
-        Tue, 28 Jun 2022 03:56:54 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A92DF1E5;
+        Tue, 28 Jun 2022 04:23:08 -0700 (PDT)
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id D139F152B;
-        Tue, 28 Jun 2022 03:56:53 -0700 (PDT)
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id A3284152B;
+        Tue, 28 Jun 2022 04:23:08 -0700 (PDT)
 Received: from [10.57.85.130] (unknown [10.57.85.130])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 48C603F5A1;
-        Tue, 28 Jun 2022 03:56:51 -0700 (PDT)
-Message-ID: <06ece223-c71e-baf8-e35e-dbc22a9cf9da@arm.com>
-Date:   Tue, 28 Jun 2022 11:56:46 +0100
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id EE4E43F5A1;
+        Tue, 28 Jun 2022 04:23:05 -0700 (PDT)
+Message-ID: <bbca5df5-8681-d6d9-201d-3d48b34e3001@arm.com>
+Date:   Tue, 28 Jun 2022 12:23:01 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101
  Thunderbird/91.10.0
-Subject: Re: [PATCH v4 2/5] dma-iommu: Add iommu_dma_opt_mapping_size()
+Subject: Re: [PATCH v4 1/5] dma-mapping: Add dma_opt_mapping_size()
 Content-Language: en-GB
 To:     John Garry <john.garry@huawei.com>,
         damien.lemoal@opensource.wdc.com, joro@8bytes.org, will@kernel.org,
@@ -36,9 +36,9 @@ Cc:     linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
         iommu@lists.linux.dev, linux-scsi@vger.kernel.org,
         linuxarm@huawei.com
 References: <1656343521-62897-1-git-send-email-john.garry@huawei.com>
- <1656343521-62897-3-git-send-email-john.garry@huawei.com>
+ <1656343521-62897-2-git-send-email-john.garry@huawei.com>
 From:   Robin Murphy <robin.murphy@arm.com>
-In-Reply-To: <1656343521-62897-3-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1656343521-62897-2-git-send-email-john.garry@huawei.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -46,73 +46,110 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2022-06-27 16:25, John Garry wrote:
-> Add the IOMMU callback for DMA mapping API dma_opt_mapping_size(), which
-> allows the drivers to know the optimal mapping limit and thus limit the
-> requested IOVA lengths.
+> Streaming DMA mapping involving an IOMMU may be much slower for larger
+> total mapping size. This is because every IOMMU DMA mapping requires an
+> IOVA to be allocated and freed. IOVA sizes above a certain limit are not
+> cached, which can have a big impact on DMA mapping performance.
 > 
-> This value is based on the IOVA rcache range limit, as IOVAs allocated
-> above this limit must always be newly allocated, which may be quite slow.
-
-Acked-by: Robin Murphy <robin.murphy@arm.com>
-
+> Provide an API for device drivers to know this "optimal" limit, such that
+> they may try to produce mapping which don't exceed it.
+> 
 > Signed-off-by: John Garry <john.garry@huawei.com>
 > Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 > ---
->   drivers/iommu/dma-iommu.c | 6 ++++++
->   drivers/iommu/iova.c      | 5 +++++
->   include/linux/iova.h      | 2 ++
->   3 files changed, 13 insertions(+)
+>   Documentation/core-api/dma-api.rst |  9 +++++++++
+>   include/linux/dma-map-ops.h        |  1 +
+>   include/linux/dma-mapping.h        |  5 +++++
+>   kernel/dma/mapping.c               | 12 ++++++++++++
+>   4 files changed, 27 insertions(+)
 > 
-> diff --git a/drivers/iommu/dma-iommu.c b/drivers/iommu/dma-iommu.c
-> index f90251572a5d..9e1586447ee8 100644
-> --- a/drivers/iommu/dma-iommu.c
-> +++ b/drivers/iommu/dma-iommu.c
-> @@ -1459,6 +1459,11 @@ static unsigned long iommu_dma_get_merge_boundary(struct device *dev)
->   	return (1UL << __ffs(domain->pgsize_bitmap)) - 1;
->   }
+> diff --git a/Documentation/core-api/dma-api.rst b/Documentation/core-api/dma-api.rst
+> index 6d6d0edd2d27..b3cd9763d28b 100644
+> --- a/Documentation/core-api/dma-api.rst
+> +++ b/Documentation/core-api/dma-api.rst
+> @@ -204,6 +204,15 @@ Returns the maximum size of a mapping for the device. The size parameter
+>   of the mapping functions like dma_map_single(), dma_map_page() and
+>   others should not be larger than the returned value.
 >   
-> +static size_t iommu_dma_opt_mapping_size(void)
-> +{
-> +	return iova_rcache_range();
-> +}
+> +::
 > +
->   static const struct dma_map_ops iommu_dma_ops = {
->   	.alloc			= iommu_dma_alloc,
->   	.free			= iommu_dma_free,
-> @@ -1479,6 +1484,7 @@ static const struct dma_map_ops iommu_dma_ops = {
->   	.map_resource		= iommu_dma_map_resource,
->   	.unmap_resource		= iommu_dma_unmap_resource,
->   	.get_merge_boundary	= iommu_dma_get_merge_boundary,
-> +	.opt_mapping_size	= iommu_dma_opt_mapping_size,
+> +	size_t
+> +	dma_opt_mapping_size(struct device *dev);
+> +
+> +Returns the maximum optimal size of a mapping for the device. Mapping large
+> +buffers may take longer so device drivers are advised to limit total DMA
+> +streaming mappings length to the returned value.
+
+Nit: I'm not sure "advised" is necessarily the right thing to say in 
+general - that's only really true for a caller who cares about 
+throughput of churning through short-lived mappings more than anything 
+else, and doesn't take a significant hit overall from splitting up 
+larger requests. I do think it's good to clarify the exact context of 
+"optimal" here, but I'd prefer to be objectively clear that it's for 
+workloads where the up-front mapping overhead dominates.
+
+Thanks,
+Robin.
+
+> +
+>   ::
+>   
+>   	bool
+> diff --git a/include/linux/dma-map-ops.h b/include/linux/dma-map-ops.h
+> index 0d5b06b3a4a6..98ceba6fa848 100644
+> --- a/include/linux/dma-map-ops.h
+> +++ b/include/linux/dma-map-ops.h
+> @@ -69,6 +69,7 @@ struct dma_map_ops {
+>   	int (*dma_supported)(struct device *dev, u64 mask);
+>   	u64 (*get_required_mask)(struct device *dev);
+>   	size_t (*max_mapping_size)(struct device *dev);
+> +	size_t (*opt_mapping_size)(void);
+>   	unsigned long (*get_merge_boundary)(struct device *dev);
 >   };
 >   
->   /*
-> diff --git a/drivers/iommu/iova.c b/drivers/iommu/iova.c
-> index db77aa675145..9f00b58d546e 100644
-> --- a/drivers/iommu/iova.c
-> +++ b/drivers/iommu/iova.c
-> @@ -26,6 +26,11 @@ static unsigned long iova_rcache_get(struct iova_domain *iovad,
->   static void free_cpu_cached_iovas(unsigned int cpu, struct iova_domain *iovad);
->   static void free_iova_rcaches(struct iova_domain *iovad);
->   
-> +unsigned long iova_rcache_range(void)
-> +{
-> +	return PAGE_SIZE << (IOVA_RANGE_CACHE_MAX_SIZE - 1);
-> +}
-> +
->   static int iova_cpuhp_dead(unsigned int cpu, struct hlist_node *node)
+> diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
+> index dca2b1355bb1..fe3849434b2a 100644
+> --- a/include/linux/dma-mapping.h
+> +++ b/include/linux/dma-mapping.h
+> @@ -144,6 +144,7 @@ int dma_set_mask(struct device *dev, u64 mask);
+>   int dma_set_coherent_mask(struct device *dev, u64 mask);
+>   u64 dma_get_required_mask(struct device *dev);
+>   size_t dma_max_mapping_size(struct device *dev);
+> +size_t dma_opt_mapping_size(struct device *dev);
+>   bool dma_need_sync(struct device *dev, dma_addr_t dma_addr);
+>   unsigned long dma_get_merge_boundary(struct device *dev);
+>   struct sg_table *dma_alloc_noncontiguous(struct device *dev, size_t size,
+> @@ -266,6 +267,10 @@ static inline size_t dma_max_mapping_size(struct device *dev)
 >   {
->   	struct iova_domain *iovad;
-> diff --git a/include/linux/iova.h b/include/linux/iova.h
-> index 320a70e40233..c6ba6d95d79c 100644
-> --- a/include/linux/iova.h
-> +++ b/include/linux/iova.h
-> @@ -79,6 +79,8 @@ static inline unsigned long iova_pfn(struct iova_domain *iovad, dma_addr_t iova)
->   int iova_cache_get(void);
->   void iova_cache_put(void);
+>   	return 0;
+>   }
+> +static inline size_t dma_opt_mapping_size(struct device *dev)
+> +{
+> +	return 0;
+> +}
+>   static inline bool dma_need_sync(struct device *dev, dma_addr_t dma_addr)
+>   {
+>   	return false;
+> diff --git a/kernel/dma/mapping.c b/kernel/dma/mapping.c
+> index db7244291b74..1bfe11b1edb6 100644
+> --- a/kernel/dma/mapping.c
+> +++ b/kernel/dma/mapping.c
+> @@ -773,6 +773,18 @@ size_t dma_max_mapping_size(struct device *dev)
+>   }
+>   EXPORT_SYMBOL_GPL(dma_max_mapping_size);
 >   
-> +unsigned long iova_rcache_range(void);
+> +size_t dma_opt_mapping_size(struct device *dev)
+> +{
+> +	const struct dma_map_ops *ops = get_dma_ops(dev);
+> +	size_t size = SIZE_MAX;
 > +
->   void free_iova(struct iova_domain *iovad, unsigned long pfn);
->   void __free_iova(struct iova_domain *iovad, struct iova *iova);
->   struct iova *alloc_iova(struct iova_domain *iovad, unsigned long size,
+> +	if (ops && ops->opt_mapping_size)
+> +		size = ops->opt_mapping_size();
+> +
+> +	return min(dma_max_mapping_size(dev), size);
+> +}
+> +EXPORT_SYMBOL_GPL(dma_opt_mapping_size);
+> +
+>   bool dma_need_sync(struct device *dev, dma_addr_t dma_addr)
+>   {
+>   	const struct dma_map_ops *ops = get_dma_ops(dev);
