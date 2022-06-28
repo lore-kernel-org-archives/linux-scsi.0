@@ -2,132 +2,109 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3922BC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jun 2022 09:14:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDC32C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jun 2022 09:38:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343897AbiF1JOc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Jun 2022 05:14:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42180 "EHLO
+        id S235547AbiF1JiQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 28 Jun 2022 05:38:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33340 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344080AbiF1JOb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Jun 2022 05:14:31 -0400
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1095E101E6
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Jun 2022 02:14:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1656407670; x=1687943670;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=m7ZvDnvdd5GvaUmk2CDtIh9qIt0xOE1YKhnPo7clhXk=;
-  b=JdtiMJxH2i+YBxQ7LFELvkY6Zqis4RI80+QeG31R0TtKyF+zI83CPvD6
-   QsxzysAxuTL/mPKbqghqmR1YveXK9WMajMiHYPqQqQcp144Iy4FReGFas
-   ijbb0X/lySvZ6xZ0x5liZhzkRxlMvLeWe/qHI+5T49byVazFX7qhVQ7vM
-   tRIUUNS7Xtbz1f4qaAdk9o1oDlZU4XIkTq9gDvRW++YPeyHerfbwGr+in
-   toixMvjTJdxsEZGpW5LJGLbuf8dr6yg0g+oXzhAJRfXVtsL6oFxsCFVL6
-   MVb69iboGoja+76Y3ndXRspz/PuL8LyzPEMz2y8c+njXGCbQWChXOaCcU
-   A==;
-X-IronPort-AV: E=Sophos;i="5.92,227,1650902400"; 
-   d="scan'208";a="202954158"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 28 Jun 2022 17:14:30 +0800
-IronPort-SDR: 68HwiV+AoqZfbTN89jMUWuCEComBi6SndpkevJQe73bjRGsCq0juVQgXeoLWfONfnDmtqvxaRD
- AhVi50FwwzTaAubZ7Iiz0pKJfzDKjH9VJkKRm1W/50/ISGdrR3RtlofwCNR2CdDQ+bXRm3kaT/
- Sy5I1+JEjIQoBj/CDMN/3xWUy+SL3rLEtl0rx//KKBNQCLtErq+9YHxODla0vRxCEIg2IsIEZm
- PCxiq1+fNQHsfZiIddmSNfjeJszji+PqDax32EXbu12KwIlbaUKptdVsoYxUwfC5ww26bBFRoX
- YeRctAhN2vqTzFo6FoO+DTMU
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Jun 2022 01:32:10 -0700
-IronPort-SDR: 2IuUkCaO4JainA8W9RM3nEAwbUcD8vIOiIhXCf3KuQjue8Z3je3hkxqsheKX9uUdpKd5bjuR9V
- ATysXjthE1CYyymyuGi6uhX+dVPeS2a9BUxlH8sWq3f32X73og1TEbWHeewhHWi2yzP6qKpTyy
- /e0IkrqK4hhMOoQ0Ib+TRqMef+GA/JC5eBn4UZLOj7mZFyqsTnTVTcRJQ+7wpWxc9Vv4H/5vr/
- UMkc0qPh99iUd4/jkBmA/3tuXuq88yNUXbYArEI6B6yqUdAlFicUg/NyuZgAXBjt5ZMPn0gtYV
- iCU=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Jun 2022 02:14:30 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LXJnd53dVz1Rwry
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Jun 2022 02:14:29 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1656407669; x=1658999670; bh=m7ZvDnvdd5GvaUmk2CDtIh9qIt0xOE1YKhn
-        Po7clhXk=; b=n1Hpc6gcPs/kxiOVTQwyRGR+uFdty2ur8mMpVtR58Kwy2fqXmbI
-        HTEscATaBiYXrvQoDsewN6VCSm9M5MIlpqKcq/8hTcw3cjPO33agP8Xd57Tj6DFz
-        4R0ljR0v+eB5w4pbvmsQ5m12TQNrFyNz/lIFaUH0ktaZyNqS0r6+dYb80iSY2vIS
-        eAjGfzucNGjkx5UDxGIgv1ZF4t8Y8uxziilTeI0bERjb3d5G2iyT+xB/TWonmtz9
-        zODt5GChELx+M4SuiD3Cm4Kcm8I7M51ZXMYbgEjMRtCnihX/D9URy755F6CYUCq9
-        +ysvrOnAro+PSPbYDdtqx2RasqndSuvPycw==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id qm913GYF01ki for <linux-scsi@vger.kernel.org>;
-        Tue, 28 Jun 2022 02:14:29 -0700 (PDT)
-Received: from [10.225.163.99] (unknown [10.225.163.99])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LXJnZ4JQfz1RtVk;
-        Tue, 28 Jun 2022 02:14:26 -0700 (PDT)
-Message-ID: <ba59a0da-a982-e3eb-1cb7-6e60f80fd319@opensource.wdc.com>
-Date:   Tue, 28 Jun 2022 18:14:25 +0900
+        with ESMTP id S234605AbiF1JiO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Jun 2022 05:38:14 -0400
+Received: from heian.cn.fujitsu.com (mail.cn.fujitsu.com [183.91.158.132])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2CEA130A;
+        Tue, 28 Jun 2022 02:38:11 -0700 (PDT)
+IronPort-Data: =?us-ascii?q?A9a23=3AwEfiD6BZ9qbamxVW/9Phw5YqxClBgxIJ4g17XOL?=
+ =?us-ascii?q?fVwLtgmtzhmMEnGIcWD+DM/mCazb1cttxbNzn80IEsJCAx9UxeLYW3SszFioV8?=
+ =?us-ascii?q?6IpJjg4wn/YZnrUdouaJK5ex512huLocYZkHhcwmj/3auK79SMkjPnRLlbBILW?=
+ =?us-ascii?q?s1h5ZFFYMpBgJ2UoLd94R2uaEsPDha++/kYqaT/73ZDdJ7wVJ3lc8sMpvnv/AU?=
+ =?us-ascii?q?MPa41v0tnRmDRxCUcS3e3M9VPrzLonpR5f0rxU9IwK0ewrD5OnREmLx9BFrBM6?=
+ =?us-ascii?q?nk6rgbwsBRbu60Qqm0yIQAvb9xEMZ4HFaPqUTbZLwbW9TiieJntJwwdNlu4GyS?=
+ =?us-ascii?q?BsyI+vHn+F1vxxwSnsgYvMeo+ebSZS4mYnJp6HcSFPi3/VnDUceOYwe5/YyBD8?=
+ =?us-ascii?q?e9rofMj9lRhKOheiexLO9V/kqh84masLsOes3v3h60TDfS+4rXZ3ZWKjMzdhC1?=
+ =?us-ascii?q?Tw0i4ZFGvO2T84Ybyd/KRfNeRtCPn8JB58k2uSlnH/yd3tfsl39ja425XXDiRd?=
+ =?us-ascii?q?6y7nFLtXYYJqJSN9Tk0LeoXjJl1kVqDly2Me3kGLDqyzzwLSU236TZW7bL5Xgn?=
+ =?us-ascii?q?tYCvbFZ7jZ75MUqaGaG?=
+IronPort-HdrOrdr: =?us-ascii?q?A9a23=3A99DtYKvfHESOGhJj5wy2oRmQ7skD7NV00zEX?=
+ =?us-ascii?q?/kB9WHVpmszxra+TdYcgpGfJYVEqKQgdcLG7Sc+9qBznhPxICOUqXYtKGTOW31?=
+ =?us-ascii?q?dAT7sSibcKoQeQeBEWn9Q1vcwLHpSWSuefMbEQt6fHCWeDf+rIjOP3lZxAm92u?=
+ =?us-ascii?q?s0tFfEV7bb169QdlBkK+Gk1yfgNPAp00D/Onl7B6jgvlaXIKdd66G3VAe+DCou?=
+ =?us-ascii?q?fAnJXgbQVDKAUg7GC1/E6VwY+/Ax6FxQ0fTj8K5b8j9FLOmwv/6r7mk9zT8G6m?=
+ =?us-ascii?q?61Pu?=
+X-IronPort-AV: E=Sophos;i="5.88,333,1635177600"; 
+   d="scan'208";a="126760304"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 28 Jun 2022 17:38:09 +0800
+Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
+        by cn.fujitsu.com (Postfix) with ESMTP id 1A6BE4D68A24;
+        Tue, 28 Jun 2022 17:38:07 +0800 (CST)
+Received: from G08CNEXCHPEKD08.g08.fujitsu.local (10.167.33.83) by
+ G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.23; Tue, 28 Jun 2022 17:38:06 +0800
+Received: from [192.168.122.212] (10.167.226.45) by
+ G08CNEXCHPEKD08.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
+ id 15.0.1497.23 via Frontend Transport; Tue, 28 Jun 2022 17:38:07 +0800
+To:     <fthain@linux-m68k.org>
+CC:     <jejb@linux.ibm.com>, <linux-kernel@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <lizhijian@fujitsu.com>,
+        <martin.petersen@oracle.com>
+References: <9831381e-f9c7-f7af-e6da-a757a76f34@linux-m68k.org>
+Subject: Re: [PATCH] scsi: Enlarge log buffer length to 256
+From:   "Li, Zhijian" <lizhijian@fujitsu.com>
+Message-ID: <6cbb4340-abc2-d902-7ae6-0ae169a97132@fujitsu.com>
+Date:   Tue, 28 Jun 2022 17:38:06 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.1.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH v4 5/5] libata-scsi: Cap ata_device->max_sectors according
- to shost->max_sectors
-Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>, joro@8bytes.org,
-        will@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        hch@lst.de, m.szyprowski@samsung.com, robin.murphy@arm.com
-Cc:     linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org, iommu@lists.linux-foundation.org,
-        iommu@lists.linux.dev, linux-scsi@vger.kernel.org,
-        linuxarm@huawei.com
-References: <1656343521-62897-1-git-send-email-john.garry@huawei.com>
- <1656343521-62897-6-git-send-email-john.garry@huawei.com>
- <b69c6112-98b7-3890-9d11-bb321a7c877a@opensource.wdc.com>
- <6619638c-52e8-cb67-c56c-9c9d38c18161@huawei.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <6619638c-52e8-cb67-c56c-9c9d38c18161@huawei.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <9831381e-f9c7-f7af-e6da-a757a76f34@linux-m68k.org>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-yoursite-MailScanner-ID: 1A6BE4D68A24.AEE54
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: lizhijian@fujitsu.com
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/28/22 16:54, John Garry wrote:
-> On 28/06/2022 00:24, Damien Le Moal wrote:
->> On 6/28/22 00:25, John Garry wrote:
->>> ATA devices (struct ata_device) have a max_sectors field which is
->>> configured internally in libata. This is then used to (re)configure the
->>> associated sdev request queue max_sectors value from how it is earlier set
->>> in __scsi_init_queue(). In __scsi_init_queue() the max_sectors value is set
->>> according to shost limits, which includes host DMA mapping limits.
->>>
->>> Cap the ata_device max_sectors according to shost->max_sectors to respect
->>> this shost limit.
->>>
->>> Signed-off-by: John Garry<john.garry@huawei.com>
->>> Acked-by: Damien Le Moal<damien.lemoal@opensource.wdc.com>
->> Nit: please change the patch title to "ata: libata-scsi: Cap ..."
->>
-> 
-> ok, but it's going to be an even longer title :)
-> 
-> BTW, this patch has no real dependency on the rest of the series, so 
-> could be taken separately if you prefer.
 
-Sure, you can send it separately. Adding it through the scsi tree is fine too.
+Sorry for the late reply. (Strange! this reply didn't arrive to my mailbox)
 
-> 
-> Thanks,
-> John
+> On Fri, 24 Jun 2022, Li Zhijian wrote:
+>
+> > scsi_report_sense() is possble to print messages exceeding 128 bytes: > [ 475.156955] sd 9:0:0:0: Warning! Received an indication that the 
+> LUN assignments on this target have changed. The Linux SCSI layer does 
+> not automatical > > Signed-off-by: Li Zhijian <lizhijian@fujitsu.com> 
+> > --- > drivers/scsi/scsi_logging.c | 2 +- > 1 file changed, 1 
+> insertion(+), 1 deletion(-) > > diff --git 
+> a/drivers/scsi/scsi_logging.c b/drivers/scsi/scsi_logging.c > index 
+> b02af340c2d3..edc3fe8c7e0f 100644 > --- a/drivers/scsi/scsi_logging.c 
+> > +++ b/drivers/scsi/scsi_logging.c > @@ -17,7 +17,7 @@ > > static 
+> char *scsi_log_reserve_buffer(size_t *len) > { > - *len = 128; > + 
+> *len = 256; > return kmalloc(*len, GFP_ATOMIC); > } >
+> Perhaps it's better to waste fewer words (both kinds). E.g.
+Yes, it's an option. if no objection, i will apply your suggestion in 
+24h later. hahaha :)
+
+Thanks
+Zhijian
 
 
--- 
-Damien Le Moal
-Western Digital Research
+>
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c 
+> index 49ef864df581..e7283bf23db3 100644 --- 
+> a/drivers/scsi/scsi_error.c +++ b/drivers/scsi/scsi_error.c @@ -463,13 
+> +463,11 @@ static void scsi_report_sense(struct scsi_device *sdev,   			evt_type = SDEV_EVT_LUN_CHANGE_REPORTED;
+>   			scsi_report_lun_change(sdev);
+>   			sdev_printk(KERN_WARNING, sdev,
+> - "Warning! Received an indication that the "   				    "LUN assignments on this target have "
+>   				    "changed. The Linux SCSI layer does not "
+>   				    "automatically remap LUN assignments.\n");
+>   		} else if (sshdr->asc == 0x3f)
+>   			sdev_printk(KERN_WARNING, sdev,
+> - "Warning! Received an indication that the "   				    "operating parameters on this target have "
+>   				    "changed. The Linux SCSI layer does not "
+>   				    "automatically adjust these parameters.\n");
+
+
+
