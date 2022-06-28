@@ -2,98 +2,80 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15AAAC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jun 2022 03:25:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B19BCCA479
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jun 2022 03:26:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232206AbiF1DZz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Jun 2022 23:25:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46782 "EHLO
+        id S232073AbiF1D0L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Jun 2022 23:26:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46838 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232203AbiF1DZe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jun 2022 23:25:34 -0400
+        with ESMTP id S232303AbiF1DZi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jun 2022 23:25:38 -0400
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 929CE25C4D;
-        Mon, 27 Jun 2022 20:25:15 -0700 (PDT)
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 25S0uqoE002157;
-        Tue, 28 Jun 2022 03:25:04 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54B8225C7E;
+        Mon, 27 Jun 2022 20:25:20 -0700 (PDT)
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 25S2FjVe026421;
+        Tue, 28 Jun 2022 03:25:00 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=mhRYrwrdEVUyJTZMUcSbnZcHfY2diOyWfIhBcpExmUI=;
- b=YeyrHQrYRXVwVBmcVCOK2kDO9TorNTA5VB4ajD3ADd2S20wc8G4MpDC6uGxcoWivkWh7
- gVqQ6QHubcRAha57TiqWNPi0F3dLeGt19UrxqdNR24DNJImJFPmHURUSB+4wwgewjpuQ
- n/vzJyE12TburwZbTZ20YNkzK0ArDMop5cscZDpKpQlYbTdbxGzxiFszhi8Pba04sQbc
- aZTOPbS4KPlhfDbEgZm0+avohuu1Njca92Q6yfrkqeZUD4oCvJGLn+Z+LkB6VVd7Mqxi
- cpx6L6MHxxkjDXegYXwuwPL14RMncUCcq78pFuVRy2PGpf30QFO5N3kyqg6rIQKofjSx Vw== 
+ bh=OHJjAeC0RSNmwTveS/AFX+RW0Zi6hcwrrh6sG5/igRw=;
+ b=EtWVXHDNrMzj07ZhwvodbAjaL3Fis+zoaZ4AV7Yog16tbNObPMbtj3oC6RiAtk16tP7t
+ 5e/F8mndWyGNV9N/zkcujfMsj/SDcN4DjDafulZrzYsrqR0cHz4mgTdpOlHMsj6KvVGF
+ wAEp0xjjrW26DsFPpsrPVJQl0kVvy05zXhLUmGRNQuwdcRW8wFHwzWW5KfbRQYKUuiJP
+ KFMojgfqvGhIMBuKydOoG1Bo+S9HtzJGNv5wsZpGwxgN/b38eVFYGysLS1FiXr9tVCgV
+ m0ybkM+dozrZIvG+1dUH0YLt/ADmYXdQoWEB+q0BdUsjIX1yn2Hu1grlBu0d/Na3yv0I pg== 
 Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3gws52cuq3-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3gwsyscrs9-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 28 Jun 2022 03:25:03 +0000
+        Tue, 28 Jun 2022 03:25:00 +0000
 Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 25S3F1p5002510;
-        Tue, 28 Jun 2022 03:25:03 GMT
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 25S3F1p2002510;
+        Tue, 28 Jun 2022 03:25:00 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3gwrt7jjns-1
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3gwrt7jjmm-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 28 Jun 2022 03:25:03 +0000
+        Tue, 28 Jun 2022 03:25:00 +0000
 Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 25S3NvqO016584;
-        Tue, 28 Jun 2022 03:25:02 GMT
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 25S3NvqE016584;
+        Tue, 28 Jun 2022 03:24:59 GMT
 Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3gwrt7jjkg-14;
-        Tue, 28 Jun 2022 03:25:02 +0000
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3gwrt7jjkg-9;
+        Tue, 28 Jun 2022 03:24:59 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     matthias.bgg@gmail.com, stanley.chu@mediatek.com,
-        jejb@linux.ibm.com, powen.kao@mediatek.com,
-        Ren Zhijie <renzhijie2@huawei.com>
+To:     axboe@kernel.dk, Bo Liu <liubo03@inspur.com>,
+        fujita.tomonori@lab.ntt.co.jp
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-mediatek@lists.infradead.org, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH -next] scsi: ufs: ufs-mediatek: Fix build error and type unmatch
-Date:   Mon, 27 Jun 2022 23:24:52 -0400
-Message-Id: <165638665782.7726.5510380683354329362.b4-ty@oracle.com>
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] scsi: Remove usage of the deprecated ida_simple_xxx API
+Date:   Mon, 27 Jun 2022 23:24:47 -0400
+Message-Id: <165638665783.7726.2129514185363786365.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.36.1
-In-Reply-To: <20220619115432.205504-1-renzhijie2@huawei.com>
-References: <20220619115432.205504-1-renzhijie2@huawei.com>
+In-Reply-To: <20220617020430.2300-1-liubo03@inspur.com>
+References: <20220617020430.2300-1-liubo03@inspur.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: 3boWjZ63gARTFCZNv0ieh5AH9WDu0tt7
-X-Proofpoint-GUID: 3boWjZ63gARTFCZNv0ieh5AH9WDu0tt7
+X-Proofpoint-ORIG-GUID: CtFUbRkvB06-fTmo4QecfHSdAW0aTwz9
+X-Proofpoint-GUID: CtFUbRkvB06-fTmo4QecfHSdAW0aTwz9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, 19 Jun 2022 19:54:32 +0800, Ren Zhijie wrote:
+On Thu, 16 Jun 2022 22:04:30 -0400, Bo Liu wrote:
 
-> If CONFIG_PM_SLEEP is not set.
+> Use ida_alloc_xxx()/ida_free() instead of
+> ida_simple_get()/ida_simple_remove().
+> The latter is deprecated and more verbose.
 > 
-> make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-, will be failed, like this:
 > 
-> drivers/ufs/host/ufs-mediatek.c: In function ‘ufs_mtk_vreg_fix_vcc’:
-> drivers/ufs/host/ufs-mediatek.c:688:46: warning: format ‘%u’ expects argument of type ‘unsigned int’, but argument 4 has type ‘long unsigned int’ [-Wformat=]
->     snprintf(vcc_name, MAX_VCC_NAME, "vcc-opt%u", res.a1);
->                                              ~^   ~~~~~~
->                                              %lu
-> drivers/ufs/host/ufs-mediatek.c: In function ‘ufs_mtk_system_suspend’:
-> drivers/ufs/host/ufs-mediatek.c:1371:8: error: implicit declaration of function ‘ufshcd_system_suspend’; did you mean ‘ufs_mtk_system_suspend’? [-Werror=implicit-function-declaration]
->   ret = ufshcd_system_suspend(dev);
->         ^~~~~~~~~~~~~~~~~~~~~
->         ufs_mtk_system_suspend
-> drivers/ufs/host/ufs-mediatek.c: In function ‘ufs_mtk_system_resume’:
-> drivers/ufs/host/ufs-mediatek.c:1386:9: error: implicit declaration of function ‘ufshcd_system_resume’; did you mean ‘ufs_mtk_system_resume’? [-Werror=implicit-function-declaration]
->   return ufshcd_system_resume(dev);
->          ^~~~~~~~~~~~~~~~~~~~
->          ufs_mtk_system_resume
-> cc1: some warnings being treated as errors
-> 
-> [...]
 
 Applied to 5.20/scsi-queue, thanks!
 
-[1/1] scsi: ufs: ufs-mediatek: Fix build error and type unmatch
-      https://git.kernel.org/mkp/scsi/c/f54912b228a8
+[1/1] scsi: Remove usage of the deprecated ida_simple_xxx API
+      https://git.kernel.org/mkp/scsi/c/873cdda193fc
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
