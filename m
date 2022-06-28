@@ -2,82 +2,78 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E76CCCA47F
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jun 2022 03:25:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B825FC43334
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jun 2022 03:25:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232182AbiF1DZd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Jun 2022 23:25:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46364 "EHLO
+        id S232045AbiF1DZh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Jun 2022 23:25:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46702 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231829AbiF1DZI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jun 2022 23:25:08 -0400
+        with ESMTP id S232013AbiF1DZ3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jun 2022 23:25:29 -0400
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 786002528C;
-        Mon, 27 Jun 2022 20:25:07 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE327252B0;
+        Mon, 27 Jun 2022 20:25:08 -0700 (PDT)
 Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 25S25YCr031567;
-        Tue, 28 Jun 2022 03:25:00 GMT
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 25S1g5tu031568;
+        Tue, 28 Jun 2022 03:25:03 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=jqIqiRlnHrHUFTHbRk/o13cAhunM9tUGL0btrqSZqaA=;
- b=hzNTte200siMrFl2qbjsCM02hZYg6xp5HjOSIF3Q4T/6fH2q23co0VPo+uG0IF2iudKD
- biVuhmn0gA7CyTsWzCrEFNFI12ZNF3b2+ZrcsABQAthNxtPhxmRgCFDeIkbh9n0q5DTF
- 9szpwBeybThI79fPlhOXbpgyeQ8ei4H+mFM779Ujop3sWvbaIsLFzbEVh3CHSfK0yOTC
- 9a17HAcMmC2998Sfom9qRhcP7UZr5dOro1z6frT+QyWcWzQv6XwYnSV8D+4VD3L6tz74
- uR4nm1ko+MntDeNsue2WXmFA8bDaYXCz26fw7LQD9asPLrzFQBYlwWnQVbV0fWKH5Fip XQ== 
+ bh=lwlP9jh3OiX6/OdiNWhehQGkgI3HQREBx2Pl1wl+Pbw=;
+ b=MZq2I4guXHJbBsEJW6w3PQHWPQA53ZpoUZwxenKjiOA7/v04+2iV/AlcXGdKlwmCU2p+
+ rvDc6CGQQABBXtDweaEuMwtWz/+A7nwziQ48NkadY8z2u3WW+845ulflkzqeIhu2pwtq
+ uNmi7EyzMl0Eb9/vYKAzr/raAPHywm0kcZYV6A4KUDHUgIlXXZWBLfYPqsTLspxTQjwG
+ 3n2hrRgFk5GWzEIQQ/ayl6bHHHMuXH5HXInvKXUIK3j2qcVpwoKfFZEPoxaR8dCQvwz6
+ iDelE6IkbRTHuXC1qumQdLUldxkLHqfPYNqnLRsSHRycQXB+4V2ldiyTvlMm0Iaf2IWm Mg== 
 Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3gwrscctnh-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3gwrscctnq-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 28 Jun 2022 03:25:00 +0000
+        Tue, 28 Jun 2022 03:25:03 +0000
 Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 25S3F1Ob002535;
-        Tue, 28 Jun 2022 03:24:59 GMT
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 25S3F2lX002584;
+        Tue, 28 Jun 2022 03:25:02 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3gwrt7jjmg-1
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3gwrt7jjnj-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 28 Jun 2022 03:24:59 +0000
+        Tue, 28 Jun 2022 03:25:02 +0000
 Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 25S3NvqC016584;
-        Tue, 28 Jun 2022 03:24:59 GMT
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 25S3NvqM016584;
+        Tue, 28 Jun 2022 03:25:02 GMT
 Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3gwrt7jjkg-8;
-        Tue, 28 Jun 2022 03:24:59 +0000
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3gwrt7jjkg-13;
+        Tue, 28 Jun 2022 03:25:02 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Jiang Jian <jiangjian@cdjrlc.com>, jejb@linux.ibm.com
+To:     Ren Yu <renyu@nfschina.com>, jejb@linux.ibm.com
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        kartilak@cisco.com, linux-kernel@vger.kernel.org,
-        sebaddel@cisco.com, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] snic: Remove duplicate 'on' in two places.
-Date:   Mon, 27 Jun 2022 23:24:46 -0400
-Message-Id: <165638665786.7726.3656286553425657370.b4-ty@oracle.com>
+        yuzhe@nfschina.com, liqiong@nfschina.com, qixu@nfschina.com,
+        linux-kernel@vger.kernel.org, hukun@nfschina.com,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] drivers:scsi: fix typo in comment
+Date:   Mon, 27 Jun 2022 23:24:51 -0400
+Message-Id: <165638665783.7726.13830190614996871126.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.36.1
-In-Reply-To: <20220621150136.9264-1-jiangjian@cdjrlc.com>
-References: <20220621150136.9264-1-jiangjian@cdjrlc.com>
+In-Reply-To: <20220617081557.9009-1-renyu@nfschina.com>
+References: <20220617081557.9009-1-renyu@nfschina.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: LY9vobFENJWSsG7kdkbg1jnq4cZqujbw
-X-Proofpoint-GUID: LY9vobFENJWSsG7kdkbg1jnq4cZqujbw
+X-Proofpoint-ORIG-GUID: kA-KUwm-Kyk_alJRcS6Z-fFc3BDpaQu7
+X-Proofpoint-GUID: kA-KUwm-Kyk_alJRcS6Z-fFc3BDpaQu7
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 21 Jun 2022 23:01:36 +0800, Jiang Jian wrote:
+On Fri, 17 Jun 2022 16:15:57 +0800, Ren Yu wrote:
 
-> file: ./drivers/scsi/snic/snic_fwint.h
-> line: 148
->  * Bit 3: Async event notifications on on tgt online/offline events.
-> changed to
->  * Bit 3: Async event notifications on tgt online/offline events.
+> Spelling mistakes in comment,non-succesfull -> non-successful.
 > 
 > 
-> [...]
 
 Applied to 5.20/scsi-queue, thanks!
 
-[1/1] snic: Remove duplicate 'on' in two places.
-      https://git.kernel.org/mkp/scsi/c/e448c8508d74
+[1/1] drivers:scsi: fix typo in comment
+      https://git.kernel.org/mkp/scsi/c/13d2d3428768
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
