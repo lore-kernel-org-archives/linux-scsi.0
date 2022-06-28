@@ -2,49 +2,50 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0F60C43334
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jun 2022 22:25:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EFABC43334
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jun 2022 22:25:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229908AbiF1WZA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S229950AbiF1WZA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Tue, 28 Jun 2022 18:25:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53568 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53558 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229610AbiF1WYq (ORCPT
+        with ESMTP id S229718AbiF1WYq (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Jun 2022 18:24:46 -0400
-Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3860A2494A
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Jun 2022 15:21:41 -0700 (PDT)
-Received: by mail-pj1-f45.google.com with SMTP id cv13so13866943pjb.4
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Jun 2022 15:21:41 -0700 (PDT)
+Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B2F43DDFF
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Jun 2022 15:21:43 -0700 (PDT)
+Received: by mail-pf1-f176.google.com with SMTP id 128so13232395pfv.12
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Jun 2022 15:21:43 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=VLQc2mCLu8msQ8/udarSByzM+S09Au/Kiel9Yxrmz+w=;
-        b=Wc/qiMpP/RK1pQqvXRvfja856SpK76Fh+Js0cSACMi7ce+cDOptbwTOhl5kH8fJyQ0
-         sKWOiwfHfYxJt+bvCsfO0cp5QfI4HFqZEeog4V5nE6t5E1brKBBThOupW2DFSSJNVWCL
-         uXAnHAvfw/ngAHbqhhnhHSvtTkB7Taa2Z8Q8Rud1YIiquCh/aNx47GSIi9sGEwAttSCZ
-         /SoG8uWTRbWFqdCeMUCsuMMNF/V7zebgWj3IM4Wh5lE+0aKWxfdJc5RuPinHecDJlEgT
-         WH5bMqSQj3k0w8S8SsQcRXPBBvlQELng4VgqHdG8rcGTsg8B3wd9JPJ5Ec3ObH/+RZPW
-         Kshw==
-X-Gm-Message-State: AJIora9elEX3WRwbJCICPoy8QW17DONrIKBtl7cm2Won9u9PtHC5agIa
-        6EY/dL2Ueq0vS4ZzBI2iZ5g=
-X-Google-Smtp-Source: AGRyM1sWT0TP2c/MGvZze57DUSpMOgGKoYWCRu04vsmU1M++4EVticduBqlQQPZSzWsJCaObhT/ioA==
-X-Received: by 2002:a17:90b:33d2:b0:1ed:2038:b949 with SMTP id lk18-20020a17090b33d200b001ed2038b949mr122605pjb.61.1656454900616;
-        Tue, 28 Jun 2022 15:21:40 -0700 (PDT)
+        bh=6r7IppzMlEf5XXXvoQHXzVy/6OXtWFNCsNcAA8rtj10=;
+        b=GlE8pGiFKIe8kDK41whCkL2yXpZFh74+1vOe4cvdV4Sc8AJVmRaRvBm73whHLGkcmM
+         LGMN8FmBtLAOgXTWKAdn6zul9pCwZGgjoXZfKDbiPjNUJhpqv+Y8jbXuWUKOpAclj6mj
+         X0k3zhJcY4c1cTgMMHlaXklFZm0pPhOhZpJ8fqPq/hI7ONTIGDK4aUw31mdxQ7VswRXO
+         1hfUQ3MdB31YiHbfuWovvUzPQRmoSi5S98HTtc1ftlIFYY8lMc+nhgNuDrMkkadUERhI
+         7LUmPEIo+oWjXJJgt1s0XHJZeBi1/E2o2nrdT6g/0+j0ZqywOTpb+tUdXy44FgJofV8A
+         sZ+g==
+X-Gm-Message-State: AJIora/bQ/4F1r5YCNqI/Q5JfTGQn7y1yNF+6x9drZvoYnkdCqUjjXua
+        HpabpqzWQMF9VekO68nFH3U=
+X-Google-Smtp-Source: AGRyM1ulc3q2FGI8S8gv3+VjyJjxMu0OMJJF+P9blqg6Tfk0+ZiU49RlMHUvA33XESjP5Tf8uCBnTQ==
+X-Received: by 2002:a63:206:0:b0:408:a75e:3400 with SMTP id 6-20020a630206000000b00408a75e3400mr126644pgc.29.1656454902510;
+        Tue, 28 Jun 2022 15:21:42 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id x9-20020a17090a294900b001eaae89de5fsm413599pjf.1.2022.06.28.15.21.39
+        by smtp.gmail.com with ESMTPSA id x9-20020a17090a294900b001eaae89de5fsm413599pjf.1.2022.06.28.15.21.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Jun 2022 15:21:39 -0700 (PDT)
+        Tue, 28 Jun 2022 15:21:41 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
         Bart Van Assche <bvanassche@acm.org>,
         Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
-        John Garry <john.garry@huawei.com>
-Subject: [PATCH 2/3] scsi: core: Retry after a delay if the device is becoming ready
-Date:   Tue, 28 Jun 2022 15:21:30 -0700
-Message-Id: <20220628222131.14780-3-bvanassche@acm.org>
+        John Garry <john.garry@huawei.com>, ericspero@icloud.com,
+        jason600.groome@gmail.com
+Subject: [PATCH 3/3] scsi: sd: Rework asynchronous resume support
+Date:   Tue, 28 Jun 2022 15:21:31 -0700
+Message-Id: <20220628222131.14780-4-bvanassche@acm.org>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220628222131.14780-1-bvanassche@acm.org>
 References: <20220628222131.14780-1-bvanassche@acm.org>
@@ -54,31 +55,165 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-If a logical unit reports that it is becoming ready, retry the command
-after a delay instead of retrying immediately.
+For some technologies, e.g. an ATA bus, resuming can take multiple
+seconds. Waiting for resume to finish can cause a very noticeable delay.
+Hence this patch that restores the behavior from before patch "scsi:
+core: pm: Rely on the device driver core for async power management" for
+most SCSI devices.
+
+This patch introduces a behavior change: if the START command fails, do
+not consider this as a SCSI disk resume failure.
 
 Cc: Ming Lei <ming.lei@redhat.com>
 Cc: Hannes Reinecke <hare@suse.de>
 Cc: John Garry <john.garry@huawei.com>
+Cc: ericspero@icloud.com
+Cc: jason600.groome@gmail.com
+Tested-by: jason600.groome@gmail.com
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=215880
+Fixes: a19a93e4c6a9 ("scsi: core: pm: Rely on the device driver core for async power management")
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi_error.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/sd.c | 79 ++++++++++++++++++++++++++++++++++++-----------
+ drivers/scsi/sd.h |  5 +++
+ 2 files changed, 66 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 49ef864df581..fb7e363c4c00 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -625,10 +625,10 @@ enum scsi_disposition scsi_check_sense(struct scsi_cmnd *scmd)
- 			return NEEDS_RETRY;
- 		/*
- 		 * if the device is in the process of becoming ready, we
--		 * should retry.
-+		 * should retry after a delay.
- 		 */
- 		if ((sshdr.asc == 0x04) && (sshdr.ascq == 0x01))
--			return NEEDS_RETRY;
-+			return ADD_TO_MLQUEUE;
- 		/*
- 		 * if the device is not started, we need to wake
- 		 * the error handler to start the motor
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 895b56c8f25e..06888b675e71 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -103,6 +103,7 @@ static void sd_config_discard(struct scsi_disk *, unsigned int);
+ static void sd_config_write_same(struct scsi_disk *);
+ static int  sd_revalidate_disk(struct gendisk *);
+ static void sd_unlock_native_capacity(struct gendisk *disk);
++static void sd_start_done_work(struct work_struct *work);
+ static int  sd_probe(struct device *);
+ static int  sd_remove(struct device *);
+ static void sd_shutdown(struct device *);
+@@ -3463,6 +3464,7 @@ static int sd_probe(struct device *dev)
+ 	sdkp->max_retries = SD_MAX_RETRIES;
+ 	atomic_set(&sdkp->openers, 0);
+ 	atomic_set(&sdkp->device->ioerr_cnt, 0);
++	INIT_WORK(&sdkp->start_done_work, sd_start_done_work);
+ 
+ 	if (!sdp->request_queue->rq_timeout) {
+ 		if (sdp->type != TYPE_MOD)
+@@ -3585,12 +3587,64 @@ static void scsi_disk_release(struct device *dev)
+ 	kfree(sdkp);
+ }
+ 
++/* Process sense data after a START command finished. */
++static void sd_start_done_work(struct work_struct *work)
++{
++	struct scsi_disk *sdkp = container_of(work, typeof(*sdkp),
++					      start_done_work);
++	struct scsi_sense_hdr sshdr;
++	int res = sdkp->start_result;
++
++	if (res == 0)
++		return;
++
++	sd_print_result(sdkp, "Start/Stop Unit failed", res);
++	if (res > 0 && scsi_normalize_sense(sdkp->start_sense_buffer,
++					    sdkp->start_sense_len, &sshdr))
++		sd_print_sense_hdr(sdkp, &sshdr);
++}
++
++/* A START command finished. May be called from interrupt context. */
++static void sd_start_done(struct request *req, blk_status_t status)
++{
++	const struct scsi_cmnd *scmd = blk_mq_rq_to_pdu(req);
++	struct scsi_disk *sdkp = scsi_disk(req->q->disk);
++
++	sdkp->start_result = scmd->result;
++	WARN_ON_ONCE(scmd->sense_len > SCSI_SENSE_BUFFERSIZE);
++	sdkp->start_sense_len = scmd->sense_len;
++	memcpy(sdkp->start_sense_buffer, scmd->sense_buffer, scmd->sense_len);
++	WARN_ON_ONCE(!schedule_work(&sdkp->start_done_work));
++}
++
++/* Submit a START command asynchronously. */
++static int sd_submit_start(struct scsi_disk *sdkp, u8 cmd[], u8 cmd_len)
++{
++	struct scsi_device *sdev = sdkp->device;
++	struct request_queue *q = sdev->request_queue;
++	struct request *req;
++	struct scsi_cmnd *scmd;
++
++	req = scsi_alloc_request(q, REQ_OP_DRV_IN, BLK_MQ_REQ_PM);
++	if (IS_ERR(req))
++		return PTR_ERR(req);
++
++	scmd = blk_mq_rq_to_pdu(req);
++	scmd->cmd_len = cmd_len;
++	memcpy(scmd->cmnd, cmd, cmd_len);
++	scmd->allowed = sdkp->max_retries;
++	req->timeout = SD_TIMEOUT;
++	req->rq_flags |= RQF_PM | RQF_QUIET;
++	req->end_io = sd_start_done;
++	blk_execute_rq_nowait(req, /*at_head=*/true);
++
++	return 0;
++}
++
+ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
+ {
+ 	unsigned char cmd[6] = { START_STOP };	/* START_VALID */
+-	struct scsi_sense_hdr sshdr;
+ 	struct scsi_device *sdp = sdkp->device;
+-	int res;
+ 
+ 	if (start)
+ 		cmd[4] |= 1;	/* START */
+@@ -3601,23 +3655,10 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
+ 	if (!scsi_device_online(sdp))
+ 		return -ENODEV;
+ 
+-	res = scsi_execute(sdp, cmd, DMA_NONE, NULL, 0, NULL, &sshdr,
+-			SD_TIMEOUT, sdkp->max_retries, 0, RQF_PM, NULL);
+-	if (res) {
+-		sd_print_result(sdkp, "Start/Stop Unit failed", res);
+-		if (res > 0 && scsi_sense_valid(&sshdr)) {
+-			sd_print_sense_hdr(sdkp, &sshdr);
+-			/* 0x3a is medium not present */
+-			if (sshdr.asc == 0x3a)
+-				res = 0;
+-		}
+-	}
++	/* Wait until processing of sense data has finished. */
++	flush_work(&sdkp->start_done_work);
+ 
+-	/* SCSI error codes must not go to the generic layer */
+-	if (res)
+-		return -EIO;
+-
+-	return 0;
++	return sd_submit_start(sdkp, cmd, sizeof(cmd));
+ }
+ 
+ /*
+@@ -3644,6 +3685,8 @@ static void sd_shutdown(struct device *dev)
+ 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
+ 		sd_start_stop_device(sdkp, 0);
+ 	}
++
++	flush_work(&sdkp->start_done_work);
+ }
+ 
+ static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 5eea762f84d1..b89187761d61 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -150,6 +150,11 @@ struct scsi_disk {
+ 	unsigned	urswrz : 1;
+ 	unsigned	security : 1;
+ 	unsigned	ignore_medium_access_errors : 1;
++
++	int		start_result;
++	u32		start_sense_len;
++	u8		start_sense_buffer[SCSI_SENSE_BUFFERSIZE];
++	struct work_struct start_done_work;
+ };
+ #define to_scsi_disk(obj) container_of(obj, struct scsi_disk, disk_dev)
+ 
