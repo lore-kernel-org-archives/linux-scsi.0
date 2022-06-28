@@ -2,169 +2,132 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00A12C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jun 2022 09:12:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3922BC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jun 2022 09:14:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343912AbiF1JMJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Jun 2022 05:12:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39170 "EHLO
+        id S1343897AbiF1JOc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 28 Jun 2022 05:14:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42180 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242283AbiF1JMH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Jun 2022 05:12:07 -0400
-Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3DC61144E
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Jun 2022 02:12:06 -0700 (PDT)
-Received: by mail-pj1-x102a.google.com with SMTP id x1-20020a17090abc8100b001ec7f8a51f5so15257863pjr.0
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Jun 2022 02:12:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=GL4UgDJTwtS4GmM+QTAb3gpESVFZ2b19Z+/6n7CXlVo=;
-        b=XPCjyAInT0a0YpJotg4OEozn0pV/AtrXpcLpC8rHQ+ZzBoHvJoa6E/xqctTmAlWMFL
-         XWvIPTnL8eKdc6pGVA8aaQbbmrHWA7KF4V3HsoDb4p+evrqtTuIScBodaIbggD0hgdXl
-         LYKW9lcSWUqBD/6kKcN2ynss6DRcd2feWpX34=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=GL4UgDJTwtS4GmM+QTAb3gpESVFZ2b19Z+/6n7CXlVo=;
-        b=2Ftj8XIvQSuowaUzq37OEPRDeMEq8eI9px5X+YIJ48NucPLtRIDjElrbptwk0z7Vrj
-         gdKlpZH68FObRYOu3mRgMKGxNmjnxqUmEOShXi5s+V+i8E9iiUgtSY+I3aBcaNKte0zk
-         qM0efJdypHLvZuEfJ753aq+7Bntubbc8OkwEzDF+NR4bCf4GtNHd6dDD6TxWtVhSdp31
-         6/+XWn4jYxHdHhtVbxgPU78hdQ1baS2KND65uMzIJUlVG+0jr1k9h/75NyvgA7DNHaR1
-         Gn5cwzET2JvQtbF6Tg86guYOzTqUB/kH/AXhaDooW0757BmSL4cgxcaFbF3VKyLnyVEP
-         yHSw==
-X-Gm-Message-State: AJIora+hjau19FeRde10GbkFNOaO8e1+hiKXhSG/W/OnjwYJVUNMcqOl
-        VxXOs1JfRdn5R53BSdesV7wIfPDimSy/un2d6QpwzQ==
-X-Google-Smtp-Source: AGRyM1sljnanmLVbkWsrQjJWf4hs95fxWBDprIr3a/0OvrXjHDZTivI98eNg/qiZ7qBH5EPJCfU27pTZ6p9ScvBdg0E=
-X-Received: by 2002:a17:903:228d:b0:16a:59bc:6132 with SMTP id
- b13-20020a170903228d00b0016a59bc6132mr2720704plh.126.1656407526221; Tue, 28
- Jun 2022 02:12:06 -0700 (PDT)
+        with ESMTP id S1344080AbiF1JOb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Jun 2022 05:14:31 -0400
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1095E101E6
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Jun 2022 02:14:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1656407670; x=1687943670;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=m7ZvDnvdd5GvaUmk2CDtIh9qIt0xOE1YKhnPo7clhXk=;
+  b=JdtiMJxH2i+YBxQ7LFELvkY6Zqis4RI80+QeG31R0TtKyF+zI83CPvD6
+   QsxzysAxuTL/mPKbqghqmR1YveXK9WMajMiHYPqQqQcp144Iy4FReGFas
+   ijbb0X/lySvZ6xZ0x5liZhzkRxlMvLeWe/qHI+5T49byVazFX7qhVQ7vM
+   tRIUUNS7Xtbz1f4qaAdk9o1oDlZU4XIkTq9gDvRW++YPeyHerfbwGr+in
+   toixMvjTJdxsEZGpW5LJGLbuf8dr6yg0g+oXzhAJRfXVtsL6oFxsCFVL6
+   MVb69iboGoja+76Y3ndXRspz/PuL8LyzPEMz2y8c+njXGCbQWChXOaCcU
+   A==;
+X-IronPort-AV: E=Sophos;i="5.92,227,1650902400"; 
+   d="scan'208";a="202954158"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 28 Jun 2022 17:14:30 +0800
+IronPort-SDR: 68HwiV+AoqZfbTN89jMUWuCEComBi6SndpkevJQe73bjRGsCq0juVQgXeoLWfONfnDmtqvxaRD
+ AhVi50FwwzTaAubZ7Iiz0pKJfzDKjH9VJkKRm1W/50/ISGdrR3RtlofwCNR2CdDQ+bXRm3kaT/
+ Sy5I1+JEjIQoBj/CDMN/3xWUy+SL3rLEtl0rx//KKBNQCLtErq+9YHxODla0vRxCEIg2IsIEZm
+ PCxiq1+fNQHsfZiIddmSNfjeJszji+PqDax32EXbu12KwIlbaUKptdVsoYxUwfC5ww26bBFRoX
+ YeRctAhN2vqTzFo6FoO+DTMU
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Jun 2022 01:32:10 -0700
+IronPort-SDR: 2IuUkCaO4JainA8W9RM3nEAwbUcD8vIOiIhXCf3KuQjue8Z3je3hkxqsheKX9uUdpKd5bjuR9V
+ ATysXjthE1CYyymyuGi6uhX+dVPeS2a9BUxlH8sWq3f32X73og1TEbWHeewhHWi2yzP6qKpTyy
+ /e0IkrqK4hhMOoQ0Ib+TRqMef+GA/JC5eBn4UZLOj7mZFyqsTnTVTcRJQ+7wpWxc9Vv4H/5vr/
+ UMkc0qPh99iUd4/jkBmA/3tuXuq88yNUXbYArEI6B6yqUdAlFicUg/NyuZgAXBjt5ZMPn0gtYV
+ iCU=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Jun 2022 02:14:30 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LXJnd53dVz1Rwry
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Jun 2022 02:14:29 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1656407669; x=1658999670; bh=m7ZvDnvdd5GvaUmk2CDtIh9qIt0xOE1YKhn
+        Po7clhXk=; b=n1Hpc6gcPs/kxiOVTQwyRGR+uFdty2ur8mMpVtR58Kwy2fqXmbI
+        HTEscATaBiYXrvQoDsewN6VCSm9M5MIlpqKcq/8hTcw3cjPO33agP8Xd57Tj6DFz
+        4R0ljR0v+eB5w4pbvmsQ5m12TQNrFyNz/lIFaUH0ktaZyNqS0r6+dYb80iSY2vIS
+        eAjGfzucNGjkx5UDxGIgv1ZF4t8Y8uxziilTeI0bERjb3d5G2iyT+xB/TWonmtz9
+        zODt5GChELx+M4SuiD3Cm4Kcm8I7M51ZXMYbgEjMRtCnihX/D9URy755F6CYUCq9
+        +ysvrOnAro+PSPbYDdtqx2RasqndSuvPycw==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id qm913GYF01ki for <linux-scsi@vger.kernel.org>;
+        Tue, 28 Jun 2022 02:14:29 -0700 (PDT)
+Received: from [10.225.163.99] (unknown [10.225.163.99])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LXJnZ4JQfz1RtVk;
+        Tue, 28 Jun 2022 02:14:26 -0700 (PDT)
+Message-ID: <ba59a0da-a982-e3eb-1cb7-6e60f80fd319@opensource.wdc.com>
+Date:   Tue, 28 Jun 2022 18:14:25 +0900
 MIME-Version: 1.0
-References: <cover.1628136510.git.gustavoars@kernel.org> <b43d4083d9788bb746dc0b2205d6a67ebb609b0d.1628136510.git.gustavoars@kernel.org>
- <202206221457.1A12D768EF@keescook> <20220623014533.GA7132@embeddedor> <20220623031401.GA8896@embeddedor>
-In-Reply-To: <20220623031401.GA8896@embeddedor>
-From:   Sumit Saxena <sumit.saxena@broadcom.com>
-Date:   Tue, 28 Jun 2022 14:41:40 +0530
-Message-ID: <CAL2rwxpJtu8kTh=ia7-8ih5wad4vseU1WOu8vh--A1DY3gfc9Q@mail.gmail.com>
-Subject: Re: [PATCH v2 3/4][next] scsi: megaraid_sas: Replace one-element
- array with flexible-array member in MR_DRV_RAID_MAP
-To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Cc:     Kees Cook <keescook@chromium.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>,
-        Linux SCSI List <linux-scsi@vger.kernel.org>,
-        linux-hardening@vger.kernel.org
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000003b3fe205e27e6e3e"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH v4 5/5] libata-scsi: Cap ata_device->max_sectors according
+ to shost->max_sectors
+Content-Language: en-US
+To:     John Garry <john.garry@huawei.com>, joro@8bytes.org,
+        will@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        hch@lst.de, m.szyprowski@samsung.com, robin.murphy@arm.com
+Cc:     linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, iommu@lists.linux-foundation.org,
+        iommu@lists.linux.dev, linux-scsi@vger.kernel.org,
+        linuxarm@huawei.com
+References: <1656343521-62897-1-git-send-email-john.garry@huawei.com>
+ <1656343521-62897-6-git-send-email-john.garry@huawei.com>
+ <b69c6112-98b7-3890-9d11-bb321a7c877a@opensource.wdc.com>
+ <6619638c-52e8-cb67-c56c-9c9d38c18161@huawei.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <6619638c-52e8-cb67-c56c-9c9d38c18161@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000003b3fe205e27e6e3e
-Content-Type: text/plain; charset="UTF-8"
+On 6/28/22 16:54, John Garry wrote:
+> On 28/06/2022 00:24, Damien Le Moal wrote:
+>> On 6/28/22 00:25, John Garry wrote:
+>>> ATA devices (struct ata_device) have a max_sectors field which is
+>>> configured internally in libata. This is then used to (re)configure the
+>>> associated sdev request queue max_sectors value from how it is earlier set
+>>> in __scsi_init_queue(). In __scsi_init_queue() the max_sectors value is set
+>>> according to shost limits, which includes host DMA mapping limits.
+>>>
+>>> Cap the ata_device max_sectors according to shost->max_sectors to respect
+>>> this shost limit.
+>>>
+>>> Signed-off-by: John Garry<john.garry@huawei.com>
+>>> Acked-by: Damien Le Moal<damien.lemoal@opensource.wdc.com>
+>> Nit: please change the patch title to "ata: libata-scsi: Cap ..."
+>>
+> 
+> ok, but it's going to be an even longer title :)
+> 
+> BTW, this patch has no real dependency on the rest of the series, so 
+> could be taken separately if you prefer.
 
->
-> BTW, I'd really like to get some input from the maintainers of this
-> code. :)
-Original patch along with the below change looks good.
+Sure, you can send it separately. Adding it through the scsi tree is fine too.
 
-@@ -1193,7 +1193,7 @@ struct MR_DRV_RAID_MAP {
- struct MR_DRV_RAID_MAP_ALL {
+> 
+> Thanks,
+> John
 
-        struct MR_DRV_RAID_MAP raidMap;
--       struct MR_LD_SPAN_MAP ldSpanMap[MAX_LOGICAL_DRIVES_DYN - 1];
-+       struct MR_LD_SPAN_MAP ldSpanMap[MAX_LOGICAL_DRIVES_DYN];
- } __packed;
 
-I will test it and then can provide an Acked-by/Tested-by tag.
-
-Thanks,
-Sumit
-
---0000000000003b3fe205e27e6e3e
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-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
-GmgWG68YahkDuVSTTt2beZdyMeDwq/KifJFo18EkhcL3e7rmDAh8SniUI/0o3HX6hrgdmUI1wSdz
-uIVL/m6Ok9mIl2U5kvguitOSC0bVaQPfNzlj+7PCKBECAwEAAaOCAdowggHWMA4GA1UdDwEB/wQE
-AwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9zZWN1cmUuZ2xvYmFs
-c2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNydDBBBggrBgEFBQcw
-AYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAw
-TQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3Lmdsb2Jh
-bHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+oDygOoY4aHR0cDov
-L2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcmwwJAYDVR0R
-BB0wG4EZc3VtaXQuc2F4ZW5hQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAfBgNV
-HSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUNz+JSIXEXl2uQ4Utcnx7FnFi
-hhowDQYJKoZIhvcNAQELBQADggEBAL0HLbxgPSW4BFbbIMN3A/ifBg4Lzaph8ARJOnZpGQivo9jG
-kQOd95knQi9Lm95JlBAJZCqXXj7QS+dnE71tsFeHWcHNNxHrTSwn4Xi5EqaRjLC6g4IEPyZHWDrD
-zzJidgfwQvfZONkf4IXnnrIEFle+26/gPs2kOjCeLMo6XGkNC4HNla1ol1htToQaNN8974pCqwIC
-rTXcWqD03VkqSOo+oPP/NAgFAZVfpeuBoK2Xv8zYlrF49Q4hxgFpWhaiDsZUSdWIS7vg1ak1n+6L
-3aHRY/lheSkOn/uJWXsqsTDp613hVtOTEDsHSQK32yTGr8jN/oRQgJASuUqQFdD4VzAxggJtMIIC
-aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
-EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwoQTpBmhDxj9JoN1ow
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIHVvJNSJGI4QzEMesKecjq3cUSYDUPJR
-V7YIudKKp940MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIyMDYy
-ODA5MTIwNlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
-SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQAtJ4CFsKLyw8wpHQ/lorMgd64/IuM/zc28yWySGT69a+q/rKsq
-kfEeNOGOtvq9/70ryYSabkQfmrFPlKocTWFd6WXNbru2j3MQU+/Kv3dmcWdbmN8+Sutb7aR3L6ct
-3pm2nYxatBNqqn5mn2roIMRMwHQ9s+NgrHXwgPUczDBFrq6SZapIxK/+DGYvCxktzLJjKymojp4T
-kkY6smoc2wZH3BZl826hvqm60cP3GBOaDdsfkVsOX7wRu7mGb7byoAaNIY4N1HrXqcuexw6y1Vn9
-JCTDMBWdEvrfedLpURkuROIwnJ9An/UyOrKk9+lpyxcAdpOoVdLGK5ItZ7cPGaJJ
---0000000000003b3fe205e27e6e3e--
+-- 
+Damien Le Moal
+Western Digital Research
