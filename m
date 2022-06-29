@@ -2,91 +2,77 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED237CCA481
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jun 2022 06:25:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D909BC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jun 2022 06:56:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231799AbiF2GZt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 29 Jun 2022 02:25:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36122 "EHLO
+        id S232406AbiF2G4P (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 29 Jun 2022 02:56:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35992 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229972AbiF2GZr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Jun 2022 02:25:47 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FD3C23BF1;
-        Tue, 28 Jun 2022 23:25:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=hGxicrNA0Ky21SHQ+zvPyQeSEbMbEJ671RYnbrPw0JA=; b=qbFJAtMX0xKPZ1ARuRDdID37q4
-        owWkofTOSGtlKKGTJhARtkYpPKzHltLGhkndQA87MkODaY6KyO3cK4q808MkXZcOU40psAis3jQba
-        hIlFNsykvnaIIUvqvKn2j1RZrQIeveQo7JYMztumkKhMbvD1zMb+mAEHnE6ESPqZza5WuXR5gF7PV
-        n41lGSXcUPlvzAaeQHQhfM7f39UWgRCFoNb11FKul4UW/Ow1CvhldL3c1YOUP0JDldI562o45tZwg
-        o0wAWuANXSfL/2mp0QfYSlqVUMbLFqDf0nTTu2Vp3DOLQ3j8ak5hAwUNMCSyw4o2Ir79RVMA1BFMh
-        i++X3W8g==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1o6R8w-009lUE-5F; Wed, 29 Jun 2022 06:25:42 +0000
-Date:   Tue, 28 Jun 2022 23:25:42 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Michael Schmitz <schmitzmic@gmail.com>
-Cc:     Arnd Bergmann <arnd@kernel.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        scsi <linux-scsi@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Linux IOMMU <iommu@lists.linux-foundation.org>,
-        Khalid Aziz <khalid@gonehiking.org>,
-        "Maciej W . Rozycki" <macro@orcam.me.uk>,
-        Matt Wang <wwentao@vmware.com>,
-        Miquel van Smoorenburg <mikevs@xs4all.net>,
-        Mark Salyzyn <salyzyn@android.com>,
-        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-        Linux-Arch <linux-arch@vger.kernel.org>,
-        alpha <linux-alpha@vger.kernel.org>,
-        linux-m68k <linux-m68k@lists.linux-m68k.org>,
-        Parisc List <linux-parisc@vger.kernel.org>,
-        Denis Efremov <efremov@linux.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
-Subject: Re: [PATCH v2 3/3] arch/*/: remove CONFIG_VIRT_TO_BUS
-Message-ID: <YrvwZi9NQSpFjStX@infradead.org>
-References: <20220617125750.728590-1-arnd@kernel.org>
- <20220617125750.728590-4-arnd@kernel.org>
- <6ba86afe-bf9f-1aca-7af1-d0d348d75ffc@gmail.com>
- <CAMuHMdVewn0OYA9oJfStk0-+vCKAUou+4Mvd5H2kmrSks1p5jg@mail.gmail.com>
- <b4e5a1c9-e375-63fb-ec7c-abb7384a6d59@gmail.com>
- <9289fd82-285c-035f-5355-4d70ce4f87b0@gmail.com>
- <CAK8P3a1ivqYB38c_QTjG8e85ZBnCB6HEa-6LR1HDc8shG1Pwmw@mail.gmail.com>
- <b1edec96-ccb2-49d6-323b-1abc0dc37a50@gmail.com>
+        with ESMTP id S231576AbiF2G4O (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Jun 2022 02:56:14 -0400
+Received: from mail.nfschina.com (unknown [IPv6:2400:dd01:100f:2:72e2:84ff:fe10:5f45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6BB312E680;
+        Tue, 28 Jun 2022 23:56:13 -0700 (PDT)
+Received: from localhost (unknown [127.0.0.1])
+        by mail.nfschina.com (Postfix) with ESMTP id 5AD931E80D11;
+        Wed, 29 Jun 2022 14:55:02 +0800 (CST)
+X-Virus-Scanned: amavisd-new at test.com
+Received: from mail.nfschina.com ([127.0.0.1])
+        by localhost (mail.nfschina.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id FcwvYR22CChY; Wed, 29 Jun 2022 14:54:59 +0800 (CST)
+Received: from localhost.localdomain (unknown [180.167.10.98])
+        (Authenticated sender: jiaming@nfschina.com)
+        by mail.nfschina.com (Postfix) with ESMTPA id 3534F1E80CDC;
+        Wed, 29 Jun 2022 14:54:59 +0800 (CST)
+From:   Zhang Jiaming <jiaming@nfschina.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        anil.gurumurthy@qlogic.com, sudarsana.kalluru@qlogic.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        liqiong@nfschina.com, renyu@nfschina.com,
+        Zhang Jiaming <jiaming@nfschina.com>
+Subject: [PATCH] scsi: bfa: Fix spelling mistake
+Date:   Wed, 29 Jun 2022 14:56:07 +0800
+Message-Id: <20220629065607.24213-1-jiaming@nfschina.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <b1edec96-ccb2-49d6-323b-1abc0dc37a50@gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jun 29, 2022 at 09:38:00AM +1200, Michael Schmitz wrote:
-> That's one of the 'liberties' I alluded to. The reason I left these in is
-> that I'm none too certain what device feature the DMA API uses to decide a
-> device isn't cache-coherent.
+Change 'Mangement' to 'Management'.
+Change 'paramater' to 'parameter'.
 
-The DMA API does not look at device features at all.  It needs to be
-told so by the platform code.  Once an architecture implements the
-hooks to support non-coherent DMA all devices are treated as
-non-coherent by default unless overriden by the architecture either
-globally (using the global dma_default_coherent variable) or per-device
-(using the dev->dma_coherent field, usually set by arch_setup_dma_ops).
+Signed-off-by: Zhang Jiaming <jiaming@nfschina.com>
+---
+ drivers/scsi/bfa/bfa_fc.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-> If it's dev->coherent_dma_mask, the way I set
-> up the device in the a3000 driver should leave the coherent mask unchanged.
-> For the Zorro drivers, devices are set up to use the same storage to store
-> normal and coherent masks - something we most likely want to change. I need
-> to think about the ramifications of that.
+diff --git a/drivers/scsi/bfa/bfa_fc.h b/drivers/scsi/bfa/bfa_fc.h
+index 0314e4b9e1fb..8f4573c48bf2 100644
+--- a/drivers/scsi/bfa/bfa_fc.h
++++ b/drivers/scsi/bfa/bfa_fc.h
+@@ -218,8 +218,8 @@ enum {
+ 	FC_ELS_FAN = 0x60,	/* Fabric Address Notification */
+ 	FC_ELS_RSCN = 0x61,	/* Reg State Change Notification */
+ 	FC_ELS_SCR = 0x62,	/* State Change Registration. */
+-	FC_ELS_RTIN = 0x77,	/* Mangement server request */
+-	FC_ELS_RNID = 0x78,	/* Mangement server request */
++	FC_ELS_RTIN = 0x77,	/* Management server request */
++	FC_ELS_RNID = 0x78,	/* Management server request */
+ 	FC_ELS_RLIR = 0x79,	/* Registered Link Incident Record */
+ 
+ 	FC_ELS_RPSC = 0x7D,	/* Report Port Speed Capabilities */
+@@ -462,7 +462,7 @@ struct fc_rsi_s {
+ };
+ 
+ /*
+- * structure for PRLI paramater pages, both request & response
++ * structure for PRLI parameter pages, both request & response
+  * see FC-PH-X table 113 & 115 for explanation also FCP table 8
+  */
+ struct fc_prli_params_s {
+-- 
+2.34.1
 
-No, the coherent mask is slightly misnamed amd not actually related.
