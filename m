@@ -2,67 +2,65 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA9B2C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jun 2022 07:27:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D59ACC43334
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jun 2022 07:37:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231497AbiF2H1C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 29 Jun 2022 03:27:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42102 "EHLO
+        id S231917AbiF2HhB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 29 Jun 2022 03:37:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51732 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231338AbiF2H1B (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Jun 2022 03:27:01 -0400
-Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75C0C252AB;
-        Wed, 29 Jun 2022 00:27:00 -0700 (PDT)
-Received: by mail-pj1-x1035.google.com with SMTP id m14-20020a17090a668e00b001ee6ece8368so9186039pjj.3;
-        Wed, 29 Jun 2022 00:27:00 -0700 (PDT)
+        with ESMTP id S231790AbiF2HhA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Jun 2022 03:37:00 -0400
+Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2F2735A9D;
+        Wed, 29 Jun 2022 00:36:59 -0700 (PDT)
+Received: by mail-pf1-x434.google.com with SMTP id a15so14263370pfv.13;
+        Wed, 29 Jun 2022 00:36:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=subject:to:references:cc:from:message-id:date:user-agent
          :mime-version:in-reply-to:content-transfer-encoding;
-        bh=p0NOM3tOvTu9tYu9Jo91fNZhl1btdoLw3G3+FzLKArM=;
-        b=n3j8GaQHuO3/QxhfJ8CTdhl1hlcudhq0b3DYg6UiXzzSaeo95kmbbOAgNKGpVh6xqy
-         C+xVMyOxJiUJ1ywhyHBR1P6e2BRACnegWrkT2jHwU44FgrnSeddVLTBk8ne2jO2MCyuz
-         thu1Rif8QuRvEQ3d5z/UXeh3d3nrgUnLN+ixbahcLuXF3mrvGO0lGDLNHX19mxbkXosq
-         qhALpOpHNWdG6IdzSXn91l0Tml3mIYg5QL3t472ECb6hXMGVdv3iWybyRdsc5g97Ne6B
-         UmwgG5YMR7UDjLv4sXXH1UZQ0C0a7ZxcJq5dwE2RtmnEavc3y6SNXT3htbQ8adBi2rUJ
-         c4zQ==
+        bh=yo9MuBJCTtyDqGRGrOTl12Biymn+yCnqsPIXboo8MP8=;
+        b=J7UL3K80EdR+wrKQGZW1ugKK+hUUTxptCuPRTBGtD+2V8+RF2BjlD3OGgSKagmFGdQ
+         jTXQQSQD75knCT1HR8mSHDkEWpZZ3AN6YLeWGkm907zoI52XUklQ5kp/wfljZOHcNfYO
+         4cAWEOjqTrRYb2naFBHVnODWDZb0PH17nYUpaD4Ij2UDUElyb7f820fkCAt0bgBAKL8O
+         ZrAevCZDB7QrZkE1YGHygeK8ILBkoG2itNzXMtU3jifT090f4eNW1PdtbGXdX/qUZn45
+         Db5TZESJ/uXwib1BxjpVnXCNuadBGB1Ds35auxkYG1pVh2pK4mtSyU6TGvf5lrUEOsam
+         OKWQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:subject:to:references:cc:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-transfer-encoding;
-        bh=p0NOM3tOvTu9tYu9Jo91fNZhl1btdoLw3G3+FzLKArM=;
-        b=ypryCuYIVSaIf71w+cIP7rsiQHJkfRjtg74rquJDV+Egxk+TzhiC8CMnIRKrfQ8UIr
-         z4kdZUPehyGEHLqNvymnRXN1fgj+SgSR8FWvAGNKRa0ij/jitABXRKEE35F+9wP26UMP
-         kRNCATJP8vwnnYi1CvirUJZVTyqRBOWINBMCmHPu5wIII8Y9AKa2+xV/MMjfz1XUKNmF
-         NgWLP8OcttYd8n0r9UFHUDjkxhXBbkMvaQlPYu+78ScVpXj/fOBSA76qNiCYvA3iEVBF
-         O+2ZqbDPNcK429MiDYiJQAOgn9aTJQGTFXyOCCMuqTezBg0g/9qLAghgiZk4t7bf2S0I
-         /GJg==
-X-Gm-Message-State: AJIora916vQy3nhI3y+dlxy7dOqHP2NxD5vJfpARiPqOfddWi1DGYJ7I
-        SuADsHyyehIfqP/WG0z/Frk=
-X-Google-Smtp-Source: AGRyM1sSZVLEMQBl3VyNMSf7sn9exiAxLXQ76/IGAArZslL7bpjz6wMRSDDWVgMeipgE9vaiQNy73A==
-X-Received: by 2002:a17:90b:3a8f:b0:1ec:93d4:f955 with SMTP id om15-20020a17090b3a8f00b001ec93d4f955mr4230251pjb.23.1656487619990;
-        Wed, 29 Jun 2022 00:26:59 -0700 (PDT)
+        bh=yo9MuBJCTtyDqGRGrOTl12Biymn+yCnqsPIXboo8MP8=;
+        b=Mtgmz8q/GSV6qEEA+9i+nK8RQzVXIrHgplmkzSk23oUiNDXpt1gVFm8zvwzqGY4i7P
+         33ycfCoylMO/l/yaCUOCYeXE/Aa+w08DuSFRkr3LrUl/5zoQ8TXEnYx4Eu8v5uhI7jTb
+         wzO+K4JGqBDdIhwSyzcgoP13w9Jca9HQyAMbPvUBpaWB+EIy3fAOSM0K26/ARdgn2Aqu
+         X/uCoc8QCFMmLXU1htG1ol7+gFLZUILbMSHZRwhR0Bhe8ggTfaThePwczlKZuMEAk3R9
+         Cv7a6I4Tupi1oK2seSX7KdyjdckmLt8XgZyeiNibiTjPfzjy0kXxZw45qElyUD8V5A5D
+         lSDw==
+X-Gm-Message-State: AJIora+jrsaIq0pUw/umypUcznn3GGJK/7Gvgsq61gQFh3GCAZ+vNIuI
+        Q/rWmx2PAN4kOZuL59J26YKtp/2VwJqXsA==
+X-Google-Smtp-Source: AGRyM1u1Na9TyzVCQppQB49a35y4wJ1s9D5Q3prQfi9dd89rJT4ztwp1A00bKsINqpMsavawJW8zMA==
+X-Received: by 2002:a05:6a00:1901:b0:518:916e:4a85 with SMTP id y1-20020a056a00190100b00518916e4a85mr8871260pfi.65.1656488219229;
+        Wed, 29 Jun 2022 00:36:59 -0700 (PDT)
 Received: from [10.1.1.24] (222-155-0-244-adsl.sparkbb.co.nz. [222.155.0.244])
-        by smtp.gmail.com with ESMTPSA id a4-20020a170902710400b00162037fbb68sm10525024pll.215.2022.06.29.00.26.56
+        by smtp.gmail.com with ESMTPSA id 132-20020a62198a000000b0051bc5f4df1csm10694147pfz.154.2022.06.29.00.36.55
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 29 Jun 2022 00:26:59 -0700 (PDT)
-Subject: Re: [PATCH v1 2/3] scsi - a2091.c: convert m68k WD33C93 drivers to
- DMA API
+        Wed, 29 Jun 2022 00:36:58 -0700 (PDT)
+Subject: Re: [PATCH v1 0/3] Converting m68k WD33C93 drivers to DMA API
 To:     Arnd Bergmann <arnd@kernel.org>
 References: <20220629011638.21783-1-schmitzmic@gmail.com>
- <20220629011638.21783-3-schmitzmic@gmail.com>
- <CAK8P3a2yx7dgU8xnhOLsyeD0eq5q+wSOOzJPmNDdG1kWkiG3-g@mail.gmail.com>
+ <CAK8P3a2hQWF8vY7HPF=6QMW+Ts8fpcwcwmBskbrMLGNgK08hSw@mail.gmail.com>
 Cc:     Linux/m68k <linux-m68k@vger.kernel.org>,
         linux-scsi <linux-scsi@vger.kernel.org>,
         Geert Uytterhoeven <geert@linux-m68k.org>
 From:   Michael Schmitz <schmitzmic@gmail.com>
-Message-ID: <554d6fa7-01b7-d3c8-a72a-6474e9c5038e@gmail.com>
-Date:   Wed, 29 Jun 2022 19:26:53 +1200
+Message-ID: <5e57e1e1-2b06-e58c-9081-3b2cce11b5ce@gmail.com>
+Date:   Wed, 29 Jun 2022 19:36:52 +1200
 User-Agent: Mozilla/5.0 (X11; Linux ppc; rv:45.0) Gecko/20100101
  Icedove/45.4.0
 MIME-Version: 1.0
-In-Reply-To: <CAK8P3a2yx7dgU8xnhOLsyeD0eq5q+wSOOzJPmNDdG1kWkiG3-g@mail.gmail.com>
+In-Reply-To: <CAK8P3a2hQWF8vY7HPF=6QMW+Ts8fpcwcwmBskbrMLGNgK08hSw@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -71,72 +69,86 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Hi Arnd,
 
-thanks for your review!
-
-Am 29.06.2022 um 18:06 schrieb Arnd Bergmann:
+Am 29.06.2022 um 18:19 schrieb Arnd Bergmann:
 > On Wed, Jun 29, 2022 at 3:16 AM Michael Schmitz <schmitzmic@gmail.com> wrote:
 >>
->> Use dma_map_single() for a2091 driver (leave bounce buffer
->> logic unchanged).
+>> V1 of a patch series to convert m68k Amiga WD33C93 drivers to the
+>> DMA API.
 >>
->> Use dma_set_mask_and_coherent() to avoid explicit cache
->> flushes.
+>> This series was precipitated by Arnd removing CONFIG_VIRT_TO_BUS. The
+>> m68k WD33C93 still used virt_to_bus to convert virtual addresses to
+>> physical addresses suitable for the DMA engines (note m68k does not
+>> have an IOMMU and uses a direct mapping for DMA addresses).
 >>
->> Compile-tested only.
+>> Arnd suggested to use dma_map_single() to set up dma mappings instead
+>> of open-coding much the same in every driver dma_setup() function.
 >>
->> CC: linux-scsi@vger.kernel.org
->> Link: https://lore.kernel.org/r/6d1d88ee-1cf6-c735-1e6d-bafd2096e322@gmail.com
->> Signed-off-by: Michael Schmitz <schmitzmic@gmail.com>
+>> It appears that m68k (MMU, except for coldfire) will set up pages for
+>> DMA transfers as non-cacheable, thus obviating the need for explicit
+>> cache management.
 >
-> Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+> To clarify, the dma-mapping API has two ways of dealing with this:
 >
->> +
->> +       addr = dma_map_single(hdata->dev, scsi_pointer->ptr,
->> +                             len, DMA_DIR(dir_in));
->> +       if (dma_mapping_error(hdata->dev, addr)) {
->> +               dev_warn(hdata->dev, "cannot map SCSI data block %p\n",
->> +                        scsi_pointer->ptr);
->> +               return 1;
->> +       }
->> +       scsi_pointer->dma_handle = addr;
+> - the streaming API (dma_map/unmap_...) uses explicit cache flushes
+>
+> - the coherent API (dma_alloc_coherent etc) uses page protections
+>   to prevent caching.
+>
+> These three drivers use the streaming API because they operate on
+> data passed in from the outside, so the non-cacheable protection bits
+> are not used here.
+
+I had feared you'd say something along these lines ...
+
+Now that throws up a possible problem for the gvp11 driver: due to the 
+need to first map an allocated chunk, then possibly discard that and try 
+another allocation strategy, copying of data to the bounce buffer is 
+deferred until after the final mapping has been successful. This means 
+for writes, we have done the cache flushing before we have actually 
+written any data to the buffer.
+
+I don't think it is safe to omit the explicit cache flush for writes in 
+this case.
+
+>> DMA setup on a3000 host adapters can be simplified to skip bounce
+>> buffer use (assuming SCSI buffers passed to the driver are cache> Thanks, and Cheers,
 >>
->>         /* don't allow DMA if the physical address is bad */
->>         if (addr & A2091_XFER_MASK) {
->> +               /* drop useless mapping */
->> +               dma_unmap_single(hdata->dev, scsi_pointer->dma_handle,
->> +                                scsi_pointer->this_residual,
->> +                                DMA_DIR(dir_in));
+>>    Michael
+>>
 >
-> I think you could save the extra map/unmap here if you wanted, but that
-> would risk introducing bugs since it requires a larger rework.
-
-Not sure how to do that ...
-
->> +               scsi_pointer->dma_handle = (dma_addr_t) NULL;
->> +
->>                 wh->dma_bounce_len = (scsi_pointer->this_residual + 511) & ~0x1ff;
->>                 wh->dma_bounce_buffer = kmalloc(wh->dma_bounce_len,
->>                                                 GFP_KERNEL);
+>> line aligned; a safe bet except for maybe sg.c input).
+>>
+>> On gvp11 and a2091 host adapters, only the lowest 16 MB of physical
+>> memory can be directy addressed by DMA, and bounce buffers from that
+>> space must still be used (possibly allocated from chip RAM using the
+>> custom allocator) if buffers are located in the higher memory regions.
+>>
+>> The m68k VME mvme147 driver has no DMA addressing or alignment
+>> restrictions and can be converted in the same way as the Amiga a3000
+>> one, but will require conversion to a platform device driver first.
 >
-> Not your bug, but if there is memory above the A2091_XFER_MASK limit,
-> this would need to use GFP_DMA instead of GFP_KERNEL.
+> Right, it seems that the old hack of passing a NULL device pointer
+> no longer works, and that is probably for the better.
+>
+> If you want an easy way out, the driver can just call
+> platform_device_register_full() to create its own device with a
+> dma_mask set up, and use that device for the DMA API, but
+> not actually match the device to a driver.
 
-Same argument goes for gvp11 - though last time I checked (and certainly 
-at the time these drivers were written), there really was no difference 
-between using GFP_DMA and GFP_KERNEL on m68k, hence the need to check 
-the allocated buffer is indeed suitable for DMA, and perhaps revert to 
-chip RAM (slow, useless for most other purposes but definitely below 16 
-MB) if that fails (as the gvp11 driver does).
-
-Most users will opt for loading the kernel to a RAM chunk at a higher 
-physical address, making the lower chunk unusable (except as chip RAM), 
-meaning allocating a bounce buffer within the first 16 MB will most 
-likely fail anyway AIUI (but Geert would know that for sure).
+I'll leave it to Geert to decide whether he prefers setting up a 
+platform device in arch/m68k/mvme147/config.c or use the shortcut. I've 
+used platform_device_register_simple() in a few other drivers so don't 
+mind that much.
 
 Cheers,
 
 	Michael
 
 >
->          Arnd
+>> Only compile tested so far, and hardware testing might be hard to do.
+>> I'd appreciate someone giving this a thorough review.
+>
+> Looks all good to me.
+>
+>         Arnd
 >
