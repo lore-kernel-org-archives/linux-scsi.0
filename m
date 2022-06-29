@@ -2,109 +2,124 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26ABAC43334
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jun 2022 20:48:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3D32C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jun 2022 21:49:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230514AbiF2Us2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 29 Jun 2022 16:48:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40580 "EHLO
+        id S230240AbiF2Vtr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 29 Jun 2022 17:49:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53364 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229698AbiF2Us1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Jun 2022 16:48:27 -0400
-Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0EC73FBCC;
-        Wed, 29 Jun 2022 13:48:21 -0700 (PDT)
-Received: by mail-pl1-x633.google.com with SMTP id r1so15172525plo.10;
-        Wed, 29 Jun 2022 13:48:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=qhsFUjH+wI94oun4uxuL1yuFWLai9/RJksYgc2AjR00=;
-        b=bju/ywKNEIT0oyzLLDdIcnsCfM8AryG+PYC0jGE2sDzfsHT2+5BWJHi0iLsisKFqcK
-         LERHVeMHOtzvKnTQmjozdmvxpQjPS0+rsTVboV33yfFfMZCg4ptp+8qI5G6ait9mHVJQ
-         B02YpSjDbnwBY9+7Os/gAecjvFLDknT2t8KgUAvgXGDxtPF+32wVnsauC4GocS1boiYy
-         6lIgTVwaJpiAc+5i5EWyZyVGXw6M6plYkPRKG/jZf4wVdzddyPYFgfklZi7UUgMILA+/
-         uqFwvykP3fJ6QFqdW6sRBXvexF8Sifc76CoNTgiMRGAWoKDhS3K66c3rVRH/5bgrQqC8
-         ZusQ==
+        with ESMTP id S229601AbiF2Vtq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Jun 2022 17:49:46 -0400
+Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 101A1DF3
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Jun 2022 14:49:45 -0700 (PDT)
+Received: by mail-pf1-f182.google.com with SMTP id d17so16276406pfq.9
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Jun 2022 14:49:45 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
          :content-language:to:cc:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=qhsFUjH+wI94oun4uxuL1yuFWLai9/RJksYgc2AjR00=;
-        b=TP7cfDys9+G8aphilZWWUISdkiRIfp1LDwzAFi4IoNk65Jq/4Bt5kK0iO8v4TyeLNU
-         DCcCR7iU43iH5g0LTYQnezRIQQBu0mI+cT6NgD0a/hwAYDWjfALy9cqn6TOKAL+7QXbE
-         mCB4zq4b15NnvWRo5UxZv+MqiHjRyqxveL00DaeAptrLPEeJqYujn7Wh/y8sXmsbXN2z
-         m+huBJ+bi+ujXGEqEPiIU7JioQZdIlClFa1b6MaSZZt4S/SYWKSfgwSattKDh8i7u4Dl
-         YixQmHURlw21Qa0k4VCRYkfe454bBj0lP0FBOaEuSy+MfbEbo0nj2L1URoEg/wLNZK6j
-         Qpww==
-X-Gm-Message-State: AJIora9oZJq9+iv7d4I3nPO2lo5NqKw7bNwH30KG+H+IHNZ8uAPBtD3D
-        NVaesgXadAalWttMojS6eFynAHuQ5Tcv5A==
-X-Google-Smtp-Source: AGRyM1t76qqv2RVL0T0jTVMhkfsPOaCn3fxyNGUq9Zl1nwTuV15oXJk0dK/UWSbShXfEesWoGQ5uIg==
-X-Received: by 2002:a17:903:124f:b0:16b:8167:e34e with SMTP id u15-20020a170903124f00b0016b8167e34emr12016165plh.52.1656535701216;
-        Wed, 29 Jun 2022 13:48:21 -0700 (PDT)
-Received: from ?IPV6:2001:df0:0:200c:b411:35d2:9458:bbe5? ([2001:df0:0:200c:b411:35d2:9458:bbe5])
-        by smtp.gmail.com with ESMTPSA id t4-20020a17090340c400b001616723b8ddsm11756842pld.45.2022.06.29.13.48.18
+        bh=WaVTBb2h1YFOhUWrT6iks+4ugpDfwN45fCdQso1iNkc=;
+        b=FoTy0Y4B35/2KY1urs7SF/G5J0L5A1BVfyCiJRP1z9yZdw6Uqt8iEWx4BYNzdFkgue
+         ykQpwxrUOhg9NRiei6f8cNB5UhzPOqBj3eHj7z+uCjvzhldAm+4bC2O6UqaF2ktEP6Cs
+         VQDCLv9paj8c26tEHslyjT+C8aGZw1oV9/qkyjO3jxprs9jZ45wqIhkDgae2BVWFxH8z
+         Q9zgt76hCXLMgFn/JOo8/Chs04sOn5Z4J2R9qUoT7J1Kuc2oORJkm/9ekb7J0QtaH+px
+         oybCJur7+mYS1PK/lSdzLyEv47nP3puJ7XAhYItK0xdG09b9BBrzhKIhGUdsuk3ONwCk
+         vekw==
+X-Gm-Message-State: AJIora/yWLw06KTCBtsNps0ZAwEAWkfHfnpyoBKYwP6gH5iTy9p+ZChO
+        qJ5SPlsVIyezxL3Um0g/4mg=
+X-Google-Smtp-Source: AGRyM1t571OCRnb/JTjGDKt6kHhtULJ2DfQ6c4RLx0dWSlqIIMoLJBC8w/ijflGULNM5Zs+kqLtw+A==
+X-Received: by 2002:a63:8549:0:b0:40d:2864:e3b6 with SMTP id u70-20020a638549000000b0040d2864e3b6mr4593147pgd.301.1656539384416;
+        Wed, 29 Jun 2022 14:49:44 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:3841:49ce:cba5:1586? ([2620:15c:211:201:3841:49ce:cba5:1586])
+        by smtp.gmail.com with ESMTPSA id 84-20020a621757000000b00524e8e48156sm12375911pfx.142.2022.06.29.14.49.27
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 29 Jun 2022 13:48:20 -0700 (PDT)
-Message-ID: <39114583-9c4a-7b19-54d5-516feb556fac@gmail.com>
-Date:   Thu, 30 Jun 2022 08:48:16 +1200
+        Wed, 29 Jun 2022 14:49:32 -0700 (PDT)
+Message-ID: <8e464697-e179-19f7-e417-be089821a861@acm.org>
+Date:   Wed, 29 Jun 2022 14:49:27 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.1
-Subject: Re: [PATCH v1 2/3] scsi - a2091.c: convert m68k WD33C93 drivers to
- DMA API
+ Thunderbird/91.10.0
+Subject: Re: [PATCH] scsi: core: Call blk_mq_free_tag_set() earlier
 Content-Language: en-US
-To:     Geert Uytterhoeven <geert@linux-m68k.org>
-Cc:     Arnd Bergmann <arnd@kernel.org>,
-        Linux/m68k <linux-m68k@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>
-References: <20220629011638.21783-1-schmitzmic@gmail.com>
- <20220629011638.21783-3-schmitzmic@gmail.com>
- <CAK8P3a2yx7dgU8xnhOLsyeD0eq5q+wSOOzJPmNDdG1kWkiG3-g@mail.gmail.com>
- <554d6fa7-01b7-d3c8-a72a-6474e9c5038e@gmail.com>
- <CAMuHMdX0x3nL5fhmv2T01o8=H6Gp1jog_MZt9gjFe2A7YyMAuQ@mail.gmail.com>
-From:   Michael Schmitz <schmitzmic@gmail.com>
-In-Reply-To: <CAMuHMdX0x3nL5fhmv2T01o8=H6Gp1jog_MZt9gjFe2A7YyMAuQ@mail.gmail.com>
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
+        John Garry <john.garry@huawei.com>,
+        Li Zhijian <lizhijian@fujitsu.com>
+References: <20220628175612.2157218-1-bvanassche@acm.org>
+ <YruoKUbpBZvAkZ4L@T590>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <YruoKUbpBZvAkZ4L@T590>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Geert,
+On 6/28/22 18:17, Ming Lei wrote:
+> On Tue, Jun 28, 2022 at 10:56:12AM -0700, Bart Van Assche wrote:
+>> There are two .exit_cmd_priv implementations. Both implementations use the
+>> SCSI host pointer. Make sure that the SCSI host pointer is valid when
+>> .exit_cmd_priv is called by moving the .exit_cmd_priv calls from
+>> scsi_device_dev_release() to scsi_forget_host(). Moving
+>> blk_mq_free_tag_set() from scsi_device_dev_release() to scsi_forget_host()
+>> is safe because scsi_forget_host() drains all the request queues that use
+>> the host tag set. This guarantees that no requests are in flight and also
+>> that no new requests will be allocated from the host tag set.
+> 
+> Not sure scsi_forget_host really drains all queues since it bypasses
+> sdev which state is SDEV_DEL, so removal for this sdev could be
+> in-progress, not done yet.
 
-On 30/06/22 03:55, Geert Uytterhoeven wrote:
-> Hi Michael,
->
-> On Wed, Jun 29, 2022 at 9:27 AM Michael Schmitz <schmitzmic@gmail.com> wrote:
->> Most users will opt for loading the kernel to a RAM chunk at a higher
->> physical address, making the lower chunk unusable (except as chip RAM),
->> meaning allocating a bounce buffer within the first 16 MB will most
->> likely fail anyway AIUI (but Geert would know that for sure).
-> Exactly.  On Zorro III-capable machines, Zorro II RAM is not mapped
-> for general use, but can be used by the z2ram block device.
-Is there any DMA capable memory other than chip and ZorroII RAM on these 
-machines?
-> Note that you can use it as a bounce buffer, by looking for and marking
-> free chunks in the zorro_unused_z2ram bitmap.
+Ah, that's right. How about making scsi_forget_host() wait until all request
+activity on the associated queues has stopped, e.g. by replacing the current
+scsi_forget_host() implementation by the one below?
 
-That would be similar to what amiga_chip_alloc() does, right? Any 
-advantages over using chip RAM (faster, perhaps)?
+/**
+  * scsi_forget_host() - Remove all SCSI devices from a host.
+  * @shost: SCSI host to remove devices from.
+  *
+  * Removes all SCSI devices that have not yet been removed. For the SCSI devices
+  * for which removal started before scsi_forget_host(), wait until the
+  * associated request queue has reached the "dead" state. In that state it is
+  * guaranteed that no new requests will be allocated and also that no requests
+  * are in progress anymore.
+  */
+void scsi_forget_host(struct Scsi_Host *shost)
+{
+	struct scsi_device *sdev;
 
-Cheers,
+	might_sleep();
 
-     Michael
+  restart:
+	spin_lock_irq(shost->host_lock);
+	list_for_each_entry(sdev, &shost->__devices, siblings) {
+		if (sdev->sdev_state == SDEV_DEL &&
+		    blk_queue_dead(sdev->request_queue)) {
+			continue;
+		}
+		if (sdev->sdev_state == SDEV_DEL) {
+			get_device(&sdev->sdev_gendev);
+			spin_unlock_irq(shost->host_lock);
 
->
-> Gr{oetje,eeting}s,
->
->                          Geert
->
-> --
-> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
->
-> In personal conversations with technical people, I call myself a hacker. But
-> when I'm talking to journalists I just say "programmer" or something like that.
->                                  -- Linus Torvalds
+			while (!blk_queue_dead(sdev->request_queue))
+				msleep(10);
+
+			spin_lock_irq(shost->host_lock);
+			put_device(&sdev->sdev_gendev);
+			goto restart;
+		}
+		spin_unlock_irq(shost->host_lock);
+		__scsi_remove_device(sdev);
+		goto restart;
+	}
+	spin_unlock_irq(shost->host_lock);
+}
+
+Thanks,
+
+Bart.
