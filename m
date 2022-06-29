@@ -2,94 +2,59 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF963C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jun 2022 11:58:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5AF1C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jun 2022 12:17:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232754AbiF2L6J (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 29 Jun 2022 07:58:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60226 "EHLO
+        id S229929AbiF2MRE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 29 Jun 2022 08:17:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48508 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229911AbiF2L55 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Jun 2022 07:57:57 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B2E8387B1;
-        Wed, 29 Jun 2022 04:57:56 -0700 (PDT)
-Received: from fraeml739-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LY0Lr1xbbz67yhs;
-        Wed, 29 Jun 2022 19:57:08 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml739-chm.china.huawei.com (10.206.15.220) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Wed, 29 Jun 2022 13:57:53 +0200
-Received: from [10.195.245.77] (10.195.245.77) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Wed, 29 Jun 2022 12:57:52 +0100
-Message-ID: <416ebe33-28ed-eef0-0001-83efd83a9d0f@huawei.com>
-Date:   Wed, 29 Jun 2022 12:57:54 +0100
+        with ESMTP id S233231AbiF2MQc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Jun 2022 08:16:32 -0400
+Received: from gandalf.ozlabs.org (mail.ozlabs.org [IPv6:2404:9400:2221:ea00::3])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C36C035244;
+        Wed, 29 Jun 2022 05:16:26 -0700 (PDT)
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mail.ozlabs.org (Postfix) with ESMTPSA id 4LY0n24Wfcz4xZG;
+        Wed, 29 Jun 2022 22:16:22 +1000 (AEST)
+From:   Michael Ellerman <patch-notifications@ellerman.id.au>
+To:     Paul Mackerras <paulus@samba.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        martin.petersen@oracle.com, jejb@linux.ibm.com,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Christophe Leroy <christophe.leroy@csgroup.eu>
+Cc:     linuxppc-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+In-Reply-To: <3b1dfb19a2c3265fb4abc2bfc7b6eae9261a998b.1654966508.git.christophe.leroy@csgroup.eu>
+References: <3b1dfb19a2c3265fb4abc2bfc7b6eae9261a998b.1654966508.git.christophe.leroy@csgroup.eu>
+Subject: Re: [PATCH 1/2] powerpc: Don't include asm/setup.h in asm/machdep.h
+Message-Id: <165650492297.3004956.3199700587499347269.b4-ty@ellerman.id.au>
+Date:   Wed, 29 Jun 2022 22:15:22 +1000
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH v4 1/5] dma-mapping: Add dma_opt_mapping_size()
-To:     Robin Murphy <robin.murphy@arm.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linuxarm@huawei.com>, <iommu@lists.linux.dev>,
-        <linux-kernel@vger.kernel.org>, <linux-ide@vger.kernel.org>,
-        <iommu@lists.linux-foundation.org>,
-        <damien.lemoal@opensource.wdc.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <m.szyprowski@samsung.com>,
-        <joro@8bytes.org>, <hch@lst.de>, <will@kernel.org>
-References: <1656343521-62897-1-git-send-email-john.garry@huawei.com>
- <1656343521-62897-2-git-send-email-john.garry@huawei.com>
- <bbca5df5-8681-d6d9-201d-3d48b34e3001@arm.com>
- <a2e717d0-c3e2-ea98-9d8b-cee1fd37c117@huawei.com>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <a2e717d0-c3e2-ea98-9d8b-cee1fd37c117@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.195.245.77]
-X-ClientProxiedBy: lhreml751-chm.china.huawei.com (10.201.108.201) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 28/06/2022 12:27, John Garry via iommu wrote:
-> On 28/06/2022 12:23, Robin Murphy wrote:
->>> +
->>> +    size_t
->>> +    dma_opt_mapping_size(struct device *dev);
->>> +
->>> +Returns the maximum optimal size of a mapping for the device. 
->>> Mapping large
->>> +buffers may take longer so device drivers are advised to limit total 
->>> DMA
->>> +streaming mappings length to the returned value.
->>
->> Nit: I'm not sure "advised" is necessarily the right thing to say in 
->> general - that's only really true for a caller who cares about 
->> throughput of churning through short-lived mappings more than anything 
->> else, and doesn't take a significant hit overall from splitting up 
->> larger requests. I do think it's good to clarify the exact context of 
->> "optimal" here, but I'd prefer to be objectively clear that it's for 
->> workloads where the up-front mapping overhead dominates.
+On Sat, 11 Jun 2022 18:55:15 +0200, Christophe Leroy wrote:
+> asm/machdep.h doesn't need asm/setup.h
 > 
-I'm going to go with something like this:
+> Remove it.
+> 
+> Add it directly in files that needs it.
+> 
+> 
+> [...]
 
-size_t
-dma_opt_mapping_size(struct device *dev);
+Applied to powerpc/next.
 
-Returns the maximum optimal size of a mapping for the device.
+[1/2] powerpc: Don't include asm/setup.h in asm/machdep.h
+      https://git.kernel.org/powerpc/c/113fe88eed53af08800f54a03e463636105831e0
+[2/2] powerpc: Move prom_init() out of asm-prototypes.h
+      https://git.kernel.org/powerpc/c/7dc3ba0a071892ea212f90f63738fd9f81b1f638
 
-Mapping larger buffers may take much longer in certain scenarios. In 
-addition, for high-rate short-lived streaming mappings the upfront time 
-spent on the mapping may account for an appreciable part of the total 
-request lifetime. As such, if splitting larger requests incurs no 
-significant performance penalty, then device drivers are advised to 
-limit total DMA streaming mappings length to the returned value.
-
-Let me know if you would like it further amended.
-
-Cheers,
-John
+cheers
