@@ -2,94 +2,90 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4030C43334
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jun 2022 02:45:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA503C43334
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jun 2022 03:33:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229635AbiF3Cpr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 29 Jun 2022 22:45:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33514 "EHLO
+        id S231454AbiF3DdO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 29 Jun 2022 23:33:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35308 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229449AbiF3Cpq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Jun 2022 22:45:46 -0400
-Received: from mail-pl1-x632.google.com (mail-pl1-x632.google.com [IPv6:2607:f8b0:4864:20::632])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA0DF1A3B0;
-        Wed, 29 Jun 2022 19:45:45 -0700 (PDT)
-Received: by mail-pl1-x632.google.com with SMTP id k14so15799087plh.4;
-        Wed, 29 Jun 2022 19:45:45 -0700 (PDT)
+        with ESMTP id S230467AbiF3DdN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Jun 2022 23:33:13 -0400
+Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EEEFE5FED;
+        Wed, 29 Jun 2022 20:33:08 -0700 (PDT)
+Received: by mail-pj1-x102a.google.com with SMTP id c6-20020a17090abf0600b001eee794a478so1520300pjs.1;
+        Wed, 29 Jun 2022 20:33:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=subject:to:references:cc:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding;
-        bh=Ev4+82itvCxx5jxqraeA1gGNjalXvR8F+/m9LOFF/5A=;
-        b=K7ZVgdrrsWcy1yjAW3ycsPtDtqN6ywgqVKRuyDKbJyN4Y+NGrTZv2hQ7J0w0bEelNV
-         i+eCFSfRuEweTConB41DSrPNj71Jr2KYkYvx3kOz1Vh4IHopNW6UAc2vNixslsuMm1wJ
-         OeYxQQCqM2Eft2uMNS2MwG+k4IRWeMYJAUAy9eEyPv8mZ0w3NN8KP5IB2ENhcqQ94sIv
-         rUiIyuxefipyrsszHFoboTh8dqAPYl1cE4Dse0F7k86V/JIgmzZ/G/hZB5RypDeEN6h+
-         UswUdrmueOcQ9kRWPl/svKOtRVP088fpizloWAqZMOmR66bHa8HkQv9a6+5iNTWT706O
-         7GLQ==
+        h=from:to:cc:subject:date:message-id;
+        bh=85BRrYxng71wcu1JoZwsELKQ/QBDT/gklfigvh09xfQ=;
+        b=Q/ogXACDmJvTnQA85r9lYDJjrFTQzX26nU5DSt3QNQgPWHiXuFf64NSGyKcry9ZwPT
+         vR+oitNMZvKBby6SaWW8d++Q8ewPumdZ2zliL84cQoH5GqAhWPuMEbVLvXUAOD9JaxxU
+         jM1dByC0E9616sLthI2knxvkOGUxXKiQ+l4pvACPPqpDci/y1xSsCBUygyutPeEuYI3I
+         nMEntLi82h5VFEnjFqkfIG8Vah962KCLtRl45YmOPqXH+cuC7MeOJYCDlze7mtXY4y3m
+         4JMC2GMZWChb2sRHDRTSiPtr1pq1APj4/8vIEES1ty11aadP3xxwJ0HCcVHvf4nhlKLp
+         hrAQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:references:cc:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding;
-        bh=Ev4+82itvCxx5jxqraeA1gGNjalXvR8F+/m9LOFF/5A=;
-        b=CScifvGkfBTTh++KtnQUvOE1SLl5LxQ+IKWCwMzphBEG3Sg0OYjtwkjfs7UwUc7lyn
-         B8DxPTZm6w7hNNNVX+M6UW+DJVeMflVsAILeZHOSICTMIkpzDXNfrRFUr5x51emJYQBX
-         2a0FEvKcREh0IZgDoe7V1hzFlromqtO2XuAGC2nUeGCl9CkhpXm72UYy4sc74dpx8gKT
-         TALP1atW8CAH5kkj4hXZppVdXDPRymOCn1bjoJE0gEaa6xwqCck1maj1bbBNHFLX1V33
-         IlUpz++7yadanbA4+bZNMb6/CZ6QQlBA+Zl8rTjbTdvAG85gYe86OfBWwAO/KR3dUsWB
-         0dXw==
-X-Gm-Message-State: AJIora9igtJqCfZhX7NuQaw6xK8lOEU8RhXVAH0sL/o3LZE6q+O9Q3dE
-        oM2BqkAQB5ACJ0UAkzp1WRa8RaFlGjU=
-X-Google-Smtp-Source: AGRyM1uZctpSZI6Mw0Axkt0tNBlPH3nv0kVLFwsCnDfKmsDu5NDV3VVpX02f6F5zRs7NTPrSgBqayw==
-X-Received: by 2002:a17:90b:4f8c:b0:1ed:243:ba07 with SMTP id qe12-20020a17090b4f8c00b001ed0243ba07mr9110403pjb.89.1656557145026;
-        Wed, 29 Jun 2022 19:45:45 -0700 (PDT)
-Received: from [10.1.1.24] (222-155-0-244-adsl.sparkbb.co.nz. [222.155.0.244])
-        by smtp.gmail.com with ESMTPSA id d4-20020a170902654400b00168aed83c63sm12151164pln.237.2022.06.29.19.45.40
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 29 Jun 2022 19:45:44 -0700 (PDT)
-Subject: Re: [PATCH v1 0/3] Converting m68k WD33C93 drivers to DMA API
-To:     Arnd Bergmann <arnd@kernel.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>
-References: <20220629011638.21783-1-schmitzmic@gmail.com>
- <CAK8P3a2hQWF8vY7HPF=6QMW+Ts8fpcwcwmBskbrMLGNgK08hSw@mail.gmail.com>
- <5e57e1e1-2b06-e58c-9081-3b2cce11b5ce@gmail.com>
- <CAK8P3a3uTpSmzaRbeWp3Y9FZYx8js5pvgjNpLj79wAFFGp4Vhg@mail.gmail.com>
- <CAMuHMdWcZdN6kZ4pHZfybd9qtPbYVtcys+VOUG+HXvX3rPFwjA@mail.gmail.com>
- <CAK8P3a32A9eqQoOm9qyWV_XpQQnKyaEg5ULKyi1ZkDpn1onL5Q@mail.gmail.com>
-Cc:     Linux/m68k <linux-m68k@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=85BRrYxng71wcu1JoZwsELKQ/QBDT/gklfigvh09xfQ=;
+        b=F7R/nHTPV+XwYsdvc0uRd65PQ6L/k8CCWmGiT82FvZF8PSGOfT5CinAm2f12jwM6Hg
+         NXW/8g6oTYIoJtklw6sQdC4SgFp4IZXfG5HPOgdwXFzDj3zm5AeGJbtdzhQNyzuDBFDL
+         AuRopQn2J8uMbjSxFF0R68lvFoQQXqZvhBx82tPGm1otiUPyjdBsMP5RL+8LtKZCeSBQ
+         GNmydxM9qo9O7QIhvRBVtIdGPog+RP3to84aUA86aKnOD0z+erN7GX29+eETDsW+CKKk
+         2D2an/zFjKSy/Q+BQAYG3veCrFWQGjZPBOwdXRCOJivejEV/goX1ld8RCglHPzCz6eVY
+         MrDQ==
+X-Gm-Message-State: AJIora/ubOB0gReLLh8egcsExowsWdS3FQ4stEpGXGFqmuUVJIf++jtk
+        9N45vbfLQYxZZGbOJ/TjfiM=
+X-Google-Smtp-Source: AGRyM1s8pFPSL1+I82q7CScMvB7qRYBuY8/vVsQTNLSnN5osKUJDzdyRzk0n1MY7fV9kPHNh/MYDUA==
+X-Received: by 2002:a17:902:a40f:b0:16a:bf3:b837 with SMTP id p15-20020a170902a40f00b0016a0bf3b837mr13613141plq.55.1656559988354;
+        Wed, 29 Jun 2022 20:33:08 -0700 (PDT)
+Received: from xplor.waratah.dyndns.org (222-155-0-244-adsl.sparkbb.co.nz. [222.155.0.244])
+        by smtp.gmail.com with ESMTPSA id s5-20020a170902988500b00161947ecc82sm12126073plp.199.2022.06.29.20.33.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 29 Jun 2022 20:33:07 -0700 (PDT)
+Received: by xplor.waratah.dyndns.org (Postfix, from userid 1000)
+        id 4CE3D360331; Thu, 30 Jun 2022 15:33:04 +1200 (NZST)
 From:   Michael Schmitz <schmitzmic@gmail.com>
-Message-ID: <299b7b79-c8b9-46b8-8ae5-30ebd38e2c2c@gmail.com>
-Date:   Thu, 30 Jun 2022 14:45:38 +1200
-User-Agent: Mozilla/5.0 (X11; Linux ppc; rv:45.0) Gecko/20100101
- Icedove/45.4.0
-MIME-Version: 1.0
-In-Reply-To: <CAK8P3a32A9eqQoOm9qyWV_XpQQnKyaEg5ULKyi1ZkDpn1onL5Q@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+To:     linux-m68k@vger.kernel.org, arnd@kernel.org
+Cc:     linux-scsi@vger.kernel.org, geert@linux-m68k.org
+Subject: [PATCH v2 0/3] Converting m68k WD33C93 drivers to DMA API
+Date:   Thu, 30 Jun 2022 15:32:59 +1200
+Message-Id: <20220630033302.3183-1-schmitzmic@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Arnd,
+This series was precipitated by Arnd removing CONFIG_VIRT_TO_BUS. The
+m68k WD33C93 still used virt_to_bus to convert virtual addresses to
+physical addresses suitable for the DMA engines (note m68k does not
+have an IOMMU and uses a direct mapping for DMA addresses). 
 
-Am 30.06.2022 um 04:44 schrieb Arnd Bergmann:
-> For simplicity, the normal bounce buffer could similarly use
-> dma_alloc_coherent(), which will also result in an uncached
-> buffer. If I read this correctly, this will also ensure that the buffer
+Arnd suggested to use dma_map_single() to set up dma mappings instead
+of open-coding much the same in every driver dma_setup() function.
 
-No sure we can rule out calling dma_setup() in interrupt context.
+DMA setup on a3000 host adapters can be kept as-is (bounce
+buffers are used only where the input buffer isn't cache line
+aligned). Cache management is now taken care of by dma_map_single().
+Note that I've restored bounce buffer allocation (dropped in v1) in
+order to make minimal changes to the core logic.
 
-> is within the DMA mask, so if ZONE_DMA is larger than the mask,
-> it just returns NULL and you have to fall back to the chipram
-> page, rather than checking the address and freeing the buffer.
+On gvp11 and a2091 host adapters, only the lowest 16 MB of physical
+memory can be directy addressed by DMA, and bounce buffers from that
+space must be used (possibly allocated from chip RAM using the
+custom allocator) if buffers are located in the higher memory regions.
+No cache management is required for chip RAM bounce buffers.
 
-Still need to check what ZONE_DMA is set to on Amiga.
+The m68k VME mvme147 driver has no DMA addressing or alignment
+restrictions and can be converted in the same way as the Amiga a3000
+one, but will require conversion to a platform device driver first.
+
+Only compile tested so far, and hardware testing might be hard to do.
 
 Cheers,
-	
-	Michael
 
->
->        Arnd
->
+   Michael
+
+
