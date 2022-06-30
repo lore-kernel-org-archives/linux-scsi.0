@@ -2,75 +2,87 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9C34C43334
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jun 2022 17:19:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C3F0C43334
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jun 2022 18:57:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236109AbiF3RTX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Jun 2022 13:19:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45318 "EHLO
+        id S235374AbiF3S5k (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Jun 2022 14:57:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37848 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236119AbiF3RTU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Jun 2022 13:19:20 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2AC137026
-        for <linux-scsi@vger.kernel.org>; Thu, 30 Jun 2022 10:19:18 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 4D245B82CC2
-        for <linux-scsi@vger.kernel.org>; Thu, 30 Jun 2022 17:19:17 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id F2D4CC34115
-        for <linux-scsi@vger.kernel.org>; Thu, 30 Jun 2022 17:19:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1656609556;
-        bh=09gIhgG7XVPMlxF3lC1kB0xjrTNOLRI3g7mVWsfPX7I=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=kU0OTtW0p/uXxnLUGB8Ictu0gP62hk1TcTzTEP0BawVHdPRXb25Qpr1yj4e5dDkMP
-         2FISBJoEWtsUBI4Or/WKFyMMpbMIrxOZ/uweBAYlNa1XeGRmehcgdQhg32E7h9xkNL
-         vZObTxhW63+r3ZxwxCVAaMChuaIJZl8P4iOp2A9dmqqwDj8d0GSeFP+MjdlS/sp7XG
-         77Gu/TcGWkKKNamcd1+LJnXgYibojYqKk8FFf/mnTT/LJP5MQgB+zgNXpcFLxs5nrA
-         LjJDp8spJemM5Gc7U0bwNFwuhwgEjhKIU5azIlcU5H6AZJgMco5zxLFe/kZouJb0Eb
-         5n+6G9Z4l41kg==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id DCB20C05FF5; Thu, 30 Jun 2022 17:19:15 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 215447] sr_mod scsi_mode_sense() failure -> "scsi-1 drive"
-Date:   Thu, 30 Jun 2022 17:19:15 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: Other
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: cshorler@googlemail.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-215447-11613-f6D8ITMHe5@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-215447-11613@https.bugzilla.kernel.org/>
-References: <bug-215447-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        with ESMTP id S236751AbiF3S5k (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Jun 2022 14:57:40 -0400
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 574103C730
+        for <linux-scsi@vger.kernel.org>; Thu, 30 Jun 2022 11:57:39 -0700 (PDT)
+Received: by mail-pj1-f48.google.com with SMTP id w1-20020a17090a6b8100b001ef26ab992bso392139pjj.0
+        for <linux-scsi@vger.kernel.org>; Thu, 30 Jun 2022 11:57:39 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=w3ABJMZ1a8USZEuFMaqLKbI+FgosswJiTdxBKxxRB4I=;
+        b=WS1GJehR9fgZlSeE3ByIT2HSBtyfvIBAyRi58i06MZeUiJfSCGjuaLoD8mHseWBEoX
+         3Yq64jZhjT8X6a+ZBzpnTp0EUr3Q4FfCIwoskk/tKPMd1qZCNf9ETvMMdrqFGEOzKoZS
+         cLHrjb5JlzPtfgQuC3LUSkKc5J1k6qmkLesQTYRaVBrvPZbliBkC/VmWQL/V3zrUs7l0
+         4uAfRqBpoProuOCxPFXohzL0SmzTerdYaW6CJWY+GjJ4+McXzKvHDL/Zur6YC0GQ6QfM
+         tF6/Bjt4/VcosjoIKSZsQY6W/ZLb3GDn2QKjVUFdwNZjsNEEoua40i2yAAJyMu0YZZxx
+         fTOg==
+X-Gm-Message-State: AJIora9ZEmV799qZR1aEEbLjnCXBpYIPWsX7UiQvMLzqx9Ag1PAwyRee
+        6we4bVjMcY4iq2Zle3wcGjA=
+X-Google-Smtp-Source: AGRyM1uNKERzeiliIZiP3Hw0u2dlGPZ9oYzJJMTF9rwGuia59VAH1QaQ0cvLpbbjGv3vZ8UOQsY5pw==
+X-Received: by 2002:a17:902:b215:b0:168:da4b:c925 with SMTP id t21-20020a170902b21500b00168da4bc925mr15524462plr.155.1656615458709;
+        Thu, 30 Jun 2022 11:57:38 -0700 (PDT)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id 63-20020a630542000000b0040c762eb57esm13750000pgf.82.2022.06.30.11.57.37
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 30 Jun 2022 11:57:37 -0700 (PDT)
+Message-ID: <b55be9e0-e1b7-8c8e-7c40-0cb633e381d3@acm.org>
+Date:   Thu, 30 Jun 2022 11:57:36 -0700
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH 3/3] scsi: sd: Rework asynchronous resume support
+Content-Language: en-US
+To:     John Garry <john.garry@huawei.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
+        ericspero@icloud.com, jason600.groome@gmail.com
+References: <20220628222131.14780-1-bvanassche@acm.org>
+ <20220628222131.14780-4-bvanassche@acm.org>
+ <82e30007-1ffc-92e4-38b5-eaf7dd2e316d@huawei.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <82e30007-1ffc-92e4-38b5-eaf7dd2e316d@huawei.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D215447
+On 6/30/22 09:23, John Garry wrote:
+> On 28/06/2022 23:21, Bart Van Assche wrote:
+>> +/* A START command finished. May be called from interrupt context. */
+>> +static void sd_start_done(struct request *req, blk_status_t status)
+>> +{
+>> +    const struct scsi_cmnd *scmd = blk_mq_rq_to_pdu(req);
+>> +    struct scsi_disk *sdkp = scsi_disk(req->q->disk);
+>> +
+>> +    sdkp->start_result = scmd->result;
+>> +    WARN_ON_ONCE(scmd->sense_len > SCSI_SENSE_BUFFERSIZE);
+> 
+> If scmd->sense_len > SCSI_SENSE_BUFFERSIZE, do you really want to go on 
+> to copy at sdkp->start_sense_buffer (which is of size 
+> SCSI_SENSE_BUFFERSIZE)? Won't that cause a corruption?
 
---- Comment #10 from Chris Horler (cshorler@googlemail.com) ---
-any update on this?
+scsi_mq_init_request() allocates a buffer with size 
+SCSI_SENSE_BUFFERSIZE. SCSI LLDs copy sense data into that buffer. I am 
+not aware of any SCSI LLD that modifies the cmd->sense_buffer pointer. 
+So if scmd->sense_len would be larger than SCSI_SENSE_BUFFERSIZE that 
+either indicates that the LLD reported a sense length that is too large 
+or that it wrote outside the bounds of the sense buffer. Do we really 
+need to add a protection in the SCSI core against buggy LLDs?
 
---=20
-You may reply to this email to add a comment.
+Thanks,
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+Bart.
