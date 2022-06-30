@@ -2,81 +2,92 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD37DC433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jun 2022 12:15:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 289CEC43334
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jun 2022 12:32:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233734AbiF3MPA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Jun 2022 08:15:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55874 "EHLO
+        id S234761AbiF3Mc6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Jun 2022 08:32:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41092 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234994AbiF3MOs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Jun 2022 08:14:48 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 628841D0F7;
-        Thu, 30 Jun 2022 05:14:40 -0700 (PDT)
-Received: from fraeml709-chm.china.huawei.com (unknown [172.18.147.226])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LYcdq12gKz6H7dh;
-        Thu, 30 Jun 2022 20:12:15 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml709-chm.china.huawei.com (10.206.15.37) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Thu, 30 Jun 2022 14:14:38 +0200
-Received: from localhost.localdomain (10.69.192.58) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Thu, 30 Jun 2022 13:14:34 +0100
-From:   John Garry <john.garry@huawei.com>
-To:     <damien.lemoal@opensource.wdc.com>, <joro@8bytes.org>,
-        <will@kernel.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <hch@lst.de>,
-        <m.szyprowski@samsung.com>, <robin.murphy@arm.com>
-CC:     <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-ide@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
-        <iommu@lists.linux.dev>, <linux-scsi@vger.kernel.org>,
-        <linuxarm@huawei.com>, John Garry <john.garry@huawei.com>
-Subject: [PATCH v5 5/5] ata: libata-scsi: Cap ata_device->max_sectors according to shost->max_sectors
-Date:   Thu, 30 Jun 2022 20:08:12 +0800
-Message-ID: <1656590892-42307-6-git-send-email-john.garry@huawei.com>
-X-Mailer: git-send-email 2.8.1
-In-Reply-To: <1656590892-42307-1-git-send-email-john.garry@huawei.com>
-References: <1656590892-42307-1-git-send-email-john.garry@huawei.com>
+        with ESMTP id S234680AbiF3Mc5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Jun 2022 08:32:57 -0400
+X-Greylist: delayed 590 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 30 Jun 2022 05:32:56 PDT
+Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B7FC35240;
+        Thu, 30 Jun 2022 05:32:56 -0700 (PDT)
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 07C5541273;
+        Thu, 30 Jun 2022 12:23:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        content-type:content-type:content-transfer-encoding:mime-version
+        :references:in-reply-to:x-mailer:message-id:date:date:subject
+        :subject:from:from:received:received:received:received; s=
+        mta-01; t=1656591787; x=1658406188; bh=7xSHP6I8VG1npYiDMNV82Knod
+        bGC4OJdhGo0ZmDYk3w=; b=ERCm/tau7kG5eJ5kFHRNGFwWh2Mqds+JPTA3OxrmJ
+        zYlSb6NlG0jx64Y0pkl+Hz4wCP53pPBHYaO715cFZ4AQy1Kqkih59Z3hen0csgsm
+        M43GP/Qz30UqOdTKpKSuVnOm7VfhXJlBe8RowWTM40FvxTzumsR1gEiTHL1qlHo0
+        2k=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id fW21kaH5Av-i; Thu, 30 Jun 2022 15:23:07 +0300 (MSK)
+Received: from T-EXCH-01.corp.yadro.com (t-exch-01.corp.yadro.com [172.17.10.101])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id C4EB341272;
+        Thu, 30 Jun 2022 15:23:07 +0300 (MSK)
+Received: from T-EXCH-10.corp.yadro.com (172.17.11.60) by
+ T-EXCH-01.corp.yadro.com (172.17.10.101) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
+ 15.1.669.32; Thu, 30 Jun 2022 15:23:07 +0300
+Received: from localhost (10.199.0.81) by T-EXCH-10.corp.yadro.com
+ (172.17.11.60) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.22; Thu, 30 Jun
+ 2022 15:23:06 +0300
+From:   Anastasia Kovaleva <a.kovaleva@yadro.com>
+To:     <target-devel@vger.kernel.org>
+CC:     <linux-scsi@vger.kernel.org>, <linux@yadro.com>
+Subject: [PATCH 2/3] target: core: make hw_max_sectors store the sectors amount in blocks
+Date:   Thu, 30 Jun 2022 15:22:40 +0300
+Message-ID: <20220630122241.1658-3-a.kovaleva@yadro.com>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20220630122241.1658-1-a.kovaleva@yadro.com>
+References: <20220630122241.1658-1-a.kovaleva@yadro.com>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+X-Originating-IP: [10.199.0.81]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-10.corp.yadro.com (172.17.11.60)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-ATA devices (struct ata_device) have a max_sectors field which is
-configured internally in libata. This is then used to (re)configure the
-associated sdev request queue max_sectors value from how it is earlier set
-in __scsi_init_queue(). In __scsi_init_queue() the max_sectors value is set
-according to shost limits, which includes host DMA mapping limits.
+By default, hw_max_sectors stores its value in 512 blocks in iblock,
+despite the fact that the block size can be 4096 bytes. Change
+hw_max_sectors to store the number of sectors in hw_block_size blocks.
 
-Cap the ata_device max_sectors according to shost->max_sectors to respect
-this shost limit.
-
-Signed-off-by: John Garry <john.garry@huawei.com>
-Acked-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Signed-off-by: Anastasia Kovaleva <a.kovaleva@yadro.com>
+Reviewed-by: Konstantin Shelekhin <k.shelekhin@yadro.com>
+Reviewed-by: Dmitriy Bogdanov <d.bogdanov@yadro.com>
 ---
- drivers/ata/libata-scsi.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/target/target_core_iblock.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 86dbb1cdfabd..24a43d540d9f 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1060,6 +1060,7 @@ int ata_scsi_dev_config(struct scsi_device *sdev, struct ata_device *dev)
- 		dev->flags |= ATA_DFLAG_NO_UNLOAD;
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index 378c80313a0f..532a30b31a7c 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -116,7 +116,8 @@ static int iblock_configure_device(struct se_device *dev)
+ 	q = bdev_get_queue(bd);
  
- 	/* configure max sectors */
-+	dev->max_sectors = min(dev->max_sectors, sdev->host->max_sectors);
- 	blk_queue_max_hw_sectors(q, dev->max_sectors);
+ 	dev->dev_attrib.hw_block_size = bdev_logical_block_size(bd);
+-	dev->dev_attrib.hw_max_sectors = queue_max_hw_sectors(q);
++	dev->dev_attrib.hw_max_sectors = mult_frac(queue_max_hw_sectors(q),
++		SECTOR_SIZE, dev->dev_attrib.hw_block_size);
+ 	dev->dev_attrib.hw_queue_depth = q->nr_requests;
  
- 	if (dev->class == ATA_DEV_ATAPI) {
+ 	if (target_configure_unmap_from_queue(&dev->dev_attrib, bd))
 -- 
-2.35.3
+2.30.2
 
