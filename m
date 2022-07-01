@@ -2,105 +2,94 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81567C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Jul 2022 11:22:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47337C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Jul 2022 11:43:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235198AbiGALWc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Jul 2022 07:22:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52410 "EHLO
+        id S234203AbiGALns (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 Jul 2022 07:43:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44748 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235661AbiGALW3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Jul 2022 07:22:29 -0400
-Received: from jari.cn (unknown [218.92.28.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C6A9C735A3;
-        Fri,  1 Jul 2022 04:22:27 -0700 (PDT)
-Received: by ajax-webmail-localhost.localdomain (Coremail) ; Fri, 1 Jul 2022
- 19:16:59 +0800 (GMT+08:00)
-X-Originating-IP: [182.148.13.66]
-Date:   Fri, 1 Jul 2022 19:16:59 +0800 (GMT+08:00)
-X-CM-HeaderCharset: UTF-8
-From:   "XueBing Chen" <chenxuebing@jari.cn>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+        with ESMTP id S229562AbiGALnq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Jul 2022 07:43:46 -0400
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2FA0F6D56C;
+        Fri,  1 Jul 2022 04:43:45 -0700 (PDT)
+Received: from pps.filterd (m0187473.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 261BLUcN039011;
+        Fri, 1 Jul 2022 11:43:35 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
+ from : reply-to : to : cc : date : in-reply-to : references : content-type
+ : mime-version : content-transfer-encoding; s=pp1;
+ bh=4Ig8q/zItxYk+yCgAqOsbU65m0EVzCGLXoaZt/UeboU=;
+ b=kfeKbE50hY9clhvpQMfd5uaUYTIcFUO0jkP9wC8kXuD31EHpxfBwrAPVwbRTu/EllPjx
+ FvW7OLh5uNO+6rwWOT4xaX4NZ5ltND542Oldisgku1fozR2ZVHd28T60GrjDJtNXJnQD
+ 3pwJ7xYlsk3J8k07nY8RDVAgwWJR+QyUywRFgDA02EaWftRwqAVzXcW/qpBNY/jVEggS
+ yosDlQAJ2mHL4SMP28bJAOlgDSfmF130ovzJ2tUR1kgnHdaDYoQurJV241QguPs3B0a3
+ IrEASsTfQPDu+oLYSBp5dGoGb8X2nXEgCdVEGapQTgRQfuMgOemPDxwhdNf1lyx6wtCE Cw== 
+Received: from ppma03wdc.us.ibm.com (ba.79.3fa9.ip4.static.sl-reverse.com [169.63.121.186])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3h1yyngx4j-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 01 Jul 2022 11:43:34 +0000
+Received: from pps.filterd (ppma03wdc.us.ibm.com [127.0.0.1])
+        by ppma03wdc.us.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 261BKGb9025460;
+        Fri, 1 Jul 2022 11:43:33 GMT
+Received: from b03cxnp08025.gho.boulder.ibm.com (b03cxnp08025.gho.boulder.ibm.com [9.17.130.17])
+        by ppma03wdc.us.ibm.com with ESMTP id 3gwt0a9crg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 01 Jul 2022 11:43:33 +0000
+Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
+        by b03cxnp08025.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 261BhW1q22610252
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 1 Jul 2022 11:43:32 GMT
+Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 73CF87805E;
+        Fri,  1 Jul 2022 11:43:32 +0000 (GMT)
+Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 8863A78063;
+        Fri,  1 Jul 2022 11:43:31 +0000 (GMT)
+Received: from lingrow.int.hansenpartnership.com (unknown [9.163.6.8])
+        by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
+        Fri,  1 Jul 2022 11:43:31 +0000 (GMT)
+Message-ID: <1338d1aed2e55c3107363a6b7e521d75f877db2f.camel@linux.ibm.com>
+Subject: Re: [PATCH] scsi: bfa: use strscpy to replace strlcpy
+From:   James Bottomley <jejb@linux.ibm.com>
+Reply-To: jejb@linux.ibm.com
+To:     XueBing Chen <chenxuebing@jari.cn>, martin.petersen@oracle.com
 Cc:     anil.gurumurthy@qlogic.com, sudarsana.kalluru@qlogic.com,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: bfa: use strscpy to replace strlcpy
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version XT6.0.1 build 20210329(c53f3fee)
- Copyright (c) 2002-2022 www.mailtech.cn
- mispb-4e503810-ca60-4ec8-a188-7102c18937cf-zhkzyfz.cn
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=UTF-8
+Date:   Fri, 01 Jul 2022 07:43:30 -0400
+In-Reply-To: <2975fca0.d18.181b97a760e.Coremail.chenxuebing@jari.cn>
+References: <2975fca0.d18.181b97a760e.Coremail.chenxuebing@jari.cn>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
-Message-ID: <2975fca0.d18.181b97a760e.Coremail.chenxuebing@jari.cn>
-X-Coremail-Locale: zh_CN
-X-CM-TRANSID: AQAAfwA3QnCr175iyfdFAA--.867W
-X-CM-SenderInfo: hfkh05pxhex0nj6mt2flof0/1tbiAQAICmFEYxsvOAANsE
-X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
-        CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
-        daVFxhVjvjDU=
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: VKWl1J7Nl0FG63qangoHSp7x6BFa4oCA
+X-Proofpoint-ORIG-GUID: VKWl1J7Nl0FG63qangoHSp7x6BFa4oCA
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
+ definitions=2022-07-01_06,2022-06-28_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ lowpriorityscore=0 mlxlogscore=670 malwarescore=0 adultscore=0
+ phishscore=0 clxscore=1011 bulkscore=0 spamscore=0 mlxscore=0
+ impostorscore=0 suspectscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2204290000 definitions=main-2207010043
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-ClRoZSBzdHJsY3B5IHNob3VsZCBub3QgYmUgdXNlZCBiZWNhdXNlIGl0IGRvZXNuJ3QgbGltaXQg
-dGhlIHNvdXJjZQpsZW5ndGguIFByZWZlcnJlZCBpcyBzdHJzY3B5LgoKU2lnbmVkLW9mZi1ieTog
-WHVlQmluZyBDaGVuIDxjaGVueHVlYmluZ0BqYXJpLmNuPgotLS0KIGRyaXZlcnMvc2NzaS9iZmEv
-YmZhX2Zjc19scG9ydC5jIHwgMjAgKysrKysrKysrKy0tLS0tLS0tLS0KIDEgZmlsZSBjaGFuZ2Vk
-LCAxMCBpbnNlcnRpb25zKCspLCAxMCBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9kcml2ZXJz
-L3Njc2kvYmZhL2JmYV9mY3NfbHBvcnQuYyBiL2RyaXZlcnMvc2NzaS9iZmEvYmZhX2Zjc19scG9y
-dC5jCmluZGV4IGIxMmFmY2M0YjE4OS4uMDA4YWZkODE3MDg3IDEwMDY0NAotLS0gYS9kcml2ZXJz
-L3Njc2kvYmZhL2JmYV9mY3NfbHBvcnQuYworKysgYi9kcml2ZXJzL3Njc2kvYmZhL2JmYV9mY3Nf
-bHBvcnQuYwpAQCAtMjY0MiwxMCArMjY0MiwxMCBAQCBiZmFfZmNzX2ZkbWlfZ2V0X2hiYWF0dHIo
-c3RydWN0IGJmYV9mY3NfbHBvcnRfZmRtaV9zICpmZG1pLAogCWJmYV9pb2NfZ2V0X2FkYXB0ZXJf
-ZndfdmVyKCZwb3J0LT5mY3MtPmJmYS0+aW9jLAogCQkJCQloYmFfYXR0ci0+ZndfdmVyc2lvbik7
-CiAKLQlzdHJsY3B5KGhiYV9hdHRyLT5kcml2ZXJfdmVyc2lvbiwgKGNoYXIgKilkcml2ZXJfaW5m
-by0+dmVyc2lvbiwKKwlzdHJzY3B5KGhiYV9hdHRyLT5kcml2ZXJfdmVyc2lvbiwgKGNoYXIgKilk
-cml2ZXJfaW5mby0+dmVyc2lvbiwKIAkJc2l6ZW9mKGhiYV9hdHRyLT5kcml2ZXJfdmVyc2lvbikp
-OwogCi0Jc3RybGNweShoYmFfYXR0ci0+b3NfbmFtZSwgZHJpdmVyX2luZm8tPmhvc3Rfb3NfbmFt
-ZSwKKwlzdHJzY3B5KGhiYV9hdHRyLT5vc19uYW1lLCBkcml2ZXJfaW5mby0+aG9zdF9vc19uYW1l
-LAogCQlzaXplb2YoaGJhX2F0dHItPm9zX25hbWUpKTsKIAogCS8qCkBAIC0yNjYzLDEzICsyNjYz
-LDEzIEBAIGJmYV9mY3NfZmRtaV9nZXRfaGJhYXR0cihzdHJ1Y3QgYmZhX2Zjc19scG9ydF9mZG1p
-X3MgKmZkbWksCiAJYmZhX2Zjc19mZG1pX2dldF9wb3J0YXR0cihmZG1pLCAmZmNzX3BvcnRfYXR0
-cik7CiAJaGJhX2F0dHItPm1heF9jdF9weWxkID0gZmNzX3BvcnRfYXR0ci5tYXhfZnJtX3NpemU7
-CiAKLQlzdHJsY3B5KGhiYV9hdHRyLT5ub2RlX3N5bV9uYW1lLnN5bW5hbWUsCisJc3Ryc2NweSho
-YmFfYXR0ci0+bm9kZV9zeW1fbmFtZS5zeW1uYW1lLAogCQlwb3J0LT5wb3J0X2NmZy5ub2RlX3N5
-bV9uYW1lLnN5bW5hbWUsIEJGQV9TWU1OQU1FX01BWExFTik7CiAJc3RyY3B5KGhiYV9hdHRyLT52
-ZW5kb3JfaW5mbywgIlFMb2dpYyIpOwogCWhiYV9hdHRyLT5udW1fcG9ydHMgPQogCQljcHVfdG9f
-YmUzMihiZmFfaW9jX2dldF9ucG9ydHMoJnBvcnQtPmZjcy0+YmZhLT5pb2MpKTsKIAloYmFfYXR0
-ci0+ZmFicmljX25hbWUgPSBwb3J0LT5mYWJyaWMtPmxwcy0+cHJfbnd3bjsKLQlzdHJsY3B5KGhi
-YV9hdHRyLT5iaW9zX3ZlciwgaGJhX2F0dHItPm9wdGlvbl9yb21fdmVyLCBCRkFfVkVSU0lPTl9M
-RU4pOworCXN0cnNjcHkoaGJhX2F0dHItPmJpb3NfdmVyLCBoYmFfYXR0ci0+b3B0aW9uX3JvbV92
-ZXIsIEJGQV9WRVJTSU9OX0xFTik7CiAKIH0KIApAQCAtMjczNiwxOSArMjczNiwxOSBAQCBiZmFf
-ZmNzX2ZkbWlfZ2V0X3BvcnRhdHRyKHN0cnVjdCBiZmFfZmNzX2xwb3J0X2ZkbWlfcyAqZmRtaSwK
-IAkvKgogCSAqIE9TIGRldmljZSBOYW1lCiAJICovCi0Jc3RybGNweShwb3J0X2F0dHItPm9zX2Rl
-dmljZV9uYW1lLCBkcml2ZXJfaW5mby0+b3NfZGV2aWNlX25hbWUsCisJc3Ryc2NweShwb3J0X2F0
-dHItPm9zX2RldmljZV9uYW1lLCBkcml2ZXJfaW5mby0+b3NfZGV2aWNlX25hbWUsCiAJCXNpemVv
-Zihwb3J0X2F0dHItPm9zX2RldmljZV9uYW1lKSk7CiAKIAkvKgogCSAqIEhvc3QgbmFtZQogCSAq
-LwotCXN0cmxjcHkocG9ydF9hdHRyLT5ob3N0X25hbWUsIGRyaXZlcl9pbmZvLT5ob3N0X21hY2hp
-bmVfbmFtZSwKKwlzdHJzY3B5KHBvcnRfYXR0ci0+aG9zdF9uYW1lLCBkcml2ZXJfaW5mby0+aG9z
-dF9tYWNoaW5lX25hbWUsCiAJCXNpemVvZihwb3J0X2F0dHItPmhvc3RfbmFtZSkpOwogCiAJcG9y
-dF9hdHRyLT5ub2RlX25hbWUgPSBiZmFfZmNzX2xwb3J0X2dldF9ud3duKHBvcnQpOwogCXBvcnRf
-YXR0ci0+cG9ydF9uYW1lID0gYmZhX2Zjc19scG9ydF9nZXRfcHd3bihwb3J0KTsKIAotCXN0cmxj
-cHkocG9ydF9hdHRyLT5wb3J0X3N5bV9uYW1lLnN5bW5hbWUsCisJc3Ryc2NweShwb3J0X2F0dHIt
-PnBvcnRfc3ltX25hbWUuc3ltbmFtZSwKIAkJYmZhX2Zjc19scG9ydF9nZXRfcHN5bV9uYW1lKHBv
-cnQpLnN5bW5hbWUsIEJGQV9TWU1OQU1FX01BWExFTik7CiAJYmZhX2Zjc19scG9ydF9nZXRfYXR0
-cihwb3J0LCAmbHBvcnRfYXR0cik7CiAJcG9ydF9hdHRyLT5wb3J0X3R5cGUgPSBjcHVfdG9fYmUz
-MihscG9ydF9hdHRyLnBvcnRfdHlwZSk7CkBAIC0zMjI5LDcgKzMyMjksNyBAQCBiZmFfZmNzX2xw
-b3J0X21zX2dtYWxfcmVzcG9uc2Uodm9pZCAqZmNzYXJnLCBzdHJ1Y3QgYmZhX2ZjeHBfcyAqZmN4
-cCwKIAkJCQkJcnNwX3N0cltnbWFsX2VudHJ5LT5sZW4tMV0gPSAwOwogCiAJCQkJLyogY29weSBJ
-UCBBZGRyZXNzIHRvIGZhYnJpYyAqLwotCQkJCXN0cmxjcHkoYmZhX2Zjc19scG9ydF9nZXRfZmFi
-cmljX2lwYWRkcihwb3J0KSwKKwkJCQlzdHJzY3B5KGJmYV9mY3NfbHBvcnRfZ2V0X2ZhYnJpY19p
-cGFkZHIocG9ydCksCiAJCQkJCWdtYWxfZW50cnktPmlwX2FkZHIsCiAJCQkJCUJGQV9GQ1NfRkFC
-UklDX0lQQUREUl9TWik7CiAJCQkJYnJlYWs7CkBAIC00NjY3LDcgKzQ2NjcsNyBAQCBiZmFfZmNz
-X2xwb3J0X25zX3NlbmRfcnNwbl9pZCh2b2lkICpuc19jYmFyZywgc3RydWN0IGJmYV9mY3hwX3Mg
-KmZjeHBfYWxsb2NlZCkKIAkJICogdG8gdGhhdCBvZiB0aGUgYmFzZSBwb3J0LgogCQkgKi8KIAot
-CQlzdHJsY3B5KHN5bWJsLAorCQlzdHJzY3B5KHN5bWJsLAogCQkJKGNoYXIgKikmKGJmYV9mY3Nf
-bHBvcnRfZ2V0X3BzeW1fbmFtZQogCQkJIChiZmFfZmNzX2dldF9iYXNlX3BvcnQocG9ydC0+ZmNz
-KSkpLAogCQkJc2l6ZW9mKHN5bWJsKSk7CkBAIC01MTk0LDcgKzUxOTQsNyBAQCBiZmFfZmNzX2xw
-b3J0X25zX3V0aWxfc2VuZF9yc3BuX2lkKHZvaWQgKmNiYXJnLCBzdHJ1Y3QgYmZhX2ZjeHBfcyAq
-ZmN4cF9hbGxvY2VkKQogCQkgKiBGb3IgVnBvcnRzLCB3ZSBhcHBlbmQgdGhlIHZwb3J0J3MgcG9y
-dCBzeW1ib2xpYyBuYW1lCiAJCSAqIHRvIHRoYXQgb2YgdGhlIGJhc2UgcG9ydC4KIAkJICovCi0J
-CXN0cmxjcHkoc3ltYmwsIChjaGFyICopJihiZmFfZmNzX2xwb3J0X2dldF9wc3ltX25hbWUKKwkJ
-c3Ryc2NweShzeW1ibCwgKGNoYXIgKikmKGJmYV9mY3NfbHBvcnRfZ2V0X3BzeW1fbmFtZQogCQkJ
-KGJmYV9mY3NfZ2V0X2Jhc2VfcG9ydChwb3J0LT5mY3MpKSksCiAJCQlzaXplb2Yoc3ltYmwpKTsK
-IAotLSAKMi4yNS4xCg==
+On Fri, 2022-07-01 at 19:16 +0800, XueBing Chen wrote:
+> The strlcpy should not be used
+
+That's not true.
+
+>  because it doesn't limit the source length. Preferred is strscpy.
+
+And that's not the reason why strscpy is often a marginally better
+choice.  In the case of what you change in bfa, none of the reasons why
+strscpy might be marginally better actually apply.
+
+James
+
+
