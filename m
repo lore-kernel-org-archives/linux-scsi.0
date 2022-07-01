@@ -2,90 +2,102 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8728CCA479
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Jul 2022 08:46:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 488E2C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Jul 2022 10:42:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232323AbiGAIqi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Jul 2022 04:46:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53990 "EHLO
+        id S236950AbiGAKmI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 Jul 2022 06:42:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36446 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234741AbiGAIqg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Jul 2022 04:46:36 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1CF573596;
-        Fri,  1 Jul 2022 01:46:34 -0700 (PDT)
-Received: from fraeml701-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LZ7zB3G1wz67VqM;
-        Fri,  1 Jul 2022 16:44:06 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml701-chm.china.huawei.com (10.206.15.50) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2375.24; Fri, 1 Jul 2022 10:46:32 +0200
-Received: from [10.126.173.51] (10.126.173.51) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Fri, 1 Jul 2022 09:46:31 +0100
-Message-ID: <42505bbc-7319-f266-f282-e76ba505725e@huawei.com>
-Date:   Fri, 1 Jul 2022 09:46:34 +0100
+        with ESMTP id S236957AbiGAKll (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Jul 2022 06:41:41 -0400
+Received: from mail.nfschina.com (unknown [IPv6:2400:dd01:100f:2:72e2:84ff:fe10:5f45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id CCA477C1BE;
+        Fri,  1 Jul 2022 03:41:38 -0700 (PDT)
+Received: from localhost (unknown [127.0.0.1])
+        by mail.nfschina.com (Postfix) with ESMTP id 224261E80D21;
+        Fri,  1 Jul 2022 18:40:08 +0800 (CST)
+X-Virus-Scanned: amavisd-new at test.com
+Received: from mail.nfschina.com ([127.0.0.1])
+        by localhost (mail.nfschina.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id Hv84oYwLqjm3; Fri,  1 Jul 2022 18:40:05 +0800 (CST)
+Received: from localhost.localdomain (unknown [112.65.12.78])
+        (Authenticated sender: jiaming@nfschina.com)
+        by mail.nfschina.com (Postfix) with ESMTPA id 054E11E80D09;
+        Fri,  1 Jul 2022 18:40:03 +0800 (CST)
+From:   Zhang Jiaming <jiaming@nfschina.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     bvanassche@acm.org, johannes.thumshirn@wdc.com,
+        himanshu.madhani@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, liqiong@nfschina.com,
+        renyu@nfschina.com, Zhang Jiaming <jiaming@nfschina.com>
+Subject: [PATCH] scsi: csiostor: Fix some typos in comments
+Date:   Fri,  1 Jul 2022 18:41:30 +0800
+Message-Id: <20220701104130.24644-1-jiaming@nfschina.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH v5 4/5] scsi: scsi_transport_sas: Cap shost max_sectors
- according to DMA optimal limit
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <joro@8bytes.org>, <will@kernel.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <hch@lst.de>,
-        <m.szyprowski@samsung.com>, <robin.murphy@arm.com>
-CC:     <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-ide@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
-        <iommu@lists.linux.dev>, <linux-scsi@vger.kernel.org>,
-        <linuxarm@huawei.com>
-References: <1656590892-42307-1-git-send-email-john.garry@huawei.com>
- <1656590892-42307-5-git-send-email-john.garry@huawei.com>
- <2e6475e5-4899-1e3a-1418-918b9510ec6d@opensource.wdc.com>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <2e6475e5-4899-1e3a-1418-918b9510ec6d@opensource.wdc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.126.173.51]
-X-ClientProxiedBy: lhreml712-chm.china.huawei.com (10.201.108.63) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 01/07/2022 00:49, Damien Le Moal wrote:
->>   
->> +	if (dma_dev) {
->> +		shost->max_sectors = min_t(unsigned int, shost->max_sectors,
->> +				dma_opt_mapping_size(dma_dev) >> SECTOR_SHIFT);
->> +	}
+There are some typos in /drivers/scsi/csiostor/csio_scsi.c.
+Fix it.
 
-Hi Damien,
+Signed-off-by: Zhang Jiaming <jiaming@nfschina.com>
+---
+ drivers/scsi/csiostor/csio_scsi.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
- > Hmm... shost->max_sectors becomes the max_hw_sectors limit for the block
- > dev. So using dma_max_mapping_size(dma_dev) for that limit makes sense.
- > Shouldn't dma_opt_mapping_size(dma_dev) be used to limit only the default
- > "soft" limit (queue max_sectors limit) instead of the hard limit ?
- >
-
-Sure, it would sensible to use dma_opt_mapping_size() to limit the 
-default queue max sectors limit, while dma_max_mapping_size() limits the 
-host max sectors. But I didn't see in practice how limiting the shost 
-max sectors to dma_opt_mapping_size() makes a difference:
-
-- block queue max_hw_sectors_kb file is read-only, so we cannot change 
-the queue max sectors from there
-
-- And no SAS driver actually tries to modify upwards from the default.
-I do note that USB storage driver as an example of a scsi driver which 
-does (modify from shost max sectors): see scsiglue.c::slave_configure()
-
-Finally there is no common method to limit the default request queue max 
-sectors for those SAS drivers - I would need to add this limit in each 
-of their slave_configure callbacks, and I didn't think that its worth it.
-
-Thanks,
-John
+diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
+index 9aafe0002ab1..a3dc6cc33136 100644
+--- a/drivers/scsi/csiostor/csio_scsi.c
++++ b/drivers/scsi/csiostor/csio_scsi.c
+@@ -153,7 +153,7 @@ csio_scsi_itnexus_loss_error(uint16_t error)
+ }
+ 
+ /*
+- * csio_scsi_fcp_cmnd - Frame the SCSI FCP command paylod.
++ * csio_scsi_fcp_cmnd - Frame the SCSI FCP command payload.
+  * @req: IO req structure.
+  * @addr: DMA location to place the payload.
+  *
+@@ -782,7 +782,7 @@ csio_scsis_io_active(struct csio_ioreq *req, enum csio_scsi_ev evt)
+ 		list_del_init(&req->sm.sm_list);
+ 		csio_set_state(&req->sm, csio_scsis_uninit);
+ 		/*
+-		 * In MSIX mode, with multiple queues, the SCSI compeltions
++		 * In MSIX mode, with multiple queues, the SCSI completions
+ 		 * could reach us sooner than the FW events sent to indicate
+ 		 * I-T nexus loss (link down, remote device logo etc). We
+ 		 * dont want to be returning such I/Os to the upper layer
+@@ -943,7 +943,7 @@ csio_scsis_aborting(struct csio_ioreq *req, enum csio_scsi_ev evt)
+ 		 * 5. FW couldn't genuinely abort the request for some reason,
+ 		 *    and sent us an error.
+ 		 *
+-		 * The first 3 scenarios are treated as  succesful abort
++		 * The first 3 scenarios are treated as  successful abort
+ 		 * operations by the host, while the last 2 are failed attempts
+ 		 * to abort. Manipulate the return value of the request
+ 		 * appropriately, so that host can convey these results
+@@ -1018,7 +1018,7 @@ csio_scsis_closing(struct csio_ioreq *req, enum csio_scsi_ev evt)
+ 
+ 		/*
+ 		 * Either close succeeded, or we issued close to FW at the
+-		 * same time FW compelted it to us. Either way, the I/O
++		 * same time FW completed it to us. Either way, the I/O
+ 		 * is closed.
+ 		 */
+ 		CSIO_DB_ASSERT((req->wr_status == FW_SUCCESS) ||
+@@ -2010,7 +2010,7 @@ csio_eh_abort_handler(struct scsi_cmnd *cmnd)
+  * @req: IO request.
+  *
+  * Cache the result in 'cmnd', since ioreq will be freed soon
+- * after we return from here, and the waiting thread shouldnt trust
++ * after we return from here, and the waiting thread shouldn't trust
+  * the ioreq contents.
+  */
+ static void
+-- 
+2.25.1
 
