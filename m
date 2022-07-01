@@ -2,58 +2,58 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85D48C43334
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Jul 2022 21:15:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D855CCA47F
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Jul 2022 21:15:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231470AbiGAVPM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Jul 2022 17:15:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40866 "EHLO
+        id S231510AbiGAVPN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 Jul 2022 17:15:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40880 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230527AbiGAVPI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Jul 2022 17:15:08 -0400
-Received: from mail-qk1-x734.google.com (mail-qk1-x734.google.com [IPv6:2607:f8b0:4864:20::734])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 325264163F
-        for <linux-scsi@vger.kernel.org>; Fri,  1 Jul 2022 14:15:07 -0700 (PDT)
-Received: by mail-qk1-x734.google.com with SMTP id b133so2718502qkc.6
-        for <linux-scsi@vger.kernel.org>; Fri, 01 Jul 2022 14:15:07 -0700 (PDT)
+        with ESMTP id S231167AbiGAVPK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Jul 2022 17:15:10 -0400
+Received: from mail-qt1-x835.google.com (mail-qt1-x835.google.com [IPv6:2607:f8b0:4864:20::835])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0CF0C4198D
+        for <linux-scsi@vger.kernel.org>; Fri,  1 Jul 2022 14:15:09 -0700 (PDT)
+Received: by mail-qt1-x835.google.com with SMTP id r2so1356137qta.0
+        for <linux-scsi@vger.kernel.org>; Fri, 01 Jul 2022 14:15:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=Hkom9/V5kSNPIdNrL8sYvaqYmccrsMrCEbg+qguoL2k=;
-        b=bHTENbV+uZcHJ3SBHU0Z/fJ1Bo3pRrqTj4OiXkHq2E6aHwwonDVfrGEJqSDC1s6zTx
-         EVQinyBCw4ftsQTlwqbopDjwDD29RPJgSe2ejzNhqhWrsUZv0fg4dinwDU0Ip/6GPEKA
-         IyzjfJn2F78QMdi6RyTX5+W53mRjnkELuVSXKz5Q1/hhEEQCuI7gq8/octS9P1s4z3sK
-         Lm3HTpn0MmVDk7WHZrNKNy+tyd6FOzzE2cH7DKoVoZSbUXAZhmV4M6J/TOd4T4q0yr6c
-         PNkYsCGvk2b0UJIdekaKdMA7Finwl6zwuo7sh7uz/WiTii8eR5fg8wT3FpiEm7sFoUoL
-         wLmQ==
+        bh=0NazchrOXVOyKdkYgas/KPBYElZtDcpxXpR9qh8Bav8=;
+        b=MEpqHdueRoHO8ncJl6w5r7uiHpBlEV9ZxM9OcKaibpRxhoe8YWPV45NDcf0KOvTsdh
+         11ag8zP55toawUjWWGzqrNtdbIZyvAawm4boUYrenCQbJLzZkScehKs2J3YUg7VYZFuf
+         AOwZTbWJKNU/j1HsdP9RGzdY8tK/10SLKzAVxDFOwnEjijf+Cs0u1b4C+SXmx3LQikjO
+         jt4LuNQx0md1XN3vZ/PcjRepv8sGF20NLkAxubqa2kPain4m0saZ+bp8rkO8eXonP5LA
+         ZFQfA97g4a1Hcb8cg5mXV7gV+EgSJJlcPUmMSos2SCXDn/Q/pbewckJ+xgKOeIA9yY7Q
+         6L9Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Hkom9/V5kSNPIdNrL8sYvaqYmccrsMrCEbg+qguoL2k=;
-        b=DiHQxVSwV3X/UwGOTxkF+fSxB7Lwr6sPMMyeyXjeiY3wJIzPPo8c4YMErOhHcl/NjU
-         z1ZmBd3tNCTEMFeblWnC8I7YbLM66QxIDwCOcocrUVTrYTdedXfoXOO0Ua/rvVtWdajQ
-         ajpzjzxyrVjUnj/7APN8iaKfLY6aO0PdxYGfQ0U1NDifN26ssWVDrMtx89hoyJ4HXR5A
-         qDQXDmi2wq8OUXCq+m5iyMmBxNq1gacK/0casUPwxuLTFkernHtRjpGG2K7+VBCQcZ8t
-         rInf89LiYuhY4NSeU71uW+85wuz8OOh+pk4pQ9Qzsw0cl13F+Z3mcSfsN7v2kwL/nAx9
-         603g==
-X-Gm-Message-State: AJIora98G6K6tevRwBYDoiOIncgT4HXIpp+O2Yoljuw91cQ3lfUQmc0i
-        ZgaXVUeKqynVi8b+/11r+GxAf9QAiQ0=
-X-Google-Smtp-Source: AGRyM1sqRmIth/RHJmqrUdEfkCVpTe4U+mgLCLoJSkRx/D/1Bdtn+sXZetjmuCODpBKpXNWQZuWtMQ==
-X-Received: by 2002:a05:620a:414b:b0:6af:2281:6c98 with SMTP id k11-20020a05620a414b00b006af22816c98mr12171061qko.93.1656710106147;
-        Fri, 01 Jul 2022 14:15:06 -0700 (PDT)
+        bh=0NazchrOXVOyKdkYgas/KPBYElZtDcpxXpR9qh8Bav8=;
+        b=hOUANH3kx0VCR14EUCwZ4AzR+nkwrm4dAudp12zlk7E+/hFg1+6FiQA4GaNg2GQUL7
+         575pjbXzEJtgg4rrAu4X+94XC0FDUecxuNvHrPCdGr6JXrL8FGllnOeKvvnBaNuFx/1I
+         BraHwQcZ64KlgKYVFlv65QOrzBCqZpFTJRI6nQC5NBLYuZAyRs+XjOA6nCrQHQN1zLCi
+         aGkIp2yA012diXk0bK9OMPwzDSpFPEfpRkRw2tWVYubsop1F3tRJMrIvnXBESg0B0RXz
+         i7pjp0miSftbw1dbwYR004HUO9jrD2XIcneO0P6QIhkQaqfkfDFgFo3p9tyv9Lq12L8G
+         vfSA==
+X-Gm-Message-State: AJIora+OHqNcrxi8gshtY3OV+Nx4di2Pa4vSKGHeyYIuYYU0ZObxhC5O
+        P3qFKKWv1OTq3GtVfWQX+27c8QznkHI=
+X-Google-Smtp-Source: AGRyM1vruTBUd6fseLMbxhbIqnRL+mRpt3CcuQGeAik/NpX/VhxRMMhlvvTNiTJLM+z5wPRIZ6mTaw==
+X-Received: by 2002:a05:622a:1c3:b0:317:93d8:c041 with SMTP id t3-20020a05622a01c300b0031793d8c041mr14952229qtw.101.1656710107971;
+        Fri, 01 Jul 2022 14:15:07 -0700 (PDT)
 Received: from mail-lvn-it-01.broadcom.com ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id g6-20020ac842c6000000b00317ccc66971sm14584509qtm.52.2022.07.01.14.15.04
+        by smtp.gmail.com with ESMTPSA id g6-20020ac842c6000000b00317ccc66971sm14584509qtm.52.2022.07.01.14.15.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 01 Jul 2022 14:15:05 -0700 (PDT)
+        Fri, 01 Jul 2022 14:15:07 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Justin Tee <justin.tee@broadcom.com>
-Subject: [PATCH 06/12] lpfc: Fix attempted FA-PWWN usage after feature disable
-Date:   Fri,  1 Jul 2022 14:14:19 -0700
-Message-Id: <20220701211425.2708-7-jsmart2021@gmail.com>
+Subject: [PATCH 07/12] lpfc: Fix lost NVME paths during LIF bounce stress test
+Date:   Fri,  1 Jul 2022 14:14:20 -0700
+Message-Id: <20220701211425.2708-8-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20220701211425.2708-1-jsmart2021@gmail.com>
 References: <20220701211425.2708-1-jsmart2021@gmail.com>
@@ -63,70 +63,65 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Disabling FA-PWWN should be effective after port reset, but in some cases
-it was found to be impossible to clear FA-PWWN usage without a driver
-reload.
+During a target link bounce test, the driver sees a mismatch between
+the NPortId and the WWPN on the node structures (ndlps) involved.
+When this occurs, the driver "swaps" the ndlp and new_ndlp node
+parameters to restore WWPN/DID uniqueness in the fc_nodes list per
+vport.  However, the driver neglected to swap the nlp_fc4_type in the
+ndlp passed to lpfc_plogi_confirm_nport causing a failure to recover
+the NVME PLOGI/PRLI and ultimately the NVME paths.
 
-Clean up FA-PWWN flag management to make enable and disable of the feature
-more robust.
+Correct confirm_nport to preserve the fc4 types from the new-ndlp
+when the data is moved over ot the ndlp structure.
 
 Co-developed-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_init.c | 6 +++++-
- drivers/scsi/lpfc/lpfc_sli.c  | 7 ++++++-
- 2 files changed, 11 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_els.c | 15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 750dd1e9f2cc..7424b194d20e 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -375,6 +375,9 @@ lpfc_update_vport_wwn(struct lpfc_vport *vport)
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 3fababb7c181..31fb2ee07bfa 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -1790,18 +1790,20 @@ lpfc_plogi_confirm_nport(struct lpfc_hba *phba, uint32_t *prsp,
+ 
+ 	/* Move this back to NPR state */
+ 	if (memcmp(&ndlp->nlp_portname, name, sizeof(struct lpfc_name)) == 0) {
+-		/* The new_ndlp is replacing ndlp totally, so we need
+-		 * to put ndlp on UNUSED list and try to free it.
++		/* The ndlp doesn't have a portname yet, but does have an
++		 * NPort ID.  The new_ndlp portname matches the Rport's
++		 * portname.  Reinstantiate the new_ndlp and reset the ndlp.
+ 		 */
+ 		lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
+ 			 "3179 PLOGI confirm NEW: %x %x\n",
+ 			 new_ndlp->nlp_DID, keepDID);
+ 
+ 		/* Two ndlps cannot have the same did on the nodelist.
+-		 * Note: for this case, ndlp has a NULL WWPN so setting
+-		 * the nlp_fc4_type isn't required.
++		 * The KeepDID and keep_nlp_fc4_type need to be swapped
++		 * because ndlp is inflight with no WWPN.
+ 		 */
+ 		ndlp->nlp_DID = keepDID;
++		ndlp->nlp_fc4_type = keep_nlp_fc4_type;
+ 		lpfc_nlp_set_state(vport, ndlp, keep_nlp_state);
  		if (phba->sli_rev == LPFC_SLI_REV4 &&
- 		    vport->port_type == LPFC_PHYSICAL_PORT &&
- 		    phba->sli4_hba.fawwpn_flag & LPFC_FAWWPN_FABRIC) {
-+			if (!(phba->sli4_hba.fawwpn_flag & LPFC_FAWWPN_CONFIG))
-+				phba->sli4_hba.fawwpn_flag &=
-+						~LPFC_FAWWPN_FABRIC;
- 			lpfc_printf_log(phba, KERN_INFO,
- 					LOG_SLI | LOG_DISCOVERY | LOG_ELS,
- 					"2701 FA-PWWN change WWPN from %llx to "
-@@ -9975,7 +9978,8 @@ lpfc_sli4_read_config(struct lpfc_hba *phba)
- 					"configured on\n");
- 			phba->sli4_hba.fawwpn_flag |= LPFC_FAWWPN_CONFIG;
- 		} else {
--			phba->sli4_hba.fawwpn_flag = 0;
-+			/* Clear FW configured flag, preserve driver flag */
-+			phba->sli4_hba.fawwpn_flag &= ~LPFC_FAWWPN_CONFIG;
- 		}
+ 		    active_rrqs_xri_bitmap)
+@@ -1816,9 +1818,8 @@ lpfc_plogi_confirm_nport(struct lpfc_hba *phba, uint32_t *prsp,
  
- 		phba->sli4_hba.conf_trunk =
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 81c61d377e43..71442faaa6c2 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -5265,7 +5265,8 @@ lpfc_sli_brdrestart_s4(struct lpfc_hba *phba)
- 	phba->pport->stopped = 0;
- 	phba->link_state = LPFC_INIT_START;
- 	phba->hba_flag = 0;
--	phba->sli4_hba.fawwpn_flag = 0;
-+	/* Preserve FA-PWWN expectation */
-+	phba->sli4_hba.fawwpn_flag &= LPFC_FAWWPN_FABRIC;
- 	spin_unlock_irq(&phba->hbalock);
+ 		lpfc_unreg_rpi(vport, ndlp);
  
- 	memset(&psli->lnk_stat_offsets, 0, sizeof(psli->lnk_stat_offsets));
-@@ -6054,6 +6055,10 @@ lpfc_sli4_retrieve_pport_name(struct lpfc_hba *phba)
- 	/* obtain link type and link number via READ_CONFIG */
- 	phba->sli4_hba.lnk_info.lnk_dv = LPFC_LNK_DAT_INVAL;
- 	lpfc_sli4_read_config(phba);
-+
-+	if (phba->sli4_hba.fawwpn_flag & LPFC_FAWWPN_CONFIG)
-+		phba->sli4_hba.fawwpn_flag |= LPFC_FAWWPN_FABRIC;
-+
- 	if (phba->sli4_hba.lnk_info.lnk_dv == LPFC_LNK_DAT_VAL)
- 		goto retrieve_ppname;
- 
+-		/* Two ndlps cannot have the same did and the fc4
+-		 * type must be transferred because the ndlp is in
+-		 * flight.
++		/* The ndlp and new_ndlp both have WWPNs but are swapping
++		 * NPort Ids and attributes.
+ 		 */
+ 		ndlp->nlp_DID = keepDID;
+ 		ndlp->nlp_fc4_type = keep_nlp_fc4_type;
 -- 
 2.26.2
 
