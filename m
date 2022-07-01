@@ -2,58 +2,58 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 040F5CCA479
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Jul 2022 21:15:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A28DC43334
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Jul 2022 21:15:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231558AbiGAVPO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Jul 2022 17:15:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40892 "EHLO
+        id S231455AbiGAVPQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 Jul 2022 17:15:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40908 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231391AbiGAVPL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Jul 2022 17:15:11 -0400
-Received: from mail-qk1-x72f.google.com (mail-qk1-x72f.google.com [IPv6:2607:f8b0:4864:20::72f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E3D843AE0
-        for <linux-scsi@vger.kernel.org>; Fri,  1 Jul 2022 14:15:10 -0700 (PDT)
-Received: by mail-qk1-x72f.google.com with SMTP id b125so2697849qkg.11
-        for <linux-scsi@vger.kernel.org>; Fri, 01 Jul 2022 14:15:10 -0700 (PDT)
+        with ESMTP id S231555AbiGAVPN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Jul 2022 17:15:13 -0400
+Received: from mail-qk1-x736.google.com (mail-qk1-x736.google.com [IPv6:2607:f8b0:4864:20::736])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 727623DA7E
+        for <linux-scsi@vger.kernel.org>; Fri,  1 Jul 2022 14:15:12 -0700 (PDT)
+Received: by mail-qk1-x736.google.com with SMTP id b24so2731201qkn.4
+        for <linux-scsi@vger.kernel.org>; Fri, 01 Jul 2022 14:15:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=bTctusDPUQ6dpOmwSeJoxHf3oZihoAR5MMEfys9sFmk=;
-        b=e/A6YFHWmw5m6BVUOQO1V2bdm+yO1sZjM3zel4fek7sQycYe5/Kg4CCvVan4L2aV8M
-         FAhKSNwKkk106sdKnTFqxhhbtSshqnLofjDL0AUJH7uJG9cLmC3M63f9v/EywAMDtJY3
-         VvGVB27lAv9ElDo/1pr71YhgcFix7aOuVgHF/TNuYpW5PFeKFSljhc6DQTCVVrqE7Rv9
-         jaQGRABK5xx096Qb3roLLOtvJZXM0wRAMNCQc7E76vwdB0tpEwXTc81eGhIJCGPTajXR
-         hXz3CPKtymKYrLR+TRL7d7+B1b8NxkZQpVyKYyDrZzXNvCnfvUDgYUDv7rnqoXz3kWEf
-         xCZg==
+        bh=BAEN1wMf84UyFQgfzP7MAN43HLkGrvEb9+8MzIrRQ+Q=;
+        b=gTEMPZzoRMllzAREtbFn5NdQ8KtsG7xHwGotVUUOX1cPu2kuksVgrGzrGhM6Fq7mzU
+         D8KYf185zYooiiHAORSt0gg+NBRnu2QDOtadg+Xe55VEuxx3Qo5i4VTvoLAO+YP206b+
+         QS9YTKKn5A5A+jetnSjXE8/OImG+gFTiiuNwDngNYV7Ej800MI3WpNi5mhK8bXsk9b3d
+         PFIhi841JUL+6pUACtkxhzWt+OOd8BFdYCyBswitnqMnAhuGsSk1s31ycYpygguoLPre
+         fo5kGhP7FapnBUBn/dLtfVRBsb51vT8UAjpI67dKJ+aLJgQJDs2DIBcVMXu8gguzmGTW
+         k4zw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=bTctusDPUQ6dpOmwSeJoxHf3oZihoAR5MMEfys9sFmk=;
-        b=JQuD9quregOjfK13YCNPUltdXOmYZOyhvhUG2Cw+1ffVeetjH6Bm2yMg8Kxe1gzXwm
-         glITUk2s/C1aiNGlXQMoRcM/vOw1V1aejYZoafK/U7n5gw1LVFHV9pDG5jkJbuPLvfvi
-         F4Pz8WQJwbdh1/SsiXeR8f/cbkVLqHpPUsjLPvapAceFNeIShvUjbz1+hMo6XGrHPHiP
-         W+BW5jYLVbMWZq6a9SIA3Og7U9QAIGElFpOlffdrlMkS/ukEaITK/9rcwo3OE9Eyv3lY
-         h8mAYeEPwX1UqBawVDsaOXTgP8pZnfMFeqYuXOj6L3Cuy40fO4l4nmd8NIYVQXC8b6Mu
-         nSCw==
-X-Gm-Message-State: AJIora88G5/3yVlKSKKxEGtPaja1kG4dsG4btMDhhQL7sKxP68VYA5Cx
-        mVDwP0TuyS0I0sKlU4eEgficDicNl9o=
-X-Google-Smtp-Source: AGRyM1vrMTjNJSHVNe+5TmdXC5Eadp/N8R/giYYC6R9Nf6ULpj9ECEEDsDlBozYy3tRxzs6x+2645Q==
-X-Received: by 2002:a05:620a:10a1:b0:6ae:fecd:758f with SMTP id h1-20020a05620a10a100b006aefecd758fmr12314838qkk.412.1656710109819;
-        Fri, 01 Jul 2022 14:15:09 -0700 (PDT)
+        bh=BAEN1wMf84UyFQgfzP7MAN43HLkGrvEb9+8MzIrRQ+Q=;
+        b=xgAR0gGYxCRag0TqRgM/kH9fKnKQYtukU1a/400v0khD8gvXv456wlV7ujMK8Mr4sA
+         nZxhnsvaLKF6HIaTRVYliQLS2DoEoETQuhSeIHLa5LP0rUqtFh9yUqDf5ZvYwjWAtsxF
+         nb4PjSe6+YZU3Q7+YgESkm4AhXtOgz4GuUpKjvdB0PS/bQqbZj/gnZj7XweicQbkLDXk
+         uOM9j6S0pzI5S+ZhHjxB5iSBK5/2uknJIgc15EYdCF2sHMsJKjENKcbQc8h9xcaNhSVc
+         2Yr8iNd+bJSHgtsdCV4LgHb5EhZJjcoQxJKkTaJSksTGankYmQcU/+Dm6BKStutQviea
+         dz+w==
+X-Gm-Message-State: AJIora/UnQAfpbIdit84e3z0eghCHIklPy0dSp266US8+Ud1G4v0WtYg
+        xTMgXSss3a1IiCSsSl2oLWzNkx5bwZ0=
+X-Google-Smtp-Source: AGRyM1vMrIGHNLBM0DubJ6EyuyGnKcMmUnjRkiYl8RI5HFIvYUoSZqtFP88VnACn/+yh50PNCPjG2g==
+X-Received: by 2002:a05:620a:410d:b0:6a7:571d:8615 with SMTP id j13-20020a05620a410d00b006a7571d8615mr12231251qko.259.1656710111378;
+        Fri, 01 Jul 2022 14:15:11 -0700 (PDT)
 Received: from mail-lvn-it-01.broadcom.com ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id g6-20020ac842c6000000b00317ccc66971sm14584509qtm.52.2022.07.01.14.15.08
+        by smtp.gmail.com with ESMTPSA id g6-20020ac842c6000000b00317ccc66971sm14584509qtm.52.2022.07.01.14.15.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 01 Jul 2022 14:15:08 -0700 (PDT)
+        Fri, 01 Jul 2022 14:15:10 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Justin Tee <justin.tee@broadcom.com>
-Subject: [PATCH 08/12] lpfc: Revert RSCN_MEMENTO workaround for misbehaved configuration
-Date:   Fri,  1 Jul 2022 14:14:21 -0700
-Message-Id: <20220701211425.2708-9-jsmart2021@gmail.com>
+Subject: [PATCH 09/12] lpfc: Refactor lpfc_nvmet_prep_abort_wqe into lpfc_sli_prep_abort_xri
+Date:   Fri,  1 Jul 2022 14:14:22 -0700
+Message-Id: <20220701211425.2708-10-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20220701211425.2708-1-jsmart2021@gmail.com>
 References: <20220701211425.2708-1-jsmart2021@gmail.com>
@@ -63,102 +63,209 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The RSCN_MEMENTO logic was to workaround a target that does not
-register both FCP and NVME FC4 types at the same time.  This caused
-the configuration to not produce a second RSCN for the NVME FC4 type
-registration in a timely manner.  The intention of the RSCN_MEMENTO
-flag was to always signal to try NVME PRLI.
+lpfc_nvmet_prep_abort_wqe has a lot of common code with
+lpfc_sli_prep_abort_xri.
 
-However, there are other FCP-only target arrays in correctly behaved
-configurations that reject the NVME PRLI followed by a LOGO leading
-to never rediscovering the target after an issue_lip (as LOGO causes
-a repeat of PLOGI/PRLIs).
+Delete lpfc_nvmet_prep_abort_wqe as the wqe can be filled out using the
+generic lpfc_sli_prep_abort_xri routine.
 
-Revert the RSCN_MEMENTO patch as it is causing correctly behaved
-configs to fail while it exists only to succeed on a misbehaved
-config.
+Add the wqec option to lpfc_sli_prep_abort_xri for
+lpfc_nvmet_prep_abort_wqe.
 
-Fixes: 1045592fc968 ("scsi: lpfc: Introduce FC_RSCN_MEMENTO flag for tracking post RSCN completion")
 Co-developed-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc.h         | 1 -
- drivers/scsi/lpfc/lpfc_els.c     | 8 ++------
- drivers/scsi/lpfc/lpfc_hbadisc.c | 3 +--
- 3 files changed, 3 insertions(+), 9 deletions(-)
+ drivers/scsi/lpfc/lpfc.h       |  3 ++-
+ drivers/scsi/lpfc/lpfc_crtn.h  |  2 +-
+ drivers/scsi/lpfc/lpfc_hw4.h   |  1 -
+ drivers/scsi/lpfc/lpfc_nvmet.c | 48 ++++------------------------------
+ drivers/scsi/lpfc/lpfc_sli.c   | 16 +++++++-----
+ 5 files changed, 18 insertions(+), 52 deletions(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-index da9070cdad91..212f9b962187 100644
+index 212f9b962187..cf4ccc54a7f2 100644
 --- a/drivers/scsi/lpfc/lpfc.h
 +++ b/drivers/scsi/lpfc/lpfc.h
-@@ -604,7 +604,6 @@ struct lpfc_vport {
- #define FC_VFI_REGISTERED	0x800000 /* VFI is registered */
- #define FC_FDISC_COMPLETED	0x1000000/* FDISC completed */
- #define FC_DISC_DELAYED		0x2000000/* Delay NPort discovery */
--#define FC_RSCN_MEMENTO		0x4000000/* RSCN cmd processed */
+@@ -986,7 +986,8 @@ struct lpfc_hba {
+ 					   u8 last_seq, u8 cr_cx_cmd);
+ 	void (*__lpfc_sli_prep_abort_xri)(struct lpfc_iocbq *cmdiocbq,
+ 					  u16 ulp_context, u16 iotag,
+-					  u8 ulp_class, u16 cqid, bool ia);
++					  u8 ulp_class, u16 cqid, bool ia,
++					  bool wqec);
  
- 	uint32_t ct_flags;
- #define FC_CT_RFF_ID		0x1	 /* RFF_ID accepted by switch */
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 31fb2ee07bfa..9371829e11b2 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -1887,7 +1887,6 @@ lpfc_end_rscn(struct lpfc_vport *vport)
- 		else {
- 			spin_lock_irq(shost->host_lock);
- 			vport->fc_flag &= ~FC_RSCN_MODE;
--			vport->fc_flag |= FC_RSCN_MEMENTO;
- 			spin_unlock_irq(shost->host_lock);
- 		}
+ 	/* expedite pool */
+ 	struct lpfc_epd_pool epd_pool;
+diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
+index f5d74958b664..bcad91204328 100644
+--- a/drivers/scsi/lpfc/lpfc_crtn.h
++++ b/drivers/scsi/lpfc/lpfc_crtn.h
+@@ -370,7 +370,7 @@ void lpfc_sli_prep_xmit_seq64(struct lpfc_hba *phba,
+ 			      u8 cr_cx_cmd);
+ void lpfc_sli_prep_abort_xri(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocbq,
+ 			     u16 ulp_context, u16 iotag, u8 ulp_class, u16 cqid,
+-			     bool ia);
++			     bool ia, bool wqec);
+ struct lpfc_sglq *__lpfc_clear_active_sglq(struct lpfc_hba *phba, uint16_t xri);
+ struct lpfc_sglq *__lpfc_sli_get_nvmet_sglq(struct lpfc_hba *phba,
+ 					    struct lpfc_iocbq *piocbq);
+diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+index f024415731ac..4527fef23ae7 100644
+--- a/drivers/scsi/lpfc/lpfc_hw4.h
++++ b/drivers/scsi/lpfc/lpfc_hw4.h
+@@ -4736,7 +4736,6 @@ struct create_xri_wqe {
+ 	uint32_t rsvd_12_15[4];         /* word 12-15 */
+ };
+ 
+-#define INHIBIT_ABORT 1
+ #define T_REQUEST_TAG 3
+ #define T_XRI_TAG 1
+ 
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+index c3cb7e8a2a7c..f7cfac0da9b6 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -3335,46 +3335,6 @@ lpfc_nvmet_unsol_issue_abort(struct lpfc_hba *phba,
+ 	return 1;
+ }
+ 
+-/**
+- * lpfc_nvmet_prep_abort_wqe - set up 'abort' work queue entry.
+- * @pwqeq: Pointer to command iocb.
+- * @xritag: Tag that  uniqely identifies the local exchange resource.
+- * @opt: Option bits -
+- *		bit 0 = inhibit sending abts on the link
+- *
+- * This function is called with hbalock held.
+- **/
+-static void
+-lpfc_nvmet_prep_abort_wqe(struct lpfc_iocbq *pwqeq, u16 xritag, u8 opt)
+-{
+-	union lpfc_wqe128 *wqe = &pwqeq->wqe;
+-
+-	/* WQEs are reused.  Clear stale data and set key fields to
+-	 * zero like ia, iaab, iaar, xri_tag, and ctxt_tag.
+-	 */
+-	memset(wqe, 0, sizeof(*wqe));
+-
+-	if (opt & INHIBIT_ABORT)
+-		bf_set(abort_cmd_ia, &wqe->abort_cmd, 1);
+-	/* Abort specified xri tag, with the mask deliberately zeroed */
+-	bf_set(abort_cmd_criteria, &wqe->abort_cmd, T_XRI_TAG);
+-
+-	bf_set(wqe_cmnd, &wqe->abort_cmd.wqe_com, CMD_ABORT_XRI_CX);
+-
+-	/* Abort the I/O associated with this outstanding exchange ID. */
+-	wqe->abort_cmd.wqe_com.abort_tag = xritag;
+-
+-	/* iotag for the wqe completion. */
+-	bf_set(wqe_reqtag, &wqe->abort_cmd.wqe_com, pwqeq->iotag);
+-
+-	bf_set(wqe_qosd, &wqe->abort_cmd.wqe_com, 1);
+-	bf_set(wqe_lenloc, &wqe->abort_cmd.wqe_com, LPFC_WQE_LENLOC_NONE);
+-
+-	bf_set(wqe_cmd_type, &wqe->abort_cmd.wqe_com, OTHER_COMMAND);
+-	bf_set(wqe_wqec, &wqe->abort_cmd.wqe_com, 1);
+-	bf_set(wqe_cqid, &wqe->abort_cmd.wqe_com, LPFC_WQE_CQ_ID_DEFAULT);
+-}
+-
+ static int
+ lpfc_nvmet_sol_fcp_issue_abort(struct lpfc_hba *phba,
+ 			       struct lpfc_async_xchg_ctx *ctxp,
+@@ -3384,7 +3344,7 @@ lpfc_nvmet_sol_fcp_issue_abort(struct lpfc_hba *phba,
+ 	struct lpfc_iocbq *abts_wqeq;
+ 	struct lpfc_nodelist *ndlp;
+ 	unsigned long flags;
+-	u8 opt;
++	bool ia;
+ 	int rc;
+ 
+ 	tgtp = (struct lpfc_nvmet_tgtport *)phba->targetport->private;
+@@ -3424,7 +3384,7 @@ lpfc_nvmet_sol_fcp_issue_abort(struct lpfc_hba *phba,
  	}
-@@ -2435,14 +2434,13 @@ lpfc_issue_els_prli(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	u32 local_nlp_type, elscmd;
+ 	abts_wqeq = ctxp->abort_wqeq;
+ 	ctxp->state = LPFC_NVME_STE_ABORT;
+-	opt = (ctxp->flag & LPFC_NVME_ABTS_RCV) ? INHIBIT_ABORT : 0;
++	ia = (ctxp->flag & LPFC_NVME_ABTS_RCV) ? true : false;
+ 	spin_unlock_irqrestore(&ctxp->ctxlock, flags);
  
- 	/*
--	 * If discovery was kicked off from RSCN mode,
--	 * the FC4 types supported from a
-+	 * If we are in RSCN mode, the FC4 types supported from a
- 	 * previous GFT_ID command may not be accurate. So, if we
- 	 * are a NVME Initiator, always look for the possibility of
- 	 * the remote NPort beng a NVME Target.
- 	 */
- 	if (phba->sli_rev == LPFC_SLI_REV4 &&
--	    vport->fc_flag & (FC_RSCN_MODE | FC_RSCN_MEMENTO) &&
-+	    vport->fc_flag & FC_RSCN_MODE &&
- 	    vport->nvmei_support)
- 		ndlp->nlp_fc4_type |= NLP_FC4_NVME;
- 	local_nlp_type = ndlp->nlp_fc4_type;
-@@ -7916,7 +7914,6 @@ lpfc_els_rcv_rscn(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
- 		if ((rscn_cnt < FC_MAX_HOLD_RSCN) &&
- 		    !(vport->fc_flag & FC_RSCN_DISCOVERY)) {
- 			vport->fc_flag |= FC_RSCN_MODE;
--			vport->fc_flag &= ~FC_RSCN_MEMENTO;
- 			spin_unlock_irq(shost->host_lock);
- 			if (rscn_cnt) {
- 				cmd = vport->fc_rscn_id_list[rscn_cnt-1]->virt;
-@@ -7966,7 +7963,6 @@ lpfc_els_rcv_rscn(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
+ 	/* Announce entry to new IO submit field. */
+@@ -3470,7 +3430,9 @@ lpfc_nvmet_sol_fcp_issue_abort(struct lpfc_hba *phba,
+ 	/* Ready - mark outstanding as aborted by driver. */
+ 	abts_wqeq->cmd_flag |= LPFC_DRIVER_ABORTED;
  
- 	spin_lock_irq(shost->host_lock);
- 	vport->fc_flag |= FC_RSCN_MODE;
--	vport->fc_flag &= ~FC_RSCN_MEMENTO;
- 	spin_unlock_irq(shost->host_lock);
- 	vport->fc_rscn_id_list[vport->fc_rscn_id_cnt++] = pcmd;
- 	/* Indicate we are done walking fc_rscn_id_list on this vport */
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index fb36f26170e4..5cd838eac455 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -1354,8 +1354,7 @@ lpfc_linkup_port(struct lpfc_vport *vport)
+-	lpfc_nvmet_prep_abort_wqe(abts_wqeq, ctxp->wqeq->sli4_xritag, opt);
++	lpfc_sli_prep_abort_xri(phba, abts_wqeq, ctxp->wqeq->sli4_xritag,
++				abts_wqeq->iotag, CLASS3,
++				LPFC_WQE_CQ_ID_DEFAULT, ia, true);
  
- 	spin_lock_irq(shost->host_lock);
- 	vport->fc_flag &= ~(FC_PT2PT | FC_PT2PT_PLOGI | FC_ABORT_DISCOVERY |
--			    FC_RSCN_MEMENTO | FC_RSCN_MODE |
--			    FC_NLP_MORE | FC_RSCN_DISCOVERY);
-+			    FC_RSCN_MODE | FC_NLP_MORE | FC_RSCN_DISCOVERY);
- 	vport->fc_flag |= FC_NDISC_ACTIVE;
- 	vport->fc_ns_retry = 0;
- 	spin_unlock_irq(shost->host_lock);
+ 	/* ABTS WQE must go to the same WQ as the WQE to be aborted */
+ 	abts_wqeq->hba_wqidx = ctxp->wqeq->hba_wqidx;
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 71442faaa6c2..3aa9e5c85aa5 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -10863,7 +10863,8 @@ lpfc_sli_prep_xmit_seq64(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocbq,
+ 
+ static void
+ __lpfc_sli_prep_abort_xri_s3(struct lpfc_iocbq *cmdiocbq, u16 ulp_context,
+-			     u16 iotag, u8 ulp_class, u16 cqid, bool ia)
++			     u16 iotag, u8 ulp_class, u16 cqid, bool ia,
++			     bool wqec)
+ {
+ 	IOCB_t *icmd = NULL;
+ 
+@@ -10892,7 +10893,8 @@ __lpfc_sli_prep_abort_xri_s3(struct lpfc_iocbq *cmdiocbq, u16 ulp_context,
+ 
+ static void
+ __lpfc_sli_prep_abort_xri_s4(struct lpfc_iocbq *cmdiocbq, u16 ulp_context,
+-			     u16 iotag, u8 ulp_class, u16 cqid, bool ia)
++			     u16 iotag, u8 ulp_class, u16 cqid, bool ia,
++			     bool wqec)
+ {
+ 	union lpfc_wqe128 *wqe;
+ 
+@@ -10919,6 +10921,8 @@ __lpfc_sli_prep_abort_xri_s4(struct lpfc_iocbq *cmdiocbq, u16 ulp_context,
+ 	bf_set(wqe_qosd, &wqe->abort_cmd.wqe_com, 1);
+ 
+ 	/* Word 11 */
++	if (wqec)
++		bf_set(wqe_wqec, &wqe->abort_cmd.wqe_com, 1);
+ 	bf_set(wqe_cqid, &wqe->abort_cmd.wqe_com, cqid);
+ 	bf_set(wqe_cmd_type, &wqe->abort_cmd.wqe_com, OTHER_COMMAND);
+ }
+@@ -10926,10 +10930,10 @@ __lpfc_sli_prep_abort_xri_s4(struct lpfc_iocbq *cmdiocbq, u16 ulp_context,
+ void
+ lpfc_sli_prep_abort_xri(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocbq,
+ 			u16 ulp_context, u16 iotag, u8 ulp_class, u16 cqid,
+-			bool ia)
++			bool ia, bool wqec)
+ {
+ 	phba->__lpfc_sli_prep_abort_xri(cmdiocbq, ulp_context, iotag, ulp_class,
+-					cqid, ia);
++					cqid, ia, wqec);
+ }
+ 
+ /**
+@@ -12207,7 +12211,7 @@ lpfc_sli_issue_abort_iotag(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 
+ 	lpfc_sli_prep_abort_xri(phba, abtsiocbp, ulp_context, iotag,
+ 				cmdiocb->iocb.ulpClass,
+-				LPFC_WQE_CQ_ID_DEFAULT, ia);
++				LPFC_WQE_CQ_ID_DEFAULT, ia, false);
+ 
+ 	abtsiocbp->vport = vport;
+ 
+@@ -12667,7 +12671,7 @@ lpfc_sli_abort_taskmgmt(struct lpfc_vport *vport, struct lpfc_sli_ring *pring,
+ 
+ 		lpfc_sli_prep_abort_xri(phba, abtsiocbq, ulp_context, iotag,
+ 					iocbq->iocb.ulpClass, cqid,
+-					ia);
++					ia, false);
+ 
+ 		abtsiocbq->vport = vport;
+ 
 -- 
 2.26.2
 
