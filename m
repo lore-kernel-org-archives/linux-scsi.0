@@ -2,58 +2,58 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D855CCA47F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 040F5CCA479
 	for <linux-scsi@archiver.kernel.org>; Fri,  1 Jul 2022 21:15:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231510AbiGAVPN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Jul 2022 17:15:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40880 "EHLO
+        id S231558AbiGAVPO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 Jul 2022 17:15:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40892 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231167AbiGAVPK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Jul 2022 17:15:10 -0400
-Received: from mail-qt1-x835.google.com (mail-qt1-x835.google.com [IPv6:2607:f8b0:4864:20::835])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0CF0C4198D
-        for <linux-scsi@vger.kernel.org>; Fri,  1 Jul 2022 14:15:09 -0700 (PDT)
-Received: by mail-qt1-x835.google.com with SMTP id r2so1356137qta.0
-        for <linux-scsi@vger.kernel.org>; Fri, 01 Jul 2022 14:15:09 -0700 (PDT)
+        with ESMTP id S231391AbiGAVPL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Jul 2022 17:15:11 -0400
+Received: from mail-qk1-x72f.google.com (mail-qk1-x72f.google.com [IPv6:2607:f8b0:4864:20::72f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E3D843AE0
+        for <linux-scsi@vger.kernel.org>; Fri,  1 Jul 2022 14:15:10 -0700 (PDT)
+Received: by mail-qk1-x72f.google.com with SMTP id b125so2697849qkg.11
+        for <linux-scsi@vger.kernel.org>; Fri, 01 Jul 2022 14:15:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=0NazchrOXVOyKdkYgas/KPBYElZtDcpxXpR9qh8Bav8=;
-        b=MEpqHdueRoHO8ncJl6w5r7uiHpBlEV9ZxM9OcKaibpRxhoe8YWPV45NDcf0KOvTsdh
-         11ag8zP55toawUjWWGzqrNtdbIZyvAawm4boUYrenCQbJLzZkScehKs2J3YUg7VYZFuf
-         AOwZTbWJKNU/j1HsdP9RGzdY8tK/10SLKzAVxDFOwnEjijf+Cs0u1b4C+SXmx3LQikjO
-         jt4LuNQx0md1XN3vZ/PcjRepv8sGF20NLkAxubqa2kPain4m0saZ+bp8rkO8eXonP5LA
-         ZFQfA97g4a1Hcb8cg5mXV7gV+EgSJJlcPUmMSos2SCXDn/Q/pbewckJ+xgKOeIA9yY7Q
-         6L9Q==
+        bh=bTctusDPUQ6dpOmwSeJoxHf3oZihoAR5MMEfys9sFmk=;
+        b=e/A6YFHWmw5m6BVUOQO1V2bdm+yO1sZjM3zel4fek7sQycYe5/Kg4CCvVan4L2aV8M
+         FAhKSNwKkk106sdKnTFqxhhbtSshqnLofjDL0AUJH7uJG9cLmC3M63f9v/EywAMDtJY3
+         VvGVB27lAv9ElDo/1pr71YhgcFix7aOuVgHF/TNuYpW5PFeKFSljhc6DQTCVVrqE7Rv9
+         jaQGRABK5xx096Qb3roLLOtvJZXM0wRAMNCQc7E76vwdB0tpEwXTc81eGhIJCGPTajXR
+         hXz3CPKtymKYrLR+TRL7d7+B1b8NxkZQpVyKYyDrZzXNvCnfvUDgYUDv7rnqoXz3kWEf
+         xCZg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=0NazchrOXVOyKdkYgas/KPBYElZtDcpxXpR9qh8Bav8=;
-        b=hOUANH3kx0VCR14EUCwZ4AzR+nkwrm4dAudp12zlk7E+/hFg1+6FiQA4GaNg2GQUL7
-         575pjbXzEJtgg4rrAu4X+94XC0FDUecxuNvHrPCdGr6JXrL8FGllnOeKvvnBaNuFx/1I
-         BraHwQcZ64KlgKYVFlv65QOrzBCqZpFTJRI6nQC5NBLYuZAyRs+XjOA6nCrQHQN1zLCi
-         aGkIp2yA012diXk0bK9OMPwzDSpFPEfpRkRw2tWVYubsop1F3tRJMrIvnXBESg0B0RXz
-         i7pjp0miSftbw1dbwYR004HUO9jrD2XIcneO0P6QIhkQaqfkfDFgFo3p9tyv9Lq12L8G
-         vfSA==
-X-Gm-Message-State: AJIora+OHqNcrxi8gshtY3OV+Nx4di2Pa4vSKGHeyYIuYYU0ZObxhC5O
-        P3qFKKWv1OTq3GtVfWQX+27c8QznkHI=
-X-Google-Smtp-Source: AGRyM1vruTBUd6fseLMbxhbIqnRL+mRpt3CcuQGeAik/NpX/VhxRMMhlvvTNiTJLM+z5wPRIZ6mTaw==
-X-Received: by 2002:a05:622a:1c3:b0:317:93d8:c041 with SMTP id t3-20020a05622a01c300b0031793d8c041mr14952229qtw.101.1656710107971;
-        Fri, 01 Jul 2022 14:15:07 -0700 (PDT)
+        bh=bTctusDPUQ6dpOmwSeJoxHf3oZihoAR5MMEfys9sFmk=;
+        b=JQuD9quregOjfK13YCNPUltdXOmYZOyhvhUG2Cw+1ffVeetjH6Bm2yMg8Kxe1gzXwm
+         glITUk2s/C1aiNGlXQMoRcM/vOw1V1aejYZoafK/U7n5gw1LVFHV9pDG5jkJbuPLvfvi
+         F4Pz8WQJwbdh1/SsiXeR8f/cbkVLqHpPUsjLPvapAceFNeIShvUjbz1+hMo6XGrHPHiP
+         W+BW5jYLVbMWZq6a9SIA3Og7U9QAIGElFpOlffdrlMkS/ukEaITK/9rcwo3OE9Eyv3lY
+         h8mAYeEPwX1UqBawVDsaOXTgP8pZnfMFeqYuXOj6L3Cuy40fO4l4nmd8NIYVQXC8b6Mu
+         nSCw==
+X-Gm-Message-State: AJIora88G5/3yVlKSKKxEGtPaja1kG4dsG4btMDhhQL7sKxP68VYA5Cx
+        mVDwP0TuyS0I0sKlU4eEgficDicNl9o=
+X-Google-Smtp-Source: AGRyM1vrMTjNJSHVNe+5TmdXC5Eadp/N8R/giYYC6R9Nf6ULpj9ECEEDsDlBozYy3tRxzs6x+2645Q==
+X-Received: by 2002:a05:620a:10a1:b0:6ae:fecd:758f with SMTP id h1-20020a05620a10a100b006aefecd758fmr12314838qkk.412.1656710109819;
+        Fri, 01 Jul 2022 14:15:09 -0700 (PDT)
 Received: from mail-lvn-it-01.broadcom.com ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id g6-20020ac842c6000000b00317ccc66971sm14584509qtm.52.2022.07.01.14.15.06
+        by smtp.gmail.com with ESMTPSA id g6-20020ac842c6000000b00317ccc66971sm14584509qtm.52.2022.07.01.14.15.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 01 Jul 2022 14:15:07 -0700 (PDT)
+        Fri, 01 Jul 2022 14:15:08 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Justin Tee <justin.tee@broadcom.com>
-Subject: [PATCH 07/12] lpfc: Fix lost NVME paths during LIF bounce stress test
-Date:   Fri,  1 Jul 2022 14:14:20 -0700
-Message-Id: <20220701211425.2708-8-jsmart2021@gmail.com>
+Subject: [PATCH 08/12] lpfc: Revert RSCN_MEMENTO workaround for misbehaved configuration
+Date:   Fri,  1 Jul 2022 14:14:21 -0700
+Message-Id: <20220701211425.2708-9-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20220701211425.2708-1-jsmart2021@gmail.com>
 References: <20220701211425.2708-1-jsmart2021@gmail.com>
@@ -63,65 +63,102 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-During a target link bounce test, the driver sees a mismatch between
-the NPortId and the WWPN on the node structures (ndlps) involved.
-When this occurs, the driver "swaps" the ndlp and new_ndlp node
-parameters to restore WWPN/DID uniqueness in the fc_nodes list per
-vport.  However, the driver neglected to swap the nlp_fc4_type in the
-ndlp passed to lpfc_plogi_confirm_nport causing a failure to recover
-the NVME PLOGI/PRLI and ultimately the NVME paths.
+The RSCN_MEMENTO logic was to workaround a target that does not
+register both FCP and NVME FC4 types at the same time.  This caused
+the configuration to not produce a second RSCN for the NVME FC4 type
+registration in a timely manner.  The intention of the RSCN_MEMENTO
+flag was to always signal to try NVME PRLI.
 
-Correct confirm_nport to preserve the fc4 types from the new-ndlp
-when the data is moved over ot the ndlp structure.
+However, there are other FCP-only target arrays in correctly behaved
+configurations that reject the NVME PRLI followed by a LOGO leading
+to never rediscovering the target after an issue_lip (as LOGO causes
+a repeat of PLOGI/PRLIs).
 
+Revert the RSCN_MEMENTO patch as it is causing correctly behaved
+configs to fail while it exists only to succeed on a misbehaved
+config.
+
+Fixes: 1045592fc968 ("scsi: lpfc: Introduce FC_RSCN_MEMENTO flag for tracking post RSCN completion")
 Co-developed-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 15 ++++++++-------
- 1 file changed, 8 insertions(+), 7 deletions(-)
+ drivers/scsi/lpfc/lpfc.h         | 1 -
+ drivers/scsi/lpfc/lpfc_els.c     | 8 ++------
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 3 +--
+ 3 files changed, 3 insertions(+), 9 deletions(-)
 
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index da9070cdad91..212f9b962187 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -604,7 +604,6 @@ struct lpfc_vport {
+ #define FC_VFI_REGISTERED	0x800000 /* VFI is registered */
+ #define FC_FDISC_COMPLETED	0x1000000/* FDISC completed */
+ #define FC_DISC_DELAYED		0x2000000/* Delay NPort discovery */
+-#define FC_RSCN_MEMENTO		0x4000000/* RSCN cmd processed */
+ 
+ 	uint32_t ct_flags;
+ #define FC_CT_RFF_ID		0x1	 /* RFF_ID accepted by switch */
 diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 3fababb7c181..31fb2ee07bfa 100644
+index 31fb2ee07bfa..9371829e11b2 100644
 --- a/drivers/scsi/lpfc/lpfc_els.c
 +++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -1790,18 +1790,20 @@ lpfc_plogi_confirm_nport(struct lpfc_hba *phba, uint32_t *prsp,
+@@ -1887,7 +1887,6 @@ lpfc_end_rscn(struct lpfc_vport *vport)
+ 		else {
+ 			spin_lock_irq(shost->host_lock);
+ 			vport->fc_flag &= ~FC_RSCN_MODE;
+-			vport->fc_flag |= FC_RSCN_MEMENTO;
+ 			spin_unlock_irq(shost->host_lock);
+ 		}
+ 	}
+@@ -2435,14 +2434,13 @@ lpfc_issue_els_prli(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 	u32 local_nlp_type, elscmd;
  
- 	/* Move this back to NPR state */
- 	if (memcmp(&ndlp->nlp_portname, name, sizeof(struct lpfc_name)) == 0) {
--		/* The new_ndlp is replacing ndlp totally, so we need
--		 * to put ndlp on UNUSED list and try to free it.
-+		/* The ndlp doesn't have a portname yet, but does have an
-+		 * NPort ID.  The new_ndlp portname matches the Rport's
-+		 * portname.  Reinstantiate the new_ndlp and reset the ndlp.
- 		 */
- 		lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
- 			 "3179 PLOGI confirm NEW: %x %x\n",
- 			 new_ndlp->nlp_DID, keepDID);
+ 	/*
+-	 * If discovery was kicked off from RSCN mode,
+-	 * the FC4 types supported from a
++	 * If we are in RSCN mode, the FC4 types supported from a
+ 	 * previous GFT_ID command may not be accurate. So, if we
+ 	 * are a NVME Initiator, always look for the possibility of
+ 	 * the remote NPort beng a NVME Target.
+ 	 */
+ 	if (phba->sli_rev == LPFC_SLI_REV4 &&
+-	    vport->fc_flag & (FC_RSCN_MODE | FC_RSCN_MEMENTO) &&
++	    vport->fc_flag & FC_RSCN_MODE &&
+ 	    vport->nvmei_support)
+ 		ndlp->nlp_fc4_type |= NLP_FC4_NVME;
+ 	local_nlp_type = ndlp->nlp_fc4_type;
+@@ -7916,7 +7914,6 @@ lpfc_els_rcv_rscn(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
+ 		if ((rscn_cnt < FC_MAX_HOLD_RSCN) &&
+ 		    !(vport->fc_flag & FC_RSCN_DISCOVERY)) {
+ 			vport->fc_flag |= FC_RSCN_MODE;
+-			vport->fc_flag &= ~FC_RSCN_MEMENTO;
+ 			spin_unlock_irq(shost->host_lock);
+ 			if (rscn_cnt) {
+ 				cmd = vport->fc_rscn_id_list[rscn_cnt-1]->virt;
+@@ -7966,7 +7963,6 @@ lpfc_els_rcv_rscn(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
  
- 		/* Two ndlps cannot have the same did on the nodelist.
--		 * Note: for this case, ndlp has a NULL WWPN so setting
--		 * the nlp_fc4_type isn't required.
-+		 * The KeepDID and keep_nlp_fc4_type need to be swapped
-+		 * because ndlp is inflight with no WWPN.
- 		 */
- 		ndlp->nlp_DID = keepDID;
-+		ndlp->nlp_fc4_type = keep_nlp_fc4_type;
- 		lpfc_nlp_set_state(vport, ndlp, keep_nlp_state);
- 		if (phba->sli_rev == LPFC_SLI_REV4 &&
- 		    active_rrqs_xri_bitmap)
-@@ -1816,9 +1818,8 @@ lpfc_plogi_confirm_nport(struct lpfc_hba *phba, uint32_t *prsp,
+ 	spin_lock_irq(shost->host_lock);
+ 	vport->fc_flag |= FC_RSCN_MODE;
+-	vport->fc_flag &= ~FC_RSCN_MEMENTO;
+ 	spin_unlock_irq(shost->host_lock);
+ 	vport->fc_rscn_id_list[vport->fc_rscn_id_cnt++] = pcmd;
+ 	/* Indicate we are done walking fc_rscn_id_list on this vport */
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index fb36f26170e4..5cd838eac455 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -1354,8 +1354,7 @@ lpfc_linkup_port(struct lpfc_vport *vport)
  
- 		lpfc_unreg_rpi(vport, ndlp);
- 
--		/* Two ndlps cannot have the same did and the fc4
--		 * type must be transferred because the ndlp is in
--		 * flight.
-+		/* The ndlp and new_ndlp both have WWPNs but are swapping
-+		 * NPort Ids and attributes.
- 		 */
- 		ndlp->nlp_DID = keepDID;
- 		ndlp->nlp_fc4_type = keep_nlp_fc4_type;
+ 	spin_lock_irq(shost->host_lock);
+ 	vport->fc_flag &= ~(FC_PT2PT | FC_PT2PT_PLOGI | FC_ABORT_DISCOVERY |
+-			    FC_RSCN_MEMENTO | FC_RSCN_MODE |
+-			    FC_NLP_MORE | FC_RSCN_DISCOVERY);
++			    FC_RSCN_MODE | FC_NLP_MORE | FC_RSCN_DISCOVERY);
+ 	vport->fc_flag |= FC_NDISC_ACTIVE;
+ 	vport->fc_ns_retry = 0;
+ 	spin_unlock_irq(shost->host_lock);
 -- 
 2.26.2
 
