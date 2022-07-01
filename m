@@ -2,102 +2,105 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 488E2C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Jul 2022 10:42:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81567C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Jul 2022 11:22:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236950AbiGAKmI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Jul 2022 06:42:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36446 "EHLO
+        id S235198AbiGALWc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 Jul 2022 07:22:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52410 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236957AbiGAKll (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Jul 2022 06:41:41 -0400
-Received: from mail.nfschina.com (unknown [IPv6:2400:dd01:100f:2:72e2:84ff:fe10:5f45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id CCA477C1BE;
-        Fri,  1 Jul 2022 03:41:38 -0700 (PDT)
-Received: from localhost (unknown [127.0.0.1])
-        by mail.nfschina.com (Postfix) with ESMTP id 224261E80D21;
-        Fri,  1 Jul 2022 18:40:08 +0800 (CST)
-X-Virus-Scanned: amavisd-new at test.com
-Received: from mail.nfschina.com ([127.0.0.1])
-        by localhost (mail.nfschina.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id Hv84oYwLqjm3; Fri,  1 Jul 2022 18:40:05 +0800 (CST)
-Received: from localhost.localdomain (unknown [112.65.12.78])
-        (Authenticated sender: jiaming@nfschina.com)
-        by mail.nfschina.com (Postfix) with ESMTPA id 054E11E80D09;
-        Fri,  1 Jul 2022 18:40:03 +0800 (CST)
-From:   Zhang Jiaming <jiaming@nfschina.com>
+        with ESMTP id S235661AbiGALW3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Jul 2022 07:22:29 -0400
+Received: from jari.cn (unknown [218.92.28.120])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C6A9C735A3;
+        Fri,  1 Jul 2022 04:22:27 -0700 (PDT)
+Received: by ajax-webmail-localhost.localdomain (Coremail) ; Fri, 1 Jul 2022
+ 19:16:59 +0800 (GMT+08:00)
+X-Originating-IP: [182.148.13.66]
+Date:   Fri, 1 Jul 2022 19:16:59 +0800 (GMT+08:00)
+X-CM-HeaderCharset: UTF-8
+From:   "XueBing Chen" <chenxuebing@jari.cn>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     bvanassche@acm.org, johannes.thumshirn@wdc.com,
-        himanshu.madhani@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, liqiong@nfschina.com,
-        renyu@nfschina.com, Zhang Jiaming <jiaming@nfschina.com>
-Subject: [PATCH] scsi: csiostor: Fix some typos in comments
-Date:   Fri,  1 Jul 2022 18:41:30 +0800
-Message-Id: <20220701104130.24644-1-jiaming@nfschina.com>
-X-Mailer: git-send-email 2.25.1
+Cc:     anil.gurumurthy@qlogic.com, sudarsana.kalluru@qlogic.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: bfa: use strscpy to replace strlcpy
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version XT6.0.1 build 20210329(c53f3fee)
+ Copyright (c) 2002-2022 www.mailtech.cn
+ mispb-4e503810-ca60-4ec8-a188-7102c18937cf-zhkzyfz.cn
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Message-ID: <2975fca0.d18.181b97a760e.Coremail.chenxuebing@jari.cn>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID: AQAAfwA3QnCr175iyfdFAA--.867W
+X-CM-SenderInfo: hfkh05pxhex0nj6mt2flof0/1tbiAQAICmFEYxsvOAANsE
+X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
+        CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
+        daVFxhVjvjDU=
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-There are some typos in /drivers/scsi/csiostor/csio_scsi.c.
-Fix it.
-
-Signed-off-by: Zhang Jiaming <jiaming@nfschina.com>
----
- drivers/scsi/csiostor/csio_scsi.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
-index 9aafe0002ab1..a3dc6cc33136 100644
---- a/drivers/scsi/csiostor/csio_scsi.c
-+++ b/drivers/scsi/csiostor/csio_scsi.c
-@@ -153,7 +153,7 @@ csio_scsi_itnexus_loss_error(uint16_t error)
- }
- 
- /*
-- * csio_scsi_fcp_cmnd - Frame the SCSI FCP command paylod.
-+ * csio_scsi_fcp_cmnd - Frame the SCSI FCP command payload.
-  * @req: IO req structure.
-  * @addr: DMA location to place the payload.
-  *
-@@ -782,7 +782,7 @@ csio_scsis_io_active(struct csio_ioreq *req, enum csio_scsi_ev evt)
- 		list_del_init(&req->sm.sm_list);
- 		csio_set_state(&req->sm, csio_scsis_uninit);
- 		/*
--		 * In MSIX mode, with multiple queues, the SCSI compeltions
-+		 * In MSIX mode, with multiple queues, the SCSI completions
- 		 * could reach us sooner than the FW events sent to indicate
- 		 * I-T nexus loss (link down, remote device logo etc). We
- 		 * dont want to be returning such I/Os to the upper layer
-@@ -943,7 +943,7 @@ csio_scsis_aborting(struct csio_ioreq *req, enum csio_scsi_ev evt)
- 		 * 5. FW couldn't genuinely abort the request for some reason,
- 		 *    and sent us an error.
- 		 *
--		 * The first 3 scenarios are treated as  succesful abort
-+		 * The first 3 scenarios are treated as  successful abort
- 		 * operations by the host, while the last 2 are failed attempts
- 		 * to abort. Manipulate the return value of the request
- 		 * appropriately, so that host can convey these results
-@@ -1018,7 +1018,7 @@ csio_scsis_closing(struct csio_ioreq *req, enum csio_scsi_ev evt)
- 
- 		/*
- 		 * Either close succeeded, or we issued close to FW at the
--		 * same time FW compelted it to us. Either way, the I/O
-+		 * same time FW completed it to us. Either way, the I/O
- 		 * is closed.
- 		 */
- 		CSIO_DB_ASSERT((req->wr_status == FW_SUCCESS) ||
-@@ -2010,7 +2010,7 @@ csio_eh_abort_handler(struct scsi_cmnd *cmnd)
-  * @req: IO request.
-  *
-  * Cache the result in 'cmnd', since ioreq will be freed soon
-- * after we return from here, and the waiting thread shouldnt trust
-+ * after we return from here, and the waiting thread shouldn't trust
-  * the ioreq contents.
-  */
- static void
--- 
-2.25.1
-
+ClRoZSBzdHJsY3B5IHNob3VsZCBub3QgYmUgdXNlZCBiZWNhdXNlIGl0IGRvZXNuJ3QgbGltaXQg
+dGhlIHNvdXJjZQpsZW5ndGguIFByZWZlcnJlZCBpcyBzdHJzY3B5LgoKU2lnbmVkLW9mZi1ieTog
+WHVlQmluZyBDaGVuIDxjaGVueHVlYmluZ0BqYXJpLmNuPgotLS0KIGRyaXZlcnMvc2NzaS9iZmEv
+YmZhX2Zjc19scG9ydC5jIHwgMjAgKysrKysrKysrKy0tLS0tLS0tLS0KIDEgZmlsZSBjaGFuZ2Vk
+LCAxMCBpbnNlcnRpb25zKCspLCAxMCBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9kcml2ZXJz
+L3Njc2kvYmZhL2JmYV9mY3NfbHBvcnQuYyBiL2RyaXZlcnMvc2NzaS9iZmEvYmZhX2Zjc19scG9y
+dC5jCmluZGV4IGIxMmFmY2M0YjE4OS4uMDA4YWZkODE3MDg3IDEwMDY0NAotLS0gYS9kcml2ZXJz
+L3Njc2kvYmZhL2JmYV9mY3NfbHBvcnQuYworKysgYi9kcml2ZXJzL3Njc2kvYmZhL2JmYV9mY3Nf
+bHBvcnQuYwpAQCAtMjY0MiwxMCArMjY0MiwxMCBAQCBiZmFfZmNzX2ZkbWlfZ2V0X2hiYWF0dHIo
+c3RydWN0IGJmYV9mY3NfbHBvcnRfZmRtaV9zICpmZG1pLAogCWJmYV9pb2NfZ2V0X2FkYXB0ZXJf
+ZndfdmVyKCZwb3J0LT5mY3MtPmJmYS0+aW9jLAogCQkJCQloYmFfYXR0ci0+ZndfdmVyc2lvbik7
+CiAKLQlzdHJsY3B5KGhiYV9hdHRyLT5kcml2ZXJfdmVyc2lvbiwgKGNoYXIgKilkcml2ZXJfaW5m
+by0+dmVyc2lvbiwKKwlzdHJzY3B5KGhiYV9hdHRyLT5kcml2ZXJfdmVyc2lvbiwgKGNoYXIgKilk
+cml2ZXJfaW5mby0+dmVyc2lvbiwKIAkJc2l6ZW9mKGhiYV9hdHRyLT5kcml2ZXJfdmVyc2lvbikp
+OwogCi0Jc3RybGNweShoYmFfYXR0ci0+b3NfbmFtZSwgZHJpdmVyX2luZm8tPmhvc3Rfb3NfbmFt
+ZSwKKwlzdHJzY3B5KGhiYV9hdHRyLT5vc19uYW1lLCBkcml2ZXJfaW5mby0+aG9zdF9vc19uYW1l
+LAogCQlzaXplb2YoaGJhX2F0dHItPm9zX25hbWUpKTsKIAogCS8qCkBAIC0yNjYzLDEzICsyNjYz
+LDEzIEBAIGJmYV9mY3NfZmRtaV9nZXRfaGJhYXR0cihzdHJ1Y3QgYmZhX2Zjc19scG9ydF9mZG1p
+X3MgKmZkbWksCiAJYmZhX2Zjc19mZG1pX2dldF9wb3J0YXR0cihmZG1pLCAmZmNzX3BvcnRfYXR0
+cik7CiAJaGJhX2F0dHItPm1heF9jdF9weWxkID0gZmNzX3BvcnRfYXR0ci5tYXhfZnJtX3NpemU7
+CiAKLQlzdHJsY3B5KGhiYV9hdHRyLT5ub2RlX3N5bV9uYW1lLnN5bW5hbWUsCisJc3Ryc2NweSho
+YmFfYXR0ci0+bm9kZV9zeW1fbmFtZS5zeW1uYW1lLAogCQlwb3J0LT5wb3J0X2NmZy5ub2RlX3N5
+bV9uYW1lLnN5bW5hbWUsIEJGQV9TWU1OQU1FX01BWExFTik7CiAJc3RyY3B5KGhiYV9hdHRyLT52
+ZW5kb3JfaW5mbywgIlFMb2dpYyIpOwogCWhiYV9hdHRyLT5udW1fcG9ydHMgPQogCQljcHVfdG9f
+YmUzMihiZmFfaW9jX2dldF9ucG9ydHMoJnBvcnQtPmZjcy0+YmZhLT5pb2MpKTsKIAloYmFfYXR0
+ci0+ZmFicmljX25hbWUgPSBwb3J0LT5mYWJyaWMtPmxwcy0+cHJfbnd3bjsKLQlzdHJsY3B5KGhi
+YV9hdHRyLT5iaW9zX3ZlciwgaGJhX2F0dHItPm9wdGlvbl9yb21fdmVyLCBCRkFfVkVSU0lPTl9M
+RU4pOworCXN0cnNjcHkoaGJhX2F0dHItPmJpb3NfdmVyLCBoYmFfYXR0ci0+b3B0aW9uX3JvbV92
+ZXIsIEJGQV9WRVJTSU9OX0xFTik7CiAKIH0KIApAQCAtMjczNiwxOSArMjczNiwxOSBAQCBiZmFf
+ZmNzX2ZkbWlfZ2V0X3BvcnRhdHRyKHN0cnVjdCBiZmFfZmNzX2xwb3J0X2ZkbWlfcyAqZmRtaSwK
+IAkvKgogCSAqIE9TIGRldmljZSBOYW1lCiAJICovCi0Jc3RybGNweShwb3J0X2F0dHItPm9zX2Rl
+dmljZV9uYW1lLCBkcml2ZXJfaW5mby0+b3NfZGV2aWNlX25hbWUsCisJc3Ryc2NweShwb3J0X2F0
+dHItPm9zX2RldmljZV9uYW1lLCBkcml2ZXJfaW5mby0+b3NfZGV2aWNlX25hbWUsCiAJCXNpemVv
+Zihwb3J0X2F0dHItPm9zX2RldmljZV9uYW1lKSk7CiAKIAkvKgogCSAqIEhvc3QgbmFtZQogCSAq
+LwotCXN0cmxjcHkocG9ydF9hdHRyLT5ob3N0X25hbWUsIGRyaXZlcl9pbmZvLT5ob3N0X21hY2hp
+bmVfbmFtZSwKKwlzdHJzY3B5KHBvcnRfYXR0ci0+aG9zdF9uYW1lLCBkcml2ZXJfaW5mby0+aG9z
+dF9tYWNoaW5lX25hbWUsCiAJCXNpemVvZihwb3J0X2F0dHItPmhvc3RfbmFtZSkpOwogCiAJcG9y
+dF9hdHRyLT5ub2RlX25hbWUgPSBiZmFfZmNzX2xwb3J0X2dldF9ud3duKHBvcnQpOwogCXBvcnRf
+YXR0ci0+cG9ydF9uYW1lID0gYmZhX2Zjc19scG9ydF9nZXRfcHd3bihwb3J0KTsKIAotCXN0cmxj
+cHkocG9ydF9hdHRyLT5wb3J0X3N5bV9uYW1lLnN5bW5hbWUsCisJc3Ryc2NweShwb3J0X2F0dHIt
+PnBvcnRfc3ltX25hbWUuc3ltbmFtZSwKIAkJYmZhX2Zjc19scG9ydF9nZXRfcHN5bV9uYW1lKHBv
+cnQpLnN5bW5hbWUsIEJGQV9TWU1OQU1FX01BWExFTik7CiAJYmZhX2Zjc19scG9ydF9nZXRfYXR0
+cihwb3J0LCAmbHBvcnRfYXR0cik7CiAJcG9ydF9hdHRyLT5wb3J0X3R5cGUgPSBjcHVfdG9fYmUz
+MihscG9ydF9hdHRyLnBvcnRfdHlwZSk7CkBAIC0zMjI5LDcgKzMyMjksNyBAQCBiZmFfZmNzX2xw
+b3J0X21zX2dtYWxfcmVzcG9uc2Uodm9pZCAqZmNzYXJnLCBzdHJ1Y3QgYmZhX2ZjeHBfcyAqZmN4
+cCwKIAkJCQkJcnNwX3N0cltnbWFsX2VudHJ5LT5sZW4tMV0gPSAwOwogCiAJCQkJLyogY29weSBJ
+UCBBZGRyZXNzIHRvIGZhYnJpYyAqLwotCQkJCXN0cmxjcHkoYmZhX2Zjc19scG9ydF9nZXRfZmFi
+cmljX2lwYWRkcihwb3J0KSwKKwkJCQlzdHJzY3B5KGJmYV9mY3NfbHBvcnRfZ2V0X2ZhYnJpY19p
+cGFkZHIocG9ydCksCiAJCQkJCWdtYWxfZW50cnktPmlwX2FkZHIsCiAJCQkJCUJGQV9GQ1NfRkFC
+UklDX0lQQUREUl9TWik7CiAJCQkJYnJlYWs7CkBAIC00NjY3LDcgKzQ2NjcsNyBAQCBiZmFfZmNz
+X2xwb3J0X25zX3NlbmRfcnNwbl9pZCh2b2lkICpuc19jYmFyZywgc3RydWN0IGJmYV9mY3hwX3Mg
+KmZjeHBfYWxsb2NlZCkKIAkJICogdG8gdGhhdCBvZiB0aGUgYmFzZSBwb3J0LgogCQkgKi8KIAot
+CQlzdHJsY3B5KHN5bWJsLAorCQlzdHJzY3B5KHN5bWJsLAogCQkJKGNoYXIgKikmKGJmYV9mY3Nf
+bHBvcnRfZ2V0X3BzeW1fbmFtZQogCQkJIChiZmFfZmNzX2dldF9iYXNlX3BvcnQocG9ydC0+ZmNz
+KSkpLAogCQkJc2l6ZW9mKHN5bWJsKSk7CkBAIC01MTk0LDcgKzUxOTQsNyBAQCBiZmFfZmNzX2xw
+b3J0X25zX3V0aWxfc2VuZF9yc3BuX2lkKHZvaWQgKmNiYXJnLCBzdHJ1Y3QgYmZhX2ZjeHBfcyAq
+ZmN4cF9hbGxvY2VkKQogCQkgKiBGb3IgVnBvcnRzLCB3ZSBhcHBlbmQgdGhlIHZwb3J0J3MgcG9y
+dCBzeW1ib2xpYyBuYW1lCiAJCSAqIHRvIHRoYXQgb2YgdGhlIGJhc2UgcG9ydC4KIAkJICovCi0J
+CXN0cmxjcHkoc3ltYmwsIChjaGFyICopJihiZmFfZmNzX2xwb3J0X2dldF9wc3ltX25hbWUKKwkJ
+c3Ryc2NweShzeW1ibCwgKGNoYXIgKikmKGJmYV9mY3NfbHBvcnRfZ2V0X3BzeW1fbmFtZQogCQkJ
+KGJmYV9mY3NfZ2V0X2Jhc2VfcG9ydChwb3J0LT5mY3MpKSksCiAJCQlzaXplb2Yoc3ltYmwpKTsK
+IAotLSAKMi4yNS4xCg==
