@@ -2,96 +2,72 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 819BFC433EF
-	for <linux-scsi@archiver.kernel.org>; Sat,  2 Jul 2022 11:47:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C037FC433EF
+	for <linux-scsi@archiver.kernel.org>; Sat,  2 Jul 2022 16:19:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232131AbiGBLr5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 2 Jul 2022 07:47:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33906 "EHLO
+        id S232281AbiGBQTG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 2 Jul 2022 12:19:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36416 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232020AbiGBLr4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Jul 2022 07:47:56 -0400
-Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B12FA1057E;
-        Sat,  2 Jul 2022 04:47:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1656762473; x=1688298473;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=EgfBReJcpv18LXfQTe5cnePYbwlzCm1/gUujXSctsoI=;
-  b=J26dcxHd4pE87Uowm/4LgQ7m1Nf6tAg4ewm1YtuMdJClJcMytuWlVm6O
-   y3/DZ+DmYilw0KvctuEr55q5HdkN5t9nOQEyvMYIjr/24h5yhA/tHac6P
-   HovoQpCwZ2cRDW5GQHArn0V1uryIQRJpZi+9miF+xdIlqKa9QVKh1QiMT
-   x1ZcEnz78dDvmgfQVzHnie4rE/6SDCBkrWKMvRJKI6/IMs1DXzS/F+pnG
-   2jgKcegq89CDUcizR0NF7Opdh2A/l1+VSf1IQGoroONEOaPiHvaPlJuZs
-   7+vkbSzgiwoCw+X8ghRYKZXObMhigBMEZnKI3kdZo7T5DBt6+iojCYZZg
-   w==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10395"; a="346807371"
-X-IronPort-AV: E=Sophos;i="5.92,239,1650956400"; 
-   d="scan'208";a="346807371"
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jul 2022 04:47:53 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.92,239,1650956400"; 
-   d="scan'208";a="918772599"
-Received: from lkp-server01.sh.intel.com (HELO 68b931ab7ac1) ([10.239.97.150])
-  by fmsmga005.fm.intel.com with ESMTP; 02 Jul 2022 04:47:51 -0700
-Received: from kbuild by 68b931ab7ac1 with local (Exim 4.95)
-        (envelope-from <lkp@intel.com>)
-        id 1o7bbK-000FCF-SQ;
-        Sat, 02 Jul 2022 11:47:50 +0000
-Date:   Sat, 2 Jul 2022 19:47:00 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Anastasia Kovaleva <a.kovaleva@yadro.com>,
-        target-devel@vger.kernel.org
-Cc:     kbuild-all@lists.01.org, linux-scsi@vger.kernel.org,
-        linux@yadro.com
-Subject: Re: [PATCH 3/3] target: core: Change the way target_xcopy_do_work
- sets restiction on max io
-Message-ID: <202207021939.V7V97GD3-lkp@intel.com>
-References: <20220630122241.1658-4-a.kovaleva@yadro.com>
+        with ESMTP id S232119AbiGBQTF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Jul 2022 12:19:05 -0400
+Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D58ADFED
+        for <linux-scsi@vger.kernel.org>; Sat,  2 Jul 2022 09:19:04 -0700 (PDT)
+Received: by mail-pj1-f51.google.com with SMTP id y14-20020a17090a644e00b001ef775f7118so972139pjm.2
+        for <linux-scsi@vger.kernel.org>; Sat, 02 Jul 2022 09:19:04 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=pMiv/rX5w9AJIoN2mfAiPetJHiwOk97AF3ZnsA2GUQk=;
+        b=ox+/yWKqmEBRuMOJYlZnzCwbvgeQTMYxA9j5PQ81C8+RortmgUQ7hSUr7MiSxtNxEi
+         mrIKWc3mMeEEzrZMVq26mOmAQR4kNWHIdhDGcNGxq0B4BKJwPL6rMsa98tcbu6Imn4nf
+         0inqXMululkgUSex24Rnr13ujRh151TGe1HwB9aO21/aYawU1RPfhk+NXX2bgY+vvz5D
+         OROJSTqrXhllW2YKcRg/JQqehdT3LsDrCgZZQ/3AHgzVtpihVNPMYudQ2G1o+lC6fVL8
+         JHBOQzrl0+6VXesLguV5VWidrvnP84tMZaBW7b+FjLrgQqmRbEfDPLwF/hwrnI05iBTQ
+         0tFw==
+X-Gm-Message-State: AJIora93eaNl2hFtkcUAY/NBdBcB3J2FgGjYbcnVcXmH5p/aiTGBdk6T
+        Fkm9P33Kq7JfNyuIVCHgBpU=
+X-Google-Smtp-Source: AGRyM1uRTqP6PnvczL+CN8+KCNgL5Hd396nAVrkk3ZlWJPlqYHsxIIIYaw5JEMUv/oh5KWBklmHnuA==
+X-Received: by 2002:a17:903:1cf:b0:16a:605a:d58a with SMTP id e15-20020a17090301cf00b0016a605ad58amr25350304plh.37.1656778743423;
+        Sat, 02 Jul 2022 09:19:03 -0700 (PDT)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id y27-20020a634b1b000000b0040cff9def93sm17184844pga.66.2022.07.02.09.19.01
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 02 Jul 2022 09:19:02 -0700 (PDT)
+Message-ID: <238400ab-db9c-5263-f15a-ec8b35e41af6@acm.org>
+Date:   Sat, 2 Jul 2022 09:19:00 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220630122241.1658-4-a.kovaleva@yadro.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH v3 1/4] scsi: qla2xxx: Remove unused del_sess_list field
+Content-Language: en-US
+To:     Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>,
+        Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org
+References: <b4a96c07-76ef-c7ac-6a73-a64bba32d26f@I-love.SAKURA.ne.jp>
+ <46629616-be04-9a53-b9d8-b2b947adf9d0@I-love.SAKURA.ne.jp>
+ <a7f24b44-c4da-9e8f-e1ff-eafa9304e13c@I-love.SAKURA.ne.jp>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <a7f24b44-c4da-9e8f-e1ff-eafa9304e13c@I-love.SAKURA.ne.jp>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Anastasia,
+On 7/1/22 22:00, Tetsuo Handa wrote:
+> "struct qla_tgt"->del_sess_list is no longer used since commit
+> 726b85487067d7f5 ("qla2xxx: Add framework for async fabric discovery").
 
-Thank you for the patch! Yet something to improve:
+Please post a new version of a patch series as a new e-mail thread 
+instead of as a reply to a previous thread.
 
-[auto build test ERROR on mkp-scsi/for-next]
-[also build test ERROR on linus/master v5.19-rc4 next-20220701]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch]
+Thanks,
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Anastasia-Kovaleva/Make-target-send-correct-io-limits/20220630-203342
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
-config: m68k-allmodconfig (https://download.01.org/0day-ci/archive/20220702/202207021939.V7V97GD3-lkp@intel.com/config)
-compiler: m68k-linux-gcc (GCC) 11.3.0
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/56a549ae44a7fa719292ad848e1f70fa745d0ece
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Anastasia-Kovaleva/Make-target-send-correct-io-limits/20220630-203342
-        git checkout 56a549ae44a7fa719292ad848e1f70fa745d0ece
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.3.0 make.cross W=1 O=build_dir ARCH=m68k SHELL=/bin/bash
-
-If you fix the issue, kindly add following tag where applicable
-Reported-by: kernel test robot <lkp@intel.com>
-
-All errors (new ones prefixed by >>, old ones prefixed by <<):
-
->> ERROR: modpost: "__divdi3" [drivers/target/target_core_mod.ko] undefined!
->> ERROR: modpost: "__udivdi3" [drivers/target/target_core_mod.ko] undefined!
-
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+Bart.
