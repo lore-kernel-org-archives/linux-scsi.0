@@ -2,89 +2,120 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08602C43334
-	for <linux-scsi@archiver.kernel.org>; Sun,  3 Jul 2022 23:28:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A904FC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jul 2022 02:44:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232443AbiGCX2Y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 3 Jul 2022 19:28:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52400 "EHLO
+        id S229868AbiGDCoZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 3 Jul 2022 22:44:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34902 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232375AbiGCX2W (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Jul 2022 19:28:22 -0400
-Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B914EB73
-        for <linux-scsi@vger.kernel.org>; Sun,  3 Jul 2022 16:28:20 -0700 (PDT)
-Received: by mail-pf1-x431.google.com with SMTP id r6so3149311pfq.6
-        for <linux-scsi@vger.kernel.org>; Sun, 03 Jul 2022 16:28:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=/hIVsD/q/UF9dyc1kLVHGPhnuZojG1AVD53nbKl4ZlU=;
-        b=NebBmKITEmQKW9BtknzajFkyW09SQtUXtuNSOy+xU9ybV2LIkXH0+xvyqtF/klER4e
-         tZRq7zXh8NiiFQQtC2tWlv4OcgG5mEx38rOxOTcxPHiIrwnA2y5DgLVKg0iIlZYLToy+
-         a4ZYLPe6DjKcak2QDwNTQ63+NgoL0QJZgs3Oc=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=/hIVsD/q/UF9dyc1kLVHGPhnuZojG1AVD53nbKl4ZlU=;
-        b=VFvD3bHdLF9u89NRl5kMsSha8aQFk1EVKonijusZeTpjPDRnyHfxRUUwsgrGmpUBc2
-         wJL1gQziN0iYZmafLU4nIzaZgQqjROvkQqeMeTvJMMdgPYLczKihoCmOzORcDLGDowNV
-         Cw0n8kH1pZP3v6W/urQvEdIY6xf9R3Yzzd22Kju8ERk8kj6pdSdXxTfNmP+KCjs6myzY
-         +0XGlzhlrDW4OjkUGNw0DnuTr9XGIGilvNbpmyrDaALq32e909Mr1cIUpX2JPCBRVTZ5
-         slWYru4AOqXxPrGBRhQvrlNBOsQ+U+vjtH2jIADhZWKwYDaYAVRiff+RpLEt3nq5fRQ3
-         +Ovg==
-X-Gm-Message-State: AJIora9LJrnpyaaGWMNxHUDYrO5LSrPpB28N0qyR4TqSSiEmIJ1iCtVc
-        /jVSJTYQBhT33dcEgI3uGE0Y9/csls1qxA==
-X-Google-Smtp-Source: AGRyM1tQqw8s/xQBYEY/2XBktL2xVedzh8VTLDgAYN/OkwES4S6cPCfjMQX31f3ag/IyV2Hf+LBkKg==
-X-Received: by 2002:a63:124f:0:b0:412:4c1f:b611 with SMTP id 15-20020a63124f000000b004124c1fb611mr1898339pgs.574.1656890900258;
-        Sun, 03 Jul 2022 16:28:20 -0700 (PDT)
-Received: from dlunevwfh.roam.corp.google.com (n122-107-196-14.sbr2.nsw.optusnet.com.au. [122.107.196.14])
-        by smtp.gmail.com with ESMTPSA id w18-20020a627b12000000b00527e026591esm10100594pfc.150.2022.07.03.16.28.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 03 Jul 2022 16:28:19 -0700 (PDT)
-From:   Daniil Lunev <dlunev@chromium.org>
-To:     Adrian Hunter <adrian.hunter@intel.com>
-Cc:     Daniil Lunev <dlunev@chromium.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Bean Huo <beanhuo@micron.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [PATCH] scsi: ufs: ufs-pci: Enable WriteBooster capability on ADL
-Date:   Mon,  4 Jul 2022 09:28:06 +1000
-Message-Id: <20220704092721.1.Ib5ebec952d9a59f5c69c89b694777f517d22466d@changeid>
-X-Mailer: git-send-email 2.31.0
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        with ESMTP id S229493AbiGDCoY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Jul 2022 22:44:24 -0400
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DDC3910A1
+        for <linux-scsi@vger.kernel.org>; Sun,  3 Jul 2022 19:44:20 -0700 (PDT)
+Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20220704024416epoutp0255bd0458ab9413fec6c743f40821ef8b~_gC-v9lBg0727907279epoutp02N
+        for <linux-scsi@vger.kernel.org>; Mon,  4 Jul 2022 02:44:16 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20220704024416epoutp0255bd0458ab9413fec6c743f40821ef8b~_gC-v9lBg0727907279epoutp02N
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1656902656;
+        bh=n8Kw2Rs2lC534VOksvXxadz8DaQjYrclcY87Zd0TzLU=;
+        h=Subject:Reply-To:From:To:In-Reply-To:Date:References:From;
+        b=NrWRledK0/MGN/nTVNwBhfcotEtOglyMzbNIDxGwsmrUzV6VF+plHKzS32ftW6RtP
+         reh26yj4jjlthnBM5/qnZeWWPYUIZKSN3IgFzZ9szIbif3zea1m5fbYSjqGJVwOf3O
+         kOGDAJhvk+e4n7DUfYPbNqh2FDKFSTbwGlGCNOss=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+        20220704024415epcas2p4e5fe5f2e9ee072bb31e3f4e1bfe95272~_gC-Evqtk2455324553epcas2p4-;
+        Mon,  4 Jul 2022 02:44:15 +0000 (GMT)
+Received: from epsmges2p1.samsung.com (unknown [182.195.36.97]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4Lbqrb1BR8z4x9Pv; Mon,  4 Jul
+        2022 02:44:15 +0000 (GMT)
+X-AuditID: b6c32a45-471ff700000025c2-65-62c253ffd5ba
+Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
+        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        A7.9A.09666.FF352C26; Mon,  4 Jul 2022 11:44:15 +0900 (KST)
+Mime-Version: 1.0
+Subject: RE:(2) [PATCH v3 1/2] scsi: ufs: wb: renaming & cleanups functions
+Reply-To: j-young.choi@samsung.com
+Sender: Jinyoung CHOI <j-young.choi@samsung.com>
+From:   Jinyoung CHOI <j-young.choi@samsung.com>
+To:     Avri Altman <Avri.Altman@wdc.com>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <DM6PR04MB65752CFFE4E5BD0D9C1DB8F4FCBF9@DM6PR04MB6575.namprd04.prod.outlook.com>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20220704024414epcms2p206c70583f57d8df4f41f36a1e686475a@epcms2p2>
+Date:   Mon, 04 Jul 2022 11:44:14 +0900
+X-CMS-MailID: 20220704024414epcms2p206c70583f57d8df4f41f36a1e686475a
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+CMS-TYPE: 102P
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprPJsWRmVeSWpSXmKPExsWy7bCmhe7/4ENJBm9PsFucfLKGzeLBvG1s
+        Fi9/XmWzOPiwk8Vi2oefzBYvD2laLLqxjcni8q45bBbd13ewWSw//o/Jgcvj8hVvj8V7XjJ5
+        TFh0gNHj+/oONo+PT2+xePRtWcXo8XmTnEf7gW6mAI6obJuM1MSU1CKF1Lzk/JTMvHRbJe/g
+        eOd4UzMDQ11DSwtzJYW8xNxUWyUXnwBdt8wcoBOVFMoSc0qBQgGJxcVK+nY2RfmlJakKGfnF
+        JbZKqQUpOQXmBXrFibnFpXnpenmpJVaGBgZGpkCFCdkZJ2/tYS24xFbxcf4DlgbGHyxdjJwc
+        EgImEjsPfgayuTiEBHYwSjzt2sbYxcjBwSsgKPF3hzBIjbCAt0Tr2lfMILaQgJLEuTWzwEqE
+        BQwkbvWag4TZBPQkfi6ZwQYyRkTgMLPEyitdUPN5JWa0P4WypSW2L9/KCGJzCsRKrGhsZ4KI
+        a0j8WNbLDGGLStxc/ZYdxn5/bD4jhC0i0XrvLFSNoMSDn7uh4pIShw59ZQO5R0IgX2LDgUCI
+        cI3E2+UHoEr0Ja51bAQ7gVfAV2LO9TNgcRYBVYnXp75AneYi0XkOYhWzgLzE9rdzmEFGMgto
+        SqzfpQ8xXVniyC24pxo2/mZHZzML8El0HP4LF98x7wkTRKuaxKImI4iwjMTXw/PZJzAqzUKE
+        8iwka2chrF3AyLyKUSy1oDg3PbXYqMAQHrHJ+bmbGMEpVct1B+Pktx/0DjEycTAeYpTgYFYS
+        4V016WCSEG9KYmVValF+fFFpTmrxIUZToIcnMkuJJucDk3peSbyhiaWBiZmZobmRqYG5kjiv
+        V8qGRCGB9MSS1OzU1ILUIpg+Jg5OqQYm9Q8GvRu/MWQlbmJVX/Vr3SsLviir/W5+Zy7YTX69
+        zuG19uO96wWE5/qXX98oZeWy60Wv2yq1WaLSLR+kre+z1l8IfW3UPtFvyodbD27WTvTt3LVb
+        805VSPS9bXuFlYumPpzEbcRxfC/bpWkiMpMfuxdv/+42Nc7QcMbNkPO6bmFyGa0xt/K3PCpf
+        7PKt9n29M6cMs/OyHZP0M2+ve+uodfeu0b83a596lDSpCf84rGzcLLV/bqHbviv7VgacO913
+        2adm2b68umWdM01K219a7PJgDDBp21hSs1DzpczJ1Y/6fz1J2h0/0eJgYQbPwxuVAXud1bk7
+        +oTmZoor+cvWW05nZv2pe26etswWw1kHlFiKMxINtZiLihMBzkSjZjIEAAA=
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20220701074420epcms2p4c4a6a016c7070d5dfa279fc4607caa95
+References: <DM6PR04MB65752CFFE4E5BD0D9C1DB8F4FCBF9@DM6PR04MB6575.namprd04.prod.outlook.com>
+        <20220701074420epcms2p4c4a6a016c7070d5dfa279fc4607caa95@epcms2p4>
+        <20220701074654epcms2p5fcc0a8abe766fa00851b00dff98ad3c7@epcms2p5>
+        <CGME20220701074420epcms2p4c4a6a016c7070d5dfa279fc4607caa95@epcms2p2>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Sets the WrtieBooster capability flag when ADL's UFS controller is used.
+>> @@ -5715,6 +5715,9 @@ static int __ufshcd_wb_toggle(struct ufs_hba *hba,
+>> bool set, enum flag_idn idn)
+>>         enum query_opcode opcode = set ? UPIU_QUERY_OPCODE_SET_FLAG :
+>>                                    UPIU_QUERY_OPCODE_CLEAR_FLAG;
+>> 
+>> +       if (!ufshcd_is_wb_allowed(hba))
+>> +               return -EPERM;
+>> +
+>>         index = ufshcd_wb_get_query_index(hba);
+>>         return ufshcd_query_flag_retry(hba, opcode, idn, index, NULL);  } @@ -
+>> 5723,60 +5726,50 @@ int ufshcd_wb_toggle(struct ufs_hba *hba, bool
+>> enable)  {
+> Nobody is checking the return value of ufshcd_wb_toggle(), maybe make it void instead?
+>
+> Other than that - looks good to me.
+>
+> Reviewed-by: Avri Altman <avri.altman@wdc.com>
 
-Signed-off-by: Daniil Lunev <dlunev@chromium.org>
+It is used in "wb_on_store()" that turns WB on/off.
 
----
+Thank you for your review. :)
 
- drivers/scsi/ufs/ufshcd-pci.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
-index e892b9feffb11..fb7285a756969 100644
---- a/drivers/scsi/ufs/ufshcd-pci.c
-+++ b/drivers/scsi/ufs/ufshcd-pci.c
-@@ -425,6 +425,7 @@ static int ufs_intel_adl_init(struct ufs_hba *hba)
- {
- 	hba->nop_out_timeout = 200;
- 	hba->quirks |= UFSHCD_QUIRK_BROKEN_AUTO_HIBERN8;
-+	hba->caps |= UFSHCD_CAP_WB_EN;
- 	return ufs_intel_common_init(hba);
- }
- 
--- 
-2.31.0
-
+Jinyoung.
