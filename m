@@ -2,681 +2,158 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3060DC43334
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jul 2022 12:46:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F15D6C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jul 2022 12:58:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234387AbiGDMqT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Jul 2022 08:46:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54258 "EHLO
+        id S234345AbiGDM6r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Jul 2022 08:58:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39580 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234401AbiGDMpx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jul 2022 08:45:53 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FB171057E;
-        Mon,  4 Jul 2022 05:45:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=soKQR+Jd5wFInH8KF+yAR7bFdvgKOq9WDi5WAO4xchI=; b=kionIkCzvuu18AT62CGx7icQPl
-        YO42BjBEJTQAZPWox90/3PlpAkHWlIqS8WnL1FUJCrlzSA1MJwkokwskYKRFG8j6RzCWdI7oRCgPi
-        rpFcAl5AfRnx6f9dq6WDDCWldlLxSG5xVa/GLYaZHq61xccdHWRJGhyiyBAj9aMAEZsZE3L/mjzLn
-        WG0Fp8NxYAcuDnqFYrcfKwCU25fWIrwPpJfAXz48rSlbBW4aw9gn9VQwo/71K4i6rXXZIDvxheuvN
-        ChBNvKX20YLrFDAWqZfwSl4sR6jj+hXE2yvHqYMzkmgKuJ89UhzEjdFlTV8J4CHflwO+kGExPePsL
-        jGhTunNQ==;
-Received: from [2001:4bb8:189:3c4a:8758:74d9:4df6:6417] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1o8LSW-008sbe-6X; Mon, 04 Jul 2022 12:45:48 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>,
+        with ESMTP id S232850AbiGDM6q (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jul 2022 08:58:46 -0400
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8EDC460DC;
+        Mon,  4 Jul 2022 05:58:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1656939523; x=1688475523;
+  h=from:to:cc:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=I3CU3OUTTR6W7+zvWWpGd2CAcFX1H9le/V1XoICejBI=;
+  b=EuyAnz9vK/nUxdZNnnIv9n5YRaAeya+DVGsturOF37ln3Gvfu1KYZmKo
+   03tF9GRhQtADYY1JeB+A2/eC1ICxOzBx/IH44tqRM6PAiWDwFDjP3fnxE
+   /gpkMhy9jAyLMdGMNb03sFQroMa3PcCm6cE26mrV1jacfNP0mYTBp5C7r
+   BJ1jXaoVEyOtYKJyVCltHT7xKgtYGNTs3WU18iin+pHbJVxwBflRZZkAA
+   xGmglMZ3W2RGs08PHMLZOw6Yi4LJAb1hxMennn1dZGt7+g2MFEHkh8JXx
+   X55D8/q4aOz3zlKIOWAZ3LHbJYSGXU139Ht1azo+uUZ/Or37jvahj56dp
+   w==;
+X-IronPort-AV: E=Sophos;i="5.92,243,1650902400"; 
+   d="scan'208";a="309089340"
+Received: from mail-dm6nam04lp2045.outbound.protection.outlook.com (HELO NAM04-DM6-obe.outbound.protection.outlook.com) ([104.47.73.45])
+  by ob1.hgst.iphmx.com with ESMTP; 04 Jul 2022 20:58:42 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=KWeOS+dxJj67p6tEbPbOjiU2nB8KdLg0AEeZiL0+7T62S5bg6NVoAW1pn/CzMPEPoNLvj50Jc+PbFqBSyKeW/ML5bi3ZVgExhPNyOuAe69TNM+2xK/T9pKT8pm4Sllpylvje5KOfnEiwhPxQHQidGyeUy1ruVQlAQdlHEXqtUDsvrncbPHjXp+mbZyAzkKzMUMdx8XEtt2WRhDSCJEj/T8lUaIe4KweRbeQqW9Mwt3xvMa3Jtoj6+7fx9rlHcWeuIxOBzw6VDuenV6O5F7ue2f+CHHD5FdVZna4hrzp4J3YJVvtwlYxRN47yx4eyZKc2HnDrQIafj/Ej9OgmzRNkaA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=E+BQo4+6qyQ8caLbjsZsMKWIgw58oJrc3bIPdLhNxGA=;
+ b=m4nMeb9vddSwQOGrabUFkjIIp8vAQBkIT9fo+FtR5LGvGF4KdZUI5IaKa+CQrOoCQZkIXY9fES5ibnYjB7Et5IXX+rqB0jVYTGv6JvqZ6hShDorDnG2aLXKbbYyd7TgFNTKWTgGswEe5rnox4sZsmfrgT05/PZcbUmAOl03WuOz1DllbXZPCJPmKzsM91/ZihiPtjLmRNcpybGK2KrHdmPQZbLPsCHDE5zmbOL8eJMTeegWh8y68498UoMO75yRknHqv7lIKvpERYB0dLsLqiC4oFp8RBvolM2CLxLiRvkdj9TyfD/XTkOMPgqVDiUt+mjyD4s1Eh77S1FCdMeHS3Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=E+BQo4+6qyQ8caLbjsZsMKWIgw58oJrc3bIPdLhNxGA=;
+ b=gIlIteJn1cTX63S9/7ehsQf87V2VCfWQ450E9xbetwIOc0agleAxW7Ty5cnEznLwwAHu+GkX6/GSQyOu3kd0/VBu+TYQQXVJ391DrUyY/Tu3GYFTQ8RakanojD7yGWHeeTB74ZQnuPdPS4zEeNYSqJ5lllBwqUzJHAXnvpLsIRY=
+Received: from PH0PR04MB7416.namprd04.prod.outlook.com (2603:10b6:510:12::17)
+ by BN7PR04MB5297.namprd04.prod.outlook.com (2603:10b6:408:d::29) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5395.17; Mon, 4 Jul
+ 2022 12:58:40 +0000
+Received: from PH0PR04MB7416.namprd04.prod.outlook.com
+ ([fe80::d54b:24e1:a45b:ab91]) by PH0PR04MB7416.namprd04.prod.outlook.com
+ ([fe80::d54b:24e1:a45b:ab91%7]) with mapi id 15.20.5395.021; Mon, 4 Jul 2022
+ 12:58:40 +0000
+From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     dm-devel@redhat.com, linux-block@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
-Subject: [PATCH 17/17] block: move zone related fields to struct gendisk
-Date:   Mon,  4 Jul 2022 14:45:00 +0200
-Message-Id: <20220704124500.155247-18-hch@lst.de>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20220704124500.155247-1-hch@lst.de>
+CC:     "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Subject: Re: [PATCH 01/17] block: remove a superflous ifdef in blkdev.h
+Thread-Topic: [PATCH 01/17] block: remove a superflous ifdef in blkdev.h
+Thread-Index: AQHYj6PpBGDuTXPD8UWi1k2YGkh+6g==
+Date:   Mon, 4 Jul 2022 12:58:40 +0000
+Message-ID: <PH0PR04MB741671715E7F16D5335002509BBE9@PH0PR04MB7416.namprd04.prod.outlook.com>
 References: <20220704124500.155247-1-hch@lst.de>
+ <20220704124500.155247-2-hch@lst.de>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 313da69d-ef19-4ce0-b9a6-08da5dbcead6
+x-ms-traffictypediagnostic: BN7PR04MB5297:EE_
+wdcipoutbound: EOP-TRUE
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: gpHVWZnQqnLrwlxeeSAAWAlegpL6kN8Uf4gCpFJJ6erEnlYcM+Z3A9sPHk7ZIZSi2A6gK7bfcfY5Td719nhE0RSZK4odgJJnqc5Rb0mDky4k7/cRr0epmxL0Vc7/zI9AbH5YDdCRbs7Px18fNmmX8/40+kT6HGt2P3s9gHJ8wqr5UEwQim3kS1zn5eojAJD+vhpYDdZVyjFDGo8ChHcelL6TejxFerCbb/vwneH8N+UPL43D1g88iOvqStHrs9Cm+yLVtj9lxcT1pg3xntLe/0mOrYhmpVg7f60n9Jp0v+YzwfzXaoXhxdaseOVM2HLeIuVuBBAflo32m2ZHEgnEsVuSs/ofOKYbK54VcRGDFFDC3dkaK1FVXjflMNxvXMkWyzhQPL4wtLlKTH+GFcjn099Zh5utDLn2oQZy1S7NJEtl/gDInS5TcbtqFhlxfGAyoNE2Qmriw9EsZ5LoVv0pLp8mYSP0xj4dbw3FY+7mFJpuDXKDqUCEu2w9AVZjAVQehMjoJTQhzxZbNo0JBm2ZWHZD2xAEPlzP/99ismeeK0+QJcHAYprQDkYzaArFRIE6Or9O4pSa0L93yHsEdbWx7UrTMVgXQTBhf2TmJGV6RDC+VejBZyAYc9rqkMaEs9hka3VthkuOo7vck5xKwdT1v/ZgwgTyne/vv+BdqMaMJKv2NZKMfHyOD6aL+aRYC6B3wyH/HZenGD+VraOGspt42nxOJ15Pc8wHt2ZrknY1WMK+IwG97dyVnxB7eJtampI5pF+jPKl3N4a7JpyQnbze3YdKIzQ1SrC5oMiT91tf/hYEzUJYFw7Mrl3xrVwpubFzMK1pxCVKS2x1zuqF3JDcLw==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR04MB7416.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(4636009)(396003)(366004)(39860400002)(376002)(346002)(136003)(9686003)(186003)(53546011)(7696005)(83380400001)(55016003)(6506007)(41300700001)(2906002)(38100700002)(54906003)(110136005)(38070700005)(122000001)(82960400001)(478600001)(4744005)(5660300002)(8936002)(52536014)(91956017)(71200400001)(66446008)(66556008)(4326008)(8676002)(66476007)(64756008)(316002)(33656002)(76116006)(66946007)(86362001)(21314003);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?TO6VSNF53gDRSvoSPAdrqvqb6P31zJRu9J95U2e/iFjdZj4z9VfdphFQaKE4?=
+ =?us-ascii?Q?uL77H30UZpASvrrJYczByoGigbxAgmOUyMw1KLY1X3X3cOaLtq/kegmerjqC?=
+ =?us-ascii?Q?/ffOJZ4nPkWFwp/WPhpmX7NnvD9Zt2JMxxMfO/T/w8sHG11nracSkHLnstnE?=
+ =?us-ascii?Q?XRfq4/bv6DxsbheCNLaim3utr1Sa+pqXrhBDf3CuuZp498rm0ck9qp4TtJD5?=
+ =?us-ascii?Q?tFLBYaAcB5WcqtCereJhOrjF2qgx0iP8DSu+6Xc0DjRlkOmFC7SmdbSiWscW?=
+ =?us-ascii?Q?kdWX/FrlRDxlm3746z78U7TSrJH+DunXQh38LQWu2scLgW+nqf9SoRZBPH9V?=
+ =?us-ascii?Q?iKSyWXW6uGzUV9QXpkPzFKSRu9dKgwd1Ee722msNoIKxxscXRv+hseYu1M9q?=
+ =?us-ascii?Q?LyjmLKn0m/KeBsHnLge0PsLndh4t9rGz2N/QN20jWLTzxLyROVdb69CqieAb?=
+ =?us-ascii?Q?ue3OgNafzQsymCF2ohY6FjhVwMlpjv00nRn+hBpqKXEuBudlBfjfUc8cC5Ql?=
+ =?us-ascii?Q?U/1ZpEvnjh/C78vTsyF38DdTBBMVt7s72SwsStFmae/9uQC/rJzLDRreKeUT?=
+ =?us-ascii?Q?tCsIPXFl/zLd62ECIDLWl2zrOOaNYvLlA5pYD7au/VfaWFzF0KiPHQL4RAps?=
+ =?us-ascii?Q?6bSOIKUy26AsKxXHEvQCYA3Ky7c6d38n+e5zZalmj0PDmQ4eS9u9GjSO2fYF?=
+ =?us-ascii?Q?zqhyBIln4hMfIOK7FavN0EE6wrmFZaiLEFcq1ZyvdHE/Gc652n83pqB70pmN?=
+ =?us-ascii?Q?V9yaURS/w8/xlAPLKhnLi+txYCkeuRBmmCpjkcqpN8HUKqQU12FGOdKNI5FM?=
+ =?us-ascii?Q?25udxpRayOXYE7ohJMi5WPPnkS/EfbHLgn+5s/FalHPOpwwMXRrpOUHdzWit?=
+ =?us-ascii?Q?Ihq0VtkZXB1NGpJfXq5bHj/UFLls5Q7qacBthDFrHSIBFYsN4Jrox9il3SWu?=
+ =?us-ascii?Q?1ocByfigI8jW1ZYMJgDvHb7tNAtC3ENQujgY0UNvihWnrg2pnmZgAvhGlB/L?=
+ =?us-ascii?Q?wS4tPpAwCs4LXpYH8zjaV10ZMkpEXc3aFPLw/FGNu+2SArla/ab2neuNzhvW?=
+ =?us-ascii?Q?G+unbyhA5KGDcb7le0ohcQ/jyLy8kgW21UfWlenuaAhj4z68EfFnqHCkrpQB?=
+ =?us-ascii?Q?6hESsZVvDEs6oDszVdORUr1knWFule7szSxF5DgEkFJtPx4Pa393wUUaAxTv?=
+ =?us-ascii?Q?PNperrRek3QwVa7z9AGTriEIKSjJ20NGOSKFMoPFFPnEg1vIobEHT8WkPSRo?=
+ =?us-ascii?Q?l7xI0GtJYi4zFK6O4i8mbORayvhWJJQ2g20uW7D1X+pMk9tu2+eFiD0COSBp?=
+ =?us-ascii?Q?wF9LyLcDOPoR9GgadBFrHpGy1yEoTRjLpAeDV5WdlZOWEu/saaf4O/0AXF1O?=
+ =?us-ascii?Q?T4pj16EMWRDglF6ydUQOXKdA8NFqeSMEV4j2ZgMlddhzO+Ygs8lcb1w/ff/c?=
+ =?us-ascii?Q?8Qy1X88JXmulh9bq2yxihpJWOXa/t/8wpqOIU1VyFcfmGM9Wzq4KEsAHIBcV?=
+ =?us-ascii?Q?tJaDHKj/biiNYXRBtmHIyy4CuUb77fW6ZLtCRgZOjIgnPmGbSWGgiKJ+17vJ?=
+ =?us-ascii?Q?ImMcpfkN0dr5zzipudyWGaBRQ5mRlHd7g2aoyvyTVMpHbegyihMllEFdo+Sw?=
+ =?us-ascii?Q?wJiVEpZi/H+KKDHvNY6CvV7yQ2FPx/gk409shvQo/MAEl8Sropqq7LJL70Cq?=
+ =?us-ascii?Q?c761Bcj6PbUM80Sofota/H5mpiU=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR04MB7416.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 313da69d-ef19-4ce0-b9a6-08da5dbcead6
+X-MS-Exchange-CrossTenant-originalarrivaltime: 04 Jul 2022 12:58:40.1365
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: gT4aPgbnD/G0MI3rP44J50n9KJwpWx6/9r46JxIstCb00dOquUYzbcVkza0pB/dSrWA14BwsjNWrSzWoaMyBVZ7HeGMMZk8m56D/P2x0bfM=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN7PR04MB5297
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Move the zone related fields that are currently stored in
-struct request_queue to struct gendisk as these are part of the highlevel
-block layer API and are only used for non-passthrough I/O that requires
-the gendisk.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- block/blk-mq-debugfs-zoned.c   |  6 +--
- block/blk-sysfs.c              |  2 +-
- block/blk-zoned.c              | 45 ++++++++---------
- drivers/block/null_blk/zoned.c |  2 +-
- drivers/md/dm-zone.c           | 74 +++++++++++++--------------
- drivers/nvme/host/multipath.c  |  2 +-
- drivers/nvme/target/zns.c      |  2 +-
- drivers/scsi/sd_zbc.c          |  2 +-
- include/linux/blk-mq.h         |  8 +--
- include/linux/blkdev.h         | 91 ++++++++++++++++------------------
- 10 files changed, 110 insertions(+), 124 deletions(-)
-
-diff --git a/block/blk-mq-debugfs-zoned.c b/block/blk-mq-debugfs-zoned.c
-index 038cb627c8689..a77b099c34b7a 100644
---- a/block/blk-mq-debugfs-zoned.c
-+++ b/block/blk-mq-debugfs-zoned.c
-@@ -11,11 +11,11 @@ int queue_zone_wlock_show(void *data, struct seq_file *m)
- 	struct request_queue *q = data;
- 	unsigned int i;
- 
--	if (!q->seq_zones_wlock)
-+	if (!q->disk->seq_zones_wlock)
- 		return 0;
- 
--	for (i = 0; i < q->nr_zones; i++)
--		if (test_bit(i, q->seq_zones_wlock))
-+	for (i = 0; i < q->disk->nr_zones; i++)
-+		if (test_bit(i, q->disk->seq_zones_wlock))
- 			seq_printf(m, "%u\n", i);
- 
- 	return 0;
-diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-index 5ce72345ac666..c0303026752d5 100644
---- a/block/blk-sysfs.c
-+++ b/block/blk-sysfs.c
-@@ -325,7 +325,7 @@ static ssize_t queue_zoned_show(struct request_queue *q, char *page)
- 
- static ssize_t queue_nr_zones_show(struct request_queue *q, char *page)
- {
--	return queue_var_show(blk_queue_nr_zones(q), page);
-+	return queue_var_show(disk_nr_zones(q->disk), page);
- }
- 
- static ssize_t queue_max_open_zones_show(struct request_queue *q, char *page)
-diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-index ee8752f083a94..4826083ce9a48 100644
---- a/block/blk-zoned.c
-+++ b/block/blk-zoned.c
-@@ -57,10 +57,10 @@ EXPORT_SYMBOL_GPL(blk_zone_cond_str);
-  */
- bool blk_req_needs_zone_write_lock(struct request *rq)
- {
--	if (!rq->q->seq_zones_wlock)
-+	if (blk_rq_is_passthrough(rq))
- 		return false;
- 
--	if (blk_rq_is_passthrough(rq))
-+	if (!rq->q->disk->seq_zones_wlock)
- 		return false;
- 
- 	switch (req_op(rq)) {
-@@ -77,7 +77,7 @@ bool blk_req_zone_write_trylock(struct request *rq)
- {
- 	unsigned int zno = blk_rq_zone_no(rq);
- 
--	if (test_and_set_bit(zno, rq->q->seq_zones_wlock))
-+	if (test_and_set_bit(zno, rq->q->disk->seq_zones_wlock))
- 		return false;
- 
- 	WARN_ON_ONCE(rq->rq_flags & RQF_ZONE_WRITE_LOCKED);
-@@ -90,7 +90,7 @@ EXPORT_SYMBOL_GPL(blk_req_zone_write_trylock);
- void __blk_req_zone_write_lock(struct request *rq)
- {
- 	if (WARN_ON_ONCE(test_and_set_bit(blk_rq_zone_no(rq),
--					  rq->q->seq_zones_wlock)))
-+					  rq->q->disk->seq_zones_wlock)))
- 		return;
- 
- 	WARN_ON_ONCE(rq->rq_flags & RQF_ZONE_WRITE_LOCKED);
-@@ -101,9 +101,9 @@ EXPORT_SYMBOL_GPL(__blk_req_zone_write_lock);
- void __blk_req_zone_write_unlock(struct request *rq)
- {
- 	rq->rq_flags &= ~RQF_ZONE_WRITE_LOCKED;
--	if (rq->q->seq_zones_wlock)
-+	if (rq->q->disk->seq_zones_wlock)
- 		WARN_ON_ONCE(!test_and_clear_bit(blk_rq_zone_no(rq),
--						 rq->q->seq_zones_wlock));
-+						 rq->q->disk->seq_zones_wlock));
- }
- EXPORT_SYMBOL_GPL(__blk_req_zone_write_unlock);
- 
-@@ -189,7 +189,7 @@ static int blk_zone_need_reset_cb(struct blk_zone *zone, unsigned int idx,
- int blkdev_zone_mgmt_all(struct block_device *bdev, unsigned int op,
- 			 gfp_t gfp_mask)
- {
--	struct request_queue *q = bdev_get_queue(bdev);
-+	struct gendisk *disk = bdev->bd_disk;
- 	sector_t capacity = bdev_nr_sectors(bdev);
- 	sector_t zone_sectors = bdev_zone_sectors(bdev);
- 	unsigned long *need_reset;
-@@ -197,19 +197,18 @@ int blkdev_zone_mgmt_all(struct block_device *bdev, unsigned int op,
- 	sector_t sector = 0;
- 	int ret;
- 
--	need_reset = blk_alloc_zone_bitmap(q->node, q->nr_zones);
-+	need_reset = blk_alloc_zone_bitmap(disk->queue->node, disk->nr_zones);
- 	if (!need_reset)
- 		return -ENOMEM;
- 
--	ret = bdev->bd_disk->fops->report_zones(bdev->bd_disk, 0,
--				q->nr_zones, blk_zone_need_reset_cb,
--				need_reset);
-+	ret = disk->fops->report_zones(disk, 0, disk->nr_zones,
-+				       blk_zone_need_reset_cb, need_reset);
- 	if (ret < 0)
- 		goto out_free_need_reset;
- 
- 	ret = 0;
- 	while (sector < capacity) {
--		if (!test_bit(blk_queue_zone_no(q, sector), need_reset)) {
-+		if (!test_bit(disk_zone_no(disk, sector), need_reset)) {
- 			sector += zone_sectors;
- 			continue;
- 		}
-@@ -452,12 +451,10 @@ int blkdev_zone_mgmt_ioctl(struct block_device *bdev, fmode_t mode,
- 
- void disk_free_zone_bitmaps(struct gendisk *disk)
- {
--	struct request_queue *q = disk->queue;
--
--	kfree(q->conv_zones_bitmap);
--	q->conv_zones_bitmap = NULL;
--	kfree(q->seq_zones_wlock);
--	q->seq_zones_wlock = NULL;
-+	kfree(disk->conv_zones_bitmap);
-+	disk->conv_zones_bitmap = NULL;
-+	kfree(disk->seq_zones_wlock);
-+	disk->seq_zones_wlock = NULL;
- }
- 
- struct blk_revalidate_zone_args {
-@@ -607,9 +604,9 @@ int blk_revalidate_disk_zones(struct gendisk *disk,
- 	blk_mq_freeze_queue(q);
- 	if (ret > 0) {
- 		blk_queue_chunk_sectors(q, args.zone_sectors);
--		q->nr_zones = args.nr_zones;
--		swap(q->seq_zones_wlock, args.seq_zones_wlock);
--		swap(q->conv_zones_bitmap, args.conv_zones_bitmap);
-+		disk->nr_zones = args.nr_zones;
-+		swap(disk->seq_zones_wlock, args.seq_zones_wlock);
-+		swap(disk->conv_zones_bitmap, args.conv_zones_bitmap);
- 		if (update_driver_data)
- 			update_driver_data(disk);
- 		ret = 0;
-@@ -634,9 +631,9 @@ void disk_clear_zone_settings(struct gendisk *disk)
- 	disk_free_zone_bitmaps(disk);
- 	blk_queue_flag_clear(QUEUE_FLAG_ZONE_RESETALL, q);
- 	q->required_elevator_features &= ~ELEVATOR_F_ZBD_SEQ_WRITE;
--	q->nr_zones = 0;
--	q->max_open_zones = 0;
--	q->max_active_zones = 0;
-+	disk->nr_zones = 0;
-+	disk->max_open_zones = 0;
-+	disk->max_active_zones = 0;
- 	q->limits.chunk_sectors = 0;
- 	q->limits.zone_write_granularity = 0;
- 	q->limits.max_zone_append_sectors = 0;
-diff --git a/drivers/block/null_blk/zoned.c b/drivers/block/null_blk/zoned.c
-index e62c52e964259..64b06caab9843 100644
---- a/drivers/block/null_blk/zoned.c
-+++ b/drivers/block/null_blk/zoned.c
-@@ -170,7 +170,7 @@ int null_register_zoned_dev(struct nullb *nullb)
- 			return ret;
- 	} else {
- 		blk_queue_chunk_sectors(q, dev->zone_size_sects);
--		q->nr_zones = bdev_nr_zones(nullb->disk->part0);
-+		nullb->disk->nr_zones = bdev_nr_zones(nullb->disk->part0);
- 	}
- 
- 	blk_queue_max_zone_append_sectors(q, dev->zone_size_sects);
-diff --git a/drivers/md/dm-zone.c b/drivers/md/dm-zone.c
-index 842c31019b513..2b89cde30c9e9 100644
---- a/drivers/md/dm-zone.c
-+++ b/drivers/md/dm-zone.c
-@@ -139,13 +139,11 @@ bool dm_is_zone_write(struct mapped_device *md, struct bio *bio)
- 
- void dm_cleanup_zoned_dev(struct mapped_device *md)
- {
--	struct request_queue *q = md->queue;
--
--	if (q) {
--		kfree(q->conv_zones_bitmap);
--		q->conv_zones_bitmap = NULL;
--		kfree(q->seq_zones_wlock);
--		q->seq_zones_wlock = NULL;
-+	if (md->disk) {
-+		kfree(md->disk->conv_zones_bitmap);
-+		md->disk->conv_zones_bitmap = NULL;
-+		kfree(md->disk->seq_zones_wlock);
-+		md->disk->seq_zones_wlock = NULL;
- 	}
- 
- 	kvfree(md->zwp_offset);
-@@ -179,31 +177,31 @@ static int dm_zone_revalidate_cb(struct blk_zone *zone, unsigned int idx,
- 				 void *data)
- {
- 	struct mapped_device *md = data;
--	struct request_queue *q = md->queue;
-+	struct gendisk *disk = md->disk;
- 
- 	switch (zone->type) {
- 	case BLK_ZONE_TYPE_CONVENTIONAL:
--		if (!q->conv_zones_bitmap) {
--			q->conv_zones_bitmap =
--				kcalloc(BITS_TO_LONGS(q->nr_zones),
-+		if (!disk->conv_zones_bitmap) {
-+			disk->conv_zones_bitmap =
-+				kcalloc(BITS_TO_LONGS(disk->nr_zones),
- 					sizeof(unsigned long), GFP_NOIO);
--			if (!q->conv_zones_bitmap)
-+			if (!disk->conv_zones_bitmap)
- 				return -ENOMEM;
- 		}
--		set_bit(idx, q->conv_zones_bitmap);
-+		set_bit(idx, disk->conv_zones_bitmap);
- 		break;
- 	case BLK_ZONE_TYPE_SEQWRITE_REQ:
- 	case BLK_ZONE_TYPE_SEQWRITE_PREF:
--		if (!q->seq_zones_wlock) {
--			q->seq_zones_wlock =
--				kcalloc(BITS_TO_LONGS(q->nr_zones),
-+		if (!disk->seq_zones_wlock) {
-+			disk->seq_zones_wlock =
-+				kcalloc(BITS_TO_LONGS(disk->nr_zones),
- 					sizeof(unsigned long), GFP_NOIO);
--			if (!q->seq_zones_wlock)
-+			if (!disk->seq_zones_wlock)
- 				return -ENOMEM;
- 		}
- 		if (!md->zwp_offset) {
- 			md->zwp_offset =
--				kvcalloc(q->nr_zones, sizeof(unsigned int),
-+				kvcalloc(disk->nr_zones, sizeof(unsigned int),
- 					 GFP_KERNEL);
- 			if (!md->zwp_offset)
- 				return -ENOMEM;
-@@ -228,7 +226,7 @@ static int dm_zone_revalidate_cb(struct blk_zone *zone, unsigned int idx,
-  */
- static int dm_revalidate_zones(struct mapped_device *md, struct dm_table *t)
- {
--	struct request_queue *q = md->queue;
-+	struct gendisk *disk = md->disk;
- 	unsigned int noio_flag;
- 	int ret;
- 
-@@ -236,7 +234,7 @@ static int dm_revalidate_zones(struct mapped_device *md, struct dm_table *t)
- 	 * Check if something changed. If yes, cleanup the current resources
- 	 * and reallocate everything.
- 	 */
--	if (!q->nr_zones || q->nr_zones != md->nr_zones)
-+	if (!disk->nr_zones || disk->nr_zones != md->nr_zones)
- 		dm_cleanup_zoned_dev(md);
- 	if (md->nr_zones)
- 		return 0;
-@@ -246,17 +244,17 @@ static int dm_revalidate_zones(struct mapped_device *md, struct dm_table *t)
- 	 * operations in this context are done as if GFP_NOIO was specified.
- 	 */
- 	noio_flag = memalloc_noio_save();
--	ret = dm_blk_do_report_zones(md, t, 0, q->nr_zones,
-+	ret = dm_blk_do_report_zones(md, t, 0, disk->nr_zones,
- 				     dm_zone_revalidate_cb, md);
- 	memalloc_noio_restore(noio_flag);
- 	if (ret < 0)
- 		goto err;
--	if (ret != q->nr_zones) {
-+	if (ret != disk->nr_zones) {
- 		ret = -EIO;
- 		goto err;
- 	}
- 
--	md->nr_zones = q->nr_zones;
-+	md->nr_zones = disk->nr_zones;
- 
- 	return 0;
- 
-@@ -301,7 +299,7 @@ int dm_set_zones_restrictions(struct dm_table *t, struct request_queue *q)
- 	 * correct value to be exposed in sysfs queue/nr_zones.
- 	 */
- 	WARN_ON_ONCE(queue_is_mq(q));
--	q->nr_zones = bdev_nr_zones(md->disk->part0);
-+	md->disk->nr_zones = bdev_nr_zones(md->disk->part0);
- 
- 	/* Check if zone append is natively supported */
- 	if (dm_table_supports_zone_append(t)) {
-@@ -466,26 +464,26 @@ static blk_status_t dm_zone_map_bio_end(struct mapped_device *md, unsigned int z
- 	}
- }
- 
--static inline void dm_zone_lock(struct request_queue *q,
--				unsigned int zno, struct bio *clone)
-+static inline void dm_zone_lock(struct gendisk *disk, unsigned int zno,
-+				struct bio *clone)
- {
- 	if (WARN_ON_ONCE(bio_flagged(clone, BIO_ZONE_WRITE_LOCKED)))
- 		return;
- 
--	wait_on_bit_lock_io(q->seq_zones_wlock, zno, TASK_UNINTERRUPTIBLE);
-+	wait_on_bit_lock_io(disk->seq_zones_wlock, zno, TASK_UNINTERRUPTIBLE);
- 	bio_set_flag(clone, BIO_ZONE_WRITE_LOCKED);
- }
- 
--static inline void dm_zone_unlock(struct request_queue *q,
--				  unsigned int zno, struct bio *clone)
-+static inline void dm_zone_unlock(struct gendisk *disk, unsigned int zno,
-+				  struct bio *clone)
- {
- 	if (!bio_flagged(clone, BIO_ZONE_WRITE_LOCKED))
- 		return;
- 
--	WARN_ON_ONCE(!test_bit(zno, q->seq_zones_wlock));
--	clear_bit_unlock(zno, q->seq_zones_wlock);
-+	WARN_ON_ONCE(!test_bit(zno, disk->seq_zones_wlock));
-+	clear_bit_unlock(zno, disk->seq_zones_wlock);
- 	smp_mb__after_atomic();
--	wake_up_bit(q->seq_zones_wlock, zno);
-+	wake_up_bit(disk->seq_zones_wlock, zno);
- 
- 	bio_clear_flag(clone, BIO_ZONE_WRITE_LOCKED);
- }
-@@ -520,7 +518,6 @@ int dm_zone_map_bio(struct dm_target_io *tio)
- 	struct dm_io *io = tio->io;
- 	struct dm_target *ti = tio->ti;
- 	struct mapped_device *md = io->md;
--	struct request_queue *q = md->queue;
- 	struct bio *clone = &tio->clone;
- 	struct orig_bio_details orig_bio_details;
- 	unsigned int zno;
-@@ -536,7 +533,7 @@ int dm_zone_map_bio(struct dm_target_io *tio)
- 
- 	/* Lock the target zone */
- 	zno = bio_zone_no(clone);
--	dm_zone_lock(q, zno, clone);
-+	dm_zone_lock(md->disk, zno, clone);
- 
- 	orig_bio_details.nr_sectors = bio_sectors(clone);
- 	orig_bio_details.op = bio_op(clone);
-@@ -546,7 +543,7 @@ int dm_zone_map_bio(struct dm_target_io *tio)
- 	 * both valid, and if the bio is a zone append, remap it to a write.
- 	 */
- 	if (!dm_zone_map_bio_begin(md, zno, clone)) {
--		dm_zone_unlock(q, zno, clone);
-+		dm_zone_unlock(md->disk, zno, clone);
- 		return DM_MAPIO_KILL;
- 	}
- 
-@@ -570,12 +567,12 @@ int dm_zone_map_bio(struct dm_target_io *tio)
- 		sts = dm_zone_map_bio_end(md, zno, &orig_bio_details,
- 					  *tio->len_ptr);
- 		if (sts != BLK_STS_OK)
--			dm_zone_unlock(q, zno, clone);
-+			dm_zone_unlock(md->disk, zno, clone);
- 		break;
- 	case DM_MAPIO_REQUEUE:
- 	case DM_MAPIO_KILL:
- 	default:
--		dm_zone_unlock(q, zno, clone);
-+		dm_zone_unlock(md->disk, zno, clone);
- 		sts = BLK_STS_IOERR;
- 		break;
- 	}
-@@ -592,7 +589,6 @@ int dm_zone_map_bio(struct dm_target_io *tio)
- void dm_zone_endio(struct dm_io *io, struct bio *clone)
- {
- 	struct mapped_device *md = io->md;
--	struct request_queue *q = md->queue;
- 	struct gendisk *disk = md->disk;
- 	struct bio *orig_bio = io->orig_bio;
- 	unsigned int zwp_offset;
-@@ -651,5 +647,5 @@ void dm_zone_endio(struct dm_io *io, struct bio *clone)
- 				zwp_offset - bio_sectors(orig_bio);
- 	}
- 
--	dm_zone_unlock(q, zno, clone);
-+	dm_zone_unlock(disk, zno, clone);
- }
-diff --git a/drivers/nvme/host/multipath.c b/drivers/nvme/host/multipath.c
-index ccf9a6da8f6e1..f26640ccb9555 100644
---- a/drivers/nvme/host/multipath.c
-+++ b/drivers/nvme/host/multipath.c
-@@ -830,7 +830,7 @@ void nvme_mpath_add_disk(struct nvme_ns *ns, struct nvme_id_ns *id)
- 				   ns->head->disk->queue);
- #ifdef CONFIG_BLK_DEV_ZONED
- 	if (blk_queue_is_zoned(ns->queue) && ns->head->disk)
--		ns->head->disk->queue->nr_zones = ns->queue->nr_zones;
-+		ns->head->disk->nr_zones = ns->disk->nr_zones;
- #endif
- }
- 
-diff --git a/drivers/nvme/target/zns.c b/drivers/nvme/target/zns.c
-index c9b2ce06ca93e..385f2fe2792ff 100644
---- a/drivers/nvme/target/zns.c
-+++ b/drivers/nvme/target/zns.c
-@@ -57,7 +57,7 @@ bool nvmet_bdev_zns_enable(struct nvmet_ns *ns)
- 	 * zones, reject the device. Otherwise, use report zones to detect if
- 	 * the device has conventional zones.
- 	 */
--	if (ns->bdev->bd_disk->queue->conv_zones_bitmap)
-+	if (ns->bdev->bd_disk->conv_zones_bitmap)
- 		return false;
- 
- 	ret = blkdev_report_zones(ns->bdev, 0, bdev_nr_zones(ns->bdev),
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index b4106f8997342..b8c97456506ac 100644
---- a/drivers/scsi/sd_zbc.c
-+++ b/drivers/scsi/sd_zbc.c
-@@ -855,7 +855,7 @@ int sd_zbc_revalidate_zones(struct scsi_disk *sdkp)
- 
- 	if (sdkp->zone_info.zone_blocks == zone_blocks &&
- 	    sdkp->zone_info.nr_zones == nr_zones &&
--	    disk->queue->nr_zones == nr_zones)
-+	    disk->nr_zones == nr_zones)
- 		goto unlock;
- 
- 	flags = memalloc_noio_save();
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index 43aad0da3305d..1b0b753609975 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -1123,12 +1123,12 @@ void blk_dump_rq_flags(struct request *, char *);
- #ifdef CONFIG_BLK_DEV_ZONED
- static inline unsigned int blk_rq_zone_no(struct request *rq)
- {
--	return blk_queue_zone_no(rq->q, blk_rq_pos(rq));
-+	return disk_zone_no(rq->q->disk, blk_rq_pos(rq));
- }
- 
- static inline unsigned int blk_rq_zone_is_seq(struct request *rq)
- {
--	return blk_queue_zone_is_seq(rq->q, blk_rq_pos(rq));
-+	return disk_zone_is_seq(rq->q->disk, blk_rq_pos(rq));
- }
- 
- bool blk_req_needs_zone_write_lock(struct request *rq);
-@@ -1150,8 +1150,8 @@ static inline void blk_req_zone_write_unlock(struct request *rq)
- 
- static inline bool blk_req_zone_is_write_locked(struct request *rq)
- {
--	return rq->q->seq_zones_wlock &&
--		test_bit(blk_rq_zone_no(rq), rq->q->seq_zones_wlock);
-+	return rq->q->disk->seq_zones_wlock &&
-+		test_bit(blk_rq_zone_no(rq), rq->q->disk->seq_zones_wlock);
- }
- 
- static inline bool blk_req_can_dispatch_to_zone(struct request *rq)
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index f1eca3f5610eb..547eb07848741 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -164,6 +164,29 @@ struct gendisk {
- #ifdef  CONFIG_BLK_DEV_INTEGRITY
- 	struct kobject integrity_kobj;
- #endif	/* CONFIG_BLK_DEV_INTEGRITY */
-+
-+#ifdef CONFIG_BLK_DEV_ZONED
-+	/*
-+	 * Zoned block device information for request dispatch control.
-+	 * nr_zones is the total number of zones of the device. This is always
-+	 * 0 for regular block devices. conv_zones_bitmap is a bitmap of nr_zones
-+	 * bits which indicates if a zone is conventional (bit set) or
-+	 * sequential (bit clear). seq_zones_wlock is a bitmap of nr_zones
-+	 * bits which indicates if a zone is write locked, that is, if a write
-+	 * request targeting the zone was dispatched.
-+	 *
-+	 * Reads of this information must be protected with blk_queue_enter() /
-+	 * blk_queue_exit(). Modifying this information is only allowed while
-+	 * no requests are being processed. See also blk_mq_freeze_queue() and
-+	 * blk_mq_unfreeze_queue().
-+	 */
-+	unsigned int		nr_zones;
-+	unsigned int		max_open_zones;
-+	unsigned int		max_active_zones;
-+	unsigned long		*conv_zones_bitmap;
-+	unsigned long		*seq_zones_wlock;
-+#endif /* CONFIG_BLK_DEV_ZONED */
-+
- #if IS_ENABLED(CONFIG_CDROM)
- 	struct cdrom_device_info *cdi;
- #endif
-@@ -469,31 +492,6 @@ struct request_queue {
- 
- 	unsigned int		required_elevator_features;
- 
--#ifdef CONFIG_BLK_DEV_ZONED
--	/*
--	 * Zoned block device information for request dispatch control.
--	 * nr_zones is the total number of zones of the device. This is always
--	 * 0 for regular block devices. conv_zones_bitmap is a bitmap of nr_zones
--	 * bits which indicates if a zone is conventional (bit set) or
--	 * sequential (bit clear). seq_zones_wlock is a bitmap of nr_zones
--	 * bits which indicates if a zone is write locked, that is, if a write
--	 * request targeting the zone was dispatched. All three fields are
--	 * initialized by the low level device driver (e.g. scsi/sd.c).
--	 * Stacking drivers (device mappers) may or may not initialize
--	 * these fields.
--	 *
--	 * Reads of this information must be protected with blk_queue_enter() /
--	 * blk_queue_exit(). Modifying this information is only allowed while
--	 * no requests are being processed. See also blk_mq_freeze_queue() and
--	 * blk_mq_unfreeze_queue().
--	 */
--	unsigned int		nr_zones;
--	unsigned long		*conv_zones_bitmap;
--	unsigned long		*seq_zones_wlock;
--	unsigned int		max_open_zones;
--	unsigned int		max_active_zones;
--#endif /* CONFIG_BLK_DEV_ZONED */
--
- 	int			node;
- #ifdef CONFIG_BLK_DEV_IO_TRACE
- 	struct blk_trace __rcu	*blk_trace;
-@@ -670,63 +668,59 @@ static inline bool blk_queue_is_zoned(struct request_queue *q)
- }
- 
- #ifdef CONFIG_BLK_DEV_ZONED
--static inline unsigned int blk_queue_nr_zones(struct request_queue *q)
-+static inline unsigned int disk_nr_zones(struct gendisk *disk)
- {
--	return blk_queue_is_zoned(q) ? q->nr_zones : 0;
-+	return blk_queue_is_zoned(disk->queue) ? disk->nr_zones : 0;
- }
- 
--static inline unsigned int blk_queue_zone_no(struct request_queue *q,
--					     sector_t sector)
-+static inline unsigned int disk_zone_no(struct gendisk *disk, sector_t sector)
- {
--	if (!blk_queue_is_zoned(q))
-+	if (!blk_queue_is_zoned(disk->queue))
- 		return 0;
--	return sector >> ilog2(q->limits.chunk_sectors);
-+	return sector >> ilog2(disk->queue->limits.chunk_sectors);
- }
- 
--static inline bool blk_queue_zone_is_seq(struct request_queue *q,
--					 sector_t sector)
-+static inline bool disk_zone_is_seq(struct gendisk *disk, sector_t sector)
- {
--	if (!blk_queue_is_zoned(q))
-+	if (!blk_queue_is_zoned(disk->queue))
- 		return false;
--	if (!q->conv_zones_bitmap)
-+	if (!disk->conv_zones_bitmap)
- 		return true;
--	return !test_bit(blk_queue_zone_no(q, sector), q->conv_zones_bitmap);
-+	return !test_bit(disk_zone_no(disk, sector), disk->conv_zones_bitmap);
- }
- 
- static inline void disk_set_max_open_zones(struct gendisk *disk,
- 		unsigned int max_open_zones)
- {
--	disk->queue->max_open_zones = max_open_zones;
-+	disk->max_open_zones = max_open_zones;
- }
- 
- static inline void disk_set_max_active_zones(struct gendisk *disk,
- 		unsigned int max_active_zones)
- {
--	disk->queue->max_active_zones = max_active_zones;
-+	disk->max_active_zones = max_active_zones;
- }
- 
- static inline unsigned int bdev_max_open_zones(struct block_device *bdev)
- {
--	return bdev->bd_disk->queue->max_open_zones;
-+	return bdev->bd_disk->max_open_zones;
- }
- 
- static inline unsigned int bdev_max_active_zones(struct block_device *bdev)
- {
--	return bdev->bd_disk->queue->max_active_zones;
-+	return bdev->bd_disk->max_active_zones;
- }
- 
- #else /* CONFIG_BLK_DEV_ZONED */
--static inline unsigned int blk_queue_nr_zones(struct request_queue *q)
-+static inline unsigned int disk_nr_zones(struct gendisk *disk)
- {
- 	return 0;
- }
--static inline bool blk_queue_zone_is_seq(struct request_queue *q,
--					 sector_t sector)
-+static inline bool disk_zone_is_seq(struct gendisk *disk, sector_t sector)
- {
- 	return false;
- }
--static inline unsigned int blk_queue_zone_no(struct request_queue *q,
--					     sector_t sector)
-+static inline unsigned int disk_zone_no(struct gendisk *disk, sector_t sector)
- {
- 	return 0;
- }
-@@ -734,6 +728,7 @@ static inline unsigned int bdev_max_open_zones(struct block_device *bdev)
- {
- 	return 0;
- }
-+
- static inline unsigned int bdev_max_active_zones(struct block_device *bdev)
- {
- 	return 0;
-@@ -902,14 +897,12 @@ const char *blk_zone_cond_str(enum blk_zone_cond zone_cond);
- 
- static inline unsigned int bio_zone_no(struct bio *bio)
- {
--	return blk_queue_zone_no(bdev_get_queue(bio->bi_bdev),
--				 bio->bi_iter.bi_sector);
-+	return disk_zone_no(bio->bi_bdev->bd_disk, bio->bi_iter.bi_sector);
- }
- 
- static inline unsigned int bio_zone_is_seq(struct bio *bio)
- {
--	return blk_queue_zone_is_seq(bdev_get_queue(bio->bi_bdev),
--				     bio->bi_iter.bi_sector);
-+	return disk_zone_is_seq(bio->bi_bdev->bd_disk, bio->bi_iter.bi_sector);
- }
- 
- /*
--- 
-2.30.2
-
+On 04.07.22 14:45, Christoph Hellwig wrote:=0A=
+> It doesn't hurt to lways have the blk_zone_cond_str prototype, and the=0A=
+> two inlines can also be defined unconditionally.=0A=
+> =0A=
+> Signed-off-by: Christoph Hellwig <hch@lst.de>=0A=
+> ---=0A=
+>  include/linux/blkdev.h | 3 ---=0A=
+>  1 file changed, 3 deletions(-)=0A=
+> =0A=
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h=0A=
+> index b9a94c53c6cd3..270cd0c552924 100644=0A=
+> --- a/include/linux/blkdev.h=0A=
+> +++ b/include/linux/blkdev.h=0A=
+> @@ -899,8 +899,6 @@ static inline struct request_queue *bdev_get_queue(st=
+ruct block_device *bdev)=0A=
+>  	return bdev->bd_queue;	/* this is never NULL */=0A=
+>  }=0A=
+>  =0A=
+> -#ifdef CONFIG_BLK_DEV_ZONED=0A=
+> -=0A=
+>  /* Helper to convert BLK_ZONE_ZONE_XXX to its string format XXX */=0A=
+>  const char *blk_zone_cond_str(enum blk_zone_cond zone_cond);=0A=
+>  =0A=
+=0A=
+Won't this break tracing in null_blk, which uses blk_zone_cond_str()?=0A=
