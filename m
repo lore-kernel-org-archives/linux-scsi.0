@@ -2,126 +2,78 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BFD5CCA479
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jul 2022 12:06:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE556CCA479
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jul 2022 12:45:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233837AbiGDMGM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Jul 2022 08:06:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42302 "EHLO
+        id S234181AbiGDMpH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Jul 2022 08:45:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53084 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233468AbiGDMGL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jul 2022 08:06:11 -0400
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [IPv6:2a01:488:42:1000:50ed:8234::])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A6092AF8;
-        Mon,  4 Jul 2022 05:06:10 -0700 (PDT)
-Received: from [2a02:8108:963f:de38:eca4:7d19:f9a2:22c5]; authenticated
-        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        id 1o8Kq7-0003VK-1C; Mon, 04 Jul 2022 14:06:07 +0200
-Message-ID: <30feb08e-83d0-34e2-06bb-40f4960c8be4@leemhuis.info>
-Date:   Mon, 4 Jul 2022 14:06:06 +0200
+        with ESMTP id S232796AbiGDMpG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jul 2022 08:45:06 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 084A6DF69;
+        Mon,  4 Jul 2022 05:45:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=r8Vz34uF3hgjoNeR0v/rpIhSqu91TXSVbFAMBKa/d70=; b=2Glapi//WtqY3AMOGBs0DSP1E8
+        mTDmR/yyUZ4PzULuRY/BAOYHHHTZSWE31rp1PenrON7U0Dtnt8aSidrBxwOpKHfMen6MPL1ov2tev
+        N7sSubL0iaHwBhyLviMeAyh80Lux+4tZyk9NmBsEut8i26mw2f59rI5PnHXsrFMvJum3fWM2BHzW4
+        n13oiD6mIPnDWQXrAbZD1q+hMKIqRsz+M8LvTp6IgafdgjxSc0b3ThWFDoq22K3WpB4QeoBv/ULFz
+        NdcciYIs/jodQw5Ap4V7zDLzTszirGqj4QqeC2KcXM4i0V4dmIm1PCqZHYgl61HRbVI9PMxMUJqBZ
+        vD8zB3Iw==;
+Received: from [2001:4bb8:189:3c4a:8758:74d9:4df6:6417] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1o8LRm-008s8e-3R; Mon, 04 Jul 2022 12:45:02 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     dm-devel@redhat.com, linux-block@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
+Subject: clean up zoned device information
+Date:   Mon,  4 Jul 2022 14:44:43 +0200
+Message-Id: <20220704124500.155247-1-hch@lst.de>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [EXT] Re: [REGRESSION] qla2xxx: tape drive not removed after
- unplug FC cable
-Content-Language: en-US
-To:     Arun Easi <aeasi@marvell.com>,
-        Tony Battersby <tonyb@cybernetics.com>
-Cc:     Saurav Kashyap <skashyap@marvell.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, regressions@lists.linux.dev
-References: <baef87c3-5dad-3b47-44c1-6914bfc90108@cybernetics.com>
- <alpine.LRH.2.21.9999.2205271524460.4730@mvluser05.qlc.com>
- <5bcb5963-9da0-fd59-45c5-d27af02e7748@leemhuis.info>
- <178e4e7a-64fc-a442-cdda-45100eaebda0@cybernetics.com>
- <alpine.LRH.2.21.9999.2206211156470.4730@mvluser05.qlc.com>
- <d41671b4-8d29-b940-da37-b8dbe81f4d72@cybernetics.com>
- <alpine.LRH.2.21.9999.2206221557150.4730@mvluser05.qlc.com>
-From:   Thorsten Leemhuis <regressions@leemhuis.info>
-In-Reply-To: <alpine.LRH.2.21.9999.2206221557150.4730@mvluser05.qlc.com>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1656936370;8e6840f3;
-X-HE-SMSGID: 1o8Kq7-0003VK-1C
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 23.06.22 01:03, Arun Easi wrote:
-> On Wed, 22 Jun 2022, 7:56am, Tony Battersby wrote:
-> 
->> On 6/21/22 18:05, Arun Easi wrote:
->>> Thanks for the info. Just to reiterate, you've reported two issues (though 
->>> this log was showing only 1 of them).
->>>
->>> Issue 1 - Tape device never disappears when removed
->>> Issue 2 - When a direct connected tape 1 was replaced with tape 2, tape 2 
->>>           was not discovered.
->>>
->>> For Issue-2, please try the attached patch. This may not be the final fix, 
->>> but wanted to check if that would fix the issue for you.
->>>
->>> For Issue-1, the behavior was intentional, though that behavior needs 
->>> refinement. These tape drives support something called FC sequence level 
->>> error recovery (added in FCP-2), which can make tape I/Os survive even 
->>> across a short cable pull. This is not a simple retry of the I/O, rather a 
->>> retry done at the FC sequence level that gives the IO a better chance of
->>> revival. In other words, the said patch that caused regression, while 
->>> introduces an incorrect reporting of the state of the device, makes backup 
->>> more resilient.
->>>
->>> Now, onto the behavior when device state is reported immediately. What we 
->>> have observed, at least with one tape drive from a major vendor, is that, 
->>> across a device loss and device back case with both the events reported to 
->>> upper layers, the backup operation was getting failed. This is due to a 
->>> REPORT LUNS command being issued during device reappearance reporting 
->>> (fc_remote_port_add -> SCSI scan), which the tape drive was not expecting 
->>> and caused the backup to fail.
->>>
->>> I know that some tape drives do not support multiple commands to it at the 
->>> same time, but not sure if that is still the norm these days.
->>>
->>> So, perhaps one way to make the behavior better, is to either report the 
->>> disappearing device a bit delayed or have intelligence added in SCSI scan 
->>> to detect ongoing tape IO operations and delay/avoid the REPORT LUNs. 
->>> Former is a more contained (in the LLD) fix.
->>>
->>> Regards,
->>> -Arun
->>
->> Your patch does fix Issue-2 for me.  For Issue-1, it would be fine with
->> me if qla2xxx reported device removal to the upper level a bit delayed,
->> as you said.
->>
-> 
-> Thanks for testing and verifying the patch.
+Hi all,
 
-BTW, that patch should have 'Link:' tags pointing to all reports about
-this issue, e.g. the start of this thread.
+this cleans up the block layer zoned device information APIs and
+moves all fields currently in the request_queue to the gendisk as
+they aren't relevant for passthrough I/O.
 
-These tags are important, as they allow others to look into the
-backstory now and years from now. That is why they should be placed in
-cases like this, as Documentation/process/submitting-patches.rst and
-Documentation/process/5.Posting.rst explain in more detail.
-Additionally, my regression tracking bot ‘regzbot’ relies on these tags
-to automatically connect reports with patches that are posted or
-committed to fix the reported issue. BTW, let me tell regzbot to monitor
-this thread:
-
-> We will post the patch upstream after due testing.
-That was more than two weeks ago now and I didn't see any progress. Or
-did I miss it?
-
-Reminder, things should take this long. For details see the section
-"Prioritize work on fixing regressions" in this document:
-https://docs.kernel.org/process/handling-regressions.html
-
-Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
-
-P.S.: As the Linux kernel's regression tracker I deal with a lot of
-reports and sometimes miss something important when writing mails like
-this. If that's the case here, don't hesitate to tell me in a public
-reply, it's in everyone's interest to set the public record straight.
-
-#regzbot poke
+Diffstat:
+ block/bio.c                    |    2 
+ block/blk-core.c               |   13 +--
+ block/blk-merge.c              |    2 
+ block/blk-mq-debugfs-zoned.c   |    6 -
+ block/blk-mq.c                 |    2 
+ block/blk-mq.h                 |   18 ++---
+ block/blk-settings.c           |   11 +--
+ block/blk-sysfs.c              |    8 --
+ block/blk-zoned.c              |   95 +++++++++++++-------------
+ block/blk.h                    |    8 +-
+ block/genhd.c                  |    1 
+ block/ioctl.c                  |    2 
+ block/partitions/core.c        |    2 
+ drivers/block/null_blk/zoned.c |    8 +-
+ drivers/md/dm-table.c          |    6 -
+ drivers/md/dm-zone.c           |   86 +++++++++++-------------
+ drivers/md/dm-zoned-target.c   |   25 +++----
+ drivers/md/dm.c                |    2 
+ drivers/nvme/host/multipath.c  |    2 
+ drivers/nvme/host/zns.c        |    6 -
+ drivers/nvme/target/zns.c      |  110 +-----------------------------
+ drivers/scsi/sd.c              |    6 -
+ drivers/scsi/sd_zbc.c          |   10 +-
+ fs/zonefs/super.c              |   17 ++--
+ include/linux/blk-mq.h         |    8 +-
+ include/linux/blkdev.h         |  146 ++++++++++++++++-------------------------
+ 26 files changed, 233 insertions(+), 369 deletions(-)
