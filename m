@@ -2,72 +2,65 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2212CCA481
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jul 2022 03:00:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D2C8C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Jul 2022 10:35:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231474AbiGDDAP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 3 Jul 2022 23:00:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41986 "EHLO
+        id S233775AbiGDKfz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Jul 2022 06:35:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60876 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230492AbiGDDAN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Jul 2022 23:00:13 -0400
-Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA1192AE0;
-        Sun,  3 Jul 2022 20:00:09 -0700 (PDT)
-Received: by mail-pj1-f47.google.com with SMTP id cp18-20020a17090afb9200b001ef79e8484aso2002542pjb.1;
-        Sun, 03 Jul 2022 20:00:09 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=vUcbLJ2czRHbyfDNPBsrrILdDcjbc2rXHAhbpDQ5bYs=;
-        b=XQ41I2IiTDZN3N+jbM36dEWiwUKXNMAxxspdo1htsRGz3Vjvp/JHGtDrwZtY/gA6Xs
-         Ya4P9143RFd6+bLDMfnhTkQFIF5WS1+8OiLalEmjiyU1yEcHkbBjqNdf3DPuXLc76LFJ
-         vuzbwrayjc6vCGz8PHVzPlqpsvOI7w+5TZzM+zAM93xiCkE/ioorHFaPCe9plFgAtsfD
-         cOAXfNgdosQah4kMHh33I6mUEvZeR+uTYVyuIETUOCqcmf/iiAz9rASwhCPrw4D6/tvu
-         wlMWSaJaayIXWDmkhLAzqe47Dr/N3qZV5TH95XUkpZJ7truNlXxIwRxe3einGsoH4/zQ
-         I3sA==
-X-Gm-Message-State: AJIora8Xx9hCCBY8T/fkhGwnv5lKCaB17rtk9a5RFERKd1kp873swQtX
-        CT8kaj1UgqGN/d/fQhUd1LA=
-X-Google-Smtp-Source: AGRyM1uYMEaEW3aD/B2kamDHroheVFY21M36FgTMBUzUWg+pdK9QTKJN2jxkZMvP+zBn2fmLApLbpg==
-X-Received: by 2002:a17:902:c641:b0:16b:dd82:c04 with SMTP id s1-20020a170902c64100b0016bdd820c04mr5632067pls.144.1656903608965;
-        Sun, 03 Jul 2022 20:00:08 -0700 (PDT)
-Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id c16-20020a056a00009000b0051c1b445094sm19978953pfj.7.2022.07.03.20.00.07
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 03 Jul 2022 20:00:08 -0700 (PDT)
-Message-ID: <fd3bb4b5-0a19-2dc0-c4b5-60f32abce508@acm.org>
-Date:   Sun, 3 Jul 2022 20:00:06 -0700
+        with ESMTP id S231810AbiGDKfy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jul 2022 06:35:54 -0400
+Received: from mail.nfschina.com (unknown [IPv6:2400:dd01:100f:2:72e2:84ff:fe10:5f45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5EFD6E0CD;
+        Mon,  4 Jul 2022 03:35:54 -0700 (PDT)
+Received: from localhost (unknown [127.0.0.1])
+        by mail.nfschina.com (Postfix) with ESMTP id D4DBC1E80C96;
+        Mon,  4 Jul 2022 18:33:57 +0800 (CST)
+X-Virus-Scanned: amavisd-new at test.com
+Received: from mail.nfschina.com ([127.0.0.1])
+        by localhost (mail.nfschina.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id 5cu4B0Ud6mOO; Mon,  4 Jul 2022 18:33:55 +0800 (CST)
+Received: from localhost.localdomain (unknown [180.167.10.98])
+        (Authenticated sender: jiaming@nfschina.com)
+        by mail.nfschina.com (Postfix) with ESMTPA id A425B1E80C90;
+        Mon,  4 Jul 2022 18:33:54 +0800 (CST)
+From:   Zhang Jiaming <jiaming@nfschina.com>
+To:     james.smart@broadcom.com, dick.kennedy@broadcom.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        liqiong@nfschina.com, renyu@nfschina.com,
+        Zhang Jiaming <jiaming@nfschina.com>
+Subject: [PATCH] scsi: lpfc: Remove unnecessary space in comments
+Date:   Mon,  4 Jul 2022 18:35:48 +0800
+Message-Id: <20220704103548.7683-1-jiaming@nfschina.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH] scsi: ufs: ufs-pci: Enable WriteBooster capability on ADL
-Content-Language: en-US
-To:     Daniil Lunev <dlunev@chromium.org>,
-        Adrian Hunter <adrian.hunter@intel.com>
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <beanhuo@micron.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <20220704092721.1.Ib5ebec952d9a59f5c69c89b694777f517d22466d@changeid>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220704092721.1.Ib5ebec952d9a59f5c69c89b694777f517d22466d@changeid>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/3/22 16:28, Daniil Lunev wrote:
-> Sets the WrtieBooster capability flag when ADL's UFS controller is used.
-            ^^^^^^^^^^^^
-WriteBooster?
+Remove unnecessary space of pci_dev 's.
 
-Otherwise this patch looks fine to me.
+Signed-off-by: Zhang Jiaming <jiaming@nfschina.com>
+---
+ drivers/scsi/lpfc/lpfc_hw.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks,
+diff --git a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
+index 7b8cf678abb5..c9f322ddefd0 100644
+--- a/drivers/scsi/lpfc/lpfc_hw.h
++++ b/drivers/scsi/lpfc/lpfc_hw.h
+@@ -4388,7 +4388,7 @@ struct lpfc_sli2_slim {
+  * This function checks PCI device to allow special handling for LC HBAs.
+  *
+  * Parameters:
+- * device : struct pci_dev 's device field
++ * device : struct pci_dev's device field
+  *
+  * return 1 => TRUE
+  *        0 => FALSE
+-- 
+2.34.1
 
-Bart.
