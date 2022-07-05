@@ -2,53 +2,53 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42D5BC43334
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jul 2022 02:42:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6CE5C43334
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Jul 2022 02:42:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231696AbiGECmA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Jul 2022 22:42:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58904 "EHLO
+        id S234135AbiGECm1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Jul 2022 22:42:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59152 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230175AbiGECmA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jul 2022 22:42:00 -0400
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A57912777
-        for <linux-scsi@vger.kernel.org>; Mon,  4 Jul 2022 19:41:59 -0700 (PDT)
+        with ESMTP id S234227AbiGECm0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jul 2022 22:42:26 -0400
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 636081277D
+        for <linux-scsi@vger.kernel.org>; Mon,  4 Jul 2022 19:42:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1656988919; x=1688524919;
+  t=1656988945; x=1688524945;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=eLFQwSzFJECaf6OosUXPb3bAWqxxfdqOwKldJTt0WWA=;
-  b=pvTVpN1bcmrV+k/8zrEOTwr9/KJTYYVGbxBQXNk5/j+FioXjQ6oa53xt
-   PjpCjDW9RDLotCy+ArAAfJIy4eYkr+ZaG3mWqtNaS+l7kn54yMlUCmz3n
-   J8VORwwXB9cnnbkQFScAqzFuSNiNou89KpFrtHNR/SDIV2xshMHaFruyA
-   zC4SYjo7BRdVuyM+j3ASgz8nFDS4UgLHLQcGotgaxJBi1vuE+Mmm5mewZ
-   5nrpNlgRVFkk6z/Pxrx8LWUqO4c0ht1wCvJlqQ4RPxP75bODq/QlG81oN
-   sRuJVszjvlbv57P+fBFrr6FmCpsdUJ3JxDAmyrC8QO8Xqid2Amw9CxTqt
+  bh=2wSTglPxExF3q9V48KFVckZugab/uZjKO2SeFC9RfmI=;
+  b=isQ2h/Dm1OHSDZbApQeF9uBNbU7PKvDfrtKqurQz2aB/uM4hv8o4+ujd
+   2pizEs7X1R4WIhvtHIV3HUdJWRs85H5lOiRAeoPLjFBDPh+t3D7wmQRMT
+   Ghyq3TwiZj00ZZn3zsMb1zQJsKPrTXYMUNp/6jfInFxLRwR7PtkoYkwqY
+   1X9qks9SFUWGoxefAxF8JBNAl0g7UOR6bS/hIbhpbjv8bGO4Oxn5D+Jjt
+   tIvzTdskf9C2CRh+onUYYtNQ0JKiXv69Qt56kVk15KJU47o+Ip4WMUig8
+   QPvEet4Dc1DqFOo8C7Mkam4FlSYDckTtF7fB4bhCRJZzeMbreFCmPTjoz
    Q==;
 X-IronPort-AV: E=Sophos;i="5.92,245,1650902400"; 
-   d="scan'208";a="309130058"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 05 Jul 2022 10:41:58 +0800
-IronPort-SDR: yoMQCHaTOPg7jIkrdrVzeCCTOoISyI8w0igpOHuPAjipZrNPvcUGh3et9sLrkRKsWGIAOdmVzs
- Tbv62rdMSk6O5TewtMamdHJQ9AV1GM7rILGZEGOxKN0w1t5FBGZCGc2XGflYWUc7VxMe+XqNUV
- BTPkVfG4K9mUx1pWRugHmaa0/x2lh0g5ivdZbJDWSnymnFVGGE1mOH1er0OCtLZr2KHOl3tRnz
- ZbJ96LRhVMVemv23JGo9djgLQHtfO8Fxxo0BbhBiXO9WRZZw/4zoq6z64ztKVQ0oQwhLFozsD7
- wbESO5Fqhw6bKK/1yjbbtUX4
+   d="scan'208";a="205520276"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 05 Jul 2022 10:42:19 +0800
+IronPort-SDR: RRDCH7hRzfrAO0w+ho9FVP30Zjt40FEx1IBFtADn+Wf2b8bR4LxXLuP+Rmc2xkIPOUGp7pGpfq
+ x72348Rlh8QF3KGELlOh3cuLzpFvpWy+2yvnqra2K9DznfRuwPR3adrkiBhyGiBkm32zD4GCnb
+ Uy/z48OBLonwj0vG4Kozqwkqw07pxWXGUyoI7L5hRUoO467KLrfEFfzWf9oewA/uZJpmvPGBLS
+ gGIT+/ECtUZsdXARmS6dMNxlgwqNwbmjX3+FmzLprPKRgGMHN//007eI+Y0WZUH5D8w5FFXqWb
+ c9SQ0SLjMgnpqskTjx1YDBoM
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 04 Jul 2022 19:03:49 -0700
-IronPort-SDR: ksInpa9omGjzqNRhq7YFAI7N38XuGVC9tfINjRH6TJh5qg+7Dn8rYE793hLty/ioNH+1bZmQQA
- 1en4/0GKFeHq5Fs/tBR4aJp4A46VQBbaO3qq5mGyL71sC6p1B0pVSEK1Ovq02H3gLgUFgRcU2x
- RjCv2OpPHSi9SOnfShbSjUO5PvAv7sI9ps2nLgrY8kf07HT9m6be7bGVEVHc30OD3P8hrmV1rl
- 3c3OlmTmf9Julqz6m8055So57oyMvys0pL6WhMagn4PTrXQNUaOwaLVowLAwjdmzka85XxEL7N
- gC8=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 04 Jul 2022 18:59:39 -0700
+IronPort-SDR: fiw1oKKt/MosFTyBrHJWDkVmDxR1TYn3FtRS3IYVDRDhgT+QlkeDFo788ZSbrh6WRga7YE+kn5
+ HSOVQXFUd1pqv/01cQJluC5x6QVXChVvYsVpyJkXx4eUKt2gZL75SxzDcYYFJlZ6QK341DgC4i
+ daBkPFXyzNieRN5vgfAk4GOmxbt8wiK5jToc6rXFbFlykBIbZbmMeEJY83Uk/OQVrCfzawvWqg
+ Sxo7CI160hrCW86eVppBhb1p+zKafVgXry6o5/6oetfCDelULFmDzwb9lJ3Z1uaIbSPXh7cxcQ
+ VPA=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 04 Jul 2022 19:41:58 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 04 Jul 2022 19:42:20 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LcRlV0bTwz1Rw4L
-        for <linux-scsi@vger.kernel.org>; Mon,  4 Jul 2022 19:41:58 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LcRlv4Phrz1RwqM
+        for <linux-scsi@vger.kernel.org>; Mon,  4 Jul 2022 19:42:19 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,37 +56,37 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1656988917; x=1659580918; bh=eLFQwSzFJECaf6OosUXPb3bAWqxxfdqOwKl
-        dJTt0WWA=; b=LxNrLO6ZbhFAEyfNq/L4fgqsvZQ2q8/DaqYFxH1c3UdTOPTE1r5
-        7l/q3VK5nUDxITXFtViV5NQBYZ37l6jLhNJiEokGXl9mH/iQ6YtBEcrPYx1GKuCx
-        huC8gnq5XN9+Qbjxix/p6z7sl5bD2f6NyMovHjXKZkHhA9IF37hNwGl4oLgxMgko
-        cENFGIVP2uLj7rt1UtxGAJa+/ey8TEnbEUXLHMi/3RZvTSHPxUuu8luydePeF+Ga
-        5PiVtNhx8ZweXEoOvw1fkTwnPOguw488PeZdw2302XHTcJETVehzzN18n9/D8gUt
-        GC5xZaBbhqWaTWyWdI3I99yYZLTLcpqeB+Q==
+        1656988939; x=1659580940; bh=2wSTglPxExF3q9V48KFVckZugab/uZjKO2S
+        eFC9RfmI=; b=FhilygavoFIJwURqIZIJu1RX+UW9fB3hWYD8CVRA93ld508a8WD
+        9tvR5ICW5QEmOmErD1h7SU2mJlrlGCNkMAfJ4wTaQ8LuVAbeVUW6A5bar1olpmj6
+        JEmIMn59dKSOWiwEdsLRslTtqTbzkCmDRUzJ6tpxWhcGwZiIviWhzHD97HRSSBK8
+        i9kmnnmfwu9uWo99PFPrb+sesnxyI0i3A9wsRaQmt0Ro8/Hmrum30ybpvpOkFs1q
+        dHGwvMjw1NXO5gpEgsUXsaCtczOgu/TSlu3eU+gkyvxdu+X0bb9a2LVrSkbOKii+
+        q5JYoeDlibeVluzqnVc937BRE+dCvP/0z+w==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id qlDVhgWjlA-u for <linux-scsi@vger.kernel.org>;
-        Mon,  4 Jul 2022 19:41:57 -0700 (PDT)
+        with ESMTP id JsXQwY2qa2bt for <linux-scsi@vger.kernel.org>;
+        Mon,  4 Jul 2022 19:42:19 -0700 (PDT)
 Received: from [10.225.163.105] (unknown [10.225.163.105])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LcRlS47xBz1RtVk;
-        Mon,  4 Jul 2022 19:41:56 -0700 (PDT)
-Message-ID: <fe0c09f3-0c0c-0527-88aa-21e13d91a23c@opensource.wdc.com>
-Date:   Tue, 5 Jul 2022 11:41:55 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LcRlt1FH1z1RtVk;
+        Mon,  4 Jul 2022 19:42:18 -0700 (PDT)
+Message-ID: <1b49bf54-4272-b550-b1f8-4f5a46e2575a@opensource.wdc.com>
+Date:   Tue, 5 Jul 2022 11:42:17 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.11.0
-Subject: Re: [PATCH 09/17] block: pass a gendisk to
- blk_queue_clear_zone_settings
+Subject: Re: [PATCH 10/17] block: pass a gendisk to
+ blk_queue_free_zone_bitmaps
 Content-Language: en-US
 To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
 Cc:     dm-devel@redhat.com, linux-block@vger.kernel.org,
         linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
 References: <20220704124500.155247-1-hch@lst.de>
- <20220704124500.155247-10-hch@lst.de>
+ <20220704124500.155247-11-hch@lst.de>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <20220704124500.155247-10-hch@lst.de>
+In-Reply-To: <20220704124500.155247-11-hch@lst.de>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -102,57 +102,75 @@ On 7/4/22 21:44, Christoph Hellwig wrote:
 Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
 > ---
->  block/blk-settings.c | 2 +-
->  block/blk-zoned.c    | 4 +++-
->  block/blk.h          | 4 ++--
->  3 files changed, 6 insertions(+), 4 deletions(-)
+>  block/blk-zoned.c | 8 +++++---
+>  block/blk.h       | 4 ++--
+>  block/genhd.c     | 2 +-
+>  3 files changed, 8 insertions(+), 6 deletions(-)
 > 
-> diff --git a/block/blk-settings.c b/block/blk-settings.c
-> index 35b7bba306a83..8bb9eef5310eb 100644
-> --- a/block/blk-settings.c
-> +++ b/block/blk-settings.c
-> @@ -946,7 +946,7 @@ void disk_set_zoned(struct gendisk *disk, enum blk_zoned_model model)
->  		blk_queue_zone_write_granularity(q,
->  						queue_logical_block_size(q));
->  	} else {
-> -		blk_queue_clear_zone_settings(q);
-> +		disk_clear_zone_settings(disk);
->  	}
->  }
->  EXPORT_SYMBOL_GPL(disk_set_zoned);
 > diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-> index 7fbe395fa51fc..5a97b48102221 100644
+> index 5a97b48102221..9085f9fb3ab42 100644
 > --- a/block/blk-zoned.c
 > +++ b/block/blk-zoned.c
-> @@ -622,8 +622,10 @@ int blk_revalidate_disk_zones(struct gendisk *disk,
+> @@ -449,8 +449,10 @@ int blkdev_zone_mgmt_ioctl(struct block_device *bdev, fmode_t mode,
+>  	return ret;
 >  }
->  EXPORT_SYMBOL_GPL(blk_revalidate_disk_zones);
 >  
-> -void blk_queue_clear_zone_settings(struct request_queue *q)
-> +void disk_clear_zone_settings(struct gendisk *disk)
+> -void blk_queue_free_zone_bitmaps(struct request_queue *q)
+> +void disk_free_zone_bitmaps(struct gendisk *disk)
 >  {
 > +	struct request_queue *q = disk->queue;
 > +
+>  	kfree(q->conv_zones_bitmap);
+>  	q->conv_zones_bitmap = NULL;
+>  	kfree(q->seq_zones_wlock);
+> @@ -612,7 +614,7 @@ int blk_revalidate_disk_zones(struct gendisk *disk,
+>  		ret = 0;
+>  	} else {
+>  		pr_warn("%s: failed to revalidate zones\n", disk->disk_name);
+> -		blk_queue_free_zone_bitmaps(q);
+> +		disk_free_zone_bitmaps(disk);
+>  	}
+>  	blk_mq_unfreeze_queue(q);
+>  
+> @@ -628,7 +630,7 @@ void disk_clear_zone_settings(struct gendisk *disk)
+>  
 >  	blk_mq_freeze_queue(q);
 >  
->  	blk_queue_free_zone_bitmaps(q);
+> -	blk_queue_free_zone_bitmaps(q);
+> +	disk_free_zone_bitmaps(disk);
+>  	blk_queue_flag_clear(QUEUE_FLAG_ZONE_RESETALL, q);
+>  	q->required_elevator_features &= ~ELEVATOR_F_ZBD_SEQ_WRITE;
+>  	q->nr_zones = 0;
 > diff --git a/block/blk.h b/block/blk.h
-> index 58ad50cacd2d5..7482a3a441dd9 100644
+> index 7482a3a441dd9..b71e22c97d773 100644
 > --- a/block/blk.h
 > +++ b/block/blk.h
-> @@ -406,10 +406,10 @@ static inline int blk_iolatency_init(struct request_queue *q) { return 0; }
->  
->  #ifdef CONFIG_BLK_DEV_ZONED
->  void blk_queue_free_zone_bitmaps(struct request_queue *q);
-> -void blk_queue_clear_zone_settings(struct request_queue *q);
-> +void disk_clear_zone_settings(struct gendisk *disk);
->  #else
->  static inline void blk_queue_free_zone_bitmaps(struct request_queue *q) {}
-> -static inline void blk_queue_clear_zone_settings(struct request_queue *q) {}
-> +static inline void disk_clear_zone_settings(struct gendisk *disk) {}
+> @@ -405,10 +405,10 @@ static inline int blk_iolatency_init(struct request_queue *q) { return 0; }
 >  #endif
 >  
->  int blk_alloc_ext_minor(void);
+>  #ifdef CONFIG_BLK_DEV_ZONED
+> -void blk_queue_free_zone_bitmaps(struct request_queue *q);
+> +void disk_free_zone_bitmaps(struct gendisk *disk);
+>  void disk_clear_zone_settings(struct gendisk *disk);
+>  #else
+> -static inline void blk_queue_free_zone_bitmaps(struct request_queue *q) {}
+> +static inline void disk_free_zone_bitmaps(struct gendisk *disk) {}
+>  static inline void disk_clear_zone_settings(struct gendisk *disk) {}
+>  #endif
+>  
+> diff --git a/block/genhd.c b/block/genhd.c
+> index d0bdeb93e922c..9d30f159c59ac 100644
+> --- a/block/genhd.c
+> +++ b/block/genhd.c
+> @@ -1165,7 +1165,7 @@ static void disk_release(struct device *dev)
+>  
+>  	disk_release_events(disk);
+>  	kfree(disk->random);
+> -	blk_queue_free_zone_bitmaps(disk->queue);
+> +	disk_free_zone_bitmaps(disk);
+>  	xa_destroy(&disk->part_tbl);
+>  
+>  	disk->queue->disk = NULL;
 
 
 -- 
