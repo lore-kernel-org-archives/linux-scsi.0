@@ -2,100 +2,103 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29AB8CCA483
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Jul 2022 15:35:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7571EC43334
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Jul 2022 15:38:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234067AbiGFPfN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Jul 2022 11:35:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44526 "EHLO
+        id S234546AbiGFPiX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Jul 2022 11:38:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58054 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232014AbiGFPe0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2022 11:34:26 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 691D62A24D;
-        Wed,  6 Jul 2022 08:33:05 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S234773AbiGFPhy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2022 11:37:54 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5DBDD27CED;
+        Wed,  6 Jul 2022 08:34:26 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5A7EB61FFB;
-        Wed,  6 Jul 2022 15:33:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF5FAC3411C;
-        Wed,  6 Jul 2022 15:33:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1657121583;
-        bh=p6qGrvHgRDnRT9BPQODceA8NfL4N4wtAVuvREEfaigQ=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Gc0ECYrX0Ox0ULa0KoUC/nQcMVVs8Zyqlhsj/EfPmJcrERDV3xDkmg/QtVNDdoRoe
-         rCPHQENfmuqOEfO9NtqoJs8YVdA4Xm3hLTzENnUdt8Usz8UIMjj4InzMWyCO3eMjAZ
-         oN0PuYo4Kp+gdvU6BNnCc+kbllEAHpUSa/bMUljCrClXaLxoeGOvjIZhy7MHOjIC6f
-         COe426bqirLS3Wr+vqM+J2LKzwv0gTZvl5LodPeJdYXi2vQsFNix8rQXjwLv9JV9cS
-         cy/l8dnTJmNAMVLNHqjPxfk6FUGW5H/mQuJq9xcQlgkMekoyQH2IdR4aAfgRJG+eYf
-         ZuA2FrGO2a4Pw==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     John Garry <john.garry@huawei.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 04/11] scsi: hisi_sas: Limit max hw sectors for v3 HW
-Date:   Wed,  6 Jul 2022 11:32:49 -0400
-Message-Id: <20220706153256.1598411-4-sashal@kernel.org>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220706153256.1598411-1-sashal@kernel.org>
-References: <20220706153256.1598411-1-sashal@kernel.org>
+        by smtp-out2.suse.de (Postfix) with ESMTPS id E9CC21FDC5;
+        Wed,  6 Jul 2022 15:34:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1657121664; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=99CJJVFpdXwZKjA8J/WZPHQwZBw2iYXjy5+4OpppZOM=;
+        b=CzzbxJMzsUpdpgAbuCBHoZFy6NhaP8LgTnNIdWOz30kkPvcZC2AOf3FsFWguO9/kg8USZp
+        XwEu6tOtZ/lB7/LaeLRb56supqWPeWH5AD5Zvjlua9KW9O0unAsr5sGhX3k1ZlySUb1U7O
+        K0Y8X1EFlwHiNxtciwq6FPczLieS3Uw=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1657121664;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=99CJJVFpdXwZKjA8J/WZPHQwZBw2iYXjy5+4OpppZOM=;
+        b=TLxnGJ6mBD6i03pQ24Gv+P/kGoeyoLC8ZGRnkL1DfndU11FVErsRTtASa0Djpg7UcCZZ26
+        V989lFefUhJljcBA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 7298713A7D;
+        Wed,  6 Jul 2022 15:34:24 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id KZ3oGICrxWKkYwAAMHmgww
+        (envelope-from <iluceno@suse.de>); Wed, 06 Jul 2022 15:34:24 +0000
+Date:   Wed, 6 Jul 2022 17:37:36 +0200
+From:   Ismael Luceno <iluceno@suse.de>
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Enzo Matsumiya <ematsumiya@suse.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Chao Leng <lengchao@huawei.com>, linux-block@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH V2 4/5] nvme: quiesce namespace queue in parallel
+Message-ID: <20220706173736.2891776c@pirotess>
+In-Reply-To: <Yp9avMfGDsOLIXeG@T590>
+References: <20211130073752.3005936-1-ming.lei@redhat.com>
+        <20220607132118.0bbb230b@pirotess>
+        <Yp9avMfGDsOLIXeG@T590>
+Organization: SUSE
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: John Garry <john.garry@huawei.com>
+On Tue, 7 Jun 2022 22:03:40 +0800
+Ming Lei <ming.lei@redhat.com> wrote:
+> On Tue, Jun 07, 2022 at 01:21:18PM +0200, Ismael Luceno wrote:
+> > Hi Ming,
+> > 
+> > Has this patch been dropped/abandoned?
+> 
+> Hi Ismael,
+> 
+> The whole patchset wasn't be accepted if I remember correctly, but
+> finally we moved srcu out of hctx in another patchset.
+> 
+> If you think the patch of 'nvme: quiesce namespace queue in parallel'
+> is useful, please provide a bit info about your case, then we may
+> figure out similar patch if it is necessary.
 
-[ Upstream commit fce54ed027577517df1e74b7d54dc2b1bd536887 ]
+Chao Leng's outgoing email (lengchao@huawei.com) permission is
+restricted; I got from him (through a couple of indirections):
+> Hi, Ismael and Ming, The case: When the multipathing software is used,
+> if one path failed, fail over to other good path may take long time.
+> This is important for scenarios that require low latency and high
+> reliability, such as real-time deals.
+>
+> This patch can fix the bug.
 
-If the controller is behind an IOMMU then the IOMMU IOVA caching range can
-affect performance, as discussed in [0].
+Same thing he said here:
+https://lore.kernel.org/linux-nvme/cc732195-c053-9ce4-e1a7-e7f6dcf762ac@huawei.com/
 
-Limit the max HW sectors to not exceed this limit. We need to hardcode the
-value until a proper DMA mapping API is available.
+Huawei is still looking for a solution to be merged in mainline.
 
-[0] https://lore.kernel.org/linux-iommu/20210129092120.1482-1-thunder.leizhen@huawei.com/
-
-Link: https://lore.kernel.org/r/1655988119-223714-1-git-send-email-john.garry@huawei.com
-Signed-off-by: John Garry <john.garry@huawei.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index cd41dc061d87..dfe7e6370d84 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -2738,6 +2738,7 @@ static int slave_configure_v3_hw(struct scsi_device *sdev)
- 	struct hisi_hba *hisi_hba = shost_priv(shost);
- 	struct device *dev = hisi_hba->dev;
- 	int ret = sas_slave_configure(sdev);
-+	unsigned int max_sectors;
- 
- 	if (ret)
- 		return ret;
-@@ -2755,6 +2756,12 @@ static int slave_configure_v3_hw(struct scsi_device *sdev)
- 		}
- 	}
- 
-+	/* Set according to IOMMU IOVA caching limit */
-+	max_sectors = min_t(size_t, queue_max_hw_sectors(sdev->request_queue),
-+			    (PAGE_SIZE * 32) >> SECTOR_SHIFT);
-+
-+	blk_queue_max_hw_sectors(sdev->request_queue, max_sectors);
-+
- 	return 0;
- }
- 
 -- 
-2.35.1
-
+Ismael Luceno
+SUSE L3 Support
