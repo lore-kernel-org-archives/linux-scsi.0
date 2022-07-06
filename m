@@ -2,95 +2,83 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C0A2C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Jul 2022 06:56:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A624C43334
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Jul 2022 07:03:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230427AbiGFG4m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Jul 2022 02:56:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49810 "EHLO
+        id S230324AbiGFHDz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Jul 2022 03:03:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57954 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229530AbiGFG4l (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2022 02:56:41 -0400
-Received: from mail-lj1-x235.google.com (mail-lj1-x235.google.com [IPv6:2a00:1450:4864:20::235])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F9D31D0FB
-        for <linux-scsi@vger.kernel.org>; Tue,  5 Jul 2022 23:56:40 -0700 (PDT)
-Received: by mail-lj1-x235.google.com with SMTP id y18so6396036ljj.6
-        for <linux-scsi@vger.kernel.org>; Tue, 05 Jul 2022 23:56:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=dZ0To80wgdekuL2hyZGIgermbtkhesmEIoMBMbQ82tQ=;
-        b=Z/1jtAlZWICe5vn5+geZN3yVRVnVjMaw1TSPghZRYylwEC+OuLEB46PwXHYIKm48ph
-         dFrQNoJCHgYBUQh4Dyk8fWDCRKQ8G+ezdJtrW7vUUrBnNxs2m7TqYYZWERilI3jfc8xX
-         4gCr+EGrefFA9rIGZbbmgcuy84ycqDq0ZlRpA4meBWidGmUsz6bgi1S8S+w6VMoLw7O0
-         fP+5QA9PffLp5LwbEIOueCAV7Kyr8ZLx6Y7Sgqx4BHpWSZMdhOm1+0nxo7wXfl/6AsOI
-         idiJLhXhayY5vOThJpVQKlTPo4BMC+BmLFMWHws1GZKYAbXa9P1uEZ8cyzyuvs5sgJDU
-         XG/A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=dZ0To80wgdekuL2hyZGIgermbtkhesmEIoMBMbQ82tQ=;
-        b=mqj0QrMq078vqROyPGqsTbm+47olNL19G+AKDJPJNTYvisW8eytgVTjWzMLARpnr+9
-         LCNMCPpBJViymP9t4s1Q3oh0W8z0DFaWKv+pbW6xpck4lIs9vCNeIp35j3QJ4JMSuy4m
-         wCi3zTFtmGrhmkhfRWQNc2VHRTAPK1bvNdOPaoyzjsIAnj+khbqlSIm0Vw9znHHXg87v
-         ihYkz6vcO9BpP6LO3EcTBwFrI6WWZat3yx5WYZt71+FtBUonc7m34OtuM4W8tihWYMyx
-         uO56kjzWkvdDoAbA30cq0TfgPN82seW+7ZP9R1sIWoCiFhSaxslPY00JjdUMcA4jibEP
-         3aPA==
-X-Gm-Message-State: AJIora81+YL7cbzEnqrDb3dG8XYrBKd/jbTs8ZnwgTke+PE9rzxSxIPs
-        1IwdmWYx0wAy2P/yf4sywN3E/A==
-X-Google-Smtp-Source: AGRyM1t+FtQEWMzZAGSJ6USAizbm35hIvCOAr/zIS1APEwOpW70KzXLCRRlgGceJMVRTLlwxkT535w==
-X-Received: by 2002:a2e:2243:0:b0:25a:9dc3:fd81 with SMTP id i64-20020a2e2243000000b0025a9dc3fd81mr21433054lji.387.1657090598560;
-        Tue, 05 Jul 2022 23:56:38 -0700 (PDT)
-Received: from [192.168.1.52] ([84.20.121.239])
-        by smtp.gmail.com with ESMTPSA id y22-20020a05651c107600b0025d38eb7390sm643961ljm.43.2022.07.05.23.56.37
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 05 Jul 2022 23:56:38 -0700 (PDT)
-Message-ID: <da999ea7-dbd1-c4ac-132e-7e6720fa469a@linaro.org>
-Date:   Wed, 6 Jul 2022 08:56:37 +0200
+        with ESMTP id S229849AbiGFHDz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2022 03:03:55 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8AA5D5A;
+        Wed,  6 Jul 2022 00:03:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=FNPTWfp4mk8fJGbONDFfJNnSLRYFpC010l13Y9aXWQ8=; b=z7xVdIuu3H3x41dq61eVCF6X7P
+        203Nf5e3o9KTwJfCIvCVaL8+2rLtAVD8zjUk/8/hdo+lBP2H+O+VZVp/EOSBA04QIYA9q+UGm+ndF
+        Htzq08g7menFmb/WuDB/KD6PPbugjJgZrxFcTEn0CqoRhON7oQrd+2Z3USZhLb7QLOUKOQ59CYzV1
+        z+U29+jL50yR0+H411LiPbBYF/GzpkFWcl5p4LKWOW+YtL6dJcPwW4mDcIFmK6dqtJ+uWxD7lBWVm
+        l03L6e5LbsqY7HutLnmStnt2d5TEIx+8o8WH53OxTRmodpUMhUc52NZIJR1dDeJe7mCIGEqhN4DND
+        cP3JEVVA==;
+Received: from [2001:4bb8:189:3c4a:f22c:c36a:4e84:c723] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1o8z4i-006uoJ-K5; Wed, 06 Jul 2022 07:03:53 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     dm-devel@redhat.com, linux-block@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
+Subject: clean up zoned device information v2
+Date:   Wed,  6 Jul 2022 09:03:34 +0200
+Message-Id: <20220706070350.1703384-1-hch@lst.de>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [PATCH v2 3/3] ufs: ufs-exynos: change ufs phy control sequence
-Content-Language: en-US
-To:     Chanho Park <chanho61.park@samsung.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Bart Van Assche <bvanassche@acm.org>
-Cc:     linux-phy@lists.infradead.org, linux-scsi@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-samsung-soc@vger.kernel.org
-References: <20220706020255.151177-1-chanho61.park@samsung.com>
- <CGME20220706020541epcas2p1c74a1d1b5ca37ee4795bf9ec0da23fa9@epcas2p1.samsung.com>
- <20220706020255.151177-4-chanho61.park@samsung.com>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <20220706020255.151177-4-chanho61.park@samsung.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 06/07/2022 04:02, Chanho Park wrote:
-> Since commit 1599069a62c6 ("phy: core: Warn when phy_power_on is called
-> before phy_init"), below warning has been reported.
-> 
-> phy_power_on was called before phy_init
-> 
-> To address this, we need to remove phy_power_on from
-> exynos_ufs_phy_init and move it after phy_init. phy_power_off and
-> phy_exit are also necessary in exynos_ufs_remove.
-> 
-> Signed-off-by: Chanho Park <chanho61.park@samsung.com>
+Hi all,
 
+this cleans up the block layer zoned device information APIs and
+moves all fields currently in the request_queue to the gendisk as
+they aren't relevant for passthrough I/O.
 
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Changes since v1:
+ - drop the blk-zoned/nvmet code sharing for now
+ - use a helper a little earlier
+ - various spelling fixes
 
-
-Best regards,
-Krzysztof
+Diffstat:
+ block/bio.c                    |    2 
+ block/blk-core.c               |   13 +--
+ block/blk-merge.c              |    2 
+ block/blk-mq-debugfs-zoned.c   |    6 -
+ block/blk-mq.c                 |    2 
+ block/blk-mq.h                 |   18 ++---
+ block/blk-settings.c           |   11 +--
+ block/blk-sysfs.c              |    8 --
+ block/blk-zoned.c              |   85 ++++++++++++------------
+ block/blk.h                    |    8 +-
+ block/genhd.c                  |    1 
+ block/ioctl.c                  |    2 
+ block/partitions/core.c        |    2 
+ drivers/block/null_blk/zoned.c |    8 +-
+ drivers/md/dm-table.c          |    6 -
+ drivers/md/dm-zone.c           |   86 +++++++++++-------------
+ drivers/md/dm-zoned-target.c   |   25 +++----
+ drivers/md/dm.c                |    2 
+ drivers/nvme/host/multipath.c  |    2 
+ drivers/nvme/host/zns.c        |    6 -
+ drivers/nvme/target/zns.c      |   14 +--
+ drivers/scsi/sd.c              |    6 -
+ drivers/scsi/sd_zbc.c          |   10 +-
+ fs/zonefs/super.c              |   17 ++--
+ include/linux/blk-mq.h         |    8 +-
+ include/linux/blkdev.h         |  144 +++++++++++++++--------------------------
+ 26 files changed, 227 insertions(+), 267 deletions(-)
