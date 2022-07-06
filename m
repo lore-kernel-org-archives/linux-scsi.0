@@ -2,77 +2,77 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B29B1C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Jul 2022 23:36:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6A10C43334
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Jul 2022 23:36:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234656AbiGFXgr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Jul 2022 19:36:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47230 "EHLO
+        id S234683AbiGFXg6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Jul 2022 19:36:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47826 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234610AbiGFXgm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2022 19:36:42 -0400
-Received: from smtprelay-out1.synopsys.com (smtprelay-out1.synopsys.com [149.117.73.133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A750C2CCA8;
-        Wed,  6 Jul 2022 16:36:41 -0700 (PDT)
-Received: from mailhost.synopsys.com (sv1-mailhost2.synopsys.com [10.205.2.132])
+        with ESMTP id S234610AbiGFXgs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2022 19:36:48 -0400
+Received: from smtprelay-out1.synopsys.com (smtprelay-out1.synopsys.com [149.117.87.133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0BA8B2CCBD;
+        Wed,  6 Jul 2022 16:36:48 -0700 (PDT)
+Received: from mailhost.synopsys.com (sv1-mailhost1.synopsys.com [10.205.2.131])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
         (Client CN "mailhost.synopsys.com", Issuer "SNPSica2" (verified OK))
-        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 8263340CAF;
-        Wed,  6 Jul 2022 23:36:41 +0000 (UTC)
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id BBA36C06E8;
+        Wed,  6 Jul 2022 23:36:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1657150601; bh=bAS8o77Z1Y+tMzGOThOXTs6nCn/UzEd3nCbgY2zNJnA=;
+        t=1657150607; bh=YGzx5por/UlZOG67bE/uBBta4HSH9MaY/jMT7mI9Li8=;
         h=Date:In-Reply-To:References:From:Subject:To:Cc:From;
-        b=PamxDTt/zxJOTIpaGJgHyUYsZvb+vRoUVGHQCiBW0CIcGh9r5QcTC46XukSFsLGkd
-         dJphZBwReCoydzIL5nxf5MkXu0CEO+YHoCu4Lz+ptKzIXPuyKJRfkIeWbc+bDqtoCG
-         Z7s4k1SGTks+ODWip2zoQrkl/bBQKd0KDumt2ULmDRPYphMt+5nUDG2fRu06VGGaUo
-         EJeSrZGkbkNSBOj6qM8ejdi9y7UWHFetqaz7fMzNQRrNZh3RsoxCMjos+sdiWy1abt
-         15TGk2cSvAdtk2SbxKYUlYsSLJLfUk071A6eNntMZGXWf8Om3DJgfyPynB3FuWa97q
-         yUoZZLDm8Srdw==
+        b=fV8JkjJd8JHk0pbIrF/uXrQ9ErQYZEQzgIDmdnkQuKh7wlX65mkFr51aTFkcxydF1
+         bnM9mO8GqJidJeeAxqE1/8n8ZFhdOQd9lgHgRc+UZGYczsDQnvkozrbADSFw+mtbH4
+         jH+ce+XArG8+1i7cmdbxqaDUY4OJeBSC2BJV6eyLSOGT0ZzGAEsBheNywN1P4w2aQD
+         1FvsI6r6oNP41tSLX0AuMTR4PLt3GvHf984VkxnQC9MwNHd++VSlSOdRhlniNQqY89
+         m3WN2tsEobyaFwVWn8PvdPEo59Fai6JQ0P3zl7DX33JGEGJHAYO5kJdgkrcNYiEslk
+         hq6u/UU+v31Uw==
 Received: from te-lab16-v2 (nanobot.internal.synopsys.com [10.204.48.11])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (Client did not present a certificate)
-        by mailhost.synopsys.com (Postfix) with ESMTPSA id 659F1A006F;
-        Wed,  6 Jul 2022 23:36:40 +0000 (UTC)
-Received: by te-lab16-v2 (sSMTP sendmail emulation); Wed, 06 Jul 2022 16:36:40 -0700
-Date:   Wed, 06 Jul 2022 16:36:40 -0700
-Message-Id: <c37cabb26020f051388500db9fe1a34587e4c76d.1657149962.git.Thinh.Nguyen@synopsys.com>
+        by mailhost.synopsys.com (Postfix) with ESMTPSA id 7EB60A0063;
+        Wed,  6 Jul 2022 23:36:46 +0000 (UTC)
+Received: by te-lab16-v2 (sSMTP sendmail emulation); Wed, 06 Jul 2022 16:36:46 -0700
+Date:   Wed, 06 Jul 2022 16:36:46 -0700
+Message-Id: <d8a976c9ca16ebf74babdd10d8da0c482de850ba.1657149962.git.Thinh.Nguyen@synopsys.com>
 In-Reply-To: <cover.1657149962.git.Thinh.Nguyen@synopsys.com>
 References: <cover.1657149962.git.Thinh.Nguyen@synopsys.com>
 X-SNPS-Relay: synopsys.com
 From:   Thinh Nguyen <Thinh.Nguyen@synopsys.com>
-Subject: [PATCH 22/36] usb: gadget: f_tcm: Use extra number of commands
+Subject: [PATCH 23/36] usb: gadget: f_tcm: Return ATA cmd direction
 To:     Felipe Balbi <balbi@kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Thinh Nguyen <Thinh.Nguyen@synopsys.com>,
-        linux-usb@vger.kernel.org
+        linux-usb@vger.kernel.org, Dmitry Bogdanov <d.bogdanov@yadro.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
 Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-To properly respond to host sending more commands than the number of
-streams the device advertises, the device needs to be able to reject the
-command with a response. Allocate an extra request to handle 1 more
-command than the number of streams.
+Check ATA Pass-Through for direction.
 
 Signed-off-by: Thinh Nguyen <Thinh.Nguyen@synopsys.com>
 ---
- drivers/usb/gadget/function/tcm.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/usb/gadget/function/f_tcm.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/usb/gadget/function/tcm.h b/drivers/usb/gadget/function/tcm.h
-index df768559fb60..c7e6d36afd3a 100644
---- a/drivers/usb/gadget/function/tcm.h
-+++ b/drivers/usb/gadget/function/tcm.h
-@@ -16,7 +16,7 @@
- #define UASP_SS_EP_COMP_LOG_STREAMS 5
- #define UASP_SS_EP_COMP_NUM_STREAMS (1 << UASP_SS_EP_COMP_LOG_STREAMS)
+diff --git a/drivers/usb/gadget/function/f_tcm.c b/drivers/usb/gadget/function/f_tcm.c
+index 91d853682468..6fea80afe2d7 100644
+--- a/drivers/usb/gadget/function/f_tcm.c
++++ b/drivers/usb/gadget/function/f_tcm.c
+@@ -898,6 +898,8 @@ static int get_cmd_dir(const unsigned char *cdb)
+ 	case READ_TOC:
+ 	case READ_FORMAT_CAPACITIES:
+ 	case REQUEST_SENSE:
++	case ATA_12:
++	case ATA_16:
+ 		ret = DMA_FROM_DEVICE;
+ 		break;
  
--#define USBG_NUM_CMDS		UASP_SS_EP_COMP_NUM_STREAMS
-+#define USBG_NUM_CMDS		(UASP_SS_EP_COMP_NUM_STREAMS + 1)
- 
- enum {
- 	USB_G_STR_INT_UAS = 0,
 -- 
 2.28.0
 
