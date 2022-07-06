@@ -2,87 +2,100 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19225CCA485
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Jul 2022 14:29:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55BAACCA473
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Jul 2022 15:31:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233112AbiGFO3V (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Jul 2022 10:29:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52080 "EHLO
+        id S233782AbiGFPbX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Jul 2022 11:31:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44152 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233494AbiGFO3U (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2022 10:29:20 -0400
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id D7DD72658;
-        Wed,  6 Jul 2022 07:29:19 -0700 (PDT)
-Received: from [192.168.1.87] (unknown [122.171.17.200])
-        by linux.microsoft.com (Postfix) with ESMTPSA id 8CB0920DDC9F;
-        Wed,  6 Jul 2022 07:29:16 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 8CB0920DDC9F
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-        s=default; t=1657117759;
-        bh=PFSLHpgWMBD62kPT/Dh5GcD1zjQveXoTA7H8jWtS0Rg=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=jVZr9LrBR+IQGvZ5v0LFYRVWxc1CeuB0lMfFdHnt8C13yOgKFb1e72XpViMLqryKn
-         p/V7BnBEwX7D8eTdxSh5EbmPxRA2LHEWM9N6nRP1Tl3YSgTpuU8FJ8lAGmzUGTKruO
-         S+gW/SgtBRBLdxC7zGczPfmLf1iEG6MZSnaCQhtQ=
-Message-ID: <1c4bc0cf-6665-3fe6-28d8-8e9613e3f9d4@linux.microsoft.com>
-Date:   Wed, 6 Jul 2022 19:59:09 +0530
+        with ESMTP id S233711AbiGFPbM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2022 11:31:12 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76B6324F32;
+        Wed,  6 Jul 2022 08:31:11 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0BE8361FE4;
+        Wed,  6 Jul 2022 15:31:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7764C385A2;
+        Wed,  6 Jul 2022 15:31:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1657121470;
+        bh=FTub9thA/XFO0HIXNb1G0/Bw07j1NqKpudxVT0lkUAk=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=g+umth7GvC6YR5L8Y6axWMXXPEtlfEzeSeDk1IHW93o/K6WmrfKHvkYGYvgueBVU5
+         1rZpnUlYloYFn16Y+Y8QufDUzoXhfrANZW7CrZ2MZpjLdSG5W4dZ4dfnF3qCw9gegI
+         9C0bGBr+C3IbI4wr0m4OQBANJlFLGnCATw2IKXh2qRNJm/SzCoIg78nbSIKuFXodKv
+         NuplPYzTCjJkQHhUbIHHqlbI/KQXUDXipo6XxflzSTsGhjiPCQICJ70Lb4RZk8AJKT
+         I6qnWwefTVrnXiCUoWBTB8s+rVqUi0OnCydLB+2vTJOa65fY81sbvZz1AjLmdg08ha
+         sjJq5n8sqI99g==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     John Garry <john.garry@huawei.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.18 10/22] scsi: hisi_sas: Limit max hw sectors for v3 HW
+Date:   Wed,  6 Jul 2022 11:30:28 -0400
+Message-Id: <20220706153041.1597639-10-sashal@kernel.org>
+X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20220706153041.1597639-1-sashal@kernel.org>
+References: <20220706153041.1597639-1-sashal@kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [PATCH] scsi: storvsc: Prevent running tasklet for long
-Content-Language: en-US
-To:     Saurabh Singh Sengar <ssengar@linux.microsoft.com>
-Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        wei.liu@kernel.org, decui@microsoft.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-hyperv@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ssengar@microsoft.com, mikelley@microsoft.com
-References: <1657035141-2132-1-git-send-email-ssengar@linux.microsoft.com>
- <b4fea161-41c5-a03e-747b-316c74eb986c@linux.microsoft.com>
- <20220706095358.GA3320@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
-From:   Praveen Kumar <kumarpraveen@linux.microsoft.com>
-In-Reply-To: <20220706095358.GA3320@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 06-07-2022 15:23, Saurabh Singh Sengar wrote:
-> On Wed, Jul 06, 2022 at 02:44:42PM +0530, Praveen Kumar wrote:
->> On 05-07-2022 21:02, Saurabh Sengar wrote:
->>> There can be scenarios where packets in ring buffer are continuously
->>> getting queued from upper layer and dequeued from storvsc interrupt
->>> handler, such scenarios can hold the foreach_vmbus_pkt loop (which is
->>> executing as a tasklet) for a long duration. Theoretically its possible
->>> that this loop executes forever. Add a condition to limit execution of
->>> this tasklet for finite amount of time to avoid such hazardous scenarios.
->>>
->>> Signed-off-by: Saurabh Sengar <ssengar@linux.microsoft.com>
->>> ---
->>>  drivers/scsi/storvsc_drv.c | 7 +++++++
->>>  1 file changed, 7 insertions(+)
->>>
->>> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
->>> index fe000da..0c428cb 100644
->>> --- a/drivers/scsi/storvsc_drv.c
->>> +++ b/drivers/scsi/storvsc_drv.c
->>> @@ -60,6 +60,9 @@
->>>  #define VMSTOR_PROTO_VERSION_WIN8_1	VMSTOR_PROTO_VERSION(6, 0)
->>>  #define VMSTOR_PROTO_VERSION_WIN10	VMSTOR_PROTO_VERSION(6, 2)
->>>  
->>> +/* channel callback timeout in ms */
->>> +#define CALLBACK_TIMEOUT		5
->>
->> If I may, it would be good if we have the CALLBACK_TIMEOUT configurable based upon user's requirement with default value to '5'.
->> I assume, this value '5' fits best to the use-case which we are trying to resolve here. Thanks.
-> 
-> Agree, how about adding a sysfs entry for this parameter
-> 
+From: John Garry <john.garry@huawei.com>
 
-Sounds good to me. Thanks.
+[ Upstream commit fce54ed027577517df1e74b7d54dc2b1bd536887 ]
 
-Regards,
+If the controller is behind an IOMMU then the IOMMU IOVA caching range can
+affect performance, as discussed in [0].
 
-~Praveen.
+Limit the max HW sectors to not exceed this limit. We need to hardcode the
+value until a proper DMA mapping API is available.
+
+[0] https://lore.kernel.org/linux-iommu/20210129092120.1482-1-thunder.leizhen@huawei.com/
+
+Link: https://lore.kernel.org/r/1655988119-223714-1-git-send-email-john.garry@huawei.com
+Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 7d819fc0395e..eb86afb21aab 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -2782,6 +2782,7 @@ static int slave_configure_v3_hw(struct scsi_device *sdev)
+ 	struct hisi_hba *hisi_hba = shost_priv(shost);
+ 	struct device *dev = hisi_hba->dev;
+ 	int ret = sas_slave_configure(sdev);
++	unsigned int max_sectors;
+ 
+ 	if (ret)
+ 		return ret;
+@@ -2799,6 +2800,12 @@ static int slave_configure_v3_hw(struct scsi_device *sdev)
+ 		}
+ 	}
+ 
++	/* Set according to IOMMU IOVA caching limit */
++	max_sectors = min_t(size_t, queue_max_hw_sectors(sdev->request_queue),
++			    (PAGE_SIZE * 32) >> SECTOR_SHIFT);
++
++	blk_queue_max_hw_sectors(sdev->request_queue, max_sectors);
++
+ 	return 0;
+ }
+ 
+-- 
+2.35.1
+
