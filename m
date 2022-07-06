@@ -2,45 +2,45 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42B49C43334
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Jul 2022 23:36:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17DE4C43334
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Jul 2022 23:36:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234609AbiGFXgU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Jul 2022 19:36:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47154 "EHLO
+        id S234616AbiGFXg1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Jul 2022 19:36:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47224 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234586AbiGFXgS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2022 19:36:18 -0400
-Received: from smtprelay-out1.synopsys.com (smtprelay-out1.synopsys.com [149.117.87.133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A4F32CCB1;
-        Wed,  6 Jul 2022 16:36:17 -0700 (PDT)
-Received: from mailhost.synopsys.com (sv1-mailhost2.synopsys.com [10.205.2.132])
+        with ESMTP id S234610AbiGFXgZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2022 19:36:25 -0400
+Received: from smtprelay-out1.synopsys.com (smtprelay-out1.synopsys.com [149.117.73.133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B04052CCA5;
+        Wed,  6 Jul 2022 16:36:23 -0700 (PDT)
+Received: from mailhost.synopsys.com (sv2-mailhost2.synopsys.com [10.205.2.134])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
         (Client CN "mailhost.synopsys.com", Issuer "SNPSica2" (verified OK))
-        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 0D030C06E8;
-        Wed,  6 Jul 2022 23:36:17 +0000 (UTC)
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 2ABFA40787;
+        Wed,  6 Jul 2022 23:36:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1657150577; bh=ID+KNbEF1qrOBaTI4FRkar7KOfJ0VQUCqvZyNnmVmF4=;
+        t=1657150583; bh=XmkV08/1OWjuoGBMF9UqFv99vhmgKcYXwDcNGVMohpg=;
         h=Date:In-Reply-To:References:From:Subject:To:Cc:From;
-        b=I6w3zyy8CinvsvJflrUFt8d0Yck8DvLE/GyyYYb+dP637KteO0D71zqyUdoQJ0g3u
-         Ll+jpeb81WnRiM5jezzBizEzWy45oMDmQCTR/3qZqhZmF9hSYuZ0ypdZF7zprQ2E0U
-         j7hq9eeMQivTqIuAZukFdRX7Sm8u+CAhMRli+t5fX4Wa44PWpB7FfLT88TzO6ylnZR
-         FEm0CCC2/IfzaupwDYZh6+93qJK6jLierf6+kz1qSLvzD30LYwtJV0Gh5LTyNvMbzY
-         rhR1i3G+4jrGWbsE+ktLEueEfowkRBCNpWrA9tPojffOJHU07+ephV6Rezn1y1riVJ
-         RnbY+WrtE8qAg==
+        b=cqxm+5pvyLKmOOIhg3Yf2qcSs6LzOLCk0AdaLThAazPuqAlv/7rkgnYJKLCKh5lPh
+         TafeLuqH6BV1L9+2aA9WJggi/MSB+4OKcNy3EY1XBDaJpOMI53+KQlf0Oqd30CoSar
+         qNxLfdsqbuviOOuia3MdcoPw7jfxt2uM881SjvFwZ8y2mBJPf095r/tq/D+MLXtLiz
+         D3lSQLk8C7BnHdupx0OIKbrOIKoIpnEqWknf3kaWdTVFjrkGT0kmXVcee04NLZI1ED
+         IEIFSBPkWHek0clBht8dImNMpFkoLD1gyRyi7ZC5wFTPsOr+DsMmduNR0h+ncl2wx+
+         JicaJihdKrAWg==
 Received: from te-lab16-v2 (nanobot.internal.synopsys.com [10.204.48.11])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (Client did not present a certificate)
-        by mailhost.synopsys.com (Postfix) with ESMTPSA id C0F56A006F;
-        Wed,  6 Jul 2022 23:36:15 +0000 (UTC)
-Received: by te-lab16-v2 (sSMTP sendmail emulation); Wed, 06 Jul 2022 16:36:15 -0700
-Date:   Wed, 06 Jul 2022 16:36:15 -0700
-Message-Id: <d9863f8d7065cd9d5f6923ce002a86f6ee6509a9.1657149962.git.Thinh.Nguyen@synopsys.com>
+        by mailhost.synopsys.com (Postfix) with ESMTPSA id E5DEFA0096;
+        Wed,  6 Jul 2022 23:36:21 +0000 (UTC)
+Received: by te-lab16-v2 (sSMTP sendmail emulation); Wed, 06 Jul 2022 16:36:21 -0700
+Date:   Wed, 06 Jul 2022 16:36:21 -0700
+Message-Id: <8c031f3f2ee313efc07ccf1c6ee24451e501aecc.1657149962.git.Thinh.Nguyen@synopsys.com>
 In-Reply-To: <cover.1657149962.git.Thinh.Nguyen@synopsys.com>
 References: <cover.1657149962.git.Thinh.Nguyen@synopsys.com>
 X-SNPS-Relay: synopsys.com
 From:   Thinh Nguyen <Thinh.Nguyen@synopsys.com>
-Subject: [PATCH 18/36] usb: gadget: f_tcm: Don't set static stream_id
+Subject: [PATCH 19/36] usb: gadget: f_tcm: Allocate matching number of commands to streams
 To:     Felipe Balbi <balbi@kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Thinh Nguyen <Thinh.Nguyen@synopsys.com>,
@@ -53,102 +53,315 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Host can assign stream ID value greater than number of streams
-allocated. The tcm function needs to keep track of which stream is
-available to assign the stream ID. This patch doesn't track that, but at
-least it makes sure that there's no Oops if the host send tag with a
-value greater than the number of supported streams.
+We can handle multiple commands concurently. Each command services a
+stream id. At the moment, the driver will handle 32 outstanding streams,
+which is equivalent to 32 commands. Make sure to allocate a matching
+number of commands to the number of streams.
 
 Signed-off-by: Thinh Nguyen <Thinh.Nguyen@synopsys.com>
 ---
- drivers/usb/gadget/function/f_tcm.c | 32 +++++------------------------
- 1 file changed, 5 insertions(+), 27 deletions(-)
+ drivers/usb/gadget/function/f_tcm.c | 110 ++++++++++++++--------------
+ drivers/usb/gadget/function/tcm.h   |   8 +-
+ 2 files changed, 61 insertions(+), 57 deletions(-)
 
 diff --git a/drivers/usb/gadget/function/f_tcm.c b/drivers/usb/gadget/function/f_tcm.c
-index 270ec631481d..7721216dc9bc 100644
+index 7721216dc9bc..6e0b54985932 100644
 --- a/drivers/usb/gadget/function/f_tcm.c
 +++ b/drivers/usb/gadget/function/f_tcm.c
-@@ -532,6 +532,7 @@ static int uasp_prepare_r_request(struct usbg_cmd *cmd)
- 	}
+@@ -50,7 +50,7 @@ static int bot_enqueue_cmd_cbw(struct f_uas *fu)
+ 	if (fu->flags & USBG_BOT_CMD_PEND)
+ 		return 0;
  
- 	stream->req_in->is_last = 1;
-+	stream->req_in->stream_id = cmd->tag;
- 	stream->req_in->complete = uasp_status_data_cmpl;
- 	stream->req_in->length = se_cmd->data_length;
- 	stream->req_in->context = cmd;
-@@ -556,6 +557,7 @@ static void uasp_prepare_status(struct usbg_cmd *cmd)
- 	iu->len = cpu_to_be16(se_cmd->scsi_sense_length);
- 	iu->status = se_cmd->scsi_status;
- 	stream->req_status->is_last = 1;
-+	stream->req_status->stream_id = cmd->tag;
- 	stream->req_status->context = cmd;
- 	stream->req_status->length = se_cmd->scsi_sense_length + 16;
- 	stream->req_status->buf = iu;
-@@ -786,19 +788,6 @@ static int uasp_alloc_cmd(struct f_uas *fu)
+-	ret = usb_ep_queue(fu->ep_out, fu->cmd.req, GFP_ATOMIC);
++	ret = usb_ep_queue(fu->ep_out, fu->cmd[0].req, GFP_ATOMIC);
+ 	if (!ret)
+ 		fu->flags |= USBG_BOT_CMD_PEND;
+ 	return ret;
+@@ -136,7 +136,7 @@ static void bot_send_bad_status(struct usbg_cmd *cmd)
+ 		}
+ 		req->complete = bot_err_compl;
+ 		req->context = cmd;
+-		req->buf = fu->cmd.buf;
++		req->buf = fu->cmd[0].buf;
+ 		usb_ep_queue(ep, req, GFP_KERNEL);
+ 	} else {
+ 		bot_enqueue_sense_code(fu, cmd);
+@@ -314,8 +314,8 @@ static int bot_prepare_reqs(struct f_uas *fu)
+ 	if (!fu->bot_req_out)
+ 		goto err_out;
+ 
+-	fu->cmd.req = usb_ep_alloc_request(fu->ep_out, GFP_KERNEL);
+-	if (!fu->cmd.req)
++	fu->cmd[0].req = usb_ep_alloc_request(fu->ep_out, GFP_KERNEL);
++	if (!fu->cmd[0].req)
+ 		goto err_cmd;
+ 
+ 	fu->bot_status.req = usb_ep_alloc_request(fu->ep_in, GFP_KERNEL);
+@@ -327,27 +327,27 @@ static int bot_prepare_reqs(struct f_uas *fu)
+ 	fu->bot_status.req->complete = bot_status_complete;
+ 	fu->bot_status.csw.Signature = cpu_to_le32(US_BULK_CS_SIGN);
+ 
+-	fu->cmd.buf = kmalloc(fu->ep_out->maxpacket, GFP_KERNEL);
+-	if (!fu->cmd.buf)
++	fu->cmd[0].buf = kmalloc(fu->ep_out->maxpacket, GFP_KERNEL);
++	if (!fu->cmd[0].buf)
+ 		goto err_buf;
+ 
+-	fu->cmd.req->complete = bot_cmd_complete;
+-	fu->cmd.req->buf = fu->cmd.buf;
+-	fu->cmd.req->length = fu->ep_out->maxpacket;
+-	fu->cmd.req->context = fu;
++	fu->cmd[0].req->complete = bot_cmd_complete;
++	fu->cmd[0].req->buf = fu->cmd[0].buf;
++	fu->cmd[0].req->length = fu->ep_out->maxpacket;
++	fu->cmd[0].req->context = fu;
+ 
+ 	ret = bot_enqueue_cmd_cbw(fu);
+ 	if (ret)
+ 		goto err_queue;
+ 	return 0;
+ err_queue:
+-	kfree(fu->cmd.buf);
+-	fu->cmd.buf = NULL;
++	kfree(fu->cmd[0].buf);
++	fu->cmd[0].buf = NULL;
+ err_buf:
+ 	usb_ep_free_request(fu->ep_in, fu->bot_status.req);
+ err_sts:
+-	usb_ep_free_request(fu->ep_out, fu->cmd.req);
+-	fu->cmd.req = NULL;
++	usb_ep_free_request(fu->ep_out, fu->cmd[0].req);
++	fu->cmd[0].req = NULL;
+ err_cmd:
+ 	usb_ep_free_request(fu->ep_out, fu->bot_req_out);
+ 	fu->bot_req_out = NULL;
+@@ -372,16 +372,16 @@ static void bot_cleanup_old_alt(struct f_uas *fu)
+ 
+ 	usb_ep_free_request(fu->ep_in, fu->bot_req_in);
+ 	usb_ep_free_request(fu->ep_out, fu->bot_req_out);
+-	usb_ep_free_request(fu->ep_out, fu->cmd.req);
++	usb_ep_free_request(fu->ep_out, fu->cmd[0].req);
+ 	usb_ep_free_request(fu->ep_in, fu->bot_status.req);
+ 
+-	kfree(fu->cmd.buf);
++	kfree(fu->cmd[0].buf);
+ 
+ 	fu->bot_req_in = NULL;
+ 	fu->bot_req_out = NULL;
+-	fu->cmd.req = NULL;
++	fu->cmd[0].req = NULL;
+ 	fu->bot_status.req = NULL;
+-	fu->cmd.buf = NULL;
++	fu->cmd[0].buf = NULL;
+ }
+ 
+ static void bot_set_alt(struct f_uas *fu)
+@@ -482,10 +482,14 @@ static void uasp_cleanup_one_stream(struct f_uas *fu, struct uas_stream *stream)
+ 
+ static void uasp_free_cmdreq(struct f_uas *fu)
+ {
+-	usb_ep_free_request(fu->ep_cmd, fu->cmd.req);
+-	kfree(fu->cmd.buf);
+-	fu->cmd.req = NULL;
+-	fu->cmd.buf = NULL;
++	int i;
++
++	for (i = 0; i < USBG_NUM_CMDS; i++) {
++		usb_ep_free_request(fu->ep_cmd, fu->cmd[i].req);
++		kfree(fu->cmd[i].buf);
++		fu->cmd[i].req = NULL;
++		fu->cmd[i].buf = NULL;
++	}
+ }
+ 
+ static void uasp_cleanup_old_alt(struct f_uas *fu)
+@@ -500,7 +504,7 @@ static void uasp_cleanup_old_alt(struct f_uas *fu)
+ 	usb_ep_disable(fu->ep_status);
+ 	usb_ep_disable(fu->ep_cmd);
+ 
+-	for (i = 0; i < UASP_SS_EP_COMP_NUM_STREAMS; i++)
++	for (i = 0; i < USBG_NUM_CMDS; i++)
+ 		uasp_cleanup_one_stream(fu, &fu->stream[i]);
+ 	uasp_free_cmdreq(fu);
+ }
+@@ -603,7 +607,8 @@ static void uasp_status_data_cmpl(struct usb_ep *ep, struct usb_request *req)
+ 
+ 	case UASP_QUEUE_COMMAND:
+ 		transport_generic_free_cmd(&cmd->se_cmd, 0);
+-		usb_ep_queue(fu->ep_cmd, fu->cmd.req, GFP_ATOMIC);
++		usb_ep_queue(fu->ep_cmd, cmd->req, GFP_ATOMIC);
++
+ 		break;
+ 
+ 	default:
+@@ -718,7 +723,7 @@ static int uasp_send_write_request(struct usbg_cmd *cmd)
+ 	return ret;
+ }
+ 
+-static int usbg_submit_command(struct f_uas *, void *, unsigned int);
++static int usbg_submit_command(struct f_uas *, struct usb_request *);
+ 
+ static void uasp_cmd_complete(struct usb_ep *ep, struct usb_request *req)
+ {
+@@ -728,7 +733,7 @@ static void uasp_cmd_complete(struct usb_ep *ep, struct usb_request *req)
+ 	if (req->status < 0)
+ 		return;
+ 
+-	ret = usbg_submit_command(fu, req->buf, req->actual);
++	ret = usbg_submit_command(fu, req);
+ 	/*
+ 	 * Once we tune for performance enqueue the command req here again so
+ 	 * we can receive a second command while we processing this one. Pay
+@@ -737,7 +742,7 @@ static void uasp_cmd_complete(struct usb_ep *ep, struct usb_request *req)
+ 	 */
+ 	if (!ret)
+ 		return;
+-	usb_ep_queue(fu->ep_cmd, fu->cmd.req, GFP_ATOMIC);
++	usb_ep_queue(fu->ep_cmd, req, GFP_ATOMIC);
+ }
+ 
+ static int uasp_alloc_stream_res(struct f_uas *fu, struct uas_stream *stream)
+@@ -766,24 +771,24 @@ static int uasp_alloc_stream_res(struct f_uas *fu, struct uas_stream *stream)
  	return -ENOMEM;
  }
  
--static void uasp_setup_stream_res(struct f_uas *fu, int max_streams)
--{
--	int i;
--
--	for (i = 0; i < max_streams; i++) {
--		struct uas_stream *s = &fu->stream[i];
--
--		s->req_in->stream_id = i + 1;
--		s->req_out->stream_id = i + 1;
--		s->req_status->stream_id = i + 1;
--	}
--}
--
- static int uasp_prepare_reqs(struct f_uas *fu)
+-static int uasp_alloc_cmd(struct f_uas *fu)
++static int uasp_alloc_cmd(struct f_uas *fu, int i)
+ {
+-	fu->cmd.req = usb_ep_alloc_request(fu->ep_cmd, GFP_KERNEL);
+-	if (!fu->cmd.req)
++	fu->cmd[i].req = usb_ep_alloc_request(fu->ep_cmd, GFP_KERNEL);
++	if (!fu->cmd[i].req)
+ 		goto err;
+ 
+-	fu->cmd.buf = kmalloc(fu->ep_cmd->maxpacket, GFP_KERNEL);
+-	if (!fu->cmd.buf)
++	fu->cmd[i].buf = kmalloc(fu->ep_cmd->maxpacket, GFP_KERNEL);
++	if (!fu->cmd[i].buf)
+ 		goto err_buf;
+ 
+-	fu->cmd.req->complete = uasp_cmd_complete;
+-	fu->cmd.req->buf = fu->cmd.buf;
+-	fu->cmd.req->length = fu->ep_cmd->maxpacket;
+-	fu->cmd.req->context = fu;
++	fu->cmd[i].req->complete = uasp_cmd_complete;
++	fu->cmd[i].req->buf = fu->cmd[i].buf;
++	fu->cmd[i].req->length = fu->ep_cmd->maxpacket;
++	fu->cmd[i].req->context = fu;
+ 	return 0;
+ 
+ err_buf:
+-	usb_ep_free_request(fu->ep_cmd, fu->cmd.req);
++	usb_ep_free_request(fu->ep_cmd, fu->cmd[i].req);
+ err:
+ 	return -ENOMEM;
+ }
+@@ -792,26 +797,22 @@ static int uasp_prepare_reqs(struct f_uas *fu)
  {
  	int ret;
-@@ -819,7 +808,6 @@ static int uasp_prepare_reqs(struct f_uas *fu)
- 	ret = uasp_alloc_cmd(fu);
- 	if (ret)
- 		goto err_free_stream;
--	uasp_setup_stream_res(fu, max_streams);
+ 	int i;
+-	int max_streams;
+-
+-	if (fu->flags & USBG_USE_STREAMS)
+-		max_streams = UASP_SS_EP_COMP_NUM_STREAMS;
+-	else
+-		max_streams = 1;
  
- 	ret = usb_ep_queue(fu->ep_cmd, fu->cmd.req, GFP_ATOMIC);
- 	if (ret)
-@@ -995,6 +983,7 @@ static int usbg_prepare_w_request(struct usbg_cmd *cmd, struct usb_request *req)
+-	for (i = 0; i < max_streams; i++) {
++	for (i = 0; i < USBG_NUM_CMDS; i++) {
+ 		ret = uasp_alloc_stream_res(fu, &fu->stream[i]);
+ 		if (ret)
+ 			goto err_cleanup;
  	}
  
- 	req->is_last = 1;
-+	req->stream_id = cmd->tag;
- 	req->complete = usbg_data_write_cmpl;
- 	req->length = se_cmd->data_length;
- 	req->context = cmd;
-@@ -1125,16 +1114,8 @@ static int usbg_submit_command(struct f_uas *fu,
+-	ret = uasp_alloc_cmd(fu);
+-	if (ret)
+-		goto err_free_stream;
++	for (i = 0; i < USBG_NUM_CMDS; i++) {
++		ret = uasp_alloc_cmd(fu, i);
++		if (ret)
++			goto err_free_stream;
+ 
+-	ret = usb_ep_queue(fu->ep_cmd, fu->cmd.req, GFP_ATOMIC);
+-	if (ret)
+-		goto err_free_stream;
++		ret = usb_ep_queue(fu->ep_cmd, fu->cmd[i].req, GFP_ATOMIC);
++		if (ret)
++			goto err_free_stream;
++	}
+ 
+ 	return 0;
+ 
+@@ -1081,10 +1082,9 @@ static struct usbg_cmd *usbg_get_cmd(struct f_uas *fu,
+ 
+ static void usbg_release_cmd(struct se_cmd *);
+ 
+-static int usbg_submit_command(struct f_uas *fu,
+-		void *cmdbuf, unsigned int len)
++static int usbg_submit_command(struct f_uas *fu, struct usb_request *req)
+ {
+-	struct command_iu *cmd_iu = cmdbuf;
++	struct command_iu *cmd_iu = req->buf;
+ 	struct usbg_cmd *cmd;
+ 	struct usbg_tpg *tpg = fu->tpg;
+ 	struct tcm_usbg_nexus *tv_nexus;
+@@ -1114,8 +1114,7 @@ static int usbg_submit_command(struct f_uas *fu,
  	}
  	memcpy(cmd->cmd_buf, cmd_iu->cdb, cmd_len);
  
--	if (fu->flags & USBG_USE_STREAMS) {
--		if (cmd->tag > UASP_SS_EP_COMP_NUM_STREAMS)
--			goto err;
--		if (!cmd->tag)
--			cmd->stream = &fu->stream[0];
--		else
--			cmd->stream = &fu->stream[cmd->tag - 1];
--	} else {
--		cmd->stream = &fu->stream[0];
--	}
-+	cmd->stream = &fu->stream[cmd->tag %
-+		UASP_SS_EP_COMP_NUM_STREAMS];
+-	cmd->stream = &fu->stream[cmd->tag %
+-		UASP_SS_EP_COMP_NUM_STREAMS];
++	cmd->stream = &fu->stream[cmd->tag % USBG_NUM_CMDS];
  
  	switch (cmd_iu->prio_attr & 0x7) {
  	case UAS_HEAD_TAG:
-@@ -1161,9 +1142,6 @@ static int usbg_submit_command(struct f_uas *fu,
+@@ -1137,6 +1136,7 @@ static int usbg_submit_command(struct f_uas *fu,
+ 	}
+ 
+ 	cmd->unpacked_lun = scsilun_to_int(&cmd_iu->lun);
++	cmd->req = req;
+ 
+ 	INIT_WORK(&cmd->work, usbg_cmd_work);
  	queue_work(tpg->workqueue, &cmd->work);
+diff --git a/drivers/usb/gadget/function/tcm.h b/drivers/usb/gadget/function/tcm.h
+index 6cb05dcd19ff..bcbe35bb5015 100644
+--- a/drivers/usb/gadget/function/tcm.h
++++ b/drivers/usb/gadget/function/tcm.h
+@@ -16,6 +16,8 @@
+ #define UASP_SS_EP_COMP_LOG_STREAMS 5
+ #define UASP_SS_EP_COMP_NUM_STREAMS (1 << UASP_SS_EP_COMP_LOG_STREAMS)
  
- 	return 0;
--err:
--	usbg_release_cmd(&cmd->se_cmd);
--	return -EINVAL;
- }
++#define USBG_NUM_CMDS		UASP_SS_EP_COMP_NUM_STREAMS
++
+ enum {
+ 	USB_G_STR_INT_UAS = 0,
+ 	USB_G_STR_INT_BBB,
+@@ -75,6 +77,8 @@ struct usbg_cmd {
+ 	struct completion write_complete;
+ 	struct kref ref;
  
- static void bot_cmd_work(struct work_struct *work)
++	struct usb_request *req;
++
+ 	/* UAS only */
+ 	u16 tag;
+ 	u16 prio_attr;
+@@ -117,14 +121,14 @@ struct f_uas {
+ #define USBG_IS_BOT		(1 << 3)
+ #define USBG_BOT_CMD_PEND	(1 << 4)
+ 
+-	struct usbg_cdb		cmd;
++	struct usbg_cdb		cmd[USBG_NUM_CMDS];
+ 	struct usb_ep		*ep_in;
+ 	struct usb_ep		*ep_out;
+ 
+ 	/* UAS */
+ 	struct usb_ep		*ep_status;
+ 	struct usb_ep		*ep_cmd;
+-	struct uas_stream	stream[UASP_SS_EP_COMP_NUM_STREAMS];
++	struct uas_stream	stream[USBG_NUM_CMDS];
+ 
+ 	/* BOT */
+ 	struct bot_status	bot_status;
 -- 
 2.28.0
 
