@@ -2,95 +2,87 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 881C2C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Jul 2022 13:58:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19225CCA485
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Jul 2022 14:29:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233595AbiGFN56 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Jul 2022 09:57:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55396 "EHLO
+        id S233112AbiGFO3V (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Jul 2022 10:29:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52080 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232833AbiGFN54 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2022 09:57:56 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17DE017A90;
-        Wed,  6 Jul 2022 06:57:54 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 8B0FE2262B;
-        Wed,  6 Jul 2022 13:57:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1657115873; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=kiUjfUaxXUHtTpdwighgqJkP8dPW871+3s1BnMx2Ltw=;
-        b=yvPvbIuuxtdk2ZX8Q8tSoKYC5cW9dKB+5Zw1LzSQH7197bMhDdli0CWLiflL03yBVSxu31
-        3GMcXYJKFvhvNqtUy2cQiQ4XZHsfkN6pzZ7I3g+QRQgLeWpktmJqk3iii4LCOU5lITaQ9i
-        sL2Y/gJxVd14DsEMqswdcEn7ilbN6V4=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1657115873;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=kiUjfUaxXUHtTpdwighgqJkP8dPW871+3s1BnMx2Ltw=;
-        b=DrSRj0EvDTIpUIt/FJqzoaO8ehUFDCc6m4Kks/eb8UIsdpsS4gF3k4Myi2JAHEtoQp9hzo
-        OUxLU3k8ElQq8jAg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 5F0F213A7D;
-        Wed,  6 Jul 2022 13:57:53 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id RZFGFuGUxWKNOAAAMHmgww
-        (envelope-from <hare@suse.de>); Wed, 06 Jul 2022 13:57:53 +0000
-Message-ID: <18d78bd6-2150-f771-9a6e-2b972d2e1192@suse.de>
-Date:   Wed, 6 Jul 2022 15:57:52 +0200
+        with ESMTP id S233494AbiGFO3U (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2022 10:29:20 -0400
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id D7DD72658;
+        Wed,  6 Jul 2022 07:29:19 -0700 (PDT)
+Received: from [192.168.1.87] (unknown [122.171.17.200])
+        by linux.microsoft.com (Postfix) with ESMTPSA id 8CB0920DDC9F;
+        Wed,  6 Jul 2022 07:29:16 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 8CB0920DDC9F
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+        s=default; t=1657117759;
+        bh=PFSLHpgWMBD62kPT/Dh5GcD1zjQveXoTA7H8jWtS0Rg=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=jVZr9LrBR+IQGvZ5v0LFYRVWxc1CeuB0lMfFdHnt8C13yOgKFb1e72XpViMLqryKn
+         p/V7BnBEwX7D8eTdxSh5EbmPxRA2LHEWM9N6nRP1Tl3YSgTpuU8FJ8lAGmzUGTKruO
+         S+gW/SgtBRBLdxC7zGczPfmLf1iEG6MZSnaCQhtQ=
+Message-ID: <1c4bc0cf-6665-3fe6-28d8-8e9613e3f9d4@linux.microsoft.com>
+Date:   Wed, 6 Jul 2022 19:59:09 +0530
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.0
-Subject: Re: [PATCH v3 6/6] blk-mq: Drop local variable for reserved tag
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+Subject: Re: [PATCH] scsi: storvsc: Prevent running tasklet for long
 Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>, axboe@kernel.dk,
-        damien.lemoal@opensource.wdc.com, bvanassche@acm.org, hch@lst.de,
-        jejb@linux.ibm.com, martin.petersen@oracle.com, satishkh@cisco.com,
-        sebaddel@cisco.com, kartilak@cisco.com
-Cc:     linux-doc@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        mpi3mr-linuxdrv.pdl@broadcom.com, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, nbd@other.debian.org
-References: <1657109034-206040-1-git-send-email-john.garry@huawei.com>
- <1657109034-206040-7-git-send-email-john.garry@huawei.com>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <1657109034-206040-7-git-send-email-john.garry@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+To:     Saurabh Singh Sengar <ssengar@linux.microsoft.com>
+Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        wei.liu@kernel.org, decui@microsoft.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-hyperv@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ssengar@microsoft.com, mikelley@microsoft.com
+References: <1657035141-2132-1-git-send-email-ssengar@linux.microsoft.com>
+ <b4fea161-41c5-a03e-747b-316c74eb986c@linux.microsoft.com>
+ <20220706095358.GA3320@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
+From:   Praveen Kumar <kumarpraveen@linux.microsoft.com>
+In-Reply-To: <20220706095358.GA3320@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/6/22 14:03, John Garry wrote:
-> The local variable is now only referenced once so drop it.
+On 06-07-2022 15:23, Saurabh Singh Sengar wrote:
+> On Wed, Jul 06, 2022 at 02:44:42PM +0530, Praveen Kumar wrote:
+>> On 05-07-2022 21:02, Saurabh Sengar wrote:
+>>> There can be scenarios where packets in ring buffer are continuously
+>>> getting queued from upper layer and dequeued from storvsc interrupt
+>>> handler, such scenarios can hold the foreach_vmbus_pkt loop (which is
+>>> executing as a tasklet) for a long duration. Theoretically its possible
+>>> that this loop executes forever. Add a condition to limit execution of
+>>> this tasklet for finite amount of time to avoid such hazardous scenarios.
+>>>
+>>> Signed-off-by: Saurabh Sengar <ssengar@linux.microsoft.com>
+>>> ---
+>>>  drivers/scsi/storvsc_drv.c | 7 +++++++
+>>>  1 file changed, 7 insertions(+)
+>>>
+>>> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+>>> index fe000da..0c428cb 100644
+>>> --- a/drivers/scsi/storvsc_drv.c
+>>> +++ b/drivers/scsi/storvsc_drv.c
+>>> @@ -60,6 +60,9 @@
+>>>  #define VMSTOR_PROTO_VERSION_WIN8_1	VMSTOR_PROTO_VERSION(6, 0)
+>>>  #define VMSTOR_PROTO_VERSION_WIN10	VMSTOR_PROTO_VERSION(6, 2)
+>>>  
+>>> +/* channel callback timeout in ms */
+>>> +#define CALLBACK_TIMEOUT		5
+>>
+>> If I may, it would be good if we have the CALLBACK_TIMEOUT configurable based upon user's requirement with default value to '5'.
+>> I assume, this value '5' fits best to the use-case which we are trying to resolve here. Thanks.
 > 
-> Signed-off-by: John Garry <john.garry@huawei.com>
-> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-> ---
->   block/blk-mq-tag.c | 6 ++----
->   1 file changed, 2 insertions(+), 4 deletions(-)
+> Agree, how about adding a sysfs entry for this parameter
 > 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Cheers,
+Sounds good to me. Thanks.
 
-Hannes
--- 
-Dr. Hannes Reinecke		           Kernel Storage Architect
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
+Regards,
+
+~Praveen.
