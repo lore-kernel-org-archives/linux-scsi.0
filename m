@@ -2,91 +2,57 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92AF6C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Jul 2022 13:40:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87769CCA473
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Jul 2022 13:44:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231979AbiGFNkv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Jul 2022 09:40:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40230 "EHLO
+        id S233033AbiGFNox (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Jul 2022 09:44:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44766 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229757AbiGFNku (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2022 09:40:50 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BCE652317C;
-        Wed,  6 Jul 2022 06:40:48 -0700 (PDT)
-Received: from fraeml735-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LdLG35gX0z689K5;
-        Wed,  6 Jul 2022 21:38:03 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml735-chm.china.huawei.com (10.206.15.216) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Wed, 6 Jul 2022 15:40:46 +0200
-Received: from [10.126.171.66] (10.126.171.66) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Wed, 6 Jul 2022 14:40:45 +0100
-Message-ID: <b5f80062-e8ef-9597-1b0c-393140950dfb@huawei.com>
-Date:   Wed, 6 Jul 2022 14:40:44 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
+        with ESMTP id S229757AbiGFNow (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2022 09:44:52 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0DA8DEF2;
+        Wed,  6 Jul 2022 06:44:51 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 81CAF68AA6; Wed,  6 Jul 2022 15:44:47 +0200 (CEST)
+Date:   Wed, 6 Jul 2022 15:44:47 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     John Garry <john.garry@huawei.com>
+Cc:     damien.lemoal@opensource.wdc.com, joro@8bytes.org, will@kernel.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, hch@lst.de,
+        m.szyprowski@samsung.com, robin.murphy@arm.com,
+        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, iommu@lists.linux-foundation.org,
+        iommu@lists.linux.dev, linux-scsi@vger.kernel.org,
+        linuxarm@huawei.com
 Subject: Re: [PATCH v5 0/5] DMA mapping changes for SCSI core
-To:     <damien.lemoal@opensource.wdc.com>, <joro@8bytes.org>,
-        <will@kernel.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <hch@lst.de>,
-        <m.szyprowski@samsung.com>, <robin.murphy@arm.com>
-CC:     <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-ide@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
-        <iommu@lists.linux.dev>, <linux-scsi@vger.kernel.org>,
-        <linuxarm@huawei.com>
-References: <1656590892-42307-1-git-send-email-john.garry@huawei.com>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <1656590892-42307-1-git-send-email-john.garry@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.126.171.66]
-X-ClientProxiedBy: lhreml732-chm.china.huawei.com (10.201.108.83) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Message-ID: <20220706134447.GA23753@lst.de>
+References: <1656590892-42307-1-git-send-email-john.garry@huawei.com> <b5f80062-e8ef-9597-1b0c-393140950dfb@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <b5f80062-e8ef-9597-1b0c-393140950dfb@huawei.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 30/06/2022 13:08, John Garry wrote:
+On Wed, Jul 06, 2022 at 02:40:44PM +0100, John Garry wrote:
+> On 30/06/2022 13:08, John Garry wrote:
+>
+> Hi Christoph,
+>
+> Can you please consider picking up this series? A few things to note 
+> beforehand:
+>
+> - I changed to only apply the mapping limit to SAS hosts in this version. I 
+> would need a fresh ack from Martin for those SCSI parts, but wanted to make 
+> sure you were ok with it.
 
-Hi Christoph,
+Yes, I've mostly been waiting for an ACK from Martin.
 
-Can you please consider picking up this series? A few things to note 
-beforehand:
+> - Damien had some doubt on updating the shost max_sectors as opposed to the 
+> per-request queue default, but I think he's ok with it - see patch 4/5
 
-- I changed to only apply the mapping limit to SAS hosts in this 
-version. I would need a fresh ack from Martin for those SCSI parts, but 
-wanted to make sure you were ok with it.
-- Damien had some doubt on updating the shost max_sectors as opposed to 
-the per-request queue default, but I think he's ok with it - see patch 4/5
-
-Thanks,
-John
-
-
-> As reported in [0], DMA mappings whose size exceeds the IOMMU IOVA caching
-> limit may see a big performance hit.
-> 
-> This series introduces a new DMA mapping API, dma_opt_mapping_size(), so
-> that drivers may know this limit when performance is a factor in the
-> mapping.
-> 
-> The SCSI SAS transport code is modified only to use this limit. For now I
-> did not want to touch other hosts as I have a concern that this change
-> could cause a performance regression.
-> 
-> I also added a patch for libata-scsi as it does not currently honour the
-> shost max_sectors limit.
-> 
-> [0]https://lore.kernel.org/linux-iommu/20210129092120.1482-1-thunder.leizhen@huawei.com/
-> 
-> Changes since v4:
-> - tweak libata and other patch titles
-> - Add Robin's tag (thanks!)
-> - Clarify description of new DMA mapping API
-
+I'm fine either way.
