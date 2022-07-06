@@ -2,93 +2,132 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C90BC43334
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Jul 2022 18:11:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBD60C43334
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Jul 2022 23:34:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233399AbiGFSLd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Jul 2022 14:11:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54276 "EHLO
+        id S234048AbiGFXeb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Jul 2022 19:34:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45154 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233289AbiGFSLc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2022 14:11:32 -0400
-Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB5F629808;
-        Wed,  6 Jul 2022 11:11:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1657131091; x=1688667091;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=0zWzCdVc4rRVUioOFiMduDaq3HrqzT/oA494L3FgPAA=;
-  b=M5YmG2ziK6V3KL6QYP2iBCjAIJ13qmxfcwc7BoJu1CO33pXBaYMSFKhV
-   MC7QRFbvbJZto7lU4/dwlXnE7Tr/qSye8UbKHtBwxh9Soej7A0uCFHdFj
-   jphGPk0L0VPpyIOuw0oxldTVWnHEFa6vbBu5VgwvCzZmm6MtvMVzIPgxy
-   5H15fIV71+DwGGrLfTKm+2HZTv4ZPrryqEErgKsa5+bmUKvUm89Z2oLZu
-   m0Cr60pi7pvFc95SuUXFMuktvq3CJpAz2+OgD5VpikAfcIV07G5zu9sEZ
-   e+mcwJgX1MJ1+GykuuPJX7JM56Ge4tsirw7DAEOPTA9J/wm41UJ4/2VNn
-   w==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10400"; a="281381358"
-X-IronPort-AV: E=Sophos;i="5.92,250,1650956400"; 
-   d="scan'208";a="281381358"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jul 2022 11:11:31 -0700
-X-IronPort-AV: E=Sophos;i="5.92,250,1650956400"; 
-   d="scan'208";a="620436130"
-Received: from ahunter6-mobl1.ger.corp.intel.com (HELO [10.0.2.15]) ([10.252.34.11])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jul 2022 11:11:28 -0700
-Message-ID: <51f6d094-22b8-ddca-4851-f07a7749af0a@intel.com>
-Date:   Wed, 6 Jul 2022 21:11:25 +0300
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Firefox/91.0 Thunderbird/91.9.1
-Subject: Re: [PATCH v2] scsi: ufs: ufs-pci: Enable WriteBooster capability on
- ADL
-Content-Language: en-US
-To:     Daniil Lunev <dlunev@chromium.org>
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Bean Huo <beanhuo@micron.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        with ESMTP id S233930AbiGFXea (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2022 19:34:30 -0400
+Received: from smtprelay-out1.synopsys.com (smtprelay-out1.synopsys.com [149.117.73.133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C7E72C661;
+        Wed,  6 Jul 2022 16:34:27 -0700 (PDT)
+Received: from mailhost.synopsys.com (sv1-mailhost1.synopsys.com [10.205.2.131])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
+        (Client CN "mailhost.synopsys.com", Issuer "SNPSica2" (verified OK))
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 34CCF4077F;
+        Wed,  6 Jul 2022 23:34:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
+        t=1657150467; bh=vR3gXJ31+j6pKaj/PWa3xpLpSdecusUouURxFMx5HgE=;
+        h=Date:From:Subject:To:Cc:From;
+        b=Dax/3zvidSsR0w8GT5pTviAtgfYo8T/xJzhzuorB2tucyqVhG5K3PNZlTuNk5xf/Z
+         9WjKhZod084/1ezxjGginCrn0gslEJiWW401jnevOoKKG1WAvLWhKdgeUidttk2JV6
+         SE3VJS3BFhHUI9n6ei53bCyFKUh0RXa5yI++4/KgESSkxVradL8dY6xLMJhS7Hb3eS
+         EDffRpxmWT+MruSSWSVxqmM9unqhpLd2tk/Fgd/R+prudiomIJadChbXu9I6bLxSZf
+         V3Som0SrPvruACPQoNpsWiTSXz8uR6fyAMkvRhRYM2gASAYZCPpllcpOus3F5qrKhp
+         gEz/GY7/wIsoQ==
+Received: from te-lab16-v2 (nanobot.internal.synopsys.com [10.204.48.11])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (Client did not present a certificate)
+        by mailhost.synopsys.com (Postfix) with ESMTPSA id 51BD4A0063;
+        Wed,  6 Jul 2022 23:34:20 +0000 (UTC)
+Received: by te-lab16-v2 (sSMTP sendmail emulation); Wed, 06 Jul 2022 16:34:20 -0700
+Date:   Wed, 06 Jul 2022 16:34:20 -0700
+Message-Id: <cover.1657149962.git.Thinh.Nguyen@synopsys.com>
+X-SNPS-Relay: synopsys.com
+From:   Thinh Nguyen <Thinh.Nguyen@synopsys.com>
+Subject: [PATCH 00/36] usb: gadget: f_tcm: Enhance UASP driver
+To:     Felipe Balbi <balbi@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Thinh Nguyen <Thinh.Nguyen@synopsys.com>,
+        linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org,
+        Dmitry Bogdanov <d.bogdanov@yadro.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        Nicholas Bellinger <nab@linux-iscsi.org>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <20220705165316.v2.1.Ib5ebec952d9a59f5c69c89b694777f517d22466d@changeid>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-In-Reply-To: <20220705165316.v2.1.Ib5ebec952d9a59f5c69c89b694777f517d22466d@changeid>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
+Cc:     John Youn <John.Youn@synopsys.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Andrzej Pietrasiewicz <andrzej.p@samsung.com>,
+        Christoph Hellwig <hch@lst.de>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/07/22 09:53, Daniil Lunev wrote:
-> Sets the WriteBooster capability flag when ADL's UFS controller is used.
-> 
-> Signed-off-by: Daniil Lunev <dlunev@chromium.org>
+The Linux UASP gadget driver is incomplete and remained broken for a long time.
+It was not implemented for performance either. This series adds some of the
+required features for the UASP driver to work. It also makes some fixes to the
+target core.
 
-Acked-by: Adrian Hunter <adrian.hunter@intel.com>
+Please note that the f_tcm is far from a good state. It needs better error
+recovery, error reports, more cleanup, and the ability to handle various
+required commands.
 
-> 
-> ---
-> 
-> Changes in v2:
-> - Fixed typo in commit message
-> 
->  drivers/scsi/ufs/ufshcd-pci.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
-> index e892b9feffb11..fb7285a756969 100644
-> --- a/drivers/scsi/ufs/ufshcd-pci.c
-> +++ b/drivers/scsi/ufs/ufshcd-pci.c
-> @@ -425,6 +425,7 @@ static int ufs_intel_adl_init(struct ufs_hba *hba)
->  {
->  	hba->nop_out_timeout = 200;
->  	hba->quirks |= UFSHCD_QUIRK_BROKEN_AUTO_HIBERN8;
-> +	hba->caps |= UFSHCD_CAP_WB_EN;
->  	return ufs_intel_common_init(hba);
->  }
->  
+Also please note that I try to juggle between checkpatch warnings and code
+style consistency. As a result, there maybe some minor checkpatch warnings.
+
+Hopefully this can help jumpstart the UASP driver. Please test it out.
+
+This was tested against UASP CV and DWC_usb3x controller.
+
+Thanks!
+
+
+Thinh Nguyen (36):
+  target: Handle MI_REPORT_SUPPORTED_OPERATION_CODES
+  target: Add overlapped response to tmrsp_table
+  target: Don't drain empty list
+  target: Does tmr notify on aborted command
+  target: Don't remove command too early
+  target: Return Function Complete
+  target: Don't do tmr_notify on empty aborted list
+  target: Refactor core_tmr_abort_task
+  target: Add common Task Management values
+  target: Implement TMR_ABORT_TASK_SET
+  target: Properly set Sense Data Length of CHECK CONDITION
+  target: Properly set Sense data length when copy sense
+  target: Don't respond TMR_LUN_DOES_NOT_EXIST for all TMR failure
+  target: Introduce target_submit_tmr_fail_response
+  target: Include INQUIRY length
+  usb: gadget: f_tcm: Increase stream count
+  usb: gadget: f_tcm: Increase bMaxBurst
+  usb: gadget: f_tcm: Don't set static stream_id
+  usb: gadget: f_tcm: Allocate matching number of commands to streams
+  usb: gadget: f_tcm: Limit number of sessions
+  usb: gadget: f_tcm: Handle multiple commands in parallel
+  usb: gadget: f_tcm: Use extra number of commands
+  usb: gadget: f_tcm: Return ATA cmd direction
+  usb: gadget: f_tcm: Execute command on write completion
+  usb: gadget: f_tcm: Minor cleanup redundant code
+  usb: gadget: f_tcm: Don't free command immediately
+  usb: gadget: f_tcm: Translate error to sense
+  usb: gadget: f_tcm: Cleanup unused variable
+  usb: gadget: f_tcm: Update state on data write
+  usb: gadget: f_tcm: Handle abort command
+  usb: gadget: f_tcm: Cleanup requests on ep disable
+  usb: gadget: f_tcm: Send sense reason
+  usb: gadget: f_tcm: Save CPU ID per command
+  usb: gadget: f_tcm: Free tags earlier
+  usb: gadget: f_tcm: Handle TASK_MANAGEMENT commands
+  usb: gadget: f_tcm: Comply with UAS Task Management requirement
+
+ drivers/target/target_core_alua.c      |  66 ++++
+ drivers/target/target_core_alua.h      |   2 +
+ drivers/target/target_core_spc.c       |  16 +-
+ drivers/target/target_core_tmr.c       |  39 +-
+ drivers/target/target_core_transport.c |  73 +++-
+ drivers/usb/gadget/function/f_tcm.c    | 502 ++++++++++++++++++-------
+ drivers/usb/gadget/function/tcm.h      |  20 +-
+ include/target/target_core_base.h      |   9 +-
+ include/target/target_core_fabric.h    |   3 +
+ 9 files changed, 562 insertions(+), 168 deletions(-)
+
+
+base-commit: 90557fa89d3e99286506593fd5180f699c41b152
+-- 
+2.28.0
 
