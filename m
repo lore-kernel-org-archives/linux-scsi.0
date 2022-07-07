@@ -2,104 +2,149 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 000B6C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jul 2022 13:40:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46C0ECCA487
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jul 2022 14:03:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235831AbiGGNkc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Jul 2022 09:40:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34034 "EHLO
+        id S235701AbiGGODH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Jul 2022 10:03:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59556 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235577AbiGGNk3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jul 2022 09:40:29 -0400
-Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD6432870C;
-        Thu,  7 Jul 2022 06:40:28 -0700 (PDT)
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 53B784127A;
-        Thu,  7 Jul 2022 13:40:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        in-reply-to:content-disposition:content-type:content-type
-        :mime-version:references:message-id:subject:subject:from:from
-        :date:date:received:received:received:received; s=mta-01; t=
-        1657201226; x=1659015627; bh=l+ZCvWqqdWG5+QB5dYesLdnfInnK5ws/Bwk
-        DJG/Scd4=; b=Nv2B7Ran7fRG+/Dew1MdOpxm2mYrwKx8cR7HoMAyBqigoQugnKA
-        wyrsHRQnK2tPhGzpdOknqoKVKCBN3EYt/nXrNaSvst1zg985XlhZXpqtFAMDWwVQ
-        mkYo075tTB0QYz/fXerJPzAjJpUiBB63BVEid3hR7Ksbw63S0n753ECE=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id quE-4-1Nrszy; Thu,  7 Jul 2022 16:40:26 +0300 (MSK)
-Received: from T-EXCH-01.corp.yadro.com (t-exch-01.corp.yadro.com [172.17.10.101])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 65E9241273;
-        Thu,  7 Jul 2022 16:40:25 +0300 (MSK)
-Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
- T-EXCH-01.corp.yadro.com (172.17.10.101) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
- 15.1.669.32; Thu, 7 Jul 2022 16:40:25 +0300
-Received: from yadro.com (10.178.114.42) by T-EXCH-08.corp.yadro.com
- (172.17.11.58) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1118.9; Thu, 7 Jul 2022
- 16:40:24 +0300
-Date:   Thu, 7 Jul 2022 16:40:24 +0300
-From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
-To:     Thinh Nguyen <Thinh.Nguyen@synopsys.com>
-CC:     <linux-scsi@vger.kernel.org>, <target-devel@vger.kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        John Youn <John.Youn@synopsys.com>,
-        Felipe Balbi <balbi@kernel.org>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        <linux-usb@vger.kernel.org>
-Subject: Re: [PATCH 08/36] target: Refactor core_tmr_abort_task
-Message-ID: <20220707134024.GF23838@yadro.com>
-References: <cover.1657149962.git.Thinh.Nguyen@synopsys.com>
- <5b89eee29b74fbafaa9df34ca3f6170d1cfc5728.1657149962.git.Thinh.Nguyen@synopsys.com>
+        with ESMTP id S235106AbiGGODC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jul 2022 10:03:02 -0400
+Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DB9A2408D;
+        Thu,  7 Jul 2022 07:03:01 -0700 (PDT)
+Received: by mail-pf1-x42d.google.com with SMTP id g126so5153510pfb.3;
+        Thu, 07 Jul 2022 07:03:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=afbiyF16Fd4Ewaaf3EKKCpvpR7aHAsNAQp7K3TuQXs4=;
+        b=EzpeppBfdoHkOWruUNAYNHzOi8S5lBuVkWR/uarc/O7MDVJ2qM1NUNdy3hxzZeKinw
+         1f6tPe15AftcBiSP1Sugt5jiQpAKlLcyz+gPyHgHTvK6IkiuSg6SYHkmzqBCpGaHkm3K
+         GirawtqITR+EFkG0pF8QxPm0bxzk97EH7JYJxQXFRi4d1kRfsZVOuxKRapjByLByJ3DF
+         qAVqAZfaAfJT+F8T/W2rPtPmXy6/uaYwejGaDWQ5Frl3XCXwsQlqWF67lU3BIXdseGBS
+         CTJ5pH+oR76s++4uNTCxHCZwHNyWF4xdxY3ay2k5fQlKGRbstnEbIjnAVDZkl7wMQgN9
+         oSpA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
+         :references:mime-version:content-disposition:in-reply-to;
+        bh=afbiyF16Fd4Ewaaf3EKKCpvpR7aHAsNAQp7K3TuQXs4=;
+        b=z/OhwksyOp469scWVs4PaYhNC01pXiyHvOwOAPTqy+pvH2sZnN6XRZ28vSAujPutvg
+         AQGgZhLZ6b3oc+7LSlfFt5U0/C+XJmECqeCtvLa4OnsKYoIxPft0iiHX4dtUOUVVNUB7
+         o72nh0ELJf3U9b+yyqEedzG2zEcK016yJwvgjxBOYlp6WuNXVcI+F2+gmAIiXH9GEXmI
+         e0vcR+88sWEl5sqYG3UvOQtrtLFGVXKrKxZQO0pdrK7dgKYQvLkQtqOvnIUOjXNMCnTL
+         ZOSG6KMdU1kw0QUexsBYdIFk/iqmwXqSO9SNDDktXRZnojoCdRBSKzl/F4iaHlhna0VS
+         T/iA==
+X-Gm-Message-State: AJIora+ocuIwxhLJzHhnnSu+WxjiLc3tnw/dFIKUzzDFT6j9ccAbwr5i
+        VaOjjRnKKhvxqeBmGOblA/WrVTwMxpHjaNmP
+X-Google-Smtp-Source: AGRyM1uGEg1zRLKU3mt/8yK/HfEqKFBdv1eoQpzxhqHLW6DjIp1gLh6JEsU/RWRdBfoHFypH/TfaNQ==
+X-Received: by 2002:a17:90b:4c8f:b0:1ec:cdd0:41b7 with SMTP id my15-20020a17090b4c8f00b001eccdd041b7mr5420238pjb.119.1657202580508;
+        Thu, 07 Jul 2022 07:03:00 -0700 (PDT)
+Received: from server.roeck-us.net ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
+        by smtp.gmail.com with ESMTPSA id k127-20020a632485000000b004148cbdd4e5sm1215293pgk.57.2022.07.07.07.02.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 07 Jul 2022 07:02:59 -0700 (PDT)
+Sender: Guenter Roeck <groeck7@gmail.com>
+Date:   Thu, 7 Jul 2022 07:02:58 -0700
+From:   Guenter Roeck <linux@roeck-us.net>
+To:     Greg KH <gregkh@linuxfoundation.org>
+Cc:     kernel test robot <lkp@intel.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        virtualization@lists.linux-foundation.org,
+        usbb2k-api-dev@nongnu.org, tipc-discussion@lists.sourceforge.net,
+        target-devel@vger.kernel.org, sound-open-firmware@alsa-project.org,
+        samba-technical@lists.samba.org, rds-devel@oss.oracle.com,
+        patches@opensource.cirrus.com, osmocom-net-gprs@lists.osmocom.org,
+        openipmi-developer@lists.sourceforge.net, nvdimm@lists.linux.dev,
+        ntb@lists.linux.dev, netfilter-devel@vger.kernel.org,
+        netdev@vger.kernel.org, mjpeg-users@lists.sourceforge.net,
+        megaraidlinux.pdl@broadcom.com, linuxppc-dev@lists.ozlabs.org,
+        linux1394-devel@lists.sourceforge.net, linux-x25@vger.kernel.org,
+        linux-wpan@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-watchdog@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-unionfs@vger.kernel.org, linux-tegra@vger.kernel.org,
+        linux-stm32@st-md-mailman.stormreply.com,
+        linux-staging@lists.linux.dev, linux-serial@vger.kernel.org,
+        linux-sctp@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-samsung-soc@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        linux-renesas-soc@vger.kernel.org, linux-rdma@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-phy@lists.infradead.org, linux-perf-users@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-parport@lists.infradead.org,
+        linux-parisc@vger.kernel.org, linux-omap@vger.kernel.org,
+        linux-nfc@lists.01.org, linux-mtd@lists.infradead.org,
+        linux-mmc@vger.kernel.org, linux-mm@kvack.org,
+        linux-mediatek@lists.infradead.org, linux-media@vger.kernel.org,
+        linux-leds@vger.kernel.org, linux-integrity@vger.kernel.org,
+        linux-input@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-hwmon@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-fpga@vger.kernel.org,
+        linux-fbdev@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-efi@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-cxl@vger.kernel.org, linux-crypto@vger.kernel.org,
+        linux-clk@vger.kernel.org, linux-cifs@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-bcache@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-amlogic@lists.infradead.org, linaro-mm-sig@lists.linaro.org,
+        legousb-devel@lists.sourceforge.net, kvm@vger.kernel.org,
+        keyrings@vger.kernel.org, isdn4linux@listserv.isdn4linux.de,
+        iommu@lists.linux.dev, iommu@lists.linux-foundation.org,
+        intel-wired-lan@lists.osuosl.org, greybus-dev@lists.linaro.org,
+        dri-devel@lists.freedesktop.org, dm-devel@redhat.com,
+        devicetree@vger.kernel.org, dev@openvswitch.org,
+        dccp@vger.kernel.org, damon@lists.linux.dev,
+        coreteam@netfilter.org, cgroups@vger.kernel.org,
+        ceph-devel@vger.kernel.org, ath11k@lists.infradead.org,
+        apparmor@lists.ubuntu.com, amd-gfx@lists.freedesktop.org,
+        alsa-devel@alsa-project.org,
+        accessrunner-general@lists.sourceforge.net
+Subject: Re: [linux-next:master] BUILD REGRESSION
+ 088b9c375534d905a4d337c78db3b3bfbb52c4a0
+Message-ID: <20220707140258.GA3492673@roeck-us.net>
+References: <62c683a2.g1VSVt6BrQC6ZzOz%lkp@intel.com>
+ <YsaUgfPbOg7WuBuB@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <5b89eee29b74fbafaa9df34ca3f6170d1cfc5728.1657149962.git.Thinh.Nguyen@synopsys.com>
-X-Originating-IP: [10.178.114.42]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-08.corp.yadro.com (172.17.11.58)
+In-Reply-To: <YsaUgfPbOg7WuBuB@kroah.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jul 06, 2022 at 04:35:14PM -0700, Thinh Nguyen wrote:
-> Minor refactoring of core_tmr_abort_task to avoid duplicate code. No
-> functional change here.
-Regardless that previous patch on that place is incorrect,
-this patch also breaks the statistic counters.
-dev->aborts_no_task counter is incremented on the end of the function,
-and should not be incremented for the case when command to be aborted is
-found.
+On Thu, Jul 07, 2022 at 10:08:33AM +0200, Greg KH wrote:
 
+[ ... ]
+> > 
+> > Unverified Error/Warning (likely false positive, please contact us if interested):
+> > 
+> > arch/x86/events/core.c:2114 init_hw_perf_events() warn: missing error code 'err'
+> > drivers/android/binder.c:1481:19-23: ERROR: from is NULL but dereferenced.
+> > drivers/android/binder.c:2920:29-33: ERROR: target_thread is NULL but dereferenced.
+> > drivers/android/binder.c:353:25-35: ERROR: node -> proc is NULL but dereferenced.
+> > drivers/android/binder.c:4888:16-20: ERROR: t is NULL but dereferenced.
+> > drivers/base/regmap/regmap.c:1996:1: internal compiler error: in arc_ifcvt, at config/arc/arc.c:9637
+> > drivers/char/random.c:869:1: internal compiler error: in arc_ifcvt, at config/arc/arc.c:9637
+> > drivers/firmware/arm_scmi/clock.c:394:1: internal compiler error: in arc_ifcvt, at config/arc/arc.c:9637
+> > drivers/firmware/arm_scmi/powercap.c:376:1: internal compiler error: in arc_ifcvt, at config/arc/arc.c:9637
+> > drivers/gpu/drm/amd/amdgpu/../pm/powerplay/hwmgr/vega10_powertune.c:1214:1: internal compiler error: in arc_ifcvt, at config/arc/arc.c:9637
+> > drivers/gpu/drm/amd/display/dc/os_types.h: drm/drm_print.h is included more than once.
+> > drivers/gpu/drm/bridge/ite-it66121.c:1398:1: internal compiler error: in arc_ifcvt, at config/arc/arc.c:9637
+> > drivers/greybus/operation.c:617:1: internal compiler error: in arc_ifcvt, at config/arc/arc.c:9637
 > 
-> Signed-off-by: Thinh Nguyen <Thinh.Nguyen@synopsys.com>
-> ---
->  drivers/target/target_core_tmr.c | 6 ++----
->  1 file changed, 2 insertions(+), 4 deletions(-)
+> <snip>
 > 
-> diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
-> index 718d985e4860..3e73f60319d5 100644
-> --- a/drivers/target/target_core_tmr.c
-> +++ b/drivers/target/target_core_tmr.c
-> @@ -158,15 +158,13 @@ void core_tmr_abort_task(
->  			list_del_init(&se_cmd->state_list);
->  			target_put_cmd_and_wait(se_cmd);
->  
-> -			pr_err("ABORT_TASK: Sending TMR_FUNCTION_COMPLETE for ref_tag: %llu\n",
-> -			       ref_tag);
-> -			tmr->response = TMR_FUNCTION_COMPLETE;
->  			atomic_long_inc(&dev->aborts_complete);
-> -			return;
-> +			goto exit;
->  		}
->  		spin_unlock_irqrestore(&dev->queues[i].lock, flags);
->  	}
->  
-> +exit:
->  	printk("ABORT_TASK: Sending TMR_FUNCTION_COMPLETE for ref_tag: %lld\n",
->  			tmr->ref_task_tag);
->  	tmr->response = TMR_FUNCTION_COMPLETE;
+> When the compiler crashes, why are you blaming all of these different
+> mailing lists?  Perhaps you need to fix your compiler :)
+> 
+
+To be fair, it says above "likely false positive, please contact us
+if interested". Also, the 32-bit build errors _are_ real, and the NULL
+dereferences in the binder driver are at the very least suspicious.
+
+Guenter
