@@ -2,168 +2,187 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A417C43334
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jul 2022 08:26:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09D10CCA482
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jul 2022 08:45:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235074AbiGGIZ7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Jul 2022 04:25:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43476 "EHLO
+        id S235309AbiGGIpT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Jul 2022 04:45:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59360 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234787AbiGGIZY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jul 2022 04:25:24 -0400
-Received: from EUR02-AM5-obe.outbound.protection.outlook.com (mail-eopbgr00050.outbound.protection.outlook.com [40.107.0.50])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2466CDBD;
-        Thu,  7 Jul 2022 01:24:54 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Mi6ENvckCn6qD7zHnN3Ln31FEpKuVMi8nqylU+MNRIjL82+nKWhE9qH2eXd3Ni/8OHDoaMAFJROh9RYbpidj7li6X3axXW5umbH0DT2pfxfNvhKeTLhVOl8eEJoX2EXjmfO+ztUqXSlNS1KFk392y+KSYVjAi51775cxDWRSfAIZqTj5T7w75U5ZdXepCsJTtbzmOAZXbr57xXaJdoKFsLeWfaYj/raqNhuTDf6V0ypWp+r8ss8EhTMtsZoDT6RElG2L2pp/J1OlWop0H0pfYGVY4RCNIuZkJxRDQcA/0aULoYABSAs4642vrHes8pZ75B67phy3c8NuIk60mSWoHQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=uImIaEsBXwBdxfR4EuOqhVYEMPnxA8r9mF2/rRXOrGA=;
- b=BL45a4F7yk6LeEcKl+8zac4QyaCpwIni3triojWD5bc1ttHjkuznMU+myVFzIESKhyegALhJliGubO2bJXSZ4czdsdP7XEz+EfKEEMIdCeGkiaMUgCEUaYjk9cR0Ni+9jc1BToFFa3r+0BuSupZ8rfBrU08gZKCHdofsZU3H2rYTaEeM0h+/1FyjQo5//l+N1ogsvYo7zFuUNVReqmzth1NdGBqOs8Dj56MsIQ4Uj9itijqy5ihnnxX5T4WbyVgMDRzy4l3g/wsvrJ1Rm2I2TJ5aP6FL4laI9ua9SYitk7eFelTnnb5b269o8uJmX4B4PiE8Fd/soOh7uTGlPRunfg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
- dkim=pass header.d=suse.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=uImIaEsBXwBdxfR4EuOqhVYEMPnxA8r9mF2/rRXOrGA=;
- b=TNO9/Dc6E46RgzaBLKGEhIbSUOR8C/z3k+wcWbtybwALu5H2QpSBeKuiemIOM60CEgeQiAdzrK6hp1XNQ3DygTewaMfSEJGz6OJSn3/pSbi6D1Op3tMdHmn/il4jgdAZ79IQ1C9IvQzjx/EWJoqnNClNK+GGqNC6/6mqkvoSzFCJiqfhkV5Ab/YDFN8B55lIpVWkueOuv4aphxRjJLb8NUK7WCsvYv9CrePeTYCITmMHfizt0V3IbCfzFnUIDQz6Pa+j6H4pevxdn4UnUCLqg1eEECwmylJOf+9NpUzo54w6y4MoVCV0oOZKk4bHoVeKoXPokiyAycxKAVQHJ/rijA==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=suse.com;
-Received: from VI1PR0401MB2526.eurprd04.prod.outlook.com
- (2603:10a6:800:58::16) by AM0PR04MB5075.eurprd04.prod.outlook.com
- (2603:10a6:208:bf::24) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5417.15; Thu, 7 Jul
- 2022 08:24:51 +0000
-Received: from VI1PR0401MB2526.eurprd04.prod.outlook.com
- ([fe80::21d5:a855:6e65:cf5d]) by VI1PR0401MB2526.eurprd04.prod.outlook.com
- ([fe80::21d5:a855:6e65:cf5d%12]) with mapi id 15.20.5417.016; Thu, 7 Jul 2022
- 08:24:50 +0000
-Message-ID: <c0506189-e36d-f7e3-8a5d-71adb2d6dc2a@suse.com>
-Date:   Thu, 7 Jul 2022 10:24:45 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH 11/36] target: Properly set Sense Data Length of CHECK
- CONDITION
-Content-Language: en-US
-To:     Thinh Nguyen <Thinh.Nguyen@synopsys.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     John Youn <John.Youn@synopsys.com>,
-        Felipe Balbi <balbi@kernel.org>,
-        Greg KH <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org
-References: <cover.1657149962.git.Thinh.Nguyen@synopsys.com>
- <61593a434f543184f41df91a4ba858e1158fd33c.1657149962.git.Thinh.Nguyen@synopsys.com>
-From:   Oliver Neukum <oneukum@suse.com>
-In-Reply-To: <61593a434f543184f41df91a4ba858e1158fd33c.1657149962.git.Thinh.Nguyen@synopsys.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: AS9PR06CA0216.eurprd06.prod.outlook.com
- (2603:10a6:20b:45e::30) To VI1PR0401MB2526.eurprd04.prod.outlook.com
- (2603:10a6:800:58::16)
+        with ESMTP id S232615AbiGGIpJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jul 2022 04:45:09 -0400
+Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 563D813F9F;
+        Thu,  7 Jul 2022 01:45:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1657183508; x=1688719508;
+  h=subject:to:cc:references:from:message-id:date:
+   mime-version:in-reply-to:content-transfer-encoding;
+  bh=edbKoKalbvq90CBmxogPesuIiDjl8rwJ49B+zZvetjQ=;
+  b=BfVKisWKCdx8CvBHxqsYg7j9cXv26yoQXE72HrhvrsHZACMcDf+Q4QeE
+   iezKOt76usGXV+kbwaKO7ucB7IaYA4gBUybR0oLB4xyC1Vm4hlMy3Mfqh
+   9orF/TMUfYsnaA4siDN3OfNN2ZHi8li2Tg62mdzzqPrFaDG0JJbV+DRPP
+   iwpbPp2cvvpvUZ62IKMOCHbcsc96XaEccZnOxR3WRawWvB7mbC3jKctJN
+   8CAuCUDBdHrDFmaFdIMnnGGbzhA6JCPGgQiHYVbqMyi9DeZgOTiWpgxom
+   oJhCT3UL+2okh6qNBEUcmQZZmIof0uguLdB3ImckLr4T46d5mInnCBOBg
+   g==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10400"; a="345659129"
+X-IronPort-AV: E=Sophos;i="5.92,252,1650956400"; 
+   d="scan'208";a="345659129"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Jul 2022 01:45:06 -0700
+X-IronPort-AV: E=Sophos;i="5.92,252,1650956400"; 
+   d="scan'208";a="651047273"
+Received: from rongch2-mobl.ccr.corp.intel.com (HELO [10.255.31.6]) ([10.255.31.6])
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Jul 2022 01:44:45 -0700
+Subject: Re: [linux-next:master] BUILD REGRESSION
+ 088b9c375534d905a4d337c78db3b3bfbb52c4a0
+To:     Greg KH <gregkh@linuxfoundation.org>,
+        kernel test robot <lkp@intel.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        virtualization@lists.linux-foundation.org,
+        usbb2k-api-dev@nongnu.org, tipc-discussion@lists.sourceforge.net,
+        target-devel@vger.kernel.org, sound-open-firmware@alsa-project.org,
+        samba-technical@lists.samba.org, rds-devel@oss.oracle.com,
+        patches@opensource.cirrus.com, osmocom-net-gprs@lists.osmocom.org,
+        openipmi-developer@lists.sourceforge.net, nvdimm@lists.linux.dev,
+        ntb@lists.linux.dev, netfilter-devel@vger.kernel.org,
+        netdev@vger.kernel.org, mjpeg-users@lists.sourceforge.net,
+        megaraidlinux.pdl@broadcom.com, linuxppc-dev@lists.ozlabs.org,
+        linux1394-devel@lists.sourceforge.net, linux-x25@vger.kernel.org,
+        linux-wpan@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-watchdog@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-unionfs@vger.kernel.org, linux-tegra@vger.kernel.org,
+        linux-stm32@st-md-mailman.stormreply.com,
+        linux-staging@lists.linux.dev, linux-serial@vger.kernel.org,
+        linux-sctp@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-samsung-soc@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        linux-renesas-soc@vger.kernel.org, linux-rdma@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-phy@lists.infradead.org, linux-perf-users@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-parport@lists.infradead.org,
+        linux-parisc@vger.kernel.org, linux-omap@vger.kernel.org,
+        linux-nfc@lists.01.org, linux-mtd@lists.infradead.org,
+        linux-mmc@vger.kernel.org, linux-mm@kvack.org,
+        linux-mediatek@lists.infradead.org, linux-media@vger.kernel.org,
+        linux-leds@vger.kernel.org, linux-integrity@vger.kernel.org,
+        linux-input@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-hwmon@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-fpga@vger.kernel.org,
+        linux-fbdev@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-efi@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-cxl@vger.kernel.org, linux-crypto@vger.kernel.org,
+        linux-clk@vger.kernel.org, linux-cifs@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-bcache@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-amlogic@lists.infradead.org, linaro-mm-sig@lists.linaro.org,
+        legousb-devel@lists.sourceforge.net, kvm@vger.kernel.org,
+        keyrings@vger.kernel.org, isdn4linux@listserv.isdn4linux.de,
+        iommu@lists.linux.dev, iommu@lists.linux-foundation.org,
+        intel-wired-lan@lists.osuosl.org, greybus-dev@lists.linaro.org,
+        dri-devel@lists.freedesktop.org, dm-devel@redhat.com,
+        devicetree@vger.kernel.org, dev@openvswitch.org,
+        dccp@vger.kernel.org, damon@lists.linux.dev,
+        coreteam@netfilter.org, cgroups@vger.kernel.org,
+        ceph-devel@vger.kernel.org, ath11k@lists.infradead.org,
+        apparmor@lists.ubuntu.com, amd-gfx@lists.freedesktop.org,
+        alsa-devel@alsa-project.org,
+        accessrunner-general@lists.sourceforge.net
+References: <62c683a2.g1VSVt6BrQC6ZzOz%lkp@intel.com>
+ <YsaUgfPbOg7WuBuB@kroah.com>
+From:   "Chen, Rong A" <rong.a.chen@intel.com>
+Message-ID: <c86816fd-aaba-01a9-5def-44868f0a46c9@intel.com>
+Date:   Thu, 7 Jul 2022 16:44:43 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Firefox/78.0 Thunderbird/78.12.0
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 5edda248-c5fb-4074-19f1-08da5ff22936
-X-MS-TrafficTypeDiagnostic: AM0PR04MB5075:EE_
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: VkCYjlYuDbS95nqmPWK02g+hR193/xCGNxO26JEWMhQgIABxc4EouCMKzcztsIdITSxVrMEpLJ5MO445cuSLf5rlfYySd0Gm02QsT64iAhE966XIESWsGTWyWZ2y7RLSmvSyFD5O+AuVIVguAdhOo8If7o5ngoSoMB/rj7x3Wy9LLLSZuElXLWJ6ZCO7yknlhaWRmStDb+PfjKjQElkGIV/O+yb3BC6lZKwuEF1x1Ay6xMJK93yuvCAg8aHItZyTbxaRmOztsDwEGC6AUXGhBrAtXdVCgMFEtbncyQ1OnDCvunjGZiu4lLxz+mKzCNkM+Bw0uM9bqO1zjZYKgdiGvfR6diAkb3sNNRUh61MgnH+Jm1YsrOm3lqbFBc0OGPbP/SNRTSKx0KnQUi6h9rtAYn8IWcSTtdApjTv8hPzopt2JpccIinmOsJEb+i8Q0vfMI3vTWT7WT1NpngShHRHMOUWEpWWr4BVzmF9+7cctUYXt/M2vAnDLf+iYB3m0IfzzJw0oZdnCKjrgpIK6kHfQ/66w1xq64JsKPwrSSu9bXXAqgVRD4pCgrryCQTmOJ3199sbPGTJEufPGJFmPchtRiJeKObZXxWWxKb261fsa7d9LEejNmnVk9baQ7IFcAw8JhmQsW6diADohlNxZpDnI15lYziJUF/E8Yl/NSZO1g6gP40F6bAg6MEBX/tKLTabQJ5QmsYL3aUyttA9BPgkohwzbUKIo91RJgShYIhyUbE3O2kPwyl/vBxrNt71a7jUACybtwKltp8l6e61pFg4w3Qj1mBab6kcfNfo3BINUncAQtBC1NfrKbVuJN3+PzWYqkE1LHTwixX5N3zxSGGgrPw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VI1PR0401MB2526.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(376002)(346002)(39860400002)(396003)(366004)(136003)(6512007)(66556008)(2616005)(66476007)(5660300002)(8936002)(8676002)(66946007)(31686004)(186003)(36756003)(86362001)(31696002)(53546011)(4326008)(6506007)(41300700001)(6486002)(2906002)(478600001)(6666004)(83380400001)(316002)(54906003)(110136005)(38100700002)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?Qk1HLytIblZXRlc3WkxQZGc5S1p2a2d0RFFRV1libk5iRGhFZkFzd2lBQmFa?=
- =?utf-8?B?SjdFOExJcTB1aDdKL1kxdmJmUFlWTFhsMVZGWHhMdHJNVEFDYnRUSW5pRG43?=
- =?utf-8?B?ZnR4RG9vY2Q0RDU3NXdlNVdqdzdsNnpVbGNpY2dxSmI3OGZLUEZLMmJjTGZC?=
- =?utf-8?B?WWgvck9McWJwRXkxWXJvSGF1d2loRllzdEhmL0JqUk1hREZRMTY0Z3FyMHpG?=
- =?utf-8?B?UmEycEpJL09kWUNUNWdxUytBZCtGa2hGSGJSam5VY0NXRDJydUsrU3BiTExp?=
- =?utf-8?B?d3Z1Z3JyR1ZOSURpcHJLd3JId1ZWM0RUUmIyZmk2djF6TzFYUXMzbk40QjdX?=
- =?utf-8?B?bWl1VDdHcGlHUy9Eb1FtTjI1UXJ0WjFneGdVM2NiUTVJOXVHQWwySXI4RVcv?=
- =?utf-8?B?Y090cmNaV2xRQkh1K29aYTZ2b0NoMHZJU0U5OENTcVdXaWxldENmOGp0YWRL?=
- =?utf-8?B?ZkpDYzFSNWY1ZW1OY2x2UzJjK3c2SVkxU0FKNm53WVhrYmVrd0hFNElhRks2?=
- =?utf-8?B?dUR0aGgzQkFIdXZqRkphRW9qTHhzUW9kell5RXBGWTNDaHV3UXJOZjJkVnFG?=
- =?utf-8?B?am4zTGNVeklHRDhkbHRRZ3d4S2pvWG5VWFJsY0l6OXJ0M2JyTUtnNDA1SkVY?=
- =?utf-8?B?RERmd29vUFQ2bStUMG9maFFzRlF2cTRCR2JLTGJSb1QwVnBFeXdRaHg5Y3lt?=
- =?utf-8?B?NThLbTVkOGFJRFcvYkhva3B2Y2JIclQ4am16ZkNTTXVBY1V5Z3BoSmF1eTN1?=
- =?utf-8?B?VHliNHdiNEpvcCtvRU1hNzVDWVUzaVk1RGhOeURjRGdWZWJFbXhiSzFVSVM2?=
- =?utf-8?B?ekk2RTM0bVBjWTBZZFN5M3FNSFBxaHA5alRJV0c3LzhuRW5OWFJmUmEvYlBw?=
- =?utf-8?B?WFMvemlUN3pXVTlTc2ExUk5mUDVNSVRkdHliT05IZGtxOGFJWmhmcHpaeUdV?=
- =?utf-8?B?cXVZdExsOWZ5Q1c2Z1gwb015Z0xoMzlya0RGeThnMExsUDZXTUEwQm4xaytk?=
- =?utf-8?B?NFMvUnVYaGVLVm9Uc1BiZVB0L2liOHhyUTZkbWM4cy9JeStqT2VTMHEvb0FO?=
- =?utf-8?B?TGNVdWtBTy9icEN0RVFXNThySytWQW1iTTNwcHFvbzJqc2JjQVEvZHJjdzFl?=
- =?utf-8?B?alJFVTFhWkF6Q1hNL0g5MjZMRW5CdHU2ZGxNS3JkK25xSVlQVzRxYjZxOHlM?=
- =?utf-8?B?NHc3My9ZQ01DNlRUcy9CcjluZXp2eFR6WWxlNkN2N2Evc0VJMTNwUG9mK3V5?=
- =?utf-8?B?TGF3emtZeDRERlFQVnplZ2FYUVVBZjVlSXVMaHh2c3pReGpXS1AvNFlKQzh3?=
- =?utf-8?B?VC8yVFIrVU96bTFWa1FGM3dkbEhHV0k2T0FubkIrTWp2NUVsTXlNMHp5UVR0?=
- =?utf-8?B?U0JKTDJaZjBHK0ZSYVViUmp0RkdFNlVvNzE5V2JwaERUK3I5d0c2dFJpdk1k?=
- =?utf-8?B?K2xLUTN1ZXl2NVp0WG96Rkh3OTVWSWE3QUJ2OVdqejRFbE8rZzhWcDdhU3ox?=
- =?utf-8?B?VGhqTmVFaElLT2J6RkpNVm9uR2l1VlhXMUNyZkJSVm5zSzlBT1lkUkYwWW1h?=
- =?utf-8?B?YWp6c2lzQU41TnBOM2I4NW5JUkFkemk4c1VDMU5tQlc2ZW9MTkF1cDFDWDNT?=
- =?utf-8?B?bmljS3V0cW42aEVRVWx2dmkxL1lwcDNaY2ZHNmFnUXg1cndwZnZxR0tyMlpj?=
- =?utf-8?B?Q2VNRzFYQjA3Y2h0MDlmMmN0NDZHQ2FaY3NKQ3pZL0tHemZIb25XMDRSL3U3?=
- =?utf-8?B?bC9rVllJVFAySXVPSWdTM0M1M3l3aS9jK3RoZDFhbE02dEI5TVhhd1JmTE9w?=
- =?utf-8?B?cjZKY25KMkhhU0tMUzlBZi9QdlF4Mm03V2w5UmQrekxWTzZCSkh5cExxUlc0?=
- =?utf-8?B?NmVIYzRZR2pQVU4xOWRBZXE5R2ZOVkdDdk5oUmI2RWRZUGlxOGY4T0UvZkQv?=
- =?utf-8?B?YmV0MlgrWkN6SXdoS2xqb1BUaUZrZUt1MUFhdzJySW9EdVpxd29NazJZZkpT?=
- =?utf-8?B?OHBDcmUyb0RKcHFuMzdvUkZ4U3MxTzJCRFgzT0Fmbk0vU2VZVmtyYzV5Q21n?=
- =?utf-8?B?WkRab1Fpd3BGSExxNUg5TkZmUmZlRWlETWpBYWI5d2ZDZXpkRmNLNlM1U3JD?=
- =?utf-8?B?azhWeGlNYWpmTExlaWJQSm9TQUhVZklxeVhRUi92aUJRUDJPVXdJRFNiVXlX?=
- =?utf-8?Q?z1Ccb0g+1LjVGIxaIpMDp2maENAia79b8DHZGBWXGIey?=
-X-OriginatorOrg: suse.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5edda248-c5fb-4074-19f1-08da5ff22936
-X-MS-Exchange-CrossTenant-AuthSource: VI1PR0401MB2526.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Jul 2022 08:24:50.7450
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: dmBHpzHGtUO0rSqEYzjD0rXSAL28p5g85d7UG3J03EHs4dUHS80sc0TqclHrpZSqVNsPO4mcH8Hj+jRwJ8c52Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0PR04MB5075
+In-Reply-To: <YsaUgfPbOg7WuBuB@kroah.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
 
-On 07.07.22 01:35, Thinh Nguyen wrote:
-> CHECK CONDITION returns sense data, and sense data is minimum 8 bytes
-> long plus additional sense data length in the data buffer. Don't just
-> set the allocated buffer length to the cmd->scsi_sense_length and check
-> the sense data for that.
+On 7/7/2022 4:08 PM, Greg KH wrote:
+> On Thu, Jul 07, 2022 at 02:56:34PM +0800, kernel test robot wrote:
+>> tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
+>> branch HEAD: 088b9c375534d905a4d337c78db3b3bfbb52c4a0  Add linux-next specific files for 20220706
+>>
+>> Error/Warning reports:
+>>
+>> https://lore.kernel.org/linux-doc/202207070644.x48XOOvs-lkp@intel.com
+>>
+>> Error/Warning: (recently discovered and may have been fixed)
+>>
+>> Documentation/arm/google/chromebook-boot-flow.rst: WARNING: document isn't included in any toctree
+>> arm-linux-gnueabi-ld: dc_dmub_srv.c:(.text+0x1108): undefined reference to `__aeabi_ddiv'
+>> arm-linux-gnueabi-ld: dc_dmub_srv.c:(.text+0x1124): undefined reference to `__aeabi_ui2d'
+>> arm-linux-gnueabi-ld: dc_dmub_srv.c:(.text+0x1164): undefined reference to `__aeabi_dmul'
+>> arm-linux-gnueabi-ld: dc_dmub_srv.c:(.text+0x1170): undefined reference to `__aeabi_dadd'
+>> arm-linux-gnueabi-ld: dc_dmub_srv.c:(.text+0x1180): undefined reference to `__aeabi_dsub'
+>> arm-linux-gnueabi-ld: dc_dmub_srv.c:(.text+0x1190): undefined reference to `__aeabi_d2uiz'
+>> arm-linux-gnueabi-ld: dc_dmub_srv.c:(.text+0x162c): undefined reference to `__aeabi_d2iz'
+>> arm-linux-gnueabi-ld: dc_dmub_srv.c:(.text+0x16b0): undefined reference to `__aeabi_i2d'
+>> dc_dmub_srv.c:(.text+0x10f8): undefined reference to `__aeabi_ui2d'
+>> dc_dmub_srv.c:(.text+0x464): undefined reference to `__floatunsidf'
+>> dc_dmub_srv.c:(.text.dc_dmub_setup_subvp_dmub_command+0x33c): undefined reference to `__floatunsidf'
+>> drivers/pci/endpoint/functions/pci-epf-vntb.c:975:5: warning: no previous prototype for 'pci_read' [-Wmissing-prototypes]
+>> drivers/pci/endpoint/functions/pci-epf-vntb.c:984:5: warning: no previous prototype for 'pci_write' [-Wmissing-prototypes]
+>> drivers/vfio/vfio_iommu_type1.c:2141:35: warning: cast to smaller integer type 'enum iommu_cap' from 'void *' [-Wvoid-pointer-to-enum-cast]
+>> mips-linux-ld: dc_dmub_srv.c:(.text.dc_dmub_setup_subvp_dmub_command+0x34c): undefined reference to `__floatunsidf'
+>> mips-linux-ld: dc_dmub_srv.c:(.text.dc_dmub_setup_subvp_dmub_command+0x378): undefined reference to `__divdf3'
+>> mips-linux-ld: dc_dmub_srv.c:(.text.dc_dmub_setup_subvp_dmub_command+0x38c): undefined reference to `__muldf3'
+>> mips-linux-ld: dc_dmub_srv.c:(.text.dc_dmub_setup_subvp_dmub_command+0x3a0): undefined reference to `__adddf3'
+>> mips-linux-ld: dc_dmub_srv.c:(.text.dc_dmub_setup_subvp_dmub_command+0x3b4): undefined reference to `__subdf3'
+>> mips-linux-ld: dc_dmub_srv.c:(.text.dc_dmub_setup_subvp_dmub_command+0x3d4): undefined reference to `__fixunsdfsi'
+>> mips-linux-ld: dc_dmub_srv.c:(.text.dc_dmub_setup_subvp_dmub_command+0x750): undefined reference to `__fixdfsi'
+>> mips-linux-ld: dc_dmub_srv.c:(.text.dc_dmub_setup_subvp_dmub_command+0x7c0): undefined reference to `__floatsidf'
+>> powerpc-linux-ld: drivers/pci/endpoint/functions/pci-epf-vntb.c:174: undefined reference to `ntb_link_event'
+>> xtensa-linux-ld: dc_dmub_srv.c:(.text+0x468): undefined reference to `__divdf3'
+>> xtensa-linux-ld: dc_dmub_srv.c:(.text+0x46c): undefined reference to `__muldf3'
+>> xtensa-linux-ld: dc_dmub_srv.c:(.text+0x470): undefined reference to `__adddf3'
+>> xtensa-linux-ld: dc_dmub_srv.c:(.text+0x474): undefined reference to `__subdf3'
+>> xtensa-linux-ld: dc_dmub_srv.c:(.text+0x478): undefined reference to `__fixunsdfsi'
+>> xtensa-linux-ld: dc_dmub_srv.c:(.text+0x47c): undefined reference to `__fixdfsi'
+>> xtensa-linux-ld: dc_dmub_srv.c:(.text+0x480): undefined reference to `__floatsidf'
+>> xtensa-linux-ld: dc_dmub_srv.c:(.text+0x60c): undefined reference to `__floatunsidf'
+>>
+>> Unverified Error/Warning (likely false positive, please contact us if interested):
+>>
+>> arch/x86/events/core.c:2114 init_hw_perf_events() warn: missing error code 'err'
+>> drivers/android/binder.c:1481:19-23: ERROR: from is NULL but dereferenced.
+>> drivers/android/binder.c:2920:29-33: ERROR: target_thread is NULL but dereferenced.
+>> drivers/android/binder.c:353:25-35: ERROR: node -> proc is NULL but dereferenced.
+>> drivers/android/binder.c:4888:16-20: ERROR: t is NULL but dereferenced.
+>> drivers/base/regmap/regmap.c:1996:1: internal compiler error: in arc_ifcvt, at config/arc/arc.c:9637
+>> drivers/char/random.c:869:1: internal compiler error: in arc_ifcvt, at config/arc/arc.c:9637
+>> drivers/firmware/arm_scmi/clock.c:394:1: internal compiler error: in arc_ifcvt, at config/arc/arc.c:9637
+>> drivers/firmware/arm_scmi/powercap.c:376:1: internal compiler error: in arc_ifcvt, at config/arc/arc.c:9637
+>> drivers/gpu/drm/amd/amdgpu/../pm/powerplay/hwmgr/vega10_powertune.c:1214:1: internal compiler error: in arc_ifcvt, at config/arc/arc.c:9637
+>> drivers/gpu/drm/amd/display/dc/os_types.h: drm/drm_print.h is included more than once.
+>> drivers/gpu/drm/bridge/ite-it66121.c:1398:1: internal compiler error: in arc_ifcvt, at config/arc/arc.c:9637
+>> drivers/greybus/operation.c:617:1: internal compiler error: in arc_ifcvt, at config/arc/arc.c:9637
 > 
-> See SPC4-r37 section 4.5.2.1.
+> <snip>
 > 
-> Signed-off-by: Thinh Nguyen <Thinh.Nguyen@synopsys.com>
-> ---
->  drivers/target/target_core_transport.c | 10 +++++++++-
->  1 file changed, 9 insertions(+), 1 deletion(-)
+> When the compiler crashes, why are you blaming all of these different
+> mailing lists?  Perhaps you need to fix your compiler :)
 > 
-> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-> index bc1e4a7c4538..9734952a6228 100644
-> --- a/drivers/target/target_core_transport.c
-> +++ b/drivers/target/target_core_transport.c
-> @@ -3459,12 +3459,20 @@ static void translate_sense_reason(struct se_cmd *cmd, sense_reason_t reason)
->  
->  	cmd->se_cmd_flags |= SCF_EMULATED_TASK_SENSE;
->  	cmd->scsi_status = SAM_STAT_CHECK_CONDITION;
-> -	cmd->scsi_sense_length  = TRANSPORT_SENSE_BUFFER;
-> +
-> +	/*
-> +	 * CHECK CONDITION returns sense data, and sense data is minimum 8
-> +	 * bytes long. See SPC4-r37 section 4.5.2.1.
-> +	 */
-> +	cmd->scsi_sense_length = 8;
-> +
->  	scsi_build_sense_buffer(desc_format, buffer, key, asc, ascq);
->  	if (sd->add_sense_info)
->  		WARN_ON_ONCE(scsi_set_sense_information(buffer,
->  							cmd->scsi_sense_length,
->  							cmd->sense_info) < 0);
-> +	/* Additional sense data length */
-> +	cmd->scsi_sense_length += buffer[7];
+> thanks,
+> 
+> greg k-h
+> 
 
-Doesn't this need to check for overflows?
+Hi Greg,
 
-	Regards
-		Oliver
+Sorry for the inconvience, we'll fix it ASAP.
 
+Best Regards,
+Rong Chen
