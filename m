@@ -2,105 +2,99 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D7E0CCA479
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jul 2022 21:47:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76F2FCCA479
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Jul 2022 21:48:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236857AbiGGVrr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Jul 2022 17:47:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53342 "EHLO
+        id S236585AbiGGVsB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Jul 2022 17:48:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53428 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236585AbiGGVro (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jul 2022 17:47:44 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9418333E10;
-        Thu,  7 Jul 2022 14:47:43 -0700 (PDT)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 267KCYii015405;
-        Thu, 7 Jul 2022 21:47:34 GMT
+        with ESMTP id S236312AbiGGVsA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jul 2022 17:48:00 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECA3230F63;
+        Thu,  7 Jul 2022 14:47:59 -0700 (PDT)
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 267KCRZY003652;
+        Thu, 7 Jul 2022 21:47:28 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=JjQ0l5P4/brIqoEehikrzY4jsz+xuJ+ncd6CB5T056A=;
- b=vxyw9oocedBKCfeRculAZnLaIqbRm+S4mOJLQWj/xthcGSz7C5/iK1tIt/rMjWYBsrAy
- MvZSLmS06EGKYkTWJ2qVxNFz48+wpcZWwBRwoLK1Kx/f32joJyFEda52Gv/SMNPEShSg
- Lsqam/0BLao7Cv0739Vc0IHUAXjZSEMb6SU9JrTEjKp7VXq9v8AvwaAw/5QbU3WhcZHk
- dm64uGkG/5+5T7t85lCKsKXXETnyuY1zgjNnG4wgz/nxU+/LYCE6M+YTRFprSzuHlBmU
- 7VaIj+cZW2hrSg770RWqjWDTo9Zw/LpNrMftW5XbtzJvIR2FMMa3IT5wQ9goXdQLuL4k 9w== 
+ bh=mYUReDqAAtD2Mc/Slejp/JsQFVi9e1ncghZX3Vavmh0=;
+ b=xnJ9jBf8Ufq6J0JVjaiWi0JryS/PVZ3dV0d11TbTkdML8UPIRmyHYhNMlt6sUKGAbpGU
+ k64Gx9anLLCmwum/I538ASOgU7UbRmo0/u29MVFnQku7yXhDpqdJGknQJgZIIC+7PFfP
+ 6qYda/BRPr3r6+vj493eF+dScvU9YM4s8t2JLgWLYQl/zXR8xZlQ8D3ZS3wKx1kMJb2F
+ Wuvi0Du4suhANFR9tbfeGAiD3ULI9Pz2yiGidy2GDPuTmHeR5W5sEf3iPLZfq0hS05mS
+ g2ODR6pqBet/WF8GYQOzJ13vdtCxaIsKTlR+/B8gSHDywC5rA0KruYY4lScx0RauYNvz yQ== 
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3h4ubyxbm6-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3h4ubye73u-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 07 Jul 2022 21:47:34 +0000
+        Thu, 07 Jul 2022 21:47:28 +0000
 Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 267LjMi3030312;
-        Thu, 7 Jul 2022 21:47:33 GMT
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 267LjM4l030275;
+        Thu, 7 Jul 2022 21:47:27 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3h4ud7c5f2-1
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3h4ud7c5bw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 07 Jul 2022 21:47:33 +0000
+        Thu, 07 Jul 2022 21:47:27 +0000
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 267LlRsg033607;
-        Thu, 7 Jul 2022 21:47:33 GMT
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 267LlRsY033607;
+        Thu, 7 Jul 2022 21:47:27 GMT
 Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3h4ud7c5ag-5;
-        Thu, 07 Jul 2022 21:47:32 +0000
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3h4ud7c5ag-1;
+        Thu, 07 Jul 2022 21:47:27 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        jejb@linux.ibm.com, alim.akhtar@samsung.com,
-        Stanley Chu <stanley.chu@mediatek.com>, bvanassche@acm.org,
-        avri.altman@wdc.com
+To:     linux-scsi@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        cc.chou@mediatek.com, eddie.huang@mediatek.com,
-        powen.kao@mediatek.com, qilin.tan@mediatek.com,
-        chaotian.jing@mediatek.com, lin.gui@mediatek.com,
-        alice.chao@mediatek.com, tun-yu.yu@mediatek.com,
-        peter.wang@mediatek.com, mason.zhang@mediatek.com,
-        jiajie.hao@mediatek.com, chun-hung.wu@mediatek.com
-Subject: Re: [PATCH v2 0/8] Provide features and fixes in MediaTek UFS platform
-Date:   Thu,  7 Jul 2022 17:47:24 -0400
-Message-Id: <165723020283.18731.6922062576024151133.b4-ty@oracle.com>
+        linux-parisc@vger.kernel.org,
+        Miquel van Smoorenburg <mikevs@xs4all.net>,
+        linuxppc-dev@lists.ozlabs.org,
+        Christoph Hellwig <hch@infradead.org>,
+        Matt Wang <wwentao@vmware.com>,
+        Khalid Aziz <khalid@gonehiking.org>,
+        linux-alpha@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+        Robin Murphy <robin.murphy@arm.com>,
+        linux-arch@vger.kernel.org,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        "Maciej W . Rozycki" <macro@orcam.me.uk>,
+        Jakub Kicinski <kuba@kernel.org>,
+        iommu@lists.linux-foundation.org,
+        Denis Efremov <efremov@linux.com>,
+        Mark Salyzyn <salyzyn@android.com>,
+        linux-m68k@lists.linux-m68k.org
+Subject: Re: [PATCH v3 0/3] phase out CONFIG_VIRT_TO_BUS
+Date:   Thu,  7 Jul 2022 17:47:20 -0400
+Message-Id: <165723020283.18731.6642678816129479253.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.36.1
-In-Reply-To: <20220623035052.18802-1-stanley.chu@mediatek.com>
-References: <20220623035052.18802-1-stanley.chu@mediatek.com>
+In-Reply-To: <20220624155226.2889613-1-arnd@kernel.org>
+References: <20220624155226.2889613-1-arnd@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: WaJzllHnZVE28Ea29Dxb7gFx-V1O-QCq
-X-Proofpoint-GUID: WaJzllHnZVE28Ea29Dxb7gFx-V1O-QCq
+X-Proofpoint-GUID: HrfrZsc4HaH6Tm6et7M--Pti1gCHS_F-
+X-Proofpoint-ORIG-GUID: HrfrZsc4HaH6Tm6et7M--Pti1gCHS_F-
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 23 Jun 2022 11:50:44 +0800, Stanley Chu wrote:
+On Fri, 24 Jun 2022 17:52:23 +0200, Arnd Bergmann wrote:
 
-> This series provides some fixes and features in MediaTek UFS platform.
-> Please consider this patch series for kernel v5.20.
+> From: Arnd Bergmann <arnd@arndb.de>
 > 
-> Compared to v1:
-> - Add one patch to fix invalid access to vccqx
-> 
-> Alice Chao (1):
->   scsi: ufs-mediatek: Fix invalid access to vccqx
+> The virt_to_bus/bus_to_virt interface has been deprecated for
+> decades. After Jakub Kicinski put a lot of work into cleaning out the
+> network drivers using them, there are only a couple of other drivers
+> left, which can all be removed or otherwise cleaned up, to remove the
+> old interface for good.
 > 
 > [...]
 
 Applied to 5.20/scsi-queue, thanks!
 
-[1/8] scsi: ufs-mediatek: Fix build warnings
-      https://git.kernel.org/mkp/scsi/c/e7bf1d50063c
-[2/8] scsi: ufs-mediatek: Always add delays for VCC operations
-      https://git.kernel.org/mkp/scsi/c/981b4ac04c2f
-[3/8] scsi: ufs-mediatek: Prevent host hang by setting CLK_CG early
-      https://git.kernel.org/mkp/scsi/c/2bae03a6ac98
-[4/8] scsi: ufs-mediatek: Add stage information for ref-clk control
-      https://git.kernel.org/mkp/scsi/c/f53f19135765
-[5/8] scsi: ufs-mediatek: Disable reset confirm feature by UniPro
-      https://git.kernel.org/mkp/scsi/c/4918694ccd69
-[6/8] scsi: ufs-mediatek: Support host power control
-      https://git.kernel.org/mkp/scsi/c/2cf5cb2bb131
-[7/8] scsi: ufs-mediatek: Support performance boosting
-      https://git.kernel.org/mkp/scsi/c/c64c487d9533
-[8/8] scsi: ufs-mediatek: Fix invalid access to vccqx
-      https://git.kernel.org/mkp/scsi/c/df1ea242e3d7
+[1/3] scsi: BusLogic remove bus_to_virt
+      https://git.kernel.org/mkp/scsi/c/9f7c2232e131
+[2/3] scsi: dpt_i2o: remove obsolete driver
+      https://git.kernel.org/mkp/scsi/c/b04e75a4a8a8
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
