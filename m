@@ -2,51 +2,51 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96D23C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Jul 2022 18:45:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E2D5C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Jul 2022 18:45:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239379AbiGHSps (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Jul 2022 14:45:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37694 "EHLO
+        id S239646AbiGHSpz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Jul 2022 14:45:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37844 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239176AbiGHSpo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jul 2022 14:45:44 -0400
+        with ESMTP id S239625AbiGHSpv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jul 2022 14:45:51 -0400
 Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.153.233])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8E805724F
-        for <linux-scsi@vger.kernel.org>; Fri,  8 Jul 2022 11:45:43 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C13E65D52
+        for <linux-scsi@vger.kernel.org>; Fri,  8 Jul 2022 11:45:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1657305945; x=1688841945;
+  t=1657305952; x=1688841952;
   h=subject:from:to:cc:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=bzfhQpZh2tiuTsI2I1arhHSYlhM0VHeCsIL+XG708X8=;
-  b=an7Fheig7BwA9MpEOME+okcTwItjGyR2/yjO9nnBs6J+uPv3GwUKm5bO
-   fjMJMxHo1EX330OLiN9taIcU0BfUef/zKCZ7sXzrY9vstQFy3TJJUzg+H
-   OxJgnPxLTa5BWjf2bvqElOWlezXuaIm5VF/pDpk/hJN7GM3Z75trEFuoh
-   CqiXwtzFYIvb7uwZW7p7YdCmdG4wWBEsmcQExux6IS/TDn4RPDWRFNRle
-   oWMmTwndeDJO2LgdvfryraeRnHrolX4dIPEAFrzpv0aE+mbV1mXWekTik
-   Nb2Kg9e6tBuZ9rCiBbPkUCN5oQ3//Yi0+dN3ISoO21yWAofu5YiCC31tD
+  bh=bJRpBTGmKCGVvVPI2q0kSaHw//a7RaFcG1Wy6g0Rr0k=;
+  b=Y2besGv2zqFwLpeb+nuq8wN/9iTbt6c48DBO3d7ISdAEkZggAIIYy0XN
+   Bx3vcQWrJYKBQI/WF1swwsMRi2SWvDp7+WEZiC9kJ6NY4TrK4tYXy8djH
+   fe01E5SHO52D9PKlfRdjHkPZqPK9laH7+dWO9IAi20NOi2686eX9R3IX+
+   X/NPjdCmZZVSUN/AhHMDHJkNODoGRufNoQeize2j4LgBmqzVCdCSVJhZO
+   h7RgV43+KtxwHjzlL+gCS9N7YFapdFFpUj3e9MHkXCxfyRB+2Rf+K8ZTg
+   eaDo00M9C2c8OIpU1FzI9f9Hgup60uFv6mBfwXfYG1niDHkebIqfZg8FV
    A==;
 X-IronPort-AV: E=Sophos;i="5.92,256,1650956400"; 
-   d="scan'208";a="171374287"
+   d="scan'208";a="171374316"
 Received: from unknown (HELO email.microchip.com) ([170.129.1.10])
-  by esa5.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 08 Jul 2022 11:45:44 -0700
-Received: from chn-vm-ex02.mchp-main.com (10.10.85.144) by
- chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
+  by esa5.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 08 Jul 2022 11:45:51 -0700
+Received: from chn-vm-ex03.mchp-main.com (10.10.85.151) by
+ chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.17; Fri, 8 Jul 2022 11:45:42 -0700
-Received: from brunhilda.pdev.net (10.10.115.15) by chn-vm-ex02.mchp-main.com
- (10.10.85.144) with Microsoft SMTP Server (version=TLS1_2,
+ 15.1.2375.17; Fri, 8 Jul 2022 11:45:48 -0700
+Received: from brunhilda.pdev.net (10.10.115.15) by chn-vm-ex03.mchp-main.com
+ (10.10.85.151) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.17 via Frontend
- Transport; Fri, 8 Jul 2022 11:45:42 -0700
+ Transport; Fri, 8 Jul 2022 11:45:48 -0700
 Received: from brunhilda.pdev.net (localhost [127.0.0.1])
-        by brunhilda.pdev.net (8.15.2/8.15.2/Debian-22ubuntu3) with ESMTP id 268Ikoos177284;
-        Fri, 8 Jul 2022 13:46:50 -0500
+        by brunhilda.pdev.net (8.15.2/8.15.2/Debian-22ubuntu3) with ESMTP id 268IktXw177297;
+        Fri, 8 Jul 2022 13:46:55 -0500
 Received: (from brace@localhost)
-        by brunhilda.pdev.net (8.15.2/8.15.2/Submit) id 268IkoU0177282;
-        Fri, 8 Jul 2022 13:46:50 -0500
+        by brunhilda.pdev.net (8.15.2/8.15.2/Submit) id 268Iktmw177296;
+        Fri, 8 Jul 2022 13:46:55 -0500
 X-Authentication-Warning: brunhilda.pdev.net: brace set sender to don.brace@microchip.com using -f
-Subject: [PATCH V2 01/16] smartpqi: shorten drive visibility after removal
+Subject: [PATCH V2 02/16] smartpqi: add controller fw version to console log
 From:   Don Brace <don.brace@microchip.com>
 To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
@@ -56,8 +56,8 @@ To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <jejb@linux.vnet.ibm.com>, <joseph.szczypek@hpe.com>,
         <POSWALD@suse.com>
 CC:     <linux-scsi@vger.kernel.org>
-Date:   Fri, 8 Jul 2022 13:46:50 -0500
-Message-ID: <165730601025.177165.9416869335174437006.stgit@brunhilda>
+Date:   Fri, 8 Jul 2022 13:46:55 -0500
+Message-ID: <165730601536.177165.17698744242908911822.stgit@brunhilda>
 In-Reply-To: <165730597930.177165.11663580730429681919.stgit@brunhilda>
 References: <165730597930.177165.11663580730429681919.stgit@brunhilda>
 User-Agent: StGit/1.5.dev2+g9ce680a52bd9
@@ -68,76 +68,33 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Mike McGowen <Mike.McGowen@microchip.com>
+From: Gilbert Wu <Gilbert.Wu@microchip.com>
 
-Check the response code returned from the LUN reset task management
-function and if it indicates the LUN is not valid, do not retry.
+Print controller firmware version to OS message log during driver
+initialization or after OFA.
 
-Reduce rescan worker delay to 5 seconds for the event handler only.
-
-The removal of a drive from the OS could have been delayed up to 30
-seconds after being physically pulled.
-
-The driver was retrying a LUN reset 3 times even though the return
-code indiciated the LUN was no longer valid. There was a 10 second
-delay between each retry. Additionally, the rescan worker was
-scheduled to run 10 seconds after the driver received the event.
-
+Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
 Reviewed-by: Scott Teel <scott.teel@microchip.com>
+Reviewed-by: Mike McGowen <mike.mcgowen@microchip.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
-Signed-off-by: Mike McGowen <Mike.McGowen@microchip.com>
+Signed-off-by: Gilbert Wu <Gilbert.Wu@microchip.com>
 Signed-off-by: Don Brace <don.brace@microchip.com>
 ---
- drivers/scsi/smartpqi/smartpqi.h      |    1 +
- drivers/scsi/smartpqi/smartpqi_init.c |   10 ++++++++--
- 2 files changed, 9 insertions(+), 2 deletions(-)
+ drivers/scsi/smartpqi/smartpqi_init.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
-index 2e40320129c0..49895c6ca64c 100644
---- a/drivers/scsi/smartpqi/smartpqi.h
-+++ b/drivers/scsi/smartpqi/smartpqi.h
-@@ -708,6 +708,7 @@ typedef u32 pqi_index_t;
- #define SOP_TMF_COMPLETE		0x0
- #define SOP_TMF_REJECTED		0x4
- #define SOP_TMF_FUNCTION_SUCCEEDED	0x8
-+#define SOP_RC_INCORRECT_LOGICAL_UNIT	0x9
- 
- /* additional CDB bytes usage field codes */
- #define SOP_ADDITIONAL_CDB_BYTES_0	0	/* 16-byte CDB */
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 7c0d069a3158..fa5cd2dfa3ad 100644
+index fa5cd2dfa3ad..394583672b0d 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -3322,6 +3322,9 @@ static int pqi_interpret_task_management_response(struct pqi_ctrl_info *ctrl_inf
- 	case SOP_TMF_REJECTED:
- 		rc = -EAGAIN;
- 		break;
-+	case SOP_RC_INCORRECT_LOGICAL_UNIT:
-+		rc = -ENODEV;
-+		break;
- 	default:
- 		rc = -EIO;
- 		break;
-@@ -3697,8 +3700,11 @@ static void pqi_event_worker(struct work_struct *work)
- 		event++;
- 	}
+@@ -7469,6 +7469,9 @@ static int pqi_get_ctrl_product_details(struct pqi_ctrl_info *ctrl_info)
+ 		sizeof(identify->vendor_id));
+ 	ctrl_info->vendor[sizeof(identify->vendor_id)] = '\0';
  
-+#define PQI_RESCAN_WORK_FOR_EVENT_DELAY		(5 * HZ)
++	dev_info(&ctrl_info->pci_dev->dev,
++		"Firmware version: %s\n", ctrl_info->firmware_version);
 +
- 	if (rescan_needed)
--		pqi_schedule_rescan_worker_delayed(ctrl_info);
-+		pqi_schedule_rescan_worker_with_delay(ctrl_info,
-+			PQI_RESCAN_WORK_FOR_EVENT_DELAY);
- 
  out:
- 	pqi_ctrl_unbusy(ctrl_info);
-@@ -6256,7 +6262,7 @@ static int pqi_lun_reset_with_retries(struct pqi_ctrl_info *ctrl_info, struct pq
+ 	kfree(identify);
  
- 	for (retries = 0;;) {
- 		reset_rc = pqi_lun_reset(ctrl_info, device);
--		if (reset_rc == 0 || ++retries > PQI_LUN_RESET_RETRIES)
-+		if (reset_rc == 0 || reset_rc == -ENODEV || ++retries > PQI_LUN_RESET_RETRIES)
- 			break;
- 		msleep(PQI_LUN_RESET_RETRY_INTERVAL_MSECS);
- 	}
 
