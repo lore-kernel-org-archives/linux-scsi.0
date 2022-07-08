@@ -2,77 +2,119 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E42DBC43334
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Jul 2022 05:09:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FD63C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Jul 2022 05:20:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233588AbiGHFJ3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Jul 2022 01:09:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38084 "EHLO
+        id S237151AbiGHFUO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Jul 2022 01:20:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44512 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229957AbiGHFJ0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jul 2022 01:09:26 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 825F274342;
-        Thu,  7 Jul 2022 22:09:25 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 27472B82124;
-        Fri,  8 Jul 2022 05:09:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F469C341C0;
-        Fri,  8 Jul 2022 05:09:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1657256962;
-        bh=6V1vhx/gUObKAIONRnrqqe+o20FprZCE1K6zJ1CvgeE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=SIR0WZpba+rNcvEMiPufGu9mnTAlsW9EGI3M8drJyHLtEZKAcdfuHx1bopV/vMl0z
-         pGS5ucFyDgm3Zgo5dfYXkdbO0ryl0sMj3/l+GqfiIRtIQIGZPVlAKlFSHcHcj0GRwg
-         +xjV6uLIH+LE/fmviDriLFOjFJCD5cN14GPjWu8/6RrQBM9UAcg30NydP/tfVB9l5L
-         tgp7UWIfups8BkB9zd6lwM29pBu3rSpA7UA46r4D+CSCOZsybPxNvnHcz8xm/q2jsb
-         MIh0A7w85yEGpFfl9psmJAcEMuQo7RJXiTs+bfsv+YN78gJIGp5Ww+S7JXol125EYX
-         Y5oX2ylKvmonA==
-Date:   Fri, 8 Jul 2022 10:39:19 +0530
-From:   Vinod Koul <vkoul@kernel.org>
-To:     Chanho Park <chanho61.park@samsung.com>
-Cc:     "'Martin K. Petersen'" <martin.petersen@oracle.com>,
-        'Kishon Vijay Abraham I' <kishon@ti.com>,
-        'Krzysztof Kozlowski' <krzysztof.kozlowski@linaro.org>,
-        "'James E . J . Bottomley'" <jejb@linux.ibm.com>,
-        'Alim Akhtar' <alim.akhtar@samsung.com>,
-        'Bart Van Assche' <bvanassche@acm.org>,
-        linux-phy@lists.infradead.org, linux-scsi@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-samsung-soc@vger.kernel.org
-Subject: Re: [PATCH v2 0/3] change exynos ufs phy control
-Message-ID: <Yse7/9TBRd0vxhL6@matsya>
-References: <CGME20220706020540epcas2p37a8b697af2c6786db9e4ed67cf20a40f@epcas2p3.samsung.com>
- <20220706020255.151177-1-chanho61.park@samsung.com>
- <yq17d4o624t.fsf@ca-mkp.ca.oracle.com>
- <000a01d89261$bd2c4df0$3784e9d0$@samsung.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <000a01d89261$bd2c4df0$3784e9d0$@samsung.com>
+        with ESMTP id S236692AbiGHFUN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jul 2022 01:20:13 -0400
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E66B3796B7
+        for <linux-scsi@vger.kernel.org>; Thu,  7 Jul 2022 22:20:10 -0700 (PDT)
+Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20220708052008epoutp0144dd3bafd7dcd0e0b213c57d8d360b6b~-wwOe7TFr1452114521epoutp015
+        for <linux-scsi@vger.kernel.org>; Fri,  8 Jul 2022 05:20:08 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20220708052008epoutp0144dd3bafd7dcd0e0b213c57d8d360b6b~-wwOe7TFr1452114521epoutp015
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1657257608;
+        bh=nOxZzrylrICb5cSJNRTGIc8Z0MS3siru3oxGpCKZnJc=;
+        h=Subject:Reply-To:From:To:Date:References:From;
+        b=TZ3kMisxDnvPZZH79rWXRSa3mm0mVSDbsU+QlTzfrQuyheHVajnpbYA6+JTFpr6LC
+         4lSvyAlcysMQ8xHhFItq6t3fnW8hVojvAHGv8vNGBCel7UQNds0G4cNEl/ZtTzjZIQ
+         sJbP88JqlDU/KyrWT+4VaL+Qhoj7QXjNzQIYN1LQ=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
+        20220708052007epcas2p3fc8c22e29a0d4dfd3fe23e0b2af423cf~-wwN22oZl2702827028epcas2p3L;
+        Fri,  8 Jul 2022 05:20:07 +0000 (GMT)
+Received: from epsmges2p3.samsung.com (unknown [182.195.36.99]) by
+        epsnrtp4.localdomain (Postfix) with ESMTP id 4LfM6b0bwkz4x9QX; Fri,  8 Jul
+        2022 05:20:07 +0000 (GMT)
+X-AuditID: b6c32a47-5e1ff700000025aa-ab-62c7be865554
+Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
+        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
+        B0.68.09642.68EB7C26; Fri,  8 Jul 2022 14:20:06 +0900 (KST)
+Mime-Version: 1.0
+Subject: [PATCH] scsi: ufs: core: Remove UIC_HIBERN8_ENTER_RETRIES
+Reply-To: keosung.park@samsung.com
+Sender: Keoseong Park <keosung.park@samsung.com>
+From:   Keoseong Park <keosung.park@samsung.com>
+To:     ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20220708052006epcms2p2d1129dbf95fd77f46906200ccb0a9ccd@epcms2p2>
+Date:   Fri, 08 Jul 2022 14:20:06 +0900
+X-CMS-MailID: 20220708052006epcms2p2d1129dbf95fd77f46906200ccb0a9ccd
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+CMS-TYPE: 102P
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrBJsWRmVeSWpSXmKPExsWy7bCmuW77vuNJBssNLE4+WcNm8WDeNjaL
+        lz+vslkcfNjJYjHtw09mi5eHNC0e3X7GaLHqQbjFohvbmCwu75rDZtF9fQebxfLj/5gceDwu
+        X/H2WLznJZPHhEUHGD2+r+9g8/j49BaLR9+WVYwenzfJebQf6GYK4IjKtslITUxJLVJIzUvO
+        T8nMS7dV8g6Od443NTMw1DW0tDBXUshLzE21VXLxCdB1y8wBOlVJoSwxpxQoFJBYXKykb2dT
+        lF9akqqQkV9cYquUWpCSU2BeoFecmFtcmpeul5daYmVoYGBkClSYkJ2xb8MT9oJZbBWvV35j
+        bWCcxdrFyMkhIWAi8X/NKiCbi0NIYAejxNPJ7xm7GDk4eAUEJf7uEAapERZwkuj8vpIZxBYS
+        UJLoWriVGSJuILFu+h4wm01AT2LK7zuMIHNEBL4zS+y6dwxqAa/EjPanLBC2tMT25VsZIWwN
+        iR/LepkhbFGJm6vfssPY74/Nh6oRkWi9dxaqRlDiwc/dUHFJidYzW9kg7HyJJzf7oebXSCzY
+        /hkqri9xrWMjC8QvvhKHb9iCmCwCqhINVx0hKlwk/q3YCHYls4C8xPa3c5hBSpgFNCXW79IH
+        MSUElCWO3GKB+aNh4292dDazAJ9Ex+G/cPEd854wQdhqEo8WbIGGgYzExTnnoP7wkHi9/yvb
+        BEbFWYhgnoXkhlkINyxgZF7FKJZaUJybnlpsVGAMj9nk/NxNjOAkq+W+g3HG2w96hxiZOBgP
+        MUpwMCuJ8MYrH08S4k1JrKxKLcqPLyrNSS0+xGgK9PxEZinR5Hxgms8riTc0sTQwMTMzNDcy
+        NTBXEuf1StmQKCSQnliSmp2aWpBaBNPHxMEp1cAUGdMnonpd7eLDmRtMm+vrfZhCd2WUr0zk
+        frD19NKAfcp/0i4sKvwqUS1ZF9zw8nqDiFOTwqG8x3fW+MdMW8+8iLP7eKni43+5S++/d70Q
+        l8h+7qb9G0kN3UfXY14GqId82uwtKN+5MPhBsrHTt9+W37btfyFxp+7Uhz3LeM4/N+fYopsV
+        bug8M+usjLDGu8cz1NI31nMYLHr/lcdi2aKGbMkHDJq2n0W966qKJwd2tRoq3l1nJ25yyung
+        hVkcLnd9lx9bt0zjbQiD1b4jaRxrDc33yx1YOfkY+9HNiRn6F5qeGTCJqt3L/tZ9PNk5aMn6
+        04a9P5h6Nr7ZUvFzZ6t//77gvUdEDrJLCvdPnq2lxFKckWioxVxUnAgANd23LTsEAAA=
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20220708052006epcms2p2d1129dbf95fd77f46906200ccb0a9ccd
+References: <CGME20220708052006epcms2p2d1129dbf95fd77f46906200ccb0a9ccd@epcms2p2>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 08-07-22, 09:29, Chanho Park wrote:
-> > > The first patch is for changing phy clocks manipulation from
-> > > controlling each symbol/ref clocks to clk_bulk APIs. The second patch
-> > > is for making power on/off sequences between pmu isolation and clk
-> > > control.  Finally, the third patch changes the phy on/off and init
-> > > sequences from ufs-exynos host driver.
-> > 
-> > Were you intending this series to go through SCSI or the phy tree?
-> 
-> I thinks the first two patches are going to phy-tree and you'll need to pick
-> the last patch.
-> 
-> Vinod,
-> Could you pick the first two patches in your tree?
+Commit 4db7a2360597 ("scsi: ufs: Fix concurrency of error handler
+and other error recovery paths") removed all callers of
+UIC_HIBERN8_ENTER_RETRIES. Hence also remove the macro itself.
 
-Applied 1-2, thanks
+Signed-off-by: Keoseong Park <keosung.park@samsung.com>
+---
+ drivers/ufs/core/ufshcd.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 1d3214e6b364..f6b36d2bfa21 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -64,9 +64,6 @@
+ /* maximum number of link-startup retries */
+ #define DME_LINKSTARTUP_RETRIES 3
+ 
+-/* Maximum retries for Hibern8 enter */
+-#define UIC_HIBERN8_ENTER_RETRIES 3
+-
+ /* maximum number of reset retries before giving up */
+ #define MAX_HOST_RESET_RETRIES 5
+ 
 -- 
-~Vinod
+2.17.1
