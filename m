@@ -2,51 +2,51 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2744CCA47F
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Jul 2022 18:46:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4734FC433EF
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Jul 2022 18:46:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239673AbiGHSqr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Jul 2022 14:46:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38914 "EHLO
+        id S239680AbiGHSq4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Jul 2022 14:46:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39030 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239672AbiGHSqo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jul 2022 14:46:44 -0400
+        with ESMTP id S239681AbiGHSqv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jul 2022 14:46:51 -0400
 Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.153.233])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0AB0796BF
-        for <linux-scsi@vger.kernel.org>; Fri,  8 Jul 2022 11:46:42 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E4EF8239A
+        for <linux-scsi@vger.kernel.org>; Fri,  8 Jul 2022 11:46:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1657306002; x=1688842002;
+  t=1657306011; x=1688842011;
   h=subject:from:to:cc:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=XfK1ZJ94igatQoWQfCRlJxtxEamYvKP8YVvIaEkA4iU=;
-  b=Wy3txGi6iI7Hcv7ci54+3fTVQEFnLRYpN7Hs0h6e+/Q/1gSwL7t01t48
-   g8P4Ex4F2iefXATunFeD2YECPbqOfWR5yzs/Ab3b8U5D3fgeHP0oBGJyT
-   pjO1lCDCXA0Uvpkpr2LB+HDBtmmKgqkyVZh80n5390YbkXafi7O8JsIHa
-   AY4UnLCyftHXUx+q4T0QoEVxSuoIcrDc2GZkJTkOBX81iriD3CWZWNYjx
-   YC+WpWMnfniQSKV5U6epFE3SygKITHTfJoqrC6C++C295mjwyXkss7e8K
-   ZtQh6Zxk11Jku4+FVHmnRurEtcisdIrdC0pDY8e21npvzFHWFCj7GwPdx
-   A==;
+  bh=AOT9YUDY3jHog0rvPFyV5GQi0iMc0Y8Tgn7hwRwn2zY=;
+  b=tv6XjNoArpR3YBl504NktQ3CaU3irt0rqD6d0u/Kwh58ADzQKWAJy+H5
+   ugS27YrMisUcyx35LBRjMhW2O1bsQnTBBkeRTsT6vFdSOqicnGWOLjBri
+   PFbyJEHRFNc0xURwsnzO3A8E9fmtT2JGLyaTuvJOyzbwDg7Fjw1z1XlYB
+   M5TkxWRy2/AV1YZwLQNtgRQMNuHK+CcnN+Hgb+4ipvFw7pc7QDUXZkOTt
+   fo/sMh5DMmQtfIGgJEdPpVqc3Kr4egmVh8qe86zUQtcWEh2kJ6Qy+elkv
+   0g8RPYGAgUVN8DeowPGsQMUrNLUSHbtbSr37g2agFJ2E6WOUdgOJu5xNT
+   w==;
 X-IronPort-AV: E=Sophos;i="5.92,256,1650956400"; 
-   d="scan'208";a="181377329"
+   d="scan'208";a="171374483"
 Received: from unknown (HELO email.microchip.com) ([170.129.1.10])
-  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 08 Jul 2022 11:46:42 -0700
-Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
- chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server
+  by esa5.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 08 Jul 2022 11:46:51 -0700
+Received: from chn-vm-ex04.mchp-main.com (10.10.85.152) by
+ chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.17; Fri, 8 Jul 2022 11:46:39 -0700
-Received: from brunhilda.pdev.net (10.10.115.15) by chn-vm-ex01.mchp-main.com
- (10.10.85.143) with Microsoft SMTP Server (version=TLS1_2,
+ 15.1.2375.17; Fri, 8 Jul 2022 11:46:49 -0700
+Received: from brunhilda.pdev.net (10.10.115.15) by chn-vm-ex04.mchp-main.com
+ (10.10.85.152) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.17 via Frontend
- Transport; Fri, 8 Jul 2022 11:46:39 -0700
+ Transport; Fri, 8 Jul 2022 11:46:49 -0700
 Received: from brunhilda.pdev.net (localhost [127.0.0.1])
-        by brunhilda.pdev.net (8.15.2/8.15.2/Debian-22ubuntu3) with ESMTP id 268Ilkuj177479;
-        Fri, 8 Jul 2022 13:47:46 -0500
+        by brunhilda.pdev.net (8.15.2/8.15.2/Debian-22ubuntu3) with ESMTP id 268IlugO177505;
+        Fri, 8 Jul 2022 13:47:56 -0500
 Received: (from brace@localhost)
-        by brunhilda.pdev.net (8.15.2/8.15.2/Submit) id 268IlkpN177478;
-        Fri, 8 Jul 2022 13:47:46 -0500
+        by brunhilda.pdev.net (8.15.2/8.15.2/Submit) id 268Ilugw177504;
+        Fri, 8 Jul 2022 13:47:56 -0500
 X-Authentication-Warning: brunhilda.pdev.net: brace set sender to don.brace@microchip.com using -f
-Subject: [PATCH V2 12/16] smartpqi: add module param to disable managed ints
+Subject: [PATCH V2 14/16] smartpqi: add ctrl ready timeout module parameter
 From:   Don Brace <don.brace@microchip.com>
 To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
@@ -56,8 +56,8 @@ To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <jejb@linux.vnet.ibm.com>, <joseph.szczypek@hpe.com>,
         <POSWALD@suse.com>
 CC:     <linux-scsi@vger.kernel.org>
-Date:   Fri, 8 Jul 2022 13:47:46 -0500
-Message-ID: <165730606638.177165.12846020942931640329.stgit@brunhilda>
+Date:   Fri, 8 Jul 2022 13:47:56 -0500
+Message-ID: <165730607666.177165.9221211345284471213.stgit@brunhilda>
 In-Reply-To: <165730597930.177165.11663580730429681919.stgit@brunhilda>
 References: <165730597930.177165.11663580730429681919.stgit@brunhilda>
 User-Agent: StGit/1.5.dev2+g9ce680a52bd9
@@ -68,84 +68,113 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Mike McGowen <Mike.McGowen@microchip.com>
+From: Kevin Barnett <kevin.barnett@microchip.com>
 
-Allow SMP affinity to be changeable by disabling managed interrupts.
+Allow user to override the default driver timeout for controller ready.
 
-On distributions where the driver is enabled for multi-queue support the
-driver utilizes kernel managed interrupts, which automatically distributes
-interrupts to all available CPUs and assigns SMP affinity.
+There are some rare configurations which require the driver to wait
+longer than the normal 3 minutes for the controller to complete its
+bootup sequence and be ready to accept commands from the driver.
 
-On most distributions, the affinity can not be changed by the user.
+The module parameter is:
 
-This change will allow managed interrupts to be disabled by the user via a
-module parameter while still allowing multi-queue support to function
-properly.
+ctrl_ready_timeout= { 0 | 30-1800 }
 
-Use the module parameter disable_managed_interrupts=1
+and specifies the timeout in seconds for the driver to wait
+for controller ready. The valid range is 0 or 30-1800. The default
+value is 0, which causes the driver to use a timeout of 180 seconds
+(3 minutes).
 
-Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
 Reviewed-by: Scott Teel <scott.teel@microchip.com>
-Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
-Signed-off-by: Mike McGowen <Mike.McGowen@microchip.com>
+Reviewed-by: Mike McGowen <mike.mcgowen@microchip.com>
+Signed-off-by: Kevin Barnett <kevin.barnett@microchip.com>
 Signed-off-by: Don Brace <don.brace@microchip.com>
 ---
- drivers/scsi/smartpqi/smartpqi.h      |    2 +-
- drivers/scsi/smartpqi/smartpqi_init.c |   13 ++++++++++++-
- 2 files changed, 13 insertions(+), 2 deletions(-)
+ drivers/scsi/smartpqi/smartpqi_init.c |   28 ++++++++++++++++++++++++++++
+ drivers/scsi/smartpqi/smartpqi_sis.c  |    4 +++-
+ drivers/scsi/smartpqi/smartpqi_sis.h  |    2 ++
+ 3 files changed, 33 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
-index f1145ded843e..49d3a8a275f3 100644
---- a/drivers/scsi/smartpqi/smartpqi.h
-+++ b/drivers/scsi/smartpqi/smartpqi.h
-@@ -1351,7 +1351,7 @@ struct pqi_ctrl_info {
- 	u8		enable_r6_writes : 1;
- 	u8		lv_drive_type_mix_valid : 1;
- 	u8		enable_stream_detection : 1;
--
-+	u8		disable_managed_interrupts : 1;
- 	u8		ciss_report_log_flags;
- 	u32		max_transfer_encrypted_sas_sata;
- 	u32		max_transfer_encrypted_nvme;
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index e07282ed0f34..2df1e8453029 100644
+index 122772628a2f..f18b63637d0b 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -175,6 +175,12 @@ module_param_named(hide_vsep,
- 	pqi_hide_vsep, int, 0644);
- MODULE_PARM_DESC(hide_vsep, "Hide the virtual SEP for direct attached drives.");
+@@ -181,6 +181,12 @@ module_param_named(disable_managed_interrupts,
+ MODULE_PARM_DESC(disable_managed_interrupts,
+ 	"Disable the kernel automatically assigning SMP affinity to IRQs.");
  
-+static int pqi_disable_managed_interrupts;
-+module_param_named(disable_managed_interrupts,
-+	pqi_disable_managed_interrupts, int, 0644);
-+MODULE_PARM_DESC(disable_managed_interrupts,
-+	"Disable the kernel automatically assigning SMP affinity to IRQs.");
++static unsigned int pqi_ctrl_ready_timeout_secs;
++module_param_named(ctrl_ready_timeout,
++	pqi_ctrl_ready_timeout_secs, uint, 0644);
++MODULE_PARM_DESC(ctrl_ready_timeout,
++	"Timeout in seconds for driver to wait for controller ready.");
 +
  static char *raid_levels[] = {
  	"RAID-0",
  	"RAID-4",
-@@ -4039,10 +4045,14 @@ static void pqi_free_irqs(struct pqi_ctrl_info *ctrl_info)
- static int pqi_enable_msix_interrupts(struct pqi_ctrl_info *ctrl_info)
- {
- 	int num_vectors_enabled;
-+	unsigned int flags = PCI_IRQ_MSIX;
-+
-+	if (!pqi_disable_managed_interrupts)
-+		flags |= PCI_IRQ_AFFINITY;
- 
- 	num_vectors_enabled = pci_alloc_irq_vectors(ctrl_info->pci_dev,
- 			PQI_MIN_MSIX_VECTORS, ctrl_info->num_queue_groups,
--			PCI_IRQ_MSIX | PCI_IRQ_AFFINITY);
-+			flags);
- 	if (num_vectors_enabled < 0) {
- 		dev_err(&ctrl_info->pci_dev->dev,
- 			"MSI-X init failed with error %d\n",
-@@ -8588,6 +8598,7 @@ static struct pqi_ctrl_info *pqi_alloc_ctrl_info(int numa_node)
- 	ctrl_info->max_write_raid_5_6 = PQI_DEFAULT_MAX_WRITE_RAID_5_6;
- 	ctrl_info->max_write_raid_1_10_2drive = ~0;
- 	ctrl_info->max_write_raid_1_10_3drive = ~0;
-+	ctrl_info->disable_managed_interrupts = pqi_disable_managed_interrupts;
- 
- 	return ctrl_info;
+@@ -9089,9 +9095,31 @@ static void pqi_process_lockup_action_param(void)
+ 		DRIVER_NAME_SHORT, pqi_lockup_action_param);
  }
+ 
++#define PQI_CTRL_READY_TIMEOUT_PARAM_MIN_SECS		30
++#define PQI_CTRL_READY_TIMEOUT_PARAM_MAX_SECS		(30 * 60)
++
++static void pqi_process_ctrl_ready_timeout_param(void)
++{
++	if (pqi_ctrl_ready_timeout_secs == 0)
++		return;
++
++	if (pqi_ctrl_ready_timeout_secs < PQI_CTRL_READY_TIMEOUT_PARAM_MIN_SECS) {
++		pr_warn("%s: ctrl_ready_timeout parm of %u second(s) is less than minimum timeout of %d seconds - setting timeout to %d seconds\n",
++			DRIVER_NAME_SHORT, pqi_ctrl_ready_timeout_secs, PQI_CTRL_READY_TIMEOUT_PARAM_MIN_SECS, PQI_CTRL_READY_TIMEOUT_PARAM_MIN_SECS);
++		pqi_ctrl_ready_timeout_secs = PQI_CTRL_READY_TIMEOUT_PARAM_MIN_SECS;
++	} else if (pqi_ctrl_ready_timeout_secs > PQI_CTRL_READY_TIMEOUT_PARAM_MAX_SECS) {
++		pr_warn("%s: ctrl_ready_timeout parm of %u seconds is greater than maximum timeout of %d seconds - setting timeout to %d seconds\n",
++			DRIVER_NAME_SHORT, pqi_ctrl_ready_timeout_secs, PQI_CTRL_READY_TIMEOUT_PARAM_MAX_SECS, PQI_CTRL_READY_TIMEOUT_PARAM_MAX_SECS);
++		pqi_ctrl_ready_timeout_secs = PQI_CTRL_READY_TIMEOUT_PARAM_MAX_SECS;
++	}
++
++	sis_ctrl_ready_timeout_secs = pqi_ctrl_ready_timeout_secs;
++}
++
+ static void pqi_process_module_params(void)
+ {
+ 	pqi_process_lockup_action_param();
++	pqi_process_ctrl_ready_timeout_param();
+ }
+ 
+ #if defined(CONFIG_PM)
+diff --git a/drivers/scsi/smartpqi/smartpqi_sis.c b/drivers/scsi/smartpqi/smartpqi_sis.c
+index 59d9c2792371..12b575f2bcef 100644
+--- a/drivers/scsi/smartpqi/smartpqi_sis.c
++++ b/drivers/scsi/smartpqi/smartpqi_sis.c
+@@ -86,6 +86,8 @@ struct sis_base_struct {
+ 
+ #pragma pack()
+ 
++unsigned int sis_ctrl_ready_timeout_secs = SIS_CTRL_READY_TIMEOUT_SECS;
++
+ static int sis_wait_for_ctrl_ready_with_timeout(struct pqi_ctrl_info *ctrl_info,
+ 	unsigned int timeout_secs)
+ {
+@@ -122,7 +124,7 @@ static int sis_wait_for_ctrl_ready_with_timeout(struct pqi_ctrl_info *ctrl_info,
+ int sis_wait_for_ctrl_ready(struct pqi_ctrl_info *ctrl_info)
+ {
+ 	return sis_wait_for_ctrl_ready_with_timeout(ctrl_info,
+-		SIS_CTRL_READY_TIMEOUT_SECS);
++		sis_ctrl_ready_timeout_secs);
+ }
+ 
+ int sis_wait_for_ctrl_ready_resume(struct pqi_ctrl_info *ctrl_info)
+diff --git a/drivers/scsi/smartpqi/smartpqi_sis.h b/drivers/scsi/smartpqi/smartpqi_sis.h
+index 5f3575261a8e..2f825d31a47e 100644
+--- a/drivers/scsi/smartpqi/smartpqi_sis.h
++++ b/drivers/scsi/smartpqi/smartpqi_sis.h
+@@ -32,4 +32,6 @@ void sis_soft_reset(struct pqi_ctrl_info *ctrl_info);
+ u32 sis_get_product_id(struct pqi_ctrl_info *ctrl_info);
+ int sis_wait_for_fw_triage_completion(struct pqi_ctrl_info *ctrl_info);
+ 
++extern unsigned int sis_ctrl_ready_timeout_secs;
++
+ #endif	/* _SMARTPQI_SIS_H */
 
