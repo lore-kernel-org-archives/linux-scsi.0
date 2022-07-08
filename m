@@ -2,94 +2,77 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E4A2C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Jul 2022 04:17:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E42DBC43334
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Jul 2022 05:09:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236947AbiGHERT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Jul 2022 00:17:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55322 "EHLO
+        id S233588AbiGHFJ3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Jul 2022 01:09:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38084 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230230AbiGHERT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jul 2022 00:17:19 -0400
-Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7995C2655C
-        for <linux-scsi@vger.kernel.org>; Thu,  7 Jul 2022 21:17:17 -0700 (PDT)
-Received: by mail-pf1-x435.google.com with SMTP id d10so8760067pfd.9
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Jul 2022 21:17:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=MNbzz6HqiT+aecUMfuE4HCVdk2tTR9rWqUJn0foYaOs=;
-        b=oY7JqxN2PctvkKLjoYKFZyyXgicFmSo0BLEeEtO+de9X5TF3XFOdIHs2BRhVNO0+0e
-         Wl+au6rKUin2DCSdQVaGmM605EOjQ38w7auKF7EAXjqgG6eZXyVfk6jJZXgH5hGOKIoA
-         Iu20bdc2ZsNp7n0PZje8YFi2fCYvRVXOiKkiY=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=MNbzz6HqiT+aecUMfuE4HCVdk2tTR9rWqUJn0foYaOs=;
-        b=M2gCCAMbZ8tNUtQYXKOSTE54lfUBpfP95Pt5BGLcpRiCB+XzP/vIoL3r4ORjmMSpGV
-         N7LVFQ05ARWl8kN0SUoQ0IUJBZBk7NlrKS+ItWwGCE+oivheItNPSvIQLni+IgfFF0Dq
-         3mFPEir3v+C1rOO9EBQG6mTv8C6d6pKWCGb0Nrq8aKCLT/VQpQsuYNXdTOJbJFNPmeWs
-         WU00RnpGdtQnE1POojOtFgbvfN/u0rXdkLpdQSfQPeMTzKqReJw9ONZfxu+69JWscGzK
-         ly3G7yHcFn7Y9z30TKpgGMGCZmzqooeHJvmvZSWn9ZcjBU653IB6+jcdCT/Vi0vXGw7E
-         eWTw==
-X-Gm-Message-State: AJIora/wbtahVItnuwsFq4euMmtKx4SFqDBK+K8jDRS52TRXOv6/Y4N5
-        H7KV2MgfbjbHJHVSOMDt+x2tPw==
-X-Google-Smtp-Source: AGRyM1u3YRxbpHHoAR2gLio3os223bzxP+inwrZHFd21UtN01SzXjzuwNuJq0VZUjYZDjiasTgFdLQ==
-X-Received: by 2002:a63:1759:0:b0:40d:5aba:4bb0 with SMTP id 25-20020a631759000000b0040d5aba4bb0mr1512690pgx.496.1657253836714;
-        Thu, 07 Jul 2022 21:17:16 -0700 (PDT)
-Received: from dlunevwfh.roam.corp.google.com (n122-107-196-14.sbr2.nsw.optusnet.com.au. [122.107.196.14])
-        by smtp.gmail.com with ESMTPSA id kk8-20020a17090b4a0800b001ef899eb51fsm435629pjb.29.2022.07.07.21.17.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Jul 2022 21:17:16 -0700 (PDT)
-From:   Daniil Lunev <dlunev@chromium.org>
-To:     Adrian Hunter <adrian.hunter@intel.com>
-Cc:     Daniil Lunev <dlunev@chromium.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Bean Huo <beanhuo@micron.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [PATCH] scsi: ufs: ufs-pci: default clock frequency for Intel's UFS controller
-Date:   Fri,  8 Jul 2022 14:17:07 +1000
-Message-Id: <20220708141612.1.Ice2e8173bd0937c7c4898b112350120063572269@changeid>
-X-Mailer: git-send-email 2.31.0
+        with ESMTP id S229957AbiGHFJ0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jul 2022 01:09:26 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 825F274342;
+        Thu,  7 Jul 2022 22:09:25 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 27472B82124;
+        Fri,  8 Jul 2022 05:09:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F469C341C0;
+        Fri,  8 Jul 2022 05:09:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1657256962;
+        bh=6V1vhx/gUObKAIONRnrqqe+o20FprZCE1K6zJ1CvgeE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=SIR0WZpba+rNcvEMiPufGu9mnTAlsW9EGI3M8drJyHLtEZKAcdfuHx1bopV/vMl0z
+         pGS5ucFyDgm3Zgo5dfYXkdbO0ryl0sMj3/l+GqfiIRtIQIGZPVlAKlFSHcHcj0GRwg
+         +xjV6uLIH+LE/fmviDriLFOjFJCD5cN14GPjWu8/6RrQBM9UAcg30NydP/tfVB9l5L
+         tgp7UWIfups8BkB9zd6lwM29pBu3rSpA7UA46r4D+CSCOZsybPxNvnHcz8xm/q2jsb
+         MIh0A7w85yEGpFfl9psmJAcEMuQo7RJXiTs+bfsv+YN78gJIGp5Ww+S7JXol125EYX
+         Y5oX2ylKvmonA==
+Date:   Fri, 8 Jul 2022 10:39:19 +0530
+From:   Vinod Koul <vkoul@kernel.org>
+To:     Chanho Park <chanho61.park@samsung.com>
+Cc:     "'Martin K. Petersen'" <martin.petersen@oracle.com>,
+        'Kishon Vijay Abraham I' <kishon@ti.com>,
+        'Krzysztof Kozlowski' <krzysztof.kozlowski@linaro.org>,
+        "'James E . J . Bottomley'" <jejb@linux.ibm.com>,
+        'Alim Akhtar' <alim.akhtar@samsung.com>,
+        'Bart Van Assche' <bvanassche@acm.org>,
+        linux-phy@lists.infradead.org, linux-scsi@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-samsung-soc@vger.kernel.org
+Subject: Re: [PATCH v2 0/3] change exynos ufs phy control
+Message-ID: <Yse7/9TBRd0vxhL6@matsya>
+References: <CGME20220706020540epcas2p37a8b697af2c6786db9e4ed67cf20a40f@epcas2p3.samsung.com>
+ <20220706020255.151177-1-chanho61.park@samsung.com>
+ <yq17d4o624t.fsf@ca-mkp.ca.oracle.com>
+ <000a01d89261$bd2c4df0$3784e9d0$@samsung.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <000a01d89261$bd2c4df0$3784e9d0$@samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-ARM platforms rely on 'ref_clk' of a UFS controller's node in DTS to set
-up the proper bRefClkFreq for the UFS storage device. The facility is
-not available on x86. To circumvene that, default the parameter,
-responsible for carrying the value to the UFS storage device
-initialization, to the one that Intel's controllers support. This is
-required to support provisioning of UFS storage devices from userspace,
-without relying on FW and/or bootloader to make the necessary
-preparations.
+On 08-07-22, 09:29, Chanho Park wrote:
+> > > The first patch is for changing phy clocks manipulation from
+> > > controlling each symbol/ref clocks to clk_bulk APIs. The second patch
+> > > is for making power on/off sequences between pmu isolation and clk
+> > > control.  Finally, the third patch changes the phy on/off and init
+> > > sequences from ufs-exynos host driver.
+> > 
+> > Were you intending this series to go through SCSI or the phy tree?
+> 
+> I thinks the first two patches are going to phy-tree and you'll need to pick
+> the last patch.
+> 
+> Vinod,
+> Could you pick the first two patches in your tree?
 
-Signed-off-by: Daniil Lunev <dlunev@chromium.org>
----
+Applied 1-2, thanks
 
- drivers/ufs/host/ufshcd-pci.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.c
-index 04166bda41daa..a6f9222cbea74 100644
---- a/drivers/ufs/host/ufshcd-pci.c
-+++ b/drivers/ufs/host/ufshcd-pci.c
-@@ -336,6 +336,7 @@ static int ufs_intel_common_init(struct ufs_hba *hba)
- 	struct intel_host *host;
- 
- 	hba->caps |= UFSHCD_CAP_RPM_AUTOSUSPEND;
-+	hba->dev_ref_clk_freq = REF_CLK_FREQ_19_2_MHZ;
- 
- 	host = devm_kzalloc(hba->dev, sizeof(*host), GFP_KERNEL);
- 	if (!host)
 -- 
-2.31.0
-
+~Vinod
