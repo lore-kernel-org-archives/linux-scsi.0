@@ -2,45 +2,45 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F1F8C43334
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Jul 2022 07:11:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C7F7C43334
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Jul 2022 07:11:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237310AbiGHHLt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Jul 2022 03:11:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52544 "EHLO
+        id S237378AbiGHHLz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Jul 2022 03:11:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52584 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236525AbiGHHLs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jul 2022 03:11:48 -0400
+        with ESMTP id S237369AbiGHHLv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jul 2022 03:11:51 -0400
 Received: from pegase2.c-s.fr (pegase2.c-s.fr [93.17.235.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 529E7735A0;
-        Fri,  8 Jul 2022 00:11:47 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7FE4776975;
+        Fri,  8 Jul 2022 00:11:50 -0700 (PDT)
 Received: from localhost (mailhub3.si.c-s.fr [172.26.127.67])
-        by localhost (Postfix) with ESMTP id 4LfPbM0k7Dz9tKD;
-        Fri,  8 Jul 2022 09:11:43 +0200 (CEST)
+        by localhost (Postfix) with ESMTP id 4LfPbN0nG9z9tKr;
+        Fri,  8 Jul 2022 09:11:44 +0200 (CEST)
 X-Virus-Scanned: amavisd-new at c-s.fr
 Received: from pegase2.c-s.fr ([172.26.127.65])
         by localhost (pegase2.c-s.fr [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id w_y4uC6M_egq; Fri,  8 Jul 2022 09:11:43 +0200 (CEST)
+        with ESMTP id GUC-TTr3AKPS; Fri,  8 Jul 2022 09:11:44 +0200 (CEST)
 Received: from messagerie.si.c-s.fr (messagerie.si.c-s.fr [192.168.25.192])
-        by pegase2.c-s.fr (Postfix) with ESMTP id 4LfPbK6kjpz9tF7;
+        by pegase2.c-s.fr (Postfix) with ESMTP id 4LfPbK6l2yz9tFj;
         Fri,  8 Jul 2022 09:11:41 +0200 (CEST)
 Received: from localhost (localhost [127.0.0.1])
-        by messagerie.si.c-s.fr (Postfix) with ESMTP id D594B8B763;
+        by messagerie.si.c-s.fr (Postfix) with ESMTP id CE6C88B76C;
         Fri,  8 Jul 2022 09:11:41 +0200 (CEST)
 X-Virus-Scanned: amavisd-new at c-s.fr
 Received: from messagerie.si.c-s.fr ([127.0.0.1])
         by localhost (messagerie.si.c-s.fr [127.0.0.1]) (amavisd-new, port 10023)
-        with ESMTP id XZuSmughcSeh; Fri,  8 Jul 2022 09:11:41 +0200 (CEST)
+        with ESMTP id NctDR-Rk0r9G; Fri,  8 Jul 2022 09:11:41 +0200 (CEST)
 Received: from PO20335.IDSI0.si.c-s.fr (unknown [192.168.233.202])
-        by messagerie.si.c-s.fr (Postfix) with ESMTP id 75BC18B76E;
+        by messagerie.si.c-s.fr (Postfix) with ESMTP id 6FB338B763;
         Fri,  8 Jul 2022 09:11:41 +0200 (CEST)
 Received: from PO20335.IDSI0.si.c-s.fr (localhost [127.0.0.1])
-        by PO20335.IDSI0.si.c-s.fr (8.17.1/8.16.1) with ESMTPS id 2687BSQg603395
+        by PO20335.IDSI0.si.c-s.fr (8.17.1/8.16.1) with ESMTPS id 2687BYYl603410
         (version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-        Fri, 8 Jul 2022 09:11:28 +0200
+        Fri, 8 Jul 2022 09:11:34 +0200
 Received: (from chleroy@localhost)
-        by PO20335.IDSI0.si.c-s.fr (8.17.1/8.17.1/Submit) id 2687BN8i603387;
-        Fri, 8 Jul 2022 09:11:23 +0200
+        by PO20335.IDSI0.si.c-s.fr (8.17.1/8.17.1/Submit) id 2687BXTU603406;
+        Fri, 8 Jul 2022 09:11:33 +0200
 X-Authentication-Warning: PO20335.IDSI0.si.c-s.fr: chleroy set sender to christophe.leroy@csgroup.eu using -f
 From:   Christophe Leroy <christophe.leroy@csgroup.eu>
 To:     Michael Ellerman <mpe@ellerman.id.au>,
@@ -51,47 +51,54 @@ Cc:     Christophe Leroy <christophe.leroy@csgroup.eu>,
         linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
         linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org,
         dri-devel@lists.freedesktop.org
-Subject: [PATCH v3 1/4] video: fbdev: offb: Include missing linux/platform_device.h
-Date:   Fri,  8 Jul 2022 09:11:05 +0200
-Message-Id: <f75b383673663e27f6b57e50b4abfb9fe3780b00.1657264228.git.christophe.leroy@csgroup.eu>
+Subject: [PATCH v3 4/4] powerpc: Finally remove unnecessary headers from asm/prom.h
+Date:   Fri,  8 Jul 2022 09:11:08 +0200
+Message-Id: <4be954abef978b34cff9193fc566ffefdd3517bb.1657264228.git.christophe.leroy@csgroup.eu>
 X-Mailer: git-send-email 2.36.1
+In-Reply-To: <f75b383673663e27f6b57e50b4abfb9fe3780b00.1657264228.git.christophe.leroy@csgroup.eu>
+References: <f75b383673663e27f6b57e50b4abfb9fe3780b00.1657264228.git.christophe.leroy@csgroup.eu>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1657264265; l=997; s=20211009; h=from:subject:message-id; bh=p+lWafqrH6KOPHJ8OTtOKJ/OSZxVmCtmi3nNoK87dwM=; b=KqCkpTMX4F6Hkya0AInt4pxI97ck7Coi4Ygpuy9qmiI6OYdHnwe7ki54ez4eao9Q+hC3PzG4GhjH Rdn9089ODPcmP2HTCnde7LOHIZrI+zPM0ak1tc0Iu2ojju8qtY8H
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1657264266; l=1143; s=20211009; h=from:subject:message-id; bh=rhMeWgMRVJCcnZ4LkUB/MevA+zWJ66UrLEuQIoq1Yg0=; b=aSzeb+chFstwLU0nCOuwBtbA5U5xgYndUebgzgAFOP3kvtFTlKpIphdt6XSL2LaRlBzvqMzXeceC 3WcuvQhNCXW3RZk7r1HJGuNvWAJdmtN/35jcrr7gzAg+rGVfsK9j
 X-Developer-Key: i=christophe.leroy@csgroup.eu; a=ed25519; pk=HIzTzUj91asvincQGOFx6+ZF5AoUuP9GdOtQChs7Mm0=
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-A lot of drivers were getting platform and of headers
-indirectly via headers like asm/pci.h or asm/prom.h
+Remove all headers included from asm/prom.h which are not used
+by asm/prom.h itself.
 
-Most of them were fixed during 5.19 cycle but a newissue was
-introduced by commit 52b1b46c39ae ("of: Create platform devices
-for OF framebuffers")
+Declare struct device_node and struct property locally to
+avoid including of.h
 
-Include missing platform_device.h to allow cleaning asm/pci.h
-
-Cc: Thomas Zimmermann <tzimmermann@suse.de>
-Fixes: 52b1b46c39ae ("of: Create platform devices for OF framebuffers")
 Signed-off-by: Christophe Leroy <christophe.leroy@csgroup.eu>
-Acked-by: Helge Deller <deller@gmx.de>
 ---
- drivers/video/fbdev/offb.c | 1 +
- 1 file changed, 1 insertion(+)
+ arch/powerpc/include/asm/prom.h | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/video/fbdev/offb.c b/drivers/video/fbdev/offb.c
-index b1acb1ebebe9..91001990e351 100644
---- a/drivers/video/fbdev/offb.c
-+++ b/drivers/video/fbdev/offb.c
-@@ -26,6 +26,7 @@
- #include <linux/init.h>
- #include <linux/ioport.h>
- #include <linux/pci.h>
-+#include <linux/platform_device.h>
- #include <asm/io.h>
+diff --git a/arch/powerpc/include/asm/prom.h b/arch/powerpc/include/asm/prom.h
+index 6f109b5cb84e..2e82820fbd64 100644
+--- a/arch/powerpc/include/asm/prom.h
++++ b/arch/powerpc/include/asm/prom.h
+@@ -12,16 +12,10 @@
+  * Updates for PPC64 by Peter Bergner & David Engebretsen, IBM Corp.
+  */
+ #include <linux/types.h>
+-#include <asm/irq.h>
+-#include <linux/atomic.h>
+ #include <asm/firmware.h>
  
- #ifdef CONFIG_PPC32
+-/* These includes should be removed once implicit includes are cleaned up. */
+-#include <linux/of.h>
+-#include <linux/of_fdt.h>
+-#include <linux/of_address.h>
+-#include <linux/of_irq.h>
+-#include <linux/platform_device.h>
++struct device_node;
++struct property;
+ 
+ #define OF_DT_BEGIN_NODE	0x1		/* Start of node, full name */
+ #define OF_DT_END_NODE		0x2		/* End node */
 -- 
 2.36.1
 
