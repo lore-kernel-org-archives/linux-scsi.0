@@ -2,117 +2,95 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5319C433EF
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 Jul 2022 05:29:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5584DC43334
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 Jul 2022 06:21:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229547AbiGIF3b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 9 Jul 2022 01:29:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35132 "EHLO
+        id S229492AbiGIGVF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 9 Jul 2022 02:21:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59372 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229448AbiGIF3a (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Jul 2022 01:29:30 -0400
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C039F88752;
-        Fri,  8 Jul 2022 22:29:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1657344568; x=1688880568;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=GwKMGDgEQOTMZAJyEWQoKSVfa5JoZEAuPF4dI30gQw0=;
-  b=YZopXBC2PpZfYD4wM52Zg+AkBzty8tzAEsiG7z5aNVATInmiunCrd9bI
-   TkzalQr8wm7gAPG1TgWg/3Ty4k7jdBQWr3WXE8/izKwXdAsKY+0U4QSiM
-   n6OeaPWsWtUVraX5IQo07XBrr55iXW+8FM7f0o+zXS1FqvxAuRjDzJtzI
-   wC9t9akd6m3fu5mkJrQeKMHdcatWqLJWPPZjhHhPLgU4WGkHYOiEF73xe
-   nNyLXyfb9OxRQRe228xqWKLgHUMLyh5UaFBZiE0hImZhuJWL1uICX8+rA
-   0DelXGfjSHFzF36RJSBLLp4jnuAZ40u7xxLoMqPKDxyEnB+Q+TdpML9sb
-   A==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10402"; a="346095872"
-X-IronPort-AV: E=Sophos;i="5.92,256,1650956400"; 
-   d="scan'208";a="346095872"
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jul 2022 22:29:27 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.92,256,1650956400"; 
-   d="scan'208";a="921219431"
-Received: from lkp-server01.sh.intel.com (HELO 68b931ab7ac1) ([10.239.97.150])
-  by fmsmga005.fm.intel.com with ESMTP; 08 Jul 2022 22:29:25 -0700
-Received: from kbuild by 68b931ab7ac1 with local (Exim 4.95)
-        (envelope-from <lkp@intel.com>)
-        id 1oA31w-000OLq-BB;
-        Sat, 09 Jul 2022 05:29:24 +0000
-Date:   Sat, 9 Jul 2022 13:29:04 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org,
-        arnd@kernel.org
-Cc:     kbuild-all@lists.01.org, linux-scsi@vger.kernel.org,
-        geert@linux-m68k.org, Michael Schmitz <schmitzmic@gmail.com>
-Subject: Re: [PATCH v1 2/4] m68k - set up platform device for mvme147_scsi
-Message-ID: <202207091359.WPLQuHhB-lkp@intel.com>
-References: <20220709001019.11149-3-schmitzmic@gmail.com>
+        with ESMTP id S229454AbiGIGVE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Jul 2022 02:21:04 -0400
+Received: from mail-ej1-x62b.google.com (mail-ej1-x62b.google.com [IPv6:2a00:1450:4864:20::62b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01B157171D
+        for <linux-scsi@vger.kernel.org>; Fri,  8 Jul 2022 23:21:03 -0700 (PDT)
+Received: by mail-ej1-x62b.google.com with SMTP id l23so948704ejr.5
+        for <linux-scsi@vger.kernel.org>; Fri, 08 Jul 2022 23:21:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ionos.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=Gjeg9WUwnbgnNpG18j3Ii5d6kwssgCM59unaq2578Ss=;
+        b=MdSl4g42hl/XcKp8A3kiIPno+qtAUIV46Aw/Ntqb3UMvVmsjRH1U3F4Osp+YPRLiz5
+         uKGM15RQsw2bPmkVviV8jZ2fj4dDWYry8OrTXAUvkZNiv3iiQhGXdKgy4OB9sQEcBTRy
+         4xeFT1RWgisGCA+gAdaWOIPFRa5CMWhb0L0DVonLg3ceR7Pzfvq/k8eb77D+sCUSwz76
+         SPhLV89BeZofc3BdRLRhA+Me40q+v3yiT94zj+upgNK+N99miE/9oRu8162GBOE2t5+R
+         TNbar33GSVGWNjx8u10qhujH4Ws7Lk7DS5qoH+rINqR7TJ4FlHgMRfMoXe2JJW1j5j6F
+         XMug==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=Gjeg9WUwnbgnNpG18j3Ii5d6kwssgCM59unaq2578Ss=;
+        b=6+0QpUoIJKJTB4ttpHOFmXSyrHMysyl6QMLFs7WfS+4kdWL9HsKu3dXWOX5a4vM7aE
+         vl5iivFu84FZi4jbspPML+JLwDseQviQG++B8ZlLwr+R8hq58CrPlkpLc6pwm2TlCw6/
+         TTPwz4+LYvY3bs36+AJS49WCivLelKZetk6+4y3JmADf+XR6QPF2zlAtxHCExo78vRoC
+         WM/lM6lSldlZmBAFfxZW8ysSI1hNm1TlNMBO6swcUX9IReK3los8pmqL/kVcT71GLpuy
+         R3iXhAB2Ap7uKZSe71FZmgHQLZypUnTE6IShyUJy1wRWdpinxLTcBlfzYkixXKsWoGCO
+         EMfg==
+X-Gm-Message-State: AJIora/9zFdgMg+SxPIpIHLChrEVlweD95dtGWqSWJFkiX87529URQJT
+        Lh+rLmU6k0dd9g2/J2S0Z2ccxGtrhTffpxfic4AnrupynmU=
+X-Google-Smtp-Source: AGRyM1uNvKfMf2qfrRolNo3yRmFWwfpwBlBeuYXlrb9/ZqMXODSuUpI4ZWGlfVoltn/spv1MaGc4EO7ManjBWBYcG6E=
+X-Received: by 2002:a17:906:9bdd:b0:72b:3cab:eade with SMTP id
+ de29-20020a1709069bdd00b0072b3cabeademr87936ejc.58.1657347661422; Fri, 08 Jul
+ 2022 23:21:01 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220709001019.11149-3-schmitzmic@gmail.com>
+References: <20220708205026.969161-1-changyuanl@google.com>
+In-Reply-To: <20220708205026.969161-1-changyuanl@google.com>
+From:   Jinpu Wang <jinpu.wang@ionos.com>
+Date:   Sat, 9 Jul 2022 08:20:50 +0200
+Message-ID: <CAMGffEkqXWTrJN-hHj4UE+Fcdm-hDBO2Q++bPcd2wQhJjNiQiQ@mail.gmail.com>
+Subject: Re: [PATCH] scsi: pm80xx: Set stopped phy's linkrate to Disabled
+To:     Changyuan Lyu <changyuanl@google.com>
+Cc:     Jack Wang <jinpu.wang@ionos.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Igor Pylypiv <ipylypiv@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Michael,
-
-I love your patch! Perhaps something to improve:
-
-[auto build test WARNING on geert-m68k/for-next]
-[also build test WARNING on mkp-scsi/for-next jejb-scsi/for-next linus/master v5.19-rc5 next-20220708]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Michael-Schmitz/Convert-m68k-MVME147-WD33C93-SCSI-driver-to-DMA-API/20220709-081556
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/geert/linux-m68k.git for-next
-config: m68k-allmodconfig (https://download.01.org/0day-ci/archive/20220709/202207091359.WPLQuHhB-lkp@intel.com/config)
-compiler: m68k-linux-gcc (GCC) 11.3.0
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/3a5e770e42ebe8984096d0cd1d93a95a1d7b67e7
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Michael-Schmitz/Convert-m68k-MVME147-WD33C93-SCSI-driver-to-DMA-API/20220709-081556
-        git checkout 3a5e770e42ebe8984096d0cd1d93a95a1d7b67e7
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.3.0 make.cross W=1 O=build_dir ARCH=m68k SHELL=/bin/bash arch/m68k/mvme147/
-
-If you fix the issue, kindly add following tag where applicable
-Reported-by: kernel test robot <lkp@intel.com>
-
-All warnings (new ones prefixed by >>):
-
-   arch/m68k/mvme147/config.c:77:13: warning: no previous prototype for 'mvme147_init_IRQ' [-Wmissing-prototypes]
-      77 | void __init mvme147_init_IRQ(void)
-         |             ^~~~~~~~~~~~~~~~
->> arch/m68k/mvme147/config.c:198:12: warning: no previous prototype for 'mvme147_platform_init' [-Wmissing-prototypes]
-     198 | int __init mvme147_platform_init(void)
-         |            ^~~~~~~~~~~~~~~~~~~~~
-
-
-vim +/mvme147_platform_init +198 arch/m68k/mvme147/config.c
-
-   197	
- > 198	int __init mvme147_platform_init(void)
-   199	{
-   200		struct platform_device *pdev;
-   201		int rv = 0;
-   202	
-   203		pdev = platform_device_register_simple("mvme147-scsi", -1,
-   204			mvme147_scsi_rsrc, ARRAY_SIZE(mvme147_scsi_rsrc));
-   205		if (IS_ERR(pdev))
-   206			rv = PTR_ERR(pdev);
-   207	
-   208		return rv;
-   209	}
-   210	
-
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+On Fri, Jul 8, 2022 at 10:50 PM Changyuan Lyu <changyuanl@google.com> wrote:
+>
+> Negotiated link rate needs to be updated to Disabled when phy is
+> stopped.
+>
+> Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
+> Signed-off-by: Changyuan Lyu <changyuanl@google.com>
+Acked-by: Jack Wang <jinpu.wang@ionso.com>
+> ---
+>  drivers/scsi/pm8001/pm80xx_hwi.c | 6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+> index 01c5e8ff4cc5..303cd05fec50 100644
+> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
+> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+> @@ -3723,8 +3723,12 @@ static int mpi_phy_stop_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
+>         pm8001_dbg(pm8001_ha, MSG, "phy:0x%x status:0x%x\n",
+>                    phyid, status);
+>         if (status == PHY_STOP_SUCCESS ||
+> -               status == PHY_STOP_ERR_DEVICE_ATTACHED)
+> +               status == PHY_STOP_ERR_DEVICE_ATTACHED) {
+>                 phy->phy_state = PHY_LINK_DISABLE;
+> +               phy->sas_phy.phy->negotiated_linkrate = SAS_PHY_DISABLED;
+> +               phy->sas_phy.linkrate = SAS_PHY_DISABLED;
+> +       }
+> +
+>         return 0;
+>  }
+>
+> --
+> 2.37.0.rc0.161.g10f37bed90-goog
+>
