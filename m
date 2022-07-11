@@ -2,68 +2,76 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A294BC43334
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jul 2022 03:39:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 189AAC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jul 2022 03:41:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229663AbiGKDj2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 10 Jul 2022 23:39:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40400 "EHLO
+        id S229675AbiGKDlN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 10 Jul 2022 23:41:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41330 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229536AbiGKDj1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Jul 2022 23:39:27 -0400
-Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5758213DEA;
-        Sun, 10 Jul 2022 20:39:26 -0700 (PDT)
-Received: by mail-pj1-f50.google.com with SMTP id o5-20020a17090a3d4500b001ef76490983so3772156pjf.2;
-        Sun, 10 Jul 2022 20:39:26 -0700 (PDT)
+        with ESMTP id S229450AbiGKDlM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Jul 2022 23:41:12 -0400
+Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07AEB13DEA;
+        Sun, 10 Jul 2022 20:41:11 -0700 (PDT)
+Received: by mail-pf1-f171.google.com with SMTP id g126so3754231pfb.3;
+        Sun, 10 Jul 2022 20:41:11 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
+         :content-language:to:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=QE7JJYPymJYEjSIRg5jCrbP1FqM2+RCByJ/BFBKot1A=;
-        b=vvLc8fqTIgWxiYsD9rHI9Lzk0drMsSfSaySPNZysynJFunZIytXBr2iznmjtZ8AV0Z
-         yW4RmvG4HTgf8qozYFgIhtYybn6jK0ZPBLvywUHMmC488jnLOjfA711D57F083nrtRBW
-         /xlPeQWzGB6RW1u+7Mrz5H4XQUHAxQTID5FiJlOxlNWKvfcsMaGAwhDZdNKJTMExvq2W
-         0XqUauZZvK/VW9EcgZBNZNsOCqumdz7GTGxphZie9U4vCqF3o+AEow17WI8FeGmBYrSG
-         STvWlgTcq5H9lMEdvJQmg/4rGxkMnhL4MuGt7eRf0PVcalEdkMfdl4uxjZHCEjOp1fgk
-         EvPw==
-X-Gm-Message-State: AJIora+vIPSfaaKyXLvgDzp1uwtOKg+HYK1zcOBmmYaQLP8fzxNLLJ7U
-        2iNJ0WzuUdST3CyJ+Bd0KgU=
-X-Google-Smtp-Source: AGRyM1su0xHZ6Ef0N6HO80MhMbx7u3fom5ZT26vDFPPmAs9nMDqcs/2xpps8t6IEicgZawPau+/WUQ==
-X-Received: by 2002:a17:90b:4c8c:b0:1ef:bff6:c964 with SMTP id my12-20020a17090b4c8c00b001efbff6c964mr14952558pjb.36.1657510765658;
-        Sun, 10 Jul 2022 20:39:25 -0700 (PDT)
+        bh=0Nm6h41G3O9mUNLTUv/DHYC4MVXmTKo7elSHwGl4+TY=;
+        b=IfpRiceJ9FFV1QInTcmaE7IIZtvdZu1SsSZpiZpN/9b6HHAD+WbkFklvrDa+Kxmj1k
+         pSri4A4rE2gSATB6Lmey66/aW0AoeoGmP3vnEiXfjSTX8LJk37XxkCA0AUBJ4cvqK5qZ
+         bfyaHvIc1f5s8zBr8ktekdEaZLDO6T4eVCKAjFTFeuzptcpB2V3vB2PfBIsikarr+Vva
+         k9/vVs+ZMFcLhL4aZYlVzRD34iTwaP5a6gxpvv9w7c5RjxL+oq/03dDI3NWhvwzCcv0l
+         sgT54YzSYEa/UD0Kblu8IiXcdNh7/zECoKxrnK2T26RheXjJ5aMq9720Xbx6AwZI6bOd
+         qMOQ==
+X-Gm-Message-State: AJIora/U4a52S4qGlUSQMThDrT8ef07JL8oYi8w9WwTsdslPcP0xe9M+
+        KiZ97kwX0JPJmmw7Mju1IYQ=
+X-Google-Smtp-Source: AGRyM1tUaxYdOoSg5+vz9UFDszgiywO4+UAMIuTL77dmYecDZuFcwEyuJp+t5+bZGLeKQaUw2iGuLQ==
+X-Received: by 2002:a63:ba5e:0:b0:415:ff45:8a47 with SMTP id l30-20020a63ba5e000000b00415ff458a47mr3189501pgu.44.1657510870434;
+        Sun, 10 Jul 2022 20:41:10 -0700 (PDT)
 Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id z2-20020a1709027e8200b0016be2bb8e68sm3432786pla.303.2022.07.10.20.39.24
+        by smtp.gmail.com with ESMTPSA id o12-20020a170902d4cc00b0016c433f7c12sm1389902plg.271.2022.07.10.20.41.08
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 10 Jul 2022 20:39:24 -0700 (PDT)
-Message-ID: <43810471-af38-570f-8cce-7b0f927bdc2d@acm.org>
-Date:   Sun, 10 Jul 2022 20:39:23 -0700
+        Sun, 10 Jul 2022 20:41:09 -0700 (PDT)
+Message-ID: <213634d7-a796-8509-9612-56fe7c61ef01@acm.org>
+Date:   Sun, 10 Jul 2022 20:41:08 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.11.0
-Subject: Re: [PATCH] scsi: megaraid: clear READ queue map's nr_queues
+Subject: Re: [RESEND PATCH v3] scsi: ufs: exclude UECxx from SFR dump list
 Content-Language: en-US
-To:     Ming Lei <ming.lei@redhat.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Cc:     Kashyap Desai <kashyap.desai@broadcom.com>,
-        sumit.saxena@broadcom.com, chandrakanth.patil@broadcom.com,
-        linux-block@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
-        Guangwu Zhang <guazhang@redhat.com>
-References: <20220706125942.528533-1-ming.lei@redhat.com>
+To:     Kiwoong Kim <kwmad.kim@samsung.com>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        adrian.hunter@intel.com, sc.suh@samsung.com, hy50.seo@samsung.com,
+        sh425.lee@samsung.com, bhoon95.kim@samsung.com
+References: <CGME20220315095716epcas2p2ec52c66863b71180a6c2c45856058683@epcas2p2.samsung.com>
+ <1647338162-75639-1-git-send-email-kwmad.kim@samsung.com>
+ <1ad26d79-9f5c-9b53-6904-7d7fd53fac2f@acm.org>
+ <000001d894ca$45da51f0$d18ef5d0$@samsung.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220706125942.528533-1-ming.lei@redhat.com>
+In-Reply-To: <000001d894ca$45da51f0$d18ef5d0$@samsung.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/6/22 05:59, Ming Lei wrote:
-> megaraid scsi driver sets set->nr_maps as 3 if poll_queues is > 0, and
-> blk-mq actually initializes each map's nr_queues as nr_hw_queues, so
-> megaraid driver has to clear READ queue map's nr_queues, otherwise queue
-> map becomes broken if poll_queues is set as non-zero.
+On 7/10/22 19:02, Kiwoong Kim wrote:
+>> Is this behavior specific to the Exynos controller or is this behavior
+>> required by the UFSHCI specification? In the latter case, can you tell me
+>> where to find this requirement in the UFSHCI specification? I haven't
+>> found that requirement yet. Maybe this means that I overlooked something?
+>
+> This is needed because those SFRs are ROC (Read to Clear) type.
+> That means reading causes clearing contexts.
+> The SFRs are mainly read in interrupt context but the reading is also done in dump.
+The above repeats what I can find in the patch description but doesn't 
+answer my question :-(
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Bart.
