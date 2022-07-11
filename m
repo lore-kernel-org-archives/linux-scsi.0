@@ -2,90 +2,137 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A457C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jul 2022 14:43:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89206CCA47B
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jul 2022 14:49:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231182AbiGKOnD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Jul 2022 10:43:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36164 "EHLO
+        id S231774AbiGKOty (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Jul 2022 10:49:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43972 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231234AbiGKOnA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jul 2022 10:43:00 -0400
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4088F6714B;
-        Mon, 11 Jul 2022 07:42:53 -0700 (PDT)
-X-UUID: d6f0f197ad0e4b9eb1096b437bc4e42b-20220711
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.8,REQID:e14be492-6eeb-45ad-b03b-8953abdd6d2e,OB:0,LO
-        B:0,IP:0,URL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,RULE:Release_Ham,ACT
-        ION:release,TS:-5
-X-CID-META: VersionHash:0f94e32,CLOUDID:513ffa63-0b3f-4b2c-b3a6-ed5c044366a0,C
-        OID:IGNORED,Recheck:0,SF:nil,TC:nil,Content:0,EDM:-3,IP:nil,URL:0,File:nil
-        ,QS:nil,BEC:nil,COL:0
-X-UUID: d6f0f197ad0e4b9eb1096b437bc4e42b-20220711
-Received: from mtkmbs11n1.mediatek.inc [(172.21.101.185)] by mailgw01.mediatek.com
-        (envelope-from <powen.kao@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 1736998879; Mon, 11 Jul 2022 22:42:47 +0800
-Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.792.3;
- Mon, 11 Jul 2022 22:42:45 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.792.3 via Frontend Transport; Mon, 11 Jul 2022 22:42:45 +0800
-From:   Po-Wen Kao <powen.kao@mediatek.com>
-To:     <asutoshd@codeaurora.org>, Alim Akhtar <alim.akhtar@samsung.com>,
-        "Avri Altman" <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>
-CC:     <wsd_upstream@mediatek.com>, <peter.wang@mediatek.com>,
-        <stanley.chu@mediatek.com>, <powen.kao@mediatek.com>,
-        <alice.chao@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <cc.chou@mediatek.com>, <chaotian.jing@mediatek.com>,
-        <jiajie.hao@mediatek.com>, <mason.zhang@mediatek.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>
-Subject: [PATCH 1/1] scsi: ufs: fix missing clk change notification on host reset
-Date:   Mon, 11 Jul 2022 22:42:23 +0800
-Message-ID: <20220711144224.17916-2-powen.kao@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20220711144224.17916-1-powen.kao@mediatek.com>
-References: <20220711144224.17916-1-powen.kao@mediatek.com>
+        with ESMTP id S231800AbiGKOtt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jul 2022 10:49:49 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A136B32449;
+        Mon, 11 Jul 2022 07:49:48 -0700 (PDT)
+Received: from fraeml705-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LhRWV2BZ9z67XMQ;
+        Mon, 11 Jul 2022 22:45:26 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml705-chm.china.huawei.com (10.206.15.54) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2375.24; Mon, 11 Jul 2022 16:49:46 +0200
+Received: from [10.202.227.197] (10.202.227.197) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Mon, 11 Jul 2022 15:49:45 +0100
+Message-ID: <2b36e407-f053-20cc-1d7f-983a4424665c@huawei.com>
+Date:   Mon, 11 Jul 2022 15:49:46 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH v5 0/5] DMA mapping changes for SCSI core
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>
+CC:     <joro@8bytes.org>, <will@kernel.org>, <jejb@linux.ibm.com>,
+        <m.szyprowski@samsung.com>, <robin.murphy@arm.com>,
+        <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
+        <iommu@lists.linux.dev>, <linux-scsi@vger.kernel.org>,
+        <linuxarm@huawei.com>
+References: <1656590892-42307-1-git-send-email-john.garry@huawei.com>
+ <b5f80062-e8ef-9597-1b0c-393140950dfb@huawei.com>
+ <20220706134447.GA23753@lst.de> <yq1y1x47jgn.fsf@ca-mkp.ca.oracle.com>
+ <5fd4814a-81b1-0e71-58e0-57a747eb684e@huawei.com>
+ <6367a264-a3d3-8857-9b5a-2afcd25580cb@opensource.wdc.com>
+ <a415e4a1-72ce-53e1-437a-fc7e56e4b913@huawei.com>
+ <62b801e8-66b6-0af7-b0c9-195823bf9f62@opensource.wdc.com>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <62b801e8-66b6-0af7-b0c9-195823bf9f62@opensource.wdc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.202.227.197]
+X-ClientProxiedBy: lhreml723-chm.china.huawei.com (10.201.108.74) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In ufshcd_host_reset_and_restore(), ufshcd_set_clk_freq() is called
-to scale clk rate. However, this did not call vops->clk_scale_notify()
-to inform platform driver of clk change.
+On 11/07/2022 11:40, Damien Le Moal wrote:
+> On 7/11/22 16:36, John Garry wrote:
+>> On 11/07/2022 00:08, Damien Le Moal wrote:
+>>>> Ah, I think that I misunderstood Damien's question. I thought he was
+>>>> asking why not keep shost max_sectors at dma_max_mapping_size() and then
+>>>> init each sdev request queue max hw sectors at dma_opt_mapping_size().
+>>> I was suggesting the reverse:)  Keep the device hard limit
+>>> (max_hw_sectors) to the max dma mapping and set the soft limit
+>>> (max_sectors) to the optimal dma mapping size.
+>>
+>> Sure, but as I mentioned below, I only see a small % of requests whose
+>> mapping size exceeds max_sectors but that still causes a big performance
+>> hit. So that is why I want to set the hard limit as the optimal dma
+>> mapping size.
+> 
+> How can you possibly end-up with requests larger than max_sectors ? BIO
+> split is done using this limit, right ? Or is it that request merging is
+> allowed up to max_hw_sectors even if the resulting request size exceeds
+> max_sectors ?
+> 
 
-We propose to call on ufshcd_scale_clks() instead so that clk change
-can be properly handled.
+Ah, I see how I thought that I was seeing requests whose size exceeded 
+max_sectors. Somebody must have changed a single disk in my system and 
+this odd disk has a higher default max_sectors_kb -- 512 vs 128 for the 
+rest.
 
-Signed-off-by: Po-Wen Kao <powen.kao@mediatek.com>
----
- drivers/scsi/ufs/ufshcd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+So ignoring my nonesence that I was seeing oversize requests, as for the 
+idea to set default max_sectors at dma_opt_mapping_size(), I see some 
+issues:
+- for SAS disks I have no common point to impose this limit. Maybe in 
+the slave configure callback, but each SAS driver has its own 
+implementation generally
+- Even if we do config in slave_configure callback the max_sectors value 
+is overwritten later in sd_revalidate_disk().
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 3f9caafa91bf..3e7af7b11d2e 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -7230,7 +7230,7 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
- 	hba->silence_err_logs = false;
- 
- 	/* scale up clocks to max frequency before full reinitialization */
--	ufshcd_set_clk_freq(hba, true);
-+	ufshcd_scale_clks(hba, true);
- 
- 	err = ufshcd_hba_enable(hba);
- 
--- 
-2.18.0
+This following change could sort the issue though:
+
+---8<----
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 895b56c8f25e..bb49bea3d161 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3214,6 +3214,8 @@ static int sd_revalidate_disk(struct gendisk *disk)
+         sector_t old_capacity = sdkp->capacity;
+         unsigned char *buffer;
+         unsigned int dev_max, rw_max;
++       struct Scsi_Host *host = sdp->host;
++       struct device *dev = host->dma_dev;
+
+         SCSI_LOG_HLQUEUE(3, sd_printk(KERN_INFO, sdkp,
+                                       "sd_revalidate_disk\n"));
+@@ -3296,8 +3298,13 @@ static int sd_revalidate_disk(struct gendisk *disk)
+                                       (sector_t)BLK_DEF_MAX_SECTORS);
+         }
+
+-       /* Do not exceed controller limit */
+-       rw_max = min(rw_max, queue_max_hw_sectors(q));
++       if (dev->dma_mask) {
++               /* Do not exceed dma optimal limit */
++               rw_max = min_t(unsigned int, rw_max,
++                               dma_opt_mapping_size(dev) >> SECTOR_SHIFT);
++       } else {
++               rw_max = min(rw_max, queue_max_hw_sectors(q));
++       }
+
+         /*
+          * Only update max_sectors if previously unset or if the 
+current value
+
+--->8---
+
+Or I could go with the method in this series, which is not preferred. 
+Let me know what you think.
+
+Thanks,
+John
 
