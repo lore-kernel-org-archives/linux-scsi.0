@@ -2,78 +2,72 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 464C6C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jul 2022 21:04:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DAA2C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jul 2022 23:00:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231866AbiGKVEz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Jul 2022 17:04:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53464 "EHLO
+        id S229606AbiGKXA6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Jul 2022 19:00:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54842 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229476AbiGKVEy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jul 2022 17:04:54 -0400
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E05552DC0;
-        Mon, 11 Jul 2022 14:04:54 -0700 (PDT)
-Received: by mail-pl1-f181.google.com with SMTP id b2so5492161plx.7;
-        Mon, 11 Jul 2022 14:04:54 -0700 (PDT)
+        with ESMTP id S229568AbiGKXA5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jul 2022 19:00:57 -0400
+Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA54F53D05
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Jul 2022 16:00:56 -0700 (PDT)
+Received: by mail-pf1-f175.google.com with SMTP id d10so5982211pfd.9
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Jul 2022 16:00:56 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:references:from:in-reply-to
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=zmWcLVgHn2c2LDFYN2xm/2mc8MyVE1o/XyuPBL+yHj8=;
-        b=XhU2wkn6PHuTcxjIB4bMhNxWGM81eapeK38p0JsxRfTpHp+HTnQgLXKU54eBbZ+468
-         uhqzVj31wNdGvTlA8NTAOe+3SVvt6+e4wtuXo3D9ga2AOWsCvsAa/iYDH79OeskdnNmC
-         4yzb2Az6vdvD68fd1z2+MnkwNJis3mtmWMGb4EHuC4h+Xfmk9Q9RuqkKT+2nF1KICple
-         b4RqHo9WUyFk/KpfCYKUE6YSbDFfdqJsUH+BcDnYnYPSMhr7EU4mHderZOfPeuHeaXH7
-         SQvcPjUZXnjwFmMF4+6ZKsb8kLaQXjXEkIPv4HayCuXCL5wjIaZBIIuisZUwQh+3kTDm
-         2kDA==
-X-Gm-Message-State: AJIora/cbWFL6sneDMcIk8BBdDVpFpEupNz9CsJPccfH4c+0OyjVL0DW
-        nAXE6LU+3Sd++Tp2LWqs96Q=
-X-Google-Smtp-Source: AGRyM1uIvxYh+CSLv9wcMjfaFUJWfxyv9q7+4nCF5+kgjM2LxtJmqbJ7dx5OFKSO3nyLvGrtgvMakw==
-X-Received: by 2002:a17:903:1108:b0:16a:a0ab:8f89 with SMTP id n8-20020a170903110800b0016aa0ab8f89mr20384827plh.12.1657573493573;
-        Mon, 11 Jul 2022 14:04:53 -0700 (PDT)
-Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id c1-20020a170902b68100b0016bd62bc003sm5168339pls.141.2022.07.11.14.04.52
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 11 Jul 2022 14:04:52 -0700 (PDT)
-Message-ID: <58eec756-0932-cc43-8702-1c6e23d89ea4@acm.org>
-Date:   Mon, 11 Jul 2022 14:04:51 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [RESEND PATCH v3] scsi: ufs: exclude UECxx from SFR dump list
-Content-Language: en-US
-To:     Kiwoong Kim <kwmad.kim@samsung.com>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com,
-        adrian.hunter@intel.com, sc.suh@samsung.com, hy50.seo@samsung.com,
-        sh425.lee@samsung.com, bhoon95.kim@samsung.com
-References: <CGME20220315095716epcas2p2ec52c66863b71180a6c2c45856058683@epcas2p2.samsung.com>
- <1647338162-75639-1-git-send-email-kwmad.kim@samsung.com>
- <1ad26d79-9f5c-9b53-6904-7d7fd53fac2f@acm.org>
- <000001d894ca$45da51f0$d18ef5d0$@samsung.com>
- <213634d7-a796-8509-9612-56fe7c61ef01@acm.org>
- <002e01d894da$e2021bc0$a6065340$@samsung.com>
+        bh=9rmdT9Gt0LPJemxvJ9q3QSxMdEXlYB2ckj3A+Acn8KA=;
+        b=xBKQdOkjie0OpnYHLZer7a3vO5fnqChICVvQe+3RlQ8ERZpeE44OnXdTe3Co9FQgN3
+         d1D1NNnZjSskNKnzUfTnqCBvTC7TzaNFRE99gjE/y9j8laWg+eb1Xhrxahybaz2MtNRr
+         QJ6RGf4dkbf3kdRNfxbW8DlrKijuYOGq94q+UYJqgAT/gi6jAw3BQrU/7+P2cRqAD+/M
+         f+MRnLXNNmaJ0NaRQrVfHqXKIuIqd0Exj7jS6Y/sw57vsi0uzYMIPozRIIAAX893dzYj
+         6jmS2yBnPdBjfk0y0INP3w93FxvA3lyMEKXazFz9kuGt2lVfMO6EEwpgMkqhX5OxYT2h
+         FfTA==
+X-Gm-Message-State: AJIora8rhoMxzOgz6cVEUv4y4dNzmPL3YM/NKqE6n6ijrsUtqX7rljd1
+        E0XzY1GhRDsGEKRao4iFmO0=
+X-Google-Smtp-Source: AGRyM1v8s6CrWRo5+r7SGbWbSVCK4NA5zc56dK5Uizv/ZI92Jo4KD2bl2dq6wgUAD0aaJW0Xb11X9g==
+X-Received: by 2002:a63:d409:0:b0:412:86b2:150d with SMTP id a9-20020a63d409000000b0041286b2150dmr17256820pgh.509.1657580455939;
+        Mon, 11 Jul 2022 16:00:55 -0700 (PDT)
+Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id m6-20020a637d46000000b00411955c03e5sm4761886pgn.29.2022.07.11.16.00.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 11 Jul 2022 16:00:55 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <002e01d894da$e2021bc0$a6065340$@samsung.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH 0/3] Improve READ CAPACITY reporting and handling
+Date:   Mon, 11 Jul 2022 16:00:48 -0700
+Message-Id: <20220711230051.15372-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.36.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/10/22 21:01, Kiwoong Kim wrote:
-> It's definitely not Exynos specific
-> because the fact that those SFRs are ROC type is written in UFSHCI.
-> I don't know more things to explain why this patch is needed.
-> 
-> You just want to know whether any additional descriptions about ROC is written ?
+Hi Martin,
 
-Hi Kiwoong,
+The three patches in this series improve READ CAPACITY reporting for zoned
+block devices in the scsi_debug driver and also improve READ CAPACITY handling
+in the SCSI disk (sd) driver for zoned block devices.
 
-I had overlooked the "ROC" text in the "Type" column in the UFSHCI 
-specification. Thank you for having taken the time to answer my questions.
+Please consider these patches for kernel v5.20.
+
+Thanks,
 
 Bart.
+
+Bart Van Assche (3):
+  scsi_debug: Set the SAME field in the REPORT ZONES response
+  scsi_debug: Make the READ CAPACITY response compliant with ZBC
+  scsi: sd_zbc: Fix handling of RC BASIS
+
+ drivers/scsi/scsi_debug.c | 22 +++++++++++++++++++---
+ drivers/scsi/sd_zbc.c     | 26 ++++++++++++++++++++++----
+ 2 files changed, 41 insertions(+), 7 deletions(-)
+
