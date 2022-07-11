@@ -2,90 +2,68 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE54FC43334
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jul 2022 02:29:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A294BC43334
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jul 2022 03:39:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229530AbiGKC3Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 10 Jul 2022 22:29:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37642 "EHLO
+        id S229663AbiGKDj2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 10 Jul 2022 23:39:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40400 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229450AbiGKC3W (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Jul 2022 22:29:22 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6FD3B6363
-        for <linux-scsi@vger.kernel.org>; Sun, 10 Jul 2022 19:29:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1657506560;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Vz1GK9BX/gFWrmQP642bPgzY3Nvglr3NVgRq93Im89w=;
-        b=Ly6i2ZKQgdlUpO9WpL2mCw1DSGVCfVTcPScHkP3tgK8rRHmQNIELWZoj93xSlEpZ0wJevO
-        23CXXJE6q+UwIRwcWLbnJByodO2YwiYj/okJvPKE84EbCL32cdwaOTvxdFAj045y/+fdTi
-        I6hJj4cUjHlFzU5aGNwrSwJ6A28jOgE=
-Received: from mail-yb1-f198.google.com (mail-yb1-f198.google.com
- [209.85.219.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-120-5FZP67t2OraJnO6vSGQJRw-1; Sun, 10 Jul 2022 22:29:19 -0400
-X-MC-Unique: 5FZP67t2OraJnO6vSGQJRw-1
-Received: by mail-yb1-f198.google.com with SMTP id j11-20020a05690212cb00b006454988d225so2873938ybu.10
-        for <linux-scsi@vger.kernel.org>; Sun, 10 Jul 2022 19:29:19 -0700 (PDT)
+        with ESMTP id S229536AbiGKDj1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Jul 2022 23:39:27 -0400
+Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5758213DEA;
+        Sun, 10 Jul 2022 20:39:26 -0700 (PDT)
+Received: by mail-pj1-f50.google.com with SMTP id o5-20020a17090a3d4500b001ef76490983so3772156pjf.2;
+        Sun, 10 Jul 2022 20:39:26 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=Vz1GK9BX/gFWrmQP642bPgzY3Nvglr3NVgRq93Im89w=;
-        b=u1MLbgfQ1Ojn+FrOUWy8AwtLyuRg6ChuN1P1MFWNkWu4/7Vr+6UkHF+KVzmR0AfnA9
-         vkYPMn3kKAgwvfiJjvrXnjQlunOC/p2FopN9EBwl0gRAb0+XuSc38haoghcI19gDzCtU
-         x/NxTetfVFZQRbV3fN7SzOutT8XJmfFpizclX3k40BbywoW9NmG4rhByzF/v9rMajIYC
-         wwfDQmKwvZaLYMQIjpUMEjhrX4X4tTi81u6SOAvamTgPKQ/EPnPw999t+Ky07IAekZ5r
-         NiCoqPdB/Ud0ck5NBMdL1BqRiHfD3KOcSBgAD4OOipE8j0Sd3B5ZaBpPMKWl8in6TUVL
-         ij9w==
-X-Gm-Message-State: AJIora/7MgK336KbKnSnQONQ5qW5OkT9+o43ubXLIF9HdTzBjDi0zPrw
-        KwfEIOLyuDrZ28TLh51sV94Pi7fai+/aMbRmnibPY5q8PDesXp9TdvjkNs6GJlaOjK2J81wykHa
-        cRI1z+e06C38/ife70dgzycF2xd7QrHJmi1ek+A==
-X-Received: by 2002:a25:3a81:0:b0:66a:645f:fe99 with SMTP id h123-20020a253a81000000b0066a645ffe99mr14836582yba.489.1657506558827;
-        Sun, 10 Jul 2022 19:29:18 -0700 (PDT)
-X-Google-Smtp-Source: AGRyM1vqb00OL/S1ZQjGqe7y+O8w1oRX078Ot3LxIDI/LAz0Qo3pnFgAsc+9LkWNbW0R7S/zmsYzgDDbhqhxqw1uYNM=
-X-Received: by 2002:a25:3a81:0:b0:66a:645f:fe99 with SMTP id
- h123-20020a253a81000000b0066a645ffe99mr14836571yba.489.1657506558645; Sun, 10
- Jul 2022 19:29:18 -0700 (PDT)
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=QE7JJYPymJYEjSIRg5jCrbP1FqM2+RCByJ/BFBKot1A=;
+        b=vvLc8fqTIgWxiYsD9rHI9Lzk0drMsSfSaySPNZysynJFunZIytXBr2iznmjtZ8AV0Z
+         yW4RmvG4HTgf8qozYFgIhtYybn6jK0ZPBLvywUHMmC488jnLOjfA711D57F083nrtRBW
+         /xlPeQWzGB6RW1u+7Mrz5H4XQUHAxQTID5FiJlOxlNWKvfcsMaGAwhDZdNKJTMExvq2W
+         0XqUauZZvK/VW9EcgZBNZNsOCqumdz7GTGxphZie9U4vCqF3o+AEow17WI8FeGmBYrSG
+         STvWlgTcq5H9lMEdvJQmg/4rGxkMnhL4MuGt7eRf0PVcalEdkMfdl4uxjZHCEjOp1fgk
+         EvPw==
+X-Gm-Message-State: AJIora+vIPSfaaKyXLvgDzp1uwtOKg+HYK1zcOBmmYaQLP8fzxNLLJ7U
+        2iNJ0WzuUdST3CyJ+Bd0KgU=
+X-Google-Smtp-Source: AGRyM1su0xHZ6Ef0N6HO80MhMbx7u3fom5ZT26vDFPPmAs9nMDqcs/2xpps8t6IEicgZawPau+/WUQ==
+X-Received: by 2002:a17:90b:4c8c:b0:1ef:bff6:c964 with SMTP id my12-20020a17090b4c8c00b001efbff6c964mr14952558pjb.36.1657510765658;
+        Sun, 10 Jul 2022 20:39:25 -0700 (PDT)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id z2-20020a1709027e8200b0016be2bb8e68sm3432786pla.303.2022.07.10.20.39.24
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 10 Jul 2022 20:39:24 -0700 (PDT)
+Message-ID: <43810471-af38-570f-8cce-7b0f927bdc2d@acm.org>
+Date:   Sun, 10 Jul 2022 20:39:23 -0700
 MIME-Version: 1.0
-References: <20220706125942.528533-1-ming.lei@redhat.com>
-In-Reply-To: <20220706125942.528533-1-ming.lei@redhat.com>
-From:   Ming Lei <ming.lei@redhat.com>
-Date:   Mon, 11 Jul 2022 10:29:07 +0800
-Message-ID: <CAFj5m9JEtVY4WBwYPPmaJHXamozUXLZ2Pzk_2+ZNN7o6x7CYFQ@mail.gmail.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
 Subject: Re: [PATCH] scsi: megaraid: clear READ queue map's nr_queues
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+Content-Language: en-US
+To:     Ming Lei <ming.lei@redhat.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org
 Cc:     Kashyap Desai <kashyap.desai@broadcom.com>,
         sumit.saxena@broadcom.com, chandrakanth.patil@broadcom.com,
-        linux-block <linux-block@vger.kernel.org>,
-        Hannes Reinecke <hare@suse.de>,
-        Guangwu Zhang <guazhang@redhat.com>,
-        Ming Lei <minlei@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+        linux-block@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
+        Guangwu Zhang <guazhang@redhat.com>
+References: <20220706125942.528533-1-ming.lei@redhat.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20220706125942.528533-1-ming.lei@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello Guys,
-
-On Wed, Jul 6, 2022 at 8:59 PM Ming Lei <ming.lei@redhat.com> wrote:
->
+On 7/6/22 05:59, Ming Lei wrote:
 > megaraid scsi driver sets set->nr_maps as 3 if poll_queues is > 0, and
 > blk-mq actually initializes each map's nr_queues as nr_hw_queues, so
 > megaraid driver has to clear READ queue map's nr_queues, otherwise queue
 > map becomes broken if poll_queues is set as non-zero.
->
-> Fixes: 9e4bec5b2a23 ("scsi: megaraid_sas: mq_poll support")
 
-Ping...
-
-Without this fix, it is easy to observe fio hang when running cpu hotplug
-test in case of 'poll_queues > 0'.
-
-Thanks,
-Ming
-
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
