@@ -2,49 +2,49 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41453C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jul 2022 23:01:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1684DC43334
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jul 2022 23:01:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231208AbiGKXBC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Jul 2022 19:01:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54878 "EHLO
+        id S229933AbiGKXBH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Jul 2022 19:01:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54912 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229933AbiGKXBA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jul 2022 19:01:00 -0400
-Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5EF05C944
-        for <linux-scsi@vger.kernel.org>; Mon, 11 Jul 2022 16:00:59 -0700 (PDT)
-Received: by mail-pf1-f179.google.com with SMTP id j3so5994528pfb.6
-        for <linux-scsi@vger.kernel.org>; Mon, 11 Jul 2022 16:00:59 -0700 (PDT)
+        with ESMTP id S231271AbiGKXBC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jul 2022 19:01:02 -0400
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52F7561B1D
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Jul 2022 16:01:01 -0700 (PDT)
+Received: by mail-pl1-f181.google.com with SMTP id l12so5686977plk.13
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Jul 2022 16:01:01 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=MwViGzXbdResYrRh1SJJofBtxGgreKrPyJ8NRT/IJic=;
-        b=mBvKPforcoSlEP5JaMSOa+Cw36mmxSxl9+TiVkA97l/GvvGlNwCxxFTMSVDqk6q2YX
-         Vxuyh0Asffj5wu7Glnu29IyxYHbkR4QzUV3ERLvLrGzHUHB5fkq2oZBceWISevcbUrHE
-         VJsOnxV7Boh7LA/+mRuwKnnGKpKWMUxUNTwCPaq/UQU4llaCnejuuaNbMklVue4aT+Ny
-         FSMf0Q2JduDpQP9KDq9UdkwL0urwUGzbw1zhf5twrPNLFBwArKfLlNbRM7xr7PAqpbFL
-         7aNhS1aMpBm7jH8Bu0D15lvjMSGqeVsqE9BYDJNSAYXZsEqENn9wZax+0sDXKC17Ori8
-         1ZwA==
-X-Gm-Message-State: AJIora/krFQR822tbgABeDKSjY1nZhlNDR8xSYoWISWFtm+6Cog3XPMb
-        j9NVWOVQ+LFWsEy8cq5CcNv42ywf6wg=
-X-Google-Smtp-Source: AGRyM1ueYScEI8ro4cqAyIvF5/5bGW88A6Gxna1d3SVOA++ypXjAHLNdWNCwCiUOxeCadi5jQXo8IQ==
-X-Received: by 2002:a62:a50e:0:b0:528:cc50:82db with SMTP id v14-20020a62a50e000000b00528cc5082dbmr20735645pfm.43.1657580458990;
-        Mon, 11 Jul 2022 16:00:58 -0700 (PDT)
+        bh=Ie36p2rZzY5GvCYUO5UdUwYiXQgaNmEth6QGiyc7UXg=;
+        b=DqfV1+OlH1s4KxruICRaPBklOjzUE+w9uJOL8NcsbdAahtbKWbY49r4YbSluT7EXy3
+         vRMWv3lL8rJgWai0Lqxg+1NXPDgkDQq5/KYU5XGbOT7mxQv8EbJoILPkVv/alXVp9Ca8
+         PMzuaAJlnW8BCdfGESwHFoQbBLFEGVnZorp5UGqhgAxcv5i6QMrVCwBlpcvV7uhZO5aJ
+         KBP6AY93iswax774g4Md8u+5Lv6ZeAV+fqC/Mo4Zwy0JCGcjWXkK9+EoSt1TjBFZrxei
+         1jRodyem2uWaSx+3Xt42Hs77ITrOPQwI0vcv6+hKt5YqZrKDwG448RFNpCkb5l3LtohD
+         EWDg==
+X-Gm-Message-State: AJIora9vH/i8cyOtSOu+Hi0e0nggyJThSro0SJcSXumj6Uexr+IfzZjp
+        R1kgHR/inEqpLf0QeeM3bsk=
+X-Google-Smtp-Source: AGRyM1szUiOrROfBzh2t1n8qpt7Kc0ueKXRaSmlrJqQyqIwO6gMX32RTChTywwTxrt0sSYKpsda3wg==
+X-Received: by 2002:a17:902:cecb:b0:16c:40a8:88ff with SMTP id d11-20020a170902cecb00b0016c40a888ffmr9751096plg.33.1657580460588;
+        Mon, 11 Jul 2022 16:01:00 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id m6-20020a637d46000000b00411955c03e5sm4761886pgn.29.2022.07.11.16.00.57
+        by smtp.gmail.com with ESMTPSA id m6-20020a637d46000000b00411955c03e5sm4761886pgn.29.2022.07.11.16.00.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 Jul 2022 16:00:58 -0700 (PDT)
+        Mon, 11 Jul 2022 16:00:59 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
         Bart Van Assche <bvanassche@acm.org>,
-        Douglas Gilbert <dgilbert@interlog.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Subject: [PATCH 2/3] scsi_debug: Make the READ CAPACITY response compliant with ZBC
-Date:   Mon, 11 Jul 2022 16:00:50 -0700
-Message-Id: <20220711230051.15372-3-bvanassche@acm.org>
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Hannes Reinecke <hare@suse.com>
+Subject: [PATCH 3/3] scsi: sd_zbc: Fix handling of RC BASIS
+Date:   Mon, 11 Jul 2022 16:00:51 -0700
+Message-Id: <20220711230051.15372-4-bvanassche@acm.org>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220711230051.15372-1-bvanassche@acm.org>
 References: <20220711230051.15372-1-bvanassche@acm.org>
@@ -54,57 +54,67 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From ZBC-1:
-* RC BASIS = 0: The RETURNED LOGICAL BLOCK ADDRESS field indicates the
-  highest LBA of a contiguous range of zones that are not sequential write
-  required zones starting with the first zone.
-* RC BASIS = 1: The RETURNED LOGICAL BLOCK ADDRESS field indicates the LBA
-  of the last logical block on the logical unit.
+Using the RETURNED LOGICAL BLOCK ADDRESS field + 1 as the capacity (largest
+addressable LBA) if RC BASIS = 0 is wrong if there are sequential write
+required zones. Hence only use the RC BASIS = 0 capacity if there are no
+sequential write required zones.
 
-The current scsi_debug READ CAPACITY response does not comply with the above
-if there are one or more sequential write required zones. Hence this patch.
-
-Cc: Douglas Gilbert <dgilbert@interlog.com>
-Cc: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Fixes: 64e14ece0700 ("scsi: scsi_debug: Implement ZBC host-aware emulation")
+Cc: Damien Le Moal <damien.lemoal@wdc.com>
+Cc: Hannes Reinecke <hare@suse.com>
+Fixes: d2e428e49eec ("scsi: sd_zbc: Reduce boot device scan and revalidate time")
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi_debug.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ drivers/scsi/sd_zbc.c | 26 ++++++++++++++++++++++----
+ 1 file changed, 22 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 5a8efc328fb5..c5f4af774078 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -304,6 +304,7 @@ struct sdebug_dev_info {
- 	unsigned int nr_exp_open;
- 	unsigned int nr_closed;
- 	unsigned int max_open;
-+	unsigned int rc_basis:2;
- 	ktime_t create_ts;	/* time since bootup that this device was created */
- 	struct sdeb_zone_state *zstate;
- };
-@@ -1901,6 +1902,8 @@ static int resp_readcap16(struct scsi_cmnd *scp,
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index 6acc4f406eb8..41ff1c0fd04b 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -699,7 +699,7 @@ static int sd_zbc_check_zoned_characteristics(struct scsi_disk *sdkp,
+  *
+  * Get the device zone size and check that the device capacity as reported
+  * by READ CAPACITY matches the max_lba value (plus one) of the report zones
+- * command reply for devices with RC_BASIS == 0.
++ * command reply.
+  *
+  * Returns 0 upon success or an error code upon failure.
+  */
+@@ -709,6 +709,7 @@ static int sd_zbc_check_capacity(struct scsi_disk *sdkp, unsigned char *buf,
+ 	u64 zone_blocks;
+ 	sector_t max_lba;
+ 	unsigned char *rec;
++	u8 same;
+ 	int ret;
  
- 	arr[15] = sdebug_lowest_aligned & 0xff;
+ 	/* Do a report zone to get max_lba and the size of the first zone */
+@@ -716,9 +717,26 @@ static int sd_zbc_check_capacity(struct scsi_disk *sdkp, unsigned char *buf,
+ 	if (ret)
+ 		return ret;
  
-+	arr[12] |= devip->rc_basis << 4;
+-	if (sdkp->rc_basis == 0) {
+-		/* The max_lba field is the capacity of this device */
+-		max_lba = get_unaligned_be64(&buf[8]);
++	/*
++	 * From ZBC-1: "If the ZONE LIST LENGTH field is zero then the SAME
++	 * field is invalid and should be ignored by the application client."
++	 */
++	if (get_unaligned_be32(&buf[0]) == 0) {
++		sd_printk(KERN_INFO, sdkp, "No zones have been reported\n");
++		return -EIO;
++	}
 +
- 	if (have_dif_prot) {
- 		arr[12] = (sdebug_dif - 1) << 1; /* P_TYPE */
- 		arr[12] |= 1; /* PROT_EN */
-@@ -5107,10 +5110,12 @@ static int sdebug_device_create_zones(struct sdebug_dev_info *devip)
- 			zsp->z_size =
- 				min_t(u64, devip->zsize, capacity - zstart);
- 		} else if ((zstart & (devip->zsize - 1)) == 0) {
--			if (devip->zmodel == BLK_ZONED_HM)
-+			if (devip->zmodel == BLK_ZONED_HM) {
- 				zsp->z_type = ZBC_ZTYPE_SWR;
--			else
-+				devip->rc_basis = 1;
-+			} else {
- 				zsp->z_type = ZBC_ZTYPE_SWP;
-+			}
- 			zsp->z_cond = ZC1_EMPTY;
- 			zsp->z_wp = zsp->z_start;
- 			zsp->z_size =
++	same = buf[4] & 0xf;
++	max_lba = get_unaligned_be64(&buf[8]);
++	/*
++	 * The max_lba field is the largest addressable LBA of the disk if:
++	 * - Either RC BASIS == 1.
++	 * - Or RC BASIS == 0, there is at least one zone in the response
++	 *   (max_lba != 0) and all zones have the same type (same == 1 ||
++	 *   same == 2).
++	 */
++	if ((sdkp->rc_basis == 0 && max_lba && (same == 1 || same == 2)) ||
++	    sdkp->rc_basis == 1) {
+ 		if (sdkp->capacity != max_lba + 1) {
+ 			if (sdkp->first_scan)
+ 				sd_printk(KERN_WARNING, sdkp,
