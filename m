@@ -2,53 +2,53 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 864F4C43334
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jul 2022 23:15:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ECDFDC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jul 2022 23:19:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231197AbiGKXPG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Jul 2022 19:15:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38876 "EHLO
+        id S231244AbiGKXTg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Jul 2022 19:19:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41740 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229754AbiGKXPF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jul 2022 19:15:05 -0400
+        with ESMTP id S229811AbiGKXTd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jul 2022 19:19:33 -0400
 Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1882585D70
-        for <linux-scsi@vger.kernel.org>; Mon, 11 Jul 2022 16:15:03 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C065E8148D
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Jul 2022 16:19:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1657581304; x=1689117304;
+  t=1657581571; x=1689117571;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=gdUWSjRbdYf9JQjewquLoGySB8ue+2IX1SbOZl2l7Uk=;
-  b=JgaGBvrWuMko+7nN2DFr8xWbGawurtJnOxHNBtSWc81JmrmPYIEzAguV
-   +aUE6HhUI9And3sBUGMA+pcOWuWpQPeWvghOs1Np5JkIVyE4JsC3n7wA7
-   pBomGJB9Wih+/R1V3vjNOtnz2it7X/P0+A7QpKdA3o17X1ktrSODJHljA
-   J35SkqMMrL92k31d2N2Co2wK22zpUdZk3ukaNLO+IGmF2QFlSh/BmHf7L
-   LiqhVZ2lijgt1DoppjdohkGU2sM1AudhkNOB6EXKOkH3rMAgbBFMG52LV
-   oD4Hwd7VzSBC607eo4W0fOOsk6ByztmxPd1ajVl3YQduEaFu2i3k384Nb
-   A==;
+  bh=0CE4i3QQ+tcOrjmsv56y1y0+cov8yGaiZFHifys4wtw=;
+  b=WeO5YGzwCHsZ4Fw0dRnnLgTs8dmCn2/H4i5rU72f7AKvIHdXQWFhNhlU
+   loVohxEkBz6SFovPe+Zzs/0lmzRDovXvQ1YhQYH3IgKCvOOtoT3fGrba7
+   cshKqHJKv4Hd2VowYOvGg7Lo3f2jYrxRkCoP9oxKhwThATEQYOep/Ikzn
+   9jOmD34hr4pSTjm6+U17VuIgSAAmOGwT+BjV3erWE+I89EhHw78IXBBNQ
+   QfXgu8XJNX2k0PJLm6XdeQY6O7B8lWraGPleV5iIOYLLQDPStT+68nU5Y
+   OLrBqqYmeZqRZbkigAVUyQJYHqEOh+Q5xexYOnhWzTnmW6Wd7dWZAElot
+   w==;
 X-IronPort-AV: E=Sophos;i="5.92,264,1650902400"; 
-   d="scan'208";a="317561081"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 12 Jul 2022 07:14:44 +0800
-IronPort-SDR: ftGgrahcWxUXnGKEQgMQTwk+R2/tD2EsVA5VffZuUfdgZNNOiLgvyj7gWLtQwQQC6ZflvNK1OY
- cjVmrf31ETEse5msOo+/gUUaPuQEjYx37GQnlDFAPruwe61i6RdztBnqFnnQcZi+dpOkvfsj0L
- PJmJ33KeZzozG+pDZK4B9KZG3KaCPXXAsSuN/hLAmEcdmyRwgcrfWB0pj3rjFzoL9XWwvCUUSh
- 7ODqlNKsFHiTgTrohxoZtNlGdM/6x4vg6ygZbNbJDRUieZNxXWeEXnj7gCokkMNnSOl2PNygaW
- ToaT2OSpn8345lvO8f/qoxaj
+   d="scan'208";a="317561447"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 12 Jul 2022 07:19:31 +0800
+IronPort-SDR: 3vfF1pJ+B0VEmTC1xSUWF49TJvx0N4fcSU+2YWQpXzg8KUc7tob5yjIi/EnKJYYK3U4yANo9GH
+ kXQlV2AfuPDCyzfN73zbfxcAWGA2RcIlEtwb9Y0ZW/vcmTd9rOqnrFQsaKisR2mSadUTm8/iUf
+ crJwOZBZTTxuj1oT7zQM5ZJXVNBr1izcM3S3DbFATbL7otG3jCIg8zA062sjb7YbstimVsDxA6
+ Rs3sx3prirTgEtiHMQRFQrwhXX9YWCMKva45diHan7h45Atxqy+u8x0a6nX7c/CMHbliHFVEzf
+ 4N9nHXAC4QpNT2f4VEUBPuYb
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 11 Jul 2022 15:36:21 -0700
-IronPort-SDR: zHAO4hCtPa+gO/uMkeLs0/WC/ngHJN+XFv24JGUjJxF2sezB0i/S1K+2NkOZZGmLuzdxz0ZME6
- wpPwvOFmgl7arFml96KkhdME4hHbDHB6t9wEbXkhX4ozdpr9MhSI18FuBllPpT+PVmv2fWAvS6
- b5LPw3knATlKYt5Pwu7TLeQCwR6rtQlYSVBQtMSq6PUtLgvYdOQJq4rvH65xjcfCII7RU2z8rX
- ZjTLWNBEciQ6t0S+XElr7w9IQxX1snM6aQ90mAY+Fsvv1pbAnEf9R+gAoNwCyDON54M90lwew5
- Wpk=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 11 Jul 2022 15:36:30 -0700
+IronPort-SDR: X33yYaYMxpsToeON4OEUkKvCX776+YEBVwm+2M8pM5JywoKIYwSSrzTfBcO1FwJJrv3wXT59qG
+ FpARQIckRfFNKasimKxHK076DWqudd6BMd6RbtrhnQaqqtzHxv9KE4nhH3xogynio5L+wcDycF
+ +iZSatBttb00L7FKyU6rZ7oJhFnbICcDyGLAmD6ABj/369lBVpecttFZaUmB9IA8S9ZHSIHcE2
+ j2pweK8mIixbsZIfDlsQWLlVRgddHOjYILBLT2VPWsKIXlXXlE797JHPQ2NZDBM7UWGoV4qU3F
+ JDg=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 11 Jul 2022 16:14:45 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 11 Jul 2022 16:19:31 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Lhfq82xT3z1Rw4L
-        for <linux-scsi@vger.kernel.org>; Mon, 11 Jul 2022 16:14:44 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Lhfwg0vFTz1Rwnl
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Jul 2022 16:19:31 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,23 +56,23 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1657581279; x=1660173280; bh=gdUWSjRbdYf9JQjewquLoGySB8ue+2IX1Sb
-        OZl2l7Uk=; b=SK39yT5BN06xeaQFyr5PQtyqJBC8F0/ZnVx3j4DSdzbJfd0Sf11
-        X+KE0NEUJCKwC4k55CWdev12N+vuI3iRoY/hT/HeXBFQDJVeOOds4bPxbMgY9i22
-        ny/f0fQLx8kwjvvCUQCaAme6jM6aKPUESSSpm4lrJEa82ozvE5gCgRNrG+kFdKAe
-        GmoC3tfUySqrbEaklyqaca4ESlo4I8sS469yZQgS0qdxr0sie0mdWScuYdsnMYuI
-        bW7AfQPVjSn/FAEFdT7/GAalnblKRAgV2ATNkssFFBOawn0qFf7nDVuWNuCzBNqX
-        n/eiZUpkzKz3RfMuXt/9ZBVgTQZyrgTHy0A==
+        1657581565; x=1660173566; bh=0CE4i3QQ+tcOrjmsv56y1y0+cov8yGaiZFH
+        ifys4wtw=; b=ofC0K8B6JoYa5I5h6wzNbABLHBfu2EjYw6ugx4HaqFEwKl1SkCk
+        26qLHN4vryppAwVHZafhtj0sqf8rNoELO7BjqWRg/zxKJs8q9IOf6Ua02K9aoeg9
+        9AkdYQWIHaKGT16XB+KSAyTWvyC60fhREtR61VAgGjEv/56ix9frlLooWDEksgi/
+        2427WwkN1/5lVXSrNnrEpkPjEHoTxWRNU/+EAlUC1mOo7ty64xqi/PRY5N2EBM3I
+        vCoNluPjRpDV8edZGgbdmBIwhqOJeCAO6b/Br9+fJCXQfCvnQjbOAnXgAHFsEsIp
+        WbX6OfIFhSu9H8bKzagft3w672ZlSpDLkSQ==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id sqfeI2Vj40aT for <linux-scsi@vger.kernel.org>;
-        Mon, 11 Jul 2022 16:14:39 -0700 (PDT)
+        with ESMTP id VWouxUz-Svwt for <linux-scsi@vger.kernel.org>;
+        Mon, 11 Jul 2022 16:19:25 -0700 (PDT)
 Received: from [10.225.163.116] (unknown [10.225.163.116])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Lhfq22SS2z1RtVk;
-        Mon, 11 Jul 2022 16:14:38 -0700 (PDT)
-Message-ID: <82a10f9f-ee82-8fe6-a557-183129ef596f@opensource.wdc.com>
-Date:   Tue, 12 Jul 2022 08:14:37 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LhfwX6lkcz1RtVk;
+        Mon, 11 Jul 2022 16:19:24 -0700 (PDT)
+Message-ID: <625056aa-0604-d1a9-e1a1-0efef70a5de1@opensource.wdc.com>
+Date:   Tue, 12 Jul 2022 08:19:23 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.11.0
@@ -130,6 +130,16 @@ On 7/12/22 08:00, Bart Van Assche wrote:
 >  	arr[15] = sdebug_lowest_aligned & 0xff;
 >  
 > +	arr[12] |= devip->rc_basis << 4;
+
+Note that I think this entire patch could be reduced to just doing this:
+
+	if (devip->zmodel == BLK_ZONED_HM) {
+		/* Set RC BASIS = 1 */
+		arr[12] |= 0x01 << 4;
+	}
+
+No ?
+
 > +
 >  	if (have_dif_prot) {
 >  		arr[12] = (sdebug_dif - 1) << 1; /* P_TYPE */
@@ -150,9 +160,6 @@ On 7/12/22 08:00, Bart Van Assche wrote:
 >  			zsp->z_wp = zsp->z_start;
 >  			zsp->z_size =
 
-Looks good.
-
-Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
 -- 
 Damien Le Moal
