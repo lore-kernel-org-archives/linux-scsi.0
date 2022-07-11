@@ -2,78 +2,158 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA560CCA47B
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jul 2022 08:45:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2A13CCA47B
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jul 2022 10:34:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229696AbiGKIpp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Jul 2022 04:45:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56268 "EHLO
+        id S230242AbiGKKek (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Jul 2022 06:34:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47798 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229526AbiGKIpn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jul 2022 04:45:43 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49FD1C3;
-        Mon, 11 Jul 2022 01:45:43 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S230204AbiGKKeV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jul 2022 06:34:21 -0400
+Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C35303E74A;
+        Mon, 11 Jul 2022 02:45:00 -0700 (PDT)
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id B66DD411D9;
+        Mon, 11 Jul 2022 09:44:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        in-reply-to:content-transfer-encoding:content-disposition
+        :content-type:content-type:mime-version:references:message-id
+        :subject:subject:from:from:date:date:received:received:received
+        :received; s=mta-01; t=1657532695; x=1659347096; bh=YOOUHYKWEWHP
+        eNoSCtxE+Fla8fMfuPc4+iON0lM6PM0=; b=W9jU9Onj5U9ybX15N6F+d/vk5yJq
+        JIE4QkVGz+jToVuUW2t1wl+uY7Xl4J/aTg++wD1FX9lItNehXFFBiSJg5OyIr93u
+        I5yeTPRJ1o1f/LqVaNleOWEojwzxLPTwhigBVULAnnQHP+Ns18fBEFkWlp33bM9g
+        stA+LUYUtKI89ho=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id K3kgeZTLLsdB; Mon, 11 Jul 2022 12:44:55 +0300 (MSK)
+Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 01BCCB80E72;
-        Mon, 11 Jul 2022 08:45:42 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9652C34115;
-        Mon, 11 Jul 2022 08:45:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1657529140;
-        bh=QtxIhf0k2gio15daq8OVYJQBXBIa6NCxYKJrxnYcFFc=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=oIRAYTlC/Yc2oiOESJQJLhT6f2aT+iDf/mH//oNAdLjmQucEpupAAaDT4tfVIs+lJ
-         WBcSKl5dUJ3/9jc57NIJqveMHvjOZEN6hoyOp1fMiVSZ6EdQhzDcAnmUK+sbTKNwPD
-         uqcMzogcUmflkqsnWbnsNlTvBWSWtDV5tqKZiQ2eD0TLR08O8/crAmMSS6pzE19Wrc
-         +DdT1sAb1GAJ4aHSjnfrBLL7hmtnvr6FL/2JealCebezFqrrCbbq1VNU3j2IQShfwH
-         tcEiT5q/NGe7c5PBPNb+rXY6mFzrmKGcyyF3fl+h3Dtev/cXaxRc+7Sp4GPsImBdI3
-         IourEKWrquzaA==
-Received: by mail-yw1-f176.google.com with SMTP id 00721157ae682-31c9b70c382so41812517b3.6;
-        Mon, 11 Jul 2022 01:45:40 -0700 (PDT)
-X-Gm-Message-State: AJIora9LZ47WWF5QGix224DHJkI8p+AFbZoUkPrgUjA+/5FwUlNB7B41
-        LZWRErOJLqqCX28KwTm/gReB0K7A/X4b1ZAecIw=
-X-Google-Smtp-Source: AGRyM1sUsXiG43gYdPyrOaU2lgN3ybvaac4dSWJPgrZcyz6wz3Jnrh2yYyISG/nxqMSKRmWAMQMlR+k8yV4FuLMnIWI=
-X-Received: by 2002:a81:1e4d:0:b0:31c:86f1:95b1 with SMTP id
- e74-20020a811e4d000000b0031c86f195b1mr17602482ywe.42.1657529139765; Mon, 11
- Jul 2022 01:45:39 -0700 (PDT)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 40C9A40886;
+        Mon, 11 Jul 2022 12:44:54 +0300 (MSK)
+Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
+ T-EXCH-02.corp.yadro.com (172.17.10.102) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
+ 15.1.669.32; Mon, 11 Jul 2022 12:44:54 +0300
+Received: from yadro.com (10.178.114.42) by T-EXCH-08.corp.yadro.com
+ (172.17.11.58) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1118.9; Mon, 11 Jul
+ 2022 12:44:53 +0300
+Date:   Mon, 11 Jul 2022 12:44:57 +0300
+From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
+To:     Thinh Nguyen <Thinh.Nguyen@synopsys.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        John Youn <John.Youn@synopsys.com>,
+        Felipe Balbi <balbi@kernel.org>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>
+Subject: Re: [PATCH 04/36] target: Does tmr notify on aborted command
+Message-ID: <20220711094457.GA32568@yadro.com>
+References: <cover.1657149962.git.Thinh.Nguyen@synopsys.com>
+ <a15b6eb1fd62e7e8bc7ad65f77cd327a2afde07e.1657149962.git.Thinh.Nguyen@synopsys.com>
+ <20220707125657.GB23838@yadro.com>
+ <154d432d-b91d-d16f-d5d4-89fd8eb7eb7b@synopsys.com>
 MIME-Version: 1.0
-References: <20220709001019.11149-1-schmitzmic@gmail.com> <20220709001019.11149-2-schmitzmic@gmail.com>
- <CAK8P3a2kwg56-UTv275GJ1r_SDsfoX2fMcmXrvNURN+L3UHoSA@mail.gmail.com> <89f0efa9-9626-2380-49dc-432ac04fe6f2@gmail.com>
-In-Reply-To: <89f0efa9-9626-2380-49dc-432ac04fe6f2@gmail.com>
-From:   Arnd Bergmann <arnd@kernel.org>
-Date:   Mon, 11 Jul 2022 10:45:23 +0200
-X-Gmail-Original-Message-ID: <CAK8P3a0JRhKj9aoS3-RKsu3yGW+0geSB7CqEytdbBn622nREFw@mail.gmail.com>
-Message-ID: <CAK8P3a0JRhKj9aoS3-RKsu3yGW+0geSB7CqEytdbBn622nREFw@mail.gmail.com>
-Subject: Re: [PATCH v1 1/4] m68k - add MVME147 SCSI base address to mvme147hw.h
-To:     Michael Schmitz <schmitzmic@gmail.com>
-Cc:     "Linux/m68k" <linux-m68k@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <154d432d-b91d-d16f-d5d4-89fd8eb7eb7b@synopsys.com>
+X-Originating-IP: [10.178.114.42]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-08.corp.yadro.com (172.17.11.58)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Jul 11, 2022 at 6:16 AM Michael Schmitz <schmitzmic@gmail.com> wrote:
-> Am 11.07.2022 um 04:06 schrieb Arnd Bergmann:
-> > On Sat, Jul 9, 2022 at 2:10 AM Michael Schmitz <schmitzmic@gmail.com> wrote:
-> > I think this should be an 'void *__iomem' token, not a plain integer.
-> > Apparently the driver internally uses a 'volatile void *', but some of
-> > the other front-ends are already converted to use __iomem.
->
-> I'll pass the base address through a platform data struct in the next
-> version to address your other concerns. Haven't seen __iomem types used
-> in the other drivers - two are Zorro devices, and two platform devices
-> (a3000 and sgiwd93). Found no other wd33c93 drivers...
+On Fri, Jul 08, 2022 at 11:11:37PM +0000, Thinh Nguyen wrote:
+> «Внимание! Данное письмо от внешнего адресата!»
+> 
+> On 7/7/2022, Dmitry Bogdanov wrote:
+> > Hi Thinh,
+> >
+> > On Wed, Jul 06, 2022 at 04:34:49PM -0700, Thinh Nguyen wrote:
+> >> If the tmr_notify is not implemented, simply execute a generic command
+> >> completion to notify the command abort.
+> > Why? What are you trying to fix?
+> 
+> If tmr_notify() is not implemented (which most don't), then the user
+> won't get notified of the command completion.
+tmr_notify is for transport drivers (iblock/pscsi/user) - transport of
+IOs to the real storage device. Not for trasport of incoming SCSI
+messages - that is a frontend driver in TCM terms.
+So, USB frontend driver has nothing to do with transport->tmr_notify().
+> 
+> I was trying to directly notify the user via target_complete_cmd(). It
+> may not be the right way to handle this, any advise?
+Frontend drivers are notified of the aborted task twice:
+1. The incoming TMF in frontend driver; usually a frontend driver do not
+ do anything here, just pass TMF to TCM Core.
+2. TCM Core makrs the command as "to be aborted". 
+  cmd->transport_state |= CMD_T_ABORTED;
+2. TCM Core checks that command is to be aborted when IO is not started
+yet or IO is completed:
+ * target_execute_cmd(start of handling SCSI cmd),
+ * target_compete_cmd (backend device completes IO), 
+ * transport_generic_request_failure  (some generic request to send a
+   failure response)
+  And calls target_handle_abort() which calls
+cmd->se_tfo->aborted_task(cmd) to notify frontend driver that it will
+not be asked to send response to the command and it may do some cleanup
+if needed.
 
-Right, I noticed this as well. The ideal way to do this would be to change
-all of these files to use __iomem tokens consistently, and then use
-ioread32be()/iowrite32be() in place of the volatile pointer dereference.
+There are two possible continuous processes in a cmd lifecycle:
+1. Data IN (several responses to initiator)
+ TCM Core receives a data from transport (backstore device) and passes
+it to frontend driver. Frontend driver is responsible to send it to the
+initiator. Probably, it may check that cmd is aborted to break sending,
+but nobody do that.
+2. Data OUT (several requests from initiators)
+ Data from DataOUT is collected by frontend driver to pass it to TCM
+Core in target_submit_cmd. TCM Core will abort the cmd at that moment.
 
-Maybe leave that for a follow-up series, you'll probably uncover
-more of these issues once you take that step.
+There is no interface in TCM Core to notify Frontend driver to stop
+those continuous processes. Probably, because of differences in fronted
+protocol standards.
+For example, iSCSI tunes that behaviour by some negotiatable session
+parameter. Current kernel iSCSI driver does not support that parameter.
 
-       Arnd
+> 
+> Thanks,
+> Thinh
+> 
+> >> Signed-off-by: Thinh Nguyen <Thinh.Nguyen@synopsys.com>
+> >> ---
+> >>   drivers/target/target_core_tmr.c | 4 ++++
+> >>   1 file changed, 4 insertions(+)
+> >>
+> >> diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
+> >> index 7a7e24069ba7..2af80d0998bf 100644
+> >> --- a/drivers/target/target_core_tmr.c
+> >> +++ b/drivers/target/target_core_tmr.c
+> >> @@ -14,6 +14,7 @@
+> >>   #include <linux/spinlock.h>
+> >>   #include <linux/list.h>
+> >>   #include <linux/export.h>
+> >> +#include <scsi/scsi_proto.h>
+> >>
+> >>   #include <target/target_core_base.h>
+> >>   #include <target/target_core_backend.h>
+> >> @@ -150,6 +151,9 @@ void core_tmr_abort_task(
+> >>                      if (dev->transport->tmr_notify)
+> >>                              dev->transport->tmr_notify(dev, TMR_ABORT_TASK,
+> >>                                                         &aborted_list);
+> >> +                    else
+> >> +                            target_complete_cmd(se_cmd,
+> >> +                                                SAM_STAT_TASK_ABORTED);
+> > That is wrong and breaks a command lifecycle and command kref counting.
+> > target_complete_cmd is used to be called by a backend driver.
+> >>
+> >>                      list_del_init(&se_cmd->state_list);
+> >>                      target_put_cmd_and_wait(se_cmd);
+> 
