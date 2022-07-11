@@ -2,170 +2,115 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 273EFC43334
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jul 2022 05:44:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04E5CCCA47B
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Jul 2022 07:16:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229517AbiGKFoj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Jul 2022 01:44:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39988 "EHLO
+        id S229894AbiGKHQd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Jul 2022 03:16:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34062 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229478AbiGKFoi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jul 2022 01:44:38 -0400
-Received: from mail-ej1-x635.google.com (mail-ej1-x635.google.com [IPv6:2a00:1450:4864:20::635])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5EF8FBE23
-        for <linux-scsi@vger.kernel.org>; Sun, 10 Jul 2022 22:44:37 -0700 (PDT)
-Received: by mail-ej1-x635.google.com with SMTP id l23so6996730ejr.5
-        for <linux-scsi@vger.kernel.org>; Sun, 10 Jul 2022 22:44:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=b9QONmd8NgRExIV5f3nev6QohovZOBU+IqQRXyOFp1U=;
-        b=iuA+S+lt9N2CKNd6L3MkZNU/L0mFZls912nG2dQyVgh1+wQBMVQq0/EjQNA4Ch1cbE
-         uKRFayuHaDYmEh1DAROM2gyyGIlVuMbbWkdSvneKNJfbqXvxUk9yQ1qPnvEXNB+kB3hc
-         B1ohPEqsI7xkFPcwJyP7COfkbvnX47ZJuw7JEXLuWtC+bwfYtbvAX5Exbv9uh2Um49UA
-         weV/T+KwnVDxbOOQF+VkzClmypWmgWdKJv3A68Gu12qPfvefc7X+yu3AIokoFiWGy7u7
-         SnK/7xd3mAxalUatYMGNsvCHISr/Zv26qVj2mW4Gc5k+VDrdwLUuPPx6dCFCSPymfwi3
-         oL6g==
+        with ESMTP id S229869AbiGKHQY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jul 2022 03:16:24 -0400
+Received: from mail-qt1-f182.google.com (mail-qt1-f182.google.com [209.85.160.182])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3BC7AC41;
+        Mon, 11 Jul 2022 00:16:23 -0700 (PDT)
+Received: by mail-qt1-f182.google.com with SMTP id g6so6351289qtu.2;
+        Mon, 11 Jul 2022 00:16:23 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=b9QONmd8NgRExIV5f3nev6QohovZOBU+IqQRXyOFp1U=;
-        b=chYsGj/quI9W06DyN9yNH2n647HFaY2fJkn6KIH4jKvmpR3f+X20ZQQ+kYAsWVxid7
-         ESpkNA9GKzzCmGaltxTelMHwXxEOrG2cJiX3mzgYrwKwwIGXp8e7RQKREQQGWtusrNqh
-         vYuwfh/sXXwqjcQyRppzJvYNI7GYIO+4PC4836lpOLai+qzuowvOhu3ZeeVfHKMg/eVc
-         NXYe/9M1EeSXg3aujB5SXOnySKmOYrSUXsKMAgFeZ24fEGNnosG1uGAQyeqjNKQSnFpD
-         CtiU+Cr7yo0FQ0FxBpDIW59cURuYnAfs3AphllOtv0NHJ2imoJkNycb2rHkEclfusFPP
-         Wt4g==
-X-Gm-Message-State: AJIora9qifZq1dMTCEuEgJj520zc3Igw0uNH1xO5NAZ4TJj1/qt7MVF7
-        SinLY2vYHbv7zU/NwruMAZYiq2LFn46mX7xKd5n9bA==
-X-Google-Smtp-Source: AGRyM1ufIP6EvpmycSWfn01fsb7IKFFmWeyt1/R+3kTidi/mWLr1cXaRq0lxnPiCLuNy+VT46PkYyvXAhu37peF7j/U=
-X-Received: by 2002:a17:907:7ea6:b0:72b:4afb:e8b with SMTP id
- qb38-20020a1709077ea600b0072b4afb0e8bmr6026267ejc.205.1657518275921; Sun, 10
- Jul 2022 22:44:35 -0700 (PDT)
+        bh=wedE63FcPbf/4vBfAtxK449esBGNm+XPK5Lks7qID9Y=;
+        b=Big8YPpgRbH+YjyEB9sB1UvJgp0vVhKO9xdtR9RCEz9BrCrfJboVQ85SM2CG/8wwBo
+         gGkbTz4xxDtx7uSHooV8R5AMGU9EDRzIWxVyIvjo6k+GhGQnKvZa60yKsEromTaVgPey
+         138619LGmP1h1E9Zm0ILCyRpEuljDdZGJLdZ81G5d/AJve7E5tfPdCeSNGwugvY2ODMe
+         +pGcpxtAallil6ZXRMFJA7vbtouQeC88GvkIMKf7utEC7Jf1YwyfG19GDqQFVTzEx1oD
+         Nr07lv/3mi7Cnh2nDWDIZLgsoDDoK0ghMMpvczgsd/ubalZD2BzKuKD0g2+pOwaXOAcb
+         ZHjg==
+X-Gm-Message-State: AJIora/GRxgnTnfaa6oJyBekCf85HFaGddIhqgrEsxfCRIEbWTJoU9hv
+        mw5sas4JSe56XObQQNjC7dDek8AWGXH4sg==
+X-Google-Smtp-Source: AGRyM1tm8FR/1yG8PurYZoFzpy63o4yAXCDBBdA4cf+Fms2YR5YEjOrnJokzTL/10hAGpoWxFe0CAw==
+X-Received: by 2002:a05:622a:44:b0:31e:b6a9:69b0 with SMTP id y4-20020a05622a004400b0031eb6a969b0mr1357452qtw.540.1657523781182;
+        Mon, 11 Jul 2022 00:16:21 -0700 (PDT)
+Received: from mail-yb1-f178.google.com (mail-yb1-f178.google.com. [209.85.219.178])
+        by smtp.gmail.com with ESMTPSA id r14-20020a05620a03ce00b006b46ad28ba7sm5586214qkm.84.2022.07.11.00.16.20
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 11 Jul 2022 00:16:20 -0700 (PDT)
+Received: by mail-yb1-f178.google.com with SMTP id 75so6039545ybf.4;
+        Mon, 11 Jul 2022 00:16:20 -0700 (PDT)
+X-Received: by 2002:a05:6902:a:b0:65c:b38e:6d9f with SMTP id
+ l10-20020a056902000a00b0065cb38e6d9fmr16228553ybh.36.1657523780563; Mon, 11
+ Jul 2022 00:16:20 -0700 (PDT)
 MIME-Version: 1.0
-References: <20220707175210.528858-1-changyuanl@google.com>
-In-Reply-To: <20220707175210.528858-1-changyuanl@google.com>
-From:   Jinpu Wang <jinpu.wang@ionos.com>
-Date:   Mon, 11 Jul 2022 07:44:25 +0200
-Message-ID: <CAMGffEmGJX1PFbJvsFF4-0UBK301bKUTJutHpHAdD=_9OTmptA@mail.gmail.com>
-Subject: Re: [PATCH] scsi: pm80xx: Fix 'Unknown' max/min linkrate
-To:     Changyuan Lyu <changyuanl@google.com>
-Cc:     Jack Wang <jinpu.wang@ionos.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Igor Pylypiv <ipylypiv@google.com>
+References: <20220709001019.11149-1-schmitzmic@gmail.com> <20220709001019.11149-4-schmitzmic@gmail.com>
+ <CAK8P3a0FndsCkCrgXdai8=2oX5yWrMLArDHN5mA90AL4N7pmRw@mail.gmail.com>
+In-Reply-To: <CAK8P3a0FndsCkCrgXdai8=2oX5yWrMLArDHN5mA90AL4N7pmRw@mail.gmail.com>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Mon, 11 Jul 2022 09:16:08 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdXapPSOBzSNTLy_RJV=RLq-6hcf-XFtvfSe-g=PrcAhEw@mail.gmail.com>
+Message-ID: <CAMuHMdXapPSOBzSNTLy_RJV=RLq-6hcf-XFtvfSe-g=PrcAhEw@mail.gmail.com>
+Subject: Re: [PATCH v1 3/4] scsi - convert mvme146_scsi.c to platform device
+To:     Arnd Bergmann <arnd@kernel.org>
+Cc:     Michael Schmitz <schmitzmic@gmail.com>,
+        "Linux/m68k" <linux-m68k@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jul 7, 2022 at 7:52 PM Changyuan Lyu <changyuanl@google.com> wrote:
+On Sun, Jul 10, 2022 at 6:12 PM Arnd Bergmann <arnd@kernel.org> wrote:
+> On Sat, Jul 9, 2022 at 2:10 AM Michael Schmitz <schmitzmic@gmail.com> wrote:
+> > Convert the mvme147_scsi driver to a platform device driver.
+> > This is required for conversion of the driver to the DMA API.
+> >
+> > CC: linux-scsi@vger.kernel.org
+> > Link: https://lore.kernel.org/r/6d1d88ee-1cf6-c735-1e6d-bafd2096e322@gmail.com
+> > Signed-off-by: Michael Schmitz <schmitzmic@gmail.com>
 >
-> Currently, the dataflow of the max/min linkrate in the driver is
-> * in pm8001_get_lrate_mode():
->   hardcoded value ==> struct sas_phy
-> * in pm8001_bytes_dmaed():
->   struct pm8001_phy ==> struct sas_phy
-> * in pm8001_phy_control():
->   libsas data ==> struct pm8001_phy
+> The patch looks correct to me, but the type cast for the address doesn't
+> seem right:
 >
-> Since pm8001_bytes_dmaed() follows pm8001_get_lrate_mode(), and
-> the fields in struct pm8001_phy are not initialized, sysfs
-> `/sys/class/sas_phy/phy-*/maximum_linkrate` always shows `Unknown`.
+> > -       regs.SASR = (volatile unsigned char *)0xfffe4000;
+> > -       regs.SCMD = (volatile unsigned char *)0xfffe4001;
+> >
+> > -       hdata = shost_priv(mvme147_shost);
+> > +       mvme147_inst->base = mres->start;
+> > +       mvme147_inst->irq = ires->start;
+> > +
+> > +       regs.SASR = (volatile unsigned char *)mres->start;
+> > +       regs.SCMD = (volatile unsigned char *)(mres->start)+0x1;
 >
-> To fix the issue, this patch changes the dataflow to the following:
-> * in pm8001_phy_init():
->   initial value ==> struct pm8001_phy
-> * in pm8001_get_lrate_mode():
->   struct pm8001_phy ==> struct sas_phy
-> * in pm8001_phy_control():
->   libsas data ==> struct pm8001_phy
+> A resource would pass a phys_addr_t token, but the driver expects a
+> virtual address that should be an __iomem pointer. The MMIO area
+> already gets mapped into virtual addresses in arch/m68k/kernel/head.S,
+> so it makes sense to skip the extra ioremap() and just use the address,
+> but then you can't pass it as an IORESOUCRE_MEM token and should
+> use platform_data with the pointer instead.
 >
-> For negotiated linkrate, the current dataflow is
-> * in pm8001_get_lrate_mode():
->   iomb data ==> struct asd_sas_phy ==> struct sas_phy
-> * in pm8001_bytes_dmaed():
->   struct asd_sas_phy ==> struct sas_phy
->
-> Since pm8001_bytes_dmaed() follows pm8001_get_lrate_mode(), the
-> assignment statements in pm8001_bytes_dmaed() are unnecessary and
-> cleaned up.
->
-> Signed-off-by: Changyuan Lyu <changyuanl@google.com>
-> Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
-looks it was broken since beginning, would be good to add cc stable.
-Thx!
-Acked-by: Jack Wang <jinpu.wang@ionos.com>
-> ---
->  drivers/scsi/pm8001/pm8001_hwi.c  | 19 +++----------------
->  drivers/scsi/pm8001/pm8001_init.c |  2 ++
->  2 files changed, 5 insertions(+), 16 deletions(-)
->
-> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-> index f7466a895d3b..991eb01bb1e0 100644
-> --- a/drivers/scsi/pm8001/pm8001_hwi.c
-> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
-> @@ -3145,15 +3145,6 @@ void pm8001_bytes_dmaed(struct pm8001_hba_info *pm8001_ha, int i)
->         if (!phy->phy_attached)
->                 return;
->
-> -       if (sas_phy->phy) {
-> -               struct sas_phy *sphy = sas_phy->phy;
-> -               sphy->negotiated_linkrate = sas_phy->linkrate;
-> -               sphy->minimum_linkrate = phy->minimum_linkrate;
-> -               sphy->minimum_linkrate_hw = SAS_LINK_RATE_1_5_GBPS;
-> -               sphy->maximum_linkrate = phy->maximum_linkrate;
-> -               sphy->maximum_linkrate_hw = phy->maximum_linkrate;
-> -       }
-> -
->         if (phy->phy_type & PORT_TYPE_SAS) {
->                 struct sas_identify_frame *id;
->                 id = (struct sas_identify_frame *)phy->frame_rcvd;
-> @@ -3177,26 +3168,22 @@ void pm8001_get_lrate_mode(struct pm8001_phy *phy, u8 link_rate)
->         switch (link_rate) {
->         case PHY_SPEED_120:
->                 phy->sas_phy.linkrate = SAS_LINK_RATE_12_0_GBPS;
-> -               phy->sas_phy.phy->negotiated_linkrate = SAS_LINK_RATE_12_0_GBPS;
->                 break;
->         case PHY_SPEED_60:
->                 phy->sas_phy.linkrate = SAS_LINK_RATE_6_0_GBPS;
-> -               phy->sas_phy.phy->negotiated_linkrate = SAS_LINK_RATE_6_0_GBPS;
->                 break;
->         case PHY_SPEED_30:
->                 phy->sas_phy.linkrate = SAS_LINK_RATE_3_0_GBPS;
-> -               phy->sas_phy.phy->negotiated_linkrate = SAS_LINK_RATE_3_0_GBPS;
->                 break;
->         case PHY_SPEED_15:
->                 phy->sas_phy.linkrate = SAS_LINK_RATE_1_5_GBPS;
-> -               phy->sas_phy.phy->negotiated_linkrate = SAS_LINK_RATE_1_5_GBPS;
->                 break;
->         }
->         sas_phy->negotiated_linkrate = phy->sas_phy.linkrate;
-> -       sas_phy->maximum_linkrate_hw = SAS_LINK_RATE_6_0_GBPS;
-> +       sas_phy->maximum_linkrate_hw = phy->maximum_linkrate;
->         sas_phy->minimum_linkrate_hw = SAS_LINK_RATE_1_5_GBPS;
-> -       sas_phy->maximum_linkrate = SAS_LINK_RATE_6_0_GBPS;
-> -       sas_phy->minimum_linkrate = SAS_LINK_RATE_1_5_GBPS;
-> +       sas_phy->maximum_linkrate = phy->maximum_linkrate;
-> +       sas_phy->minimum_linkrate = phy->minimum_linkrate;
->  }
->
->  /**
-> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-> index 9b04f1a6a67d..01f2f41928eb 100644
-> --- a/drivers/scsi/pm8001/pm8001_init.c
-> +++ b/drivers/scsi/pm8001/pm8001_init.c
-> @@ -143,6 +143,8 @@ static void pm8001_phy_init(struct pm8001_hba_info *pm8001_ha, int phy_id)
->         struct asd_sas_phy *sas_phy = &phy->sas_phy;
->         phy->phy_state = PHY_LINK_DISABLE;
->         phy->pm8001_ha = pm8001_ha;
-> +       phy->minimum_linkrate = SAS_LINK_RATE_1_5_GBPS;
-> +       phy->maximum_linkrate = SAS_LINK_RATE_6_0_GBPS;
->         sas_phy->enabled = (phy_id < pm8001_ha->chip->n_phy) ? 1 : 0;
->         sas_phy->class = SAS;
->         sas_phy->iproto = SAS_PROTOCOL_ALL;
-> --
-> 2.37.0.rc0.161.g10f37bed90-goog
->
+> The alternative is to do it the normal way and pass the physical address
+> as a resource, that you can pass into devm_platform_ioremap_resource()
+> or a similar helper.
+
+I would prefer the latter.  While head.S sets up the mapping,
+__ioremap() does not have support for this on the mvme platform,
+so this has to be added first. Look at the amiga and virt platforms
+for examples.
+
+If you do want to pass the virtual address as platform data (for now
+;-), please provide the physical memory resource too, so we don't
+have to go through another synchronization step with the m68k and
+scsi trees later.
+
+Thanks!
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
