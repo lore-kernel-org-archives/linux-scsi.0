@@ -2,82 +2,86 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 877ABC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jul 2022 06:57:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04DB0CCA480
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jul 2022 07:58:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232200AbiGLG5n (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Jul 2022 02:57:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41796 "EHLO
+        id S232355AbiGLH6n (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Jul 2022 03:58:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59876 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229889AbiGLG5l (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jul 2022 02:57:41 -0400
-Received: from mail-qk1-f169.google.com (mail-qk1-f169.google.com [209.85.222.169])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D2F397485;
-        Mon, 11 Jul 2022 23:57:40 -0700 (PDT)
-Received: by mail-qk1-f169.google.com with SMTP id x17so5589427qkh.11;
-        Mon, 11 Jul 2022 23:57:40 -0700 (PDT)
+        with ESMTP id S231952AbiGLH6l (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jul 2022 03:58:41 -0400
+Received: from mail-pg1-x531.google.com (mail-pg1-x531.google.com [IPv6:2607:f8b0:4864:20::531])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 921BEEAF;
+        Tue, 12 Jul 2022 00:58:38 -0700 (PDT)
+Received: by mail-pg1-x531.google.com with SMTP id r22so6890397pgr.2;
+        Tue, 12 Jul 2022 00:58:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id;
+        bh=qnDj9YjP4Jn6UNsO+JwNZ89hEl3kIOBm4jZ+bjUXltg=;
+        b=Zwh98wpc5RAZ8xyw+BsZHlXJ8tpLxZpEEl0uM94UT8pz/5gpeiBMNUUI2fk8u2du2P
+         Tw7emQ6PfJ4Lgno39rVmVeJEfl5F0Y4s6NCUszLHN2tf54FH4H3Qjpq/S892f4o2g27n
+         bYfJ7dUCnD0nSsd3q0w6D+rR6w0deXY//KO7JR9pIv0c6gXGk96Il1UBWM98Oa3ssHRe
+         +3PJd/aaslVIU6ubasELVx1CAyKWs7CG6tewsiSMSWX+dwPMABiCsA/Qg2IIn59jn3tf
+         DIxaMBxlQOynpvhrRB4qL9oyB/O+eYiO5oDaRUoUZKtZ66Z9ewJWLHAYUsx5gZos8wDp
+         jyUA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=3uLizQBOgw3ria9ktcfW+7uku2VEsdPuYJ1TFmbFXVM=;
-        b=FNSQljt+XYfh1kkyz4xwlhhvEPQPAobQ0Tc/J0tpOOGIj/7IdH+myDK454OhWD+J4u
-         Me2bvOi6AujlVXvMDDefSLXwnnfHZh0JDusHKcgwFua7asZmTzfYpGvGS/cMppVNb5PC
-         ZM7FzSJbPnBcDFhsRi7UCv0X/iDQRDz7SHi/9jJgF88kKW1dBm08oKwCYxE7MXiBTTUt
-         ApO2CwzGzPmZU5bNMlIz0OmFDnK62BFOuXd3pYOthwzG5nOAjVzH0FhULWNNLaI9G9xp
-         SAgPXFll0S3uhGgLuRuOJ1uxB3zhWUvMlpD5K15EqC9iy7HqvJAl45C96Hu34lCSfzvt
-         oV7Q==
-X-Gm-Message-State: AJIora8Kgoyl6tNbprB6d6JZOQV37yZthtDBp9XsT8wes/Dq9bwsqJPk
-        8BgElEaZCmr2tRN6B2lJ0AJA7EnFg+gD0w==
-X-Google-Smtp-Source: AGRyM1seeApahIj0sjy2RmX9T8TnHb0hwKlNeKcBrv+PFgQ5Aiqi5cTFaJjVxtETj+5g/OeSbU0uqQ==
-X-Received: by 2002:a37:620f:0:b0:6b5:7487:cc20 with SMTP id w15-20020a37620f000000b006b57487cc20mr9423568qkb.95.1657609059509;
-        Mon, 11 Jul 2022 23:57:39 -0700 (PDT)
-Received: from mail-yb1-f172.google.com (mail-yb1-f172.google.com. [209.85.219.172])
-        by smtp.gmail.com with ESMTPSA id x13-20020a05620a258d00b006a8b6848556sm8540228qko.7.2022.07.11.23.57.39
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 11 Jul 2022 23:57:39 -0700 (PDT)
-Received: by mail-yb1-f172.google.com with SMTP id r3so12445678ybr.6;
-        Mon, 11 Jul 2022 23:57:39 -0700 (PDT)
-X-Received: by 2002:a5b:6c1:0:b0:669:a7c3:4c33 with SMTP id
- r1-20020a5b06c1000000b00669a7c34c33mr20687151ybq.543.1657609058868; Mon, 11
- Jul 2022 23:57:38 -0700 (PDT)
-MIME-Version: 1.0
-References: <20220709001019.11149-1-schmitzmic@gmail.com> <20220709001019.11149-4-schmitzmic@gmail.com>
- <CAK8P3a0FndsCkCrgXdai8=2oX5yWrMLArDHN5mA90AL4N7pmRw@mail.gmail.com>
- <CAMuHMdXapPSOBzSNTLy_RJV=RLq-6hcf-XFtvfSe-g=PrcAhEw@mail.gmail.com>
- <fb5f0f5d-e144-3f5b-9e46-6e22d8a3ca60@gmail.com> <CAMuHMdVYpQCVhti34y-bNwn-nOFaN7w-xM-SBZbHh+oDwbRndw@mail.gmail.com>
- <a4a3908a-29c5-fe2e-4c58-eed59133d39f@gmail.com> <f565782c-6463-d962-13ce-01c5f0d160e7@gmail.com>
-In-Reply-To: <f565782c-6463-d962-13ce-01c5f0d160e7@gmail.com>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Tue, 12 Jul 2022 08:57:27 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdXMvQ+c=zm8W2AFnSfqxHUGbDEBXNUYBYx1CXH7GTBGpg@mail.gmail.com>
-Message-ID: <CAMuHMdXMvQ+c=zm8W2AFnSfqxHUGbDEBXNUYBYx1CXH7GTBGpg@mail.gmail.com>
-Subject: Re: [PATCH v1 3/4] scsi - convert mvme146_scsi.c to platform device
-To:     Michael Schmitz <schmitzmic@gmail.com>
-Cc:     Arnd Bergmann <arnd@kernel.org>,
-        "Linux/m68k" <linux-m68k@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=qnDj9YjP4Jn6UNsO+JwNZ89hEl3kIOBm4jZ+bjUXltg=;
+        b=7VVqolSeRUqY8cavg5wshjlp/H9jLHAdXMM43ft0eXb0zKTh4hxkUX75qc4wOcCR1N
+         1fouO8gboOy1s4+C2+nII9qCOShdP422spDK5te4pAPlFv+kwrkEokg6ZdzWKgvlnmnY
+         S00fwuxX/VkFKjcuTn5exSrxNrbToyRqsQIXvnc+Q2uYeAgerfEWyrhVtDCz1R+Zh9B7
+         8CYXKOy7W1OjG/AJA0cwP2WcgKADnKQ7Qxi6F5XxtbX67uEVypAe0rXN6xWktcPLDpO2
+         vdRwHt/gFAykBEiL2Htz/1JGhMnOzQuXHjzlsSsLOn4iCR/+bXj7dwXAyDUwb4YZQo6h
+         Ub6Q==
+X-Gm-Message-State: AJIora8cdb6AayumupeC8/5VA/vBcQ+I1dSczkUjAEPjfjuIs6QGFKbl
+        CXbZhJGEWfjvX3ql44tnAyoTuQnzK9c=
+X-Google-Smtp-Source: AGRyM1uCLGmzMYY2wxHJA6g3LpBPk+fAWwleO7VZjqpjImsP5B2pDwkinzqKR86ht7xMWFUog41dHw==
+X-Received: by 2002:a65:6907:0:b0:415:c9c1:eb4f with SMTP id s7-20020a656907000000b00415c9c1eb4fmr15924063pgq.193.1657612718071;
+        Tue, 12 Jul 2022 00:58:38 -0700 (PDT)
+Received: from xplor.waratah.dyndns.org (222-155-0-244-adsl.sparkbb.co.nz. [222.155.0.244])
+        by smtp.gmail.com with ESMTPSA id q93-20020a17090a17e600b001e33e264fd6sm6225304pja.40.2022.07.12.00.58.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 12 Jul 2022 00:58:37 -0700 (PDT)
+Received: by xplor.waratah.dyndns.org (Postfix, from userid 1000)
+        id 637EF36031B; Tue, 12 Jul 2022 19:58:34 +1200 (NZST)
+From:   Michael Schmitz <schmitzmic@gmail.com>
+To:     linux-m68k@vger.kernel.org, arnd@kernel.org
+Cc:     linux-scsi@vger.kernel.org, geert@linux-m68k.org
+Subject: [PATCH v2 0/5] Convert m68k MVME147 WD33C93 SCSI driver to DMA API
+Date:   Tue, 12 Jul 2022 19:58:27 +1200
+Message-Id: <20220712075832.23793-1-schmitzmic@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Michael,
+This series was precipitated by Arnd removing CONFIG_VIRT_TO_BUS. The
+m68k WD33C93 still used virt_to_bus to convert virtual addresses to
+physical addresses suitable for the DMA engines (note m68k does not
+have an IOMMU and uses a direct mapping for DMA addresses). 
 
-On Tue, Jul 12, 2022 at 5:27 AM Michael Schmitz <schmitzmic@gmail.com> wrote:
-> I just realized the commit message subject for this patch needs
-> correcting. Will that mess up your workflow (assuming I retain the
-> subject line for the announcement mail)?
+Arnd suggested to use dma_map_single() to set up dma mappings instead
+of open-coding much the same in every driver dma_setup() function. An
+earlier patch series has converted the three Amiga WD33C93 drivers,
+this series now takes care of the sole remaining m68k WD33C93 driver.
 
-Np, I'm used to editing subject lines all the time ;-)
+The m68k VME mvme147 driver has no DMA addressing or alignment
+restrictions and can be converted in the same way as the Amiga a3000
+one in my previous series, but requires conversion to a platform
+device driver first.
 
-Gr{oetje,eeting}s,
+Changes from v1: 
+- use of devm_platform_ioremap_resource() to convert phys. resource
+to virtual address for chip registers.
 
-                        Geert
+Only compile tested so far, and hardware testing might be hard to do.
+I'd appreciate someone giving this a thorough review.
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+Cheers,
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+   Michael
+
+
