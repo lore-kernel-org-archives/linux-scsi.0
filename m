@@ -2,95 +2,114 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EF67C43334
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jul 2022 08:28:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 151CACCA47C
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Jul 2022 09:07:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229657AbiGLI2J (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Jul 2022 04:28:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58846 "EHLO
+        id S232062AbiGLJHL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Jul 2022 05:07:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36390 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232237AbiGLI2H (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jul 2022 04:28:07 -0400
-Received: from mout.kundenserver.de (mout.kundenserver.de [217.72.192.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8F4D974B4;
-        Tue, 12 Jul 2022 01:28:05 -0700 (PDT)
-Received: from mail-yw1-f170.google.com ([209.85.128.170]) by
- mrelayeu.kundenserver.de (mreue109 [213.165.67.113]) with ESMTPSA (Nemesis)
- id 1MEFnP-1oIZmQ3fEr-00AE1Q; Tue, 12 Jul 2022 10:28:04 +0200
-Received: by mail-yw1-f170.google.com with SMTP id 00721157ae682-31d85f82f0bso37513587b3.7;
-        Tue, 12 Jul 2022 01:28:03 -0700 (PDT)
-X-Gm-Message-State: AJIora9eodH2nmyg+yyjo3Z+gkYDPi4P3wVkR3YF+A68HYlLIUmA0zCq
-        jC3id/5XNgGFI7Tn7JFC41FkyFV209Dmiw1F3cs=
-X-Google-Smtp-Source: AGRyM1u9HrvdVLUYfcTjxl6JYK42QXCE/vx+bUc1E+DlIYc4j8YKWLUVVYfD/FHC1DMwxhEvHUxz2HArNEw2IL5mAk0=
-X-Received: by 2002:a81:d93:0:b0:31c:d32d:4d76 with SMTP id
- 141-20020a810d93000000b0031cd32d4d76mr25884738ywn.135.1657614482595; Tue, 12
- Jul 2022 01:28:02 -0700 (PDT)
-MIME-Version: 1.0
-References: <20220704025632.235968-1-renzhijie2@huawei.com>
-In-Reply-To: <20220704025632.235968-1-renzhijie2@huawei.com>
-From:   Arnd Bergmann <arnd@arndb.de>
-Date:   Tue, 12 Jul 2022 10:27:45 +0200
-X-Gmail-Original-Message-ID: <CAK8P3a07jGCuAVQAZgpENRP_xFLiogU9W1Uze+n21h7TdOZhog@mail.gmail.com>
-Message-ID: <CAK8P3a07jGCuAVQAZgpENRP_xFLiogU9W1Uze+n21h7TdOZhog@mail.gmail.com>
-Subject: Re: [PATCH -next] scsi: ufs: ufs-mediatek: Fix build error
-To:     Ren Zhijie <renzhijie2@huawei.com>
-Cc:     stanley.chu@mediatek.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Bart Van Assche <bvanassche@acm.org>,
+        with ESMTP id S229783AbiGLJHK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jul 2022 05:07:10 -0400
+Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC08132B91;
+        Tue, 12 Jul 2022 02:07:09 -0700 (PDT)
+Received: by mail-pf1-x42c.google.com with SMTP id l124so6952428pfl.8;
+        Tue, 12 Jul 2022 02:07:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=subject:to:references:cc:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding;
+        bh=faNUdVwfi83DLJgtsRVpRUnKNkRdra8kpC3G7WPuHGY=;
+        b=odLvA5ycaJvyOtSwCtCCcoft1Z7PwBN4qlM59/l1W/1omkTACPBpDBw8HX7xmqfBnf
+         wR7o92smwaJnFLifdaF4pDX4QQtOvLYem2RPQpsKOC4shlWh+8LpIiHVyH/sE8NYeyM9
+         HTilfzdvFrLsbuVWGPz51WY8fCZn8z48KuZnsJtEaJ8zbNi5Ktl5ecPj+6NhkFUqcn3E
+         pFm7qbOKZxpnby02ClrF3ZJKNsCGAu72Qo22634Gc4j7f9RU/SRdrFE7T7kBirEKHNGI
+         yWnIV1GSA2/rYdNePTsDMUvf/UF5iphIA+KtjO03T8zmAsIWl2JbG0O3igERfaX4GLCP
+         O38A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:references:cc:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding;
+        bh=faNUdVwfi83DLJgtsRVpRUnKNkRdra8kpC3G7WPuHGY=;
+        b=b13jxKN8tkHMTjanZ6EzS4djCGd4bZayD0yeuSajYcAyYuKmB4rBwav2bcZEbvb1ry
+         X2+n12F3tElFa1jrmx7hfPpoGuUs6nwRPuFVirjI1icOkRyOLjpB+Q4AEwK9yO5qBOaP
+         SdPZcXODG0YhHLZLjWZIIDEM3J4YtLyEBh5HqcLRChONESk/5dUWw11o8PhDvkt7Gald
+         w1bRtn+b3nj03W86PqB9FovutwAl9bt3ZpHfN45YKAPgrPhx7Dq84xuc6lYKJi82Bk72
+         2gV+D3kl5hmdj2zDXUa6Mfir8ph/KonA8dyFGFZE3glb8Yz/ot0f3LPwoeQqylROu3tA
+         6NRA==
+X-Gm-Message-State: AJIora/413/WF1hdpa7jtnkUD/UrB0cMO4ygT3mob9hDhlC/9qnx8F+9
+        WHo9ciCIuDsKzy/MONGg4MKl4toIMyc=
+X-Google-Smtp-Source: AGRyM1u/6z3Si73nX/j2hIjzQZlX4Mm1+euIQQwpYBoPogK1zCXJO4TEdGfFyRAm4gfiq1TwTfWQMQ==
+X-Received: by 2002:a63:4d0e:0:b0:412:1877:9820 with SMTP id a14-20020a634d0e000000b0041218779820mr19694397pgb.177.1657616829430;
+        Tue, 12 Jul 2022 02:07:09 -0700 (PDT)
+Received: from [10.1.1.24] (222-155-0-244-adsl.sparkbb.co.nz. [222.155.0.244])
+        by smtp.gmail.com with ESMTPSA id pi4-20020a17090b1e4400b001df264610c4sm2313292pjb.0.2022.07.12.02.07.06
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 12 Jul 2022 02:07:09 -0700 (PDT)
+Subject: Re: [PATCH v2 2/5] m68k - set up platform device for mvme147_scsi
+To:     Arnd Bergmann <arnd@kernel.org>
+References: <20220712075832.23793-1-schmitzmic@gmail.com>
+ <20220712075832.23793-3-schmitzmic@gmail.com>
+ <CAK8P3a2ptjH3VyCjuwQROw8GuOs8CxuhX8dMBxMa5m-Q93yZ_g@mail.gmail.com>
+Cc:     Linux/m68k <linux-m68k@vger.kernel.org>,
         linux-scsi <linux-scsi@vger.kernel.org>,
-        "moderated list:ARM/Mediatek SoC..." 
-        <linux-mediatek@lists.infradead.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Provags-ID: V03:K1:QdMVMsi+6aHmn8J8UEPhX4t+Uv/ZKhDQIrzYhy9SLwFVH7u6RXI
- lBZY9oBpwN6WznVGfIM5S+V3jXTGYE5YDq/mHG92u0zkoZo7RIINkRLmntZx2ksjIqxpCsH
- NkOf1B9+dhOFzCqaOCotC0GFsIoBHlIpZdCuiMzoL805o71BLpPUhBA5CgPBpz3PlsLnDAW
- wBlKc6Dwwz4OdTRpeSe2Q==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:2RFsKK1FhIg=:EnSRMEo+1oOOgalCgJFfAy
- RKxRpWDqwP9PtHNZLjIFEUrXYLxlztensnEY8i+/NF3wohXijARCQr1yDP6TM+t8VGIIicvo7
- qlAFGc1eBm+m48Y1J8/Y+2puCEJJDpLypIwBjOENm2zVZsmY7WKqIxbc3azXwL/OslfFdhwya
- 08UUwakZvPysBUZBxCrUMQJcCIqYI7vuLIxYwU5+xQJQoAoFS8Qf1fuPfWQ86mt821snaDd+t
- OMw9O4yX7CCHBQp3zkI/AiYGsw5ZuizVVaE50FIEe9MXVMneIv7hb9ZqAqS3hAijecDItHxro
- aWRlJqHKj0Y/kQcXCRzlUM9qs5f7gEUNVEp4n1BNHuVKJJROArjWNFoAA4ZyoXk+9AbFCodHF
- wi2KRzOf2zdISHTAfHAFVa0odTeiLr7n6ax0PsSJA1kPfMSWKW4vL9pEUljL9HAuvHwDFCOZa
- a60ihbBvoSzKge5z4pXQX7oSPOqhYt+LeSh7lg2EAFxrDWxqN+hNfgIBvN3CqFdIgS+5IQPwB
- aBJdsmY1L8gRPOEvlCNfOYRNwKGJOBR7KvlHm03TZTSv4ATJkeaibGJ9r5/iiYX1MURIVB+Jx
- JShSqymQvd+V7Ld7GNh8dRbTtsy8AgV5UjicgmxvN2lgt7qHFQr1hHtQaKh9363oo2laPN2yZ
- XQje3/Vey/4uRPgbqcjTpg8KVcAdyTSSoNDEqGPVA1m3IWQ8mjgNS1T+2pr8+fakjhidSs254
- OPnZ802WXcvafSkKb0DY/+u2wl8nGPNlBFfWAUcwKlDnmWspwuSwHsIdECOGdN50kxwM1KvMP
- xIKPUMbQ6PqTlOQbv5bz6/LIUHJOn4W9H1bqjoJHc3BZq8ofwlqFXLu9t2zRm01z3F5BAKcy4
- //h14B5wc7W2dy7SHQ3g==
+        Geert Uytterhoeven <geert@linux-m68k.org>
+From:   Michael Schmitz <schmitzmic@gmail.com>
+Message-ID: <7b652abd-3094-e0c8-d8fb-087c60c51fa2@gmail.com>
+Date:   Tue, 12 Jul 2022 21:07:04 +1200
+User-Agent: Mozilla/5.0 (X11; Linux ppc; rv:45.0) Gecko/20100101
+ Icedove/45.4.0
+MIME-Version: 1.0
+In-Reply-To: <CAK8P3a2ptjH3VyCjuwQROw8GuOs8CxuhX8dMBxMa5m-Q93yZ_g@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Jul 4, 2022 at 4:56 AM Ren Zhijie <renzhijie2@huawei.com> wrote:
-> diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-> index c958279bdd8f..e006c2528a3a 100644
-> --- a/drivers/ufs/host/ufs-mediatek.c
-> +++ b/drivers/ufs/host/ufs-mediatek.c
-> @@ -1427,6 +1427,7 @@ static int ufs_mtk_system_resume(struct device *dev)
->  }
->  #endif
->
-> +#ifdef CONFIG_PM
->  static int ufs_mtk_runtime_suspend(struct device *dev)
->  {
->         struct ufs_hba *hba = dev_get_drvdata(dev);
-> @@ -1449,6 +1450,7 @@ static int ufs_mtk_runtime_resume(struct device *dev)
->
->         return ufshcd_runtime_resume(dev);
->  }
-> +#endif
->
->  static const struct dev_pm_ops ufs_mtk_pm_ops = {
->         SET_SYSTEM_SLEEP_PM_OPS(ufs_mtk_system_suspend,
+Hi Arnd,
 
-This change works, but it's not great. It's better to change the
-SET_SYSTEM_SLEEP_PM_OPS() to the new SYSTEM_SLEEP_PM_OPS()
-that works without the #ifdef.
+Am 12.07.2022 um 20:12 schrieb Arnd Bergmann:
+> On Tue, Jul 12, 2022 at 9:58 AM Michael Schmitz <schmitzmic@gmail.com> wrote:
+>> +
+>> +static const struct resource mvme147_scsi_rsrc[] __initconst = {
+>> +       DEFINE_RES_MEM(MVME147_SCSI_BASE, 0xff),
+>
+> Still the wrong size?
 
-         Arnd
+Too true - forgot to fix that, sorry.
+
+>
+>> +       DEFINE_RES_IRQ(MVME147_IRQ_SCSI_PORT),
+>> +};
+>> +
+>> +int __init mvme147_platform_init(void)
+>> +{
+>> +       struct platform_device *pdev;
+>> +       int rv = 0;
+>> +
+>> +       pdev = platform_device_register_simple("mvme147-scsi", -1,
+>> +               mvme147_scsi_rsrc, ARRAY_SIZE(mvme147_scsi_rsrc));
+>
+> I think you actually have to use platform_device_register_full() to pass
+> a DMA mask here: As I understand it, the dma_set_mask_and_coherent()
+> call in the driver fails if the device is not already marked as dma
+> capable by having an initial mask set.
+
+I'll take a look at that - if true, this requires the amiga-a3000-scsi 
+platform device set-up be changed in the same way (the gvp11 and a2091 
+drivers inherit the DMA mask from the Zorro bus default, so ought to 
+work OK).
+
+Cheers,
+
+	Michael
+
+> The way this normally works is that the device gets created with a mask
+> that reflects the capabilities of the bus, while the driver sets a mask
+> based on what it wants to program into the device, and the dma-mapping
+> interfaces ensure that we only use the intersection of those.
+>
+>         Arnd
+>
