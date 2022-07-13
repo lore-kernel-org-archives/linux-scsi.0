@@ -2,87 +2,146 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78BFCCCA479
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jul 2022 08:48:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0390DC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jul 2022 09:09:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235787AbiGMIsj convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Jul 2022 04:48:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57718 "EHLO
+        id S234458AbiGMJJF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Jul 2022 05:09:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54588 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235354AbiGMIsg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jul 2022 04:48:36 -0400
-Received: from mout.kundenserver.de (mout.kundenserver.de [217.72.192.74])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 353EFB5B;
-        Wed, 13 Jul 2022 01:48:33 -0700 (PDT)
-Received: from mail-yw1-f170.google.com ([209.85.128.170]) by
- mrelayeu.kundenserver.de (mreue108 [213.165.67.113]) with ESMTPSA (Nemesis)
- id 1MN5aF-1ntBob0jMz-00J0b0; Wed, 13 Jul 2022 10:48:32 +0200
-Received: by mail-yw1-f170.google.com with SMTP id 00721157ae682-31caffa4a45so105632547b3.3;
-        Wed, 13 Jul 2022 01:48:31 -0700 (PDT)
-X-Gm-Message-State: AJIora8y6z6uYZh3PhIula2m8MLgT/2NIfjavDr0qbSOkHyXxmlEhuQT
-        j8OrvOYyeYjs8Y1VcB5gkQiDsymoSKrKzp2ykIk=
-X-Google-Smtp-Source: AGRyM1vMr+hSc6XskeD23TlpGSLGsRTL4NEsYvdeNOBHcA1yUcy1PSuMux1dEngAH38Zd7x/dWUVbgkF4avt9/jahz0=
-X-Received: by 2002:a0d:df0f:0:b0:31b:e000:7942 with SMTP id
- i15-20020a0ddf0f000000b0031be0007942mr2817622ywe.320.1657702110838; Wed, 13
- Jul 2022 01:48:30 -0700 (PDT)
+        with ESMTP id S231162AbiGMJJF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jul 2022 05:09:05 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51CAFA44D9
+        for <linux-scsi@vger.kernel.org>; Wed, 13 Jul 2022 02:09:04 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 5C43B1F899;
+        Wed, 13 Jul 2022 09:09:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1657703341; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=lKU363P+X4155K3SD7IOzleQglqmIhnB08RXmzoXOlI=;
+        b=YTNFe4KL3/nrl7OImvV8KvbQSozNydFCPRR1r6Au6aayjFgdkv+5eFqUOdinXlTcz/qQgx
+        UPcE4uhm9x/Tj+HkmY3oBs5IR4YwGbwWlwTNstqJC2fNtgrlNOj7JZCAAL96RyGRPiY7Fb
+        evcrPOxjqlQZwRtzIPc9VHbZII21C9g=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1657703341;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=lKU363P+X4155K3SD7IOzleQglqmIhnB08RXmzoXOlI=;
+        b=uhDpQw9qvDQLozoeiQONeUdqOB21WH/2xuUHZu0yFb63VeZlOvQG0ArcAQguvj2lkCyI6Z
+        n+BajNM7C7hGi3Ag==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 4652813754;
+        Wed, 13 Jul 2022 09:09:01 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id OKjAEK2LzmJZSgAAMHmgww
+        (envelope-from <hare@suse.de>); Wed, 13 Jul 2022 09:09:01 +0000
+Message-ID: <d3cb23e6-50a8-43bf-5031-90a0907bed7c@suse.de>
+Date:   Wed, 13 Jul 2022 11:09:00 +0200
 MIME-Version: 1.0
-References: <20220704025632.235968-1-renzhijie2@huawei.com>
- <CAK8P3a07jGCuAVQAZgpENRP_xFLiogU9W1Uze+n21h7TdOZhog@mail.gmail.com> <df9909dc-3303-808e-575a-47190f636279@huawei.com>
-In-Reply-To: <df9909dc-3303-808e-575a-47190f636279@huawei.com>
-From:   Arnd Bergmann <arnd@arndb.de>
-Date:   Wed, 13 Jul 2022 10:48:14 +0200
-X-Gmail-Original-Message-ID: <CAK8P3a3SA9zvVu0i1m0kqbemLd4WfTMGfpc8VwhsmJOBgZHvsA@mail.gmail.com>
-Message-ID: <CAK8P3a3SA9zvVu0i1m0kqbemLd4WfTMGfpc8VwhsmJOBgZHvsA@mail.gmail.com>
-Subject: Re: [PATCH -next] scsi: ufs: ufs-mediatek: Fix build error
-To:     Ren Zhijie <renzhijie2@huawei.com>
-Cc:     Arnd Bergmann <arnd@arndb.de>, stanley.chu@mediatek.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        "moderated list:ARM/Mediatek SoC..." 
-        <linux-mediatek@lists.infradead.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-X-Provags-ID: V03:K1:gDaUUwadwRbJVvwyOuBr1OgzQBq2pJdQ83hIa3JyWYcdFgGNyRW
- T14G+lOpGsMt9q8Iq2qnhkiNSsfJp4ymDt3WxArrdWScrM/4IyaWg9KtLFN9p47bHfwxz14
- iLPunpO/wd2Keo1A0nqIxH9zoCGxMQL+C4YKpfKWXaTi1cGm6YGenUGUbmbkmjYDyt21jcl
- 7LPovyFFz4mVrMYQdKQKg==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:oCkHxI1MJDg=:i35SxlMs/KnI8M+kKInsqn
- bQNfdYcSu3IoK7UvwiaDYDLrMiHiJwc6+2TgsrmrcYUGezEzAAsXs5Itf81jFLG/Z2/awmlMc
- ItBTHlgN8bV2dnQLW4FXAh0SwvIiBYhIZt5fJJNpSioVIHs6+banh1BVOnsI0DVhlaYp/wptm
- Vq2TeQlp8+Bn7tecqbPfE/kAK5iWNiIw7c5fOCpMQ59B44mKvmFC6e1qGqIgIxIYEKV5S4sCy
- AlamTnfIV0D8vWu8ZztZw4nv7eiLo7n44ofYeEScThF8w5TmxdpPbiou6nurKxsLl51oh3xpA
- BMKKF2RSGKuhSf0bgH0Wc1BiGgOxzA6iiH3zIFIsTy9rISuBWFpzGVY824uhpb0dj9pA7E4g5
- RZe+96KN+JWhJwJCsdrI+gCRCt9qSL2F/BTCfE2jMm32Cvrbr1uWnbFNnX3uIiYVp4yWk+h07
- kMQoInt54SpvWH6Mnbzi06TkcXWjD705GhxFZhzlrlIBypHz19gCFcTShp5yLI4VHXXaaaNbp
- H0k58KYObGjwbIij615cAdjlJgtDczlW7RDglpzTk1gPOzIkm/C2KQJ2BjznM5HGWtKtHKxHD
- iQF2craGnq2LqEgkGRQl84cedM64rQX/IJs3SYL3MvU6KaMEXb6sswIfBhdD8HkxfjW0awRCM
- bhAp7KrmmNb3iP18UXQVdSoemj7RafO5jB/n7mZmmQ40fkbODiS75CWa+McJ/sA1AoPI3tJqw
- pywM0qzjfe5HRsjmN+OD2O7rZ3xQMw5PamzksOXwqmZQFzQUdcvctE3QB1MCOrp/gQgKTEtl8
- OriTo1qwb/jd1mxNTXKi/8UlvAZxK9O8VHc0xGxlcm3uI+sDKSOvjeKYlq0gxCqCQAlR2W5mv
- vfsz3CAqtOE/aItr8Zcw==
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.4.0
+Subject: Re: [Bug 216232] New: mysterious block devices are shown under /dev
+ folder
+Content-Language: en-US
+To:     bugzilla-daemon@kernel.org, linux-scsi@vger.kernel.org
+References: <bug-216232-11613@https.bugzilla.kernel.org/>
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <bug-216232-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jul 13, 2022 at 3:44 AM Ren Zhijie <renzhijie2@huawei.com> wrote:
-> 在 2022/7/12 16:27, Arnd Bergmann 写道:
->
-> Thanks for your suggestion.
->
-> How does it to fix the implicit-function-declaration error?
->
+On 7/10/22 11:47, bugzilla-daemon@kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=216232
+> 
+>              Bug ID: 216232
+>             Summary: mysterious block devices are shown under /dev folder
+>             Product: SCSI Drivers
+>             Version: 2.5
+>      Kernel Version: 5.4.61
+>            Hardware: All
+>                  OS: Linux
+>                Tree: Mainline
+>              Status: NEW
+>            Severity: normal
+>            Priority: P1
+>           Component: QLOGIC QLA2XXX
+>            Assignee: scsi_drivers-qla2xxx@kernel-bugs.osdl.org
+>            Reporter: yshxxsjt715@gmail.com
+>          Regression: No
+> 
+> we are using linux kernel 5.4.61 and fibre channel card is qlogic's
+> ISP2722-based 16/32Gb adapter card.
+> 
+> the problem is that we are seeing some devices with lun 768 with size of 512B
+> shown under /dev folder. In the syslog we saw something like
+> 
+> Jul 10 17:00:08 hci01 kernel: [21675145.568997] scsi_io_completion_action: 24
+> callbacks suppressed
+> Jul 10 17:00:08 hci01 kernel: [21675145.569005] sd 6:0:0:768: [sdau] tag#1298
+> FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+> Jul 10 17:00:08 hci01 kernel: [21675145.569011] sd 6:0:0:768: [sdau] tag#1298
+> Sense Key : Illegal Request [current]
+> Jul 10 17:00:08 hci01 kernel: [21675145.569015] sd 6:0:0:768: [sdau] tag#1298
+> Add. Sense: Logical block address out of range
+> Jul 10 17:00:08 hci01 kernel: [21675145.569019] sd 6:0:0:768: [sdau] tag#1298
+> CDB: Read(10) 28 00 00 00 00 00 00 00 01 00
+> Jul 10 17:00:08 hci01 kernel: [21675145.569021] print_req_error: 24 callbacks
+> suppressed
+> Jul 10 17:00:08 hci01 kernel: [21675145.569025] blk_update_request: critical
+> target error, dev sdau, sector 0 op 0x0:(READ) flags 0x80700 phys_seg 1 prio
+> class 0
+> Jul 10 17:00:08 hci01 kernel: [21675145.601879] sd 6:0:0:768: [sdau] tag#1299
+> FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+> Jul 10 17:00:08 hci01 kernel: [21675145.601883] sd 6:0:0:768: [sdau] tag#1299
+> Sense Key : Illegal Request [current]
+> Jul 10 17:00:08 hci01 kernel: [21675145.601886] sd 6:0:0:768: [sdau] tag#1299
+> Add. Sense: Logical block address out of range
+> Jul 10 17:00:08 hci01 kernel: [21675145.601888] sd 6:0:0:768: [sdau] tag#1299
+> CDB: Read(10) 28 00 00 00 00 00 00 00 01 00
+> Jul 10 17:00:08 hci01 kernel: [21675145.601891] blk_update_request: critical
+> target error, dev sdau, sector 0 op 0x0:(READ) flags 0x0 phys_seg 1 prio class
+> 0
+> Jul 10 17:00:08 hci01 kernel: [21675145.604213] buffer_io_error: 22 callbacks
+> suppressed
+> Jul 10 17:00:08 hci01 kernel: [21675145.604215] Buffer I/O error on dev sdau,
+> logical block 0, async page read
+> Jul 10 17:00:08 hci01 kernel: [21675145.634149] sd 6:0:0:768: [sdau] tag#1300
+> FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+> Jul 10 17:00:08 hci01 kernel: [21675145.634152] sd 6:0:0:768: [sdau] tag#1300
+> Sense Key : Illegal Request [current]
+> Jul 10 17:00:08 hci01 kernel: [21675145.634155] sd 6:0:0:768: [sdau] tag#1300
+> Add. Sense: Logical block address out of range
+> Jul 10 17:00:08 hci01 kernel: [21675145.634158] sd 6:0:0:768: [sdau] tag#1300
+> CDB: Read(10) 28 00 00 00 00 00 00 00 01 00
+> 
+> here, the lun id of 768 does not exist on SAN but when I try to manually delete
+> it, after some seconds it still appears.
+> 
 
-I missed that part at first. I would say the #ifdef around the
-declarations in the
-header should be removed here, it serves no purpose, and it is safe to rely
-on the compiler to perform dead code elimination so this does not lead to
-a link error even if a dead function references another function that is not
-reachable.
+This looks more like a configuration issue on the storage.
+What is the output of 'lsscsi' on your system?
 
-        Arnd
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		           Kernel Storage Architect
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
