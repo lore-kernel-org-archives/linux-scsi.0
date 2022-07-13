@@ -2,75 +2,97 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61FCAC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jul 2022 13:11:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD559C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jul 2022 13:29:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235845AbiGMNL6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Jul 2022 09:11:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33800 "EHLO
+        id S235134AbiGMN32 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Jul 2022 09:29:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55664 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235819AbiGMNL6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jul 2022 09:11:58 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 832B3DBF
-        for <linux-scsi@vger.kernel.org>; Wed, 13 Jul 2022 06:11:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1657717911;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=UCrelzCP57Cv6KnBFo49I91GxcTZsuGCeHP+3vdovVo=;
-        b=TfLIn8HQiclsdZrBEehAgY5h3yBi61oKZKwFaIaKJao8dEELMSyDomB4ZpyZUV3pECC02s
-        LAIE3mH7tioyLbIDZAl0UcPIIrhyATpl2glV/qGgc3yK0FrzrBltNEksYodZEDadGfYOTp
-        5kavqh1m5ofg2gQP4uF5Xj3RUj5iu6I=
-Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
- [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-133-uIa1xmKqNL-VzNqgR3SnxA-1; Wed, 13 Jul 2022 09:11:48 -0400
-X-MC-Unique: uIa1xmKqNL-VzNqgR3SnxA-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.rdu2.redhat.com [10.11.54.1])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 123061C0F699;
-        Wed, 13 Jul 2022 13:11:48 +0000 (UTC)
-Received: from T590 (ovpn-8-16.pek2.redhat.com [10.72.8.16])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 639E640CFD05;
-        Wed, 13 Jul 2022 13:11:44 +0000 (UTC)
-Date:   Wed, 13 Jul 2022 21:11:40 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Tasmiya Nalatwad <tasmiya@linux.vnet.ibm.com>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [linux-next] [5.19.0-rc1] kernel crashes while performing driver
- bind/unbind test with SLUB_DEBUG enabled
-Message-ID: <Ys7EXeoVbLRZj9CL@T590>
-References: <c1846219-cea9-e82c-7337-6f6d9ffadd3d@linux.vnet.ibm.com>
- <Yqksbtth8zzEmjp4@T590>
- <d789d8f6-71c3-3927-7708-141b43c3ba0b@linux.vnet.ibm.com>
+        with ESMTP id S231748AbiGMN3Z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jul 2022 09:29:25 -0400
+Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03E9613D3C;
+        Wed, 13 Jul 2022 06:29:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1657718965; x=1689254965;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=L4CProI6gki3JdTLeUa3J0QD35v7lRC9rLkvXYbbm7s=;
+  b=lV/hhsEbkyd+L7t3ZQqw6MWnR9E18g8YfiL4VeXmzltRn/Wl5Ld0w8Ij
+   WvydpqY+Vn4rAmnoF/9KGGv00GIsL6Hgq1w7JbQtmIjwmPcZObUu1mV1Q
+   jv0gzWQpunN3QYPiyka3BNhDJ9gTGmKKp5k+NQ3yKOjdBylBs+0URuc3k
+   BYr+vkRarW+wj09oOSwn0TaOVdoEC6CWSTOx5Pw2JJk/FxJCw6UcK9Dox
+   7EV66XKD+4kB/RLeOvbJbJwNzkLfmzg5cG5I3ZAnksE7IUlOGFVJ+oEkD
+   yQqnaeg/8by2xkD+qlGyzTOWwT7md43TXq6e9uV7vUJctEyuyo5qDgQ6I
+   A==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10406"; a="346891062"
+X-IronPort-AV: E=Sophos;i="5.92,267,1650956400"; 
+   d="scan'208";a="346891062"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jul 2022 06:29:24 -0700
+X-IronPort-AV: E=Sophos;i="5.92,267,1650956400"; 
+   d="scan'208";a="622940542"
+Received: from ahunter6-mobl1.ger.corp.intel.com (HELO [10.0.2.15]) ([10.252.51.236])
+  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jul 2022 06:29:22 -0700
+Message-ID: <0c1da7b8-1be0-76a9-f613-ef307bac4e36@intel.com>
+Date:   Wed, 13 Jul 2022 16:29:18 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d789d8f6-71c3-3927-7708-141b43c3ba0b@linux.vnet.ibm.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.11.54.1
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Firefox/91.0 Thunderbird/91.9.1
+Subject: Re: [PATCH] scsi: ufs: ufs-pci: default clock frequency for Intel's
+ UFS controller
+Content-Language: en-US
+To:     Daniil Lunev <dlunev@chromium.org>
+Cc:     Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Bean Huo <beanhuo@micron.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+References: <20220708141612.1.Ice2e8173bd0937c7c4898b112350120063572269@changeid>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+In-Reply-To: <20220708141612.1.Ice2e8173bd0937c7c4898b112350120063572269@changeid>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jul 13, 2022 at 03:49:05PM +0530, Tasmiya Nalatwad wrote:
-> Greetings,
+On 8/07/22 07:17, Daniil Lunev wrote:
+> ARM platforms rely on 'ref_clk' of a UFS controller's node in DTS to set
+> up the proper bRefClkFreq for the UFS storage device. The facility is
+> not available on x86. To circumvene that, default the parameter,
+> responsible for carrying the value to the UFS storage device
+> initialization, to the one that Intel's controllers support. This is
+> required to support provisioning of UFS storage devices from userspace,
+> without relying on FW and/or bootloader to make the necessary
+> preparations.
 > 
-> While running plain bind/unbind test on scsi I had enabled slub_debug
+> Signed-off-by: Daniil Lunev <dlunev@chromium.org>
+> ---
 > 
-> System has FC adapter with multipath enabled.
+>  drivers/ufs/host/ufshcd-pci.c | 1 +
+>  1 file changed, 1 insertion(+)
 > 
-> Step 1 : Added slub_debug in /etc/default/grub saved the configuration and
-> rebooted the machine.
-> Step 2 : Performed normal driver bind/unbind test.
+> diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.c
+> index 04166bda41daa..a6f9222cbea74 100644
+> --- a/drivers/ufs/host/ufshcd-pci.c
+> +++ b/drivers/ufs/host/ufshcd-pci.c
+> @@ -336,6 +336,7 @@ static int ufs_intel_common_init(struct ufs_hba *hba)
+>  	struct intel_host *host;
+>  
+>  	hba->caps |= UFSHCD_CAP_RPM_AUTOSUSPEND;
+> +	hba->dev_ref_clk_freq = REF_CLK_FREQ_19_2_MHZ;
 
-Hello,
+I have seen requirement documents saying 19.2 or 38.4, so this is would
+be a problem since it overwrites the value even if it has been set correctly
+to something other than 19.2 MHz.
 
-Can you try the following patches and see if they are helpful?
-
-
-Thanks,
-Ming
+>  
+>  	host = devm_kzalloc(hba->dev, sizeof(*host), GFP_KERNEL);
+>  	if (!host)
 
