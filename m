@@ -2,192 +2,87 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9615C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jul 2022 08:17:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78BFCCCA479
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jul 2022 08:48:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234486AbiGMIRJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Jul 2022 04:17:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41694 "EHLO
+        id S235787AbiGMIsj convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Jul 2022 04:48:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57718 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235401AbiGMIQn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jul 2022 04:16:43 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2719A9FE1D
-        for <linux-scsi@vger.kernel.org>; Wed, 13 Jul 2022 01:13:55 -0700 (PDT)
-Received: from fraeml715-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LjVdd2kVfz67ZTx;
-        Wed, 13 Jul 2022 16:09:25 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml715-chm.china.huawei.com (10.206.15.34) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Wed, 13 Jul 2022 10:13:47 +0200
-Received: from [10.195.32.223] (10.195.32.223) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Wed, 13 Jul 2022 09:13:46 +0100
-Message-ID: <3c0f352a-0be6-7322-3556-8ce0d66ba8f3@huawei.com>
-Date:   Wed, 13 Jul 2022 09:13:47 +0100
+        with ESMTP id S235354AbiGMIsg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jul 2022 04:48:36 -0400
+Received: from mout.kundenserver.de (mout.kundenserver.de [217.72.192.74])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 353EFB5B;
+        Wed, 13 Jul 2022 01:48:33 -0700 (PDT)
+Received: from mail-yw1-f170.google.com ([209.85.128.170]) by
+ mrelayeu.kundenserver.de (mreue108 [213.165.67.113]) with ESMTPSA (Nemesis)
+ id 1MN5aF-1ntBob0jMz-00J0b0; Wed, 13 Jul 2022 10:48:32 +0200
+Received: by mail-yw1-f170.google.com with SMTP id 00721157ae682-31caffa4a45so105632547b3.3;
+        Wed, 13 Jul 2022 01:48:31 -0700 (PDT)
+X-Gm-Message-State: AJIora8y6z6uYZh3PhIula2m8MLgT/2NIfjavDr0qbSOkHyXxmlEhuQT
+        j8OrvOYyeYjs8Y1VcB5gkQiDsymoSKrKzp2ykIk=
+X-Google-Smtp-Source: AGRyM1vMr+hSc6XskeD23TlpGSLGsRTL4NEsYvdeNOBHcA1yUcy1PSuMux1dEngAH38Zd7x/dWUVbgkF4avt9/jahz0=
+X-Received: by 2002:a0d:df0f:0:b0:31b:e000:7942 with SMTP id
+ i15-20020a0ddf0f000000b0031be0007942mr2817622ywe.320.1657702110838; Wed, 13
+ Jul 2022 01:48:30 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH v4 4/4] scsi: core: Call blk_mq_free_tag_set() earlier
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-CC:     Jaegeuk Kim <jaegeuk@kernel.org>, <linux-scsi@vger.kernel.org>,
-        "Christoph Hellwig" <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Li Zhijian <lizhijian@fujitsu.com>
-References: <20220712221936.1199196-1-bvanassche@acm.org>
- <20220712221936.1199196-5-bvanassche@acm.org>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <20220712221936.1199196-5-bvanassche@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.195.32.223]
-X-ClientProxiedBy: lhreml754-chm.china.huawei.com (10.201.108.204) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+References: <20220704025632.235968-1-renzhijie2@huawei.com>
+ <CAK8P3a07jGCuAVQAZgpENRP_xFLiogU9W1Uze+n21h7TdOZhog@mail.gmail.com> <df9909dc-3303-808e-575a-47190f636279@huawei.com>
+In-Reply-To: <df9909dc-3303-808e-575a-47190f636279@huawei.com>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Wed, 13 Jul 2022 10:48:14 +0200
+X-Gmail-Original-Message-ID: <CAK8P3a3SA9zvVu0i1m0kqbemLd4WfTMGfpc8VwhsmJOBgZHvsA@mail.gmail.com>
+Message-ID: <CAK8P3a3SA9zvVu0i1m0kqbemLd4WfTMGfpc8VwhsmJOBgZHvsA@mail.gmail.com>
+Subject: Re: [PATCH -next] scsi: ufs: ufs-mediatek: Fix build error
+To:     Ren Zhijie <renzhijie2@huawei.com>
+Cc:     Arnd Bergmann <arnd@arndb.de>, stanley.chu@mediatek.com,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        "moderated list:ARM/Mediatek SoC..." 
+        <linux-mediatek@lists.infradead.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+X-Provags-ID: V03:K1:gDaUUwadwRbJVvwyOuBr1OgzQBq2pJdQ83hIa3JyWYcdFgGNyRW
+ T14G+lOpGsMt9q8Iq2qnhkiNSsfJp4ymDt3WxArrdWScrM/4IyaWg9KtLFN9p47bHfwxz14
+ iLPunpO/wd2Keo1A0nqIxH9zoCGxMQL+C4YKpfKWXaTi1cGm6YGenUGUbmbkmjYDyt21jcl
+ 7LPovyFFz4mVrMYQdKQKg==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:oCkHxI1MJDg=:i35SxlMs/KnI8M+kKInsqn
+ bQNfdYcSu3IoK7UvwiaDYDLrMiHiJwc6+2TgsrmrcYUGezEzAAsXs5Itf81jFLG/Z2/awmlMc
+ ItBTHlgN8bV2dnQLW4FXAh0SwvIiBYhIZt5fJJNpSioVIHs6+banh1BVOnsI0DVhlaYp/wptm
+ Vq2TeQlp8+Bn7tecqbPfE/kAK5iWNiIw7c5fOCpMQ59B44mKvmFC6e1qGqIgIxIYEKV5S4sCy
+ AlamTnfIV0D8vWu8ZztZw4nv7eiLo7n44ofYeEScThF8w5TmxdpPbiou6nurKxsLl51oh3xpA
+ BMKKF2RSGKuhSf0bgH0Wc1BiGgOxzA6iiH3zIFIsTy9rISuBWFpzGVY824uhpb0dj9pA7E4g5
+ RZe+96KN+JWhJwJCsdrI+gCRCt9qSL2F/BTCfE2jMm32Cvrbr1uWnbFNnX3uIiYVp4yWk+h07
+ kMQoInt54SpvWH6Mnbzi06TkcXWjD705GhxFZhzlrlIBypHz19gCFcTShp5yLI4VHXXaaaNbp
+ H0k58KYObGjwbIij615cAdjlJgtDczlW7RDglpzTk1gPOzIkm/C2KQJ2BjznM5HGWtKtHKxHD
+ iQF2craGnq2LqEgkGRQl84cedM64rQX/IJs3SYL3MvU6KaMEXb6sswIfBhdD8HkxfjW0awRCM
+ bhAp7KrmmNb3iP18UXQVdSoemj7RafO5jB/n7mZmmQ40fkbODiS75CWa+McJ/sA1AoPI3tJqw
+ pywM0qzjfe5HRsjmN+OD2O7rZ3xQMw5PamzksOXwqmZQFzQUdcvctE3QB1MCOrp/gQgKTEtl8
+ OriTo1qwb/jd1mxNTXKi/8UlvAZxK9O8VHc0xGxlcm3uI+sDKSOvjeKYlq0gxCqCQAlR2W5mv
+ vfsz3CAqtOE/aItr8Zcw==
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/07/2022 23:19, Bart Van Assche wrote:
-> There are two .exit_cmd_priv implementations. Both implementations use
-> resources associated with the SCSI host. Make sure that these resources are
-> still available when .exit_cmd_priv is called by moving the .exit_cmd_priv
-> calls from scsi_host_dev_release() to scsi_forget_host(). Moving
-> blk_mq_free_tag_set() from scsi_host_dev_release() to scsi_forget_host() is
-> safe because scsi_forget_host() waits until all SCSI devices associated
+On Wed, Jul 13, 2022 at 3:44 AM Ren Zhijie <renzhijie2@huawei.com> wrote:
+> 在 2022/7/12 16:27, Arnd Bergmann 写道:
+>
+> Thanks for your suggestion.
+>
+> How does it to fix the implicit-function-declaration error?
+>
 
-It seems to me that blk_mq_free_tag_set() is called from 
-scsi_remove_host() now, right?
+I missed that part at first. I would say the #ifdef around the
+declarations in the
+header should be removed here, it serves no purpose, and it is safe to rely
+on the compiler to perform dead code elimination so this does not lead to
+a link error even if a dead function references another function that is not
+reachable.
 
-> with the host have been removed.
-> 
-> This patch fixes the following use-after-free:
-> 
-> ==================================================================
-> BUG: KASAN: use-after-free in srp_exit_cmd_priv+0x27/0xd0 [ib_srp]
-> Read of size 8 at addr ffff888100337000 by task multipathd/16727
-> Call Trace:
->   <TASK>
->   dump_stack_lvl+0x34/0x44
->   print_report.cold+0x5e/0x5db
->   kasan_report+0xab/0x120
->   srp_exit_cmd_priv+0x27/0xd0 [ib_srp]
->   scsi_mq_exit_request+0x4d/0x70
->   blk_mq_free_rqs+0x143/0x410
->   __blk_mq_free_map_and_rqs+0x6e/0x100
->   blk_mq_free_tag_set+0x2b/0x160
->   scsi_host_dev_release+0xf3/0x1a0
->   device_release+0x54/0xe0
->   kobject_put+0xa5/0x120
->   device_release+0x54/0xe0
->   kobject_put+0xa5/0x120
->   scsi_device_dev_release_usercontext+0x4c1/0x4e0
->   execute_in_process_context+0x23/0x90
->   device_release+0x54/0xe0
->   kobject_put+0xa5/0x120
->   scsi_disk_release+0x3f/0x50
->   device_release+0x54/0xe0
->   kobject_put+0xa5/0x120
->   disk_release+0x17f/0x1b0
->   device_release+0x54/0xe0
->   kobject_put+0xa5/0x120
->   dm_put_table_device+0xa3/0x160 [dm_mod]
->   dm_put_device+0xd0/0x140 [dm_mod]
->   free_priority_group+0xd8/0x110 [dm_multipath]
->   free_multipath+0x94/0xe0 [dm_multipath]
->   dm_table_destroy+0xa2/0x1e0 [dm_mod]
->   __dm_destroy+0x196/0x350 [dm_mod]
->   dev_remove+0x10c/0x160 [dm_mod]
->   ctl_ioctl+0x2c2/0x590 [dm_mod]
->   dm_ctl_ioctl+0x5/0x10 [dm_mod]
->   __x64_sys_ioctl+0xb4/0xf0
->   dm_ctl_ioctl+0x5/0x10 [dm_mod]
->   __x64_sys_ioctl+0xb4/0xf0
->   do_syscall_64+0x3b/0x90
->   entry_SYSCALL_64_after_hwframe+0x46/0xb0
-> 
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Ming Lei <ming.lei@redhat.com>
-> Cc: Mike Christie <michael.christie@oracle.com>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: John Garry <john.garry@huawei.com>
-> Cc: Li Zhijian <lizhijian@fujitsu.com>
-> Reported-by: Li Zhijian <lizhijian@fujitsu.com>
-> Tested-by: Li Zhijian <lizhijian@fujitsu.com>
-> Fixes: 65ca846a5314 ("scsi: core: Introduce {init,exit}_cmd_priv()")
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->   drivers/scsi/hosts.c    | 10 +++++-----
->   drivers/scsi/scsi_lib.c |  3 +++
->   2 files changed, 8 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-> index 8fa98c8d0ee0..6c63672971f1 100644
-> --- a/drivers/scsi/hosts.c
-> +++ b/drivers/scsi/hosts.c
-> @@ -197,6 +197,8 @@ void scsi_remove_host(struct Scsi_Host *shost)
->   	 * the dependent SCSI targets and devices are gone before returning.
->   	 */
->   	wait_event(shost->targets_wq, atomic_read(&shost->target_count) == 0);
-> +
-> +	scsi_mq_destroy_tags(shost);
->   }
->   EXPORT_SYMBOL(scsi_remove_host);
->   
-> @@ -302,8 +304,8 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
->   	return error;
->   
->   	/*
-> -	 * Any host allocation in this function will be freed in
-> -	 * scsi_host_dev_release().
-> +	 * Any resources associated with the SCSI host in this function except
-> +	 * the tag set will be freed by scsi_host_dev_release().
->   	 */
->    out_del_dev:
->   	device_del(&shost->shost_dev);
-> @@ -319,6 +321,7 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
->   	pm_runtime_disable(&shost->shost_gendev);
->   	pm_runtime_set_suspended(&shost->shost_gendev);
->   	pm_runtime_put_noidle(&shost->shost_gendev);
-> +	scsi_mq_destroy_tags(shost);
->    fail:
->   	return error;
->   }
-> @@ -352,9 +355,6 @@ static void scsi_host_dev_release(struct device *dev)
->   		kfree(dev_name(&shost->shost_dev));
->   	}
->   
-> -	if (shost->tag_set.tags)
-> -		scsi_mq_destroy_tags(shost);
-> -
->   	kfree(shost->shost_data);
->   
->   	ida_free(&host_index_ida, shost->host_no);
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 2aca0a838ca5..295c48fdb650 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1990,7 +1990,10 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
->   
->   void scsi_mq_destroy_tags(struct Scsi_Host *shost)
->   {
-> +	if (!shost->tag_set.tags)
-> +		return;
->   	blk_mq_free_tag_set(&shost->tag_set);
-> +	WARN_ON_ONCE(shost->tag_set.tags);
-
-blk_mq_free_tag_set() clears the tagset tags pointer, so I don't know 
-why you don't trust the semantics of that API - this seems like paranoia.
-
->   }
->   
->   /**
-> .
-
-
-Thanks,
-john
+        Arnd
