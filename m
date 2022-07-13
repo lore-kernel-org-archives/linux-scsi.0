@@ -2,97 +2,125 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B1BBC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jul 2022 01:44:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97B69C43334
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jul 2022 02:05:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233685AbiGMBoR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Jul 2022 21:44:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47542 "EHLO
+        id S231128AbiGMCFM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Jul 2022 22:05:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59400 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233868AbiGMBoO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jul 2022 21:44:14 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FBD42872E;
-        Tue, 12 Jul 2022 18:44:13 -0700 (PDT)
-Received: from dggpeml500020.china.huawei.com (unknown [172.30.72.57])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4LjL0s3cYyzVfc3;
-        Wed, 13 Jul 2022 09:40:29 +0800 (CST)
-Received: from dggpeml500008.china.huawei.com (7.185.36.147) by
- dggpeml500020.china.huawei.com (7.185.36.88) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Wed, 13 Jul 2022 09:44:11 +0800
-Received: from [127.0.0.1] (10.67.111.83) by dggpeml500008.china.huawei.com
- (7.185.36.147) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Wed, 13 Jul
- 2022 09:44:10 +0800
-Message-ID: <df9909dc-3303-808e-575a-47190f636279@huawei.com>
-Date:   Wed, 13 Jul 2022 09:44:10 +0800
+        with ESMTP id S229727AbiGMCFM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jul 2022 22:05:12 -0400
+Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96F77C166C;
+        Tue, 12 Jul 2022 19:05:11 -0700 (PDT)
+Received: by mail-pj1-x102a.google.com with SMTP id i8-20020a17090a4b8800b001ef8a65bfbdso1250053pjh.1;
+        Tue, 12 Jul 2022 19:05:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language
+         :from:to:cc:references:in-reply-to:content-transfer-encoding;
+        bh=zXWTV7ls01ZFKOZC63W7jXuAEiR61fc3WFYoak+FHwU=;
+        b=ToDyxDVgIibNrV84k77wPbtRENmgUAxD4Hhd0L949c1RpBIgtduQbkLL/qiEWYYjeb
+         rX1jX75ITfh+LoVZINOiCOqvH4fITSUiHL5z6V4ssTZGGKI3FWW1D/f8IYOJfJAgyHbd
+         iac+94UUjGgVkN4fVazRIVDlpFzYlxxWPsqKAEdltn0eGu4RP+d2cbzEaaqKfKZb3QqI
+         vzySWqQ+9FMX6pWuvsZzn2BFGxYc8Xi1DugXeCWg146MaiL0+D/OEtq4dfNL739sDSOl
+         gzhXiHXBv09G22Ckt7JMyvzZIfmJ0zNhd5ztNWbChnggiyfU4iyPQWRhY8A062p4eGc9
+         hzyg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:from:to:cc:references:in-reply-to
+         :content-transfer-encoding;
+        bh=zXWTV7ls01ZFKOZC63W7jXuAEiR61fc3WFYoak+FHwU=;
+        b=a+psUAtI/O4ucPsVeqEQ+7r7CGubyUsJfgFIpV2j69evwbRNQCJJt7KTN/Ov2DNSIL
+         hyE+4nlY+iKpVz/UPoHie7igU2RpnzPtBJ5Vd7Cxv+Nhfv5Fc+uZ7bZhIgQHPoVYJQJt
+         SgXzll1S9vudyisQEHc1tLdhuKxbs/wQJpEoUvXrWL0JFPYZGdk1oR0XlRzTZt+7ISnL
+         2zX1aiSKytxYZq1BaLdxNL2mwxyohYzgj6mx1KipgXswKsG0O4a54KDdRnHpjJwjUWuS
+         04NefLERrRJQqiiFSek0TzO5DrYSSElRKxEOSbg5Ko9QXkMb3It1dqTePl7MviPK6QBy
+         dlbQ==
+X-Gm-Message-State: AJIora8A7RnOaFVJIR0zKf3LY1fcul5FTmpFUb1+HhGpJR8NLQEnjgfD
+        kI0S2wE7+GTXr6p1o9LW+zqt7n+IaFE=
+X-Google-Smtp-Source: AGRyM1v442chetQ/U6Sil1Ifi4SEnLlGQLmv9RlFj8JH3h8mMIzdP8mknle6DTt3AAWNJsvOS+38hg==
+X-Received: by 2002:a17:90a:f001:b0:1f0:3285:6b5b with SMTP id bt1-20020a17090af00100b001f032856b5bmr1297100pjb.12.1657677910940;
+        Tue, 12 Jul 2022 19:05:10 -0700 (PDT)
+Received: from ?IPV6:2001:df0:0:200c:c871:5dfe:6dac:981b? ([2001:df0:0:200c:c871:5dfe:6dac:981b])
+        by smtp.gmail.com with ESMTPSA id u14-20020a17090341ce00b0016c19417495sm7595066ple.239.2022.07.12.19.05.08
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 12 Jul 2022 19:05:10 -0700 (PDT)
+Message-ID: <0306abfd-565f-2081-21a6-dbaf3c36044e@gmail.com>
+Date:   Wed, 13 Jul 2022 14:05:06 +1200
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [PATCH -next] scsi: ufs: ufs-mediatek: Fix build error
-To:     Arnd Bergmann <arnd@arndb.de>
-CC:     <stanley.chu@mediatek.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Bart Van Assche <bvanassche@acm.org>,
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.9.1
+Subject: Re: [PATCH v2 2/5] m68k - set up platform device for mvme147_scsi
+Content-Language: en-US
+From:   Michael Schmitz <schmitzmic@gmail.com>
+To:     Arnd Bergmann <arnd@kernel.org>
+Cc:     Linux/m68k <linux-m68k@vger.kernel.org>,
         linux-scsi <linux-scsi@vger.kernel.org>,
-        "moderated list:ARM/Mediatek SoC..." 
-        <linux-mediatek@lists.infradead.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>
-References: <20220704025632.235968-1-renzhijie2@huawei.com>
- <CAK8P3a07jGCuAVQAZgpENRP_xFLiogU9W1Uze+n21h7TdOZhog@mail.gmail.com>
-From:   Ren Zhijie <renzhijie2@huawei.com>
-In-Reply-To: <CAK8P3a07jGCuAVQAZgpENRP_xFLiogU9W1Uze+n21h7TdOZhog@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+        Geert Uytterhoeven <geert@linux-m68k.org>
+References: <20220712075832.23793-1-schmitzmic@gmail.com>
+ <20220712075832.23793-3-schmitzmic@gmail.com>
+ <CAK8P3a2ptjH3VyCjuwQROw8GuOs8CxuhX8dMBxMa5m-Q93yZ_g@mail.gmail.com>
+ <7b652abd-3094-e0c8-d8fb-087c60c51fa2@gmail.com>
+ <4faebfc0-4fc4-aff6-a507-293d755893ba@gmail.com>
+In-Reply-To: <4faebfc0-4fc4-aff6-a507-293d755893ba@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.67.111.83]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- dggpeml500008.china.huawei.com (7.185.36.147)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-在 2022/7/12 16:27, Arnd Bergmann 写道:
-> On Mon, Jul 4, 2022 at 4:56 AM Ren Zhijie <renzhijie2@huawei.com> wrote:
->> diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
->> index c958279bdd8f..e006c2528a3a 100644
->> --- a/drivers/ufs/host/ufs-mediatek.c
->> +++ b/drivers/ufs/host/ufs-mediatek.c
->> @@ -1427,6 +1427,7 @@ static int ufs_mtk_system_resume(struct device *dev)
->>   }
->>   #endif
->>
->> +#ifdef CONFIG_PM
->>   static int ufs_mtk_runtime_suspend(struct device *dev)
->>   {
->>          struct ufs_hba *hba = dev_get_drvdata(dev);
->> @@ -1449,6 +1450,7 @@ static int ufs_mtk_runtime_resume(struct device *dev)
->>
->>          return ufshcd_runtime_resume(dev);
->>   }
->> +#endif
->>
->>   static const struct dev_pm_ops ufs_mtk_pm_ops = {
->>          SET_SYSTEM_SLEEP_PM_OPS(ufs_mtk_system_suspend,
-> This change works, but it's not great. It's better to change the
-> SET_SYSTEM_SLEEP_PM_OPS() to the new SYSTEM_SLEEP_PM_OPS()
-> that works without the #ifdef.
->
->           Arnd
-
 Hi Arnd,
 
-Thanks for your suggestion.
+On 12/07/22 21:28, Michael Schmitz wrote:
+>
+>>> I think you actually have to use platform_device_register_full() to 
+>>> pass
+>>> a DMA mask here: As I understand it, the dma_set_mask_and_coherent()
+>>> call in the driver fails if the device is not already marked as dma
+>>> capable by having an initial mask set.
+>>
+>> I'll take a look at that - if true, this requires the amiga-a3000-scsi
+>> platform device set-up be changed in the same way (the gvp11 and a2091
+>> drivers inherit the DMA mask from the Zorro bus default, so ought to
+>> work OK).
+>
+> I think we are good with using platform_device_register_simple():
+>
+> setup_pdev_dma_masks() sets the DMA mask to 32 bit when allocating a 
+> new platform device, and platform_device_register_full() only changes 
+> that when passed in a non-zero mask in pdevinfo.
+>
+> platform_device_register_simple() leaves the pdevinfo mask zero, so 
+> the 32 bit default set in setup_pdev_dma_masks() survives.
 
-How does it to fix the implicit-function-declaration error?
+Verified by having pata_falcon print the default DMA mask (0xffffffff), 
+then setting a 24 bit DMA mask and reading it back.
 
-Thanks,
+That did uncover an error I made in the gvp11 driver - the devices' 
+default DMA mask there is given as a 32 bit integer, but the DMA API 
+needs 64 bit. Will send a separate fix for that.
 
-Ren Zhijie
+Cheers,
 
-> .
+     Michael
 
+>
+> Cheers,
+>
+>     Michael
+>
+>>
+>> Cheers,
+>>
+>>     Michael
+>>
+>>> The way this normally works is that the device gets created with a mask
+>>> that reflects the capabilities of the bus, while the driver sets a mask
+>>> based on what it wants to program into the device, and the dma-mapping
+>>> interfaces ensure that we only use the intersection of those.
+>>>
+>>>         Arnd
+>>>
