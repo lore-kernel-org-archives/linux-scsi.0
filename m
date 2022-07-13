@@ -2,110 +2,192 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5528CCA479
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jul 2022 07:49:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9615C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jul 2022 08:17:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234523AbiGMHtz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Jul 2022 03:49:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45902 "EHLO
+        id S234486AbiGMIRJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Jul 2022 04:17:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41694 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234820AbiGMHte (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jul 2022 03:49:34 -0400
-Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F04CA6275;
-        Wed, 13 Jul 2022 00:49:23 -0700 (PDT)
-Received: by mail-pj1-x102a.google.com with SMTP id b8so9495889pjo.5;
-        Wed, 13 Jul 2022 00:49:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id;
-        bh=CrQsD7k2TGNgMpuMXvFQ6UJMpTWk7vqzcPn/bAxF6gM=;
-        b=qujboVQv/GAXjx8T4a1mPg35RSjntq/W7Kk59w68Rf66kihbKNrAgGb6LdEeylGlqM
-         jVOq6xzNLqZpyrCCRzmBN/gdEC30y1vqeG8Ow98FMUsssOh4VOTFPTyd749YSh6Hemk6
-         b+o2n2TisuDoJwH9h+2MB08bzPce43qpMbbTUojh5OCTJmiSbjXSa538YVeAMfIjAGXh
-         In3K90FhOtyJaR54UKtzbeFHAiJRnHjsUeoAeXLxl4Vkw5pBNYk9tuVod/PSp74kL49L
-         9dNho8WKcwhu3dAwJUz99L3aFgbQ59/3S2xdi5ir8Drts1L2xC7gSwclyM9x39ysJ7PJ
-         rfdw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=CrQsD7k2TGNgMpuMXvFQ6UJMpTWk7vqzcPn/bAxF6gM=;
-        b=yqC/bWxhKpe/WCsPJ0lAOIE4zedL/TbmuS0dIklVLPY4qUO3mTptc9Ta/CjV9oBQDr
-         ZCV0iO9qtX+ddj2+dzmv6BDh6+5/nxNxM1cisj8jj9sDwLXtGujCp1JdSOGOOF/QhdEG
-         YxvNFglkA5pOBSvsKP0LtxKvC+bt9+Czt58aRX5wRQHq2bGkXQbiZbPCQRFSRdzsr53p
-         etukfcPbVg6SGWvsBUX8R5b4XtHZwjCYTEYU9q/8P74FHPUVG4tUIvaoI5rFwWDMuxij
-         3XpadzFqFUi5nJL8vWTKDXNdSPQhXGf6p5UcL+oo002Efy7Bbj6XMEEKADlvq6T+sCcn
-         mc0w==
-X-Gm-Message-State: AJIora+Qr1dWFiC03dduzOfvKfSQnCfGkKhGDiFKiTXEE4cpyVDDwgAm
-        ereo4dsB8NlpFa4JUPdGQL3OG//8q/w=
-X-Google-Smtp-Source: AGRyM1ssVKpBfS/TmLe3l/dcTqoOvy80xaFXUvZf0au5gj4E8amKjhwBvqMNPOReGzC7GFXJzxssvQ==
-X-Received: by 2002:a17:902:f708:b0:153:839f:bf2c with SMTP id h8-20020a170902f70800b00153839fbf2cmr1950221plo.113.1657698563483;
-        Wed, 13 Jul 2022 00:49:23 -0700 (PDT)
-Received: from xplor.waratah.dyndns.org (222-155-0-244-adsl.sparkbb.co.nz. [222.155.0.244])
-        by smtp.gmail.com with ESMTPSA id d1-20020aa797a1000000b005259578e8fcsm8094979pfq.181.2022.07.13.00.49.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 13 Jul 2022 00:49:23 -0700 (PDT)
-Received: by xplor.waratah.dyndns.org (Postfix, from userid 1000)
-        id EDDA536031B; Wed, 13 Jul 2022 19:49:19 +1200 (NZST)
-From:   Michael Schmitz <schmitzmic@gmail.com>
-To:     linux-m68k@vger.kernel.org, arnd@kernel.org
-Cc:     linux-scsi@vger.kernel.org, geert@linux-m68k.org,
-        Michael Schmitz <schmitzmic@gmail.com>
-Subject: [PATCH] scsi - gvp11.c: fix DMA mask calculation error
-Date:   Wed, 13 Jul 2022 19:49:13 +1200
-Message-Id: <20220713074913.7873-1-schmitzmic@gmail.com>
-X-Mailer: git-send-email 2.17.1
+        with ESMTP id S235401AbiGMIQn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jul 2022 04:16:43 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2719A9FE1D
+        for <linux-scsi@vger.kernel.org>; Wed, 13 Jul 2022 01:13:55 -0700 (PDT)
+Received: from fraeml715-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LjVdd2kVfz67ZTx;
+        Wed, 13 Jul 2022 16:09:25 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml715-chm.china.huawei.com (10.206.15.34) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Wed, 13 Jul 2022 10:13:47 +0200
+Received: from [10.195.32.223] (10.195.32.223) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Wed, 13 Jul 2022 09:13:46 +0100
+Message-ID: <3c0f352a-0be6-7322-3556-8ce0d66ba8f3@huawei.com>
+Date:   Wed, 13 Jul 2022 09:13:47 +0100
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH v4 4/4] scsi: core: Call blk_mq_free_tag_set() earlier
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+CC:     Jaegeuk Kim <jaegeuk@kernel.org>, <linux-scsi@vger.kernel.org>,
+        "Christoph Hellwig" <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Li Zhijian <lizhijian@fujitsu.com>
+References: <20220712221936.1199196-1-bvanassche@acm.org>
+ <20220712221936.1199196-5-bvanassche@acm.org>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <20220712221936.1199196-5-bvanassche@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.195.32.223]
+X-ClientProxiedBy: lhreml754-chm.china.huawei.com (10.201.108.204) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-DMA masks given in the Zorro ID table don't contain the 2 byte
-alignment quirk seen in the GVP11_XFER_MASK macro from gvp11.h
-so no need to account for that.
+On 12/07/2022 23:19, Bart Van Assche wrote:
+> There are two .exit_cmd_priv implementations. Both implementations use
+> resources associated with the SCSI host. Make sure that these resources are
+> still available when .exit_cmd_priv is called by moving the .exit_cmd_priv
+> calls from scsi_host_dev_release() to scsi_forget_host(). Moving
+> blk_mq_free_tag_set() from scsi_host_dev_release() to scsi_forget_host() is
+> safe because scsi_forget_host() waits until all SCSI devices associated
 
-DMA masks passed to dma_set_mask_and_coherent() must be 64 bit,
-add the missing cast in the TO_DMA_MASK macro used to convert
-driver DMA masks to DMA API masks.
+It seems to me that blk_mq_free_tag_set() is called from 
+scsi_remove_host() now, right?
 
-CC: linux-scsi@vger.kernel.org
-Link: https://lore.kernel.org/r/6d1d88ee-1cf6-c735-1e6d-bafd2096e322@gmail.com
-Fixes: f4a09e5a3a36 ("scsi - gvp11.c: convert m68k WD33C93 drivers to DMA API")
-Signed-off-by: Michael Schmitz <schmitzmic@gmail.com>
----
- drivers/scsi/gvp11.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+> with the host have been removed.
+> 
+> This patch fixes the following use-after-free:
+> 
+> ==================================================================
+> BUG: KASAN: use-after-free in srp_exit_cmd_priv+0x27/0xd0 [ib_srp]
+> Read of size 8 at addr ffff888100337000 by task multipathd/16727
+> Call Trace:
+>   <TASK>
+>   dump_stack_lvl+0x34/0x44
+>   print_report.cold+0x5e/0x5db
+>   kasan_report+0xab/0x120
+>   srp_exit_cmd_priv+0x27/0xd0 [ib_srp]
+>   scsi_mq_exit_request+0x4d/0x70
+>   blk_mq_free_rqs+0x143/0x410
+>   __blk_mq_free_map_and_rqs+0x6e/0x100
+>   blk_mq_free_tag_set+0x2b/0x160
+>   scsi_host_dev_release+0xf3/0x1a0
+>   device_release+0x54/0xe0
+>   kobject_put+0xa5/0x120
+>   device_release+0x54/0xe0
+>   kobject_put+0xa5/0x120
+>   scsi_device_dev_release_usercontext+0x4c1/0x4e0
+>   execute_in_process_context+0x23/0x90
+>   device_release+0x54/0xe0
+>   kobject_put+0xa5/0x120
+>   scsi_disk_release+0x3f/0x50
+>   device_release+0x54/0xe0
+>   kobject_put+0xa5/0x120
+>   disk_release+0x17f/0x1b0
+>   device_release+0x54/0xe0
+>   kobject_put+0xa5/0x120
+>   dm_put_table_device+0xa3/0x160 [dm_mod]
+>   dm_put_device+0xd0/0x140 [dm_mod]
+>   free_priority_group+0xd8/0x110 [dm_multipath]
+>   free_multipath+0x94/0xe0 [dm_multipath]
+>   dm_table_destroy+0xa2/0x1e0 [dm_mod]
+>   __dm_destroy+0x196/0x350 [dm_mod]
+>   dev_remove+0x10c/0x160 [dm_mod]
+>   ctl_ioctl+0x2c2/0x590 [dm_mod]
+>   dm_ctl_ioctl+0x5/0x10 [dm_mod]
+>   __x64_sys_ioctl+0xb4/0xf0
+>   dm_ctl_ioctl+0x5/0x10 [dm_mod]
+>   __x64_sys_ioctl+0xb4/0xf0
+>   do_syscall_64+0x3b/0x90
+>   entry_SYSCALL_64_after_hwframe+0x46/0xb0
+> 
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Ming Lei <ming.lei@redhat.com>
+> Cc: Mike Christie <michael.christie@oracle.com>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: John Garry <john.garry@huawei.com>
+> Cc: Li Zhijian <lizhijian@fujitsu.com>
+> Reported-by: Li Zhijian <lizhijian@fujitsu.com>
+> Tested-by: Li Zhijian <lizhijian@fujitsu.com>
+> Fixes: 65ca846a5314 ("scsi: core: Introduce {init,exit}_cmd_priv()")
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>   drivers/scsi/hosts.c    | 10 +++++-----
+>   drivers/scsi/scsi_lib.c |  3 +++
+>   2 files changed, 8 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+> index 8fa98c8d0ee0..6c63672971f1 100644
+> --- a/drivers/scsi/hosts.c
+> +++ b/drivers/scsi/hosts.c
+> @@ -197,6 +197,8 @@ void scsi_remove_host(struct Scsi_Host *shost)
+>   	 * the dependent SCSI targets and devices are gone before returning.
+>   	 */
+>   	wait_event(shost->targets_wq, atomic_read(&shost->target_count) == 0);
+> +
+> +	scsi_mq_destroy_tags(shost);
+>   }
+>   EXPORT_SYMBOL(scsi_remove_host);
+>   
+> @@ -302,8 +304,8 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+>   	return error;
+>   
+>   	/*
+> -	 * Any host allocation in this function will be freed in
+> -	 * scsi_host_dev_release().
+> +	 * Any resources associated with the SCSI host in this function except
+> +	 * the tag set will be freed by scsi_host_dev_release().
+>   	 */
+>    out_del_dev:
+>   	device_del(&shost->shost_dev);
+> @@ -319,6 +321,7 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+>   	pm_runtime_disable(&shost->shost_gendev);
+>   	pm_runtime_set_suspended(&shost->shost_gendev);
+>   	pm_runtime_put_noidle(&shost->shost_gendev);
+> +	scsi_mq_destroy_tags(shost);
+>    fail:
+>   	return error;
+>   }
+> @@ -352,9 +355,6 @@ static void scsi_host_dev_release(struct device *dev)
+>   		kfree(dev_name(&shost->shost_dev));
+>   	}
+>   
+> -	if (shost->tag_set.tags)
+> -		scsi_mq_destroy_tags(shost);
+> -
+>   	kfree(shost->shost_data);
+>   
+>   	ida_free(&host_index_ida, shost->host_no);
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 2aca0a838ca5..295c48fdb650 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1990,7 +1990,10 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
+>   
+>   void scsi_mq_destroy_tags(struct Scsi_Host *shost)
+>   {
+> +	if (!shost->tag_set.tags)
+> +		return;
+>   	blk_mq_free_tag_set(&shost->tag_set);
+> +	WARN_ON_ONCE(shost->tag_set.tags);
 
-diff --git a/drivers/scsi/gvp11.c b/drivers/scsi/gvp11.c
-index e8b7a09eb8c7..7d56a236a011 100644
---- a/drivers/scsi/gvp11.c
-+++ b/drivers/scsi/gvp11.c
-@@ -30,7 +30,7 @@ struct gvp11_hostdata {
- };
- 
- #define DMA_DIR(d)   ((d == DATA_OUT_DIR) ? DMA_TO_DEVICE : DMA_FROM_DEVICE)
--#define TO_DMA_MASK(m)	((~(m & 0xfffffff0))-1)
-+#define TO_DMA_MASK(m)	(~((unsigned long long)m & 0xffffffff))
- 
- static irqreturn_t gvp11_intr(int irq, void *data)
- {
-@@ -334,7 +334,7 @@ static int gvp11_probe(struct zorro_dev *z, const struct zorro_device_id *ent)
- 
- 	if (dma_set_mask_and_coherent(&z->dev,
- 		TO_DMA_MASK(default_dma_xfer_mask))) {
--		dev_warn(&z->dev, "cannot use DMA mask %x\n",
-+		dev_warn(&z->dev, "cannot use DMA mask %llx\n",
- 			 TO_DMA_MASK(default_dma_xfer_mask));
- 		return -ENODEV;
- 	}
-@@ -383,7 +383,7 @@ static int gvp11_probe(struct zorro_dev *z, const struct zorro_device_id *ent)
- 		hdata->wh.dma_xfer_mask = gvp11_xfer_mask;
- 		if (dma_set_mask_and_coherent(&z->dev,
- 			TO_DMA_MASK(gvp11_xfer_mask))) {
--			dev_warn(&z->dev, "cannot use DMA mask %x\n",
-+			dev_warn(&z->dev, "cannot use DMA mask %llx\n",
- 				 TO_DMA_MASK(gvp11_xfer_mask));
- 			error = -ENODEV;
- 			goto fail_check_or_alloc;
--- 
-2.17.1
+blk_mq_free_tag_set() clears the tagset tags pointer, so I don't know 
+why you don't trust the semantics of that API - this seems like paranoia.
 
+>   }
+>   
+>   /**
+> .
+
+
+Thanks,
+john
