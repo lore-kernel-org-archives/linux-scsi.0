@@ -2,125 +2,85 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97B69C43334
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jul 2022 02:05:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EAA86C43334
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jul 2022 02:56:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231128AbiGMCFM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Jul 2022 22:05:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59400 "EHLO
+        id S231493AbiGMC4I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Jul 2022 22:56:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59032 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229727AbiGMCFM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jul 2022 22:05:12 -0400
-Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96F77C166C;
-        Tue, 12 Jul 2022 19:05:11 -0700 (PDT)
-Received: by mail-pj1-x102a.google.com with SMTP id i8-20020a17090a4b8800b001ef8a65bfbdso1250053pjh.1;
-        Tue, 12 Jul 2022 19:05:11 -0700 (PDT)
+        with ESMTP id S230364AbiGMC4H (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jul 2022 22:56:07 -0400
+Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 281CEAE5E;
+        Tue, 12 Jul 2022 19:56:07 -0700 (PDT)
+Received: by mail-pj1-x1029.google.com with SMTP id t5-20020a17090a6a0500b001ef965b262eso1357252pjj.5;
+        Tue, 12 Jul 2022 19:56:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language
-         :from:to:cc:references:in-reply-to:content-transfer-encoding;
-        bh=zXWTV7ls01ZFKOZC63W7jXuAEiR61fc3WFYoak+FHwU=;
-        b=ToDyxDVgIibNrV84k77wPbtRENmgUAxD4Hhd0L949c1RpBIgtduQbkLL/qiEWYYjeb
-         rX1jX75ITfh+LoVZINOiCOqvH4fITSUiHL5z6V4ssTZGGKI3FWW1D/f8IYOJfJAgyHbd
-         iac+94UUjGgVkN4fVazRIVDlpFzYlxxWPsqKAEdltn0eGu4RP+d2cbzEaaqKfKZb3QqI
-         vzySWqQ+9FMX6pWuvsZzn2BFGxYc8Xi1DugXeCWg146MaiL0+D/OEtq4dfNL739sDSOl
-         gzhXiHXBv09G22Ckt7JMyvzZIfmJ0zNhd5ztNWbChnggiyfU4iyPQWRhY8A062p4eGc9
-         hzyg==
+        h=from:to:cc:subject:date:message-id;
+        bh=YU2pts1EeWVUyc8NOJvYWPdPaG8ZMBOoLSKqRqGVayY=;
+        b=n8j6AUaMQ6L3Cq9ZNmEGytU4bVzuQ/NKtWbpjTZ8N0Ti+qURy3Yxm32Mi/m8tXL4UJ
+         shIaLswa0AGeLb8mo+uwu/kn64HSDTLwsBTYbGynuoRJpdtfieGdcMwO9wdbF9PwKhm8
+         ZRQe+wo8ZggwP/CkoGKnRJIOG8zub0qGWQH38tHmf7LfGI2m5bF7XDSrJ9i+0sdHd0mD
+         cdwz8PAf/X540CG7KSyF+iIIzvPv7YoCAp4gCosk9BJ/Fohdr5pASlx1Yd9WZTf43e+N
+         /LeN6/Z6Um/+qes8ULWU3TmjqSgAVN6NXxRkvfqjA4SfXDlgjXhUxWVvN7PskFGN9U3F
+         7hFw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:from:to:cc:references:in-reply-to
-         :content-transfer-encoding;
-        bh=zXWTV7ls01ZFKOZC63W7jXuAEiR61fc3WFYoak+FHwU=;
-        b=a+psUAtI/O4ucPsVeqEQ+7r7CGubyUsJfgFIpV2j69evwbRNQCJJt7KTN/Ov2DNSIL
-         hyE+4nlY+iKpVz/UPoHie7igU2RpnzPtBJ5Vd7Cxv+Nhfv5Fc+uZ7bZhIgQHPoVYJQJt
-         SgXzll1S9vudyisQEHc1tLdhuKxbs/wQJpEoUvXrWL0JFPYZGdk1oR0XlRzTZt+7ISnL
-         2zX1aiSKytxYZq1BaLdxNL2mwxyohYzgj6mx1KipgXswKsG0O4a54KDdRnHpjJwjUWuS
-         04NefLERrRJQqiiFSek0TzO5DrYSSElRKxEOSbg5Ko9QXkMb3It1dqTePl7MviPK6QBy
-         dlbQ==
-X-Gm-Message-State: AJIora8A7RnOaFVJIR0zKf3LY1fcul5FTmpFUb1+HhGpJR8NLQEnjgfD
-        kI0S2wE7+GTXr6p1o9LW+zqt7n+IaFE=
-X-Google-Smtp-Source: AGRyM1v442chetQ/U6Sil1Ifi4SEnLlGQLmv9RlFj8JH3h8mMIzdP8mknle6DTt3AAWNJsvOS+38hg==
-X-Received: by 2002:a17:90a:f001:b0:1f0:3285:6b5b with SMTP id bt1-20020a17090af00100b001f032856b5bmr1297100pjb.12.1657677910940;
-        Tue, 12 Jul 2022 19:05:10 -0700 (PDT)
-Received: from ?IPV6:2001:df0:0:200c:c871:5dfe:6dac:981b? ([2001:df0:0:200c:c871:5dfe:6dac:981b])
-        by smtp.gmail.com with ESMTPSA id u14-20020a17090341ce00b0016c19417495sm7595066ple.239.2022.07.12.19.05.08
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 12 Jul 2022 19:05:10 -0700 (PDT)
-Message-ID: <0306abfd-565f-2081-21a6-dbaf3c36044e@gmail.com>
-Date:   Wed, 13 Jul 2022 14:05:06 +1200
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.1
-Subject: Re: [PATCH v2 2/5] m68k - set up platform device for mvme147_scsi
-Content-Language: en-US
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=YU2pts1EeWVUyc8NOJvYWPdPaG8ZMBOoLSKqRqGVayY=;
+        b=h+8TMFBsGAvRVQcXeNP+tMs0xr0UbbwONASTep5DhTq0G/dq8xkUpcZcn8u0HV8qL6
+         W9XNlzhVkTUNZ/Plets27zZZe67XWDUnKs30ty5zwZgptxeibnGvfgl+mHwfVUv1HUO9
+         TdZlajzOaXHCD/nesQl1l8btNiBRONB8AH5PjYEr+xFkJOppeR4KgVoiYbxWgsJpAdNW
+         TDcsGP4bsfFI40u1EfxHz6t94W14FApxDp82usx5x8SdNfstKf0PKxRsJ5gxYF7JkjJj
+         SFMljUKLN5u8a656bpCaNRfnk8ROOf49Iy3oelSOkJt5v9oLGLW1l2PSJ70+nuh1/NKH
+         z1Zg==
+X-Gm-Message-State: AJIora8J+u5PYeJnKf8Q2ryGr5rhb2dTt5evkO22Kt2aCr/j6BO1c8PA
+        IXkbjPJxmOwwjt1bYzYC9ow=
+X-Google-Smtp-Source: AGRyM1tZqjEBQYGys7RhzRxSv4XTK+C/SMndE8W7Z2QDSWQKw8R5c+8oAwzBME9cgPGX+6X271kbPg==
+X-Received: by 2002:a17:902:edd1:b0:158:8318:b51e with SMTP id q17-20020a170902edd100b001588318b51emr1317603plk.89.1657680966743;
+        Tue, 12 Jul 2022 19:56:06 -0700 (PDT)
+Received: from xplor.waratah.dyndns.org (222-155-0-244-adsl.sparkbb.co.nz. [222.155.0.244])
+        by smtp.gmail.com with ESMTPSA id 11-20020a17090a0f8b00b001efc839ac97sm324627pjz.3.2022.07.12.19.56.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 12 Jul 2022 19:56:06 -0700 (PDT)
+Received: by xplor.waratah.dyndns.org (Postfix, from userid 1000)
+        id D63A536031B; Wed, 13 Jul 2022 14:56:02 +1200 (NZST)
 From:   Michael Schmitz <schmitzmic@gmail.com>
-To:     Arnd Bergmann <arnd@kernel.org>
-Cc:     Linux/m68k <linux-m68k@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>
-References: <20220712075832.23793-1-schmitzmic@gmail.com>
- <20220712075832.23793-3-schmitzmic@gmail.com>
- <CAK8P3a2ptjH3VyCjuwQROw8GuOs8CxuhX8dMBxMa5m-Q93yZ_g@mail.gmail.com>
- <7b652abd-3094-e0c8-d8fb-087c60c51fa2@gmail.com>
- <4faebfc0-4fc4-aff6-a507-293d755893ba@gmail.com>
-In-Reply-To: <4faebfc0-4fc4-aff6-a507-293d755893ba@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+To:     linux-m68k@vger.kernel.org, arnd@kernel.org
+Cc:     linux-scsi@vger.kernel.org, geert@linux-m68k.org
+Subject: [PATCH v3 0/5] Convert m68k MVME147 WD33C93 SCSI driver to DMA API
+Date:   Wed, 13 Jul 2022 14:55:56 +1200
+Message-Id: <20220713025601.22584-1-schmitzmic@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Arnd,
+This series was precipitated by Arnd removing CONFIG_VIRT_TO_BUS. The
+m68k WD33C93 still used virt_to_bus to convert virtual addresses to
+physical addresses suitable for the DMA engines (note m68k does not
+have an IOMMU and uses a direct mapping for DMA addresses). 
 
-On 12/07/22 21:28, Michael Schmitz wrote:
->
->>> I think you actually have to use platform_device_register_full() to 
->>> pass
->>> a DMA mask here: As I understand it, the dma_set_mask_and_coherent()
->>> call in the driver fails if the device is not already marked as dma
->>> capable by having an initial mask set.
->>
->> I'll take a look at that - if true, this requires the amiga-a3000-scsi
->> platform device set-up be changed in the same way (the gvp11 and a2091
->> drivers inherit the DMA mask from the Zorro bus default, so ought to
->> work OK).
->
-> I think we are good with using platform_device_register_simple():
->
-> setup_pdev_dma_masks() sets the DMA mask to 32 bit when allocating a 
-> new platform device, and platform_device_register_full() only changes 
-> that when passed in a non-zero mask in pdevinfo.
->
-> platform_device_register_simple() leaves the pdevinfo mask zero, so 
-> the 32 bit default set in setup_pdev_dma_masks() survives.
+Arnd suggested to use dma_map_single() to set up dma mappings instead
+of open-coding much the same in every driver dma_setup() function. An
+earlier patch series has converted the three Amiga WD33C93 drivers,
+this series now takes care of the sole remaining m68k WD33C93 driver.
 
-Verified by having pata_falcon print the default DMA mask (0xffffffff), 
-then setting a 24 bit DMA mask and reading it back.
+The m68k VME mvme147 driver has no DMA addressing or alignment
+restrictions and can be converted in the same way as the Amiga a3000
+one in my previous series, but requires conversion to a platform
+device driver first.
 
-That did uncover an error I made in the gvp11 driver - the devices' 
-default DMA mask there is given as a 32 bit integer, but the DMA API 
-needs 64 bit. Will send a separate fix for that.
+Changes from v2: 
+- fix platform iomem resource size
+
+Only compile tested so far, and hardware testing might be hard to do.
+I'd appreciate someone giving this a thorough review.
 
 Cheers,
 
-     Michael
+   Michael
 
->
-> Cheers,
->
->     Michael
->
->>
->> Cheers,
->>
->>     Michael
->>
->>> The way this normally works is that the device gets created with a mask
->>> that reflects the capabilities of the bus, while the driver sets a mask
->>> based on what it wants to program into the device, and the dma-mapping
->>> interfaces ensure that we only use the intersection of those.
->>>
->>>         Arnd
->>>
+
