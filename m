@@ -2,170 +2,199 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90EBEC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jul 2022 18:40:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BCA9C43334
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jul 2022 19:14:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236788AbiGMSk0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Jul 2022 14:40:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42172 "EHLO
+        id S231638AbiGMTOn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Jul 2022 15:14:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39140 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236732AbiGMSkV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jul 2022 14:40:21 -0400
-Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42CF32F3B4
-        for <linux-scsi@vger.kernel.org>; Wed, 13 Jul 2022 11:40:20 -0700 (PDT)
-Received: by mail-pj1-f51.google.com with SMTP id 89-20020a17090a09e200b001ef7638e536so5119630pjo.3
-        for <linux-scsi@vger.kernel.org>; Wed, 13 Jul 2022 11:40:20 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=kFgul6gA6DX3cHQh1Ulrnm4FIMJB2kFR32O/UhE+xxk=;
-        b=gqxR+BwAivEbm/oVRgyctP9wap1ajFvlpqBNU+Q2/oybiEepycaSFg36suhIHrtkgP
-         lBWNwJsqs+npOrKES/UdNMH6hu4RdYFfLT3S2m+0lHIKjk1IqeyuACs47Cpzbvv1EwX7
-         F6toYosDbwi958G+JiRQMZ8yrqnA+4HYjImS4w+HZjKIQ/V2pP+arDHMA8s4ZvkZ8+eS
-         mviNi/x0NbURED6/HmmgjTaVPWR0jzfm+rAUjiN/QK1lsC+uAbMxbIl0/t2WHXCFdyT2
-         OagM9eaT45JIhWVonQOs6ZywJ7ZeOm5CLeWVd2hOBlUa+kEfq3CvL+YXOyeI47RnbTVY
-         +vUA==
-X-Gm-Message-State: AJIora9wHxXSwtYpUVt0/wg3IJ25eOND6deq7akefUd9btykMFUzxTJv
-        fYyduhOPxyezYjNQfgkT8Qc=
-X-Google-Smtp-Source: AGRyM1uWXxNabaRehtJN1II26XWscgWGUT848C4eTwTdLnd2/XwVKYOoQ2Fae2uL6r1SBa0I+hL3jg==
-X-Received: by 2002:a17:902:6a88:b0:16a:901:3c7c with SMTP id n8-20020a1709026a8800b0016a09013c7cmr4708929plk.100.1657737619498;
-        Wed, 13 Jul 2022 11:40:19 -0700 (PDT)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:cf8d:5409:1ca6:f804])
-        by smtp.gmail.com with ESMTPSA id h16-20020a056a00001000b0051bada81bc7sm7075372pfk.161.2022.07.13.11.40.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 13 Jul 2022 11:40:18 -0700 (PDT)
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
-        Bart Van Assche <bvanassche@google.com>
-Subject: [PATCH] scsi: ufs: Fix a race condition related to device management
-Date:   Wed, 13 Jul 2022 11:40:08 -0700
-Message-Id: <20220713184008.2232094-1-bvanassche@acm.org>
-X-Mailer: git-send-email 2.37.0.170.g444d1eabd0-goog
+        with ESMTP id S236838AbiGMTOk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jul 2022 15:14:40 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 456FB1F2D8
+        for <linux-scsi@vger.kernel.org>; Wed, 13 Jul 2022 12:14:39 -0700 (PDT)
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 26DJDmkw023352;
+        Wed, 13 Jul 2022 19:14:38 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-id : content-transfer-encoding : mime-version; s=corp-2021-07-09;
+ bh=ZrN1svKNgTEJZjwH4xsFc9FQHMZXIVIVPuyvEk1HhpM=;
+ b=qL9EwvPc1Hab5fPFTKJwtb8U9t2FHh3FUd8vUfgdXN022Td0d4kLOrBgoRGbkynStIl4
+ 0x8zgARWVOMdgNLrb8ycK8BAexauTau+SMqYTCSLByHElRsCAqbheBnGwuMDibeb9W8a
+ +bpanOV1MgA5p3Brnjx8RDBLzLkYDXSuJeV5XBet2nrkHLCDQuIO1+6kYy8GNtLVE21X
+ SLLH/HFOJQpu6z8LKf4sTGZ2T3FXTr7+2/j9FBmx6snv2xq2OOcr4YcCAxGVE8tH63WO
+ WFuIoJQHzLvSIaKFf3oTdqD6W5x4GJEw/W3UtYkyNcKoQkLG49LZ5qLflbE52DAWPxTb KQ== 
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3h71scb9a3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 13 Jul 2022 19:14:37 +0000
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 26DJ6pUR031158;
+        Wed, 13 Jul 2022 19:14:37 GMT
+Received: from nam04-mw2-obe.outbound.protection.outlook.com (mail-mw2nam04lp2174.outbound.protection.outlook.com [104.47.73.174])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3h7044q6y1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 13 Jul 2022 19:14:37 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=NF5MdM0Hxm3oS89jWUUp1RIeZKNSPfx+Iq1L0zMopS9rtqexF6UxXOvo3G35t32QgIqzBGAFTvxmPNnZ74ijqxDqVZbi20GdfJJC72uwCXaj8gdNwHql264P/QcLXgmXA+5Z7Jf1+xHMWfuceNn34qZAwrqaRvOkAhsBkJg6XxLLNz6eVUX8SKfxtu8z75PSDh/E21lcQw9T2Rx+I3OTV5WplSVftda+8XYzfwyqxTi15vmjEmw9Xnc21/FUA3L9QttFaESz+6QNRLGxEAfBnqyO8R7nb4+2toR/r+pbcjMraMY9x9p8n2GMH9K7OyHnvhc03+9QdCFoeuHD98oICA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=ZrN1svKNgTEJZjwH4xsFc9FQHMZXIVIVPuyvEk1HhpM=;
+ b=RBVhHGQzglnyiEMYzDq6qDYMgXSG7rQJk8iVeNgtZCMuG9hCHaImJdL6/xyMuGiTjF4GV2/9If8CfiVcjVKTrK1JupkudHSr33401RAMNmTwb+IGDWlQubwiPMvgffOqyGrILJS4ZUXQ+QoLMsCpNidyCt0kEWxyS9ia+S+ZCr8suxgrzqR9MOSi1qjhnE53fkti6ELBjX+xcjHVZ716NgjXkuZizjYhW5pZChAxCTDOnHG/dt7eTXN8YAAUrcN7naEzLwHEVdn9fUhHBslsUVzx3fn5oeRjeV+Kdj/b3xvnxSsctOKVnpFzkUpirv04/Lf1mZJFTnyLpC2amhpVNw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ZrN1svKNgTEJZjwH4xsFc9FQHMZXIVIVPuyvEk1HhpM=;
+ b=IdlEneAPbT5bKl+5YP2zh4q7pf/ecggc8xZV5bWWYapVODVWmyYwA98ims0KNCM7eOwGK1zqllp0bctYaen5ceZGsMEoelJyZuAheG5Ucp/A5PblQu9H9BYmTptPtnEfwZkCp9jaIzGn5IjzYUL1/VzjTL/7V5ZBHFgrq1F9Kpo=
+Received: from SN6PR10MB2943.namprd10.prod.outlook.com (2603:10b6:805:d4::19)
+ by CY4PR10MB1287.namprd10.prod.outlook.com (2603:10b6:903:2b::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5417.16; Wed, 13 Jul
+ 2022 19:14:34 +0000
+Received: from SN6PR10MB2943.namprd10.prod.outlook.com
+ ([fe80::a99d:1057:f4ba:a4eb]) by SN6PR10MB2943.namprd10.prod.outlook.com
+ ([fe80::a99d:1057:f4ba:a4eb%3]) with mapi id 15.20.5417.026; Wed, 13 Jul 2022
+ 19:14:34 +0000
+From:   Himanshu Madhani <himanshu.madhani@oracle.com>
+To:     Nilesh Javali <njavali@marvell.com>
+CC:     Martin Petersen <martin.petersen@oracle.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        "GR-QLogic-Storage-Upstream@marvell.com" 
+        <GR-QLogic-Storage-Upstream@marvell.com>
+Subject: Re: [PATCH 00/10] qla2xxx bug fixes
+Thread-Topic: [PATCH 00/10] qla2xxx bug fixes
+Thread-Index: AQHYlnhanBMNFMakc0WV5Zinx2jvqa18rKEA
+Date:   Wed, 13 Jul 2022 19:14:34 +0000
+Message-ID: <A69D1C1D-7FF1-4F44-AAC9-5AE7B3A4EF85@oracle.com>
+References: <20220713052045.10683-1-njavali@marvell.com>
+In-Reply-To: <20220713052045.10683-1-njavali@marvell.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-mailer: Apple Mail (2.3696.100.31)
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: cfee1ae3-bddd-4b74-675b-08da6503ec24
+x-ms-traffictypediagnostic: CY4PR10MB1287:EE_
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: nIPyDI1v1mEaL5Nzc4CCFv01kgJowHypcT0a0rb4hEP2QMfM9MWk5tAfTOxra6ibV4CIGeoG4CEcKMQbPmOUC9zTH/ZjYKOKSCHxxtzP2CJGKrJ9T9DnbFbXfGzIjs5vpjVZCmGGKfg2yoMgxAaAddxHy6Pg5hmdEs916QtjGWoa+QvsWjqj5ZzwPWR8CZNDF/hs+QFNTCkeHQfk5q62he2zgcDRuyY5XMH3N+CGLnq6MG4mB+fxAh/PDSgHmKS1d4a9HiyuYnvP/Td1VR39tgbT3m0yz1Z7eQuDqfoIYCSedqjOfT3CCT0Jol0l60rHL8PmcFsrS5BY15G1nQ0phcNX2JiuKUniqOUti862L7oA700AxkHVUps2RV4v+43dGfi0LaXFqcTEciGCVJs4JgOh5INXOhudcrEF2gzu8JVNGdN+p8mLkhVxdLJHV4iWt7HYrWzkgc2OUfBYM2wxFfDtAlUY2/9wL7NKOpS87f8N0ekrI/E6uv32SzAWqYAEiCrwWiaxVGsWLScPzZbIoWHbP9MrFq/3X0iLVXD4icJWplItxb1pMMBenhFEBQbJ39TPsZnwQrh0NnefaUuzAdcPlzT2pa3ubp1Rqkr0uFQTqFPeIxCk9gcYu5NLlCwYMjpj1vGp16wQJEpayVRUq/t+rDYEPl0GHZjYGGyuNY+EAyLdSOeKDxu2m0Hd66lDzmy+5YcLZnnxvFwqGW9G7DhQ98/2R9nePOt7N7p9kQ7Mlz8JWvaS8004crqptxZX+HDh3oXthTMvNCVsX2Ob9J5iPlmaoGnrS2ZhuzA8f3rLxSGy1nHfwplSevCnozMubh9S6xQ6XCNfPMAnQkvA6fgM3X4SJGSYCybVRanK5lA=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2943.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(39860400002)(366004)(136003)(396003)(346002)(376002)(64756008)(66446008)(66476007)(54906003)(2616005)(66946007)(41300700001)(6486002)(71200400001)(8676002)(6916009)(66556008)(4326008)(2906002)(478600001)(76116006)(83380400001)(6506007)(8936002)(91956017)(5660300002)(44832011)(33656002)(316002)(38070700005)(86362001)(122000001)(26005)(36756003)(53546011)(38100700002)(186003)(6512007)(45980500001);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?V3aDXkKcNwxaHxlsRrDSGGOXJZGdi4vMBJDxoRt3D/E9wQvJWU4csmP9h4CQ?=
+ =?us-ascii?Q?ZqE43nWIa0zUK9utwEsOz9UEJ7Z+zKsDqmux+BNgJDP5wEjJ3xWSPwHLPqkh?=
+ =?us-ascii?Q?oDQfl14u9MIqsQrdt8lbBgqOxGPYY/jKsrIbeTEeYbPJiPdK/ovDEgB+o4pr?=
+ =?us-ascii?Q?gq6KTqKF8TmJu37b5T0OyTYMG8ajLOAUc99y5Vf+YDGTx0GFgX3hbSjND+ON?=
+ =?us-ascii?Q?Kwnwy8O9Grz9RrQkTaxX1674iphnfGDj3JxASU5IRz4SHPytTRw9kKQ+V+W0?=
+ =?us-ascii?Q?VVERagjaSF3IvvHxSKLql2PB2wh7fcuT3zQcAtxKlHW+wKa+W3g5pno9mAkK?=
+ =?us-ascii?Q?f5TirpQe7WkKh4ewxjp1M8FTOd0sdfavnrZSHZeEVDwlsrf5n0G0FHCkw5Jn?=
+ =?us-ascii?Q?+3qx7ynWNe8C4qw5wKR4R7gCEoGa5WIfvC4dCe4n33OqKyEQPgiURwkqs/Ta?=
+ =?us-ascii?Q?QY/1VRMAmCzBg/r0bepQCBclf3HBMWDZ73gtYClDck6Ml5YzP5UiIVcbwUGb?=
+ =?us-ascii?Q?6WFT97+MhFF+Jc9ot1s3y8bw7x4tvTrEClprPeQd3cIt0FTu7b2UUuL4kefL?=
+ =?us-ascii?Q?ZlQE7taJg6FZgrAZufHcOcOjXyAzDCUdTIeDUlF+LVCbkG7YEbSjsVXV/ilB?=
+ =?us-ascii?Q?Olw/DYaH5UCcs/18EM4un7tm9n09CEgPGiNj8148zPThW66CL9jDELhMuPJn?=
+ =?us-ascii?Q?hP/JG3T9skmNEmyVizyURRfwQlPjy2kgvynt3nsRGt+TzIoF7fVDNPdqC5H0?=
+ =?us-ascii?Q?gsBgL0Y84FG5ak3PnjwCRf34vHcegKCVr4GapOB2T6DWOxY3v6K/3Afauimm?=
+ =?us-ascii?Q?Xz4TOM4nUDQdCD8e3irKuMoKXZxsmp4g3s108M7QZHM4kYK80CgdnJlrgzfS?=
+ =?us-ascii?Q?jIzYIDftbBjtBGp4lbKCKpW3LjnxsHwbdFozZVWIISnIxtGn1yca6yi47Nxx?=
+ =?us-ascii?Q?ECZ948lBptzkgzv4p1uty0prLc995Z6RCKIr/powGc9sbhdTeIgAhHZf9UI4?=
+ =?us-ascii?Q?H50iF1CP17ezFlfd8du/On6pJvcVHV6RAANER/YCRdoZcaiuG34yT6Qu70f3?=
+ =?us-ascii?Q?yPsbix7SWDGb9cUPXn8lveT6mXsle5KFJ4aB9yVd43Ux9g6gAYiL1pI1hPLb?=
+ =?us-ascii?Q?Uu56m9LJx2pgrV7ISvuPFVBuhnUK2QLvplOrPTUXJGxSYkrVO+SrKAdIIdhj?=
+ =?us-ascii?Q?rltVIIx2hRmHzEQk1x2Q0w1kGNViHjP38fG6altMaM6XuTxkALQGrnHi3htI?=
+ =?us-ascii?Q?GXKIOwSgXdZe0SgBztLBEtOImqLJcbqkCagSraEWGZ8/ee7+asA4oKp0qAh1?=
+ =?us-ascii?Q?OBVflega16MDCnk6ZV6hIDFQOF083L8elgEjW6WJh/z5F9msPwa5X46X5uHC?=
+ =?us-ascii?Q?9uhpHB/8BnlVTT9XQ+iY6JYY44AGfAhhlp3Li4dil6+XpZ48poM8KzcCPUOb?=
+ =?us-ascii?Q?Bchr98NLnGbMyoygStC2NtDkDgtPSFbJ+3RNYCW7JthiastCtze8mVm2dpGr?=
+ =?us-ascii?Q?yZFrt13beqLvSSuT0CRt1dNFgZlfK17cdgpXTPdcJrnCpTSlZKPWIF4WWW6/?=
+ =?us-ascii?Q?bjXZeyLXkIxPj72Jz2h2fm0ahv9+AZp+Y/AKBrDGDHpdQGGhr7QCp9qpqy89?=
+ =?us-ascii?Q?JA=3D=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <6DA1426949601A47B7A8FF30302D142E@namprd10.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SN6PR10MB2943.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: cfee1ae3-bddd-4b74-675b-08da6503ec24
+X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Jul 2022 19:14:34.7306
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: T/MWLAWrk8K5e6MpGLP2ylnoQFiIIVK5V0+akzSVPNwNhCLwnvYRboDzTATldmJTe1djy5OjBO7bFp7/wIK1DcJJZNhJy2VY8tJYdnKbK/g=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR10MB1287
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.517,18.0.883
+ definitions=2022-07-13_07:2022-07-13,2022-07-13 signatures=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 phishscore=0
+ mlxlogscore=999 suspectscore=0 adultscore=0 mlxscore=0 spamscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2206140000 definitions=main-2207130073
+X-Proofpoint-GUID: UuZfB3_SUbu1G1cyuWEqttnTNkYUJDol
+X-Proofpoint-ORIG-GUID: UuZfB3_SUbu1G1cyuWEqttnTNkYUJDol
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bart Van Assche <bvanassche@google.com>
 
-If a device management command completion happens after
-wait_for_completion_timeout() times out and before ufshcd_clear_cmds() is
-called then the completion code may crash on the complete() call in
-__ufshcd_transfer_req_compl(). This patch fixes the following crash:
 
-Unable to handle kernel NULL pointer dereference at virtual address 0000000000000008
-Call trace:
- complete+0x64/0x178
- __ufshcd_transfer_req_compl+0x30c/0x9c0
- ufshcd_poll+0xf0/0x208
- ufshcd_sl_intr+0xb8/0xf0
- ufshcd_intr+0x168/0x2f4
- __handle_irq_event_percpu+0xa0/0x30c
- handle_irq_event+0x84/0x178
- handle_fasteoi_irq+0x150/0x2e8
- __handle_domain_irq+0x114/0x1e4
- gic_handle_irq.31846+0x58/0x300
- el1_irq+0xe4/0x1c0
- efi_header_end+0x110/0x680
- __irq_exit_rcu+0x108/0x124
- __handle_domain_irq+0x118/0x1e4
- gic_handle_irq.31846+0x58/0x300
- el1_irq+0xe4/0x1c0
- cpuidle_enter_state+0x3ac/0x8c4
- do_idle+0x2fc/0x55c
- cpu_startup_entry+0x84/0x90
- kernel_init+0x0/0x310
- start_kernel+0x0/0x608
- start_kernel+0x4ec/0x608
+> On Jul 12, 2022, at 10:20 PM, Nilesh Javali <njavali@marvell.com> wrote:
+>=20
+> Martin,
+>=20
+> Please apply the qla2xxx driver bug fixes to the scsi tree
+> at your earliest convenience.
+>=20
+> Thanks,
+> Nilesh
+>=20
+> Arun Easi (2):
+>  qla2xxx: Fix response queue handler reading stale packets
+>  qla2xxx: Fix discovery issues in FC-AL topology
+>=20
+> Bikash Hazarika (3):
+>  qla2xxx: Fix incorrect display of max frame size
+>  qla2xxx: zero undefined mailbox IN registers
+>  qla2xxx: update manufacturer details
+>=20
+> Nilesh Javali (3):
+>  Revert "scsi: qla2xxx: Fix disk failure to rediscover"
+>  qla2xxx: fix sparse warning for dport_data
+>  qla2xxx: Update version to 10.02.07.800-k
+>=20
+> Quinn Tran (2):
+>  qla2xxx: edif: Fix dropped IKE message
+>  qla2xxx: Fix imbalance vha->vref_count
+>=20
+> drivers/scsi/qla2xxx/qla_bsg.c     |  4 +-
+> drivers/scsi/qla2xxx/qla_def.h     |  3 +-
+> drivers/scsi/qla2xxx/qla_gbl.h     |  5 +-
+> drivers/scsi/qla2xxx/qla_gs.c      | 11 ++--
+> drivers/scsi/qla2xxx/qla_init.c    | 40 +++++++++++++--
+> drivers/scsi/qla2xxx/qla_isr.c     | 80 ++++++++++++++++++------------
+> drivers/scsi/qla2xxx/qla_mbx.c     |  7 ++-
+> drivers/scsi/qla2xxx/qla_nvme.c    |  5 --
+> drivers/scsi/qla2xxx/qla_os.c      | 10 ++++
+> drivers/scsi/qla2xxx/qla_version.h |  4 +-
+> 10 files changed, 114 insertions(+), 55 deletions(-)
+>=20
+>=20
+> base-commit: bcec04b3cce4c498ef0d416a3a2aaf0369578151
+> --=20
+> 2.19.0.rc0
+>=20
 
-Fixes: 5a0b0cb9bee7 ("[SCSI] ufs: Add support for sending NOP OUT UPIU")
-Signed-off-by: Bart Van Assche <bvanassche@google.com>
----
- drivers/ufs/core/ufshcd.c | 57 ++++++++++++++++++++++++++-------------
- 1 file changed, 39 insertions(+), 18 deletions(-)
+Looks Good. For the series
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index ff016807babf..641a219dbf50 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -2991,37 +2991,58 @@ ufshcd_dev_cmd_completion(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
- 		struct ufshcd_lrb *lrbp, int max_timeout)
- {
--	int err = 0;
--	unsigned long time_left;
-+	unsigned long time_left = msecs_to_jiffies(max_timeout);
- 	unsigned long flags;
-+	bool pending;
-+	int err;
- 
-+retry:
- 	time_left = wait_for_completion_timeout(hba->dev_cmd.complete,
--			msecs_to_jiffies(max_timeout));
-+						time_left);
- 
--	spin_lock_irqsave(hba->host->host_lock, flags);
--	hba->dev_cmd.complete = NULL;
- 	if (likely(time_left)) {
-+		/*
-+		 * The caller of this function still owns the @lrbp tag so the
-+		 * code below does not trigger any race conditions.
-+		 */
-+		hba->dev_cmd.complete = NULL;
- 		err = ufshcd_get_tr_ocs(lrbp);
- 		if (!err)
- 			err = ufshcd_dev_cmd_completion(hba, lrbp);
--	}
--	spin_unlock_irqrestore(hba->host->host_lock, flags);
--
--	if (!time_left) {
-+	} else {
- 		err = -ETIMEDOUT;
- 		dev_dbg(hba->dev, "%s: dev_cmd request timedout, tag %d\n",
- 			__func__, lrbp->task_tag);
--		if (!ufshcd_clear_cmds(hba, 1U << lrbp->task_tag))
-+		if (!ufshcd_clear_cmds(hba, 1U << lrbp->task_tag)) {
- 			/* successfully cleared the command, retry if needed */
- 			err = -EAGAIN;
--		/*
--		 * in case of an error, after clearing the doorbell,
--		 * we also need to clear the outstanding_request
--		 * field in hba
--		 */
--		spin_lock_irqsave(&hba->outstanding_lock, flags);
--		__clear_bit(lrbp->task_tag, &hba->outstanding_reqs);
--		spin_unlock_irqrestore(&hba->outstanding_lock, flags);
-+			/*
-+			 * Since clearing the command succeeded we also need to
-+			 * clear the task tag bit from the outstanding_reqs
-+			 * variable.
-+			 */
-+			spin_lock_irqsave(&hba->outstanding_lock, flags);
-+			pending = test_bit(lrbp->task_tag,
-+					   &hba->outstanding_reqs);
-+			if (pending) {
-+				hba->dev_cmd.complete = NULL;
-+				__clear_bit(lrbp->task_tag,
-+					    &hba->outstanding_reqs);
-+			}
-+			spin_unlock_irqrestore(&hba->outstanding_lock, flags);
-+
-+			if (!pending) {
-+				/*
-+				 * A race occurred between this function and the
-+				 * completion handler.
-+				 */
-+				time_left = 1;
-+				goto retry;
-+			}
-+		} else {
-+			dev_err(hba->dev, "%s: failed to clear tag %d\n", __func__,
-+				lrbp->task_tag);
-+		}
- 	}
- 
- 	return err;
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+
+--
+Himanshu Madhani	Oracle Linux Engineering
+
