@@ -2,95 +2,122 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0A3DC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jul 2022 20:04:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07200C43334
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Jul 2022 20:43:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237020AbiGMUER (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Jul 2022 16:04:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41360 "EHLO
+        id S237124AbiGMUnI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Jul 2022 16:43:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36806 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231860AbiGMUEQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jul 2022 16:04:16 -0400
-Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE9F5DFBF
-        for <linux-scsi@vger.kernel.org>; Wed, 13 Jul 2022 13:04:15 -0700 (PDT)
-Received: by mail-pj1-f53.google.com with SMTP id t5-20020a17090a6a0500b001ef965b262eso5356743pjj.5
-        for <linux-scsi@vger.kernel.org>; Wed, 13 Jul 2022 13:04:15 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=AT8865gafO4AP8eOM0W0kP/u5ZywEtYtgelpTP7YQHI=;
-        b=Z9/VJUrOoh8i5kreBRSpHO+uA9wrMbShOssikC/Xvg2J/ihSRyL9rDf2Yfm639mup+
-         QOCvU/0QBkaQ7xASpFZ8bPcWfhvv2j2i7tcW3fpE6HoDaUbH8XyJXWklWEkzL7foEqN0
-         ewnSSdNdw0r2i7jFAHeWHyehXgteyuNZrOD98VtGGVcHsKJMsshZYYU+E36F+h7pK8pv
-         xt8+jgvmkklgTgS9L/nkzvlqiQSmfQbTtsLmSKBVQngasxiO5m81I+iEoeQtVIHnDlxS
-         R3LAlc71ye/GELqHEGAkA0GPi14nbgAoG6Gq366Srg3kGWvpWSPMahE58rS1RLNvc7mX
-         xUlQ==
-X-Gm-Message-State: AJIora9y5QU8jfbTgCTKNkuXNm9SwZ8NzL6jASt8CZVAJOUI3CzRoSJr
-        jgP2RH6oVtDyVtNRp6pJn1U=
-X-Google-Smtp-Source: AGRyM1uJX2ROBrRrzyHZWwrKA5zAZpp9ic5DneX1axFsFnKMoh5p9nnUkjkVhs2j5IVMQlxjtbBK+w==
-X-Received: by 2002:a17:902:db12:b0:16c:3273:c7b1 with SMTP id m18-20020a170902db1200b0016c3273c7b1mr4634380plx.172.1657742655161;
-        Wed, 13 Jul 2022 13:04:15 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:cf8d:5409:1ca6:f804? ([2620:15c:211:201:cf8d:5409:1ca6:f804])
-        by smtp.gmail.com with ESMTPSA id h3-20020aa79f43000000b0050dc762816asm9209154pfr.68.2022.07.13.13.04.13
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 13 Jul 2022 13:04:14 -0700 (PDT)
-Message-ID: <98e6554a-5d88-fcb6-d46d-a267009da014@acm.org>
-Date:   Wed, 13 Jul 2022 13:04:12 -0700
+        with ESMTP id S229959AbiGMUnH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jul 2022 16:43:07 -0400
+Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D6303122E;
+        Wed, 13 Jul 2022 13:43:06 -0700 (PDT)
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 1ECD5412D2;
+        Wed, 13 Jul 2022 20:43:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        content-type:content-type:content-transfer-encoding:mime-version
+        :x-mailer:message-id:date:date:subject:subject:from:from
+        :received:received:received:received; s=mta-01; t=1657744984; x=
+        1659559385; bh=A0KX4HnG0cWEY+wYlrm4+1H0bVSpVL+X+oShvjbc8cM=; b=J
+        9x3R41HtDSWPE/r0MY359wvfYPbAVq8Q8rD5V2KkqAWUhPHn967AgCX+edQVXn4Y
+        UlpdQ/ef/9R4rcXrv/6bB1YVBShJgXUpQRnwFiNPd7LFyNGhEAg4aW4fcKLdTYZW
+        ZMRHrayRx9qqNfe1tcMcnHWL48BBF7PP28SMY6LYrM=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id 2zdtEl7nazkd; Wed, 13 Jul 2022 23:43:04 +0300 (MSK)
+Received: from T-EXCH-01.corp.yadro.com (t-exch-01.corp.yadro.com [172.17.10.101])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id C44ED412C5;
+        Wed, 13 Jul 2022 23:43:03 +0300 (MSK)
+Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
+ T-EXCH-01.corp.yadro.com (172.17.10.101) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
+ 15.1.669.32; Wed, 13 Jul 2022 23:43:03 +0300
+Received: from NB-591.corp.yadro.com (10.178.114.42) by
+ T-EXCH-08.corp.yadro.com (172.17.11.58) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.2.1118.9; Wed, 13 Jul 2022 23:43:02 +0300
+From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
+To:     Martin Petersen <martin.petersen@oracle.com>,
+        <target-devel@vger.kernel.org>,
+        Nick Couchman <nick.e.couchman@gmail.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux@yadro.com>,
+        Dmitry Bogdanov <d.bogdanov@yadro.com>
+Subject: [PATCH] target: iscsi: handle abort for WRITE_PENDING cmds
+Date:   Wed, 13 Jul 2022 23:42:12 +0300
+Message-ID: <20220713204212.7850-1-d.bogdanov@yadro.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH v4 4/4] scsi: core: Call blk_mq_free_tag_set() earlier
-Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Li Zhijian <lizhijian@fujitsu.com>
-References: <20220712221936.1199196-1-bvanassche@acm.org>
- <20220712221936.1199196-5-bvanassche@acm.org>
- <3c0f352a-0be6-7322-3556-8ce0d66ba8f3@huawei.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <3c0f352a-0be6-7322-3556-8ce0d66ba8f3@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.178.114.42]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-08.corp.yadro.com (172.17.11.58)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/13/22 01:13, John Garry wrote:
-> It seems to me that blk_mq_free_tag_set() is called from 
-> scsi_remove_host() now, right?
+Sometimes an initiator does not send data for WRITE commands and tries
+to abort it. The abort hangs waiting for frontend driver completion.
+iSCSI driver waits for for data and that timeout eventually initiates
+connection reinstatment. The connection closing releases the commands in
+the connection, but those aborted commands still did not handle the
+abort and did not decrease a command ref counter. Because of that the
+connection reinstatement hangs indefinitely and prevents re-login for
+that initiator.
 
-Right, I will update the patch description. I moved the 
-blk_mq_free_tag_set() after I wrote the patch description.
+This patch adds a handling in TCM of the abort for the WRITE_PENDING
+commands at connection closing moment to make it possible to release
+them.
 
->> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
->> index 2aca0a838ca5..295c48fdb650 100644
->> --- a/drivers/scsi/scsi_lib.c
->> +++ b/drivers/scsi/scsi_lib.c
->> @@ -1990,7 +1990,10 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
->>   void scsi_mq_destroy_tags(struct Scsi_Host *shost)
->>   {
->> +    if (!shost->tag_set.tags)
->> +        return;
->>       blk_mq_free_tag_set(&shost->tag_set);
->> +    WARN_ON_ONCE(shost->tag_set.tags);
-> 
-> blk_mq_free_tag_set() clears the tagset tags pointer, so I don't know 
-> why you don't trust the semantics of that API - this seems like paranoia.
+Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
+---
+ drivers/target/iscsi/iscsi_target.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
 
-Semantics of the API? Shouldn't this rather be called an undocumented 
-aspect of blk_mq_free_tag_set()?
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index e368f038ff5c..27eca5e72f52 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -26,6 +26,7 @@
+ #include <target/target_core_base.h>
+ #include <target/target_core_fabric.h>
+ 
++#include <target/target_core_backend.h>
+ #include <target/iscsi/iscsi_target_core.h>
+ #include "iscsi_target_parameters.h"
+ #include "iscsi_target_seq_pdu_list.h"
+@@ -4171,7 +4172,8 @@ static void iscsit_release_commands_from_conn(struct iscsit_conn *conn)
+ 
+ 		if (se_cmd->se_tfo != NULL) {
+ 			spin_lock_irq(&se_cmd->t_state_lock);
+-			if (se_cmd->transport_state & CMD_T_ABORTED) {
++			if (se_cmd->t_state != TRANSPORT_WRITE_PENDING &&
++			    se_cmd->transport_state & CMD_T_ABORTED) {
+ 				/*
+ 				 * LIO's abort path owns the cleanup for this,
+ 				 * so put it back on the list and let
+@@ -4191,8 +4193,13 @@ static void iscsit_release_commands_from_conn(struct iscsit_conn *conn)
+ 		list_del_init(&cmd->i_conn_node);
+ 
+ 		iscsit_increment_maxcmdsn(cmd, sess);
+-		iscsit_free_cmd(cmd, true);
+-
++		if (cmd->se_cmd.t_state == TRANSPORT_WRITE_PENDING &&
++		    cmd->se_cmd.transport_state & CMD_T_ABORTED) {
++			/* handle an abort in TCM */
++			target_complete_cmd(&cmd->se_cmd, SAM_STAT_TASK_ABORTED);
++		} else {
++			iscsit_free_cmd(cmd, true);
++		}
+ 	}
+ }
+ 
+-- 
+2.25.1
 
-My concern is that the "set->tags = NULL" statement might be removed in 
-the future from blk_mq_free_tag_set() and also that it is possible that 
-scsi_mq_destroy_tags() is not updated after that change.
-
-Thanks,
-
-Bart.
