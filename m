@@ -2,98 +2,88 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 585C0C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jul 2022 06:25:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37B54CCA47C
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jul 2022 09:12:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231337AbiGNGZe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 Jul 2022 02:25:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46876 "EHLO
+        id S237672AbiGNJMG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 Jul 2022 05:12:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33046 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229745AbiGNGZc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jul 2022 02:25:32 -0400
-X-Greylist: delayed 1854 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 13 Jul 2022 23:25:30 PDT
-Received: from m15112.mail.126.com (m15112.mail.126.com [220.181.15.112])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id BBCAACE03
-        for <linux-scsi@vger.kernel.org>; Wed, 13 Jul 2022 23:25:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=126.com;
-        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=7xeg2
-        It69vev28YpRbCSc9ZzsINbiExknAK2m0FfCT8=; b=Pg/PPw2HzVYpDgR2vaSRI
-        xfIw0Ns1zYgfIsewHrD0WeKlfwkSGx94QQZWrGlsBbPdiYqDwAmbXhcUqObHqz/O
-        kjNkohC4TtPB7o2KLJ5iZIbfbP+cU/49EcKFX2hxSsww4wyK3trIWQGhLmxDzDSJ
-        C0v33efnrMybPNljumCMtk=
-Received: from localhost.localdomain (unknown [124.16.139.61])
-        by smtp2 (Coremail) with SMTP id DMmowAAnMwaHr89ipt1OEw--.289S2;
-        Thu, 14 Jul 2022 13:54:16 +0800 (CST)
-From:   Liang He <windhl@126.com>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com, windhl@126.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH] ufs: host: ufschd-pltfrm: Hold reference returned by of_parse_phandle()
-Date:   Thu, 14 Jul 2022 13:54:13 +0800
-Message-Id: <20220714055413.373449-1-windhl@126.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S237690AbiGNJLt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jul 2022 05:11:49 -0400
+X-Greylist: delayed 2399 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 14 Jul 2022 02:11:48 PDT
+Received: from sinsgout.his.huawei.com (sinsgout.his.huawei.com [119.8.179.247])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A2FB22B34;
+        Thu, 14 Jul 2022 02:11:48 -0700 (PDT)
+Received: from sinmsgout03.his.huawei.com (unknown [172.28.115.130])
+        by sinsgout.his.huawei.com (SkyGuard) with ESMTP id 4Lk6CX1llBz3Z9D9;
+        Thu, 14 Jul 2022 15:52:24 +0800 (CST)
+Received: from fraeml706-chm.china.huawei.com (unknown [172.18.156.208])
+        by sinmsgout03.his.huawei.com (SkyGuard) with ESMTP id 4Lk6B94QXHz9xGQ7;
+        Thu, 14 Jul 2022 15:51:13 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml706-chm.china.huawei.com (10.206.15.55) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2375.24; Thu, 14 Jul 2022 09:52:14 +0200
+Received: from [10.126.173.191] (10.126.173.191) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Thu, 14 Jul 2022 08:52:13 +0100
+Message-ID: <8a9d9c72-65c1-cb7d-80d7-4ac2b65871fe@huawei.com>
+Date:   Thu, 14 Jul 2022 08:52:15 +0100
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH v5 0/5] DMA mapping changes for SCSI core
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     Christoph Hellwig <hch@lst.de>, <damien.lemoal@opensource.wdc.com>,
+        <joro@8bytes.org>, <will@kernel.org>, <jejb@linux.ibm.com>,
+        <m.szyprowski@samsung.com>, <robin.murphy@arm.com>,
+        <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
+        <iommu@lists.linux.dev>, <linux-scsi@vger.kernel.org>,
+        <linuxarm@huawei.com>
+References: <1656590892-42307-1-git-send-email-john.garry@huawei.com>
+ <b5f80062-e8ef-9597-1b0c-393140950dfb@huawei.com>
+ <20220706134447.GA23753@lst.de> <yq1y1x47jgn.fsf@ca-mkp.ca.oracle.com>
+ <5fd4814a-81b1-0e71-58e0-57a747eb684e@huawei.com>
+ <yq135f4xul0.fsf@ca-mkp.ca.oracle.com>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <yq135f4xul0.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: DMmowAAnMwaHr89ipt1OEw--.289S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7Zry5XrWxKw1DAryUKr17KFg_yoW8WFWrpF
-        WY93yYyr4xKF4I9FWxA3WUG3sakw4xGrWUCa92ka4Syrs7Xa47X3WkKFy5C3WrGryfX3W8
-        tFsYyF18Wan7tFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0z__MakUUUUU=
-X-Originating-IP: [124.16.139.61]
-X-CM-SenderInfo: hzlqvxbo6rjloofrz/1tbiuAg+F2JVkW3rygAAsz
+X-Originating-IP: [10.126.173.191]
+X-ClientProxiedBy: lhreml725-chm.china.huawei.com (10.201.108.76) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In ufshcd_populate_vreg(), we should hold the reference returned by
-of_parse_phandle() and then use it to call of_node_put() for refcount
-balance.
+On 14/07/2022 04:10, Martin K. Petersen wrote:
 
-Fixes: aa4976130934 ("ufs: Add regulator enable support")
-Signed-off-by: Liang He <windhl@126.com>
----
+Hi Martin,
 
- We add a helper to check the return value of_parse_phandle() as we
-do not need the reference, otherwise we need to declare a device_node 
-in ufshcd_populate_vreg().
+>> So I set max hw sectors at this ‘opt’ mapping size to ensure that we
+>> get no mappings which exceed this size. Indeed, I think max sectors is
+>> 128Kb today for my host, which would be same as dma_opt_mapping_size()
+>> value with an IOMMU enabled. And I find that only a small % of request
+>> size may exceed this 128kb size, but it still has a big performance
+>> impact.
+> The purpose of the soft limit is to pick the appropriate I/O size
+> (i.e. for best performance). The purpose of the hard limit is to ensure
+> we don't submit something the hardware can't handle or describe.
+> 
+> IOW, the hard limit is not about performance at all. The hard limit is
+> mainly relevant for things that are way bigger than anything we'd issue
+> as regular filesystem I/O such as multi-megabyte firmware images, etc.
+> 
+> It's perfectly fine for firmware download performance to be
+> "suboptimal". What is typically more important in that scenario is that
+> the firmware image makes it inside a single I/O.
 
- drivers/ufs/host/ufshcd-pltfrm.c | 17 ++++++++++++++++-
- 1 file changed, 16 insertions(+), 1 deletion(-)
+OK, fine. I've improved the next version such that the DMA mapping opt 
+limit only affects the max_sectors default.
 
-diff --git a/drivers/ufs/host/ufshcd-pltfrm.c b/drivers/ufs/host/ufshcd-pltfrm.c
-index e7332cc65b1f..2cb409d9ed3d 100644
---- a/drivers/ufs/host/ufshcd-pltfrm.c
-+++ b/drivers/ufs/host/ufshcd-pltfrm.c
-@@ -108,6 +108,21 @@ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
- 	return ret;
- }
- 
-+static bool is_of_parse_phandle(const struct device_node *np,
-+						const char *phandle_name,
-+						int index)
-+{
-+	struct device_node *parse_np = of_parse_phandle(np, phandle_name, index);
-+	bool ret = false;
-+
-+	if (parse_np) {
-+		ret = true;
-+		of_node_put(parse_np);
-+	}
-+
-+	return ret;
-+}
-+
- #define MAX_PROP_SIZE 32
- static int ufshcd_populate_vreg(struct device *dev, const char *name,
- 		struct ufs_vreg **out_vreg)
-@@ -122,7 +137,7 @@ static int ufshcd_populate_vreg(struct device *dev, const char *name,
- 	}
- 
- 	snprintf(prop_name, MAX_PROP_SIZE, "%s-supply", name);
--	if (!of_parse_phandle(np, prop_name, 0)) {
-+	if (!is_of_parse_phandle(np, prop_name, 0)) {
- 		dev_info(dev, "%s: Unable to find %s regulator, assuming enabled\n",
- 				__func__, prop_name);
- 		goto out;
--- 
-2.25.1
-
+Thanks,
+John
