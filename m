@@ -2,78 +2,57 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57350C43334
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jul 2022 19:04:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23E5EC433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jul 2022 23:56:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232564AbiGNTEv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 Jul 2022 15:04:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46894 "EHLO
+        id S240618AbiGNX4w (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 Jul 2022 19:56:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34310 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229458AbiGNTEv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jul 2022 15:04:51 -0400
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6CA24B49E
-        for <linux-scsi@vger.kernel.org>; Thu, 14 Jul 2022 12:04:49 -0700 (PDT)
-Received: by mail-pl1-f176.google.com with SMTP id w7so1246572ply.12
-        for <linux-scsi@vger.kernel.org>; Thu, 14 Jul 2022 12:04:49 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=Th40Nh+iqGN0NTSs3Rr2UYrpV9Ac2fzgq7R6fGTWYcg=;
-        b=5/Tjt7G+uCTLbMQ5Mv6iBGQ0lxZuqV45V4KA6cC4nO4ywJRVxM6wQEm5dP0EgnVNBy
-         76ztnGOjE32Er2KMnQ7qBXK8RZ/t01PCFXhB3WPUVtqJBODov1Qn4FxtQcW5/6KeIAYn
-         EGskX8ERxF1XsdPZ1S0ra0H3+VApBndisf+WOjAsuxDS7nIkXUS1R+jFr5l6xXt5zXED
-         HbNQMzYcEMHncOj30Nvy5zVJumDL1YD9z53FO7Q1sMG28nqfFkw9mcvmWqI6AHWQrQtS
-         Hx1hLVRndEJKg8VRVdIz/5QviYZot40/9QJzIdJWJ5GoL/tA1w64atCduHu+qW6Rjqga
-         DIVw==
-X-Gm-Message-State: AJIora83Q7DJvaPTY9Kk0ey8xLRMYFqTHsuYWiLQB407bDUN8zl2ik7u
-        lqurpGbVkbbXOgXvHS/1WFs=
-X-Google-Smtp-Source: AGRyM1uXG8/xpANTeWaX6/k1RypdnzzbhoQGDJp7JF8v43tllie52QOnLS8gMbnRjDiaE3ZBwhNKYg==
-X-Received: by 2002:a17:902:7c04:b0:16c:2e00:395a with SMTP id x4-20020a1709027c0400b0016c2e00395amr9757800pll.123.1657825489095;
-        Thu, 14 Jul 2022 12:04:49 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:9fab:70d1:f0e7:922b? ([2620:15c:211:201:9fab:70d1:f0e7:922b])
-        by smtp.gmail.com with ESMTPSA id t23-20020a170902b21700b0015e8d4eb29csm1825079plr.230.2022.07.14.12.04.47
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 14 Jul 2022 12:04:48 -0700 (PDT)
-Message-ID: <dfb22780-45b6-29f1-180d-aa56a2b57f66@acm.org>
-Date:   Thu, 14 Jul 2022 12:04:46 -0700
+        with ESMTP id S229556AbiGNX4u (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jul 2022 19:56:50 -0400
+Received: from m151.mail.126.com (m151.mail.126.com [220.181.15.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 43F3666ADD
+        for <linux-scsi@vger.kernel.org>; Thu, 14 Jul 2022 16:56:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=126.com;
+        s=s110527; h=Date:From:Subject:MIME-Version:Message-ID; bh=G7GRC
+        GqIAa39bfUTQmwIK6WlfSBgba7n712HyAla33g=; b=cGTAeBnbG6QPLmuUDSIFj
+        vvjtk9T0sGUQ0d7T477O7vbI5JM9kJAvclIfAA1XiBXNg7EcvQdi3qXmr6QdIS3W
+        XtP9yp3ObrVAz/3I7jvUNC4+zYEeRhpJi2d6OG+tp3DNoGf7D3KAHblNGJWugcdo
+        kqrocBOwvEPP6CyIfHvIeM=
+Received: from windhl$126.com ( [124.16.139.61] ) by ajax-webmail-wmsvr1
+ (Coremail) ; Fri, 15 Jul 2022 07:56:38 +0800 (CST)
+X-Originating-IP: [124.16.139.61]
+Date:   Fri, 15 Jul 2022 07:56:38 +0800 (CST)
+From:   "Liang He" <windhl@126.com>
+To:     "Bart Van Assche" <bvanassche@acm.org>
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org
+Subject: Re:Re: [PATCH] ufs: host: ufschd-pltfrm: Hold reference returned by
+ of_parse_phandle()
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version XT5.0.13 build 20220113(9671e152)
+ Copyright (c) 2002-2022 www.mailtech.cn 126com
+In-Reply-To: <d5f800ea-09c2-b677-ffb6-3d6f2c294115@acm.org>
+References: <20220714055413.373449-1-windhl@126.com>
+ <d5f800ea-09c2-b677-ffb6-3d6f2c294115@acm.org>
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=GBK
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH v3 1/2] scsi: core: Make sure that hosts outlive targets
- and devices
-Content-Language: en-US
-To:     Mike Christie <michael.christie@oracle.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
-        Ming Lei <ming.lei@redhat.com>, Christoph Hellwig <hch@lst.de>,
-        Hannes Reinecke <hare@suse.de>,
-        John Garry <john.garry@huawei.com>
-References: <20220707182122.3797-1-bvanassche@acm.org>
- <20220707182122.3797-2-bvanassche@acm.org>
- <8fa5f4a0-fcdf-365d-8c42-9ab4041f2a8e@oracle.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <8fa5f4a0-fcdf-365d-8c42-9ab4041f2a8e@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <72cd069b.136.181ff249c3e.Coremail.windhl@126.com>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID: AcqowACnwLA3rdBiBRgiAA--.12746W
+X-CM-SenderInfo: hzlqvxbo6rjloofrz/1tbi7RY+F1pEAZiqAQABs-
+X-Coremail-Antispam: 1U5529EdanIXcx71UUUUU7vcSsGvfC2KfnxnUU==
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/9/22 08:57, Mike Christie wrote:
-> If so, could we move what are doing in this patch down a level? Put the wait in
-> scsi_remove_target and wake in scsi_target_dev_release. Instead of a target_count
-> you have a scsi_target sdev_count.
-> 
-> scsi_forget_host would then need to loop over the targets and do
-> scsi_target_remove on them instead of doing it at the scsi_device level.
-
-I'm not sure how to implement the above since scsi_remove_target() skips 
-targets that have one of the states STARGET_DEL, STARGET_REMOVE or 
-STARGET_CREATED_REMOVE?
-
-Thanks,
-
-Bart.
+CkF0IDIwMjItMDctMTUgMDI6MTU6MTIsICJCYXJ0IFZhbiBBc3NjaGUiIDxidmFuYXNzY2hlQGFj
+bS5vcmc+IHdyb3RlOgo+T24gNy8xMy8yMiAyMjo1NCwgTGlhbmcgSGUgd3JvdGU6Cj4+ICtzdGF0
+aWMgYm9vbCBpc19vZl9wYXJzZV9waGFuZGxlKGNvbnN0IHN0cnVjdCBkZXZpY2Vfbm9kZSAqbnAs
+Cj4+ICsJCQkJCQljb25zdCBjaGFyICpwaGFuZGxlX25hbWUsCj4+ICsJCQkJCQlpbnQgaW5kZXgp
+Cj4+ICt7Cj4KPlRoZSBmdW5jdGlvbiBuYW1lIHNvdW5kcyB3ZWlyZCB0byBtZS4gV291bGQgcGhh
+bmRsZV9leGlzdHMoKSBwZXJoYXBzIGJlIAo+YSBiZXR0ZXIgbmFtZT8KPgo+VGhhbmtzLAo+Cgo+
+QmFydC4KCgpUaGFua3MsIEJhcnQKCgpJIHdpbGwgc2VuZCBhIG5ldyB2ZXJzaW9uIHdpdGggYWJv
+dmUgbmFtZS4KCgpUaGFua3MgYWdhaW4sCgoKTGlhbmc=
