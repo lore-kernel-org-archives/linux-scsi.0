@@ -2,37 +2,37 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1763C43334
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jul 2022 18:30:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFA67CCA47B
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Jul 2022 18:30:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240711AbiGNSaJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 Jul 2022 14:30:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46444 "EHLO
+        id S240728AbiGNSaK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 Jul 2022 14:30:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46540 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240710AbiGNSaB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jul 2022 14:30:01 -0400
+        with ESMTP id S240698AbiGNSaE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jul 2022 14:30:04 -0400
 Received: from sinmsgout02.his.huawei.com (sinmsgout02.his.huawei.com [119.8.177.37])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 582CF6B262;
-        Thu, 14 Jul 2022 11:29:58 -0700 (PDT)
-Received: from fraeml714-chm.china.huawei.com (unknown [172.18.156.149])
-        by sinmsgout02.his.huawei.com (SkyGuard) with ESMTP id 4LkNL13Y76z9v7Hs;
-        Fri, 15 Jul 2022 02:28:57 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D22E06B252;
+        Thu, 14 Jul 2022 11:30:01 -0700 (PDT)
+Received: from fraeml715-chm.china.huawei.com (unknown [172.18.156.207])
+        by sinmsgout02.his.huawei.com (SkyGuard) with ESMTP id 4LkNL60NFLz9v7J0;
+        Fri, 15 Jul 2022 02:29:01 +0800 (CST)
 Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml714-chm.china.huawei.com (10.206.15.33) with Microsoft SMTP Server
+ fraeml715-chm.china.huawei.com (10.206.15.34) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Thu, 14 Jul 2022 20:29:46 +0200
+ 15.1.2375.24; Thu, 14 Jul 2022 20:29:51 +0200
 Received: from localhost.localdomain (10.69.192.58) by
  lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Thu, 14 Jul 2022 19:29:44 +0100
+ 15.1.2375.24; Thu, 14 Jul 2022 19:29:48 +0100
 From:   John Garry <john.garry@huawei.com>
 To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
 CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linuxarm@huawei.com>, Xiang Chen <chenxiang66@hisilicon.com>,
         John Garry <john.garry@huawei.com>
-Subject: [PATCH 3/5] scsi: hisi_sas: Relocate DMA unmap of SMP task
-Date:   Fri, 15 Jul 2022 02:23:20 +0800
-Message-ID: <1657823002-139010-4-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 5/5] scsi: libsas: Resume SAS host for phy reset or enable via sysfs
+Date:   Fri, 15 Jul 2022 02:23:22 +0800
+Message-ID: <1657823002-139010-6-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1657823002-139010-1-git-send-email-john.garry@huawei.com>
 References: <1657823002-139010-1-git-send-email-john.garry@huawei.com>
@@ -48,79 +48,54 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Currently SMP tasks are DMA unmapped only when cq of SMP IO is returned
-normally. If the cq of SMP IO is returned with exception actually SMP tas
-is never unmapped. Relocate DMA unmap of SMP task to fix the issue.
+Currently if a phy reset or enable phy is issued via sysfs when controller
+is suspended, those operations will be ignored as SAS_HA_REGISTERED is
+cleared. If RPM is enabled then we may aggressively suspend automatically.
+In this case it may be difficult to enable or reset a phy via sysfs, so
+resume the host in these scenarios.
 
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 6 +++++-
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 2 --
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 2 --
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 2 --
- 4 files changed, 5 insertions(+), 7 deletions(-)
+ drivers/scsi/libsas/sas_init.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index bd62e441f947..33af5b8dede2 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -219,11 +219,15 @@ void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
- 		task->lldd_task = NULL;
+diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
+index dc35f0f8eae3..e4f77072a58d 100644
+--- a/drivers/scsi/libsas/sas_init.c
++++ b/drivers/scsi/libsas/sas_init.c
+@@ -531,6 +531,7 @@ static int queue_phy_reset(struct sas_phy *phy, int hard_reset)
+ 	if (!d)
+ 		return -ENOMEM;
  
- 		if (!sas_protocol_ata(task->task_proto)) {
--			if (slot->n_elem)
-+			if (slot->n_elem) {
- 				if (task->task_proto & SAS_PROTOCOL_SSP)
- 					dma_unmap_sg(dev, task->scatter,
- 						     task->num_scatter,
- 						     task->data_dir);
-+				else
-+					dma_unmap_sg(dev, &task->smp_task.smp_req,
-+						     1, DMA_TO_DEVICE);
-+			}
- 			if (slot->n_elem_dif) {
- 				struct sas_ssp_task *ssp_task = &task->ssp_task;
- 				struct scsi_cmnd *scsi_cmnd = ssp_task->cmd;
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index 4582791def32..349546bacb2b 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -1282,8 +1282,6 @@ static void slot_complete_v1_hw(struct hisi_hba *hisi_hba,
++	pm_runtime_get_sync(ha->dev);
+ 	/* libsas workqueue coordinates ata-eh reset with discovery */
+ 	mutex_lock(&d->event_lock);
+ 	d->reset_result = 0;
+@@ -544,6 +545,7 @@ static int queue_phy_reset(struct sas_phy *phy, int hard_reset)
+ 	if (rc == 0)
+ 		rc = d->reset_result;
+ 	mutex_unlock(&d->event_lock);
++	pm_runtime_put_sync(ha->dev);
  
- 		ts->stat = SAS_SAM_STAT_GOOD;
+ 	return rc;
+ }
+@@ -558,6 +560,7 @@ static int queue_phy_enable(struct sas_phy *phy, int enable)
+ 	if (!d)
+ 		return -ENOMEM;
  
--		dma_unmap_sg(dev, &task->smp_task.smp_req, 1,
--			     DMA_TO_DEVICE);
- 		memcpy(to + sg_resp->offset,
- 		       hisi_sas_status_buf_addr_mem(slot) +
- 		       sizeof(struct hisi_sas_err_record),
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 18297ab5a32b..70e401fd432a 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -2428,8 +2428,6 @@ static void slot_complete_v2_hw(struct hisi_hba *hisi_hba,
++	pm_runtime_get_sync(ha->dev);
+ 	/* libsas workqueue coordinates ata-eh reset with discovery */
+ 	mutex_lock(&d->event_lock);
+ 	d->enable_result = 0;
+@@ -571,6 +574,7 @@ static int queue_phy_enable(struct sas_phy *phy, int enable)
+ 	if (rc == 0)
+ 		rc = d->enable_result;
+ 	mutex_unlock(&d->event_lock);
++	pm_runtime_put_sync(ha->dev);
  
- 		ts->stat = SAS_SAM_STAT_GOOD;
- 
--		dma_unmap_sg(dev, &task->smp_task.smp_req, 1,
--			     DMA_TO_DEVICE);
- 		memcpy(to + sg_resp->offset,
- 		       hisi_sas_status_buf_addr_mem(slot) +
- 		       sizeof(struct hisi_sas_err_record),
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 76c4173e277d..4d3eb53a8209 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -2311,8 +2311,6 @@ static void slot_complete_v3_hw(struct hisi_hba *hisi_hba,
- 
- 		ts->stat = SAS_SAM_STAT_GOOD;
- 
--		dma_unmap_sg(dev, &task->smp_task.smp_req, 1,
--			     DMA_TO_DEVICE);
- 		memcpy(to + sg_resp->offset,
- 			hisi_sas_status_buf_addr_mem(slot) +
- 		       sizeof(struct hisi_sas_err_record),
+ 	return rc;
+ }
 -- 
 2.35.3
 
