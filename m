@@ -2,165 +2,124 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B29AC43334
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Jul 2022 11:24:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0AF1C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Jul 2022 12:48:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229844AbiGOLY4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Jul 2022 07:24:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44564 "EHLO
+        id S231686AbiGOMsR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Jul 2022 08:48:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59292 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229452AbiGOLYz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Jul 2022 07:24:55 -0400
-Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD95A13DDA;
-        Fri, 15 Jul 2022 04:24:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1657884294; x=1689420294;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=JNPs4/IF9I3v2fBpT9/SGwbwqcvHXBKUeiu4ZOuzkhE=;
-  b=d6vlxd9M05hidsXkn/J5dfmzryZu3d8h3yie6Wvh63HMxFenJU7sYk6x
-   mrdZABYB4PpqPo1/w8um9UdBMZNiTZatNY/dH7uGGJm5SB70n3ylDr71+
-   Qc/iXC9orWOEWgQyomsxY2mOyKQ2jd3XXIyRRahrzlqUx0iYR0vvgnVmF
-   9zukeAuGK10F4JpOjnYW8DALxHVH0q6UaoDUce3BV31t9wcgVlUOcqfMu
-   LpDc93ZVsFNRil3kxL+s9DmEgIpz0fsRlI2Xr3o+6OBlFSGt4pqRkHwya
-   tks9Od3dxatRJ2WdbVotAMbSvtmS0Y8RrPi3vKQ/rQe3vd37GDlorqf/k
-   Q==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10408"; a="349732046"
-X-IronPort-AV: E=Sophos;i="5.92,273,1650956400"; 
-   d="scan'208";a="349732046"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2022 04:24:54 -0700
-X-IronPort-AV: E=Sophos;i="5.92,273,1650956400"; 
-   d="scan'208";a="654298689"
-Received: from ahunter6-mobl1.ger.corp.intel.com (HELO [10.0.2.15]) ([10.252.52.80])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2022 04:24:50 -0700
-Message-ID: <13af7867-4a42-751c-e7b1-9af4e239c085@intel.com>
-Date:   Fri, 15 Jul 2022 14:24:47 +0300
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Firefox/91.0 Thunderbird/91.11.0
-Subject: Re: [PATCH] scsi: ufs: ufshcd: Read device property for ref clock
-Content-Language: en-US
-To:     Daniil Lunev <dlunev@chromium.org>,
-        Bart Van Assche <bvanassche@acm.org>
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        with ESMTP id S231563AbiGOMsQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Jul 2022 08:48:16 -0400
+Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46F897479E
+        for <linux-scsi@vger.kernel.org>; Fri, 15 Jul 2022 05:48:15 -0700 (PDT)
+Received: by mail-pj1-x102a.google.com with SMTP id p9so5558584pjd.3
+        for <linux-scsi@vger.kernel.org>; Fri, 15 Jul 2022 05:48:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=WobHjGnXEstvgY9WdzvQAd+zN5fEdHbmcar/6NVFvmg=;
+        b=CGnX2SotKISaTXX/p06h0MAF5ZCZ0iIvMuo3YLy6PMGAeaRm1xyMHrMbWOZkn+nUbN
+         4PA7evUzpLDzIavz/6M9ygc79bzabOHCcBrKX9YhW2vY0DL7w3aTBj1vWESoeR8rk5nC
+         Yk3WFs3hBq4LTpMWms8ZQOAtuLwtWKL4g5skI=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=WobHjGnXEstvgY9WdzvQAd+zN5fEdHbmcar/6NVFvmg=;
+        b=l5sWSjTQ2gWTVsRPtbW2/hezNXm2+kNsYSd982V8o6m4nEGIJC11nOnrxjJWSVdLzQ
+         pJM2/c8eh9nzTyMEGkjXjMCE/ZZeZNnZ6cQqoZVAxQr26gRZUZKb+HnMsDs8Y2pDR/Ga
+         c1w+tL0yXZ2lXFUsJ/hvB6FB/Vaa1RGOjnW0DsbxjIwsHedT7dGxZc3lz1uhW54/U0pM
+         Qk5Ca2OZXNUJpiWqiTa+DUkDHK/T+5uhU/Klr/TT3E6gMfxw+lEC9WUvhvojUQ+8pcl0
+         hKTi9j7BNJyYQcg56au1n+zweKF07roezW2fn09G5CfMdsnexQg2m2t+RWsm7dqv6Omg
+         Pn+g==
+X-Gm-Message-State: AJIora9m1DKQYwQI1BJwc+HFAOi+Uber+Inivy3TNheYOiDJja40p6VM
+        8DUaarpvTcD3cFf6ubfbhruH6Q==
+X-Google-Smtp-Source: AGRyM1uujm85L0CQUZcgqAYRbsZtc+sjUu6h8mrLFguMbPMHGLQstpqScMdP7AHPirNmcMiLV/A7zQ==
+X-Received: by 2002:a17:902:988b:b0:16b:fae3:fcd5 with SMTP id s11-20020a170902988b00b0016bfae3fcd5mr14026480plp.109.1657889294789;
+        Fri, 15 Jul 2022 05:48:14 -0700 (PDT)
+Received: from dlunevwfh.roam.corp.google.com (n122-107-196-14.sbr2.nsw.optusnet.com.au. [122.107.196.14])
+        by smtp.gmail.com with ESMTPSA id u16-20020a170903125000b001690d398401sm3530730plh.88.2022.07.15.05.48.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 15 Jul 2022 05:48:14 -0700 (PDT)
+From:   Daniil Lunev <dlunev@chromium.org>
+To:     Adrian Hunter <adrian.hunter@intel.com>
+Cc:     Daniil Lunev <dlunev@chromium.org>,
         Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
         Bean Huo <beanhuo@micron.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Jonathan Corbet <corbet@lwn.net>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Randy Dunlap <rdunlap@infradead.org>,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-References: <20220715210230.1.I365d113d275117dee8fd055ce4fc7e6aebd0bce9@changeid>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-In-Reply-To: <20220715210230.1.I365d113d275117dee8fd055ce4fc7e6aebd0bce9@changeid>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: [PATCH] scsi: ufs: ufs-pci: Correct check for RESET DSM
+Date:   Fri, 15 Jul 2022 22:48:07 +1000
+Message-Id: <20220715224722.1.I22460c4f4a9ccf2c96c3f9bb392b409926d80b2f@changeid>
+X-Mailer: git-send-email 2.31.0
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 15/07/22 14:03, Daniil Lunev wrote:
-> UFS storage devices require bRefClkFreq attribute to be set to operate
-> correctly at high speed mode. The necessary value is determined by what the
-> SoC / board supports. The standard doesn't specify a method to query the
-> value, so the information needs to be fed in separately.
-> 
-> DT information feeds into setting up the clock framework, so platforms
-> using DT can get the UFS reference clock frequency from the clock
-> framework. A special node "ref_clk" from the clock array for the UFS
-> controller node is used as the source for the information.
-> 
-> On the platforms that do not use DT (e.g. Intel), the alternative mechanism
-> to feed the intended reference clock frequency is necessary. Specifying the
-> necessary information in DSD of the UFS controller ACPI node is an
-> alternative mechanism proposed in this patch. Those can be accessed via
-> firmware property facility in the kernel and in many ways simillar to
-> querying properties defined in DT.
-> 
-> This patch introduces a small helper function to query a predetermined ACPI
-> supplied property of the UFS controller, and uses it to attempt retrieving
-> reference clock value, unless that was already done by the clock
-> infrastructure.
-> 
-> Signed-off-by: Daniil Lunev <dlunev@chromium.org>
+dsm_fns is a bitmap, and it is 0-indexed according to the check in
+__intel_dsm funciton. But common initialization was checking it as if it
+was 1-indexed. The CL corrects the discrepancy. This change won't break
+any existing calls to the function, since before the change both bits 0
+and 1 were checked and needed to be set.
 
-Reviewed-by: Adrian Hunter <adrian.hunter@intel.com>
+Signed-off-by: Daniil Lunev <dlunev@chromium.org>
 
-> 
-> ---
-> 
->  Documentation/scsi/ufs.rst | 15 +++++++++++++++
->  drivers/ufs/core/ufshcd.c  | 16 ++++++++++++++++
->  2 files changed, 31 insertions(+)
-> 
-> diff --git a/Documentation/scsi/ufs.rst b/Documentation/scsi/ufs.rst
-> index fbac745b783ce..885b1a736e3f3 100644
-> --- a/Documentation/scsi/ufs.rst
-> +++ b/Documentation/scsi/ufs.rst
-> @@ -17,6 +17,8 @@ Universal Flash Storage
->       3.2 UTP Transfer requests
->       3.3 UFS error handling
->       3.4 SCSI Error handling
-> +   4. BSG Support
-> +   5. UFS Reference Clock Frequency configuration
->  
->  
->  1. Overview
-> @@ -193,3 +195,16 @@ UFS specifications can be found at:
->  
->  - UFS - http://www.jedec.org/sites/default/files/docs/JESD220.pdf
->  - UFSHCI - http://www.jedec.org/sites/default/files/docs/JESD223.pdf
-> +
-> +5. UFS Reference Clock Frequency configuration
-> +==============================================
-> +
-> +Devicetree can define a clock named "ref_clk" under the UFS controller node
-> +to specify the intended reference clock frequency for the UFS storage
-> +parts. ACPI-based system can specify the frequency using ACPI
-> +Device-Specific Data property named "ref-clk-freq". In both ways the value
-> +is interpreted as frequency in Hz and must match one of the values given in
-> +the UFS specification. UFS subsystem will attempt to read the value when
-> +executing common controller initialization. If the value is available, UFS
-> +subsytem will ensure the bRefClkFreq attribute of the UFS storage device is
-> +set accordingly and will modify it if there is a mismatch.
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index ce86d1b790c05..78242f189f636 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -8536,6 +8536,19 @@ static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on)
->  	return ret;
->  }
->  
-> +static enum ufs_ref_clk_freq ufshcd_parse_ref_clk_property(struct ufs_hba *hba)
-> +{
-> +	u32 freq;
-> +	int ret = device_property_read_u32(hba->dev, "ref-clk-freq", &freq);
-> +
-> +	if (ret) {
-> +		dev_dbg(hba->dev, "Cannnot query 'ref-clk-freq' property = %d", ret);
-> +		return REF_CLK_FREQ_INVAL;
-> +	}
-> +
-> +	return ufs_get_bref_clk_from_hz(freq);
-> +}
-> +
->  static int ufshcd_init_clocks(struct ufs_hba *hba)
->  {
->  	int ret = 0;
-> @@ -8629,6 +8642,9 @@ static int ufshcd_hba_init(struct ufs_hba *hba)
->  	if (err)
->  		goto out_disable_hba_vreg;
->  
-> +	if (hba->dev_ref_clk_freq == REF_CLK_FREQ_INVAL)
-> +		hba->dev_ref_clk_freq = ufshcd_parse_ref_clk_property(hba);
-> +
->  	err = ufshcd_setup_clocks(hba, true);
->  	if (err)
->  		goto out_disable_hba_vreg;
+---
+
+ drivers/ufs/host/ufshcd-pci.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.c
+index 04166bda41daa..e54a49e64acad 100644
+--- a/drivers/ufs/host/ufshcd-pci.c
++++ b/drivers/ufs/host/ufshcd-pci.c
+@@ -20,6 +20,12 @@
+ #include <linux/acpi.h>
+ #include <linux/gpio/consumer.h>
+ 
++#define __INTEL_DSM_SUPPORTED(host, fn) \
++	((fn) < 32 && (fn) >= 0 && ((host)->dsm_fns & (1 << (fn))))
++
++#define INTEL_DSM_SUPPORTED(host, name) \
++	__INTEL_DSM_SUPPORTED(host, INTEL_DSM_##name)
++
+ struct ufs_host {
+ 	void (*late_init)(struct ufs_hba *hba);
+ };
+@@ -71,7 +77,7 @@ static int __intel_dsm(struct intel_host *intel_host, struct device *dev,
+ static int intel_dsm(struct intel_host *intel_host, struct device *dev,
+ 		     unsigned int fn, u32 *result)
+ {
+-	if (fn > 31 || !(intel_host->dsm_fns & (1 << fn)))
++	if (!__INTEL_DSM_SUPPORTED(intel_host, fn))
+ 		return -EOPNOTSUPP;
+ 
+ 	return __intel_dsm(intel_host, dev, fn, result);
+@@ -300,7 +306,7 @@ static int ufs_intel_device_reset(struct ufs_hba *hba)
+ {
+ 	struct intel_host *host = ufshcd_get_variant(hba);
+ 
+-	if (host->dsm_fns & INTEL_DSM_RESET) {
++	if (INTEL_DSM_SUPPORTED(host, RESET)) {
+ 		u32 result = 0;
+ 		int err;
+ 
+@@ -342,7 +348,7 @@ static int ufs_intel_common_init(struct ufs_hba *hba)
+ 		return -ENOMEM;
+ 	ufshcd_set_variant(hba, host);
+ 	intel_dsm_init(host, hba->dev);
+-	if (host->dsm_fns & INTEL_DSM_RESET) {
++	if (INTEL_DSM_SUPPORTED(host, RESET)) {
+ 		if (hba->vops->device_reset)
+ 			hba->caps |= UFSHCD_CAP_DEEPSLEEP;
+ 	} else {
+-- 
+2.31.0
 
