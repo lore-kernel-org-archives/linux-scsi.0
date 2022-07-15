@@ -2,56 +2,84 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9CC2C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Jul 2022 08:26:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74C4CC43334
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Jul 2022 09:16:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232187AbiGOI0u (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Jul 2022 04:26:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50750 "EHLO
+        id S231876AbiGOJQ0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Jul 2022 05:16:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33992 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229560AbiGOI0t (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Jul 2022 04:26:49 -0400
-X-Greylist: delayed 505 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 15 Jul 2022 01:26:49 PDT
-Received: from mail.connexion24.pl (mail.connexion24.pl [141.94.21.111])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 402497FE79
-        for <linux-scsi@vger.kernel.org>; Fri, 15 Jul 2022 01:26:48 -0700 (PDT)
-Received: by mail.connexion24.pl (Postfix, from userid 1002)
-        id 62DC6A6EA2; Fri, 15 Jul 2022 08:16:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=connexion24.pl;
-        s=mail; t=1657873014;
-        bh=ChRcLNpIfKnVgp03/tSyWuRw1tWSTk/OEiEnuZMWs58=;
-        h=Date:From:To:Subject:From;
-        b=kphGlVI7u7RTGSsC6ALO+Gr5u+eNareE2ngZCE0aPsn09l410td5uvJpeyZvvTAOA
-         GzrcmDM+iOAm8AjiGLCnj+BQYfAEaiKBdTW932TueWqB0Vn4AYCoPMiD7Gf9lchqbW
-         LKd1X+QyD7+WW1sBZ+SmHlD1lISa0ZhPdoL4Ok7kJoQzwZhsP+UBziA64Pw0kznhIB
-         f/njeVdDatso3IaizIlSvBu1XWvQpt/v2oacxuxpCELCFr0yGOappn9ihi7brwYKGQ
-         aNbib7dYTJluQ5G8xIXilgENno18fpluMNHOzHwZsqTK75fvVTitakdZNSjHBo9UAr
-         UagFQpa4mrArw==
-Received: by mail.connexion24.pl for <linux-scsi@vger.kernel.org>; Fri, 15 Jul 2022 08:16:12 GMT
-Message-ID: <20220715064500-0.1.4m.esn6.0.co9474hky4@connexion24.pl>
-Date:   Fri, 15 Jul 2022 08:16:12 GMT
-From:   "Norbert Karecki" <norbert.karecki@connexion24.pl>
-To:     <linux-scsi@vger.kernel.org>
-Subject: Wycena paneli fotowoltaicznych
-X-Mailer: mail.connexion24.pl
+        with ESMTP id S231807AbiGOJQK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Jul 2022 05:16:10 -0400
+Received: from m12-16.163.com (m12-16.163.com [220.181.12.16])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6313010578;
+        Fri, 15 Jul 2022 02:16:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=fyFNc
+        QNYCyFBpknjFCUUPQ3zekHBnb0d0LNY2pr0Pgc=; b=Q09WJ3SiHiFao93P6X8m5
+        nkYxsOr7YKw6XvreuIsA+PaHcLL8PIKGyH8rCYeuOPFuHuETcweNOGNv4Swj78sp
+        FJP8baTXIif/U5fUUUd+8P7tWm2yNwcuQBlWev2+halw/L1SF5C8rX9ocVAZlYpL
+        vwEImIvHoGiHOl+pQGmQUk=
+Received: from localhost.localdomain (unknown [111.48.58.12])
+        by smtp12 (Coremail) with SMTP id EMCowABnILoiMNFiUm9+Bw--.10365S2;
+        Fri, 15 Jul 2022 17:15:25 +0800 (CST)
+From:   Jiangshan Yi <13667453960@163.com>
+To:     martin.petersen@oracle.com, jejb@linux.ibm.com,
+        sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
+        suganath-prabu.subramani@broadcom.com
+Cc:     MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Jiangshan Yi <yijiangshan@kylinos.cn>,
+        k2ci <kernel-bot@kylinos.cn>
+Subject: [PATCH] scsi: mpt3sas: Fix spelling typo in comment
+Date:   Fri, 15 Jul 2022 17:15:03 +0800
+Message-Id: <20220715091503.1003482-1-13667453960@163.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: EMCowABnILoiMNFiUm9+Bw--.10365S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWrury7Jr47ZFy5Gry8uw13twb_yoW8JF1kpa
+        yqkF98AryDJr1UWr1UGryDZF17tw1rJrWUtr4jkw18tas8J34Dtr17Jr1UJ3WUtF4rt3ya
+        qr1DJryYga1UJFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jxmi_UUUUU=
+X-Originating-IP: [111.48.58.12]
+X-CM-SenderInfo: bprtllyxuvjmiwq6il2tof0z/1tbiVw4-+1etnrR7CAAAs+
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Dzie=C5=84 dobry,
+From: Jiangshan Yi <yijiangshan@kylinos.cn>
 
-dostrzegam mo=C5=BCliwo=C5=9B=C4=87 wsp=C3=B3=C5=82pracy z Pa=C5=84stwa f=
-irm=C4=85.
+Fix spelling typo in comment.
 
-=C5=9Awiadczymy kompleksow=C4=85 obs=C5=82ug=C4=99 inwestycji w fotowolta=
-ik=C4=99, kt=C3=B3ra obni=C5=BCa koszty energii elektrycznej nawet o 90%.
+Reported-by: k2ci <kernel-bot@kylinos.cn>
+Signed-off-by: Jiangshan Yi <yijiangshan@kylinos.cn>
+---
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Czy s=C4=85 Pa=C5=84stwo zainteresowani weryfikacj=C4=85 wst=C4=99pnych p=
-ropozycji?
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index 84c87c2c3e7e..d0b8db59ba30 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -3491,7 +3491,7 @@ host_trace_buffer_enable_store(struct device *cdev,
+ }
+ static DEVICE_ATTR_RW(host_trace_buffer_enable);
+ 
+-/*********** diagnostic trigger suppport *********************************/
++/*********** diagnostic trigger support *********************************/
+ 
+ /**
+  * diag_trigger_master_show - show the diag_trigger_master attribute
+@@ -3794,7 +3794,7 @@ diag_trigger_mpi_store(struct device *cdev,
+ 
+ static DEVICE_ATTR_RW(diag_trigger_mpi);
+ 
+-/*********** diagnostic trigger suppport *** END ****************************/
++/*********** diagnostic trigger support *** END ****************************/
+ 
+ /*****************************************/
+ 
+-- 
+2.25.1
 
-
-Pozdrawiam,
-Norbert Karecki
