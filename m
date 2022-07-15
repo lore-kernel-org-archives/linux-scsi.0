@@ -2,100 +2,192 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7586CCA47C
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Jul 2022 06:02:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AF79C43334
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Jul 2022 07:09:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230149AbiGOGCw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Jul 2022 02:02:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48514 "EHLO
+        id S231782AbiGOHJu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Jul 2022 03:09:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41390 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230119AbiGOGCi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Jul 2022 02:02:38 -0400
-Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5020F7A53F
-        for <linux-scsi@vger.kernel.org>; Thu, 14 Jul 2022 23:02:35 -0700 (PDT)
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 26EMB5Z7009903
-        for <linux-scsi@vger.kernel.org>; Thu, 14 Jul 2022 23:02:34 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-type; s=pfpt0220;
- bh=NCcU5ixjsW/8Aefo6/rDOEom1BBytsch+1NmNvKhxwg=;
- b=gN9ESHWCnazinFMIzTbAqWJhmgnzEgUvI+vOet02iV3zJwlQNy8h753EzoU2Q6EkWLaG
- CfQ2H5VZIKyRHaWZYOCIFBpDoXGWZ4v662zCQH6Du4LuKs+0ln9QUk920WQe+3/bDDMp
- T46rAiN9vIfgshvj2e3n+u7O5sIiVECKSm/GLn/8RAwgmGR6Q+oIzvZ30Po2k3ezHIQG
- WzpiSlXwJwGiSP/MuDMIRCx6Itjx4s5f01ZYxcbm11NX65ioPNsmTbGCyczHnMNxS0O4
- fPpMhln2xmVpmb5zAKHEaVWEDislNBQIMtJ6n6EWrAG/egwxDb4NejjBF+1PasHvnNcW yA== 
-Received: from dc5-exch01.marvell.com ([199.233.59.181])
-        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3h9udu8g1u-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Thu, 14 Jul 2022 23:02:34 -0700
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 14 Jul
- 2022 23:02:32 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 14 Jul 2022 23:02:32 -0700
-Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id 0246A3F7059;
-        Thu, 14 Jul 2022 23:02:31 -0700 (PDT)
-From:   Nilesh Javali <njavali@marvell.com>
-To:     <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>, <bhazarika@marvell.com>,
-        <agurumurthy@marvell.com>
-Subject: [PATCH 0/6] qla2xxx driver features
-Date:   Thu, 14 Jul 2022 23:02:21 -0700
-Message-ID: <20220715060227.23923-1-njavali@marvell.com>
-X-Mailer: git-send-email 2.12.0
+        with ESMTP id S231514AbiGOHJX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Jul 2022 03:09:23 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABF567969A
+        for <linux-scsi@vger.kernel.org>; Fri, 15 Jul 2022 00:08:30 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 33C78622F3
+        for <linux-scsi@vger.kernel.org>; Fri, 15 Jul 2022 07:08:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 871CAC341C6
+        for <linux-scsi@vger.kernel.org>; Fri, 15 Jul 2022 07:08:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1657868909;
+        bh=nuAEY6Efpx0qligEoEBi1llT7Jr97NGoHj8Gr3AA9KI=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=p3Trne5t9rG/fiWRAYoUI9QL4Pw2mTq5od+0zY4aUV7598ONFAYHh1csBs7UAeqnx
+         TCkhmYQUGl7sLLFXBt+SGNm0gSDjj4xg41Lk8DeiHORGMU+N3+/3kdhbygdW6XkHpz
+         BxN88+MCrC4lcY0Q1Y9N0nrL56nTa0e9ejkaZTz4ze11W5IRrWYRlSDO0yr021ULN2
+         ZDKWCbRh0zX3EYKHdOjDkNktrc6bMixRneAd8JEaBSU6LadLldoNn67yI2Q0I2w7jJ
+         RFAYQ5sXCKponXkq6U+8PKmXGZWDotYzPQL8OvLG0VJwYt3O7RqYaco2WFShAd9ckm
+         vJqES0Q/OYmDw==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 6D21DCC13B9; Fri, 15 Jul 2022 07:08:29 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 216232] mysterious block devices are shown under /dev folder
+Date:   Fri, 15 Jul 2022 07:08:29 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-qla2xxx@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: QLOGIC QLA2XXX
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: yshxxsjt715@gmail.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: scsi_drivers-qla2xxx@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-216232-11613-UK9uR0pRdp@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-216232-11613@https.bugzilla.kernel.org/>
+References: <bug-216232-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-GUID: -Z0Y67RrHkXXlm2ZWeZHqeWwLeYtwsnP
-X-Proofpoint-ORIG-GUID: -Z0Y67RrHkXXlm2ZWeZHqeWwLeYtwsnP
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
- definitions=2022-07-15_02,2022-07-14_01,2022-06-22_01
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Martin,
+https://bugzilla.kernel.org/show_bug.cgi?id=3D216232
 
-Please apply the qla2xxx driver features to the scsi tree
-at your earliest convenience.
+--- Comment #2 from jshen28 (yshxxsjt715@gmail.com) ---
+Hi, thank you very much for feedback,
 
-Thanks,
-Nilesh
+the lsscsi output is quite long so I just pick a small part of it. I put
+it in the attachment, please have a look. thank you.
 
-Anil Gurumurthy (1):
-  qla2xxx: Add NVMe parameters support in Auxiliary Image Status
-
-Arun Easi (4):
-  qla2xxx: Add debugfs create/delete helpers
-  qla2xxx: Add a generic tracing framework
-  qla2xxx: Add driver console messages tracing
-  qla2xxx: Add srb tracing
-
-Nilesh Javali (1):
-  qla2xxx: Update version to 10.02.07.900-k
-
- drivers/scsi/qla2xxx/qla_bsg.c     |   8 +-
- drivers/scsi/qla2xxx/qla_bsg.h     |   3 +-
- drivers/scsi/qla2xxx/qla_dbg.c     |  26 ++-
- drivers/scsi/qla2xxx/qla_dbg.h     | 286 +++++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_def.h     |  55 +++++-
- drivers/scsi/qla2xxx/qla_dfs.c     | 239 ++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_fw.h      |   3 +
- drivers/scsi/qla2xxx/qla_gbl.h     |   1 +
- drivers/scsi/qla2xxx/qla_init.c    |   8 +-
- drivers/scsi/qla2xxx/qla_inline.h  |  12 ++
- drivers/scsi/qla2xxx/qla_iocb.c    |   4 +
- drivers/scsi/qla2xxx/qla_isr.c     |   5 +
- drivers/scsi/qla2xxx/qla_os.c      |  35 ++++
- drivers/scsi/qla2xxx/qla_version.h |   4 +-
- 14 files changed, 675 insertions(+), 14 deletions(-)
+Best,
+Norman
 
 
-base-commit: f095c3cd1b694a73a5de276dae919f05a8dd1811
--- 
-2.19.0.rc0
 
+On Wed, Jul 13, 2022 at 5:09 PM <bugzilla-daemon@kernel.org> wrote:
+
+> https://bugzilla.kernel.org/show_bug.cgi?id=3D216232
+>
+> --- Comment #1 from Hannes Reinecke (hare@suse.de) ---
+> On 7/10/22 11:47, bugzilla-daemon@kernel.org wrote:
+> > https://bugzilla.kernel.org/show_bug.cgi?id=3D216232
+> >
+> >              Bug ID: 216232
+> >             Summary: mysterious block devices are shown under /dev fold=
+er
+> >             Product: SCSI Drivers
+> >             Version: 2.5
+> >      Kernel Version: 5.4.61
+> >            Hardware: All
+> >                  OS: Linux
+> >                Tree: Mainline
+> >              Status: NEW
+> >            Severity: normal
+> >            Priority: P1
+> >           Component: QLOGIC QLA2XXX
+> >            Assignee: scsi_drivers-qla2xxx@kernel-bugs.osdl.org
+> >            Reporter: yshxxsjt715@gmail.com
+> >          Regression: No
+> >
+> > we are using linux kernel 5.4.61 and fibre channel card is qlogic's
+> > ISP2722-based 16/32Gb adapter card.
+> >
+> > the problem is that we are seeing some devices with lun 768 with size of
+> 512B
+> > shown under /dev folder. In the syslog we saw something like
+> >
+> > Jul 10 17:00:08 hci01 kernel: [21675145.568997]
+> scsi_io_completion_action: 24
+> > callbacks suppressed
+> > Jul 10 17:00:08 hci01 kernel: [21675145.569005] sd 6:0:0:768: [sdau]
+> tag#1298
+> > FAILED Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
+> > Jul 10 17:00:08 hci01 kernel: [21675145.569011] sd 6:0:0:768: [sdau]
+> tag#1298
+> > Sense Key : Illegal Request [current]
+> > Jul 10 17:00:08 hci01 kernel: [21675145.569015] sd 6:0:0:768: [sdau]
+> tag#1298
+> > Add. Sense: Logical block address out of range
+> > Jul 10 17:00:08 hci01 kernel: [21675145.569019] sd 6:0:0:768: [sdau]
+> tag#1298
+> > CDB: Read(10) 28 00 00 00 00 00 00 00 01 00
+> > Jul 10 17:00:08 hci01 kernel: [21675145.569021] print_req_error: 24
+> callbacks
+> > suppressed
+> > Jul 10 17:00:08 hci01 kernel: [21675145.569025] blk_update_request:
+> critical
+> > target error, dev sdau, sector 0 op 0x0:(READ) flags 0x80700 phys_seg 1
+> prio
+> > class 0
+> > Jul 10 17:00:08 hci01 kernel: [21675145.601879] sd 6:0:0:768: [sdau]
+> tag#1299
+> > FAILED Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
+> > Jul 10 17:00:08 hci01 kernel: [21675145.601883] sd 6:0:0:768: [sdau]
+> tag#1299
+> > Sense Key : Illegal Request [current]
+> > Jul 10 17:00:08 hci01 kernel: [21675145.601886] sd 6:0:0:768: [sdau]
+> tag#1299
+> > Add. Sense: Logical block address out of range
+> > Jul 10 17:00:08 hci01 kernel: [21675145.601888] sd 6:0:0:768: [sdau]
+> tag#1299
+> > CDB: Read(10) 28 00 00 00 00 00 00 00 01 00
+> > Jul 10 17:00:08 hci01 kernel: [21675145.601891] blk_update_request:
+> critical
+> > target error, dev sdau, sector 0 op 0x0:(READ) flags 0x0 phys_seg 1 prio
+> > class
+> > 0
+> > Jul 10 17:00:08 hci01 kernel: [21675145.604213] buffer_io_error: 22
+> callbacks
+> > suppressed
+> > Jul 10 17:00:08 hci01 kernel: [21675145.604215] Buffer I/O error on dev
+> sdau,
+> > logical block 0, async page read
+> > Jul 10 17:00:08 hci01 kernel: [21675145.634149] sd 6:0:0:768: [sdau]
+> tag#1300
+> > FAILED Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
+> > Jul 10 17:00:08 hci01 kernel: [21675145.634152] sd 6:0:0:768: [sdau]
+> tag#1300
+> > Sense Key : Illegal Request [current]
+> > Jul 10 17:00:08 hci01 kernel: [21675145.634155] sd 6:0:0:768: [sdau]
+> tag#1300
+> > Add. Sense: Logical block address out of range
+> > Jul 10 17:00:08 hci01 kernel: [21675145.634158] sd 6:0:0:768: [sdau]
+> tag#1300
+> > CDB: Read(10) 28 00 00 00 00 00 00 00 01 00
+> >
+> > here, the lun id of 768 does not exist on SAN but when I try to manually
+> > delete
+> > it, after some seconds it still appears.
+> >
+>
+> This looks more like a configuration issue on the storage.
+> What is the output of 'lsscsi' on your system?
+>
+> Cheers,
+>
+> Hannes
+>
+> --
+> You may reply to this email to add a comment.
+>
+> You are receiving this mail because:
+> You reported the bug.
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
