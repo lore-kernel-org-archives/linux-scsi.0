@@ -2,90 +2,71 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 603EBC43334
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Jul 2022 18:44:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6852C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Jul 2022 20:08:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229956AbiGOSob (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Jul 2022 14:44:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59380 "EHLO
+        id S229659AbiGOUIn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Jul 2022 16:08:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35582 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229481AbiGOSob (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Jul 2022 14:44:31 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86F3F12750
-        for <linux-scsi@vger.kernel.org>; Fri, 15 Jul 2022 11:44:30 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 47A4CB82B4B
-        for <linux-scsi@vger.kernel.org>; Fri, 15 Jul 2022 18:44:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 070E1C341D5
-        for <linux-scsi@vger.kernel.org>; Fri, 15 Jul 2022 18:44:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1657910668;
-        bh=oxTOM9y9NhJuKToHE5gMxoA2dYJr6PWws0fpaKsL398=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=EACJ51dBQlkgK/AwY5E99yxpuPyQU+DdW3jL8T21T43NO2woYFybLEKZ+KmDAOTll
-         dIrOLpAKMIjj6Qk7Lcn7ObMcw9CXyTdMTHGJnh0J8nwJ3oXKLazqONjhFULc4p4rFO
-         gKFrnRf5Z0AtXxwlI+6rvEA835VrCrQj7PG1oX/1UhsCzrKE7EURMdZrW3kFXuqlHC
-         slOq8wdC6G5vIKBYnRbRkSvsI+SXycvXQXKWmYSB37kDMXPj1wTAluwBHHZ2qG5duT
-         iYX6DX4T4N0+ktX8eFGx/XQ/nhd/zW7Ob+OoH1JmcCYJP1wqC1lvFegr4j5zWp421n
-         bts5OCIZTVOLA==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id E98F4C05FD6; Fri, 15 Jul 2022 18:44:27 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 215880] Resume process hangs for 5-6 seconds starting sometime
- in 5.16
-Date:   Fri, 15 Jul 2022 18:44:27 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: Other
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: nilsdev@cocosmail.de
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: cc
-Message-ID: <bug-215880-11613-ekhArT7YgV@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-215880-11613@https.bugzilla.kernel.org/>
-References: <bug-215880-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        with ESMTP id S229546AbiGOUIl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Jul 2022 16:08:41 -0400
+Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B143AC00;
+        Fri, 15 Jul 2022 13:08:38 -0700 (PDT)
+Received: by mail-pf1-f169.google.com with SMTP id c3so4605367pfb.13;
+        Fri, 15 Jul 2022 13:08:38 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=AGRZfVbKDyiQzk8+TdTbG4aad4bbLhDSN7hz43+l7UE=;
+        b=6VSn9b4XyN/748PnJMPGFxSgeNv9MS0dm1j9YujQPAD85ufiaC8n3Z80A54EqHH23E
+         RBcAgUzoKZJyFipGetDEo1jmd9dn3L39OWGEURsq8SVpK9xzi+8lhvKDzeK0HWl6ED7i
+         eOyWIFx/jfU+jkDOxwtQgmpOj/3ddFFv0IOM2W2L9JzStf6IFNhkTTyQXgGiMDkNduOl
+         YPcm0yvHmIM12HjYNvl41xZ45SzdxMJ+/83StjKcuCWXSQQ0DsDsb14WRCEThIgEi6bc
+         9ZK4kF5LePrK4FJ3n+avFt/j9HLHEveFoYLc8hgY4b7zBDESI1xpqIQ3Bqea8bxRUvYn
+         n53Q==
+X-Gm-Message-State: AJIora/Fb3QeCR1J5w5wdR1tOvInqW0PuISi0rz2YpfWfoxpDCtnyR8G
+        wPMZH4q/83yezB3uAWWQwZo=
+X-Google-Smtp-Source: AGRyM1umbLYdghMK69WLQdua9gp4AenAs12BsoE/LQ+UvaPgrJJj8RSEf0Q+O/f+S//qWq3+xnEATw==
+X-Received: by 2002:a63:4d4f:0:b0:412:a02e:2896 with SMTP id n15-20020a634d4f000000b00412a02e2896mr13996580pgl.337.1657915718110;
+        Fri, 15 Jul 2022 13:08:38 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:276e:f777:f438:e01d? ([2620:15c:211:201:276e:f777:f438:e01d])
+        by smtp.gmail.com with ESMTPSA id x1-20020a170902a38100b0015ee60ef65bsm3978634pla.260.2022.07.15.13.08.36
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 15 Jul 2022 13:08:37 -0700 (PDT)
+Message-ID: <8919f85e-41d3-1fff-962a-9972064307d3@acm.org>
+Date:   Fri, 15 Jul 2022 13:08:35 -0700
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+Subject: Re: [PATCH] scsi: ufs: ufs-pci: Correct check for RESET DSM
+Content-Language: en-US
+To:     Daniil Lunev <dlunev@chromium.org>,
+        Adrian Hunter <adrian.hunter@intel.com>
+Cc:     Avri Altman <avri.altman@wdc.com>, Bean Huo <beanhuo@micron.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+References: <20220715224722.1.I22460c4f4a9ccf2c96c3f9bb392b409926d80b2f@changeid>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20220715224722.1.I22460c4f4a9ccf2c96c3f9bb392b409926d80b2f@changeid>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D215880
+On 7/15/22 05:48, Daniil Lunev wrote:
+> +#define __INTEL_DSM_SUPPORTED(host, fn) \
+> +	((fn) < 32 && (fn) >= 0 && ((host)->dsm_fns & (1 << (fn))))
 
-Nils (nilsdev@cocosmail.de) changed:
+Could this macro have been implemented as a function?
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |nilsdev@cocosmail.de
+Should '1 << (fn)' perhaps be changed into '1u << (fn)'?
 
---- Comment #28 from Nils (nilsdev@cocosmail.de) ---
-Possibly related:
+Thanks,
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D216087
-
-"Only Toshiba MG08/MG09 SATA hard disks disappear after resume from S3 susp=
-end
-(reproducible) - AMD Ryzen 5 PRO 4650G"
-
-on an X570 board (0x7901).
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+Bart.
