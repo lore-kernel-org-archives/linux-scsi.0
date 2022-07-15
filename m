@@ -2,73 +2,95 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3013C43334
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Jul 2022 07:18:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 089D7C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Jul 2022 07:32:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229758AbiGOHSq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Jul 2022 03:18:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52050 "EHLO
+        id S231967AbiGOHch (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Jul 2022 03:32:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34774 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229468AbiGOHSo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Jul 2022 03:18:44 -0400
-Received: from m12-17.163.com (m12-17.163.com [220.181.12.17])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B0D7A21BF;
-        Fri, 15 Jul 2022 00:18:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=pFPdW
-        o32C2z4BES280q0lcpi6YS7wb8DqIA3+9MA7bw=; b=lM0puH4U77kj0j1nVwAcg
-        Uu6BSMDLAeFgOaxmnIwKGL5q2XPGA3NoELxVNtyEVYpuYzJ6PL7qzB5JB8D4mJ43
-        RzkW1l2+t+sn5+UlU7xZi8f/DTFMKpXx7XblX1/gYVwd0nfdxh3QNBW6+5PQCsLS
-        akTPKhJQArz9NzfrjqwXJE=
-Received: from localhost.localdomain (unknown [111.48.58.12])
-        by smtp13 (Coremail) with SMTP id EcCowAAH446qFNFiWHS8Ng--.38475S2;
-        Fri, 15 Jul 2022 15:18:03 +0800 (CST)
-From:   Jiangshan Yi <13667453960@163.com>
-To:     martin.petersen@oracle.com, jejb@linux.ibm.com,
-        njavali@marvell.com, GR-QLogic-Storage-Upstream@marvell.com
+        with ESMTP id S231915AbiGOHcg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Jul 2022 03:32:36 -0400
+Received: from mail-pg1-x52a.google.com (mail-pg1-x52a.google.com [IPv6:2607:f8b0:4864:20::52a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F19E97B791;
+        Fri, 15 Jul 2022 00:32:35 -0700 (PDT)
+Received: by mail-pg1-x52a.google.com with SMTP id q16so603271pgq.6;
+        Fri, 15 Jul 2022 00:32:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=Xhkyx9F8tVf/d1N3ebELfQNQ/kZk1tVV6FgOJJw40IY=;
+        b=C1hnfgNGaErmtt8GJW4mRcledeMDc+BKsT3jL2oNeLMSsXPO9Pc/31a/WFaNbmzdxt
+         lh2PyHvYO3Wnu77HG+VBTx5EvsI4jT3kKgzswpLCjfogL7GGYgvop/AFV0NKrth0fW1P
+         xFAmy2b2Tu455xd0ThMFark18woIImv+t7IRqdF2A2oquqj6XAXNwGheB8lExuPSbKn4
+         Er0BhTIk2CTvqJjq4tL5KG6yBejfxigoarArap/QcE/AeRAbfLRupqdEuA/Vm3sO2nd+
+         qe3LK6Dazmn3ZHuv2vOZZnUw0ScN58s+SaDqJu7p1REYYuemCUmRjlNyEN2sYPCF1Ykk
+         u+vg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=Xhkyx9F8tVf/d1N3ebELfQNQ/kZk1tVV6FgOJJw40IY=;
+        b=nWdRuND1Hy+cuNOTzxqzH+3QADC3fb0N44J0yj/f1QUQMovgLNCWyPG/wWFMqe47Bh
+         aXHikPAQBCub7V+wCGFTk/KQdhCB8g4V7hycVoJh4gDz48FW3sZB/cosJ/0YMtdFD6QT
+         OjT/w82o7KRTq0jS237Fh+qk8s9KFSqXy2P+C3CdvtmL+IK2egx9kNkWKyL327454kVM
+         03HzjWfM6LqXRaenEDhv090myS917inw2MMPBGIR0EOKCpXGjoCS+BO7z1TP2SfBwQ8d
+         HdK0kbjf6V2gC8SV0nmqH6QH86Uge9vhn9vnCgQbJMeoFOpylnbi9rzznwt0z5J+EInh
+         3Z4A==
+X-Gm-Message-State: AJIora+UYo9faBWFWUGVi5ndNsmqiYx7sPm0R4fery9MUQx5GCczoZla
+        ddXm3/lRxVYt0UFSlGSroaArY8QqkDkn
+X-Google-Smtp-Source: AGRyM1trd/AxNasvP2q/f2x8cI3MIE1OGA5Psan5P6i+mPcJOPVGahunHQYMVrrkmpDNNOpDgC4cYQ==
+X-Received: by 2002:aa7:88cc:0:b0:51c:319e:772c with SMTP id k12-20020aa788cc000000b0051c319e772cmr12431831pff.41.1657870355444;
+        Fri, 15 Jul 2022 00:32:35 -0700 (PDT)
+Received: from localhost.localdomain ([144.202.91.207])
+        by smtp.gmail.com with ESMTPSA id x14-20020aa79ace000000b0052ad49292f0sm2962590pfp.48.2022.07.15.00.32.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 15 Jul 2022 00:32:35 -0700 (PDT)
+From:   Zheyu Ma <zheyuma97@gmail.com>
+To:     jinpu.wang@cloud.ionos.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jiangshan Yi <yijiangshan@kylinos.cn>,
-        k2ci <kernel-bot@kylinos.cn>
-Subject: [PATCH] scsi: qla2xxx: Fix spelling typo in comment
-Date:   Fri, 15 Jul 2022 15:17:35 +0800
-Message-Id: <20220715071735.856293-1-13667453960@163.com>
+        Zheyu Ma <zheyuma97@gmail.com>
+Subject: [PATCH] scsi: pm8001: Fix the warning when failing at the probe time
+Date:   Fri, 15 Jul 2022 15:32:21 +0800
+Message-Id: <20220715073221.3364198-1-zheyuma97@gmail.com>
 X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: EcCowAAH446qFNFiWHS8Ng--.38475S2
-X-Coremail-Antispam: 1Uf129KBjvdXoWrury7Jr47ZFy5Gw15KFyxuFg_yoWfXFb_uF
-        WYq3yIgry5CF4S9w18Zr4avr1IvFZ5Wr18Aw1FvrW3Aw43Z3ZrJrn0qrWava47K3yIyFZ8
-        Zw48XrWYyr1UWjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IU0siSJUUUUU==
-X-Originating-IP: [111.48.58.12]
-X-CM-SenderInfo: bprtllyxuvjmiwq6il2tof0z/1tbivgs-+1ZceGPAggAAsi
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Jiangshan Yi <yijiangshan@kylinos.cn>
+When the driver fails at chip_init(), we will get the following warning:
 
-Fix spelling typo in comment.
+[    7.778705] remove_proc_entry: removing non-empty directory 'irq/21', leaking at least 'pm80xx0'
+[    7.779414] WARNING: CPU: 0 PID: 290 at fs/proc/generic.c:720 remove_proc_entry+0x389/0x3f0
+[    7.782793] RIP: 0010:remove_proc_entry+0x389/0x3f0
+[    7.790813] Call Trace:
+[    7.791284]  unregister_irq_proc+0x14c/0x170
+[    7.793043]  pci_disable_device+0x1ad/0x380
+[    7.793396]  pm8001_pci_probe+0x6d9/0xd40 [pm80xx]
 
-Reported-by: k2ci <kernel-bot@kylinos.cn>
-Signed-off-by: Jiangshan Yi <yijiangshan@kylinos.cn>
+Fix this by free the irq before disabling the pci device.
+
+Signed-off-by: Zheyu Ma <zheyuma97@gmail.com>
 ---
- drivers/scsi/qla2xxx/qla_init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/pm8001/pm8001_init.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 3f3417a3e891..b8a9f923fb32 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -6661,7 +6661,7 @@ qla2x00_loop_resync(scsi_qla_host_t *vha)
- * Description: This function will set the appropriate flags and call
- *              qla2x00_loop_resync. If successful loop will be resynced
- * Arguments : scsi_qla_host_t pointer
--* returm    : Success or Failure
-+* return    : Success or Failure
- */
- 
- int qla2x00_perform_loop_resync(scsi_qla_host_t *ha)
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+index 9b04f1a6a67d..71ade184ee6f 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -1159,6 +1159,7 @@ static int pm8001_pci_probe(struct pci_dev *pdev,
+ err_out_shost:
+ 	scsi_remove_host(pm8001_ha->shost);
+ err_out_ha_free:
++	free_irq(pm8001_ha->irq, sha);
+ 	pm8001_free(pm8001_ha);
+ err_out_free:
+ 	kfree(sha);
 -- 
 2.25.1
 
