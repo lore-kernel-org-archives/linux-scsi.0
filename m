@@ -2,70 +2,60 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC17AC433EF
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Jul 2022 08:55:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA462C43334
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Jul 2022 10:11:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230035AbiGPIzF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 16 Jul 2022 04:55:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35974 "EHLO
+        id S231530AbiGPKLV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 16 Jul 2022 06:11:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52534 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229779AbiGPIzF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 16 Jul 2022 04:55:05 -0400
-Received: from mail-lj1-x233.google.com (mail-lj1-x233.google.com [IPv6:2a00:1450:4864:20::233])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C36AB7F4
-        for <linux-scsi@vger.kernel.org>; Sat, 16 Jul 2022 01:55:04 -0700 (PDT)
-Received: by mail-lj1-x233.google.com with SMTP id w2so8007671ljj.7
-        for <linux-scsi@vger.kernel.org>; Sat, 16 Jul 2022 01:55:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=l9ZsNmk05iN6+VFZiJW7mW59na0Inh9htV4AahkyW44=;
-        b=O6qTrNcYhgnYbToVlL95VE7ydGM3aYH/qK5DntO31xYbOHRp+QGMSSePhRDEMF8seF
-         1oWhGvdv7UvPx2bqn2SbAHqO5RQpVbdN2qSNnx1uaVo0KP/good24OlENUMY5ursivvm
-         Si9geZC7A05vxFW5CUBEI+Yrsdo/DkfKq/pbgJZJmzcZrs23aY3jGm2+Lp8NyD4EKjPJ
-         TFMqWCQefjoDWdFjrD9R8GwnDQxAOLaVUEaSRwCeApDbrpzdVfvFuI9hy5B7OHk5D1Jm
-         KH4hTz4CbY94hEc740GjeZ50aB0nCwham1NGN1M+LZyuderV9IDPeOx52rFQ1pPnssZs
-         DUyg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=l9ZsNmk05iN6+VFZiJW7mW59na0Inh9htV4AahkyW44=;
-        b=sMgBU38gHNs5w3kdeXg0u0JL1+puFOMghCB8Kyw41yo8ZQc1ZbmrSsbT4A/CXSo/A7
-         04txDURHzWgH73aENlCJX7ln5MTFckOhlhIE8CCf8lQdNr9Sz/Ef+znaki9iKnpwPQrz
-         8Jr11R4nqykDrnU+KOECbq99oanW9x4AvKPS02W9/I9JE28DxRe6RuBh34K5Zb8xP+hm
-         dwovF8Piee2nfwsjc8rycECmAXZs+o3VBAh6K4YDSPN5t9dOARVzcurbpR0JGSId8NFZ
-         ldqb1cx+XiMApXqHmFMIrTPxSHFrVhixz2/4PB9YS0g/jCpA5ANoVM9mFjNikOKww01o
-         ZcrQ==
-X-Gm-Message-State: AJIora8WZ5aLrqXyRyUfLWvkV6aPwOQzBezQFMMnFFzJGPECt7OkBukS
-        UT5h53w3Uqn0ZGYqRTAAmWzRhNCoAhnjkxAa2Tt2g5ftCA==
-X-Google-Smtp-Source: AGRyM1vOd3Hs1lrY7dgjKv2uCApIomptmRLtaW/ok/cyT6hlEki/DlTq1v2AWZpBrNvC07zziO1BeZgICzEw0pJMuYg=
-X-Received: by 2002:a2e:9109:0:b0:25d:66fe:eda5 with SMTP id
- m9-20020a2e9109000000b0025d66feeda5mr8308424ljg.385.1657961702324; Sat, 16
- Jul 2022 01:55:02 -0700 (PDT)
+        with ESMTP id S229540AbiGPKLV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 16 Jul 2022 06:11:21 -0400
+Received: from mout.kundenserver.de (mout.kundenserver.de [212.227.17.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B7E71D0CA
+        for <linux-scsi@vger.kernel.org>; Sat, 16 Jul 2022 03:11:18 -0700 (PDT)
+Received: from localhost ([82.165.81.187]) by mrelayeu.kundenserver.de
+ (mreue109 [213.165.67.113]) with ESMTPSA (Nemesis) id
+ 1N7Qp1-1nTnxY1qc1-017oqE for <linux-scsi@vger.kernel.org>; Sat, 16 Jul 2022
+ 12:11:17 +0200
+To:     linux-scsi@vger.kernel.org
+Subject: =?utf-8?B?QmVudXR6ZXItS29udG9pbmZvcm1hdGlvbmVuIGbDvHIg0JQ=?=  =?utf-8?B?0L7QsdGA0YvQuSDQtNC10L3RjCEg0J3QsNC/0L7QvNC40L3QsNC10Lwg0L4g?=  =?utf-8?B?0JLQsNGI0LXQvCDQstGL0LjQs9GA0YvRiNC90L7QvCDQsdC40LvQtdGC0LUg?=  =?utf-8?B?0JPQvtGB0JvQvtGC0L4hINCf0L7Qu9GD0YfQuNGC0LUg0LLRi9C40LPRgNGL?=  =?utf-8?B?0Yg6IGh0dHBzOi8vdGlueXVybC5jb20vMmRhenh0cHYgYg==?=  =?utf-8?B?ZWkgVW50ZXJuZWhtZW5zLVdlYnNpdGU=?=
+Date:   Sat, 16 Jul 2022 12:11:17 +0200
+From:   Unternehmens-Website <braukhoff@gmx.de>
+Message-ID: <84646098662c2896dc71bee5d0e56375@braukhoff.eu>
+X-Mailer: PHPMailer 5.2.14 (https://github.com/PHPMailer/PHPMailer)
 MIME-Version: 1.0
-References: <20220715212515.347664-1-bvanassche@acm.org> <20220715212515.347664-2-bvanassche@acm.org>
-In-Reply-To: <20220715212515.347664-2-bvanassche@acm.org>
-From:   Stanley Chu <chu.stanley@gmail.com>
-Date:   Sat, 16 Jul 2022 16:54:50 +0800
-Message-ID: <CAGaU9a9J7FBvLK+TKt2qPmVu1NRsT2bVOAaTWtHiym1O0se47g@mail.gmail.com>
-Subject: Re: [PATCH v2 1/5] scsi: ufs: Reduce the clock scaling latency
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+X-Provags-ID: V03:K1:VjHmxtEJCejiUYy51dlU/5heU4ga2gaCK5Z4/hIvrlpZOXWxNAT
+ C3jubXU/hCZzPQXo11VLskcs+DL2DEZ2TQkDC9qbnvHKzFOcxlOueTsVlOUUZlkmwiu3noa
+ dq5puz1cSd3ZTI+A0fHT/6E7kF/A5QzpA5VTxH52zfixOEnLazMVy5bKkjoCUOL0IA3THyx
+ /PmRe5TSWHnKr7A0n7p7w==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:8OQS7rfgz+g=:xs6KzWjRlMnXtwAna0E+ES
+ z6c3ETWECYwogaZpr9tJ0xMf8o0xyEn6F3RuhUjdNkNKpxaUuF3uoMY39UXPSxe4UAGR0Ec5R
+ /cEImEFbFGI4snDTptNeiVSLa9KxCATXARTY2QFtv/NTkhBDxPN7N3uJ1iSaMfS49X5JjhEh0
+ U7Q9WIybs5pRZPES6/G4AoXsNc5jkYbC2KQaXd/X3foem1mlo0D4CRfAXI8w8XGn+rtBNqQ0I
+ SD+V/uhUOzUGdaJSmvnjbvTgB5xt2cSNFfafGqpi7BoGKrhHGqxGtuLaF7T8yQIQQBna5HwoL
+ mROfKfoSgzJQo1psXGnTwEa9niEPaiRC+4mwv2LpMOc2DQqgl+zdsVabygipSbmRTtIZrLW/M
+ lT1l4bVuKpLSc1NFpqwcPbt/dOl3tAoafrFkX0XmX9zZaF4kLXODwnkZCKu3n/BQ7TupE57zk
+ pht9vkdzuBvlciQixcgTmaYmmyHuFjV/KagGBX38zW5zIHXtmLd72DsGS8FA/o+dlJH7H0kTu
+ EbzdTbVkKuZiKZbiXFkvJ90iGzeB+BHhTEOc2jL74sXclPGmMLYzzL37+m4fXGNLuwWkKsp87
+ ncIKEhuIGdco2LMgLKatgkeMalIP0wSUjZtSNK1Jn4VC/Fsebbz74i9QbmSN39M18WHiHw/ye
+ JWp5eAmnU/aR2UGPdYYQ+4YuvSmVvF89NENkUd10i9FGlkOfHwvsIGJWrweF29v38ZPGtLvWQ
+ EMJvCdo8yzLJ5TTCUQue5jZwiNpO7Y+BIbQTqh55+VV06Xw9+MMvhLcPp0U=
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Jul 16, 2022 at 5:27 AM Bart Van Assche <bvanassche@acm.org> wrote:
->
-> Wait at most 20 ms before rechecking the doorbells instead of waiting
-> for a potentially long time between doorbell checks.
+Hallo Добрый день! Напоминаем о Вашем выигрышном билете ГосЛото! Получите выигрыш: https://tinyurl.com/2dazxtpv,
 
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+vielen Dank für die Registrierung bei Unternehmens-Website. Das Benutzerkonto wurde angelegt und muss zur Verwendung noch verifiziert werden.
+Um dieses zu tun, genügt ein Klick auf den folgenden Link oder der Link kann auch aus dieser Nachricht kopiert und in den Webbrowser eingefügt werden:
+http://braukhoff.eu/index.php/component/users/?task=registration.activate&token=b5c85e698e913cf72818ad36d980527b
+
+Nach der Verifizierung wird der Administrator über die ausstehende Aktivierung des Benutzerkontos informiert. Sobald das Benutzerkonto aktiviert wurde wird eine Bestätigungsmail verschickt.
+Nach der Aktivierung ist eine Anmeldung bei http://braukhoff.eu/ mit dem folgenden Benutzernamen und Passwort möglich:
+
+Benutzername: franacoschtig1973
+Passwort: V8NTqm4nad
+
