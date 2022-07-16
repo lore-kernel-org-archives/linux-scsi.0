@@ -2,78 +2,81 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 326BBC43334
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Jul 2022 13:47:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D5D0C43334
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Jul 2022 13:50:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229732AbiGPNry (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 16 Jul 2022 09:47:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50384 "EHLO
+        id S229987AbiGPNuM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 16 Jul 2022 09:50:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52212 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229457AbiGPNrw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 16 Jul 2022 09:47:52 -0400
+        with ESMTP id S229457AbiGPNuL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 16 Jul 2022 09:50:11 -0400
 Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA24B1C123;
-        Sat, 16 Jul 2022 06:47:51 -0700 (PDT)
-Received: by mail-pj1-f50.google.com with SMTP id t5-20020a17090a6a0500b001ef965b262eso8558304pjj.5;
-        Sat, 16 Jul 2022 06:47:51 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0474B12AE6
+        for <linux-scsi@vger.kernel.org>; Sat, 16 Jul 2022 06:50:11 -0700 (PDT)
+Received: by mail-pj1-f50.google.com with SMTP id s21so7929799pjq.4
+        for <linux-scsi@vger.kernel.org>; Sat, 16 Jul 2022 06:50:10 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
+         :content-language:to:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=HZJ/936nVqNWje7AIbkFDRvOjSNDHlER+myfiO44S5s=;
-        b=D6b9doYjkv94W8YOnJAPRfaEoUWUUW2uE9kQqPwmdq9bHnfez7V8hDYfN0JzQXsnKv
-         wTbNy//plC211hv8OImXVplpbReLM6Gq8mg5Icp2PMXhDO1h2f46aoiWWvV68nA5Fz9p
-         cWar/D8PeVix1tU32xuuZ+Q/WF8U9oGtPvRhygGR/73voln9P9cvva5bsSuFX17OTHI5
-         Q5n7aSx+XvVFlO/IKjQJjsODCdafEO4kDeeI42SizNRYZGBX0cJBCtCXggKXxaYE6I5C
-         on5KGf11l5gZM8TgMzZl6lemwUdfBQOLRIdKT83Pf/g/OTGg6cijpbNa7a3U2kpc7VqH
-         vmxg==
-X-Gm-Message-State: AJIora9m5bWU+45A8SZEpNcFsCTf4l0+BYHjLLdtlXSp6GNYeQ7R/51s
-        M9ryh0KCo6IWT2LHxKYi4yQ=
-X-Google-Smtp-Source: AGRyM1ueVGzx1JynMTAYjgBHKqo/W3Dc8DGsBZh608L+B1fV9sFh9pj881mXq63v7ewB2+2lhjYW6A==
-X-Received: by 2002:a17:90b:3e84:b0:1f0:3f92:8c91 with SMTP id rj4-20020a17090b3e8400b001f03f928c91mr28827478pjb.112.1657979271310;
-        Sat, 16 Jul 2022 06:47:51 -0700 (PDT)
+        bh=N8MPswfJTmjIdqPIAuEOmZ+nQprx1kxikV2FQ8K3TjY=;
+        b=fkDX/PAXRkOTQx7PfRWBB5xdhL+1G3Ow0AG3COUAnNxR1N4kGWzhFJb53jbhyt43hW
+         N4aKBKYmvne0ninyTWAfAZfWV7z/XTQGoa8q+7fHEwolTACQX8FFIoyfzqPpVNv5VJHA
+         nNTR1FCmzlOLzyQBakS4zYfkkT971YtSukXXBkeWYsPKuveYorcWWiWlV5szxedcnsOQ
+         8OLWEJTQ4t/SO31A/nNqLS2Tdh/4rOImVhyb8Kwjr/zaLDkQwD/zuaIVLHUXfvw9tm8/
+         QEAxitAMrZnSEwp5u1HlClaQeDPvWP+yK6PMt4MBlJmc271EhItW1oGG6pnkvRG4Sw4r
+         yE3Q==
+X-Gm-Message-State: AJIora9lZAUffB8mNfEWQ4AMY5sl7aGBXL4QS8Jpa1pPKXPquOxIJ9mS
+        9x9MErrGywbKUFCU+PqgbkgmfyxZ7RE=
+X-Google-Smtp-Source: AGRyM1sfZu7jPT40VWFky/CFppXUpKskeMcRD96XaMEgFxw51nd5ZmEbnRiiy8RzBN1f0YpKk09d2w==
+X-Received: by 2002:a17:902:9307:b0:166:41a8:abc0 with SMTP id bc7-20020a170902930700b0016641a8abc0mr19082578plb.135.1657979410440;
+        Sat, 16 Jul 2022 06:50:10 -0700 (PDT)
 Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id c12-20020a170902c2cc00b0016bff65d5cbsm5551489pla.194.2022.07.16.06.47.49
+        by smtp.gmail.com with ESMTPSA id d8-20020a170902654800b0016c6e360ff2sm5548762pln.132.2022.07.16.06.50.09
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 16 Jul 2022 06:47:50 -0700 (PDT)
-Message-ID: <434e296f-dc7f-2a65-e7db-643e89e492e0@acm.org>
-Date:   Sat, 16 Jul 2022 06:47:48 -0700
+        Sat, 16 Jul 2022 06:50:09 -0700 (PDT)
+Message-ID: <0209504a-fdd5-5987-4772-dfb14c6ceafc@acm.org>
+Date:   Sat, 16 Jul 2022 06:50:08 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.11.0
-Subject: Re: [PATCH] scsi: qla2xxx: Fix spelling typo in comment
+Subject: Re: [PATCH v2] ufs: host: ufschd-pltfrm: Hold reference returned by
+ of_parse_phandle()
 Content-Language: en-US
-To:     Jiangshan Yi <13667453960@163.com>, martin.petersen@oracle.com,
-        jejb@linux.ibm.com, njavali@marvell.com,
-        GR-QLogic-Storage-Upstream@marvell.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jiangshan Yi <yijiangshan@kylinos.cn>,
-        k2ci <kernel-bot@kylinos.cn>
-References: <20220715071735.856293-1-13667453960@163.com>
+To:     Liang He <windhl@126.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+References: <20220715001703.389981-1-windhl@126.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220715071735.856293-1-13667453960@163.com>
+In-Reply-To: <20220715001703.389981-1-windhl@126.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/15/22 00:17, Jiangshan Yi wrote:
-> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-> index 3f3417a3e891..b8a9f923fb32 100644
-> --- a/drivers/scsi/qla2xxx/qla_init.c
-> +++ b/drivers/scsi/qla2xxx/qla_init.c
-> @@ -6661,7 +6661,7 @@ qla2x00_loop_resync(scsi_qla_host_t *vha)
->   * Description: This function will set the appropriate flags and call
->   *              qla2x00_loop_resync. If successful loop will be resynced
->   * Arguments : scsi_qla_host_t pointer
-> -* returm    : Success or Failure
-> +* return    : Success or Failure
->   */
+On 7/14/22 17:17, Liang He wrote:
+> +static bool phandle_exists(const struct device_node *np,
+> +						const char *phandle_name,
+> +						int index)
 
-Please convert the entire function header into kernel-doc format instead 
-of only fixing the spelling error shown above.
+Indentation of the arguments now looks really odd :-(
+
+> +{
+> +	struct device_node *parse_np = of_parse_phandle(np, phandle_name, index);
+> +	bool ret = false;
+> +
+> +	if (parse_np) {
+> +		ret = true;
+> +		of_node_put(parse_np);
+> +	}
+> +
+> +	return ret;
+> +}
+
+The 'ret' variable is not necessary. If "return ret" is changed into 
+"return parse_np" then the variable 'ret' can be left out.
 
 Thanks,
 
