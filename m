@@ -2,107 +2,85 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A85A5C43334
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jul 2022 13:11:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29397C43334
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jul 2022 13:59:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235493AbiGRNLB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Jul 2022 09:11:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35686 "EHLO
+        id S235661AbiGRN73 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Jul 2022 09:59:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56708 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233722AbiGRNK6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jul 2022 09:10:58 -0400
-Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 932631D30A
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2022 06:10:57 -0700 (PDT)
-Received: by mail-pj1-x1030.google.com with SMTP id s21so11666978pjq.4
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2022 06:10:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition;
-        bh=ph3uhCHYF3MS80ng/XwPYbh3jLpt+WFtffo9ialWLL0=;
-        b=qZdO0gx1Vx4/26BGyrlGwdB1mGleX8HFGCkBPMmqflqyVphiIZQCDX735lMm5k+DGq
-         UBpSVaHc5ZF8C09JU0V/chW7EXHYMf2BXcSY9YpIhEdNRVm8jd9scq00e/MDsFhMQuUt
-         PnliKU3/94L1zW/TgWOcg44PaHpFe7j8QisR672OiVtYk8jT0aBI+T7SNSm9WwUIDhyj
-         FmY/93qdinqcY0xvLMIIDAeJf6cxb2UIIJsA+qxPzrl4Z2U6HaPz6hu6WfpskW5AJyrG
-         GM+hmGlKXYTbLSKt/dmcTlmBYeD6lJ2wYb08FctwSjJIYAAvf7AMcb2eISE9IBsvL78w
-         SZnw==
+        with ESMTP id S234666AbiGRN72 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jul 2022 09:59:28 -0400
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 447661D325
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2022 06:59:28 -0700 (PDT)
+Received: by mail-pl1-f182.google.com with SMTP id k19so9080466pll.5
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2022 06:59:28 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
-         :mime-version:content-disposition;
-        bh=ph3uhCHYF3MS80ng/XwPYbh3jLpt+WFtffo9ialWLL0=;
-        b=mTsot32L1Wyv4NNzjDh8hkGggQnPVNf3PCTHGy37fjw8CUfXwOYyEchvM2eIF5G0D1
-         HsS3pbvyGXTll+lL/SXc09PzkVFbQCKIzmTfn3BO4I88fIL3EEMSrMLZGBEEm2AhEv4/
-         XT4DuIiTstAl14lgMsS5zDSE8kyEeWcHVpFvTlae+lH3Owbarp0plV+GlXYjrr81vuTU
-         JmBL36HIAZgjQlqARfiULMTIF4LbGZFa8sxTqGsurZkwoDkVrGlz9KCRIfYg06xO4azm
-         ujNdB3lVeKWJ548X49bw8VdAnKL6DekDKp9g/zgR5dck7acB4z1B/pYHQW4iNqVq8FeV
-         zKBQ==
-X-Gm-Message-State: AJIora8z48Ko2HDp3dyDYXkAHs1xE8NUDt8EOAyNcZm7S6WdjaY5Fcr4
-        ZhLfxWJW1ZFjMUMpI+3kt3A=
-X-Google-Smtp-Source: AGRyM1s5a4Qqi1Yoe0lhAI+axwBnizM/Nmi4Q0w0jNJ+3b3TxdWXbKYPLv6WyU0Hlunocc2NutmOmg==
-X-Received: by 2002:a17:90b:384b:b0:1f0:6ef2:183f with SMTP id nl11-20020a17090b384b00b001f06ef2183fmr31598886pjb.100.1658149857036;
-        Mon, 18 Jul 2022 06:10:57 -0700 (PDT)
-Received: from server.roeck-us.net ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
-        by smtp.gmail.com with ESMTPSA id z3-20020aa79e43000000b005284d10d8f6sm9190975pfq.215.2022.07.18.06.10.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 Jul 2022 06:10:32 -0700 (PDT)
-Sender: Guenter Roeck <groeck7@gmail.com>
-Date:   Mon, 18 Jul 2022 06:09:56 -0700
-From:   Guenter Roeck <linux@roeck-us.net>
-To:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
-Subject: Re: [PATCH v2 1/1] mpi3mr: Fix compilation errors observed on i386
- arch
-Message-ID: <20220718130956.GA3767867@roeck-us.net>
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=Lq/fpXinlaBHMmExMgxXWRpxnZ1QzetP4yrNawYBvnY=;
+        b=3pFclR7AanGL/OF4FuwZ6di1aGUFsoO++DbJ1Wl8BKxvrlW1dJdSN0aF9T4NOBHITp
+         JXoFy0MxA1VtaDi/frHArjo5z4P99v6Wk45gytDAo8L02Vh5YfqyRfM30OrUjlNeSGnq
+         5I3HFpZfbDBtaA5Ez9SsWd31LLkSj2JBscoLE4mrWn6waI2dvmpr9zlPNy7JJFBqJZ0J
+         TWDVkRSs9RC0RyGM3pEpGVSmRv5z7l2v0FP/vPnGpUVO91alBRhJ56yatqJHek7DSG93
+         lYlV+fWlPgU4XuP+Robw63eongY3K37R74V1LmUnAOAuG2DNI4+a2dOHtQ2jXSLvmkaO
+         Mzhw==
+X-Gm-Message-State: AJIora99Cs84DcewNP4n7aVaLuoC/yGABhYK0wZk07+VsD2KLbx1kxgB
+        YbhhTFqN1SnGGNf12llZnko=
+X-Google-Smtp-Source: AGRyM1sQloJe0MUm++Z/7U9DjbALT9KZ/HD9UzZSIeRTv3EitUwyriSj+XYvzAlGYjfi19EqqpvXMg==
+X-Received: by 2002:a17:902:d683:b0:16c:b718:f94b with SMTP id v3-20020a170902d68300b0016cb718f94bmr21212901ply.9.1658152767583;
+        Mon, 18 Jul 2022 06:59:27 -0700 (PDT)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id c66-20020a621c45000000b00528ce53a4a6sm9240111pfc.196.2022.07.18.06.59.26
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 18 Jul 2022 06:59:26 -0700 (PDT)
+Message-ID: <03268468-f884-fa94-91f9-40ef4c3e57ca@acm.org>
+Date:   Mon, 18 Jul 2022 06:59:25 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+Subject: Re: [PATCH 3/3] scsi: sd_zbc: Fix handling of RC BASIS
+Content-Language: en-US
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Hannes Reinecke <hare@suse.com>
+References: <20220711230051.15372-1-bvanassche@acm.org>
+ <20220711230051.15372-4-bvanassche@acm.org>
+ <90cb95f0-7d8b-af10-9480-76a2163993e2@opensource.wdc.com>
+ <95f2f1d5-3e32-bb6f-b8e4-df0c232ed6eb@opensource.wdc.com>
+ <7f58e047-8fa8-7300-3062-ab1d22495b2d@acm.org>
+ <6d228185-1ce3-b0c8-71b8-badfe78505b7@opensource.wdc.com>
+ <01cac097-1420-2142-c701-2542bf437656@acm.org>
+ <11a23d81-b949-15de-11d3-426d2fd45db9@opensource.wdc.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <11a23d81-b949-15de-11d3-426d2fd45db9@opensource.wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Jul 18, 2022 at 03:23:51PM +0530, Sreekanth Reddy wrote:
-> Fix below compilation errors observed on i386 ARCH,
-> 
-> cast from pointer to integer of different size
-> [-Werror=pointer-to-int-cast]
-> 
-> Fixes: c196bc4dce ("scsi: mpi3mr: Reduce VD queue depth on detecting throttling")
-> Reported-by: Guenter Roeck <linux@roeck-us.net>
-> Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+On 7/18/22 03:38, Damien Le Moal wrote:
+> Even the above code (removing the "sdkp->rc_basis == 0" test) is
+> borderline in my opinion. The code with the test is per specs, so correct.
 
-Tested-by: Guenter Roeck <linux@roeck-us.net>
+Hi Damien,
 
-> ---
->  drivers/scsi/mpi3mr/mpi3mr_os.c | 5 ++---
->  1 file changed, 2 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-> index 0901bc932d5c..4102636df4fc 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-> +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-> @@ -386,7 +386,7 @@ static void mpi3mr_queue_qd_reduction_event(struct mpi3mr_ioc *mrioc,
->  		ioc_warn(mrioc, "failed to queue TG QD reduction event\n");
->  		return;
->  	}
-> -	*(__le64 *)fwevt->event_data = (__le64)tg;
-> +	*(struct mpi3mr_throttle_group_info **)fwevt->event_data = tg;
->  	fwevt->mrioc = mrioc;
->  	fwevt->event_id = MPI3MR_DRIVER_EVENT_TG_QD_REDUCTION;
->  	fwevt->send_ack = 0;
-> @@ -1660,8 +1660,7 @@ static void mpi3mr_fwevt_bh(struct mpi3mr_ioc *mrioc,
->  	{
->  		struct mpi3mr_throttle_group_info *tg;
->  
-> -		tg = (struct mpi3mr_throttle_group_info *)
-> -		    (*(__le64 *)fwevt->event_data);
-> +		tg = *(struct mpi3mr_throttle_group_info **)fwevt->event_data;
->  		dprint_event_bh(mrioc,
->  		    "qd reduction event processed for tg_id(%d) reduction_needed(%d)\n",
->  		    tg->id, tg->need_qd_reduction);
-> -- 
-> 2.27.0
-> 
-> 
-> 
+I do not agree that the current code is compliant with the ZBC 
+specification. My interpretation of the ZBC specification is that the RC 
+BASIS field influences the meaning of the RETURNED LOGICAL BLOCK ADDRESS 
+field in the READ CAPACITY response only. The max_lba variable in 
+sd_zbc_check_capacity() represents the MAXIMUM LBA field from the REPORT 
+ZONES response. All I found in ZBC-2 about that field is the following: 
+"The MAXIMUM LBA field contains the LBA of the last logical block on the 
+logical unit." I haven't found any reference to RC BASIS in the 
+description of the REPORT ZONES command - neither in ZBC-1 nor in ZBC-2.
+
+Thanks,
+
+Bart.
