@@ -2,216 +2,133 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E4F9C43334
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jul 2022 16:51:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05D1BC43334
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jul 2022 18:04:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234385AbiGRQv4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Jul 2022 12:51:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47276 "EHLO
+        id S235333AbiGRSEf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Jul 2022 14:04:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47716 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233927AbiGRQvz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jul 2022 12:51:55 -0400
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD6222B244
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2022 09:51:52 -0700 (PDT)
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 26IGi9sT016197;
-        Mon, 18 Jul 2022 16:51:51 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to : sender :
- content-transfer-encoding : mime-version; s=pp1;
- bh=bcZ0eX5Cu/ii/H0jlWGUZRsuqZyFqaUO5IvkG1G8xq4=;
- b=H9f/l9LY5/dNDbYfWkY3eo4g/UFN7sH735BzBJjL08rRS83F8WMZUmUbUZ0IGAfV5N7V
- a9Uj5B36ImiBK9MHObGvHgeji+0uIgQBKYinQIaCfQi+T0kt+W/2nvfmcO+sGyR1lEmR
- 71BkO+W8fdYG/pb2hm8SURTGk5Vozr9rZqvKgQRl6okYcz8FzXeM0PrSJSglMJo5jAbE
- 4ylaWoz36zrk94nE+mOny57CWrhTsyvD5++HJViQg9HG5Z87PRyVm1nlETLNTJNjVugM
- LnGNpZRLCQHaMhxrKqoNhI8sOkV5V1UAAVbGJzXYmxSR+rBgc4yoPJo7gdQs7iEOeVeT Zw== 
-Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3hdba305e9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 18 Jul 2022 16:51:51 +0000
-Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
-        by ppma03ams.nl.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 26IGpCYp020811;
-        Mon, 18 Jul 2022 16:51:48 GMT
-Received: from b06avi18626390.portsmouth.uk.ibm.com (b06avi18626390.portsmouth.uk.ibm.com [9.149.26.192])
-        by ppma03ams.nl.ibm.com with ESMTP id 3hbmy8tudd-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 18 Jul 2022 16:51:48 +0000
-Received: from d06av22.portsmouth.uk.ibm.com (d06av22.portsmouth.uk.ibm.com [9.149.105.58])
-        by b06avi18626390.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 26IGo32h22348084
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 18 Jul 2022 16:50:03 GMT
-Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id AA4144C046;
-        Mon, 18 Jul 2022 16:51:45 +0000 (GMT)
-Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 96B2F4C044;
-        Mon, 18 Jul 2022 16:51:45 +0000 (GMT)
-Received: from t480-pf1aa2c2 (unknown [9.145.17.130])
-        by d06av22.portsmouth.uk.ibm.com (Postfix) with ESMTPS;
-        Mon, 18 Jul 2022 16:51:45 +0000 (GMT)
-Received: from bblock by t480-pf1aa2c2 with local (Exim 4.95)
-        (envelope-from <bblock@linux.ibm.com>)
-        id 1oDTyD-000Fpn-6I;
-        Mon, 18 Jul 2022 18:51:45 +0200
-Date:   Mon, 18 Jul 2022 16:51:45 +0000
-From:   Benjamin Block <bblock@linux.ibm.com>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Steffen Maier <maier@linux.ibm.com>,
-        Alexander Egorenkov <egorenar@linux.ibm.com>
-Subject: regression next-20220714: mkfs.ext4 on multipath device over scsi
- disks causes 'lifelock' in block layer
-Message-ID: <YtWPoZISMLxHA/vu@t480-pf1aa2c2.fritz.box>
-References: <20220302053559.32147-1-martin.petersen@oracle.com>
- <20220302053559.32147-11-martin.petersen@oracle.com>
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20220302053559.32147-11-martin.petersen@oracle.com>
-Sender: Benjamin Block <bblock@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: nvvSn4COse4YsNuHvBWW-zvaQ_cF8qLw
-X-Proofpoint-ORIG-GUID: nvvSn4COse4YsNuHvBWW-zvaQ_cF8qLw
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
-MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
- definitions=2022-07-18_16,2022-07-18_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 clxscore=1015
- priorityscore=1501 lowpriorityscore=0 malwarescore=0 phishscore=0
- spamscore=0 mlxscore=0 suspectscore=0 impostorscore=0 adultscore=0
- mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2206140000 definitions=main-2207180072
+        with ESMTP id S235312AbiGRSEe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jul 2022 14:04:34 -0400
+Received: from mail-yw1-x114a.google.com (mail-yw1-x114a.google.com [IPv6:2607:f8b0:4864:20::114a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2BC6A2ED7C
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2022 11:04:32 -0700 (PDT)
+Received: by mail-yw1-x114a.google.com with SMTP id 00721157ae682-31e55e88567so2881627b3.15
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2022 11:04:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
+         :cc;
+        bh=NWd4oljylJpm15QI+9XW2O50oFX4hIWhG0QplH8ZUcc=;
+        b=WZP90pTPH10CAWvZhZJBuczOui98Td8io0fgStFdSWAL73qQaJOJaqCxLfQdQpGnex
+         h33Pw3BOS4ET/QLPR1qNefP/G6rXf1JHCz52O8Ex/DUD674t9qZBWErA0swipGhzp+HS
+         R1XZQHVH523oSJJKwFazN8Ti51cG/nzXH6QkKYO4+f5VaUYhkINc+gbpJigOkK1C43/l
+         mh8zdvBek5v4XHA/4GWHxm8pAfC3WrLHYwGGi+Pq8WQVmbiV3AY9biHCAVSPzRsCku9d
+         8L9f/sbHn50lydL6aMWRg5XLmS8aV0h6tLek/icbhqlibGJsit49/PtmhrUwMxvxt7Wi
+         UYDQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:in-reply-to:message-id:mime-version
+         :references:subject:from:to:cc;
+        bh=NWd4oljylJpm15QI+9XW2O50oFX4hIWhG0QplH8ZUcc=;
+        b=mWY5s8wdgLR39JlvxDLK+gikXtMzb3r1c0cQyxzG1fKoaksiyUFyiWzBORxRKm8tHG
+         FIjoAYT2ls1LDPsHsKNXOGddDIJFLtVBxgZSH5nxEcaJfVN64glvPPhhNRK7yZGZF0nV
+         v+E2NdcsOWm8Vz6QQsnA7xzZHFLkNOvObUL0LDZZKblRnUj+N+2Qoliq+Tr8QY+XxBtt
+         7kogdVSAbt7adHYHQkd2HMgsfar7qiF5tqsiGKYsdc+Qp4DF/r5sauGyHEH45nsJUbHH
+         eZmJkrHJanPShV5KhClEww5IGvGaCTOqShmugJtHNZMEbR5BcWgMyvm3xIsSMwtW7qu3
+         rH8A==
+X-Gm-Message-State: AJIora9t11+7jIoMX7jJbn5cQ7iZiCUxZKWk9DXjCIuPUFEARyF+xsNu
+        9FxeXoxVTuB6rPHyEI58LvQIJcDube38hIeLaQ==
+X-Google-Smtp-Source: AGRyM1uB1P/tEFzS7Z6lx8XrCNRWsqlv7V1H3xl8sl1/sKEhqaX33ZIQYN0i8q9S8220iDZ4ZD8+1sQkqrtnq9PlHQ==
+X-Received: from justinstitt.mtv.corp.google.com ([2620:15c:211:202:f922:7e91:d8e8:24c4])
+ (user=justinstitt job=sendgmr) by 2002:a05:6902:124c:b0:66e:d96f:2661 with
+ SMTP id t12-20020a056902124c00b0066ed96f2661mr28116509ybu.499.1658167471383;
+ Mon, 18 Jul 2022 11:04:31 -0700 (PDT)
+Date:   Mon, 18 Jul 2022 11:04:21 -0700
+In-Reply-To: <20220708211447.135209-1-justinstitt@google.com>
+Message-Id: <20220718180421.49697-1-justinstitt@google.com>
+Mime-Version: 1.0
+References: <20220708211447.135209-1-justinstitt@google.com>
+X-Mailer: git-send-email 2.37.0.170.g444d1eabd0-goog
+Subject: [PATCH v2] target: iscsi: fix clang -Wformat warnings
+From:   Justin Stitt <justinstitt@google.com>
+To:     justinstitt@google.com
+Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        llvm@lists.linux.dev, martin.petersen@oracle.com,
+        mgurtovoy@nvidia.com, michael.christie@oracle.com,
+        mingzhe.zou@easystack.cn, nathan@kernel.org,
+        ndesaulniers@google.com, target-devel@vger.kernel.org,
+        trix@redhat.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Mar 02, 2022 at 12:35:55AM -0500, Martin K. Petersen wrote:
-> In preparation for adding support for the WRITE SAME(16) NDOB flag,
-> move configuration of the WRITE_ZEROES operation to a separate
-> function. This is done to facilitate fetching all VPD pages before
-> choosing the appropriate zeroing method for a given device.
-> 
-> The deferred configuration also allows us to mirror the discard
-> behavior and permit the user to revert a device to the kernel default
-> configuration by echoing "default" to the sysfs file.
-> 
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> ---
->  drivers/scsi/sd.c | 56 +++++++++++++++++++++++++++++++++--------------
->  drivers/scsi/sd.h |  7 ++++--
->  2 files changed, 44 insertions(+), 19 deletions(-)
-> 
+When building with Clang we encounter these warnings:
+| drivers/target/iscsi/iscsi_target_login.c:719:24: error: format
+| specifies type 'unsigned short' but the argument has type 'int'
+| [-Werror,-Wformat] " from node: %s\n", atomic_read(&sess->nconn),
+-
+| drivers/target/iscsi/iscsi_target_login.c:767:12: error: format
+| specifies type 'unsigned short' but the argument has type 'int'
+| [-Werror,-Wformat] " %s\n", atomic_read(&sess->nconn),
+-
+| drivers/target/iscsi/iscsi_target.c:4365:12: error: format specifies
+| type 'unsigned short' but the argument has type 'int' [-Werror,-Wformat]
+| " %s\n", atomic_read(&sess->nconn)
 
-Hello Martin,
+For all warnings, the format specifier is `%hu` which describes an
+unsigned short. The resulting type of atomic_read is an int. The
+proposed fix is to listen to Clang and swap the format specifier.
 
-somehow this patch triggers a regression on s390x with zFCP in
-`next-20220714`.
+Link: https://github.com/ClangBuiltLinux/linux/issues/378
+Signed-off-by: Justin Stitt <justinstitt@google.com>
+---
+diff from v1->v2:
+Combined two similar patches into one:
+* https://lore.kernel.org/all/20220708221314.466294-1-justinstitt@google.com/
+* https://lore.kernel.org/llvm/20220708211447.135209-1-justinstitt@google.com/
 
-In our daily regression test suite a simple:
+ drivers/target/iscsi/iscsi_target.c       | 2 +-
+ drivers/target/iscsi/iscsi_target_login.c | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-  # mkfs.ext4 -F /dev/mapper/mpathc1
-
-causes the block layer to trip with this when trying to discard blocks
-(at least that's my assumption about what its trying to do) from a SCSI
-disk:
-
-  [   33.042224] blk_insert_cloned_request: over max size limit. (4194304 > 65535)
-  [   33.042228] device-mapper: multipath: 251:0: Failing path 8:0.
-  [   33.042239] blk_insert_cloned_request: over max size limit. (4194304 > 65535)
-  [   33.042267] device-mapper: multipath: 251:0: Failing path 8:64.
-  [   33.197329] device-mapper: multipath: 251:0: Reinstating path 8:0.
-  [   33.198850] device-mapper: multipath: 251:0: Reinstating path 8:64.
-  [   33.210742] blk_insert_cloned_request: over max size limit. (4194304 > 65535)
-  [   33.210752] device-mapper: multipath: 251:0: Failing path 8:0.
-  [   33.210771] blk_insert_cloned_request: over max size limit. (4194304 > 65535)
-  [   33.210792] device-mapper: multipath: 251:0: Failing path 8:64.
-  [   38.200929] device-mapper: multipath: 251:0: Reinstating path 8:0.
-  [   38.201489] device-mapper: multipath: 251:0: Reinstating path 8:64.
-  [   38.220039] blk_insert_cloned_request: over max size limit. (4194304 > 65535)
-  [   38.220045] device-mapper: multipath: 251:0: Failing path 8:0.
-  [   38.220056] blk_insert_cloned_request: over max size limit. (4194304 > 65535)
-  [   38.220060] device-mapper: multipath: 251:0: Failing path 8:64.
-  [   43.202538] device-mapper: multipath: 251:0: Reinstating path 8:0.
-  [   43.203015] device-mapper: multipath: 251:0: Reinstating path 8:64.
-  [   43.219877] blk_insert_cloned_request: over max size limit. (4194304 > 65535)
-  [   43.219881] device-mapper: multipath: 251:0: Failing path 8:0.
-  [   43.219889] blk_insert_cloned_request: over max size limit. (4194304 > 65535)
-  [   43.219892] device-mapper: multipath: 251:0: Failing path 8:64.
-  [   48.204035] device-mapper: multipath: 251:0: Reinstating path 8:0.
-  [   48.204526] device-mapper: multipath: 251:0: Reinstating path 8:64.
-  [   48.219951] blk_insert_cloned_request: over max size limit. (4194304 > 65535)
-  [   48.219964] device-mapper: multipath: 251:0: Failing path 8:0.
-  [   48.219990] blk_insert_cloned_request: over max size limit. (4194304 > 65535)
-  [   48.219996] device-mapper: multipath: 251:0: Failing path 8:64.
-  [   53.205456] device-mapper: multipath: 251:0: Reinstating path 8:0.
-  [   53.206950] device-mapper: multipath: 251:0: Reinstating path 8:64.
-  [   53.219820] blk_insert_cloned_request: over max size limit. (4194304 > 65535)
-  [   53.219824] device-mapper: multipath: 251:0: Failing path 8:0.
-  [   53.219834] blk_insert_cloned_request: over max size limit. (4194304 > 65535)
-  [   53.219837] device-mapper: multipath: 251:0: Failing path 8:64.
-  [   58.209693] device-mapper: multipath: 251:0: Reinstating path 8:0.
-  [   58.210143] device-mapper: multipath: 251:0: Reinstating path 8:64.
-
-This continues ad infinitum.
-
-I suspected this patchset as it's new in next-20220714, and next-20220704
-didn't have this bug in our regression runs. I didn't see any other 'obvious'
-patch in scsi or block that has a diff between those two tags.
-
-I started bisecting between:
-  9821106213c8 ("scsi: zfcp: Drop redundant "the" in the comments")
-as good, and
-  f095c3cd1b69 ("scsi: qla2xxx: Update version to 10.02.07.800-k")
-as bad; and ended up at:
-  1bd95bb98f83 ("scsi: sd: Move WRITE_ZEROES configuration to a separate function")
-
-I ran this on Fedora 36, with mkfs.ext4 1.46.5 (30-Dec-2021).
-
-The multipath device:
-
-  create: mpathc (36005076307ffc5e3000000000000805c) dm-0 IBM,2107900
-  size=20G features='1 queue_if_no_path' hwhandler='1 alua' wp=rw
-  `-+- policy='service-time 0' prio=50 status=active
-    |- 0:0:0:1079787648 sda 8:0   active ready running
-    `- 1:0:0:1079787648 sde 8:64  active ready running
-
-Some information on the block devices and topology:
-
-  # lsblk /dev/sda /dev/sde
-  NAME        MAJ:MIN RM SIZE RO TYPE  MOUNTPOINTS
-  sda           8:0    0  20G  0 disk
-  └─mpathc    251:0    0  20G  0 mpath
-    └─mpathc1 251:2    0  20G  0 part
-  sde           8:64   0  20G  0 disk
-  └─mpathc    251:0    0  20G  0 mpath
-    └─mpathc1 251:2    0  20G  0 part
-  # lsblk -t /dev/sda /dev/sde
-  NAME        ALIGNMENT MIN-IO OPT-IO PHY-SEC LOG-SEC ROTA SCHED       RQ-SIZE  RA WSAME
-  sda                 0    512      0     512     512    1 bfq             256 512    0B
-  └─mpathc            0    512      0     512     512    1 mq-deadline     256 128    0B
-    └─mpathc1         0    512      0     512     512    1                 128 128    0B
-  sde                 0    512      0     512     512    1 bfq             256 512    0B
-  └─mpathc            0    512      0     512     512    1 mq-deadline     256 128    0B
-    └─mpathc1         0    512      0     512     512    1                 128 128    0B
-  # lsblk -D /dev/sda /dev/sde
-  NAME        DISC-ALN DISC-GRAN DISC-MAX DISC-ZERO
-  sda                0        1G       4G         0
-  └─mpathc           0        1G       4G         0
-    └─mpathc1        0        1G       4G         0
-  sde                0        1G       4G         0
-  └─mpathc           0        1G       4G         0
-    └─mpathc1        0        1G       4G         0
-  # lsblk -S /dev/sda /dev/sde
-  NAME HCTL             TYPE VENDOR   MODEL    REV SERIAL      TRAN
-  sda  0:0:0:1079787648 disk IBM      2107900 1060 75DL241805C fc
-  sde  1:0:0:1079787648 disk IBM      2107900 1060 75DL241805C fc
-
-Any idea why this is happening? In case you need more details, this
-reproduces very reliably here.
-
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index e368f038ff5c..bfb717065344 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -4361,7 +4361,7 @@ int iscsit_close_connection(
+ 
+ 	spin_lock_bh(&sess->conn_lock);
+ 	atomic_dec(&sess->nconn);
+-	pr_debug("Decremented iSCSI connection count to %hu from node:"
++	pr_debug("Decremented iSCSI connection count to %d from node:"
+ 		" %s\n", atomic_read(&sess->nconn),
+ 		sess->sess_ops->InitiatorName);
+ 	/*
+diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
+index 6b94eecc4790..0778591abae7 100644
+--- a/drivers/target/iscsi/iscsi_target_login.c
++++ b/drivers/target/iscsi/iscsi_target_login.c
+@@ -715,7 +715,7 @@ void iscsi_post_login_handler(
+ 
+ 		list_add_tail(&conn->conn_list, &sess->sess_conn_list);
+ 		atomic_inc(&sess->nconn);
+-		pr_debug("Incremented iSCSI Connection count to %hu"
++		pr_debug("Incremented iSCSI Connection count to %d"
+ 			" from node: %s\n", atomic_read(&sess->nconn),
+ 			sess->sess_ops->InitiatorName);
+ 		spin_unlock_bh(&sess->conn_lock);
+@@ -763,7 +763,7 @@ void iscsi_post_login_handler(
+ 	spin_lock_bh(&sess->conn_lock);
+ 	list_add_tail(&conn->conn_list, &sess->sess_conn_list);
+ 	atomic_inc(&sess->nconn);
+-	pr_debug("Incremented iSCSI Connection count to %hu from node:"
++	pr_debug("Incremented iSCSI Connection count to %d from node:"
+ 		" %s\n", atomic_read(&sess->nconn),
+ 		sess->sess_ops->InitiatorName);
+ 	spin_unlock_bh(&sess->conn_lock);
 -- 
-Best Regards, Benjamin Block  / Linux on IBM Z Kernel Development / IBM Systems
-IBM Deutschland Research & Development GmbH    /    https://www.ibm.com/privacy
-Vorsitz. AufsR.: Gregor Pillen         /         Geschäftsführung: David Faller
-Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
+2.37.0.170.g444d1eabd0-goog
+
