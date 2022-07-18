@@ -2,461 +2,162 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22A0FC43334
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jul 2022 08:54:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B6D6C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jul 2022 09:41:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229888AbiGRIyn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Jul 2022 04:54:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58040 "EHLO
+        id S234191AbiGRJlt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Jul 2022 05:41:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34794 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229711AbiGRIyl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jul 2022 04:54:41 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C1B0C46
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2022 01:54:40 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id C920F373AF;
-        Mon, 18 Jul 2022 08:54:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1658134478; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=E0w0iwtrvbZq4zCIMbuyF6vYyQMGpazR5bEKipOeKL8=;
-        b=ZSwFq8Hy8pNirbCEgzF5H0+C9mhxIDRSpZPNMweaTWJdh+lm+U15YK+gSU8Kj4XZBL+Gll
-        uzaE/hwoL2hfxITSQ4o1yPbdELaIETQyrODbDTqvIe4LjXWy8LJn8SvWdQaWWB9kdHOvTE
-        5bCxT50fVSlQvf7Q+944mKJj0MisSZU=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1658134478;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=E0w0iwtrvbZq4zCIMbuyF6vYyQMGpazR5bEKipOeKL8=;
-        b=mVfXFpMIqQO2oAhNz3frnoFpCbBw1qs1qgrweRLbWu2P2DupLlow4mVRYJv6Lhc6+ABVgj
-        PZR7NwumsaMUAyCA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id B002113754;
-        Mon, 18 Jul 2022 08:54:38 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id tkXzKs4f1WK2HgAAMHmgww
-        (envelope-from <dwagner@suse.de>); Mon, 18 Jul 2022 08:54:38 +0000
-Date:   Mon, 18 Jul 2022 10:54:38 +0200
-From:   Daniel Wagner <dwagner@suse.de>
-To:     Nilesh Javali <njavali@marvell.com>
-Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        GR-QLogic-Storage-Upstream@marvell.com, bhazarika@marvell.com,
-        agurumurthy@marvell.com, Steven Rostedt <rostedt@goodmis.org>
-Subject: Re: [PATCH 2/6] qla2xxx: Add a generic tracing framework
-Message-ID: <20220718085438.mdv3rnbwc4bxfxrd@carbon.lan>
-References: <20220715060227.23923-1-njavali@marvell.com>
- <20220715060227.23923-3-njavali@marvell.com>
+        with ESMTP id S234186AbiGRJls (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jul 2022 05:41:48 -0400
+Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7BAD1ADB9
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2022 02:41:47 -0700 (PDT)
+Received: by mail-pf1-x435.google.com with SMTP id e16so10106239pfm.11
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2022 02:41:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version;
+        bh=/7RL35bEEj9aeAgR9EqRuo+pxwHNf7dnfGLU73NktZs=;
+        b=DEXPMkFeBGnJ4rCrfaS3col2AfbMHzrUIVUyr4TRz2FMOeI3MG8JJVLNeJR/kkAuzH
+         dLMz0ux37EkBM82vgkMaCr1D292cTdKXLXYfW+Egn9Pu2/aTQAxEr0eWqQgR1pXZ+hdn
+         YEsi6BjyU/DrjpjWNSA28LYJMtMpQcIyrDfdk=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
+        bh=/7RL35bEEj9aeAgR9EqRuo+pxwHNf7dnfGLU73NktZs=;
+        b=FhRTPyyZ2hp9wgVOzbD80ep3mhxw5JJetW+ogrAEQN+VuB4RxgxOwBuvFdXEOfX/02
+         GKt/KRIeGkb5D23VYb3+S9vy8wUIfvP+3SWczgsfhCtbVzZ/uXw7d209qhorUKFNuIOw
+         pqQ/hGo5TO3Q0rlKW6ZQXiRTXBS9bGYWxoaKTJiy0/vgFeq6XmLqL0UmvvZ5SjagbECv
+         8y1/NvVgVx3r6lSFmsCNsF+S43n0/M3qxzW4WGr/93671HvqcNyKnEN9jFomcncdSINv
+         tOauxGyT6PvYOMiP2haGLDOCsNWQbGPUOtCut99jdLEv9GzndiKlXMa1ALrEF8zAd5fS
+         YZvg==
+X-Gm-Message-State: AJIora+DFwz1r5uhodI4gvNFwHWxGkboKTElygHGovVnc7RXcTLswNGS
+        b19cjbfAJTrIMPnN/pqRnfY7Y/5xpxHijPypJy7BEEmbzgD7wEerOnCHxLOwwE7nE5VUsaWda2S
+        rHw9ukC7GoG5D/LPBcPnFH5IeDTb7IEVtLDaroQBxjIZItpkGfwEkX0Qr6xDCl0zsPYJ5vxsuk9
+        77h6fQ8XZTwE8=
+X-Google-Smtp-Source: AGRyM1vGSKe1Xd8gQfGwCIVKcWCbJRY2NP23GlsL8m53uMLpJL4ocvWsYKgcAu5emzPO4waz5yfQDA==
+X-Received: by 2002:a63:5a44:0:b0:412:7bee:d757 with SMTP id k4-20020a635a44000000b004127beed757mr24459045pgm.419.1658137306744;
+        Mon, 18 Jul 2022 02:41:46 -0700 (PDT)
+Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id x19-20020aa79413000000b0052b66304d54sm2303092pfo.74.2022.07.18.02.41.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 18 Jul 2022 02:41:45 -0700 (PDT)
+From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: [PATCH v2 0/1] mpi3mr: Fix compilation errors on i386 arch
+Date:   Mon, 18 Jul 2022 15:23:50 +0530
+Message-Id: <20220718095351.15868-1-sreekanth.reddy@broadcom.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220715060227.23923-3-njavali@marvell.com>
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="00000000000030123405e4112d1f"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi
+--00000000000030123405e4112d1f
+Content-Transfer-Encoding: 8bit
 
-[adding Steven Rostedt]
+Fix below compilation errors observed on i386 arch
+with allyesconfig config
 
-On Thu, Jul 14, 2022 at 11:02:23PM -0700, Nilesh Javali wrote:
-> From: Arun Easi <aeasi@marvell.com>
-> 
-> Adding a message based tracing mechanism where
-> a rotating number of messages are captured in
-> a trace structure. Disable/enable/resize
-> operations are allowed via debugfs interfaces.
+cast from pointer to integer of different size
+[-Werror=pointer-to-int-cast]
+and
+cast to pointer from integer of different size
 
-I really wonder why you need to this kind of infrastructure to your
-driver? As far I know the qla2xxx is already able to log into
-ftrace. Why can't we just use this infrastructure?
+Sreekanth Reddy (1):
+  mpi3mr: Fix compilation errors observed on i386 arch
 
-Thanks,
-Daniel
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-> 
-> Signed-off-by: Arun Easi <aeasi@marvell.com>
-> Signed-off-by: Nilesh Javali <njavali@marvell.com>
-> ---
->  drivers/scsi/qla2xxx/qla_dbg.c |  12 +++
->  drivers/scsi/qla2xxx/qla_dbg.h | 140 +++++++++++++++++++++++++++++++++
->  drivers/scsi/qla2xxx/qla_def.h |  31 ++++++++
->  drivers/scsi/qla2xxx/qla_dfs.c | 102 ++++++++++++++++++++++++
->  drivers/scsi/qla2xxx/qla_os.c  |   5 ++
->  5 files changed, 290 insertions(+)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-> index 7cf1f78cbaee..c4ba8ac51d27 100644
-> --- a/drivers/scsi/qla2xxx/qla_dbg.c
-> +++ b/drivers/scsi/qla2xxx/qla_dbg.c
-> @@ -2777,3 +2777,15 @@ ql_dbg_qp(uint32_t level, struct qla_qpair *qpair, int32_t id,
->  	va_end(va);
->  
->  }
-> +
-> +#ifdef QLA_TRACING
-> +void qla_tracing_init(void)
-> +{
-> +	if (is_kdump_kernel())
-> +		return;
-> +}
-> +
-> +void qla_tracing_exit(void)
-> +{
-> +}
-> +#endif /* QLA_TRACING */
-> diff --git a/drivers/scsi/qla2xxx/qla_dbg.h b/drivers/scsi/qla2xxx/qla_dbg.h
-> index feeb1666227f..e0d91a1f81c0 100644
-> --- a/drivers/scsi/qla2xxx/qla_dbg.h
-> +++ b/drivers/scsi/qla2xxx/qla_dbg.h
-> @@ -5,6 +5,7 @@
->   */
->  
->  #include "qla_def.h"
-> +#include <linux/delay.h>
->  
->  /*
->   * Firmware Dump structure definition
-> @@ -321,6 +322,145 @@ struct qla2xxx_fw_dump {
->  
->  extern uint ql_errlev;
->  
-> +#ifdef QLA_TRACING
-> +#include <linux/crash_dump.h>
-> +
-> +extern void qla_tracing_init(void);
-> +extern void qla_tracing_exit(void);
-> +
-> +static inline int
-> +ql_mask_match_ext(uint level, int *log_tunable)
-> +{
-> +	if (*log_tunable == 1)
-> +		*log_tunable = QL_DBG_DEFAULT1_MASK;
-> +
-> +	return (level & *log_tunable) == level;
-> +}
-> +
-> +static inline int
-> +__qla_trace_get(struct qla_trace *trc)
-> +{
-> +	if (test_bit(QLA_TRACE_QUIESCE, &trc->flags))
-> +		return -EIO;
-> +	atomic_inc(&trc->ref_count);
-> +	return 0;
-> +}
-> +
-> +static inline int
-> +qla_trace_get(struct qla_trace *trc)
-> +{
-> +	unsigned long flags;
-> +	int ret;
-> +
-> +	spin_lock_irqsave(&trc->trc_lock, flags);
-> +	ret = __qla_trace_get(trc);
-> +	spin_unlock_irqrestore(&trc->trc_lock, flags);
-> +
-> +	return ret;
-> +}
-> +
-> +static inline void
-> +qla_trace_put(struct qla_trace *trc)
-> +{
-> +	wmb();
-> +	atomic_dec(&trc->ref_count);
-> +}
-> +
-> +static inline char *
-> +qla_get_trace_next(struct qla_trace *trc)
-> +{
-> +	uint32_t t_ind;
-> +	char *buf;
-> +	unsigned long flags;
-> +
-> +	spin_lock_irqsave(&trc->trc_lock, flags);
-> +	if (!test_bit(QLA_TRACE_ENABLED, &trc->flags) ||
-> +	    __qla_trace_get(trc)) {
-> +		spin_unlock_irqrestore(&trc->trc_lock, flags);
-> +		return NULL;
-> +	}
-> +	t_ind = trc->trace_ind = qla_trace_ind_norm(trc, trc->trace_ind + 1);
-> +	spin_unlock_irqrestore(&trc->trc_lock, flags);
-> +
-> +	if (!t_ind)
-> +		set_bit(QLA_TRACE_WRAPPED, &trc->flags);
-> +
-> +	buf = qla_trace_record(trc, t_ind);
-> +	/* Put an end marker '>' for the next record. */
-> +	qla_trace_record(trc, qla_trace_ind_norm(trc, t_ind + 1))[0] = '>';
-> +
-> +	return buf;
-> +}
-> +
-> +static inline int
-> +qla_trace_quiesce(struct qla_trace *trc)
-> +{
-> +	unsigned long flags;
-> +	u32 cnt = 0;
-> +	int ret = 0;
-> +
-> +	set_bit(QLA_TRACE_QUIESCE, &trc->flags);
-> +
-> +	spin_lock_irqsave(&trc->trc_lock, flags);
-> +	while (atomic_read(&trc->ref_count)) {
-> +		spin_unlock_irqrestore(&trc->trc_lock, flags);
-> +
-> +		msleep(1);
-> +
-> +		spin_lock_irqsave(&trc->trc_lock, flags);
-> +		cnt++;
-> +		if (cnt > 10 * 1000) {
-> +			pr_info("qla2xxx: Trace could not be quiesced now (count=%d).",
-> +				atomic_read(&trc->ref_count));
-> +			/* Leave trace enabled */
-> +			clear_bit(QLA_TRACE_QUIESCE, &trc->flags);
-> +			ret = -EIO;
-> +			break;
-> +		}
-> +	}
-> +	spin_unlock_irqrestore(&trc->trc_lock, flags);
-> +	return ret;
-> +}
-> +
-> +static inline void
-> +qla_trace_init(struct qla_trace *trc, char *name, u32 num_entries)
-> +{
-> +	if (trc->recs)
-> +		return;
-> +
-> +	memset(trc, 0, sizeof(*trc));
-> +
-> +	trc->name = name;
-> +	spin_lock_init(&trc->trc_lock);
-> +	if (!num_entries)
-> +		return;
-> +	trc->num_entries = num_entries;
-> +	trc->recs = vzalloc(trc->num_entries *
-> +				sizeof(struct qla_trace_rec));
-> +	if (!trc->recs)
-> +		return;
-> +
-> +	set_bit(QLA_TRACE_ENABLED, &trc->flags);
-> +}
-> +
-> +static inline void
-> +qla_trace_uninit(struct qla_trace *trc)
-> +{
-> +	if (!trc->recs)
-> +		return;
-> +
-> +	vfree(trc->recs);
-> +	trc->recs = NULL;
-> +	clear_bit(QLA_TRACE_ENABLED, &trc->flags);
-> +}
-> +
-> +#else /* QLA_TRACING */
-> +#define qla_trace_init(trc, name, num)
-> +#define qla_trace_uninit(trc)
-> +#define qla_tracing_init()
-> +#define qla_tracing_exit()
-> +#endif /* QLA_TRACING */
-> +
->  void __attribute__((format (printf, 4, 5)))
->  ql_dbg(uint, scsi_qla_host_t *vha, uint, const char *fmt, ...);
->  void __attribute__((format (printf, 4, 5)))
-> diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-> index 22274b405d01..39322105e7be 100644
-> --- a/drivers/scsi/qla2xxx/qla_def.h
-> +++ b/drivers/scsi/qla2xxx/qla_def.h
-> @@ -35,6 +35,37 @@
->  
->  #include <uapi/scsi/fc/fc_els.h>
->  
-> +#define QLA_TRACING /* Captures driver messages to buffer */
-> +
-> +#ifdef QLA_TRACING
-> +#define QLA_TRACE_LINE_SIZE		256	/* Biggest so far is ~215 */
-> +#define qla_trace_ind_norm(_trc, _ind)	((_ind) >= (_trc)->num_entries ? \
-> +							0 : (_ind))
-> +#define qla_trace_record(_trc, __ind)	((_trc)->recs[__ind].buf)
-> +#define qla_trace_record_len		(sizeof(struct qla_trace_rec))
-> +#define qla_trace_start(_trc)		qla_trace_record(_trc, 0)
-> +#define qla_trace_len(_trc)		((_trc)->num_entries)
-> +#define qla_trace_size(_trc)		(qla_trace_record_len * \
-> +						(_trc)->num_entries)
-> +#define qla_trace_cur_ind(_trc)		((_trc)->trace_ind)
-> +struct qla_trace_rec {
-> +	char buf[QLA_TRACE_LINE_SIZE];
-> +};
-> +
-> +struct qla_trace {
-> +#define QLA_TRACE_ENABLED	0 /* allow trace writes or not */
-> +#define QLA_TRACE_WRAPPED	1
-> +#define QLA_TRACE_QUIESCE	2
-> +	unsigned long	flags;
-> +	atomic_t	ref_count;
-> +	u32		num_entries;
-> +	u32		trace_ind;
-> +	spinlock_t	trc_lock;
-> +	char		*name;
-> +	struct qla_trace_rec *recs;
-> +};
-> +#endif /* QLA_TRACING */
-> +
->  #define QLA_DFS_DEFINE_DENTRY(_debugfs_file_name) \
->  	struct dentry *dfs_##_debugfs_file_name
->  #define QLA_DFS_ROOT_DEFINE_DENTRY(_debugfs_file_name) \
-> diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
-> index c3c8b9536ef6..98c6390ad1f1 100644
-> --- a/drivers/scsi/qla2xxx/qla_dfs.c
-> +++ b/drivers/scsi/qla2xxx/qla_dfs.c
-> @@ -489,6 +489,108 @@ qla_dfs_naqp_show(struct seq_file *s, void *unused)
->  	return 0;
->  }
->  
-> +#ifdef QLA_TRACING
-> +static char *trace_help = "\
-> +# Format:\n\
-> +#   <msec> <cpu#> <message>\n\
-> +#\n\
-> +# Trace control by writing:\n\
-> +#   'enable' - to enable this trace\n\
-> +#   'disable' - to disable this trace\n\
-> +#   'resize=<nlines>' - to resize this trace to <nlines>\n\
-> +#\n";
-> +
-> +static int
-> +qla_dfs_trace_show(struct seq_file *s, void *unused)
-> +{
-> +	struct qla_trace *trc = s->private;
-> +	char *buf;
-> +	u32 t_ind = 0, i;
-> +
-> +	seq_puts(s, trace_help);
-> +
-> +	if (qla_trace_get(trc))
-> +		return 0;
-> +
-> +	seq_printf(s, "# Trace max lines = %d, writes = %s\n#\n",
-> +		   trc->num_entries, test_bit(QLA_TRACE_ENABLED,
-> +		   &trc->flags) ? "enabled" : "disabled");
-> +
-> +	if (test_bit(QLA_TRACE_WRAPPED, &trc->flags))
-> +		t_ind = qla_trace_cur_ind(trc) + 1;
-> +
-> +	for (i = 0; i < qla_trace_len(trc); i++, t_ind++) {
-> +		t_ind = qla_trace_ind_norm(trc, t_ind);
-> +		buf = qla_trace_record(trc, t_ind);
-> +		if (!buf[0])
-> +			continue;
-> +		seq_puts(s, buf);
-> +	}
-> +
-> +	mb();
-> +	qla_trace_put(trc);
-> +	return 0;
-> +}
-> +
-> +#define string_is(_buf, _str_val) \
-> +	(strncmp(_str_val, _buf, strlen(_str_val)) == 0)
-> +
-> +static ssize_t
-> +qla_dfs_trace_write(struct file *file, const char __user *buffer,
-> +		    size_t count, loff_t *pos)
-> +{
-> +	struct seq_file *s = file->private_data;
-> +	struct qla_trace *trc = s->private;
-> +	char buf[32];
-> +	ssize_t ret = count;
-> +
-> +	memset(buf, 0, sizeof(buf));
-> +	if (copy_from_user(buf, buffer, min(sizeof(buf), count)))
-> +		return -EFAULT;
-> +
-> +	if (string_is(buf, "enable")) {
-> +		if (!trc->recs) {
-> +			pr_warn("qla2xxx: '%s' is empty, resize before enabling.\n",
-> +					trc->name);
-> +			return -EINVAL;
-> +		}
-> +		pr_info("qla2xxx: Enabling trace '%s'\n", trc->name);
-> +		set_bit(QLA_TRACE_ENABLED, &trc->flags);
-> +	} else if (string_is(buf, "disable")) {
-> +		pr_info("qla2xxx: Disabling trace '%s'\n", trc->name);
-> +		clear_bit(QLA_TRACE_ENABLED, &trc->flags);
-> +	} else if (string_is(buf, "resize")) {
-> +		u32 new_len;
-> +
-> +		if (sscanf(buf, "resize=%d", &new_len) != 1)
-> +			return -EINVAL;
-> +		if (new_len == trc->num_entries) {
-> +			pr_info("qla2xxx: New trace size is same as old.\n");
-> +			return count;
-> +		}
-> +		pr_info("qla2xxx: Changing trace '%s' size to %d\n",
-> +			trc->name, new_len);
-> +		if (qla_trace_quiesce(trc)) {
-> +			ret = -EBUSY;
-> +			goto done;
-> +		}
-> +		qla_trace_uninit(trc);
-> +		/*
-> +		 * Go through init once again to start creating traces
-> +		 * based on the respective tunable.
-> +		 */
-> +		qla_trace_init(trc, trc->name, new_len);
-> +		if (!trc->recs) {
-> +			pr_warn("qla2xxx: Trace allocation failed for '%s'\n",
-> +				trc->name);
-> +			ret = -ENOMEM;
-> +		}
-> +	}
-> +done:
-> +	return ret;
-> +}
-> +#endif /* QLA_TRACING */
-> +
->  /*
->   * Helper macros for setting up debugfs entries.
->   * _name: The name of the debugfs entry
-> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-> index 0bd0fd1042df..0d2397069cac 100644
-> --- a/drivers/scsi/qla2xxx/qla_os.c
-> +++ b/drivers/scsi/qla2xxx/qla_os.c
-> @@ -8191,6 +8191,8 @@ qla2x00_module_init(void)
->  	BUILD_BUG_ON(sizeof(sw_info_t) != 32);
->  	BUILD_BUG_ON(sizeof(target_id_t) != 2);
->  
-> +	qla_tracing_init();
-> +
->  	/* Allocate cache for SRBs. */
->  	srb_cachep = kmem_cache_create("qla2xxx_srbs", sizeof(srb_t), 0,
->  	    SLAB_HWCACHE_ALIGN, NULL);
-> @@ -8269,6 +8271,7 @@ qla2x00_module_init(void)
->  
->  destroy_cache:
->  	kmem_cache_destroy(srb_cachep);
-> +	qla_tracing_exit();
->  	return ret;
->  }
->  
-> @@ -8287,6 +8290,8 @@ qla2x00_module_exit(void)
->  	fc_release_transport(qla2xxx_transport_template);
->  	qlt_exit();
->  	kmem_cache_destroy(srb_cachep);
-> +
-> +	qla_tracing_exit();
->  }
->  
->  module_init(qla2x00_module_init);
-> -- 
-> 2.19.0.rc0
-> 
+-- 
+2.27.0
+
+
+--00000000000030123405e4112d1f
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+5AGo2E3pe+2yEgkxKvM2fnniZHUiSjbrfKk6nl9RIXPOKUP5HntZFdA5XuNYXWM+HPs3O0AJwBm/
+VCZsZtkjVjxeBmTXiXDnxytdsHdGrHGymPfjJYatDu6d1KRVDlMCAwEAAaOCAd0wggHZMA4GA1Ud
+DwEB/wQEAwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9zZWN1cmUu
+Z2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNydDBBBggr
+BgEFBQcwAYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJj
+YTIwMjAwTQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3
+Lmdsb2JhbHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+oDygOoY4
+aHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcmww
+JwYDVR0RBCAwHoEcc3JlZWthbnRoLnJlZGR5QGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEF
+BQcDBDAfBgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUClVHbAvhzGT8
+s2/6xOf58NkGMQ8wDQYJKoZIhvcNAQELBQADggEBAENRsP1H3calKC2Sstg/8li8byKiqljCFkfi
+IhcJsjPOOR9UZnMFxAoH/s2AlM7mQDR7rZ2MxRuUnIa6Cp5W5w1lUJHktjCUHnQq5nIAZ9GH5SDY
+pgzbFsoYX8U2QCmkAC023FF++ZDJuc9aj0R/nhABxmUYErIze2jV/VO8Pj7TnCrBONZ/Qvf8G5CQ
+X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
+eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
+Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
+MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIOuXNf6UkcRyFxoe9ZhG
+oGlCyViEJZPTBqmSQ5enL8IMMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDcxODA5NDE0N1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCva4pkETE2EuXOfWO99AteLTnY9TrrYb9WyPcO
+gI5z8pxM6ttlzybjtKM09Cb4olJ8+CA2thzuIkW00jxx2/iv+gWn5dUdFGK1OZA12xGvMQaFZhkm
+KiZepEW18zGyA6DEankm+NKiGOsXR8QRPncroSyBsfou9tRhgXbb1YiQrZ317iM2C4j5RjLKZtiF
+AmxAg7k6nLSl0qxFazZs94ZyQglAOsTW2h7nAHg90Us4z6ycSqCRx3isvW/3IlwAHCH5oVRW0sUe
+MjblyECe9lziLJUNXqCl3rw61glbKqDcdfMcRUcAgyIvzwY/rz4oxNSrjNCHvUYB8/qj1wgrgxuX
+--00000000000030123405e4112d1f--
