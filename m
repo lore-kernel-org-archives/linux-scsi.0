@@ -2,133 +2,104 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05D1BC43334
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jul 2022 18:04:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B061AC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jul 2022 19:02:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235333AbiGRSEf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Jul 2022 14:04:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47716 "EHLO
+        id S234205AbiGRTCg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Jul 2022 15:02:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56898 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235312AbiGRSEe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jul 2022 14:04:34 -0400
-Received: from mail-yw1-x114a.google.com (mail-yw1-x114a.google.com [IPv6:2607:f8b0:4864:20::114a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2BC6A2ED7C
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2022 11:04:32 -0700 (PDT)
-Received: by mail-yw1-x114a.google.com with SMTP id 00721157ae682-31e55e88567so2881627b3.15
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2022 11:04:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
-         :cc;
-        bh=NWd4oljylJpm15QI+9XW2O50oFX4hIWhG0QplH8ZUcc=;
-        b=WZP90pTPH10CAWvZhZJBuczOui98Td8io0fgStFdSWAL73qQaJOJaqCxLfQdQpGnex
-         h33Pw3BOS4ET/QLPR1qNefP/G6rXf1JHCz52O8Ex/DUD674t9qZBWErA0swipGhzp+HS
-         R1XZQHVH523oSJJKwFazN8Ti51cG/nzXH6QkKYO4+f5VaUYhkINc+gbpJigOkK1C43/l
-         mh8zdvBek5v4XHA/4GWHxm8pAfC3WrLHYwGGi+Pq8WQVmbiV3AY9biHCAVSPzRsCku9d
-         8L9f/sbHn50lydL6aMWRg5XLmS8aV0h6tLek/icbhqlibGJsit49/PtmhrUwMxvxt7Wi
-         UYDQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:in-reply-to:message-id:mime-version
-         :references:subject:from:to:cc;
-        bh=NWd4oljylJpm15QI+9XW2O50oFX4hIWhG0QplH8ZUcc=;
-        b=mWY5s8wdgLR39JlvxDLK+gikXtMzb3r1c0cQyxzG1fKoaksiyUFyiWzBORxRKm8tHG
-         FIjoAYT2ls1LDPsHsKNXOGddDIJFLtVBxgZSH5nxEcaJfVN64glvPPhhNRK7yZGZF0nV
-         v+E2NdcsOWm8Vz6QQsnA7xzZHFLkNOvObUL0LDZZKblRnUj+N+2Qoliq+Tr8QY+XxBtt
-         7kogdVSAbt7adHYHQkd2HMgsfar7qiF5tqsiGKYsdc+Qp4DF/r5sauGyHEH45nsJUbHH
-         eZmJkrHJanPShV5KhClEww5IGvGaCTOqShmugJtHNZMEbR5BcWgMyvm3xIsSMwtW7qu3
-         rH8A==
-X-Gm-Message-State: AJIora9t11+7jIoMX7jJbn5cQ7iZiCUxZKWk9DXjCIuPUFEARyF+xsNu
-        9FxeXoxVTuB6rPHyEI58LvQIJcDube38hIeLaQ==
-X-Google-Smtp-Source: AGRyM1uB1P/tEFzS7Z6lx8XrCNRWsqlv7V1H3xl8sl1/sKEhqaX33ZIQYN0i8q9S8220iDZ4ZD8+1sQkqrtnq9PlHQ==
-X-Received: from justinstitt.mtv.corp.google.com ([2620:15c:211:202:f922:7e91:d8e8:24c4])
- (user=justinstitt job=sendgmr) by 2002:a05:6902:124c:b0:66e:d96f:2661 with
- SMTP id t12-20020a056902124c00b0066ed96f2661mr28116509ybu.499.1658167471383;
- Mon, 18 Jul 2022 11:04:31 -0700 (PDT)
-Date:   Mon, 18 Jul 2022 11:04:21 -0700
-In-Reply-To: <20220708211447.135209-1-justinstitt@google.com>
-Message-Id: <20220718180421.49697-1-justinstitt@google.com>
-Mime-Version: 1.0
-References: <20220708211447.135209-1-justinstitt@google.com>
-X-Mailer: git-send-email 2.37.0.170.g444d1eabd0-goog
-Subject: [PATCH v2] target: iscsi: fix clang -Wformat warnings
-From:   Justin Stitt <justinstitt@google.com>
-To:     justinstitt@google.com
-Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        llvm@lists.linux.dev, martin.petersen@oracle.com,
-        mgurtovoy@nvidia.com, michael.christie@oracle.com,
-        mingzhe.zou@easystack.cn, nathan@kernel.org,
-        ndesaulniers@google.com, target-devel@vger.kernel.org,
-        trix@redhat.com
-Content-Type: text/plain; charset="UTF-8"
+        with ESMTP id S233949AbiGRTCf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jul 2022 15:02:35 -0400
+Received: from mx0b-0016f401.pphosted.com (mx0a-0016f401.pphosted.com [67.231.148.174])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35B212B278
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2022 12:02:34 -0700 (PDT)
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 26IGKh5q020580;
+        Mon, 18 Jul 2022 12:02:30 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=date : from : to :
+ cc : subject : in-reply-to : message-id : references : mime-version :
+ content-type; s=pfpt0220; bh=f4rl721HIcVRQPDWwVMhF4DwsnMP9xrwXJQ4rXc8Z2o=;
+ b=hr+aXs3yLPlHmisSCVSDSOrwdqCDFwzi2Bi/hCazmFJEImwQ5FbfQg1fb8Ud8WmoRrgO
+ WSNQNTiovt6XLIVWpxAhsIoB/EiHN3ZxOLrZ5dQHL0n5HUU/ZswKF5GdVqtX5Ft2grin
+ xP24nMII1mxpzFbkznn6VyBnq3xJEm8OkFpIcr1xiq3b6flkajbWLVEvK1zz4e8wp/p5
+ tBT8vEkM0CxAC8RnCZDJfNDHD0fn6qHkzOlCfShiCUsfwMozSY97yTeNDsU7tFNeGe9e
+ WRbKlE1Af5lzRpWVkxllqH+9NP5VDhE0mJxT6dlziA9yVYzItMBTqWnOOTdEWQCOAgtX Kg== 
+Received: from dc5-exch01.marvell.com ([199.233.59.181])
+        by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 3hday0hkk5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Mon, 18 Jul 2022 12:02:29 -0700
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 18 Jul
+ 2022 12:02:28 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.18 via Frontend
+ Transport; Mon, 18 Jul 2022 12:02:28 -0700
+Received: from mvluser05.qlc.com (unknown [10.112.10.135])
+        by maili.marvell.com (Postfix) with ESMTP id 43A953F7052;
+        Mon, 18 Jul 2022 12:02:28 -0700 (PDT)
+Received: from localhost (aeasi@localhost)
+        by mvluser05.qlc.com (8.14.4/8.14.4/Submit) with ESMTP id 26IJ2Q6r026138;
+        Mon, 18 Jul 2022 12:02:27 -0700
+X-Authentication-Warning: mvluser05.qlc.com: aeasi owned process doing -bs
+Date:   Mon, 18 Jul 2022 12:02:26 -0700
+From:   Arun Easi <aeasi@marvell.com>
+To:     Daniel Wagner <dwagner@suse.de>
+CC:     Nilesh Javali <njavali@marvell.com>, <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>, <bhazarika@marvell.com>,
+        <agurumurthy@marvell.com>, Steven Rostedt <rostedt@goodmis.org>
+Subject: Re: [PATCH 2/6] qla2xxx: Add a generic tracing framework
+In-Reply-To: <20220718085438.mdv3rnbwc4bxfxrd@carbon.lan>
+Message-ID: <f49cd5a0-93b8-48a2-5a3a-a4554ef660ac@marvell.com>
+References: <20220715060227.23923-1-njavali@marvell.com>
+ <20220715060227.23923-3-njavali@marvell.com>
+ <20220718085438.mdv3rnbwc4bxfxrd@carbon.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
+X-Proofpoint-GUID: 5p_ymGOBjtMNPJpM7wgCy4x3zWwhZdn1
+X-Proofpoint-ORIG-GUID: 5p_ymGOBjtMNPJpM7wgCy4x3zWwhZdn1
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
+ definitions=2022-07-18_18,2022-07-18_01,2022-06-22_01
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When building with Clang we encounter these warnings:
-| drivers/target/iscsi/iscsi_target_login.c:719:24: error: format
-| specifies type 'unsigned short' but the argument has type 'int'
-| [-Werror,-Wformat] " from node: %s\n", atomic_read(&sess->nconn),
--
-| drivers/target/iscsi/iscsi_target_login.c:767:12: error: format
-| specifies type 'unsigned short' but the argument has type 'int'
-| [-Werror,-Wformat] " %s\n", atomic_read(&sess->nconn),
--
-| drivers/target/iscsi/iscsi_target.c:4365:12: error: format specifies
-| type 'unsigned short' but the argument has type 'int' [-Werror,-Wformat]
-| " %s\n", atomic_read(&sess->nconn)
+On Mon, 18 Jul 2022, 1:54am, Daniel Wagner wrote:
 
-For all warnings, the format specifier is `%hu` which describes an
-unsigned short. The resulting type of atomic_read is an int. The
-proposed fix is to listen to Clang and swap the format specifier.
+> Hi
+> 
+> [adding Steven Rostedt]
+> 
+> On Thu, Jul 14, 2022 at 11:02:23PM -0700, Nilesh Javali wrote:
+> > From: Arun Easi <aeasi@marvell.com>
+> > 
+> > Adding a message based tracing mechanism where
+> > a rotating number of messages are captured in
+> > a trace structure. Disable/enable/resize
+> > operations are allowed via debugfs interfaces.
+> 
+> I really wonder why you need to this kind of infrastructure to your
+> driver? As far I know the qla2xxx is already able to log into
+> ftrace. Why can't we just use this infrastructure?
+> 
 
-Link: https://github.com/ClangBuiltLinux/linux/issues/378
-Signed-off-by: Justin Stitt <justinstitt@google.com>
----
-diff from v1->v2:
-Combined two similar patches into one:
-* https://lore.kernel.org/all/20220708221314.466294-1-justinstitt@google.com/
-* https://lore.kernel.org/llvm/20220708211447.135209-1-justinstitt@google.com/
+Many times when a problem was reported on the driver, we had to request 
+for a repro with extended error logging (via driver module parameter) 
+turned on. With this internal tracing in place, log messages that appear 
+only with extended error logging are captured by default in the internal 
+trace buffer.
 
- drivers/target/iscsi/iscsi_target.c       | 2 +-
- drivers/target/iscsi/iscsi_target_login.c | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+AFAIK, kernel tracing requires a user initiated action to be turned on, 
+like enabling individual tracepoints. Though a script (either startup or 
+udev) can do this job, enabling tracepoints by default for a single 
+driver, I think, may not be a preferred choice -- particularly when the 
+trace buffer is shared across the kernel. That also brings the extra 
+overhead of finding how this could be done across various distros.
 
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index e368f038ff5c..bfb717065344 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -4361,7 +4361,7 @@ int iscsit_close_connection(
- 
- 	spin_lock_bh(&sess->conn_lock);
- 	atomic_dec(&sess->nconn);
--	pr_debug("Decremented iSCSI connection count to %hu from node:"
-+	pr_debug("Decremented iSCSI connection count to %d from node:"
- 		" %s\n", atomic_read(&sess->nconn),
- 		sess->sess_ops->InitiatorName);
- 	/*
-diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
-index 6b94eecc4790..0778591abae7 100644
---- a/drivers/target/iscsi/iscsi_target_login.c
-+++ b/drivers/target/iscsi/iscsi_target_login.c
-@@ -715,7 +715,7 @@ void iscsi_post_login_handler(
- 
- 		list_add_tail(&conn->conn_list, &sess->sess_conn_list);
- 		atomic_inc(&sess->nconn);
--		pr_debug("Incremented iSCSI Connection count to %hu"
-+		pr_debug("Incremented iSCSI Connection count to %d"
- 			" from node: %s\n", atomic_read(&sess->nconn),
- 			sess->sess_ops->InitiatorName);
- 		spin_unlock_bh(&sess->conn_lock);
-@@ -763,7 +763,7 @@ void iscsi_post_login_handler(
- 	spin_lock_bh(&sess->conn_lock);
- 	list_add_tail(&conn->conn_list, &sess->sess_conn_list);
- 	atomic_inc(&sess->nconn);
--	pr_debug("Incremented iSCSI Connection count to %hu from node:"
-+	pr_debug("Incremented iSCSI Connection count to %d from node:"
- 		" %s\n", atomic_read(&sess->nconn),
- 		sess->sess_ops->InitiatorName);
- 	spin_unlock_bh(&sess->conn_lock);
--- 
-2.37.0.170.g444d1eabd0-goog
+For cases where the memory/driver size matters, there is an option to 
+compile out this feature, plus choosing a lower default trace buffer size.
 
+Regards,
+-Arun
