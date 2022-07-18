@@ -2,53 +2,53 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA3F6C43334
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jul 2022 10:38:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A207CC43334
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jul 2022 10:47:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233401AbiGRKiK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Jul 2022 06:38:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46442 "EHLO
+        id S233971AbiGRKrg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Jul 2022 06:47:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53336 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230249AbiGRKiJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jul 2022 06:38:09 -0400
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 881031E3CC
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2022 03:38:08 -0700 (PDT)
+        with ESMTP id S233597AbiGRKrg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jul 2022 06:47:36 -0400
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7F9911A07
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2022 03:47:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1658140688; x=1689676688;
+  t=1658141254; x=1689677254;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=xgDweaqwjGUysEECMRUqriZmy2u4jS4ab5O4RgakWtI=;
-  b=Qa+vtsCwWfAZcqjJimnCs0IfjgKWukLayHyyr1wgzWoVTMzsW52rj9JD
-   8l4Jbb0gUj8iBCC1vnVRQ+oXFcPAD+5+tgDvFsKrWFFfJ+UwDNc98Irfm
-   0vNmxrHTuIPHJWi6Fk1x9m+6f6rZHu86YXdJBkRyYDL41ovcAYDaK33DR
-   D2M/FT2O9z+MUzvPpHiaGEv4Ko5FhdLueuYmG7OiIKej6X3el30DhRloV
-   +m5tFPywA3D4AGn3VXmDoOO5GcJZBKXiJ/P3Fa32aELee4/+DA3KVdPQW
-   VKBLICXB4hYFnrOToeIR27HUndAQFDWX3+/R6TyRESAehsR2IL10QNAaM
-   w==;
+  bh=ICBy3sF/NsNEHPOB6+kzZdomREf/FmWtWHtPkhQaSng=;
+  b=L9CAw7XpPcCa9ZiHW69MQ5BFYK/boM1KRmaeCxRLhTeqknF8QfIpzMUj
+   5wgKEpuy10KyZHwub5KNqcBpRp1OoI5H8hyU5vBSMMZ8jgccV+ZS9ViEa
+   5hY11cjLqTS3rZhsLj/xOv2r1kVPpOQXiO5feG46tmrqWjm9BQqkzq0qo
+   puE70x5xUI3iuSs/CzI8PZD9uG06HvR7WDfuCvdJlsyd3GfxGgxNZH2Je
+   hD7oX0ja0S82BnlXib0hM4bU0II5IV722Cjw6WLCNGayFkDzmGcBoggSB
+   Dg3uI7MdKc1FCaxfqeF7BzXPJj+59SCPwLBmACdkraHo0F4z3cne+xFci
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.92,280,1650902400"; 
-   d="scan'208";a="206713533"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 18 Jul 2022 18:38:07 +0800
-IronPort-SDR: V/39qDUe4HD2GePwXzdbNL9HsVgx01+ToTObpL6zolRiME2O48xKKByfdYtd5c5zv7N6UWvBk7
- KACfd9RV0+px/IrH0/Iypaw0j4IfwyeL9JXXYCZDucR023a4bw5hHz3fGAN92i3/TDZo4mJ5+z
- rZBq/kARToSyS/5v9hCFF4vr18Z7pav5dQqgEVRLKwx4lc3AZMPqcHCE6qD8m7VCKWwzvVpkSd
- J8IZC+hWGdVdRYoZKPO6b8Xt7DqPwGljtdmxVYrD1ZIP4s4vxUzvSvlSxKg+EOLLt2C8e1wt01
- Y2kT3ZKptWp1u/XDZ4Mk7Rli
+   d="scan'208";a="210984674"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 18 Jul 2022 18:47:33 +0800
+IronPort-SDR: fm3wjoC+Xr87fPaGbZu1XXvGDLWCV3cQfqJpUb2/nMoA5MYB0d53W9o0pV1ZaUZOk8pW/Jc4gr
+ 0sYd3NlECODCeFzdqA/GwTeeIMtumaaNJZSeT5QgK+wB3cOcneN9MB/bsccP6ZDnjBr3fgg+4i
+ 7R/LUwSL+XbtbSm07+qfFoulq8KGaCCkTPueJrEDqVd2xi71s9CmeJVYz7butZYVeieSb49ixA
+ lHeJnwrBmHdgWrrvJCYz6WqjwWCCLyUieYsi5HGQK8de0+vXdScxAVpY6jkTrmmeubXf9GhIJS
+ zAr+L4Me3XYo1LXnM6TGThGx
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 18 Jul 2022 02:54:51 -0700
-IronPort-SDR: 9IW7gM8lvEZ00GF6HX3iNKaDPKh4ciltqE3/+ARlSZzEyL9lGufBZJT4FVKvEc4mNsWJh5lrPu
- W4rtacxxPp1mho14XBN09/bvFoj2xP0g9icMt2Dk+uWByUR+xpnKtc3zwdJ6J6ozIljDIj6/y5
- TQHl6vTPMkM667XuX8BXVh1ydg5zyuvcEQJAafIz9uGjT0qjh9lRJxAiq6MyogQkRAEOw4JPNy
- PvhA+kIbxmPv4l3A2LZ3gt56cVObexxXM9hDoKDx+MmCTxxot5FQ9HSCZDYRmtArklNI/LVxG8
- cYY=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 18 Jul 2022 03:09:00 -0700
+IronPort-SDR: LI3DZyiNoobfVeeShdbJqjtgYDhyjuTyX4NeKCrwezG1Ncp2YPmcSpir6BUQJ4VVc88k4QfwRA
+ ECdLJt27EH12Af8oUWQdtpkihXvePDGKBWy0DOuzoFN1eviG703Dnsr06ItCEm7cDE8Wk6Q0Iv
+ yqtr2FNSWE736QIgDHHFRLsbbsPf66cLsbqNnV0vp8hRMV6l9i1s7YjryAEacsBU30KIjf1TPL
+ 0LxgjZgJ7MpZgkHOcHGzFJBudFZHIrit8tIGaHQ2NWRYO0HuECDCiHK3TCD+ABH/zqA6jcVy3c
+ JyM=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 18 Jul 2022 03:38:08 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 18 Jul 2022 03:47:34 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Lmdhv2cRRz1Rwqy
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2022 03:38:07 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Lmdvn4ShRz1Rwqy
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2022 03:47:33 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,120 +56,102 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1658140686; x=1660732687; bh=xgDweaqwjGUysEECMRUqriZmy2u4jS4ab5O
-        4RgakWtI=; b=LEH1+2RUN/bJXe3q39TQQCBwyW9DcE6FJBp9iWhBoh16S168f7T
-        jxYGt7li+vorxylifIdeaJKoCiWS90oMC1StXaIGRqRZ+a+xzpSj+8HgMK4DjyRv
-        rsgxTz6qlY1/WcYu9G3U3b+3sykraW5DYiHUHgF3vDfAMfWPXEX2WCcQcRFJDsDB
-        VLXhPiUGMYX5w+fXXRjiHMPrgQiz/Uy2x4agKjdL8SitTfdctuPdC9fxrq8jJ2zQ
-        5peMav8Ay58Qo7pg+qe3YSmx7PeNL51T0vKHzgizhGhklepgOYRBCPf7jflpvF++
-        ThxxeqS2h41WTYAk72YSAmao5RV1cHM924A==
+        1658141252; x=1660733253; bh=ICBy3sF/NsNEHPOB6+kzZdomREf/FmWtWHt
+        PkhQaSng=; b=ffy3r4QzJl2eMxIGeYvZDxhndyaiLEBA6fObdRuA9MXXWuuAuiB
+        zxy2PZue182NyNIs04OSk2RsuUJHRg1ElHOVGtXKOX0xUbQAqa615RJPLSPZbOk6
+        tgjaNfOx5LbKyKliH7H1EJXWmR6bKjTbD2Lsjb0S+1zqNlcakLIYxDDMDF7pgJpm
+        OyOGmOMuDR4RZuFjFX+RVZsMPb0VhGzJ2aDMcdHEUamVC3CuoZt8+m2Mcyb9bHLT
+        malHx8Lm/DEhM60u7f8h6dsj57P5IU0HEjZ83ME2zYrTjqB6SFgHwzkujjGyAuUe
+        WnQPWsMgLhRBfdAGPCNZOXKZ0yxHnoXANag==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id QSNp4k-b3CIa for <linux-scsi@vger.kernel.org>;
-        Mon, 18 Jul 2022 03:38:06 -0700 (PDT)
+        with ESMTP id DxHn12dMWhnf for <linux-scsi@vger.kernel.org>;
+        Mon, 18 Jul 2022 03:47:32 -0700 (PDT)
 Received: from [10.225.163.120] (unknown [10.225.163.120])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Lmdhr4K4pz1RtVk;
-        Mon, 18 Jul 2022 03:38:04 -0700 (PDT)
-Message-ID: <11a23d81-b949-15de-11d3-426d2fd45db9@opensource.wdc.com>
-Date:   Mon, 18 Jul 2022 19:38:02 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Lmdvk2p0qz1RtVk;
+        Mon, 18 Jul 2022 03:47:30 -0700 (PDT)
+Message-ID: <6725df4f-4e27-3320-8b7b-22ba15a07866@opensource.wdc.com>
+Date:   Mon, 18 Jul 2022 19:47:29 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.11.0
-Subject: Re: [PATCH 3/3] scsi: sd_zbc: Fix handling of RC BASIS
+Subject: Re: [PATCH v6 4/6] scsi: sd: Allow max_sectors be capped at DMA
+ optimal size limit
 Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        Hannes Reinecke <hare@suse.com>
-References: <20220711230051.15372-1-bvanassche@acm.org>
- <20220711230051.15372-4-bvanassche@acm.org>
- <90cb95f0-7d8b-af10-9480-76a2163993e2@opensource.wdc.com>
- <95f2f1d5-3e32-bb6f-b8e4-df0c232ed6eb@opensource.wdc.com>
- <7f58e047-8fa8-7300-3062-ab1d22495b2d@acm.org>
- <6d228185-1ce3-b0c8-71b8-badfe78505b7@opensource.wdc.com>
- <01cac097-1420-2142-c701-2542bf437656@acm.org>
+To:     John Garry <john.garry@huawei.com>, joro@8bytes.org,
+        will@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        hch@lst.de, m.szyprowski@samsung.com, robin.murphy@arm.com
+Cc:     linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, iommu@lists.linux.dev,
+        linux-scsi@vger.kernel.org, linuxarm@huawei.com
+References: <1657797329-98541-1-git-send-email-john.garry@huawei.com>
+ <1657797329-98541-5-git-send-email-john.garry@huawei.com>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <01cac097-1420-2142-c701-2542bf437656@acm.org>
+In-Reply-To: <1657797329-98541-5-git-send-email-john.garry@huawei.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/16/22 05:53, Bart Van Assche wrote:
-> On 7/12/22 15:08, Damien Le Moal wrote:
->> diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
->> index 6acc4f406eb8..32da54e7b68a 100644
->> --- a/drivers/scsi/sd_zbc.c
->> +++ b/drivers/scsi/sd_zbc.c
->> @@ -716,17 +716,15 @@ static int sd_zbc_check_capacity(struct scsi_disk
->> *sdkp, unsigned char *buf,
->>          if (ret)
->>                  return ret;
->>
->> -       if (sdkp->rc_basis == 0) {
->> -               /* The max_lba field is the capacity of this device */
->> -               max_lba = get_unaligned_be64(&buf[8]);
->> -               if (sdkp->capacity != max_lba + 1) {
->> -                       if (sdkp->first_scan)
->> -                               sd_printk(KERN_WARNING, sdkp,
->> -                                       "Changing capacity from %llu to
->> max LBA+1 %llu\n",
->> -                                       (unsigned long long)sdkp->capacity,
->> -                                       (unsigned long long)max_lba + 1);
->> -                       sdkp->capacity = max_lba + 1;
->> -               }
->> +       /* The max_lba field is the capacity of this device */
->> +       max_lba = get_unaligned_be64(&buf[8]);
->> +       if (sdkp->capacity != max_lba + 1) {
->> +               if (sdkp->first_scan)
->> +                       sd_printk(KERN_WARNING, sdkp,
->> +                               "Changing capacity from %llu to max LBA+1 %llu\n",
->> +                               (unsigned long long)sdkp->capacity,
->> +                               (unsigned long long)max_lba + 1);
->> +               sdkp->capacity = max_lba + 1;
->>          }
->>
->>          if (sdkp->zone_starting_lba_gran == 0) {
->>
->> That is, always check the reported capacity against max_lba of report
->> zones reply, regardless of rc_basis (and we can even then drop the
->> rc_basis field from struct scsi_disk).
+On 7/14/22 20:15, John Garry wrote:
+> Streaming DMA mappings may be considerably slower when mappings go through
+> an IOMMU and the total mapping length is somewhat long. This is because the
+> IOMMU IOVA code allocates and free an IOVA for each mapping, which may
+> affect performance.
 > 
-> I like the above patch because it simplifies the existing code.
+> New member Scsi_Host.opt_sectors is added, which is the optimal host
+> max_sectors, and use this value to cap the request queue max_sectors when
+> set.
 > 
->> But I would argue that any problem with the current code would mean a
->> buggy device firmware. For such case, the device FW should be fixed or we
->> should add a quirk for it.
+> It could be considered to have request queues io_opt value initially
+> set at Scsi_Host.opt_sectors in __scsi_init_queue(), but that is not
+> really the purpose of io_opt.
 > 
-> My question was which approach should be followed for devices with a 
-> buggy firmware? Use the zones up to the LBA reported in the READ 
-> CAPACITY response or reject these devices entirely?
-
-We should not try to write code for buggy devices. These should be handled
-with quirks, or even better, ignored to give incentives to the device
-vendor to fix their bugs.
-
-Even the above code (removing the "sdkp->rc_basis == 0" test) is
-borderline in my opinion. The code with the test is per specs, so correct.
-
-If you really insist on changing the code as above, we should add
-something like this under the "if (sdkp->capacity != max_lba + 1) {":
-
-	if (sdkp->rc_basis != 0)
-		sd_printk(KERN_WARNING, sdkp,
-			  "ZBC device reported an invalid capacity\n");
-
-To signal that the drive is wrong.
-
+> Finally, even though Scsi_Host.opt_sectors value should never be greater
+> than the request queue max_hw_sectors value, continue to limit to this
+> value for safety.
 > 
-> Thanks,
+> Signed-off-by: John Garry <john.garry@huawei.com>
+> ---
+>  drivers/scsi/sd.c        | 2 ++
+>  include/scsi/scsi_host.h | 1 +
+>  2 files changed, 3 insertions(+)
 > 
-> Bart.
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index a1a2ac09066f..3eaee1f7aaca 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -3296,6 +3296,8 @@ static int sd_revalidate_disk(struct gendisk *disk)
+>  				      (sector_t)BLK_DEF_MAX_SECTORS);
+>  	}
+>  
+> +	rw_max = min_not_zero(rw_max, sdp->host->opt_sectors);
+> +
 
+Adding a comment explaining what the cap is would be nice.
+
+>  	/* Do not exceed controller limit */
+>  	rw_max = min(rw_max, queue_max_hw_sectors(q));
+>  
+> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+> index 667d889b92b5..d32a84b2bb40 100644
+> --- a/include/scsi/scsi_host.h
+> +++ b/include/scsi/scsi_host.h
+> @@ -607,6 +607,7 @@ struct Scsi_Host {
+>  	short unsigned int sg_tablesize;
+>  	short unsigned int sg_prot_tablesize;
+>  	unsigned int max_sectors;
+> +	unsigned int opt_sectors;
+>  	unsigned int max_segment_size;
+>  	unsigned long dma_boundary;
+>  	unsigned long virt_boundary_mask;
+
+Otherwise, looks good.
+
+Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
 -- 
 Damien Le Moal
