@@ -2,85 +2,149 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A098FC43334
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jul 2022 08:31:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5ED7C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jul 2022 08:45:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232757AbiGRIbS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Jul 2022 04:31:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38424 "EHLO
+        id S234025AbiGRIpq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Jul 2022 04:45:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49938 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230009AbiGRIbR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jul 2022 04:31:17 -0400
-Received: from m151.mail.126.com (m151.mail.126.com [220.181.15.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E16C018E3D
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2022 01:31:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=126.com;
-        s=s110527; h=Date:From:Subject:MIME-Version:Message-ID; bh=w0Zly
-        cFUKUeKowevLO6R+JOpaZL1j/GeA9JEKQ71PtI=; b=RTyLWdjMwVQgI/jyYsS/v
-        jF0jb1/kxGiUJFYOkBXeGDBdDRXIWilW9I1OzfFCY7qJ+W5cFWd8kYsV10DCmwtQ
-        AGWS8I/swi9bSOjipgQ7zZjRfjvMWAjADUSYAGcq4it2tufZDSgXYRO1E69V5t4E
-        ia5FJFnvBqXxfYoKEaquIE=
-Received: from windhl$126.com ( [124.16.139.61] ) by ajax-webmail-wmsvr1
- (Coremail) ; Mon, 18 Jul 2022 16:30:50 +0800 (CST)
-X-Originating-IP: [124.16.139.61]
-Date:   Mon, 18 Jul 2022 16:30:50 +0800 (CST)
-From:   "Liang He" <windhl@126.com>
-To:     "Bart Van Assche" <bvanassche@acm.org>
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org
-Subject: Re:Re: [PATCH v2] ufs: host: ufschd-pltfrm: Hold reference returned
- by of_parse_phandle()
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version XT5.0.13 build 20220113(9671e152)
- Copyright (c) 2002-2022 www.mailtech.cn 126com
-In-Reply-To: <6e005dc0-720e-41b1-10df-cc088245bccb@acm.org>
-References: <20220715001703.389981-1-windhl@126.com>
- <0209504a-fdd5-5987-4772-dfb14c6ceafc@acm.org>
- <741595c3.743.1820a1c502e.Coremail.windhl@126.com>
- <6e005dc0-720e-41b1-10df-cc088245bccb@acm.org>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=GBK
+        with ESMTP id S233911AbiGRIpm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jul 2022 04:45:42 -0400
+Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F9E055A5;
+        Mon, 18 Jul 2022 01:45:40 -0700 (PDT)
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 131C04126D;
+        Mon, 18 Jul 2022 08:45:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        in-reply-to:content-disposition:content-type:content-type
+        :mime-version:references:message-id:subject:subject:from:from
+        :date:date:received:received:received:received; s=mta-01; t=
+        1658133936; x=1659948337; bh=BIq+hEEh8RMOoO4jTsB6tGOwoYt0aWSQe3S
+        gw6BDfiQ=; b=VWSjka2yI1SOxsg5QABddIdA7x0mNVOMOg0A/PZozvUJqS0S06j
+        Eo+5k0Rwoy0HjVjGOU8oJET/TgpNaf9E99yV2fD35RXq0aaUFYS8m3p4VqDKfspA
+        At98+9AyeOwYOcj169c6QwdFuLKTgSrv9HZYGQCxJRQAv829pm/Vhv+g=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id Ox1RSROYcUWG; Mon, 18 Jul 2022 11:45:36 +0300 (MSK)
+Received: from T-EXCH-01.corp.yadro.com (t-exch-01.corp.yadro.com [172.17.10.101])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id D081041253;
+        Mon, 18 Jul 2022 11:45:32 +0300 (MSK)
+Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
+ T-EXCH-01.corp.yadro.com (172.17.10.101) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
+ 15.1.669.32; Mon, 18 Jul 2022 11:45:32 +0300
+Received: from yadro.com (10.199.18.20) by T-EXCH-08.corp.yadro.com
+ (172.17.11.58) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1118.9; Mon, 18 Jul
+ 2022 11:45:31 +0300
+Date:   Mon, 18 Jul 2022 11:45:34 +0300
+From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
+To:     Mike Christie <michael.christie@oracle.com>
+CC:     Martin Petersen <martin.petersen@oracle.com>,
+        <target-devel@vger.kernel.org>,
+        Nick Couchman <nick.e.couchman@gmail.com>,
+        <linux-scsi@vger.kernel.org>, <linux@yadro.com>
+Subject: Re: [PATCH] target: iscsi: handle abort for WRITE_PENDING cmds
+Message-ID: <20220718084534.GA12544@yadro.com>
+References: <20220713204212.7850-1-d.bogdanov@yadro.com>
+ <0fc89e77-197b-47e6-f661-5f7f18f6634f@oracle.com>
 MIME-Version: 1.0
-Message-ID: <17e51061.2bac.182106e747f.Coremail.windhl@126.com>
-X-Coremail-Locale: zh_CN
-X-CM-TRANSID: AcqowADXwbE6GtVikeYiAA--.61233W
-X-CM-SenderInfo: hzlqvxbo6rjloofrz/1tbizgBCF18RPg79WQACsD
-X-Coremail-Antispam: 1U5529EdanIXcx71UUUUU7vcSsGvfC2KfnxnUU==
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <0fc89e77-197b-47e6-f661-5f7f18f6634f@oracle.com>
+X-Originating-IP: [10.199.18.20]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-08.corp.yadro.com (172.17.11.58)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-CgpBdCAyMDIyLTA3LTE3IDIyOjU4OjQ1LCAiQmFydCBWYW4gQXNzY2hlIiA8YnZhbmFzc2NoZUBh
-Y20ub3JnPiB3cm90ZToKPk9uIDcvMTYvMjIgMjA6MDMsIExpYW5nIEhlIHdyb3RlOgo+PiBBdCAy
-MDIyLTA3LTE2IDIxOjUwOjA4LCAiQmFydCBWYW4gQXNzY2hlIiA8YnZhbmFzc2NoZUBhY20ub3Jn
-PiB3cm90ZToKPj4+IE9uIDcvMTQvMjIgMTc6MTcsIExpYW5nIEhlIHdyb3RlOgo+Pj4+ICtzdGF0
-aWMgYm9vbCBwaGFuZGxlX2V4aXN0cyhjb25zdCBzdHJ1Y3QgZGV2aWNlX25vZGUgKm5wLAo+Pj4+
-ICsJCQkJCQljb25zdCBjaGFyICpwaGFuZGxlX25hbWUsCj4+Pj4gKwkJCQkJCWludCBpbmRleCkK
-Pj4+Cj4+PiBJbmRlbnRhdGlvbiBvZiB0aGUgYXJndW1lbnRzIG5vdyBsb29rcyByZWFsbHkgb2Rk
-IDotKAo+PiAKPj4gWWVzLCBCYXJ0LCBJIGFsc28gd29uZGVyIHRoaXMgY29kaW5nIHN0eWxlLCBo
-b3dldmVyIEkgbGVhcm5lZCB0aGF0Cj4+IGZyb20gdGhlIGRlZmluaXRpb24gb2YgJ29mX3BhcnNl
-X3BoYW5kbGUnIGluIG9mLmguCj4+IAo+PiBJcyBpdCBPSyBpZiBJIHB1dCBhbGwgb2YgdGhlbSBp
-biBvbmUgbGluZaO/Cj4KPk5vLiBGcm9tIERvY3VtZW50YXRpb24vcHJvY2Vzcy9jb2Rpbmctc3R5
-bGUucnN0IChwbGVhc2UgcmVhZCB0aGF0IAo+ZG9jdW1lbnQgaW4gaXRzIGVudGlyZXR5KTogIlRo
-ZSBwcmVmZXJyZWQgbGltaXQgb24gdGhlIGxlbmd0aCBvZiBhIAo+c2luZ2xlIGxpbmUgaXMgODAg
-Y29sdW1ucy4gWy4uLl0gQSB2ZXJ5IGNvbW1vbmx5IHVzZWQgc3R5bGUKPmlzIHRvIGFsaWduIGRl
-c2NlbmRhbnRzIHRvIGEgZnVuY3Rpb24gb3BlbiBwYXJlbnRoZXNpcy4iCj4KPkNvbnNpZGVyIHRv
-IHVzZSB0aGUgZm9sbG93aW5nIGZvcm1hdHRpbmc6Cj4KPnN0YXRpYyBib29sIHBoYW5kbGVfZXhp
-c3RzKGNvbnN0IHN0cnVjdCBkZXZpY2Vfbm9kZSAqbnAsCj4JCQkgICBjb25zdCBjaGFyICpwaGFu
-ZGxlX25hbWUsIGludCBpbmRleCkKPnsKPglbIC4uLiBdCj59Cj4KClRoYW5rcyB2ZXJ5IG11Y2gs
-IEJhcnQsCgpJIHdpbGwgZm9sbG93IHlvdXIgYWR2aWNlIGFuZCBJIHdpbGwgcmVhZCBjYXJlZnVs
-bHkgdGhlIERvY3VtZW50YXRpb24vcHJvY2Vzcy9jb2Rpbmctc3R5bGUucnN0CgpMaWFuZwoKPj4+
-PiArewo+Pj4+ICsJc3RydWN0IGRldmljZV9ub2RlICpwYXJzZV9ucCA9IG9mX3BhcnNlX3BoYW5k
-bGUobnAsIHBoYW5kbGVfbmFtZSwgaW5kZXgpOwo+Pj4+ICsJYm9vbCByZXQgPSBmYWxzZTsKPj4+
-PiArCj4+Pj4gKwlpZiAocGFyc2VfbnApIHsKPj4+PiArCQlyZXQgPSB0cnVlOwo+Pj4+ICsJCW9m
-X25vZGVfcHV0KHBhcnNlX25wKTsKPj4+PiArCX0KPj4+PiArCj4+Pj4gKwlyZXR1cm4gcmV0Owo+
-Pj4+ICt9Cj4+Pgo+Pj4gVGhlICdyZXQnIHZhcmlhYmxlIGlzIG5vdCBuZWNlc3NhcnkuIElmICJy
-ZXR1cm4gcmV0IiBpcyBjaGFuZ2VkIGludG8KPj4+ICJyZXR1cm4gcGFyc2VfbnAiIHRoZW4gdGhl
-IHZhcmlhYmxlICdyZXQnIGNhbiBiZSBsZWZ0IG91dC4KPj4+Cj4+IAo+PiBPSywgSSB3aWxsIHVz
-ZSAncmV0dXJuIHBhcnNlX25wJyBpbiBuZXcgdmVyc2lvbiB3aGVuIHlvdSBjb25maXJtIGFib3Zl
-IGNvZGluZyBzdHlsZS4KPgo+WW91IG1heSB3YW50IHRvIHVzZSAicmV0dXJuIHBhcnNlX25wICE9
-IE5VTEwiIGlmIHlvdSB3YW50IHRvIGJlIHN1cmUgCj50aGF0IG5vYm9keSBlbHNlIHdpbGwgY29t
-cGxhaW4gYWJvdXQgYW4gaW1wbGljaXQgY29udmVyc2lvbiBvZiBhIHBvaW50ZXIgCj50byBhIGJv
-b2xlYW4gdHlwZS4KPgpPSywgSSB0aGluayAncmV0dXJuIHBhcnNlX25wICE9IE5VTEwnIGlzIGJl
-dHRlci4KCkkgd2lsbCBwcmVwYXJlIG5ldyB2ZXJzaW9uIHBhdGNoIHNvb24uCgo+VGhhbmtzLAo+
-Cj5CYXJ0LgoKVGhhbmtzLCAKTGlhbmcK
+Hi Mike,
+
+On Thu, Jul 14, 2022 at 11:44:25AM -0500, Mike Christie wrote:
+> 
+> On 7/13/22 3:42 PM, Dmitry Bogdanov wrote:
+> > Sometimes an initiator does not send data for WRITE commands and tries
+> > to abort it. The abort hangs waiting for frontend driver completion.
+> > iSCSI driver waits for for data and that timeout eventually initiates
+> > connection reinstatment. The connection closing releases the commands in
+> > the connection, but those aborted commands still did not handle the
+> > abort and did not decrease a command ref counter. Because of that the
+> > connection reinstatement hangs indefinitely and prevents re-login for
+> > that initiator.
+> >
+> > This patch adds a handling in TCM of the abort for the WRITE_PENDING
+> > commands at connection closing moment to make it possible to release
+> > them.
+> >
+> > Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
+> > ---
+> >  drivers/target/iscsi/iscsi_target.c | 13 ++++++++++---
+> >  1 file changed, 10 insertions(+), 3 deletions(-)
+> >
+> > diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+> > index e368f038ff5c..27eca5e72f52 100644
+> > --- a/drivers/target/iscsi/iscsi_target.c
+> > +++ b/drivers/target/iscsi/iscsi_target.c
+> > @@ -26,6 +26,7 @@
+> >  #include <target/target_core_base.h>
+> >  #include <target/target_core_fabric.h>
+> >
+> > +#include <target/target_core_backend.h>
+> >  #include <target/iscsi/iscsi_target_core.h>
+> >  #include "iscsi_target_parameters.h"
+> >  #include "iscsi_target_seq_pdu_list.h"
+> > @@ -4171,7 +4172,8 @@ static void iscsit_release_commands_from_conn(struct iscsit_conn *conn)
+> >
+> >               if (se_cmd->se_tfo != NULL) {
+> >                       spin_lock_irq(&se_cmd->t_state_lock);
+> > -                     if (se_cmd->transport_state & CMD_T_ABORTED) {
+> > +                     if (se_cmd->t_state != TRANSPORT_WRITE_PENDING &&
+> > +                         se_cmd->transport_state & CMD_T_ABORTED) {
+> >                               /*
+> >                                * LIO's abort path owns the cleanup for this,
+> >                                * so put it back on the list and let
+> > @@ -4191,8 +4193,13 @@ static void iscsit_release_commands_from_conn(struct iscsit_conn *conn)
+> >               list_del_init(&cmd->i_conn_node);
+> >
+> >               iscsit_increment_maxcmdsn(cmd, sess);
+> > -             iscsit_free_cmd(cmd, true);
+> > -
+> > +             if (cmd->se_cmd.t_state == TRANSPORT_WRITE_PENDING &&
+> > +                 cmd->se_cmd.transport_state & CMD_T_ABORTED) {
+> > +                     /* handle an abort in TCM */
+> > +                     target_complete_cmd(&cmd->se_cmd, SAM_STAT_TASK_ABORTED);
+> >
+> 
+> Will we have an extra ref left on the se_cmd if TAS is used so the se_cmd
+> does not get freed?
+> 
+> For TAS, it looks like we would do:
+> 
+> - target_handle_abort -> queue_status. This would not do anything because
+> before calling iscsit_release_commands_from_conn we have killed the iscsi tx
+> thread.
+> 
+> - target_handle_abort -> transport_cmd_check_stop_to_fabric -> check_stop_free ->
+> target_put_sess_cmd.
+> 
+> iscsi creates the se_cmd with TARGET_SCF_ACK_KREF set so do we have one ref
+> left?
+Yes, you are right. TAS case is not covered by my patch. But that is
+actually another bug (that iSCSI does not complete responses in case of
+connection closed).
+My patch does not do worse for the that case.
+IMHO, TAS + connection closed case has to be addressed in a separate patch.
+> 
+> For the non TAS case we do two puts:
+> 
+> target_handle_abort -> SCF_ACK_KREF is set so we do a target_put_sess_cmd here.
+> 
+> target_handle_abort -> transport_cmd_check_stop_to_fabric -> check_stop_free ->
+> target_put_sess_cmd which does a second put.
+
