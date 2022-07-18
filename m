@@ -2,56 +2,56 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DAA6CCCA47F
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jul 2022 12:03:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51C44CCA489
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jul 2022 12:03:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234618AbiGRMDU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Jul 2022 08:03:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49824 "EHLO
+        id S234628AbiGRMDW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Jul 2022 08:03:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49836 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234614AbiGRMDS (ORCPT
+        with ESMTP id S234616AbiGRMDS (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jul 2022 08:03:18 -0400
 Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1160023BF4;
-        Mon, 18 Jul 2022 05:03:16 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6076F23BC1;
+        Mon, 18 Jul 2022 05:03:17 -0700 (PDT)
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 6975441253;
+        by mta-01.yadro.com (Postfix) with ESMTP id E11E841243;
         Mon, 18 Jul 2022 12:03:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received:received; s=
-        mta-01; t=1658145792; x=1659960193; bh=Tkl+zatztNDm6Kqin4txodgfT
-        BtK9BpbLcFMWgmlwQw=; b=t1o+0pgiNevcb3MuN/b7HpUZJcBgyXU9heYQaA5Ym
-        Vgyfoeq2t1XgWWjgnaZSxBdQzujzeG9ACDvMsqT05k0uQKetE5AQGt+nph5I9HTv
-        br8N1e2Sfmd671539AgZujR9ErQlUabYdDkq0WK3EuWSLrHQaX71Du3dj004lwUW
-        N0=
+        mta-01; t=1658145790; x=1659960191; bh=0UipmKlEVSZpOdJ1kLDoCcLvt
+        3GLc7DWU/ZXydBphsk=; b=sKeA3iz7AJDI5pbjqVvH8cJC7HFmnq46BO7utL3AW
+        iMSmMiccVIV27xGjre+xGI5Ov1Br50kt0snOC9otw95RBFix3Tcp1KLL2hM6VKxj
+        apvadhuMW1jz9uIZEOx2VWouI+mYpN4JMk2vj90lr40yMM6YKpj1HcPC0YMUxuwH
+        Z8=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id pcuJUPGGtsx8; Mon, 18 Jul 2022 15:03:12 +0300 (MSK)
-Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
+        with ESMTP id acTENU3WBE07; Mon, 18 Jul 2022 15:03:10 +0300 (MSK)
+Received: from T-EXCH-01.corp.yadro.com (t-exch-01.corp.yadro.com [172.17.10.101])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 157BC41243;
-        Mon, 18 Jul 2022 15:03:09 +0300 (MSK)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 4F6A541242;
+        Mon, 18 Jul 2022 15:03:07 +0300 (MSK)
 Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
- T-EXCH-02.corp.yadro.com (172.17.10.102) with Microsoft SMTP Server
+ T-EXCH-01.corp.yadro.com (172.17.10.101) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
  15.1.669.32; Mon, 18 Jul 2022 15:03:07 +0300
 Received: from NB-591.corp.yadro.com (10.199.18.20) by
  T-EXCH-08.corp.yadro.com (172.17.11.58) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.2.1118.9; Mon, 18 Jul 2022 15:03:07 +0300
+ 15.2.1118.9; Mon, 18 Jul 2022 15:03:06 +0300
 From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
 To:     Martin Petersen <martin.petersen@oracle.com>,
         <target-devel@vger.kernel.org>
 CC:     <linux-scsi@vger.kernel.org>, <linux@yadro.com>,
         Dmitry Bogdanov <d.bogdanov@yadro.com>,
         Roman Bolshakov <r.bolshakov@yadro.com>
-Subject: [PATCH 2/6] scsi: target: core: add list of opcodes for RSOC
-Date:   Mon, 18 Jul 2022 15:01:13 +0300
-Message-ID: <20220718120117.4435-3-d.bogdanov@yadro.com>
+Subject: [PATCH 1/6] scsi: target: core: add support of RSOC command
+Date:   Mon, 18 Jul 2022 15:01:12 +0300
+Message-ID: <20220718120117.4435-2-d.bogdanov@yadro.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220718120117.4435-1-d.bogdanov@yadro.com>
 References: <20220718120117.4435-1-d.bogdanov@yadro.com>
@@ -65,633 +65,274 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Add support of REPORT SUPPORTED OPERATION CODES command according
+to SPC4.
+
 Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
 Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
 ---
- drivers/target/target_core_spc.c | 595 +++++++++++++++++++++++++++++++
- include/scsi/scsi_proto.h        |   3 +
- 2 files changed, 598 insertions(+)
+ drivers/target/target_core_spc.c  | 200 ++++++++++++++++++++++++++++++
+ include/scsi/scsi_proto.h         |   7 ++
+ include/target/target_core_base.h |  12 ++
+ 3 files changed, 219 insertions(+)
 
 diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
-index 4157f73977cf..506e28b14e5a 100644
+index c14441c89bed..4157f73977cf 100644
 --- a/drivers/target/target_core_spc.c
 +++ b/drivers/target/target_core_spc.c
-@@ -1308,8 +1308,603 @@ spc_emulate_testunitready(struct se_cmd *cmd)
+@@ -1308,6 +1308,202 @@ spc_emulate_testunitready(struct se_cmd *cmd)
  	return 0;
  }
  
-+static struct target_opcode_descriptor tcm_opcode_read6 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = READ_6,
-+	.cdb_size = 6,
-+	.usage_bits = {READ_6, 0x1f, 0xff, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
++
++static struct target_opcode_descriptor *tcm_supported_opcodes[] = {
 +};
 +
-+static struct target_opcode_descriptor tcm_opcode_read10 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = READ_10,
-+	.cdb_size = 10,
-+	.usage_bits = {READ_10, 0xf8, 0xff, 0xff,
-+		       0xff, 0xff, SCSI_GROUP_NUMBER_MASK, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
++static int
++spc_rsoc_encode_command_timeouts_descriptor(unsigned char *buf, u8 ctdp,
++				struct target_opcode_descriptor *descr)
++{
++	if (!ctdp)
++		return 0;
 +
-+static struct target_opcode_descriptor tcm_opcode_read12 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = READ_12,
-+	.cdb_size = 12,
-+	.usage_bits = {READ_12, 0xf8, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, SCSI_GROUP_NUMBER_MASK, SCSI_CONTROL_MASK},
-+};
++	put_unaligned_be16(0xa, buf);
++	buf[3] = descr->specific_timeout;
++	put_unaligned_be32(descr->nominal_timeout, &buf[4]);
++	put_unaligned_be32(descr->recommended_timeout, &buf[8]);
 +
-+static struct target_opcode_descriptor tcm_opcode_read16 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = READ_16,
-+	.cdb_size = 16,
-+	.usage_bits = {READ_16, 0xf8, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, SCSI_GROUP_NUMBER_MASK, SCSI_CONTROL_MASK},
-+};
++	return 12;
++}
 +
-+static struct target_opcode_descriptor tcm_opcode_write6 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = WRITE_6,
-+	.cdb_size = 6,
-+	.usage_bits = {WRITE_6, 0x1f, 0xff, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
++static int
++spc_rsoc_encode_command_descriptor(unsigned char *buf, u8 ctdp,
++				   struct target_opcode_descriptor *descr)
++{
++	int td_size = 0;
 +
-+static struct target_opcode_descriptor tcm_opcode_write10 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = WRITE_10,
-+	.cdb_size = 10,
-+	.usage_bits = {WRITE_10, 0xf8, 0xff, 0xff,
-+		       0xff, 0xff, SCSI_GROUP_NUMBER_MASK, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
++	buf[0] = descr->opcode;
 +
-+static struct target_opcode_descriptor tcm_opcode_write_verify10 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = WRITE_VERIFY,
-+	.cdb_size = 10,
-+	.usage_bits = {WRITE_VERIFY, 0xf0, 0xff, 0xff,
-+		       0xff, 0xff, SCSI_GROUP_NUMBER_MASK, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
++	put_unaligned_be16(descr->service_action, &buf[2]);
 +
-+static struct target_opcode_descriptor tcm_opcode_write12 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = WRITE_12,
-+	.cdb_size = 12,
-+	.usage_bits = {WRITE_12, 0xf8, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, SCSI_GROUP_NUMBER_MASK, SCSI_CONTROL_MASK},
-+};
++	buf[5] = (ctdp << 1) | descr->serv_action_valid;
++	put_unaligned_be16(descr->cdb_size, &buf[6]);
 +
-+static struct target_opcode_descriptor tcm_opcode_write16 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = WRITE_16,
-+	.cdb_size = 16,
-+	.usage_bits = {WRITE_16, 0xf8, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, SCSI_GROUP_NUMBER_MASK, SCSI_CONTROL_MASK},
-+};
++	td_size = spc_rsoc_encode_command_timeouts_descriptor(&buf[8], ctdp,
++							      descr);
 +
-+static struct target_opcode_descriptor tcm_opcode_write_verify16 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = WRITE_VERIFY_16,
-+	.cdb_size = 16,
-+	.usage_bits = {WRITE_VERIFY_16, 0xf0, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, SCSI_GROUP_NUMBER_MASK, SCSI_CONTROL_MASK},
-+};
++	return 8 + td_size;
++}
 +
-+static struct target_opcode_descriptor tcm_opcode_xdwriteread10 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = XDWRITEREAD_10,
-+	.cdb_size = 10,
-+	.usage_bits = {XDWRITEREAD_10, 0x18, 0xff, 0xff,
-+		       0xff, 0xff, SCSI_GROUP_NUMBER_MASK, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
++static int
++spc_rsoc_encode_one_command_descriptor(unsigned char *buf, u8 ctdp,
++				       struct target_opcode_descriptor *descr)
++{
++	int td_size = 0;
 +
-+static struct target_opcode_descriptor tcm_opcode_xdwriteread32 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = VARIABLE_LENGTH_CMD,
-+	.service_action = XDWRITEREAD_32,
-+	.cdb_size = 32,
-+	.usage_bits = {VARIABLE_LENGTH_CMD, SCSI_CONTROL_MASK, 0x00, 0x00,
-+		       0x00, 0x00, SCSI_GROUP_NUMBER_MASK, 0x18,
-+		       0x00, XDWRITEREAD_32, 0x18, 0x00,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0x00, 0x00, 0x00, 0x00,
-+		       0x00, 0x00, 0x00, 0x00,
-+		       0xff, 0xff, 0xff, 0xff},
-+};
++	if (!descr) {
++		buf[1] = (ctdp << 7) | SCSI_SUPPORT_NOT_SUPPORTED;
++		return 2;
++	}
 +
-+static struct target_opcode_descriptor tcm_opcode_write_same32 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = VARIABLE_LENGTH_CMD,
-+	.service_action = WRITE_SAME_32,
-+	.cdb_size = 32,
-+	.usage_bits = {VARIABLE_LENGTH_CMD, SCSI_CONTROL_MASK, 0x00, 0x00,
-+		       0x00, 0x00, SCSI_GROUP_NUMBER_MASK, 0x18,
-+		       0x00, WRITE_SAME_32, 0xe8, 0x00,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0x00, 0x00, 0x00, 0x00,
-+		       0x00, 0x00, 0x00, 0x00,
-+		       0xff, 0xff, 0xff, 0xff},
-+};
++	buf[1] = (ctdp << 7) | SCSI_SUPPORT_FULL;
++	put_unaligned_be16(descr->cdb_size, &buf[2]);
++	memcpy(&buf[4], descr->usage_bits, descr->cdb_size);
 +
-+static struct target_opcode_descriptor tcm_opcode_compare_write = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = COMPARE_AND_WRITE,
-+	.cdb_size = 16,
-+	.usage_bits = {COMPARE_AND_WRITE, 0x18, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, 0x00, 0x00,
-+		       0x00, 0xff, SCSI_GROUP_NUMBER_MASK, SCSI_CONTROL_MASK},
-+};
++	td_size = spc_rsoc_encode_command_timeouts_descriptor(
++			&buf[4 + descr->cdb_size], ctdp, descr);
 +
-+static struct target_opcode_descriptor tcm_opcode_read_capacity = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = READ_CAPACITY,
-+	.cdb_size = 10,
-+	.usage_bits = {READ_CAPACITY, 0x00, 0xff, 0xff,
-+		       0xff, 0xff, 0x00, 0x00,
-+		       0x01, SCSI_CONTROL_MASK},
-+};
++	return 4 + descr->cdb_size + td_size;
++}
 +
-+static struct target_opcode_descriptor tcm_opcode_read_capacity16 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = SERVICE_ACTION_IN_16,
-+	.service_action = SAI_READ_CAPACITY_16,
-+	.cdb_size = 16,
-+	.usage_bits = {SERVICE_ACTION_IN_16, SAI_READ_CAPACITY_16, 0x00, 0x00,
-+		       0x00, 0x00, 0x00, 0x00,
-+		       0x00, 0x00, 0xff, 0xff,
-+		       0xff, 0xff, 0x00, SCSI_CONTROL_MASK},
-+};
++static sense_reason_t
++spc_rsoc_get_descr(struct se_cmd *cmd, struct target_opcode_descriptor **opcode)
++{
++	struct target_opcode_descriptor *descr;
++	struct se_session *sess = cmd->se_sess;
++	unsigned char *cdb = cmd->t_task_cdb;
++	u8 opts = cdb[2] & 0x3;
++	u8 requested_opcode;
++	u16 requested_sa;
++	int i;
 +
-+static struct target_opcode_descriptor tcm_opcode_read_report_refferals = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = SERVICE_ACTION_IN_16,
-+	.service_action = SAI_REPORT_REFERRALS,
-+	.cdb_size = 16,
-+	.usage_bits = {SERVICE_ACTION_IN_16, SAI_REPORT_REFERRALS, 0x00, 0x00,
-+		       0x00, 0x00, 0x00, 0x00,
-+		       0x00, 0x00, 0xff, 0xff,
-+		       0xff, 0xff, 0x00, SCSI_CONTROL_MASK},
-+};
++	requested_opcode = cdb[3];
++	requested_sa = ((u16)cdb[4]) << 8 | cdb[5];
++	*opcode = NULL;
 +
-+static struct target_opcode_descriptor tcm_opcode_sync_cache = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = SYNCHRONIZE_CACHE,
-+	.cdb_size = 10,
-+	.usage_bits = {SYNCHRONIZE_CACHE, 0x02, 0xff, 0xff,
-+		       0xff, 0xff, SCSI_GROUP_NUMBER_MASK, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
++	if (opts > 3) {
++		pr_debug("TARGET_CORE[%s]: Invalid REPORT SUPPORTED OPERATION CODES"
++			" with unsupported REPORTING OPTIONS %#x for 0x%08llx from %s\n",
++			cmd->se_tfo->fabric_name, opts,
++			cmd->se_lun->unpacked_lun,
++			sess->se_node_acl->initiatorname);
++		return TCM_INVALID_CDB_FIELD;
++	}
 +
-+static struct target_opcode_descriptor tcm_opcode_sync_cache16 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = SYNCHRONIZE_CACHE_16,
-+	.cdb_size = 16,
-+	.usage_bits = {SYNCHRONIZE_CACHE_16, 0x02, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, SCSI_GROUP_NUMBER_MASK, SCSI_CONTROL_MASK},
-+};
++	for (i = 0; i < ARRAY_SIZE(tcm_supported_opcodes); i++) {
++		descr = tcm_supported_opcodes[i];
++		if (descr->opcode != requested_opcode)
++			continue;
 +
-+static struct target_opcode_descriptor tcm_opcode_unmap = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = UNMAP,
-+	.cdb_size = 10,
-+	.usage_bits = {UNMAP, 0x00, 0x00, 0x00,
-+		       0x00, 0x00, SCSI_GROUP_NUMBER_MASK, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
++		switch (opts) {
++		case 0x1:
++			/*
++			 * If the REQUESTED OPERATION CODE field specifies an
++			 * operation code for which the device server implements
++			 * service actions, then the device server shall
++			 * terminate the command with CHECK CONDITION status,
++			 * with the sense key set to ILLEGAL REQUEST, and the
++			 * additional sense code set to INVALID FIELD IN CDB
++			 */
++			if (descr->serv_action_valid)
++				return TCM_INVALID_CDB_FIELD;
++			*opcode = descr;
++			break;
++		case 0x2:
++			/*
++			 * If the REQUESTED OPERATION CODE field specifies an
++			 * operation code for which the device server does not
++			 * implement service actions, then the device server
++			 * shall terminate the command with CHECK CONDITION
++			 * status, with the sense key set to ILLEGAL REQUEST,
++			 * and the additional sense code set to INVALID FIELD IN CDB.
++			 */
++			if (descr->serv_action_valid &&
++			    descr->service_action == requested_sa)
++				*opcode = descr;
++			else if (!descr->serv_action_valid)
++				return TCM_INVALID_CDB_FIELD;
++			break;
++		case 0x3:
++			/*
++			 * The command support data for the operation code and
++			 * service action a specified in the REQUESTED OPERATION
++			 * CODE field and REQUESTED SERVICE ACTION field shall
++			 * be returned in the one_command parameter data format.
++			 */
++			if (descr->service_action == requested_sa)
++				*opcode = descr;
++			break;
++		}
++	}
++	return 0;
++}
 +
-+static struct target_opcode_descriptor tcm_opcode_write_same = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = WRITE_SAME,
-+	.cdb_size = 10,
-+	.usage_bits = {WRITE_SAME, 0xe8, 0xff, 0xff,
-+		       0xff, 0xff, SCSI_GROUP_NUMBER_MASK, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
++static sense_reason_t
++spc_emulate_report_supp_op_codes(struct se_cmd *cmd)
++{
++	int descr_num = ARRAY_SIZE(tcm_supported_opcodes);
++	struct target_opcode_descriptor *descr = NULL;
++	unsigned char *cdb = cmd->t_task_cdb;
++	u8 rctd = (cdb[2] >> 7) & 0x1;
++	unsigned char *buf = NULL;
++	int response_length = 0;
++	u8 opts = cdb[2] & 0x3;
++	unsigned char *rbuf;
++	int ret = 0;
++	int i;
 +
-+static struct target_opcode_descriptor tcm_opcode_write_same16 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = WRITE_SAME_16,
-+	.cdb_size = 16,
-+	.usage_bits = {WRITE_SAME_16, 0xe8, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, SCSI_GROUP_NUMBER_MASK, SCSI_CONTROL_MASK},
-+};
++	rbuf = transport_kmap_data_sg(cmd);
++	if (cmd->data_length && !rbuf) {
++		ret = TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
++		goto out;
++	}
 +
-+static struct target_opcode_descriptor tcm_opcode_verify = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = VERIFY,
-+	.cdb_size = 10,
-+	.usage_bits = {VERIFY, 0x00, 0xff, 0xff,
-+		       0xff, 0xff, SCSI_GROUP_NUMBER_MASK, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
++	if (opts == 0)
++		response_length = 4 + (8 + rctd * 12) * descr_num;
++	else {
++		ret = spc_rsoc_get_descr(cmd, &descr);
++		if (ret)
++			goto out;
 +
-+static struct target_opcode_descriptor tcm_opcode_verify16 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = VERIFY_16,
-+	.cdb_size = 16,
-+	.usage_bits = {VERIFY_16, 0x00, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, SCSI_GROUP_NUMBER_MASK, SCSI_CONTROL_MASK},
-+};
++		if (descr)
++			response_length = 4 + descr->cdb_size + rctd * 12;
++		else
++			response_length = 2;
++	}
 +
-+static struct target_opcode_descriptor tcm_opcode_start_stop = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = START_STOP,
-+	.cdb_size = 6,
-+	.usage_bits = {START_STOP, 0x01, 0x00, 0x00,
-+		       0x01, SCSI_CONTROL_MASK},
-+};
++	buf = kzalloc(response_length, GFP_KERNEL);
++	if (!buf) {
++		ret = TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
++		goto out;
++	}
++	response_length = 0;
 +
-+static struct target_opcode_descriptor tcm_opcode_mode_select = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = MODE_SELECT,
-+	.cdb_size = 6,
-+	.usage_bits = {MODE_SELECT, 0x10, 0x00, 0x00,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
++	if (opts == 0) {
++		response_length += 4;
 +
-+static struct target_opcode_descriptor tcm_opcode_mode_select10 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = MODE_SELECT_10,
-+	.cdb_size = 10,
-+	.usage_bits = {MODE_SELECT_10, 0x10, 0x00, 0x00,
-+		       0x00, 0x00, 0x00, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
++		for (i = 0; i < ARRAY_SIZE(tcm_supported_opcodes); i++) {
++			descr = tcm_supported_opcodes[i];
++			response_length += spc_rsoc_encode_command_descriptor(
++					&buf[response_length], rctd, descr);
++		}
++		put_unaligned_be32(response_length - 3, buf);
++	} else {
++		response_length = spc_rsoc_encode_one_command_descriptor(
++				&buf[response_length], rctd, descr);
++	}
 +
-+static struct target_opcode_descriptor tcm_opcode_mode_sense = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = MODE_SENSE,
-+	.cdb_size = 6,
-+	.usage_bits = {MODE_SENSE, 0x08, 0xff, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
++	memcpy(rbuf, buf, min_t(u32, response_length, cmd->data_length));
++out:
++	kfree(buf);
++	transport_kunmap_data_sg(cmd);
 +
-+static struct target_opcode_descriptor tcm_opcode_mode_sense10 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = MODE_SENSE_10,
-+	.cdb_size = 10,
-+	.usage_bits = {MODE_SENSE_10, 0x18, 0xff, 0xff,
-+		       0x00, 0x00, 0x00, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
++	if (!ret)
++		target_complete_cmd_with_length(cmd, SAM_STAT_GOOD, response_length);
++	return ret;
++}
 +
-+static struct target_opcode_descriptor tcm_opcode_pri_read_keys = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = PERSISTENT_RESERVE_IN,
-+	.service_action = PRI_READ_KEYS,
-+	.cdb_size = 10,
-+	.usage_bits = {PERSISTENT_RESERVE_IN, PRI_READ_KEYS, 0x00, 0x00,
-+		       0x00, 0x00, 0x00, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_pri_read_resrv = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = PERSISTENT_RESERVE_IN,
-+	.service_action = PRI_READ_RESERVATION,
-+	.cdb_size = 10,
-+	.usage_bits = {PERSISTENT_RESERVE_IN, PRI_READ_RESERVATION, 0x00, 0x00,
-+		       0x00, 0x00, 0x00, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_pri_read_caps = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = PERSISTENT_RESERVE_IN,
-+	.service_action = PRI_REPORT_CAPABILITIES,
-+	.cdb_size = 10,
-+	.usage_bits = {PERSISTENT_RESERVE_IN, PRI_REPORT_CAPABILITIES, 0x00, 0x00,
-+		       0x00, 0x00, 0x00, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_pri_read_full_status = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = PERSISTENT_RESERVE_IN,
-+	.service_action = PRI_READ_FULL_STATUS,
-+	.cdb_size = 10,
-+	.usage_bits = {PERSISTENT_RESERVE_IN, PRI_READ_FULL_STATUS, 0x00, 0x00,
-+		       0x00, 0x00, 0x00, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_pro_register = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = PERSISTENT_RESERVE_OUT,
-+	.service_action = PRO_REGISTER,
-+	.cdb_size = 10,
-+	.usage_bits = {PERSISTENT_RESERVE_OUT, PRO_REGISTER, 0xff, 0x00,
-+		       0x00, 0xff, 0xff, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_pro_reserve = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = PERSISTENT_RESERVE_OUT,
-+	.service_action = PRO_RESERVE,
-+	.cdb_size = 10,
-+	.usage_bits = {PERSISTENT_RESERVE_OUT, PRO_RESERVE, 0xff, 0x00,
-+		       0x00, 0xff, 0xff, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_pro_release = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = PERSISTENT_RESERVE_OUT,
-+	.service_action = PRO_RELEASE,
-+	.cdb_size = 10,
-+	.usage_bits = {PERSISTENT_RESERVE_OUT, PRO_RELEASE, 0xff, 0x00,
-+		       0x00, 0xff, 0xff, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_pro_clear = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = PERSISTENT_RESERVE_OUT,
-+	.service_action = PRO_CLEAR,
-+	.cdb_size = 10,
-+	.usage_bits = {PERSISTENT_RESERVE_OUT, PRO_CLEAR, 0xff, 0x00,
-+		       0x00, 0xff, 0xff, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_pro_preempt = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = PERSISTENT_RESERVE_OUT,
-+	.service_action = PRO_PREEMPT,
-+	.cdb_size = 10,
-+	.usage_bits = {PERSISTENT_RESERVE_OUT, PRO_PREEMPT, 0xff, 0x00,
-+		       0x00, 0xff, 0xff, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_pro_preempt_abort = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = PERSISTENT_RESERVE_OUT,
-+	.service_action = PRO_PREEMPT_AND_ABORT,
-+	.cdb_size = 10,
-+	.usage_bits = {PERSISTENT_RESERVE_OUT, PRO_PREEMPT_AND_ABORT, 0xff, 0x00,
-+		       0x00, 0xff, 0xff, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_pro_reg_ign_exist = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = PERSISTENT_RESERVE_OUT,
-+	.service_action = PRO_REGISTER_AND_IGNORE_EXISTING_KEY,
-+	.cdb_size = 10,
-+	.usage_bits = {
-+		PERSISTENT_RESERVE_OUT, PRO_REGISTER_AND_IGNORE_EXISTING_KEY,
-+		0xff, 0x00,
-+		0x00, 0xff, 0xff, 0xff,
-+		0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_pro_register_move = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = PERSISTENT_RESERVE_OUT,
-+	.service_action = PRO_REGISTER_AND_MOVE,
-+	.cdb_size = 10,
-+	.usage_bits = {PERSISTENT_RESERVE_OUT, PRO_REGISTER_AND_MOVE, 0xff, 0x00,
-+		       0x00, 0xff, 0xff, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_release = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = RELEASE,
-+	.cdb_size = 6,
-+	.usage_bits = {RELEASE, 0x00, 0x00, 0x00,
-+		       0x00, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_release10 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = RELEASE_10,
-+	.cdb_size = 10,
-+	.usage_bits = {RELEASE_10, 0x00, 0x00, 0x00,
-+		       0x00, 0x00, 0x00, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_reserve = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = RESERVE,
-+	.cdb_size = 6,
-+	.usage_bits = {RESERVE, 0x00, 0x00, 0x00,
-+		       0x00, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_reserve10 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = RESERVE_10,
-+	.cdb_size = 10,
-+	.usage_bits = {RESERVE_10, 0x00, 0x00, 0x00,
-+		       0x00, 0x00, 0x00, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_request_sense = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = REQUEST_SENSE,
-+	.cdb_size = 6,
-+	.usage_bits = {REQUEST_SENSE, 0x00, 0x00, 0x00,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_inquiry = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = INQUIRY,
-+	.cdb_size = 6,
-+	.usage_bits = {INQUIRY, 0x01, 0xff, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_extended_copy_lid1 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = EXTENDED_COPY,
-+	.cdb_size = 16,
-+	.usage_bits = {EXTENDED_COPY, 0x00, 0x00, 0x00,
-+		       0x00, 0x00, 0x00, 0x00,
-+		       0x00, 0x00, 0xff, 0xff,
-+		       0xff, 0xff, 0x00, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_rcv_copy_res_op_params = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = RECEIVE_COPY_RESULTS,
-+	.service_action = RCR_SA_OPERATING_PARAMETERS,
-+	.cdb_size = 16,
-+	.usage_bits = {RECEIVE_COPY_RESULTS, RCR_SA_OPERATING_PARAMETERS,
-+		       0x00, 0x00,
-+		       0x00, 0x00, 0x00, 0x00,
-+		       0x00, 0x00, 0xff, 0xff,
-+		       0xff, 0xff, 0x00, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_report_luns = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = REPORT_LUNS,
-+	.cdb_size = 12,
-+	.usage_bits = {REPORT_LUNS, 0x00, 0xff, 0x00,
-+		       0x00, 0x00, 0xff, 0xff,
-+		       0xff, 0xff, 0x00, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_test_unit_ready = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = TEST_UNIT_READY,
-+	.cdb_size = 6,
-+	.usage_bits = {TEST_UNIT_READY, 0x00, 0x00, 0x00,
-+		       0x00, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_report_target_pgs = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = MAINTENANCE_IN,
-+	.service_action = MI_REPORT_TARGET_PGS,
-+	.cdb_size = 12,
-+	.usage_bits = {MAINTENANCE_IN, 0xE0 | MI_REPORT_TARGET_PGS, 0x00, 0x00,
-+		       0x00, 0x00, 0xff, 0xff,
-+		       0xff, 0xff, 0x00, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_report_supp_opcodes = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = MAINTENANCE_IN,
-+	.service_action = MI_REPORT_SUPPORTED_OPERATION_CODES,
-+	.cdb_size = 12,
-+	.usage_bits = {MAINTENANCE_IN, MI_REPORT_SUPPORTED_OPERATION_CODES,
-+		       0x87, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, 0x00, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_set_tpg = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = MAINTENANCE_OUT,
-+	.service_action = MO_SET_TARGET_PGS,
-+	.cdb_size = 12,
-+	.usage_bits = {MAINTENANCE_OUT, MO_SET_TARGET_PGS, 0x00, 0x00,
-+		       0x00, 0x00, 0xff, 0xff,
-+		       0xff, 0xff, 0x00, SCSI_CONTROL_MASK},
-+};
- 
- static struct target_opcode_descriptor *tcm_supported_opcodes[] = {
-+	&tcm_opcode_read6,
-+	&tcm_opcode_read10,
-+	&tcm_opcode_read12,
-+	&tcm_opcode_read16,
-+	&tcm_opcode_write6,
-+	&tcm_opcode_write10,
-+	&tcm_opcode_write_verify10,
-+	&tcm_opcode_write12,
-+	&tcm_opcode_write16,
-+	&tcm_opcode_write_verify16,
-+	&tcm_opcode_xdwriteread10,
-+	&tcm_opcode_xdwriteread32,
-+	&tcm_opcode_write_same32,
-+	&tcm_opcode_compare_write,
-+	&tcm_opcode_read_capacity,
-+	&tcm_opcode_read_capacity16,
-+	&tcm_opcode_read_report_refferals,
-+	&tcm_opcode_sync_cache,
-+	&tcm_opcode_sync_cache16,
-+	&tcm_opcode_unmap,
-+	&tcm_opcode_write_same,
-+	&tcm_opcode_write_same16,
-+	&tcm_opcode_verify,
-+	&tcm_opcode_verify16,
-+	&tcm_opcode_start_stop,
-+	&tcm_opcode_mode_select,
-+	&tcm_opcode_mode_select10,
-+	&tcm_opcode_mode_sense,
-+	&tcm_opcode_mode_sense10,
-+	&tcm_opcode_pri_read_keys,
-+	&tcm_opcode_pri_read_resrv,
-+	&tcm_opcode_pri_read_caps,
-+	&tcm_opcode_pri_read_full_status,
-+	&tcm_opcode_pro_register,
-+	&tcm_opcode_pro_reserve,
-+	&tcm_opcode_pro_release,
-+	&tcm_opcode_pro_clear,
-+	&tcm_opcode_pro_preempt,
-+	&tcm_opcode_pro_preempt_abort,
-+	&tcm_opcode_pro_reg_ign_exist,
-+	&tcm_opcode_pro_register_move,
-+	&tcm_opcode_release,
-+	&tcm_opcode_release10,
-+	&tcm_opcode_reserve,
-+	&tcm_opcode_reserve10,
-+	&tcm_opcode_request_sense,
-+	&tcm_opcode_inquiry,
-+	&tcm_opcode_extended_copy_lid1,
-+	&tcm_opcode_rcv_copy_res_op_params,
-+	&tcm_opcode_report_luns,
-+	&tcm_opcode_test_unit_ready,
-+	&tcm_opcode_report_target_pgs,
-+	&tcm_opcode_report_supp_opcodes,
-+	&tcm_opcode_set_tpg,
- };
- 
- static int
+ sense_reason_t
+ spc_parse_cdb(struct se_cmd *cmd, unsigned int *size)
+ {
+@@ -1433,6 +1629,10 @@ spc_parse_cdb(struct se_cmd *cmd, unsigned int *size)
+ 				cmd->execute_cmd =
+ 					target_emulate_report_target_port_groups;
+ 			}
++			if ((cdb[1] & 0x1f) ==
++			    MI_REPORT_SUPPORTED_OPERATION_CODES)
++				cmd->execute_cmd =
++					spc_emulate_report_supp_op_codes;
+ 			*size = get_unaligned_be32(&cdb[6]);
+ 		} else {
+ 			/*
 diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
-index 651b5183451c..cb722225b3bc 100644
+index c03e35fc382c..651b5183451c 100644
 --- a/include/scsi/scsi_proto.h
 +++ b/include/scsi/scsi_proto.h
-@@ -349,4 +349,7 @@ enum scsi_support_opcode {
- 	SCSI_SUPPORT_VENDOR		= 5,
+@@ -342,4 +342,11 @@ enum scsi_version_descriptor {
+ 	SCSI_VERSION_DESCRIPTOR_SRP	= 0x0940
  };
  
-+#define SCSI_CONTROL_MASK 0
-+#define SCSI_GROUP_NUMBER_MASK 0
++enum scsi_support_opcode {
++	SCSI_SUPPORT_NO_INFO		= 0,
++	SCSI_SUPPORT_NOT_SUPPORTED	= 1,
++	SCSI_SUPPORT_FULL		= 3,
++	SCSI_SUPPORT_VENDOR		= 5,
++};
 +
  #endif /* _SCSI_PROTO_H_ */
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index c2b36f7d917d..d93c65bcbc11 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -867,6 +867,18 @@ struct se_device {
+ 	struct se_device_queue	*queues;
+ };
+ 
++struct target_opcode_descriptor {
++	u8			support:3;
++	u8			serv_action_valid:1;
++	u8			opcode;
++	u16			service_action;
++	u32			cdb_size;
++	u8			specific_timeout;
++	u16			nominal_timeout;
++	u16			recommended_timeout;
++	u8			usage_bits[];
++};
++
+ struct se_hba {
+ 	u16			hba_tpgt;
+ 	u32			hba_id;
 -- 
 2.25.1
 
