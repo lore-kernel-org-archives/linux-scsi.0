@@ -2,111 +2,214 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B49FEC43334
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jul 2022 09:42:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57C72C43334
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jul 2022 09:48:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234166AbiGRJmN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Jul 2022 05:42:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34798 "EHLO
+        id S234250AbiGRJsW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Jul 2022 05:48:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39212 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234189AbiGRJlv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jul 2022 05:41:51 -0400
-Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40FA718B19
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2022 02:41:49 -0700 (PDT)
-Received: by mail-pj1-x1034.google.com with SMTP id o5-20020a17090a3d4500b001ef76490983so12064986pjf.2
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2022 02:41:49 -0700 (PDT)
+        with ESMTP id S233917AbiGRJsV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jul 2022 05:48:21 -0400
+Received: from mail-oa1-x33.google.com (mail-oa1-x33.google.com [IPv6:2001:4860:4864:20::33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 738A21ADB6
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2022 02:48:20 -0700 (PDT)
+Received: by mail-oa1-x33.google.com with SMTP id 586e51a60fabf-10cf9f5b500so21178480fac.2
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2022 02:48:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version;
-        bh=jYzkq426+uqL/XFtDPOsAEQeK0doS0hRFdPKamrR8xg=;
-        b=K2KREIocC7HROWrgOb6LcQ9KbctTq77umnqN92xOgTq7n/MK7Xc/NIG1nXMX6cVV6D
-         /Tzbn3vhXps/UfqCnUdeZNyaAhWL0n0FNoSCHPmKl5ODqQ7eXAsbzo69b1iDMrsS8KVb
-         vejVNeVtg0pcRlsTS/+eBSSDsyJ4v+LTLOK+Q=
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=+L1rkRQaOuQYcHcjOyifCg8nVcfu+2h+xjHYtVgDbqs=;
+        b=ZGGq5jVhTao3b6qP6r66Wze0gcfAQQ8TlI0+BOo0JsRHaLfdM0MojUQ6wt3q/c8cU+
+         Dn3Z0/VtYj9/4jfm5lJ9sGfGXBc6TMPIcntI5CaGcc3nivm/XF3cTSCmPRiwVf/7bH8V
+         qz8xlyzKT6tnBxhAW2gIYd95drSuEYLiJKdfE=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version;
-        bh=jYzkq426+uqL/XFtDPOsAEQeK0doS0hRFdPKamrR8xg=;
-        b=67aNLvwNl/blHlCXda9KqlyE8/c7Yp6aUs5ntr98+YfwIjbXXs17QaaSUrwLRMh4gi
-         eEs4IZgHZ0m8dgjkROV9r6kK17BLRbexBr7wJwYNGJEMI5OEZydjRJ1HnCI1uxERdyxA
-         XjcEJ/hemmIvcs3gJrPOUH/TaQkG9mIClZUVK6ewUm/m+5/s7aturpHjz+kOqGWgpVYZ
-         y/xa7exiAiRudxJKTMhXqlCeFYkR7DjhVySSf/K3oBtuf40IPnRkMokUCbPm+7fqnZ1j
-         i9xr47rfl5CF3/i29dt8nTpxQ5K4PZciQmwPuABj5Cxxlv8Zi0NE//OZ79Vrp62JF+4a
-         Bv1A==
-X-Gm-Message-State: AJIora9YJS1MjKXe8XLi/yCLD2xW2baahwpv2Cz7PnJK4NfzvQypjwJU
-        teEXgL7KUC6+MsivgTRzdhPSksnwbqA4/lkCJEJpc87sujvrjG6Eh9Xm0UVgvSLyIg1F9xutDzY
-        m60CW/DRxRi5LN79F/p9AGJ4v8NFERys//XWHQyFXhqcmnFnMBrk2DLn9wDKISzuasI+qzgjPLl
-        6Ap3MDR2c0s5s=
-X-Google-Smtp-Source: AGRyM1sacUSwr4dCPDJ4seXk2zNm4tqixu4ezDepf0IPNZVPIxFi2CAntCUmWSmgYW3/hRQ9l86qYQ==
-X-Received: by 2002:a17:902:d542:b0:16c:8ac:f471 with SMTP id z2-20020a170902d54200b0016c08acf471mr27744231plf.39.1658137308932;
-        Mon, 18 Jul 2022 02:41:48 -0700 (PDT)
-Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id x19-20020aa79413000000b0052b66304d54sm2303092pfo.74.2022.07.18.02.41.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 Jul 2022 02:41:48 -0700 (PDT)
-From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     martin.petersen@oracle.com,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Guenter Roeck <linux@roeck-us.net>
-Subject: [PATCH v2 1/1] mpi3mr: Fix compilation errors observed on i386 arch
-Date:   Mon, 18 Jul 2022 15:23:51 +0530
-Message-Id: <20220718095351.15868-2-sreekanth.reddy@broadcom.com>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20220718095351.15868-1-sreekanth.reddy@broadcom.com>
-References: <20220718095351.15868-1-sreekanth.reddy@broadcom.com>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=+L1rkRQaOuQYcHcjOyifCg8nVcfu+2h+xjHYtVgDbqs=;
+        b=fotpkq7EFkt1xUS6Cth5+AAVMMADS9S2oHwsSFJEegIxgi3nEsAEv0uqXq5j0pY2Ep
+         mn008PmA61aNDM+864jeCLaGQfUzIrURTTK0iv8VxINvPobhXCftZomVFdKHD5zv8SBE
+         fVW+uYpSW2hbqdbOTy2YvruE5AsKXPlIj2f4ogIa61qvuPq1KHKzKESGrt0DRloFPHD/
+         yTNNaulny5SELKeOj42mapA+B686AeaTEBd5P0djfh90EQ8Gdj9SXeAvGf50XRtdPu5R
+         zmkYoIoQQDyBMfvkXKDTh8uUWesIDwRhFRjtAHbLAuQO+Y0BqT4Kx2cU0mkVxophVlKb
+         w3dw==
+X-Gm-Message-State: AJIora8GvW9rOAGzz3le07LBusmklQf0Vk7UE9xFi9z65EwBJtRe4Bzr
+        WmCk0ooD3D/LUsgdJGrkjLX1vSvgSzApgDw+GWQqA/sH8U9wUGCp
+X-Google-Smtp-Source: AGRyM1uvUwDzIzbxV0alZkrOAS4DaemGhV+WwLZjkbCVE/0nIX/QZqwGu1gs2cvsh3rMyRTOMjPJKLktWxP47glGrTM=
+X-Received: by 2002:a05:6870:8308:b0:10c:2b7d:4f19 with SMTP id
+ p8-20020a056870830800b0010c2b7d4f19mr13943525oae.234.1658137699575; Mon, 18
+ Jul 2022 02:48:19 -0700 (PDT)
 MIME-Version: 1.0
+References: <20220715150219.16875-1-sreekanth.reddy@broadcom.com>
+ <20220715150219.16875-2-sreekanth.reddy@broadcom.com> <3a869ecf-bd82-2e72-2ec9-7b67a20c2d63@roeck-us.net>
+ <CAK=zhgogTnOgCwGytaay3fBJjuj1aw4ssOp-=nG75-2a-k3gkA@mail.gmail.com> <0cd50038-4988-0a6e-1bae-a82edde962b9@roeck-us.net>
+In-Reply-To: <0cd50038-4988-0a6e-1bae-a82edde962b9@roeck-us.net>
+From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Date:   Mon, 18 Jul 2022 15:18:08 +0530
+Message-ID: <CAK=zhgrnU1du6x+Zv5C2QqW6fqDRyoKcunYLm7WT+vPdfyr_ug@mail.gmail.com>
+Subject: Re: [PATCH 1/1] mpi3mr: Fix compilation errors observed on i386 arch
+To:     Guenter Roeck <linux@roeck-us.net>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000514c1005e4112d3c"
+        boundary="00000000000098cb8a05e4114478"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000514c1005e4112d3c
-Content-Transfer-Encoding: 8bit
+--00000000000098cb8a05e4114478
+Content-Type: text/plain; charset="UTF-8"
 
-Fix below compilation errors observed on i386 ARCH,
+On Sat, Jul 16, 2022 at 7:34 PM Guenter Roeck <linux@roeck-us.net> wrote:
+>
+> On 7/16/22 06:35, Sreekanth Reddy wrote:
+> > Hi Guenter,
+> >
+> > Please check the changes below. I hope this change will work with
+> > 32-bit pointers as well.  If it looks good then I will post this
+> > change as a patch.
+> >
+> > diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+> > index 0901bc932d5c..0bba19c0f984 100644
+> > --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
+> > +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+> > @@ -386,7 +386,7 @@ static void mpi3mr_queue_qd_reduction_event(struct
+> > mpi3mr_ioc *mrioc,
+> >                  ioc_warn(mrioc, "failed to queue TG QD reduction event\n");
+> >                  return;
+> >          }
+> > -       *(__le64 *)fwevt->event_data = (__le64)tg;
+> > +       memcpy(fwevt->event_data, (char *)&tg, sizeof(void *)); >          fwevt->mrioc = mrioc;
+> >          fwevt->event_id = MPI3MR_DRIVER_EVENT_TG_QD_REDUCTION;
+> >          fwevt->send_ack = 0;
+> > @@ -1660,8 +1660,7 @@ static void mpi3mr_fwevt_bh(struct mpi3mr_ioc *mrioc,
+> >          {
+> >                  struct mpi3mr_throttle_group_info *tg;
+> >
+> > -               tg = (struct mpi3mr_throttle_group_info *)
+> > -                   (*(__le64 *)fwevt->event_data);
+> > +               memcpy((char *)&tg, fwevt->event_data, sizeof(void *));
+> >                  dprint_event_bh(mrioc,
+> >                      "qd reduction event processed for tg_id(%d)
+> > reduction_needed(%d)\n",
+> >                      tg->id, tg->need_qd_reduction);
+> >
+>
+> If I understand correctly, you want to pass the pointer to tg along. If so,
+> the following seems cleaner and less confusing to me.
 
-cast from pointer to integer of different size
-[-Werror=pointer-to-int-cast]
+Yes, it is correct. I have posted a new patch with your suggested changes below.
+https://patchwork.kernel.org/project/linux-scsi/patch/20220718095351.15868-2-sreekanth.reddy@broadcom.com/
 
-Fixes: c196bc4dce ("scsi: mpi3mr: Reduce VD queue depth on detecting throttling")
-Reported-by: Guenter Roeck <linux@roeck-us.net>
-Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
----
- drivers/scsi/mpi3mr/mpi3mr_os.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+Thanks,
+Sreekanth
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 0901bc932d5c..4102636df4fc 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -386,7 +386,7 @@ static void mpi3mr_queue_qd_reduction_event(struct mpi3mr_ioc *mrioc,
- 		ioc_warn(mrioc, "failed to queue TG QD reduction event\n");
- 		return;
- 	}
--	*(__le64 *)fwevt->event_data = (__le64)tg;
-+	*(struct mpi3mr_throttle_group_info **)fwevt->event_data = tg;
- 	fwevt->mrioc = mrioc;
- 	fwevt->event_id = MPI3MR_DRIVER_EVENT_TG_QD_REDUCTION;
- 	fwevt->send_ack = 0;
-@@ -1660,8 +1660,7 @@ static void mpi3mr_fwevt_bh(struct mpi3mr_ioc *mrioc,
- 	{
- 		struct mpi3mr_throttle_group_info *tg;
- 
--		tg = (struct mpi3mr_throttle_group_info *)
--		    (*(__le64 *)fwevt->event_data);
-+		tg = *(struct mpi3mr_throttle_group_info **)fwevt->event_data;
- 		dprint_event_bh(mrioc,
- 		    "qd reduction event processed for tg_id(%d) reduction_needed(%d)\n",
- 		    tg->id, tg->need_qd_reduction);
--- 
-2.27.0
+>
+> diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+> index 6a47f8c77256..f581c07c2665 100644
+> --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
+> +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+> @@ -386,7 +386,7 @@ static void mpi3mr_queue_qd_reduction_event(struct mpi3mr_ioc *mrioc,
+>                  ioc_warn(mrioc, "failed to queue TG QD reduction event\n");
+>                  return;
+>          }
+> -       *(__le64 *)fwevt->event_data = (__le64)tg;
+> +       *(struct mpi3mr_throttle_group_info **)fwevt->event_data = tg;
+>          fwevt->mrioc = mrioc;
+>          fwevt->event_id = MPI3MR_DRIVER_EVENT_TG_QD_REDUCTION;
+>          fwevt->send_ack = 0;
+> @@ -1652,8 +1652,7 @@ static void mpi3mr_fwevt_bh(struct mpi3mr_ioc *mrioc,
+>          {
+>                  struct mpi3mr_throttle_group_info *tg;
+>
+> -               tg = (struct mpi3mr_throttle_group_info *)
+> -                   (*(__le64 *)fwevt->event_data);
+> +               tg = *(struct mpi3mr_throttle_group_info **)fwevt->event_data;
+>                  dprint_event_bh(mrioc,
+>                      "qd reduction event processed for tg_id(%d) reduction_needed(%d)\n",
+>                      tg->id, tg->need_qd_reduction);
+>
+> or simply
+>
+> diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+> index 6a47f8c77256..cc93b41dd428 100644
+> --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
+> +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+> @@ -386,7 +386,7 @@ static void mpi3mr_queue_qd_reduction_event(struct mpi3mr_ioc *mrioc,
+>                  ioc_warn(mrioc, "failed to queue TG QD reduction event\n");
+>                  return;
+>          }
+> -       *(__le64 *)fwevt->event_data = (__le64)tg;
+> +       *(void **)fwevt->event_data = tg;
+>          fwevt->mrioc = mrioc;
+>          fwevt->event_id = MPI3MR_DRIVER_EVENT_TG_QD_REDUCTION;
+>          fwevt->send_ack = 0;
+> @@ -1652,8 +1652,7 @@ static void mpi3mr_fwevt_bh(struct mpi3mr_ioc *mrioc,
+>          {
+>                  struct mpi3mr_throttle_group_info *tg;
+>
+> -               tg = (struct mpi3mr_throttle_group_info *)
+> -                   (*(__le64 *)fwevt->event_data);
+> +               tg = *(void **)fwevt->event_data;
+>                  dprint_event_bh(mrioc,
+>                      "qd reduction event processed for tg_id(%d) reduction_needed(%d)\n",
+>                      tg->id, tg->need_qd_reduction);
+>
+> Thanks,
+> Guenter
+>
+> > Thanks,
+> > Sreekanth
+> >
+> > On Fri, Jul 15, 2022 at 10:19 PM Guenter Roeck <linux@roeck-us.net> wrote:
+> >>
+> >> On 7/15/22 08:02, Sreekanth Reddy wrote:
+> >>> Fix below compilation errors observed on i386 ARCH,
+> >>>
+> >>> cast from pointer to integer of different size
+> >>> [-Werror=pointer-to-int-cast]
+> >>>
+> >>> Fixes: c196bc4dce ("scsi: mpi3mr: Reduce VD queue depth on detecting throttling")
+> >>> Reported-by: Guenter Roeck <linux@roeck-us.net>
+> >>> Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+> >>> ---
+> >>>    drivers/scsi/mpi3mr/mpi3mr_os.c | 5 ++---
+> >>>    1 file changed, 2 insertions(+), 3 deletions(-)
+> >>>
+> >>> diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+> >>> index 0901bc932d5c..d8013576d863 100644
+> >>> --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
+> >>> +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+> >>> @@ -386,7 +386,7 @@ static void mpi3mr_queue_qd_reduction_event(struct mpi3mr_ioc *mrioc,
+> >>>                ioc_warn(mrioc, "failed to queue TG QD reduction event\n");
+> >>>                return;
+> >>>        }
+> >>> -     *(__le64 *)fwevt->event_data = (__le64)tg;
+> >>> +     memcpy(fwevt->event_data, (char *)&tg, sizeof(u64));
+> >>>        fwevt->mrioc = mrioc;
+> >>>        fwevt->event_id = MPI3MR_DRIVER_EVENT_TG_QD_REDUCTION;
+> >>>        fwevt->send_ack = 0;
+> >>> @@ -1660,8 +1660,7 @@ static void mpi3mr_fwevt_bh(struct mpi3mr_ioc *mrioc,
+> >>>        {
+> >>>                struct mpi3mr_throttle_group_info *tg;
+> >>>
+> >>> -             tg = (struct mpi3mr_throttle_group_info *)
+> >>> -                 (*(__le64 *)fwevt->event_data);
+> >>> +             memcpy((char *)&tg, fwevt->event_data, sizeof(u64));
+> >>
+> >> How is this expected to work on a system with 32-bit pointers ?
+> >>
+> >> Guenter
+> >>
+> >>>                dprint_event_bh(mrioc,
+> >>>                    "qd reduction event processed for tg_id(%d) reduction_needed(%d)\n",
+> >>>                    tg->id, tg->need_qd_reduction);
+> >>
+>
 
-
---000000000000514c1005e4112d3c
+--00000000000098cb8a05e4114478
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -177,13 +280,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIAhbg6eZcPMam5IabP7p
-BvKjOBI8siskkr9uXGIHYxrvMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDcxODA5NDE0OVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIFahIo+A8A/wqUe7bTxp
+VmFvs5dLUYVEDa7UFDCkDC/YMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDcxODA5NDgxOVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBSbWSJF9ornlQzDOujO6T8WrytdAVGpPO1gU4X
-15MWyuYj7an2p5k3NYKChszR8mwSwWsyASrrOqheppn298sPeNq+zGQY0042RlsfNne74IdPYpdc
-AHIzUTkJCAjAJxmons8LxO0HwNPnd5Hh3VIjMnf9+kHx2PSUROcnaRpXhBBaKHiU1xtWb87fDMh2
-koqIFVZ6hhPgOTqqt7Z1cj4Gx8djD5noa5zHGZEVL9K2ACWflqbvdvDIZ4dOesHwCQVm2hJMCPRS
-kLA3K87BlOoqH/NRGT7kvRcMGwTf4EDB5RflpvRoS20kmkewzOsyOlL6ocSopq+FVsI1/hH0tbfT
---000000000000514c1005e4112d3c--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQAb8zOagsvRfa7ERwbAJQJ/VI4AQQwL5lI8w7EE
+FOMLK35jlaS0L1YjGjvRO8DWzUdt+MdoZIbwMSm6uCZjYFzwmofGKpXiN19SD01ZZW+G2ajr02Q+
+y7qS82oJokel/kMNV++03mKzaqlt4vAqTA9P1yf5lQMQA9OiwCu6X5d+DOAjJdqMMxbRm6+s6RpA
+b1ZlfEDtuHBLOlkXEfakNAM7K8uRZbYSEr56BtKl6gvuuQgk1YPMLNro1z0DdPwVptbjsCGJ2hRz
+8T/3/iE75xOyUFmJqjKDPdGy7pxsHbyjBZAS3cBCyQcIiFIfp59RDoQVSiOIC0N38H7GxEw2wIXl
+--00000000000098cb8a05e4114478--
