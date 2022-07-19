@@ -2,98 +2,97 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DEC8C43334
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jul 2022 22:31:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B8B2C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jul 2022 22:44:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239633AbiGSWbe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Jul 2022 18:31:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35142 "EHLO
+        id S231350AbiGSWoR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Jul 2022 18:44:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44010 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232480AbiGSWbd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2022 18:31:33 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 819F24F68F;
-        Tue, 19 Jul 2022 15:31:32 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id BDD1EB81D9E;
-        Tue, 19 Jul 2022 22:31:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D2EFC341C6;
-        Tue, 19 Jul 2022 22:31:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1658269889;
-        bh=xBsNiIMMI61ZsRhK57QPnpQXFAF/uUru2IBPm5xDOok=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=GbLLdxnBasZ3J/VmbW+T8dRYdw9CQMZkQYGqgazvzzSFoSto0ODn6h90z31OnWSgE
-         IYFjNcrZtInWYCrGCb4dupQxh4o93Vo9XI7Deoi4eVAzVjFX2eYR/D9FPaIT8IpXMY
-         WA5y4i0cyPtbyvQEv4cma09lCLZppj2WiWn7u9DM7csbuDCBxSWBt6ypmiU11VHU0A
-         l41argqGFJ1/+1oC/xX9HDvKLBFd12G5/TRW/9A/ZLwKTXezANSisqTJgFx/JLWxUu
-         0jEisI4+5ths/C8bOTQ4Kt8NrGWWr7qR9IMMDZ105T4slXJrWtw2jJGJrA8eYKPsOC
-         kHskSWaoqzN+g==
-Date:   Tue, 19 Jul 2022 17:31:27 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Cc:     Chaitanya Kulkarni <chaitanyak@nvidia.com>,
-        Yi Zhang <yi.zhang@redhat.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "mstowe@redhat.com" <mstowe@redhat.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Xiao Yang <yangx.jy@fujitsu.com>,
-        Keith Busch <kbusch@kernel.org>
-Subject: Re: blktests failures with v5.19-rc1
-Message-ID: <20220719223127.GA1585747@bhelgaas>
+        with ESMTP id S240338AbiGSWoQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2022 18:44:16 -0400
+Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F01375F103
+        for <linux-scsi@vger.kernel.org>; Tue, 19 Jul 2022 15:44:15 -0700 (PDT)
+Received: by mail-pj1-f51.google.com with SMTP id q13-20020a17090a304d00b001f1af9a18a2so334387pjl.5
+        for <linux-scsi@vger.kernel.org>; Tue, 19 Jul 2022 15:44:15 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=AvbdLtb0n6v+dG5iB0jUCYcxb68bpVsaZAwbJnQM+O0=;
+        b=tFwoilycp46bfkmdH7D73fXWPkKWQE5qJF0m08V6aXnnKP/wApBADUsqXpSwbubmZk
+         rujOGWa5bqMAT7xnKvgQOCU2203kgUpqIs8y3boUdX+eaqgkV9X8O1gjq5Q9wzrHegtA
+         MX7iJfrmsFPONKoDuV0p52yreonMNZ3Hz8KJcJ4YHOwvS82cbr1LAb0+drc/UvOAidYa
+         6kpA28d1BuUPi6H9AViijfMYH3t3MYOIupK1xayqFIoEXw2rlFOPWrbtIxS0f53NucPm
+         h3ZwBAdbgREvJWjWM9ld4bKydTT67k+C7mtIfrhdrgKjQVLi7nImW7RogrTsxZzbsX6X
+         0Wpg==
+X-Gm-Message-State: AJIora++tKVfd6JvO5dlxZFYD4i2V5KXJixup8KPP2SK99K/ZH2eij6d
+        ywkBJ7NCIhz3ocr80FIPGZk=
+X-Google-Smtp-Source: AGRyM1tClh1QJweGLovMBVkpYIdb8nq6V4LeQ2eUzxgN3VjpHW3EWBfrgqt7LO59BV5rmAMnsOcwWQ==
+X-Received: by 2002:a17:902:e888:b0:16c:33f7:89cb with SMTP id w8-20020a170902e88800b0016c33f789cbmr36168338plg.2.1658270655295;
+        Tue, 19 Jul 2022 15:44:15 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:a7e0:78fc:9269:215b? ([2620:15c:211:201:a7e0:78fc:9269:215b])
+        by smtp.gmail.com with ESMTPSA id w1-20020a17090a028100b001f216a9d021sm101204pja.40.2022.07.19.15.44.13
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 19 Jul 2022 15:44:14 -0700 (PDT)
+Message-ID: <dd412695-218e-2674-a97e-d93961299f0a@acm.org>
+Date:   Tue, 19 Jul 2022 15:44:12 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220719045036.h273puvs3cibafix@shindev>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+Subject: Re: [PATCH v2 5/5] scsi: ufs: Allow UFS host drivers to override the
+ sg entry size
+Content-Language: en-US
+To:     Avri Altman <Avri.Altman@wdc.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Eric Biggers <ebiggers@google.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Anders Roxell <anders.roxell@linaro.org>,
+        Daejun Park <daejun7.park@samsung.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>
+References: <20220715212515.347664-1-bvanassche@acm.org>
+ <20220715212515.347664-6-bvanassche@acm.org>
+ <DM6PR04MB6575E66298A6E29011FD9958FC8F9@DM6PR04MB6575.namprd04.prod.outlook.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <DM6PR04MB6575E66298A6E29011FD9958FC8F9@DM6PR04MB6575.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Jul 19, 2022 at 04:50:36AM +0000, Shinichiro Kawasaki wrote:
-> On Jun 15, 2022 / 17:16, Keith Busch wrote:
-> > On Wed, Jun 15, 2022 at 02:47:27PM -0500, Bjorn Helgaas wrote:
-> > > On Tue, Jun 14, 2022 at 04:00:45AM +0000, Shinichiro Kawasaki wrote:
-> > > > 
-> > > > Yeah, this WARN is confusing for us then it would be valuable to
-> > > > test by blktests not to repeat it. One point I wonder is: which test
-> > > > group the test case will it fall in? The nvme group could be the
-> > > > group to add, probably.
-> > > > 
-> > > > Another point I wonder is other kernel test suite than blktests.
-> > > > Don't we have more appropriate test suite to check PCI device
-> > > > rescan/remove race ? Such a test sounds more like a PCI bus
-> > > > sub-system test than block/storage test.
-> > > 
-> > > I'm not aware of such a test, but it would be nice to have one.
-> > > 
-> > > Can you share your qemu config so I can reproduce this locally?
-> > > 
-> > > Thanks for finding and reporting this!
-> > 
-> > This ought to be reproducible with any pci device that can be
-> > removed. Since we initially observed with nvme, you can try with
-> > such a device. A quick way to get one appearing in qemu is to add
-> > parameters:
-> > 
-> >         -drive id=n,if=none,file=null-co://,format=raw \
-> > 	-device nvme,serial=foobar,drive=n
-> 
-> Did you have chance to reproduce the WARN? Recently, it was reported
-> again [1] and getting attention.
+On 7/19/22 04:15, Avri Altman wrote:
+>> @@ -9601,6 +9602,7 @@ int ufshcd_alloc_host(struct device *dev, struct
+>> ufs_hba **hba_handle)
+>>          hba->dev = dev;
+>>          hba->dev_ref_clk_freq = REF_CLK_FREQ_INVAL;
+>>          hba->nop_out_timeout = NOP_OUT_TIMEOUT;
+>> +       ufshcd_set_sg_entry_size(hba, sizeof(struct ufshcd_sg_entry));
+>
+> Where are you setting this variant for ufs-exynos?
+> I would expect here a set_sg_entry_size vop.
 
-I have not paid any attention to this yet.  From what I can tell, the
-problem was discovered by a test case (i.e., not reported by a
-real-world user), it is not a recent regression, we haven't identified
-a commit that introduced the problem, and we do not have a potential
-fix for it.  Obviously it needs to be fixed and I'm not trying to
-minimize the problem; I just want to calibrate it against everything
-else.
+The Exynos code used in Pixel 6 phones is available for download from a 
+Google server but is not yet upstream unfortunately. This is why no 
+ufshcd_set_sg_entry_size() call has been added in the ufs-exynos driver.
 
-> [1] https://lore.kernel.org/linux-block/4ed3028b-2d2f-8755-fec2-0b9cb5ad42d2@fujitsu.com/
-> 
-> -- 
-> Shin'ichiro Kawasaki
+>> +#define ufshcd_set_sg_entry_size(hba, sg_entry_size)                   \
+>> +       ({ (void)(hba); BUILD_BUG_ON(sg_entry_size != sizeof(struct
+>> ufshcd_sg_entry)); })
+>
+> Why not static inline void?
+
+Because sg_entry_size is used inside BUILD_BUG_ON(). The resulting code 
+does not compile if the above macro is changed into a function.
+
+Thanks,
+
+Bart.
