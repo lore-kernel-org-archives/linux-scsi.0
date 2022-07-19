@@ -2,76 +2,119 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68322C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jul 2022 07:56:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 294BBC43334
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jul 2022 08:25:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235027AbiGSH4C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Jul 2022 03:56:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44582 "EHLO
+        id S235745AbiGSIZW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Jul 2022 04:25:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37652 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234116AbiGSH4B (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2022 03:56:01 -0400
-Received: from m12-11.163.com (m12-11.163.com [220.181.12.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 03AFE6549;
-        Tue, 19 Jul 2022 00:55:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=HF412
-        /wHUz+0a5LIVNz1VvcPVzrrXujuay7goG5yM10=; b=dGts/y/bkFT4/FOcwnk7+
-        dumD7t+iXyeIgWa1B2xdubk3if1xEEnjPgM0iBqOpYyxILo1f36YwnvpFQBMiJXW
-        OQWLqj97sLAIpVSIBXm0tLwqh6wtEacXLrwHChiK3ttf6RThAhiRYzK76QYSMH0X
-        mjJXB8CzV8EqtagARWd784=
-Received: from DESKTOP-KE2DLLP.localdomain (unknown [223.87.207.239])
-        by smtp7 (Coremail) with SMTP id C8CowAAHR05OY9Zi69XQOQ--.41313S2;
-        Tue, 19 Jul 2022 15:54:56 +0800 (CST)
-From:   Yang Hao <yanghao_ht@163.com>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Yang Hao <yanghao_ht@163.com>
-Subject: [RFC] scsi: ch: add scsi_device_put in ch_readconfig
-Date:   Tue, 19 Jul 2022 15:54:42 +0800
-Message-Id: <20220719075442.6215-1-yanghao_ht@163.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S234607AbiGSIZU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2022 04:25:20 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D8EC63A7
+        for <linux-scsi@vger.kernel.org>; Tue, 19 Jul 2022 01:25:16 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id CAD6B1F96A;
+        Tue, 19 Jul 2022 08:25:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1658219114; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ZfuoHiT5gI+iw/S8x1Y2zaDL+70FJ7UZFvNUKZxxny0=;
+        b=k3annwPybrFslMQjEAqEHKoJUsJ6DKPO/htUuUT/UJClksg5kTww6cIXd2JqeFTHt//38Y
+        Sftbde49D7ocySAtUaRe583q6BqoPh85n74wqfDq2kZT9zVUBlaqTwLKmunwXABfjOll9G
+        Kh/PcyMGyiEZAtuKqneBNovQ36wbyDs=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1658219114;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ZfuoHiT5gI+iw/S8x1Y2zaDL+70FJ7UZFvNUKZxxny0=;
+        b=e6xvCFOHv/awHgQrZ3kGHoOIMR8G4QnrtPYGPQE7bhGDQAZRgUggMgk/GAOqFOr9eicYDJ
+        bbmgSmctWlqy/9Cw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id BCF1C13488;
+        Tue, 19 Jul 2022 08:25:14 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id VlYULmpq1mLXSQAAMHmgww
+        (envelope-from <dwagner@suse.de>); Tue, 19 Jul 2022 08:25:14 +0000
+Date:   Tue, 19 Jul 2022 10:25:14 +0200
+From:   Daniel Wagner <dwagner@suse.de>
+To:     Steven Rostedt <rostedt@goodmis.org>
+Cc:     Arun Easi <aeasi@marvell.com>, Nilesh Javali <njavali@marvell.com>,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        GR-QLogic-Storage-Upstream@marvell.com, bhazarika@marvell.com,
+        agurumurthy@marvell.com
+Subject: Re: [PATCH 2/6] qla2xxx: Add a generic tracing framework
+Message-ID: <20220719082514.egsqevbaxl7a4prx@carbon.lan>
+References: <20220715060227.23923-1-njavali@marvell.com>
+ <20220715060227.23923-3-njavali@marvell.com>
+ <20220718085438.mdv3rnbwc4bxfxrd@carbon.lan>
+ <f49cd5a0-93b8-48a2-5a3a-a4554ef660ac@marvell.com>
+ <20220718152243.21ad13e7@gandalf.local.home>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: C8CowAAHR05OY9Zi69XQOQ--.41313S2
-X-Coremail-Antispam: 1Uf129KBjvdXoW7JF43GryftF4xtryUXFyfCrg_yoWxCwb_ua
-        yI9Fy7Xr4FvFWkK342gry3urZ29w4jvwn8u3Wvqr95Z3yxXF1UX3WUAFy7Cw15KF4UXr9r
-        JF1qvr1Yk34UujkaLaAFLSUrUUUU1b8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IUU0JmUUUUUU==
-X-Originating-IP: [223.87.207.239]
-X-CM-SenderInfo: p1dqwxhdrbx3i6rwjhhfrp/1tbiGgdD31aECjiT9wAAsF
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220718152243.21ad13e7@gandalf.local.home>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-ch_probe
-  ch_readconfig
-    scsi_device_lookup
-      scsi_device_get
-      ...
+Hi Arun,
 
-when the dev is found, the related refcnt of dev will increase,
-and there is no 'scsi_device_put' to decrease it, which will lead
-to refcnt leak.
+On Mon, Jul 18, 2022 at 03:22:43PM -0400, Steven Rostedt wrote:
+> On Mon, 18 Jul 2022 12:02:26 -0700
+> Arun Easi <aeasi@marvell.com> wrote:
+> 
+> > Many times when a problem was reported on the driver, we had to request 
+> > for a repro with extended error logging (via driver module parameter) 
+> > turned on. With this internal tracing in place, log messages that appear 
+> > only with extended error logging are captured by default in the internal 
+> > trace buffer.
+> > 
+> > AFAIK, kernel tracing requires a user initiated action to be turned on, 
+> > like enabling individual tracepoints. Though a script (either startup or 
+> > udev) can do this job, enabling tracepoints by default for a single 
+> > driver, I think, may not be a preferred choice -- particularly when the 
+> > trace buffer is shared across the kernel. That also brings the extra 
+> > overhead of finding how this could be done across various distros.
+> > 
+> > For cases where the memory/driver size matters, there is an option to 
+> > compile out this feature, plus choosing a lower default trace buffer size.
 
-Signed-off-by: Yang Hao <yanghao_ht@163.com>
----
- drivers/scsi/ch.c | 2 ++
- 1 file changed, 2 insertions(+)
+I am really asking the question why do we need to add special debugging
+code to every single driver? Can't we try to make more use of generic
+code and extend it if necessary?
 
-diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
-index 27012908b..70ba5d63e 100644
---- a/drivers/scsi/ch.c
-+++ b/drivers/scsi/ch.c
-@@ -407,6 +407,8 @@ ch_readconfig(scsi_changer *ch)
- 					ch->dt[elem]->vendor,
- 					ch->dt[elem]->model,
- 					ch->dt[elem]->rev);
-+				scsi_device_put(ch->dt[elem]);
-+				ch->dt[elem] = NULL;
- 			}
- 		}
- 	}
--- 
-2.25.1
+Both FC drivers qla2xxx and lpfc are doing their own thing for
+debugging/logging and I really fail to see why we can't not move towards
+a more generic way. Dumping logs to the kernel log was the simplest way
+but as this series shows, this is not something you can do in production
+systems.
 
+> You can enable an ftrace instance from inside the kernel, and make it a
+> compile time option.
+>
+> 	#include <linux/trace_events.h>
+> 	#include <linux/trace.h>
+> 
+> 	struct trace_array *tr;
+> 
+> 	tr = trace_array_get_by_name("qla2xxx");
+> 	trace_array_set_clr_event(tr, "qla", NULL, true);
+> 
+> And now you have trace events running:
+> 
+>  # cat /sys/kernel/tracing/instances/qla/trace
+
+Thanks Steve for the tip!
+
+Daniel
