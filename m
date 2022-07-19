@@ -2,140 +2,130 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A29F0C43334
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jul 2022 00:20:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48FB8C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jul 2022 01:47:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236544AbiGSAUJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Jul 2022 20:20:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58534 "EHLO
+        id S235211AbiGSBrw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Jul 2022 21:47:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53596 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236463AbiGSAUI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jul 2022 20:20:08 -0400
-Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5A9E37F86
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2022 17:20:05 -0700 (PDT)
-Received: by mail-pj1-x102f.google.com with SMTP id o5-20020a17090a3d4500b001ef76490983so14211461pjf.2
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2022 17:20:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=O4T2VQDxAWCrJIF9JXck1NEHm4y5ISvV3hD9xQiPuAk=;
-        b=jHJtw10vDryNboN4iS1vTEDcw4++rsAMT+oMpC4qCdktpwfJXav5atwlQxJUQlAlUt
-         WkrprZ+wNT5qddGI+8++AcfEe7GtK7aMNOtCSRqWmp5bzm2S+AwgyFmatEA+Bi7ns53V
-         u2S4UeWl/z22mWLYSEgXP17ktwllvML1VWN3s=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=O4T2VQDxAWCrJIF9JXck1NEHm4y5ISvV3hD9xQiPuAk=;
-        b=SGq7In7U+WeLGtJbpF1wxF/FaPAS9csIn8X7JM1bUnwAoUMrSZOaCcS00nfWrsnzgm
-         qO2c+H22PRdpOwB17IiyMTvttzxrtX5DvegCKfyrSf8CLahn1dT0IrvJj4MIF/g4jlm4
-         n2D07R29CNBvKQ5HUwPc6Jn5fvcz4mPIzCdl9iTWNadkrvIDxy50p1MkOCD8nZpOeovd
-         mLw0aXNk2m4iQAF5LvyJZ3pnlqn+B0BHbe7ZO4JrplRuACIWbiaTEvpdLGSSIoSJpHek
-         cThx0VnN1alDkbROmBwwSi5Thu0uBEvaoDyYUW50rnxd5P9h873A5b6KuSLYNH3tSE7h
-         gqGw==
-X-Gm-Message-State: AJIora+VnQqhsbjxLbnDXH+r5YpJRLBSgJZazWDFvdgyMR0FevpXHE+M
-        guFRKhfEj24WuPXJ60/iBmL0bA==
-X-Google-Smtp-Source: AGRyM1vF7G9VIj7hNbh/uQX4M+nAU6jRINRgeMGqfALml7DCCkNmCtqF4Gk9efWCuSb0ZblQJ/RjNw==
-X-Received: by 2002:a17:90a:f404:b0:1f1:fd63:281a with SMTP id ch4-20020a17090af40400b001f1fd63281amr705772pjb.158.1658190005301;
-        Mon, 18 Jul 2022 17:20:05 -0700 (PDT)
-Received: from dlunevwfh.roam.corp.google.com (n122-107-196-14.sbr2.nsw.optusnet.com.au. [122.107.196.14])
-        by smtp.gmail.com with ESMTPSA id a8-20020a1709027e4800b0016cbb46806asm9075813pln.278.2022.07.18.17.20.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 Jul 2022 17:20:04 -0700 (PDT)
-From:   Daniil Lunev <dlunev@chromium.org>
-To:     Adrian Hunter <adrian.hunter@intel.com>,
-        Bart Van Assche <bvanassche@acm.org>
-Cc:     Daniil Lunev <dlunev@chromium.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <beanhuo@micron.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [PATCH v2] scsi: ufs: ufs-pci: Correct check for RESET DSM
-Date:   Tue, 19 Jul 2022 10:19:54 +1000
-Message-Id: <20220719101903.v2.1.I22460c4f4a9ccf2c96c3f9bb392b409926d80b2f@changeid>
-X-Mailer: git-send-email 2.31.0
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        with ESMTP id S230230AbiGSBrv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jul 2022 21:47:51 -0400
+X-Greylist: delayed 197 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 18 Jul 2022 18:47:50 PDT
+Received: from mx0a-00230701.pphosted.com (mx0a-00230701.pphosted.com [148.163.156.19])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CBA331B7A9;
+        Mon, 18 Jul 2022 18:47:50 -0700 (PDT)
+Received: from pps.filterd (m0297266.ppops.net [127.0.0.1])
+        by mx0a-00230701.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 26J15LEr011685;
+        Mon, 18 Jul 2022 18:28:42 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=synopsys.com; h=date : message-id :
+ in-reply-to : references : from : subject : to : cc; s=pfptdkimsnps;
+ bh=nuHVSWCgl9dwD0wByFXYvmOFMYvn1dm33E7o/YfdqrY=;
+ b=b4Smb5ZFNadz6txMBipOo46sdJ3CaFE63gOYfnJWcwSoRua4xxZYySvhvKCb6zsNSZRq
+ g85UHtxAuNCfM0nVxa0CVdCpHpNCUNhC1ZeoDW9nz4Zf2n2hAnt0K10RdfbcxfhQZEwe
+ oz9YVB69o0rCSWBLX7BFgekHNpurCiBXcnGq/LVnX/0Fd+I9YOyaDUw9UTd4N1bjx1Bl
+ JJCEc4wq171MmvcIEeEiq901MbrotZFa4FczZNb0I/J+TDMk/3eg6v4Jmz92ijD+H1pu
+ D2Cmn7BBeCXf4wpmiNIlx4460NqrEJ+nKkIQaE9QtOfLVrvhWdOM6VUnjo7/tU5WPKne 5g== 
+Received: from smtprelay-out1.synopsys.com (smtprelay-out1.synopsys.com [149.117.87.133])
+        by mx0a-00230701.pphosted.com (PPS) with ESMTPS id 3hbvk5whs7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 18 Jul 2022 18:28:42 -0700
+Received: from mailhost.synopsys.com (sv1-mailhost2.synopsys.com [10.205.2.132])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
+        (Client CN "mailhost.synopsys.com", Issuer "SNPSica2" (verified OK))
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 10A6BC0649;
+        Tue, 19 Jul 2022 01:28:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
+        t=1658194122; bh=HXpi+zxefL7ycJivlkZYu4nzewzzTh6ZNR2/6Q/0HNU=;
+        h=Date:In-Reply-To:References:From:Subject:To:Cc:From;
+        b=C8SUhXbjLJ3if4wFdDLLFvdmLTKOdNAA3ZJHB8CUVF8EKUXzizs0hP94IOK27QyqF
+         52Yko+tCl0Nz/E4n92fl+aHxyxB1gxfMreqNh7enX+vpTb5gN26FY2UKo27k+4FFCl
+         cKjlvyeEcLsEflsTRd6T1zSYTyRIPQXXCAaS6Z8vdKjBXuGjk6SdRsag92YdfGRS5K
+         6hJsi5JzHOwzK6+6q+eamTI9UHXwfh5w6jjh1LVAL7575LuYklIyfY9DgI7IBRc/eG
+         a9gLiEtbFkh2+qDzttS//72h3wc4P8PNhh7EiuvPxUT8JTg/9TSCjT85nWw3sHdqFY
+         /8ew9dSLhhYiA==
+Received: from te-lab16-v2 (nanobot.internal.synopsys.com [10.204.48.11])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (Client did not present a certificate)
+        by mailhost.synopsys.com (Postfix) with ESMTPSA id C92F8A006D;
+        Tue, 19 Jul 2022 01:28:40 +0000 (UTC)
+Received: by te-lab16-v2 (sSMTP sendmail emulation); Mon, 18 Jul 2022 18:28:40 -0700
+Date:   Mon, 18 Jul 2022 18:28:40 -0700
+Message-Id: <dc2225ef078a08eccbd3fa9b06c760f85b88fc16.1658192351.git.Thinh.Nguyen@synopsys.com>
+In-Reply-To: <cover.1658192351.git.Thinh.Nguyen@synopsys.com>
+References: <cover.1658192351.git.Thinh.Nguyen@synopsys.com>
+X-SNPS-Relay: synopsys.com
+From:   Thinh Nguyen <Thinh.Nguyen@synopsys.com>
+Subject: [PATCH v2 25/25] usb: gadget: f_tcm: Comply with UAS Task Management requirement
+To:     Felipe Balbi <balbi@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Thinh Nguyen <Thinh.Nguyen@synopsys.com>,
+        linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dmitry Bogdanov <d.bogdanov@yadro.com>
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+X-Proofpoint-GUID: _F5FVp5rpwqkwXYASrUTrMfRvAALCqWr
+X-Proofpoint-ORIG-GUID: _F5FVp5rpwqkwXYASrUTrMfRvAALCqWr
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
+ definitions=2022-07-18_22,2022-07-18_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_active_cloned_notspam policy=outbound_active_cloned score=0
+ mlxscore=0 phishscore=0 adultscore=0 suspectscore=0 lowpriorityscore=0
+ mlxlogscore=987 malwarescore=0 clxscore=1015 bulkscore=0 impostorscore=0
+ priorityscore=1501 spamscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2206140000 definitions=main-2207190004
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-dsm_fns is a bitmap, and it is 0-indexed according to the check in
-__intel_dsm funciton. But common initialization was checking it as if it
-was 1-indexed. The CL corrects the discrepancy. This change won't break
-any existing calls to the function, since before the change both bits 0
-and 1 were checked and needed to be set.
+The UASP driver must support all the task management functions listed in
+Table 20 of UAS-r04. However, not all of them are implemented in the
+Target core. To remain compliant while indicate that the TMR did not go
+through, report RC_TMF_FAILED instead of RC_TMF_NOT_SUPPORTED and print
+a warning to the user.
 
-Signed-off-by: Daniil Lunev <dlunev@chromium.org>
-
+Signed-off-by: Thinh Nguyen <Thinh.Nguyen@synopsys.com>
 ---
+ Changes in v2:
+ - None
 
-Changes in v2:
-* Make __INTEL_DSM_SUPPORTED a function
-* use `1u` instead of `1` in shift operator
+ drivers/usb/gadget/function/f_tcm.c | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
 
- drivers/ufs/host/ufshcd-pci.c | 17 +++++++++++++----
- 1 file changed, 13 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.c
-index 04166bda41daa..c13c31c2ae793 100644
---- a/drivers/ufs/host/ufshcd-pci.c
-+++ b/drivers/ufs/host/ufshcd-pci.c
-@@ -24,7 +24,7 @@ struct ufs_host {
- 	void (*late_init)(struct ufs_hba *hba);
- };
+diff --git a/drivers/usb/gadget/function/f_tcm.c b/drivers/usb/gadget/function/f_tcm.c
+index dfa3e7c043a3..727d7c3e61c2 100644
+--- a/drivers/usb/gadget/function/f_tcm.c
++++ b/drivers/usb/gadget/function/f_tcm.c
+@@ -643,6 +643,30 @@ static void uasp_prepare_response(struct usbg_cmd *cmd)
+ 		rsp_iu->response_code =
+ 			tcm_to_uasp_response(se_cmd->se_tmr_req->response);
  
--enum {
-+enum intel_ufs_dsm_func_id {
- 	INTEL_DSM_FNS		=  0,
- 	INTEL_DSM_RESET		=  1,
- };
-@@ -42,6 +42,15 @@ static const guid_t intel_dsm_guid =
- 	GUID_INIT(0x1A4832A0, 0x7D03, 0x43CA,
- 		  0xB0, 0x20, 0xF6, 0xDC, 0xD1, 0x2A, 0x19, 0x50);
- 
-+static bool __intel_dsm_supported(struct intel_host *host,
-+				   enum intel_ufs_dsm_func_id fn)
-+{
-+	return fn < 32 && fn >= 0 && (host->dsm_fns & (1u << fn));
-+}
++	/*
++	 * The UASP driver must support all the task management functions listed
++	 * in Table 20 of UAS-r04. To remain compliant while indicate that the
++	 * TMR did not go through, report RC_TMF_FAILED instead of
++	 * RC_TMF_NOT_SUPPORTED and print a warning to the user.
++	 */
++	switch (cmd->tmr_func) {
++	case TMR_ABORT_TASK:
++	case TMR_ABORT_TASK_SET:
++	case TMR_CLEAR_TASK_SET:
++	case TMR_LUN_RESET:
++	case TMR_I_T_NEXUS_RESET:
++	case TMR_CLEAR_ACA:
++	case TMR_QUERY_TASK:
++	case TMR_QUERY_TASK_SET:
++	case TMR_QUERY_ASYNC_EVENT:
++		if (rsp_iu->response_code == RC_TMF_NOT_SUPPORTED) {
++			pr_warn("TMR function %d not supported\n",
++				cmd->tmr_func);
++			rsp_iu->response_code = RC_TMF_FAILED;
++		}
++		break;
++	}
 +
-+#define INTEL_DSM_SUPPORTED(host, name) \
-+	__intel_dsm_supported(host, INTEL_DSM_##name)
-+
- static int __intel_dsm(struct intel_host *intel_host, struct device *dev,
- 		       unsigned int fn, u32 *result)
- {
-@@ -71,7 +80,7 @@ static int __intel_dsm(struct intel_host *intel_host, struct device *dev,
- static int intel_dsm(struct intel_host *intel_host, struct device *dev,
- 		     unsigned int fn, u32 *result)
- {
--	if (fn > 31 || !(intel_host->dsm_fns & (1 << fn)))
-+	if (!__intel_dsm_supported(intel_host, fn))
- 		return -EOPNOTSUPP;
- 
- 	return __intel_dsm(intel_host, dev, fn, result);
-@@ -300,7 +309,7 @@ static int ufs_intel_device_reset(struct ufs_hba *hba)
- {
- 	struct intel_host *host = ufshcd_get_variant(hba);
- 
--	if (host->dsm_fns & INTEL_DSM_RESET) {
-+	if (INTEL_DSM_SUPPORTED(host, RESET)) {
- 		u32 result = 0;
- 		int err;
- 
-@@ -342,7 +351,7 @@ static int ufs_intel_common_init(struct ufs_hba *hba)
- 		return -ENOMEM;
- 	ufshcd_set_variant(hba, host);
- 	intel_dsm_init(host, hba->dev);
--	if (host->dsm_fns & INTEL_DSM_RESET) {
-+	if (INTEL_DSM_SUPPORTED(host, RESET)) {
- 		if (hba->vops->device_reset)
- 			hba->caps |= UFSHCD_CAP_DEEPSLEEP;
- 	} else {
+ 	stream->req_status->is_last = 1;
+ 	stream->req_status->stream_id = cmd->tag;
+ 	stream->req_status->context = cmd;
 -- 
-2.31.0
+2.28.0
 
