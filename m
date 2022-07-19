@@ -2,70 +2,125 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25DE5C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jul 2022 09:57:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E27CBC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jul 2022 10:06:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237396AbiGSJ5S (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Jul 2022 05:57:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52410 "EHLO
+        id S237340AbiGSKG4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Jul 2022 06:06:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36456 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231652AbiGSJ5R (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2022 05:57:17 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DDB00E03B;
-        Tue, 19 Jul 2022 02:57:14 -0700 (PDT)
-Received: from fraeml744-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LnDf149Xbz67T9q;
-        Tue, 19 Jul 2022 17:52:41 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml744-chm.china.huawei.com (10.206.15.225) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 19 Jul 2022 11:57:12 +0200
-Received: from localhost.localdomain (10.69.192.58) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 19 Jul 2022 10:57:10 +0100
-From:   John Garry <john.garry@huawei.com>
-To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>, <hch@lst.de>,
-        <damien.lemoal@opensource.wdc.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <iommu@lists.linux.dev>, John Garry <john.garry@huawei.com>
-Subject: [PATCH] scsi: sd: Add a comment about limiting max_sectors to shost optimal limit
-Date:   Tue, 19 Jul 2022 17:51:04 +0800
-Message-ID: <1658224264-49972-1-git-send-email-john.garry@huawei.com>
-X-Mailer: git-send-email 2.8.1
+        with ESMTP id S236984AbiGSKGz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2022 06:06:55 -0400
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30429112B
+        for <linux-scsi@vger.kernel.org>; Tue, 19 Jul 2022 03:06:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1658225212; x=1689761212;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=YauuOWB0eWlQxPIi0jYv3JHtwzs7d0w3Q3HbluMXv3M=;
+  b=YfKKq2kdKKNah+D+8QqM5+b7vtgFzCu2oNahynr2Lm9IXgjiPCXPq8tV
+   X0bZJE1ffbvhPlmaqsItkquwGSdu0EOdIZ9JG2ZKygNUZyfNh6IzC2fNy
+   3U80nuvpT1fO1qmOx2knTnZi/eCdsInqiKONoSC+lY6GQflW7wTqm2T3+
+   rPJlx+h1MuOOHXd+fUlNNSyMzswzMm9KWugLeMvMTIjwtjAcn9kEXNjJq
+   dCj1aE9YhlZhe4gm/KCI0NrIuHgHfQrSh/Mda8gwRce/YlWJe2zxhLLHE
+   Byg44Zj0YEqQ5GX1HcyIe0NJXhIu1GhJ63Q+j86dsSrk9igAHr9t54Gzg
+   A==;
+X-IronPort-AV: E=Sophos;i="5.92,283,1650902400"; 
+   d="scan'208";a="211269523"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 19 Jul 2022 18:06:52 +0800
+IronPort-SDR: wA4IEKHEjWzDnkF3UE2Id+n1duSotiMSxfLgjnZlbpdXNZLkTEypa1Zrsfo1Zx0K9z/akZ+i3l
+ SSWqMvH6ofKxt2YM1jksin9L1/P8brjzCVWRG5k8uE7aew1i1utHIiunsuZcOOAsFdxExBOsdS
+ KwvLz8oGJuB4MGbe/3oVI9NWsFaEmmvn4OKrZXeAPHUBLxRI4tZy3MEAygBi1m/pyndRmyvBB1
+ h60jXNWavRLetMg1X37jIsZe8xZHrsx1we7qSAIctjovYSqhBCAPgvCUBBte8NsHqnSSCyEpP0
+ jwNzAs4I1dL7Zy7s90gj/G66
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 19 Jul 2022 02:23:20 -0700
+IronPort-SDR: LkxS1R4ADoTyMtDOKo43QHzkKm/44HF5BESt27Wz3W66W3wZVm53M2khwUiGT+Tr3xB9zc3Wz0
+ wghvMgtE0zPkFbV/y/R/GxtC2EhydYFnmVP+pYgs4wpvQGaX7nr3aLfCjsBiTylfl1KAMl6SLG
+ eXhfpyxfnUWmwbSQ+f+Er0IZqKiiEQiE2NtfkRuJgXXWziTsjUTBRbTFHX5P1XZVQNsAuGEB4f
+ bSyp9XxxepsNgolrB9N4lycoPO5Owk2HQvfhrYnPN5060yTk0241h/ogtZDjcNOcXVNbssZJ41
+ zLs=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 19 Jul 2022 03:06:53 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LnDyN4Mctz1Rwry
+        for <linux-scsi@vger.kernel.org>; Tue, 19 Jul 2022 03:06:52 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1658225212; x=1660817213; bh=YauuOWB0eWlQxPIi0jYv3JHtwzs7d0w3Q3H
+        bluMXv3M=; b=B6ldBGGeutES4yTjwz6A5Ffl19zIhBlH1DbbBAoNmfheZbw0yji
+        7chlMDHEzqOxzbOV8IWyRcJawMMqNI1g4VBqN0WWBc3WF4Gi1gyXJ2Pvl6+RwjAs
+        Kyqya3ZHk/GjSbTU/ypiuMcOa/6rbZ1r/f/P4lsgF0Dt1563M0DLdwLuj6FwS0hY
+        EUT6hs+JMHcmLOL5cJjzDJ1xSNbmQq5HeEWj0kvY1MnyQSnWiIhl0vWKOBbP2xob
+        v8XBMFyZW/IiPq+iDVyfzApkD9rRrxE/8ckO3vQkJt+yvfVBSlphcjbEcZVV1xP1
+        +FKXBj1Sil53riIbMkhuvMODRX/I5pEomIQ==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id EwPUIUQFUlmV for <linux-scsi@vger.kernel.org>;
+        Tue, 19 Jul 2022 03:06:52 -0700 (PDT)
+Received: from [10.225.163.120] (unknown [10.225.163.120])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LnDyL6sYDz1RtVk;
+        Tue, 19 Jul 2022 03:06:50 -0700 (PDT)
+Message-ID: <af41fbeb-c2b1-e4c8-8b75-fa03fb9eb993@opensource.wdc.com>
+Date:   Tue, 19 Jul 2022 19:06:49 +0900
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+Subject: Re: [PATCH] scsi: sd: Add a comment about limiting max_sectors to
+ shost optimal limit
+Content-Language: en-US
+To:     John Garry <john.garry@huawei.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, hch@lst.de
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        iommu@lists.linux.dev
+References: <1658224264-49972-1-git-send-email-john.garry@huawei.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <1658224264-49972-1-git-send-email-john.garry@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add a comment about limiting the default the SCSI disk request_queue
-max_sectors initial value to that of the SCSI host optimal sectors limit.
+On 7/19/22 18:51, John Garry wrote:
+> Add a comment about limiting the default the SCSI disk request_queue
+> max_sectors initial value to that of the SCSI host optimal sectors limit.
+> 
+> Suggested-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> Signed-off-by: John Garry <john.garry@huawei.com>
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 3eaee1f7aaca..ed9f43f9512e 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -3296,6 +3296,11 @@ static int sd_revalidate_disk(struct gendisk *disk)
+>  				      (sector_t)BLK_DEF_MAX_SECTORS);
+>  	}
+>  
+> +	/*
+> +	 * Limit default to SCSI host optimal sector limit if set. There may be
+> +	 * an impact on performance for when the size of a request exceeds this
+> +	 * host limit.
+> +	 */
+>  	rw_max = min_not_zero(rw_max, sdp->host->opt_sectors);
+>  
+>  	/* Do not exceed controller limit */
 
-Suggested-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
+Looks good.
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 3eaee1f7aaca..ed9f43f9512e 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3296,6 +3296,11 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 				      (sector_t)BLK_DEF_MAX_SECTORS);
- 	}
- 
-+	/*
-+	 * Limit default to SCSI host optimal sector limit if set. There may be
-+	 * an impact on performance for when the size of a request exceeds this
-+	 * host limit.
-+	 */
- 	rw_max = min_not_zero(rw_max, sdp->host->opt_sectors);
- 
- 	/* Do not exceed controller limit */
+Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+
 -- 
-2.35.3
-
+Damien Le Moal
+Western Digital Research
