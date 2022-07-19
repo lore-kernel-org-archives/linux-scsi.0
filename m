@@ -2,106 +2,140 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FCDFC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jul 2022 03:20:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA52AC43334
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jul 2022 03:21:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235351AbiGSDUm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Jul 2022 23:20:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58036 "EHLO
+        id S234220AbiGSDV5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Jul 2022 23:21:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58854 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234935AbiGSDUi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jul 2022 23:20:38 -0400
-Received: from mx0b-00230701.pphosted.com (mx0b-00230701.pphosted.com [148.163.158.9])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC38A24F25;
-        Mon, 18 Jul 2022 20:20:28 -0700 (PDT)
-Received: from pps.filterd (m0297265.ppops.net [127.0.0.1])
-        by mx0a-00230701.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 26ILeY2P029326;
-        Mon, 18 Jul 2022 18:26:50 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=synopsys.com; h=date : message-id :
- in-reply-to : references : from : subject : to : cc; s=pfptdkimsnps;
- bh=M180YcUp4LTEpyCxleR4FVpckgymUrgVO89H/11fMPg=;
- b=GQW344vCkoFDSgBVShL5hSEsap/SwqnYUokefgIHtfSTbU4o+ywg4rvDf7P5kU5anvYV
- Qefx6ohxo9S+FylUqTMP32SHlWrsPgXKiefvGyto4Ja/Ex3MRO/6mm/ietKs7ycj5VrF
- NABjyLDh1HRXoPgkNng0nhPtCcctLVUrczFqILygu/HwfEDl2vvCClfacXVvn0Si7Ui6
- Ajg77x4UAT6ENHFnWP6CYm3VjWI9q5NFbnrWXZiOzW34KRwpxcOFwsWdKQc9Ih5GERD4
- M67WN3cJiAr8tsnA3Dc5p18frSmw7iV2gzvZsfQ9IVcDwtGWqzDQxaNW8U4fgpU0FvYo QQ== 
-Received: from smtprelay-out1.synopsys.com (smtprelay-out1.synopsys.com [149.117.73.133])
-        by mx0a-00230701.pphosted.com (PPS) with ESMTPS id 3hc6dec5fa-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 18 Jul 2022 18:26:50 -0700
-Received: from mailhost.synopsys.com (sv1-mailhost1.synopsys.com [10.205.2.131])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
-        (Client CN "mailhost.synopsys.com", Issuer "SNPSica2" (verified OK))
-        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 286CF4008A;
-        Tue, 19 Jul 2022 01:26:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1658194009; bh=tNgndfD1F79ARxp0mVGVrV9+gTpVlt3d7W6aaKNj5QY=;
-        h=Date:In-Reply-To:References:From:Subject:To:Cc:From;
-        b=go8OJejElGgKpXSj0lOdvZudMCsBEc2JNCkOyrKcOlW231kjaSA1O8/UO/vqK14AI
-         y6rVO2wSyE3MW9YaHU7y2P6oPAGDG6V45JhM/SxGQLYPh/yeBfCLy0i6iS1VtxABKB
-         J4oS5JbpFFUXqCa1McoQ8ZpXkcXoHILEeOnlnBXwNN5P/wFbXjA25WHWMJjZvp16J1
-         wbaXZPWUWTdnXKOwowmX+2rzVQYvH5NT4gwekuqHq3wpgkpV0x59HmE7785G/il3ct
-         4H7ZXFZJw6AR4YXGZC9CMaAHxzfpzOasNGfPnrhD0KnqaSs3xhPS1XJ0dcc2R/lFBR
-         pwz5sDHTyLPAA==
-Received: from te-lab16-v2 (nanobot.internal.synopsys.com [10.204.48.11])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (Client did not present a certificate)
-        by mailhost.synopsys.com (Postfix) with ESMTPSA id 09316A0068;
-        Tue, 19 Jul 2022 01:26:48 +0000 (UTC)
-Received: by te-lab16-v2 (sSMTP sendmail emulation); Mon, 18 Jul 2022 18:26:47 -0700
-Date:   Mon, 18 Jul 2022 18:26:47 -0700
-Message-Id: <d9d1f0a91efdd03cc62acbae11edf92f3fe3dbe7.1658192351.git.Thinh.Nguyen@synopsys.com>
-In-Reply-To: <cover.1658192351.git.Thinh.Nguyen@synopsys.com>
-References: <cover.1658192351.git.Thinh.Nguyen@synopsys.com>
-X-SNPS-Relay: synopsys.com
-From:   Thinh Nguyen <Thinh.Nguyen@synopsys.com>
-Subject: [PATCH v2 07/25] usb: gadget: f_tcm: Limit number of sessions
-To:     Felipe Balbi <balbi@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Thinh Nguyen <Thinh.Nguyen@synopsys.com>,
-        linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-X-Proofpoint-ORIG-GUID: N8n_EpjNDkF3a89Yh31weB8Mttcz4h-Q
-X-Proofpoint-GUID: N8n_EpjNDkF3a89Yh31weB8Mttcz4h-Q
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
- definitions=2022-07-18_22,2022-07-18_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_active_cloned_notspam policy=outbound_active_cloned score=0
- mlxlogscore=908 clxscore=1015 malwarescore=0 bulkscore=0 mlxscore=0
- phishscore=0 adultscore=0 priorityscore=1501 spamscore=0 suspectscore=0
- lowpriorityscore=0 impostorscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2206140000 definitions=main-2207190004
+        with ESMTP id S233381AbiGSDV4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jul 2022 23:21:56 -0400
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DEB90183A8
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2022 20:21:53 -0700 (PDT)
+Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20220719032149epoutp01feda3a1c9555fbaffbf064d1f1e41afa~DHPD17gPX2524425244epoutp01b
+        for <linux-scsi@vger.kernel.org>; Tue, 19 Jul 2022 03:21:49 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20220719032149epoutp01feda3a1c9555fbaffbf064d1f1e41afa~DHPD17gPX2524425244epoutp01b
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1658200909;
+        bh=IzTJpwJDmv27DqFGcnFFbEYZnoox6AVDGRsU60ndVjo=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=Zb6rzIXx0wWHuYXnrPlCbANvK0OljsiTez0dfu9RoNmOk4Um2AIHvze4j2Teu9qni
+         6sU8PecFvxwdunGrhX6B06XwydvdPUEnlQb7+NcAUc2Hi/BRbo9sNEnFZIbY4ldzMC
+         L15wgdLUctZZ5gWR02zvzPazvSx08L1Hy13GxG3k=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+        20220719032148epcas2p40620d8c2deacc8e9f312a97ff9d83a06~DHPDFIQ1B2191821918epcas2p4N;
+        Tue, 19 Jul 2022 03:21:48 +0000 (GMT)
+Received: from epsmges2p4.samsung.com (unknown [182.195.36.100]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4Ln3yz4SFxz4x9Q7; Tue, 19 Jul
+        2022 03:21:47 +0000 (GMT)
+Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
+        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
+        88.BC.09662.B4326D26; Tue, 19 Jul 2022 12:21:47 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
+        20220719032146epcas2p3a23b4266bb6adf788b656840b855e3b9~DHPBwOODc1950719507epcas2p3y;
+        Tue, 19 Jul 2022 03:21:46 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20220719032146epsmtrp125a31940478b463502ed6a9f299f284c~DHPBvCMCf2146621466epsmtrp1x;
+        Tue, 19 Jul 2022 03:21:46 +0000 (GMT)
+X-AuditID: b6c32a48-9f7ff700000025be-34-62d6234bf26b
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        B3.B0.08802.A4326D26; Tue, 19 Jul 2022 12:21:46 +0900 (KST)
+Received: from ubuntu.dsn.sec.samsung.com (unknown [10.229.95.128]) by
+        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20220719032146epsmtip102c9df9302f0fdd1538513a65359277c~DHPBfrYn_0745907459epsmtip1G;
+        Tue, 19 Jul 2022 03:21:46 +0000 (GMT)
+From:   Kiwoong Kim <kwmad.kim@samsung.com>
+To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        adrian.hunter@intel.com, sc.suh@samsung.com, hy50.seo@samsung.com,
+        sh425.lee@samsung.com, bhoon95.kim@samsung.com,
+        vkumar.1997@samsung.com
+Cc:     Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: [PATCH v1] scsi: ufs: enable link lost interrupt
+Date:   Tue, 19 Jul 2022 12:18:38 +0900
+Message-Id: <1658200718-90312-1-git-send-email-kwmad.kim@samsung.com>
+X-Mailer: git-send-email 2.7.4
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrJKsWRmVeSWpSXmKPExsWy7bCmqa638rUkg+e7ZS1OPlnDZvFg3jY2
+        i5c/r7JZHHzYyWLxdekzVovVix+wWCy6sY3J4uaWoywWl3fNYbPovr6DzWL58X9MFl13bzBa
+        LP33lsXizv2PLA58Hov3vGTymLDoAKPH9/UdbB4fn95i8ejbsorR4/MmOY/2A91MAexR2TYZ
+        qYkpqUUKqXnJ+SmZeem2St7B8c7xpmYGhrqGlhbmSgp5ibmptkouPgG6bpk5QDcrKZQl5pQC
+        hQISi4uV9O1sivJLS1IVMvKLS2yVUgtScgrMC/SKE3OLS/PS9fJSS6wMDQyMTIEKE7IzNk7u
+        ZC04zV5x9MJu5gbGpWxdjJwcEgImEu/PP2IGsYUEdjBKHOnQgLA/MUq87yruYuQCsj8zSrya
+        28AM07Bm8mkWiMQuRomFz35COT8YJVZcWw42lk1AU+LpzalMIAkRgUNMEtfXn2UESTALqEvs
+        mnCCCcQWFrCUuHDpOAuIzSKgKvH82WegFRwcvAKuEm87vSC2yUncPNfJDDJHQuAru8St7l0s
+        IDUSAi4SK1sZIWqEJV4d38IOYUtJvOxvY4coKZbYtE8eorWBUWLJp80sEDXGErOetTOC1DAD
+        3bl+lz5EubLEkVssEEfySXQc/gs1hVeio00IolFZ4tekyVBLJSVm3rwDtdRD4vzKU4yQcIuV
+        uPH1BfsERtlZCPMXMDKuYhRLLSjOTU8tNiowgcdQcn7uJkZwGtTy2ME4++0HvUOMTByMhxgl
+        OJiVRHhFai8nCfGmJFZWpRblxxeV5qQWH2I0BQbWRGYp0eR8YCLOK4k3NLE0MDEzMzQ3MjUw
+        VxLn9UrZkCgkkJ5YkpqdmlqQWgTTx8TBKdXAdEJ4SbzmuZfTWS7M2PnIPIq34OYc0cvnft77
+        w6l2hOGWnPOzzJypE5w5n7DoGavOKW9qW3r7w4oFz2o5r69btM7qzKXFa57n3em4a3vq/DpD
+        vR0t1r7m9Zor2ZL2BNdMeLzg3Sxtm7bD3cuennq49Kl41LTHed4t/9OUHnkZ3xP6cWFZvndx
+        +2v/uOl/0uQnRHBP+Hsvt2DRfZ3SaTXSasbXfB4ntF+ydJ9i9/vVsVuzOn47zhA8oMpx7e7s
+        5kozk7QTGy+apHO7/v/ktuHxzx3tbycXiRZXXd/MeUmn4fFO9Sd/X27T/c/Po7yvwO8BV7z6
+        9PgjWo/EnJJDPky5MLvPzeW5zNcXx+99amF8O+WcEktxRqKhFnNRcSIAHP507QwEAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrNLMWRmVeSWpSXmKPExsWy7bCSnK6X8rUkg6v/NC1OPlnDZvFg3jY2
+        i5c/r7JZHHzYyWLxdekzVovVix+wWCy6sY3J4uaWoywWl3fNYbPovr6DzWL58X9MFl13bzBa
+        LP33lsXizv2PLA58Hov3vGTymLDoAKPH9/UdbB4fn95i8ejbsorR4/MmOY/2A91MAexRXDYp
+        qTmZZalF+nYJXBkbJ3eyFpxmrzh6YTdzA+NSti5GTg4JAROJNZNPs3QxcnEICexglFj67jAr
+        REJS4sTO54wQtrDE/ZYjrBBF3xglvj5ZC1bEJqAp8fTmVCYQW0TgEpPE/1vmIDazgLrErgkn
+        wOLCApYSFy4dZwGxWQRUJZ4/+8zcxcjBwSvgKvG20wtivpzEzXOdzBMYeRYwMqxilEwtKM5N
+        zy02LDDKSy3XK07MLS7NS9dLzs/dxAgOTy2tHYx7Vn3QO8TIxMF4iFGCg1lJhFek9nKSEG9K
+        YmVValF+fFFpTmrxIUZpDhYlcd4LXSfjhQTSE0tSs1NTC1KLYLJMHJxSDUwVXfMlCwS9+LbJ
+        f25iXi6RnFvGfbjPVX9px+yJ31Zd2Mo/Ielg5AaD7Pdbf1yWSpwj9UsxYN6kTyquidfzyx8f
+        Xqi52bR9lqCWS7q6BreTgsiftCA9nf4YzuPPNzh9FuJra+JUjXtjsPN5Sv0968N71tRcsind
+        W5V069eVQyue8LzYs+zhyu7ZVxfvXdY3zZ//XoxY9NlnDioLCrXXvJyiZuWnXlV91Gfuz8h9
+        vVyPZhb9zW9V5olNOv5R0OVeuE15jn1Jqrm1yyn9C/ohCtrRTLccta92xCRtdJeVWlWsMpFr
+        8gmmJYaP78++sF1rBZ/Mg3d3/Csb0hbryMZxrHzw5/WBgJniTJf1X5xUPKLEUpyRaKjFXFSc
+        CACl4iQgvgIAAA==
+X-CMS-MailID: 20220719032146epcas2p3a23b4266bb6adf788b656840b855e3b9
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20220719032146epcas2p3a23b4266bb6adf788b656840b855e3b9
+References: <CGME20220719032146epcas2p3a23b4266bb6adf788b656840b855e3b9@epcas2p3.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Only allocate up to USBG_NUM_CMDS number of session tags. We should not
-be using more than USBG_NUM_CMDS of tags due to the number of commands
-limit we imposed. Each command uses a unique tag. Any more than that is
-unnecessary. By limitting it, we can detect an issue in our driver
-immediately should we run out of session tags.
+Link lost is treated as fatal error with the following
+patch, but its event isn't registered as interrupt source,
+so I enable it.
+--
+scsi: ufs: Treat link loss as fatal error
 
-Signed-off-by: Thinh Nguyen <Thinh.Nguyen@synopsys.com>
+Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
 ---
- Changes in v2:
- - Add more comments in change log for the change reason.
+ drivers/scsi/ufs/ufshci.h | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
- drivers/usb/gadget/function/tcm.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/usb/gadget/function/tcm.h b/drivers/usb/gadget/function/tcm.h
-index bcbe35bb5015..df768559fb60 100644
---- a/drivers/usb/gadget/function/tcm.h
-+++ b/drivers/usb/gadget/function/tcm.h
-@@ -26,7 +26,7 @@ enum {
- #define USB_G_ALT_INT_BBB       0
- #define USB_G_ALT_INT_UAS       1
+diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
+index a7ff0e5..0b627f4 100644
+--- a/drivers/scsi/ufs/ufshci.h
++++ b/drivers/scsi/ufs/ufshci.h
+@@ -133,11 +133,7 @@ static inline u32 ufshci_version(u32 major, u32 minor)
  
--#define USB_G_DEFAULT_SESSION_TAGS	128
-+#define USB_G_DEFAULT_SESSION_TAGS	USBG_NUM_CMDS
+ #define UFSHCD_UIC_MASK		(UIC_COMMAND_COMPL | UFSHCD_UIC_PWR_MASK)
  
- struct tcm_usbg_nexus {
- 	struct se_session *tvn_se_sess;
+-#define UFSHCD_ERROR_MASK	(UIC_ERROR |\
+-				DEVICE_FATAL_ERROR |\
+-				CONTROLLER_FATAL_ERROR |\
+-				SYSTEM_BUS_FATAL_ERROR |\
+-				CRYPTO_ENGINE_FATAL_ERROR)
++#define UFSHCD_ERROR_MASK	(UIC_ERROR | INT_FATAL_ERRORS)
+ 
+ #define INT_FATAL_ERRORS	(DEVICE_FATAL_ERROR |\
+ 				CONTROLLER_FATAL_ERROR |\
 -- 
-2.28.0
+2.7.4
 
