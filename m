@@ -2,84 +2,142 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0F88C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jul 2022 18:14:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00619C43334
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jul 2022 21:06:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240017AbiGSSO0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Jul 2022 14:14:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45134 "EHLO
+        id S238045AbiGSVGl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Jul 2022 17:06:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52174 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239844AbiGSSOZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2022 14:14:25 -0400
-Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B99E5C979;
-        Tue, 19 Jul 2022 11:14:25 -0700 (PDT)
-Received: by mail-pf1-f174.google.com with SMTP id l124so14295601pfl.8;
-        Tue, 19 Jul 2022 11:14:25 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=dBr9REex/+6G3QPBUfRPrB9+jJoVwDOy1dYS7GNaZ2k=;
-        b=2+/LobL8aWzIbe0njkE633kPyDuCymOvfkzGo2tIVUuXP9Zwaj3NOET8+6moUw9Q+J
-         jD8qk3+nzDfk8J54PihSNnRspPYX5nNTsvs3w02zj7JsN/KL4qCgCX+/+fHpC4vHS8J7
-         4QzQk+yHgjfNfkVXUDz+wk5KBVIR8xzEPXYcvfOF5P0EnzQQ7uueqK5OLXIsJZ0tqLe1
-         3WEMUrzA75g0787neci/LS+xo02N5zWbPJLYhsi9Fz4SjDDkXXRGoLbQhP68J7jEnmA8
-         2n0O5Vk8PkyvwDFnWfNCGM1aUBQWhhctOI9oqh+954c1QkbZKLfmMjtjvGpmmeyWZc/Q
-         zNWQ==
-X-Gm-Message-State: AJIora/8V+CWnYdTnAZRBD8NKMBnLDcGx8unxTl3ih/6W0mDRLBlBkA/
-        PaxUUWQb+jqKIx3gvWXgVPM=
-X-Google-Smtp-Source: AGRyM1vnyLrr8eeKVZN8VzTx0RHYA8N/h8LzBPbJO83+rL4o9JTcra1eB4OWZclONC0Ou4JrzVWEpw==
-X-Received: by 2002:a05:6a00:1504:b0:52a:e3ae:a603 with SMTP id q4-20020a056a00150400b0052ae3aea603mr35153601pfu.48.1658254464396;
-        Tue, 19 Jul 2022 11:14:24 -0700 (PDT)
-Received: from ?IPV6:2600:1010:b002:e126:5611:6026:69c2:37bc? ([2600:1010:b002:e126:5611:6026:69c2:37bc])
-        by smtp.gmail.com with ESMTPSA id o186-20020a62cdc3000000b0050dc7628171sm11866177pfg.75.2022.07.19.11.14.22
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 19 Jul 2022 11:14:23 -0700 (PDT)
-Message-ID: <db19ed29-e7f9-e5b0-3a6c-f2812078a07d@acm.org>
-Date:   Tue, 19 Jul 2022 11:14:21 -0700
+        with ESMTP id S240548AbiGSVG3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2022 17:06:29 -0400
+Received: from mx0b-0016f401.pphosted.com (mx0a-0016f401.pphosted.com [67.231.148.174])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5F1061D40
+        for <linux-scsi@vger.kernel.org>; Tue, 19 Jul 2022 14:06:19 -0700 (PDT)
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 26JGoArP014154;
+        Tue, 19 Jul 2022 14:06:15 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=date : from : to :
+ cc : subject : in-reply-to : message-id : references : mime-version :
+ content-type; s=pfpt0220; bh=yef932Ra0866vSLpasDIXLoty8/3vQwO6MoE2NnWRHk=;
+ b=HwZD4ExqGJ+aWlWesFPigJq8Zixf3ym4OFJwOxAd9r9+BIg08MBJc16LTG4IlSNrPZ2u
+ 0bO7TEb8oX2rVgFFzVwyy5IBYoqv+Sy8S5e4k2//9ikrAPdNRmWmiKQU+k9dcwc8CNJq
+ oPu/PEE0fb4JP7NMlU8cnWxeB0zPRmzNA7KpYooathmMxHxfSxU+mlmHZ9qifqwu54kQ
+ BLB5NMgK+CddHZDizIgpogUHRhft4E+5PN8fLH6dNOJwIpik/Rrjbiheg7KNYcTgZ4pt
+ uFwrT2oOVJASiGRwPH+KWc7aLF+tCKiirIrgSAwF+xiV+dYjFg7e5CYDfinmL9rTV/Od Xg== 
+Received: from dc5-exch01.marvell.com ([199.233.59.181])
+        by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 3hdqw1awpf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Tue, 19 Jul 2022 14:06:15 -0700
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 19 Jul
+ 2022 14:06:13 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.18 via Frontend
+ Transport; Tue, 19 Jul 2022 14:06:13 -0700
+Received: from mvluser05.qlc.com (unknown [10.112.10.135])
+        by maili.marvell.com (Postfix) with ESMTP id 4FAE03F7090;
+        Tue, 19 Jul 2022 14:06:13 -0700 (PDT)
+Received: from localhost (aeasi@localhost)
+        by mvluser05.qlc.com (8.14.4/8.14.4/Submit) with ESMTP id 26JL6B67028985;
+        Tue, 19 Jul 2022 14:06:12 -0700
+X-Authentication-Warning: mvluser05.qlc.com: aeasi owned process doing -bs
+Date:   Tue, 19 Jul 2022 14:06:11 -0700
+From:   Arun Easi <aeasi@marvell.com>
+To:     Steven Rostedt <rostedt@goodmis.org>
+CC:     Daniel Wagner <dwagner@suse.de>,
+        Nilesh Javali <njavali@marvell.com>,
+        <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>, <bhazarika@marvell.com>,
+        <agurumurthy@marvell.com>
+Subject: Re: [EXT] Re: [PATCH 2/6] qla2xxx: Add a generic tracing framework
+In-Reply-To: <20220718152243.21ad13e7@gandalf.local.home>
+Message-ID: <259d53a5-958e-6508-4e45-74dba2821242@marvell.com>
+References: <20220715060227.23923-1-njavali@marvell.com>
+ <20220715060227.23923-3-njavali@marvell.com>
+ <20220718085438.mdv3rnbwc4bxfxrd@carbon.lan>
+ <f49cd5a0-93b8-48a2-5a3a-a4554ef660ac@marvell.com>
+ <20220718152243.21ad13e7@gandalf.local.home>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [PATCH v2 2/2] scsi: sd: Rework asynchronous resume support
-Content-Language: en-US
-To:     Geert Uytterhoeven <geert@linux-m68k.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
-        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
-        John Garry <john.garry@huawei.com>, ericspero@icloud.com,
-        jason600.groome@gmail.com, linux-renesas-soc@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20220630195703.10155-1-bvanassche@acm.org>
- <20220630195703.10155-3-bvanassche@acm.org>
- <alpine.DEB.2.22.394.2207191125130.1006766@ramsan.of.borg>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <alpine.DEB.2.22.394.2207191125130.1006766@ramsan.of.borg>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+        boundary="1879738122-1939649863-1658264773=:3483"
+X-Proofpoint-ORIG-GUID: Z7u43gLfTf9WZQfrOaanoCiFNbW5ZNrs
+X-Proofpoint-GUID: Z7u43gLfTf9WZQfrOaanoCiFNbW5ZNrs
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
+ definitions=2022-07-19_08,2022-07-19_01,2022-06-22_01
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/19/22 02:26, Geert Uytterhoeven wrote:
-> Thanks for your patch, which is now commit 88f1669019bd62b3 ("scsi: sd:
-> Rework asynchronous resume support") in scsi/for-next.
+--1879738122-1939649863-1658264773=:3483
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 8BIT
+
+On Mon, 18 Jul 2022, 12:22pm, Steven Rostedt wrote:
+
+> External Email
 > 
-> On the Salvator-XS development board[1] with a SATA hard drive
-> connected, accessing the hard drive after resume from s2idle hangs.
-> I have bisected this to the aformentioned commit, and reverting this
-> commit fixes the issue.
+> ----------------------------------------------------------------------
+> On Mon, 18 Jul 2022 12:02:26 -0700
+> Arun Easi <aeasi@marvell.com> wrote:
 > 
-> [1] arch/arm64/boot/dts/renesas/r8a77951-salvator-xs.dts
+> > Many times when a problem was reported on the driver, we had to request 
+> > for a repro with extended error logging (via driver module parameter) 
+> > turned on. With this internal tracing in place, log messages that appear 
+> > only with extended error logging are captured by default in the internal 
+> > trace buffer.
+> > 
+> > AFAIK, kernel tracing requires a user initiated action to be turned on, 
+> > like enabling individual tracepoints. Though a script (either startup or 
+> > udev) can do this job, enabling tracepoints by default for a single 
+> > driver, I think, may not be a preferred choice -- particularly when the 
+> > trace buffer is shared across the kernel. That also brings the extra 
+> > overhead of finding how this could be done across various distros.
+> > 
+> > For cases where the memory/driver size matters, there is an option to 
+> > compile out this feature, plus choosing a lower default trace buffer size.
+> 
+> You can enable an ftrace instance from inside the kernel, and make it a
+> compile time option.
+> 
+> 	#include <linux/trace_events.h>
+> 	#include <linux/trace.h>
+> 
+> 	struct trace_array *tr;
+> 
+> 	tr = trace_array_get_by_name("qla2xxx");
+> 	trace_array_set_clr_event(tr, "qla", NULL, true);
+> 
+> And now you have trace events running:
+> 
+>  # cat /sys/kernel/tracing/instances/qla/trace
+> 
 
-Hi Geert,
+Thanks Steve. I was not aware of this relatively newer interface. This 
+looks promising.
 
-Thank you for having reported this. How about creating a bug report on 
-https://bugzilla.kernel.org/ and attaching the kernel logs with and 
-without this patch? It's probably better to upload the kernel logs 
-somewhere rather than to post these on the linux-scsi mailing list.
+I have a question on the behavior of this interface.
 
-Thanks,
+It appears by calling the above two interfaces, I get a separate instance 
+of "qla" only traces, but with only the "qla"-only instance being enabled, 
+leaving the main (/sys/kernel/tracing/events/qla/enable) one disabled. No 
+issues there, but when I enable both of them, I get garbage values on one.
 
-Bart.
+/sys/kernel/tracing/instances/qla2xxx/trace:
+             cat-56106   [012] ..... 2419873.470098: ql_dbg_log: qla2xxx [0000:05:00.0]-1054:14:  Entered (null).
+             cat-56106   [012] ..... 2419873.470101: ql_dbg_log: qla2xxx [0000:05:00.0]-1000:14:  Entered ×+<96>²Ü<98>^H.
+             cat-56106   [012] ..... 2419873.470102: ql_dbg_log: qla2xxx [0000:05:00.0]-1006:14:  Prepare to issue mbox cmd=0xde589000.
+
+/sys/kernel/tracing/trace:
+             cat-56106   [012] ..... 2419873.470097: ql_dbg_log: qla2xxx [0000:05:00.0]-1054:14:  Entered qla2x00_get_firmware_state.
+             cat-56106   [012] ..... 2419873.470100: ql_dbg_log: qla2xxx [0000:05:00.0]-1000:14:  Entered qla2x00_mailbox_command.
+             cat-56106   [012] ..... 2419873.470102: ql_dbg_log: qla2xxx [0000:05:00.0]-1006:14:  Prepare to issue mbox cmd=0x69.
+
+It appears that only one should be enabled at a time. Per my read of 
+Documentation/trace/ftrace.rst, the main directory and instances have 
+separate trace buffers, so I am a bit confused with the above output.
+
+Regards,
+-Arun
+--1879738122-1939649863-1658264773=:3483--
