@@ -2,287 +2,140 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2458ACCA47F
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Jul 2022 23:38:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A29F0C43334
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jul 2022 00:20:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234587AbiGRXiJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Jul 2022 19:38:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50452 "EHLO
+        id S236544AbiGSAUJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Jul 2022 20:20:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58534 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230297AbiGRXiI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jul 2022 19:38:08 -0400
-Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2BF2F3134A;
-        Mon, 18 Jul 2022 16:38:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1658187487; x=1689723487;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=VQyC/hOp1k/THL4RsIPvnfCiglULK2+aEj5I7+E/pmM=;
-  b=CRqOBYrqD1wMYa/h4UDI6X1XQHnITxv6S8/4SWytMK12VDz1iLcSgGxC
-   zxbm3AijmjRY140of23ktN/wFhptKoJN7sw5DOVA7kUkOEVgyjwKdG2aw
-   mJKHDuqrE+M1MskIXYP7IVWS88yHUZ23WhLKruJJdXy5Von/cSv0/7fFk
-   rHrIE1s672YQQT+wJi2xuJM0lMst4iqa02Gw7AQ8jqjCPdf8ZDI0X1zlL
-   8qeCq7pS0m+KtvCtXhzcTZ4mmDZCa78l04v0Y1VJMh3Fv+yqiJJZIxGex
-   bn52Z3Z6YVFhkcFJPZSHGKnzTZ0ITPKhlP5a6eOnlc0wDkMJg0HXeMBBk
-   Q==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10412"; a="312030503"
-X-IronPort-AV: E=Sophos;i="5.92,282,1650956400"; 
-   d="scan'208";a="312030503"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jul 2022 16:38:06 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.92,282,1650956400"; 
-   d="scan'208";a="739652209"
-Received: from lkp-server02.sh.intel.com (HELO ff137eb26ff1) ([10.239.97.151])
-  by fmsmga001.fm.intel.com with ESMTP; 18 Jul 2022 16:38:03 -0700
-Received: from kbuild by ff137eb26ff1 with local (Exim 4.95)
-        (envelope-from <lkp@intel.com>)
-        id 1oDaJP-0004ro-BP;
-        Mon, 18 Jul 2022 23:38:03 +0000
-Date:   Tue, 19 Jul 2022 07:37:35 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Andrew Morton <akpm@linux-foundation.org>
-Cc:     ntfs3@lists.linux.dev, mpi3mr-linuxdrv.pdl@broadcom.com,
-        linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-can@vger.kernel.org,
-        apparmor@lists.ubuntu.com,
-        Linux Memory Management List <linux-mm@kvack.org>
-Subject: [linux-next:master] BUILD REGRESSION
- 036ad6daa8f0fd357af7f50f9da58539eaa6f68c
-Message-ID: <62d5eebf.e9jDQ0OnJ8xy689Q%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        with ESMTP id S236463AbiGSAUI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jul 2022 20:20:08 -0400
+Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5A9E37F86
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2022 17:20:05 -0700 (PDT)
+Received: by mail-pj1-x102f.google.com with SMTP id o5-20020a17090a3d4500b001ef76490983so14211461pjf.2
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2022 17:20:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=O4T2VQDxAWCrJIF9JXck1NEHm4y5ISvV3hD9xQiPuAk=;
+        b=jHJtw10vDryNboN4iS1vTEDcw4++rsAMT+oMpC4qCdktpwfJXav5atwlQxJUQlAlUt
+         WkrprZ+wNT5qddGI+8++AcfEe7GtK7aMNOtCSRqWmp5bzm2S+AwgyFmatEA+Bi7ns53V
+         u2S4UeWl/z22mWLYSEgXP17ktwllvML1VWN3s=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=O4T2VQDxAWCrJIF9JXck1NEHm4y5ISvV3hD9xQiPuAk=;
+        b=SGq7In7U+WeLGtJbpF1wxF/FaPAS9csIn8X7JM1bUnwAoUMrSZOaCcS00nfWrsnzgm
+         qO2c+H22PRdpOwB17IiyMTvttzxrtX5DvegCKfyrSf8CLahn1dT0IrvJj4MIF/g4jlm4
+         n2D07R29CNBvKQ5HUwPc6Jn5fvcz4mPIzCdl9iTWNadkrvIDxy50p1MkOCD8nZpOeovd
+         mLw0aXNk2m4iQAF5LvyJZ3pnlqn+B0BHbe7ZO4JrplRuACIWbiaTEvpdLGSSIoSJpHek
+         cThx0VnN1alDkbROmBwwSi5Thu0uBEvaoDyYUW50rnxd5P9h873A5b6KuSLYNH3tSE7h
+         gqGw==
+X-Gm-Message-State: AJIora+VnQqhsbjxLbnDXH+r5YpJRLBSgJZazWDFvdgyMR0FevpXHE+M
+        guFRKhfEj24WuPXJ60/iBmL0bA==
+X-Google-Smtp-Source: AGRyM1vF7G9VIj7hNbh/uQX4M+nAU6jRINRgeMGqfALml7DCCkNmCtqF4Gk9efWCuSb0ZblQJ/RjNw==
+X-Received: by 2002:a17:90a:f404:b0:1f1:fd63:281a with SMTP id ch4-20020a17090af40400b001f1fd63281amr705772pjb.158.1658190005301;
+        Mon, 18 Jul 2022 17:20:05 -0700 (PDT)
+Received: from dlunevwfh.roam.corp.google.com (n122-107-196-14.sbr2.nsw.optusnet.com.au. [122.107.196.14])
+        by smtp.gmail.com with ESMTPSA id a8-20020a1709027e4800b0016cbb46806asm9075813pln.278.2022.07.18.17.20.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 18 Jul 2022 17:20:04 -0700 (PDT)
+From:   Daniil Lunev <dlunev@chromium.org>
+To:     Adrian Hunter <adrian.hunter@intel.com>,
+        Bart Van Assche <bvanassche@acm.org>
+Cc:     Daniil Lunev <dlunev@chromium.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: [PATCH v2] scsi: ufs: ufs-pci: Correct check for RESET DSM
+Date:   Tue, 19 Jul 2022 10:19:54 +1000
+Message-Id: <20220719101903.v2.1.I22460c4f4a9ccf2c96c3f9bb392b409926d80b2f@changeid>
+X-Mailer: git-send-email 2.31.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
-branch HEAD: 036ad6daa8f0fd357af7f50f9da58539eaa6f68c  Add linux-next specific files for 20220718
+dsm_fns is a bitmap, and it is 0-indexed according to the check in
+__intel_dsm funciton. But common initialization was checking it as if it
+was 1-indexed. The CL corrects the discrepancy. This change won't break
+any existing calls to the function, since before the change both bits 0
+and 1 were checked and needed to be set.
 
-Error/Warning reports:
+Signed-off-by: Daniil Lunev <dlunev@chromium.org>
 
-https://lore.kernel.org/linux-mm/202206292052.LsFui3zO-lkp@intel.com
-https://lore.kernel.org/linux-mm/202207160452.HPLSlqzA-lkp@intel.com
-https://lore.kernel.org/llvm/202207090100.acXdJ79H-lkp@intel.com
-https://lore.kernel.org/llvm/202207150400.NMBYJFkA-lkp@intel.com
-https://lore.kernel.org/llvm/202207190150.mf4rb4VG-lkp@intel.com
+---
 
-Error/Warning: (recently discovered and may have been fixed)
+Changes in v2:
+* Make __INTEL_DSM_SUPPORTED a function
+* use `1u` instead of `1` in shift operator
 
-drivers/gpu/drm/amd/amdgpu/../display/dc/core/dc.c:2837:6: warning: no previous prototype for function 'dc_reset_state' [-Wmissing-prototypes]
-drivers/pci/endpoint/functions/pci-epf-vntb.c:1247: undefined reference to `ntb_register_device'
-drivers/pci/endpoint/functions/pci-epf-vntb.c:174: undefined reference to `ntb_link_event'
-drivers/pci/endpoint/functions/pci-epf-vntb.c:262: undefined reference to `ntb_db_event'
-drivers/pci/endpoint/functions/pci-epf-vntb.c:975:5: warning: no previous prototype for 'pci_read' [-Wmissing-prototypes]
-drivers/pci/endpoint/functions/pci-epf-vntb.c:984:5: warning: no previous prototype for 'pci_write' [-Wmissing-prototypes]
-drivers/scsi/mpi3mr/mpi3mr_os.c:1655:22: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
-drivers/scsi/mpi3mr/mpi3mr_os.c:389:40: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
-drivers/scsi/qla2xxx/qla_init.c:171:10: warning: variable 'bail' set but not used [-Wunused-but-set-variable]
-drivers/vfio/vfio_iommu_type1.c:2141:35: warning: cast to smaller integer type 'enum iommu_cap' from 'void *' [-Wvoid-pointer-to-enum-cast]
-reset-simple.c:(.text+0x3aa): undefined reference to `devm_ioremap_resource'
-security/apparmor/policy_ns.c:83:20: warning: no previous prototype for 'alloc_unconfined' [-Wmissing-prototypes]
-security/apparmor/policy_ns.c:83:20: warning: no previous prototype for function 'alloc_unconfined' [-Wmissing-prototypes]
-unix_connect.c:115:55: error: expected identifier before '(' token
-vmlinux.o: warning: objtool: ct_idle_enter+0x21: call to ftrace_likely_update() leaves .noinstr.text section
-vmlinux.o: warning: objtool: ct_idle_exit+0x27: call to ftrace_likely_update() leaves .noinstr.text section
-vmlinux.o: warning: objtool: ct_irq_enter+0x22: call to ftrace_likely_update() leaves .noinstr.text section
-vmlinux.o: warning: objtool: ct_irq_exit+0x22: call to ftrace_likely_update() leaves .noinstr.text section
-vmlinux.o: warning: objtool: ct_kernel_enter.constprop.0+0x38: call to ftrace_likely_update() leaves .noinstr.text section
-vmlinux.o: warning: objtool: ct_kernel_enter_state+0x41: call to ftrace_likely_update() leaves .noinstr.text section
-vmlinux.o: warning: objtool: ct_kernel_exit.constprop.0+0x44: call to ftrace_likely_update() leaves .noinstr.text section
-vmlinux.o: warning: objtool: ct_kernel_exit_state+0x41: call to ftrace_likely_update() leaves .noinstr.text section
-vmlinux.o: warning: objtool: ct_nmi_enter+0x37: call to ftrace_likely_update() leaves .noinstr.text section
+ drivers/ufs/host/ufshcd-pci.c | 17 +++++++++++++----
+ 1 file changed, 13 insertions(+), 4 deletions(-)
 
-Unverified Error/Warning (likely false positive, please contact us if interested):
-
-arch/x86/kernel/cpu/rdrand.c:38 x86_init_rdrand() error: uninitialized symbol 'prev'.
-drivers/char/random.c:886:1: internal compiler error: in arc_ifcvt, at config/arc/arc.cc:9642
-drivers/clk/renesas/clk-r8a7779.c:137 r8a7779_cpg_clocks_init() warn: possible memory leak of 'data'
-drivers/firmware/arm_scmi/powercap.c:376:1: internal compiler error: in arc_ifcvt, at config/arc/arc.cc:9642
-drivers/gpu/drm/amd/amdgpu/../display/dc/bios/bios_parser2.c:2994:1: internal compiler error: in arc_ifcvt, at config/arc/arc.cc:9642
-drivers/misc/habanalabs/gaudi2/gaudi2.c:8728:1: internal compiler error: in arc_ifcvt, at config/arc/arc.cc:9642
-drivers/net/can/slcan/slcan-core.c:601:14: sparse:    void *
-drivers/net/can/slcan/slcan-core.c:601:14: sparse:    void [noderef] __rcu *
-drivers/net/can/slcan/slcan-core.c:601:14: sparse: sparse: incompatible types in comparison expression (different address spaces):
-drivers/net/dsa/microchip/ksz9477.c:501:1: internal compiler error: in arc_ifcvt, at config/arc/arc.cc:9642
-drivers/net/ethernet/microchip/lan743x_main.c:1238:1: internal compiler error: in arc_ifcvt, at config/arc/arc.cc:9642
-drivers/net/wireless/ath/ath9k/hif_usb.c:251:57: warning: suggest braces around empty body in an 'else' statement [-Wempty-body]
-drivers/soc/mediatek/mtk-mutex.c:793:1: internal compiler error: in arc_ifcvt, at config/arc/arc.cc:9642
-drivers/staging/media/zoran/zr36016.c:430:1: internal compiler error: in arc_ifcvt, at config/arc/arc.cc:9642
-drivers/staging/media/zoran/zr36050.c:829:1: internal compiler error: in arc_ifcvt, at config/arc/arc.cc:9642
-drivers/staging/media/zoran/zr36060.c:869:1: internal compiler error: in arc_ifcvt, at config/arc/arc.cc:9642
-drivers/target/target_core_device.c:1013:1: internal compiler error: in arc_ifcvt, at config/arc/arc.cc:9642
-drivers/thunderbolt/tmu.c:758:1: internal compiler error: in arc_ifcvt, at config/arc/arc.cc:9642
-fs/kernel_read_file.c:61 kernel_read_file() warn: impossible condition '(i_size > (((~0) >> 1))) => (s64min-s64max > s64max)'
-mm/memory.c:5183:1: internal compiler error: in arc_ifcvt, at config/arc/arc.cc:9642
-net/ipv6/raw.c:938:1: internal compiler error: in arc_ifcvt, at config/arc/arc.cc:9642
-net/ipv6/tcp_ipv6.c:347:1: internal compiler error: in arc_ifcvt, at config/arc/arc.cc:9642
-net/l2tp/l2tp_ip6.c:660:1: internal compiler error: in arc_ifcvt, at config/arc/arc.cc:9642
-security/apparmor/policy_ns.c:83:19: sparse: sparse: symbol 'alloc_unconfined' was not declared. Should it be static?
-sound/soc/sof/intel/mtl.c:553:1: internal compiler error: in arc_ifcvt, at config/arc/arc.cc:9642
-
-Error/Warning ids grouped by kconfigs:
-
-gcc_recent_errors
-|-- alpha-allyesconfig
-|   |-- drivers-pci-endpoint-functions-pci-epf-vntb.c:warning:no-previous-prototype-for-pci_read
-|   |-- drivers-pci-endpoint-functions-pci-epf-vntb.c:warning:no-previous-prototype-for-pci_write
-|   `-- security-apparmor-policy_ns.c:warning:no-previous-prototype-for-alloc_unconfined
-|-- arc-allyesconfig
-|   |-- drivers-char-random.c:internal-compiler-error:in-arc_ifcvt-at-config-arc-arc.cc
-|   |-- drivers-firmware-arm_scmi-powercap.c:internal-compiler-error:in-arc_ifcvt-at-config-arc-arc.cc
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-bios-bios_parser2.c:internal-compiler-error:in-arc_ifcvt-at-config-arc-arc.cc
-|   |-- drivers-misc-habanalabs-gaudi2-gaudi2.c:internal-compiler-error:in-arc_ifcvt-at-config-arc-arc.cc
-|   |-- drivers-net-dsa-microchip-ksz9477.c:internal-compiler-error:in-arc_ifcvt-at-config-arc-arc.cc
-|   |-- drivers-net-ethernet-microchip-lan743x_main.c:internal-compiler-error:in-arc_ifcvt-at-config-arc-arc.cc
-|   |-- drivers-pci-endpoint-functions-pci-epf-vntb.c:warning:no-previous-prototype-for-pci_read
-|   |-- drivers-pci-endpoint-functions-pci-epf-vntb.c:warning:no-previous-prototype-for-pci_write
-|   |-- drivers-scsi-mpi3mr-mpi3mr_os.c:warning:cast-from-pointer-to-integer-of-different-size
-|   |-- drivers-scsi-mpi3mr-mpi3mr_os.c:warning:cast-to-pointer-from-integer-of-different-size
-|   |-- drivers-soc-mediatek-mtk-mutex.c:internal-compiler-error:in-arc_ifcvt-at-config-arc-arc.cc
-|   |-- drivers-staging-media-zoran-zr36016.c:internal-compiler-error:in-arc_ifcvt-at-config-arc-arc.cc
-|   |-- drivers-staging-media-zoran-zr36050.c:internal-compiler-error:in-arc_ifcvt-at-config-arc-arc.cc
-|   |-- drivers-staging-media-zoran-zr36060.c:internal-compiler-error:in-arc_ifcvt-at-config-arc-arc.cc
-|   |-- drivers-target-target_core_device.c:internal-compiler-error:in-arc_ifcvt-at-config-arc-arc.cc
-|   |-- drivers-thunderbolt-tmu.c:internal-compiler-error:in-arc_ifcvt-at-config-arc-arc.cc
-|   |-- mm-memory.c:internal-compiler-error:in-arc_ifcvt-at-config-arc-arc.cc
-|   |-- net-ipv6-raw.c:internal-compiler-error:in-arc_ifcvt-at-config-arc-arc.cc
-|   |-- net-ipv6-tcp_ipv6.c:internal-compiler-error:in-arc_ifcvt-at-config-arc-arc.cc
-|   |-- net-l2tp-l2tp_ip6.c:internal-compiler-error:in-arc_ifcvt-at-config-arc-arc.cc
-|   |-- security-apparmor-policy_ns.c:warning:no-previous-prototype-for-alloc_unconfined
-|   `-- sound-soc-sof-intel-mtl.c:internal-compiler-error:in-arc_ifcvt-at-config-arc-arc.cc
-|-- i386-allyesconfig
-|   |-- drivers-pci-endpoint-functions-pci-epf-vntb.c:warning:no-previous-prototype-for-pci_read
-|   |-- drivers-pci-endpoint-functions-pci-epf-vntb.c:warning:no-previous-prototype-for-pci_write
-|   |-- drivers-scsi-mpi3mr-mpi3mr_os.c:warning:cast-from-pointer-to-integer-of-different-size
-|   |-- drivers-scsi-mpi3mr-mpi3mr_os.c:warning:cast-to-pointer-from-integer-of-different-size
-|   `-- security-apparmor-policy_ns.c:warning:no-previous-prototype-for-alloc_unconfined
-|-- i386-randconfig-a014-20220718
-|   |-- drivers-scsi-mpi3mr-mpi3mr_os.c:warning:cast-from-pointer-to-integer-of-different-size
-|   |-- drivers-scsi-mpi3mr-mpi3mr_os.c:warning:cast-to-pointer-from-integer-of-different-size
-|   `-- security-apparmor-policy_ns.c:warning:no-previous-prototype-for-alloc_unconfined
-|-- i386-randconfig-a015-20220718
-|   |-- drivers-scsi-mpi3mr-mpi3mr_os.c:warning:cast-from-pointer-to-integer-of-different-size
-|   `-- drivers-scsi-mpi3mr-mpi3mr_os.c:warning:cast-to-pointer-from-integer-of-different-size
-|-- i386-randconfig-a016-20220718
-|   |-- drivers-scsi-mpi3mr-mpi3mr_os.c:warning:cast-from-pointer-to-integer-of-different-size
-|   `-- drivers-scsi-mpi3mr-mpi3mr_os.c:warning:cast-to-pointer-from-integer-of-different-size
-|-- i386-randconfig-c033-20220718
-|   `-- security-apparmor-policy_ns.c:warning:no-previous-prototype-for-alloc_unconfined
-|-- i386-randconfig-m021-20220718
-|   |-- arch-x86-kernel-cpu-rdrand.c-x86_init_rdrand()-error:uninitialized-symbol-prev-.
-|   `-- security-apparmor-policy_ns.c:warning:no-previous-prototype-for-alloc_unconfined
-|-- i386-randconfig-s002-20220718
-|   |-- fs-ntfs3-attrib.c:sparse:sparse:cast-to-restricted-__le64
-clang_recent_errors
-|-- arm64-randconfig-r001-20220718
-|   |-- drivers-scsi-qla2xxx-qla_init.c:warning:variable-bail-set-but-not-used
-|   |-- drivers-vfio-vfio_iommu_type1.c:warning:cast-to-smaller-integer-type-enum-iommu_cap-from-void
-|   `-- security-apparmor-policy_ns.c:warning:no-previous-prototype-for-function-alloc_unconfined
-|-- i386-randconfig-a003-20220718
-|   `-- security-apparmor-policy_ns.c:warning:no-previous-prototype-for-function-alloc_unconfined
-|-- powerpc-randconfig-r035-20220718
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-core-dc.c:warning:no-previous-prototype-for-function-dc_reset_state
-|-- s390-randconfig-r032-20220718
-|   `-- reset-simple.c:(.text):undefined-reference-to-devm_ioremap_resource
-|-- x86_64-randconfig-a001
-|   `-- drivers-vfio-vfio_iommu_type1.c:warning:cast-to-smaller-integer-type-enum-iommu_cap-from-void
-`-- x86_64-randconfig-a005
-    |-- drivers-vfio-vfio_iommu_type1.c:warning:cast-to-smaller-integer-type-enum-iommu_cap-from-void
-    `-- security-apparmor-policy_ns.c:warning:no-previous-prototype-for-function-alloc_unconfined
-
-elapsed time: 721m
-
-configs tested: 78
-configs skipped: 2
-
-gcc tested configs:
-i386                 randconfig-c001-20220718
-sh                          landisk_defconfig
-powerpc                     tqm8541_defconfig
-sh                            migor_defconfig
-powerpc                  iss476-smp_defconfig
-sh                          r7785rp_defconfig
-arm                        oxnas_v6_defconfig
-arc                              alldefconfig
-mips                    maltaup_xpa_defconfig
-arm                       omap2plus_defconfig
-m68k                          multi_defconfig
-arm                          lpd270_defconfig
-sh                             sh03_defconfig
-arm64                            alldefconfig
-m68k                                defconfig
-powerpc                     rainier_defconfig
-x86_64                           alldefconfig
-parisc                generic-64bit_defconfig
-powerpc                      tqm8xx_defconfig
-loongarch                           defconfig
-ia64                             allmodconfig
-arc                               allnoconfig
-alpha                             allnoconfig
-riscv                             allnoconfig
-csky                              allnoconfig
-x86_64               randconfig-k001-20220718
-arc                              allyesconfig
-alpha                            allyesconfig
-m68k                             allyesconfig
-m68k                             allmodconfig
-powerpc                          allmodconfig
-sh                               allmodconfig
-mips                             allyesconfig
-powerpc                           allnoconfig
-i386                                defconfig
-i386                             allyesconfig
-x86_64                        randconfig-a002
-x86_64                        randconfig-a006
-x86_64                        randconfig-a004
-x86_64               randconfig-a013-20220718
-x86_64               randconfig-a012-20220718
-x86_64               randconfig-a011-20220718
-x86_64               randconfig-a015-20220718
-x86_64               randconfig-a014-20220718
-x86_64               randconfig-a016-20220718
-i386                 randconfig-a011-20220718
-i386                 randconfig-a013-20220718
-i386                 randconfig-a012-20220718
-i386                 randconfig-a015-20220718
-i386                 randconfig-a014-20220718
-i386                 randconfig-a016-20220718
-s390                 randconfig-r044-20220718
-riscv                randconfig-r042-20220718
-arc                  randconfig-r043-20220718
-um                             i386_defconfig
-um                           x86_64_defconfig
-x86_64                          rhel-8.3-func
-x86_64                         rhel-8.3-kunit
-x86_64                    rhel-8.3-kselftests
-x86_64                           rhel-8.3-syz
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                           allyesconfig
-
-clang tested configs:
-arm                     am200epdkit_defconfig
-powerpc                        fsp2_defconfig
-powerpc                     akebono_defconfig
-powerpc                    socrates_defconfig
-x86_64                        randconfig-a001
-x86_64                        randconfig-a003
-x86_64                        randconfig-a005
-i386                 randconfig-a003-20220718
-i386                 randconfig-a001-20220718
-i386                 randconfig-a002-20220718
-i386                 randconfig-a006-20220718
-i386                 randconfig-a004-20220718
-i386                 randconfig-a005-20220718
-hexagon              randconfig-r041-20220718
-hexagon              randconfig-r045-20220718
-
+diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.c
+index 04166bda41daa..c13c31c2ae793 100644
+--- a/drivers/ufs/host/ufshcd-pci.c
++++ b/drivers/ufs/host/ufshcd-pci.c
+@@ -24,7 +24,7 @@ struct ufs_host {
+ 	void (*late_init)(struct ufs_hba *hba);
+ };
+ 
+-enum {
++enum intel_ufs_dsm_func_id {
+ 	INTEL_DSM_FNS		=  0,
+ 	INTEL_DSM_RESET		=  1,
+ };
+@@ -42,6 +42,15 @@ static const guid_t intel_dsm_guid =
+ 	GUID_INIT(0x1A4832A0, 0x7D03, 0x43CA,
+ 		  0xB0, 0x20, 0xF6, 0xDC, 0xD1, 0x2A, 0x19, 0x50);
+ 
++static bool __intel_dsm_supported(struct intel_host *host,
++				   enum intel_ufs_dsm_func_id fn)
++{
++	return fn < 32 && fn >= 0 && (host->dsm_fns & (1u << fn));
++}
++
++#define INTEL_DSM_SUPPORTED(host, name) \
++	__intel_dsm_supported(host, INTEL_DSM_##name)
++
+ static int __intel_dsm(struct intel_host *intel_host, struct device *dev,
+ 		       unsigned int fn, u32 *result)
+ {
+@@ -71,7 +80,7 @@ static int __intel_dsm(struct intel_host *intel_host, struct device *dev,
+ static int intel_dsm(struct intel_host *intel_host, struct device *dev,
+ 		     unsigned int fn, u32 *result)
+ {
+-	if (fn > 31 || !(intel_host->dsm_fns & (1 << fn)))
++	if (!__intel_dsm_supported(intel_host, fn))
+ 		return -EOPNOTSUPP;
+ 
+ 	return __intel_dsm(intel_host, dev, fn, result);
+@@ -300,7 +309,7 @@ static int ufs_intel_device_reset(struct ufs_hba *hba)
+ {
+ 	struct intel_host *host = ufshcd_get_variant(hba);
+ 
+-	if (host->dsm_fns & INTEL_DSM_RESET) {
++	if (INTEL_DSM_SUPPORTED(host, RESET)) {
+ 		u32 result = 0;
+ 		int err;
+ 
+@@ -342,7 +351,7 @@ static int ufs_intel_common_init(struct ufs_hba *hba)
+ 		return -ENOMEM;
+ 	ufshcd_set_variant(hba, host);
+ 	intel_dsm_init(host, hba->dev);
+-	if (host->dsm_fns & INTEL_DSM_RESET) {
++	if (INTEL_DSM_SUPPORTED(host, RESET)) {
+ 		if (hba->vops->device_reset)
+ 			hba->caps |= UFSHCD_CAP_DEEPSLEEP;
+ 	} else {
 -- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+2.31.0
+
