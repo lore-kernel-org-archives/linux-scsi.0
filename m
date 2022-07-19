@@ -2,172 +2,313 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18939CCA47F
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jul 2022 15:56:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C4D9C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jul 2022 16:15:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239682AbiGSP4Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Jul 2022 11:56:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34508 "EHLO
+        id S238606AbiGSQPI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Jul 2022 12:15:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48292 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239633AbiGSP4P (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2022 11:56:15 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5EEC1D0D3;
-        Tue, 19 Jul 2022 08:56:14 -0700 (PDT)
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 26JExJBP031784;
-        Tue, 19 Jul 2022 15:56:13 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2022-7-12;
- bh=Me2weV5LtaxIZkzrUxjea8R+oE9mV0krDEyckCgPEhM=;
- b=USg4+gP1+8YAcdqBC/o2S1OuqyV4N1JLvkmyntCooAcwKwdamNypj+iuMWiz+FOy/bFx
- EALE+gYGo8rJ6tFSSlc6NQoeSAj6garS57zwyGRr9uAuIkSjmNVI8SDa31gkAep+qsAX
- AXV/gAjSu8YixOTJuQVyghipqPq3b5oUOdXXfvLCmeSPYJFGpw6oWlkNd95i8cKc4Bkz
- Cx05NhX/bOROzs2m9r6Hp6s/8kkpaJX5vtfxCXvKSf6rEn8YZlWqvNKFGma3gqs3Dm7Y
- vFOy8RPvFd9xvhAoAh68VJv9v0xAWbmnbFYKk3UN4V8586sdGHyQadgF4FD6ZiuM2CoU kQ== 
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3hbnvtexhq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 19 Jul 2022 15:56:12 +0000
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 26JEUZhk039270;
-        Tue, 19 Jul 2022 15:56:11 GMT
-Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2177.outbound.protection.outlook.com [104.47.56.177])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3hc1k4vk22-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 19 Jul 2022 15:56:11 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Q2xOcLUqeONisYKRPuGDb171vQUYZWsCsUqhQypf8k0IueX1qy12EeQmsFbCcemhDcj3UtPurMr2eGPhXGzTlOMENy0TumiUYupDZbTa5okMcs0/EwloOnl0F9GBo3lsSpBYe7fD8fy2YIZqwaodajWfdPhY1oSN+heBqrzjbMJBHr6X8uAJHPR4xD9gX9cgQ/Svceurm034efEpQRx0cxb7lnURubQiFhjCvDbfO0XDT/fJ5fsvRC/gwFkl5udkxU9O26yujX4rrxHv6ijH/FrFoVXTyCVo5rux1xJSdOAFQtoEReu75llTwYPuLQroUY9QgsIXlQTKnAb3AEGwnA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Me2weV5LtaxIZkzrUxjea8R+oE9mV0krDEyckCgPEhM=;
- b=iHddPq4a0GJL7iizkvyok82sQRbgUN8Lel0BG0CAGr8uX83Q8jZolIB2r8tupoh3Tzt5Wp8SesVsnGnkkGPVLncQ68LfE7Lcmv4gX1bulDIgvZZ+/KTs5hMixMOgTec7tlRWV4KvP6fzzVfeN3dBOBFEGgxiyonhqvp3tmP09SJFyRkRJv32PSAL/gddwlMOBzhapDIy3eXb6WA+FLS5Zuqk2/qRA8Wto9y1O8V21SQw6hXeUeRnPX+gCMfopA/ERorVxkRPv7R60SzVqAJgh9y9t2Hffu5LVXhMGF/VEnILuKOcwYzixffBVxcLFgJkmkOFOXo2tgdD6he5LcRm7Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Me2weV5LtaxIZkzrUxjea8R+oE9mV0krDEyckCgPEhM=;
- b=z5+PoaZK9flXVhCy1j3/Ve3wrYre5MiDUgLLI4IW65Nyu5kuDsvRBLZbB/EfnOicvml/Dp4XAjf2rbKUsseWkdt61NtPDMvoo85RqIKEo3MUqd++wLO1XrjF+vUNkGDZ2gH4GCcSt/jG/0cE0+Pe8SB+viY+tcssV2Us6yX5GOk=
-Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
- BLAPR10MB5316.namprd10.prod.outlook.com (2603:10b6:208:326::6) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5438.12; Tue, 19 Jul 2022 15:56:09 +0000
-Received: from DM5PR10MB1466.namprd10.prod.outlook.com
- ([fe80::8dee:d667:f326:1d50]) by DM5PR10MB1466.namprd10.prod.outlook.com
- ([fe80::8dee:d667:f326:1d50%6]) with mapi id 15.20.5438.025; Tue, 19 Jul 2022
- 15:56:09 +0000
-Message-ID: <74bf1df3-a466-9d78-1a25-7425c89b9fa3@oracle.com>
-Date:   Tue, 19 Jul 2022 10:56:07 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.0.2
-Subject: Re: [PATCH v2 2/4] target: Implement TMR_ABORT_TASK_SET
-Content-Language: en-US
-To:     Thinh Nguyen <Thinh.Nguyen@synopsys.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     John Youn <John.Youn@synopsys.com>, linux-usb@vger.kernel.org
-References: <cover.1658195608.git.Thinh.Nguyen@synopsys.com>
- <7d31722a7e07bc24ea37b5841a17545003eeddb4.1658195608.git.Thinh.Nguyen@synopsys.com>
-From:   Mike Christie <michael.christie@oracle.com>
-In-Reply-To: <7d31722a7e07bc24ea37b5841a17545003eeddb4.1658195608.git.Thinh.Nguyen@synopsys.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: CH0PR04CA0089.namprd04.prod.outlook.com
- (2603:10b6:610:74::34) To DM5PR10MB1466.namprd10.prod.outlook.com
- (2603:10b6:3:b::7)
+        with ESMTP id S238271AbiGSQOR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2022 12:14:17 -0400
+Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 233234C610;
+        Tue, 19 Jul 2022 09:14:16 -0700 (PDT)
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id B6D1A412CD;
+        Tue, 19 Jul 2022 16:14:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        in-reply-to:content-disposition:content-type:content-type
+        :mime-version:references:message-id:subject:subject:from:from
+        :date:date:received:received:received:received; s=mta-01; t=
+        1658247252; x=1660061653; bh=179YibTfhTaduOIWcJFryeuT3lKurRZvc6L
+        tqA8h2bA=; b=Dr2RVgb3c8e4iiPBM/EUArUdTBjez3L2vSH9A9SqFdSDVD6Gtng
+        os1FWJTxHwmvRMzryRwvxCy+vks3MPhzaZhpTrZyBrDWEfnK7kI4CzdATfko9Pe1
+        VFBNgUpgB+i0MCLZeNTTJt7szwzZH63LzfDAiKGGfh/lZiLiSvuWd/m0=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id FhINlhgr7-QV; Tue, 19 Jul 2022 19:14:12 +0300 (MSK)
+Received: from T-EXCH-01.corp.yadro.com (t-exch-01.corp.yadro.com [172.17.10.101])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id BC8FB412C5;
+        Tue, 19 Jul 2022 19:14:11 +0300 (MSK)
+Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
+ T-EXCH-01.corp.yadro.com (172.17.10.101) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
+ 15.1.669.32; Tue, 19 Jul 2022 19:14:11 +0300
+Received: from yadro.com (10.178.114.42) by T-EXCH-08.corp.yadro.com
+ (172.17.11.58) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1118.9; Tue, 19 Jul
+ 2022 19:14:04 +0300
+Date:   Tue, 19 Jul 2022 19:14:03 +0300
+From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
+To:     Mike Christie <michael.christie@oracle.com>
+CC:     Martin Petersen <martin.petersen@oracle.com>,
+        <target-devel@vger.kernel.org>,
+        Nick Couchman <nick.e.couchman@gmail.com>,
+        <linux-scsi@vger.kernel.org>, <linux@yadro.com>
+Subject: Re: [PATCH] target: iscsi: handle abort for WRITE_PENDING cmds
+Message-ID: <20220719161403.GA27979@yadro.com>
+References: <20220713204212.7850-1-d.bogdanov@yadro.com>
+ <0fc89e77-197b-47e6-f661-5f7f18f6634f@oracle.com>
+ <20220718084534.GA12544@yadro.com>
+ <9e1c0853-a5f9-cba0-2f51-05ac773f1fa3@oracle.com>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 9ca06823-bf6e-40b1-5ad3-08da699f329c
-X-MS-TrafficTypeDiagnostic: BLAPR10MB5316:EE_
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: zOssSO97O8Dtbsx00WUwkVqCCffUfKWZ4lrjklAIxX0MAc1tuHdfIHK2dM1dc+agMA1h8V6LjToGYjCps0qpoRQJ1S67KrH51shbxOvff7acNwzzdIrCqveBruwmwwJp5abl9DIECl9xmKOz4UIsita8UpQyYmdXD9P/UhP/rSPwI54VaPKU62MCF7buTOem19bq4zaN54G4tmflVWuucTVuV57PbkAE5x7yRwT8Rb80C7KxMjXauBlvCAWQDrkDORdcRKrqSD47tqPFyqsk0C+qlB3/Vfwb7S7tLb2B8nlZyDAL3wQ4Ti5eUmm4aLTAe+DO27ZhXa8zjRB+BnhZSyT1Zd5TrW4Ej9P1YH5LFPHL1L8gS6J8ccG6vuvJCXFhA9saJEWqtuktrtpd2v+dcyv2hB1nRiMaeTscMh/+4McvZyghIcl/nYS3CfkFfHttb2MFq+rTzQ9ellcexHe/YfQCaH6jq2UlsegWqAaXyVb0e8ASEJCPSQp014NqZsbXu5/bb1IA5EQ+gbaTNM9QPLGvxwuXI0eD3/wb4z008s/gCzHIqpVNPtVpB6OmJUHU4rMLLWBXVZ5xmH6P/pv4w+/FZSxJXQakpvMTprdvvHjp7v8NdxyH9EGZhMfIrYv0sl4QeTR3ZZepoh8QzE2L9h/uUYlF7p5+libUHIYbYhGLDnKEJHNI1Io7m81Nc0tBudEzRz8eHMXUFG/s+LBqOdFNbuFlBTk4dGGmYe4cKMGr96so1Eyju4MrDAOMjMbBDKz9NKhHHFI3JhodObNS7BgDJbZsVOieGGeNmYEUl2cEmQfvRWSW0uwADWjNSLxZhB3AXeWWLD6UxDHCFPRGPg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(136003)(39860400002)(366004)(396003)(346002)(376002)(66946007)(8936002)(4744005)(66476007)(5660300002)(8676002)(4326008)(66556008)(2906002)(36756003)(86362001)(38100700002)(31696002)(6486002)(2616005)(478600001)(83380400001)(6636002)(316002)(110136005)(41300700001)(186003)(6506007)(53546011)(26005)(6512007)(31686004)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?RFJwQ3d3TmlXclhKL2M1UTNXL1MwZTdpWU5QQ0tFZDNkM3ZpZVU1UDk1ZWFZ?=
- =?utf-8?B?Wi9NWjQrQ0pmQW0rQnFoSm9pc0g3Vkxtbkd1YnkrN3dhZUFVWHpLc09ZS0Nq?=
- =?utf-8?B?SHl2QmZGR21Ed1J5cEpOeGRNb0dJNlY2UjhQMGtaSkE1NlRPaXdodlFndita?=
- =?utf-8?B?cXBSREZ1SSthN1ZDV2ZwVW1HRUV5dWxoSHpGTG5DOTZXRVdDb1pEM0xJcllk?=
- =?utf-8?B?Vk5HbmZZTDZSdUU2N3dnV3Zmb1d4M2VIdWJsVmRRQUNMQTUvaVFGOFhlRWJp?=
- =?utf-8?B?V25ZQ3JRckQwWHdaSHI3M2d4aWxhNFIyTnQ0SUc0dkxwRE9oYTVKam1ETU0w?=
- =?utf-8?B?K3lGc21vU2R6OFNOTUNVeEljSzhUSHBFYUhUK0dSOVBEQjU0TVBEMGpURWd3?=
- =?utf-8?B?QThpZm5KV0YyS2NZREZ3MUlCb1ZIMXFwaWF0d3hqaHVtYkZSWUl3WnV4V25j?=
- =?utf-8?B?SlQ4cm9LZVFQQVJnbHc0bW1CbnFxblQyanFsaEx1bVdsZThGYVZSVEhHQlVy?=
- =?utf-8?B?SXpMOU9pa2FQZUcxSWlCRTZGVDBsQWgwL0E4dXQ4WHlhbzc4Zy9hZklxUXcv?=
- =?utf-8?B?K201RTVoclh3WEVCMWpzTWozMzJDeFVhNjRmUjlKUzN1ekZmK1BvNUo3ek5X?=
- =?utf-8?B?Tm5uRUJnVjdWMjdEOVVRWnM0dFlpK3N0b09WR3l4OTNaU2F5bnNYRG9RZnhV?=
- =?utf-8?B?RFA5cldTd2EvN3BRYkQxRXNuU1hZTk9tY04yWW56Zkk5VlVRK3hOZ0krUWZk?=
- =?utf-8?B?MHdQWVZDWEdCUFB1ZFVMbW8rTkFHOWVIVVR3UTRQYWcvcDFLUG9tM3pQNEFp?=
- =?utf-8?B?L0xpVW5WZDV6bUpXSHM0eERsRU1UaDl4YzlITTQ0YzVsSzZMS1hORHl4bUxk?=
- =?utf-8?B?UDJUa3RiSVI3c2MyajRiOVRHMitFMmtXN3FjMzl4eGZTUnh6eEpoN1Yzd1lz?=
- =?utf-8?B?R0xwTXRpeG5NU28wZkFCSEFlam9zWHZlR2R5dVoxcXIvMWVyUHVvUW05Y2lI?=
- =?utf-8?B?N21RcG9TZWcwUGxHOUx4K3JhOHkzVklkWS8vY2hQR3RVU3lDbVBjSmY0VHMz?=
- =?utf-8?B?VHM0QU9USk1qSnNZRXlCV00vT0dRQ0hvQVhnZ2UrZUtYU1U1SEIwZHFuenJT?=
- =?utf-8?B?eG9LOERkY3JGYU9ZUmdBWisrRnROV09OaytIMmh0UHNkU0Zxd3BJeVBGa2FR?=
- =?utf-8?B?bXhQcGhvL2xFQmdTMTBQN21YY0hTSHJLcWozbGVHR2ZUWVFDTlBnNUNZN2dB?=
- =?utf-8?B?dTFGZ0puVFJKSzdpSU10MXFPOGJkMW42RzhQZzI4RG5nQU91WjJZQkxLcHdK?=
- =?utf-8?B?VXhrbStiRnFEWlYrQVk3MFJxVytjSmlHYnc1NTNRZGZIdmxmamdObXR5YWox?=
- =?utf-8?B?THZ3SHl3VWNUM2UrUUk5VXVJcHNlSnZhd2dCNFVDNHEzOTR0TnY1MVR4Ymdl?=
- =?utf-8?B?ZWU5bW91dE5SUG1SS3FiMXRqNFVIeTlFZFA3SGF6LzM4M0tHck9CVkc3dE9V?=
- =?utf-8?B?Z05jbDZMaWUwMldCNWFsYUF5MDFNZG1JOUx4eCtJRWVYZXdSVk5qNnhXaTA4?=
- =?utf-8?B?dGprdDdkTVVzaEcvT1ZmOEFrK3JoRUZVZHJUSXNlN3ZRZm52WGFtb1RyUEUy?=
- =?utf-8?B?QWIwVURNRFpkb00vVVpzQXRxQVdSdmcweU1JcTAvVmVsLzNOUHhPZWpGYVMv?=
- =?utf-8?B?QytOT3Y2WDZYSEtDOHQwUUdBcHVJRGpRUFRBa2tMbytXRkpwUERPUlo2cGwx?=
- =?utf-8?B?OGRMek1WbGlWMTlUZjUxVmpZVmpaVTVXSk5BMDFycDRoK254bUFFNUxkK2oy?=
- =?utf-8?B?cUFwenEvMzMrbkFXZVRsalkrYXNiVW9XOTY2ZU9DK05iSzJSOUo1Tjg4VmtH?=
- =?utf-8?B?UmgvZFN4QmxGbzBUaGp1V1ZOYVZZbzJWQUMrQXEzZGNxYWJKSldtbnhyQVJQ?=
- =?utf-8?B?QzNlZ1FrajRhSG5pK0U2cjJoVzFOMVNXQkJNa2Jhc3cwVDJoWW1uQWZhNlFY?=
- =?utf-8?B?bG5FN3RhSDJsNGpBZ0FQNlJHK080TktlRks3Sk1HMk8yUlhTZWp0YlB2UHpy?=
- =?utf-8?B?dXMzM0l1QkRwWkpRdjBpamRBTFlzNEtFZ3R4WVJFNjJ3dDR5c0dyc3FXNWlF?=
- =?utf-8?B?a1kvenIxYVE1SUlOVnlJbDN4Y3Bqa0p5NFhSMEVsYlVsakMyVW4vTHYzbzZO?=
- =?utf-8?B?VEE9PQ==?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9ca06823-bf6e-40b1-5ad3-08da699f329c
-X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Jul 2022 15:56:09.7264
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 1ZAGb5SqVjnJLfvUcT4QYPNtwc6Y0BxSTQyTcw2ZaJNpuQGUYXRtVjb6pUxJDBZJQQntxgSRaTfFYREBQsuElnSnPJnu9ETdMQFUVfMpgv4=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BLAPR10MB5316
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
- definitions=2022-07-19_04,2022-07-19_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=0
- mlxlogscore=999 malwarescore=0 adultscore=0 mlxscore=0 spamscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2206140000 definitions=main-2207190066
-X-Proofpoint-GUID: hefh56ZjOhaHpjLG5N-iHKM6COdd9qv1
-X-Proofpoint-ORIG-GUID: hefh56ZjOhaHpjLG5N-iHKM6COdd9qv1
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <9e1c0853-a5f9-cba0-2f51-05ac773f1fa3@oracle.com>
+X-Originating-IP: [10.178.114.42]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-08.corp.yadro.com (172.17.11.58)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/18/22 9:07 PM, Thinh Nguyen wrote:
-> Task ABORT TASK SET function is required by SCSI transport protocol
-
-What OS is using this and how do they use it? For the latter, does the
-OS try an abort for each cmd first, then try an abort task set if the
-aborts fail (does fail mean get a response that indicates failure and
-also does a timeout count)? Or does it start with the abort task set?
-
-I'm asking because it looks like if it does an abort first, then the
-abort task set will always return TMR_TASK_DOES_NOT_EXIST. For the abort
-we will remove the cmds from the state_list so if the abort task set runs
-after the initiator has tried to abort all the commands it will never
-find any.
-
-> standards (SAM-4 r14 section 7.3). It is similar to ABORT TASK
-> function, but it applies to all commands received on a specified I_T
-> nexus rather than a specific referenced command. Modify
-> core_tmr_abort_task() to support TMR_ABORT_TASK_SET.
+Hi Mike,
+On Mon, Jul 18, 2022 at 04:22:36PM -0500, Mike Christie wrote:
 > 
+> On 7/18/22 3:45 AM, Dmitry Bogdanov wrote:
+> > Hi Mike,
+> >
+> > On Thu, Jul 14, 2022 at 11:44:25AM -0500, Mike Christie wrote:
+> >>
+> >> On 7/13/22 3:42 PM, Dmitry Bogdanov wrote:
+> >>> Sometimes an initiator does not send data for WRITE commands and tries
+> >>> to abort it. The abort hangs waiting for frontend driver completion.
+> >>> iSCSI driver waits for for data and that timeout eventually initiates
+> >>> connection reinstatment. The connection closing releases the commands in
+> >>> the connection, but those aborted commands still did not handle the
+> >>> abort and did not decrease a command ref counter. Because of that the
+> >>> connection reinstatement hangs indefinitely and prevents re-login for
+> >>> that initiator.
+> >>>
+> >>> This patch adds a handling in TCM of the abort for the WRITE_PENDING
+> >>> commands at connection closing moment to make it possible to release
+> >>> them.
+> >>>
+> >>> Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
+> >>> ---
+> >>>  drivers/target/iscsi/iscsi_target.c | 13 ++++++++++---
+> >>>  1 file changed, 10 insertions(+), 3 deletions(-)
+> >>>
+> >>> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+> >>> index e368f038ff5c..27eca5e72f52 100644
+> >>> --- a/drivers/target/iscsi/iscsi_target.c
+> >>> +++ b/drivers/target/iscsi/iscsi_target.c
+> >>> @@ -26,6 +26,7 @@
+> >>>  #include <target/target_core_base.h>
+> >>>  #include <target/target_core_fabric.h>
+> >>>
+> >>> +#include <target/target_core_backend.h>
+> >>>  #include <target/iscsi/iscsi_target_core.h>
+> >>>  #include "iscsi_target_parameters.h"
+> >>>  #include "iscsi_target_seq_pdu_list.h"
+> >>> @@ -4171,7 +4172,8 @@ static void iscsit_release_commands_from_conn(struct iscsit_conn *conn)
+> >>>
+> >>>               if (se_cmd->se_tfo != NULL) {
+> >>>                       spin_lock_irq(&se_cmd->t_state_lock);
+> >>> -                     if (se_cmd->transport_state & CMD_T_ABORTED) {
+> >>> +                     if (se_cmd->t_state != TRANSPORT_WRITE_PENDING &&
+> >>> +                         se_cmd->transport_state & CMD_T_ABORTED) {
+> >>>                               /*
+> >>>                                * LIO's abort path owns the cleanup for this,
+> >>>                                * so put it back on the list and let
+> >>> @@ -4191,8 +4193,13 @@ static void iscsit_release_commands_from_conn(struct iscsit_conn *conn)
+> >>>               list_del_init(&cmd->i_conn_node);
+> >>>
+> >>>               iscsit_increment_maxcmdsn(cmd, sess);
+> >>> -             iscsit_free_cmd(cmd, true);
+> >>> -
+> >>> +             if (cmd->se_cmd.t_state == TRANSPORT_WRITE_PENDING &&
+> >>> +                 cmd->se_cmd.transport_state & CMD_T_ABORTED) {
+> >>> +                     /* handle an abort in TCM */
+> >>> +                     target_complete_cmd(&cmd->se_cmd, SAM_STAT_TASK_ABORTED);
+> >>>
+> >>
+> >> Will we have an extra ref left on the se_cmd if TAS is used so the se_cmd
+> >> does not get freed?
+> >>
+> >> For TAS, it looks like we would do:
+> >>
+> >> - target_handle_abort -> queue_status. This would not do anything because
+> >> before calling iscsit_release_commands_from_conn we have killed the iscsi tx
+> >> thread.
+> >>
+> >> - target_handle_abort -> transport_cmd_check_stop_to_fabric -> check_stop_free ->
+> >> target_put_sess_cmd.
+> >>
+> >> iscsi creates the se_cmd with TARGET_SCF_ACK_KREF set so do we have one ref
+> >> left?
+> > Yes, you are right. TAS case is not covered by my patch. But that is
+> > actually another bug (that iSCSI does not complete responses in case of
+> > connection closed).
+> 
+> What do you mean this is a bug already? I mean is there a leak or spec violation?
+> 
+> Spec wise we don't need to send a response to the initiator when the connection
+> is closed for a single connection session and ERL=0. We just can't because the
+> connection is down. And the initiator knows it will not be getting a response
+> because the connection is gone and cleans up on it's side.
+Looks like it is a FC term :) "Completion" there is a confirmation that
+a response has been received by a peer and a driver can free its
+resources now. A failed completion due to network error (logout for
+instance) is a completion too.
+Under "iSCSI does not complete responses in case of connection closed"
+I meant that iscsi_target does nothing if tcm_core queues a
+response/status when iscsi connection is closed already. It does not
+"complete" the queued response by decrementing kref by
+target_put_sess_cmd like in normal case.
 
+I reproduced that bug by simple test case:
+1. Export scsi_debug (with 30s delay) device to Initiator on 2 paths
+2. On initiator:
+  # make the first IO do some initial IO traffic on the disk to make the
+  # second dd to send just one READ_10 command.
+  dd if=/dev/sda iflag=direct of=/dev/null bs=512 count=1
+  # start 1 IO on the first path that will hang forever eventually
+  dd if=/dev/sda iflag=direct of=/dev/null bs=512 count=1 &
+  sleep 1
+  # LUN_RESET on the second path, to make TAS feature send a response
+  # for the command from the first path
+  sg_reset -d /dev/sdb &
+3. On target:
+  # simulate local connection reinstatement (like on DataOut timeout)
+  echo 0 > /sys/kernel/config/target/iscsi/iqn/tpg0/enable
+
+In that scenario the connection will be already closed at the moment of
+target_handle_abort => queue_status(), iscsi_target will not free that
+cmd at the connection closing because that command is CMD_T_ABORTED and
+tcm_core will endlessly wait for "completion" of the queued response.
+
+That is that another bug that is not addressed in my patch because it is
+really another bug.
+My patch fixes only unableness of relogin (due to aborted WRITE_PENDING
+commands) that was really catched by our customers. I believe that it
+make sense to have it in 5.20.
+
+For RecoveryLevel > 0, I even get a crash on cmd->conn dereference at
+lio_queue_status() -> iscsit_add_cmd_to_response_queue().
+So, that another bug "TAS when connection is closed" is a complex issue
+and to be addressed separatelly.
+
+> 
+> If TRANSPORT_WRITE_PENDING is not set then we will drive the cleanup of commands
+> internally and not leak memory right? Is there a bug in this path where we also leak
+> memory? If that path is ok, can't we handle the TRANSPORT_WRITE_PENDING is set case
+> in a similar way?
+> 
+> This was the patch I had proposed when we discussed this last time. It's completely
+> untested, but just to show what I mean. I think it should probably check the t_state
+> like how you did it instead of adding a transport_state bit. The idea is that the
+> command is never going to get completed and we can't send a response because the
+> connection is down. The iscsi layer knows all this and that it hasn't sent the cmd
+> to LIO core for backend processing, so it forces the cleanup.
+I saw somewhen that patch, but did not tested it. And it does not fixes
+that crash too.
+> 
+> 
+> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+> index 2c54c5d8412d..d0e80a2b653b 100644
+> --- a/drivers/target/iscsi/iscsi_target.c
+> +++ b/drivers/target/iscsi/iscsi_target.c
+> @@ -4088,7 +4088,8 @@ static void iscsit_release_commands_from_conn(struct iscsi_conn *conn)
+> 
+>                 if (se_cmd->se_tfo != NULL) {
+>                         spin_lock_irq(&se_cmd->t_state_lock);
+> -                       if (se_cmd->transport_state & CMD_T_ABORTED) {
+> +                       if (se_cmd->transport_state & CMD_T_ABORTED &&
+> +                           se_cmd->transport_state & CMD_T_SUBMITTED) {
+>                                 /*
+>                                  * LIO's abort path owns the cleanup for this,
+>                                  * so put it back on the list and let
+> @@ -4096,7 +4097,7 @@ static void iscsit_release_commands_from_conn(struct iscsi_conn *conn)
+>                                  */
+>                                 list_move_tail(&cmd->i_conn_node,
+>                                                &conn->conn_cmd_list);
+> -                       } else {
+> +                       } else if (!(se_cmd->transport_state & CMD_T_ABORTED)) {
+>                                 se_cmd->transport_state |= CMD_T_FABRIC_STOP;
+>                         }
+>                         spin_unlock_irq(&se_cmd->t_state_lock);
+> @@ -4108,8 +4109,12 @@ static void iscsit_release_commands_from_conn(struct iscsi_conn *conn)
+>                 list_del_init(&cmd->i_conn_node);
+> 
+>                 iscsit_increment_maxcmdsn(cmd, sess);
+> -               iscsit_free_cmd(cmd, true);
+> 
+> +               if (se_cmd->transport_state & CMD_T_ABORTED &&
+> +                   !(se_cmd->transport_state & CMD_T_SUBMITTED))
+> +                       iscsit_free_cmd(cmd, false, true);
+> +               else
+> +                       iscsit_free_cmd(cmd, true, false);
+>         }
+>  }
+> 
+> diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/target/iscsi/iscsi_target_util.c
+> index 6dd5810e2af1..931586595044 100644
+> --- a/drivers/target/iscsi/iscsi_target_util.c
+> +++ b/drivers/target/iscsi/iscsi_target_util.c
+> @@ -742,7 +742,7 @@ void __iscsit_free_cmd(struct iscsi_cmd *cmd, bool check_queues)
+>                 conn->conn_transport->iscsit_unmap_cmd(conn, cmd);
+>  }
+> 
+> -void iscsit_free_cmd(struct iscsi_cmd *cmd, bool shutdown)
+> +void iscsit_free_cmd(struct iscsi_cmd *cmd, bool shutdown, bool force_cleanup)
+>  {
+>         struct se_cmd *se_cmd = cmd->se_cmd.se_tfo ? &cmd->se_cmd : NULL;
+>         int rc;
+> @@ -751,10 +751,14 @@ void iscsit_free_cmd(struct iscsi_cmd *cmd, bool shutdown)
+> 
+>         __iscsit_free_cmd(cmd, shutdown);
+>         if (se_cmd) {
+> -               rc = transport_generic_free_cmd(se_cmd, shutdown);
+> +               rc = transport_generic_free_cmd(se_cmd,
+> +                                       force_cleanup ? false : shutdown);
+>                 if (!rc && shutdown && se_cmd->se_sess) {
+>                         __iscsit_free_cmd(cmd, shutdown);
+>                         target_put_sess_cmd(se_cmd);
+> +               } else if (se_cmd->sess && force_cleanup) {
+> +                       __iscsit_free_cmd(cmd, true);
+> +                       target_put_sess_cmd(se_cmd);
+>                 }
+>         } else {
+>                 iscsit_release_cmd(cmd);
+> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+> index 14c6f2bb1b01..eb233ea8db65 100644
+> --- a/drivers/target/target_core_transport.c
+> +++ b/drivers/target/target_core_transport.c
+> @@ -1554,7 +1554,7 @@ int transport_handle_cdb_direct(
+>          * this to be called for initial descriptor submission.
+>          */
+>         cmd->t_state = TRANSPORT_NEW_CMD;
+> -       cmd->transport_state |= CMD_T_ACTIVE;
+> +       cmd->transport_state |= (CMD_T_ACTIVE | CMD_T_SUBMITTED);
+> 
+>         /*
+>          * transport_generic_new_cmd() is already handling QUEUE_FULL,
+> @@ -2221,7 +2221,7 @@ void target_execute_cmd(struct se_cmd *cmd)
+>                 return;
+> 
+>         spin_lock_irq(&cmd->t_state_lock);
+> -       cmd->t_state = TRANSPORT_PROCESSING;
+> +       cmd->t_state = (TRANSPORT_PROCESSING | CMD_T_SUBMITTED);
+>         cmd->transport_state |= CMD_T_ACTIVE | CMD_T_SENT;
+>         spin_unlock_irq(&cmd->t_state_lock);
+> 
+> diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+> index fb11c7693b25..b759ec810fa9 100644
+> --- a/include/target/target_core_base.h
+> +++ b/include/target/target_core_base.h
+> @@ -511,6 +511,7 @@ struct se_cmd {
+>  #define CMD_T_COMPLETE         (1 << 2)
+>  #define CMD_T_SENT             (1 << 4)
+>  #define CMD_T_STOP             (1 << 5)
+> +#define CMD_T_SUBMITTED                (1 << 6)
+>  #define CMD_T_TAS              (1 << 10)
+>  #define CMD_T_FABRIC_STOP      (1 << 11)
+>         spinlock_t              t_state_lock;
+> 
+> 
+> 
