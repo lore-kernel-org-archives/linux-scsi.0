@@ -2,193 +2,179 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7CFACCA479
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jul 2022 02:16:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A1EFCCA482
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jul 2022 02:18:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236863AbiGSCQ1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Jul 2022 22:16:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51066 "EHLO
+        id S236896AbiGSCSz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Jul 2022 22:18:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52712 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232694AbiGSCQZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jul 2022 22:16:25 -0400
-Received: from mx0a-00230701.pphosted.com (mx0a-00230701.pphosted.com [148.163.156.19])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7D4C22BFA;
-        Mon, 18 Jul 2022 19:16:24 -0700 (PDT)
-Received: from pps.filterd (m0297266.ppops.net [127.0.0.1])
-        by mx0a-00230701.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 26INpod5011657;
-        Mon, 18 Jul 2022 18:28:18 -0700
+        with ESMTP id S236900AbiGSCSy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jul 2022 22:18:54 -0400
+Received: from mx0b-00230701.pphosted.com (mx0b-00230701.pphosted.com [148.163.158.9])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C23F73C8E9;
+        Mon, 18 Jul 2022 19:18:52 -0700 (PDT)
+Received: from pps.filterd (m0098572.ppops.net [127.0.0.1])
+        by mx0b-00230701.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 26ILoCF8020763;
+        Mon, 18 Jul 2022 18:26:38 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=synopsys.com; h=date : message-id :
  in-reply-to : references : from : subject : to : cc; s=pfptdkimsnps;
- bh=onOJh2hcdIl+q/Y9f/POAVrOhKBEi/urtBPAsHEj5Z4=;
- b=a9ms9QOWQssmrIQCIgWV3evwBH200OPMURyEmnPCQ+tpbwcyPUxhYbRqpsQAchc4l0jl
- G/89gCvWJZNFHp/CMH4qQnOvpgO4Xhd5clYupOy6TS6ztGV8I3de70zCTpwOvnX0sltw
- jFibBsGEvIRb/c4qdn//QORpGuWl+jsZNnQKRwq1SX7S2zW/0tmEKDeJk6mYSdu94MwA
- Jvga1FN4xnapUYXMjD7yoT42wfg3IK1IzxStmUiXWWB5WHrgMKF3/4ysyQsQyjpp7Z+H
- VOYuTmvD8AY7KNgyoqxf9C2d/onvkkRAB2652etIIVrxYwAt5tcVRdviTVGa7WoHkdyi xA== 
+ bh=MtkL5HtVzu1AN/MUKIOAzTNp5lPvcuXSXw6ukmlraiA=;
+ b=O41UM5yyqiIFG2UePAX9b6+bmaekA88pimIs4SdsojbZODzoBtY4Iig9XWNPVZ3UV3Ri
+ cIWTlVvQqY3SNB+8XvmyOoWqBV9BmlW2Qt8eeD0p8u6cCKb83txh+gHeE082AFezorda
+ ac8tkGuI28WqwqjdEXDFVdfwsVFQURBvz7pVbv10BxGRfw6CwkxlO7KCD5avBwrwQaQH
+ e+dq3T2OSTzFTEbnTtbp/DND+22uo1AVMBA4lvFDL3Iyfyj4wn2sSd6QgrDV5MSLGv7H
+ qmmERH6iW8jheCHMEw5dDdQ7fzCGDDoFcaFpD9hjmZE+4JvCtPVOlgL7BnCxvL2yC5nX gQ== 
 Received: from smtprelay-out1.synopsys.com (smtprelay-out1.synopsys.com [149.117.87.133])
-        by mx0a-00230701.pphosted.com (PPS) with ESMTPS id 3hbvk5whr1-1
+        by mx0b-00230701.pphosted.com (PPS) with ESMTPS id 3hc6c344wm-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 18 Jul 2022 18:28:18 -0700
+        Mon, 18 Jul 2022 18:26:37 -0700
 Received: from mailhost.synopsys.com (sv2-mailhost2.synopsys.com [10.205.2.134])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
         (Client CN "mailhost.synopsys.com", Issuer "SNPSica2" (verified OK))
-        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 8AAADC0649;
-        Tue, 19 Jul 2022 01:28:17 +0000 (UTC)
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id D3D2FC0649;
+        Tue, 19 Jul 2022 01:26:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1658194097; bh=4MEfvkp8Bb/ru/wAgS6sQwD0ijPTHIo4v+U4hbSm5ko=;
+        t=1658193996; bh=JhsO1p/dFQs74XyIe0gssm1C8LZABLQ+B+PPL+9af98=;
         h=Date:In-Reply-To:References:From:Subject:To:Cc:From;
-        b=but6wzf8WcRKU9isqjBG6xHxDTS8vZ4P3Fna6BHvzVHHZz2OfKznzRpz6IU1uYPB2
-         qqIyLUanRU1tmVwbMhFFbssI5gkEDt39WPqL181eotYL+ZYi/uUBfVmCB7zh5VSCIx
-         0zTYfQiU6NhJLtBXIpXyN4RWufdTstLKoVyk4nCei0CHnDztFc9gu2IoP13Xrx008m
-         A1sHo60rUYVkTC+A6sN3LolR9Ui/tBoJFs2grp9zy1hOWggPZ7oteF4Y2BzVtjusby
-         m6ciE+xK5pKx9C97fC4xlRRUBwnfspUTgLShKgAHpW3bf4kw/h6iO5wxbNnvHf8o/J
-         iLKwCEFuWPMQw==
+        b=lH3Dwnem7Z6tCz8PUq6Wk+ziBIEuT015RauWjZLMoH4ceVsFhzWwJAcsXsBDz50iM
+         r78HEY339840ILH2StMRmzJBhytaahzRL1ZRGKkyYk4f3LCUvXikrshJErCuAG2Xl3
+         xSme2ZO5B3GmBjzARrqSDfbcoKkZXMSh5KTaBWD9cXRx4La7X4WnH5uR7OBP1E94fq
+         9mLubC1qeyvQ6voEEXhbNFJCcSrJ8ILJ3zBWpAZ8+0+hz834dVW6CAsKmgwzTXeTGr
+         pTlYhdYvETaK12zO1DjQy5Z3InfIHgp+OqFg7mf/2Fjm+u+6K42x1qsOxMABMM7YM8
+         1Q50E5YAEevpw==
 Received: from te-lab16-v2 (nanobot.internal.synopsys.com [10.204.48.11])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (Client did not present a certificate)
-        by mailhost.synopsys.com (Postfix) with ESMTPSA id 5173DA0096;
-        Tue, 19 Jul 2022 01:28:16 +0000 (UTC)
-Received: by te-lab16-v2 (sSMTP sendmail emulation); Mon, 18 Jul 2022 18:28:16 -0700
-Date:   Mon, 18 Jul 2022 18:28:16 -0700
-Message-Id: <3fbae6ecb8e9f31807635152a377b076e86fb12e.1658192351.git.Thinh.Nguyen@synopsys.com>
+        by mailhost.synopsys.com (Postfix) with ESMTPSA id 98801A0096;
+        Tue, 19 Jul 2022 01:26:35 +0000 (UTC)
+Received: by te-lab16-v2 (sSMTP sendmail emulation); Mon, 18 Jul 2022 18:26:35 -0700
+Date:   Mon, 18 Jul 2022 18:26:35 -0700
+Message-Id: <1ca4811d61c50e5b9ff81e2b181544ae0ac3106a.1658192351.git.Thinh.Nguyen@synopsys.com>
 In-Reply-To: <cover.1658192351.git.Thinh.Nguyen@synopsys.com>
 References: <cover.1658192351.git.Thinh.Nguyen@synopsys.com>
 X-SNPS-Relay: synopsys.com
 From:   Thinh Nguyen <Thinh.Nguyen@synopsys.com>
-Subject: [PATCH v2 21/25] usb: gadget: f_tcm: Get stream by tag
+Subject: [PATCH v2 05/25] usb: gadget: f_tcm: Don't set static stream_id
 To:     Felipe Balbi <balbi@kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Thinh Nguyen <Thinh.Nguyen@synopsys.com>,
         linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
         Dmitry Bogdanov <d.bogdanov@yadro.com>
 Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-X-Proofpoint-GUID: ZYL-LpT_TcOrJqtcR4_I4NedvyT0rqxs
-X-Proofpoint-ORIG-GUID: ZYL-LpT_TcOrJqtcR4_I4NedvyT0rqxs
+X-Proofpoint-ORIG-GUID: 9p4-WGYie49SZDCX9BLCYq5hNt4wWpxr
+X-Proofpoint-GUID: 9p4-WGYie49SZDCX9BLCYq5hNt4wWpxr
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
  definitions=2022-07-18_22,2022-07-18_01,2022-06-22_01
 X-Proofpoint-Spam-Details: rule=outbound_active_cloned_notspam policy=outbound_active_cloned score=0
- mlxscore=0 phishscore=0 adultscore=0 suspectscore=0 lowpriorityscore=0
- mlxlogscore=991 malwarescore=0 clxscore=1015 bulkscore=0 impostorscore=0
- priorityscore=1501 spamscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2206140000 definitions=main-2207190004
+ malwarescore=0 priorityscore=1501 mlxscore=0 impostorscore=0 spamscore=0
+ bulkscore=0 lowpriorityscore=0 suspectscore=0 mlxlogscore=946 phishscore=0
+ clxscore=1015 adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2206140000 definitions=main-2207190004
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In preparation for TASK MANAGEMENT handling of overlapped command,
-implement uasp_get_stream_by_tag() to find the active stream/command
-based on a given tag.
-
-For simplicity, we use mod operation to quickly find an in-progress
-matching command tag to check for overlapped command. The assumption is
-that the UASP class driver will limit to using tag id from 1 to
-USBG_NUM_CMDS. This is based on observation from the Windows and Linux
-UASP storage class driver behavior. If an unusual UASP class driver uses
-a tag greater than USBG_NUM_CMDS, then this method may no longer work
-due to possible stream id collision. In that case, we need to use a
-proper algorithm to fetch the stream (or simply walk through all active
-streams to check for overlap).
+Host can assign stream ID value greater than number of streams
+allocated. The tcm function needs to keep track of which stream is
+available to assign the stream ID. This patch doesn't track that, but at
+least it makes sure that there's no Oops if the host send tag with a
+value greater than the number of supported streams.
 
 Signed-off-by: Thinh Nguyen <Thinh.Nguyen@synopsys.com>
 ---
  Changes in v2:
- - Splitted from TASK MANAGEMENT change
+ - None
 
- drivers/usb/gadget/function/f_tcm.c | 30 ++++++++++++++++++++++-------
- 1 file changed, 23 insertions(+), 7 deletions(-)
+ drivers/usb/gadget/function/f_tcm.c | 32 +++++------------------------
+ 1 file changed, 5 insertions(+), 27 deletions(-)
 
 diff --git a/drivers/usb/gadget/function/f_tcm.c b/drivers/usb/gadget/function/f_tcm.c
-index 084143213176..a10e74290664 100644
+index 270ec631481d..7721216dc9bc 100644
 --- a/drivers/usb/gadget/function/f_tcm.c
 +++ b/drivers/usb/gadget/function/f_tcm.c
-@@ -506,6 +506,22 @@ static void uasp_cleanup_old_alt(struct f_uas *fu)
- 	uasp_free_cmdreq(fu);
+@@ -532,6 +532,7 @@ static int uasp_prepare_r_request(struct usbg_cmd *cmd)
+ 	}
+ 
+ 	stream->req_in->is_last = 1;
++	stream->req_in->stream_id = cmd->tag;
+ 	stream->req_in->complete = uasp_status_data_cmpl;
+ 	stream->req_in->length = se_cmd->data_length;
+ 	stream->req_in->context = cmd;
+@@ -556,6 +557,7 @@ static void uasp_prepare_status(struct usbg_cmd *cmd)
+ 	iu->len = cpu_to_be16(se_cmd->scsi_sense_length);
+ 	iu->status = se_cmd->scsi_status;
+ 	stream->req_status->is_last = 1;
++	stream->req_status->stream_id = cmd->tag;
+ 	stream->req_status->context = cmd;
+ 	stream->req_status->length = se_cmd->scsi_sense_length + 16;
+ 	stream->req_status->buf = iu;
+@@ -786,19 +788,6 @@ static int uasp_alloc_cmd(struct f_uas *fu)
+ 	return -ENOMEM;
  }
  
-+static struct uas_stream *uasp_get_stream_by_tag(struct f_uas *fu, u16 tag)
-+{
-+	/*
-+	 * For simplicity, we use mod operation to quickly find an in-progress
-+	 * matching command tag to check for overlapped command. The assumption
-+	 * is that the UASP class driver will limit to using tag id from 1 to
-+	 * USBG_NUM_CMDS. This is based on observation from the Windows and
-+	 * Linux UASP storage class driver behavior. If an unusual UASP class
-+	 * driver uses a tag greater than USBG_NUM_CMDS, then this method may no
-+	 * longer work due to possible stream id collision. In that case, we
-+	 * need to use a proper algorithm to fetch the stream (or simply walk
-+	 * through all active streams to check for overlap).
-+	 */
-+	return &fu->stream[tag % USBG_NUM_CMDS];
-+}
-+
- static void uasp_status_data_cmpl(struct usb_ep *ep, struct usb_request *req);
- 
- static int uasp_prepare_r_request(struct usbg_cmd *cmd)
-@@ -513,7 +529,7 @@ static int uasp_prepare_r_request(struct usbg_cmd *cmd)
- 	struct se_cmd *se_cmd = &cmd->se_cmd;
- 	struct f_uas *fu = cmd->fu;
- 	struct usb_gadget *gadget = fuas_to_gadget(fu);
--	struct uas_stream *stream = cmd->stream;
-+	struct uas_stream *stream = uasp_get_stream_by_tag(fu, cmd->tag);
- 
- 	if (!gadget->sg_supported) {
- 		cmd->data_buf = kmalloc(se_cmd->data_length, GFP_ATOMIC);
-@@ -546,7 +562,7 @@ static void uasp_prepare_status(struct usbg_cmd *cmd)
+-static void uasp_setup_stream_res(struct f_uas *fu, int max_streams)
+-{
+-	int i;
+-
+-	for (i = 0; i < max_streams; i++) {
+-		struct uas_stream *s = &fu->stream[i];
+-
+-		s->req_in->stream_id = i + 1;
+-		s->req_out->stream_id = i + 1;
+-		s->req_status->stream_id = i + 1;
+-	}
+-}
+-
+ static int uasp_prepare_reqs(struct f_uas *fu)
  {
- 	struct se_cmd *se_cmd = &cmd->se_cmd;
- 	struct sense_iu *iu = &cmd->sense_iu;
--	struct uas_stream *stream = cmd->stream;
-+	struct uas_stream *stream = uasp_get_stream_by_tag(cmd->fu, cmd->tag);
- 
- 	cmd->state = UASP_QUEUE_COMMAND;
- 	iu->iu_id = IU_ID_STATUS;
-@@ -568,8 +584,8 @@ static void uasp_prepare_status(struct usbg_cmd *cmd)
- static void uasp_status_data_cmpl(struct usb_ep *ep, struct usb_request *req)
- {
- 	struct usbg_cmd *cmd = req->context;
--	struct uas_stream *stream = cmd->stream;
- 	struct f_uas *fu = cmd->fu;
-+	struct uas_stream *stream = uasp_get_stream_by_tag(fu, cmd->tag);
  	int ret;
+@@ -819,7 +808,6 @@ static int uasp_prepare_reqs(struct f_uas *fu)
+ 	ret = uasp_alloc_cmd(fu);
+ 	if (ret)
+ 		goto err_free_stream;
+-	uasp_setup_stream_res(fu, max_streams);
  
- 	if (req->status == -ESHUTDOWN)
-@@ -620,7 +636,7 @@ static void uasp_status_data_cmpl(struct usb_ep *ep, struct usb_request *req)
- static int uasp_send_status_response(struct usbg_cmd *cmd)
- {
- 	struct f_uas *fu = cmd->fu;
--	struct uas_stream *stream = cmd->stream;
-+	struct uas_stream *stream = uasp_get_stream_by_tag(fu, cmd->tag);
- 	struct sense_iu *iu = &cmd->sense_iu;
+ 	ret = usb_ep_queue(fu->ep_cmd, fu->cmd.req, GFP_ATOMIC);
+ 	if (ret)
+@@ -995,6 +983,7 @@ static int usbg_prepare_w_request(struct usbg_cmd *cmd, struct usb_request *req)
+ 	}
  
- 	iu->tag = cpu_to_be16(cmd->tag);
-@@ -632,7 +648,7 @@ static int uasp_send_status_response(struct usbg_cmd *cmd)
- static int uasp_send_read_response(struct usbg_cmd *cmd)
- {
- 	struct f_uas *fu = cmd->fu;
--	struct uas_stream *stream = cmd->stream;
-+	struct uas_stream *stream = uasp_get_stream_by_tag(fu, cmd->tag);
- 	struct sense_iu *iu = &cmd->sense_iu;
- 	int ret;
+ 	req->is_last = 1;
++	req->stream_id = cmd->tag;
+ 	req->complete = usbg_data_write_cmpl;
+ 	req->length = se_cmd->data_length;
+ 	req->context = cmd;
+@@ -1125,16 +1114,8 @@ static int usbg_submit_command(struct f_uas *fu,
+ 	}
+ 	memcpy(cmd->cmd_buf, cmd_iu->cdb, cmd_len);
  
-@@ -675,7 +691,7 @@ static int uasp_send_read_response(struct usbg_cmd *cmd)
- static int uasp_send_write_request(struct usbg_cmd *cmd)
- {
- 	struct f_uas *fu = cmd->fu;
--	struct uas_stream *stream = cmd->stream;
-+	struct uas_stream *stream = uasp_get_stream_by_tag(fu, cmd->tag);
- 	struct sense_iu *iu = &cmd->sense_iu;
- 	int ret;
+-	if (fu->flags & USBG_USE_STREAMS) {
+-		if (cmd->tag > UASP_SS_EP_COMP_NUM_STREAMS)
+-			goto err;
+-		if (!cmd->tag)
+-			cmd->stream = &fu->stream[0];
+-		else
+-			cmd->stream = &fu->stream[cmd->tag - 1];
+-	} else {
+-		cmd->stream = &fu->stream[0];
+-	}
++	cmd->stream = &fu->stream[cmd->tag %
++		UASP_SS_EP_COMP_NUM_STREAMS];
  
-@@ -1285,7 +1301,7 @@ static void usbg_aborted_task(struct se_cmd *se_cmd)
- {
- 	struct usbg_cmd *cmd = container_of(se_cmd, struct usbg_cmd, se_cmd);
- 	struct f_uas *fu = cmd->fu;
--	struct uas_stream *stream = cmd->stream;
-+	struct uas_stream *stream = uasp_get_stream_by_tag(fu, cmd->tag);
- 	int ret = 0;
+ 	switch (cmd_iu->prio_attr & 0x7) {
+ 	case UAS_HEAD_TAG:
+@@ -1161,9 +1142,6 @@ static int usbg_submit_command(struct f_uas *fu,
+ 	queue_work(tpg->workqueue, &cmd->work);
  
- 	if (stream->req_out->status == -EINPROGRESS)
+ 	return 0;
+-err:
+-	usbg_release_cmd(&cmd->se_cmd);
+-	return -EINVAL;
+ }
+ 
+ static void bot_cmd_work(struct work_struct *work)
 -- 
 2.28.0
 
