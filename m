@@ -2,49 +2,39 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92AADCCA481
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jul 2022 09:17:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7629C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jul 2022 09:17:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236991AbiGSJRe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Jul 2022 05:17:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46354 "EHLO
+        id S237029AbiGSJRs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Jul 2022 05:17:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46520 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235941AbiGSJRb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2022 05:17:31 -0400
+        with ESMTP id S235941AbiGSJRr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2022 05:17:47 -0400
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EAECF1FCE4;
-        Tue, 19 Jul 2022 02:17:30 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D15020BED;
+        Tue, 19 Jul 2022 02:17:47 -0700 (PDT)
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id CDE1E68AA6; Tue, 19 Jul 2022 11:17:26 +0200 (CEST)
-Date:   Tue, 19 Jul 2022 11:17:26 +0200
+        id 97ECD68AA6; Tue, 19 Jul 2022 11:17:44 +0200 (CEST)
+Date:   Tue, 19 Jul 2022 11:17:44 +0200
 From:   Christoph Hellwig <hch@lst.de>
-To:     John Garry <john.garry@huawei.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        joro@8bytes.org, will@kernel.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, m.szyprowski@samsung.com,
-        robin.murphy@arm.com, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
-        iommu@lists.linux.dev, linux-scsi@vger.kernel.org,
-        linuxarm@huawei.com
-Subject: Re: [PATCH v6 4/6] scsi: sd: Allow max_sectors be capped at DMA
- optimal size limit
-Message-ID: <20220719091726.GA30468@lst.de>
-References: <1657797329-98541-1-git-send-email-john.garry@huawei.com> <1657797329-98541-5-git-send-email-john.garry@huawei.com> <6725df4f-4e27-3320-8b7b-22ba15a07866@opensource.wdc.com> <e3dbd78e-95fe-ea61-8bcf-45ea02de1647@huawei.com> <20220719071028.GA28633@lst.de> <1f523333-1de5-2a09-0476-298edcbba413@huawei.com>
+To:     Jason Yan <yanaijie@huawei.com>
+Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        hare@suse.com, hch@lst.de, bvanassche@acm.org,
+        syzbot+d44b35ecfb807e5af0b5@syzkaller.appspotmail.com
+Subject: Re: [PATCH] scsi: fix WARNING in scsi_alloc_sgtables
+Message-ID: <20220719091744.GB30468@lst.de>
+References: <20220719080026.1595874-1-yanaijie@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1f523333-1de5-2a09-0476-298edcbba413@huawei.com>
+In-Reply-To: <20220719080026.1595874-1-yanaijie@huawei.com>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Jul 19, 2022 at 10:10:22AM +0100, John Garry wrote:
-> Just saying in case it's an issue - I was looking at 
-> http://git.infradead.org/users/hch/dma-mapping.git/log/refs/heads/for-next 
-> and the order is not the same as this series and would cause an 
-> intermediate build breakage at 9f5ec52ae501 ("scsi: scsi_transport_sas: cap 
-> shost opt_sectors according to DMA optimal limit")
+Looks good:
 
-No idea what git-am did there, I've fixed it up now.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
