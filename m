@@ -2,78 +2,44 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F2ADC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jul 2022 07:05:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2B1BC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jul 2022 07:10:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235005AbiGSHFf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Jul 2022 03:05:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39564 "EHLO
+        id S235559AbiGSHKf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Jul 2022 03:10:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43270 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234012AbiGSHFe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2022 03:05:34 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4AA1922B3E;
-        Tue, 19 Jul 2022 00:05:34 -0700 (PDT)
-Received: from fraeml740-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Ln8sG1gt7z67QNP;
-        Tue, 19 Jul 2022 15:02:10 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml740-chm.china.huawei.com (10.206.15.221) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 19 Jul 2022 09:05:32 +0200
-Received: from [10.126.173.247] (10.126.173.247) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 19 Jul 2022 08:05:31 +0100
-Message-ID: <e3dbd78e-95fe-ea61-8bcf-45ea02de1647@huawei.com>
-Date:   Tue, 19 Jul 2022 08:05:30 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
+        with ESMTP id S234338AbiGSHKe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2022 03:10:34 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 368B22BD2;
+        Tue, 19 Jul 2022 00:10:33 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id D975368AA6; Tue, 19 Jul 2022 09:10:28 +0200 (CEST)
+Date:   Tue, 19 Jul 2022 09:10:28 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     John Garry <john.garry@huawei.com>
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>, joro@8bytes.org,
+        will@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        hch@lst.de, m.szyprowski@samsung.com, robin.murphy@arm.com,
+        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, iommu@lists.linux.dev,
+        linux-scsi@vger.kernel.org, linuxarm@huawei.com
 Subject: Re: [PATCH v6 4/6] scsi: sd: Allow max_sectors be capped at DMA
  optimal size limit
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <joro@8bytes.org>, <will@kernel.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <hch@lst.de>,
-        <m.szyprowski@samsung.com>, <robin.murphy@arm.com>
-CC:     <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-ide@vger.kernel.org>, <iommu@lists.linux.dev>,
-        <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>
-References: <1657797329-98541-1-git-send-email-john.garry@huawei.com>
- <1657797329-98541-5-git-send-email-john.garry@huawei.com>
- <6725df4f-4e27-3320-8b7b-22ba15a07866@opensource.wdc.com>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <6725df4f-4e27-3320-8b7b-22ba15a07866@opensource.wdc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.126.173.247]
-X-ClientProxiedBy: lhreml716-chm.china.huawei.com (10.201.108.67) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Message-ID: <20220719071028.GA28633@lst.de>
+References: <1657797329-98541-1-git-send-email-john.garry@huawei.com> <1657797329-98541-5-git-send-email-john.garry@huawei.com> <6725df4f-4e27-3320-8b7b-22ba15a07866@opensource.wdc.com> <e3dbd78e-95fe-ea61-8bcf-45ea02de1647@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <e3dbd78e-95fe-ea61-8bcf-45ea02de1647@huawei.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 18/07/2022 11:47, Damien Le Moal wrote:
->> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
->> index a1a2ac09066f..3eaee1f7aaca 100644
->> --- a/drivers/scsi/sd.c
->> +++ b/drivers/scsi/sd.c
->> @@ -3296,6 +3296,8 @@ static int sd_revalidate_disk(struct gendisk *disk)
->>   				      (sector_t)BLK_DEF_MAX_SECTORS);
->>   	}
+On Tue, Jul 19, 2022 at 08:05:30AM +0100, John Garry wrote:
+> Christoph has now applied this (thanks, BTW), so would you like me to 
+> follow up with a patch on top with a comment?
 
-Hi Damien,
-
->>   
->> +	rw_max = min_not_zero(rw_max, sdp->host->opt_sectors);
->> +
-> Adding a comment explaining what the cap is would be nice.
-> 
-
-
-Christoph has now applied this (thanks, BTW), so would you like me to 
-follow up with a patch on top with a comment?
-
-Thanks,
-John
+Please do.
