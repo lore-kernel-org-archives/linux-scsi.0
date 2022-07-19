@@ -2,125 +2,177 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E27CBC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jul 2022 10:06:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10017C43334
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Jul 2022 10:08:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237340AbiGSKG4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Jul 2022 06:06:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36456 "EHLO
+        id S230001AbiGSKIw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Jul 2022 06:08:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37570 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236984AbiGSKGz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2022 06:06:55 -0400
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30429112B
-        for <linux-scsi@vger.kernel.org>; Tue, 19 Jul 2022 03:06:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1658225212; x=1689761212;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=YauuOWB0eWlQxPIi0jYv3JHtwzs7d0w3Q3HbluMXv3M=;
-  b=YfKKq2kdKKNah+D+8QqM5+b7vtgFzCu2oNahynr2Lm9IXgjiPCXPq8tV
-   X0bZJE1ffbvhPlmaqsItkquwGSdu0EOdIZ9JG2ZKygNUZyfNh6IzC2fNy
-   3U80nuvpT1fO1qmOx2knTnZi/eCdsInqiKONoSC+lY6GQflW7wTqm2T3+
-   rPJlx+h1MuOOHXd+fUlNNSyMzswzMm9KWugLeMvMTIjwtjAcn9kEXNjJq
-   dCj1aE9YhlZhe4gm/KCI0NrIuHgHfQrSh/Mda8gwRce/YlWJe2zxhLLHE
-   Byg44Zj0YEqQ5GX1HcyIe0NJXhIu1GhJ63Q+j86dsSrk9igAHr9t54Gzg
-   A==;
-X-IronPort-AV: E=Sophos;i="5.92,283,1650902400"; 
-   d="scan'208";a="211269523"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 19 Jul 2022 18:06:52 +0800
-IronPort-SDR: wA4IEKHEjWzDnkF3UE2Id+n1duSotiMSxfLgjnZlbpdXNZLkTEypa1Zrsfo1Zx0K9z/akZ+i3l
- SSWqMvH6ofKxt2YM1jksin9L1/P8brjzCVWRG5k8uE7aew1i1utHIiunsuZcOOAsFdxExBOsdS
- KwvLz8oGJuB4MGbe/3oVI9NWsFaEmmvn4OKrZXeAPHUBLxRI4tZy3MEAygBi1m/pyndRmyvBB1
- h60jXNWavRLetMg1X37jIsZe8xZHrsx1we7qSAIctjovYSqhBCAPgvCUBBte8NsHqnSSCyEpP0
- jwNzAs4I1dL7Zy7s90gj/G66
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 19 Jul 2022 02:23:20 -0700
-IronPort-SDR: LkxS1R4ADoTyMtDOKo43QHzkKm/44HF5BESt27Wz3W66W3wZVm53M2khwUiGT+Tr3xB9zc3Wz0
- wghvMgtE0zPkFbV/y/R/GxtC2EhydYFnmVP+pYgs4wpvQGaX7nr3aLfCjsBiTylfl1KAMl6SLG
- eXhfpyxfnUWmwbSQ+f+Er0IZqKiiEQiE2NtfkRuJgXXWziTsjUTBRbTFHX5P1XZVQNsAuGEB4f
- bSyp9XxxepsNgolrB9N4lycoPO5Owk2HQvfhrYnPN5060yTk0241h/ogtZDjcNOcXVNbssZJ41
- zLs=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 19 Jul 2022 03:06:53 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LnDyN4Mctz1Rwry
-        for <linux-scsi@vger.kernel.org>; Tue, 19 Jul 2022 03:06:52 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1658225212; x=1660817213; bh=YauuOWB0eWlQxPIi0jYv3JHtwzs7d0w3Q3H
-        bluMXv3M=; b=B6ldBGGeutES4yTjwz6A5Ffl19zIhBlH1DbbBAoNmfheZbw0yji
-        7chlMDHEzqOxzbOV8IWyRcJawMMqNI1g4VBqN0WWBc3WF4Gi1gyXJ2Pvl6+RwjAs
-        Kyqya3ZHk/GjSbTU/ypiuMcOa/6rbZ1r/f/P4lsgF0Dt1563M0DLdwLuj6FwS0hY
-        EUT6hs+JMHcmLOL5cJjzDJ1xSNbmQq5HeEWj0kvY1MnyQSnWiIhl0vWKOBbP2xob
-        v8XBMFyZW/IiPq+iDVyfzApkD9rRrxE/8ckO3vQkJt+yvfVBSlphcjbEcZVV1xP1
-        +FKXBj1Sil53riIbMkhuvMODRX/I5pEomIQ==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id EwPUIUQFUlmV for <linux-scsi@vger.kernel.org>;
-        Tue, 19 Jul 2022 03:06:52 -0700 (PDT)
-Received: from [10.225.163.120] (unknown [10.225.163.120])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LnDyL6sYDz1RtVk;
-        Tue, 19 Jul 2022 03:06:50 -0700 (PDT)
-Message-ID: <af41fbeb-c2b1-e4c8-8b75-fa03fb9eb993@opensource.wdc.com>
-Date:   Tue, 19 Jul 2022 19:06:49 +0900
+        with ESMTP id S229785AbiGSKIv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2022 06:08:51 -0400
+Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F081646E;
+        Tue, 19 Jul 2022 03:08:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1658225330; x=1689761330;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=QTy3XoJRQtIWmsDOMRAiAy4AuqtsDCsrx7wMgsI5PWQ=;
+  b=RAxJitNKW9Y1jeFQx4XbSX9IyIiq5BuxchauvtfLQknWZ9yGz0d4fOcf
+   UhgLtswi5rI21rNqdF9NKeLo62aH14n9Tqesrb72gi7YfcJzeXtd/DBi8
+   zHblavnITrTPNNppGw+ZUVidyr3e8t4WjGStzJNb/kDVZWT7ec1yJkMME
+   j0+9R7ewtSiJVa1Unnx6pZVDPdNEZTmfQ2dbaetJjUDD6XnOqedyAhGlP
+   jQGmlTydSeZQBRl3NenU0h/U1vCdyIE4q1EcMIZoWo9QQAblWd8Pj6T4E
+   gjO9DKf+aRmrPCKzWcoVO/OMxFlzMKhotCqYU8jOOTAM66ewVvc7PqCIJ
+   g==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10412"; a="287196741"
+X-IronPort-AV: E=Sophos;i="5.92,283,1650956400"; 
+   d="scan'208";a="287196741"
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Jul 2022 03:08:50 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.92,283,1650956400"; 
+   d="scan'208";a="724207084"
+Received: from lkp-server02.sh.intel.com (HELO ff137eb26ff1) ([10.239.97.151])
+  by orsmga004.jf.intel.com with ESMTP; 19 Jul 2022 03:08:48 -0700
+Received: from kbuild by ff137eb26ff1 with local (Exim 4.95)
+        (envelope-from <lkp@intel.com>)
+        id 1oDk9n-0005We-3d;
+        Tue, 19 Jul 2022 10:08:47 +0000
+Date:   Tue, 19 Jul 2022 18:08:34 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Dmitry Bogdanov <d.bogdanov@yadro.com>,
+        Martin Petersen <martin.petersen@oracle.com>,
+        target-devel@vger.kernel.org
+Cc:     kbuild-all@lists.01.org, linux-scsi@vger.kernel.org,
+        linux@yadro.com, Dmitry Bogdanov <d.bogdanov@yadro.com>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
+Subject: Re: [PATCH 1/6] scsi: target: core: add support of RSOC command
+Message-ID: <202207191727.tSUku1lU-lkp@intel.com>
+References: <20220718120117.4435-2-d.bogdanov@yadro.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [PATCH] scsi: sd: Add a comment about limiting max_sectors to
- shost optimal limit
-Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, hch@lst.de
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        iommu@lists.linux.dev
-References: <1658224264-49972-1-git-send-email-john.garry@huawei.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <1658224264-49972-1-git-send-email-john.garry@huawei.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220718120117.4435-2-d.bogdanov@yadro.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/19/22 18:51, John Garry wrote:
-> Add a comment about limiting the default the SCSI disk request_queue
-> max_sectors initial value to that of the SCSI host optimal sectors limit.
-> 
-> Suggested-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> Signed-off-by: John Garry <john.garry@huawei.com>
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 3eaee1f7aaca..ed9f43f9512e 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -3296,6 +3296,11 @@ static int sd_revalidate_disk(struct gendisk *disk)
->  				      (sector_t)BLK_DEF_MAX_SECTORS);
->  	}
->  
-> +	/*
-> +	 * Limit default to SCSI host optimal sector limit if set. There may be
-> +	 * an impact on performance for when the size of a request exceeds this
-> +	 * host limit.
-> +	 */
->  	rw_max = min_not_zero(rw_max, sdp->host->opt_sectors);
->  
->  	/* Do not exceed controller limit */
+Hi Dmitry,
 
-Looks good.
+Thank you for the patch! Perhaps something to improve:
 
-Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+[auto build test WARNING on mkp-scsi/for-next]
+[also build test WARNING on jejb-scsi/for-next linus/master v5.19-rc7 next-20220718]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Dmitry-Bogdanov/add-support-of-RSOC-command/20220718-200622
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+config: nios2-randconfig-s042-20220718 (https://download.01.org/0day-ci/archive/20220719/202207191727.tSUku1lU-lkp@intel.com/config)
+compiler: nios2-linux-gcc (GCC) 12.1.0
+reproduce:
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # apt-get install sparse
+        # sparse version: v0.6.4-39-gce1a6720-dirty
+        # https://github.com/intel-lab-lkp/linux/commit/dd5367ced3f2a2d631776343184cca65d8cfbed8
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Dmitry-Bogdanov/add-support-of-RSOC-command/20220718-200622
+        git checkout dd5367ced3f2a2d631776343184cca65d8cfbed8
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__' O=build_dir ARCH=nios2 SHELL=/bin/bash drivers/target/
+
+If you fix the issue, kindly add following tag where applicable
+Reported-by: kernel test robot <lkp@intel.com>
+
+
+sparse warnings: (new ones prefixed by >>)
+>> drivers/target/target_core_spc.c:1459:21: sparse: sparse: incorrect type in assignment (different base types) @@     expected int ret @@     got restricted sense_reason_t @@
+   drivers/target/target_core_spc.c:1459:21: sparse:     expected int ret
+   drivers/target/target_core_spc.c:1459:21: sparse:     got restricted sense_reason_t
+   drivers/target/target_core_spc.c:1466:21: sparse: sparse: incorrect type in assignment (different base types) @@     expected int ret @@     got restricted sense_reason_t @@
+   drivers/target/target_core_spc.c:1466:21: sparse:     expected int ret
+   drivers/target/target_core_spc.c:1466:21: sparse:     got restricted sense_reason_t
+   drivers/target/target_core_spc.c:1478:21: sparse: sparse: incorrect type in assignment (different base types) @@     expected int ret @@     got restricted sense_reason_t @@
+   drivers/target/target_core_spc.c:1478:21: sparse:     expected int ret
+   drivers/target/target_core_spc.c:1478:21: sparse:     got restricted sense_reason_t
+>> drivers/target/target_core_spc.c:1504:16: sparse: sparse: incorrect type in return expression (different base types) @@     expected restricted sense_reason_t @@     got int ret @@
+   drivers/target/target_core_spc.c:1504:16: sparse:     expected restricted sense_reason_t
+   drivers/target/target_core_spc.c:1504:16: sparse:     got int ret
+
+vim +1459 drivers/target/target_core_spc.c
+
+  1442	
+  1443	static sense_reason_t
+  1444	spc_emulate_report_supp_op_codes(struct se_cmd *cmd)
+  1445	{
+  1446		int descr_num = ARRAY_SIZE(tcm_supported_opcodes);
+  1447		struct target_opcode_descriptor *descr = NULL;
+  1448		unsigned char *cdb = cmd->t_task_cdb;
+  1449		u8 rctd = (cdb[2] >> 7) & 0x1;
+  1450		unsigned char *buf = NULL;
+  1451		int response_length = 0;
+  1452		u8 opts = cdb[2] & 0x3;
+  1453		unsigned char *rbuf;
+  1454		int ret = 0;
+  1455		int i;
+  1456	
+  1457		rbuf = transport_kmap_data_sg(cmd);
+  1458		if (cmd->data_length && !rbuf) {
+> 1459			ret = TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+  1460			goto out;
+  1461		}
+  1462	
+  1463		if (opts == 0)
+  1464			response_length = 4 + (8 + rctd * 12) * descr_num;
+  1465		else {
+  1466			ret = spc_rsoc_get_descr(cmd, &descr);
+  1467			if (ret)
+  1468				goto out;
+  1469	
+  1470			if (descr)
+  1471				response_length = 4 + descr->cdb_size + rctd * 12;
+  1472			else
+  1473				response_length = 2;
+  1474		}
+  1475	
+  1476		buf = kzalloc(response_length, GFP_KERNEL);
+  1477		if (!buf) {
+  1478			ret = TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+  1479			goto out;
+  1480		}
+  1481		response_length = 0;
+  1482	
+  1483		if (opts == 0) {
+  1484			response_length += 4;
+  1485	
+  1486			for (i = 0; i < ARRAY_SIZE(tcm_supported_opcodes); i++) {
+  1487				descr = tcm_supported_opcodes[i];
+  1488				response_length += spc_rsoc_encode_command_descriptor(
+  1489						&buf[response_length], rctd, descr);
+  1490			}
+  1491			put_unaligned_be32(response_length - 3, buf);
+  1492		} else {
+  1493			response_length = spc_rsoc_encode_one_command_descriptor(
+  1494					&buf[response_length], rctd, descr);
+  1495		}
+  1496	
+  1497		memcpy(rbuf, buf, min_t(u32, response_length, cmd->data_length));
+  1498	out:
+  1499		kfree(buf);
+  1500		transport_kunmap_data_sg(cmd);
+  1501	
+  1502		if (!ret)
+  1503			target_complete_cmd_with_length(cmd, SAM_STAT_GOOD, response_length);
+> 1504		return ret;
+  1505	}
+  1506	
 
 -- 
-Damien Le Moal
-Western Digital Research
+0-DAY CI Kernel Test Service
+https://01.org/lkp
