@@ -2,341 +2,130 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65A99CCA485
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jul 2022 11:29:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC74AC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jul 2022 11:42:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240916AbiGTL36 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Jul 2022 07:29:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38834 "EHLO
+        id S240695AbiGTLmn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Jul 2022 07:42:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52750 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240895AbiGTL3k (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jul 2022 07:29:40 -0400
-Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 686EA6E2D0;
-        Wed, 20 Jul 2022 04:29:16 -0700 (PDT)
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 0545A41259;
-        Wed, 20 Jul 2022 11:29:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        content-type:content-type:content-transfer-encoding:mime-version
-        :references:in-reply-to:x-mailer:message-id:date:date:subject
-        :subject:from:from:received:received:received:received; s=
-        mta-01; t=1658316553; x=1660130954; bh=/ljtCixRxDhiFXPaCcPCFSA4F
-        eSMsoG9N1vrALXRP74=; b=StBS7w9N0FK3j3obSOHPf40Uq96rXIr7p4VFzZ1xh
-        BXduHrsf+f3NnNekhfX538A4sxCXC99kj8CCA82fTzp9Ob0k3guJGptCk4qWq6rO
-        dyLJdawWXXMdtZaZ9GJlI3rXJT7CRDnsiKmWd/7JX9g8+obuvmfVTsUKM6R+r3RF
-        5M=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 2L0OpZc8-KQj; Wed, 20 Jul 2022 14:29:13 +0300 (MSK)
-Received: from T-EXCH-01.corp.yadro.com (t-exch-01.corp.yadro.com [172.17.10.101])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 43D31412CC;
-        Wed, 20 Jul 2022 14:29:13 +0300 (MSK)
-Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
- T-EXCH-01.corp.yadro.com (172.17.10.101) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
- 15.1.669.32; Wed, 20 Jul 2022 14:29:13 +0300
-Received: from NB-591.corp.yadro.com (10.178.114.42) by
- T-EXCH-08.corp.yadro.com (172.17.11.58) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.2.1118.9; Wed, 20 Jul 2022 14:29:12 +0300
-From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
-To:     Martin Petersen <martin.petersen@oracle.com>,
-        <target-devel@vger.kernel.org>
-CC:     <linux-scsi@vger.kernel.org>, <linux@yadro.com>,
-        Dmitry Bogdanov <d.bogdanov@yadro.com>
-Subject: [PATCH 2/2] target: core: de-RCU of se_lun and se_lun acl
-Date:   Wed, 20 Jul 2022 14:28:52 +0300
-Message-ID: <20220720112852.11440-3-d.bogdanov@yadro.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220720112852.11440-1-d.bogdanov@yadro.com>
-References: <20220720112852.11440-1-d.bogdanov@yadro.com>
+        with ESMTP id S231649AbiGTLmm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jul 2022 07:42:42 -0400
+Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 809C3459B1;
+        Wed, 20 Jul 2022 04:42:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1658317361; x=1689853361;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=kan8sLYiHB+1kxmOtgHMUGFkI4Py16KnYnn3nVJ2gy0=;
+  b=Q3eNQNVRDJvjL+ozNU5R3AMV0B8IM9u78DVxEyvpEOqfjrrHeXmMFj2o
+   OY4nx67PciguCFEiQFRXb0gAYSxtUQJ8t5zoI+YgbaNDqsp0UMjqGMvzd
+   57gw/R1UVL/Vy6MPngp1BQEkCo9bBoSptINt/TiC4kEsUOVwFhwHnhUDg
+   LiFRAFYLySYHEkNquoX4lcWscx98gYmoV7qYJRkpMTHd443uYNUlYr4zV
+   PS+Mc1lTZ6njfKnW/tH2V6nSQ0GwBcW9ST3m13grEHa++nZ5c0jQQvcmL
+   8+FkvnphDJJ5WtPbfQ/EumZkNE468uJvXt0mXP7fX+CL9BsqKt179K65U
+   w==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10413"; a="285520509"
+X-IronPort-AV: E=Sophos;i="5.92,286,1650956400"; 
+   d="scan'208";a="285520509"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jul 2022 04:42:40 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.92,286,1650956400"; 
+   d="scan'208";a="595210140"
+Received: from lkp-server01.sh.intel.com (HELO 7dfbdc7c7900) ([10.239.97.150])
+  by orsmga007.jf.intel.com with ESMTP; 20 Jul 2022 04:42:36 -0700
+Received: from kbuild by 7dfbdc7c7900 with local (Exim 4.95)
+        (envelope-from <lkp@intel.com>)
+        id 1oE867-0000Sl-DA;
+        Wed, 20 Jul 2022 11:42:35 +0000
+Date:   Wed, 20 Jul 2022 19:41:58 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Can Guo <quic_cang@quicinc.com>, bvanassche@acm.org,
+        stanley.chu@mediatek.com, adrian.hunter@intel.com,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, beanhuo@micron.com,
+        quic_asutoshd@quicinc.com, quic_nguyenb@quicinc.com,
+        quic_ziqichen@quicinc.com, linux-scsi@vger.kernel.org,
+        kernel-team@android.com
+Cc:     kbuild-all@lists.01.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        Jinyoung Choi <j-young.choi@samsung.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] scsi: ufs: Add Multi-Circular Queue support
+Message-ID: <202207201927.zCPpAzRa-lkp@intel.com>
+References: <1658214120-22772-2-git-send-email-quic_cang@quicinc.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.178.114.42]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-08.corp.yadro.com (172.17.11.58)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1658214120-22772-2-git-send-email-quic_cang@quicinc.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-se_lun and se_lun_acl are immutable pointers of struct se_dev_entry.
-Remove RCU usage for access to those pointers.
+Hi Can,
 
-Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
----
- drivers/target/target_core_alua.c   |  3 +--
- drivers/target/target_core_device.c | 29 +++++++++++-----------------
- drivers/target/target_core_pr.c     | 30 +++++++++--------------------
- drivers/target/target_core_stat.c   | 10 ++++------
- drivers/target/target_core_xcopy.c  |  2 +-
- include/target/target_core_base.h   |  4 ++--
- 6 files changed, 28 insertions(+), 50 deletions(-)
+I love your patch! Yet something to improve:
 
-diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
-index 58df0145e8d0..fb91423a4e2e 100644
---- a/drivers/target/target_core_alua.c
-+++ b/drivers/target/target_core_alua.c
-@@ -934,8 +934,7 @@ static void core_alua_queue_state_change_ua(struct t10_alua_tg_pt_gp *tg_pt_gp)
- 
- 		spin_lock(&lun->lun_deve_lock);
- 		list_for_each_entry(se_deve, &lun->lun_deve_list, lun_link) {
--			lacl = rcu_dereference_check(se_deve->se_lun_acl,
--					lockdep_is_held(&lun->lun_deve_lock));
-+			lacl = se_deve->se_lun_acl;
- 
- 			/*
- 			 * spc4r37 p.242:
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index 335f8cbfe633..01b804789e0b 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -75,7 +75,7 @@ transport_lookup_cmd_lun(struct se_cmd *se_cmd)
- 			return TCM_WRITE_PROTECTED;
- 		}
- 
--		se_lun = rcu_dereference(deve->se_lun);
-+		se_lun = deve->se_lun;
- 
- 		if (!percpu_ref_tryget_live(&se_lun->lun_ref)) {
- 			se_lun = NULL;
-@@ -152,7 +152,7 @@ int transport_lookup_tmr_lun(struct se_cmd *se_cmd)
- 	rcu_read_lock();
- 	deve = target_nacl_find_deve(nacl, se_cmd->orig_fe_lun);
- 	if (deve) {
--		se_lun = rcu_dereference(deve->se_lun);
-+		se_lun = deve->se_lun;
- 
- 		if (!percpu_ref_tryget_live(&se_lun->lun_ref)) {
- 			se_lun = NULL;
-@@ -216,7 +216,7 @@ struct se_dev_entry *core_get_se_deve_from_rtpi(
- 
- 	rcu_read_lock();
- 	hlist_for_each_entry_rcu(deve, &nacl->lun_entry_hlist, link) {
--		lun = rcu_dereference(deve->se_lun);
-+		lun = deve->se_lun;
- 		if (!lun) {
- 			pr_err("%s device entries device pointer is"
- 				" NULL, but Initiator has access.\n",
-@@ -243,11 +243,8 @@ void core_free_device_list_for_node(
- 	struct se_dev_entry *deve;
- 
- 	mutex_lock(&nacl->lun_entry_mutex);
--	hlist_for_each_entry_rcu(deve, &nacl->lun_entry_hlist, link) {
--		struct se_lun *lun = rcu_dereference_check(deve->se_lun,
--					lockdep_is_held(&nacl->lun_entry_mutex));
--		core_disable_device_list_for_node(lun, deve, nacl, tpg);
--	}
-+	hlist_for_each_entry_rcu(deve, &nacl->lun_entry_hlist, link)
-+		core_disable_device_list_for_node(deve->se_lun, deve, nacl, tpg);
- 	mutex_unlock(&nacl->lun_entry_mutex);
- }
- 
-@@ -334,8 +331,7 @@ int core_enable_device_list_for_node(
- 	mutex_lock(&nacl->lun_entry_mutex);
- 	orig = target_nacl_find_deve(nacl, mapped_lun);
- 	if (orig && orig->se_lun) {
--		struct se_lun *orig_lun = rcu_dereference_check(orig->se_lun,
--					lockdep_is_held(&nacl->lun_entry_mutex));
-+		struct se_lun *orig_lun = orig->se_lun;
- 
- 		if (orig_lun != lun) {
- 			pr_err("Existing orig->se_lun doesn't match new lun"
-@@ -355,8 +351,8 @@ int core_enable_device_list_for_node(
- 			return -EINVAL;
- 		}
- 
--		rcu_assign_pointer(new->se_lun, lun);
--		rcu_assign_pointer(new->se_lun_acl, lun_acl);
-+		new->se_lun = lun;
-+		new->se_lun_acl = lun_acl;
- 		hlist_del_rcu(&orig->link);
- 		hlist_add_head_rcu(&new->link, &nacl->lun_entry_hlist);
- 		mutex_unlock(&nacl->lun_entry_mutex);
-@@ -374,8 +370,8 @@ int core_enable_device_list_for_node(
- 		return 0;
- 	}
- 
--	rcu_assign_pointer(new->se_lun, lun);
--	rcu_assign_pointer(new->se_lun_acl, lun_acl);
-+	new->se_lun = lun;
-+	new->se_lun_acl = lun_acl;
- 	hlist_add_head_rcu(&new->link, &nacl->lun_entry_hlist);
- 	mutex_unlock(&nacl->lun_entry_mutex);
- 
-@@ -454,10 +450,7 @@ void core_clear_lun_from_tpg(struct se_lun *lun, struct se_portal_group *tpg)
- 
- 		mutex_lock(&nacl->lun_entry_mutex);
- 		hlist_for_each_entry_rcu(deve, &nacl->lun_entry_hlist, link) {
--			struct se_lun *tmp_lun = rcu_dereference_check(deve->se_lun,
--					lockdep_is_held(&nacl->lun_entry_mutex));
--
--			if (lun != tmp_lun)
-+			if (lun != deve->se_lun)
- 				continue;
- 
- 			core_disable_device_list_for_node(lun, deve, nacl, tpg);
-diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-index 3829b61b56c1..6bdedf34d6c9 100644
---- a/drivers/target/target_core_pr.c
-+++ b/drivers/target/target_core_pr.c
-@@ -739,8 +739,7 @@ static struct t10_pr_registration *__core_scsi3_alloc_registration(
- 			if (!deve_tmp->se_lun_acl)
- 				continue;
- 
--			lacl_tmp = rcu_dereference_check(deve_tmp->se_lun_acl,
--						lockdep_is_held(&lun_tmp->lun_deve_lock));
-+			lacl_tmp = deve_tmp->se_lun_acl;
- 			nacl_tmp = lacl_tmp->se_lun_nacl;
- 			/*
- 			 * Skip the matching struct se_node_acl that is allocated
-@@ -784,8 +783,7 @@ static struct t10_pr_registration *__core_scsi3_alloc_registration(
- 			 * the original *pr_reg is processed in
- 			 * __core_scsi3_add_registration()
- 			 */
--			dest_lun = rcu_dereference_check(deve_tmp->se_lun,
--				kref_read(&deve_tmp->pr_kref) != 0);
-+			dest_lun = deve_tmp->se_lun;
- 
- 			pr_reg_atp = __core_scsi3_do_alloc_registration(dev,
- 						nacl_tmp, dest_lun, deve_tmp,
-@@ -1437,34 +1435,26 @@ static void core_scsi3_nodeacl_undepend_item(struct se_node_acl *nacl)
- 
- static int core_scsi3_lunacl_depend_item(struct se_dev_entry *se_deve)
- {
--	struct se_lun_acl *lun_acl;
--
- 	/*
- 	 * For nacl->dynamic_node_acl=1
- 	 */
--	lun_acl = rcu_dereference_check(se_deve->se_lun_acl,
--				kref_read(&se_deve->pr_kref) != 0);
--	if (!lun_acl)
-+	if (!se_deve->se_lun_acl)
- 		return 0;
- 
--	return target_depend_item(&lun_acl->se_lun_group.cg_item);
-+	return target_depend_item(&se_deve->se_lun_acl->se_lun_group.cg_item);
- }
- 
- static void core_scsi3_lunacl_undepend_item(struct se_dev_entry *se_deve)
- {
--	struct se_lun_acl *lun_acl;
--
--	/*
-+/*
- 	 * For nacl->dynamic_node_acl=1
- 	 */
--	lun_acl = rcu_dereference_check(se_deve->se_lun_acl,
--				kref_read(&se_deve->pr_kref) != 0);
--	if (!lun_acl) {
-+	if (!se_deve->se_lun_acl) {
- 		kref_put(&se_deve->pr_kref, target_pr_kref_release);
- 		return;
- 	}
- 
--	target_undepend_item(&lun_acl->se_lun_group.cg_item);
-+	target_undepend_item(&se_deve->se_lun_acl->se_lun_group.cg_item);
- 	kref_put(&se_deve->pr_kref, target_pr_kref_release);
- }
- 
-@@ -1751,8 +1741,7 @@ core_scsi3_decode_spec_i_port(
- 		 * and then call __core_scsi3_add_registration() in the
- 		 * 2nd loop which will never fail.
- 		 */
--		dest_lun = rcu_dereference_check(dest_se_deve->se_lun,
--				kref_read(&dest_se_deve->pr_kref) != 0);
-+		dest_lun = dest_se_deve->se_lun;
- 
- 		dest_pr_reg = __core_scsi3_alloc_registration(cmd->se_dev,
- 					dest_node_acl, dest_lun, dest_se_deve,
-@@ -3446,8 +3435,7 @@ core_scsi3_emulate_pro_register_and_move(struct se_cmd *cmd, u64 res_key,
- 	dest_pr_reg = __core_scsi3_locate_pr_reg(dev, dest_node_acl,
- 					iport_ptr);
- 	if (!dest_pr_reg) {
--		struct se_lun *dest_lun = rcu_dereference_check(dest_se_deve->se_lun,
--				kref_read(&dest_se_deve->pr_kref) != 0);
-+		struct se_lun *dest_lun = dest_se_deve->se_lun;
- 
- 		spin_unlock(&dev->dev_reservation_lock);
- 		if (core_scsi3_alloc_registration(cmd->se_dev, dest_node_acl,
-diff --git a/drivers/target/target_core_stat.c b/drivers/target/target_core_stat.c
-index 62d15bcc3d93..f85ee5b0fd80 100644
---- a/drivers/target/target_core_stat.c
-+++ b/drivers/target/target_core_stat.c
-@@ -877,7 +877,6 @@ static ssize_t target_stat_auth_dev_show(struct config_item *item,
- 	struct se_lun_acl *lacl = auth_to_lacl(item);
- 	struct se_node_acl *nacl = lacl->se_lun_nacl;
- 	struct se_dev_entry *deve;
--	struct se_lun *lun;
- 	ssize_t ret;
- 
- 	rcu_read_lock();
-@@ -886,9 +885,9 @@ static ssize_t target_stat_auth_dev_show(struct config_item *item,
- 		rcu_read_unlock();
- 		return -ENODEV;
- 	}
--	lun = rcu_dereference(deve->se_lun);
-+
- 	/* scsiDeviceIndex */
--	ret = snprintf(page, PAGE_SIZE, "%u\n", lun->lun_index);
-+	ret = snprintf(page, PAGE_SIZE, "%u\n", deve->se_lun->lun_index);
- 	rcu_read_unlock();
- 	return ret;
- }
-@@ -1217,7 +1216,6 @@ static ssize_t target_stat_iport_dev_show(struct config_item *item,
- 	struct se_lun_acl *lacl = iport_to_lacl(item);
- 	struct se_node_acl *nacl = lacl->se_lun_nacl;
- 	struct se_dev_entry *deve;
--	struct se_lun *lun;
- 	ssize_t ret;
- 
- 	rcu_read_lock();
-@@ -1226,9 +1224,9 @@ static ssize_t target_stat_iport_dev_show(struct config_item *item,
- 		rcu_read_unlock();
- 		return -ENODEV;
- 	}
--	lun = rcu_dereference(deve->se_lun);
-+
- 	/* scsiDeviceIndex */
--	ret = snprintf(page, PAGE_SIZE, "%u\n", lun->lun_index);
-+	ret = snprintf(page, PAGE_SIZE, "%u\n", deve->se_lun->lun_index);
- 	rcu_read_unlock();
- 	return ret;
- }
-diff --git a/drivers/target/target_core_xcopy.c b/drivers/target/target_core_xcopy.c
-index 6bb20aa9c5bc..8713cda0c2fb 100644
---- a/drivers/target/target_core_xcopy.c
-+++ b/drivers/target/target_core_xcopy.c
-@@ -88,7 +88,7 @@ static int target_xcopy_locate_se_dev_e4(struct se_session *sess,
- 		struct se_device *this_dev;
- 		int rc;
- 
--		this_lun = rcu_dereference(deve->se_lun);
-+		this_lun = deve->se_lun;
- 		this_dev = rcu_dereference_raw(this_lun->lun_se_dev);
- 
- 		rc = target_xcopy_locate_se_dev_e4_iter(this_dev, dev_wwn);
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index c2b36f7d917d..8c920456edd9 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -665,9 +665,9 @@ struct se_dev_entry {
- 	/* Used for PR SPEC_I_PT=1 and REGISTER_AND_MOVE */
- 	struct kref		pr_kref;
- 	struct completion	pr_comp;
--	struct se_lun_acl __rcu	*se_lun_acl;
-+	struct se_lun_acl	*se_lun_acl;
- 	spinlock_t		ua_lock;
--	struct se_lun __rcu	*se_lun;
-+	struct se_lun		*se_lun;
- #define DEF_PR_REG_ACTIVE		1
- 	unsigned long		deve_flags;
- 	struct list_head	alua_port_list;
+[auto build test ERROR on jejb-scsi/for-next]
+[also build test ERROR on mkp-scsi/for-next next-20220719]
+[cannot apply to linus/master v5.19-rc7]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Can-Guo/UFS-Multi-Circular-Queue-MCQ/20220719-150436
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+config: i386-randconfig-a005 (https://download.01.org/0day-ci/archive/20220720/202207201927.zCPpAzRa-lkp@intel.com/config)
+compiler: gcc-11 (Debian 11.3.0-3) 11.3.0
+reproduce (this is a W=1 build):
+        # https://github.com/intel-lab-lkp/linux/commit/2b7356bcd24efd2d6b69f04dd9fd010c4256cc7e
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Can-Guo/UFS-Multi-Circular-Queue-MCQ/20220719-150436
+        git checkout 2b7356bcd24efd2d6b69f04dd9fd010c4256cc7e
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        make W=1 O=build_dir ARCH=i386 SHELL=/bin/bash drivers/ufs/core/
+
+If you fix the issue, kindly add following tag where applicable
+Reported-by: kernel test robot <lkp@intel.com>
+
+All errors (new ones prefixed by >>):
+
+   drivers/ufs/core/ufs-mcq.c: In function 'ufshcd_mcq_release_resource':
+>> drivers/ufs/core/ufs-mcq.c:275:25: error: implicit declaration of function 'devm_iounmap'; did you mean 'pci_iounmap'? [-Werror=implicit-function-declaration]
+     275 |                         devm_iounmap(hba->dev, res->base);
+         |                         ^~~~~~~~~~~~
+         |                         pci_iounmap
+   cc1: some warnings being treated as errors
+
+
+vim +275 drivers/ufs/core/ufs-mcq.c
+
+   265	
+   266	static void ufshcd_mcq_release_resource(struct ufs_hba *hba)
+   267	{
+   268		struct ufshcd_res_info_t *res;
+   269		int i;
+   270	
+   271		for (i = RES_MCQ; i < RES_MAX; i++) {
+   272			res = &hba->res[i];
+   273	
+   274			if(res->base) {
+ > 275				devm_iounmap(hba->dev, res->base);
+   276				res->base = NULL;
+   277			}
+   278	
+   279			if (res->is_alloc)
+   280				devm_kfree(hba->dev, res->resource);
+   281		}
+   282	}
+   283	
+
 -- 
-2.25.1
-
+0-DAY CI Kernel Test Service
+https://01.org/lkp
