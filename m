@@ -2,150 +2,122 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE378C43334
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jul 2022 07:57:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58FE4C43334
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jul 2022 08:19:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229581AbiGTH5Y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Jul 2022 03:57:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41650 "EHLO
+        id S237440AbiGTITh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Jul 2022 04:19:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60342 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229453AbiGTH5X (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jul 2022 03:57:23 -0400
-Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97C8C61105;
-        Wed, 20 Jul 2022 00:57:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1658303842; x=1689839842;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=qIthjsEZ85d8ocjhmCfrhK7Xx0+PQIkRHO1HHgSI8pw=;
-  b=WaXSBcCibLYAOl146qbK87YJWk17yhmmeCPIEiVVUK5li6fihxWxapBU
-   p1E8GspitZN67eG/AunFpcEMH4LMHC4zN9u2mfTLqi7x8zAndI/2zJhYS
-   Fifxm0HSj07sBxJ6fxyKWoRlcWWvs8+8psDeyuD/EtTbbbP+ALBqLp4V9
-   0fBR6wCiK0ZMgH99R971Opd6mJFEeZmT//zlXnoiTAyW+q0/phgEN/7Q4
-   JSNLAhGJqUZDZuTlyzcboEWuv7CbzDPrpP2c/T51TkVcf1cPMosO8o6c9
-   SkKnFJgB5DeMJlb+y/TCk/Xm5y4CjBUYl/RawEuR/BMynvgq1QrK5YAka
-   g==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10413"; a="266484824"
-X-IronPort-AV: E=Sophos;i="5.92,286,1650956400"; 
-   d="scan'208";a="266484824"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jul 2022 00:57:22 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.92,286,1650956400"; 
-   d="scan'208";a="597981890"
-Received: from lkp-server01.sh.intel.com (HELO 7dfbdc7c7900) ([10.239.97.150])
-  by orsmga002.jf.intel.com with ESMTP; 20 Jul 2022 00:57:17 -0700
-Received: from kbuild by 7dfbdc7c7900 with local (Exim 4.95)
-        (envelope-from <lkp@intel.com>)
-        id 1oE4a5-0000F5-1P;
-        Wed, 20 Jul 2022 07:57:17 +0000
-Date:   Wed, 20 Jul 2022 15:57:05 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Can Guo <quic_cang@quicinc.com>, bvanassche@acm.org,
-        stanley.chu@mediatek.com, adrian.hunter@intel.com,
-        alim.akhtar@samsung.com, avri.altman@wdc.com, beanhuo@micron.com,
-        quic_asutoshd@quicinc.com, quic_nguyenb@quicinc.com,
-        quic_ziqichen@quicinc.com, linux-scsi@vger.kernel.org,
-        kernel-team@android.com
-Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] scsi: ufs: Add Multi-Circular Queue support
-Message-ID: <202207201538.0hGdcttT-lkp@intel.com>
-References: <1658214120-22772-2-git-send-email-quic_cang@quicinc.com>
+        with ESMTP id S232647AbiGTITg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jul 2022 04:19:36 -0400
+Received: from mx0a-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4C4445F52;
+        Wed, 20 Jul 2022 01:19:35 -0700 (PDT)
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 26K7RJbV022970;
+        Wed, 20 Jul 2022 08:19:35 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=pp1;
+ bh=KOCwHeadE/oMbxq2JBe4TjRQ/Hb4D12jZplqoyY1WME=;
+ b=Xjb7rXuuf/EkmIMlxjXol3/LNfEvwefHLVe1IQ14NOwdagTBFpcC4+jU8nqfIAeT3uyx
+ Y+Nxj3/3LhfJ/YQPwdsNPW2YmtkrzqdUhDR/pbmVRFaC9FLQpztBfmM/91fskG53c++n
+ 5UxU2WlTPVK5TxqXCGqUubDXY4ZsqNY69wW4KepITJEdwuFqZopBbUiUr1L3UqRnB3Tv
+ iPZtOmuSaLt1et8d77YUcoeE3DHUTCHTmq7qDNxRDdeHQ2zzoYRzqxqnYnwQLXPL1FMM
+ RULugGbFqr9gv9cVk3cmT1Cbtt/E9197ZrkjNTjSa/pY15877TeCNbgXbqfofTp+NjJX uw== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (PPS) with ESMTPS id 3hedb49pm6-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 20 Jul 2022 08:19:34 +0000
+Received: from m0098419.ppops.net (m0098419.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 26K7T8qt032256;
+        Wed, 20 Jul 2022 08:19:34 GMT
+Received: from ppma01dal.us.ibm.com (83.d6.3fa9.ip4.static.sl-reverse.com [169.63.214.131])
+        by mx0b-001b2d01.pphosted.com (PPS) with ESMTPS id 3hedb49pks-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 20 Jul 2022 08:19:34 +0000
+Received: from pps.filterd (ppma01dal.us.ibm.com [127.0.0.1])
+        by ppma01dal.us.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 26K86mPK020054;
+        Wed, 20 Jul 2022 08:19:33 GMT
+Received: from b01cxnp22033.gho.pok.ibm.com (b01cxnp22033.gho.pok.ibm.com [9.57.198.23])
+        by ppma01dal.us.ibm.com with ESMTP id 3hbmy9pjy3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 20 Jul 2022 08:19:33 +0000
+Received: from b01ledav002.gho.pok.ibm.com (b01ledav002.gho.pok.ibm.com [9.57.199.107])
+        by b01cxnp22033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 26K8JWCu23331314
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 20 Jul 2022 08:19:32 GMT
+Received: from b01ledav002.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 7B0C7124055;
+        Wed, 20 Jul 2022 08:19:32 +0000 (GMT)
+Received: from b01ledav002.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 02C2A124054;
+        Wed, 20 Jul 2022 08:19:29 +0000 (GMT)
+Received: from [9.43.112.189] (unknown [9.43.112.189])
+        by b01ledav002.gho.pok.ibm.com (Postfix) with ESMTP;
+        Wed, 20 Jul 2022 08:19:29 +0000 (GMT)
+Message-ID: <59642c8d-adbf-cbfd-ffee-3f3b31613e05@linux.vnet.ibm.com>
+Date:   Wed, 20 Jul 2022 13:49:25 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1658214120-22772-2-git-send-email-quic_cang@quicinc.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [linux-next] [5.19.0-rc1] kernel crashes while performing driver
+ bind/unbind test with SLUB_DEBUG enabled
+Content-Language: en-US
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        abdhalee@linux.vnet.ibm.com, mputtash@linux.vnet.com,
+        sachinp@linux.vnet.com
+References: <c1846219-cea9-e82c-7337-6f6d9ffadd3d@linux.vnet.ibm.com>
+ <Yqksbtth8zzEmjp4@T590>
+ <d789d8f6-71c3-3927-7708-141b43c3ba0b@linux.vnet.ibm.com>
+ <Ys7EXeoVbLRZj9CL@T590>
+From:   Tasmiya Nalatwad <tasmiya@linux.vnet.ibm.com>
+In-Reply-To: <Ys7EXeoVbLRZj9CL@T590>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: C6Y7Nv445Ywi2oLmL8ylqw3RMu5xVhhm
+X-Proofpoint-ORIG-GUID: xJElMXN19Tba3c02ohfit4DIqeLtnkDu
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
+ definitions=2022-07-20_04,2022-07-19_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 bulkscore=0
+ lowpriorityscore=0 adultscore=0 spamscore=0 impostorscore=0 malwarescore=0
+ suspectscore=0 mlxlogscore=964 phishscore=0 priorityscore=1501
+ clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2206140000 definitions=main-2207200033
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Can,
+Greetings,
 
-I love your patch! Perhaps something to improve:
+Sure I will verify, could you please provide me the code patch.
 
-[auto build test WARNING on jejb-scsi/for-next]
-[also build test WARNING on mkp-scsi/for-next next-20220719]
-[cannot apply to linus/master v5.19-rc7]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Can-Guo/UFS-Multi-Circular-Queue-MCQ/20220719-150436
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-config: x86_64-randconfig-r036-20220718 (https://download.01.org/0day-ci/archive/20220720/202207201538.0hGdcttT-lkp@intel.com/config)
-compiler: clang version 15.0.0 (https://github.com/llvm/llvm-project dd5635541cd7bbd62cd59b6694dfb759b6e9a0d8)
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/2b7356bcd24efd2d6b69f04dd9fd010c4256cc7e
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Can-Guo/UFS-Multi-Circular-Queue-MCQ/20220719-150436
-        git checkout 2b7356bcd24efd2d6b69f04dd9fd010c4256cc7e
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=x86_64 SHELL=/bin/bash drivers/ufs/core/
-
-If you fix the issue, kindly add following tag where applicable
-Reported-by: kernel test robot <lkp@intel.com>
-
-All warnings (new ones prefixed by >>):
-
->> drivers/ufs/core/ufshcd.c:5465:13: warning: no previous prototype for function 'ufshcd_transfer_req_compl' [-Wmissing-prototypes]
-   irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
-               ^
-   drivers/ufs/core/ufshcd.c:5465:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
-   irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
-   ^
-   static 
-   1 warning generated.
-
-
-vim +/ufshcd_transfer_req_compl +5465 drivers/ufs/core/ufshcd.c
-
-  5456	
-  5457	/**
-  5458	 * ufshcd_transfer_req_compl - handle SCSI and query command completion
-  5459	 * @hba: per adapter instance
-  5460	 *
-  5461	 * Returns
-  5462	 *  IRQ_HANDLED - If interrupt is valid
-  5463	 *  IRQ_NONE    - If invalid interrupt
-  5464	 */
-> 5465	irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
-  5466	{
-  5467		/* Resetting interrupt aggregation counters first and reading the
-  5468		 * DOOR_BELL afterward allows us to handle all the completed requests.
-  5469		 * In order to prevent other interrupts starvation the DB is read once
-  5470		 * after reset. The down side of this solution is the possibility of
-  5471		 * false interrupt if device completes another request after resetting
-  5472		 * aggregation and before reading the DB.
-  5473		 */
-  5474		if (ufshcd_is_intr_aggr_allowed(hba) &&
-  5475		    !(hba->quirks & UFSHCI_QUIRK_SKIP_RESET_INTR_AGGR))
-  5476			ufshcd_reset_intr_aggr(hba);
-  5477	
-  5478		if (ufs_fail_completion())
-  5479			return IRQ_HANDLED;
-  5480	
-  5481		/*
-  5482		 * Ignore the ufshcd_poll() return value and return IRQ_HANDLED since we
-  5483		 * do not want polling to trigger spurious interrupt complaints.
-  5484		 */
-  5485		ufshcd_poll(hba->host, 0);
-  5486	
-  5487		return IRQ_HANDLED;
-  5488	}
-  5489	EXPORT_SYMBOL_GPL(ufshcd_transfer_req_compl);
-  5490	
+On 7/13/22 18:41, Ming Lei wrote:
+> On Wed, Jul 13, 2022 at 03:49:05PM +0530, Tasmiya Nalatwad wrote:
+>> Greetings,
+>>
+>> While running plain bind/unbind test on scsi I had enabled slub_debug
+>>
+>> System has FC adapter with multipath enabled.
+>>
+>> Step 1 : Added slub_debug in /etc/default/grub saved the configuration and
+>> rebooted the machine.
+>> Step 2 : Performed normal driver bind/unbind test.
+> 
+> Hello,
+> 
+> Can you try the following patches and see if they are helpful?
+> 
+> 
+> Thanks,
+> Ming
+> 
 
 -- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+Regards,
+Tasmiya Nalatwad
+IBM Linux Technology Center
