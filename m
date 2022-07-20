@@ -2,104 +2,142 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 358BCC43334
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jul 2022 17:36:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BE8BC43334
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jul 2022 17:44:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241076AbiGTRgu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Jul 2022 13:36:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60246 "EHLO
+        id S230477AbiGTRon (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Jul 2022 13:44:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41130 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241136AbiGTRgr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jul 2022 13:36:47 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55D256052C;
-        Wed, 20 Jul 2022 10:36:46 -0700 (PDT)
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 26KGlQDi031128;
-        Wed, 20 Jul 2022 17:36:34 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=KoYN6t2ojX51eMCu42S4f7m7B8qXBwHa6ASD9qlPSh8=;
- b=iSPu9XFZSMAkgoAiQqlXoC5Dsbqjs6VsDvJCpE90kZlaw6zOGmqkCgBq/sSjEUENCK4X
- kal8ASE4/Os9Hz8VhHYBNm8chLMGb/j66P8faTMGMqRvaTzHHpGQwnJdLx6RD06g4/fq
- 6f3ePZBcGfwxNBTHyz9lDkMR+KkGdTI6/X2Mmn+BMUmQ+qJSNOR77RjeAB+I7C9U2Vsj
- /o14bV5SHQp2KCr9pVpXOxnNUP1PmIKP2O6uv35SHmf5P3/qwPA9n0/dbvkpszNMGwQP
- fz34xTW+q4SpGB9zwj6mpnAzq4vZdLiI1/jqrpjnl6b9paDSD5TJefuKK3lU45fyn92n zg== 
-Received: from nasanppmta03.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3he90k23dc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 20 Jul 2022 17:36:34 +0000
-Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
-        by NASANPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 26KHaXsu015729
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 20 Jul 2022 17:36:33 GMT
-Received: from [10.46.161.58] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.22; Wed, 20 Jul
- 2022 10:36:32 -0700
-Message-ID: <cd6e30b2-55da-eca8-d4fc-fdc143f340f7@quicinc.com>
-Date:   Wed, 20 Jul 2022 10:34:43 -0700
+        with ESMTP id S229489AbiGTRok (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jul 2022 13:44:40 -0400
+Received: from mail-qv1-f42.google.com (mail-qv1-f42.google.com [209.85.219.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8FEA84AD57;
+        Wed, 20 Jul 2022 10:44:38 -0700 (PDT)
+Received: by mail-qv1-f42.google.com with SMTP id h18so4268385qvr.12;
+        Wed, 20 Jul 2022 10:44:38 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=6MsTEfbt4L6FalHmKt8VsogFuWDPpiL5KzDKo6pfQR4=;
+        b=Q4uIGpZUEySFurg+0mlmx/6VhKgrnHWuirSxhkP5cpX5oiTUdWfmrnQ3xZObLJwL3D
+         JyprUhZ7B+VREFHU+3kKuBG7u3ldUENPoKSVuNLhhHknAcSeclIfDG8bj6XCr7+6Tbwo
+         Y+bxTLRzGMy7VxcIWLb1CIrNq8ha72I62/hAnP+Joch+B/LCrqzfc4SHwv61RuOqnvDD
+         CSjPpEAKjrn0o6ZwRsF9TSXyt2W+ILJ46l/FeaJAkgPBCRiTaDwIxyaJPbBQyVE1c41A
+         t6q+1/n/oVPjTwJArYJUt9IW6sQtHGd4XkWO3cmyOWTChQeiWzCrZzDB0g4RcUet6rLc
+         7STw==
+X-Gm-Message-State: AJIora8w1uMyOl1A7rOMKfljpzLfyase+X21FSzn8TfeO95i7iDPIej6
+        D7ymCkFHxR7h3gGOZSRlBXHegyoaA5in/Wa/
+X-Google-Smtp-Source: AGRyM1sc2WgrP5H7OuBfP7BnrBBNksBpNwV28P7UWS9J7We0oYSjK2QE4LIxQFea7+nPpTKPZ8FwuQ==
+X-Received: by 2002:a05:6214:2302:b0:470:2d10:b6e4 with SMTP id gc2-20020a056214230200b004702d10b6e4mr30784518qvb.72.1658339077139;
+        Wed, 20 Jul 2022 10:44:37 -0700 (PDT)
+Received: from mail-yw1-f172.google.com (mail-yw1-f172.google.com. [209.85.128.172])
+        by smtp.gmail.com with ESMTPSA id c26-20020a05620a269a00b006b5ba7b9a6fsm16396283qkp.35.2022.07.20.10.44.36
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 20 Jul 2022 10:44:36 -0700 (PDT)
+Received: by mail-yw1-f172.google.com with SMTP id 00721157ae682-2ef5380669cso181756977b3.9;
+        Wed, 20 Jul 2022 10:44:36 -0700 (PDT)
+X-Received: by 2002:a81:5404:0:b0:31c:c24d:94b0 with SMTP id
+ i4-20020a815404000000b0031cc24d94b0mr41950143ywb.502.1658339076192; Wed, 20
+ Jul 2022 10:44:36 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.0.1
-Subject: Re: [PATCH 1/2] scsi: ufs: Add Multi-Circular Queue support
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Can Guo <quic_cang@quicinc.com>, <stanley.chu@mediatek.com>,
-        <adrian.hunter@intel.com>, <alim.akhtar@samsung.com>,
-        <avri.altman@wdc.com>, <beanhuo@micron.com>,
-        <quic_nguyenb@quicinc.com>, <quic_ziqichen@quicinc.com>,
-        <linux-scsi@vger.kernel.org>, <kernel-team@android.com>
-CC:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1658214120-22772-1-git-send-email-quic_cang@quicinc.com>
- <1658214120-22772-2-git-send-email-quic_cang@quicinc.com>
- <574ad23b-45c9-1bc3-0a86-c7cb73ea07bf@acm.org>
-From:   "Asutosh Das (asd)" <quic_asutoshd@quicinc.com>
-In-Reply-To: <574ad23b-45c9-1bc3-0a86-c7cb73ea07bf@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: BITM_wsmMmEOn15-5vKT8R9JTdDi_tRK
-X-Proofpoint-GUID: BITM_wsmMmEOn15-5vKT8R9JTdDi_tRK
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
- definitions=2022-07-20_10,2022-07-20_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 mlxscore=0
- impostorscore=0 phishscore=0 clxscore=1011 bulkscore=0 malwarescore=0
- adultscore=0 lowpriorityscore=0 priorityscore=1501 mlxlogscore=999
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2206140000 definitions=main-2207200071
+References: <20220630195703.10155-1-bvanassche@acm.org> <20220630195703.10155-3-bvanassche@acm.org>
+ <alpine.DEB.2.22.394.2207191125130.1006766@ramsan.of.borg>
+ <db19ed29-e7f9-e5b0-3a6c-f2812078a07d@acm.org> <CAMuHMdVzsgSYtbJQnaigNax_JbxPsQfU+gHcteS-ojWbxUdMfw@mail.gmail.com>
+ <CAMuHMdWtxBj8ug7AHTqentF8UD4jpO2sgoWWcQCOvEKLJtdq8A@mail.gmail.com> <506ca1a6-1122-5755-fc74-60f7c7bfbd0d@acm.org>
+In-Reply-To: <506ca1a6-1122-5755-fc74-60f7c7bfbd0d@acm.org>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Wed, 20 Jul 2022 19:44:25 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdVQ2K2v8jpsFfOMk99DG_sBB4_ioiQRroC7K_Ov1wvp9w@mail.gmail.com>
+Message-ID: <CAMuHMdVQ2K2v8jpsFfOMk99DG_sBB4_ioiQRroC7K_Ov1wvp9w@mail.gmail.com>
+Subject: Re: [PATCH v2 2/2] scsi: sd: Rework asynchronous resume support
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        scsi <linux-scsi@vger.kernel.org>,
+        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
+        John Garry <john.garry@huawei.com>, ericspero@icloud.com,
+        jason600.groome@gmail.com,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 Hi Bart,
 
-On 7/19/2022 4:07 PM, Bart Van Assche wrote:
-> On 7/19/22 00:01, Can Guo wrote:
->> Adds MCQ support to UFS driver.
-> 
-> The description of this patch is too short. It should be explained how 
-> the UFSHCI queues are made visible to the block layer. It should also be 
-> explained which roles are assigned to queues and how (HCTX_TYPE_*). How 
-> the MAXQ configuration register is handled should also be explained.
-> 
-> The host lock is obtained in multiple UFSHCI 3.0 code paths. Information 
-> about the role of the host lock in MCQ code should be provided.
-> 
-> Thanks,
-> 
-> Bart.
-Thanks for having taken a look.
-I'll check the comments and upload a next version.
+On Wed, Jul 20, 2022 at 6:51 PM Bart Van Assche <bvanassche@acm.org> wrote:
+> On 7/20/22 00:47, Geert Uytterhoeven wrote:
+> > With more debug options enabled, it prints:
+> >
+> > INFO: task kworker/0:7:283 blocked for more than 120 seconds.
+> >        Not tainted 5.19.0-rc7-salvator-x-00794-g6780eb02b605 #1287
+> > "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> > task:kworker/0:7     state:D stack:    0 pid:  283 ppid:     2 flags:0x00000008
+> > Workqueue: events ata_scsi_dev_rescan
+> > Call trace:
+> >   __switch_to+0xbc/0x124
+> >   __schedule+0x540/0x71c
+> >   schedule+0x58/0xa0
+> >   io_schedule+0x18/0x34
+> >   blk_mq_get_tag+0x138/0x244
+> >   __blk_mq_alloc_requests+0x130/0x2f0
+> >   blk_mq_alloc_request+0x74/0xa8
+> >   scsi_alloc_request+0x10/0x30
+> >   __scsi_execute+0x5c/0x18c
+> >   scsi_vpd_inquiry+0x7c/0xdc
+> >   scsi_get_vpd_size+0x34/0xa8
+> >   scsi_get_vpd_buf+0x28/0xf4
+> >   scsi_attach_vpd+0x44/0x170
+> >   scsi_rescan_device+0x30/0x98
+> >   ata_scsi_dev_rescan+0xc8/0xfc
+> >   process_one_work+0x2e0/0x474
+> >   worker_thread+0x1cc/0x270
+> >   kthread+0xd8/0xe8
+> >   ret_from_fork+0x10/0x20
+> >
+> > This doesn't look like it's blocked in the R-Car SATA driver, but on
+> > some I/O scheduling event in the block core?
+>
+> I'm not familiar with the SATA code but from a quick look it seems like
+> the above code is only triggered from inside the ATA error handler
+> (ata_do_eh() -> ata_eh_recover() -> ata_eh_revalidate_and_attach() ->
+> schedule_work(&(ap->scsi_rescan_task) -> ata_scsi_dev_rescan()). It
+> doesn't seem normal to me that the ATA error handler gets invoked during
+> a resume. How about testing the following two code changes?
 
--asd
+Thanks for your suggestions!
+
+> * In sd_start_stop_device(), change "return sd_submit_start(sdkp, cmd,
+> sizeof(cmd))" into "sd_submit_start(sdkp, cmd, sizeof(cmd))" and below
+> that call add "flush_work(&sdkp->start_done_work)". This makes
+> sd_start_stop_device() again synchronous. This will learn us whether the
+> behavior change is caused by submitting the START command from another
+> context or by not waiting until the START command has finished.
+
+Unfortunately this doesn't have any impact.
+
+> * Back out the above change, change "return sd_submit_start(sdkp, cmd,
+> sizeof(cmd))" again into "sd_submit_start(sdkp, cmd, sizeof(cmd))" and
+> below that statement add a call to
+> scsi_run_queue(sdkp->device->request_queue). If this change helps it
+
+(that's the static scsi_run_queue() in drivers/scsi/scsi_lib.c?)
+
+> means that the scsi_run_queue() call is necessary to prevent reordering
+> of the START command with other SCSI commands.
+
+Unfortunately this doesn't have any impact either.
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
