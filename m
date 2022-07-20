@@ -2,48 +2,48 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D834C43334
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jul 2022 01:27:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95C96CCA488
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jul 2022 01:28:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242008AbiGTB13 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Jul 2022 21:27:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43602 "EHLO
+        id S242250AbiGTB2p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Jul 2022 21:28:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42786 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241970AbiGTB1D (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2022 21:27:03 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C6D674CD8;
-        Tue, 19 Jul 2022 18:18:12 -0700 (PDT)
+        with ESMTP id S242198AbiGTB1o (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2022 21:27:44 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 329DC67CB0;
+        Tue, 19 Jul 2022 18:18:38 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 37010B81DF6;
-        Wed, 20 Jul 2022 01:18:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 00A10C341CA;
-        Wed, 20 Jul 2022 01:18:08 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 5FFCECE1E85;
+        Wed, 20 Jul 2022 01:18:36 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF6C2C341D0;
+        Wed, 20 Jul 2022 01:18:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1658279889;
-        bh=/Ig2tbqHef+3D8WRqRuVOBMa0BsImMB2vBeVVWc89H8=;
+        s=k20201202; t=1658279914;
+        bh=6wb/MlVfI6SKjTbpRAzndMk2/Pd/MfW2cahP+ld3YDw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=kQHK7Jtc56dvGN5ca9cjbKF1L2SCmN/WzTWgKNbeoRPDzvLBTZbyronInXil5f7Wr
-         h1POB+G7FdKdx8jAkfXO23OeGxFPC2iaHM4Qr4RKp5fCrTtUsQupzNuugcj9/Xj1A5
-         GAAnUT48WB9FIedHR8OFgY1WerwfYoCuVrzNLrfj/9e9AoduiDfLLFwrJ3OwMCQBF0
-         Dr995RXwNkFjgfz5haD2VALyzc9uP0Q0TbCFDt+7S0ql8bcpwfhM+N+Gk9dsazkQTA
-         1LWayEBHLM5VZp4KhOnkXTIZ5/7BQg7PdKadQP0yXFZXUHGhx43eCerj8do5GtKu1R
-         94NoI6ieDw3Wg==
+        b=RsIO29duquUpbmEjB/469k/o7+F9DSswetu4NyBfvnvSitn6t2KpUjBVW1DrBga1E
+         EKvGadEywFWtNcqEU4gtajAYEt7LBdkiCj2spqg9IKvkA7vZuDZMe9J0U9LXmRiGId
+         Cc0ZiueDHfvvT0jkm91OXb6W7+yZ5Elf7eGNn0D2EBQ79CNMimgPrA5uWUhSWY+6lz
+         WVZ9yc/E9RI6Y7GM8qRgdSqNhORDCmUyXRz2iqXnVSQ6S4IibPDJL+acjD7hQ8/nXQ
+         /Tfmig1blHBbymu19x9tBkpeMBYMob25O4Pz5c0JzehK2zKjGv7rtQww7tdZccN4jb
+         PPXdvG9Fkf7hw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Changyuan Lyu <changyuanl@google.com>,
-        Igor Pylypiv <ipylypiv@google.com>,
+Cc:     Mike Christie <michael.christie@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, jinpu.wang@cloud.ionos.com,
-        jejb@linux.ibm.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 16/16] scsi: pm80xx: Set stopped phy's linkrate to Disabled
-Date:   Tue, 19 Jul 2022 21:17:30 -0400
-Message-Id: <20220720011730.1025099-16-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 7/8] scsi: target: Fix WRITE_SAME No Data Buffer crash
+Date:   Tue, 19 Jul 2022 21:18:09 -0400
+Message-Id: <20220720011810.1025308-7-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220720011730.1025099-1-sashal@kernel.org>
-References: <20220720011730.1025099-1-sashal@kernel.org>
+In-Reply-To: <20220720011810.1025308-1-sashal@kernel.org>
+References: <20220720011810.1025308-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -52,39 +52,78 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Changyuan Lyu <changyuanl@google.com>
+From: Mike Christie <michael.christie@oracle.com>
 
-[ Upstream commit 355bf2e036c954317ddc4a9618b4f7e38ea5a970 ]
+[ Upstream commit ccd3f449052449a917a3e577d8ba0368f43b8f29 ]
 
-Negotiated link rate needs to be updated to 'Disabled' when phy is stopped.
+In newer version of the SBC specs, we have a NDOB bit that indicates there
+is no data buffer that gets written out. If this bit is set using commands
+like "sg_write_same --ndob" we will crash in target_core_iblock/file's
+execute_write_same handlers when we go to access the se_cmd->t_data_sg
+because its NULL.
 
-Link: https://lore.kernel.org/r/20220708205026.969161-1-changyuanl@google.com
-Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
-Signed-off-by: Changyuan Lyu <changyuanl@google.com>
+This patch adds a check for the NDOB bit in the common WRITE SAME code
+because we don't support it. And, it adds a check for zero SG elements in
+each handler in case the initiator tries to send a normal WRITE SAME with
+no data buffer.
+
+Link: https://lore.kernel.org/r/20220628022325.14627-2-michael.christie@oracle.com
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Mike Christie <michael.christie@oracle.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/pm8001/pm80xx_hwi.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/target/target_core_file.c   | 3 +++
+ drivers/target/target_core_iblock.c | 4 ++++
+ drivers/target/target_core_sbc.c    | 6 ++++++
+ 3 files changed, 13 insertions(+)
 
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index ce67965a504f..5ce65bf2d3a6 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -3406,8 +3406,12 @@ static int mpi_phy_stop_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 			pm8001_printk("phy:0x%x status:0x%x\n",
- 					phyid, status));
- 	if (status == PHY_STOP_SUCCESS ||
--		status == PHY_STOP_ERR_DEVICE_ATTACHED)
-+		status == PHY_STOP_ERR_DEVICE_ATTACHED) {
- 		phy->phy_state = PHY_LINK_DISABLE;
-+		phy->sas_phy.phy->negotiated_linkrate = SAS_PHY_DISABLED;
-+		phy->sas_phy.linkrate = SAS_PHY_DISABLED;
+diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
+index 16751ae55d7b..98487116d15e 100644
+--- a/drivers/target/target_core_file.c
++++ b/drivers/target/target_core_file.c
+@@ -468,6 +468,9 @@ fd_execute_write_same(struct se_cmd *cmd)
+ 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+ 	}
+ 
++	if (!cmd->t_data_nents)
++		return TCM_INVALID_CDB_FIELD;
++
+ 	if (cmd->t_data_nents > 1 ||
+ 	    cmd->t_data_sg[0].length != cmd->se_dev->dev_attrib.block_size) {
+ 		pr_err("WRITE_SAME: Illegal SGL t_data_nents: %u length: %u"
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index 5668d02de10b..1f02817135e3 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -471,6 +471,10 @@ iblock_execute_write_same(struct se_cmd *cmd)
+ 		       " backends not supported\n");
+ 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+ 	}
++
++	if (!cmd->t_data_nents)
++		return TCM_INVALID_CDB_FIELD;
++
+ 	sg = &cmd->t_data_sg[0];
+ 
+ 	if (cmd->t_data_nents > 1 ||
+diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+index af9b038da3ba..64e4daa1a507 100644
+--- a/drivers/target/target_core_sbc.c
++++ b/drivers/target/target_core_sbc.c
+@@ -325,6 +325,12 @@ sbc_setup_write_same(struct se_cmd *cmd, unsigned char flags, struct sbc_ops *op
+ 		pr_warn("WRITE SAME with ANCHOR not supported\n");
+ 		return TCM_INVALID_CDB_FIELD;
+ 	}
++
++	if (flags & 0x01) {
++		pr_warn("WRITE SAME with NDOB not supported\n");
++		return TCM_INVALID_CDB_FIELD;
 +	}
 +
- 	return 0;
- }
- 
+ 	/*
+ 	 * Special case for WRITE_SAME w/ UNMAP=1 that ends up getting
+ 	 * translated into block discard requests within backend code.
 -- 
 2.35.1
 
