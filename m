@@ -2,82 +2,130 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3E0BC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jul 2022 15:41:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ECACC43334
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jul 2022 16:37:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241221AbiGTPlo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Jul 2022 11:41:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50564 "EHLO
+        id S229784AbiGTQhD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Jul 2022 12:37:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36578 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232804AbiGTPlm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jul 2022 11:41:42 -0400
-Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EEBFC22BD7;
-        Wed, 20 Jul 2022 08:41:41 -0700 (PDT)
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 34132412D2;
-        Wed, 20 Jul 2022 15:41:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        in-reply-to:content-transfer-encoding:content-disposition
-        :content-type:content-type:mime-version:references:message-id
-        :subject:subject:from:from:date:date:received:received:received
-        :received; s=mta-01; t=1658331699; x=1660146100; bh=BiGYJAeCpEGQ
-        em6DfQ73uEeCnzcf59XOM101tD6+ZC0=; b=l8yWjs2Yw6IK9hmOTT3aBz66aso7
-        XGGVXSVZMNubkjUgQgs6tWOoLDHRrvMjTh7e29NXxO5t0sXCkZfjK0xa3O63aO1D
-        W6M+3hmLmMJjfKJKSj0tip79xpyZvmCNG+tOZxfFzfNuW+rZVi1/eDWI2In/WaH2
-        VNyY1WSnHnmsRdY=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id Kvp7q4TTa0Zl; Wed, 20 Jul 2022 18:41:39 +0300 (MSK)
-Received: from T-EXCH-01.corp.yadro.com (t-exch-01.corp.yadro.com [172.17.10.101])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id C6508412CD;
-        Wed, 20 Jul 2022 18:41:35 +0300 (MSK)
-Received: from T-EXCH-09.corp.yadro.com (172.17.11.59) by
- T-EXCH-01.corp.yadro.com (172.17.10.101) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
- 15.1.669.32; Wed, 20 Jul 2022 18:41:12 +0300
-Received: from yadro.com (10.178.118.226) by T-EXCH-09.corp.yadro.com
- (172.17.11.59) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1118.9; Wed, 20 Jul
- 2022 18:41:11 +0300
-Date:   Wed, 20 Jul 2022 18:41:10 +0300
-From:   Konstantin Shelekhin <k.shelekhin@yadro.com>
-To:     Mike Christie <michael.christie@oracle.com>
-CC:     Thinh Nguyen <Thinh.Nguyen@synopsys.com>,
-        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <target-devel@vger.kernel.org>,
+        with ESMTP id S229456AbiGTQhD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jul 2022 12:37:03 -0400
+Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4643A52DD5;
+        Wed, 20 Jul 2022 09:37:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1658335020; x=1689871020;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=OIDH+HrZlHRBE1ZuSvOPWqWqsoLOZVIP03udR607o7E=;
+  b=DmZ+PHmKXvhWRCuGctaxmCh9Y/CDyT8qR462OsG6SYoxc+7lejr0OWhk
+   QTM6ySXQ0haIKvtVpyfpWzFWlMaxoUFMi15l8DqkbSo4ao7jqURjPkBRd
+   N1gkQAMEEgF7ug6i9coXJlrIVISkOmGpvNL2sGITV02KCixImclNyVbaM
+   OYezlyJDRLRePDLnruSUki0wY3ohN/3aVYbyXaC5oxLBtL4VyjZW3XoUL
+   nh8sU/YYG4LL0u9YtLRFg7YqKIFZSSRdBuvtyB0mcVRPC/ER4Tr50fC5P
+   aTFNWWCsqhpvorOgce9Jf8qv8p3Os41pq8dJ7MHWOjSP7EjTz1/sOH0Me
+   g==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10414"; a="350817090"
+X-IronPort-AV: E=Sophos;i="5.92,286,1650956400"; 
+   d="scan'208";a="350817090"
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jul 2022 09:36:59 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.92,286,1650956400"; 
+   d="scan'208";a="665929373"
+Received: from lkp-server01.sh.intel.com (HELO 7dfbdc7c7900) ([10.239.97.150])
+  by fmsmga004.fm.intel.com with ESMTP; 20 Jul 2022 09:36:54 -0700
+Received: from kbuild by 7dfbdc7c7900 with local (Exim 4.95)
+        (envelope-from <lkp@intel.com>)
+        id 1oECgv-0000iP-Sz;
+        Wed, 20 Jul 2022 16:36:53 +0000
+Date:   Thu, 21 Jul 2022 00:36:28 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Can Guo <quic_cang@quicinc.com>, bvanassche@acm.org,
+        stanley.chu@mediatek.com, adrian.hunter@intel.com,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, beanhuo@micron.com,
+        quic_asutoshd@quicinc.com, quic_nguyenb@quicinc.com,
+        quic_ziqichen@quicinc.com, linux-scsi@vger.kernel.org,
+        kernel-team@android.com
+Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        John Youn <John.Youn@synopsys.com>, <linux-usb@vger.kernel.org>
-Subject: Re: [PATCH v2 2/4] target: Implement TMR_ABORT_TASK_SET
-Message-ID: <YtggwBMKgIJqN4mT@yadro.com>
-References: <cover.1658195608.git.Thinh.Nguyen@synopsys.com>
- <7d31722a7e07bc24ea37b5841a17545003eeddb4.1658195608.git.Thinh.Nguyen@synopsys.com>
- <74bf1df3-a466-9d78-1a25-7425c89b9fa3@oracle.com>
+        Daejun Park <daejun7.park@samsung.com>,
+        Jinyoung Choi <j-young.choi@samsung.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] scsi: ufs: Add Multi-Circular Queue support
+Message-ID: <202207210049.FUSfJIAA-lkp@intel.com>
+References: <1658214120-22772-2-git-send-email-quic_cang@quicinc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <74bf1df3-a466-9d78-1a25-7425c89b9fa3@oracle.com>
-X-Originating-IP: [10.178.118.226]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-09.corp.yadro.com (172.17.11.59)
+In-Reply-To: <1658214120-22772-2-git-send-email-quic_cang@quicinc.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Jul 19, 2022 at 10:56:07AM -0500, Mike Christie wrote:
-> «Внимание! Данное письмо от внешнего адресата!»
-> 
-> On 7/18/22 9:07 PM, Thinh Nguyen wrote:
-> > Task ABORT TASK SET function is required by SCSI transport protocol
-> 
-> What OS is using this and how do they use it? For the latter, does the
-> OS try an abort for each cmd first, then try an abort task set if the
-> aborts fail (does fail mean get a response that indicates failure and
-> also does a timeout count)? Or does it start with the abort task set?
+Hi Can,
 
-AIX IIRC. However, this feature also requires valid bits in one of the
-VPD pages.
+I love your patch! Yet something to improve:
+
+[auto build test ERROR on jejb-scsi/for-next]
+[also build test ERROR on mkp-scsi/for-next next-20220720]
+[cannot apply to linus/master v5.19-rc7]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Can-Guo/UFS-Multi-Circular-Queue-MCQ/20220719-150436
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+config: i386-randconfig-a005-20220718 (https://download.01.org/0day-ci/archive/20220721/202207210049.FUSfJIAA-lkp@intel.com/config)
+compiler: clang version 15.0.0 (https://github.com/llvm/llvm-project dd5635541cd7bbd62cd59b6694dfb759b6e9a0d8)
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/2b7356bcd24efd2d6b69f04dd9fd010c4256cc7e
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Can-Guo/UFS-Multi-Circular-Queue-MCQ/20220719-150436
+        git checkout 2b7356bcd24efd2d6b69f04dd9fd010c4256cc7e
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=i386 SHELL=/bin/bash drivers/ufs/
+
+If you fix the issue, kindly add following tag where applicable
+Reported-by: kernel test robot <lkp@intel.com>
+
+All errors (new ones prefixed by >>):
+
+>> drivers/ufs/core/ufs-mcq.c:275:4: error: call to undeclared function 'devm_iounmap'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+                           devm_iounmap(hba->dev, res->base);
+                           ^
+   1 error generated.
+
+
+vim +/devm_iounmap +275 drivers/ufs/core/ufs-mcq.c
+
+   265	
+   266	static void ufshcd_mcq_release_resource(struct ufs_hba *hba)
+   267	{
+   268		struct ufshcd_res_info_t *res;
+   269		int i;
+   270	
+   271		for (i = RES_MCQ; i < RES_MAX; i++) {
+   272			res = &hba->res[i];
+   273	
+   274			if(res->base) {
+ > 275				devm_iounmap(hba->dev, res->base);
+   276				res->base = NULL;
+   277			}
+   278	
+   279			if (res->is_alloc)
+   280				devm_kfree(hba->dev, res->resource);
+   281		}
+   282	}
+   283	
+
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
