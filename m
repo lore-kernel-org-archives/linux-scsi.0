@@ -2,160 +2,82 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FA78C43334
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jul 2022 13:43:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3E0BC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jul 2022 15:41:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234096AbiGTNn6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Jul 2022 09:43:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36124 "EHLO
+        id S241221AbiGTPlo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Jul 2022 11:41:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230479AbiGTNn5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jul 2022 09:43:57 -0400
-Received: from mail.cybernetics.com (mail.cybernetics.com [173.71.130.66])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA49451A33
-        for <linux-scsi@vger.kernel.org>; Wed, 20 Jul 2022 06:43:55 -0700 (PDT)
-X-ASG-Debug-ID: 1658324633-1cf43917f35c3120001-ziuLRu
-Received: from cybernetics.com ([10.10.4.126]) by mail.cybernetics.com with ESMTP id VbBkTeUMKfBYzqav; Wed, 20 Jul 2022 09:43:53 -0400 (EDT)
-X-Barracuda-Envelope-From: tonyb@cybernetics.com
-X-ASG-Whitelist: Client
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cybernetics.com; s=mail;
-        bh=6NsY7VgePf58oFXi6L1fdu0V8Z5DuTEGgxiOlpIvg0E=;
-        h=Content-Transfer-Encoding:Content-Type:Subject:From:Cc:To:Content-Language:
-        MIME-Version:Date:Message-ID; b=MjH/KOhDcXfG47BNdpLi7ogvJ+jy9teQ7K5cj5mMPglMA
-        AN9Ih38P/rIzRR6B95cxt037wi8aSqkDQzFCr5wKPEq0jo6+h07dyKGu2NF1eHEMX1CIqJfM95O68
-        vi1hNmRYq09pryVxmW2HdtLKuhDCkPJm43jXdocmrshZkYzcc=
-Received: from [10.157.2.224] (HELO [192.168.200.1])
-  by cybernetics.com (CommuniGate Pro SMTP 7.1.1)
-  with ESMTPS id 12092950; Wed, 20 Jul 2022 09:43:53 -0400
-Message-ID: <97dcf365-89ff-014d-a3e5-1404c6af511c@cybernetics.com>
-Date:   Wed, 20 Jul 2022 09:43:52 -0400
+        with ESMTP id S232804AbiGTPlm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jul 2022 11:41:42 -0400
+Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EEBFC22BD7;
+        Wed, 20 Jul 2022 08:41:41 -0700 (PDT)
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 34132412D2;
+        Wed, 20 Jul 2022 15:41:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        in-reply-to:content-transfer-encoding:content-disposition
+        :content-type:content-type:mime-version:references:message-id
+        :subject:subject:from:from:date:date:received:received:received
+        :received; s=mta-01; t=1658331699; x=1660146100; bh=BiGYJAeCpEGQ
+        em6DfQ73uEeCnzcf59XOM101tD6+ZC0=; b=l8yWjs2Yw6IK9hmOTT3aBz66aso7
+        XGGVXSVZMNubkjUgQgs6tWOoLDHRrvMjTh7e29NXxO5t0sXCkZfjK0xa3O63aO1D
+        W6M+3hmLmMJjfKJKSj0tip79xpyZvmCNG+tOZxfFzfNuW+rZVi1/eDWI2In/WaH2
+        VNyY1WSnHnmsRdY=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id Kvp7q4TTa0Zl; Wed, 20 Jul 2022 18:41:39 +0300 (MSK)
+Received: from T-EXCH-01.corp.yadro.com (t-exch-01.corp.yadro.com [172.17.10.101])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id C6508412CD;
+        Wed, 20 Jul 2022 18:41:35 +0300 (MSK)
+Received: from T-EXCH-09.corp.yadro.com (172.17.11.59) by
+ T-EXCH-01.corp.yadro.com (172.17.10.101) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
+ 15.1.669.32; Wed, 20 Jul 2022 18:41:12 +0300
+Received: from yadro.com (10.178.118.226) by T-EXCH-09.corp.yadro.com
+ (172.17.11.59) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1118.9; Wed, 20 Jul
+ 2022 18:41:11 +0300
+Date:   Wed, 20 Jul 2022 18:41:10 +0300
+From:   Konstantin Shelekhin <k.shelekhin@yadro.com>
+To:     Mike Christie <michael.christie@oracle.com>
+CC:     Thinh Nguyen <Thinh.Nguyen@synopsys.com>,
+        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <target-devel@vger.kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        John Youn <John.Youn@synopsys.com>, <linux-usb@vger.kernel.org>
+Subject: Re: [PATCH v2 2/4] target: Implement TMR_ABORT_TASK_SET
+Message-ID: <YtggwBMKgIJqN4mT@yadro.com>
+References: <cover.1658195608.git.Thinh.Nguyen@synopsys.com>
+ <7d31722a7e07bc24ea37b5841a17545003eeddb4.1658195608.git.Thinh.Nguyen@synopsys.com>
+ <74bf1df3-a466-9d78-1a25-7425c89b9fa3@oracle.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Content-Language: en-US
-To:     Quinn Tran <qutran@marvell.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org
-From:   Tony Battersby <tonyb@cybernetics.com>
-Subject: [PATCH] scsi: qla2xxx: Disable ATIO interrupt coalesce for quad port
- ISP27XX
-Content-Type: text/plain; charset=UTF-8
-X-ASG-Orig-Subj: [PATCH] scsi: qla2xxx: Disable ATIO interrupt coalesce for quad port
- ISP27XX
-Content-Transfer-Encoding: 7bit
-X-Barracuda-Connect: UNKNOWN[10.10.4.126]
-X-Barracuda-Start-Time: 1658324633
-X-Barracuda-URL: https://10.10.4.122:443/cgi-mod/mark.cgi
-X-Barracuda-BRTS-Status: 1
-X-Virus-Scanned: by bsmtpd at cybernetics.com
-X-Barracuda-Scan-Msg-Size: 5083
+Content-Type: text/plain; charset="utf-8"
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <74bf1df3-a466-9d78-1a25-7425c89b9fa3@oracle.com>
+X-Originating-IP: [10.178.118.226]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-09.corp.yadro.com (172.17.11.59)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This message was previously sent to scst-devel:
-https://sourceforge.net/p/scst/mailman/scst-devel/thread/d381eb86-d446-4f9e-03c3-aa93d93dd074%40cybernetics.com/#msg37682919
+On Tue, Jul 19, 2022 at 10:56:07AM -0500, Mike Christie wrote:
+> «Внимание! Данное письмо от внешнего адресата!»
+> 
+> On 7/18/22 9:07 PM, Thinh Nguyen wrote:
+> > Task ABORT TASK SET function is required by SCSI transport protocol
+> 
+> What OS is using this and how do they use it? For the latter, does the
+> OS try an abort for each cmd first, then try an abort task set if the
+> aborts fail (does fail mean get a response that indicates failure and
+> also does a timeout count)? Or does it start with the abort task set?
 
-I am using a quad-port 16 Gbps QLE2694L (ISP2071) with SCST 3.6 +
-qla2x00t-32gbit and kernel 5.15.  The following old commit that went
-into upstream kernel v4.16 is causing a problem for me:
-
-commit d2b292c3f6fdef5819a276acd64915bae6384a7f
-Author: Quinn Tran <quinn.tran@cavium.com>
-Date:   Thu Dec 28 12:33:17 2017 -0800
-
-    scsi: qla2xxx: Enable ATIO interrupt handshake for ISP27XX
-    
-    Enable ATIO Q interrupt handshake for ISP27XX. This patch
-    coalesce ATIO's interrupts for Quad port ISP27XX adapter.
-    Interrupt coalesce allows performance to scale for this
-    specific case.
-
-This commit was present in qla2xxx when qla2x00t-32gbit was first
-imported into SCST.
-
-With the "ATIO interrupt coalesce" enabled by the above patch, ATIO
-interrupts are handled by qla24xx_msix_default() rather than by
-qla83xx_msix_atio_q() for the ISP2071.  I guess this is supposed to
-generate fewer interrupts so that ATIO entries can be handled in larger
-batches.  But this causes a problem where sometimes
-qlt_24xx_process_atio_queue() returns while the hardware is still adding
-ATIO entries to the queue, but then the hardware doesn't generate
-another interrupt until a separate event sometimes minutes later.  This
-leaves incoming ATIO entries (i.e. incoming target-mode SCSI commands)
-ignored in the adapter's hardware queue for a long time until the host
-sends another command at a different time to generate an interrupt. 
-There does not seem to be any timeout function that generates an
-interrupt after a short period of inactivity to process the remainder of
-the ATIO queue, which is what would be necessary for interrupt coalesce
-to function properly.
-
-In my case I am using virtual tape drives, which generally process only
-one command at a time, so there will often never be a "next" command to
-generate an interrupt until the previous command completes.  If the
-previous command is stuck in the adapter's ATIO queue, then the host
-will timeout and abort the command, and the task management function to
-abort the command generates the interrupt that causes the command to
-finally be received by SCST, so the command appears to have been aborted
-immediately.  With disk drives the situation might be a bit different
-since a busy disk might get a steady stream of commands to generate
-additional interrupts to process the ATIO queue, but even that is not
-guaranteed, so there might still be problems.
-
-I tried to fix the problem by modifying qla24xx_msix_default() to call
-qlt_24xx_process_atio_queue() before wrt_reg_dword(&reg->hccr,
-HCCRX_CLR_RISC_INT) instead of after, but that didn't help.  The problem
-was solved by disabling the ATIO interrupt coalesce feature and
-re-enabling the dedicated ATIO MSI-X interrupt (qla83xx_msix_atio_q())
-for calling qlt_24xx_process_atio_queue().  Another workaround is to use
-ql2xenablemsix=0, but of course keeping MSI-X enabled is better.
-
-The patch below is against the upstream Linux kernel.  It can be applied
-to SCST with "patch -p4" from the qla2x00t-32gbit directory.
-
-If someone really wants to keep the interrupt coalesce feature, it could
-be turned into a module parameter instead.
-
-From e5888ce5dbffff2d38d9dafd4841d6d3bcda4365 Mon Sep 17 00:00:00 2001
-From: Tony Battersby <tonyb@cybernetics.com>
-Date: Thu, 7 Jul 2022 15:08:01 -0400
-Subject: [PATCH] scsi: qla2xxx: Disable ATIO interrupt coalesce for quad port ISP27XX
-
-This partially reverts commit d2b292c3f6fdef5819a276acd64915bae6384a7f.
-
-For some workloads where the host sends a batch of commands and then
-pauses, ATIO interrupt coalesce can cause some incoming ATIO entries to
-be ignored for extended periods of time, resulting in slow performance,
-timeouts, and aborted commands.  So disable interrupt coalesce and
-re-enable the dedicated ATIO MSI-X interrupt.
-
-Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
----
- drivers/scsi/qla2xxx/qla_target.c | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index cb97f625970d..80fd9980dfc9 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -6932,14 +6932,8 @@ qlt_24xx_config_rings(struct scsi_qla_host *vha)
- 
- 	if (ha->flags.msix_enabled) {
- 		if (IS_QLA83XX(ha) || IS_QLA27XX(ha) || IS_QLA28XX(ha)) {
--			if (IS_QLA2071(ha)) {
--				/* 4 ports Baker: Enable Interrupt Handshake */
--				icb->msix_atio = 0;
--				icb->firmware_options_2 |= cpu_to_le32(BIT_26);
--			} else {
--				icb->msix_atio = cpu_to_le16(msix->entry);
--				icb->firmware_options_2 &= cpu_to_le32(~BIT_26);
--			}
-+			icb->msix_atio = cpu_to_le16(msix->entry);
-+			icb->firmware_options_2 &= cpu_to_le32(~BIT_26);
- 			ql_dbg(ql_dbg_init, vha, 0xf072,
- 			    "Registering ICB vector 0x%x for atio que.\n",
- 			    msix->entry);
-
+AIX IIRC. However, this feature also requires valid bits in one of the
+VPD pages.
