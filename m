@@ -2,53 +2,54 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4B53CCA480
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jul 2022 07:27:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29A69CCA480
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jul 2022 07:47:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230331AbiGTH1G (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Jul 2022 03:27:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47144 "EHLO
+        id S240249AbiGTHrk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Jul 2022 03:47:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34542 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229689AbiGTH1E (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jul 2022 03:27:04 -0400
-Received: from mail-qt1-f172.google.com (mail-qt1-f172.google.com [209.85.160.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1ECB654CAF;
-        Wed, 20 Jul 2022 00:27:03 -0700 (PDT)
-Received: by mail-qt1-f172.google.com with SMTP id l14so10399658qtv.4;
-        Wed, 20 Jul 2022 00:27:03 -0700 (PDT)
+        with ESMTP id S240212AbiGTHrh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jul 2022 03:47:37 -0400
+Received: from mail-qk1-f177.google.com (mail-qk1-f177.google.com [209.85.222.177])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55DAE68DD0;
+        Wed, 20 Jul 2022 00:47:35 -0700 (PDT)
+Received: by mail-qk1-f177.google.com with SMTP id v28so11519693qkg.13;
+        Wed, 20 Jul 2022 00:47:35 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=7oI+lhuJP85REkq3gckr6T7bDGeRg2RVlq2lqlswzzQ=;
-        b=kQXXLOsaKNXZFfmy7xcuFPM5KSkszC95Of8jLNiKA8lXsL4rgE0YOUof4qQ4n8WK1y
-         zmDG5bDsXHh0ku0nzCGlob1AajewQ8oBoJ86nUqXovyEdKK9metiIKtc4Q+jEkhc0LIe
-         rnB4mSgEb8y2x8Z6oez3rwfVtLIJK+rXVqF+qykswRU6lkGwHPExq9Y9nyIieaqsV1mU
-         V+vKgUERt60naxE2FVi46dh2q63N3EYRF55rKYisKbN5NHCxaIpwrOjAnRnbbaD23TnL
-         /wbCg22+A6nh04ptxuMO9XgSBt6mnOmj2NMi8q9gTX45pHvjV8cVqBtZF3fDZ54lsFsx
-         VV3Q==
-X-Gm-Message-State: AJIora+9lG5PKXhy7xI+FMhuV/z5Hb5Xq4z/bYeH3QwuCsauQSdxZen0
-        E7Z/OsQbVIdJLhxryb7CnG/XEtBwnLookUIQ
-X-Google-Smtp-Source: AGRyM1tRnM9BpZ5Ts94F2ZcXcruBOA8u4drAZsQXPzI1oVNq9r6QRB/e38E686hcietH3QxZ7bgOZg==
-X-Received: by 2002:a05:622a:1210:b0:31e:e139:a6d4 with SMTP id y16-20020a05622a121000b0031ee139a6d4mr16422580qtx.160.1658302022166;
-        Wed, 20 Jul 2022 00:27:02 -0700 (PDT)
-Received: from mail-yw1-f172.google.com (mail-yw1-f172.google.com. [209.85.128.172])
-        by smtp.gmail.com with ESMTPSA id cm17-20020a05622a251100b00304f3e320f2sm12643188qtb.4.2022.07.20.00.27.00
+        bh=g6OFt7NDDXTwc0PWSj7z7x7MOLnXeXvAiNcc7ZqxbqU=;
+        b=cQReM7C+ScPTHHSF+yEmeMQ2CU1PZr4SrF8nr1TFSwjlUsCAaI5lmGAFHxGAPBrjEC
+         n3yNPVOkZ7kUYJPK54PnczYnxjgflgBbq452T4NxU2V1ovGehsaT0wb3pXsvpSAK7KeP
+         Flc3Aic1VNI/UY2IVWUb9ruuXQYQnjYsjJ1o3VH7CTGoAj7oBI2tQ8l0c+bGCEQxVKXs
+         7RroQIkKT7ZKCP3tfJuYfb/jHY50e/5tph8uVGx41RZr1WHNTyzMz5UGg3s9UBpVb59S
+         uFEteJdSYQsP82YNZd3KA09gNfIbFH4RbQyhOG8JbjjSZO80W7nkFgfYssw8s6irGKkE
+         uVfg==
+X-Gm-Message-State: AJIora/nzcM//Pn+5KtyNJTpzlZurCdD7anXt8nMVFABAYsoMkI6GtK6
+        HEMvJOeke3AzFXawCn6P3jGqE//nsMpUQsVb
+X-Google-Smtp-Source: AGRyM1vXPndfBHXf4z/PWgBIQNOrZDM/KFrNJlNkPcQSacUXKtkEaUUglsGGANnWOyIlGuzkAUDw7w==
+X-Received: by 2002:a37:ccb:0:b0:6b5:e1ad:75b9 with SMTP id 194-20020a370ccb000000b006b5e1ad75b9mr11321220qkm.601.1658303254259;
+        Wed, 20 Jul 2022 00:47:34 -0700 (PDT)
+Received: from mail-yw1-f169.google.com (mail-yw1-f169.google.com. [209.85.128.169])
+        by smtp.gmail.com with ESMTPSA id y13-20020a05620a25cd00b006af20edff0csm16590008qko.58.2022.07.20.00.47.33
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 20 Jul 2022 00:27:01 -0700 (PDT)
-Received: by mail-yw1-f172.google.com with SMTP id 00721157ae682-31bf3656517so164311147b3.12;
-        Wed, 20 Jul 2022 00:27:00 -0700 (PDT)
-X-Received: by 2002:a81:84c1:0:b0:31e:4e05:e4f4 with SMTP id
- u184-20020a8184c1000000b0031e4e05e4f4mr10579025ywf.384.1658302020370; Wed, 20
- Jul 2022 00:27:00 -0700 (PDT)
+        Wed, 20 Jul 2022 00:47:33 -0700 (PDT)
+Received: by mail-yw1-f169.google.com with SMTP id 00721157ae682-31c89653790so164715217b3.13;
+        Wed, 20 Jul 2022 00:47:33 -0700 (PDT)
+X-Received: by 2002:a0d:dd15:0:b0:31e:6ce3:e67f with SMTP id
+ g21-20020a0ddd15000000b0031e6ce3e67fmr1231174ywe.316.1658303252881; Wed, 20
+ Jul 2022 00:47:32 -0700 (PDT)
 MIME-Version: 1.0
 References: <20220630195703.10155-1-bvanassche@acm.org> <20220630195703.10155-3-bvanassche@acm.org>
- <alpine.DEB.2.22.394.2207191125130.1006766@ramsan.of.borg> <db19ed29-e7f9-e5b0-3a6c-f2812078a07d@acm.org>
-In-Reply-To: <db19ed29-e7f9-e5b0-3a6c-f2812078a07d@acm.org>
+ <alpine.DEB.2.22.394.2207191125130.1006766@ramsan.of.borg>
+ <db19ed29-e7f9-e5b0-3a6c-f2812078a07d@acm.org> <CAMuHMdVzsgSYtbJQnaigNax_JbxPsQfU+gHcteS-ojWbxUdMfw@mail.gmail.com>
+In-Reply-To: <CAMuHMdVzsgSYtbJQnaigNax_JbxPsQfU+gHcteS-ojWbxUdMfw@mail.gmail.com>
 From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Wed, 20 Jul 2022 09:26:49 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdVzsgSYtbJQnaigNax_JbxPsQfU+gHcteS-ojWbxUdMfw@mail.gmail.com>
-Message-ID: <CAMuHMdVzsgSYtbJQnaigNax_JbxPsQfU+gHcteS-ojWbxUdMfw@mail.gmail.com>
+Date:   Wed, 20 Jul 2022 09:47:21 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdWtxBj8ug7AHTqentF8UD4jpO2sgoWWcQCOvEKLJtdq8A@mail.gmail.com>
+Message-ID: <CAMuHMdWtxBj8ug7AHTqentF8UD4jpO2sgoWWcQCOvEKLJtdq8A@mail.gmail.com>
 Subject: Re: [PATCH v2 2/2] scsi: sd: Rework asynchronous resume support
 To:     Bart Van Assche <bvanassche@acm.org>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -64,34 +65,59 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hoi Bart,
-
-On Tue, Jul 19, 2022 at 8:14 PM Bart Van Assche <bvanassche@acm.org> wrote:
-> On 7/19/22 02:26, Geert Uytterhoeven wrote:
-> > Thanks for your patch, which is now commit 88f1669019bd62b3 ("scsi: sd:
-> > Rework asynchronous resume support") in scsi/for-next.
+On Wed, Jul 20, 2022 at 9:26 AM Geert Uytterhoeven <geert@linux-m68k.org> wrote:
+> On Tue, Jul 19, 2022 at 8:14 PM Bart Van Assche <bvanassche@acm.org> wrote:
+> > On 7/19/22 02:26, Geert Uytterhoeven wrote:
+> > > Thanks for your patch, which is now commit 88f1669019bd62b3 ("scsi: sd:
+> > > Rework asynchronous resume support") in scsi/for-next.
+> > >
+> > > On the Salvator-XS development board[1] with a SATA hard drive
+> > > connected, accessing the hard drive after resume from s2idle hangs.
+> > > I have bisected this to the aformentioned commit, and reverting this
+> > > commit fixes the issue.
+> > >
+> > > [1] arch/arm64/boot/dts/renesas/r8a77951-salvator-xs.dts
 > >
-> > On the Salvator-XS development board[1] with a SATA hard drive
-> > connected, accessing the hard drive after resume from s2idle hangs.
-> > I have bisected this to the aformentioned commit, and reverting this
-> > commit fixes the issue.
-> >
-> > [1] arch/arm64/boot/dts/renesas/r8a77951-salvator-xs.dts
+> > Thank you for having reported this. How about creating a bug report on
+> > https://bugzilla.kernel.org/ and attaching the kernel logs with and
 >
-> Thank you for having reported this. How about creating a bug report on
-> https://bugzilla.kernel.org/ and attaching the kernel logs with and
+> I never created a bug report on bko before...
+>
+> > without this patch? It's probably better to upload the kernel logs
+>
+> Unfortunately the logs do not indicate anything went wrong.
+> I.e. no difference before/after.
 
-I never created a bug report on bko before...
+With more debug options enabled, it prints:
 
-> without this patch? It's probably better to upload the kernel logs
+INFO: task kworker/0:7:283 blocked for more than 120 seconds.
+      Not tainted 5.19.0-rc7-salvator-x-00794-g6780eb02b605 #1287
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+task:kworker/0:7     state:D stack:    0 pid:  283 ppid:     2 flags:0x00000008
+Workqueue: events ata_scsi_dev_rescan
+Call trace:
+ __switch_to+0xbc/0x124
+ __schedule+0x540/0x71c
+ schedule+0x58/0xa0
+ io_schedule+0x18/0x34
+ blk_mq_get_tag+0x138/0x244
+ __blk_mq_alloc_requests+0x130/0x2f0
+ blk_mq_alloc_request+0x74/0xa8
+ scsi_alloc_request+0x10/0x30
+ __scsi_execute+0x5c/0x18c
+ scsi_vpd_inquiry+0x7c/0xdc
+ scsi_get_vpd_size+0x34/0xa8
+ scsi_get_vpd_buf+0x28/0xf4
+ scsi_attach_vpd+0x44/0x170
+ scsi_rescan_device+0x30/0x98
+ ata_scsi_dev_rescan+0xc8/0xfc
+ process_one_work+0x2e0/0x474
+ worker_thread+0x1cc/0x270
+ kthread+0xd8/0xe8
+ ret_from_fork+0x10/0x20
 
-Unfortunately the logs do not indicate anything went wrong.
-I.e. no difference before/after.
-
-> somewhere rather than to post these on the linux-scsi mailing list.
-
-Lore links are great for after-the-fact reporting.  If you follow
-the lore link in the buggy commit, you arrive in this thread ;-)
+This doesn't look like it's blocked in the R-Car SATA driver, but on
+some I/O scheduling event in the block core?
 
 Gr{oetje,eeting}s,
 
