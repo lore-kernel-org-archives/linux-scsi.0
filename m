@@ -2,49 +2,45 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7334C43334
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jul 2022 01:21:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE26BC43334
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jul 2022 01:21:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241687AbiGTBVm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Jul 2022 21:21:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57818 "EHLO
+        id S241566AbiGTBVq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Jul 2022 21:21:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46380 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241518AbiGTBVO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2022 21:21:14 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05C9A6EEA4;
-        Tue, 19 Jul 2022 18:16:10 -0700 (PDT)
+        with ESMTP id S241651AbiGTBVS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2022 21:21:18 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13DF26A9C0;
+        Tue, 19 Jul 2022 18:16:12 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 3F007B81DEB;
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 55DF36172D;
+        Wed, 20 Jul 2022 01:16:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DBB1DC385A2;
         Wed, 20 Jul 2022 01:16:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6A1C1C385A9;
-        Wed, 20 Jul 2022 01:16:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1658279767;
-        bh=sEl4qH64NgMI4EgpkCU53pw0i4nw6pt6UDHxRme/ow0=;
+        s=k20201202; t=1658279770;
+        bh=yFi+738m5tAoBxOaads/0rYD8jyFACjkx0yYi6lkbZw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Fo2HmYE8IzmHOtL5gzQIB36UuvCY4hn+cCti3/7TGYOL6bky4duRNf+AdRaU2Bac7
-         4MsMZUt5WmhE248jJ86OD7deS8y3tvhGzyWxxeyFu38D6HzkurDHymVE49dI/O9CxI
-         GvhPJzNUBt+TOL6Uxr7pGNsbWn1h/RkDUBbRTcw7P92U+AJCyTekShrwVBCp2P2yaS
-         jLt0M2pKvG+BMDm+5rqk1ZBdj6QZHrBm2fsNFLbUb/NYMSS6NP7Ev/Ix4aA7UOV35j
-         54d02T/8vID0UseZUvp+jVXPw5QDz3a+nK/NopERaNlxeLxyH/i56L+VxV7Y83V3uc
-         wb24vom1ZjcpA==
+        b=dATWGoNEFLqq8eaKWaQXVNHP1HnN+kCyqlGXQJ6uhV0blytoNvA2RjU3TbvYxsrig
+         sqx8apLR0yg3KINflfmSpX72kvP4P6qRsdRDi5c/qETuh677YmuXQ+ig1Rel4CdNVR
+         OQBj8n+agcQrybsQxNRPPjbmPcLN/EuB/BkRBJAr66Z3wfnsVblJmDCa8klJ0suPSK
+         rPD4AWN8wRi+v5ku9BKJoxfgTb4FJuQW7ZSoS8Bte/y4SRfgWH203se+4Xcht7kLZv
+         Z8Z0eLM2YUdtc0nV5pUGq2mBCg0Eu4vMNVdjDEgR1d9gZOdedj5WMVQS4XkHVaPCCx
+         79LDfPN1SMsgQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Po-Wen Kao <powen.kao@mediatek.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
+Cc:     Changyuan Lyu <changyuanl@google.com>,
+        Igor Pylypiv <ipylypiv@google.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
-        matthias.bgg@gmail.com, beanhuo@micron.com, avri.altman@wdc.com,
-        daejun7.park@samsung.com, adrian.hunter@intel.com,
-        linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.15 38/42] scsi: ufs: core: Fix missing clk change notification on host reset
-Date:   Tue, 19 Jul 2022 21:13:46 -0400
-Message-Id: <20220720011350.1024134-38-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, jinpu.wang@cloud.ionos.com,
+        jejb@linux.ibm.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.15 40/42] scsi: pm80xx: Set stopped phy's linkrate to Disabled
+Date:   Tue, 19 Jul 2022 21:13:48 -0400
+Message-Id: <20220720011350.1024134-40-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220720011350.1024134-1-sashal@kernel.org>
 References: <20220720011350.1024134-1-sashal@kernel.org>
@@ -56,39 +52,38 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Po-Wen Kao <powen.kao@mediatek.com>
+From: Changyuan Lyu <changyuanl@google.com>
 
-[ Upstream commit 52a518019ca187227b786f8b8ee20869a97f3af4 ]
+[ Upstream commit 355bf2e036c954317ddc4a9618b4f7e38ea5a970 ]
 
-In ufshcd_host_reset_and_restore(), ufshcd_set_clk_freq() is called to
-scale clock rate. However, this did not call vops->clk_scale_notify() to
-inform platform driver of clock change.
+Negotiated link rate needs to be updated to 'Disabled' when phy is stopped.
 
-Call ufshcd_scale_clks() instead so that clock change can be properly
-handled.
-
-Link: https://lore.kernel.org/r/20220711144224.17916-2-powen.kao@mediatek.com
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
-Signed-off-by: Po-Wen Kao <powen.kao@mediatek.com>
+Link: https://lore.kernel.org/r/20220708205026.969161-1-changyuanl@google.com
+Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
+Signed-off-by: Changyuan Lyu <changyuanl@google.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/pm8001/pm80xx_hwi.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 5c9a31f18b7f..a2eb54d51418 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -7060,7 +7060,7 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
- 	hba->silence_err_logs = false;
- 
- 	/* scale up clocks to max frequency before full reinitialization */
--	ufshcd_set_clk_freq(hba, true);
-+	ufshcd_scale_clks(hba, true);
- 
- 	err = ufshcd_hba_enable(hba);
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+index 04746df26c6c..146402037488 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -3776,8 +3776,12 @@ static int mpi_phy_stop_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 	pm8001_dbg(pm8001_ha, MSG, "phy:0x%x status:0x%x\n",
+ 		   phyid, status);
+ 	if (status == PHY_STOP_SUCCESS ||
+-		status == PHY_STOP_ERR_DEVICE_ATTACHED)
++		status == PHY_STOP_ERR_DEVICE_ATTACHED) {
+ 		phy->phy_state = PHY_LINK_DISABLE;
++		phy->sas_phy.phy->negotiated_linkrate = SAS_PHY_DISABLED;
++		phy->sas_phy.linkrate = SAS_PHY_DISABLED;
++	}
++
+ 	return 0;
+ }
  
 -- 
 2.35.1
