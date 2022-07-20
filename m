@@ -2,49 +2,45 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67DADCCA48F
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jul 2022 01:25:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9911CCA47F
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jul 2022 01:25:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240783AbiGTBZQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Jul 2022 21:25:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57570 "EHLO
+        id S240230AbiGTBZP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Jul 2022 21:25:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57980 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242102AbiGTBYj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2022 21:24:39 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F3BF73934;
-        Tue, 19 Jul 2022 18:17:30 -0700 (PDT)
+        with ESMTP id S241977AbiGTBYT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2022 21:24:19 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5A8A735BE;
+        Tue, 19 Jul 2022 18:17:21 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 3AB34B81DEA;
-        Wed, 20 Jul 2022 01:17:28 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6DFB5C341CA;
-        Wed, 20 Jul 2022 01:17:25 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7D55961831;
+        Wed, 20 Jul 2022 01:17:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A216C341D5;
+        Wed, 20 Jul 2022 01:17:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1658279847;
-        bh=hFKG1bbEtQeJKNkTd5Ayfh8yCS0l9VAbsfYnJ46IJkA=;
+        s=k20201202; t=1658279839;
+        bh=EJ42gwPelp1i8y77jY6L1SXXMBbPs+OVvTVdu5paoJ8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ogsVYQE1RZG2FiisSriCDkLId2EPII8skQSlBkL84WztApDcXwRmW3Z0vuMUZAKEj
-         Xfok36FIy0oXIwR/ElTZ9abi7RAoByapueNbPMnrTtbZK+AZdDX/148kErLLz/B86C
-         03o4viqohWgHAnH2xUoW15cS0Mwc0p7rhtiadnrsq/uqneFRv4A8p1z2NBWdV5xa2a
-         j/9h+ClgydNvyfkZxEnBBrE/7eF0H/5QnFZIMfOjWhJPn4UAQOiJDevV8JufYOPmY2
-         F00+3ZhrQC8pu9PiGPt2fmc4oJ0MeBZXsOuULqPmOPQZl42ieDd8XMcxZnaTPWLN4H
-         vITdgx6LL511A==
+        b=DhPBu9bHHV+zUHLShgv3u9txjD2fwtmiS7sq1BEoPnMSu3FJFzBClFpxTwfj4BV9I
+         oVJoyvd6wHW1tHyDQc3VMuGEJXZG804m8TldLvbhS3VadgEMNJIRBGaB+/DwG177dM
+         YUFhEKunS41QjqGzRE/8LuN2SmhmoFaGsLYR3khc2bLnLRoHQX7NB2zn1xHiYGF8e7
+         YZwnoFQEDIHBmHfKWLVr4znwm5NRbiR5I1T8EEb9GL+/fdKa/OKuTmaEnRMmaSp658
+         HgcbQEvwmLEW9Q8bSrbNMZ8SFROlc8fRYGpVFvavXyLMH30RSwud6F4qvFj9SsTX95
+         W7oawZX2pYx3g==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Po-Wen Kao <powen.kao@mediatek.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
+Cc:     Mike Christie <michael.christie@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
-        matthias.bgg@gmail.com, beanhuo@micron.com, avri.altman@wdc.com,
-        adrian.hunter@intel.com, daejun7.park@samsung.com,
-        linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.10 23/25] scsi: ufs: core: Fix missing clk change notification on host reset
-Date:   Tue, 19 Jul 2022 21:16:14 -0400
-Message-Id: <20220720011616.1024753-23-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.10 20/25] scsi: target: Fix WRITE_SAME No Data Buffer crash
+Date:   Tue, 19 Jul 2022 21:16:11 -0400
+Message-Id: <20220720011616.1024753-20-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220720011616.1024753-1-sashal@kernel.org>
 References: <20220720011616.1024753-1-sashal@kernel.org>
@@ -56,40 +52,78 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Po-Wen Kao <powen.kao@mediatek.com>
+From: Mike Christie <michael.christie@oracle.com>
 
-[ Upstream commit 52a518019ca187227b786f8b8ee20869a97f3af4 ]
+[ Upstream commit ccd3f449052449a917a3e577d8ba0368f43b8f29 ]
 
-In ufshcd_host_reset_and_restore(), ufshcd_set_clk_freq() is called to
-scale clock rate. However, this did not call vops->clk_scale_notify() to
-inform platform driver of clock change.
+In newer version of the SBC specs, we have a NDOB bit that indicates there
+is no data buffer that gets written out. If this bit is set using commands
+like "sg_write_same --ndob" we will crash in target_core_iblock/file's
+execute_write_same handlers when we go to access the se_cmd->t_data_sg
+because its NULL.
 
-Call ufshcd_scale_clks() instead so that clock change can be properly
-handled.
+This patch adds a check for the NDOB bit in the common WRITE SAME code
+because we don't support it. And, it adds a check for zero SG elements in
+each handler in case the initiator tries to send a normal WRITE SAME with
+no data buffer.
 
-Link: https://lore.kernel.org/r/20220711144224.17916-2-powen.kao@mediatek.com
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
-Signed-off-by: Po-Wen Kao <powen.kao@mediatek.com>
+Link: https://lore.kernel.org/r/20220628022325.14627-2-michael.christie@oracle.com
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Mike Christie <michael.christie@oracle.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/target/target_core_file.c   | 3 +++
+ drivers/target/target_core_iblock.c | 4 ++++
+ drivers/target/target_core_sbc.c    | 6 ++++++
+ 3 files changed, 13 insertions(+)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index ea6ceab1a1b2..ba14ac9b3914 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -6824,7 +6824,7 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
+index 7143d03f0e02..b20f842bcfbc 100644
+--- a/drivers/target/target_core_file.c
++++ b/drivers/target/target_core_file.c
+@@ -455,6 +455,9 @@ fd_execute_write_same(struct se_cmd *cmd)
+ 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+ 	}
  
- 	/* scale up clocks to max frequency before full reinitialization */
--	ufshcd_set_clk_freq(hba, true);
-+	ufshcd_scale_clks(hba, true);
++	if (!cmd->t_data_nents)
++		return TCM_INVALID_CDB_FIELD;
++
+ 	if (cmd->t_data_nents > 1 ||
+ 	    cmd->t_data_sg[0].length != cmd->se_dev->dev_attrib.block_size) {
+ 		pr_err("WRITE_SAME: Illegal SGL t_data_nents: %u length: %u"
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index f2bd2e207e0b..db4f1ae3d6fc 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -458,6 +458,10 @@ iblock_execute_write_same(struct se_cmd *cmd)
+ 		       " backends not supported\n");
+ 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+ 	}
++
++	if (!cmd->t_data_nents)
++		return TCM_INVALID_CDB_FIELD;
++
+ 	sg = &cmd->t_data_sg[0];
  
- 	err = ufshcd_hba_enable(hba);
- 	if (err)
+ 	if (cmd->t_data_nents > 1 ||
+diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+index eaf8551ebc61..c001f14645a4 100644
+--- a/drivers/target/target_core_sbc.c
++++ b/drivers/target/target_core_sbc.c
+@@ -312,6 +312,12 @@ sbc_setup_write_same(struct se_cmd *cmd, unsigned char flags, struct sbc_ops *op
+ 		pr_warn("WRITE SAME with ANCHOR not supported\n");
+ 		return TCM_INVALID_CDB_FIELD;
+ 	}
++
++	if (flags & 0x01) {
++		pr_warn("WRITE SAME with NDOB not supported\n");
++		return TCM_INVALID_CDB_FIELD;
++	}
++
+ 	/*
+ 	 * Special case for WRITE_SAME w/ UNMAP=1 that ends up getting
+ 	 * translated into block discard requests within backend code.
 -- 
 2.35.1
 
