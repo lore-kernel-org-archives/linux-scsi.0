@@ -2,130 +2,150 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29A69CCA480
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jul 2022 07:47:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE378C43334
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jul 2022 07:57:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240249AbiGTHrk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Jul 2022 03:47:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34542 "EHLO
+        id S229581AbiGTH5Y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Jul 2022 03:57:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41650 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240212AbiGTHrh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jul 2022 03:47:37 -0400
-Received: from mail-qk1-f177.google.com (mail-qk1-f177.google.com [209.85.222.177])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55DAE68DD0;
-        Wed, 20 Jul 2022 00:47:35 -0700 (PDT)
-Received: by mail-qk1-f177.google.com with SMTP id v28so11519693qkg.13;
-        Wed, 20 Jul 2022 00:47:35 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=g6OFt7NDDXTwc0PWSj7z7x7MOLnXeXvAiNcc7ZqxbqU=;
-        b=cQReM7C+ScPTHHSF+yEmeMQ2CU1PZr4SrF8nr1TFSwjlUsCAaI5lmGAFHxGAPBrjEC
-         n3yNPVOkZ7kUYJPK54PnczYnxjgflgBbq452T4NxU2V1ovGehsaT0wb3pXsvpSAK7KeP
-         Flc3Aic1VNI/UY2IVWUb9ruuXQYQnjYsjJ1o3VH7CTGoAj7oBI2tQ8l0c+bGCEQxVKXs
-         7RroQIkKT7ZKCP3tfJuYfb/jHY50e/5tph8uVGx41RZr1WHNTyzMz5UGg3s9UBpVb59S
-         uFEteJdSYQsP82YNZd3KA09gNfIbFH4RbQyhOG8JbjjSZO80W7nkFgfYssw8s6irGKkE
-         uVfg==
-X-Gm-Message-State: AJIora/nzcM//Pn+5KtyNJTpzlZurCdD7anXt8nMVFABAYsoMkI6GtK6
-        HEMvJOeke3AzFXawCn6P3jGqE//nsMpUQsVb
-X-Google-Smtp-Source: AGRyM1vXPndfBHXf4z/PWgBIQNOrZDM/KFrNJlNkPcQSacUXKtkEaUUglsGGANnWOyIlGuzkAUDw7w==
-X-Received: by 2002:a37:ccb:0:b0:6b5:e1ad:75b9 with SMTP id 194-20020a370ccb000000b006b5e1ad75b9mr11321220qkm.601.1658303254259;
-        Wed, 20 Jul 2022 00:47:34 -0700 (PDT)
-Received: from mail-yw1-f169.google.com (mail-yw1-f169.google.com. [209.85.128.169])
-        by smtp.gmail.com with ESMTPSA id y13-20020a05620a25cd00b006af20edff0csm16590008qko.58.2022.07.20.00.47.33
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 20 Jul 2022 00:47:33 -0700 (PDT)
-Received: by mail-yw1-f169.google.com with SMTP id 00721157ae682-31c89653790so164715217b3.13;
-        Wed, 20 Jul 2022 00:47:33 -0700 (PDT)
-X-Received: by 2002:a0d:dd15:0:b0:31e:6ce3:e67f with SMTP id
- g21-20020a0ddd15000000b0031e6ce3e67fmr1231174ywe.316.1658303252881; Wed, 20
- Jul 2022 00:47:32 -0700 (PDT)
+        with ESMTP id S229453AbiGTH5X (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jul 2022 03:57:23 -0400
+Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97C8C61105;
+        Wed, 20 Jul 2022 00:57:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1658303842; x=1689839842;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=qIthjsEZ85d8ocjhmCfrhK7Xx0+PQIkRHO1HHgSI8pw=;
+  b=WaXSBcCibLYAOl146qbK87YJWk17yhmmeCPIEiVVUK5li6fihxWxapBU
+   p1E8GspitZN67eG/AunFpcEMH4LMHC4zN9u2mfTLqi7x8zAndI/2zJhYS
+   Fifxm0HSj07sBxJ6fxyKWoRlcWWvs8+8psDeyuD/EtTbbbP+ALBqLp4V9
+   0fBR6wCiK0ZMgH99R971Opd6mJFEeZmT//zlXnoiTAyW+q0/phgEN/7Q4
+   JSNLAhGJqUZDZuTlyzcboEWuv7CbzDPrpP2c/T51TkVcf1cPMosO8o6c9
+   SkKnFJgB5DeMJlb+y/TCk/Xm5y4CjBUYl/RawEuR/BMynvgq1QrK5YAka
+   g==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10413"; a="266484824"
+X-IronPort-AV: E=Sophos;i="5.92,286,1650956400"; 
+   d="scan'208";a="266484824"
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jul 2022 00:57:22 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.92,286,1650956400"; 
+   d="scan'208";a="597981890"
+Received: from lkp-server01.sh.intel.com (HELO 7dfbdc7c7900) ([10.239.97.150])
+  by orsmga002.jf.intel.com with ESMTP; 20 Jul 2022 00:57:17 -0700
+Received: from kbuild by 7dfbdc7c7900 with local (Exim 4.95)
+        (envelope-from <lkp@intel.com>)
+        id 1oE4a5-0000F5-1P;
+        Wed, 20 Jul 2022 07:57:17 +0000
+Date:   Wed, 20 Jul 2022 15:57:05 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Can Guo <quic_cang@quicinc.com>, bvanassche@acm.org,
+        stanley.chu@mediatek.com, adrian.hunter@intel.com,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, beanhuo@micron.com,
+        quic_asutoshd@quicinc.com, quic_nguyenb@quicinc.com,
+        quic_ziqichen@quicinc.com, linux-scsi@vger.kernel.org,
+        kernel-team@android.com
+Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        Jinyoung Choi <j-young.choi@samsung.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] scsi: ufs: Add Multi-Circular Queue support
+Message-ID: <202207201538.0hGdcttT-lkp@intel.com>
+References: <1658214120-22772-2-git-send-email-quic_cang@quicinc.com>
 MIME-Version: 1.0
-References: <20220630195703.10155-1-bvanassche@acm.org> <20220630195703.10155-3-bvanassche@acm.org>
- <alpine.DEB.2.22.394.2207191125130.1006766@ramsan.of.borg>
- <db19ed29-e7f9-e5b0-3a6c-f2812078a07d@acm.org> <CAMuHMdVzsgSYtbJQnaigNax_JbxPsQfU+gHcteS-ojWbxUdMfw@mail.gmail.com>
-In-Reply-To: <CAMuHMdVzsgSYtbJQnaigNax_JbxPsQfU+gHcteS-ojWbxUdMfw@mail.gmail.com>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Wed, 20 Jul 2022 09:47:21 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdWtxBj8ug7AHTqentF8UD4jpO2sgoWWcQCOvEKLJtdq8A@mail.gmail.com>
-Message-ID: <CAMuHMdWtxBj8ug7AHTqentF8UD4jpO2sgoWWcQCOvEKLJtdq8A@mail.gmail.com>
-Subject: Re: [PATCH v2 2/2] scsi: sd: Rework asynchronous resume support
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        scsi <linux-scsi@vger.kernel.org>,
-        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
-        John Garry <john.garry@huawei.com>, ericspero@icloud.com,
-        jason600.groome@gmail.com,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1658214120-22772-2-git-send-email-quic_cang@quicinc.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jul 20, 2022 at 9:26 AM Geert Uytterhoeven <geert@linux-m68k.org> wrote:
-> On Tue, Jul 19, 2022 at 8:14 PM Bart Van Assche <bvanassche@acm.org> wrote:
-> > On 7/19/22 02:26, Geert Uytterhoeven wrote:
-> > > Thanks for your patch, which is now commit 88f1669019bd62b3 ("scsi: sd:
-> > > Rework asynchronous resume support") in scsi/for-next.
-> > >
-> > > On the Salvator-XS development board[1] with a SATA hard drive
-> > > connected, accessing the hard drive after resume from s2idle hangs.
-> > > I have bisected this to the aformentioned commit, and reverting this
-> > > commit fixes the issue.
-> > >
-> > > [1] arch/arm64/boot/dts/renesas/r8a77951-salvator-xs.dts
-> >
-> > Thank you for having reported this. How about creating a bug report on
-> > https://bugzilla.kernel.org/ and attaching the kernel logs with and
->
-> I never created a bug report on bko before...
->
-> > without this patch? It's probably better to upload the kernel logs
->
-> Unfortunately the logs do not indicate anything went wrong.
-> I.e. no difference before/after.
+Hi Can,
 
-With more debug options enabled, it prints:
+I love your patch! Perhaps something to improve:
 
-INFO: task kworker/0:7:283 blocked for more than 120 seconds.
-      Not tainted 5.19.0-rc7-salvator-x-00794-g6780eb02b605 #1287
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-task:kworker/0:7     state:D stack:    0 pid:  283 ppid:     2 flags:0x00000008
-Workqueue: events ata_scsi_dev_rescan
-Call trace:
- __switch_to+0xbc/0x124
- __schedule+0x540/0x71c
- schedule+0x58/0xa0
- io_schedule+0x18/0x34
- blk_mq_get_tag+0x138/0x244
- __blk_mq_alloc_requests+0x130/0x2f0
- blk_mq_alloc_request+0x74/0xa8
- scsi_alloc_request+0x10/0x30
- __scsi_execute+0x5c/0x18c
- scsi_vpd_inquiry+0x7c/0xdc
- scsi_get_vpd_size+0x34/0xa8
- scsi_get_vpd_buf+0x28/0xf4
- scsi_attach_vpd+0x44/0x170
- scsi_rescan_device+0x30/0x98
- ata_scsi_dev_rescan+0xc8/0xfc
- process_one_work+0x2e0/0x474
- worker_thread+0x1cc/0x270
- kthread+0xd8/0xe8
- ret_from_fork+0x10/0x20
+[auto build test WARNING on jejb-scsi/for-next]
+[also build test WARNING on mkp-scsi/for-next next-20220719]
+[cannot apply to linus/master v5.19-rc7]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-This doesn't look like it's blocked in the R-Car SATA driver, but on
-some I/O scheduling event in the block core?
+url:    https://github.com/intel-lab-lkp/linux/commits/Can-Guo/UFS-Multi-Circular-Queue-MCQ/20220719-150436
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+config: x86_64-randconfig-r036-20220718 (https://download.01.org/0day-ci/archive/20220720/202207201538.0hGdcttT-lkp@intel.com/config)
+compiler: clang version 15.0.0 (https://github.com/llvm/llvm-project dd5635541cd7bbd62cd59b6694dfb759b6e9a0d8)
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/2b7356bcd24efd2d6b69f04dd9fd010c4256cc7e
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Can-Guo/UFS-Multi-Circular-Queue-MCQ/20220719-150436
+        git checkout 2b7356bcd24efd2d6b69f04dd9fd010c4256cc7e
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=x86_64 SHELL=/bin/bash drivers/ufs/core/
 
-Gr{oetje,eeting}s,
+If you fix the issue, kindly add following tag where applicable
+Reported-by: kernel test robot <lkp@intel.com>
 
-                        Geert
+All warnings (new ones prefixed by >>):
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+>> drivers/ufs/core/ufshcd.c:5465:13: warning: no previous prototype for function 'ufshcd_transfer_req_compl' [-Wmissing-prototypes]
+   irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
+               ^
+   drivers/ufs/core/ufshcd.c:5465:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+   irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
+   ^
+   static 
+   1 warning generated.
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+
+vim +/ufshcd_transfer_req_compl +5465 drivers/ufs/core/ufshcd.c
+
+  5456	
+  5457	/**
+  5458	 * ufshcd_transfer_req_compl - handle SCSI and query command completion
+  5459	 * @hba: per adapter instance
+  5460	 *
+  5461	 * Returns
+  5462	 *  IRQ_HANDLED - If interrupt is valid
+  5463	 *  IRQ_NONE    - If invalid interrupt
+  5464	 */
+> 5465	irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
+  5466	{
+  5467		/* Resetting interrupt aggregation counters first and reading the
+  5468		 * DOOR_BELL afterward allows us to handle all the completed requests.
+  5469		 * In order to prevent other interrupts starvation the DB is read once
+  5470		 * after reset. The down side of this solution is the possibility of
+  5471		 * false interrupt if device completes another request after resetting
+  5472		 * aggregation and before reading the DB.
+  5473		 */
+  5474		if (ufshcd_is_intr_aggr_allowed(hba) &&
+  5475		    !(hba->quirks & UFSHCI_QUIRK_SKIP_RESET_INTR_AGGR))
+  5476			ufshcd_reset_intr_aggr(hba);
+  5477	
+  5478		if (ufs_fail_completion())
+  5479			return IRQ_HANDLED;
+  5480	
+  5481		/*
+  5482		 * Ignore the ufshcd_poll() return value and return IRQ_HANDLED since we
+  5483		 * do not want polling to trigger spurious interrupt complaints.
+  5484		 */
+  5485		ufshcd_poll(hba->host, 0);
+  5486	
+  5487		return IRQ_HANDLED;
+  5488	}
+  5489	EXPORT_SYMBOL_GPL(ufshcd_transfer_req_compl);
+  5490	
+
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
