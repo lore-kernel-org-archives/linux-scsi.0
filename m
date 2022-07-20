@@ -2,45 +2,46 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50DA1C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jul 2022 01:27:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC5EDCCA47F
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jul 2022 01:27:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241486AbiGTB1N (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Jul 2022 21:27:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42128 "EHLO
+        id S241453AbiGTB13 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Jul 2022 21:27:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60430 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239785AbiGTB0c (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2022 21:26:32 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A0726B764;
-        Tue, 19 Jul 2022 18:18:06 -0700 (PDT)
+        with ESMTP id S241969AbiGTB1C (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2022 21:27:02 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BDBF274DFE;
+        Tue, 19 Jul 2022 18:18:11 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2A7D36176F;
-        Wed, 20 Jul 2022 01:18:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6431C36AE2;
-        Wed, 20 Jul 2022 01:18:04 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 1B23ACE1E85;
+        Wed, 20 Jul 2022 01:18:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7AC07C36AE7;
+        Wed, 20 Jul 2022 01:18:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1658279885;
-        bh=544yBDK2FundSfShdnZ3FCs8blak+9EF5IwyHv5mmi4=;
+        s=k20201202; t=1658279888;
+        bh=4rHJvhO6IulS4WVPm3E1drzznrtHZQn+K6t/T+xVjZ4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=oFvjZhU8nHT7OrXCwajmp79GhuW99JceedFU6rzNOAiTTL+t2vOP8DYWnl9o+c/3f
-         YMxjI/hZmMMHYY/9DOUP78LT1GjSTqJpIpitojKaSbdnL1VWbmaZUTWN1uGdD9MDQW
-         vtv2CrHNwH2Gda/Lw2mV5AC8pz4kDTXuevMdVCUTd/NPQeDb6/ESKKODbXKP8VYAf3
-         hGYS174PoZvwIG+jEGyMTHt7ws1ztmofrj3jCuqxGCaA6MDderfuYjNwLU+84YEwov
-         bNAPNZ3/phZlKhkgBBIkhKML3nFdjnyoJp0LaEQDC0xiJvsNIEvuUiHKg4d0FPCuqE
-         oTn6QBKFfTO2Q==
+        b=jK2bbxRWQujVNmtcUB37r8LAm8c9DVTMRap4Hfr3AEgEcGAcs9aLdTyE7KtrgpKek
+         cWjsT08GPAW2q2aF7gaJKpX4B9pmbgIeq+ENpE5BXpf6wWQO4YcQ7LM479eP8Z8lII
+         iUWc6MSg3SqzMMi5FQOjf8zPaLbFFo/5A44fsBZxk3Zbjytt2MccjNeWRBpnc4hGFZ
+         BhsGlCYbCDbwrtisXPg5a2laWBIhp/yZYKdTlJTILweEw9OPqw1WksJjfWvtKXR0oM
+         e3l/nSdTdIv4BWuwaVrLG77bE+1id5ikXaRV1Q/9Jot+jr4wihIxYfJYgHTlzrTg4O
+         X3rIXNeWbaGSg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Mike Christie <michael.christie@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
+Cc:     Changyuan Lyu <changyuanl@google.com>,
+        Igor Pylypiv <ipylypiv@google.com>,
+        Jack Wang <jinpu.wang@ionos.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 13/16] scsi: target: Fix WRITE_SAME No Data Buffer crash
-Date:   Tue, 19 Jul 2022 21:17:27 -0400
-Message-Id: <20220720011730.1025099-13-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, jinpu.wang@cloud.ionos.com,
+        jejb@linux.ibm.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 15/16] scsi: pm80xx: Fix 'Unknown' max/min linkrate
+Date:   Tue, 19 Jul 2022 21:17:29 -0400
+Message-Id: <20220720011730.1025099-15-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220720011730.1025099-1-sashal@kernel.org>
 References: <20220720011730.1025099-1-sashal@kernel.org>
@@ -52,78 +53,121 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Mike Christie <michael.christie@oracle.com>
+From: Changyuan Lyu <changyuanl@google.com>
 
-[ Upstream commit ccd3f449052449a917a3e577d8ba0368f43b8f29 ]
+[ Upstream commit e78276cadb669d3e55cffe66bd166ff3c8572e38 ]
 
-In newer version of the SBC specs, we have a NDOB bit that indicates there
-is no data buffer that gets written out. If this bit is set using commands
-like "sg_write_same --ndob" we will crash in target_core_iblock/file's
-execute_write_same handlers when we go to access the se_cmd->t_data_sg
-because its NULL.
+Currently, the data flow of the max/min linkrate in the driver is
 
-This patch adds a check for the NDOB bit in the common WRITE SAME code
-because we don't support it. And, it adds a check for zero SG elements in
-each handler in case the initiator tries to send a normal WRITE SAME with
-no data buffer.
+ * in pm8001_get_lrate_mode():
+   hardcoded value ==> struct sas_phy
 
-Link: https://lore.kernel.org/r/20220628022325.14627-2-michael.christie@oracle.com
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Mike Christie <michael.christie@oracle.com>
+ * in pm8001_bytes_dmaed():
+   struct pm8001_phy ==> struct sas_phy
+
+ * in pm8001_phy_control():
+   libsas data ==> struct pm8001_phy
+
+Since pm8001_bytes_dmaed() follows pm8001_get_lrate_mode(), and the fields
+in struct pm8001_phy are not initialized, sysfs
+`/sys/class/sas_phy/phy-*/maximum_linkrate` always shows `Unknown`.
+
+To fix the issue, change the dataflow to the following:
+
+ * in pm8001_phy_init():
+   initial value ==> struct pm8001_phy
+
+ * in pm8001_get_lrate_mode():
+   struct pm8001_phy ==> struct sas_phy
+
+ * in pm8001_phy_control():
+   libsas data ==> struct pm8001_phy
+
+For negotiated linkrate, the current dataflow is:
+
+ * in pm8001_get_lrate_mode():
+   iomb data ==> struct asd_sas_phy ==> struct sas_phy
+
+ * in pm8001_bytes_dmaed():
+   struct asd_sas_phy ==> struct sas_phy
+
+Since pm8001_bytes_dmaed() follows pm8001_get_lrate_mode(), the assignment
+statements in pm8001_bytes_dmaed() are unnecessary and cleaned up.
+
+Link: https://lore.kernel.org/r/20220707175210.528858-1-changyuanl@google.com
+Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
+Acked-by: Jack Wang <jinpu.wang@ionos.com>
+Signed-off-by: Changyuan Lyu <changyuanl@google.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/target_core_file.c   | 3 +++
- drivers/target/target_core_iblock.c | 4 ++++
- drivers/target/target_core_sbc.c    | 6 ++++++
- 3 files changed, 13 insertions(+)
+ drivers/scsi/pm8001/pm8001_hwi.c  | 19 +++----------------
+ drivers/scsi/pm8001/pm8001_init.c |  2 ++
+ 2 files changed, 5 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
-index 7143d03f0e02..b20f842bcfbc 100644
---- a/drivers/target/target_core_file.c
-+++ b/drivers/target/target_core_file.c
-@@ -455,6 +455,9 @@ fd_execute_write_same(struct se_cmd *cmd)
- 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
- 	}
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+index fec653b54307..b2523fc03caf 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.c
++++ b/drivers/scsi/pm8001/pm8001_hwi.c
+@@ -3249,15 +3249,6 @@ void pm8001_bytes_dmaed(struct pm8001_hba_info *pm8001_ha, int i)
+ 	if (!phy->phy_attached)
+ 		return;
  
-+	if (!cmd->t_data_nents)
-+		return TCM_INVALID_CDB_FIELD;
-+
- 	if (cmd->t_data_nents > 1 ||
- 	    cmd->t_data_sg[0].length != cmd->se_dev->dev_attrib.block_size) {
- 		pr_err("WRITE_SAME: Illegal SGL t_data_nents: %u length: %u"
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index 1c181d31f4c8..19cf5bdbb03d 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -458,6 +458,10 @@ iblock_execute_write_same(struct se_cmd *cmd)
- 		       " backends not supported\n");
- 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+-	if (sas_phy->phy) {
+-		struct sas_phy *sphy = sas_phy->phy;
+-		sphy->negotiated_linkrate = sas_phy->linkrate;
+-		sphy->minimum_linkrate = phy->minimum_linkrate;
+-		sphy->minimum_linkrate_hw = SAS_LINK_RATE_1_5_GBPS;
+-		sphy->maximum_linkrate = phy->maximum_linkrate;
+-		sphy->maximum_linkrate_hw = phy->maximum_linkrate;
+-	}
+-
+ 	if (phy->phy_type & PORT_TYPE_SAS) {
+ 		struct sas_identify_frame *id;
+ 		id = (struct sas_identify_frame *)phy->frame_rcvd;
+@@ -3281,26 +3272,22 @@ void pm8001_get_lrate_mode(struct pm8001_phy *phy, u8 link_rate)
+ 	switch (link_rate) {
+ 	case PHY_SPEED_120:
+ 		phy->sas_phy.linkrate = SAS_LINK_RATE_12_0_GBPS;
+-		phy->sas_phy.phy->negotiated_linkrate = SAS_LINK_RATE_12_0_GBPS;
+ 		break;
+ 	case PHY_SPEED_60:
+ 		phy->sas_phy.linkrate = SAS_LINK_RATE_6_0_GBPS;
+-		phy->sas_phy.phy->negotiated_linkrate = SAS_LINK_RATE_6_0_GBPS;
+ 		break;
+ 	case PHY_SPEED_30:
+ 		phy->sas_phy.linkrate = SAS_LINK_RATE_3_0_GBPS;
+-		phy->sas_phy.phy->negotiated_linkrate = SAS_LINK_RATE_3_0_GBPS;
+ 		break;
+ 	case PHY_SPEED_15:
+ 		phy->sas_phy.linkrate = SAS_LINK_RATE_1_5_GBPS;
+-		phy->sas_phy.phy->negotiated_linkrate = SAS_LINK_RATE_1_5_GBPS;
+ 		break;
  	}
-+
-+	if (!cmd->t_data_nents)
-+		return TCM_INVALID_CDB_FIELD;
-+
- 	sg = &cmd->t_data_sg[0];
+ 	sas_phy->negotiated_linkrate = phy->sas_phy.linkrate;
+-	sas_phy->maximum_linkrate_hw = SAS_LINK_RATE_6_0_GBPS;
++	sas_phy->maximum_linkrate_hw = phy->maximum_linkrate;
+ 	sas_phy->minimum_linkrate_hw = SAS_LINK_RATE_1_5_GBPS;
+-	sas_phy->maximum_linkrate = SAS_LINK_RATE_6_0_GBPS;
+-	sas_phy->minimum_linkrate = SAS_LINK_RATE_1_5_GBPS;
++	sas_phy->maximum_linkrate = phy->maximum_linkrate;
++	sas_phy->minimum_linkrate = phy->minimum_linkrate;
+ }
  
- 	if (cmd->t_data_nents > 1 ||
-diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index e63c163dba78..6f6db650e938 100644
---- a/drivers/target/target_core_sbc.c
-+++ b/drivers/target/target_core_sbc.c
-@@ -312,6 +312,12 @@ sbc_setup_write_same(struct se_cmd *cmd, unsigned char flags, struct sbc_ops *op
- 		pr_warn("WRITE SAME with ANCHOR not supported\n");
- 		return TCM_INVALID_CDB_FIELD;
- 	}
-+
-+	if (flags & 0x01) {
-+		pr_warn("WRITE SAME with NDOB not supported\n");
-+		return TCM_INVALID_CDB_FIELD;
-+	}
-+
- 	/*
- 	 * Special case for WRITE_SAME w/ UNMAP=1 that ends up getting
- 	 * translated into block discard requests within backend code.
+ /**
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+index 1f41537d52a5..fc379f80d7c5 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -123,6 +123,8 @@ static void pm8001_phy_init(struct pm8001_hba_info *pm8001_ha, int phy_id)
+ 	struct asd_sas_phy *sas_phy = &phy->sas_phy;
+ 	phy->phy_state = PHY_LINK_DISABLE;
+ 	phy->pm8001_ha = pm8001_ha;
++	phy->minimum_linkrate = SAS_LINK_RATE_1_5_GBPS;
++	phy->maximum_linkrate = SAS_LINK_RATE_6_0_GBPS;
+ 	sas_phy->enabled = (phy_id < pm8001_ha->chip->n_phy) ? 1 : 0;
+ 	sas_phy->class = SAS;
+ 	sas_phy->iproto = SAS_PROTOCOL_ALL;
 -- 
 2.35.1
 
