@@ -2,45 +2,45 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9911CCA47F
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jul 2022 01:25:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B3CECCA485
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jul 2022 01:25:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240230AbiGTBZP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Jul 2022 21:25:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57980 "EHLO
+        id S241364AbiGTBZR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Jul 2022 21:25:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58014 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241977AbiGTBYT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2022 21:24:19 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5A8A735BE;
-        Tue, 19 Jul 2022 18:17:21 -0700 (PDT)
+        with ESMTP id S242145AbiGTBYm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2022 21:24:42 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B60FA4A81D;
+        Tue, 19 Jul 2022 18:17:32 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7D55961831;
-        Wed, 20 Jul 2022 01:17:20 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A216C341D5;
-        Wed, 20 Jul 2022 01:17:18 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 2FE8FB81DD5;
+        Wed, 20 Jul 2022 01:17:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03365C341CA;
+        Wed, 20 Jul 2022 01:17:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1658279839;
-        bh=EJ42gwPelp1i8y77jY6L1SXXMBbPs+OVvTVdu5paoJ8=;
+        s=k20201202; t=1658279849;
+        bh=2JMI4+jiFEGbj/Vv46g4htDma9uuS4k32ctd2LwYaF4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=DhPBu9bHHV+zUHLShgv3u9txjD2fwtmiS7sq1BEoPnMSu3FJFzBClFpxTwfj4BV9I
-         oVJoyvd6wHW1tHyDQc3VMuGEJXZG804m8TldLvbhS3VadgEMNJIRBGaB+/DwG177dM
-         YUFhEKunS41QjqGzRE/8LuN2SmhmoFaGsLYR3khc2bLnLRoHQX7NB2zn1xHiYGF8e7
-         YZwnoFQEDIHBmHfKWLVr4znwm5NRbiR5I1T8EEb9GL+/fdKa/OKuTmaEnRMmaSp658
-         HgcbQEvwmLEW9Q8bSrbNMZ8SFROlc8fRYGpVFvavXyLMH30RSwud6F4qvFj9SsTX95
-         W7oawZX2pYx3g==
+        b=QCpSLkWVJEJESl6yY6n8e/Ct55Y9hqGsYUm94z/xuKNkbWqSlr2z+lJs8cTiqF+b9
+         /Ix4mrDiraDSL8/KP1eGJSm6pvEPyBV41peJS5DdBFQl+QUuOutJzyhGnzzF8e7a6A
+         oKag/ZxIM5W0G43jgIgnnjHk280j+i69YXoqN+Hw2UYteahX9W9esSwrWPaEwFSnrh
+         qnVwE5/jW+HfpFj7woxse3ogXc2HKDDklvy3Y9iNxO6LeJlRNjk6Jm3zfx+uRQ4nC0
+         w9grxcvAejEKfjTc609GBZHDjUT1Z0OZjDdBiapt9zYi5qS65/x0qTlRFFcgqrEF3X
+         v/m95Khlws78Q==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Mike Christie <michael.christie@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
+Cc:     Changyuan Lyu <changyuanl@google.com>,
+        Igor Pylypiv <ipylypiv@google.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 20/25] scsi: target: Fix WRITE_SAME No Data Buffer crash
-Date:   Tue, 19 Jul 2022 21:16:11 -0400
-Message-Id: <20220720011616.1024753-20-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, jinpu.wang@cloud.ionos.com,
+        jejb@linux.ibm.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.10 25/25] scsi: pm80xx: Set stopped phy's linkrate to Disabled
+Date:   Tue, 19 Jul 2022 21:16:16 -0400
+Message-Id: <20220720011616.1024753-25-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220720011616.1024753-1-sashal@kernel.org>
 References: <20220720011616.1024753-1-sashal@kernel.org>
@@ -52,78 +52,39 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Mike Christie <michael.christie@oracle.com>
+From: Changyuan Lyu <changyuanl@google.com>
 
-[ Upstream commit ccd3f449052449a917a3e577d8ba0368f43b8f29 ]
+[ Upstream commit 355bf2e036c954317ddc4a9618b4f7e38ea5a970 ]
 
-In newer version of the SBC specs, we have a NDOB bit that indicates there
-is no data buffer that gets written out. If this bit is set using commands
-like "sg_write_same --ndob" we will crash in target_core_iblock/file's
-execute_write_same handlers when we go to access the se_cmd->t_data_sg
-because its NULL.
+Negotiated link rate needs to be updated to 'Disabled' when phy is stopped.
 
-This patch adds a check for the NDOB bit in the common WRITE SAME code
-because we don't support it. And, it adds a check for zero SG elements in
-each handler in case the initiator tries to send a normal WRITE SAME with
-no data buffer.
-
-Link: https://lore.kernel.org/r/20220628022325.14627-2-michael.christie@oracle.com
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Mike Christie <michael.christie@oracle.com>
+Link: https://lore.kernel.org/r/20220708205026.969161-1-changyuanl@google.com
+Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
+Signed-off-by: Changyuan Lyu <changyuanl@google.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/target_core_file.c   | 3 +++
- drivers/target/target_core_iblock.c | 4 ++++
- drivers/target/target_core_sbc.c    | 6 ++++++
- 3 files changed, 13 insertions(+)
+ drivers/scsi/pm8001/pm80xx_hwi.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
-index 7143d03f0e02..b20f842bcfbc 100644
---- a/drivers/target/target_core_file.c
-+++ b/drivers/target/target_core_file.c
-@@ -455,6 +455,9 @@ fd_execute_write_same(struct se_cmd *cmd)
- 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
- 	}
- 
-+	if (!cmd->t_data_nents)
-+		return TCM_INVALID_CDB_FIELD;
-+
- 	if (cmd->t_data_nents > 1 ||
- 	    cmd->t_data_sg[0].length != cmd->se_dev->dev_attrib.block_size) {
- 		pr_err("WRITE_SAME: Illegal SGL t_data_nents: %u length: %u"
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index f2bd2e207e0b..db4f1ae3d6fc 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -458,6 +458,10 @@ iblock_execute_write_same(struct se_cmd *cmd)
- 		       " backends not supported\n");
- 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
- 	}
-+
-+	if (!cmd->t_data_nents)
-+		return TCM_INVALID_CDB_FIELD;
-+
- 	sg = &cmd->t_data_sg[0];
- 
- 	if (cmd->t_data_nents > 1 ||
-diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index eaf8551ebc61..c001f14645a4 100644
---- a/drivers/target/target_core_sbc.c
-+++ b/drivers/target/target_core_sbc.c
-@@ -312,6 +312,12 @@ sbc_setup_write_same(struct se_cmd *cmd, unsigned char flags, struct sbc_ops *op
- 		pr_warn("WRITE SAME with ANCHOR not supported\n");
- 		return TCM_INVALID_CDB_FIELD;
- 	}
-+
-+	if (flags & 0x01) {
-+		pr_warn("WRITE SAME with NDOB not supported\n");
-+		return TCM_INVALID_CDB_FIELD;
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+index 0305c8999ba5..16519daf67cb 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -3705,8 +3705,12 @@ static int mpi_phy_stop_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 	pm8001_dbg(pm8001_ha, MSG, "phy:0x%x status:0x%x\n",
+ 		   phyid, status);
+ 	if (status == PHY_STOP_SUCCESS ||
+-		status == PHY_STOP_ERR_DEVICE_ATTACHED)
++		status == PHY_STOP_ERR_DEVICE_ATTACHED) {
+ 		phy->phy_state = PHY_LINK_DISABLE;
++		phy->sas_phy.phy->negotiated_linkrate = SAS_PHY_DISABLED;
++		phy->sas_phy.linkrate = SAS_PHY_DISABLED;
 +	}
 +
- 	/*
- 	 * Special case for WRITE_SAME w/ UNMAP=1 that ends up getting
- 	 * translated into block discard requests within backend code.
+ 	return 0;
+ }
+ 
 -- 
 2.35.1
 
