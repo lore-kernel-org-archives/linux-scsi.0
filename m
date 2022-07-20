@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3C4CCCA486
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jul 2022 01:21:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 961EBCCA487
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Jul 2022 01:25:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241151AbiGTBVo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Jul 2022 21:21:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58050 "EHLO
+        id S238704AbiGTBZN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Jul 2022 21:25:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59832 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241436AbiGTBVT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2022 21:21:19 -0400
+        with ESMTP id S242070AbiGTBYh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2022 21:24:37 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D22F6EEB4;
-        Tue, 19 Jul 2022 18:16:12 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E30C73926;
+        Tue, 19 Jul 2022 18:17:30 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id A736CB81DE6;
-        Wed, 20 Jul 2022 01:16:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 654AFC341C6;
-        Wed, 20 Jul 2022 01:16:08 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id BB365B81DD6;
+        Wed, 20 Jul 2022 01:17:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D183C341CE;
+        Wed, 20 Jul 2022 01:17:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1658279769;
-        bh=e4LToHQ54CsRTzlI1yh/v1017o6sWaSGkAOjVFoN+YQ=;
+        s=k20201202; t=1658279848;
+        bh=i3loZA7TO1d65ReVoryig1SMg9VY/k9kQOK6NEh639Q=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=iW6PXzp7FF5eKGam2kH8n1Wbb0Un8vQQZuyXTH8E9oM3VGKrv1QbUSrZ11eJHpXek
-         5CK144kTXpP/fLvkaDQgnWUH8XfdTa8ajJUTccXnGeO+7alX4Lhr4czMzGaq/DtD86
-         sKZDvR8n2gXLTDLhS3X87ykwdGmnUQ3Ouppgr+bibNag4d3Z+0PucVtGsZbgv4axu1
-         z/Sfi1/65yIHjYOJ/vCid63IF3W+7GLA36iBG5ZTTBX6kDqHv4Iy4w+/GHCZ9ROrFo
-         wHYCD4eOo28sdzswSjM4QS2VHfBquNFM6vaALwX2bJLvQexQHHArSx0kZAy4gmoJHs
-         8W3Po4NXNL6Sg==
+        b=neKmR9CiW5XbxTTC27hCIbDk2tKwZzY+AevBOR9H4TyCffU7Nve0RmyY+ia+tyxYm
+         iH55vF7VeLW3bmew15hWtFbxRr/DVfF/PHr9+/Y82Or3/ss2lrxatcBQrTNfgs89bX
+         v7Am4RjZRcNH7oJAJEmM3BDSG94QICwjHHS07of2MM4dkuTDicSlV/CXuxY0a+0AbO
+         QcCLeLuXHdRQRk2U2FiyuXe7AFnu1XICe5vgiJoSGeR/WmtUIj10cZB95h4urqf1Yl
+         59hJzYSSgl5akHNV3bj4nvnWokb1JKo6vW4ndMENeo6RIJcgOihQkc+NEP2cy50mk6
+         j5+jys4ciRxzA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Changyuan Lyu <changyuanl@google.com>,
@@ -39,12 +39,12 @@ Cc:     Changyuan Lyu <changyuanl@google.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, jinpu.wang@cloud.ionos.com,
         jejb@linux.ibm.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 39/42] scsi: pm80xx: Fix 'Unknown' max/min linkrate
-Date:   Tue, 19 Jul 2022 21:13:47 -0400
-Message-Id: <20220720011350.1024134-39-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 24/25] scsi: pm80xx: Fix 'Unknown' max/min linkrate
+Date:   Tue, 19 Jul 2022 21:16:15 -0400
+Message-Id: <20220720011616.1024753-24-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220720011350.1024134-1-sashal@kernel.org>
-References: <20220720011350.1024134-1-sashal@kernel.org>
+In-Reply-To: <20220720011616.1024753-1-sashal@kernel.org>
+References: <20220720011616.1024753-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -106,10 +106,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  2 files changed, 5 insertions(+), 16 deletions(-)
 
 diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index 32fc450bf84b..031a50329182 100644
+index da9fbe62a34d..816d853604e8 100644
 --- a/drivers/scsi/pm8001/pm8001_hwi.c
 +++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -3210,15 +3210,6 @@ void pm8001_bytes_dmaed(struct pm8001_hba_info *pm8001_ha, int i)
+@@ -3166,15 +3166,6 @@ void pm8001_bytes_dmaed(struct pm8001_hba_info *pm8001_ha, int i)
  	if (!phy->phy_attached)
  		return;
  
@@ -125,7 +125,7 @@ index 32fc450bf84b..031a50329182 100644
  	if (phy->phy_type & PORT_TYPE_SAS) {
  		struct sas_identify_frame *id;
  		id = (struct sas_identify_frame *)phy->frame_rcvd;
-@@ -3242,26 +3233,22 @@ void pm8001_get_lrate_mode(struct pm8001_phy *phy, u8 link_rate)
+@@ -3198,26 +3189,22 @@ void pm8001_get_lrate_mode(struct pm8001_phy *phy, u8 link_rate)
  	switch (link_rate) {
  	case PHY_SPEED_120:
  		phy->sas_phy.linkrate = SAS_LINK_RATE_12_0_GBPS;
@@ -156,7 +156,7 @@ index 32fc450bf84b..031a50329182 100644
  
  /**
 diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index a25a34535b7a..89f6084c87ee 100644
+index 01eb2ade2070..81b4c97af853 100644
 --- a/drivers/scsi/pm8001/pm8001_init.c
 +++ b/drivers/scsi/pm8001/pm8001_init.c
 @@ -141,6 +141,8 @@ static void pm8001_phy_init(struct pm8001_hba_info *pm8001_ha, int phy_id)
