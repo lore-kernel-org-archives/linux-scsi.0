@@ -2,225 +2,208 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36F1FC43334
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Jul 2022 09:49:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EAA7C43334
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Jul 2022 10:47:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231447AbiGUJtn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Jul 2022 05:49:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48474 "EHLO
+        id S232571AbiGUKrs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Jul 2022 06:47:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47110 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230228AbiGUJtm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jul 2022 05:49:42 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 032D3814B3
-        for <linux-scsi@vger.kernel.org>; Thu, 21 Jul 2022 02:49:41 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 8C6C320F24;
-        Thu, 21 Jul 2022 09:49:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1658396980; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=wPGmeowVrwgtZ5gfH0w3pZ0LaCgFEEEdoO7EyUaLrA8=;
-        b=QaYwZjkFrPOBkSZ64XB9MawGbgETCdYbE8bmjinIFg5unSCcUyOtrPdnFEbcVrW0br9P3m
-        py+Qe+VFsIzXFHIG35bZeKNIBawm3dXNm5JUgcLSBd34fhAA+v0joMsQHUm1wY0j4FwQwJ
-        rIH2eAqjG4LbiCSBK8WDdHSOdI4Z+oE=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1658396980;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=wPGmeowVrwgtZ5gfH0w3pZ0LaCgFEEEdoO7EyUaLrA8=;
-        b=jh/tVQBRDITQKXb2YIiC4vu/gpD90gmDbSNWVLiJFJ42cJ5DZ1oH2zKhe1A6AAVrAL/QZ+
-        +36X/w7pC4Vg4BCw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 7CB5F13A1B;
-        Thu, 21 Jul 2022 09:49:40 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id hRhnHjQh2WJsQAAAMHmgww
-        (envelope-from <dwagner@suse.de>); Thu, 21 Jul 2022 09:49:40 +0000
-Date:   Thu, 21 Jul 2022 11:49:39 +0200
-From:   Daniel Wagner <dwagner@suse.de>
-To:     linux-scsi@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        "Dwip N. Banerjee" <dnbanerg@us.ibm.com>
-Subject: Re: [PATCH] lpfc: Decouple port_template and vport_template
-Message-ID: <20220721094939.jhsf2636536ao4yc@carbon>
-References: <20220705094203.50154-1-dwagner@suse.de>
+        with ESMTP id S232470AbiGUKrr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jul 2022 06:47:47 -0400
+Received: from m12-15.163.com (m12-15.163.com [220.181.12.15])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id CA51682FA0;
+        Thu, 21 Jul 2022 03:47:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=0NkQR
+        Pn4zjs0M2E/oW9nF063Q8F7n3ehRlORKVixzZM=; b=l6wo2/ZGEyIwW5qNoYb6U
+        zjCe6EeblRDQ+bjKkJ7SgN/kJI14c5Chmp9p92xb8kLWupocPuEi/EZZQph/8CZw
+        5H2Nbzs+idqFK9jIc8dw6TDcH2T2b/8Z9WQuItFGxtK/u4v/ghzxY1VuJFeaSBBr
+        Af2ymNLqcp2a2tbZdDWPMs=
+Received: from localhost.localdomain (unknown [223.104.68.234])
+        by smtp11 (Coremail) with SMTP id D8CowACXv1vhKtliX0TCAA--.225S2;
+        Thu, 21 Jul 2022 18:31:02 +0800 (CST)
+From:   Slark Xiao <slark_xiao@163.com>
+To:     james.smart@broadcom.com, dick.kennedy@broadcom.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Slark Xiao <slark_xiao@163.com>
+Subject: [PATCH] scsi: lpfc: Fix typo 'the the' in comment
+Date:   Thu, 21 Jul 2022 18:30:56 +0800
+Message-Id: <20220721103056.53143-1-slark_xiao@163.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220705094203.50154-1-dwagner@suse.de>
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: D8CowACXv1vhKtliX0TCAA--.225S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxKryUur47JryDCF1rurW3Wrg_yoW3Gry7pF
+        WxGa4UCr1DKF1xtr17Ar4UZFnIyw4rWr9FkanFy345uFyFk3yxtFyrtFWrJr98JF10ywnF
+        yrnF934DW3WUXFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pRTGQhUUUUU=
+X-Originating-IP: [223.104.68.234]
+X-CM-SenderInfo: xvod2y5b0lt0i6rwjhhfrp/1tbivwZFZFWB0jBpdQAAsy
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Jul 05, 2022 at 11:42:03AM +0200, Daniel Wagner wrote:
-> From: "Dwip N. Banerjee" <dnbanerg@us.ibm.com>
-> 
-> The problem here is that the lpfc_hba structure has been freed but the
-> Scsi_Host's hostt pointer is still pointing to the (v) port template
-> area inside the freed hba structure - through which the module is
-> accessed.
-> 
-> Basically we need to ensure that the access to the module structure
-> (via the host template or otherwise) stays valid even after the HBA
-> structure is freed (or delay that free).
-> 
-> Signed-off-by: Dwip N. Banerjee <dnbanerg@us.ibm.com>
-> Signed-off-by: Daniel Wagner <dwagner@suse.de>
-> ---
-> Hi,
-> 
-> This patch is in our downstream kernels for a while. I've forward
-> ported so we also fix the upstream driver for everyone.
-> 
-> @Dwip, I took the liberty to add your SoB, hope this is okay.
-> 
-> Daniel
+Replace 'the the' with 'the' some places in the comment.
+Update 'the the' to 'then the' in 1 place.
 
-ping
+Signed-off-by: Slark Xiao <slark_xiao@163.com>
+---
+ drivers/scsi/lpfc/lpfc_attr.c    | 10 +++++-----
+ drivers/scsi/lpfc/lpfc_els.c     |  2 +-
+ drivers/scsi/lpfc/lpfc_hbadisc.c |  2 +-
+ drivers/scsi/lpfc/lpfc_init.c    |  4 ++--
+ drivers/scsi/lpfc/lpfc_mbox.c    |  4 ++--
+ drivers/scsi/lpfc/lpfc_nvmet.c   |  2 +-
+ drivers/scsi/lpfc/lpfc_sli.c     |  2 +-
+ 7 files changed, 13 insertions(+), 13 deletions(-)
 
-> 
->  drivers/scsi/lpfc/lpfc.h      |  5 -----
->  drivers/scsi/lpfc/lpfc_crtn.h |  1 +
->  drivers/scsi/lpfc/lpfc_init.c | 22 +++++++---------------
->  drivers/scsi/lpfc/lpfc_scsi.c | 28 ++++++++++++++++++++++++++++
->  4 files changed, 36 insertions(+), 20 deletions(-)
-> 
-> diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-> index da9070cdad91..4c72e639fdaf 100644
-> --- a/drivers/scsi/lpfc/lpfc.h
-> +++ b/drivers/scsi/lpfc/lpfc.h
-> @@ -1616,11 +1616,6 @@ struct lpfc_hba {
->  #define LPFC_POLL_SLOWPATH	1	/* called from slowpath */
->  
->  	char os_host_name[MAXHOSTNAMELEN];
-> -
-> -	/* SCSI host template information - for physical port */
-> -	struct scsi_host_template port_template;
-> -	/* SCSI host template information - for all vports */
-> -	struct scsi_host_template vport_template;
->  	atomic_t dbg_log_idx;
->  	atomic_t dbg_log_cnt;
->  	atomic_t dbg_log_dmping;
-> diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
-> index b1be0dd0337a..4331b85c2e79 100644
-> --- a/drivers/scsi/lpfc/lpfc_crtn.h
-> +++ b/drivers/scsi/lpfc/lpfc_crtn.h
-> @@ -456,6 +456,7 @@ extern const struct attribute_group *lpfc_hba_groups[];
->  extern const struct attribute_group *lpfc_vport_groups[];
->  extern struct scsi_host_template lpfc_template;
->  extern struct scsi_host_template lpfc_template_nvme;
-> +extern struct scsi_host_template lpfc_vport_template;
->  extern struct fc_function_template lpfc_transport_functions;
->  extern struct fc_function_template lpfc_vport_transport_functions;
->  
-> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-> index 93b94c64518d..4d1e813a94db 100644
-> --- a/drivers/scsi/lpfc/lpfc_init.c
-> +++ b/drivers/scsi/lpfc/lpfc_init.c
-> @@ -4686,7 +4686,7 @@ lpfc_create_port(struct lpfc_hba *phba, int instance, struct device *dev)
->  {
->  	struct lpfc_vport *vport;
->  	struct Scsi_Host  *shost = NULL;
-> -	struct scsi_host_template *template;
-> +	struct scsi_host_template *template, *vport_template;
->  	int error = 0;
->  	int i;
->  	uint64_t wwn;
-> @@ -4718,42 +4718,34 @@ lpfc_create_port(struct lpfc_hba *phba, int instance, struct device *dev)
->  
->  	/* Seed template for SCSI host registration */
->  	if (dev == &phba->pcidev->dev) {
-> -		template = &phba->port_template;
-> -
->  		if (phba->cfg_enable_fc4_type & LPFC_ENABLE_FCP) {
->  			/* Seed physical port template */
-> -			memcpy(template, &lpfc_template, sizeof(*template));
-> +			template = &lpfc_template;
->  
->  			if (use_no_reset_hba)
->  				/* template is for a no reset SCSI Host */
->  				template->eh_host_reset_handler = NULL;
->  
->  			/* Template for all vports this physical port creates */
-> -			memcpy(&phba->vport_template, &lpfc_template,
-> -			       sizeof(*template));
-> -			phba->vport_template.shost_groups = lpfc_vport_groups;
-> -			phba->vport_template.eh_bus_reset_handler = NULL;
-> -			phba->vport_template.eh_host_reset_handler = NULL;
-> -			phba->vport_template.vendor_id = 0;
-> +			vport_template = &lpfc_vport_template;
->  
->  			/* Initialize the host templates with updated value */
->  			if (phba->sli_rev == LPFC_SLI_REV4) {
->  				template->sg_tablesize = phba->cfg_scsi_seg_cnt;
-> -				phba->vport_template.sg_tablesize =
-> +				vport_template->sg_tablesize =
->  					phba->cfg_scsi_seg_cnt;
->  			} else {
->  				template->sg_tablesize = phba->cfg_sg_seg_cnt;
-> -				phba->vport_template.sg_tablesize =
-> +				vport_template->sg_tablesize =
->  					phba->cfg_sg_seg_cnt;
->  			}
->  
->  		} else {
->  			/* NVMET is for physical port only */
-> -			memcpy(template, &lpfc_template_nvme,
-> -			       sizeof(*template));
-> +			template = &lpfc_template_nvme;
->  		}
->  	} else {
-> -		template = &phba->vport_template;
-> +		template = &lpfc_vport_template;
->  	}
->  
->  	shost = scsi_host_alloc(template, sizeof(struct lpfc_vport));
-> diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-> index d43968203248..5b6368428cb8 100644
-> --- a/drivers/scsi/lpfc/lpfc_scsi.c
-> +++ b/drivers/scsi/lpfc/lpfc_scsi.c
-> @@ -6848,3 +6848,31 @@ struct scsi_host_template lpfc_template = {
->  	.change_queue_depth	= scsi_change_queue_depth,
->  	.track_queue_depth	= 1,
->  };
-> +
-> +/* Template for all vports this physical port creates */
-> +struct scsi_host_template lpfc_vport_template = {
-> +	.module			= THIS_MODULE,
-> +	.name			= LPFC_DRIVER_NAME,
-> +	.proc_name		= LPFC_DRIVER_NAME,
-> +	.info			= lpfc_info,
-> +	.queuecommand		= lpfc_queuecommand,
-> +	.eh_timed_out		= fc_eh_timed_out,
-> +	.eh_should_retry_cmd    = fc_eh_should_retry_cmd,
-> +	.eh_abort_handler	= lpfc_abort_handler,
-> +	.eh_device_reset_handler = lpfc_device_reset_handler,
-> +	.eh_target_reset_handler = lpfc_target_reset_handler,
-> +	.eh_bus_reset_handler	= NULL,
-> +	.eh_host_reset_handler  = NULL,
-> +	.slave_alloc		= lpfc_slave_alloc,
-> +	.slave_configure	= lpfc_slave_configure,
-> +	.slave_destroy		= lpfc_slave_destroy,
-> +	.scan_finished		= lpfc_scan_finished,
-> +	.this_id		= -1,
-> +	.sg_tablesize		= LPFC_DEFAULT_SG_SEG_CNT,
-> +	.cmd_per_lun		= LPFC_CMD_PER_LUN,
-> +	.shost_groups		= lpfc_vport_groups,
-> +	.max_sectors		= 0xFFFFFFFF,
-> +	.vendor_id		= 0,
-> +	.change_queue_depth	= scsi_change_queue_depth,
-> +	.track_queue_depth	= 1,
-> +};
-> -- 
-> 2.29.2
-> 
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index 09cf2cd0ae60..2d92bb725225 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -2438,7 +2438,7 @@ lpfc_sriov_hw_max_virtfn_show(struct device *dev,
+ 
+ /**
+  * lpfc_enable_bbcr_set: Sets an attribute value.
+- * @phba: pointer the the adapter structure.
++ * @phba: pointer the adapter structure.
+  * @val: integer attribute value.
+  *
+  * Description:
+@@ -2529,7 +2529,7 @@ lpfc_##attr##_show(struct device *dev, struct device_attribute *attr, \
+  * takes a default argument, a minimum and maximum argument.
+  *
+  * lpfc_##attr##_init: Initializes an attribute.
+- * @phba: pointer the the adapter structure.
++ * @phba: pointer the adapter structure.
+  * @val: integer attribute value.
+  *
+  * Validates the min and max values then sets the adapter config field
+@@ -2562,7 +2562,7 @@ lpfc_##attr##_init(struct lpfc_hba *phba, uint val) \
+  * into a function with the name lpfc_hba_queue_depth_set
+  *
+  * lpfc_##attr##_set: Sets an attribute value.
+- * @phba: pointer the the adapter structure.
++ * @phba: pointer the adapter structure.
+  * @val: integer attribute value.
+  *
+  * Description:
+@@ -2691,7 +2691,7 @@ lpfc_##attr##_show(struct device *dev, struct device_attribute *attr, \
+  * lpfc_##attr##_init: validates the min and max values then sets the
+  * adapter config field accordingly, or uses the default if out of range
+  * and prints an error message.
+- * @phba: pointer the the adapter structure.
++ * @phba: pointer the adapter structure.
+  * @val: integer attribute value.
+  *
+  * Returns:
+@@ -2723,7 +2723,7 @@ lpfc_##attr##_init(struct lpfc_vport *vport, uint val) \
+  * lpfc_##attr##_set: validates the min and max values then sets the
+  * adapter config field if in the valid range. prints error message
+  * and does not set the parameter if invalid.
+- * @phba: pointer the the adapter structure.
++ * @phba: pointer the adapter structure.
+  * @val:	integer attribute value.
+  *
+  * Returns:
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 9e69de9eb992..32aeac0416f1 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -8654,7 +8654,7 @@ lpfc_els_rcv_rtv(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
+  * @rrq: Pointer to the rrq struct.
+  *
+  * Build a ELS RRQ command and send it to the target. If the issue_iocb is
+- * Successful the the completion handler will clear the RRQ.
++ * successful then the completion handler will clear the RRQ.
+  *
+  * Return codes
+  *   0 - Successfully sent rrq els iocb.
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index 2645def612e6..70bd3704f131 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -2452,7 +2452,7 @@ static void lpfc_sli4_fcf_pri_list_del(struct lpfc_hba *phba,
+  * @phba: pointer to lpfc hba data structure.
+  * @fcf_index: the index of the fcf record to update
+  * This routine acquires the hbalock and then set the LPFC_FCF_FLOGI_FAILED
+- * flag so the the round robin slection for the particular priority level
++ * flag so the round robin slection for the particular priority level
+  * will try a different fcf record that does not have this bit set.
+  * If the fcf record is re-read for any reason this flag is cleared brfore
+  * adding it to the priority list.
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 4a0eadd1c22c..2705c69ecd53 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -5497,7 +5497,7 @@ lpfc_sli4_async_link_evt(struct lpfc_hba *phba,
+ 	bf_set(lpfc_mbx_read_top_link_spd, la,
+ 	       (bf_get(lpfc_acqe_link_speed, acqe_link)));
+ 
+-	/* Fake the the following irrelvant fields */
++	/* Fake the following irrelvant fields */
+ 	bf_set(lpfc_mbx_read_top_topology, la, LPFC_TOPOLOGY_PT_PT);
+ 	bf_set(lpfc_mbx_read_top_alpa_granted, la, 0);
+ 	bf_set(lpfc_mbx_read_top_il, la, 0);
+@@ -12492,7 +12492,7 @@ lpfc_cpu_affinity_check(struct lpfc_hba *phba, int vectors)
+ 			/* Mark CPU as IRQ not assigned by the kernel */
+ 			cpup->flag |= LPFC_CPU_MAP_UNASSIGN;
+ 
+-			/* If so, find a new_cpup thats on the the SAME
++			/* If so, find a new_cpup thats on the SAME
+ 			 * phys_id as cpup. start_cpu will start where we
+ 			 * left off so all unassigned entries don't get assgined
+ 			 * the IRQ of the first entry.
+diff --git a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
+index 9858b1743769..cebb3d7598e5 100644
+--- a/drivers/scsi/lpfc/lpfc_mbox.c
++++ b/drivers/scsi/lpfc/lpfc_mbox.c
+@@ -2509,7 +2509,7 @@ lpfc_sli4_dump_page_a0(struct lpfc_hba *phba, struct lpfcMboxq *mbox)
+  * information via a READ_FCF mailbox command. This mailbox command also is used
+  * to indicate where received unsolicited frames from this FCF will be sent. By
+  * default this routine will set up the FCF to forward all unsolicited frames
+- * the the RQ ID passed in the @phba. This can be overridden by the caller for
++ * the RQ ID passed in the @phba. This can be overridden by the caller for
+  * more complicated setups.
+  **/
+ void
+@@ -2577,7 +2577,7 @@ lpfc_reg_fcfi(struct lpfc_hba *phba, struct lpfcMboxq *mbox)
+  * information via a READ_FCF mailbox command. This mailbox command also is used
+  * to indicate where received unsolicited frames from this FCF will be sent. By
+  * default this routine will set up the FCF to forward all unsolicited frames
+- * the the RQ ID passed in the @phba. This can be overridden by the caller for
++ * the RQ ID passed in the @phba. This can be overridden by the caller for
+  * more complicated setups.
+  **/
+ void
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+index f7cfac0da9b6..7517dd55fe91 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -1469,7 +1469,7 @@ lpfc_nvmet_cleanup_io_context(struct lpfc_hba *phba)
+ 	if (!infop)
+ 		return;
+ 
+-	/* Cycle the the entire CPU context list for every MRQ */
++	/* Cycle the entire CPU context list for every MRQ */
+ 	for (i = 0; i < phba->cfg_nvmet_mrq; i++) {
+ 		for_each_present_cpu(j) {
+ 			infop = lpfc_get_ctx_list(phba, j, i);
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 608016725db9..c28127b5a975 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -20540,7 +20540,7 @@ lpfc_log_fw_write_cmpl(struct lpfc_hba *phba, u32 shdr_status,
+  * the offset after the write object mailbox has completed. @size is used to
+  * determine the end of the object and whether the eof bit should be set.
+  *
+- * Return 0 is successful and offset will contain the the new offset to use
++ * Return 0 is successful and offset will contain the new offset to use
+  * for the next write.
+  * Return negative value for error cases.
+  **/
+-- 
+2.25.1
+
