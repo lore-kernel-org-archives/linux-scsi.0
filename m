@@ -2,125 +2,111 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66487C43334
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Jul 2022 08:07:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE89AC43334
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Jul 2022 09:35:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230089AbiGUIHu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Jul 2022 04:07:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40994 "EHLO
+        id S232621AbiGUJfK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Jul 2022 05:35:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37012 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229517AbiGUIHt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jul 2022 04:07:49 -0400
-Received: from mail-qt1-f182.google.com (mail-qt1-f182.google.com [209.85.160.182])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DC037D1CA;
-        Thu, 21 Jul 2022 01:07:48 -0700 (PDT)
-Received: by mail-qt1-f182.google.com with SMTP id r24so729054qtx.6;
-        Thu, 21 Jul 2022 01:07:48 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=OeXUgWfSBwMA0/mnxBHkh+G2d6QD85lH1tvWPe7kfmU=;
-        b=G8jYurc4SOoMRJRYTacFTd5Tpd+r/IknAy6t2pGlrwrBRj1qteES0bNDfFTdbw7EKX
-         5dXSHkSgzkQujYqGo+9q65qnRuHJj4ta8MGnvictj1TpCXlgjOaVtCQ6tbL8zRVy2nRz
-         eFQ9PJRWMTJiGnu59wiTOzdnwIdLkaUOC9p+J+cyPS0nuYtBqSIfqouY/T9pbr7jm2FH
-         f42NcRZDaX61vy/Mf+u58Kz2E8dLDvIYjgLnSGDh3e5mapX5j5jmwFWriJMLa0INIvH7
-         YopX+qvnnkWZpQbTcPAQHuFKDpUxEgARIYlwGSnmBEIsfEGie8AXj0QStfoE5Uo6az2F
-         Yegg==
-X-Gm-Message-State: AJIora9e82AMSb9/E41bNHwOLAKFyZMgnxH/nNvJZFcLDI6R8vtzZ7EH
-        qXG823Y/Icrl+RmUUqyCuut83AMeijec9Q==
-X-Google-Smtp-Source: AGRyM1uTzlTutYxDz89ACPZo4iqWinNStblbjjURUTlEfKPYJkdQjorAR4BJ98NZVCL1OLE3uk5j2Q==
-X-Received: by 2002:ac8:5b44:0:b0:31f:775:c2a2 with SMTP id n4-20020ac85b44000000b0031f0775c2a2mr5175880qtw.122.1658390867025;
-        Thu, 21 Jul 2022 01:07:47 -0700 (PDT)
-Received: from mail-yb1-f182.google.com (mail-yb1-f182.google.com. [209.85.219.182])
-        by smtp.gmail.com with ESMTPSA id h15-20020a05620a244f00b006af3bc9c6bbsm1127499qkn.52.2022.07.21.01.07.46
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 21 Jul 2022 01:07:46 -0700 (PDT)
-Received: by mail-yb1-f182.google.com with SMTP id c131so1520302ybf.9;
-        Thu, 21 Jul 2022 01:07:46 -0700 (PDT)
-X-Received: by 2002:a25:bc8e:0:b0:66e:fe43:645c with SMTP id
- e14-20020a25bc8e000000b0066efe43645cmr40553747ybk.202.1658390865825; Thu, 21
- Jul 2022 01:07:45 -0700 (PDT)
+        with ESMTP id S230506AbiGUJfJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jul 2022 05:35:09 -0400
+Received: from m12-18.163.com (m12-18.163.com [220.181.12.18])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 185D181480;
+        Thu, 21 Jul 2022 02:35:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=y7YlJ
+        0gUBvWmouic+7YQgu3orvoqLTEd9aUBCF6F6go=; b=D8OnmR9hd6L8W370Oml0M
+        lIgotPwxqpiZ38/ohD9xdbBt2YTNQwIpdVwb/5E7/cnSF1nN4TxKJd/Nt4Ebosb6
+        y02zg7Lucu0dlnaql2Qw94JnGfsQLce6Hur2MmmhSNkv3oJxKW5i3Fgp/jvvaNVL
+        TXrhqPEiLn4H1R2O7UkQec=
+Received: from localhost.localdomain (unknown [223.104.68.234])
+        by smtp14 (Coremail) with SMTP id EsCowAD3_wevHdliMAj_OA--.377S2;
+        Thu, 21 Jul 2022 17:34:43 +0800 (CST)
+From:   Slark Xiao <slark_xiao@163.com>
+To:     artur.paszkiewicz@intel.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Slark Xiao <slark_xiao@163.com>
+Subject: [PATCH] scsi: isci: Fix typo 'the the' in comment
+Date:   Thu, 21 Jul 2022 17:34:38 +0800
+Message-Id: <20220721093438.51753-1-slark_xiao@163.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-References: <20220630195703.10155-1-bvanassche@acm.org> <20220630195703.10155-3-bvanassche@acm.org>
- <alpine.DEB.2.22.394.2207191125130.1006766@ramsan.of.borg>
- <db19ed29-e7f9-e5b0-3a6c-f2812078a07d@acm.org> <CAMuHMdVzsgSYtbJQnaigNax_JbxPsQfU+gHcteS-ojWbxUdMfw@mail.gmail.com>
- <CAMuHMdWtxBj8ug7AHTqentF8UD4jpO2sgoWWcQCOvEKLJtdq8A@mail.gmail.com>
- <506ca1a6-1122-5755-fc74-60f7c7bfbd0d@acm.org> <CAMuHMdVQ2K2v8jpsFfOMk99DG_sBB4_ioiQRroC7K_Ov1wvp9w@mail.gmail.com>
- <6f70e742-9d8a-f389-0482-0ba9696bf445@acm.org>
-In-Reply-To: <6f70e742-9d8a-f389-0482-0ba9696bf445@acm.org>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Thu, 21 Jul 2022 10:07:34 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdVc+ATGV-=R3uV6RyF0-mZiuKv7HpmogRBgqGVyO-MKWg@mail.gmail.com>
-Message-ID: <CAMuHMdVc+ATGV-=R3uV6RyF0-mZiuKv7HpmogRBgqGVyO-MKWg@mail.gmail.com>
-Subject: Re: [PATCH v2 2/2] scsi: sd: Rework asynchronous resume support
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        scsi <linux-scsi@vger.kernel.org>,
-        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
-        John Garry <john.garry@huawei.com>, ericspero@icloud.com,
-        jason600.groome@gmail.com,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: EsCowAD3_wevHdliMAj_OA--.377S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxCFWDJr4xCw48XFW7Cw1DGFg_yoW5WF1Dp3
+        y8G34S9r4DAa1Ikwn7Kw4UXF98ua1xGasrGa43X3W5WFWYyryj9ryUKay5ZFWUXry0gr90
+        qrn8try7Ga4DtrDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pRJPEsUUUUU=
+X-Originating-IP: [223.104.68.234]
+X-CM-SenderInfo: xvod2y5b0lt0i6rwjhhfrp/1tbiJRNFZGAJpJp9vQAAsA
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hoi Bart,
+Replace 'the the' with 'the' in the comment.
 
-On Wed, Jul 20, 2022 at 8:04 PM Bart Van Assche <bvanassche@acm.org> wrote:
-> On 7/20/22 10:44, Geert Uytterhoeven wrote:
-> > On Wed, Jul 20, 2022 at 6:51 PM Bart Van Assche <bvanassche@acm.org> wrote:
-> >> I'm not familiar with the SATA code but from a quick look it seems like
-> >> the above code is only triggered from inside the ATA error handler
-> >> (ata_do_eh() -> ata_eh_recover() -> ata_eh_revalidate_and_attach() ->
-> >> schedule_work(&(ap->scsi_rescan_task) -> ata_scsi_dev_rescan()). It
-> >> doesn't seem normal to me that the ATA error handler gets invoked during
-> >> a resume. How about testing the following two code changes?
-> >
-> > Thanks for your suggestions!
-> >
-> >> * In sd_start_stop_device(), change "return sd_submit_start(sdkp, cmd,
-> >> sizeof(cmd))" into "sd_submit_start(sdkp, cmd, sizeof(cmd))" and below
-> >> that call add "flush_work(&sdkp->start_done_work)". This makes
-> >> sd_start_stop_device() again synchronous. This will learn us whether the
-> >> behavior change is caused by submitting the START command from another
-> >> context or by not waiting until the START command has finished.
-> >
-> > Unfortunately this doesn't have any impact.
-> >
-> >> * Back out the above change, change "return sd_submit_start(sdkp, cmd,
-> >> sizeof(cmd))" again into "sd_submit_start(sdkp, cmd, sizeof(cmd))" and
-> >> below that statement add a call to
-> >> scsi_run_queue(sdkp->device->request_queue). If this change helps it
-> >
-> > (that's the static scsi_run_queue() in drivers/scsi/scsi_lib.c?)
-> >
-> >> means that the scsi_run_queue() call is necessary to prevent reordering
-> >> of the START command with other SCSI commands.
-> >
-> > Unfortunately this doesn't have any impact either.
->
-> That's surprising. Is there anything unusual about the test setup that I
-> should know, e.g. very small number of CPU cores or a very small queue
-> depth of the SATA device? How about adding pr_info() statements at the
-> start and end of the following functions and also before the return
-> statements in these functions to determine where execution of the START
-> command hangs?
-> * sd_start_done().
-> * sd_start_done_work().
+Signed-off-by: Slark Xiao <slark_xiao@163.com>
+---
+ drivers/scsi/isci/host.h                | 2 +-
+ drivers/scsi/isci/remote_device.h       | 2 +-
+ drivers/scsi/isci/remote_node_context.h | 2 +-
+ drivers/scsi/isci/task.c                | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
 
-None of these functions seem to be called at all?
+diff --git a/drivers/scsi/isci/host.h b/drivers/scsi/isci/host.h
+index 6bc3f022630a..64e4759f25d7 100644
+--- a/drivers/scsi/isci/host.h
++++ b/drivers/scsi/isci/host.h
+@@ -244,7 +244,7 @@ enum sci_controller_states {
+ 	SCIC_INITIALIZED,
+ 
+ 	/**
+-	 * This state indicates the the controller is in the process of becoming
++	 * This state indicates the controller is in the process of becoming
+ 	 * ready (i.e. starting).  In this state no new IO operations are permitted.
+ 	 * This state is entered from the INITIALIZED state.
+ 	 */
+diff --git a/drivers/scsi/isci/remote_device.h b/drivers/scsi/isci/remote_device.h
+index 3ad681c4c20a..db097483ff04 100644
+--- a/drivers/scsi/isci/remote_device.h
++++ b/drivers/scsi/isci/remote_device.h
+@@ -198,7 +198,7 @@ enum sci_status sci_remote_device_reset_complete(
+  * permitted.  This state is entered from the INITIAL state.  This state
+  * is entered from the STOPPING state.
+  *
+- * @SCI_DEV_STARTING: This state indicates the the remote device is in
++ * @SCI_DEV_STARTING: This state indicates the remote device is in
+  * the process of becoming ready (i.e. starting).  In this state no new
+  * IO operations are permitted.  This state is entered from the STOPPED
+  * state.
+diff --git a/drivers/scsi/isci/remote_node_context.h b/drivers/scsi/isci/remote_node_context.h
+index c7ee81d01125..f22950b12b8b 100644
+--- a/drivers/scsi/isci/remote_node_context.h
++++ b/drivers/scsi/isci/remote_node_context.h
+@@ -154,7 +154,7 @@ enum sci_remote_node_context_destination_state {
+ /**
+  * struct sci_remote_node_context - This structure contains the data
+  *    associated with the remote node context object.  The remote node context
+- *    (RNC) object models the the remote device information necessary to manage
++ *    (RNC) object models the remote device information necessary to manage
+  *    the silicon RNC.
+  */
+ struct sci_remote_node_context {
+diff --git a/drivers/scsi/isci/task.c b/drivers/scsi/isci/task.c
+index c514b20293b2..9a311a58c37c 100644
+--- a/drivers/scsi/isci/task.c
++++ b/drivers/scsi/isci/task.c
+@@ -67,7 +67,7 @@
+ /**
+ * isci_task_refuse() - complete the request to the upper layer driver in
+ *     the case where an I/O needs to be completed back in the submit path.
+-* @ihost: host on which the the request was queued
++* @ihost: host on which the request was queued
+ * @task: request to complete
+ * @response: response code for the completed task.
+ * @status: status code for the completed task.
+-- 
+2.25.1
 
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
