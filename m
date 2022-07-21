@@ -2,119 +2,125 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 009E3C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Jul 2022 06:58:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66487C43334
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Jul 2022 08:07:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230388AbiGUG6q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Jul 2022 02:58:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45096 "EHLO
+        id S230089AbiGUIHu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Jul 2022 04:07:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40994 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229678AbiGUG6p (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jul 2022 02:58:45 -0400
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D8BA78DF9
-        for <linux-scsi@vger.kernel.org>; Wed, 20 Jul 2022 23:58:43 -0700 (PDT)
-X-UUID: b699d71d53754a0bbfee738f5bf1e004-20220721
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.8,REQID:b53c832c-9fc3-4dab-9fab-a51376232a8a,OB:0,LO
-        B:0,IP:0,URL:5,TC:0,Content:100,EDM:0,RT:0,SF:0,FILE:0,RULE:Release_Ham,AC
-        TION:release,TS:105
-X-CID-META: VersionHash:0f94e32,CLOUDID:3072e064-0b3f-4b2c-b3a6-ed5c044366a0,C
-        OID:IGNORED,Recheck:0,SF:801,TC:nil,Content:3,EDM:-3,IP:nil,URL:1,File:nil
-        ,QS:nil,BEC:nil,COL:0
-X-UUID: b699d71d53754a0bbfee738f5bf1e004-20220721
-Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw02.mediatek.com
-        (envelope-from <peter.wang@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1203457934; Thu, 21 Jul 2022 14:58:36 +0800
-Received: from mtkcas10.mediatek.inc (172.21.101.39) by
- mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.2.792.15; Thu, 21 Jul 2022 14:58:35 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas10.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 21 Jul 2022 14:58:34 +0800
-From:   <peter.wang@mediatek.com>
-To:     <stanley.chu@mediatek.com>, <linux-scsi@vger.kernel.org>,
-        <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
-        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
-CC:     <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
-        <chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
-        <powen.kao@mediatek.com>, <qilin.tan@mediatek.com>,
-        <lin.gui@mediatek.com>
-Subject: [PATCH v3] scsi: ufs: correct ufshcd_shutdown flow
-Date:   Thu, 21 Jul 2022 14:58:33 +0800
-Message-ID: <20220721065833.26887-1-peter.wang@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        with ESMTP id S229517AbiGUIHt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jul 2022 04:07:49 -0400
+Received: from mail-qt1-f182.google.com (mail-qt1-f182.google.com [209.85.160.182])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DC037D1CA;
+        Thu, 21 Jul 2022 01:07:48 -0700 (PDT)
+Received: by mail-qt1-f182.google.com with SMTP id r24so729054qtx.6;
+        Thu, 21 Jul 2022 01:07:48 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=OeXUgWfSBwMA0/mnxBHkh+G2d6QD85lH1tvWPe7kfmU=;
+        b=G8jYurc4SOoMRJRYTacFTd5Tpd+r/IknAy6t2pGlrwrBRj1qteES0bNDfFTdbw7EKX
+         5dXSHkSgzkQujYqGo+9q65qnRuHJj4ta8MGnvictj1TpCXlgjOaVtCQ6tbL8zRVy2nRz
+         eFQ9PJRWMTJiGnu59wiTOzdnwIdLkaUOC9p+J+cyPS0nuYtBqSIfqouY/T9pbr7jm2FH
+         f42NcRZDaX61vy/Mf+u58Kz2E8dLDvIYjgLnSGDh3e5mapX5j5jmwFWriJMLa0INIvH7
+         YopX+qvnnkWZpQbTcPAQHuFKDpUxEgARIYlwGSnmBEIsfEGie8AXj0QStfoE5Uo6az2F
+         Yegg==
+X-Gm-Message-State: AJIora9e82AMSb9/E41bNHwOLAKFyZMgnxH/nNvJZFcLDI6R8vtzZ7EH
+        qXG823Y/Icrl+RmUUqyCuut83AMeijec9Q==
+X-Google-Smtp-Source: AGRyM1uTzlTutYxDz89ACPZo4iqWinNStblbjjURUTlEfKPYJkdQjorAR4BJ98NZVCL1OLE3uk5j2Q==
+X-Received: by 2002:ac8:5b44:0:b0:31f:775:c2a2 with SMTP id n4-20020ac85b44000000b0031f0775c2a2mr5175880qtw.122.1658390867025;
+        Thu, 21 Jul 2022 01:07:47 -0700 (PDT)
+Received: from mail-yb1-f182.google.com (mail-yb1-f182.google.com. [209.85.219.182])
+        by smtp.gmail.com with ESMTPSA id h15-20020a05620a244f00b006af3bc9c6bbsm1127499qkn.52.2022.07.21.01.07.46
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 21 Jul 2022 01:07:46 -0700 (PDT)
+Received: by mail-yb1-f182.google.com with SMTP id c131so1520302ybf.9;
+        Thu, 21 Jul 2022 01:07:46 -0700 (PDT)
+X-Received: by 2002:a25:bc8e:0:b0:66e:fe43:645c with SMTP id
+ e14-20020a25bc8e000000b0066efe43645cmr40553747ybk.202.1658390865825; Thu, 21
+ Jul 2022 01:07:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+References: <20220630195703.10155-1-bvanassche@acm.org> <20220630195703.10155-3-bvanassche@acm.org>
+ <alpine.DEB.2.22.394.2207191125130.1006766@ramsan.of.borg>
+ <db19ed29-e7f9-e5b0-3a6c-f2812078a07d@acm.org> <CAMuHMdVzsgSYtbJQnaigNax_JbxPsQfU+gHcteS-ojWbxUdMfw@mail.gmail.com>
+ <CAMuHMdWtxBj8ug7AHTqentF8UD4jpO2sgoWWcQCOvEKLJtdq8A@mail.gmail.com>
+ <506ca1a6-1122-5755-fc74-60f7c7bfbd0d@acm.org> <CAMuHMdVQ2K2v8jpsFfOMk99DG_sBB4_ioiQRroC7K_Ov1wvp9w@mail.gmail.com>
+ <6f70e742-9d8a-f389-0482-0ba9696bf445@acm.org>
+In-Reply-To: <6f70e742-9d8a-f389-0482-0ba9696bf445@acm.org>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Thu, 21 Jul 2022 10:07:34 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdVc+ATGV-=R3uV6RyF0-mZiuKv7HpmogRBgqGVyO-MKWg@mail.gmail.com>
+Message-ID: <CAMuHMdVc+ATGV-=R3uV6RyF0-mZiuKv7HpmogRBgqGVyO-MKWg@mail.gmail.com>
+Subject: Re: [PATCH v2 2/2] scsi: sd: Rework asynchronous resume support
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        scsi <linux-scsi@vger.kernel.org>,
+        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
+        John Garry <john.garry@huawei.com>, ericspero@icloud.com,
+        jason600.groome@gmail.com,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Peter Wang <peter.wang@mediatek.com>
+Hoi Bart,
 
-Both ufshcd_shtdown and ufshcd_wl_shutdown could run concurrently.
-And it have race condition when ufshcd_wl_shutdown on-going and
-clock/power turn off by ufshcd_shutdown.
+On Wed, Jul 20, 2022 at 8:04 PM Bart Van Assche <bvanassche@acm.org> wrote:
+> On 7/20/22 10:44, Geert Uytterhoeven wrote:
+> > On Wed, Jul 20, 2022 at 6:51 PM Bart Van Assche <bvanassche@acm.org> wrote:
+> >> I'm not familiar with the SATA code but from a quick look it seems like
+> >> the above code is only triggered from inside the ATA error handler
+> >> (ata_do_eh() -> ata_eh_recover() -> ata_eh_revalidate_and_attach() ->
+> >> schedule_work(&(ap->scsi_rescan_task) -> ata_scsi_dev_rescan()). It
+> >> doesn't seem normal to me that the ATA error handler gets invoked during
+> >> a resume. How about testing the following two code changes?
+> >
+> > Thanks for your suggestions!
+> >
+> >> * In sd_start_stop_device(), change "return sd_submit_start(sdkp, cmd,
+> >> sizeof(cmd))" into "sd_submit_start(sdkp, cmd, sizeof(cmd))" and below
+> >> that call add "flush_work(&sdkp->start_done_work)". This makes
+> >> sd_start_stop_device() again synchronous. This will learn us whether the
+> >> behavior change is caused by submitting the START command from another
+> >> context or by not waiting until the START command has finished.
+> >
+> > Unfortunately this doesn't have any impact.
+> >
+> >> * Back out the above change, change "return sd_submit_start(sdkp, cmd,
+> >> sizeof(cmd))" again into "sd_submit_start(sdkp, cmd, sizeof(cmd))" and
+> >> below that statement add a call to
+> >> scsi_run_queue(sdkp->device->request_queue). If this change helps it
+> >
+> > (that's the static scsi_run_queue() in drivers/scsi/scsi_lib.c?)
+> >
+> >> means that the scsi_run_queue() call is necessary to prevent reordering
+> >> of the START command with other SCSI commands.
+> >
+> > Unfortunately this doesn't have any impact either.
+>
+> That's surprising. Is there anything unusual about the test setup that I
+> should know, e.g. very small number of CPU cores or a very small queue
+> depth of the SATA device? How about adding pr_info() statements at the
+> start and end of the following functions and also before the return
+> statements in these functions to determine where execution of the START
+> command hangs?
+> * sd_start_done().
+> * sd_start_done_work().
 
-The normal case:
-ufshcd_wl_shutdown -> ufshcd_shtdown
-ufshcd_shtdown should turn off clock/power.
+None of these functions seem to be called at all?
 
-The abnormal case:
-ufshcd_shtdown -> ufshcd_wl_shutdown
-Wait ufshcd_wl_shutdown set device to power off and turn off clock/power.
-If timeout happen, means device still in active mode, cannot turn off
-clock/power directly. Skip and keep clock/power on in this case.
+Gr{oetje,eeting}s,
 
-Also remove pm_runtime_get_sync because shutdown is focus on
-turn off clock/power. We don't need turn on(resume) and turn off.
-The second reason is ufshcd_wl_shutdown call ufshcd_rpm_get_sync
-already, if ufshcd_shtdown wait ufshcd_wl_shutdown finish,
-hba->dev is already resume and no need pm_runtime_get_sync.
+                        Geert
 
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
----
- drivers/ufs/core/ufshcd.c | 14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index c7b337480e3e..47b639fd28b9 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -58,6 +58,9 @@
- /* Task management command timeout */
- #define TM_CMD_TIMEOUT	100 /* msecs */
- 
-+/* Shutdown wait devcie into power off timeout */
-+#define UFS_SHUTDOWN_TIMEOUT	500 /* msecs */
-+
- /* maximum number of retries for a general UIC command  */
- #define UFS_UIC_COMMAND_RETRIES 3
- 
-@@ -9461,10 +9464,15 @@ EXPORT_SYMBOL(ufshcd_runtime_resume);
-  */
- int ufshcd_shutdown(struct ufs_hba *hba)
- {
--	if (ufshcd_is_ufs_dev_poweroff(hba) && ufshcd_is_link_off(hba))
--		goto out;
-+	unsigned long timeout;
- 
--	pm_runtime_get_sync(hba->dev);
-+	/* Wait ufshcd_wl_shutdown clear ufs state */
-+	timeout = jiffies + msecs_to_jiffies(UFS_SHUTDOWN_TIMEOUT);
-+	while (!ufshcd_is_ufs_dev_poweroff(hba) || !ufshcd_is_link_off(hba)) {
-+		if (time_after(jiffies, timeout))
-+			goto out;
-+		msleep(1);
-+	}
- 
- 	ufshcd_suspend(hba);
- out:
--- 
-2.18.0
-
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
