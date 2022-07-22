@@ -2,120 +2,88 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76CFDC43334
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jul 2022 11:31:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5205AC43334
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jul 2022 14:25:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234924AbiGVLbN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Jul 2022 07:31:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32992 "EHLO
+        id S233577AbiGVOZJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Jul 2022 10:25:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54724 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234877AbiGVLa6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jul 2022 07:30:58 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7BD1BBDA1F;
-        Fri, 22 Jul 2022 04:30:45 -0700 (PDT)
-Received: from fraeml741-chm.china.huawei.com (unknown [172.18.147.226])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Lq6ZR4xMdz67h3l;
-        Fri, 22 Jul 2022 19:26:07 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml741-chm.china.huawei.com (10.206.15.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Fri, 22 Jul 2022 13:30:43 +0200
-Received: from localhost.localdomain (10.69.192.58) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Fri, 22 Jul 2022 12:30:39 +0100
-From:   John Garry <john.garry@huawei.com>
-To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <jinpu.wang@cloud.ionos.com>, <damien.lemoal@opensource.wdc.com>,
-        <yangxingui@huawei.com>, <chenxiang66@hisilicon.com>,
-        <hare@suse.de>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        John Garry <john.garry@huawei.com>
-Subject: [PATCH 6/6] scsi: libsas: Make sas_{alloc, alloc_slow, free}_task() private
-Date:   Fri, 22 Jul 2022 19:24:09 +0800
-Message-ID: <1658489049-232850-7-git-send-email-john.garry@huawei.com>
-X-Mailer: git-send-email 2.8.1
-In-Reply-To: <1658489049-232850-1-git-send-email-john.garry@huawei.com>
-References: <1658489049-232850-1-git-send-email-john.garry@huawei.com>
+        with ESMTP id S229959AbiGVOZH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jul 2022 10:25:07 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A9B33B0A
+        for <linux-scsi@vger.kernel.org>; Fri, 22 Jul 2022 07:25:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1658499904;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=q2mGRXz22bkMOk7xLIcJYRLD2bboN65vI3Em/QI2a08=;
+        b=ChdZndQ8Z7HSBGdovi3ITcueoU4a2yzpIOGyDoC/WX6dsp+xdHoCoDbT5zEjpFjQHRT0m7
+        Ja5jL4Avtn1K3ULRbGFzd4Ccf0I9kRBmlWwdugue5kyhcZ6QVch54gYUujLDJfp1Klgyzn
+        3cj0svSLGKnyfNouzNsovMkELEcZ/M8=
+Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
+ [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-230-qUuK0DkHOeWPd3hCEMVgIw-1; Fri, 22 Jul 2022 10:25:01 -0400
+X-MC-Unique: qUuK0DkHOeWPd3hCEMVgIw-1
+Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 48DDD1C006AD;
+        Fri, 22 Jul 2022 14:25:01 +0000 (UTC)
+Received: from fedora-work.redhat.com (unknown [10.22.10.171])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 11A18492C3B;
+        Fri, 22 Jul 2022 14:25:01 +0000 (UTC)
+From:   David Jeffery <djeffery@redhat.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        MPT-FusionLinux.pdl@broadcom.com,
+        David Jeffery <djeffery@redhat.com>,
+        Laurence Oberman <loberman@redhat.com>
+Subject: [PATCH] scsi: mpt3sas: Stop fw fault watchdog work item during system shutdown
+Date:   Fri, 22 Jul 2022 10:24:48 -0400
+Message-Id: <20220722142448.6289-1-djeffery@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.85 on 10.11.54.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-We have no users outside libsas any longer, so make sas_alloc_task(),
-sas_alloc_slow_task(), and sas_free_task() private.
+During system shutdown or reboot, mpt3sas will reset the firmware back to
+ready state. However, the driver leaves running a watchdog work item
+intended to keep the firmware in operational state. This causes a second,
+unneeded reset on shutdown and moves the firmware back to operational
+instead of in ready state as intended. And if the mpt3sas_fwfault_debug
+module parameter is set, this extra reset also panics the system.
 
-Signed-off-by: John Garry <john.garry@huawei.com>
+mpt3sas's scsih_shutdown needs to stop the watchdog before resetting the
+firmware back to ready state.
+
+Fixes: fae21608c31c ("scsi: mpt3sas: Transition IOC to Ready state during shutdown")
+Signed-off-by: David Jeffery <djeffery@redhat.com>
+Tested-by: Laurence Oberman <loberman@redhat.com>
 ---
- drivers/scsi/libsas/sas_init.c     | 3 ---
- drivers/scsi/libsas/sas_internal.h | 4 ++++
- include/scsi/libsas.h              | 4 ----
- 3 files changed, 4 insertions(+), 7 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
-index dc35f0f8eae3..fad4fb731bf3 100644
---- a/drivers/scsi/libsas/sas_init.c
-+++ b/drivers/scsi/libsas/sas_init.c
-@@ -35,7 +35,6 @@ struct sas_task *sas_alloc_task(gfp_t flags)
- 
- 	return task;
- }
--EXPORT_SYMBOL_GPL(sas_alloc_task);
- 
- struct sas_task *sas_alloc_slow_task(gfp_t flags)
- {
-@@ -56,7 +55,6 @@ struct sas_task *sas_alloc_slow_task(gfp_t flags)
- 
- 	return task;
- }
--EXPORT_SYMBOL_GPL(sas_alloc_slow_task);
- 
- void sas_free_task(struct sas_task *task)
- {
-@@ -65,7 +63,6 @@ void sas_free_task(struct sas_task *task)
- 		kmem_cache_free(sas_task_cache, task);
- 	}
- }
--EXPORT_SYMBOL_GPL(sas_free_task);
- 
- /*------------ SAS addr hash -----------*/
- void sas_hash_addr(u8 *hashed, const u8 *sas_addr)
-diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
-index 13d0ffaada93..19856e107ebd 100644
---- a/drivers/scsi/libsas/sas_internal.h
-+++ b/drivers/scsi/libsas/sas_internal.h
-@@ -52,6 +52,10 @@ void sas_unregister_phys(struct sas_ha_struct *sas_ha);
- struct asd_sas_event *sas_alloc_event(struct asd_sas_phy *phy, gfp_t gfp_flags);
- void sas_free_event(struct asd_sas_event *event);
- 
-+struct sas_task *sas_alloc_task(gfp_t flags);
-+struct sas_task *sas_alloc_slow_task(gfp_t flags);
-+void sas_free_task(struct sas_task *task);
-+
- int  sas_register_ports(struct sas_ha_struct *sas_ha);
- void sas_unregister_ports(struct sas_ha_struct *sas_ha);
- 
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index ff04eb6d250b..1c45575d1082 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -639,10 +639,6 @@ struct sas_task_slow {
- #define SAS_TASK_STATE_ABORTED      4
- #define SAS_TASK_NEED_DEV_RESET     8
- 
--extern struct sas_task *sas_alloc_task(gfp_t flags);
--extern struct sas_task *sas_alloc_slow_task(gfp_t flags);
--extern void sas_free_task(struct sas_task *task);
--
- static inline bool sas_is_internal_abort(struct sas_task *task)
- {
- 	return task->task_proto == SAS_PROTOCOL_INTERNAL_ABORT;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index b519f4b59d30..5e8887fa02c8 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -11386,6 +11386,7 @@ scsih_shutdown(struct pci_dev *pdev)
+ 	_scsih_ir_shutdown(ioc);
+ 	_scsih_nvme_shutdown(ioc);
+ 	mpt3sas_base_mask_interrupts(ioc);
++	mpt3sas_base_stop_watchdog(ioc);
+ 	ioc->shost_recovery = 1;
+ 	mpt3sas_base_make_ioc_ready(ioc, SOFT_RESET);
+ 	ioc->shost_recovery = 0;
 -- 
-2.35.3
+2.36.1
 
