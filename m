@@ -2,211 +2,122 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DCB8C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jul 2022 17:35:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09BAFC43334
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jul 2022 17:56:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236017AbiGVRfP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Jul 2022 13:35:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55578 "EHLO
+        id S236223AbiGVR4Q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Jul 2022 13:56:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48480 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229593AbiGVRfO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jul 2022 13:35:14 -0400
-Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EB0DA474;
-        Fri, 22 Jul 2022 10:35:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1658511313; x=1690047313;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=IuuPH99jalwAgwdF9bn4eQQXgiS+OOi3ixR9llJ2zEw=;
-  b=rpt5CLngf45kdsufnqMLsCR+5ZicNZRmLQ+Z50iTCg/ceuTZWeUH+vjO
-   QfxKJVozIPIPNZO7Kpv2z4izchJMoxaYmwJ2KUA/gCAtIbNv3WAiTk5yk
-   YCKSf5wAxlGIjIRwBKoLcI4ZxMP0cmTad54hCIbBPZ8e/eGNw3D/KTZwr
-   s=;
-Received: from unknown (HELO ironmsg02-sd.qualcomm.com) ([10.53.140.142])
-  by alexa-out-sd-01.qualcomm.com with ESMTP; 22 Jul 2022 10:35:13 -0700
-X-QCInternal: smtphost
-Received: from unknown (HELO nasanex01a.na.qualcomm.com) ([10.52.223.231])
-  by ironmsg02-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jul 2022 10:35:11 -0700
-Received: from [10.110.117.123] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.22; Fri, 22 Jul
- 2022 10:35:11 -0700
-Message-ID: <4838bb09-d5a8-9b6a-9011-5394b8869695@quicinc.com>
-Date:   Fri, 22 Jul 2022 10:35:10 -0700
+        with ESMTP id S236158AbiGVR4N (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jul 2022 13:56:13 -0400
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A179D4C619;
+        Fri, 22 Jul 2022 10:56:12 -0700 (PDT)
+Received: by mail-pl1-f176.google.com with SMTP id d7so5151906plr.9;
+        Fri, 22 Jul 2022 10:56:12 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=K6H8ybl2+ag7idCYOoYVw/oCxdPB2Pr7niRGvSl53OA=;
+        b=NA6Va0F0RIvgen9z1fpVvPHFI0qhOk/O9Pfdmq2MlZ80VgZk3D4Ppaer3AijwbYvQU
+         PYsM34iG2GzdWqYHYB8p8xMoT9bX2kGfWyLS3HVT2LKAY7fAtkHM3bbtL720LW5BMWiI
+         hDzy/UvI5nYcz7CMokFkqicX7cfncbi7mdD2sXRl/sA7XMy5Vfg2ymv9qJk3+VjOiat0
+         Hxc1h1tFXpVtBsRmYe8oe6IrHBf5shpuva2Ft7d4A+fYz6veYQdVUZYYVNM1fWWo4YFD
+         5471sE8189nZw091jvpMua+ogZLtIhwMXb6gCIy75JdwIvdpGAUTBc1UBRk8KFpT3B6g
+         LUAw==
+X-Gm-Message-State: AJIora+DEw3eAKjfbOxpOCKbrXQgyULBf0hUqVMFQgWm9p8CW1/V37DV
+        Kpac/8jM97Vpu2x56Bp9LkE=
+X-Google-Smtp-Source: AGRyM1vCHU8qGyA8pLRAYfvadi7jDT5J7KiHVcv7GaY3IC+IUt3kg/RktDKh1wIJu/8+y40eAeoQfQ==
+X-Received: by 2002:a17:90b:33d2:b0:1f0:3a40:982d with SMTP id lk18-20020a17090b33d200b001f03a40982dmr840647pjb.60.1658512572066;
+        Fri, 22 Jul 2022 10:56:12 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:9cf6:7e29:d977:6fc7? ([2620:15c:211:201:9cf6:7e29:d977:6fc7])
+        by smtp.gmail.com with ESMTPSA id q3-20020a170902a3c300b0016c6a6d8967sm4065003plb.83.2022.07.22.10.56.10
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 22 Jul 2022 10:56:11 -0700 (PDT)
+Message-ID: <084e7c5a-f98d-d61e-de81-83525851ecf9@acm.org>
+Date:   Fri, 22 Jul 2022 10:56:09 -0700
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.0.3
-Subject: Re: [PATCH 1/2] scsi: ufs: Add Multi-Circular Queue support
-To:     Avri Altman <Avri.Altman@wdc.com>, Can Guo <quic_cang@quicinc.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
-        "quic_ziqichen@quicinc.com" <quic_ziqichen@quicinc.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "kernel-team@android.com" <kernel-team@android.com>
-CC:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1658214120-22772-1-git-send-email-quic_cang@quicinc.com>
- <1658214120-22772-2-git-send-email-quic_cang@quicinc.com>
- <DM6PR04MB65750EE12401C4F69B352E5CFC909@DM6PR04MB6575.namprd04.prod.outlook.com>
-From:   "Asutosh Das (asd)" <quic_asutoshd@quicinc.com>
-In-Reply-To: <DM6PR04MB65750EE12401C4F69B352E5CFC909@DM6PR04MB6575.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+Subject: Re: [PATCH v2 2/2] scsi: sd: Rework asynchronous resume support
+Content-Language: en-US
+To:     Geert Uytterhoeven <geert@linux-m68k.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        scsi <linux-scsi@vger.kernel.org>,
+        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
+        John Garry <john.garry@huawei.com>, ericspero@icloud.com,
+        jason600.groome@gmail.com,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+References: <20220630195703.10155-1-bvanassche@acm.org>
+ <20220630195703.10155-3-bvanassche@acm.org>
+ <alpine.DEB.2.22.394.2207191125130.1006766@ramsan.of.borg>
+ <db19ed29-e7f9-e5b0-3a6c-f2812078a07d@acm.org>
+ <CAMuHMdVzsgSYtbJQnaigNax_JbxPsQfU+gHcteS-ojWbxUdMfw@mail.gmail.com>
+ <CAMuHMdWtxBj8ug7AHTqentF8UD4jpO2sgoWWcQCOvEKLJtdq8A@mail.gmail.com>
+ <506ca1a6-1122-5755-fc74-60f7c7bfbd0d@acm.org>
+ <CAMuHMdVQ2K2v8jpsFfOMk99DG_sBB4_ioiQRroC7K_Ov1wvp9w@mail.gmail.com>
+ <6f70e742-9d8a-f389-0482-0ba9696bf445@acm.org>
+ <CAMuHMdVc+ATGV-=R3uV6RyF0-mZiuKv7HpmogRBgqGVyO-MKWg@mail.gmail.com>
+ <54e20a27-a10b-b77a-e950-1d3398e2e907@acm.org>
+ <CAMuHMdURQpAEGgv4cY7v0rqzs12v2TT=Amt26Y0OoBSW7YAoaw@mail.gmail.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <CAMuHMdURQpAEGgv4cY7v0rqzs12v2TT=Amt26Y0OoBSW7YAoaw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Avri
-Thanks for taking a look.
+On 7/22/22 01:53, Geert Uytterhoeven wrote:
+> During s2idle, the following trace data is generated:
+> 
+>     kworker/u16:9-325     [000] ...2.   230.478731: block_rq_issue: 8,0
+> N 0 () 0 + 0 [kworker/u16:9]
+>     kworker/u16:9-325     [000] ...2.   230.478745:
+> scsi_dispatch_cmd_start: host_no=0 channel=0 id=0 lun=0 data_sgl=0
+> prot_sgl=0 prot_op=SCSI_PROT_NORMAL driver_tag=0 scheduler_tag=0
+> cmnd=(SYNCHRONIZE_CACHE - raw=35 00 00 00 00 00 00 00 00 00)
+>            <idle>-0       [007] d.h3.   230.478832:
+> scsi_dispatch_cmd_done: host_no=0 channel=0 id=0 lun=0 data_sgl=0
+> prot_sgl=0 prot_op=SCSI_PROT_NORMAL driver_tag=0 scheduler_tag=0
+> cmnd=(SYNCHRONIZE_CACHE - raw=35 00 00 00 00 00 00 00 00 00)
+> result=(driver=DRIVER_OK host=DID_OK message=COMMAND_COMPLETE
+> status=SAM_STAT_GOOD)
+>            <idle>-0       [000] ..s2.   230.478851: block_rq_complete:
+> 8,0 N () 18446744073709551615 + 0 [0]
+>     kworker/u16:9-325     [000] ...2.   230.483134: block_rq_issue: 8,0
+> N 0 () 0 + 0 [kworker/u16:9]
+>     kworker/u16:9-325     [000] ...2.   230.483136:
+> scsi_dispatch_cmd_start: host_no=0 channel=0 id=0 lun=0 data_sgl=0
+> prot_sgl=0 prot_op=SCSI_PROT_NORMAL driver_tag=0 scheduler_tag=1
+> cmnd=(START_STOP - raw=1b 00 00 00 00 00)
+>            <idle>-0       [007] d.h3.   230.624530:
+> scsi_dispatch_cmd_done: host_no=0 channel=0 id=0 lun=0 data_sgl=0
+> prot_sgl=0 prot_op=SCSI_PROT_NORMAL driver_tag=0 scheduler_tag=1
+> cmnd=(START_STOP - raw=1b 00 00 00 00 00) result=(driver=DRIVER_OK
+> host=DID_OK message=COMMAND_COMPLETE status=SAM_STAT_GOOD)
+>            <idle>-0       [000] d.s4.   230.624634: scsi_eh_wakeup: host_no=0
+>            <idle>-0       [000] ..s2.   230.624642: block_rq_complete:
+> 8,0 N () 18446744073709551615 + 0 [0]
+>    kworker/u16:14-1027    [007] d..3.   231.393642: scsi_eh_wakeup: host_no=0
+> 
+> When reading from hard drive after s2idle, no more trace data
+> is generated.
 
-On 7/22/2022 12:31 AM, Avri Altman wrote:
->> +static int ufshcd_mcq_config_resource(struct ufs_hba *hba)
->> +{
->> +       struct platform_device *pdev = to_platform_device(hba->dev);
->> +       struct ufshcd_res_info_t *res;
->> +       struct resource *res_mem, *res_mcq;
->> +       int i, ret = 0;
->> +
->> +       memcpy(hba->res, ufshcd_res_info, sizeof(ufshcd_res_info));
->> +
->> +       for (i = 0; i < RES_MAX; i++) {
->> +               res = &hba->res[i];
->> +
->> +               res->resource = platform_get_resource_byname(pdev,
->> +                                                            IORESOURCE_MEM,
->> +                                                            res->name);
->> +               if (!res->resource) {
->> +                       dev_info(hba->dev, "Resource %s not provided\n", res-
->>> name);
->> +                       if (i == RES_MEM)
->> +                               return -ENOMEM;
->> +                       continue;
->> +               } else if (i == RES_MEM) {
->> +                       res_mem = res->resource;
->> +                       res->base = hba->mmio_base;
->> +                       continue;
->> +               }
->> +
->> +               res->base = devm_ioremap_resource(hba->dev, res->resource);
->> +               if (IS_ERR(res->base)) {
->> +                       dev_err(hba->dev, "Failed to map res %s, err = %d\n",
->> +                                        res->name, (int)PTR_ERR(res->base));
->> +                       res->base = NULL;
->> +                       ret = PTR_ERR(res->base);
->> +                       goto out_err;
->> +               }
->> +       }
->> +
->> +       res = &hba->res[RES_MCQ];
->> +       /* MCQ resource provided */
->> +       if (res->base)
->> +               goto out;
->> +
->> +       /* Manually allocate MCQ resource */
-> Did you consider to force providing the MCQ configuration?
-> 
->> +       res_mcq = res->resource;
->> +       res_mcq = devm_kzalloc(hba->dev, sizeof(*res_mcq), GFP_KERNEL);
->> +       if (!res_mcq) {
->> +               dev_err(hba->dev, "Failed to alloate MCQ resource\n");
->> +               goto out_err;
->> +       }
->> +       res->is_alloc = true;
->> +
->> +       res_mcq->start = res_mem->start +
->> +                        mcq_sqattr_offset(hba->mcq_capabilities);
->> +       res_mcq->end = res_mcq->start + 32 * MCQ_QCFG_SIZE - 1;
-> Shouldn't there can be MCQCap.MAXQ queues and no more than 32?
-> 
-Yes correct. Will change it in the next version.
-> 
->> +int ufshcd_mcq_init(struct ufs_hba *hba)
->> +{
->> +       struct Scsi_Host *host = hba->host;
->> +       struct ufs_hw_queue *hwq;
->> +       int i, ret = 0;
->> +
->> +       if (!is_mcq_supported(hba))
->> +               return 0;
->> +
->> +       ret = ufshcd_mcq_config_resource(hba);
->> +       if (ret) {
->> +               dev_err(hba->dev, "Failed to config MCQ resource\n");
->> +               return ret;
->> +       }
->> +
->> +       ret = ufshcd_vops_config_mcq_rop(hba);
->> +       if (ret) {
->> +               dev_err(hba->dev, "MCQ Runtime Operation Pointers not
->> configured\n");
->> +               goto out_err;
->> +       }
->> +
->> +       hba->nr_queues[HCTX_TYPE_DEFAULT] = num_possible_cpus();
->> +       hba->nr_queues[HCTX_TYPE_READ] = 0;
->> +       hba->nr_queues[HCTX_TYPE_POLL] = 1;
->> +
->> +       for (i = 0; i < HCTX_MAX_TYPES; i++)
->> +               host->nr_hw_queues += hba->nr_queues[i];
->> +
->> +       host->can_queue = hba->nutrs;
->> +       host->cmd_per_lun = hba->nutrs;
->> +
->> +       /* One more reserved for dev_cmd_queue */
->> +       hba->nr_hw_queues = host->nr_hw_queues + 1;
-> Is it possible, since MCQ memory space is *added* to the UTR & UTMR lists,
-> That we'll keep using the legacy doorbell for query commands?
-> Wouldn't it will simplify the hw_queue bookkeeping
-> 
-Umm, I didn't understand this suggestion. Please can you elaborate a bit.
-When MCQ mode is selected the Config.QT is set to 1.
-So how would we keep using the legacy doorbell for query commands?
+I think the above commands come from the suspend sequence. '1b 00 00 00 
+00 00' stops a block device. The lowest bit in byte 4 needs to be set to 
+start a block device.
 
-> 
->> -#define ufshcd_hex_dump(prefix_str, buf, len) do {                       \
->> -       size_t __len = (len);                                            \
->> -       print_hex_dump(KERN_ERR, prefix_str,                             \
->> -                      __len > 4 ? DUMP_PREFIX_OFFSET : DUMP_PREFIX_NONE,\
->> -                      16, 4, buf, __len, false);                        \
->> +#define ufshcd_hex_dump(prefix_str, buf, len) do {                     \
->> +       size_t __len = (len);                                           \
->> +                                                                       \
->> +       print_hex_dump(KERN_ERR, prefix_str,                            \
->> +                      __len > 4 ? DUMP_PREFIX_OFFSET : DUMP_PREFIX_NONE, \
->> +                      16, 4, buf, __len, false);                       \
->> +                                                                       \
->>   } while (0)
-> Should this be part of this patch?
-> 
-No it shouldn't. Will remove this.
->> +#define UFSHCD_MCQ_IO_QUEUE_OFFSET     1
-> Maybe add a comment above: "queue 0 is reserved for query commands" or something
-> That is if the query commands don't use the  legacy doorbell
-> 
->> +static inline bool ufshcd_is_hwq_full(struct ufs_hw_queue *q)
->> +{
->> +       return (q->sq_hp_slot == ((q->sq_tp_slot + 1) %
->> +                                     q->max_entries));
->> +}
-> Isn't sq_tp_slot is already % q->max_entries ?
-> 
-This function is unused in this patchset and I will remove it in the 
-next version.
+Something that is not yet clear is whether or not sd_submit_start() 
+hangs during the resume process. How about verifying whether or not 
+sd_submit_start() hangs by either issuing SysRq-t or by adding pr_info() 
+statements in that function?
 
-> 
-> Thanks,
-> Avri
+Thanks,
 
+Bart.
