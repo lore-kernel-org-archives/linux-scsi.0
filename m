@@ -2,149 +2,289 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9ED91C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jul 2022 01:27:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1F1CC433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jul 2022 01:59:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229740AbiGVB17 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Jul 2022 21:27:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56708 "EHLO
+        id S233463AbiGVB7h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Jul 2022 21:59:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46020 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229501AbiGVB16 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jul 2022 21:27:58 -0400
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5323E18383
-        for <linux-scsi@vger.kernel.org>; Thu, 21 Jul 2022 18:27:52 -0700 (PDT)
-X-UUID: 02730eedee7843d89e7bf127450bb4d1-20220722
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.8,REQID:1a5a4136-1269-42fe-a460-bf0755c88c3c,OB:0,LO
-        B:0,IP:0,URL:5,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,RULE:Release_Ham,ACTI
-        ON:release,TS:5
-X-CID-META: VersionHash:0f94e32,CLOUDID:3b66f264-0b3f-4b2c-b3a6-ed5c044366a0,C
-        OID:IGNORED,Recheck:0,SF:nil,TC:nil,Content:0,EDM:-3,IP:nil,URL:1,File:nil
-        ,QS:nil,BEC:nil,COL:0
-X-UUID: 02730eedee7843d89e7bf127450bb4d1-20220722
-Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw01.mediatek.com
-        (envelope-from <chaotian.jing@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 2103498637; Fri, 22 Jul 2022 09:27:47 +0800
-Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.792.3;
- Fri, 22 Jul 2022 09:27:46 +0800
-Received: from mhfsdcap04 (10.17.3.154) by mtkmbs11n2.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.2.792.3 via Frontend
- Transport; Fri, 22 Jul 2022 09:27:45 +0800
-Message-ID: <fab0b6332a5a43634f3df437c2b38bc3e618aa4d.camel@mediatek.com>
-Subject: Re: [PATCH v1] scsi: ufs: correct ufshcd_shutdown flow
-From:   Chaotian Jing <chaotian.jing@mediatek.com>
-To:     Peter Wang <peter.wang@mediatek.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        <stanley.chu@mediatek.com>, <linux-scsi@vger.kernel.org>,
-        <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
-        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
-CC:     <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-        <chun-hung.wu@mediatek.com>, <alice.chao@mediatek.com>,
-        <cc.chou@mediatek.com>, <jiajie.hao@mediatek.com>,
-        <powen.kao@mediatek.com>, <qilin.tan@mediatek.com>,
-        <lin.gui@mediatek.com>
-Date:   Fri, 22 Jul 2022 09:27:45 +0800
-In-Reply-To: <a71af42f-3b66-c0a1-c79d-a4573d0376fe@mediatek.com>
-References: <20220719130208.29032-1-peter.wang@mediatek.com>
-         <afb8d403-f8f5-5161-4680-ce2c3ae7787d@acm.org>
-         <a71af42f-3b66-c0a1-c79d-a4573d0376fe@mediatek.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+        with ESMTP id S229547AbiGVB7g (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jul 2022 21:59:36 -0400
+Received: from m12-14.163.com (m12-14.163.com [220.181.12.14])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9A32C97480;
+        Thu, 21 Jul 2022 18:59:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=dbBus
+        LHp8HDPjiNGQg9/hgfq0xVyqPTOixL0iSVtzKc=; b=H+jY8oDn9YNMOJ/WbfTjU
+        NY5pvOBbhnAlEFjv5MvIMO+Rxn05UTy55ecA9iScuh/yxDephkRpTIxbCc3Lqfde
+        UNSecMmN0FMCnrOfEYPtEWb6QOF+z6oid8tjz4Bub1mpkOYdqnzJlDM/9OxSsZbO
+        Tk88Mf2XC0A2KtsRWmkTes=
+Received: from localhost.localdomain (unknown [111.48.58.12])
+        by smtp10 (Coremail) with SMTP id DsCowAB3JI1SBNpiSLaDOg--.9426S2;
+        Fri, 22 Jul 2022 09:58:45 +0800 (CST)
+From:   Jiangshan Yi <13667453960@163.com>
+To:     bvanassche@acm.org, martin.petersen@oracle.com, jejb@linux.ibm.com,
+        njavali@marvell.com, GR-QLogic-Storage-Upstream@marvell.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jiangshan Yi <yijiangshan@kylinos.cn>,
+        k2ci <kernel-bot@kylinos.cn>
+Subject: [PATCH v2] scsi: qla2xxx: Fix typo in comment
+Date:   Fri, 22 Jul 2022 09:58:34 +0800
+Message-Id: <20220722015834.3219438-1-13667453960@163.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-MTK:  N
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: DsCowAB3JI1SBNpiSLaDOg--.9426S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW3JF1rXFyxJF1kKr4xJrWDurg_yoW7XF1xpr
+        Zagw1fArWjyF129r42yFy8ZF1UuanIyryUK3WDWw1UAw40vrWxtrnFy34Fya4kCa4kZa40
+        qFnayaySgFsFqr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jSoGPUUUUU=
+X-Originating-IP: [111.48.58.12]
+X-CM-SenderInfo: bprtllyxuvjmiwq6il2tof0z/xtbBAhZG+2B0IpOlTgAAsn
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 2022-07-21 at 12:30 +0800, Peter Wang wrote:
-> Hi Bart
-> 
-> On 7/21/22 5:40 AM, Bart Van Assche wrote:
-> > On 7/19/22 06:02, peter.wang@mediatek.com wrote:
-> > > From: Peter Wang <peter.wang@mediatek.com>
-> > > 
-> > > After ufshcd_wl_shutdown set device poweroff and link off,
-> > > ufshcd_shutdown not turn off regulators/clocks.
-> > > Correct the flow to wait ufshcd_wl_shutdown done and turn off
-> > > regulators/clocks by polling ufs device/link state 500ms.
-> > > Also remove pm_runtime_get_sync because it is unnecessary.
-> > 
-> > Please explain in the patch description why the
-> > pm_runtime_get_sync() 
-> > call is not necessary.
-> 
-> Because shutdown is focus on turn off clock/power, we don't need
-> turn 
-> on(resume) and turn off, right?
-> 
-> > 
-> > > diff --git a/drivers/ufs/core/ufshcd.c
-> > > b/drivers/ufs/core/ufshcd.c
-> > > index c7b337480e3e..1c11af48b584 100644
-> > > --- a/drivers/ufs/core/ufshcd.c
-> > > +++ b/drivers/ufs/core/ufshcd.c
-> > > @@ -9461,10 +9461,14 @@ EXPORT_SYMBOL(ufshcd_runtime_resume);
-> > >    */
-> > >   int ufshcd_shutdown(struct ufs_hba *hba)
-> > >   {
-> > > -    if (ufshcd_is_ufs_dev_poweroff(hba) &&
-> > > ufshcd_is_link_off(hba))
-> > > -        goto out;
-> > > +    ktime_t timeout = ktime_add_ms(ktime_get(), 500);
-> > 
-> > Where does the 500 ms timeout come from?
-> 
-> It is a time to wait device into power off, if the 500 ms is not 
-> suitable, could you suggess a value?
-> 
-> > 
-> > Additionally, given the large timeout, please use jiffies instead
-> > of 
-> > ktime_get().
-> 
-> Okay, will change next version.
-> 
-> > 
-> > > -    pm_runtime_get_sync(hba->dev);
-> > > +    /* Wait ufshcd_wl_shutdown clear ufs state, timeout 500 ms
-> > > */
-> > > +    while (!ufshcd_is_ufs_dev_poweroff(hba) || 
-> > > !ufshcd_is_link_off(hba)) {
-> > > +        if (ktime_after(ktime_get(), timeout))
-> > > +            goto out;
-> > > +        msleep(1);
-> > > +    }
-> > 
-> > Please explain why this wait loop has been introduced.
-> 
-> Both ufshcd_shtdown and ufshcd_wl_shutdown could run concurrently.
+From: Jiangshan Yi <yijiangshan@kylinos.cn>
 
-Is it possible to avoid the dev's shutdown and its parent's shutdown
-run concurrently ? if cannnot avoid it, then seems the concurrently run
-case may happen at any device and its parent device! then how do deal
-with it ?
+Fix typo in comment.
 
-Also, the timeout 500ms may make no sense as the child device may not
-get the device lock of its parent(it must wait parent's shutdown()
-return then it can get the device lock).
-> 
-> if ufshcd_wl_shutdown -> ufshcd_shtdown, clock/power off should ok.
-> 
-> If ufshcd_shtdown -> ufshcd_wl_shutdown, wait ufshcd_wl_shutdown set 
-> device to power off and turn off clock/power.
-> 
-> If timeout happen, means device still in active mode, cannot turn
-> off 
-> clock/power directly. Skip and keep clock/power on in this case.
-> 
-> 
-> > 
-> > Thanks,
-> > 
-> > Bart.
+Reported-by: k2ci <kernel-bot@kylinos.cn>
+Signed-off-by: Jiangshan Yi <yijiangshan@kylinos.cn>
+---
+ drivers/scsi/qla2xxx/qla_init.c | 148 ++++++++++++++++----------------
+ 1 file changed, 74 insertions(+), 74 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 3f3417a3e891..3dc083bbac3c 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -19,8 +19,8 @@
+ #include "qla_target.h"
+ 
+ /*
+-*  QLogic ISP2x00 Hardware Support Function Prototypes.
+-*/
++ * QLogic ISP2x00 Hardware Support Function Prototypes.
++ */
+ static int qla2x00_isp_firmware(scsi_qla_host_t *);
+ static int qla2x00_setup_chip(scsi_qla_host_t *);
+ static int qla2x00_fw_ready(scsi_qla_host_t *);
+@@ -2381,15 +2381,15 @@ qla83xx_nic_core_fw_load(scsi_qla_host_t *vha)
+ }
+ 
+ /*
+-* qla2x00_initialize_adapter
+-*      Initialize board.
+-*
+-* Input:
+-*      ha = adapter block pointer.
+-*
+-* Returns:
+-*      0 = success
+-*/
++ * qla2x00_initialize_adapter
++ *      Initialize board.
++ *
++ * Input:
++ *      ha = adapter block pointer.
++ *
++ * Returns:
++ *      0 = success
++ */
+ int
+ qla2x00_initialize_adapter(scsi_qla_host_t *vha)
+ {
+@@ -4661,18 +4661,18 @@ qla2x00_fw_ready(scsi_qla_host_t *vha)
+ }
+ 
+ /*
+-*  qla2x00_configure_hba
+-*      Setup adapter context.
+-*
+-* Input:
+-*      ha = adapter state pointer.
+-*
+-* Returns:
+-*      0 = success
+-*
+-* Context:
+-*      Kernel context.
+-*/
++ * qla2x00_configure_hba
++ *      Setup adapter context.
++ *
++ * Input:
++ *      ha = adapter state pointer.
++ *
++ * Returns:
++ *      0 = success
++ *
++ * Context:
++ *      Kernel context.
++ */
+ static int
+ qla2x00_configure_hba(scsi_qla_host_t *vha)
+ {
+@@ -4861,18 +4861,18 @@ static void qla2xxx_nvram_wwn_from_ofw(scsi_qla_host_t *vha, nvram_t *nv)
+ }
+ 
+ /*
+-* NVRAM configuration for ISP 2xxx
+-*
+-* Input:
+-*      ha                = adapter block pointer.
+-*
+-* Output:
+-*      initialization control block in response_ring
+-*      host adapters parameters in host adapter block
+-*
+-* Returns:
+-*      0 = success.
+-*/
++ * NVRAM configuration for ISP 2xxx
++ *
++ * Input:
++ *      ha = adapter block pointer.
++ *
++ * Output:
++ *      initialization control block in response_ring
++ *      host adapters parameters in host adapter block
++ *
++ * Returns:
++ *      0 = success.
++ */
+ int
+ qla2x00_nvram_config(scsi_qla_host_t *vha)
+ {
+@@ -5330,7 +5330,7 @@ static void qla_get_login_template(scsi_qla_host_t *vha)
+  *      Updates Fibre Channel Device Database with what is actually on loop.
+  *
+  * Input:
+- *      ha                = adapter block pointer.
++ *      ha = adapter block pointer.
+  *
+  * Returns:
+  *      0 = success.
+@@ -6599,7 +6599,7 @@ qla2x00_local_device_login(scsi_qla_host_t *vha, fc_port_t *fcport)
+ }
+ 
+ /*
+- *  qla2x00_loop_resync
++ * qla2x00_loop_resync
+  *      Resync with fibre channel devices.
+  *
+  * Input:
+@@ -6657,12 +6657,12 @@ qla2x00_loop_resync(scsi_qla_host_t *vha)
+ }
+ 
+ /*
+-* qla2x00_perform_loop_resync
+-* Description: This function will set the appropriate flags and call
+-*              qla2x00_loop_resync. If successful loop will be resynced
+-* Arguments : scsi_qla_host_t pointer
+-* returm    : Success or Failure
+-*/
++ * qla2x00_perform_loop_resync
++ * Description: This function will set the appropriate flags and call
++ *              qla2x00_loop_resync. If successful loop will be resynced
++ * Arguments : scsi_qla_host_t pointer
++ * return    : Success or Failure
++ */
+ 
+ int qla2x00_perform_loop_resync(scsi_qla_host_t *ha)
+ {
+@@ -7007,13 +7007,13 @@ qla2xxx_mctp_dump(scsi_qla_host_t *vha)
+ }
+ 
+ /*
+-* qla2x00_quiesce_io
+-* Description: This function will block the new I/Os
+-*              Its not aborting any I/Os as context
+-*              is not destroyed during quiescence
+-* Arguments: scsi_qla_host_t
+-* return   : void
+-*/
++ * qla2x00_quiesce_io
++ * Description: This function will block the new I/Os
++ *              Its not aborting any I/Os as context
++ *              is not destroyed during quiescence
++ * Arguments: scsi_qla_host_t
++ * return   : void
++ */
+ void
+ qla2x00_quiesce_io(scsi_qla_host_t *vha)
+ {
+@@ -7175,15 +7175,15 @@ qla2x00_abort_isp_cleanup(scsi_qla_host_t *vha)
+ }
+ 
+ /*
+-*  qla2x00_abort_isp
+-*      Resets ISP and aborts all outstanding commands.
+-*
+-* Input:
+-*      ha           = adapter block pointer.
+-*
+-* Returns:
+-*      0 = success
+-*/
++ * qla2x00_abort_isp
++ *      Resets ISP and aborts all outstanding commands.
++ *
++ * Input:
++ *      ha = adapter block pointer.
++ *
++ * Returns:
++ *      0 = success
++ */
+ int
+ qla2x00_abort_isp(scsi_qla_host_t *vha)
+ {
+@@ -7376,15 +7376,15 @@ qla2x00_abort_isp(scsi_qla_host_t *vha)
+ }
+ 
+ /*
+-*  qla2x00_restart_isp
+-*      restarts the ISP after a reset
+-*
+-* Input:
+-*      ha = adapter block pointer.
+-*
+-* Returns:
+-*      0 = success
+-*/
++ * qla2x00_restart_isp
++ *      restarts the ISP after a reset
++ *
++ * Input:
++ *      ha = adapter block pointer.
++ *
++ * Returns:
++ *      0 = success
++ */
+ static int
+ qla2x00_restart_isp(scsi_qla_host_t *vha)
+ {
+@@ -7469,12 +7469,12 @@ qla25xx_init_queues(struct qla_hw_data *ha)
+ }
+ 
+ /*
+-* qla2x00_reset_adapter
+-*      Reset adapter.
+-*
+-* Input:
+-*      ha = adapter block pointer.
+-*/
++ * qla2x00_reset_adapter
++ *      Reset adapter.
++ *
++ * Input:
++ *      ha = adapter block pointer.
++ */
+ int
+ qla2x00_reset_adapter(scsi_qla_host_t *vha)
+ {
+-- 
+2.25.1
 
