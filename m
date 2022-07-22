@@ -2,83 +2,211 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C782CC433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jul 2022 17:33:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DCB8C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jul 2022 17:35:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234146AbiGVRdz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Jul 2022 13:33:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54402 "EHLO
+        id S236017AbiGVRfP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Jul 2022 13:35:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55578 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235065AbiGVRdx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jul 2022 13:33:53 -0400
-Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3303788CE4
-        for <linux-scsi@vger.kernel.org>; Fri, 22 Jul 2022 10:33:53 -0700 (PDT)
-Received: by mail-pf1-f172.google.com with SMTP id c139so5033888pfc.2
-        for <linux-scsi@vger.kernel.org>; Fri, 22 Jul 2022 10:33:53 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=LsNJ0WhmOReguy+4H0FMoDzLavslkh2zlIo4DGoPRPI=;
-        b=21odKPB7ulEB3st3MQ8N6CeMr7tvAejiVQcZ9ErSF7lOCCLDSnFUWDTBBPPe/SvOwm
-         Xm23VduSpKkLbZpdc2Pz/ieZaybtFaFIP5eFxQw8/+6W7xzH8Kp0fzyb1DpKVb9ZTRyS
-         QPd6HkyLp2cxGG2SC7PkD6bijiGJjr2QMHPYsVElAc2QmJxWZUPHUyxOhJgATEjn6Mks
-         VeaB/oIMkt0xTzaGd+VdrF4zhFkgAjHNdN8xx0mzqhYukQmc2LkzakT8B5jBq8/QOEk/
-         TRh18QzfsxP8z7YmHAnii1hrI/LsbwW+LudviWB5RH84Xq2TYr7JyKFWeO7DJGGXHa7K
-         pN1g==
-X-Gm-Message-State: AJIora9eOHwmmfBgtiYG1PoHhP1sF9iVnkWlPnAda+R50vJXVg2b4/Cs
-        PcCkEFcY3/Fc24po9mL8NJI=
-X-Google-Smtp-Source: AGRyM1thBaovh3zAkOVWcFZVcfAT3eLLX0m9cVuCtw0mvKFai9lsgF3fitRT5K6ibXENPhPMQD0gdg==
-X-Received: by 2002:a63:f143:0:b0:41a:3744:8639 with SMTP id o3-20020a63f143000000b0041a37448639mr746470pgk.254.1658511232508;
-        Fri, 22 Jul 2022 10:33:52 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:9cf6:7e29:d977:6fc7? ([2620:15c:211:201:9cf6:7e29:d977:6fc7])
-        by smtp.gmail.com with ESMTPSA id s18-20020a170902ea1200b0016bf9437766sm4035990plg.261.2022.07.22.10.33.51
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 22 Jul 2022 10:33:51 -0700 (PDT)
-Message-ID: <69a25298-5c2b-6efc-2a5a-9a2409d69b4b@acm.org>
-Date:   Fri, 22 Jul 2022 10:33:50 -0700
+        with ESMTP id S229593AbiGVRfO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jul 2022 13:35:14 -0400
+Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EB0DA474;
+        Fri, 22 Jul 2022 10:35:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1658511313; x=1690047313;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=IuuPH99jalwAgwdF9bn4eQQXgiS+OOi3ixR9llJ2zEw=;
+  b=rpt5CLngf45kdsufnqMLsCR+5ZicNZRmLQ+Z50iTCg/ceuTZWeUH+vjO
+   QfxKJVozIPIPNZO7Kpv2z4izchJMoxaYmwJ2KUA/gCAtIbNv3WAiTk5yk
+   YCKSf5wAxlGIjIRwBKoLcI4ZxMP0cmTad54hCIbBPZ8e/eGNw3D/KTZwr
+   s=;
+Received: from unknown (HELO ironmsg02-sd.qualcomm.com) ([10.53.140.142])
+  by alexa-out-sd-01.qualcomm.com with ESMTP; 22 Jul 2022 10:35:13 -0700
+X-QCInternal: smtphost
+Received: from unknown (HELO nasanex01a.na.qualcomm.com) ([10.52.223.231])
+  by ironmsg02-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jul 2022 10:35:11 -0700
+Received: from [10.110.117.123] (10.80.80.8) by nasanex01a.na.qualcomm.com
+ (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.22; Fri, 22 Jul
+ 2022 10:35:11 -0700
+Message-ID: <4838bb09-d5a8-9b6a-9011-5394b8869695@quicinc.com>
+Date:   Fri, 22 Jul 2022 10:35:10 -0700
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [PATCH] scsi: ufs: Increase the maximum data buffer size
-Content-Language: en-US
-To:     Avri Altman <Avri.Altman@wdc.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.0.3
+Subject: Re: [PATCH 1/2] scsi: ufs: Add Multi-Circular Queue support
+To:     Avri Altman <Avri.Altman@wdc.com>, Can Guo <quic_cang@quicinc.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
+        "quic_ziqichen@quicinc.com" <quic_ziqichen@quicinc.com>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>
-References: <20220720170323.1599006-1-bvanassche@acm.org>
- <DM6PR04MB6575FA4433A6743D5940DAB7FC909@DM6PR04MB6575.namprd04.prod.outlook.com>
- <DM6PR04MB6575D4AE8FC800F0A7429AA8FC909@DM6PR04MB6575.namprd04.prod.outlook.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <DM6PR04MB6575D4AE8FC800F0A7429AA8FC909@DM6PR04MB6575.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+        "kernel-team@android.com" <kernel-team@android.com>
+CC:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        Jinyoung Choi <j-young.choi@samsung.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        open list <linux-kernel@vger.kernel.org>
+References: <1658214120-22772-1-git-send-email-quic_cang@quicinc.com>
+ <1658214120-22772-2-git-send-email-quic_cang@quicinc.com>
+ <DM6PR04MB65750EE12401C4F69B352E5CFC909@DM6PR04MB6575.namprd04.prod.outlook.com>
+From:   "Asutosh Das (asd)" <quic_asutoshd@quicinc.com>
+In-Reply-To: <DM6PR04MB65750EE12401C4F69B352E5CFC909@DM6PR04MB6575.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/22/22 03:19, Avri Altman wrote:
->>> Note: the maximum data buffer size supported by the UFSHCI specification
->>> is 65535 * 256 MiB or about 16 TiB.
- >
-> Can you help me find this limit in UFSHCI?
+Hi Avri
+Thanks for taking a look.
 
- From the UFSHCI 3.0 specification:
-* PRDT length is a sixteen bit field so the maximum value is 65535 
-(entries).
-* The maximum length of a single descriptor is 256 KiB. See also the DBC 
-(Data Byte Count) field.
+On 7/22/2022 12:31 AM, Avri Altman wrote:
+>> +static int ufshcd_mcq_config_resource(struct ufs_hba *hba)
+>> +{
+>> +       struct platform_device *pdev = to_platform_device(hba->dev);
+>> +       struct ufshcd_res_info_t *res;
+>> +       struct resource *res_mem, *res_mcq;
+>> +       int i, ret = 0;
+>> +
+>> +       memcpy(hba->res, ufshcd_res_info, sizeof(ufshcd_res_info));
+>> +
+>> +       for (i = 0; i < RES_MAX; i++) {
+>> +               res = &hba->res[i];
+>> +
+>> +               res->resource = platform_get_resource_byname(pdev,
+>> +                                                            IORESOURCE_MEM,
+>> +                                                            res->name);
+>> +               if (!res->resource) {
+>> +                       dev_info(hba->dev, "Resource %s not provided\n", res-
+>>> name);
+>> +                       if (i == RES_MEM)
+>> +                               return -ENOMEM;
+>> +                       continue;
+>> +               } else if (i == RES_MEM) {
+>> +                       res_mem = res->resource;
+>> +                       res->base = hba->mmio_base;
+>> +                       continue;
+>> +               }
+>> +
+>> +               res->base = devm_ioremap_resource(hba->dev, res->resource);
+>> +               if (IS_ERR(res->base)) {
+>> +                       dev_err(hba->dev, "Failed to map res %s, err = %d\n",
+>> +                                        res->name, (int)PTR_ERR(res->base));
+>> +                       res->base = NULL;
+>> +                       ret = PTR_ERR(res->base);
+>> +                       goto out_err;
+>> +               }
+>> +       }
+>> +
+>> +       res = &hba->res[RES_MCQ];
+>> +       /* MCQ resource provided */
+>> +       if (res->base)
+>> +               goto out;
+>> +
+>> +       /* Manually allocate MCQ resource */
+> Did you consider to force providing the MCQ configuration?
+> 
+>> +       res_mcq = res->resource;
+>> +       res_mcq = devm_kzalloc(hba->dev, sizeof(*res_mcq), GFP_KERNEL);
+>> +       if (!res_mcq) {
+>> +               dev_err(hba->dev, "Failed to alloate MCQ resource\n");
+>> +               goto out_err;
+>> +       }
+>> +       res->is_alloc = true;
+>> +
+>> +       res_mcq->start = res_mem->start +
+>> +                        mcq_sqattr_offset(hba->mcq_capabilities);
+>> +       res_mcq->end = res_mcq->start + 32 * MCQ_QCFG_SIZE - 1;
+> Shouldn't there can be MCQCap.MAXQ queues and no more than 32?
+> 
+Yes correct. Will change it in the next version.
+> 
+>> +int ufshcd_mcq_init(struct ufs_hba *hba)
+>> +{
+>> +       struct Scsi_Host *host = hba->host;
+>> +       struct ufs_hw_queue *hwq;
+>> +       int i, ret = 0;
+>> +
+>> +       if (!is_mcq_supported(hba))
+>> +               return 0;
+>> +
+>> +       ret = ufshcd_mcq_config_resource(hba);
+>> +       if (ret) {
+>> +               dev_err(hba->dev, "Failed to config MCQ resource\n");
+>> +               return ret;
+>> +       }
+>> +
+>> +       ret = ufshcd_vops_config_mcq_rop(hba);
+>> +       if (ret) {
+>> +               dev_err(hba->dev, "MCQ Runtime Operation Pointers not
+>> configured\n");
+>> +               goto out_err;
+>> +       }
+>> +
+>> +       hba->nr_queues[HCTX_TYPE_DEFAULT] = num_possible_cpus();
+>> +       hba->nr_queues[HCTX_TYPE_READ] = 0;
+>> +       hba->nr_queues[HCTX_TYPE_POLL] = 1;
+>> +
+>> +       for (i = 0; i < HCTX_MAX_TYPES; i++)
+>> +               host->nr_hw_queues += hba->nr_queues[i];
+>> +
+>> +       host->can_queue = hba->nutrs;
+>> +       host->cmd_per_lun = hba->nutrs;
+>> +
+>> +       /* One more reserved for dev_cmd_queue */
+>> +       hba->nr_hw_queues = host->nr_hw_queues + 1;
+> Is it possible, since MCQ memory space is *added* to the UTR & UTMR lists,
+> That we'll keep using the legacy doorbell for query commands?
+> Wouldn't it will simplify the hw_queue bookkeeping
+> 
+Umm, I didn't understand this suggestion. Please can you elaborate a bit.
+When MCQ mode is selected the Config.QT is set to 1.
+So how would we keep using the legacy doorbell for query commands?
 
-So the maximum amount of data that can be transferred at once is 65535 * 
-256 KiB or about 16 GiB (and not what I wrote in my previous message).
+> 
+>> -#define ufshcd_hex_dump(prefix_str, buf, len) do {                       \
+>> -       size_t __len = (len);                                            \
+>> -       print_hex_dump(KERN_ERR, prefix_str,                             \
+>> -                      __len > 4 ? DUMP_PREFIX_OFFSET : DUMP_PREFIX_NONE,\
+>> -                      16, 4, buf, __len, false);                        \
+>> +#define ufshcd_hex_dump(prefix_str, buf, len) do {                     \
+>> +       size_t __len = (len);                                           \
+>> +                                                                       \
+>> +       print_hex_dump(KERN_ERR, prefix_str,                            \
+>> +                      __len > 4 ? DUMP_PREFIX_OFFSET : DUMP_PREFIX_NONE, \
+>> +                      16, 4, buf, __len, false);                       \
+>> +                                                                       \
+>>   } while (0)
+> Should this be part of this patch?
+> 
+No it shouldn't. Will remove this.
+>> +#define UFSHCD_MCQ_IO_QUEUE_OFFSET     1
+> Maybe add a comment above: "queue 0 is reserved for query commands" or something
+> That is if the query commands don't use the  legacy doorbell
+> 
+>> +static inline bool ufshcd_is_hwq_full(struct ufs_hw_queue *q)
+>> +{
+>> +       return (q->sq_hp_slot == ((q->sq_tp_slot + 1) %
+>> +                                     q->max_entries));
+>> +}
+> Isn't sq_tp_slot is already % q->max_entries ?
+> 
+This function is unused in this patchset and I will remove it in the 
+next version.
 
-Thanks,
+> 
+> Thanks,
+> Avri
 
-Bart.
