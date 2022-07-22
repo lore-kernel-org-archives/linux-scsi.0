@@ -2,122 +2,85 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09BAFC43334
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jul 2022 17:56:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4E2EC43334
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jul 2022 17:58:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236223AbiGVR4Q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Jul 2022 13:56:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48480 "EHLO
+        id S235573AbiGVR6a (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Jul 2022 13:58:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50218 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236158AbiGVR4N (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jul 2022 13:56:13 -0400
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A179D4C619;
-        Fri, 22 Jul 2022 10:56:12 -0700 (PDT)
-Received: by mail-pl1-f176.google.com with SMTP id d7so5151906plr.9;
-        Fri, 22 Jul 2022 10:56:12 -0700 (PDT)
+        with ESMTP id S232888AbiGVR63 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jul 2022 13:58:29 -0400
+Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D757B61105;
+        Fri, 22 Jul 2022 10:58:27 -0700 (PDT)
+Received: by mail-pf1-f181.google.com with SMTP id c3so5040057pfb.13;
+        Fri, 22 Jul 2022 10:58:27 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
          :content-language:to:cc:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=K6H8ybl2+ag7idCYOoYVw/oCxdPB2Pr7niRGvSl53OA=;
-        b=NA6Va0F0RIvgen9z1fpVvPHFI0qhOk/O9Pfdmq2MlZ80VgZk3D4Ppaer3AijwbYvQU
-         PYsM34iG2GzdWqYHYB8p8xMoT9bX2kGfWyLS3HVT2LKAY7fAtkHM3bbtL720LW5BMWiI
-         hDzy/UvI5nYcz7CMokFkqicX7cfncbi7mdD2sXRl/sA7XMy5Vfg2ymv9qJk3+VjOiat0
-         Hxc1h1tFXpVtBsRmYe8oe6IrHBf5shpuva2Ft7d4A+fYz6veYQdVUZYYVNM1fWWo4YFD
-         5471sE8189nZw091jvpMua+ogZLtIhwMXb6gCIy75JdwIvdpGAUTBc1UBRk8KFpT3B6g
-         LUAw==
-X-Gm-Message-State: AJIora+DEw3eAKjfbOxpOCKbrXQgyULBf0hUqVMFQgWm9p8CW1/V37DV
-        Kpac/8jM97Vpu2x56Bp9LkE=
-X-Google-Smtp-Source: AGRyM1vCHU8qGyA8pLRAYfvadi7jDT5J7KiHVcv7GaY3IC+IUt3kg/RktDKh1wIJu/8+y40eAeoQfQ==
-X-Received: by 2002:a17:90b:33d2:b0:1f0:3a40:982d with SMTP id lk18-20020a17090b33d200b001f03a40982dmr840647pjb.60.1658512572066;
-        Fri, 22 Jul 2022 10:56:12 -0700 (PDT)
+        bh=XI6aI/fJE0zfHg81LO7kfFCj4mcwWmAT78t/HxVPB5c=;
+        b=qcm8G3X12FJ7VxU+7fJHzlsss77YGiCq30PqsllDJ3BwZglyW2E/4QtoWNt5VxYcwz
+         AsmG6aCV7Q3brPf1PdDmdePBk9P/7CQxlk/6b0uFvle3XnSPYQmOasGfIFZDIIGkoqFY
+         KOuQO1sN9THff/MD6L9Vi9OHUk6NTssqYJB8kYpD8lU747gI/eqvTBnW1cbbXJl22R6q
+         3+bAeBtUeltArTwekjuTezvAdVoqkOXFJTrxF6gpyO7wnRCN8UijYgk1fQ71FPC5wM9c
+         R2ejg5rspP4AVKTCYmWE8WUjrD0xVQP9TH0m4Pu/Wtb9k9CpPXsry3R6qzyCbCVJVfhv
+         LHyg==
+X-Gm-Message-State: AJIora+ebT3cI30yjSVoB7f8CIbBPtaWYaqiFQSHXCoMiKEB/G5hMd7O
+        L0slcirHlD/sfAoqhOpJNoU=
+X-Google-Smtp-Source: AGRyM1tEbmCsZ17e5zfJFAHUCqG+l7LdCnTCt0iQrz00mXvdvvA31CYlcGjTBybG0R7PgETIt6p5Yw==
+X-Received: by 2002:a63:500d:0:b0:415:e89e:42b7 with SMTP id e13-20020a63500d000000b00415e89e42b7mr821297pgb.140.1658512707195;
+        Fri, 22 Jul 2022 10:58:27 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:9cf6:7e29:d977:6fc7? ([2620:15c:211:201:9cf6:7e29:d977:6fc7])
-        by smtp.gmail.com with ESMTPSA id q3-20020a170902a3c300b0016c6a6d8967sm4065003plb.83.2022.07.22.10.56.10
+        by smtp.gmail.com with ESMTPSA id y22-20020a170902b49600b0016c5306917fsm4037363plr.53.2022.07.22.10.58.25
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 22 Jul 2022 10:56:11 -0700 (PDT)
-Message-ID: <084e7c5a-f98d-d61e-de81-83525851ecf9@acm.org>
-Date:   Fri, 22 Jul 2022 10:56:09 -0700
+        Fri, 22 Jul 2022 10:58:26 -0700 (PDT)
+Message-ID: <1de1372e-1c69-611b-0999-c162da8013ac@acm.org>
+Date:   Fri, 22 Jul 2022 10:58:24 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.11.0
-Subject: Re: [PATCH v2 2/2] scsi: sd: Rework asynchronous resume support
+Subject: Re: [PATCH 1/2] scsi: ufs: Add Multi-Circular Queue support
 Content-Language: en-US
-To:     Geert Uytterhoeven <geert@linux-m68k.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        scsi <linux-scsi@vger.kernel.org>,
-        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
-        John Garry <john.garry@huawei.com>, ericspero@icloud.com,
-        jason600.groome@gmail.com,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-References: <20220630195703.10155-1-bvanassche@acm.org>
- <20220630195703.10155-3-bvanassche@acm.org>
- <alpine.DEB.2.22.394.2207191125130.1006766@ramsan.of.borg>
- <db19ed29-e7f9-e5b0-3a6c-f2812078a07d@acm.org>
- <CAMuHMdVzsgSYtbJQnaigNax_JbxPsQfU+gHcteS-ojWbxUdMfw@mail.gmail.com>
- <CAMuHMdWtxBj8ug7AHTqentF8UD4jpO2sgoWWcQCOvEKLJtdq8A@mail.gmail.com>
- <506ca1a6-1122-5755-fc74-60f7c7bfbd0d@acm.org>
- <CAMuHMdVQ2K2v8jpsFfOMk99DG_sBB4_ioiQRroC7K_Ov1wvp9w@mail.gmail.com>
- <6f70e742-9d8a-f389-0482-0ba9696bf445@acm.org>
- <CAMuHMdVc+ATGV-=R3uV6RyF0-mZiuKv7HpmogRBgqGVyO-MKWg@mail.gmail.com>
- <54e20a27-a10b-b77a-e950-1d3398e2e907@acm.org>
- <CAMuHMdURQpAEGgv4cY7v0rqzs12v2TT=Amt26Y0OoBSW7YAoaw@mail.gmail.com>
+To:     Avri Altman <Avri.Altman@wdc.com>, Can Guo <quic_cang@quicinc.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "quic_asutoshd@quicinc.com" <quic_asutoshd@quicinc.com>,
+        "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
+        "quic_ziqichen@quicinc.com" <quic_ziqichen@quicinc.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "kernel-team@android.com" <kernel-team@android.com>
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        Jinyoung Choi <j-young.choi@samsung.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        open list <linux-kernel@vger.kernel.org>
+References: <1658214120-22772-1-git-send-email-quic_cang@quicinc.com>
+ <1658214120-22772-2-git-send-email-quic_cang@quicinc.com>
+ <DM6PR04MB65750EE12401C4F69B352E5CFC909@DM6PR04MB6575.namprd04.prod.outlook.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <CAMuHMdURQpAEGgv4cY7v0rqzs12v2TT=Amt26Y0OoBSW7YAoaw@mail.gmail.com>
+In-Reply-To: <DM6PR04MB65750EE12401C4F69B352E5CFC909@DM6PR04MB6575.namprd04.prod.outlook.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/22/22 01:53, Geert Uytterhoeven wrote:
-> During s2idle, the following trace data is generated:
-> 
->     kworker/u16:9-325     [000] ...2.   230.478731: block_rq_issue: 8,0
-> N 0 () 0 + 0 [kworker/u16:9]
->     kworker/u16:9-325     [000] ...2.   230.478745:
-> scsi_dispatch_cmd_start: host_no=0 channel=0 id=0 lun=0 data_sgl=0
-> prot_sgl=0 prot_op=SCSI_PROT_NORMAL driver_tag=0 scheduler_tag=0
-> cmnd=(SYNCHRONIZE_CACHE - raw=35 00 00 00 00 00 00 00 00 00)
->            <idle>-0       [007] d.h3.   230.478832:
-> scsi_dispatch_cmd_done: host_no=0 channel=0 id=0 lun=0 data_sgl=0
-> prot_sgl=0 prot_op=SCSI_PROT_NORMAL driver_tag=0 scheduler_tag=0
-> cmnd=(SYNCHRONIZE_CACHE - raw=35 00 00 00 00 00 00 00 00 00)
-> result=(driver=DRIVER_OK host=DID_OK message=COMMAND_COMPLETE
-> status=SAM_STAT_GOOD)
->            <idle>-0       [000] ..s2.   230.478851: block_rq_complete:
-> 8,0 N () 18446744073709551615 + 0 [0]
->     kworker/u16:9-325     [000] ...2.   230.483134: block_rq_issue: 8,0
-> N 0 () 0 + 0 [kworker/u16:9]
->     kworker/u16:9-325     [000] ...2.   230.483136:
-> scsi_dispatch_cmd_start: host_no=0 channel=0 id=0 lun=0 data_sgl=0
-> prot_sgl=0 prot_op=SCSI_PROT_NORMAL driver_tag=0 scheduler_tag=1
-> cmnd=(START_STOP - raw=1b 00 00 00 00 00)
->            <idle>-0       [007] d.h3.   230.624530:
-> scsi_dispatch_cmd_done: host_no=0 channel=0 id=0 lun=0 data_sgl=0
-> prot_sgl=0 prot_op=SCSI_PROT_NORMAL driver_tag=0 scheduler_tag=1
-> cmnd=(START_STOP - raw=1b 00 00 00 00 00) result=(driver=DRIVER_OK
-> host=DID_OK message=COMMAND_COMPLETE status=SAM_STAT_GOOD)
->            <idle>-0       [000] d.s4.   230.624634: scsi_eh_wakeup: host_no=0
->            <idle>-0       [000] ..s2.   230.624642: block_rq_complete:
-> 8,0 N () 18446744073709551615 + 0 [0]
->    kworker/u16:14-1027    [007] d..3.   231.393642: scsi_eh_wakeup: host_no=0
-> 
-> When reading from hard drive after s2idle, no more trace data
-> is generated.
+On 7/22/22 00:31, Avri Altman wrote:
+>> +#define UFSHCD_MCQ_IO_QUEUE_OFFSET     1
+> Maybe add a comment above: "queue 0 is reserved for query commands" or something
+> That is if the query commands don't use the  legacy doorbell
 
-I think the above commands come from the suspend sequence. '1b 00 00 00 
-00 00' stops a block device. The lowest bit in byte 4 needs to be set to 
-start a block device.
-
-Something that is not yet clear is whether or not sd_submit_start() 
-hangs during the resume process. How about verifying whether or not 
-sd_submit_start() hangs by either issuing SysRq-t or by adding pr_info() 
-statements in that function?
+Is it essential to reserve a queue for device management commands? 
+Wouldn't it be better to have one additional queue for submitting I/O 
+commands rather than reserving a queue for device management commands?
 
 Thanks,
 
 Bart.
+
