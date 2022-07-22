@@ -2,85 +2,88 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4E2EC43334
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jul 2022 17:58:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F6C4C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jul 2022 18:04:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235573AbiGVR6a (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Jul 2022 13:58:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50218 "EHLO
+        id S231339AbiGVSER (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Jul 2022 14:04:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54052 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232888AbiGVR63 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jul 2022 13:58:29 -0400
-Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D757B61105;
-        Fri, 22 Jul 2022 10:58:27 -0700 (PDT)
-Received: by mail-pf1-f181.google.com with SMTP id c3so5040057pfb.13;
-        Fri, 22 Jul 2022 10:58:27 -0700 (PDT)
+        with ESMTP id S235827AbiGVSEM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jul 2022 14:04:12 -0400
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B419813F93
+        for <linux-scsi@vger.kernel.org>; Fri, 22 Jul 2022 11:04:11 -0700 (PDT)
+Received: by mail-pl1-f177.google.com with SMTP id z3so5201488plb.1
+        for <linux-scsi@vger.kernel.org>; Fri, 22 Jul 2022 11:04:11 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
          :content-language:to:cc:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=XI6aI/fJE0zfHg81LO7kfFCj4mcwWmAT78t/HxVPB5c=;
-        b=qcm8G3X12FJ7VxU+7fJHzlsss77YGiCq30PqsllDJ3BwZglyW2E/4QtoWNt5VxYcwz
-         AsmG6aCV7Q3brPf1PdDmdePBk9P/7CQxlk/6b0uFvle3XnSPYQmOasGfIFZDIIGkoqFY
-         KOuQO1sN9THff/MD6L9Vi9OHUk6NTssqYJB8kYpD8lU747gI/eqvTBnW1cbbXJl22R6q
-         3+bAeBtUeltArTwekjuTezvAdVoqkOXFJTrxF6gpyO7wnRCN8UijYgk1fQ71FPC5wM9c
-         R2ejg5rspP4AVKTCYmWE8WUjrD0xVQP9TH0m4Pu/Wtb9k9CpPXsry3R6qzyCbCVJVfhv
-         LHyg==
-X-Gm-Message-State: AJIora+ebT3cI30yjSVoB7f8CIbBPtaWYaqiFQSHXCoMiKEB/G5hMd7O
-        L0slcirHlD/sfAoqhOpJNoU=
-X-Google-Smtp-Source: AGRyM1tEbmCsZ17e5zfJFAHUCqG+l7LdCnTCt0iQrz00mXvdvvA31CYlcGjTBybG0R7PgETIt6p5Yw==
-X-Received: by 2002:a63:500d:0:b0:415:e89e:42b7 with SMTP id e13-20020a63500d000000b00415e89e42b7mr821297pgb.140.1658512707195;
-        Fri, 22 Jul 2022 10:58:27 -0700 (PDT)
+        bh=0G9IXPR6Tw9u4K90d7Qyi37Gnq89rkjK88M8sdp4wcE=;
+        b=7Id97OmaD+dpXHke+VC9S08W2/HGXgkXAHXX18lp8lUMHY6kfqde70k7GL+aI+Ac7Z
+         3hR18lgkmHAHUIV7qCtDB9/TinqEoEycJrr5NpXnRbkBlySJAPMhDr61pSCaq0Z7g5E2
+         iUbbEOI3xYT1b/Xi3k/VRgsIhJgpJYskS3fYK0y3AlRm5KPSbLcrLyaTd96uymZM4yGW
+         PnkIYZnNCyiQcIFJy0vJQb0uDwwiUwcgCGtvkGDKfuyOXMjtEOPJ2ZarbeYmNOUAMuYO
+         upRwXwW3UIua9Mw5+Unza6yeBT/Ck6DwDaBNDZwosfxLdf3RHaG8hwNVOJCe8UG5VZkO
+         p90w==
+X-Gm-Message-State: AJIora9WmmKQf+J3B8fOLnq1Yo/N9u7ostVNXJLYuc61DFrRewpsv9iH
+        axQ+qktLeJI2BXvx1+8b+y4=
+X-Google-Smtp-Source: AGRyM1tyRlpOkC9LR1tUTjXTsRZQTZG0ZPjBQfuTav4mfXobli6INpnif5GO02jqRhEpYNzQEGR3dQ==
+X-Received: by 2002:a17:90b:4ac1:b0:1ef:c1ba:e73e with SMTP id mh1-20020a17090b4ac100b001efc1bae73emr18674775pjb.47.1658513051184;
+        Fri, 22 Jul 2022 11:04:11 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:9cf6:7e29:d977:6fc7? ([2620:15c:211:201:9cf6:7e29:d977:6fc7])
-        by smtp.gmail.com with ESMTPSA id y22-20020a170902b49600b0016c5306917fsm4037363plr.53.2022.07.22.10.58.25
+        by smtp.gmail.com with ESMTPSA id a142-20020a621a94000000b0052b433aa45asm4247935pfa.159.2022.07.22.11.04.09
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 22 Jul 2022 10:58:26 -0700 (PDT)
-Message-ID: <1de1372e-1c69-611b-0999-c162da8013ac@acm.org>
-Date:   Fri, 22 Jul 2022 10:58:24 -0700
+        Fri, 22 Jul 2022 11:04:10 -0700 (PDT)
+Message-ID: <54727af0-dc4b-fadb-5193-13ff4ecc48ef@acm.org>
+Date:   Fri, 22 Jul 2022 11:04:08 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.11.0
-Subject: Re: [PATCH 1/2] scsi: ufs: Add Multi-Circular Queue support
+Subject: Re: [PATCH v1] scsi: ufs: correct ufshcd_shutdown flow
 Content-Language: en-US
-To:     Avri Altman <Avri.Altman@wdc.com>, Can Guo <quic_cang@quicinc.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "quic_asutoshd@quicinc.com" <quic_asutoshd@quicinc.com>,
-        "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
-        "quic_ziqichen@quicinc.com" <quic_ziqichen@quicinc.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "kernel-team@android.com" <kernel-team@android.com>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1658214120-22772-1-git-send-email-quic_cang@quicinc.com>
- <1658214120-22772-2-git-send-email-quic_cang@quicinc.com>
- <DM6PR04MB65750EE12401C4F69B352E5CFC909@DM6PR04MB6575.namprd04.prod.outlook.com>
+To:     Peter Wang <peter.wang@mediatek.com>, stanley.chu@mediatek.com,
+        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com
+Cc:     wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
+        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
+        cc.chou@mediatek.com, chaotian.jing@mediatek.com,
+        jiajie.hao@mediatek.com, powen.kao@mediatek.com,
+        qilin.tan@mediatek.com, lin.gui@mediatek.com
+References: <20220719130208.29032-1-peter.wang@mediatek.com>
+ <afb8d403-f8f5-5161-4680-ce2c3ae7787d@acm.org>
+ <a71af42f-3b66-c0a1-c79d-a4573d0376fe@mediatek.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <DM6PR04MB65750EE12401C4F69B352E5CFC909@DM6PR04MB6575.namprd04.prod.outlook.com>
+In-Reply-To: <a71af42f-3b66-c0a1-c79d-a4573d0376fe@mediatek.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/22/22 00:31, Avri Altman wrote:
->> +#define UFSHCD_MCQ_IO_QUEUE_OFFSET     1
-> Maybe add a comment above: "queue 0 is reserved for query commands" or something
-> That is if the query commands don't use the  legacy doorbell
+On 7/20/22 21:30, Peter Wang wrote:
+> On 7/21/22 5:40 AM, Bart Van Assche wrote:
+>> On 7/19/22 06:02, peter.wang@mediatek.com wrote:
+>>> From: Peter Wang <peter.wang@mediatek.com>
+>>> Also remove pm_runtime_get_sync because it is unnecessary.
+>>
+>> Please explain in the patch description why the pm_runtime_get_sync() 
+>> call is not necessary.
+> 
+> Because shutdown is focus on turn off clock/power, we don't need turn 
+> on(resume) and turn off, right?
+Hi Peter,
 
-Is it essential to reserve a queue for device management commands? 
-Wouldn't it be better to have one additional queue for submitting I/O 
-commands rather than reserving a queue for device management commands?
+I think that removing the pm_runtime_get_sync() call is safe because the 
+device driver core already performs a runtime resume before the UFS 
+driver shutdown callback function is called. From drivers/base/core.c:
+
+		/* Don't allow any more runtime suspends */
+		pm_runtime_get_noresume(dev);
+		pm_runtime_barrier(dev);
 
 Thanks,
 
 Bart.
-
