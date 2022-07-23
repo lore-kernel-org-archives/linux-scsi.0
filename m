@@ -2,80 +2,76 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F0A8C43334
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Jul 2022 21:12:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7273C43334
+	for <linux-scsi@archiver.kernel.org>; Sat, 23 Jul 2022 06:41:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235668AbiGVVM6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Jul 2022 17:12:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52478 "EHLO
+        id S233922AbiGWGlt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 23 Jul 2022 02:41:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52222 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229572AbiGVVM5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jul 2022 17:12:57 -0400
-Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3C3EB504E
-        for <linux-scsi@vger.kernel.org>; Fri, 22 Jul 2022 14:12:56 -0700 (PDT)
-Received: by mail-pf1-f170.google.com with SMTP id b9so5428371pfp.10
-        for <linux-scsi@vger.kernel.org>; Fri, 22 Jul 2022 14:12:56 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=c9WsKYP78qtCT0ErIavQs+Q5NIpoTLGobCYxRumep4k=;
-        b=rozp5YkTmNhjxR799z5Tm4F35y0w4+9bD94A3R53RSP42D/VdJtorQuS0nyH7PQYxT
-         U9di2qOdcs1HU1m4uKjiQccFXdA0tFWyTBPMvdjuXUyHXtUh9MMwD8ynMRUAoGlXUjYe
-         hnPMB1W/ZRKqEVmBaSSRB4MJR2P9zjd1wTbkBfLxyTjwNLom3jE2u4d3wo5psuZh5FVu
-         cYQDlPqlyjuLJEbyB2jBcjMuJATmPqRxGbuCb+jbjsRSTiNoCXMJ4fLXB2vkrkEQhGiP
-         YqazM862Jt9a4WF4Fr/bq6/KnzDWlViOkpbLLhvJqNbh8Ym1grBzV7f8CWuJfdUwuV92
-         vffg==
-X-Gm-Message-State: AJIora/JZwqRPiD91aHovMkzMARB+fdMv6fhQk2fxAVWCvaP3cXcoK4b
-        1Ti4LlOJ9Ib+QKbcpzLAmIM=
-X-Google-Smtp-Source: AGRyM1skqTQGIq8EhXNOZW/llHdz3ok4Yt+f/wc47H+x9dyaLS8CpI3xeEkInEGO84kmTs6bP/YNog==
-X-Received: by 2002:a05:6a00:1589:b0:52a:eb00:71d8 with SMTP id u9-20020a056a00158900b0052aeb0071d8mr1805063pfk.38.1658524376175;
-        Fri, 22 Jul 2022 14:12:56 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:805b:3c64:6a1f:424c? ([2620:15c:211:201:805b:3c64:6a1f:424c])
-        by smtp.gmail.com with ESMTPSA id i9-20020a628709000000b0052aca106b20sm4404311pfe.202.2022.07.22.14.12.54
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 22 Jul 2022 14:12:55 -0700 (PDT)
-Message-ID: <2f66f4ba-f0d5-6b8a-cc3b-fa896a302d60@acm.org>
-Date:   Fri, 22 Jul 2022 14:12:52 -0700
+        with ESMTP id S229723AbiGWGls (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Jul 2022 02:41:48 -0400
+Received: from mail-m974.mail.163.com (mail-m974.mail.163.com [123.126.97.4])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9D17464E11;
+        Fri, 22 Jul 2022 23:41:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=kucPn
+        kJPET0vErhB73+JEC1LgKSF0wQdv8SoTfgnP4A=; b=BJPrKQh/vhuRZ+NC2pWDR
+        CdpiBHLOLW/NSN7g8tEdAnk1FGze9taU8hIvGb6YjmsJLY5wQCT+MWbVm+X61YOe
+        AEJqFQv9B92eAreMcQj1qzrh847UFCVf43Gq+jNbpSeKj3x23XKtbJqLP6egnjwJ
+        fBIl3GTzD8PRkQ8vmLc3dI=
+Received: from localhost.localdomain (unknown [123.58.221.99])
+        by smtp4 (Coremail) with SMTP id HNxpCgCX5ITfl9titVQzQQ--.40765S2;
+        Sat, 23 Jul 2022 14:40:32 +0800 (CST)
+From:   williamsukatube@163.com
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     james.smart@broadcom.com, dick.kennedy@broadcom.com,
+        William Dean <williamsukatube@gmail.com>,
+        Hacash Robot <hacashRobot@santino.com>
+Subject: [PATCH] scsi: lpfc: check the return value of alloc_workqueue()
+Date:   Sat, 23 Jul 2022 14:40:27 +0800
+Message-Id: <20220723064027.2956623-1-williamsukatube@163.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [PATCH v3] scsi: ufs: correct ufshcd_shutdown flow
-Content-Language: en-US
-To:     peter.wang@mediatek.com, stanley.chu@mediatek.com,
-        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com
-Cc:     wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
-        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
-        cc.chou@mediatek.com, chaotian.jing@mediatek.com,
-        jiajie.hao@mediatek.com, powen.kao@mediatek.com,
-        qilin.tan@mediatek.com, lin.gui@mediatek.com
-References: <20220721065833.26887-1-peter.wang@mediatek.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220721065833.26887-1-peter.wang@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: HNxpCgCX5ITfl9titVQzQQ--.40765S2
+X-Coremail-Antispam: 1Uf129KBjvdXoWrtFWxCF4UXF4kAFykZw1xuFg_yoWDAwb_ua
+        y8ZF1xXws5GF1xAasrJr43Z3sI9r48XFnxu3Z0qryrCr4xZF1kWFs8WFn8X3yUArn5JFyD
+        Ga1rX3y0yr13ujkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IU5uwZ7UUUUU==
+X-Originating-IP: [123.58.221.99]
+X-CM-SenderInfo: xzlozx5dpv3yxdwxuvi6rwjhhfrp/xtbBiAFHg1aECKfLXAAAsn
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/20/22 23:58, peter.wang@mediatek.com wrote:
-> Both ufshcd_shtdown and ufshcd_wl_shutdown could run concurrently.
-> And it have race condition when ufshcd_wl_shutdown on-going and
-> clock/power turn off by ufshcd_shutdown.
-> 
-> The normal case:
-> ufshcd_wl_shutdown -> ufshcd_shtdown
-> ufshcd_shtdown should turn off clock/power.
-> 
-> The abnormal case:
-> ufshcd_shtdown -> ufshcd_wl_shutdown
+From: William Dean <williamsukatube@gmail.com>
 
-How can this happen since device_shutdown() iterates over devices in the 
-opposite order in which these have been created?
+The function alloc_workqueue() in lpfc_sli4_driver_resource_setup() can
+fail, but there is no check of its return value. To fix this bug, its
+return value should be checked with new error handling code.
 
-Thanks,
+Fixes: 3cee98db2610f ("scsi: lpfc: Fix crash on driver unload in wq free")
+Reported-by: Hacash Robot <hacashRobot@santino.com>
+Signed-off-by: William Dean <williamsukatube@gmail.com>
+---
+ drivers/scsi/lpfc/lpfc_init.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Bart.
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 750dd1e9f2cc..8e9594f4ed16 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -7958,6 +7958,8 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
+ 
+ 	/* The lpfc_wq workqueue for deferred irq use */
+ 	phba->wq = alloc_workqueue("lpfc_wq", WQ_MEM_RECLAIM, 0);
++	if (!phba->wq)
++		return -ENOMEM;
+ 
+ 	/*
+ 	 * Initialize timers used by driver
+-- 
+2.25.1
+
