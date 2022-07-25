@@ -2,225 +2,173 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E98D6C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jul 2022 17:36:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62DF7C43334
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jul 2022 19:51:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236607AbiGYRgD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Jul 2022 13:36:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43752 "EHLO
+        id S236669AbiGYTvJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Jul 2022 15:51:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59826 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236190AbiGYRgC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jul 2022 13:36:02 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 919D9A46D;
-        Mon, 25 Jul 2022 10:36:01 -0700 (PDT)
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 26PBOhFt021964;
-        Mon, 25 Jul 2022 17:35:49 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=ba3NBpgik/RlbZcSqjI7hnyK8Rl8xqoqOnzZmmYjne0=;
- b=c8+q7S06y+NHXK6h8iFEg9GIBR3T1qNLy+2Lb6dC0p9wOLVXwbR2xaQ8OlHhodttrfGd
- eoNhfq1gYTVMpNU0mjOP6US2S3QVXp0JHIyQkehAG55Tt4b8q0OD0illXvSx1Pl27XkP
- xU5f3PrEv9T4AkAPD22D0QtaUqMUjwVq/F/gAW2AwQl2NqoRkW8JgxMG/Ke+LZFGWzOR
- cKvrGszp1mbgk8Y4eiS6IQ0wUPtYK6FW5o3w/roZ0dop6gChSSTh20PLi9PiLgwzsv+F
- hK5E6PBZFJMdHsdB1G12fVqJY5ak4rwTzFwOAyluwot7IEgo4R/ox33lL6HMsjhXeNo0 mQ== 
-Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3hg97andm6-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 25 Jul 2022 17:35:49 +0000
-Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
-        by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 26PHZmSn008588
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 25 Jul 2022 17:35:48 GMT
-Received: from [10.110.113.144] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.22; Mon, 25 Jul
- 2022 10:35:47 -0700
-Message-ID: <2f13e07d-744f-5c59-492c-846e2f31d202@quicinc.com>
-Date:   Mon, 25 Jul 2022 10:35:46 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.0.3
-Subject: Re: [PATCH 1/2] scsi: ufs: Add Multi-Circular Queue support
-To:     Bean Huo <huobean@gmail.com>, Can Guo <quic_cang@quicinc.com>,
-        <bvanassche@acm.org>, <stanley.chu@mediatek.com>,
-        <adrian.hunter@intel.com>, <alim.akhtar@samsung.com>,
-        <avri.altman@wdc.com>, <beanhuo@micron.com>,
-        <quic_nguyenb@quicinc.com>, <quic_ziqichen@quicinc.com>,
-        <linux-scsi@vger.kernel.org>, <kernel-team@android.com>
+        with ESMTP id S235738AbiGYTvI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jul 2022 15:51:08 -0400
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F36CB2A;
+        Mon, 25 Jul 2022 12:51:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1658778665; x=1690314665;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=qIVgD8Se49dxTWDk79SdIIEIF9bh2i6MtI4B2d7+KmM=;
+  b=C+f/7NRB4Hjp7vHtPRDpjTByXVxJXIcr7FleQ5Jua2x/ahoXRf0nuzvy
+   WFTMKKvo7RT1z0k3omUZ7dUYruc4C2FCqTnl7GgNDd80lLBE8MqroASPi
+   R4+gtqx7OgG2izXuUUAY8qIkbSNj+8FpIADyWLMMkTHD1TPTc2lFM1Zit
+   RXZUPCv4d29+RfN0bnwqfLxVgZOzXsXneuaR6SqeM8e/zIAYHj+T4kdlb
+   a/vzACvELfl2z24IUanHssr9NAQzl9WtWTJMK+Q9fDJBV+RCiwzMAAXu6
+   Rxl5+f+6h9+lOjGmTZKLaCLQ4Uo5k8Kncx7m5xrXFGmvvObRYcUycGGEW
+   g==;
+X-IronPort-AV: E=Sophos;i="5.93,193,1654531200"; 
+   d="scan'208";a="207486645"
+Received: from mail-bn1nam07lp2044.outbound.protection.outlook.com (HELO NAM02-BN1-obe.outbound.protection.outlook.com) ([104.47.51.44])
+  by ob1.hgst.iphmx.com with ESMTP; 26 Jul 2022 03:51:01 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=HPDil6UbgiyVsC0kvQK7hS2fzKY3VK1aRvwewooSPn+vBwxMawmXea3KgNeG2pE5/xOKbndZy/ZoVjmRK8y/glX6xUEvTU8C02sa6qeS5I6ruI9PotmMUc9EiC/7BQZ2bmW0+KlEll2/ibnvvsJTIErF+oH9bh67hdqnp/aOVIERp7dKvznyd8DTFJenwyLCvREkM/O8I5T/m6tvzXux41Hsr0w/KHMedzDGF4IelsYZTgzdSCp0869zLmcOETV9II6uDk7Hd16kg6d39P2nX9qCZPNv2HFDh/ostMpqGmuPMDstLtuxU6QmGuRp2bqKE5r1rO2OFKJsyIIJXpQn3Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=qIVgD8Se49dxTWDk79SdIIEIF9bh2i6MtI4B2d7+KmM=;
+ b=W8MJt8zgrthndFI20+O4CimkQPv3Xbon2tpXB90zs1zwLAInxdF2xBhyFbYRv1WUI0n6sAUJkOgMyMadiCMRbyioSMasgkJ6YhCxJs7vjxuFKxTKW3HVA4DnRTopmLM89BXhtByyXkkXwsofOwFaa1qQsHTW3Ql4awery4QadMqZfmfJp35031sz7ZaiHJjHjWIN4ELcIxqapZMjMnYDQWwKmq4TfhlV1p240gy7L/Pp/2XZZ2dVSap8Rak9zU1FZMh9leR1ybE4Ds8HVGQ6dj8rYAlnmBOTBqhQcbU6Yy6j0vG2bsVdmOr1O8rZxt4PlKqeLWAtQS/11RWnmgDGwA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=qIVgD8Se49dxTWDk79SdIIEIF9bh2i6MtI4B2d7+KmM=;
+ b=F0CoPXk3pf5o/uJZCeidfh2vOQxuyqUiEFxSz+x+5wHnHAqe23Eep60xbATkNGlxJkr5Jypf0x1K+1eXXVLdofjhvu1M9KLVIzdyT6LcgzPYgw35GuOJ4wsSuXicRemCgqsbAl5ZO7/ZjuYMepieaYHdaogFurDQcJTTv79aduo=
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
+ BY5PR04MB6948.namprd04.prod.outlook.com (2603:10b6:a03:220::23) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5458.18; Mon, 25 Jul
+ 2022 19:50:59 +0000
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::5d26:82d8:6c89:9e31]) by DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::5d26:82d8:6c89:9e31%8]) with mapi id 15.20.5458.024; Mon, 25 Jul 2022
+ 19:50:59 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     "Asutosh Das (asd)" <quic_asutoshd@quicinc.com>,
+        Can Guo <quic_cang@quicinc.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
+        "quic_ziqichen@quicinc.com" <quic_ziqichen@quicinc.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "kernel-team@android.com" <kernel-team@android.com>
 CC:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Daejun Park <daejun7.park@samsung.com>,
         Jinyoung Choi <j-young.choi@samsung.com>,
         Kiwoong Kim <kwmad.kim@samsung.com>,
         open list <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 1/2] scsi: ufs: Add Multi-Circular Queue support
+Thread-Topic: [PATCH 1/2] scsi: ufs: Add Multi-Circular Queue support
+Thread-Index: AQHYmz2OvInxSH8TlUq8qOHvad4nHq2MbQiAgALjEQCAADjhAA==
+Date:   Mon, 25 Jul 2022 19:50:58 +0000
+Message-ID: <DM6PR04MB65752C063B1C9D06A3CB44DAFC959@DM6PR04MB6575.namprd04.prod.outlook.com>
 References: <1658214120-22772-1-git-send-email-quic_cang@quicinc.com>
  <1658214120-22772-2-git-send-email-quic_cang@quicinc.com>
- <9f4c233f8f6f9288b17859efab0cb22df2452777.camel@gmail.com>
-From:   "Asutosh Das (asd)" <quic_asutoshd@quicinc.com>
-In-Reply-To: <9f4c233f8f6f9288b17859efab0cb22df2452777.camel@gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 9I1utxZBljj_yp9u6V4xLRU4FLgCo7Ww
-X-Proofpoint-GUID: 9I1utxZBljj_yp9u6V4xLRU4FLgCo7Ww
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
- definitions=2022-07-25_12,2022-07-25_03,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 clxscore=1011
- suspectscore=0 spamscore=0 bulkscore=0 priorityscore=1501 mlxlogscore=999
- malwarescore=0 impostorscore=0 mlxscore=0 phishscore=0 lowpriorityscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2206140000
- definitions=main-2207250072
+ <DM6PR04MB65756C2EF5D9F23B5EC9E3A7FC939@DM6PR04MB6575.namprd04.prod.outlook.com>
+ <a46700a8-585f-ddcb-ccaa-806afcb31ec3@quicinc.com>
+In-Reply-To: <a46700a8-585f-ddcb-ccaa-806afcb31ec3@quicinc.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 0cfe716a-85d3-4a1f-6343-08da6e76ff04
+x-ms-traffictypediagnostic: BY5PR04MB6948:EE_
+wdcipoutbound: EOP-TRUE
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: rQX+NX3y10m4u1YAUFovPTRQpMdLUIEx5EtUf0cjKlYxsKhgaeKfVsHLVNK3Z64zg7czqCuCi2xZ5XU5UicE8s9QPDPaBS+sgLvg9wZ2JgA34eB0c7ZEPWOp3WE5A12m1+g5SBACY0rqTGnPcf3Fs3OJ5NCgSjv7r20YshWlDjufysbrTFDBsLskLHTAfickdfi9HxuWnVqDhWGeBW8xd89ibyARTuZefcjZDUfhf6F9crih7F8OdY1minTjZbNoG/XfGFyzacRfQHqW571tYeI0aUE9KHQ+wnG0J8PJHUXbXBJFB9oN8bhnIweFOp0Td4yql45PL7UX1y5K5j1IzUPcbr/bHwXJ36HhW6QrmU3YKtBNDoxskmxpwG6AlOud46T4Unczkj6Xp2rD/TStjp98PV6Rrx+9iZMQ/1ytzrDyPuSIpropVXO4lneBh4uZoQFd6uYz0ZnSrzwq7CIlDq2jhV2O9J9tcSQIMueOpOWgKPn77XfqRQ+7cTrjBHGSTGpcw//czvegpVkfeaZt31RaJpqasWN/3uRdwQ6BBIXGOWGTQPQlhuC1lJi62HEpGQ1VywwEPrJA2ZCj5LZMpalr9JOiORChXhfcz4uNQjcX/1I46/w0b0skxKuO7zIwodeob226/PW13uWJjsMuNgPI86T5xnra2RzuWnSMlSZsu7JCQseuJMzee9++vEe+32J5JeIK2g+HdPHseBPRZobGRdoUiuw2Dt6CI+qThTGPkChP0SqfKiz1F858USib31UZyf42aHRlRnfB708YbHhFTmrNIQiAyhX2YWsIUhZFtEpEKV3BYFrbKj6M7QK8XqP9xFgMo6VdO0maA0jzfg==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(4636009)(396003)(136003)(346002)(366004)(39860400002)(376002)(66946007)(2906002)(26005)(9686003)(41300700001)(478600001)(55016003)(7696005)(33656002)(53546011)(6506007)(4326008)(76116006)(110136005)(8676002)(71200400001)(54906003)(316002)(82960400001)(86362001)(122000001)(38100700002)(38070700005)(921005)(4744005)(7416002)(186003)(52536014)(66556008)(64756008)(66446008)(66476007)(5660300002)(8936002);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?M3VlWFRUMHJBWHViTHJrMWV4K2FSeU91eml0TmtRakZyTFJzT2g2Z0ZZK0gr?=
+ =?utf-8?B?WUVYT3FNa2ZrRnRWNm5iVjF6c1lONmpRa29CTzlOcTR0OEN5NU5NSzk1WWFK?=
+ =?utf-8?B?bWswa0ZHUllqeEhINmFkRHZMQi9vamhCWGNTdEVQRHJmSVAxMEhLRzFoT0xu?=
+ =?utf-8?B?cGUzZk1BQVQzWUVRZzFkemZRRktJQXJqekM5YjZYSXhGdzdIMytsTGRmbGgz?=
+ =?utf-8?B?L1U2a3Q0b3NMbmZRZmV4MDZxSENpWmpSaG0zdmZDeUVPcWJWNHhYMkdiN1k5?=
+ =?utf-8?B?Q1pxbWRyK0pyYWF0b2FoV0NvdXJ0UXkrWHQ0TGtROW5TTExOcFA0REFabzFR?=
+ =?utf-8?B?YlYrVDRwL3RwN0hsSFVHbnd5VDBiTFIxUzNuaUFMa3c1dktBd3RHdHZONkxB?=
+ =?utf-8?B?VjBCa2d1V2I2U3JqTm1EeTZJM2o4SXUrOHpxcnBwSlBVcDFndHorY1hVTmFl?=
+ =?utf-8?B?SGFZYUcxcFJ4WXRzelVETGJTNzFiQXZYZ3lSMnVIYlZHUGpBQ002ZjVGNkFL?=
+ =?utf-8?B?Uk1RSEIvMGNrc3FpcHh6ejlZcEdTNVZuKzUybTJMZzBsU1JuMmRpc3l3UTlG?=
+ =?utf-8?B?ejdGdTJ6cEFBNW0va2NPeDVycnExUy9STHFoTHF3YWJGaGw0ZFpDQ3d5OWd2?=
+ =?utf-8?B?bi9wZWxFR2pPVER1aTJ0ck0zSkQwYUdqL0d2NksyL2xERHlqNXJOR1o1eGtB?=
+ =?utf-8?B?TkJUbHM3bnNUSFd3QXdQbThPMEVuZ0lrcnI5eG5VK21PcnFkWG9pbVVzZE8w?=
+ =?utf-8?B?Y3FRSzIwMGxLTU9wR3FXb3ZYaXFkUEpEVzN4UFlZV1VsTUx5WlZrV1A4MUpt?=
+ =?utf-8?B?K1VsbWY3MXJzWTZHa1BxSGZZMGd2NGdLTmtWNzVmS0RncmJENFdkTjVkbUJJ?=
+ =?utf-8?B?eVNLRnoyMDRFTFdncFFkbjhpT01oQTA4QitxdU1FeklpSGpFSFB1OFkrN2JN?=
+ =?utf-8?B?S0J6N3R6MCtPemtPZHNHWjY1WXI3b0s0QVp1UWxHTzN3MXpjdVJZQ1p5YmVw?=
+ =?utf-8?B?a3IwY0RaMG1oSXU4ZTVFNUg0NTZBL0dUcVc1dGora1dJSnF6bk9yL2JxRDNM?=
+ =?utf-8?B?TFRVZm14OEpmdkd1Zlk0aEtYTEVPUlphVmlLQnR3ZkEzL2dlMjkxU2VSZHhR?=
+ =?utf-8?B?QWszZHpnSHdWSkIwU1pJRmZSYWhRbHk2NEh3ckhFazVSL2d5TUZaMCtYQ0cr?=
+ =?utf-8?B?U0lnZXM5SGc0eGZLTk1STVpDYWJFVVJ0eTdhdzZwbkZ5aHZPaEE0YlJzbUxM?=
+ =?utf-8?B?WE5MMXFXMFJWaEN6NDBjbllGODFQaWlOMnhLeVR2OEx2YzFmT0xxMFkxVGNa?=
+ =?utf-8?B?Wk5zWDRyQ2c0Q1U3NW9xR1V0VVhxblFUWEZyMFhtbjBKTllSMndZV1pZbTZO?=
+ =?utf-8?B?RUFhaCtmR2h6bnVHNS9NV25qcDVDT2VqVGI2NUxLamM0QlZIeVlITUVHQXNN?=
+ =?utf-8?B?ODJhWGZwaEtxdHROUFZEVk4vdWxxS282a3hLOU94cEpMWU5nT08zOGZncXdQ?=
+ =?utf-8?B?cVF6eklac3FpYTFXWWZGdlMxSjlpaXVha3pMSFhjVnlrU2ZKRUxjUXdjdlZs?=
+ =?utf-8?B?a2p6eXVyNFVsZVBnZnhscUdvaktSekZrVDFOczFlOHduWGJzT3JHVDhrSWI2?=
+ =?utf-8?B?ZGVHbjNqZXJPMzhDeXZFTDZpdGpuRjBySFBhb284eFVrUHIrckRhYkYxVUQ2?=
+ =?utf-8?B?QmxYR0NYRGlXbzh1MCtibEVTLzFzOFU0dXdHQU1JOG0vNExodVZUbERYbnZj?=
+ =?utf-8?B?OER1QzZoZlRMelFqY1BaRFVWZWN4NVFjY1RkVmVRdUE3d290MFVwb2hzdk54?=
+ =?utf-8?B?NGxVVXVKeEtBWFJUaU9zaDdVbnhBR1M5MnFsR1hlanUwMzg3T0VWVWJSRis1?=
+ =?utf-8?B?cndHSHM3QUNjU3NIRFAzckdJQW9QQ3p5Vld5cVpJc2ZxNjhaa0hjR1NpTDRj?=
+ =?utf-8?B?Ujl1VnZ0SHo5bU9xUmQ5SVFLaGNnYzY1c1lSS1NseFZpeXE4WUtBdUhueC9Q?=
+ =?utf-8?B?M0VNWHRRYloxd0NrUkYxTXp3SkhNYjlmc3puZGhFaHhSMU1WeE5leGhWQzBa?=
+ =?utf-8?B?REZoZ2ZpVzhEdEd6ZjNaUmhHdkhZNU1nb2N3WnRIVDZtRVlRRGN1SHRHc0pq?=
+ =?utf-8?Q?ZHZLNaECGPNz+Nfx+ckBIgx+c?=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0cfe716a-85d3-4a1f-6343-08da6e76ff04
+X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Jul 2022 19:50:58.9864
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: Gig8FRU4ygIUZ0ODSgjcRMHJ9PH7uELMEApjR4uXglWM1AQy7nIDe4cYpSixXLgBSfrLHlJInUsLUBQh6lzz0w==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR04MB6948
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/24/2022 2:54 PM, Bean Huo wrote:
-> 
-> Hi Can/Asutosh
-> 
-> A few questions about MCQ configuration:
-> 
-> 
-
-Hello Bean,
-Thanks for the review.
-
-> On Tue, 2022-07-19 at 00:01 -0700, Can Guo wrote:
->> From: Asutosh Das <quic_asutoshd@quicinc.com>
->>
->> Adds MCQ support to UFS driver.
->>
->> Co-developed-by: Can Guo <quic_cang@quicinc.com>
->> Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
->> Signed-off-by: Can Guo <quic_cang@quicinc.com>
->> ---
->>
->> +void ufshcd_mcq_config_mac(struct ufs_hba *hba)
->> +{
->> +       u32 val = ufshcd_readl(hba, REG_UFS_MCQ_CFG);
->> +
->> +       val &= ~MCQ_CFG_MAC_MASK;
->> +       val |= hba->dev_info.bqueuedepth << MCQ_CFG_MAC_OFFSET;
->> +       ufshcd_writel(hba, val, REG_UFS_MCQ_CFG);
-> 
-> Here you set MaxActiveCommand to dev_info.bqueuedepth (this limit comes
-> from UFS devices). I see in the qsize configuration that you want to
-> set the queue depth in each HW queue to be hba->nutrs (this limit comes
-> from UFSHCI),  should not it be min(device limit, ufshci limit)?
-> 
-Yes, looks like it should be. Let me relook this logic.
->> +}
->> +EXPORT_SYMBOL_GPL(ufshcd_mcq_config_mac);
->> +
->>
-> ...
->> +
->> +       for_each_hw_queue(hba, i) {
->> +               hwq = &hba->uhq[i];
->> +               hwq->id = i;
->> +               qsize = hwq->max_entries * MCQ_ENTRY_SIZE_IN_DWORD -
->> 1;
-> 
-> qsize is hba->nutrs, 32*8-1 = 255 =256DW,  per draft spec , should not
-> be 8DW in 4.0?
-> 
->> +
->> +               /* SQLBA */
->> +               ufsmcq_writel(hba, lower_32_bits(hwq->sqe_dma_addr),
->> +                             MCQ_CFG_n(REG_SQLBA, i));
->> +               /* SQUBA */
->> +               ufsmcq_writel(hba, upper_32_bits(hwq->sqe_dma_addr),
->> +                             MCQ_CFG_n(REG_SQUBA, i));
->> +               /* SQDAO */
->> +               ufsmcq_writel(hba, MCQ_ROP_OFFSET_n(ROP_SQD, i),
->> +                             MCQ_CFG_n(REG_SQDAO, i));
->>
-> 
-> ...
-> 
->>         }
->> +
->> +out:
->> +       hba->mcq_base = res->base;
->> +       return 0;
->> +
->> +out_err:
->> +       ufshcd_mcq_release_resource(hba);
->> +       return ret;
->> +}
->> +
->> +int ufshcd_mcq_init(struct ufs_hba *hba)
->> +{
->> +       struct Scsi_Host *host = hba->host;
->> +       struct ufs_hw_queue *hwq;
->> +       int i, ret = 0;
->> +
->> +       if (!is_mcq_supported(hba))
->> +               return 0;
->> +
->> +       ret = ufshcd_mcq_config_resource(hba);
->> +       if (ret) {
->> +               dev_err(hba->dev, "Failed to config MCQ resource\n");
->> +               return ret;
->> +       }
->> +
->> +       ret = ufshcd_vops_config_mcq_rop(hba);
->> +       if (ret) {
->> +               dev_err(hba->dev, "MCQ Runtime Operation Pointers not
->> configured\n");
->> +               goto out_err;
->> +       }
->> +
->> +       hba->nr_queues[HCTX_TYPE_DEFAULT] = num_possible_cpus();
-> 
-> 4.0 supports maximum number of queues is 32. for cpus < 32, cpu to
-> queue will be 1x1, how about cpus > 32?
-> 
-Good point. Will check and fix it.
->> +       hba->nr_queues[HCTX_TYPE_READ] = 0;
->> +       hba->nr_queues[HCTX_TYPE_POLL] = 1;
->> +
->> +       for (i = 0; i < HCTX_MAX_TYPES; i++)
->> +               host->nr_hw_queues += hba->nr_queues[i];
->> +
->> +       host->can_queue = hba->nutrs;
-> 
-> Also here, can_queue is inlined with ufshci limitation, not the UFS
-> device limit.
-> 
-Yes, will take a look.
->> +       host->cmd_per_lun = hba->nutrs;
->> +
->> +       /* One more reserved for dev_cmd_queue */
->> +       hba->nr_hw_queues = host->nr_hw_queues + 1;
->> +
->> +       hba->uhq = devm_kmalloc(hba->dev,
-> ...
->>   
->>          ufshcd_tune_unipro_params(hba);
->> @@ -9641,6 +9775,10 @@ int ufshcd_init(struct ufs_hba *hba, void
->> __iomem *mmio_base, unsigned int irq)
->>                  goto out_disable;
->>          }
->>   
->> +       err = ufshcd_mcq_init(hba);
-> 
-> The driver will force the customer to use MCQ, how about adding a
-> configuration option for the customer to choose (like eMMC CMDQ does)?
-> 
-Let me check what eMMC does and see if that can be adopted here.
-
-> Kind regards,
-> Bean
-> 
-> 
-
--asd
+IA0KPiBPbiA3LzIzLzIwMjIgMToyMiBQTSwgQXZyaSBBbHRtYW4gd3JvdGU6DQo+ID4+IC1zdGF0
+aWMgdm9pZCB1ZnNoY2RfaG9zdF9tZW1vcnlfY29uZmlndXJlKHN0cnVjdCB1ZnNfaGJhICpoYmEp
+DQo+ID4+ICtzdGF0aWMgaW50IHVmc2hjZF9ob3N0X21lbW9yeV9jb25maWd1cmUoc3RydWN0IHVm
+c19oYmEgKmhiYSkNCj4gPj4gICB7DQo+ID4+ICAgICAgICAgIHN0cnVjdCB1dHBfdHJhbnNmZXJf
+cmVxX2Rlc2MgKnV0cmRscDsNCj4gPj4gICAgICAgICAgZG1hX2FkZHJfdCBjbWRfZGVzY19kbWFf
+YWRkcjsgQEAgLTM3MjEsNiArMzc2NCw5IEBAIHN0YXRpYw0KPiA+PiB2b2lkIHVmc2hjZF9ob3N0
+X21lbW9yeV9jb25maWd1cmUoc3RydWN0DQo+ID4+IHVmc19oYmEgKmhiYSkNCj4gPj4gICAgICAg
+ICAgaW50IGNtZF9kZXNjX3NpemU7DQo+ID4+ICAgICAgICAgIGludCBpOw0KPiA+Pg0KPiA+PiAr
+ICAgICAgIGlmIChpc19tY3FfZW5hYmxlZChoYmEpKQ0KPiA+PiArICAgICAgICAgICAgICAgcmV0
+dXJuIHVmc2hjZF9tY3FfbWVtb3J5X2NvbmZpZ3VyZShoYmEpOw0KPiA+PiArDQo+ID4+ICAgICAg
+ICAgIHV0cmRscCA9IGhiYS0+dXRyZGxfYmFzZV9hZGRyOw0KPiA+Pg0KPiA+PiAgICAgICAgICBy
+ZXNwb25zZV9vZmZzZXQgPQ0KPiA+PiBAQCAtMzc1OSw2ICszODA1LDggQEAgc3RhdGljIHZvaWQN
+Cj4gdWZzaGNkX2hvc3RfbWVtb3J5X2NvbmZpZ3VyZShzdHJ1Y3QNCj4gPj4gdWZzX2hiYSAqaGJh
+KQ0KPiA+Pg0KPiA+PiAgICAgICAgICAgICAgICAgIHVmc2hjZF9pbml0X2xyYihoYmEsICZoYmEt
+PmxyYltpXSwgaSk7DQo+ID4gSWYgaXNfbWNxX2VuYWJsZWQsIGRvIHlvdSBzdGlsbCBjYWxsIHVm
+c2hjZF9pbml0X2xyYj8NCj4gPg0KPiA+IFRoYW5rcywNCj4gPiBBdnJpDQo+ID4NCj4gPj4gICAg
+ICAgICAgfQ0KPiBBbm90aGVyIGZ1bmN0aW9uIHVmc2hjZF9tY3FfaW5pdF9scmIoKSBpcyBjYWxs
+ZWQuDQpCdXQgeW91IGFyZSBzdGlsbCBjYWxsaW5nIHVmc2hjZF9pbml0X2xyYiBhbnl3YXkuDQoN
+ClRoYW5rcywNCkF2cmkNCg0KPiANCj4gLWFzZA0K
