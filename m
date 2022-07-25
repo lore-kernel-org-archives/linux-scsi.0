@@ -2,140 +2,97 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77335C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jul 2022 20:24:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F21E1C43334
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jul 2022 20:35:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237076AbiGYUY4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Jul 2022 16:24:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59114 "EHLO
+        id S237214AbiGYUfZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Jul 2022 16:35:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41644 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237027AbiGYUYy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jul 2022 16:24:54 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97CA2220F4;
-        Mon, 25 Jul 2022 13:24:50 -0700 (PDT)
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 26PKLTcP023683;
-        Mon, 25 Jul 2022 20:24:35 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=Yxa2DKXFeSRUqLnxqH8PzN4Dvhs5EWeSMDfLydV/Vro=;
- b=gNTdVO0sJxDxZBONi/cGd5HX8UKxwWu6spxeD0F957cnmwJuW2dffqp6gi/3SUMAp7Gr
- PlCdnmvvofwsDpNNfqlYafqJss8Camw8BWknb0tZeFfchN3rmCIm+wboVea4UMZmkp9h
- zCvkIcuB5tpu2VXCAxBBcTnuMX+dmoqfBHaO7LfN6Gl+iAMTd0kMT0sD/5HBk9M4oDP2
- Xe9tGFoqqHwC0To/Pg7HyST5azkl6vHxW+X/OQJxWTeSnOTDDCEtwIHFmorGCgSRZEGI
- 7hz3fBkcaMCdRrqrdk3gOLXeg05jtkPpTNUiP0mFdvH4Ea83+E2MSn6Eo+uaWffNW3Vk yg== 
-Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3hga9fwqs7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 25 Jul 2022 20:24:35 +0000
-Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
-        by NASANPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 26PKOYA6013850
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 25 Jul 2022 20:24:34 GMT
-Received: from [10.110.113.144] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.22; Mon, 25 Jul
- 2022 13:24:33 -0700
-Message-ID: <1d1b6814-6d3f-084a-d5bc-7364a98200db@quicinc.com>
-Date:   Mon, 25 Jul 2022 13:24:32 -0700
+        with ESMTP id S237194AbiGYUfY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jul 2022 16:35:24 -0400
+Received: from mail-lf1-x132.google.com (mail-lf1-x132.google.com [IPv6:2a00:1450:4864:20::132])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6880E115F
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Jul 2022 13:35:21 -0700 (PDT)
+Received: by mail-lf1-x132.google.com with SMTP id t17so7540735lfk.0
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Jul 2022 13:35:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=kF+g+F7mYcIUaJYAQWrmzn8M6Wb/+yPNGEuaPjJTuM4=;
+        b=c1E4ypsrj4lfQjVDS1PjLkofXsBCBIYDZ1iSIrtIkmc6jnYy+Q+NdEG9xEhHz7sCTb
+         7S8gZR6Kr0566YVA6fqyBfHCGzMq0XTU6LjPzw+gKr9GarCxMwFKil9NrN5y5MNqZi25
+         23ZJNUw8tky4+kkjcWOway9aElUecKZBb9L80dv2B1iSCGvkn3+n5Evi0EkUBb6kQcoa
+         k4Dg9URTwEyonbgRpBNIgMlnNq9XkMWZVoHVhPinK1jsRrVO6eO9XgfrAGw2XsL+bgcn
+         jgo9TAy/07Pet6Ww4BN6yscaYs/KCpunHCdXKQKkwd3FEsFvJjZHS9XJFEyAOogPD16E
+         rUgw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=kF+g+F7mYcIUaJYAQWrmzn8M6Wb/+yPNGEuaPjJTuM4=;
+        b=EKXCJcS0qS8dwqEsa4gzlAhAR1CO+mtGBR9L07dC4knjW8cb6YgkXmLBJNmFld+v7T
+         uL5FwJg0ejnTE6J1gkRMgq1t8DnKbn+so5+yU96iN6ERtVOrH42u0sdSdCjQY8NKnINV
+         gKaPntq/KhPkofvIxP/yclbNoN2yGKRGcJkk8OI79O7iArcFd+pLdOVy1TiC22VNJXzm
+         PVtUj6dS6DF7LOEKDzi5ripTLs4lTZmRwwYvCivb7FPwqF5If73DVAXOD4R+AG0BecRa
+         xOq6gBG5+lam4stsxu29MmFlAy9INLBW6wK3XCBt9t32MUUJAF0I1lGVbtzENA++tMrT
+         gAYw==
+X-Gm-Message-State: AJIora8c1datvjVsl7Hfpmuo9d2OxyMxpAaAdEC2g593GFWtHkxApbmD
+        Kzb7Fd5QSzRcxBN78mV1uKJaZQ==
+X-Google-Smtp-Source: AGRyM1ttV6py/cPAH9tBoi/teqtLFo+O1OebISYGtEbEAaJj118/1dMgrgbrEF7axMWM/vp84mGJqg==
+X-Received: by 2002:a05:6512:2302:b0:489:da47:6a90 with SMTP id o2-20020a056512230200b00489da476a90mr4974106lfu.12.1658781319674;
+        Mon, 25 Jul 2022 13:35:19 -0700 (PDT)
+Received: from [192.168.3.197] (78-26-46-173.network.trollfjord.no. [78.26.46.173])
+        by smtp.gmail.com with ESMTPSA id s7-20020a05651c200700b0025deb36756dsm2339404ljo.103.2022.07.25.13.35.18
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 25 Jul 2022 13:35:19 -0700 (PDT)
+Message-ID: <ea2cc75c-611f-f612-e692-325fb7e98d6b@linaro.org>
+Date:   Mon, 25 Jul 2022 22:35:17 +0200
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.0.3
-Subject: Re: [PATCH 1/2] scsi: ufs: Add Multi-Circular Queue support
-To:     Avri Altman <Avri.Altman@wdc.com>, Can Guo <quic_cang@quicinc.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
-        "quic_ziqichen@quicinc.com" <quic_ziqichen@quicinc.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "kernel-team@android.com" <kernel-team@android.com>
-CC:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1658214120-22772-1-git-send-email-quic_cang@quicinc.com>
- <1658214120-22772-2-git-send-email-quic_cang@quicinc.com>
- <DM6PR04MB65756C2EF5D9F23B5EC9E3A7FC939@DM6PR04MB6575.namprd04.prod.outlook.com>
- <a46700a8-585f-ddcb-ccaa-806afcb31ec3@quicinc.com>
- <DM6PR04MB65752C063B1C9D06A3CB44DAFC959@DM6PR04MB6575.namprd04.prod.outlook.com>
-From:   "Asutosh Das (asd)" <quic_asutoshd@quicinc.com>
-In-Reply-To: <DM6PR04MB65752C063B1C9D06A3CB44DAFC959@DM6PR04MB6575.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.12.0
+Subject: Re: [PATCH] dt-bindings: ufs: qcom,ufs: add SC8280XP binding
+Content-Language: en-US
+To:     Johan Hovold <johan@kernel.org>, Rob Herring <robh@kernel.org>
+Cc:     Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20220711101441.4896-1-johan+linaro@kernel.org>
+ <Yt5+EU529KriiAvE@hovoldconsulting.com>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+In-Reply-To: <Yt5+EU529KriiAvE@hovoldconsulting.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: ztMQ9c_ltrnm1PsDj0dG8lZXUiYTqOQf
-X-Proofpoint-GUID: ztMQ9c_ltrnm1PsDj0dG8lZXUiYTqOQf
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
- definitions=2022-07-25_13,2022-07-25_03,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
- priorityscore=1501 suspectscore=0 adultscore=0 clxscore=1015 phishscore=0
- spamscore=0 mlxscore=0 lowpriorityscore=0 malwarescore=0 mlxlogscore=999
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2206140000 definitions=main-2207250083
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/25/2022 12:50 PM, Avri Altman wrote:
->   
->> On 7/23/2022 1:22 PM, Avri Altman wrote:
->>>> -static void ufshcd_host_memory_configure(struct ufs_hba *hba)
->>>> +static int ufshcd_host_memory_configure(struct ufs_hba *hba)
->>>>    {
->>>>           struct utp_transfer_req_desc *utrdlp;
->>>>           dma_addr_t cmd_desc_dma_addr; @@ -3721,6 +3764,9 @@ static
->>>> void ufshcd_host_memory_configure(struct
->>>> ufs_hba *hba)
->>>>           int cmd_desc_size;
->>>>           int i;
->>>>
->>>> +       if (is_mcq_enabled(hba))
->>>> +               return ufshcd_mcq_memory_configure(hba);
->>>> +
->>>>           utrdlp = hba->utrdl_base_addr;
->>>>
->>>>           response_offset =
->>>> @@ -3759,6 +3805,8 @@ static void
->> ufshcd_host_memory_configure(struct
->>>> ufs_hba *hba)
->>>>
->>>>                   ufshcd_init_lrb(hba, &hba->lrb[i], i);
->>> If is_mcq_enabled, do you still call ufshcd_init_lrb?
->>>
->>> Thanks,
->>> Avri
->>>
->>>>           }
->> Another function ufshcd_mcq_init_lrb() is called.
-> But you are still calling ufshcd_init_lrb anyway.
-> 
-I checked the patch, but couldn't find where ufshcd_init_lrb() is being 
-invoked if mcq is enabled.
-Please can you point it to me?
-
-In ufshcd_host_memory_configure(), it goes as:
-if (is_mcq_enabled(hba))
-	return ufshcd_mcq_memory_configure(hba);
-
-And ufshcd_init_lrb() is only invoked from ufshcd_host_memory_configure().
-
-Am I missing something?
-
-> Thanks,
-> Avri
-> 
+On 25/07/2022 13:27, Johan Hovold wrote:
+> On Mon, Jul 11, 2022 at 12:14:41PM +0200, Johan Hovold wrote:
+>> Add SC8280XP to the DT schema.
 >>
+>> Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+>> ---
+> 
+> Rob,
+> 
+> Will you be picking this one up?
+> 
+> There doesn't seem to be any other maintainers listed for this file in
+> case it's expected to go through some other tree.
+> 
 
--asd
+The preference is that it should go via subsystem and get_maintainers.pl
+points Alimi, Avri and Bart. However in the past it seems indeed Rob was
+picking it up...
+
+
+Best regards,
+Krzysztof
