@@ -2,162 +2,113 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3466C43334
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jul 2022 03:38:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF1BBC43334
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jul 2022 03:46:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230059AbiGYDiK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 24 Jul 2022 23:38:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43668 "EHLO
+        id S230357AbiGYDqG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 24 Jul 2022 23:46:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46530 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229571AbiGYDiJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Jul 2022 23:38:09 -0400
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 852D2E030;
-        Sun, 24 Jul 2022 20:38:07 -0700 (PDT)
-Received: from dggpeml500020.china.huawei.com (unknown [172.30.72.56])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4Lrlzl2xdMz1M8Df;
-        Mon, 25 Jul 2022 11:35:15 +0800 (CST)
-Received: from dggpeml500008.china.huawei.com (7.185.36.147) by
- dggpeml500020.china.huawei.com (7.185.36.88) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Mon, 25 Jul 2022 11:38:05 +0800
-Received: from [127.0.0.1] (10.67.111.83) by dggpeml500008.china.huawei.com
- (7.185.36.147) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Mon, 25 Jul
- 2022 11:38:05 +0800
-Message-ID: <af043109-c101-a147-707b-82e79469ae73@huawei.com>
-Date:   Mon, 25 Jul 2022 11:38:04 +0800
+        with ESMTP id S229571AbiGYDqF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Jul 2022 23:46:05 -0400
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 316CFDFAE
+        for <linux-scsi@vger.kernel.org>; Sun, 24 Jul 2022 20:46:00 -0700 (PDT)
+X-UUID: 6bd1b4e30590445e81a86f5f524a6759-20220725
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.8,REQID:e7cf49c7-1547-4ab1-9a05-732e8adc215a,OB:0,LO
+        B:0,IP:0,URL:5,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,RULE:Release_Ham,ACTI
+        ON:release,TS:5
+X-CID-META: VersionHash:0f94e32,CLOUDID:746362b3-06d2-48ef-b2dd-540836705165,C
+        OID:IGNORED,Recheck:0,SF:nil,TC:nil,Content:0,EDM:-3,IP:nil,URL:1,File:nil
+        ,QS:nil,BEC:nil,COL:0
+X-UUID: 6bd1b4e30590445e81a86f5f524a6759-20220725
+Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw02.mediatek.com
+        (envelope-from <peter.wang@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 793621049; Mon, 25 Jul 2022 11:45:53 +0800
+Received: from mtkmbs11n1.mediatek.inc (172.21.101.186) by
+ mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.792.15; Mon, 25 Jul 2022 11:45:52 +0800
+Received: from [172.21.84.99] (172.21.84.99) by mtkmbs11n1.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.2.792.15 via Frontend
+ Transport; Mon, 25 Jul 2022 11:45:52 +0800
+Subject: Re: [PATCH v1] scsi: ufs: correct ufshcd_shutdown flow
+To:     Bart Van Assche <bvanassche@acm.org>, <stanley.chu@mediatek.com>,
+        <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
+        <jejb@linux.ibm.com>
+CC:     <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
+        <chun-hung.wu@mediatek.com>, <alice.chao@mediatek.com>,
+        <cc.chou@mediatek.com>, <chaotian.jing@mediatek.com>,
+        <jiajie.hao@mediatek.com>, <powen.kao@mediatek.com>,
+        <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>
+References: <20220719130208.29032-1-peter.wang@mediatek.com>
+ <afb8d403-f8f5-5161-4680-ce2c3ae7787d@acm.org>
+ <a71af42f-3b66-c0a1-c79d-a4573d0376fe@mediatek.com>
+ <54727af0-dc4b-fadb-5193-13ff4ecc48ef@acm.org>
+From:   Peter Wang <peter.wang@mediatek.com>
+Message-ID: <f14ea4b1-819a-2549-9f26-7fae592ad5f5@mediatek.com>
+Date:   Mon, 25 Jul 2022 11:45:51 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [PATCH -next] scsi: ufs: ufs-mediatek: Fix build error
-To:     Arnd Bergmann <arnd@arndb.de>
-CC:     <stanley.chu@mediatek.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        "moderated list:ARM/Mediatek SoC..." 
-        <linux-mediatek@lists.infradead.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>
-References: <20220704025632.235968-1-renzhijie2@huawei.com>
- <CAK8P3a07jGCuAVQAZgpENRP_xFLiogU9W1Uze+n21h7TdOZhog@mail.gmail.com>
- <df9909dc-3303-808e-575a-47190f636279@huawei.com>
- <CAK8P3a3SA9zvVu0i1m0kqbemLd4WfTMGfpc8VwhsmJOBgZHvsA@mail.gmail.com>
-From:   Ren Zhijie <renzhijie2@huawei.com>
-In-Reply-To: <CAK8P3a3SA9zvVu0i1m0kqbemLd4WfTMGfpc8VwhsmJOBgZHvsA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <54727af0-dc4b-fadb-5193-13ff4ecc48ef@acm.org>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.67.111.83]
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- dggpeml500008.china.huawei.com (7.185.36.147)
-X-CFilter-Loop: Reflected
+Content-Language: en-US
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-在 2022/7/13 16:48, Arnd Bergmann 写道:
-> On Wed, Jul 13, 2022 at 3:44 AM Ren Zhijie <renzhijie2@huawei.com> wrote:
->> 在 2022/7/12 16:27, Arnd Bergmann 写道:
+
+On 7/23/22 2:04 AM, Bart Van Assche wrote:
+> On 7/20/22 21:30, Peter Wang wrote:
+>> On 7/21/22 5:40 AM, Bart Van Assche wrote:
+>>> On 7/19/22 06:02, peter.wang@mediatek.com wrote:
+>>>> From: Peter Wang <peter.wang@mediatek.com>
+>>>> Also remove pm_runtime_get_sync because it is unnecessary.
+>>>
+>>> Please explain in the patch description why the 
+>>> pm_runtime_get_sync() call is not necessary.
 >>
->> Thanks for your suggestion.
->>
->> How does it to fix the implicit-function-declaration error?
->>
-> I missed that part at first. I would say the #ifdef around the
-> declarations in the
-> header should be removed here, it serves no purpose, and it is safe to rely
-> on the compiler to perform dead code elimination so this does not lead to
-> a link error even if a dead function references another function that is not
-> reachable.
+>> Because shutdown is focus on turn off clock/power, we don't need turn 
+>> on(resume) and turn off, right?
+> Hi Peter,
 >
->          Arnd
+> I think that removing the pm_runtime_get_sync() call is safe because 
+> the device driver core already performs a runtime resume before the 
+> UFS driver shutdown callback function is called. From 
+> drivers/base/core.c:
+>
+>         /* Don't allow any more runtime suspends */
+>         pm_runtime_get_noresume(dev);
+>         pm_runtime_barrier(dev);
+>
+> Thanks,
+>
+> Bart.
 
-Hi Arnd,
+Hi Bart,
 
-I try to use the new marcos SYSTEM_SLEEP_PM_OPS and RUNTIME_PM_OPS to 
-replace the old ones, and remove #ifdef around the declarations in the 
-header, my local changes attach below.
+No, in drivers/base/core.c:
+pm_runtime_get_noresume(dev); => No guarantee device will resume
+pm_runtime_barrier(dev);      => Only flush pending pm request like 
+RPM_SUSPENDING/RPM_RESUMING
 
-But it seems  that doesn't work, which has ld errors:
+So, If below two condition is meet.
+(1) device is already in RPM_SUSPENDED
+(2) device resume is required.
+Then driver still need call pm_runtime_get_sync just like 
+ufshcd_wl_shutdown.
 
-aarch64-linux-gnu-ld: Unexpected GOT/PLT entries detected!
-aarch64-linux-gnu-ld: Unexpected run-time procedure linkages detected!
-drivers/ufs/host/ufs-mediatek.o: In function `ufs_mtk_runtime_resume':
-ufs-mediatek.c:(.text+0x1d0c): undefined reference to 
-`ufshcd_runtime_resume'
-drivers/ufs/host/ufs-mediatek.o: In function `ufs_mtk_runtime_suspend':
-ufs-mediatek.c:(.text+0x1d64): undefined reference to 
-`ufshcd_runtime_suspend'
-Makefile:1255: recipe for target 'vmlinux' failed
-make: *** [vmlinux] Error 1
+The reason why here can remove pm_runtime_get_sync is because,
+(1) ufshcd_wl_shutdown -> pm_runtime_get_sync, will resume hba->dev too.
+(2) device resume(turn on clk/power) is not required, even if device is 
+in RPM_SUSPENDED.
 
-(CONFIG_PM and CONFIG_PM_SLEEP are both not set, and
+Thanks.
+Peter
 
-run cmd: make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-)
-
-Thanks,
-
-Ren Zhijie
-
---
-
-diff --git a/drivers/ufs/host/ufs-mediatek.c 
-b/drivers/ufs/host/ufs-mediatek.c
-index c958279bdd8f..8c0c6f04eed1 100644
---- a/drivers/ufs/host/ufs-mediatek.c
-+++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -1402,7 +1402,6 @@ static int ufs_mtk_remove(struct platform_device 
-*pdev)
-         return 0;
-  }
-
--#ifdef CONFIG_PM_SLEEP
-  static int ufs_mtk_system_suspend(struct device *dev)
-  {
-         struct ufs_hba *hba = dev_get_drvdata(dev);
-@@ -1425,7 +1424,6 @@ static int ufs_mtk_system_resume(struct device *dev)
-
-         return ufshcd_system_resume(dev);
-  }
--#endif
-
-  static int ufs_mtk_runtime_suspend(struct device *dev)
-  {
-@@ -1451,9 +1449,9 @@ static int ufs_mtk_runtime_resume(struct device *dev)
-  }
-
-  static const struct dev_pm_ops ufs_mtk_pm_ops = {
--       SET_SYSTEM_SLEEP_PM_OPS(ufs_mtk_system_suspend,
-+       SYSTEM_SLEEP_PM_OPS(ufs_mtk_system_suspend,
-                                 ufs_mtk_system_resume)
--       SET_RUNTIME_PM_OPS(ufs_mtk_runtime_suspend,
-+       RUNTIME_PM_OPS(ufs_mtk_runtime_suspend,
-                            ufs_mtk_runtime_resume, NULL)
-         .prepare         = ufshcd_suspend_prepare,
-         .complete        = ufshcd_resume_complete,
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 7fe1a926cd99..17ec18d55470 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1081,14 +1081,10 @@ static inline void *ufshcd_get_variant(struct 
-ufs_hba *hba)
-         return hba->priv;
-  }
-
--#ifdef CONFIG_PM
-  extern int ufshcd_runtime_suspend(struct device *dev);
-  extern int ufshcd_runtime_resume(struct device *dev);
--#endif
--#ifdef CONFIG_PM_SLEEP
-  extern int ufshcd_system_suspend(struct device *dev);
-  extern int ufshcd_system_resume(struct device *dev);
--#endif
-  extern int ufshcd_shutdown(struct ufs_hba *hba);
-  extern int ufshcd_dme_configure_adapt(struct ufs_hba *hba,
-                                       int agreed_gear,
-
-> .
 
