@@ -2,96 +2,92 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A178BC43334
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jul 2022 17:07:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3084CCA48A
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jul 2022 17:35:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234035AbiGYRHv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Jul 2022 13:07:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58390 "EHLO
+        id S236206AbiGYRfh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Jul 2022 13:35:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43318 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230172AbiGYRHu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jul 2022 13:07:50 -0400
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF41C17A8C
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Jul 2022 10:07:49 -0700 (PDT)
-Received: by mail-pl1-f176.google.com with SMTP id p1so2481369plr.11
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Jul 2022 10:07:49 -0700 (PDT)
+        with ESMTP id S235920AbiGYRfg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jul 2022 13:35:36 -0400
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D646026DC
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Jul 2022 10:35:35 -0700 (PDT)
+Received: by mail-pl1-f169.google.com with SMTP id y24so11047755plh.7
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Jul 2022 10:35:35 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=sw1p4Ct4038ajzG7YO2p29jpkoZuGnzz5bWfg0LQBtM=;
-        b=Zg2/iwD9U4Au7UCB7xdtGkif0nWkNvdBWGdf+gIOrsb/v4ZF5WBt4WeGw1vd5LCPbg
-         7N1SLhWGZhwSRsnll5tr9rARthefLC7LEjj6YhchdV4ux1sdLhqNPyim14qbYKCt0K/S
-         28b0IrRUjGUkMHfQgKgYZkZeAFSP7DK7xsFD8X/2tfRpNUbaUegBH8oifY3nHpz2AnQa
-         6er4eeWrEf7FcOdkh/H/FuIghDLm3f/7P3/VOhOEi+oo24FIZqJ0iwRaNIkNxWDikCP9
-         j7f1n3d8/JL3ecTODP5A/J8c3jWQ9zrX9ixAPalM8ZL8GQQylg1+fg8AO/luqNpslQPx
-         pwtQ==
-X-Gm-Message-State: AJIora+1gTYkc2Kg67Jmt2PoRVSxk+kNlY83ytvGNlY4xpwk9IRxk7pf
-        rEIVq/sv3w6ro7u5zARIEPM=
-X-Google-Smtp-Source: AGRyM1unNMYA1GUxNbVV21SCt/CEhvRgmKS5ZtPL3ilnIkmvLlHcY5dIokCQMDpDtfBn4ZknBqhWVg==
-X-Received: by 2002:a17:90a:5e0b:b0:1f0:5565:ee6e with SMTP id w11-20020a17090a5e0b00b001f05565ee6emr32488117pjf.128.1658768869293;
-        Mon, 25 Jul 2022 10:07:49 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:54bc:1b55:1813:e7a8? ([2620:15c:211:201:54bc:1b55:1813:e7a8])
-        by smtp.gmail.com with ESMTPSA id v188-20020a6261c5000000b0051b9ecb53e6sm9801300pfb.105.2022.07.25.10.07.47
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 25 Jul 2022 10:07:48 -0700 (PDT)
-Message-ID: <2edfdadc-2a93-591f-c5ca-98dc02a30499@acm.org>
-Date:   Mon, 25 Jul 2022 10:07:46 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [PATCH v3] scsi: ufs: correct ufshcd_shutdown flow
-Content-Language: en-US
-To:     Peter Wang <peter.wang@mediatek.com>, stanley.chu@mediatek.com,
-        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com
-Cc:     wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
-        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
-        cc.chou@mediatek.com, chaotian.jing@mediatek.com,
-        jiajie.hao@mediatek.com, powen.kao@mediatek.com,
-        qilin.tan@mediatek.com, lin.gui@mediatek.com
-References: <20220721065833.26887-1-peter.wang@mediatek.com>
- <2f66f4ba-f0d5-6b8a-cc3b-fa896a302d60@acm.org>
- <090da948-0fce-9a89-0e1c-a26b3e0b735f@mediatek.com>
+        bh=N2TQvHzsK9K8uSunlyMMUv1UL653YQ5v+iwrcscS8V8=;
+        b=brk3XVM8SVMPvFTOJWJ71KH1atxxMiKqkyBYgFEXZVOFNosyaGo11uTmWvyE6C0goX
+         icJJn5mBWKAeCDE2lbZKgE+9sH9EYsSmvRjDPMDb+KhSH7sCO2d0fvPjjn9GJlVTShEG
+         +Ls/w3bZyVW8sWe9qzdlvY6n5vXqK+pY5FJFdYl07Jg4KanOWjqzeIIJ7aeIWCwTdfkU
+         b2hdQapQYC+qwZblQPEAjdA+VDCJLMNKchtHi3Um+Xs1dfERTkTAg6PQm9fPgz/75Zef
+         qaAfFAmMv9AuDizD5jsbbtdaw55zAWl9Tz8DC0oViKfF1Ja9yJa0k65If32UoTh55lLT
+         LVVg==
+X-Gm-Message-State: AJIora86ugtI7M0xKCLZOVm7SdTpplOn5vbDGw/GsZlnVbXl0Ct+eOnV
+        JfDE7YWtrVO2r4ud/vP0iK8=
+X-Google-Smtp-Source: AGRyM1sqU3uJuMwx4AyRX4Qpjhfu26MCZrudyL3r+Q9rkR42Et4eS8CpnL8dVQ6hp4ZMv7ZFMp9tuQ==
+X-Received: by 2002:a17:902:da89:b0:16c:49ee:9e71 with SMTP id j9-20020a170902da8900b0016c49ee9e71mr12884287plx.71.1658770535136;
+        Mon, 25 Jul 2022 10:35:35 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:54bc:1b55:1813:e7a8])
+        by smtp.gmail.com with ESMTPSA id i188-20020a6287c5000000b005251b9102dbsm10216098pfe.144.2022.07.25.10.35.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 25 Jul 2022 10:35:34 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <090da948-0fce-9a89-0e1c-a26b3e0b735f@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>
+Subject: [PATCH v2] scsi: ufs: Increase the maximum data buffer size
+Date:   Mon, 25 Jul 2022 10:35:17 -0700
+Message-Id: <20220725173528.849643-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.37.1.359.gd136c6c3e2-goog
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/24/22 20:47, Peter Wang wrote:
-> Because kernel_restart is export, and mediatek may call kernel_restart 
-                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Measurements have shown that for some UFS devices the maximum sequential
+I/O throughput is achieved with a transfer size above 512 KiB. Hence
+increase the maximum size of the data buffer associated with a single
+request from SCSI_DEFAULT_MAX_SECTORS (1024) * 512 bytes = 512 KiB into
+255 MiB.
 
-Is this code upstream?
+Notes:
+- The maximum data buffer size supported by the UFSHCI specification
+  is 65535 * 256 KiB or about 16 GiB.
+- The maximum data buffer size for READ(10) commands is 65535 logical
+  blocks. To transfer more than 65535 * 4096 bytes = 255 MiB with a
+  single SCSI command, the READ(16) command is required. Support for
+  READ(16) is optional in the UFS 3.1 and UFS 4.0 standards.
 
-> while shutdown is on going.
-> EXPORT_SYMBOL_GPL(kernel_restart);
-> kernel_restart -> kernel_restart_prepare -> device_shutdown
-> 
-> So, there may have two thread execute device_shutdown concurrently.
-> And the list_lock in device_shutdown function is not protect shutdown 
-> callback function,
-> caused two callback function(ufshcd_shutdown/ufshcd_wl_shutdown) could 
-> run concurrently.
-> 
-> Here is the error log that two thread in device_shutdown.
-> [37684.002227] [T1500641] platform +platform:112b0000.ufshci 
-> kpoc_charger: ufshcd-mtk 112b0000.ufshci: [name:core&]shutdown
-> [37684.002264] [T1600339] scsi +scsi:0:0:0:49488 charger_thread: 
-> ufs_device_wlun 0:0:0:49488: [name:core&]shutdown
+Cc: Adrian Hunter <adrian.hunter@intel.com>
+Cc: Avri Altman <avri.altman@wdc.com>
+Cc: Bean Huo <beanhuo@micron.com>
+Cc: Stanley Chu <stanley.chu@mediatek.com>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/ufs/core/ufshcd.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Hi Peter,
-
-I had not yet taken a look at the kernel_restart() function. Now that I 
-have taken a look, it seems to me that kernel_restart() calls must be 
-serialized via the system_transition_mutex. Please make sure that the 
-kernel_restart() calls are serialized.
-
-Thanks,
-
-Bart.
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 36b7212e9cb5..a6fddf4c546e 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -8365,6 +8365,7 @@ static struct scsi_host_template ufshcd_driver_template = {
+ 	.cmd_per_lun		= UFSHCD_CMD_PER_LUN,
+ 	.can_queue		= UFSHCD_CAN_QUEUE,
+ 	.max_segment_size	= PRDT_DATA_BYTE_COUNT_MAX,
++	.max_sectors		= 65535 * 4096 / SECTOR_SIZE, /* 255 MiB */
+ 	.max_host_blocked	= 1,
+ 	.track_queue_depth	= 1,
+ 	.sdev_groups		= ufshcd_driver_groups,
