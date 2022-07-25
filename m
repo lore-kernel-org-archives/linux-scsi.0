@@ -2,138 +2,126 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6AFBC433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jul 2022 04:30:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B591C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jul 2022 06:34:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230010AbiGYEaV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Jul 2022 00:30:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34020 "EHLO
+        id S229965AbiGYGez convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Jul 2022 02:34:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54666 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229633AbiGYEaU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jul 2022 00:30:20 -0400
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCC5A1172
-        for <linux-scsi@vger.kernel.org>; Sun, 24 Jul 2022 21:30:13 -0700 (PDT)
-X-UUID: 167253a6d59c439e8c7c4e9359b9ff21-20220725
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.8,REQID:70381fc4-e905-45ad-8160-47340cafd6d1,OB:0,LO
-        B:0,IP:0,URL:5,TC:0,Content:-5,EDM:0,RT:0,SF:95,FILE:0,RULE:Release_Ham,AC
-        TION:release,TS:95
-X-CID-INFO: VERSION:1.1.8,REQID:70381fc4-e905-45ad-8160-47340cafd6d1,OB:0,LOB:
-        0,IP:0,URL:5,TC:0,Content:-5,EDM:0,RT:0,SF:95,FILE:0,RULE:Spam_GS981B3D,AC
-        TION:quarantine,TS:95
-X-CID-META: VersionHash:0f94e32,CLOUDID:8527b829-fd69-41f1-91fc-8b8a329d3a88,C
-        OID:8684c16ac9de,Recheck:0,SF:28|17|19|48,TC:nil,Content:0,EDM:-3,IP:nil,U
-        RL:1,File:nil,QS:nil,BEC:nil,COL:0
-X-UUID: 167253a6d59c439e8c7c4e9359b9ff21-20220725
-Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw01.mediatek.com
-        (envelope-from <peter.wang@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1219463843; Mon, 25 Jul 2022 12:30:08 +0800
-Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.792.3;
- Mon, 25 Jul 2022 12:30:02 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.792.15 via Frontend Transport; Mon, 25 Jul 2022 12:30:02 +0800
-From:   <peter.wang@mediatek.com>
-To:     <stanley.chu@mediatek.com>, <linux-scsi@vger.kernel.org>,
-        <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
-        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
-CC:     <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
-        <chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
-        <powen.kao@mediatek.com>, <qilin.tan@mediatek.com>,
-        <lin.gui@mediatek.com>
-Subject: [PATCH v2] ufs: core: fix lockdep warning of clk_scaling_lock
-Date:   Mon, 25 Jul 2022 12:30:00 +0800
-Message-ID: <20220725043000.5086-1-peter.wang@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        with ESMTP id S229436AbiGYGey (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jul 2022 02:34:54 -0400
+Received: from mout.kundenserver.de (mout.kundenserver.de [212.227.126.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F19BDEBC;
+        Sun, 24 Jul 2022 23:34:52 -0700 (PDT)
+Received: from mail-yb1-f174.google.com ([209.85.219.174]) by
+ mrelayeu.kundenserver.de (mreue009 [213.165.67.97]) with ESMTPSA (Nemesis) id
+ 1MxDgm-1nIeHq1Ygi-00xdBg; Mon, 25 Jul 2022 08:34:50 +0200
+Received: by mail-yb1-f174.google.com with SMTP id r3so18420524ybr.6;
+        Sun, 24 Jul 2022 23:34:50 -0700 (PDT)
+X-Gm-Message-State: AJIora/wGjnOtXdNy8YPgjFwGYKnb4LKbtEPMae9WjC7bMMQfLbPSd24
+        QxuewmiufMBbV9el25zi1f5iedRRhdLqMlPYyuw=
+X-Google-Smtp-Source: AGRyM1sGLkw4aJn1HNx3IEfYHktSuUgf/62QRFsCyHiqKFcP2xKhpEE3DffyH3k+rdGJlryPzfWKqPb5CFt6r49usFA=
+X-Received: by 2002:a05:6902:120f:b0:668:2228:9627 with SMTP id
+ s15-20020a056902120f00b0066822289627mr8961174ybu.134.1658730889063; Sun, 24
+ Jul 2022 23:34:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+References: <20220704025632.235968-1-renzhijie2@huawei.com>
+ <CAK8P3a07jGCuAVQAZgpENRP_xFLiogU9W1Uze+n21h7TdOZhog@mail.gmail.com>
+ <df9909dc-3303-808e-575a-47190f636279@huawei.com> <CAK8P3a3SA9zvVu0i1m0kqbemLd4WfTMGfpc8VwhsmJOBgZHvsA@mail.gmail.com>
+ <af043109-c101-a147-707b-82e79469ae73@huawei.com>
+In-Reply-To: <af043109-c101-a147-707b-82e79469ae73@huawei.com>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Mon, 25 Jul 2022 08:34:32 +0200
+X-Gmail-Original-Message-ID: <CAK8P3a0LCaMoWArcQNY5qayUABgRXWEogrtQQ-sbR+zY6n=O4w@mail.gmail.com>
+Message-ID: <CAK8P3a0LCaMoWArcQNY5qayUABgRXWEogrtQQ-sbR+zY6n=O4w@mail.gmail.com>
+Subject: Re: [PATCH -next] scsi: ufs: ufs-mediatek: Fix build error
+To:     Ren Zhijie <renzhijie2@huawei.com>
+Cc:     Arnd Bergmann <arnd@arndb.de>, stanley.chu@mediatek.com,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        "moderated list:ARM/Mediatek SoC..." 
+        <linux-mediatek@lists.infradead.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        Paul Cercueil <paul@crapouillou.net>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+X-Provags-ID: V03:K1:pPXj472gOxDCKOUdDVMug14blajMG3OpwpXdEMYEQfYjbOekJU0
+ yGtIsVQ7G0TEEYlKWZzG+kf9xqmmH4OJeEscFhcBO3/mtia4yg05gezJvU1DJqARvAO+ORO
+ DEq5Xd0ZPWYI4mbic/Gmc04asiS1jmLJcl0fxREnI8xtk1VoZ5nIvc8AvMkbKl20vrIu01T
+ uKZPuCiM9pW+0O5KCS2sg==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:kUFT0qALxt4=:xiBh3K95xwwv35lvXTCLRo
+ YiyeI0+KAbrS+9HTsSQZnmYoEMpDZmP8qmvQxaeBvjm5KRSC4GZhFqppGJ2oxFWvsJyT+uPF0
+ Ts5MT5ROjkKSJO8OM7b4uzEz/qtywLIbuQRKueY3rk5pN//2yQcZWPlASjcZNAnR+SKkAXcLo
+ ZfyrJhrm4dsqOoGdyiJHFikGdN4mm3r55i8PCLFXjwFcTaGiVyvH6STyt9yaAwmMYoM4YPKLx
+ XgHeH06zH1waCO0sWjw15vfepGJEJIJ9pjoWPJULy4OcQT4ItAAZFMjS35Nex+OmCo/U05j8Y
+ UCB64DZ3kg5GUF085G63WZBD6nspvtWizbUFweyFOEikpBd7x22ry6RsI97MuWhfdgq2bfJpZ
+ dE21VRpf1TB3+U+L8x5YXPZTQANSFsK0XvCGOkd8KRNLiYbXX/MRqm6UiRLEIJrgyPOmtx8ak
+ KBqtEh68S3QFujM/GyIQr1TMqLLuqvuYJ8F+Ld/LCf8Ia1r1jweZe4D1Elq+I47DyklreoUu3
+ LFMoADV1k3WVq510cF2HTG3MtZhKQEIrtVBgnW7YM1YA3DrLsvuPwUfEHHpZUVs4+A2avnuS+
+ TOlJCLHBS0JmCY6Ci6rtZWRiZbB2rsCuRyf68u8ZQsA3KKwG0fmNxgU876bKH+XJnhrl7hZOZ
+ /tFIUfKqmLBNvLx5TjCNQy86QUWd98ibILvtrUmaORnnSwDu3xLABNYMypQi2LXWRiB3wfISN
+ u/md0vAg560eC4twBUpMRtNXRovKSDSguwRb1lStZb/vh/qOZhncd2nAlG4FmddtsgA+fTKM5
+ kHxnlbhMTf/YlfAZQjWHTip2fd1csGVYRp9NH7nUQNbLd5jE2StTzLAQ73TPYIYvUMvDSNwkW
+ gXaNpCvDp3Wo/gTzib6w==
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Peter Wang <peter.wang@mediatek.com>
+On Mon, Jul 25, 2022 at 5:38 AM Ren Zhijie <renzhijie2@huawei.com> wrote:
+> 在 2022/7/13 16:48, Arnd Bergmann 写道:
+>
+> I try to use the new marcos SYSTEM_SLEEP_PM_OPS and RUNTIME_PM_OPS to
+> replace the old ones, and remove #ifdef around the declarations in the
+> header, my local changes attach below.
+>
+> But it seems  that doesn't work, which has ld errors:
+>
+> aarch64-linux-gnu-ld: Unexpected GOT/PLT entries detected!
+> aarch64-linux-gnu-ld: Unexpected run-time procedure linkages detected!
+> drivers/ufs/host/ufs-mediatek.o: In function `ufs_mtk_runtime_resume':
+> ufs-mediatek.c:(.text+0x1d0c): undefined reference to
+> `ufshcd_runtime_resume'
+> drivers/ufs/host/ufs-mediatek.o: In function `ufs_mtk_runtime_suspend':
+> ufs-mediatek.c:(.text+0x1d64): undefined reference to
+> `ufshcd_runtime_suspend'
+> Makefile:1255: recipe for target 'vmlinux' failed
+> make: *** [vmlinux] Error 1
+>
+> (CONFIG_PM and CONFIG_PM_SLEEP are both not set, and
+>
 
-There have a lockdep warning like below in current flow.
-kworker/u16:0:  Possible unsafe locking scenario:
+It appears that there is a mistake in the RUNTIME_PM_OPS()
+macro definition, can you try this patch on top?
 
-kworker/u16:0:        CPU0                    CPU1
-kworker/u16:0:        ----                    ----
-kworker/u16:0:   lock(&hba->clk_scaling_lock);
-kworker/u16:0:                                lock(&hba->dev_cmd.lock);
-kworker/u16:0:                                lock(&hba->clk_scaling_lock);
-kworker/u16:0:   lock(&hba->dev_cmd.lock);
-kworker/u16:0:
+diff --git a/include/linux/pm.h b/include/linux/pm.h
+index 871c9c49ec9d..84592229d754 100644
+--- a/include/linux/pm.h
++++ b/include/linux/pm.h
+@@ -334,9 +334,9 @@ struct dev_pm_ops {
+        .restore_noirq = pm_sleep_ptr(resume_fn),
 
-Before this patch clk_scaling_lock was held in reader mode during the ufshcd_wb_toggle() call.
-With this patch applied clk_scaling_lock is not held while ufshcd_wb_toggle() is called.
+ #define RUNTIME_PM_OPS(suspend_fn, resume_fn, idle_fn) \
+-       .runtime_suspend = suspend_fn, \
+-       .runtime_resume = resume_fn, \
+-       .runtime_idle = idle_fn,
++       .runtime_suspend = pm_ptr(suspend_fn), \
++       .runtime_resume = pm_ptr(resume_fn), \
++       .runtime_idle = pm_ptr(idle_fn),
 
-This is safe because ufshcd_wb_toggle will held clk_scaling_lock in reader mode "again" in flow
-ufshcd_wb_toggle -> __ufshcd_wb_toggle -> ufshcd_query_flag_retry -> ufshcd_query_flag ->
-ufshcd_exec_dev_cmd -> down_read(&hba->clk_scaling_lock);
-The protect should enough and make sure clock is not change while send command.
+ #ifdef CONFIG_PM_SLEEP
+ #define SET_SYSTEM_SLEEP_PM_OPS(suspend_fn, resume_fn) \
 
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
----
- drivers/ufs/core/ufshcd.c | 22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
+Commit 1a3c7bb08826 ("PM: core: Add new *_PM_OPS macros, deprecate
+old ones") introduced all the macros with the intent of using pm_ptr()
+and pm_sleep_ptr() in them, and I think Paul accidentally forgot to add
+those in this instance.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index c7b337480e3e..209089bd8085 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -1249,12 +1249,10 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba)
- 	return ret;
- }
- 
--static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, bool writelock)
-+static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba)
- {
--	if (writelock)
--		up_write(&hba->clk_scaling_lock);
--	else
--		up_read(&hba->clk_scaling_lock);
-+	up_write(&hba->clk_scaling_lock);
-+
- 	ufshcd_scsi_unblock_requests(hba);
- 	ufshcd_release(hba);
- }
-@@ -1271,7 +1269,7 @@ static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, bool writelock)
- static int ufshcd_devfreq_scale(struct ufs_hba *hba, bool scale_up)
- {
- 	int ret = 0;
--	bool is_writelock = true;
-+	bool wb_toggle = false;
- 
- 	ret = ufshcd_clock_scaling_prepare(hba);
- 	if (ret)
-@@ -1300,13 +1298,15 @@ static int ufshcd_devfreq_scale(struct ufs_hba *hba, bool scale_up)
- 		}
- 	}
- 
--	/* Enable Write Booster if we have scaled up else disable it */
--	downgrade_write(&hba->clk_scaling_lock);
--	is_writelock = false;
--	ufshcd_wb_toggle(hba, scale_up);
-+	wb_toggle = true;
- 
- out_unprepare:
--	ufshcd_clock_scaling_unprepare(hba, is_writelock);
-+	ufshcd_clock_scaling_unprepare(hba);
-+
-+	/* Enable Write Booster if we have scaled up else disable it */
-+	if (wb_toggle)
-+		ufshcd_wb_toggle(hba, scale_up);
-+
- 	return ret;
- }
- 
--- 
-2.18.0
-
+       Arnd
