@@ -2,44 +2,44 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80389C43334
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jul 2022 16:24:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D32BC43334
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jul 2022 16:26:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235724AbiGYQYh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Jul 2022 12:24:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54420 "EHLO
+        id S235559AbiGYQ0o (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Jul 2022 12:26:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56020 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234315AbiGYQYf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jul 2022 12:24:35 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD84317A8C;
-        Mon, 25 Jul 2022 09:24:34 -0700 (PDT)
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 26PFs6FH009209;
-        Mon, 25 Jul 2022 16:24:21 GMT
+        with ESMTP id S234946AbiGYQ0n (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jul 2022 12:26:43 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E3FE1C93D;
+        Mon, 25 Jul 2022 09:26:43 -0700 (PDT)
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 26PBOR2B022309;
+        Mon, 25 Jul 2022 16:26:30 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
  mime-version : subject : to : cc : references : from : in-reply-to :
  content-type : content-transfer-encoding; s=qcppdkim1;
- bh=ASnxwFUYdxCyeDA2J9p5DdAuN8MhNlL3KDL6zyM2Cpk=;
- b=he0MdEPeoxfqV5UazktwFtDjH3/hdzlqEfgk++1LtDgClJGjRrxrGmhTCsLES15aYTjS
- KNbJQdGKCXOz2CDFfFJNSH2maylR9YfJcuEOU5+4h7vfWMd1KXJoGBTj+wiX0emark9o
- qvZZtMWF75E2oa5feRx2o+HGPfzkOHdk+3IMjtwb3P4xniPAwD4I5duO8nXV04QZJyka
- PeRNMGGR3fEGwhN0jpdbapwEamNVMLuYmhcSWzNmpDe0tWd4qkOPTJYqbVqgUgYfDuxV
- L6jV1O1RJhjbX6izbsZu8k33HYkvjlhoNKWpZnOxXQjiL+xYZ44O4LEc5Y5PwYLjU3DF ZQ== 
-Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3hg8k6vyxm-1
+ bh=krRtdK0Cy6Im8bsE90b9X4dbN1lTV7/1hoasOmSFsOE=;
+ b=eov2DKX8ywa9IBi/Oaauz7PLJ33mo9t5LQ028xlUxQ/ZQ9mQ+5n9mCU4VGvmDVkNrtGN
+ Gw0iNvdk+QfK62XJrbCnrS74/DMuykOgIgCywjBeluqo7b2hilNtHmKa2bTgF+kSyT7y
+ sliD3D9eqDa3v3egFPorlHfsxEOcPeav9+j9DJhAlveLQgHLxZXzdjxKiFmQQqJrfu1A
+ otlH5tmwxzRuGSqwE9/6l2WvJWcj8d9MeI0cz+A3fHzfBu321IWNLnUkKzC8K0DOJg+U
+ 7zoVedm9scySkip8VOwqN5O/TltRTzoKCZjJlBbnCQbec72z6krC+KXlXoCtKlu18w6p Cw== 
+Received: from nasanppmta03.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3hga9fw1v7-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 25 Jul 2022 16:24:20 +0000
+        Mon, 25 Jul 2022 16:26:30 +0000
 Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
-        by NASANPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 26PGOJW9009169
+        by NASANPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 26PGQTH3003260
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 25 Jul 2022 16:24:19 GMT
+        Mon, 25 Jul 2022 16:26:29 GMT
 Received: from [10.110.113.144] (10.80.80.8) by nasanex01a.na.qualcomm.com
  (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.22; Mon, 25 Jul
- 2022 09:24:19 -0700
-Message-ID: <5905e987-722a-885f-e37b-33d8dc63ceef@quicinc.com>
-Date:   Mon, 25 Jul 2022 09:24:18 -0700
+ 2022 09:26:28 -0700
+Message-ID: <a46700a8-585f-ddcb-ccaa-806afcb31ec3@quicinc.com>
+Date:   Mon, 25 Jul 2022 09:26:28 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
  Thunderbird/102.0.3
@@ -62,9 +62,9 @@ CC:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         open list <linux-kernel@vger.kernel.org>
 References: <1658214120-22772-1-git-send-email-quic_cang@quicinc.com>
  <1658214120-22772-2-git-send-email-quic_cang@quicinc.com>
- <DM6PR04MB657575D62B7A2136D6AF1654FC939@DM6PR04MB6575.namprd04.prod.outlook.com>
+ <DM6PR04MB65756C2EF5D9F23B5EC9E3A7FC939@DM6PR04MB6575.namprd04.prod.outlook.com>
 From:   "Asutosh Das (asd)" <quic_asutoshd@quicinc.com>
-In-Reply-To: <DM6PR04MB657575D62B7A2136D6AF1654FC939@DM6PR04MB6575.namprd04.prod.outlook.com>
+In-Reply-To: <DM6PR04MB65756C2EF5D9F23B5EC9E3A7FC939@DM6PR04MB6575.namprd04.prod.outlook.com>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [10.80.80.8]
@@ -72,31 +72,47 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nasanex01a.na.qualcomm.com (10.52.223.231)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: wgpv7XuJXaXEZPf3AE8IAp7sfvSYCJSe
-X-Proofpoint-ORIG-GUID: wgpv7XuJXaXEZPf3AE8IAp7sfvSYCJSe
+X-Proofpoint-ORIG-GUID: 0NSP2KJnivg6ArFZeYIj8slNfXCcLzFj
+X-Proofpoint-GUID: 0NSP2KJnivg6ArFZeYIj8slNfXCcLzFj
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
- definitions=2022-07-25_11,2022-07-25_02,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
- mlxlogscore=999 phishscore=0 spamscore=0 impostorscore=0 bulkscore=0
- mlxscore=0 adultscore=0 lowpriorityscore=0 clxscore=1015 suspectscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2206140000 definitions=main-2207250066
+ definitions=2022-07-25_12,2022-07-25_02,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
+ priorityscore=1501 suspectscore=0 adultscore=0 clxscore=1015 phishscore=0
+ spamscore=0 mlxscore=0 lowpriorityscore=0 malwarescore=0 mlxlogscore=999
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2206140000 definitions=main-2207250067
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/23/2022 8:26 AM, Avri Altman wrote:
+On 7/23/2022 1:22 PM, Avri Altman wrote:
+>> -static void ufshcd_host_memory_configure(struct ufs_hba *hba)
+>> +static int ufshcd_host_memory_configure(struct ufs_hba *hba)
+>>   {
+>>          struct utp_transfer_req_desc *utrdlp;
+>>          dma_addr_t cmd_desc_dma_addr;
+>> @@ -3721,6 +3764,9 @@ static void ufshcd_host_memory_configure(struct
+>> ufs_hba *hba)
+>>          int cmd_desc_size;
+>>          int i;
+>>
+>> +       if (is_mcq_enabled(hba))
+>> +               return ufshcd_mcq_memory_configure(hba);
 >> +
->> +               /* sqen|size|cqid */
->> +               ufsmcq_writel(hba, (1 << 31) | qsize | (i << 16),
->> +                             MCQ_CFG_n(REG_SQATTR, i));
-> So there is a 1X1 SQ-CQ topology.
-> Isn't that should be configurable?
+>>          utrdlp = hba->utrdl_base_addr;
+>>
+>>          response_offset =
+>> @@ -3759,6 +3805,8 @@ static void ufshcd_host_memory_configure(struct
+>> ufs_hba *hba)
+>>
+>>                  ufshcd_init_lrb(hba, &hba->lrb[i], i);
+> If is_mcq_enabled, do you still call ufshcd_init_lrb?
 > 
 > Thanks,
 > Avri
-The popular configuration appeared to be 1:1.
-Other configurations may be added as needed later, perhaps.
+> 
+>>          }
+Another function ufshcd_mcq_init_lrb() is called.
 
 -asd
