@@ -2,95 +2,64 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08935C43334
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jul 2022 11:27:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F69AC43334
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jul 2022 12:03:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235061AbiGYL1E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Jul 2022 07:27:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60830 "EHLO
+        id S235105AbiGYMDI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Jul 2022 08:03:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51148 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235054AbiGYL1D (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jul 2022 07:27:03 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B87217E29;
-        Mon, 25 Jul 2022 04:27:03 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B68A560F6E;
-        Mon, 25 Jul 2022 11:27:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ECDE8C341C6;
-        Mon, 25 Jul 2022 11:27:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1658748422;
-        bh=gyicn1Y/kmjxjCx7a/buwlQV+yyFDW2xvCQ1SbmZ9oI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=mJZlq4rAbjvUwDrXAFY/7JGMJEWY5DamG5XCPq34ooyrnb4HRXZKtgbbH7VtCO/XX
-         R59QlTqZ295hepmzCZyY1lipYYw5yBUkDSYJCD8M8++vSY6OFkZK4zsHO4lcFKTLtj
-         iw/4VHovPjWdeyUlZuYJwyV55ohq0zrrVtyjq46OSGlGi0qijLqjcoM8/7IA0AhCbf
-         hwA8GKXR2JM8O2PwlgTL26E/cKu2hI4nTLhLUJW87uynNJnzMZkjkTGFWTT+ZwThFi
-         CMDKT6KFp9TJeZgmCcRhs0pV1F28s9cqq5m/cOtsnutUeWsCiiVqb3pTG8anConmNe
-         7W9takm832Lsg==
-Received: from johan by xi.lan with local (Exim 4.94.2)
-        (envelope-from <johan@kernel.org>)
-        id 1oFwEz-0003mi-2P; Mon, 25 Jul 2022 13:27:13 +0200
-Date:   Mon, 25 Jul 2022 13:27:13 +0200
-From:   Johan Hovold <johan@kernel.org>
-To:     Rob Herring <robh@kernel.org>
-Cc:     Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] dt-bindings: ufs: qcom,ufs: add SC8280XP binding
-Message-ID: <Yt5+EU529KriiAvE@hovoldconsulting.com>
-References: <20220711101441.4896-1-johan+linaro@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220711101441.4896-1-johan+linaro@kernel.org>
+        with ESMTP id S232990AbiGYMDG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jul 2022 08:03:06 -0400
+Received: from smtpbg.qq.com (unknown [43.155.67.158])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B319186C5;
+        Mon, 25 Jul 2022 05:03:01 -0700 (PDT)
+X-QQ-mid: bizesmtp62t1658750576trgg8haf
+Received: from localhost.localdomain ( [171.217.48.70])
+        by bizesmtp.qq.com (ESMTP) with 
+        id ; Mon, 25 Jul 2022 20:02:30 +0800 (CST)
+X-QQ-SSF: 0100000000200050H000000A0000020
+X-QQ-FEAT: Xr3l1UkvC/aFfYnrLnL9gmj4ixHPv8ux1uSqhGqsqeAbmTsdvkHGxokM33OF4
+        eEwie8WHRMYN+gKtfnACdfS0bwTs4WMR6NowGRKX7MVjgAPydTCbHDR7P0ahDY60OmIQ0DD
+        IBodpNUOA6RQDUdCf55nCQNk5VSzdUdOezorvactxzQtANdNpVAy5kG/NuWoyi9b72cg6hi
+        2lF+dPT5p/5t/13318aLGWqYOpnAzWWM2H7pMBI8n6yACVW52Lts5VmEiNFfNHECX8ook3Z
+        vUIP6swyExqd/Ue2cXmDkS9Iujcd+8f4pVxotDE8309vhiKxzr8lYwjOdJZVZ3GfMOXslkI
+        GmTTqL670WolCNh8w0HqSsGO8yjQjuIh3PGMePsnPHKlPwPB4N5P7Ahj7tTOA==
+X-QQ-GoodBg: 0
+From:   min tang <tangmin@cdjrlc.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        min tang <tangmin@cdjrlc.com>
+Subject: [PATCH] scsi: Fix comment typo
+Date:   Mon, 25 Jul 2022 20:02:27 +0800
+Message-Id: <20220725120227.2626-1-tangmin@cdjrlc.com>
+X-Mailer: git-send-email 2.17.1
+X-QQ-SENDSIZE: 520
+Feedback-ID: bizesmtp:cdjrlc.com:qybglogicsvr:qybglogicsvr6
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Jul 11, 2022 at 12:14:41PM +0200, Johan Hovold wrote:
-> Add SC8280XP to the DT schema.
-> 
-> Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
-> ---
+The double `are' is duplicated in line 1229, remove one.
 
-Rob,
+Signed-off-by: min tang <tangmin@cdjrlc.com>
+---
+ drivers/scsi/scsi_error.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Will you be picking this one up?
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index cdaca13ac1f1..dececd2a2b91 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -1226,7 +1226,7 @@ scsi_eh_action(struct scsi_cmnd *scmd, enum scsi_disposition rtn)
+  * @done_q:	Queue for processed commands.
+  *
+  * Notes:
+- *    We don't want to use the normal command completion while we are are
++ *    We don't want to use the normal command completion while we are
+  *    still handling errors - it may cause other commands to be queued,
+  *    and that would disturb what we are doing.  Thus we really want to
+  *    keep a list of pending commands for final completion, and once we
+-- 
+2.17.1
 
-There doesn't seem to be any other maintainers listed for this file in
-case it's expected to go through some other tree.
-
->  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> index dcd32c10205a..f2d6298d926c 100644
-> --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> @@ -26,6 +26,7 @@ properties:
->            - qcom,msm8994-ufshc
->            - qcom,msm8996-ufshc
->            - qcom,msm8998-ufshc
-> +          - qcom,sc8280xp-ufshc
->            - qcom,sdm845-ufshc
->            - qcom,sm6350-ufshc
->            - qcom,sm8150-ufshc
-> @@ -98,6 +99,7 @@ allOf:
->            contains:
->              enum:
->                - qcom,msm8998-ufshc
-> +              - qcom,sc8280xp-ufshc
->                - qcom,sm8250-ufshc
->                - qcom,sm8350-ufshc
->                - qcom,sm8450-ufshc
-
-Johan
