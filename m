@@ -2,130 +2,106 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6C0FC433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jul 2022 08:47:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F06A4C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Jul 2022 08:51:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232525AbiGYIrh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Jul 2022 04:47:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59944 "EHLO
+        id S234112AbiGYIu7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Jul 2022 04:50:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34392 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230486AbiGYIrg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jul 2022 04:47:36 -0400
-Received: from aposti.net (aposti.net [89.234.176.197])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7191FBC8A;
-        Mon, 25 Jul 2022 01:47:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=crapouillou.net;
-        s=mail; t=1658738851; h=from:from:sender:reply-to:subject:subject:date:date:
-         message-id:message-id:to:to:cc:cc:mime-version:mime-version:
-         content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=TPQel/35hWIJPM94sA5/FSXttvqtiNGBtFglYvAjWfM=;
-        b=tHujnarTp1a2IeCxqv7V7p0ZYM+XAQkUf6h2bzPhZAXtGabexkpEqtJIk3riIG+KD72GCt
-        rfgngCkeMVeNIGR86FW8u0m95+M2aZUF7ZmSCzmZir9XhlmQkEMozE8c4Y/XCjH3vb4sMf
-        UOQU8nHSOqTI2TQ70ZGL4h88/sbskZg=
-Date:   Mon, 25 Jul 2022 09:47:20 +0100
-From:   Paul Cercueil <paul@crapouillou.net>
-Subject: Re: [PATCH -next] scsi: ufs: ufs-mediatek: Fix build error
-To:     Arnd Bergmann <arnd@arndb.de>, Ren Zhijie <renzhijie2@huawei.com>
-Cc:     stanley.chu@mediatek.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        "ARM/Mediatek SoC..." <linux-mediatek@lists.infradead.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Message-Id: <W2JKFR.Y0JWFHU8ZIJU3@crapouillou.net>
-In-Reply-To: <CAK8P3a0LCaMoWArcQNY5qayUABgRXWEogrtQQ-sbR+zY6n=O4w@mail.gmail.com>
-References: <20220704025632.235968-1-renzhijie2@huawei.com>
-        <CAK8P3a07jGCuAVQAZgpENRP_xFLiogU9W1Uze+n21h7TdOZhog@mail.gmail.com>
-        <df9909dc-3303-808e-575a-47190f636279@huawei.com>
-        <CAK8P3a3SA9zvVu0i1m0kqbemLd4WfTMGfpc8VwhsmJOBgZHvsA@mail.gmail.com>
-        <af043109-c101-a147-707b-82e79469ae73@huawei.com>
-        <CAK8P3a0LCaMoWArcQNY5qayUABgRXWEogrtQQ-sbR+zY6n=O4w@mail.gmail.com>
+        with ESMTP id S234089AbiGYIu5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jul 2022 04:50:57 -0400
+X-Greylist: delayed 4764 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 25 Jul 2022 01:50:56 PDT
+Received: from h3cspam02-ex.h3c.com (smtp.h3c.com [221.12.31.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57E576437
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Jul 2022 01:50:56 -0700 (PDT)
+Received: from h3cspam02-ex.h3c.com (localhost [127.0.0.2] (may be forged))
+        by h3cspam02-ex.h3c.com with ESMTP id 26P7VTni055343
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Jul 2022 15:31:29 +0800 (GMT-8)
+        (envelope-from xi.fengfei@h3c.com)
+Received: from mail.maildlp.com ([172.25.15.154])
+        by h3cspam02-ex.h3c.com with ESMTP id 26P7Txkk050140;
+        Mon, 25 Jul 2022 15:29:59 +0800 (GMT-8)
+        (envelope-from xi.fengfei@h3c.com)
+Received: from DAG2EX05-BASE.srv.huawei-3com.com (unknown [10.8.0.68])
+        by mail.maildlp.com (Postfix) with ESMTP id 6A45B22FEFE6;
+        Mon, 25 Jul 2022 15:34:07 +0800 (CST)
+Received: from localhost.localdomain (10.99.222.162) by
+ DAG2EX05-BASE.srv.huawei-3com.com (10.8.0.68) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.17; Mon, 25 Jul 2022 15:29:59 +0800
+From:   Fengfei Xi <xi.fengfei@h3c.com>
+To:     <sathya.prakash@broadcom.com>, <sreekanth.reddy@broadcom.com>,
+        <suganath-prabu.subramani@broadcom.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>
+CC:     <MPT-FusionLinux.pdl@broadcom.com>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <zhou.kete@h3c.com>,
+        Fengfei Xi <xi.fengfei@h3c.com>
+Subject: [PATCH] scsi: mpt3sas: fix kernel panic in scsih_qcmd after shutdown/unload
+Date:   Mon, 25 Jul 2022 15:27:03 +0800
+Message-ID: <20220725072703.5562-1-xi.fengfei@h3c.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+X-Originating-IP: [10.99.222.162]
+X-ClientProxiedBy: BJSMTP01-EX.srv.huawei-3com.com (10.63.20.132) To
+ DAG2EX05-BASE.srv.huawei-3com.com (10.8.0.68)
+X-DNSRBL: 
+X-MAIL: h3cspam02-ex.h3c.com 26P7VTni055343
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Arnd,
+We encountered a kernel crash problem after the user performed a 
+shutdown operation. By analyzing the vmcore file, it is confirmed 
+that it is scsih_qcmd called memset to access ioc->request resources 
+that have been released in shutdown/module unload path.
 
-Le lun., juil. 25 2022 at 08:34:32 +0200, Arnd Bergmann <arnd@arndb.de>=20
-a =C3=A9crit :
-> On Mon, Jul 25, 2022 at 5:38 AM Ren Zhijie <renzhijie2@huawei.com>=20
-> wrote:
->>  =E5=9C=A8 2022/7/13 16:48, Arnd Bergmann =E5=86=99=E9=81=93:
->>=20
->>  I try to use the new marcos SYSTEM_SLEEP_PM_OPS and RUNTIME_PM_OPS=20
->> to
->>  replace the old ones, and remove #ifdef around the declarations in=20
->> the
->>  header, my local changes attach below.
->>=20
->>  But it seems  that doesn't work, which has ld errors:
->>=20
->>  aarch64-linux-gnu-ld: Unexpected GOT/PLT entries detected!
->>  aarch64-linux-gnu-ld: Unexpected run-time procedure linkages=20
->> detected!
->>  drivers/ufs/host/ufs-mediatek.o: In function=20
->> `ufs_mtk_runtime_resume':
->>  ufs-mediatek.c:(.text+0x1d0c): undefined reference to
->>  `ufshcd_runtime_resume'
->>  drivers/ufs/host/ufs-mediatek.o: In function=20
->> `ufs_mtk_runtime_suspend':
->>  ufs-mediatek.c:(.text+0x1d64): undefined reference to
->>  `ufshcd_runtime_suspend'
->>  Makefile:1255: recipe for target 'vmlinux' failed
->>  make: *** [vmlinux] Error 1
->>=20
->>  (CONFIG_PM and CONFIG_PM_SLEEP are both not set, and
->>=20
->=20
-> It appears that there is a mistake in the RUNTIME_PM_OPS()
-> macro definition, can you try this patch on top?
->=20
-> diff --git a/include/linux/pm.h b/include/linux/pm.h
-> index 871c9c49ec9d..84592229d754 100644
-> --- a/include/linux/pm.h
-> +++ b/include/linux/pm.h
-> @@ -334,9 +334,9 @@ struct dev_pm_ops {
->         .restore_noirq =3D pm_sleep_ptr(resume_fn),
->=20
->  #define RUNTIME_PM_OPS(suspend_fn, resume_fn, idle_fn) \
-> -       .runtime_suspend =3D suspend_fn, \
-> -       .runtime_resume =3D resume_fn, \
-> -       .runtime_idle =3D idle_fn,
-> +       .runtime_suspend =3D pm_ptr(suspend_fn), \
-> +       .runtime_resume =3D pm_ptr(resume_fn), \
-> +       .runtime_idle =3D pm_ptr(idle_fn),
+crash> struct MPT3SAS_ADAPTER 0xffff00ff85806880
+struct MPT3SAS_ADAPTER {
+  list = {
+    next = 0xffff800008eb8038 <mpt3sas_ioc_list>,
+    prev = 0xffff800008eb8038 <mpt3sas_ioc_list>
+  },
+  ...
+  name = "mpt3sas_cm0\000\000\000\000\000\000\000\
+  ...
+  remove_host = 1 '\001',
+  ...
+  request_sz = 128,
+  request = 0x0,
+  ...
+  sense = 0x0,
 
-Not a mistake, the pm_ptr() macros are not needed here, because the=20
-dev_pm_ops pointer must always be wrapped with pm_ptr().
+The SCSI queuecommand handlers(scsih_qcmd) may be invoked after 
+shutdown/unload, depending on other components. So we should add 
+checks for 'ioc->remove_host' in scsih_qcmd, so not to access 
+pointers/resources potentially freed in the PCI shutdown/module 
+unload path.
 
-The proper fix is:
+Just like the following commit:
+  9ff549ffb4fb4cc9a4b24d1de9dc3e68287797c4
+  scsi: mpt3sas: fix oops in error handlers after shutdown/unload
 
--  .pm     =3D &ufs_mtk_pm_ops,
-+  .pm     =3D pm_ptr(&ufs_mtk_pm_ops),
+Signed-off-by: Fengfei Xi <xi.fengfei@h3c.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Cheers,
--Paul
-
->=20
->  #ifdef CONFIG_PM_SLEEP
->  #define SET_SYSTEM_SLEEP_PM_OPS(suspend_fn, resume_fn) \
->=20
-> Commit 1a3c7bb08826 ("PM: core: Add new *_PM_OPS macros, deprecate
-> old ones") introduced all the macros with the intent of using pm_ptr()
-> and pm_sleep_ptr() in them, and I think Paul accidentally forgot to=20
-> add
-> those in this instance.
->=20
->        Arnd
-
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index b519f4b59..d8994eaec 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -5140,7 +5140,8 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ 		scsi_print_command(scmd);
+ 
+ 	sas_device_priv_data = scmd->device->hostdata;
+-	if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
++	if (!sas_device_priv_data || !sas_device_priv_data->sas_target ||
++	    ioc->remove_host) {
+ 		scmd->result = DID_NO_CONNECT << 16;
+ 		scsi_done(scmd);
+ 		return 0;
+-- 
+2.17.1
 
