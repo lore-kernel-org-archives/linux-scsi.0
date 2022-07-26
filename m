@@ -2,122 +2,217 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C793C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jul 2022 00:51:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2531C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jul 2022 02:56:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230112AbiGZAvM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Jul 2022 20:51:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39780 "EHLO
+        id S237014AbiGZC4Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Jul 2022 22:56:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49222 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230247AbiGZAvL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jul 2022 20:51:11 -0400
-Received: from out3-smtp.messagingengine.com (out3-smtp.messagingengine.com [66.111.4.27])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF34C140FD
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Jul 2022 17:51:10 -0700 (PDT)
-Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
-        by mailout.nyi.internal (Postfix) with ESMTP id 7AA765C00CE;
-        Mon, 25 Jul 2022 20:51:07 -0400 (EDT)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute5.internal (MEProxy); Mon, 25 Jul 2022 20:51:07 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-id:content-type:date:date
-        :feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-        :message-id:mime-version:references:reply-to:sender:subject
-        :subject:to:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
-        :x-sasl-enc; s=fm3; t=1658796667; x=1658883067; bh=M/WDU4tI4EEY0
-        hnCnjZh/nF+JXQXLA4WTQdigik0Ic4=; b=kz4Nos2R91H+Y/HSHwa3fK0mriSIg
-        yOQSPi66heTQsTc8F/Ssi0nc7cGKYQa1SFewibQM6AcOvbH42XPqDjoruYgJeh8c
-        k+cn7kyQ8bDX5tbnLqcPyMEKISbA3Nis7jN/r2Wo2OnXap+ssqqT53dSOD1xyIlP
-        8Cz5FRgAkY8kPdjB3juC8NlJlSmpRvDUiNzeKcPCxPR6SY26O9VvkaRJUYkMj6LI
-        h9JEYRZPoLMXJqBu1xsqtV7el+vBlsYdu2HcwIYGnsiv9DtPVGxkYWzb9Pcf3DHl
-        nF+LDxqz9zYhEPazTZ6x026Cx18hDUR9/IIueSXkxuuoTXlNkcVHzt79A==
-X-ME-Sender: <xms:ejrfYkHwlcOVbt5uSdqiw54NQiW2e_5L9UhAQyovTmJFf_0Vibm9NQ>
-    <xme:ejrfYtXNkx4ajqIK2qjSC77IHWfjcdIQdLcgbUtLZjG5ljARXV_IMBOoDq-djliBf
-    6o2nBvfP-K6dmR3DPA>
-X-ME-Received: <xmr:ejrfYuJZmD0ZMRjUhhjf5deI7vVORzg4NMUwkedmsqfC9DuSnvf5lxmNTNt9WVQ9WHUBIoGw-JzoEduwE2Lf7LuTVMInebROQwo>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvfedrvddtledgfeelucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepfffhvfevufgjkfhfgggtsehmtderredttdejnecuhfhrohhmpefhihhnnhcu
-    vfhhrghinhcuoehfthhhrghinheslhhinhhugidqmheikehkrdhorhhgqeenucggtffrrg
-    htthgvrhhnpeelfeeklefggfetkedukeevfffgvdeuheetffekledtfeejteelieejteeh
-    geelieenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
-    hfthhhrghinheslhhinhhugidqmheikehkrdhorhhg
-X-ME-Proxy: <xmx:ejrfYmG92jeKIuULGIDi9eWnUMdBm76bMgOHtGxThbHLlOXJjzKrUA>
-    <xmx:ejrfYqWM9z3zPiKkLZqIcKJamahnx0t-NLeJWfh_stHyTtlIyIGinQ>
-    <xmx:ejrfYpO8xQkUEoTxJ7UvSDo243o2dfLepHoMdmvQ5UQCjDA4NUCGrw>
-    <xmx:ezrfYnW8zRNLUCZecqZhCoVcgesHz8tNjqbhh8z_5p328QtaVnBOTQ>
-Feedback-ID: i58a146ae:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
- 25 Jul 2022 20:51:03 -0400 (EDT)
-Date:   Tue, 26 Jul 2022 10:50:56 +1000 (AEST)
-From:   Finn Thain <fthain@linux-m68k.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-cc:     peter.wang@mediatek.com, stanley.chu@mediatek.com,
-        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com,
-        wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
-        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
-        cc.chou@mediatek.com, chaotian.jing@mediatek.com,
-        jiajie.hao@mediatek.com, powen.kao@mediatek.com,
-        qilin.tan@mediatek.com, lin.gui@mediatek.com
-Subject: Re: [PATCH v1] ufs: core: change comment message to popular format
-In-Reply-To: <e962c613-7bdc-99f3-4273-b91beec614ee@acm.org>
-Message-ID: <f396dec0-67c2-30f-5be5-c99ecdb985db@linux-m68k.org>
-References: <20220725131558.13219-1-peter.wang@mediatek.com> <e962c613-7bdc-99f3-4273-b91beec614ee@acm.org>
+        with ESMTP id S229853AbiGZC4Y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jul 2022 22:56:24 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8142611441;
+        Mon, 25 Jul 2022 19:56:23 -0700 (PDT)
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 26Q0oJGH012131;
+        Tue, 26 Jul 2022 02:55:59 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=eh7lwV78QvbkO6UqWgVk7uxqFlg4dBXN/Goh4UfRBYI=;
+ b=k/y7wPYT++cECz42lbSsiSPquF0/DEf6rYO00e/son/i/eKtJWLxWWupK+ZDup9Zka9f
+ PEe0ec90ec587kStHYInG26q7ixTyolJZZQmCC+FazaB3WRMbJfHBlPYMLOnZOSb8kOH
+ gcZ3GqWnUm4vrNNJcmIPOp/jyZxH3hAYtN2bb6h1wq8ecg0v/CUGRyRAflJcVJAZNKw9
+ YlqS7qsrZyKHfluJnM8iX2IEcpSVsPilcTtcJn46llfprQHYjiZPFeU/QbpcBwOcY8AM
+ ShqyDV+SVRIBsGndl6kuJSR053XQeoyPUeF++ok2/gdneYeNpfMQ9d7nuM2o7+b/WYy7 Ow== 
+Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3hhs84jc3u-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 26 Jul 2022 02:55:59 +0000
+Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.47.97.222])
+        by NASANPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 26Q2tw3A019793
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 26 Jul 2022 02:55:58 GMT
+Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
+ nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Mon, 25 Jul 2022 19:55:57 -0700
+Received: from [10.253.34.146] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.22; Mon, 25 Jul
+ 2022 19:55:52 -0700
+Message-ID: <2975315f-f59b-0787-a662-e50766aaf470@quicinc.com>
+Date:   Tue, 26 Jul 2022 10:55:50 +0800
 MIME-Version: 1.0
-Content-Type: multipart/mixed; BOUNDARY="-1463811774-132907978-1658795837=:30080"
-Content-ID: <b9adaa9a-2967-e8ad-e5ea-2b1882b2b18@nippy.intranet>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [PATCH 1/2] scsi: ufs: Add Multi-Circular Queue support
+Content-Language: en-US
+To:     Avri Altman <Avri.Altman@wdc.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "quic_asutoshd@quicinc.com" <quic_asutoshd@quicinc.com>,
+        "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
+        "quic_ziqichen@quicinc.com" <quic_ziqichen@quicinc.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "kernel-team@android.com" <kernel-team@android.com>
+CC:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        Jinyoung Choi <j-young.choi@samsung.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        open list <linux-kernel@vger.kernel.org>
+References: <1658214120-22772-1-git-send-email-quic_cang@quicinc.com>
+ <1658214120-22772-2-git-send-email-quic_cang@quicinc.com>
+ <DM6PR04MB6575048E121B56FDA56DA27DFC939@DM6PR04MB6575.namprd04.prod.outlook.com>
+From:   Can Guo <quic_cang@quicinc.com>
+In-Reply-To: <DM6PR04MB6575048E121B56FDA56DA27DFC939@DM6PR04MB6575.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: 7aVkLI4sa6HQ-IZBTWliXdILxzYlZQwP
+X-Proofpoint-GUID: 7aVkLI4sa6HQ-IZBTWliXdILxzYlZQwP
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
+ definitions=2022-07-25_13,2022-07-25_03,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ impostorscore=0 mlxlogscore=999 lowpriorityscore=0 bulkscore=0
+ clxscore=1011 suspectscore=0 phishscore=0 mlxscore=0 spamscore=0
+ adultscore=0 malwarescore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2206140000 definitions=main-2207260010
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Hi Avri,
 
----1463811774-132907978-1658795837=:30080
-Content-Type: text/plain; CHARSET=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Content-ID: <90cc7f52-fc8e-aee1-574c-ae11d18adb8b@nippy.intranet>
+On 7/23/2022 10:59 PM, Avri Altman wrote:
+>> +#define MCQ_ROP_OFFSET_n(p, i) \
+>> +       hba->mcq_rop[(p)].offset + hba->mcq_rop[(p)].stride * (i)
+> Can you please explain the 0x100 stride thing?
+> Theoretically, each rop set is 48Bytes long, or did I get it wrong?
 
-On Mon, 25 Jul 2022, Bart Van Assche wrote:
+In the draft, there are 4 sets of MCQ Operation & Runtime Registers, 
+i.e. SQD_n, SQIS_n, CQD_n and CQIS_n.
 
-> On 7/25/22 06:15, peter.wang@mediatek.com wrote:
-> > From: Peter Wang <peter.wang@mediatek.com>
-> >=20
-> > Some editor cannot display =E2=80=980=E2=80=99 =E2=80=981=E2=80=99 in c=
-orrect format.
-> > Change it to '0' '1' for most editor can display.
->=20
-> As far as I know checkpatch accepts non-ASCII UTF-8 characters. Using=20
-> this encoding is essential to spell non-English names correctly in=20
-> source files.=20
+They may be interleaved or segregated, depends on realistic HW designs.
 
-The only foreign language that's relevant in the context of this=20
-particular comment is C. Writing '0' to indicate a char value would be=20
-fine but this is not a char value.
+For example, either #1 or #2 can be the case, and QCOM uses case #1, in 
+which 'stride' means the size (in bytes)
 
-Quoted and unquoted zeros are used inconsistently in this comment, though=
-=20
-the patch does not address this unfortunately.
+that one register has to hop over to reach the same register on next 
+round (for example, addr of SQHP_n == (addr of SQHP_0) + (stride * n)).
 
-> I don't think it's feasible nor desirable to eliminate all non-ASCII=20
-> UTF-8 from kernel source code files.
+To allow flexibility, SoC vendors, depends on realistic HW designs, (by 
+using vops_config_mcq_rop) can manipulate
 
-That's neither here nor there -- I don't think it's feasible or desirable=
-=20
-to eliminate all bugs from the kernel source code files. One man's bug is=
-=20
-another man's feature e.g. bloat, choice of programming language,=20
-interpretation of license terms.
+the 'offset' and 'stride' of each MCQ Operation & Runtime Register such 
+that SQDAO_n, SQISAO_n, CQDAO_n and
 
-> Maybe this means that it's time to switch to another editor?
->=20
+CQISAO_n are programmed with wanted offsets/values.
 
-It's not hard to find more tooling that is impacted by misplaced unicode.=
-=20
-The security vulnerabilities stemming from the use of Unicode in source=20
-files are telling.
+#1 -
 
-Unicode doesn't help here so it shouldn't have been used here IMO.
----1463811774-132907978-1658795837=:30080--
+SQHP_0
+SQTP_0
+SQRTC_0
+SQCTI_0
+SQRTS_0
+SQIS_0
+SQIE_0
+CQHP_0
+CQTP_0
+CQIS_0
+CQIE_0
+CQIACR_0
+SQHP_1
+SQTP_1
+SQRTC_1
+SQCTI_1
+SQRTS_1
+SQIS_1
+SQIE_1
+CQHP_1
+CQTP_1
+CQIS_1
+CQIE_1
+CQIACR_1
+...
+SQHP_n
+SQTP_n
+SQRTC_n
+SQCTI_n
+SQRTS_n
+SQIS_n
+SQIE_n
+CQHP_n
+CQTP_n
+CQIS_n
+CQIE_n
+CQIACR_n
+
+
+#2 -
+
+SQHP_0
+SQTP_0
+SQRTC_0
+SQCTI_0
+SQRTS_0
+SQHP_1
+SQTP_1
+SQRTC_1
+SQCTI_1
+SQRTS_1
+...
+SQHP_n
+SQTP_n
+SQRTC_n
+SQCTI_n
+SQRTS_n
+
+
+SQIS_0
+SQIE_0
+SQIS_1
+SQIE_1
+...
+SQIS_n
+SQIE_n
+
+
+CQHP_0
+CQTP_0
+CQHP_1
+CQTP_1
+...
+CQHP_n
+CQTP_n
+
+
+CQIS_0
+CQIE_0
+CQIACR_0
+CQIS_1
+CQIE_1
+CQIACR_1
+...
+CQIS_n
+CQIE_n
+CQIACR_n
+
+
+Thanks,
+
+Can Guo.
+
+> Thanks,
+> Avri
