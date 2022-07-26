@@ -2,43 +2,43 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E56E2C43334
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jul 2022 06:26:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF2F8C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jul 2022 06:35:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237988AbiGZG0k (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Jul 2022 02:26:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42632 "EHLO
+        id S232174AbiGZGfW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Jul 2022 02:35:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51766 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237998AbiGZG0Z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jul 2022 02:26:25 -0400
+        with ESMTP id S231764AbiGZGfT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jul 2022 02:35:19 -0400
 Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C15AA31358;
-        Mon, 25 Jul 2022 23:22:12 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1C86617F;
+        Mon, 25 Jul 2022 23:35:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1658816532; x=1690352532;
+  t=1658817317; x=1690353317;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=Dzh+1CSSIH6C14edPRoY7J2NHub9uUBWlrGKu3JDw6E=;
-  b=Rrr3mKjHZoInyfZ482hBlsNEH4K5YcLW5sQIiwSD4x1vCzdJdb9cHBWw
-   9E3CpTseh5fkcNcawMnNbeP91wAsdTvtwpitqBPy8ySIlJu87hwjXctdL
-   3ghpd+RZbxQz776Y3u0QUwbIadBoL9daG0EIcamivnz9P9ixR6BVnG9Jj
-   c=;
-Received: from unknown (HELO ironmsg05-sd.qualcomm.com) ([10.53.140.145])
-  by alexa-out-sd-01.qualcomm.com with ESMTP; 25 Jul 2022 23:21:50 -0700
+  bh=oqiaUstZrPNZbvGmC+OGqeMInj0ofQIcow7ykALf3T8=;
+  b=ChbkDW40TCKw8/ISjSFgG37LlCFC1LTzy9AzimDVntZXj26oYLX8LObX
+   VVolmpT4qBdfqt/ST9JNIlKdssxRcb37V6xDF9niUbD6M2Zbh+SME6/Vo
+   dA3+FN8Yw7ubI43td0kTW7yb4l0cgsXN6GFplE0cACpStOlUbWmCUlLiJ
+   8=;
+Received: from unknown (HELO ironmsg01-sd.qualcomm.com) ([10.53.140.141])
+  by alexa-out-sd-01.qualcomm.com with ESMTP; 25 Jul 2022 23:35:17 -0700
 X-QCInternal: smtphost
 Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg05-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Jul 2022 23:21:49 -0700
+  by ironmsg01-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Jul 2022 23:35:16 -0700
 Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
  nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Mon, 25 Jul 2022 23:21:49 -0700
+ 15.2.986.22; Mon, 25 Jul 2022 23:35:16 -0700
 Received: from [10.253.34.146] (10.80.80.8) by nalasex01a.na.qualcomm.com
  (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.22; Mon, 25 Jul
- 2022 23:21:45 -0700
-Message-ID: <b0a4ef07-afc8-51c7-c395-92ed798b914b@quicinc.com>
-Date:   Tue, 26 Jul 2022 14:21:42 +0800
+ 2022 23:35:11 -0700
+Message-ID: <35eb780d-93cf-be2c-deb5-239fad5f3abf@quicinc.com>
+Date:   Tue, 26 Jul 2022 14:35:08 +0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.8.0
@@ -63,9 +63,9 @@ CC:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         open list <linux-kernel@vger.kernel.org>
 References: <1658214120-22772-1-git-send-email-quic_cang@quicinc.com>
  <1658214120-22772-2-git-send-email-quic_cang@quicinc.com>
- <DM6PR04MB657540D8D6584C15C8701767FC929@DM6PR04MB6575.namprd04.prod.outlook.com>
+ <DM6PR04MB65757CEC7F66AB732EF5FC48FC929@DM6PR04MB6575.namprd04.prod.outlook.com>
 From:   Can Guo <quic_cang@quicinc.com>
-In-Reply-To: <DM6PR04MB657540D8D6584C15C8701767FC929@DM6PR04MB6575.namprd04.prod.outlook.com>
+In-Reply-To: <DM6PR04MB65757CEC7F66AB732EF5FC48FC929@DM6PR04MB6575.namprd04.prod.outlook.com>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [10.80.80.8]
@@ -77,41 +77,25 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Hi Avri,
 
-On 7/24/2022 12:32 PM, Avri Altman wrote:
->> +
->> +/**
->> + * @ucdl_base_addr: UFS Command Descriptor base address
->> + * @sqe_base_addr: submission queue entry base address
->> + * @sqe_shadow_addr: submission queue entry shadow address
-> When you are editing your commit log, could you please also say something about the shadow queues concept?
+On 7/24/2022 12:07 PM, Avri Altman wrote:
+>> @@ -2558,7 +2587,8 @@ void ufshcd_prepare_utp_scsi_cmd_upiu(struct
+>> ufshcd_lrb *lrbp, u8 upiu_flags)
+>>                                  UPIU_TRANSACTION_COMMAND, upiu_flags,
+>>                                  lrbp->lun, lrbp->task_tag);
+>>          ucd_req_ptr->header.dword_1 = UPIU_HEADER_DWORD(
+>> -                               UPIU_COMMAND_SET_TYPE_SCSI, 0, 0, 0);
+>> +                               UPIU_COMMAND_SET_TYPE_SCSI |
+>> +                               (lrbp->hw_queue_id << 4), 0, 0, 0);
+> This is fine, as long as we have 16 queues or less.
+> Otherwise, we need to fill the EXT_IID as well (only if bEXTIIDEn = 1).
+>
+> Also, don't we need to do this for query commands as well?
+> Or at least add a comment that the queue id for query command is 0.
 
-Sure, we will add comments in next version.
+As per UFS4.0 JEDEC draft, EXT_IID or IID is not required in QUERY 
+REQUEST/RESPONSE UPIU,
 
-> And why it is a good idea to maintain 2 sets of addresses, which basically points to the same place?
-
-When block layer chooses one task tag for one command, that tag will be 
-used to link these pre-allocated data structs -
-
-ucdl[tag]<->lrpb[tag]<->utrd[tag], and the tag chosen by block layer is 
-random (it does not increase from 0 to n and goes
-
-back to 0 in a circular way). But, in MCQ mode, when we submit the 
-command to UFSHCI, we need to make sure the SQTP
-
-get increased one slot by one slot (we cannot skip slots). Hence by 
-keeping shadow utrds (or shadow SQEs), the data struct
-
-linkage ucdl[tag]<->lrpb[tag]<->shadow_sqe[tag] remains same, and we 
-copy the shadow sqe to the sqe[sq_tp_slot] only
-
-when we finally decide the very sq_tp_slot used to submit this command 
-in SQTP.
-
-The benefit is that we can 100% leverage the existing initialization 
-logic of lrbp in ufshcd_queuecommand path without changing a line.
-
-Otherwise, considerable changes would be required to implement the idea 
-of dynamical SQE assignment (to lrbp).
+unless my doc is out dated, please let me know.
 
 
 Thanks,
