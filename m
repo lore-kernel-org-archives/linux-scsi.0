@@ -2,154 +2,117 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA004CCA489
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jul 2022 09:14:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61304C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jul 2022 09:16:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232243AbiGZJOo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Jul 2022 05:14:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51764 "EHLO
+        id S232489AbiGZJQk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Jul 2022 05:16:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54690 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229527AbiGZJOm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jul 2022 05:14:42 -0400
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E75FB2AC64;
-        Tue, 26 Jul 2022 02:14:40 -0700 (PDT)
-X-UUID: 5afc939cd27d4da8982af7e83bb723de-20220726
+        with ESMTP id S231384AbiGZJQj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jul 2022 05:16:39 -0400
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0BFF24087
+        for <linux-scsi@vger.kernel.org>; Tue, 26 Jul 2022 02:16:38 -0700 (PDT)
+X-UUID: adbdb38f735b455d9552b88161b9721c-20220726
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.8,REQID:052d362d-871e-419e-8c54-df11f1e541bd,OB:0,LO
-        B:0,IP:0,URL:5,TC:0,Content:-5,EDM:0,RT:0,SF:95,FILE:0,RULE:Release_Ham,AC
-        TION:release,TS:95
-X-CID-INFO: VERSION:1.1.8,REQID:052d362d-871e-419e-8c54-df11f1e541bd,OB:0,LOB:
-        0,IP:0,URL:5,TC:0,Content:-5,EDM:0,RT:0,SF:95,FILE:0,RULE:Spam_GS981B3D,AC
-        TION:quarantine,TS:95
-X-CID-META: VersionHash:0f94e32,CLOUDID:061c87b3-06d2-48ef-b2dd-540836705165,C
-        OID:5eab6ed11b39,Recheck:0,SF:28|17|19|48,TC:nil,Content:0,EDM:-3,IP:nil,U
-        RL:1,File:nil,QS:nil,BEC:nil,COL:0
-X-UUID: 5afc939cd27d4da8982af7e83bb723de-20220726
-Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw01.mediatek.com
+X-CID-O-INFO: VERSION:1.1.8,REQID:71665570-07d5-4dad-9601-437ab9620c4f,OB:0,LO
+        B:0,IP:0,URL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,RULE:Release_Ham,ACTI
+        ON:release,TS:0
+X-CID-META: VersionHash:0f94e32,CLOUDID:ed33f9d3-912a-458b-a623-74f605a77e93,C
+        OID:IGNORED,Recheck:0,SF:nil,TC:nil,Content:0,EDM:-3,IP:nil,URL:0,File:nil
+        ,QS:nil,BEC:nil,COL:0
+X-UUID: adbdb38f735b455d9552b88161b9721c-20220726
+Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw02.mediatek.com
         (envelope-from <peter.wang@mediatek.com>)
         (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 873259752; Tue, 26 Jul 2022 17:14:35 +0800
+        with ESMTP id 931997404; Tue, 26 Jul 2022 17:16:33 +0800
 Received: from mtkmbs11n1.mediatek.inc (172.21.101.186) by
  mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.792.3;
- Tue, 26 Jul 2022 17:14:34 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.792.15 via Frontend Transport; Tue, 26 Jul 2022 17:14:34 +0800
-From:   <peter.wang@mediatek.com>
-To:     <stanley.chu@mediatek.com>, <linux-scsi@vger.kernel.org>,
-        <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
-        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
+ Tue, 26 Jul 2022 17:16:32 +0800
+Received: from [172.21.84.99] (172.21.84.99) by mtkmbs11n1.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.2.792.15 via Frontend
+ Transport; Tue, 26 Jul 2022 17:16:31 +0800
+Subject: Re: [PATCH v3] scsi: ufs: correct ufshcd_shutdown flow
+To:     Bart Van Assche <bvanassche@acm.org>, <stanley.chu@mediatek.com>,
+        <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
+        <jejb@linux.ibm.com>
 CC:     <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
-        <chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
-        <powen.kao@mediatek.com>, <qilin.tan@mediatek.com>,
-        <lin.gui@mediatek.com>, <stable@vger.kernel.org>
-Subject: [PATCH v3] ufs: core: fix lockdep warning of clk_scaling_lock
-Date:   Tue, 26 Jul 2022 17:14:33 +0800
-Message-ID: <20220726091433.22755-1-peter.wang@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        <chun-hung.wu@mediatek.com>, <alice.chao@mediatek.com>,
+        <cc.chou@mediatek.com>, <chaotian.jing@mediatek.com>,
+        <jiajie.hao@mediatek.com>, <powen.kao@mediatek.com>,
+        <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>
+References: <20220721065833.26887-1-peter.wang@mediatek.com>
+ <2f66f4ba-f0d5-6b8a-cc3b-fa896a302d60@acm.org>
+ <090da948-0fce-9a89-0e1c-a26b3e0b735f@mediatek.com>
+ <2edfdadc-2a93-591f-c5ca-98dc02a30499@acm.org>
+From:   Peter Wang <peter.wang@mediatek.com>
+Message-ID: <dcf7c68b-cfb8-e8ab-f023-f469903c05ce@mediatek.com>
+Date:   Tue, 26 Jul 2022 17:16:31 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+In-Reply-To: <2edfdadc-2a93-591f-c5ca-98dc02a30499@acm.org>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Peter Wang <peter.wang@mediatek.com>
+Hi Bart,
 
-There have a lockdep warning like below in current flow.
-kworker/u16:0:  Possible unsafe locking scenario:
+On 7/26/22 1:07 AM, Bart Van Assche wrote:
+> On 7/24/22 20:47, Peter Wang wrote:
+>> Because kernel_restart is export, and mediatek may call kernel_restart 
+> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>
+> Is this code upstream?
+>
+No, it not upstream.
+And sorry that I correct mediatek usage, it is kernel_power_off, not 
+kernel_restart.
 
-kworker/u16:0:        CPU0                    CPU1
-kworker/u16:0:        ----                    ----
-kworker/u16:0:   lock(&hba->clk_scaling_lock);
-kworker/u16:0:                                lock(&hba->dev_cmd.lock);
-kworker/u16:0:                                lock(&hba->clk_scaling_lock);
-kworker/u16:0:   lock(&hba->dev_cmd.lock);
-kworker/u16:0:
+>> while shutdown is on going.
+>> EXPORT_SYMBOL_GPL(kernel_restart);
+>> kernel_restart -> kernel_restart_prepare -> device_shutdown
+>>
+>> So, there may have two thread execute device_shutdown concurrently.
+>> And the list_lock in device_shutdown function is not protect shutdown 
+>> callback function,
+>> caused two callback function(ufshcd_shutdown/ufshcd_wl_shutdown) 
+>> could run concurrently.
+>>
+>> Here is the error log that two thread in device_shutdown.
+>> [37684.002227] [T1500641] platform +platform:112b0000.ufshci 
+>> kpoc_charger: ufshcd-mtk 112b0000.ufshci: [name:core&]shutdown
+>> [37684.002264] [T1600339] scsi +scsi:0:0:0:49488 charger_thread: 
+>> ufs_device_wlun 0:0:0:49488: [name:core&]shutdown
+>
+> Hi Peter,
+>
+> I had not yet taken a look at the kernel_restart() function. Now that 
+> I have taken a look, it seems to me that kernel_restart() calls must 
+> be serialized via the system_transition_mutex. Please make sure that 
+> the kernel_restart() calls are serialized.
+>
+> Thanks,
+>
+> Bart.
 
-Before this patch clk_scaling_lock was held in reader mode during the ufshcd_wb_toggle() call.
-With this patch applied clk_scaling_lock is not held while ufshcd_wb_toggle() is called.
+I think kernel_power_off could use system_transition_mutex to protect 
+shutdown racing.
+We will try it, Thanks for the suggestion.
+And if no need wait, it could more simple in this patch. I will upload 
+next version again.
 
-This is safe because ufshcd_wb_toggle will held clk_scaling_lock in reader mode "again" in flow
-ufshcd_wb_toggle -> __ufshcd_wb_toggle -> ufshcd_query_flag_retry -> ufshcd_query_flag ->
-ufshcd_exec_dev_cmd -> down_read(&hba->clk_scaling_lock);
-The protect should enough and make sure clock is not change while send command.
+Thanks.
+Peter
 
-ufshcd_wb_toggle can protected by hba->clk_scaling.is_allowed to make sure
-ufshcd_devfreq_scale function not run concurrently.
 
-Fixes: 0e9d4ca43ba8 ("scsi: ufs: Protect some contexts from unexpected clock scaling")
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
----
- drivers/ufs/core/ufshcd.c | 27 ++++++++++++++++-----------
- 1 file changed, 16 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index c7b337480e3e..aa57126fdb49 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -272,6 +272,7 @@ static void ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set);
- static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable);
- static void ufshcd_hba_vreg_set_lpm(struct ufs_hba *hba);
- static void ufshcd_hba_vreg_set_hpm(struct ufs_hba *hba);
-+static void ufshcd_clk_scaling_allow(struct ufs_hba *hba, bool allow);
- 
- static inline void ufshcd_enable_irq(struct ufs_hba *hba)
- {
-@@ -1249,12 +1250,10 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba)
- 	return ret;
- }
- 
--static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, bool writelock)
-+static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba)
- {
--	if (writelock)
--		up_write(&hba->clk_scaling_lock);
--	else
--		up_read(&hba->clk_scaling_lock);
-+	up_write(&hba->clk_scaling_lock);
-+
- 	ufshcd_scsi_unblock_requests(hba);
- 	ufshcd_release(hba);
- }
-@@ -1271,7 +1270,7 @@ static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, bool writelock)
- static int ufshcd_devfreq_scale(struct ufs_hba *hba, bool scale_up)
- {
- 	int ret = 0;
--	bool is_writelock = true;
-+	bool wb_toggle = false;
- 
- 	ret = ufshcd_clock_scaling_prepare(hba);
- 	if (ret)
-@@ -1300,13 +1299,19 @@ static int ufshcd_devfreq_scale(struct ufs_hba *hba, bool scale_up)
- 		}
- 	}
- 
--	/* Enable Write Booster if we have scaled up else disable it */
--	downgrade_write(&hba->clk_scaling_lock);
--	is_writelock = false;
--	ufshcd_wb_toggle(hba, scale_up);
-+	/* Disable clk_scaling until ufshcd_wb_toggle finish */
-+	hba->clk_scaling.is_allowed = false;
-+	wb_toggle = true;
- 
- out_unprepare:
--	ufshcd_clock_scaling_unprepare(hba, is_writelock);
-+	ufshcd_clock_scaling_unprepare(hba);
-+
-+	/* Enable Write Booster if we have scaled up else disable it */
-+	if (wb_toggle) {
-+		ufshcd_wb_toggle(hba, scale_up);
-+		ufshcd_clk_scaling_allow(hba, true);
-+	}
-+
- 	return ret;
- }
- 
--- 
-2.18.0
+
+
 
