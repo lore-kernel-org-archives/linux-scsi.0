@@ -2,169 +2,93 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E536AC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jul 2022 10:48:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD526C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jul 2022 11:37:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238652AbiGZKsH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Jul 2022 06:48:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43988 "EHLO
+        id S238866AbiGZLhW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Jul 2022 07:37:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48890 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233291AbiGZKsE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jul 2022 06:48:04 -0400
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47A76240A7
-        for <linux-scsi@vger.kernel.org>; Tue, 26 Jul 2022 03:47:59 -0700 (PDT)
-Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20220726104754epoutp017d2ec7669bdbc22c6ce58c182d3767bc~FW1imtp4n1965619656epoutp01h
-        for <linux-scsi@vger.kernel.org>; Tue, 26 Jul 2022 10:47:54 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20220726104754epoutp017d2ec7669bdbc22c6ce58c182d3767bc~FW1imtp4n1965619656epoutp01h
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1658832474;
-        bh=fQ+Y+QmHnh/EDveNBIvr5sL4r2bOolAvTQu/ym0MQ40=;
-        h=From:To:Cc:Subject:Date:References:From;
-        b=QSoSkNSlZ9myZg4vn3DO35QoU/VU+WK4mHamVkqdIYX1IWrdARJ8TSougIzEGJDUp
-         COJFMbamRwwDkvk/SNWv3FUUg/couFDyHa2/h0yoNBMwcuOGL1mR55SA4rN+jo7okl
-         TOem5lY6LBsupe6JpVVguyyUXL2mE4uvdYTEeHVg=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
-        20220726104753epcas2p1f4f7ed696f18d7e5b34b7729d114cf1e~FW1iKIoha2666126661epcas2p1U;
-        Tue, 26 Jul 2022 10:47:53 +0000 (GMT)
-Received: from epsmges2p1.samsung.com (unknown [182.195.36.99]) by
-        epsnrtp4.localdomain (Postfix) with ESMTP id 4LsYXT28Thz4x9Pq; Tue, 26 Jul
-        2022 10:47:53 +0000 (GMT)
-Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
-        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
-        3D.DD.09666.956CFD26; Tue, 26 Jul 2022 19:47:53 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas2p2.samsung.com (KnoxPortal) with ESMTPA id
-        20220726104752epcas2p25991dabdb0acb21e25f21277f3198b09~FW1hQlJM61146411464epcas2p29;
-        Tue, 26 Jul 2022 10:47:52 +0000 (GMT)
-Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20220726104752epsmtrp19621ddec4fcba5decef904a14c85faf9~FW1hPwgku2764827648epsmtrp1K;
-        Tue, 26 Jul 2022 10:47:52 +0000 (GMT)
-X-AuditID: b6c32a45-45bff700000025c2-ee-62dfc659025c
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        40.DD.08802.856CFD26; Tue, 26 Jul 2022 19:47:52 +0900 (KST)
-Received: from localhost.localdomain (unknown [10.229.9.55]) by
-        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20220726104752epsmtip26f3ea21891bc998bbdebccc76ea401a5~FW1hETgl02032620326epsmtip2W;
-        Tue, 26 Jul 2022 10:47:52 +0000 (GMT)
-From:   Gyunghoon Kwon <goodjob.kwon@samsung.com>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Gyunghoon Kwon <goodjob.kwon@samsung.com>
-Subject: [PATCH] scsi: ufs: introduce dev_cmd_notify callback
-Date:   Tue, 26 Jul 2022 19:45:17 +0900
-Message-Id: <20220726104516.127032-1-goodjob.kwon@samsung.com>
-X-Mailer: git-send-email 2.37.1
+        with ESMTP id S238867AbiGZLhI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jul 2022 07:37:08 -0400
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB29A33400;
+        Tue, 26 Jul 2022 04:37:00 -0700 (PDT)
+X-UUID: 44db0f43488442609308444ceff2495f-20220726
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.8,REQID:cda59f34-b347-4e15-b9bd-f7dc090222b6,OB:0,LO
+        B:0,IP:0,URL:5,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,RULE:Release_Ham,ACTI
+        ON:release,TS:5
+X-CID-META: VersionHash:0f94e32,CLOUDID:03858ab3-06d2-48ef-b2dd-540836705165,C
+        OID:IGNORED,Recheck:0,SF:nil,TC:nil,Content:0,EDM:-3,IP:nil,URL:1,File:nil
+        ,QS:nil,BEC:nil,COL:0
+X-UUID: 44db0f43488442609308444ceff2495f-20220726
+Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw01.mediatek.com
+        (envelope-from <peter.wang@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 1559230552; Tue, 26 Jul 2022 19:36:55 +0800
+Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
+ mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.792.15; Tue, 26 Jul 2022 19:36:54 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.792.15 via Frontend Transport; Tue, 26 Jul 2022 19:36:54 +0800
+From:   <peter.wang@mediatek.com>
+To:     <stanley.chu@mediatek.com>, <linux-scsi@vger.kernel.org>,
+        <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
+        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
+CC:     <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
+        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+        <alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
+        <chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
+        <powen.kao@mediatek.com>, <qilin.tan@mediatek.com>,
+        <lin.gui@mediatek.com>, <stable@vger.kernel.org>
+Subject: [PATCH v4] ufs: core: correct ufshcd_shutdown flow
+Date:   Tue, 26 Jul 2022 19:36:53 +0800
+Message-ID: <20220726113653.25024-1-peter.wang@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrLKsWRmVeSWpSXmKPExsWy7bCmuW7ksftJBmvvcFk8mLeNzeLlz6ts
-        Fj07nS0W3djGZHF51xw2i+7rO9gslh//x+TA7jFh0QFGj49Pb7F49G1ZxejxeZOcR/uBbqYA
-        1qhsm4zUxJTUIoXUvOT8lMy8dFsl7+B453hTMwNDXUNLC3MlhbzE3FRbJRefAF23zBygK5QU
-        yhJzSoFCAYnFxUr6djZF+aUlqQoZ+cUltkqpBSk5BeYFesWJucWleel6eaklVoYGBkamQIUJ
-        2RmPvjawFBwQrPj3YiVrA+M5vi5GTg4JAROJ1xvXMncxcnEICexglDjZcJ0ZJCEk8IlRYtps
-        ZQj7M6PE0k5TmIYHc5czQjTsYpToObWVHcL5yChx6UofG0gVm4C+xNTzL4EmcXCICBhJXFvl
-        CVLDLDCTUeLM1WNMIDXCArYSP06fZQGxWQRUJU79+gK2mVfATqLt9k4miG3yEtdvtkHFBSVO
-        znwCVs8MFG/eOhvsbAmBc+wSex88YYVocJHYv2kvM4QtLPHq+BZ2CFtK4mV/G5RdLHHy/wZG
-        iOYWRonO6+egEsYSs561M4JczSygKbF+lz6IKSGgLHHkFtRePomOw3/ZIcK8Eh1tQhCNahJn
-        Zk6D2iojcX9KAwuE7SHRteM0OyQQYyVmr9zKNoFRfhaSb2Yh+WYWwt4FjMyrGMVSC4pz01OL
-        jQoM4XGanJ+7iRGcDrVcdzBOfvtB7xAjEwfjIUYJDmYlEd6E6PtJQrwpiZVVqUX58UWlOanF
-        hxhNgeE7kVlKNDkfmJDzSuINTSwNTMzMDM2NTA3MlcR5vVI2JAoJpCeWpGanphakFsH0MXFw
-        SjUwLVtsvzy7LeXSgqs/V7Ps/vF7oZ023+bef/JqqRP/vFrY8pXzdfSPC9ZHls5tbuOx0eFa
-        nmBV/n2B9o8vzHscRE/++9uV4c79ynSN/GG7TUdj6zlmZ+oyLO/IDH/oe1L9yaSLoiceKrCp
-        yNkHNb//u9txboLOl2WMp/nTnJwZ5T/L2LFITOt50jg1KcnBNDB7A8vzwqU3NpySy8mJqZLg
-        F9Y+mf/15+K6U4bKS6WPF11bJO2maVX2QNd9+RNdxo/xT2U21G5+7HXusN6TNZdWuU8W2r5n
-        9jqxaTNst50+dDi5TCXu8LUFC9bVz1LyWSxqml82lb9M57e9XP9HN4sGbi4GP/OL+zgluiO9
-        VhxYrsRSnJFoqMVcVJwIAINo7CEQBAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrHLMWRmVeSWpSXmKPExsWy7bCSvG7EsftJBnffyVs8mLeNzeLlz6ts
-        Fj07nS0W3djGZHF51xw2i+7rO9gslh//x+TA7jFh0QFGj49Pb7F49G1ZxejxeZOcR/uBbqYA
-        1igum5TUnMyy1CJ9uwSujEdfG1gKDghW/HuxkrWB8RxfFyMnh4SAicSDucsZuxi5OIQEdjBK
-        zH72mLWLkQMoISNx74gURI2wxP2WI6wQNe8ZJU6vP8UIkmAT0JeYev4lM4gtAjRoxq13YEXM
-        AnMZJSZs/sEEkhAWsJX4cfosC4jNIqAqcerXF7AGXgE7ibbbO5kgNshLXL/ZBhUXlDg58wlY
-        PTNQvHnrbOYJjHyzkKRmIUktYGRaxSiZWlCcm55bbFhglJdarlecmFtcmpeul5yfu4kRHKRa
-        WjsY96z6oHeIkYmD8RCjBAezkghvQvT9JCHelMTKqtSi/Pii0pzU4kOM0hwsSuK8F7pOxgsJ
-        pCeWpGanphakFsFkmTg4pRqY1nnO75v4Nc11EYubKP/c/JSt3eqFOnqnv29jyeRhfVB89/ux
-        eu21d59uW5t69VxVE+8j2UgZ6eQ1cXN7V3nlVxc73Df/qCgZqFzH2cUq0LUx8pl3fo79P7Wv
-        k6sUrgX1nnGpdH6X6Wd1a43wXUNG/UK/1kebBB+ufB072+zWQkWHo2VTjv0r1Fz5Wlro0wNu
-        xh1vKuYoLRIx3iK78YGkWee7gPrLXDl+kWvN1sr9XXxgxsYJxzTVQ58sv3crcIrwCVNBlo4L
-        nk160ysl1xiqO59cfe/grWsLLTavmZFRda7DXc6BpymI64JM1fOglHtrC+duPxC8Jdtt7tFq
-        yS++Jj8N18gIB6YZrlnAU7ROiaU4I9FQi7moOBEAfqyhcMECAAA=
-X-CMS-MailID: 20220726104752epcas2p25991dabdb0acb21e25f21277f3198b09
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20220726104752epcas2p25991dabdb0acb21e25f21277f3198b09
-References: <CGME20220726104752epcas2p25991dabdb0acb21e25f21277f3198b09@epcas2p2.samsung.com>
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Some UFS host controller may need to synchronize dev command among
-UFS host controllers.
+From: Peter Wang <peter.wang@mediatek.com>
 
-Signed-off-by: Gyunghoon Kwon <goodjob.kwon@samsung.com>
+In normal case: ufshcd_wl_shutdown -> ufshcd_shtdown
+ufshcd_shtdown should turn off clock/power after ufshcd_wl_shutdown
+which set device power off and link off.
+
+Also remove pm_runtime_get_sync.
+The reason why here can remove pm_runtime_get_sync is because,
+(1) ufshcd_wl_shutdown -> pm_runtime_get_sync, will resume hba->dev too.
+(2) device resume(turn on clk/power) is not required, even if device is in RPM_SUSPENDED.
+
+Signed-off-by: Peter Wang <peter.wang@mediatek.com>
 ---
- drivers/scsi/ufs/ufshcd.c |  2 ++
- drivers/scsi/ufs/ufshcd.h | 10 ++++++++++
- 2 files changed, 12 insertions(+)
+ drivers/ufs/core/ufshcd.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 823ecd99eb2c..02d0350ee1a2 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -2942,8 +2942,10 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index c7b337480e3e..d13c76983555 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -9462,12 +9462,8 @@ EXPORT_SYMBOL(ufshcd_runtime_resume);
+ int ufshcd_shutdown(struct ufs_hba *hba)
+ {
+ 	if (ufshcd_is_ufs_dev_poweroff(hba) && ufshcd_is_link_off(hba))
+-		goto out;
+-
+-	pm_runtime_get_sync(hba->dev);
++		ufshcd_suspend(hba);
  
- 	ufshcd_add_query_upiu_trace(hba, UFS_QUERY_SEND, lrbp->ucd_req_ptr);
- 
-+	ufshcd_vops_dev_cmd_notify(hba, PRE_CHANGE);
- 	ufshcd_send_command(hba, tag);
- 	err = ufshcd_wait_for_dev_cmd(hba, lrbp, timeout);
-+	ufshcd_vops_dev_cmd_notify(hba, POST_CHANGE);
- 	ufshcd_add_query_upiu_trace(hba, err ? UFS_QUERY_ERR : UFS_QUERY_COMP,
- 				    (struct utp_upiu_req *)lrbp->ucd_rsp_ptr);
- 
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 34c5db101f14..f13b6cdfbe1d 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -320,6 +320,7 @@ struct ufs_pwr_mode_info {
-  * @device_reset: called to issue a reset pulse on the UFS device
-  * @program_key: program or evict an inline encryption key
-  * @event_notify: called to notify important events
-+ * @dev_cmd_notify: called to notify device management request is issued
-  */
- struct ufs_hba_variant_ops {
- 	const char *name;
-@@ -357,6 +358,8 @@ struct ufs_hba_variant_ops {
- 			       const union ufs_crypto_cfg_entry *cfg, int slot);
- 	void	(*event_notify)(struct ufs_hba *hba,
- 				enum ufs_event_type evt, void *data);
-+	void	(*dev_cmd_notify)(struct ufs_hba *hba,
-+			       enum ufs_notify_change_status);
- };
- 
- /* clock gating state  */
-@@ -1354,6 +1357,13 @@ static inline void ufshcd_vops_config_scaling_param(struct ufs_hba *hba,
- 		hba->vops->config_scaling_param(hba, profile, data);
- }
- 
-+static inline void ufshcd_vops_dev_cmd_notify(struct ufs_hba *hba,
-+					enum ufs_notify_change_status status)
-+{
-+	if (hba->vops && hba->vops->dev_cmd_notify)
-+		hba->vops->dev_cmd_notify(hba, status);
-+}
-+
- extern struct ufs_pm_lvl_states ufs_pm_lvl_states[];
- 
- /*
+-	ufshcd_suspend(hba);
+-out:
+ 	hba->is_powered = false;
+ 	/* allow force shutdown even in case of errors */
+ 	return 0;
 -- 
-2.37.1
+2.18.0
 
