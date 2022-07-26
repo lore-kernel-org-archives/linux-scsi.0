@@ -2,88 +2,95 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F35B5C00144
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jul 2022 22:47:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DC60C00144
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jul 2022 22:52:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231855AbiGZWrz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Jul 2022 18:47:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46920 "EHLO
+        id S231855AbiGZWwm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Jul 2022 18:52:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48944 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229766AbiGZWrz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jul 2022 18:47:55 -0400
-Received: from mail-pg1-f179.google.com (mail-pg1-f179.google.com [209.85.215.179])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C591326E7;
-        Tue, 26 Jul 2022 15:47:54 -0700 (PDT)
-Received: by mail-pg1-f179.google.com with SMTP id f65so14356274pgc.12;
-        Tue, 26 Jul 2022 15:47:54 -0700 (PDT)
+        with ESMTP id S229766AbiGZWwl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jul 2022 18:52:41 -0400
+Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B6D213F1C
+        for <linux-scsi@vger.kernel.org>; Tue, 26 Jul 2022 15:52:38 -0700 (PDT)
+Received: by mail-pj1-f53.google.com with SMTP id o14-20020a17090a4b4e00b001f2f2b61be5so367353pjl.4
+        for <linux-scsi@vger.kernel.org>; Tue, 26 Jul 2022 15:52:38 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=JzO3IeIuQztvrsRLmkpE46imkHEW5eNh0OyZa8Qe6mc=;
-        b=XweNemqX6PO2mO9uu+ax2woh5HBQI9pakx5bwGiXaBMfG/lMn1LtisyDKBW4ZDrxFS
-         9rAZrAU91/OPxUQEA2B/4V/2Q3UCEdpmgCDyoe0LBi0BcOf+z8MzRiBj/pXVYLJe7fAs
-         uM4rDmuuWzbN6P4P6xEFxj8M7ru2M40p34ZlJggi57B2l07Z3x3gvzeMC5D4xNzpypRW
-         EIh8nRcOtUcRBteHVA/k+83WBWNEb8fm4nrTEo5NwPEZHvA2iNZMBgvGsvcj66R6GhEA
-         jJFnDNbJtB7HPLMfjMIP8ge5o5hBAG3wUOZdrvGDQymsISTuJ1/aID6xE9DZsLTDhsYh
-         xmOA==
-X-Gm-Message-State: AJIora/7tQxlEl0j0EgkDRBJtOtT/ioi91AYWnZUDMMJugKBvfTkjLR9
-        tXJsCKQXNrQBqpZ2K9soNZg=
-X-Google-Smtp-Source: AGRyM1sXVHkFvgipghxDJ1g2uLuoOmJdlIIG8IIXeHwQJHKJ/EyvEqYyD0g4d9gjzcwKN7/rg+sEmg==
-X-Received: by 2002:a05:6a00:796:b0:52c:2d1:3ae0 with SMTP id g22-20020a056a00079600b0052c02d13ae0mr7814087pfu.52.1658875673432;
-        Tue, 26 Jul 2022 15:47:53 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:34f4:7aa8:57:d456? ([2620:15c:211:201:34f4:7aa8:57:d456])
-        by smtp.gmail.com with ESMTPSA id a9-20020a170902ecc900b001641b2d61d4sm9478073plh.30.2022.07.26.15.47.50
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 26 Jul 2022 15:47:52 -0700 (PDT)
-Message-ID: <47d98e37-d32f-2afa-8272-29f48d066fe7@acm.org>
-Date:   Tue, 26 Jul 2022 15:47:49 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [PATCH 1/2] scsi: ufs: Add Multi-Circular Queue support
-Content-Language: en-US
-To:     "Asutosh Das (asd)" <quic_asutoshd@quicinc.com>,
-        Avri Altman <Avri.Altman@wdc.com>,
-        Can Guo <quic_cang@quicinc.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
-        "quic_ziqichen@quicinc.com" <quic_ziqichen@quicinc.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "kernel-team@android.com" <kernel-team@android.com>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1658214120-22772-1-git-send-email-quic_cang@quicinc.com>
- <1658214120-22772-2-git-send-email-quic_cang@quicinc.com>
- <DM6PR04MB65756C5A6C5F674B19091F7DFC939@DM6PR04MB6575.namprd04.prod.outlook.com>
- <78495ab6-358d-4d91-e710-140331f37843@quicinc.com>
+        bh=RjPdjDNHaGgfRGzJe//q3RZ0DCxZJJgykjoWO+QXeIE=;
+        b=uIFfMYSItgB4FjvxXLegBIzLmc5Bu0jA3KLqyA1prjeoE26qyDW9+F+VSlSZopV+Jd
+         GYm9bh9ZVlPYie+pGLOJKvJFxZfcy3K8WLTFSs7U/0J+svWfULVuQJfBydQPbjRo8xJV
+         1443ZSqbLVbNzra8x35Bnyy7V19KYYo+pX8w1p6EOabgE7BBhl10el+/Op3WaS3LFuTr
+         oBfTm2ni8cp62HNZjC9KU9+7XVoAnLVQ73e2YDrOI2U8pGyGO8/hLYcGkuAF0vBk3OMg
+         5JdNIuGAPIoiYO+x0DPgfL2Z1VStc9wElbLedLiTJRDhPey/no4VFhb03bsW6YVKbXLY
+         7YWQ==
+X-Gm-Message-State: AJIora9sxGDJcNOcqrJJGs8BFTuk3xeif0Yta1VurBjE6GJIol0eeaWo
+        zNGBj7CEGOUyGpEIUILOSIE=
+X-Google-Smtp-Source: AGRyM1s0fFeyZu37VbBt09ivvxl3BwAu56n2Ib7Zp3RvjlsjtD6tzauOrWdz8Dbu1o/FyMO1Gps3gg==
+X-Received: by 2002:a17:903:444:b0:16d:4873:f270 with SMTP id iw4-20020a170903044400b0016d4873f270mr19340103plb.104.1658875957870;
+        Tue, 26 Jul 2022 15:52:37 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:34f4:7aa8:57:d456])
+        by smtp.gmail.com with ESMTPSA id f10-20020a17090aa78a00b001f2ebfdcd3asm92991pjq.54.2022.07.26.15.52.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 26 Jul 2022 15:52:37 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <78495ab6-358d-4d91-e710-140331f37843@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>
+Subject: [PATCH v3] scsi: ufs: Increase the maximum data buffer size
+Date:   Tue, 26 Jul 2022 15:52:21 -0700
+Message-Id: <20220726225232.1362251-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.37.1.359.gd136c6c3e2-goog
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/25/22 09:35, Asutosh Das (asd) wrote:
-> On 7/23/2022 2:23 PM, Avri Altman wrote:
->> Also maybe we can constify sizeof(struct utp_transfer_req_desc) which 
->> is used now few times.
->
-> Ok, agree to make sizeof(struct utp_transfer_req_desc) a constant in the 
-> next version.
+Measurements for one particular UFS controller + UFS device show a 25%
+higher read bandwidth if the maximum data buffer size is increased from
+512 KiB to 1 MiB. Hence increase the maximum size of the data buffer
+associated with a single request from SCSI_DEFAULT_MAX_SECTORS (1024)
+* 512 bytes = 512 KiB to 1 MiB.
 
-Please don't. I'm concerned that introducing a symbolic name for that 
-sizeof() expression will make code harder to read instead of easier.
+Notes:
+- The maximum data buffer size supported by the UFSHCI specification
+  is 65535 * 256 KiB or about 16 GiB.
+- The maximum data buffer size for READ(10) commands is 65535 logical
+  blocks. To transfer more than 65535 * 4096 bytes = 255 MiB with a
+  single SCSI command, the READ(16) command is required. Support for
+  READ(16) is optional in the UFS 3.1 and UFS 4.0 standards.
 
-Thanks,
+Cc: Adrian Hunter <adrian.hunter@intel.com>
+Cc: Avri Altman <avri.altman@wdc.com>
+Cc: Bean Huo <beanhuo@micron.com>
+Cc: Stanley Chu <stanley.chu@mediatek.com>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+Changes compared to v2: changed maximum transfer size 255 MiB to 1 MiB.
+Changes compared to v1: changed maximum transfer size from 1 GiB to 255 MiB.
 
-Bart.
+ drivers/ufs/core/ufshcd.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 36b7212e9cb5..678bc8d6d6aa 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -8365,6 +8365,7 @@ static struct scsi_host_template ufshcd_driver_template = {
+ 	.cmd_per_lun		= UFSHCD_CMD_PER_LUN,
+ 	.can_queue		= UFSHCD_CAN_QUEUE,
+ 	.max_segment_size	= PRDT_DATA_BYTE_COUNT_MAX,
++	.max_sectors		= (1 << 20) / SECTOR_SIZE, /* 1 MiB */
+ 	.max_host_blocked	= 1,
+ 	.track_queue_depth	= 1,
+ 	.sdev_groups		= ufshcd_driver_groups,
