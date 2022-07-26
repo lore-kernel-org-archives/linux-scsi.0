@@ -2,172 +2,122 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BFCD8C43334
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jul 2022 03:55:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E56E2C43334
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Jul 2022 06:26:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231754AbiGZDzy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Jul 2022 23:55:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51822 "EHLO
+        id S237988AbiGZG0k (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Jul 2022 02:26:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42632 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231243AbiGZDzx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jul 2022 23:55:53 -0400
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 210927672
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Jul 2022 20:55:52 -0700 (PDT)
-Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20220726035550epoutp035410a5b3c7721aac93c5f8e9bb2905f7~FRNwtkDiN2768927689epoutp03h
-        for <linux-scsi@vger.kernel.org>; Tue, 26 Jul 2022 03:55:50 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20220726035550epoutp035410a5b3c7721aac93c5f8e9bb2905f7~FRNwtkDiN2768927689epoutp03h
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1658807750;
-        bh=fbcLM874Vz+W4WSi9y5XBWvhudbB9qUC0fnLm9sOjTg=;
-        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-        b=mDUIqTcKQ4p9gY96ARyLc81vML3F60LykcQfMTV1wI9nUyYpp/LzAiaoJ11iwJ2aE
-         6EGuRw3WdSuRDKiC8iqYVbWZStB/enMjV/6xCHW0on4S2t5LEcJukV33K1++BGKN9w
-         BuGR9jbxb2VGxxRinHO8Fbdqnry/JIj697A+UQek=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-        epcas5p3.samsung.com (KnoxPortal) with ESMTP id
-        20220726035549epcas5p31e2872f38aadcf0a99c6cefbcb81689a~FRNv1yBv30765407654epcas5p3H;
-        Tue, 26 Jul 2022 03:55:49 +0000 (GMT)
-Received: from epsmges5p3new.samsung.com (unknown [182.195.38.174]) by
-        epsnrtp2.localdomain (Postfix) with ESMTP id 4LsNNy1zYxz4x9Q0; Tue, 26 Jul
-        2022 03:55:46 +0000 (GMT)
-Received: from epcas5p3.samsung.com ( [182.195.41.41]) by
-        epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        64.EA.09639.BB56FD26; Tue, 26 Jul 2022 12:55:39 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
-        20220726035538epcas5p4135e63f642ef49535ff12d25c5846e4d~FRNl6b2do0887508875epcas5p4K;
-        Tue, 26 Jul 2022 03:55:38 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20220726035538epsmtrp2c8c3317535a72cb2990c979f4f47e800~FRNl5j9vJ0718607186epsmtrp2z;
-        Tue, 26 Jul 2022 03:55:38 +0000 (GMT)
-X-AuditID: b6c32a4b-e6dff700000025a7-11-62df65bb1675
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        D8.6B.08905.AB56FD26; Tue, 26 Jul 2022 12:55:38 +0900 (KST)
-Received: from alimakhtar03 (unknown [107.122.12.5]) by epsmtip1.samsung.com
-        (KnoxPortal) with ESMTPA id
-        20220726035536epsmtip15e06a5b0baf4bea3dd788359ca92263c~FRNkMRmxr2640726407epsmtip1Y;
-        Tue, 26 Jul 2022 03:55:36 +0000 (GMT)
-From:   "Alim Akhtar" <alim.akhtar@samsung.com>
-To:     "'Johan Hovold'" <johan+linaro@kernel.org>,
-        "'Rob Herring'" <robh+dt@kernel.org>,
-        "'Krzysztof Kozlowski'" <krzysztof.kozlowski+dt@linaro.org>,
-        "'Martin K. Petersen'" <martin.petersen@oracle.com>
-Cc:     "'Andy Gross'" <agross@kernel.org>,
-        "'Bjorn Andersson'" <bjorn.andersson@linaro.org>,
-        "'Avri Altman'" <avri.altman@wdc.com>,
-        "'Bart Van Assche'" <bvanassche@acm.org>,
-        <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-In-Reply-To: <20220711101441.4896-1-johan+linaro@kernel.org>
-Subject: RE: [PATCH] dt-bindings: ufs: qcom,ufs: add SC8280XP binding
-Date:   Tue, 26 Jul 2022 09:25:35 +0530
-Message-ID: <000001d8a0a3$913c2120$b3b46360$@samsung.com>
+        with ESMTP id S237998AbiGZG0Z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jul 2022 02:26:25 -0400
+Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C15AA31358;
+        Mon, 25 Jul 2022 23:22:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1658816532; x=1690352532;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=Dzh+1CSSIH6C14edPRoY7J2NHub9uUBWlrGKu3JDw6E=;
+  b=Rrr3mKjHZoInyfZ482hBlsNEH4K5YcLW5sQIiwSD4x1vCzdJdb9cHBWw
+   9E3CpTseh5fkcNcawMnNbeP91wAsdTvtwpitqBPy8ySIlJu87hwjXctdL
+   3ghpd+RZbxQz776Y3u0QUwbIadBoL9daG0EIcamivnz9P9ixR6BVnG9Jj
+   c=;
+Received: from unknown (HELO ironmsg05-sd.qualcomm.com) ([10.53.140.145])
+  by alexa-out-sd-01.qualcomm.com with ESMTP; 25 Jul 2022 23:21:50 -0700
+X-QCInternal: smtphost
+Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
+  by ironmsg05-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Jul 2022 23:21:49 -0700
+Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
+ nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Mon, 25 Jul 2022 23:21:49 -0700
+Received: from [10.253.34.146] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.22; Mon, 25 Jul
+ 2022 23:21:45 -0700
+Message-ID: <b0a4ef07-afc8-51c7-c395-92ed798b914b@quicinc.com>
+Date:   Tue, 26 Jul 2022 14:21:42 +0800
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [PATCH 1/2] scsi: ufs: Add Multi-Circular Queue support
+Content-Language: en-US
+To:     Avri Altman <Avri.Altman@wdc.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "quic_asutoshd@quicinc.com" <quic_asutoshd@quicinc.com>,
+        "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
+        "quic_ziqichen@quicinc.com" <quic_ziqichen@quicinc.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "kernel-team@android.com" <kernel-team@android.com>
+CC:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        Jinyoung Choi <j-young.choi@samsung.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        open list <linux-kernel@vger.kernel.org>
+References: <1658214120-22772-1-git-send-email-quic_cang@quicinc.com>
+ <1658214120-22772-2-git-send-email-quic_cang@quicinc.com>
+ <DM6PR04MB657540D8D6584C15C8701767FC929@DM6PR04MB6575.namprd04.prod.outlook.com>
+From:   Can Guo <quic_cang@quicinc.com>
+In-Reply-To: <DM6PR04MB657540D8D6584C15C8701767FC929@DM6PR04MB6575.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQGXKANTK7IsGceyoQ2tYQ03261akwKSTS7Prf5j5AA=
-Content-Language: en-us
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrMJsWRmVeSWpSXmKPExsWy7bCmpu7u1PtJBrfXCFmce/ybxeLlz6ts
-        Fqf3v2OxmPbhJ7PF/CPnWC1WVFr0vXjIbDFx/1l2i8u75rBZdF/fwWax/Pg/JovWvUfYHXg8
-        Ll/x9ti0qpPN4861PWweH5/eYvH4vEnOo/1AN1MAW1S2TUZqYkpqkUJqXnJ+SmZeuq2Sd3C8
-        c7ypmYGhrqGlhbmSQl5ibqqtkotPgK5bZg7QhUoKZYk5pUChgMTiYiV9O5ui/NKSVIWM/OIS
-        W6XUgpScApMCveLE3OLSvHS9vNQSK0MDAyNToMKE7IzPDwoKpvJVbP8wmbmBcSZ3FyMnh4SA
-        icSr2c9Yuxi5OIQEdjNK7PjUzQiSEBL4xCjx5r0ZROIbo8SC6fuYYTq6m99CdexllJh8uYUZ
-        wnnJKPHv/2mwKjYBXYkdi9vYQBIiAmcYJbZ9PAOWYBZYxyTx7qIgiM0pYCOx//hsFhBbWMBV
-        4sfvGUC7OThYBFQlTr3SBwnzClhK/Nh2hh3CFpQ4OfMJC8QYeYntb+dAXaQg8fPpMlYQW0TA
-        SuJ01y82iBpxiZdHj7CD3CAhcIRDoqN3IjtEg4vE1p1LWCFsYYlXx7dAxaUkPr/bywZyg4SA
-        h8SiP1IQ4QyJt8vXM0LY9hIHrsxhASlhFtCUWL9LH2IVn0Tv7ydMEJ28Eh1tQhDVqhLN766y
-        QNjSEhO7u6GWekicOnaNcQKj4iwkj81C8tgsJA/MQli2gJFlFaNkakFxbnpqsWmBcV5qOTy2
-        k/NzNzGCU6+W9w7GRw8+6B1iZOJgPMQowcGsJMKbEH0/SYg3JbGyKrUoP76oNCe1+BCjKTCw
-        JzJLiSbnA5N/Xkm8oYmlgYmZmZmJpbGZoZI4r9fVTUlCAumJJanZqakFqUUwfUwcnFINTCfr
-        3EyfOU7sC9PsCuXb9L2xrn39U8ZLaWteb5w1NWryklWn61VM6207pCa2Twk1v5i0nZ3/kanf
-        m+sH/3/y0uAucvWqbD1kJ90U0cWxMDJXpq7y0oRl5laSW354q1xg+loUWHCV0Tp2XZankL2k
-        XMnCNTmcM5+WaOqHpnDnrdXgOcyYyFmaF65a0jgzpVfok6N78UU9y8D/E/YXZjtZH45P2Lfg
-        565sToHMVS/fG6/Jm/+3Ut7WZbbe9kr9i3e+e2kwzGPz9mlbeaxom0N8VrvWLAXmyXfnT3j1
-        NqCt6/EpG2vrjSlvHl4Mv9zGWlov4JjoMnH/y6QPh0tjpy2z4vY7GCt6+92hDR6/0oyUWIoz
-        Eg21mIuKEwFqoCUERgQAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprLIsWRmVeSWpSXmKPExsWy7bCSnO6u1PtJBvfmy1qce/ybxeLlz6ts
-        Fqf3v2OxmPbhJ7PF/CPnWC1WVFr0vXjIbDFx/1l2i8u75rBZdF/fwWax/Pg/JovWvUfYHXg8
-        Ll/x9ti0qpPN4861PWweH5/eYvH4vEnOo/1AN1MAWxSXTUpqTmZZapG+XQJXxucHBQVT+Sq2
-        f5jM3MA4k7uLkZNDQsBEorv5LWsXIxeHkMBuRommrc9ZIBLSEtc3TmCHsIUlVv57zg5R9JxR
-        YtX72WBFbAK6EjsWt7GBJEQEzjBK3H7cwgLiMAtsYZJoPbaTEaKll1Hi6ME9zCAtnAI2EvuP
-        Q7QLC7hK/Pg9A6iIg4NFQFXi1Ct9kDCvgKXEj21n2CFsQYmTM5+wgJQwC+hJtG1kBAkzC8hL
-        bH87hxniOgWJn0+XsYLYIgJWEqe7frFB1IhLvDx6hH0Co/AsJJNmIUyahWTSLCQdCxhZVjFK
-        phYU56bnFhsWGOallusVJ+YWl+al6yXn525iBMegluYOxu2rPugdYmTiYDzEKMHBrCTCmxB9
-        P0mINyWxsiq1KD++qDQntfgQozQHi5I474Wuk/FCAumJJanZqakFqUUwWSYOTqkGpsie9l9y
-        K5wE/BjmP2dRWHLM3fHSusmbzzoGG83I6herfqeRmy0SMjv2FxP/0V/37nJ2ptssffemZdF2
-        y6SQ9lZRo0eKApZhafePKpUUsi2Zzb/ibtLiDWvqqo4ttTq2fguv9jOd63NvJ0lM3G7zv/t3
-        jGqv0cLtlTGM6VrSfLaVJ3P/y4vZXLpX0mOW7XL/cb6Uyru3Ka/frzXP75z7YtHt2Qn7Sjgs
-        DQzX2dhUq5c+2dO9fbn2/ZY+P2GNG4qm7IFZ5u/SFv7Zde2Ay5nQ8ycUXqsEn1LVFpd51n5R
-        QVS77yrH4+JPoZNk9kgG/TxYXb7N1zxh5T7p2Rc31cvtOx3sc69SOqWmZeHmqbXzlViKMxIN
-        tZiLihMBzC3QSjADAAA=
-X-CMS-MailID: 20220726035538epcas5p4135e63f642ef49535ff12d25c5846e4d
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20220711101520epcas5p421bdaef157484ed146577e5deea04e09
-References: <CGME20220711101520epcas5p421bdaef157484ed146577e5deea04e09@epcas5p4.samsung.com>
-        <20220711101441.4896-1-johan+linaro@kernel.org>
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-+ Martin K
+Hi Avri,
 
->-----Original Message-----
->From: Johan Hovold [mailto:johan+linaro@kernel.org]
->Sent: Monday, July 11, 2022 3:45 PM
->To: Rob Herring <robh+dt@kernel.org>; Krzysztof Kozlowski
-><krzysztof.kozlowski+dt@linaro.org>
->Cc: Andy Gross <agross@kernel.org>; Bjorn Andersson
-><bjorn.andersson@linaro.org>; Alim Akhtar <alim.akhtar@samsung.com>;
->Avri Altman <avri.altman@wdc.com>; Bart Van Assche
-><bvanassche@acm.org>; linux-arm-msm@vger.kernel.org; linux-
->scsi@vger.kernel.org; devicetree@vger.kernel.org; linux-
->kernel@vger.kernel.org; Johan Hovold <johan+linaro@kernel.org>
->Subject: [PATCH] dt-bindings: ufs: qcom,ufs: add SC8280XP binding
+On 7/24/2022 12:32 PM, Avri Altman wrote:
+>> +
+>> +/**
+>> + * @ucdl_base_addr: UFS Command Descriptor base address
+>> + * @sqe_base_addr: submission queue entry base address
+>> + * @sqe_shadow_addr: submission queue entry shadow address
+> When you are editing your commit log, could you please also say something about the shadow queues concept?
+
+Sure, we will add comments in next version.
+
+> And why it is a good idea to maintain 2 sets of addresses, which basically points to the same place?
+
+When block layer chooses one task tag for one command, that tag will be 
+used to link these pre-allocated data structs -
+
+ucdl[tag]<->lrpb[tag]<->utrd[tag], and the tag chosen by block layer is 
+random (it does not increase from 0 to n and goes
+
+back to 0 in a circular way). But, in MCQ mode, when we submit the 
+command to UFSHCI, we need to make sure the SQTP
+
+get increased one slot by one slot (we cannot skip slots). Hence by 
+keeping shadow utrds (or shadow SQEs), the data struct
+
+linkage ucdl[tag]<->lrpb[tag]<->shadow_sqe[tag] remains same, and we 
+copy the shadow sqe to the sqe[sq_tp_slot] only
+
+when we finally decide the very sq_tp_slot used to submit this command 
+in SQTP.
+
+The benefit is that we can 100% leverage the existing initialization 
+logic of lrbp in ufshcd_queuecommand path without changing a line.
+
+Otherwise, considerable changes would be required to implement the idea 
+of dynamical SQE assignment (to lrbp).
+
+
+Thanks,
+
+Can Guo.
+
 >
->Add SC8280XP to the DT schema.
->
->Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
->---
-
-Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
-
-@ Martin, 
-Is this something you can take via your tree?
-
-> Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
-> 1 file changed, 2 insertions(+)
->
->diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
->b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
->index dcd32c10205a..f2d6298d926c 100644
->--- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
->+++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
->@@ -26,6 +26,7 @@ properties:
->           - qcom,msm8994-ufshc
->           - qcom,msm8996-ufshc
->           - qcom,msm8998-ufshc
->+          - qcom,sc8280xp-ufshc
->           - qcom,sdm845-ufshc
->           - qcom,sm6350-ufshc
->           - qcom,sm8150-ufshc
->@@ -98,6 +99,7 @@ allOf:
->           contains:
->             enum:
->               - qcom,msm8998-ufshc
->+              - qcom,sc8280xp-ufshc
->               - qcom,sm8250-ufshc
->               - qcom,sm8350-ufshc
->               - qcom,sm8450-ufshc
->--
->2.35.1
-
-
+> Thanks,
+> Avri
