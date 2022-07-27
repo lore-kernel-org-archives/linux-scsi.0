@@ -2,57 +2,58 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4CFCC19F2C
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jul 2022 03:16:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA6B4C19F21
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jul 2022 03:16:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240297AbiG0DQd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Jul 2022 23:16:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46224 "EHLO
+        id S240309AbiG0DQq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Jul 2022 23:16:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46980 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240308AbiG0DQO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jul 2022 23:16:14 -0400
+        with ESMTP id S240296AbiG0DQW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jul 2022 23:16:22 -0400
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF2BC3DF12
-        for <linux-scsi@vger.kernel.org>; Tue, 26 Jul 2022 20:16:07 -0700 (PDT)
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 26R2wcQw009003;
-        Wed, 27 Jul 2022 03:16:06 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 132EADF95;
+        Tue, 26 Jul 2022 20:16:13 -0700 (PDT)
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 26R2oK84009181;
+        Wed, 27 Jul 2022 03:16:05 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2022-7-12;
- bh=8UYu7Yjk5tnwQAQJ+fXJR9hbvuHhDQfaX6YHBMtjjko=;
- b=ep2HdTInNV5aoB+RiB/vIZnBTvEC2DkcYkVkc4+1zQvek++TgddhRb/sGOO8NazlgjTL
- lfajCSUjJYOCBS7o97GWCXoqW2Fd51Tgx8Vg8UTZuu12pk/zBF7J9jmlGEoyJoxRKUoz
- cbWO0X2yrUkgElfmGAOoyuQGThbZd0gZ0aUTK6zD8IjGyfKpg1XSv4DOvJPCUw7pDRb6
- 3oQ0oi7bje9nRU1YfmlsWKk9HhzYXncD2b/K95w3LHaI19A1aGOzp6oBOsS+ds1Oa4f7
- YWdPFpeBAol0bbr0szbAA5IHs/aVcsJBUrKi1m4MyNFiAW1ZTs/J+Kbe0iQiFDKvXMJt ow== 
+ bh=v0JsU5gY8oQjUzpm6RnYGbDeKU4KlqHaXe00iCatyXI=;
+ b=e1+ZNQmDpvHZ9uuzD6rWUz87Re4DQLu4S+/iTTCXjbwkHth2vdk9E74ywQMG2fWgF3T3
+ InOuM5FwJy43tt958xCxLDBkR6Z1nFYyg+b8g1pvEcyh+g6JNQW544vuqP4k93Jz8V/H
+ dU46o2e5/SE5sCU3qHfMSezRwXS5jkR9+sDkF0NIATkPkUZnfT2eEJtuaKMpVUwGUjzy
+ GnWMud5KD5qG9+pN6RgVARm4PFNEbz41zUOQn2lRjbTRwF1a5mp4HVKa387RAb/XJb+W
+ sBlPEmhD4LlXPAQIPq62ygDs0UCu3xaq5NejdpHANgbyvs0lScDhlPHPlsXlk3TverzW Ew== 
 Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3hg94gg3rh-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3hg9anyu45-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 27 Jul 2022 03:16:06 +0000
+        Wed, 27 Jul 2022 03:16:04 +0000
 Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 26R1S2t1034428;
-        Wed, 27 Jul 2022 03:16:04 GMT
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 26R2avdB035387;
+        Wed, 27 Jul 2022 03:16:03 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3hh633p3x8-1
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3hh633p3wg-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 27 Jul 2022 03:16:04 +0000
+        Wed, 27 Jul 2022 03:16:03 +0000
 Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 26R3E0h4008228;
-        Wed, 27 Jul 2022 03:16:04 GMT
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 26R3E0h0008228;
+        Wed, 27 Jul 2022 03:16:02 GMT
 Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3hh633p3uc-6;
-        Wed, 27 Jul 2022 03:16:04 +0000
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3hh633p3uc-4;
+        Wed, 27 Jul 2022 03:16:02 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     linux-scsi@vger.kernel.org,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/2] mpi3mr: Add support for Resource Based Metering
-Date:   Tue, 26 Jul 2022 23:15:59 -0400
-Message-Id: <165889172880.804.8642287743124952617.b4-ty@oracle.com>
+To:     John Garry <john.garry@huawei.com>, jejb@linux.ibm.com
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linuxarm@huawei.com
+Subject: Re: [PATCH 0/5] hisi_sas/libsas: Some misc patches
+Date:   Tue, 26 Jul 2022 23:15:57 -0400
+Message-Id: <165889172881.804.324470301794752070.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.36.1
-In-Reply-To: <20220708195020.8323-1-sreekanth.reddy@broadcom.com>
-References: <20220708195020.8323-1-sreekanth.reddy@broadcom.com>
+In-Reply-To: <1657823002-139010-1-git-send-email-john.garry@huawei.com>
+References: <1657823002-139010-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
@@ -60,34 +61,39 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
  definitions=2022-07-26_07,2022-07-26_01,2022-06-22_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0 malwarescore=0
- adultscore=0 mlxscore=0 mlxlogscore=862 suspectscore=0 spamscore=0
+ adultscore=0 mlxscore=0 mlxlogscore=999 suspectscore=0 spamscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2206140000
  definitions=main-2207270009
-X-Proofpoint-GUID: fh06_UxsfTVYr8q6zGVEeuuTTnULRW9V
-X-Proofpoint-ORIG-GUID: fh06_UxsfTVYr8q6zGVEeuuTTnULRW9V
+X-Proofpoint-ORIG-GUID: YaTfZg7r3-DOx02HckQYORisDMAnbP43
+X-Proofpoint-GUID: YaTfZg7r3-DOx02HckQYORisDMAnbP43
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, 9 Jul 2022 01:20:18 +0530, Sreekanth Reddy wrote:
+On Fri, 15 Jul 2022 02:23:17 +0800, John Garry wrote:
 
-> Enhanced driver to track cumulative pending large data size
-> at the controller level and at a throttle group level.
-> when one of the value exceeds a firmware determined value
-> then divert the future selective I/O to the firmware.
-> 
-> Sreekanth Reddy (2):
->   mpi3mr: Resource Based Metering
->   mpi3mr: Reduce VD queue depth on detecting the throttling
+> This is just some random patches which I have collected for the hisi_sas
+> driver and libsas over the last cycle, described briefly as follows:
+> - Remove some duplication in slave_configure_v3_hw()
+> - Some DMA mapping API usage tidying
+> - v3 HW SATA completion error processing improvement
+> - For libsas, resume host when changing phy settings via sysfs - our test
+>   guys seem to find it useful.
 > 
 > [...]
 
 Applied to 5.20/scsi-queue, thanks!
 
-[1/2] mpi3mr: Resource Based Metering
-      https://git.kernel.org/mkp/scsi/c/f10af057325c
-[2/2] mpi3mr: Reduce VD queue depth on detecting the throttling
-      https://git.kernel.org/mkp/scsi/c/cf1ce8b71524
+[1/5] scsi: hisi_sas: Call hisi_sas_slave_configure() from slave_configure_v3_hw()
+      https://git.kernel.org/mkp/scsi/c/eed9f513bf7f
+[2/5] scsi: hisi_sas: Remove unnecessary variable to hold DMA map elements
+      https://git.kernel.org/mkp/scsi/c/bc22f9c06c25
+[3/5] scsi: hisi_sas: Relocate DMA unmap of SMP task
+      https://git.kernel.org/mkp/scsi/c/f0902095a773
+[4/5] scsi: hisi_sas: Modify v3 HW SATA completion error processing
+      https://git.kernel.org/mkp/scsi/c/7e15334f5d25
+[5/5] scsi: libsas: Resume SAS host for phy reset or enable via sysfs
+      https://git.kernel.org/mkp/scsi/c/1e82e4627a79
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
