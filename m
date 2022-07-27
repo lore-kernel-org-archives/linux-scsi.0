@@ -2,42 +2,42 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62B93C04A68
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jul 2022 07:05:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E2CEC04A68
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jul 2022 07:07:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229635AbiG0HF2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Jul 2022 03:05:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44462 "EHLO
+        id S229698AbiG0HH3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Jul 2022 03:07:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45406 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229460AbiG0HF1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2022 03:05:27 -0400
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15CF8DEF9
-        for <linux-scsi@vger.kernel.org>; Wed, 27 Jul 2022 00:05:25 -0700 (PDT)
-Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20220727070523epoutp0231e2a114dcc54cba7457954fe3db0c7e~FncjQ6JQM2448024480epoutp02l
-        for <linux-scsi@vger.kernel.org>; Wed, 27 Jul 2022 07:05:23 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20220727070523epoutp0231e2a114dcc54cba7457954fe3db0c7e~FncjQ6JQM2448024480epoutp02l
+        with ESMTP id S229556AbiG0HH2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2022 03:07:28 -0400
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71D143135D
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Jul 2022 00:07:27 -0700 (PDT)
+Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20220727070725epoutp04eb8787005d6569669d649a4bb89c9c83~FneVFVUu92253622536epoutp04K
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Jul 2022 07:07:25 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20220727070725epoutp04eb8787005d6569669d649a4bb89c9c83~FneVFVUu92253622536epoutp04K
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1658905523;
-        bh=R6OHZS8L6v6uGk9MS1iioqNTlA6txP76blUF08vlRRs=;
+        s=mail20170921; t=1658905645;
+        bh=pFDs8N3oHmGo6gWocH4YoHqcmEMLBNY95qrWeadYc8Y=;
         h=Subject:Reply-To:From:To:In-Reply-To:Date:References:From;
-        b=kU92BbhfG+juNXHex4nfROQrZXD7uA7jcrBitotCEOffGEWbur+vAEHKBXr09oJoM
-         05vLvufMD+A+J6wNH6rkNy4e70qDnwisPr+ohaqH1gYFMd8S0a7v8hTIHT93GXJpV0
-         4WmqRnver02ot76TuvpQ0/7vczSQQFFnfX3eDvv0=
-Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
-        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
-        20220727070523epcas2p167dff79a64fd544b7fa80694b4c297cb~Fnci3g7m41693016930epcas2p1n;
-        Wed, 27 Jul 2022 07:05:23 +0000 (GMT)
-Received: from epsmges2p1.samsung.com (unknown [182.195.36.90]) by
-        epsnrtp3.localdomain (Postfix) with ESMTP id 4Lt4YG5VCdz4x9QL; Wed, 27 Jul
-        2022 07:05:22 +0000 (GMT)
-X-AuditID: b6c32a45-45bff700000025c2-3f-62e0e3b2b448
-Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
-        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
-        03.9B.09666.2B3E0E26; Wed, 27 Jul 2022 16:05:22 +0900 (KST)
+        b=ZyTQBB9U5MEBQhEGS7DQV9HXcLG3iedHG/XA6NYDOTcqGD4URB/Q1cDOm44BLVjjK
+         BHWngYbkP7HZGatsm2yDt+4jx64IjvvX/m7QW7Iv+B5ZJmlPz8dYaFeg8Rv0CVKXm/
+         gc8NipvcyATpUQwsAbGGp/nPU1vhu8Ygx9RBeymY=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas2p2.samsung.com (KnoxPortal) with ESMTP id
+        20220727070725epcas2p235d37d9273cd19d4be71c22a8f93643a~FneUgxaxw1101911019epcas2p2j;
+        Wed, 27 Jul 2022 07:07:25 +0000 (GMT)
+Received: from epsmges2p4.samsung.com (unknown [182.195.36.100]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4Lt4bc4160z4x9Pv; Wed, 27 Jul
+        2022 07:07:24 +0000 (GMT)
+X-AuditID: b6c32a48-9f7ff700000025be-9e-62e0e42c7677
+Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
+        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
+        CE.65.09662.C24E0E26; Wed, 27 Jul 2022 16:07:24 +0900 (KST)
 Mime-Version: 1.0
-Subject: [PATCH v4 2/7] scsi: ufs: wb: Change wb_enabled condition test
+Subject: [PATCH v4 3/7] scsi: ufs: wb: Change functions name and modify
 Reply-To: j-young.choi@samsung.com
 Sender: Jinyoung CHOI <j-young.choi@samsung.com>
 From:   Jinyoung CHOI <j-young.choi@samsung.com>
@@ -58,65 +58,141 @@ X-Drm-Type: N,general
 X-Msg-Generator: Mail
 X-Msg-Type: PERSONAL
 X-Reply-Demand: N
-Message-ID: <20220727070522epcms2p5ad2dd21b471acee963dd58b37d35e11f@epcms2p5>
-Date:   Wed, 27 Jul 2022 16:05:22 +0900
-X-CMS-MailID: 20220727070522epcms2p5ad2dd21b471acee963dd58b37d35e11f
+Message-ID: <20220727070724epcms2p8e449d0c89b52f03a9d3dc254df0ec547@epcms2p8>
+Date:   Wed, 27 Jul 2022 16:07:24 +0900
+X-CMS-MailID: 20220727070724epcms2p8e449d0c89b52f03a9d3dc254df0ec547
 Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
 X-CPGSPASS: Y
 X-CPGSPASS: Y
 CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprPJsWRmVeSWpSXmKPExsWy7bCmme6mxw+SDPas1bY4+WQNm8WDedvY
-        LF7+vMpmcfBhJ4vFtA8/mS1eHtK0WHRjG5PF5V1z2Cy6r+9gs1h+/B+TA5fH5SveHov3vGTy
-        mLDoAKPH9/UdbB4fn95i8ejbsorR4/MmOY/2A91MARxR2TYZqYkpqUUKqXnJ+SmZeem2St7B
-        8c7xpmYGhrqGlhbmSgp5ibmptkouPgG6bpk5QCcqKZQl5pQChQISi4uV9O1sivJLS1IVMvKL
-        S2yVUgtScgrMC/SKE3OLS/PS9fJSS6wMDQyMTIEKE7Iz7jdtYS3oZqtoPnCcuYFxImsXIyeH
-        hICJxKJVBxm7GLk4hAR2MErsejoPKMHBwSsgKPF3hzBIjbCAu8T0v3+ZQGwhASWJc2tmMYKU
-        CAsYSNzqNQcJswnoSfxcMoMNZIyIwFlmiYUPpzBBzOeVmNH+lAXClpbYvnwrI4jNKeAn0fPi
-        BNQNGhI/lvUyQ9iiEjdXv2WHsd8fm88IYYtItN47C1UjKPHg526ouKTEoUNf2UDukRDIl9hw
-        IBAiXCPxdvkBqBJ9iWsdG8FO4BXwlWi4NgPsNBYBVYnZz/uhTnCRmPd2KVgNs4C8xPa3c5hB
-        RjILaEqs36UPMV1Z4sgtFpinGjb+ZkdnMwvwSXQc/gsX3zHvCRNEq5rEoiYjiLCMxNfD89kn
-        MCrNQoTyLCRrZyGsXcDIvIpRLLWgODc9tdiowBAescn5uZsYwSlVy3UH4+S3H/QOMTJxMB5i
-        lOBgVhLhTYi+nyTEm5JYWZValB9fVJqTWnyI0RTo4YnMUqLJ+cCknlcSb2hiaWBiZmZobmRq
-        YK4kzuuVsiFRSCA9sSQ1OzW1ILUIpo+Jg1OqgWnjOzmFxacXTFn2/UHb3/J2naAC3ZuaVprH
-        HikpTDq4WpjPtzX3oVnt7/CgKb88j29+13Nk6dmwgP9h/iL8x5dXKrFz55/0fzEzf+21OoZr
-        D2V0FA3/iYWu4356WJe564D/fD9JJYn724Jf/suvSTrWWLFvYbXF9eps06JJ+9Y55LGk3f9m
-        4BoyRURsI+f2rlki9U9OsWRruzxWWDL5Z5v7vMVH/8xWY7zkZHlbk4OlZMbbo6pHrhws2GB9
-        +65/caDhz5PtrbfjQ/8uvBvluFdAMjzms6fd8Y2nsrYfYtHKa98RuSDKXKHefqfL5KpTx3cc
-        39SzrlN1dgSXS3Nvx5eq6i1qfsGmJ1zyJfvipiuxFGckGmoxFxUnAgBGWGPvMgQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprHJsWRmVeSWpSXmKPExsWy7bCmha7OkwdJBqemyVucfLKGzeLBvG1s
+        Fi9/XmWzOPiwk8Vi2oefzBYvD2laLLqxjcni8q45bBbd13ewWSw//o/Jgcvj8hVvj8V7XjJ5
+        TFh0gNHj+/oONo+PT2+xePRtWcXo8XmTnEf7gW6mAI6obJuM1MSU1CKF1Lzk/JTMvHRbJe/g
+        eOd4UzMDQ11DSwtzJYW8xNxUWyUXnwBdt8wcoBOVFMoSc0qBQgGJxcVK+nY2RfmlJakKGfnF
+        JbZKqQUpOQXmBXrFibnFpXnpenmpJVaGBgZGpkCFCdkZa/c8Yyv4JVNx6nppA+N6iS5GTg4J
+        AROJOZ0tjF2MXBxCAjsYJW6sfgHkcHDwCghK/N0hDFIjLOAu8avpMROILSSgJHFuzSywEmEB
+        A4lbveYgYTYBPYmfS2awgYwRETjLLLHw4RQmiPm8EjPan7JA2NIS25dvZQSxOQX8JHpenGCF
+        iGtI/FjWywxhi0rcXP2WHcZ+f2w+I4QtItF67yxUjaDEg5+7oeKSEocOfWUDuUdCIF9iw4FA
+        iHCNxNvlB6BK9CWudWwEO4FXwFdiy8zFbCA2i4CqxNWNd9kgalwkJt49BlbPLCAvsf3tHGaQ
+        kcwCmhLrd+lDTFeWOHKLBeapho2/2dHZzAJ8Eh2H/8LFd8x7wgTRqiaxqMkIIiwj8fXwfPYJ
+        jEqzEKE8C8naWQhrFzAyr2IUSy0ozk1PLTYqMIHHa3J+7iZGcELV8tjBOPvtB71DjEwcjIcY
+        JTiYlUR4E6LvJwnxpiRWVqUW5ccXleakFh9iNAV6eCKzlGhyPjCl55XEG5pYGpiYmRmaG5ka
+        mCuJ83qlbEgUEkhPLEnNTk0tSC2C6WPi4JRqYNqxpOHqcsZf5wPrTVfkPtafkJ30e+rvB5zc
+        0l626TWlAcJSXX6aOvJTpayKlytvVSxd8U5lkxm39pv3Lh8Xxv1lCeSSXqGu/+TPs61Kzxtm
+        rH693o9X74WmjkuZvrRg+MUpP1ZO26AZaa59ot62y/vT7Cud3mIHIkRns0i8UxXRciw25/vu
+        msIdO0XUuvjlgUqN08VTvb4btko56bYstfplEbiZ8fzOJOlpK+4qrvAK/vQs7iJ/WIr9fsVt
+        Kw9PLusRefMydnZ/eTsLm8/8K/NOHEj81fM5NyV7lV+e27qVtQHzuSzevuQpKwvdaHf7kZ1e
+        5IwTb/LOOrU5N/fzhm1X1/KMlN/HxlRnojVXiaU4I9FQi7moOBEAjbzAJjEEAAA=
 DLP-Filter: Pass
 X-CFilter-Loop: Reflected
 X-CMS-RootMailID: 20220727065904epcms2p60a7a56101785ddefa55c82b3cc25116d
 References: <20220727070410epcms2p5206785e4d960b32dcbb6729710dab535@epcms2p5>
         <20220727065904epcms2p60a7a56101785ddefa55c82b3cc25116d@epcms2p6>
-        <CGME20220727065904epcms2p60a7a56101785ddefa55c82b3cc25116d@epcms2p5>
+        <CGME20220727065904epcms2p60a7a56101785ddefa55c82b3cc25116d@epcms2p8>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Changed to improve readability.
-As implemented in ufshcd_wb_togle_flush(), the conditional test is
-modified in the same way.
+The parameter name of ufshcd_wb_toggle_flush_during_h8() has been changed
+in the same as other toggle functions.
+
+Function names were ambiguous. So changed to suit the meaning.
 
 Reviewed-by: Avri Altman <avri.altman@wdc.com>
 Signed-off-by: Jinyoung Choi <j-young.choi@samsung.com>
 ---
- drivers/ufs/core/ufshcd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/ufs/core/ufshcd.c | 30 +++++++++++++++++-------------
+ 1 file changed, 17 insertions(+), 13 deletions(-)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index a3bdf9986511..48ba109e29f7 100644
+index 48ba109e29f7..52377fedae49 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -5733,7 +5733,7 @@ int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable)
+@@ -265,8 +265,9 @@ static int ufshcd_setup_vreg(struct ufs_hba *hba, bool on);
+ static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
+ 					 struct ufs_vreg *vreg);
+ static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag);
+-static void ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set);
+-static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable);
++static void ufshcd_wb_toggle_buf_flush_during_h8(struct ufs_hba *hba,
++						 bool enable);
++static void ufshcd_wb_toggle_buf_flush(struct ufs_hba *hba, bool enable);
+ static void ufshcd_hba_vreg_set_lpm(struct ufs_hba *hba);
+ static void ufshcd_hba_vreg_set_hpm(struct ufs_hba *hba);
+ 
+@@ -286,16 +287,16 @@ static inline void ufshcd_disable_irq(struct ufs_hba *hba)
+ 	}
+ }
+ 
+-static inline void ufshcd_wb_config(struct ufs_hba *hba)
++static void ufshcd_wb_set_default_flags(struct ufs_hba *hba)
+ {
+ 	if (!ufshcd_is_wb_allowed(hba))
+ 		return;
+ 
+ 	ufshcd_wb_toggle(hba, true);
+ 
+-	ufshcd_wb_toggle_flush_during_h8(hba, true);
++	ufshcd_wb_toggle_buf_flush_during_h8(hba, true);
+ 	if (!(hba->quirks & UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL))
+-		ufshcd_wb_toggle_flush(hba, true);
++		ufshcd_wb_toggle_buf_flush(hba, true);
+ }
+ 
+ static void ufshcd_scsi_unblock_requests(struct ufs_hba *hba)
+@@ -5750,22 +5751,23 @@ int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable)
+ 	return ret;
+ }
+ 
+-static void ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set)
++static void ufshcd_wb_toggle_buf_flush_during_h8(struct ufs_hba *hba,
++						 bool enable)
  {
  	int ret;
  
--	if (!(enable ^ hba->dev_info.wb_enabled))
-+	if (hba->dev_info.wb_enabled == enable)
- 		return 0;
+-	ret = __ufshcd_wb_toggle(hba, set,
++	ret = __ufshcd_wb_toggle(hba, enable,
+ 			QUERY_FLAG_IDN_WB_BUFF_FLUSH_DURING_HIBERN8);
+ 	if (ret) {
+ 		dev_err(hba->dev, "%s: WB-Buf Flush during H8 %s failed: %d\n",
+-			__func__, set ? "enable" : "disable", ret);
++			__func__, enable ? "enable" : "disable", ret);
+ 		return;
+ 	}
+ 	dev_dbg(hba->dev, "%s WB-Buf Flush during H8 %s\n",
+-			__func__, set ? "enabled" : "disabled");
++			__func__, enable ? "enabled" : "disabled");
+ }
  
- 	ret = __ufshcd_wb_toggle(hba, enable, QUERY_FLAG_IDN_WB_EN);
+-static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable)
++static void ufshcd_wb_toggle_buf_flush(struct ufs_hba *hba, bool enable)
+ {
+ 	int ret;
+ 
+@@ -5814,9 +5816,9 @@ static bool ufshcd_wb_presrv_usrspc_keep_vcc_on(struct ufs_hba *hba,
+ static void ufshcd_wb_force_disable(struct ufs_hba *hba)
+ {
+ 	if (!(hba->quirks & UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL))
+-		ufshcd_wb_toggle_flush(hba, false);
++		ufshcd_wb_toggle_buf_flush(hba, false);
+ 
+-	ufshcd_wb_toggle_flush_during_h8(hba, false);
++	ufshcd_wb_toggle_buf_flush_during_h8(hba, false);
+ 	ufshcd_wb_toggle(hba, false);
+ 	hba->caps &= ~UFSHCD_CAP_WB_EN;
+ 
+@@ -8213,7 +8215,9 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool init_dev_params)
+ 	 */
+ 	ufshcd_set_active_icc_lvl(hba);
+ 
+-	ufshcd_wb_config(hba);
++	/* Enable UFS Write Booster if supported */
++	ufshcd_wb_set_default_flags(hba);
++
+ 	if (hba->ee_usr_mask)
+ 		ufshcd_write_ee_control(hba);
+ 	/* Enable Auto-Hibernate if configured */
 -- 
 2.25.1
