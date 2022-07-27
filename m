@@ -2,89 +2,87 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 734BCC04A68
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jul 2022 19:44:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6F6EC3F6B0
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jul 2022 21:41:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235723AbiG0ToJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Jul 2022 15:44:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60764 "EHLO
+        id S232465AbiG0Vlj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Jul 2022 17:41:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33066 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232399AbiG0ToF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2022 15:44:05 -0400
-Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C25E05245F;
-        Wed, 27 Jul 2022 12:44:04 -0700 (PDT)
-Received: by mail-pg1-f180.google.com with SMTP id q16so16716078pgq.6;
-        Wed, 27 Jul 2022 12:44:04 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=BWrsUDoB9+7Y574+57XLS7gWjGKhdg5+bty83bzhgMk=;
-        b=INfHXwxxGDtgm/sRN8M7957HKU5+MkwViNx17Zv8ebk4MQin44h1OTXDZgTnfqelxb
-         tI62Yxf4p0QDI03/AVS7Fbnku/pRYBrBL/MErxbxccvSM6FZgJenSolx5D1Pvv8Kzbq7
-         mlBYXCuNR1of44pBu1uCpdseBslNIzh0A0n/T27nxDdDgnq8DdBd0W3YReLaK8EHcLoe
-         tKBJdmzUFAJJYgLW4gzXAdacr56PgJ2JbiHMyVvWLIJlu3R+6RRghPlRAklnJguyUU3S
-         igUJwvLwAFYp3GsZvPu8PlK7R/iO8MI0+wMRQW4rnrUpCbaIYxzPWogD8aAUwuryBCbV
-         EwWw==
-X-Gm-Message-State: AJIora/glWDngt5ouktawgc5wrCNl49IInG3FPWpO46t1epaeN4BcBPh
-        u0FNgRyctvrVB7rgJ2lHCDo=
-X-Google-Smtp-Source: AGRyM1unipVrmM6ZQWx0gHivnfNuqNnv2jo2rrrctYcUvHnW0vQMarfXVqPfiLcjUh5Tm3rCxsdkhw==
-X-Received: by 2002:a05:6a02:30a:b0:41a:b002:83ac with SMTP id bn10-20020a056a02030a00b0041ab00283acmr20880154pgb.113.1658951044130;
-        Wed, 27 Jul 2022 12:44:04 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:a84e:2ec1:1b57:b033? ([2620:15c:211:201:a84e:2ec1:1b57:b033])
-        by smtp.gmail.com with ESMTPSA id k13-20020a63d84d000000b0040c52ff0ba9sm12480194pgj.37.2022.07.27.12.44.02
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 27 Jul 2022 12:44:03 -0700 (PDT)
-Message-ID: <90ef5f84-1e4e-d93e-5ee9-acdf36109827@acm.org>
-Date:   Wed, 27 Jul 2022 12:44:01 -0700
+        with ESMTP id S229508AbiG0Vli (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2022 17:41:38 -0400
+Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5481840BD7;
+        Wed, 27 Jul 2022 14:41:37 -0700 (PDT)
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id BC089412E3;
+        Wed, 27 Jul 2022 21:41:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        content-type:content-type:content-transfer-encoding:mime-version
+        :x-mailer:message-id:date:date:subject:subject:from:from
+        :received:received:received:received; s=mta-01; t=1658958094; x=
+        1660772495; bh=t7EhrIoyEZSQcV06FqUI1RHbm/vZ0Y2rSUerUxU+STM=; b=t
+        O2tQMFk4WyqPa3SCi7e57mslm7/ch/ZKrERaQ4MpviKT7L+5x8wPJaEDX9Em7j7T
+        T0YYUw+ipOGIjzLo2dxEv76/rM8RNRZDGBcYUm2ypgC0w5pFa0erLfFPEN5SU1Up
+        2KkvQzOqkFf/l6WtG+iZSfDjcv+UNmJY7DPBcXRZW8=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id 3fCOkFaeaPky; Thu, 28 Jul 2022 00:41:34 +0300 (MSK)
+Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id BABD9412DB;
+        Thu, 28 Jul 2022 00:41:33 +0300 (MSK)
+Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
+ T-EXCH-02.corp.yadro.com (172.17.10.102) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
+ 15.1.669.32; Thu, 28 Jul 2022 00:41:33 +0300
+Received: from NB-591.corp.yadro.com (10.199.18.20) by
+ T-EXCH-08.corp.yadro.com (172.17.11.58) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.2.1118.9; Thu, 28 Jul 2022 00:41:32 +0300
+From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
+To:     Martin Petersen <martin.petersen@oracle.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        <target-devel@vger.kernel.org>
+CC:     <linux-scsi@vger.kernel.org>, <linux@yadro.com>,
+        Dmitry Bogdanov <d.bogdanov@yadro.com>
+Subject: [PATCH v2 0/2] target: core: fix race during ACL removal
+Date:   Thu, 28 Jul 2022 00:41:23 +0300
+Message-ID: <20220727214125.19647-1-d.bogdanov@yadro.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [PATCH v4 5/7] scsi: ufs: wb: Add
- ufshcd_is_wb_buf_flush_allowed()
-Content-Language: en-US
-To:     j-young.choi@samsung.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <20220727070841epcms2p5e212d617dd0f985555fa052f099013f0@epcms2p5>
- <20220727070724epcms2p8e449d0c89b52f03a9d3dc254df0ec547@epcms2p8>
- <20220727070410epcms2p5206785e4d960b32dcbb6729710dab535@epcms2p5>
- <20220727065904epcms2p60a7a56101785ddefa55c82b3cc25116d@epcms2p6>
- <CGME20220727065904epcms2p60a7a56101785ddefa55c82b3cc25116d@epcms2p7>
- <20220727071024epcms2p70366b54ac8eca3758b7cf4336e0d457c@epcms2p7>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220727071024epcms2p70366b54ac8eca3758b7cf4336e0d457c@epcms2p7>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.199.18.20]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-08.corp.yadro.com (172.17.11.58)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/27/22 00:10, Jinyoung CHOI wrote:
-> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-> index 94bcfec98fb8..78adc556444a 100644
-> --- a/include/ufs/ufshcd.h
-> +++ b/include/ufs/ufshcd.h
-> @@ -1017,6 +1017,12 @@ static inline bool ufshcd_is_wb_allowed(struct ufs_hba *hba)
->   	return hba->caps & UFSHCD_CAP_WB_EN;
->   }
->   
-> +static inline bool ufshcd_is_wb_buf_flush_allowed(struct ufs_hba *hba)
-> +{
-> +	return ufshcd_is_wb_allowed(hba) &&
-> +		!(hba->quirks & UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL);
-> +}
+This patchset fixes a race condition due to incorrect usage of RCU
+for se_dev_entry.se_lun variable when ACL is being removed.
 
-Since this function is only used inside the UFS driver core it should be 
-added in drivers/ufs/core/ufshcd-priv.h instead of include/ufs/ufshcd.h.
+Based on 5.20/scsi-queue.
 
-Thanks,
+v2:
+  add more details in commit message
+  fix misformatting
 
-Bart.
+Dmitry Bogdanov (2):
+  target: core: fix race during ACL removal
+  target: core: de-RCU of se_lun and se_lun acl
+
+ drivers/target/target_core_alua.c   |  3 +--
+ drivers/target/target_core_device.c | 32 ++++++++++-------------------
+ drivers/target/target_core_pr.c     | 28 ++++++++-----------------
+ drivers/target/target_core_stat.c   | 10 ++++-----
+ drivers/target/target_core_xcopy.c  |  2 +-
+ include/target/target_core_base.h   |  4 ++--
+ 6 files changed, 27 insertions(+), 52 deletions(-)
+
+-- 
+2.25.1
+
