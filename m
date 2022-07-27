@@ -2,48 +2,48 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98D88C3F6B0
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jul 2022 18:56:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8245BC04A68
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jul 2022 18:57:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233710AbiG0S4P (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Jul 2022 14:56:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39508 "EHLO
+        id S233539AbiG0S5E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Jul 2022 14:57:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39662 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232455AbiG0Sz4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2022 14:55:56 -0400
-Received: from mail-pg1-f169.google.com (mail-pg1-f169.google.com [209.85.215.169])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1958127B27;
-        Wed, 27 Jul 2022 10:55:56 -0700 (PDT)
-Received: by mail-pg1-f169.google.com with SMTP id bf13so16495252pgb.11;
-        Wed, 27 Jul 2022 10:55:56 -0700 (PDT)
+        with ESMTP id S232605AbiG0S4o (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2022 14:56:44 -0400
+Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E94554C62D;
+        Wed, 27 Jul 2022 10:58:00 -0700 (PDT)
+Received: by mail-pj1-f49.google.com with SMTP id ha11so731106pjb.2;
+        Wed, 27 Jul 2022 10:58:00 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
          :content-language:to:cc:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=7qxn+JNDvcIG+lyVki0RgRQJyk3Tl2RlS02Rp/s2JCk=;
-        b=K8JHfvN1G1QdSYLrl6zoAGa+extXSsGu2FKZfLze/LAUbCYFWdrUoIp1/6Xb3BJmKk
-         IJdqzVeTzE1v+S2l2DiQrqL07lZdwjnS+N7ZwPkFBsVwe+Nw40kzwowZeLiISkakyvOM
-         LdHjqrJMcfDsMBJIxcHUaIM0Uto/pgHUisL5Uu47ewua4qBAhpNxq9M7puP1erpOcW+3
-         pfUhc0/ZZecn2dnDckWKTJmIYifvY74LWroQjAcFSwmuFpB+qOhess1jrR4aucWxWHkF
-         ZX0Of0FO3OFxAVIQ+DYQPGvfaC4tdqLuLdHcekDS1tg9NTJkLmqmPhWjFSLzGb+TQcFw
-         2/Sw==
-X-Gm-Message-State: AJIora8y1tefT7wgAFugzd9T5EswFf8Nrm2LfBFYCJqebIxiB35nYP4j
-        gRTT2d2dgSTxmK5RPDvLcHU=
-X-Google-Smtp-Source: AGRyM1tO2NHQPOkTbEkiTtiX+GPr//1Bgn2ydfjx67gqokU31MXnafLgfUyNg7YxYZECA4U2oJYiCQ==
-X-Received: by 2002:a63:c5:0:b0:40d:d290:24ef with SMTP id 188-20020a6300c5000000b0040dd29024efmr16467841pga.141.1658944555427;
-        Wed, 27 Jul 2022 10:55:55 -0700 (PDT)
+        bh=4vE7Bsz6vrHUNePlGNIG+g1zzaWWwe+MjkqFS82oLcU=;
+        b=jaOFWWE6QX36qBEc/1dpgUqRXGaox+48OC/dj7b1V9GjH1VjXarB362XWI0FEUWeF4
+         9/oyohNFj3F0Z9mTOfo4BSV+bl+yzfQDZfu12TS6tnFRYWBmbGOE+P1tRDf7tNaLIOkr
+         iMSvdRbGbkMmycf8ijlFerJKSGR1oPZTtqwjvgFw9dIZokCH+q0A6vjmXQt91ZECdCHQ
+         lPASR2KDllApn+1Kx2GLDl4xFh0kbBtDay8u0vnyi5foLK4loO/5smvMSff/gz4YKt7r
+         BxOOv6V6mZCnatDtw1ieYyr2+ShVMd5bn/GKG685yjyxxQVgpvgfNC63ltU/AnXyZsr8
+         1QHg==
+X-Gm-Message-State: AJIora/+ZwT0XYj9OC7Z/0uOyvGQg2UMW2MQxDtt0HAWQYV80t1TlUNK
+        X2OzLSeFhhjqLCp+tlS9CRk=
+X-Google-Smtp-Source: AGRyM1tFVd8EqwxIE+VDBtTOrcnZ22zKgfGpfCBk21Zv7Woc9eTIJzAuoFWzsa9F1fR+kw0nGXPpKw==
+X-Received: by 2002:a17:90b:4d0e:b0:1f1:9109:99df with SMTP id mw14-20020a17090b4d0e00b001f1910999dfmr5884407pjb.234.1658944680200;
+        Wed, 27 Jul 2022 10:58:00 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:a84e:2ec1:1b57:b033? ([2620:15c:211:201:a84e:2ec1:1b57:b033])
-        by smtp.gmail.com with ESMTPSA id mj1-20020a17090b368100b001f310564e8bsm1480908pjb.30.2022.07.27.10.55.53
+        by smtp.gmail.com with ESMTPSA id e1-20020a170902784100b0016d4f05eb95sm9939079pln.272.2022.07.27.10.57.57
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 27 Jul 2022 10:55:54 -0700 (PDT)
-Message-ID: <b8ecd9ce-35b7-276d-b028-2d8a4a900945@acm.org>
-Date:   Wed, 27 Jul 2022 10:55:51 -0700
+        Wed, 27 Jul 2022 10:57:58 -0700 (PDT)
+Message-ID: <fa60e605-a881-79aa-b9ed-9c8bdf06778f@acm.org>
+Date:   Wed, 27 Jul 2022 10:57:56 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.11.0
-Subject: Re: [PATCH v2 1/5] scsi: ufs: ufs-mediatek: Remove redundant header
- files
+Subject: Re: [PATCH v2 2/5] scsi: ufs: ufs-mediatek: Provide detailed
+ description for UIC errors
 Content-Language: en-US
 To:     Stanley Chu <stanley.chu@mediatek.com>, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org, martin.petersen@oracle.com,
@@ -55,9 +55,9 @@ Cc:     peter.wang@mediatek.com, chun-hung.wu@mediatek.com,
         tun-yu.yu@mediatek.com, cc.chou@mediatek.com,
         chaotian.jing@mediatek.com, jiajie.hao@mediatek.com
 References: <20220727034454.31892-1-stanley.chu@mediatek.com>
- <20220727034454.31892-2-stanley.chu@mediatek.com>
+ <20220727034454.31892-3-stanley.chu@mediatek.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220727034454.31892-2-stanley.chu@mediatek.com>
+In-Reply-To: <20220727034454.31892-3-stanley.chu@mediatek.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -65,15 +65,29 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 7/26/22 20:44, Stanley Chu wrote:
-> Remove redundant header files like
-> <linux/sched/clock.h>
-> 
-> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
-> Change-Id: I7796a23a5fdc767a4d00475b399844ceeaded0a8
+> diff --git a/drivers/ufs/host/ufs-mediatek.h b/drivers/ufs/host/ufs-mediatek.h
+> index aa26d415527b..9017ab8f9867 100644
+> --- a/drivers/ufs/host/ufs-mediatek.h
+> +++ b/drivers/ufs/host/ufs-mediatek.h
+> @@ -26,6 +26,44 @@
+>   #define REG_UFS_DEBUG_SEL_B2        0x22D8
+>   #define REG_UFS_DEBUG_SEL_B3        0x22DC
+>   
+> +/*
+> + * Details of UIC Errors
+> + */
+> +static const u8 *ufs_uic_err_str[] = {
+> +	"PHY Adapter Layer",
+> +	"Data Link Layer",
+> +	"Network Link Layer",
+> +	"Transport Link Layer",
+> +	"DME"
+> +};
 
-Please leave out Change-Id tags from patches that are sent upstream.
+Why type u8 for strings instead of char?
 
-Otherwise this patch looks good to me.
+Please define arrays in .c files. Otherwise one copy of the array will 
+be included in each source file this header file is included in.
 
 Thanks,
 
