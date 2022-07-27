@@ -2,85 +2,93 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A98C4C19F2B
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jul 2022 03:12:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4ECDEC19F21
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jul 2022 03:15:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231543AbiG0DMM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Jul 2022 23:12:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42814 "EHLO
+        id S240253AbiG0DP2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Jul 2022 23:15:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45360 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240168AbiG0DMK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jul 2022 23:12:10 -0400
-Received: from mail-lj1-x236.google.com (mail-lj1-x236.google.com [IPv6:2a00:1450:4864:20::236])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B9B41C126;
-        Tue, 26 Jul 2022 20:12:09 -0700 (PDT)
-Received: by mail-lj1-x236.google.com with SMTP id r14so18422284ljp.2;
-        Tue, 26 Jul 2022 20:12:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=vjqboMjUafpTNGUy0/O4ZDtfa56hWKNu2C1XCtWQzVA=;
-        b=Q5Xo+Bg4msAdmVwzpBwCtILRjoM1yJhUc972HzJcEoCaxF/JjzLsi9okJmR2dCNhnm
-         GLf+ZPI3plNCoXTd0rDjKsAy/+/0giq1jUTovcZaTd1Q0f0YgTm1cQt3HeO50O9KQBei
-         6eePw2J4KHWgrOvrek1LtHJUQBaHntpaTF2mNAiid10OowP2K4PE/qM49A/tlQUm89PL
-         29VElTUpRzd2+CwuIdptK9G5Kr+MeiNSqsdAfHYEEYxEBADiNVC8u3x58tA9zml5XRVh
-         MrANXuRRlTbZhlonGdbsWS3O75N/Qv96MXvIYitmfLlpNNME/ty9esOgEokZNkl55fzp
-         cGtQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=vjqboMjUafpTNGUy0/O4ZDtfa56hWKNu2C1XCtWQzVA=;
-        b=rXow1m0xYhgGLY47UApfiJ2cfDBTR22REM4GynHUgwN4LZuaHIwg7dSCsd3bYvjiaU
-         3PTWyS5GX17LoqGC4Z3vZS8w+kgZM3ylb6HXYL/gLqQ4w0AhzYSa/Kyl+mj+ww0q/bnX
-         d0BYS5VZ89rT+KA5Xse1Nkn8Dt6KEPd5IFEeCwwoLhiTBLkVgh8B0bH6ILe+f8s8krM2
-         dEJNxEXcFCDEaWNk+pAOkxa1OmjVlhmDNkns0rIAK1/4nKzTi+UmhwbLXqZFmo51EV4y
-         /MWdi/0m5EARNWxLgc5n8rbNv4NCA1qbON0xsoB9Nscq4o70WP9dWiEiay/CBrPo8Zas
-         v9oQ==
-X-Gm-Message-State: AJIora/5qwmNELoUjZjuoIs5FjTyB1gq2SQ+LSaruNyHQxOfkgvyak/q
-        3KlFj/kPNBxRPPnxicTjwgD18tsDV2dc9uySXw==
-X-Google-Smtp-Source: AGRyM1v4Ncd9HBGYmoz4GB4ul2KRx32NDFuoju0Nas2HcyCjW1c4g23bxplhHnlVMchicE6sR/kHzTuS7vhfvbW0uG0=
-X-Received: by 2002:a05:651c:1796:b0:25d:7288:ed0b with SMTP id
- bn22-20020a05651c179600b0025d7288ed0bmr6844732ljb.228.1658891527252; Tue, 26
- Jul 2022 20:12:07 -0700 (PDT)
+        with ESMTP id S240247AbiG0DPZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jul 2022 23:15:25 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1058019C0B
+        for <linux-scsi@vger.kernel.org>; Tue, 26 Jul 2022 20:15:19 -0700 (PDT)
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 26R2oXUe024544;
+        Wed, 27 Jul 2022 03:15:16 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2022-7-12;
+ bh=NeYSpmUc75UFbJLJmKRwVqAPYjHbnaqeEe7yTsnGn4o=;
+ b=YOI2+wkZXdlU8mYXHHXw0lIwqydzPiMvxlE12hBhspPoJdDCu1jmk0OwiOBpBMY8CbWx
+ wDHGR9VF64ljJOJ3J4O8FvfOK59piBMRlSbue+At88yzwGxSdB9wItQ/w8QRUjyqFz2p
+ nGcMAvoaB1tNpbLyrgBA8aRJ6pPvAPurEAViqqcn7l1m7SvmxzkEXJuPDanT3SuhHG0j
+ jAS0cAETwR41JlOh8m7FkuTE8fWMFNaBm01Nerhppo1k7wjRL8HjpbgO03B8R9mhOI1R
+ O0IFFscYYquHBREmKix0ISz/4JXMxM6uP/0MPqnrHM1sIMaUQ6QsB85hBRnhfbhwVhHb bQ== 
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3hg940r0pb-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 27 Jul 2022 03:15:16 +0000
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 26QNn39A020003;
+        Wed, 27 Jul 2022 03:15:15 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3hh638mkst-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 27 Jul 2022 03:15:15 +0000
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 26R3Dx7X005078;
+        Wed, 27 Jul 2022 03:15:15 GMT
+Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3hh638mkrj-2;
+        Wed, 27 Jul 2022 03:15:15 +0000
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+To:     linux-scsi@vger.kernel.org, David Jeffery <djeffery@redhat.com>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Laurence Oberman <loberman@redhat.com>,
+        MPT-FusionLinux.pdl@broadcom.com,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: Re: [PATCH] scsi: mpt3sas: Stop fw fault watchdog work item during system shutdown
+Date:   Tue, 26 Jul 2022 23:15:11 -0400
+Message-Id: <165889169551.689.2429580988083621138.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.36.1
+In-Reply-To: <20220722142448.6289-1-djeffery@redhat.com>
+References: <20220722142448.6289-1-djeffery@redhat.com>
 MIME-Version: 1.0
-References: <20220727030526.31022-1-peter.wang@mediatek.com>
-In-Reply-To: <20220727030526.31022-1-peter.wang@mediatek.com>
-From:   Stanley Chu <chu.stanley@gmail.com>
-Date:   Wed, 27 Jul 2022 11:11:55 +0800
-Message-ID: <CAGaU9a9FG9DxNsPEC=DDE_ZENn9PGoeQy0BG9FG8p-trdmTNmQ@mail.gmail.com>
-Subject: Re: [PATCH v5] ufs: core: correct ufshcd_shutdown flow
-To:     peter.wang@mediatek.com
-Cc:     Stanley Chu <stanley.chu@mediatek.com>, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Avri Altman <avri.altman@wdc.com>, alim.akhtar@samsung.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
-        Chun-Hung Wu <chun-hung.wu@mediatek.com>,
-        alice.chao@mediatek.com, cc.chou@mediatek.com,
-        chaotian.jing@mediatek.com, jiajie.hao@mediatek.com,
-        powen.kao@mediatek.com, qilin.tan@mediatek.com,
-        lin.gui@mediatek.com, stable@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
+ definitions=2022-07-26_07,2022-07-26_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 malwarescore=0
+ suspectscore=0 mlxscore=0 bulkscore=0 adultscore=0 spamscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2206140000 definitions=main-2207270009
+X-Proofpoint-GUID: qYTpmqi8Sx2vmoep_NfST8FZiJy62-2E
+X-Proofpoint-ORIG-GUID: qYTpmqi8Sx2vmoep_NfST8FZiJy62-2E
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jul 27, 2022 at 11:10 AM <peter.wang@mediatek.com> wrote:
->
-> From: Peter Wang <peter.wang@mediatek.com>
->
-> After ufshcd_wl_shutdown set device power off and link off,
-> ufshcd_shutdown could turn off clock/power.
->
-> Also remove pm_runtime_get_sync.
-> The reason why here can remove pm_runtime_get_sync is because,
-> (1) ufshcd_wl_shutdown -> pm_runtime_get_sync, will resume hba->dev too.
-> (2) device resume(turn on clk/power) is not required, even if device is in RPM_SUSPENDED.
->
-> Fixes: b294ff3e3449 ("scsi: ufs: core: Enable power management for wlun")
-> Cc: <stable@vger.kernel.org> # 5.15.x
-> Signed-off-by: Peter Wang <peter.wang@mediatek.com>
+On Fri, 22 Jul 2022 10:24:48 -0400, David Jeffery wrote:
 
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+> During system shutdown or reboot, mpt3sas will reset the firmware back to
+> ready state. However, the driver leaves running a watchdog work item
+> intended to keep the firmware in operational state. This causes a second,
+> unneeded reset on shutdown and moves the firmware back to operational
+> instead of in ready state as intended. And if the mpt3sas_fwfault_debug
+> module parameter is set, this extra reset also panics the system.
+> 
+> [...]
+
+Applied to 5.19/scsi-fixes, thanks!
+
+[1/1] scsi: mpt3sas: Stop fw fault watchdog work item during system shutdown
+      https://git.kernel.org/mkp/scsi/c/0fde22c5420e
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
