@@ -2,42 +2,42 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2971C04A68
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jul 2022 06:59:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03A9EC04A68
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jul 2022 07:04:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230016AbiG0G7e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Jul 2022 02:59:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39602 "EHLO
+        id S229556AbiG0HER (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Jul 2022 03:04:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43186 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231443AbiG0G7S (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2022 02:59:18 -0400
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA4BF313AE
-        for <linux-scsi@vger.kernel.org>; Tue, 26 Jul 2022 23:59:07 -0700 (PDT)
-Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20220727065905epoutp0121220ef9b0a63677864db65a4199d89b~FnXDY1XWq0942909429epoutp011
-        for <linux-scsi@vger.kernel.org>; Wed, 27 Jul 2022 06:59:05 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20220727065905epoutp0121220ef9b0a63677864db65a4199d89b~FnXDY1XWq0942909429epoutp011
+        with ESMTP id S229379AbiG0HEP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2022 03:04:15 -0400
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E8631D0EA
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Jul 2022 00:04:14 -0700 (PDT)
+Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20220727070412epoutp02b9152dbb62b9f418f6411e17d2064793~FnbgoC8nf2318523185epoutp02z
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Jul 2022 07:04:12 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20220727070412epoutp02b9152dbb62b9f418f6411e17d2064793~FnbgoC8nf2318523185epoutp02z
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1658905145;
-        bh=lNNfLiLq987R9+I+SlWzlrwsx34BfKrbsSzg18k1BO4=;
-        h=Subject:Reply-To:From:To:Date:References:From;
-        b=D8IIiIIBBQB75u8AF4W+Jiz36v3io1J77S12mn7PU8cvZsROrGPF4Ya13psG9PGGj
-         fVjfH0DFWtzNH1pKD98RITKQYB5dNyY8jQ830HNG4ayuJk90U3qYZuJN8SDb1Bjhf9
-         Bc5uQN5si0JSebfrf7TEpLAbn9rM9/JogbQ6hjKQ=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
-        20220727065905epcas2p46087a372261c557b2b8689796a468825~FnXC2lDm81032510325epcas2p4O;
-        Wed, 27 Jul 2022 06:59:05 +0000 (GMT)
+        s=mail20170921; t=1658905452;
+        bh=LXR6+O3eDWHctBCVff2wddft4H7hjY69vVRu/Mki4Uk=;
+        h=Subject:Reply-To:From:To:In-Reply-To:Date:References:From;
+        b=QYkW1oEC1f49N7wxkZz+zBS5+Mz2yeg6VKgswL8Ja2kaGeaFn1/zPEbtryg2Gmi44
+         /qHvhsGIFrZiFIi+2MlvZmoA1sq1IgTLtuzb99uDPyTdBFt6OUNc+sP2YoSwphMzGT
+         i/Xfm13WV6g3nf+FDjA7nNNS2CktWq0/EdT0uORo=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas2p2.samsung.com (KnoxPortal) with ESMTP id
+        20220727070411epcas2p2bf17ee8cd775ee25c08011dd302627c6~FnbgLo7RU0217702177epcas2p2J;
+        Wed, 27 Jul 2022 07:04:11 +0000 (GMT)
 Received: from epsmges2p1.samsung.com (unknown [182.195.36.68]) by
-        epsnrtp1.localdomain (Postfix) with ESMTP id 4Lt4Q04KhJz4x9Pv; Wed, 27 Jul
-        2022 06:59:04 +0000 (GMT)
-X-AuditID: b6c32a45-45bff700000025c2-b6-62e0e2389809
-Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
+        epsnrtp2.localdomain (Postfix) with ESMTP id 4Lt4Wt6znRz4x9Q1; Wed, 27 Jul
+        2022 07:04:10 +0000 (GMT)
+X-AuditID: b6c32a45-471ff700000025c2-c9-62e0e36a7e60
+Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
         epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
-        0B.57.09666.832E0E26; Wed, 27 Jul 2022 15:59:04 +0900 (KST)
+        ED.0B.09666.A63E0E26; Wed, 27 Jul 2022 16:04:10 +0900 (KST)
 Mime-Version: 1.0
-Subject: [PATCH v4 0/7] scsi: ufs: wb: Add sysfs attribute and cleanup
+Subject: [PATCH v4 1/7] scsi: ufs: wb: Move ufshcd_is_wb_allowed() to callee
 Reply-To: j-young.choi@samsung.com
 Sender: Jinyoung CHOI <j-young.choi@samsung.com>
 From:   Jinyoung CHOI <j-young.choi@samsung.com>
@@ -52,73 +52,92 @@ To:     ALIM AKHTAR <alim.akhtar@samsung.com>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 X-Priority: 3
 X-Content-Kind-Code: NORMAL
+In-Reply-To: <20220727065904epcms2p60a7a56101785ddefa55c82b3cc25116d@epcms2p6>
 X-CPGS-Detection: blocking_info_exchange
 X-Drm-Type: N,general
 X-Msg-Generator: Mail
 X-Msg-Type: PERSONAL
 X-Reply-Demand: N
-Message-ID: <20220727065904epcms2p60a7a56101785ddefa55c82b3cc25116d@epcms2p6>
-Date:   Wed, 27 Jul 2022 15:59:04 +0900
-X-CMS-MailID: 20220727065904epcms2p60a7a56101785ddefa55c82b3cc25116d
+Message-ID: <20220727070410epcms2p5206785e4d960b32dcbb6729710dab535@epcms2p5>
+Date:   Wed, 27 Jul 2022 16:04:10 +0900
+X-CMS-MailID: 20220727070410epcms2p5206785e4d960b32dcbb6729710dab535
 Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
 X-CPGSPASS: Y
 X-CPGSPASS: Y
 CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrIJsWRmVeSWpSXmKPExsWy7bCmqa7FowdJBk3nFSxOPlnDZvFg3jY2
-        i5c/r7JZHHzYyWIx7cNPZouXhzQtevu3slksurGNyeLyrjlsFt3Xd7BZLD/+j8mB2+PyFW+P
-        xXteMnlMWHSA0eP7+g42j49Pb7F49G1ZxejxeZOcR/uBbqYAjqhsm4zUxJTUIoXUvOT8lMy8
-        dFsl7+B453hTMwNDXUNLC3MlhbzE3FRbJRefAF23zBygO5UUyhJzSoFCAYnFxUr6djZF+aUl
-        qQoZ+cUltkqpBSk5BeYFesWJucWleel6eaklVoYGBkamQIUJ2RmfrtkVTOCouL6qgaWBcRdb
-        FyMHh4SAiUT3AtEuRi4OIYEdjBI7pj5kBonzCghK/N0hDGIKC7hJHH1u0sXICVSiJHFuzSxG
-        iLCBxK1ec5Awm4CexM8lM9hApogInGWWWPhwChNIQkKAV2JG+1MWCFtaYvvyrYwQtobEj2W9
-        zBC2qMTN1W/ZYez3x+ZD1YhItN47C1UjKPHg526ouKTEoUNfoa7Pl9hwIBAiXCPxdvkBqBJ9
-        iWsdG8HW8gr4Sizp/cUKYrMIqEp0rfwKtcpF4sv8N2A1zALyEtvfzgF7nFlAU2L9Ln2I6coS
-        R26xwDzSsPE3OzqbWYBPouPwX7j4jnlPmCBa1SQWNRlBhGUkvh6eD1XiIdF2qINpAqPiLEQg
-        z0JywiyEExYwMq9iFEstKM5NTy02KjCEx2pyfu4mRnBa1XLdwTj57Qe9Q4xMHIyHGCU4mJVE
-        eBOi7ycJ8aYkVlalFuXHF5XmpBYfYjQFen4is5Rocj4wseeVxBuaWBqYmJkZmhuZGpgrifN6
-        pWxIFBJITyxJzU5NLUgtgulj4uCUamBS9L+2Z3ecYefWjVEr3G9vKZmYMnd6d/P2li317SFN
-        T4zCX1yLD7U+0HfWcf3+mJdmq9jOczEDk8qpOX/jkhsmb2ie18aukBrLvN+6KenWG+PAO1k3
-        FC/s3NB29f63OCWXnx3fjwT9/LQm9bmHBId6hImh4y7FOXfudJtvyfzo1p0TH7Zy7t8Ns58+
-        O7pA6lJfW3COYp/J+orlrR8mNnikyp9bdU6rIUUvN3f+f2VXc6kNrSvUl4V6cUiyRxRKvVuV
-        qrHlf4teUt8iwf/Fy5SrzrxZHeMqVPTqZ9ueP7b/t9mWMC1nED7XOm1NkFdbg4XIp7R/CVzB
-        TPM8rK61J02rTRQIfZ4upHzWv/J4mxJLcUaioRZzUXEiAHfwaP80BAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprPJsWRmVeSWpSXmKPExsWy7bCmuW7W4wdJBh+eWVicfLKGzeLBvG1s
+        Fi9/XmWzOPiwk8Vi2oefzBYvD2laLLqxjcni8q45bBbd13ewWSw//o/Jgcvj8hVvj8V7XjJ5
+        TFh0gNHj+/oONo+PT2+xePRtWcXo8XmTnEf7gW6mAI6obJuM1MSU1CKF1Lzk/JTMvHRbJe/g
+        eOd4UzMDQ11DSwtzJYW8xNxUWyUXnwBdt8wcoBOVFMoSc0qBQgGJxcVK+nY2RfmlJakKGfnF
+        JbZKqQUpOQXmBXrFibnFpXnpenmpJVaGBgZGpkCFCdkZ/9+9YS5o56k4+nIdawNjI1cXIyeH
+        hICJxNp1O5m7GLk4hAR2MEq0X5vB3sXIwcErICjxd4cwSI2wgI/EoUWb2UFsIQEliXNrZjGC
+        lAgLGEjc6jUHCbMJ6En8XDKDDWSMiMBZZomFD6cwQcznlZjR/pQFwpaW2L58KyOIzSngJ/Fq
+        yl5GiLiGxI9lvcwQtqjEzdVv2WHs98fmQ9WISLTeOwtVIyjx4OduqLikxKFDX9lA7pEQyJfY
+        cCAQIlwj8Xb5AagSfYlrHRvBTuAV8JU4fPEnG4jNIqAqcW/2K6gaF4nN61rAbGYBeYntb+cw
+        g4xkFtCUWL9LH2K6ssSRWywwTzVs/M2OzmYW4JPoOPwXLr5j3hMmiFY1iUVNRhBhGYmvh+ez
+        T2BUmoUI5VlI1s5CWLuAkXkVo1hqQXFuemqxUYEhPGKT83M3MYJTqpbrDsbJbz/oHWJk4mA8
+        xCjBwawkwpsQfT9JiDclsbIqtSg/vqg0J7X4EKMp0MMTmaVEk/OBST2vJN7QxNLAxMzM0NzI
+        1MBcSZzXK2VDopBAemJJanZqakFqEUwfEwenVAOTEu+Sre+sPI+fv5xv67U5zsp1hWdm6YHp
+        7zQj1R4s6WJyLv4pf6FysZP1Z7uaFbz5lQwlsUuyE/qN/iUETJ8o/aNB0TJU0PWcPkfuQTFh
+        V0bm9LSJ8h1X922I/PdPQPZVQqV5w3GbO0FzuhrXyG7X/Hbm0anZmbOz16y9wHs6NuWsXCrb
+        6+kz9324fCSwZP6GBTHMlamZ72cHTF17L+5OWZuojKxZ8o2VHfHZcesslUJfhc9Yquz4b2q1
+        0Q7DXytDlxf0zeQRXRMfMKHbOs9p8qJZu/z2P26Z1P3Ma2vIE1Z/lyjfjtA3fe9s17Cwl/ua
+        nNkcFMY+mTU5fq53zJfoObHVW1u+x7TvdV31o0CJpTgj0VCLuag4EQDEvCr+MgQAAA==
 DLP-Filter: Pass
 X-CFilter-Loop: Reflected
 X-CMS-RootMailID: 20220727065904epcms2p60a7a56101785ddefa55c82b3cc25116d
-References: <CGME20220727065904epcms2p60a7a56101785ddefa55c82b3cc25116d@epcms2p6>
+References: <20220727065904epcms2p60a7a56101785ddefa55c82b3cc25116d@epcms2p6>
+        <CGME20220727065904epcms2p60a7a56101785ddefa55c82b3cc25116d@epcms2p5>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch series is to clean up UFS's Write Booster code and
-adds sysfs attribute which can control the specific feature of it.
+The condition test is performed for each function calling
+__ufshcd_wb_toggle().
+By modifying the position, it removes the code redundancy and prevents
+the test from being missing in the caller function.
 
-V2:
-	- modify commit message
-	- move & modify err messages
-	- remove unnesscessary debug messages
-V3:
-	- split patch (functional, non-functional)
-V4:
-	- split patch (The number of patches from 2 to 7)
-	- modify dev messages
-	- modify commit message
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
+Signed-off-by: Jinyoung Choi <j-young.choi@samsung.com>
+---
+ drivers/ufs/core/ufshcd.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-Jinyoung Choi (7):
-  scsi: ufs: wb: Move ufshcd_is_wb_allowed() to callee function
-  scsi: ufs: wb: Change wb_enabled condition test
-  scsi: ufs: wb: Change functions name and modify parameter name
-  scsi: ufs: wb: Add explicit flush sysfs attribute
-  scsi: ufs: wb: Add ufshcd_is_wb_buf_flush_allowed()
-  scsi: ufs: wb: Modify messages
-  scsi: ufs: wb: Move the comment to the right position
-
- drivers/ufs/core/ufs-sysfs.c | 46 +++++++++++++++++++++++-
- drivers/ufs/core/ufshcd.c    | 69 +++++++++++++++++++-----------------
- include/ufs/ufshcd.h         |  7 ++++
- 3 files changed, 89 insertions(+), 33 deletions(-)
-
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 8f11f118c30e..a3bdf9986511 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -5722,6 +5722,9 @@ static int __ufshcd_wb_toggle(struct ufs_hba *hba, bool set, enum flag_idn idn)
+ 	enum query_opcode opcode = set ? UPIU_QUERY_OPCODE_SET_FLAG :
+ 				   UPIU_QUERY_OPCODE_CLEAR_FLAG;
+ 
++	if (!ufshcd_is_wb_allowed(hba))
++		return -EPERM;
++
+ 	index = ufshcd_wb_get_query_index(hba);
+ 	return ufshcd_query_flag_retry(hba, opcode, idn, index, NULL);
+ }
+@@ -5730,9 +5733,6 @@ int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable)
+ {
+ 	int ret;
+ 
+-	if (!ufshcd_is_wb_allowed(hba))
+-		return 0;
+-
+ 	if (!(enable ^ hba->dev_info.wb_enabled))
+ 		return 0;
+ 
+@@ -5769,8 +5769,7 @@ static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable)
+ {
+ 	int ret;
+ 
+-	if (!ufshcd_is_wb_allowed(hba) ||
+-	    hba->dev_info.wb_buf_flush_enabled == enable)
++	if (hba->dev_info.wb_buf_flush_enabled == enable)
+ 		return;
+ 
+ 	ret = __ufshcd_wb_toggle(hba, enable, QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN);
 -- 
 2.25.1
