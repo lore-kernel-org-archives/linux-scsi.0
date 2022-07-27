@@ -2,170 +2,112 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA72FC04A68
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jul 2022 08:29:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A266C04A68
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jul 2022 13:04:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229767AbiG0I32 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Jul 2022 04:29:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46662 "EHLO
+        id S233490AbiG0NE0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Jul 2022 09:04:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46530 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230388AbiG0I3S (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2022 04:29:18 -0400
-Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F35F459A2;
-        Wed, 27 Jul 2022 01:29:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1658910557; x=1690446557;
-  h=from:to:cc:subject:date:message-id:mime-version;
-  bh=iTamDCOH/9WmaX6NdcA+gYUfOkf4snb7Ud8mOkqbfFk=;
-  b=AxR2nJRfG9LnfZr1d6aLNA/Yb6LCnpT8r+670zpA+f+aPRWtpf5F58NS
-   HCREXg0xP2pTEgReG96Fk4Xp/9/NE5hlyrXz9OtDj0Z52wrxPiQXzOoBT
-   UbSdbOo5ni4uS2FEMNO5JwvXdFHgCkHi929TQd9e5tofpG3l+wJyIVGNE
-   0=;
-Received: from unknown (HELO ironmsg05-sd.qualcomm.com) ([10.53.140.145])
-  by alexa-out-sd-01.qualcomm.com with ESMTP; 27 Jul 2022 01:29:16 -0700
-X-QCInternal: smtphost
-Received: from unknown (HELO nasanex01a.na.qualcomm.com) ([10.52.223.231])
-  by ironmsg05-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jul 2022 01:29:16 -0700
-Received: from hu-cchinnad-hyd.qualcomm.com (10.80.80.8) by
- nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Wed, 27 Jul 2022 01:29:14 -0700
-From:   Chetan C R <quic_cchinnad@quicinc.com>
-To:     <jejb@linux.ibm.com>
-CC:     <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        Chetan C R <quic_cchinnad@quicinc.com>
-Subject: [PATCH V1] scsi: ufs: Get boot device storage type from command line
-Date:   Wed, 27 Jul 2022 13:58:55 +0530
-Message-ID: <1658910535-31802-1-git-send-email-quic_cchinnad@quicinc.com>
-X-Mailer: git-send-email 2.7.4
+        with ESMTP id S233385AbiG0NEZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2022 09:04:25 -0400
+Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28B6222BCB;
+        Wed, 27 Jul 2022 06:04:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1658927065; x=1690463065;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=6SwQ9YOIn0PoKIrChETiUz4v21HjnRgy6rGCYq0XXgU=;
+  b=irmfqzC2v/aBWpiqF88sbveXqeWEwh9bWkWsHJ8WFuhAd9SH9/nQt8/V
+   9RohSGVX6dU9OLQ6tdwRDvJzQh4Wm/+Z42JKvNy37N8WOjHhqL/KZ4MEB
+   MHrktjoPfjxSwduWoiYLRiHkXZbVu3JmYB9dN2qmjWS2QCW2tLj0ZUZIX
+   qke674bF4BagRSIH2EhDEPffNhy1TuehSueth3BwGNLvowROy4I2d/kx3
+   QgxT9dC8rgTiq4xlcGqKbhzhzXaN3ij5MXb87y7T8Qn690V1V/7WCX1/+
+   fJCmboWc+4CUcYniRxcs7Bu/D0RqOa3ClYHKNWxn2HfoF82P4wDFxFpVI
+   A==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10420"; a="349931419"
+X-IronPort-AV: E=Sophos;i="5.93,195,1654585200"; 
+   d="scan'208";a="349931419"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jul 2022 06:04:24 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.93,195,1654585200"; 
+   d="scan'208";a="550839199"
+Received: from lkp-server01.sh.intel.com (HELO e0eace57cfef) ([10.239.97.150])
+  by orsmga003.jf.intel.com with ESMTP; 27 Jul 2022 06:04:23 -0700
+Received: from kbuild by e0eace57cfef with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1oGgi5-0008iy-1E;
+        Wed, 27 Jul 2022 13:04:21 +0000
+Date:   Wed, 27 Jul 2022 21:04:17 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Chetan C R <quic_cchinnad@quicinc.com>, jejb@linux.ibm.com
+Cc:     kbuild-all@lists.01.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, Chetan C R <quic_cchinnad@quicinc.com>
+Subject: Re: [PATCH V1] scsi: ufs: Get boot device storage type from command
+ line
+Message-ID: <202207272021.6YK4F8UV-lkp@intel.com>
+References: <1658910535-31802-1-git-send-email-quic_cchinnad@quicinc.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1658910535-31802-1-git-send-email-quic_cchinnad@quicinc.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Get the boot device storage type by reading it from
-kernel command line arguments and export the same
-information to ufs modules.
+Hi Chetan,
 
-Signed-off-by: Chetan C R <quic_cchinnad@quicinc.com>
----
- drivers/ufs/Kconfig            |  1 +
- drivers/ufs/host/Kconfig       |  9 +++++++
- drivers/ufs/host/Makefile      |  1 +
- drivers/ufs/host/ufs-cmdline.c | 54 ++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 65 insertions(+)
- create mode 100644 drivers/ufs/host/ufs-cmdline.c
+Thank you for the patch! Perhaps something to improve:
 
-diff --git a/drivers/ufs/Kconfig b/drivers/ufs/Kconfig
-index 90226f7..9d2f84e 100644
---- a/drivers/ufs/Kconfig
-+++ b/drivers/ufs/Kconfig
-@@ -9,6 +9,7 @@ menuconfig SCSI_UFSHCD
- 	select PM_DEVFREQ
- 	select DEVFREQ_GOV_SIMPLE_ONDEMAND
- 	select NLS
-+	select UFS_QCOM_CMDLINE if ARCH_QCOM
- 	help
- 	  Enables support for UFS (Universal Flash Storage) host controllers.
- 	  A UFS host controller is an electronic component that is able to
-diff --git a/drivers/ufs/host/Kconfig b/drivers/ufs/host/Kconfig
-index 8259022..6197070 100644
---- a/drivers/ufs/host/Kconfig
-+++ b/drivers/ufs/host/Kconfig
-@@ -68,6 +68,15 @@ config SCSI_UFS_QCOM
- 	  Select this if you have UFS controller on QCOM chipset.
- 	  If unsure, say N.
- 
-+config UFS_QCOM_CMDLINE
-+	bool "Get the boot device type from kernel command line for Qcom devices"
-+	help
-+	  This selects the support of getting the boot device storage type
-+	  from kernel command line arguments and export this information
-+	  to the Qcom UFS controller platform driver.
-+
-+	  If unsure, say N.
-+
- config SCSI_UFS_MEDIATEK
- 	tristate "Mediatek specific hooks to UFS controller platform driver"
- 	depends on SCSI_UFSHCD_PLATFORM && ARCH_MEDIATEK
-diff --git a/drivers/ufs/host/Makefile b/drivers/ufs/host/Makefile
-index e4be542..a9463f1 100644
---- a/drivers/ufs/host/Makefile
-+++ b/drivers/ufs/host/Makefile
-@@ -6,6 +6,7 @@ obj-$(CONFIG_SCSI_UFS_CDNS_PLATFORM) += cdns-pltfrm.o
- obj-$(CONFIG_SCSI_UFS_QCOM) += ufs_qcom.o
- ufs_qcom-y += ufs-qcom.o
- ufs_qcom-$(CONFIG_SCSI_UFS_CRYPTO) += ufs-qcom-ice.o
-+obj-$(CONFIG_UFS_QCOM_CMDLINE)          += ufs-cmdline.o
- obj-$(CONFIG_SCSI_UFS_EXYNOS) += ufs-exynos.o
- obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
- obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
-diff --git a/drivers/ufs/host/ufs-cmdline.c b/drivers/ufs/host/ufs-cmdline.c
-new file mode 100644
-index 0000000..408755c
---- /dev/null
-+++ b/drivers/ufs/host/ufs-cmdline.c
-@@ -0,0 +1,54 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (c) 2022, The Linux Foundation. All rights reserved.
-+ */
-+
-+#include <linux/init.h>
-+#include <linux/printk.h>
-+#include <linux/string.h>
-+
-+#ifdef CONFIG_BOOT_CONFIG
-+#include <linux/bootconfig.h>
-+#endif
-+
-+#define ANDROID_BOOT_DEV_MAX_V3    30
-+
-+static char android_boot_dev_v3[ANDROID_BOOT_DEV_MAX_V3];
-+static const char *android_boot_dev_v4;
-+
-+const char *get_storage_boot_device(void)
-+{
-+	if (android_boot_dev_v4 && strlen(android_boot_dev_v4))
-+		return android_boot_dev_v4;
-+
-+	else if (strlen(android_boot_dev_v3))
-+		return android_boot_dev_v3;
-+
-+	pr_err("Not able to get Bootconfig or Kernel command line param\n");
-+	return NULL;
-+};
-+EXPORT_SYMBOL_GPL(get_storage_boot_device);
-+
-+/* boot image header version 3 android boot device type */
-+static int __init get_android_boot_dev_v3(char *str)
-+{
-+	strscpy(android_boot_dev_v3, str, ANDROID_BOOT_DEV_MAX_V3);
-+	return 1;
-+}
-+__setup("androidboot.bootdevice=", get_android_boot_dev_v3);
-+
-+#ifdef CONFIG_BOOT_CONFIG
-+/* boot image header version 4 android boot device type */
-+static int __init get_android_boot_dev_v4(void)
-+{
-+	struct xbc_node *vnode = NULL;
-+
-+	android_boot_dev_v4 = xbc_find_value("androidboot.bootdevice", &vnode);
-+
-+	if (vnode && xbc_node_is_array(vnode))
-+		xbc_array_for_each_value(vnode, android_boot_dev_v4);
-+
-+	return 0;
-+}
-+fs_initcall(get_android_boot_dev_v4);
-+#endif
+[auto build test WARNING on jejb-scsi/for-next]
+[also build test WARNING on mkp-scsi/for-next linus/master v5.19-rc8 next-20220726]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Chetan-C-R/scsi-ufs-Get-boot-device-storage-type-from-command-line/20220727-163016
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+config: i386-allyesconfig (https://download.01.org/0day-ci/archive/20220727/202207272021.6YK4F8UV-lkp@intel.com/config)
+compiler: gcc-11 (Debian 11.3.0-3) 11.3.0
+reproduce (this is a W=1 build):
+        # https://github.com/intel-lab-lkp/linux/commit/42a08523b91855ba31b0974a32f02c43b163c571
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Chetan-C-R/scsi-ufs-Get-boot-device-storage-type-from-command-line/20220727-163016
+        git checkout 42a08523b91855ba31b0974a32f02c43b163c571
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        make W=1 O=build_dir ARCH=i386 SHELL=/bin/bash drivers/ufs/host/
+
+If you fix the issue, kindly add following tag where applicable
+Reported-by: kernel test robot <lkp@intel.com>
+
+All warnings (new ones prefixed by >>):
+
+>> drivers/ufs/host/ufs-cmdline.c:19:13: warning: no previous prototype for 'get_storage_boot_device' [-Wmissing-prototypes]
+      19 | const char *get_storage_boot_device(void)
+         |             ^~~~~~~~~~~~~~~~~~~~~~~
+
+
+vim +/get_storage_boot_device +19 drivers/ufs/host/ufs-cmdline.c
+
+    18	
+  > 19	const char *get_storage_boot_device(void)
+    20	{
+    21		if (android_boot_dev_v4 && strlen(android_boot_dev_v4))
+    22			return android_boot_dev_v4;
+    23	
+    24		else if (strlen(android_boot_dev_v3))
+    25			return android_boot_dev_v3;
+    26	
+    27		pr_err("Not able to get Bootconfig or Kernel command line param\n");
+    28		return NULL;
+    29	};
+    30	EXPORT_SYMBOL_GPL(get_storage_boot_device);
+    31	
+
 -- 
-2.7.4
-
+0-DAY CI Kernel Test Service
+https://01.org/lkp
