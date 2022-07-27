@@ -2,91 +2,88 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F73AC19F29
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jul 2022 19:01:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 734BCC04A68
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jul 2022 19:44:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231496AbiG0TBV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Jul 2022 15:01:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46256 "EHLO
+        id S235723AbiG0ToJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Jul 2022 15:44:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60764 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231382AbiG0TBG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2022 15:01:06 -0400
-Received: from mail-pg1-f181.google.com (mail-pg1-f181.google.com [209.85.215.181])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03BB589AAC;
-        Wed, 27 Jul 2022 11:12:20 -0700 (PDT)
-Received: by mail-pg1-f181.google.com with SMTP id f65so16529807pgc.12;
-        Wed, 27 Jul 2022 11:12:19 -0700 (PDT)
+        with ESMTP id S232399AbiG0ToF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2022 15:44:05 -0400
+Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C25E05245F;
+        Wed, 27 Jul 2022 12:44:04 -0700 (PDT)
+Received: by mail-pg1-f180.google.com with SMTP id q16so16716078pgq.6;
+        Wed, 27 Jul 2022 12:44:04 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
+         :content-language:to:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=RNVMJ4oZ8yHzMS/5F5vQFWD6tQYWHNz7yT3+sY7HxXA=;
-        b=nRkfNNrYt2ZK4DUimkI7vzomXYnIKfQkIWhgYp8MuyFsieNr3q9mU9OfuE5e3Pjoth
-         3fCR9Tfp+f9vPEMshygga+rp/9H45P+onm8Dbmm95ji+4TmzoO2hGmMPEti5BZYe2GCS
-         u3F91Rzf4J6ifJqNKvnxtfPYeO7qfJ1xPfPp4uQRooqJhVmmtpWeWRGHQNEaCoqSrq0q
-         Je7RkjTfjvPdTELu9dr/FcSQMr29FYRJfKsC37/qZVk6J5uzEZ99wmnuhu8TcrL2Km0/
-         senzB/A0MCFTymWwPfs+JU/svyaIooyPpylxO0Ouru517XmxKrbhIAvry0+ej1/62VIU
-         GKBQ==
-X-Gm-Message-State: AJIora8oNOt9fyUPhrXjuKJOOmCLdYKz2OG87WMWk9HyeQ61aGud6uMa
-        GWMnfBGYwBN7x8Rfe3QRvIw=
-X-Google-Smtp-Source: AGRyM1usI0Gt657atV+HPb4lgLIOIMc5MiSpXSfWbHnB7XKqfY5gstwVxG7jNUFV+C3r+yvf7zuFPQ==
-X-Received: by 2002:a05:6a00:1946:b0:52a:e551:2241 with SMTP id s6-20020a056a00194600b0052ae5512241mr22626795pfk.29.1658945539275;
-        Wed, 27 Jul 2022 11:12:19 -0700 (PDT)
+        bh=BWrsUDoB9+7Y574+57XLS7gWjGKhdg5+bty83bzhgMk=;
+        b=INfHXwxxGDtgm/sRN8M7957HKU5+MkwViNx17Zv8ebk4MQin44h1OTXDZgTnfqelxb
+         tI62Yxf4p0QDI03/AVS7Fbnku/pRYBrBL/MErxbxccvSM6FZgJenSolx5D1Pvv8Kzbq7
+         mlBYXCuNR1of44pBu1uCpdseBslNIzh0A0n/T27nxDdDgnq8DdBd0W3YReLaK8EHcLoe
+         tKBJdmzUFAJJYgLW4gzXAdacr56PgJ2JbiHMyVvWLIJlu3R+6RRghPlRAklnJguyUU3S
+         igUJwvLwAFYp3GsZvPu8PlK7R/iO8MI0+wMRQW4rnrUpCbaIYxzPWogD8aAUwuryBCbV
+         EwWw==
+X-Gm-Message-State: AJIora/glWDngt5ouktawgc5wrCNl49IInG3FPWpO46t1epaeN4BcBPh
+        u0FNgRyctvrVB7rgJ2lHCDo=
+X-Google-Smtp-Source: AGRyM1unipVrmM6ZQWx0gHivnfNuqNnv2jo2rrrctYcUvHnW0vQMarfXVqPfiLcjUh5Tm3rCxsdkhw==
+X-Received: by 2002:a05:6a02:30a:b0:41a:b002:83ac with SMTP id bn10-20020a056a02030a00b0041ab00283acmr20880154pgb.113.1658951044130;
+        Wed, 27 Jul 2022 12:44:04 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:a84e:2ec1:1b57:b033? ([2620:15c:211:201:a84e:2ec1:1b57:b033])
-        by smtp.gmail.com with ESMTPSA id h13-20020a170902680d00b0016ce31cfea6sm14180388plk.159.2022.07.27.11.12.16
+        by smtp.gmail.com with ESMTPSA id k13-20020a63d84d000000b0040c52ff0ba9sm12480194pgj.37.2022.07.27.12.44.02
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 27 Jul 2022 11:12:18 -0700 (PDT)
-Message-ID: <5fab3d4f-914e-63f8-a3e8-7dd92ecdb04a@acm.org>
-Date:   Wed, 27 Jul 2022 11:12:15 -0700
+        Wed, 27 Jul 2022 12:44:03 -0700 (PDT)
+Message-ID: <90ef5f84-1e4e-d93e-5ee9-acdf36109827@acm.org>
+Date:   Wed, 27 Jul 2022 12:44:01 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.11.0
-Subject: Re: [PATCH v4] ufs: core: fix lockdep warning of clk_scaling_lock
+Subject: Re: [PATCH v4 5/7] scsi: ufs: wb: Add
+ ufshcd_is_wb_buf_flush_allowed()
 Content-Language: en-US
-To:     peter.wang@mediatek.com, stanley.chu@mediatek.com,
-        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com
-Cc:     wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
-        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
-        cc.chou@mediatek.com, chaotian.jing@mediatek.com,
-        jiajie.hao@mediatek.com, powen.kao@mediatek.com,
-        qilin.tan@mediatek.com, lin.gui@mediatek.com,
-        stable@vger.kernel.org
-References: <20220727032110.31168-1-peter.wang@mediatek.com>
+To:     j-young.choi@samsung.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <20220727070841epcms2p5e212d617dd0f985555fa052f099013f0@epcms2p5>
+ <20220727070724epcms2p8e449d0c89b52f03a9d3dc254df0ec547@epcms2p8>
+ <20220727070410epcms2p5206785e4d960b32dcbb6729710dab535@epcms2p5>
+ <20220727065904epcms2p60a7a56101785ddefa55c82b3cc25116d@epcms2p6>
+ <CGME20220727065904epcms2p60a7a56101785ddefa55c82b3cc25116d@epcms2p7>
+ <20220727071024epcms2p70366b54ac8eca3758b7cf4336e0d457c@epcms2p7>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220727032110.31168-1-peter.wang@mediatek.com>
+In-Reply-To: <20220727071024epcms2p70366b54ac8eca3758b7cf4336e0d457c@epcms2p7>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/26/22 20:21, peter.wang@mediatek.com wrote:
-> -	/* Enable Write Booster if we have scaled up else disable it */
-> -	downgrade_write(&hba->clk_scaling_lock);
-> -	is_writelock = false;
-> -	ufshcd_wb_toggle(hba, scale_up);
-> +	/* Disable clk_scaling until ufshcd_wb_toggle finish */
-> +	hba->clk_scaling.is_allowed = false;
-> +	wb_toggle = true;
+On 7/27/22 00:10, Jinyoung CHOI wrote:
+> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+> index 94bcfec98fb8..78adc556444a 100644
+> --- a/include/ufs/ufshcd.h
+> +++ b/include/ufs/ufshcd.h
+> @@ -1017,6 +1017,12 @@ static inline bool ufshcd_is_wb_allowed(struct ufs_hba *hba)
+>   	return hba->caps & UFSHCD_CAP_WB_EN;
+>   }
 >   
->   out_unprepare:
-> -	ufshcd_clock_scaling_unprepare(hba, is_writelock);
-> +	ufshcd_clock_scaling_unprepare(hba);
-> +
-> +	/* Enable Write Booster if we have scaled up else disable it */
-> +	if (wb_toggle) {
-> +		ufshcd_wb_toggle(hba, scale_up);
-> +		ufshcd_clk_scaling_allow(hba, true);
-> +	}
+> +static inline bool ufshcd_is_wb_buf_flush_allowed(struct ufs_hba *hba)
+> +{
+> +	return ufshcd_is_wb_allowed(hba) &&
+> +		!(hba->quirks & UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL);
+> +}
 
-I'm concerned that briefly disabling clock scaling may cause the clock 
-to remain at a high frequency even if it shouldn't. Has the following 
-approach been considered? Instead of moving the 
-ufshcd_clk_scaling_allow() call, convert dev_cmd.lock into a semaphore, 
-lock it near the start of ufshcd_devfreq_scale() and unlock it near the 
-end of the same function.
+Since this function is only used inside the UFS driver core it should be 
+added in drivers/ufs/core/ufshcd-priv.h instead of include/ufs/ufshcd.h.
 
 Thanks,
 
