@@ -2,54 +2,53 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1ADD2C04A68
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jul 2022 13:16:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14F6DC04A68
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jul 2022 13:49:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233700AbiG0NQ1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Jul 2022 09:16:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55186 "EHLO
+        id S232845AbiG0Ntg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Jul 2022 09:49:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52980 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232254AbiG0NQZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2022 09:16:25 -0400
-Received: from mail-ed1-x535.google.com (mail-ed1-x535.google.com [IPv6:2a00:1450:4864:20::535])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D00319029;
-        Wed, 27 Jul 2022 06:16:21 -0700 (PDT)
-Received: by mail-ed1-x535.google.com with SMTP id m8so21328606edd.9;
-        Wed, 27 Jul 2022 06:16:21 -0700 (PDT)
+        with ESMTP id S231518AbiG0Ntf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2022 09:49:35 -0400
+Received: from mail-ej1-x629.google.com (mail-ej1-x629.google.com [IPv6:2a00:1450:4864:20::629])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FDA41FCF4;
+        Wed, 27 Jul 2022 06:49:33 -0700 (PDT)
+Received: by mail-ej1-x629.google.com with SMTP id os14so31635467ejb.4;
+        Wed, 27 Jul 2022 06:49:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=message-id:subject:from:to:date:in-reply-to:references
          :content-transfer-encoding:user-agent:mime-version;
-        bh=Eulazy/cIqbEQxNLHQla1/EWCHbecZL1aHMX/om153g=;
-        b=paXhMUpgg56VAxh+FdkVlBufIqTLxf3o2PP75i5CHx47cB2/taRA4sxOJeOEpdb7D2
-         eoMVk8PwmBzPLNCco3G5L6QjPBRJu9n2eYp3lqnhVgyWNNG4shAsjZ+r9f15a61uHkhQ
-         YoqJ+FmydWS2Q+JgoZxMZOW+9qfl/WJGfFWKuxvE4cWgnfnxEKgCnu0E+ahN6fz7F/JR
-         ogEdDLYTyY6ZzrhCSFc62c8HKtqASw/Yjo/ou4qPhllw/AedNWMYCZxgIW/MXcrBEuKY
-         LL3/d6YwFlDUjSORh29Z2LejwV9yxps4fl/DVccIPlp2AVT9UPYQli8y+Cz6+i9v2pHs
-         CA8Q==
+        bh=Vj2LN4XjfRsXRFnZMqSEcbIyXXU8xmtwUttCD6kAXxY=;
+        b=Tb1b90evxLS7TTWzEzwyBCgrmxz0YM5dpAy1/F866dZvLHP68FjWursIw/ySDWRemz
+         M4p37SafJefIepx9cOHQphOJBtw2M9bTQv8OPsD/TPPsfz+VmxzjGI2ZFm9kgDYQJ/3p
+         JkZeU3KPSVquIDVbBgmavOBBrpeGo29c+i4refDoKdyOcHqXGarok1ddZ30yNuzy5gE3
+         wXLQwFv7f8y7+KTAOJJUqVIl1eZNRXoz3TWP5Ii672v3E8jAQPa7yDcpaTZhDz9afU9A
+         b1quhZ3UpBdkecCrguHqvUoysqSPf7YJ2KqR5wvPjalKbW17jUg3UvnNWQ5P7AcsKO7u
+         Wruw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:subject:from:to:date:in-reply-to
          :references:content-transfer-encoding:user-agent:mime-version;
-        bh=Eulazy/cIqbEQxNLHQla1/EWCHbecZL1aHMX/om153g=;
-        b=IuiwAVeZkfMp7HZwLI6YhDo1F4z+Pj2meTzlSTY0RdLAcIx9FeqHbN/nR4nhkOL0jN
-         rHOneLRuMRM56QypW37zcEX/rQ0b8AiBn2qURdgaC84d9slwj8v8y3lgmqqhYEGYCtGr
-         AHhssvTWSl6fV+5Ge2s/BbhK5PL+tJR64zQZW1MHj/2bu3ZMBaeBH3Ephojqu/TVDo3m
-         /1sauGEEAXGIdxs+pDJk4OzZ35SpuqqVUvpSGKfJKVreIku/A8IK7XePVc8/UF0JBM5/
-         oObiIcLCZUDbqFci1/n/i3Wg7agZMH+MHwiEks7oIEZenio2XPHnHpiAjBFfvZFgy0GT
-         txpQ==
-X-Gm-Message-State: AJIora81lXJb2w50K3ll/B202pFHjITYEg+6g3daxYsJW9nSnOlTvtpk
-        +bnGm/u6nLROGmvyDmmcbgo=
-X-Google-Smtp-Source: AGRyM1u3tOjqoga5WV9J/xKER/XhQHozhuDCpetK1VnYFeOj16wuVfHG/AN0b6NcbK+vaJjtwneizQ==
-X-Received: by 2002:a05:6402:1914:b0:43a:d548:8adc with SMTP id e20-20020a056402191400b0043ad5488adcmr23112758edz.214.1658927779926;
-        Wed, 27 Jul 2022 06:16:19 -0700 (PDT)
+        bh=Vj2LN4XjfRsXRFnZMqSEcbIyXXU8xmtwUttCD6kAXxY=;
+        b=7u3i9z4wj9FG66Z0YZCAoMoSrio1x7MtH3ZVAMaoRcv2EPuxIhSXthz3/4zkhPvf4+
+         79PAVNET6yYw4MDFl8pCPjJJpgNhOAD13pEer0n2KH6u2b5yVQhUX7LUyzsUchvXhmqX
+         IcRLBXA6L+x9C3aLqjTa1rTaZfEBQg75//FEtH8rF3SZfWbUPPSeQ316eyPNsj5mC+7t
+         hAadnHPoyVpkcQJ1dYJg8Za4fw+uaBnXDXwj+DBd2EIlefhD4d+U2HN+Tkzt6Uiu3s1d
+         iFtvl7X+NcPzmWND41FzAeF9Pcfx4qMEBM5sA3eh+Kmd/5L0YNRouQZ0Us50/1Ag3mPw
+         LUXw==
+X-Gm-Message-State: AJIora+3ISPd0DC6K6kD4XyAZo6jWabcJBmU3/PcVpdeGBaRFLrDzpgO
+        JXonHWXV1mjC6W+HTH05y8o=
+X-Google-Smtp-Source: AGRyM1smRBREMExG/t/+rSz8lLFAZH6N4BXeOwq0BEkIIiuFrZVPPHQQeV6ZdJtYMUZ1Aox16zLP9w==
+X-Received: by 2002:a17:907:d8d:b0:72f:75:9bbd with SMTP id go13-20020a1709070d8d00b0072f00759bbdmr18076377ejc.148.1658929771538;
+        Wed, 27 Jul 2022 06:49:31 -0700 (PDT)
 Received: from [10.176.234.249] ([137.201.254.41])
-        by smtp.googlemail.com with ESMTPSA id kv11-20020a17090778cb00b0072eddc468absm7623776ejc.134.2022.07.27.06.16.18
+        by smtp.googlemail.com with ESMTPSA id j15-20020aa7de8f000000b0043be16f5f4csm6799122edv.52.2022.07.27.06.49.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 27 Jul 2022 06:16:19 -0700 (PDT)
-Message-ID: <dfcd22985fde6fe8a8a00bfb2a9c8ee43f92e34b.camel@gmail.com>
-Subject: Re: [PATCH v4 1/7] scsi: ufs: wb: Move ufshcd_is_wb_allowed() to
- callee
+        Wed, 27 Jul 2022 06:49:30 -0700 (PDT)
+Message-ID: <94bcf58b268b1fb468f5be20d9b93bf8e5d3ce57.camel@gmail.com>
+Subject: Re: [PATCH v4 2/7] scsi: ufs: wb: Change wb_enabled condition test
 From:   Bean Huo <huobean@gmail.com>
 To:     j-young.choi@samsung.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
         "avri.altman@wdc.com" <avri.altman@wdc.com>,
@@ -60,11 +59,12 @@ To:     j-young.choi@samsung.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
         "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date:   Wed, 27 Jul 2022 15:16:18 +0200
-In-Reply-To: <20220727070410epcms2p5206785e4d960b32dcbb6729710dab535@epcms2p5>
-References: <20220727065904epcms2p60a7a56101785ddefa55c82b3cc25116d@epcms2p6>
+Date:   Wed, 27 Jul 2022 15:49:29 +0200
+In-Reply-To: <20220727070522epcms2p5ad2dd21b471acee963dd58b37d35e11f@epcms2p5>
+References: <20220727070410epcms2p5206785e4d960b32dcbb6729710dab535@epcms2p5>
+         <20220727065904epcms2p60a7a56101785ddefa55c82b3cc25116d@epcms2p6>
          <CGME20220727065904epcms2p60a7a56101785ddefa55c82b3cc25116d@epcms2p5>
-         <20220727070410epcms2p5206785e4d960b32dcbb6729710dab535@epcms2p5>
+         <20220727070522epcms2p5ad2dd21b471acee963dd58b37d35e11f@epcms2p5>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.44.1-0ubuntu1 
@@ -73,33 +73,12 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2022-07-27 at 16:04 +0900, Jinyoung CHOI wrote:
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 8f11f118c30e..a3bdf9986511 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -5722,6 +5722,9 @@ static int __ufshcd_wb_toggle(struct ufs_hba
-> *hba, bool set, enum flag_idn idn)
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0enum query_opcode opcode =
-=3D set ? UPIU_QUERY_OPCODE_SET_FLAG :
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 UPIU_QUERY_OPCODE=
-_CLEAR_FLAG;
-> =C2=A0
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (!ufshcd_is_wb_allowed(hba)=
-)
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0return -EPERM;
-> +
-Hi J-young,
+On Wed, 2022-07-27 at 16:05 +0900, Jinyoung CHOI wrote:
+> Changed to improve readability.
+> As implemented in ufshcd_wb_togle_flush(), the conditional test is
+> modified in the same way.
+>=20
+> Reviewed-by: Avri Altman <avri.altman@wdc.com>
+> Signed-off-by: Jinyoung Choi <j-young.choi@samsung.com>
 
-here you should change its return, Otherwise, there will be an fake
-error printing:
-
-        dev_err(hba->dev, "%s Write Booster %s failed %d\n",         =20
-                        __func__, enable ? "enable" : "disable", ret);
-
-
-Kind regards,
-Bean
+Reviewed-by: Bean Huo <beanhuo@micron.com>
