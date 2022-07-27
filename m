@@ -2,71 +2,79 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F52BC04A68
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jul 2022 18:55:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98D88C3F6B0
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jul 2022 18:56:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233850AbiG0Szt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Jul 2022 14:55:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38814 "EHLO
+        id S233710AbiG0S4P (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Jul 2022 14:56:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39508 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233710AbiG0Szd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2022 14:55:33 -0400
-Received: from mail-pg1-f179.google.com (mail-pg1-f179.google.com [209.85.215.179])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 672A38053A;
-        Wed, 27 Jul 2022 10:54:52 -0700 (PDT)
-Received: by mail-pg1-f179.google.com with SMTP id 72so16554161pge.0;
-        Wed, 27 Jul 2022 10:54:52 -0700 (PDT)
+        with ESMTP id S232455AbiG0Sz4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2022 14:55:56 -0400
+Received: from mail-pg1-f169.google.com (mail-pg1-f169.google.com [209.85.215.169])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1958127B27;
+        Wed, 27 Jul 2022 10:55:56 -0700 (PDT)
+Received: by mail-pg1-f169.google.com with SMTP id bf13so16495252pgb.11;
+        Wed, 27 Jul 2022 10:55:56 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
          :content-language:to:cc:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=iM28l70GATLFve15qcYA6iaGMWXkiPg+C+0XFnQgM0I=;
-        b=prLxW6GwxBQPFpqB2seyxhJ/L/kOnXnZUY2V4bx5IYuf9WxwQPhgucfaaXVa8dV2kN
-         73d1B9Gk8hPgKAwE2FqkMr/JSU221ZO53ra5R6h/j3iPvicM0VFXbn7pJnvEN0qfYqK0
-         rLxdjQ555zkZ67He8gSkmSYjPJ4F5bztMx3A4rbOwHw7JfAV+Q+JrzfgdLNIxSMzctvh
-         ml6gkSWm+YGa7QZH1uGz0WN/efqXrpy8A82PhiSNdSFxwCZMFt4Z99QSHDVg6YFsa5dD
-         XuqJIJ9csjU7/vr8NOnPvFU8Nl7dzKlejGTEmaFOqFlw9/b6W3awDVSHlF5XrKtqVGOV
-         SUtg==
-X-Gm-Message-State: AJIora8vbluhEu293EAlP2hfHMoPbQCMTz/86Jsa6LXwzMQjS/SUEj7v
-        gflXL5ANsrmtHv/bQ5U+VgU=
-X-Google-Smtp-Source: AGRyM1syk/n8dXBSw+6bXNt1/MGXukbIrHHFSAc89gH3H3WBNC4VJg/AlmxyERIjInCDCpkaKnOmIQ==
-X-Received: by 2002:a05:6a00:16ca:b0:52b:cc59:9488 with SMTP id l10-20020a056a0016ca00b0052bcc599488mr22849005pfc.0.1658944491439;
-        Wed, 27 Jul 2022 10:54:51 -0700 (PDT)
+        bh=7qxn+JNDvcIG+lyVki0RgRQJyk3Tl2RlS02Rp/s2JCk=;
+        b=K8JHfvN1G1QdSYLrl6zoAGa+extXSsGu2FKZfLze/LAUbCYFWdrUoIp1/6Xb3BJmKk
+         IJdqzVeTzE1v+S2l2DiQrqL07lZdwjnS+N7ZwPkFBsVwe+Nw40kzwowZeLiISkakyvOM
+         LdHjqrJMcfDsMBJIxcHUaIM0Uto/pgHUisL5Uu47ewua4qBAhpNxq9M7puP1erpOcW+3
+         pfUhc0/ZZecn2dnDckWKTJmIYifvY74LWroQjAcFSwmuFpB+qOhess1jrR4aucWxWHkF
+         ZX0Of0FO3OFxAVIQ+DYQPGvfaC4tdqLuLdHcekDS1tg9NTJkLmqmPhWjFSLzGb+TQcFw
+         2/Sw==
+X-Gm-Message-State: AJIora8y1tefT7wgAFugzd9T5EswFf8Nrm2LfBFYCJqebIxiB35nYP4j
+        gRTT2d2dgSTxmK5RPDvLcHU=
+X-Google-Smtp-Source: AGRyM1tO2NHQPOkTbEkiTtiX+GPr//1Bgn2ydfjx67gqokU31MXnafLgfUyNg7YxYZECA4U2oJYiCQ==
+X-Received: by 2002:a63:c5:0:b0:40d:d290:24ef with SMTP id 188-20020a6300c5000000b0040dd29024efmr16467841pga.141.1658944555427;
+        Wed, 27 Jul 2022 10:55:55 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:a84e:2ec1:1b57:b033? ([2620:15c:211:201:a84e:2ec1:1b57:b033])
-        by smtp.gmail.com with ESMTPSA id c3-20020a170903234300b0016be5f24aaesm11961037plh.163.2022.07.27.10.54.49
+        by smtp.gmail.com with ESMTPSA id mj1-20020a17090b368100b001f310564e8bsm1480908pjb.30.2022.07.27.10.55.53
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 27 Jul 2022 10:54:50 -0700 (PDT)
-Message-ID: <3be80a61-3002-eba1-53e2-928ffa740902@acm.org>
-Date:   Wed, 27 Jul 2022 10:54:48 -0700
+        Wed, 27 Jul 2022 10:55:54 -0700 (PDT)
+Message-ID: <b8ecd9ce-35b7-276d-b028-2d8a4a900945@acm.org>
+Date:   Wed, 27 Jul 2022 10:55:51 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.11.0
-Subject: Re: [PATCH] scsi: ufs: introduce dev_cmd_notify callback
+Subject: Re: [PATCH v2 1/5] scsi: ufs: ufs-mediatek: Remove redundant header
+ files
 Content-Language: en-US
-To:     Avri Altman <Avri.Altman@wdc.com>,
-        Gyunghoon Kwon <goodjob.kwon@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc:     "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <CGME20220727051046epcas2p15481688ac3b7917bed8d06ebfb0a4184@epcas2p1.samsung.com>
- <20220727050954.118743-1-goodjob.kwon@samsung.com>
- <DM6PR04MB65752988E971F9953913C38DFC979@DM6PR04MB6575.namprd04.prod.outlook.com>
+To:     Stanley Chu <stanley.chu@mediatek.com>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, martin.petersen@oracle.com,
+        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com
+Cc:     peter.wang@mediatek.com, chun-hung.wu@mediatek.com,
+        alice.chao@mediatek.com, powen.kao@mediatek.com,
+        mason.zhang@mediatek.com, qilin.tan@mediatek.com,
+        lin.gui@mediatek.com, eddie.huang@mediatek.com,
+        tun-yu.yu@mediatek.com, cc.chou@mediatek.com,
+        chaotian.jing@mediatek.com, jiajie.hao@mediatek.com
+References: <20220727034454.31892-1-stanley.chu@mediatek.com>
+ <20220727034454.31892-2-stanley.chu@mediatek.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <DM6PR04MB65752988E971F9953913C38DFC979@DM6PR04MB6575.namprd04.prod.outlook.com>
+In-Reply-To: <20220727034454.31892-2-stanley.chu@mediatek.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/26/22 22:16, Avri Altman wrote:
->> Some UFS host controller may need to synchronize dev command among UFS
->> host controllers.
->
-> You need to include at least one implementation of this vop,
-> Otherwise, its just a piece of dead code.
+On 7/26/22 20:44, Stanley Chu wrote:
+> Remove redundant header files like
+> <linux/sched/clock.h>
+> 
+> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+> Change-Id: I7796a23a5fdc767a4d00475b399844ceeaded0a8
 
-+1
+Please leave out Change-Id tags from patches that are sent upstream.
+
+Otherwise this patch looks good to me.
+
+Thanks,
+
+Bart.
