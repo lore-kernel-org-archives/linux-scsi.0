@@ -2,156 +2,170 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01246C3F6B0
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jul 2022 07:36:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA72FC04A68
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jul 2022 08:29:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230348AbiG0Hgl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Jul 2022 03:36:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39854 "EHLO
+        id S229767AbiG0I32 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Jul 2022 04:29:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46662 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229680AbiG0Hgk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2022 03:36:40 -0400
-Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E37B521275;
-        Wed, 27 Jul 2022 00:36:38 -0700 (PDT)
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 7C92F400F6;
-        Wed, 27 Jul 2022 07:36:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        in-reply-to:content-disposition:content-type:content-type
-        :mime-version:references:message-id:subject:subject:from:from
-        :date:date:received:received:received:received; s=mta-01; t=
-        1658907396; x=1660721797; bh=kgUS0xFxV00WTpEvdaLiL6E4GU4f69zp39u
-        YRxTrSU4=; b=P5eWLlLkY+1TYmNHqH/XJlmFKlnj8AaZZ8rd4AVIHblDo8+Ae/D
-        OR6JwmP28xEBQzow41QYXOgv97Gy8nh5RrsK98v65Viuzmy55aMUc0rAJCxlggtI
-        Eg0k7ZT0YIBIJVYGyef65aFzyeRvQfz6QcDIXY+ubVUOMGrRrCGv/g6c=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id tBHjJVJ72TVi; Wed, 27 Jul 2022 10:36:36 +0300 (MSK)
-Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id A7492412C5;
-        Wed, 27 Jul 2022 10:36:25 +0300 (MSK)
-Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
- T-EXCH-02.corp.yadro.com (172.17.10.102) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
- 15.1.669.32; Wed, 27 Jul 2022 10:36:25 +0300
-Received: from yadro.com (10.178.114.42) by T-EXCH-08.corp.yadro.com
- (172.17.11.58) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1118.9; Wed, 27 Jul
- 2022 10:36:25 +0300
-Date:   Wed, 27 Jul 2022 10:36:25 +0300
-From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
-To:     Mike Christie <michael.christie@oracle.com>
-CC:     Martin Petersen <martin.petersen@oracle.com>,
-        <target-devel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux@yadro.com>
-Subject: Re: [PATCH 2/2] target: core: de-RCU of se_lun and se_lun acl
-Message-ID: <20220727073625.GC31648@yadro.com>
-References: <20220720112852.11440-1-d.bogdanov@yadro.com>
- <20220720112852.11440-3-d.bogdanov@yadro.com>
- <11b8cdf2-a41b-881f-0797-d2bfa4c45b8f@oracle.com>
+        with ESMTP id S230388AbiG0I3S (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2022 04:29:18 -0400
+Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F35F459A2;
+        Wed, 27 Jul 2022 01:29:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1658910557; x=1690446557;
+  h=from:to:cc:subject:date:message-id:mime-version;
+  bh=iTamDCOH/9WmaX6NdcA+gYUfOkf4snb7Ud8mOkqbfFk=;
+  b=AxR2nJRfG9LnfZr1d6aLNA/Yb6LCnpT8r+670zpA+f+aPRWtpf5F58NS
+   HCREXg0xP2pTEgReG96Fk4Xp/9/NE5hlyrXz9OtDj0Z52wrxPiQXzOoBT
+   UbSdbOo5ni4uS2FEMNO5JwvXdFHgCkHi929TQd9e5tofpG3l+wJyIVGNE
+   0=;
+Received: from unknown (HELO ironmsg05-sd.qualcomm.com) ([10.53.140.145])
+  by alexa-out-sd-01.qualcomm.com with ESMTP; 27 Jul 2022 01:29:16 -0700
+X-QCInternal: smtphost
+Received: from unknown (HELO nasanex01a.na.qualcomm.com) ([10.52.223.231])
+  by ironmsg05-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jul 2022 01:29:16 -0700
+Received: from hu-cchinnad-hyd.qualcomm.com (10.80.80.8) by
+ nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Wed, 27 Jul 2022 01:29:14 -0700
+From:   Chetan C R <quic_cchinnad@quicinc.com>
+To:     <jejb@linux.ibm.com>
+CC:     <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        Chetan C R <quic_cchinnad@quicinc.com>
+Subject: [PATCH V1] scsi: ufs: Get boot device storage type from command line
+Date:   Wed, 27 Jul 2022 13:58:55 +0530
+Message-ID: <1658910535-31802-1-git-send-email-quic_cchinnad@quicinc.com>
+X-Mailer: git-send-email 2.7.4
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <11b8cdf2-a41b-881f-0797-d2bfa4c45b8f@oracle.com>
-X-Originating-IP: [10.178.114.42]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-08.corp.yadro.com (172.17.11.58)
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Jul 26, 2022 at 05:38:52PM -0500, Mike Christie wrote:
-> 
-> On 7/20/22 6:28 AM, Dmitry Bogdanov wrote:
-> > @@ -1437,34 +1435,26 @@ static void core_scsi3_nodeacl_undepend_item(struct se_node_acl *nacl)
-> >
-> >  static int core_scsi3_lunacl_depend_item(struct se_dev_entry *se_deve)
-> >  {
-> > -     struct se_lun_acl *lun_acl;
-> > -
-> >       /*
-> >        * For nacl->dynamic_node_acl=1
-> >        */
-> > -     lun_acl = rcu_dereference_check(se_deve->se_lun_acl,
-> > -                             kref_read(&se_deve->pr_kref) != 0);
-> > -     if (!lun_acl)
-> > +     if (!se_deve->se_lun_acl)
-> >               return 0;
-> 
-> Will se_lun_acl and se_lun ever be NULL now? Should this maybe be a
-> WARN_ON or return a -EXYZ error code like when target_depend_item fails
-> at the bottom of the function?
-After the first patch from the patchset deve->se_lun_acl is always NULL
-for deve on a dynamyc ACL, and always NOT NULL for deve on a configured
-ACL, and deve->se_lun is never NULL.
+Get the boot device storage type by reading it from
+kernel command line arguments and export the same
+information to ufs modules.
 
-> 
-> I don't think it's a problem with your patch. I think we had issues
-> before it. If they were NULL then I think we can hit issues like:
-> 
-> 1. __core_scsi3_alloc_registration calls core_scsi3_lunacl_depend_item.
-> If se_lun_acl is NULL and we return 0.
-> 
-> 2. __core_scsi3_alloc_registration and other callers treat 0 as success.
-> 
-> 3. It then does:
-> 
-> dest_lun = deve_tmp->se_lun;
-> 
-> pr_reg_atp = __core_scsi3_do_alloc_registration(dev,
->                                 nacl_tmp, dest_lun, deve_tmp,
->  
-> 4. So if se_lun is also NULL then for __core_scsi3_do_alloc_registration's
-> args we have:
-> 
-> dest_deve, as non-NULL
-> lun as NULL
-> 
-> 5. __core_scsi3_do_alloc_registration will then do a
-> 
->         pr_reg->pr_aptpl_target_lun = lun->unpacked_lun;
->         pr_reg->tg_pt_sep_rtpi = lun->lun_rtpi;
-> 
-> and since lun is NULL we will crash.
+Signed-off-by: Chetan C R <quic_cchinnad@quicinc.com>
+---
+ drivers/ufs/Kconfig            |  1 +
+ drivers/ufs/host/Kconfig       |  9 +++++++
+ drivers/ufs/host/Makefile      |  1 +
+ drivers/ufs/host/ufs-cmdline.c | 54 ++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 65 insertions(+)
+ create mode 100644 drivers/ufs/host/ufs-cmdline.c
 
-I think it was not possible even before my patches becasue deve->se_lun
-NULLing was after waiting for deve->pr_kref == 0, which is incremented
-in PR OUT handling under spinlock for lun->lun_deve_list. There
-everything is safe.
+diff --git a/drivers/ufs/Kconfig b/drivers/ufs/Kconfig
+index 90226f7..9d2f84e 100644
+--- a/drivers/ufs/Kconfig
++++ b/drivers/ufs/Kconfig
+@@ -9,6 +9,7 @@ menuconfig SCSI_UFSHCD
+ 	select PM_DEVFREQ
+ 	select DEVFREQ_GOV_SIMPLE_ONDEMAND
+ 	select NLS
++	select UFS_QCOM_CMDLINE if ARCH_QCOM
+ 	help
+ 	  Enables support for UFS (Universal Flash Storage) host controllers.
+ 	  A UFS host controller is an electronic component that is able to
+diff --git a/drivers/ufs/host/Kconfig b/drivers/ufs/host/Kconfig
+index 8259022..6197070 100644
+--- a/drivers/ufs/host/Kconfig
++++ b/drivers/ufs/host/Kconfig
+@@ -68,6 +68,15 @@ config SCSI_UFS_QCOM
+ 	  Select this if you have UFS controller on QCOM chipset.
+ 	  If unsure, say N.
+ 
++config UFS_QCOM_CMDLINE
++	bool "Get the boot device type from kernel command line for Qcom devices"
++	help
++	  This selects the support of getting the boot device storage type
++	  from kernel command line arguments and export this information
++	  to the Qcom UFS controller platform driver.
++
++	  If unsure, say N.
++
+ config SCSI_UFS_MEDIATEK
+ 	tristate "Mediatek specific hooks to UFS controller platform driver"
+ 	depends on SCSI_UFSHCD_PLATFORM && ARCH_MEDIATEK
+diff --git a/drivers/ufs/host/Makefile b/drivers/ufs/host/Makefile
+index e4be542..a9463f1 100644
+--- a/drivers/ufs/host/Makefile
++++ b/drivers/ufs/host/Makefile
+@@ -6,6 +6,7 @@ obj-$(CONFIG_SCSI_UFS_CDNS_PLATFORM) += cdns-pltfrm.o
+ obj-$(CONFIG_SCSI_UFS_QCOM) += ufs_qcom.o
+ ufs_qcom-y += ufs-qcom.o
+ ufs_qcom-$(CONFIG_SCSI_UFS_CRYPTO) += ufs-qcom-ice.o
++obj-$(CONFIG_UFS_QCOM_CMDLINE)          += ufs-cmdline.o
+ obj-$(CONFIG_SCSI_UFS_EXYNOS) += ufs-exynos.o
+ obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
+ obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
+diff --git a/drivers/ufs/host/ufs-cmdline.c b/drivers/ufs/host/ufs-cmdline.c
+new file mode 100644
+index 0000000..408755c
+--- /dev/null
++++ b/drivers/ufs/host/ufs-cmdline.c
+@@ -0,0 +1,54 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (c) 2022, The Linux Foundation. All rights reserved.
++ */
++
++#include <linux/init.h>
++#include <linux/printk.h>
++#include <linux/string.h>
++
++#ifdef CONFIG_BOOT_CONFIG
++#include <linux/bootconfig.h>
++#endif
++
++#define ANDROID_BOOT_DEV_MAX_V3    30
++
++static char android_boot_dev_v3[ANDROID_BOOT_DEV_MAX_V3];
++static const char *android_boot_dev_v4;
++
++const char *get_storage_boot_device(void)
++{
++	if (android_boot_dev_v4 && strlen(android_boot_dev_v4))
++		return android_boot_dev_v4;
++
++	else if (strlen(android_boot_dev_v3))
++		return android_boot_dev_v3;
++
++	pr_err("Not able to get Bootconfig or Kernel command line param\n");
++	return NULL;
++};
++EXPORT_SYMBOL_GPL(get_storage_boot_device);
++
++/* boot image header version 3 android boot device type */
++static int __init get_android_boot_dev_v3(char *str)
++{
++	strscpy(android_boot_dev_v3, str, ANDROID_BOOT_DEV_MAX_V3);
++	return 1;
++}
++__setup("androidboot.bootdevice=", get_android_boot_dev_v3);
++
++#ifdef CONFIG_BOOT_CONFIG
++/* boot image header version 4 android boot device type */
++static int __init get_android_boot_dev_v4(void)
++{
++	struct xbc_node *vnode = NULL;
++
++	android_boot_dev_v4 = xbc_find_value("androidboot.bootdevice", &vnode);
++
++	if (vnode && xbc_node_is_array(vnode))
++		xbc_array_for_each_value(vnode, android_boot_dev_v4);
++
++	return 0;
++}
++fs_initcall(get_android_boot_dev_v4);
++#endif
+-- 
+2.7.4
 
-> 
-> 
-> 
-> >
-> > -     return target_depend_item(&lun_acl->se_lun_group.cg_item);
-> > +     return target_depend_item(&se_deve->se_lun_acl->se_lun_group.cg_item);
-> >  }
-> >
-> >  static void core_scsi3_lunacl_undepend_item(struct se_dev_entry *se_deve)
-> >  {
-> > -     struct se_lun_acl *lun_acl;
-> > -
-> > -     /*
-> > +/*
-> 
-> Just drop the misformatting bit above.
-oops, will drop it.
-
-> >        * For nacl->dynamic_node_acl=1
-> >        */
-> > -     lun_acl = rcu_dereference_check(se_deve->se_lun_acl,
-> > -                             kref_read(&se_deve->pr_kref) != 0);
-> > -     if (!lun_acl) {
-> > +     if (!se_deve->se_lun_acl) {
-> >               kref_put(&se_deve->pr_kref, target_pr_kref_release);
-> >               return;
-> >       }
-> >
-> > -     target_undepend_item(&lun_acl->se_lun_group.cg_item);
-> > +     target_undepend_item(&se_deve->se_lun_acl->se_lun_group.cg_item);
-> >       kref_put(&se_deve->pr_kref, target_pr_kref_release);
-> >  }
