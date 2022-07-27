@@ -2,89 +2,71 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4938C19F2B
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jul 2022 18:53:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F52BC04A68
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jul 2022 18:55:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237058AbiG0Sxx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Jul 2022 14:53:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37044 "EHLO
+        id S233850AbiG0Szt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Jul 2022 14:55:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38814 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235595AbiG0Sxi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2022 14:53:38 -0400
-Received: from mail-ej1-x62f.google.com (mail-ej1-x62f.google.com [IPv6:2a00:1450:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 855DB43E49;
-        Wed, 27 Jul 2022 10:50:58 -0700 (PDT)
-Received: by mail-ej1-x62f.google.com with SMTP id l23so32904150ejr.5;
-        Wed, 27 Jul 2022 10:50:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:subject:from:to:date:in-reply-to:references
-         :content-transfer-encoding:user-agent:mime-version;
-        bh=WSx0gfRjsg3xRpvKbX9jGCtpeGwAnxtFBDRN8ACR4hA=;
-        b=DTWME+8U9y+rzGdF2Calq/d9Su/47Jgtr3oEPP+ZwPm4+hS9p7rDOKhluy5AUOtISF
-         f1zB8IDe3pO/jxHnN4GSEnY+Z0OXwbvNLMKIhGydI9w2s3tzeLgpSNCfKlXR8N6UUunM
-         yDa/Sluo0kf9XmvAUx3kmV4OX39gkEdSekfNI1TotOwFSLa8HkaY9bfkk7/FiMDxBaB8
-         Z9LJnZV00l+MoO08hlBABqZY4CFchbnvujIETUw0Zp7BeTqAQy6inZH0Oi2ZB1uObBC0
-         wyWeje4wp3SR0MHPh+NAv8Oi+8qa/zUUnBw9tKtuLMvXDEY6LkTkTt3x18nSEx8uSBzK
-         WY8Q==
+        with ESMTP id S233710AbiG0Szd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2022 14:55:33 -0400
+Received: from mail-pg1-f179.google.com (mail-pg1-f179.google.com [209.85.215.179])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 672A38053A;
+        Wed, 27 Jul 2022 10:54:52 -0700 (PDT)
+Received: by mail-pg1-f179.google.com with SMTP id 72so16554161pge.0;
+        Wed, 27 Jul 2022 10:54:52 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:subject:from:to:date:in-reply-to
-         :references:content-transfer-encoding:user-agent:mime-version;
-        bh=WSx0gfRjsg3xRpvKbX9jGCtpeGwAnxtFBDRN8ACR4hA=;
-        b=3AwJzXXXFve23To1qkCpJn21nHZMROPXmb6twbJNtjDxZwrTCRQaeWDqMOXJSfi9b8
-         MrHfhmwHTzUAAxWbmkdB/Joto4DRPgqe7lyYjDLWu6gNdxvtLWLyi8mAFQh8shkX8Hi2
-         TFUbbk69lXOIbSe7FL3CXy3qAv/zyRnTu4voyg3pZH5QEC2JpKUHjB9loTeNZfW6mDQl
-         ItibGx1oMaeQ8kO2xEbWjualFBcUq/LeIZoXen6bBKnI4XBaOF4xmSvRSiypai7UF/u8
-         ssMf1bRPO32n6t3XuDIOCzLvrv7eJ23HVBsmNQPOXwhcTbl0w/nWCkdVQSwxlRu/9ZiQ
-         G5Zw==
-X-Gm-Message-State: AJIora/KqGc9uk5ZKmMo73rTGhGrjKvTeBvMzDUICrdfwf4g6Ofx+NOG
-        SomI7Le9PmshRB6e505NXsk=
-X-Google-Smtp-Source: AGRyM1trwwVk6ZAK+kkjUNTanLpjpJhGYZ6RNdvzirvqiG8G6bsQwQSCUlT2bT6P9TLqRZENrxdg4g==
-X-Received: by 2002:a17:907:7208:b0:72f:368f:2eb4 with SMTP id dr8-20020a170907720800b0072f368f2eb4mr18559262ejc.457.1658944257035;
-        Wed, 27 Jul 2022 10:50:57 -0700 (PDT)
-Received: from [10.176.234.249] ([137.201.254.41])
-        by smtp.googlemail.com with ESMTPSA id ga2-20020a170906b84200b00724261b592esm7871509ejb.186.2022.07.27.10.50.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 27 Jul 2022 10:50:56 -0700 (PDT)
-Message-ID: <bf6b650792bb2f24e78d751c68201e1f305400da.camel@gmail.com>
-Subject: Re: [PATCH v4 5/7] scsi: ufs: wb: Add
- ufshcd_is_wb_buf_flush_allowed()
-From:   Bean Huo <huobean@gmail.com>
-To:     j-young.choi@samsung.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=iM28l70GATLFve15qcYA6iaGMWXkiPg+C+0XFnQgM0I=;
+        b=prLxW6GwxBQPFpqB2seyxhJ/L/kOnXnZUY2V4bx5IYuf9WxwQPhgucfaaXVa8dV2kN
+         73d1B9Gk8hPgKAwE2FqkMr/JSU221ZO53ra5R6h/j3iPvicM0VFXbn7pJnvEN0qfYqK0
+         rLxdjQ555zkZ67He8gSkmSYjPJ4F5bztMx3A4rbOwHw7JfAV+Q+JrzfgdLNIxSMzctvh
+         ml6gkSWm+YGa7QZH1uGz0WN/efqXrpy8A82PhiSNdSFxwCZMFt4Z99QSHDVg6YFsa5dD
+         XuqJIJ9csjU7/vr8NOnPvFU8Nl7dzKlejGTEmaFOqFlw9/b6W3awDVSHlF5XrKtqVGOV
+         SUtg==
+X-Gm-Message-State: AJIora8vbluhEu293EAlP2hfHMoPbQCMTz/86Jsa6LXwzMQjS/SUEj7v
+        gflXL5ANsrmtHv/bQ5U+VgU=
+X-Google-Smtp-Source: AGRyM1syk/n8dXBSw+6bXNt1/MGXukbIrHHFSAc89gH3H3WBNC4VJg/AlmxyERIjInCDCpkaKnOmIQ==
+X-Received: by 2002:a05:6a00:16ca:b0:52b:cc59:9488 with SMTP id l10-20020a056a0016ca00b0052bcc599488mr22849005pfc.0.1658944491439;
+        Wed, 27 Jul 2022 10:54:51 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:a84e:2ec1:1b57:b033? ([2620:15c:211:201:a84e:2ec1:1b57:b033])
+        by smtp.gmail.com with ESMTPSA id c3-20020a170903234300b0016be5f24aaesm11961037plh.163.2022.07.27.10.54.49
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 27 Jul 2022 10:54:50 -0700 (PDT)
+Message-ID: <3be80a61-3002-eba1-53e2-928ffa740902@acm.org>
+Date:   Wed, 27 Jul 2022 10:54:48 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+Subject: Re: [PATCH] scsi: ufs: introduce dev_cmd_notify callback
+Content-Language: en-US
+To:     Avri Altman <Avri.Altman@wdc.com>,
+        Gyunghoon Kwon <goodjob.kwon@samsung.com>,
         "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc:     "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date:   Wed, 27 Jul 2022 19:50:55 +0200
-In-Reply-To: <20220727071024epcms2p70366b54ac8eca3758b7cf4336e0d457c@epcms2p7>
-References: <20220727070841epcms2p5e212d617dd0f985555fa052f099013f0@epcms2p5>
-         <20220727070724epcms2p8e449d0c89b52f03a9d3dc254df0ec547@epcms2p8>
-         <20220727070410epcms2p5206785e4d960b32dcbb6729710dab535@epcms2p5>
-         <20220727065904epcms2p60a7a56101785ddefa55c82b3cc25116d@epcms2p6>
-         <CGME20220727065904epcms2p60a7a56101785ddefa55c82b3cc25116d@epcms2p7>
-         <20220727071024epcms2p70366b54ac8eca3758b7cf4336e0d457c@epcms2p7>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.1-0ubuntu1 
-MIME-Version: 1.0
+References: <CGME20220727051046epcas2p15481688ac3b7917bed8d06ebfb0a4184@epcas2p1.samsung.com>
+ <20220727050954.118743-1-goodjob.kwon@samsung.com>
+ <DM6PR04MB65752988E971F9953913C38DFC979@DM6PR04MB6575.namprd04.prod.outlook.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <DM6PR04MB65752988E971F9953913C38DFC979@DM6PR04MB6575.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2022-07-27 at 16:10 +0900, Jinyoung CHOI wrote:
-> The explicit flushing should check the following.
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0- UFSHCD_CAP_WB_EN
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0- UFSHCI_QUIRK_SKIP_MANUA=
-L_WB_FLUSH_CTRL
->=20
-> Changed to improve readability.
->=20
-> Reviewed-by: Avri Altman <avri.altman@wdc.com>
-> Signed-off-by: Jinyoung Choi <j-young.choi@samsung.com>
-Acked-by: Bean Huo <beanhuo@micron.com>
+On 7/26/22 22:16, Avri Altman wrote:
+>> Some UFS host controller may need to synchronize dev command among UFS
+>> host controllers.
+>
+> You need to include at least one implementation of this vop,
+> Otherwise, its just a piece of dead code.
 
++1
