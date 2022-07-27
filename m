@@ -2,99 +2,152 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68945C19F2C
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jul 2022 03:16:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC105C19F2B
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jul 2022 03:21:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240339AbiG0DQw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Jul 2022 23:16:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46998 "EHLO
+        id S240292AbiG0DVU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Jul 2022 23:21:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51074 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240334AbiG0DQX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jul 2022 23:16:23 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B56C03DBC0;
-        Tue, 26 Jul 2022 20:16:22 -0700 (PDT)
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 26R2phCC029985;
-        Wed, 27 Jul 2022 03:16:04 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2022-7-12;
- bh=J2vBu1m4zTDwawbCKsSD5AhIF5f7bJkTK1Ll+UnC+HY=;
- b=RUcztjtvY/ykesoOqjVdG4iyE/6+UStvTWw66FgfulNYdS1LOamC5Acow0D2gPIgzmz4
- AL5uLFIgh/111E/lHojNbYCYjKY4FOZr8x3xUNKbVI+OULVoRNlFx0Zruix/pnbA15l0
- tq/2fYhEq5law2ghx6BVmga6aromdWvdPBCSXiQb+A7u6MFwN1mKIxmty86PdZm1UseS
- 5gmr5IrMXr/XoUqWAp9NaFwd+Et2cluzn1HkmxFbInzCDgLslza9UwZUSzzvQHKaFifG
- /5aVQ8f9FlyPCZyrhQuatnLIwyNH8vPkCOFekpBpvVhI8rK2giErvY5Z9XTifj9+o15b 6w== 
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3hg9hsrbrx-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 27 Jul 2022 03:16:04 +0000
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 26R0XEvs034456;
-        Wed, 27 Jul 2022 03:16:03 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3hh633p3w2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 27 Jul 2022 03:16:02 +0000
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 26R3E0gw008228;
-        Wed, 27 Jul 2022 03:16:02 GMT
-Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3hh633p3uc-3;
-        Wed, 27 Jul 2022 03:16:02 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Adrian Hunter <adrian.hunter@intel.com>,
-        Daniil Lunev <dlunev@chromium.org>,
-        Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Jonathan Corbet <corbet@lwn.net>, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Randy Dunlap <rdunlap@infradead.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: Re: [PATCH] scsi: ufs: ufshcd: Read device property for ref clock
-Date:   Tue, 26 Jul 2022 23:15:56 -0400
-Message-Id: <165889172881.804.1367014483116861516.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.36.1
-In-Reply-To: <20220715210230.1.I365d113d275117dee8fd055ce4fc7e6aebd0bce9@changeid>
-References: <20220715210230.1.I365d113d275117dee8fd055ce4fc7e6aebd0bce9@changeid>
+        with ESMTP id S240280AbiG0DVS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jul 2022 23:21:18 -0400
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5FBBD248E8;
+        Tue, 26 Jul 2022 20:21:17 -0700 (PDT)
+X-UUID: 1429017a8fbf4357885e2b24aa255190-20220727
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.8,REQID:40db339d-f865-4c48-9ede-34f63baad5d3,OB:0,LO
+        B:0,IP:0,URL:5,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,RULE:Release_Ham,ACT
+        ION:release,TS:0
+X-CID-META: VersionHash:0f94e32,CLOUDID:3a6e20ee-db04-4499-9fdf-04ef44b9468c,C
+        OID:IGNORED,Recheck:0,SF:nil,TC:nil,Content:0,EDM:-3,IP:nil,URL:1,File:nil
+        ,QS:nil,BEC:nil,COL:0
+X-UUID: 1429017a8fbf4357885e2b24aa255190-20220727
+Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw01.mediatek.com
+        (envelope-from <peter.wang@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 1129967393; Wed, 27 Jul 2022 11:21:12 +0800
+Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.792.3;
+ Wed, 27 Jul 2022 11:21:11 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.792.15 via Frontend Transport; Wed, 27 Jul 2022 11:21:11 +0800
+From:   <peter.wang@mediatek.com>
+To:     <stanley.chu@mediatek.com>, <linux-scsi@vger.kernel.org>,
+        <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
+        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
+CC:     <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
+        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+        <alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
+        <chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
+        <powen.kao@mediatek.com>, <qilin.tan@mediatek.com>,
+        <lin.gui@mediatek.com>, <stable@vger.kernel.org>
+Subject: [PATCH v4] ufs: core: fix lockdep warning of clk_scaling_lock
+Date:   Wed, 27 Jul 2022 11:21:10 +0800
+Message-ID: <20220727032110.31168-1-peter.wang@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
- definitions=2022-07-26_07,2022-07-26_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0 malwarescore=0
- adultscore=0 mlxscore=0 mlxlogscore=999 suspectscore=0 spamscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2206140000
- definitions=main-2207270009
-X-Proofpoint-ORIG-GUID: ox54HQOKDaSm-QN1emBiExysxKFBZJ_p
-X-Proofpoint-GUID: ox54HQOKDaSm-QN1emBiExysxKFBZJ_p
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 15 Jul 2022 21:03:53 +1000, Daniil Lunev wrote:
+From: Peter Wang <peter.wang@mediatek.com>
 
-> UFS storage devices require bRefClkFreq attribute to be set to operate
-> correctly at high speed mode. The necessary value is determined by what the
-> SoC / board supports. The standard doesn't specify a method to query the
-> value, so the information needs to be fed in separately.
-> 
-> DT information feeds into setting up the clock framework, so platforms
-> using DT can get the UFS reference clock frequency from the clock
-> framework. A special node "ref_clk" from the clock array for the UFS
-> controller node is used as the source for the information.
-> 
-> [...]
+There have a lockdep warning like below in current flow, and have deadlock issue.
+kworker/u16:0:  Possible unsafe locking scenario:
 
-Applied to 5.20/scsi-queue, thanks!
+kworker/u16:0:        CPU0                    CPU1
+kworker/u16:0:        ----                    ----
+kworker/u16:0:   lock(&hba->clk_scaling_lock);
+kworker/u16:0:                                lock(&hba->dev_cmd.lock);
+kworker/u16:0:                                lock(&hba->clk_scaling_lock);
+kworker/u16:0:   lock(&hba->dev_cmd.lock);
+kworker/u16:0:
 
-[1/1] scsi: ufs: ufshcd: Read device property for ref clock
-      https://git.kernel.org/mkp/scsi/c/ca452621b829
+Before this patch clk_scaling_lock was held in reader mode during the ufshcd_wb_toggle() call.
+With this patch applied clk_scaling_lock is not held while ufshcd_wb_toggle() is called.
 
+This is safe because ufshcd_wb_toggle will held clk_scaling_lock in reader mode "again" in flow
+ufshcd_wb_toggle -> __ufshcd_wb_toggle -> ufshcd_query_flag_retry -> ufshcd_query_flag ->
+ufshcd_exec_dev_cmd -> down_read(&hba->clk_scaling_lock);
+The protect should enough and make sure clock is not change while send command.
+
+ufshcd_wb_toggle can protected by hba->clk_scaling.is_allowed to make sure
+ufshcd_devfreq_scale function not run concurrently.
+
+Fixes: 0e9d4ca43ba8 ("scsi: ufs: Protect some contexts from unexpected clock scaling")
+Cc: <stable@vger.kernel.org> # 5.15.x
+Signed-off-by: Peter Wang <peter.wang@mediatek.com>
+---
+ drivers/ufs/core/ufshcd.c | 27 ++++++++++++++++-----------
+ 1 file changed, 16 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index c7b337480e3e..aa57126fdb49 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -272,6 +272,7 @@ static void ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set);
+ static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable);
+ static void ufshcd_hba_vreg_set_lpm(struct ufs_hba *hba);
+ static void ufshcd_hba_vreg_set_hpm(struct ufs_hba *hba);
++static void ufshcd_clk_scaling_allow(struct ufs_hba *hba, bool allow);
+ 
+ static inline void ufshcd_enable_irq(struct ufs_hba *hba)
+ {
+@@ -1249,12 +1250,10 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba)
+ 	return ret;
+ }
+ 
+-static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, bool writelock)
++static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba)
+ {
+-	if (writelock)
+-		up_write(&hba->clk_scaling_lock);
+-	else
+-		up_read(&hba->clk_scaling_lock);
++	up_write(&hba->clk_scaling_lock);
++
+ 	ufshcd_scsi_unblock_requests(hba);
+ 	ufshcd_release(hba);
+ }
+@@ -1271,7 +1270,7 @@ static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, bool writelock)
+ static int ufshcd_devfreq_scale(struct ufs_hba *hba, bool scale_up)
+ {
+ 	int ret = 0;
+-	bool is_writelock = true;
++	bool wb_toggle = false;
+ 
+ 	ret = ufshcd_clock_scaling_prepare(hba);
+ 	if (ret)
+@@ -1300,13 +1299,19 @@ static int ufshcd_devfreq_scale(struct ufs_hba *hba, bool scale_up)
+ 		}
+ 	}
+ 
+-	/* Enable Write Booster if we have scaled up else disable it */
+-	downgrade_write(&hba->clk_scaling_lock);
+-	is_writelock = false;
+-	ufshcd_wb_toggle(hba, scale_up);
++	/* Disable clk_scaling until ufshcd_wb_toggle finish */
++	hba->clk_scaling.is_allowed = false;
++	wb_toggle = true;
+ 
+ out_unprepare:
+-	ufshcd_clock_scaling_unprepare(hba, is_writelock);
++	ufshcd_clock_scaling_unprepare(hba);
++
++	/* Enable Write Booster if we have scaled up else disable it */
++	if (wb_toggle) {
++		ufshcd_wb_toggle(hba, scale_up);
++		ufshcd_clk_scaling_allow(hba, true);
++	}
++
+ 	return ret;
+ }
+ 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.18.0
+
