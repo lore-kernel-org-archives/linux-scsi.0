@@ -2,92 +2,91 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8245BC04A68
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jul 2022 18:57:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F73AC19F29
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Jul 2022 19:01:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233539AbiG0S5E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Jul 2022 14:57:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39662 "EHLO
+        id S231496AbiG0TBV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Jul 2022 15:01:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46256 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232605AbiG0S4o (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2022 14:56:44 -0400
-Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E94554C62D;
-        Wed, 27 Jul 2022 10:58:00 -0700 (PDT)
-Received: by mail-pj1-f49.google.com with SMTP id ha11so731106pjb.2;
-        Wed, 27 Jul 2022 10:58:00 -0700 (PDT)
+        with ESMTP id S231382AbiG0TBG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2022 15:01:06 -0400
+Received: from mail-pg1-f181.google.com (mail-pg1-f181.google.com [209.85.215.181])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03BB589AAC;
+        Wed, 27 Jul 2022 11:12:20 -0700 (PDT)
+Received: by mail-pg1-f181.google.com with SMTP id f65so16529807pgc.12;
+        Wed, 27 Jul 2022 11:12:19 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
          :content-language:to:cc:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=4vE7Bsz6vrHUNePlGNIG+g1zzaWWwe+MjkqFS82oLcU=;
-        b=jaOFWWE6QX36qBEc/1dpgUqRXGaox+48OC/dj7b1V9GjH1VjXarB362XWI0FEUWeF4
-         9/oyohNFj3F0Z9mTOfo4BSV+bl+yzfQDZfu12TS6tnFRYWBmbGOE+P1tRDf7tNaLIOkr
-         iMSvdRbGbkMmycf8ijlFerJKSGR1oPZTtqwjvgFw9dIZokCH+q0A6vjmXQt91ZECdCHQ
-         lPASR2KDllApn+1Kx2GLDl4xFh0kbBtDay8u0vnyi5foLK4loO/5smvMSff/gz4YKt7r
-         BxOOv6V6mZCnatDtw1ieYyr2+ShVMd5bn/GKG685yjyxxQVgpvgfNC63ltU/AnXyZsr8
-         1QHg==
-X-Gm-Message-State: AJIora/+ZwT0XYj9OC7Z/0uOyvGQg2UMW2MQxDtt0HAWQYV80t1TlUNK
-        X2OzLSeFhhjqLCp+tlS9CRk=
-X-Google-Smtp-Source: AGRyM1tFVd8EqwxIE+VDBtTOrcnZ22zKgfGpfCBk21Zv7Woc9eTIJzAuoFWzsa9F1fR+kw0nGXPpKw==
-X-Received: by 2002:a17:90b:4d0e:b0:1f1:9109:99df with SMTP id mw14-20020a17090b4d0e00b001f1910999dfmr5884407pjb.234.1658944680200;
-        Wed, 27 Jul 2022 10:58:00 -0700 (PDT)
+        bh=RNVMJ4oZ8yHzMS/5F5vQFWD6tQYWHNz7yT3+sY7HxXA=;
+        b=nRkfNNrYt2ZK4DUimkI7vzomXYnIKfQkIWhgYp8MuyFsieNr3q9mU9OfuE5e3Pjoth
+         3fCR9Tfp+f9vPEMshygga+rp/9H45P+onm8Dbmm95ji+4TmzoO2hGmMPEti5BZYe2GCS
+         u3F91Rzf4J6ifJqNKvnxtfPYeO7qfJ1xPfPp4uQRooqJhVmmtpWeWRGHQNEaCoqSrq0q
+         Je7RkjTfjvPdTELu9dr/FcSQMr29FYRJfKsC37/qZVk6J5uzEZ99wmnuhu8TcrL2Km0/
+         senzB/A0MCFTymWwPfs+JU/svyaIooyPpylxO0Ouru517XmxKrbhIAvry0+ej1/62VIU
+         GKBQ==
+X-Gm-Message-State: AJIora8oNOt9fyUPhrXjuKJOOmCLdYKz2OG87WMWk9HyeQ61aGud6uMa
+        GWMnfBGYwBN7x8Rfe3QRvIw=
+X-Google-Smtp-Source: AGRyM1usI0Gt657atV+HPb4lgLIOIMc5MiSpXSfWbHnB7XKqfY5gstwVxG7jNUFV+C3r+yvf7zuFPQ==
+X-Received: by 2002:a05:6a00:1946:b0:52a:e551:2241 with SMTP id s6-20020a056a00194600b0052ae5512241mr22626795pfk.29.1658945539275;
+        Wed, 27 Jul 2022 11:12:19 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:a84e:2ec1:1b57:b033? ([2620:15c:211:201:a84e:2ec1:1b57:b033])
-        by smtp.gmail.com with ESMTPSA id e1-20020a170902784100b0016d4f05eb95sm9939079pln.272.2022.07.27.10.57.57
+        by smtp.gmail.com with ESMTPSA id h13-20020a170902680d00b0016ce31cfea6sm14180388plk.159.2022.07.27.11.12.16
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 27 Jul 2022 10:57:58 -0700 (PDT)
-Message-ID: <fa60e605-a881-79aa-b9ed-9c8bdf06778f@acm.org>
-Date:   Wed, 27 Jul 2022 10:57:56 -0700
+        Wed, 27 Jul 2022 11:12:18 -0700 (PDT)
+Message-ID: <5fab3d4f-914e-63f8-a3e8-7dd92ecdb04a@acm.org>
+Date:   Wed, 27 Jul 2022 11:12:15 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.11.0
-Subject: Re: [PATCH v2 2/5] scsi: ufs: ufs-mediatek: Provide detailed
- description for UIC errors
+Subject: Re: [PATCH v4] ufs: core: fix lockdep warning of clk_scaling_lock
 Content-Language: en-US
-To:     Stanley Chu <stanley.chu@mediatek.com>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, martin.petersen@oracle.com,
+To:     peter.wang@mediatek.com, stanley.chu@mediatek.com,
+        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
         avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com
-Cc:     peter.wang@mediatek.com, chun-hung.wu@mediatek.com,
-        alice.chao@mediatek.com, powen.kao@mediatek.com,
-        mason.zhang@mediatek.com, qilin.tan@mediatek.com,
-        lin.gui@mediatek.com, eddie.huang@mediatek.com,
-        tun-yu.yu@mediatek.com, cc.chou@mediatek.com,
-        chaotian.jing@mediatek.com, jiajie.hao@mediatek.com
-References: <20220727034454.31892-1-stanley.chu@mediatek.com>
- <20220727034454.31892-3-stanley.chu@mediatek.com>
+Cc:     wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
+        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
+        cc.chou@mediatek.com, chaotian.jing@mediatek.com,
+        jiajie.hao@mediatek.com, powen.kao@mediatek.com,
+        qilin.tan@mediatek.com, lin.gui@mediatek.com,
+        stable@vger.kernel.org
+References: <20220727032110.31168-1-peter.wang@mediatek.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220727034454.31892-3-stanley.chu@mediatek.com>
+In-Reply-To: <20220727032110.31168-1-peter.wang@mediatek.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/26/22 20:44, Stanley Chu wrote:
-> diff --git a/drivers/ufs/host/ufs-mediatek.h b/drivers/ufs/host/ufs-mediatek.h
-> index aa26d415527b..9017ab8f9867 100644
-> --- a/drivers/ufs/host/ufs-mediatek.h
-> +++ b/drivers/ufs/host/ufs-mediatek.h
-> @@ -26,6 +26,44 @@
->   #define REG_UFS_DEBUG_SEL_B2        0x22D8
->   #define REG_UFS_DEBUG_SEL_B3        0x22DC
+On 7/26/22 20:21, peter.wang@mediatek.com wrote:
+> -	/* Enable Write Booster if we have scaled up else disable it */
+> -	downgrade_write(&hba->clk_scaling_lock);
+> -	is_writelock = false;
+> -	ufshcd_wb_toggle(hba, scale_up);
+> +	/* Disable clk_scaling until ufshcd_wb_toggle finish */
+> +	hba->clk_scaling.is_allowed = false;
+> +	wb_toggle = true;
 >   
-> +/*
-> + * Details of UIC Errors
-> + */
-> +static const u8 *ufs_uic_err_str[] = {
-> +	"PHY Adapter Layer",
-> +	"Data Link Layer",
-> +	"Network Link Layer",
-> +	"Transport Link Layer",
-> +	"DME"
-> +};
+>   out_unprepare:
+> -	ufshcd_clock_scaling_unprepare(hba, is_writelock);
+> +	ufshcd_clock_scaling_unprepare(hba);
+> +
+> +	/* Enable Write Booster if we have scaled up else disable it */
+> +	if (wb_toggle) {
+> +		ufshcd_wb_toggle(hba, scale_up);
+> +		ufshcd_clk_scaling_allow(hba, true);
+> +	}
 
-Why type u8 for strings instead of char?
-
-Please define arrays in .c files. Otherwise one copy of the array will 
-be included in each source file this header file is included in.
+I'm concerned that briefly disabling clock scaling may cause the clock 
+to remain at a high frequency even if it shouldn't. Has the following 
+approach been considered? Instead of moving the 
+ufshcd_clk_scaling_allow() call, convert dev_cmd.lock into a semaphore, 
+lock it near the start of ufshcd_devfreq_scale() and unlock it near the 
+end of the same function.
 
 Thanks,
 
