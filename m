@@ -2,77 +2,121 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67817C04A68
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jul 2022 21:09:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 837DBC04A68
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jul 2022 21:26:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231804AbiG1VJU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Jul 2022 17:09:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38462 "EHLO
+        id S229963AbiG1V0f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Jul 2022 17:26:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50114 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231617AbiG1VJS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jul 2022 17:09:18 -0400
-Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E23CF6E2C4
-        for <linux-scsi@vger.kernel.org>; Thu, 28 Jul 2022 14:09:17 -0700 (PDT)
-Received: by mail-pj1-f47.google.com with SMTP id f11-20020a17090a4a8b00b001f2f7e32d03so5890729pjh.0
-        for <linux-scsi@vger.kernel.org>; Thu, 28 Jul 2022 14:09:17 -0700 (PDT)
+        with ESMTP id S229570AbiG1V0e (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jul 2022 17:26:34 -0400
+Received: from mail-ej1-x636.google.com (mail-ej1-x636.google.com [IPv6:2a00:1450:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 951135B04F
+        for <linux-scsi@vger.kernel.org>; Thu, 28 Jul 2022 14:26:32 -0700 (PDT)
+Received: by mail-ej1-x636.google.com with SMTP id ss3so5227644ejc.11
+        for <linux-scsi@vger.kernel.org>; Thu, 28 Jul 2022 14:26:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :content-transfer-encoding:user-agent:mime-version;
+        bh=gOm5WzTFcp6H1IZFGOjdTMXk3A3yXZdzdCMWdzGm6XM=;
+        b=HOhRdQU+mkVcqXA0SwSceYUDsOYp3cQTUQp33i5l/isCD+eWR/FkCNRf+5ruq623yU
+         3Kp89ReMWspmMKIWuifPkuE6pGWSEEbiOq/B9DY0yO1iSZ/BzifnDNlHSAa4SGfHC/ws
+         KchLVp1vsdBkzyT7dww+hstw3/w6SBRxEYHb0+ZDMV6nvnRbR0LdL5EAGMs3uNt99gSI
+         ioO5EZQ7VhgUcThIojfugYl4MHHRtP5+rdMG8U8I8JAUJ1O3vqmQ9e7eqCP2InzJIZY4
+         ZANUP0zz7tRqrK0JqRpl8+YxtH6zPzSwQvIcEQpZu0Zxm/v2UhHsqxb/HRSXR01+mK9p
+         OjJg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=Lyi8U+Ii4fVfb5gf7+2FrD8JGQrjhTiU6yH1xtTTg/w=;
-        b=SbE/oaIHU9gS7BHyNcbnGImiICssnpRt5U24jQaHS7c5WSTUI1f8g7NNv1HvqqYAe6
-         TeECu9nSzQdFKOamEXTs0pOsKcrBOwwSg4u/lW/ki2geVllxES/Q41qkkCePgZKle91m
-         rXyQ/fLPl9QWtb+uolAPHmlFlBzZAxOAJH2LeAIsbr3wFJIG4Tu4h6BAiblnbHarr6of
-         dUN5DTTR99Rtm9jLq+iA/L0MylYRnJja6rhVdPutKB0JA1Pmjs6f5tnqvuRW1wdgPHuM
-         aCsJTBVqEyLQ2vwbiJsEklelt2YtBVtR0O/9rdo78RrvJT8mz7JSyU5FQN76pQxabNYs
-         K8Dw==
-X-Gm-Message-State: ACgBeo0mfBtY2kDHIc/+TYBrnuSYhjRO0RLbe79l9gzThPxWUblZyqNh
-        8Xkb+j2ZM6oMz+IBeKoY2Vc=
-X-Google-Smtp-Source: AA6agR64abIOX2ysY7VcL3JkGNB0p5eUsBWTITWET/AvauG63Mt114Tw/uFvUHgzRplDX9SS0QSR3g==
-X-Received: by 2002:a17:902:a382:b0:16d:9b15:83d5 with SMTP id x2-20020a170902a38200b0016d9b1583d5mr669128pla.101.1659042557265;
-        Thu, 28 Jul 2022 14:09:17 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:9520:2952:8318:8e3e? ([2620:15c:211:201:9520:2952:8318:8e3e])
-        by smtp.gmail.com with ESMTPSA id l13-20020a170903120d00b0016b8746132esm1889851plh.105.2022.07.28.14.09.15
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 28 Jul 2022 14:09:16 -0700 (PDT)
-Message-ID: <968f5255-f7b9-e011-2bd3-aa711bdd142a@acm.org>
-Date:   Thu, 28 Jul 2022 14:09:03 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:content-transfer-encoding:user-agent:mime-version;
+        bh=gOm5WzTFcp6H1IZFGOjdTMXk3A3yXZdzdCMWdzGm6XM=;
+        b=D/pfbOdARVRd+cYMdyhdZ6/+ms7sGoB0Ztf5jrQ1mJtWCtlwbsAMuMD5zXHQXdcsgv
+         CyZIaDKpi0XHC06yiWMxMWBsBTW6zZBO6yizWIgC4FscKP006scE1/7P4KCL3ykPezuL
+         s8cwkzYdWFc2rWyOhP5WNLdxOlrXHVw0BToPpGWLp3S1EMmy6T9bv1XsldmUDOJnyXyT
+         DUk/Vik3yDYFaUj7/uSTioQwOL8kMy3cM0dffo9TK0e2LUeEin2mk6Qkne51IWWRIGFL
+         TgAkZ4kXD1l697O6DLnz5ZIlXmcNTefIUq/3/E4mK4/0JbuwWarhAK+0iUWUDLf29Ld2
+         jG/w==
+X-Gm-Message-State: AJIora/UJG1bCiTMph0lecPsKFNQr3EHfnbGHqKmEf95B33xT1aUc+RS
+        3RGlqjppronJpinTTtvNI7M=
+X-Google-Smtp-Source: AGRyM1sjMC9NeXxDwGxrbYL6KH/FQzVMzZ1dXYM4nN6jLAFPMfO0gGy9dUfKZGZZUyhKSxd0H5ZhzA==
+X-Received: by 2002:a17:906:58d1:b0:72e:e049:cf00 with SMTP id e17-20020a17090658d100b0072ee049cf00mr571193ejs.361.1659043590978;
+        Thu, 28 Jul 2022 14:26:30 -0700 (PDT)
+Received: from p200300c5870e1483ac11a16c0f4ae195.dip0.t-ipconnect.de (p200300c5870e1483ac11a16c0f4ae195.dip0.t-ipconnect.de. [2003:c5:870e:1483:ac11:a16c:f4a:e195])
+        by smtp.googlemail.com with ESMTPSA id wi7-20020a170906fd4700b0072f03d10fa0sm814398ejb.207.2022.07.28.14.26.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 28 Jul 2022 14:26:30 -0700 (PDT)
+Message-ID: <e2fba3fe9b10d060a9906c440dd1f55e52404d77.camel@gmail.com>
 Subject: Re: [PATCH v1 0/2] ufs: allow vendor disable wb toggle in clock
  scaling
-Content-Language: en-US
-To:     peter.wang@mediatek.com, stanley.chu@mediatek.com,
-        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com
+From:   Bean Huo <huobean@gmail.com>
+To:     Bart Van Assche <bvanassche@acm.org>, peter.wang@mediatek.com,
+        stanley.chu@mediatek.com, linux-scsi@vger.kernel.org,
+        martin.petersen@oracle.com, avri.altman@wdc.com,
+        alim.akhtar@samsung.com, jejb@linux.ibm.com
 Cc:     wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
         chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
         cc.chou@mediatek.com, chaotian.jing@mediatek.com,
         jiajie.hao@mediatek.com, powen.kao@mediatek.com,
         qilin.tan@mediatek.com, lin.gui@mediatek.com
+Date:   Thu, 28 Jul 2022 23:26:29 +0200
+In-Reply-To: <968f5255-f7b9-e011-2bd3-aa711bdd142a@acm.org>
 References: <20220728071637.22364-1-peter.wang@mediatek.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220728071637.22364-1-peter.wang@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+         <968f5255-f7b9-e011-2bd3-aa711bdd142a@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.1-0ubuntu1 
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/28/22 00:16, peter.wang@mediatek.com wrote:
-> Mediatek ufs do not want to toggle write booster when clock scaling.
-> This patch set allow vendor disable wb toggle in clock scaling.
+On Thu, 2022-07-28 at 14:09 -0700, Bart Van Assche wrote:
+> On 7/28/22 00:16, peter.wang@mediatek.com=C2=A0wrote:
+> > Mediatek ufs do not want to toggle write booster when clock
+> > scaling.
+> > This patch set allow vendor disable wb toggle in clock scaling.
+>=20
+> I don't like this approach. Whether or not to toggle the write
+> booster=20
+> when scaling the clock is not dependent on the host controller and
+> hence=20
+> should not depend on the host controller driver.
+>=20
+> Has it been considered to add a sysfs attribute in the UFS driver
+> core=20
+> to control this behavior?
+>=20
 
-I don't like this approach. Whether or not to toggle the write booster 
-when scaling the clock is not dependent on the host controller and hence 
-should not depend on the host controller driver.
+Bart,=20
+we already have wb_on sysfs node, but it only allows to write this node
+when clock scaling is not supported.
 
-Has it been considered to add a sysfs attribute in the UFS driver core 
-to control this behavior?
 
-Thanks,
+static ssize_t wb_on_store(..)
+{
+	struct ufs_hba *hba =3D dev_get_drvdata(dev);
+	unsigned int wb_enable;
+	ssize_t res;
 
-Bart.
+	if (ufshcd_is_clkscaling_supported(hba)) {
+		/*
+		 * If the platform supports
+UFSHCD_CAP_AUTO_BKOPS_SUSPEND,
+		 * turn WB on/off will be done while clock scaling
+up/down.
+		 */
+		dev_warn(dev, "To control WB through wb_on is not
+allowed!\n");
+		return -EOPNOTSUPP;
+	}
+
+
+Kind regards,
+Bean
+
+> Thanks,
+>=20
+> Bart.
+
