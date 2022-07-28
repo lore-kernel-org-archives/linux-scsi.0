@@ -2,115 +2,90 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1D4BC04A68
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jul 2022 02:26:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB9B5C04A68
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jul 2022 02:28:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233464AbiG1C0v (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Jul 2022 22:26:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55634 "EHLO
+        id S236086AbiG1C2t (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Jul 2022 22:28:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56706 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232427AbiG1C0v (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2022 22:26:51 -0400
-Received: from mail-lf1-x134.google.com (mail-lf1-x134.google.com [IPv6:2a00:1450:4864:20::134])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 82F9115713;
-        Wed, 27 Jul 2022 19:26:49 -0700 (PDT)
-Received: by mail-lf1-x134.google.com with SMTP id a23so870256lfm.10;
-        Wed, 27 Jul 2022 19:26:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=lF4K9njh1CfE8adJZDA/xjNewn/fwTSHNz/x/3VXeQw=;
-        b=XVSTyj7vzz7QwsIqoxOxW+ZgWu2IUtoVj2iGcz9DufSsKAqdcgfPdyxvQTvD7BVO/z
-         qpHYvZ2LtkPo8QoSnUd5pJ9x/AR2II/+a8R6c/pKrLo/3N1CaTN42/4WVOBYZseyzQCZ
-         7BVYNgJCPWsn+xPJ0O0WIyAsPC2e3J6IHr9+f6NelImngddAoda6FOoMPqH7eyaMeRtu
-         67rykmv3DMo7aJzC3K8Telr3f83TzwT9rp0Qbi+0lA0XzbK/HE6DXpjQMt33yteYSW3T
-         v9pX9wWvGMy81LNFsnCKpJizH5lRkfn4Pnb+1uX6JPfzI1qrS+3JBl+geYUamYOMXB1N
-         MPXg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=lF4K9njh1CfE8adJZDA/xjNewn/fwTSHNz/x/3VXeQw=;
-        b=s3DK4dmxloTOL0SuGQk3VCGaQ8Ji0svnuIx1LvneMISQ+0dFTkpgERp1UxD9q6jE+z
-         asL2I74mMnK4EsNWLhAQ2s7/YH7d+uU62Rbwx+0qKMSzqwOiCNjsJ+oT/U4u8ykPNcSn
-         yUIVLEY7MErQNTk7l/XSNuiN50z5+tGSQU6JrbJkdOoIktkiRI8tB0TGet02w55iIQEL
-         Tt/Cxd0lU7qPlI4tO0cSatAkEbLrPHN3xukfaGOGXoLkQYKLUfVW0j72m7EZ1sQsAohO
-         QRIDxEAxfkiXIFkMGhihnvyQQsgTzGc5MCHAuDOf9AwsvVomD1F/qAH2tdyvS3wcO7Ll
-         R2Rw==
-X-Gm-Message-State: AJIora/xIDWDE94DdcdCN5ylu6HNWb5J79ihbVRIIpm6rgH8ntJmxPw2
-        VQvzaEhnsLyd13bDTOGgvHTfIYoCkTeE9OjBqg==
-X-Google-Smtp-Source: AGRyM1tS57mHO/4ewowr7uHmS2gxY8q8rgApDI1ve1jS/0Y+B4OisEaiylmJYKS4KcGoiSBGXLKiU+wxqiVBp+TA7UU=
-X-Received: by 2002:a05:6512:2288:b0:48a:87c4:a8eb with SMTP id
- f8-20020a056512228800b0048a87c4a8ebmr7255274lfu.328.1658975207414; Wed, 27
- Jul 2022 19:26:47 -0700 (PDT)
+        with ESMTP id S232427AbiG1C2q (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2022 22:28:46 -0400
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0BD2152DF0;
+        Wed, 27 Jul 2022 19:28:38 -0700 (PDT)
+X-UUID: 82e6bf47a6424cc694de4794d6b47828-20220728
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.8,REQID:9296a40b-1f1f-4bab-bfa6-cfead44dca6e,OB:0,LO
+        B:0,IP:0,URL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,RULE:Release_Ham,ACT
+        ION:release,TS:-5
+X-CID-META: VersionHash:0f94e32,CLOUDID:febf1836-fd9a-435f-8e8b-e247f150d0a2,C
+        OID:IGNORED,Recheck:0,SF:nil,TC:nil,Content:0,EDM:-3,IP:nil,URL:0,File:nil
+        ,QS:nil,BEC:nil,COL:0
+X-UUID: 82e6bf47a6424cc694de4794d6b47828-20220728
+Received: from mtkmbs11n1.mediatek.inc [(172.21.101.185)] by mailgw02.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 200118487; Thu, 28 Jul 2022 10:28:36 +0800
+Received: from mtkmbs11n1.mediatek.inc (172.21.101.186) by
+ mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.792.15; Thu, 28 Jul 2022 10:28:35 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.792.15 via Frontend Transport; Thu, 28 Jul 2022 10:28:34 +0800
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
+        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>,
+        <bvanassche@acm.org>
+CC:     <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+        <alice.chao@mediatek.com>, <powen.kao@mediatek.com>,
+        <mason.zhang@mediatek.com>, <qilin.tan@mediatek.com>,
+        <lin.gui@mediatek.com>, <eddie.huang@mediatek.com>,
+        <tun-yu.yu@mediatek.com>, <cc.chou@mediatek.com>,
+        <chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
+        <stanley.chu@mediatek.com>
+Subject: [PATCH v3 0/5] scsi: ufs-mediatek: Provide features and fixes in MediaTek platforms
+Date:   Thu, 28 Jul 2022 10:28:28 +0800
+Message-ID: <20220728022833.16243-1-stanley.chu@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
-References: <20220727034454.31892-1-stanley.chu@mediatek.com>
- <20220727034454.31892-3-stanley.chu@mediatek.com> <fa60e605-a881-79aa-b9ed-9c8bdf06778f@acm.org>
-In-Reply-To: <fa60e605-a881-79aa-b9ed-9c8bdf06778f@acm.org>
-From:   Stanley Chu <chu.stanley@gmail.com>
-Date:   Thu, 28 Jul 2022 10:26:35 +0800
-Message-ID: <CAGaU9a8vyk7PKwNPCJJokUWp5jSrr3X8PQbmzgMjfLSRmVwLYw@mail.gmail.com>
-Subject: Re: [PATCH v2 2/5] scsi: ufs: ufs-mediatek: Provide detailed
- description for UIC errors
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     Stanley Chu <stanley.chu@mediatek.com>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Avri Altman <avri.altman@wdc.com>, alim.akhtar@samsung.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        peter.wang@mediatek.com, Chun-Hung Wu <chun-hung.wu@mediatek.com>,
-        alice.chao@mediatek.com, powen.kao@mediatek.com,
-        mason.zhang@mediatek.com, qilin.tan@mediatek.com,
-        lin.gui@mediatek.com, eddie.huang@mediatek.com,
-        tun-yu.yu@mediatek.com, cc.chou@mediatek.com,
-        chaotian.jing@mediatek.com, jiajie.hao@mediatek.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart,
+Hi Martin,
 
-On Thu, Jul 28, 2022 at 3:04 AM Bart Van Assche <bvanassche@acm.org> wrote:
->
-> On 7/26/22 20:44, Stanley Chu wrote:
-> > diff --git a/drivers/ufs/host/ufs-mediatek.h b/drivers/ufs/host/ufs-med=
-iatek.h
-> > index aa26d415527b..9017ab8f9867 100644
-> > --- a/drivers/ufs/host/ufs-mediatek.h
-> > +++ b/drivers/ufs/host/ufs-mediatek.h
-> > @@ -26,6 +26,44 @@
-> >   #define REG_UFS_DEBUG_SEL_B2        0x22D8
-> >   #define REG_UFS_DEBUG_SEL_B3        0x22DC
-> >
-> > +/*
-> > + * Details of UIC Errors
-> > + */
-> > +static const u8 *ufs_uic_err_str[] =3D {
-> > +     "PHY Adapter Layer",
-> > +     "Data Link Layer",
-> > +     "Network Link Layer",
-> > +     "Transport Link Layer",
-> > +     "DME"
-> > +};
->
-> Why type u8 for strings instead of char?
+This series provides some features and fixes in MediaTek UFS platforms.
+Please consider this patch series for kernel v5.20.
 
-Will use char instead in the next version.
+Changes since v2:
+ - Remove Change-ID tag in patch "scsi: ufs: ufs-mediatek: Remove redundant header files" (Bart)
+ - Move const string table to ufs-mediatek.c from ufs-mediatek.h (Bart)
 
->
-> Please define arrays in .c files. Otherwise one copy of the array will
-> be included in each source file this header file is included in.
+Changes since v1:
+ - Remove unnecessary changes in patch "scsi: ufs: ufs-mediatek: Fix performance scaling"
 
-Will move them to .c in the next version.
+Peter Wang (2):
+  scsi: ufs: ufs-mediatek: Dump more registers
+  scsi: ufs: ufs-mediatek: Fix performance scaling
 
-Thanks, Stanley
+Po-Wen Kao (1):
+  scsi: ufs: ufs-medaitek: Support clk-scaling to optimize power
+    consumption
 
+Stanley Chu (2):
+  scsi: ufs: ufs-mediatek: Remove redundant header files
+  scsi: ufs: ufs-mediatek: Provide detailed description for UIC errors
 
+ drivers/ufs/host/ufs-mediatek-trace.h |  25 +++-
+ drivers/ufs/host/ufs-mediatek.c       | 205 +++++++++++++++++++++++++-
+ drivers/ufs/host/ufs-mediatek.h       |   7 +
+ 3 files changed, 229 insertions(+), 8 deletions(-)
 
---=20
-Yours truly,
+-- 
+2.18.0
 
-=E6=9C=B1=E5=8E=9F=E9=99=9E (Stanley Chu)
