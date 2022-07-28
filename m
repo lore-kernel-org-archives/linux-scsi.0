@@ -2,154 +2,75 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B5F6C04A68
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jul 2022 11:50:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED84CC04A68
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jul 2022 13:33:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236616AbiG1LuO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Jul 2022 07:50:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54484 "EHLO
+        id S230088AbiG1Ndv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Jul 2022 09:33:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40282 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236771AbiG1LuL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jul 2022 07:50:11 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4839EF1B
-        for <linux-scsi@vger.kernel.org>; Thu, 28 Jul 2022 04:50:09 -0700 (PDT)
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 7D58133FD2;
-        Thu, 28 Jul 2022 11:50:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1659009008; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=onwjqwmZp1XKnAVi3DqvLMaDrBfUynJjcYLbd5abIrg=;
-        b=trPMWjMC5V5Nv+jdlpF+EwU3znGbxNyLxhgABKzOygJc87yd9AhHnnz/w2eiExkQWZky0w
-        4acHj9K+w8Klah+hzOQUUFIWvHAl9Zh3M0JVzMOROckoaUz1dMNQnKNytBidH1AyJ6wXJm
-        ixQVWsipZ6FNZ03y3V2RrGZtdEuX0V8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1659009008;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=onwjqwmZp1XKnAVi3DqvLMaDrBfUynJjcYLbd5abIrg=;
-        b=OXXcsCxuQGSwPDtyxguY5HQSziQdrua6+1KqjQuGOb4FTxQNnZMRuzGoIpdLZ9Euc/A44g
-        LKqCG/ftGfoZLrCQ==
-Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 60B4E2C141;
-        Thu, 28 Jul 2022 11:50:08 +0000 (UTC)
-Received: by adalid.arch.suse.de (Postfix, from userid 17828)
-        id 680C351A6244; Thu, 28 Jul 2022 13:50:08 +0200 (CEST)
-From:   Daniel Wagner <dwagner@suse.de>
-To:     linux-scsi@vger.kernel.org
-Cc:     Daniel Wagner <dwagner@suse.de>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Quinn Tran <qutran@marvell.com>,
-        Nilesh Javali <njavali@marvell.com>
-Subject: [PATCH v1] qla2xxx: Allow nvme report port registration
-Date:   Thu, 28 Jul 2022 13:50:07 +0200
-Message-Id: <20220728115007.4376-1-dwagner@suse.de>
-X-Mailer: git-send-email 2.35.3
+        with ESMTP id S229622AbiG1Nds (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jul 2022 09:33:48 -0400
+Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 646F75140F;
+        Thu, 28 Jul 2022 06:33:48 -0700 (PDT)
+Received: by mail-pj1-f54.google.com with SMTP id e1so2062076pjl.1;
+        Thu, 28 Jul 2022 06:33:48 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=gHUvDp9XxgXKyC/S3Y/ZPZ1AK6LyrKzwAJXqinHhkxY=;
+        b=eL37x8c4y9LgS4noEaq4Nbu1pJYqbgVLPdmMfJDte8pIKclLWYmOnFxb2m7tHKCyzy
+         VqtUjtbz7Klx0xRADHJjoaoJASMrpijWb+vc3FbldV7ryvuXSv/qsjC04UkW+ivaAvil
+         ripYHP6j0az/1OtZ0saBI+nWZjnOKc9VbVnk32OcnSLxJLpRLvgMsNIImUetcpQN9WwX
+         9cZAH3hhxPVlITWWZKTjBKvIR9g0ACclEt/es8SSC135Md6q+LihcmOlul1XpRHajdrT
+         iGMLg4oSaR0gdI9Y//7hzwHCUfEG/0fXpTwbANhYwYummelwAzUiZRWKzjGnABD7x9vQ
+         Kkqw==
+X-Gm-Message-State: AJIora8lYgWyndYTkbm11el5bYptjeryvTqmbacCVUkhmWLlQJw61nvZ
+        /Y5z6CxVH9mMVdoNpOTvTW4=
+X-Google-Smtp-Source: AGRyM1s+K/6al4NrwNKS3VWhyVYTdV/0+QCqk/k3mxIiaamLxq73CxhjB49R4yO7pJbpvxoBVwNEZQ==
+X-Received: by 2002:a17:902:9307:b0:166:41a8:abc0 with SMTP id bc7-20020a170902930700b0016641a8abc0mr26273877plb.135.1659015227738;
+        Thu, 28 Jul 2022 06:33:47 -0700 (PDT)
+Received: from [192.168.3.217] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id w71-20020a627b4a000000b005289ffefe82sm736615pfc.130.2022.07.28.06.33.46
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 28 Jul 2022 06:33:46 -0700 (PDT)
+Message-ID: <238bacda-6df5-0836-2f6a-74a6079a7ae4@acm.org>
+Date:   Thu, 28 Jul 2022 06:33:45 -0700
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+Subject: Re: [PATCH V1] scsi: ufs: Get boot device storage type from command
+ line
+Content-Language: en-US
+To:     "Chetan Chinnadagudihundi Ravindranath (Consultant) (QUIC)" 
+        <quic_cchinnad@quicinc.com>, jejb@linux.ibm.com
+Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+References: <1658910535-31802-1-git-send-email-quic_cchinnad@quicinc.com>
+ <a09de6e0-700b-0715-06a8-150ab41e8e7f@acm.org>
+ <c66ffd91-8649-edb7-86dc-422ae82e1b84@quicinc.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <c66ffd91-8649-edb7-86dc-422ae82e1b84@quicinc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Move the both ONLINE state check into qla2x00_update_fcport and call
-both register port register functions.
+On 7/28/22 01:35, Chetan Chinnadagudihundi Ravindranath (Consultant) 
+(QUIC) wrote:
+> Hi Brat,
 
-Currently, qla2x00_reg_remote_port and qla_nvme_register_remote check
-the state if it is ONLINE. If it not, the state is set to ONLINE and
-the function is executed.
+Please spell my name correctly.
 
-qla2x00_reg_remote_port is called before qla_nvme_register_remote and
-hence qla_nvme_register_remote will always bail out and never register
-a nvme remote port.
+> Yes, since SCSI_UFSHCD=y am selecting UFS_QCOM_CMDLINE=y so that it gets 
+> __setup() declarations. I am able to read the command line arguments and 
+> get this "androidboot.bootdevice=" info. I had cross checked again.
 
-Fixes: 6a45c8e137d4 ("scsi: qla2xxx: Fix disk failure to rediscover")
-Cc: Himanshu Madhani <himanshu.madhani@oracle.com>
-Cc: Quinn Tran <qutran@marvell.com>
-Cc: Nilesh Javali <njavali@marvell.com>
-Signed-off-by: Daniel Wagner <dwagner@suse.de>
----
- drivers/scsi/qla2xxx/qla_init.c | 33 ++++++++++++++++-----------------
- drivers/scsi/qla2xxx/qla_nvme.c |  5 -----
- 2 files changed, 16 insertions(+), 22 deletions(-)
+I was asking about SCSI_UFSHCD=m instead of SCSI_UFSHCD=y.
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 3f3417a3e891..71b804cfd808 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -5764,11 +5764,6 @@ qla2x00_reg_remote_port(scsi_qla_host_t *vha, fc_port_t *fcport)
- 	struct fc_rport *rport;
- 	unsigned long flags;
- 
--	if (atomic_read(&fcport->state) == FCS_ONLINE)
--		return;
--
--	qla2x00_set_fcport_state(fcport, FCS_ONLINE);
--
- 	rport_ids.node_name = wwn_to_u64(fcport->node_name);
- 	rport_ids.port_name = wwn_to_u64(fcport->port_name);
- 	rport_ids.port_id = fcport->d_id.b.domain << 16 |
-@@ -5864,18 +5859,25 @@ qla2x00_update_fcport(scsi_qla_host_t *vha, fc_port_t *fcport)
- 
- 	qla24xx_update_fcport_fcp_prio(vha, fcport);
- 
-+	if (atomic_read(&fcport->state) != FCS_ONLINE) {
-+		qla2x00_set_fcport_state(fcport, FCS_ONLINE);
-+
-+		switch (vha->host->active_mode) {
-+		case MODE_INITIATOR:
-+		case MODE_DUAL:
-+			qla2x00_reg_remote_port(vha, fcport);
-+			break;
-+		default:
-+			break;
-+		}
-+
-+		if (NVME_TARGET(vha->hw, fcport))
-+			qla_nvme_register_remote(vha, fcport);
-+	}
-+
- 	switch (vha->host->active_mode) {
--	case MODE_INITIATOR:
--		qla2x00_reg_remote_port(vha, fcport);
--		break;
- 	case MODE_TARGET:
--		qla2x00_set_fcport_state(fcport, FCS_ONLINE);
--		if (!vha->vha_tgt.qla_tgt->tgt_stop &&
--			!vha->vha_tgt.qla_tgt->tgt_stopped)
--			qlt_fc_port_added(vha, fcport);
--		break;
- 	case MODE_DUAL:
--		qla2x00_reg_remote_port(vha, fcport);
- 		if (!vha->vha_tgt.qla_tgt->tgt_stop &&
- 			!vha->vha_tgt.qla_tgt->tgt_stopped)
- 			qlt_fc_port_added(vha, fcport);
-@@ -5884,9 +5886,6 @@ qla2x00_update_fcport(scsi_qla_host_t *vha, fc_port_t *fcport)
- 		break;
- 	}
- 
--	if (NVME_TARGET(vha->hw, fcport))
--		qla_nvme_register_remote(vha, fcport);
--
- 	if (IS_IIDMA_CAPABLE(vha->hw) && vha->hw->flags.gpsc_supported) {
- 		if (fcport->id_changed) {
- 			fcport->id_changed = 0;
-diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
-index 87c9404aa401..7450c3458be7 100644
---- a/drivers/scsi/qla2xxx/qla_nvme.c
-+++ b/drivers/scsi/qla2xxx/qla_nvme.c
-@@ -37,11 +37,6 @@ int qla_nvme_register_remote(struct scsi_qla_host *vha, struct fc_port *fcport)
- 		(fcport->nvme_flag & NVME_FLAG_REGISTERED))
- 		return 0;
- 
--	if (atomic_read(&fcport->state) == FCS_ONLINE)
--		return 0;
--
--	qla2x00_set_fcport_state(fcport, FCS_ONLINE);
--
- 	fcport->nvme_flag &= ~NVME_FLAG_RESETTING;
- 
- 	memset(&req, 0, sizeof(struct nvme_fc_port_info));
--- 
-2.35.3
+Thanks,
 
+Bart.
