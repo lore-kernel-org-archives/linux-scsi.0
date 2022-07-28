@@ -2,144 +2,121 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78003C04A68
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jul 2022 01:18:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 375DCC19F29
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jul 2022 01:19:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233464AbiG1BSb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Jul 2022 21:18:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39210 "EHLO
+        id S234393AbiG1BTO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Jul 2022 21:19:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39692 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232869AbiG1BSa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2022 21:18:30 -0400
-Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D009820F5C
-        for <linux-scsi@vger.kernel.org>; Wed, 27 Jul 2022 18:18:28 -0700 (PDT)
-Received: by mail-pl1-x634.google.com with SMTP id d3so492881pls.4
-        for <linux-scsi@vger.kernel.org>; Wed, 27 Jul 2022 18:18:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=DbJ1JQagj5h+ZbT03NPdBvoB9tQLkDVPT4NuZ0/GtLk=;
-        b=E3EHc2z1Ho78zDYmfDRILIQg6ZXyLq0LWBpNb80YqCkQ51v9w9qHNQQjXRr7i6u32+
-         RB9ZdJgYENhwccpgPQMp8OKYaniR1UkP9XcCOFTIqlFnsx9O28uvE9oKk1J2m8srzCZJ
-         sGA8DqCGTQUfQ6Z0Z0mBNnvTUdpiZe52kCxMQ=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=DbJ1JQagj5h+ZbT03NPdBvoB9tQLkDVPT4NuZ0/GtLk=;
-        b=fEhhZcT1n+yUge9ljtQlF3cdXjNxJY1mgTrwIPIT266rrtl5paTKXibgTtBrhBLItG
-         291R2pAlWLwnw344P3er5YbFckCFaYFA7T45OWlM8RaUWfbV1s27z5hL/GPLzeOxkfYF
-         2r9urE9q/o5CLwxuvJCDyN2ZJi+APP6HGmyArcS+RXx6gd34xNoVtB60OmhKb5Tn70Ug
-         CSj6xoBJp1ZsDDjz2h/fHD4dLNGtFJ572M+bjsOHgxdQWb2c69l7Hi7VySA6bsPVJFRl
-         bsZVqCcUgDoUAW++tonh7HiwV93CEmlelfg4KqIZanS8d1ykUoohmqUvrmEJNY017eWL
-         dzdg==
-X-Gm-Message-State: AJIora87ciSLjbdWHGlW/dbazVeNzz8aUOEc9+jez+o76qmEJ3LMmv/z
-        dfTw+t0RVpdbbXEgP7uZJG+hOA==
-X-Google-Smtp-Source: AGRyM1tCPi0ohc89CBXSKZxfLRltdXXs8O6uc+qjEJHGaLQkOtqcpqh+t16kXliEsJVbuwrhb7K7rQ==
-X-Received: by 2002:a17:90b:3ec1:b0:1f1:edcf:dd2b with SMTP id rm1-20020a17090b3ec100b001f1edcfdd2bmr7703792pjb.156.1658971108399;
-        Wed, 27 Jul 2022 18:18:28 -0700 (PDT)
-Received: from dlunevwfh.roam.corp.google.com (n122-107-196-14.sbr2.nsw.optusnet.com.au. [122.107.196.14])
-        by smtp.gmail.com with ESMTPSA id n3-20020a170902f60300b0016bdea07b9esm14294309plg.190.2022.07.27.18.18.25
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 27 Jul 2022 18:18:28 -0700 (PDT)
-From:   Daniil Lunev <dlunev@chromium.org>
-To:     Adrian Hunter <adrian.hunter@intel.com>,
-        Bart Van Assche <bvanassche@acm.org>
-Cc:     Daniil Lunev <dlunev@chromium.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <beanhuo@micron.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [PATCH v3] scsi: ufs: ufs-pci: Correct check for RESET DSM
-Date:   Thu, 28 Jul 2022 11:18:21 +1000
-Message-Id: <20220728111748.v3.1.I22460c4f4a9ccf2c96c3f9bb392b409926d80b2f@changeid>
-X-Mailer: git-send-email 2.31.0
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        with ESMTP id S234511AbiG1BTF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2022 21:19:05 -0400
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 008C53AB19
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Jul 2022 18:19:02 -0700 (PDT)
+Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20220728011857epoutp0194fec496d51db4e8b8e4d890b3c8295c~F2XXdGIqS2669626696epoutp01a
+        for <linux-scsi@vger.kernel.org>; Thu, 28 Jul 2022 01:18:57 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20220728011857epoutp0194fec496d51db4e8b8e4d890b3c8295c~F2XXdGIqS2669626696epoutp01a
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1658971138;
+        bh=ONqAunqwZYTfDxgzM5OVZYL/ihR/N0AERdocHpv6bSM=;
+        h=Subject:Reply-To:From:To:In-Reply-To:Date:References:From;
+        b=oNqdZly9Hn1PcCKYBlxuNCQ6klIXRRYoan+ofPwdnCrnW76mwisRtpH/3/zw8Ytzs
+         j9gCC6Vg2bRIWl06MtK1hKm507Ycr5PqLuwC84mWrEGnOOLx1W5uG4tKh/dZft/+bC
+         WbR5clPmcceev8Q3+aKyVg1hU9BKHoMlq0aORBDg=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas2p2.samsung.com (KnoxPortal) with ESMTP id
+        20220728011857epcas2p2e87f8691971a0561df32733bc098e090~F2XW9mtd71003110031epcas2p2T;
+        Thu, 28 Jul 2022 01:18:57 +0000 (GMT)
+Received: from epsmges2p4.samsung.com (unknown [182.195.36.97]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4LtXq46Fnsz4x9QC; Thu, 28 Jul
+        2022 01:18:56 +0000 (GMT)
+X-AuditID: b6c32a48-9e1ff700000025be-77-62e1e4004d35
+Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
+        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
+        19.C2.09662.004E1E26; Thu, 28 Jul 2022 10:18:56 +0900 (KST)
+Mime-Version: 1.0
+Subject: RE:(2) [PATCH v4 5/7] scsi: ufs: wb: Add
+ ufshcd_is_wb_buf_flush_allowed()
+Reply-To: j-young.choi@samsung.com
+Sender: Jinyoung CHOI <j-young.choi@samsung.com>
+From:   Jinyoung CHOI <j-young.choi@samsung.com>
+To:     ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <90ef5f84-1e4e-d93e-5ee9-acdf36109827@acm.org>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20220728011856epcms2p74ded3da804e42a8b7a15b0d5d85ef630@epcms2p7>
+Date:   Thu, 28 Jul 2022 10:18:56 +0900
+X-CMS-MailID: 20220728011856epcms2p74ded3da804e42a8b7a15b0d5d85ef630
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+CMS-TYPE: 102P
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprMJsWRmVeSWpSXmKPExsWy7bCmhS7Dk4dJBofb9S1OPlnDZvFg3jY2
+        i5c/r7JZHHzYyWLx8pCmxaIb25gsLu+aw2bRfX0Hm8Xy4/+YHDg9Fu95yeQxYdEBRo/v6zvY
+        PD4+vcXi0bdlFaPH501yHu0HupkC2KOybTJSE1NSixRS85LzUzLz0m2VvIPjneNNzQwMdQ0t
+        LcyVFPISc1NtlVx8AnTdMnOALlNSKEvMKQUKBSQWFyvp29kU5ZeWpCpk5BeX2CqlFqTkFJgX
+        6BUn5haX5qXr5aWWWBkaGBiZAhUmZGdc3D2TseAYT8WnNbYNjHN4uhg5OSQETCROHGhk6WLk
+        4hAS2MEosezHCuYuRg4OXgFBib87hEFqhAVCJI6v+M0IYgsJKEmcWzOLEaREWMBA4lavOUiY
+        TUBP4ueSGWwgtojAImaJfzvTIMbzSsxof8oCYUtLbF++FWwMp4C1xIHtDcwQcQ2JH8t6oWxR
+        iZur37LD2O+PzWeEsEUkWu+dhaoRlHjwczdUXFLi0KGvbCDnSAjkS2w4EAgRrpF4u/wAVIm+
+        xLWOjWAn8Ar4Siy5M48JpJxFQFViwaUQiBIXic7Jq8HKmQW0JZYtfA0OA2YBTYn1u/QhhitL
+        HLnFAvNTw8bf7OhsZgE+iY7Df+HiO+Y9YYJoVZNY1GQEEZaR+Hp4PvsERqVZiDCehWTtLIS1
+        CxiZVzGKpRYU56anFhsVmMBjNTk/dxMjOHVqeexgnP32g94hRiYOxkOMEhzMSiK8CdH3k4R4
+        UxIrq1KL8uOLSnNSiw8xmgL9O5FZSjQ5H5i880riDU0sDUzMzAzNjUwNzJXEeb1SNiQKCaQn
+        lqRmp6YWpBbB9DFxcEo1MDVmOJ2y2/Xq0b7jFlKnPx7j6crKXfqJdf8spZAT13++jbnZxBsg
+        +/fH4eqprJwPrWbaKk26w6K49tqLwEizbembQ87dWnIhcQ13oZRK5i7J5Ebem48t125108i5
+        qPLd5u29hcUZy15zT/ztcPbS5jVV4vymGYEBTrzZOezLNBy64jnKF637+zZnE9/K1xuKWObf
+        ENr2bMGaENktbxy29j0KduqWVNOVuLzg9LWEjIroaW8P6WpsOWR10sjsvWD5lNDnS3bybhRT
+        +hK3w+ajsIe5CPOiXK6H7Xrh5/uOLuw3+/dQlEv5pP434ekfDM9JGKfelJk359OGbQzr7oct
+        9b+dvMagcNYG3YmKTrwN3/cqsRRnJBpqMRcVJwIAH9RvniYEAAA=
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20220727065904epcms2p60a7a56101785ddefa55c82b3cc25116d
+References: <90ef5f84-1e4e-d93e-5ee9-acdf36109827@acm.org>
+        <20220727070841epcms2p5e212d617dd0f985555fa052f099013f0@epcms2p5>
+        <20220727070724epcms2p8e449d0c89b52f03a9d3dc254df0ec547@epcms2p8>
+        <20220727070410epcms2p5206785e4d960b32dcbb6729710dab535@epcms2p5>
+        <20220727065904epcms2p60a7a56101785ddefa55c82b3cc25116d@epcms2p6>
+        <20220727071024epcms2p70366b54ac8eca3758b7cf4336e0d457c@epcms2p7>
+        <CGME20220727065904epcms2p60a7a56101785ddefa55c82b3cc25116d@epcms2p7>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-dsm_fns is a bitmap, and it is 0-indexed according to the check in
-__intel_dsm function. But common initialization was checking it as if it
-was 1-indexed. This patch corrects the discrepancy. This change won't
-break any existing calls to the function, since before the change both
-bits 0 and 1 were checked and needed to be set.
-
-Signed-off-by: Daniil Lunev <dlunev@chromium.org>
-
----
-
-Changes in v3:
-* Commit message typos
-* Args indentation
-
-Changes in v2:
-* Make __INTEL_DSM_SUPPORTED a function
-* use `1u` instead of `1` in shift operator
-
- drivers/ufs/host/ufshcd-pci.c | 17 +++++++++++++----
- 1 file changed, 13 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.c
-index 04166bda41daa..b9572fcc3bda5 100644
---- a/drivers/ufs/host/ufshcd-pci.c
-+++ b/drivers/ufs/host/ufshcd-pci.c
-@@ -24,7 +24,7 @@ struct ufs_host {
- 	void (*late_init)(struct ufs_hba *hba);
- };
- 
--enum {
-+enum intel_ufs_dsm_func_id {
- 	INTEL_DSM_FNS		=  0,
- 	INTEL_DSM_RESET		=  1,
- };
-@@ -42,6 +42,15 @@ static const guid_t intel_dsm_guid =
- 	GUID_INIT(0x1A4832A0, 0x7D03, 0x43CA,
- 		  0xB0, 0x20, 0xF6, 0xDC, 0xD1, 0x2A, 0x19, 0x50);
- 
-+static bool __intel_dsm_supported(struct intel_host *host,
-+				  enum intel_ufs_dsm_func_id fn)
-+{
-+	return fn < 32 && fn >= 0 && (host->dsm_fns & (1u << fn));
-+}
-+
-+#define INTEL_DSM_SUPPORTED(host, name) \
-+	__intel_dsm_supported(host, INTEL_DSM_##name)
-+
- static int __intel_dsm(struct intel_host *intel_host, struct device *dev,
- 		       unsigned int fn, u32 *result)
- {
-@@ -71,7 +80,7 @@ static int __intel_dsm(struct intel_host *intel_host, struct device *dev,
- static int intel_dsm(struct intel_host *intel_host, struct device *dev,
- 		     unsigned int fn, u32 *result)
- {
--	if (fn > 31 || !(intel_host->dsm_fns & (1 << fn)))
-+	if (!__intel_dsm_supported(intel_host, fn))
- 		return -EOPNOTSUPP;
- 
- 	return __intel_dsm(intel_host, dev, fn, result);
-@@ -300,7 +309,7 @@ static int ufs_intel_device_reset(struct ufs_hba *hba)
- {
- 	struct intel_host *host = ufshcd_get_variant(hba);
- 
--	if (host->dsm_fns & INTEL_DSM_RESET) {
-+	if (INTEL_DSM_SUPPORTED(host, RESET)) {
- 		u32 result = 0;
- 		int err;
- 
-@@ -342,7 +351,7 @@ static int ufs_intel_common_init(struct ufs_hba *hba)
- 		return -ENOMEM;
- 	ufshcd_set_variant(hba, host);
- 	intel_dsm_init(host, hba->dev);
--	if (host->dsm_fns & INTEL_DSM_RESET) {
-+	if (INTEL_DSM_SUPPORTED(host, RESET)) {
- 		if (hba->vops->device_reset)
- 			hba->caps |= UFSHCD_CAP_DEEPSLEEP;
- 	} else {
--- 
-2.31.0
-
+>On=C2=A07/27/22=C2=A000:10,=C2=A0Jinyoung=C2=A0CHOI=C2=A0wrote:=0D=0A>>=C2=
+=A0diff=C2=A0--git=C2=A0a/include/ufs/ufshcd.h=C2=A0b/include/ufs/ufshcd.h=
+=0D=0A>>=C2=A0index=C2=A094bcfec98fb8..78adc556444a=C2=A0100644=0D=0A>>=C2=
+=A0---=C2=A0a/include/ufs/ufshcd.h=0D=0A>>=C2=A0+++=C2=A0b/include/ufs/ufsh=
+cd.h=0D=0A>>=C2=A0=40=40=C2=A0-1017,6=C2=A0+1017,12=C2=A0=40=40=C2=A0static=
+=C2=A0inline=C2=A0bool=C2=A0ufshcd_is_wb_allowed(struct=C2=A0ufs_hba=C2=A0*=
+hba)=0D=0A>>=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0return=C2=A0hba->caps=C2=A0&=C2=A0UFSHCD_CAP_WB_EN;=0D=0A>>=C2=A0=C2=A0=
+=C2=A0=7D=0D=0A>>=C2=A0=C2=A0=C2=A0=0D=0A>>=C2=A0+static=C2=A0inline=C2=A0b=
+ool=C2=A0ufshcd_is_wb_buf_flush_allowed(struct=C2=A0ufs_hba=C2=A0*hba)=0D=
+=0A>>=C2=A0+=7B=0D=0A>>=C2=A0+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0return=C2=A0ufshcd_is_wb_allowed(hba)=C2=A0&&=0D=0A>>=C2=A0+=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=21(hba->quirks=C2=A0&=C2=A0UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL=
+);=0D=0A>>=C2=A0+=7D=0D=0A>=0D=0A>Since=C2=A0this=C2=A0function=C2=A0is=C2=
+=A0only=C2=A0used=C2=A0inside=C2=A0the=C2=A0UFS=C2=A0driver=C2=A0core=C2=A0=
+it=C2=A0should=C2=A0be=C2=A0=0D=0A>added=C2=A0in=C2=A0drivers/ufs/core/ufsh=
+cd-priv.h=C2=A0instead=C2=A0of=C2=A0include/ufs/ufshcd.h.=0D=0A>=0D=0A>Than=
+ks,=0D=0A>=0D=0A>Bart.=0D=0A=0D=0AOK,=20I=20will=20move=20it.=0D=0AI=20didn=
+'t=20know=20the=20exact=20purpose=20of=20ufshcd-priv.h.=0D=0AThank=20you=20=
+for=20telling=20me.=0D=0A=0D=0AThanks,=20Jinyoung.
