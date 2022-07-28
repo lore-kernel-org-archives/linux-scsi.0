@@ -2,74 +2,80 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED84CC04A68
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jul 2022 13:33:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CED68C04A68
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jul 2022 13:37:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230088AbiG1Ndv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Jul 2022 09:33:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40282 "EHLO
+        id S229522AbiG1Nhu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Jul 2022 09:37:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44706 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229622AbiG1Nds (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jul 2022 09:33:48 -0400
-Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 646F75140F;
-        Thu, 28 Jul 2022 06:33:48 -0700 (PDT)
-Received: by mail-pj1-f54.google.com with SMTP id e1so2062076pjl.1;
-        Thu, 28 Jul 2022 06:33:48 -0700 (PDT)
+        with ESMTP id S229527AbiG1Nhs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jul 2022 09:37:48 -0400
+Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73EC1E54;
+        Thu, 28 Jul 2022 06:37:48 -0700 (PDT)
+Received: by mail-pf1-f170.google.com with SMTP id c3so1931668pfb.13;
+        Thu, 28 Jul 2022 06:37:48 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
          :content-language:to:cc:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=gHUvDp9XxgXKyC/S3Y/ZPZ1AK6LyrKzwAJXqinHhkxY=;
-        b=eL37x8c4y9LgS4noEaq4Nbu1pJYqbgVLPdmMfJDte8pIKclLWYmOnFxb2m7tHKCyzy
-         VqtUjtbz7Klx0xRADHJjoaoJASMrpijWb+vc3FbldV7ryvuXSv/qsjC04UkW+ivaAvil
-         ripYHP6j0az/1OtZ0saBI+nWZjnOKc9VbVnk32OcnSLxJLpRLvgMsNIImUetcpQN9WwX
-         9cZAH3hhxPVlITWWZKTjBKvIR9g0ACclEt/es8SSC135Md6q+LihcmOlul1XpRHajdrT
-         iGMLg4oSaR0gdI9Y//7hzwHCUfEG/0fXpTwbANhYwYummelwAzUiZRWKzjGnABD7x9vQ
-         Kkqw==
-X-Gm-Message-State: AJIora8lYgWyndYTkbm11el5bYptjeryvTqmbacCVUkhmWLlQJw61nvZ
-        /Y5z6CxVH9mMVdoNpOTvTW4=
-X-Google-Smtp-Source: AGRyM1s+K/6al4NrwNKS3VWhyVYTdV/0+QCqk/k3mxIiaamLxq73CxhjB49R4yO7pJbpvxoBVwNEZQ==
-X-Received: by 2002:a17:902:9307:b0:166:41a8:abc0 with SMTP id bc7-20020a170902930700b0016641a8abc0mr26273877plb.135.1659015227738;
-        Thu, 28 Jul 2022 06:33:47 -0700 (PDT)
+        bh=4RLlGi5dAg2VHKxbnNsmBFx3UyLfmfFc7h36hZHmzx8=;
+        b=ggvGoRVaHJFAvy7QjcWwrjd73AJF6I2xTzZqd4+KpDDJONQxsB4kgvbkRENGW90tn7
+         jHgGd/5o+HMIJHgwV2FPdsNbjs6kVJCaYJ2dZ1dAQObvyfRWbgfvQV9HBLAiOphuz65P
+         vTsYxvhdGolSVD8FXe6Plfsd6JD+HgUBkOYxca/7w5q1E55UivikdcwNL15n17BZ0F/3
+         yJG+bGoOikgEY+6mBEMXXpPzytKuMpYFYPp9rvOsDQZWh591pq7fMJHmj6WNm57GTgFS
+         seWi2+z3JPy+CmeySIbae4zKMsyxDzer8WG4UUeNRZxvB034KaRf4YeBegZAvHbLuXPK
+         KMNQ==
+X-Gm-Message-State: AJIora/g33ugQZVMm90BxAGQmuFP1I38bsTnfgpoSseBwlE0A2BsObtj
+        ktklvlBYY/MyEEAMJovFBfc=
+X-Google-Smtp-Source: AGRyM1towNySqyGC9e26YS+cLOL4fnOnEp8PYg5c3M86CM2n/7wpJ+CfvrBhStzIT5TsmM0TxL09+w==
+X-Received: by 2002:a05:6a00:99f:b0:52a:dd61:a50f with SMTP id u31-20020a056a00099f00b0052add61a50fmr27257824pfg.9.1659015467889;
+        Thu, 28 Jul 2022 06:37:47 -0700 (PDT)
 Received: from [192.168.3.217] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id w71-20020a627b4a000000b005289ffefe82sm736615pfc.130.2022.07.28.06.33.46
+        by smtp.gmail.com with ESMTPSA id f34-20020a17090a702500b001f254ec83aesm3615951pjk.38.2022.07.28.06.37.46
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 28 Jul 2022 06:33:46 -0700 (PDT)
-Message-ID: <238bacda-6df5-0836-2f6a-74a6079a7ae4@acm.org>
-Date:   Thu, 28 Jul 2022 06:33:45 -0700
+        Thu, 28 Jul 2022 06:37:47 -0700 (PDT)
+Message-ID: <28005e66-ba90-8986-1b8f-b76bba46064c@acm.org>
+Date:   Thu, 28 Jul 2022 06:37:45 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.11.0
-Subject: Re: [PATCH V1] scsi: ufs: Get boot device storage type from command
- line
+Subject: Re: [PATCH] ufs: core: print capabilities in controller's sysfs node
 Content-Language: en-US
-To:     "Chetan Chinnadagudihundi Ravindranath (Consultant) (QUIC)" 
-        <quic_cchinnad@quicinc.com>, jejb@linux.ibm.com
-Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <1658910535-31802-1-git-send-email-quic_cchinnad@quicinc.com>
- <a09de6e0-700b-0715-06a8-150ab41e8e7f@acm.org>
- <c66ffd91-8649-edb7-86dc-422ae82e1b84@quicinc.com>
+To:     Daniil Lunev <dlunev@chromium.org>,
+        Adrian Hunter <adrian.hunter@intel.com>
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+References: <20220728144710.1.Id612b86fd30936dfd4c456b3341547c15cecf321@changeid>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <c66ffd91-8649-edb7-86dc-422ae82e1b84@quicinc.com>
+In-Reply-To: <20220728144710.1.Id612b86fd30936dfd4c456b3341547c15cecf321@changeid>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/28/22 01:35, Chetan Chinnadagudihundi Ravindranath (Consultant) 
-(QUIC) wrote:
-> Hi Brat,
+On 7/27/22 21:49, Daniil Lunev wrote:
+> +static ssize_t caps_show(struct device *dev, struct device_attribute *attr,
+> +			 char *buf)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +
+> +	return sysfs_emit(buf, "0x%08llx\n", hba->caps);
+> +}
 
-Please spell my name correctly.
-
-> Yes, since SCSI_UFSHCD=y am selecting UFS_QCOM_CMDLINE=y so that it gets 
-> __setup() declarations. I am able to read the command line arguments and 
-> get this "androidboot.bootdevice=" info. I had cross checked again.
-
-I was asking about SCSI_UFSHCD=m instead of SCSI_UFSHCD=y.
+This code change includes all of the UFSHCD_CAP_* constants in the 
+kernel ABI. Is that really what we want? I'm wondering whether it 
+perhaps would be better only to export those capabilities to user space 
+that user space needs to know about.
 
 Thanks,
 
