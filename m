@@ -2,115 +2,127 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0C36C04A68
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jul 2022 04:49:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 499F8C04A68
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jul 2022 06:21:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231682AbiG1Etl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Jul 2022 00:49:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35072 "EHLO
+        id S232183AbiG1GVY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Jul 2022 02:21:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33698 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230018AbiG1Eti (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jul 2022 00:49:38 -0400
-Received: from mail-pf1-x433.google.com (mail-pf1-x433.google.com [IPv6:2607:f8b0:4864:20::433])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DFC2D5727B
-        for <linux-scsi@vger.kernel.org>; Wed, 27 Jul 2022 21:49:37 -0700 (PDT)
-Received: by mail-pf1-x433.google.com with SMTP id e16so924001pfm.11
-        for <linux-scsi@vger.kernel.org>; Wed, 27 Jul 2022 21:49:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=dIU+0kp3XN3YAPMWZ5u0JzDJny+Q5/T546hhxY9/MfE=;
-        b=A3sLGIAmpGd9lKIDOhhq2hO5j80ogagK4XK4GFtQnARt4AIiSbaTzZIev/8/RK64dm
-         IoPap9nhtD+S410RMzgKbqmbyRJch/aDkX+U2Mbo3tGqrioZ4UdbR2Dky3+NMXqYuhCl
-         BChxx+YrgUl2Fgl1eZB2jV7hWmHzxKVSnT07A=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=dIU+0kp3XN3YAPMWZ5u0JzDJny+Q5/T546hhxY9/MfE=;
-        b=hjCCmoIJdnvTBQY60vIp/9oXEaTBBtHkPmNOZeCQmBvj2ryayORnSuI4t3Vmn1K92E
-         8aIzCMVbICIIJJzXbI5rE68JBjjIsB3ARDknC7hkgW4XW9Vqat5ANFn8LbtZsAELXnNR
-         +i4dfxMPKB6lHG0MyT9jL0nGrYEXrkF/6Wuz4jMc20EvxsHfKQGmYKfE2G9EIPcdUlFr
-         6Cbyxw1h35dPoXGBEaOHmLoHSbVU53NLTG7csl++CgKjdDlURTyYpVc1ltYCoSbokV+d
-         MyYsdl3L3ACpMnRAYCTwUd3HJL+WVeVjCdxyZamXd1JiISwYCPpu5Gshrz4l6RvdBjiM
-         qmKQ==
-X-Gm-Message-State: AJIora+YOwuszF5682ahTRBPR9pXlQwek65vKMxs2ZMLu/HIquEtz1BB
-        wmlQhUUxM+FjfN/05rm3W4Yh4Q==
-X-Google-Smtp-Source: AGRyM1uXJ6dajQE24lZ91bt+VAFIy4MIeVWoq2tZj6TXIQoLp+R4aE+8WfwpXl9CllMHDU7nsU4wVQ==
-X-Received: by 2002:a63:e80e:0:b0:419:d02c:fc8b with SMTP id s14-20020a63e80e000000b00419d02cfc8bmr21198632pgh.385.1658983777433;
-        Wed, 27 Jul 2022 21:49:37 -0700 (PDT)
-Received: from dlunevwfh.roam.corp.google.com (n122-107-196-14.sbr2.nsw.optusnet.com.au. [122.107.196.14])
-        by smtp.gmail.com with ESMTPSA id u8-20020a1709026e0800b001640aad2f71sm14530251plk.180.2022.07.27.21.49.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 27 Jul 2022 21:49:37 -0700 (PDT)
-From:   Daniil Lunev <dlunev@chromium.org>
-To:     Adrian Hunter <adrian.hunter@intel.com>,
-        Bart Van Assche <bvanassche@acm.org>
-Cc:     Daniil Lunev <dlunev@chromium.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [PATCH] ufs: core: print capabilities in controller's sysfs node
-Date:   Thu, 28 Jul 2022 14:49:25 +1000
-Message-Id: <20220728144710.1.Id612b86fd30936dfd4c456b3341547c15cecf321@changeid>
-X-Mailer: git-send-email 2.31.0
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        with ESMTP id S230043AbiG1GVX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jul 2022 02:21:23 -0400
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 757745C973
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Jul 2022 23:21:19 -0700 (PDT)
+Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20220728062113epoutp042c167c1e906eb2a3d56e91aa3b55a793~F6fR209Bo2717127171epoutp04n
+        for <linux-scsi@vger.kernel.org>; Thu, 28 Jul 2022 06:21:13 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20220728062113epoutp042c167c1e906eb2a3d56e91aa3b55a793~F6fR209Bo2717127171epoutp04n
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1658989273;
+        bh=/evFvAqXQi7c+IqL7X8XjIssIUeaJ50cElJRdAnjasI=;
+        h=Subject:Reply-To:From:To:In-Reply-To:Date:References:From;
+        b=t5AJovh3z2IZdcfuiCbMHfQaeRcnqw8M4XnBwBVjyQVRUAlP7x4CL3OUJUWD5gCHp
+         xuQtSHvK8JW/jDjQwqIxhE/TswVCuBioBebQpQVWwgSq3f8yEAOeEjU+gxlBsKO2pC
+         MeFAlcUWowpHwpqcTPnS0ANoxzXVTf9usJ162BWI=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
+        20220728062113epcas2p321bbcb8e57015f420bd20dbd915b0261~F6fRSpEvo1188011880epcas2p3x;
+        Thu, 28 Jul 2022 06:21:13 +0000 (GMT)
+Received: from epsmges2p4.samsung.com (unknown [182.195.36.101]) by
+        epsnrtp2.localdomain (Postfix) with ESMTP id 4LtgWr5mDgz4x9QC; Thu, 28 Jul
+        2022 06:21:12 +0000 (GMT)
+X-AuditID: b6c32a48-9f7ff700000025be-eb-62e22ad8a37d
+Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
+        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
+        64.A2.09662.8DA22E26; Thu, 28 Jul 2022 15:21:12 +0900 (KST)
+Mime-Version: 1.0
+Subject: RE:(2) [PATCH v4 1/7] scsi: ufs: wb: Move ufshcd_is_wb_allowed() to
+ callee
+Reply-To: j-young.choi@samsung.com
+Sender: Jinyoung CHOI <j-young.choi@samsung.com>
+From:   Jinyoung CHOI <j-young.choi@samsung.com>
+To:     ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <dfcd22985fde6fe8a8a00bfb2a9c8ee43f92e34b.camel@gmail.com>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20220728062112epcms2p8caabb4288c426b9b7641a7e867c50af3@epcms2p8>
+Date:   Thu, 28 Jul 2022 15:21:12 +0900
+X-CMS-MailID: 20220728062112epcms2p8caabb4288c426b9b7641a7e867c50af3
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+CMS-TYPE: 102P
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprPJsWRmVeSWpSXmKPExsWy7bCmqe4NrUdJBldeSVqcfLKGzeLBvG1s
+        Fi9/XmWzOPiwk8Vi2oefzBYvD2laLLqxjcni8q45bBbd13ewWSw//o/Jgcvj8hVvj8V7XjJ5
+        TFh0gNHj+/oONo+PT2+xePRtWcXo8XmTnEf7gW6mAI6obJuM1MSU1CKF1Lzk/JTMvHRbJe/g
+        eOd4UzMDQ11DSwtzJYW8xNxUWyUXnwBdt8wcoBOVFMoSc0qBQgGJxcVK+nY2RfmlJakKGfnF
+        JbZKqQUpOQXmBXrFibnFpXnpenmpJVaGBgZGpkCFCdkZ915uYSxYIlixYsdkxgbGVwJdjJwc
+        EgImEv8ud7F2MXJxCAnsYJToOfmArYuRg4NXQFDi7w5hkBphgVCJllcn2EBsIQEliXNrZjGC
+        lAgLGEjc6jUHCbMJ6En8XDKDDWSMiMBZZomFD6cwQcznlZjR/pQFwpaW2L58KyOIzSngLrFl
+        5m5GiLiGxI9lvcwQtqjEzdVv2WHs98fmQ9WISLTeOwtVIyjx4CdMr6TEoUNfwU6WEMiX2HAg
+        ECJcI/F2+QGoEn2Jax0bwU7gFfCV+LIQ4gQWAVWJVde+QZ3pIvHgxEawtcwC2hLLFr5mBhnJ
+        LKApsX6XPsR0ZYkjt1hgnmrY+Jsdnc0swCfRcfgvXHzHvCdMEK1qEouajCDCMhJfD89nn8Co
+        NAsRyrOQrJ2FsHYBI/MqRrHUguLc9NRiowITeMQm5+duYgSnVC2PHYyz337QO8TIxMF4iFGC
+        g1lJhDch+n6SEG9KYmVValF+fFFpTmrxIUZToIcnMkuJJucDk3peSbyhiaWBiZmZobmRqYG5
+        kjivV8qGRCGB9MSS1OzU1ILUIpg+Jg5OqQamhVOXJYk/aj4Y9rFLXmqz0r6Xee9Ygt2vuUyJ
+        dJsiyyYZ21w+4Xbb1o2PqlI8327r2ZChK6bklHFOxn3JnPx/b3I+/uh81jdjk69m677QLS37
+        9jwtzcp3zD9ZEB11c6/FJee7tmt/XHmj+u3E97+5G9oL0ksdH29jvHrn5iJV567XSt+EpFLt
+        J2Y/6nLw1Ltb1Z2b4qjLP7OoV72QXVq/mFFYhEv5VLkqw6UZXM/Lp1y7HFR73CBh+elF4hy2
+        xrICHFy3VG2dDwezV1o5TFVfrSWkFl/p8uFSSfPnKNkL4t2lpnyhiam7w/39FnY5nju53uTT
+        hX+LvGa8SrEv90y1/fG7Kn6T9dMU8w/xHUosxRmJhlrMRcWJAL5ZMc0yBAAA
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20220727065904epcms2p60a7a56101785ddefa55c82b3cc25116d
+References: <dfcd22985fde6fe8a8a00bfb2a9c8ee43f92e34b.camel@gmail.com>
+        <20220727065904epcms2p60a7a56101785ddefa55c82b3cc25116d@epcms2p6>
+        <20220727070410epcms2p5206785e4d960b32dcbb6729710dab535@epcms2p5>
+        <CGME20220727065904epcms2p60a7a56101785ddefa55c82b3cc25116d@epcms2p8>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Allows userspace to check supported by the controller/device
-functionality, e.g. write booster.
-
-Signed-off-by: Daniil Lunev <dlunev@chromium.org>
-
----
-
- drivers/ufs/core/ufs-sysfs.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
-
-diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
-index 0a088b47d5570..b0c294c367519 100644
---- a/drivers/ufs/core/ufs-sysfs.c
-+++ b/drivers/ufs/core/ufs-sysfs.c
-@@ -254,6 +254,14 @@ static ssize_t wb_on_store(struct device *dev, struct device_attribute *attr,
- 	return res < 0 ? res : count;
- }
- 
-+static ssize_t caps_show(struct device *dev, struct device_attribute *attr,
-+			 char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	return sysfs_emit(buf, "0x%08llx\n", hba->caps);
-+}
-+
- static DEVICE_ATTR_RW(rpm_lvl);
- static DEVICE_ATTR_RO(rpm_target_dev_state);
- static DEVICE_ATTR_RO(rpm_target_link_state);
-@@ -262,6 +270,7 @@ static DEVICE_ATTR_RO(spm_target_dev_state);
- static DEVICE_ATTR_RO(spm_target_link_state);
- static DEVICE_ATTR_RW(auto_hibern8);
- static DEVICE_ATTR_RW(wb_on);
-+static DEVICE_ATTR_RO(caps);
- 
- static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
- 	&dev_attr_rpm_lvl.attr,
-@@ -272,6 +281,7 @@ static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
- 	&dev_attr_spm_target_link_state.attr,
- 	&dev_attr_auto_hibern8.attr,
- 	&dev_attr_wb_on.attr,
-+	&dev_attr_caps.attr,
- 	NULL
- };
- 
--- 
-2.31.0
-
+>On=C2=A0Wed,=C2=A02022-07-27=C2=A0at=C2=A016:04=C2=A0+0900,=C2=A0Jinyoung=
+=C2=A0CHOI=C2=A0wrote:=0D=0A>>=C2=A0diff=C2=A0--git=C2=A0a/drivers/ufs/core=
+/ufshcd.c=C2=A0b/drivers/ufs/core/ufshcd.c=0D=0A>>=C2=A0index=C2=A08f11f118=
+c30e..a3bdf9986511=C2=A0100644=0D=0A>>=C2=A0---=C2=A0a/drivers/ufs/core/ufs=
+hcd.c=0D=0A>>=C2=A0+++=C2=A0b/drivers/ufs/core/ufshcd.c=0D=0A>>=C2=A0=40=40=
+=C2=A0-5722,6=C2=A0+5722,9=C2=A0=40=40=C2=A0static=C2=A0int=C2=A0__ufshcd_w=
+b_toggle(struct=C2=A0ufs_hba=0D=0A>>=C2=A0*hba,=C2=A0bool=C2=A0set,=C2=A0en=
+um=C2=A0flag_idn=C2=A0idn)=0D=0A>>=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0enum=C2=A0query_opcode=C2=A0opcode=C2=A0=3D=C2=A0set=C2=A0?=
+=C2=A0UPIU_QUERY_OPCODE_SET_FLAG=C2=A0:=0D=0A>>=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0UPIU_QUERY_OPCODE_CLEAR_FLAG;=0D=0A>=
+>=C2=A0=C2=A0=0D=0A>>=C2=A0+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if=C2=
+=A0(=21ufshcd_is_wb_allowed(hba))=0D=0A>>=C2=A0+=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0return=C2=A0=
+-EPERM;=0D=0A>>=C2=A0+=0D=0A>Hi=C2=A0J-young,=0D=0A>=0D=0A>here=C2=A0you=C2=
+=A0should=C2=A0change=C2=A0its=C2=A0return,=C2=A0Otherwise,=C2=A0there=C2=
+=A0will=C2=A0be=C2=A0an=C2=A0fake=0D=0A>error=C2=A0printing:=0D=0A>=0D=0A>=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0dev_err(hba->dev,=C2=A0=22%=
+s=C2=A0Write=C2=A0Booster=C2=A0%s=C2=A0failed=C2=A0%d=5Cn=22,=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=0D=0A>=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0__func__,=C2=A0enable=C2=
+=A0?=C2=A0=22enable=22=C2=A0:=C2=A0=22disable=22,=C2=A0ret);=0D=0A>=0D=0A>=
+=0D=0A>Kind=C2=A0regards,=0D=0A>Bean=0D=0A=0D=0AYou=20are=20right=21=0D=0AR=
+ather=20than=20changing=20the=20return=20value,=20this=20patch=20is=20likel=
+y=20to=20be=20excluded=0D=0Abecause=20caller=20can=20continue=20unnecessary=
+=20work.=0D=0A=0D=0AThanks,=20Jinyoung.
