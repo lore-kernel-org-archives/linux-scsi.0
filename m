@@ -2,110 +2,102 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE099C04A68
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jul 2022 19:38:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABB03C04A68
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jul 2022 19:52:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229620AbiG1TiV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Jul 2022 15:38:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56694 "EHLO
+        id S231590AbiG1TwP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Jul 2022 15:52:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36482 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229458AbiG1TiU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jul 2022 15:38:20 -0400
-Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB6E9BC91;
-        Thu, 28 Jul 2022 12:38:19 -0700 (PDT)
-Received: by mail-pf1-f182.google.com with SMTP id e16so2748228pfm.11;
-        Thu, 28 Jul 2022 12:38:19 -0700 (PDT)
+        with ESMTP id S229502AbiG1TwN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jul 2022 15:52:13 -0400
+Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B0FB1CFD5;
+        Thu, 28 Jul 2022 12:52:13 -0700 (PDT)
+Received: by mail-pg1-x532.google.com with SMTP id l193so1936102pge.9;
+        Thu, 28 Jul 2022 12:52:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=Q6Nd+Q0znhV0oBUcJ9SffYMNHCPkVgH2JbTP7gR3xXw=;
+        b=alecOQsYpv2iZLHlSQSZ8Pv/W0uldMCf/G3vQ/8QXQu/XhBmIaeA44YEqkPbt8iDS5
+         FTLUhAR2OtfhLK7KIirjYSjGoW8dDTllCAk4mKkIAtFTWWGzmbVwuZ8t5z5kuz+sYB26
+         qvo1xcqRqwhz4+tIix6DMdtbvaBZQWNWy0eYctGWrT7RafPhHSZArbwHFx9ML77a4GxA
+         84aOhEvZJDvq7kPc03npiGoF1fKAzQ3Xr5sdF1Jd2++QGYTFYOBLpJ66XFAx0CJ+9PaY
+         GJkX5z+WNtartBSWU/8BV8Q2C2xnEFbx7M42EUPn9pdH97f5R4Yt3oXs9SBqdxwnTGIZ
+         iLTw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
          :content-language:to:cc:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=vIxmQnkl3fMccyRP7AFD2Lb9/2fToNcLZtlAYIfiBfs=;
-        b=1aScTeH9IMwd9KgvGBksY3vSB0MgLm7pInsW/sCqV7XLnhQD+LdjHiECRF1uvQpfQP
-         ZiWrcwFDNUMc+EjR54Zjnqv+I0Ex+bNTHvs1gKFgNyPW3zexP5JdupOtT4DodVhfOk2j
-         rE2cPuxUac9mY1xJO2gyUYg+9NsI063Dz5iVGZ6+WJ03ekkT9SY3wlFLd1oGERmWori9
-         yosvs8Cu55bIjw3p8X8nETRemXtS2AcURIyr0qj+doEeSHmyYg2iPgY2Eb3XczEiRl0m
-         bK8G7gHRjSSro14qeMKDU89iWc/tM8sZ1ccZEVXdWunGL50Uxq1awNXI/W4T6YpJ+4sr
-         Zxdg==
-X-Gm-Message-State: AJIora+cxEnI+Uj0//xjOWdpEpHJ06M0wIUFd1v1r1Gkq3kj65j0vzVR
-        401UN9+Vatm0apiEUjQlSew=
-X-Google-Smtp-Source: AGRyM1sQ2Iw/wfAEfc5Eohl7Ndyvtt0tx8n5tb4166A/8q/gKzMD0H2xapDfJxgN08wLwp9e8ILEqA==
-X-Received: by 2002:a65:49c8:0:b0:41a:eb36:d1a7 with SMTP id t8-20020a6549c8000000b0041aeb36d1a7mr266848pgs.66.1659037099101;
-        Thu, 28 Jul 2022 12:38:19 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:9520:2952:8318:8e3e? ([2620:15c:211:201:9520:2952:8318:8e3e])
-        by smtp.gmail.com with ESMTPSA id g1-20020a625201000000b0051bada81bc7sm1121860pfb.161.2022.07.28.12.38.16
+        bh=Q6Nd+Q0znhV0oBUcJ9SffYMNHCPkVgH2JbTP7gR3xXw=;
+        b=l2mrqQKet2YrXEvsZFuHJ93DD7Wp0uX2HoLupJaWBs0PFrjjJS23/12YglT/v9X3aC
+         GFTLc5Poq2pMgMIjuj5gOE78n3nSe7z4tjWgNMKV5IgYmWeeH5GT+7AOzkiMeM+erSuy
+         YKWCwdTuTbG73bHqYaqNj+EgYEfR1pkWUvVC0Ey7zNajP34UJGPw29WT7g5fv8uESllf
+         N+vdbOY6teNfmEMHLMKVi+cqC9UBlKInRyu3mnktQz7kAuhy0D94kZPxskMxajZqNUX2
+         a7fI+2iqxeyQjPqnpeW04gN4ykTEIMZY2ngeSoCIG2LEStXYlEZWmV81c8K9mjH/to5j
+         UW8g==
+X-Gm-Message-State: AJIora+1GABj9dfu4HtRYo/d5PxVOfbMiH9SxzOlTBQ4PsXjOl0s3nDJ
+        bfAKEwaOn0YuTdLt29QQe90=
+X-Google-Smtp-Source: AGRyM1suCrcDF6++nJ3oOFqhptT6beAHWVLcZwrncorVv/8TNUI45oZSjY6ot1xjaLv0iT9q/G7hDw==
+X-Received: by 2002:a05:6a00:a29:b0:52a:c0c3:4379 with SMTP id p41-20020a056a000a2900b0052ac0c34379mr143615pfh.15.1659037932535;
+        Thu, 28 Jul 2022 12:52:12 -0700 (PDT)
+Received: from [10.69.47.244] ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id d10-20020a170902654a00b0016d710d8af7sm1719223pln.142.2022.07.28.12.52.11
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 28 Jul 2022 12:38:17 -0700 (PDT)
-Message-ID: <f803e7fb-9dde-e4d4-a55c-6427516dfdbb@acm.org>
-Date:   Thu, 28 Jul 2022 12:38:14 -0700
+        Thu, 28 Jul 2022 12:52:12 -0700 (PDT)
+Message-ID: <36eb306c-2e44-4639-5d1a-e1f3e09c3a47@gmail.com>
+Date:   Thu, 28 Jul 2022 12:52:10 -0700
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [PATCH 1/2] scsi: ufs: Add Multi-Circular Queue support
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.0.1
+Subject: Re: [PATCH] scsi: lpfc: check the return value of alloc_workqueue()
 Content-Language: en-US
-To:     Can Guo <quic_cang@quicinc.com>, stanley.chu@mediatek.com,
-        adrian.hunter@intel.com, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, beanhuo@micron.com, quic_asutoshd@quicinc.com,
-        quic_nguyenb@quicinc.com, quic_ziqichen@quicinc.com,
-        linux-scsi@vger.kernel.org, kernel-team@android.com
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1658214120-22772-1-git-send-email-quic_cang@quicinc.com>
- <1658214120-22772-2-git-send-email-quic_cang@quicinc.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <1658214120-22772-2-git-send-email-quic_cang@quicinc.com>
+To:     williamsukatube@163.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     james.smart@broadcom.com, dick.kennedy@broadcom.com,
+        William Dean <williamsukatube@gmail.com>,
+        Hacash Robot <hacashRobot@santino.com>
+References: <20220723064027.2956623-1-williamsukatube@163.com>
+From:   James Smart <jsmart2021@gmail.com>
+In-Reply-To: <20220723064027.2956623-1-williamsukatube@163.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/19/22 00:01, Can Guo wrote:
->   static int ufshcd_map_queues(struct Scsi_Host *shost)
->   {
-> -	int i, ret;
-> +	int i, queue_offset = 0, ret;
-> +	struct ufs_hba *hba = shost_priv(shost);
+On 7/22/2022 11:40 PM, williamsukatube@163.com wrote:
+> From: William Dean <williamsukatube@gmail.com>
+> 
+> The function alloc_workqueue() in lpfc_sli4_driver_resource_setup() can
+> fail, but there is no check of its return value. To fix this bug, its
+> return value should be checked with new error handling code.
+> 
+> Fixes: 3cee98db2610f ("scsi: lpfc: Fix crash on driver unload in wq free")
+> Reported-by: Hacash Robot <hacashRobot@santino.com>
+> Signed-off-by: William Dean <williamsukatube@gmail.com>
+> ---
+>   drivers/scsi/lpfc/lpfc_init.c | 2 ++
+>   1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+> index 750dd1e9f2cc..8e9594f4ed16 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -7958,6 +7958,8 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
 >   
->   	for (i = 0; i < shost->nr_maps; i++) {
->   		struct blk_mq_queue_map *map = &shost->tag_set.map[i];
+>   	/* The lpfc_wq workqueue for deferred irq use */
+>   	phba->wq = alloc_workqueue("lpfc_wq", WQ_MEM_RECLAIM, 0);
+> +	if (!phba->wq)
+> +		return -ENOMEM;
 >   
-> -		switch (i) {
-> -		case HCTX_TYPE_DEFAULT:
-> -		case HCTX_TYPE_POLL:
-> -			map->nr_queues = 1;
-> -			break;
-> -		case HCTX_TYPE_READ:
-> -			map->nr_queues = 0;
-> +		map->nr_queues = hba->nr_queues[i];
-> +		if (!map->nr_queues)
->   			continue;
-> -		default:
-> -			WARN_ON_ONCE(true);
-> -		}
-> -		map->queue_offset = 0;
-> +
-> +		map->queue_offset = queue_offset;
-> +		if (i == HCTX_TYPE_POLL && !is_mcq_enabled(hba))
-> +			map->queue_offset = 0;
-> +
->   		ret = blk_mq_map_queues(map);
-> -		WARN_ON_ONCE(ret);
-> +
-> +		if (ret)
-> +			return ret;
-> +
-> +		queue_offset += map->nr_queues;
->   	}
+>   	/*
+>   	 * Initialize timers used by driver
 
-It is not clear to me why the WARN_ON_ONCE(ret) statement has been 
-changed into "if (ret) return ret;"?
+Reviewed-by: James Smart <jsmart2021@gmail.com>
 
-Thanks,
-
-Bart.
+-- james
