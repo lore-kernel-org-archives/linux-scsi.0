@@ -2,64 +2,111 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A02BC04A68
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jul 2022 06:50:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22A32C04A68
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jul 2022 07:13:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234183AbiG1Gua (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Jul 2022 02:50:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53040 "EHLO
+        id S232566AbiG1HNx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Jul 2022 03:13:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42508 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233616AbiG1Gu3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jul 2022 02:50:29 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69DF0501AD;
-        Wed, 27 Jul 2022 23:50:28 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0466F61AF0;
-        Thu, 28 Jul 2022 06:50:28 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A882C433C1;
-        Thu, 28 Jul 2022 06:50:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1658991027;
-        bh=QnsMv5n+oml6tSg5a/IL8irjZHBGgpq3vTxxpSrgmyM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=JNwkeX23cHuQPEH1YLhh/+Euq7sDWwhTOpZbWzB9peOm6q1x0p2o0/6XLOaPcKVmi
-         MjihxSxsd0GH8SACQVQZSsz0KFfJ1F7bzRG8oqrPVY0YmyMcjOavyBy4r6DPR+L9Xg
-         WVo9XoYMn1Em0QQbB+31BFFXH8y5HABBnj06DBfg=
-Date:   Thu, 28 Jul 2022 08:50:24 +0200
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Daniil Lunev <dlunev@chromium.org>
-Cc:     Adrian Hunter <adrian.hunter@intel.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] ufs: core: print capabilities in controller's sysfs node
-Message-ID: <YuIxsD+ExIF8QYEx@kroah.com>
-References: <20220728144710.1.Id612b86fd30936dfd4c456b3341547c15cecf321@changeid>
+        with ESMTP id S230482AbiG1HNw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jul 2022 03:13:52 -0400
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 822185E311;
+        Thu, 28 Jul 2022 00:13:51 -0700 (PDT)
+X-UUID: f5b4335d66944ec7881168631f0d3798-20220728
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.8,REQID:15cfd353-6f83-40a3-8faa-57d4626a5268,OB:0,LO
+        B:0,IP:0,URL:5,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,RULE:Release_Ham,ACTI
+        ON:release,TS:5
+X-CID-META: VersionHash:0f94e32,CLOUDID:5cc18ed0-841b-4e95-ad42-8f86e18f54fc,C
+        OID:IGNORED,Recheck:0,SF:nil,TC:nil,Content:0,EDM:-3,IP:nil,URL:1,File:nil
+        ,QS:nil,BEC:nil,COL:0
+X-UUID: f5b4335d66944ec7881168631f0d3798-20220728
+Received: from mtkmbs11n1.mediatek.inc [(172.21.101.185)] by mailgw01.mediatek.com
+        (envelope-from <peter.wang@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 1828418788; Thu, 28 Jul 2022 15:13:43 +0800
+Received: from mtkmbs11n1.mediatek.inc (172.21.101.186) by
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.792.3;
+ Thu, 28 Jul 2022 15:13:43 +0800
+Received: from [172.21.84.99] (172.21.84.99) by mtkmbs11n1.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.2.792.15 via Frontend
+ Transport; Thu, 28 Jul 2022 15:13:42 +0800
+Subject: Re: [PATCH v4] ufs: core: fix lockdep warning of clk_scaling_lock
+To:     Bart Van Assche <bvanassche@acm.org>, <stanley.chu@mediatek.com>,
+        <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
+        <jejb@linux.ibm.com>
+CC:     <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
+        <chun-hung.wu@mediatek.com>, <alice.chao@mediatek.com>,
+        <cc.chou@mediatek.com>, <chaotian.jing@mediatek.com>,
+        <jiajie.hao@mediatek.com>, <powen.kao@mediatek.com>,
+        <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
+        <stable@vger.kernel.org>
+References: <20220727032110.31168-1-peter.wang@mediatek.com>
+ <5fab3d4f-914e-63f8-a3e8-7dd92ecdb04a@acm.org>
+From:   Peter Wang <peter.wang@mediatek.com>
+Message-ID: <47d1efed-69a7-cabf-e586-48b09a9afd78@mediatek.com>
+Date:   Thu, 28 Jul 2022 15:13:37 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220728144710.1.Id612b86fd30936dfd4c456b3341547c15cecf321@changeid>
+In-Reply-To: <5fab3d4f-914e-63f8-a3e8-7dd92ecdb04a@acm.org>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jul 28, 2022 at 02:49:25PM +1000, Daniil Lunev wrote:
-> Allows userspace to check supported by the controller/device
-> functionality, e.g. write booster.
-> 
-> Signed-off-by: Daniil Lunev <dlunev@chromium.org>
 
-You have to also document this in Documentation/ABI/ when you add a new
-sysfs file.  Please do so here.
+On 7/28/22 2:12 AM, Bart Van Assche wrote:
+> On 7/26/22 20:21, peter.wang@mediatek.com wrote:
+>> -    /* Enable Write Booster if we have scaled up else disable it */
+>> -    downgrade_write(&hba->clk_scaling_lock);
+>> -    is_writelock = false;
+>> -    ufshcd_wb_toggle(hba, scale_up);
+>> +    /* Disable clk_scaling until ufshcd_wb_toggle finish */
+>> +    hba->clk_scaling.is_allowed = false;
+>> +    wb_toggle = true;
+>>     out_unprepare:
+>> -    ufshcd_clock_scaling_unprepare(hba, is_writelock);
+>> +    ufshcd_clock_scaling_unprepare(hba);
+>> +
+>> +    /* Enable Write Booster if we have scaled up else disable it */
+>> +    if (wb_toggle) {
+>> +        ufshcd_wb_toggle(hba, scale_up);
+>> +        ufshcd_clk_scaling_allow(hba, true);
+>> +    }
+>
+> I'm concerned that briefly disabling clock scaling may cause the clock 
+> to remain at a high frequency even if it shouldn't. Has the following 
+> approach been considered? Instead of moving the 
+> ufshcd_clk_scaling_allow() call, convert dev_cmd.lock into a 
+> semaphore, lock it near the start of ufshcd_devfreq_scale() and unlock 
+> it near the end of the same function.
+>
+> Thanks,
+>
+> Bart.
 
-thanks,
 
-greg k-h
+Hi Bart,
+
+Clock scaling up/down have a polling_ms, so it shouldn't have this 
+condition that scale up block scale down.
+Convert dev_cmd.lock into a semaphore is more risky, and dev_cmd.lock 
+should hold when send dev command only.
+I think it is not suitable to hold this dev_cmd.lock in 
+ufshcd_devfreq_scale.
+
+Maybe we can have another choice, let vendor decide ufshcd_wb_toggle 
+with clock scaling or not?
+
+Thanks.
+Peter
+
+
+
