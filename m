@@ -2,106 +2,69 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00A27C00144
-	for <linux-scsi@archiver.kernel.org>; Fri, 29 Jul 2022 20:12:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68211C19F2A
+	for <linux-scsi@archiver.kernel.org>; Fri, 29 Jul 2022 20:14:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239097AbiG2UMG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 29 Jul 2022 16:12:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48178 "EHLO
+        id S239158AbiG2UOx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 29 Jul 2022 16:14:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49946 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239023AbiG2UME (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Jul 2022 16:12:04 -0400
-Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F92684EC6;
-        Fri, 29 Jul 2022 13:12:04 -0700 (PDT)
-Received: by mail-pf1-f176.google.com with SMTP id k79so1320650pfd.8;
-        Fri, 29 Jul 2022 13:12:04 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc;
-        bh=WqEsTmzo4i5fSlXYqdazJ4mWkRbar+SoV/KUVTSJNWs=;
-        b=wQHXFNyXsTJWyHy8Es7Wc+FPEkRLvliewTYhZLHZfVTDk2FCi739eXGLRNRd067+XX
-         axXk18E4R8M8mAMwvo4WTQmA+oR2I0SLacgoOZZ5d1OMIZX/xnes5/rPW8Eln0PJB2Wt
-         gh/zq8MGJoB6yDM4xhVpc3ya5bMW0rGU00RwyuDwCpyA3WzCZn09pvO4CrrkWzdrNapE
-         k7cJUVUv7p2udLmvmGuHWHffI8bZLo7CLk4/4EP7CbVQa3Uydy5FxU+5CeGOyTlZ32/3
-         A21C8uvKlvpSX7H059f5AZzt7+4evgsXygMOcQWxve+QjHNTJ/LfPeUCdpBRZDlD3kJk
-         El7A==
-X-Gm-Message-State: ACgBeo0f6ZNX6etzdunuuJq/P9ETjvLa96lFaShN3bwWWo9gy3W6fqnn
-        rQ43DT6Z0+Q3Hmm3NhxUkjE=
-X-Google-Smtp-Source: AA6agR6iI8nn5Vcvd08VLRPwuWa8rIn7Kk4foThZXSwlQ5u9RHtvmZKSHYJvGz2KRhxKOklgT7jDBg==
-X-Received: by 2002:a63:4407:0:b0:41b:b1df:cf6e with SMTP id r7-20020a634407000000b0041bb1dfcf6emr1509227pga.605.1659125523637;
-        Fri, 29 Jul 2022 13:12:03 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:f090:7a49:3465:6a5? ([2620:15c:211:201:f090:7a49:3465:6a5])
-        by smtp.gmail.com with ESMTPSA id e64-20020a621e43000000b0052ab42ea0c5sm3376910pfe.147.2022.07.29.13.12.01
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 29 Jul 2022 13:12:02 -0700 (PDT)
-Message-ID: <7e8c58cf-64c1-8426-bf22-97d3df85ed38@acm.org>
-Date:   Fri, 29 Jul 2022 13:11:59 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [PATCH v1] scsi: ufs: Fix ufshcd_scale_clks decision in recovery
- flow
-Content-Language: en-US
-To:     Stanley Chu <stanley.chu@mediatek.com>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, martin.petersen@oracle.com,
-        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com
-Cc:     peter.wang@mediatek.com, chun-hung.wu@mediatek.com,
-        alice.chao@mediatek.com, powen.kao@mediatek.com,
-        mason.zhang@mediatek.com, qilin.tan@mediatek.com,
-        lin.gui@mediatek.com, eddie.huang@mediatek.com,
-        tun-yu.yu@mediatek.com, cc.chou@mediatek.com,
-        chaotian.jing@mediatek.com, jiajie.hao@mediatek.com
-References: <20220729075519.4665-1-stanley.chu@mediatek.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220729075519.4665-1-stanley.chu@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S230499AbiG2UOw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Jul 2022 16:14:52 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A3D789EB3;
+        Fri, 29 Jul 2022 13:14:51 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by sin.source.kernel.org (Postfix) with ESMTPS id BD6F9CE2BD9;
+        Fri, 29 Jul 2022 20:14:49 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id DB5CBC433D6;
+        Fri, 29 Jul 2022 20:14:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1659125687;
+        bh=ykpusgUN+Wy7D2gUWSGzrQjY86z8OOUvZz9K3vERSG8=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=PbeTP0J4vMdUfNFm5jFFGs6Hwfo5UWChfBkHaVaNfUTgjL6WLUTmmMRqqZeP+D9Tz
+         HPWMYtBQJG5NCBYzwG4420L7vWvTboYHfEPV/usm1RLGwhevlQzMJivEcXrBEW2jNz
+         xZNYTXeVxhGChbtig1G1mJR4pcFaffrT2+7wq+EAdxothmiRwbo34WiGFLXaCiPh6F
+         VdNw3kr4beLFU4bvsTUK1x6nHoQjlUMEqHFhvwmPgVxZs+lBMnRUkUSHk83Nc79s9y
+         2q0wWk03VQP11H1z7PlQR5H1NBFwpDn4DrNxs/Ue9q8wPXO76HMfxlBpQ6xVojjO36
+         kAw+3L0inxaXw==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id C72A1C43142;
+        Fri, 29 Jul 2022 20:14:47 +0000 (UTC)
+Subject: Re: [GIT PULL] SCSI fixes for 5.19-rc8
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <d3a4b15f5eab509f9830f858a82f0db394d201db.camel@HansenPartnership.com>
+References: <d3a4b15f5eab509f9830f858a82f0db394d201db.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <d3a4b15f5eab509f9830f858a82f0db394d201db.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+X-PR-Tracked-Commit-Id: f5c2976e0cb0f6236013bfb479868531b04f61d4
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 1c8ac1c4af178ebcdf6fd4a0ba11716e2c814593
+Message-Id: <165912568780.21424.9938780429617910310.pr-tracker-bot@kernel.org>
+Date:   Fri, 29 Jul 2022 20:14:47 +0000
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/29/22 00:55, Stanley Chu wrote:
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 581d88af07ab..dc57a7988023 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -1574,8 +1574,6 @@ static ssize_t ufshcd_clkscale_enable_store(struct device *dev,
->   	ufshcd_rpm_get_sync(hba);
->   	ufshcd_hold(hba, false);
->   
-> -	hba->clk_scaling.is_enabled = value;
-> -
->   	if (value) {
->   		ufshcd_resume_clkscaling(hba);
->   	} else {
-> @@ -1586,6 +1584,8 @@ static ssize_t ufshcd_clkscale_enable_store(struct device *dev,
->   					__func__, err);
->   	}
->   
-> +	hba->clk_scaling.is_enabled = value;
-> +
->   	ufshcd_release(hba);
->   	ufshcd_rpm_put_sync(hba);
->   out:
-> @@ -7259,7 +7259,8 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
->   	hba->silence_err_logs = false;
->   
->   	/* scale up clocks to max frequency before full reinitialization */
-> -	ufshcd_scale_clks(hba, true);
-> +	if (ufshcd_is_clkscaling_supported(hba) && hba->clk_scaling.is_enabled)
-> +		ufshcd_scale_clks(hba, true);
->   
->   	err = ufshcd_hba_enable(hba);
+The pull request you sent on Fri, 29 Jul 2022 15:42:21 -0400:
 
-I see a race condition between the hba->clk_scaling.is_enabled check in 
-ufshcd_host_reset_and_restore() and the code that sets 
-ufshcd_clkscale_enable_store(). Shouldn't the code in 
-ufshcd_host_reset_and_restore() that scales up the clocks be serialized 
-against ufshcd_clkscale_enable_store()?
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-Thanks,
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/1c8ac1c4af178ebcdf6fd4a0ba11716e2c814593
 
-Bart.
+Thank you!
+
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
