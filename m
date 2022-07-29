@@ -2,48 +2,47 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8567CC00144
-	for <linux-scsi@archiver.kernel.org>; Fri, 29 Jul 2022 20:32:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C82BBC00144
+	for <linux-scsi@archiver.kernel.org>; Fri, 29 Jul 2022 20:34:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238699AbiG2Ucx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 29 Jul 2022 16:32:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36468 "EHLO
+        id S239038AbiG2Uee (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 29 Jul 2022 16:34:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37574 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229931AbiG2Ucv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Jul 2022 16:32:51 -0400
-Received: from mail-pg1-f178.google.com (mail-pg1-f178.google.com [209.85.215.178])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94A575FAD1;
-        Fri, 29 Jul 2022 13:32:50 -0700 (PDT)
-Received: by mail-pg1-f178.google.com with SMTP id r186so4851960pgr.2;
-        Fri, 29 Jul 2022 13:32:50 -0700 (PDT)
+        with ESMTP id S229931AbiG2Ued (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Jul 2022 16:34:33 -0400
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 794118B4A3;
+        Fri, 29 Jul 2022 13:34:32 -0700 (PDT)
+Received: by mail-pl1-f178.google.com with SMTP id d3so5578717pls.4;
+        Fri, 29 Jul 2022 13:34:32 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:in-reply-to:from:references:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc;
-        bh=xrL2XtamT4FT/8smQHiuGpzknBloKpSyaDrKzyKKzI8=;
-        b=feIR/FL8YP1JUzNo1dW3QSvo+YtDDJfeQ7EmogCU0CbrPsNdkte5q6NuHYBjdHnocK
-         hry/f+zg/0Ve8jK7sXkL4ZO5wY+X6ixRtZY+fNtNH2k/T5jkBMuW/KkYyZZEtACg8/Kw
-         GLTsHUqO6MEzvo3AUkaX26kDF8GJzC7+Q9CIacIvg63Dmp5fjOdbENG8Gr/smBf492rc
-         Dh6JBtcTQjIXCNpIvAnHZIPJNUB/2AlCt8qZ4fqoZaYMew670kV26/hnY5It6BF+yIxY
-         DjT7rzZdsW/RO1aaH/hmrFA6XolvTsKHwZcaui/T1290vMAeLkVPejxUB77FvLBZj3x+
-         PjTA==
-X-Gm-Message-State: AJIora+XEyBRGVRUNWmUPnwQaF7JoTe9Wp1W3OvP92waKFVzyBwqS0nP
-        50np9sOMd/aRi+aKv8qJ9gpm/WRgrCk=
-X-Google-Smtp-Source: AGRyM1tfK+Ex8JPsNPlR9sehgbM7kOjECRUhkjL+zNkOKxPYsL0Y9Xauh9Aa7Vitt3rjc1KrjauPng==
-X-Received: by 2002:a63:6c06:0:b0:419:ab8e:e177 with SMTP id h6-20020a636c06000000b00419ab8ee177mr4144562pgc.188.1659126770003;
-        Fri, 29 Jul 2022 13:32:50 -0700 (PDT)
+        bh=lz+voYShqwJWZIveEgi3l00fmU3XjgscqfYAMdEVMmo=;
+        b=St1dOrKGvrCi1DWJbDeCfQWZKQwzgVNCLZ1znIsFlefIe3IR/7MVghOR0fqEMufsv3
+         DctIe++hxSQH8cLrfShT3eRgUzrTmEo8+rJaiFenP4OpalpzR0BIhrDlkx1RkAVR/JWk
+         rllCjPYVLpLiULkI+8aW5oB8uaTvPydqeJ6fKbQO0gQE/CpRe7nEH4Ti5t3q+CDuodrG
+         IWrnZBFgJ1JdHYMl/aNx3uz3s0fGivm0eHzjH/GW6IgpBPA5qbAUyngXQSqUw0hh0yiZ
+         EDmTseD6xnrsZ7lHAdxQkk4FA5O07vwWFV/GGxxT9JPYATGhaOJpi1Zmk3dDRw6Mj4tC
+         xHXA==
+X-Gm-Message-State: ACgBeo257J/siNqF8ZsHs2aDLx9WoMc5WPgztGeLpXsHIi7I1hD9mve2
+        TaTA/6cWmzfPNubXkRuDB7s=
+X-Google-Smtp-Source: AA6agR7J2FkHfNF3gFH7yKEiPgfip/m0kbVNYXdxZpZ2UlP74Y04blSBHbSl8mrQ9RAT9w/XfGN3qw==
+X-Received: by 2002:a17:902:e80b:b0:16d:67a9:36a2 with SMTP id u11-20020a170902e80b00b0016d67a936a2mr5560850plg.144.1659126871883;
+        Fri, 29 Jul 2022 13:34:31 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:f090:7a49:3465:6a5? ([2620:15c:211:201:f090:7a49:3465:6a5])
-        by smtp.gmail.com with ESMTPSA id o70-20020a17090a0a4c00b001e29ddf9f4fsm3475340pjo.3.2022.07.29.13.32.48
+        by smtp.gmail.com with ESMTPSA id ik2-20020a170902ab0200b0016d7b2352desm4055555plb.244.2022.07.29.13.34.30
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 29 Jul 2022 13:32:49 -0700 (PDT)
-Message-ID: <6ad66ba9-0488-de6d-fec5-0feb5ca92de6@acm.org>
-Date:   Fri, 29 Jul 2022 13:32:47 -0700
+        Fri, 29 Jul 2022 13:34:31 -0700 (PDT)
+Message-ID: <0fccbbcf-2eb0-56b0-8334-0952a03308b3@acm.org>
+Date:   Fri, 29 Jul 2022 13:34:28 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.11.0
-Subject: Re: [PATCH v5 4/6] scsi: ufs: wb: Add
- ufshcd_is_wb_buf_flush_allowed()
+Subject: Re: [PATCH v5 5/6] scsi: ufs: wb: Modify messages
 Content-Language: en-US
 To:     j-young.choi@samsung.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
         "avri.altman@wdc.com" <avri.altman@wdc.com>,
@@ -53,25 +52,34 @@ To:     j-young.choi@samsung.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
         "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <20220729045600epcms2p45c0f8a5a0a76c7fe85b0961570de89ce@epcms2p4>
+References: <20220729045656epcms2p1e6912ae09ca2122d4d04854878e19b2c@epcms2p1>
+ <20220729045600epcms2p45c0f8a5a0a76c7fe85b0961570de89ce@epcms2p4>
  <20220729045433epcms2p77ff2cdde6ddffd9ab0b0810ebe84f0e5@epcms2p7>
  <20220729045252epcms2p7fee5c1cdca5e4bef02a833e40f80649b@epcms2p7>
  <20220729045045epcms2p8caf00317889ed4da8531b7466ec6e368@epcms2p8>
- <CGME20220729045045epcms2p8caf00317889ed4da8531b7466ec6e368@epcms2p1>
- <20220729045656epcms2p1e6912ae09ca2122d4d04854878e19b2c@epcms2p1>
+ <CGME20220729045045epcms2p8caf00317889ed4da8531b7466ec6e368@epcms2p4>
+ <20220729045756epcms2p40a1baa2c6bf17772023ccec20aef3f0a@epcms2p4>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220729045656epcms2p1e6912ae09ca2122d4d04854878e19b2c@epcms2p1>
+In-Reply-To: <20220729045756epcms2p40a1baa2c6bf17772023ccec20aef3f0a@epcms2p4>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/28/22 21:56, Jinyoung CHOI wrote:
-> The explicit flushing should check the following.
-> 	- UFSHCD_CAP_WB_EN
-> 	- UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL
-> 
-> Changed to improve readability.
+On 7/28/22 21:57, Jinyoung CHOI wrote:
+>   	ret = __ufshcd_wb_toggle(hba, enable, QUERY_FLAG_IDN_WB_EN);
+>   	if (ret) {
+> -		dev_err(hba->dev, "%s Write Booster %s failed %d\n",
+> +		dev_err(hba->dev, "%s: Write Booster %s failed %d\n",
+>   			__func__, enable ? "enable" : "disable", ret);
+>   		return ret;
+>   	}
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Please also fix the grammar (enable -> enabling; disable -> disabling).
+
+Otherwise this patch looks good to me.
+
+Thanks,
+
+Bart.
