@@ -2,84 +2,114 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA4EFC04A68
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Jul 2022 23:23:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03CE6C00140
+	for <linux-scsi@archiver.kernel.org>; Fri, 29 Jul 2022 01:32:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233560AbiG1XXV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Jul 2022 19:23:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46390 "EHLO
+        id S233506AbiG2BcO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Jul 2022 21:32:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37244 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230312AbiG1XXU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jul 2022 19:23:20 -0400
-Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C4F6785A9;
-        Thu, 28 Jul 2022 16:23:19 -0700 (PDT)
-Received: by mail-pj1-f44.google.com with SMTP id o14-20020a17090a4b4e00b001f2f2b61be5so3639784pjl.4;
-        Thu, 28 Jul 2022 16:23:19 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=4Ratr9Exz8Ftlqqn4wgISmjbTd17otGsA8sFttr7gCM=;
-        b=uXA4SD0sR9TrlW49d3vTpWIXNxV4o4r63cm41dq7q7RSpXhKcBJoie2OiCkc8fBKFX
-         RHWbKmVJx6mm4nkBtnW0PMCPTlIW+dKFBTK/PIo6AU1s493urXJ3xA+4sJ/fZ9UzmwCo
-         XEUTn5T4J2sqoRMm8cgmtsyUSZy8O/hS287kuon+B6vDKSjvTM6NwLUaBnapMSQ2vA6y
-         JnDvnpQVZ+plo1/3Puv1ys9VscFKnk4PxVb4j0PnaDIjoKDWsFmMmU1cHHKOQq0SECd8
-         rITvdRfEHEYFMBLH357ZvEn0Ow0zGFrxP7/v6g9bdt0+sNAPd8vrguLJ+iocJlLYhooI
-         5jZw==
-X-Gm-Message-State: ACgBeo2DwWyLaGwceWI7cW5Jp7eR542GWrYCSMee8PK8TqA07xXbadaF
-        vG/dx9+oLeOfgy9R8CwVZsM=
-X-Google-Smtp-Source: AA6agR7ptvck88Z8HcDM/q4g4ud1V3N5WFiXZ3HEHBk+cET8Vm4bTTRPWiz5UVJ/NdEY0d6xiEITFQ==
-X-Received: by 2002:a17:902:cf09:b0:16d:3b47:d2dc with SMTP id i9-20020a170902cf0900b0016d3b47d2dcmr1038640plg.123.1659050598660;
-        Thu, 28 Jul 2022 16:23:18 -0700 (PDT)
-Received: from ?IPV6:2620:0:1000:2514:ec20:15e1:edc2:6f55? ([2620:0:1000:2514:ec20:15e1:edc2:6f55])
-        by smtp.gmail.com with ESMTPSA id t1-20020a170902e84100b0016d1b708729sm1981305plg.132.2022.07.28.16.23.16
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 28 Jul 2022 16:23:17 -0700 (PDT)
-Message-ID: <3f96d798-e9bb-15d8-65b9-2383e112c654@acm.org>
-Date:   Thu, 28 Jul 2022 16:23:16 -0700
+        with ESMTP id S229535AbiG2BcN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jul 2022 21:32:13 -0400
+Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6469A5E33A
+        for <linux-scsi@vger.kernel.org>; Thu, 28 Jul 2022 18:32:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1659058332; x=1690594332;
+  h=message-id:date:mime-version:subject:to:references:from:
+   in-reply-to:content-transfer-encoding;
+  bh=kq9PDiPPwny32UbzTzcdaVnsfTL7bxgZ6itxvnxFbN8=;
+  b=TDuJmWOkRsiyQClAH2jMa2VMLstlDiJO5jQEIkEWWC+U9QDQU/MXH2Zq
+   P2JipGSzGt/RziDt9rBip57jVRk3PJ/rpRu1j/bRMCrjbFzR6h9CE05Hr
+   pGNxZMRMjoCI8jc2XS7ohF0i8A4ZXqIXEtR4cgUzxFRhrk+dl2/i6Xife
+   s=;
+Received: from unknown (HELO ironmsg01-sd.qualcomm.com) ([10.53.140.141])
+  by alexa-out-sd-01.qualcomm.com with ESMTP; 28 Jul 2022 18:32:12 -0700
+X-QCInternal: smtphost
+Received: from unknown (HELO nasanex01a.na.qualcomm.com) ([10.52.223.231])
+  by ironmsg01-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jul 2022 18:32:11 -0700
+Received: from [10.110.38.152] (10.80.80.8) by nasanex01a.na.qualcomm.com
+ (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.22; Thu, 28 Jul
+ 2022 18:32:10 -0700
+Message-ID: <f6c9076e-186b-3dc7-3723-ad7a9262b7d9@quicinc.com>
+Date:   Thu, 28 Jul 2022 18:32:09 -0700
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [PATCH v2] ufs: core: print capabilities in controller's sysfs
- node
-Content-Language: en-US
-To:     Daniil Lunev <dlunev@chromium.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
-        Sohaib Mohamed <sohaib.amhmd@gmail.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <20220729090521.v2.1.Id612b86fd30936dfd4c456b3341547c15cecf321@changeid>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220729090521.v2.1.Id612b86fd30936dfd4c456b3341547c15cecf321@changeid>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.0.3
+Subject: Re: [PATCH 0/2] UFS Multi-Circular Queue (MCQ)
+To:     Bean Huo <huobean@gmail.com>, Can Guo <quic_cang@quicinc.com>,
+        <bvanassche@acm.org>, <stanley.chu@mediatek.com>,
+        <adrian.hunter@intel.com>, <alim.akhtar@samsung.com>,
+        <avri.altman@wdc.com>, <beanhuo@micron.com>,
+        <quic_nguyenb@quicinc.com>, <quic_ziqichen@quicinc.com>,
+        <linux-scsi@vger.kernel.org>, <kernel-team@android.com>
+References: <1658214120-22772-1-git-send-email-quic_cang@quicinc.com>
+ <3b1a57c89058e3c09a746bc55c21fbb15434717b.camel@gmail.com>
+From:   "Asutosh Das (asd)" <quic_asutoshd@quicinc.com>
+In-Reply-To: <3b1a57c89058e3c09a746bc55c21fbb15434717b.camel@gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/28/22 16:05, Daniil Lunev wrote:
-> +What:		/sys/bus/platform/drivers/ufshcd/*/caps
-> +What:		/sys/bus/platform/devices/*.ufs/caps
-> +Date:		July 2022
-> +Contact:	Daniil Lunev <dlunev@chromium.org>
-> +Description:	Read-only attribute. Enabled capabilities of the UFS driver. The
-> +		enabled capabilities are determined by what is supported by the
-> +		host controller and the UFS device.
-> +		Format: 0x%08llx
+Hello Bean,
 
-This documentation is useless since the meaning of the individual bits 
-has not been documented.
+On 7/28/2022 3:23 PM, Bean Huo wrote:
+> On Tue, 2022-07-19 at 00:01 -0700, Can Guo wrote:
+>> UFS Multi-Circular Queue (MCQ) has been added in UFSHCI v4.0 to
+>> improve storage performance.
+>> This patch series is a RFC implementation of this.
+>>
+> 
+> Hi Can/Asutosh,
+> 
+> we could remove RFC, add more detail about MCQ configuration and its
+> implementation. Review will takes longer since we don't have a platform
+> to verify it, and now only reply you to verify.
+> 
+> 
+Thank you for the review.
 
-Thanks,
+Sure, the whole idea of sending a RFC was to get a validation on the 
+design that we plan to pursue. I think several valid points / comments 
+were raised and we're coding those up now; hence, it's taking some time.
+We plan to keep the next version as RFC too, unless we feel we've sorted 
+out the initial design considerations.
 
-Bart.
+> Kind regards,
+> Bean
+> 
+>> This is the initial driver implementation and it has been verified by
+>> booting on an emulation
+>> platform. During testing, all low power modes were disabled and it
+>> was in HS-G1 mode.
+>>
+>> Please take a look and let us know your thoughts.
+>>
+>> Asutosh Das (1):
+>>    scsi: ufs: Add Multi-Circular Queue support
+>>
+>> Can Guo (1):
+>>    scsi: ufs-qcom: Implement three CMQ related vops
+>>
+>>   drivers/ufs/core/Makefile   |   2 +-
+>>   drivers/ufs/core/ufs-mcq.c  | 555
+>> ++++++++++++++++++++++++++++++++++++++++++++
+>>   drivers/ufs/core/ufshcd.c   | 362 ++++++++++++++++++++---------
+>>   drivers/ufs/host/ufs-qcom.c | 116 +++++++++
+>>   drivers/ufs/host/ufs-qcom.h |   2 +
+>>   include/ufs/ufs.h           |   1 +
+>>   include/ufs/ufshcd.h        | 231 +++++++++++++++++-
+>>   include/ufs/ufshci.h        |  89 +++++++
+>>   8 files changed, 1251 insertions(+), 107 deletions(-)
+>>   create mode 100644 drivers/ufs/core/ufs-mcq.c
+>>
+> 
+
+-asd
