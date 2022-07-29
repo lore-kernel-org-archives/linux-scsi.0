@@ -2,235 +2,76 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E34ABC00144
-	for <linux-scsi@archiver.kernel.org>; Fri, 29 Jul 2022 19:42:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0360CC3F6B0
+	for <linux-scsi@archiver.kernel.org>; Fri, 29 Jul 2022 20:06:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238755AbiG2Tm3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 29 Jul 2022 15:42:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55570 "EHLO
+        id S238853AbiG2UGN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 29 Jul 2022 16:06:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44124 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237395AbiG2TmZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Jul 2022 15:42:25 -0400
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8AB976D54E;
-        Fri, 29 Jul 2022 12:42:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1659123743;
-        bh=yfpz3eZOzFusdrvGSIrT5vP213KUwZ2IU/B7Jq1m2iQ=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=KK3XAgAB8W4tAkjRvqN1BO9jOs9hZ0tMpFS434sVoLyHzr9g+4dWtL86JnlzpewvK
-         fNb7/wWYWoY3ja6jEypBk/Mji/qcrdeykIj/GvugE8tpNSt41jD7UtjF75rc/o+TAl
-         B9N7pa9jEb0+OAKHTcKLTxwf5DPqdG2G/J3uoPq0=
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 66E8E1280728;
-        Fri, 29 Jul 2022 15:42:23 -0400 (EDT)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id sAM1TJKT386L; Fri, 29 Jul 2022 15:42:23 -0400 (EDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1659123743;
-        bh=yfpz3eZOzFusdrvGSIrT5vP213KUwZ2IU/B7Jq1m2iQ=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=KK3XAgAB8W4tAkjRvqN1BO9jOs9hZ0tMpFS434sVoLyHzr9g+4dWtL86JnlzpewvK
-         fNb7/wWYWoY3ja6jEypBk/Mji/qcrdeykIj/GvugE8tpNSt41jD7UtjF75rc/o+TAl
-         B9N7pa9jEb0+OAKHTcKLTxwf5DPqdG2G/J3uoPq0=
-Received: from [IPv6:2601:5c4:4300:c551:a71:90ff:fec2:f05b] (unknown [IPv6:2601:5c4:4300:c551:a71:90ff:fec2:f05b])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (Client did not present a certificate)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id DB6A61280614;
-        Fri, 29 Jul 2022 15:42:22 -0400 (EDT)
-Message-ID: <d3a4b15f5eab509f9830f858a82f0db394d201db.camel@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 5.19-rc8
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Date:   Fri, 29 Jul 2022 15:42:21 -0400
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.4 
+        with ESMTP id S229564AbiG2UGM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Jul 2022 16:06:12 -0400
+Received: from mail-pg1-f179.google.com (mail-pg1-f179.google.com [209.85.215.179])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 135C363914;
+        Fri, 29 Jul 2022 13:06:09 -0700 (PDT)
+Received: by mail-pg1-f179.google.com with SMTP id r186so4807971pgr.2;
+        Fri, 29 Jul 2022 13:06:09 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc;
+        bh=FB+0W8v8UDMpFz9rL6S4eZJw9kfVH7QjSk7HN7wEXkY=;
+        b=ZL2Nad0F5qbfqgqCmDIZh/o8X9lxNfaSlUUJguj9EgE24iF+8Lwx9B2uf5ozVPHP+L
+         6CiCO7ivF5wPW0EJMdE78UwPmPknQ5ayCDaQjeZHJ8PO19MZKXaY42DdLzLNsOcoxrkB
+         9WseFS/LL7IIdy9iy+DmzKn1CGpxdjac+kize8btUUOZC7QWAo7JuoQ80B5Kpeher3rz
+         sIigJJ5K/TjMU8xdRYz1AD1o3VzE5tsih1gno1G8lfLKInKAMWso8lapxFSvjxDhpOQW
+         A04GxNwmWkxBiszCYh9ewNiR+cl+vv7CNO/n26S0budgw+4FjMy001OsLSTROv93hD8x
+         TdKQ==
+X-Gm-Message-State: AJIora+ZSEvOhh7gLYVudxwTv8FCRdqdv7PC6q92Kbnx8T/q4ttisWVX
+        KRGraLste8rrLxAoudv7JeE=
+X-Google-Smtp-Source: AGRyM1tInMycz2iLxo2bv+KHymYOshzLCE6LdcJ59I+SaA75WRa0GNpXbX3yXBDfQg1M+2RWj8IR7A==
+X-Received: by 2002:aa7:8554:0:b0:52b:cfed:168b with SMTP id y20-20020aa78554000000b0052bcfed168bmr5148694pfn.4.1659125169057;
+        Fri, 29 Jul 2022 13:06:09 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:f090:7a49:3465:6a5? ([2620:15c:211:201:f090:7a49:3465:6a5])
+        by smtp.gmail.com with ESMTPSA id g197-20020a6252ce000000b0052531985e3esm3356171pfb.22.2022.07.29.13.06.07
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 29 Jul 2022 13:06:08 -0700 (PDT)
+Message-ID: <d473f4b3-9aba-fe39-d88c-b762d9d779b0@acm.org>
+Date:   Fri, 29 Jul 2022 13:06:06 -0700
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+Subject: Re: [PATCH V3] scsi: ufs: Get boot device storage type from command
+ line
+Content-Language: en-US
+To:     "Chetan Chinnadagudihundi Ravindranath (Consultant) (QUIC)" 
+        <quic_cchinnad@quicinc.com>
+Cc:     jejb@linux.ibm.com, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+References: <1659034814-3473-1-git-send-email-quic_cchinnad@quicinc.com>
+ <77330f3a-5f73-e10f-7e85-f3df304aa4d7@acm.org>
+ <f1cf652a-4a36-fe60-5a98-14b9d97c9a41@quicinc.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <f1cf652a-4a36-fe60-5a98-14b9d97c9a41@quicinc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Four fixes, three in drivers.  The two biggest fixes are ufs and the
-remaining driver and core fix are small and obvious (and the core fix
-is low risk).
+On 7/29/22 05:54, Chetan Chinnadagudihundi Ravindranath (Consultant) 
+(QUIC) wrote:
+> Please suggest any efficient way of making ufs-cmdline part of vmlinux.
 
-The patch is available here:
+A patch description should not only explain what has been changed but 
+also why a change is being made. Information about why support is being 
+added for the androidboot.bootdevice parameter in the Qualcomm UFS host 
+controller driver is missing from the patch description.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Please also address Christoph's comment about this new command-line 
+parameter not being used anywhere in the upstream kernel tree.
 
-The short changelog is:
+Thanks,
 
-Bart Van Assche (1):
-      scsi: ufs: core: Fix a race condition related to device management
-
-David Jeffery (1):
-      scsi: mpt3sas: Stop fw fault watchdog work item during system shutdown
-
-Jason Yan (1):
-      scsi: core: Fix warning in scsi_alloc_sgtables()
-
-Liang He (1):
-      scsi: ufs: host: Hold reference returned by of_parse_phandle()
-
-And the diffstat:
-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c |  1 +
- drivers/scsi/scsi_ioctl.c            |  2 +-
- drivers/ufs/core/ufshcd.c            | 58 +++++++++++++++++++++++++-----------
- drivers/ufs/host/ufshcd-pltfrm.c     | 15 ++++++++--
- 4 files changed, 55 insertions(+), 21 deletions(-)
-
-With full diff below.
-
-James
-
----
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index b519f4b59d30..5e8887fa02c8 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -11386,6 +11386,7 @@ scsih_shutdown(struct pci_dev *pdev)
- 	_scsih_ir_shutdown(ioc);
- 	_scsih_nvme_shutdown(ioc);
- 	mpt3sas_base_mask_interrupts(ioc);
-+	mpt3sas_base_stop_watchdog(ioc);
- 	ioc->shost_recovery = 1;
- 	mpt3sas_base_make_ioc_ready(ioc, SOFT_RESET);
- 	ioc->shost_recovery = 0;
-diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
-index a480c4d589f5..729e309e6034 100644
---- a/drivers/scsi/scsi_ioctl.c
-+++ b/drivers/scsi/scsi_ioctl.c
-@@ -450,7 +450,7 @@ static int sg_io(struct scsi_device *sdev, struct sg_io_hdr *hdr, fmode_t mode)
- 		goto out_put_request;
- 
- 	ret = 0;
--	if (hdr->iovec_count) {
-+	if (hdr->iovec_count && hdr->dxfer_len) {
- 		struct iov_iter i;
- 		struct iovec *iov = NULL;
- 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index c7b337480e3e..3d367be71728 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -2953,37 +2953,59 @@ ufshcd_dev_cmd_completion(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
- 		struct ufshcd_lrb *lrbp, int max_timeout)
- {
--	int err = 0;
--	unsigned long time_left;
-+	unsigned long time_left = msecs_to_jiffies(max_timeout);
- 	unsigned long flags;
-+	bool pending;
-+	int err;
- 
-+retry:
- 	time_left = wait_for_completion_timeout(hba->dev_cmd.complete,
--			msecs_to_jiffies(max_timeout));
-+						time_left);
- 
--	spin_lock_irqsave(hba->host->host_lock, flags);
--	hba->dev_cmd.complete = NULL;
- 	if (likely(time_left)) {
-+		/*
-+		 * The completion handler called complete() and the caller of
-+		 * this function still owns the @lrbp tag so the code below does
-+		 * not trigger any race conditions.
-+		 */
-+		hba->dev_cmd.complete = NULL;
- 		err = ufshcd_get_tr_ocs(lrbp);
- 		if (!err)
- 			err = ufshcd_dev_cmd_completion(hba, lrbp);
--	}
--	spin_unlock_irqrestore(hba->host->host_lock, flags);
--
--	if (!time_left) {
-+	} else {
- 		err = -ETIMEDOUT;
- 		dev_dbg(hba->dev, "%s: dev_cmd request timedout, tag %d\n",
- 			__func__, lrbp->task_tag);
--		if (!ufshcd_clear_cmds(hba, 1U << lrbp->task_tag))
-+		if (ufshcd_clear_cmds(hba, 1U << lrbp->task_tag) == 0) {
- 			/* successfully cleared the command, retry if needed */
- 			err = -EAGAIN;
--		/*
--		 * in case of an error, after clearing the doorbell,
--		 * we also need to clear the outstanding_request
--		 * field in hba
--		 */
--		spin_lock_irqsave(&hba->outstanding_lock, flags);
--		__clear_bit(lrbp->task_tag, &hba->outstanding_reqs);
--		spin_unlock_irqrestore(&hba->outstanding_lock, flags);
-+			/*
-+			 * Since clearing the command succeeded we also need to
-+			 * clear the task tag bit from the outstanding_reqs
-+			 * variable.
-+			 */
-+			spin_lock_irqsave(&hba->outstanding_lock, flags);
-+			pending = test_bit(lrbp->task_tag,
-+					   &hba->outstanding_reqs);
-+			if (pending) {
-+				hba->dev_cmd.complete = NULL;
-+				__clear_bit(lrbp->task_tag,
-+					    &hba->outstanding_reqs);
-+			}
-+			spin_unlock_irqrestore(&hba->outstanding_lock, flags);
-+
-+			if (!pending) {
-+				/*
-+				 * The completion handler ran while we tried to
-+				 * clear the command.
-+				 */
-+				time_left = 1;
-+				goto retry;
-+			}
-+		} else {
-+			dev_err(hba->dev, "%s: failed to clear tag %d\n",
-+				__func__, lrbp->task_tag);
-+		}
- 	}
- 
- 	return err;
-diff --git a/drivers/ufs/host/ufshcd-pltfrm.c b/drivers/ufs/host/ufshcd-pltfrm.c
-index e7332cc65b1f..173aea8e9997 100644
---- a/drivers/ufs/host/ufshcd-pltfrm.c
-+++ b/drivers/ufs/host/ufshcd-pltfrm.c
-@@ -108,9 +108,20 @@ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
- 	return ret;
- }
- 
-+static bool phandle_exists(const struct device_node *np,
-+			   const char *phandle_name, int index)
-+{
-+	struct device_node *parse_np = of_parse_phandle(np, phandle_name, index);
-+
-+	if (parse_np)
-+		of_node_put(parse_np);
-+
-+	return parse_np != NULL;
-+}
-+
- #define MAX_PROP_SIZE 32
- static int ufshcd_populate_vreg(struct device *dev, const char *name,
--		struct ufs_vreg **out_vreg)
-+				struct ufs_vreg **out_vreg)
- {
- 	char prop_name[MAX_PROP_SIZE];
- 	struct ufs_vreg *vreg = NULL;
-@@ -122,7 +133,7 @@ static int ufshcd_populate_vreg(struct device *dev, const char *name,
- 	}
- 
- 	snprintf(prop_name, MAX_PROP_SIZE, "%s-supply", name);
--	if (!of_parse_phandle(np, prop_name, 0)) {
-+	if (!phandle_exists(np, prop_name, 0)) {
- 		dev_info(dev, "%s: Unable to find %s regulator, assuming enabled\n",
- 				__func__, prop_name);
- 		goto out;
-
+Bart.
