@@ -2,69 +2,95 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68211C19F2A
-	for <linux-scsi@archiver.kernel.org>; Fri, 29 Jul 2022 20:14:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37822C00144
+	for <linux-scsi@archiver.kernel.org>; Fri, 29 Jul 2022 20:16:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239158AbiG2UOx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 29 Jul 2022 16:14:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49946 "EHLO
+        id S238608AbiG2UQj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 29 Jul 2022 16:16:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51922 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230499AbiG2UOw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Jul 2022 16:14:52 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A3D789EB3;
-        Fri, 29 Jul 2022 13:14:51 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id BD6F9CE2BD9;
-        Fri, 29 Jul 2022 20:14:49 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id DB5CBC433D6;
-        Fri, 29 Jul 2022 20:14:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1659125687;
-        bh=ykpusgUN+Wy7D2gUWSGzrQjY86z8OOUvZz9K3vERSG8=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=PbeTP0J4vMdUfNFm5jFFGs6Hwfo5UWChfBkHaVaNfUTgjL6WLUTmmMRqqZeP+D9Tz
-         HPWMYtBQJG5NCBYzwG4420L7vWvTboYHfEPV/usm1RLGwhevlQzMJivEcXrBEW2jNz
-         xZNYTXeVxhGChbtig1G1mJR4pcFaffrT2+7wq+EAdxothmiRwbo34WiGFLXaCiPh6F
-         VdNw3kr4beLFU4bvsTUK1x6nHoQjlUMEqHFhvwmPgVxZs+lBMnRUkUSHk83Nc79s9y
-         2q0wWk03VQP11H1z7PlQR5H1NBFwpDn4DrNxs/Ue9q8wPXO76HMfxlBpQ6xVojjO36
-         kAw+3L0inxaXw==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id C72A1C43142;
-        Fri, 29 Jul 2022 20:14:47 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI fixes for 5.19-rc8
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <d3a4b15f5eab509f9830f858a82f0db394d201db.camel@HansenPartnership.com>
-References: <d3a4b15f5eab509f9830f858a82f0db394d201db.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <d3a4b15f5eab509f9830f858a82f0db394d201db.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: f5c2976e0cb0f6236013bfb479868531b04f61d4
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 1c8ac1c4af178ebcdf6fd4a0ba11716e2c814593
-Message-Id: <165912568780.21424.9938780429617910310.pr-tracker-bot@kernel.org>
-Date:   Fri, 29 Jul 2022 20:14:47 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        with ESMTP id S230499AbiG2UQi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Jul 2022 16:16:38 -0400
+Received: from mail-pg1-f171.google.com (mail-pg1-f171.google.com [209.85.215.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07D1E8AEE5;
+        Fri, 29 Jul 2022 13:16:38 -0700 (PDT)
+Received: by mail-pg1-f171.google.com with SMTP id q16so4817954pgq.6;
+        Fri, 29 Jul 2022 13:16:38 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc;
+        bh=Oy4qUGZWXPlIDUNNbQ5N/E9k+z0m3V8PivYub989Lys=;
+        b=JSdT8wi7ilCWtyaOOm8uTzx3ilzxbn36g/RYLT8Yi9gk6Xi70b9rrVhjx1mZU+Wcjd
+         jXQUBsh9ftsG2UCXN5U2TWMZLaZ1KmPKyPAqsxDwBDGfj/4MO8ZBcMTvkgHRryR6I0Xi
+         i5Z5zuj5DxLRV6uPSIfW8ytK7nWqFwg+CLw5E/k9tnm5H6llzC0PF79LtNmKjHdSblEx
+         bpA15jpr2UsuEkMQ0Tc/m+q+1qUUNuqg9yWiKAAo50yciM7TyUCTzNaL+ZB3IZ59AoCH
+         GbdzzhOsggLVLUVCoRww4S+7R2u0Z5VpTM2ml8xCLtDtDvN2rlJNzIaD//VqGbDgnSuD
+         viyg==
+X-Gm-Message-State: AJIora88Oes+8e18riuPgweHYMJHsnL4dpH0dvJbbFXeOZWcOqYKtz71
+        OXaToXIwlgEdWMmPoYbMldI=
+X-Google-Smtp-Source: AA6agR4mbh+EQVGMYnvNnyGvVsz7e222331FYdJ8cC8pW/VthJQGeTEn0YHbT4C/BMwDUQFgfYyNIQ==
+X-Received: by 2002:a05:6a00:1812:b0:52a:c171:7cc5 with SMTP id y18-20020a056a00181200b0052ac1717cc5mr5037264pfa.81.1659125797322;
+        Fri, 29 Jul 2022 13:16:37 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:f090:7a49:3465:6a5? ([2620:15c:211:201:f090:7a49:3465:6a5])
+        by smtp.gmail.com with ESMTPSA id ij21-20020a170902ab5500b0016c0c82e85csm4066461plb.75.2022.07.29.13.16.35
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 29 Jul 2022 13:16:36 -0700 (PDT)
+Message-ID: <360e6b66-30f6-5c54-c03f-b5d267f6703a@acm.org>
+Date:   Fri, 29 Jul 2022 13:16:33 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+Subject: Re: [PATCH v5 1/6] scsi: ufs: wb: Change wb_enabled condition test
+Content-Language: en-US
+To:     j-young.choi@samsung.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <20220729045045epcms2p8caf00317889ed4da8531b7466ec6e368@epcms2p8>
+ <CGME20220729045045epcms2p8caf00317889ed4da8531b7466ec6e368@epcms2p7>
+ <20220729045252epcms2p7fee5c1cdca5e4bef02a833e40f80649b@epcms2p7>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20220729045252epcms2p7fee5c1cdca5e4bef02a833e40f80649b@epcms2p7>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Fri, 29 Jul 2022 15:42:21 -0400:
+On 7/28/22 21:52, Jinyoung CHOI wrote:
+> Changed to improve readability.
+> As implemented in ufshcd_wb_togle_flush(), the conditional test is
+> modified in the same way.
+> 
+> Reviewed-by: Avri Altman <avri.altman@wdc.com>
+> Reviewed-by: Bean Huo <beanhuo@micron.com>
+> Signed-off-by: Jinyoung Choi <j-young.choi@samsung.com>
+> ---
+>   drivers/ufs/core/ufshcd.c | 6 ++----
+>   1 file changed, 2 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 8f11f118c30e..bbf12aa6a5ae 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -5730,10 +5730,8 @@ int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable)
+>   {
+>   	int ret;
+>   
+> -	if (!ufshcd_is_wb_allowed(hba))
+> -		return 0;
+> -
+> -	if (!(enable ^ hba->dev_info.wb_enabled))
+> +	if (!ufshcd_is_wb_allowed(hba) ||
+> +	    hba->dev_info.wb_enabled == enable)
+>   		return 0;
+>   
+>   	ret = __ufshcd_wb_toggle(hba, enable, QUERY_FLAG_IDN_WB_EN);
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/1c8ac1c4af178ebcdf6fd4a0ba11716e2c814593
-
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
