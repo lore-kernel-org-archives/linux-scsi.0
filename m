@@ -2,733 +2,370 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16A31C19F2B
-	for <linux-scsi@archiver.kernel.org>; Fri, 29 Jul 2022 13:05:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DE4CC00144
+	for <linux-scsi@archiver.kernel.org>; Fri, 29 Jul 2022 13:05:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236412AbiG2NFV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 29 Jul 2022 09:05:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53844 "EHLO
+        id S236366AbiG2NFl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 29 Jul 2022 09:05:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54172 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236410AbiG2NEm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Jul 2022 09:04:42 -0400
-Received: from mail-pg1-x531.google.com (mail-pg1-x531.google.com [IPv6:2607:f8b0:4864:20::531])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B591C5F11C
-        for <linux-scsi@vger.kernel.org>; Fri, 29 Jul 2022 06:04:24 -0700 (PDT)
-Received: by mail-pg1-x531.google.com with SMTP id 206so480185pgb.0
-        for <linux-scsi@vger.kernel.org>; Fri, 29 Jul 2022 06:04:24 -0700 (PDT)
+        with ESMTP id S236444AbiG2NEx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Jul 2022 09:04:53 -0400
+Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63E1652451
+        for <linux-scsi@vger.kernel.org>; Fri, 29 Jul 2022 06:04:27 -0700 (PDT)
+Received: by mail-pj1-x102e.google.com with SMTP id e1so4789941pjl.1
+        for <linux-scsi@vger.kernel.org>; Fri, 29 Jul 2022 06:04:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version;
-        bh=OArpu/92ivmRyTA/7t+MBc/IkHSOQyJhklkvzXgmZWg=;
-        b=OjeB9IlbPLH+RAm3ZFaL45axoX8A0LZbqEvDtepjgOiq2E/fUoIRluBiu7ao0fjH+a
-         Vd+CQbm0/38zOxJjNhtb4nB8pBoBEoc7VTIFlbEqFn/7nGuVJYiQpZxOzR0dqPEMPuLv
-         KGlDXOLfE6y+qebIOWcvhAFtrnbR+gXGrFBjs=
+        bh=hK1yJn59aauAxm5DCBT7RHEiABHsI7LkawadLlxiOTE=;
+        b=KFR73wWfeXRDrm4gpeSNxni4vSCyJXQTqPx7xPNwDIfzgQr+fabWMk8K/l5LyG9xp7
+         nCoz3L6VLJ2FyJW/aPEP0kNQTxoSBgkF0oX6xTm1/6snprPKuySkCKqwOW9Il8LM1gW/
+         44nd2RDzVKlLhkdD0B5yWIy55nKUyf/0SFHeM=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version;
-        bh=OArpu/92ivmRyTA/7t+MBc/IkHSOQyJhklkvzXgmZWg=;
-        b=aY+PeTMaLlZAQyXJdFOYxIsTkVwMwfubx48Za7jBPjV+mSdhVWfAv9Lvngxxnqqp/y
-         uYaObFzdR0HJDmSORWmjXpcLaKvERQH5+nh3daGkAbbP37PS/yin69uTmbdcR6Tg+LAi
-         KearL5/BAX9PE4oWeNMGkjQ1upFh77Kdbz7cgwAsVudLyPTy1RdXQLaj8MZ/TDIpatf7
-         XdW8oj5yHmNBJGZhaF4sA0jdQSOZXWEsf7/PS6qaS6XnVIrQpMcjX0YgKBGeW8eAcw/H
-         PRkSPbSylxwlGSoM457A8r8oN8s8hV1xCZAPTXmQ8GN+pDB6Es7X8oyiCUqN1SayAjMn
-         HgYw==
-X-Gm-Message-State: AJIora910mcdM3iE9ZE9ztTpsI+94/dEbK9tRv5VfU1OjYMP/FtjsAd4
-        ahoFtL+WQPJ8f9pUpINkZbyYdqaGK1E0fhknP5Kpm2/JiXccYOxsS1D94CeCBg0fDCpeUnl1OHH
-        FABBoZ5hPh0PasiWf7Nu2lhrrfSFwnDgPsgEt/d0jqYUVSzIN37ySIBhfPVO9Aurbgu/bHXK+wZ
-        4DY8so+bSF
-X-Google-Smtp-Source: AGRyM1uhZLTbmLj9b0jAJW8WzKty0lprpioBG9JYJiZrWgqO4ocAwsvdfRi2zpoLY89YyRXgdYAs4A==
-X-Received: by 2002:a05:6a02:30a:b0:41a:b002:83ac with SMTP id bn10-20020a056a02030a00b0041ab00283acmr2999965pgb.113.1659099863628;
-        Fri, 29 Jul 2022 06:04:23 -0700 (PDT)
+        bh=hK1yJn59aauAxm5DCBT7RHEiABHsI7LkawadLlxiOTE=;
+        b=ThKf7B+FzvxlgZTIqKDgGUQy5V/Rog/nJXMnYHaX65Xnu3GgrQj0l9rTtIun6IQOSM
+         AZWBPe3lJefPTPivKooveTJ6xhWpawFsmaIcL38sPWuAOZcYrSyFc0HuXDiQ+HFGOOQF
+         Sel29xwBNOn0sGSJeU6s4e4acyLkps5JtIqi9C+8R1cKqsF4IMFi7BRoj8c4P6QPBhiy
+         aBdK9eY9C6jXxLQNS1QNip8xuAeF6FY5yY/Qoo0gRwdD+gMurV2BGt27NBhtNZvtl56z
+         6Hs9XCzQCE1PGdj+tWYq5PHKiwpGDWQGqJeMs/rRUUMryeCYuH2v4MmfLBiHg2Ja1nXI
+         UHoA==
+X-Gm-Message-State: ACgBeo3wHM+TYac20FM0fUxURMo66xC+3TGxmjjqyi4ZHoNTXOq/yWdD
+        5YBJ4BiOBWsHlDqNUuanq1y9QyRkOKfnIY8zqOue4+7DCteEZMeDp23TnahgkLIE/QLexaSTYAm
+        a+CyALbG1y9zGFfcEP8YvMAT4wF1eIJOVl3E9PxuDWPM2z24FYLYNwstdgJy15Oc+LXsaKp4TQQ
+        msUvpFmoGy
+X-Google-Smtp-Source: AA6agR6StLUt2oOYEMJFPg8kyQOajXcym3OoCjo1NkQS7xUaQvcVsvO7KPn+Er1vlykwseci//MxTw==
+X-Received: by 2002:a17:902:f30c:b0:16d:a79c:4aed with SMTP id c12-20020a170902f30c00b0016da79c4aedmr3761555ple.23.1659099865580;
+        Fri, 29 Jul 2022 06:04:25 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id d9-20020a170902b70900b0016dd6929af5sm1225816pls.206.2022.07.29.06.04.21
+        by smtp.gmail.com with ESMTPSA id d9-20020a170902b70900b0016dd6929af5sm1225816pls.206.2022.07.29.06.04.23
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 29 Jul 2022 06:04:23 -0700 (PDT)
+        Fri, 29 Jul 2022 06:04:25 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 03/15] mpi3mr: Added helper functions to retrieve cnfg pages
-Date:   Fri, 29 Jul 2022 18:46:15 +0530
-Message-Id: <20220729131627.15019-4-sreekanth.reddy@broadcom.com>
+Subject: [PATCH 04/15] mpi3mr: Enable Enclosure device add event
+Date:   Fri, 29 Jul 2022 18:46:16 +0530
+Message-Id: <20220729131627.15019-5-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20220729131627.15019-1-sreekanth.reddy@broadcom.com>
 References: <20220729131627.15019-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000001020e305e4f14a93"
+        boundary="0000000000002d188f05e4f14a13"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000001020e305e4f14a93
+--0000000000002d188f05e4f14a13
 Content-Transfer-Encoding: 8bit
 
-Added helper functions to retrieve below controller's
-config pages,
-- SAS IOUnit Page0
-- SAS IOUnit Page1
-- Driver Page1
-- Device Page0
-- SAS Phy Page0
-- SAS Phy Page1
-- SAS Expander Page0
-- SAS Expander Page1
-- Enclosure Page0
-
-Also added the helper function to set the SAS IOUnit Page1.
+Enable and process the Enclosure device add event.
 
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr.h    |  26 ++
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 595 ++++++++++++++++++++++++++++++++
- 2 files changed, 621 insertions(+)
+ drivers/scsi/mpi3mr/mpi3mr.h    |  19 +++++
+ drivers/scsi/mpi3mr/mpi3mr_fw.c |   4 +
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 133 +++++++++++++++++++++++++++++++-
+ 3 files changed, 154 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index e15ad0e..8af94d3 100644
+index 8af94d3..542b462 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr.h
 +++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -1179,4 +1179,30 @@ void mpi3mr_app_save_logdata(struct mpi3mr_ioc *mrioc, char *event_data,
+@@ -461,6 +461,16 @@ struct mpi3mr_throttle_group_info {
+ 	atomic_t pend_large_data_sz;
+ };
+ 
++/**
++ * struct mpi3mr_enclosure_node - enclosure information
++ * @list: List of enclosures
++ * @pg0: Enclosure page 0;
++ */
++struct mpi3mr_enclosure_node {
++	struct list_head list;
++	struct mpi3_enclosure_page0 pg0;
++};
++
+ /**
+  * struct tgt_dev_sas_sata - SAS/SATA device specific
+  * information cached from firmware given data
+@@ -535,12 +545,14 @@ union _form_spec_inf {
+  * @slot: Slot number
+  * @encl_handle: FW enclosure handle
+  * @perst_id: FW assigned Persistent ID
++ * @devpg0_flag: Device Page0 flag
+  * @dev_type: SAS/SATA/PCIE device type
+  * @is_hidden: Should be exposed to upper layers or not
+  * @host_exposed: Already exposed to host or not
+  * @io_throttle_enabled: I/O throttling needed or not
+  * @q_depth: Device specific Queue Depth
+  * @wwid: World wide ID
++ * @enclosure_logical_id: Enclosure logical identifier
+  * @dev_spec: Device type specific information
+  * @ref_count: Reference count
+  */
+@@ -552,12 +564,14 @@ struct mpi3mr_tgt_dev {
+ 	u16 slot;
+ 	u16 encl_handle;
+ 	u16 perst_id;
++	u16 devpg0_flag;
+ 	u8 dev_type;
+ 	u8 is_hidden;
+ 	u8 host_exposed;
+ 	u8 io_throttle_enabled;
+ 	u16 q_depth;
+ 	u64 wwid;
++	u64 enclosure_logical_id;
+ 	union _form_spec_inf dev_spec;
+ 	struct kref ref_count;
+ };
+@@ -877,6 +891,7 @@ struct scmd_priv {
+  * @cfg_page: Default memory for configuration pages
+  * @cfg_page_dma: Configuration page DMA address
+  * @cfg_page_sz: Default configuration page memory size
++ * @enclosure_list: List of Enclosure objects
+  */
+ struct mpi3mr_ioc {
+ 	struct list_head list;
+@@ -1053,6 +1068,8 @@ struct mpi3mr_ioc {
+ 	void *cfg_page;
+ 	dma_addr_t cfg_page_dma;
+ 	u16 cfg_page_sz;
++
++	struct list_head enclosure_list;
+ };
+ 
+ /**
+@@ -1177,6 +1194,8 @@ int mpi3mr_pel_get_seqnum_post(struct mpi3mr_ioc *mrioc,
+ 	struct mpi3mr_drv_cmd *drv_cmd);
+ void mpi3mr_app_save_logdata(struct mpi3mr_ioc *mrioc, char *event_data,
  	u16 event_data_size);
++struct mpi3mr_enclosure_node *mpi3mr_enclosure_find_by_handle(
++	struct mpi3mr_ioc *mrioc, u16 handle);
  extern const struct attribute_group *mpi3mr_host_groups[];
  extern const struct attribute_group *mpi3mr_dev_groups[];
-+
-+int mpi3mr_cfg_get_dev_pg0(struct mpi3mr_ioc *mrioc, u16 *ioc_status,
-+	struct mpi3_device_page0 *dev_pg0, u16 pg_sz, u32 form, u32 form_spec);
-+int mpi3mr_cfg_get_sas_phy_pg0(struct mpi3mr_ioc *mrioc, u16 *ioc_status,
-+	struct mpi3_sas_phy_page0 *phy_pg0, u16 pg_sz, u32 form,
-+	u32 form_spec);
-+int mpi3mr_cfg_get_sas_phy_pg1(struct mpi3mr_ioc *mrioc, u16 *ioc_status,
-+	struct mpi3_sas_phy_page1 *phy_pg1, u16 pg_sz, u32 form,
-+	u32 form_spec);
-+int mpi3mr_cfg_get_sas_exp_pg0(struct mpi3mr_ioc *mrioc, u16 *ioc_status,
-+	struct mpi3_sas_expander_page0 *exp_pg0, u16 pg_sz, u32 form,
-+	u32 form_spec);
-+int mpi3mr_cfg_get_sas_exp_pg1(struct mpi3mr_ioc *mrioc, u16 *ioc_status,
-+	struct mpi3_sas_expander_page1 *exp_pg1, u16 pg_sz, u32 form,
-+	u32 form_spec);
-+int mpi3mr_cfg_get_enclosure_pg0(struct mpi3mr_ioc *mrioc, u16 *ioc_status,
-+	struct mpi3_enclosure_page0 *encl_pg0, u16 pg_sz, u32 form,
-+	u32 form_spec);
-+int mpi3mr_cfg_get_sas_io_unit_pg0(struct mpi3mr_ioc *mrioc,
-+	struct mpi3_sas_io_unit_page0 *sas_io_unit_pg0, u16 pg_sz);
-+int mpi3mr_cfg_get_sas_io_unit_pg1(struct mpi3mr_ioc *mrioc,
-+	struct mpi3_sas_io_unit_page1 *sas_io_unit_pg1, u16 pg_sz);
-+int mpi3mr_cfg_set_sas_io_unit_pg1(struct mpi3mr_ioc *mrioc,
-+	struct mpi3_sas_io_unit_page1 *sas_io_unit_pg1, u16 pg_sz);
-+int mpi3mr_cfg_get_driver_pg1(struct mpi3mr_ioc *mrioc,
-+	struct mpi3_driver_page1 *driver_pg1, u16 pg_sz);
- #endif /*MPI3MR_H_INCLUDED*/
+ 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index da6eceb..50e88d4 100644
+index 50e88d4..9c36f52 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -5042,3 +5042,598 @@ out:
- 	mpi3mr_free_config_dma_memory(mrioc, &mem_desc);
- 	return retval;
+@@ -244,6 +244,9 @@ static void mpi3mr_print_event_data(struct mpi3mr_ioc *mrioc,
+ 	case MPI3_EVENT_ENCL_DEVICE_STATUS_CHANGE:
+ 		desc = "Enclosure Device Status Change";
+ 		break;
++	case MPI3_EVENT_ENCL_DEVICE_ADDED:
++		desc = "Enclosure Added";
++		break;
+ 	case MPI3_EVENT_HARD_RESET_RECEIVED:
+ 		desc = "Hard Reset Received";
+ 		break;
+@@ -3660,6 +3663,7 @@ static int mpi3mr_enable_events(struct mpi3mr_ioc *mrioc)
+ 	mpi3mr_unmask_events(mrioc, MPI3_EVENT_DEVICE_INFO_CHANGED);
+ 	mpi3mr_unmask_events(mrioc, MPI3_EVENT_DEVICE_STATUS_CHANGE);
+ 	mpi3mr_unmask_events(mrioc, MPI3_EVENT_ENCL_DEVICE_STATUS_CHANGE);
++	mpi3mr_unmask_events(mrioc, MPI3_EVENT_ENCL_DEVICE_ADDED);
+ 	mpi3mr_unmask_events(mrioc, MPI3_EVENT_SAS_TOPOLOGY_CHANGE_LIST);
+ 	mpi3mr_unmask_events(mrioc, MPI3_EVENT_SAS_DISCOVERY);
+ 	mpi3mr_unmask_events(mrioc, MPI3_EVENT_SAS_DEVICE_DISCOVERY_ERROR);
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index 40bed22..ca718cb 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -1026,6 +1026,7 @@ static void mpi3mr_update_tgtdev(struct mpi3mr_ioc *mrioc,
+ {
+ 	u16 flags = 0;
+ 	struct mpi3mr_stgt_priv_data *scsi_tgt_priv_data = NULL;
++	struct mpi3mr_enclosure_node *enclosure_dev = NULL;
+ 	u8 prot_mask = 0;
+ 
+ 	tgtdev->perst_id = le16_to_cpu(dev_pg0->persistent_id);
+@@ -1036,8 +1037,17 @@ static void mpi3mr_update_tgtdev(struct mpi3mr_ioc *mrioc,
+ 	tgtdev->slot = le16_to_cpu(dev_pg0->slot);
+ 	tgtdev->q_depth = le16_to_cpu(dev_pg0->queue_depth);
+ 	tgtdev->wwid = le64_to_cpu(dev_pg0->wwid);
++	tgtdev->devpg0_flag = le16_to_cpu(dev_pg0->flags);
++
++	if (tgtdev->encl_handle)
++		enclosure_dev = mpi3mr_enclosure_find_by_handle(mrioc,
++		    tgtdev->encl_handle);
++	if (enclosure_dev)
++		tgtdev->enclosure_logical_id = le64_to_cpu(
++		    enclosure_dev->pg0.enclosure_logical_id);
++
++	flags = tgtdev->devpg0_flag;
+ 
+-	flags = le16_to_cpu(dev_pg0->flags);
+ 	tgtdev->is_hidden = (flags & MPI3_DEVICE0_FLAGS_HIDDEN);
+ 
+ 	if (is_added == true)
+@@ -1265,6 +1275,116 @@ out:
+ 		mpi3mr_tgtdev_put(tgtdev);
  }
-+
+ 
 +/**
-+ * mpi3mr_cfg_get_dev_pg0 - Read current device page0
++ * mpi3mr_enclosure_find_by_handle - enclosure search by handle
 + * @mrioc: Adapter instance reference
-+ * @ioc_status: Pointer to return ioc status
-+ * @dev_pg0: Pointer to return device page 0
-+ * @pg_sz: Size of the memory allocated to the page pointer
-+ * @form: The form to be used for addressing the page
-+ * @form_spec: Form specific information like device handle
++ * @handle: Firmware device handle of the enclosure
 + *
-+ * This is handler for config page read for a specific device
-+ * page0. The ioc_status has the controller returned ioc_status.
-+ * This routine doesn't check ioc_status to decide whether the
-+ * page read is success or not and it is the callers
-+ * responsibility.
++ * This searches for enclosure device based on handle, then returns the
++ * enclosure object.
 + *
-+ * Return: 0 on success, non-zero on failure.
++ * Return: Enclosure object reference or NULL
 + */
-+int mpi3mr_cfg_get_dev_pg0(struct mpi3mr_ioc *mrioc, u16 *ioc_status,
-+	struct mpi3_device_page0 *dev_pg0, u16 pg_sz, u32 form, u32 form_spec)
++struct mpi3mr_enclosure_node *mpi3mr_enclosure_find_by_handle(
++	struct mpi3mr_ioc *mrioc, u16 handle)
 +{
-+	struct mpi3_config_page_header cfg_hdr;
-+	struct mpi3_config_request cfg_req;
-+	u32 page_address;
++	struct mpi3mr_enclosure_node *enclosure_dev, *r = NULL;
 +
-+	memset(dev_pg0, 0, pg_sz);
-+	memset(&cfg_hdr, 0, sizeof(cfg_hdr));
-+	memset(&cfg_req, 0, sizeof(cfg_req));
-+
-+	cfg_req.function = MPI3_FUNCTION_CONFIG;
-+	cfg_req.action = MPI3_CONFIG_ACTION_PAGE_HEADER;
-+	cfg_req.page_type = MPI3_CONFIG_PAGETYPE_DEVICE;
-+	cfg_req.page_number = 0;
-+	cfg_req.page_address = 0;
-+
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, NULL,
-+	    MPI3MR_INTADMCMD_TIMEOUT, ioc_status, &cfg_hdr, sizeof(cfg_hdr))) {
-+		ioc_err(mrioc, "device page0 header read failed\n");
-+		goto out_failed;
++	list_for_each_entry(enclosure_dev, &mrioc->enclosure_list, list) {
++		if (le16_to_cpu(enclosure_dev->pg0.enclosure_handle) != handle)
++			continue;
++		r = enclosure_dev;
++		goto out;
 +	}
-+	if (*ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+		ioc_err(mrioc, "device page0 header read failed with ioc_status(0x%04x)\n",
-+		    *ioc_status);
-+		goto out_failed;
-+	}
-+	cfg_req.action = MPI3_CONFIG_ACTION_READ_CURRENT;
-+	page_address = ((form & MPI3_DEVICE_PGAD_FORM_MASK) |
-+	    (form_spec & MPI3_DEVICE_PGAD_HANDLE_MASK));
-+	cfg_req.page_address = cpu_to_le32(page_address);
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, &cfg_hdr,
-+	    MPI3MR_INTADMCMD_TIMEOUT, ioc_status, dev_pg0, pg_sz)) {
-+		ioc_err(mrioc, "device page0 read failed\n");
-+		goto out_failed;
-+	}
-+	return 0;
-+out_failed:
-+	return -1;
-+}
-+
-+
-+/**
-+ * mpi3mr_cfg_get_sas_phy_pg0 - Read current SAS Phy page0
-+ * @mrioc: Adapter instance reference
-+ * @ioc_status: Pointer to return ioc status
-+ * @phy_pg0: Pointer to return SAS Phy page 0
-+ * @pg_sz: Size of the memory allocated to the page pointer
-+ * @form: The form to be used for addressing the page
-+ * @form_spec: Form specific information like phy number
-+ *
-+ * This is handler for config page read for a specific SAS Phy
-+ * page0. The ioc_status has the controller returned ioc_status.
-+ * This routine doesn't check ioc_status to decide whether the
-+ * page read is success or not and it is the callers
-+ * responsibility.
-+ *
-+ * Return: 0 on success, non-zero on failure.
-+ */
-+int mpi3mr_cfg_get_sas_phy_pg0(struct mpi3mr_ioc *mrioc, u16 *ioc_status,
-+	struct mpi3_sas_phy_page0 *phy_pg0, u16 pg_sz, u32 form,
-+	u32 form_spec)
-+{
-+	struct mpi3_config_page_header cfg_hdr;
-+	struct mpi3_config_request cfg_req;
-+	u32 page_address;
-+
-+	memset(phy_pg0, 0, pg_sz);
-+	memset(&cfg_hdr, 0, sizeof(cfg_hdr));
-+	memset(&cfg_req, 0, sizeof(cfg_req));
-+
-+	cfg_req.function = MPI3_FUNCTION_CONFIG;
-+	cfg_req.action = MPI3_CONFIG_ACTION_PAGE_HEADER;
-+	cfg_req.page_type = MPI3_CONFIG_PAGETYPE_SAS_PHY;
-+	cfg_req.page_number = 0;
-+	cfg_req.page_address = 0;
-+
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, NULL,
-+	    MPI3MR_INTADMCMD_TIMEOUT, ioc_status, &cfg_hdr, sizeof(cfg_hdr))) {
-+		ioc_err(mrioc, "sas phy page0 header read failed\n");
-+		goto out_failed;
-+	}
-+	if (*ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+		ioc_err(mrioc, "sas phy page0 header read failed with ioc_status(0x%04x)\n",
-+		    *ioc_status);
-+		goto out_failed;
-+	}
-+	cfg_req.action = MPI3_CONFIG_ACTION_READ_CURRENT;
-+	page_address = ((form & MPI3_SAS_PHY_PGAD_FORM_MASK) |
-+	    (form_spec & MPI3_SAS_PHY_PGAD_PHY_NUMBER_MASK));
-+	cfg_req.page_address = cpu_to_le32(page_address);
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, &cfg_hdr,
-+	    MPI3MR_INTADMCMD_TIMEOUT, ioc_status, phy_pg0, pg_sz)) {
-+		ioc_err(mrioc, "sas phy page0 read failed\n");
-+		goto out_failed;
-+	}
-+	return 0;
-+out_failed:
-+	return -1;
++out:
++	return r;
 +}
 +
 +/**
-+ * mpi3mr_cfg_get_sas_phy_pg1 - Read current SAS Phy page1
++ * mpi3mr_encldev_add_chg_evt_debug - debug for enclosure event
 + * @mrioc: Adapter instance reference
-+ * @ioc_status: Pointer to return ioc status
-+ * @phy_pg1: Pointer to return SAS Phy page 1
-+ * @pg_sz: Size of the memory allocated to the page pointer
-+ * @form: The form to be used for addressing the page
-+ * @form_spec: Form specific information like phy number
++ * @encl_pg0: Enclosure page 0.
++ * @is_added: Added event or not
 + *
-+ * This is handler for config page read for a specific SAS Phy
-+ * page1. The ioc_status has the controller returned ioc_status.
-+ * This routine doesn't check ioc_status to decide whether the
-+ * page read is success or not and it is the callers
-+ * responsibility.
-+ *
-+ * Return: 0 on success, non-zero on failure.
++ * Return nothing.
 + */
-+int mpi3mr_cfg_get_sas_phy_pg1(struct mpi3mr_ioc *mrioc, u16 *ioc_status,
-+	struct mpi3_sas_phy_page1 *phy_pg1, u16 pg_sz, u32 form,
-+	u32 form_spec)
++static void mpi3mr_encldev_add_chg_evt_debug(struct mpi3mr_ioc *mrioc,
++	struct mpi3_enclosure_page0 *encl_pg0, u8 is_added)
 +{
-+	struct mpi3_config_page_header cfg_hdr;
-+	struct mpi3_config_request cfg_req;
-+	u32 page_address;
++	char *reason_str = NULL;
 +
-+	memset(phy_pg1, 0, pg_sz);
-+	memset(&cfg_hdr, 0, sizeof(cfg_hdr));
-+	memset(&cfg_req, 0, sizeof(cfg_req));
++	if (!(mrioc->logging_level & MPI3_DEBUG_EVENT_WORK_TASK))
++		return;
 +
-+	cfg_req.function = MPI3_FUNCTION_CONFIG;
-+	cfg_req.action = MPI3_CONFIG_ACTION_PAGE_HEADER;
-+	cfg_req.page_type = MPI3_CONFIG_PAGETYPE_SAS_PHY;
-+	cfg_req.page_number = 1;
-+	cfg_req.page_address = 0;
++	if (is_added)
++		reason_str = "enclosure added";
++	else
++		reason_str = "enclosure dev status changed";
 +
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, NULL,
-+	    MPI3MR_INTADMCMD_TIMEOUT, ioc_status, &cfg_hdr, sizeof(cfg_hdr))) {
-+		ioc_err(mrioc, "sas phy page1 header read failed\n");
-+		goto out_failed;
-+	}
-+	if (*ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+		ioc_err(mrioc, "sas phy page1 header read failed with ioc_status(0x%04x)\n",
-+		    *ioc_status);
-+		goto out_failed;
-+	}
-+	cfg_req.action = MPI3_CONFIG_ACTION_READ_CURRENT;
-+	page_address = ((form & MPI3_SAS_PHY_PGAD_FORM_MASK) |
-+	    (form_spec & MPI3_SAS_PHY_PGAD_PHY_NUMBER_MASK));
-+	cfg_req.page_address = cpu_to_le32(page_address);
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, &cfg_hdr,
-+	    MPI3MR_INTADMCMD_TIMEOUT, ioc_status, phy_pg1, pg_sz)) {
-+		ioc_err(mrioc, "sas phy page1 read failed\n");
-+		goto out_failed;
-+	}
-+	return 0;
-+out_failed:
-+	return -1;
-+}
-+
-+
-+/**
-+ * mpi3mr_cfg_get_sas_exp_pg0 - Read current SAS Expander page0
-+ * @mrioc: Adapter instance reference
-+ * @ioc_status: Pointer to return ioc status
-+ * @exp_pg0: Pointer to return SAS Expander page 0
-+ * @pg_sz: Size of the memory allocated to the page pointer
-+ * @form: The form to be used for addressing the page
-+ * @form_spec: Form specific information like device handle
-+ *
-+ * This is handler for config page read for a specific SAS
-+ * Expander page0. The ioc_status has the controller returned
-+ * ioc_status. This routine doesn't check ioc_status to decide
-+ * whether the page read is success or not and it is the callers
-+ * responsibility.
-+ *
-+ * Return: 0 on success, non-zero on failure.
-+ */
-+int mpi3mr_cfg_get_sas_exp_pg0(struct mpi3mr_ioc *mrioc, u16 *ioc_status,
-+	struct mpi3_sas_expander_page0 *exp_pg0, u16 pg_sz, u32 form,
-+	u32 form_spec)
-+{
-+	struct mpi3_config_page_header cfg_hdr;
-+	struct mpi3_config_request cfg_req;
-+	u32 page_address;
-+
-+	memset(exp_pg0, 0, pg_sz);
-+	memset(&cfg_hdr, 0, sizeof(cfg_hdr));
-+	memset(&cfg_req, 0, sizeof(cfg_req));
-+
-+	cfg_req.function = MPI3_FUNCTION_CONFIG;
-+	cfg_req.action = MPI3_CONFIG_ACTION_PAGE_HEADER;
-+	cfg_req.page_type = MPI3_CONFIG_PAGETYPE_SAS_EXPANDER;
-+	cfg_req.page_number = 0;
-+	cfg_req.page_address = 0;
-+
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, NULL,
-+	    MPI3MR_INTADMCMD_TIMEOUT, ioc_status, &cfg_hdr, sizeof(cfg_hdr))) {
-+		ioc_err(mrioc, "expander page0 header read failed\n");
-+		goto out_failed;
-+	}
-+	if (*ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+		ioc_err(mrioc, "expander page0 header read failed with ioc_status(0x%04x)\n",
-+		    *ioc_status);
-+		goto out_failed;
-+	}
-+	cfg_req.action = MPI3_CONFIG_ACTION_READ_CURRENT;
-+	page_address = ((form & MPI3_SAS_EXPAND_PGAD_FORM_MASK) |
-+	    (form_spec & (MPI3_SAS_EXPAND_PGAD_PHYNUM_MASK |
-+	    MPI3_SAS_EXPAND_PGAD_HANDLE_MASK)));
-+	cfg_req.page_address = cpu_to_le32(page_address);
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, &cfg_hdr,
-+	    MPI3MR_INTADMCMD_TIMEOUT, ioc_status, exp_pg0, pg_sz)) {
-+		ioc_err(mrioc, "expander page0 read failed\n");
-+		goto out_failed;
-+	}
-+	return 0;
-+out_failed:
-+	return -1;
++	ioc_info(mrioc,
++	    "%s: handle(0x%04x), enclosure logical id(0x%016llx)\n",
++	    reason_str, le16_to_cpu(encl_pg0->enclosure_handle),
++	    (unsigned long long)le64_to_cpu(encl_pg0->enclosure_logical_id));
++	ioc_info(mrioc,
++	    "number of slots(%d), port(%d), flags(0x%04x), present(%d)\n",
++	    le16_to_cpu(encl_pg0->num_slots), encl_pg0->io_unit_port,
++	    le16_to_cpu(encl_pg0->flags),
++	    ((le16_to_cpu(encl_pg0->flags) &
++	      MPI3_ENCLS0_FLAGS_ENCL_DEV_PRESENT_MASK) >> 4));
 +}
 +
 +/**
-+ * mpi3mr_cfg_get_sas_exp_pg1 - Read current SAS Expander page1
++ * mpi3mr_encldev_add_chg_evt_bh - Enclosure evt bottomhalf
 + * @mrioc: Adapter instance reference
-+ * @ioc_status: Pointer to return ioc status
-+ * @exp_pg1: Pointer to return SAS Expander page 1
-+ * @pg_sz: Size of the memory allocated to the page pointer
-+ * @form: The form to be used for addressing the page
-+ * @form_spec: Form specific information like phy number
++ * @fwevt: Firmware event reference
 + *
-+ * This is handler for config page read for a specific SAS
-+ * Expander page1. The ioc_status has the controller returned
-+ * ioc_status. This routine doesn't check ioc_status to decide
-+ * whether the page read is success or not and it is the callers
-+ * responsibility.
++ * Prints information about the Enclosure device status or
++ * Enclosure add events if logging is enabled and add or remove
++ * the enclosure from the controller's internal list of
++ * enclosures.
 + *
-+ * Return: 0 on success, non-zero on failure.
++ * Return: Nothing.
 + */
-+int mpi3mr_cfg_get_sas_exp_pg1(struct mpi3mr_ioc *mrioc, u16 *ioc_status,
-+	struct mpi3_sas_expander_page1 *exp_pg1, u16 pg_sz, u32 form,
-+	u32 form_spec)
++static void mpi3mr_encldev_add_chg_evt_bh(struct mpi3mr_ioc *mrioc,
++	struct mpi3mr_fwevt *fwevt)
 +{
-+	struct mpi3_config_page_header cfg_hdr;
-+	struct mpi3_config_request cfg_req;
-+	u32 page_address;
++	struct mpi3mr_enclosure_node *enclosure_dev = NULL;
++	struct mpi3_enclosure_page0 *encl_pg0;
++	u16 encl_handle;
++	u8 added, present;
 +
-+	memset(exp_pg1, 0, pg_sz);
-+	memset(&cfg_hdr, 0, sizeof(cfg_hdr));
-+	memset(&cfg_req, 0, sizeof(cfg_req));
++	encl_pg0 = (struct mpi3_enclosure_page0 *) fwevt->event_data;
++	added = (fwevt->event_id == MPI3_EVENT_ENCL_DEVICE_ADDED) ? 1 : 0;
++	mpi3mr_encldev_add_chg_evt_debug(mrioc, encl_pg0, added);
 +
-+	cfg_req.function = MPI3_FUNCTION_CONFIG;
-+	cfg_req.action = MPI3_CONFIG_ACTION_PAGE_HEADER;
-+	cfg_req.page_type = MPI3_CONFIG_PAGETYPE_SAS_EXPANDER;
-+	cfg_req.page_number = 1;
-+	cfg_req.page_address = 0;
 +
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, NULL,
-+	    MPI3MR_INTADMCMD_TIMEOUT, ioc_status, &cfg_hdr, sizeof(cfg_hdr))) {
-+		ioc_err(mrioc, "expander page1 header read failed\n");
-+		goto out_failed;
++	encl_handle = le16_to_cpu(encl_pg0->enclosure_handle);
++	present = ((le16_to_cpu(encl_pg0->flags) &
++	      MPI3_ENCLS0_FLAGS_ENCL_DEV_PRESENT_MASK) >> 4);
++
++	if (encl_handle)
++		enclosure_dev = mpi3mr_enclosure_find_by_handle(mrioc,
++		    encl_handle);
++	if (!enclosure_dev && present) {
++		enclosure_dev =
++			kzalloc(sizeof(struct mpi3mr_enclosure_node),
++			    GFP_KERNEL);
++		if (!enclosure_dev)
++			return;
++		list_add_tail(&enclosure_dev->list,
++		    &mrioc->enclosure_list);
 +	}
-+	if (*ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+		ioc_err(mrioc, "expander page1 header read failed with ioc_status(0x%04x)\n",
-+		    *ioc_status);
-+		goto out_failed;
++	if (enclosure_dev) {
++		if (!present) {
++			list_del(&enclosure_dev->list);
++			kfree(enclosure_dev);
++		} else
++			memcpy(&enclosure_dev->pg0, encl_pg0,
++			    sizeof(enclosure_dev->pg0));
++
 +	}
-+	cfg_req.action = MPI3_CONFIG_ACTION_READ_CURRENT;
-+	page_address = ((form & MPI3_SAS_EXPAND_PGAD_FORM_MASK) |
-+	    (form_spec & (MPI3_SAS_EXPAND_PGAD_PHYNUM_MASK |
-+	    MPI3_SAS_EXPAND_PGAD_HANDLE_MASK)));
-+	cfg_req.page_address = cpu_to_le32(page_address);
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, &cfg_hdr,
-+	    MPI3MR_INTADMCMD_TIMEOUT, ioc_status, exp_pg1, pg_sz)) {
-+		ioc_err(mrioc, "expander page1 read failed\n");
-+		goto out_failed;
-+	}
-+	return 0;
-+out_failed:
-+	return -1;
 +}
 +
-+/**
-+ * mpi3mr_cfg_get_enclosure_pg0 - Read current Enclosure page0
-+ * @mrioc: Adapter instance reference
-+ * @ioc_status: Pointer to return ioc status
-+ * @encl_pg0: Pointer to return Enclosure page 0
-+ * @pg_sz: Size of the memory allocated to the page pointer
-+ * @form: The form to be used for addressing the page
-+ * @form_spec: Form specific information like device handle
-+ *
-+ * This is handler for config page read for a specific Enclosure
-+ * page0. The ioc_status has the controller returned ioc_status.
-+ * This routine doesn't check ioc_status to decide whether the
-+ * page read is success or not and it is the callers
-+ * responsibility.
-+ *
-+ * Return: 0 on success, non-zero on failure.
-+ */
-+int mpi3mr_cfg_get_enclosure_pg0(struct mpi3mr_ioc *mrioc, u16 *ioc_status,
-+	struct mpi3_enclosure_page0 *encl_pg0, u16 pg_sz, u32 form,
-+	u32 form_spec)
-+{
-+	struct mpi3_config_page_header cfg_hdr;
-+	struct mpi3_config_request cfg_req;
-+	u32 page_address;
-+
-+	memset(encl_pg0, 0, pg_sz);
-+	memset(&cfg_hdr, 0, sizeof(cfg_hdr));
-+	memset(&cfg_req, 0, sizeof(cfg_req));
-+
-+	cfg_req.function = MPI3_FUNCTION_CONFIG;
-+	cfg_req.action = MPI3_CONFIG_ACTION_PAGE_HEADER;
-+	cfg_req.page_type = MPI3_CONFIG_PAGETYPE_ENCLOSURE;
-+	cfg_req.page_number = 0;
-+	cfg_req.page_address = 0;
-+
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, NULL,
-+	    MPI3MR_INTADMCMD_TIMEOUT, ioc_status, &cfg_hdr, sizeof(cfg_hdr))) {
-+		ioc_err(mrioc, "enclosure page0 header read failed\n");
-+		goto out_failed;
-+	}
-+	if (*ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+		ioc_err(mrioc, "enclosure page0 header read failed with ioc_status(0x%04x)\n",
-+		    *ioc_status);
-+		goto out_failed;
-+	}
-+	cfg_req.action = MPI3_CONFIG_ACTION_READ_CURRENT;
-+	page_address = ((form & MPI3_ENCLOS_PGAD_FORM_MASK) |
-+	    (form_spec & MPI3_ENCLOS_PGAD_HANDLE_MASK));
-+	cfg_req.page_address = cpu_to_le32(page_address);
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, &cfg_hdr,
-+	    MPI3MR_INTADMCMD_TIMEOUT, ioc_status, encl_pg0, pg_sz)) {
-+		ioc_err(mrioc, "enclosure page0 read failed\n");
-+		goto out_failed;
-+	}
-+	return 0;
-+out_failed:
-+	return -1;
-+}
-+
-+
-+/**
-+ * mpi3mr_cfg_get_sas_io_unit_pg0 - Read current SASIOUnit page0
-+ * @mrioc: Adapter instance reference
-+ * @sas_io_unit_pg0: Pointer to return SAS IO Unit page 0
-+ * @pg_sz: Size of the memory allocated to the page pointer
-+ *
-+ * This is handler for config page read for the SAS IO Unit
-+ * page0. This routine checks ioc_status to decide whether the
-+ * page read is success or not.
-+ *
-+ * Return: 0 on success, non-zero on failure.
-+ */
-+int mpi3mr_cfg_get_sas_io_unit_pg0(struct mpi3mr_ioc *mrioc,
-+	struct mpi3_sas_io_unit_page0 *sas_io_unit_pg0, u16 pg_sz)
-+{
-+	struct mpi3_config_page_header cfg_hdr;
-+	struct mpi3_config_request cfg_req;
-+	u16 ioc_status = 0;
-+
-+	memset(sas_io_unit_pg0, 0, pg_sz);
-+	memset(&cfg_hdr, 0, sizeof(cfg_hdr));
-+	memset(&cfg_req, 0, sizeof(cfg_req));
-+
-+	cfg_req.function = MPI3_FUNCTION_CONFIG;
-+	cfg_req.action = MPI3_CONFIG_ACTION_PAGE_HEADER;
-+	cfg_req.page_type = MPI3_CONFIG_PAGETYPE_SAS_IO_UNIT;
-+	cfg_req.page_number = 0;
-+	cfg_req.page_address = 0;
-+
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, NULL,
-+	    MPI3MR_INTADMCMD_TIMEOUT, &ioc_status, &cfg_hdr, sizeof(cfg_hdr))) {
-+		ioc_err(mrioc, "sas io unit page0 header read failed\n");
-+		goto out_failed;
-+	}
-+	if (ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+		ioc_err(mrioc, "sas io unit page0 header read failed with ioc_status(0x%04x)\n",
-+		    ioc_status);
-+		goto out_failed;
-+	}
-+	cfg_req.action = MPI3_CONFIG_ACTION_READ_CURRENT;
-+
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, &cfg_hdr,
-+	    MPI3MR_INTADMCMD_TIMEOUT, &ioc_status, sas_io_unit_pg0, pg_sz)) {
-+		ioc_err(mrioc, "sas io unit page0 read failed\n");
-+		goto out_failed;
-+	}
-+	if (ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+		ioc_err(mrioc, "sas io unit page0 read failed with ioc_status(0x%04x)\n",
-+		    ioc_status);
-+		goto out_failed;
-+	}
-+	return 0;
-+out_failed:
-+	return -1;
-+}
-+
-+/**
-+ * mpi3mr_cfg_get_sas_io_unit_pg1 - Read current SASIOUnit page1
-+ * @mrioc: Adapter instance reference
-+ * @sas_io_unit_pg1: Pointer to return SAS IO Unit page 1
-+ * @pg_sz: Size of the memory allocated to the page pointer
-+ *
-+ * This is handler for config page read for the SAS IO Unit
-+ * page1. This routine checks ioc_status to decide whether the
-+ * page read is success or not.
-+ *
-+ * Return: 0 on success, non-zero on failure.
-+ */
-+int mpi3mr_cfg_get_sas_io_unit_pg1(struct mpi3mr_ioc *mrioc,
-+	struct mpi3_sas_io_unit_page1 *sas_io_unit_pg1, u16 pg_sz)
-+{
-+	struct mpi3_config_page_header cfg_hdr;
-+	struct mpi3_config_request cfg_req;
-+	u16 ioc_status = 0;
-+
-+	memset(sas_io_unit_pg1, 0, pg_sz);
-+	memset(&cfg_hdr, 0, sizeof(cfg_hdr));
-+	memset(&cfg_req, 0, sizeof(cfg_req));
-+
-+	cfg_req.function = MPI3_FUNCTION_CONFIG;
-+	cfg_req.action = MPI3_CONFIG_ACTION_PAGE_HEADER;
-+	cfg_req.page_type = MPI3_CONFIG_PAGETYPE_SAS_IO_UNIT;
-+	cfg_req.page_number = 1;
-+	cfg_req.page_address = 0;
-+
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, NULL,
-+	    MPI3MR_INTADMCMD_TIMEOUT, &ioc_status, &cfg_hdr, sizeof(cfg_hdr))) {
-+		ioc_err(mrioc, "sas io unit page1 header read failed\n");
-+		goto out_failed;
-+	}
-+	if (ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+		ioc_err(mrioc, "sas io unit page1 header read failed with ioc_status(0x%04x)\n",
-+		    ioc_status);
-+		goto out_failed;
-+	}
-+	cfg_req.action = MPI3_CONFIG_ACTION_READ_CURRENT;
-+
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, &cfg_hdr,
-+	    MPI3MR_INTADMCMD_TIMEOUT, &ioc_status, sas_io_unit_pg1, pg_sz)) {
-+		ioc_err(mrioc, "sas io unit page1 read failed\n");
-+		goto out_failed;
-+	}
-+	if (ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+		ioc_err(mrioc, "sas io unit page1 read failed with ioc_status(0x%04x)\n",
-+		    ioc_status);
-+		goto out_failed;
-+	}
-+	return 0;
-+out_failed:
-+	return -1;
-+}
-+
-+/**
-+ * mpi3mr_cfg_set_sas_io_unit_pg1 - Write SASIOUnit page1
-+ * @mrioc: Adapter instance reference
-+ * @sas_io_unit_pg1: Pointer to the SAS IO Unit page 1 to write
-+ * @pg_sz: Size of the memory allocated to the page pointer
-+ *
-+ * This is handler for config page write for the SAS IO Unit
-+ * page1. This routine checks ioc_status to decide whether the
-+ * page read is success or not. This will modify both current
-+ * and persistent page.
-+ *
-+ * Return: 0 on success, non-zero on failure.
-+ */
-+int mpi3mr_cfg_set_sas_io_unit_pg1(struct mpi3mr_ioc *mrioc,
-+	struct mpi3_sas_io_unit_page1 *sas_io_unit_pg1, u16 pg_sz)
-+{
-+	struct mpi3_config_page_header cfg_hdr;
-+	struct mpi3_config_request cfg_req;
-+	u16 ioc_status = 0;
-+
-+	memset(&cfg_hdr, 0, sizeof(cfg_hdr));
-+	memset(&cfg_req, 0, sizeof(cfg_req));
-+
-+	cfg_req.function = MPI3_FUNCTION_CONFIG;
-+	cfg_req.action = MPI3_CONFIG_ACTION_PAGE_HEADER;
-+	cfg_req.page_type = MPI3_CONFIG_PAGETYPE_SAS_IO_UNIT;
-+	cfg_req.page_number = 1;
-+	cfg_req.page_address = 0;
-+
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, NULL,
-+	    MPI3MR_INTADMCMD_TIMEOUT, &ioc_status, &cfg_hdr, sizeof(cfg_hdr))) {
-+		ioc_err(mrioc, "sas io unit page1 header read failed\n");
-+		goto out_failed;
-+	}
-+	if (ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+		ioc_err(mrioc, "sas io unit page1 header read failed with ioc_status(0x%04x)\n",
-+		    ioc_status);
-+		goto out_failed;
-+	}
-+	cfg_req.action = MPI3_CONFIG_ACTION_WRITE_CURRENT;
-+
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, &cfg_hdr,
-+	    MPI3MR_INTADMCMD_TIMEOUT, &ioc_status, sas_io_unit_pg1, pg_sz)) {
-+		ioc_err(mrioc, "sas io unit page1 write current failed\n");
-+		goto out_failed;
-+	}
-+	if (ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+		ioc_err(mrioc, "sas io unit page1 write current failed with ioc_status(0x%04x)\n",
-+		    ioc_status);
-+		goto out_failed;
+ /**
+  * mpi3mr_sastopochg_evt_debug - SASTopoChange details
+  * @mrioc: Adapter instance reference
+@@ -1641,6 +1761,13 @@ static void mpi3mr_fwevt_bh(struct mpi3mr_ioc *mrioc,
+ 		mpi3mr_devstatuschg_evt_bh(mrioc, fwevt);
+ 		break;
+ 	}
++	case MPI3_EVENT_ENCL_DEVICE_ADDED:
++	case MPI3_EVENT_ENCL_DEVICE_STATUS_CHANGE:
++	{
++		mpi3mr_encldev_add_chg_evt_bh(mrioc, fwevt);
++		break;
 +	}
 +
-+	cfg_req.action = MPI3_CONFIG_ACTION_WRITE_PERSISTENT;
-+
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, &cfg_hdr,
-+	    MPI3MR_INTADMCMD_TIMEOUT, &ioc_status, sas_io_unit_pg1, pg_sz)) {
-+		ioc_err(mrioc, "sas io unit page1 write persistent failed\n");
-+		goto out_failed;
-+	}
-+	if (ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+		ioc_err(mrioc, "sas io unit page1 write persistent failed with ioc_status(0x%04x)\n",
-+		    ioc_status);
-+		goto out_failed;
-+	}
-+	return 0;
-+out_failed:
-+	return -1;
-+}
-+
-+/**
-+ * mpi3mr_cfg_get_driver_pg1 - Read current Driver page1
-+ * @mrioc: Adapter instance reference
-+ * @driver_pg1: Pointer to return Driver page 1
-+ * @pg_sz: Size of the memory allocated to the page pointer
-+ *
-+ * This is handler for config page read for the Driver page1.
-+ * This routine checks ioc_status to decide whether the page
-+ * read is success or not.
-+ *
-+ * Return: 0 on success, non-zero on failure.
-+ */
-+int mpi3mr_cfg_get_driver_pg1(struct mpi3mr_ioc *mrioc,
-+	struct mpi3_driver_page1 *driver_pg1, u16 pg_sz)
-+{
-+	struct mpi3_config_page_header cfg_hdr;
-+	struct mpi3_config_request cfg_req;
-+	u16 ioc_status = 0;
-+
-+	memset(driver_pg1, 0, pg_sz);
-+	memset(&cfg_hdr, 0, sizeof(cfg_hdr));
-+	memset(&cfg_req, 0, sizeof(cfg_req));
-+
-+	cfg_req.function = MPI3_FUNCTION_CONFIG;
-+	cfg_req.action = MPI3_CONFIG_ACTION_PAGE_HEADER;
-+	cfg_req.page_type = MPI3_CONFIG_PAGETYPE_DRIVER;
-+	cfg_req.page_number = 1;
-+	cfg_req.page_address = 0;
-+
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, NULL,
-+	    MPI3MR_INTADMCMD_TIMEOUT, &ioc_status, &cfg_hdr, sizeof(cfg_hdr))) {
-+		ioc_err(mrioc, "driver page1 header read failed\n");
-+		goto out_failed;
-+	}
-+	if (ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+		ioc_err(mrioc, "driver page1 header read failed with ioc_status(0x%04x)\n",
-+		    ioc_status);
-+		goto out_failed;
-+	}
-+	cfg_req.action = MPI3_CONFIG_ACTION_READ_CURRENT;
-+
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, &cfg_hdr,
-+	    MPI3MR_INTADMCMD_TIMEOUT, &ioc_status, driver_pg1, pg_sz)) {
-+		ioc_err(mrioc, "driver page1 read failed\n");
-+		goto out_failed;
-+	}
-+	if (ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+		ioc_err(mrioc, "driver page1 read failed with ioc_status(0x%04x)\n",
-+		    ioc_status);
-+		goto out_failed;
-+	}
-+	return 0;
-+out_failed:
-+	return -1;
-+}
+ 	case MPI3_EVENT_SAS_TOPOLOGY_CHANGE_LIST:
+ 	{
+ 		mpi3mr_sastopochg_evt_bh(mrioc, fwevt);
+@@ -2502,6 +2629,8 @@ void mpi3mr_os_handle_events(struct mpi3mr_ioc *mrioc,
+ 	}
+ 	case MPI3_EVENT_DEVICE_INFO_CHANGED:
+ 	case MPI3_EVENT_LOG_DATA:
++	case MPI3_EVENT_ENCL_DEVICE_STATUS_CHANGE:
++	case MPI3_EVENT_ENCL_DEVICE_ADDED:
+ 	{
+ 		process_evt_bh = 1;
+ 		break;
+@@ -2516,7 +2645,6 @@ void mpi3mr_os_handle_events(struct mpi3mr_ioc *mrioc,
+ 		mpi3mr_cablemgmt_evt_th(mrioc, event_reply);
+ 		break;
+ 	}
+-	case MPI3_EVENT_ENCL_DEVICE_STATUS_CHANGE:
+ 	case MPI3_EVENT_SAS_DISCOVERY:
+ 	case MPI3_EVENT_SAS_DEVICE_DISCOVERY_ERROR:
+ 	case MPI3_EVENT_SAS_BROADCAST_PRIMITIVE:
+@@ -4569,6 +4697,7 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	INIT_LIST_HEAD(&mrioc->tgtdev_list);
+ 	INIT_LIST_HEAD(&mrioc->delayed_rmhs_list);
+ 	INIT_LIST_HEAD(&mrioc->delayed_evtack_cmds_list);
++	INIT_LIST_HEAD(&mrioc->enclosure_list);
+ 
+ 	mutex_init(&mrioc->reset_mutex);
+ 	mpi3mr_init_drv_cmd(&mrioc->init_cmds, MPI3MR_HOSTTAG_INITCMDS);
 -- 
 2.27.0
 
 
---0000000000001020e305e4f14a93
+--0000000000002d188f05e4f14a13
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -799,13 +436,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIFv5kINn01OL7j5x3yX6
-KpbvgloEHCQvGapRY+1DHoRTMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDcyOTEzMDQyNFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIGhRTYpd8ueZr/iqoEEi
+8Y3T0XGM3GVj+FmzGHbU9CeYMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDcyOTEzMDQyNlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBeBJMc5OCegQ6sNaDFiUqnF9qrHld8/6CcTFVK
-bd5m9QQHFbfXeW1/MirhV3FTDxeHhJ/KkpFfeK6xTf3g0Sdp3RrIU0diposUHbMmBHs/C+oqYnY5
-ODO+w7FoYAOU9IAuZWtzpnZ3/jJEA6TgWtg4DY0pbZvv+zVJus9q7MXfKLdRFbMEdSD2ZrQe9qHH
-g0mL7bGW4LLO8IJcEF2yFxybiguEHmGrYHcpb5vtBNEfNKHnqzvSyL6Y/M2lylB2XR+TQc2XeCVU
-eEGOtbIUzoiB/jv8/R7zp/B/2QSUvLKUFWiQjDJwwSoAJwy4aF6W/SfZX6HG0agoxb7iT9i+Q8IL
---0000000000001020e305e4f14a93--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQAbFf//zcI/1+28ZoJQ80mYHw6CVRrt2O1TjR6o
+WdmHD7eFq4WH3NKFMRuZ9JpiHryYYjxOtXvAmBxRVMGspuQ4o6/cb0e8vov+VHbCRq8PHIb0baa/
+XKoBZ4e8jQ3kjkl05ddpH1xCuLpyuc03JjYWJNU0nIAiX5Pr94bOOrZyDSfv50k+qeFCZaYXkAji
+MtxI0u93V4l0+K/wvc+AXakOLmBN9AW4ZYzJAsFGjW0Vz3jTDnxN2Oed8Jw6BislNoUNkSeLt0AE
+7vpQLlPHVpXru/d+KJWWVkH7BIniNVxJzvNsrcll2AhhCeBwsrUpPSgYEPcAUTGi+s3TcYo1Q4tz
+--0000000000002d188f05e4f14a13--
