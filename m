@@ -2,116 +2,143 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90D72C00144
-	for <linux-scsi@archiver.kernel.org>; Fri, 29 Jul 2022 07:55:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD8B7C00144
+	for <linux-scsi@archiver.kernel.org>; Fri, 29 Jul 2022 08:02:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232792AbiG2Hzh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 29 Jul 2022 03:55:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38448 "EHLO
+        id S235374AbiG2ICj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 29 Jul 2022 04:02:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43606 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229475AbiG2Hzf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Jul 2022 03:55:35 -0400
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0DDC2D1F4;
-        Fri, 29 Jul 2022 00:55:30 -0700 (PDT)
-X-UUID: 4c0975a4053b4d99b8e60b74514fb5d8-20220729
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.8,REQID:5630dc57-9195-4a3e-9daf-c264d9961ceb,OB:0,LO
-        B:0,IP:0,URL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,RULE:Release_Ham,ACT
-        ION:release,TS:-5
-X-CID-META: VersionHash:0f94e32,CLOUDID:d8f6b524-a982-4824-82d2-9da3b6056c2a,C
-        OID:IGNORED,Recheck:0,SF:nil,TC:nil,Content:0,EDM:-3,IP:nil,URL:0,File:nil
-        ,QS:nil,BEC:nil,COL:0
-X-UUID: 4c0975a4053b4d99b8e60b74514fb5d8-20220729
-Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw02.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 885014646; Fri, 29 Jul 2022 15:55:22 +0800
-Received: from mtkcas10.mediatek.inc (172.21.101.39) by
- mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.2.792.15; Fri, 29 Jul 2022 15:55:20 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas10.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Fri, 29 Jul 2022 15:55:20 +0800
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
-        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>,
-        <bvanassche@acm.org>
-CC:     <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <alice.chao@mediatek.com>, <powen.kao@mediatek.com>,
-        <mason.zhang@mediatek.com>, <qilin.tan@mediatek.com>,
-        <lin.gui@mediatek.com>, <eddie.huang@mediatek.com>,
-        <tun-yu.yu@mediatek.com>, <cc.chou@mediatek.com>,
-        <chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
-        <stanley.chu@mediatek.com>
-Subject: [PATCH v1] scsi: ufs: Fix ufshcd_scale_clks decision in recovery flow
-Date:   Fri, 29 Jul 2022 15:55:19 +0800
-Message-ID: <20220729075519.4665-1-stanley.chu@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        with ESMTP id S235372AbiG2ICZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Jul 2022 04:02:25 -0400
+Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC2E780F44;
+        Fri, 29 Jul 2022 01:02:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1659081743; x=1690617743;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=d0OEfYLhT9pPlxoUCYRjyRAQjyV8GZZUnsYK4JQajk4=;
+  b=JTGvUBNRlGtuCnMCIftqV2/FD/z6R5hv73ntijIfPU+GMOGbsigNF4mZ
+   mIce9KJ2Fb1x3R+b/B+kCspIXv30geOEczO+3vQu5EuQStk1HQ87fbX+I
+   nHU85VTgDPHhcOFkfiybfh2Ukz115s/OLwXbIwaFl4fu7yZQroh+LhFRl
+   in8+kACk4iv16y94Vr3D14wxElyQVPz3Lc6rReyWG6yj103iMAh4GMnGY
+   1/kClxmhMd18dZRydo5QU4hKZqnOXMg7gO+dgsmU5euxqt+JnDKhcuqLH
+   mv/+1lfAzN61vOx+sW+gVVeTdZEUKGCX/Kjp68BagTkGX5SX/mvOrqHJu
+   A==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10422"; a="352717824"
+X-IronPort-AV: E=Sophos;i="5.93,200,1654585200"; 
+   d="scan'208";a="352717824"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jul 2022 01:02:21 -0700
+X-IronPort-AV: E=Sophos;i="5.93,200,1654585200"; 
+   d="scan'208";a="660140521"
+Received: from ahunter6-mobl1.ger.corp.intel.com (HELO [10.0.2.15]) ([10.252.46.142])
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jul 2022 01:02:19 -0700
+Message-ID: <4b889b61-5aa0-892f-0808-352545193e47@intel.com>
+Date:   Fri, 29 Jul 2022 11:02:17 +0300
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Firefox/91.0 Thunderbird/91.11.0
+Subject: Re: [PATCH v3] scsi: ufs: ufs-pci: Correct check for RESET DSM
+Content-Language: en-US
+To:     Daniil Lunev <dlunev@chromium.org>,
+        Bart Van Assche <bvanassche@acm.org>
+Cc:     Avri Altman <avri.altman@wdc.com>, Bean Huo <beanhuo@micron.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+References: <20220728111748.v3.1.I22460c4f4a9ccf2c96c3f9bb392b409926d80b2f@changeid>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+In-Reply-To: <20220728111748.v3.1.I22460c4f4a9ccf2c96c3f9bb392b409926d80b2f@changeid>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When someone toggles clk-scaling feature via sysfs interface,
-the flag "hba->clk_scaling.is_enabled" shall be changed after
-ufshcd_devfreq_scale() is finished.
+On 28/07/22 04:18, Daniil Lunev wrote:
+> dsm_fns is a bitmap, and it is 0-indexed according to the check in
+> __intel_dsm function. But common initialization was checking it as if it
+> was 1-indexed. This patch corrects the discrepancy. This change won't
+> break any existing calls to the function, since before the change both
+> bits 0 and 1 were checked and needed to be set.
+> 
+> Signed-off-by: Daniil Lunev <dlunev@chromium.org>
 
-By this change, we can use this flag to make right decision for
-invoking ufshcd_scale_clks() in host recovery flow, i.e., in
-ufshcd_host_reset_and_restore().
+Reviewed-by: Adrian Hunter <adrian.hunter@intel.com>
 
-ufshcd_scale_clks() shall be invoked only if both conditions
-are satisfied,
-
-1. Clk-scaling is supported, and
-2. Clk-scaling is enabled
-
-Otherwise, the clk and gear which would be scaled by
-ufshcd_scale_clks() shall be already in the default state
-so the scaling is not required anymore.
-
-Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
----
- drivers/ufs/core/ufshcd.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 581d88af07ab..dc57a7988023 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -1574,8 +1574,6 @@ static ssize_t ufshcd_clkscale_enable_store(struct device *dev,
- 	ufshcd_rpm_get_sync(hba);
- 	ufshcd_hold(hba, false);
- 
--	hba->clk_scaling.is_enabled = value;
--
- 	if (value) {
- 		ufshcd_resume_clkscaling(hba);
- 	} else {
-@@ -1586,6 +1584,8 @@ static ssize_t ufshcd_clkscale_enable_store(struct device *dev,
- 					__func__, err);
- 	}
- 
-+	hba->clk_scaling.is_enabled = value;
-+
- 	ufshcd_release(hba);
- 	ufshcd_rpm_put_sync(hba);
- out:
-@@ -7259,7 +7259,8 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
- 	hba->silence_err_logs = false;
- 
- 	/* scale up clocks to max frequency before full reinitialization */
--	ufshcd_scale_clks(hba, true);
-+	if (ufshcd_is_clkscaling_supported(hba) && hba->clk_scaling.is_enabled)
-+		ufshcd_scale_clks(hba, true);
- 
- 	err = ufshcd_hba_enable(hba);
- 
--- 
-2.18.0
+> 
+> ---
+> 
+> Changes in v3:
+> * Commit message typos
+> * Args indentation
+> 
+> Changes in v2:
+> * Make __INTEL_DSM_SUPPORTED a function
+> * use `1u` instead of `1` in shift operator
+> 
+>  drivers/ufs/host/ufshcd-pci.c | 17 +++++++++++++----
+>  1 file changed, 13 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.c
+> index 04166bda41daa..b9572fcc3bda5 100644
+> --- a/drivers/ufs/host/ufshcd-pci.c
+> +++ b/drivers/ufs/host/ufshcd-pci.c
+> @@ -24,7 +24,7 @@ struct ufs_host {
+>  	void (*late_init)(struct ufs_hba *hba);
+>  };
+>  
+> -enum {
+> +enum intel_ufs_dsm_func_id {
+>  	INTEL_DSM_FNS		=  0,
+>  	INTEL_DSM_RESET		=  1,
+>  };
+> @@ -42,6 +42,15 @@ static const guid_t intel_dsm_guid =
+>  	GUID_INIT(0x1A4832A0, 0x7D03, 0x43CA,
+>  		  0xB0, 0x20, 0xF6, 0xDC, 0xD1, 0x2A, 0x19, 0x50);
+>  
+> +static bool __intel_dsm_supported(struct intel_host *host,
+> +				  enum intel_ufs_dsm_func_id fn)
+> +{
+> +	return fn < 32 && fn >= 0 && (host->dsm_fns & (1u << fn));
+> +}
+> +
+> +#define INTEL_DSM_SUPPORTED(host, name) \
+> +	__intel_dsm_supported(host, INTEL_DSM_##name)
+> +
+>  static int __intel_dsm(struct intel_host *intel_host, struct device *dev,
+>  		       unsigned int fn, u32 *result)
+>  {
+> @@ -71,7 +80,7 @@ static int __intel_dsm(struct intel_host *intel_host, struct device *dev,
+>  static int intel_dsm(struct intel_host *intel_host, struct device *dev,
+>  		     unsigned int fn, u32 *result)
+>  {
+> -	if (fn > 31 || !(intel_host->dsm_fns & (1 << fn)))
+> +	if (!__intel_dsm_supported(intel_host, fn))
+>  		return -EOPNOTSUPP;
+>  
+>  	return __intel_dsm(intel_host, dev, fn, result);
+> @@ -300,7 +309,7 @@ static int ufs_intel_device_reset(struct ufs_hba *hba)
+>  {
+>  	struct intel_host *host = ufshcd_get_variant(hba);
+>  
+> -	if (host->dsm_fns & INTEL_DSM_RESET) {
+> +	if (INTEL_DSM_SUPPORTED(host, RESET)) {
+>  		u32 result = 0;
+>  		int err;
+>  
+> @@ -342,7 +351,7 @@ static int ufs_intel_common_init(struct ufs_hba *hba)
+>  		return -ENOMEM;
+>  	ufshcd_set_variant(hba, host);
+>  	intel_dsm_init(host, hba->dev);
+> -	if (host->dsm_fns & INTEL_DSM_RESET) {
+> +	if (INTEL_DSM_SUPPORTED(host, RESET)) {
+>  		if (hba->vops->device_reset)
+>  			hba->caps |= UFSHCD_CAP_DEEPSLEEP;
+>  	} else {
 
