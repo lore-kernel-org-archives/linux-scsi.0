@@ -2,137 +2,105 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C8DFC04A68
-	for <linux-scsi@archiver.kernel.org>; Sat, 30 Jul 2022 07:08:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64B79C04A68
+	for <linux-scsi@archiver.kernel.org>; Sat, 30 Jul 2022 07:55:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229665AbiG3HIY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 30 Jul 2022 03:08:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34250 "EHLO
+        id S230059AbiG3HzC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 30 Jul 2022 03:55:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57756 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229573AbiG3HIW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Jul 2022 03:08:22 -0400
-Received: from mail-lj1-x230.google.com (mail-lj1-x230.google.com [IPv6:2a00:1450:4864:20::230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 560D256BB6;
-        Sat, 30 Jul 2022 00:08:20 -0700 (PDT)
-Received: by mail-lj1-x230.google.com with SMTP id s14so7266189ljh.0;
-        Sat, 30 Jul 2022 00:08:20 -0700 (PDT)
+        with ESMTP id S229463AbiG3HzB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Jul 2022 03:55:01 -0400
+Received: from alexa-out-sd-02.qualcomm.com (alexa-out-sd-02.qualcomm.com [199.106.114.39])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 478603DF2D;
+        Sat, 30 Jul 2022 00:55:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc;
-        bh=tIBM3YfgmPp7U8f9ccRVjiScdQ5ht2L/cW+n6qhI3xc=;
-        b=V6cWGzy9vo9bC1mYKdvD6nyEL8as9poBhoSM6xL/F42GmNlOiLQuW6o8GgVi6AavBn
-         q7RmkSALlud/LxIWHogkH73pdjhkuoboeuobzy8FIIPoUQxJW4T73SlAYEx4A/iqt1SI
-         TZ78tTt4SAMW0hKHS9hSb3vBuPJ+lJVAp4iZRqFPwV6TzciXfY1zZGKcysuHL5ap2ptM
-         9gctWFxVpfZAN1SO5iqN75vaNh+xJx+YnQiTAIzI3G4MCyJoYIXeVM2xsm88hIHT0QMl
-         IldU/hBUWbW71UWjx9ZXimOJw7LWx38Opz7Clb37jHTy19ysbaiEAi6LMppeh/afE/2Z
-         7+7g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc;
-        bh=tIBM3YfgmPp7U8f9ccRVjiScdQ5ht2L/cW+n6qhI3xc=;
-        b=NSlN7640J6J1AipgPrrEZ+LjiQNrzp0xNHaR6sUzJPmKo/4+VJsmv848Pk8KVWxOqY
-         W+M9mDIX8/CPEmQxJgLcHssNwfOCRVqZRzylWpyu1/4/auxaUH5HW9oOUO5fo8B1mgHn
-         ANEmrtXPrFI8EAMMoq9pmKOSGs12Ac9WhKyIDm0bYym3FiuOhLTR7N0sJ6xXR8pQtdfs
-         nU3bLSosAHf+sJTg5OtC+DmPWhj/A6HbWuZN7/cTEfn8Klyadts+HHFE5uVmigbJQUep
-         YzuWBU7a1X9mCXwqCPwmnI+spp5WhxXqIfVQ4FnLPpNcZyfIJC2fdpcNOZYqDsZWF8hE
-         ghrA==
-X-Gm-Message-State: AJIora9TXH4ht3/lLFOIq4C4Nu4IVE+BHkYygfX5/fjYAump6zK4Z+T0
-        bdwVKklLi2DVrILk6hK5oMa0uIBj19aDAVTB3Q==
-X-Google-Smtp-Source: AGRyM1uMbpWyeRPaYBKWgwfiN9eWE6DT9CoW3l+aLTwC6kJww0K6oQ9sU7MvSHntmxMdWn4Yb/6vYz0HC6Fa1qoqbMs=
-X-Received: by 2002:a05:651c:1796:b0:25d:7288:ed0b with SMTP id
- bn22-20020a05651c179600b0025d7288ed0bmr2142081ljb.228.1659164898266; Sat, 30
- Jul 2022 00:08:18 -0700 (PDT)
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1659167700; x=1690703700;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=6Shwt+Sz680BwEw6tvfx5LXYNZ3fuh1Or7vfVOJvxiU=;
+  b=DrnOx5CkwaHdq/P887ad3ktO1N/S7xpteCrkYxLbDaXw2QB2t8R6nwL0
+   Gy9kXWdLz57asjrqh91+SbDj2woSHS5b/jhQaIZhu8rvJtqf24tV4ZOKT
+   bTyIz3Trm5ywbpZzffF1XGj+AM17tRqHgYWU//xs2l/F122LJojWB24Pr
+   U=;
+Received: from unknown (HELO ironmsg04-sd.qualcomm.com) ([10.53.140.144])
+  by alexa-out-sd-02.qualcomm.com with ESMTP; 30 Jul 2022 00:55:00 -0700
+X-QCInternal: smtphost
+Received: from unknown (HELO nasanex01a.na.qualcomm.com) ([10.52.223.231])
+  by ironmsg04-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Jul 2022 00:54:59 -0700
+Received: from [10.242.58.28] (10.80.80.8) by nasanex01a.na.qualcomm.com
+ (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.22; Sat, 30 Jul
+ 2022 00:54:58 -0700
+Message-ID: <d620614b-6c20-d7ed-af19-ca0accb427d6@quicinc.com>
+Date:   Sat, 30 Jul 2022 13:24:54 +0530
 MIME-Version: 1.0
-References: <20220729075519.4665-1-stanley.chu@mediatek.com> <7e8c58cf-64c1-8426-bf22-97d3df85ed38@acm.org>
-In-Reply-To: <7e8c58cf-64c1-8426-bf22-97d3df85ed38@acm.org>
-From:   Stanley Chu <chu.stanley@gmail.com>
-Date:   Sat, 30 Jul 2022 15:08:05 +0800
-Message-ID: <CAGaU9a_G1kH8VezozhZ3-S6-GvMr=EUVc4btU8Dwdo+cCJDxUg@mail.gmail.com>
-Subject: Re: [PATCH v1] scsi: ufs: Fix ufshcd_scale_clks decision in recovery flow
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.0.3
+Subject: Re: [PATCH V3] scsi: ufs: Get boot device storage type from command
+ line
+Content-Language: en-US
 To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     Stanley Chu <stanley.chu@mediatek.com>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Avri Altman <avri.altman@wdc.com>, alim.akhtar@samsung.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        peter.wang@mediatek.com, Chun-Hung Wu <chun-hung.wu@mediatek.com>,
-        alice.chao@mediatek.com, powen.kao@mediatek.com,
-        mason.zhang@mediatek.com, qilin.tan@mediatek.com,
-        lin.gui@mediatek.com, eddie.huang@mediatek.com,
-        tun-yu.yu@mediatek.com, cc.chou@mediatek.com,
-        chaotian.jing@mediatek.com, jiajie.hao@mediatek.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+CC:     <jejb@linux.ibm.com>, <linux-kernel@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+References: <1659034814-3473-1-git-send-email-quic_cchinnad@quicinc.com>
+ <77330f3a-5f73-e10f-7e85-f3df304aa4d7@acm.org>
+ <f1cf652a-4a36-fe60-5a98-14b9d97c9a41@quicinc.com>
+ <d473f4b3-9aba-fe39-d88c-b762d9d779b0@acm.org>
+From:   "Chetan Chinnadagudihundi Ravindranath (Consultant) (QUIC)" 
+        <quic_cchinnad@quicinc.com>
+In-Reply-To: <d473f4b3-9aba-fe39-d88c-b762d9d779b0@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart,
+ > why a change is being made:
+There are 2 variants of the android bootdev device. One is EMMC and 
+other is UFS. We would be not knowing the android boot storage type at 
+build time. So, we need to know the storage type at run time(bootup 
+time) by reading the  "androidboot.bootdevice=". We need to distinguish 
+between EMMC and UFS at bootup time and take appropriate action.
 
-On Sat, Jul 30, 2022 at 4:12 AM Bart Van Assche <bvanassche@acm.org> wrote:
->
-> On 7/29/22 00:55, Stanley Chu wrote:
-> > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> > index 581d88af07ab..dc57a7988023 100644
-> > --- a/drivers/ufs/core/ufshcd.c
-> > +++ b/drivers/ufs/core/ufshcd.c
-> > @@ -1574,8 +1574,6 @@ static ssize_t ufshcd_clkscale_enable_store(struc=
-t device *dev,
-> >       ufshcd_rpm_get_sync(hba);
-> >       ufshcd_hold(hba, false);
-> >
-> > -     hba->clk_scaling.is_enabled =3D value;
-> > -
-> >       if (value) {
-> >               ufshcd_resume_clkscaling(hba);
-> >       } else {
-> > @@ -1586,6 +1584,8 @@ static ssize_t ufshcd_clkscale_enable_store(struc=
-t device *dev,
-> >                                       __func__, err);
-> >       }
-> >
-> > +     hba->clk_scaling.is_enabled =3D value;
-> > +
-> >       ufshcd_release(hba);
-> >       ufshcd_rpm_put_sync(hba);
-> >   out:
-> > @@ -7259,7 +7259,8 @@ static int ufshcd_host_reset_and_restore(struct u=
-fs_hba *hba)
-> >       hba->silence_err_logs =3D false;
-> >
-> >       /* scale up clocks to max frequency before full reinitialization =
-*/
-> > -     ufshcd_scale_clks(hba, true);
-> > +     if (ufshcd_is_clkscaling_supported(hba) && hba->clk_scaling.is_en=
-abled)
-> > +             ufshcd_scale_clks(hba, true);
-> >
-> >       err =3D ufshcd_hba_enable(hba);
->
-> I see a race condition between the hba->clk_scaling.is_enabled check in
-> ufshcd_host_reset_and_restore() and the code that sets
-> ufshcd_clkscale_enable_store(). Shouldn't the code in
-> ufshcd_host_reset_and_restore() that scales up the clocks be serialized
-> against ufshcd_clkscale_enable_store()?
+ > Information about why support is being added for the 
+androidboot.bootdevice parameter in the Qualcomm UFS host controller driver:
 
-Both check and set paths are serialized by hba->host_sem currently.
+We will get the "androidboot.bootdevice=" by reading cmdline
+case 1: if the boot image header version is 3
+         We get the bootdevice info by reading /proc/cmdline ( 
+__setup("androidboot.bootdevice=", get_android_boot_dev_v3);
 
-Would I miss any other unserialized paths?
+Case 2: if the boot image header version is 4
+         We get the bootdevice info by reading /proc/bootconfig 
+(android_boot_dev_v4 = xbc_find_value("androidboot.bootdevice", &vnode))
+
+Qualcomm UFS modules(ufs-qcom.c) calls this 
+get_storage_boot_device()(ufs-cmdline.c)   and get the bootdevice info 
+and take appropriate action. This code is yet to be upstreamed. Please 
+let me know if this info convincing.
 
 Thanks,
-Stanley
 
+Chetan
 
+On 7/30/2022 1:36 AM, Bart Van Assche wrote:
+> On 7/29/22 05:54, Chetan Chinnadagudihundi Ravindranath (Consultant) 
+> (QUIC) wrote:
+>> Please suggest any efficient way of making ufs-cmdline part of vmlinux.
+>
+> A patch description should not only explain what has been changed but 
+> also why a change is being made. Information about why support is 
+> being added for the androidboot.bootdevice parameter in the Qualcomm 
+> UFS host controller driver is missing from the patch description.
+>
+> Please also address Christoph's comment about this new command-line 
+> parameter not being used anywhere in the upstream kernel tree.
 >
 > Thanks,
 >
 > Bart.
-
-
-
---=20
-Yours truly,
-
-=E6=9C=B1=E5=8E=9F=E9=99=9E (Stanley Chu)
