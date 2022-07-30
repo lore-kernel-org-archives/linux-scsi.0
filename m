@@ -2,113 +2,103 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42982C3F6B0
-	for <linux-scsi@archiver.kernel.org>; Sat, 30 Jul 2022 08:34:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C0A0C04A68
+	for <linux-scsi@archiver.kernel.org>; Sat, 30 Jul 2022 12:37:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231819AbiG3Ie6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 30 Jul 2022 04:34:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52376 "EHLO
+        id S233930AbiG3Mhl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 30 Jul 2022 08:37:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52324 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231700AbiG3Ie5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Jul 2022 04:34:57 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D33613E21;
-        Sat, 30 Jul 2022 01:34:54 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4LvyMj5yx8zKCMB;
-        Sat, 30 Jul 2022 16:33:37 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.127.227])
-        by APP3 (Coremail) with SMTP id _Ch0CgCH6mkn7eRi2T9yBQ--.5018S5;
-        Sat, 30 Jul 2022 16:34:49 +0800 (CST)
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-To:     stable@vger.kernel.org, ming.lei@redhat.com
-Cc:     jejb@linux.vnet.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com
-Subject: [PATCH stable 4.19 1/1] scsi: core: Fix race between handling STS_RESOURCE and completion
-Date:   Sat, 30 Jul 2022 16:46:51 +0800
-Message-Id: <20220730084651.4093719-2-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20220730084651.4093719-1-yukuai1@huaweicloud.com>
-References: <20220730084651.4093719-1-yukuai1@huaweicloud.com>
+        with ESMTP id S230135AbiG3Mhk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Jul 2022 08:37:40 -0400
+Received: from mail-wr1-x430.google.com (mail-wr1-x430.google.com [IPv6:2a00:1450:4864:20::430])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A6B71838B;
+        Sat, 30 Jul 2022 05:37:39 -0700 (PDT)
+Received: by mail-wr1-x430.google.com with SMTP id q30so4380425wra.11;
+        Sat, 30 Jul 2022 05:37:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=+zqXY6rkbMPJMqxkU+rtqDlpsqxUz8kijBJqA4TT6I4=;
+        b=PCp0FluRL4dEiyBs8kpRXdqgSajxSjtKCXBHRf2VvWn9bE3NiUAnD0Dx8F3h51txtp
+         55mhTmys1bW2yLccVjfz6IEiyiiDvU9EX0fuZ/jvaOMQjSj7jVO10g4JkNQn1z/tjfUm
+         dpW0zrZuLe0zfVxKwC7EQu60GVhOqIlLmJBjbWnUljx5o4b+JLzVk4iheGtEkoQVxF1m
+         TiH73P4kUlGX81QnelYCbdN6FgInYKCMVJTGbdXCQa4M/HqXXBJaa8S4Vf/txUzTbLFM
+         +svdZwCj2C8koI4+64OG+1zkQW4kNrdyqMWVZCdzt4C0/C4fG0k67Zuu6F5hbBBjBamv
+         FNlA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=+zqXY6rkbMPJMqxkU+rtqDlpsqxUz8kijBJqA4TT6I4=;
+        b=Pd5WEqyUr9QmIeaAYnjP6bUZ9bPvvdaejMmJXG/zebiBaDKPnE3V4oAlLWfhJGAnX3
+         WGKchynkqMv5/sCNKaGgY8ltqm0tM4bTfzBX4SjCD1YEQi40NI2Hp5jGRA6FnicYsy8I
+         WuaN1pf8jmZpl3JswurgphCOasxmaZfPmTx/2B9GLF0vH0xhtpwIe40iE1bNUeccJeA9
+         ZejCFVJKw6o6zHwum1tNo/41MWaOyEZwsc5SWYl21JPNxN9JauXkyfcf/DA75YTekxnv
+         xMUa2PxsNsJEB/YRjSLPqVyI0uBHHxrA8G4mRRbbrB22Cu2cGMX7dbyTJhkCDe88zres
+         cvDA==
+X-Gm-Message-State: ACgBeo3wepz9dBCUtAwBvt6PurdJ8e/tUP987Dyn3M8LBNsMupje3iyO
+        flm9r7jvmOPFgmqMckyBVV0=
+X-Google-Smtp-Source: AA6agR5CGhKjD+l7VNDqxKiZ32jGvTOkrvgweH4tLy+324ya1sYXoh3+IFN6ZXOPpfYiPZq3BAtS+A==
+X-Received: by 2002:adf:f287:0:b0:220:5a73:e6df with SMTP id k7-20020adff287000000b002205a73e6dfmr940406wro.541.1659184657501;
+        Sat, 30 Jul 2022 05:37:37 -0700 (PDT)
+Received: from localhost (cpc154979-craw9-2-0-cust193.16-3.cable.virginm.net. [80.193.200.194])
+        by smtp.gmail.com with ESMTPSA id l18-20020a7bc452000000b003a2e655f2e6sm7977080wmi.21.2022.07.30.05.37.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 30 Jul 2022 05:37:37 -0700 (PDT)
+From:   Colin Ian King <colin.i.king@gmail.com>
+To:     Khalid Aziz <khalid@gonehiking.org>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: FlashPoint: remove redundant variable bm_int_st
+Date:   Sat, 30 Jul 2022 13:37:36 +0100
+Message-Id: <20220730123736.147758-1-colin.i.king@gmail.com>
+X-Mailer: git-send-email 2.35.3
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _Ch0CgCH6mkn7eRi2T9yBQ--.5018S5
-X-Coremail-Antispam: 1UD129KBjvJXoW7tFyxXr4fXr1DWF1rCFy7trb_yoW8ur4fpF
-        Z7ua4jkrWIgF4rC3yDWF1fury5u397Jry5WFW7W3s8ua43tryxXws3t3WDXF9YkF97GF1Y
-        qryqqFZ2q3W5ArUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9m14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWUuVWrJwAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
-        x26xkF7I0E14v26r1I6r4UM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-        Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-        A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
-        0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
-        IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
-        Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxGrwCFx2
-        IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v2
-        6r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67
-        AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IY
-        s7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr
-        0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUqAp5UUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Ming Lei <ming.lei@redhat.com>
+The variable bm_int_st is assigned a value but it is never read. The
+variable and the assignment are redundant and can be removed.
 
-commit 673235f915318ced5d7ec4b2bfd8cb909e6a4a55 upstream.
+Cleans up clang scan build warning:
+drivers/scsi/FlashPoint.c:1726:7: warning: Although the value stored
+to 'bm_int_st' is used in the enclosing expression, the value is never
+actually read from 'bm_int_st' [deadcode.DeadStores]
 
-When queuing I/O request to LLD, STS_RESOURCE may be returned because:
-
- - Host is in recovery or blocked
-
- - Target queue throttling or target is blocked
-
- - LLD rejection
-
-In these scenarios BLK_STS_DEV_RESOURCE is returned to the block layer to
-avoid an unnecessary re-run of the queue. However, all of the requests
-queued to this SCSI device may complete immediately after reading
-'sdev->device_busy' and BLK_STS_DEV_RESOURCE is returned to block layer. In
-that case the current I/O won't get a chance to get queued since it is
-invisible at that time for both scsi_run_queue_async() and blk-mq's
-RESTART.
-
-Fix the issue by not returning BLK_STS_DEV_RESOURCE in this situation.
-
-Link: https://lore.kernel.org/r/20201202100419.525144-1-ming.lei@redhat.com
-Fixes: 86ff7c2a80cd ("blk-mq: introduce BLK_STS_DEV_RESOURCE")
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Sumit Saxena <sumit.saxena@broadcom.com>
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>
-Cc: Bart Van Assche <bvanassche@acm.org>
-Cc: Ewan Milne <emilne@redhat.com>
-Cc: Long Li <longli@microsoft.com>
-Reported-by: John Garry <john.garry@huawei.com>
-Tested-by: "chenxiang (M)" <chenxiang66@hisilicon.com>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
 ---
- drivers/scsi/scsi_lib.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/scsi/FlashPoint.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 0191708c9dd4..ace4a7230bcf 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2157,8 +2157,7 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
- 	case BLK_STS_OK:
- 		break;
- 	case BLK_STS_RESOURCE:
--		if (atomic_read(&sdev->device_busy) ||
--		    scsi_device_blocked(sdev))
-+		if (scsi_device_blocked(sdev))
- 			ret = BLK_STS_DEV_RESOURCE;
- 		break;
- 	default:
+diff --git a/drivers/scsi/FlashPoint.c b/drivers/scsi/FlashPoint.c
+index 90253208a72f..3d9c56ac8224 100644
+--- a/drivers/scsi/FlashPoint.c
++++ b/drivers/scsi/FlashPoint.c
+@@ -1712,7 +1712,7 @@ static unsigned char FlashPoint_InterruptPending(void *pCurrCard)
+ static int FlashPoint_HandleInterrupt(void *pcard)
+ {
+ 	struct sccb *currSCCB;
+-	unsigned char thisCard, result, bm_status, bm_int_st;
++	unsigned char thisCard, result, bm_status;
+ 	unsigned short hp_int;
+ 	unsigned char i, target;
+ 	struct sccb_card *pCurrCard = pcard;
+@@ -1723,7 +1723,7 @@ static int FlashPoint_HandleInterrupt(void *pcard)
+ 
+ 	MDISABLE_INT(ioport);
+ 
+-	if ((bm_int_st = RD_HARPOON(ioport + hp_int_status)) & EXT_STATUS_ON)
++	if (RD_HARPOON(ioport + hp_int_status) & EXT_STATUS_ON)
+ 		bm_status = RD_HARPOON(ioport + hp_ext_status) &
+ 					(unsigned char)BAD_EXT_STATUS;
+ 	else
 -- 
-2.31.1
+2.35.3
 
