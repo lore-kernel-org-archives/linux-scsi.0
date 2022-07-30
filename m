@@ -2,105 +2,69 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64B79C04A68
-	for <linux-scsi@archiver.kernel.org>; Sat, 30 Jul 2022 07:55:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07DAAC04A68
+	for <linux-scsi@archiver.kernel.org>; Sat, 30 Jul 2022 08:34:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230059AbiG3HzC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 30 Jul 2022 03:55:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57756 "EHLO
+        id S230457AbiG3Iey (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 30 Jul 2022 04:34:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52352 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229463AbiG3HzB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Jul 2022 03:55:01 -0400
-Received: from alexa-out-sd-02.qualcomm.com (alexa-out-sd-02.qualcomm.com [199.106.114.39])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 478603DF2D;
-        Sat, 30 Jul 2022 00:55:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1659167700; x=1690703700;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=6Shwt+Sz680BwEw6tvfx5LXYNZ3fuh1Or7vfVOJvxiU=;
-  b=DrnOx5CkwaHdq/P887ad3ktO1N/S7xpteCrkYxLbDaXw2QB2t8R6nwL0
-   Gy9kXWdLz57asjrqh91+SbDj2woSHS5b/jhQaIZhu8rvJtqf24tV4ZOKT
-   bTyIz3Trm5ywbpZzffF1XGj+AM17tRqHgYWU//xs2l/F122LJojWB24Pr
-   U=;
-Received: from unknown (HELO ironmsg04-sd.qualcomm.com) ([10.53.140.144])
-  by alexa-out-sd-02.qualcomm.com with ESMTP; 30 Jul 2022 00:55:00 -0700
-X-QCInternal: smtphost
-Received: from unknown (HELO nasanex01a.na.qualcomm.com) ([10.52.223.231])
-  by ironmsg04-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Jul 2022 00:54:59 -0700
-Received: from [10.242.58.28] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.22; Sat, 30 Jul
- 2022 00:54:58 -0700
-Message-ID: <d620614b-6c20-d7ed-af19-ca0accb427d6@quicinc.com>
-Date:   Sat, 30 Jul 2022 13:24:54 +0530
+        with ESMTP id S229674AbiG3Iex (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Jul 2022 04:34:53 -0400
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0FDF13E21;
+        Sat, 30 Jul 2022 01:34:51 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.153])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4LvyMg50yHz6Pn3s;
+        Sat, 30 Jul 2022 16:33:35 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.127.227])
+        by APP3 (Coremail) with SMTP id _Ch0CgCH6mkn7eRi2T9yBQ--.5018S4;
+        Sat, 30 Jul 2022 16:34:49 +0800 (CST)
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+To:     stable@vger.kernel.org, ming.lei@redhat.com
+Cc:     jejb@linux.vnet.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com
+Subject: [PATCH stable 4.19 0/1] fix io hung for scsi
+Date:   Sat, 30 Jul 2022 16:46:50 +0800
+Message-Id: <20220730084651.4093719-1-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.0.3
-Subject: Re: [PATCH V3] scsi: ufs: Get boot device storage type from command
- line
-Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>
-CC:     <jejb@linux.ibm.com>, <linux-kernel@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
-References: <1659034814-3473-1-git-send-email-quic_cchinnad@quicinc.com>
- <77330f3a-5f73-e10f-7e85-f3df304aa4d7@acm.org>
- <f1cf652a-4a36-fe60-5a98-14b9d97c9a41@quicinc.com>
- <d473f4b3-9aba-fe39-d88c-b762d9d779b0@acm.org>
-From:   "Chetan Chinnadagudihundi Ravindranath (Consultant) (QUIC)" 
-        <quic_cchinnad@quicinc.com>
-In-Reply-To: <d473f4b3-9aba-fe39-d88c-b762d9d779b0@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
+X-CM-TRANSID: _Ch0CgCH6mkn7eRi2T9yBQ--.5018S4
+X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
+        VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUU5E7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E
+        6xAIw20EY4v20xvaj40_JFC_Wr1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
+        kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8I
+        cVCY1x0267AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87
+        Iv6xkF7I0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE
+        6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72
+        CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7
+        MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr
+        0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0E
+        wIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJV
+        W8JwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI
+        42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
- > why a change is being made:
-There are 2 variants of the android bootdev device. One is EMMC and 
-other is UFS. We would be not knowing the android boot storage type at 
-build time. So, we need to know the storage type at run time(bootup 
-time) by reading the  "androidboot.bootdevice=". We need to distinguish 
-between EMMC and UFS at bootup time and take appropriate action.
+From: Yu Kuai <yukuai3@huawei.com>
 
- > Information about why support is being added for the 
-androidboot.bootdevice parameter in the Qualcomm UFS host controller driver:
+One of our product reported a io hung problem, turns out the problem
+can be fixed by the patch.
 
-We will get the "androidboot.bootdevice=" by reading cmdline
-case 1: if the boot image header version is 3
-         We get the bootdevice info by reading /proc/cmdline ( 
-__setup("androidboot.bootdevice=", get_android_boot_dev_v3);
+I'm not sure why this patch is not backported yet, however, please
+consider it in 4.19 lts.
 
-Case 2: if the boot image header version is 4
-         We get the bootdevice info by reading /proc/bootconfig 
-(android_boot_dev_v4 = xbc_find_value("androidboot.bootdevice", &vnode))
+Ming Lei (1):
+  scsi: core: Fix race between handling STS_RESOURCE and completion
 
-Qualcomm UFS modules(ufs-qcom.c) calls this 
-get_storage_boot_device()(ufs-cmdline.c)   and get the bootdevice info 
-and take appropriate action. This code is yet to be upstreamed. Please 
-let me know if this info convincing.
+ drivers/scsi/scsi_lib.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Thanks,
+-- 
+2.31.1
 
-Chetan
-
-On 7/30/2022 1:36 AM, Bart Van Assche wrote:
-> On 7/29/22 05:54, Chetan Chinnadagudihundi Ravindranath (Consultant) 
-> (QUIC) wrote:
->> Please suggest any efficient way of making ufs-cmdline part of vmlinux.
->
-> A patch description should not only explain what has been changed but 
-> also why a change is being made. Information about why support is 
-> being added for the androidboot.bootdevice parameter in the Qualcomm 
-> UFS host controller driver is missing from the patch description.
->
-> Please also address Christoph's comment about this new command-line 
-> parameter not being used anywhere in the upstream kernel tree.
->
-> Thanks,
->
-> Bart.
