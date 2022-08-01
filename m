@@ -2,532 +2,645 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F94BC00144
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Aug 2022 07:40:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53695C00144
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Aug 2022 07:46:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229732AbiHAHkk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 Aug 2022 03:40:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42414 "EHLO
+        id S229832AbiHAHql (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 1 Aug 2022 03:46:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45130 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229726AbiHAHkj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2022 03:40:39 -0400
-Received: from mail-oi1-x22d.google.com (mail-oi1-x22d.google.com [IPv6:2607:f8b0:4864:20::22d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26D3CB7F1
-        for <linux-scsi@vger.kernel.org>; Mon,  1 Aug 2022 00:40:37 -0700 (PDT)
-Received: by mail-oi1-x22d.google.com with SMTP id u9so12186116oiv.12
-        for <linux-scsi@vger.kernel.org>; Mon, 01 Aug 2022 00:40:37 -0700 (PDT)
+        with ESMTP id S229827AbiHAHqg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2022 03:46:36 -0400
+Received: from mail-ot1-x32d.google.com (mail-ot1-x32d.google.com [IPv6:2607:f8b0:4864:20::32d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A38A2CDD1
+        for <linux-scsi@vger.kernel.org>; Mon,  1 Aug 2022 00:46:34 -0700 (PDT)
+Received: by mail-ot1-x32d.google.com with SMTP id g19-20020a9d1293000000b0061c7bfda5dfso7724387otg.1
+        for <linux-scsi@vger.kernel.org>; Mon, 01 Aug 2022 00:46:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc;
-        bh=VMGRnrj3UJ0PORcKYl99d2dcQKIkMxTT9n9/QEBOg7w=;
-        b=Xy5tBslx09C0Uazw3jQMWhvJFMyr+e4AvUxq8Mhe5VEUKxP7aYu/pO9QO11C8Dlge4
-         JwavJQJMoJaZZQKlFABSOOMzLmyD6zBRgJB9i/b5e9aJyct98cTJDYCd1oybUSr8+9uD
-         9HtfWPbt+xtUl/7htnrpxVVh6gOM4GEr+3Umc=
+        bh=5PyqlulpJ4+igbcQ8H/jBsNwTZfLL8jpXsW8Lihz2g4=;
+        b=V/k6I+2qiaXeHo5O3AzFd9L+kdVKL2mRwwY4ARk9AoX72h1PkCEnQ37GdWbPeRtIjn
+         Bf7QlRS/y9qLtP/eEfZUfzHkkRY3WRjNoeh/36fgfIR44qz4MVaURS83SP2IILR6FGDd
+         LZZwd3jNQiU6sAXBIXS6c4nA1lX+KB/Z0uw7Q=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:x-gm-message-state:from:to:cc;
-        bh=VMGRnrj3UJ0PORcKYl99d2dcQKIkMxTT9n9/QEBOg7w=;
-        b=hBFg0qxbsDfxNySsTIkVjO1yHKfiGh8EJsqMpmufJP+PG9h5ld2pp1Gu9AQxGa2u3A
-         fhyKzN5pBW/PVh5PEOBLKQ1qDyyZzrA6awEOzOcjv1BJ7duVSOM6Q/pUePNC/H8xES4j
-         HgCnS21xNT488aGPSetQoq62ypj60Vp2EcOCLr0PBPWT5QuFuGIuzWp64KlSPpRpoi2/
-         8u8m+7RhUR5g+qYZ94gmyd7IizosVwS63rnlMQ7PhrLvyUXmWPyNmz7+oiLe2mj1jXAu
-         YENNmWc7bzmvFv4DXqexJVIBO2Cxz5KW9ptbZfNv0qx96KpTDHd+qRp7QAq3ycp9MtKq
-         S8PA==
-X-Gm-Message-State: AJIora9WsQMDEBv5PhRi60wTB+1dL/Gnaq91NWbKCJJjzAC5HWqjoyds
-        4NkFW6ehLiTozItMp9gIXVDyQP6rUU6xBmpO6bIPB4NfV3tOUQ==
-X-Google-Smtp-Source: AGRyM1tALM8UimiXwrwKcc6gV50HeKq7A2LzqmMxbKATMMrcN7nr1gABA/nxWBDsXO/CFy1QSWoPMbojlRd2Wypki9c=
-X-Received: by 2002:a05:6808:1447:b0:33d:e19e:f6eb with SMTP id
- x7-20020a056808144700b0033de19ef6ebmr3167907oiv.234.1659339636183; Mon, 01
- Aug 2022 00:40:36 -0700 (PDT)
+        bh=5PyqlulpJ4+igbcQ8H/jBsNwTZfLL8jpXsW8Lihz2g4=;
+        b=b9MnRFcvzDYEZQWYezoVa+nTv9fB27zqWD4JRX1B0qLEHFPA8ghhCv8HSytuzrPjP4
+         WuNgGUFbsISEz1pjVeQ8QDD3vQ/+wDXBrkXHtdhlLf6Ct0UpuH0KqMc1/lwk1WjIQVWr
+         i6R7jY+mMHch79EJJYNNNXK2REPhuGzga5Tug1IwDKGVS1IITpvF6BUlYV2zu/CqhTqx
+         jeSzI9kEXJXEhq0XaU4PX8CQ2E8YEtJWbT6bTACDHCQSkcxOExUqaMJAYGtYjFdeAg/Q
+         cjVT7HW0EqG1RqRw+4+8ivS8O3O2IROYBX0W/O7GL8hneT2cX1JQgH/iOhjBXnZVu9sy
+         cRhg==
+X-Gm-Message-State: AJIora+Cg5aBlrOT8S73yY6YrYU/0rmBirfHtYy1ptwijPqwr2YHpYip
+        QQyItntxg1zf6gYWuwdFDDNQHGw7BXxvg95wgNdrbQ==
+X-Google-Smtp-Source: AGRyM1u9L3zFPtgKEga+pZ2cLm26WQEKu8YPENGbKA+p6JLo7qklqfp8QrTki8sdMso5QjogSu+a74XMry7sWuXnVL4=
+X-Received: by 2002:a9d:686:0:b0:61c:8be0:a26a with SMTP id
+ 6-20020a9d0686000000b0061c8be0a26amr5367658otx.127.1659339992990; Mon, 01 Aug
+ 2022 00:46:32 -0700 (PDT)
 MIME-Version: 1.0
 References: <20220729131627.15019-1-sreekanth.reddy@broadcom.com>
- <20220729131627.15019-3-sreekanth.reddy@broadcom.com> <AA2A58CA-8EB7-408B-AFE0-696E0BB04CE3@oracle.com>
-In-Reply-To: <AA2A58CA-8EB7-408B-AFE0-696E0BB04CE3@oracle.com>
+ <20220729131627.15019-6-sreekanth.reddy@broadcom.com> <A42CFDC9-CB67-4DDF-8029-3A6AAC8A41DF@oracle.com>
+In-Reply-To: <A42CFDC9-CB67-4DDF-8029-3A6AAC8A41DF@oracle.com>
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Date:   Mon, 1 Aug 2022 13:10:25 +0530
-Message-ID: <CAK=zhgrfjJT8AWOorn7yZVWLivoBfdd0Nn9gZ+Lbk23uHUOMYA@mail.gmail.com>
-Subject: Re: [PATCH 02/15] mpi3mr: Add framework to issue cnfg requests
+Date:   Mon, 1 Aug 2022 13:16:21 +0530
+Message-ID: <CAK=zhgpOcnPC6D=_WObgZn8_4x0i60fHsKEcGHiWO3yFxCqqSQ@mail.gmail.com>
+Subject: Re: [PATCH 05/15] mpi3mr: Add framework to add phys to STL
 To:     Himanshu Madhani <himanshu.madhani@oracle.com>
 Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         Martin Petersen <martin.petersen@oracle.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000009b6fdb05e5291da8"
+        boundary="000000000000e09ecd05e529327c"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000009b6fdb05e5291da8
+--000000000000e09ecd05e529327c
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Fri, Jul 29, 2022 at 10:30 PM Himanshu Madhani
+On Sat, Jul 30, 2022 at 1:12 AM Himanshu Madhani
 <himanshu.madhani@oracle.com> wrote:
 >
 >
 >
-> > On Jul 29, 2022, at 6:16 AM, Sreekanth Reddy <sreekanth.reddy@broadcom.=
-com> wrote:
+> > On Jul 29, 2022, at 6:16 AM, Sreekanth Reddy <sreekanth.reddy@broadcom.com> wrote:
 > >
-> > Added framework to issue config requests commands to
-> > controller firmware.
+> > Added framework to register and unregister the
+> > host and expander phys with SCSI Transport Layer (STL).
 > >
 > > Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 > > ---
-> > drivers/scsi/mpi3mr/mpi3mr.h    |  28 ++++
-> > drivers/scsi/mpi3mr/mpi3mr_fw.c | 256 ++++++++++++++++++++++++++++++++
-> > drivers/scsi/mpi3mr/mpi3mr_os.c |   1 +
-> > 3 files changed, 285 insertions(+)
+> > drivers/scsi/mpi3mr/Makefile           |   1 +
+> > drivers/scsi/mpi3mr/mpi3mr.h           |  93 ++++++
+> > drivers/scsi/mpi3mr/mpi3mr_transport.c | 430 +++++++++++++++++++++++++
+> > 3 files changed, 524 insertions(+)
+> > create mode 100644 drivers/scsi/mpi3mr/mpi3mr_transport.c
 > >
-> > diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.=
-h
-> > index 0935b2e..e15ad0e 100644
+> > diff --git a/drivers/scsi/mpi3mr/Makefile b/drivers/scsi/mpi3mr/Makefile
+> > index f5cdbe4..ef86ca4 100644
+> > --- a/drivers/scsi/mpi3mr/Makefile
+> > +++ b/drivers/scsi/mpi3mr/Makefile
+> > @@ -3,3 +3,4 @@ obj-m += mpi3mr.o
+> > mpi3mr-y +=  mpi3mr_os.o     \
+> >               mpi3mr_fw.o \
+> >               mpi3mr_app.o \
+> > +             mpi3mr_transport.o
+> > diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+> > index 542b462..006bc5d 100644
 > > --- a/drivers/scsi/mpi3mr/mpi3mr.h
 > > +++ b/drivers/scsi/mpi3mr/mpi3mr.h
-> > @@ -97,6 +97,7 @@ extern atomic64_t event_counter;
-> > #define MPI3MR_HOSTTAG_PEL_ABORT      3
-> > #define MPI3MR_HOSTTAG_PEL_WAIT               4
-> > #define MPI3MR_HOSTTAG_BLK_TMS                5
-> > +#define MPI3MR_HOSTTAG_CFG_CMDS              6
+> > @@ -39,6 +39,7 @@
+> > #include <scsi/scsi_host.h>
+> > #include <scsi/scsi_tcq.h>
+> > #include <uapi/scsi/scsi_bsg_mpi3mr.h>
+> > +#include <scsi/scsi_transport_sas.h>
 > >
-> > #define MPI3MR_NUM_DEVRMCMD           16
-> > #define MPI3MR_HOSTTAG_DEVRMCMD_MIN   (MPI3MR_HOSTTAG_BLK_TMS + 1)
-> > @@ -126,6 +127,8 @@ extern atomic64_t event_counter;
+> > #include "mpi/mpi30_transport.h"
+> > #include "mpi/mpi30_cnfg.h"
+> > @@ -461,6 +462,98 @@ struct mpi3mr_throttle_group_info {
+> >       atomic_t pend_large_data_sz;
+> > };
 > >
-> > #define MPI3MR_WATCHDOG_INTERVAL              1000 /* in milli seconds =
-*/
-> >
-> > +#define MPI3MR_DEFAULT_CFG_PAGE_SZ           1024 /* in bytes */
+> > +/* HBA port flags */
+> > +#define MPI3MR_HBA_PORT_FLAG_DIRTY   0x01
 > > +
-> > #define MPI3MR_SCMD_TIMEOUT    (60 * HZ)
-> > #define MPI3MR_EH_SCMD_TIMEOUT (60 * HZ)
-> >
-> > @@ -274,6 +277,7 @@ enum mpi3mr_reset_reason {
-> >       MPI3MR_RESET_FROM_SYSFS =3D 23,
-> >       MPI3MR_RESET_FROM_SYSFS_TIMEOUT =3D 24,
-> >       MPI3MR_RESET_FROM_FIRMWARE =3D 27,
-> > +     MPI3MR_RESET_FROM_CFG_REQ_TIMEOUT =3D 29,
-> > };
-> >
-> > /* Queue type definitions */
-> > @@ -679,6 +683,21 @@ struct mpi3mr_drv_cmd {
-> >           struct mpi3mr_drv_cmd *drv_cmd);
-> > };
-> >
 > > +/**
-> > + * struct dma_memory_desc - memory descriptor structure to store
-> > + * virtual address, dma address and size for any generic dma
-> > + * memory allocations in the driver.
-> > + *
-> > + * @size: buffer size
-> > + * @addr: virtual address
-> > + * @dma_addr: dma address
+> > + * struct mpi3mr_hba_port - HBA's port information
+> > + * @port_id: Port number
+> > + * @flags: HBA port flags
 > > + */
-> > +struct dma_memory_desc {
-> > +     u32 size;
-> > +     void *addr;
-> > +     dma_addr_t dma_addr;
+> > +struct mpi3mr_hba_port {
+> > +     struct list_head list;
+> > +     u8 port_id;
+> > +     u8 flags;
 > > +};
 > > +
-> >
-> > /**
-> >  * struct chain_element - memory descriptor structure to store
-> > @@ -756,6 +775,7 @@ struct scmd_priv {
-> >  * @num_op_reply_q: Number of operational reply queues
-> >  * @op_reply_qinfo: Operational reply queue info pointer
-> >  * @init_cmds: Command tracker for initialization commands
-> > + * @cfg_cmds: Command tracker for configuration requests
-> >  * @facts: Cached IOC facts data
-> >  * @op_reply_desc_sz: Operational reply descriptor size
-> >  * @num_reply_bufs: Number of reply buffers allocated
-> > @@ -854,6 +874,9 @@ struct scmd_priv {
-> >  * @io_throttle_low: I/O size to stop throttle in 512b blocks
-> >  * @num_io_throttle_group: Maximum number of throttle groups
-> >  * @throttle_groups: Pointer to throttle group info structures
-> > + * @cfg_page: Default memory for configuration pages
-> > + * @cfg_page_dma: Configuration page DMA address
-> > + * @cfg_page_sz: Default configuration page memory size
-> >  */
-> > struct mpi3mr_ioc {
-> >       struct list_head list;
-> > @@ -904,6 +927,7 @@ struct mpi3mr_ioc {
-> >       struct op_reply_qinfo *op_reply_qinfo;
-> >
-> >       struct mpi3mr_drv_cmd init_cmds;
-> > +     struct mpi3mr_drv_cmd cfg_cmds;
-> >       struct mpi3mr_ioc_facts facts;
-> >       u16 op_reply_desc_sz;
-> >
-> > @@ -1025,6 +1049,10 @@ struct mpi3mr_ioc {
-> >       u32 io_throttle_low;
-> >       u16 num_io_throttle_group;
-> >       struct mpi3mr_throttle_group_info *throttle_groups;
-> > +
-> > +     void *cfg_page;
-> > +     dma_addr_t cfg_page_dma;
-> > +     u16 cfg_page_sz;
-> > };
-> >
-> > /**
-> > diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3=
-mr_fw.c
-> > index 0866dfd..da6eceb 100644
-> > --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-> > +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-> > @@ -299,6 +299,8 @@ mpi3mr_get_drv_cmd(struct mpi3mr_ioc *mrioc, u16 ho=
-st_tag,
-> >       switch (host_tag) {
-> >       case MPI3MR_HOSTTAG_INITCMDS:
-> >               return &mrioc->init_cmds;
-> > +     case MPI3MR_HOSTTAG_CFG_CMDS:
-> > +             return &mrioc->cfg_cmds;
-> >       case MPI3MR_HOSTTAG_BSG_CMDS:
-> >               return &mrioc->bsg_cmds;
-> >       case MPI3MR_HOSTTAG_BLK_TMS:
-> > @@ -907,6 +909,7 @@ static const struct {
-> >       { MPI3MR_RESET_FROM_SYSFS, "sysfs invocation" },
-> >       { MPI3MR_RESET_FROM_SYSFS_TIMEOUT, "sysfs TM timeout" },
-> >       { MPI3MR_RESET_FROM_FIRMWARE, "firmware asynchronous reset" },
-> > +     { MPI3MR_RESET_FROM_CFG_REQ_TIMEOUT, "configuration request timeo=
-ut"},
-> > };
-> >
-> > /**
-> > @@ -3738,6 +3741,14 @@ retry_init:
-> >
-> >       mpi3mr_print_ioc_info(mrioc);
-> >
-> > +     dprint_init(mrioc, "allocating config page buffers\n");
-> > +     mrioc->cfg_page =3D dma_alloc_coherent(&mrioc->pdev->dev,
-> > +         MPI3MR_DEFAULT_CFG_PAGE_SZ, &mrioc->cfg_page_dma, GFP_KERNEL)=
-;
-> > +     if (!mrioc->cfg_page)
-> > +             goto out_failed_noretry;
-> > +
-> > +     mrioc->cfg_page_sz =3D MPI3MR_DEFAULT_CFG_PAGE_SZ;
-> > +
-> >       retval =3D mpi3mr_alloc_reply_sense_bufs(mrioc);
-> >       if (retval) {
-> >               ioc_err(mrioc,
-> > @@ -4362,6 +4373,10 @@ static void mpi3mr_flush_drv_cmds(struct mpi3mr_=
-ioc *mrioc)
-> >
-> >       cmdptr =3D &mrioc->init_cmds;
-> >       mpi3mr_drv_cmd_comp_reset(mrioc, cmdptr);
-> > +
-> > +     cmdptr =3D &mrioc->cfg_cmds;
-> > +     mpi3mr_drv_cmd_comp_reset(mrioc, cmdptr);
-> > +
-> >       cmdptr =3D &mrioc->bsg_cmds;
-> >       mpi3mr_drv_cmd_comp_reset(mrioc, cmdptr);
-> >       cmdptr =3D &mrioc->host_tm_cmds;
-> > @@ -4786,3 +4801,244 @@ out:
-> >           ((retval =3D=3D 0) ? "successful" : "failed"));
-> >       return retval;
-> > }
-> > +
+> > +/**
+> > + * struct mpi3mr_sas_port - Internal SAS port information
+> > + * @port_list: List of ports belonging to a SAS node
+> > + * @num_phys: Number of phys associated with port
+> > + * @hba_port: HBA port entry
+> > + * @remote_identify: Attached device identification
+> > + * @rphy: SAS transport layer rphy object
+> > + * @port: SAS transport layer port object
+> > + * @phy_list: mpi3mr_sas_phy objects belonging to this port
+> > + */
+> > +struct mpi3mr_sas_port {
+> > +     struct list_head port_list;
+> > +     u8 num_phys;
+> > +     struct mpi3mr_hba_port *hba_port;
+> > +     struct sas_identify remote_identify;
+> > +     struct sas_rphy *rphy;
+> > +     struct sas_port *port;
+> > +     struct list_head phy_list;
+> > +};
 > > +
 > > +/**
-> > + * mpi3mr_free_config_dma_memory - free memory for config page
-> > + * @mrioc: Adapter instance reference
-> > + * @mem_desc: memory descriptor structure
-> > + *
-> > + * Check whether the size of the buffer specified by the memory
-> > + * descriptor is greater than the default page size if so then
-> > + * free the memory pointed by the descriptor.
-> > + *
-> > + * Return: 0 on success, non-zero on failure.
->
-> Nit: the above comment is incorrect. This function returns nothing.
-
-Agree. Will update in the next patch version set.
-
->
+> > + * struct mpi3mr_sas_phy - Internal SAS Phy information
+> > + * @port_siblings: List of phys belonging to a port
+> > + * @identify: Phy identification
+> > + * @remote_identify: Attached device identification
+> > + * @phy: SAS transport layer Phy object
+> > + * @phy_id: Unique phy id within a port
+> > + * @handle: Firmware device handle for this phy
+> > + * @attached_handle: Firmware device handle for attached device
+> > + * @phy_belongs_to_port: Flag to indicate phy belongs to port
+> > +   @hba_port: HBA port entry
 > > + */
-> > +static void mpi3mr_free_config_dma_memory(struct mpi3mr_ioc *mrioc,
-> > +     struct dma_memory_desc *mem_desc)
+> > +struct mpi3mr_sas_phy {
+> > +     struct list_head port_siblings;
+> > +     struct sas_identify identify;
+> > +     struct sas_identify remote_identify;
+> > +     struct sas_phy *phy;
+> > +     u8 phy_id;
+> > +     u16 handle;
+> > +     u16 attached_handle;
+> > +     u8 phy_belongs_to_port;
+> > +     struct mpi3mr_hba_port *hba_port;
+> > +};
+> > +
+> > +/**
+> > + * struct mpi3mr_sas_node - SAS host/expander information
+> > + * @list: List of sas nodes in a controller
+> > + * @parent_dev: Parent device class
+> > + * @num_phys: Number phys belonging to sas_node
+> > + * @sas_address: SAS address of sas_node
+> > + * @handle: Firmware device handle for this sas_host/expander
+> > + * @sas_address_parent: SAS address of parent expander or host
+> > + * @enclosure_handle: Firmware handle of enclosure of this node
+> > + * @device_info: Capabilities of this sas_host/expander
+> > + * @non_responding: used to refresh the expander devices during reset
+> > + * @host_node: Flag to indicate this is a host_node
+> > + * @hba_port: HBA port entry
+> > + * @phy: A list of phys that make up this sas_host/expander
+> > + * @sas_port_list: List of internal ports of this node
+> > + * @rphy: sas_rphy object of this expander node
+> > + */
+> > +struct mpi3mr_sas_node {
+> > +     struct list_head list;
+> > +     struct device *parent_dev;
+> > +     u8 num_phys;
+> > +     u64 sas_address;
+> > +     u16 handle;
+> > +     u64 sas_address_parent;
+> > +     u16 enclosure_handle;
+> > +     u64 enclosure_logical_id;
+> > +     u8 non_responding;
+> > +     u8 host_node;
+> > +     struct mpi3mr_hba_port *hba_port;
+> > +     struct mpi3mr_sas_phy *phy;
+> > +     struct list_head sas_port_list;
+> > +     struct sas_rphy *rphy;
+> > +};
+> > +
+> > /**
+> >  * struct mpi3mr_enclosure_node - enclosure information
+> >  * @list: List of enclosures
+> > diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr/mpi3mr_transport.c
+> > new file mode 100644
+> > index 0000000..989bf63
+> > --- /dev/null
+> > +++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
+> > @@ -0,0 +1,430 @@
+> > +// SPDX-License-Identifier: GPL-2.0-or-later
+> > +/*
+> > + * Driver for Broadcom MPI3 Storage Controllers
+> > + *
+> > + * Copyright (C) 2017-2022 Broadcom Inc.
+> > + *  (mailto: mpi3mr-linuxdrv.pdl@broadcom.com)
+> > + *
+> > + */
+> > +
+> > +#include "mpi3mr.h"
+> > +
+> > +/**
+> > + * mpi3mr_convert_phy_link_rate -
+> > + * @link_rate: link rate as defined in the MPI header
+> > + *
+> > + * Convert link_rate from mpi format into sas_transport layer
+> > + * form.
+> > + *
+> > + * Return: A valid SAS transport layer defined link rate
+> > + */
+> > +static enum sas_linkrate mpi3mr_convert_phy_link_rate(u8 link_rate)
 > > +{
-> > +     if ((mem_desc->size > mrioc->cfg_page_sz) && mem_desc->addr) {
-> > +             dma_free_coherent(&mrioc->pdev->dev, mem_desc->size,
-> > +                 mem_desc->addr, mem_desc->dma_addr);
-> > +             mem_desc->addr =3D NULL;
+> > +     enum sas_linkrate rc;
+> > +
+> > +     switch (link_rate) {
+> > +     case MPI3_SAS_NEG_LINK_RATE_1_5:
+> > +             rc = SAS_LINK_RATE_1_5_GBPS;
+> > +             break;
+> > +     case MPI3_SAS_NEG_LINK_RATE_3_0:
+> > +             rc = SAS_LINK_RATE_3_0_GBPS;
+> > +             break;
+> > +     case MPI3_SAS_NEG_LINK_RATE_6_0:
+> > +             rc = SAS_LINK_RATE_6_0_GBPS;
+> > +             break;
+> > +     case MPI3_SAS_NEG_LINK_RATE_12_0:
+> > +             rc = SAS_LINK_RATE_12_0_GBPS;
+> > +             break;
+> > +     case MPI3_SAS_NEG_LINK_RATE_22_5:
+> > +             rc = SAS_LINK_RATE_12_0_GBPS;
+>
+> This should be SAS_LINK_RATE_22_5_GBPS
+
+Agree. Will update in next version patch set.
+
+>
+> > +             break;
+> > +     case MPI3_SAS_NEG_LINK_RATE_PHY_DISABLED:
+> > +             rc = SAS_PHY_DISABLED;
+> > +             break;
+> > +     case MPI3_SAS_NEG_LINK_RATE_NEGOTIATION_FAILED:
+> > +             rc = SAS_LINK_RATE_FAILED;
+> > +             break;
+> > +     case MPI3_SAS_NEG_LINK_RATE_PORT_SELECTOR:
+> > +             rc = SAS_SATA_PORT_SELECTOR;
+> > +             break;
+> > +     case MPI3_SAS_NEG_LINK_RATE_SMP_RESET_IN_PROGRESS:
+> > +             rc = SAS_PHY_RESET_IN_PROGRESS;
+> > +             break;
+> > +     case MPI3_SAS_NEG_LINK_RATE_SATA_OOB_COMPLETE:
+> > +     case MPI3_SAS_NEG_LINK_RATE_UNKNOWN_LINK_RATE:
+> > +     default:
+> > +             rc = SAS_LINK_RATE_UNKNOWN;
+> > +             break;
+> > +     }
+> > +     return rc;
+> > +}
+> > +
+> > +/**
+> > + * mpi3mr_delete_sas_phy - Remove a single phy from port
+> > + * @mrioc: Adapter instance reference
+> > + * @mr_sas_port: Internal Port object
+> > + * @mr_sas_phy: Internal Phy object
+> > + *
+> > + * Return: None.
+> > + */
+> > +static void mpi3mr_delete_sas_phy(struct mpi3mr_ioc *mrioc,
+> > +     struct mpi3mr_sas_port *mr_sas_port,
+> > +     struct mpi3mr_sas_phy *mr_sas_phy)
+> > +{
+> > +     u64 sas_address = mr_sas_port->remote_identify.sas_address;
+> > +
+> > +     dev_info(&mr_sas_phy->phy->dev,
+> > +         "remove: sas_address(0x%016llx), phy(%d)\n",
+> > +         (unsigned long long) sas_address, mr_sas_phy->phy_id);
+> > +
+> > +     list_del(&mr_sas_phy->port_siblings);
+> > +     mr_sas_port->num_phys--;
+> > +     sas_port_delete_phy(mr_sas_port->port, mr_sas_phy->phy);
+> > +     mr_sas_phy->phy_belongs_to_port = 0;
+> > +}
+> > +
+> > +/**
+> > + * mpi3mr_add_sas_phy - Adding a single phy to a port
+> > + * @mrioc: Adapter instance reference
+> > + * @mr_sas_port: Internal Port object
+> > + * @mr_sas_phy: Internal Phy object
+> > + *
+> > + * Return: None.
+> > + */
+> > +static void mpi3mr_add_sas_phy(struct mpi3mr_ioc *mrioc,
+> > +     struct mpi3mr_sas_port *mr_sas_port,
+> > +     struct mpi3mr_sas_phy *mr_sas_phy)
+> > +{
+> > +     u64 sas_address = mr_sas_port->remote_identify.sas_address;
+> > +
+> > +     dev_info(&mr_sas_phy->phy->dev,
+> > +         "add: sas_address(0x%016llx), phy(%d)\n", (unsigned long long)
+> > +         sas_address, mr_sas_phy->phy_id);
+> > +
+> > +     list_add_tail(&mr_sas_phy->port_siblings, &mr_sas_port->phy_list);
+> > +     mr_sas_port->num_phys++;
+> > +     sas_port_add_phy(mr_sas_port->port, mr_sas_phy->phy);
+> > +     mr_sas_phy->phy_belongs_to_port = 1;
+> > +}
+> > +
+> > +/**
+> > + * mpi3mr_add_phy_to_an_existing_port - add phy to existing port
+> > + * @mrioc: Adapter instance reference
+> > + * @mr_sas_node: Internal sas node object (expander or host)
+> > + * @mr_sas_phy: Internal Phy object *
+> > + * @sas_address: SAS address of device/expander were phy needs
+> > + *             to be added to
+> > + * @hba_port: HBA port entry
+> > + *
+> > + * Return: None.
+> > + */
+> > +static void mpi3mr_add_phy_to_an_existing_port(struct mpi3mr_ioc *mrioc,
+> > +     struct mpi3mr_sas_node *mr_sas_node, struct mpi3mr_sas_phy *mr_sas_phy,
+> > +     u64 sas_address, struct mpi3mr_hba_port *hba_port)
+> > +{
+> > +     struct mpi3mr_sas_port *mr_sas_port;
+> > +     struct mpi3mr_sas_phy *srch_phy;
+> > +
+> > +     if (mr_sas_phy->phy_belongs_to_port == 1)
+> > +             return;
+> > +
+> > +     if (!hba_port)
+> > +             return;
+> > +
+> > +     list_for_each_entry(mr_sas_port, &mr_sas_node->sas_port_list,
+> > +         port_list) {
+> > +             if (mr_sas_port->remote_identify.sas_address !=
+> > +                 sas_address)
+> > +                     continue;
+> > +             if (mr_sas_port->hba_port != hba_port)
+> > +                     continue;
+> > +             list_for_each_entry(srch_phy, &mr_sas_port->phy_list,
+> > +                 port_siblings) {
+> > +                     if (srch_phy == mr_sas_phy)
+> > +                             return;
+> > +             }
+> > +             mpi3mr_add_sas_phy(mrioc, mr_sas_port, mr_sas_phy);
+> > +             return;
 > > +     }
 > > +}
 > > +
-> > +
-> > +
->
-> Remove extra newline
-
-Agree. Will remove it next patch version set.
->
 > > +/**
-> > + * mpi3mr_alloc_config_dma_memory - Alloc memory for config page
+> > + * mpi3mr_del_phy_from_an_existing_port - del phy from a port
 > > + * @mrioc: Adapter instance reference
-> > + * @mem_desc: Memory descriptor to hold dma memory info
+> > + * @mr_sas_node: Internal sas node object (expander or host)
+> > + * @mr_sas_phy: Internal Phy object
 > > + *
-> > + * This function allocates new dmaable memory or provides the
-> > + * default config page dmaable memory based on the memory size
-> > + * described by the descriptor.
-> > + *
-> > + * Return: 0 on success, non-zero on failure.
+> > + * Return: None.
 > > + */
-> > +static int mpi3mr_alloc_config_dma_memory(struct mpi3mr_ioc *mrioc,
-> > +     struct dma_memory_desc *mem_desc)
+> > +static void mpi3mr_del_phy_from_an_existing_port(struct mpi3mr_ioc *mrioc,
+> > +     struct mpi3mr_sas_node *mr_sas_node, struct mpi3mr_sas_phy *mr_sas_phy)
 > > +{
-> > +     if (mem_desc->size > mrioc->cfg_page_sz) {
-> > +             mem_desc->addr =3D dma_alloc_coherent(&mrioc->pdev->dev,
-> > +                 mem_desc->size, &mem_desc->dma_addr, GFP_KERNEL);
-> > +             if (!mem_desc->addr)
-> > +                     return -ENOMEM;
-> > +     } else {
-> > +             mem_desc->addr =3D mrioc->cfg_page;
-> > +             mem_desc->dma_addr =3D mrioc->cfg_page_dma;
-> > +             memset(mem_desc->addr, 0, mrioc->cfg_page_sz);
+> > +     struct mpi3mr_sas_port *mr_sas_port, *next;
+> > +     struct mpi3mr_sas_phy *srch_phy;
+> > +
+> > +     if (mr_sas_phy->phy_belongs_to_port == 0)
+> > +             return;
+> > +
+> > +     list_for_each_entry_safe(mr_sas_port, next, &mr_sas_node->sas_port_list,
+> > +         port_list) {
+> > +             list_for_each_entry(srch_phy, &mr_sas_port->phy_list,
+> > +                 port_siblings) {
+> > +                     if (srch_phy != mr_sas_phy)
+> > +                             continue;
+> > +                     mpi3mr_delete_sas_phy(mrioc, mr_sas_port,
+> > +                         mr_sas_phy);
+> > +                     return;
+> > +             }
 > > +     }
+> > +}
+> > +
+> > +/**
+> > + * mpi3mr_sas_port_sanity_check - sanity check while adding port
+> > + * @mrioc: Adapter instance reference
+> > + * @mr_sas_node: Internal sas node object (expander or host)
+> > + * @sas_address: SAS address of device/expander
+> > + * @hba_port: HBA port entry
+> > + *
+> > + * Verifies whether the Phys attached to a device with the given
+> > + * SAS address already belongs to an existing sas port if so
+> > + * will remove those phys from the sas port
+> > + *
+> > + * Return: None.
+> > + */
+> > +static void mpi3mr_sas_port_sanity_check(struct mpi3mr_ioc *mrioc,
+> > +     struct mpi3mr_sas_node *mr_sas_node, u64 sas_address,
+> > +     struct mpi3mr_hba_port *hba_port)
+> > +{
+> > +     int i;
+> > +
+> > +     for (i = 0; i < mr_sas_node->num_phys; i++) {
+> > +             if ((mr_sas_node->phy[i].remote_identify.sas_address !=
+> > +                 sas_address) || (mr_sas_node->phy[i].hba_port != hba_port))
+> > +                     continue;
+> > +             if (mr_sas_node->phy[i].phy_belongs_to_port == 1)
+> > +                     mpi3mr_del_phy_from_an_existing_port(mrioc,
+> > +                         mr_sas_node, &mr_sas_node->phy[i]);
+> > +     }
+> > +}
+> > +
+> > +/**
+> > + * mpi3mr_set_identify - set identify for phys and end devices
+> > + * @mrioc: Adapter instance reference
+> > + * @handle: Firmware device handle
+> > + * @identify: SAS transport layer's identify info
+> > + *
+> > + * Populates sas identify info for a specific device.
+> > + *
+> > + * Return: 0 for success, non-zero for failure.
+> > + */
+> > +static int mpi3mr_set_identify(struct mpi3mr_ioc *mrioc, u16 handle,
+> > +     struct sas_identify *identify)
+> > +{
+> > +
+> > +     struct mpi3_device_page0 device_pg0;
+> > +     struct mpi3_device0_sas_sata_format *sasinf;
+> > +     u16 device_info;
+> > +     u16 ioc_status;
+> > +
+> > +     if (mrioc->reset_in_progress) {
+> > +             ioc_err(mrioc, "%s: host reset in progress!\n", __func__);
+> > +             return -EFAULT;
+> > +     }
+> > +
+> > +     if ((mpi3mr_cfg_get_dev_pg0(mrioc, &ioc_status, &device_pg0,
+> > +         sizeof(device_pg0), MPI3_DEVICE_PGAD_FORM_HANDLE, handle))) {
+> > +             ioc_err(mrioc, "%s: device page0 read failed\n", __func__);
+> > +             return -ENXIO;
+> > +     }
+> > +
+> > +     if (ioc_status != MPI3_IOCSTATUS_SUCCESS) {
+> > +             ioc_err(mrioc, "device page read failed for handle(0x%04x), with ioc_status(0x%04x) failure at %s:%d/%s()!\n",
+> > +                 handle, ioc_status, __FILE__, __LINE__, __func__);
+> > +             return -EIO;
+> > +     }
+> > +
+> > +     memset(identify, 0, sizeof(struct sas_identify));
+> > +     sasinf = &device_pg0.device_specific.sas_sata_format;
+> > +     device_info = le16_to_cpu(sasinf->device_info);
+> > +
+> > +     /* sas_address */
+> > +     identify->sas_address = le64_to_cpu(sasinf->sas_address);
+> > +
+> > +     /* phy number of the parent device this device is linked to */
+> > +     identify->phy_identifier = sasinf->phy_num;
+> > +
+> > +     /* device_type */
+> > +     switch (device_info & MPI3_SAS_DEVICE_INFO_DEVICE_TYPE_MASK) {
+> > +     case MPI3_SAS_DEVICE_INFO_DEVICE_TYPE_NO_DEVICE:
+> > +             identify->device_type = SAS_PHY_UNUSED;
+> > +             break;
+> > +     case MPI3_SAS_DEVICE_INFO_DEVICE_TYPE_END_DEVICE:
+> > +             identify->device_type = SAS_END_DEVICE;
+> > +             break;
+> > +     case MPI3_SAS_DEVICE_INFO_DEVICE_TYPE_EXPANDER:
+> > +             identify->device_type = SAS_EDGE_EXPANDER_DEVICE;
+> > +             break;
+> > +     }
+> > +
+> > +     /* initiator_port_protocols */
+> > +     if (device_info & MPI3_SAS_DEVICE_INFO_SSP_INITIATOR)
+> > +             identify->initiator_port_protocols |= SAS_PROTOCOL_SSP;
+> > +     /* MPI3.0 doesn't have define for SATA INIT so setting both here*/
+> > +     if (device_info & MPI3_SAS_DEVICE_INFO_STP_INITIATOR)
+> > +             identify->initiator_port_protocols |= (SAS_PROTOCOL_STP |
+> > +                 SAS_PROTOCOL_SATA);
+> > +     if (device_info & MPI3_SAS_DEVICE_INFO_SMP_INITIATOR)
+> > +             identify->initiator_port_protocols |= SAS_PROTOCOL_SMP;
+> > +
+> > +     /* target_port_protocols */
+> > +     if (device_info & MPI3_SAS_DEVICE_INFO_SSP_TARGET)
+> > +             identify->target_port_protocols |= SAS_PROTOCOL_SSP;
+> > +     /* MPI3.0 doesn't have define for STP Target so setting both here*/
+> > +     if (device_info & MPI3_SAS_DEVICE_INFO_STP_SATA_TARGET)
+> > +             identify->target_port_protocols |= (SAS_PROTOCOL_STP |
+> > +                 SAS_PROTOCOL_SATA);
+> > +     if (device_info & MPI3_SAS_DEVICE_INFO_SMP_TARGET)
+> > +             identify->target_port_protocols |= SAS_PROTOCOL_SMP;
 > > +     return 0;
 > > +}
 > > +
-> > +
 > > +/**
-> > + * mpi3mr_post_cfg_req - Issue config requests and wait
+> > + * mpi3mr_add_host_phy - report sas_host phy to SAS transport
 > > + * @mrioc: Adapter instance reference
-> > + * @cfg_req: Configuration request
-> > + * @timeout: Timeout in seconds
-> > + * @ioc_status: Pointer to return ioc status
+> > + * @mr_sas_phy: Internal Phy object
+> > + * @phy_pg0: SAS phy page 0
+> > + * @parent_dev: Prent device class object
 > > + *
-> > + * A generic function for posting MPI3 configuration request to
-> > + * the firmware. This blocks for the completion of request for
-> > + * timeout seconds and if the request times out this function
-> > + * faults the controller with proper reason code.
-> > + *
-> > + * On successful completion of the request this function returns
-> > + * appropriate ioc status from the firmware back to the caller.
-> > + *
-> > + * Return: 0 on success, non-zero on failure.
+> > + * Return: 0 for success, non-zero for failure.
 > > + */
-> > +static int mpi3mr_post_cfg_req(struct mpi3mr_ioc *mrioc,
-> > +     struct mpi3_config_request *cfg_req, int timeout, u16 *ioc_status=
-)
+> > +static int mpi3mr_add_host_phy(struct mpi3mr_ioc *mrioc,
+> > +     struct mpi3mr_sas_phy *mr_sas_phy, struct mpi3_sas_phy_page0 phy_pg0,
+> > +     struct device *parent_dev)
 > > +{
-> > +     int retval =3D 0;
+> > +     struct sas_phy *phy;
+> > +     int phy_index = mr_sas_phy->phy_id;
 > > +
-> > +     mutex_lock(&mrioc->cfg_cmds.mutex);
-> > +     if (mrioc->cfg_cmds.state & MPI3MR_CMD_PENDING) {
-> > +             retval =3D -1;
-> > +             ioc_err(mrioc, "sending config request failed due to comm=
-and in use\n");
-> > +             mutex_unlock(&mrioc->cfg_cmds.mutex);
-> > +             goto out;
+> > +
+> > +     INIT_LIST_HEAD(&mr_sas_phy->port_siblings);
+> > +     phy = sas_phy_alloc(parent_dev, phy_index);
+> > +     if (!phy) {
+> > +             ioc_err(mrioc, "failure at %s:%d/%s()!\n",
+> > +                 __FILE__, __LINE__, __func__);
+> > +             return -1;
 > > +     }
-> > +     mrioc->cfg_cmds.state =3D MPI3MR_CMD_PENDING;
-> > +     mrioc->cfg_cmds.is_waiting =3D 1;
->
-> You are setting is_waiting here, but I don=E2=80=99t see this being clear=
-ed anywhere.
-
-It is getting cleared in mpi3mr_process_admin_reply_desc() with below lines=
-,
-
-                        if (cmdptr->is_waiting) {
-                                complete(&cmdptr->done);
-                                cmdptr->is_waiting =3D 0;
-                        } else if (cmdptr->callback)
-                                cmdptr->callback(mrioc, cmdptr);
-
->
-> > +     mrioc->cfg_cmds.callback =3D NULL;
-> > +     mrioc->cfg_cmds.ioc_status =3D 0;
-> > +     mrioc->cfg_cmds.ioc_loginfo =3D 0;
-> > +
-> > +     cfg_req->host_tag =3D cpu_to_le16(MPI3MR_HOSTTAG_CFG_CMDS);
-> > +     cfg_req->function =3D MPI3_FUNCTION_CONFIG;
-> > +
-> > +     init_completion(&mrioc->cfg_cmds.done);
-> > +     dprint_cfg_info(mrioc, "posting config request\n");
-> > +     if (mrioc->logging_level & MPI3_DEBUG_CFG_INFO)
-> > +             dprint_dump(cfg_req, sizeof(struct mpi3_config_request),
-> > +                 "mpi3_cfg_req");
-> > +     retval =3D mpi3mr_admin_request_post(mrioc, cfg_req, sizeof(*cfg_=
-req), 1);
-> > +     if (retval) {
-> > +             ioc_err(mrioc, "posting config request failed\n");
-> > +             goto out_unlock;
+> > +     if ((mpi3mr_set_identify(mrioc, mr_sas_phy->handle,
+> > +         &mr_sas_phy->identify))) {
+> > +             ioc_err(mrioc, "failure at %s:%d/%s()!\n",
+> > +                 __FILE__, __LINE__, __func__);
+> > +             sas_phy_free(phy);
+> > +             return -1;
 > > +     }
-> > +     wait_for_completion_timeout(&mrioc->cfg_cmds.done, (timeout * HZ)=
-);
-> > +     if (!(mrioc->cfg_cmds.state & MPI3MR_CMD_COMPLETE)) {
-> > +             mpi3mr_check_rh_fault_ioc(mrioc,
-> > +                 MPI3MR_RESET_FROM_CFG_REQ_TIMEOUT);
-> > +             ioc_err(mrioc, "config request timed out\n");
-> > +             retval =3D -1;
-> > +             goto out_unlock;
+> > +     phy->identify = mr_sas_phy->identify;
+> > +     mr_sas_phy->attached_handle = le16_to_cpu(phy_pg0.attached_dev_handle);
+> > +     if (mr_sas_phy->attached_handle)
+> > +             mpi3mr_set_identify(mrioc, mr_sas_phy->attached_handle,
+> > +                 &mr_sas_phy->remote_identify);
+> > +     phy->identify.phy_identifier = mr_sas_phy->phy_id;
+> > +     phy->negotiated_linkrate = mpi3mr_convert_phy_link_rate(
+> > +         (phy_pg0.negotiated_link_rate &
+> > +         MPI3_SAS_NEG_LINK_RATE_LOGICAL_MASK) >>
+> > +         MPI3_SAS_NEG_LINK_RATE_LOGICAL_SHIFT);
+> > +     phy->minimum_linkrate_hw = mpi3mr_convert_phy_link_rate(
+> > +         phy_pg0.hw_link_rate & MPI3_SAS_HWRATE_MIN_RATE_MASK);
+> > +     phy->maximum_linkrate_hw = mpi3mr_convert_phy_link_rate(
+> > +         phy_pg0.hw_link_rate >> 4);
+> > +     phy->minimum_linkrate = mpi3mr_convert_phy_link_rate(
+> > +         phy_pg0.programmed_link_rate & MPI3_SAS_PRATE_MIN_RATE_MASK);
+> > +     phy->maximum_linkrate = mpi3mr_convert_phy_link_rate(
+> > +         phy_pg0.programmed_link_rate >> 4);
+> > +     phy->hostdata = mr_sas_phy->hba_port;
+> > +
+> > +     if ((sas_phy_add(phy))) {
+> > +             ioc_err(mrioc, "failure at %s:%d/%s()!\n",
+> > +                 __FILE__, __LINE__, __func__);
+> > +             sas_phy_free(phy);
+> > +             return -1;
 > > +     }
-> > +     *ioc_status =3D mrioc->cfg_cmds.ioc_status & MPI3_IOCSTATUS_STATU=
-S_MASK;
-> > +     if ((*ioc_status) !=3D MPI3_IOCSTATUS_SUCCESS)
-> > +             dprint_cfg_err(mrioc,
-> > +                 "cfg_page request returned with ioc_status(0x%04x), l=
-og_info(0x%08x)\n",
-> > +                 *ioc_status, mrioc->cfg_cmds.ioc_loginfo);
-> > +
-> > +out_unlock:
-> > +     mrioc->cfg_cmds.state =3D MPI3MR_CMD_NOTUSED;
->
-> Should you not set mrioc->cfg_cmds.is_waiting =3D 0 here? Or am I missing=
- something?
-
-cfg_cmds's is_waiting is cleared in mpi3mr_process_admin_reply_desc().
-
->
-> > +     mutex_unlock(&mrioc->cfg_cmds.mutex);
-> > +
-> > +out:
-> > +     return retval;
+> > +     if ((mrioc->logging_level & MPI3_DEBUG_TRANSPORT_INFO))
+> > +             dev_info(&phy->dev,
+> > +                 "add: handle(0x%04x), sas_address(0x%016llx)\n"
+> > +                 "\tattached_handle(0x%04x), sas_address(0x%016llx)\n",
+> > +                 mr_sas_phy->handle, (unsigned long long)
+> > +                 mr_sas_phy->identify.sas_address,
+> > +                 mr_sas_phy->attached_handle,
+> > +                 (unsigned long long)
+> > +                 mr_sas_phy->remote_identify.sas_address);
+> > +     mr_sas_phy->phy = phy;
+> > +     return 0;
 > > +}
 > > +
 > > +/**
-> > + * mpi3mr_process_cfg_req - config page request processor
+> > + * mpi3mr_add_expander_phy - report expander phy to transport
 > > + * @mrioc: Adapter instance reference
-> > + * @cfg_req: Configuration request
-> > + * @cfg_hdr: Configuration page header
-> > + * @timeout: Timeout in seconds
-> > + * @ioc_status: Pointer to return ioc status
-> > + * @cfg_buf: Memory pointer to copy config page or header
-> > + * @cfg_buf_sz: Size of the memory to get config page or header
+> > + * @mr_sas_phy: Internal Phy object
+> > + * @expander_pg1: SAS Expander page 1
+> > + * @parent_dev: Parent device class object
 > > + *
-> > + * This is handler for config page read, write and config page
-> > + * header read operations.
-> > + *
-> > + * This function expects the cfg_req to be populated with page
-> > + * type, page number, action for the header read and with page
-> > + * address for all other operations.
-> > + *
-> > + * The cfg_hdr can be passed as null for reading required header
-> > + * details for read/write pages the cfg_hdr should point valid
-> > + * configuration page header.
-> > + *
-> > + * This allocates dmaable memory based on the size of the config
-> > + * buffer and set the SGE of the cfg_req.
-> > + *
-> > + * For write actions, the config page data has to be passed in
-> > + * the cfg_buf and size of the data has to be mentioned in the
-> > + * cfg_buf_sz.
-> > + *
-> > + * For read/header actions, on successful completion of the
-> > + * request with successful ioc_status the data will be copied
-> > + * into the cfg_buf limited to a minimum of actual page size and
-> > + * cfg_buf_sz
-> > + *
-> > + *
-> > + * Return: 0 on success, non-zero on failure.
+> > + * Return: 0 for success, non-zero for failure.
 > > + */
-> > +static int mpi3mr_process_cfg_req(struct mpi3mr_ioc *mrioc,
-> > +     struct mpi3_config_request *cfg_req,
-> > +     struct mpi3_config_page_header *cfg_hdr, int timeout, u16 *ioc_st=
-atus,
-> > +     void *cfg_buf, u32 cfg_buf_sz)
+> > +static int mpi3mr_add_expander_phy(struct mpi3mr_ioc *mrioc,
+> > +     struct mpi3mr_sas_phy *mr_sas_phy,
+> > +     struct mpi3_sas_expander_page1 expander_pg1,
+> > +     struct device *parent_dev)
 > > +{
-> > +     struct dma_memory_desc mem_desc;
-> > +     int retval =3D -1;
-> > +     u8 invalid_action =3D 0;
-> > +     u8 sgl_flags =3D MPI3MR_SGEFLAGS_SYSTEM_SIMPLE_END_OF_LIST;
+> > +     struct sas_phy *phy;
+> > +     int phy_index = mr_sas_phy->phy_id;
 > > +
-> > +     memset(&mem_desc, 0, sizeof(struct dma_memory_desc));
-> > +
-> > +     if (cfg_req->action =3D=3D MPI3_CONFIG_ACTION_PAGE_HEADER)
-> > +             mem_desc.size =3D sizeof(struct mpi3_config_page_header);
-> > +     else {
-> > +             if (!cfg_hdr) {
-> > +                     ioc_err(mrioc, "null config header passed for con=
-fig action(%d), page_type(0x%02x), page_num(%d)\n",
-> > +                         cfg_req->action, cfg_req->page_type,
-> > +                         cfg_req->page_number);
-> > +                     goto out;
-> > +             }
-> > +             switch (cfg_hdr->page_attribute & MPI3_CONFIG_PAGEATTR_MA=
-SK) {
-> > +             case MPI3_CONFIG_PAGEATTR_READ_ONLY:
-> > +                     if (cfg_req->action
-> > +                         !=3D MPI3_CONFIG_ACTION_READ_CURRENT)
-> > +                             invalid_action =3D 1;
-> > +                     break;
-> > +             case MPI3_CONFIG_PAGEATTR_CHANGEABLE:
-> > +                     if ((cfg_req->action =3D=3D
-> > +                          MPI3_CONFIG_ACTION_READ_PERSISTENT) ||
-> > +                         (cfg_req->action =3D=3D
-> > +                          MPI3_CONFIG_ACTION_WRITE_PERSISTENT))
-> > +                             invalid_action =3D 1;
-> > +                     break;
-> > +             case MPI3_CONFIG_PAGEATTR_PERSISTENT:
-> > +             default:
-> > +                     break;
-> > +             }
-> > +             if (invalid_action) {
-> > +                     ioc_err(mrioc,
-> > +                         "config action(%d) is not allowed for page_ty=
-pe(0x%02x), page_num(%d) with page_attribute(0x%02x)\n",
-> > +                         cfg_req->action, cfg_req->page_type,
-> > +                         cfg_req->page_number, cfg_hdr->page_attribute=
-);
-> > +                     goto out;
-> > +             }
-> > +             mem_desc.size =3D le16_to_cpu(cfg_hdr->page_length) * 4;
-> > +             cfg_req->page_length =3D cfg_hdr->page_length;
-> > +             cfg_req->page_version =3D cfg_hdr->page_version;
+> > +     INIT_LIST_HEAD(&mr_sas_phy->port_siblings);
+> > +     phy = sas_phy_alloc(parent_dev, phy_index);
+> > +     if (!phy) {
+> > +             ioc_err(mrioc, "failure at %s:%d/%s()!\n",
+> > +                 __FILE__, __LINE__, __func__);
+> > +             return -1;
 > > +     }
-> > +     if (mpi3mr_alloc_config_dma_memory(mrioc, &mem_desc))
-> > +             goto out;
-> > +
-> > +     mpi3mr_add_sg_single(&cfg_req->sgl, sgl_flags, mem_desc.size,
-> > +         mem_desc.dma_addr);
-> > +
-> > +     if ((cfg_req->action =3D=3D MPI3_CONFIG_ACTION_WRITE_PERSISTENT) =
-||
-> > +         (cfg_req->action =3D=3D MPI3_CONFIG_ACTION_WRITE_CURRENT)) {
-> > +             memcpy(mem_desc.addr, cfg_buf, min_t(u16, mem_desc.size,
-> > +                 cfg_buf_sz));
-> > +             dprint_cfg_info(mrioc, "config buffer to be written\n");
-> > +             if (mrioc->logging_level & MPI3_DEBUG_CFG_INFO)
-> > +                     dprint_dump(mem_desc.addr, mem_desc.size, "cfg_bu=
-f");
+> > +     if ((mpi3mr_set_identify(mrioc, mr_sas_phy->handle,
+> > +         &mr_sas_phy->identify))) {
+> > +             ioc_err(mrioc, "failure at %s:%d/%s()!\n",
+> > +                 __FILE__, __LINE__, __func__);
+> > +             sas_phy_free(phy);
+> > +             return -1;
 > > +     }
+> > +     phy->identify = mr_sas_phy->identify;
+> > +     mr_sas_phy->attached_handle =
+> > +         le16_to_cpu(expander_pg1.attached_dev_handle);
+> > +     if (mr_sas_phy->attached_handle)
+> > +             mpi3mr_set_identify(mrioc, mr_sas_phy->attached_handle,
+> > +                 &mr_sas_phy->remote_identify);
+> > +     phy->identify.phy_identifier = mr_sas_phy->phy_id;
+> > +     phy->negotiated_linkrate = mpi3mr_convert_phy_link_rate(
+> > +         (expander_pg1.negotiated_link_rate &
+> > +         MPI3_SAS_NEG_LINK_RATE_LOGICAL_MASK) >>
+> > +         MPI3_SAS_NEG_LINK_RATE_LOGICAL_SHIFT);
+> > +     phy->minimum_linkrate_hw = mpi3mr_convert_phy_link_rate(
+> > +         expander_pg1.hw_link_rate & MPI3_SAS_HWRATE_MIN_RATE_MASK);
+> > +     phy->maximum_linkrate_hw = mpi3mr_convert_phy_link_rate(
+> > +         expander_pg1.hw_link_rate >> 4);
+> > +     phy->minimum_linkrate = mpi3mr_convert_phy_link_rate(
+> > +         expander_pg1.programmed_link_rate & MPI3_SAS_PRATE_MIN_RATE_MASK);
+> > +     phy->maximum_linkrate = mpi3mr_convert_phy_link_rate(
+> > +         expander_pg1.programmed_link_rate >> 4);
+> > +     phy->hostdata = mr_sas_phy->hba_port;
 > > +
-> > +     if (mpi3mr_post_cfg_req(mrioc, cfg_req, timeout, ioc_status))
-> > +             goto out;
-> > +
-> > +     retval =3D 0;
-> > +     if ((*ioc_status =3D=3D MPI3_IOCSTATUS_SUCCESS) &&
-> > +         (cfg_req->action !=3D MPI3_CONFIG_ACTION_WRITE_PERSISTENT) &&
-> > +         (cfg_req->action !=3D MPI3_CONFIG_ACTION_WRITE_CURRENT)) {
-> > +             memcpy(cfg_buf, mem_desc.addr, min_t(u16, mem_desc.size,
-> > +                 cfg_buf_sz));
-> > +             dprint_cfg_info(mrioc, "config buffer read\n");
-> > +             if (mrioc->logging_level & MPI3_DEBUG_CFG_INFO)
-> > +                     dprint_dump(mem_desc.addr, mem_desc.size, "cfg_bu=
-f");
+> > +     if ((sas_phy_add(phy))) {
+> > +             ioc_err(mrioc, "failure at %s:%d/%s()!\n",
+> > +                 __FILE__, __LINE__, __func__);
+> > +             sas_phy_free(phy);
+> > +             return -1;
 > > +     }
-> > +
-> > +out:
-> > +     mpi3mr_free_config_dma_memory(mrioc, &mem_desc);
-> > +     return retval;
+> > +     if ((mrioc->logging_level & MPI3_DEBUG_TRANSPORT_INFO))
+> > +             dev_info(&phy->dev,
+> > +                 "add: handle(0x%04x), sas_address(0x%016llx)\n"
+> > +                 "\tattached_handle(0x%04x), sas_address(0x%016llx)\n",
+> > +                 mr_sas_phy->handle, (unsigned long long)
+> > +                 mr_sas_phy->identify.sas_address,
+> > +                 mr_sas_phy->attached_handle,
+> > +                 (unsigned long long)
+> > +                 mr_sas_phy->remote_identify.sas_address);
+> > +     mr_sas_phy->phy = phy;
+> > +     return 0;
 > > +}
-> > diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3=
-mr_os.c
-> > index 8bdf927..40bed22 100644
-> > --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-> > +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-> > @@ -4574,6 +4574,7 @@ mpi3mr_probe(struct pci_dev *pdev, const struct p=
-ci_device_id *id)
-> >       mpi3mr_init_drv_cmd(&mrioc->init_cmds, MPI3MR_HOSTTAG_INITCMDS);
-> >       mpi3mr_init_drv_cmd(&mrioc->host_tm_cmds, MPI3MR_HOSTTAG_BLK_TMS)=
-;
-> >       mpi3mr_init_drv_cmd(&mrioc->bsg_cmds, MPI3MR_HOSTTAG_BSG_CMDS);
-> > +     mpi3mr_init_drv_cmd(&mrioc->cfg_cmds, MPI3MR_HOSTTAG_CFG_CMDS);
-> >
-> >       for (i =3D 0; i < MPI3MR_NUM_DEVRMCMD; i++)
-> >               mpi3mr_init_drv_cmd(&mrioc->dev_rmhs_cmds[i],
 > > --
 > > 2.27.0
 > >
@@ -536,7 +649,7 @@ ci_device_id *id)
 > Himanshu Madhani        Oracle Linux Engineering
 >
 
---0000000000009b6fdb05e5291da8
+--000000000000e09ecd05e529327c
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -607,13 +720,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEID7eVKPZvd+4s1JCKznK
-HrJbdf862Vwrw0Jxr2N/bUCfMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDgwMTA3NDAzNlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIB0iLtxCdCHg7mlp+Jwz
+eqkUk9WgNwzfDiMfJ64f4LiAMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDgwMTA3NDYzM1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQClfWKaLIcIot9kDqDwpg62S1PLJ+NIrGJMEsGy
-KFYtngPBppLDAT/FyMKZOMzjm07yR9c5CmF65PKsiVBP1Fdv2UXIUuU6bBwl65PL5gmjiS5kXn/l
-Xj6LaGLziC9NpEWKXHkbIrPAWDjQ85frrlzYsje5/nmTRk3qJ927yz/Xqp94B6+xuypIF03OEBLF
-hhLBPjyCAe+GGy9LcTNniPAKGt6KjS1rKdP+lss9JU1wAUoeq6xOZt0i4Ws8LU6EVIW9leJ38qjf
-zmpsztG46n/VRgwHs0qhKoe3jZndDHDEiRVfWej+2fbUjrsZDXXjXau+Fyvv6brqdndznRkuCVkP
---0000000000009b6fdb05e5291da8--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQC9CqLOWfBxki7YDBB5pyFswrqyxmQ80ffbBBkR
+Y6xOoEeGYFNV5GkFqoVptTxLOaWnofUgyWL795/rhyYONbIGB+E2a68DkHX+n4AepZNvyguXpYBA
+MaRwxbqfYHV6yQ9kTHwQ8UEjOEk9u8g5vpqsJmWQWezKilEqKlzvuu/wXQOgy9qqlaDx3I3oOyfk
+W4jd6u4aaZsAsljsVKW+Ro92VBNp5z6Kxn7VwUnkIy6oe0aF5wvTMsIiVlrcp/CXsBipUCiSvLPS
+J72gvVBFFNS6j9ZepVrPRoVxirPs/3bEfP3/u80oxNXP810UMEdowwX3FEH722BiWePl/voTPjWj
+--000000000000e09ecd05e529327c--
