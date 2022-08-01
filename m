@@ -2,122 +2,123 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52712C19F2A
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Aug 2022 12:44:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9D61C00144
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Aug 2022 12:44:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232120AbiHAMof (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 Aug 2022 08:44:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44248 "EHLO
+        id S234902AbiHAMop (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 1 Aug 2022 08:44:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44224 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234417AbiHAMoP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2022 08:44:15 -0400
-Received: from mail-pg1-x534.google.com (mail-pg1-x534.google.com [IPv6:2607:f8b0:4864:20::534])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33B9B402E1
-        for <linux-scsi@vger.kernel.org>; Mon,  1 Aug 2022 05:29:37 -0700 (PDT)
-Received: by mail-pg1-x534.google.com with SMTP id r186so9544309pgr.2
-        for <linux-scsi@vger.kernel.org>; Mon, 01 Aug 2022 05:29:37 -0700 (PDT)
+        with ESMTP id S234821AbiHAMoQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2022 08:44:16 -0400
+Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0EE2C4599A
+        for <linux-scsi@vger.kernel.org>; Mon,  1 Aug 2022 05:29:39 -0700 (PDT)
+Received: by mail-pj1-x1035.google.com with SMTP id e8-20020a17090a280800b001f2fef7886eso11802838pjd.3
+        for <linux-scsi@vger.kernel.org>; Mon, 01 Aug 2022 05:29:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc;
-        bh=LlXXGTp/SgccJILfZkbL6Ll4YFaRYBGiN5W0leAPczo=;
-        b=dKxUjGJwbHfoyfASGnqYhwWF5ajoMIf6fERJRTpc0SRumEI5switgnQjCYODzWlq0M
-         uE/HluhU07yzGjVGg4gxaVl8Wx8cirZcO07QF8XwAcgTd9rHxE3k/11wTB7c6pM28FSw
-         +fFbw73RUg56Ys7/3aoRO9pfXT7Wu42VoYuCQ=
+        bh=cGBVEJ3HQhgntAZUGI77BVY2BQhqSOt4jV1QeOBSK5Y=;
+        b=RFrwn0lHJtZkRLD2q5KwDPFDMusUVVl5ex0NyUUtXlu/bqz596Iu6HEpy3jJtNrzNq
+         8Qi1e6nh8/DOsblwjfCLuuVYrZapJ73PUQHTCXACG55gtKHODy4lZalHypUigOMFfDzb
+         kSeUpLhZIgFE7QVAXsWeM0D3NIUKYv2fvumZ0=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc;
-        bh=LlXXGTp/SgccJILfZkbL6Ll4YFaRYBGiN5W0leAPczo=;
-        b=5hXlKLWt1zS7TQphsrBlCrdg8CRpGxdmEu7nVc+uqIl6QI7vPviz6aWgQWx2zLJGgI
-         8TJTnXOJj+KKWtL8SF22yk3IkmLas4UkpUAHznSKWnenIvG10IDPzcudvkeFF0Ju6Wxi
-         oRAV5zBgcG9zSuUa/UxqMV6Dt64ttOPoxCtsAqoDV7mE+GpDfUwOvgJcsPsWbuNBQp7X
-         nUGILblehlqLamhMVF8xVvVFEQjH5j1fzhPjn97g1q8ZSatPZxx7X6TeMVq4TcNk1fVy
-         BLi28H4s3odw2t3fhjgLUJtNVP1XqYL1pFpaZoKUo2zHXiwfBB8oeMYpENgeySj3aBOv
-         EP+Q==
-X-Gm-Message-State: AJIora9WzBvoE51YROwEhGMAQehdLrrIvm09G+2Ih84We6+7eKIglDoR
-        7iqFqP0TOFqUMxLxJQI8TUbiP7YtQyJ5JygPUix3h16DOp0D0omsTUW0PDSOYf02XAIsNzrbrwj
-        WQTDumfUsngtWW4PnApw5p3dNdOcwNx63HLQyDvn/y4gDrft+8EOiy8HXSrWeuHszqH6aWhJm/d
-        RIVSHCCqrp
-X-Google-Smtp-Source: AGRyM1s8H5jxutoIT2MUxAXNQEfIifLjicBmEE8shf3SLnMtyzAz10Bs3Yi3ouc2/ee2vsf5HyQcTw==
-X-Received: by 2002:a05:6a00:1901:b0:4fa:fa9e:42e6 with SMTP id y1-20020a056a00190100b004fafa9e42e6mr16044686pfi.1.1659356976228;
-        Mon, 01 Aug 2022 05:29:36 -0700 (PDT)
+        bh=cGBVEJ3HQhgntAZUGI77BVY2BQhqSOt4jV1QeOBSK5Y=;
+        b=cpsUJkocnoVoitSRQKuPf13U8lsQ+nsdxe505Uf5UNs2ukOr+9RAT2yv7/kHQIZQ9H
+         5+e0sr7w9MYTVdK9/P1meVjGSMeq80mQTmJvIIJPeWaZTCJ807JdTmEFHNVEa2zQdpC3
+         znYwEJQZJpQ1H1+uYcI1X8ZUiPAFDh5hvgC/yNu0qycFm6rX7g+kdqrCyVEID18fNpxY
+         VgWtbq1fEVZtxA8Dl3x2Ib9K0XMw9ZexRGjyIV5DEim9fL3L5JqAsUnlR/w6TBxR3pjf
+         HN+R7M0FwsLv36elgZR7LVqPzjP/47ss9pptJEbGnMIawLrPLWfxg8U9RmWxcYElk8FW
+         19dg==
+X-Gm-Message-State: ACgBeo2hFDOccSp17dOsqfuPkJKYdIZ1kpNI5acKT/rV6ApS7Yk/xGgS
+        y1ucDonf0vWOG2LeLMKjyW1POwPI/WMUvCb043zIUzN72DADZecwfA2aFS9a19UIK0UP8Xeoo4n
+        UAEYbRPl+yrFbdnLRAXg8J1LRFltHwTG8vOXayyBPd35Nzzb+u+5RBww1MPtzqXQCBhvAeQECve
+        HplTYpjsmD
+X-Google-Smtp-Source: AA6agR6oAaX3qkDpv2F5FCNwhHiR21kR8KEa7qL+VgfY7fxuJKHTn9KPJVv5okBNLjHf7buJDavD7g==
+X-Received: by 2002:a17:902:d54c:b0:16d:9d52:2cb1 with SMTP id z12-20020a170902d54c00b0016d9d522cb1mr16282147plf.29.1659356978153;
+        Mon, 01 Aug 2022 05:29:38 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id u3-20020a17090add4300b001f260b1954bsm8931912pjv.13.2022.08.01.05.29.34
+        by smtp.gmail.com with ESMTPSA id u3-20020a17090add4300b001f260b1954bsm8931912pjv.13.2022.08.01.05.29.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 01 Aug 2022 05:29:35 -0700 (PDT)
+        Mon, 01 Aug 2022 05:29:37 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 1/4] mpt3sas: Don't change dma mask while reallocating pools
-Date:   Mon,  1 Aug 2022 18:11:41 +0530
-Message-Id: <20220801124144.11458-2-sreekanth.reddy@broadcom.com>
+Subject: [PATCH 2/4] mpt3sas: Fix trace buffer registration failed
+Date:   Mon,  1 Aug 2022 18:11:42 +0530
+Message-Id: <20220801124144.11458-3-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20220801124144.11458-1-sreekanth.reddy@broadcom.com>
 References: <20220801124144.11458-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000002892b505e52d271d"
+        boundary="0000000000004504f205e52d273f"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000002892b505e52d271d
+--0000000000004504f205e52d273f
 Content-Transfer-Encoding: 8bit
 
-When a pool crosses the 4gb boundary region then
-before reallocation pools just change the coherent
-dma mask to 32bit and keep the normal dma mask to 63/64 bit.
+The ExtendedType field was set to one in the diag buffer
+register command and hence MPT Endpoint firmware is
+failing the request with Invalid Field IOCStatus.
+
+So, memset the request frame to zero before framing the
+diag buffer register command.
 
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 21 ++++++++++++++-------
- 1 file changed, 14 insertions(+), 7 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 565339a..e257e0d 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -2990,19 +2990,26 @@ static int
- _base_config_dma_addressing(struct MPT3SAS_ADAPTER *ioc, struct pci_dev *pdev)
- {
- 	struct sysinfo s;
-+	u64 coherent_dma_mask, dma_mask;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index 84c87c2..df00deb 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -1686,6 +1686,7 @@ _ctl_diag_register_2(struct MPT3SAS_ADAPTER *ioc,
+ 	ioc->ctl_cmds.status = MPT3_CMD_PENDING;
+ 	memset(ioc->ctl_cmds.reply, 0, ioc->reply_sz);
+ 	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
++	memset(mpi_request, 0, ioc->request_sz);
+ 	ioc->ctl_cmds.smid = smid;
  
--	if (ioc->is_mcpu_endpoint ||
--	    sizeof(dma_addr_t) == 4 || ioc->use_32bit_dma ||
--	    dma_get_required_mask(&pdev->dev) <= 32)
-+	if (ioc->is_mcpu_endpoint || sizeof(dma_addr_t) == 4 ||
-+	    dma_get_required_mask(&pdev->dev) <= 32) {
- 		ioc->dma_mask = 32;
-+		coherent_dma_mask = dma_mask = DMA_BIT_MASK(32);
- 	/* Set 63 bit DMA mask for all SAS3 and SAS35 controllers */
--	else if (ioc->hba_mpi_version_belonged > MPI2_VERSION)
-+	} else if (ioc->hba_mpi_version_belonged > MPI2_VERSION) {
- 		ioc->dma_mask = 63;
--	else
-+		coherent_dma_mask = dma_mask = DMA_BIT_MASK(63);
-+	} else {
- 		ioc->dma_mask = 64;
-+		coherent_dma_mask = dma_mask = DMA_BIT_MASK(64);
-+	}
-+
-+	if (ioc->use_32bit_dma)
-+		coherent_dma_mask = DMA_BIT_MASK(32);
+ 	request_data = ioc->diag_buffer[buffer_type];
+@@ -1787,6 +1788,7 @@ _ctl_diag_register_2(struct MPT3SAS_ADAPTER *ioc,
+ 	if (rc && request_data) {
+ 		dma_free_coherent(&ioc->pdev->dev, request_data_sz,
+ 		    request_data, request_data_dma);
++		ioc->diag_buffer[buffer_type] = NULL;
+ 		ioc->diag_buffer_status[buffer_type] &=
+ 		    ~MPT3_DIAG_BUFFER_IS_DRIVER_ALLOCATED;
+ 	}
+@@ -2163,6 +2165,7 @@ mpt3sas_send_diag_release(struct MPT3SAS_ADAPTER *ioc, u8 buffer_type,
+ 	ioc->ctl_cmds.status = MPT3_CMD_PENDING;
+ 	memset(ioc->ctl_cmds.reply, 0, ioc->reply_sz);
+ 	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
++	memset(mpi_request, 0, ioc->request_sz);
+ 	ioc->ctl_cmds.smid = smid;
  
--	if (dma_set_mask(&pdev->dev, DMA_BIT_MASK(ioc->dma_mask)) ||
--	    dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(ioc->dma_mask)))
-+	if (dma_set_mask(&pdev->dev, dma_mask) ||
-+	    dma_set_coherent_mask(&pdev->dev, coherent_dma_mask))
- 		return -ENODEV;
+ 	mpi_request->Function = MPI2_FUNCTION_DIAG_RELEASE;
+@@ -2417,6 +2420,7 @@ _ctl_diag_read_buffer(struct MPT3SAS_ADAPTER *ioc, void __user *arg)
+ 	ioc->ctl_cmds.status = MPT3_CMD_PENDING;
+ 	memset(ioc->ctl_cmds.reply, 0, ioc->reply_sz);
+ 	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
++	memset(mpi_request, 0, ioc->request_sz);
+ 	ioc->ctl_cmds.smid = smid;
  
- 	if (ioc->dma_mask > 32) {
+ 	mpi_request->Function = MPI2_FUNCTION_DIAG_BUFFER_POST;
 -- 
 2.27.0
 
 
---0000000000002892b505e52d271d
+--0000000000004504f205e52d273f
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -188,13 +189,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIMGPEIX77sFMyh0bIrUW
-vukK3np4ZhFCnvVscDzOskzEMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDgwMTEyMjkzNlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIOHIXsHG7TpH3sjFRqhe
+v/9yGWI42r/eWWTNx/HJSBkMMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDgwMTEyMjkzOFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBzPThcrkmJ4c+bIyUdRNx673KB69RIAh3FtvK7
-N4kusYWIIGlkyTjKghoJzEiRwQ0M4xAVpw7zUByjAF0g3ChFf66SWCRVBi0WouEK3iYMockbhrbB
-+Te0w64DlW04SiOXxFRaYS+r/XpXFkCF2FwFdTnMghqomtMnrjPzrkPMADdvajYL1gEQ0b7LWjVP
-aRa2jPx+JOIZkG9DpEbjASWWv0fKb89vuduoPpGO3iiQuZfPiTRKjVyFdvv/h6fOBOj8ytrrm9w1
-vElGM3urbKRZc5I5qjTVOn+IhxfXluINdl/eyk8oFNzS0bwo8M90k9eed8RPP+y0JlyvFA7vtljA
---0000000000002892b505e52d271d--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCFk1+a+HVipymmlx8lci//aoHpoExnJiWylGxb
+FMJ+pxT+Hbqrk7Lgi1p3Jq6py44hmmsFtj61F7nPadwYpCJBDLkBuihXuQ92Wge/Fp2pdWYIXAGX
+8ErNIbIsgrZJn233YW6/qisNWAg7sHWUTU+9LHoBqrSpxHh/Npb+Gn+oC6PScPgomroPGaJGFSYw
+bwvRYDhY1NZ2gsxgt91CLr/3Km7KwwY3X80kXTzhiIH7XA4/0WKocm3eSPs+3/Cn7S4kMEM2maxM
+qC758GgBQ9+3o+llkweGRcZ1G5cAQbMbU99Df6DvyjerOutz6ZLqORKXHLQDyPct87Xlp9dtG7fT
+--0000000000004504f205e52d273f--
