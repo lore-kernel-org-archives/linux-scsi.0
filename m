@@ -2,98 +2,73 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D3EBC00144
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Aug 2022 17:59:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9F60C00144
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Aug 2022 18:12:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232766AbiHAR7X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 Aug 2022 13:59:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35894 "EHLO
+        id S233337AbiHASMX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 1 Aug 2022 14:12:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50816 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234031AbiHAR7F (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2022 13:59:05 -0400
-Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA5A5CEB
-        for <linux-scsi@vger.kernel.org>; Mon,  1 Aug 2022 10:58:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1659376726; x=1690912726;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=SiWC72t5X6/y2SG3bHl14Tn6Tl6IUgel79YS7kEoldo=;
-  b=N6uEG2z5wyI79eY3nKre7qDU1vNzWX98qg/45Z/7DcxtngJRHbH4JO7n
-   e0ccKCjZ88XkWcsM1Igkss34sTvlVzlxAOurA+do5aCguUF7uTWE+93X6
-   D9SqkIWXGb9BtqnGR/UIECdwSKuyBY9Z2WChs3FwKlgR9+HSAXjGLdPnj
-   0=;
-Received: from unknown (HELO ironmsg03-sd.qualcomm.com) ([10.53.140.143])
-  by alexa-out-sd-01.qualcomm.com with ESMTP; 01 Aug 2022 10:58:46 -0700
-X-QCInternal: smtphost
-Received: from unknown (HELO nasanex01a.na.qualcomm.com) ([10.52.223.231])
-  by ironmsg03-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Aug 2022 10:58:46 -0700
-Received: from [10.46.161.58] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.22; Mon, 1 Aug 2022
- 10:58:45 -0700
-Message-ID: <d492e8ab-5378-7e94-f457-936ff5411a28@quicinc.com>
-Date:   Mon, 1 Aug 2022 10:58:45 -0700
+        with ESMTP id S232038AbiHASMW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2022 14:12:22 -0400
+Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A573165BE
+        for <linux-scsi@vger.kernel.org>; Mon,  1 Aug 2022 11:12:21 -0700 (PDT)
+Received: by mail-pj1-f52.google.com with SMTP id t22so3519432pjy.1
+        for <linux-scsi@vger.kernel.org>; Mon, 01 Aug 2022 11:12:21 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc;
+        bh=PNXNA8TxxbGuK12us0UQ2S31lXjK2ZTUZr1Y2KB6Xww=;
+        b=5nMC1OV80Ezp4/XiyByom8MWPsllMqGvgWl5hvHacyn9afQnsEqQbG+eiCcUVNYluT
+         mm9J+305QTqKcE8SrZTie1eDrOtscIJw4iUcJw8FOyYn9aFdkFhs5A1l3KkY7xsJFPzo
+         GFotXJ/HOX/8jjDeJ4IzW7DaeKuR4l7xxLKNT70v/3xGAEXjWtC4UGORjbr5ERNMRUXj
+         ajvABNTkIYGrnIGwhzN9yIVuMr+a5kaV/u4o7UbVMVZVIZb907vXvU/nLF8Eb+T55PdN
+         Sv4DUny8RnkE1IJmvbIMftR4uq5ov8i4ax9fJey1FoXrpaRIr6R5Zi47+y5zxFfJj7hh
+         ocig==
+X-Gm-Message-State: ACgBeo2w4B0DebyisgzlY8BIqsQwgabeyZWmvGSw/EGZNgCh6vz6XXyZ
+        gMdlpAgb+CBIdKIQQPluRZ0=
+X-Google-Smtp-Source: AA6agR6+KsrcstHZgvImeNkG4tJ+Z8XtfWVYeTX1KBNhtGQ6ivTNzKQ5l6LgcpIQYh4osBHZEKycAw==
+X-Received: by 2002:a17:90a:d3cb:b0:1f1:82ca:3ba0 with SMTP id d11-20020a17090ad3cb00b001f182ca3ba0mr21009005pjw.236.1659377540953;
+        Mon, 01 Aug 2022 11:12:20 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:6496:b2a7:616f:954d? ([2620:15c:211:201:6496:b2a7:616f:954d])
+        by smtp.gmail.com with ESMTPSA id z5-20020a1709027e8500b0016d9b101413sm9846668pla.200.2022.08.01.11.12.18
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 01 Aug 2022 11:12:20 -0700 (PDT)
+Message-ID: <ffa00837-5e3f-24fa-ac2c-7d4a505c848b@acm.org>
+Date:   Mon, 1 Aug 2022 11:12:17 -0700
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.0.3
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
 Subject: Re: [PATCH v1 0/2] ufs: allow vendor disable wb toggle in clock
  scaling
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Asutosh Das <asutoshd@codeaurora.org>
-CC:     Peter Wang <peter.wang@mediatek.com>, <martin.petersen@oracle.com>,
-        <stanley.chu@mediatek.com>, <linux-scsi@vger.kernel.org>,
-        <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-        <chun-hung.wu@mediatek.com>, <alice.chao@mediatek.com>,
-        <cc.chou@mediatek.com>, <chaotian.jing@mediatek.com>,
-        <jiajie.hao@mediatek.com>, <powen.kao@mediatek.com>,
-        <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
-        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
-        <jejb@linux.ibm.com>
+Content-Language: en-US
+To:     Christoph Hellwig <hch@infradead.org>, peter.wang@mediatek.com
+Cc:     stanley.chu@mediatek.com, linux-scsi@vger.kernel.org,
+        martin.petersen@oracle.com, avri.altman@wdc.com,
+        alim.akhtar@samsung.com, jejb@linux.ibm.com,
+        wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
+        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
+        cc.chou@mediatek.com, chaotian.jing@mediatek.com,
+        jiajie.hao@mediatek.com, powen.kao@mediatek.com,
+        qilin.tan@mediatek.com, lin.gui@mediatek.com
 References: <20220728071637.22364-1-peter.wang@mediatek.com>
- <968f5255-f7b9-e011-2bd3-aa711bdd142a@acm.org>
- <ca760b93-e6e9-abea-f2b2-dbb0c592690b@mediatek.com>
- <dadc85ee-1252-38e8-a34f-3d1935f16b29@acm.org>
-From:   "Asutosh Das (asd)" <quic_asutoshd@quicinc.com>
-In-Reply-To: <dadc85ee-1252-38e8-a34f-3d1935f16b29@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
+ <YugT7jfkMGGvH7hO@infradead.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <YugT7jfkMGGvH7hO@infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello,
+On 8/1/22 10:57, Christoph Hellwig wrote:
+> Please fix up your wording.  A vendor can't do anything at all in Linux.
+> A driver might be able to disable things for a specific device, though.
 
-On 8/1/2022 9:43 AM, Bart Van Assche wrote:
-> On 8/1/22 07:30, Peter Wang wrote:
->> Or, do you think we can direct remove ufshcd_wb_toggle in clock 
->> scaling and only let sysfs to control wb behavior?
-> 
-> I think it's worth asking the people who introduced this feature whether 
-> it can be removed.
-> 
-> Hi Asutosh,
-> 
-> Commit 3d17b9b5ab11 ("scsi: ufs: Add write booster feature support") 
-> introduced the following code in ufshcd_devfreq_scale():
-> 
-> +       /* Enable Write Booster if we have scaled up else disable it */
-> +       up_write(&hba->clk_scaling_lock);
-> +       ufshcd_wb_ctrl(hba, scale_up);
-> +       down_write(&hba->clk_scaling_lock);
-> 
-> Would you mind if the code for enabling/disabling the WriteBooster is 
-> removed again from ufshcd_devfreq_scale() and that a new mechanism is 
-> introduced for controlling the WriteBooster mechanism?
-> 
-Qualcomm would need the load based toggling of WB during scaling.
-What would the new mechanism be for controlling WB mechanism?
+Agreed that the description should become more clear. I think Peter 
+wanted to refer to the "vendor driver" where he wrote "vendor".
 
-> Thanks,
-> 
-> Bart.
-
+Bart.
