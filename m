@@ -2,43 +2,42 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73DEDC00144
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Aug 2022 05:27:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DA6CC3F6B0
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Aug 2022 05:39:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238580AbiHAF10 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 Aug 2022 01:27:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54548 "EHLO
+        id S239573AbiHAFfz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 1 Aug 2022 01:35:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58630 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229838AbiHAF1Z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2022 01:27:25 -0400
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5EA9E13E30
-        for <linux-scsi@vger.kernel.org>; Sun, 31 Jul 2022 22:27:23 -0700 (PDT)
-Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20220801052719epoutp01d317f925dda8e5af2423d50cb120d435~HIVWtYEPw0537805378epoutp018
-        for <linux-scsi@vger.kernel.org>; Mon,  1 Aug 2022 05:27:19 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20220801052719epoutp01d317f925dda8e5af2423d50cb120d435~HIVWtYEPw0537805378epoutp018
+        with ESMTP id S239398AbiHAFfy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2022 01:35:54 -0400
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3BC1A1B4
+        for <linux-scsi@vger.kernel.org>; Sun, 31 Jul 2022 22:35:52 -0700 (PDT)
+Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20220801053551epoutp021f20611b8d4875def3a91aba788a7001~HIczHYU511656116561epoutp02w
+        for <linux-scsi@vger.kernel.org>; Mon,  1 Aug 2022 05:35:51 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20220801053551epoutp021f20611b8d4875def3a91aba788a7001~HIczHYU511656116561epoutp02w
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1659331639;
-        bh=4L46FagLgyJ5JDvVZYktopEo4AtRddUa2OuM1hy48r8=;
+        s=mail20170921; t=1659332151;
+        bh=zNra2Ieju11CQ/z1mTVbBscSXhxWJKuVmYMhiJEc1VI=;
         h=Subject:Reply-To:From:To:In-Reply-To:Date:References:From;
-        b=ZivhipyvXg2hPDadtXBeFORgtUIJzgrKQwbQ2zhtd6tA2CTL/B2NRHYIkvQn22CWw
-         S5Ei05zQSceoDr0ix8pkFoZigQ78Tj609eGPu3aV3QmcCiI01TJLCMkkATOMd6hQSP
-         Psh/5b8P+uuwDhTWB80tEE9L9p6dEDzWT2I4a+9U=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
-        20220801052718epcas2p146f395c293d1db9dd60c2306cb6bd213~HIVWJ556z0677806778epcas2p1D;
-        Mon,  1 Aug 2022 05:27:18 +0000 (GMT)
-Received: from epsmges2p1.samsung.com (unknown [182.195.36.102]) by
-        epsnrtp2.localdomain (Postfix) with ESMTP id 4Lx67p4dZmz4x9Q7; Mon,  1 Aug
-        2022 05:27:18 +0000 (GMT)
-X-AuditID: b6c32a45-471ff700000025c2-99-62e76436ae3d
-Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
-        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
-        3C.54.09666.63467E26; Mon,  1 Aug 2022 14:27:18 +0900 (KST)
+        b=IpsVet8I1YZoCJZKMjU4QDeXc0cjOPhXbTSYZG49ijjGdGzgEeZGAqMNybKkWyg6p
+         72hGJ4p81ENMSAxjIqCcbHODyweKqIf2+EsAB9IDRmpv1rP1imSMJjqCuUDj4z3T1U
+         rzwsF5sE4ZwcYoBstZliR+Js8LWI5K6A6rbRJ834=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+        20220801053550epcas2p411ecf73e8c08cafab99011e2c4d76965~HIcynvz3l1219812198epcas2p4T;
+        Mon,  1 Aug 2022 05:35:50 +0000 (GMT)
+Received: from epsmges2p3.samsung.com (unknown [182.195.36.100]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4Lx6Kf17fNz4x9Pr; Mon,  1 Aug
+        2022 05:35:50 +0000 (GMT)
+X-AuditID: b6c32a47-5e1ff700000025aa-ed-62e766360a09
+Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
+        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
+        38.A2.09642.63667E26; Mon,  1 Aug 2022 14:35:50 +0900 (KST)
 Mime-Version: 1.0
-Subject: RE:(2) [PATCH v5 3/6] scsi: ufs: wb: Add explicit flush sysfs
- attribute
+Subject: RE:(2) [PATCH v5 5/6] scsi: ufs: wb: Modify messages
 Reply-To: j-young.choi@samsung.com
 Sender: Jinyoung CHOI <j-young.choi@samsung.com>
 From:   Jinyoung CHOI <j-young.choi@samsung.com>
@@ -53,123 +52,72 @@ To:     Bart Van Assche <bvanassche@acm.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 X-Priority: 3
 X-Content-Kind-Code: NORMAL
-In-Reply-To: <82d1e6da-df4b-31bb-ec46-76099d7c3288@acm.org>
+In-Reply-To: <0fccbbcf-2eb0-56b0-8334-0952a03308b3@acm.org>
 X-CPGS-Detection: blocking_info_exchange
 X-Drm-Type: N,general
 X-Msg-Generator: Mail
 X-Msg-Type: PERSONAL
 X-Reply-Demand: N
-Message-ID: <20220801052718epcms2p11e9e1677abbc0e573cddff4e641e212f@epcms2p1>
-Date:   Mon, 01 Aug 2022 14:27:18 +0900
-X-CMS-MailID: 20220801052718epcms2p11e9e1677abbc0e573cddff4e641e212f
+Message-ID: <20220801053549epcms2p34b374c5256cdecab72882cf9e4f55279@epcms2p3>
+Date:   Mon, 01 Aug 2022 14:35:49 +0900
+X-CMS-MailID: 20220801053549epcms2p34b374c5256cdecab72882cf9e4f55279
 Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
 X-CPGSPASS: Y
 X-CPGSPASS: Y
 CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprHJsWRmVeSWpSXmKPExsWy7bCmqa5ZyvMkg6cTlCxOPlnDZvFg3jY2
+X-Brightmail-Tracker: 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
-        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
+        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
 DLP-Filter: Pass
 X-CFilter-Loop: Reflected
 X-CMS-RootMailID: 20220729045045epcms2p8caf00317889ed4da8531b7466ec6e368
-References: <82d1e6da-df4b-31bb-ec46-76099d7c3288@acm.org>
+References: <0fccbbcf-2eb0-56b0-8334-0952a03308b3@acm.org>
+        <20220729045656epcms2p1e6912ae09ca2122d4d04854878e19b2c@epcms2p1>
+        <20220729045600epcms2p45c0f8a5a0a76c7fe85b0961570de89ce@epcms2p4>
         <20220729045433epcms2p77ff2cdde6ddffd9ab0b0810ebe84f0e5@epcms2p7>
         <20220729045252epcms2p7fee5c1cdca5e4bef02a833e40f80649b@epcms2p7>
         <20220729045045epcms2p8caf00317889ed4da8531b7466ec6e368@epcms2p8>
-        <20220729045600epcms2p45c0f8a5a0a76c7fe85b0961570de89ce@epcms2p4>
-        <CGME20220729045045epcms2p8caf00317889ed4da8531b7466ec6e368@epcms2p1>
+        <20220729045756epcms2p40a1baa2c6bf17772023ccec20aef3f0a@epcms2p4>
+        <CGME20220729045045epcms2p8caf00317889ed4da8531b7466ec6e368@epcms2p3>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->On 7/28/22 21:56, Jinyoung CHOI wrote:
->> diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
->> index 6b248abb1bd7..7e9e1db55d60 100644
->> --- a/Documentation/ABI/testing/sysfs-driver-ufs
->> +++ b/Documentation/ABI/testing/sysfs-driver-ufs
->> @@ -1417,6 +1417,16 @@ Description:	This node is used to set or display whether UFS WriteBooster is
->>   		platform that doesn't support UFSHCD_CAP_CLK_SCALING, we can
->>   		disable/enable WriteBooster through this sysfs node.
->>   
->> +What:		/sys/bus/platform/drivers/ufshcd/*/wb_buf_flush_en
->> +What:		/sys/bus/platform/devices/*.ufs/wb_buf_flush_en
->> +Date:		July 2022
->> +Contact:	Jinyoung Choi <j-young.choi@samsung.com>
->> +Description:	This node is used to set or display whether WriteBooster
->                      ^^^^
+>On 7/28/22 21:57, Jinyoung CHOI wrote:
+>>   	ret = __ufshcd_wb_toggle(hba, enable, QUERY_FLAG_IDN_WB_EN);
+>>   	if (ret) {
+>> -		dev_err(hba->dev, "%s Write Booster %s failed %d\n",
+>> +		dev_err(hba->dev, "%s: Write Booster %s failed %d\n",
+>>   			__func__, enable ? "enable" : "disable", ret);
+>>   		return ret;
+>>   	}
 >
->Please change "node" into "attribute" (here and below). Sysfs files are 
->called attributes.
+>Please also fix the grammar (enable -> enabling; disable -> disabling).
 >
-
-The wb_on description is also written as node.
-This will also be changed to other commit.
-
-
->> +		buffer flusing is enabled. The data written in the WriteBooster
->                        ^^^^^^^
->                        flushing?
->> +		Buffer can be flushed by an explicit host command or
->> +		implicitly while in hibernate (HIBERN8) state.
->
->The above sentence is misleading because it suggests that setting this 
->attribute causes the WB buffer to be flushed in its entirety. That is 
->not correct - what this attribute controls is whether or not the UFS 
->device is allowed to start with flushing the WB buffer.
->
-
-It seems to have been written so briefly.
-Because each device manufacturer may have different flush policies,
-So, I did not describe the amount. This is the same as the ufs spec.
-I will add more explanation.
-And, I don't fully understand your comment (That is not correct ~)
-If you explain it more, I will consider it.
-
-
->> +	if (!ufshcd_is_wb_allowed(hba) ||
->> +	    (hba->quirks & UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL)) {
->> +		dev_warn(dev, "It is not allowed to configure WB buf flush!\n");
->
->flush -> flushing
->
-
-OK, I will fix it.
-
-
->> +	ufshcd_rpm_get_sync(hba);
->> +	res = ufshcd_wb_toggle_buf_flush(hba, wb_buf_flush_en);
->> +	ufshcd_rpm_put_sync(hba);
->> +out:
->> +	up(&hba->host_sem);
->> +	return res < 0 ? res : count;
->> +}
->
->Please leave a blank line above goto labels as requested by the kernel 
->coding style guide.
+>Otherwise this patch looks good to me.
 >
 >Thanks,
 >
 >Bart.
 
-OK, I will fix it.
-wb_on_store() will also be modified with this. (other commit)
+OK, I will fix it. 
 
-Kind Regards,
-Jinyoung
+Thanks,
+Jinyoung.
