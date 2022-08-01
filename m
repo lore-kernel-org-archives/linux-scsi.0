@@ -2,123 +2,87 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3DE1C00144
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Aug 2022 08:46:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59115C00144
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Aug 2022 09:35:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229972AbiHAIq3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 Aug 2022 04:46:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53934 "EHLO
+        id S230101AbiHAJfq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 1 Aug 2022 05:35:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55526 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229642AbiHAIq2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2022 04:46:28 -0400
-Received: from wout5-smtp.messagingengine.com (wout5-smtp.messagingengine.com [64.147.123.21])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 307E232BAD;
-        Mon,  1 Aug 2022 01:46:26 -0700 (PDT)
-Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
-        by mailout.west.internal (Postfix) with ESMTP id 520113200319;
-        Mon,  1 Aug 2022 04:46:22 -0400 (EDT)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute5.internal (MEProxy); Mon, 01 Aug 2022 04:46:23 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kroah.com; h=cc
-        :cc:content-type:date:date:from:from:in-reply-to:in-reply-to
-        :message-id:mime-version:references:reply-to:sender:subject
-        :subject:to:to; s=fm3; t=1659343581; x=1659429981; bh=MmWQQwnoIs
-        Ox2ktt+sqgYPhQg8kOnNwtDf2Fo92hJuM=; b=j/1yvp0dvB40mwD16TE4i+E9g4
-        aui9sSfvJOWtCA0hHNTpJT6sl0/QcSaES3VArdbsXpHtX/+VTqQ8H6agP0MDYwcS
-        U4hF01teRwdtSCXIv9xzlj00YcV+gc/68iH6g1geEouv58n/uG4S0nWm8o7AGpby
-        gmyv5T28bamtdPSw+uwTq75jtEX0dJWtgNbWQ1h2sxTJAt+1ihtRefsP3bWWzPA7
-        jfXP8mJdU9TV6sA+GLXXK+UfIv3/dEwP9Ag6zICxPCpZdHrcyJhJAXyuPhAhZ2OF
-        hAHzxKPIp/aKZsrEO1jRg4OlU2K2tmyrh3j/3Gvhh4VMCQebOKY9Z5iIAAAg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:date:date:feedback-id
-        :feedback-id:from:from:in-reply-to:in-reply-to:message-id
-        :mime-version:references:reply-to:sender:subject:subject:to:to
-        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-        fm3; t=1659343581; x=1659429981; bh=MmWQQwnoIsOx2ktt+sqgYPhQg8kO
-        nNwtDf2Fo92hJuM=; b=N7RYiqbTKDoJTloKtiRNk8R85wCaKANCmum3Q4cMpCKd
-        MUBypEDHdzzhKTMxqLO74WfcZk+y5ZOCL8IgXVV/jH0/4ev3P0ZjYZe6uzt3+6dD
-        CHjos1ksel7N75Catzq/Wq3bxNVQLh0lTH5rjg2PPdt+KvqaG0b/pbxN4HLlacl3
-        nEiA9hquQ0zQhMgvDTU67gH/idQn9QYxj+U3KfXvoHZcz3aN+0K4r/ybenzd5t9I
-        vLxIJQa4fzSmRnzIcmaenizY0O3BQSCE475AlCn+pg1RluFa2OPeJTjr0qx3JO6O
-        xbg7NvBuMzinBkaIbWV0QcXjdq9BhOTb7DjJZvr4rQ==
-X-ME-Sender: <xms:3ZLnYizPB-U4tuh4lpaApwbGe526Zwh1b9PowmPeVKkflsZ82Qm0ag>
-    <xme:3ZLnYuTZ-vSmBR9PM_PQliqPCkrhBeTRz_1wEYaguxU6MSRCp6AElndOVtXXVNijF
-    rUQyVGDxR2MuQ>
-X-ME-Received: <xmr:3ZLnYkX2ITzkJBDqpJ99w-EEqL5Y0SkUiDPWvdmh5-r36ycz4jREhfnNIaSFbif7856bU-qkm9dNyUWfBG84mqTiWncyzgc5zQugPQ>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvfedrvddvfedgtdekucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepfffhvfevuffkfhggtggujgesthdtredttddtvdenucfhrhhomhepifhrvghg
-    ucfmjfcuoehgrhgvgheskhhrohgrhhdrtghomheqnecuggftrfgrthhtvghrnhepgeehue
-    ehgfdtledutdelkeefgeejteegieekheefudeiffdvudeffeelvedttddvnecuffhomhgr
-    ihhnpehkvghrnhgvlhdrohhrghenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmh
-    epmhgrihhlfhhrohhmpehgrhgvgheskhhrohgrhhdrtghomh
-X-ME-Proxy: <xmx:3ZLnYohFN0BbwBXymKYrYPYOhDdy3A72PclkGWswDjtV0-jskTz7Lw>
-    <xmx:3ZLnYkCPpEVpAwKxEeM5cmGgvpL-KAY2mgYJzDCKmhRhGTeaZ9JVCg>
-    <xmx:3ZLnYpIaq4-_TPpoKx5Vk6xqo5P39RyzRd6z4nSXtoNRoZRV7OTrIQ>
-    <xmx:3ZLnYuy4M526QGgGht5MOgw0gd5qDQrm7BTIBZQV3zpx81mrzKtGVw>
-Feedback-ID: i787e41f1:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
- 1 Aug 2022 04:46:21 -0400 (EDT)
-Date:   Mon, 1 Aug 2022 10:46:11 +0200
-From:   Greg KH <greg@kroah.com>
-To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     ming.lei@redhat.com, stable@vger.kernel.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, yukuai3@huawei.com,
-        yi.zhang@huawei.com
-Subject: Re: [PATCH stable 5.4] scsi: core: Fix race between handling
- STS_RESOURCE and completion
-Message-ID: <YueS04RIq2gTUGgg@kroah.com>
-References: <20220801012251.1959147-1-yukuai1@huaweicloud.com>
+        with ESMTP id S229987AbiHAJfq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2022 05:35:46 -0400
+Received: from mail-ed1-x536.google.com (mail-ed1-x536.google.com [IPv6:2a00:1450:4864:20::536])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 037AA32EF5
+        for <linux-scsi@vger.kernel.org>; Mon,  1 Aug 2022 02:35:45 -0700 (PDT)
+Received: by mail-ed1-x536.google.com with SMTP id x21so257546edd.3
+        for <linux-scsi@vger.kernel.org>; Mon, 01 Aug 2022 02:35:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ionos.com; s=google;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc;
+        bh=EMKbttx5ynAzplQ+ZmcvHUaeklBVcrnfLbLDovv8/3Y=;
+        b=LuHDs+y7/OjGIAEQFJgXvC1jca8nj94djTniNYXTJT6JIc/qOKNnleCYJQ4yZvfmHw
+         kOOjEzwPC4Qih0AtEfcw5QQrSiVPn2cFkw3uz3j1SHJTHdubZaoNZGLqqpQtSVwRgo2c
+         XoMOBDUiBKYzyBinDjaaran9pRyclloRy4hCe8L5DDsNJgt6Erkyv7n8F2K/7K+twvVB
+         l2x7cqYZh2lcLhbLfk8iYwcjbG1QLmOmVLWeG/BrWN95GLoVCac1EttYbdfs12ARdrid
+         79mhqcvl4iaLKAa/6o37ZY8NWytm2cLFISufZqkLJrjt+NG2ynhlXzeD7FXd+ahsdg6q
+         0yxg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc;
+        bh=EMKbttx5ynAzplQ+ZmcvHUaeklBVcrnfLbLDovv8/3Y=;
+        b=rNm7M94Y3r/yxOtvp3TAXBdPF0X7LxJTLNoH1fdob1evrvV+V14b/jd5osAl78xBn2
+         YzAiiukrIRFlPBRA/BRuXj8FPVUmbCicA0lAM6FjNXtiDa0vqox9GPbypthSSjE91cew
+         NORzpcTeOu9974ZpdkOX3k2gzmMMpP5SuUDkbMsR4B4I4FAQ7bi0rIcRtscrnRJ0meUw
+         rPni6r9z5K0NvyWN6O0R8iRKBpEgoo2ZoPXJYaQzgtS6MN/czleKWqaIofTsRK3LXLL/
+         umDtCwiLumiIKr9jak+SmLbFo4ofCMmT7xwFFtE9LFe4dHC7ZmIreT7g7W1DIuskUHSZ
+         L69Q==
+X-Gm-Message-State: ACgBeo0rNpqcwq1/FqTEI6Y04s1sploskV4hE1U5EX27pNL+b+HTCDNl
+        a1lrlRe/LlW0usJo80c5FhCWICTeJfkZdMY4Agan0Q==
+X-Google-Smtp-Source: AA6agR7ewnSpbMEne9Lx5NzVVrOMwHSzHVXsw4be5pHt2k35zLXYZA0lgCm7lteJSHw6ajgYf36Q7uU5pXJ4cFqCxrk=
+X-Received: by 2002:a05:6402:190b:b0:43d:d001:2cce with SMTP id
+ e11-20020a056402190b00b0043dd0012ccemr912505edz.326.1659346543607; Mon, 01
+ Aug 2022 02:35:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220801012251.1959147-1-yukuai1@huaweicloud.com>
+References: <20220722094612.78583-1-slark_xiao@163.com>
+In-Reply-To: <20220722094612.78583-1-slark_xiao@163.com>
+From:   Jinpu Wang <jinpu.wang@ionos.com>
+Date:   Mon, 1 Aug 2022 11:35:33 +0200
+Message-ID: <CAMGffEnpVKB4z2zz-5WpneU3P3n4T7HO8A=su7yFPyX1WNyj2Q@mail.gmail.com>
+Subject: Re: [PATCH] scsi: pm8001: Fix typo 'the the' in comment
+To:     Slark Xiao <slark_xiao@163.com>
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        jinpu.wang@ionos.com, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Aug 01, 2022 at 09:22:51AM +0800, Yu Kuai wrote:
-> From: Ming Lei <ming.lei@redhat.com>
-> 
-> commit 673235f915318ced5d7ec4b2bfd8cb909e6a4a55 upstream.
-> 
-> When queuing I/O request to LLD, STS_RESOURCE may be returned because:
-> 
->  - Host is in recovery or blocked
-> 
->  - Target queue throttling or target is blocked
-> 
->  - LLD rejection
-> 
-> In these scenarios BLK_STS_DEV_RESOURCE is returned to the block layer to
-> avoid an unnecessary re-run of the queue. However, all of the requests
-> queued to this SCSI device may complete immediately after reading
-> 'sdev->device_busy' and BLK_STS_DEV_RESOURCE is returned to block layer. In
-> that case the current I/O won't get a chance to get queued since it is
-> invisible at that time for both scsi_run_queue_async() and blk-mq's
-> RESTART.
-> 
-> Fix the issue by not returning BLK_STS_DEV_RESOURCE in this situation.
-> 
-> Link: https://lore.kernel.org/r/20201202100419.525144-1-ming.lei@redhat.com
-> Fixes: 86ff7c2a80cd ("blk-mq: introduce BLK_STS_DEV_RESOURCE")
-> Cc: Hannes Reinecke <hare@suse.com>
-> Cc: Sumit Saxena <sumit.saxena@broadcom.com>
-> Cc: Kashyap Desai <kashyap.desai@broadcom.com>
-> Cc: Bart Van Assche <bvanassche@acm.org>
-> Cc: Ewan Milne <emilne@redhat.com>
-> Cc: Long Li <longli@microsoft.com>
-> Reported-by: John Garry <john.garry@huawei.com>
-> Tested-by: "chenxiang (M)" <chenxiang66@hisilicon.com>
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+On Fri, Jul 22, 2022 at 11:46 AM Slark Xiao <slark_xiao@163.com> wrote:
+>
+> Replace 'the the' with 'the' in the comment.
+>
+> Signed-off-by: Slark Xiao <slark_xiao@163.com>
+Acked-by: Jack Wang <jinpu.wang@ionos.com>
 > ---
->  drivers/scsi/scsi_lib.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-
-Both now queued up, thanks.
-
-greg k-h
+>  drivers/scsi/pm8001/pm8001_hwi.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+> index 4acaff479916..91d78d0a38fe 100644
+> --- a/drivers/scsi/pm8001/pm8001_hwi.c
+> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
+> @@ -3138,7 +3138,7 @@ int pm8001_mpi_local_phy_ctl(struct pm8001_hba_info *pm8001_ha, void *piomb)
+>   *
+>   * when HBA driver received the identify done event or initiate FIS received
+>   * event(for SATA), it will invoke this function to notify the sas layer that
+> - * the sas toplogy has formed, please discover the the whole sas domain,
+> + * the sas toplogy has formed, please discover the whole sas domain,
+>   * while receive a broadcast(change) primitive just tell the sas
+>   * layer to discover the changed domain rather than the whole domain.
+>   */
+> --
+> 2.25.1
+>
