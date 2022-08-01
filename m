@@ -2,97 +2,95 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E506BC00144
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Aug 2022 12:44:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 968A1C00144
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Aug 2022 12:44:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234906AbiHAMoq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 Aug 2022 08:44:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43326 "EHLO
+        id S234464AbiHAMov (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 1 Aug 2022 08:44:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43806 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232480AbiHAMoR (ORCPT
+        with ESMTP id S234848AbiHAMoR (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2022 08:44:17 -0400
-Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53ED0459AA
-        for <linux-scsi@vger.kernel.org>; Mon,  1 Aug 2022 05:29:43 -0700 (PDT)
-Received: by mail-pf1-x42c.google.com with SMTP id b133so10459932pfb.6
-        for <linux-scsi@vger.kernel.org>; Mon, 01 Aug 2022 05:29:43 -0700 (PDT)
+Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 476A6459A6
+        for <linux-scsi@vger.kernel.org>; Mon,  1 Aug 2022 05:29:41 -0700 (PDT)
+Received: by mail-pf1-x42e.google.com with SMTP id q19so1109907pfg.8
+        for <linux-scsi@vger.kernel.org>; Mon, 01 Aug 2022 05:29:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc;
-        bh=2XWLDQlqww8i+XGCt5gwRqzbkcMkQVI/5bmzMbXTTG8=;
-        b=F5FncUdOIPxCDyZwZa/9UZLA0hdlcK5oji/Tpzy9kVZS8getOLRcnyHyn2P/N8mInc
-         O6SDDcDhEPIzchtlXmfwE4Qv3bePVtAnNMv0HzuYXDA8zyJb7TckgyS7DN8D/ppBC1M7
-         16tdBvmMNsFqN8zpJ87kVTNoUVhFvghibXk4k=
+        bh=/oVK/540+xd6AdMKQ0OiBm/3r5zGeNHPZ7BVxpiBzwA=;
+        b=L849O49WC6CJXPd24mDVd9CoPUNowS/0RvbFpYCVOYh/w4Fk8TNwG+w+nlmomA6N8S
+         lYx13sH7U/6R15K458xcUBCTNwLZbOHElC4Pp7lTumaEGg4SYx8B1wc/1qdSteyoqL97
+         FmOZMHXIOUjpSK4eCvSz/S+lJLckp8Rm5KQeA=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc;
-        bh=2XWLDQlqww8i+XGCt5gwRqzbkcMkQVI/5bmzMbXTTG8=;
-        b=caWvykCr1wG2mbZm8oEAsGUG0SjoVVAWzLPuD8cbVt/U7NKAeZzH58zVusWxyMDMPH
-         vM/bvzILatGhJl2zQlDgV9zZlUAPmdUUYPBanIsNWx1PUev8DGdZ+phPDjh7FQBKiax9
-         rvcGXsuon3MDXezgLyrAX8AlIEDYMH/4xWZYXbTDKpyX5RIg/hYAUd0dGQqkEcrQuVdV
-         Pi9OCXbX5J5YaTHE64iKvdV2B8A2IdFqwEl4y6RXNr6zQulvfLUna0BOz/HjHrcrTnSr
-         2x/hO3060tsnnffpO9XSS0XfC/eJkGHU1JibbfWXXKDRaM7b/nOrhTZywJ/LdgtVI09P
-         VWDg==
-X-Gm-Message-State: ACgBeo2u+hgritNU5XroroXNw9Zc9XHgNrD5VbL+rJgbRmlj/XRVS/Dr
-        5B+cWcgnVL+ezCjmcYXPk7JHmYikJhaSXakk5n0l84Yn4cv9UP+xZJP2T3CCoi7wJkfQUj7C7p8
-        hQ+gxkX8lpX8JUYHrw1we8ciJoC+0bMJHVXnuurfnZTcEj0gSPH6VL024B//SJ0nYT85eLQjy3U
-        FeZ6RPeM8t
-X-Google-Smtp-Source: AA6agR7JJdusx62Y1LtsFXbhKEI8PwIEFCJU+rO8OUoBhExue8f44+aUM6NOb5OHo38Las32P4nSaA==
-X-Received: by 2002:a63:6bc5:0:b0:41c:26d2:81e2 with SMTP id g188-20020a636bc5000000b0041c26d281e2mr3012752pgc.522.1659356982341;
-        Mon, 01 Aug 2022 05:29:42 -0700 (PDT)
+        bh=/oVK/540+xd6AdMKQ0OiBm/3r5zGeNHPZ7BVxpiBzwA=;
+        b=Nhn7CzFw9ovsWa5JvHZ98BE6FB0ENdleTddaTFtD2hr9lul7Lwzjk83RbawlaFl40W
+         FIQb6itlL1WYDwUQvNk24HYgUUTWoxQbb1T/uWyWRO6C4IYxo2qO4HEFGR095Y/9B9sh
+         pnSy95pES1oDHvcg7TaMLa5iGpbRzodSlczWHvF4TXYkHOyh+Cr630Z6pXatvnShzGk3
+         K8g81cLJ9xDHa2kttCK7itgtIqfeYTDnJ5PnvYzG/C+iYRjU32VYM3V6o9c3s7r7miFJ
+         otvVu7qSpdMgYYJdWaWNSlGk//MBtXQe7PgaefdCtE1Q5C0nMiLeuTF982AMklK22f4d
+         lOsg==
+X-Gm-Message-State: ACgBeo00MNypEz3712wGMaHHRahfJFDJb3ESqSQJC0ScyvQft2twyDe+
+        2JoPTGmERb5pZPXaZX5PXfzhCjgPBNbxhnBdH1j/e/VUc0JOtjpMiNo9eP5VjNrVhuosLhdRyzN
+        H6PDZlJ6ohhge9RomtZSYvMdj4qGFX6Skpp19VKsVo8xuNymhuRwwOHO2WqwgseOv8op/EAAmA6
+        uDcfWPhLyr
+X-Google-Smtp-Source: AA6agR7ACxXQHSeaBDx1w7WH8NDwflx+//i1v5DanBn9Qb4YKEeyJZ//Kb0RLPPvRyNc3NQKfRqRwA==
+X-Received: by 2002:a65:66da:0:b0:41b:ee3f:6262 with SMTP id c26-20020a6566da000000b0041bee3f6262mr6019139pgw.204.1659356980336;
+        Mon, 01 Aug 2022 05:29:40 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id u3-20020a17090add4300b001f260b1954bsm8931912pjv.13.2022.08.01.05.29.40
+        by smtp.gmail.com with ESMTPSA id u3-20020a17090add4300b001f260b1954bsm8931912pjv.13.2022.08.01.05.29.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 01 Aug 2022 05:29:41 -0700 (PDT)
+        Mon, 01 Aug 2022 05:29:39 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 4/4] mpt3sas: Update driver version to 43.100.00.00
-Date:   Mon,  1 Aug 2022 18:11:44 +0530
-Message-Id: <20220801124144.11458-5-sreekanth.reddy@broadcom.com>
+Subject: [PATCH 3/4] mpt3sas: Increase cmd_per_lun to 128
+Date:   Mon,  1 Aug 2022 18:11:43 +0530
+Message-Id: <20220801124144.11458-4-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20220801124144.11458-1-sreekanth.reddy@broadcom.com>
 References: <20220801124144.11458-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000845cb905e52d27a9"
+        boundary="00000000000066a6c405e52d2758"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000845cb905e52d27a9
+--00000000000066a6c405e52d2758
 Content-Transfer-Encoding: 8bit
 
-Update driver version to 43.100.00.00.
+Increase cmd_per_lun to 128
 
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index e584cf0..9ce89f5 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -77,8 +77,8 @@
- #define MPT3SAS_DRIVER_NAME		"mpt3sas"
- #define MPT3SAS_AUTHOR "Avago Technologies <MPT-FusionLinux.pdl@avagotech.com>"
- #define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
--#define MPT3SAS_DRIVER_VERSION		"42.100.00.00"
--#define MPT3SAS_MAJOR_VERSION		42
-+#define MPT3SAS_DRIVER_VERSION		"43.100.00.00"
-+#define MPT3SAS_MAJOR_VERSION		43
- #define MPT3SAS_MINOR_VERSION		100
- #define MPT3SAS_BUILD_VERSION		0
- #define MPT3SAS_RELEASE_VERSION	00
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index f321733..e54747a 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -11974,7 +11974,7 @@ static struct scsi_host_template mpt3sas_driver_template = {
+ 	.sg_tablesize			= MPT3SAS_SG_DEPTH,
+ 	.max_sectors			= 32767,
+ 	.max_segment_size		= 0xffffffff,
+-	.cmd_per_lun			= 7,
++	.cmd_per_lun			= 128,
+ 	.shost_groups			= mpt3sas_host_groups,
+ 	.sdev_groups			= mpt3sas_dev_groups,
+ 	.track_queue_depth		= 1,
 -- 
 2.27.0
 
 
---000000000000845cb905e52d27a9
+--00000000000066a6c405e52d2758
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -163,13 +161,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIPRzZnYLRzUOB2eRShCJ
-3ZVlMfSY52pCgO/eqD8J4DbKMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDgwMTEyMjk0MlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIBSmPuJ23pCoaAhylYzl
+NfxhY4D5UP9DUWgW3XCIE+cBMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDgwMTEyMjk0MFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQDDQzc8nTuRBPbmLSptLd/My6/I+WthfjQJwGLr
-f6IVrAQ9VTpsL5fNSwjCigT65pf6gcOgenhNYfTtW3kW7dtIVg8AsdwAH4VEQylHDmkAAnb1P387
-wZsvnYJbOiNWZRf+QxCJlI9ZjtawyulJ1ifpF8aNjW1/JgAGqBHKVPj5oFdfqO3lrHN+TEVDNa3d
-CRuiXkwnLdiksxEZQxuUGzAUoL9rfnhZN2aN1xZPNnnXDr/1pZ7axykDo6yLD5qRGVjJLdpC2LWj
-FZCIQZRC1woVU0pyL4k4BGvIio6e1rnZo0o2qLhtZG+Ow+IUBYOGVTAlx8/hHmbO1Ih4OCb3G4xD
---000000000000845cb905e52d27a9--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBigTp5zRSiHTFOipoD3Z4euuY6lzZp8+wpnAZK
+hYuUC3OGsrZtnCYIViWiZz3zirdZ0G7aoKoRkrxCLQo/8KKnPYklDVqF4zjGHidIqQ08xCiATI4j
+bkvv1JtI3KmWwyW0GWERqiG0IIuAC/QKm011DMpqM49FImbu+ATBaLiESFSjxpd+2lClgsOkGH1c
++qEEloKW6Jp9S7FriM9m5FM+N/7y3Yp4kktu19TY6ItgxdFyQKKrD4hODOpZPq+7QLBQcCJJsCBl
+FeGr51TgnMlFQRRpF7hXA8dw9jncvpkUaJUnfdB9cZmE5E+eUfZrJGEthus/Qe6Usi7wj0gbVAt3
+--00000000000066a6c405e52d2758--
