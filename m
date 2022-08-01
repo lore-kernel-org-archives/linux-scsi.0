@@ -2,112 +2,53 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ADD51C00144
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Aug 2022 17:48:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12790C00144
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Aug 2022 17:58:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233475AbiHARsv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 Aug 2022 13:48:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55954 "EHLO
+        id S231548AbiHAR61 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 1 Aug 2022 13:58:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33342 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232650AbiHARsu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2022 13:48:50 -0400
-Received: from mail-pg1-f170.google.com (mail-pg1-f170.google.com [209.85.215.170])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91E0A2F01F;
-        Mon,  1 Aug 2022 10:48:49 -0700 (PDT)
-Received: by mail-pg1-f170.google.com with SMTP id 206so6819275pgb.0;
-        Mon, 01 Aug 2022 10:48:49 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc;
-        bh=EN6VLRMLyX8Pe8pUfOBoTSaSGWWPYWCDNxOmZN2qUZE=;
-        b=S057YlMtKhdK+oTVpluP7EEfNOjUEHHvz2V2yxfoLxtaEc6Fs+XJjvtjDCGKlbWxIA
-         zeDMAGPdy4SgbS6aWKWVFJV5f6BiDcypuoL+pqYy5wPvFwAcFWC18LmxpVqgIxCTU0PD
-         uB0ad5cLEqLjYEMwgqCsvkmaBzqelcHzatUxTpj8F+VSCCREO+K6alAVFMzPYgRWsMcD
-         Oqu+9SC1Ap+Xbc07X1X9NblbR3rJyndIsGhv2AgN3k+YVwTYHSzcvKF61xKAnmxqGVUT
-         G9wqFHd4pGxeOvo0+9raynPZhvXvT8BiwtDZSHzsCHI7N5OoDXw8o0XPu/Kg3Iio18fK
-         R+0g==
-X-Gm-Message-State: AJIora/2DKaVPNlIAZ/0jBCpUzurOMUXCArwvxJpYpbuGMgHlUerFirJ
-        pa4SGZ+SoLgcaBSrq49WOi4=
-X-Google-Smtp-Source: AGRyM1s3sQEiFccWVLANXwiDQ2eLWBsm42X5+Q5P4fg5LoKgu+s9ID24Gf8TXPj2PzKAUWypLGgOLw==
-X-Received: by 2002:a65:6c05:0:b0:41a:d13f:f0fb with SMTP id y5-20020a656c05000000b0041ad13ff0fbmr14358372pgu.393.1659376128957;
-        Mon, 01 Aug 2022 10:48:48 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:6496:b2a7:616f:954d? ([2620:15c:211:201:6496:b2a7:616f:954d])
-        by smtp.gmail.com with ESMTPSA id u8-20020a1709026e0800b0016d1e2a240dsm9832596plk.202.2022.08.01.10.48.46
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 01 Aug 2022 10:48:47 -0700 (PDT)
-Message-ID: <1ca16b27-21e5-3537-400a-25cdae52396e@acm.org>
-Date:   Mon, 1 Aug 2022 10:48:45 -0700
+        with ESMTP id S234162AbiHAR54 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2022 13:57:56 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04576DF36
+        for <linux-scsi@vger.kernel.org>; Mon,  1 Aug 2022 10:57:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=4AGBIvqYGEc7iz46/rHoisPzKl94Z4nXzpK7XzD4ejo=; b=RJkW3lvqjh9QC+IS/abgFXsl9I
+        AqyT9Vo+I/4WvSk5tcN5Jtp6bXGxlym09S2Tz0Bf6DiAFOMeJRMgaSvduU4g7qUMtw0Uq6FIrWjiL
+        twKwNxEloKYo1NZjwDC83YtAK0epZMcooI/n0jsLl7EKTvAvQa/0fHXQxmRFoEMp+HtyxPRKv5ZJE
+        8vWjEus96crZucdSvCvm0ER2o4LzQPlfp1bVqrxG4k46oUkhVVvG6jcegYTfzCxmS4Zks0F2geqAC
+        iGKKXexy/zb6nccDiIWvusjGg8M6rZae+wuVgZcdpeui5MImd0fknxEV7uQTz25vOsgGy8qOrg7jB
+        0vs1ydlw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1oIZf4-008QzX-Us; Mon, 01 Aug 2022 17:57:02 +0000
+Date:   Mon, 1 Aug 2022 10:57:02 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     peter.wang@mediatek.com
+Cc:     stanley.chu@mediatek.com, linux-scsi@vger.kernel.org,
+        martin.petersen@oracle.com, avri.altman@wdc.com,
+        alim.akhtar@samsung.com, jejb@linux.ibm.com,
+        wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
+        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
+        cc.chou@mediatek.com, chaotian.jing@mediatek.com,
+        jiajie.hao@mediatek.com, powen.kao@mediatek.com,
+        qilin.tan@mediatek.com, lin.gui@mediatek.com
+Subject: Re: [PATCH v1 0/2] ufs: allow vendor disable wb toggle in clock
+ scaling
+Message-ID: <YugT7jfkMGGvH7hO@infradead.org>
+References: <20220728071637.22364-1-peter.wang@mediatek.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [PATCH v4] ufs: core: print UFSHCD capabilities in controller's
- sysfs node
-Content-Language: en-US
-To:     Daniil Lunev <dlunev@chromium.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <beanhuo@micron.com>, Can Guo <cang@codeaurora.org>,
-        Daejun Park <daejun7.park@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
-        Sohaib Mohamed <sohaib.amhmd@gmail.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <20220729151301.v4.1.Ibf9efc9be50783eeee55befa2270b7d38552354c@changeid>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220729151301.v4.1.Ibf9efc9be50783eeee55befa2270b7d38552354c@changeid>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220728071637.22364-1-peter.wang@mediatek.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/28/22 22:13, Daniil Lunev wrote:
-> Allows userspace to check if Clock Scaling, Write Booster functionality
-> status.
-
-The above sentence is not complete. Did you perhaps want to write "are 
-supported by the host controller" instead of "status"?
-
-> +What:		/sys/bus/platform/drivers/ufshcd/*/capabilities/clock_scaling
-> +What:		/sys/bus/platform/devices/*.ufs/capabilities/clock_scaling
-> +Date:		July 2022
-> +Contact:	Daniil Lunev <dlunev@chromium.org>
-> +Description:	Indicates status of clock scaling.
-> +
-> +		== ============================
-> +		0  Clock scaling is not enabled.
-> +		1  Clock scaling is enabled.
-> +		== ============================
-> +
-> +		The file is read only.
-
-I don't think the above documentation is correct. My understanding is 
-that the UFSHCD_CAP_CLK_SCALING flag indicates whether or not the host 
-controller supports clock scaling. It does not indicate whether or not 
-clock scaling is enabled.
-
-> +What:		/sys/bus/platform/drivers/ufshcd/*/capabilities/write_booster
-> +What:		/sys/bus/platform/devices/*.ufs/capabilities/write_booster
-> +Date:		July 2022
-> +Contact:	Daniil Lunev <dlunev@chromium.org>
-> +Description:	Indicates status of Write Booster.
-> +
-> +		== ============================
-> +		0  Write Booster can not be enabled.
-> +		1  Write Booster can be enabled.
-> +		== ============================
-> +
-> +		The file is read only.
-
-Please change "can not / can be enabled" into "is not supported by the 
-host controller / is supported by the host controller".
-
-Thanks,
-
-Bart.
+Please fix up your wording.  A vendor can't do anything at all in Linux.
+A driver might be able to disable things for a specific device, though.
