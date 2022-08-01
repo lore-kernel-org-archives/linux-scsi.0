@@ -2,55 +2,50 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01B4FC00144
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Aug 2022 21:31:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F9C6C00144
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Aug 2022 21:43:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234736AbiHAVbN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 Aug 2022 17:31:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58838 "EHLO
+        id S231338AbiHAVnE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 1 Aug 2022 17:43:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39048 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234182AbiHAVae (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2022 17:30:34 -0400
-Received: from mail-yw1-x112a.google.com (mail-yw1-x112a.google.com [IPv6:2607:f8b0:4864:20::112a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A9B922B24
-        for <linux-scsi@vger.kernel.org>; Mon,  1 Aug 2022 14:29:30 -0700 (PDT)
-Received: by mail-yw1-x112a.google.com with SMTP id 00721157ae682-324ec5a9e97so38290617b3.7
-        for <linux-scsi@vger.kernel.org>; Mon, 01 Aug 2022 14:29:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=BJhneIs24eJv4ukierhtqacrrE32PmvIZRJVAVZL+KU=;
-        b=i7PDO41unYnFJQoVscy3Nu89f90rGxroCFDcTvi/H7u+L9k1OuxQYEpW8vJALQy9sb
-         DWLoIfoVnuCby8ibe6ZxfCqBNW7NE84+9VadRx+x8hOA2ZjDaEJZocgRkX1SNVS/i/IQ
-         /bp7FrkWXo7dKxoBcEPFJuCjYG8G+Dse+pQjk=
+        with ESMTP id S229914AbiHAVnD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2022 17:43:03 -0400
+Received: from mail-pg1-f178.google.com (mail-pg1-f178.google.com [209.85.215.178])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E2EA23170;
+        Mon,  1 Aug 2022 14:43:01 -0700 (PDT)
+Received: by mail-pg1-f178.google.com with SMTP id f11so10771715pgj.7;
+        Mon, 01 Aug 2022 14:43:01 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=BJhneIs24eJv4ukierhtqacrrE32PmvIZRJVAVZL+KU=;
-        b=fMpJBXHHTKtLnxXjwiBcn7W5uJDLVyewcDJpQOWHt6GECnlLPqrDlBJ5SwJ34TZB8P
-         LKOdfOnC2fZP5OLx1hUBOTzUfqvy3DdXbcytxEey/o1Ww7dZqGpIl+0Zye1D4tvglShC
-         gjvVAkM+PQkuNUiD+9Esc9u6U8jW6MWESd3c+UYE/7VnGBvsmFu9bsTCRVGI9b7mm5MO
-         XqHjzm8DkxgCD903mmSU4kD4uwz2BoEMog1NN54vIVhtNetUbMdaRzcnBd6SEzl7U2Cq
-         3A19JaNyeZ3HoWjPpSnsf1WfUuAmsMeDBnFCtNFm/qZat4vL378FqwX6PnOVAoLUUmoK
-         y9aw==
-X-Gm-Message-State: ACgBeo3VGIwFW0QfRQVJAQExqT7tcrRM20fkKiRXGqBbJHYS1vu2D2EZ
-        Ucs7KDVpbPlVzJKTS9qIkYeYzHn9AUf3F9OVWHtjpQ==
-X-Google-Smtp-Source: AA6agR6WmFz3ErZkaFdpehjCddleiWEdMhQ6+XEtTrZxM9pG0247rhhM7LZWBLuBSKnW1ZHSCYb+K6Up5wrjjCV/7ew=
-X-Received: by 2002:a0d:cb0b:0:b0:322:6f04:9262 with SMTP id
- n11-20020a0dcb0b000000b003226f049262mr14681907ywd.224.1659389369472; Mon, 01
- Aug 2022 14:29:29 -0700 (PDT)
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc;
+        bh=/Uj3k4mtLY63OgD/JEu30S8Bzg5zX65s31dnHrHQ/nI=;
+        b=J6xI+S4dxCFfHt4TUbZAFWUFsZ2hs+uzLlsrPE8VhXSkP3V/Ng4B7bzgtq8m+rmkCi
+         03j7FZ79KfvcHO4lt2krWIXuCNIxI9jC3vPQuGopG76d9Umi8kNEfBl5csImDJ1ker6y
+         YlbDblFbGQOBQyJBC1EWNv4cMEieghlJaNR2UKfv3Krg/5ly9UnhEAt1vwgEhZhDw7pm
+         ioutNi3Kr64JfwCA2bYb8V8boFSbvHLflqyXIoTB2pJ0rS/Vx9q9bIcB10H5fRhlbq/V
+         emgmVxQRBGmn3mzQSrYzVKAkLSn12Gr3CrcHNSg1OvtjGwlW91mhyZVf8yGUQu2M+L6y
+         8sIA==
+X-Gm-Message-State: AJIora9tW0KrwptcYOGeOJ8ZMN3MkX+mZamHu+Onbym+XEeooinSY31m
+        6Ga8lt25Orl0hHOTHk5q4Hc=
+X-Google-Smtp-Source: AGRyM1uddY6LgwKOTm5Ji22rWIffZn64NStLaReByHvTQu57KlxPYNzalWni1MTEMw8H2VUrSUhtPg==
+X-Received: by 2002:a63:4042:0:b0:411:bbfe:e736 with SMTP id n63-20020a634042000000b00411bbfee736mr14888481pga.1.1659390180950;
+        Mon, 01 Aug 2022 14:43:00 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:6496:b2a7:616f:954d? ([2620:15c:211:201:6496:b2a7:616f:954d])
+        by smtp.gmail.com with ESMTPSA id d3-20020a170902f14300b0016d5428f041sm9941638plb.199.2022.08.01.14.42.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 01 Aug 2022 14:43:00 -0700 (PDT)
+Message-ID: <a74ec294-9701-9842-bec3-84b624f8850a@acm.org>
+Date:   Mon, 1 Aug 2022 14:42:57 -0700
 MIME-Version: 1.0
-References: <20220729151301.v4.1.Ibf9efc9be50783eeee55befa2270b7d38552354c@changeid>
- <1ca16b27-21e5-3537-400a-25cdae52396e@acm.org>
-In-Reply-To: <1ca16b27-21e5-3537-400a-25cdae52396e@acm.org>
-From:   Daniil Lunev <dlunev@chromium.org>
-Date:   Tue, 2 Aug 2022 07:29:18 +1000
-Message-ID: <CAONX=-eknyxTsM21gW6ruaCoov3oJB12g871Wmiq+ibDm4QZCA@mail.gmail.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
 Subject: Re: [PATCH v4] ufs: core: print UFSHCD capabilities in controller's
  sysfs node
-To:     Bart Van Assche <bvanassche@acm.org>
+Content-Language: en-US
+To:     Daniil Lunev <dlunev@chromium.org>
 Cc:     Adrian Hunter <adrian.hunter@intel.com>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Alim Akhtar <alim.akhtar@samsung.com>,
@@ -63,45 +58,42 @@ Cc:     Adrian Hunter <adrian.hunter@intel.com>,
         Sohaib Mohamed <sohaib.amhmd@gmail.com>,
         Stanley Chu <stanley.chu@mediatek.com>,
         linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+References: <20220729151301.v4.1.Ibf9efc9be50783eeee55befa2270b7d38552354c@changeid>
+ <1ca16b27-21e5-3537-400a-25cdae52396e@acm.org>
+ <CAONX=-eknyxTsM21gW6ruaCoov3oJB12g871Wmiq+ibDm4QZCA@mail.gmail.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <CAONX=-eknyxTsM21gW6ruaCoov3oJB12g871Wmiq+ibDm4QZCA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-HI Bart
-> The above sentence is not complete. Did you perhaps want to write "are
-> supported by the host controller" instead of "status"?
-Will fix it in the next version.
+On 8/1/22 14:29, Daniil Lunev wrote:
+>> Please change "can not / can be enabled" into "is not supported by the
+>> host controller / is supported by the host controller".
+>
+> That would be incorrect. The "caps" variable semantics is a bit weird
+> in the sense that it is used at times to convey "active" 
+> capabilities, not just supported one. For example, for the 
+> writebooster capability to be present in caps, first controller 
+> driver should indicate it is ready to support it, then the part that 
+> is attached to the host controller has to indicate support in the 
+> device descriptor, then WB has to be configured and its lifetime
+> should not be exhausted. If any of those parameters are not
+> satisfied, the capability will be removed from the set despite 
+> generally being supported. I am not sure how to properly word it, but
+> just saying "controller supports it" would be counter-factual
+> (especially since the controller doesn't really knows anything about
+> writebooster per-se, it is part's functionality). What would be
+> suggested wording in that case?
+Given the above I think we can keep the current wording. This also makes 
+me wonder why the UFSHCD_CAP_WB_EN flag occurs in the hba->caps member 
+variable. That member variable is used to track controller capabilities. 
+My understanding is that the WriteBooster functionality is a UFS device 
+feature and also that no host controller support is required to control 
+the WriteBooster feature.
 
-> I don't think the above documentation is correct. My understanding is
-> that the UFSHCD_CAP_CLK_SCALING flag indicates whether or not the host
-> controller supports clock scaling. It does not indicate whether or not
-> clock scaling is enabled.
-Ah, right, there is a control for it in sysfs, it is just hidden in
-ufshcd.c I was under
-a wrong impression that it is like the writebooster capability that
-has quite a bit of
-conditions for staying present. WIll fix it in the next version.
+Thanks,
 
-> Please change "can not / can be enabled" into "is not supported by the
-> host controller / is supported by the host controller".
-That would be incorrect. The "caps" variable semantics is a bit weird
-in the sense
-that it is used at times to convey "active" capabilities, not just
-supported one. For
-example, for the writebooster capability to be present in caps, first
-controller driver
-should indicate it is ready to support it, then the part that is
-attached to the host
-controller has to indicate support in the device descriptor, then WB has to be
-configured and its lifetime should not be exhausted. If any of those parameters
-are not satisfied, the capability will be removed from the set despite generally
-being supported. I am not sure how to properly word it, but just
-saying "controller
-supports it" would becounter-factual (especially since the controller
-doesn't really
-knows anything about writebooster per-ce, it is part's functionality).
-What would
-be suggested wording in that case?
-
---Daniil
+Bart.
