@@ -2,123 +2,97 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9D61C00144
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Aug 2022 12:44:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E506BC00144
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Aug 2022 12:44:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234902AbiHAMop (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 Aug 2022 08:44:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44224 "EHLO
+        id S234906AbiHAMoq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 1 Aug 2022 08:44:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234821AbiHAMoQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2022 08:44:16 -0400
-Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0EE2C4599A
-        for <linux-scsi@vger.kernel.org>; Mon,  1 Aug 2022 05:29:39 -0700 (PDT)
-Received: by mail-pj1-x1035.google.com with SMTP id e8-20020a17090a280800b001f2fef7886eso11802838pjd.3
-        for <linux-scsi@vger.kernel.org>; Mon, 01 Aug 2022 05:29:39 -0700 (PDT)
+        with ESMTP id S232480AbiHAMoR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2022 08:44:17 -0400
+Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53ED0459AA
+        for <linux-scsi@vger.kernel.org>; Mon,  1 Aug 2022 05:29:43 -0700 (PDT)
+Received: by mail-pf1-x42c.google.com with SMTP id b133so10459932pfb.6
+        for <linux-scsi@vger.kernel.org>; Mon, 01 Aug 2022 05:29:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc;
-        bh=cGBVEJ3HQhgntAZUGI77BVY2BQhqSOt4jV1QeOBSK5Y=;
-        b=RFrwn0lHJtZkRLD2q5KwDPFDMusUVVl5ex0NyUUtXlu/bqz596Iu6HEpy3jJtNrzNq
-         8Qi1e6nh8/DOsblwjfCLuuVYrZapJ73PUQHTCXACG55gtKHODy4lZalHypUigOMFfDzb
-         kSeUpLhZIgFE7QVAXsWeM0D3NIUKYv2fvumZ0=
+        bh=2XWLDQlqww8i+XGCt5gwRqzbkcMkQVI/5bmzMbXTTG8=;
+        b=F5FncUdOIPxCDyZwZa/9UZLA0hdlcK5oji/Tpzy9kVZS8getOLRcnyHyn2P/N8mInc
+         O6SDDcDhEPIzchtlXmfwE4Qv3bePVtAnNMv0HzuYXDA8zyJb7TckgyS7DN8D/ppBC1M7
+         16tdBvmMNsFqN8zpJ87kVTNoUVhFvghibXk4k=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc;
-        bh=cGBVEJ3HQhgntAZUGI77BVY2BQhqSOt4jV1QeOBSK5Y=;
-        b=cpsUJkocnoVoitSRQKuPf13U8lsQ+nsdxe505Uf5UNs2ukOr+9RAT2yv7/kHQIZQ9H
-         5+e0sr7w9MYTVdK9/P1meVjGSMeq80mQTmJvIIJPeWaZTCJ807JdTmEFHNVEa2zQdpC3
-         znYwEJQZJpQ1H1+uYcI1X8ZUiPAFDh5hvgC/yNu0qycFm6rX7g+kdqrCyVEID18fNpxY
-         VgWtbq1fEVZtxA8Dl3x2Ib9K0XMw9ZexRGjyIV5DEim9fL3L5JqAsUnlR/w6TBxR3pjf
-         HN+R7M0FwsLv36elgZR7LVqPzjP/47ss9pptJEbGnMIawLrPLWfxg8U9RmWxcYElk8FW
-         19dg==
-X-Gm-Message-State: ACgBeo2hFDOccSp17dOsqfuPkJKYdIZ1kpNI5acKT/rV6ApS7Yk/xGgS
-        y1ucDonf0vWOG2LeLMKjyW1POwPI/WMUvCb043zIUzN72DADZecwfA2aFS9a19UIK0UP8Xeoo4n
-        UAEYbRPl+yrFbdnLRAXg8J1LRFltHwTG8vOXayyBPd35Nzzb+u+5RBww1MPtzqXQCBhvAeQECve
-        HplTYpjsmD
-X-Google-Smtp-Source: AA6agR6oAaX3qkDpv2F5FCNwhHiR21kR8KEa7qL+VgfY7fxuJKHTn9KPJVv5okBNLjHf7buJDavD7g==
-X-Received: by 2002:a17:902:d54c:b0:16d:9d52:2cb1 with SMTP id z12-20020a170902d54c00b0016d9d522cb1mr16282147plf.29.1659356978153;
-        Mon, 01 Aug 2022 05:29:38 -0700 (PDT)
+        bh=2XWLDQlqww8i+XGCt5gwRqzbkcMkQVI/5bmzMbXTTG8=;
+        b=caWvykCr1wG2mbZm8oEAsGUG0SjoVVAWzLPuD8cbVt/U7NKAeZzH58zVusWxyMDMPH
+         vM/bvzILatGhJl2zQlDgV9zZlUAPmdUUYPBanIsNWx1PUev8DGdZ+phPDjh7FQBKiax9
+         rvcGXsuon3MDXezgLyrAX8AlIEDYMH/4xWZYXbTDKpyX5RIg/hYAUd0dGQqkEcrQuVdV
+         Pi9OCXbX5J5YaTHE64iKvdV2B8A2IdFqwEl4y6RXNr6zQulvfLUna0BOz/HjHrcrTnSr
+         2x/hO3060tsnnffpO9XSS0XfC/eJkGHU1JibbfWXXKDRaM7b/nOrhTZywJ/LdgtVI09P
+         VWDg==
+X-Gm-Message-State: ACgBeo2u+hgritNU5XroroXNw9Zc9XHgNrD5VbL+rJgbRmlj/XRVS/Dr
+        5B+cWcgnVL+ezCjmcYXPk7JHmYikJhaSXakk5n0l84Yn4cv9UP+xZJP2T3CCoi7wJkfQUj7C7p8
+        hQ+gxkX8lpX8JUYHrw1we8ciJoC+0bMJHVXnuurfnZTcEj0gSPH6VL024B//SJ0nYT85eLQjy3U
+        FeZ6RPeM8t
+X-Google-Smtp-Source: AA6agR7JJdusx62Y1LtsFXbhKEI8PwIEFCJU+rO8OUoBhExue8f44+aUM6NOb5OHo38Las32P4nSaA==
+X-Received: by 2002:a63:6bc5:0:b0:41c:26d2:81e2 with SMTP id g188-20020a636bc5000000b0041c26d281e2mr3012752pgc.522.1659356982341;
+        Mon, 01 Aug 2022 05:29:42 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id u3-20020a17090add4300b001f260b1954bsm8931912pjv.13.2022.08.01.05.29.36
+        by smtp.gmail.com with ESMTPSA id u3-20020a17090add4300b001f260b1954bsm8931912pjv.13.2022.08.01.05.29.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 01 Aug 2022 05:29:37 -0700 (PDT)
+        Mon, 01 Aug 2022 05:29:41 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 2/4] mpt3sas: Fix trace buffer registration failed
-Date:   Mon,  1 Aug 2022 18:11:42 +0530
-Message-Id: <20220801124144.11458-3-sreekanth.reddy@broadcom.com>
+Subject: [PATCH 4/4] mpt3sas: Update driver version to 43.100.00.00
+Date:   Mon,  1 Aug 2022 18:11:44 +0530
+Message-Id: <20220801124144.11458-5-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20220801124144.11458-1-sreekanth.reddy@broadcom.com>
 References: <20220801124144.11458-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000004504f205e52d273f"
+        boundary="000000000000845cb905e52d27a9"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000004504f205e52d273f
+--000000000000845cb905e52d27a9
 Content-Transfer-Encoding: 8bit
 
-The ExtendedType field was set to one in the diag buffer
-register command and hence MPT Endpoint firmware is
-failing the request with Invalid Field IOCStatus.
-
-So, memset the request frame to zero before framing the
-diag buffer register command.
+Update driver version to 43.100.00.00.
 
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_ctl.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/scsi/mpt3sas/mpt3sas_base.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index 84c87c2..df00deb 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -1686,6 +1686,7 @@ _ctl_diag_register_2(struct MPT3SAS_ADAPTER *ioc,
- 	ioc->ctl_cmds.status = MPT3_CMD_PENDING;
- 	memset(ioc->ctl_cmds.reply, 0, ioc->reply_sz);
- 	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
-+	memset(mpi_request, 0, ioc->request_sz);
- 	ioc->ctl_cmds.smid = smid;
- 
- 	request_data = ioc->diag_buffer[buffer_type];
-@@ -1787,6 +1788,7 @@ _ctl_diag_register_2(struct MPT3SAS_ADAPTER *ioc,
- 	if (rc && request_data) {
- 		dma_free_coherent(&ioc->pdev->dev, request_data_sz,
- 		    request_data, request_data_dma);
-+		ioc->diag_buffer[buffer_type] = NULL;
- 		ioc->diag_buffer_status[buffer_type] &=
- 		    ~MPT3_DIAG_BUFFER_IS_DRIVER_ALLOCATED;
- 	}
-@@ -2163,6 +2165,7 @@ mpt3sas_send_diag_release(struct MPT3SAS_ADAPTER *ioc, u8 buffer_type,
- 	ioc->ctl_cmds.status = MPT3_CMD_PENDING;
- 	memset(ioc->ctl_cmds.reply, 0, ioc->reply_sz);
- 	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
-+	memset(mpi_request, 0, ioc->request_sz);
- 	ioc->ctl_cmds.smid = smid;
- 
- 	mpi_request->Function = MPI2_FUNCTION_DIAG_RELEASE;
-@@ -2417,6 +2420,7 @@ _ctl_diag_read_buffer(struct MPT3SAS_ADAPTER *ioc, void __user *arg)
- 	ioc->ctl_cmds.status = MPT3_CMD_PENDING;
- 	memset(ioc->ctl_cmds.reply, 0, ioc->reply_sz);
- 	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
-+	memset(mpi_request, 0, ioc->request_sz);
- 	ioc->ctl_cmds.smid = smid;
- 
- 	mpi_request->Function = MPI2_FUNCTION_DIAG_BUFFER_POST;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index e584cf0..9ce89f5 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -77,8 +77,8 @@
+ #define MPT3SAS_DRIVER_NAME		"mpt3sas"
+ #define MPT3SAS_AUTHOR "Avago Technologies <MPT-FusionLinux.pdl@avagotech.com>"
+ #define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
+-#define MPT3SAS_DRIVER_VERSION		"42.100.00.00"
+-#define MPT3SAS_MAJOR_VERSION		42
++#define MPT3SAS_DRIVER_VERSION		"43.100.00.00"
++#define MPT3SAS_MAJOR_VERSION		43
+ #define MPT3SAS_MINOR_VERSION		100
+ #define MPT3SAS_BUILD_VERSION		0
+ #define MPT3SAS_RELEASE_VERSION	00
 -- 
 2.27.0
 
 
---0000000000004504f205e52d273f
+--000000000000845cb905e52d27a9
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -189,13 +163,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIOHIXsHG7TpH3sjFRqhe
-v/9yGWI42r/eWWTNx/HJSBkMMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDgwMTEyMjkzOFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIPRzZnYLRzUOB2eRShCJ
+3ZVlMfSY52pCgO/eqD8J4DbKMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDgwMTEyMjk0MlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCFk1+a+HVipymmlx8lci//aoHpoExnJiWylGxb
-FMJ+pxT+Hbqrk7Lgi1p3Jq6py44hmmsFtj61F7nPadwYpCJBDLkBuihXuQ92Wge/Fp2pdWYIXAGX
-8ErNIbIsgrZJn233YW6/qisNWAg7sHWUTU+9LHoBqrSpxHh/Npb+Gn+oC6PScPgomroPGaJGFSYw
-bwvRYDhY1NZ2gsxgt91CLr/3Km7KwwY3X80kXTzhiIH7XA4/0WKocm3eSPs+3/Cn7S4kMEM2maxM
-qC758GgBQ9+3o+llkweGRcZ1G5cAQbMbU99Df6DvyjerOutz6ZLqORKXHLQDyPct87Xlp9dtG7fT
---0000000000004504f205e52d273f--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQDDQzc8nTuRBPbmLSptLd/My6/I+WthfjQJwGLr
+f6IVrAQ9VTpsL5fNSwjCigT65pf6gcOgenhNYfTtW3kW7dtIVg8AsdwAH4VEQylHDmkAAnb1P387
+wZsvnYJbOiNWZRf+QxCJlI9ZjtawyulJ1ifpF8aNjW1/JgAGqBHKVPj5oFdfqO3lrHN+TEVDNa3d
+CRuiXkwnLdiksxEZQxuUGzAUoL9rfnhZN2aN1xZPNnnXDr/1pZ7axykDo6yLD5qRGVjJLdpC2LWj
+FZCIQZRC1woVU0pyL4k4BGvIio6e1rnZo0o2qLhtZG+Ow+IUBYOGVTAlx8/hHmbO1Ih4OCb3G4xD
+--000000000000845cb905e52d27a9--
