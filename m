@@ -2,90 +2,117 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D75FC00144
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Aug 2022 03:23:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 590BDC00144
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Aug 2022 03:45:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238799AbiHADX6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 31 Jul 2022 23:23:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53464 "EHLO
+        id S238768AbiHADpo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 31 Jul 2022 23:45:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35922 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237074AbiHADX4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 31 Jul 2022 23:23:56 -0400
-Received: from mail-lj1-x22c.google.com (mail-lj1-x22c.google.com [IPv6:2a00:1450:4864:20::22c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B429C65B1;
-        Sun, 31 Jul 2022 20:23:55 -0700 (PDT)
-Received: by mail-lj1-x22c.google.com with SMTP id q7so10888490ljp.13;
-        Sun, 31 Jul 2022 20:23:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc;
-        bh=GNxvEO8zKMF9CuL60442aziMrziKJwXDy+lUG20M/ag=;
-        b=iyx3d/NDu2nKpMoy/Z9uAw6CuiuFJYmEEu4gVHmqdwBt5ror1Ahn3BNZL1p+OmS9HE
-         tAyIPEko9+xcgfN/Je26e00wMf18DiARtGozbBZRu4XaFfijI2YJ1oOIIq0CMr9spXu2
-         gi4ZVOjpKapMxnbUlHVaXaqDmaXALMj9+WD8ojtm6zhn7JMOGlvHC9r1PpAPfYIdT/8E
-         5deVq7qTyvZBBlec470JvDLuZzF8vEiT+4etz6i/E+rlNeM6m9tz/ywPWCtAlo6cM74i
-         3dDoNaDkeNIs2CGOpop3eiqjG9K21J0xneISc9BX6XowptUOuOtuL7Au/vbnV7crIYFh
-         xPbQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc;
-        bh=GNxvEO8zKMF9CuL60442aziMrziKJwXDy+lUG20M/ag=;
-        b=C7gCt1igVj2Swks3cQDGuUJfLlMbJUwzH/vs+t6YTYUPuPx+MPGegUx2n/ijcmneh1
-         g0LBqaaZZbFO6djAGe/PxuTPok8MrUAsqVECkkQvBBR9kWzZjgfKqdRy6gzTX+BMkwY2
-         euUj7BB2Te4lW0oRQYV0hMy16kbVbsgANYddk8NCNb1N0Kfkt0P/MTeCqyno4EDdO+5n
-         W2kA7NPMhQ+0bKLSxNyFyFvnBmW585EPZx1rjp0Tz9Gu1VY6bIOLbHWqVs76hPE0JRAD
-         x8sRY+CTAmmBX7+ma7wOhrbgUYveSp+lqLeOBp2+nsLugVX+56Ibm3cMTFBTBsdnKICD
-         PVGg==
-X-Gm-Message-State: AJIora8ud5PWpejrIMEgibiFaCylZKGCXbNbfFylb3Nr80IkfWxyg12B
-        Jx6B0mgHVpGsOTFwjSnQTJXVx6KwLNQ6tGWZaw==
-X-Google-Smtp-Source: AGRyM1tC/foZjMEICK7b3UU3dizOYg3b315tP53NJ2o45HmK9C2RYWpFxF7iN7nxEF1ccgNI3PN6erQlx3BUs/zqYBo=
-X-Received: by 2002:a05:651c:98d:b0:25d:eb67:7160 with SMTP id
- b13-20020a05651c098d00b0025deb677160mr4247395ljq.385.1659324233799; Sun, 31
- Jul 2022 20:23:53 -0700 (PDT)
-MIME-Version: 1.0
-References: <20220720204414.1.I699244ea7efbd326a34a6dfd9b5a31e78400cf68@changeid>
-In-Reply-To: <20220720204414.1.I699244ea7efbd326a34a6dfd9b5a31e78400cf68@changeid>
-From:   Stanley Chu <chu.stanley@gmail.com>
-Date:   Mon, 1 Aug 2022 11:23:42 +0800
-Message-ID: <CAGaU9a_Tm_awy+EAaYpv1Aj+URKkrD1yZDY2dWbhoWj0qUr5uw@mail.gmail.com>
-Subject: Re: [PATCH] ufs: core: ufshcd: use CLOCK_BOOTTIME for debugging timestamps
-To:     Daniil Lunev <dlunev@chromium.org>
-Cc:     Adrian Hunter <adrian.hunter@intel.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        with ESMTP id S233450AbiHADpn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 31 Jul 2022 23:45:43 -0400
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32B4160EF
+        for <linux-scsi@vger.kernel.org>; Sun, 31 Jul 2022 20:45:41 -0700 (PDT)
+Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20220801034540epoutp03c4c08f42f8450193903879267cdab131~HG8mLn1bk0115801158epoutp03z
+        for <linux-scsi@vger.kernel.org>; Mon,  1 Aug 2022 03:45:40 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20220801034540epoutp03c4c08f42f8450193903879267cdab131~HG8mLn1bk0115801158epoutp03z
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1659325540;
+        bh=ymLE9gFZmGJ45hBlzXD584V1zn4y6YEzfrxY1b4vzeQ=;
+        h=Subject:Reply-To:From:To:In-Reply-To:Date:References:From;
+        b=Ju+cO3wxSdLkUjup5h0E/pfDRd0ST53gqR2hAUUQvwkTUR81lpCwzEv4BB7q1S7K6
+         xI5aLqmUapjB6kqASEXpQHu4DFX4tVOBA2XYTJr71zrXYbRn448azPiRwDBY/GQHjf
+         KG+3RZWtiTRiAQUb5e1VXyKuRBgoqy34fIua+uqY=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+        20220801034539epcas2p4bcd25c77870a4ed1f7d5995dd7751a0b~HG8lprVtR1363313633epcas2p4l;
+        Mon,  1 Aug 2022 03:45:39 +0000 (GMT)
+Received: from epsmges2p1.samsung.com (unknown [182.195.36.97]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4Lx3tW0X9cz4x9Pv; Mon,  1 Aug
+        2022 03:45:39 +0000 (GMT)
+X-AuditID: b6c32a45-471ff700000025c2-0b-62e74c626b13
+Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
+        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        77.98.09666.26C47E26; Mon,  1 Aug 2022 12:45:39 +0900 (KST)
+Mime-Version: 1.0
+Subject: RE:(2) [PATCH v5 2/6] scsi: ufs: wb: Change functions name and
+ modify parameter name
+Reply-To: j-young.choi@samsung.com
+Sender: Jinyoung CHOI <j-young.choi@samsung.com>
+From:   Jinyoung CHOI <j-young.choi@samsung.com>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <01a30932-adae-a499-1194-57c925a3633f@acm.org>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20220801034538epcms2p270ca60820681d09de109a2df504a3806@epcms2p2>
+Date:   Mon, 01 Aug 2022 12:45:38 +0900
+X-CMS-MailID: 20220801034538epcms2p270ca60820681d09de109a2df504a3806
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+CMS-TYPE: 102P
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprPJsWRmVeSWpSXmKPExsWy7bCmqW6yz/MkgzfTGC1OPlnDZvFg3jY2
+        i5c/r7JZHHzYyWIx7cNPZouXhzQtFt3YxmRxedccNovu6zvYLJYf/8fkwOVx+Yq3x+I9L5k8
+        Jiw6wOjxfX0Hm8fHp7dYPPq2rGL0+LxJzqP9QDdTAEdUtk1GamJKapFCal5yfkpmXrqtkndw
+        vHO8qZmBoa6hpYW5kkJeYm6qrZKLT4CuW2YO0IlKCmWJOaVAoYDE4mIlfTubovzSklSFjPzi
+        Elul1IKUnALzAr3ixNzi0rx0vbzUEitDAwMjU6DChOyMx+fWshbMZKnYMPclUwPjJuYuRk4O
+        CQETicUNb9i7GLk4hAR2MErcvzCXrYuRg4NXQFDi7w5hkBphgXiJuXfnsYHYQgJKEufWzGIE
+        KREWMJC41WsOEmYT0JP4uWQGG8gYEYETzBLbjzxhhJjPKzGj/SkLhC0tsX35VrA4p4C1xMfX
+        y5kg4hoSP5b1Qt0jKnFz9Vt2GPv9sflQc0QkWu+dhaoRlHjwczdUXFLi0KGvYCdLCORLbDgQ
+        CBGukXi7/ABUib7EtY6NYCfwCvhKTFv/F2wti4CqxI8XH6BqXCSmX38EtpZZQF5i+9s5zCAj
+        mQU0Jdbv0oeYrixx5BYLzFMNG3+zo7OZBfgkOg7/hYvvmPeECaJVTWJRkxFEWEbi6+H57BMY
+        lWYhQnkWkrWzENYuYGRexSiWWlCcm55abFRgCI/Y5PzcTYzglKrluoNx8tsPeocYmTgYDzFK
+        cDArifDecXmeJMSbklhZlVqUH19UmpNafIjRFOjhicxSosn5wKSeVxJvaGJpYGJmZmhuZGpg
+        riTO65WyIVFIID2xJDU7NbUgtQimj4mDU6qBqWWfgdar8s3S/NzcX3929lepHz+/3PvT9NuP
+        HrOxP2pamp644Oyu1eHZspfnRf/70qYsvPS7zbt9DP0zlq7IyDI87bZd+cOeq723OFde8ncV
+        PnxB5Y/7dO3Fhxeo6L4y1N4QXMZ98sTZyRYdnGGva1Jf8V8IbzrD/ePF5NKfmzt38mtvZ4/M
+        2Gy4Y7n3rQiPFIvwFLs3Hyy2tXltffVd13vp3jN+fKs4gnfG9SrXnvm197JcnM3Can/J14yG
+        Rku5O2fWXXwf/j2IgXt/dw1b2CW+0mLp9Ab91JWcj1M+r2cLqd/xe8q2GAG+hwIu2RsldL5L
+        lSi1XBH9JrJ16mLdhWcKUtn/RkkyLLkW+//obCWW4oxEQy3mouJEABv055cyBAAA
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20220729045045epcms2p8caf00317889ed4da8531b7466ec6e368
+References: <01a30932-adae-a499-1194-57c925a3633f@acm.org>
+        <20220729045252epcms2p7fee5c1cdca5e4bef02a833e40f80649b@epcms2p7>
+        <20220729045045epcms2p8caf00317889ed4da8531b7466ec6e368@epcms2p8>
+        <20220729045433epcms2p77ff2cdde6ddffd9ab0b0810ebe84f0e5@epcms2p7>
+        <CGME20220729045045epcms2p8caf00317889ed4da8531b7466ec6e368@epcms2p2>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Daniil,
+>On 7/28/22 21:54, Jinyoung CHOI wrote:
+>> -static inline void ufshcd_wb_config(struct ufs_hba *hba)
+>> +static void ufshcd_wb_set_default_flags(struct ufs_hba *hba)
+>
+>It is not clear to me why the new name is considered an improvement? The 
+>old name looks better to me. If you want to rename this function anyway, 
+>how about ufshcd_configure_wb()?
+>
+>Thanks,
+>
+>Bart.
 
-On Wed, Jul 20, 2022 at 6:49 PM Daniil Lunev <dlunev@chromium.org> wrote:
->
-> CLOCK_MONOTONIC is not advanced when the system is in suspend. This
-> becomes problematic when debugging issues related to suspend-resume:
-> the timestamps printed by ufshcd_print_trs can not be correlated with
-> dmesg entries, which are timestamped with CLOCK_BOOTTIME.
->
-> This CL changes the used clock to CLOCK_BOOTTIME for the informational
-> timestamp variables and adds mirroring CLOCK_BOOTIME instances for
-> variables used in subsequent derevations (to not change the semantics of
-> those derevations).
->
-> Signed-off-by: Daniil Lunev <dlunev@chromium.org>
->
+It is desirable to express it as configure because it sets several values.
+I will change it.
+Thank you for your opinion.
 
-Regarding the suspend/resume issue breakdown with aligned timestamp
-with the dmesg logs, perhaps we need to use "sched_clock()" since it
-is the timestamp used by dmesg?
-
-Thanks,
-Stanley
+Kind Regards,
+Jinyoung.
