@@ -2,87 +2,140 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59115C00144
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Aug 2022 09:35:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F16CFC19F2C
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Aug 2022 10:31:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230101AbiHAJfq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 Aug 2022 05:35:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55526 "EHLO
+        id S230328AbiHAKbB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 1 Aug 2022 06:31:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34574 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229987AbiHAJfq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2022 05:35:46 -0400
-Received: from mail-ed1-x536.google.com (mail-ed1-x536.google.com [IPv6:2a00:1450:4864:20::536])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 037AA32EF5
-        for <linux-scsi@vger.kernel.org>; Mon,  1 Aug 2022 02:35:45 -0700 (PDT)
-Received: by mail-ed1-x536.google.com with SMTP id x21so257546edd.3
-        for <linux-scsi@vger.kernel.org>; Mon, 01 Aug 2022 02:35:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc;
-        bh=EMKbttx5ynAzplQ+ZmcvHUaeklBVcrnfLbLDovv8/3Y=;
-        b=LuHDs+y7/OjGIAEQFJgXvC1jca8nj94djTniNYXTJT6JIc/qOKNnleCYJQ4yZvfmHw
-         kOOjEzwPC4Qih0AtEfcw5QQrSiVPn2cFkw3uz3j1SHJTHdubZaoNZGLqqpQtSVwRgo2c
-         XoMOBDUiBKYzyBinDjaaran9pRyclloRy4hCe8L5DDsNJgt6Erkyv7n8F2K/7K+twvVB
-         l2x7cqYZh2lcLhbLfk8iYwcjbG1QLmOmVLWeG/BrWN95GLoVCac1EttYbdfs12ARdrid
-         79mhqcvl4iaLKAa/6o37ZY8NWytm2cLFISufZqkLJrjt+NG2ynhlXzeD7FXd+ahsdg6q
-         0yxg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc;
-        bh=EMKbttx5ynAzplQ+ZmcvHUaeklBVcrnfLbLDovv8/3Y=;
-        b=rNm7M94Y3r/yxOtvp3TAXBdPF0X7LxJTLNoH1fdob1evrvV+V14b/jd5osAl78xBn2
-         YzAiiukrIRFlPBRA/BRuXj8FPVUmbCicA0lAM6FjNXtiDa0vqox9GPbypthSSjE91cew
-         NORzpcTeOu9974ZpdkOX3k2gzmMMpP5SuUDkbMsR4B4I4FAQ7bi0rIcRtscrnRJ0meUw
-         rPni6r9z5K0NvyWN6O0R8iRKBpEgoo2ZoPXJYaQzgtS6MN/czleKWqaIofTsRK3LXLL/
-         umDtCwiLumiIKr9jak+SmLbFo4ofCMmT7xwFFtE9LFe4dHC7ZmIreT7g7W1DIuskUHSZ
-         L69Q==
-X-Gm-Message-State: ACgBeo0rNpqcwq1/FqTEI6Y04s1sploskV4hE1U5EX27pNL+b+HTCDNl
-        a1lrlRe/LlW0usJo80c5FhCWICTeJfkZdMY4Agan0Q==
-X-Google-Smtp-Source: AA6agR7ewnSpbMEne9Lx5NzVVrOMwHSzHVXsw4be5pHt2k35zLXYZA0lgCm7lteJSHw6ajgYf36Q7uU5pXJ4cFqCxrk=
-X-Received: by 2002:a05:6402:190b:b0:43d:d001:2cce with SMTP id
- e11-20020a056402190b00b0043dd0012ccemr912505edz.326.1659346543607; Mon, 01
- Aug 2022 02:35:43 -0700 (PDT)
+        with ESMTP id S231359AbiHAKam (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2022 06:30:42 -0400
+Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 508402B61D;
+        Mon,  1 Aug 2022 03:30:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1659349833; x=1690885833;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=eGo0V8fFrWREYTwhr5/rcZuEs8MyHDPd7UAYMxVJyHY=;
+  b=ax+iUAh/dAM0BaCpP8FLGn0pR55ML8BISXJWj+hUUcwFGrsg6aHP1T6s
+   +8w8/g59E/sn3RAN1RMLpwVdypf8r/wpXoQ71BWrla6C1jviDLaIeCMbM
+   SPKuAksycfDcxE+szAVB8RajmPGhu9QCgzx/bO8h/cXKvRdxgNUEBIlrQ
+   Tbz6L0xZsAt540oXrU/rEN84WnQ2okG4or/wc54QE631eRFMcxukCoaAZ
+   JC5zlspFrLV6RQ9ZVk4X+KA3UThmjaGY4JJPCvV6eZT9ZLs+5guFdyZOM
+   66bffWghbrqLDkqqHS9ANmNI6sSKlaDl0H6tozSNtY93vfbAzB004qig2
+   g==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10425"; a="289125299"
+X-IronPort-AV: E=Sophos;i="5.93,206,1654585200"; 
+   d="scan'208";a="289125299"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Aug 2022 03:30:30 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.93,206,1654585200"; 
+   d="scan'208";a="552469679"
+Received: from lkp-server01.sh.intel.com (HELO e0eace57cfef) ([10.239.97.150])
+  by orsmga003.jf.intel.com with ESMTP; 01 Aug 2022 03:30:27 -0700
+Received: from kbuild by e0eace57cfef with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1oISgs-000F1v-1U;
+        Mon, 01 Aug 2022 10:30:26 +0000
+Date:   Mon, 1 Aug 2022 18:29:42 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Daniil Lunev <dlunev@chromium.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Stanley Chu <chu.stanley@gmail.com>
+Cc:     kbuild-all@lists.01.org, Daniil Lunev <dlunev@chromium.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v2] ufs: core: ufshcd: use local_clock() for debugging
+ timestamps
+Message-ID: <202208011814.gx9OZFDF-lkp@intel.com>
+References: <20220801142931.v2.1.I699244ea7efbd326a34a6dfd9b5a31e78400cf68@changeid>
 MIME-Version: 1.0
-References: <20220722094612.78583-1-slark_xiao@163.com>
-In-Reply-To: <20220722094612.78583-1-slark_xiao@163.com>
-From:   Jinpu Wang <jinpu.wang@ionos.com>
-Date:   Mon, 1 Aug 2022 11:35:33 +0200
-Message-ID: <CAMGffEnpVKB4z2zz-5WpneU3P3n4T7HO8A=su7yFPyX1WNyj2Q@mail.gmail.com>
-Subject: Re: [PATCH] scsi: pm8001: Fix typo 'the the' in comment
-To:     Slark Xiao <slark_xiao@163.com>
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        jinpu.wang@ionos.com, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220801142931.v2.1.I699244ea7efbd326a34a6dfd9b5a31e78400cf68@changeid>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Jul 22, 2022 at 11:46 AM Slark Xiao <slark_xiao@163.com> wrote:
->
-> Replace 'the the' with 'the' in the comment.
->
-> Signed-off-by: Slark Xiao <slark_xiao@163.com>
-Acked-by: Jack Wang <jinpu.wang@ionos.com>
-> ---
->  drivers/scsi/pm8001/pm8001_hwi.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-> index 4acaff479916..91d78d0a38fe 100644
-> --- a/drivers/scsi/pm8001/pm8001_hwi.c
-> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
-> @@ -3138,7 +3138,7 @@ int pm8001_mpi_local_phy_ctl(struct pm8001_hba_info *pm8001_ha, void *piomb)
->   *
->   * when HBA driver received the identify done event or initiate FIS received
->   * event(for SATA), it will invoke this function to notify the sas layer that
-> - * the sas toplogy has formed, please discover the the whole sas domain,
-> + * the sas toplogy has formed, please discover the whole sas domain,
->   * while receive a broadcast(change) primitive just tell the sas
->   * layer to discover the changed domain rather than the whole domain.
->   */
-> --
-> 2.25.1
->
+Hi Daniil,
+
+Thank you for the patch! Yet something to improve:
+
+[auto build test ERROR on jejb-scsi/for-next]
+[also build test ERROR on mkp-scsi/for-next linus/master v5.19 next-20220728]
+[cannot apply to bvanassche/for-next]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Daniil-Lunev/ufs-core-ufshcd-use-local_clock-for-debugging-timestamps/20220801-123157
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+config: i386-randconfig-a005 (https://download.01.org/0day-ci/archive/20220801/202208011814.gx9OZFDF-lkp@intel.com/config)
+compiler: gcc-11 (Debian 11.3.0-3) 11.3.0
+reproduce (this is a W=1 build):
+        # https://github.com/intel-lab-lkp/linux/commit/45a46347597e5c368c27a9fe01e400af675eb5e9
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Daniil-Lunev/ufs-core-ufshcd-use-local_clock-for-debugging-timestamps/20220801-123157
+        git checkout 45a46347597e5c368c27a9fe01e400af675eb5e9
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        make W=1 O=build_dir ARCH=i386 SHELL=/bin/bash drivers/ufs/core/
+
+If you fix the issue, kindly add following tag where applicable
+Reported-by: kernel test robot <lkp@intel.com>
+
+All errors (new ones prefixed by >>):
+
+   drivers/ufs/core/ufshcd.c: In function 'ufshcd_send_command':
+>> drivers/ufs/core/ufshcd.c:2143:46: error: implicit declaration of function 'local_clock'; did you mean 'local_lock'? [-Werror=implicit-function-declaration]
+    2143 |         lrbp->issue_time_stamp_local_clock = local_clock();
+         |                                              ^~~~~~~~~~~
+         |                                              local_lock
+   cc1: some warnings being treated as errors
+
+
+vim +2143 drivers/ufs/core/ufshcd.c
+
+  2130	
+  2131	/**
+  2132	 * ufshcd_send_command - Send SCSI or device management commands
+  2133	 * @hba: per adapter instance
+  2134	 * @task_tag: Task tag of the command
+  2135	 */
+  2136	static inline
+  2137	void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
+  2138	{
+  2139		struct ufshcd_lrb *lrbp = &hba->lrb[task_tag];
+  2140		unsigned long flags;
+  2141	
+  2142		lrbp->issue_time_stamp = ktime_get();
+> 2143		lrbp->issue_time_stamp_local_clock = local_clock();
+  2144		lrbp->compl_time_stamp = ktime_set(0, 0);
+  2145		lrbp->compl_time_stamp_local_clock = 0;
+  2146		ufshcd_add_command_trace(hba, task_tag, UFS_CMD_SEND);
+  2147		ufshcd_clk_scaling_start_busy(hba);
+  2148		if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
+  2149			ufshcd_start_monitor(hba, lrbp);
+  2150	
+  2151		spin_lock_irqsave(&hba->outstanding_lock, flags);
+  2152		if (hba->vops && hba->vops->setup_xfer_req)
+  2153			hba->vops->setup_xfer_req(hba, task_tag, !!lrbp->cmd);
+  2154		__set_bit(task_tag, &hba->outstanding_reqs);
+  2155		ufshcd_writel(hba, 1 << task_tag, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+  2156		spin_unlock_irqrestore(&hba->outstanding_lock, flags);
+  2157	}
+  2158	
+
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
