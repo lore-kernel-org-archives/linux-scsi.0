@@ -2,119 +2,214 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0541EC00144
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Aug 2022 14:32:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10344C00144
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Aug 2022 14:34:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231553AbiHAOco (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 Aug 2022 10:32:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46256 "EHLO
+        id S232351AbiHAOeH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 1 Aug 2022 10:34:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230452AbiHAOcl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2022 10:32:41 -0400
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46AF724BF7
-        for <linux-scsi@vger.kernel.org>; Mon,  1 Aug 2022 07:32:39 -0700 (PDT)
-X-UUID: 3af1ea06c24b415da2234987f49c9050-20220801
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.8,REQID:ca11299a-27cb-4f5d-961a-497d0c608c59,OB:0,LO
-        B:0,IP:0,URL:5,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,RULE:Release_Ham,ACTI
-        ON:release,TS:5
-X-CID-META: VersionHash:0f94e32,CLOUDID:f353ead0-841b-4e95-ad42-8f86e18f54fc,C
-        OID:IGNORED,Recheck:0,SF:nil,TC:nil,Content:0,EDM:-3,IP:nil,URL:1,File:nil
-        ,QS:nil,BEC:nil,COL:0
-X-UUID: 3af1ea06c24b415da2234987f49c9050-20220801
-Received: from mtkmbs11n1.mediatek.inc [(172.21.101.185)] by mailgw02.mediatek.com
-        (envelope-from <peter.wang@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 777971090; Mon, 01 Aug 2022 22:32:33 +0800
-Received: from mtkmbs11n1.mediatek.inc (172.21.101.186) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.792.3;
- Mon, 1 Aug 2022 22:32:32 +0800
-Received: from [172.21.84.99] (172.21.84.99) by mtkmbs11n1.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.2.792.15 via Frontend
- Transport; Mon, 1 Aug 2022 22:32:32 +0800
-Subject: Re: [PATCH v1 2/2] ufs: host: support wb toggle with clock scaling
-To:     Bean Huo <huobean@gmail.com>, <stanley.chu@mediatek.com>,
-        <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
-        <jejb@linux.ibm.com>
-CC:     <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-        <chun-hung.wu@mediatek.com>, <alice.chao@mediatek.com>,
-        <cc.chou@mediatek.com>, <chaotian.jing@mediatek.com>,
-        <jiajie.hao@mediatek.com>, <powen.kao@mediatek.com>,
-        <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>
-References: <20220728071637.22364-1-peter.wang@mediatek.com>
- <20220728071637.22364-3-peter.wang@mediatek.com>
- <ea3b173cb2575dbb81cb416469880c50dd536bd0.camel@gmail.com>
-From:   Peter Wang <peter.wang@mediatek.com>
-Message-ID: <df7e2f8a-4f49-d1fa-7090-18b4f086b608@mediatek.com>
-Date:   Mon, 1 Aug 2022 22:32:31 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        with ESMTP id S231351AbiHAOeG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2022 10:34:06 -0400
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AFA2226AD7;
+        Mon,  1 Aug 2022 07:34:03 -0700 (PDT)
+Received: from dggpemm500022.china.huawei.com (unknown [172.30.72.53])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4LxLC81nkwz1M8Sh;
+        Mon,  1 Aug 2022 22:31:00 +0800 (CST)
+Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
+ dggpemm500022.china.huawei.com (7.185.36.162) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Mon, 1 Aug 2022 22:34:00 +0800
+Received: from huawei.com (10.175.101.6) by dggpemm500017.china.huawei.com
+ (7.185.36.178) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Mon, 1 Aug
+ 2022 22:33:59 +0800
+From:   Wenchao Hao <haowenchao@huawei.com>
+To:     Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
+        "Mike Christie" <michael.christie@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+CC:     Wenchao Hao <haowenchao@huawei.com>, <linfeilong@huawei.com>
+Subject: [PATCH v3] scsi: iscsi: Fix multiple iscsi session unbind event sent to userspace
+Date:   Mon, 1 Aug 2022 23:47:29 -0400
+Message-ID: <20220802034729.2566787-1-haowenchao@huawei.com>
+X-Mailer: git-send-email 2.32.0
 MIME-Version: 1.0
-In-Reply-To: <ea3b173cb2575dbb81cb416469880c50dd536bd0.camel@gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.101.6]
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ dggpemm500017.china.huawei.com (7.185.36.178)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+I found an issue that kernel would send ISCSI_KEVENT_UNBIND_SESSION
+for multiple times which should be fixed.
 
-On 7/29/22 5:57 AM, Bean Huo wrote:
-> On Thu, 2022-07-28 at 15:16 +0800, peter.wang@mediatek.com wrote:
->> From: Peter Wang <peter.wang@mediatek.com>
->>
->> Set UFSHCD_CAP_WB_WITH_CLK_SCALING for qcom to compatible legacy
->> design.
->>
->> Signed-off-by: Peter Wang <peter.wang@mediatek.com>
->> ---
->>   drivers/ufs/host/ufs-qcom.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-
->> qcom.c
->> index f10d4668814c..f8c9a78e7776 100644
->> --- a/drivers/ufs/host/ufs-qcom.c
->> +++ b/drivers/ufs/host/ufs-qcom.c
->> @@ -869,7 +869,7 @@ static void ufs_qcom_set_caps(struct ufs_hba
->> *hba)
->>          struct ufs_qcom_host *host = ufshcd_get_variant(hba);
->>   
->>          hba->caps |= UFSHCD_CAP_CLK_GATING |
->> UFSHCD_CAP_HIBERN8_WITH_CLK_GATING;
->> -       hba->caps |= UFSHCD_CAP_CLK_SCALING;
->> +       hba->caps |= UFSHCD_CAP_CLK_SCALING |
->> UFSHCD_CAP_WB_WITH_CLK_SCALING;
->>          hba->caps |= UFSHCD_CAP_AUTO_BKOPS_SUSPEND;
->>          hba->caps |= UFSHCD_CAP_WB_EN;
->>          hba->caps |= UFSHCD_CAP_CRYPTO;
-> Hi peter,
->
-> If WB is on/off based on clk scaling up/down is legacy design, maybe
-> you have a more advanced design. It is true there is an issue since we
-> didn't differentiate the read or write. WB is only for write. How to
-> know this time clk scaling is for write from driver level, not possible
-> now.
->
-> Kind regards,
-> Bean
+This patch introduce target_state in iscsi_cls_session to make
+sure session would send only one ISCSI_KEVENT_UNBIND_SESSION.
 
-Hi Bean,
+But this would break issue fixed in commit 13e60d3ba287 ("scsi: iscsi:
+Report unbind session event when the target has been removed"). The issue
+is iscsid died for any reason after it send unbind session to kernel, once
+iscsid restart again, it loss kernel's ISCSI_KEVENT_UNBIND_SESSION event.
 
-Yes, we don't know if clock scaling up/down is for write or read.
-But we want to keep WB always on even clock scaling down.
-This is why we need this patch, let different host can choose toggle wb 
-or not.
+Now kernel think iscsi_cls_session has already sent an
+ISCSI_KEVENT_UNBIND_SESSION event and would not send it any more. Which
+would cause userspace unable to logout. Actually the session is in
+invalid state(it's target_id is INVALID), iscsid should not sync this
+session in it's restart.
 
-Thanks.
-Peter
+So we need to check session's target state during iscsid restart,
+if session is in unbound state, do not sync this session and perform
+session teardown. It's reasonable because once a session is unbound, we
+can not recover it any more(mainly because it's target id is INVALID)
 
+Changes from V2:
+- Make target bind state to a state kind rather than a bool.
 
+Changes from V1:
+- Using target_unbound rather than state to indicate session has been
+  unbound
 
+Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
+---
+ drivers/scsi/scsi_transport_iscsi.c | 49 +++++++++++++++++++++++++++++
+ include/scsi/scsi_transport_iscsi.h |  7 +++++
+ 2 files changed, 56 insertions(+)
 
-
-
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 5d21f07456c6..43d48ddfea07 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -1676,6 +1676,29 @@ static const char *iscsi_session_state_name(int state)
+ 	return name;
+ }
+ 
++static struct {
++	int value;
++	char *name;
++} iscsi_session_target_state_names[] = {
++	{ ISCSI_SESSION_TARGET_UNBOUND,		"UNBOUND" },
++	{ ISCSI_SESSION_TARGET_BOUND,		"BOUND" },
++	{ ISCSI_SESSION_TARGET_UNBINDING,	"UNBINDING" },
++};
++
++static const char *iscsi_session_target_state_name(int state)
++{
++	int i;
++	char *name = NULL;
++
++	for (i = 0; i < ARRAY_SIZE(iscsi_session_target_state_names); i++) {
++		if (iscsi_session_target_state_names[i].value == state) {
++			name = iscsi_session_target_state_names[i].name;
++			break;
++		}
++	}
++	return name;
++}
++
+ int iscsi_session_chkready(struct iscsi_cls_session *session)
+ {
+ 	int err;
+@@ -1899,6 +1922,7 @@ static void __iscsi_unblock_session(struct work_struct *work)
+ 	cancel_delayed_work_sync(&session->recovery_work);
+ 	spin_lock_irqsave(&session->lock, flags);
+ 	session->state = ISCSI_SESSION_LOGGED_IN;
++	session->target_state = ISCSI_SESSION_TARGET_BOUND;
+ 	spin_unlock_irqrestore(&session->lock, flags);
+ 	/* start IO */
+ 	scsi_target_unblock(&session->dev, SDEV_RUNNING);
+@@ -1961,6 +1985,15 @@ static void __iscsi_unbind_session(struct work_struct *work)
+ 	unsigned long flags;
+ 	unsigned int target_id;
+ 
++	spin_lock_irqsave(&session->lock, flags);
++	if (session->target_state != ISCSI_SESSION_TARGET_BOUND) {
++		ISCSI_DBG_TRANS_SESSION(session, "Abort unbind sesison\n");
++		spin_unlock_irqrestore(&session->lock, flags);
++		return;
++	}
++	session->target_state = ISCSI_SESSION_TARGET_UNBINDING;
++	spin_unlock_irqrestore(&session->lock, flags);
++
+ 	ISCSI_DBG_TRANS_SESSION(session, "Unbinding session\n");
+ 
+ 	/* Prevent new scans and make sure scanning is not in progress */
+@@ -1984,6 +2017,9 @@ static void __iscsi_unbind_session(struct work_struct *work)
+ 
+ unbind_session_exit:
+ 	iscsi_session_event(session, ISCSI_KEVENT_UNBIND_SESSION);
++	spin_lock_irqsave(&session->lock, flags);
++	session->target_state = ISCSI_SESSION_TARGET_UNBOUND;
++	spin_unlock_irqrestore(&session->lock, flags);
+ 	ISCSI_DBG_TRANS_SESSION(session, "Completed target removal\n");
+ }
+ 
+@@ -4324,6 +4360,16 @@ iscsi_session_attr(def_taskmgmt_tmo, ISCSI_PARAM_DEF_TASKMGMT_TMO, 0);
+ iscsi_session_attr(discovery_parent_idx, ISCSI_PARAM_DISCOVERY_PARENT_IDX, 0);
+ iscsi_session_attr(discovery_parent_type, ISCSI_PARAM_DISCOVERY_PARENT_TYPE, 0);
+ 
++static ssize_t
++show_priv_session_target_state(struct device *dev, struct device_attribute *attr,
++			char *buf)
++{
++	struct iscsi_cls_session *session = iscsi_dev_to_session(dev->parent);
++	return sysfs_emit(buf, "%s\n",
++			iscsi_session_target_state_name(session->target_state));
++}
++static ISCSI_CLASS_ATTR(priv_sess, target_state, S_IRUGO,
++			show_priv_session_target_state, NULL);
+ static ssize_t
+ show_priv_session_state(struct device *dev, struct device_attribute *attr,
+ 			char *buf)
+@@ -4426,6 +4472,7 @@ static struct attribute *iscsi_session_attrs[] = {
+ 	&dev_attr_sess_boot_target.attr,
+ 	&dev_attr_priv_sess_recovery_tmo.attr,
+ 	&dev_attr_priv_sess_state.attr,
++	&dev_attr_priv_sess_target_state.attr,
+ 	&dev_attr_priv_sess_creator.attr,
+ 	&dev_attr_sess_chap_out_idx.attr,
+ 	&dev_attr_sess_chap_in_idx.attr,
+@@ -4539,6 +4586,8 @@ static umode_t iscsi_session_attr_is_visible(struct kobject *kobj,
+ 		return S_IRUGO | S_IWUSR;
+ 	else if (attr == &dev_attr_priv_sess_state.attr)
+ 		return S_IRUGO;
++	else if (attr == &dev_attr_priv_sess_target_state.attr)
++		return S_IRUGO;
+ 	else if (attr == &dev_attr_priv_sess_creator.attr)
+ 		return S_IRUGO;
+ 	else if (attr == &dev_attr_priv_sess_target_id.attr)
+diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+index 9acb8422f680..377b039eefdd 100644
+--- a/include/scsi/scsi_transport_iscsi.h
++++ b/include/scsi/scsi_transport_iscsi.h
+@@ -236,6 +236,12 @@ enum {
+ 	ISCSI_SESSION_FREE,
+ };
+ 
++enum {
++	ISCSI_SESSION_TARGET_UNBOUND,
++	ISCSI_SESSION_TARGET_BOUND,
++	ISCSI_SESSION_TARGET_UNBINDING,
++};
++
+ #define ISCSI_MAX_TARGET -1
+ 
+ struct iscsi_cls_session {
+@@ -264,6 +270,7 @@ struct iscsi_cls_session {
+ 	 */
+ 	pid_t creator;
+ 	int state;
++	int target_state;			/* session target bind state */
+ 	int sid;				/* session id */
+ 	void *dd_data;				/* LLD private data */
+ 	struct device dev;	/* sysfs transport/container device */
+-- 
+2.32.0
 
