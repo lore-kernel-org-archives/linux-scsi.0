@@ -2,64 +2,67 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AFB7C00140
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Aug 2022 11:23:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EDE3C00140
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Aug 2022 12:16:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236614AbiHBLXm convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Aug 2022 07:23:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55844 "EHLO
+        id S236483AbiHBMQa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Aug 2022 08:16:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37268 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231860AbiHBLXl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Aug 2022 07:23:41 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F01A3E740;
-        Tue,  2 Aug 2022 04:23:39 -0700 (PDT)
-Received: from kwepemi100016.china.huawei.com (unknown [172.30.72.53])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Lxsvs5jP5zWfFn;
-        Tue,  2 Aug 2022 19:19:37 +0800 (CST)
-Received: from canpemm500008.china.huawei.com (7.192.105.151) by
- kwepemi100016.china.huawei.com (7.221.188.123) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 2 Aug 2022 19:23:36 +0800
-Received: from canpemm500008.china.huawei.com ([7.192.105.151]) by
- canpemm500008.china.huawei.com ([7.192.105.151]) with mapi id 15.01.2375.024;
- Tue, 2 Aug 2022 19:23:36 +0800
-From:   "lijinlin (A)" <lijinlin3@huawei.com>
-To:     "lduncan@suse.com" <lduncan@suse.com>,
-        "cleech@redhat.com" <cleech@redhat.com>,
-        "michael.christie@oracle.com" <michael.christie@oracle.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "mark.mielke@gmail.com" <mark.mielke@gmail.com>
-CC:     "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linfeilong <linfeilong@huawei.com>,
-        "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>
-Subject: RE: [PATCH] scsi: iscsi: iscsi_tcp: Fix null-ptr-deref while calling
- getpeername()
-Thread-Topic: [PATCH] scsi: iscsi: iscsi_tcp: Fix null-ptr-deref while calling
- getpeername()
-Thread-Index: AQHYplPSHTFXshUY502LyLNPnnKlQa2bdgFg
-Date:   Tue, 2 Aug 2022 11:23:36 +0000
-Message-ID: <d8afc88468ab481eb325e842ad384e0e@huawei.com>
-References: <20220802101939.3972556-1-lijinlin3@huawei.com>
-In-Reply-To: <20220802101939.3972556-1-lijinlin3@huawei.com>
-Accept-Language: zh-CN, en-US
-Content-Language: zh-CN
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [10.174.179.2]
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+        with ESMTP id S233511AbiHBMQ3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Aug 2022 08:16:29 -0400
+Received: from smtpbg.qq.com (unknown [43.155.67.158])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02914262C;
+        Tue,  2 Aug 2022 05:16:23 -0700 (PDT)
+X-QQ-mid: bizesmtp91t1659442572tox89pbw
+Received: from kali.lan ( [125.69.43.47])
+        by bizesmtp.qq.com (ESMTP) with 
+        id ; Tue, 02 Aug 2022 20:16:10 +0800 (CST)
+X-QQ-SSF: 01000000002000F0U000B00A0000020
+X-QQ-FEAT: zT6n3Y95oi0+GF2rz41IpklRcaOGRreCB/vyXaTX2YbnxIVMbcZECTfR9yO/3
+        8npwl5Hj4lgtsMU4s/TMXiG0u2PUaRHZ8fHYtPbo2E/EelUGWi+5+4MV+jHV/ArGO1Dod8E
+        Sz6nKxkDksp+W0UJod80LdUSoUxw9VXV9pAkYKjQJaSmPuqVh3TQYyOQpAzdhX/+JvWsg8q
+        vQa+5hYtmzxp+ORs8hOwx43XouR9wfkvQfcdcjGyx3hE2JCmdbn1a1N00BbQn1x1Iwpgaih
+        QaiptHfzunkKEeqmhPO8AvJVWeurP/C+I28AzPye4kXEF8MeUMQK3ru3PCPNycWYoZ4nFGY
+        Kt0DjypTV/CNrBOMKf0VDbM6ZR/ALj51n8sSo1CzYptwRqo3d7+yAVh2/gFEg==
+X-QQ-GoodBg: 0
+From:   Jason Wang <wangborong@cdjrlc.com>
+To:     martin.petersen@oracle.com
+Cc:     james.smart@broadcom.com, dick.kennedy@broadcom.com,
+        jejb@linux.ibm.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Jason Wang <wangborong@cdjrlc.com>
+Subject: [PATCH] scsi: lpfc: Fix comment typo
+Date:   Wed,  3 Aug 2022 04:16:09 +0800
+Message-Id: <20220802201609.7788-1-wangborong@cdjrlc.com>
+X-Mailer: git-send-email 2.35.1
 MIME-Version: 1.0
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: bizesmtp:cdjrlc.com:qybglogicsvr:qybglogicsvr6
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-So sorry, this patch has problem, please ignore.
+The double `from' is duplicated in the comment, remove one.
 
-Thanks
-Li Jinlin
+Signed-off-by: Jason Wang <wangborong@cdjrlc.com>
+---
+ drivers/scsi/lpfc/lpfc_debugfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index 5037ea09a810..89c59d9fd040 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -2538,7 +2538,7 @@ lpfc_debugfs_lseek(struct file *file, loff_t off, int whence)
+  * @ppos: The position in the file to start reading from.
+  *
+  * Description:
+- * This routine reads data from from the buffer indicated in the private_data
++ * This routine reads data from the buffer indicated in the private_data
+  * field of @file. It will start reading at @ppos and copy up to @nbytes of
+  * data to @buf.
+  *
+-- 
+2.35.1
+
