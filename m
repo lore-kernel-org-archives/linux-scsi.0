@@ -2,160 +2,159 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0892C19F2B
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Aug 2022 08:14:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B5D5C00140
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Aug 2022 08:43:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236362AbiHBIOe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Aug 2022 04:14:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52302 "EHLO
+        id S235400AbiHBIn4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Aug 2022 04:43:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45716 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233206AbiHBIOc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Aug 2022 04:14:32 -0400
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id CB0E540BDE;
-        Tue,  2 Aug 2022 01:14:31 -0700 (PDT)
-Received: from [192.168.1.87] (unknown [122.171.18.126])
-        by linux.microsoft.com (Postfix) with ESMTPSA id 0FF1120FEB3D;
-        Tue,  2 Aug 2022 01:14:28 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 0FF1120FEB3D
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-        s=default; t=1659428071;
-        bh=e9jMP+l1EBs7edkrR5yZ/P6HawFIJg7Wsf/tP8c1hH0=;
-        h=Date:Subject:To:References:From:In-Reply-To:From;
-        b=sXcg7ueT90KrfILlIRM1HvHe29gKYoqSsyMQQeLTWwjG/2yXmE0aR2uVg0MLLbabt
-         bFLzzVExKfHih7h+hz22WEJriYgk9tSIr380HorDd/SRNsmSyQsKfrYRToXiqRvEob
-         v/XBrdiMYQPyzKMTC6bhLKTBeUWwNFvx6GIrQrRE=
-Message-ID: <33983fa2-c9a8-1ac1-2f75-8360a077cfc2@linux.microsoft.com>
-Date:   Tue, 2 Aug 2022 13:44:23 +0530
+        with ESMTP id S234821AbiHBIny (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Aug 2022 04:43:54 -0400
+Received: from mail-oa1-x2d.google.com (mail-oa1-x2d.google.com [IPv6:2001:4860:4864:20::2d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB52221E0B
+        for <linux-scsi@vger.kernel.org>; Tue,  2 Aug 2022 01:43:53 -0700 (PDT)
+Received: by mail-oa1-x2d.google.com with SMTP id 586e51a60fabf-10ea9ef5838so11057144fac.3
+        for <linux-scsi@vger.kernel.org>; Tue, 02 Aug 2022 01:43:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc;
+        bh=gpnuLZQRXUjofJzZBaY/CPnTkiNyRaRYAr3iATqFgQU=;
+        b=aafK5xMjjzXUjSC02XynC8HTgypSLenhPBDz6XYMBTYJakh2sInhv8F1GLVRsG6H07
+         vjOWAkDsqs8V1TNmI2Ge2FlPelvFgjtUXF4O3m9I2pP/3FXHMNLZ8VkJ0xUskzdsrowW
+         9FiQvJI7crqkSSU/GCx08Dt2igk4p9i7FDxL0=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc;
+        bh=gpnuLZQRXUjofJzZBaY/CPnTkiNyRaRYAr3iATqFgQU=;
+        b=NtMUFEBYtw2OWGjUMhFEzd9xyam/Dt+6gIlKkp7iwT5B+cR0cnt5H1LYk9qu4wdqDU
+         GOWpbOeCn/hdiwHp0VGx8laSvL4xh8q9CHNQk4cPIWZiWGf1Fge+qi8PabcWMeVRZPlb
+         vSUHOYgKpS4yG5XKvd0vvwlDaBLC7HqKAtyRzevs4vqnNRax91a9GyxMgIzYOByWERwS
+         COEd3DFMsnKLddY889hLLgcydmuufo7OY4fomJaAY+sgAxXDK5yTiCtM8AgBnnEOdpdt
+         eH5B/CGJxJ+wdsZ8y9yz8HiD5ifFnL8o4y6wttPUssP4RLS6/OaL+FGbaNi8ZTTzwo3u
+         BJvQ==
+X-Gm-Message-State: AJIora8h9p1hZAMjH8erV4CWWKiylA8qZR23fuBv+pAvGXfOK2K46xcI
+        zJgy+gw3ztPqbkNW/bwX4ll309c30kmevxNue7X3dMg0BmuPyg==
+X-Google-Smtp-Source: AGRyM1uHBHsMkkkBOp5CCviL0P25vAa0axEa80MigscmnZG0PI7sgcWtQwSusRwthluBP8qkPLjcqLGXaBMnKxjMkuY=
+X-Received: by 2002:a05:6870:ec93:b0:10e:75ae:8177 with SMTP id
+ eo19-20020a056870ec9300b0010e75ae8177mr8977114oab.234.1659429833050; Tue, 02
+ Aug 2022 01:43:53 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [PATCH] Drivers: hv: vmbus: Optimize vmbus_on_event
-Content-Language: en-US
-To:     Saurabh Sengar <ssengar@linux.microsoft.com>, kys@microsoft.com,
-        haiyangz@microsoft.com, sthemmin@microsoft.com, wei.liu@kernel.org,
-        decui@microsoft.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-hyperv@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <1658741848-4210-1-git-send-email-ssengar@linux.microsoft.com>
-From:   Praveen Kumar <kumarpraveen@linux.microsoft.com>
-In-Reply-To: <1658741848-4210-1-git-send-email-ssengar@linux.microsoft.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <20220801124144.11458-1-sreekanth.reddy@broadcom.com>
+ <20220801124144.11458-4-sreekanth.reddy@broadcom.com> <YugUOiB6k8rcH87N@infradead.org>
+In-Reply-To: <YugUOiB6k8rcH87N@infradead.org>
+From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Date:   Tue, 2 Aug 2022 14:13:42 +0530
+Message-ID: <CAK=zhgoJJLshCb6VLgo1Htjg1BEw3FXtCJQkJVsAYGQ7Lu0mjw@mail.gmail.com>
+Subject: Re: [PATCH 3/4] mpt3sas: Increase cmd_per_lun to 128
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="000000000000bfcb1405e53e1d73"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 25-07-2022 15:07, Saurabh Sengar wrote:
-> In the vmbus_on_event loop, 2 jiffies timer will not serve the purpose if
-> callback_fn takes longer. For effective use move this check inside of
-> callback functions where needed. Out of all the VMbus drivers using
-> vmbus_on_event, only storvsc has a high packet volume, thus add this limit
-> only in storvsc callback for now.
-> There is no apparent benefit of loop itself because this tasklet will be
-> scheduled anyway again if there are packets left in ring buffer. This
-> patch removes this unnecessary loop as well.
-> 
+--000000000000bfcb1405e53e1d73
+Content-Type: text/plain; charset="UTF-8"
 
-In my understanding the loop was for optimizing the host to guest signaling for batched channels.
-And the loop ensures that we process all the posted messages from the host before returning from the respective callbacks.
+On Mon, Aug 1, 2022 at 11:28 PM Christoph Hellwig <hch@infradead.org> wrote:
+>
+> On Mon, Aug 01, 2022 at 06:11:43PM +0530, Sreekanth Reddy wrote:
+> > Increase cmd_per_lun to 128
+>
+> Why?
 
-Am I missing something here.
+In one of the earlier thread (mpt3sas fails to allocate budget_map and
+detects no devices -
+https://lore.kernel.org/all/YdcZwVUFGUPgkbLn@T590/T/) it has been
+mentioned that cmd_per_lun with value 7 is so small and hence we
+thought it is better to increase it to 128.
 
-> Signed-off-by: Saurabh Sengar <ssengar@linux.microsoft.com>
-> ---
->  drivers/hv/connection.c    | 33 ++++++++++++++-------------------
->  drivers/scsi/storvsc_drv.c |  9 +++++++++
->  2 files changed, 23 insertions(+), 19 deletions(-)
-> 
-> diff --git a/drivers/hv/connection.c b/drivers/hv/connection.c
-> index eca7afd..9dc27e5 100644
-> --- a/drivers/hv/connection.c
-> +++ b/drivers/hv/connection.c
-> @@ -431,34 +431,29 @@ struct vmbus_channel *relid2channel(u32 relid)
->  void vmbus_on_event(unsigned long data)
->  {
->  	struct vmbus_channel *channel = (void *) data;
-> -	unsigned long time_limit = jiffies + 2;
-> +	void (*callback_fn)(void *context);
->  
->  	trace_vmbus_on_event(channel);
->  
->  	hv_debug_delay_test(channel, INTERRUPT_DELAY);
-> -	do {
-> -		void (*callback_fn)(void *);
->  
-> -		/* A channel once created is persistent even when
-> -		 * there is no driver handling the device. An
-> -		 * unloading driver sets the onchannel_callback to NULL.
-> -		 */
-> -		callback_fn = READ_ONCE(channel->onchannel_callback);
-> -		if (unlikely(callback_fn == NULL))
-> -			return;
-> -
-> -		(*callback_fn)(channel->channel_callback_context);
-> +	/* A channel once created is persistent even when
-> +	 * there is no driver handling the device. An
-> +	 * unloading driver sets the onchannel_callback to NULL.
-> +	 */
-> +	callback_fn = READ_ONCE(channel->onchannel_callback);
-> +	if (unlikely(!callback_fn))
-> +		return;
->  
-> -		if (channel->callback_mode != HV_CALL_BATCHED)
-> -			return;
-> +	(*callback_fn)(channel->channel_callback_context);
->  
-> -		if (likely(hv_end_read(&channel->inbound) == 0))
-> -			return;
-> +	if (channel->callback_mode != HV_CALL_BATCHED)
-> +		return;
->  
-> -		hv_begin_read(&channel->inbound);
-> -	} while (likely(time_before(jiffies, time_limit)));
-> +	if (likely(hv_end_read(&channel->inbound) == 0))
-> +		return;
->  
-> -	/* The time limit (2 jiffies) has been reached */
-> +	hv_begin_read(&channel->inbound);
->  	tasklet_schedule(&channel->callback_event);
->  }
->  
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index fe000da..c457e6b 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -60,6 +60,9 @@
->  #define VMSTOR_PROTO_VERSION_WIN8_1	VMSTOR_PROTO_VERSION(6, 0)
->  #define VMSTOR_PROTO_VERSION_WIN10	VMSTOR_PROTO_VERSION(6, 2)
->  
-> +/* channel callback timeout in ms */
-> +#define CALLBACK_TIMEOUT               2
-> +
->  /*  Packet structure describing virtual storage requests. */
->  enum vstor_packet_operation {
->  	VSTOR_OPERATION_COMPLETE_IO		= 1,
-> @@ -1204,6 +1207,7 @@ static void storvsc_on_channel_callback(void *context)
->  	struct hv_device *device;
->  	struct storvsc_device *stor_device;
->  	struct Scsi_Host *shost;
-> +	unsigned long time_limit = jiffies + msecs_to_jiffies(CALLBACK_TIMEOUT);
->  
->  	if (channel->primary_channel != NULL)
->  		device = channel->primary_channel->device_obj;
-> @@ -1224,6 +1228,11 @@ static void storvsc_on_channel_callback(void *context)
->  		u32 minlen = rqst_id ? sizeof(struct vstor_packet) :
->  			sizeof(enum vstor_packet_operation);
->  
-> +		if (unlikely(time_after(jiffies, time_limit))) {
-> +			hv_pkt_iter_close(channel);
-> +			return;
-> +		}
-> +
->  		if (pktlen < minlen) {
->  			dev_err(&device->device,
->  				"Invalid pkt: id=%llu, len=%u, minlen=%u\n",
+Thanks,
+Sreekanth
 
-Regards,
+--000000000000bfcb1405e53e1d73
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
-~Praveen.
+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
+5AGo2E3pe+2yEgkxKvM2fnniZHUiSjbrfKk6nl9RIXPOKUP5HntZFdA5XuNYXWM+HPs3O0AJwBm/
+VCZsZtkjVjxeBmTXiXDnxytdsHdGrHGymPfjJYatDu6d1KRVDlMCAwEAAaOCAd0wggHZMA4GA1Ud
+DwEB/wQEAwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9zZWN1cmUu
+Z2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNydDBBBggr
+BgEFBQcwAYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJj
+YTIwMjAwTQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3
+Lmdsb2JhbHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+oDygOoY4
+aHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcmww
+JwYDVR0RBCAwHoEcc3JlZWthbnRoLnJlZGR5QGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEF
+BQcDBDAfBgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUClVHbAvhzGT8
+s2/6xOf58NkGMQ8wDQYJKoZIhvcNAQELBQADggEBAENRsP1H3calKC2Sstg/8li8byKiqljCFkfi
+IhcJsjPOOR9UZnMFxAoH/s2AlM7mQDR7rZ2MxRuUnIa6Cp5W5w1lUJHktjCUHnQq5nIAZ9GH5SDY
+pgzbFsoYX8U2QCmkAC023FF++ZDJuc9aj0R/nhABxmUYErIze2jV/VO8Pj7TnCrBONZ/Qvf8G5CQ
+X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
+eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
+Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
+MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIDD8i5aS4EwOx95uMcNC
+EoizUZqh1ilwm5e32tFLGsYQMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDgwMjA4NDM1M1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQC18N+MMDInF3YU2piGkswM38AfpOCbUA+/EI6c
+SSRwZ+fPpkW+atNwiO2ViQ+Tjzs42Hn9xaA9OjQ/J+t7iqDpqiAS1WPHKozHswx//hg9Ufg4MiIQ
+WjDD30Fs4X6172RtUfItGKlXGLzpVxspm/Fb9zqHTG6ObVLurdmsKow3AND94iipkQLsFwEVydog
+0TdS9sg/vbITVyab40FEMjiMSB1zb6fKwWLYPtTTDCluMjuuYHE/fwN0d9mFC4XWOXQjoXNfN9Xb
+HkRmPsdul+muUJy9QIlxGSI1k5/AD1zWZd25JISkHcMXrJwfYARcedV/proa/dD81OKm2L0nwpiD
+--000000000000bfcb1405e53e1d73--
