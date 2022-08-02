@@ -2,192 +2,153 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB225C00140
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Aug 2022 21:50:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBB78C32766
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Aug 2022 22:13:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232270AbiHBVuW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Aug 2022 17:50:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58992 "EHLO
+        id S236544AbiHBWMn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Aug 2022 18:12:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43230 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230205AbiHBVuT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Aug 2022 17:50:19 -0400
-Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D4CA627D
-        for <linux-scsi@vger.kernel.org>; Tue,  2 Aug 2022 14:50:17 -0700 (PDT)
-Received: by mail-pl1-x62f.google.com with SMTP id x10so13945966plb.3
-        for <linux-scsi@vger.kernel.org>; Tue, 02 Aug 2022 14:50:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=Hb89G9krB6RKM/pZci++W1IGnnGTFxYNnFvZ3OknFGs=;
-        b=k3Teggg8APeevPHASdBY5f2itpnShq02Mcu65hszc5EF41S5RxU0QA17I03FH++ZC0
-         ZVzSGXFobmTSYpYudykju17v7k5Dq16V7a7k83w2wQ5oULJ5ulf9O65WpsZhXI4KKgHT
-         9prRIi8oFh0LOOznCs8ZrVp44q4xWegLpjLIc=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=Hb89G9krB6RKM/pZci++W1IGnnGTFxYNnFvZ3OknFGs=;
-        b=kygGznqtPI+4dcYpRKs7Q/WKEVC0dazusLqfbq+BFQM5HPrWRwgsQLsMeuJknhwMa+
-         4+IU3GfsFLDfEPATd3N3YnykP0yRSeQnTbpG2xAwQWW/1gqe91sdjOGPshMg4O0ef9Sm
-         jwG34b6wre/mhH+jDdkU+LPIqRtS4pEfG/xuCs75Hg49GKbWOmcjJYbRurEBZyXoqvkR
-         vzVBmXYyx9907paX2DMY0hVKeYYphKnyCWXLqUviOGbPIWpulw1GaMau9LwjlgQw32qd
-         5oGng+/1rV896EpWKaiGkHVaIxdTHdA9e5Qz1LLmiDYAu0+2xnp2PfsGuDwpMUdCsPsj
-         vQnA==
-X-Gm-Message-State: ACgBeo1Xdkr6fLcUk0tHwntdhpJU7kQNtK40/bMymtVwBpElmwBkIH1Z
-        GCcBvNPi0l+5FnfzHG4A5nEmOg==
-X-Google-Smtp-Source: AA6agR7xtjqmZwo1XewbkN9y3rqgaqhkChFH1KXDhxYO+a3agQiGv9Sf2bftbRpMuWB8yVpO8ykD6Q==
-X-Received: by 2002:a17:90b:2241:b0:1f5:2c5e:1080 with SMTP id hk1-20020a17090b224100b001f52c5e1080mr1560747pjb.85.1659477016773;
-        Tue, 02 Aug 2022 14:50:16 -0700 (PDT)
-Received: from dlunevwfh.roam.corp.google.com (n122-107-196-14.sbr2.nsw.optusnet.com.au. [122.107.196.14])
-        by smtp.gmail.com with ESMTPSA id a25-20020a634d19000000b00419b66846fcsm9458089pgb.91.2022.08.02.14.50.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 02 Aug 2022 14:50:16 -0700 (PDT)
-From:   Daniil Lunev <dlunev@chromium.org>
-To:     Adrian Hunter <adrian.hunter@intel.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Daniil Lunev <dlunev@chromium.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <beanhuo@micron.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
-        Sohaib Mohamed <sohaib.amhmd@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [PATCH v6] ufs: core: print UFSHCD capabilities in controller's sysfs node
-Date:   Wed,  3 Aug 2022 07:50:07 +1000
-Message-Id: <20220803074955.v6.1.Ibf9efc9be50783eeee55befa2270b7d38552354c@changeid>
-X-Mailer: git-send-email 2.31.0
+        with ESMTP id S235369AbiHBWMJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Aug 2022 18:12:09 -0400
+Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5B1D54C90;
+        Tue,  2 Aug 2022 15:11:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1659478320; x=1691014320;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=dhv6+T0m4BozChdUSL5UsmZ7sbExT/0ShfHnoMLEeRA=;
+  b=igfjoPJcCkSNj2jgbjFWTNjv3yqAqfBqkL4gwHcjHYXvuHIq28LNziSx
+   pBCNz+BNYVSsaR7tRS+NjJ9pdEyPZdG+VeSqp6zvCkoEtdkoCgwE39Chz
+   B/apC7IKoT9clRSRKTv8ijAWRvAuRvdPTzJLnpWgSyOKrb1vv0hnE9HsQ
+   dj9ZRRCfpyiy9WBw4H9b57/NpmFPkY5fjgl+kXyy8FKTGydcP/SAYzLgy
+   5qOFWEHRAsYUY3ZMmPIawWWtXPttyKoCKyXrOn1/ZYSYHjbOo8M1nzpvy
+   opEHYYgceZQqsd09krsmAqH1/kL3Qoj5pyPvZlFKTSIV/RCeUlx+CjidK
+   Q==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10427"; a="269909724"
+X-IronPort-AV: E=Sophos;i="5.93,212,1654585200"; 
+   d="scan'208";a="269909724"
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Aug 2022 15:11:45 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.93,212,1654585200"; 
+   d="scan'208";a="728989347"
+Received: from lkp-server01.sh.intel.com (HELO e0eace57cfef) ([10.239.97.150])
+  by orsmga004.jf.intel.com with ESMTP; 02 Aug 2022 15:11:36 -0700
+Received: from kbuild by e0eace57cfef with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1oJ06y-000GVS-0r;
+        Tue, 02 Aug 2022 22:11:36 +0000
+Date:   Wed, 3 Aug 2022 06:11:23 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Li Jinlin <lijinlin3@huawei.com>, lduncan@suse.com,
+        cleech@redhat.com, michael.christie@oracle.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, mark.mielke@gmail.com
+Cc:     kbuild-all@lists.01.org, open-iscsi@googlegroups.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linfeilong@huawei.com, liuzhiqiang26@huawei.com
+Subject: Re: [PATCH] scsi: iscsi: iscsi_tcp: Fix null-ptr-deref while calling
+ getpeername()
+Message-ID: <202208030633.x2jgVRIa-lkp@intel.com>
+References: <20220802101939.3972556-1-lijinlin3@huawei.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220802101939.3972556-1-lijinlin3@huawei.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Allows userspace to check if Clock Scaling and Write Booster are
-supported.
+Hi Li,
 
-Signed-off-by: Daniil Lunev <dlunev@chromium.org>
+Thank you for the patch! Perhaps something to improve:
 
----
+[auto build test WARNING on mkp-scsi/for-next]
+[also build test WARNING on jejb-scsi/for-next linus/master v5.19 next-20220728]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-Changes in v6:
-* Add comment to clarify meaning of the "capbilities" sysfs group.
+url:    https://github.com/intel-lab-lkp/linux/commits/Li-Jinlin/scsi-iscsi-iscsi_tcp-Fix-null-ptr-deref-while-calling-getpeername/20220802-173945
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+config: loongarch-randconfig-s041-20220801 (https://download.01.org/0day-ci/archive/20220803/202208030633.x2jgVRIa-lkp@intel.com/config)
+compiler: loongarch64-linux-gcc (GCC) 12.1.0
+reproduce:
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # apt-get install sparse
+        # sparse version: v0.6.4-39-gce1a6720-dirty
+        # https://github.com/intel-lab-lkp/linux/commit/ccc367df3fdba07b24eeda721ca928cce50f40d2
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Li-Jinlin/scsi-iscsi-iscsi_tcp-Fix-null-ptr-deref-while-calling-getpeername/20220802-173945
+        git checkout ccc367df3fdba07b24eeda721ca928cce50f40d2
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__' O=build_dir ARCH=loongarch SHELL=/bin/bash drivers/scsi/
 
-Changes in v5:
-* Correct wording for clock scaling.
-* Correct wording for the commit message.
+If you fix the issue, kindly add following tag where applicable
+Reported-by: kernel test robot <lkp@intel.com>
 
-Changes in v4:
-* Dropped crypto node per Eric Biggers mentioning it can be queried from
-  disk's queue node
+sparse warnings: (new ones prefixed by >>)
+   drivers/scsi/iscsi_tcp.c:798:26: sparse: sparse: incorrect type in argument 1 (different base types) @@     expected unsigned int fd @@     got struct file *file @@
+   drivers/scsi/iscsi_tcp.c:798:26: sparse:     expected unsigned int fd
+   drivers/scsi/iscsi_tcp.c:798:26: sparse:     got struct file *file
+   drivers/scsi/iscsi_tcp.c:852:26: sparse: sparse: incorrect type in argument 1 (different base types) @@     expected unsigned int fd @@     got struct file *file @@
+   drivers/scsi/iscsi_tcp.c:852:26: sparse:     expected unsigned int fd
+   drivers/scsi/iscsi_tcp.c:852:26: sparse:     got struct file *file
+>> drivers/scsi/iscsi_tcp.c:798:22: sparse: sparse: non size-preserving pointer to integer cast
+   drivers/scsi/iscsi_tcp.c:852:22: sparse: sparse: non size-preserving pointer to integer cast
 
-Changes in v3:
-* Expose each capability individually.
-* Update documentation to represent new scheme.
+vim +798 drivers/scsi/iscsi_tcp.c
 
-Changes in v2:
-* Add documentation entry for the new sysfs node.
+   777	
+   778	static int iscsi_sw_tcp_conn_get_param(struct iscsi_cls_conn *cls_conn,
+   779					       enum iscsi_param param, char *buf)
+   780	{
+   781		struct iscsi_conn *conn = cls_conn->dd_data;
+   782		struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
+   783		struct iscsi_sw_tcp_conn *tcp_sw_conn = tcp_conn->dd_data;
+   784		struct sockaddr_in6 addr;
+   785		struct socket *sock;
+   786		int rc;
+   787	
+   788		switch(param) {
+   789		case ISCSI_PARAM_CONN_PORT:
+   790		case ISCSI_PARAM_CONN_ADDRESS:
+   791		case ISCSI_PARAM_LOCAL_PORT:
+   792			spin_lock_bh(&conn->session->frwd_lock);
+   793			if (!tcp_sw_conn || !tcp_sw_conn->sock) {
+   794				spin_unlock_bh(&conn->session->frwd_lock);
+   795				return -ENOTCONN;
+   796			}
+   797			sock = tcp_sw_conn->sock;
+ > 798			fget(sock->file);
+   799			spin_unlock_bh(&conn->session->frwd_lock);
+   800	
+   801			if (param == ISCSI_PARAM_LOCAL_PORT)
+   802				rc = kernel_getsockname(sock,
+   803							(struct sockaddr *)&addr);
+   804			else
+   805				rc = kernel_getpeername(sock,
+   806							(struct sockaddr *)&addr);
+   807			spin_lock_bh(&conn->session->frwd_lock);
+   808			sockfd_put(sock);
+   809			spin_unlock_bh(&conn->session->frwd_lock);
+   810			if (rc < 0)
+   811				return rc;
+   812	
+   813			return iscsi_conn_get_addr_param((struct sockaddr_storage *)
+   814							 &addr, param, buf);
+   815		default:
+   816			return iscsi_conn_get_param(cls_conn, param, buf);
+   817		}
+   818	
+   819		return 0;
+   820	}
+   821	
 
- Documentation/ABI/testing/sysfs-driver-ufs | 26 +++++++++++++++
- drivers/ufs/core/ufs-sysfs.c               | 37 ++++++++++++++++++++++
- 2 files changed, 63 insertions(+)
-
-diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
-index 6b248abb1bd71..1750a9b84ce0f 100644
---- a/Documentation/ABI/testing/sysfs-driver-ufs
-+++ b/Documentation/ABI/testing/sysfs-driver-ufs
-@@ -1591,6 +1591,32 @@ Description:	This entry shows the status of HPB.
- 
- 		The file is read only.
- 
-+What:		/sys/bus/platform/drivers/ufshcd/*/capabilities/clock_scaling
-+What:		/sys/bus/platform/devices/*.ufs/capabilities/clock_scaling
-+Date:		July 2022
-+Contact:	Daniil Lunev <dlunev@chromium.org>
-+Description:	Indicates status of clock scaling.
-+
-+		== ============================
-+		0  Clock scaling is not supported.
-+		1  Clock scaling is supported.
-+		== ============================
-+
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/capabilities/write_booster
-+What:		/sys/bus/platform/devices/*.ufs/capabilities/write_booster
-+Date:		July 2022
-+Contact:	Daniil Lunev <dlunev@chromium.org>
-+Description:	Indicates status of Write Booster.
-+
-+		== ============================
-+		0  Write Booster can not be enabled.
-+		1  Write Booster can be enabled.
-+		== ============================
-+
-+		The file is read only.
-+
- What:		/sys/class/scsi_device/*/device/hpb_param_sysfs/activation_thld
- Date:		February 2021
- Contact:	Avri Altman <avri.altman@wdc.com>
-diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
-index 0a088b47d5570..4149cdf19de92 100644
---- a/drivers/ufs/core/ufs-sysfs.c
-+++ b/drivers/ufs/core/ufs-sysfs.c
-@@ -279,6 +279,42 @@ static const struct attribute_group ufs_sysfs_default_group = {
- 	.attrs = ufs_sysfs_ufshcd_attrs,
- };
- 
-+static ssize_t clock_scaling_show(struct device *dev, struct device_attribute *attr,
-+				  char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	return sysfs_emit(buf, "%d\n", ufshcd_is_clkscaling_supported(hba));
-+}
-+
-+static ssize_t write_booster_show(struct device *dev, struct device_attribute *attr,
-+				  char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	return sysfs_emit(buf, "%d\n", ufshcd_is_wb_allowed(hba));
-+}
-+
-+static DEVICE_ATTR_RO(clock_scaling);
-+static DEVICE_ATTR_RO(write_booster);
-+
-+/*
-+ * The "capabilities" sysfs group represents the effective capabilities of the
-+ * host-device pair, i.e. the capabilities which are enabled in the driver for
-+ * the specific host controller, supported by the host controller and are
-+ * supported and/or have compatible configuration on the device side.
-+ */
-+static struct attribute *ufs_sysfs_capabilities_attrs[] = {
-+	&dev_attr_clock_scaling.attr,
-+	&dev_attr_write_booster.attr,
-+	NULL
-+};
-+
-+static const struct attribute_group ufs_sysfs_capabilities_group = {
-+	.name = "capabilities",
-+	.attrs = ufs_sysfs_capabilities_attrs,
-+};
-+
- static ssize_t monitor_enable_show(struct device *dev,
- 				   struct device_attribute *attr, char *buf)
- {
-@@ -1134,6 +1170,7 @@ static const struct attribute_group ufs_sysfs_attributes_group = {
- 
- static const struct attribute_group *ufs_sysfs_groups[] = {
- 	&ufs_sysfs_default_group,
-+	&ufs_sysfs_capabilities_group,
- 	&ufs_sysfs_monitor_group,
- 	&ufs_sysfs_device_descriptor_group,
- 	&ufs_sysfs_interconnect_descriptor_group,
 -- 
-2.31.0
-
+0-DAY CI Kernel Test Service
+https://01.org/lkp
