@@ -2,153 +2,99 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBB78C32766
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Aug 2022 22:13:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A026C00140
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Aug 2022 22:30:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236544AbiHBWMn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Aug 2022 18:12:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43230 "EHLO
+        id S237227AbiHBWae (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Aug 2022 18:30:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59428 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235369AbiHBWMJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Aug 2022 18:12:09 -0400
-Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5B1D54C90;
-        Tue,  2 Aug 2022 15:11:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1659478320; x=1691014320;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=dhv6+T0m4BozChdUSL5UsmZ7sbExT/0ShfHnoMLEeRA=;
-  b=igfjoPJcCkSNj2jgbjFWTNjv3yqAqfBqkL4gwHcjHYXvuHIq28LNziSx
-   pBCNz+BNYVSsaR7tRS+NjJ9pdEyPZdG+VeSqp6zvCkoEtdkoCgwE39Chz
-   B/apC7IKoT9clRSRKTv8ijAWRvAuRvdPTzJLnpWgSyOKrb1vv0hnE9HsQ
-   dj9ZRRCfpyiy9WBw4H9b57/NpmFPkY5fjgl+kXyy8FKTGydcP/SAYzLgy
-   5qOFWEHRAsYUY3ZMmPIawWWtXPttyKoCKyXrOn1/ZYSYHjbOo8M1nzpvy
-   opEHYYgceZQqsd09krsmAqH1/kL3Qoj5pyPvZlFKTSIV/RCeUlx+CjidK
-   Q==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10427"; a="269909724"
-X-IronPort-AV: E=Sophos;i="5.93,212,1654585200"; 
-   d="scan'208";a="269909724"
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Aug 2022 15:11:45 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.93,212,1654585200"; 
-   d="scan'208";a="728989347"
-Received: from lkp-server01.sh.intel.com (HELO e0eace57cfef) ([10.239.97.150])
-  by orsmga004.jf.intel.com with ESMTP; 02 Aug 2022 15:11:36 -0700
-Received: from kbuild by e0eace57cfef with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1oJ06y-000GVS-0r;
-        Tue, 02 Aug 2022 22:11:36 +0000
-Date:   Wed, 3 Aug 2022 06:11:23 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Li Jinlin <lijinlin3@huawei.com>, lduncan@suse.com,
-        cleech@redhat.com, michael.christie@oracle.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, mark.mielke@gmail.com
-Cc:     kbuild-all@lists.01.org, open-iscsi@googlegroups.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linfeilong@huawei.com, liuzhiqiang26@huawei.com
-Subject: Re: [PATCH] scsi: iscsi: iscsi_tcp: Fix null-ptr-deref while calling
- getpeername()
-Message-ID: <202208030633.x2jgVRIa-lkp@intel.com>
-References: <20220802101939.3972556-1-lijinlin3@huawei.com>
+        with ESMTP id S237394AbiHBWaM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Aug 2022 18:30:12 -0400
+Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9ABAE558C2
+        for <linux-scsi@vger.kernel.org>; Tue,  2 Aug 2022 15:30:02 -0700 (PDT)
+Received: by mail-pj1-x1031.google.com with SMTP id h21-20020a17090aa89500b001f31a61b91dso125341pjq.4
+        for <linux-scsi@vger.kernel.org>; Tue, 02 Aug 2022 15:30:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=sbLn5/BbsVzDXmiDM5gruvFji+gGb0oB3jAMVbh1DeU=;
+        b=P7Ppf6JcVdyZKg/IgEVUbCpOrcKPzY0UZbdf+rzycVt5jiZ+x0lNxevwLlN05HBex6
+         nhtNSZ7OEo0qZS/o9orLPdw0/p3TbK6ZQPmUAUp9bohiKYGEKvHpym7YM4C1sgcjULZi
+         CuLYqYBTqIN8HTFxAqux+2Du2ZFW0x2+98UpY80c6QdC0uM4OIL0uxyD4pQtP2G8yidq
+         5fi6Br2H5iGfyyUsuaJyU+sC8tvUeHv8bFyfXXsEQvDkFrVFWgZqVkbTLv0Cwa3wtPqn
+         Lw4geJWDyMU+1u7mlniFwjzXcZzZVlbYKzk9luNtIg6zoLUEUgzfH45IjF6R+svnrrPX
+         dUzQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=sbLn5/BbsVzDXmiDM5gruvFji+gGb0oB3jAMVbh1DeU=;
+        b=35j342OBalsqyzmNuiTVwVjdqjfb6fES474QLXP83OnCac+mjd66RzsvjAk9OpmQZ4
+         yo15JS0VyC111jAOpVnz0EzwjqyiogiprP2SAUz77JJ7MUgBPzbJvu8SQgJ6Wm0KNC6Z
+         m2jcF+rPfpwGJnecyzN4n0U9bbbYCSMzasMA65QhKxNpHMWfYWb/6H8FhN/EyWUg5BVN
+         mgkcULoE4o54yZ1f98UVzoHt70uyfyp05ULS8vF0CwNPLA9ROi5CQH1l6aDDZL2vAuzB
+         oesj4J6PCPjN6Oi7K/9Uulo0iLPre9v+9gBreAWT8dzfGXwCS3ISgjB9OIgo1XBujLdy
+         nlQg==
+X-Gm-Message-State: ACgBeo0EWAERmnG+NNH8tvkrABzyq6mQFdfpqTcxGoIR+6TGKFPJAQdQ
+        sYjLX2Jf8x/MJjndADJJPAcBXXnkN/8=
+X-Google-Smtp-Source: AA6agR7VaMu5z4pqjUTB2j+4Otk0PCD5hZjM5IQim1UTQCZjEwU4du/8nNZMFmbv5QzXajYQI3dKmA==
+X-Received: by 2002:a17:90b:4f91:b0:1cd:3a73:3a5d with SMTP id qe17-20020a17090b4f9100b001cd3a733a5dmr1706311pjb.98.1659479401786;
+        Tue, 02 Aug 2022 15:30:01 -0700 (PDT)
+Received: from [192.168.50.208] (ip98-164-252-174.oc.oc.cox.net. [98.164.252.174])
+        by smtp.gmail.com with ESMTPSA id t5-20020a17090340c500b0016be4d78792sm186946pld.257.2022.08.02.15.30.00
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 02 Aug 2022 15:30:01 -0700 (PDT)
+Message-ID: <5575255f-91f1-54d5-709c-4f1d35f8ecfd@gmail.com>
+Date:   Tue, 2 Aug 2022 15:29:59 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220802101939.3972556-1-lijinlin3@huawei.com>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.1.0
+Subject: Re: [PATCH] lpfc: Decouple port_template and vport_template
+Content-Language: en-US
+To:     Daniel Wagner <dwagner@suse.de>, linux-scsi@vger.kernel.org
+Cc:     "Dwip N. Banerjee" <dnbanerg@us.ibm.com>
+References: <20220705094203.50154-1-dwagner@suse.de>
+ <20220721094939.jhsf2636536ao4yc@carbon>
+From:   James Smart <jsmart2021@gmail.com>
+In-Reply-To: <20220721094939.jhsf2636536ao4yc@carbon>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Li,
+On 7/21/2022 2:49 AM, Daniel Wagner wrote:
+> On Tue, Jul 05, 2022 at 11:42:03AM +0200, Daniel Wagner wrote:
+>> From: "Dwip N. Banerjee" <dnbanerg@us.ibm.com>
+>>
+>> The problem here is that the lpfc_hba structure has been freed but the
+>> Scsi_Host's hostt pointer is still pointing to the (v) port template
+>> area inside the freed hba structure - through which the module is
+>> accessed.
+>>
+>> Basically we need to ensure that the access to the module structure
+>> (via the host template or otherwise) stays valid even after the HBA
+>> structure is freed (or delay that free).
+>>
+>> Signed-off-by: Dwip N. Banerjee <dnbanerg@us.ibm.com>
+>> Signed-off-by: Daniel Wagner <dwagner@suse.de>
+>> ---
+>> Hi,
+>>
+>> This patch is in our downstream kernels for a while. I've forward
+>> ported so we also fix the upstream driver for everyone.
+>>
+>> @Dwip, I took the liberty to add your SoB, hope this is okay.
+>>
+>> Daniel
 
-Thank you for the patch! Perhaps something to improve:
+We are reproducing this issue now, but think the fix should be slightly 
+different. We're putting it together for testing.
 
-[auto build test WARNING on mkp-scsi/for-next]
-[also build test WARNING on jejb-scsi/for-next linus/master v5.19 next-20220728]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+-- james
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Li-Jinlin/scsi-iscsi-iscsi_tcp-Fix-null-ptr-deref-while-calling-getpeername/20220802-173945
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
-config: loongarch-randconfig-s041-20220801 (https://download.01.org/0day-ci/archive/20220803/202208030633.x2jgVRIa-lkp@intel.com/config)
-compiler: loongarch64-linux-gcc (GCC) 12.1.0
-reproduce:
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # apt-get install sparse
-        # sparse version: v0.6.4-39-gce1a6720-dirty
-        # https://github.com/intel-lab-lkp/linux/commit/ccc367df3fdba07b24eeda721ca928cce50f40d2
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Li-Jinlin/scsi-iscsi-iscsi_tcp-Fix-null-ptr-deref-while-calling-getpeername/20220802-173945
-        git checkout ccc367df3fdba07b24eeda721ca928cce50f40d2
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__' O=build_dir ARCH=loongarch SHELL=/bin/bash drivers/scsi/
 
-If you fix the issue, kindly add following tag where applicable
-Reported-by: kernel test robot <lkp@intel.com>
-
-sparse warnings: (new ones prefixed by >>)
-   drivers/scsi/iscsi_tcp.c:798:26: sparse: sparse: incorrect type in argument 1 (different base types) @@     expected unsigned int fd @@     got struct file *file @@
-   drivers/scsi/iscsi_tcp.c:798:26: sparse:     expected unsigned int fd
-   drivers/scsi/iscsi_tcp.c:798:26: sparse:     got struct file *file
-   drivers/scsi/iscsi_tcp.c:852:26: sparse: sparse: incorrect type in argument 1 (different base types) @@     expected unsigned int fd @@     got struct file *file @@
-   drivers/scsi/iscsi_tcp.c:852:26: sparse:     expected unsigned int fd
-   drivers/scsi/iscsi_tcp.c:852:26: sparse:     got struct file *file
->> drivers/scsi/iscsi_tcp.c:798:22: sparse: sparse: non size-preserving pointer to integer cast
-   drivers/scsi/iscsi_tcp.c:852:22: sparse: sparse: non size-preserving pointer to integer cast
-
-vim +798 drivers/scsi/iscsi_tcp.c
-
-   777	
-   778	static int iscsi_sw_tcp_conn_get_param(struct iscsi_cls_conn *cls_conn,
-   779					       enum iscsi_param param, char *buf)
-   780	{
-   781		struct iscsi_conn *conn = cls_conn->dd_data;
-   782		struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
-   783		struct iscsi_sw_tcp_conn *tcp_sw_conn = tcp_conn->dd_data;
-   784		struct sockaddr_in6 addr;
-   785		struct socket *sock;
-   786		int rc;
-   787	
-   788		switch(param) {
-   789		case ISCSI_PARAM_CONN_PORT:
-   790		case ISCSI_PARAM_CONN_ADDRESS:
-   791		case ISCSI_PARAM_LOCAL_PORT:
-   792			spin_lock_bh(&conn->session->frwd_lock);
-   793			if (!tcp_sw_conn || !tcp_sw_conn->sock) {
-   794				spin_unlock_bh(&conn->session->frwd_lock);
-   795				return -ENOTCONN;
-   796			}
-   797			sock = tcp_sw_conn->sock;
- > 798			fget(sock->file);
-   799			spin_unlock_bh(&conn->session->frwd_lock);
-   800	
-   801			if (param == ISCSI_PARAM_LOCAL_PORT)
-   802				rc = kernel_getsockname(sock,
-   803							(struct sockaddr *)&addr);
-   804			else
-   805				rc = kernel_getpeername(sock,
-   806							(struct sockaddr *)&addr);
-   807			spin_lock_bh(&conn->session->frwd_lock);
-   808			sockfd_put(sock);
-   809			spin_unlock_bh(&conn->session->frwd_lock);
-   810			if (rc < 0)
-   811				return rc;
-   812	
-   813			return iscsi_conn_get_addr_param((struct sockaddr_storage *)
-   814							 &addr, param, buf);
-   815		default:
-   816			return iscsi_conn_get_param(cls_conn, param, buf);
-   817		}
-   818	
-   819		return 0;
-   820	}
-   821	
-
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
