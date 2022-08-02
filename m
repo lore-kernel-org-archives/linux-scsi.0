@@ -2,72 +2,74 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81580C00140
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Aug 2022 07:19:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42C16C00140
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Aug 2022 07:38:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235905AbiHBHTW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Aug 2022 03:19:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58040 "EHLO
+        id S235974AbiHBHiM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Aug 2022 03:38:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43034 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235925AbiHBHTQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Aug 2022 03:19:16 -0400
-Received: from out30-130.freemail.mail.aliyun.com (out30-130.freemail.mail.aliyun.com [115.124.30.130])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B197049B48
-        for <linux-scsi@vger.kernel.org>; Tue,  2 Aug 2022 00:19:10 -0700 (PDT)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R181e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018045176;MF=kanie@linux.alibaba.com;NM=1;PH=DS;RN=7;SR=0;TI=SMTPD_---0VLAavtl_1659424740;
-Received: from localhost(mailfrom:kanie@linux.alibaba.com fp:SMTPD_---0VLAavtl_1659424740)
-          by smtp.aliyun-inc.com;
-          Tue, 02 Aug 2022 15:19:05 +0800
-From:   Guixin Liu <kanie@linux.alibaba.com>
-To:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH] scsi: megaraid_sas: remove unnecessary kfree
-Date:   Tue,  2 Aug 2022 15:19:00 +0800
-Message-Id: <1659424740-46918-1-git-send-email-kanie@linux.alibaba.com>
-X-Mailer: git-send-email 1.8.3.1
+        with ESMTP id S236008AbiHBHiD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Aug 2022 03:38:03 -0400
+Received: from mail-m971.mail.163.com (mail-m971.mail.163.com [123.126.97.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 24296E008;
+        Tue,  2 Aug 2022 00:38:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=l0q+Q
+        YiG/Eqa3mATE+vLJIuo/ItC1B0Gui0igDzgwt4=; b=UuR1oIOZkpDf12FOYjgYW
+        RIddEflkNmVKmZRjpsA5uPYeWwlAMLZs8ys8V/uv9ENXEx6ipjji8FKO1jJqCq6L
+        hNx4FQ8a0i1e/05vATssKO7SEWGXnhNgfJkU4APJYpXsbI6aiXz18Wh4W+7ISt8W
+        IYxcjeZEWyX9ePq+EoF08k=
+Received: from localhost.localdomain (unknown [123.58.221.99])
+        by smtp1 (Coremail) with SMTP id GdxpCgCXJZbw0+hiFYdnSA--.5473S2;
+        Tue, 02 Aug 2022 15:36:18 +0800 (CST)
+From:   studentxswpy@163.com
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Xie Shaowen <studentxswpy@163.com>,
+        Hacash Robot <hacashRobot@santino.com>
+Subject: [PATCH] scsi: sun3x_esp: check the return value of ioremap() in esp_sun3x_probe()
+Date:   Tue,  2 Aug 2022 15:36:14 +0800
+Message-Id: <20220802073614.3213171-1-studentxswpy@163.com>
+X-Mailer: git-send-email 2.25.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: GdxpCgCXJZbw0+hiFYdnSA--.5473S2
+X-Coremail-Antispam: 1Uf129KBjvdXoW7Xw4DCrW8tF47XFW8JryfXrb_yoWfWwc_Wa
+        1Svrs7WF4Yyw1xtF17Cwn8Z34Ikr1kZr4kuF1FqFy3Cw1UZ3WDXa9F9rn7ua45WaykGayF
+        y3s0vF4Fv34SgjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IU8JGYJUUUUU==
+X-Originating-IP: [123.58.221.99]
+X-CM-SenderInfo: xvwxvv5qw024ls16il2tof0z/xtbB0wpRJFXlwVHQtwAAsr
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When alloc ctrl mem fail, the reply_map will be free in
-megasas_free_ctrl_mem(), no need to free in megasas_alloc_ctrl_mem().
+From: Xie Shaowen <studentxswpy@163.com>
 
-Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
+The function ioremap() in esp_sun3x_probe() can fail, so
+its return value should be checked.
+
+Fixes: 4bdc0d676a643 ("remove ioremap_nocache and devm_ioremap_nocache")
+Reported-by: Hacash Robot <hacashRobot@santino.com>
+Signed-off-by: Xie Shaowen <studentxswpy@163.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+ drivers/scsi/sun3x_esp.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index a3e117a..f6c37a9 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -7153,22 +7153,18 @@ static int megasas_alloc_ctrl_mem(struct megasas_instance *instance)
- 	switch (instance->adapter_type) {
- 	case MFI_SERIES:
- 		if (megasas_alloc_mfi_ctrl_mem(instance))
--			goto fail;
-+			return -ENOMEM;
- 		break;
- 	case AERO_SERIES:
- 	case VENTURA_SERIES:
- 	case THUNDERBOLT_SERIES:
- 	case INVADER_SERIES:
- 		if (megasas_alloc_fusion_context(instance))
--			goto fail;
-+			return -ENOMEM;
- 		break;
- 	}
+diff --git a/drivers/scsi/sun3x_esp.c b/drivers/scsi/sun3x_esp.c
+index d3489ac7ab28..cc670b50a357 100644
+--- a/drivers/scsi/sun3x_esp.c
++++ b/drivers/scsi/sun3x_esp.c
+@@ -199,6 +199,8 @@ static int esp_sun3x_probe(struct platform_device *dev)
+ 		goto fail_unmap_regs;
  
- 	return 0;
-- fail:
--	kfree(instance->reply_map);
--	instance->reply_map = NULL;
--	return -ENOMEM;
- }
+ 	esp->dma_regs = ioremap(res->start, 0x10);
++	if (!esp->dma_regs)
++		goto fail_unmap_regs;
  
- /*
+ 	esp->command_block = dma_alloc_coherent(esp->dev, 16,
+ 						&esp->command_block_dma,
 -- 
-1.8.3.1
+2.25.1
 
