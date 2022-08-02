@@ -2,125 +2,160 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0A80C00140
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Aug 2022 08:10:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0892C19F2B
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Aug 2022 08:14:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236426AbiHBIKs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Aug 2022 04:10:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50476 "EHLO
+        id S236362AbiHBIOe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Aug 2022 04:14:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52302 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236427AbiHBIKp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Aug 2022 04:10:45 -0400
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C80712AE5
-        for <linux-scsi@vger.kernel.org>; Tue,  2 Aug 2022 01:10:43 -0700 (PDT)
-Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20220802081040epoutp03f43d874068e71ac125a873ebe6ef8321~HeNQzZL010277302773epoutp03d
-        for <linux-scsi@vger.kernel.org>; Tue,  2 Aug 2022 08:10:40 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20220802081040epoutp03f43d874068e71ac125a873ebe6ef8321~HeNQzZL010277302773epoutp03d
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1659427840;
-        bh=WfYURiMfxdscvV155kuVfTOog8MwJWRdwgn+ujFV3oI=;
-        h=Subject:Reply-To:From:To:In-Reply-To:Date:References:From;
-        b=HSO3lBN8Knyuz9LR0pqvUTKnL8zh0PD4KIMeU9ybibMXxrnL5Zpzou03ZxhcLMW2S
-         fYYxYcD0NehWCppejmWmg4sQKNyAD0qqo3pCNG42UIPMqe4N3IGbgu10d5lvIvTixI
-         HGsCvuEefUfV/ASWt7YXtcNLATFJR5j7GLWMjvZo=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
-        20220802081039epcas2p1f09accf349a68b375b6248729253e809~HeNQO46uS2809228092epcas2p1F;
-        Tue,  2 Aug 2022 08:10:39 +0000 (GMT)
-Received: from epsmges2p2.samsung.com (unknown [182.195.36.98]) by
-        epsnrtp4.localdomain (Postfix) with ESMTP id 4Lxnjq40Xbz4x9Px; Tue,  2 Aug
-        2022 08:10:39 +0000 (GMT)
-X-AuditID: b6c32a46-0b9ff700000025b2-b2-62e8dbff4c7a
-Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
-        epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        6D.E8.09650.FFBD8E26; Tue,  2 Aug 2022 17:10:39 +0900 (KST)
-Mime-Version: 1.0
-Subject: [PATCH v6 6/6] scsi: ufs: wb: Move the comment to the right
- position
-Reply-To: j-young.choi@samsung.com
-Sender: Jinyoung CHOI <j-young.choi@samsung.com>
-From:   Jinyoung CHOI <j-young.choi@samsung.com>
-To:     ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <20220802080146epcms2p24b86bfce3d3c09c79b91d861cb3b2cce@epcms2p2>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20220802081039epcms2p68dbe18151e04103d10bf28751f9ace4e@epcms2p6>
-Date:   Tue, 02 Aug 2022 17:10:39 +0900
-X-CMS-MailID: 20220802081039epcms2p68dbe18151e04103d10bf28751f9ace4e
+        with ESMTP id S233206AbiHBIOc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Aug 2022 04:14:32 -0400
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id CB0E540BDE;
+        Tue,  2 Aug 2022 01:14:31 -0700 (PDT)
+Received: from [192.168.1.87] (unknown [122.171.18.126])
+        by linux.microsoft.com (Postfix) with ESMTPSA id 0FF1120FEB3D;
+        Tue,  2 Aug 2022 01:14:28 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 0FF1120FEB3D
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+        s=default; t=1659428071;
+        bh=e9jMP+l1EBs7edkrR5yZ/P6HawFIJg7Wsf/tP8c1hH0=;
+        h=Date:Subject:To:References:From:In-Reply-To:From;
+        b=sXcg7ueT90KrfILlIRM1HvHe29gKYoqSsyMQQeLTWwjG/2yXmE0aR2uVg0MLLbabt
+         bFLzzVExKfHih7h+hz22WEJriYgk9tSIr380HorDd/SRNsmSyQsKfrYRToXiqRvEob
+         v/XBrdiMYQPyzKMTC6bhLKTBeUWwNFvx6GIrQrRE=
+Message-ID: <33983fa2-c9a8-1ac1-2f75-8360a077cfc2@linux.microsoft.com>
+Date:   Tue, 2 Aug 2022 13:44:23 +0530
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+Subject: Re: [PATCH] Drivers: hv: vmbus: Optimize vmbus_on_event
+Content-Language: en-US
+To:     Saurabh Sengar <ssengar@linux.microsoft.com>, kys@microsoft.com,
+        haiyangz@microsoft.com, sthemmin@microsoft.com, wei.liu@kernel.org,
+        decui@microsoft.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-hyperv@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+References: <1658741848-4210-1-git-send-email-ssengar@linux.microsoft.com>
+From:   Praveen Kumar <kumarpraveen@linux.microsoft.com>
+In-Reply-To: <1658741848-4210-1-git-send-email-ssengar@linux.microsoft.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrJJsWRmVeSWpSXmKPExsWy7bCmhe7/2y+SDFoOy1icfLKGzeLBvG1s
-        Fi9/XmWzOPiwk8Vi2oefzBYvD2laLLqxjcni8q45bBbd13ewWSw//o/JYunWm4wO3B6Xr3h7
-        LN7zksljwqIDjB4tJ/ezeHxf38Hm8fHpLRaPvi2rGD0+b5LzaD/QzRTAGZVtk5GamJJapJCa
-        l5yfkpmXbqvkHRzvHG9qZmCoa2hpYa6kkJeYm2qr5OIToOuWmQN0rJJCWWJOKVAoILG4WEnf
-        zqYov7QkVSEjv7jEVim1ICWnwLxArzgxt7g0L10vL7XEytDAwMgUqDAhO+PisnlsBTfYKraf
-        +MvWwHictYuRk0NCwETi9t5rQDYXh5DADkaJSetmMHYxcnDwCghK/N0hDFIjLOAvseZBGzOI
-        LSSgJHFuzSywEmEBA4lbveYgYTYBPYmfS2awgYwREWhjkTjWuZUZYj6vxIz2pywQtrTE9uVb
-        GUFsTgE/iYk3PkDVaEj8WNYLZYtK3Fz9lh3Gfn9sPiOELSLReu8sVI2gxIOfu6HikhKHDn1l
-        A7lHQiBfYsOBQIhwjcTb5QegSvQlrnVsBDuBV8BX4lXXebDxLAKqErO/PoAa6SLx4ckZNhCb
-        WUBeYvvbOcwgI5kFNCXW79KHmK4sceQWC8xTDRt/s6OzmQX4JDoO/4WL75j3hAmiVU1iUZMR
-        RFhG4uvh+ewTGJVmIUJ5FpK1sxDWLmBkXsUollpQnJueWmxUYASP2OT83E2M4DSr5baDccrb
-        D3qHGJk4GA8xSnAwK4nw3nF5niTEm5JYWZValB9fVJqTWnyI0RTo4YnMUqLJ+cBEn1cSb2hi
-        aWBiZmZobmRqYK4kzuuVsiFRSCA9sSQ1OzW1ILUIpo+Jg1Oqgck11GTTPOWG+1MY/7f69G/8
-        0FefEsuyiHfltwNbJp1j2rl/5cSY6VHqGqv9/sR6lB4sCPpdlZvgWM8h1b6txqVEbHPSlOyA
-        Hfvee8+6et/gyU0+17JZ5UF3vqsfla9caC84cXnmK+3VbqZHH980syn3OsntmyD4n1M5333X
-        IfHM+ylif1xOHJ9V+C+kY4uJQrJHtMe1U68mP2mZfDfwqSHD9rz47X3TvfZMfOtrK3F0SmmF
-        yKOVFjwJWnMa3rdqts/rPv5zn0czt1g9n/GC1Orewm5ZBxvlgoO/heZ3aq53KpaZYL429wXz
-        1dl2QanZ0V+VNv89GMx1KbrgRPbExPJ8FefXHyTWv5xx4L7wDyWW4oxEQy3mouJEAHF7Ysg8
-        BAAA
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20220802080146epcms2p24b86bfce3d3c09c79b91d861cb3b2cce
-References: <20220802080146epcms2p24b86bfce3d3c09c79b91d861cb3b2cce@epcms2p2>
-        <CGME20220802080146epcms2p24b86bfce3d3c09c79b91d861cb3b2cce@epcms2p6>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The location of the comment is wrong. so fix it.
+On 25-07-2022 15:07, Saurabh Sengar wrote:
+> In the vmbus_on_event loop, 2 jiffies timer will not serve the purpose if
+> callback_fn takes longer. For effective use move this check inside of
+> callback functions where needed. Out of all the VMbus drivers using
+> vmbus_on_event, only storvsc has a high packet volume, thus add this limit
+> only in storvsc callback for now.
+> There is no apparent benefit of loop itself because this tasklet will be
+> scheduled anyway again if there are packets left in ring buffer. This
+> patch removes this unnecessary loop as well.
+> 
 
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Jinyoung Choi <j-young.choi@samsung.com>
----
- drivers/ufs/core/ufshcd.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+In my understanding the loop was for optimizing the host to guest signaling for batched channels.
+And the loop ensures that we process all the posted messages from the host before returning from the respective callbacks.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index dcd7f03db2a2..196f964c0877 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -1298,9 +1298,10 @@ static int ufshcd_devfreq_scale(struct ufs_hba *hba, bool scale_up)
- 		}
- 	}
- 
--	/* Enable Write Booster if we have scaled up else disable it */
- 	downgrade_write(&hba->clk_scaling_lock);
- 	is_writelock = false;
-+
-+	/* Enable Write Booster if we have scaled up else disable it */
- 	ufshcd_wb_toggle(hba, scale_up);
- 
- out_unprepare:
--- 
-2.25.1
+Am I missing something here.
+
+> Signed-off-by: Saurabh Sengar <ssengar@linux.microsoft.com>
+> ---
+>  drivers/hv/connection.c    | 33 ++++++++++++++-------------------
+>  drivers/scsi/storvsc_drv.c |  9 +++++++++
+>  2 files changed, 23 insertions(+), 19 deletions(-)
+> 
+> diff --git a/drivers/hv/connection.c b/drivers/hv/connection.c
+> index eca7afd..9dc27e5 100644
+> --- a/drivers/hv/connection.c
+> +++ b/drivers/hv/connection.c
+> @@ -431,34 +431,29 @@ struct vmbus_channel *relid2channel(u32 relid)
+>  void vmbus_on_event(unsigned long data)
+>  {
+>  	struct vmbus_channel *channel = (void *) data;
+> -	unsigned long time_limit = jiffies + 2;
+> +	void (*callback_fn)(void *context);
+>  
+>  	trace_vmbus_on_event(channel);
+>  
+>  	hv_debug_delay_test(channel, INTERRUPT_DELAY);
+> -	do {
+> -		void (*callback_fn)(void *);
+>  
+> -		/* A channel once created is persistent even when
+> -		 * there is no driver handling the device. An
+> -		 * unloading driver sets the onchannel_callback to NULL.
+> -		 */
+> -		callback_fn = READ_ONCE(channel->onchannel_callback);
+> -		if (unlikely(callback_fn == NULL))
+> -			return;
+> -
+> -		(*callback_fn)(channel->channel_callback_context);
+> +	/* A channel once created is persistent even when
+> +	 * there is no driver handling the device. An
+> +	 * unloading driver sets the onchannel_callback to NULL.
+> +	 */
+> +	callback_fn = READ_ONCE(channel->onchannel_callback);
+> +	if (unlikely(!callback_fn))
+> +		return;
+>  
+> -		if (channel->callback_mode != HV_CALL_BATCHED)
+> -			return;
+> +	(*callback_fn)(channel->channel_callback_context);
+>  
+> -		if (likely(hv_end_read(&channel->inbound) == 0))
+> -			return;
+> +	if (channel->callback_mode != HV_CALL_BATCHED)
+> +		return;
+>  
+> -		hv_begin_read(&channel->inbound);
+> -	} while (likely(time_before(jiffies, time_limit)));
+> +	if (likely(hv_end_read(&channel->inbound) == 0))
+> +		return;
+>  
+> -	/* The time limit (2 jiffies) has been reached */
+> +	hv_begin_read(&channel->inbound);
+>  	tasklet_schedule(&channel->callback_event);
+>  }
+>  
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index fe000da..c457e6b 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -60,6 +60,9 @@
+>  #define VMSTOR_PROTO_VERSION_WIN8_1	VMSTOR_PROTO_VERSION(6, 0)
+>  #define VMSTOR_PROTO_VERSION_WIN10	VMSTOR_PROTO_VERSION(6, 2)
+>  
+> +/* channel callback timeout in ms */
+> +#define CALLBACK_TIMEOUT               2
+> +
+>  /*  Packet structure describing virtual storage requests. */
+>  enum vstor_packet_operation {
+>  	VSTOR_OPERATION_COMPLETE_IO		= 1,
+> @@ -1204,6 +1207,7 @@ static void storvsc_on_channel_callback(void *context)
+>  	struct hv_device *device;
+>  	struct storvsc_device *stor_device;
+>  	struct Scsi_Host *shost;
+> +	unsigned long time_limit = jiffies + msecs_to_jiffies(CALLBACK_TIMEOUT);
+>  
+>  	if (channel->primary_channel != NULL)
+>  		device = channel->primary_channel->device_obj;
+> @@ -1224,6 +1228,11 @@ static void storvsc_on_channel_callback(void *context)
+>  		u32 minlen = rqst_id ? sizeof(struct vstor_packet) :
+>  			sizeof(enum vstor_packet_operation);
+>  
+> +		if (unlikely(time_after(jiffies, time_limit))) {
+> +			hv_pkt_iter_close(channel);
+> +			return;
+> +		}
+> +
+>  		if (pktlen < minlen) {
+>  			dev_err(&device->device,
+>  				"Invalid pkt: id=%llu, len=%u, minlen=%u\n",
+
+Regards,
+
+~Praveen.
