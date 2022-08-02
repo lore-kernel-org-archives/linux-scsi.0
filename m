@@ -2,42 +2,43 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7B61C3F6B0
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Aug 2022 08:09:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0A80C00140
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Aug 2022 08:10:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236356AbiHBIJc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Aug 2022 04:09:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48648 "EHLO
+        id S236426AbiHBIKs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Aug 2022 04:10:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50476 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232948AbiHBIJb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Aug 2022 04:09:31 -0400
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 980D3192B2
-        for <linux-scsi@vger.kernel.org>; Tue,  2 Aug 2022 01:09:29 -0700 (PDT)
-Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20220802080928epoutp0293d320e8e0549a0772ee21007f2db39b~HeMNXVT4w1505515055epoutp02d
-        for <linux-scsi@vger.kernel.org>; Tue,  2 Aug 2022 08:09:28 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20220802080928epoutp0293d320e8e0549a0772ee21007f2db39b~HeMNXVT4w1505515055epoutp02d
+        with ESMTP id S236427AbiHBIKp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Aug 2022 04:10:45 -0400
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C80712AE5
+        for <linux-scsi@vger.kernel.org>; Tue,  2 Aug 2022 01:10:43 -0700 (PDT)
+Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20220802081040epoutp03f43d874068e71ac125a873ebe6ef8321~HeNQzZL010277302773epoutp03d
+        for <linux-scsi@vger.kernel.org>; Tue,  2 Aug 2022 08:10:40 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20220802081040epoutp03f43d874068e71ac125a873ebe6ef8321~HeNQzZL010277302773epoutp03d
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1659427768;
-        bh=3jLix4T4XgSy7myOUsJb8gZNbmWtNDyABXmcfSgtTyM=;
+        s=mail20170921; t=1659427840;
+        bh=WfYURiMfxdscvV155kuVfTOog8MwJWRdwgn+ujFV3oI=;
         h=Subject:Reply-To:From:To:In-Reply-To:Date:References:From;
-        b=Sa/6jJcnkcSvqnxRFQaZ8EChCJBVIVs6VZOv7kptHjbv8drbX0TWe/eeTXU61Wa3W
-         lyzoEHRpfDfRXQ1g723Xvnk5UsIm2XNlEdBsXwQF1tSjN5B3XuwbB5XREFEx7Oc2Oh
-         IqtS26WcxTUM6AZvQ83ondOQolmROwV/Zr13BgH8=
-Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
+        b=HSO3lBN8Knyuz9LR0pqvUTKnL8zh0PD4KIMeU9ybibMXxrnL5Zpzou03ZxhcLMW2S
+         fYYxYcD0NehWCppejmWmg4sQKNyAD0qqo3pCNG42UIPMqe4N3IGbgu10d5lvIvTixI
+         HGsCvuEefUfV/ASWt7YXtcNLATFJR5j7GLWMjvZo=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
         epcas2p1.samsung.com (KnoxPortal) with ESMTP id
-        20220802080927epcas2p12304cfdf89a96bbe75b6859fda206d29~HeMM8a6I_0083000830epcas2p1b;
-        Tue,  2 Aug 2022 08:09:27 +0000 (GMT)
-Received: from epsmges2p2.samsung.com (unknown [182.195.36.68]) by
-        epsnrtp3.localdomain (Postfix) with ESMTP id 4LxnhR2Fymz4x9Q2; Tue,  2 Aug
-        2022 08:09:27 +0000 (GMT)
-X-AuditID: b6c32a46-0b9ff700000025b2-62-62e8dbb7ef20
-Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
+        20220802081039epcas2p1f09accf349a68b375b6248729253e809~HeNQO46uS2809228092epcas2p1F;
+        Tue,  2 Aug 2022 08:10:39 +0000 (GMT)
+Received: from epsmges2p2.samsung.com (unknown [182.195.36.98]) by
+        epsnrtp4.localdomain (Postfix) with ESMTP id 4Lxnjq40Xbz4x9Px; Tue,  2 Aug
+        2022 08:10:39 +0000 (GMT)
+X-AuditID: b6c32a46-0b9ff700000025b2-b2-62e8dbff4c7a
+Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
         epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        B4.D7.09650.7BBD8E26; Tue,  2 Aug 2022 17:09:27 +0900 (KST)
+        6D.E8.09650.FFBD8E26; Tue,  2 Aug 2022 17:10:39 +0900 (KST)
 Mime-Version: 1.0
-Subject: [PATCH v6 5/6] scsi: ufs: wb: Modify messages
+Subject: [PATCH v6 6/6] scsi: ufs: wb: Move the comment to the right
+ position
 Reply-To: j-young.choi@samsung.com
 Sender: Jinyoung CHOI <j-young.choi@samsung.com>
 From:   Jinyoung CHOI <j-young.choi@samsung.com>
@@ -59,137 +60,67 @@ X-Drm-Type: N,general
 X-Msg-Generator: Mail
 X-Msg-Type: PERSONAL
 X-Reply-Demand: N
-Message-ID: <20220802080927epcms2p1d0d89c32a9bd07c07f233801bb954807@epcms2p1>
-Date:   Tue, 02 Aug 2022 17:09:27 +0900
-X-CMS-MailID: 20220802080927epcms2p1d0d89c32a9bd07c07f233801bb954807
+Message-ID: <20220802081039epcms2p68dbe18151e04103d10bf28751f9ace4e@epcms2p6>
+Date:   Tue, 02 Aug 2022 17:10:39 +0900
+X-CMS-MailID: 20220802081039epcms2p68dbe18151e04103d10bf28751f9ace4e
 Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
 X-CPGSPASS: Y
 X-CPGSPASS: Y
 CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrBJsWRmVeSWpSXmKPExsWy7bCmqe722y+SDB63CFqcfLKGzeLBvG1s
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrJJsWRmVeSWpSXmKPExsWy7bCmhe7/2y+SDFoOy1icfLKGzeLBvG1s
         Fi9/XmWzOPiwk8Vi2oefzBYvD2laLLqxjcni8q45bBbd13ewWSw//o/JYunWm4wO3B6Xr3h7
         LN7zksljwqIDjB4tJ/ezeHxf38Hm8fHpLRaPvi2rGD0+b5LzaD/QzRTAGZVtk5GamJJapJCa
         l5yfkpmXbqvkHRzvHG9qZmCoa2hpYa6kkJeYm2qr5OIToOuWmQN0rJJCWWJOKVAoILG4WEnf
-        zqYov7QkVSEjv7jEVim1ICWnwLxArzgxt7g0L10vL7XEytDAwMgUqDAhO2PTvJOsBWtlK46/
-        esLYwPhRvIuRk0NCwETi2ObtjF2MXBxCAjsYJa4dW8rUxcjBwSsgKPF3hzBIjbCAmcTO41PY
-        QGwhASWJc2tmMYKUCAsYSNzqNQcJswnoSfxcMoMNZIyIQBuLxLHOrcwQ83klZrQ/ZYGwpSW2
-        L9/KCGJzCvhJTLzxAapGQ+LHsl4oW1Ti5uq37DD2+2PzGSFsEYnWe2ehagQlHvzcDRWXlDh0
-        6CsbyD0SAvkSGw4EQoRrJN4uPwBVoi9xrWMj2Am8Ar4SJ2Y2soOUswioSixYIwdR4iLRfrKF
-        FcRmFpCX2P52DjNICbOApsT6XfoQw5UljtxigfmpYeNvdnQ2swCfRMfhv3DxHfOeMEG0qkks
-        ajKCCMtIfD08n30Co9IsRCDPQrJ2FsLaBYzMqxjFUguKc9NTi40KjODxmpyfu4kRnGS13HYw
-        Tnn7Qe8QIxMH4yFGCQ5mJRHeOy7Pk4R4UxIrq1KL8uOLSnNSiw8xmgL9O5FZSjQ5H5jm80ri
-        DU0sDUzMzAzNjUwNzJXEeb1SNiQKCaQnlqRmp6YWpBbB9DFxcEo1MG38O+FLp7uImajknkeH
-        t7kuP/vpQbWBRZ157h/bFmnZJZc1a1Wj+cOTmhYWKCe7mR/+ON/x+yENieRfO48cEWrI+da9
-        yOrTIiX3+E/7q6pcuKb3HTB4mKTy/hKH/6+TC7kcu6Qcu2d+D6+9kKhXnd24zobHpJfz1Mqa
-        m7uKtwfGZFVxGOxdq6Hgs5pzncWbya8maL/+sfNGR3CCnGWv+e5I4R3vP384M/nLbEGbgnI2
-        Zv+n934dvXSjsWqJ01nfb8fquy/XbD7/yHTRCZuz0xNO7mN9nssqvHKi0vS0uXM0/6jONV3z
-        gZsteZOkYfznMzkzD8ldu1l058z9Pon3239PlvzA7sHoKXT42uaMllwlluKMREMt5qLiRADr
-        C0cbOwQAAA==
+        zqYov7QkVSEjv7jEVim1ICWnwLxArzgxt7g0L10vL7XEytDAwMgUqDAhO+PisnlsBTfYKraf
+        +MvWwHictYuRk0NCwETi9t5rQDYXh5DADkaJSetmMHYxcnDwCghK/N0hDFIjLOAvseZBGzOI
+        LSSgJHFuzSywEmEBA4lbveYgYTYBPYmfS2awgYwREWhjkTjWuZUZYj6vxIz2pywQtrTE9uVb
+        GUFsTgE/iYk3PkDVaEj8WNYLZYtK3Fz9lh3Gfn9sPiOELSLReu8sVI2gxIOfu6HikhKHDn1l
+        A7lHQiBfYsOBQIhwjcTb5QegSvQlrnVsBDuBV8BX4lXXebDxLAKqErO/PoAa6SLx4ckZNhCb
+        WUBeYvvbOcwgI5kFNCXW79KHmK4sceQWC8xTDRt/s6OzmQX4JDoO/4WL75j3hAmiVU1iUZMR
+        RFhG4uvh+ewTGJVmIUJ5FpK1sxDWLmBkXsUollpQnJueWmxUYASP2OT83E2M4DSr5baDccrb
+        D3qHGJk4GA8xSnAwK4nw3nF5niTEm5JYWZValB9fVJqTWnyI0RTo4YnMUqLJ+cBEn1cSb2hi
+        aWBiZmZobmRqYK4kzuuVsiFRSCA9sSQ1OzW1ILUIpo+Jg1Oqgck11GTTPOWG+1MY/7f69G/8
+        0FefEsuyiHfltwNbJp1j2rl/5cSY6VHqGqv9/sR6lB4sCPpdlZvgWM8h1b6txqVEbHPSlOyA
+        Hfvee8+6et/gyU0+17JZ5UF3vqsfla9caC84cXnmK+3VbqZHH980syn3OsntmyD4n1M5333X
+        IfHM+ylif1xOHJ9V+C+kY4uJQrJHtMe1U68mP2mZfDfwqSHD9rz47X3TvfZMfOtrK3F0SmmF
+        yKOVFjwJWnMa3rdqts/rPv5zn0czt1g9n/GC1Orewm5ZBxvlgoO/heZ3aq53KpaZYL429wXz
+        1dl2QanZ0V+VNv89GMx1KbrgRPbExPJ8FefXHyTWv5xx4L7wDyWW4oxEQy3mouJEAHF7Ysg8
+        BAAA
 DLP-Filter: Pass
 X-CFilter-Loop: Reflected
 X-CMS-RootMailID: 20220802080146epcms2p24b86bfce3d3c09c79b91d861cb3b2cce
 References: <20220802080146epcms2p24b86bfce3d3c09c79b91d861cb3b2cce@epcms2p2>
-        <CGME20220802080146epcms2p24b86bfce3d3c09c79b91d861cb3b2cce@epcms2p1>
+        <CGME20220802080146epcms2p24b86bfce3d3c09c79b91d861cb3b2cce@epcms2p6>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Messages are modified to fit the format of others.
+The location of the comment is wrong. so fix it.
 
 Reviewed-by: Avri Altman <avri.altman@wdc.com>
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 Signed-off-by: Jinyoung Choi <j-young.choi@samsung.com>
 ---
- drivers/ufs/core/ufs-sysfs.c |  2 +-
- drivers/ufs/core/ufshcd.c    | 23 +++++++++++------------
- 2 files changed, 12 insertions(+), 13 deletions(-)
+ drivers/ufs/core/ufshcd.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
-index 2c0b7f45de4b..117272cf7d61 100644
---- a/drivers/ufs/core/ufs-sysfs.c
-+++ b/drivers/ufs/core/ufs-sysfs.c
-@@ -230,7 +230,7 @@ static ssize_t wb_on_store(struct device *dev, struct device_attribute *attr,
- 		 * If the platform supports UFSHCD_CAP_CLK_SCALING, turn WB
- 		 * on/off will be done while clock scaling up/down.
- 		 */
--		dev_warn(dev, "To control WB through wb_on is not allowed!\n");
-+		dev_warn(dev, "It is not allowed to configure WB!\n");
- 		return -EOPNOTSUPP;
- 	}
- 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 5099d161f115..dcd7f03db2a2 100644
+index dcd7f03db2a2..196f964c0877 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -5737,13 +5737,13 @@ int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable)
- 
- 	ret = __ufshcd_wb_toggle(hba, enable, QUERY_FLAG_IDN_WB_EN);
- 	if (ret) {
--		dev_err(hba->dev, "%s Write Booster %s failed %d\n",
--			__func__, enable ? "enable" : "disable", ret);
-+		dev_err(hba->dev, "%s: Write Booster %s failed %d\n",
-+			__func__, enable ? "enabling" : "disabling", ret);
- 		return ret;
+@@ -1298,9 +1298,10 @@ static int ufshcd_devfreq_scale(struct ufs_hba *hba, bool scale_up)
+ 		}
  	}
  
- 	hba->dev_info.wb_enabled = enable;
--	dev_info(hba->dev, "%s Write Booster %s\n",
-+	dev_info(hba->dev, "%s: Write Booster %s\n",
- 			__func__, enable ? "enabled" : "disabled");
+-	/* Enable Write Booster if we have scaled up else disable it */
+ 	downgrade_write(&hba->clk_scaling_lock);
+ 	is_writelock = false;
++
++	/* Enable Write Booster if we have scaled up else disable it */
+ 	ufshcd_wb_toggle(hba, scale_up);
  
- 	return ret;
-@@ -5757,11 +5757,11 @@ static void ufshcd_wb_toggle_buf_flush_during_h8(struct ufs_hba *hba,
- 	ret = __ufshcd_wb_toggle(hba, enable,
- 			QUERY_FLAG_IDN_WB_BUFF_FLUSH_DURING_HIBERN8);
- 	if (ret) {
--		dev_err(hba->dev, "%s: WB-Buf Flush during H8 %s failed: %d\n",
--			__func__, enable ? "enable" : "disable", ret);
-+		dev_err(hba->dev, "%s: WB-Buf Flush during H8 %s failed %d\n",
-+			__func__, enable ? "enabling" : "disabling", ret);
- 		return;
- 	}
--	dev_dbg(hba->dev, "%s WB-Buf Flush during H8 %s\n",
-+	dev_info(hba->dev, "%s: WB-Buf Flush during H8 %s\n",
- 			__func__, enable ? "enabled" : "disabled");
- }
- 
-@@ -5775,14 +5775,13 @@ int ufshcd_wb_toggle_buf_flush(struct ufs_hba *hba, bool enable)
- 
- 	ret = __ufshcd_wb_toggle(hba, enable, QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN);
- 	if (ret) {
--		dev_err(hba->dev, "%s WB-Buf Flush %s failed %d\n", __func__,
--			enable ? "enable" : "disable", ret);
-+		dev_err(hba->dev, "%s: WB-Buf Flush %s failed %d\n",
-+			__func__, enable ? "enabling" : "disabling", ret);
- 		return ret;
- 	}
- 
- 	hba->dev_info.wb_buf_flush_enabled = enable;
--
--	dev_dbg(hba->dev, "%s WB-Buf Flush %s\n",
-+	dev_info(hba->dev, "%s: WB-Buf Flush %s\n",
- 			__func__, enable ? "enabled" : "disabled");
- 
- 	return ret;
-@@ -5800,7 +5799,7 @@ static bool ufshcd_wb_presrv_usrspc_keep_vcc_on(struct ufs_hba *hba,
- 					      QUERY_ATTR_IDN_CURR_WB_BUFF_SIZE,
- 					      index, 0, &cur_buf);
- 	if (ret) {
--		dev_err(hba->dev, "%s dCurWriteBoosterBufferSize read failed %d\n",
-+		dev_err(hba->dev, "%s: dCurWriteBoosterBufferSize read failed %d\n",
- 			__func__, ret);
- 		return false;
- 	}
-@@ -5885,7 +5884,7 @@ static bool ufshcd_wb_need_flush(struct ufs_hba *hba)
- 				      QUERY_ATTR_IDN_AVAIL_WB_BUFF_SIZE,
- 				      index, 0, &avail_buf);
- 	if (ret) {
--		dev_warn(hba->dev, "%s dAvailableWriteBoosterBufferSize read failed %d\n",
-+		dev_warn(hba->dev, "%s: dAvailableWriteBoosterBufferSize read failed %d\n",
- 			 __func__, ret);
- 		return false;
- 	}
+ out_unprepare:
 -- 
 2.25.1
