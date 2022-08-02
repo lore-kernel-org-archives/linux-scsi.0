@@ -2,63 +2,64 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B936DC00140
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Aug 2022 21:44:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB225C00140
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Aug 2022 21:50:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234587AbiHBVod (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Aug 2022 17:44:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53638 "EHLO
+        id S232270AbiHBVuW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Aug 2022 17:50:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58992 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232388AbiHBVoc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Aug 2022 17:44:32 -0400
-Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD5C81E3CA
-        for <linux-scsi@vger.kernel.org>; Tue,  2 Aug 2022 14:44:29 -0700 (PDT)
-Received: by mail-pg1-x52c.google.com with SMTP id bf13so13447559pgb.11
-        for <linux-scsi@vger.kernel.org>; Tue, 02 Aug 2022 14:44:29 -0700 (PDT)
+        with ESMTP id S230205AbiHBVuT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Aug 2022 17:50:19 -0400
+Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D4CA627D
+        for <linux-scsi@vger.kernel.org>; Tue,  2 Aug 2022 14:50:17 -0700 (PDT)
+Received: by mail-pl1-x62f.google.com with SMTP id x10so13945966plb.3
+        for <linux-scsi@vger.kernel.org>; Tue, 02 Aug 2022 14:50:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=jx77LHzy5pMrCy8NUb4I/3IoM72bQAsPqELbMVaVYMI=;
-        b=M+FWZiBkOwo7uh9T3nWcMkcWmtG6C2yzvR27hmerBUYdhTpujV7CuAQxjNmM81QRzx
-         oVhkDJ8m6h7pH/CNhQWnIfbiYPgrNL/PzQP0GkwY1AkhDwJgg7tCtTiT+ZgUFSmBqbk8
-         u8gAK+JKQPs/OQ2dEpNxLQlxJFDcjd7a1GNVI=
+        bh=Hb89G9krB6RKM/pZci++W1IGnnGTFxYNnFvZ3OknFGs=;
+        b=k3Teggg8APeevPHASdBY5f2itpnShq02Mcu65hszc5EF41S5RxU0QA17I03FH++ZC0
+         ZVzSGXFobmTSYpYudykju17v7k5Dq16V7a7k83w2wQ5oULJ5ulf9O65WpsZhXI4KKgHT
+         9prRIi8oFh0LOOznCs8ZrVp44q4xWegLpjLIc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=jx77LHzy5pMrCy8NUb4I/3IoM72bQAsPqELbMVaVYMI=;
-        b=O9FCZ9/LoKkz3U4FRflxMH3aC/r21lOO0t088/xRZ9WfqM347X6qLUZSs0mUxtClld
-         2chvpQtnZtL7qZDz1moBHhNGIrZ5yMSlcrVlgyuW2E+6tzDaNxdYjXaZ/sQLRKJ8mYcY
-         301MfBruWqnuyyEOgqJhLXfPdqXRZr/XcEzJ8CMtkzOgAyIs1Q+coKIklvpmsBn4VxkC
-         6l3ln3xAitk1elHLYbXYkUHPdPpJenFfDVAJ7Ta6cXQub99dwU+1VYxsXZ3tE5VbivST
-         M6raWg5O/nglAxpNBVvKzBxHhTyzQ8KN72MJcvCXNR4blQK4VRk9HZzR7h2gypFPYTrw
-         ootQ==
-X-Gm-Message-State: AJIora/tmhNrR7WRAlURPcG0j/prmYr+q9ROxyChMWvN0ecpmOHlE+95
-        V/8+VI6sbwo+nhYCt7bdg4nD7g==
-X-Google-Smtp-Source: AGRyM1tGwvgbGA4/CpS7LVOQe6EcV1n7uxiobzbS/WgUEYaEjD3YAs5mz5nhXZ1zm2vU3ZYBZXOvgg==
-X-Received: by 2002:a63:f306:0:b0:41a:6258:dcd2 with SMTP id l6-20020a63f306000000b0041a6258dcd2mr18010158pgh.28.1659476669200;
-        Tue, 02 Aug 2022 14:44:29 -0700 (PDT)
+        bh=Hb89G9krB6RKM/pZci++W1IGnnGTFxYNnFvZ3OknFGs=;
+        b=kygGznqtPI+4dcYpRKs7Q/WKEVC0dazusLqfbq+BFQM5HPrWRwgsQLsMeuJknhwMa+
+         4+IU3GfsFLDfEPATd3N3YnykP0yRSeQnTbpG2xAwQWW/1gqe91sdjOGPshMg4O0ef9Sm
+         jwG34b6wre/mhH+jDdkU+LPIqRtS4pEfG/xuCs75Hg49GKbWOmcjJYbRurEBZyXoqvkR
+         vzVBmXYyx9907paX2DMY0hVKeYYphKnyCWXLqUviOGbPIWpulw1GaMau9LwjlgQw32qd
+         5oGng+/1rV896EpWKaiGkHVaIxdTHdA9e5Qz1LLmiDYAu0+2xnp2PfsGuDwpMUdCsPsj
+         vQnA==
+X-Gm-Message-State: ACgBeo1Xdkr6fLcUk0tHwntdhpJU7kQNtK40/bMymtVwBpElmwBkIH1Z
+        GCcBvNPi0l+5FnfzHG4A5nEmOg==
+X-Google-Smtp-Source: AA6agR7xtjqmZwo1XewbkN9y3rqgaqhkChFH1KXDhxYO+a3agQiGv9Sf2bftbRpMuWB8yVpO8ykD6Q==
+X-Received: by 2002:a17:90b:2241:b0:1f5:2c5e:1080 with SMTP id hk1-20020a17090b224100b001f52c5e1080mr1560747pjb.85.1659477016773;
+        Tue, 02 Aug 2022 14:50:16 -0700 (PDT)
 Received: from dlunevwfh.roam.corp.google.com (n122-107-196-14.sbr2.nsw.optusnet.com.au. [122.107.196.14])
-        by smtp.gmail.com with ESMTPSA id x11-20020a170902a38b00b0015e9f45c1f4sm161459pla.186.2022.08.02.14.44.24
+        by smtp.gmail.com with ESMTPSA id a25-20020a634d19000000b00419b66846fcsm9458089pgb.91.2022.08.02.14.50.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 02 Aug 2022 14:44:28 -0700 (PDT)
+        Tue, 02 Aug 2022 14:50:16 -0700 (PDT)
 From:   Daniil Lunev <dlunev@chromium.org>
 To:     Adrian Hunter <adrian.hunter@intel.com>,
         Bart Van Assche <bvanassche@acm.org>,
-        Stanley Chu <chu.stanley@gmail.com>
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Cc:     Daniil Lunev <dlunev@chromium.org>,
         Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         Bean Huo <beanhuo@micron.com>,
-        Daejun Park <daejun7.park@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        Sohaib Mohamed <sohaib.amhmd@gmail.com>,
         linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [PATCH v4] ufs: core: ufshcd: use local_clock() for debugging timestamps
-Date:   Wed,  3 Aug 2022 07:44:19 +1000
-Message-Id: <20220803074349.v4.1.I699244ea7efbd326a34a6dfd9b5a31e78400cf68@changeid>
+Subject: [PATCH v6] ufs: core: print UFSHCD capabilities in controller's sysfs node
+Date:   Wed,  3 Aug 2022 07:50:07 +1000
+Message-Id: <20220803074955.v6.1.Ibf9efc9be50783eeee55befa2270b7d38552354c@changeid>
 X-Mailer: git-send-email 2.31.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -66,174 +67,127 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-CLOCK_MONOTONIC is not advanced when the system is in suspend. This
-becomes problematic when debugging issues related to suspend-resume:
-the timestamps printed by ufshcd_print_trs can not be correlated with
-dmesg entries, which are timestamped with local_clock().
-
-This CL changes the used clock to local_clock() for the informational
-timestamp variables and adds mirroring *_local_clock instances for
-variables used in subsequent derevations (to not change the semantics of
-those derevations).
+Allows userspace to check if Clock Scaling and Write Booster are
+supported.
 
 Signed-off-by: Daniil Lunev <dlunev@chromium.org>
 
 ---
 
+Changes in v6:
+* Add comment to clarify meaning of the "capbilities" sysfs group.
+
+Changes in v5:
+* Correct wording for clock scaling.
+* Correct wording for the commit message.
+
 Changes in v4:
-- Use div_u64 instead of "/"
+* Dropped crypto node per Eric Biggers mentioning it can be queried from
+  disk's queue node
 
 Changes in v3:
-- Add missing header
+* Expose each capability individually.
+* Update documentation to represent new scheme.
 
 Changes in v2:
-- Use local clock to better align with dmesg
-- Correct commit message
+* Add documentation entry for the new sysfs node.
 
- drivers/ufs/core/ufshcd.c | 20 ++++++++++++--------
- include/ufs/ufshcd.h      | 14 +++++++++-----
- 2 files changed, 21 insertions(+), 13 deletions(-)
+ Documentation/ABI/testing/sysfs-driver-ufs | 26 +++++++++++++++
+ drivers/ufs/core/ufs-sysfs.c               | 37 ++++++++++++++++++++++
+ 2 files changed, 63 insertions(+)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index ce86d1b790c05..3b3c011d81e36 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -21,6 +21,7 @@
- #include <linux/interrupt.h>
- #include <linux/module.h>
- #include <linux/regulator/consumer.h>
-+#include <linux/sched/clock.h>
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_dbg.h>
- #include <scsi/scsi_driver.h>
-@@ -460,7 +461,7 @@ static void ufshcd_print_evt(struct ufs_hba *hba, u32 id,
- 		if (e->tstamp[p] == 0)
- 			continue;
- 		dev_err(hba->dev, "%s[%d] = 0x%x at %lld us\n", err_name, p,
--			e->val[p], ktime_to_us(e->tstamp[p]));
-+			e->val[p], div_u64(e->tstamp[p], 1000));
- 		found = true;
- 	}
+diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
+index 6b248abb1bd71..1750a9b84ce0f 100644
+--- a/Documentation/ABI/testing/sysfs-driver-ufs
++++ b/Documentation/ABI/testing/sysfs-driver-ufs
+@@ -1591,6 +1591,32 @@ Description:	This entry shows the status of HPB.
  
-@@ -505,9 +506,9 @@ void ufshcd_print_trs(struct ufs_hba *hba, unsigned long bitmap, bool pr_prdt)
- 		lrbp = &hba->lrb[tag];
+ 		The file is read only.
  
- 		dev_err(hba->dev, "UPIU[%d] - issue time %lld us\n",
--				tag, ktime_to_us(lrbp->issue_time_stamp));
-+				tag, div_u64(lrbp->issue_time_stamp_local_clock, 1000));
- 		dev_err(hba->dev, "UPIU[%d] - complete time %lld us\n",
--				tag, ktime_to_us(lrbp->compl_time_stamp));
-+				tag, div_u64(lrbp->compl_time_stamp_local_clock, 1000));
- 		dev_err(hba->dev,
- 			"UPIU[%d] - Transfer Request Descriptor phys@0x%llx\n",
- 			tag, (u64)lrbp->utrd_dma_addr);
-@@ -569,10 +570,10 @@ static void ufshcd_print_host_state(struct ufs_hba *hba)
- 	dev_err(hba->dev, "Clk gate=%d\n", hba->clk_gating.state);
- 	dev_err(hba->dev,
- 		"last_hibern8_exit_tstamp at %lld us, hibern8_exit_cnt=%d\n",
--		ktime_to_us(hba->ufs_stats.last_hibern8_exit_tstamp),
-+		div_u64(hba->ufs_stats.last_hibern8_exit_tstamp, 1000),
- 		hba->ufs_stats.hibern8_exit_cnt);
- 	dev_err(hba->dev, "last intr at %lld us, last intr status=0x%x\n",
--		ktime_to_us(hba->ufs_stats.last_intr_ts),
-+		div_u64(hba->ufs_stats.last_intr_ts, 1000),
- 		hba->ufs_stats.last_intr_status);
- 	dev_err(hba->dev, "error handling flags=0x%x, req. abort count=%d\n",
- 		hba->eh_flags, hba->req_abort_count);
-@@ -2142,7 +2143,9 @@ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
- 	unsigned long flags;
- 
- 	lrbp->issue_time_stamp = ktime_get();
-+	lrbp->issue_time_stamp_local_clock = local_clock();
- 	lrbp->compl_time_stamp = ktime_set(0, 0);
-+	lrbp->compl_time_stamp_local_clock = 0;
- 	ufshcd_add_command_trace(hba, task_tag, UFS_CMD_SEND);
- 	ufshcd_clk_scaling_start_busy(hba);
- 	if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
-@@ -4199,7 +4202,7 @@ int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
- 	} else {
- 		ufshcd_vops_hibern8_notify(hba, UIC_CMD_DME_HIBER_EXIT,
- 								POST_CHANGE);
--		hba->ufs_stats.last_hibern8_exit_tstamp = ktime_get();
-+		hba->ufs_stats.last_hibern8_exit_tstamp = local_clock();
- 		hba->ufs_stats.hibern8_exit_cnt++;
- 	}
- 
-@@ -4696,7 +4699,7 @@ void ufshcd_update_evt_hist(struct ufs_hba *hba, u32 id, u32 val)
- 
- 	e = &hba->ufs_stats.event[id];
- 	e->val[e->pos] = val;
--	e->tstamp[e->pos] = ktime_get();
-+	e->tstamp[e->pos] = local_clock();
- 	e->cnt += 1;
- 	e->pos = (e->pos + 1) % UFS_EVENT_HIST_LENGTH;
- 
-@@ -5329,6 +5332,7 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
- 	for_each_set_bit(index, &completed_reqs, hba->nutrs) {
- 		lrbp = &hba->lrb[index];
- 		lrbp->compl_time_stamp = ktime_get();
-+		lrbp->compl_time_stamp_local_clock = local_clock();
- 		cmd = lrbp->cmd;
- 		if (cmd) {
- 			if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
-@@ -6617,7 +6621,7 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
- 
- 	intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
- 	hba->ufs_stats.last_intr_status = intr_status;
--	hba->ufs_stats.last_intr_ts = ktime_get();
-+	hba->ufs_stats.last_intr_ts = local_clock();
- 
- 	/*
- 	 * There could be max of hba->nutrs reqs in flight and in worst case
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index a92271421718e..2de73196bb779 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -160,8 +160,10 @@ struct ufs_pm_lvl_states {
-  * @task_tag: Task tag of the command
-  * @lun: LUN of the command
-  * @intr_cmd: Interrupt command (doesn't participate in interrupt aggregation)
-- * @issue_time_stamp: time stamp for debug purposes
-- * @compl_time_stamp: time stamp for statistics
-+ * @issue_time_stamp: time stamp for debug purposes (CLOCK_MONOTONIC)
-+ * @issue_time_stamp_local_clock: time stamp for debug purposes (local_clock)
-+ * @compl_time_stamp: time stamp for statistics (CLOCK_MONOTONIC)
-+ * @compl_time_stamp_local_clock: time stamp for debug purposes (local_clock)
-  * @crypto_key_slot: the key slot to use for inline crypto (-1 if none)
-  * @data_unit_num: the data unit number for the first block for inline crypto
-  * @req_abort_skip: skip request abort task flag
-@@ -185,7 +187,9 @@ struct ufshcd_lrb {
- 	u8 lun; /* UPIU LUN id field is only 8-bit wide */
- 	bool intr_cmd;
- 	ktime_t issue_time_stamp;
-+	u64 issue_time_stamp_local_clock;
- 	ktime_t compl_time_stamp;
-+	u64 compl_time_stamp_local_clock;
- #ifdef CONFIG_SCSI_UFS_CRYPTO
- 	int crypto_key_slot;
- 	u64 data_unit_num;
-@@ -430,7 +434,7 @@ struct ufs_clk_scaling {
- struct ufs_event_hist {
- 	int pos;
- 	u32 val[UFS_EVENT_HIST_LENGTH];
--	ktime_t tstamp[UFS_EVENT_HIST_LENGTH];
-+	u64 tstamp[UFS_EVENT_HIST_LENGTH];
- 	unsigned long long cnt;
++What:		/sys/bus/platform/drivers/ufshcd/*/capabilities/clock_scaling
++What:		/sys/bus/platform/devices/*.ufs/capabilities/clock_scaling
++Date:		July 2022
++Contact:	Daniil Lunev <dlunev@chromium.org>
++Description:	Indicates status of clock scaling.
++
++		== ============================
++		0  Clock scaling is not supported.
++		1  Clock scaling is supported.
++		== ============================
++
++		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/capabilities/write_booster
++What:		/sys/bus/platform/devices/*.ufs/capabilities/write_booster
++Date:		July 2022
++Contact:	Daniil Lunev <dlunev@chromium.org>
++Description:	Indicates status of Write Booster.
++
++		== ============================
++		0  Write Booster can not be enabled.
++		1  Write Booster can be enabled.
++		== ============================
++
++		The file is read only.
++
+ What:		/sys/class/scsi_device/*/device/hpb_param_sysfs/activation_thld
+ Date:		February 2021
+ Contact:	Avri Altman <avri.altman@wdc.com>
+diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
+index 0a088b47d5570..4149cdf19de92 100644
+--- a/drivers/ufs/core/ufs-sysfs.c
++++ b/drivers/ufs/core/ufs-sysfs.c
+@@ -279,6 +279,42 @@ static const struct attribute_group ufs_sysfs_default_group = {
+ 	.attrs = ufs_sysfs_ufshcd_attrs,
  };
  
-@@ -446,10 +450,10 @@ struct ufs_event_hist {
-  */
- struct ufs_stats {
- 	u32 last_intr_status;
--	ktime_t last_intr_ts;
-+	u64 last_intr_ts;
++static ssize_t clock_scaling_show(struct device *dev, struct device_attribute *attr,
++				  char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++
++	return sysfs_emit(buf, "%d\n", ufshcd_is_clkscaling_supported(hba));
++}
++
++static ssize_t write_booster_show(struct device *dev, struct device_attribute *attr,
++				  char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++
++	return sysfs_emit(buf, "%d\n", ufshcd_is_wb_allowed(hba));
++}
++
++static DEVICE_ATTR_RO(clock_scaling);
++static DEVICE_ATTR_RO(write_booster);
++
++/*
++ * The "capabilities" sysfs group represents the effective capabilities of the
++ * host-device pair, i.e. the capabilities which are enabled in the driver for
++ * the specific host controller, supported by the host controller and are
++ * supported and/or have compatible configuration on the device side.
++ */
++static struct attribute *ufs_sysfs_capabilities_attrs[] = {
++	&dev_attr_clock_scaling.attr,
++	&dev_attr_write_booster.attr,
++	NULL
++};
++
++static const struct attribute_group ufs_sysfs_capabilities_group = {
++	.name = "capabilities",
++	.attrs = ufs_sysfs_capabilities_attrs,
++};
++
+ static ssize_t monitor_enable_show(struct device *dev,
+ 				   struct device_attribute *attr, char *buf)
+ {
+@@ -1134,6 +1170,7 @@ static const struct attribute_group ufs_sysfs_attributes_group = {
  
- 	u32 hibern8_exit_cnt;
--	ktime_t last_hibern8_exit_tstamp;
-+	u64 last_hibern8_exit_tstamp;
- 	struct ufs_event_hist event[UFS_EVT_CNT];
- };
- 
+ static const struct attribute_group *ufs_sysfs_groups[] = {
+ 	&ufs_sysfs_default_group,
++	&ufs_sysfs_capabilities_group,
+ 	&ufs_sysfs_monitor_group,
+ 	&ufs_sysfs_device_descriptor_group,
+ 	&ufs_sysfs_interconnect_descriptor_group,
 -- 
 2.31.0
 
