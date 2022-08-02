@@ -2,78 +2,74 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DEE3C00140
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Aug 2022 14:13:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88005C00140
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Aug 2022 14:33:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237231AbiHBONe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Aug 2022 10:13:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41898 "EHLO
+        id S237309AbiHBOdt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Aug 2022 10:33:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54022 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237157AbiHBONd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Aug 2022 10:13:33 -0400
-Received: from mail-lf1-x129.google.com (mail-lf1-x129.google.com [IPv6:2a00:1450:4864:20::129])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F2781B7A1;
-        Tue,  2 Aug 2022 07:13:32 -0700 (PDT)
-Received: by mail-lf1-x129.google.com with SMTP id e15so12097515lfs.0;
-        Tue, 02 Aug 2022 07:13:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc;
-        bh=gq5EF+uHu6U2Mh2NO3P+IK3XirUR3qoeh2OQtRdPzSE=;
-        b=Posz/xft7fE+5ODbToH8feXAc2vPzH4JAfErx4gip96rWFBD2vQgD0diCZS9MxC9dK
-         nEX+UEpbPhrPn6rtebFwSre/DaMptZwarVun5mXyGT3XjkqTCwqpU54zRf7395f9seAl
-         3qpxr0aemw4SAJnptCqzI+CUJmO2cmLs+YiH2YnO4YVh/v6oH4iTcmc1lSRKiiN0hU+/
-         Djfy6yWMqcqPkEBQY2SylkuDOKsXE3jdfmDoXkW/0cL2SFNMnaX3hf7s2tcaFZq2Z8+P
-         kjJNnmfRF9Cx8a98re5swBSrOBs38DIRGOzwLCUJZ9Qd9C9twGPNLvsItGRTT+LWCCVm
-         xZ3g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc;
-        bh=gq5EF+uHu6U2Mh2NO3P+IK3XirUR3qoeh2OQtRdPzSE=;
-        b=vSGMqTrN5httHXARyOAzdTZUIV+Z4zX5BXacQc7wKMdnPtxWfZ4hdSAK9wSr/0KPg3
-         x1Fe/L/lDJdZV7cdQtVqbxpbiizYAxP57ltgupEXO+3w61IWY1kz6/SmHqgd2ZiBB0ve
-         6PLgYxOXWPPmF4UAXEvWcEgPHs/b1zf+vXFmcIq1SMoJMsGqK5G4cnnyc8253P/NYJAU
-         XgmznD9FGlVmaBrd0b9GSjew0nmpPbG8Nse6ehd3UCzGyByg6JP6Qzc9jDPTinrPb1bX
-         0D9r5rsyrlVpc4eQJzl42iuebpY6OXwW6AKunXN4QGN2KxCjstb4vftYE/9DLibGHsKK
-         FrhQ==
-X-Gm-Message-State: ACgBeo0FDMN5ipha7rfUU6OrEiXkBpf9usEwuOneam5fdPGH1/xraDwl
-        QJIUapwW3J2PgQOUg/E8WPK/cmt8e5eYmzEFrkzEGR//oPiF
-X-Google-Smtp-Source: AA6agR6hwnxP5Z9bhzfcvqMV3gDZ5SCPC++b1OWUATEkGKBdN/dQZMHEWChjLXMb45tdDo/vVsY319c6vtdeCXd+2pg=
-X-Received: by 2002:a05:6512:3096:b0:48b:4f7:9019 with SMTP id
- z22-20020a056512309600b0048b04f79019mr2133407lfd.208.1659449610460; Tue, 02
- Aug 2022 07:13:30 -0700 (PDT)
+        with ESMTP id S236750AbiHBOds (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Aug 2022 10:33:48 -0400
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DFC1E1571D
+        for <linux-scsi@vger.kernel.org>; Tue,  2 Aug 2022 07:33:47 -0700 (PDT)
+X-UUID: 215f38cd16bb4b0d85dd590cf467fb6b-20220802
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.8,REQID:13147732-e2b2-454d-a4bf-181768a0e058,OB:0,LO
+        B:0,IP:0,URL:5,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,RULE:Release_Ham,ACTI
+        ON:release,TS:5
+X-CID-META: VersionHash:0f94e32,CLOUDID:594d16d0-a6cf-4fb6-be1b-c60094821ca2,C
+        OID:IGNORED,Recheck:0,SF:nil,TC:nil,Content:0,EDM:-3,IP:nil,URL:1,File:nil
+        ,QS:nil,BEC:nil,COL:0
+X-UUID: 215f38cd16bb4b0d85dd590cf467fb6b-20220802
+Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw01.mediatek.com
+        (envelope-from <peter.wang@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 326605912; Tue, 02 Aug 2022 22:33:41 +0800
+Received: from mtkmbs11n1.mediatek.inc (172.21.101.186) by
+ mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.792.15; Tue, 2 Aug 2022 22:33:39 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.792.15 via Frontend Transport; Tue, 2 Aug 2022 22:33:39 +0800
+From:   <peter.wang@mediatek.com>
+To:     <stanley.chu@mediatek.com>, <linux-scsi@vger.kernel.org>,
+        <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
+        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
+CC:     <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
+        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+        <alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
+        <chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
+        <powen.kao@mediatek.com>, <qilin.tan@mediatek.com>,
+        <lin.gui@mediatek.com>
+Subject: [PATCH v3 0/2] ufs: allow host driver disable wb toggle druing clock scaling
+Date:   Tue, 2 Aug 2022 22:32:21 +0800
+Message-ID: <20220802143223.1276-1-peter.wang@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
-References: <CGME20220802080146epcms2p24b86bfce3d3c09c79b91d861cb3b2cce@epcms2p6>
- <20220802080146epcms2p24b86bfce3d3c09c79b91d861cb3b2cce@epcms2p2> <20220802081039epcms2p68dbe18151e04103d10bf28751f9ace4e@epcms2p6>
-In-Reply-To: <20220802081039epcms2p68dbe18151e04103d10bf28751f9ace4e@epcms2p6>
-From:   Stanley Chu <chu.stanley@gmail.com>
-Date:   Tue, 2 Aug 2022 22:13:18 +0800
-Message-ID: <CAGaU9a9jwjd8NW8M7Cju440nqpHDfuY0m7FWM8dx++m8R=ZYgA@mail.gmail.com>
-Subject: Re: [PATCH v6 6/6] scsi: ufs: wb: Move the comment to the right position
-To:     j-young.choi@samsung.com
-Cc:     ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Aug 2, 2022 at 4:27 PM Jinyoung CHOI <j-young.choi@samsung.com> wrote:
->
-> The location of the comment is wrong. so fix it.
->
-> Reviewed-by: Avri Altman <avri.altman@wdc.com>
-> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-> Signed-off-by: Jinyoung Choi <j-young.choi@samsung.com>
+From: Peter Wang <peter.wang@mediatek.com>
 
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+Mediatek ufs do not want to toggle write booster during clock scaling. 
+This patch set allow host driver disable wb toggle during clock scaling.
+
+Peter Wang (2):
+  ufs: core: introduce a choice of wb toggle during clock scaling
+  ufs: host: support wb toggle with clock scaling
+
+ drivers/ufs/core/ufs-sysfs.c | 3 ++-
+ drivers/ufs/core/ufshcd.c    | 8 +++++---
+ drivers/ufs/host/ufs-qcom.c  | 2 +-
+ include/ufs/ufshcd.h         | 7 +++++++
+ 4 files changed, 15 insertions(+), 5 deletions(-)
+
+-- 
+2.18.0
+
