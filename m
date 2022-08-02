@@ -2,140 +2,87 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A0D4C19F2C
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Aug 2022 01:46:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 448A7C00144
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Aug 2022 02:38:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235348AbiHBBqD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 Aug 2022 21:46:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34476 "EHLO
+        id S235701AbiHBCig (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 1 Aug 2022 22:38:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42394 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231529AbiHBBp7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2022 21:45:59 -0400
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B754327FFB
-        for <linux-scsi@vger.kernel.org>; Mon,  1 Aug 2022 18:45:56 -0700 (PDT)
-Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20220802014555epoutp0134713a6965297af14d7e1b3ce87044a9~HY9Uz5Jt03024430244epoutp01e
-        for <linux-scsi@vger.kernel.org>; Tue,  2 Aug 2022 01:45:55 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20220802014555epoutp0134713a6965297af14d7e1b3ce87044a9~HY9Uz5Jt03024430244epoutp01e
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1659404755;
-        bh=Q956tALq6kvKLNuJeQDGrC56P4MalXRdUlX1/LqVvak=;
-        h=From:To:Cc:Subject:Date:References:From;
-        b=KA2BJdFdnoLMt9bbjwLUTPpFDnosmIre/nkOmhn/T1MC4Gs/BTxdeIJC1BaXqppd0
-         T09HXX+7YgMwnYSDiqh7qNbt5Vs4hpBZbPeRlmuSkFDhM3+9EyqPi40kDuMe2fsMmE
-         N9M/vsVI8DQGheCBHPm9RRKwdZl0Xc58hXu/Qr2c=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
-        20220802014554epcas2p47d16d5368e5966106ba33ca66ee34592~HY9UE2u9Y1398513985epcas2p4X;
-        Tue,  2 Aug 2022 01:45:54 +0000 (GMT)
-Received: from epsmges2p4.samsung.com (unknown [182.195.36.92]) by
-        epsnrtp1.localdomain (Postfix) with ESMTP id 4Lxd9s2drKz4x9Q2; Tue,  2 Aug
-        2022 01:45:53 +0000 (GMT)
-Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
-        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
-        E0.95.09662.1D188E26; Tue,  2 Aug 2022 10:45:53 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas2p2.samsung.com (KnoxPortal) with ESMTPA id
-        20220802014552epcas2p236519c03464ab32d9a877887710b1c10~HY9SxpeNi2956229562epcas2p2I;
-        Tue,  2 Aug 2022 01:45:52 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20220802014552epsmtrp25687b3c86d3a62cbba76d37917a81bdb~HY9SwrOih0405604056epsmtrp2m;
-        Tue,  2 Aug 2022 01:45:52 +0000 (GMT)
-X-AuditID: b6c32a48-9f7ff700000025be-78-62e881d1a865
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        1A.94.08905.0D188E26; Tue,  2 Aug 2022 10:45:52 +0900 (KST)
-Received: from ubuntu.dsn.sec.samsung.com (unknown [10.229.95.128]) by
-        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20220802014552epsmtip2b6e0a15be128dbf8bcbe0afe2596aea2~HY9ShJ_Sg2693826938epsmtip2B;
-        Tue,  2 Aug 2022 01:45:52 +0000 (GMT)
-From:   Kiwoong Kim <kwmad.kim@samsung.com>
-To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com,
-        adrian.hunter@intel.com, sc.suh@samsung.com, hy50.seo@samsung.com,
-        sh425.lee@samsung.com, bhoon95.kim@samsung.com
-Cc:     Kiwoong Kim <kwmad.kim@samsung.com>
-Subject: [PATCH v2] scsi: ufs: enable link lost interrupt
-Date:   Tue,  2 Aug 2022 10:42:31 +0900
-Message-Id: <1659404551-160958-1-git-send-email-kwmad.kim@samsung.com>
-X-Mailer: git-send-email 2.7.4
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrCKsWRmVeSWpSXmKPExsWy7bCmhe7FxhdJBtOfCVicfLKGzeLBvG1s
-        Fi9/XmWzOPiwk8Xi69JnrBarFz9gsVh0YxuTxc0tR1ksLu+aw2bRfX0Hm8Xy4/+YLLru3mC0
-        WPrvLYsDr8fiPS+ZPCYsOsDo8X19B5vHx6e3WDz6tqxi9Pi8Sc6j/UA3UwB7VLZNRmpiSmqR
-        Qmpecn5KZl66rZJ3cLxzvKmZgaGuoaWFuZJCXmJuqq2Si0+ArltmDtC5SgpliTmlQKGAxOJi
-        JX07m6L80pJUhYz84hJbpdSClJwC8wK94sTc4tK8dL281BIrQwMDI1OgwoTsjB13HrIXfGWv
-        WDvjBnsD41G2LkZODgkBE4kXDeeZuxi5OIQEdjBKvPx3jAkkISTwiVHiSH8whP2NUaJ3igJM
-        w7HTixghGvYCNcxcwQTh/GCUeP56FVg3m4CmxNObU8ESIgIrmSRuvFoGlmAWUJfYNeEEmC0s
-        YCmx7/EtFhCbRUBV4tOKmYwgNq+Am0Tr3gOMEOvkJG6e62SGsN+yS+x5Kwxhu0ic7jsCFReW
-        eHV8CzuELSXx+d1eoN84gOxiiU375EFukBBoYJRY8mkzC0SNscSsZ+2MIDXMQIeu36UPUa4s
-        cQTiGmYBPomOw3/ZIcK8Eh1tQhCNyhK/Jk2GOkxSYubNO1AlHhI9BxQgQRUr8WHvJuYJjLKz
-        EMYvYGRcxSiWWlCcm55abFRgAo+h5PzcTYzg5KflsYNx9tsPeocYmTgYDzFKcDArifDecXme
-        JMSbklhZlVqUH19UmpNafIjRFBhYE5mlRJPzgek3ryTe0MTSwMTMzNDcyNTAXEmc1ytlQ6KQ
-        QHpiSWp2ampBahFMHxMHp1QDU5z/KYl/bm6CcxYsDq1NWctQsJ3pfFfbfY+fqhmGn9KUFD2r
-        NvRlJ265+SfN4fu3Hdnsrs+fOG1dtevHi2yxhDdrbtc7dnd6+P8T12JYVtkeOOeQs0PJ7l0y
-        STYzzsalGO/5turkjOz6nav27Zl2dE9tQqGa79FcA9e0iKY9mW7z/uhsEP0w7eHF2LPrz0ws
-        Z1uT9+Pg7WfP1nzaWnvb9/Xb7V9WpSQFrpjw3uTPwuqSfr3X9/t+7VW5uzljXifDp/Cc0p5f
-        c0uCz6a2in1bx380s9Ymp9ki/8uaW2cSkpMO+d+U3W8Rk7+6fWNRx+YjQTeuP5Sp2Wkrsbxz
-        QcQKO4kJHKfeRkVYfzny9fibrPdKLMUZiYZazEXFiQC5osuMBwQAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrGLMWRmVeSWpSXmKPExsWy7bCSvO6FxhdJBreP6lmcfLKGzeLBvG1s
-        Fi9/XmWzOPiwk8Xi69JnrBarFz9gsVh0YxuTxc0tR1ksLu+aw2bRfX0Hm8Xy4/+YLLru3mC0
-        WPrvLYsDr8fiPS+ZPCYsOsDo8X19B5vHx6e3WDz6tqxi9Pi8Sc6j/UA3UwB7FJdNSmpOZllq
-        kb5dAlfGjjsP2Qu+slesnXGDvYHxKFsXIyeHhICJxLHTixi7GLk4hAR2M0pMajvNBJGQlDix
-        8zkjhC0scb/lCCuILSTwjVFi/k4xEJtNQFPi6c2pYPUiAtuZJH59TAOxmQXUJXZNOAEWFxaw
-        lNj3+BYLiM0ioCrxacVMsJm8Am4SrXsPQM2Xk7h5rpN5AiPPAkaGVYySqQXFuem5xYYFhnmp
-        5XrFibnFpXnpesn5uZsYwUGppbmDcfuqD3qHGJk4GA8xSnAwK4nw3nF5niTEm5JYWZValB9f
-        VJqTWnyIUZqDRUmc90LXyXghgfTEktTs1NSC1CKYLBMHp1QDU4Ps/pMnuq4IbrTyCdVJSnSX
-        z5vwX9s244VQxrHjr1YdSGFvzvXb8LLN7th10SYX9+CZG3lFZOd6vFw9W3flVHa7/M0tDA+L
-        VWI3v0sV6rv0Y9vKP0tVJr402CBVLPXg/8v7Vk8vvfz5YVFTs8e3teVtrDN4a4onSk393/Zd
-        /Zdx1Q7zqPlTZ2wXy3i2TMyV/UGIIEPglxmMecynV7cy//xhnXXvYmCEzYQmriqR3UG1ux/6
-        xU3ga+ufHLJuQvu024f2fd3ockvV+u0+rfqL6zbe1/OTdPvFfOCU+BS/7fO1lt4K27qi82jN
-        94zE001uu3fuS/04v+P1PplbRV6/p1gftN2efMbt0ZEt29/8nrhbiaU4I9FQi7moOBEAnlgh
-        NLkCAAA=
-X-CMS-MailID: 20220802014552epcas2p236519c03464ab32d9a877887710b1c10
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20220802014552epcas2p236519c03464ab32d9a877887710b1c10
-References: <CGME20220802014552epcas2p236519c03464ab32d9a877887710b1c10@epcas2p2.samsung.com>
+        with ESMTP id S231416AbiHBCif (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2022 22:38:35 -0400
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E68AC41D02;
+        Mon,  1 Aug 2022 19:38:34 -0700 (PDT)
+Received: by mail-pl1-f176.google.com with SMTP id d16so4073194pll.11;
+        Mon, 01 Aug 2022 19:38:34 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc;
+        bh=UGzznOV9VUjY4XYtVqCKOg55qroI35eUv2/+eZwa/S0=;
+        b=eBhWrKmgHcQRTAtnBXgZqV8TZCqhS3LD8g9Fu51vHe+x3M/K+DyrmMjv9ccyPoEOVY
+         EYiUn3j9JMw+CVt0iXIGuuuzE3P6mruXb05gsj/Ti6JFp+BiQyRdvJ+o2Wboe7k6KzrJ
+         1BwM5SIjELm2tbYmw5dGVf/r2LlwMcvLh7QYH4P0ZIt2pCyNSlP5bw6xJLi1toR36tfj
+         K96KI/KfMwSKnD2PN92mxsBsISXjG4WJSghLEZC/aMFentjb/6BE2w3DyvvEX2ChfiC+
+         D9FkMZ8QDlKKUBU2Gl86OXSfYg7Zf20zs7ASSwGi9h0dWO2HFLBmf8Td7YcwXE3KWYwM
+         mbwQ==
+X-Gm-Message-State: ACgBeo0iSnG6t4ZWaSq/wzKyq6PZ+UTr6iqlKS28bLkuS2IMONCs1sBQ
+        qYo4WB7hEjy+WRyHuYRWeOM=
+X-Google-Smtp-Source: AA6agR7BIr8AO5+UTQSdCXvoHrMZ7XFc20qaqeBllNotwuZ6TgL1KEpbuk0pEVZV5xXyRI+tZldklw==
+X-Received: by 2002:a17:902:d48f:b0:16d:4b2e:e2a2 with SMTP id c15-20020a170902d48f00b0016d4b2ee2a2mr18844904plg.77.1659407914211;
+        Mon, 01 Aug 2022 19:38:34 -0700 (PDT)
+Received: from [192.168.3.217] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id e4-20020a056a0000c400b0052dd95e72bcsm332434pfj.193.2022.08.01.19.38.31
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 01 Aug 2022 19:38:32 -0700 (PDT)
+Message-ID: <c4acb34f-7bba-336f-ddfc-a9c098f2c95f@acm.org>
+Date:   Mon, 1 Aug 2022 19:38:31 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+Subject: Re: [PATCH v5] ufs: core: print UFSHCD capabilities in controller's
+ sysfs node
+Content-Language: en-US
+To:     Daniil Lunev <dlunev@chromium.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Keoseong Park <keosung.park@samsung.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        Sohaib Mohamed <sohaib.amhmd@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+References: <20220802103643.v5.1.Ibf9efc9be50783eeee55befa2270b7d38552354c@changeid>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20220802103643.v5.1.Ibf9efc9be50783eeee55befa2270b7d38552354c@changeid>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-v1 -> v2: add a fixes tag
+On 8/1/22 17:37, Daniil Lunev wrote:
+> +What:		/sys/bus/platform/drivers/ufshcd/*/capabilities/write_booster
+> +What:		/sys/bus/platform/devices/*.ufs/capabilities/write_booster
+> +Date:		July 2022
+> +Contact:	Daniil Lunev <dlunev@chromium.org>
+> +Description:	Indicates status of Write Booster.
+> +
+> +		== ============================
+> +		0  Write Booster can not be enabled.
+> +		1  Write Booster can be enabled.
+> +		== ============================
+> +
+> +		The file is read only.
+Is the "capabilities" directory a directory with capabilities of the 
+host, with capabilities of the UFS device or perhaps with capabilities 
+of both?
 
-Link lost is treated as fatal error with the patch
-c99b9b2, but its event isn't registered as interrupt source,
-so I enable it.
+Thanks,
 
-Fixes: c99b9b2 ("scsi: ufs: Treat link loss as fatal error")
-Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
----
- drivers/scsi/ufs/ufshci.h | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-index a7ff0e5..0b627f4 100644
---- a/drivers/scsi/ufs/ufshci.h
-+++ b/drivers/scsi/ufs/ufshci.h
-@@ -133,11 +133,7 @@ static inline u32 ufshci_version(u32 major, u32 minor)
- 
- #define UFSHCD_UIC_MASK		(UIC_COMMAND_COMPL | UFSHCD_UIC_PWR_MASK)
- 
--#define UFSHCD_ERROR_MASK	(UIC_ERROR |\
--				DEVICE_FATAL_ERROR |\
--				CONTROLLER_FATAL_ERROR |\
--				SYSTEM_BUS_FATAL_ERROR |\
--				CRYPTO_ENGINE_FATAL_ERROR)
-+#define UFSHCD_ERROR_MASK	(UIC_ERROR | INT_FATAL_ERRORS)
- 
- #define INT_FATAL_ERRORS	(DEVICE_FATAL_ERROR |\
- 				CONTROLLER_FATAL_ERROR |\
--- 
-2.7.4
-
+Bart.
