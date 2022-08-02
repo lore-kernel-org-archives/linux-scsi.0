@@ -2,237 +2,238 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 569ADC00140
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Aug 2022 21:12:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B936DC00140
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Aug 2022 21:44:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233140AbiHBVMf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Aug 2022 17:12:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58232 "EHLO
+        id S234587AbiHBVod (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Aug 2022 17:44:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53638 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233085AbiHBVMe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Aug 2022 17:12:34 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FE7046D9F
-        for <linux-scsi@vger.kernel.org>; Tue,  2 Aug 2022 14:12:33 -0700 (PDT)
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 272KXvc4028656;
-        Tue, 2 Aug 2022 21:12:32 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-id : content-transfer-encoding : mime-version; s=corp-2022-7-12;
- bh=bCz7hU/htztg9zWDfLkgMmIPU+SjjkCoeBxkJq5rpl0=;
- b=YD+iypaI7d5E11c01dyZ76/7p+JdcRlMlW76oZDxWiE3FIkPq01szoNSw+DJqUrClGSe
- gFdiB7bpGhZLwE4hrZT56DnonB6LZ5HmRl8iBs+0jGtyzoymdKMbAuztX7wCNQeKd70U
- eEeJ3OY7iwL85DXbrvYMsiS5inX6k2mNS+xHzYopr1VJnt8iqph66zQKdV67KwU7fitu
- uBfE4EidryKF2o9ze3HT+vRRjP9FXAth7dbEJKc517W+GjOjhwk0EuzSU4lVJR2fgCyo
- qW4rGzFHhutksPoDOcp8/YznjahEqI/U0bJ79z3vlUswtibwRs75TQfWulfBYp43wj0p lg== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3hmvh9r10c-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 02 Aug 2022 21:12:32 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 272Jf5wB007354;
-        Tue, 2 Aug 2022 21:12:31 GMT
-Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2171.outbound.protection.outlook.com [104.47.59.171])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3hmu32f296-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 02 Aug 2022 21:12:31 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Bv0jOL0KMNL/6Skrc8tIRKhIrYHij7spYO5JRhMEhHnyKaZHW6Z5od4bE2tEYFW6UtKpsa3uCYnAYBHfelpkZWH5rUsMKPXgfWYAoQE3LEOSnlEoZH/Wntk/soC+FzuHft4+vod9azE+jxFFjc2IbME2aMwFhDArwiqcalh8gR2JsS8XwpGE+/ruL+fyqaHF0g+LUTory424oG72e5PWhri+1vXUJh8KevKP8Fz06oCcbWxhJ0PGbP+yY/6WP8eEJGJOvvTQdQh6NwhE6lhjtkEuDUlURwSCG7/4w/fiDYphK8QBGD1t5qRhsOwv0LyhKwW2PROFdhLPAMFhycNUmg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=bCz7hU/htztg9zWDfLkgMmIPU+SjjkCoeBxkJq5rpl0=;
- b=iQbXP+4F72Rl6n1qkqRgYtvNJrOF0TtuX43/XFvzItNmiwkhKnTaej8bVfOm3aC1BoKMsTIfdY9AMxa/tj6NhwMEci7xWxFgphZ1+vt15vBviiO4HzF7CW3R2eEBqScbfkhTl975H2/9i2eRQtRv6Zutb30xUS75jk0EkL7fHtX29iYUH/DZzYRcC6LeL7byd/rcrjcw1zVj7IwYp4+qiBEFfWO4P29ODnUc6Khqcb5cg9o2UylBSnF9hun/ovq+yCgDb+8SvEF/2eJWwsVd1LPBh2qXjO65Ns6xfrfJZ9lWCxFI7hRWiRLlA9kpWCw4oAbG45VsA2tvSSry64ujHw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+        with ESMTP id S232388AbiHBVoc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Aug 2022 17:44:32 -0400
+Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD5C81E3CA
+        for <linux-scsi@vger.kernel.org>; Tue,  2 Aug 2022 14:44:29 -0700 (PDT)
+Received: by mail-pg1-x52c.google.com with SMTP id bf13so13447559pgb.11
+        for <linux-scsi@vger.kernel.org>; Tue, 02 Aug 2022 14:44:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=bCz7hU/htztg9zWDfLkgMmIPU+SjjkCoeBxkJq5rpl0=;
- b=az0VEA9E2LvgK5p7ILT7rbdSICfhWghAI1dM4T6edGsu7SRxc7Y6m+Zyg7dLMObI3tu+/3aDVpqojetAcMSL2yZBpOlEUw6DdKD7R0KRfZClmN0ECoKEK8NYbkblGhf+ypONMGg/k04ItX373L+vQEErSr6q+PyWgcGVLaDmMtY=
-Received: from SN6PR10MB2943.namprd10.prod.outlook.com (2603:10b6:805:d4::19)
- by MW5PR10MB5874.namprd10.prod.outlook.com (2603:10b6:303:19c::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5482.16; Tue, 2 Aug
- 2022 21:12:29 +0000
-Received: from SN6PR10MB2943.namprd10.prod.outlook.com
- ([fe80::741e:dd09:de30:aee3]) by SN6PR10MB2943.namprd10.prod.outlook.com
- ([fe80::741e:dd09:de30:aee3%3]) with mapi id 15.20.5482.016; Tue, 2 Aug 2022
- 21:12:29 +0000
-From:   Himanshu Madhani <himanshu.madhani@oracle.com>
-To:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-CC:     linux-scsi <linux-scsi@vger.kernel.org>,
-        Martin Petersen <martin.petersen@oracle.com>
-Subject: Re: [PATCH 15/15] mpi3mr: Block IOs while refreshing target dev
- objects
-Thread-Topic: [PATCH 15/15] mpi3mr: Block IOs while refreshing target dev
- objects
-Thread-Index: AQHYo0wQuKgC6SxWL0Wu4MmoZu/IRa2cIosA
-Date:   Tue, 2 Aug 2022 21:12:29 +0000
-Message-ID: <615133A3-CFE0-4134-AAC4-4ECEC5682384@oracle.com>
-References: <20220729131627.15019-1-sreekanth.reddy@broadcom.com>
- <20220729131627.15019-16-sreekanth.reddy@broadcom.com>
-In-Reply-To: <20220729131627.15019-16-sreekanth.reddy@broadcom.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-mailer: Apple Mail (2.3696.100.31)
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 2f5f5959-47f1-4550-7432-08da74cbb53c
-x-ms-traffictypediagnostic: MW5PR10MB5874:EE_
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: etDiChyh+3dAC5DFTcnQX93TWUy6agtELBp2O9QhBQ6VaPTGjF+R3DYkRkXStfZ7wgh/F+OSB0ysV1ssHgTepTiQjNC8amD+Vb7N8Rg6auv2rIbuGEw+qfnEY+OctI7AZT0Oni9MbLIqv7jwThWc/wthga86TzxctafuLOKCqWKqgKQD+u5ivlUcCj8QobbokgS7OGGS/iTc6o3OtAX1TFCja9OdT8PmHWMNbDSD8Flk24rsyQh59jSPHbYV5WmBNfAqJGOm6w9LmXHAluDbsNXTOXOfjRJa9O5Iaj0t8B8niZlmy8NMtEnhqa2VkvAbOX+mggUY1c4+70qyy2sbwqCZhi0B6qdLf6EueEdNDUt9G0ueX/czwiuF0GmOoExFSM/3wz3aEfDN0myWYwVAVaNT2UGGdw3xTj/AxWamaWJQnPanHvUW6DA6SYfgA8btOKsvHIqTANBAeMITYmKn952XPNpLlCDVU8LfTy034bF8Pzc3E/LSA+aAhaI23xJcNZoOwCTG2al3OFpECjYPq40vgyj80HdHAvVCpOul1ylky8PGcUfc4g7LFwM4q4i1eA6rdAiF1BpOK5BjeHoG0ZurV0RyZRxJUl2b2LVVWvFZnLb/8MPCd2KTpPDCMDpfzbI+1pWpehpqPfaTE+GSm+Sjp9RLkMf7a4f99AiUAaUYHiNPVA/YI1MGTuC7HMeF4oID3AaFwNmfBSMZkkgpWrdbhNzTzQvBko5AdGjKwaBi8S9Poe3YtsYv0h4T0CXa1KQ6QapEtZXQQz+FKfGhB/tTC0GJ7D7WD6ZaKzG2uIg7dkapmstFSoNb+3/AbuY1Yl/whD5DjBYfHQjG1G34HrQQEvZVWNiNnpQteKEQyMg=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2943.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(376002)(396003)(346002)(136003)(366004)(39860400002)(478600001)(6916009)(186003)(83380400001)(6512007)(6506007)(36756003)(107886003)(26005)(41300700001)(2616005)(54906003)(6486002)(316002)(8936002)(53546011)(4326008)(38070700005)(8676002)(71200400001)(44832011)(2906002)(33656002)(91956017)(38100700002)(66446008)(86362001)(66946007)(122000001)(5660300002)(76116006)(66476007)(64756008)(66556008)(32563001)(45980500001);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?fD71EkhOMzo6An9xvUb3vtt2Cs0zSP+G6jKS8z/z98V1mxXgSGn0nc4KBnQf?=
- =?us-ascii?Q?D6ch2+pQXzIMK84A6dUdKKq9EvZfQm0saPXXV1WifGLLlMEeBQsB1dgTiG76?=
- =?us-ascii?Q?WLCExQr8LwPo9hgL3hbdpKoHl1Nd97jsf5Slyx1n5VXpw7s4kP2Agz4OmT09?=
- =?us-ascii?Q?EFmY3HfqLklWijNIn9ayx16hdH7fmD6ROPOlOaOsFDG2G232jgHBdn2bYL5L?=
- =?us-ascii?Q?Wo29Jx7lLxi9dOwR8UBnB7+TY2dQbB1RVEqgxsY4RuDXIzbYoN2Q62LfKRPK?=
- =?us-ascii?Q?zo/QHokVJTSCTwuKH9/K7DW5nOImgnDHaBv3cYEHKvnaGjNH5WnHDOyT8iar?=
- =?us-ascii?Q?vl39LrhWYFXzYfIODjOcGtdLyxNQiO6QSne54paK5BAaT7i39jKS2MNNx0gn?=
- =?us-ascii?Q?6MKTcs5uvILgQSiBHKywQY78ax4jYehVxgFqnTwtcXT/ibTV3CI/vtVUj97d?=
- =?us-ascii?Q?S0Ug6aYmQ4WT9sJ7QvXq0PHFY93qR/6PIz4Xc7kbcCKMcvnX4tlwEXs7IwIW?=
- =?us-ascii?Q?to4sz+zal7sxtAFmaNFHGr4MK6nHGTVwav58t6oQ5EpWcI5BoBDC24cOjJwM?=
- =?us-ascii?Q?DAGFTjF+YQm+RFSUAWUCVLUJW9ral0I0bFtQF4AT0H1Br+2YhRz9DFheu015?=
- =?us-ascii?Q?QR9AvaaNmqmCQE73sKQ/OrpimgUK/v8x1ulxq1poBiUi22RqJ361vezFPrrN?=
- =?us-ascii?Q?Q6Tr3hKFxV6A5M+1w7NC/KYlUO7g2WjkKmTAabRpHN9/BQLDBL/H4rJdmgFd?=
- =?us-ascii?Q?pkhnCaMeNNEpQh+b+rul7Kw2NVo4eA+sYfs7uEQ4Bnq0rXNB7z6puee5oot6?=
- =?us-ascii?Q?hsD99klrmNQo2DsZAT/4KnBH+qyWGa1xX4YFH53FnXw6PS3fnHntx7LHBZ2s?=
- =?us-ascii?Q?JHF7dJRb3y+Dif2YdVl+CcbsBIOkLSXpwMpRE6yvdU3PpQDAIapGL7SuaAHz?=
- =?us-ascii?Q?en03NC7qT2n85saY4t/0AB07nr6kse7RYS/wGgB/G/2RTE+wJ4PwQgb0ox1d?=
- =?us-ascii?Q?PqL5Mpd2IJ/tsKmkCOwODR8JRbvhIODsHDoFgdu6d52F36KZRtkpKtQovg6y?=
- =?us-ascii?Q?ALm0mm98nrSb8j8kYgvnNsV1Y3kNx6BWcYWgr91X4FJ+qRgoTVk6Da8lo1nr?=
- =?us-ascii?Q?k7zudF/uzLEMVCHcWINXKDMm7lFOOze/MTgOAd3T68fsFtMMZ0Vcab6ZhYYu?=
- =?us-ascii?Q?bklEtyJ82kkEJE/5/AKJP4TrZSkv4xRrBqdrUKP4plVqyLDXKmO33brexfR2?=
- =?us-ascii?Q?qUx77nMhsX4u9ow02hvMjmqAR+jg6oVC9xBja9x8JS3seUUj6iqyEYdAFrs5?=
- =?us-ascii?Q?7q/fCcRJdj4FattlnZO9SxC6aphNJ9kSWVlkDPEik3ikZBsx69xDoMyMLA7S?=
- =?us-ascii?Q?r//LtwJvvJS2EUIYL3WAX6IVRZNrjAYnhbMfTiIjsVQua3AZ1FJaIQgTV51x?=
- =?us-ascii?Q?cTeQJ/TdmvxjrhnuPtPsfdHKegqCxPd635wKRM5viwMVv5fapjVBGw8MTtXP?=
- =?us-ascii?Q?7BAxkkdqs7SJn6xhOn6jgTib3Y3bICkDNUnXZWQ66WaI76rEEgci4Qhi/eoy?=
- =?us-ascii?Q?O3ZtyE7T+VDrpQAJt5vaoDlBoSJVZNJvkXm3WIAN5zVPMc8UYlCFC1hWccYL?=
- =?us-ascii?Q?Lg=3D=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <8E7D275ABACF934C8CF3671D310F2DEB@namprd10.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=jx77LHzy5pMrCy8NUb4I/3IoM72bQAsPqELbMVaVYMI=;
+        b=M+FWZiBkOwo7uh9T3nWcMkcWmtG6C2yzvR27hmerBUYdhTpujV7CuAQxjNmM81QRzx
+         oVhkDJ8m6h7pH/CNhQWnIfbiYPgrNL/PzQP0GkwY1AkhDwJgg7tCtTiT+ZgUFSmBqbk8
+         u8gAK+JKQPs/OQ2dEpNxLQlxJFDcjd7a1GNVI=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=jx77LHzy5pMrCy8NUb4I/3IoM72bQAsPqELbMVaVYMI=;
+        b=O9FCZ9/LoKkz3U4FRflxMH3aC/r21lOO0t088/xRZ9WfqM347X6qLUZSs0mUxtClld
+         2chvpQtnZtL7qZDz1moBHhNGIrZ5yMSlcrVlgyuW2E+6tzDaNxdYjXaZ/sQLRKJ8mYcY
+         301MfBruWqnuyyEOgqJhLXfPdqXRZr/XcEzJ8CMtkzOgAyIs1Q+coKIklvpmsBn4VxkC
+         6l3ln3xAitk1elHLYbXYkUHPdPpJenFfDVAJ7Ta6cXQub99dwU+1VYxsXZ3tE5VbivST
+         M6raWg5O/nglAxpNBVvKzBxHhTyzQ8KN72MJcvCXNR4blQK4VRk9HZzR7h2gypFPYTrw
+         ootQ==
+X-Gm-Message-State: AJIora/tmhNrR7WRAlURPcG0j/prmYr+q9ROxyChMWvN0ecpmOHlE+95
+        V/8+VI6sbwo+nhYCt7bdg4nD7g==
+X-Google-Smtp-Source: AGRyM1tGwvgbGA4/CpS7LVOQe6EcV1n7uxiobzbS/WgUEYaEjD3YAs5mz5nhXZ1zm2vU3ZYBZXOvgg==
+X-Received: by 2002:a63:f306:0:b0:41a:6258:dcd2 with SMTP id l6-20020a63f306000000b0041a6258dcd2mr18010158pgh.28.1659476669200;
+        Tue, 02 Aug 2022 14:44:29 -0700 (PDT)
+Received: from dlunevwfh.roam.corp.google.com (n122-107-196-14.sbr2.nsw.optusnet.com.au. [122.107.196.14])
+        by smtp.gmail.com with ESMTPSA id x11-20020a170902a38b00b0015e9f45c1f4sm161459pla.186.2022.08.02.14.44.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 02 Aug 2022 14:44:28 -0700 (PDT)
+From:   Daniil Lunev <dlunev@chromium.org>
+To:     Adrian Hunter <adrian.hunter@intel.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Stanley Chu <chu.stanley@gmail.com>
+Cc:     Daniil Lunev <dlunev@chromium.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: [PATCH v4] ufs: core: ufshcd: use local_clock() for debugging timestamps
+Date:   Wed,  3 Aug 2022 07:44:19 +1000
+Message-Id: <20220803074349.v4.1.I699244ea7efbd326a34a6dfd9b5a31e78400cf68@changeid>
+X-Mailer: git-send-email 2.31.0
 MIME-Version: 1.0
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR10MB2943.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2f5f5959-47f1-4550-7432-08da74cbb53c
-X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Aug 2022 21:12:29.3855
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: SN8NfYjlBNsG6dRBbqlon8NlZv5HUoJy71/5ca12hvCo0K+WJMILj9EAi+3/LcHfy4cfEoyp0jETyaHZj1M3+LB5ogmFTsJTEx/OSbTJDkM=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW5PR10MB5874
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
- definitions=2022-08-02_14,2022-08-02_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 suspectscore=0
- adultscore=0 bulkscore=0 malwarescore=0 mlxlogscore=999 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2206140000
- definitions=main-2208020099
-X-Proofpoint-ORIG-GUID: j8EEk_zUOwuVICjGVeo9ZK3m3gMwO0OR
-X-Proofpoint-GUID: j8EEk_zUOwuVICjGVeo9ZK3m3gMwO0OR
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+CLOCK_MONOTONIC is not advanced when the system is in suspend. This
+becomes problematic when debugging issues related to suspend-resume:
+the timestamps printed by ufshcd_print_trs can not be correlated with
+dmesg entries, which are timestamped with local_clock().
 
+This CL changes the used clock to local_clock() for the informational
+timestamp variables and adds mirroring *_local_clock instances for
+variables used in subsequent derevations (to not change the semantics of
+those derevations).
 
-> On Jul 29, 2022, at 6:16 AM, Sreekanth Reddy <sreekanth.reddy@broadcom.co=
-m> wrote:
->=20
-> Block the IOs on the target devices until corresponding
-> target device's target dev objects are refreshed as part
-> of post controller reset operation.
->=20
-> Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-> ---
-> drivers/scsi/mpi3mr/mpi3mr_os.c | 25 +++++++++++++++----------
-> 1 file changed, 15 insertions(+), 10 deletions(-)
->=20
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr=
-_os.c
-> index d4f37b1..c7d9e46 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-> +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-> @@ -424,6 +424,8 @@ void mpi3mr_invalidate_devhandles(struct mpi3mr_ioc *=
-mrioc)
-> 			tgt_priv->io_throttle_enabled =3D 0;
-> 			tgt_priv->io_divert =3D 0;
-> 			tgt_priv->throttle_group =3D NULL;
-> +			if (tgtdev->host_exposed)
-> +				atomic_set(&tgt_priv->block_io, 1);
-> 		}
-> 	}
-> }
-> @@ -835,6 +837,7 @@ void mpi3mr_remove_tgtdev_from_host(struct mpi3mr_ioc=
- *mrioc,
-> 	    __func__, tgtdev->dev_handle, (unsigned long long)tgtdev->wwid);
-> 	if (tgtdev->starget && tgtdev->starget->hostdata) {
-> 		tgt_priv =3D tgtdev->starget->hostdata;
-> +		atomic_set(&tgt_priv->block_io, 0);
-> 		tgt_priv->dev_handle =3D MPI3MR_INVALID_DEV_HANDLE;
-> 	}
->=20
-> @@ -1077,6 +1080,8 @@ static void mpi3mr_update_tgtdev(struct mpi3mr_ioc =
-*mrioc,
-> 		scsi_tgt_priv_data->dev_type =3D tgtdev->dev_type;
-> 		scsi_tgt_priv_data->io_throttle_enabled =3D
-> 		    tgtdev->io_throttle_enabled;
-> +		if (is_added =3D=3D true)
-> +			atomic_set(&scsi_tgt_priv_data->block_io, 0);
-> 	}
->=20
-> 	switch (dev_pg0->access_status) {
-> @@ -4576,6 +4581,16 @@ static int mpi3mr_qcmd(struct Scsi_Host *shost,
->=20
-> 	stgt_priv_data =3D sdev_priv_data->tgt_priv_data;
->=20
-> +	if (atomic_read(&stgt_priv_data->block_io)) {
-> +		if (mrioc->stop_drv_processing) {
-> +			scmd->result =3D DID_NO_CONNECT << 16;
-> +			scsi_done(scmd);
-> +			goto out;
-> +		}
-> +		retval =3D SCSI_MLQUEUE_DEVICE_BUSY;
-> +		goto out;
-> +	}
-> +
-> 	dev_handle =3D stgt_priv_data->dev_handle;
-> 	if (dev_handle =3D=3D MPI3MR_INVALID_DEV_HANDLE) {
-> 		scmd->result =3D DID_NO_CONNECT << 16;
-> @@ -4588,16 +4603,6 @@ static int mpi3mr_qcmd(struct Scsi_Host *shost,
-> 		goto out;
-> 	}
->=20
-> -	if (atomic_read(&stgt_priv_data->block_io)) {
-> -		if (mrioc->stop_drv_processing) {
-> -			scmd->result =3D DID_NO_CONNECT << 16;
-> -			scsi_done(scmd);
-> -			goto out;
-> -		}
-> -		retval =3D SCSI_MLQUEUE_DEVICE_BUSY;
-> -		goto out;
-> -	}
-> -
-> 	if (stgt_priv_data->dev_type =3D=3D MPI3_DEVICE_DEVFORM_PCIE)
-> 		is_pcie_dev =3D 1;
-> 	if ((scmd->cmnd[0] =3D=3D UNMAP) && is_pcie_dev &&
-> --=20
-> 2.27.0
->=20
+Signed-off-by: Daniil Lunev <dlunev@chromium.org>
 
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+---
 
---
-Himanshu Madhani	Oracle Linux Engineering
+Changes in v4:
+- Use div_u64 instead of "/"
+
+Changes in v3:
+- Add missing header
+
+Changes in v2:
+- Use local clock to better align with dmesg
+- Correct commit message
+
+ drivers/ufs/core/ufshcd.c | 20 ++++++++++++--------
+ include/ufs/ufshcd.h      | 14 +++++++++-----
+ 2 files changed, 21 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index ce86d1b790c05..3b3c011d81e36 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -21,6 +21,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/module.h>
+ #include <linux/regulator/consumer.h>
++#include <linux/sched/clock.h>
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_dbg.h>
+ #include <scsi/scsi_driver.h>
+@@ -460,7 +461,7 @@ static void ufshcd_print_evt(struct ufs_hba *hba, u32 id,
+ 		if (e->tstamp[p] == 0)
+ 			continue;
+ 		dev_err(hba->dev, "%s[%d] = 0x%x at %lld us\n", err_name, p,
+-			e->val[p], ktime_to_us(e->tstamp[p]));
++			e->val[p], div_u64(e->tstamp[p], 1000));
+ 		found = true;
+ 	}
+ 
+@@ -505,9 +506,9 @@ void ufshcd_print_trs(struct ufs_hba *hba, unsigned long bitmap, bool pr_prdt)
+ 		lrbp = &hba->lrb[tag];
+ 
+ 		dev_err(hba->dev, "UPIU[%d] - issue time %lld us\n",
+-				tag, ktime_to_us(lrbp->issue_time_stamp));
++				tag, div_u64(lrbp->issue_time_stamp_local_clock, 1000));
+ 		dev_err(hba->dev, "UPIU[%d] - complete time %lld us\n",
+-				tag, ktime_to_us(lrbp->compl_time_stamp));
++				tag, div_u64(lrbp->compl_time_stamp_local_clock, 1000));
+ 		dev_err(hba->dev,
+ 			"UPIU[%d] - Transfer Request Descriptor phys@0x%llx\n",
+ 			tag, (u64)lrbp->utrd_dma_addr);
+@@ -569,10 +570,10 @@ static void ufshcd_print_host_state(struct ufs_hba *hba)
+ 	dev_err(hba->dev, "Clk gate=%d\n", hba->clk_gating.state);
+ 	dev_err(hba->dev,
+ 		"last_hibern8_exit_tstamp at %lld us, hibern8_exit_cnt=%d\n",
+-		ktime_to_us(hba->ufs_stats.last_hibern8_exit_tstamp),
++		div_u64(hba->ufs_stats.last_hibern8_exit_tstamp, 1000),
+ 		hba->ufs_stats.hibern8_exit_cnt);
+ 	dev_err(hba->dev, "last intr at %lld us, last intr status=0x%x\n",
+-		ktime_to_us(hba->ufs_stats.last_intr_ts),
++		div_u64(hba->ufs_stats.last_intr_ts, 1000),
+ 		hba->ufs_stats.last_intr_status);
+ 	dev_err(hba->dev, "error handling flags=0x%x, req. abort count=%d\n",
+ 		hba->eh_flags, hba->req_abort_count);
+@@ -2142,7 +2143,9 @@ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
+ 	unsigned long flags;
+ 
+ 	lrbp->issue_time_stamp = ktime_get();
++	lrbp->issue_time_stamp_local_clock = local_clock();
+ 	lrbp->compl_time_stamp = ktime_set(0, 0);
++	lrbp->compl_time_stamp_local_clock = 0;
+ 	ufshcd_add_command_trace(hba, task_tag, UFS_CMD_SEND);
+ 	ufshcd_clk_scaling_start_busy(hba);
+ 	if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
+@@ -4199,7 +4202,7 @@ int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
+ 	} else {
+ 		ufshcd_vops_hibern8_notify(hba, UIC_CMD_DME_HIBER_EXIT,
+ 								POST_CHANGE);
+-		hba->ufs_stats.last_hibern8_exit_tstamp = ktime_get();
++		hba->ufs_stats.last_hibern8_exit_tstamp = local_clock();
+ 		hba->ufs_stats.hibern8_exit_cnt++;
+ 	}
+ 
+@@ -4696,7 +4699,7 @@ void ufshcd_update_evt_hist(struct ufs_hba *hba, u32 id, u32 val)
+ 
+ 	e = &hba->ufs_stats.event[id];
+ 	e->val[e->pos] = val;
+-	e->tstamp[e->pos] = ktime_get();
++	e->tstamp[e->pos] = local_clock();
+ 	e->cnt += 1;
+ 	e->pos = (e->pos + 1) % UFS_EVENT_HIST_LENGTH;
+ 
+@@ -5329,6 +5332,7 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
+ 	for_each_set_bit(index, &completed_reqs, hba->nutrs) {
+ 		lrbp = &hba->lrb[index];
+ 		lrbp->compl_time_stamp = ktime_get();
++		lrbp->compl_time_stamp_local_clock = local_clock();
+ 		cmd = lrbp->cmd;
+ 		if (cmd) {
+ 			if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
+@@ -6617,7 +6621,7 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
+ 
+ 	intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
+ 	hba->ufs_stats.last_intr_status = intr_status;
+-	hba->ufs_stats.last_intr_ts = ktime_get();
++	hba->ufs_stats.last_intr_ts = local_clock();
+ 
+ 	/*
+ 	 * There could be max of hba->nutrs reqs in flight and in worst case
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index a92271421718e..2de73196bb779 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -160,8 +160,10 @@ struct ufs_pm_lvl_states {
+  * @task_tag: Task tag of the command
+  * @lun: LUN of the command
+  * @intr_cmd: Interrupt command (doesn't participate in interrupt aggregation)
+- * @issue_time_stamp: time stamp for debug purposes
+- * @compl_time_stamp: time stamp for statistics
++ * @issue_time_stamp: time stamp for debug purposes (CLOCK_MONOTONIC)
++ * @issue_time_stamp_local_clock: time stamp for debug purposes (local_clock)
++ * @compl_time_stamp: time stamp for statistics (CLOCK_MONOTONIC)
++ * @compl_time_stamp_local_clock: time stamp for debug purposes (local_clock)
+  * @crypto_key_slot: the key slot to use for inline crypto (-1 if none)
+  * @data_unit_num: the data unit number for the first block for inline crypto
+  * @req_abort_skip: skip request abort task flag
+@@ -185,7 +187,9 @@ struct ufshcd_lrb {
+ 	u8 lun; /* UPIU LUN id field is only 8-bit wide */
+ 	bool intr_cmd;
+ 	ktime_t issue_time_stamp;
++	u64 issue_time_stamp_local_clock;
+ 	ktime_t compl_time_stamp;
++	u64 compl_time_stamp_local_clock;
+ #ifdef CONFIG_SCSI_UFS_CRYPTO
+ 	int crypto_key_slot;
+ 	u64 data_unit_num;
+@@ -430,7 +434,7 @@ struct ufs_clk_scaling {
+ struct ufs_event_hist {
+ 	int pos;
+ 	u32 val[UFS_EVENT_HIST_LENGTH];
+-	ktime_t tstamp[UFS_EVENT_HIST_LENGTH];
++	u64 tstamp[UFS_EVENT_HIST_LENGTH];
+ 	unsigned long long cnt;
+ };
+ 
+@@ -446,10 +450,10 @@ struct ufs_event_hist {
+  */
+ struct ufs_stats {
+ 	u32 last_intr_status;
+-	ktime_t last_intr_ts;
++	u64 last_intr_ts;
+ 
+ 	u32 hibern8_exit_cnt;
+-	ktime_t last_hibern8_exit_tstamp;
++	u64 last_hibern8_exit_tstamp;
+ 	struct ufs_event_hist event[UFS_EVT_CNT];
+ };
+ 
+-- 
+2.31.0
 
