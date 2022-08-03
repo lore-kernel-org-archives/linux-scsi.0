@@ -2,56 +2,54 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B779C00140
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Aug 2022 23:58:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D94B2C00140
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Aug 2022 00:07:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232552AbiHBX57 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Aug 2022 19:57:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54858 "EHLO
+        id S235320AbiHCAHS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Aug 2022 20:07:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60234 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229637AbiHBX5y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Aug 2022 19:57:54 -0400
-Received: from mail-lf1-x129.google.com (mail-lf1-x129.google.com [IPv6:2a00:1450:4864:20::129])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7AF2DF26;
-        Tue,  2 Aug 2022 16:57:52 -0700 (PDT)
-Received: by mail-lf1-x129.google.com with SMTP id m22so12315157lfl.9;
-        Tue, 02 Aug 2022 16:57:52 -0700 (PDT)
+        with ESMTP id S229637AbiHCAHR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Aug 2022 20:07:17 -0400
+Received: from mail-yb1-xb32.google.com (mail-yb1-xb32.google.com [IPv6:2607:f8b0:4864:20::b32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5EF661B7AB
+        for <linux-scsi@vger.kernel.org>; Tue,  2 Aug 2022 17:07:16 -0700 (PDT)
+Received: by mail-yb1-xb32.google.com with SMTP id 7so26056732ybw.0
+        for <linux-scsi@vger.kernel.org>; Tue, 02 Aug 2022 17:07:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc;
-        bh=1cg93yqJyafdpG8s67QRUD8AgOSMfWbzD5eV2X0T+hk=;
-        b=cSM7f1oOewo3sm1q3jb64L9EjWKdctaYd0+/BS/BDbL4FhRFQTfCY6TRBYjuxBBHSS
-         Lim3czZia2zXih//SdtF2theBAf2N9lV4PzGQ7jdowro0PprJ/H0yx8ia6omXdxDeBcc
-         4EFI5Zr1mdiiXcB3pvxnUb20RD+ONbIE73bcmtZpVNvODCEjP05C+3BrI9uI2lg244pQ
-         LIm0vCFWVQ7vtNPn6d+Ih8spGtLHdioRJskgjZVJzP4/kB9fhJaEja7l+BziPNB7JJfZ
-         YclezaNXGxP+MmGDAdA3FtLS+bxHawMHal5BDBJgyAT+SqBWYVKKmrkd8lLOfGFXn6uU
-         Zb6Q==
+        d=chromium.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=LID6PppF1z9gU+tE6VsSkmWpd5HwGrNeV2dSIOGuA9k=;
+        b=Lf18+jbV2UHRV/jigCpNlahlOqXbOsj+3twVjafJ32gIl4GTS+DO55MDRDfIp5+iK9
+         jTZvrs/e74OjWNegBJbAS53Ax2qq4oVZ2fZHSp48wqyEJp9zEg6Hr4CnyjK5p95zA6iT
+         5VqBLOt+Sw1muSECHxqOVTp/7AmpbucV2yPrM=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc;
-        bh=1cg93yqJyafdpG8s67QRUD8AgOSMfWbzD5eV2X0T+hk=;
-        b=pftDjtpciKpuAL2pkc1KFDm7e181iWCZS7Wy2QEMzMPwCIwfPp0ZOp5iEGQ4pgRmiZ
-         zLcNiRjJKYCdDVZJOxCXAgxGhduEvCsFG7yUDPqstDDTKiJuS+XShEtga2eboxoaTFNu
-         idFuoeJJXE8m785J4SyCv7s5aQ/WDnptfZ99xnj/dwd0NQmeePrhH8E9NAaERmBvtmSx
-         2P9T+sjU2zDyaBgDQxw8oSZe405YYl89jDp8dc6LDOZlycPSbxMiQC0Yu4Njlkzkyv/z
-         GHouAsCo1nOFWV8XaqHee1rHIXCd7+IUvP42EZ2nmoGZsqPHLJ01rVIbr+U25p9oj5BJ
-         zsNA==
-X-Gm-Message-State: ACgBeo14vweEinaLfhwEwCRyjrGerXWtVGl3IEA/02Cksgkr7MVBLG5q
-        OIaC/LqX3fpuXyCa2x/wcSQ1bofM+qitbtrH3g==
-X-Google-Smtp-Source: AA6agR6lLhObT3q9+xJ6iO8J7nfPdTYcZkfXA5luK2os7jWt0xqk2E8m1lcHs3xNeIp3jVygTVescaBbhH5Slar14+A=
-X-Received: by 2002:ac2:483b:0:b0:48a:e7f2:c7ff with SMTP id
- 27-20020ac2483b000000b0048ae7f2c7ffmr7507089lft.591.1659484670751; Tue, 02
- Aug 2022 16:57:50 -0700 (PDT)
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=LID6PppF1z9gU+tE6VsSkmWpd5HwGrNeV2dSIOGuA9k=;
+        b=2ishK+zBjagOeFPZLF1x9Az1Hayu0zNyovClCum5+Ald7Wrczz6sn9vBGVXkxtTOGS
+         trBIVMm1aMxlL2FiR7vi++WFXQZFl+5PyEiHroQuKHwreY95osyE5Gd7gmf/dOQpRKxU
+         SJ6VTG+IcvAUeXbQOEM1ZsWBTbt8JjTMnMB43Qeug3HlUGsZFBYcGentWyNlPnSaenQO
+         B0tKxbw0aVmOkg++fa+JIzRcXwXDzTa6YwbMDquH6WjTZKDx6ZDfUZjX9Hbpc7rGQnig
+         8CulkpYVYdg68vxohpduNXjnXhlTZbnC4n9nj5fuTiwSb5Ij+FJuN8C7S84cDwZ3EP5M
+         aXww==
+X-Gm-Message-State: ACgBeo3/8Yk+6xgsU+G4oIvUoT/c79fXDyC4Fd9VSVxjL116V/nGgjIw
+        rGAjsCKjA6WLPAABD6OSVNUCKkBj0RpZEArNHEPVZw==
+X-Google-Smtp-Source: AA6agR6XURFQzTpCJvJlNfHGiJqZ1o8ve0q4LDXLowmGVtIyFzCNGuJhimroNdxvpjpPUyPBIsrvp6/APYPAuEIJ1qY=
+X-Received: by 2002:a25:cf91:0:b0:671:83db:c8f9 with SMTP id
+ f139-20020a25cf91000000b0067183dbc8f9mr18188088ybg.535.1659485235638; Tue, 02
+ Aug 2022 17:07:15 -0700 (PDT)
 MIME-Version: 1.0
 References: <20220803074349.v4.1.I699244ea7efbd326a34a6dfd9b5a31e78400cf68@changeid>
-In-Reply-To: <20220803074349.v4.1.I699244ea7efbd326a34a6dfd9b5a31e78400cf68@changeid>
-From:   Stanley Chu <chu.stanley@gmail.com>
-Date:   Wed, 3 Aug 2022 07:57:39 +0800
-Message-ID: <CAGaU9a8H7QmkhBvNfZhH+CyFaup1oGX1j7a36ph9t+Me3MjCQw@mail.gmail.com>
+ <CAGaU9a8H7QmkhBvNfZhH+CyFaup1oGX1j7a36ph9t+Me3MjCQw@mail.gmail.com>
+In-Reply-To: <CAGaU9a8H7QmkhBvNfZhH+CyFaup1oGX1j7a36ph9t+Me3MjCQw@mail.gmail.com>
+From:   Daniil Lunev <dlunev@chromium.org>
+Date:   Wed, 3 Aug 2022 10:07:04 +1000
+Message-ID: <CAONX=-cSKdWGAqadzvrdJyZfL+PGOM7V0E1HcHuUny4V00JiUA@mail.gmail.com>
 Subject: Re: [PATCH v4] ufs: core: ufshcd: use local_clock() for debugging timestamps
-To:     Daniil Lunev <dlunev@chromium.org>
+To:     Stanley Chu <chu.stanley@gmail.com>
 Cc:     Adrian Hunter <adrian.hunter@intel.com>,
         Bart Van Assche <bvanassche@acm.org>,
         Alim Akhtar <alim.akhtar@samsung.com>,
@@ -66,26 +64,8 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Daniil,
-
-On Wed, Aug 3, 2022 at 5:44 AM Daniil Lunev <dlunev@chromium.org> wrote:
->
-> CLOCK_MONOTONIC is not advanced when the system is in suspend. This
-> becomes problematic when debugging issues related to suspend-resume:
-> the timestamps printed by ufshcd_print_trs can not be correlated with
-> dmesg entries, which are timestamped with local_clock().
->
-> This CL changes the used clock to local_clock() for the informational
-> timestamp variables and adds mirroring *_local_clock instances for
-> variables used in subsequent derevations (to not change the semantics of
-> those derevations).
->
-> Signed-off-by: Daniil Lunev <dlunev@chromium.org>
->
-> ---
-
-Please kindly add all Reviewed or Acked tags received in previous
-versions to any newer patches.
-
-Thanks,
-Stanley
+> Please kindly add all Reviewed or Acked tags received in previous
+> versions to any newer patches.
+Oh, thanks for this suggestion, I didn't know if I should do that. Should
+I create a new patch with those brought over?
+--Daniil
