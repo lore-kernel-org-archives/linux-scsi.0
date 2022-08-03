@@ -2,170 +2,145 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6811CC19F2A
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Aug 2022 04:37:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1FCCC19F28
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Aug 2022 05:34:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235824AbiHCEhN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 Aug 2022 00:37:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60038 "EHLO
+        id S235172AbiHCFeW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 Aug 2022 01:34:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60774 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229457AbiHCEhL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Aug 2022 00:37:11 -0400
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 53A395467B;
-        Tue,  2 Aug 2022 21:37:10 -0700 (PDT)
-Received: by linux.microsoft.com (Postfix, from userid 1127)
-        id 0565520FFC0C; Tue,  2 Aug 2022 21:37:10 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 0565520FFC0C
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-        s=default; t=1659501430;
-        bh=aGFADYTmhfG3G/nJc1EU3o6+heuDU6xMfrYwIst6ego=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=gOeW3fl49V+aGkpBFee5/bhUVVHJSX4+034spdXmC4DqX6J1l6qFfEdd1f2q98zvR
-         Yr76dKo8cooAPN6qlCidReDpiQcmoqPLBXuJzZU+84ePQb9tGYdZnUoIyaE5Pn/tQy
-         he/DTnIOzmApIFQwgJFeqAwmS3AJPlF15f5ZpAnk=
-Date:   Tue, 2 Aug 2022 21:37:09 -0700
-From:   Saurabh Singh Sengar <ssengar@linux.microsoft.com>
-To:     Praveen Kumar <kumarpraveen@linux.microsoft.com>
-Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        wei.liu@kernel.org, decui@microsoft.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-hyperv@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] Drivers: hv: vmbus: Optimize vmbus_on_event
-Message-ID: <20220803043709.GA26795@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
-References: <1658741848-4210-1-git-send-email-ssengar@linux.microsoft.com>
- <33983fa2-c9a8-1ac1-2f75-8360a077cfc2@linux.microsoft.com>
+        with ESMTP id S231741AbiHCFeV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Aug 2022 01:34:21 -0400
+Received: from mail-lj1-x229.google.com (mail-lj1-x229.google.com [IPv6:2a00:1450:4864:20::229])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66CAF2CDE9;
+        Tue,  2 Aug 2022 22:34:19 -0700 (PDT)
+Received: by mail-lj1-x229.google.com with SMTP id w15so8686008ljw.1;
+        Tue, 02 Aug 2022 22:34:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc;
+        bh=m/mpVF2yi0tEdHzO4TUHj1gXlq1RjxX5J9jK9yNPyWM=;
+        b=Hyx9KJx2zDiy9tLp2uInAaAHZvdobyDOFVUKfRBQsQT+Q/9H2+GsfP0PGsyKAhN7hF
+         /vXRLSVKFLu/1Oe7MURdfNvKVfEUCgY2aTPf+RxGiiTxAEsRrxZU3leJ8YEyvfU4O+cZ
+         HOOyMWUIk6R/4M8GytJmlEhrurbm24xfj4aXYRYu9dTvCM4HR+Wil7SIWe81vys3Vlxt
+         jy56jDHSg7O5r2cw/T9ZH2z/O5daPFEvXTnr5hmSiRtekvxlaMOAPJCzU36uQ6BCY7ef
+         phqekqOCJnibtfnFoJcWEIZ2RUm/CAnbacWX69orip0VU/erkMrTV0c1OnM5rNnsPK9G
+         Kj2w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc;
+        bh=m/mpVF2yi0tEdHzO4TUHj1gXlq1RjxX5J9jK9yNPyWM=;
+        b=dTdu58EdHNgifLniBouiES2FxptoJBPoooz7lxkzDqai3ThhIVddyfJBrjgkFBOhro
+         psz1giYNBmw5ZxK09n42uytToY6S8qgQyP+KALvsB9Q3r3BSFq+g78m84xc9FCicLAz5
+         HwYZL0HhsPg0M/E8jrGMLb1QZ0ffXjUwr6Ni8WjF36jCQj1DcTzTKVi3QmHf5TgMDImU
+         7qClj3gTtqsDadEjYd9BwQAO0ArqPvhIDp/vA/FN63I+sx1rOmWlaiveYZUxYG+AY9o1
+         LS4HQW8Re//QRF9VcMjZ/Pn9BBrfoYZvIKKTmO5Ugx333oAhpK1dkf1MLtMp6Dw2T9Up
+         O4xQ==
+X-Gm-Message-State: ACgBeo0HGwcKpJhrhcC89kQfa2s+GNVhCvZ1MSkpwTAfAGDLo4BsxO+h
+        ZCxr6bvd9BAVtX+EuUHNPjPHcCA2eYSdhClU4A==
+X-Google-Smtp-Source: AA6agR646p7FUT0NrQdMUfoV4D1TzismNFplFcOD7RivvPBOTxpiN3xQf1ZwkL+BAI3hpDd8UJUujM/YjGLIVlVm29I=
+X-Received: by 2002:a05:651c:1a26:b0:25e:5c81:efd7 with SMTP id
+ by38-20020a05651c1a2600b0025e5c81efd7mr1962677ljb.307.1659504857436; Tue, 02
+ Aug 2022 22:34:17 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <33983fa2-c9a8-1ac1-2f75-8360a077cfc2@linux.microsoft.com>
-User-Agent: Mutt/1.5.21 (2010-09-15)
+References: <20220802080146epcms2p24b86bfce3d3c09c79b91d861cb3b2cce@epcms2p2>
+ <20220802080927epcms2p1d0d89c32a9bd07c07f233801bb954807@epcms2p1>
+ <CGME20220802080146epcms2p24b86bfce3d3c09c79b91d861cb3b2cce@epcms2p8>
+ <CAGaU9a_YZDxaeOCErnQwFF9mE7bARDf4sw3F3ai1DiWwNVMFcw@mail.gmail.com> <20220803041126epcms2p82bafb63e4f135d09017519ed3066f914@epcms2p8>
+In-Reply-To: <20220803041126epcms2p82bafb63e4f135d09017519ed3066f914@epcms2p8>
+From:   Stanley Chu <chu.stanley@gmail.com>
+Date:   Wed, 3 Aug 2022 13:34:05 +0800
+Message-ID: <CAGaU9a8Xxvtc0=Ci=ztwya=GqFZ0WB3p4wSo-QvLADdF3Fj+4Q@mail.gmail.com>
+Subject: Re: (2) [PATCH v6 5/6] scsi: ufs: wb: Modify messages
+To:     j-young.choi@samsung.com
+Cc:     ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Thanks for your review, please find my comment inline.
+hi Jinyoung,
 
-On Tue, Aug 02, 2022 at 01:44:23PM +0530, Praveen Kumar wrote:
-> On 25-07-2022 15:07, Saurabh Sengar wrote:
-> > In the vmbus_on_event loop, 2 jiffies timer will not serve the purpose if
-> > callback_fn takes longer. For effective use move this check inside of
-> > callback functions where needed. Out of all the VMbus drivers using
-> > vmbus_on_event, only storvsc has a high packet volume, thus add this limit
-> > only in storvsc callback for now.
-> > There is no apparent benefit of loop itself because this tasklet will be
-> > scheduled anyway again if there are packets left in ring buffer. This
-> > patch removes this unnecessary loop as well.
-> > 
-> 
-> In my understanding the loop was for optimizing the host to guest signaling for batched channels.
-> And the loop ensures that we process all the posted messages from the host before returning from the respective callbacks.
-> 
-> Am I missing something here.
+On Wed, Aug 3, 2022 at 12:11 PM Jinyoung CHOI <j-young.choi@samsung.com> wrote:
+>
+> Hi, Stanley,
+>
+> >Hi,
+> >
+> >On Tue, Aug 2, 2022 at 4:29 PM Jinyoung CHOI <j-young.choi@samsung.com> wrote:
+> >>
+> >> Messages are modified to fit the format of others.
+> >>
+> >> Reviewed-by: Avri Altman <avri.altman@wdc.com>
+> >> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> >> Signed-off-by: Jinyoung Choi <j-young.choi@samsung.com>
+> >> ---
+> >>  drivers/ufs/core/ufs-sysfs.c |  2 +-
+> >>  drivers/ufs/core/ufshcd.c    | 23 +++++++++++------------
+> >>  2 files changed, 12 insertions(+), 13 deletions(-)
+> >>
+> >> diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
+> >> index 2c0b7f45de4b..117272cf7d61 100644
+> >> --- a/drivers/ufs/core/ufs-sysfs.c
+> >> +++ b/drivers/ufs/core/ufs-sysfs.c
+> >> @@ -230,7 +230,7 @@ static ssize_t wb_on_store(struct device *dev, struct device_attribute *attr,
+> >>                  * If the platform supports UFSHCD_CAP_CLK_SCALING, turn WB
+> >>                  * on/off will be done while clock scaling up/down.
+> >>                  */
+> >> -               dev_warn(dev, "To control WB through wb_on is not allowed!\n");
+> >> +               dev_warn(dev, "It is not allowed to configure WB!\n");
+> >>                 return -EOPNOTSUPP;
+> >>         }
+> >>
+> >> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> >> index 5099d161f115..dcd7f03db2a2 100644
+> >> --- a/drivers/ufs/core/ufshcd.c
+> >> +++ b/drivers/ufs/core/ufshcd.c
+> >> @@ -5737,13 +5737,13 @@ int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable)
+> >>
+> >>         ret = __ufshcd_wb_toggle(hba, enable, QUERY_FLAG_IDN_WB_EN);
+> >>         if (ret) {
+> >> -               dev_err(hba->dev, "%s Write Booster %s failed %d\n",
+> >> -                       __func__, enable ? "enable" : "disable", ret);
+> >> +               dev_err(hba->dev, "%s: Write Booster %s failed %d\n",
+> >> +                       __func__, enable ? "enabling" : "disabling", ret);
+> >>                 return ret;
+> >>         }
+> >>
+> >>         hba->dev_info.wb_enabled = enable;
+> >> -       dev_info(hba->dev, "%s Write Booster %s\n",
+> >> +       dev_info(hba->dev, "%s: Write Booster %s\n",
+> >>                         __func__, enable ? "enabled" : "disabled");
+> >
+> >You need to rebase this patch to follow the latest change as
+> >https://lore.kernel.org/all/20220709000027.3929970-1-bjorn.andersson@linaro.org/
+>
+> I am currently working on the latest 5.20/scsi-staging.
+> In this case, can I refer the commit of 5.19/scsi-fixes
+> and add commit to 5.20/scsi-staging?
+> Or can I reflect it in my change?
+> I have no experience, so please guide. :)
+>
+> Thank you for checking.
+> Jinyoung.
+>
+>
 
-Out of all the drivers using vmbus_on_event, only storvsc have high packet volume.
-The callback for storvsc is storvsc_on_channel_callback function which anyway has
-loop to check if there are any completion packets left. After this change when we
-move timeout inside storvsc callback, there is a possibility it comes back from
-callback leaving packets in ring buffer, for such cases the tasklet will be rescheduled.
-This function handles single ring buffer per call there is no batching.
+I did not notice that the below patch is merged to 5.19/scsi-fixes, so
+I guess perhaps you could keep working on the latest
+5.20/scsi-staging, and then Martin would help resolve the conflict.
+https://lore.kernel.org/all/20220709000027.3929970-1-bjorn.andersson@linaro.org/
 
-- Saurabh
-> 
-> > Signed-off-by: Saurabh Sengar <ssengar@linux.microsoft.com>
-> > ---
-> >  drivers/hv/connection.c    | 33 ++++++++++++++-------------------
-> >  drivers/scsi/storvsc_drv.c |  9 +++++++++
-> >  2 files changed, 23 insertions(+), 19 deletions(-)
-> > 
-> > diff --git a/drivers/hv/connection.c b/drivers/hv/connection.c
-> > index eca7afd..9dc27e5 100644
-> > --- a/drivers/hv/connection.c
-> > +++ b/drivers/hv/connection.c
-> > @@ -431,34 +431,29 @@ struct vmbus_channel *relid2channel(u32 relid)
-> >  void vmbus_on_event(unsigned long data)
-> >  {
-> >  	struct vmbus_channel *channel = (void *) data;
-> > -	unsigned long time_limit = jiffies + 2;
-> > +	void (*callback_fn)(void *context);
-> >  
-> >  	trace_vmbus_on_event(channel);
-> >  
-> >  	hv_debug_delay_test(channel, INTERRUPT_DELAY);
-> > -	do {
-> > -		void (*callback_fn)(void *);
-> >  
-> > -		/* A channel once created is persistent even when
-> > -		 * there is no driver handling the device. An
-> > -		 * unloading driver sets the onchannel_callback to NULL.
-> > -		 */
-> > -		callback_fn = READ_ONCE(channel->onchannel_callback);
-> > -		if (unlikely(callback_fn == NULL))
-> > -			return;
-> > -
-> > -		(*callback_fn)(channel->channel_callback_context);
-> > +	/* A channel once created is persistent even when
-> > +	 * there is no driver handling the device. An
-> > +	 * unloading driver sets the onchannel_callback to NULL.
-> > +	 */
-> > +	callback_fn = READ_ONCE(channel->onchannel_callback);
-> > +	if (unlikely(!callback_fn))
-> > +		return;
-> >  
-> > -		if (channel->callback_mode != HV_CALL_BATCHED)
-> > -			return;
-> > +	(*callback_fn)(channel->channel_callback_context);
-> >  
-> > -		if (likely(hv_end_read(&channel->inbound) == 0))
-> > -			return;
-> > +	if (channel->callback_mode != HV_CALL_BATCHED)
-> > +		return;
-> >  
-> > -		hv_begin_read(&channel->inbound);
-> > -	} while (likely(time_before(jiffies, time_limit)));
-> > +	if (likely(hv_end_read(&channel->inbound) == 0))
-> > +		return;
-> >  
-> > -	/* The time limit (2 jiffies) has been reached */
-> > +	hv_begin_read(&channel->inbound);
-> >  	tasklet_schedule(&channel->callback_event);
-> >  }
-> >  
-> > diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> > index fe000da..c457e6b 100644
-> > --- a/drivers/scsi/storvsc_drv.c
-> > +++ b/drivers/scsi/storvsc_drv.c
-> > @@ -60,6 +60,9 @@
-> >  #define VMSTOR_PROTO_VERSION_WIN8_1	VMSTOR_PROTO_VERSION(6, 0)
-> >  #define VMSTOR_PROTO_VERSION_WIN10	VMSTOR_PROTO_VERSION(6, 2)
-> >  
-> > +/* channel callback timeout in ms */
-> > +#define CALLBACK_TIMEOUT               2
-> > +
-> >  /*  Packet structure describing virtual storage requests. */
-> >  enum vstor_packet_operation {
-> >  	VSTOR_OPERATION_COMPLETE_IO		= 1,
-> > @@ -1204,6 +1207,7 @@ static void storvsc_on_channel_callback(void *context)
-> >  	struct hv_device *device;
-> >  	struct storvsc_device *stor_device;
-> >  	struct Scsi_Host *shost;
-> > +	unsigned long time_limit = jiffies + msecs_to_jiffies(CALLBACK_TIMEOUT);
-> >  
-> >  	if (channel->primary_channel != NULL)
-> >  		device = channel->primary_channel->device_obj;
-> > @@ -1224,6 +1228,11 @@ static void storvsc_on_channel_callback(void *context)
-> >  		u32 minlen = rqst_id ? sizeof(struct vstor_packet) :
-> >  			sizeof(enum vstor_packet_operation);
-> >  
-> > +		if (unlikely(time_after(jiffies, time_limit))) {
-> > +			hv_pkt_iter_close(channel);
-> > +			return;
-> > +		}
-> > +
-> >  		if (pktlen < minlen) {
-> >  			dev_err(&device->device,
-> >  				"Invalid pkt: id=%llu, len=%u, minlen=%u\n",
-> 
-> Regards,
-> 
-> ~Praveen.
+Thanks,
+
+Stanley
