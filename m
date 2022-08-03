@@ -2,163 +2,50 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E434C19F28
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Aug 2022 14:35:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31DC8C19F28
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Aug 2022 15:09:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236303AbiHCOfQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 Aug 2022 10:35:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53460 "EHLO
+        id S236808AbiHCPJ4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 Aug 2022 11:09:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45990 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232879AbiHCOfP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Aug 2022 10:35:15 -0400
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A83D5C5A;
-        Wed,  3 Aug 2022 07:35:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1659537313; x=1691073313;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=467MqZTPTGhJZVmTBdgipMMRNgFOH6x08fDl7lIVEqc=;
-  b=lVUf90ZafUXR22PZuDE74FRDijAcxJDBCyVPugKS/+KeV5N7WWQ6VP5V
-   ZyVVj0G29IHOfZcVhqcLcgdespHMLObF+6mEKPceOOGzVtNV+Rh2Z3NsU
-   RzRtTaIPmvGbl0qpYiymVHsbUT0p1dB1TAzkIAm89vGCpSePTdPPWcVhi
-   +vc4KADJCXcybV3vxzmaZjoBhNhsk6AEolO6GYAdB+VOJcqbeqsWdiOS6
-   5Uy1O62dPoi8aJh2Z03kcgBUrVfyzCY8h2ygdWzv+csw3B276lF4R4WD+
-   wYzZFmeN9iO9aH2tOBCumsnlhwq7ne4UzCjCbepla9jCQDwdTLXV83VJB
-   Q==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10428"; a="351398936"
-X-IronPort-AV: E=Sophos;i="5.93,214,1654585200"; 
-   d="scan'208";a="351398936"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Aug 2022 07:35:13 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.93,214,1654585200"; 
-   d="scan'208";a="635701620"
-Received: from lkp-server01.sh.intel.com (HELO e0eace57cfef) ([10.239.97.150])
-  by orsmga001.jf.intel.com with ESMTP; 03 Aug 2022 07:35:10 -0700
-Received: from kbuild by e0eace57cfef with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1oJFSn-000HMb-1x;
-        Wed, 03 Aug 2022 14:35:09 +0000
-Date:   Wed, 3 Aug 2022 22:34:32 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Li Jinlin <lijinlin3@huawei.com>, lduncan@suse.com,
-        cleech@redhat.com, michael.christie@oracle.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, mark.mielke@gmail.com
-Cc:     kbuild-all@lists.01.org, open-iscsi@googlegroups.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linfeilong@huawei.com, liuzhiqiang26@huawei.com
-Subject: Re: [PATCH] scsi: iscsi: iscsi_tcp: Fix null-ptr-deref while calling
- getpeername()
-Message-ID: <202208032214.0FELL5gK-lkp@intel.com>
-References: <20220802101939.3972556-1-lijinlin3@huawei.com>
+        with ESMTP id S235868AbiHCPJy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Aug 2022 11:09:54 -0400
+X-Greylist: delayed 562 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 03 Aug 2022 08:09:52 PDT
+Received: from plesk1.hk-node.need.sh (unknown [202.95.9.31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 97F111F62A
+        for <linux-scsi@vger.kernel.org>; Wed,  3 Aug 2022 08:09:52 -0700 (PDT)
+Received: by plesk1.hk-node.need.sh (Postfix, from userid 10741)
+        id F2858822E57A5; Wed,  3 Aug 2022 23:00:28 +0800 (HKT)
+To:     linux-scsi@vger.kernel.org
+Subject: =?us-ascii?Q?Teflonfabric_"BITCOIN_WILL_MAKE_YOU_A_BILLIONAI?=  =?us-ascii?Q?RE"?=
+Date:   Wed, 3 Aug 2022 15:00:28 +0000
+From:   Teflonfabric <sales@teflonfabric.cn>
+Reply-To: sales@teflonfabric.cn
+Message-ID: <wqjjixNemGnem2b7nNqU1zisk0CZEsLisotVlO8tjE@www.teflonfabric.cn>
+X-Mailer: WPMailSMTP/Mailer/mail 2.5.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220802101939.3972556-1-lijinlin3@huawei.com>
+Content-Type: text/plain; charset=UTF-8
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Li,
-
-Thank you for the patch! Perhaps something to improve:
-
-[auto build test WARNING on mkp-scsi/for-next]
-[also build test WARNING on jejb-scsi/for-next linus/master v5.19 next-20220728]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Li-Jinlin/scsi-iscsi-iscsi_tcp-Fix-null-ptr-deref-while-calling-getpeername/20220802-173945
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
-config: x86_64-allyesconfig (https://download.01.org/0day-ci/archive/20220803/202208032214.0FELL5gK-lkp@intel.com/config)
-compiler: gcc-11 (Debian 11.3.0-3) 11.3.0
-reproduce (this is a W=1 build):
-        # https://github.com/intel-lab-lkp/linux/commit/ccc367df3fdba07b24eeda721ca928cce50f40d2
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Li-Jinlin/scsi-iscsi-iscsi_tcp-Fix-null-ptr-deref-while-calling-getpeername/20220802-173945
-        git checkout ccc367df3fdba07b24eeda721ca928cce50f40d2
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        make W=1 O=build_dir ARCH=x86_64 SHELL=/bin/bash drivers/scsi/
-
-If you fix the issue, kindly add following tag where applicable
-Reported-by: kernel test robot <lkp@intel.com>
-
-All warnings (new ones prefixed by >>):
-
-   drivers/scsi/iscsi_tcp.c: In function 'iscsi_sw_tcp_conn_get_param':
->> drivers/scsi/iscsi_tcp.c:798:26: warning: passing argument 1 of 'fget' makes integer from pointer without a cast [-Wint-conversion]
-     798 |                 fget(sock->file);
-         |                      ~~~~^~~~~~
-         |                          |
-         |                          struct file *
-   In file included from drivers/scsi/iscsi_tcp.c:25:
-   include/linux/file.h:48:39: note: expected 'unsigned int' but argument is of type 'struct file *'
-      48 | extern struct file *fget(unsigned int fd);
-         |                          ~~~~~~~~~~~~~^~
-   drivers/scsi/iscsi_tcp.c: In function 'iscsi_sw_tcp_host_get_param':
-   drivers/scsi/iscsi_tcp.c:852:26: warning: passing argument 1 of 'fget' makes integer from pointer without a cast [-Wint-conversion]
-     852 |                 fget(sock->file);
-         |                      ~~~~^~~~~~
-         |                          |
-         |                          struct file *
-   In file included from drivers/scsi/iscsi_tcp.c:25:
-   include/linux/file.h:48:39: note: expected 'unsigned int' but argument is of type 'struct file *'
-      48 | extern struct file *fget(unsigned int fd);
-         |                          ~~~~~~~~~~~~~^~
-
-
-vim +/fget +798 drivers/scsi/iscsi_tcp.c
-
-   777	
-   778	static int iscsi_sw_tcp_conn_get_param(struct iscsi_cls_conn *cls_conn,
-   779					       enum iscsi_param param, char *buf)
-   780	{
-   781		struct iscsi_conn *conn = cls_conn->dd_data;
-   782		struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
-   783		struct iscsi_sw_tcp_conn *tcp_sw_conn = tcp_conn->dd_data;
-   784		struct sockaddr_in6 addr;
-   785		struct socket *sock;
-   786		int rc;
-   787	
-   788		switch(param) {
-   789		case ISCSI_PARAM_CONN_PORT:
-   790		case ISCSI_PARAM_CONN_ADDRESS:
-   791		case ISCSI_PARAM_LOCAL_PORT:
-   792			spin_lock_bh(&conn->session->frwd_lock);
-   793			if (!tcp_sw_conn || !tcp_sw_conn->sock) {
-   794				spin_unlock_bh(&conn->session->frwd_lock);
-   795				return -ENOTCONN;
-   796			}
-   797			sock = tcp_sw_conn->sock;
- > 798			fget(sock->file);
-   799			spin_unlock_bh(&conn->session->frwd_lock);
-   800	
-   801			if (param == ISCSI_PARAM_LOCAL_PORT)
-   802				rc = kernel_getsockname(sock,
-   803							(struct sockaddr *)&addr);
-   804			else
-   805				rc = kernel_getpeername(sock,
-   806							(struct sockaddr *)&addr);
-   807			spin_lock_bh(&conn->session->frwd_lock);
-   808			sockfd_put(sock);
-   809			spin_unlock_bh(&conn->session->frwd_lock);
-   810			if (rc < 0)
-   811				return rc;
-   812	
-   813			return iscsi_conn_get_addr_param((struct sockaddr_storage *)
-   814							 &addr, param, buf);
-   815		default:
-   816			return iscsi_conn_get_param(cls_conn, param, buf);
-   817		}
-   818	
-   819		return 0;
-   820	}
-   821	
+Message Body:
+A QUICK AND EFFECTIVE WAY TO GET RICH https://telegra.ph/Cryptocurrency-makes-people-millionaires-at-15-people-per-hour---Page-287094-08-02
 
 -- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+Thanks for your inquiry! We will respond to you ASAP!
+
+With Best Regards,
+
+Export Department
+
+Jiangsu Esone New Material Co.,Ltd.
+Taixing Youngsun FL-Plastics Co.,Ltd. 
+
+Skype:    steven_4860
+email:    sales@chinayoungsun.com
+          sales@esone
+Tel:      +86 523 87590206   Mobile:  +86 13901437262 
+Web:      www.teflonfabric.cn
+
