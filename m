@@ -2,116 +2,247 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66EBAC19F28
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Aug 2022 19:30:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 266EFC19F2B
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Aug 2022 20:51:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238730AbiHCTaD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 Aug 2022 15:30:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60814 "EHLO
+        id S238720AbiHCUvX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 Aug 2022 16:51:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55788 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238725AbiHCT3f (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Aug 2022 15:29:35 -0400
-Received: from mail-vs1-f53.google.com (mail-vs1-f53.google.com [209.85.217.53])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8058F5927E
-        for <linux-scsi@vger.kernel.org>; Wed,  3 Aug 2022 12:28:55 -0700 (PDT)
-Received: by mail-vs1-f53.google.com with SMTP id 129so18922911vsq.8
-        for <linux-scsi@vger.kernel.org>; Wed, 03 Aug 2022 12:28:55 -0700 (PDT)
+        with ESMTP id S238815AbiHCUut (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Aug 2022 16:50:49 -0400
+Received: from mail-pg1-x52f.google.com (mail-pg1-x52f.google.com [IPv6:2607:f8b0:4864:20::52f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12A112E9D8
+        for <linux-scsi@vger.kernel.org>; Wed,  3 Aug 2022 13:50:48 -0700 (PDT)
+Received: by mail-pg1-x52f.google.com with SMTP id d7so13116422pgc.13
+        for <linux-scsi@vger.kernel.org>; Wed, 03 Aug 2022 13:50:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=RAxlI5Y8Kp9u75e5W9NQ6XnoRU3A8IEOpX4oxatpzqA=;
+        b=ikYycF3lzQ4ZM3NofzkLavn+lwVx1I+jin6Q/ORotMxUrlv3muPm1ZiZBqzGjZPyKO
+         +MbaSRjsY6gF2QWzdx/1ZBXjtWii50U0txwUzb8GMJLRImHNyJF0x4JtftbnvzEpni/m
+         SGS++E4BVVvjTVN+vuCxy1BTqgFedyuhf+sOs=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc;
-        bh=RCxZcYJN9rkKZCIis3ewORAEM/I+F6Y2IS/7dkOJB6o=;
-        b=NH7BLhAZt8Q7gj7DUTYwIyju7mbfSSErbDyvjxA2R9NWgdOXszoUmmllb8Gr4ydva8
-         Cl5EMCAq5ghjpBAveAx0oX1bQWvib4e+NyEFB4w1GHmlNakfQQEI76Xr15VOW8lG+FNa
-         7exA2QbLi7Qadmg/7EXvVCV6HogxjIfaKX7JGF9fy71jeGKkMKF9BWK4KRK5Jl9Pb6OE
-         ThYB0rRmmfIQTSS9nkMfUsfBrhNJwZvwehHo3HAf+9VVgvW2ndLh6BF2MmSvEKyg5Yg3
-         ei38sbDR+4+jY7r7gKaQ6hvBMzQB4wcrhn+2OB0NHimlcVSUTdYhEvyxctOH0VDhP2AN
-         FPiA==
-X-Gm-Message-State: ACgBeo3G713h+0yc9Z3EO+nP2aFLlpqdz5cDu+611Ylmi7pYQL5pnG9n
-        GCO8lbElmHXlQYs35+Y+HyEyTRLmLVk=
-X-Google-Smtp-Source: AA6agR5JPTv9cCZgg/k8OdPdC5xEIL2jgCN9700hcZo/9c1ZtDwXDp1PvaN7CtUksCOK77lA0OXfhw==
-X-Received: by 2002:a17:902:694c:b0:16d:cc5a:8485 with SMTP id k12-20020a170902694c00b0016dcc5a8485mr27650119plt.90.1659554923341;
-        Wed, 03 Aug 2022 12:28:43 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:db71:edb7:462a:44af? ([2620:15c:211:201:db71:edb7:462a:44af])
-        by smtp.gmail.com with ESMTPSA id v66-20020a626145000000b0052e6854e665sm80107pfb.109.2022.08.03.12.28.40
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 03 Aug 2022 12:28:42 -0700 (PDT)
-Message-ID: <2070dd08-371b-a660-388e-ec2481781db9@acm.org>
-Date:   Wed, 3 Aug 2022 12:28:38 -0700
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=RAxlI5Y8Kp9u75e5W9NQ6XnoRU3A8IEOpX4oxatpzqA=;
+        b=RZq0oio/Tj9kK8u+FOKKGE0IiWhFWcVHaYcf8ADB6JxrImDU7yfCYpGEnQzzPW0912
+         TRPAerMpIBkKMwFASwaBEXyx5MyMuzL1Xf7MHdVt9azjIMjKaTnIZZ2NF1O8Jit6teLi
+         kJP1pBpmHveCB3D00gCchNzvnXsMyLMs9+LRy1fJFYuvaSb1E1+8oMIHACRBexwy0dgL
+         u23GWziJ7IJl01FKpe4arOU8l8izm/0E0X6dRi/C+waoY1rb9hxgEdFMEHjCwESLGOmu
+         JqQHEpIUXPWDjvMbWFKIlCS9sxc4Zy69588NoQcymJKeHC5azmgSoY4YgPRSrODcFLpi
+         GcxA==
+X-Gm-Message-State: ACgBeo0ps1YLySEqlQu7VURiBuqPeS7JhexmvSPP4nWNY+RF4MbyPk7Z
+        su6Q4fFK8WjFXDhACv/NYLz1zw==
+X-Google-Smtp-Source: AA6agR5FnaAqfJxxr5WaDoXKWStzf88yfvrvtDj1+KqAwQ/8Z+p1TTQR9aY0pAeFTwGKlazKCJ3s5g==
+X-Received: by 2002:a05:6a00:1c49:b0:52e:4e9a:a07a with SMTP id s9-20020a056a001c4900b0052e4e9aa07amr2532846pfw.26.1659559847228;
+        Wed, 03 Aug 2022 13:50:47 -0700 (PDT)
+Received: from dlunevwfh.roam.corp.google.com (n122-107-196-14.sbr2.nsw.optusnet.com.au. [122.107.196.14])
+        by smtp.gmail.com with ESMTPSA id q6-20020a17090a68c600b001f2e20edd14sm1998406pjj.45.2022.08.03.13.50.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 03 Aug 2022 13:50:46 -0700 (PDT)
+From:   Daniil Lunev <dlunev@chromium.org>
+To:     Adrian Hunter <adrian.hunter@intel.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Stanley Chu <chu.stanley@gmail.com>
+Cc:     Daniil Lunev <dlunev@chromium.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Eric Biggers <ebiggers@google.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        jongmin jeong <jjmin.jeong@samsung.com>,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-mediatek@lists.infradead.org, linux-scsi@vger.kernel.org
+Subject: [PATCH v5] ufs: core: ufshcd: use local_clock() for debugging timestamps
+Date:   Thu,  4 Aug 2022 06:50:34 +1000
+Message-Id: <20220804065019.v5.1.I699244ea7efbd326a34a6dfd9b5a31e78400cf68@changeid>
+X-Mailer: git-send-email 2.31.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [PATCH v4] ufs: allow host driver disable wb toggle druing clock
- scaling
-Content-Language: en-US
-To:     peter.wang@mediatek.com, stanley.chu@mediatek.com,
-        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com
-Cc:     wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
-        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
-        cc.chou@mediatek.com, chaotian.jing@mediatek.com,
-        jiajie.hao@mediatek.com, powen.kao@mediatek.com,
-        qilin.tan@mediatek.com, lin.gui@mediatek.com
-References: <20220803030329.5897-1-peter.wang@mediatek.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220803030329.5897-1-peter.wang@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/2/22 20:03, peter.wang@mediatek.com wrote:
-> 
+CLOCK_MONOTONIC is not advanced when the system is in suspend. This
+becomes problematic when debugging issues related to suspend-resume:
+the timestamps printed by ufshcd_print_trs can not be correlated with
+dmesg entries, which are timestamped with local_clock().
 
-disable -> to disable?
+This CL changes the used clock to local_clock() for the informational
+timestamp variables and adds mirroring *_local_clock instances for
+variables used in subsequent derevations (to not change the semantics of
+those derevations).
 
-toggle -> toggling?
+Signed-off-by: Daniil Lunev <dlunev@chromium.org>
+Acked-by: Stanley Chu <stanley.chu@mediatek.com>
+Acked-by: Avri Altman <avri.altman@wdc.com>
 
-druing -> during?
+---
 
-> diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
-> index 0a088b47d557..7f41f2a69b04 100644
-> --- a/drivers/ufs/core/ufs-sysfs.c
-> +++ b/drivers/ufs/core/ufs-sysfs.c
-> @@ -225,7 +225,8 @@ static ssize_t wb_on_store(struct device *dev, struct device_attribute *attr,
->   	unsigned int wb_enable;
->   	ssize_t res;
->   
-> -	if (!ufshcd_is_wb_allowed(hba) || ufshcd_is_clkscaling_supported(hba)) {
-> +	if (!ufshcd_is_wb_allowed(hba) || (ufshcd_is_clkscaling_supported(hba)
-> +		&& ufshcd_enable_wb_if_scaling_up(hba))) {
+Changes in v5:
+- Bring over "acks" from the previous iterations
 
-The "&&" is misplaced - it should occur at the end of the previous line. 
-Isn't this something that checkpatch complains about?
+Changes in v4:
+- Use div_u64 instead of "/"
 
->   	/* Enable Write Booster if we have scaled up else disable it */
-> -	downgrade_write(&hba->clk_scaling_lock);
-> -	is_writelock = false;
-> -	ufshcd_wb_toggle(hba, scale_up);
-> +	if (ufshcd_enable_wb_if_scaling_up(hba)) {
-> +		downgrade_write(&hba->clk_scaling_lock);
-> +		is_writelock = false;
-> +		ufshcd_wb_toggle(hba, scale_up);
-> +	}
+Changes in v3:
+- Add missing header
 
-Since this code is being modified, please move the "/* Enable" comment 
-to where it should occur (just above the ufshcd_wb_toggle() call).
+Changes in v2:
+- Use local clock to better align with dmesg
+- Correct commit message
 
-> @@ -1004,6 +1010,10 @@ static inline bool ufshcd_is_wb_allowed(struct ufs_hba *hba)
->   {
->   	return hba->caps & UFSHCD_CAP_WB_EN;
->   }
-> +static inline bool ufshcd_enable_wb_if_scaling_up(struct ufs_hba *hba)
-> +{
-> +	return hba->caps & UFSHCD_CAP_WB_WITH_CLK_SCALING;
-> +}
+ drivers/ufs/core/ufshcd.c | 20 ++++++++++++--------
+ include/ufs/ufshcd.h      | 14 +++++++++-----
+ 2 files changed, 21 insertions(+), 13 deletions(-)
 
-It seems like a blank line is missing above the new function definition?
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index ce86d1b790c05..3b3c011d81e36 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -21,6 +21,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/module.h>
+ #include <linux/regulator/consumer.h>
++#include <linux/sched/clock.h>
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_dbg.h>
+ #include <scsi/scsi_driver.h>
+@@ -460,7 +461,7 @@ static void ufshcd_print_evt(struct ufs_hba *hba, u32 id,
+ 		if (e->tstamp[p] == 0)
+ 			continue;
+ 		dev_err(hba->dev, "%s[%d] = 0x%x at %lld us\n", err_name, p,
+-			e->val[p], ktime_to_us(e->tstamp[p]));
++			e->val[p], div_u64(e->tstamp[p], 1000));
+ 		found = true;
+ 	}
+ 
+@@ -505,9 +506,9 @@ void ufshcd_print_trs(struct ufs_hba *hba, unsigned long bitmap, bool pr_prdt)
+ 		lrbp = &hba->lrb[tag];
+ 
+ 		dev_err(hba->dev, "UPIU[%d] - issue time %lld us\n",
+-				tag, ktime_to_us(lrbp->issue_time_stamp));
++				tag, div_u64(lrbp->issue_time_stamp_local_clock, 1000));
+ 		dev_err(hba->dev, "UPIU[%d] - complete time %lld us\n",
+-				tag, ktime_to_us(lrbp->compl_time_stamp));
++				tag, div_u64(lrbp->compl_time_stamp_local_clock, 1000));
+ 		dev_err(hba->dev,
+ 			"UPIU[%d] - Transfer Request Descriptor phys@0x%llx\n",
+ 			tag, (u64)lrbp->utrd_dma_addr);
+@@ -569,10 +570,10 @@ static void ufshcd_print_host_state(struct ufs_hba *hba)
+ 	dev_err(hba->dev, "Clk gate=%d\n", hba->clk_gating.state);
+ 	dev_err(hba->dev,
+ 		"last_hibern8_exit_tstamp at %lld us, hibern8_exit_cnt=%d\n",
+-		ktime_to_us(hba->ufs_stats.last_hibern8_exit_tstamp),
++		div_u64(hba->ufs_stats.last_hibern8_exit_tstamp, 1000),
+ 		hba->ufs_stats.hibern8_exit_cnt);
+ 	dev_err(hba->dev, "last intr at %lld us, last intr status=0x%x\n",
+-		ktime_to_us(hba->ufs_stats.last_intr_ts),
++		div_u64(hba->ufs_stats.last_intr_ts, 1000),
+ 		hba->ufs_stats.last_intr_status);
+ 	dev_err(hba->dev, "error handling flags=0x%x, req. abort count=%d\n",
+ 		hba->eh_flags, hba->req_abort_count);
+@@ -2142,7 +2143,9 @@ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
+ 	unsigned long flags;
+ 
+ 	lrbp->issue_time_stamp = ktime_get();
++	lrbp->issue_time_stamp_local_clock = local_clock();
+ 	lrbp->compl_time_stamp = ktime_set(0, 0);
++	lrbp->compl_time_stamp_local_clock = 0;
+ 	ufshcd_add_command_trace(hba, task_tag, UFS_CMD_SEND);
+ 	ufshcd_clk_scaling_start_busy(hba);
+ 	if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
+@@ -4199,7 +4202,7 @@ int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
+ 	} else {
+ 		ufshcd_vops_hibern8_notify(hba, UIC_CMD_DME_HIBER_EXIT,
+ 								POST_CHANGE);
+-		hba->ufs_stats.last_hibern8_exit_tstamp = ktime_get();
++		hba->ufs_stats.last_hibern8_exit_tstamp = local_clock();
+ 		hba->ufs_stats.hibern8_exit_cnt++;
+ 	}
+ 
+@@ -4696,7 +4699,7 @@ void ufshcd_update_evt_hist(struct ufs_hba *hba, u32 id, u32 val)
+ 
+ 	e = &hba->ufs_stats.event[id];
+ 	e->val[e->pos] = val;
+-	e->tstamp[e->pos] = ktime_get();
++	e->tstamp[e->pos] = local_clock();
+ 	e->cnt += 1;
+ 	e->pos = (e->pos + 1) % UFS_EVENT_HIST_LENGTH;
+ 
+@@ -5329,6 +5332,7 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
+ 	for_each_set_bit(index, &completed_reqs, hba->nutrs) {
+ 		lrbp = &hba->lrb[index];
+ 		lrbp->compl_time_stamp = ktime_get();
++		lrbp->compl_time_stamp_local_clock = local_clock();
+ 		cmd = lrbp->cmd;
+ 		if (cmd) {
+ 			if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
+@@ -6617,7 +6621,7 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
+ 
+ 	intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
+ 	hba->ufs_stats.last_intr_status = intr_status;
+-	hba->ufs_stats.last_intr_ts = ktime_get();
++	hba->ufs_stats.last_intr_ts = local_clock();
+ 
+ 	/*
+ 	 * There could be max of hba->nutrs reqs in flight and in worst case
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index a92271421718e..2de73196bb779 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -160,8 +160,10 @@ struct ufs_pm_lvl_states {
+  * @task_tag: Task tag of the command
+  * @lun: LUN of the command
+  * @intr_cmd: Interrupt command (doesn't participate in interrupt aggregation)
+- * @issue_time_stamp: time stamp for debug purposes
+- * @compl_time_stamp: time stamp for statistics
++ * @issue_time_stamp: time stamp for debug purposes (CLOCK_MONOTONIC)
++ * @issue_time_stamp_local_clock: time stamp for debug purposes (local_clock)
++ * @compl_time_stamp: time stamp for statistics (CLOCK_MONOTONIC)
++ * @compl_time_stamp_local_clock: time stamp for debug purposes (local_clock)
+  * @crypto_key_slot: the key slot to use for inline crypto (-1 if none)
+  * @data_unit_num: the data unit number for the first block for inline crypto
+  * @req_abort_skip: skip request abort task flag
+@@ -185,7 +187,9 @@ struct ufshcd_lrb {
+ 	u8 lun; /* UPIU LUN id field is only 8-bit wide */
+ 	bool intr_cmd;
+ 	ktime_t issue_time_stamp;
++	u64 issue_time_stamp_local_clock;
+ 	ktime_t compl_time_stamp;
++	u64 compl_time_stamp_local_clock;
+ #ifdef CONFIG_SCSI_UFS_CRYPTO
+ 	int crypto_key_slot;
+ 	u64 data_unit_num;
+@@ -430,7 +434,7 @@ struct ufs_clk_scaling {
+ struct ufs_event_hist {
+ 	int pos;
+ 	u32 val[UFS_EVENT_HIST_LENGTH];
+-	ktime_t tstamp[UFS_EVENT_HIST_LENGTH];
++	u64 tstamp[UFS_EVENT_HIST_LENGTH];
+ 	unsigned long long cnt;
+ };
+ 
+@@ -446,10 +450,10 @@ struct ufs_event_hist {
+  */
+ struct ufs_stats {
+ 	u32 last_intr_status;
+-	ktime_t last_intr_ts;
++	u64 last_intr_ts;
+ 
+ 	u32 hibern8_exit_cnt;
+-	ktime_t last_hibern8_exit_tstamp;
++	u64 last_hibern8_exit_tstamp;
+ 	struct ufs_event_hist event[UFS_EVT_CNT];
+ };
+ 
+-- 
+2.31.0
 
-Otherwise this patch looks good to me.
-
-Thanks,
-
-Bart.
