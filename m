@@ -2,75 +2,81 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 419E1C19F28
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Aug 2022 17:39:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03766C19F28
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Aug 2022 17:41:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238236AbiHCRju (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 Aug 2022 13:39:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46822 "EHLO
+        id S238383AbiHCRll (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 Aug 2022 13:41:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48606 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236781AbiHCRjs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Aug 2022 13:39:48 -0400
-Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A6F511819;
-        Wed,  3 Aug 2022 10:39:48 -0700 (PDT)
-Received: by mail-pf1-f182.google.com with SMTP id 130so9273853pfv.13;
-        Wed, 03 Aug 2022 10:39:48 -0700 (PDT)
+        with ESMTP id S236310AbiHCRlk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Aug 2022 13:41:40 -0400
+Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D00E75244F;
+        Wed,  3 Aug 2022 10:41:39 -0700 (PDT)
+Received: by mail-pj1-f49.google.com with SMTP id f11-20020a17090a4a8b00b001f2f7e32d03so4123853pjh.0;
+        Wed, 03 Aug 2022 10:41:39 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:to
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc;
-        bh=vFN4yAJ3TTxYc7VJJIK9g5MfH7WV/QaOOUEwSWvvAFk=;
-        b=Zkpxbm2tCRC3ZXLuol1MMMrsO4c1y3Z4sOhPqj4YRSSUQL8vWaXEJgLq2+rvya/K0y
-         aourilThquFWGk5E2ul5mqOU9gypa2LQrAT6ddom4qCk+/DY35adjJICoCjd6dLxUczB
-         FPDXwD56oDdWea3Uo9mUHnmUX7qyoBv5ALYGvrqd/GdcSsfgxB0oKIkaNxRIgdQuJW4/
-         0uxXFDE53r+MIsZp4XGZnroBiOHxmOzgBEqE4YsTqIfvvil296eWX11asIULrSRlkeVq
-         xd6aEpwfQHMcq1EL7p5MjyubVF0V9V5B4m07+hV9DIm/2huwWF9MTiYRcv4PtduLJyq9
-         Qa+w==
-X-Gm-Message-State: ACgBeo0b30rhazHejyCvH9BxhbKxFoMmdbkGAvj5Qnoq7YM1io0I+LIk
-        cslJF14yhl9tq6RxOJw0BK4=
-X-Google-Smtp-Source: AA6agR6YG+qmhsNrnnTdhSEbKAWJIjwoZCCZ+/q8IaXPj77qJPi9gEimE+QdYGZqveGINhiN6NQNzQ==
-X-Received: by 2002:a63:4b1b:0:b0:41c:863:8ccf with SMTP id y27-20020a634b1b000000b0041c08638ccfmr12631353pga.509.1659548387455;
-        Wed, 03 Aug 2022 10:39:47 -0700 (PDT)
+        bh=BmXLM4azNBHOm55vuddHIDwGu+x7EIrIT1rqwezLYSQ=;
+        b=mOZgjDIQufEKFfMiN/LhOD00d6t+loTz228SYwjR2l3T9lhvcWmVMWyDukfbu0kmCv
+         oP4VOOOAuALIZkzW5MZdeB1hlpvADt44yyxeEz09cSr7WpZw08fr+foygmDMcG/N6VXc
+         NkbFSV2ZBVB3QzEQoytjqYyoxBJfXEUXmrNDK0idcpc0roRWXyNhUQ2mABajLN23ctAg
+         OD6z/jNkcYfZ3MkoQI8vYWaSXJ8M/nyj/P5gWq+KPWoj68c+m51Xb+Lg2BMWa/XW7u0T
+         1urAalw1YcZLFEs9Jf2VEUF8NqTGGD9whwX3sMgc/WD23s5BR2vmznOKm0faurh03gek
+         dCvw==
+X-Gm-Message-State: ACgBeo1za9uVNQcgAlADKgCwhJc39yoCM8B1E/S4/+g7yZC2i61/6xXF
+        3+s6d0gUbRXvDvwNHPQTeQU=
+X-Google-Smtp-Source: AA6agR7KkdrQHjwWFF79/PpeF1hY36KcVwzXJ4t/pAJKSs5nCfxkcgcOXcSOvQr7ptUhJGXtKV4NUg==
+X-Received: by 2002:a17:90a:fe06:b0:1f3:547:1b31 with SMTP id ck6-20020a17090afe0600b001f305471b31mr6170185pjb.114.1659548499172;
+        Wed, 03 Aug 2022 10:41:39 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:db71:edb7:462a:44af? ([2620:15c:211:201:db71:edb7:462a:44af])
-        by smtp.gmail.com with ESMTPSA id a5-20020a17090a008500b001f559e00473sm297546pja.43.2022.08.03.10.39.45
+        by smtp.gmail.com with ESMTPSA id f12-20020a170902ce8c00b0016c78aaae7fsm2290609plg.23.2022.08.03.10.41.36
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 03 Aug 2022 10:39:46 -0700 (PDT)
-Message-ID: <d123da27-6609-3ea8-b0a8-334d6dfc5345@acm.org>
-Date:   Wed, 3 Aug 2022 10:39:44 -0700
+        Wed, 03 Aug 2022 10:41:38 -0700 (PDT)
+Message-ID: <e98d1448-ca35-b29a-0960-e3cb8a9673a0@acm.org>
+Date:   Wed, 3 Aug 2022 10:41:35 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.11.0
-Subject: Re: [PATCH v6 4/6] scsi: ufs: wb: Add
- ufshcd_is_wb_buf_flush_allowed()
+Subject: Re: [PATCH v4] ufs: core: ufshcd: use local_clock() for debugging
+ timestamps
 Content-Language: en-US
-To:     j-young.choi@samsung.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>
-References: <20220802080146epcms2p24b86bfce3d3c09c79b91d861cb3b2cce@epcms2p2>
- <CGME20220802080146epcms2p24b86bfce3d3c09c79b91d861cb3b2cce@epcms2p2>
- <20220802080831epcms2p2c2b9f94e2f450a6a772a193d9720b650@epcms2p2>
+To:     Daniil Lunev <dlunev@chromium.org>,
+        Stanley Chu <chu.stanley@gmail.com>
+Cc:     Adrian Hunter <adrian.hunter@intel.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+References: <20220803074349.v4.1.I699244ea7efbd326a34a6dfd9b5a31e78400cf68@changeid>
+ <CAGaU9a8H7QmkhBvNfZhH+CyFaup1oGX1j7a36ph9t+Me3MjCQw@mail.gmail.com>
+ <CAONX=-cSKdWGAqadzvrdJyZfL+PGOM7V0E1HcHuUny4V00JiUA@mail.gmail.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220802080831epcms2p2c2b9f94e2f450a6a772a193d9720b650@epcms2p2>
+In-Reply-To: <CAONX=-cSKdWGAqadzvrdJyZfL+PGOM7V0E1HcHuUny4V00JiUA@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/2/22 01:08, Jinyoung CHOI wrote:
-> Changed to improve readability.
+On 8/2/22 17:07, Daniil Lunev wrote:
+>> Please kindly add all Reviewed or Acked tags received in previous
+>> versions to any newer patches.
+>
+> Oh, thanks for this suggestion, I didn't know if I should do that. Should
+> I create a new patch with those brought over?
 
-The above description is a bit too cryptic. Consider changing it into 
-"Introduce ufshcd_is_wb_buf_flush_allowed() to improve readability."
+That sounds like a good idea to me. Otherwise this information will be 
+lost when the SCSI maintainer queues this patch.
 
 Thanks,
 
 Bart.
+
