@@ -2,75 +2,123 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 473CCC19F28
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Aug 2022 06:35:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F55CC19F28
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Aug 2022 08:57:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234709AbiHCGfK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 Aug 2022 02:35:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46856 "EHLO
+        id S234027AbiHCI5H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 Aug 2022 04:57:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51322 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234619AbiHCGfJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Aug 2022 02:35:09 -0400
-Received: from mail-yb1-xb2c.google.com (mail-yb1-xb2c.google.com [IPv6:2607:f8b0:4864:20::b2c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 124215724F
-        for <linux-scsi@vger.kernel.org>; Tue,  2 Aug 2022 23:35:07 -0700 (PDT)
-Received: by mail-yb1-xb2c.google.com with SMTP id 123so26955355ybv.7
-        for <linux-scsi@vger.kernel.org>; Tue, 02 Aug 2022 23:35:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=drdaKm1rYuNx2R4KHfm7Yuhd8hot7Jil0OwecH2OJZo=;
-        b=fA3tCgNA8/kv8khG6b3Xdam/7tcuG+JeJwmweOfpHzpztZAnDserPJvMqR2r2r/C/u
-         X49qugF1JZZbrmhbU5EYIaMrcPuC/uhPzpYccgsscTQnftqdUQTDgaxEVpLDwdH6X0bh
-         mAOTqV9zaajB6c+182EQqxsb1NVnGj70hK7/A=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=drdaKm1rYuNx2R4KHfm7Yuhd8hot7Jil0OwecH2OJZo=;
-        b=SVbtp2lESxww+De9XwxPkTcf2BmN3/PKdP4cTEfYfBaeayY3MssW3rgX0Ctg+w9WRA
-         2icK0edYm9Ug3hU8rhPRNWkux7CnV9ursICMsskucdpVMaMl4NrpSO8LHOClwZv5mbhJ
-         4t5rUr7nbYiQkAFKu4c1wbNoPCmtMa11980JNTsxR1V0C2BYeGORuKW9cQLOwzsgz46Q
-         MXgkbRDCWvNiJUKMQzp1x/QodV/Qq4fnS2PK4ggYO7qrw0Af5kyfMuoqAyp5EtXIBJ1L
-         75DE2BVOOku6Qa5mJQdtYoWH/+t/1mvX5L8wa+rbX5cK/0D5XMau4eTUJZp9n/tomlgT
-         LaCA==
-X-Gm-Message-State: ACgBeo3nXxZGf2jHIGR2Qmyh8rtBEAhG3rKANvnW852K0RtPizZxyIO/
-        w0aOiLGV6RjJkpn69qiSXSxJAEitWraEeLwf+AZN5A==
-X-Google-Smtp-Source: AA6agR7dFKricjPxEoi6JyVu40+XkuE9ZHzhJkC86xfuVNHsey1GnmspDjZQ3n+eC17M2de7P8dtpd1WNS1Vahex1BI=
-X-Received: by 2002:a25:c206:0:b0:67a:6ba0:98f5 with SMTP id
- s6-20020a25c206000000b0067a6ba098f5mr1253055ybf.507.1659508506351; Tue, 02
- Aug 2022 23:35:06 -0700 (PDT)
+        with ESMTP id S232447AbiHCI5G (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Aug 2022 04:57:06 -0400
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12B871FCE4;
+        Wed,  3 Aug 2022 01:57:05 -0700 (PDT)
+Received: from canpemm500008.china.huawei.com (unknown [172.30.72.53])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4LyQgN3vr8zTgTg;
+        Wed,  3 Aug 2022 16:55:44 +0800 (CST)
+Received: from [10.174.179.2] (10.174.179.2) by canpemm500008.china.huawei.com
+ (7.192.105.151) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Wed, 3 Aug
+ 2022 16:57:01 +0800
+Subject: Re: [PATCH] scsi: iscsi: iscsi_tcp: Fix null-ptr-deref while calling
+ getpeername()
+To:     Mike Christie <michael.christie@oracle.com>,
+        "lduncan@suse.com" <lduncan@suse.com>,
+        "cleech@redhat.com" <cleech@redhat.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "mark.mielke@gmail.com" <mark.mielke@gmail.com>
+CC:     "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linfeilong <linfeilong@huawei.com>,
+        "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>
+References: <20220802101939.3972556-1-lijinlin3@huawei.com>
+ <d8afc88468ab481eb325e842ad384e0e@huawei.com>
+ <f52cc786-be48-d670-6212-5ae6117d314d@oracle.com>
+From:   Li Jinlin <lijinlin3@huawei.com>
+Message-ID: <edd3f6af-98eb-2f17-2144-99daf6455be8@huawei.com>
+Date:   Wed, 3 Aug 2022 16:56:44 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.0
 MIME-Version: 1.0
-References: <20220803074955.v6.1.Ibf9efc9be50783eeee55befa2270b7d38552354c@changeid>
- <YuoRuP2pxgSQ6c9E@kroah.com>
-In-Reply-To: <YuoRuP2pxgSQ6c9E@kroah.com>
-From:   Daniil Lunev <dlunev@chromium.org>
-Date:   Wed, 3 Aug 2022 16:34:55 +1000
-Message-ID: <CAONX=-f8kHWCEEyqUdpn5wsyMZKa4eJSSCLvPDn3R5mQF9FSMA@mail.gmail.com>
-Subject: Re: [PATCH v6] ufs: core: print UFSHCD capabilities in controller's
- sysfs node
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Adrian Hunter <adrian.hunter@intel.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <beanhuo@micron.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
-        Sohaib Mohamed <sohaib.amhmd@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <f52cc786-be48-d670-6212-5ae6117d314d@oracle.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.179.2]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ canpemm500008.china.huawei.com (7.192.105.151)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> Why is this information not also in the Documentation/ABI/ entries as
-> well?
-How would you want me to word it in there? For each entry? There
-will be more in the future, would we need to just copy it as a
-boilerplate? Bart suggested it be added in the code, do you see
-a good way to mention the same in the doc?
-Thanks,
---Daniil
+
+
+On 8/3/2022 12:25 AM, Mike Christie wrote:
+> On 8/2/22 6:23 AM, lijinlin (A) wrote:
+>> So sorry, this patch has problem, please ignore.
+>>
+> 
+> Was the issue the fget use?
+>> I know I gave the suggestion to do the get, but seeing it now makes
+> me think I was wrong and it's getting too messy.
+> 
+I use get_file() in local, and test the patch can fix this null-ptr-deref.
+But I got an INFO report as below, it only appears once in multiple
+tests. I'm not sure if this info report represents a possible problem
+with the patch. So I ask for ignore it.
+
+    INFO: trying to register non-static key.
+    The code is fine but needs lockdep annotation, or maybe
+    you didn't initialize this object before use?
+    turning off the locking correctness validator.
+    CPU: 21 PID: 1074 Comm: cat Not tainted 5.19.0 #44
+    Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.15.0-0-g2dd4b9b3f840-prebuilt.qemu.org 04/01/2014
+    Call Trace:
+    <TASK>
+    dump_stack_lvl+0x49/0x63
+    dump_stack+0x10/0x16
+    register_lock_class+0x483/0x490
+    ? reacquire_held_locks+0xcb/0x1e0
+    ? release_sock+0x1e/0xb0
+    __lock_acquire.constprop.0+0x4e/0x530
+    ? lock_release+0x142/0x2d0
+    lock_acquire+0xc3/0x1b0
+    ? iscsi_sw_tcp_host_get_param+0xa4/0x120
+    _raw_spin_lock_bh+0x34/0x50
+    ? iscsi_sw_tcp_host_get_param+0xa4/0x120
+    iscsi_sw_tcp_host_get_param+0xa4/0x120
+    show_host_param_ISCSI_HOST_PARAM_IPADDRESS+0x56/0x70
+    dev_attr_show+0x1d/0x50
+    sysfs_kf_seq_show+0xad/0x120
+    kernfs_seq_show+0x2c/0x40
+    seq_read_iter+0x12e/0x4d0
+    ? aa_file_perm+0x177/0x5a0
+    kernfs_fop_read_iter+0x183/0x210
+    new_sync_read+0xfe/0x180
+    ? 0xffffffff81000000
+    vfs_read+0x14d/0x1a0
+    ksys_read+0x6d/0xf0
+    __x64_sys_read+0x1a/0x20
+    do_syscall_64+0x3b/0x90
+    entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+
+> Let's just add a mutex for getting/setting the tcp_sw_conn->sock in
+> the non-io paths (io paths are flushed/locked already). Something like
+> this (patch is only compile tested):
+> 
+
+This patch is clean, I have tested it and it is effective.
+Please push this patch to the mainline, Thanks.
+
+Jinlin
+
+> diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+> index 9fee70d6434a..c1696472965e 100644
+> --- a/drivers/scsi/iscsi_tcp.c
+> +++ b/drivers/scsi/iscsi_tcp.c
+
