@@ -2,158 +2,162 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92D7BC00140
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Aug 2022 03:03:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A366C19F28
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Aug 2022 04:11:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233759AbiHCDDq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Aug 2022 23:03:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39098 "EHLO
+        id S234259AbiHCELd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 Aug 2022 00:11:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44870 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229559AbiHCDDl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Aug 2022 23:03:41 -0400
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E657B28E1D
-        for <linux-scsi@vger.kernel.org>; Tue,  2 Aug 2022 20:03:39 -0700 (PDT)
-X-UUID: 5c9aa8add49f4ad7a2c53a42483a0a9e-20220803
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.8,REQID:2da82811-c5b5-4318-93c1-25db172bc7f6,OB:0,LO
-        B:0,IP:0,URL:5,TC:0,Content:-5,EDM:0,RT:0,SF:95,FILE:0,RULE:Release_Ham,AC
-        TION:release,TS:95
-X-CID-INFO: VERSION:1.1.8,REQID:2da82811-c5b5-4318-93c1-25db172bc7f6,OB:0,LOB:
-        0,IP:0,URL:5,TC:0,Content:-5,EDM:0,RT:0,SF:95,FILE:0,RULE:Spam_GS981B3D,AC
-        TION:quarantine,TS:95
-X-CID-META: VersionHash:0f94e32,CLOUDID:3cec20d0-a6cf-4fb6-be1b-c60094821ca2,C
-        OID:71ee6605736a,Recheck:0,SF:28|17|19|48,TC:nil,Content:0,EDM:-3,IP:nil,U
-        RL:1,File:nil,QS:nil,BEC:nil,COL:0
-X-UUID: 5c9aa8add49f4ad7a2c53a42483a0a9e-20220803
-Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw01.mediatek.com
-        (envelope-from <peter.wang@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1554070985; Wed, 03 Aug 2022 11:03:32 +0800
-Received: from mtkcas10.mediatek.inc (172.21.101.39) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.792.3;
- Wed, 3 Aug 2022 11:03:31 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas10.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 3 Aug 2022 11:03:30 +0800
-From:   <peter.wang@mediatek.com>
-To:     <stanley.chu@mediatek.com>, <linux-scsi@vger.kernel.org>,
-        <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
-        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
-CC:     <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
-        <chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
-        <powen.kao@mediatek.com>, <qilin.tan@mediatek.com>,
-        <lin.gui@mediatek.com>
-Subject: [PATCH v4] ufs: allow host driver disable wb toggle druing clock scaling
-Date:   Wed, 3 Aug 2022 11:03:29 +0800
-Message-ID: <20220803030329.5897-1-peter.wang@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+        with ESMTP id S231321AbiHCELb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Aug 2022 00:11:31 -0400
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B5521CB37
+        for <linux-scsi@vger.kernel.org>; Tue,  2 Aug 2022 21:11:29 -0700 (PDT)
+Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20220803041127epoutp038739526a42a69f0536256a08c6456fff~HulrzvFwN2885128851epoutp03N
+        for <linux-scsi@vger.kernel.org>; Wed,  3 Aug 2022 04:11:27 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20220803041127epoutp038739526a42a69f0536256a08c6456fff~HulrzvFwN2885128851epoutp03N
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1659499887;
+        bh=nk0HgHTb3YmPbS1gAOn05D8FZD3X0XhQ93Vr7Llg3x0=;
+        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
+        b=mfyPa+F3D0uLTFIE3/dpTjOqq4vVvtzcTBTIc8mYzuoJfO/LL5djTo4UVN7I46DlV
+         aq9AyTS6sqoeaLUbnQTctCgOsqP0RwAE6ssmjlPf1WbxQ+VqWytjQhqd/aeewebRUq
+         p/OoE1wdg972zniPLa8B5aI9G0KqfufBAjtQZcEk=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
+        20220803041127epcas2p1f1aaebfc58c526c02d20a35f053e16f8~HulrXhzgs1348113481epcas2p1F;
+        Wed,  3 Aug 2022 04:11:27 +0000 (GMT)
+Received: from epsmges2p3.samsung.com (unknown [182.195.36.99]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4LyJML3nTkz4x9Q1; Wed,  3 Aug
+        2022 04:11:26 +0000 (GMT)
+X-AuditID: b6c32a47-5e1ff700000025aa-6e-62e9f56e9d65
+Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
+        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
+        D0.AD.09642.E65F9E26; Wed,  3 Aug 2022 13:11:26 +0900 (KST)
+Mime-Version: 1.0
+Subject: RE:(2) [PATCH v6 5/6] scsi: ufs: wb: Modify messages
+Reply-To: j-young.choi@samsung.com
+Sender: Jinyoung CHOI <j-young.choi@samsung.com>
+From:   Jinyoung CHOI <j-young.choi@samsung.com>
+To:     Stanley Chu <chu.stanley@gmail.com>
+CC:     ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <CAGaU9a_YZDxaeOCErnQwFF9mE7bARDf4sw3F3ai1DiWwNVMFcw@mail.gmail.com>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20220803041126epcms2p82bafb63e4f135d09017519ed3066f914@epcms2p8>
+Date:   Wed, 03 Aug 2022 13:11:26 +0900
+X-CMS-MailID: 20220803041126epcms2p82bafb63e4f135d09017519ed3066f914
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+CMS-TYPE: 102P
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrBJsWRmVeSWpSXmKPExsWy7bCmuW7e15dJBj82y1icfLKGzeLBvG1s
+        Fi9/XmWzOPiwk8Vi2oefzBZfLu5ntnh5SNNi0Y1tTBaXd81hs+i+voPNYvnxf0wO3B6Xr3h7
+        7Jx1l91j8Z6XTB4TFh1g9Pi+voPN4+PTWywefVtWMXp83iTn0X6gmymAMyrbJiM1MSW1SCE1
+        Lzk/JTMv3VbJOzjeOd7UzMBQ19DSwlxJIS8xN9VWycUnQNctMwfoWCWFssScUqBQQGJxsZK+
+        nU1RfmlJqkJGfnGJrVJqQUpOgXmBXnFibnFpXrpeXmqJlaGBgZEpUGFCdsaBT7OZCqaIVFw4
+        P4O1gXEqfxcjB4eEgInExefZXYxcHEICOxglWl9OZgGJ8woISvzdIdzFyMkhLGArca//OSuI
+        LSSgJHFuzSxGkBJhAQOJW73mIGE2AT2Jn0tmsIHYIgLqEkf2HmcDGckscJZZ4t+UL2C9EgK8
+        EjPan7JA2NIS25dvZQSxOQUCJab8msgMEdeQ+LGsF8oWlbi5+i07jP3+2HxGCFtEovXeWaga
+        QYkHP3dDxSUlDh36ygbxVr7EhgOBEOEaibfLD0CV6Etc69gIdgKvgK/EkdlzwcazCKhKzFv2
+        HGqVi8T6hzfBxjMLyEtsfzuHGWQks4CmxPpd+hDTlSWO3GKBeaph4292dDazAJ9Ex+G/cPEd
+        854wQbSqSSxqMprAqDwLEcqzkKyahbBqASPzKkax1ILi3PTUYqMCY3i8JufnbmIEJ1kt9x2M
+        M95+0DvEyMTBeIhRgoNZSYT3jsvzJCHelMTKqtSi/Pii0pzU4kOMpkBPTmSWEk3OB6b5vJJ4
+        QxNLAxMzM0NzI1MDcyVxXq+UDYlCAumJJanZqakFqUUwfUwcnFINTItdfDe9nBwrkznhSt1B
+        BuGiJVyP82Ra9y1bb6Zzg8nV4u6vTw6WtUd/e2p/+ROaa9Lz3csgqOyXgqzDzB8RC/pZo6aG
+        FT1ed+p8wePNb0/4Hjvd9e7tnPcH7j53NvA6MJuje9sh7dD151y/FJ8LddzKlPOs7P1SWVe9
+        4Gs3nwhsWLWp5C9vuTTTOaZPlz1mS6v3psuejvoodb6Bb7r+mpfO3185OLVYxE05lP4pxPBc
+        W0/vjfzY07UTgtdsei/ZNntHVMWVBr/z8T2GYl9OVzfeWs37ZZtdwZl3cacfzZzbHsmyKWXJ
+        uV5e10Nnzi+/lf5yTn1wDY/1PpnFdqpGqyXuKVVoszx637h4woLwT1uUWIozEg21mIuKEwHn
+        3okyOwQAAA==
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20220802080146epcms2p24b86bfce3d3c09c79b91d861cb3b2cce
+References: <CAGaU9a_YZDxaeOCErnQwFF9mE7bARDf4sw3F3ai1DiWwNVMFcw@mail.gmail.com>
+        <20220802080146epcms2p24b86bfce3d3c09c79b91d861cb3b2cce@epcms2p2>
+        <20220802080927epcms2p1d0d89c32a9bd07c07f233801bb954807@epcms2p1>
+        <CGME20220802080146epcms2p24b86bfce3d3c09c79b91d861cb3b2cce@epcms2p8>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Peter Wang <peter.wang@mediatek.com>
+Hi, Stanley,
 
-Mediatek ufs do not want to toggle write booster during clock scaling.
-This patch allow host driver disable wb toggle during clock scaling.
+>Hi,
+>
+>On Tue, Aug 2, 2022 at 4:29 PM Jinyoung CHOI <j-young.choi@samsung.com> wrote:
+>>
+>> Messages are modified to fit the format of others.
+>>
+>> Reviewed-by: Avri Altman <avri.altman@wdc.com>
+>> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+>> Signed-off-by: Jinyoung Choi <j-young.choi@samsung.com>
+>> ---
+>>  drivers/ufs/core/ufs-sysfs.c |  2 +-
+>>  drivers/ufs/core/ufshcd.c    | 23 +++++++++++------------
+>>  2 files changed, 12 insertions(+), 13 deletions(-)
+>>
+>> diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
+>> index 2c0b7f45de4b..117272cf7d61 100644
+>> --- a/drivers/ufs/core/ufs-sysfs.c
+>> +++ b/drivers/ufs/core/ufs-sysfs.c
+>> @@ -230,7 +230,7 @@ static ssize_t wb_on_store(struct device *dev, struct device_attribute *attr,
+>>                  * If the platform supports UFSHCD_CAP_CLK_SCALING, turn WB
+>>                  * on/off will be done while clock scaling up/down.
+>>                  */
+>> -               dev_warn(dev, "To control WB through wb_on is not allowed!\n");
+>> +               dev_warn(dev, "It is not allowed to configure WB!\n");
+>>                 return -EOPNOTSUPP;
+>>         }
+>>
+>> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+>> index 5099d161f115..dcd7f03db2a2 100644
+>> --- a/drivers/ufs/core/ufshcd.c
+>> +++ b/drivers/ufs/core/ufshcd.c
+>> @@ -5737,13 +5737,13 @@ int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable)
+>>
+>>         ret = __ufshcd_wb_toggle(hba, enable, QUERY_FLAG_IDN_WB_EN);
+>>         if (ret) {
+>> -               dev_err(hba->dev, "%s Write Booster %s failed %d\n",
+>> -                       __func__, enable ? "enable" : "disable", ret);
+>> +               dev_err(hba->dev, "%s: Write Booster %s failed %d\n",
+>> +                       __func__, enable ? "enabling" : "disabling", ret);
+>>                 return ret;
+>>         }
+>>
+>>         hba->dev_info.wb_enabled = enable;
+>> -       dev_info(hba->dev, "%s Write Booster %s\n",
+>> +       dev_info(hba->dev, "%s: Write Booster %s\n",
+>>                         __func__, enable ? "enabled" : "disabled");
+>
+>You need to rebase this patch to follow the latest change as
+>https://lore.kernel.org/all/20220709000027.3929970-1-bjorn.andersson@linaro.org/
 
-So, introduce a flag UFSHCD_CAP_WB_WITH_CLK_SCALING to decouple WB
-and clock scaling. UFSHCD_CAP_WB_WITH_CLK_SCALING only valid when
-UFSHCD_CAP_CLK_SCALING is set. Just like UFSHCD_CAP_HIBERN8_WITH_CLK_GATING
-is valid only when UFSHCD_CAP_CLK_GATING set.
+I am currently working on the latest 5.20/scsi-staging.
+In this case, can I refer the commit of 5.19/scsi-fixes 
+and add commit to 5.20/scsi-staging?
+Or can I reflect it in my change?
+I have no experience, so please guide. :)
 
-Set UFSHCD_CAP_WB_WITH_CLK_SCALING for qcom to compatible legacy design in
-the same time.
+Thank you for checking.
+Jinyoung.
 
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
----
- drivers/ufs/core/ufs-sysfs.c |  3 ++-
- drivers/ufs/core/ufshcd.c    |  8 +++++---
- drivers/ufs/host/ufs-qcom.c  |  2 +-
- include/ufs/ufshcd.h         | 10 ++++++++++
- 4 files changed, 18 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
-index 0a088b47d557..7f41f2a69b04 100644
---- a/drivers/ufs/core/ufs-sysfs.c
-+++ b/drivers/ufs/core/ufs-sysfs.c
-@@ -225,7 +225,8 @@ static ssize_t wb_on_store(struct device *dev, struct device_attribute *attr,
- 	unsigned int wb_enable;
- 	ssize_t res;
- 
--	if (!ufshcd_is_wb_allowed(hba) || ufshcd_is_clkscaling_supported(hba)) {
-+	if (!ufshcd_is_wb_allowed(hba) || (ufshcd_is_clkscaling_supported(hba)
-+		&& ufshcd_enable_wb_if_scaling_up(hba))) {
- 		/*
- 		 * If the platform supports UFSHCD_CAP_CLK_SCALING, turn WB
- 		 * on/off will be done while clock scaling up/down.
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index c7b337480e3e..ac50fbe8aeb8 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -1301,9 +1301,11 @@ static int ufshcd_devfreq_scale(struct ufs_hba *hba, bool scale_up)
- 	}
- 
- 	/* Enable Write Booster if we have scaled up else disable it */
--	downgrade_write(&hba->clk_scaling_lock);
--	is_writelock = false;
--	ufshcd_wb_toggle(hba, scale_up);
-+	if (ufshcd_enable_wb_if_scaling_up(hba)) {
-+		downgrade_write(&hba->clk_scaling_lock);
-+		is_writelock = false;
-+		ufshcd_wb_toggle(hba, scale_up);
-+	}
- 
- out_unprepare:
- 	ufshcd_clock_scaling_unprepare(hba, is_writelock);
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index f10d4668814c..f8c9a78e7776 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -869,7 +869,7 @@ static void ufs_qcom_set_caps(struct ufs_hba *hba)
- 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
- 
- 	hba->caps |= UFSHCD_CAP_CLK_GATING | UFSHCD_CAP_HIBERN8_WITH_CLK_GATING;
--	hba->caps |= UFSHCD_CAP_CLK_SCALING;
-+	hba->caps |= UFSHCD_CAP_CLK_SCALING | UFSHCD_CAP_WB_WITH_CLK_SCALING;
- 	hba->caps |= UFSHCD_CAP_AUTO_BKOPS_SUSPEND;
- 	hba->caps |= UFSHCD_CAP_WB_EN;
- 	hba->caps |= UFSHCD_CAP_CRYPTO;
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index a92271421718..5a8fabb9f008 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -648,6 +648,12 @@ enum ufshcd_caps {
- 	 * notification if it is supported by the UFS device.
- 	 */
- 	UFSHCD_CAP_TEMP_NOTIF				= 1 << 11,
-+
-+	/*
-+	 * Enable WriteBooster when scaling up the clock and disable
-+	 * WriteBooster when scaling the clock down.
-+	 */
-+	UFSHCD_CAP_WB_WITH_CLK_SCALING			= 1 << 12,
- };
- 
- struct ufs_hba_variant_params {
-@@ -1004,6 +1010,10 @@ static inline bool ufshcd_is_wb_allowed(struct ufs_hba *hba)
- {
- 	return hba->caps & UFSHCD_CAP_WB_EN;
- }
-+static inline bool ufshcd_enable_wb_if_scaling_up(struct ufs_hba *hba)
-+{
-+	return hba->caps & UFSHCD_CAP_WB_WITH_CLK_SCALING;
-+}
- 
- #define ufshcd_writel(hba, val, reg)	\
- 	writel((val), (hba)->mmio_base + (reg))
--- 
-2.18.0
 
