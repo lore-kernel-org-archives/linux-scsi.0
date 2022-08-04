@@ -2,146 +2,143 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88A45C00144
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Aug 2022 06:55:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64ACEC19F2C
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Aug 2022 07:42:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238965AbiHDGzp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 Aug 2022 02:55:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57496 "EHLO
+        id S239184AbiHDHma (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 Aug 2022 03:42:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238960AbiHDGzh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2022 02:55:37 -0400
-Received: from EUR01-VE1-obe.outbound.protection.outlook.com (mail-eopbgr140083.outbound.protection.outlook.com [40.107.14.83])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C749B1FB
-        for <linux-scsi@vger.kernel.org>; Wed,  3 Aug 2022 23:55:36 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=n0C+ROSExNeDlNwSpo1l2PVkec+/mdJjZWd0DmjfZbrpxJG7F6O5Pw56MjkrEkFCRxWCANVuE41Wwf4QSXMzQBFMetTiLtWKcIUozNO5kWGNYS6FQLp2bsv2tCvodidIkYQ15VAKZyF+mGfWWrnqo9N/WaJziEPXsS3q2UW+FFZOZlXHNms+nUGG5EAyTNFiYKJZ0L+19BkUCEuwmjOc+FMfzGFiFvLiXjN/kY/MqrX/BZaJXRXufDvqle/T1HZBSpXdFfWsmah/0q1LouOzTqAgKBNfLdKqTCAwXJTAjT9RGXrleAV7FtP757v1wo67uI+lzanglEBg3ld9coYibg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=OqPNOtYhGj0TtHP6uxrgS4Dr9+X1OX7GcSZHhJmStUs=;
- b=Y1F1OHXu9RNYwd6eGxIqXyyTH4smSi2Ddi7bfQ3O3AErq/c/DOaXaVmlVD8OV3Ti/b/mF+GFtOonifu5GqdN3lCK9jKHYYEIKt1NnArYvfmm1P010tIWKe2301RB5Gs7aWt3WJ0ELcFl8tccE8ZnYrbUY5Fm6np+pHwoLMkmdcSae6enB+ACukg6Ch8g5DNYNSw+kAp30kPh6Y90ztWOkOBg5d8LfVsrznrl7DoASk2PRbHIZUGL9IcMfZAzCZye4ay6mhWWHqS/cyDDnIWWTxLgwznhXxMEvxI7of1Ii5nXVKQFF8Rn7AWKhX50XtrTpbFt2D1Ntl6OZUrodAqBUw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
- dkim=pass header.d=suse.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=OqPNOtYhGj0TtHP6uxrgS4Dr9+X1OX7GcSZHhJmStUs=;
- b=YJ07daYgkYVgyYJhqNBTXRtO3WJI6TxfSMOpvqKDObpt5s2rJDd1LVOV92DS26qaLwIJGx8hJ9lCXc7+IPobpqMR1xpkbg20CBlFPWqQzAy3tABHPQLtCjq28K9o7JffyA/7jidlxfF3GYNyENlsba8dxLYJ2hmpqyg4mghLDFJG1l4T0lDoLGqGxJNOrgnt63NOC8Hzw2TbrzqlKT/3uTvjujpTe9iDw2xbiCuIGY3Z0IPdMEXwQsQIGBhRcgWEnY0N4rj4zsTWBmFCiUKIhajyIBDn/xC+dj+GsBbKkjuMCELCeNZpsvsqadEK5T1j8b9HJscriRyMX36Ev0/7eg==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=suse.com;
-Received: from VI1PR0401MB2526.eurprd04.prod.outlook.com
- (2603:10a6:800:58::16) by DB7PR04MB4393.eurprd04.prod.outlook.com
- (2603:10a6:5:32::21) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5504.15; Thu, 4 Aug
- 2022 06:55:31 +0000
-Received: from VI1PR0401MB2526.eurprd04.prod.outlook.com
- ([fe80::9cc6:7688:607e:a3b6]) by VI1PR0401MB2526.eurprd04.prod.outlook.com
- ([fe80::9cc6:7688:607e:a3b6%9]) with mapi id 15.20.5504.015; Thu, 4 Aug 2022
- 06:55:31 +0000
-Message-ID: <cb0b6190-558d-745a-9342-d7d3eadc680c@suse.com>
-Date:   Thu, 4 Aug 2022 08:55:27 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [PATCH 00/10] scsi: Fix internal host code use
-Content-Language: en-US
-To:     Mike Christie <michael.christie@oracle.com>, jgross@suse.com,
-        njavali@marvell.com, pbonzini@redhat.com, jasowang@redhat.com,
-        mst@redhat.com, stefanha@redhat.com, oneukum@suse.com,
-        manoj@linux.ibm.com, mrochs@linux.ibm.com, ukrishn@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        james.bottomley@hansenpartnership.com
-References: <20220804034100.121125-1-michael.christie@oracle.com>
-From:   Oliver Neukum <oneukum@suse.com>
-In-Reply-To: <20220804034100.121125-1-michael.christie@oracle.com>
-Content-Type: text/plain; charset=UTF-8
+        with ESMTP id S233186AbiHDHm3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2022 03:42:29 -0400
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB7092A276
+        for <linux-scsi@vger.kernel.org>; Thu,  4 Aug 2022 00:42:27 -0700 (PDT)
+Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20220804074226epoutp0435f233c4a4a50a4fb1c70da9b0ec5650~IFHLVOpMw1055910559epoutp04U
+        for <linux-scsi@vger.kernel.org>; Thu,  4 Aug 2022 07:42:26 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20220804074226epoutp0435f233c4a4a50a4fb1c70da9b0ec5650~IFHLVOpMw1055910559epoutp04U
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1659598946;
+        bh=Rm83Ec5yFCaQndyEYNktaf6vrS+E3EUgRBd9vlEqa4E=;
+        h=Subject:Reply-To:From:To:Date:References:From;
+        b=BcyBYWlizkylV4wi07KVSbhY3UWioAE1U9oDaZYXMptUTm1s6EZ9eIfxJrSxtgqFW
+         mNlnnZcuc06/s2x8A8ynQpP+m++s8uL44LkiCJ/FpIaCwWqdVWn+aLPiIEAfnxLZt9
+         v4Q4w9E66INNgFG3ZlcZIz/dIwok2tCR5krUn/f4=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
+        20220804074225epcas2p340956e2923a6957fcdfbb4be56442c03~IFHKqa6eo0759107591epcas2p3M;
+        Thu,  4 Aug 2022 07:42:25 +0000 (GMT)
+Received: from epsmges2p4.samsung.com (unknown [182.195.36.99]) by
+        epsnrtp2.localdomain (Postfix) with ESMTP id 4Lz10J6MtHz4x9Px; Thu,  4 Aug
+        2022 07:42:24 +0000 (GMT)
+X-AuditID: b6c32a48-9f7ff700000025be-55-62eb78607d6f
+Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
+        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
+        E6.E1.09662.0687BE26; Thu,  4 Aug 2022 16:42:24 +0900 (KST)
+Mime-Version: 1.0
+Subject: [PATCH v7 0/6] scsi: ufs: wb: Add sysfs attribute and cleanup
+Reply-To: j-young.choi@samsung.com
+Sender: Jinyoung CHOI <j-young.choi@samsung.com>
+From:   Jinyoung CHOI <j-young.choi@samsung.com>
+To:     ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20220804074224epcms2p18f0ac2f92073aeed981718a9cab23866@epcms2p1>
+Date:   Thu, 04 Aug 2022 16:42:24 +0900
+X-CMS-MailID: 20220804074224epcms2p18f0ac2f92073aeed981718a9cab23866
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: AS8P189CA0056.EURP189.PROD.OUTLOOK.COM
- (2603:10a6:20b:458::33) To VI1PR0401MB2526.eurprd04.prod.outlook.com
- (2603:10a6:800:58::16)
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: df49f3cd-d2f6-4d14-ae96-08da75e65233
-X-MS-TrafficTypeDiagnostic: DB7PR04MB4393:EE_
-X-LD-Processed: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba,ExtFwd
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: e/5ESec4tBO8jMvLcrdwNFr+RmnoUVs9g4QOqQq0BN1++Gs7Ev9vcaSBpSBWFHFMk9iyMuA8/dKhuEYHVMsfxKn6snzTxKwv3ZFh+PE1KZXvQLzpiq7nyx6Tkp45RYo90lMgUtpQeYPsrCuEmnNl8WLfyzS6zQIsfyWox1OIFRx2Nvvt89Ky5znqMZRg8Lukdt5IfDdt9r7kzqq/R8piVFv2RK8Or6FbUxHhoNQXexy794wUXjW05MFLe5wCeW/+QKi6mazBK7ol8It7M3hvCfaWNC7DFgXXvyCf7QZ1hEWhA5wkm0h20xDtm45P8TY33+jXRJEGJ+1j3qU80z4DSHorp+Hb41hInKStEe8Q09rNOQOQ+Y3DSLhs9ewzvDuOYnhGk7P4grs3Y8IQUV4L1/fwxF4ebK/Qv5wgSHXyG3+cmk3WbDxINBmyGBeMcyLrc/ptLAxQB9vcpsgh4b9uscPviXm9jORLcvhgLYJ78kjAkdVPCIUysxCzcWwQrSib+VSxHnm8/bcWj9UfYCnalZLWPvln3kfYWB8Ze9DmkQrvGr3x0dPKM/OW5Xj0hRu4abnhYeyYlDLj7Ogo3YjGOPlyjzk7iyrd8hHijgkuvjo8GBIl60kMT9SRNOPvDezcqZbWtXVYYllUCs+2rR+LJJNJKz0PawhsnqQcjvetiM1G9uOax+RmscfTmT37+EUlWNPlbKHWfMcgxDWad9Ok5GZiM3IwdbPYWgJHd5JjI2qim5y/0lqDLRr5U0jc0ZQ9H/CLZuuo93C8/fK4WGErhrVyfQ3OEouzva6lUcDFo37cb4jSytchjDWT93FFq5WEG2JftqGGw+G7HYT4UagU0i3cth8FeKXPN1g0neMYOo0=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VI1PR0401MB2526.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(366004)(396003)(346002)(39860400002)(376002)(136003)(36756003)(478600001)(6486002)(66946007)(66556008)(66476007)(8676002)(31686004)(316002)(8936002)(4744005)(5660300002)(7416002)(6512007)(186003)(2616005)(2906002)(53546011)(6506007)(6666004)(41300700001)(83380400001)(38100700002)(86362001)(921005)(31696002)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?M2djZ3U4ZlNGQ3loNmFyVEhsZjZiL3JUdGVhZ2Z2T1FFWGZldElJUDRmY28r?=
- =?utf-8?B?RnYwM2l3ZWNSVGg1Um5qNmRXOThWSmFRVlZUSEl6TDc0OU1yL000SlNzRjNP?=
- =?utf-8?B?dnhsb29FcFM3YkU4bVo4OTFLdk8vUWRyOCtuSDJ4OWdWejkxamF6K1NWSExn?=
- =?utf-8?B?MTZ6MS9oOG1pamNxbnd2OXcyY1hkcDJYdTB1NnJvdGVSQ251L1NGR28xQVZP?=
- =?utf-8?B?SnJUVFhYZWhOSUxySWczZjkzRFo2UXdHSFB6UEJRVVB6elNyQjlHYm8ybmNI?=
- =?utf-8?B?ZW93anVmanZIZnBZMENaOTVESWhWQkI5OWQva1kxRnpFa3JrdWlsQ24waHJj?=
- =?utf-8?B?YmVUZmhtbUtTRGZvQjJkWEdBUFVJY3FRMlEyZXJqVjY0bXVqU21iUWJqMkFo?=
- =?utf-8?B?T1p0NFZQczRmNkxWQndqeGNaMCtDcUFRaUl4cmJkcnZKcm9ITDRPRVlzR2Fu?=
- =?utf-8?B?amNCenFHUzVBMUczSVFIUHNnSk56dE5WV3VkeG9nRGdNR0F0bHBuZllqeGxw?=
- =?utf-8?B?OU9HNUNZdUJyb0gxUUJ5QmI1R2tSNlhaYm5DV2hYYnBhK1h5MzNuN3hoTE8y?=
- =?utf-8?B?MElNTEttLzk2UThhQVdBUFFXSmg1YjFJSEc4RUFjM1plSEo1cE05UEs3KzZs?=
- =?utf-8?B?YnBvUU1sc3ZuZU9pMTluZU01c2ZSaHFXRzVvQVE4S2NVSDVCWE41V1pncmNF?=
- =?utf-8?B?eit3OC84NjQrRmpTZFEreVdxMWZ5ZE9aQ0Z6N2tVanNkWDh2SllydnpnU3R5?=
- =?utf-8?B?eFB5WE1qN1FaZGhGVW9MNGlaWG41UHJLNUZGUEVQbkJYU1dVOGFiT21lRE1Y?=
- =?utf-8?B?RFJ2bzNQdkcvdzJudG0waCt6U2FzMEVncDZsTjk5N1dybTJIZmRkbytMZUdH?=
- =?utf-8?B?VCtvTzZsUkhteGNtdTN6V0Y3alVKYUxSNGxjVVo5MjlzWkhRUHg3dU9yQXNG?=
- =?utf-8?B?L21jVmdCZ2t6NytMTUQ5dGduZWtlQkhnZGV6Y00wZEc5ZTNoSzdIa1pvVjZJ?=
- =?utf-8?B?TVZCTHUrM3FHclpRVlRjNG1VbTEzeHo3cXQyM3FDUmplcExZZW1TNUxrdXdE?=
- =?utf-8?B?TjEyM2NtVE1aRU95enpHMzl5OHROZThVQ0xaQjRTQzZaS0Zza0xNcmg0TXNU?=
- =?utf-8?B?UkdlUzI4NHlKSW1Eemk3SXBtTGRuczdHalZ5VXpWTDM0VVk5dnBoVFlMSGQ5?=
- =?utf-8?B?VTZubkxtUXRCcXNVNmozUWtMZkYyZWVuQXMzeUkxVTVuRVl6L3JxcG0vU1ZE?=
- =?utf-8?B?ZHBjRnFsd0lUMkE4c1VLaGE5ZjhYUkNPbnBDMldlWXcwY2RJMFNtczlndE1D?=
- =?utf-8?B?QVVBNkRLcVJrblVJYkZrNGZTd0hWODJLdVBKYUxUN2RYRk9LakhZbkVMS1NE?=
- =?utf-8?B?UlZNVzBMeDlGbmxFTUVYTHg3Qk5UcCtvc0NuckdUQ01QZkgweWJsNUVHQWkw?=
- =?utf-8?B?TXI3cGRpU3pGT2xQK2dhNTZ0YkR4Y3RGSWg5R1NJRExrQStyZys4c0d0Rng4?=
- =?utf-8?B?NDhpVjNPU1E2VXpIYzNGOWxqMUlIcHhXT3NNTEdIVm0wcTNtM0ZVRkpVT3pw?=
- =?utf-8?B?NTNma1htQUp4aExTdVl3WktJdERYRjJEOHN4TlpMbnM4ZGdCN1AwMjdHOFUw?=
- =?utf-8?B?dS9IdDNRbHhzdTdGVlduMEZCMXo1SUVPb0RZUmlxbjFlWVFxaUhFOG9iYUpk?=
- =?utf-8?B?YWw4UEMrZ29tZkNLcVlDUkNHaFRBZmZQZEoraTVmYys2d3VpMXlKRzNUSDBP?=
- =?utf-8?B?WVFBTlhnTmhmVHowTCs4cXVGV1RFUk5Vdnk2NkpRSzZEa3B4QnYyT0o0dXlU?=
- =?utf-8?B?M0hnaHlCZUxOQjBMOWd0K1NkejBSRXJrYnNpN0NhQmdlSDdrcklIcEp0NVoz?=
- =?utf-8?B?NGlmbE5ubTltc1JJUFp1SE9FblIxVEtreDlFNHBzUnBxQjZSR1E4ejcweVBE?=
- =?utf-8?B?WG9oY056REFEbUNMWnZ0UW5Ccnp5eDR1NGtDTDVsQU1LTk1GMEVUVnMzVU94?=
- =?utf-8?B?M1cybHJrRGZ3QW1MQVBjTHNGL1JHTU5aOFFRT0duYTYrckdnZ2tYcE9WTVNS?=
- =?utf-8?B?WjUvdVJBUTJCdFVVM3IyV00yajJEdUR3cmd4c0NaVFZwR2xVRk8wVzRNckFS?=
- =?utf-8?B?aGlJd0dCYjFEeWNjTVFKU2lHQ2liWWREZHNNTWdtYWtERWlkV1hJa21ybmxy?=
- =?utf-8?Q?jGyHAoc0jnIH2/b9dTif44AxoA/kr5vqf7g6qsd2+F//?=
-X-OriginatorOrg: suse.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: df49f3cd-d2f6-4d14-ae96-08da75e65233
-X-MS-Exchange-CrossTenant-AuthSource: VI1PR0401MB2526.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Aug 2022 06:55:31.1205
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Zr1uq0/4VqL9FwwZg9I9A9AlW6sdaeZX9ZR5GYxA0uluJiKaKHBI6KqieUFAo5l011tY6LUZA9cH441QMkYSZA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB7PR04MB4393
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+CMS-TYPE: 102P
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrDJsWRmVeSWpSXmKPExsWy7bCmhW5Cxeskg5udxhYnn6xhs3gwbxub
+        xcufV9ksDj7sZLGY9uEns8XLQ5oWvf1b2SwW3djGZHF51xw2i+7rO9gslh//x2SxdOtNRgce
+        j8tXvD0W73nJ5DFh0QFGj5aT+1k8vq/vYPP4+PQWi0ffllWMHp83yXm0H+hmCuCMyrbJSE1M
+        SS1SSM1Lzk/JzEu3VfIOjneONzUzMNQ1tLQwV1LIS8xNtVVy8QnQdcvMAbpYSaEsMacUKBSQ
+        WFyspG9nU5RfWpKqkJFfXGKrlFqQklNgXqBXnJhbXJqXrpeXWmJlaGBgZApUmJCd8eLxX6aC
+        /bwVC/qusjcwHuDqYuTkkBAwkXj6eh57FyMXh5DADkaJY9s/MHUxcnDwCghK/N0hDGIKC7hJ
+        zLnOD1IuJKAkcW7NLEaIsIHErV5zkDCbgJ7EzyUz2EBsEYE2Fon1p9khpvNKzGh/ygJhS0ts
+        X76VEcLWkPixrJcZwhaVuLn6LTuM/f7YfKgaEYnWe2ehagQlHvzcDRWXlDh06CsbyAkSAvkS
+        Gw4EQoRrJN4uPwBVoi9xrWMj2FpeAV+Jrp6XYKexCKhKrJ31lA2ixkVi78EDYDazgLzE9rdz
+        mEFGMgtoSqzfpQ8xXVniyC0WmEcaNv5mR2czC/BJdBz+CxffMe8JE0SrmsSiJiOIsIzE18Pz
+        oUo8JKb0vGGbwKg4CxHGs5CcMAvhhAWMzKsYxVILinPTU4uNCkzg0Zqcn7uJEZxstTx2MM5+
+        +0HvECMTB+MhRgkOZiUR3hWWr5OEeFMSK6tSi/Lji0pzUosPMZoCPT+RWUo0OR+Y7vNK4g1N
+        LA1MzMwMzY1MDcyVxHm9UjYkCgmkJ5akZqemFqQWwfQxcXBKNTCpH51y0OQry++NgbIVj9by
+        HRSO2vu5zWR16BP9OObtXIy71aqs9l/5NpF9cluP2jHOAL7Jtes/uLwtszy1vNKU2zZ+D3ei
+        4a68B88/qd795HCqtv82f0Do6l8rBOZGCItWWrP827p9rsFCHbMJ6+4mvPvHWGD5dEPg0mVH
+        VQ+vOLpC5Nne6nZppYwVvKy5zu9cxEtT7JsX7vhmW8jtc2JxwGZtJvtpfWaVC1+zrDtuO0Wr
+        o9LmG8+eP0EmGVf18/2F2HZ2nuA6PXHtyxcbpzhELpv89UqB5jKvB4kXndcG35DeyXuj7WdK
+        c/yk29yv7MLf8Mn8Wu65/sbLvnd9tu+4G5/JtHMbioV+F72w6ZWOEktxRqKhFnNRcSIAxhoe
+        rD8EAAA=
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20220804074224epcms2p18f0ac2f92073aeed981718a9cab23866
+References: <CGME20220804074224epcms2p18f0ac2f92073aeed981718a9cab23866@epcms2p1>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+This patch series is to clean up UFS's Write Booster code and
+adds sysfs attribute which can control the specific feature of it.
 
+V2:
+	- modify commit message
+	- move & modify err messages
+	- remove unnesscessary debug messages
+V3:
+	- split patch (functional, non-functional)
+V4:
+	- split patch (The number of patches from 2 to 7)
+	- modify dev messages
+	- modify commit message
+V5:
+	- drop (scsi: ufs: wb: Move ufshcd_is_wb_allowed() to callee)
+	- fix condition check
+	- add document for sysfs attribute
+	- move ufshcd_is_wb_buf_flush_allowed() to ufs-priv.h
+V6:
+	- Change the function name from ufshcd_wb_config() to
+	ufshcd_configure_wb()
+	- modify document description for wb_buf_flush_en attribute
+	- fix some dev_err messages
+V7:
+	- renaming sysfs attribute name 
+	  (wb_buf_flush_en -> enable_wb_buf_flush)
+	- update document description
+	- change debug message level (info -> dbg)
+	  (5.19/scsi-fixes, https://git.kernel.org/mkp/scsi/c/2ae57c995003)
 
-On 04.08.22 05:40, Mike Christie wrote:
-> The following patches made over Martin's 5.20 staging branch fix an issue
-> where we probably intended the host codes:
-> 
-> DID_TARGET_FAILURE
-> DID_NEXUS_FAILURE
-> DID_ALLOC_FAILURE
-> DID_MEDIUM_ERROR
-> 
-> to be internal to scsi-ml, but at some point drivers started using them
-> and the driver writers never updated scsi-ml.
+Jinyoung Choi (6):
+  scsi: ufs: wb: Change wb_enabled condition test
+  scsi: ufs: wb: Change functions name and modify parameter name
+  scsi: ufs: wb: Add explicit flush sysfs attribute
+  scsi: ufs: wb: Introduce ufshcd_is_wb_buf_flush_allowed() to improve
+    readability
+  scsi: ufs: wb: Modify messages
+  scsi: ufs: wb: Move the comment to the right position
 
-Hi,
+ Documentation/ABI/testing/sysfs-driver-ufs |  9 +++
+ drivers/ufs/core/ufs-sysfs.c               | 47 ++++++++++++++-
+ drivers/ufs/core/ufshcd-priv.h             |  6 ++
+ drivers/ufs/core/ufshcd.c                  | 70 ++++++++++++----------
+ include/ufs/ufshcd.h                       |  1 +
+ 5 files changed, 99 insertions(+), 34 deletions(-)
 
-this approach drops useful information, though. If a device
-reports such specific an error condition, why not use that
-information?
-
-	Regards
-		Oliver
-
+-- 
+2.25.1
