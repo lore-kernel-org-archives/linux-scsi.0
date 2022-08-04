@@ -2,190 +2,548 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC8A0C19F2A
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Aug 2022 15:07:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7983C19F2A
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Aug 2022 15:14:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236180AbiHDPHv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 Aug 2022 11:07:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46244 "EHLO
+        id S235288AbiHDPOQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 Aug 2022 11:14:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52780 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232643AbiHDPHt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2022 11:07:49 -0400
-X-Greylist: delayed 943 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 04 Aug 2022 08:07:46 PDT
-Received: from na01-obe.outbound.protection.outlook.com (unknown [52.101.56.18])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF7F61C133
-        for <linux-scsi@vger.kernel.org>; Thu,  4 Aug 2022 08:07:46 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Zq2JWailuv3Ia+A7vpefhy2SrxCUuFBjLT1IRuLAxy6Eqou0DJCsihroPX4+U75YRfqQUlMbSfm5j/Byrwc3e392XwbeXu3KO5haQkF1axNVl52RCTJD18QtEeXYQhwoj9d7qtRaCFBmvllWNd8AvKHqv//r9KkML0vFvkge0pFYlynHy4XZCOXoJj6YWyUegBLu1M4nYIL5Mmxsr6VG75cyej7RQgC6eXNMv9m7yQYy9hb3bDMFYLVGosO/FLqblhgYMwLPCl/ZK/Mf3p2biQ0L+DRAYfYbp1Kb+9sEO6vWIqfBKP7e4pGLFQ0+EgF0YRrFkWMAg2ljLuOtadyoGg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=07n5JxT8vxSTRjtD8fVRsvcWg6Hp6qsZpwoyCPbbmSI=;
- b=mZnkf9Z9nhJ1g2B2KAYIiCzamR2/lchUYhZR66isnbuUz2EDvjr3SwpJv5geNnIkFqJJKeh9Nnr+siw8L6fMQ9qxy5iT5EzArxy+0pzv/5zFmGOV3vGwdtUKdjT93jw8fYkyqqq54cIDAp5VQdzPXLs7LUaVKTTWOVPlv3i69Zkde77+PVdk0mnOGPZ6nwZ8tPuwLIx4PiEXUTIv/YHOUDVs8dlwIe/l5fbe/MNysw74CISaY/T91uba5S4dXOJSGEg2PLvr5NHu8wYt1rCBmXoBGjIOaiFBHLuXqSVBEkT96SwF1xYS8n82wyY+LPR3DpVJJacZuE+vZE35CahtDQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=07n5JxT8vxSTRjtD8fVRsvcWg6Hp6qsZpwoyCPbbmSI=;
- b=UZ3/1hDqDfVPLTl9nklzK8dJNfKmFqQUA1aEqFYh+6UJzBSZ+0pOVmCdbVTefNYWD/s98zZgSMpWocxkD88C2s6w72LJPUZ8K71hTii936kxF9/g3k4DRRVUPAI0qtfH5FzOmlkPUok7sDMIcSvECO6c3wp/P51Bch0mVGGEmPY=
-Received: from PH0PR21MB3025.namprd21.prod.outlook.com (2603:10b6:510:d2::21)
- by PH7PR21MB3356.namprd21.prod.outlook.com (2603:10b6:510:1dc::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5504.12; Thu, 4 Aug
- 2022 14:52:00 +0000
-Received: from PH0PR21MB3025.namprd21.prod.outlook.com
- ([fe80::29af:3ad1:b654:63b8]) by PH0PR21MB3025.namprd21.prod.outlook.com
- ([fe80::29af:3ad1:b654:63b8%6]) with mapi id 15.20.5525.005; Thu, 4 Aug 2022
- 14:52:00 +0000
-From:   "Michael Kelley (LINUX)" <mikelley@microsoft.com>
-To:     Saurabh Sengar <ssengar@linux.microsoft.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "wei.liu@kernel.org" <wei.liu@kernel.org>,
-        Dexuan Cui <decui@microsoft.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Saurabh Singh Sengar <ssengar@microsoft.com>
-Subject: RE: [PATCH] scsi: storvsc: Remove WQ_MEM_RECLAIM from
- storvsc_error_wq
-Thread-Topic: [PATCH] scsi: storvsc: Remove WQ_MEM_RECLAIM from
- storvsc_error_wq
-Thread-Index: AQHYpYCi7mFrpB9jL0m3yqafwIHdQa2e1quQ
-Date:   Thu, 4 Aug 2022 14:52:00 +0000
-Message-ID: <PH0PR21MB302574B34EA43A39ED45AF0AD79F9@PH0PR21MB3025.namprd21.prod.outlook.com>
-References: <1659342483-4857-1-git-send-email-ssengar@linux.microsoft.com>
-In-Reply-To: <1659342483-4857-1-git-send-email-ssengar@linux.microsoft.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=00edeadd-38b4-4353-aa6d-b4e2c96f3f7d;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2022-08-04T14:45:27Z;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=microsoft.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 58dec0e9-0fbb-4f67-621d-08da7628e323
-x-ms-traffictypediagnostic: PH7PR21MB3356:EE_
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: EMkEVvd+Qx6SDYXKYQCzgnDRfdVxSZbIPZ0fNxt8fej6zFjTlDUohL8YxVU/UTizlpfQAJC2dp3g5ccL7hKnr6ICA6R91oKiCIpa8WFx+roO4JTA7FX5DAo0CTkBpG68SX+e+iJjIhioFWTNC3XnpZMD0hLFVcx4hlEjRmZ2XgQgxb70babMv86tkABSSFJHS55htTZMHNvYpT9B92rtk+pvJ7X0EYCthpWbmYFyplRLHJp9B/vq53HWuDoP/YvRxGB0ngovavh9iqOMuf2xY8La9YzkAbEY/xLz6s59PzY4Gf9/62m5/GzNKOAz3/k/lumeHUaNjniqTuryp9Mp1mAZW/XyLHam5qeZkFb4M0/J6/7CPjLCigqYHJqw2O8kB/LIRns0LoRjC07jEQY4CBCSjuZW9v1Jb+nmotdq8fcbi+jPY+Eh8v7BhdF/indD4diHreiG3GokVZJr/LMN2kaE+dunP8ewH6nKEUCJIQzxIb0WDg1CPhtbARx/CxzlMgaI1iTqYr5jyCmQ46Tdff9+88dCTVxFZm8Dl+nkQS2jTjuvNwLXCLt5stNZRC0X595+qKUBlgKG9lZpRIb5VYFz9rkeJkkDgnvU9joEFb7gIUZEfLOTbnwwOYXHNGw1f+KCEbnT1eJUFGZZcu8mgqmCxwwn47saVfPp/jQJkJqfkuyOGOzXhJMmr+/JILvIDV6qCBEsKum38wli10lC0T6Il58Yh2JuX9rNQ3oGE6uSWGPpCwix8zLLrZRVrvd0gwJ2nfwp8MOnWKGzWzv//CSkZ7ys3JA0kF79/Sw/89ataF2aWuxR5W3NlQ2zIPsafDV4OOF2OMgaXVhmmB42PJdHYl1gIQPcDxVXbzb1VysihNPN7gvwS6lkgNYcaBeH
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR21MB3025.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(4636009)(396003)(39860400002)(366004)(376002)(136003)(346002)(451199009)(82960400001)(921005)(82950400001)(8990500004)(26005)(5660300002)(52536014)(86362001)(316002)(66446008)(71200400001)(64756008)(8676002)(9686003)(33656002)(66476007)(83380400001)(66556008)(41300700001)(76116006)(66946007)(55016003)(38100700002)(38070700005)(122000001)(186003)(10290500003)(2906002)(478600001)(6636002)(110136005)(8936002)(7696005)(6506007);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?YbBKGzkL1wSI+YrnGDlQuDQj9Zl0GhYpK3RJMSW39KSK6G5S5DOKt5bi6C+W?=
- =?us-ascii?Q?azGIPtyzwPdprcRJUr8ZYaCVZn7JTyBvLMSIYyPsZy8E3orcFqxczsFqd+lq?=
- =?us-ascii?Q?HugCZYkYs5yj6lTdrhhhVjh9B4duw6JXeKD7Sze642OJApRnRFNR+Uk6yksr?=
- =?us-ascii?Q?gO46ub8CEjqYnr/08Q/K4IZScv5FWAofUR1aq4eqBQNw3ngIee4SWlGSteKL?=
- =?us-ascii?Q?XHVY/W5N6gXmM7NP3UEKBHZRTDco1ufl+OcGKKqJdreY8ZrnJOJVClwmT79V?=
- =?us-ascii?Q?4eqgVHpMZsw8xFiLqO0phb0KyoljSqJ6KZ4LfI4l/nOmCkF620kA4kX0ir7N?=
- =?us-ascii?Q?ea9Gyzu6umvS5YiHyE/Ogc1LbYZHlITzyPYIIQR4pRaInidza7wFQ9fQfzVx?=
- =?us-ascii?Q?9A7Ttmaf9/G3etADjrFXNuvWGwHxtFDe6VbIZr3n1x/JMeJas9WhlMOL2Heu?=
- =?us-ascii?Q?k4Jm0rurjdkILT7SgU1xGewwnv21SihRvxpTQl5S4GUDfqTEOLULnaveWJ9w?=
- =?us-ascii?Q?X5aMYBuMvZX4C/ZTnWSMqwpR0jXx+F1PsxbjsxH+D/F4HynD+QFzHw7VjSaX?=
- =?us-ascii?Q?8hrYFCixmb+oYpH2AYh/OEhE3uD1nasDPd/DYKBA7+rEGgtcXNkjlctsafUM?=
- =?us-ascii?Q?VEgLipDyaeyucm02Ba3mnPFN7TfjJgLO4ffWEhlkmg7/m7uPnTNm48I9RwEH?=
- =?us-ascii?Q?ev0kx/auUngz8Q1nII7G9Am6m7+M3qRjL2lgc6GxQjD8m5NoBhY5bOftyWb0?=
- =?us-ascii?Q?2qH3OyTEw2P/d+4k4FQgFWViSe9dM9yc094ZeL94liEr/jovH71gxt487rl+?=
- =?us-ascii?Q?61JseL1MeC9B73gNA0phJkBisDNaWZ/N7yuGSPNJR81s5lyhUtlcPcG9WM54?=
- =?us-ascii?Q?YYmGxS2/Y9lwcbA7qgmRGWvjBVLaVIfbwpYbxfhtjiXSEPVn0ZOQ8W13rX9/?=
- =?us-ascii?Q?D+UyYLkssLHkKoueXpXd4EotqMVCQutx1T4G3qwlfvVewqzhnV1JUlw2dK7X?=
- =?us-ascii?Q?Ju09RhELQtMtV/vfH6AjJzVZdCeRGhbRVObhbcMZ2wda5T9PfChseZwXOZ0h?=
- =?us-ascii?Q?d8CiPjlQKVuu/N5AZtSqaM/S6bCzo9xt/Dphllw8F0DOqW6geKAknref3Uuj?=
- =?us-ascii?Q?e0Ed7r0A79MxksiWOsDtJUfM4SwgP3wlc1LxbR1uJaWDUbWsm5VJwZvWsJDJ?=
- =?us-ascii?Q?ZgRxUrSKrxEAm6EbP3sghbF26DBlh8c8VuW45OHivAMXaUwM0X0uX6lc3Ka+?=
- =?us-ascii?Q?FaYk1+lgT62V8Pk0kwrSqjyFxsYixKeq++i7DgvthmIKAZeV90+QT4dPqTmm?=
- =?us-ascii?Q?izIpCgdalA+IkpyoinjKo6GzyTLy68tmq2bPEO9GXcMHYTl/qOVIcioYiUNV?=
- =?us-ascii?Q?wZ8NCsiOvMbuGXUy88oGvnW79tYlTXPheFYPsL3o7HBxyqBxH/ek+sSTkPdh?=
- =?us-ascii?Q?Clk52fIaSilLMgmj3qkd6LY6KphXJlZzt1+EiUuIisZ9zrkWDxaf1EW1/gH2?=
- =?us-ascii?Q?jgXEuBayO9cOPIOmaSM0tsbggj6VDUqVi0Yl7Sias60x3xtcaos+Uk+7GX+2?=
- =?us-ascii?Q?YZKlnuceFrU1LPrLPu3A6YdHz+e+ZXCChe8yOOXe2xrLG/pUF46rnZyIkQUP?=
- =?us-ascii?Q?PA=3D=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S234093AbiHDPOP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2022 11:14:15 -0400
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C15212E;
+        Thu,  4 Aug 2022 08:14:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1659626052;
+        bh=CK00+RmMLUmbOSy7NG+lnz7dM/464so90/QBHs9RGKY=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=gNBAPahg+t6yUV0GlefKc35sfutKC85ZfKTS/JGA1/gge8ouolpA1mHOi0KM5EUbv
+         S0i8WhGpypJ4DJZisVG5Byp7MRpBdw+f9v6jPoCE2O3NN7awSQgfAaM3gBpRA5suiH
+         ATfQCLgDsDT3FC1oiL3fL0fZASiU7AKyOoOXGC50=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id DD3C01280224;
+        Thu,  4 Aug 2022 11:14:12 -0400 (EDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id jffIsxv9UwCs; Thu,  4 Aug 2022 11:14:12 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1659626052;
+        bh=CK00+RmMLUmbOSy7NG+lnz7dM/464so90/QBHs9RGKY=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=gNBAPahg+t6yUV0GlefKc35sfutKC85ZfKTS/JGA1/gge8ouolpA1mHOi0KM5EUbv
+         S0i8WhGpypJ4DJZisVG5Byp7MRpBdw+f9v6jPoCE2O3NN7awSQgfAaM3gBpRA5suiH
+         ATfQCLgDsDT3FC1oiL3fL0fZASiU7AKyOoOXGC50=
+Received: from lingrow.int.hansenpartnership.com (c-67-166-174-65.hsd1.va.comcast.net [67.166.174.65])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (Client did not present a certificate)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 4D5CA12801F3;
+        Thu,  4 Aug 2022 11:14:12 -0400 (EDT)
+Message-ID: <e8b94928dcadff82e7b7eabb80f75ed12fc1a394.camel@HansenPartnership.com>
+Subject: [GIT PULL] first round of SCSI updates for the 5.19+ merge window
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Thu, 04 Aug 2022 11:14:10 -0400
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR21MB3356
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Saurabh Sengar <ssengar@linux.microsoft.com> Sent: Monday, August 1, =
-2022 1:28 AM
->=20
-> storvsc_error_wq workqueue should not be marked as WQ_MEM_RECLAIM
-> as it's doesn't need to make forward progress under memory pressure.
+Updates to the usual drivers (ufs, qla2xx, target, lpfc, smartpqi,
+mpi3mr).  The main driver change that might cause issues on down the
+road is the conversion of some of our oldest surviving drivers to the
+DMA API (should only affect m68k).  The only major core change is the
+rework of async resume; the rest are either completely trivial or for
+updating deprecated APIs.
 
-s/it's/it/
+The patch is available here:
 
-> Marking this workqueue as WQ_MEM_RECLAIM may cause deadlock while
-> flushing a non-WQ_MEM_RECLAIM workqueue.
-> In the current state it causes the following warning:
->=20
-> [   14.506347] ------------[ cut here ]------------
-> [   14.506354] workqueue: WQ_MEM_RECLAIM storvsc_error_wq_0:storvsc_remov=
-e_lun is flushing !WQ_MEM_RECLAIM events_freezable_power_:disk_events_workf=
-n
-> [   14.506360] WARNING: CPU: 0 PID: 8 at <-snip->kernel/workqueue.c:2623 =
-check_flush_dependency+0xb5/0x130
-> [   14.506390] CPU: 0 PID: 8 Comm: kworker/u4:0 Not tainted 5.4.0-1086-az=
-ure #91~18.04.1-Ubuntu
-> [   14.506391] Hardware name: Microsoft Corporation Virtual Machine/Virtu=
-al Machine, BIOS Hyper-V UEFI Release v4.1 05/09/2022
-> [   14.506393] Workqueue: storvsc_error_wq_0 storvsc_remove_lun
-> [   14.506395] RIP: 0010:check_flush_dependency+0xb5/0x130
-> 		<-snip->
-> [   14.506408] Call Trace:
-> [   14.506412]  __flush_work+0xf1/0x1c0
-> [   14.506414]  __cancel_work_timer+0x12f/0x1b0
-> [   14.506417]  ? kernfs_put+0xf0/0x190
-> [   14.506418]  cancel_delayed_work_sync+0x13/0x20
-> [   14.506420]  disk_block_events+0x78/0x80
-> [   14.506421]  del_gendisk+0x3d/0x2f0
-> [   14.506423]  sr_remove+0x28/0x70
-> [   14.506427]  device_release_driver_internal+0xef/0x1c0
-> [   14.506428]  device_release_driver+0x12/0x20
-> [   14.506429]  bus_remove_device+0xe1/0x150
-> [   14.506431]  device_del+0x167/0x380
-> [   14.506432]  __scsi_remove_device+0x11d/0x150
-> [   14.506433]  scsi_remove_device+0x26/0x40
-> [   14.506434]  storvsc_remove_lun+0x40/0x60
-> [   14.506436]  process_one_work+0x209/0x400
-> [   14.506437]  worker_thread+0x34/0x400
-> [   14.506439]  kthread+0x121/0x140
-> [   14.506440]  ? process_one_work+0x400/0x400
-> [   14.506441]  ? kthread_park+0x90/0x90
-> [   14.506443]  ret_from_fork+0x35/0x40
-> [   14.506445] ---[ end trace 2d9633159fdc6ee7 ]---
->=20
-> Signed-off-by: Saurabh Sengar <ssengar@linux.microsoft.com>
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
 
-This should have a "Fixes:" tag for commit 436ad9413353 where
-this workqueue was introduced.
+The short changelog is:
 
-Michael
+Alice Chao (1):
+      scsi: ufs: ufs-mediatek: Fix invalid access to vccqx
 
-> ---
->  drivers/scsi/storvsc_drv.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index fe000da..8ced292 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -2012,7 +2012,7 @@ static int storvsc_probe(struct hv_device *device,
->  	 */
->  	host_dev->handle_error_wq =3D
->  			alloc_ordered_workqueue("storvsc_error_wq_%d",
-> -						WQ_MEM_RECLAIM,
-> +						0,
->  						host->host_no);
->  	if (!host_dev->handle_error_wq) {
->  		ret =3D -ENOMEM;
-> --
-> 1.8.3.1
+Alim Akhtar (6):
+      scsi: ufs: Rearrange addresses in increasing order
+      scsi: ufs: host: ufs-exynos: Use already existing definition
+      scsi: ufs: host: ufs-exynos: Remove unused defines
+      scsi: ufs: host: ufs-exynos: Add support for FSD UFS HCI
+      scsi: ufs: host: ufs-exynos: Add mphy apb clock mask
+      scsi: dt-bindings: ufs: exynos-ufs: Add FSD compatible
+
+Arnd Bergmann (2):
+      scsi: dpt_i2o: Remove obsolete driver
+      scsi: BusLogic: Remove bus_to_virt()
+
+Arun Easi (8):
+      scsi: qla2xxx: Fix discovery issues in FC-AL topology
+      scsi: qla2xxx: Fix response queue handler reading stale packets
+      scsi: qla2xxx: Fix losing FCP-2 targets on long port disable with I/Os
+      scsi: qla2xxx: Add debug prints in the device remove path
+      scsi: qla2xxx: Fix losing target when it reappears during delete
+      scsi: qla2xxx: Fix losing FCP-2 targets during port perturbation tests
+      scsi: qla2xxx: Fix crash due to stale SRB access around I/O timeouts
+      scsi: qla2xxx: Fix excessive I/O error messages by default
+
+Bart Van Assche (2):
+      scsi: sd: Rework asynchronous resume support
+      scsi: core: Move the definition of SCSI_QUEUE_DELAY
+
+Bikash Hazarika (4):
+      scsi: qla2xxx: Update manufacturer details
+      scsi: qla2xxx: Zero undefined mailbox IN registers
+      scsi: qla2xxx: Fix incorrect display of max frame size
+      scsi: qla2xxx: Add a new v2 dport diagnostic feature
+
+Bo Liu (1):
+      scsi: core: bsg: Remove usage of the deprecated ida_simple_xxx() API
+
+CC Chou (1):
+      scsi: ufs: ufs-mediatek: Introduce workaround for power mode change
+
+ChanWoo Lee (1):
+      scsi: ufs: ufs-qcom: Remove unneeded code
+
+Changyuan Lyu (1):
+      scsi: trace: Print driver_tag and scheduler_tag in SCSI trace
+
+Chanho Park (1):
+      scsi: ufs: ufs-exynos: Change ufs phy control sequence
+
+Colin Ian King (2):
+      scsi: ufs: core: Fix spelling mistake "Cannnot" -> "Cannot"
+      scsi: fcoe: Remove redundant assignment to variable 'wlen'
+
+Damien Le Moal (3):
+      scsi: libsas: Introduce struct smp_rps_resp
+      scsi: libsas: Introduce struct smp_rg_resp
+      scsi: libsas: Introduce struct smp_disc_resp
+
+Dan Carpenter (3):
+      scsi: mpi3mr: Delete a stray tab
+      scsi: mpi3mr: Unlock on error path
+      scsi: qla2xxx: Check correct variable in qla24xx_async_gffid()
+
+Daniil Lunev (2):
+      scsi: ufs: core: Read device property for ref clock
+      scsi: ufs: ufs-pci: Enable WriteBooster capability on ADL
+
+Dmitry Bogdanov (8):
+      scsi: target: iscsi: Do not require target authentication
+      scsi: target: iscsi: Allow AuthMethod=None
+      scsi: target: iscsi: Support base64 in CHAP
+      scsi: target: iscsi: Add support for extended CDB AHS
+      scsi: iscsi: Prefer xmit of DataOut over new commands
+      scsi: target: iscsi: Control authentication per ACL
+      scsi: target: iscsi: Extract auth functions
+      scsi: target: iscsi: Add upcast helpers
+
+Don Brace (2):
+      scsi: smartpqi: Update version to 2.1.18-045
+      scsi: smartpqi: Update copyright to current year
+
+Gilbert Wu (1):
+      scsi: smartpqi: Add controller fw version to console log
+
+James Smart (12):
+      scsi: lpfc: Copyright updates for 14.2.0.5 patches
+      scsi: lpfc: Update lpfc version to 14.2.0.5
+      scsi: lpfc: Remove Menlo/Hornet related code
+      scsi: lpfc: Refactor lpfc_nvmet_prep_abort_wqe() into lpfc_sli_prep_abort_xri()
+      scsi: lpfc: Revert RSCN_MEMENTO workaround for misbehaved configuration
+      scsi: lpfc: Fix lost NVMe paths during LIF bounce stress test
+      scsi: lpfc: Fix attempted FA-PWWN usage after feature disable
+      scsi: lpfc: Fix possible memory leak when failing to issue CMF WQE
+      scsi: lpfc: Remove extra atomic_inc on cmd_pending in queuecommand after VMID
+      scsi: lpfc: Set PU field when providing D_ID in XMIT_ELS_RSP64_CX iocb
+      scsi: lpfc: Prevent buffer overflow crashes in debugfs with malformed user input
+      scsi: lpfc: Fix uninitialized cqe field in lpfc_nvme_cancel_iocb()
+
+Jason Wang (1):
+      scsi: megaraid: Remove the static variable initialisation
+
+Jiang Jian (7):
+      scsi: zfcp: Drop redundant "the" in the comments
+      scsi: sym53c8xx_2: Remove redundant "with"
+      scsi: snic: Remove redundant "on"
+      scsi: aacraid: Remove redundant "the"
+      scsi: target: Remove duplicate "the"
+      scsi: message: fusion: Drop redundant "the"
+      scsi: hisi_sas: Align comments
+
+Jiapeng Chong (1):
+      scsi: megaraid_sas: Clean up some inconsistent indenting
+
+Johan Hovold (1):
+      scsi: ufs: dt-bindings: Add SC8280XP binding
+
+John Garry (5):
+      scsi: hisi_sas: Call hisi_sas_slave_configure() from slave_configure_v3_hw()
+      scsi: pm8001: Expose hardware queues for pm80xx
+      scsi: pm8001: Use non-atomic bitmap ops for tag alloc + free
+      scsi: pm8001: Set up tags before using them
+      scsi: pm8001: Rework shost initial values
+
+Julian Wiedmann (1):
+      scsi: zfcp: Declare zfcp_sdev_attrs as static
+
+Junwoo Lee (1):
+      scsi: ufs: Skip last hci reset to get valid register values
+
+Justin Stitt (1):
+      scsi: target: iscsi: Fix clang -Wformat warnings
+
+Karan Tilak Kumar (1):
+      scsi: fnic: Refactor code in fnic probe to initialize SCSI layer
+
+Keoseong Park (1):
+      scsi: ufs: core: Remove UIC_HIBERN8_ENTER_RETRIES
+
+Kevin Barnett (4):
+      scsi: smartpqi: Add ctrl ready timeout module parameter
+      scsi: smartpqi: Update deleting a LUN via sysfs
+      scsi: smartpqi: Fix RAID map race condition
+      scsi: smartpqi: Stop logging spurious PQI reset failures
+
+Krzysztof Kozlowski (3):
+      scsi: ufs: ufshcd: Constify pointed data
+      scsi: ufs: ufshcd-pltfrm: Constify pointed data
+      scsi: ufs: exynos: Constify driver data
+
+Kumar Meiyappan (1):
+      scsi: smartpqi: Add driver support for multi-LUN devices
+
+Li Zhijian (1):
+      scsi: core: Shorten long warning messages
+
+Mahesh Rajashekhara (1):
+      scsi: smartpqi: Fix DMA direction for RAID requests
+
+Max Gurtovoy (1):
+      scsi: iscsi: Make iscsi_unregister_transport() return void
+
+Michael Schmitz (4):
+      scsi: gvp11.c: Fix DMA mask calculation error
+      scsi: gvp11: Convert m68k WD33C93 drivers to DMA API
+      scsi: a2091: Convert m68k WD33C93 drivers to DMA API
+      scsi: a3000: Convert m68k WD33C93 drivers to DMA API
+
+Mike Christie (21):
+      scsi: target: Remove XDWRITEREAD emulated support
+      scsi: target: Detect UNMAP support post configuration
+      scsi: target: Add file configure_unmap callout
+      scsi: target: Add iblock configure_unmap callout
+      scsi: target: Add callout to configure UNMAP settings
+      scsi: target: Remove incorrect zero blocks WRITE_SAME check
+      scsi: libiscsi: Improve conn_send_pdu API
+      scsi: iscsi: Try to avoid taking back_lock in xmit path
+      scsi: iscsi: Remove iscsi_get_task back_lock requirement
+      scsi: iscsi: Remove unneeded task state check
+      scsi: iscsi_tcp: Drop target_alloc use
+      scsi: iscsi_tcp: Tell net when there's more data
+      scsi: iscsi: Run recv path from workqueue
+      scsi: iscsi: Add recv workqueue helpers
+      scsi: iscsi: Rename iscsi_conn_queue_work()
+      scsi: iscsi: Fix session removal on shutdown
+      scsi: qedi: Use QEDI_MODE_NORMAL for error handling
+      scsi: iscsi: Add helper to remove a session from the kernel
+      scsi: iscsi: Clean up bound endpoints during shutdown
+      scsi: iscsi: Allow iscsi_if_stop_conn() to be called from kernel
+      scsi: iscsi: Fix HW conn removal use after free
+
+Mike McGowen (5):
+      scsi: smartpqi: Add module param to disable managed ints
+      scsi: smartpqi: Add PCI IDs for Lenovo controllers
+      scsi: smartpqi: Add PCI ID for Adaptec SmartHBA 2100-8i
+      scsi: smartpqi: Close write read holes
+      scsi: smartpqi: Shorten drive visibility after removal
+
+Murthy Bhat (1):
+      scsi: smartpqi: Add PCI IDs for ramaxel controllers
+
+Nilesh Javali (6):
+      scsi: qla2xxx: Update version to 10.02.07.800-k
+      scsi: qla2xxx: Fix sparse warning for dport_data
+      scsi: Revert "scsi: qla2xxx: Fix disk failure to rediscover"
+      scsi: qla2xxx: Update version to 10.02.07.700-k
+      scsi: qla2xxx: Update version to 10.02.07.600-k
+      scsi: qla2xxx: Update version to 10.02.07.500-k
+
+Peter Wang (5):
+      scsi: ufs: ufs-mediatek: Support performance boosting
+      scsi: ufs: ufs-mediatek: Add stage information for ref-clk control
+      scsi: ufs: ufs-mediatek: Prevent host hang by setting CLK_CG early
+      scsi: ufs: ufs-mediatek: Always add delays for VCC operations
+      scsi: ufs: ufs-mediatek: Support low-power mode for VCCQ
+
+Po-Wen Kao (4):
+      scsi: ufs: ufs-mediatek: Support host power control
+      scsi: ufs: ufs-mediatek: Disable reset confirm feature by UniPro
+      scsi: ufs: ufs-mediatek: Prevent device regulators setting LPM incorrectly
+      scsi: ufs: ufs-mediatek: Fix the timing of configuring device regulators
+
+Quinn Tran (24):
+      scsi: qla2xxx: Fix imbalance vha->vref_count
+      scsi: qla2xxx: edif: Fix dropped IKE message
+      scsi: qla2xxx: Fix erroneous mailbox timeout after PCI error injection
+      scsi: qla2xxx: Turn off multi-queue for 8G adapters
+      scsi: qla2xxx: Wind down adapter after PCIe error
+      scsi: qla2xxx: edif: Fix slow session teardown
+      scsi: qla2xxx: edif: Reduce N2N thrashing at app_start time
+      scsi: qla2xxx: edif: Fix no logout on delete for N2N
+      scsi: qla2xxx: edif: Fix session thrash
+      scsi: qla2xxx: edif: Tear down session if keys have been removed
+      scsi: qla2xxx: edif: Fix no login after app start
+      scsi: qla2xxx: edif: Reduce disruption due to multiple app start
+      scsi: qla2xxx: edif: Send LOGO for unexpected IKE message
+      scsi: qla2xxx: edif: Fix I/O timeout due to over-subscription
+      scsi: qla2xxx: edif: Fix n2n login retry for secure device
+      scsi: qla2xxx: edif: Fix n2n discovery issue with secure target
+      scsi: qla2xxx: edif: Remove old doorbell interface
+      scsi: qla2xxx: edif: Add retry for ELS passthrough
+      scsi: qla2xxx: edif: Synchronize NPIV deletion with authentication application
+      scsi: qla2xxx: edif: Fix potential stuck session in sa update
+      scsi: qla2xxx: edif: Add bsg interface to read doorbell events
+      scsi: qla2xxx: edif: Wait for app to ack on sess down
+      scsi: qla2xxx: edif: bsg refactor
+      scsi: qla2xxx: edif: Reduce Initiator-Initiator thrashing
+
+Ren Yu (1):
+      scsi: mpt3sas: Fix typo in comment
+
+Ren Zhijie (1):
+      scsi: ufs: ufs-mediatek: Fix build error and type mismatch
+
+Sagar Biradar (1):
+      scsi: smartpqi: Fix PCI control linkdown system hang
+
+Sreekanth Reddy (4):
+      scsi: mpi3mr: Reduce VD queue depth on detecting throttling
+      scsi: mpi3mr: Resource Based Metering
+      scsi: mpi3mr: Increase cmd_per_lun to 128
+      scsi: mpi3mr: Enable shared host tagset
+
+Stanley Chu (8):
+      scsi: ufs: ufs-mediatek: Fix build warnings
+      scsi: ufs: ufs-mediatek: Disable unused VCCQx power rails
+      scsi: ufs: ufs-mediatek: Support multiple VCC sources
+      scsi: ufs: Export regulator functions
+      scsi: ufs: ufs-mediatek: Support low-power mode for parents of VCCQx
+      scsi: ufs: ufs-mediatek: Support flexible parameters for SMC calls
+      scsi: ufs: Fix ADAPT logic for HS-G5
+      scsi: ufs: Export ufshcd_uic_change_pwr_mode()
+
+Tetsuo Handa (1):
+      scsi: mpt3sas: Remove flush_scheduled_work() call
+
+Tony Battersby (1):
+      scsi: sg: Allow waiting for commands to complete on removed device
+
+Varun Prakash (1):
+      scsi: MAINTAINERS: Update cxgb3i and cxgb4i maintainer
+
+Wolfram Sang (1):
+      scsi: ufs: core: Fix typos in error messages
+
+Xiang Chen (3):
+      scsi: libsas: Resume SAS host for phy reset or enable via sysfs
+      scsi: hisi_sas: Relocate DMA unmap of SMP task
+      scsi: hisi_sas: Remove unnecessary variable to hold DMA map elements
+
+Xin Gao (1):
+      scsi: ch: Do not initialise statics to 0
+
+Xingui Yang (1):
+      scsi: hisi_sas: Modify v3 HW SATA completion error processing
+
+Xiu Jianfeng (1):
+      scsi: lpfc: Use memset_startat() helper in lpfc_nvmet_xmt_fcp_op_cmp()
+
+Yang Li (1):
+      scsi: target: iscsi: Fix NULL pointer dereference in iscsi_conn_auth_required()
+
+Yoshihiro Shimoda (5):
+      scsi: MAINTAINERS: Add maintainer for Renesas UFS driver
+      scsi: ufs: ufs-renesas: Add support for Renesas R-Car UFS controller
+      scsi: ufs: core: Add UFSHCD_QUIRK_HIBERN_FASTAUTO
+      scsi: ufs: core: Add UFSHCD_QUIRK_BROKEN_64BIT_ADDRESS
+      scsi: dt-bindings: ufs: Document Renesas R-Car UFS host controller
+
+Zhang Jiaming (1):
+      scsi: mpt3sas: Fix whitespace and spelling mistake
+
+keliu (1):
+      scsi: core: iscsi: Directly use ida_alloc()/ida_free()
+
+And the diffstat:
+
+ .../devicetree/bindings/ufs/qcom,ufs.yaml          |    2 +
+ .../devicetree/bindings/ufs/renesas,ufs.yaml       |   61 +
+ .../bindings/ufs/samsung,exynos-ufs.yaml           |    1 +
+ Documentation/scsi/ufs.rst                         |   15 +
+ Documentation/userspace-api/ioctl/ioctl-number.rst |    2 +-
+ MAINTAINERS                                        |   19 +-
+ block/bsg.c                                        |    4 +-
+ drivers/infiniband/ulp/iser/iscsi_iser.c           |    4 +-
+ drivers/message/fusion/mptspi.c                    |    2 +-
+ drivers/s390/scsi/zfcp_diag.h                      |    2 +-
+ drivers/s390/scsi/zfcp_sysfs.c                     |    2 +-
+ drivers/scsi/BusLogic.c                            |   35 +-
+ drivers/scsi/Kconfig                               |   13 +-
+ drivers/scsi/Makefile                              |    1 -
+ drivers/scsi/a2091.c                               |   63 +-
+ drivers/scsi/a3000.c                               |   53 +-
+ drivers/scsi/aacraid/aachba.c                      |    2 +-
+ drivers/scsi/aic94xx/aic94xx_dev.c                 |    2 +-
+ drivers/scsi/be2iscsi/be_main.c                    |   21 +-
+ drivers/scsi/bnx2i/bnx2i_iscsi.c                   |    2 +-
+ drivers/scsi/ch.c                                  |    2 +-
+ drivers/scsi/cxgbi/libcxgbi.c                      |    4 +-
+ drivers/scsi/dpt/dpti_i2o.h                        |  441 ---
+ drivers/scsi/dpt/dpti_ioctl.h                      |  136 -
+ drivers/scsi/dpt/dptsig.h                          |  336 --
+ drivers/scsi/dpt/osd_defs.h                        |   79 -
+ drivers/scsi/dpt/osd_util.h                        |  358 --
+ drivers/scsi/dpt/sys_info.h                        |  417 ---
+ drivers/scsi/dpt_i2o.c                             | 3545 --------------------
+ drivers/scsi/dpti.h                                |  331 --
+ drivers/scsi/fcoe/fcoe.c                           |    1 -
+ drivers/scsi/fnic/fnic_main.c                      |   45 +-
+ drivers/scsi/gvp11.c                               |   95 +-
+ drivers/scsi/hisi_sas/hisi_sas_main.c              |   49 +-
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c             |    2 -
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c             |    6 +-
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c             |   16 +-
+ drivers/scsi/hosts.c                               |    4 +-
+ drivers/scsi/iscsi_tcp.c                           |   74 +-
+ drivers/scsi/iscsi_tcp.h                           |    2 +
+ drivers/scsi/libiscsi.c                            |  313 +-
+ drivers/scsi/libiscsi_tcp.c                        |    6 +-
+ drivers/scsi/libsas/sas_expander.c                 |   67 +-
+ drivers/scsi/libsas/sas_init.c                     |    4 +
+ drivers/scsi/libsas/sas_internal.h                 |    2 +-
+ drivers/scsi/lpfc/lpfc.h                           |   11 +-
+ drivers/scsi/lpfc/lpfc_attr.c                      |   27 +-
+ drivers/scsi/lpfc/lpfc_bsg.c                       |  324 --
+ drivers/scsi/lpfc/lpfc_bsg.h                       |   14 +-
+ drivers/scsi/lpfc/lpfc_crtn.h                      |    2 +-
+ drivers/scsi/lpfc/lpfc_debugfs.c                   |   22 +-
+ drivers/scsi/lpfc/lpfc_els.c                       |   32 +-
+ drivers/scsi/lpfc/lpfc_hbadisc.c                   |   60 +-
+ drivers/scsi/lpfc/lpfc_hw.h                        |   10 -
+ drivers/scsi/lpfc/lpfc_hw4.h                       |    1 -
+ drivers/scsi/lpfc/lpfc_ids.h                       |    4 +-
+ drivers/scsi/lpfc/lpfc_init.c                      |   19 +-
+ drivers/scsi/lpfc/lpfc_nvme.c                      |    1 +
+ drivers/scsi/lpfc/lpfc_nvmet.c                     |   54 +-
+ drivers/scsi/lpfc/lpfc_scsi.c                      |    1 -
+ drivers/scsi/lpfc/lpfc_sli.c                       |   38 +-
+ drivers/scsi/lpfc/lpfc_sli.h                       |    1 -
+ drivers/scsi/lpfc/lpfc_version.h                   |    2 +-
+ drivers/scsi/megaraid/megaraid_mbox.c              |    2 +-
+ drivers/scsi/megaraid/megaraid_sas_base.c          |    4 +-
+ drivers/scsi/mpi3mr/mpi3mr.h                       |   73 +-
+ drivers/scsi/mpi3mr/mpi3mr_fw.c                    |   67 +
+ drivers/scsi/mpi3mr/mpi3mr_os.c                    |  291 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.c                |    8 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c               |    3 +-
+ drivers/scsi/pm8001/pm8001_hwi.c                   |    5 +
+ drivers/scsi/pm8001/pm8001_init.c                  |   73 +-
+ drivers/scsi/pm8001/pm8001_sas.c                   |   10 +-
+ drivers/scsi/pm8001/pm8001_sas.h                   |    3 +
+ drivers/scsi/pm8001/pm80xx_hwi.c                   |   46 +-
+ drivers/scsi/qedi/qedi_main.c                      |   11 +-
+ drivers/scsi/qla2xxx/qla_attr.c                    |   29 +-
+ drivers/scsi/qla2xxx/qla_bsg.c                     |   96 +-
+ drivers/scsi/qla2xxx/qla_bsg.h                     |   15 +
+ drivers/scsi/qla2xxx/qla_dbg.h                     |    2 +-
+ drivers/scsi/qla2xxx/qla_def.h                     |   36 +-
+ drivers/scsi/qla2xxx/qla_edif.c                    |  585 ++--
+ drivers/scsi/qla2xxx/qla_edif.h                    |    7 +-
+ drivers/scsi/qla2xxx/qla_edif_bsg.h                |  106 +-
+ drivers/scsi/qla2xxx/qla_fw.h                      |    2 +-
+ drivers/scsi/qla2xxx/qla_gbl.h                     |   13 +-
+ drivers/scsi/qla2xxx/qla_gs.c                      |  131 +-
+ drivers/scsi/qla2xxx/qla_init.c                    |   96 +-
+ drivers/scsi/qla2xxx/qla_iocb.c                    |    5 +-
+ drivers/scsi/qla2xxx/qla_isr.c                     |  138 +-
+ drivers/scsi/qla2xxx/qla_mbx.c                     |   67 +-
+ drivers/scsi/qla2xxx/qla_mid.c                     |    6 +-
+ drivers/scsi/qla2xxx/qla_nvme.c                    |    5 -
+ drivers/scsi/qla2xxx/qla_os.c                      |  103 +-
+ drivers/scsi/qla2xxx/qla_target.c                  |   35 +-
+ drivers/scsi/qla2xxx/qla_version.h                 |    4 +-
+ drivers/scsi/scsi_error.c                          |    4 +-
+ drivers/scsi/scsi_lib.c                            |   14 +-
+ drivers/scsi/scsi_transport_iscsi.c                |   98 +-
+ drivers/scsi/sd.c                                  |   84 +-
+ drivers/scsi/sd.h                                  |    5 +
+ drivers/scsi/sg.c                                  |   53 +-
+ drivers/scsi/smartpqi/Kconfig                      |    2 +-
+ drivers/scsi/smartpqi/smartpqi.h                   |   27 +-
+ drivers/scsi/smartpqi/smartpqi_init.c              |  405 ++-
+ drivers/scsi/smartpqi/smartpqi_sas_transport.c     |    2 +-
+ drivers/scsi/smartpqi/smartpqi_sis.c               |   11 +-
+ drivers/scsi/smartpqi/smartpqi_sis.h               |    4 +-
+ drivers/scsi/snic/snic_fwint.h                     |    2 +-
+ drivers/scsi/sym53c8xx_2/sym_hipd.c                |    2 +-
+ drivers/target/iscsi/iscsi_target.c                |   57 +-
+ drivers/target/iscsi/iscsi_target_auth.c           |  122 +-
+ drivers/target/iscsi/iscsi_target_configfs.c       |  113 +-
+ drivers/target/iscsi/iscsi_target_login.c          |   17 +-
+ drivers/target/iscsi/iscsi_target_nego.c           |  160 +-
+ drivers/target/iscsi/iscsi_target_nego.h           |    3 +-
+ drivers/target/iscsi/iscsi_target_nodeattrib.c     |    1 +
+ drivers/target/iscsi/iscsi_target_tpg.c            |    3 +-
+ drivers/target/target_core_alua.c                  |    2 +-
+ drivers/target/target_core_configfs.c              |   27 +-
+ drivers/target/target_core_device.c                |    6 +
+ drivers/target/target_core_file.c                  |   37 +-
+ drivers/target/target_core_iblock.c                |   13 +-
+ drivers/target/target_core_sbc.c                   |   99 -
+ drivers/ufs/core/ufshcd-priv.h                     |    6 +-
+ drivers/ufs/core/ufshcd.c                          |   86 +-
+ drivers/ufs/host/Kconfig                           |   12 +
+ drivers/ufs/host/Makefile                          |    1 +
+ drivers/ufs/host/ufs-exynos.c                      |  182 +-
+ drivers/ufs/host/ufs-exynos.h                      |    1 +
+ drivers/ufs/host/ufs-mediatek.c                    |  324 +-
+ drivers/ufs/host/ufs-mediatek.h                    |   74 +
+ drivers/ufs/host/ufs-qcom.c                        |   23 -
+ drivers/ufs/host/ufs-renesas.c                     |  412 +++
+ drivers/ufs/host/ufshcd-pci.c                      |    1 +
+ drivers/ufs/host/ufshcd-pltfrm.c                   |   15 +-
+ drivers/ufs/host/ufshcd-pltfrm.h                   |    6 +-
+ include/scsi/libiscsi.h                            |   13 +-
+ include/scsi/libsas.h                              |    2 +-
+ include/scsi/sas.h                                 |   42 +-
+ include/scsi/scsi_transport_iscsi.h                |    3 +-
+ include/target/iscsi/iscsi_target_core.h           |   14 +
+ include/target/target_core_backend.h               |    1 +
+ include/trace/events/scsi.h                        |   35 +-
+ include/ufs/ufshcd.h                               |   21 +-
+ include/ufs/unipro.h                               |  104 +-
+ 146 files changed, 4429 insertions(+), 7663 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ufs/renesas,ufs.yaml
+ delete mode 100644 drivers/scsi/dpt/dpti_i2o.h
+ delete mode 100644 drivers/scsi/dpt/dpti_ioctl.h
+ delete mode 100644 drivers/scsi/dpt/dptsig.h
+ delete mode 100644 drivers/scsi/dpt/osd_defs.h
+ delete mode 100644 drivers/scsi/dpt/osd_util.h
+ delete mode 100644 drivers/scsi/dpt/sys_info.h
+ delete mode 100644 drivers/scsi/dpt_i2o.c
+ delete mode 100644 drivers/scsi/dpti.h
+ create mode 100644 drivers/ufs/host/ufs-renesas.c
+
+James
+
 
