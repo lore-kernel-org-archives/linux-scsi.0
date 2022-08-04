@@ -2,220 +2,236 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D806CC25B06
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Aug 2022 17:00:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC87EC19F2A
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Aug 2022 17:04:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237223AbiHDRAH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 Aug 2022 13:00:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60874 "EHLO
+        id S235165AbiHDRE1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 Aug 2022 13:04:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34748 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237280AbiHDRAE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2022 13:00:04 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F29267CB8
-        for <linux-scsi@vger.kernel.org>; Thu,  4 Aug 2022 10:00:03 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 47560203FE;
-        Thu,  4 Aug 2022 17:00:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1659632402; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=FwcW2mPAi75EimOmCeg96xupUEbB0Myn/4vih0msLAg=;
-        b=jm0GkCqW/9oZ94rrl1qOm0w7DGKmkADhswM3tQZBnnGTn7YFOBPts0EgPrxGwU3PJTtDwF
-        YzW6Ct/82wRj0SH1/4p+2m7iSbANyUnEAYGmg1iOAVp4sfIe+T9sv5dVQ0U9/+vuF+HuFm
-        tOZIyILGEBvqv5MI6MdBF5l7nm1I6G0=
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id CA83513A94;
-        Thu,  4 Aug 2022 17:00:01 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id vY5ZLxH762K9NQAAMHmgww
-        (envelope-from <jgross@suse.com>); Thu, 04 Aug 2022 17:00:01 +0000
-Message-ID: <3a91ea83-1d01-8b78-5318-4fbf4f3373d3@suse.com>
-Date:   Thu, 4 Aug 2022 19:00:01 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [PATCH 01/10] scsi: xen: Drop use of internal host codes.
+        with ESMTP id S232024AbiHDREZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2022 13:04:25 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51CE45722D
+        for <linux-scsi@vger.kernel.org>; Thu,  4 Aug 2022 10:04:23 -0700 (PDT)
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 274H3iGx013174;
+        Thu, 4 Aug 2022 17:04:14 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
+ subject : to : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2022-7-12;
+ bh=IJuyZWhnIqS5HX/eni11Ugk7SQuPF4tl1kDZjGcEwPY=;
+ b=kPEikIQ+JNablLBVRLSK1UHT6Iiw4eB6QtZnfoMfWevLjjVEX2VUhWmCb3mDR5TBDdYq
+ d7B3XYTbF2oxBnlPV1sP9TDNh0oclH5DwVp14Rs1AtdE6q/nMe1PFsmmhOYnfZWeptb2
+ DHrjzUwbRoRrxLogCqQRy409qqmMsVEEsn+vmJd1xdrqlN89Hpg9BIzYcBTmxwnrmbhp
+ mgM/XZXrqivHsBfIz7g+SCFmDd+vAMNSOK/M+SzTSnrJMqM3gH3ZSMWULgnjx/ada43p
+ s/X2fJigUbJ4+V55B+SpVB3aqQpnmuzLJfJoXexULQGB1B4pop3wBKhxJxFKVXLTkXBN 5Q== 
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3hmu2cd9c5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 04 Aug 2022 17:04:14 +0000
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 274GAnk6003887;
+        Thu, 4 Aug 2022 17:04:13 GMT
+Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2103.outbound.protection.outlook.com [104.47.55.103])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3hmu34gxfd-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 04 Aug 2022 17:04:13 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=T2TxV0I5yRiZpFxJiFn0PCH+FxVz78gtgkp/3UXbIKSdPuB7w7Z7flBHsKUqQTWVgMXvG/Df0B0QYkp5posKdcWX0BWQLMmWqmCphSOjNK13QDNsPFaCY6H6760Pk6OUyiLl3NHdN/sIXMaQeqevjssIhflzgH9VV+swyGQRTAO6cd7HgckVe7tjO/yY71BE4s6SLoxt3ZxsjET0H+I01JF4a77I1SjvQ1RYezOSY6OQCQE81CWnGwYj0UbqJaRyNtMVKSOxH/EqFnzE4PYcO8Hf5/tHwq0hbBiQ09dWRYp3S9tOEtBw1G4fZ9HbUkbOL+V1U10owSVQGVgRZM7OgA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=IJuyZWhnIqS5HX/eni11Ugk7SQuPF4tl1kDZjGcEwPY=;
+ b=azd0jNiQTJIrFuYidDaDjtBz5HWfStJqmXv4/sjP24HhqFQ3PtDswghoMFzU7kTdtgL2/vFS2J6GTKgYP/RfjNKPzK7g5hH/ZgYg/1Pcriqg9N43tviWvE731QkLQhWhDs2yZ++wAThzVaNsL+vV6eKnHLiq19tobwxoYZRmbk5akZiRjp1lxVmzesPlgmiB7ga94vgslwkMv7il3D2641N66CRWIkiUZcF+dhnqccGNvkuJ8hoSJW7YWPNxeqn/3wWxnavqLSW14zP0suMhPMKdV0UkaXifnuGJR3eNRfQdsIDqqsmig48AdD6jImDZti7floEV7d9pbVfemn91dg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=IJuyZWhnIqS5HX/eni11Ugk7SQuPF4tl1kDZjGcEwPY=;
+ b=p6pgnscw0MYUWEaTPx4SvxVkpolAOoxkoO5p28HPHzoUhTZpiY+yJogYXf3TGe1LjU4HR6AJs7/cNQJ2SbrkOQ/Lr6da9VdNY0h0jc54DuCLMrW+fSxe6nV5neRYh/zQC4asw+oLxngzO09mccteEkj3pLu4Wd/BiOWQIGfOnv0=
+Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
+ BY5PR10MB3875.namprd10.prod.outlook.com (2603:10b6:a03:1f9::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5504.14; Thu, 4 Aug
+ 2022 17:04:09 +0000
+Received: from DM5PR10MB1466.namprd10.prod.outlook.com
+ ([fe80::8dee:d667:f326:1d50]) by DM5PR10MB1466.namprd10.prod.outlook.com
+ ([fe80::8dee:d667:f326:1d50%6]) with mapi id 15.20.5504.014; Thu, 4 Aug 2022
+ 17:04:09 +0000
+Message-ID: <1136e369-49b0-c3ef-340a-ab337f514fc5@oracle.com>
+Date:   Thu, 4 Aug 2022 12:04:07 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.1.0
+Subject: Re: [PATCH 00/10] scsi: Fix internal host code use
 Content-Language: en-US
-To:     Mike Christie <michael.christie@oracle.com>, njavali@marvell.com,
-        pbonzini@redhat.com, jasowang@redhat.com, mst@redhat.com,
-        stefanha@redhat.com, oneukum@suse.com, manoj@linux.ibm.com,
+To:     Oliver Neukum <oneukum@suse.com>, jgross@suse.com,
+        njavali@marvell.com, pbonzini@redhat.com, jasowang@redhat.com,
+        mst@redhat.com, stefanha@redhat.com, manoj@linux.ibm.com,
         mrochs@linux.ibm.com, ukrishn@linux.ibm.com,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         james.bottomley@hansenpartnership.com
 References: <20220804034100.121125-1-michael.christie@oracle.com>
- <20220804034100.121125-2-michael.christie@oracle.com>
- <b4b91e8b-d6c7-fb5e-6a96-f2b6780dbfe3@suse.com>
- <e037decf-26d1-e60b-2815-9e330d0b6c47@oracle.com>
-From:   Juergen Gross <jgross@suse.com>
-In-Reply-To: <e037decf-26d1-e60b-2815-9e330d0b6c47@oracle.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="------------qxoksAZXDNYHERoFEPmpA0sD"
+ <cb0b6190-558d-745a-9342-d7d3eadc680c@suse.com>
+From:   Mike Christie <michael.christie@oracle.com>
+In-Reply-To: <cb0b6190-558d-745a-9342-d7d3eadc680c@suse.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: CH0PR03CA0317.namprd03.prod.outlook.com
+ (2603:10b6:610:118::12) To DM5PR10MB1466.namprd10.prod.outlook.com
+ (2603:10b6:3:b::7)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 8f908436-421d-486c-0be2-08da763b58d5
+X-MS-TrafficTypeDiagnostic: BY5PR10MB3875:EE_
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: leTI/L/8Jet3l+D6jqd7OIe0xH7JtXusuYSktRfcqO6d4/EUfxBTAhjLtwglaKD0oiBgCNs02JkWqo46nhTcFxR2drK79PBit3BV2uhSJmZwon9kMpYLe9m9ZXi0PXaQ5wtdT/sx9BdE7TOenYyIdODMYoxFYaWMrjte2U1lccfIC3LSMvoPoDj74XuXI7S7UK/i5HHX3ujLco6twM0TOmpEmck7vr8BAIWZTvXJLKkuhf6jrHVMN5SRR1/BO9xRg56OUkxY3Cl1yUJ0x9IV0oYGgFX5oGh2zm5zhauo81Uel6/uySzYFYaehWXXD5HeGTgbtIGVZNGGy/dxX/XNk/P7f371Fz7EQYOrvKlrCBI1MV4LH0hYYj+4jVXA6QyuHjnfkprPfEDeQTCLKNEQOfd3fr78rOX43SzYeNanw4vBclwIpW08fKn/vnWIEqHqiWe9gOjFlOx8kgNAVSgnwlx0MtN+bplUe3mYOpPjJnQWNm/APxb8rgg1+wx2F1dCgzu5Zbn5I3kOQeHxQQVOkAsCVZBg3Wgx/vppbTFSdB/JG6OQ49vuP/NFdkn/4SgKpC3sQWv1a5IDNrg+Q5ozcrdL8yyFKWRAat3K0DS1KvgUQbsiz8lxlzXXAsemSOxOyiAwv7Q8Q38l1nnrw2Qy0AdwXZo57K9BtA1F4dx6L0V8WTIw0Mr8a17jXgQfoEoUZniRT8H0mmzEAsYFsUQT+z1QiYIMPR5dKjNHMQyTPAYC1jNcR01ylC99eMH5XsDopIjyaEsbKLSOrOcg4wugIOdDtp5GmWU9svRLGWqvIqqllFvKeHB3xGMcddbYF+TCbGm+HqqMKA3eQxhDIjcb+7JrRcKJp+A8BbM9ClwWdeU=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(39860400002)(366004)(396003)(376002)(136003)(346002)(316002)(6486002)(83380400001)(86362001)(921005)(31696002)(31686004)(2906002)(38100700002)(36756003)(7416002)(8936002)(66946007)(8676002)(66556008)(66476007)(186003)(53546011)(6506007)(26005)(2616005)(478600001)(6512007)(5660300002)(41300700001)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?T0lnZk1VNmdNNTBOeDJoblkzcEVjU2JybXArNjdoUGRHZmFrelFCcjlNbEpq?=
+ =?utf-8?B?eE95R3plNHBGeElWZmZ5VWphdG9yV2NOelhnRkFzQWxscUVubUU4dkdHOUNC?=
+ =?utf-8?B?d3cvMVFRWDgwSFpnSmRlTjRRelBrdUhGTnI5T2VHYXNQQ0IyUmpLVEYraEJw?=
+ =?utf-8?B?ai9ZaWFiOVdGN3M2ajZzOGU5WDNoVVpVV0ZnNHNLTXVHajU2TjFXbnVvcXJz?=
+ =?utf-8?B?QlpxL3FUVkk1dGRWcG1GaWpBbW9kN3pyVXFEWVBDVkw3clAvR0Q0UG9SQkFp?=
+ =?utf-8?B?eHdjRjJGVmJ6ckIxTG9Cdm5JVUdoeUpRQmJOamp6QnlGZUhldG9hbnpIbEpX?=
+ =?utf-8?B?dHluT3EzWTR4REVtLzYvVU9OMzFGaEJ3akROaktIY1orN2Z6a0gyT0Z2WlVR?=
+ =?utf-8?B?NXRhalF1T3N2N3FEdlVsZWNVY0VQOEZSU3drMEJJU01mdkwvbFdpZE8reisw?=
+ =?utf-8?B?UDh1WlNuQXV0ek8zWmFnOEEwdDJkcDJCZjA1Q2lQL1Y4MzI5VnY5alNTU3Ja?=
+ =?utf-8?B?S0FGZmRtUG1LcVJ1WVVJQ1l0YWgxUVhWbFlmN1cvZUVETDlPcUZ6TGN5NzZz?=
+ =?utf-8?B?VkloQkpaV1RhTHNTVnhXS2RJUVZZbVpKQ1lPanc0aEE4aG9wZ3NIZzRLZ2hC?=
+ =?utf-8?B?Y005SXI5NjhGZVJKWTVxTitSTnlmTlVQKzYzRVFjOGpsWSt4aHpCM0tGMEUv?=
+ =?utf-8?B?WXFvU2c2MjVZMW5VMWtlc1hXbGtrVG5IRVlKcHc3Rm8xUHdOQjRMOHFhczlF?=
+ =?utf-8?B?Wmk4VGJ6TjJ4TUxQYytVMmFoS1BNOHR4WmlrdVYyZVIzSnVyK3RydTBxMmhH?=
+ =?utf-8?B?RjNnZUQyWGZ2RGhiOUNjazFvQnNRVTV6dGYwMmV5VGpTQ0xUc2xjeVI1SW1a?=
+ =?utf-8?B?RVRHaHVGdkRlLzR1WUxqWkllb2xua2ZVc3g1MHAzQzVhck5TbkN0MmFseUhJ?=
+ =?utf-8?B?Z3VHZ1E4YW0ydkhveWFjWUg1QlhlM1llNVEwVWRaYzJsU0UvRjRWS1hlOUo5?=
+ =?utf-8?B?dGZRZERyZEFaOHhmMC9Wc2h6cVlhZWhEK1FhenJHN2ZnVzdMU2w3ZWVxRmRq?=
+ =?utf-8?B?cWQ3WUIycU0yWVM5OXB4ZWVuOEFjMGJLbVQ1eTcwclpoRlpqdTN3aDFMNHAx?=
+ =?utf-8?B?V1Bpbkl0a3ZKL0Zid0xXRjYyaGJaSVhCTWdSM1RFYmwrSUtoaDcxSHR3NjNF?=
+ =?utf-8?B?STdzS3l3bGdmVk5obEFaMGxHdGxuQytkQStrWmd4THpkZmVFcnJmN09qbjdv?=
+ =?utf-8?B?c1VmTWVmQXFyVlVYbHpMYTJCU3pQR21YTDk0T3FJT2pKU3ZFdURuYUpGdDgy?=
+ =?utf-8?B?WnNFMVlqajZ0WWNCbjFhVGMrSDJUYmh4RFA4dXNZTmI5L2V1cHpuVkI0dTBQ?=
+ =?utf-8?B?TDBWQjJhRTlKU3NCME5KU2pCRC81TjJVS0RTUjgzNHB1RkVjOE0xb3creitD?=
+ =?utf-8?B?TFJpUUlUYjVPM2hZZDBqNmwyUjBKTDVuY3dRNWQ1VEpoSGtOMzNzblphbWtj?=
+ =?utf-8?B?OUJsN2MrTEV5Z3dtN2pZNEFhN1F4M3ZxbWhxenRGLzRxWkJUaE1OSkFDaHJk?=
+ =?utf-8?B?UTN3RWprVFNXWUlXYWZWZk5xQTVkZDJTaS9rZS92c0NJdUhXSHprSUlWYmJB?=
+ =?utf-8?B?ZTNQeXZ5YXBVUVVBWjNRUnZCbkxjZUFKTm9KK2cvOWxqVVMwaUZlSjkvS1RW?=
+ =?utf-8?B?KzRaT0MxbVMvQUF1OVdOWmdlcjgwaDhaMTYrN3lQcmxuZzB0UVo1VzFtNEk1?=
+ =?utf-8?B?TW8xTW45WlQ0NlVVbU5HYStXbmIxVlVUYXJCdlM4eXM3MzdDS3I4ZFVHU2M2?=
+ =?utf-8?B?TTQ2MXNUMDlNTFFIZk14dWxkcmVDb2s5aXpOcGdGKytFM0V3OGtBajRqYU1Y?=
+ =?utf-8?B?Wmw5cEQ4ZjgxdnhBZW0vQWJMT3BXMC9kdzhHa3VkV0VBckYveGQ0UkRLa0tU?=
+ =?utf-8?B?TzJGT284bmU4dFRFR3Q2OWhiT3dPdnY0d3lvSElJTUF4eVIzd1dnMkRzSUlH?=
+ =?utf-8?B?di96Mk9JTnBjSmtUdytJdXBFYzdZQ2RtaGdPajY3V0M4dFlpRG5zYkZvazE0?=
+ =?utf-8?B?RnkwbW1sZW5rQVdBa0pSZ0g2VHc3anRvQVZqazBtdkJLUDhFRllNZGZvMmVS?=
+ =?utf-8?B?cS9mRmI5Z2kyYmYwaXd6NXJUa0gzZ1dnQTExS1pSNlhhL09RSmM2ZlpmZG9Y?=
+ =?utf-8?B?YkE9PQ==?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8f908436-421d-486c-0be2-08da763b58d5
+X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Aug 2022 17:04:09.3101
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: g+3XXi1VWfSZR2J/vFaiwAYMndMWTPvEH5ofyckm0dfwMK2kjM+qneJQO9cCGbbPDIGALhg9Qw528DSsfgh1pd+hXbv6JHZSPibk7k3MtY8=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR10MB3875
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
+ definitions=2022-08-04_03,2022-08-04_02,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 suspectscore=0
+ mlxlogscore=999 bulkscore=0 mlxscore=0 phishscore=0 spamscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2206140000 definitions=main-2208040074
+X-Proofpoint-GUID: lxYRWH6xix11EKmSyDdsLeD9og6nNSXF
+X-Proofpoint-ORIG-GUID: lxYRWH6xix11EKmSyDdsLeD9og6nNSXF
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------------qxoksAZXDNYHERoFEPmpA0sD
-Content-Type: multipart/mixed; boundary="------------a07xwurgYDnhFFXVRQeqFAOF";
- protected-headers="v1"
-From: Juergen Gross <jgross@suse.com>
-To: Mike Christie <michael.christie@oracle.com>, njavali@marvell.com,
- pbonzini@redhat.com, jasowang@redhat.com, mst@redhat.com,
- stefanha@redhat.com, oneukum@suse.com, manoj@linux.ibm.com,
- mrochs@linux.ibm.com, ukrishn@linux.ibm.com, martin.petersen@oracle.com,
- linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com
-Message-ID: <3a91ea83-1d01-8b78-5318-4fbf4f3373d3@suse.com>
-Subject: Re: [PATCH 01/10] scsi: xen: Drop use of internal host codes.
-References: <20220804034100.121125-1-michael.christie@oracle.com>
- <20220804034100.121125-2-michael.christie@oracle.com>
- <b4b91e8b-d6c7-fb5e-6a96-f2b6780dbfe3@suse.com>
- <e037decf-26d1-e60b-2815-9e330d0b6c47@oracle.com>
-In-Reply-To: <e037decf-26d1-e60b-2815-9e330d0b6c47@oracle.com>
+On 8/4/22 1:55 AM, Oliver Neukum wrote:
+> 
+> 
+> On 04.08.22 05:40, Mike Christie wrote:
+>> The following patches made over Martin's 5.20 staging branch fix an issue
+>> where we probably intended the host codes:
+>>
+>> DID_TARGET_FAILURE
+>> DID_NEXUS_FAILURE
+>> DID_ALLOC_FAILURE
+>> DID_MEDIUM_ERROR
+>>
+>> to be internal to scsi-ml, but at some point drivers started using them
+>> and the driver writers never updated scsi-ml.
+> 
+> Hi,
+> 
+> this approach drops useful information, though. If a device
+> reports such specific an error condition, why not use that
+> information
 
---------------a07xwurgYDnhFFXVRQeqFAOF
-Content-Type: multipart/mixed; boundary="------------LBaUbfldLDOGSJZ7QWvVHRGH"
+Is there a specific patch/case/code you are concerned?
 
---------------LBaUbfldLDOGSJZ7QWvVHRGH
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: base64
+I think in most cases the drivers were not using the correct
+error code or they were stretching in trying to find a code
+already.
 
-T24gMDQuMDguMjIgMTg6MjgsIE1pa2UgQ2hyaXN0aWUgd3JvdGU6DQo+IE9uIDgvNC8yMiAx
-OjE4IEFNLCBKdWVyZ2VuIEdyb3NzIHdyb3RlOg0KPj4gT24gMDQuMDguMjIgMDU6NDAsIE1p
-a2UgQ2hyaXN0aWUgd3JvdGU6DQo+Pj4gVGhlIGVycm9yIGNvZGVzOg0KPj4+DQo+Pj4gRElE
-X1RBUkdFVF9GQUlMVVJFDQo+Pj4gRElEX05FWFVTX0ZBSUxVUkUNCj4+PiBESURfQUxMT0Nf
-RkFJTFVSRQ0KPj4+IERJRF9NRURJVU1fRVJST1INCj4+Pg0KPj4+IGFyZSBpbnRlcm5hbCB0
-byB0aGUgU0NTSSBsYXllci4gRHJpdmVycyBtdXN0IG5vdCB1c2UgdGhlbSBiZWNhdXNlOg0K
-Pj4+DQo+Pj4gMS4gVGhleSBhcmUgbm90IHByb3BhZ2F0ZWQgdXB3YXJkcywgc28gU0cgSU8v
-cGFzc3Rocm91Z2ggdXNlcnMgd2lsbCBub3QNCj4+PiBzZWUgYW4gZXJyb3IgYW5kIHRoaW5r
-IGEgY29tbWFuZCB3YXMgc3VjY2Vzc2Z1bC4NCj4+Pg0KPj4+IHhlbi1zY3NpYmFjayB3aWxs
-IG5ldmVyIHNlZSB0aGlzIGVycm9yIGFuZCBzaG91bGQgbm90IHRyeSB0byBzZW5kIGl0Lg0K
-Pj4+DQo+Pj4gMi4gVGhlcmUgaXMgbm8gaGFuZGxpbmcgZm9yIHRoZW0gaW4gc2NzaV9kZWNp
-ZGVfZGlzcG9zaXRpb24gc28gaWYNCj4+PiB4ZW4tc2NzaWZyb250IHdlcmUgdG8gcmV0dXJu
-IHRoZSBlcnJvciB0byBzY3NpLW1sIHRoZW4gaXQga2lja3Mgb2ZmIHRoZQ0KPj4+IGVycm9y
-IGhhbmRsZXIgd2hpY2ggaXMgZGVmaW5pdGVseSBub3Qgd2hhdCB3ZSB3YW50Lg0KPj4+DQo+
-Pj4gVGhpcyBwYXRjaCByZW1vdmUgdGhlIHVzZSBmcm9tIHhlbi1zY3NpZnJvbnQvYmFjay4N
-Cj4+Pg0KPj4+IFNpZ25lZC1vZmYtYnk6IE1pa2UgQ2hyaXN0aWUgPG1pY2hhZWwuY2hyaXN0
-aWVAb3JhY2xlLmNvbT4NCj4+PiAtLS0NCj4+PiAgwqAgZHJpdmVycy9zY3NpL3hlbi1zY3Np
-ZnJvbnQuY8KgwqDCoMKgwqDCoCB8wqAgOCAtLS0tLS0tLQ0KPj4+ICDCoCBkcml2ZXJzL3hl
-bi94ZW4tc2NzaWJhY2suY8KgwqDCoMKgwqDCoMKgwqAgfCAxMiAtLS0tLS0tLS0tLS0NCj4+
-PiAgwqAgaW5jbHVkZS94ZW4vaW50ZXJmYWNlL2lvL3ZzY3NpaWYuaCB8IDEwICstLS0tLS0t
-LS0NCj4+PiAgwqAgMyBmaWxlcyBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMjkgZGVsZXRp
-b25zKC0pDQo+Pj4NCj4+DQo+PiAuLi4NCj4+DQo+Pj4gZGlmZiAtLWdpdCBhL2luY2x1ZGUv
-eGVuL2ludGVyZmFjZS9pby92c2NzaWlmLmggYi9pbmNsdWRlL3hlbi9pbnRlcmZhY2UvaW8v
-dnNjc2lpZi5oDQo+Pj4gaW5kZXggN2VhNGRjOTYxMWM0Li40NGViMWYzNGYxYTAgMTAwNjQ0
-DQo+Pj4gLS0tIGEvaW5jbHVkZS94ZW4vaW50ZXJmYWNlL2lvL3ZzY3NpaWYuaA0KPj4+ICsr
-KyBiL2luY2x1ZGUveGVuL2ludGVyZmFjZS9pby92c2NzaWlmLmgNCj4+PiBAQCAtMzE2LDE2
-ICszMTYsOCBAQCBzdHJ1Y3QgdnNjc2lpZl9yZXNwb25zZSB7DQo+Pj4gIMKgICNkZWZpbmUg
-WEVOX1ZTQ1NJSUZfUlNMVF9IT1NUX1RSQU5TUE9SVF9ESVNSVVBURUQgMTQNCj4+PiAgwqAg
-LyogVHJhbnNwb3J0IGNsYXNzIGZhc3RmYWlsZWQgKi8NCj4+PiAgwqAgI2RlZmluZSBYRU5f
-VlNDU0lJRl9SU0xUX0hPU1RfVFJBTlNQT1JUX0ZBSUxGQVNUwqAgMTUNCj4+PiAtLyogUGVy
-bWFuZW50IHRhcmdldCBmYWlsdXJlICovDQo+Pj4gLSNkZWZpbmUgWEVOX1ZTQ1NJSUZfUlNM
-VF9IT1NUX1RBUkdFVF9GQUlMVVJFwqDCoMKgwqDCoCAxNg0KPj4+IC0vKiBQZXJtYW5lbnQg
-bmV4dXMgZmFpbHVyZSBvbiBwYXRoICovDQo+Pj4gLSNkZWZpbmUgWEVOX1ZTQ1NJSUZfUlNM
-VF9IT1NUX05FWFVTX0ZBSUxVUkXCoMKgwqDCoMKgwqAgMTcNCj4+PiAtLyogU3BhY2UgYWxs
-b2NhdGlvbiBvbiBkZXZpY2UgZmFpbGVkICovDQo+Pj4gLSNkZWZpbmUgWEVOX1ZTQ1NJSUZf
-UlNMVF9IT1NUX0FMTE9DX0ZBSUxVUkXCoMKgwqDCoMKgwqAgMTgNCj4+PiAtLyogTWVkaXVt
-IGVycm9yICovDQo+Pj4gLSNkZWZpbmUgWEVOX1ZTQ1NJSUZfUlNMVF9IT1NUX01FRElVTV9F
-UlJPUsKgwqDCoMKgwqDCoMKgIDE5DQo+Pj4gIMKgIC8qIFRyYW5zcG9ydCBtYXJnaW5hbCBl
-cnJvcnMgKi8NCj4+PiAtI2RlZmluZSBYRU5fVlNDU0lJRl9SU0xUX0hPU1RfVFJBTlNQT1JU
-X01BUkdJTkFMwqAgMjANCj4+PiArI2RlZmluZSBYRU5fVlNDU0lJRl9SU0xUX0hPU1RfVFJB
-TlNQT1JUX01BUkdJTkFMwqAgMTYNCj4+DQo+PiBQbGVhc2UgZHJvcCB0aGUgbW9kaWZpY2F0
-aW9ucyBvZiB0aGlzIGhlYWRlci4NCj4+DQo+PiBUaGlzIGlzIGEgY29weSBvZiB0aGUgbWFz
-dGVyIGZyb20gdGhlIFhlbiByZXBvc2l0b3J5LiBJdCBtaWdodCBiZSB1c2VkDQo+PiBpbiBt
-dWx0aXBsZSBPUydlcyBhY3Jvc3MgbWFueSByZWxlYXNlcywgc28gaXQgbmVlZHMgdG8gYmUg
-cmVnYXJkZWQgYXMgQUJJLg0KPj4NCj4gDQo+IEhvdyBkbyB5b3Ugd2FudCB0byBoYW5kbGUg
-c2NzaWZyb250X2hvc3RfYnl0ZT8NCj4gDQo+IHhlbi1zY3NpYmFjay5jIHdpbGwgbmV2ZXIg
-cmV0dXJuIHRob3NlIGVycm9yIGNvZGVzLCBidXQgY2FuIHNvbWUgb3RoZXINCj4gaW1wbGVt
-ZW50YXRpb24/IERvIHlvdSB3YW50IG1lIHRvIGFkZCB0cmFuc2xhdGlvbiBmcm9tIHRoZSBY
-RU5fVlNDU0lJRg0KPiB0byBzb21lIG90aGVyIERJRCBjb2Rlcz8NCg0KSXRzIGZpbmUgZm9y
-IHNjc2lmcm9udCB0byB1c2UgdGhlICJkZWZhdWx0OiIgZmFsbGJhY2sgaW4gdGhpcyBjYXNl
-Lg0KDQoNCkp1ZXJnZW4NCg0K
---------------LBaUbfldLDOGSJZ7QWvVHRGH
-Content-Type: application/pgp-keys; name="OpenPGP_0xB0DE9DD628BF132F.asc"
-Content-Disposition: attachment; filename="OpenPGP_0xB0DE9DD628BF132F.asc"
-Content-Description: OpenPGP public key
-Content-Transfer-Encoding: quoted-printable
+The only ones that I thought were questionable were:
 
------BEGIN PGP PUBLIC KEY BLOCK-----
+1. storvsc_drv: Used DID_TARGET_FAILURE for a local allocation
+failure when they wanted to handle lun removal/scanning from a
+worker thread.
 
-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
-jR/i1DG86lem3iBDXzXsZDn8R38=3D
-=3D2wuH
------END PGP PUBLIC KEY BLOCK-----
+I don't think DID_TARGET_FAILURE is right here. The driver wants
+to just not retry this command. It's not really a perm target
+failure like DID_TARGET_FAILURE is documented as. The failure
+is just that the driver can't allocate some mem to perform lun
+management.
 
---------------LBaUbfldLDOGSJZ7QWvVHRGH--
+I think either:
 
---------------a07xwurgYDnhFFXVRQeqFAOF--
+1. When we hit that failure path that we want to keep the 
+DID_NO_CONNECT/DID_REQUEUE and not overwrite them.
 
---------------qxoksAZXDNYHERoFEPmpA0sD
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature"
+Or
 
------BEGIN PGP SIGNATURE-----
+2. I used DID_BAD_TARGET to try and keep the spirit of their
+DID_TARGET_FAILURE use where we couldn't handle an operation on
+it's behalf. So the target itself is not bad but our processing
+for it was so I thought it was close enough.
 
-wsB5BAABCAAjFiEEhRJncuj2BJSl0Jf3sN6d1ii/Ey8FAmLr+xEFAwAAAAAACgkQsN6d1ii/Ey91
-TQf/UTmqZaOtkAGF4rA+sbLxHWe84iXfO0pld0Kcs/DYFDUsRMgKxbSnaOJoss8+w2G3Bwboh1ce
-i1bPkb/FlNbyc+Lm+V+YTfO8wqROlVzfbRGrzoPBRcKxMYkA3ZAhqSMS1C1cP5sD2lK8cUYuKJnJ
-R63fmC+iazAgZ5YtWOtsCkCvoAGO2bKj+mhuqe/vdcEsxVSC98U2IN0nd6KK/Lz9XG2huibQztqi
-/omABBHnmirDeOozDog6LOJVdakRi4mHd7LLp1jpVaUdtpROYIGTqDM3ykzcJVzH5NmjjwKkqpqq
-2gUsJ/HFpJGQR18/9fwOCqky/IQMsGJW5set5yzZLw==
-=VwVb
------END PGP SIGNATURE-----
+Note that I think the root issue is that the driver should
+not be handling UAs and doing LUN scanning/removal and should
+have added code to scsi-ml so it can be handled for everyone.
+So really that code should not exist but that is a larger
+change. I didn't want to add a new error code because of this.
 
---------------qxoksAZXDNYHERoFEPmpA0sD--
+2. uas: Used DID_TARGET_FAILURE when a TMF was not supported.
+Again I don't think that code was right because it's not
+a perm target failure. It is something that we don't want to
+retry on another path but I don't think that comes up for
+this driver ever.
+
+I think DID_BAD_TARGET is ok'ish for this one. It's not a bad
+target, but the target doesn't support what we needed and
+DID_BAD_TARGET still conveys what we wanted and gives us the
+same behavior.
+
+3. cxlflash: DID_ALLOC_FAILURE was wrong in this case because
+they wanted a retryable error. DID_ALLOC_FAILURE was for when
+we are doing provisioning and couldn't allocate space on the
+device, and is not retrable.
+
+DID_ERROR gives them the behavior they want. It does lose info
+but that's just how drivers ask scsi-ml to retry errors we don't
+have codes for. We could add a new code but I don't think it
+was worth it since we don't do that for every other driver and
+their retryable errors. If there are drivers that have the same
+issue then I'm for adding a new code.
+
+
+
