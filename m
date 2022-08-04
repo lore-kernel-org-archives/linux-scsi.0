@@ -2,133 +2,114 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79D44C19F2A
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Aug 2022 13:00:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F302BC19F2D
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Aug 2022 13:00:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232611AbiHDNAY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 Aug 2022 09:00:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41276 "EHLO
+        id S235966AbiHDNAZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 Aug 2022 09:00:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41306 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230092AbiHDNAX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2022 09:00:23 -0400
-Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30E6360EF
-        for <linux-scsi@vger.kernel.org>; Thu,  4 Aug 2022 06:00:22 -0700 (PDT)
-Received: by mail-pl1-x630.google.com with SMTP id w10so19282905plq.0
-        for <linux-scsi@vger.kernel.org>; Thu, 04 Aug 2022 06:00:22 -0700 (PDT)
+        with ESMTP id S231921AbiHDNAY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2022 09:00:24 -0400
+Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4718060F1
+        for <linux-scsi@vger.kernel.org>; Thu,  4 Aug 2022 06:00:23 -0700 (PDT)
+Received: by mail-pl1-x629.google.com with SMTP id w7so19229028ply.12
+        for <linux-scsi@vger.kernel.org>; Thu, 04 Aug 2022 06:00:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
-         :from:from:to:cc;
-        bh=vcxUkdyWlyZwNFk5sab4zShn9rXehvCFtuQJGZ9wRp4=;
-        b=C3Vl7ZXTb1eITHr9kNZPwFJiKcKxZ9JEDsalBwJ2fIIg1KiiJseRkg+i/sl/PodSJL
-         0Jk39myPFuF89Gp1K1urndKyu7hISx//LEI9ov/0GXlKZiGC0IA1bOop85a9Aq34gQlI
-         u/NfttzZVDEGkOjmWqSK1BDKMvdv2sKbZewBY=
+        h=mime-version:message-id:date:subject:cc:to:from:from:to:cc;
+        bh=eP/YJWCQnjZnBuOumn0r13vHDviNuHsEcsNlfX1M6ec=;
+        b=SywkeAPK0KX00nbvd0Cp6HCCIlqoAWQXdsC9+vov4lnm3Cxj2RHB887b4XcEqhtlZ+
+         F6/6eiWdN7vDQLpi7sSFxA9IgIUcKjP887FzzvjdOuCh/xShEdm8PHGjWPpMtMJpomPD
+         77n70DH/2k59QP6rAnV27UFVenCs824jJjPvw=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
-         :from:x-gm-message-state:from:to:cc;
-        bh=vcxUkdyWlyZwNFk5sab4zShn9rXehvCFtuQJGZ9wRp4=;
-        b=2tZMRN+eyRIN2hELZmRtDVsPfEzUgULEUEO1tt8HPvkxw1/bjrhFfxpKi5De55VMzK
-         14ojMZifariTw2mkbkQEsIiWjBAhQ/5X9D2BjL8RktUS7dWi//qTqd7PUyJr9wPyrijB
-         Rrsh2Jlvvs9mxRJWTFUwxoahoX4JWvWcQBDPF0d+8sdRwQVfu4hOYJcW7xvH0FCYuU8i
-         KcQRIeyfgjww/jmzue7eouO8AfFABxW1xwj4fRFC5oQ+LkZQWHKFzIZm9FCv+Zw0URmg
-         /3wp4QW/QhfW+f2qNuPBd7NCJPxMmzt4OjWS8hkw7iEbw9HGZIKsfYLNN6T72YIldLgY
-         Tt2Q==
-X-Gm-Message-State: ACgBeo0uz8MDfi6WFzRXS8YbXBkcAlki2mWCOYl26lkcQduB/klr9hf8
-        8p8DP+MVLhOm8//7zt2bNakAXAasIi8l8E5eq6H2QkdjqKVCA3Je5wNOoalIjoTiAY+jsQ7+N0U
-        cW6eP1JbEC8f6PpPk5CJi7zp105rzO3cvWqPPn5d98icMnGbor1L016EIe4ODKcHVhWvjILIqTK
-        diGdLC0whV
-X-Google-Smtp-Source: AA6agR7Sy4KHQxE2Zji4B6EH5x2SXRrkvuNGi064vBBC7t0XTMOkLihvHZZRkntYMlzM+WJFHqAoqg==
-X-Received: by 2002:a17:90a:fe92:b0:1f5:1b0b:1cd7 with SMTP id co18-20020a17090afe9200b001f51b0b1cd7mr1993104pjb.197.1659618020355;
-        Thu, 04 Aug 2022 06:00:20 -0700 (PDT)
+        h=mime-version:message-id:date:subject:cc:to:from:x-gm-message-state
+         :from:to:cc;
+        bh=eP/YJWCQnjZnBuOumn0r13vHDviNuHsEcsNlfX1M6ec=;
+        b=Rw+4a2Visg3uvS2fGC5+C6VvCqfvMReK6PDsJ2snkETYjpB4K4c7Cm5J4NsW054xmD
+         XktFMGuoQez1DVLW05ib+U4HaIkKbnp9scN4WmSKdRuFZQuec6jyJEYpzA0tPcM4K1u6
+         a17sE3hXM6OaE6ShfT04m/jPpYVNpxa/AWQFMvDd9hkmp/SnWc/mvHZ0Oj2XMMkbuWnE
+         NBg+zEs3tFj8JzcKtX51EClDayClVLacAzrHHA3npJDdJQgkxvMZNMS5q0ThB794gTkM
+         DRIi2H3OslAl1dPRUF9g475hg0+9M2wH6scVKmFbolP3K0a33Sa0Qcg6UZd0RzrxUnEQ
+         la6g==
+X-Gm-Message-State: ACgBeo2rIOksa9GtTNTYg3Z8zIKiKSm0ew817QDNTUSGT1yqIb/jkBH1
+        +7guZGPLcXrEPDLJu8PXMu5fpJ1KAOD4dgO8aHW3H8K8q5bndcc1chaKcvlu8UgQN/77ZKPyj6H
+        tFxcNiYh3jgHleOGPl9PA/PT76wVpagPQO3SP8k4nIgdxjxg6hGVwWo1Gu+g30g/50RID/B46Ly
+        63C6kbXZl+
+X-Google-Smtp-Source: AA6agR4vfondY0aY1KltXkfpEd9aswGHwYYeuOwpSZdJsPe1RqudeM5CJRN47R49QlekY02GdtjXkw==
+X-Received: by 2002:a17:90b:180f:b0:1f5:160c:a656 with SMTP id lw15-20020a17090b180f00b001f5160ca656mr10730282pjb.193.1659618017715;
+        Thu, 04 Aug 2022 06:00:17 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id w15-20020aa7954f000000b0052e2a1edab8sm934645pfq.24.2022.08.04.06.00.18
+        by smtp.gmail.com with ESMTPSA id w15-20020aa7954f000000b0052e2a1edab8sm934645pfq.24.2022.08.04.06.00.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 Aug 2022 06:00:19 -0700 (PDT)
+        Thu, 04 Aug 2022 06:00:16 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>
-Subject: [PATCH v2 01/15] mpi3mr: Add config and transport related debug flags
-Date:   Thu,  4 Aug 2022 18:42:12 +0530
-Message-Id: <20220804131226.16653-2-sreekanth.reddy@broadcom.com>
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: [PATCH v2 00/15] mpi3mr: Added Support for SAS Transport
+Date:   Thu,  4 Aug 2022 18:42:11 +0530
+Message-Id: <20220804131226.16653-1-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20220804131226.16653-1-sreekanth.reddy@broadcom.com>
-References: <20220804131226.16653-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000a59b6605e569ee74"
+        boundary="000000000000b737dc05e569ee3f"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000a59b6605e569ee74
+--000000000000b737dc05e569ee3f
 Content-Transfer-Encoding: 8bit
 
-Add config and transport request related error & info debug
-flags and functions.
+- Enhanced the driver to support SAS transport layer and
+ expose SAS controller PHYs, ports, attached expander, expander PHYs,
+ expander ports and SAS/SATA end devices to the kernel through
+ SAS transport class.
+- The driver also provides call back handlers for get_linkerrors,
+ get_enclosure_identifier, get_bay_identifier, phy_reset, phy_enable,
+ set_phy_speed and smp_handler to the kernel as defined by the
+ SAS transport layer.
+- The SAS transport layer support is enabled only when the
+ controller multipath capability is not enabled.
+- The NVMe devices, VDs, vSES and PCIe Managed SES devices
+ are not exposed through SAS transport.
 
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
-Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
----
- drivers/scsi/mpi3mr/mpi3mr_debug.h | 27 +++++++++++++++++++++++++++
- 1 file changed, 27 insertions(+)
+V2:
+ - Accommodated the changes suggested by Himanshu Madhani
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_debug.h b/drivers/scsi/mpi3mr/mpi3mr_debug.h
-index 2464c40..ee6edd8 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_debug.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr_debug.h
-@@ -23,9 +23,13 @@
- #define MPI3_DEBUG_RESET		0x00000020
- #define MPI3_DEBUG_SCSI_ERROR		0x00000040
- #define MPI3_DEBUG_REPLY		0x00000080
-+#define MPI3_DEBUG_CFG_ERROR		0x00000100
-+#define MPI3_DEBUG_TRANSPORT_ERROR	0x00000200
- #define MPI3_DEBUG_BSG_ERROR		0x00008000
- #define MPI3_DEBUG_BSG_INFO		0x00010000
- #define MPI3_DEBUG_SCSI_INFO		0x00020000
-+#define MPI3_DEBUG_CFG_INFO		0x00040000
-+#define MPI3_DEBUG_TRANSPORT_INFO	0x00080000
- #define MPI3_DEBUG			0x01000000
- #define MPI3_DEBUG_SG			0x02000000
- 
-@@ -122,6 +126,29 @@
- 			pr_info("%s: " fmt, (ioc)->name, ##__VA_ARGS__); \
- 	} while (0)
- 
-+#define dprint_cfg_info(ioc, fmt, ...) \
-+	do { \
-+		if (ioc->logging_level & MPI3_DEBUG_CFG_INFO) \
-+			pr_info("%s: " fmt, (ioc)->name, ##__VA_ARGS__); \
-+	} while (0)
-+
-+#define dprint_cfg_err(ioc, fmt, ...) \
-+	do { \
-+		if (ioc->logging_level & MPI3_DEBUG_CFG_ERROR) \
-+			pr_info("%s: " fmt, (ioc)->name, ##__VA_ARGS__); \
-+	} while (0)
-+#define dprint_transport_info(ioc, fmt, ...) \
-+	do { \
-+		if (ioc->logging_level & MPI3_DEBUG_TRANSPORT_INFO) \
-+			pr_info("%s: " fmt, (ioc)->name, ##__VA_ARGS__); \
-+	} while (0)
-+
-+#define dprint_transport_err(ioc, fmt, ...) \
-+	do { \
-+		if (ioc->logging_level & MPI3_DEBUG_TRANSPORT_ERROR) \
-+			pr_info("%s: " fmt, (ioc)->name, ##__VA_ARGS__); \
-+	} while (0)
-+
- #endif /* MPT3SAS_DEBUG_H_INCLUDED */
- 
- /**
+Sreekanth Reddy (15):
+  mpi3mr: Add config and transport related debug flags
+  mpi3mr: Add framework to issue cnfg requests
+  mpi3mr: Added helper functions to retrieve cnfg pages
+  mpi3mr: Enable Enclosure device add event
+  mpi3mr: Add framework to add phys to STL
+  mpi3mr: Add helper functions to retrieve device objects
+  mpi3mr: Add helper functions to manage device's port
+  mpi3mr: Enable STL on HBAs where multipath is disabled
+  mpi3mr: Add expander devices to STL
+  mpi3mr: Get target object based on rphy
+  mpi3mr: Add SAS SATA end devices to STL
+  mpi3mr: Add framework to issue MPT transport cmds
+  mpi3mr: Support sas transport class callbacks
+  mpi3mr: Refresh sas ports during soft reset
+  mpi3mr: Block IOs while refreshing target dev objects
+
+ drivers/scsi/mpi3mr/Makefile           |    1 +
+ drivers/scsi/mpi3mr/mpi3mr.h           |  240 +-
+ drivers/scsi/mpi3mr/mpi3mr_debug.h     |   27 +
+ drivers/scsi/mpi3mr/mpi3mr_fw.c        |  892 ++++++-
+ drivers/scsi/mpi3mr/mpi3mr_os.c        |  444 +++-
+ drivers/scsi/mpi3mr/mpi3mr_transport.c | 3283 ++++++++++++++++++++++++
+ 6 files changed, 4835 insertions(+), 52 deletions(-)
+ create mode 100644 drivers/scsi/mpi3mr/mpi3mr_transport.c
+
 -- 
 2.27.0
 
 
---000000000000a59b6605e569ee74
+--000000000000b737dc05e569ee3f
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -199,13 +180,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIJZaF+N7iMkISnfoR4C4
-7w7xKBgfNcRVj/uQThq2kAAhMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDgwNDEzMDAyMVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIHHXlD2j4NFN43jaeVww
+WrAxdixIzoGnHYTly2mVhpzKMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDgwNDEzMDAyMlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBeNlyWXpnLOFghV0UXBgQl1UlsyEuSLZVR1RFk
-8ydz8+K3qQjkwb3RG0STyzRgPWDw5amaocYns1w4nN+uFxAjNDHIIYL1of/FN4y7vLqV/KmSdR1c
-dZYrVY5EvTFV72tOgyx2rm+5kIrc/7isnrExXMlFIxvvnUMSGLJKGYSNIwAht64nLwY/tUiv8VGu
-rhtuq3rjtrZpwRZncgzq9vX7fn0ANj/elv0yMQsYQFXcwjeOEsgItJZQRgtObTzMmycsNitcJwSL
-a+oGaE0jlQbjhQz2IbpjICL64NZ70JYNqvl7nRKW+9PPH0vd21F2RwovvAFzCnAwT+8L5XBQ77u7
---000000000000a59b6605e569ee74--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBZdmf6QkExwxRFjZhI77P3Xdm15CZrQMxhNzxI
+EfeBriCAcK+6EMAiH9BKS3pgmypl1nc6dJ75OOht0SIRCoUVtSE2Kq9FoQMY2FI8cqYOzFm6NGXL
+N6ssDc6ZDM+6WAEkYI2gXFniBJITFgXupkqY21gFCHSkaIm9h5NfO/++0s5rubaznRN3WGrd0sIq
+PTn6w/qE5eAZFRQ2cfTTSjcXd4OAyipKltx4a+RDg7P1ajNezwjnhIMOADQPV5DIzi822G+yV1p/
+AClAXh+7F2ffN9pOq1SrrIrlu91dTOgNX/IUkYXkg+PdW6zOGvOxyRCBsuvjH03o+vrvKR4CNsEK
+--000000000000b737dc05e569ee3f--
