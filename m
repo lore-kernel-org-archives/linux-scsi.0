@@ -2,131 +2,206 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F0C9C00144
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Aug 2022 05:49:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA7F5C00144
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Aug 2022 06:18:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237531AbiHDFto (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 Aug 2022 01:49:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46874 "EHLO
+        id S230177AbiHDGSc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 Aug 2022 02:18:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36774 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238968AbiHDFt2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2022 01:49:28 -0400
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D5C061130
-        for <linux-scsi@vger.kernel.org>; Wed,  3 Aug 2022 22:49:15 -0700 (PDT)
-Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20220804054907epoutp019c50f3b18602f0a3ae4a80f75f4ad621~IDkPv_SHK2765927659epoutp01D
-        for <linux-scsi@vger.kernel.org>; Thu,  4 Aug 2022 05:49:07 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20220804054907epoutp019c50f3b18602f0a3ae4a80f75f4ad621~IDkPv_SHK2765927659epoutp01D
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1659592147;
-        bh=eEByWWlr1hq3Oo9gT1G5MAyMMOkHgVV4ti9vWCBEiA4=;
-        h=Subject:Reply-To:From:To:In-Reply-To:Date:References:From;
-        b=vL1kii8eIhTC5lqkWqbrCYDGv1FwaEuYUGuj2dx0L+4lONaVnx6Glc2L4eFBK6kbs
-         yUs3ikhWQRhFm4pyAsk7iv26fZkyuyidIxyfADkYyXLYcnv45dEw2WUcj8UQJt81Oi
-         EZ9E8YXhafzl+FG7ep0eXVWKAsFVYQt9sP6Oabgs=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas2p2.samsung.com (KnoxPortal) with ESMTP id
-        20220804054907epcas2p2848db7c14ee034955cb98b3a05929ef4~IDkPVsuuJ0802008020epcas2p2n;
-        Thu,  4 Aug 2022 05:49:07 +0000 (GMT)
-Received: from epsmges2p3.samsung.com (unknown [182.195.36.70]) by
-        epsnrtp4.localdomain (Postfix) with ESMTP id 4LyyTZ5f9Mz4x9Q5; Thu,  4 Aug
-        2022 05:49:06 +0000 (GMT)
-X-AuditID: b6c32a47-5e1ff700000025aa-8f-62eb5dd2a3cc
-Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
-        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
-        CB.BB.09642.2DD5BE26; Thu,  4 Aug 2022 14:49:06 +0900 (KST)
-Mime-Version: 1.0
-Subject: RE:(2) [PATCH v6 3/6] scsi: ufs: wb: Add explicit flush sysfs
- attribute
-Reply-To: j-young.choi@samsung.com
-Sender: Jinyoung CHOI <j-young.choi@samsung.com>
-From:   Jinyoung CHOI <j-young.choi@samsung.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <28b41877-2697-6bbb-066d-ee0f6e330565@acm.org>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20220804054906epcms2p1f3b7f3dc8be225a96933121e77c6648f@epcms2p1>
-Date:   Thu, 04 Aug 2022 14:49:06 +0900
-X-CMS-MailID: 20220804054906epcms2p1f3b7f3dc8be225a96933121e77c6648f
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrOJsWRmVeSWpSXmKPExsWy7bCmqe6l2NdJBhev61qcfLKGzeLBvG1s
-        Fi9/XmWzOPiwk8Vi2oefzBYvD2laLLqxjcni8q45bBbd13ewWSw//o/JYunWm4wO3B6Xr3h7
-        LN7zksljwqIDjB4tJ/ezeHxf38Hm8fHpLRaPvi2rGD0+b5LzaD/QzRTAGZVtk5GamJJapJCa
-        l5yfkpmXbqvkHRzvHG9qZmCoa2hpYa6kkJeYm2qr5OIToOuWmQN0rJJCWWJOKVAoILG4WEnf
-        zqYov7QkVSEjv7jEVim1ICWnwLxArzgxt7g0L10vL7XEytDAwMgUqDAhO2Pzhhb2gpkcFUe7
-        pjM2MF5h62Lk4JAQMJG4uEusi5GLQ0hgB6PEpeXnmEHivAKCEn93CHcxcnIICwRJbFyzmxnE
-        FhJQkji3ZhYjSImwgIHErV5zkDCbgJ7EzyUz2EBsEYFGFon/G9JAbAkBXokZ7U9ZIGxpie3L
-        tzKC2JwC1hJXd71gg4hrSPxY1ssMYYtK3Fz9lh3Gfn9sPiOELSLReu8sVI2gxIOfu6HikhKH
-        Dn2F+iRfYsOBQIhwjcTb5QegSvQlrnVsBDuBV8BXYumy9awgNouAqsSep99YIWpcJC70/gY7
-        h1lAXmL72zngQGAW0JRYv0sfYrqyxJFbLDBPNWz8zY7OZhbgk+g4/BcuvmPeEyaIVjWJRU1G
-        EGEZia+H57NPYFSahQjkWUjWzkJYu4CReRWjWGpBcW56arFRgTE8WpPzczcxglOslvsOxhlv
-        P+gdYmTiYDzEKMHBrCTCu8LydZIQb0piZVVqUX58UWlOavEhRlOghycyS4km5wOTfF5JvKGJ
-        pYGJmZmhuZGpgbmSOK9XyoZEIYH0xJLU7NTUgtQimD4mDk6pBiYXr+c/hAwP+z3YFsGxTv39
-        Yy6vr99exv0z0p12bNufhCnzq0W0dzo0zN6yyF1LVevgBunymoPGR37dqZyhwB49Nbtm7h/J
-        opA3ykuYJ/5a+DOJ9Xvx0sx/PnX2WhbTD5zSU7lmsFzhmZqE35177lFSXaeVXnSmX6xVaG3t
-        3V1y7GGQ3nTf7f80E0PcjRI9PGzlJALibML3tP90zIowODFD/mCRTc4z1X3sd0Lvnd0d995h
-        T+TtSWV8on9XtfmHqwmXzfyvIlN3j6u04/6Ph2fWn7oo6zr9WKJjotMTtZQlvOtE9xULXjDt
-        rbVyvpjE8OtAp+l8Y5ELbU09bMLPLuodfKaxcVZ1x/IpfjrnWpVYijMSDbWYi4oTAfOz8no6
-        BAAA
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20220802080146epcms2p24b86bfce3d3c09c79b91d861cb3b2cce
-References: <28b41877-2697-6bbb-066d-ee0f6e330565@acm.org>
-        <20220802080146epcms2p24b86bfce3d3c09c79b91d861cb3b2cce@epcms2p2>
-        <20220802080740epcms2p3893fd9cfb765d4addbbfe58c68cf5af3@epcms2p3>
-        <CGME20220802080146epcms2p24b86bfce3d3c09c79b91d861cb3b2cce@epcms2p1>
+        with ESMTP id S229464AbiHDGS3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2022 02:18:29 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1CD61EAD1
+        for <linux-scsi@vger.kernel.org>; Wed,  3 Aug 2022 23:18:27 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 08654402C2;
+        Thu,  4 Aug 2022 06:18:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1659593899; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=5LRVOawiY224bYDqFfadnMpF/s78eMz6+Ds0bNa5FJA=;
+        b=DvGU3nhk4l3gUCSkghWqOZXE7+y9yCaEZVEk3TPfy9lLotrzOPCvv3pDJC3wv1RbiIrOmX
+        Ph/U8CTiYdo+JUXt9t0LMp/w2DKsk320fVHUnWtXvqBn7ECzSMJn0fbCPoUeHmfHvOhFF7
+        gZwMLRf/mZSvVpEKpBo5yDhn09OnwGo=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 9B02F1348A;
+        Thu,  4 Aug 2022 06:18:18 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id De1WJKpk62KAegAAMHmgww
+        (envelope-from <jgross@suse.com>); Thu, 04 Aug 2022 06:18:18 +0000
+Message-ID: <b4b91e8b-d6c7-fb5e-6a96-f2b6780dbfe3@suse.com>
+Date:   Thu, 4 Aug 2022 08:18:18 +0200
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+Subject: Re: [PATCH 01/10] scsi: xen: Drop use of internal host codes.
+Content-Language: en-US
+To:     Mike Christie <michael.christie@oracle.com>, njavali@marvell.com,
+        pbonzini@redhat.com, jasowang@redhat.com, mst@redhat.com,
+        stefanha@redhat.com, oneukum@suse.com, manoj@linux.ibm.com,
+        mrochs@linux.ibm.com, ukrishn@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        james.bottomley@hansenpartnership.com
+References: <20220804034100.121125-1-michael.christie@oracle.com>
+ <20220804034100.121125-2-michael.christie@oracle.com>
+From:   Juergen Gross <jgross@suse.com>
+In-Reply-To: <20220804034100.121125-2-michael.christie@oracle.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="------------N5F739OcGgySqS0mRWbnjhzr"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->On 8/2/22 01:07, Jinyoung CHOI wrote:
->> +What:		/sys/bus/platform/drivers/ufshcd/*/wb_buf_flush_en
->> +What:		/sys/bus/platform/devices/*.ufs/wb_buf_flush_en
->> +Date:		July 2022
->> +Contact:	Jinyoung Choi <j-young.choi@samsung.com>
->> +Description:	This entry shows the status of WriteBooster buffer flushing
->
->Can we rename this attribute into something that has a word order that 
->is grammatically correct, e.g. enable_wb_buf_flush?
->
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------------N5F739OcGgySqS0mRWbnjhzr
+Content-Type: multipart/mixed; boundary="------------PTRtCTgo6MttyMbMUVCEeHzi";
+ protected-headers="v1"
+From: Juergen Gross <jgross@suse.com>
+To: Mike Christie <michael.christie@oracle.com>, njavali@marvell.com,
+ pbonzini@redhat.com, jasowang@redhat.com, mst@redhat.com,
+ stefanha@redhat.com, oneukum@suse.com, manoj@linux.ibm.com,
+ mrochs@linux.ibm.com, ukrishn@linux.ibm.com, martin.petersen@oracle.com,
+ linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com
+Message-ID: <b4b91e8b-d6c7-fb5e-6a96-f2b6780dbfe3@suse.com>
+Subject: Re: [PATCH 01/10] scsi: xen: Drop use of internal host codes.
+References: <20220804034100.121125-1-michael.christie@oracle.com>
+ <20220804034100.121125-2-michael.christie@oracle.com>
+In-Reply-To: <20220804034100.121125-2-michael.christie@oracle.com>
 
-OK, I will replace it.
-Instead, When the list is printed through "ls",
-it may be difficult to check because the prefix is different.
+--------------PTRtCTgo6MttyMbMUVCEeHzi
+Content-Type: multipart/mixed; boundary="------------nLc0qbFNejHBq5qzdtZwHEqr"
 
->> +		and it can be used to allow or disallow the flushing.
->> +		If the flushing is allowed, the device executes the flush
->> +		operation when the command queue is empty.
->
->The attribute has "enabled" in its name while the above text uses the 
->verb "allowed". Consider changing "allowed" into "enabled". Please also 
->change "If the flushing" into "If flushing".
->
->Thanks,
->
->Bart
+--------------nLc0qbFNejHBq5qzdtZwHEqr
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: base64
 
-OK, I will apply next patch.
+T24gMDQuMDguMjIgMDU6NDAsIE1pa2UgQ2hyaXN0aWUgd3JvdGU6DQo+IFRoZSBlcnJvciBj
+b2RlczoNCj4gDQo+IERJRF9UQVJHRVRfRkFJTFVSRQ0KPiBESURfTkVYVVNfRkFJTFVSRQ0K
+PiBESURfQUxMT0NfRkFJTFVSRQ0KPiBESURfTUVESVVNX0VSUk9SDQo+IA0KPiBhcmUgaW50
+ZXJuYWwgdG8gdGhlIFNDU0kgbGF5ZXIuIERyaXZlcnMgbXVzdCBub3QgdXNlIHRoZW0gYmVj
+YXVzZToNCj4gDQo+IDEuIFRoZXkgYXJlIG5vdCBwcm9wYWdhdGVkIHVwd2FyZHMsIHNvIFNH
+IElPL3Bhc3N0aHJvdWdoIHVzZXJzIHdpbGwgbm90DQo+IHNlZSBhbiBlcnJvciBhbmQgdGhp
+bmsgYSBjb21tYW5kIHdhcyBzdWNjZXNzZnVsLg0KPiANCj4geGVuLXNjc2liYWNrIHdpbGwg
+bmV2ZXIgc2VlIHRoaXMgZXJyb3IgYW5kIHNob3VsZCBub3QgdHJ5IHRvIHNlbmQgaXQuDQo+
+IA0KPiAyLiBUaGVyZSBpcyBubyBoYW5kbGluZyBmb3IgdGhlbSBpbiBzY3NpX2RlY2lkZV9k
+aXNwb3NpdGlvbiBzbyBpZg0KPiB4ZW4tc2NzaWZyb250IHdlcmUgdG8gcmV0dXJuIHRoZSBl
+cnJvciB0byBzY3NpLW1sIHRoZW4gaXQga2lja3Mgb2ZmIHRoZQ0KPiBlcnJvciBoYW5kbGVy
+IHdoaWNoIGlzIGRlZmluaXRlbHkgbm90IHdoYXQgd2Ugd2FudC4NCj4gDQo+IFRoaXMgcGF0
+Y2ggcmVtb3ZlIHRoZSB1c2UgZnJvbSB4ZW4tc2NzaWZyb250L2JhY2suDQo+IA0KPiBTaWdu
+ZWQtb2ZmLWJ5OiBNaWtlIENocmlzdGllIDxtaWNoYWVsLmNocmlzdGllQG9yYWNsZS5jb20+
+DQo+IC0tLQ0KPiAgIGRyaXZlcnMvc2NzaS94ZW4tc2NzaWZyb250LmMgICAgICAgfCAgOCAt
+LS0tLS0tLQ0KPiAgIGRyaXZlcnMveGVuL3hlbi1zY3NpYmFjay5jICAgICAgICAgfCAxMiAt
+LS0tLS0tLS0tLS0NCj4gICBpbmNsdWRlL3hlbi9pbnRlcmZhY2UvaW8vdnNjc2lpZi5oIHwg
+MTAgKy0tLS0tLS0tLQ0KPiAgIDMgZmlsZXMgY2hhbmdlZCwgMSBpbnNlcnRpb24oKyksIDI5
+IGRlbGV0aW9ucygtKQ0KPiANCg0KLi4uDQoNCj4gZGlmZiAtLWdpdCBhL2luY2x1ZGUveGVu
+L2ludGVyZmFjZS9pby92c2NzaWlmLmggYi9pbmNsdWRlL3hlbi9pbnRlcmZhY2UvaW8vdnNj
+c2lpZi5oDQo+IGluZGV4IDdlYTRkYzk2MTFjNC4uNDRlYjFmMzRmMWEwIDEwMDY0NA0KPiAt
+LS0gYS9pbmNsdWRlL3hlbi9pbnRlcmZhY2UvaW8vdnNjc2lpZi5oDQo+ICsrKyBiL2luY2x1
+ZGUveGVuL2ludGVyZmFjZS9pby92c2NzaWlmLmgNCj4gQEAgLTMxNiwxNiArMzE2LDggQEAg
+c3RydWN0IHZzY3NpaWZfcmVzcG9uc2Ugew0KPiAgICNkZWZpbmUgWEVOX1ZTQ1NJSUZfUlNM
+VF9IT1NUX1RSQU5TUE9SVF9ESVNSVVBURUQgMTQNCj4gICAvKiBUcmFuc3BvcnQgY2xhc3Mg
+ZmFzdGZhaWxlZCAqLw0KPiAgICNkZWZpbmUgWEVOX1ZTQ1NJSUZfUlNMVF9IT1NUX1RSQU5T
+UE9SVF9GQUlMRkFTVCAgMTUNCj4gLS8qIFBlcm1hbmVudCB0YXJnZXQgZmFpbHVyZSAqLw0K
+PiAtI2RlZmluZSBYRU5fVlNDU0lJRl9SU0xUX0hPU1RfVEFSR0VUX0ZBSUxVUkUgICAgICAx
+Ng0KPiAtLyogUGVybWFuZW50IG5leHVzIGZhaWx1cmUgb24gcGF0aCAqLw0KPiAtI2RlZmlu
+ZSBYRU5fVlNDU0lJRl9SU0xUX0hPU1RfTkVYVVNfRkFJTFVSRSAgICAgICAxNw0KPiAtLyog
+U3BhY2UgYWxsb2NhdGlvbiBvbiBkZXZpY2UgZmFpbGVkICovDQo+IC0jZGVmaW5lIFhFTl9W
+U0NTSUlGX1JTTFRfSE9TVF9BTExPQ19GQUlMVVJFICAgICAgIDE4DQo+IC0vKiBNZWRpdW0g
+ZXJyb3IgKi8NCj4gLSNkZWZpbmUgWEVOX1ZTQ1NJSUZfUlNMVF9IT1NUX01FRElVTV9FUlJP
+UiAgICAgICAgMTkNCj4gICAvKiBUcmFuc3BvcnQgbWFyZ2luYWwgZXJyb3JzICovDQo+IC0j
+ZGVmaW5lIFhFTl9WU0NTSUlGX1JTTFRfSE9TVF9UUkFOU1BPUlRfTUFSR0lOQUwgIDIwDQo+
+ICsjZGVmaW5lIFhFTl9WU0NTSUlGX1JTTFRfSE9TVF9UUkFOU1BPUlRfTUFSR0lOQUwgIDE2
+DQoNClBsZWFzZSBkcm9wIHRoZSBtb2RpZmljYXRpb25zIG9mIHRoaXMgaGVhZGVyLg0KDQpU
+aGlzIGlzIGEgY29weSBvZiB0aGUgbWFzdGVyIGZyb20gdGhlIFhlbiByZXBvc2l0b3J5LiBJ
+dCBtaWdodCBiZSB1c2VkDQppbiBtdWx0aXBsZSBPUydlcyBhY3Jvc3MgbWFueSByZWxlYXNl
+cywgc28gaXQgbmVlZHMgdG8gYmUgcmVnYXJkZWQgYXMgQUJJLg0KDQoNCkp1ZXJnZW4NCg==
 
-Warm Regards,
-Jinyoung.
+--------------nLc0qbFNejHBq5qzdtZwHEqr
+Content-Type: application/pgp-keys; name="OpenPGP_0xB0DE9DD628BF132F.asc"
+Content-Disposition: attachment; filename="OpenPGP_0xB0DE9DD628BF132F.asc"
+Content-Description: OpenPGP public key
+Content-Transfer-Encoding: quoted-printable
+
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+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
+jR/i1DG86lem3iBDXzXsZDn8R38=3D
+=3D2wuH
+-----END PGP PUBLIC KEY BLOCK-----
+
+--------------nLc0qbFNejHBq5qzdtZwHEqr--
+
+--------------PTRtCTgo6MttyMbMUVCEeHzi--
+
+--------------N5F739OcGgySqS0mRWbnjhzr
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature"
+
+-----BEGIN PGP SIGNATURE-----
+
+wsB5BAABCAAjFiEEhRJncuj2BJSl0Jf3sN6d1ii/Ey8FAmLrZKoFAwAAAAAACgkQsN6d1ii/Ey/5
+ugf+IHnMwdl6hbMnVkFlkDQsr19WUzjNtgSG/LjpIQn3CzvFHbQ1O3qe4DjSy/UGjLpBqQLHaA5z
+nmOkblyM1KEzY4aiHrhOipHN3lDAftyDLqZXd6go7Mea+pVIJcaribTwJ56xff/0rk/IFxshBK/T
+ZvpoqK7PBWWuJfJkewBpJUJFK/lmnJ71DvxoqPUs6nyXpZQ+qLl0adDgN8i/LzolX5+JQTxz9LqT
+X4i6Od+hV7clKlj6GHq30gmtnmB32gUyAz3+sGvuS6uVFlh1U2CdO6waHo8sDxRzpd85gEpRRiud
+FH4yajt7MxmQiP9lfuBmcHejZXhfOLy8DZ/o0rozsw==
+=+lla
+-----END PGP SIGNATURE-----
+
+--------------N5F739OcGgySqS0mRWbnjhzr--
