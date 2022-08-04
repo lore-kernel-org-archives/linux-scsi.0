@@ -2,372 +2,439 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5CB5C19F2D
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Aug 2022 13:00:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 782A9C19F2A
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Aug 2022 13:00:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234188AbiHDNAz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 Aug 2022 09:00:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41814 "EHLO
+        id S239487AbiHDNA5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 Aug 2022 09:00:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41846 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239785AbiHDNAr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2022 09:00:47 -0400
-Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63B052BED
-        for <linux-scsi@vger.kernel.org>; Thu,  4 Aug 2022 06:00:46 -0700 (PDT)
-Received: by mail-pj1-x102d.google.com with SMTP id f11-20020a17090a4a8b00b001f2f7e32d03so5748455pjh.0
-        for <linux-scsi@vger.kernel.org>; Thu, 04 Aug 2022 06:00:46 -0700 (PDT)
+        with ESMTP id S239532AbiHDNAt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2022 09:00:49 -0400
+Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A2BB6316
+        for <linux-scsi@vger.kernel.org>; Thu,  4 Aug 2022 06:00:48 -0700 (PDT)
+Received: by mail-pj1-x102a.google.com with SMTP id v16-20020a17090abb9000b001f25244c65dso5226093pjr.2
+        for <linux-scsi@vger.kernel.org>; Thu, 04 Aug 2022 06:00:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc;
-        bh=zFbA7GGrj3pHQqpLBfCg3+6B3k/axPdKI5x4ZzUhJp4=;
-        b=huEyviqItbnVA9+VkbpWQajbAEiOleO06iWch9QND4H/c1dnQ86h6TWZr8t8IJ409t
-         OmnNbVqTjPkuyYfnN241Z8j3hKp+TwCPhmfdcxta8SkKsuNqUQ8o3/Ol6b235gv8sGly
-         6p6Bi0LcIWvAjPXC9IlX24Pn7Y3n+y/3AjupU=
+        bh=qJjY0PqjDtlARz2LpGr9kEyEgFrzD2lkwEW7s8rsFKM=;
+        b=DOwqfApZGSM+OZotJkSeD06PlL5BpJgrNlE/nU0Fz680zudjJeJdF82lfcPtGUjabW
+         dih2vpRed2V/ziDuPr6JyZ3K1lMoyMTLmw7PzwVTzLrY+T8fAW8CYr2pS18qPOlVQUng
+         hX1dk+m0rsHmk3iThThK3EPWtR0s7bXruxvmE=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc;
-        bh=zFbA7GGrj3pHQqpLBfCg3+6B3k/axPdKI5x4ZzUhJp4=;
-        b=otN6pS/qr+jyJ2l16mkBaySVXyPbVOnZSm25armd1NOhnFvj3/eajDbVQ8FkTNQFxI
-         ISsfY89eP582fOV8n71yrmIcC9o4byW5GVzd7AClekf7mXPISlIIJ/2A0oD935+MC8ub
-         JPBoSs56BxNCltL0uSfTa7jnariAllDKXopNMtbqRwLe+4Ia5WxHKKzckffxlIceB4fk
-         8I66g16riourYB8yGEg6b+ICX3fuwCQdGK5B7gi+iBOta4qB0MWhhf8WWqlZOwzkeIjY
-         SdiWPP2HfqxTigTX8Xc9pxj2EVfQLnVwq1oXY7J7Ot+Gp55mnpA2YGm8nugkklkwm3Cz
-         LBKg==
-X-Gm-Message-State: ACgBeo13rPEkeuWV0ynBhcjg5XzGrI6ZqRTaTLkzbr5F562EyMFhF2+o
-        q4WDENJsjZre0nyeK/8wSZFAT9ePRusDW+Rv1nSRT28eNW/9XI3NtjRl4kg2eIUlSF/rZe5lyHF
-        z+tmEa2sM+twqxFTWVCXezYOLFIwT8nL7FSNJxSUXgX6tFi/GRhPV+ofew1SQsHouUZ3J2E0QLr
-        /DUDqUy6ue
-X-Google-Smtp-Source: AA6agR7H13vEwsLls3HyReXsNiD1lZ0UyD6VF7SzskNEbqUzEObt3d1Y/ZOuPNAWpmEQva5FJR2Xag==
-X-Received: by 2002:a17:903:2601:b0:16d:b055:2985 with SMTP id jd1-20020a170903260100b0016db0552985mr1809137plb.161.1659618028161;
-        Thu, 04 Aug 2022 06:00:28 -0700 (PDT)
+        bh=qJjY0PqjDtlARz2LpGr9kEyEgFrzD2lkwEW7s8rsFKM=;
+        b=Q4a5M7mEXIJfyCqmpvebCG0c99lDDovg75yDRRiYHGKXr42eEXx+dMomNrvfC10sgN
+         o6Ttq6OxkQEF04bI24GmVz+Z911o7hhG2pEVxfVxj2wdvmPX6QqcWJe7M1MEuoPL9ffL
+         P3U8x0MHo/NB0jU00ykRmqzE5nxaAehgwNuBTddUjYJaT/7Ry4LXqKpYxvrZZNTquymh
+         Ll02wXA8R79fnci/+uOfCEnnuwerJbP8sXBrIIQhBtxsocznITwOq15MskSx1xeXVq2o
+         hh19lwzkmYBNZ0E+KGSY97GhnOGlRATzbc8XuegoELc+ZpBWd8rhsXkSsOX4kW15e0/J
+         vcvg==
+X-Gm-Message-State: ACgBeo1euqkwhBNMLqkM4ttrjBBL8xamc1aUrXa5NvgXXPkLboBBXxfj
+        ufT0IyKWSCRhL5WsqCaU+/+Vlnk/xzx5dEPjpc0spy9txK13AMGlPgMh2wA44CPcPXDuvH61jWH
+        iPTTlk1dPrHBMbvFz1P69IM4iU9b4R/BvXIMIMTj3PwMpzifBeKNw04VNJBsO+XuTHW5flT4xct
+        eWnDiw+lph
+X-Google-Smtp-Source: AA6agR5YvZYvZ8pretc6o8LrxxJdSG2kHGLBJh3e7IEJMnrZQ/JT6PvuPp22HMBhZq1kbTzEl1/uXw==
+X-Received: by 2002:a17:902:e790:b0:16d:27be:711c with SMTP id cp16-20020a170902e79000b0016d27be711cmr1839334plb.114.1659618047122;
+        Thu, 04 Aug 2022 06:00:47 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id w15-20020aa7954f000000b0052e2a1edab8sm934645pfq.24.2022.08.04.06.00.26
+        by smtp.gmail.com with ESMTPSA id w15-20020aa7954f000000b0052e2a1edab8sm934645pfq.24.2022.08.04.06.00.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 Aug 2022 06:00:27 -0700 (PDT)
+        Thu, 04 Aug 2022 06:00:46 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>
-Subject: [PATCH v2 04/15] mpi3mr: Enable Enclosure device add event
-Date:   Thu,  4 Aug 2022 18:42:15 +0530
-Message-Id: <20220804131226.16653-5-sreekanth.reddy@broadcom.com>
+        kernel test robot <lkp@intel.com>
+Subject: [PATCH v2 11/15] mpi3mr: Add SAS SATA end devices to STL
+Date:   Thu,  4 Aug 2022 18:42:22 +0530
+Message-Id: <20220804131226.16653-12-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20220804131226.16653-1-sreekanth.reddy@broadcom.com>
 References: <20220804131226.16653-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000000d0b1a05e569f029"
+        boundary="000000000000346ca705e569f080"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000000d0b1a05e569f029
+--000000000000346ca705e569f080
 Content-Transfer-Encoding: 8bit
 
-Enable and process the Enclosure device add event.
+Register/unregister the SAS, SATA devices to
+SCSI Transport Layer(STL) whenever the corresponding device
+is added/removed from topology.
 
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+Reported-by: kernel test robot <lkp@intel.com>
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr.h    |  19 +++++
- drivers/scsi/mpi3mr/mpi3mr_fw.c |   4 +
- drivers/scsi/mpi3mr/mpi3mr_os.c | 133 +++++++++++++++++++++++++++++++-
- 3 files changed, 154 insertions(+), 2 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr.h           |  10 ++
+ drivers/scsi/mpi3mr/mpi3mr_os.c        |  84 ++++++++++---
+ drivers/scsi/mpi3mr/mpi3mr_transport.c | 158 +++++++++++++++++++++++++
+ 3 files changed, 235 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 8af94d3..542b462 100644
+index a91a57b..21ea021 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr.h
 +++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -461,6 +461,16 @@ struct mpi3mr_throttle_group_info {
- 	atomic_t pend_large_data_sz;
- };
- 
-+/**
-+ * struct mpi3mr_enclosure_node - enclosure information
-+ * @list: List of enclosures
-+ * @pg0: Enclosure page 0;
-+ */
-+struct mpi3mr_enclosure_node {
-+	struct list_head list;
-+	struct mpi3_enclosure_page0 pg0;
-+};
-+
- /**
-  * struct tgt_dev_sas_sata - SAS/SATA device specific
+@@ -569,7 +569,10 @@ struct mpi3mr_enclosure_node {
   * information cached from firmware given data
-@@ -535,12 +545,14 @@ union _form_spec_inf {
-  * @slot: Slot number
-  * @encl_handle: FW enclosure handle
-  * @perst_id: FW assigned Persistent ID
-+ * @devpg0_flag: Device Page0 flag
-  * @dev_type: SAS/SATA/PCIE device type
-  * @is_hidden: Should be exposed to upper layers or not
-  * @host_exposed: Already exposed to host or not
-  * @io_throttle_enabled: I/O throttling needed or not
-  * @q_depth: Device specific Queue Depth
-  * @wwid: World wide ID
-+ * @enclosure_logical_id: Enclosure logical identifier
-  * @dev_spec: Device type specific information
-  * @ref_count: Reference count
+  *
+  * @sas_address: World wide unique SAS address
++ * @sas_address_parent: Sas address of parent expander or host
+  * @dev_info: Device information bits
++ * @phy_id: Phy identifier provided in device page 0
++ * @attached_phy_id: Attached phy identifier provided in device page 0
+  * @sas_transport_attached: Is this device exposed to transport
+  * @pend_sas_rphy_add: Flag to check device is in process of add
+  * @hba_port: HBA port entry
+@@ -577,7 +580,10 @@ struct mpi3mr_enclosure_node {
   */
-@@ -552,12 +564,14 @@ struct mpi3mr_tgt_dev {
- 	u16 slot;
- 	u16 encl_handle;
- 	u16 perst_id;
-+	u16 devpg0_flag;
- 	u8 dev_type;
- 	u8 is_hidden;
- 	u8 host_exposed;
- 	u8 io_throttle_enabled;
- 	u16 q_depth;
- 	u64 wwid;
-+	u64 enclosure_logical_id;
- 	union _form_spec_inf dev_spec;
- 	struct kref ref_count;
- };
-@@ -877,6 +891,7 @@ struct scmd_priv {
-  * @cfg_page: Default memory for configuration pages
-  * @cfg_page_dma: Configuration page DMA address
-  * @cfg_page_sz: Default configuration page memory size
-+ * @enclosure_list: List of Enclosure objects
-  */
- struct mpi3mr_ioc {
- 	struct list_head list;
-@@ -1053,6 +1068,8 @@ struct mpi3mr_ioc {
- 	void *cfg_page;
- 	dma_addr_t cfg_page_dma;
- 	u16 cfg_page_sz;
-+
-+	struct list_head enclosure_list;
- };
- 
- /**
-@@ -1177,6 +1194,8 @@ int mpi3mr_pel_get_seqnum_post(struct mpi3mr_ioc *mrioc,
- 	struct mpi3mr_drv_cmd *drv_cmd);
- void mpi3mr_app_save_logdata(struct mpi3mr_ioc *mrioc, char *event_data,
- 	u16 event_data_size);
-+struct mpi3mr_enclosure_node *mpi3mr_enclosure_find_by_handle(
-+	struct mpi3mr_ioc *mrioc, u16 handle);
- extern const struct attribute_group *mpi3mr_host_groups[];
- extern const struct attribute_group *mpi3mr_dev_groups[];
- 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index bfc4244..c732586 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -244,6 +244,9 @@ static void mpi3mr_print_event_data(struct mpi3mr_ioc *mrioc,
- 	case MPI3_EVENT_ENCL_DEVICE_STATUS_CHANGE:
- 		desc = "Enclosure Device Status Change";
- 		break;
-+	case MPI3_EVENT_ENCL_DEVICE_ADDED:
-+		desc = "Enclosure Added";
-+		break;
- 	case MPI3_EVENT_HARD_RESET_RECEIVED:
- 		desc = "Hard Reset Received";
- 		break;
-@@ -3660,6 +3663,7 @@ static int mpi3mr_enable_events(struct mpi3mr_ioc *mrioc)
- 	mpi3mr_unmask_events(mrioc, MPI3_EVENT_DEVICE_INFO_CHANGED);
- 	mpi3mr_unmask_events(mrioc, MPI3_EVENT_DEVICE_STATUS_CHANGE);
- 	mpi3mr_unmask_events(mrioc, MPI3_EVENT_ENCL_DEVICE_STATUS_CHANGE);
-+	mpi3mr_unmask_events(mrioc, MPI3_EVENT_ENCL_DEVICE_ADDED);
- 	mpi3mr_unmask_events(mrioc, MPI3_EVENT_SAS_TOPOLOGY_CHANGE_LIST);
- 	mpi3mr_unmask_events(mrioc, MPI3_EVENT_SAS_DISCOVERY);
- 	mpi3mr_unmask_events(mrioc, MPI3_EVENT_SAS_DEVICE_DISCOVERY_ERROR);
+ struct tgt_dev_sas_sata {
+ 	u64 sas_address;
++	u64 sas_address_parent;
+ 	u16 dev_info;
++	u8 phy_id;
++	u8 attached_phy_id;
+ 	u8 sas_transport_attached;
+ 	u8 pend_sas_rphy_add;
+ 	struct mpi3mr_hba_port *hba_port;
+@@ -1357,6 +1363,10 @@ void mpi3mr_update_links(struct mpi3mr_ioc *mrioc,
+ 	struct mpi3mr_hba_port *hba_port);
+ void mpi3mr_remove_tgtdev_from_host(struct mpi3mr_ioc *mrioc,
+ 	struct mpi3mr_tgt_dev *tgtdev);
++int mpi3mr_report_tgtdev_to_sas_transport(struct mpi3mr_ioc *mrioc,
++	struct mpi3mr_tgt_dev *tgtdev);
++void mpi3mr_remove_tgtdev_from_sas_transport(struct mpi3mr_ioc *mrioc,
++	struct mpi3mr_tgt_dev *tgtdev);
+ struct mpi3mr_tgt_dev *__mpi3mr_get_tgtdev_by_addr_and_rphy(
+ 	struct mpi3mr_ioc *mrioc, u64 sas_address, struct sas_rphy *rphy);
+ void mpi3mr_print_device_event_notice(struct mpi3mr_ioc *mrioc,
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 40bed22..ca718cb 100644
+index aed9b60..8b1b912 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -1026,6 +1026,7 @@ static void mpi3mr_update_tgtdev(struct mpi3mr_ioc *mrioc,
- {
- 	u16 flags = 0;
- 	struct mpi3mr_stgt_priv_data *scsi_tgt_priv_data = NULL;
-+	struct mpi3mr_enclosure_node *enclosure_dev = NULL;
- 	u8 prot_mask = 0;
+@@ -836,19 +836,25 @@ void mpi3mr_remove_tgtdev_from_host(struct mpi3mr_ioc *mrioc,
+ 		tgt_priv->dev_handle = MPI3MR_INVALID_DEV_HANDLE;
+ 	}
  
- 	tgtdev->perst_id = le16_to_cpu(dev_pg0->persistent_id);
-@@ -1036,8 +1037,17 @@ static void mpi3mr_update_tgtdev(struct mpi3mr_ioc *mrioc,
- 	tgtdev->slot = le16_to_cpu(dev_pg0->slot);
- 	tgtdev->q_depth = le16_to_cpu(dev_pg0->queue_depth);
- 	tgtdev->wwid = le64_to_cpu(dev_pg0->wwid);
-+	tgtdev->devpg0_flag = le16_to_cpu(dev_pg0->flags);
+-	if (tgtdev->starget) {
+-		if (mrioc->current_event)
+-			mrioc->current_event->pending_at_sml = 1;
+-		scsi_remove_target(&tgtdev->starget->dev);
+-		tgtdev->host_exposed = 0;
+-		if (mrioc->current_event) {
+-			mrioc->current_event->pending_at_sml = 0;
+-			if (mrioc->current_event->discard) {
+-				mpi3mr_print_device_event_notice(mrioc, false);
+-				return;
++	if (!mrioc->sas_transport_enabled || (tgtdev->dev_type !=
++	    MPI3_DEVICE_DEVFORM_SAS_SATA) || tgtdev->non_stl) {
++		if (tgtdev->starget) {
++			if (mrioc->current_event)
++				mrioc->current_event->pending_at_sml = 1;
++			scsi_remove_target(&tgtdev->starget->dev);
++			tgtdev->host_exposed = 0;
++			if (mrioc->current_event) {
++				mrioc->current_event->pending_at_sml = 0;
++				if (mrioc->current_event->discard) {
++					mpi3mr_print_device_event_notice(mrioc,
++					    false);
++					return;
++				}
+ 			}
+ 		}
+-	}
++	} else
++		mpi3mr_remove_tgtdev_from_sas_transport(mrioc, tgtdev);
 +
-+	if (tgtdev->encl_handle)
-+		enclosure_dev = mpi3mr_enclosure_find_by_handle(mrioc,
-+		    tgtdev->encl_handle);
-+	if (enclosure_dev)
-+		tgtdev->enclosure_logical_id = le64_to_cpu(
-+		    enclosure_dev->pg0.enclosure_logical_id);
-+
-+	flags = tgtdev->devpg0_flag;
- 
--	flags = le16_to_cpu(dev_pg0->flags);
- 	tgtdev->is_hidden = (flags & MPI3_DEVICE0_FLAGS_HIDDEN);
- 
- 	if (is_added == true)
-@@ -1265,6 +1275,116 @@ out:
- 		mpi3mr_tgtdev_put(tgtdev);
+ 	ioc_info(mrioc, "%s :Removed handle(0x%04x), wwid(0x%016llx)\n",
+ 	    __func__, tgtdev->dev_handle, (unsigned long long)tgtdev->wwid);
  }
+@@ -870,21 +876,25 @@ static int mpi3mr_report_tgtdev_to_host(struct mpi3mr_ioc *mrioc,
+ 	int retval = 0;
+ 	struct mpi3mr_tgt_dev *tgtdev;
  
-+/**
-+ * mpi3mr_enclosure_find_by_handle - enclosure search by handle
-+ * @mrioc: Adapter instance reference
-+ * @handle: Firmware device handle of the enclosure
-+ *
-+ * This searches for enclosure device based on handle, then returns the
-+ * enclosure object.
-+ *
-+ * Return: Enclosure object reference or NULL
-+ */
-+struct mpi3mr_enclosure_node *mpi3mr_enclosure_find_by_handle(
-+	struct mpi3mr_ioc *mrioc, u16 handle)
-+{
-+	struct mpi3mr_enclosure_node *enclosure_dev, *r = NULL;
++	if (mrioc->reset_in_progress)
++		return -1;
 +
-+	list_for_each_entry(enclosure_dev, &mrioc->enclosure_list, list) {
-+		if (le16_to_cpu(enclosure_dev->pg0.enclosure_handle) != handle)
-+			continue;
-+		r = enclosure_dev;
+ 	tgtdev = mpi3mr_get_tgtdev_by_perst_id(mrioc, perst_id);
+ 	if (!tgtdev) {
+ 		retval = -1;
+ 		goto out;
+ 	}
+-	if (tgtdev->is_hidden) {
++	if (tgtdev->is_hidden || tgtdev->host_exposed) {
+ 		retval = -1;
+ 		goto out;
+ 	}
+-	if (!tgtdev->host_exposed && !mrioc->reset_in_progress) {
++	if (!mrioc->sas_transport_enabled || (tgtdev->dev_type !=
++	    MPI3_DEVICE_DEVFORM_SAS_SATA) || tgtdev->non_stl){
+ 		tgtdev->host_exposed = 1;
+ 		if (mrioc->current_event)
+ 			mrioc->current_event->pending_at_sml = 1;
+-		scsi_scan_target(&mrioc->shost->shost_gendev, 0,
+-		    tgtdev->perst_id,
++		scsi_scan_target(&mrioc->shost->shost_gendev,
++		    mrioc->scsi_device_channel, tgtdev->perst_id,
+ 		    SCAN_WILD_CARD, SCSI_SCAN_INITIAL);
+ 		if (!tgtdev->starget)
+ 			tgtdev->host_exposed = 0;
+@@ -895,7 +905,8 @@ static int mpi3mr_report_tgtdev_to_host(struct mpi3mr_ioc *mrioc,
+ 				goto out;
+ 			}
+ 		}
+-	}
++	} else
++		mpi3mr_report_tgtdev_to_sas_transport(mrioc, tgtdev);
+ out:
+ 	if (tgtdev)
+ 		mpi3mr_tgtdev_put(tgtdev);
+@@ -1087,6 +1098,9 @@ static void mpi3mr_update_tgtdev(struct mpi3mr_ioc *mrioc,
+ 		tgtdev->dev_spec.sas_sata_inf.dev_info = dev_info;
+ 		tgtdev->dev_spec.sas_sata_inf.sas_address =
+ 		    le64_to_cpu(sasinf->sas_address);
++		tgtdev->dev_spec.sas_sata_inf.phy_id = sasinf->phy_num;
++		tgtdev->dev_spec.sas_sata_inf.attached_phy_id =
++		    sasinf->attached_phy_identifier;
+ 		if ((dev_info & MPI3_SAS_DEVICE_INFO_DEVICE_TYPE_MASK) !=
+ 		    MPI3_SAS_DEVICE_INFO_DEVICE_TYPE_END_DEVICE)
+ 			tgtdev->is_hidden = 1;
+@@ -1494,12 +1508,30 @@ static void mpi3mr_sastopochg_evt_bh(struct mpi3mr_ioc *mrioc,
+ 	int i;
+ 	u16 handle;
+ 	u8 reason_code;
+-	u64 exp_sas_address = 0;
++	u64 exp_sas_address = 0, parent_sas_address = 0;
+ 	struct mpi3mr_hba_port *hba_port = NULL;
+ 	struct mpi3mr_tgt_dev *tgtdev = NULL;
+ 	struct mpi3mr_sas_node *sas_expander = NULL;
++	unsigned long flags;
++	u8 link_rate, prev_link_rate, parent_phy_number;
+ 
+ 	mpi3mr_sastopochg_evt_debug(mrioc, event_data);
++	if (mrioc->sas_transport_enabled) {
++		hba_port = mpi3mr_get_hba_port_by_id(mrioc,
++		    event_data->io_unit_port);
++		if (le16_to_cpu(event_data->expander_dev_handle)) {
++			spin_lock_irqsave(&mrioc->sas_node_lock, flags);
++			sas_expander = __mpi3mr_expander_find_by_handle(mrioc,
++			    le16_to_cpu(event_data->expander_dev_handle));
++			if (sas_expander) {
++				exp_sas_address = sas_expander->sas_address;
++				hba_port = sas_expander->hba_port;
++			}
++			spin_unlock_irqrestore(&mrioc->sas_node_lock, flags);
++			parent_sas_address = exp_sas_address;
++		} else
++			parent_sas_address = mrioc->sas_hba.sas_address;
++	}
+ 
+ 	for (i = 0; i < event_data->num_entries; i++) {
+ 		if (fwevt->discard)
+@@ -1521,6 +1553,24 @@ static void mpi3mr_sastopochg_evt_bh(struct mpi3mr_ioc *mrioc,
+ 			mpi3mr_tgtdev_del_from_list(mrioc, tgtdev);
+ 			mpi3mr_tgtdev_put(tgtdev);
+ 			break;
++		case MPI3_EVENT_SAS_TOPO_PHY_RC_RESPONDING:
++		case MPI3_EVENT_SAS_TOPO_PHY_RC_PHY_CHANGED:
++		case MPI3_EVENT_SAS_TOPO_PHY_RC_NO_CHANGE:
++		{
++			if (!mrioc->sas_transport_enabled || tgtdev->non_stl
++			    || tgtdev->is_hidden)
++				break;
++			link_rate = event_data->phy_entry[i].link_rate >> 4;
++			prev_link_rate = event_data->phy_entry[i].link_rate & 0xF;
++			if (link_rate == prev_link_rate)
++				break;
++			if (!parent_sas_address)
++				break;
++			parent_phy_number = event_data->start_phy_num + i;
++			mpi3mr_update_links(mrioc, parent_sas_address, handle,
++			    parent_phy_number, link_rate, hba_port);
++			break;
++		}
+ 		default:
+ 			break;
+ 		}
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr/mpi3mr_transport.c
+index 48cee03..706c6e6 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
+@@ -1652,3 +1652,161 @@ void mpi3mr_expander_remove(struct mpi3mr_ioc *mrioc, u64 sas_address,
+ 		mpi3mr_expander_node_remove(mrioc, sas_expander);
+ 
+ }
++
++/**
++ * mpi3mr_get_sas_negotiated_logical_linkrate - get linkrate
++ * @mrioc: Adapter instance reference
++ * @tgtdev: Target device
++ *
++ * This function identifies whether the target device is
++ * attached directly or through expander and issues sas phy
++ * page0 or expander phy page1 and gets the link rate, if there
++ * is any failure in reading the pages then this returns link
++ * rate of 1.5.
++ *
++ * Return: logical link rate.
++ */
++static u8 mpi3mr_get_sas_negotiated_logical_linkrate(struct mpi3mr_ioc *mrioc,
++	struct mpi3mr_tgt_dev *tgtdev)
++{
++	u8 link_rate = MPI3_SAS_NEG_LINK_RATE_1_5, phy_number;
++	struct mpi3_sas_expander_page1 expander_pg1;
++	struct mpi3_sas_phy_page0 phy_pg0;
++	u32 phynum_handle;
++	u16 ioc_status;
++
++	phy_number = tgtdev->dev_spec.sas_sata_inf.phy_id;
++	if (!(tgtdev->devpg0_flag & MPI3_DEVICE0_FLAGS_ATT_METHOD_DIR_ATTACHED)) {
++		phynum_handle = ((phy_number<<MPI3_SAS_EXPAND_PGAD_PHYNUM_SHIFT)
++				 | tgtdev->parent_handle);
++		if (mpi3mr_cfg_get_sas_exp_pg1(mrioc, &ioc_status,
++		    &expander_pg1, sizeof(expander_pg1),
++		    MPI3_SAS_EXPAND_PGAD_FORM_HANDLE_PHY_NUM,
++		    phynum_handle)) {
++			ioc_err(mrioc, "failure at %s:%d/%s()!\n",
++			    __FILE__, __LINE__, __func__);
++			goto out;
++		}
++		if (ioc_status != MPI3_IOCSTATUS_SUCCESS) {
++			ioc_err(mrioc, "failure at %s:%d/%s()!\n",
++			    __FILE__, __LINE__, __func__);
++			goto out;
++		}
++		link_rate = (expander_pg1.negotiated_link_rate &
++			     MPI3_SAS_NEG_LINK_RATE_LOGICAL_MASK) >>
++			MPI3_SAS_NEG_LINK_RATE_LOGICAL_SHIFT;
 +		goto out;
 +	}
++	if (mpi3mr_cfg_get_sas_phy_pg0(mrioc, &ioc_status, &phy_pg0,
++	    sizeof(struct mpi3_sas_phy_page0),
++	    MPI3_SAS_PHY_PGAD_FORM_PHY_NUMBER, phy_number)) {
++		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		goto out;
++	}
++	if (ioc_status != MPI3_IOCSTATUS_SUCCESS) {
++		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		goto out;
++	}
++	link_rate = (phy_pg0.negotiated_link_rate &
++		     MPI3_SAS_NEG_LINK_RATE_LOGICAL_MASK) >>
++		MPI3_SAS_NEG_LINK_RATE_LOGICAL_SHIFT;
 +out:
-+	return r;
++	return link_rate;
 +}
 +
 +/**
-+ * mpi3mr_encldev_add_chg_evt_debug - debug for enclosure event
++ * mpi3mr_report_tgtdev_to_sas_transport - expose dev to SAS TL
 + * @mrioc: Adapter instance reference
-+ * @encl_pg0: Enclosure page 0.
-+ * @is_added: Added event or not
++ * @tgtdev: Target device
 + *
-+ * Return nothing.
++ * This function exposes the target device after
++ * preparing host_phy, setting up link rate etc.
++ *
++ * Return: 0 on success, non-zero for failure.
 + */
-+static void mpi3mr_encldev_add_chg_evt_debug(struct mpi3mr_ioc *mrioc,
-+	struct mpi3_enclosure_page0 *encl_pg0, u8 is_added)
++int mpi3mr_report_tgtdev_to_sas_transport(struct mpi3mr_ioc *mrioc,
++	struct mpi3mr_tgt_dev *tgtdev)
 +{
-+	char *reason_str = NULL;
++	int retval = 0;
++	u8 link_rate, parent_phy_number;
++	u64 sas_address_parent, sas_address;
++	struct mpi3mr_hba_port *hba_port;
++	u8 port_id;
 +
-+	if (!(mrioc->logging_level & MPI3_DEBUG_EVENT_WORK_TASK))
++	if ((tgtdev->dev_type != MPI3_DEVICE_DEVFORM_SAS_SATA) ||
++	    !mrioc->sas_transport_enabled)
++		return -1;
++
++	sas_address = tgtdev->dev_spec.sas_sata_inf.sas_address;
++	if (!mrioc->sas_hba.num_phys)
++		mpi3mr_sas_host_add(mrioc);
++	else
++		mpi3mr_sas_host_refresh(mrioc);
++
++	if (mpi3mr_get_sas_address(mrioc, tgtdev->parent_handle,
++	    &sas_address_parent) != 0) {
++		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		return -1;
++	}
++	tgtdev->dev_spec.sas_sata_inf.sas_address_parent = sas_address_parent;
++
++	parent_phy_number = tgtdev->dev_spec.sas_sata_inf.phy_id;
++	port_id = tgtdev->io_unit_port;
++
++	hba_port = mpi3mr_get_hba_port_by_id(mrioc, port_id);
++	if (!hba_port) {
++		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		return -1;
++	}
++	tgtdev->dev_spec.sas_sata_inf.hba_port = hba_port;
++
++	link_rate = mpi3mr_get_sas_negotiated_logical_linkrate(mrioc, tgtdev);
++
++	mpi3mr_update_links(mrioc, sas_address_parent, tgtdev->dev_handle,
++	    parent_phy_number, link_rate, hba_port);
++
++	tgtdev->host_exposed = 1;
++	if (!mpi3mr_sas_port_add(mrioc, tgtdev->dev_handle,
++	    sas_address_parent, hba_port)) {
++		tgtdev->host_exposed = 0;
++		retval = -1;
++	} else if ((!tgtdev->starget)) {
++		if (!mrioc->is_driver_loading)
++			mpi3mr_sas_port_remove(mrioc, sas_address,
++			    sas_address_parent, hba_port);
++		tgtdev->host_exposed = 0;
++		retval = -1;
++	}
++	return retval;
++}
++
++/**
++ * mpi3mr_remove_tgtdev_from_sas_transport - remove from SAS TL
++ * @mrioc: Adapter instance reference
++ * @tgtdev: Target device
++ *
++ * This function removes the target device
++ *
++ * Return: None.
++ */
++void mpi3mr_remove_tgtdev_from_sas_transport(struct mpi3mr_ioc *mrioc,
++	struct mpi3mr_tgt_dev *tgtdev)
++{
++	u64 sas_address_parent, sas_address;
++	struct mpi3mr_hba_port *hba_port;
++
++	if ((tgtdev->dev_type != MPI3_DEVICE_DEVFORM_SAS_SATA) ||
++	    !mrioc->sas_transport_enabled)
 +		return;
 +
-+	if (is_added)
-+		reason_str = "enclosure added";
-+	else
-+		reason_str = "enclosure dev status changed";
-+
-+	ioc_info(mrioc,
-+	    "%s: handle(0x%04x), enclosure logical id(0x%016llx)\n",
-+	    reason_str, le16_to_cpu(encl_pg0->enclosure_handle),
-+	    (unsigned long long)le64_to_cpu(encl_pg0->enclosure_logical_id));
-+	ioc_info(mrioc,
-+	    "number of slots(%d), port(%d), flags(0x%04x), present(%d)\n",
-+	    le16_to_cpu(encl_pg0->num_slots), encl_pg0->io_unit_port,
-+	    le16_to_cpu(encl_pg0->flags),
-+	    ((le16_to_cpu(encl_pg0->flags) &
-+	      MPI3_ENCLS0_FLAGS_ENCL_DEV_PRESENT_MASK) >> 4));
++	hba_port = tgtdev->dev_spec.sas_sata_inf.hba_port;
++	sas_address = tgtdev->dev_spec.sas_sata_inf.sas_address;
++	sas_address_parent = tgtdev->dev_spec.sas_sata_inf.sas_address_parent;
++	mpi3mr_sas_port_remove(mrioc, sas_address, sas_address_parent,
++	    hba_port);
++	tgtdev->host_exposed = 0;
 +}
-+
-+/**
-+ * mpi3mr_encldev_add_chg_evt_bh - Enclosure evt bottomhalf
-+ * @mrioc: Adapter instance reference
-+ * @fwevt: Firmware event reference
-+ *
-+ * Prints information about the Enclosure device status or
-+ * Enclosure add events if logging is enabled and add or remove
-+ * the enclosure from the controller's internal list of
-+ * enclosures.
-+ *
-+ * Return: Nothing.
-+ */
-+static void mpi3mr_encldev_add_chg_evt_bh(struct mpi3mr_ioc *mrioc,
-+	struct mpi3mr_fwevt *fwevt)
-+{
-+	struct mpi3mr_enclosure_node *enclosure_dev = NULL;
-+	struct mpi3_enclosure_page0 *encl_pg0;
-+	u16 encl_handle;
-+	u8 added, present;
-+
-+	encl_pg0 = (struct mpi3_enclosure_page0 *) fwevt->event_data;
-+	added = (fwevt->event_id == MPI3_EVENT_ENCL_DEVICE_ADDED) ? 1 : 0;
-+	mpi3mr_encldev_add_chg_evt_debug(mrioc, encl_pg0, added);
-+
-+
-+	encl_handle = le16_to_cpu(encl_pg0->enclosure_handle);
-+	present = ((le16_to_cpu(encl_pg0->flags) &
-+	      MPI3_ENCLS0_FLAGS_ENCL_DEV_PRESENT_MASK) >> 4);
-+
-+	if (encl_handle)
-+		enclosure_dev = mpi3mr_enclosure_find_by_handle(mrioc,
-+		    encl_handle);
-+	if (!enclosure_dev && present) {
-+		enclosure_dev =
-+			kzalloc(sizeof(struct mpi3mr_enclosure_node),
-+			    GFP_KERNEL);
-+		if (!enclosure_dev)
-+			return;
-+		list_add_tail(&enclosure_dev->list,
-+		    &mrioc->enclosure_list);
-+	}
-+	if (enclosure_dev) {
-+		if (!present) {
-+			list_del(&enclosure_dev->list);
-+			kfree(enclosure_dev);
-+		} else
-+			memcpy(&enclosure_dev->pg0, encl_pg0,
-+			    sizeof(enclosure_dev->pg0));
-+
-+	}
-+}
-+
- /**
-  * mpi3mr_sastopochg_evt_debug - SASTopoChange details
-  * @mrioc: Adapter instance reference
-@@ -1641,6 +1761,13 @@ static void mpi3mr_fwevt_bh(struct mpi3mr_ioc *mrioc,
- 		mpi3mr_devstatuschg_evt_bh(mrioc, fwevt);
- 		break;
- 	}
-+	case MPI3_EVENT_ENCL_DEVICE_ADDED:
-+	case MPI3_EVENT_ENCL_DEVICE_STATUS_CHANGE:
-+	{
-+		mpi3mr_encldev_add_chg_evt_bh(mrioc, fwevt);
-+		break;
-+	}
-+
- 	case MPI3_EVENT_SAS_TOPOLOGY_CHANGE_LIST:
- 	{
- 		mpi3mr_sastopochg_evt_bh(mrioc, fwevt);
-@@ -2502,6 +2629,8 @@ void mpi3mr_os_handle_events(struct mpi3mr_ioc *mrioc,
- 	}
- 	case MPI3_EVENT_DEVICE_INFO_CHANGED:
- 	case MPI3_EVENT_LOG_DATA:
-+	case MPI3_EVENT_ENCL_DEVICE_STATUS_CHANGE:
-+	case MPI3_EVENT_ENCL_DEVICE_ADDED:
- 	{
- 		process_evt_bh = 1;
- 		break;
-@@ -2516,7 +2645,6 @@ void mpi3mr_os_handle_events(struct mpi3mr_ioc *mrioc,
- 		mpi3mr_cablemgmt_evt_th(mrioc, event_reply);
- 		break;
- 	}
--	case MPI3_EVENT_ENCL_DEVICE_STATUS_CHANGE:
- 	case MPI3_EVENT_SAS_DISCOVERY:
- 	case MPI3_EVENT_SAS_DEVICE_DISCOVERY_ERROR:
- 	case MPI3_EVENT_SAS_BROADCAST_PRIMITIVE:
-@@ -4569,6 +4697,7 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	INIT_LIST_HEAD(&mrioc->tgtdev_list);
- 	INIT_LIST_HEAD(&mrioc->delayed_rmhs_list);
- 	INIT_LIST_HEAD(&mrioc->delayed_evtack_cmds_list);
-+	INIT_LIST_HEAD(&mrioc->enclosure_list);
- 
- 	mutex_init(&mrioc->reset_mutex);
- 	mpi3mr_init_drv_cmd(&mrioc->init_cmds, MPI3MR_HOSTTAG_INITCMDS);
 -- 
 2.27.0
 
 
---0000000000000d0b1a05e569f029
+--000000000000346ca705e569f080
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -438,13 +505,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIF4g+7PAu40P7npsHed9
-CKoTMA/j1+WSot67N8D7oDCkMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDgwNDEzMDA0NVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIAqvLNmJSnxbXsw1ujXB
+1gWu3IwGXQiz1FM0VFjUqK8nMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDgwNDEzMDA0N1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQB2AqPB8g4vk3yZreg6HsePTSiWLSn9NeSjKE3L
-52ZOTFGJD/s4IEJU86MmQurGagRxK50TCLbd58dJ4VH0Ed1kqPVGcVZ4hB7emdOF9K7bskcRPgOK
-lCKSokYQclcx2VgH5iEp/JBUIEsJik/hmaUzZsRbj3sEQ81P0Kgmsgh+GRs0+zfo4vtNqLM4ys3g
-mvmmf7Kn+dd+/R6xpuQruoLnSkRXkRH95bPOG16v6kHUgD6Ef5qHTFczYMjtFUK/yE6O/BXZnoIi
-vQQJoj2gUxhDpEUxKCLNU14LpAR33TILu+DjPwn8sX5wKQq49gTQCVT29PpDrSIX2Z1fwZvzXLrn
---0000000000000d0b1a05e569f029--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCG6mqh07mMY+Qd3PjGlOIu9OzK+a6ZwCcUSnde
+83mQYpCnQHAMrWbQtp/MW3MJFQtc6v/vRnXagfmyZ6RBLouKG383ylUiZtMHJ1Sm3zhVsy+UXu2/
+aB3k+7096xcQ2YeCCQwYt5HIoT7oWG8zOtvEp5jEpVO3T3VkiDLVEY8zAhQVaoFLIp5oknhkpu+N
+g/XF7kDSoaN+Ku46Fpm824I5ij4t9frq73ZPF1akt4mUR1QTrNv3P1QwSxoig1J9ZpH9zTPFs+t1
+LlExHDYmGVq9VARBwU3MVw+Jte/gpRFp9Cdv+OvvZTWIp9i+MJtVpq08tlengTCLW3mCbstpqVrf
+--000000000000346ca705e569f080--
