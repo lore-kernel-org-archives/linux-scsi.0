@@ -2,735 +2,669 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 854CFC19F2A
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Aug 2022 13:00:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1319C19F2D
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Aug 2022 13:00:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231143AbiHDNAg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 Aug 2022 09:00:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41504 "EHLO
+        id S239484AbiHDNAt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 Aug 2022 09:00:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41732 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239384AbiHDNAd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2022 09:00:33 -0400
-Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 748566339
-        for <linux-scsi@vger.kernel.org>; Thu,  4 Aug 2022 06:00:27 -0700 (PDT)
-Received: by mail-pf1-x435.google.com with SMTP id q19so9933903pfg.8
-        for <linux-scsi@vger.kernel.org>; Thu, 04 Aug 2022 06:00:27 -0700 (PDT)
+        with ESMTP id S239764AbiHDNAm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2022 09:00:42 -0400
+Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24BB862D0
+        for <linux-scsi@vger.kernel.org>; Thu,  4 Aug 2022 06:00:39 -0700 (PDT)
+Received: by mail-pj1-x1034.google.com with SMTP id gj1so4528990pjb.0
+        for <linux-scsi@vger.kernel.org>; Thu, 04 Aug 2022 06:00:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc;
-        bh=8jy35WE5Hk4LH8nfPwFlIQdVU0zeHXgyddqNg/ZG7U0=;
-        b=cSVUWN3+PxnaQqNnj8cwpjFXTTOaYxGoW42Y2d33zpd5F5QNysN9C5lLa3hcXLBYJk
-         gy7IquERTZqP3Wit6YRlnan6eYJxHpzuDvAf7a47XFnsnPMTklxKZwqkFVwGpN/kxJGN
-         9oVcWUIKHTW0IDNEot1bkfhHC8ygT5WGUuo4c=
+        bh=+7wMLVCUtyMO2GhjRanjaZTbKuU80xS0MZdWZfmVtUI=;
+        b=CqbsnTO73Dw/MNFGGxRslSwW8zryuMb3SgEcrLt/gDrQpSE9S87joFVeH8woR9N8Y6
+         OJYa46pKyNgLJYflnXNWtLhTLjQTz42q5wr6oA6JfkbZqiPIHxMwdRpVRfOryn4xdoAz
+         B8lWXnfQu9e8Ki3OVagM/+rdun8oD0AnnWpqE=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc;
-        bh=8jy35WE5Hk4LH8nfPwFlIQdVU0zeHXgyddqNg/ZG7U0=;
-        b=M4u0YuuKYUVgCj7KklZdf5G3r7kR6ZyywC713gvj1fZuZK9Tx3ZHkmb+r757zsOLat
-         CKa7o25erWH+e1x57PXCCYB4p3xTYn001MLw6+MS6qDyflUfE7vOva2Nswyux2LNoEu8
-         HA+mJUiV88dYzHWl8Em8VrvjkMKv2Ms1XE2O4bty3qwRPifnano6Qst4KjrOtDcftoU9
-         V10K+suI0FKr5vAfxV61Dwofg/zo+NWw2SAeXY0+kMiFPERczWTegS0sGrQMDg76SU4C
-         V3bZpMg49fb8OwZ0eW6t4cbaJCBhlt80ZNlNcPTUumPkktFAyyYuq/sSUvHM1IYA9fah
-         ssYw==
-X-Gm-Message-State: ACgBeo2L68d+3EkK9XOUUAkTYbqISkzF5p4Tp9Tzc8QbJEkgYtcEMyfT
-        C2BHIFvMv4JHkH081HOEM0LSo0/PHk7t9Sv27fOgdsoJFigA+G+U7xlXmXDjZQyS+TNVBJO729u
-        1guE8ye9hmVZ7zMbmalZeKbzs1fo1RCgcYQ1K4ADDoU9cGnFxDb5ryp4Yj5e6lyi2JftH2xSKsn
-        6caccmAvK3
-X-Google-Smtp-Source: AA6agR6hM/h5XCoAbMKDHukUMpMe0Wk/fHZ7wXLd9Syks5RcoqOvwPLgBE4fI3BzkedOrZ6+3gHluQ==
-X-Received: by 2002:a65:6d9a:0:b0:41c:c77:7b6 with SMTP id bc26-20020a656d9a000000b0041c0c7707b6mr1607998pgb.139.1659618025907;
-        Thu, 04 Aug 2022 06:00:25 -0700 (PDT)
+        bh=+7wMLVCUtyMO2GhjRanjaZTbKuU80xS0MZdWZfmVtUI=;
+        b=UtCump82ui2XkCykYJu1zym2qWnJLAdDqAhqcN5JAIQCYdBygk/uGIcMpHnDtCc1Hd
+         5Ovg/0T0a6+5ROxo+EnEoQtcMd06kNwOzsQxnStGU0Q6fkVsj/JwoTLgfz4B7Z3xD/q3
+         rXIuPicDZcDit9yCg4+hHaRyvfpkHZdMQH3/hnBBqBVavQQXjXd/Z95/xq+glLsAjMoE
+         OLdB1v0zAagEQHhrC+p1+tcJpBfykm93Typ330m6bCtgpacwiLgYmAuqA5ab2w6P/hq2
+         BlVZlJvZAmcAxyAikTvZzxoLIYjkqpkA5fU+NwlHRVVGeIJcZN0pptuPBR+kX1e2wzED
+         UyLA==
+X-Gm-Message-State: ACgBeo2dt+gT3uSq/2BbDQIzltu6ZOtVMbcrxJw/dCnL/d6lmwLsiB/p
+        HwauCmX7V61TE3t2xjVHbZaHuJ4d9K+wAO/QDwJvSJ05FsDKeTKLDg2N2HK57Zn97qVk0HCK1OE
+        xv/u/0gEkpS/i7QV/tswE13JzTZIo8AqmmeydQIzABppYaBLxrwRsHYHdYiie2BZdc3QZ2utm3x
+        gHbQHv/Huz
+X-Google-Smtp-Source: AA6agR5IrF+9LOssRuRMPg3wDhvUrQSSdhtsv9Pj2EsDa5RiOLFSrzu19F9KBWN1UgHNvjx3hOoayA==
+X-Received: by 2002:a17:90b:3e8b:b0:1f5:2a52:9148 with SMTP id rj11-20020a17090b3e8b00b001f52a529148mr1984528pjb.175.1659618036189;
+        Thu, 04 Aug 2022 06:00:36 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id w15-20020aa7954f000000b0052e2a1edab8sm934645pfq.24.2022.08.04.06.00.24
+        by smtp.gmail.com with ESMTPSA id w15-20020aa7954f000000b0052e2a1edab8sm934645pfq.24.2022.08.04.06.00.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 Aug 2022 06:00:25 -0700 (PDT)
+        Thu, 04 Aug 2022 06:00:35 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>
-Subject: [PATCH v2 03/15] mpi3mr: Added helper functions to retrieve cnfg pages
-Date:   Thu,  4 Aug 2022 18:42:14 +0530
-Message-Id: <20220804131226.16653-4-sreekanth.reddy@broadcom.com>
+        Himanshu Madhani <himanshu.madani@oracle.com>
+Subject: [PATCH v2 07/15] mpi3mr: Add helper functions to manage device's port
+Date:   Thu,  4 Aug 2022 18:42:18 +0530
+Message-Id: <20220804131226.16653-8-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20220804131226.16653-1-sreekanth.reddy@broadcom.com>
 References: <20220804131226.16653-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000f3402205e569eed6"
+        boundary="000000000000a536c205e569ef44"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000f3402205e569eed6
+--000000000000a536c205e569ef44
 Content-Transfer-Encoding: 8bit
 
-Added helper functions to retrieve below controller's
-config pages,
-- SAS IOUnit Page0
-- SAS IOUnit Page1
-- Driver Page1
-- Device Page0
-- SAS Phy Page0
-- SAS Phy Page1
-- SAS Expander Page0
-- SAS Expander Page1
-- Enclosure Page0
+Added below helper functions,
+- Add, update the host phys with STL
+- Add, remove the device's sas port with STL
 
-Also added the helper function to set the SAS IOUnit Page1.
-
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+Reviewed-by: Himanshu Madhani <himanshu.madani@oracle.com>
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr.h    |  26 ++
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 595 ++++++++++++++++++++++++++++++++
- 2 files changed, 621 insertions(+)
+ drivers/scsi/mpi3mr/mpi3mr.h           |  13 +
+ drivers/scsi/mpi3mr/mpi3mr_os.c        |   2 +-
+ drivers/scsi/mpi3mr/mpi3mr_transport.c | 525 +++++++++++++++++++++++++
+ 3 files changed, 539 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index e15ad0e..8af94d3 100644
+index 742caf5..8ab843a 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr.h
 +++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -1179,4 +1179,30 @@ void mpi3mr_app_save_logdata(struct mpi3mr_ioc *mrioc, char *event_data,
- 	u16 event_data_size);
- extern const struct attribute_group *mpi3mr_host_groups[];
- extern const struct attribute_group *mpi3mr_dev_groups[];
-+
-+int mpi3mr_cfg_get_dev_pg0(struct mpi3mr_ioc *mrioc, u16 *ioc_status,
-+	struct mpi3_device_page0 *dev_pg0, u16 pg_sz, u32 form, u32 form_spec);
-+int mpi3mr_cfg_get_sas_phy_pg0(struct mpi3mr_ioc *mrioc, u16 *ioc_status,
-+	struct mpi3_sas_phy_page0 *phy_pg0, u16 pg_sz, u32 form,
-+	u32 form_spec);
-+int mpi3mr_cfg_get_sas_phy_pg1(struct mpi3mr_ioc *mrioc, u16 *ioc_status,
-+	struct mpi3_sas_phy_page1 *phy_pg1, u16 pg_sz, u32 form,
-+	u32 form_spec);
-+int mpi3mr_cfg_get_sas_exp_pg0(struct mpi3mr_ioc *mrioc, u16 *ioc_status,
-+	struct mpi3_sas_expander_page0 *exp_pg0, u16 pg_sz, u32 form,
-+	u32 form_spec);
-+int mpi3mr_cfg_get_sas_exp_pg1(struct mpi3mr_ioc *mrioc, u16 *ioc_status,
-+	struct mpi3_sas_expander_page1 *exp_pg1, u16 pg_sz, u32 form,
-+	u32 form_spec);
-+int mpi3mr_cfg_get_enclosure_pg0(struct mpi3mr_ioc *mrioc, u16 *ioc_status,
-+	struct mpi3_enclosure_page0 *encl_pg0, u16 pg_sz, u32 form,
-+	u32 form_spec);
-+int mpi3mr_cfg_get_sas_io_unit_pg0(struct mpi3mr_ioc *mrioc,
-+	struct mpi3_sas_io_unit_page0 *sas_io_unit_pg0, u16 pg_sz);
-+int mpi3mr_cfg_get_sas_io_unit_pg1(struct mpi3mr_ioc *mrioc,
-+	struct mpi3_sas_io_unit_page1 *sas_io_unit_pg1, u16 pg_sz);
-+int mpi3mr_cfg_set_sas_io_unit_pg1(struct mpi3mr_ioc *mrioc,
-+	struct mpi3_sas_io_unit_page1 *sas_io_unit_pg1, u16 pg_sz);
-+int mpi3mr_cfg_get_driver_pg1(struct mpi3mr_ioc *mrioc,
-+	struct mpi3_driver_page1 *driver_pg1, u16 pg_sz);
+@@ -570,12 +570,18 @@ struct mpi3mr_enclosure_node {
+  *
+  * @sas_address: World wide unique SAS address
+  * @dev_info: Device information bits
++ * @sas_transport_attached: Is this device exposed to transport
++ * @pend_sas_rphy_add: Flag to check device is in process of add
+  * @hba_port: HBA port entry
++ * @rphy: SAS transport layer rphy object
+  */
+ struct tgt_dev_sas_sata {
+ 	u64 sas_address;
+ 	u16 dev_info;
++	u8 sas_transport_attached;
++	u8 pend_sas_rphy_add;
+ 	struct mpi3mr_hba_port *hba_port;
++	struct sas_rphy *rphy;
+ };
+ 
+ /**
+@@ -1331,4 +1337,11 @@ int mpi3mr_cfg_get_driver_pg1(struct mpi3mr_ioc *mrioc,
+ u8 mpi3mr_is_expander_device(u16 device_info);
+ struct mpi3mr_hba_port *mpi3mr_get_hba_port_by_id(struct mpi3mr_ioc *mrioc,
+ 	u8 port_id);
++void mpi3mr_sas_host_refresh(struct mpi3mr_ioc *mrioc);
++void mpi3mr_sas_host_add(struct mpi3mr_ioc *mrioc);
++void mpi3mr_update_links(struct mpi3mr_ioc *mrioc,
++	u64 sas_address_parent, u16 handle, u8 phy_number, u8 link_rate,
++	struct mpi3mr_hba_port *hba_port);
++void mpi3mr_print_device_event_notice(struct mpi3mr_ioc *mrioc,
++	bool device_add);
  #endif /*MPI3MR_H_INCLUDED*/
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 99d8df6..bfc4244 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -5039,3 +5039,598 @@ out:
- 	mpi3mr_free_config_dma_memory(mrioc, &mem_desc);
- 	return retval;
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index b75ce73..905b434 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -804,7 +804,7 @@ static void mpi3mr_set_io_divert_for_all_vd_in_tg(struct mpi3mr_ioc *mrioc,
+  *
+  * Return: None.
+  */
+-static void mpi3mr_print_device_event_notice(struct mpi3mr_ioc *mrioc,
++void mpi3mr_print_device_event_notice(struct mpi3mr_ioc *mrioc,
+ 	bool device_add)
+ {
+ 	ioc_notice(mrioc, "Device %s was in progress before the reset and\n",
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr/mpi3mr_transport.c
+index f1da7ef..3de9fa0 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
+@@ -706,3 +706,528 @@ struct mpi3mr_hba_port *mpi3mr_get_hba_port_by_id(struct mpi3mr_ioc *mrioc,
+ 
+ 	return NULL;
  }
 +
 +/**
-+ * mpi3mr_cfg_get_dev_pg0 - Read current device page0
++ * mpi3mr_update_links - refreshing SAS phy link changes
 + * @mrioc: Adapter instance reference
-+ * @ioc_status: Pointer to return ioc status
-+ * @dev_pg0: Pointer to return device page 0
-+ * @pg_sz: Size of the memory allocated to the page pointer
-+ * @form: The form to be used for addressing the page
-+ * @form_spec: Form specific information like device handle
++ * @sas_address_parent: SAS address of parent expander or host
++ * @handle: Firmware device handle of attached device
++ * @phy_number: Phy number
++ * @link_rate: New link rate
++ * @hba_port: HBA port entry
 + *
-+ * This is handler for config page read for a specific device
-+ * page0. The ioc_status has the controller returned ioc_status.
-+ * This routine doesn't check ioc_status to decide whether the
-+ * page read is success or not and it is the callers
-+ * responsibility.
-+ *
-+ * Return: 0 on success, non-zero on failure.
++ * Return: None.
 + */
-+int mpi3mr_cfg_get_dev_pg0(struct mpi3mr_ioc *mrioc, u16 *ioc_status,
-+	struct mpi3_device_page0 *dev_pg0, u16 pg_sz, u32 form, u32 form_spec)
++void mpi3mr_update_links(struct mpi3mr_ioc *mrioc,
++	u64 sas_address_parent, u16 handle, u8 phy_number, u8 link_rate,
++	struct mpi3mr_hba_port *hba_port)
 +{
-+	struct mpi3_config_page_header cfg_hdr;
-+	struct mpi3_config_request cfg_req;
-+	u32 page_address;
++	unsigned long flags;
++	struct mpi3mr_sas_node *mr_sas_node;
++	struct mpi3mr_sas_phy *mr_sas_phy;
 +
-+	memset(dev_pg0, 0, pg_sz);
-+	memset(&cfg_hdr, 0, sizeof(cfg_hdr));
-+	memset(&cfg_req, 0, sizeof(cfg_req));
++	if (mrioc->reset_in_progress)
++		return;
 +
-+	cfg_req.function = MPI3_FUNCTION_CONFIG;
-+	cfg_req.action = MPI3_CONFIG_ACTION_PAGE_HEADER;
-+	cfg_req.page_type = MPI3_CONFIG_PAGETYPE_DEVICE;
-+	cfg_req.page_number = 0;
-+	cfg_req.page_address = 0;
-+
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, NULL,
-+	    MPI3MR_INTADMCMD_TIMEOUT, ioc_status, &cfg_hdr, sizeof(cfg_hdr))) {
-+		ioc_err(mrioc, "device page0 header read failed\n");
-+		goto out_failed;
++	spin_lock_irqsave(&mrioc->sas_node_lock, flags);
++	mr_sas_node = __mpi3mr_sas_node_find_by_sas_address(mrioc,
++	    sas_address_parent, hba_port);
++	if (!mr_sas_node) {
++		spin_unlock_irqrestore(&mrioc->sas_node_lock, flags);
++		return;
 +	}
-+	if (*ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+		ioc_err(mrioc, "device page0 header read failed with ioc_status(0x%04x)\n",
-+		    *ioc_status);
-+		goto out_failed;
-+	}
-+	cfg_req.action = MPI3_CONFIG_ACTION_READ_CURRENT;
-+	page_address = ((form & MPI3_DEVICE_PGAD_FORM_MASK) |
-+	    (form_spec & MPI3_DEVICE_PGAD_HANDLE_MASK));
-+	cfg_req.page_address = cpu_to_le32(page_address);
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, &cfg_hdr,
-+	    MPI3MR_INTADMCMD_TIMEOUT, ioc_status, dev_pg0, pg_sz)) {
-+		ioc_err(mrioc, "device page0 read failed\n");
-+		goto out_failed;
-+	}
-+	return 0;
-+out_failed:
-+	return -1;
-+}
 +
++	mr_sas_phy = &mr_sas_node->phy[phy_number];
++	mr_sas_phy->attached_handle = handle;
++	spin_unlock_irqrestore(&mrioc->sas_node_lock, flags);
++	if (handle && (link_rate >= MPI3_SAS_NEG_LINK_RATE_1_5)) {
++		mpi3mr_set_identify(mrioc, handle,
++		    &mr_sas_phy->remote_identify);
++		mpi3mr_add_phy_to_an_existing_port(mrioc, mr_sas_node,
++		    mr_sas_phy, mr_sas_phy->remote_identify.sas_address,
++		    hba_port);
++	} else
++		memset(&mr_sas_phy->remote_identify, 0, sizeof(struct
++		    sas_identify));
 +
-+/**
-+ * mpi3mr_cfg_get_sas_phy_pg0 - Read current SAS Phy page0
-+ * @mrioc: Adapter instance reference
-+ * @ioc_status: Pointer to return ioc status
-+ * @phy_pg0: Pointer to return SAS Phy page 0
-+ * @pg_sz: Size of the memory allocated to the page pointer
-+ * @form: The form to be used for addressing the page
-+ * @form_spec: Form specific information like phy number
-+ *
-+ * This is handler for config page read for a specific SAS Phy
-+ * page0. The ioc_status has the controller returned ioc_status.
-+ * This routine doesn't check ioc_status to decide whether the
-+ * page read is success or not and it is the callers
-+ * responsibility.
-+ *
-+ * Return: 0 on success, non-zero on failure.
-+ */
-+int mpi3mr_cfg_get_sas_phy_pg0(struct mpi3mr_ioc *mrioc, u16 *ioc_status,
-+	struct mpi3_sas_phy_page0 *phy_pg0, u16 pg_sz, u32 form,
-+	u32 form_spec)
-+{
-+	struct mpi3_config_page_header cfg_hdr;
-+	struct mpi3_config_request cfg_req;
-+	u32 page_address;
++	if (mr_sas_phy->phy)
++		mr_sas_phy->phy->negotiated_linkrate =
++		    mpi3mr_convert_phy_link_rate(link_rate);
 +
-+	memset(phy_pg0, 0, pg_sz);
-+	memset(&cfg_hdr, 0, sizeof(cfg_hdr));
-+	memset(&cfg_req, 0, sizeof(cfg_req));
-+
-+	cfg_req.function = MPI3_FUNCTION_CONFIG;
-+	cfg_req.action = MPI3_CONFIG_ACTION_PAGE_HEADER;
-+	cfg_req.page_type = MPI3_CONFIG_PAGETYPE_SAS_PHY;
-+	cfg_req.page_number = 0;
-+	cfg_req.page_address = 0;
-+
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, NULL,
-+	    MPI3MR_INTADMCMD_TIMEOUT, ioc_status, &cfg_hdr, sizeof(cfg_hdr))) {
-+		ioc_err(mrioc, "sas phy page0 header read failed\n");
-+		goto out_failed;
-+	}
-+	if (*ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+		ioc_err(mrioc, "sas phy page0 header read failed with ioc_status(0x%04x)\n",
-+		    *ioc_status);
-+		goto out_failed;
-+	}
-+	cfg_req.action = MPI3_CONFIG_ACTION_READ_CURRENT;
-+	page_address = ((form & MPI3_SAS_PHY_PGAD_FORM_MASK) |
-+	    (form_spec & MPI3_SAS_PHY_PGAD_PHY_NUMBER_MASK));
-+	cfg_req.page_address = cpu_to_le32(page_address);
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, &cfg_hdr,
-+	    MPI3MR_INTADMCMD_TIMEOUT, ioc_status, phy_pg0, pg_sz)) {
-+		ioc_err(mrioc, "sas phy page0 read failed\n");
-+		goto out_failed;
-+	}
-+	return 0;
-+out_failed:
-+	return -1;
++	if ((mrioc->logging_level & MPI3_DEBUG_TRANSPORT_INFO))
++		dev_info(&mr_sas_phy->phy->dev,
++		    "refresh: parent sas_address(0x%016llx),\n"
++		    "\tlink_rate(0x%02x), phy(%d)\n"
++		    "\tattached_handle(0x%04x), sas_address(0x%016llx)\n",
++		    (unsigned long long)sas_address_parent,
++		    link_rate, phy_number, handle, (unsigned long long)
++		    mr_sas_phy->remote_identify.sas_address);
 +}
 +
 +/**
-+ * mpi3mr_cfg_get_sas_phy_pg1 - Read current SAS Phy page1
++ * mpi3mr_sas_host_refresh - refreshing sas host object contents
 + * @mrioc: Adapter instance reference
-+ * @ioc_status: Pointer to return ioc status
-+ * @phy_pg1: Pointer to return SAS Phy page 1
-+ * @pg_sz: Size of the memory allocated to the page pointer
-+ * @form: The form to be used for addressing the page
-+ * @form_spec: Form specific information like phy number
 + *
-+ * This is handler for config page read for a specific SAS Phy
-+ * page1. The ioc_status has the controller returned ioc_status.
-+ * This routine doesn't check ioc_status to decide whether the
-+ * page read is success or not and it is the callers
-+ * responsibility.
++ * This function refreshes the controllers phy information and
++ * updates the SAS transport layer with updated information,
++ * this is executed for each device addition or device info
++ * change events
 + *
-+ * Return: 0 on success, non-zero on failure.
++ * Return: None.
 + */
-+int mpi3mr_cfg_get_sas_phy_pg1(struct mpi3mr_ioc *mrioc, u16 *ioc_status,
-+	struct mpi3_sas_phy_page1 *phy_pg1, u16 pg_sz, u32 form,
-+	u32 form_spec)
++void mpi3mr_sas_host_refresh(struct mpi3mr_ioc *mrioc)
 +{
-+	struct mpi3_config_page_header cfg_hdr;
-+	struct mpi3_config_request cfg_req;
-+	u32 page_address;
++	int i;
++	u8 link_rate;
++	u16 sz, port_id, attached_handle;
++	struct mpi3_sas_io_unit_page0 *sas_io_unit_pg0 = NULL;
 +
-+	memset(phy_pg1, 0, pg_sz);
-+	memset(&cfg_hdr, 0, sizeof(cfg_hdr));
-+	memset(&cfg_req, 0, sizeof(cfg_req));
++	dprint_transport_info(mrioc,
++	    "updating handles for sas_host(0x%016llx)\n",
++	    (unsigned long long)mrioc->sas_hba.sas_address);
 +
-+	cfg_req.function = MPI3_FUNCTION_CONFIG;
-+	cfg_req.action = MPI3_CONFIG_ACTION_PAGE_HEADER;
-+	cfg_req.page_type = MPI3_CONFIG_PAGETYPE_SAS_PHY;
-+	cfg_req.page_number = 1;
-+	cfg_req.page_address = 0;
-+
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, NULL,
-+	    MPI3MR_INTADMCMD_TIMEOUT, ioc_status, &cfg_hdr, sizeof(cfg_hdr))) {
-+		ioc_err(mrioc, "sas phy page1 header read failed\n");
-+		goto out_failed;
++	sz = offsetof(struct mpi3_sas_io_unit_page0, phy_data) +
++	    (mrioc->sas_hba.num_phys *
++	     sizeof(struct mpi3_sas_io_unit0_phy_data));
++	sas_io_unit_pg0 = kzalloc(sz, GFP_KERNEL);
++	if (!sas_io_unit_pg0)
++		return;
++	if (mpi3mr_cfg_get_sas_io_unit_pg0(mrioc, sas_io_unit_pg0, sz)) {
++		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		goto out;
 +	}
-+	if (*ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+		ioc_err(mrioc, "sas phy page1 header read failed with ioc_status(0x%04x)\n",
-+		    *ioc_status);
-+		goto out_failed;
-+	}
-+	cfg_req.action = MPI3_CONFIG_ACTION_READ_CURRENT;
-+	page_address = ((form & MPI3_SAS_PHY_PGAD_FORM_MASK) |
-+	    (form_spec & MPI3_SAS_PHY_PGAD_PHY_NUMBER_MASK));
-+	cfg_req.page_address = cpu_to_le32(page_address);
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, &cfg_hdr,
-+	    MPI3MR_INTADMCMD_TIMEOUT, ioc_status, phy_pg1, pg_sz)) {
-+		ioc_err(mrioc, "sas phy page1 read failed\n");
-+		goto out_failed;
-+	}
-+	return 0;
-+out_failed:
-+	return -1;
-+}
 +
++	mrioc->sas_hba.handle = 0;
++	for (i = 0; i < mrioc->sas_hba.num_phys; i++) {
++		if (sas_io_unit_pg0->phy_data[i].phy_flags &
++		    (MPI3_SASIOUNIT0_PHYFLAGS_HOST_PHY |
++		     MPI3_SASIOUNIT0_PHYFLAGS_VIRTUAL_PHY))
++			continue;
++		link_rate =
++		    sas_io_unit_pg0->phy_data[i].negotiated_link_rate >> 4;
++		if (!mrioc->sas_hba.handle)
++			mrioc->sas_hba.handle = le16_to_cpu(
++			    sas_io_unit_pg0->phy_data[i].controller_dev_handle);
++		port_id = sas_io_unit_pg0->phy_data[i].io_unit_port;
++		if (!(mpi3mr_get_hba_port_by_id(mrioc, port_id)))
++			if (!mpi3mr_alloc_hba_port(mrioc, port_id))
++				goto out;
 +
-+/**
-+ * mpi3mr_cfg_get_sas_exp_pg0 - Read current SAS Expander page0
-+ * @mrioc: Adapter instance reference
-+ * @ioc_status: Pointer to return ioc status
-+ * @exp_pg0: Pointer to return SAS Expander page 0
-+ * @pg_sz: Size of the memory allocated to the page pointer
-+ * @form: The form to be used for addressing the page
-+ * @form_spec: Form specific information like device handle
-+ *
-+ * This is handler for config page read for a specific SAS
-+ * Expander page0. The ioc_status has the controller returned
-+ * ioc_status. This routine doesn't check ioc_status to decide
-+ * whether the page read is success or not and it is the callers
-+ * responsibility.
-+ *
-+ * Return: 0 on success, non-zero on failure.
-+ */
-+int mpi3mr_cfg_get_sas_exp_pg0(struct mpi3mr_ioc *mrioc, u16 *ioc_status,
-+	struct mpi3_sas_expander_page0 *exp_pg0, u16 pg_sz, u32 form,
-+	u32 form_spec)
-+{
-+	struct mpi3_config_page_header cfg_hdr;
-+	struct mpi3_config_request cfg_req;
-+	u32 page_address;
-+
-+	memset(exp_pg0, 0, pg_sz);
-+	memset(&cfg_hdr, 0, sizeof(cfg_hdr));
-+	memset(&cfg_req, 0, sizeof(cfg_req));
-+
-+	cfg_req.function = MPI3_FUNCTION_CONFIG;
-+	cfg_req.action = MPI3_CONFIG_ACTION_PAGE_HEADER;
-+	cfg_req.page_type = MPI3_CONFIG_PAGETYPE_SAS_EXPANDER;
-+	cfg_req.page_number = 0;
-+	cfg_req.page_address = 0;
-+
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, NULL,
-+	    MPI3MR_INTADMCMD_TIMEOUT, ioc_status, &cfg_hdr, sizeof(cfg_hdr))) {
-+		ioc_err(mrioc, "expander page0 header read failed\n");
-+		goto out_failed;
++		mrioc->sas_hba.phy[i].handle = mrioc->sas_hba.handle;
++		attached_handle = le16_to_cpu(
++		    sas_io_unit_pg0->phy_data[i].attached_dev_handle);
++		if (attached_handle && link_rate < MPI3_SAS_NEG_LINK_RATE_1_5)
++			link_rate = MPI3_SAS_NEG_LINK_RATE_1_5;
++		mrioc->sas_hba.phy[i].hba_port =
++			mpi3mr_get_hba_port_by_id(mrioc, port_id);
++		mpi3mr_update_links(mrioc, mrioc->sas_hba.sas_address,
++		    attached_handle, i, link_rate,
++		    mrioc->sas_hba.phy[i].hba_port);
 +	}
-+	if (*ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+		ioc_err(mrioc, "expander page0 header read failed with ioc_status(0x%04x)\n",
-+		    *ioc_status);
-+		goto out_failed;
-+	}
-+	cfg_req.action = MPI3_CONFIG_ACTION_READ_CURRENT;
-+	page_address = ((form & MPI3_SAS_EXPAND_PGAD_FORM_MASK) |
-+	    (form_spec & (MPI3_SAS_EXPAND_PGAD_PHYNUM_MASK |
-+	    MPI3_SAS_EXPAND_PGAD_HANDLE_MASK)));
-+	cfg_req.page_address = cpu_to_le32(page_address);
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, &cfg_hdr,
-+	    MPI3MR_INTADMCMD_TIMEOUT, ioc_status, exp_pg0, pg_sz)) {
-+		ioc_err(mrioc, "expander page0 read failed\n");
-+		goto out_failed;
-+	}
-+	return 0;
-+out_failed:
-+	return -1;
++ out:
++	kfree(sas_io_unit_pg0);
 +}
 +
 +/**
-+ * mpi3mr_cfg_get_sas_exp_pg1 - Read current SAS Expander page1
++ * mpi3mr_sas_host_add - create sas host object
 + * @mrioc: Adapter instance reference
-+ * @ioc_status: Pointer to return ioc status
-+ * @exp_pg1: Pointer to return SAS Expander page 1
-+ * @pg_sz: Size of the memory allocated to the page pointer
-+ * @form: The form to be used for addressing the page
-+ * @form_spec: Form specific information like phy number
 + *
-+ * This is handler for config page read for a specific SAS
-+ * Expander page1. The ioc_status has the controller returned
-+ * ioc_status. This routine doesn't check ioc_status to decide
-+ * whether the page read is success or not and it is the callers
-+ * responsibility.
++ * This function creates the controllers phy information and
++ * updates the SAS transport layer with updated information,
++ * this is executed for first device addition or device info
++ * change event.
 + *
-+ * Return: 0 on success, non-zero on failure.
++ * Return: None.
 + */
-+int mpi3mr_cfg_get_sas_exp_pg1(struct mpi3mr_ioc *mrioc, u16 *ioc_status,
-+	struct mpi3_sas_expander_page1 *exp_pg1, u16 pg_sz, u32 form,
-+	u32 form_spec)
++void mpi3mr_sas_host_add(struct mpi3mr_ioc *mrioc)
 +{
-+	struct mpi3_config_page_header cfg_hdr;
-+	struct mpi3_config_request cfg_req;
-+	u32 page_address;
++	int i;
++	u16 sz, num_phys = 1, port_id, ioc_status;
++	struct mpi3_sas_io_unit_page0 *sas_io_unit_pg0 = NULL;
++	struct mpi3_sas_phy_page0 phy_pg0;
++	struct mpi3_device_page0 dev_pg0;
++	struct mpi3_enclosure_page0 encl_pg0;
++	struct mpi3_device0_sas_sata_format *sasinf;
 +
-+	memset(exp_pg1, 0, pg_sz);
-+	memset(&cfg_hdr, 0, sizeof(cfg_hdr));
-+	memset(&cfg_req, 0, sizeof(cfg_req));
++	sz = offsetof(struct mpi3_sas_io_unit_page0, phy_data) +
++	    (num_phys * sizeof(struct mpi3_sas_io_unit0_phy_data));
++	sas_io_unit_pg0 = kzalloc(sz, GFP_KERNEL);
++	if (!sas_io_unit_pg0)
++		return;
 +
-+	cfg_req.function = MPI3_FUNCTION_CONFIG;
-+	cfg_req.action = MPI3_CONFIG_ACTION_PAGE_HEADER;
-+	cfg_req.page_type = MPI3_CONFIG_PAGETYPE_SAS_EXPANDER;
-+	cfg_req.page_number = 1;
-+	cfg_req.page_address = 0;
++	if (mpi3mr_cfg_get_sas_io_unit_pg0(mrioc, sas_io_unit_pg0, sz)) {
++		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		goto out;
++	}
++	num_phys = sas_io_unit_pg0->num_phys;
++	kfree(sas_io_unit_pg0);
 +
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, NULL,
-+	    MPI3MR_INTADMCMD_TIMEOUT, ioc_status, &cfg_hdr, sizeof(cfg_hdr))) {
-+		ioc_err(mrioc, "expander page1 header read failed\n");
-+		goto out_failed;
++	mrioc->sas_hba.host_node = 1;
++	INIT_LIST_HEAD(&mrioc->sas_hba.sas_port_list);
++	mrioc->sas_hba.parent_dev = &mrioc->shost->shost_gendev;
++	mrioc->sas_hba.phy = kcalloc(num_phys,
++	    sizeof(struct mpi3mr_sas_phy), GFP_KERNEL);
++	if (!mrioc->sas_hba.phy)
++		return;
++
++	mrioc->sas_hba.num_phys = num_phys;
++
++	sz = offsetof(struct mpi3_sas_io_unit_page0, phy_data) +
++	    (num_phys * sizeof(struct mpi3_sas_io_unit0_phy_data));
++	sas_io_unit_pg0 = kzalloc(sz, GFP_KERNEL);
++	if (!sas_io_unit_pg0)
++		return;
++
++	if (mpi3mr_cfg_get_sas_io_unit_pg0(mrioc, sas_io_unit_pg0, sz)) {
++		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		goto out;
 +	}
-+	if (*ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+		ioc_err(mrioc, "expander page1 header read failed with ioc_status(0x%04x)\n",
-+		    *ioc_status);
-+		goto out_failed;
++
++	mrioc->sas_hba.handle = 0;
++	for (i = 0; i < mrioc->sas_hba.num_phys; i++) {
++		if (sas_io_unit_pg0->phy_data[i].phy_flags &
++		    (MPI3_SASIOUNIT0_PHYFLAGS_HOST_PHY |
++		    MPI3_SASIOUNIT0_PHYFLAGS_VIRTUAL_PHY))
++			continue;
++		if (mpi3mr_cfg_get_sas_phy_pg0(mrioc, &ioc_status, &phy_pg0,
++		    sizeof(struct mpi3_sas_phy_page0),
++		    MPI3_SAS_PHY_PGAD_FORM_PHY_NUMBER, i)) {
++			ioc_err(mrioc, "failure at %s:%d/%s()!\n",
++			    __FILE__, __LINE__, __func__);
++			goto out;
++		}
++		if (ioc_status != MPI3_IOCSTATUS_SUCCESS) {
++			ioc_err(mrioc, "failure at %s:%d/%s()!\n",
++			    __FILE__, __LINE__, __func__);
++			goto out;
++		}
++
++		if (!mrioc->sas_hba.handle)
++			mrioc->sas_hba.handle = le16_to_cpu(
++			    sas_io_unit_pg0->phy_data[i].controller_dev_handle);
++		port_id = sas_io_unit_pg0->phy_data[i].io_unit_port;
++
++		if (!(mpi3mr_get_hba_port_by_id(mrioc, port_id)))
++			if (!mpi3mr_alloc_hba_port(mrioc, port_id))
++				goto out;
++
++		mrioc->sas_hba.phy[i].handle = mrioc->sas_hba.handle;
++		mrioc->sas_hba.phy[i].phy_id = i;
++		mrioc->sas_hba.phy[i].hba_port =
++		    mpi3mr_get_hba_port_by_id(mrioc, port_id);
++		mpi3mr_add_host_phy(mrioc, &mrioc->sas_hba.phy[i],
++		    phy_pg0, mrioc->sas_hba.parent_dev);
 +	}
-+	cfg_req.action = MPI3_CONFIG_ACTION_READ_CURRENT;
-+	page_address = ((form & MPI3_SAS_EXPAND_PGAD_FORM_MASK) |
-+	    (form_spec & (MPI3_SAS_EXPAND_PGAD_PHYNUM_MASK |
-+	    MPI3_SAS_EXPAND_PGAD_HANDLE_MASK)));
-+	cfg_req.page_address = cpu_to_le32(page_address);
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, &cfg_hdr,
-+	    MPI3MR_INTADMCMD_TIMEOUT, ioc_status, exp_pg1, pg_sz)) {
-+		ioc_err(mrioc, "expander page1 read failed\n");
-+		goto out_failed;
++	if ((mpi3mr_cfg_get_dev_pg0(mrioc, &ioc_status, &dev_pg0,
++	    sizeof(dev_pg0), MPI3_DEVICE_PGAD_FORM_HANDLE,
++	    mrioc->sas_hba.handle))) {
++		ioc_err(mrioc, "%s: device page0 read failed\n", __func__);
++		goto out;
 +	}
-+	return 0;
-+out_failed:
-+	return -1;
++	if (ioc_status != MPI3_IOCSTATUS_SUCCESS) {
++		ioc_err(mrioc, "device page read failed for handle(0x%04x), with ioc_status(0x%04x) failure at %s:%d/%s()!\n",
++		    mrioc->sas_hba.handle, ioc_status, __FILE__, __LINE__,
++		    __func__);
++		goto out;
++	}
++	mrioc->sas_hba.enclosure_handle =
++	    le16_to_cpu(dev_pg0.enclosure_handle);
++	sasinf = &dev_pg0.device_specific.sas_sata_format;
++	mrioc->sas_hba.sas_address =
++	    le64_to_cpu(sasinf->sas_address);
++	ioc_info(mrioc,
++	    "host_add: handle(0x%04x), sas_addr(0x%016llx), phys(%d)\n",
++	    mrioc->sas_hba.handle,
++	    (unsigned long long) mrioc->sas_hba.sas_address,
++	    mrioc->sas_hba.num_phys);
++
++	if (mrioc->sas_hba.enclosure_handle) {
++		if (!(mpi3mr_cfg_get_enclosure_pg0(mrioc, &ioc_status,
++		    &encl_pg0, sizeof(dev_pg0),
++		    MPI3_ENCLOS_PGAD_FORM_HANDLE,
++		    mrioc->sas_hba.enclosure_handle)) &&
++		    (ioc_status == MPI3_IOCSTATUS_SUCCESS))
++			mrioc->sas_hba.enclosure_logical_id =
++				le64_to_cpu(encl_pg0.enclosure_logical_id);
++	}
++
++out:
++	kfree(sas_io_unit_pg0);
 +}
 +
 +/**
-+ * mpi3mr_cfg_get_enclosure_pg0 - Read current Enclosure page0
++ * mpi3mr_sas_port_add - Expose the SAS device to the SAS TL
 + * @mrioc: Adapter instance reference
-+ * @ioc_status: Pointer to return ioc status
-+ * @encl_pg0: Pointer to return Enclosure page 0
-+ * @pg_sz: Size of the memory allocated to the page pointer
-+ * @form: The form to be used for addressing the page
-+ * @form_spec: Form specific information like device handle
++ * @handle: Firmware device handle of the attached device
++ * @sas_address_parent: sas address of parent expander or host
++ * @hba_port: HBA port entry
 + *
-+ * This is handler for config page read for a specific Enclosure
-+ * page0. The ioc_status has the controller returned ioc_status.
-+ * This routine doesn't check ioc_status to decide whether the
-+ * page read is success or not and it is the callers
-+ * responsibility.
++ * This function creates a new sas port object for the given end
++ * device matching sas address and hba_port and adds it to the
++ * sas_node's sas_port_list and expose the attached sas device
++ * to the SAS transport layer through sas_rphy_add.
 + *
-+ * Return: 0 on success, non-zero on failure.
++ * Returns a valid mpi3mr_sas_port reference or NULL.
 + */
-+int mpi3mr_cfg_get_enclosure_pg0(struct mpi3mr_ioc *mrioc, u16 *ioc_status,
-+	struct mpi3_enclosure_page0 *encl_pg0, u16 pg_sz, u32 form,
-+	u32 form_spec)
++static struct mpi3mr_sas_port *mpi3mr_sas_port_add(struct mpi3mr_ioc *mrioc,
++	u16 handle, u64 sas_address_parent, struct mpi3mr_hba_port *hba_port)
 +{
-+	struct mpi3_config_page_header cfg_hdr;
-+	struct mpi3_config_request cfg_req;
-+	u32 page_address;
++	struct mpi3mr_sas_phy *mr_sas_phy, *next;
++	struct mpi3mr_sas_port *mr_sas_port;
++	unsigned long flags;
++	struct mpi3mr_sas_node *mr_sas_node;
++	struct sas_rphy *rphy;
++	struct mpi3mr_tgt_dev *tgtdev = NULL;
++	int i;
++	struct sas_port *port;
 +
-+	memset(encl_pg0, 0, pg_sz);
-+	memset(&cfg_hdr, 0, sizeof(cfg_hdr));
-+	memset(&cfg_req, 0, sizeof(cfg_req));
-+
-+	cfg_req.function = MPI3_FUNCTION_CONFIG;
-+	cfg_req.action = MPI3_CONFIG_ACTION_PAGE_HEADER;
-+	cfg_req.page_type = MPI3_CONFIG_PAGETYPE_ENCLOSURE;
-+	cfg_req.page_number = 0;
-+	cfg_req.page_address = 0;
-+
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, NULL,
-+	    MPI3MR_INTADMCMD_TIMEOUT, ioc_status, &cfg_hdr, sizeof(cfg_hdr))) {
-+		ioc_err(mrioc, "enclosure page0 header read failed\n");
-+		goto out_failed;
-+	}
-+	if (*ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+		ioc_err(mrioc, "enclosure page0 header read failed with ioc_status(0x%04x)\n",
-+		    *ioc_status);
-+		goto out_failed;
-+	}
-+	cfg_req.action = MPI3_CONFIG_ACTION_READ_CURRENT;
-+	page_address = ((form & MPI3_ENCLOS_PGAD_FORM_MASK) |
-+	    (form_spec & MPI3_ENCLOS_PGAD_HANDLE_MASK));
-+	cfg_req.page_address = cpu_to_le32(page_address);
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, &cfg_hdr,
-+	    MPI3MR_INTADMCMD_TIMEOUT, ioc_status, encl_pg0, pg_sz)) {
-+		ioc_err(mrioc, "enclosure page0 read failed\n");
-+		goto out_failed;
-+	}
-+	return 0;
-+out_failed:
-+	return -1;
-+}
-+
-+
-+/**
-+ * mpi3mr_cfg_get_sas_io_unit_pg0 - Read current SASIOUnit page0
-+ * @mrioc: Adapter instance reference
-+ * @sas_io_unit_pg0: Pointer to return SAS IO Unit page 0
-+ * @pg_sz: Size of the memory allocated to the page pointer
-+ *
-+ * This is handler for config page read for the SAS IO Unit
-+ * page0. This routine checks ioc_status to decide whether the
-+ * page read is success or not.
-+ *
-+ * Return: 0 on success, non-zero on failure.
-+ */
-+int mpi3mr_cfg_get_sas_io_unit_pg0(struct mpi3mr_ioc *mrioc,
-+	struct mpi3_sas_io_unit_page0 *sas_io_unit_pg0, u16 pg_sz)
-+{
-+	struct mpi3_config_page_header cfg_hdr;
-+	struct mpi3_config_request cfg_req;
-+	u16 ioc_status = 0;
-+
-+	memset(sas_io_unit_pg0, 0, pg_sz);
-+	memset(&cfg_hdr, 0, sizeof(cfg_hdr));
-+	memset(&cfg_req, 0, sizeof(cfg_req));
-+
-+	cfg_req.function = MPI3_FUNCTION_CONFIG;
-+	cfg_req.action = MPI3_CONFIG_ACTION_PAGE_HEADER;
-+	cfg_req.page_type = MPI3_CONFIG_PAGETYPE_SAS_IO_UNIT;
-+	cfg_req.page_number = 0;
-+	cfg_req.page_address = 0;
-+
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, NULL,
-+	    MPI3MR_INTADMCMD_TIMEOUT, &ioc_status, &cfg_hdr, sizeof(cfg_hdr))) {
-+		ioc_err(mrioc, "sas io unit page0 header read failed\n");
-+		goto out_failed;
-+	}
-+	if (ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+		ioc_err(mrioc, "sas io unit page0 header read failed with ioc_status(0x%04x)\n",
-+		    ioc_status);
-+		goto out_failed;
-+	}
-+	cfg_req.action = MPI3_CONFIG_ACTION_READ_CURRENT;
-+
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, &cfg_hdr,
-+	    MPI3MR_INTADMCMD_TIMEOUT, &ioc_status, sas_io_unit_pg0, pg_sz)) {
-+		ioc_err(mrioc, "sas io unit page0 read failed\n");
-+		goto out_failed;
-+	}
-+	if (ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+		ioc_err(mrioc, "sas io unit page0 read failed with ioc_status(0x%04x)\n",
-+		    ioc_status);
-+		goto out_failed;
-+	}
-+	return 0;
-+out_failed:
-+	return -1;
-+}
-+
-+/**
-+ * mpi3mr_cfg_get_sas_io_unit_pg1 - Read current SASIOUnit page1
-+ * @mrioc: Adapter instance reference
-+ * @sas_io_unit_pg1: Pointer to return SAS IO Unit page 1
-+ * @pg_sz: Size of the memory allocated to the page pointer
-+ *
-+ * This is handler for config page read for the SAS IO Unit
-+ * page1. This routine checks ioc_status to decide whether the
-+ * page read is success or not.
-+ *
-+ * Return: 0 on success, non-zero on failure.
-+ */
-+int mpi3mr_cfg_get_sas_io_unit_pg1(struct mpi3mr_ioc *mrioc,
-+	struct mpi3_sas_io_unit_page1 *sas_io_unit_pg1, u16 pg_sz)
-+{
-+	struct mpi3_config_page_header cfg_hdr;
-+	struct mpi3_config_request cfg_req;
-+	u16 ioc_status = 0;
-+
-+	memset(sas_io_unit_pg1, 0, pg_sz);
-+	memset(&cfg_hdr, 0, sizeof(cfg_hdr));
-+	memset(&cfg_req, 0, sizeof(cfg_req));
-+
-+	cfg_req.function = MPI3_FUNCTION_CONFIG;
-+	cfg_req.action = MPI3_CONFIG_ACTION_PAGE_HEADER;
-+	cfg_req.page_type = MPI3_CONFIG_PAGETYPE_SAS_IO_UNIT;
-+	cfg_req.page_number = 1;
-+	cfg_req.page_address = 0;
-+
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, NULL,
-+	    MPI3MR_INTADMCMD_TIMEOUT, &ioc_status, &cfg_hdr, sizeof(cfg_hdr))) {
-+		ioc_err(mrioc, "sas io unit page1 header read failed\n");
-+		goto out_failed;
-+	}
-+	if (ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+		ioc_err(mrioc, "sas io unit page1 header read failed with ioc_status(0x%04x)\n",
-+		    ioc_status);
-+		goto out_failed;
-+	}
-+	cfg_req.action = MPI3_CONFIG_ACTION_READ_CURRENT;
-+
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, &cfg_hdr,
-+	    MPI3MR_INTADMCMD_TIMEOUT, &ioc_status, sas_io_unit_pg1, pg_sz)) {
-+		ioc_err(mrioc, "sas io unit page1 read failed\n");
-+		goto out_failed;
-+	}
-+	if (ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+		ioc_err(mrioc, "sas io unit page1 read failed with ioc_status(0x%04x)\n",
-+		    ioc_status);
-+		goto out_failed;
-+	}
-+	return 0;
-+out_failed:
-+	return -1;
-+}
-+
-+/**
-+ * mpi3mr_cfg_set_sas_io_unit_pg1 - Write SASIOUnit page1
-+ * @mrioc: Adapter instance reference
-+ * @sas_io_unit_pg1: Pointer to the SAS IO Unit page 1 to write
-+ * @pg_sz: Size of the memory allocated to the page pointer
-+ *
-+ * This is handler for config page write for the SAS IO Unit
-+ * page1. This routine checks ioc_status to decide whether the
-+ * page read is success or not. This will modify both current
-+ * and persistent page.
-+ *
-+ * Return: 0 on success, non-zero on failure.
-+ */
-+int mpi3mr_cfg_set_sas_io_unit_pg1(struct mpi3mr_ioc *mrioc,
-+	struct mpi3_sas_io_unit_page1 *sas_io_unit_pg1, u16 pg_sz)
-+{
-+	struct mpi3_config_page_header cfg_hdr;
-+	struct mpi3_config_request cfg_req;
-+	u16 ioc_status = 0;
-+
-+	memset(&cfg_hdr, 0, sizeof(cfg_hdr));
-+	memset(&cfg_req, 0, sizeof(cfg_req));
-+
-+	cfg_req.function = MPI3_FUNCTION_CONFIG;
-+	cfg_req.action = MPI3_CONFIG_ACTION_PAGE_HEADER;
-+	cfg_req.page_type = MPI3_CONFIG_PAGETYPE_SAS_IO_UNIT;
-+	cfg_req.page_number = 1;
-+	cfg_req.page_address = 0;
-+
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, NULL,
-+	    MPI3MR_INTADMCMD_TIMEOUT, &ioc_status, &cfg_hdr, sizeof(cfg_hdr))) {
-+		ioc_err(mrioc, "sas io unit page1 header read failed\n");
-+		goto out_failed;
-+	}
-+	if (ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+		ioc_err(mrioc, "sas io unit page1 header read failed with ioc_status(0x%04x)\n",
-+		    ioc_status);
-+		goto out_failed;
-+	}
-+	cfg_req.action = MPI3_CONFIG_ACTION_WRITE_CURRENT;
-+
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, &cfg_hdr,
-+	    MPI3MR_INTADMCMD_TIMEOUT, &ioc_status, sas_io_unit_pg1, pg_sz)) {
-+		ioc_err(mrioc, "sas io unit page1 write current failed\n");
-+		goto out_failed;
-+	}
-+	if (ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+		ioc_err(mrioc, "sas io unit page1 write current failed with ioc_status(0x%04x)\n",
-+		    ioc_status);
-+		goto out_failed;
++	if (!hba_port) {
++		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		return NULL;
 +	}
 +
-+	cfg_req.action = MPI3_CONFIG_ACTION_WRITE_PERSISTENT;
++	mr_sas_port = kzalloc(sizeof(struct mpi3mr_sas_port), GFP_KERNEL);
++	if (!mr_sas_port)
++		return NULL;
 +
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, &cfg_hdr,
-+	    MPI3MR_INTADMCMD_TIMEOUT, &ioc_status, sas_io_unit_pg1, pg_sz)) {
-+		ioc_err(mrioc, "sas io unit page1 write persistent failed\n");
-+		goto out_failed;
++	INIT_LIST_HEAD(&mr_sas_port->port_list);
++	INIT_LIST_HEAD(&mr_sas_port->phy_list);
++	spin_lock_irqsave(&mrioc->sas_node_lock, flags);
++	mr_sas_node = __mpi3mr_sas_node_find_by_sas_address(mrioc,
++	    sas_address_parent, hba_port);
++	spin_unlock_irqrestore(&mrioc->sas_node_lock, flags);
++
++	if (!mr_sas_node) {
++		ioc_err(mrioc, "%s:could not find parent sas_address(0x%016llx)!\n",
++		    __func__, (unsigned long long)sas_address_parent);
++		goto out_fail;
 +	}
-+	if (ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+		ioc_err(mrioc, "sas io unit page1 write persistent failed with ioc_status(0x%04x)\n",
-+		    ioc_status);
-+		goto out_failed;
++
++	if ((mpi3mr_set_identify(mrioc, handle,
++	    &mr_sas_port->remote_identify))) {
++		ioc_err(mrioc,  "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		goto out_fail;
 +	}
-+	return 0;
-+out_failed:
-+	return -1;
++
++	if (mr_sas_port->remote_identify.device_type == SAS_PHY_UNUSED) {
++		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		goto out_fail;
++	}
++
++	mr_sas_port->hba_port = hba_port;
++	mpi3mr_sas_port_sanity_check(mrioc, mr_sas_node,
++	    mr_sas_port->remote_identify.sas_address, hba_port);
++
++	for (i = 0; i < mr_sas_node->num_phys; i++) {
++		if ((mr_sas_node->phy[i].remote_identify.sas_address !=
++		    mr_sas_port->remote_identify.sas_address) ||
++		    (mr_sas_node->phy[i].hba_port != hba_port))
++			continue;
++		list_add_tail(&mr_sas_node->phy[i].port_siblings,
++		    &mr_sas_port->phy_list);
++		mr_sas_port->num_phys++;
++	}
++
++	if (!mr_sas_port->num_phys) {
++		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		goto out_fail;
++	}
++
++	if (mr_sas_port->remote_identify.device_type == SAS_END_DEVICE) {
++		tgtdev = mpi3mr_get_tgtdev_by_addr(mrioc,
++		    mr_sas_port->remote_identify.sas_address,
++		    mr_sas_port->hba_port);
++
++		if (!tgtdev) {
++			ioc_err(mrioc, "failure at %s:%d/%s()!\n",
++			    __FILE__, __LINE__, __func__);
++			goto out_fail;
++		}
++		tgtdev->dev_spec.sas_sata_inf.pend_sas_rphy_add = 1;
++	}
++
++	if (!mr_sas_node->parent_dev) {
++		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		goto out_fail;
++	}
++
++	port = sas_port_alloc_num(mr_sas_node->parent_dev);
++	if ((sas_port_add(port))) {
++		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		goto out_fail;
++	}
++
++	list_for_each_entry(mr_sas_phy, &mr_sas_port->phy_list,
++	    port_siblings) {
++		if ((mrioc->logging_level & MPI3_DEBUG_TRANSPORT_INFO))
++			dev_info(&port->dev,
++			    "add: handle(0x%04x), sas_address(0x%016llx), phy(%d)\n",
++			    handle, (unsigned long long)
++			    mr_sas_port->remote_identify.sas_address,
++			    mr_sas_phy->phy_id);
++		sas_port_add_phy(port, mr_sas_phy->phy);
++		mr_sas_phy->phy_belongs_to_port = 1;
++		mr_sas_phy->hba_port = hba_port;
++	}
++
++	mr_sas_port->port = port;
++	if (mr_sas_port->remote_identify.device_type == SAS_END_DEVICE) {
++		rphy = sas_end_device_alloc(port);
++		tgtdev->dev_spec.sas_sata_inf.rphy = rphy;
++	} else {
++		rphy = sas_expander_alloc(port,
++		    mr_sas_port->remote_identify.device_type);
++	}
++	rphy->identify = mr_sas_port->remote_identify;
++
++	if (mrioc->current_event)
++		mrioc->current_event->pending_at_sml = 1;
++
++	if ((sas_rphy_add(rphy))) {
++		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++	}
++	if (mr_sas_port->remote_identify.device_type == SAS_END_DEVICE) {
++		tgtdev->dev_spec.sas_sata_inf.pend_sas_rphy_add = 0;
++		tgtdev->dev_spec.sas_sata_inf.sas_transport_attached = 1;
++		mpi3mr_tgtdev_put(tgtdev);
++	}
++
++	dev_info(&rphy->dev,
++	    "%s: added: handle(0x%04x), sas_address(0x%016llx)\n",
++	    __func__, handle, (unsigned long long)
++	    mr_sas_port->remote_identify.sas_address);
++
++	mr_sas_port->rphy = rphy;
++	spin_lock_irqsave(&mrioc->sas_node_lock, flags);
++	list_add_tail(&mr_sas_port->port_list, &mr_sas_node->sas_port_list);
++	spin_unlock_irqrestore(&mrioc->sas_node_lock, flags);
++
++	if (mrioc->current_event) {
++		mrioc->current_event->pending_at_sml = 0;
++		if (mrioc->current_event->discard)
++			mpi3mr_print_device_event_notice(mrioc, true);
++	}
++
++	return mr_sas_port;
++
++ out_fail:
++	list_for_each_entry_safe(mr_sas_phy, next, &mr_sas_port->phy_list,
++	    port_siblings)
++		list_del(&mr_sas_phy->port_siblings);
++	kfree(mr_sas_port);
++	return NULL;
 +}
 +
 +/**
-+ * mpi3mr_cfg_get_driver_pg1 - Read current Driver page1
++ * mpi3mr_sas_port_remove - remove port from the list
 + * @mrioc: Adapter instance reference
-+ * @driver_pg1: Pointer to return Driver page 1
-+ * @pg_sz: Size of the memory allocated to the page pointer
++ * @sas_address: SAS address of attached device
++ * @sas_address_parent: SAS address of parent expander or host
++ * @hba_port: HBA port entry
 + *
-+ * This is handler for config page read for the Driver page1.
-+ * This routine checks ioc_status to decide whether the page
-+ * read is success or not.
++ * Removing object and freeing associated memory from the
++ * sas_port_list.
 + *
-+ * Return: 0 on success, non-zero on failure.
++ * Return: None
 + */
-+int mpi3mr_cfg_get_driver_pg1(struct mpi3mr_ioc *mrioc,
-+	struct mpi3_driver_page1 *driver_pg1, u16 pg_sz)
++static void mpi3mr_sas_port_remove(struct mpi3mr_ioc *mrioc, u64 sas_address,
++	u64 sas_address_parent, struct mpi3mr_hba_port *hba_port)
 +{
-+	struct mpi3_config_page_header cfg_hdr;
-+	struct mpi3_config_request cfg_req;
-+	u16 ioc_status = 0;
++	int i;
++	unsigned long flags;
++	struct mpi3mr_sas_port *mr_sas_port, *next;
++	struct mpi3mr_sas_node *mr_sas_node;
++	u8 found = 0;
++	struct mpi3mr_sas_phy *mr_sas_phy, *next_phy;
++	struct mpi3mr_hba_port *srch_port, *hba_port_next = NULL;
 +
-+	memset(driver_pg1, 0, pg_sz);
-+	memset(&cfg_hdr, 0, sizeof(cfg_hdr));
-+	memset(&cfg_req, 0, sizeof(cfg_req));
++	if (!hba_port)
++		return;
 +
-+	cfg_req.function = MPI3_FUNCTION_CONFIG;
-+	cfg_req.action = MPI3_CONFIG_ACTION_PAGE_HEADER;
-+	cfg_req.page_type = MPI3_CONFIG_PAGETYPE_DRIVER;
-+	cfg_req.page_number = 1;
-+	cfg_req.page_address = 0;
++	spin_lock_irqsave(&mrioc->sas_node_lock, flags);
++	mr_sas_node = __mpi3mr_sas_node_find_by_sas_address(mrioc,
++	    sas_address_parent, hba_port);
++	if (!mr_sas_node) {
++		spin_unlock_irqrestore(&mrioc->sas_node_lock, flags);
++		return;
++	}
++	list_for_each_entry_safe(mr_sas_port, next, &mr_sas_node->sas_port_list,
++	    port_list) {
++		if (mr_sas_port->remote_identify.sas_address != sas_address)
++			continue;
++		if (mr_sas_port->hba_port != hba_port)
++			continue;
++		found = 1;
++		list_del(&mr_sas_port->port_list);
++		goto out;
++	}
 +
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, NULL,
-+	    MPI3MR_INTADMCMD_TIMEOUT, &ioc_status, &cfg_hdr, sizeof(cfg_hdr))) {
-+		ioc_err(mrioc, "driver page1 header read failed\n");
-+		goto out_failed;
++ out:
++	if (!found) {
++		spin_unlock_irqrestore(&mrioc->sas_node_lock, flags);
++		return;
 +	}
-+	if (ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+		ioc_err(mrioc, "driver page1 header read failed with ioc_status(0x%04x)\n",
-+		    ioc_status);
-+		goto out_failed;
-+	}
-+	cfg_req.action = MPI3_CONFIG_ACTION_READ_CURRENT;
 +
-+	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, &cfg_hdr,
-+	    MPI3MR_INTADMCMD_TIMEOUT, &ioc_status, driver_pg1, pg_sz)) {
-+		ioc_err(mrioc, "driver page1 read failed\n");
-+		goto out_failed;
++	if (mr_sas_node->host_node) {
++		list_for_each_entry_safe(srch_port, hba_port_next,
++		    &mrioc->hba_port_table_list, list) {
++			if (srch_port != hba_port)
++				continue;
++			ioc_info(mrioc,
++			    "removing hba_port entry: %p port: %d from hba_port list\n",
++			    srch_port, srch_port->port_id);
++			list_del(&hba_port->list);
++			kfree(hba_port);
++			break;
++		}
 +	}
-+	if (ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+		ioc_err(mrioc, "driver page1 read failed with ioc_status(0x%04x)\n",
-+		    ioc_status);
-+		goto out_failed;
++
++	for (i = 0; i < mr_sas_node->num_phys; i++) {
++		if (mr_sas_node->phy[i].remote_identify.sas_address ==
++		    sas_address)
++			memset(&mr_sas_node->phy[i].remote_identify, 0,
++			    sizeof(struct sas_identify));
 +	}
-+	return 0;
-+out_failed:
-+	return -1;
++
++	spin_unlock_irqrestore(&mrioc->sas_node_lock, flags);
++
++	if (mrioc->current_event)
++		mrioc->current_event->pending_at_sml = 1;
++
++	list_for_each_entry_safe(mr_sas_phy, next_phy,
++	    &mr_sas_port->phy_list, port_siblings) {
++		if ((mrioc->logging_level & MPI3_DEBUG_TRANSPORT_INFO))
++			dev_info(&mr_sas_port->port->dev,
++			    "remove: sas_address(0x%016llx), phy(%d)\n",
++			    (unsigned long long)
++			    mr_sas_port->remote_identify.sas_address,
++			    mr_sas_phy->phy_id);
++		mr_sas_phy->phy_belongs_to_port = 0;
++		if (!mrioc->stop_drv_processing)
++			sas_port_delete_phy(mr_sas_port->port,
++			    mr_sas_phy->phy);
++		list_del(&mr_sas_phy->port_siblings);
++	}
++	if (!mrioc->stop_drv_processing)
++		sas_port_delete(mr_sas_port->port);
++	ioc_info(mrioc, "%s: removed sas_address(0x%016llx)\n",
++	    __func__, (unsigned long long)sas_address);
++
++	if (mrioc->current_event) {
++		mrioc->current_event->pending_at_sml = 0;
++		if (mrioc->current_event->discard)
++			mpi3mr_print_device_event_notice(mrioc, false);
++	}
++
++	kfree(mr_sas_port);
 +}
 -- 
 2.27.0
 
 
---000000000000f3402205e569eed6
+--000000000000a536c205e569ef44
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -801,13 +735,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIJuPN+xS0WPHP3GidVD7
-eyMy9EonKeh1NJyYpNDnZWJPMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDgwNDEzMDAyNlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEILgD83h1fU4ThIS9or8v
+NxREW4vOjAT4o3OA+2qHDubCMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDgwNDEzMDAzOFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQDELTsTgzO6h0YTRKmH8of3Nw5bV7Abi3PBBA9Q
-yEs3AI/8XJzMDRntB62/AKpMj/4Yznc4WI6cFzvcy0S3NRz8wwEeEHbip/95JetZbRbXxQvDLKod
-v38BdwPcj9H6VoK7jR4PzzWjmgjivq2vIOcRGkNd/oyvKT5vdnWz9SgW1oMgy4vNVwu1BuS0YHlZ
-ZE37bnOIFq6EKnb5G68VVxskPyIaBsl+19/kqYkfnbxRIdhDckpV+ipyWk/BwBb4Le/VLlaNYhKD
-hpess+3piG3hEvDa3y6pVKpymdpEN8N5AcFrdCFttiBd3l1Eg2l4hqj9TwjaxJUanFpxv7AN1zVk
---000000000000f3402205e569eed6--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBCA/se7YsGmEuvtdwi2s5s2mp+9oG/3ZzYz6jF
+z4NxhN4vfVBF2qO5rQqjNc17ynyB42155LuuS2Z/8BExg6ncavdLc0DQYb0uBYlbgBDW54cbHx6X
+tEmqDfhL2bTEwuYAi8d3ZU1mnYTtEhXrrXTdM+snATaaeXFlYC/+5P+I6VOgykpbUg074bYvjB16
+RG1CWx5kJAwlHJ+WbG5D0RvcMn6xuy9WloWF/Fqk8MMRTVTUXHVhqc6GdWSb8feV2L5XmndK9RTf
+HAwZU4s6IkD/A3sazufzre4a/Qr/e9lM1JlhLFBr7ukB27D9S08fbWcx/Jg0wQOIpbwiTQR7GErB
+--000000000000a536c205e569ef44--
