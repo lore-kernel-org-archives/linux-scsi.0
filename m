@@ -2,663 +2,150 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84178C19F2D
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Aug 2022 13:01:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 103D6C3F6B0
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Aug 2022 13:01:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239586AbiHDNBI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 Aug 2022 09:01:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41998 "EHLO
+        id S239613AbiHDNBK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 Aug 2022 09:01:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42010 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239598AbiHDNA5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2022 09:00:57 -0400
-Received: from mail-pg1-x52a.google.com (mail-pg1-x52a.google.com [IPv6:2607:f8b0:4864:20::52a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 854386316
-        for <linux-scsi@vger.kernel.org>; Thu,  4 Aug 2022 06:00:55 -0700 (PDT)
-Received: by mail-pg1-x52a.google.com with SMTP id r186so17885511pgr.2
-        for <linux-scsi@vger.kernel.org>; Thu, 04 Aug 2022 06:00:55 -0700 (PDT)
+        with ESMTP id S239767AbiHDNA6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2022 09:00:58 -0400
+Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 019E163AE
+        for <linux-scsi@vger.kernel.org>; Thu,  4 Aug 2022 06:00:57 -0700 (PDT)
+Received: by mail-pf1-x42f.google.com with SMTP id f28so11045456pfk.1
+        for <linux-scsi@vger.kernel.org>; Thu, 04 Aug 2022 06:00:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc;
-        bh=XbhZfgZyckP/RC8YSCheuZMnrRY6TCgDlEU1L78qd2I=;
-        b=YY+kKye9kFOnd2ioLEOnYwe4v208CUYhLngxzT/r0mgN3Dd7Ei0FGiAk+vV7WtWL4U
-         OSYVcZSt/wf/3HP/wNnLLvn7aFFsXQwmGE66BXGPxo8Pbvu/MN9E+lVQYUUMC1JsiUoG
-         ScOFo08ch0DuG0xbwtd1oaAZccm971g8axbCE=
+        bh=5lr/V3IcGYlzcMMUX0zaLSFXZuNQJVAbCP0x+AtM52U=;
+        b=cLkB25K4Qg3eoev7jVEBzGsGBrUzL2ejk8h9ISpQBJQNZzQ/tWzyQwBFmiD6OR4Vsm
+         V2ISYFAJB9LL023vuPmvdxDXFKUTz4t4Ty77qCehBsFOdTiaKP1vkig4gmNRyz2nzhjW
+         QrOfXdpTpLXVoRAApJ6+hWiPHhHOwnAQOEUlM=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc;
-        bh=XbhZfgZyckP/RC8YSCheuZMnrRY6TCgDlEU1L78qd2I=;
-        b=pZlc/nNlR4+am2BmHfcw+uALKVw8icYF996dizWeSEwCy1IqzsbWyCvxsg3PqYYwhi
-         rwfUkmPq1TUN63NJdJUmwXbx/rFg7m3xtPo8JZYMFUpfqJz9SpE5/a3qDW70eYWsPC5L
-         YJRWoRu+PusOtyzw3BqJTucmZH7/x1XtyzBqWt6n+I6AK0qD2JefG2Jf4KmMwJZN7mt3
-         o+nfujAgDHcS+evARM9cBPnuPlOQYj1iLvvhEphNoSbuuSAPycwyIDkJDSkAF68IKsxh
-         /QtrsPTWMtmws0/RS6tpB9OsH9EdH4ZfhR4Y61lrY6ZzcL1K4LuvNiZlOlibu9Ja/EJ/
-         HwOQ==
-X-Gm-Message-State: ACgBeo2JjLo3BmVEGAymXCHoMGqJJh/b5cM/XJv5Oh4SuihcFoPo7oS9
-        4uFTbEBs+Ty+brxDmCYcm0vPLYNHFgYW8usf9fZO/GtiJu3r426j/ol7L5cklVWBiXSLR68M0nb
-        uVQO4EIcZma+GiCQa/a7Qz0IQKVicwdNxx0EiYkbU5yvRlND8AVAh2n7lKa9h+S1JELDo55RwSl
-        4d80s+bKW5
-X-Google-Smtp-Source: AA6agR5QCKjPP8UQQZPSkkkBlgEK4KFC+PbTg/DsA9A2Oc/DUM3UXwdwOqX59wE/Yl2uFN+TvaSn9Q==
-X-Received: by 2002:a05:6a00:2403:b0:52b:cd68:27f0 with SMTP id z3-20020a056a00240300b0052bcd6827f0mr1799362pfh.11.1659618053795;
-        Thu, 04 Aug 2022 06:00:53 -0700 (PDT)
+        bh=5lr/V3IcGYlzcMMUX0zaLSFXZuNQJVAbCP0x+AtM52U=;
+        b=yDW6mVrIh9lSvhG1HRiIfrlejDs8U27pGXwBi5PWeXocq315ob0R7En51lQ6c1RYHw
+         JGBbRXLzeSceOKW7uezUQ1P1Sc7wpGyCPFCA3IK6vc8nmpKJIExBU1v03dLKUBtTKaTD
+         SAjHBPna40xgIOzA7mJpY/5aoqrGe5xSbByy7+y7jSZVvW8pNvszNApjDjArlqFl4wuj
+         F1bhtrdSZDZh41GjXoAmx9M13TjAJkrGmNgytP1LStLk1JJgDf5SMY6DPjg5QVTZDlSL
+         Y/x67GL2pS2Zo/XTTKiKVUCOohaTUYaiJlhBA4TNKHs/4JyCIwKPpAal4zRvH1wxRDxU
+         S9uQ==
+X-Gm-Message-State: ACgBeo2FylbTfnyedRj8boLfCR03j1cz2y7WJuQM/YphHKGHpWcPFqOG
+        6ow0FxjKsaIHsr58CeYADxgzCAQABkGkaMvMGsNmIq1Njq5lXNx31Unu1jrDeILGMAGRddvS9XU
+        6BG4mlN92GsDJMhkpHTvTDaLPKKOoEgBj1JBwLTcjHLfJYlYppD2cpsGgrHUguTfYS0aodmhX8q
+        szZ4daqOmq
+X-Google-Smtp-Source: AA6agR4l0K515mxZKhV7WRNpskTFLEg5X1lN3RAeyoiq3kbcZq5Dpk4Ka7bJ0Q82W3MQV7x5rO/hAg==
+X-Received: by 2002:a05:6a00:2484:b0:52b:2be0:2191 with SMTP id c4-20020a056a00248400b0052b2be02191mr1645318pfv.51.1659618056090;
+        Thu, 04 Aug 2022 06:00:56 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id w15-20020aa7954f000000b0052e2a1edab8sm934645pfq.24.2022.08.04.06.00.51
+        by smtp.gmail.com with ESMTPSA id w15-20020aa7954f000000b0052e2a1edab8sm934645pfq.24.2022.08.04.06.00.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 Aug 2022 06:00:53 -0700 (PDT)
+        Thu, 04 Aug 2022 06:00:55 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
         Himanshu Madhani <himanshu.madhani@oracle.com>
-Subject: [PATCH v2 14/15] mpi3mr: Refresh sas ports during soft reset
-Date:   Thu,  4 Aug 2022 18:42:25 +0530
-Message-Id: <20220804131226.16653-15-sreekanth.reddy@broadcom.com>
+Subject: [PATCH v2 15/15] mpi3mr: Block IOs while refreshing target dev objects
+Date:   Thu,  4 Aug 2022 18:42:26 +0530
+Message-Id: <20220804131226.16653-16-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20220804131226.16653-1-sreekanth.reddy@broadcom.com>
 References: <20220804131226.16653-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000a26d8005e569f03b"
+        boundary="000000000000bb5bb005e569f087"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000a26d8005e569f03b
+--000000000000bb5bb005e569f087
 Content-Transfer-Encoding: 8bit
 
-- Update the Host's sas ports if there is change in port id
- or phys. If the port id is changed then the driver updates
- the same. If some phys are enabled/disabled during reset then
- driver updates the same in STL.
-
-- Check for the responding expander devices and update the
- device handle if it got changed. Register the expander with
- STL if it got added during reset and unregister the
- expander device if it got removed during reset.
+Block the IOs on the target devices until corresponding
+target device's target dev objects are refreshed as part
+of post controller reset operation.
 
 Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr.h           |  11 +
- drivers/scsi/mpi3mr/mpi3mr_fw.c        |  10 +-
- drivers/scsi/mpi3mr/mpi3mr_os.c        |  50 ++++
- drivers/scsi/mpi3mr/mpi3mr_transport.c | 350 +++++++++++++++++++++++++
- 4 files changed, 420 insertions(+), 1 deletion(-)
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 25 +++++++++++++++----------
+ 1 file changed, 15 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index d203167..0f47b45 100644
---- a/drivers/scsi/mpi3mr/mpi3mr.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -482,6 +482,9 @@ struct mpi3mr_hba_port {
-  * struct mpi3mr_sas_port - Internal SAS port information
-  * @port_list: List of ports belonging to a SAS node
-  * @num_phys: Number of phys associated with port
-+ * @marked_responding: used while refresing the sas ports
-+ * @lowest_phy: lowest phy ID of current sas port
-+ * @phy_mask: phy_mask of current sas port
-  * @hba_port: HBA port entry
-  * @remote_identify: Attached device identification
-  * @rphy: SAS transport layer rphy object
-@@ -491,6 +494,9 @@ struct mpi3mr_hba_port {
- struct mpi3mr_sas_port {
- 	struct list_head port_list;
- 	u8 num_phys;
-+	u8 marked_responding;
-+	int lowest_phy;
-+	u32 phy_mask;
- 	struct mpi3mr_hba_port *hba_port;
- 	struct sas_identify remote_identify;
- 	struct sas_rphy *rphy;
-@@ -939,6 +945,7 @@ struct scmd_priv {
-  * @scan_started: Async scan started
-  * @scan_failed: Asycn scan failed
-  * @stop_drv_processing: Stop all command processing
-+ * @device_refresh_on: Don't process the events until devices are refreshed
-  * @max_host_ios: Maximum host I/O count
-  * @chain_buf_count: Chain buffer count
-  * @chain_buf_pool: Chain buffer pool
-@@ -1107,6 +1114,7 @@ struct mpi3mr_ioc {
- 	u8 scan_started;
- 	u16 scan_failed;
- 	u8 stop_drv_processing;
-+	u8 device_refresh_on;
- 
- 	u16 max_host_ios;
- 	spinlock_t tgtdev_lock;
-@@ -1378,4 +1386,7 @@ struct mpi3mr_tgt_dev *__mpi3mr_get_tgtdev_by_addr_and_rphy(
- 	struct mpi3mr_ioc *mrioc, u64 sas_address, struct sas_rphy *rphy);
- void mpi3mr_print_device_event_notice(struct mpi3mr_ioc *mrioc,
- 	bool device_add);
-+void mpi3mr_refresh_sas_ports(struct mpi3mr_ioc *mrioc);
-+void mpi3mr_refresh_expanders(struct mpi3mr_ioc *mrioc);
-+void mpi3mr_add_event_wait_for_device_refresh(struct mpi3mr_ioc *mrioc);
- #endif /*MPI3MR_H_INCLUDED*/
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 866ad22..cc700e2 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -3974,6 +3974,11 @@ retry_init:
- 		goto out_failed;
- 	}
- 
-+	if (!is_resume) {
-+		mrioc->device_refresh_on = 1;
-+		mpi3mr_add_event_wait_for_device_refresh(mrioc);
-+	}
-+
- 	ioc_info(mrioc, "sending port enable\n");
- 	retval = mpi3mr_issue_port_enable(mrioc, 0);
- 	if (retval) {
-@@ -4730,6 +4735,7 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
- 	ioc_info(mrioc, "controller reset is triggered by %s\n",
- 	    mpi3mr_reset_rc_name(reset_reason));
- 
-+	mrioc->device_refresh_on = 0;
- 	mrioc->reset_in_progress = 1;
- 	mrioc->stop_bsgs = 1;
- 	mrioc->prev_reset_result = -1;
-@@ -4811,7 +4817,8 @@ out:
- 			mpi3mr_pel_wait_post(mrioc, &mrioc->pel_cmds);
- 		}
- 
--		mpi3mr_rfresh_tgtdevs(mrioc);
-+		mrioc->device_refresh_on = 0;
-+
- 		mrioc->ts_update_counter = 0;
- 		spin_lock_irqsave(&mrioc->watchdog_lock, flags);
- 		if (mrioc->watchdog_work_q)
-@@ -4825,6 +4832,7 @@ out:
- 	} else {
- 		mpi3mr_issue_reset(mrioc,
- 		    MPI3_SYSIF_HOST_DIAG_RESET_ACTION_DIAG_FAULT, reset_reason);
-+		mrioc->device_refresh_on = 0;
- 		mrioc->unrecoverable = 1;
- 		mrioc->reset_in_progress = 0;
- 		retval = -1;
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 71f1cef..4c8ef9f 100644
+index 4c8ef9f..e7c461e 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -40,6 +40,8 @@ static void mpi3mr_send_event_ack(struct mpi3mr_ioc *mrioc, u8 event,
- 
- #define MPI3MR_DRIVER_EVENT_TG_QD_REDUCTION	(0xFFFF)
- 
-+#define MPI3_EVENT_WAIT_FOR_DEVICES_TO_REFRESH	(0xFFFE)
-+
- /**
-  * mpi3mr_host_tag_for_scmd - Get host tag for a scmd
-  * @mrioc: Adapter instance reference
-@@ -1114,6 +1116,9 @@ static void mpi3mr_update_tgtdev(struct mpi3mr_ioc *mrioc,
- 		    MPI3_DEVICE0_FLAGS_ATT_METHOD_VIRTUAL)) ||
- 		    (tgtdev->parent_handle == 0xFFFF))
- 			tgtdev->non_stl = 1;
-+		if (tgtdev->dev_spec.sas_sata_inf.hba_port)
-+			tgtdev->dev_spec.sas_sata_inf.hba_port->port_id =
-+			    dev_pg0->io_unit_port;
- 		break;
- 	}
- 	case MPI3_DEVICE_DEVFORM_PCIE:
-@@ -1887,6 +1892,22 @@ static void mpi3mr_fwevt_bh(struct mpi3mr_ioc *mrioc,
+@@ -424,6 +424,8 @@ void mpi3mr_invalidate_devhandles(struct mpi3mr_ioc *mrioc)
+ 			tgt_priv->io_throttle_enabled = 0;
+ 			tgt_priv->io_divert = 0;
+ 			tgt_priv->throttle_group = NULL;
++			if (tgtdev->host_exposed)
++				atomic_set(&tgt_priv->block_io, 1);
  		}
- 		break;
  	}
-+	case MPI3_EVENT_WAIT_FOR_DEVICES_TO_REFRESH:
-+	{
-+		while (mrioc->device_refresh_on)
-+			msleep(500);
-+
-+		dprint_event_bh(mrioc,
-+		    "scan for non responding and newly added devices after soft reset started\n");
-+		if (mrioc->sas_transport_enabled) {
-+			mpi3mr_refresh_sas_ports(mrioc);
-+			mpi3mr_refresh_expanders(mrioc);
+ }
+@@ -835,6 +837,7 @@ void mpi3mr_remove_tgtdev_from_host(struct mpi3mr_ioc *mrioc,
+ 	    __func__, tgtdev->dev_handle, (unsigned long long)tgtdev->wwid);
+ 	if (tgtdev->starget && tgtdev->starget->hostdata) {
+ 		tgt_priv = tgtdev->starget->hostdata;
++		atomic_set(&tgt_priv->block_io, 0);
+ 		tgt_priv->dev_handle = MPI3MR_INVALID_DEV_HANDLE;
+ 	}
+ 
+@@ -1077,6 +1080,8 @@ static void mpi3mr_update_tgtdev(struct mpi3mr_ioc *mrioc,
+ 		scsi_tgt_priv_data->dev_type = tgtdev->dev_type;
+ 		scsi_tgt_priv_data->io_throttle_enabled =
+ 		    tgtdev->io_throttle_enabled;
++		if (is_added == true)
++			atomic_set(&scsi_tgt_priv_data->block_io, 0);
+ 	}
+ 
+ 	switch (dev_pg0->access_status) {
+@@ -4577,6 +4582,16 @@ static int mpi3mr_qcmd(struct Scsi_Host *shost,
+ 
+ 	stgt_priv_data = sdev_priv_data->tgt_priv_data;
+ 
++	if (atomic_read(&stgt_priv_data->block_io)) {
++		if (mrioc->stop_drv_processing) {
++			scmd->result = DID_NO_CONNECT << 16;
++			scsi_done(scmd);
++			goto out;
 +		}
-+		mpi3mr_rfresh_tgtdevs(mrioc);
-+		ioc_info(mrioc,
-+		    "scan for non responding and newly added devices after soft reset completed\n");
-+		break;
-+	}
- 	default:
- 		break;
- 	}
-@@ -2656,6 +2677,35 @@ static void mpi3mr_cablemgmt_evt_th(struct mpi3mr_ioc *mrioc,
- 	}
- }
- 
-+/**
-+ * mpi3mr_add_event_wait_for_device_refresh - Add Wait for Device Refresh Event
-+ * @mrioc: Adapter instance reference
-+ *
-+ * Add driver specific event to make sure that the driver won't process the
-+ * events until all the devices are refreshed during soft reset.
-+ *
-+ * Return: Nothing
-+ */
-+void mpi3mr_add_event_wait_for_device_refresh(struct mpi3mr_ioc *mrioc)
-+{
-+	struct mpi3mr_fwevt *fwevt = NULL;
-+
-+	fwevt = mpi3mr_alloc_fwevt(0);
-+	if (!fwevt) {
-+		dprint_event_th(mrioc,
-+		    "failed to schedule bottom half handler for event(0x%02x)\n",
-+		    MPI3_EVENT_WAIT_FOR_DEVICES_TO_REFRESH);
-+		return;
-+	}
-+	fwevt->mrioc = mrioc;
-+	fwevt->event_id = MPI3_EVENT_WAIT_FOR_DEVICES_TO_REFRESH;
-+	fwevt->send_ack = 0;
-+	fwevt->process_evt = 1;
-+	fwevt->evt_ctx = 0;
-+	fwevt->event_data_size = 0;
-+	mpi3mr_fwevt_add_to_list(mrioc, fwevt);
-+}
-+
- /**
-  * mpi3mr_os_handle_events - Firmware event handler
-  * @mrioc: Adapter instance reference
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr/mpi3mr_transport.c
-index b7fcfb3..c27e441 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
-@@ -9,6 +9,9 @@
- 
- #include "mpi3mr.h"
- 
-+static void mpi3mr_expander_node_remove(struct mpi3mr_ioc *mrioc,
-+	struct mpi3mr_sas_node *sas_expander);
-+
- /**
-  * mpi3mr_post_transport_req - Issue transport requests and wait
-  * @mrioc: Adapter instance reference
-@@ -596,6 +599,9 @@ static void mpi3mr_delete_sas_phy(struct mpi3mr_ioc *mrioc,
- 
- 	list_del(&mr_sas_phy->port_siblings);
- 	mr_sas_port->num_phys--;
-+	mr_sas_port->phy_mask &= ~(1 << mr_sas_phy->phy_id);
-+	if (mr_sas_port->lowest_phy == mr_sas_phy->phy_id)
-+		mr_sas_port->lowest_phy = ffs(mr_sas_port->phy_mask) - 1;
- 	sas_port_delete_phy(mr_sas_port->port, mr_sas_phy->phy);
- 	mr_sas_phy->phy_belongs_to_port = 0;
- }
-@@ -620,6 +626,9 @@ static void mpi3mr_add_sas_phy(struct mpi3mr_ioc *mrioc,
- 
- 	list_add_tail(&mr_sas_phy->port_siblings, &mr_sas_port->phy_list);
- 	mr_sas_port->num_phys++;
-+	mr_sas_port->phy_mask |= (1 << mr_sas_phy->phy_id);
-+	if (mr_sas_phy->phy_id < mr_sas_port->lowest_phy)
-+		mr_sas_port->lowest_phy = ffs(mr_sas_port->phy_mask) - 1;
- 	sas_port_add_phy(mr_sas_port->port, mr_sas_phy->phy);
- 	mr_sas_phy->phy_belongs_to_port = 1;
- }
-@@ -1351,6 +1360,7 @@ static struct mpi3mr_sas_port *mpi3mr_sas_port_add(struct mpi3mr_ioc *mrioc,
- 		list_add_tail(&mr_sas_node->phy[i].port_siblings,
- 		    &mr_sas_port->phy_list);
- 		mr_sas_port->num_phys++;
-+		mr_sas_port->phy_mask |= (1 << i);
- 	}
- 
- 	if (!mr_sas_port->num_phys) {
-@@ -1359,6 +1369,8 @@ static struct mpi3mr_sas_port *mpi3mr_sas_port_add(struct mpi3mr_ioc *mrioc,
- 		goto out_fail;
- 	}
- 
-+	mr_sas_port->lowest_phy = ffs(mr_sas_port->phy_mask) - 1;
-+
- 	if (mr_sas_port->remote_identify.device_type == SAS_END_DEVICE) {
- 		tgtdev = mpi3mr_get_tgtdev_by_addr(mrioc,
- 		    mr_sas_port->remote_identify.sas_address,
-@@ -1560,6 +1572,344 @@ static void mpi3mr_sas_port_remove(struct mpi3mr_ioc *mrioc, u64 sas_address,
- 	kfree(mr_sas_port);
- }
- 
-+/**
-+ * struct host_port - host port details
-+ * @sas_address: SAS Address of the attached device
-+ * @phy_mask: phy mask of host port
-+ * @handle: Device Handle of attached device
-+ * @iounit_port_id: port ID
-+ * @used: host port is already matched with sas port from sas_port_list
-+ * @lowest_phy: lowest phy ID of host port
-+ */
-+struct host_port {
-+	u64	sas_address;
-+	u32	phy_mask;
-+	u16	handle;
-+	u8	iounit_port_id;
-+	u8	used;
-+	u8	lowest_phy;
-+};
-+
-+/**
-+ * mpi3mr_update_mr_sas_port - update sas port objects during reset
-+ * @mrioc: Adapter instance reference
-+ * @h_port: host_port object
-+ * @mr_sas_port: sas_port objects which needs to be updated
-+ *
-+ * Update the port ID of sas port object. Also add the phys if new phys got
-+ * added to current sas port and remove the phys if some phys are moved
-+ * out of the current sas port.
-+ *
-+ * Return: Nothing.
-+ */
-+static void
-+mpi3mr_update_mr_sas_port(struct mpi3mr_ioc *mrioc, struct host_port *h_port,
-+	struct mpi3mr_sas_port *mr_sas_port)
-+{
-+	struct mpi3mr_sas_phy *mr_sas_phy;
-+	u32 phy_mask_xor, phys_to_be_added, phys_to_be_removed;
-+	int i;
-+
-+	h_port->used = 1;
-+	mr_sas_port->marked_responding = 1;
-+
-+	dev_info(&mr_sas_port->port->dev,
-+	    "sas_address(0x%016llx), old: port_id %d phy_mask 0x%x, new: port_id %d phy_mask:0x%x\n",
-+	    mr_sas_port->remote_identify.sas_address,
-+	    mr_sas_port->hba_port->port_id, mr_sas_port->phy_mask,
-+	    h_port->iounit_port_id, h_port->phy_mask);
-+
-+	mr_sas_port->hba_port->port_id = h_port->iounit_port_id;
-+	mr_sas_port->hba_port->flags &= ~MPI3MR_HBA_PORT_FLAG_DIRTY;
-+
-+	/* Get the newly added phys bit map & removed phys bit map */
-+	phy_mask_xor = mr_sas_port->phy_mask ^ h_port->phy_mask;
-+	phys_to_be_added = h_port->phy_mask & phy_mask_xor;
-+	phys_to_be_removed = mr_sas_port->phy_mask & phy_mask_xor;
-+
-+	/*
-+	 * Register these new phys to current mr_sas_port's port.
-+	 * if these phys are previously registered with another port
-+	 * then delete these phys from that port first.
-+	 */
-+	for_each_set_bit(i, (ulong *) &phys_to_be_added, BITS_PER_TYPE(u32)) {
-+		mr_sas_phy = &mrioc->sas_hba.phy[i];
-+		if (mr_sas_phy->phy_belongs_to_port)
-+			mpi3mr_del_phy_from_an_existing_port(mrioc,
-+			    &mrioc->sas_hba, mr_sas_phy);
-+		mpi3mr_add_phy_to_an_existing_port(mrioc,
-+		    &mrioc->sas_hba, mr_sas_phy,
-+		    mr_sas_port->remote_identify.sas_address,
-+		    mr_sas_port->hba_port);
-+	}
-+
-+	/* Delete the phys which are not part of current mr_sas_port's port. */
-+	for_each_set_bit(i, (ulong *) &phys_to_be_removed, BITS_PER_TYPE(u32)) {
-+		mr_sas_phy = &mrioc->sas_hba.phy[i];
-+		if (mr_sas_phy->phy_belongs_to_port)
-+			mpi3mr_del_phy_from_an_existing_port(mrioc,
-+			    &mrioc->sas_hba, mr_sas_phy);
-+	}
-+}
-+
-+/**
-+ * mpi3mr_refresh_sas_ports - update host's sas ports during reset
-+ * @mrioc: Adapter instance reference
-+ *
-+ * Update the host's sas ports during reset by checking whether
-+ * sas ports are still intact or not. Add/remove phys if any hba
-+ * phys are (moved in)/(moved out) of sas port. Also update
-+ * io_unit_port if it got changed during reset.
-+ *
-+ * Return: Nothing.
-+ */
-+void
-+mpi3mr_refresh_sas_ports(struct mpi3mr_ioc *mrioc)
-+{
-+	struct host_port h_port[32];
-+	int i, j, found, host_port_count = 0, port_idx;
-+	u16 sz, attached_handle, ioc_status;
-+	struct mpi3_sas_io_unit_page0 *sas_io_unit_pg0 = NULL;
-+	struct mpi3_device_page0 dev_pg0;
-+	struct mpi3_device0_sas_sata_format *sasinf;
-+	struct mpi3mr_sas_port *mr_sas_port;
-+
-+	sz = offsetof(struct mpi3_sas_io_unit_page0, phy_data) +
-+		(mrioc->sas_hba.num_phys *
-+		 sizeof(struct mpi3_sas_io_unit0_phy_data));
-+	sas_io_unit_pg0 = kzalloc(sz, GFP_KERNEL);
-+	if (!sas_io_unit_pg0)
-+		return;
-+	if (mpi3mr_cfg_get_sas_io_unit_pg0(mrioc, sas_io_unit_pg0, sz)) {
-+		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
-+		    __FILE__, __LINE__, __func__);
++		retval = SCSI_MLQUEUE_DEVICE_BUSY;
 +		goto out;
 +	}
 +
-+	/* Create a new expander port table */
-+	for (i = 0; i < mrioc->sas_hba.num_phys; i++) {
-+		attached_handle = le16_to_cpu(
-+		    sas_io_unit_pg0->phy_data[i].attached_dev_handle);
-+		if (!attached_handle)
-+			continue;
-+		found = 0;
-+		for (j = 0; j < host_port_count; j++) {
-+			if (h_port[j].handle == attached_handle) {
-+				h_port[j].phy_mask |= (1 << i);
-+				found = 1;
-+				break;
-+			}
-+		}
-+		if (found)
-+			continue;
-+		if ((mpi3mr_cfg_get_dev_pg0(mrioc, &ioc_status, &dev_pg0,
-+		    sizeof(dev_pg0), MPI3_DEVICE_PGAD_FORM_HANDLE,
-+		    attached_handle))) {
-+			dprint_reset(mrioc,
-+			    "failed to read dev_pg0 for handle(0x%04x) at %s:%d/%s()!\n",
-+			    attached_handle, __FILE__, __LINE__, __func__);
-+			continue;
-+		}
-+		if (ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+			dprint_reset(mrioc,
-+			    "ioc_status(0x%x) while reading dev_pg0 for handle(0x%04x) at %s:%d/%s()!\n",
-+			    ioc_status, attached_handle,
-+			    __FILE__, __LINE__, __func__);
-+			continue;
-+		}
-+		sasinf = &dev_pg0.device_specific.sas_sata_format;
-+
-+		port_idx = host_port_count;
-+		h_port[port_idx].sas_address = le64_to_cpu(sasinf->sas_address);
-+		h_port[port_idx].handle = attached_handle;
-+		h_port[port_idx].phy_mask = (1 << i);
-+		h_port[port_idx].iounit_port_id = sas_io_unit_pg0->phy_data[i].io_unit_port;
-+		h_port[port_idx].lowest_phy = sasinf->phy_num;
-+		h_port[port_idx].used = 0;
-+		host_port_count++;
-+	}
-+
-+	if (!host_port_count)
-+		goto out;
-+
-+	if (mrioc->logging_level & MPI3_DEBUG_RESET) {
-+		ioc_info(mrioc, "Host port details before reset\n");
-+		list_for_each_entry(mr_sas_port, &mrioc->sas_hba.sas_port_list,
-+		    port_list) {
-+			ioc_info(mrioc,
-+			    "port_id:%d, sas_address:(0x%016llx), phy_mask:(0x%x), lowest phy id:%d\n",
-+			    mr_sas_port->hba_port->port_id,
-+			    mr_sas_port->remote_identify.sas_address,
-+			    mr_sas_port->phy_mask, mr_sas_port->lowest_phy);
-+		}
-+		mr_sas_port = NULL;
-+		ioc_info(mrioc, "Host port details after reset\n");
-+		for (i = 0; i < host_port_count; i++) {
-+			ioc_info(mrioc,
-+			    "port_id:%d, sas_address:(0x%016llx), phy_mask:(0x%x), lowest phy id:%d\n",
-+			    h_port[i].iounit_port_id, h_port[i].sas_address,
-+			    h_port[i].phy_mask, h_port[i].lowest_phy);
-+		}
-+	}
-+
-+	/* mark all host sas port entries as dirty */
-+	list_for_each_entry(mr_sas_port, &mrioc->sas_hba.sas_port_list,
-+	    port_list) {
-+		mr_sas_port->marked_responding = 0;
-+		mr_sas_port->hba_port->flags |= MPI3MR_HBA_PORT_FLAG_DIRTY;
-+	}
-+
-+	/* First check for matching lowest phy */
-+	for (i = 0; i < host_port_count; i++) {
-+		mr_sas_port = NULL;
-+		list_for_each_entry(mr_sas_port, &mrioc->sas_hba.sas_port_list,
-+		    port_list) {
-+			if (mr_sas_port->marked_responding)
-+				continue;
-+			if (h_port[i].sas_address != mr_sas_port->remote_identify.sas_address)
-+				continue;
-+			if (h_port[i].lowest_phy == mr_sas_port->lowest_phy) {
-+				mpi3mr_update_mr_sas_port(mrioc, &h_port[i], mr_sas_port);
-+				break;
-+			}
-+		}
-+	}
-+
-+	/* In case if lowest phy is got enabled or disabled during reset */
-+	for (i = 0; i < host_port_count; i++) {
-+		if (h_port[i].used)
-+			continue;
-+		mr_sas_port = NULL;
-+		list_for_each_entry(mr_sas_port, &mrioc->sas_hba.sas_port_list,
-+		    port_list) {
-+			if (mr_sas_port->marked_responding)
-+				continue;
-+			if (h_port[i].sas_address != mr_sas_port->remote_identify.sas_address)
-+				continue;
-+			if (h_port[i].phy_mask & mr_sas_port->phy_mask) {
-+				mpi3mr_update_mr_sas_port(mrioc, &h_port[i], mr_sas_port);
-+				break;
-+			}
-+		}
-+	}
-+
-+	/* In case if expander cable is removed & connected to another HBA port during reset */
-+	for (i = 0; i < host_port_count; i++) {
-+		if (h_port[i].used)
-+			continue;
-+		mr_sas_port = NULL;
-+		list_for_each_entry(mr_sas_port, &mrioc->sas_hba.sas_port_list,
-+		    port_list) {
-+			if (mr_sas_port->marked_responding)
-+				continue;
-+			if (h_port[i].sas_address != mr_sas_port->remote_identify.sas_address)
-+				continue;
-+			mpi3mr_update_mr_sas_port(mrioc, &h_port[i], mr_sas_port);
-+			break;
-+		}
-+	}
-+out:
-+	kfree(sas_io_unit_pg0);
-+}
-+
-+/**
-+ * mpi3mr_refresh_expanders - Refresh expander device exposure
-+ * @mrioc: Adapter instance reference
-+ *
-+ * This is executed post controller reset to identify any
-+ * missing expander devices during reset and remove from the upper layers
-+ * or expose any newly detected expander device to the upper layers.
-+ *
-+ * Return: Nothing.
-+ */
-+void
-+mpi3mr_refresh_expanders(struct mpi3mr_ioc *mrioc)
-+{
-+	struct mpi3mr_sas_node *sas_expander, *sas_expander_next;
-+	struct mpi3_sas_expander_page0 expander_pg0;
-+	u16 ioc_status, handle;
-+	u64 sas_address;
-+	int i;
-+	unsigned long flags;
-+	struct mpi3mr_hba_port *hba_port;
-+
-+	spin_lock_irqsave(&mrioc->sas_node_lock, flags);
-+	list_for_each_entry(sas_expander, &mrioc->sas_expander_list, list) {
-+		sas_expander->non_responding = 1;
-+	}
-+	spin_unlock_irqrestore(&mrioc->sas_node_lock, flags);
-+
-+	sas_expander = NULL;
-+
-+	handle = 0xffff;
-+
-+	/* Search for responding expander devices and add them if they are newly got added */
-+	while (true) {
-+		if ((mpi3mr_cfg_get_sas_exp_pg0(mrioc, &ioc_status, &expander_pg0,
-+		    sizeof(struct mpi3_sas_expander_page0),
-+		    MPI3_SAS_EXPAND_PGAD_FORM_GET_NEXT_HANDLE, handle))) {
-+			dprint_reset(mrioc,
-+			    "failed to read exp pg0 for handle(0x%04x) at %s:%d/%s()!\n",
-+			    handle, __FILE__, __LINE__, __func__);
-+			break;
-+		}
-+
-+		if (ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-+			dprint_reset(mrioc,
-+			   "ioc_status(0x%x) while reading exp pg0 for handle:(0x%04x), %s:%d/%s()!\n",
-+			   ioc_status, handle, __FILE__, __LINE__, __func__);
-+			break;
-+		}
-+
-+		handle = le16_to_cpu(expander_pg0.dev_handle);
-+		sas_address = le64_to_cpu(expander_pg0.sas_address);
-+		hba_port = mpi3mr_get_hba_port_by_id(mrioc, expander_pg0.io_unit_port);
-+
-+		if (!hba_port) {
-+			mpi3mr_sas_host_refresh(mrioc);
-+			mpi3mr_expander_add(mrioc, handle);
-+			continue;
-+		}
-+
-+		spin_lock_irqsave(&mrioc->sas_node_lock, flags);
-+		sas_expander =
-+		    mpi3mr_expander_find_by_sas_address(mrioc,
-+		    sas_address, hba_port);
-+		spin_unlock_irqrestore(&mrioc->sas_node_lock, flags);
-+
-+		if (!sas_expander) {
-+			mpi3mr_sas_host_refresh(mrioc);
-+			mpi3mr_expander_add(mrioc, handle);
-+			continue;
-+		}
-+
-+		sas_expander->non_responding = 0;
-+		if (sas_expander->handle == handle)
-+			continue;
-+
-+		sas_expander->handle = handle;
-+		for (i = 0 ; i < sas_expander->num_phys ; i++)
-+			sas_expander->phy[i].handle = handle;
-+	}
-+
-+	/*
-+	 * Delete non responding expander devices and the corresponding
-+	 * hba_port if the non responding expander device's parent device
-+	 * is a host node.
-+	 */
-+	sas_expander = NULL;
-+	spin_lock_irqsave(&mrioc->sas_node_lock, flags);
-+	list_for_each_entry_safe_reverse(sas_expander, sas_expander_next,
-+	    &mrioc->sas_expander_list, list) {
-+		if (sas_expander->non_responding) {
-+			spin_unlock_irqrestore(&mrioc->sas_node_lock, flags);
-+			mpi3mr_expander_node_remove(mrioc, sas_expander);
-+			spin_lock_irqsave(&mrioc->sas_node_lock, flags);
-+		}
-+	}
-+	spin_unlock_irqrestore(&mrioc->sas_node_lock, flags);
-+}
-+
- /**
-  * mpi3mr_expander_node_add - insert an expander to the list.
-  * @mrioc: Adapter instance reference
+ 	dev_handle = stgt_priv_data->dev_handle;
+ 	if (dev_handle == MPI3MR_INVALID_DEV_HANDLE) {
+ 		scmd->result = DID_NO_CONNECT << 16;
+@@ -4589,16 +4604,6 @@ static int mpi3mr_qcmd(struct Scsi_Host *shost,
+ 		goto out;
+ 	}
+ 
+-	if (atomic_read(&stgt_priv_data->block_io)) {
+-		if (mrioc->stop_drv_processing) {
+-			scmd->result = DID_NO_CONNECT << 16;
+-			scsi_done(scmd);
+-			goto out;
+-		}
+-		retval = SCSI_MLQUEUE_DEVICE_BUSY;
+-		goto out;
+-	}
+-
+ 	if (stgt_priv_data->dev_type == MPI3_DEVICE_DEVFORM_PCIE)
+ 		is_pcie_dev = 1;
+ 	if ((scmd->cmnd[0] == UNMAP) && is_pcie_dev &&
 -- 
 2.27.0
 
 
---000000000000a26d8005e569f03b
+--000000000000bb5bb005e569f087
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -729,13 +216,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIOhixfdhP+JqtGn+d763
-9uhG6bkEW+03YehKOcI3mwGKMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDgwNDEzMDA1NVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIOfdATp8+aOMy2reBnFn
+1fUxbeEmrpbKRtgEQveSUYpPMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDgwNDEzMDA1NlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQC/dICcrHoDxOi7ZZT9eVked9aGH1fGrmMGNBik
-cSR87Mlw2ezUfu+MGAXQM1pH1yW/u6D4LravEm9KCeE8/BDhoPeFm6rLv+U0Xk2TvfZj7HIR15yz
-q2om+s2uc+/lkNsnxFE78ad6+DWs10e+sk6v0INtEvSJE4HPOz1DnpAbD5E1DFmqfBQ7OXzbVcrl
-pDzZp6gHyRyB6dj5ZMOtkeaMfUVyl4sXNnx8zXtH6ymAyc95y5PlJThkzem6Qz17Fq+LE3PTNG6m
-fuwc0Z1yPlhv7qVRp45HPwU18wIMyX6yiN2JHwikpPaaI2cbqmSYZ9f6wE0YpUBXQ5eVJPLQ2U7D
---000000000000a26d8005e569f03b--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCBMZFr8TFdncxeh7JS5QMSce2AfGAhX8OYzRun
+mpBAxD5Qyo/Divz0kNhuHj6pOmaruJJR1CyDc9kmfS9Ob4bFgeU8/vSg1JuzSS/6r8oSpU1Ous57
+fIZhgaYqDMEpCDMBhdHb3TJEo7Tu0TuFq+wdFsxSrmDwn+3m+2MuCSeIu1UxGG8kOh7qM89LmcSi
+yKwA7z0s/iAE3IKWX5/K4AAwuIvrVHAJW8Cp9YICRaiJZM5JCR6bK5LThSUBqjx4l7OZ0mpiVt3x
+LpLCyIrkrosrzM/hxdB0T6oM9oaLFD+ads6OIZXdIDLRIYuIVxhS3H6TUwSRZtbUwHfCY/AcmXVD
+--000000000000bb5bb005e569f087--
