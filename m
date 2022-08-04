@@ -2,86 +2,135 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C6B7C19F29
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Aug 2022 01:50:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F1C3C19F29
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Aug 2022 02:50:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238944AbiHDBu5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 Aug 2022 21:50:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60474 "EHLO
+        id S237100AbiHDCuH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 Aug 2022 22:50:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41484 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229596AbiHDBu4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Aug 2022 21:50:56 -0400
-Received: from invmail3.skhynix.com (exvmail3.hynix.com [166.125.252.90])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B29FDD107
-        for <linux-scsi@vger.kernel.org>; Wed,  3 Aug 2022 18:50:53 -0700 (PDT)
-X-AuditID: a67dfc59-507ff7000000959d-d9-62eb25f6d0ee
-Received: from hymail21.hynixad.com (10.156.135.51) by hymail19.hynixad.com
- (10.156.135.49) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.2.986.15; Thu, 4 Aug 2022
- 10:50:45 +0900
-Received: from hymail21.hynixad.com ([10.156.135.51]) by hymail21.hynixad.com
- ([10.156.135.51]) with mapi id 15.02.0986.015; Thu, 4 Aug 2022 10:50:45 +0900
-From:   =?utf-8?B?7KCV7JqU7ZWcKEpPVU5HIFlPSEFOKSBNb2JpbGUgU0U=?= 
-        <yohan.joung@sk.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-CC:     Jaegeuk Kim <jaegeuk@kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "Avri Altman" <avri.altman@wdc.com>, Bean Huo <beanhuo@micron.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>
-Subject: RE: [PATCH v3] scsi: ufs: Increase the maximum data buffer size
-Thread-Topic: [PATCH v3] scsi: ufs: Increase the maximum data buffer size
-Thread-Index: AQHYoUKOvUbRZtx3z0GI27+IE7yewa2cTOUQgACEW4CAATMjMA==
-Date:   Thu, 4 Aug 2022 01:50:45 +0000
-Message-ID: <d8945bdf320240b2bdf6ee411eff6c8a@sk.com>
-References: <20220726225232.1362251-1-bvanassche@acm.org>
- <55fce3baaabf4e33aeaccbe5b4e1f145@sk.com>
- <6263c2a5-e7b6-c9e5-69e8-b6d93604d82d@acm.org>
-In-Reply-To: <6263c2a5-e7b6-c9e5-69e8-b6d93604d82d@acm.org>
-Accept-Language: ko-KR, en-US
-Content-Language: ko-KR
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [10.152.36.223]
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        with ESMTP id S231136AbiHDCuH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Aug 2022 22:50:07 -0400
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 710C21EC7D
+        for <linux-scsi@vger.kernel.org>; Wed,  3 Aug 2022 19:50:05 -0700 (PDT)
+X-UUID: 76a5242ec1b740ed90d0a3fb3ed89932-20220804
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:Content-Type:In-Reply-To:MIME-Version:Date:Message-ID:From:References:CC:To:Subject; bh=nZNz3ndGuUJjbvH6dWvp3hMM7FBdisSKstCOJKWBSB4=;
+        b=f6gWWyDvN4CU8r9B8hBJ4zjGJITKj8kqT4Nnhs7unqjhOwZHsOfnRRKdP3B2sK4hudgPIkQeOZO/zES903k9PoC3ZbrVL35qflyKH2RPutfq/7UZCXZelXks5q8GRRPYxBCBEF/AinGsFyspRe2qIXzyoqXa7JuPGUYdP+B2lkQ=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.8,REQID:5e1c394a-bfdd-4b3c-9fe3-33cdc2d1e1d7,OB:0,LO
+        B:0,IP:0,URL:5,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,RULE:Release_Ham,ACTI
+        ON:release,TS:5
+X-CID-META: VersionHash:0f94e32,CLOUDID:077a3625-a982-4824-82d2-9da3b6056c2a,C
+        OID:IGNORED,Recheck:0,SF:nil,TC:nil,Content:0,EDM:-3,IP:nil,URL:1,File:nil
+        ,QS:nil,BEC:nil,COL:0
+X-UUID: 76a5242ec1b740ed90d0a3fb3ed89932-20220804
+Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw02.mediatek.com
+        (envelope-from <peter.wang@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 277556207; Thu, 04 Aug 2022 10:49:59 +0800
+Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
+ mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.792.15; Thu, 4 Aug 2022 10:49:58 +0800
+Received: from [172.21.84.99] (172.21.84.99) by mtkmbs11n2.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.2.792.15 via Frontend
+ Transport; Thu, 4 Aug 2022 10:49:57 +0800
+Subject: Re: [PATCH v4] ufs: allow host driver disable wb toggle druing clock
+ scaling
+To:     Bart Van Assche <bvanassche@acm.org>, <stanley.chu@mediatek.com>,
+        <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
+        <jejb@linux.ibm.com>
+CC:     <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
+        <chun-hung.wu@mediatek.com>, <alice.chao@mediatek.com>,
+        <cc.chou@mediatek.com>, <chaotian.jing@mediatek.com>,
+        <jiajie.hao@mediatek.com>, <powen.kao@mediatek.com>,
+        <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>
+References: <20220803030329.5897-1-peter.wang@mediatek.com>
+ <2070dd08-371b-a660-388e-ec2481781db9@acm.org>
+From:   Peter Wang <peter.wang@mediatek.com>
+Message-ID: <86e03b02-b8d9-cd16-dbc3-55efa10bda80@mediatek.com>
+Date:   Thu, 4 Aug 2022 10:49:57 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-X-CFilter-Loop: Reflected
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrJLMWRmVeSWpSXmKPExsXCNUdUSfen6uskg+OTjSy6r+9gc2D0+LxJ
-        LoAxissmJTUnsyy1SN8ugSvjxEKrgg/cFVu+xjcwnuDuYuTkkBAwkbg37wRzFyMXh5DAK0aJ
-        SZ9vQzlzGSWafu5nBKliEwiVuHF7JZgtIhAn0TrrFSNIEbPAFSaJSR//soMkhAU8JNZ9ngGU
-        4AAq8pS4PyUEot5J4s2WC2AlLAIqEmt//2AFsXkFTCXm3pzFBLFsGqPEtWOdYAs4Bawlfm38
-        ywoyh1FAVuLqNRmQMLOAuMTir9eYIa4WkFiy5zyULSrx8vE/VghbUeL3n61grcwCmhLrd+lD
-        tCpKTOl+yA6xVlDi5MwnLBDlkhIHV9xgmcAoNgvJhlkI3bOQdM9C0r2AkWUVo0hmXlluYmaO
-        sV5xdkZlXmaFXnJ+7iZGYIQsq/0TuYPx24XgQ4wCHIxKPLwZba+ShFgTy4orcw8xSnAwK4nw
-        3nF5niTEm5JYWZValB9fVJqTWnyIUZqDRUmc91tYaoKQQHpiSWp2ampBahFMlomDU6qB0dzX
-        1+jz9ndvHqmr1m1LYTCwbZjW5KjH8jT/1gVp7k+3Z9dsjjOae8BUu0hb1Slw4pLS0xq9zXHS
-        Kp07Th9h+713wdnKgFMnY864c/offHE2svJvw9pij9hYuUbPgGlKGppvtnGu+ycwPTPwRmdx
-        +72cH4tqI7/sTlw32zjt994VTRfis7kSlViKMxINtZiLihMBGbqwTIwCAAA=
+In-Reply-To: <2070dd08-371b-a660-388e-ec2481781db9@acm.org>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-PiBPbiA4LzIvMjIgMTY6NDAsIHlvaGFuLmpvdW5nQHNrLmNvbSB3cm90ZToNCj4gPiBJcyBpdCBw
-b3NzaWJsZSBieSBhZGRpbmcgb25seSBtYXhfc2VjdG9yIHRvIGluY3JlYXNlIHRoZSBkYXRhIGJ1
-ZmZlciBzaXplPw0KPiANCj4gWWVzLg0KPiANCj4gPiBJIHRoaW5rIHRoZSBkYXRhIGJ1ZmZlciB3
-aWxsIHNwbGl0IHRvIDUxMiBLaUIsIGJlY2F1c2UgdGhlIHNnX3RhYmxlDQo+ID4gc2l6ZSBpcyBT
-R19BTEwNCj4gDQo+IEkgZG9uJ3QgdGhpbmsgc28uIFdpdGggdGhpcyBwYXRjaCBhcHBsaWVkLCB0
-aGUgbGltaXRzIHN1cHBvcnRlZCBieSB0aGUgVUZTDQo+IGRyaXZlciBhcmUgYXMgZm9sbG93czoN
-Cj4gDQo+IAkuc2dfdGFibGVzaXplCQk9IFNHX0FMTCwgICAgICAgICAgICAgICAgICAgLyogMTI4
-ICovDQo+ICAgCS5tYXhfc2VnbWVudF9zaXplCT0gUFJEVF9EQVRBX0JZVEVfQ09VTlRfTUFYLCAv
-KiAyNTYgS2lCKi8NCj4gCS5tYXhfc2VjdG9ycwkJPSAoMSA8PCAyMCkgLyBTRUNUT1JfU0laRSwg
-IC8qIDEgTWlCICovDQo+IA0KPiBTbyB0aGUgbWF4aW11bSBkYXRhIGJ1ZmZlciBzaXplIGlzIG1p
-bihtYXhfc2VjdG9ycyAqIDUxMiwgc2dfdGFibGVzaXplICoNCj4gbWF4X3NlZ21lbnRfc2l6ZSkg
-PSBtaW4oMSBNaUIsIDEyOCAqIDI1NiBLaUIpID0gMSBNaUIuIE9uIGEgc3lzdGVtIHdpdGgNCj4g
-NCBLaUIgcGFnZXMsIHRoZSBkYXRhIGJ1ZmZlciBzaXplIHdpbGwgYmUgMTI4ICogNCBLaUIgPSA1
-MTIgTWlCIGlmIG5vbmUgb2YNCj4gdGhlIHBhZ2VzIGludm9sdmVkIGluIHRoZSBJL08gYXJlIGNv
-bnRpZ3VvdXMuDQpJbiBibG9jayBsYXllciwgbWF4X3NlZ21lbnRfc2l6ZSBpcyBvYnRhaW5lZCBm
-cm9tIGdldF9tYXhfc2VnbWVudF9zaXplLg0Kc2VnX2JvdW5kYXJ5X21hc2sgaXMgc2V0IHRvIFBB
-R0VfU0laRSAtIDEgaW4gdGhlIHVmcyBkcml2ZXIuDQpUaGUgc2VnbWVudCBzaXplIGlzIHRoZSBQ
-QUdFIHNpemUsIGFuZCB0aGUgbWF4IGJ1ZmZlciBzaXplIGlzDQpzZWdtZW50IHNpemUgKiBtYXgg
-c2VnbWVudCBjb3VudCAoIFBBR0UgU0laRSAqIDEyOCApID0gNTEyIEtpQiAgaW4gYmxvY2sgbGF5
-ZXINClJpZ2h0PyANCj4NCj4gQmFydC4NCg==
+
+On 8/4/22 3:28 AM, Bart Van Assche wrote:
+> On 8/2/22 20:03, peter.wang@mediatek.com wrote:
+>>
+>
+> disable -> to disable?
+>
+> toggle -> toggling?
+>
+> druing -> during?
+>
+>> diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
+>> index 0a088b47d557..7f41f2a69b04 100644
+>> --- a/drivers/ufs/core/ufs-sysfs.c
+>> +++ b/drivers/ufs/core/ufs-sysfs.c
+>> @@ -225,7 +225,8 @@ static ssize_t wb_on_store(struct device *dev, 
+>> struct device_attribute *attr,
+>>       unsigned int wb_enable;
+>>       ssize_t res;
+>>   -    if (!ufshcd_is_wb_allowed(hba) || 
+>> ufshcd_is_clkscaling_supported(hba)) {
+>> +    if (!ufshcd_is_wb_allowed(hba) || 
+>> (ufshcd_is_clkscaling_supported(hba)
+>> +        && ufshcd_enable_wb_if_scaling_up(hba))) {
+>
+> The "&&" is misplaced - it should occur at the end of the previous 
+> line. Isn't this something that checkpatch complains about?
+>
+>>       /* Enable Write Booster if we have scaled up else disable it
+ */
+>> -    downgrade_write(&hba->clk_scaling_lock);
+>> -    is_writelock = false;
+>> -    ufshcd_wb_toggle(hba, scale_up);
+>> +    if (ufshcd_enable_wb_if_scaling_up(hba)) {
+>> +        downgrade_write(&hba->clk_scaling_lock);
+>> +        is_writelock = false;
+>> +        ufshcd_wb_toggle(hba, scale_up);
+>> +    }
+>
+> Since this code is being modified, please move the "/* Enable" comment 
+> to where it should occur (just above the ufshcd_wb_toggle() call).
+>
+>> @@ -1004,6 +1010,10 @@ static inline bool ufshcd_is_wb_allowed(struct 
+>> ufs_hba *hba)
+>>   {
+>>       return hba->caps & UFSHCD_CAP_WB_EN;
+>>   }
+>> +static inline bool ufshcd_enable_wb_if_scaling_up(struct ufs_hba *hba)
+>> +{
+>> +    return hba->caps & UFSHCD_CAP_WB_WITH_CLK_SCALING;
+>> +}
+>
+> It seems like a blank line is missing above the new function definition?
+>
+> Otherwise this patch looks good to me.
+>
+> Thanks,
+
+Hi Bart,
+
+
+Will fix next version.
+
+
+Thanks
+
+Peter
+
+>
+> Bart.
