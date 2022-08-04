@@ -2,114 +2,474 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F302BC19F2D
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Aug 2022 13:00:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BE69C19F2A
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Aug 2022 13:00:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235966AbiHDNAZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 Aug 2022 09:00:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41306 "EHLO
+        id S231921AbiHDNAc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 Aug 2022 09:00:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41408 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231921AbiHDNAY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2022 09:00:24 -0400
-Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4718060F1
-        for <linux-scsi@vger.kernel.org>; Thu,  4 Aug 2022 06:00:23 -0700 (PDT)
-Received: by mail-pl1-x629.google.com with SMTP id w7so19229028ply.12
-        for <linux-scsi@vger.kernel.org>; Thu, 04 Aug 2022 06:00:23 -0700 (PDT)
+        with ESMTP id S231143AbiHDNA1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2022 09:00:27 -0400
+Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11A986179
+        for <linux-scsi@vger.kernel.org>; Thu,  4 Aug 2022 06:00:25 -0700 (PDT)
+Received: by mail-pf1-x42f.google.com with SMTP id f28so11043823pfk.1
+        for <linux-scsi@vger.kernel.org>; Thu, 04 Aug 2022 06:00:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=mime-version:message-id:date:subject:cc:to:from:from:to:cc;
-        bh=eP/YJWCQnjZnBuOumn0r13vHDviNuHsEcsNlfX1M6ec=;
-        b=SywkeAPK0KX00nbvd0Cp6HCCIlqoAWQXdsC9+vov4lnm3Cxj2RHB887b4XcEqhtlZ+
-         F6/6eiWdN7vDQLpi7sSFxA9IgIUcKjP887FzzvjdOuCh/xShEdm8PHGjWPpMtMJpomPD
-         77n70DH/2k59QP6rAnV27UFVenCs824jJjPvw=
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:from:to:cc;
+        bh=+kYzqpeRTMZ0DAhj+iJJpjcactA05PpyVkwcN2M6gbM=;
+        b=S8YNMnwWzF8UYHFMqWx2cThmQHuM/gQTgQLWy0bY4GJXi4+sKrPNdv2lduus6eUuaU
+         d2p6tnTEUUJOwnMUzErs8kAdKTbLuv4Zk/ZV9L3buu6auHuodSBQO06wNO+J3AU9fI0H
+         99abLwbqbUyUKvU8YJLcDbS7gUzJrB3w0hZbE=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=mime-version:message-id:date:subject:cc:to:from:x-gm-message-state
-         :from:to:cc;
-        bh=eP/YJWCQnjZnBuOumn0r13vHDviNuHsEcsNlfX1M6ec=;
-        b=Rw+4a2Visg3uvS2fGC5+C6VvCqfvMReK6PDsJ2snkETYjpB4K4c7Cm5J4NsW054xmD
-         XktFMGuoQez1DVLW05ib+U4HaIkKbnp9scN4WmSKdRuFZQuec6jyJEYpzA0tPcM4K1u6
-         a17sE3hXM6OaE6ShfT04m/jPpYVNpxa/AWQFMvDd9hkmp/SnWc/mvHZ0Oj2XMMkbuWnE
-         NBg+zEs3tFj8JzcKtX51EClDayClVLacAzrHHA3npJDdJQgkxvMZNMS5q0ThB794gTkM
-         DRIi2H3OslAl1dPRUF9g475hg0+9M2wH6scVKmFbolP3K0a33Sa0Qcg6UZd0RzrxUnEQ
-         la6g==
-X-Gm-Message-State: ACgBeo2rIOksa9GtTNTYg3Z8zIKiKSm0ew817QDNTUSGT1yqIb/jkBH1
-        +7guZGPLcXrEPDLJu8PXMu5fpJ1KAOD4dgO8aHW3H8K8q5bndcc1chaKcvlu8UgQN/77ZKPyj6H
-        tFxcNiYh3jgHleOGPl9PA/PT76wVpagPQO3SP8k4nIgdxjxg6hGVwWo1Gu+g30g/50RID/B46Ly
-        63C6kbXZl+
-X-Google-Smtp-Source: AA6agR4vfondY0aY1KltXkfpEd9aswGHwYYeuOwpSZdJsPe1RqudeM5CJRN47R49QlekY02GdtjXkw==
-X-Received: by 2002:a17:90b:180f:b0:1f5:160c:a656 with SMTP id lw15-20020a17090b180f00b001f5160ca656mr10730282pjb.193.1659618017715;
-        Thu, 04 Aug 2022 06:00:17 -0700 (PDT)
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:x-gm-message-state:from:to:cc;
+        bh=+kYzqpeRTMZ0DAhj+iJJpjcactA05PpyVkwcN2M6gbM=;
+        b=JCljqUzVbW7AO0PC2MpWzFnq3wLvh8o1ddrVJxSrijGMFziM3gI3U+n6zj2ZzfM+FH
+         mkmaDG4EROYUwI3pzqEXYZKKmSeMO/Quo8CQcJifyFriwzRj8qNo2VGICHQkP68R2Ej6
+         UUD8c5k7Jn6TynzIls+zak6ZzGrN9lOZGwdLTW9vXYXFp9FUkYf2XgLPkKS7cr2soYoD
+         HWUe3qH4xFtNAs1qs81jX8LbdlQ6jCO98ZKz744/WlO2Ya0R2wYQ/R/EngNCdmgDzGCD
+         GhVs+z5L3NXqVF0bWbYTs6Hiaor6W9Klsu4QkyOvRHwdz0mGgmExRqRyxzXN5C1VJm4u
+         Ql6Q==
+X-Gm-Message-State: ACgBeo3x/Fw5NYTY4uCseGLZj2KCSc7gsKU1i20jjBI3AZINJSb09U74
+        gIxQilxCGvHHjNhnAHu0gxwstQpyo5bIhx3SdKJjzvVI8YXujU49OqTE6z/4FHteP3Af09TR16A
+        /hXRgBGaSCV30GRvt+4YXz/2S+Q4st8X/EmVPHJbO/KwiervXFZBzoScdn1o6WSsOeHNCLjuMEH
+        q4HhNTsG0Q
+X-Google-Smtp-Source: AA6agR6OjuKkbddDiepNGWAr/n4lFCZsaA2rYVvXkMuY0IFwmXWWESOYmhcP8x0k47kejPMfUz8oPQ==
+X-Received: by 2002:a63:ba17:0:b0:41c:c1c4:bb9e with SMTP id k23-20020a63ba17000000b0041cc1c4bb9emr1563267pgf.531.1659618023736;
+        Thu, 04 Aug 2022 06:00:23 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id w15-20020aa7954f000000b0052e2a1edab8sm934645pfq.24.2022.08.04.06.00.14
+        by smtp.gmail.com with ESMTPSA id w15-20020aa7954f000000b0052e2a1edab8sm934645pfq.24.2022.08.04.06.00.21
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 Aug 2022 06:00:16 -0700 (PDT)
+        Thu, 04 Aug 2022 06:00:22 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH v2 00/15] mpi3mr: Added Support for SAS Transport
-Date:   Thu,  4 Aug 2022 18:42:11 +0530
-Message-Id: <20220804131226.16653-1-sreekanth.reddy@broadcom.com>
+Subject: [PATCH v2 02/15] mpi3mr: Add framework to issue cnfg requests
+Date:   Thu,  4 Aug 2022 18:42:13 +0530
+Message-Id: <20220804131226.16653-3-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20220804131226.16653-1-sreekanth.reddy@broadcom.com>
+References: <20220804131226.16653-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000b737dc05e569ee3f"
+        boundary="000000000000d0920405e569eefa"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000b737dc05e569ee3f
+--000000000000d0920405e569eefa
 Content-Transfer-Encoding: 8bit
 
-- Enhanced the driver to support SAS transport layer and
- expose SAS controller PHYs, ports, attached expander, expander PHYs,
- expander ports and SAS/SATA end devices to the kernel through
- SAS transport class.
-- The driver also provides call back handlers for get_linkerrors,
- get_enclosure_identifier, get_bay_identifier, phy_reset, phy_enable,
- set_phy_speed and smp_handler to the kernel as defined by the
- SAS transport layer.
-- The SAS transport layer support is enabled only when the
- controller multipath capability is not enabled.
-- The NVMe devices, VDs, vSES and PCIe Managed SES devices
- are not exposed through SAS transport.
+Added framework to issue config requests commands to
+controller firmware.
 
-V2:
- - Accommodated the changes suggested by Himanshu Madhani
+Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+---
+ drivers/scsi/mpi3mr/mpi3mr.h    |  28 ++++
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 253 ++++++++++++++++++++++++++++++++
+ drivers/scsi/mpi3mr/mpi3mr_os.c |   1 +
+ 3 files changed, 282 insertions(+)
 
-Sreekanth Reddy (15):
-  mpi3mr: Add config and transport related debug flags
-  mpi3mr: Add framework to issue cnfg requests
-  mpi3mr: Added helper functions to retrieve cnfg pages
-  mpi3mr: Enable Enclosure device add event
-  mpi3mr: Add framework to add phys to STL
-  mpi3mr: Add helper functions to retrieve device objects
-  mpi3mr: Add helper functions to manage device's port
-  mpi3mr: Enable STL on HBAs where multipath is disabled
-  mpi3mr: Add expander devices to STL
-  mpi3mr: Get target object based on rphy
-  mpi3mr: Add SAS SATA end devices to STL
-  mpi3mr: Add framework to issue MPT transport cmds
-  mpi3mr: Support sas transport class callbacks
-  mpi3mr: Refresh sas ports during soft reset
-  mpi3mr: Block IOs while refreshing target dev objects
-
- drivers/scsi/mpi3mr/Makefile           |    1 +
- drivers/scsi/mpi3mr/mpi3mr.h           |  240 +-
- drivers/scsi/mpi3mr/mpi3mr_debug.h     |   27 +
- drivers/scsi/mpi3mr/mpi3mr_fw.c        |  892 ++++++-
- drivers/scsi/mpi3mr/mpi3mr_os.c        |  444 +++-
- drivers/scsi/mpi3mr/mpi3mr_transport.c | 3283 ++++++++++++++++++++++++
- 6 files changed, 4835 insertions(+), 52 deletions(-)
- create mode 100644 drivers/scsi/mpi3mr/mpi3mr_transport.c
-
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index 0935b2e..e15ad0e 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -97,6 +97,7 @@ extern atomic64_t event_counter;
+ #define MPI3MR_HOSTTAG_PEL_ABORT	3
+ #define MPI3MR_HOSTTAG_PEL_WAIT		4
+ #define MPI3MR_HOSTTAG_BLK_TMS		5
++#define MPI3MR_HOSTTAG_CFG_CMDS		6
+ 
+ #define MPI3MR_NUM_DEVRMCMD		16
+ #define MPI3MR_HOSTTAG_DEVRMCMD_MIN	(MPI3MR_HOSTTAG_BLK_TMS + 1)
+@@ -126,6 +127,8 @@ extern atomic64_t event_counter;
+ 
+ #define MPI3MR_WATCHDOG_INTERVAL		1000 /* in milli seconds */
+ 
++#define MPI3MR_DEFAULT_CFG_PAGE_SZ		1024 /* in bytes */
++
+ #define MPI3MR_SCMD_TIMEOUT    (60 * HZ)
+ #define MPI3MR_EH_SCMD_TIMEOUT (60 * HZ)
+ 
+@@ -274,6 +277,7 @@ enum mpi3mr_reset_reason {
+ 	MPI3MR_RESET_FROM_SYSFS = 23,
+ 	MPI3MR_RESET_FROM_SYSFS_TIMEOUT = 24,
+ 	MPI3MR_RESET_FROM_FIRMWARE = 27,
++	MPI3MR_RESET_FROM_CFG_REQ_TIMEOUT = 29,
+ };
+ 
+ /* Queue type definitions */
+@@ -679,6 +683,21 @@ struct mpi3mr_drv_cmd {
+ 	    struct mpi3mr_drv_cmd *drv_cmd);
+ };
+ 
++/**
++ * struct dma_memory_desc - memory descriptor structure to store
++ * virtual address, dma address and size for any generic dma
++ * memory allocations in the driver.
++ *
++ * @size: buffer size
++ * @addr: virtual address
++ * @dma_addr: dma address
++ */
++struct dma_memory_desc {
++	u32 size;
++	void *addr;
++	dma_addr_t dma_addr;
++};
++
+ 
+ /**
+  * struct chain_element - memory descriptor structure to store
+@@ -756,6 +775,7 @@ struct scmd_priv {
+  * @num_op_reply_q: Number of operational reply queues
+  * @op_reply_qinfo: Operational reply queue info pointer
+  * @init_cmds: Command tracker for initialization commands
++ * @cfg_cmds: Command tracker for configuration requests
+  * @facts: Cached IOC facts data
+  * @op_reply_desc_sz: Operational reply descriptor size
+  * @num_reply_bufs: Number of reply buffers allocated
+@@ -854,6 +874,9 @@ struct scmd_priv {
+  * @io_throttle_low: I/O size to stop throttle in 512b blocks
+  * @num_io_throttle_group: Maximum number of throttle groups
+  * @throttle_groups: Pointer to throttle group info structures
++ * @cfg_page: Default memory for configuration pages
++ * @cfg_page_dma: Configuration page DMA address
++ * @cfg_page_sz: Default configuration page memory size
+  */
+ struct mpi3mr_ioc {
+ 	struct list_head list;
+@@ -904,6 +927,7 @@ struct mpi3mr_ioc {
+ 	struct op_reply_qinfo *op_reply_qinfo;
+ 
+ 	struct mpi3mr_drv_cmd init_cmds;
++	struct mpi3mr_drv_cmd cfg_cmds;
+ 	struct mpi3mr_ioc_facts facts;
+ 	u16 op_reply_desc_sz;
+ 
+@@ -1025,6 +1049,10 @@ struct mpi3mr_ioc {
+ 	u32 io_throttle_low;
+ 	u16 num_io_throttle_group;
+ 	struct mpi3mr_throttle_group_info *throttle_groups;
++
++	void *cfg_page;
++	dma_addr_t cfg_page_dma;
++	u16 cfg_page_sz;
+ };
+ 
+ /**
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 0866dfd..99d8df6 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -299,6 +299,8 @@ mpi3mr_get_drv_cmd(struct mpi3mr_ioc *mrioc, u16 host_tag,
+ 	switch (host_tag) {
+ 	case MPI3MR_HOSTTAG_INITCMDS:
+ 		return &mrioc->init_cmds;
++	case MPI3MR_HOSTTAG_CFG_CMDS:
++		return &mrioc->cfg_cmds;
+ 	case MPI3MR_HOSTTAG_BSG_CMDS:
+ 		return &mrioc->bsg_cmds;
+ 	case MPI3MR_HOSTTAG_BLK_TMS:
+@@ -907,6 +909,7 @@ static const struct {
+ 	{ MPI3MR_RESET_FROM_SYSFS, "sysfs invocation" },
+ 	{ MPI3MR_RESET_FROM_SYSFS_TIMEOUT, "sysfs TM timeout" },
+ 	{ MPI3MR_RESET_FROM_FIRMWARE, "firmware asynchronous reset" },
++	{ MPI3MR_RESET_FROM_CFG_REQ_TIMEOUT, "configuration request timeout"},
+ };
+ 
+ /**
+@@ -3738,6 +3741,14 @@ retry_init:
+ 
+ 	mpi3mr_print_ioc_info(mrioc);
+ 
++	dprint_init(mrioc, "allocating config page buffers\n");
++	mrioc->cfg_page = dma_alloc_coherent(&mrioc->pdev->dev,
++	    MPI3MR_DEFAULT_CFG_PAGE_SZ, &mrioc->cfg_page_dma, GFP_KERNEL);
++	if (!mrioc->cfg_page)
++		goto out_failed_noretry;
++
++	mrioc->cfg_page_sz = MPI3MR_DEFAULT_CFG_PAGE_SZ;
++
+ 	retval = mpi3mr_alloc_reply_sense_bufs(mrioc);
+ 	if (retval) {
+ 		ioc_err(mrioc,
+@@ -4362,6 +4373,10 @@ static void mpi3mr_flush_drv_cmds(struct mpi3mr_ioc *mrioc)
+ 
+ 	cmdptr = &mrioc->init_cmds;
+ 	mpi3mr_drv_cmd_comp_reset(mrioc, cmdptr);
++
++	cmdptr = &mrioc->cfg_cmds;
++	mpi3mr_drv_cmd_comp_reset(mrioc, cmdptr);
++
+ 	cmdptr = &mrioc->bsg_cmds;
+ 	mpi3mr_drv_cmd_comp_reset(mrioc, cmdptr);
+ 	cmdptr = &mrioc->host_tm_cmds;
+@@ -4786,3 +4801,241 @@ out:
+ 	    ((retval == 0) ? "successful" : "failed"));
+ 	return retval;
+ }
++
++
++/**
++ * mpi3mr_free_config_dma_memory - free memory for config page
++ * @mrioc: Adapter instance reference
++ * @mem_desc: memory descriptor structure
++ *
++ * Check whether the size of the buffer specified by the memory
++ * descriptor is greater than the default page size if so then
++ * free the memory pointed by the descriptor.
++ *
++ * Return: Nothing.
++ */
++static void mpi3mr_free_config_dma_memory(struct mpi3mr_ioc *mrioc,
++	struct dma_memory_desc *mem_desc)
++{
++	if ((mem_desc->size > mrioc->cfg_page_sz) && mem_desc->addr) {
++		dma_free_coherent(&mrioc->pdev->dev, mem_desc->size,
++		    mem_desc->addr, mem_desc->dma_addr);
++		mem_desc->addr = NULL;
++	}
++}
++
++/**
++ * mpi3mr_alloc_config_dma_memory - Alloc memory for config page
++ * @mrioc: Adapter instance reference
++ * @mem_desc: Memory descriptor to hold dma memory info
++ *
++ * This function allocates new dmaable memory or provides the
++ * default config page dmaable memory based on the memory size
++ * described by the descriptor.
++ *
++ * Return: 0 on success, non-zero on failure.
++ */
++static int mpi3mr_alloc_config_dma_memory(struct mpi3mr_ioc *mrioc,
++	struct dma_memory_desc *mem_desc)
++{
++	if (mem_desc->size > mrioc->cfg_page_sz) {
++		mem_desc->addr = dma_alloc_coherent(&mrioc->pdev->dev,
++		    mem_desc->size, &mem_desc->dma_addr, GFP_KERNEL);
++		if (!mem_desc->addr)
++			return -ENOMEM;
++	} else {
++		mem_desc->addr = mrioc->cfg_page;
++		mem_desc->dma_addr = mrioc->cfg_page_dma;
++		memset(mem_desc->addr, 0, mrioc->cfg_page_sz);
++	}
++	return 0;
++}
++
++/**
++ * mpi3mr_post_cfg_req - Issue config requests and wait
++ * @mrioc: Adapter instance reference
++ * @cfg_req: Configuration request
++ * @timeout: Timeout in seconds
++ * @ioc_status: Pointer to return ioc status
++ *
++ * A generic function for posting MPI3 configuration request to
++ * the firmware. This blocks for the completion of request for
++ * timeout seconds and if the request times out this function
++ * faults the controller with proper reason code.
++ *
++ * On successful completion of the request this function returns
++ * appropriate ioc status from the firmware back to the caller.
++ *
++ * Return: 0 on success, non-zero on failure.
++ */
++static int mpi3mr_post_cfg_req(struct mpi3mr_ioc *mrioc,
++	struct mpi3_config_request *cfg_req, int timeout, u16 *ioc_status)
++{
++	int retval = 0;
++
++	mutex_lock(&mrioc->cfg_cmds.mutex);
++	if (mrioc->cfg_cmds.state & MPI3MR_CMD_PENDING) {
++		retval = -1;
++		ioc_err(mrioc, "sending config request failed due to command in use\n");
++		mutex_unlock(&mrioc->cfg_cmds.mutex);
++		goto out;
++	}
++	mrioc->cfg_cmds.state = MPI3MR_CMD_PENDING;
++	mrioc->cfg_cmds.is_waiting = 1;
++	mrioc->cfg_cmds.callback = NULL;
++	mrioc->cfg_cmds.ioc_status = 0;
++	mrioc->cfg_cmds.ioc_loginfo = 0;
++
++	cfg_req->host_tag = cpu_to_le16(MPI3MR_HOSTTAG_CFG_CMDS);
++	cfg_req->function = MPI3_FUNCTION_CONFIG;
++
++	init_completion(&mrioc->cfg_cmds.done);
++	dprint_cfg_info(mrioc, "posting config request\n");
++	if (mrioc->logging_level & MPI3_DEBUG_CFG_INFO)
++		dprint_dump(cfg_req, sizeof(struct mpi3_config_request),
++		    "mpi3_cfg_req");
++	retval = mpi3mr_admin_request_post(mrioc, cfg_req, sizeof(*cfg_req), 1);
++	if (retval) {
++		ioc_err(mrioc, "posting config request failed\n");
++		goto out_unlock;
++	}
++	wait_for_completion_timeout(&mrioc->cfg_cmds.done, (timeout * HZ));
++	if (!(mrioc->cfg_cmds.state & MPI3MR_CMD_COMPLETE)) {
++		mpi3mr_check_rh_fault_ioc(mrioc,
++		    MPI3MR_RESET_FROM_CFG_REQ_TIMEOUT);
++		ioc_err(mrioc, "config request timed out\n");
++		retval = -1;
++		goto out_unlock;
++	}
++	*ioc_status = mrioc->cfg_cmds.ioc_status & MPI3_IOCSTATUS_STATUS_MASK;
++	if ((*ioc_status) != MPI3_IOCSTATUS_SUCCESS)
++		dprint_cfg_err(mrioc,
++		    "cfg_page request returned with ioc_status(0x%04x), log_info(0x%08x)\n",
++		    *ioc_status, mrioc->cfg_cmds.ioc_loginfo);
++
++out_unlock:
++	mrioc->cfg_cmds.state = MPI3MR_CMD_NOTUSED;
++	mutex_unlock(&mrioc->cfg_cmds.mutex);
++
++out:
++	return retval;
++}
++
++/**
++ * mpi3mr_process_cfg_req - config page request processor
++ * @mrioc: Adapter instance reference
++ * @cfg_req: Configuration request
++ * @cfg_hdr: Configuration page header
++ * @timeout: Timeout in seconds
++ * @ioc_status: Pointer to return ioc status
++ * @cfg_buf: Memory pointer to copy config page or header
++ * @cfg_buf_sz: Size of the memory to get config page or header
++ *
++ * This is handler for config page read, write and config page
++ * header read operations.
++ *
++ * This function expects the cfg_req to be populated with page
++ * type, page number, action for the header read and with page
++ * address for all other operations.
++ *
++ * The cfg_hdr can be passed as null for reading required header
++ * details for read/write pages the cfg_hdr should point valid
++ * configuration page header.
++ *
++ * This allocates dmaable memory based on the size of the config
++ * buffer and set the SGE of the cfg_req.
++ *
++ * For write actions, the config page data has to be passed in
++ * the cfg_buf and size of the data has to be mentioned in the
++ * cfg_buf_sz.
++ *
++ * For read/header actions, on successful completion of the
++ * request with successful ioc_status the data will be copied
++ * into the cfg_buf limited to a minimum of actual page size and
++ * cfg_buf_sz
++ *
++ *
++ * Return: 0 on success, non-zero on failure.
++ */
++static int mpi3mr_process_cfg_req(struct mpi3mr_ioc *mrioc,
++	struct mpi3_config_request *cfg_req,
++	struct mpi3_config_page_header *cfg_hdr, int timeout, u16 *ioc_status,
++	void *cfg_buf, u32 cfg_buf_sz)
++{
++	struct dma_memory_desc mem_desc;
++	int retval = -1;
++	u8 invalid_action = 0;
++	u8 sgl_flags = MPI3MR_SGEFLAGS_SYSTEM_SIMPLE_END_OF_LIST;
++
++	memset(&mem_desc, 0, sizeof(struct dma_memory_desc));
++
++	if (cfg_req->action == MPI3_CONFIG_ACTION_PAGE_HEADER)
++		mem_desc.size = sizeof(struct mpi3_config_page_header);
++	else {
++		if (!cfg_hdr) {
++			ioc_err(mrioc, "null config header passed for config action(%d), page_type(0x%02x), page_num(%d)\n",
++			    cfg_req->action, cfg_req->page_type,
++			    cfg_req->page_number);
++			goto out;
++		}
++		switch (cfg_hdr->page_attribute & MPI3_CONFIG_PAGEATTR_MASK) {
++		case MPI3_CONFIG_PAGEATTR_READ_ONLY:
++			if (cfg_req->action
++			    != MPI3_CONFIG_ACTION_READ_CURRENT)
++				invalid_action = 1;
++			break;
++		case MPI3_CONFIG_PAGEATTR_CHANGEABLE:
++			if ((cfg_req->action ==
++			     MPI3_CONFIG_ACTION_READ_PERSISTENT) ||
++			    (cfg_req->action ==
++			     MPI3_CONFIG_ACTION_WRITE_PERSISTENT))
++				invalid_action = 1;
++			break;
++		case MPI3_CONFIG_PAGEATTR_PERSISTENT:
++		default:
++			break;
++		}
++		if (invalid_action) {
++			ioc_err(mrioc,
++			    "config action(%d) is not allowed for page_type(0x%02x), page_num(%d) with page_attribute(0x%02x)\n",
++			    cfg_req->action, cfg_req->page_type,
++			    cfg_req->page_number, cfg_hdr->page_attribute);
++			goto out;
++		}
++		mem_desc.size = le16_to_cpu(cfg_hdr->page_length) * 4;
++		cfg_req->page_length = cfg_hdr->page_length;
++		cfg_req->page_version = cfg_hdr->page_version;
++	}
++	if (mpi3mr_alloc_config_dma_memory(mrioc, &mem_desc))
++		goto out;
++
++	mpi3mr_add_sg_single(&cfg_req->sgl, sgl_flags, mem_desc.size,
++	    mem_desc.dma_addr);
++
++	if ((cfg_req->action == MPI3_CONFIG_ACTION_WRITE_PERSISTENT) ||
++	    (cfg_req->action == MPI3_CONFIG_ACTION_WRITE_CURRENT)) {
++		memcpy(mem_desc.addr, cfg_buf, min_t(u16, mem_desc.size,
++		    cfg_buf_sz));
++		dprint_cfg_info(mrioc, "config buffer to be written\n");
++		if (mrioc->logging_level & MPI3_DEBUG_CFG_INFO)
++			dprint_dump(mem_desc.addr, mem_desc.size, "cfg_buf");
++	}
++
++	if (mpi3mr_post_cfg_req(mrioc, cfg_req, timeout, ioc_status))
++		goto out;
++
++	retval = 0;
++	if ((*ioc_status == MPI3_IOCSTATUS_SUCCESS) &&
++	    (cfg_req->action != MPI3_CONFIG_ACTION_WRITE_PERSISTENT) &&
++	    (cfg_req->action != MPI3_CONFIG_ACTION_WRITE_CURRENT)) {
++		memcpy(cfg_buf, mem_desc.addr, min_t(u16, mem_desc.size,
++		    cfg_buf_sz));
++		dprint_cfg_info(mrioc, "config buffer read\n");
++		if (mrioc->logging_level & MPI3_DEBUG_CFG_INFO)
++			dprint_dump(mem_desc.addr, mem_desc.size, "cfg_buf");
++	}
++
++out:
++	mpi3mr_free_config_dma_memory(mrioc, &mem_desc);
++	return retval;
++}
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index 8bdf927..40bed22 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -4574,6 +4574,7 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	mpi3mr_init_drv_cmd(&mrioc->init_cmds, MPI3MR_HOSTTAG_INITCMDS);
+ 	mpi3mr_init_drv_cmd(&mrioc->host_tm_cmds, MPI3MR_HOSTTAG_BLK_TMS);
+ 	mpi3mr_init_drv_cmd(&mrioc->bsg_cmds, MPI3MR_HOSTTAG_BSG_CMDS);
++	mpi3mr_init_drv_cmd(&mrioc->cfg_cmds, MPI3MR_HOSTTAG_CFG_CMDS);
+ 
+ 	for (i = 0; i < MPI3MR_NUM_DEVRMCMD; i++)
+ 		mpi3mr_init_drv_cmd(&mrioc->dev_rmhs_cmds[i],
 -- 
 2.27.0
 
 
---000000000000b737dc05e569ee3f
+--000000000000d0920405e569eefa
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -180,13 +540,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIHHXlD2j4NFN43jaeVww
-WrAxdixIzoGnHYTly2mVhpzKMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDgwNDEzMDAyMlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEINCgZdyW6d7YykYQ3+nK
+b2UKMC+muaFud17R0A4zlrbqMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDgwNDEzMDAyNFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBZdmf6QkExwxRFjZhI77P3Xdm15CZrQMxhNzxI
-EfeBriCAcK+6EMAiH9BKS3pgmypl1nc6dJ75OOht0SIRCoUVtSE2Kq9FoQMY2FI8cqYOzFm6NGXL
-N6ssDc6ZDM+6WAEkYI2gXFniBJITFgXupkqY21gFCHSkaIm9h5NfO/++0s5rubaznRN3WGrd0sIq
-PTn6w/qE5eAZFRQ2cfTTSjcXd4OAyipKltx4a+RDg7P1ajNezwjnhIMOADQPV5DIzi822G+yV1p/
-AClAXh+7F2ffN9pOq1SrrIrlu91dTOgNX/IUkYXkg+PdW6zOGvOxyRCBsuvjH03o+vrvKR4CNsEK
---000000000000b737dc05e569ee3f--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCGhvqYcUwdWzl7jKjuiIDLRwZ4tbL3BCIBQi+Z
+toszBn3A8IttTx329t4hVpbMX2GFbOCQB3iyt55h8i8107n44slAIama0b5CIz0ElhhvRHN3UeJh
+7sm0uZjGjep2RovS4wyckdLUybI42rihdJJmGurGRnD2X89ZLbTFzlA79cfBOEwEtkv0q690cFKF
+l2bGUwibWcrBAZkGAk/28KWN7mx9ufox8gxte6d110OjxT8boDJSAglc4jxOftWq+aitSxEhkat2
+2ShJEMnzIcRDzO0GwUtuvCUL5jbFIJtg1BIWdYNzX2MRuSNHe5yau6stTbE66eC8LR7NhhVYopu4
+--000000000000d0920405e569eefa--
