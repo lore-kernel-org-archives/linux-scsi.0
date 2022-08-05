@@ -2,98 +2,77 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC9CAC25B08
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 Aug 2022 11:56:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93D28C00140
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 Aug 2022 12:09:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239543AbiHEL44 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 5 Aug 2022 07:56:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41560 "EHLO
+        id S240670AbiHEMJ5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 5 Aug 2022 08:09:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49482 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236059AbiHEL4z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Aug 2022 07:56:55 -0400
-Received: from mail-wm1-x336.google.com (mail-wm1-x336.google.com [IPv6:2a00:1450:4864:20::336])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 82F637646E;
-        Fri,  5 Aug 2022 04:56:54 -0700 (PDT)
-Received: by mail-wm1-x336.google.com with SMTP id r1-20020a05600c35c100b003a326685e7cso3813362wmq.1;
-        Fri, 05 Aug 2022 04:56:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc;
-        bh=GtM/cD7hflcv6BD0/3bodvkpI0nOjm8qfPi0VHcfBA8=;
-        b=GQCxOQ9ymOiXtZRK5e3o3fqq3FRHxzS+LX8p/DO5szFAXxNc0eflCk59DGneDzPMJA
-         8T/TzsnPGz/HjiT/6kUrffGCTgcqb9r/wGCZGG+ZrCXdH1S/Yp7Ro50FFysg3pzb+iVy
-         bx5rL2lGTC8tzdcVt5iDHHSJsidzmMgF7xjQFRk6J2x3m8lOvgxkxegpfGm3kxpGa06C
-         O3WQGolRr9lQwuXj3WPh77go0vp4tRw9LyL8DdEcVYWbGrv2Eq5HXhAQeU03D40I843+
-         wcyPd5lVJrpJmrWUYjty40nuRMIuduErV3RFyTNPpqE/OrvVqAJi7kUDEHHYgxWd2dNO
-         Z3ag==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc;
-        bh=GtM/cD7hflcv6BD0/3bodvkpI0nOjm8qfPi0VHcfBA8=;
-        b=cd/vnEXxpeyWyC+V7HoqX7/+stdq7thouqyWRlZv0av/v6hoTz8YOheJEEoXzumNdl
-         0jPkTWqH82lY2u2W4nGZYdvsmwij9LTxDHGpRNLrixQB+f6E73g1DoAlUXlrGxYMCxbn
-         dVAsj6O1Hav+PPmBlHoMgVkH3tt+YQyhT3FGHPeCZl6WRogF5+IEaHXFsJWVQxnb/IiT
-         vYDdr5k0VEKLePnMtEIh3b6WwR+JcPfmvIpWU/qCHgJXV1NE4GBx07EuSVSJ6Q6Ip9vP
-         2E6IVU9ud1LkH7ux+jTQB1LbK5TaTlBo98e7RVhRXKuJ7PYZZqcV3XmJO8wWx2eIrghH
-         jQzQ==
-X-Gm-Message-State: ACgBeo2sicjurEzSo/48wCpOHh5dH1e6n1oz5BSKs5wDMNBrOI3gj/6d
-        o2IPGEQO5YK2EjtQZmcIVHhLWg5N3HYInd0G
-X-Google-Smtp-Source: AA6agR5CaTanmJoi83t6yf9QMs9jyIizyAaIYrJvx6dNOdWDPmKbY11fIfYuAHeW5xn6H8e8oUaKxA==
-X-Received: by 2002:a05:600c:501e:b0:3a3:4a04:fdb5 with SMTP id n30-20020a05600c501e00b003a34a04fdb5mr9556965wmr.168.1659700613091;
-        Fri, 05 Aug 2022 04:56:53 -0700 (PDT)
-Received: from localhost (cpc154979-craw9-2-0-cust193.16-3.cable.virginm.net. [80.193.200.194])
-        by smtp.gmail.com with ESMTPSA id i17-20020a05600c355100b003a2e92edeccsm9108432wmq.46.2022.08.05.04.56.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 05 Aug 2022 04:56:52 -0700 (PDT)
-From:   Colin Ian King <colin.i.king@gmail.com>
-To:     =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: st: remove redundant variable pointer stp
-Date:   Fri,  5 Aug 2022 12:56:52 +0100
-Message-Id: <20220805115652.2340991-1-colin.i.king@gmail.com>
-X-Mailer: git-send-email 2.35.3
+        with ESMTP id S240671AbiHEMJ4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Aug 2022 08:09:56 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50FF277577
+        for <linux-scsi@vger.kernel.org>; Fri,  5 Aug 2022 05:09:55 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 921DE372BA;
+        Fri,  5 Aug 2022 12:09:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1659701391; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=yNiPqdRWh2f9GKcvqC68FZH1NM0M2wha9esUGUeLjF8=;
+        b=FJhOquq7jtDWgqpQ412tJRCBI1VFapi4IvxoIkcbXzsCV5ukpoxy+36ZdCNaPON6yaivHs
+        hVfso/dzBzYelbIEXFW14I5IzxfP+v78A0OdHVJvJcOn+fvVWHsrkYbwJTYNwqSIvClJcO
+        j634zjVUIXg4K04RNaYmYzErYlEbxpI=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1659701391;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=yNiPqdRWh2f9GKcvqC68FZH1NM0M2wha9esUGUeLjF8=;
+        b=52rE2VbAkLdmnsobkJKVt6PkGB/v8+kUDyi77q9/TaoauYiClCsqCCIsrXw8Lh2Ma8MbQt
+        UQyqyZRe4VGrSTDA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 8394F133B5;
+        Fri,  5 Aug 2022 12:09:51 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id IMsdII8I7WIIEgAAMHmgww
+        (envelope-from <dwagner@suse.de>); Fri, 05 Aug 2022 12:09:51 +0000
+Date:   Fri, 5 Aug 2022 14:09:50 +0200
+From:   Daniel Wagner <dwagner@suse.de>
+To:     Himanshu Madhani <himanshu.madhani@oracle.com>
+Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Quinn Tran <qutran@marvell.com>,
+        Nilesh Javali <njavali@marvell.com>
+Subject: Re: [PATCH v1] qla2xxx: Allow nvme report port registration
+Message-ID: <20220805120950.jfcc3rlljpjabsps@carbon.lan>
+References: <20220728115007.4376-1-dwagner@suse.de>
+ <20220728134755.fnc4ttqjwwzbm5dl@carbon.lan>
+ <76E241FF-6DFC-4CD5-8271-658A1A504577@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <76E241FF-6DFC-4CD5-8271-658A1A504577@oracle.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Variable stp is assigned a value that is never read, the assignment
-and the variable stp are redundant and can be removed.
+On Wed, Aug 03, 2022 at 05:30:24PM +0000, Himanshu Madhani wrote:
+> Do you see issue with reverted patch?
 
-Cleans up clang scan build warning:
-drivers/scsi/st.c:4253:7: warning: Although the value stored to 'stp'
-is used in the enclosing expression, the value is never actually
-read from 'stp' [deadcode.DeadStores]
+No, all is good again with 6a45c8e137d4 ("scsi: qla2xxx: Fix disk
+failure to rediscover") reverted.
 
-Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
----
- drivers/scsi/st.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+> I see no issues with the code change per say, just want to understand if
+> you were seeing issue with the offending patch reverted as well?
 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 850172a2b8f1..65f521b036c1 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -4246,11 +4246,10 @@ static int st_probe(struct device *dev)
- 	struct st_partstat *STps;
- 	struct st_buffer *buffer;
- 	int i, error;
--	char *stp;
- 
- 	if (SDp->type != TYPE_TAPE)
- 		return -ENODEV;
--	if ((stp = st_incompatible(SDp))) {
-+	if (st_incompatible(SDp)) {
- 		sdev_printk(KERN_INFO, SDp,
- 			    "OnStream tapes are no longer supported;\n");
- 		sdev_printk(KERN_INFO, SDp,
--- 
-2.35.3
-
+I didn't see the revert in time hence I started to fix the code because
+I understood the patch actually fixes a race.
