@@ -2,132 +2,85 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70B74C25B06
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Aug 2022 21:07:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4502C19F2D
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 Aug 2022 01:54:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232085AbiHDVHQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 Aug 2022 17:07:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37964 "EHLO
+        id S240060AbiHEByP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 Aug 2022 21:54:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58626 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230337AbiHDVHO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2022 17:07:14 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id CB5756580E
-        for <linux-scsi@vger.kernel.org>; Thu,  4 Aug 2022 14:07:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1659647232;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=yIosAhkjdjbdDCxflqN6vVYLdrFXgbNaWxJiqeyFPkc=;
-        b=XQsKfJ4YH34OQvXGzzee7fR/PGU2qFdKGVtAYpYwZ49MOTRk9CSqRQYqPaQnRErGPYblLm
-        s4dk3GnA3Uvl1FOP00WzurxpU8h9Z1pa1kHecsDB8TqUz7PRqtnytX3OkeIZdvAZhtTWlc
-        JtCAwDbBMvtv+Hv1+3+8vkRYMfZxhos=
-Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com
- [209.85.208.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-223-tND5EKlEPFu0nkmGSr8Dag-1; Thu, 04 Aug 2022 17:07:11 -0400
-X-MC-Unique: tND5EKlEPFu0nkmGSr8Dag-1
-Received: by mail-ed1-f72.google.com with SMTP id b6-20020a056402278600b0043e686058feso530224ede.10
-        for <linux-scsi@vger.kernel.org>; Thu, 04 Aug 2022 14:07:11 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc;
-        bh=yIosAhkjdjbdDCxflqN6vVYLdrFXgbNaWxJiqeyFPkc=;
-        b=Vr5cjzGs+La/NRoa7p8Vn+OW081W9/Ag+cJ+HiCZRtJc2MW4XSP8jHGD+auaZAkFk+
-         nOImtNeABBoRaeAA8K+ut0uvI7mOX8fbGX60uXJrXaIT8Iw0izMSl5+phYhPlAJVUH7A
-         ENNqST+S/oBfewthWvOkwOKmiPc52mnN/RnUz7U3fkGhhx1QZkNyWuuaHmIG3L0CR03q
-         h4Om8TRJHRBAARTzS4BpsA6dzaA8e22HZQyZQamooUzsEfhuSxKLUkvd00K1jgOV5zel
-         OJLVCAVWQRDVS4Kt7V3Uc+HUC6FqjFehl5XJMiFrFJpi4E3Jjl9u+FyeM+4nbTR+CW0G
-         gREQ==
-X-Gm-Message-State: ACgBeo2sRimMkt3VyvfD39/7ekQJTFXg5uheWIDW7mkSjdTsHnanBORv
-        sxmSPgzBlZwVJPPb7EvYl72+ezjLXSpZiKj8vi1ZVMAt7wXCeId+t0tzXqBZeW5vY8ZgegaCmzj
-        928YrVo1vPg3AxyEjhvWyzw==
-X-Received: by 2002:a05:6402:288c:b0:43c:d371:48e4 with SMTP id eg12-20020a056402288c00b0043cd37148e4mr3742836edb.239.1659647230184;
-        Thu, 04 Aug 2022 14:07:10 -0700 (PDT)
-X-Google-Smtp-Source: AA6agR4JHjrCB4gYEF8L3U0admA1ESyRSgcEfzBp36DL6uheG3RW3xgl2liWtU3x6VqEuq+fHlq+JA==
-X-Received: by 2002:a05:6402:288c:b0:43c:d371:48e4 with SMTP id eg12-20020a056402288c00b0043cd37148e4mr3742817edb.239.1659647230022;
-        Thu, 04 Aug 2022 14:07:10 -0700 (PDT)
-Received: from ?IPV6:2001:1c00:c1e:bf00:d69d:5353:dba5:ee81? (2001-1c00-0c1e-bf00-d69d-5353-dba5-ee81.cable.dynamic.v6.ziggo.nl. [2001:1c00:c1e:bf00:d69d:5353:dba5:ee81])
-        by smtp.gmail.com with ESMTPSA id ep11-20020a1709069b4b00b0073087f7dfe2sm718773ejc.125.2022.08.04.14.07.09
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 04 Aug 2022 14:07:09 -0700 (PDT)
-Message-ID: <f0dc4b4a-cc46-72b4-ca5a-7664080f02d3@redhat.com>
-Date:   Thu, 4 Aug 2022 23:07:08 +0200
+        with ESMTP id S235658AbiHEByO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2022 21:54:14 -0400
+Received: from invmail.skhynix.com (exvmail.hynix.com [166.125.252.79])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id D6C05B83
+        for <linux-scsi@vger.kernel.org>; Thu,  4 Aug 2022 18:54:09 -0700 (PDT)
+X-AuditID: a67dfc4e-cc1ff700000138f0-f2-62ec783e23dd
+Received: from hymail21.hynixad.com (10.156.135.51) by hymail23.hynixad.com
+ (10.156.135.53) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.2.986.15; Fri, 5 Aug 2022
+ 10:54:06 +0900
+Received: from hymail21.hynixad.com ([10.156.135.51]) by hymail21.hynixad.com
+ ([10.156.135.51]) with mapi id 15.02.0986.015; Fri, 5 Aug 2022 10:54:06 +0900
+From:   =?utf-8?B?7KCV7JqU7ZWcKEpPVU5HIFlPSEFOKSBNb2JpbGUgU0U=?= 
+        <yohan.joung@sk.com>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+CC:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        "Avri Altman" <avri.altman@wdc.com>, Bean Huo <beanhuo@micron.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>
+Subject: RE: [PATCH v3] scsi: ufs: Increase the maximum data buffer size
+Thread-Topic: [PATCH v3] scsi: ufs: Increase the maximum data buffer size
+Thread-Index: AQHYoUKOvUbRZtx3z0GI27+IE7yewa2cTOUQgACEW4CAATMjMIAAduaAgAESlAA=
+Date:   Fri, 5 Aug 2022 01:54:06 +0000
+Message-ID: <f0464649f7e144c4a0536659201fc48b@sk.com>
+References: <20220726225232.1362251-1-bvanassche@acm.org>
+ <55fce3baaabf4e33aeaccbe5b4e1f145@sk.com>
+ <6263c2a5-e7b6-c9e5-69e8-b6d93604d82d@acm.org>
+ <d8945bdf320240b2bdf6ee411eff6c8a@sk.com>
+ <7a6499c6-4e98-072e-ce09-ddda7179b93e@acm.org>
+In-Reply-To: <7a6499c6-4e98-072e-ce09-ddda7179b93e@acm.org>
+Accept-Language: ko-KR, en-US
+Content-Language: ko-KR
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [10.152.36.223]
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.12.0
-Subject: Re: [PATCH 03/10] scsi: uas: Drop DID_TARGET_FAILURE use.
-Content-Language: en-US
-To:     Mike Christie <michael.christie@oracle.com>, jgross@suse.com,
-        njavali@marvell.com, pbonzini@redhat.com, jasowang@redhat.com,
-        mst@redhat.com, stefanha@redhat.com, oneukum@suse.com,
-        manoj@linux.ibm.com, mrochs@linux.ibm.com, ukrishn@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        james.bottomley@hansenpartnership.com, kraxel@redhat.com
-References: <20220804034100.121125-1-michael.christie@oracle.com>
- <20220804034100.121125-4-michael.christie@oracle.com>
- <51baa06b-ed8a-5de8-93da-6de97077173d@oracle.com>
-From:   Hans de Goede <hdegoede@redhat.com>
-In-Reply-To: <51baa06b-ed8a-5de8-93da-6de97077173d@oracle.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-CFilter-Loop: Reflected
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrJLMWRmVeSWpSXmKPExsXCNUdUSde+4k2SwcE9zBbd13ewOTB6fN4k
+        F8AYxWWTkpqTWZZapG+XwJXROfsde8EkrorztztZGxg/cHYxcnJICJhI7F3xh7mLkYtDSOAV
+        o8SCt+uYIJy5jBKXntxkBaliEwiVuHF7JSOILSIQJ9E66xUjSBGzwBUmiUkf/7KDJIQFPCTW
+        fZ4BlOAAKvKUuD8lBML0k9j4IQKkgkVAReLLglawkbwCphLHz/cyQuz6zChxeMcHFpAEp4C1
+        xOFnG5hBehkFZCWuXpMBCTMLiEss/nqNGeJoAYkle85D2aISLx//Y4WwFSV+/9nKCtLKLKAp
+        sX6XPkSrosSU7ofsEGsFJU7OfMICUS4pcXDFDZYJjGKzkGyYhdA9C0n3LCTdCxhZVjEKZ+aV
+        5SZm5ugVZ2dU5mVW6CXn525iBEbIsto/fjsYv1wIPsQowMGoxMN7YMvrJCHWxLLiytxDjBIc
+        zEoivD93AIV4UxIrq1KL8uOLSnNSiw8xSnOwKInzfgtLTRASSE8sSc1OTS1ILYLJMnFwSjUw
+        yvcuunZvseVjeekXkT6L4h1eRO2/4FK9LOdwscjEHr91i679tax+9XO69JJpuVxzY6UfLdj9
+        u/9X7cRdAtv39ZYsKuydk2230tE1d07jz4fpHVMjv+xz4f6lJe7YlvW4pOCpzXdzcw6T53qf
+        eY6L31siprzpQ37sMwkes3Xms8tiXQTXNzF1K7EUZyQaajEXFScCAG24S7yMAgAA
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
-
-On 8/4/22 20:59, Mike Christie wrote:
-> Adding Hans and Gerd. Sorry, I messed up the cc originally.
-> 
-> On 8/3/22 10:40 PM, Mike Christie wrote:
->> DID_TARGET_FAILURE is internal to the SCSI layer. Drivers must not use it
->> because:
->>
->> 1. It's not propagated upwards, so SG IO/passthrough users will not see an
->> error and think a command was successful.
->>
->> 2. There is no handling for them in scsi_decide_disposition so it results
->> in the scsi eh running.
->>
->> It looks like the driver wanted a hard failure so this swaps it with
->> DID_BAD_TARGET which gives us that behavior and the error looks like it's
->> for a case where the target did not support a TMF we wanted to use (maybe
->> not a bad target but disappointing so close enough).
->>
->> Signed-off-by: Mike Christie <michael.christie@oracle.com>
-
-The suggested change sounds reasonable to me. Note I never touched
-the part of the driver being changed here and I'm not a SCSI expert,
-so this is just my 2 cents on the change really.
-
-Regards,
-
-Hans
-
-
-
-
->> ---
->>  drivers/usb/storage/uas.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
->> index 84dc270f6f73..de3836412bf3 100644
->> --- a/drivers/usb/storage/uas.c
->> +++ b/drivers/usb/storage/uas.c
->> @@ -283,7 +283,7 @@ static bool uas_evaluate_response_iu(struct response_iu *riu, struct scsi_cmnd *
->>  		set_host_byte(cmnd, DID_OK);
->>  		break;
->>  	case RC_TMF_NOT_SUPPORTED:
->> -		set_host_byte(cmnd, DID_TARGET_FAILURE);
->> +		set_host_byte(cmnd, DID_BAD_TARGET);
->>  		break;
->>  	default:
->>  		uas_log_cmd_state(cmnd, "response iu", response_code);
-> 
-
+PiA+IEluIGJsb2NrIGxheWVyLCBtYXhfc2VnbWVudF9zaXplIGlzIG9idGFpbmVkIGZyb20gZ2V0
+X21heF9zZWdtZW50X3NpemUuDQo+ID4gc2VnX2JvdW5kYXJ5X21hc2sgaXMgc2V0IHRvIFBBR0Vf
+U0laRSAtIDEgaW4gdGhlIHVmcyBkcml2ZXIuDQo+ID4gVGhlIHNlZ21lbnQgc2l6ZSBpcyB0aGUg
+UEFHRSBzaXplLCBhbmQgdGhlIG1heCBidWZmZXIgc2l6ZSBpcyBzZWdtZW50DQo+ID4gc2l6ZSAq
+IG1heCBzZWdtZW50IGNvdW50ICggUEFHRSBTSVpFICogMTI4ICkgPSA1MTIgS2lCICBpbiBibG9j
+ayBsYXllcg0KPiA+IFJpZ2h0Pw0KPiANCj4gVGhhbmtzIGZvciBoYXZpbmcgcmVwb3J0ZWQgdGhp
+cy4gSSBoYWQgb3Zlcmxvb2tlZCB0aGF0IHRoZSBVRlMgaG9zdA0KPiBjb250cm9sbGVyIGRyaXZl
+ciBzZXRzIHRoZSBkbWFfYm91bmRhcnkgbWVtYmVyIG9mIHRoZSBob3N0X3RlbXBsYXRlIGZpZWxk
+Lg0KPiBJcyBteSB1bmRlcnN0YW5kaW5nIGNvcnJlY3QgdGhhdCBVRlMgaG9zdCBjb250cm9sbGVy
+cyBzaG91bGQgc3VwcG9ydCBETUENCj4gc2VnbWVudHMgdGhhdCBjb25zaXN0IG9mIG11bHRpcGxl
+IHBoeXNpY2FsIHBhZ2VzPw0KbWF4IHZhbHVlIG9mIGRhdGEgYnl0ZSBjb3VudCBpcyAyNTZrYiBp
+biBQUkRULiANCjI1NmtiIChkYXRhIGJ5dGUgY291bnQpICogMTI4IChtYXggc2VnbWVudHMpID0g
+MzI3NjhrYg0KSWYgcGh5c2ljYWwgcGFnZXMgYXJlIGNvbnRpbnVvdXMsIGl0IHNlZW1zIHRoYXQg
+SU8gY2FuIGJlIGRlbGl2ZXJlZCB1cCB0byAzMm1iLg0KcGVyZm9ybWFuY2UgY2hlY2tzIGFyZSBy
+ZXF1aXJlZCwgYnV0IHdlIGRvbid0IGhhdmUgdG8gY29uc2lkZXIgc2F0dXJhdGlvbi4NCmJlY2F1
+c2UgdGhlIGRldmljZSB2ZW5kb3IgY2FuIHNldCBvcHRfeGZlcl9ibG9ja3MgLg0KVGhhbmtzLCAN
+CnlvaGFuDQo+IA0KPiBUaGFua3MsDQo+IA0KPiBCYXJ0Lg0K
