@@ -2,159 +2,329 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B0FDC3F6B0
-	for <linux-scsi@archiver.kernel.org>; Sun,  7 Aug 2022 16:45:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 020E9C19F2A
+	for <linux-scsi@archiver.kernel.org>; Sun,  7 Aug 2022 16:58:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234067AbiHGQms (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 7 Aug 2022 12:42:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41922 "EHLO
+        id S233178AbiHGQ6h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 7 Aug 2022 12:58:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48116 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233178AbiHGQmr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Aug 2022 12:42:47 -0400
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44BFA2BD2;
-        Sun,  7 Aug 2022 09:42:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1659890566; x=1691426566;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=6OhnfoBiaZTWht7GA1P70bu9k1nEE2U220KaOY5t++U=;
-  b=I+o538DMnKwBE6TRfOH7N995fVGxZRqG81pSE3MSrDFyM8rJKLJ8CrfX
-   oPj/QfXZU5zOsuozFx/2HEja7oKUlRGzfwfZPz7FURPq3VO5ILy6HiHEY
-   tCwSeHyIBcnKzklF/+tM6H88Gi1gNu96SGXweeGOg5sTJzCcspa/rdWAG
-   Vhve+CA8kTE+eSYSvaCp6q53dstmF3yzRw7ODPT579P/3F3/dn+msn23U
-   S02uOUYlBzWVc3RfxHuFJbaGJMnzMPV/xk8u81DCFstlVS8IlK0i64QHg
-   ij6nUA2w/dZy7HZA38s+jp2ql3ps5mIH7azv6psC4hbbNwaeRaeOlYqpa
-   Q==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10432"; a="352174740"
-X-IronPort-AV: E=Sophos;i="5.93,220,1654585200"; 
-   d="scan'208";a="352174740"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Aug 2022 09:42:45 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.93,220,1654585200"; 
-   d="scan'208";a="693502765"
-Received: from lkp-server01.sh.intel.com (HELO e0eace57cfef) ([10.239.97.150])
-  by FMSMGA003.fm.intel.com with ESMTP; 07 Aug 2022 09:42:42 -0700
-Received: from kbuild by e0eace57cfef with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1oKjMP-000LTb-2U;
-        Sun, 07 Aug 2022 16:42:41 +0000
-Date:   Mon, 8 Aug 2022 00:41:58 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Li Jinlin <lijinlin3@huawei.com>, lduncan@suse.com,
-        cleech@redhat.com, michael.christie@oracle.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, mark.mielke@gmail.com
-Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org,
-        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linfeilong@huawei.com,
-        liuzhiqiang26@huawei.com
-Subject: Re: [PATCH] scsi: iscsi: iscsi_tcp: Fix null-ptr-deref while calling
- getpeername()
-Message-ID: <202208080020.xQk6IIBw-lkp@intel.com>
-References: <20220802101939.3972556-1-lijinlin3@huawei.com>
+        with ESMTP id S230010AbiHGQ6e (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Aug 2022 12:58:34 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C71606545
+        for <linux-scsi@vger.kernel.org>; Sun,  7 Aug 2022 09:58:33 -0700 (PDT)
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 277AhoTT032247;
+        Sun, 7 Aug 2022 16:58:15 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : content-transfer-encoding : content-type :
+ mime-version; s=corp-2022-7-12;
+ bh=EDxnLt4PBQd3XF8EAlL3zlxW9fLkIJ8QfR5paJ7zmGY=;
+ b=u75BeAyXheCdWFLYFXchWOfpnq8YYU/e6DLpLlT6kdgrLlO8daPJks2QzRAsYTyy4ZCr
+ gwOAsz98Rx4N8V5sWFY+wvabnF/hjiPK3+Sb/UPMwooZYh9PrwVqSs+73uhdYCPufuKI
+ 4SYx/UmN6fg/Kc4ZJRMXC9N3teddg5S5OqCphkt/9caP9aJGmHmA5dbHDRTCO3NndEkL
+ sL3+wzbfl7PGoZpaCn8J2NMw62uemIvSKZ2OxD4Sz4Lf9lZC8VtyyYG4O5dxsKHfEBRQ
+ 3S94qw9HJ/t/zfig7dh4shSGGCigmyCPV+V2EzkxSmnbsBagqyJ8IkFJ//XtscOn7pMS UA== 
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3hseqchuyt-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sun, 07 Aug 2022 16:58:14 +0000
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 277CS1DK035901;
+        Sun, 7 Aug 2022 16:58:14 GMT
+Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2176.outbound.protection.outlook.com [104.47.55.176])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3hser7ap1p-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sun, 07 Aug 2022 16:58:14 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=iab8cbzhcGdlm1McgiGf05E51JdCz5SvZK5FFX6qybxfMSfWbFiKO6WpcIZO+neg1CJ5h2B7klThnvt0AZo91SYcTEvXA7c8dhAcA6YTQX3X3GQJmy84gBMEjtTq/hVhH0D7Xmen7jwRjAPCoKaPT4a4gn3V2kSry7rA9vM5OIOAwShQ87fmohKFTBpxgvwaKCgW2cHczuziUKekCgCtcuckcZh3Ymvrr1nyXlpvln5dbBRjs7LZVKva0SO88doO5pvTAQZhC7RFupRYwxfN/K1gTlI50m5q2SdxBLAFTvJgRDd2YMCAqjpRdGNIskkdPBFNQUYLk52ynIeUgjktdg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=EDxnLt4PBQd3XF8EAlL3zlxW9fLkIJ8QfR5paJ7zmGY=;
+ b=ju0sX5suyuwswaPYaFtAcAl39xQ+aT9Nt5MERN4FIbMzBuv2qVphM2Fp5mETs2fKc/LWsNUDs7xhw72qYswzFYJC9N+esDnJB+N1MJKLECuJV8Mmy2NjjgiuhaESxAFQoUXBAtMMga87I8r1128w1HGxRTOXEmmBfgoSwmylEnvdvn/jKlMSNSHxjj3SndGNOZN/qepOZU4B1mwoIkYfWpNCTuMDs3ixnr/5A59w/kxurUdWCq3a6Y2pHB8QIkjv99t93xHxecT14DDKdxKuNNpO6pbpYgIZD2vyDYwK2tdI+Mp6kaP7X5FANRS5gfl2qOeGiNtRzcoTAZByMcx+FA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=EDxnLt4PBQd3XF8EAlL3zlxW9fLkIJ8QfR5paJ7zmGY=;
+ b=Yq0mNAjwo8OI/OfLz1ZuaTTOcR3BHlDUQZNcTy9Iz/DprZkOy3FKSplBlgV3jyIRWN2ql7s8tIiQ69kBP3Ots0sEg+SrTSqn6Nb55220538lRAtTOet+qoPFQNaSGJTYjrZJ9pUts0IOgzzRRMNzQtQAa2GLDcNTShkVwrPRTIU=
+Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
+ PH0PR10MB4662.namprd10.prod.outlook.com (2603:10b6:510:38::14) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.5504.14; Sun, 7 Aug 2022 16:58:12 +0000
+Received: from DM5PR10MB1466.namprd10.prod.outlook.com
+ ([fe80::8dee:d667:f326:1d50]) by DM5PR10MB1466.namprd10.prod.outlook.com
+ ([fe80::8dee:d667:f326:1d50%6]) with mapi id 15.20.5504.019; Sun, 7 Aug 2022
+ 16:58:06 +0000
+From:   Mike Christie <michael.christie@oracle.com>
+To:     lijinlin3@huawei.com, lduncan@suse.com, cleech@redhat.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        jejb@linux.ibm.com
+Cc:     Mike Christie <michael.christie@oracle.com>
+Subject: [PATCH] scsi: iscsi_tcp: Fix null-ptr-deref while calling getpeername
+Date:   Sun,  7 Aug 2022 11:58:04 -0500
+Message-Id: <20220807165804.8628-1-michael.christie@oracle.com>
+X-Mailer: git-send-email 2.25.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: CH0PR13CA0035.namprd13.prod.outlook.com
+ (2603:10b6:610:b2::10) To DM5PR10MB1466.namprd10.prod.outlook.com
+ (2603:10b6:3:b::7)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220802101939.3972556-1-lijinlin3@huawei.com>
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: ec416cc1-2728-4ab5-b511-08da7895ffe4
+X-MS-TrafficTypeDiagnostic: PH0PR10MB4662:EE_
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: YNnqwCPGpFmLN8w6qyu3se//cj+Pysicaxd4OHDRG3FuAcw8A70gQKwM+13sINmXRtdRKQv6Vb1igK1kKiI8GU1RozQnKN+djZNBgiG0NdoultdzVfS1wrz9Z/FN6ufFKs101laolJJbmFIk7LtMCxFAaZNa80Su632RKygCWPtGAGTlcBbeZB6d6n7VtuKKroehAr851YKSf5spYoWcF/ayGbv2SO9B+oj30ppMLg8J3rddEF02YZldO9ZY8Ai7mpaJyUpSWbWVnH36Lk2lRcQPNBLlEEUVQTq7jEmgefmnTthhhjVbhZS3MORt4/5HGSEEkdSbo00rClTPJ/hWk12/Qov7ao6FKFcIoAQUc2+Hc8Im9EUrhB6oF6Rmk183Ms9MPW3lu72roO9ElWXGzGLQ9Rit0LNuHzsRet8Us5POs+aIZTlMD0udXhQOv6HAFS+dkKFNkp36p73moDwtOHC+hy4uFAbkOQ8LPtQRfY1eKmW8MuwEuoFPdEZF0XEocaVk+2EyD71DeymZkyvkBmRx7K8uJwhV7CsxECdO8U/PVv8KPzWOOpHIybi5DjwOkbhwv8ANKXxr4n+1GiGkvDCnTV77b+OmXiY5uyINxI2m0QQc7W8xhwOwnCcSqeIGXqv5nmABNhruk3g7K6XZqnHxvjPQP0UTKS57CfJ/hFlh+2EeMqFs4DVmhlNoOxp8AJ/bpde4T20ECDB+4686g/KBUbqOFpM2MMe89Gu/irk=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(396003)(366004)(346002)(136003)(39860400002)(376002)(4326008)(8936002)(66946007)(66556008)(6486002)(8676002)(5660300002)(186003)(66476007)(316002)(36756003)(478600001)(2616005)(107886003)(1076003)(2906002)(6512007)(26005)(41300700001)(6506007)(83380400001)(38100700002)(86362001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?dypsAVHdeDuOAHGVxUQk0Dr2x8MjYdYDUzp/x+mGRAFOFWhMbAx+zd5+c1Bu?=
+ =?us-ascii?Q?IvR4d4o3y/xhOt2Dy5UtuvR4livzGfyAGFurzIf0cUXJPdc7Ot+JYaZC5mFS?=
+ =?us-ascii?Q?4d3cLwdRnMGCQn1pTROib4laJAnHRRnhBPq8FQjMWturJp0ZhHQUdAnf7l/g?=
+ =?us-ascii?Q?Z9TYEaqN+Qiyv05mgBYEpXqeEMc1WYQc4F61Dn/2/LtGjFQ7Fl4ETB2V0tSV?=
+ =?us-ascii?Q?1sMn9lv/vIG0ibN/HwqJU5Hdeb9rEdh4BQ9bsYlf3Q4h216tJgTcuu/+VZmz?=
+ =?us-ascii?Q?ck/B9OtjcFrwec3UmoqaoydkVRL0ZrMfFI5zvHYbhV//68nUX8WR4BORHv+2?=
+ =?us-ascii?Q?hn4Rz8UCJ3K/uWRMAEL5Qy+bTYqfzAW4G+IMGX4wLbf/hWAz9LFGT/NGWMhv?=
+ =?us-ascii?Q?AB7JGQKQ4jNC9TKoQSuLOTflJp09p+kIb1DuRtlhX0XkJPnCue0vmqd8j4WR?=
+ =?us-ascii?Q?aRKjhlj3AB8fJjk5CSfd4Z6Da42LVco2PAZfTIrn7f14JKArj67DbuGC8efI?=
+ =?us-ascii?Q?lzkqdF+LF+XiOHWpN9yikq34HFVPWjjir6R7zdxUT8RARz6Z5bOW3aka0br8?=
+ =?us-ascii?Q?otuPM9QaGBHRkXRxxRvUaPJYUJCWjOkNsMpJrPfL3/BKVUqvJeu1FL2Mdrsk?=
+ =?us-ascii?Q?jcQ1zUc6GaDpyltorGuCuMPdKU94YM/Qmv88zFVrmJ1vDb8xOK6cFTIzfwNz?=
+ =?us-ascii?Q?cTlR+hoHJ3RgZl4Mai9Mp9YMSM8L8zObUPTtmq5yBwLtL4tBtt4gGh40WgNI?=
+ =?us-ascii?Q?t5C+MldKeYNwDGHEBnPi2tXwzNGiKK03Seef6UVev3pjgwZcvoE/DIfQ+EAC?=
+ =?us-ascii?Q?2QVBBu6XdvXzE2UFq42yaH/9rcImRV5L/yE0QOmaRVV2yp2bwYpvWQjo81Qt?=
+ =?us-ascii?Q?7jXt2T7EXcZImtZlQl5ni1QxbE4gylhDlxBZB01gmCdW9Z/7Wp1xoo5ni3tq?=
+ =?us-ascii?Q?lzqqvb84zCZ38lvquNOqDLwmjacvNZOcLNoN4PlIX5CahVrWzo4qh/nssbGu?=
+ =?us-ascii?Q?Q13P8vGWkn2JFpKoEYlhyDmPWC73CrZ189bR1nZZezXXjfPU2AUrUlPGxL6y?=
+ =?us-ascii?Q?H5e3Ff9y2Nz1fQ/fxnjXDjNbcoxBiO6W+eoAShKSAtVnuHf16TYvdokB9lY0?=
+ =?us-ascii?Q?vtRZpmGkRlEkrVnFyybPeSrBn3q9219VfgOexvd/c5cmZ1SDoUBWg+2kNvGu?=
+ =?us-ascii?Q?Mts550nRkbehV7SZaTVXj0nSOW8KuN1z/hvmxfLqV8IEdikhHpLlbyJG3Qcf?=
+ =?us-ascii?Q?pe7e7jWdXmiyYrHnQ+W7Q5YyTZ6L/NX0cfZy7tdMTdCcNHjmfNfMkmQOUToP?=
+ =?us-ascii?Q?Ea3PgcyS6eG0qyaEMUYmViHWy7M1RGvs6uiW8jwcSH0W1foG1NZBqMs37F6U?=
+ =?us-ascii?Q?kcuo/X7Fh+iiW+qc9EeUIVHYpPAMDVKO4ZD7qrgU6J3bu0xICyBOGApy2+US?=
+ =?us-ascii?Q?Q0PZbXG/D88H6d/7bN8djJQSKQ0Op17S9dbMmmGwxY3g2oavw26aD8A37ZzU?=
+ =?us-ascii?Q?wTi972ovEWbQqol7Ruio/TMwZ4VwdppxWvXosBt81Hwp208EF9s+1SA2BTe1?=
+ =?us-ascii?Q?WsSzmXz9JWrBLXigUMNMGZ8xzXzaevnnwkOjHo0LL+Mf+XYUQDt+ozzuflMe?=
+ =?us-ascii?Q?TQ=3D=3D?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: ec416cc1-2728-4ab5-b511-08da7895ffe4
+X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Aug 2022 16:58:06.6703
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: z3yft6LxXEOs6mRsmhKK1K49BV3+VxPKdzn5k2KaJj9VwFVDru6n9ADZjW4EjfJBiv+e0fNHAJwwRUxe4t3H6K1nXBlFwvEgdHroKHrS4oM=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB4662
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
+ definitions=2022-08-07_10,2022-08-05_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 mlxlogscore=999
+ spamscore=0 suspectscore=0 adultscore=0 phishscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2206140000
+ definitions=main-2208070092
+X-Proofpoint-ORIG-GUID: Et4s-3YPcNADyQYgFQ1Jy3ulA-Cm64ta
+X-Proofpoint-GUID: Et4s-3YPcNADyQYgFQ1Jy3ulA-Cm64ta
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Li,
+This patch fixes a NULL pointer crash that occurs when we are freeing the
+socket at the same time we access it via sysfs.
 
-Thank you for the patch! Yet something to improve:
+The problem is that:
 
-[auto build test ERROR on mkp-scsi/for-next]
-[also build test ERROR on jejb-scsi/for-next linus/master v5.19 next-20220805]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+1. iscsi_sw_tcp_conn_get_param/iscsi_sw_tcp_host_get_param takes the
+frwd_lock and does sock_hold() then drops the frwd_lock. sock_hold does a
+get on the "struct sock".
+2. iscsi_sw_tcp_release_conn does sockfd_put() which does the last put on
+the "struct socket" and that does __sock_release which sets the sock->ops
+to NULL.
+3. iscsi_sw_tcp_conn_get_param/iscsi_sw_tcp_host_get_param then calls
+kernel_getpeername which acceses the NULL sock->ops.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Li-Jinlin/scsi-iscsi-iscsi_tcp-Fix-null-ptr-deref-while-calling-getpeername/20220802-173945
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
-config: x86_64-randconfig-r033-20220801 (https://download.01.org/0day-ci/archive/20220808/202208080020.xQk6IIBw-lkp@intel.com/config)
-compiler: clang version 16.0.0 (https://github.com/llvm/llvm-project 52cd00cabf479aa7eb6dbb063b7ba41ea57bce9e)
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/ccc367df3fdba07b24eeda721ca928cce50f40d2
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Li-Jinlin/scsi-iscsi-iscsi_tcp-Fix-null-ptr-deref-while-calling-getpeername/20220802-173945
-        git checkout ccc367df3fdba07b24eeda721ca928cce50f40d2
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=x86_64 SHELL=/bin/bash drivers/scsi/
+Above we do a get on the "struct sock", but we needed a get on the
+"struct socket". Originally, we just held the frwd_lock the entire time
+but in:
 
-If you fix the issue, kindly add following tag where applicable
-Reported-by: kernel test robot <lkp@intel.com>
+commit bcf3a2953d36 ("scsi: iscsi: iscsi_tcp: Avoid holding spinlock
+while calling getpeername()")
 
-All errors (new ones prefixed by >>):
+we switched to refcount based because the network layer changed and
+started taking a mutex in that path.
 
->> drivers/scsi/iscsi_tcp.c:798:8: error: incompatible pointer to integer conversion passing 'struct file *' to parameter of type 'unsigned int' [-Wint-conversion]
-                   fget(sock->file);
-                        ^~~~~~~~~~
-   include/linux/file.h:48:39: note: passing argument to parameter 'fd' here
-   extern struct file *fget(unsigned int fd);
-                                         ^
-   drivers/scsi/iscsi_tcp.c:852:8: error: incompatible pointer to integer conversion passing 'struct file *' to parameter of type 'unsigned int' [-Wint-conversion]
-                   fget(sock->file);
-                        ^~~~~~~~~~
-   include/linux/file.h:48:39: note: passing argument to parameter 'fd' here
-   extern struct file *fget(unsigned int fd);
-                                         ^
-   2 errors generated.
+Instead of trying to maintain multiple refcounts, this just has a use a
+mutex for accessing the socket in the interface code paths.
 
+Fixes: bcf3a2953d36 ("scsi: iscsi: iscsi_tcp: Avoid holding spinlock
+while calling getpeername()")
+Signed-off-by: Mike Christie <michael.christie@oracle.com>
 
-vim +798 drivers/scsi/iscsi_tcp.c
+---
+ drivers/scsi/iscsi_tcp.c | 56 ++++++++++++++++++++++++++--------------
+ drivers/scsi/iscsi_tcp.h |  3 +++
+ 2 files changed, 40 insertions(+), 19 deletions(-)
 
-   777	
-   778	static int iscsi_sw_tcp_conn_get_param(struct iscsi_cls_conn *cls_conn,
-   779					       enum iscsi_param param, char *buf)
-   780	{
-   781		struct iscsi_conn *conn = cls_conn->dd_data;
-   782		struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
-   783		struct iscsi_sw_tcp_conn *tcp_sw_conn = tcp_conn->dd_data;
-   784		struct sockaddr_in6 addr;
-   785		struct socket *sock;
-   786		int rc;
-   787	
-   788		switch(param) {
-   789		case ISCSI_PARAM_CONN_PORT:
-   790		case ISCSI_PARAM_CONN_ADDRESS:
-   791		case ISCSI_PARAM_LOCAL_PORT:
-   792			spin_lock_bh(&conn->session->frwd_lock);
-   793			if (!tcp_sw_conn || !tcp_sw_conn->sock) {
-   794				spin_unlock_bh(&conn->session->frwd_lock);
-   795				return -ENOTCONN;
-   796			}
-   797			sock = tcp_sw_conn->sock;
- > 798			fget(sock->file);
-   799			spin_unlock_bh(&conn->session->frwd_lock);
-   800	
-   801			if (param == ISCSI_PARAM_LOCAL_PORT)
-   802				rc = kernel_getsockname(sock,
-   803							(struct sockaddr *)&addr);
-   804			else
-   805				rc = kernel_getpeername(sock,
-   806							(struct sockaddr *)&addr);
-   807			spin_lock_bh(&conn->session->frwd_lock);
-   808			sockfd_put(sock);
-   809			spin_unlock_bh(&conn->session->frwd_lock);
-   810			if (rc < 0)
-   811				return rc;
-   812	
-   813			return iscsi_conn_get_addr_param((struct sockaddr_storage *)
-   814							 &addr, param, buf);
-   815		default:
-   816			return iscsi_conn_get_param(cls_conn, param, buf);
-   817		}
-   818	
-   819		return 0;
-   820	}
-   821	
-
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index 29b1bd755afe..6a1c885a1b4a 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -595,6 +595,8 @@ iscsi_sw_tcp_conn_create(struct iscsi_cls_session *cls_session,
+ 	INIT_WORK(&conn->recvwork, iscsi_sw_tcp_recv_data_work);
+ 	tcp_sw_conn->queue_recv = iscsi_recv_from_iscsi_q;
+ 
++	mutex_init(&tcp_sw_conn->sock_lock);
++
+ 	tfm = crypto_alloc_ahash("crc32c", 0, CRYPTO_ALG_ASYNC);
+ 	if (IS_ERR(tfm))
+ 		goto free_conn;
+@@ -629,11 +631,15 @@ iscsi_sw_tcp_conn_create(struct iscsi_cls_session *cls_session,
+ 
+ static void iscsi_sw_tcp_release_conn(struct iscsi_conn *conn)
+ {
+-	struct iscsi_session *session = conn->session;
+ 	struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
+ 	struct iscsi_sw_tcp_conn *tcp_sw_conn = tcp_conn->dd_data;
+ 	struct socket *sock = tcp_sw_conn->sock;
+ 
++	/*
++	 * The iscsi transport class will make sure we are not called in
++	 * parallel with start, stop, bind and destroys. However, this can be
++	 * called twice if userspace does a stop then a destroy.
++	 */
+ 	if (!sock)
+ 		return;
+ 
+@@ -649,9 +655,9 @@ static void iscsi_sw_tcp_release_conn(struct iscsi_conn *conn)
+ 
+ 	iscsi_suspend_rx(conn);
+ 
+-	spin_lock_bh(&session->frwd_lock);
++	mutex_lock(&tcp_sw_conn->sock_lock);
+ 	tcp_sw_conn->sock = NULL;
+-	spin_unlock_bh(&session->frwd_lock);
++	mutex_unlock(&tcp_sw_conn->sock_lock);
+ 	sockfd_put(sock);
+ }
+ 
+@@ -703,7 +709,6 @@ iscsi_sw_tcp_conn_bind(struct iscsi_cls_session *cls_session,
+ 		       struct iscsi_cls_conn *cls_conn, uint64_t transport_eph,
+ 		       int is_leading)
+ {
+-	struct iscsi_session *session = cls_session->dd_data;
+ 	struct iscsi_conn *conn = cls_conn->dd_data;
+ 	struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
+ 	struct iscsi_sw_tcp_conn *tcp_sw_conn = tcp_conn->dd_data;
+@@ -723,10 +728,10 @@ iscsi_sw_tcp_conn_bind(struct iscsi_cls_session *cls_session,
+ 	if (err)
+ 		goto free_socket;
+ 
+-	spin_lock_bh(&session->frwd_lock);
++	mutex_lock(&tcp_sw_conn->sock_lock);
+ 	/* bind iSCSI connection and socket */
+ 	tcp_sw_conn->sock = sock;
+-	spin_unlock_bh(&session->frwd_lock);
++	mutex_unlock(&tcp_sw_conn->sock_lock);
+ 
+ 	/* setup Socket parameters */
+ 	sk = sock->sk;
+@@ -763,8 +768,15 @@ static int iscsi_sw_tcp_conn_set_param(struct iscsi_cls_conn *cls_conn,
+ 		break;
+ 	case ISCSI_PARAM_DATADGST_EN:
+ 		iscsi_set_param(cls_conn, param, buf, buflen);
++
++		mutex_lock(&tcp_sw_conn->sock_lock);
++		if (!tcp_sw_conn->sock) {
++			mutex_unlock(&tcp_sw_conn->sock_lock);
++			return -ENOTCONN;
++		}
+ 		tcp_sw_conn->sendpage = conn->datadgst_en ?
+ 			sock_no_sendpage : tcp_sw_conn->sock->ops->sendpage;
++		mutex_unlock(&tcp_sw_conn->sock_lock);
+ 		break;
+ 	case ISCSI_PARAM_MAX_R2T:
+ 		return iscsi_tcp_set_max_r2t(conn, buf);
+@@ -789,14 +801,12 @@ static int iscsi_sw_tcp_conn_get_param(struct iscsi_cls_conn *cls_conn,
+ 	case ISCSI_PARAM_CONN_PORT:
+ 	case ISCSI_PARAM_CONN_ADDRESS:
+ 	case ISCSI_PARAM_LOCAL_PORT:
+-		spin_lock_bh(&conn->session->frwd_lock);
+-		if (!tcp_sw_conn || !tcp_sw_conn->sock) {
+-			spin_unlock_bh(&conn->session->frwd_lock);
++		mutex_lock(&tcp_sw_conn->sock_lock);
++		sock = tcp_sw_conn->sock;
++		if (!sock) {
++			mutex_unlock(&tcp_sw_conn->sock_lock);
+ 			return -ENOTCONN;
+ 		}
+-		sock = tcp_sw_conn->sock;
+-		sock_hold(sock->sk);
+-		spin_unlock_bh(&conn->session->frwd_lock);
+ 
+ 		if (param == ISCSI_PARAM_LOCAL_PORT)
+ 			rc = kernel_getsockname(sock,
+@@ -804,7 +814,7 @@ static int iscsi_sw_tcp_conn_get_param(struct iscsi_cls_conn *cls_conn,
+ 		else
+ 			rc = kernel_getpeername(sock,
+ 						(struct sockaddr *)&addr);
+-		sock_put(sock->sk);
++		mutex_unlock(&tcp_sw_conn->sock_lock);
+ 		if (rc < 0)
+ 			return rc;
+ 
+@@ -842,17 +852,25 @@ static int iscsi_sw_tcp_host_get_param(struct Scsi_Host *shost,
+ 		}
+ 		tcp_conn = conn->dd_data;
+ 		tcp_sw_conn = tcp_conn->dd_data;
++		/*
++		 * If the leadconn is bound then setup has completed and destroy
++		 * has not been run yet. Grab a ref to the conn incase a destroy
++		 * starts to run after we drop the fwrd_lock.
++		 */
++		iscsi_get_conn(conn->cls_conn);
++		spin_unlock_bh(&session->frwd_lock);
++
++		mutex_lock(&tcp_sw_conn->sock_lock);
+ 		sock = tcp_sw_conn->sock;
+ 		if (!sock) {
+-			spin_unlock_bh(&session->frwd_lock);
++			mutex_unlock(&tcp_sw_conn->sock_lock);
++			iscsi_put_conn(conn->cls_conn);
+ 			return -ENOTCONN;
+ 		}
+-		sock_hold(sock->sk);
+-		spin_unlock_bh(&session->frwd_lock);
+ 
+-		rc = kernel_getsockname(sock,
+-					(struct sockaddr *)&addr);
+-		sock_put(sock->sk);
++		rc = kernel_getsockname(sock, (struct sockaddr *)&addr);
++		mutex_unlock(&tcp_sw_conn->sock_lock);
++		iscsi_put_conn(conn->cls_conn);
+ 		if (rc < 0)
+ 			return rc;
+ 
+diff --git a/drivers/scsi/iscsi_tcp.h b/drivers/scsi/iscsi_tcp.h
+index 850a018aefb9..230db7d62f67 100644
+--- a/drivers/scsi/iscsi_tcp.h
++++ b/drivers/scsi/iscsi_tcp.h
+@@ -28,6 +28,9 @@ struct iscsi_sw_tcp_send {
+ 
+ struct iscsi_sw_tcp_conn {
+ 	struct socket		*sock;
++	/* Taken when accessing the sock from the netlink/sysfs interface */
++	struct mutex		sock_lock;
++
+ 	struct work_struct	recvwork;
+ 	bool			queue_recv;
+ 
 -- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+2.18.2
+
