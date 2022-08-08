@@ -2,80 +2,151 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8ECA2C19F2A
-	for <linux-scsi@archiver.kernel.org>; Mon,  8 Aug 2022 02:37:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 265C9C25B0D
+	for <linux-scsi@archiver.kernel.org>; Mon,  8 Aug 2022 03:26:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234125AbiHHChy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 7 Aug 2022 22:37:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59520 "EHLO
+        id S236791AbiHHD0K (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 7 Aug 2022 23:26:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60624 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231560AbiHHChw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Aug 2022 22:37:52 -0400
-Received: from out30-131.freemail.mail.aliyun.com (out30-131.freemail.mail.aliyun.com [115.124.30.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D215C10CD
-        for <linux-scsi@vger.kernel.org>; Sun,  7 Aug 2022 19:37:50 -0700 (PDT)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R141e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018045176;MF=kanie@linux.alibaba.com;NM=1;PH=DS;RN=7;SR=0;TI=SMTPD_---0VLbcjlD_1659926267;
-Received: from 192.168.3.3(mailfrom:kanie@linux.alibaba.com fp:SMTPD_---0VLbcjlD_1659926267)
-          by smtp.aliyun-inc.com;
-          Mon, 08 Aug 2022 10:37:47 +0800
-Message-ID: <76be7fa8-2c68-331a-db7c-ed346184a08a@linux.alibaba.com>
-Date:   Mon, 8 Aug 2022 10:37:46 +0800
+        with ESMTP id S231905AbiHHD0I (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Aug 2022 23:26:08 -0400
+Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40394DFE5;
+        Sun,  7 Aug 2022 20:26:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1659929167; x=1691465167;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=bOeEbQASG8qYDkYJbxcsIUMSn9m3cJLEwP0JygTYejw=;
+  b=RZeFJKwcGDqZsZwhWgouJVIv2SLE4VaAQSBNXHLRYXo274EET15TAUxW
+   rR8RgdMBddin1WBjHWHQl1a/0MQrXqvCcXIn56OwO2UDvSnSww/ey1AHO
+   25jMLGrzcg+0oYqYAx4KIFBHZHCI7b54lEIok4H0ejPi1gNHYPVAS2BZR
+   T/varMc9QP3Ny83CUN6zZ+wR2zuF3wOqtpjlVMcRSmPysWz0xML1XD1/B
+   ISa8mXsa2Nk7acph52tkEQTBxQtjZkabb4ehGJkH2jNcoaasi0m38GKDL
+   Uxauo/nXoVrk0JpoCWcBm9Zo/h66XL7lZFsWosUq0hCmVdGnBlzlE5ZOg
+   Q==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10432"; a="376786101"
+X-IronPort-AV: E=Sophos;i="5.93,221,1654585200"; 
+   d="scan'208";a="376786101"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Aug 2022 20:26:07 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.93,221,1654585200"; 
+   d="scan'208";a="931870261"
+Received: from lkp-server01.sh.intel.com (HELO e0eace57cfef) ([10.239.97.150])
+  by fmsmga005.fm.intel.com with ESMTP; 07 Aug 2022 20:26:04 -0700
+Received: from kbuild by e0eace57cfef with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1oKtP1-000Lqj-1H;
+        Mon, 08 Aug 2022 03:26:03 +0000
+Date:   Mon, 8 Aug 2022 11:25:23 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Li Jinlin <lijinlin3@huawei.com>, lduncan@suse.com,
+        cleech@redhat.com, michael.christie@oracle.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, mark.mielke@gmail.com
+Cc:     kbuild-all@lists.01.org, open-iscsi@googlegroups.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linfeilong@huawei.com, liuzhiqiang26@huawei.com
+Subject: Re: [PATCH] scsi: iscsi: iscsi_tcp: Fix null-ptr-deref while calling
+ getpeername()
+Message-ID: <202208081109.mO6WgY4E-lkp@intel.com>
+References: <20220802101939.3972556-1-lijinlin3@huawei.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.8.1
-Subject: Re: [PATCH] scsi: megaraid_sas: remove unnecessary kfree
-From:   Guixin Liu <kanie@linux.alibaba.com>
-To:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-References: <1659424740-46918-1-git-send-email-kanie@linux.alibaba.com>
-In-Reply-To: <1659424740-46918-1-git-send-email-kanie@linux.alibaba.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220802101939.3972556-1-lijinlin3@huawei.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+Hi Li,
 
-Gentle ping.
+Thank you for the patch! Perhaps something to improve:
 
-在 2022/8/2 15:19, Guixin Liu 写道:
-> When alloc ctrl mem fail, the reply_map will be free in
-> megasas_free_ctrl_mem(), no need to free in megasas_alloc_ctrl_mem().
->
-> Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
-> ---
->   drivers/scsi/megaraid/megaraid_sas_base.c | 8 ++------
->   1 file changed, 2 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-> index a3e117a..f6c37a9 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -7153,22 +7153,18 @@ static int megasas_alloc_ctrl_mem(struct megasas_instance *instance)
->   	switch (instance->adapter_type) {
->   	case MFI_SERIES:
->   		if (megasas_alloc_mfi_ctrl_mem(instance))
-> -			goto fail;
-> +			return -ENOMEM;
->   		break;
->   	case AERO_SERIES:
->   	case VENTURA_SERIES:
->   	case THUNDERBOLT_SERIES:
->   	case INVADER_SERIES:
->   		if (megasas_alloc_fusion_context(instance))
-> -			goto fail;
-> +			return -ENOMEM;
->   		break;
->   	}
->   
->   	return 0;
-> - fail:
-> -	kfree(instance->reply_map);
-> -	instance->reply_map = NULL;
-> -	return -ENOMEM;
->   }
->   
->   /*
+[auto build test WARNING on mkp-scsi/for-next]
+[also build test WARNING on jejb-scsi/for-next linus/master v5.19]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Li-Jinlin/scsi-iscsi-iscsi_tcp-Fix-null-ptr-deref-while-calling-getpeername/20220802-173945
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+config: powerpc-randconfig-s051-20220801 (https://download.01.org/0day-ci/archive/20220808/202208081109.mO6WgY4E-lkp@intel.com/config)
+compiler: powerpc-linux-gcc (GCC) 12.1.0
+reproduce:
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # apt-get install sparse
+        # sparse version: v0.6.4-39-gce1a6720-dirty
+        # https://github.com/intel-lab-lkp/linux/commit/ccc367df3fdba07b24eeda721ca928cce50f40d2
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Li-Jinlin/scsi-iscsi-iscsi_tcp-Fix-null-ptr-deref-while-calling-getpeername/20220802-173945
+        git checkout ccc367df3fdba07b24eeda721ca928cce50f40d2
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__' O=build_dir ARCH=powerpc SHELL=/bin/bash drivers/scsi/
+
+If you fix the issue, kindly add following tag where applicable
+Reported-by: kernel test robot <lkp@intel.com>
+
+sparse warnings: (new ones prefixed by >>)
+>> drivers/scsi/iscsi_tcp.c:798:26: sparse: sparse: incorrect type in argument 1 (different base types) @@     expected unsigned int fd @@     got struct file *file @@
+   drivers/scsi/iscsi_tcp.c:798:26: sparse:     expected unsigned int fd
+   drivers/scsi/iscsi_tcp.c:798:26: sparse:     got struct file *file
+   drivers/scsi/iscsi_tcp.c:852:26: sparse: sparse: incorrect type in argument 1 (different base types) @@     expected unsigned int fd @@     got struct file *file @@
+   drivers/scsi/iscsi_tcp.c:852:26: sparse:     expected unsigned int fd
+   drivers/scsi/iscsi_tcp.c:852:26: sparse:     got struct file *file
+
+vim +798 drivers/scsi/iscsi_tcp.c
+
+   777	
+   778	static int iscsi_sw_tcp_conn_get_param(struct iscsi_cls_conn *cls_conn,
+   779					       enum iscsi_param param, char *buf)
+   780	{
+   781		struct iscsi_conn *conn = cls_conn->dd_data;
+   782		struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
+   783		struct iscsi_sw_tcp_conn *tcp_sw_conn = tcp_conn->dd_data;
+   784		struct sockaddr_in6 addr;
+   785		struct socket *sock;
+   786		int rc;
+   787	
+   788		switch(param) {
+   789		case ISCSI_PARAM_CONN_PORT:
+   790		case ISCSI_PARAM_CONN_ADDRESS:
+   791		case ISCSI_PARAM_LOCAL_PORT:
+   792			spin_lock_bh(&conn->session->frwd_lock);
+   793			if (!tcp_sw_conn || !tcp_sw_conn->sock) {
+   794				spin_unlock_bh(&conn->session->frwd_lock);
+   795				return -ENOTCONN;
+   796			}
+   797			sock = tcp_sw_conn->sock;
+ > 798			fget(sock->file);
+   799			spin_unlock_bh(&conn->session->frwd_lock);
+   800	
+   801			if (param == ISCSI_PARAM_LOCAL_PORT)
+   802				rc = kernel_getsockname(sock,
+   803							(struct sockaddr *)&addr);
+   804			else
+   805				rc = kernel_getpeername(sock,
+   806							(struct sockaddr *)&addr);
+   807			spin_lock_bh(&conn->session->frwd_lock);
+   808			sockfd_put(sock);
+   809			spin_unlock_bh(&conn->session->frwd_lock);
+   810			if (rc < 0)
+   811				return rc;
+   812	
+   813			return iscsi_conn_get_addr_param((struct sockaddr_storage *)
+   814							 &addr, param, buf);
+   815		default:
+   816			return iscsi_conn_get_param(cls_conn, param, buf);
+   817		}
+   818	
+   819		return 0;
+   820	}
+   821	
+
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
