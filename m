@@ -2,191 +2,125 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74C8FC25B06
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Aug 2022 19:33:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D3E7C25B08
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Aug 2022 19:43:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245538AbiHITdS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 9 Aug 2022 15:33:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36938 "EHLO
+        id S1344370AbiHITmc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 9 Aug 2022 15:42:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42642 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245720AbiHITdF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Aug 2022 15:33:05 -0400
-Received: from mail-pj1-f46.google.com (mail-pj1-f46.google.com [209.85.216.46])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B9D12250A;
-        Tue,  9 Aug 2022 12:33:04 -0700 (PDT)
-Received: by mail-pj1-f46.google.com with SMTP id c19-20020a17090ae11300b001f2f94ed5c6so1798715pjz.1;
-        Tue, 09 Aug 2022 12:33:04 -0700 (PDT)
+        with ESMTP id S1344603AbiHITkq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Aug 2022 15:40:46 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 47F0D1A06E
+        for <linux-scsi@vger.kernel.org>; Tue,  9 Aug 2022 12:40:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1660074044;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=nzfgbRqx1oA7rB0L1CmuO04Pzl/8xtUsGl9mIPWH8rg=;
+        b=YXqsZ7TvQPsTPaqvvYUUMLYNR7OS/Dj3UrZ1N9p3XI2ne/mSGRqt8ledgE6gSijXlBu8if
+        TdUC2maIuETTXU+9QlWXs51lUyA0C/Fp2Pv6ZCnQybKrdnN7ruj8JSz/uOQwNMLpO8Kx2B
+        siWF0NPD/muqkG+sfRjDo4JtS9b45sM=
+Received: from mail-ed1-f71.google.com (mail-ed1-f71.google.com
+ [209.85.208.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-292-9TJloXASOMW6x2hIdCProg-1; Tue, 09 Aug 2022 15:40:42 -0400
+X-MC-Unique: 9TJloXASOMW6x2hIdCProg-1
+Received: by mail-ed1-f71.google.com with SMTP id z20-20020a05640235d400b0043e1e74a495so7868775edc.11
+        for <linux-scsi@vger.kernel.org>; Tue, 09 Aug 2022 12:40:42 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc;
-        bh=f+0qvG5LpZ/YCrirnG9rg8hMNbrBXBa71sPfrtvKm9k=;
-        b=ql8K1a0GRsOwdjQmw3bqWsqTlaoDUeSjApF2nBtg+B8lwg3xfu3+AUKfKCo0HeMKcg
-         DZAL4gCnSsU82o1XlWjwKih7cw3Rkx31p/99YipROZaXyXQJ8y9udNy6oCWEOPmGWxob
-         GmiaoP1YbWAv4qPnKoiSWdgzIYgFDZx4+yCrsiRu7/qmLqMgZHOEA9K5dYKsnQZ9Eksp
-         +4ELWxyGColWXG20dnpSf/iivMJVBHgl3qcQKXRYvyvoy3AQmpeMzEGJDM+A/VNSi2ee
-         Sm3jukwtxAsc33CbfhsPX2gEIrTNK3565WA3K4kVSRcv6WMwyqSe0m4GZeCKF7TSljYb
-         ubfA==
-X-Gm-Message-State: ACgBeo2cqEmDcr0Ch1SDhhrO9w5jbBFMfLgQu+0P6e2C5tKJn9I+AO3i
-        ciD2OtgGSHERpkQNDJOWwHiytlX3RT0=
-X-Google-Smtp-Source: AA6agR5b3k6/3uuXU2uCikVcoZWIFTOMmR2vQDrfIljSBaQQd1XN66Nj9Fx1iPA0NtYy8Ovw7IMVMA==
-X-Received: by 2002:a17:902:e891:b0:16f:a8:9b9c with SMTP id w17-20020a170902e89100b0016f00a89b9cmr24397129plg.8.1660073583617;
-        Tue, 09 Aug 2022 12:33:03 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:61e9:2f41:c2d4:73d? ([2620:15c:211:201:61e9:2f41:c2d4:73d])
-        by smtp.gmail.com with ESMTPSA id d14-20020a170902654e00b0016d12adc282sm11204466pln.147.2022.08.09.12.33.01
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 09 Aug 2022 12:33:03 -0700 (PDT)
-Message-ID: <4768d11e-06c6-1b74-9822-b2421a3f59bb@acm.org>
-Date:   Tue, 9 Aug 2022 12:33:00 -0700
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc;
+        bh=nzfgbRqx1oA7rB0L1CmuO04Pzl/8xtUsGl9mIPWH8rg=;
+        b=b4uxPPWxKCrd2+i5Jn0jRRe0xF9iusDrgEXdmFSees0zEa89YWShTR1O5n66tRkVdB
+         1otfvmUjiWcSEDee/01/OTZoDCgCY+A8/SDOKr+qmxMY0Ywwk7YbhWXVYOw8SFUbHp8V
+         Tj97dRPzPuiQvFisnZOn+Cl1HcFmr/aE4HzjopgQSyfOEqLoLo6c7jKyycZFjEWket/a
+         qvYRlR6r0Wc2EuCzbu+LqxdhQ1h83aDlaDC/Dgu9E+r3KMdpB61BBCCwk9lHPhvaq9aF
+         IUl5SMW+4NE5Qpg5QmoZ0w5AwUExj6vHSP+9mP37zSIDdpgACfCxSHJx9GJ3TgdpbnCV
+         KnMQ==
+X-Gm-Message-State: ACgBeo2FIXKRtZf+fa+dqkmgUSev7AMiSysMWFRK0QyN7lbDlXi6/zFL
+        Dkh8lMJteP6fUIZTlX48y2bgzfaTR/u/K/fjyFNMar1TgLMaEu7mWuQkNwNFo2xc+nITVmHjYNn
+        d/DqrJxLEhjvs+WIprg6C7Q==
+X-Received: by 2002:a17:907:75d5:b0:730:8baf:b314 with SMTP id jl21-20020a17090775d500b007308bafb314mr17626111ejc.587.1660074041774;
+        Tue, 09 Aug 2022 12:40:41 -0700 (PDT)
+X-Google-Smtp-Source: AA6agR4i0sPhXMDOLhsiuZ5FKwOqA5EwPNTCNZvmwuiH+w2aQ/64CF+5Ah7uhbaGJ4r5OZ6fCvdTSA==
+X-Received: by 2002:a17:907:75d5:b0:730:8baf:b314 with SMTP id jl21-20020a17090775d500b007308bafb314mr17626097ejc.587.1660074041581;
+        Tue, 09 Aug 2022 12:40:41 -0700 (PDT)
+Received: from redhat.com ([2.52.152.113])
+        by smtp.gmail.com with ESMTPSA id q35-20020a05640224a300b00440a1888e00sm4114845eda.59.2022.08.09.12.40.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 09 Aug 2022 12:40:41 -0700 (PDT)
+Date:   Tue, 9 Aug 2022 15:40:37 -0400
+From:   "Michael S. Tsirkin" <mst@redhat.com>
+To:     Mike Christie <michael.christie@oracle.com>
+Cc:     jgross@suse.com, njavali@marvell.com, pbonzini@redhat.com,
+        jasowang@redhat.com, stefanha@redhat.com, oneukum@suse.com,
+        manoj@linux.ibm.com, mrochs@linux.ibm.com, ukrishn@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        james.bottomley@hansenpartnership.com
+Subject: Re: [PATCH 05/10] scsi: virtio_scsi: Drop DID_NEXUS_FAILURE use.
+Message-ID: <20220809154011-mutt-send-email-mst@kernel.org>
+References: <20220804034100.121125-1-michael.christie@oracle.com>
+ <20220804034100.121125-6-michael.christie@oracle.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [PATCH v2 12/20] block,nvme,scsi,dm: Add blk_status to pr_ops
- callouts.
-Content-Language: en-US
-To:     Mike Christie <michael.christie@oracle.com>,
-        Christoph Hellwig <hch@lst.de>
-Cc:     linux-block@vger.kernel.org, dm-devel@redhat.com,
-        snitzer@kernel.org, axboe@kernel.dk,
-        linux-nvme@lists.infradead.org, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com
-References: <20220809000419.10674-1-michael.christie@oracle.com>
- <20220809000419.10674-13-michael.christie@oracle.com>
- <20220809072155.GF11161@lst.de>
- <4af2a4d3-04d1-966a-5fd5-5e443b593c8b@oracle.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <4af2a4d3-04d1-966a-5fd5-5e443b593c8b@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220804034100.121125-6-michael.christie@oracle.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/9/22 11:08, Mike Christie wrote:
-> On 8/9/22 2:21 AM, Christoph Hellwig wrote:
->> On Mon, Aug 08, 2022 at 07:04:11PM -0500, Mike Christie wrote:
->>> To handle both cases, this patch adds a blk_status_t arg to the pr_ops
->>> callouts. The lower levels will convert their device specific error to
->>> the blk_status_t then the upper levels can easily check that code
->>> without knowing the device type. It also allows us to keep userspace
->>> compat where it expects a negative -Exyz error code if the command fails
->>> before it's sent to the device or a device/tranport specific value if the
->>> error is > 0.
->>
->> Why do we need two return values here?
+On Wed, Aug 03, 2022 at 10:40:55PM -0500, Mike Christie wrote:
+> DID_NEXUS_FAILURE is internal to the SCSI layer. Drivers must not use it
+> because:
 > 
-> I know the 2 return values are gross :) I can do it in one, but I wasn't sure
-> what's worse. See below for the other possible solutions. I think they are all
-> bad.
+> 1. It's not propagated upwards, so SG IO/passthrough users will not see an
+> error and think a command was successful.
 > 
+> 2. There is no handling for them in scsi_decide_disposition so it results
+> in the scsi eh running.
 > 
-> 0. Convert device specific conflict error to -EBADE then back:
+> It looks like virtio_scsi gets this when something like qemu returns
+> VIRTIO_SCSI_S_NEXUS_FAILURE. It looks like qemu returns that error code
+> if host OS returns DID_NEXUS_FAILURE (qemu's internal
+> SCSI_HOST_RESERVATION_ERROR maps to DID_NEXUS_FAILURE). This shouldn't
+> happen for linux since we don't propagate that error code to userspace.
 > 
-> sd_pr_command()
+> This has us convert VIRTIO_SCSI_S_NEXUS_FAILURE to a
+> SAM_STAT_RESERVATION_CONFLICT in case some other virt layer is returning
+> it. In that case we will still get the reservation confict failure we
+> expect.
 > 
-> .....
-> 
-> /* would add similar check for NVME_SC_RESERVATION_CONFLICT in nvme */
-> if (result == SAM_STAT_CHECK_CONDITION)
-> 	return -EBADE;
-> else
-> 	return result;
-> 
-> 
-> LIO then just checks for -EBADE but when going to userspace we have to
-> convert:
-> 
-> 
-> blkdev_pr_register()
-> 
-> ...
-> 	result = ops->pr_register()
-> 	if (result < 0) {
-> 		/* For compat we must convert back to the nvme/scsi code */
-> 		if (result == -EBADE) {
-> 			/* need some helper for this that calls down the stack */
-> 			if (bdev == SCSI)
-> 				return SAM_STAT_RESERVATION_CONFLICT
-> 			else
-> 				return NVME_SC_RESERVATION_CONFLICT
-> 		} else
-> 			return blk_status_to_str(result)
-> 	} else
-> 		return result;
-> 
-> 
-> The conversion is kind of gross and I was thinking in the future it's going
-> to get worse. I'm going to want to have more advanced error handling in LIO
-> and dm-multipath. Like dm-multipath wants to know if an pr_op failed because
-> of a path failure, so it can retry another one, or a hard device/target error.
-> It would be nice for LIO if an PGR had bad/illegal values and the device
-> returned an error than I could detect that.
-> 
-> 
-> 1. Drop the -Exyz error type and use blk_status_t in the kernel:
-> 
-> sd_pr_command()
-> 
-> .....
-> if (result < 0)
-> 	return -errno_to_blk_status(result);
-> else if (result == SAM_STAT_CHECK_CONDITION)
-> 	return -BLK_STS_NEXUS;
-> else
-> 	return result;
-> 
-> blkdev_pr_register()
-> 
-> ...
-> 	result = ops->pr_register()
-> 	if (result < 0) {
-> 		/* For compat we must convert back to the nvme/scsi code */
-> 		if (result == -BLK_STS_NEXUS) {
-> 			/* need some helper for this that calls down the stack */
-> 			if (bdev == SCSI)
-> 				return SAM_STAT_RESERVATION_CONFLICT
-> 			else
-> 				return NVME_SC_RESERVATION_CONFLICT
-> 		} else
-> 			return blk_status_to_str(result)
-> 	} else
-> 		return result;
-> 
-> This has similar issues as #0 where we have to convert before returning to
-> userspace.
-> 
-> 
-> Note: In this case, if the block layer uses an -Exyz error code there's not
-> BLK_STS for then we would return -EIO to userspace now. I was thinking
-> that might not be ok but I could also just add a BLK_STS error code
-> for errors like EINVAL, EWOULDBLOCK, ENOMEM, etc so that doesn't happen.
-> 
-> 
-> 2. We could do something like below where the low levels are not changed but the
-> caller converts:
-> 
-> sd_pr_command()
-> 	/* no changes */
-> 
-> lio()
-> 	result = ops->pr_register()
-> 	if (result > 0) {
-> 		/* add some stacked helper again that goes through dm and
-> 		 * to the low level device
-> 		 */
-> 		if (bdev == SCSI) {
-> 			result = scsi_result_to_blk_status(result)
-> 		else
-> 			result = nvme_error_status(result)
-> 
-> 
-> This looks simple, but it felt wrong having upper layers having to
-> know the device type and calling conversion functions.
+> Signed-off-by: Mike Christie <michael.christie@oracle.com>
 
-Has it been considered to introduce a new enumeration type instead of 
-choosing (0), (1) or (2)?
+If everyone drops it, so should virtio
 
-Thanks,
+so
 
-Bart.
+Acked-by: Michael S. Tsirkin <mst@redhat.com>
+
+but pls merge with rest of the patchset.
+
+> ---
+>  drivers/scsi/virtio_scsi.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+> index 112d8c3962b0..00cf6743db8c 100644
+> --- a/drivers/scsi/virtio_scsi.c
+> +++ b/drivers/scsi/virtio_scsi.c
+> @@ -144,7 +144,7 @@ static void virtscsi_complete_cmd(struct virtio_scsi *vscsi, void *buf)
+>  		set_host_byte(sc, DID_BAD_TARGET);
+>  		break;
+>  	case VIRTIO_SCSI_S_NEXUS_FAILURE:
+> -		set_host_byte(sc, DID_NEXUS_FAILURE);
+> +		set_status_byte(sc, SAM_STAT_RESERVATION_CONFLICT);
+>  		break;
+>  	default:
+>  		scmd_printk(KERN_WARNING, sc, "Unknown response %d",
+> -- 
+> 2.25.1
+
