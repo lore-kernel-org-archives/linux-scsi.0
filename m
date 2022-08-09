@@ -2,42 +2,57 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63BEDC19F2D
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Aug 2022 04:14:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B9B6C19F2D
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Aug 2022 06:52:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233685AbiHIEOY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 9 Aug 2022 00:14:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33862 "EHLO
+        id S232502AbiHIGwz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 9 Aug 2022 02:52:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57832 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229612AbiHIEOX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Aug 2022 00:14:23 -0400
-X-Greylist: delayed 493 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 08 Aug 2022 21:14:20 PDT
-Received: from vigilant-mayer.142-93-222-223.plesk.page (unknown [142.93.222.223])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D06C7180
-        for <linux-scsi@vger.kernel.org>; Mon,  8 Aug 2022 21:14:20 -0700 (PDT)
-Received: by vigilant-mayer.142-93-222-223.plesk.page (Postfix, from userid 10000)
-        id 6850F7F0E3; Tue,  9 Aug 2022 09:36:01 +0530 (IST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=mahalaxmicomforts.in; s=default; t=1660017961;
-        bh=rLJk2rNWUK1Wo0fbWdWnpB/ZkMElvV+SBcq/8AhvXKo=; h=To:Subject:From;
-        b=VM5l15XfTZMZ6whYqpVMiDEp2F4+hZo75TtsGPVRE01Yecu8dWqvrjyvmY6hc3Qhr
-         6NMkhfRbewa0dxGYVsoZCG+mqyU1JatI/Yz0oqJrTo1dbjDfjjGQ00jVjBy4lVJGme
-         rHQcP7B2ikFjQhSc10R/v7Yig8uYlCOKp5XI1vYQ=
-To:     linux-scsi@vger.kernel.org
-Subject: Kryptowahrung macht Sie zum Millionar
-Date:   Tue, 9 Aug 2022 04:06:01 +0000
-From:   WordPress <admin@mahalaxmicomforts.in>
-Message-ID: <fB5qOHPyJ9TooYELx8CEvdMrYAuSeCs3yFNeB0aa0qI@mahalaxmicomforts.in>
-X-Mailer: PHPMailer 6.5.3 (https://github.com/PHPMailer/PHPMailer)
+        with ESMTP id S229606AbiHIGww (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Aug 2022 02:52:52 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53B7F205CF
+        for <linux-scsi@vger.kernel.org>; Mon,  8 Aug 2022 23:52:51 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 33EF368AA6; Tue,  9 Aug 2022 08:52:47 +0200 (CEST)
+Date:   Tue, 9 Aug 2022 08:52:47 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Mike Christie <michael.christie@oracle.com>
+Cc:     mwilck@suse.com, "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
+        Hannes Reinecke <hare@suse.de>, Ming Lei <ming.lei@redhat.com>,
+        Bart Van Assche <Bart.VanAssche@sandisk.com>,
+        Dave Prizer <dave.prizer@hpe.com>
+Subject: Re: [PATCH RESEND] scsi: scan: retry INQUIRY after timeout
+Message-ID: <20220809065247.GA9663@lst.de>
+References: <20220808202018.22224-1-mwilck@suse.com> <251c6042-5778-5d82-64e3-a2de5e1e2d36@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-X-PPP-Message-ID: <166001796137.357061.15270460237701058431@vigilant-mayer.142-93-222-223.plesk.page>
-X-PPP-Vhost: mahalaxmicomforts.in
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <251c6042-5778-5d82-64e3-a2de5e1e2d36@oracle.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-JosephAvave
-Kryptowahrung macht Sie zum Millionar
-Kryptowahrung macht Sie zum Millionar https://telegra.ph/Deutschland-hat-eine-neue-Einnahmequelle-von-919342-Euro-pro-Woche-08-07
+On Mon, Aug 08, 2022 at 05:11:27PM -0500, Mike Christie wrote:
+> For REPORT_LUNS it looks like we retry almost all errors 3 times. For the
+> probe/setup commands, at least for disks, it looks like we also are more
+> forgiving and will retry DID_TIME_OUT/DID_TRANSPORT_DISRUPTED 3 times for
+> commands like SAI_READ_CAPACITY_16 (I didn't check every sd operation and
+> other upper level drivers).
+> 
+> However, for the other probe/setup  operations that rely on scsi_attach_vpd
+> succeeding like sd_read_block_limits then we will hit issues where the device
+> is partially setup. Should scsi_vpd_inquiry be retrying 3 times as well?
+> 
+> An alternative to changing all the callers would be we could make scsi_noretry_cmd
+> detect when it's an internal passthrough command and just retry these types of
+> errors. For SG IO type of passthough we still want to fail right away.
 
+Yes, I think one single place to do retries for setup path command
+is much better than growing ad-hoc logic.
+
+I just made a similar comment to similar nvme patch from SuSE a few days
+ago..
