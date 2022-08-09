@@ -2,157 +2,149 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C09AC19F2D
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Aug 2022 07:37:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4247C19F2D
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Aug 2022 08:21:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239323AbiHIHhw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 9 Aug 2022 03:37:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60878 "EHLO
+        id S229891AbiHIIVt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 9 Aug 2022 04:21:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59610 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232748AbiHIHhv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Aug 2022 03:37:51 -0400
-Received: from mail-lf1-x12d.google.com (mail-lf1-x12d.google.com [IPv6:2a00:1450:4864:20::12d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 569D6CC0
-        for <linux-scsi@vger.kernel.org>; Tue,  9 Aug 2022 00:37:50 -0700 (PDT)
-Received: by mail-lf1-x12d.google.com with SMTP id c17so15881949lfb.3
-        for <linux-scsi@vger.kernel.org>; Tue, 09 Aug 2022 00:37:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc;
-        bh=BWv2o6e7/VMeVBBomh2q0LGKe4D3IL7APng5W1rm6rA=;
-        b=JImA3A2P0f4kVGGimPQ3MJxJmbfnxIXYp136XMq9/+aD6WxGdgUKrffJXtF1rTghJO
-         qfoFRjV73PVSmZ/jvqFku5gXZ+aZnsjavyEEl9wwCAm+oFRfg2TDwEG/w9pDPZux2j/Z
-         HkkI8GcuakeZEqZM1C/pJHEmSx12dKJGC5DH4=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc;
-        bh=BWv2o6e7/VMeVBBomh2q0LGKe4D3IL7APng5W1rm6rA=;
-        b=UjXvMFV/E/y8VvKL0DorcwGpNik8sIwYi6Bf/cREGHQD38Aua5UziEg3nGrS2gbmB2
-         2kSLDTePss+HlyKyfZJ65ROsJJl2Omz0SujsukxfGrSFeJvu6w3bmyJ2pgS9VoQSlpIo
-         YWB90PVaHMPjbwLMSAqVPBoFHBwsU0TCov0WQ0byPS4ln1nOGPzIpGaMI11OY6MU+aas
-         0zM4bgUa0shJNW71m9rUPCcLJhhdXicvpcY89vOHyanOqT1wLaL80iLR3xLILTv+tpt2
-         j3cHCVqq6u9xkbphwkMoWa9Z2XxY1S8vjYdqE+SgfhhbFYuW2jQ+hZBJZ+b5AbKBSD69
-         ohhA==
-X-Gm-Message-State: ACgBeo0Gl9rirwNXg2+kVN6izw3s9Hvx/xhSmtawIlmcUz9vk4tWgJC/
-        e9esxQ/QPdYMPlrOAp+hYxclrQb4JCBFZwjD3XoZxA==
-X-Google-Smtp-Source: AA6agR5/E8ZyWUDYhe1+fx+KpnWizIVpPiwmv1QbyYdlYw6HiFNo4+sm05UYV+F6sE5gw3sSvfzFd319FFLcsqBIgUk=
-X-Received: by 2002:a05:6512:33d5:b0:48b:17a:6b86 with SMTP id
- d21-20020a05651233d500b0048b017a6b86mr8226952lfg.671.1660030668537; Tue, 09
- Aug 2022 00:37:48 -0700 (PDT)
+        with ESMTP id S229567AbiHIIVr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Aug 2022 04:21:47 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 455BF62EE
+        for <linux-scsi@vger.kernel.org>; Tue,  9 Aug 2022 01:21:38 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id B43B51FED5;
+        Tue,  9 Aug 2022 08:21:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1660033296; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=hs6j7JvkIBZwom726J75vUZ8Hnv7Za5ejyg75ai6cMc=;
+        b=O33NlNoRmvdSxuScrhU7GXJUu9Y0qdtJEkxwFD6ugfucgeE9mCi0/DtQmYvIjOW5iI0Jsi
+        uOoi9VBRJ4cg7QozOIGKfatSBNRQ1RYcgGAoEtqEVwfFEwDo7xuuaG/pxGSsCQ4qoZJBld
+        dJuNqyY2fHKZY7QTuKXSnFFZQsOyIuw=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 6C0F913AA1;
+        Tue,  9 Aug 2022 08:21:36 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id HfOzGBAZ8mJREgAAMHmgww
+        (envelope-from <mwilck@suse.com>); Tue, 09 Aug 2022 08:21:36 +0000
+Message-ID: <068e9fbf445dd90b7b6538cded8b7cd98acccbbd.camel@suse.com>
+Subject: Re: [PATCH RESEND] scsi: scan: retry INQUIRY after timeout
+From:   Martin Wilck <mwilck@suse.com>
+To:     Mike Christie <michael.christie@oracle.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
+        Hannes Reinecke <hare@suse.de>, Ming Lei <ming.lei@redhat.com>,
+        Bart Van Assche <Bart.VanAssche@sandisk.com>,
+        Dave Prizer <dave.prizer@hpe.com>
+Date:   Tue, 09 Aug 2022 10:21:35 +0200
+In-Reply-To: <251c6042-5778-5d82-64e3-a2de5e1e2d36@oracle.com>
+References: <20220808202018.22224-1-mwilck@suse.com>
+         <251c6042-5778-5d82-64e3-a2de5e1e2d36@oracle.com>
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.3 
 MIME-Version: 1.0
-References: <1659424729-46502-1-git-send-email-kanie@linux.alibaba.com>
-In-Reply-To: <1659424729-46502-1-git-send-email-kanie@linux.alibaba.com>
-From:   Sumit Saxena <sumit.saxena@broadcom.com>
-Date:   Tue, 9 Aug 2022 13:07:22 +0530
-Message-ID: <CAL2rwxo4ZnztD7RFnY28m+Rv85tg0dbYDiOj8i43KY-+act_Sg@mail.gmail.com>
-Subject: Re: [PATCH] scsi: megaraid_sas: fix double kfree
-To:     Guixin Liu <kanie@linux.alibaba.com>
-Cc:     Kashyap Desai <kashyap.desai@broadcom.com>,
-        Shivasharan Srikanteshwara 
-        <shivasharan.srikanteshwara@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>,
-        Linux SCSI List <linux-scsi@vger.kernel.org>
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000056129f05e5ca02ec"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000056129f05e5ca02ec
-Content-Type: text/plain; charset="UTF-8"
+On Mon, 2022-08-08 at 17:11 -0500, Mike Christie wrote:
+> On 8/8/22 3:20 PM, mwilck@suse.com=A0wrote:
+> > From: Martin Wilck <mwilck@suse.com>
+> >=20
+> > The SCSI mid layer doesn't retry commands after DID_TIME_OUT (see
+> > scsi_noretry_cmd()). Packet loss in the fabric can cause spurious
+> > timeouts
+> > during SCSI device probing, causing device probing to fail. This
+> > has been
+> > observed in FCoE uplink failover tests, for example.
+>=20
+> What about the other scan/probe related commands and other transient
+> transport
+> errors like this (so when we get to the point DID_TRANSPORT_DISRUPTED
+> is returned)?
+> I think if you changed your test a little so the fc port state
+> changed, we could
+> still hit the same end problem. We can hit similar errors with iscsi
+> and plain old
+> FC.
 
-On Tue, Aug 2, 2022 at 12:49 PM Guixin Liu <kanie@linux.alibaba.com> wrote:
->
-> When alloc log_to_span fail, call kfree(instance->ctrl_context) first,
-> then jump to megasas_free_ctrl_mem() in megasas_init_fw(), call
-> kfree(instance->ctrl_context) second.
->
-> Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
-Looks good.
-Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
+All true. My focus was to fix an issue that has been encountered=20
+frequently by HPE. In the test scenario at hand, I expected to still
+see some errors after applying this patch, but we didn't. Can we agree
+to fix this issue now, and see later what else may need fixing?=20
 
---00000000000056129f05e5ca02ec
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
+I suppose that it's impossible to do error-proof probing in the
+presence of random transport layer errors, so whatever we do will be
+just a gradual improvement, improving matters in some scenarios while
+possibly slowing down probing in others. Also, verifying changes in
+this area with meaningful tests is difficult and a time and resource
+consuming endeavour.
 
-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
-GmgWG68YahkDuVSTTt2beZdyMeDwq/KifJFo18EkhcL3e7rmDAh8SniUI/0o3HX6hrgdmUI1wSdz
-uIVL/m6Ok9mIl2U5kvguitOSC0bVaQPfNzlj+7PCKBECAwEAAaOCAdowggHWMA4GA1UdDwEB/wQE
-AwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9zZWN1cmUuZ2xvYmFs
-c2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNydDBBBggrBgEFBQcw
-AYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAw
-TQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3Lmdsb2Jh
-bHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+oDygOoY4aHR0cDov
-L2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcmwwJAYDVR0R
-BB0wG4EZc3VtaXQuc2F4ZW5hQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAfBgNV
-HSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUNz+JSIXEXl2uQ4Utcnx7FnFi
-hhowDQYJKoZIhvcNAQELBQADggEBAL0HLbxgPSW4BFbbIMN3A/ifBg4Lzaph8ARJOnZpGQivo9jG
-kQOd95knQi9Lm95JlBAJZCqXXj7QS+dnE71tsFeHWcHNNxHrTSwn4Xi5EqaRjLC6g4IEPyZHWDrD
-zzJidgfwQvfZONkf4IXnnrIEFle+26/gPs2kOjCeLMo6XGkNC4HNla1ol1htToQaNN8974pCqwIC
-rTXcWqD03VkqSOo+oPP/NAgFAZVfpeuBoK2Xv8zYlrF49Q4hxgFpWhaiDsZUSdWIS7vg1ak1n+6L
-3aHRY/lheSkOn/uJWXsqsTDp613hVtOTEDsHSQK32yTGr8jN/oRQgJASuUqQFdD4VzAxggJtMIIC
-aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
-EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwoQTpBmhDxj9JoN1ow
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEID0DNtUpvQ2s91r+b+MH98c/+yC9Gf0z
-/zHlcZkAMw2mMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIyMDgw
-OTA3Mzc0OFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
-SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQAHrEdcN7s/rGcBWe9E3aqAYHMOKNSRWFoBhk6o0wP9VaBNxw1J
-8Dx5POSEaQgoxHnMRW23iTzZAXKEiT4wBxp9xi7Pl8J8lNGoxLr9cyYuInXjgqJ/GcHFJG5O2ZaJ
-bSQ7048Xm+sHrAyc+nm3N1n66QuQuC6ZvmYzl2YrIJFoWnMIDPXyJuOBXXepDuTKHwEkV4ImMrGc
-h06s18eyEYnDk4Re97T7Rk7lmCzrbUb7goIewt/YJIvgWydxhuACti3+0JR8EXAgU8bBnosBkx7i
-O/8rJqZJQ/mtzke0Cf9Ed53pOjb06yC5/owEPDIk3Lyf1Ai27cI4arsFy2hWnh+L
---00000000000056129f05e5ca02ec--
+
+> For REPORT_LUNS it looks like we retry almost all errors 3 times. For
+> the
+> probe/setup commands, at least for disks, it looks like we also are
+> more
+> forgiving and will retry DID_TIME_OUT/DID_TRANSPORT_DISRUPTED 3 times
+> for
+> commands like SAI_READ_CAPACITY_16 (I didn't check every sd operation
+> and
+> other upper level drivers).
+>=20
+> However, for the other probe/setup=A0 operations that rely on
+> scsi_attach_vpd
+> succeeding like sd_read_block_limits then we will hit issues where
+> the device
+> is partially setup. Should scsi_vpd_inquiry be retrying 3 times as
+> well?
+
+I think so. A frequent cause of errors in the multipath context is that
+the udev rules assume that as soon as the "inquiry" sysfs attribute is
+valid, the attributes "vpd_pg80" and "vpd_pg83" will be valid, too. But
+in the presence of transport errors, any of the vpd attributes may be
+invalid unless we retry.
+
+Perhaps it also make sense to discuss the default timeouts? Given that
+the max delay is (n_retries * timeout), the worst-case delay caused by
+a single probing command would not change if we cut the timeout in half
+and retry DID_TIME_OUT instead. In the case at hand, that would
+probably have made sense - if the INQUIRY response wasn't received
+after a few seconds, it wouldn't make sense to wait any longer. But I
+guess there are other scenarios where a timeout of 20s or more is
+required.
+
+Note that the kernel isn't the only point of failure. udev rules
+calling sg_inq or other similar tools may fall into the same trap. It
+is even worse there, because commands called from udev rules are
+expected to terminate quickly, thus there isn't much room for retries.
+sg_inq uses a default passthrough timeout of 60s, and no retries.
+
+> An alternative to changing all the callers would be we could make
+> scsi_noretry_cmd
+> detect when it's an internal passthrough command and just retry these
+> types of
+> errors. For SG IO type of passthough we still want to fail right
+> away.
+
+We can't distinguish these two cases. I am not sure if we ever could,
+but at least since da6269da4cfe2 ("block: remove
+REQ_OP_SCSI_{IN,OUT}"), we obviously can't.
+
+Martin K. P., Christoph, thoughts?
+
+Regards,
+Martin
+
