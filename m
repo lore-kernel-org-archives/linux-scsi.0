@@ -2,71 +2,94 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E71A7C25B0C
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Aug 2022 17:13:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46601C19F2A
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Aug 2022 17:15:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235285AbiHKRNs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Aug 2022 13:13:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44780 "EHLO
+        id S235737AbiHKRPz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Aug 2022 13:15:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44772 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234919AbiHKRNa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Aug 2022 13:13:30 -0400
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C2EA98CB0;
-        Thu, 11 Aug 2022 09:54:20 -0700 (PDT)
-Received: by mail-pl1-f169.google.com with SMTP id x10so17419868plb.3;
-        Thu, 11 Aug 2022 09:54:20 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc;
-        bh=ghMwt9G6INoMEmlW5dhmg6qUUpa6pnUlc2kP5MleMy0=;
-        b=OWYAs9lFto6IuRZgIWur8ciQXZ2QuosNSSqNnw+BpmbFAXDWopVrFLS4wP4kHqQ6Mm
-         ovRek8Ykcv6aZmSmjBiBUxf2eAcqIOqWtLXHv45CxhqUjSgxwTw7G984HARXsTepag9Y
-         eLTr5X30KFrBlTvMwPF1esnPUC6C2RirFzsyg09Lnv5fYMVffFCC8DyMN7hNzuO+WB4O
-         KRg5p1YtBIfu6HGzy8K/ybDHkpht20EWmz45jibSSU4MAxxcmC+DCUCK2/XZEu5DDFiG
-         BxXqZMyM3lGAukY78HI+Us5DMoM9rZUIilyPeJoKlS3DWnnoP2t3iyxiSIJ4QNso2ciI
-         KekQ==
-X-Gm-Message-State: ACgBeo0ugceQvK+fqluWVIMPnagHeUjhb96zuoIxGoFftqe2ZwDuaMDJ
-        911ka4Nc0iWs9OLFToSDU4A=
-X-Google-Smtp-Source: AA6agR5ieWdQuWvudLAEWQMsFxgSeC/cycIV50x4a22kEvb+9VbqhyvFZei0LgdosP4xscNrEyZ9tg==
-X-Received: by 2002:a17:902:8302:b0:16d:d74f:e5cc with SMTP id bd2-20020a170902830200b0016dd74fe5ccmr128985plb.6.1660236859831;
-        Thu, 11 Aug 2022 09:54:19 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:fa57:1951:439d:3051? ([2620:15c:211:201:fa57:1951:439d:3051])
-        by smtp.gmail.com with ESMTPSA id u12-20020a170903124c00b0016d2d2c7df1sm15447418plh.188.2022.08.11.09.54.18
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 11 Aug 2022 09:54:19 -0700 (PDT)
-Message-ID: <3e736bbf-9094-f2c9-18b3-1113a9d3a806@acm.org>
-Date:   Thu, 11 Aug 2022 09:54:16 -0700
+        with ESMTP id S236574AbiHKRPj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Aug 2022 13:15:39 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 82CF395ACE
+        for <linux-scsi@vger.kernel.org>; Thu, 11 Aug 2022 10:02:24 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id D87DF20805;
+        Thu, 11 Aug 2022 17:02:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1660237342; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=xS2ydyW/VdJNC6Py8HjhdLUTqqqCrdmBEBUPrJEEyOY=;
+        b=sa+FXYHMGGhGrPIieZqA53zJygpF/u8F3ilziacNSA0ate3qPdNgt3ijvxzLA84j4RU47F
+        pqAtjw0mljv5ROjQy4210qZKKuw1hLs/qkqXt8k6XcGCHy6arcVndrkoCLaxWUlktkv2HM
+        8MzWxOfibmXSDi6nEQatHkk47UWTKoA=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 97EB813A9B;
+        Thu, 11 Aug 2022 17:02:22 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id k25oIx429WLBSQAAMHmgww
+        (envelope-from <mwilck@suse.com>); Thu, 11 Aug 2022 17:02:22 +0000
+Message-ID: <29f24bf21ea98082b7709e067cb2d08d2253cab8.camel@suse.com>
+Subject: Re: [PATCH 3/4] scsi: Internally retry scsi_execute commands
+From:   Martin Wilck <mwilck@suse.com>
+To:     Mike Christie <michael.christie@oracle.com>, bvanassche@acm.org,
+        hch@lst.de, martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        james.bottomley@hansenpartnership.com
+Cc:     Hannes Reinecke <Hannes.Reinecke@suse.com>
+Date:   Thu, 11 Aug 2022 19:02:21 +0200
+In-Reply-To: <e7318011-ee9f-05ec-eb87-1d95f4fe12e5@oracle.com>
+References: <20220810034155.20744-1-michael.christie@oracle.com>
+         <20220810034155.20744-4-michael.christie@oracle.com>
+         <6149f7bdfa013e0352e59dee2669298b2c080a03.camel@suse.com>
+         <2b1943b2-466f-5674-1c8c-7db7b2dc4738@oracle.com>
+         <e4dd855269b2efb2e2f3efdde92f1f3339159878.camel@suse.com>
+         <e7318011-ee9f-05ec-eb87-1d95f4fe12e5@oracle.com>
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.3 
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [PATCH v2] scsi: ufs: host: ufs-exynos: staticize fsd_ufs_drvs
-Content-Language: en-US
-To:     Alim Akhtar <alim.akhtar@samsung.com>,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Cc:     krzysztof.kozlowski+dt@linaro.org, avri.altman@wdc.com,
-        martin.petersen@oracle.com, chanho61.park@samsung.com,
-        linux-samsung-soc@vger.kernel.org
-References: <CGME20220811162118epcas5p2f452b3b425953d47e60e4b29868c03c9@epcas5p2.samsung.com>
- <20220811161053.54081-1-alim.akhtar@samsung.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220811161053.54081-1-alim.akhtar@samsung.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/11/22 09:10, Alim Akhtar wrote:
-> struct fsd_ufs_drvs is not used outside this file, so made it static.
-> This fixes sparse warning:
-> 
-> drivers/ufs/host/ufs-exynos.c:1721:28: sparse: sparse:
-> symbol 'fsd_ufs_drvs' was not declared. Should it be static?
+On Thu, 2022-08-11 at 11:15 -0500, Mike Christie wrote:
+> >=20
+> > I don't think it's _that_ speficic. (retries < allowed) is the
+> > default
+> > case, at least for the first failure. REQ_FAILFAST_DEV has very few
+> > users except for the device handlers, and NEEDS_RETRY is a rather
+> > frequently used disposition.
+> I'm saying it's really specific because we only hit this code
+> path that is causing issues when scsi_check_sense returns
+> NEEDS_RETRY.
 
-`staticize' is not a verb. Anyway:
+What about the other cases in scsi_decide_disposition() that jump to
+maybe_retry?
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+
+> There's 5 in there and one in scsi_dh_alua. 4 of them are UAs.
+>=20
+> Compared to all the sense errors that we check for in the
+> scsi_execute callers and including all the times they do a retry for
+> all errors the 5 cases in scsi_check_sense seemed really specific.
+>=20
+> Let me send a patch for this type of design because in the other mail
+> Christoph was asking for more details. I originally started going
+> that
+> route so it won't be too much trouble to do a RFC so we can get an
+> idea of what it will look like.
+
+Looking forward to it.
+
+Martin
+
