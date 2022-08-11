@@ -2,178 +2,192 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 247E3C25B0C
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Aug 2022 19:00:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71DD9C19F2A
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Aug 2022 19:05:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236286AbiHKTA3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Aug 2022 15:00:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42456 "EHLO
+        id S234678AbiHKTFX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Aug 2022 15:05:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46404 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236260AbiHKTA0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Aug 2022 15:00:26 -0400
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 901B433A18
-        for <linux-scsi@vger.kernel.org>; Thu, 11 Aug 2022 12:00:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1660244423; x=1691780423;
-  h=message-id:date:mime-version:subject:from:to:cc:
-   references:in-reply-to:content-transfer-encoding;
-  bh=Uzj3YwW6ocVHk+CwQQzQFprEylxVDouB0qPIFdDgEgc=;
-  b=Ka41FiLN9P8f1UhaecFYudPhWIVqTkLFVwye8aAfN7CS4ivpyJKiGlZH
-   uypSZVYp6b1XzU7dQ0AMT2+/c52tY/mlnrSH+mJCJwVVUD/wrajXL1xy5
-   y1og7842rqbPN456EjC0lIbK8SHAyD0GoZ+ern5oFEkdV0tE6srV+Juht
-   CWH/mURcRPMPAQTdktNGIA95qGK0Eb+fjDSNJqsWZ+aHUfOy/pQZ5VkbE
-   Za8FpwQw+x9F7/uoevne6nBELwLaBxNdrzIc7JHULrSqjGP7/tDXVETAk
-   933X7Ll19uwOQlI/yx/XJA9F3u4gsolSG0jm16TtEMoVPjP1+nLAdGXcw
-   A==;
-X-IronPort-AV: E=Sophos;i="5.93,230,1654531200"; 
-   d="scan'208";a="209026061"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 12 Aug 2022 03:00:21 +0800
-IronPort-SDR: d2aFZEmOI9vYCSjCx/et6lkMNoiIDLWi0FOopaXe1EdOTse6QBScqSXcM/heW80m2aWXMM5yx+
- OUnqJq0/97pM++dOrZcnC9l5GPP8PMgi3vB9QT3O1tXiNqturCMo5v/Yq0eb2K71D0skLznBT4
- UUapx//EV/6pzMNjaLLXHpJHrnmpaQKysKyZBBkN5/KeqYnfrWxBRKE2dBd33t+xBCpYpEmSII
- S/fuajia4ErQRuX6o3army8/ezVU8xkTlhO5bFOI7EreODYrPhkHbiU2NPmT/3WNY6/2xrcLFX
- IDCQBPJO3FOeBg3VXXuJsyxC
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 11 Aug 2022 11:15:55 -0700
-IronPort-SDR: YnNWiddr/tMAQeTgEXwkbITCkQXihbwwcEfKIK+f44G1pW8VLWWKnMZexcwPy7OnhZJ1EzZtyw
- SXEGvoulbqptala7zW00Ua758sMN62ES5S3WHBem2P1fXA6dIHW1KgOVIwg0fydbxSR3s0dZeo
- rZe8lSr9H72FXF0zd7bONMwcbyfWurZh9DaD6/FhO7kDB6S8xkVMB+TFxi/Fpc3m2zblN96Hdx
- +PCqPUW8bTGGEjbYkGzWaJzu+tQdGTx3b2tN7ll7O6bTeq7K5xrPStzwgAMDduokXJ40bsT4dl
- Wts=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 11 Aug 2022 12:00:22 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4M3bjJ6h1rz1Rwqy
-        for <linux-scsi@vger.kernel.org>; Thu, 11 Aug 2022 12:00:20 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:references:to:from:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1660244420; x=1662836421; bh=Uzj3YwW6ocVHk+CwQQzQFprEylxVDouB0qP
-        IFdDgEgc=; b=htalaxQZLU6n+xQ53+fYXwM44z2mD9rqJz5xkVjM72dgu3Y8YUv
-        VS72N5ctoI2vmMnq7ppssxEXAvf2TZ1pQLsEjJw48nTqJzEFRVfiopqILahyJ3/E
-        FcKrtNeQFyHJpZmIJRb6wJUrv5c6Mc1W0YpuGT6OKb/2wszJL7zgArsOx48+Hfsp
-        gqGIosaPXIlU7ZniOBjtgWEFln0Gp/l9hCXMV9KngBYPyd5B4NGJEBQbPpqaoSXS
-        bX1ke+4dp9AUK6GjlXsyHqHM8DFE+UcurGOKZcu7tY0sfGoOj3Gk0t+mjLShNeKu
-        1CS4dmrF9Ii5TrIHj+GYSet3ft/6WzmGYUA==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id 3_PednzjF40k for <linux-scsi@vger.kernel.org>;
-        Thu, 11 Aug 2022 12:00:20 -0700 (PDT)
-Received: from [10.11.46.122] (c02drav6md6t.sdcorp.global.sandisk.com [10.11.46.122])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4M3bjH4Nw6z1RtVk;
-        Thu, 11 Aug 2022 12:00:19 -0700 (PDT)
-Message-ID: <b262981b-9925-5812-2b5d-0d4a2a16e97d@opensource.wdc.com>
-Date:   Thu, 11 Aug 2022 12:00:19 -0700
+        with ESMTP id S230006AbiHKTFW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Aug 2022 15:05:22 -0400
+Received: from matoro.tk (unknown [IPv6:2600:1700:4b10:9d80::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0BA913DFF
+        for <linux-scsi@vger.kernel.org>; Thu, 11 Aug 2022 12:05:17 -0700 (PDT)
+DKIM-Signature: a=rsa-sha256; bh=q3BjX2A2lCJGN6h/n9u5r27tBr3ibKhnmVxcu37AZ34=;
+ c=relaxed/relaxed; d=matoro.tk;
+ h=Subject:Subject:Sender:To:To:Cc:Cc:From:From:Date:Date:MIME-Version:MIME-Version:Content-Type:Content-Type:Content-Transfer-Encoding:Content-Transfer-Encoding:Reply-To:In-Reply-To:In-Reply-To:Message-Id:Message-Id:References:References:Autocrypt:Openpgp;
+ i=@matoro.tk; s=20220801; t=1660244702; v=1; x=1660676702;
+ b=xOy3cq1NjzD1uex1IiMvBCG6RQuVH5RCYwS7KJThTuVs/eRWSKhOqhhGiQRMw4BVNFQtvsI4
+ rdtGJDnc8fQpwsCI639YfAyZxjVEByXymFli/araly1ldx+RiPEIMKDPJG+RJfWzTc2Obx4pgBU
+ j5WZYeVmyUuXuNT4o5k4TYgOOEL3IMgXR461skWCylau5BNPrF/KdkoTx2X1O07vQozv42vrOAq
+ RH0kEYVwpI2KvCBDL3i8U5/V9re3cqInyT7iUYenPnyBVxLo0WdQki2CJjwYXc2wfvK8/oPj7fl
+ MMp9Nw1LvOLxaQc79bPd0J0AGbxc8LWtT7XOx9e004UL8PbQ9r42/WGw9zOCm/tIwcoqJ5JqWo2
+ 443ysuWZjRcRrHhQ0SuzDbaWUoKgwn68YhVBhnkHPMpUgg61n/h98yb0KTC16JXnwBGqZBIZWt+
+ Zlf+leA8+FkmQUYMciXsrR+03fYdjrWnONquBdjs3BkQrdw9ajpVJQwLTAe68zB04vFu1s1GgsY
+ +ICQqQszySJXv9K5d6jZZ47KL9YCCykiVQ1RhrQ5Qwpxs408rBftc3rlEQjtLcN/EIMJjThXCmb
+ yaStw77TokeEVnPBUgw6cT6O8toNojeh/PtV6UCxytDqJgC2W3L9vDm0RovaoTkBmVbWg6pe7bT
+ dZNwjScHb+A=
+Received: by matoro.tk (envelope-sender
+ <matoro_mailinglist_kernel@matoro.tk>) with ESMTPS id 8dd01dd7; Thu, 11 Aug
+ 2022 15:05:02 -0400
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.12.0
-Subject: Re: [PATCH 0/6] libsas and drivers: NCQ error handling
-Content-Language: en-US
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-To:     John Garry <john.garry@huawei.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, jinpu.wang@cloud.ionos.com,
-        yangxingui@huawei.com, chenxiang66@hisilicon.com, hare@suse.de
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <1658489049-232850-1-git-send-email-john.garry@huawei.com>
- <d2e27cb7-d90a-2f0a-1848-e1ec8faf7899@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <d2e27cb7-d90a-2f0a-1848-e1ec8faf7899@opensource.wdc.com>
-Content-Type: text/plain; charset=UTF-8
+Date:   Thu, 11 Aug 2022 15:05:01 -0400
+From:   matoro <matoro_mailinglist_kernel@matoro.tk>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>
+Subject: Re: [PATCH v3 0/5] Fix mpt3sas driver sparse warnings
+In-Reply-To: <fdb96df5-a9a2-673a-6f4c-bef2f14c23cc@opensource.wdc.com>
+References: <20220307234854.148145-1-damien.lemoal@opensource.wdc.com>
+ <yq1a6dzkcgb.fsf@ca-mkp.ca.oracle.com>
+ <CAK=zhgosaNGejvNq9ANzhuHqwLSxfckfdhLAX_r2y=9DN=oAvA@mail.gmail.com>
+ <13f2f53e87ff7b653c46c3da19ea8115@matoro.tk>
+ <fdb96df5-a9a2-673a-6f4c-bef2f14c23cc@opensource.wdc.com>
+Message-ID: <840410bd27c152079ea4cd483d58f416@matoro.tk>
+X-Sender: matoro_mailinglist_kernel@matoro.tk
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2022/08/11 11:54, Damien Le Moal wrote:
-> On 2022/07/22 4:24, John Garry wrote:
->> As reported in [0], the pm8001 driver NCQ error handling more or less
->> duplicates what libata does in link error handling, as follows:
->> - abort all commands
->> - do autopsy with read log ext 10 command
->> - reset the target to recover
->>
->> Indeed for the hisi_sas driver we want to add similar handling for NCQ
->> errors.
->>
->> This series add a new libsas API - sas_ata_link_abort() - to handle host
->> NCQ errors, and fixes up pm8001 and hisi_sas drivers to use it. As
->> mentioned in the pm8001 changeover patch, I would prefer a better place to
->> locate the SATA ABORT command (rather that nexus reset callback).
->>
->> I would appreciate some testing of the pm8001 change as the read log ext10
->> command mostly hangs on my arm64 machine - these arm64 hangs are a known
->> issue.
-> 
-> I applied this series on top of the current Linus tree and ran some tests: a
-> bunch of fio runs and also ran libzbc test suites on a SATA SMR drive as that
-> generates many command failures. No problems detected, the tests all pass.
-> FYI, messages for failed commands look like this:
-> 
-> pm80xx0:: mpi_sata_event 2685: SATA EVENT 0x23
-> sas: Enter sas_scsi_recover_host busy: 1 failed: 1
-> sas: sas_scsi_find_task: aborting task 0x00000000ba62a907
-> pm80xx0:: mpi_sata_completion 2292: task null, freeing CCB tag 2
-> sas: sas_scsi_find_task: task 0x00000000ba62a907 is aborted
-> sas: sas_eh_handle_sas_errors: task 0x00000000ba62a907 is aborted
-> ata21.00: exception Emask 0x0 SAct 0x20000000 SErr 0x0 action 0x0
-> ata21.00: failed command: WRITE FPDMA QUEUED
-> ata21.00: cmd 61/02:00:ff:ff:ea/00:00:02:00:00/40 tag 29 ncq dma 8192 out
-> res 43/04:02:ff:ff:ea/00:00:02:00:00/00 Emask 0x400 (NCQ error) <F>
-> ata21.00: status: { DRDY SENSE ERR }
-> ata21.00: error: { ABRT }
-> ata21.00: configured for UDMA/133
-> ata21: EH complete
-> sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 1 tries: 1
-> 
-> Seems all good to me.
+Just a small update, the module stuff turned out to be a separate, 
+unrelated regression.  I bisected that one also (applying these reverts 
+each time to allow me to boot) and reported it to Masahiro, who put in a 
+fix for it here:  
+https://lore.kernel.org/all/20220809141117.641543-1-masahiroy@kernel.org/ 
+.  So you can ignore that stuff.  Are these two commits still planned to 
+be reverted?
 
-Forgot to mention: tested with pm80xx driver.
+-------- Original Message --------
+Subject: Re: [PATCH v3 0/5] Fix mpt3sas driver sparse warnings
+Date: 2022-08-02 19:36
+ From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+To: matoro <matoro_mailinglist_kernel@matoro.tk>, Sreekanth Reddy 
+<sreekanth.reddy@broadcom.com>
+
+On 8/3/22 05:27, matoro wrote:
+> Hi folks, sorry for the lateness, unfortunately this is in fact broken
+> on BE.  I use mpt3sas on sparc and my drives fail to come up on 5.19,
+> bisected to this patchset.  Reverting both of the endian-related
+> commits, b4efbec4c2a75b619fae4e8768be379e88c78687 and
+> 7ab4d2441b952977556672c2fe3f4c2a698cbb37, allows it to boot.  However,
+> after booting, I can't load any modules - everything errors with
+> "disagrees about version of symbol module_layout".  I have completely
+> wiped out kernel sources, the module tree, and the kernel image,
+> rebuilding both from scratch with ONLY the revert patch applied, but I
+> still can't load any modules.  Presumably it would work with
+> CONFIG_MODVERSIONS=n, but these CRC checks are there for a reason and I
+> can't tell if it has something to do with the revert or not.
+
+For b4efbec4c2a75b619fae4e8768be379e88c78687, removing the cpu_to_le32()
+call results in the bytes actually being reversed by writel()/readl() 
+for
+your BE machine. So it looks like the values that need to be written to
+the HBA have to be in CPU endian, not le32. Should be easy to fix.
+And for 7ab4d2441b952977556672c2fe3f4c2a698cbb37, this looks like the 
+same
+problem.
+
+I will be traveling and busy this week, but I can have a look at a fix
+next Monday. If the Broadcom folks can send a fix faster than that, that
+is of course welcome :)
 
 > 
->>
->> Finally with these changes we can make the libsas task alloc/free APIs
->> private, which they should always have been.
->>
->> Based on v5.19-rc6
->>
->> [0] https://lore.kernel.org/linux-scsi/8fb3b093-55f0-1fab-81f4-e8519810a978@huawei.com/
->>
->> John Garry (5):
->>   scsi: pm8001: Modify task abort handling for SATA task
->>   scsi: libsas: Add sas_ata_link_abort()
->>   scsi: pm8001: Use sas_ata_link_abort() to handle NCQ errors
->>   scsi: hisi_sas: Don't issue ATA softreset in hisi_sas_abort_task()
->>   scsi: libsas: Make sas_{alloc, alloc_slow, free}_task() private
->>
->> Xingui Yang (1):
->>   scsi: hisi_sas: Add SATA_DISK_ERR bit handling for v3 hw
->>
->>  drivers/scsi/hisi_sas/hisi_sas_main.c  |   5 +-
->>  drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  22 ++-
->>  drivers/scsi/libsas/sas_ata.c          |  10 ++
->>  drivers/scsi/libsas/sas_init.c         |   3 -
->>  drivers/scsi/libsas/sas_internal.h     |   4 +
->>  drivers/scsi/pm8001/pm8001_hwi.c       | 194 +++++++------------------
->>  drivers/scsi/pm8001/pm8001_sas.c       |  13 ++
->>  drivers/scsi/pm8001/pm8001_sas.h       |   8 +-
->>  drivers/scsi/pm8001/pm80xx_hwi.c       | 177 ++--------------------
->>  include/scsi/libsas.h                  |   4 -
->>  include/scsi/sas_ata.h                 |   5 +
->>  11 files changed, 132 insertions(+), 313 deletions(-)
->>
+> $ modprobe --dump-modversions
+> /lib/modules/5.19.0-gentoo-sparc64/kernel/fs/openpromfs/openpromfs.ko  
+> |
+> grep "module_layout"
+> 0xa6c23707      module_layout
+> $ grep "module_layout" /usr/src/linux/Module.symvers
+> 0xa6c23707      module_layout   vmlinux EXPORT_SYMBOL
 > 
+> If you need real hardware access and do not have any on hand, please
+> reach out and I can provide temporary access!
 > 
+> Here is the full error on vanilla 5.19:
+> 
+> mpt3sas version 42.100.00.00 loaded
+> mpt2sas_cm0: 64 BIT PCI BUS DMA ADDRESSING SUPPORTED, total mem
+> (32650280 kB)
+> mpt2sas_cm0: _base_wait_for_doorbell_not_used: failed due to timeout
+> count(5000), doorbell_reg(18000000)!
+> mpt2sas_cm0: CurrentHostPageSize is 0: Setting default host page size 
+> to
+> 4k
+> mpt2sas_cm0: MSI-X vectors supported: 1
+>           no of cores: 64, max_msix_vectors: -1
+> mpt2sas_cm0:  0 1 1
+> mpt2sas_cm0: pci_alloc_irq_vectors failed (r=-22) !!!
+> mpt2sas_cm0: High IOPs queues : disabled
+> mpt2sas0: IO-APIC enabled: IRQ 4
+> mpt2sas_cm0: iomem(0x0000084100000000), mapped(0x(____ptrval____)),
+> size(16384)
+> mpt2sas_cm0: ioport(0x0000085100000000), size(256)
+> mpt2sas_cm0: doorbell is in use (line=6869)
+> mpt2sas_cm0: _base_get_ioc_facts: handshake failed (r=-14)
+> mpt2sas_cm0: failure at
+> drivers/scsi/mpt3sas/mpt3sas_scsih.c:12336/_scsih_probe()!
+> mpt2sas_cm1: 64 BIT PCI BUS DMA ADDRESSING SUPPORTED, total mem
+> (32650280 kB)
+> mpt2sas_cm1: _base_wait_for_doorbell_not_used: failed due to timeout
+> count(5000), doorbell_reg(18000000)!
+> mpt2sas_cm1: CurrentHostPageSize is 0: Setting default host page size 
+> to
+> 4k
+> mpt2sas_cm1: MSI-X vectors supported: 1
+>           no of cores: 64, max_msix_vectors: -1
+> mpt2sas_cm1:  0 1 1
+> mpt2sas_cm1: pci_alloc_irq_vectors failed (r=-22) !!!
+> mpt2sas_cm1: High IOPs queues : disabled
+> mpt2sas1: IO-APIC enabled: IRQ 5
+> mpt2sas_cm1: iomem(0x0000084120000000), mapped(0x(____ptrval____)),
+> size(16384)
+> mpt2sas_cm1: ioport(0x0000085100002000), size(256)
+> mpt2sas_cm1: doorbell is in use (line=6869)
+> mpt2sas_cm1: _base_get_ioc_facts: handshake failed (r=-14)
+> mpt2sas_cm1: failure at
+> drivers/scsi/mpt3sas/mpt3sas_scsih.c:12336/_scsih_probe()!
+> 
+> -------- Original Message --------
+> Subject: Re: [PATCH v3 0/5] Fix mpt3sas driver sparse warnings
+> Date: 2022-03-09 01:35
+>  From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+> To: "Martin K. Petersen" <martin.petersen@oracle.com>
+> 
+> On Wed, Mar 9, 2022 at 9:26 AM Martin K. Petersen
+> <martin.petersen@oracle.com> wrote:
+>> 
+>> 
+>> Sreekanth,
+>> 
+>>> This series fix (remove) all sparse warnings generated when compiling
+>>> the mpt3sas driver. All warnings are related to __iomem access and
+>>> endianness.
+>> 
+>> Please review this series and validate the patch 5 modification.
+> 
+> Martin,
+> This patch set looks good, but before acknowledging this patch set I
+> just wanted to do some basic testing on a big endian machine.
+> Currently I don't have a big endian machine, internally I am checking
+> to get access to big endian machines. Meanwhile if anyone does a basic
+> testing on any big endian machine then please let me know. I will add
+> the acknowledgement signature.
+> 
+> Thanks,
+> Sreekanth
+> 
+>> 
+>> Thanks!
+>> 
+>> --
+>> Martin K. Petersen      Oracle Linux Engineering
 
-
--- 
-Damien Le Moal
-Western Digital Research
