@@ -2,67 +2,64 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01762C19F2A
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Aug 2022 13:57:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE7CFC25B0C
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Aug 2022 15:12:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235314AbiHKN5W (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Aug 2022 09:57:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40212 "EHLO
+        id S235531AbiHKPMe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Aug 2022 11:12:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58010 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234657AbiHKN5U (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Aug 2022 09:57:20 -0400
+        with ESMTP id S230133AbiHKPMd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Aug 2022 11:12:33 -0400
 Received: from bg5.exmail.qq.com (bg4.exmail.qq.com [43.154.54.12])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CFECB804A8;
-        Thu, 11 Aug 2022 06:57:18 -0700 (PDT)
-X-QQ-mid: bizesmtp85t1660226222tbhiahg5
-Received: from localhost.localdomain ( [182.148.14.53])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC3667B793;
+        Thu, 11 Aug 2022 08:12:27 -0700 (PDT)
+X-QQ-mid: bizesmtp83t1660230728t7q7362u
+Received: from localhost.localdomain ( [110.188.55.240])
         by bizesmtp.qq.com (ESMTP) with 
-        id ; Thu, 11 Aug 2022 21:57:01 +0800 (CST)
-X-QQ-SSF: 01000000002000G0V000B00A0000020
-X-QQ-FEAT: SGbEDZt3Zybfc3s74YKhE6ILnhOuPw7a5eYaBUV/U7cvE1hff5zxioMm3+iiU
-        75k0tRnQe6TnGxBm7ZiGUhiA7Q61lXXuThp45++M3pBKdnuONE6OWuzNE47xPf3iCyL7VOh
-        85iohTZjy+SAQVgM57Qi38BSI2hgvfsjI2wyUa1/lQc9Ah+7JAEPzYzW9wdiA3Vh2rYeAes
-        rEZhJnSWaemjSBSGptdFz6ui4t3autKuUenPf1R0hjWLfnnRv66kOmQTeKr2iK2xQAFbUO2
-        GGuCenGNDNMszu6pfo7Uj5g2tZg7grA86aM2PrrL1Wa/3p78ngM7gr/43xwff5Dd6sOCWZ6
-        Q5MOK+fhUYZXIEGL6OmeWeZmqjEPPIK3uWmt8FB6M5dq+egUmHRMYwwa7+yTIDn3jXLxrKv
+        id ; Thu, 11 Aug 2022 23:11:58 +0800 (CST)
+X-QQ-SSF: 0100000000200070H000B00A0000020
+X-QQ-FEAT: UMQM+3VOEYsTPC6jMH0yz2i4V+oZLsGcQU83QUJxmWPROYvQZ4BMGwaf+LtgI
+        7CDKQfi+bB1csRp6nSTxoQx8kG1V9KxQmeH5BiOi6CS9Ol/0gDnq+ixD2kfsqM7Im1XBhWz
+        kMhcstK/vS4TqTFK9ARDHWWu/sLQG5VdWgGg0IcvIArQdg8463bTMzR/7Eo7uMempJ2/ke3
+        nKVqvori/Egh+PIrtf3WhXTZJ9FlOaQrSJt6K0J8ZEpWVKGDYvziHQW1dCPeu5BQx9T8FPt
+        aWyrnzJuO5mKnhX/cakL6fZ3p2VjveNskSCfqkGKNwP0O39midPA76BJ5ztNxQdcXcS5dqX
+        HuvjhPpQPAdXH/e5qVbSzwLRfuH+PP9qFzXGU4TLqxZdVNBEDAxOgrmnew40w==
 X-QQ-GoodBg: 0
-From:   Jason Wang <wangborong@cdjrlc.com>
-To:     martin.petersen@oracle.com
-Cc:     kartilak@cisco.com, sebaddel@cisco.com, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jason Wang <wangborong@cdjrlc.com>
-Subject: [PATCH] scsi: snic: Fix comment typo
-Date:   Thu, 11 Aug 2022 21:56:54 +0800
-Message-Id: <20220811135654.24862-1-wangborong@cdjrlc.com>
-X-Mailer: git-send-email 2.36.1
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+From:   min tang <tangmin@cdjrlc.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     hare@suse.de, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, min tang <tangmin@cdjrlc.com>
+Subject: [PATCH] scsi: Fix comment typo
+Date:   Thu, 11 Aug 2022 23:11:46 +0800
+Message-Id: <20220811151146.12677-1-tangmin@cdjrlc.com>
+X-Mailer: git-send-email 2.17.1
 X-QQ-SENDSIZE: 520
 Feedback-ID: bizesmtp:cdjrlc.com:qybglogicsvr:qybglogicsvr6
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The double `to' is duplicated in the comment, remove one.
+The double `the' is duplicated in line 208, remove one.
 
-Signed-off-by: Jason Wang <wangborong@cdjrlc.com>
+Signed-off-by: min tang <tangmin@cdjrlc.com>
 ---
- drivers/scsi/snic/snic_debugfs.c | 2 +-
+ drivers/scsi/fcoe/fcoe_ctlr.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/snic/snic_debugfs.c b/drivers/scsi/snic/snic_debugfs.c
-index 57bdc3ba49d9..a03493ca1e87 100644
---- a/drivers/scsi/snic/snic_debugfs.c
-+++ b/drivers/scsi/snic/snic_debugfs.c
-@@ -362,7 +362,7 @@ void snic_stats_debugfs_init(struct snic *snic)
-  *
-  * Description:
-  * When Debufs is configured this routine removes debugfs file system
-- * elements that are specific to to snic stats
-+ * elements that are specific to snic stats
-  */
- void
- snic_stats_debugfs_remove(struct snic *snic)
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index 39e16eab47aa..28e8b9f1e1a4 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -205,7 +205,7 @@ static int fcoe_sysfs_fcf_add(struct fcoe_fcf *new)
+ 		 * that doesn't have a priv (fcf was deleted). However,
+ 		 * libfcoe will always delete FCFs before trying to add
+ 		 * them. This is ensured because both recv_adv and
+-		 * age_fcfs are protected by the the fcoe_ctlr's mutex.
++		 * age_fcfs are protected by the fcoe_ctlr's mutex.
+ 		 * This means that we should never get a FCF with a
+ 		 * non-NULL priv pointer.
+ 		 */
 -- 
-2.36.1
+2.17.1
 
