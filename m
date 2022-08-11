@@ -2,88 +2,56 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8448C25B0C
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Aug 2022 11:53:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37FEAC19F2A
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Aug 2022 12:17:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235065AbiHKLxi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Aug 2022 07:53:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57010 "EHLO
+        id S234524AbiHKMRD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Aug 2022 08:17:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53574 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235081AbiHKLxQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Aug 2022 07:53:16 -0400
-Received: from mail-lf1-x130.google.com (mail-lf1-x130.google.com [IPv6:2a00:1450:4864:20::130])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 013FA95E72
-        for <linux-scsi@vger.kernel.org>; Thu, 11 Aug 2022 04:53:15 -0700 (PDT)
-Received: by mail-lf1-x130.google.com with SMTP id t1so25222128lft.8
-        for <linux-scsi@vger.kernel.org>; Thu, 11 Aug 2022 04:53:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc;
-        bh=5HiYzFHc/9Xp6EzsvXqUwFD4ssSumNPG0+vT3T1mUK0=;
-        b=eDCPKHKlMIy/f4StHh/b1bfEoZExC+kNQgf1fkCBF1qyOR9H1Ay5YCMC+cVsuh3Ght
-         7DwYOLrllPXCy0IOKoA0Hx2PkH60cTX4/lZhWvGtdYpKDiKUtj7iH6fTITy0GpOfXkRt
-         6gH0sIXYVXySMUtSPGLVP8OEiu7T/lIj8aNVDWyZsw+ofnklpDrmfg91S70EM4aQt3W1
-         ZJY6c8wC+QbVt4Wv/iWIDZyxEw5Bz9wmaM64t0vzSpKgxyCuzCG5G38uMrLwLguv8yap
-         es/32BddycSQ26VJhiRINI8pyT2lJrA+VZpENMgnS27aa/fMesWvf3NAz3h7GAcHsFdx
-         zRYA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc;
-        bh=5HiYzFHc/9Xp6EzsvXqUwFD4ssSumNPG0+vT3T1mUK0=;
-        b=oQ6Hy/cWemAV5UNWAHfSuoV081X+/ivdwbAN0sW38XBBUiDP511ZcUysJTYYJY3EO7
-         L6m9l2+pyYW5ELHfDdDaWfO8CZU54tPC3JQ6LdUfEiDpYuWGP2HBaab2jxNdOHzqyqDu
-         msDTiURq8jSZnfQmnxGwcqSIQFVkO0H4POU/b5+D4pvaIANphaqOE1FJ5ZTbsh/1d8MW
-         7bBeMg4oTR2CP9pSZlNemJesUepJatEGThaIsB1t3r5IenlkZ5LHMiENhDVzftrDR+a7
-         4o7zQRlwKvMqiMHeINVKNMY1smvjKpeiWGoyITkPsyJY7PjFTgeoxJWsWTcOhce6/pwd
-         xhLQ==
-X-Gm-Message-State: ACgBeo2wLAZiNrjZ3qhSd1KzxU4li93PW09fhQSwkDQNyDdPAoIAX9Oo
-        KcjMCzfnlNEuxzsTtrS/zkO4NQ==
-X-Google-Smtp-Source: AA6agR4xWcrV3sC9joYRds2dRPdF5QYf+E49P5o/1hiFlngFTfZ6XBB3+3ZXhz0ewEzcMt8g6j4ThQ==
-X-Received: by 2002:ac2:418a:0:b0:48b:aa2:1d9f with SMTP id z10-20020ac2418a000000b0048b0aa21d9fmr12284425lfh.195.1660218793156;
-        Thu, 11 Aug 2022 04:53:13 -0700 (PDT)
-Received: from [192.168.1.39] ([83.146.140.105])
-        by smtp.gmail.com with ESMTPSA id t21-20020a056512209500b0048b37616f13sm679005lfr.206.2022.08.11.04.53.12
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 11 Aug 2022 04:53:12 -0700 (PDT)
-Message-ID: <f47638a3-08e6-2ea0-5e1a-b482f3687142@linaro.org>
-Date:   Thu, 11 Aug 2022 14:53:11 +0300
+        with ESMTP id S234164AbiHKMRC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Aug 2022 08:17:02 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B5538FD5D
+        for <linux-scsi@vger.kernel.org>; Thu, 11 Aug 2022 05:17:02 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id B239968AA6; Thu, 11 Aug 2022 14:16:58 +0200 (CEST)
+Date:   Thu, 11 Aug 2022 14:16:58 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Mike Christie <michael.christie@oracle.com>
+Cc:     bvanassche@acm.org, mwilck@suse.com, hch@lst.de,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        james.bottomley@hansenpartnership.com
+Subject: Re: [PATCH 1/4] scsi: Fix passthrough retry counter handling
+Message-ID: <20220811121658.GA1742@lst.de>
+References: <20220810034155.20744-1-michael.christie@oracle.com> <20220810034155.20744-2-michael.christie@oracle.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.12.0
-Subject: Re: [PATCH] scsi: ufs: host: ufs-exynos: staticize fsd_ufs_drvs
-Content-Language: en-US
-To:     Alim Akhtar <alim.akhtar@samsung.com>,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Cc:     krzysztof.kozlowski+dt@linaro.org, avri.altman@wdc.com,
-        bvanassche@acm.org, martin.petersen@oracle.com,
-        chanho61.park@samsung.com, linux-samsung-soc@vger.kernel.org
-References: <CGME20220811114614epcas5p29046e326acc8d13824479504e80a0d49@epcas5p2.samsung.com>
- <20220811113550.31914-1-alim.akhtar@samsung.com>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <20220811113550.31914-1-alim.akhtar@samsung.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220810034155.20744-2-michael.christie@oracle.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/08/2022 14:35, Alim Akhtar wrote:
-> struct fsd_ufs_drvs is not used outside this file, so made it static.
-> This fixes sparse warning:
-> 
-> drivers/ufs/host/ufs-exynos.c:1721:28: sparse: sparse:
-> symbol 'fsd_ufs_drvs' was not declared. Should it be static?
-> 
-> Reported-by: kernel test robot <lkp@intel.com>
-> Fixes: 216f74e8059a ("scsi: ufs: host: ufs-exynos: Add support for FSD UFS HCI")
-> Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
+On Tue, Aug 09, 2022 at 10:41:52PM -0500, Mike Christie wrote:
+>  	scsi_init_command(sdev, cmd);
+>  
+> +	if (!blk_rq_is_passthrough(req))
+> +		cmd->allowed = 0;
+> +
+>  	cmd->eh_eflags = 0;
+> -	cmd->allowed = 0;
 
-This should be static const.
+While this is correct, I think it makes the function read rather odd.
 
-Best regards,
-Krzysztof
+I'd move it down after the:
+
+	if (blk_rq_is_passthrough(req))
+		return scsi_setup_scsi_cmnd(sdev, req);
+
+and maybe add a comment;
+
+	/* usually overriden by the ULP */
+	cmd->allowed = 0;
+
