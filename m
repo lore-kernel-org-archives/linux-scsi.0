@@ -2,213 +2,171 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5995C19F2A
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Aug 2022 18:22:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81AE2C19F2A
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Aug 2022 18:54:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235083AbiHKSW1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Aug 2022 14:22:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60124 "EHLO
+        id S236140AbiHKSy4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Aug 2022 14:54:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35902 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235075AbiHKSWY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Aug 2022 14:22:24 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2DBF896FFA
-        for <linux-scsi@vger.kernel.org>; Thu, 11 Aug 2022 11:22:23 -0700 (PDT)
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 27BHsOLA007165;
-        Thu, 11 Aug 2022 18:22:13 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2022-7-12;
- bh=SgTJ+RfRzhD1LK7H1SpvhWl6QCyjak9ENtinTJfTLyY=;
- b=pWR/GTH5F/3kgFbwyd7/Q6dmENZ8aKFdZkC79wi+HRXUIOY+cxmVYp/5Gx9WpGnoXCP9
- un3RJI3/QvwmEccYx9n+LjGBKi8/JI/v/5rl8cCU5ZiJ9H3GAHs7eF4rSYrcakycoDef
- 5TIyq59xIEdnz6XeQiEKC9a4guHCrWm+I44FCv49p2Grch7AuNsZe9OrMjmIs42T9VqL
- uQesfzWAlxBXdeDOvdvxhsOKk1no37arRuhXx5JRyW81kz8JBSJUlW33C0zaoukUHrHV
- 1a7ttrCKiYuUedhwUkYSXqo6aUi/+WkCweej8mMjPdNs/LAno3yTzH7gZulz9kZL+bEP PQ== 
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3huwqj5fah-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 11 Aug 2022 18:22:12 +0000
-Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 27BIChjR035319;
-        Thu, 11 Aug 2022 18:22:10 GMT
-Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2102.outbound.protection.outlook.com [104.47.58.102])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3huwqkc4mp-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 11 Aug 2022 18:22:09 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=D5Q4tgGR1iGD+V5VnCSjo31W+UbLDYuhkoGPfqndzLnYcFyI6gXiv4xzpKzpo5vJclEsEdzRzckLef2w+y8sZfw4TosTW40m14aYHtlsLEHqPlqz0ozpOyB/ZzWud1TmCYZIS+BmE1Iu49FffpmOUFNCff4WiJ+OlJDNMlkvS9nLS0gQBMdT5zM3y5SEQm8MJ1mhFbhRuzbzJ1KO4KrxYonpkrxj3Bi8/f6n+WIoFST0+ySoGONYM/ui6ZWLJT41TXLww8gva0iLWzdhrW5m847ZeRGaJZlbc+d5oBE9BVOXBwdM7RP3WdQT+qGT5Nv/ACXTUF7Y7n6JR14xzkTHrw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=SgTJ+RfRzhD1LK7H1SpvhWl6QCyjak9ENtinTJfTLyY=;
- b=Xg1tmh5ic2qVTt58qssdrAzRCUKJNy5a7TmjEBg8tQEIlzDXYBEw4uzhlEc8Ysm47XMDTbWGp3MN9d0zdYO8uydUNtNSlIeAKDFoFbz0gLEwl4/EHntJ5vJgL4XWkxQ/n+D10u8jtVbfB4a7GX6TAXPNZWrLuv/qBuD18D0PsMtt185VwrSngt9zoyXkCuzjZH0Xfl3gF3Czt0eJoSXzaTONra+DdP1LTBzklez6S4S+GOtlGhWDHfUXOzIRQnYEC4ZEYDAedQ3GP4WIrdfzd835bvAuTJMaPkLqj52wSMsD4kxjbtA+zYGT/JLUE8/L+xa2HuWgKN4H6RrwhUEw+Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=SgTJ+RfRzhD1LK7H1SpvhWl6QCyjak9ENtinTJfTLyY=;
- b=ty80diqRM+XmRS7yoF9i6nZOvSqegcqlDCogIXeE8x+xQGmNgpH/wEziChp4oZ/f3q2P8GJ+gDHsPCOl+Jp1bK3fgJ2vNnDcDS2Y9GzWhJDkbYFKqFxBccm5Ti7ZH3jE4Ztq9oiDMvPf3fRLiW236/YOt9GgIF+dnNFLkc1Zgow=
-Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
- BY5PR10MB4164.namprd10.prod.outlook.com (2603:10b6:a03:210::15) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5525.10; Thu, 11 Aug
- 2022 18:22:07 +0000
-Received: from DM5PR10MB1466.namprd10.prod.outlook.com
- ([fe80::8dee:d667:f326:1d50]) by DM5PR10MB1466.namprd10.prod.outlook.com
- ([fe80::8dee:d667:f326:1d50%6]) with mapi id 15.20.5504.024; Thu, 11 Aug 2022
- 18:22:07 +0000
-Message-ID: <06191b89-1825-9b2f-0d05-e8add30f2adf@oracle.com>
-Date:   Thu, 11 Aug 2022 13:22:05 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.1.0
-Subject: Re: [PATCH 3/4] scsi: Internally retry scsi_execute commands
+        with ESMTP id S236123AbiHKSyy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Aug 2022 14:54:54 -0400
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9F4E9F0D8
+        for <linux-scsi@vger.kernel.org>; Thu, 11 Aug 2022 11:54:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1660244093; x=1691780093;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=JAaAJR7wc67hy6jnXKsnD5CiFky15y0MQprEMGqEB0E=;
+  b=T1IHhYMHNOXGRllcyUxMr9qk9iluT+Szp9etJfexBRLX3+CQfLpTly2H
+   oMTeviQXLdZ1wkFhNtjUlLeEHX7nqyDHznv7qEExOeg1cnWr5sSdUl9V4
+   sxFx9Lec/1tCFN8EDfDxvK5P9oymOGi5m9tV2hvgznXIRplC1dQe53UoD
+   duIT5YHAPuo3FABpgN5Rbov9nfFtiwFl1UiCMhXTdvQdFOYb7URIjpo4R
+   JAiBQeYGXwaRweAmNPCT0bGx9Tvy8rMput1/2+VhyBz7p58lVvKk6QFDC
+   RRWOcLkB2zS93QXX0DAJUt7Hrd3qy2dK4i0EO/Hr6JOrlkg0rZr6dDabD
+   w==;
+X-IronPort-AV: E=Sophos;i="5.93,230,1654531200"; 
+   d="scan'208";a="206969517"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 12 Aug 2022 02:54:52 +0800
+IronPort-SDR: PaE4AdsbPPnw1SD6ZZzI4s8dORY206IAAYrYczcryUJpYYQyTRy5G2o8flN0zPvhsfY1k6A0r9
+ Vt7/XtvQP3p2lEUBCjVDkdjQqS8OFAGMTwVsPWeLK7zx5J+n8Cwktj48KVMhpVvjlgpI9SrWjd
+ hyHOHybZYv9Vr6SkgPrl5i2kWP0DFcBums0iRBx2RnCIAzUhuyhr2zyhy0BOk1vn79uKbRWErb
+ gfAp3vn28vowwHafQeTk4hP93w30EEkEbjCSJL4k9tjsnmc2SRzsfmmZyJkpf6SURqfiS7B3hk
+ +HWWwsFAGrvzV9KpxTaWRc0R
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 11 Aug 2022 11:10:26 -0700
+IronPort-SDR: NZYFyKZkuLW6b5W490B6QHnA86OkmJVibMJ2sCElMrkAUAaqomoefIms24R5N2j6rArIQ5kc6e
+ zG7tEggjPIEY5w+CclNY7P8Kk1orWvt7uBtWHnptyGdALjVBHRo1LXR2t0yTjA267ItsDNWnSo
+ OG3s0xKg0iOXrllRCwp6zyA15BKasmRst1QPKtOVNbOuVI1FXZ18/ppFxackTY5YwyPm1GtQzZ
+ XAmRcmqoK9UiDr8BBD2bsgdXH25am8uRP7nAQfAIDnWj0s96h3SvyRg/UJ0FeG8lobGaH38ICx
+ V1w=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 11 Aug 2022 11:54:53 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4M3bZz661hz1Rwry
+        for <linux-scsi@vger.kernel.org>; Thu, 11 Aug 2022 11:54:51 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1660244091; x=1662836092; bh=JAaAJR7wc67hy6jnXKsnD5CiFky15y0MQpr
+        EMGqEB0E=; b=GLOohb2nCQUpcM2LGrY1E9hzZsSYZyzMaQH+mqnC1ZrTbrH8gfp
+        M+pGt7DvexoYtiVDkN2oa8TXukc92f87cx8r8fqHqt1FXGm8tj96u4SOrlAMSAAf
+        ebkFq49d5l1LP5SlEUcI3M72yHfGT0LihnOFGtFuMHFIFKlMV65v+hyc6qO6Gwpc
+        Zkjoq/NqhEDXWVAcc0zxcdmQ003tdOzL4HXvmIFTa8ac6DPEo0O4rK2P9ZmoDNax
+        gLUP7Oouqjdd2tbKdWYlhwdvKGi/zacwelKlQbXnKrp2FdghIDzKlhGOltU6QboE
+        w1FK1zAek63UZEWFURcLgME2iV58GryDfpw==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id P3lwTQs0N16y for <linux-scsi@vger.kernel.org>;
+        Thu, 11 Aug 2022 11:54:51 -0700 (PDT)
+Received: from [10.11.46.122] (c02drav6md6t.sdcorp.global.sandisk.com [10.11.46.122])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4M3bZy3NGDz1RtVk;
+        Thu, 11 Aug 2022 11:54:50 -0700 (PDT)
+Message-ID: <d2e27cb7-d90a-2f0a-1848-e1ec8faf7899@opensource.wdc.com>
+Date:   Thu, 11 Aug 2022 11:54:50 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.12.0
+Subject: Re: [PATCH 0/6] libsas and drivers: NCQ error handling
 Content-Language: en-US
-To:     Martin Wilck <mwilck@suse.com>, bvanassche@acm.org, hch@lst.de,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        james.bottomley@hansenpartnership.com
-Cc:     Hannes Reinecke <Hannes.Reinecke@suse.com>
-References: <20220810034155.20744-1-michael.christie@oracle.com>
- <20220810034155.20744-4-michael.christie@oracle.com>
- <6149f7bdfa013e0352e59dee2669298b2c080a03.camel@suse.com>
- <2b1943b2-466f-5674-1c8c-7db7b2dc4738@oracle.com>
- <e4dd855269b2efb2e2f3efdde92f1f3339159878.camel@suse.com>
- <e7318011-ee9f-05ec-eb87-1d95f4fe12e5@oracle.com>
- <29f24bf21ea98082b7709e067cb2d08d2253cab8.camel@suse.com>
-From:   Mike Christie <michael.christie@oracle.com>
-In-Reply-To: <29f24bf21ea98082b7709e067cb2d08d2253cab8.camel@suse.com>
+To:     John Garry <john.garry@huawei.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, jinpu.wang@cloud.ionos.com,
+        yangxingui@huawei.com, chenxiang66@hisilicon.com, hare@suse.de
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <1658489049-232850-1-git-send-email-john.garry@huawei.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <1658489049-232850-1-git-send-email-john.garry@huawei.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: CH2PR17CA0013.namprd17.prod.outlook.com
- (2603:10b6:610:53::23) To DM5PR10MB1466.namprd10.prod.outlook.com
- (2603:10b6:3:b::7)
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 3bafb1ab-a599-4b8f-c314-08da7bc66603
-X-MS-TrafficTypeDiagnostic: BY5PR10MB4164:EE_
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: lOr3+VK0DOE36o4LF2YGUporsZmsEzRMA8buWyHLl54inhqWHLv4F9uKymY8EuE+lVdIRMx15Y3jcT5E8bEU9W5yCpjplgyd9pvGbd+h7u8WwGfrqLUIucDRKhsvMciTubdGBhFtr0JIwOIlmbn8TZS3k9vmxIPBjozfxshKMtcpoQE+qh/n84lAtnpfcoNHfrAUJWVpKWEfBbkzf1Ip7777vZE5YlTnWbCjabZ2d3V79TkQ/ulzaZbBj7TVH+whYSCaahsof18t7SJzaYnnD3aIgNHC1QSKRyUsda3AKZ8fZlDGonifJYyYsKuhXTJHYuCDO6BqZcMqcfXBtMymFKVqDpZTqKg/Dp4xhRwGhMi+9/GD0TyIORoNzcr6JWqFm1lbWDHWXlfEREx+/EkEnaB0z/EWdCLMtHhV6EjEAcOnpLjhshUfKy4/GMq754S2pBZecHKr4SkWbWdKKO0b41O5FY4N0gPBIBC835BvVvWOICGKFjmKLZbIsQPLSNEVptXNMtyRhWHzW4R2UBwML+UHGC71PtN2+o/OvdfMqPdTkahwv71OnkghzXNmRpo5fVQi609NgeeHvq2wD3rxH0DBwp+kDZe8czuH/HQ9JEiXgicClZJCDkZsKOJ/++X6fCtX+xqjBAbDHYLYZbhRu3JVX4zTEDv6PVQ4LO0VhnBbsSwX1/ElTf8wqVVm+xaA4KFP+LmeXAuCBUhMTUKNFdMVDh2Wk4iM3NQVP4VPhYfHR/1UGKea03GyY1nmjdN+O3iJvqo7GuXhv0quzQoCtSuri3P4xnEWcHk9hCu/90+Y8DiI/OyiNT9LGfuQrdElXps+SUS5z5bltWH8yIPrXw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(396003)(39860400002)(346002)(376002)(136003)(366004)(5660300002)(6506007)(53546011)(41300700001)(26005)(6512007)(8936002)(31696002)(86362001)(316002)(66476007)(6486002)(478600001)(66556008)(66946007)(8676002)(4326008)(2906002)(31686004)(36756003)(2616005)(186003)(83380400001)(38100700002)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?VlgzZWhScFRLemJzVGpoK2VjZmtYRjJ2MHZtZmVIa0lObHcrSEhEMnJBMmdX?=
- =?utf-8?B?cUl1T0d5c1VOb1M0ZS8zSlNEdFdvNGFmRXFGNzN1dU4vWWJKNDFVNkFjUDZI?=
- =?utf-8?B?VzllMzlpYXVJelJwTzJXYWNYUlovbi9vNHlGcjlnd0o2R0lzcHlFaG1JVlZQ?=
- =?utf-8?B?MWF4ckJyUlBjNFErOUdrK0VqZlB2T09tMEo0SS9mK1FobTRUSWc5OW9WMzNx?=
- =?utf-8?B?NTVEc2lGRUtucDRIWHdVbHRjUUFVNFlycWx6NnhMTDRaZ0NGMlFsYVpFZk56?=
- =?utf-8?B?dmZwV3JwVzNJa3VQdDNlWFB0ci9NMHJaaHZZWDVFT2k3OEJ1Z2s3MEhpbE1I?=
- =?utf-8?B?VnpDcGlyemJ4aTVjVWMvMEJRZ3p1M3V5SlQxK0p0bHZwaCtacy9TaHM2WGhq?=
- =?utf-8?B?N3JlSTVHczB1ZmM2bkVoMGQvdGlWWEd4MnRNaGVDS1N4aGszWEFtR1haTWds?=
- =?utf-8?B?K0J4OXRQaFJDbUt4ZFU4a01ESmVIc0RRWGg5TW5KcFJDNUJLTHFDczRMSXhY?=
- =?utf-8?B?aXJSOXhKNGp2Zm84Q2c2cWNZcjVoZ2VGM3hnRVlzakFEZDdoWEhEQUticjhD?=
- =?utf-8?B?NGFMZ3dHU2hlNVlhWHpQRzZrT3dyWmxPRnNKTWpIYlJyUEJVWG1Ra3FHYzRF?=
- =?utf-8?B?bzZwQ0RLalhmV2lXZXJDTmZaR2FQeWsyN0hPSkpxNDBSTi94QVQrVkJPT2hq?=
- =?utf-8?B?bXRLZUIzQUg5VTdpQkFoelE1eWxHbnFkK2lXdllkeDBzcG1aV1RIOTlBL1VD?=
- =?utf-8?B?OEpHbTNlVzQzNHVJM0g2QjFNQzVWYndpdWNSK1V5WCtQalJQdlV2N2dLTHN6?=
- =?utf-8?B?QytpZC9rUVY0VmhKekdhZmVNMGt4SS9pbWdyWHJzSm1CRUxBK3djVy9Hck51?=
- =?utf-8?B?S2RHQ2NNSFVWbXlvUU5FaHZ2U0F2UFl1cTliMHFqM0p4cWN2bEJZSFd4Z2hL?=
- =?utf-8?B?VGhiUWNqcllsVWxvb0FieG1aM2FMYUNsNHdINnk3M2ZwOWo1MXNReWpGQ2hL?=
- =?utf-8?B?K1dSOWFYbmhzZXprV2dmeVNpODFrNVVHcFI0NDI3bnR4dk50WjVQdUpCbzdG?=
- =?utf-8?B?Q01VVVBRNng1NGZpdU1lRDBzTCsrT2RmTkF6Y0V5VnlwMEJrUks5L2ZXd0d2?=
- =?utf-8?B?MVM4YldwUlJqbHhXUGV3WVRIMEZXVzZkQjBRVmJ6R2Q4TTkvdWE1MG1ldHYv?=
- =?utf-8?B?UE5GcE96WHdtZDJhVndrR2QrMVdtUDY0WDZtMkEyOXhnR1ZCTXJIVmNXTDZW?=
- =?utf-8?B?UVhUdy9mS1JUdmZYckJneVF2RkF3RFBaUGNpdk56cFlKWEpSU3Zma1JzNElv?=
- =?utf-8?B?R0pHYWVCclUraUxXMzJsb1Jpd3UvemwvakZLUVpxeGtrMXE5eWlPUVlBYURj?=
- =?utf-8?B?QkxFV3ppYXp1YnRzajY2NDIyMytiYmpnamhCUzdlZmVZZXp0UXlvK3VURVJh?=
- =?utf-8?B?eERkR1RsSEduS3plcGpxZzZBYzVnOXdoZU5MeHc5S1RwMnk2ZndtY0l1T2N2?=
- =?utf-8?B?aDUwc2laWFlpS2dTOEJobTNLbFRhVE9YQ01aeldVc3NUekpocG11VVZQbWlT?=
- =?utf-8?B?K1FRRFZwRzAxYk5GOFFsd2ljNzlNbmdvTUppbGcyTWsrUjBZV2R6Yk12cDJv?=
- =?utf-8?B?cDBLR2xvcEZsSmZLTTh3Q09GV2c4Y005TnJqN1ZabDNLQnpUQ2Y1dW02aGxE?=
- =?utf-8?B?aEJoUjlvVW9ZL2VVYVlkMEhKalpvVm5zOHhvcnhCbVI4VmhlRDM2bjF3VGZs?=
- =?utf-8?B?eXFobGlIWTJNQ0tXSkNQMGk3MWRDUFpvRFVCWWsvc216N05MdGd2Q2doU2lO?=
- =?utf-8?B?TlpiTWlvcHhPNnB3WGpSS2RmaldnMGRKOC9YdGFNOVJ3NkFWYjUyaG5oanlk?=
- =?utf-8?B?QkFlYkFwSUxVNitJcmFWc2dYanBOenFSb0JuSytZZnRRblhrQVFsWWk0STRt?=
- =?utf-8?B?ekxLNGR0L2lOb05ZalBUcjNCREVQSzUvTEV4U1lVN3FiREpDcytmRURQZGVO?=
- =?utf-8?B?cUJORUVUckFiWS9XWC94ZjJib0ZxUXhtZTRreWxOa0lVR2p5Tlp2RU9YQ3Zj?=
- =?utf-8?B?N3E4cmx5Y0VZM1ZOaDUreFN0REpEbm1ra0E2czFVckRTVTNBamxJYlJocnQr?=
- =?utf-8?B?K0VIdEtxSUJIWm5ZL0hJVXJqV0F2ajdUUmcxL083Q1lFZC9URnhrZWM1ZUZB?=
- =?utf-8?B?dlE9PQ==?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: =?utf-8?B?WC9YQ0tma2RYVXJFQjYwSEJPY2NNQi9qR0V1S1J3THlHZHpaanlsem00Sk02?=
- =?utf-8?B?dUdQT0cyTnFLNmtqZ3lZK3RNMG5kVzNPd3NzN1Bjcm1idnNwYWwva3U5NGNp?=
- =?utf-8?B?WDJNLzNWNC91V1JDcEtwaUF1M1VjS2tHUUxuUEpmTTVvODArNGNUMWJoMGdG?=
- =?utf-8?B?T1JpWm53UHh2Mm5JanN6VG9vRlNzVWV2YjVMM0QyUDRsaXdwY0RjR0YwUCta?=
- =?utf-8?B?VzhLQjBwbDhsdnFlaDk4RWFMS3RONlpvL0x0ZlVQTktvRlVneEJQMEp5Qk1j?=
- =?utf-8?B?MUVDMkdrNDl0YStZQmlCVDh3VE5JUFB1NHNtcXlybmNSYm9RRXFrUUxDVktK?=
- =?utf-8?B?Vm9OZDRaUndGOXc4Qjc4YjVKUk1sWWRYUGw5aDl6R1QrWjRxYnFPOERHb2xE?=
- =?utf-8?B?STFoYWZMc0NuZVgwcmtGbmxpLzJvdUFqc2xINUZjeGtnT3ZaOFZST011eitm?=
- =?utf-8?B?cCtoY3hXUEFnMC9rbC9Gd0hwZEhNbytFSDVzcjI4MkpKbTlwQk5uU2c4N0Vh?=
- =?utf-8?B?TUpMcVRJSEhjV1VjWWEvT0ZTTVhXU3U0S1hScUk5MmNyV1hYUk81WUhGS2Ny?=
- =?utf-8?B?aWIwL2ZoRVQ3WFZoMXo3TElFZWQ1N200a2N6NnZvcmU0a0JqVmFjNEFYZzFG?=
- =?utf-8?B?VFVYYnI2YU5yNnA0LzhDZlphdUpCa05xdHFXNFJtdHNQcXhMTVVubkxPZ25L?=
- =?utf-8?B?MkVUK0haNVoreEJSemYrbjE1WUQzNmpMQzEyQnl3T1pjTUdWbjZ0Y3hMWHQr?=
- =?utf-8?B?RUJnTm9oVDRGYTlDNWNnZDBiQTg1bHYybmc1VVlmMGhpYU8xWDZsUXJlcUdK?=
- =?utf-8?B?dTR6RUZ5TTc2MEtVTFE1VzM0NHhWY08xR2R3MXNJY095QjNROFNIU1kzZDZt?=
- =?utf-8?B?djdjYWN2aE15Mk0zcVhUUFl1Ykw5Q205QVJyczV2SWJVRHlYcE1ROWI1R0VI?=
- =?utf-8?B?K2lZdzZSMFNsV0dQWElDRFdGOFVYcnI1NG1EMkJDRnhjMS9oVW5lVVNEU09T?=
- =?utf-8?B?N3FsNXd5M0d3c2NKaytRbm9teFdFMGJydGpJc1E2YXVyZW9kaytMN29FWUV0?=
- =?utf-8?B?NmUzQkxScWV3a0RuVEpUNE9LZGp1TmN4SEJsVnBxQmVWNlI0YnRudE5CUDhO?=
- =?utf-8?B?NWlTeW9yN2VYTUw4UkZQSFgxS1hyWTFtaGkyYVRIVXVwTlRVdDQ3dWFDMHZP?=
- =?utf-8?B?ZmFNcTRPRU1ES1pUcTc3Z3VoeGZoZkVKUmhpTmVqSFU2YWxlZnlCaFJSa1ly?=
- =?utf-8?B?YW5pUXlsYWRIVGh0cjJSN2NqRDBYbVd1bTViVnB0UE9ydUF2dXB4UTR3R1FU?=
- =?utf-8?Q?qOb3rRvi74EZUgQjkPgDd3RiAE8t+oYfIN?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3bafb1ab-a599-4b8f-c314-08da7bc66603
-X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Aug 2022 18:22:07.3172
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: zVAlVHodgkVFCnYFbs0xOEdR9JdAfAlFOtejXB24tlpVUeExXMz7OEuG3Vf28juG/SIz/7orLG5Q6hRf8MYt4Lyn42U/g2mQUQ1ATGDHqlk=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR10MB4164
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
- definitions=2022-08-11_11,2022-08-11_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 spamscore=0 mlxscore=0
- adultscore=0 bulkscore=0 mlxlogscore=999 phishscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2207270000
- definitions=main-2208110058
-X-Proofpoint-ORIG-GUID: iyCUB4BqlFnPxH04YT4a2zKG5ajYXAn6
-X-Proofpoint-GUID: iyCUB4BqlFnPxH04YT4a2zKG5ajYXAn6
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/11/22 12:02 PM, Martin Wilck wrote:
-> On Thu, 2022-08-11 at 11:15 -0500, Mike Christie wrote:
->>>
->>> I don't think it's _that_ speficic. (retries < allowed) is the
->>> default
->>> case, at least for the first failure. REQ_FAILFAST_DEV has very few
->>> users except for the device handlers, and NEEDS_RETRY is a rather
->>> frequently used disposition.
->> I'm saying it's really specific because we only hit this code
->> path that is causing issues when scsi_check_sense returns
->> NEEDS_RETRY.
+On 2022/07/22 4:24, John Garry wrote:
+> As reported in [0], the pm8001 driver NCQ error handling more or less
+> duplicates what libata does in link error handling, as follows:
+> - abort all commands
+> - do autopsy with read log ext 10 command
+> - reset the target to recover
 > 
-> What about the other cases in scsi_decide_disposition() that jump to
-> maybe_retry?
+> Indeed for the hisi_sas driver we want to add similar handling for NCQ
+> errors.
+> 
+> This series add a new libsas API - sas_ata_link_abort() - to handle host
+> NCQ errors, and fixes up pm8001 and hisi_sas drivers to use it. As
+> mentioned in the pm8001 changeover patch, I would prefer a better place to
+> locate the SATA ABORT command (rather that nexus reset callback).
+> 
+> I would appreciate some testing of the pm8001 change as the read log ext10
+> command mostly hangs on my arm64 machine - these arm64 hangs are a known
+> issue.
 
-Ok one exception to what I wrote. DID_TIMEOUT hits the
-blk_rq_is_passthrough test of course :)
+I applied this series on top of the current Linus tree and ran some tests: a
+bunch of fio runs and also ran libzbc test suites on a SATA SMR drive as that
+generates many command failures. No problems detected, the tests all pass.
+FYI, messages for failed commands look like this:
 
-The rest hit that check condition check and are retried like normal IO:
+pm80xx0:: mpi_sata_event 2685: SATA EVENT 0x23
+sas: Enter sas_scsi_recover_host busy: 1 failed: 1
+sas: sas_scsi_find_task: aborting task 0x00000000ba62a907
+pm80xx0:: mpi_sata_completion 2292: task null, freeing CCB tag 2
+sas: sas_scsi_find_task: task 0x00000000ba62a907 is aborted
+sas: sas_eh_handle_sas_errors: task 0x00000000ba62a907 is aborted
+ata21.00: exception Emask 0x0 SAct 0x20000000 SErr 0x0 action 0x0
+ata21.00: failed command: WRITE FPDMA QUEUED
+ata21.00: cmd 61/02:00:ff:ff:ea/00:00:02:00:00/40 tag 29 ncq dma 8192 out
+res 43/04:02:ff:ff:ea/00:00:02:00:00/00 Emask 0x400 (NCQ error) <F>
+ata21.00: status: { DRDY SENSE ERR }
+ata21.00: error: { ABRT }
+ata21.00: configured for UDMA/133
+ata21: EH complete
+sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 1 tries: 1
 
-scsi_noretry_cmd()
-.....
+Seems all good to me.
 
-	switch (host_byte(scmd->result)) {
-...
+> 
+> Finally with these changes we can make the libsas task alloc/free APIs
+> private, which they should always have been.
+> 
+> Based on v5.19-rc6
+> 
+> [0] https://lore.kernel.org/linux-scsi/8fb3b093-55f0-1fab-81f4-e8519810a978@huawei.com/
+> 
+> John Garry (5):
+>   scsi: pm8001: Modify task abort handling for SATA task
+>   scsi: libsas: Add sas_ata_link_abort()
+>   scsi: pm8001: Use sas_ata_link_abort() to handle NCQ errors
+>   scsi: hisi_sas: Don't issue ATA softreset in hisi_sas_abort_task()
+>   scsi: libsas: Make sas_{alloc, alloc_slow, free}_task() private
+> 
+> Xingui Yang (1):
+>   scsi: hisi_sas: Add SATA_DISK_ERR bit handling for v3 hw
+> 
+>  drivers/scsi/hisi_sas/hisi_sas_main.c  |   5 +-
+>  drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  22 ++-
+>  drivers/scsi/libsas/sas_ata.c          |  10 ++
+>  drivers/scsi/libsas/sas_init.c         |   3 -
+>  drivers/scsi/libsas/sas_internal.h     |   4 +
+>  drivers/scsi/pm8001/pm8001_hwi.c       | 194 +++++++------------------
+>  drivers/scsi/pm8001/pm8001_sas.c       |  13 ++
+>  drivers/scsi/pm8001/pm8001_sas.h       |   8 +-
+>  drivers/scsi/pm8001/pm80xx_hwi.c       | 177 ++--------------------
+>  include/scsi/libsas.h                  |   4 -
+>  include/scsi/sas_ata.h                 |   5 +
+>  11 files changed, 132 insertions(+), 313 deletions(-)
+> 
 
-        if (!scsi_status_is_check_condition(scmd->result))
-                return false;
 
-We get to that blk_rq_is_passthrough for DID_TIME_OUT because it
-has a goto to bypass the above test. The other host errors we return
-false above and retry.
+-- 
+Damien Le Moal
+Western Digital Research
