@@ -2,40 +2,38 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18AF5C19F2A
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Aug 2022 13:56:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01762C19F2A
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Aug 2022 13:57:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235226AbiHKN4X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Aug 2022 09:56:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39426 "EHLO
+        id S235314AbiHKN5W (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Aug 2022 09:57:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40212 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234650AbiHKN4W (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Aug 2022 09:56:22 -0400
+        with ESMTP id S234657AbiHKN5U (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Aug 2022 09:57:20 -0400
 Received: from bg5.exmail.qq.com (bg4.exmail.qq.com [43.154.54.12])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C129C7E314;
-        Thu, 11 Aug 2022 06:56:20 -0700 (PDT)
-X-QQ-mid: bizesmtp81t1660226157t4rprdd2
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CFECB804A8;
+        Thu, 11 Aug 2022 06:57:18 -0700 (PDT)
+X-QQ-mid: bizesmtp85t1660226222tbhiahg5
 Received: from localhost.localdomain ( [182.148.14.53])
         by bizesmtp.qq.com (ESMTP) with 
-        id ; Thu, 11 Aug 2022 21:55:56 +0800 (CST)
+        id ; Thu, 11 Aug 2022 21:57:01 +0800 (CST)
 X-QQ-SSF: 01000000002000G0V000B00A0000020
-X-QQ-FEAT: zT6n3Y95oi3bVIXAbHMtSOZADe/8+tTl6FBI+nkFergHEQ/tIvg/IiXMtb3p5
-        v+WG4L5QGH2A9B8eNWbvKjjv/NWnfr8WfMwNqw+LndVOaOJgTDsNdruK/K5Klea4R7cyGA1
-        bvFWb46Ot8J69EGuChV6Xzvly2C115SoEbqCjzXkQTOAAN//kuYbqW6f3VFReZwPb6vWqXZ
-        eNnt+IrgU4lg77v7/xR/zMeaI3VE+OZKqwfyOs2iIqZ/83W02tPVZF2s+Des+dQQYCkcQwm
-        T6e08rmM9w/Oc5StGVADkGdEBDUi+YiuwArxRr0gNSzOBvBhY9sddhcEbJFFPDuZKPpzGD/
-        nPUcXdO2gyrOsKQU8KNTf6S55twm6YtZdoVweTpDg54wBJjFAW3oESHQ3G4ZCVZnBIbZQf0
-        doe6Z/LmZn4=
+X-QQ-FEAT: SGbEDZt3Zybfc3s74YKhE6ILnhOuPw7a5eYaBUV/U7cvE1hff5zxioMm3+iiU
+        75k0tRnQe6TnGxBm7ZiGUhiA7Q61lXXuThp45++M3pBKdnuONE6OWuzNE47xPf3iCyL7VOh
+        85iohTZjy+SAQVgM57Qi38BSI2hgvfsjI2wyUa1/lQc9Ah+7JAEPzYzW9wdiA3Vh2rYeAes
+        rEZhJnSWaemjSBSGptdFz6ui4t3autKuUenPf1R0hjWLfnnRv66kOmQTeKr2iK2xQAFbUO2
+        GGuCenGNDNMszu6pfo7Uj5g2tZg7grA86aM2PrrL1Wa/3p78ngM7gr/43xwff5Dd6sOCWZ6
+        Q5MOK+fhUYZXIEGL6OmeWeZmqjEPPIK3uWmt8FB6M5dq+egUmHRMYwwa7+yTIDn3jXLxrKv
 X-QQ-GoodBg: 0
 From:   Jason Wang <wangborong@cdjrlc.com>
-To:     aliakc@web.de
-Cc:     oliver@neukum.org, lenehan@twibble.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, dc395x@twibble.org,
+To:     martin.petersen@oracle.com
+Cc:     kartilak@cisco.com, sebaddel@cisco.com, jejb@linux.ibm.com,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         Jason Wang <wangborong@cdjrlc.com>
-Subject: [PATCH] scsi: dc395x: Fix comment typo
-Date:   Thu, 11 Aug 2022 21:55:49 +0800
-Message-Id: <20220811135549.23965-1-wangborong@cdjrlc.com>
+Subject: [PATCH] scsi: snic: Fix comment typo
+Date:   Thu, 11 Aug 2022 21:56:54 +0800
+Message-Id: <20220811135654.24862-1-wangborong@cdjrlc.com>
 X-Mailer: git-send-email 2.36.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -45,27 +43,26 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The double `the' is duplicated in the comment, remove one.
+The double `to' is duplicated in the comment, remove one.
 
 Signed-off-by: Jason Wang <wangborong@cdjrlc.com>
 ---
- drivers/scsi/dc395x.c | 2 +-
+ drivers/scsi/snic/snic_debugfs.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
-index 670a836a6ba1..7c7fd511cffe 100644
---- a/drivers/scsi/dc395x.c
-+++ b/drivers/scsi/dc395x.c
-@@ -2052,7 +2052,7 @@ static void data_in_phase0(struct AdapterCtlBlk *acb, struct ScsiReqBlk *srb,
- 		/*
- 		 * KG: We should wait for the DMA FIFO to be empty ...
- 		 * but: it would be better to wait first for the SCSI FIFO and then the
--		 * the DMA FIFO to become empty? How do we know, that the device not already
-+		 * DMA FIFO to become empty? How do we know, that the device not already
- 		 * sent data to the FIFO in a MsgIn phase, eg.?
- 		 */
- 		if (!(DC395x_read8(acb, TRM_S1040_DMA_FIFOSTAT) & 0x80)) {
+diff --git a/drivers/scsi/snic/snic_debugfs.c b/drivers/scsi/snic/snic_debugfs.c
+index 57bdc3ba49d9..a03493ca1e87 100644
+--- a/drivers/scsi/snic/snic_debugfs.c
++++ b/drivers/scsi/snic/snic_debugfs.c
+@@ -362,7 +362,7 @@ void snic_stats_debugfs_init(struct snic *snic)
+  *
+  * Description:
+  * When Debufs is configured this routine removes debugfs file system
+- * elements that are specific to to snic stats
++ * elements that are specific to snic stats
+  */
+ void
+ snic_stats_debugfs_remove(struct snic *snic)
 -- 
 2.36.1
-
 
