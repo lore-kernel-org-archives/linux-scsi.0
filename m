@@ -2,98 +2,72 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB5EFC00140
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 Aug 2022 16:34:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88F41C25B0F
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 Aug 2022 17:35:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238908AbiHLQeF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 12 Aug 2022 12:34:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33946 "EHLO
+        id S234923AbiHLRfJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 12 Aug 2022 13:35:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40144 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236015AbiHLQeC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Aug 2022 12:34:02 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9657A14004;
-        Fri, 12 Aug 2022 09:34:01 -0700 (PDT)
-Received: from fraeml711-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4M48Pr4dSCz682NF;
-        Sat, 13 Aug 2022 00:33:52 +0800 (CST)
-Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml711-chm.china.huawei.com (10.206.15.60) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Fri, 12 Aug 2022 18:33:59 +0200
-Received: from [10.48.157.254] (10.48.157.254) by
- lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Fri, 12 Aug 2022 17:33:58 +0100
-Message-ID: <34bdd9a8-26bf-95b0-ed62-a6af5db05654@huawei.com>
-Date:   Fri, 12 Aug 2022 17:33:57 +0100
+        with ESMTP id S239447AbiHLRfH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Aug 2022 13:35:07 -0400
+Received: from mp-relay-01.fibernetics.ca (mp-relay-01.fibernetics.ca [208.85.217.136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07CFFB2743
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Aug 2022 10:35:03 -0700 (PDT)
+Received: from mailpool-fe-02.fibernetics.ca (mailpool-fe-02.fibernetics.ca [208.85.217.145])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mp-relay-01.fibernetics.ca (Postfix) with ESMTPS id 86348E0CC8;
+        Fri, 12 Aug 2022 17:35:02 +0000 (UTC)
+Received: from localhost (mailpool-mx-01.fibernetics.ca [208.85.217.140])
+        by mailpool-fe-02.fibernetics.ca (Postfix) with ESMTP id 7648B6053F;
+        Fri, 12 Aug 2022 17:35:02 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at 
+Received: from mailpool-fe-02.fibernetics.ca ([208.85.217.145])
+        by localhost (mail-mx-01.fibernetics.ca [208.85.217.140]) (amavisd-new, port 10024)
+        with ESMTP id 3nmE7vGcDsza; Fri, 12 Aug 2022 17:35:02 +0000 (UTC)
+Received: from [192.168.48.17] (host-104-157-202-215.dyn.295.ca [104.157.202.215])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: dgilbert@interlog.com)
+        by mail.ca.inter.net (Postfix) with ESMTPSA id D829460493;
+        Fri, 12 Aug 2022 17:35:01 +0000 (UTC)
+Message-ID: <30454ea8-63fb-12d5-5d34-0e872457dad8@interlog.com>
+Date:   Fri, 12 Aug 2022 13:34:57 -0400
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH 0/6] libsas and drivers: NCQ error handling
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <jinpu.wang@cloud.ionos.com>, <yangxingui@huawei.com>,
-        <chenxiang66@hisilicon.com>, <hare@suse.de>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <1658489049-232850-1-git-send-email-john.garry@huawei.com>
- <d2e27cb7-d90a-2f0a-1848-e1ec8faf7899@opensource.wdc.com>
- <437abe43-7ddd-6f49-9386-d8ed04c659bf@huawei.com>
- <15bfd5e0-7fcd-fdee-a546-7720b55eb108@opensource.wdc.com>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <15bfd5e0-7fcd-fdee-a546-7720b55eb108@opensource.wdc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.12.0
+Reply-To: dgilbert@interlog.com
+Subject: Re: [sg3_utils 0/3] Prepare for removing /proc/scsi from the Linux
+ kernel
+Content-Language: en-CA
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org
+References: <20220810182739.756352-1-bvanassche@acm.org>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+In-Reply-To: <20220810182739.756352-1-bvanassche@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.48.157.254]
-X-ClientProxiedBy: lhrpeml100003.china.huawei.com (7.191.160.210) To
- lhrpeml500003.china.huawei.com (7.191.162.67)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/08/2022 16:39, Damien Le Moal wrote:
->> For this specific test we don't seem to run a hardreset after the
->> autopsy, but we do seem to be getting an NCQ error. That's interesting.
->>
->> We have noticed this scenario for hisi_sas NCQ error, whereby the
->> autopsy decided a reset is not required or useful, such as a medium
->> error. Anyway the pm8001 driver relies on the reset being run always for
->> the NCQ error. So I am thinking of tweaking sas_ata_link_abort() as follows:
->>
->> void sas_ata_link_abort(struct domain_device *device)
->> {
->> 	struct ata_port *ap = device->sata_dev.ap;
->> 	struct ata_link *link = &ap->link;
->>
->> 	link->eh_info.err_mask |= AC_ERR_DEV;
->> +	link->eh_info.action |= ATA_EH_RESET;
->> 	ata_link_abort(link);
->> }
->>
->> This should force a reset.
-> This is an unaligned write to a sequential write required zone on SMR. So
-> definitely not worth a reset. Forcing hard resetting the link for such error is
-> an overkill. I think it is better to let ata_link_abort() -> ... -> scsi & ata
-> EH decide on the disposition.
-
-Do you know if this triggered the pm8001 IO_XFER_ERROR_ABORTED_NCQ_MODE 
-  error?
-
-If I do not set ATA_EH_RESET then I need to trust that libata will 
-always decide to do the reset for pm8001 IO_XFER_ERROR_ABORTED_NCQ_MODE 
-error. That is because it is in the reset that I send the pm8001 "abort 
-all" command - I could not find a better place for it.
-
+On 2022-08-10 14:27, Bart Van Assche wrote:
+> Hi Doug,
 > 
-> Note that patch 3 did not apply cleanly to the current Linus tree. So a rebase
-> for the series is needed.
+> The sg3_utils package is the only /proc/scsi user I know of. Although support
+> for systems without /proc/scsi was added to rescan_scsi_bus.sh more than ten
+> years ago, a few references to /proc/scsi remain. Convert these references into
+> the recommended interfaces.
 > 
+> Please consider these patches for inclusion in the sg3_utils package.
 
-That might be just git am, which always seems temperamental. The patches 
-still apply from cherry-pick'ing for me. Anyway, I'll send a new version 
-next week.
+The three patches in this series have been applied to my upstream subversion
+repository as revision 968 with a few cosmetic changes. That should now be
+mirrored at: https://github.com/doug-gilbert/sg3_utils
 
-Thanks,
-John
+Thanks
+Doug Gilbert
 
