@@ -2,202 +2,141 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46E34C25B08
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 Aug 2022 10:48:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23959C00140
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 Aug 2022 11:31:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237749AbiHLKsR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 12 Aug 2022 06:48:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54278 "EHLO
+        id S231843AbiHLLbN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 12 Aug 2022 07:31:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37252 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231822AbiHLKsQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Aug 2022 06:48:16 -0400
-Received: from mail-qv1-f53.google.com (mail-qv1-f53.google.com [209.85.219.53])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5777C9FF8;
-        Fri, 12 Aug 2022 03:48:15 -0700 (PDT)
-Received: by mail-qv1-f53.google.com with SMTP id b7so325501qvq.2;
-        Fri, 12 Aug 2022 03:48:15 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc;
-        bh=T/2FZXIGpYCgsZ5/AhrQtZsSNuWBGq95VlFDnMpQa1w=;
-        b=hlQKb3NdbPy6jaDgbmW4iBbYwRuHIMS8Le3K++MdPVp6+Nk8hy9VCaQ14q8fhH8oYy
-         cWisbOis/tNdvENJdpGIbxlsPwuQZgi0KqH9pFEaXKDEwAnNq+oQgT/HVZJsRygPeMfV
-         l4ELMa22T2yzjbhqt4EhkQOzsLmR7wHhpqvioVMQzExNNfwB4xhLEhefbqL5GOFSWxVY
-         eZKSo3mOwrB7Fp9uPEFpVSQQl1bI9FdoHUFYzUovu59GZoJg81VVQRNj9rZd/XtytQ9X
-         bcqY66g78cagIFRMMgWO93zJz9h4v7XBWFFu2WQc8bPSlEBWD4wNyq9joylBrTHNBpE9
-         OefQ==
-X-Gm-Message-State: ACgBeo3uX9TS0vQAa/+sdGgVIz90OfXoWBBvW6d3v/xQtA7M5pHoNoeE
-        1zYySU/D1Tqx+Q331KGmhDOhgrzxoBsMtg==
-X-Google-Smtp-Source: AA6agR63zvSfbSnFL2zmb1zqThSIu80vwXrWmJ2GlYraOaEMqtO2Lojivr14qVU41RI5Whl7ic38Pw==
-X-Received: by 2002:ad4:4b30:0:b0:476:f037:8a2 with SMTP id s16-20020ad44b30000000b00476f03708a2mr2754488qvw.2.1660301294202;
-        Fri, 12 Aug 2022 03:48:14 -0700 (PDT)
-Received: from mail-yw1-f181.google.com (mail-yw1-f181.google.com. [209.85.128.181])
-        by smtp.gmail.com with ESMTPSA id y6-20020ae9f406000000b006b8cff25187sm1537953qkl.42.2022.08.12.03.48.12
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 12 Aug 2022 03:48:13 -0700 (PDT)
-Received: by mail-yw1-f181.google.com with SMTP id 00721157ae682-32a17d3bba2so6123987b3.9;
-        Fri, 12 Aug 2022 03:48:12 -0700 (PDT)
-X-Received: by 2002:a81:13c2:0:b0:31f:3dc8:e01 with SMTP id
- 185-20020a8113c2000000b0031f3dc80e01mr3214850ywt.316.1660301292378; Fri, 12
- Aug 2022 03:48:12 -0700 (PDT)
+        with ESMTP id S229739AbiHLLbM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Aug 2022 07:31:12 -0400
+Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E6DDADCCE;
+        Fri, 12 Aug 2022 04:31:10 -0700 (PDT)
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id AFE4141399;
+        Fri, 12 Aug 2022 11:31:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        in-reply-to:content-transfer-encoding:content-disposition
+        :content-type:content-type:mime-version:references:message-id
+        :subject:subject:from:from:date:date:received:received:received
+        :received; s=mta-01; t=1660303867; x=1662118268; bh=YROq5AD6XA+G
+        3xOZ51mMOlYP1/LF/t6LqTV9Jm331xY=; b=mbPZmP1JgLoGvvi8TN49/hFUOYWA
+        ICPT0pda+XsQB6+mOihxH9t/ZqBmS4PVFSmiWs5mLuHafUG7Q/mmPrOt2Iw9k3l6
+        jIf+wrCjZdLLYSFMp/e6j6UWRcAdN+j5TN5EJVQvQMvQtp6Dyl8CQmZf3GOD6rj0
+        C24sIEIHI83y1fM=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id 5JRZ64mOZG8R; Fri, 12 Aug 2022 14:31:07 +0300 (MSK)
+Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 06D2041395;
+        Fri, 12 Aug 2022 14:30:44 +0300 (MSK)
+Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
+ T-EXCH-02.corp.yadro.com (172.17.10.102) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
+ 15.1.669.32; Fri, 12 Aug 2022 14:30:44 +0300
+Received: from yadro.com (10.199.18.20) by T-EXCH-08.corp.yadro.com
+ (172.17.11.58) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1118.9; Fri, 12 Aug
+ 2022 14:30:43 +0300
+Date:   Fri, 12 Aug 2022 14:30:42 +0300
+From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
+To:     Mike Christie <michael.christie@oracle.com>
+CC:     Martin Petersen <martin.petersen@oracle.com>,
+        <target-devel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux@yadro.com>, Roman Bolshakov <r.bolshakov@yadro.com>
+Subject: Re: [PATCH 3/6] scsi: target: core: dynamic opcode support in RSOC
+Message-ID: <20220812113042.GA32459@yadro.com>
+References: <20220718120117.4435-1-d.bogdanov@yadro.com>
+ <20220718120117.4435-4-d.bogdanov@yadro.com>
+ <1f72d08c-10e3-e625-0c19-e666fb70e5bb@oracle.com>
 MIME-Version: 1.0
-References: <20220630195703.10155-1-bvanassche@acm.org> <20220630195703.10155-3-bvanassche@acm.org>
- <alpine.DEB.2.22.394.2207191125130.1006766@ramsan.of.borg>
- <db19ed29-e7f9-e5b0-3a6c-f2812078a07d@acm.org> <CAMuHMdVzsgSYtbJQnaigNax_JbxPsQfU+gHcteS-ojWbxUdMfw@mail.gmail.com>
- <CAMuHMdWtxBj8ug7AHTqentF8UD4jpO2sgoWWcQCOvEKLJtdq8A@mail.gmail.com>
- <506ca1a6-1122-5755-fc74-60f7c7bfbd0d@acm.org> <CAMuHMdVQ2K2v8jpsFfOMk99DG_sBB4_ioiQRroC7K_Ov1wvp9w@mail.gmail.com>
- <6f70e742-9d8a-f389-0482-0ba9696bf445@acm.org> <CAMuHMdVc+ATGV-=R3uV6RyF0-mZiuKv7HpmogRBgqGVyO-MKWg@mail.gmail.com>
- <54e20a27-a10b-b77a-e950-1d3398e2e907@acm.org> <CAMuHMdURQpAEGgv4cY7v0rqzs12v2TT=Amt26Y0OoBSW7YAoaw@mail.gmail.com>
- <084e7c5a-f98d-d61e-de81-83525851ecf9@acm.org>
-In-Reply-To: <084e7c5a-f98d-d61e-de81-83525851ecf9@acm.org>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Fri, 12 Aug 2022 12:48:00 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdW2vOC8ZsE_XF8TbSNoF9zCrwq7UkGZ5jXen1E1mTZe+g@mail.gmail.com>
-Message-ID: <CAMuHMdW2vOC8ZsE_XF8TbSNoF9zCrwq7UkGZ5jXen1E1mTZe+g@mail.gmail.com>
-Subject: Re: [PATCH v2 2/2] scsi: sd: Rework asynchronous resume support
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        scsi <linux-scsi@vger.kernel.org>,
-        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
-        John Garry <john.garry@huawei.com>, ericspero@icloud.com,
-        jason600.groome@gmail.com,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-ide@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <1f72d08c-10e3-e625-0c19-e666fb70e5bb@oracle.com>
+X-Originating-IP: [10.199.18.20]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-08.corp.yadro.com (172.17.11.58)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart,
-
-CC linux-ide
-
-On Fri, Jul 22, 2022 at 7:56 PM Bart Van Assche <bvanassche@acm.org> wrote:
-> On 7/22/22 01:53, Geert Uytterhoeven wrote:
-> > During s2idle, the following trace data is generated:
+On Thu, Aug 11, 2022 at 10:43:05PM -0500, Mike Christie wrote:
+> «Внимание! Данное письмо от внешнего адресата!»
+> 
+> On 7/18/22 7:01 AM, Dmitry Bogdanov wrote:
+> > Report supported opcodes depending on a dynamic device configuration
 > >
-> >     kworker/u16:9-325     [000] ...2.   230.478731: block_rq_issue: 8,0
-> > N 0 () 0 + 0 [kworker/u16:9]
-> >     kworker/u16:9-325     [000] ...2.   230.478745:
-> > scsi_dispatch_cmd_start: host_no=0 channel=0 id=0 lun=0 data_sgl=0
-> > prot_sgl=0 prot_op=SCSI_PROT_NORMAL driver_tag=0 scheduler_tag=0
-> > cmnd=(SYNCHRONIZE_CACHE - raw=35 00 00 00 00 00 00 00 00 00)
-> >            <idle>-0       [007] d.h3.   230.478832:
-> > scsi_dispatch_cmd_done: host_no=0 channel=0 id=0 lun=0 data_sgl=0
-> > prot_sgl=0 prot_op=SCSI_PROT_NORMAL driver_tag=0 scheduler_tag=0
-> > cmnd=(SYNCHRONIZE_CACHE - raw=35 00 00 00 00 00 00 00 00 00)
-> > result=(driver=DRIVER_OK host=DID_OK message=COMMAND_COMPLETE
-> > status=SAM_STAT_GOOD)
-> >            <idle>-0       [000] ..s2.   230.478851: block_rq_complete:
-> > 8,0 N () 18446744073709551615 + 0 [0]
-> >     kworker/u16:9-325     [000] ...2.   230.483134: block_rq_issue: 8,0
-> > N 0 () 0 + 0 [kworker/u16:9]
-> >     kworker/u16:9-325     [000] ...2.   230.483136:
-> > scsi_dispatch_cmd_start: host_no=0 channel=0 id=0 lun=0 data_sgl=0
-> > prot_sgl=0 prot_op=SCSI_PROT_NORMAL driver_tag=0 scheduler_tag=1
-> > cmnd=(START_STOP - raw=1b 00 00 00 00 00)
-> >            <idle>-0       [007] d.h3.   230.624530:
-> > scsi_dispatch_cmd_done: host_no=0 channel=0 id=0 lun=0 data_sgl=0
-> > prot_sgl=0 prot_op=SCSI_PROT_NORMAL driver_tag=0 scheduler_tag=1
-> > cmnd=(START_STOP - raw=1b 00 00 00 00 00) result=(driver=DRIVER_OK
-> > host=DID_OK message=COMMAND_COMPLETE status=SAM_STAT_GOOD)
-> >            <idle>-0       [000] d.s4.   230.624634: scsi_eh_wakeup: host_no=0
-> >            <idle>-0       [000] ..s2.   230.624642: block_rq_complete:
-> > 8,0 N () 18446744073709551615 + 0 [0]
-> >    kworker/u16:14-1027    [007] d..3.   231.393642: scsi_eh_wakeup: host_no=0
+> > Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
+> > Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
+> > ---
+> >  drivers/target/target_core_spc.c  | 118 ++++++++++++++++++++++++++++--
+> >  include/target/target_core_base.h |   1 +
+> >  2 files changed, 114 insertions(+), 5 deletions(-)
 > >
-> > When reading from hard drive after s2idle, no more trace data
-> > is generated.
->
-> I think the above commands come from the suspend sequence. '1b 00 00 00
-> 00 00' stops a block device. The lowest bit in byte 4 needs to be set to
-> start a block device.
->
-> Something that is not yet clear is whether or not sd_submit_start()
-> hangs during the resume process. How about verifying whether or not
-> sd_submit_start() hangs by either issuing SysRq-t or by adding pr_info()
-> statements in that function?
+> > diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
+> > index 506e28b14e5a..cf516136b933 100644
+> > --- a/drivers/target/target_core_spc.c
+> > +++ b/drivers/target/target_core_spc.c
+> > @@ -1424,6 +1424,13 @@ static struct target_opcode_descriptor tcm_opcode_xdwriteread32 = {
+> >                      0xff, 0xff, 0xff, 0xff},
+> >  };
+> >
+> > +static bool tcm_is_ws_enabled(struct se_cmd *cmd)
+> > +{
+> > +     struct se_device *dev = cmd->se_dev;
+> > +
+> > +     return dev->dev_attrib.emulate_tpws;
+> > +}
+> > +
+> >  static struct target_opcode_descriptor tcm_opcode_write_same32 = {
+> >       .support = SCSI_SUPPORT_FULL,
+> >       .serv_action_valid = 1,
+> > @@ -1438,8 +1445,16 @@ static struct target_opcode_descriptor tcm_opcode_write_same32 = {
+> >                      0x00, 0x00, 0x00, 0x00,
+> >                      0x00, 0x00, 0x00, 0x00,
+> >                      0xff, 0xff, 0xff, 0xff},
+> > +     .enabled = tcm_is_ws_enabled,
+> >  };
+> 
+> I'm not sure what's incorrect. I think your patch is correct but the write
+> same code is wrong.
+> 
+> If emulate_tpws is 0, we will still execute the command. We actually only fail
+> with TCM_UNSUPPORTED_SCSI_OPCODE if it's a WRITE_SAME with the UNMAP bit = 1
+> and emulate_tpws=0.
+> 
+> If it's just a normal WRITE_SAME we maybe go by if by max_write_same_len is
+> greater than zero? Maybe that was a mistake and sbc_setup_write_same needs
+> a emulate_tpws check.
+Looks like emulate_tpws was introduced exaclty for WS+UNMAP bit case
+and it can not be used in tcm_is_ws_enabled as only check. Because of
+WS is actually two different commands selected by UNMAP bit it is
+unable somehow to differentiate them in RSOC. So I will reformulate
+the check in tcm_is_ws_enabled to be true if some of cases is
+supported by the backstore device.
++	return (dev->dev_attrib.emulate_tpws && !!ops->execute_unmap) ||
++	       !!ops->execute_write_same;
 
-sd_submit_start() is called once during suspend, and once during
-resume.  It does not hang.
+> 
+> >  static struct target_opcode_descriptor tcm_opcode_sync_cache = {
+> > @@ -1502,6 +1533,14 @@ static struct target_opcode_descriptor tcm_opcode_sync_cache16 = {
+> >                      0xff, 0xff, SCSI_GROUP_NUMBER_MASK, SCSI_CONTROL_MASK},
+> >  };
+> >
+> > +static bool tcm_is_unmap_enabled(struct se_cmd *cmd)
+> > +{
+> > +     struct sbc_ops *ops = cmd->protocol_data;
+> > +     struct se_device *dev = cmd->se_dev;
+> > +
+> > +     return ops->execute_unmap  && dev->dev_attrib.emulate_tpu;
+> > +}
+> 
+> Just a trivial nit. You had an extra space there.
+yep, will fix 
 
-Reading from /dev/sda hangs after resume (not in sd_submit_start(),
-which is never called for reading).
-
-Two tasks are blocked in blk_mq_get_tag() calling io_schedule():
-
-task:kworker/7:1     state:D stack:    0 pid:  122 ppid:     2 flags:0x00000008
-Workqueue: events ata_scsi_dev_rescan
-Call trace:
- __switch_to+0xbc/0x124
- __schedule+0x540/0x71c
- schedule+0x58/0xa0
- io_schedule+0x18/0x34
- blk_mq_get_tag+0x138/0x244
- __blk_mq_alloc_requests+0x130/0x2f0
- blk_mq_alloc_request+0x74/0xa8
- scsi_alloc_request+0x10/0x30
- __scsi_execute+0x5c/0x18c
- scsi_vpd_inquiry+0x7c/0xdc
- scsi_get_vpd_size+0x34/0xa8
- scsi_get_vpd_buf+0x28/0xf4
- scsi_attach_vpd+0x44/0x170
- scsi_rescan_device+0x30/0x98
- ata_scsi_dev_rescan+0xc8/0xfc
- process_one_work+0x2e0/0x474
- worker_thread+0x1cc/0x270
- kthread+0xd8/0xe8
- ret_from_fork+0x10/0x20
-
-
-task:hd              state:D stack:    0 pid: 1163 ppid:  1076 flags:0x00000000
-Call trace:
- __switch_to+0xbc/0x124
- __schedule+0x540/0x71c
- schedule+0x58/0xa0
- io_schedule+0x18/0x34
- blk_mq_get_tag+0x138/0x244
- __blk_mq_alloc_requests+0x130/0x2f0
- blk_mq_submit_bio+0x44c/0x5b4
- __submit_bio+0x24/0x5c
- submit_bio_noacct_nocheck+0x8c/0x178
- submit_bio_noacct+0x380/0x3b0
- submit_bio+0x34/0x3c
- mpage_bio_submit+0x28/0x38
- mpage_readahead+0xa8/0x178
- blkdev_readahead+0x14/0x1c
- read_pages+0x4c/0x158
- page_cache_ra_unbounded+0xd8/0x174
- do_page_cache_ra+0x40/0x4c
- page_cache_ra_order+0x14/0x1c
- ondemand_readahead+0x124/0x2fc
- page_cache_sync_ra+0x50/0x54
- filemap_read+0x130/0x6e8
- blkdev_read_iter+0xf0/0x164
- new_sync_read+0x74/0xc0
- vfs_read+0xbc/0xd8
- ksys_read+0x6c/0xd4
- __arm64_sys_read+0x14/0x1c
- invoke_syscall+0x70/0xf4
- el0_svc_common.constprop.0+0xbc/0xf0
- do_el0_svc+0x18/0x20
- el0_svc+0x30/0x84
- el0t_64_sync_handler+0x90/0xf8
- el0t_64_sync+0x14c/0x150
-
-I hope this helps.
-Thanks!
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
