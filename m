@@ -2,113 +2,155 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86804C00140
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 Aug 2022 08:03:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E96CC00140
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 Aug 2022 08:06:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231698AbiHLIDZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 12 Aug 2022 04:03:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42902 "EHLO
+        id S233297AbiHLIGt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 12 Aug 2022 04:06:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46044 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229552AbiHLIDY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Aug 2022 04:03:24 -0400
-Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83AEC9C2FA;
-        Fri, 12 Aug 2022 01:03:23 -0700 (PDT)
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 54B6C41242;
-        Fri, 12 Aug 2022 08:03:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        in-reply-to:content-transfer-encoding:content-disposition
-        :content-type:content-type:mime-version:references:message-id
-        :subject:subject:from:from:date:date:received:received:received
-        :received; s=mta-01; t=1660291400; x=1662105801; bh=gM3xqwycVx6f
-        d8QpBl8Se03RISF8OOLrmfL75nBVpnU=; b=FXvxl5dE0UvWpJV7xuqZS7B0du5u
-        UB3oIvaTi+u2Ki0hG7lg5vDU6DZ+08WMWJFVwRCS0TR4LCjgsWJdG5is+M1z9wMn
-        e4vrp9k6slpbu/HTDKkjHbP3cx7WJSY5H64Pa9iUJc4M4HDz/ET50U8cmAS+aM45
-        dIXnjMGxV5lzGUU=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id FPjeQs0V6vw2; Fri, 12 Aug 2022 11:03:20 +0300 (MSK)
-Received: from T-EXCH-01.corp.yadro.com (t-exch-01.corp.yadro.com [172.17.10.101])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 8E4E64138F;
-        Fri, 12 Aug 2022 11:03:07 +0300 (MSK)
-Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
- T-EXCH-01.corp.yadro.com (172.17.10.101) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
- 15.1.669.32; Fri, 12 Aug 2022 11:03:07 +0300
-Received: from yadro.com (10.178.114.42) by T-EXCH-08.corp.yadro.com
- (172.17.11.58) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1118.9; Fri, 12 Aug
- 2022 11:03:06 +0300
-Date:   Fri, 12 Aug 2022 11:03:07 +0300
-From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
-To:     Mike Christie <michael.christie@oracle.com>
-CC:     Martin Petersen <martin.petersen@oracle.com>,
-        <target-devel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux@yadro.com>, Roman Bolshakov <r.bolshakov@yadro.com>
-Subject: Re: [PATCH 2/6] scsi: target: core: add list of opcodes for RSOC
-Message-ID: <20220812080307.GA29582@yadro.com>
-References: <20220718120117.4435-1-d.bogdanov@yadro.com>
- <20220718120117.4435-3-d.bogdanov@yadro.com>
- <99508f9b-46cb-b696-a5c4-3874b4d08355@oracle.com>
+        with ESMTP id S229552AbiHLIGr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Aug 2022 04:06:47 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EB329DB6D;
+        Fri, 12 Aug 2022 01:06:46 -0700 (PDT)
+Received: from fraeml741-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4M3x8Y4CcJz687YW;
+        Fri, 12 Aug 2022 16:06:37 +0800 (CST)
+Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
+ fraeml741-chm.china.huawei.com (10.206.15.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Fri, 12 Aug 2022 10:06:43 +0200
+Received: from [10.48.157.254] (10.48.157.254) by
+ lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Fri, 12 Aug 2022 09:06:42 +0100
+Message-ID: <437abe43-7ddd-6f49-9386-d8ed04c659bf@huawei.com>
+Date:   Fri, 12 Aug 2022 09:06:42 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <99508f9b-46cb-b696-a5c4-3874b4d08355@oracle.com>
-X-Originating-IP: [10.178.114.42]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-08.corp.yadro.com (172.17.11.58)
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH 0/6] libsas and drivers: NCQ error handling
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <jinpu.wang@cloud.ionos.com>, <yangxingui@huawei.com>,
+        <chenxiang66@hisilicon.com>, <hare@suse.de>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <1658489049-232850-1-git-send-email-john.garry@huawei.com>
+ <d2e27cb7-d90a-2f0a-1848-e1ec8faf7899@opensource.wdc.com>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <d2e27cb7-d90a-2f0a-1848-e1ec8faf7899@opensource.wdc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.48.157.254]
+X-ClientProxiedBy: lhrpeml100003.china.huawei.com (7.191.160.210) To
+ lhrpeml500003.china.huawei.com (7.191.162.67)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Aug 11, 2022 at 10:38:29PM -0500, Mike Christie wrote:
-> «Внимание! Данное письмо от внешнего адресата!»
+On 11/08/2022 19:54, Damien Le Moal wrote:
+> On 2022/07/22 4:24, John Garry wrote:
+>> As reported in [0], the pm8001 driver NCQ error handling more or less
+>> duplicates what libata does in link error handling, as follows:
+>> - abort all commands
+>> - do autopsy with read log ext 10 command
+>> - reset the target to recover
+>>
+>> Indeed for the hisi_sas driver we want to add similar handling for NCQ
+>> errors.
+>>
+>> This series add a new libsas API - sas_ata_link_abort() - to handle host
+>> NCQ errors, and fixes up pm8001 and hisi_sas drivers to use it. As
+>> mentioned in the pm8001 changeover patch, I would prefer a better place to
+>> locate the SATA ABORT command (rather that nexus reset callback).
+>>
+>> I would appreciate some testing of the pm8001 change as the read log ext10
+>> command mostly hangs on my arm64 machine - these arm64 hangs are a known
+>> issue.
 > 
-> On 7/18/22 7:01 AM, Dmitry Bogdanov wrote:
-> > Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
-> > Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
-> > ---
-> >  drivers/target/target_core_spc.c | 595 +++++++++++++++++++++++++++++++
-> >  include/scsi/scsi_proto.h        |   3 +
-> >  2 files changed, 598 insertions(+)
-> >
-> > diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
-> > index 4157f73977cf..506e28b14e5a 100644
-> > --- a/drivers/target/target_core_spc.c
-> > +++ b/drivers/target/target_core_spc.c
+
+Thanks for this!
+
+> I applied this series on top of the current Linus tree and ran some tests: a
+> bunch of fio runs and also ran libzbc test suites on a SATA SMR drive as that
+> generates many command failures. No problems detected, the tests all pass.
+> FYI, messages for failed commands look like this:
+> 
+> pm80xx0:: mpi_sata_event 2685: SATA EVENT 0x23
+> sas: Enter sas_scsi_recover_host busy: 1 failed: 1
+> sas: sas_scsi_find_task: aborting task 0x00000000ba62a907
+> pm80xx0:: mpi_sata_completion 2292: task null, freeing CCB tag 2
+> sas: sas_scsi_find_task: task 0x00000000ba62a907 is aborted
+> sas: sas_eh_handle_sas_errors: task 0x00000000ba62a907 is aborted
+> ata21.00: exception Emask 0x0 SAct 0x20000000 SErr 0x0 action 0x0
+> ata21.00: failed command: WRITE FPDMA QUEUED
+> ata21.00: cmd 61/02:00:ff:ff:ea/00:00:02:00:00/40 tag 29 ncq dma 8192 out
+> res 43/04:02:ff:ff:ea/00:00:02:00:00/00 Emask 0x400 (NCQ error) <F>
+> ata21.00: status: { DRDY SENSE ERR }
+> ata21.00: error: { ABRT }
+> ata21.00: configured for UDMA/133
+> ata21: EH complete
+> sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 1 tries: 1
+> 
+
+For this specific test we don't seem to run a hardreset after the 
+autopsy, but we do seem to be getting an NCQ error. That's interesting.
+
+We have noticed this scenario for hisi_sas NCQ error, whereby the 
+autopsy decided a reset is not required or useful, such as a medium 
+error. Anyway the pm8001 driver relies on the reset being run always for 
+the NCQ error. So I am thinking of tweaking sas_ata_link_abort() as follows:
+
+void sas_ata_link_abort(struct domain_device *device)
+{
+	struct ata_port *ap = device->sata_dev.ap;
+	struct ata_link *link = &ap->link;
+
+	link->eh_info.err_mask |= AC_ERR_DEV;
++	link->eh_info.action |= ATA_EH_RESET;
+	ata_link_abort(link);
+}
+
+This should force a reset.
+
+Thanks,
+John
+
+> Seems all good to me.
+> 
+>>
+>> Finally with these changes we can make the libsas task alloc/free APIs
+>> private, which they should always have been.
+>>
+>> Based on v5.19-rc6
+>>
+>> [0] https://lore.kernel.org/linux-scsi/8fb3b093-55f0-1fab-81f4-e8519810a978@huawei.com/
+>>
+>> John Garry (5):
+>>    scsi: pm8001: Modify task abort handling for SATA task
+>>    scsi: libsas: Add sas_ata_link_abort()
+>>    scsi: pm8001: Use sas_ata_link_abort() to handle NCQ errors
+>>    scsi: hisi_sas: Don't issue ATA softreset in hisi_sas_abort_task()
+>>    scsi: libsas: Make sas_{alloc, alloc_slow, free}_task() private
+>>
+>> Xingui Yang (1):
+>>    scsi: hisi_sas: Add SATA_DISK_ERR bit handling for v3 hw
+>>
+>>   drivers/scsi/hisi_sas/hisi_sas_main.c  |   5 +-
+>>   drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  22 ++-
+>>   drivers/scsi/libsas/sas_ata.c          |  10 ++
+>>   drivers/scsi/libsas/sas_init.c         |   3 -
+>>   drivers/scsi/libsas/sas_internal.h     |   4 +
+>>   drivers/scsi/pm8001/pm8001_hwi.c       | 194 +++++++------------------
+>>   drivers/scsi/pm8001/pm8001_sas.c       |  13 ++
+>>   drivers/scsi/pm8001/pm8001_sas.h       |   8 +-
+>>   drivers/scsi/pm8001/pm80xx_hwi.c       | 177 ++--------------------
+>>   include/scsi/libsas.h                  |   4 -
+>>   include/scsi/sas_ata.h                 |   5 +
+>>   11 files changed, 132 insertions(+), 313 deletions(-)
+>>
 > 
 > 
-> > +static struct target_opcode_descriptor tcm_opcode_xdwriteread10 = {
-> > +     .support = SCSI_SUPPORT_FULL,
-> > +     .opcode = XDWRITEREAD_10,
-> > +     .cdb_size = 10,
-> > +     .usage_bits = {XDWRITEREAD_10, 0x18, 0xff, 0xff,
-> > +                    0xff, 0xff, SCSI_GROUP_NUMBER_MASK, 0xff,
-> > +                    0xff, SCSI_CONTROL_MASK},
-> > +};
-> > +
-> > +static struct target_opcode_descriptor tcm_opcode_xdwriteread32 = {
-> > +     .support = SCSI_SUPPORT_FULL,
-> > +     .serv_action_valid = 1,
-> > +     .opcode = VARIABLE_LENGTH_CMD,
-> > +     .service_action = XDWRITEREAD_32,
-> > +     .cdb_size = 32,
-> > +     .usage_bits = {VARIABLE_LENGTH_CMD, SCSI_CONTROL_MASK, 0x00, 0x00,
-> > +                    0x00, 0x00, SCSI_GROUP_NUMBER_MASK, 0x18,
-> > +                    0x00, XDWRITEREAD_32, 0x18, 0x00,
-> > +                    0xff, 0xff, 0xff, 0xff,
-> > +                    0xff, 0xff, 0xff, 0xff,
-> > +                    0x00, 0x00, 0x00, 0x00,
-> > +                    0x00, 0x00, 0x00, 0x00,
-> > +                    0xff, 0xff, 0xff, 0xff},
-> > +};
-> > +
-> 
-> I just removed these because they didn't work. I think the patch was added to
-> one of Martin's tree after you made this patch.
-Yes, I saw,  Iwill remove XDWRITEREAD_* in the next revision.
+
