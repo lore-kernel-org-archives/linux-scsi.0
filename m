@@ -2,93 +2,67 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0611BC00140
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 Aug 2022 21:46:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49F76C25B0F
+	for <linux-scsi@archiver.kernel.org>; Sat, 13 Aug 2022 07:49:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234678AbiHLVqR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 12 Aug 2022 17:46:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34346 "EHLO
+        id S234725AbiHMHtx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 13 Aug 2022 03:49:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38294 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229677AbiHLVqQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Aug 2022 17:46:16 -0400
-Received: from mail-pg1-f178.google.com (mail-pg1-f178.google.com [209.85.215.178])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4BC6596FD3
-        for <linux-scsi@vger.kernel.org>; Fri, 12 Aug 2022 14:46:15 -0700 (PDT)
-Received: by mail-pg1-f178.google.com with SMTP id bh13so1818652pgb.4
-        for <linux-scsi@vger.kernel.org>; Fri, 12 Aug 2022 14:46:15 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc;
-        bh=g0PZQPj3FEhuSJmM84r9tA07BU17QO2Le2TxX33AsR0=;
-        b=qLEpkSDY+W74ldkWA0adV434fSywV//nDAxsHwwJNoR6NzYfUVyqLLaik8RVdmhu8Y
-         nguHPoed6YDgjkzQGyhO5Nw4nImBYbtc7yFjrbPbEpX0qxKoUaSxWym78RQf/b1Isv9i
-         +zZp6fNSCjWDi4dia+VILJGbwmnTNP37GEujcygNNcheEXKpga2L3DcdFazcRjmZs1Ok
-         49Iv/EMp3cBgSAqGMwHVmmlOBhE5H64yeCllPoJ+awkMtTti9EYFGTqJVakQ9aXPHsut
-         Ueu0uYVVyknnYdM9RwiWYrCb62tM86v4ZJEF+Ep8Yw6rcuFC54vN/F+T5dplUDGubktp
-         tGFw==
-X-Gm-Message-State: ACgBeo19p/wmXk4wLYaOTBNq/miHl6k5qoYvfxKYEDTwetkbMztE6e4i
-        HB8qmPWP2R3ip1STbSTlfmY=
-X-Google-Smtp-Source: AA6agR6Ggn/XVJsb02kR8lAow0DEbtweBrcqrS91eBtWEMVWzWVacpvgG0w4vPbGkcOArWv+f6G0fA==
-X-Received: by 2002:a63:f4d:0:b0:41c:5b90:f643 with SMTP id 13-20020a630f4d000000b0041c5b90f643mr4781949pgp.537.1660340774724;
-        Fri, 12 Aug 2022 14:46:14 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:2414:9f13:41de:d21d? ([2620:15c:211:201:2414:9f13:41de:d21d])
-        by smtp.gmail.com with ESMTPSA id j9-20020a170903024900b0016d8d277c02sm2260258plh.25.2022.08.12.14.46.12
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 12 Aug 2022 14:46:13 -0700 (PDT)
-Message-ID: <031208a8-6250-15ed-ddb1-0bcdc83dfd5e@acm.org>
-Date:   Fri, 12 Aug 2022 14:46:11 -0700
+        with ESMTP id S229719AbiHMHtw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 13 Aug 2022 03:49:52 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 662915F79;
+        Sat, 13 Aug 2022 00:49:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=996nTc1Rzd0p7dmFxUJd/OrFv7UQBU3m78hDVoUU6E4=; b=GrccNOnV3cMbFoojV0nJqmx1on
+        QUAll3CgXBLia56NswHWJVEHw1sfSAUCh4dnXqIIpi9/fqLbXI/XdsWGl2a1+p1ARypMnEW/cT3mI
+        hKXZO19/ob5pNPbb6ZoAV5RsAJj5T/hyW4QZrzHya0r6f6XOgTQCBSH3t9GT3Y+Vh2xxJhEiAtkpX
+        rkb6ssEVaXe795LJ1C1vTio7KM77A/55i9d8Et+E3DAvO1ToLzGK/cDVX6o8dAIcDOvwjWfFt0hG4
+        bO6gbgk47GLNxmVgDVy45SBLw0u9HntEBAMtmN6YHPJUBpoDfrUfhQELRyqgX0dJXcXgQsyQPPOGG
+        dXO1Ac1A==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1oMltv-00C94Z-SQ; Sat, 13 Aug 2022 07:49:43 +0000
+Date:   Sat, 13 Aug 2022 00:49:43 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Dmitry Bogdanov <d.bogdanov@yadro.com>
+Cc:     Mike Christie <michael.christie@oracle.com>,
+        Martin Petersen <martin.petersen@oracle.com>,
+        target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux@yadro.com, Roman Bolshakov <r.bolshakov@yadro.com>
+Subject: Re: [PATCH 2/6] scsi: target: core: add list of opcodes for RSOC
+Message-ID: <YvdXl/H1etXxeTqN@infradead.org>
+References: <20220718120117.4435-1-d.bogdanov@yadro.com>
+ <20220718120117.4435-3-d.bogdanov@yadro.com>
+ <99508f9b-46cb-b696-a5c4-3874b4d08355@oracle.com>
+ <20220812080307.GA29582@yadro.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [PATCH 3/4] scsi: core: Remove procfs support
-Content-Language: en-US
-To:     dgilbert@interlog.com,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
-        Hannes Reinecke <hare@suse.de>,
-        John Garry <john.garry@huawei.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20220812204553.2202539-1-bvanassche@acm.org>
- <20220812204553.2202539-4-bvanassche@acm.org>
- <7a3b2aea-336a-c2ea-155d-de2b08380793@interlog.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <7a3b2aea-336a-c2ea-155d-de2b08380793@interlog.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220812080307.GA29582@yadro.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/12/22 14:17, Douglas Gilbert wrote:
-> On 2022-08-12 16:45, Bart Van Assche wrote:
->> There are equivalents for all /proc/scsi functionality in sysfs. The most
->> prominent user of /proc/scsi is the sg3_utils software package. Support
->> for systems without /proc/scsi was added to sg3_utils in 2008. Hence
->> remove procfs support from the SCSI core.
-> 
-> Perhaps it is just me but I find 'cat /proc/scsi/sg/debug' very useful
-> when something goes wrong with the sg driver or something that it depends
-> on. Part of my sg driver rewrite (3 years and still pending) was to
-> transfer the output that formerly went to /proc/scsi/sg/debug to
-> debugfs instead (or as well).
-> 
-> The most recent version of that procfs-->debugfs work for the sg driver
-> can be found in a post to this list titled: "[PATCH v24 35/46] sg: first
-> debugfs support" on 20220410.
-> 
-> Put another way, there are many hours of debugging experience that will be
-> lost by:
->    drivers/scsi/sg.c           | 358 ---------------------------
+On Fri, Aug 12, 2022 at 11:03:07AM +0300, Dmitry Bogdanov wrote:
+> > > +     .support = SCSI_SUPPORT_FULL,
+> > > +     .opcode = XDWRITEREAD_10,
+> > > +     .cdb_size = 10,
+> > > +     .usage_bits = {XDWRITEREAD_10, 0x18, 0xff, 0xff,
+> > > +                    0xff, 0xff, SCSI_GROUP_NUMBER_MASK, 0xff,
+> > > +                    0xff, SCSI_CONTROL_MASK},
+> > > +};
 
-Hi Doug,
+> > one of Martin's tree after you made this patch.
+> Yes, I saw,  Iwill remove XDWRITEREAD_* in the next revision.
 
-How about extracting patch "[PATCH v24 35/46] sg: first debugfs support" 
-from that 46 patch series and including it in this patch series?
-
-Thanks,
-
-Bart.
+What this does point out is that the way the patches are done,
+we have a fundamental issue with these descriptors being potentially
+out of sync with the actually supported commands. Once way to fix
+this would be to add a parse callback to these dscriptors to unwind
+sbc_parse_cdb.  The big downside would be an extra expensive indirect
+call per command, though.
