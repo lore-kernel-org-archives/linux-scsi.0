@@ -2,46 +2,47 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 046BAC2BB43
-	for <linux-scsi@archiver.kernel.org>; Sun, 14 Aug 2022 15:36:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0B56C25B0F
+	for <linux-scsi@archiver.kernel.org>; Sun, 14 Aug 2022 15:36:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240786AbiHNPgq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 14 Aug 2022 11:36:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52048 "EHLO
+        id S240834AbiHNPgs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 14 Aug 2022 11:36:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52302 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241018AbiHNPgH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Aug 2022 11:36:07 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3215C1E3DC;
-        Sun, 14 Aug 2022 08:31:27 -0700 (PDT)
+        with ESMTP id S240808AbiHNPfj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Aug 2022 11:35:39 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCD401CFE8;
+        Sun, 14 Aug 2022 08:30:59 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id AF73EB80B4D;
-        Sun, 14 Aug 2022 15:31:26 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7700DC433C1;
-        Sun, 14 Aug 2022 15:31:24 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2CB0660B90;
+        Sun, 14 Aug 2022 15:30:54 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3D272C433D6;
+        Sun, 14 Aug 2022 15:30:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660491085;
-        bh=cFQps2UgGzKfxxucgJAhHcyTCzeTMbAGguhyK1OacKw=;
+        s=k20201202; t=1660491053;
+        bh=GUcB9eD+iEOCbxU+UeqApPApFnGb+Rc+D67AbgcVBCw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=JNG6F7iIeLqR1BrTAhzh9w5B+Awpk7y+kNImlMntqpSfv73b/WyM00ZOPko2HssCE
-         m7WlsdBNTIYXR9AVm/S0McYt3E/UxxZNvCqK0lM6/kv63qzj+Uk0jwoE+auGCJxFXH
-         HdXW4ZJ3NPf5crl4PJ2E/nIG96cKrFLdf57fg14bJiIWIs869CYfPIszGvSC3D3JOk
-         ClMjLuBxf223YgewWgXgg2mlVr152gbLLSnyOgt7+3FTwshmug+DqsjOzC36pfNDsq
-         C8OHo9lMIpO3xWCtMmmpBdeWKP5Rslq4vcQBvYgUhEQeH1RuloSwc/OQzPI776DAAQ
-         d+H74YukfPubg==
+        b=c5D7+MeVhbc7r0SHjDXpq0utDRIKmYYf3zhbTfJGLxhiy9XcSrynPlN/TYlcdv6me
+         28R7r+Hg7CR8qR2vmDQh0mvup7V9tWFlVj/et0HS42Qs3HIlmgwT0AqLqGIKBJ7AVW
+         9Wh/oVlEfv/Fm+P+EgQV+9d7yN5FAyz5JgC+BNqcUpyfkv3optUghbibjB1oMFW4z3
+         KvULYg3tHmKnGAdSYYxCnBBm8xVlODnHEVcwyOwPSqfIVD9gq/V6sLd/+/S90FY7RG
+         WTteFwKLrd575pu8lS/QKfohehxyRicUayynEteHhSdgU6jtNIcl4xVLbZn/BTcKaC
+         n2+6QPEX7VZOw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Justin Tee <justin.tee@broadcom.com>,
+Cc:     Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
+        bvanassche@acm.org, beanhuo@micron.com, avri.altman@wdc.com,
+        adrian.hunter@intel.com, j-young.choi@samsung.com,
+        ebiggers@google.com, jjmin.jeong@samsung.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.18 25/56] scsi: lpfc: Prevent buffer overflow crashes in debugfs with malformed user input
-Date:   Sun, 14 Aug 2022 11:29:55 -0400
-Message-Id: <20220814153026.2377377-25-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.18 11/56] scsi: ufs: core: Add UFSHCD_QUIRK_HIBERN_FASTAUTO
+Date:   Sun, 14 Aug 2022 11:29:41 -0400
+Message-Id: <20220814153026.2377377-11-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220814153026.2377377-1-sashal@kernel.org>
 References: <20220814153026.2377377-1-sashal@kernel.org>
@@ -53,83 +54,59 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 
-[ Upstream commit f8191d40aa612981ce897e66cda6a88db8df17bb ]
+[ Upstream commit 2f11bbc2c7f37e3a6151ac548b1c0679cc90ea83 ]
 
-Malformed user input to debugfs results in buffer overflow crashes.  Adapt
-input string lengths to fit within internal buffers, leaving space for NULL
-terminators.
+Add UFSHCD_QUIRK_HIBERN_FASTAUTO quirk for host controllers which supports
+auto-hibernate the capability but only FASTAUTO mode.
 
-Link: https://lore.kernel.org/r/20220701211425.2708-3-jsmart2021@gmail.com
-Co-developed-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+Link: https://lore.kernel.org/r/20220603110524.1997825-4-yoshihiro.shimoda.uh@renesas.com
+Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_debugfs.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 9 +++++++--
+ drivers/scsi/ufs/ufshcd.h | 6 ++++++
+ 2 files changed, 13 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
-index 7b24c932e812..25deacc92b02 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.c
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-@@ -2607,8 +2607,8 @@ lpfc_debugfs_multixripools_write(struct file *file, const char __user *buf,
- 	struct lpfc_sli4_hdw_queue *qp;
- 	struct lpfc_multixri_pool *multixri_pool;
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 95be78549ed2..92de5b8d187c 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -4290,8 +4290,13 @@ static int ufshcd_get_max_pwr_mode(struct ufs_hba *hba)
+ 	if (hba->max_pwr_info.is_valid)
+ 		return 0;
  
--	if (nbytes > 64)
--		nbytes = 64;
-+	if (nbytes > sizeof(mybuf) - 1)
-+		nbytes = sizeof(mybuf) - 1;
+-	pwr_info->pwr_tx = FAST_MODE;
+-	pwr_info->pwr_rx = FAST_MODE;
++	if (hba->quirks & UFSHCD_QUIRK_HIBERN_FASTAUTO) {
++		pwr_info->pwr_tx = FASTAUTO_MODE;
++		pwr_info->pwr_rx = FASTAUTO_MODE;
++	} else {
++		pwr_info->pwr_tx = FAST_MODE;
++		pwr_info->pwr_rx = FAST_MODE;
++	}
+ 	pwr_info->hs_rate = PA_HS_MODE_B;
  
- 	memset(mybuf, 0, sizeof(mybuf));
+ 	/* Get the connected lane count */
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 1745144eb904..d14cc48226ce 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -608,6 +608,12 @@ enum ufshcd_quirks {
+ 	 * 64-bit addressing supported capability but it doesn't work.
+ 	 */
+ 	UFSHCD_QUIRK_BROKEN_64BIT_ADDRESS		= 1 << 17,
++
++	/*
++	 * This quirk needs to be enabled if the host controller has
++	 * auto-hibernate capability but it's FASTAUTO only.
++	 */
++	UFSHCD_QUIRK_HIBERN_FASTAUTO			= 1 << 18,
+ };
  
-@@ -2688,8 +2688,8 @@ lpfc_debugfs_nvmestat_write(struct file *file, const char __user *buf,
- 	if (!phba->targetport)
- 		return -ENXIO;
- 
--	if (nbytes > 64)
--		nbytes = 64;
-+	if (nbytes > sizeof(mybuf) - 1)
-+		nbytes = sizeof(mybuf) - 1;
- 
- 	memset(mybuf, 0, sizeof(mybuf));
- 
-@@ -2826,8 +2826,8 @@ lpfc_debugfs_ioktime_write(struct file *file, const char __user *buf,
- 	char mybuf[64];
- 	char *pbuf;
- 
--	if (nbytes > 64)
--		nbytes = 64;
-+	if (nbytes > sizeof(mybuf) - 1)
-+		nbytes = sizeof(mybuf) - 1;
- 
- 	memset(mybuf, 0, sizeof(mybuf));
- 
-@@ -2954,8 +2954,8 @@ lpfc_debugfs_nvmeio_trc_write(struct file *file, const char __user *buf,
- 	char mybuf[64];
- 	char *pbuf;
- 
--	if (nbytes > 63)
--		nbytes = 63;
-+	if (nbytes > sizeof(mybuf) - 1)
-+		nbytes = sizeof(mybuf) - 1;
- 
- 	memset(mybuf, 0, sizeof(mybuf));
- 
-@@ -3060,8 +3060,8 @@ lpfc_debugfs_hdwqstat_write(struct file *file, const char __user *buf,
- 	char *pbuf;
- 	int i;
- 
--	if (nbytes > 64)
--		nbytes = 64;
-+	if (nbytes > sizeof(mybuf) - 1)
-+		nbytes = sizeof(mybuf) - 1;
- 
- 	memset(mybuf, 0, sizeof(mybuf));
- 
+ enum ufshcd_caps {
 -- 
 2.35.1
 
