@@ -2,47 +2,46 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A247C25B06
-	for <linux-scsi@archiver.kernel.org>; Sun, 14 Aug 2022 15:36:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 046BAC2BB43
+	for <linux-scsi@archiver.kernel.org>; Sun, 14 Aug 2022 15:36:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240713AbiHNPgn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 14 Aug 2022 11:36:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52368 "EHLO
+        id S240786AbiHNPgq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 14 Aug 2022 11:36:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52048 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240926AbiHNPfx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Aug 2022 11:35:53 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D7721659B;
-        Sun, 14 Aug 2022 08:31:17 -0700 (PDT)
+        with ESMTP id S241018AbiHNPgH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Aug 2022 11:36:07 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3215C1E3DC;
+        Sun, 14 Aug 2022 08:31:27 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 7D4F8B80B77;
-        Sun, 14 Aug 2022 15:31:16 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B224C4347C;
-        Sun, 14 Aug 2022 15:31:14 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id AF73EB80B4D;
+        Sun, 14 Aug 2022 15:31:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7700DC433C1;
+        Sun, 14 Aug 2022 15:31:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660491075;
-        bh=mr9tRLqQ8X+aGtXimse11oHRXOJPJJGTmgtdeuO+DJw=;
+        s=k20201202; t=1660491085;
+        bh=cFQps2UgGzKfxxucgJAhHcyTCzeTMbAGguhyK1OacKw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=M9vn/6Wd5wdsXN/xuTvTQ9nYtAOatjkOuaca9GeCq2Pp5yClaiSHzplciUf8Klxf6
-         i/j43apPXjV4vderG4mM84JUD0J7NqEqDEhSw4pKtHexwo1SaCISGoI+WS60zw/hd7
-         nGD6qylCVwCOQSnb9kxcMlK8PHAw5b1yXZwL/4lUy74jlE67tuMv8nLTq8/jYJ4gaO
-         M8c6s0spIhZUlOt1IyIh1Xfw0ERRasceaVjSYWDisIGIarHR1o5wKRlllLhiGm0yfi
-         P0UDlWBLZm65w9svV04Ka+x+0lWhvngGLxeRZTbkmV2KZP0ZGiAIKw3nRMkBY65J58
-         h5w+g1t8xoVWg==
+        b=JNG6F7iIeLqR1BrTAhzh9w5B+Awpk7y+kNImlMntqpSfv73b/WyM00ZOPko2HssCE
+         m7WlsdBNTIYXR9AVm/S0McYt3E/UxxZNvCqK0lM6/kv63qzj+Uk0jwoE+auGCJxFXH
+         HdXW4ZJ3NPf5crl4PJ2E/nIG96cKrFLdf57fg14bJiIWIs869CYfPIszGvSC3D3JOk
+         ClMjLuBxf223YgewWgXgg2mlVr152gbLLSnyOgt7+3FTwshmug+DqsjOzC36pfNDsq
+         C8OHo9lMIpO3xWCtMmmpBdeWKP5Rslq4vcQBvYgUhEQeH1RuloSwc/OQzPI776DAAQ
+         d+H74YukfPubg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Mike Christie <michael.christie@oracle.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        Lee Duncan <lduncan@suse.com>,
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Justin Tee <justin.tee@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, cleech@redhat.com,
-        jejb@linux.ibm.com, open-iscsi@googlegroups.com,
+        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.18 18/56] scsi: iscsi: Fix HW conn removal use after free
-Date:   Sun, 14 Aug 2022 11:29:48 -0400
-Message-Id: <20220814153026.2377377-18-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.18 25/56] scsi: lpfc: Prevent buffer overflow crashes in debugfs with malformed user input
+Date:   Sun, 14 Aug 2022 11:29:55 -0400
+Message-Id: <20220814153026.2377377-25-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220814153026.2377377-1-sashal@kernel.org>
 References: <20220814153026.2377377-1-sashal@kernel.org>
@@ -54,38 +53,82 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Mike Christie <michael.christie@oracle.com>
+From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit c577ab7ba5f3bf9062db8a58b6e89d4fe370447e ]
+[ Upstream commit f8191d40aa612981ce897e66cda6a88db8df17bb ]
 
-If qla4xxx doesn't remove the connection before the session, the iSCSI
-class tries to remove the connection for it. We were doing a
-iscsi_put_conn() in the iter function which is not needed and will result
-in a use after free because iscsi_remove_conn() will free the connection.
+Malformed user input to debugfs results in buffer overflow crashes.  Adapt
+input string lengths to fit within internal buffers, leaving space for NULL
+terminators.
 
-Link: https://lore.kernel.org/r/20220616222738.5722-2-michael.christie@oracle.com
-Tested-by: Nilesh Javali <njavali@marvell.com>
-Reviewed-by: Lee Duncan <lduncan@suse.com>
-Reviewed-by: Nilesh Javali <njavali@marvell.com>
-Signed-off-by: Mike Christie <michael.christie@oracle.com>
+Link: https://lore.kernel.org/r/20220701211425.2708-3-jsmart2021@gmail.com
+Co-developed-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/scsi_transport_iscsi.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_debugfs.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 5d21f07456c6..6e73f14b9749 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -2143,8 +2143,6 @@ static int iscsi_iter_destroy_conn_fn(struct device *dev, void *data)
- 		return 0;
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index 7b24c932e812..25deacc92b02 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -2607,8 +2607,8 @@ lpfc_debugfs_multixripools_write(struct file *file, const char __user *buf,
+ 	struct lpfc_sli4_hdw_queue *qp;
+ 	struct lpfc_multixri_pool *multixri_pool;
  
- 	iscsi_remove_conn(iscsi_dev_to_conn(dev));
--	iscsi_put_conn(iscsi_dev_to_conn(dev));
--
- 	return 0;
- }
+-	if (nbytes > 64)
+-		nbytes = 64;
++	if (nbytes > sizeof(mybuf) - 1)
++		nbytes = sizeof(mybuf) - 1;
+ 
+ 	memset(mybuf, 0, sizeof(mybuf));
+ 
+@@ -2688,8 +2688,8 @@ lpfc_debugfs_nvmestat_write(struct file *file, const char __user *buf,
+ 	if (!phba->targetport)
+ 		return -ENXIO;
+ 
+-	if (nbytes > 64)
+-		nbytes = 64;
++	if (nbytes > sizeof(mybuf) - 1)
++		nbytes = sizeof(mybuf) - 1;
+ 
+ 	memset(mybuf, 0, sizeof(mybuf));
+ 
+@@ -2826,8 +2826,8 @@ lpfc_debugfs_ioktime_write(struct file *file, const char __user *buf,
+ 	char mybuf[64];
+ 	char *pbuf;
+ 
+-	if (nbytes > 64)
+-		nbytes = 64;
++	if (nbytes > sizeof(mybuf) - 1)
++		nbytes = sizeof(mybuf) - 1;
+ 
+ 	memset(mybuf, 0, sizeof(mybuf));
+ 
+@@ -2954,8 +2954,8 @@ lpfc_debugfs_nvmeio_trc_write(struct file *file, const char __user *buf,
+ 	char mybuf[64];
+ 	char *pbuf;
+ 
+-	if (nbytes > 63)
+-		nbytes = 63;
++	if (nbytes > sizeof(mybuf) - 1)
++		nbytes = sizeof(mybuf) - 1;
+ 
+ 	memset(mybuf, 0, sizeof(mybuf));
+ 
+@@ -3060,8 +3060,8 @@ lpfc_debugfs_hdwqstat_write(struct file *file, const char __user *buf,
+ 	char *pbuf;
+ 	int i;
+ 
+-	if (nbytes > 64)
+-		nbytes = 64;
++	if (nbytes > sizeof(mybuf) - 1)
++		nbytes = sizeof(mybuf) - 1;
+ 
+ 	memset(mybuf, 0, sizeof(mybuf));
  
 -- 
 2.35.1
