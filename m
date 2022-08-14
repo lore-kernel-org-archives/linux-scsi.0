@@ -2,49 +2,46 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08C90C25B08
-	for <linux-scsi@archiver.kernel.org>; Sun, 14 Aug 2022 15:36:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A77CBC3F6B0
+	for <linux-scsi@archiver.kernel.org>; Sun, 14 Aug 2022 15:36:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240871AbiHNPgv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 14 Aug 2022 11:36:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54590 "EHLO
+        id S240847AbiHNPgt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 14 Aug 2022 11:36:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54784 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240888AbiHNPft (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Aug 2022 11:35:49 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D3F91CFD7;
-        Sun, 14 Aug 2022 08:31:11 -0700 (PDT)
+        with ESMTP id S241046AbiHNPgL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Aug 2022 11:36:11 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A1571E3FA;
+        Sun, 14 Aug 2022 08:31:28 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 1F830B80B4D;
-        Sun, 14 Aug 2022 15:31:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23144C433C1;
-        Sun, 14 Aug 2022 15:31:07 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D566B60C99;
+        Sun, 14 Aug 2022 15:31:27 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DED3C43470;
+        Sun, 14 Aug 2022 15:31:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660491068;
-        bh=dt0BS2f9ek9t8KbWEO8Bu16vd6SbZkTKMNwAzrHuyl8=;
+        s=k20201202; t=1660491087;
+        bh=e0Y26IHvt/BfDtmyJiFGBYaa2Fed/g7mKB3u3OlEk48=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=mCfSQcX0LwFhupOmt+HrhSvWnZIJStW9VXOZ67AozprFqhcNdy+UAL8Qw75UXBwUz
-         Jtr6X+8uilCy6P0IJFcYVQtpvL8KeXBa08r2ZXbhlxGgVzg1n/vNJxyWooQh6vdVfu
-         yG30rnyN+1OiylbUGmFmJPMorIcAePjg7haIqZinTPs4UL8rbARiZaqLW9ZAPUL+hO
-         5BDq3bjHqcFzmgwr7cl3Fl8fPMN1rwaoaMqW8OU1FexnHHuDgfCKY7gOaA9LCFTh2m
-         89SpVLywgOy87Ve93lu00ulb+z6qNU8UhdBlW/WQ6Pyrlzq9QvQDREoKjCnipLGc67
-         vmYPNW9sHV9Yg==
+        b=ZHb+LpW4HqBYWSDKJ0Mt29O1S85VaHatF5jpJoFmlGKCLnijElL4KIladvT1yHndQ
+         Sn0si/GstfTWYacoNYfyG4rwsMc6RdYnwMHGZeLAeNzjrlK+9Twj/aoMQzHunLed7w
+         8MBPK3NYoIAaQFYlMDD6uqL/P9aEnIv3rHoHROhbuC0aHW5+1wX7bNzAaq+4AAwFln
+         qUcUREaTRyKZI9VQhvOrg/YkBVGomhRiClzo7xHQQO37Nvu885/6hPjFp8w9fRwscn
+         plpMeWW6xwJ9Qd9WY3lsql0Hojlu1+B3m8ilEDCj3c7zIkpbLMKmXbQYJ+nuHBjOax
+         WMc9BZvG4dFtQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Po-Wen Kao <powen.kao@mediatek.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Justin Tee <justin.tee@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
-        matthias.bgg@gmail.com, beanhuo@micron.com, bvanassche@acm.org,
-        avri.altman@wdc.com, peter.wang@mediatek.com, linmq006@gmail.com,
-        ye.guojin@zte.com.cn, linux-scsi@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.18 15/56] scsi: ufs: ufs-mediatek: Fix the timing of configuring device regulators
-Date:   Sun, 14 Aug 2022 11:29:45 -0400
-Message-Id: <20220814153026.2377377-15-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.18 26/56] scsi: lpfc: Fix possible memory leak when failing to issue CMF WQE
+Date:   Sun, 14 Aug 2022 11:29:56 -0400
+Message-Id: <20220814153026.2377377-26-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220814153026.2377377-1-sashal@kernel.org>
 References: <20220814153026.2377377-1-sashal@kernel.org>
@@ -56,113 +53,43 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Po-Wen Kao <powen.kao@mediatek.com>
+From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit 3fd23b8dfb54d9b74eba6dfdd3225db3ac116785 ]
+[ Upstream commit 2f67dc7970bce3529edce93a0a14234d88b3fcd5 ]
 
-Currently the LPM configurations of device regulators may not work since
-VCC is not disabled yet while ufs_mtk_vreg_set_lpm() is executed.
+There is no corresponding free routine if lpfc_sli4_issue_wqe fails to
+issue the CMF WQE in lpfc_issue_cmf_sync_wqe.
 
-Fix this by changing the timing of invoking ufs_mtk_vreg_set_lpm().
+If ret_val is non-zero, then free the iocbq request structure.
 
-Link: https://lore.kernel.org/r/20220616053725.5681-5-stanley.chu@mediatek.com
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
-Signed-off-by: Po-Wen Kao <powen.kao@mediatek.com>
-Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+Link: https://lore.kernel.org/r/20220701211425.2708-6-jsmart2021@gmail.com
+Co-developed-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ufs/ufs-mediatek.c | 58 ++++++++++++++++++++++++++++++---
- 1 file changed, 53 insertions(+), 5 deletions(-)
+ drivers/scsi/lpfc/lpfc_sli.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
-index 86a938075f30..266ceed34751 100644
---- a/drivers/scsi/ufs/ufs-mediatek.c
-+++ b/drivers/scsi/ufs/ufs-mediatek.c
-@@ -1033,7 +1033,6 @@ static int ufs_mtk_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
- 		 * ufshcd_suspend() re-enabling regulators while vreg is still
- 		 * in low-power mode.
- 		 */
--		ufs_mtk_vreg_set_lpm(hba, true);
- 		err = ufs_mtk_mphy_power_on(hba, false);
- 		if (err)
- 			goto fail;
-@@ -1057,12 +1056,13 @@ static int ufs_mtk_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- {
- 	int err;
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 123a18784aa4..978cc87d4117 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -2003,10 +2003,12 @@ lpfc_issue_cmf_sync_wqe(struct lpfc_hba *phba, u32 ms, u64 total)
  
-+	if (hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL)
-+		ufs_mtk_vreg_set_lpm(hba, false);
-+
- 	err = ufs_mtk_mphy_power_on(hba, true);
- 	if (err)
- 		goto fail;
- 
--	ufs_mtk_vreg_set_lpm(hba, false);
--
- 	if (ufshcd_is_link_hibern8(hba)) {
- 		err = ufs_mtk_link_set_hpm(hba);
- 		if (err)
-@@ -1227,9 +1227,57 @@ static int ufs_mtk_remove(struct platform_device *pdev)
- 	return 0;
- }
- 
-+int ufs_mtk_system_suspend(struct device *dev)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	int ret;
-+
-+	ret = ufshcd_system_suspend(dev);
-+	if (ret)
-+		return ret;
-+
-+	ufs_mtk_vreg_set_lpm(hba, true);
-+
-+	return 0;
-+}
-+
-+int ufs_mtk_system_resume(struct device *dev)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	ufs_mtk_vreg_set_lpm(hba, false);
-+
-+	return ufshcd_system_resume(dev);
-+}
-+
-+int ufs_mtk_runtime_suspend(struct device *dev)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	int ret = 0;
-+
-+	ret = ufshcd_runtime_suspend(dev);
-+	if (ret)
-+		return ret;
-+
-+	ufs_mtk_vreg_set_lpm(hba, true);
-+
-+	return 0;
-+}
-+
-+int ufs_mtk_runtime_resume(struct device *dev)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	ufs_mtk_vreg_set_lpm(hba, false);
-+
-+	return ufshcd_runtime_resume(dev);
-+}
-+
- static const struct dev_pm_ops ufs_mtk_pm_ops = {
--	SET_SYSTEM_SLEEP_PM_OPS(ufshcd_system_suspend, ufshcd_system_resume)
--	SET_RUNTIME_PM_OPS(ufshcd_runtime_suspend, ufshcd_runtime_resume, NULL)
-+	SET_SYSTEM_SLEEP_PM_OPS(ufs_mtk_system_suspend,
-+				ufs_mtk_system_resume)
-+	SET_RUNTIME_PM_OPS(ufs_mtk_runtime_suspend,
-+			   ufs_mtk_runtime_resume, NULL)
- 	.prepare	 = ufshcd_suspend_prepare,
- 	.complete	 = ufshcd_resume_complete,
- };
+ 	sync_buf->cmd_flag |= LPFC_IO_CMF;
+ 	ret_val = lpfc_sli4_issue_wqe(phba, &phba->sli4_hba.hdwq[0], sync_buf);
+-	if (ret_val)
++	if (ret_val) {
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_CGN_MGMT,
+ 				"6214 Cannot issue CMF_SYNC_WQE: x%x\n",
+ 				ret_val);
++		__lpfc_sli_release_iocbq(phba, sync_buf);
++	}
+ out_unlock:
+ 	spin_unlock_irqrestore(&phba->hbalock, iflags);
+ 	return ret_val;
 -- 
 2.35.1
 
