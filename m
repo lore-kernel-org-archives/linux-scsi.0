@@ -2,51 +2,50 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33094C3F6B0
-	for <linux-scsi@archiver.kernel.org>; Sun, 14 Aug 2022 15:31:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A247C25B06
+	for <linux-scsi@archiver.kernel.org>; Sun, 14 Aug 2022 15:36:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240396AbiHNPbk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 14 Aug 2022 11:31:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39596 "EHLO
+        id S240713AbiHNPgn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 14 Aug 2022 11:36:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52368 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240362AbiHNPa4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Aug 2022 11:30:56 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0AA3D1A826;
-        Sun, 14 Aug 2022 08:29:32 -0700 (PDT)
+        with ESMTP id S240926AbiHNPfx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Aug 2022 11:35:53 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D7721659B;
+        Sun, 14 Aug 2022 08:31:17 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1479460C41;
-        Sun, 14 Aug 2022 15:29:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0DFB2C433D6;
-        Sun, 14 Aug 2022 15:29:29 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 7D4F8B80B77;
+        Sun, 14 Aug 2022 15:31:16 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B224C4347C;
+        Sun, 14 Aug 2022 15:31:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660490971;
-        bh=qt61o7YewrXnnLL9ocm5HDs/bnCH6kg7cv3t1Ds3lw8=;
+        s=k20201202; t=1660491075;
+        bh=mr9tRLqQ8X+aGtXimse11oHRXOJPJJGTmgtdeuO+DJw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=hNNDrRCxBQIok7pc0B2BtKN5py0ml1fNBjXHenOw1KbwjmkXG0ygxTZfC5Li6wAWj
-         GO4Gpr4SayO+Bq7eM7s/8fGxtdUQWGKZ+38+MA9Mi0lzj744IjuDaHhnHReTgY1phE
-         H01+WJac0OSGq34E8QzVhyQdVb2hIpGzbDq6qOquhx/4Sf4baaJQT9vTeF2BUY6EMJ
-         4jG6EI6P/dzNK4JbRIbkYtbMJvEDrYa3rI6AigALbR+6IgIqR4R4eTfNmMEoI31/k8
-         ayczk4roQ4ZfRDtMQvi2vAFyzRp14sJBckV41bGMGADwBzxW5ilWufRa4/ZZPfcEAU
-         eGw6fgjfgLxWg==
+        b=M9vn/6Wd5wdsXN/xuTvTQ9nYtAOatjkOuaca9GeCq2Pp5yClaiSHzplciUf8Klxf6
+         i/j43apPXjV4vderG4mM84JUD0J7NqEqDEhSw4pKtHexwo1SaCISGoI+WS60zw/hd7
+         nGD6qylCVwCOQSnb9kxcMlK8PHAw5b1yXZwL/4lUy74jlE67tuMv8nLTq8/jYJ4gaO
+         M8c6s0spIhZUlOt1IyIh1Xfw0ERRasceaVjSYWDisIGIarHR1o5wKRlllLhiGm0yfi
+         P0UDlWBLZm65w9svV04Ka+x+0lWhvngGLxeRZTbkmV2KZP0ZGiAIKw3nRMkBY65J58
+         h5w+g1t8xoVWg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Chanho Park <chanho61.park@samsung.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+Cc:     Mike Christie <michael.christie@oracle.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        Lee Duncan <lduncan@suse.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
-        alim.akhtar@samsung.com, bvanassche@acm.org, beanhuo@micron.com,
-        peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-samsung-soc@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.19 38/64] scsi: ufs: ufs-exynos: Change ufs phy control sequence
-Date:   Sun, 14 Aug 2022 11:24:11 -0400
-Message-Id: <20220814152437.2374207-38-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, cleech@redhat.com,
+        jejb@linux.ibm.com, open-iscsi@googlegroups.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.18 18/56] scsi: iscsi: Fix HW conn removal use after free
+Date:   Sun, 14 Aug 2022 11:29:48 -0400
+Message-Id: <20220814153026.2377377-18-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220814152437.2374207-1-sashal@kernel.org>
-References: <20220814152437.2374207-1-sashal@kernel.org>
+In-Reply-To: <20220814153026.2377377-1-sashal@kernel.org>
+References: <20220814153026.2377377-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -55,79 +54,36 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Chanho Park <chanho61.park@samsung.com>
+From: Mike Christie <michael.christie@oracle.com>
 
-[ Upstream commit 3d73b200f9893d8f5ba5d105e8b69c8d16744fa2 ]
+[ Upstream commit c577ab7ba5f3bf9062db8a58b6e89d4fe370447e ]
 
-Since commit 1599069a62c6 ("phy: core: Warn when phy_power_on is called
-before phy_init"), the following warning has been reported:
+If qla4xxx doesn't remove the connection before the session, the iSCSI
+class tries to remove the connection for it. We were doing a
+iscsi_put_conn() in the iter function which is not needed and will result
+in a use after free because iscsi_remove_conn() will free the connection.
 
-	phy_power_on was called before phy_init
-
-To address this, we need to remove phy_power_on from exynos_ufs_phy_init()
-and move it after phy_init. phy_power_off and phy_exit are also necessary
-in exynos_ufs_remove().
-
-Link: https://lore.kernel.org/r/20220706020255.151177-4-chanho61.park@samsung.com
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Signed-off-by: Chanho Park <chanho61.park@samsung.com>
+Link: https://lore.kernel.org/r/20220616222738.5722-2-michael.christie@oracle.com
+Tested-by: Nilesh Javali <njavali@marvell.com>
+Reviewed-by: Lee Duncan <lduncan@suse.com>
+Reviewed-by: Nilesh Javali <njavali@marvell.com>
+Signed-off-by: Mike Christie <michael.christie@oracle.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/ufs/host/ufs-exynos.c | 17 ++++++++++-------
- 1 file changed, 10 insertions(+), 7 deletions(-)
+ drivers/scsi/scsi_transport_iscsi.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
-index a81d8cbd542f..25995667c832 100644
---- a/drivers/ufs/host/ufs-exynos.c
-+++ b/drivers/ufs/host/ufs-exynos.c
-@@ -910,9 +910,13 @@ static int exynos_ufs_phy_init(struct exynos_ufs *ufs)
- 	if (ret) {
- 		dev_err(hba->dev, "%s: phy init failed, ret = %d\n",
- 			__func__, ret);
--		goto out_exit_phy;
-+		return ret;
- 	}
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 5d21f07456c6..6e73f14b9749 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -2143,8 +2143,6 @@ static int iscsi_iter_destroy_conn_fn(struct device *dev, void *data)
+ 		return 0;
  
-+	ret = phy_power_on(generic_phy);
-+	if (ret)
-+		goto out_exit_phy;
-+
- 	return 0;
- 
- out_exit_phy:
-@@ -1174,10 +1178,6 @@ static int exynos_ufs_init(struct ufs_hba *hba)
- 		goto out;
- 	}
- 
--	ret = phy_power_on(ufs->phy);
--	if (ret)
--		goto phy_off;
+ 	iscsi_remove_conn(iscsi_dev_to_conn(dev));
+-	iscsi_put_conn(iscsi_dev_to_conn(dev));
 -
- 	exynos_ufs_priv_init(hba, ufs);
- 
- 	if (ufs->drv_data->drv_init) {
-@@ -1195,8 +1195,6 @@ static int exynos_ufs_init(struct ufs_hba *hba)
- 	exynos_ufs_config_smu(ufs);
- 	return 0;
- 
--phy_off:
--	phy_power_off(ufs->phy);
- out:
- 	hba->priv = NULL;
- 	return ret;
-@@ -1514,9 +1512,14 @@ static int exynos_ufs_probe(struct platform_device *pdev)
- static int exynos_ufs_remove(struct platform_device *pdev)
- {
- 	struct ufs_hba *hba =  platform_get_drvdata(pdev);
-+	struct exynos_ufs *ufs = ufshcd_get_variant(hba);
- 
- 	pm_runtime_get_sync(&(pdev)->dev);
- 	ufshcd_remove(hba);
-+
-+	phy_power_off(ufs->phy);
-+	phy_exit(ufs->phy);
-+
  	return 0;
  }
  
