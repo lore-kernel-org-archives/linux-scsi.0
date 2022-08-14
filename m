@@ -2,46 +2,48 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A77CBC3F6B0
-	for <linux-scsi@archiver.kernel.org>; Sun, 14 Aug 2022 15:36:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6852BC282E7
+	for <linux-scsi@archiver.kernel.org>; Sun, 14 Aug 2022 15:37:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240847AbiHNPgt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 14 Aug 2022 11:36:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54784 "EHLO
+        id S239721AbiHNPhY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 14 Aug 2022 11:37:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54910 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241046AbiHNPgL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Aug 2022 11:36:11 -0400
+        with ESMTP id S240712AbiHNPgn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Aug 2022 11:36:43 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A1571E3FA;
-        Sun, 14 Aug 2022 08:31:28 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E4411F2DF;
+        Sun, 14 Aug 2022 08:32:05 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D566B60C99;
-        Sun, 14 Aug 2022 15:31:27 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DED3C43470;
-        Sun, 14 Aug 2022 15:31:26 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 37B3860BC9;
+        Sun, 14 Aug 2022 15:32:04 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3FB88C433D6;
+        Sun, 14 Aug 2022 15:32:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660491087;
-        bh=e0Y26IHvt/BfDtmyJiFGBYaa2Fed/g7mKB3u3OlEk48=;
+        s=k20201202; t=1660491123;
+        bh=njb5nsYY32sNatF5cFueoIMtAne14vj0zsb0g2m84FQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ZHb+LpW4HqBYWSDKJ0Mt29O1S85VaHatF5jpJoFmlGKCLnijElL4KIladvT1yHndQ
-         Sn0si/GstfTWYacoNYfyG4rwsMc6RdYnwMHGZeLAeNzjrlK+9Twj/aoMQzHunLed7w
-         8MBPK3NYoIAaQFYlMDD6uqL/P9aEnIv3rHoHROhbuC0aHW5+1wX7bNzAaq+4AAwFln
-         qUcUREaTRyKZI9VQhvOrg/YkBVGomhRiClzo7xHQQO37Nvu885/6hPjFp8w9fRwscn
-         plpMeWW6xwJ9Qd9WY3lsql0Hojlu1+B3m8ilEDCj3c7zIkpbLMKmXbQYJ+nuHBjOax
-         WMc9BZvG4dFtQ==
+        b=NIloLY7KBzihs5IXb5A/tYAMrtpyE+keWBBUlSc/+DZ1A/9SFmDqhGokBuuefLvLJ
+         O5pcgvgHP58kJ35dHw2n7Oa6igbNG/GOdQ/pRIRAdgNijw0R2PMJqUYFOzZcyoqhvX
+         8m8GCZy2d0aMMGGCV03GbJP+AEG2Jy9nPad2TIAhqv5uTFrAuO1yaC5igzHWJrpn7o
+         JKMbJEWfYxy0uTknhfVtrXCCzhymcaTbcX2B0AMzOI8OTV6ylGW0oupF2PmJYXFT67
+         7ySyPhiiFjU2epfazQBKD4k5pXJdTCNPS9wyfyZFfe8TJUvW97bfhqaVzL/NPWqxJH
+         QLNAdbfNKX+Dg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Justin Tee <justin.tee@broadcom.com>,
+Cc:     Chanho Park <chanho61.park@samsung.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.18 26/56] scsi: lpfc: Fix possible memory leak when failing to issue CMF WQE
-Date:   Sun, 14 Aug 2022 11:29:56 -0400
-Message-Id: <20220814153026.2377377-26-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
+        alim.akhtar@samsung.com, beanhuo@micron.com, bvanassche@acm.org,
+        peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-samsung-soc@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.18 34/56] scsi: ufs: ufs-exynos: Change ufs phy control sequence
+Date:   Sun, 14 Aug 2022 11:30:04 -0400
+Message-Id: <20220814153026.2377377-34-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220814153026.2377377-1-sashal@kernel.org>
 References: <20220814153026.2377377-1-sashal@kernel.org>
@@ -53,43 +55,82 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Chanho Park <chanho61.park@samsung.com>
 
-[ Upstream commit 2f67dc7970bce3529edce93a0a14234d88b3fcd5 ]
+[ Upstream commit 3d73b200f9893d8f5ba5d105e8b69c8d16744fa2 ]
 
-There is no corresponding free routine if lpfc_sli4_issue_wqe fails to
-issue the CMF WQE in lpfc_issue_cmf_sync_wqe.
+Since commit 1599069a62c6 ("phy: core: Warn when phy_power_on is called
+before phy_init"), the following warning has been reported:
 
-If ret_val is non-zero, then free the iocbq request structure.
+	phy_power_on was called before phy_init
 
-Link: https://lore.kernel.org/r/20220701211425.2708-6-jsmart2021@gmail.com
-Co-developed-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+To address this, we need to remove phy_power_on from exynos_ufs_phy_init()
+and move it after phy_init. phy_power_off and phy_exit are also necessary
+in exynos_ufs_remove().
+
+Link: https://lore.kernel.org/r/20220706020255.151177-4-chanho61.park@samsung.com
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Signed-off-by: Chanho Park <chanho61.park@samsung.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/ufs/ufs-exynos.c | 17 ++++++++++-------
+ 1 file changed, 10 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 123a18784aa4..978cc87d4117 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -2003,10 +2003,12 @@ lpfc_issue_cmf_sync_wqe(struct lpfc_hba *phba, u32 ms, u64 total)
+diff --git a/drivers/scsi/ufs/ufs-exynos.c b/drivers/scsi/ufs/ufs-exynos.c
+index 474a4a064a68..3ff9bd77f2c6 100644
+--- a/drivers/scsi/ufs/ufs-exynos.c
++++ b/drivers/scsi/ufs/ufs-exynos.c
+@@ -909,9 +909,13 @@ static int exynos_ufs_phy_init(struct exynos_ufs *ufs)
+ 	if (ret) {
+ 		dev_err(hba->dev, "%s: phy init failed, ret = %d\n",
+ 			__func__, ret);
+-		goto out_exit_phy;
++		return ret;
+ 	}
  
- 	sync_buf->cmd_flag |= LPFC_IO_CMF;
- 	ret_val = lpfc_sli4_issue_wqe(phba, &phba->sli4_hba.hdwq[0], sync_buf);
--	if (ret_val)
-+	if (ret_val) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_CGN_MGMT,
- 				"6214 Cannot issue CMF_SYNC_WQE: x%x\n",
- 				ret_val);
-+		__lpfc_sli_release_iocbq(phba, sync_buf);
-+	}
- out_unlock:
- 	spin_unlock_irqrestore(&phba->hbalock, iflags);
- 	return ret_val;
++	ret = phy_power_on(generic_phy);
++	if (ret)
++		goto out_exit_phy;
++
+ 	return 0;
+ 
+ out_exit_phy:
+@@ -1173,10 +1177,6 @@ static int exynos_ufs_init(struct ufs_hba *hba)
+ 		goto out;
+ 	}
+ 
+-	ret = phy_power_on(ufs->phy);
+-	if (ret)
+-		goto phy_off;
+-
+ 	exynos_ufs_priv_init(hba, ufs);
+ 
+ 	if (ufs->drv_data->drv_init) {
+@@ -1194,8 +1194,6 @@ static int exynos_ufs_init(struct ufs_hba *hba)
+ 	exynos_ufs_config_smu(ufs);
+ 	return 0;
+ 
+-phy_off:
+-	phy_power_off(ufs->phy);
+ out:
+ 	hba->priv = NULL;
+ 	return ret;
+@@ -1513,9 +1511,14 @@ static int exynos_ufs_probe(struct platform_device *pdev)
+ static int exynos_ufs_remove(struct platform_device *pdev)
+ {
+ 	struct ufs_hba *hba =  platform_get_drvdata(pdev);
++	struct exynos_ufs *ufs = ufshcd_get_variant(hba);
+ 
+ 	pm_runtime_get_sync(&(pdev)->dev);
+ 	ufshcd_remove(hba);
++
++	phy_power_off(ufs->phy);
++	phy_exit(ufs->phy);
++
+ 	return 0;
+ }
+ 
 -- 
 2.35.1
 
