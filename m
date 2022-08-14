@@ -2,96 +2,100 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 977B7C25B06
-	for <linux-scsi@archiver.kernel.org>; Sun, 14 Aug 2022 17:00:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A19F9C25B06
+	for <linux-scsi@archiver.kernel.org>; Sun, 14 Aug 2022 21:08:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240443AbiHNRA5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 14 Aug 2022 13:00:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44358 "EHLO
+        id S231351AbiHNVIG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 14 Aug 2022 17:08:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48244 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241340AbiHNQ7u (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Aug 2022 12:59:50 -0400
-Received: from mail-ej1-x630.google.com (mail-ej1-x630.google.com [IPv6:2a00:1450:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25A3D248E6;
-        Sun, 14 Aug 2022 09:56:23 -0700 (PDT)
-Received: by mail-ej1-x630.google.com with SMTP id qn6so9982933ejc.11;
-        Sun, 14 Aug 2022 09:56:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc;
-        bh=3FPcPJtSj/bElkQiP9PnLcaKYbdRrJQOnxh5GM0k2J8=;
-        b=jIhzROlIbZmReGLhU1yiB9ifnYNpK7wPMtsEhXldCXAgr8Rl8UiEDggdP71dGuTbS2
-         vlO4HaLZtyD2uYq1DAk8mLwgDaeBSkNLaZkdvKKMyK7WzqdJQXz2vx6Xay0pd7Z7sDx1
-         nsyUwCQiqqprl2sTAnh0An7a16wwTTiwXAEsyVymr4pYykSW49E1DE8uVt3MG/YM2vIp
-         QsVf4SfoxVwN3OrtvQFfukbQg7QdjKv5I3P3bzFBSxC7qFPIVninGAyHPs/jVwHE5irt
-         1f/knX5O8pcdB4DCux0gS+hCAGcEi+RbECkkWC0o6dh6HCEID2zNvPjwDehPQmrbb0Ie
-         b1Zw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc;
-        bh=3FPcPJtSj/bElkQiP9PnLcaKYbdRrJQOnxh5GM0k2J8=;
-        b=Li01OkcYXYSf57WzGPbsiAAJ30+R/4vCNVPBf/9HpXKHJJ8rUs/6CecDWZb+tth0em
-         SupTCGuAQ8C7C9U7hozVLNz5vNvuLfsCXo2rDDTu1T8KT9i54NXAe9nwwkyuAijncJd2
-         PN4Z2Y9+l7U3dr93APKGhAqOw+wSsDj9/zjqYAF8Z4sxYsWwXbuNGpa4z8yjf2dt0oqD
-         /ngXITw6ywDjw+RqMez4XLrLIs9fqgKHw09ZGTL91DHOFCqwTX1AFmTs8KYb1byYnE5N
-         pf1z+yToE47gCzvcavEVm6F1CBUt6Ic+sdVIXQwUZH3eWO/jxlmSnj/QV96KYTw2vfy+
-         jH8A==
-X-Gm-Message-State: ACgBeo3Rx407GcPCWQ4qkPkVU2f4vJx8w5q6bnYm9MgqF6SACBEBxa0V
-        LZd2YOezvC059TGmNI2Kv4GBETxV/UG+SSLoSzQ=
-X-Google-Smtp-Source: AA6agR4KRezlsVlNGcVNG12SydHF7/Af523+ZOD9iAijtLg+m6b2EPZib0GbeQ98ybmVhtVI16y8jh9PJCtnXHLMyzU=
-X-Received: by 2002:a17:907:7241:b0:734:b282:184b with SMTP id
- ds1-20020a170907724100b00734b282184bmr8200009ejc.445.1660496181572; Sun, 14
- Aug 2022 09:56:21 -0700 (PDT)
+        with ESMTP id S229479AbiHNVIF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Aug 2022 17:08:05 -0400
+Received: from mp-relay-02.fibernetics.ca (mp-relay-02.fibernetics.ca [208.85.217.137])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC8856348
+        for <linux-scsi@vger.kernel.org>; Sun, 14 Aug 2022 14:08:04 -0700 (PDT)
+Received: from mailpool-fe-02.fibernetics.ca (mailpool-fe-02.fibernetics.ca [208.85.217.145])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mp-relay-02.fibernetics.ca (Postfix) with ESMTPS id 542C9700F6;
+        Sun, 14 Aug 2022 21:08:03 +0000 (UTC)
+Received: from localhost (mailpool-mx-02.fibernetics.ca [208.85.217.141])
+        by mailpool-fe-02.fibernetics.ca (Postfix) with ESMTP id 3805B60951;
+        Sun, 14 Aug 2022 21:08:03 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at 
+Received: from mailpool-fe-02.fibernetics.ca ([208.85.217.145])
+        by localhost (mail-mx-02.fibernetics.ca [208.85.217.141]) (amavisd-new, port 10024)
+        with ESMTP id qSndPJHais2W; Sun, 14 Aug 2022 21:08:02 +0000 (UTC)
+Received: from [192.168.48.17] (host-104-157-202-215.dyn.295.ca [104.157.202.215])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: dgilbert@interlog.com)
+        by mail.ca.inter.net (Postfix) with ESMTPSA id 3939D60556;
+        Sun, 14 Aug 2022 21:08:01 +0000 (UTC)
+Message-ID: <ce3ae6cc-bd66-6139-f503-adeee3884313@interlog.com>
+Date:   Sun, 14 Aug 2022 17:07:55 -0400
 MIME-Version: 1.0
-References: <20220802034729.2566787-1-haowenchao@huawei.com> <3ba71030-982b-c98b-78ee-ceca74da3b57@oracle.com>
-In-Reply-To: <3ba71030-982b-c98b-78ee-ceca74da3b57@oracle.com>
-From:   wenchao hao <haowenchao22@gmail.com>
-Date:   Mon, 15 Aug 2022 00:56:10 +0800
-Message-ID: <CAOptpSPLSbrQ8hgr275Ds7fwcBA_W9jYt0SFfhV-npPaz08S7g@mail.gmail.com>
-Subject: Re: [PATCH v3] scsi: iscsi: Fix multiple iscsi session unbind event
- sent to userspace
-To:     Mike Christie <michael.christie@oracle.com>
-Cc:     Wenchao Hao <haowenchao@huawei.com>, Lee Duncan <lduncan@suse.com>,
-        Chris Leech <cleech@redhat.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linfeilong@huawei.com
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.12.0
+Reply-To: dgilbert@interlog.com
+Subject: Re: [PATCH 0/4] Remove procfs support
+Content-Language: en-CA
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Avri Altman <Avri.Altman@wdc.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
+        Hannes Reinecke <hare@suse.de>,
+        John Garry <john.garry@huawei.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+References: <20220812204553.2202539-1-bvanassche@acm.org>
+ <DM6PR04MB6575F397E1B519922D3C2C5AFC699@DM6PR04MB6575.namprd04.prod.outlook.com>
+ <e71a33f6-0a65-561b-33b9-6772239c21df@acm.org>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+In-Reply-To: <e71a33f6-0a65-561b-33b9-6772239c21df@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Aug 12, 2022 at 12:06 PM Mike Christie
-<michael.christie@oracle.com> wrote:
->
-> On 8/1/22 10:47 PM, Wenchao Hao wrote:
-> > I found an issue that kernel would send ISCSI_KEVENT_UNBIND_SESSION
-> > for multiple times which should be fixed.
-> >
-> > This patch introduce target_state in iscsi_cls_session to make
-> > sure session would send only one ISCSI_KEVENT_UNBIND_SESSION.
-> >
-> > But this would break issue fixed in commit 13e60d3ba287 ("scsi: iscsi:
-> > Report unbind session event when the target has been removed"). The issue
-> > is iscsid died for any reason after it send unbind session to kernel, once
-> > iscsid restart again, it loss kernel's ISCSI_KEVENT_UNBIND_SESSION event.
-> >
-> > Now kernel think iscsi_cls_session has already sent an
-> > ISCSI_KEVENT_UNBIND_SESSION event and would not send it any more. Which
-> > would cause userspace unable to logout. Actually the session is in
-> > invalid state(it's target_id is INVALID), iscsid should not sync this
-> > session in it's restart.
-> >
-> > So we need to check session's target state during iscsid restart,
-> > if session is in unbound state, do not sync this session and perform
-> > session teardown. It's reasonable because once a session is unbound, we
-> > can not recover it any more(mainly because it's target id is INVALID)
-> >
->
-> I think we are ok now. Do you have a link to the userspace parts so
-> I can make sure we have everything covered now?
+On 2022-08-14 10:27, Bart Van Assche wrote:
+> On 8/14/22 05:54, Avri Altman wrote:
+>>> The SCSI sysfs interface made the procfs interface superfluous. sysfs support
+>  >
+>> Field application engineers are using #cat /proc/scsi/scsi to get the 
+>> devices's fw version - Rev: xxx
+>> Where should they look for that now?
+> 
+> Hi Avri,
+> 
+> Please take a look at the output of the following command:
+> 
+> find /sys -name inquiry | xargs grep -aH .
 
-I updated the PR on github: https://github.com/open-iscsi/open-iscsi/pull/339
+# find /sys -name inquiry | xargs grep -aH .
+/sys/devices/pseudo_0/adapter1/host1/target1:0:0/1:0:0:0/inquiry:[
+/sys/devices/pseudo_0/adapter1/host1/target1:0:0/1:0:0:0/inquiry:Linux 
+scsi_debug      019120210520��!
+/sys/devices/pseudo_0/adapter2/host2/target2:0:0/2:0:0:0/inquiry:[
+/sys/devices/pseudo_0/adapter2/host2/target2:0:0/2:0:0:0/inquiry:Linux 
+scsi_debug      019120210520��!
+/sys/devices/pseudo_0/adapter0/host0/target0:0:0/0:0:0:0/inquiry:[
+/sys/devices/pseudo_0/adapter0/host0/target0:0:0/0:0:0:0/inquiry:Linux 
+scsi_debug      019120210520��!
+
+That is on Fedora 36, lk 5.18.16-200.fc36.x86_64 . Not exactly informative
+unless you already know what you are looking for.
+
+How about lsscsi ?
+# lsscsi
+[0:0:0:0]    disk    Linux    scsi_debug       0191  /dev/sda
+[1:0:0:0]    disk    Linux    scsi_debug       0191  /dev/sdb
+[2:0:0:0]    disk    Linux    scsi_debug       0191  /dev/sdc
+[N:0:1:1]    disk    SKHynix_HFS512GDE9X081N__1                 /dev/nvme0n1
+
+I plan to add JSON output to lsscsi in the near future.
+
+Doug Gilbert
