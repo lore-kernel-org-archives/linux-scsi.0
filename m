@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2F3AC3F6B0
-	for <linux-scsi@archiver.kernel.org>; Sun, 14 Aug 2022 15:43:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4228C2BB41
+	for <linux-scsi@archiver.kernel.org>; Sun, 14 Aug 2022 15:47:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241291AbiHNPnM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 14 Aug 2022 11:43:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40566 "EHLO
+        id S241556AbiHNPr1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 14 Aug 2022 11:47:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55102 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241713AbiHNPmN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Aug 2022 11:42:13 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB6DE237C0;
-        Sun, 14 Aug 2022 08:33:34 -0700 (PDT)
+        with ESMTP id S241894AbiHNPqg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Aug 2022 11:46:36 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F15527CE1;
+        Sun, 14 Aug 2022 08:35:03 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 9DAD7B80B4D;
-        Sun, 14 Aug 2022 15:33:31 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 346FCC433B5;
-        Sun, 14 Aug 2022 15:33:29 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 031F960DEB;
+        Sun, 14 Aug 2022 15:35:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57A64C43142;
+        Sun, 14 Aug 2022 15:35:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660491210;
-        bh=CiXBaTcZl+tFw6/d7qenwdQyFhRZj8CcEMPAYDJrwYE=;
+        s=k20201202; t=1660491302;
+        bh=kVlUXOCqSVxVL6zHBfQjFoxbj12/c/D87XseBODHvrM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Ogb87InBQjN041v11+emtl9mkesz+OC8G+tOc62pqMuqXCjfK31E5jX5D+Tij2tI0
-         66QF+wOZDPzdu5gtoBwC2N+mWUtV9uXOe57SzM7b4Xr9tC6eHJXc5KvrId75Ls6jcW
-         hImods+DgBIWTWOGRrmtYOZTNR1ja1P7ZbU1Eqb4b14bfuWtcLkCe5TvwLjAjIBaIy
-         6T1dSAffzacaSzYpyeuJRzdxWPdXBWcYIandaRiPYL+m5tJsYV4TlBplb3gIVsYPtE
-         GffQbZe+Ei0o/a/CUa+Q5b/1GNzkAIqDugxDfH9WwkNBuxKlQB+FwjzfIkRVPQHqfg
-         3Pz6/AEcjul6Q==
+        b=HhqF+yOEqr5sDBk/lN0sj3hfYNhSF8+MfQEBK4xOZNAoL2PbnT4Rad4vUSz6gRwLB
+         RTjBT/irz7vBOcFb/GO0lK5XRD5Em/6XeAms/kLsqhwyFQEfwFl2kW1zM95HcPNeSj
+         dAYzb6a57t24XgaXfeoVZVR6BqSKflMuaTFacr6fuAWxS0Y1Z+JZOVk16tGwmLbzB6
+         LODbZENAi4K9uZyZDSPFNwpUMGzvh33qsP8GOxmz4Ts+LJjwSlfKJlY1kYMr6nBkW0
+         5DY4jI75TORcNOCrUZbl7sPOVFh/J9KXQGheSETJWrxDxn2P8Pty+tKLCKYdzewVXs
+         ZeVjua1oIPdrQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
@@ -39,12 +39,12 @@ Cc:     James Smart <jsmart2021@gmail.com>,
         Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
         dick.kennedy@broadcom.com, jejb@linux.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 21/46] scsi: lpfc: Prevent buffer overflow crashes in debugfs with malformed user input
-Date:   Sun, 14 Aug 2022 11:32:22 -0400
-Message-Id: <20220814153247.2378312-21-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 16/31] scsi: lpfc: Prevent buffer overflow crashes in debugfs with malformed user input
+Date:   Sun, 14 Aug 2022 11:34:16 -0400
+Message-Id: <20220814153431.2379231-16-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220814153247.2378312-1-sashal@kernel.org>
-References: <20220814153247.2378312-1-sashal@kernel.org>
+In-Reply-To: <20220814153431.2379231-1-sashal@kernel.org>
+References: <20220814153431.2379231-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -72,10 +72,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 10 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
-index 08b2e85dcd7d..79bc86ba59b3 100644
+index beaf3a8d206f..fbc76d69ea0b 100644
 --- a/drivers/scsi/lpfc/lpfc_debugfs.c
 +++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-@@ -2607,8 +2607,8 @@ lpfc_debugfs_multixripools_write(struct file *file, const char __user *buf,
+@@ -2609,8 +2609,8 @@ lpfc_debugfs_multixripools_write(struct file *file, const char __user *buf,
  	struct lpfc_sli4_hdw_queue *qp;
  	struct lpfc_multixri_pool *multixri_pool;
  
@@ -86,7 +86,7 @@ index 08b2e85dcd7d..79bc86ba59b3 100644
  
  	memset(mybuf, 0, sizeof(mybuf));
  
-@@ -2688,8 +2688,8 @@ lpfc_debugfs_nvmestat_write(struct file *file, const char __user *buf,
+@@ -2690,8 +2690,8 @@ lpfc_debugfs_nvmestat_write(struct file *file, const char __user *buf,
  	if (!phba->targetport)
  		return -ENXIO;
  
@@ -97,7 +97,7 @@ index 08b2e85dcd7d..79bc86ba59b3 100644
  
  	memset(mybuf, 0, sizeof(mybuf));
  
-@@ -2826,8 +2826,8 @@ lpfc_debugfs_ioktime_write(struct file *file, const char __user *buf,
+@@ -2828,8 +2828,8 @@ lpfc_debugfs_ioktime_write(struct file *file, const char __user *buf,
  	char mybuf[64];
  	char *pbuf;
  
@@ -108,7 +108,7 @@ index 08b2e85dcd7d..79bc86ba59b3 100644
  
  	memset(mybuf, 0, sizeof(mybuf));
  
-@@ -2954,8 +2954,8 @@ lpfc_debugfs_nvmeio_trc_write(struct file *file, const char __user *buf,
+@@ -2956,8 +2956,8 @@ lpfc_debugfs_nvmeio_trc_write(struct file *file, const char __user *buf,
  	char mybuf[64];
  	char *pbuf;
  
@@ -119,7 +119,7 @@ index 08b2e85dcd7d..79bc86ba59b3 100644
  
  	memset(mybuf, 0, sizeof(mybuf));
  
-@@ -3060,8 +3060,8 @@ lpfc_debugfs_hdwqstat_write(struct file *file, const char __user *buf,
+@@ -3062,8 +3062,8 @@ lpfc_debugfs_hdwqstat_write(struct file *file, const char __user *buf,
  	char *pbuf;
  	int i;
  
