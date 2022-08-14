@@ -2,46 +2,47 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83851C25B08
-	for <linux-scsi@archiver.kernel.org>; Sun, 14 Aug 2022 15:28:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABB8BC25B06
+	for <linux-scsi@archiver.kernel.org>; Sun, 14 Aug 2022 15:28:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240132AbiHNP24 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 14 Aug 2022 11:28:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37988 "EHLO
+        id S240278AbiHNP26 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 14 Aug 2022 11:28:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38378 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240134AbiHNP23 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Aug 2022 11:28:29 -0400
+        with ESMTP id S239891AbiHNP2h (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Aug 2022 11:28:37 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7F4BB1EC;
-        Sun, 14 Aug 2022 08:28:23 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F5A9B1CB;
+        Sun, 14 Aug 2022 08:28:36 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 62ED1B80B56;
-        Sun, 14 Aug 2022 15:28:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D8F08C433D6;
-        Sun, 14 Aug 2022 15:28:19 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id A90D1B80B27;
+        Sun, 14 Aug 2022 15:28:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3FAF2C433D7;
+        Sun, 14 Aug 2022 15:28:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660490901;
-        bh=yWDQ9RtqIFVVwTO4cTahQSOk9mCzHcSac7SkVGICur4=;
+        s=k20201202; t=1660490913;
+        bh=a4/LmbqCcfw4a/dBf+i02Qljn4gGGMGLZNQ7He7NoVg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Bm/F5tB/oyeeVi/2omXYj0Q8C8fPuihHuigUk/TVRaREQCib7rNiDCl0msj7uKmhC
-         tf4Tv3JuFnOfOE2sXuusrJLximRGbeHHExnSa5rL78obTroDbnp3YQPgw6atgwDQ0f
-         ENS+xqWF1Yc66dlEMfiD52SVRivtqanQ0+Bbuhyt6KcHXYhda1ptYIcAX9DfG/Lyeb
-         Yd9H5I8nzESFCznfgubaghMG6TLi9oLhqI7/NNM/i0MuhTh3s352UsubJYlMzs3+Ne
-         eZwBNUZLnK7bAuWVu5qRrptljlHEDRhNeTiu7SCKZ7Zirzh5HUifkMRD0gkVZTjWKy
-         VM406UnqxozOQ==
+        b=tWp9wQyEuxWVxFCNGDYVRYbbPEOniSDzHwVKgsl0Ym9sbEJgwzEiaA53/xqYWws6l
+         MBXXnr16QSi4KNOrn+ugD7UzqqITFGRq2OoG7BUcg6HBthDY8Ec4sc8gGXaOjlKYD+
+         e+FjO3RutjLQq3Nm3UQyH3Ad1IEm5ZmzrFa/rFF4rF4rYPw5bk0ahDtq8vHXTYWddI
+         viMCbmTSGDTr4CKP8CLxyd5ya35igj5QCbi0KJsHodYT4cRc7PPnuE2+L+H2KaKvDv
+         u+LrQChXSJLq3d/BLzanfufj1B+ftQAMkK6jcorwYigMQkFBrqrvEcY7qXvn511hgL
+         MS+5RhmRyrYcw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+Cc:     Po-Wen Kao <powen.kao@mediatek.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
-        bvanassche@acm.org, beanhuo@micron.com, avri.altman@wdc.com,
-        adrian.hunter@intel.com, jjmin.jeong@samsung.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.19 14/64] scsi: ufs: core: Add UFSHCD_QUIRK_HIBERN_FASTAUTO
-Date:   Sun, 14 Aug 2022 11:23:47 -0400
-Message-Id: <20220814152437.2374207-14-sashal@kernel.org>
+        matthias.bgg@gmail.com, linux-scsi@vger.kernel.org,
+        linux-mediatek@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.19 18/64] scsi: ufs: ufs-mediatek: Fix the timing of configuring device regulators
+Date:   Sun, 14 Aug 2022 11:23:51 -0400
+Message-Id: <20220814152437.2374207-18-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220814152437.2374207-1-sashal@kernel.org>
 References: <20220814152437.2374207-1-sashal@kernel.org>
@@ -53,59 +54,113 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+From: Po-Wen Kao <powen.kao@mediatek.com>
 
-[ Upstream commit 2f11bbc2c7f37e3a6151ac548b1c0679cc90ea83 ]
+[ Upstream commit 3fd23b8dfb54d9b74eba6dfdd3225db3ac116785 ]
 
-Add UFSHCD_QUIRK_HIBERN_FASTAUTO quirk for host controllers which supports
-auto-hibernate the capability but only FASTAUTO mode.
+Currently the LPM configurations of device regulators may not work since
+VCC is not disabled yet while ufs_mtk_vreg_set_lpm() is executed.
 
-Link: https://lore.kernel.org/r/20220603110524.1997825-4-yoshihiro.shimoda.uh@renesas.com
-Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Fix this by changing the timing of invoking ufs_mtk_vreg_set_lpm().
+
+Link: https://lore.kernel.org/r/20220616053725.5681-5-stanley.chu@mediatek.com
+Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+Signed-off-by: Po-Wen Kao <powen.kao@mediatek.com>
+Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/ufs/core/ufshcd.c | 9 +++++++--
- include/ufs/ufshcd.h      | 6 ++++++
- 2 files changed, 13 insertions(+), 2 deletions(-)
+ drivers/ufs/host/ufs-mediatek.c | 58 ++++++++++++++++++++++++++++++---
+ 1 file changed, 53 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index dc5f0dfc8c79..7360a1fe52a7 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -4292,8 +4292,13 @@ static int ufshcd_get_max_pwr_mode(struct ufs_hba *hba)
- 	if (hba->max_pwr_info.is_valid)
- 		return 0;
+diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
+index beabc3ccd30b..8b9daa281cc4 100644
+--- a/drivers/ufs/host/ufs-mediatek.c
++++ b/drivers/ufs/host/ufs-mediatek.c
+@@ -1026,7 +1026,6 @@ static int ufs_mtk_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
+ 		 * ufshcd_suspend() re-enabling regulators while vreg is still
+ 		 * in low-power mode.
+ 		 */
+-		ufs_mtk_vreg_set_lpm(hba, true);
+ 		err = ufs_mtk_mphy_power_on(hba, false);
+ 		if (err)
+ 			goto fail;
+@@ -1050,12 +1049,13 @@ static int ufs_mtk_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ {
+ 	int err;
  
--	pwr_info->pwr_tx = FAST_MODE;
--	pwr_info->pwr_rx = FAST_MODE;
-+	if (hba->quirks & UFSHCD_QUIRK_HIBERN_FASTAUTO) {
-+		pwr_info->pwr_tx = FASTAUTO_MODE;
-+		pwr_info->pwr_rx = FASTAUTO_MODE;
-+	} else {
-+		pwr_info->pwr_tx = FAST_MODE;
-+		pwr_info->pwr_rx = FAST_MODE;
-+	}
- 	pwr_info->hs_rate = PA_HS_MODE_B;
- 
- 	/* Get the connected lane count */
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 795c8951341d..991aea081ec7 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -583,6 +583,12 @@ enum ufshcd_quirks {
- 	 * 64-bit addressing supported capability but it doesn't work.
- 	 */
- 	UFSHCD_QUIRK_BROKEN_64BIT_ADDRESS		= 1 << 17,
++	if (hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL)
++		ufs_mtk_vreg_set_lpm(hba, false);
 +
-+	/*
-+	 * This quirk needs to be enabled if the host controller has
-+	 * auto-hibernate capability but it's FASTAUTO only.
-+	 */
-+	UFSHCD_QUIRK_HIBERN_FASTAUTO			= 1 << 18,
- };
+ 	err = ufs_mtk_mphy_power_on(hba, true);
+ 	if (err)
+ 		goto fail;
  
- enum ufshcd_caps {
+-	ufs_mtk_vreg_set_lpm(hba, false);
+-
+ 	if (ufshcd_is_link_hibern8(hba)) {
+ 		err = ufs_mtk_link_set_hpm(hba);
+ 		if (err)
+@@ -1220,9 +1220,57 @@ static int ufs_mtk_remove(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
++int ufs_mtk_system_suspend(struct device *dev)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++	int ret;
++
++	ret = ufshcd_system_suspend(dev);
++	if (ret)
++		return ret;
++
++	ufs_mtk_vreg_set_lpm(hba, true);
++
++	return 0;
++}
++
++int ufs_mtk_system_resume(struct device *dev)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++
++	ufs_mtk_vreg_set_lpm(hba, false);
++
++	return ufshcd_system_resume(dev);
++}
++
++int ufs_mtk_runtime_suspend(struct device *dev)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++	int ret = 0;
++
++	ret = ufshcd_runtime_suspend(dev);
++	if (ret)
++		return ret;
++
++	ufs_mtk_vreg_set_lpm(hba, true);
++
++	return 0;
++}
++
++int ufs_mtk_runtime_resume(struct device *dev)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++
++	ufs_mtk_vreg_set_lpm(hba, false);
++
++	return ufshcd_runtime_resume(dev);
++}
++
+ static const struct dev_pm_ops ufs_mtk_pm_ops = {
+-	SET_SYSTEM_SLEEP_PM_OPS(ufshcd_system_suspend, ufshcd_system_resume)
+-	SET_RUNTIME_PM_OPS(ufshcd_runtime_suspend, ufshcd_runtime_resume, NULL)
++	SET_SYSTEM_SLEEP_PM_OPS(ufs_mtk_system_suspend,
++				ufs_mtk_system_resume)
++	SET_RUNTIME_PM_OPS(ufs_mtk_runtime_suspend,
++			   ufs_mtk_runtime_resume, NULL)
+ 	.prepare	 = ufshcd_suspend_prepare,
+ 	.complete	 = ufshcd_resume_complete,
+ };
 -- 
 2.35.1
 
