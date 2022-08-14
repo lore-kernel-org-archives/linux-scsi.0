@@ -2,134 +2,96 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EBDEC25B06
-	for <linux-scsi@archiver.kernel.org>; Sun, 14 Aug 2022 15:52:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 977B7C25B06
+	for <linux-scsi@archiver.kernel.org>; Sun, 14 Aug 2022 17:00:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241984AbiHNPwn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 14 Aug 2022 11:52:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38054 "EHLO
+        id S240443AbiHNRA5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 14 Aug 2022 13:00:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44358 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241847AbiHNPuM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Aug 2022 11:50:12 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 739721CB25;
-        Sun, 14 Aug 2022 08:35:49 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B16DC60C8C;
-        Sun, 14 Aug 2022 15:35:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2AE81C43470;
-        Sun, 14 Aug 2022 15:35:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660491348;
-        bh=vn8sRngeekKj5Hiwjb/2YEw2w2BCxvYLhU5ASInCkPg=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=AN1RpwqB4DPvfIBtxhegWuv1xHsIKS5Mt+oyMdj/3XSzPfVpc6N0ZF4mf6lthVXDx
-         P3paCWCeDbUwyCLT2gHMdzztAl6hfqPLCSl4q8UJODH1DSqz9y0mORNpmTIZivCYtq
-         LGhHoKuPOsDmBiXx8xBLHgbTSDUe5RDHpbtDC1SkK9Umuq88TCL72pNZhYyXaKMZse
-         bn4gTprx4yYkVIr16qS9NGt1Q1898MiNub4dFZ9ft7D3izTwLNtis6gaYj/tLrQ4Q3
-         ZXkoIMOz7+73YM+CMFxasQsngBdriJtGj2AIoyIHUS1zheZLWXeVCkHfyC3DH/M6c8
-         4b1C+tV57O4ZA==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Justin Tee <justin.tee@broadcom.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 10/21] scsi: lpfc: Prevent buffer overflow crashes in debugfs with malformed user input
-Date:   Sun, 14 Aug 2022 11:35:20 -0400
-Message-Id: <20220814153531.2379705-10-sashal@kernel.org>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220814153531.2379705-1-sashal@kernel.org>
-References: <20220814153531.2379705-1-sashal@kernel.org>
+        with ESMTP id S241340AbiHNQ7u (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Aug 2022 12:59:50 -0400
+Received: from mail-ej1-x630.google.com (mail-ej1-x630.google.com [IPv6:2a00:1450:4864:20::630])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25A3D248E6;
+        Sun, 14 Aug 2022 09:56:23 -0700 (PDT)
+Received: by mail-ej1-x630.google.com with SMTP id qn6so9982933ejc.11;
+        Sun, 14 Aug 2022 09:56:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc;
+        bh=3FPcPJtSj/bElkQiP9PnLcaKYbdRrJQOnxh5GM0k2J8=;
+        b=jIhzROlIbZmReGLhU1yiB9ifnYNpK7wPMtsEhXldCXAgr8Rl8UiEDggdP71dGuTbS2
+         vlO4HaLZtyD2uYq1DAk8mLwgDaeBSkNLaZkdvKKMyK7WzqdJQXz2vx6Xay0pd7Z7sDx1
+         nsyUwCQiqqprl2sTAnh0An7a16wwTTiwXAEsyVymr4pYykSW49E1DE8uVt3MG/YM2vIp
+         QsVf4SfoxVwN3OrtvQFfukbQg7QdjKv5I3P3bzFBSxC7qFPIVninGAyHPs/jVwHE5irt
+         1f/knX5O8pcdB4DCux0gS+hCAGcEi+RbECkkWC0o6dh6HCEID2zNvPjwDehPQmrbb0Ie
+         b1Zw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc;
+        bh=3FPcPJtSj/bElkQiP9PnLcaKYbdRrJQOnxh5GM0k2J8=;
+        b=Li01OkcYXYSf57WzGPbsiAAJ30+R/4vCNVPBf/9HpXKHJJ8rUs/6CecDWZb+tth0em
+         SupTCGuAQ8C7C9U7hozVLNz5vNvuLfsCXo2rDDTu1T8KT9i54NXAe9nwwkyuAijncJd2
+         PN4Z2Y9+l7U3dr93APKGhAqOw+wSsDj9/zjqYAF8Z4sxYsWwXbuNGpa4z8yjf2dt0oqD
+         /ngXITw6ywDjw+RqMez4XLrLIs9fqgKHw09ZGTL91DHOFCqwTX1AFmTs8KYb1byYnE5N
+         pf1z+yToE47gCzvcavEVm6F1CBUt6Ic+sdVIXQwUZH3eWO/jxlmSnj/QV96KYTw2vfy+
+         jH8A==
+X-Gm-Message-State: ACgBeo3Rx407GcPCWQ4qkPkVU2f4vJx8w5q6bnYm9MgqF6SACBEBxa0V
+        LZd2YOezvC059TGmNI2Kv4GBETxV/UG+SSLoSzQ=
+X-Google-Smtp-Source: AA6agR4KRezlsVlNGcVNG12SydHF7/Af523+ZOD9iAijtLg+m6b2EPZib0GbeQ98ybmVhtVI16y8jh9PJCtnXHLMyzU=
+X-Received: by 2002:a17:907:7241:b0:734:b282:184b with SMTP id
+ ds1-20020a170907724100b00734b282184bmr8200009ejc.445.1660496181572; Sun, 14
+ Aug 2022 09:56:21 -0700 (PDT)
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+References: <20220802034729.2566787-1-haowenchao@huawei.com> <3ba71030-982b-c98b-78ee-ceca74da3b57@oracle.com>
+In-Reply-To: <3ba71030-982b-c98b-78ee-ceca74da3b57@oracle.com>
+From:   wenchao hao <haowenchao22@gmail.com>
+Date:   Mon, 15 Aug 2022 00:56:10 +0800
+Message-ID: <CAOptpSPLSbrQ8hgr275Ds7fwcBA_W9jYt0SFfhV-npPaz08S7g@mail.gmail.com>
+Subject: Re: [PATCH v3] scsi: iscsi: Fix multiple iscsi session unbind event
+ sent to userspace
+To:     Mike Christie <michael.christie@oracle.com>
+Cc:     Wenchao Hao <haowenchao@huawei.com>, Lee Duncan <lduncan@suse.com>,
+        Chris Leech <cleech@redhat.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linfeilong@huawei.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+On Fri, Aug 12, 2022 at 12:06 PM Mike Christie
+<michael.christie@oracle.com> wrote:
+>
+> On 8/1/22 10:47 PM, Wenchao Hao wrote:
+> > I found an issue that kernel would send ISCSI_KEVENT_UNBIND_SESSION
+> > for multiple times which should be fixed.
+> >
+> > This patch introduce target_state in iscsi_cls_session to make
+> > sure session would send only one ISCSI_KEVENT_UNBIND_SESSION.
+> >
+> > But this would break issue fixed in commit 13e60d3ba287 ("scsi: iscsi:
+> > Report unbind session event when the target has been removed"). The issue
+> > is iscsid died for any reason after it send unbind session to kernel, once
+> > iscsid restart again, it loss kernel's ISCSI_KEVENT_UNBIND_SESSION event.
+> >
+> > Now kernel think iscsi_cls_session has already sent an
+> > ISCSI_KEVENT_UNBIND_SESSION event and would not send it any more. Which
+> > would cause userspace unable to logout. Actually the session is in
+> > invalid state(it's target_id is INVALID), iscsid should not sync this
+> > session in it's restart.
+> >
+> > So we need to check session's target state during iscsid restart,
+> > if session is in unbound state, do not sync this session and perform
+> > session teardown. It's reasonable because once a session is unbound, we
+> > can not recover it any more(mainly because it's target id is INVALID)
+> >
+>
+> I think we are ok now. Do you have a link to the userspace parts so
+> I can make sure we have everything covered now?
 
-[ Upstream commit f8191d40aa612981ce897e66cda6a88db8df17bb ]
-
-Malformed user input to debugfs results in buffer overflow crashes.  Adapt
-input string lengths to fit within internal buffers, leaving space for NULL
-terminators.
-
-Link: https://lore.kernel.org/r/20220701211425.2708-3-jsmart2021@gmail.com
-Co-developed-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/lpfc/lpfc_debugfs.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
-index e15bb3dfe995..69551132f304 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.c
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-@@ -2402,8 +2402,8 @@ lpfc_debugfs_multixripools_write(struct file *file, const char __user *buf,
- 	struct lpfc_sli4_hdw_queue *qp;
- 	struct lpfc_multixri_pool *multixri_pool;
- 
--	if (nbytes > 64)
--		nbytes = 64;
-+	if (nbytes > sizeof(mybuf) - 1)
-+		nbytes = sizeof(mybuf) - 1;
- 
- 	/* Protect copy from user */
- 	if (!access_ok(buf, nbytes))
-@@ -2487,8 +2487,8 @@ lpfc_debugfs_nvmestat_write(struct file *file, const char __user *buf,
- 	if (!phba->targetport)
- 		return -ENXIO;
- 
--	if (nbytes > 64)
--		nbytes = 64;
-+	if (nbytes > sizeof(mybuf) - 1)
-+		nbytes = sizeof(mybuf) - 1;
- 
- 	memset(mybuf, 0, sizeof(mybuf));
- 
-@@ -2629,8 +2629,8 @@ lpfc_debugfs_nvmektime_write(struct file *file, const char __user *buf,
- 	char mybuf[64];
- 	char *pbuf;
- 
--	if (nbytes > 64)
--		nbytes = 64;
-+	if (nbytes > sizeof(mybuf) - 1)
-+		nbytes = sizeof(mybuf) - 1;
- 
- 	memset(mybuf, 0, sizeof(mybuf));
- 
-@@ -2757,8 +2757,8 @@ lpfc_debugfs_nvmeio_trc_write(struct file *file, const char __user *buf,
- 	char mybuf[64];
- 	char *pbuf;
- 
--	if (nbytes > 63)
--		nbytes = 63;
-+	if (nbytes > sizeof(mybuf) - 1)
-+		nbytes = sizeof(mybuf) - 1;
- 
- 	memset(mybuf, 0, sizeof(mybuf));
- 
-@@ -2863,8 +2863,8 @@ lpfc_debugfs_cpucheck_write(struct file *file, const char __user *buf,
- 	char *pbuf;
- 	int i, j;
- 
--	if (nbytes > 64)
--		nbytes = 64;
-+	if (nbytes > sizeof(mybuf) - 1)
-+		nbytes = sizeof(mybuf) - 1;
- 
- 	memset(mybuf, 0, sizeof(mybuf));
- 
--- 
-2.35.1
-
+I updated the PR on github: https://github.com/open-iscsi/open-iscsi/pull/339
