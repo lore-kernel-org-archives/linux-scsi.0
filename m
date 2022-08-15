@@ -2,127 +2,117 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D71CC25B06
-	for <linux-scsi@archiver.kernel.org>; Mon, 15 Aug 2022 13:49:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60A59C00140
+	for <linux-scsi@archiver.kernel.org>; Mon, 15 Aug 2022 15:26:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232396AbiHONtV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 15 Aug 2022 09:49:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32878 "EHLO
+        id S230056AbiHOP0h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 15 Aug 2022 11:26:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42134 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233153AbiHONtS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Aug 2022 09:49:18 -0400
-Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 106A422BCE;
-        Mon, 15 Aug 2022 06:49:16 -0700 (PDT)
-Received: by mail-pj1-f48.google.com with SMTP id h21-20020a17090aa89500b001f31a61b91dso14483909pjq.4;
-        Mon, 15 Aug 2022 06:49:16 -0700 (PDT)
+        with ESMTP id S229981AbiHOP0g (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Aug 2022 11:26:36 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3218015FF4
+        for <linux-scsi@vger.kernel.org>; Mon, 15 Aug 2022 08:26:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1660577195;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=gRm8Qm84cdP80jnwoCtGTGa5zd6N03cK9WEkK0EjwzE=;
+        b=dPBFo260ChttCP1n8LTRCnfJRTLaUPCIYTaFR1EGzJ5e3Vwx5vebd1DjPXE6kbcreLFtiF
+        lnOOpgDqnL7HvYZzT/wZ2o0lDkX68x94WKpDyZv7UtN63/sXdkq3RybEr2rSVp20nLWd/V
+        pXe0EMF00iup0nxi9of6Aduqg6gYxVI=
+Received: from mail-il1-f197.google.com (mail-il1-f197.google.com
+ [209.85.166.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-624-s9K0QdcrPd2AXA5jXghstQ-1; Mon, 15 Aug 2022 11:26:33 -0400
+X-MC-Unique: s9K0QdcrPd2AXA5jXghstQ-1
+Received: by mail-il1-f197.google.com with SMTP id i4-20020a056e0212c400b002e5c72b3bd7so1547923ilm.6
+        for <linux-scsi@vger.kernel.org>; Mon, 15 Aug 2022 08:26:33 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc;
-        bh=gVwXRsOgJI+Cnx7zqybxmCG71vWgxYHCtyi19HC0Kc8=;
-        b=ytol3Hc2EN52t7A/I5knS1WwWcfTfPVzAmSBnDvLqPwwWKYHjMNUJz0MuqtSGIC7Ix
-         hLHz93Jr3mSHCkBcSmrgk+NLq/5P9DC9A93EyMfI7QS94mNTSmtWLtuNYZo4kEH3AEY/
-         MJqSaoWhYTJv2vFlBpGnDUXq4tlAvDCNKdjiepYtAvbEhP2rs2kSVGwbAKoFp/ROflo7
-         zlxksIaxzJxzCyHSd72+uRhpJ2XSKUZJAzbTB/muQaWoe3Qn5q2A/FSpnGkJkyKCT8sn
-         m5Ba3dV36tCZeZi7xgWDSoq7TfLo5IZR3gjNdRejuCFhSzK1IXtBZRHOP4nSfqO0mdRt
-         2l2w==
-X-Gm-Message-State: ACgBeo293AInyIbZJxEWuEAYVFPJIWrzta81loeAUnbQIcb7qO4eB0d4
-        IefMt1sWm3BlYhVRNZTwpKI=
-X-Google-Smtp-Source: AA6agR5e2cZfn3HgeXo5E8txEycPGs6tblIkJci3N7OcvN2/8u50r5xhXS1mLhci6L3BQHh1yVvHPQ==
-X-Received: by 2002:a17:902:e154:b0:171:4e75:a282 with SMTP id d20-20020a170902e15400b001714e75a282mr17453864pla.90.1660571355461;
-        Mon, 15 Aug 2022 06:49:15 -0700 (PDT)
-Received: from [192.168.3.217] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id b12-20020a170903228c00b0016be596c8afsm6957795plh.282.2022.08.15.06.49.13
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 15 Aug 2022 06:49:14 -0700 (PDT)
-Message-ID: <40700595-8c83-1b61-ea93-ea9554bfb2db@acm.org>
-Date:   Mon, 15 Aug 2022 06:49:12 -0700
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc;
+        bh=gRm8Qm84cdP80jnwoCtGTGa5zd6N03cK9WEkK0EjwzE=;
+        b=dOejFdD7t5sPPvogWMepC+18pwbm+x36gUEUKbxagm/6ctGszSO+9eYQHPakjRZ1Nl
+         nyJb9huNBNj1sc9A0MZrzYi2EWkPYFmHTeu9vIhB7s//g0NK9BBxZbHG1AGebEl0uLo9
+         HoAHiRXH5qU5yBPwKlyPM4pJey7bdYg+egogc95WvFwb31e/+diFSnKytBMqnDVb5bnz
+         /v22ARYKlXKp+GgZNHcnb4KGRkPD36qk9cOULa4znFqLFwL9ViujNKo6A8u+5FRjg9VQ
+         hQ/TfuGND2uHMUsvf71HtXV9U0H4FamTET05zUZn60Ti0t7QSAgzT84tLzClq8xrF7R1
+         hnIA==
+X-Gm-Message-State: ACgBeo2KcC2dcow608CK+SBjzLFdLcJpMB+i9dFiNdrcyp2GvlvI9Ggu
+        eIl5VXIDWbXVlEFP37+EBN5AkrbfQVQY3BrNyXmzIzftoHtlmKlK1NdAd4anl9yUxTfVtCdxjRB
+        ekgCp+EJKYREdbEgUL0g4jZmoZ7+4EousyX78Dw==
+X-Received: by 2002:a02:600f:0:b0:342:9185:60b4 with SMTP id i15-20020a02600f000000b00342918560b4mr7681839jac.248.1660577193160;
+        Mon, 15 Aug 2022 08:26:33 -0700 (PDT)
+X-Google-Smtp-Source: AA6agR6GhuM4k9A0g3gyj4yVJnu3JQGRWjWFhjqYUWSQLhH3n0g5zhM4HyWnCgLw6Olc0OHrhmS552ZRfvxluZnwxXo=
+X-Received: by 2002:a02:600f:0:b0:342:9185:60b4 with SMTP id
+ i15-20020a02600f000000b00342918560b4mr7681828jac.248.1660577192994; Mon, 15
+ Aug 2022 08:26:32 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.1.2
-Subject: Re: [PATCH v2 2/2] scsi: sd: Rework asynchronous resume support
-Content-Language: en-US
-To:     Geert Uytterhoeven <geert@linux-m68k.org>
+References: <20220812204553.2202539-1-bvanassche@acm.org>
+In-Reply-To: <20220812204553.2202539-1-bvanassche@acm.org>
+From:   Ewan Milne <emilne@redhat.com>
+Date:   Mon, 15 Aug 2022 11:26:22 -0400
+Message-ID: <CAGtn9r=QrDBcEssvtwrEcXa6xO-8Jp3rMfJ09CxDNMhc549z_g@mail.gmail.com>
+Subject: Re: [PATCH 0/4] Remove procfs support
+To:     Bart Van Assche <bvanassche@acm.org>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        scsi <linux-scsi@vger.kernel.org>,
-        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
-        John Garry <john.garry@huawei.com>, ericspero@icloud.com,
-        jason600.groome@gmail.com,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-ide@vger.kernel.org,
-        James Bottomley <James.Bottomley@hansenpartnership.com>
-References: <20220630195703.10155-1-bvanassche@acm.org>
- <20220630195703.10155-3-bvanassche@acm.org>
- <alpine.DEB.2.22.394.2207191125130.1006766@ramsan.of.borg>
- <db19ed29-e7f9-e5b0-3a6c-f2812078a07d@acm.org>
- <CAMuHMdVzsgSYtbJQnaigNax_JbxPsQfU+gHcteS-ojWbxUdMfw@mail.gmail.com>
- <CAMuHMdWtxBj8ug7AHTqentF8UD4jpO2sgoWWcQCOvEKLJtdq8A@mail.gmail.com>
- <506ca1a6-1122-5755-fc74-60f7c7bfbd0d@acm.org>
- <CAMuHMdVQ2K2v8jpsFfOMk99DG_sBB4_ioiQRroC7K_Ov1wvp9w@mail.gmail.com>
- <6f70e742-9d8a-f389-0482-0ba9696bf445@acm.org>
- <CAMuHMdVc+ATGV-=R3uV6RyF0-mZiuKv7HpmogRBgqGVyO-MKWg@mail.gmail.com>
- <54e20a27-a10b-b77a-e950-1d3398e2e907@acm.org>
- <CAMuHMdURQpAEGgv4cY7v0rqzs12v2TT=Amt26Y0OoBSW7YAoaw@mail.gmail.com>
- <084e7c5a-f98d-d61e-de81-83525851ecf9@acm.org>
- <CAMuHMdW2vOC8ZsE_XF8TbSNoF9zCrwq7UkGZ5jXen1E1mTZe+g@mail.gmail.com>
- <14ec47f3-f3b8-61c7-2c64-d96d00dd7076@acm.org>
- <CAMuHMdW7nGxV_3Z2JV_TCM+WtTdYv5P+0cE6Tw=6krcseNCdAw@mail.gmail.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <CAMuHMdW7nGxV_3Z2JV_TCM+WtTdYv5P+0cE6Tw=6krcseNCdAw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
+        Hannes Reinecke <hare@suse.de>,
+        John Garry <john.garry@huawei.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/15/22 03:13, Geert Uytterhoeven wrote:
-> Showing all locks held in the system:
-> 1 lock held by rcu_tasks_kthre/10:
->   #0: ffff800009575c38 (rcu_tasks.tasks_gp_mutex){+.+.}-{3:3}, at:
-> rcu_tasks_one_gp+0x34/0x4c8
-> 4 locks held by kworker/0:10/104:
->   #0: ffff0004c0008738 ((wq_completion)events){+.+.}-{0:0}, at:
-> process_one_work+0x1f4/0x6a0
->   #1: ffff80000a90bde0
-> ((work_completion)(&ap->scsi_rescan_task)){+.+.}-{0:0}, at:
-> process_one_work+0x1f4/0x6a0
->   #2: ffff0004c2b6bf60 (&ap->scsi_scan_mutex){+.+.}-{3:3}, at:
-> ata_scsi_dev_rescan+0x28/0x118
->   #3: ffff0004c2902368 (&dev->mutex){....}-{3:3}, at:
-> scsi_rescan_device+0x28/0x78
-> 1 lock held by in:imklog/636:
->   #0: ffff0004c5ee86e8 (&f->f_pos_lock){+.+.}-{3:3}, at: __fdget_pos+0x54/0x68
-> 1 lock held by hd/1013:
->   #0: ffff0004c06388b8 (mapping.invalidate_lock#2){.+.+}-{3:3}, at:
-> page_cache_ra_unbounded+0x64/0x1a8
+You want to *remove* a user-visible interface that has been there
+for decades (granted, /proc has its issues and sysfs could replace it)
+because you want to make a kernel data structure a const structure?
 
-Thank you for having shared this information. I will take a closer look 
-and see what I can derive from the above information.
+Many other things in the kernel still provide a procfs interface.
 
-> I've just tried with a USB storage device on the same platform,
-> and it can be read fine after s2idle.  So it looks like the issue
-> is related to SATA.
 
-Unfortunately the above does not learn us anything new. The code 
-modified by commit 88f1669019bd ("scsi: sd: Rework asynchronous resume 
-support") is only called if sdev->manage_start_stop != 1. Only the SATA 
-code, the Firewire code and the manage_start_stop sysfs attribute store 
-method set that member variable:
+-Ewan
 
-$ git grep -nH 'manage_start_stop = '
-drivers/ata/libata-scsi.c:1083:		sdev->manage_start_stop = 1;
-drivers/firewire/sbp2.c:1521:		sdev->manage_start_stop = 1;
-drivers/scsi/sd.c:240:	sdp->manage_start_stop = v;
 
-Would it be possible to share the output of the command below? That 
-should reveal which ATA driver is active on the test setup.
+On Fri, Aug 12, 2022 at 4:46 PM Bart Van Assche <bvanassche@acm.org> wrote:
+>
+> Hi Martin,
+>
+> The SCSI sysfs interface made the procfs interface superfluous. sysfs support was
+> added in the most prominent user of the procfs interface (sg3_utils) in 2008. The
+> implementation of the procfs interface makes it harder than necessary to constify
+> the SCSI host templates. Hence this patch series that removes the procfs interface.
+>
+> Please consider this patch series for the next merge window.
+>
+> Thanks,
+>
+> Bart.
+>
+> Bart Van Assche (4):
+>   scsi: esas2r: Rename two functions and two variables
+>   scsi: esas2r: Remove procfs support
+>   scsi: core: Remove procfs support
+>   scsi: core: Update a source code comment
+>
+>  drivers/scsi/Kconfig               |  11 -
+>  drivers/scsi/Makefile              |   1 -
+>  drivers/scsi/esas2r/esas2r.h       |   4 +-
+>  drivers/scsi/esas2r/esas2r_ioctl.c |   2 +-
+>  drivers/scsi/esas2r/esas2r_main.c  |  43 +--
+>  drivers/scsi/hosts.c               |   5 -
+>  drivers/scsi/scsi.c                |   8 +-
+>  drivers/scsi/scsi_devinfo.c        | 146 ---------
+>  drivers/scsi/scsi_priv.h           |  17 -
+>  drivers/scsi/scsi_proc.c           | 477 -----------------------------
+>  drivers/scsi/sg.c                  | 358 ----------------------
+>  include/scsi/scsi_host.h           |   8 +-
+>  12 files changed, 14 insertions(+), 1066 deletions(-)
+>  delete mode 100644 drivers/scsi/scsi_proc.c
+>
 
-find /sys -name proc_name | xargs grep -aH .
-
-Thanks,
-
-Bart.
