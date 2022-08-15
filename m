@@ -2,131 +2,134 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F24ADC00140
-	for <linux-scsi@archiver.kernel.org>; Mon, 15 Aug 2022 17:59:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3AB8C00140
+	for <linux-scsi@archiver.kernel.org>; Mon, 15 Aug 2022 18:44:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229959AbiHOR7w (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 15 Aug 2022 13:59:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42422 "EHLO
+        id S239775AbiHOSo6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 15 Aug 2022 14:44:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38386 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232711AbiHOR71 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Aug 2022 13:59:27 -0400
-Received: from mail-io1-f70.google.com (mail-io1-f70.google.com [209.85.166.70])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8EF7C28E38
-        for <linux-scsi@vger.kernel.org>; Mon, 15 Aug 2022 10:59:26 -0700 (PDT)
-Received: by mail-io1-f70.google.com with SMTP id h8-20020a6bfb08000000b00684f0587d0cso4577699iog.14
-        for <linux-scsi@vger.kernel.org>; Mon, 15 Aug 2022 10:59:26 -0700 (PDT)
+        with ESMTP id S243319AbiHOSnp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Aug 2022 14:43:45 -0400
+Received: from mail-qt1-f179.google.com (mail-qt1-f179.google.com [209.85.160.179])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF1212A27A;
+        Mon, 15 Aug 2022 11:27:06 -0700 (PDT)
+Received: by mail-qt1-f179.google.com with SMTP id y18so6080648qtv.5;
+        Mon, 15 Aug 2022 11:27:06 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc;
-        bh=pc5WxU8NMnC+CnIzNPL1GwX0yvtsCVqhE7KfX+0SS/w=;
-        b=S/y7LU3McpNTwhm5kSoQXxGfzqTHEt1g3ZUdf9PJY8GTP78kYnZsYuLfDkooJHgog5
-         D31sdtgDziBKzymNQPGw8WgVw9E2P4zX/Us26X0Xl1LmrrovTzyMDRomWC+ocE5IrdX+
-         gIUis7DYkak7IoQ92s6xTKwAsTPdIW1Er0XAv0/1YF18f2CAfF4Oy0LOayIVTNlvkDmy
-         FDbhBbgKaoj9cGvL0OVs36rGECT9vbcqv+jE0LWz+bMIFyMOYpfSaHFIEWdvqEo7TRa+
-         jWQrS4oxLjYhvhmBlarEHNhdscMFPWoETdN4ZFzbP3kYOShv6gBOKhDaizheTGjXUm5R
-         u2rQ==
-X-Gm-Message-State: ACgBeo0w4vPpfUCpfAyB3k8mnO0d+2+J9jVFpWeSZTbCRthpBV/TxDlJ
-        FwYkQfE+Ap4sWtUJA9gqTtshHUsaAnWVfzE8yIy/P+XGgm1P
-X-Google-Smtp-Source: AA6agR7XNLSv+trWB7eGaaMeGYV48OHQ8WVQY5lpTMEJlKJLu6afFuOheCfxYnlH5qjQCSo5Jq7R1PaFAtbBO8eZhVwEZ4L6Ew1v
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc;
+        bh=Vcsd5KIyv5vV0yCbV3qFPHVddWMzIuIgoz3STTGEAYU=;
+        b=uIiD6Ts40QOW1TjikMRkvOaMO7e6FKqka8Qn//VNQbDMVkPrUY8i774p3D2eMsthzx
+         L9KCiTAZe1EmyFiWtjlPnER5jILnXeTh238ddrb9YYY8Xgt0UMLb8zqI7C0R2tmrEdY7
+         mtT+pwXBymNagfhb00YjCOqK1T0ys4X043g91WPDASEZagGLtiw6/tfJY/rn41GY1M8g
+         chiVHbbF8j/hutpzG0WJClfrkmfPHuW0G9535JRJnqjEd/+1xsn5WpduAoRgRnx9WnL+
+         3M7nBU8WQ0T9VYftqAeHmSyAdRoxT8dFCdLOimj3e87evrJ2JNvambYmn/yHJyLUS8TU
+         Lryw==
+X-Gm-Message-State: ACgBeo38ZLPgNnF+feHoSdJ1l+YC+28luS/KlEvD1JBi3IR8FsBMZVh+
+        3XSd/YF5Fu0jXWQihlwBthtm8Up8HCCoQziI
+X-Google-Smtp-Source: AA6agR73fi5TMze5z6JjXEYZsN1wjE8krOqfrS0/e5sGppd1GBH6z3DpmA+z5Zf59Zf6ZDeVLGpT0Q==
+X-Received: by 2002:ac8:574e:0:b0:344:555f:cbe4 with SMTP id 14-20020ac8574e000000b00344555fcbe4mr8382283qtx.276.1660588025872;
+        Mon, 15 Aug 2022 11:27:05 -0700 (PDT)
+Received: from mail-yw1-f172.google.com (mail-yw1-f172.google.com. [209.85.128.172])
+        by smtp.gmail.com with ESMTPSA id r2-20020a05620a298200b006b5f68bc106sm10010153qkp.110.2022.08.15.11.27.04
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 15 Aug 2022 11:27:04 -0700 (PDT)
+Received: by mail-yw1-f172.google.com with SMTP id 00721157ae682-32868f43dd6so93656047b3.8;
+        Mon, 15 Aug 2022 11:27:04 -0700 (PDT)
+X-Received: by 2002:a05:6902:100a:b0:676:ed53:25b0 with SMTP id
+ w10-20020a056902100a00b00676ed5325b0mr11651790ybt.365.1660588023793; Mon, 15
+ Aug 2022 11:27:03 -0700 (PDT)
 MIME-Version: 1.0
-X-Received: by 2002:a05:6638:dd1:b0:341:55c2:38b6 with SMTP id
- m17-20020a0566380dd100b0034155c238b6mr7809604jaj.245.1660586364483; Mon, 15
- Aug 2022 10:59:24 -0700 (PDT)
-Date:   Mon, 15 Aug 2022 10:59:24 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <0000000000005fbed305e64b6440@google.com>
-Subject: [syzbot] upstream boot error: general protection fault in scsi_alloc_sdev
-From:   syzbot <syzbot+9ada839c852179f13999@syzkaller.appspotmail.com>
-To:     jejb@linux.ibm.com, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        syzkaller-bugs@googlegroups.com
+References: <20220630195703.10155-1-bvanassche@acm.org> <20220630195703.10155-3-bvanassche@acm.org>
+ <alpine.DEB.2.22.394.2207191125130.1006766@ramsan.of.borg>
+ <db19ed29-e7f9-e5b0-3a6c-f2812078a07d@acm.org> <CAMuHMdVzsgSYtbJQnaigNax_JbxPsQfU+gHcteS-ojWbxUdMfw@mail.gmail.com>
+ <CAMuHMdWtxBj8ug7AHTqentF8UD4jpO2sgoWWcQCOvEKLJtdq8A@mail.gmail.com>
+ <506ca1a6-1122-5755-fc74-60f7c7bfbd0d@acm.org> <CAMuHMdVQ2K2v8jpsFfOMk99DG_sBB4_ioiQRroC7K_Ov1wvp9w@mail.gmail.com>
+ <6f70e742-9d8a-f389-0482-0ba9696bf445@acm.org> <CAMuHMdVc+ATGV-=R3uV6RyF0-mZiuKv7HpmogRBgqGVyO-MKWg@mail.gmail.com>
+ <54e20a27-a10b-b77a-e950-1d3398e2e907@acm.org> <CAMuHMdURQpAEGgv4cY7v0rqzs12v2TT=Amt26Y0OoBSW7YAoaw@mail.gmail.com>
+ <084e7c5a-f98d-d61e-de81-83525851ecf9@acm.org> <CAMuHMdW2vOC8ZsE_XF8TbSNoF9zCrwq7UkGZ5jXen1E1mTZe+g@mail.gmail.com>
+ <14ec47f3-f3b8-61c7-2c64-d96d00dd7076@acm.org> <CAMuHMdW7nGxV_3Z2JV_TCM+WtTdYv5P+0cE6Tw=6krcseNCdAw@mail.gmail.com>
+ <40700595-8c83-1b61-ea93-ea9554bfb2db@acm.org>
+In-Reply-To: <40700595-8c83-1b61-ea93-ea9554bfb2db@acm.org>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Mon, 15 Aug 2022 20:26:52 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdV_hzvd2YkJfRqXm8SmKuibWiUy-c7XpGCnEr86HMx=_Q@mail.gmail.com>
+Message-ID: <CAMuHMdV_hzvd2YkJfRqXm8SmKuibWiUy-c7XpGCnEr86HMx=_Q@mail.gmail.com>
+Subject: Re: [PATCH v2 2/2] scsi: sd: Rework asynchronous resume support
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        scsi <linux-scsi@vger.kernel.org>,
+        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
+        John Garry <john.garry@huawei.com>, ericspero@icloud.com,
+        jason600.groome@gmail.com,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-ide@vger.kernel.org,
+        James Bottomley <James.Bottomley@hansenpartnership.com>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello,
+Hoi Bart,
 
-syzbot found the following issue on:
+On Mon, Aug 15, 2022 at 3:49 PM Bart Van Assche <bvanassche@acm.org> wrote:
+> On 8/15/22 03:13, Geert Uytterhoeven wrote:
+> > Showing all locks held in the system:
+> > 1 lock held by rcu_tasks_kthre/10:
+> >   #0: ffff800009575c38 (rcu_tasks.tasks_gp_mutex){+.+.}-{3:3}, at:
+> > rcu_tasks_one_gp+0x34/0x4c8
+> > 4 locks held by kworker/0:10/104:
+> >   #0: ffff0004c0008738 ((wq_completion)events){+.+.}-{0:0}, at:
+> > process_one_work+0x1f4/0x6a0
+> >   #1: ffff80000a90bde0
+> > ((work_completion)(&ap->scsi_rescan_task)){+.+.}-{0:0}, at:
+> > process_one_work+0x1f4/0x6a0
+> >   #2: ffff0004c2b6bf60 (&ap->scsi_scan_mutex){+.+.}-{3:3}, at:
+> > ata_scsi_dev_rescan+0x28/0x118
+> >   #3: ffff0004c2902368 (&dev->mutex){....}-{3:3}, at:
+> > scsi_rescan_device+0x28/0x78
+> > 1 lock held by in:imklog/636:
+> >   #0: ffff0004c5ee86e8 (&f->f_pos_lock){+.+.}-{3:3}, at: __fdget_pos+0x54/0x68
+> > 1 lock held by hd/1013:
+> >   #0: ffff0004c06388b8 (mapping.invalidate_lock#2){.+.+}-{3:3}, at:
+> > page_cache_ra_unbounded+0x64/0x1a8
+>
+> Thank you for having shared this information. I will take a closer look
+> and see what I can derive from the above information.
+>
+> > I've just tried with a USB storage device on the same platform,
+> > and it can be read fine after s2idle.  So it looks like the issue
+> > is related to SATA.
+>
+> Unfortunately the above does not learn us anything new. The code
+> modified by commit 88f1669019bd ("scsi: sd: Rework asynchronous resume
+> support") is only called if sdev->manage_start_stop != 1. Only the SATA
+> code, the Firewire code and the manage_start_stop sysfs attribute store
+> method set that member variable:
+>
+> $ git grep -nH 'manage_start_stop = '
+> drivers/ata/libata-scsi.c:1083:         sdev->manage_start_stop = 1;
+> drivers/firewire/sbp2.c:1521:           sdev->manage_start_stop = 1;
+> drivers/scsi/sd.c:240:  sdp->manage_start_stop = v;
+>
+> Would it be possible to share the output of the command below? That
+> should reveal which ATA driver is active on the test setup.
+>
+> find /sys -name proc_name | xargs grep -aH .
 
-HEAD commit:    568035b01cfb Linux 6.0-rc1
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=17b23aa5080000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=3b9175e0879a7749
-dashboard link: https://syzkaller.appspot.com/bug?extid=9ada839c852179f13999
-compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
+/sys/devices/platform/soc/ee300000.sata/ata1/host0/scsi_host/host0/proc_name:sata_rcar
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+9ada839c852179f13999@syzkaller.appspotmail.com
+Gr{oetje,eeting}s,
 
-scsi 0:0:1:0: Direct-Access     Google   PersistentDisk   1    PQ: 0 ANSI: 6
-general protection fault, probably for non-canonical address 0xffff000000000800: 0000 [#1] PREEMPT SMP KASAN
-KASAN: maybe wild-memory-access in range [0xfff8200000004000-0xfff8200000004007]
-CPU: 1 PID: 56 Comm: kworker/u4:4 Not tainted 6.0.0-rc1-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 07/22/2022
-Workqueue: events_unbound async_run_entry_fn
-RIP: 0010:freelist_dereference mm/slub.c:347 [inline]
-RIP: 0010:get_freepointer mm/slub.c:354 [inline]
-RIP: 0010:get_freepointer_safe mm/slub.c:368 [inline]
-RIP: 0010:slab_alloc_node mm/slub.c:3211 [inline]
-RIP: 0010:slab_alloc mm/slub.c:3251 [inline]
-RIP: 0010:__kmalloc+0x113/0x340 mm/slub.c:4420
-Code: 8b 51 08 48 8b 01 48 83 79 10 00 48 89 44 24 08 0f 84 18 02 00 00 48 85 c0 0f 84 0f 02 00 00 48 8b 7d 00 8b 4d 28 40 f6 c7 0f <48> 8b 1c 08 0f 85 1b 02 00 00 48 8d 4a 08 65 48 0f c7 0f 0f 94 c0
-RSP: 0018:ffffc900015777f8 EFLAGS: 00010246
+                        Geert
 
-RAX: ffff000000000000 RBX: ffff88801bd64000 RCX: 0000000000000800
-RDX: 0000000000005d09 RSI: 0000000000000dc0 RDI: 000000000003dce0
-RBP: ffff888011842140 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000001 R11: 0000000000000000 R12: 0000000000000dc0
-R13: 0000000000000000 R14: 0000000000000cb8 R15: 0000000000000dc0
-FS:  0000000000000000(0000) GS:ffff8880b9b00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000000000000000 CR3: 000000000bc8e000 CR4: 0000000000350ee0
-Call Trace:
- <TASK>
- kmalloc include/linux/slab.h:605 [inline]
- kzalloc include/linux/slab.h:733 [inline]
- scsi_alloc_sdev+0x109/0xcc0 drivers/scsi/scsi_scan.c:287
- scsi_probe_and_add_lun+0x22be/0x3660 drivers/scsi/scsi_scan.c:1191
- __scsi_scan_target+0x21f/0xdb0 drivers/scsi/scsi_scan.c:1673
- scsi_scan_channel drivers/scsi/scsi_scan.c:1761 [inline]
- scsi_scan_channel+0x148/0x1e0 drivers/scsi/scsi_scan.c:1737
- scsi_scan_host_selected+0x2df/0x3b0 drivers/scsi/scsi_scan.c:1790
- do_scsi_scan_host+0x1e8/0x260 drivers/scsi/scsi_scan.c:1929
- do_scan_async+0x3e/0x500 drivers/scsi/scsi_scan.c:1939
- async_run_entry_fn+0x98/0x530 kernel/async.c:127
- process_one_work+0x991/0x1610 kernel/workqueue.c:2289
- worker_thread+0x665/0x1080 kernel/workqueue.c:2436
- kthread+0x2e4/0x3a0 kernel/kthread.c:376
- ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:306
- </TASK>
-Modules linked in:
-----------------
-Code disassembly (best guess):
-   0:	8b 51 08             	mov    0x8(%rcx),%edx
-   3:	48 8b 01             	mov    (%rcx),%rax
-   6:	48 83 79 10 00       	cmpq   $0x0,0x10(%rcx)
-   b:	48 89 44 24 08       	mov    %rax,0x8(%rsp)
-  10:	0f 84 18 02 00 00    	je     0x22e
-  16:	48 85 c0             	test   %rax,%rax
-  19:	0f 84 0f 02 00 00    	je     0x22e
-  1f:	48 8b 7d 00          	mov    0x0(%rbp),%rdi
-  23:	8b 4d 28             	mov    0x28(%rbp),%ecx
-  26:	40 f6 c7 0f          	test   $0xf,%dil
-* 2a:	48 8b 1c 08          	mov    (%rax,%rcx,1),%rbx <-- trapping instruction
-  2e:	0f 85 1b 02 00 00    	jne    0x24f
-  34:	48 8d 4a 08          	lea    0x8(%rdx),%rcx
-  38:	65 48 0f c7 0f       	cmpxchg16b %gs:(%rdi)
-  3d:	0f 94 c0             	sete   %al
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
