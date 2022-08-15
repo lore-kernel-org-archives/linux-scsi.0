@@ -2,36 +2,36 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 786D2C25B0D
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Aug 2022 01:49:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CBB3C25B0D
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Aug 2022 01:55:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233545AbiHPBtT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 15 Aug 2022 21:49:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45220 "EHLO
+        id S243185AbiHPBzA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 15 Aug 2022 21:55:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48316 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233512AbiHPBs6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Aug 2022 21:48:58 -0400
+        with ESMTP id S232617AbiHPByl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Aug 2022 21:54:41 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DD992036B9;
-        Mon, 15 Aug 2022 14:40:47 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1641C21146F;
+        Mon, 15 Aug 2022 14:46:22 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 22186B811FE;
-        Mon, 15 Aug 2022 21:40:46 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BBA9DC433D7;
-        Mon, 15 Aug 2022 21:40:41 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 95823B811FE;
+        Mon, 15 Aug 2022 21:46:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D58E7C433D6;
+        Mon, 15 Aug 2022 21:46:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660599644;
-        bh=s1ysBUarhjxYEJL4ryDgOKJSJUjnZCoo74clBKJ7yNs=;
+        s=k20201202; t=1660599980;
+        bh=9P1wiCHMqEfEMRjp5RWcePkGLroiFvT2II+AyFuabVQ=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=W9PFrRzkfJnI6SrnWoCVG5SqJNhu1B5NEPoyhp8D91e3ogQKqwHXEqkt90ffhnXlf
-         qJMqJ+FDHdOWOYTENMc3DRbWLuMOa2ngAdL1NIss/wvQvBG8G6ua1oWpSM+/vq7tj2
-         81JiienoY6xTd5A2JSjUpSu4Zn1YPyP94sam4qHJ7H98nGEu0iYXhRfFuN0pAYq/Vd
-         42j2Q5hlQ6I0r9jpzaXgaETDQ1riXTBdlNKl/oO2wSa+CXNNcLiPnpe/V4oyVF8HpQ
-         1NfBSGb2nz1mGZ7hiVdDiZBB32PIYjax4U3xXdATGhdHbN7FdEc4PWHO4Gwq1ZmhJu
-         rMCdU5/i2ZUNA==
-Date:   Mon, 15 Aug 2022 16:40:35 -0500
+        b=pN/UAeEWR9Cl72HCG6eavcTQAflelQE+1zXehSk9ZT47IZIlHVgTjYoi04Up2QF/g
+         Q4VTLIjzsH7OR05f3XRTB6psxqkFDSccQgH3gPRAGePI3eXmMT4ScH5lu/+TT32oW6
+         9AsxpEFF9s+rehxFo+mJTLNtXomhXoinL6+OfE15YhQtbzhrcMaAsQALOiF1xlvDxZ
+         2i7CnO3wiIKmfI6nsGTjtChMBUo7UqfqbmqTRLqH0l8dSpcfVxcPPVHotXtQwLd/je
+         iOrE6ljiNHJqe1TE3qkYgzwPTG0ku4RN3+Ey+vk60EkemJUynjYa+gjrcKIStJq9HB
+         XeRnjA1BlqQeQ==
+Date:   Mon, 15 Aug 2022 16:46:13 -0500
 From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
 To:     megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org
@@ -43,9 +43,9 @@ Cc:     Kashyap Desai <kashyap.desai@broadcom.com>,
         Kees Cook <keescook@chromium.org>,
         "Gustavo A. R. Silva" <gustavoars@kernel.org>,
         linux-hardening@vger.kernel.org
-Subject: [PATCH v3 1/6] scsi: megaraid_sas: Replace one-element array with
- flexible-array member in MR_FW_RAID_MAP
-Message-ID: <4495ce170c8ef088a10f1abe0e7c227368f43242.1660592640.git.gustavoars@kernel.org>
+Subject: [PATCH v3 3/6] scsi: megaraid_sas: Replace one-element array with
+ flexible-array member in MR_DRV_RAID_MAP
+Message-ID: <1448f387821833726b99f0ce13069ada89164eb5.1660592640.git.gustavoars@kernel.org>
 References: <cover.1660592640.git.gustavoars@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -58,76 +58,48 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 One-element arrays are deprecated, and we are replacing them with
 flexible array members, instead. So, replace one-element array with
 flexible-array member in struct MR_DRV_RAID_MAP and refactor the
-the rest of the code accordingly.
+code accordingly.
 
 This helps with the ongoing efforts to tighten the FORTIFY_SOURCE
 routines on memcpy().
 
 Link: https://github.com/KSPP/linux/issues/79
 Link: https://github.com/KSPP/linux/issues/109
-Enhanced-by: Kees Cook <keescook@chromium.org> # Change in struct MR_FW_RAID_MAP_ALL
+Enhanced-by: Kees Cook <keescook@chromium.org> # Change in struct MR_DRV_RAID_MAP_ALL
 Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 ---
 Changes in v3:
- - Modify MR_FW_RAID_MAP_ALL structures.
- - Revert use of struct_size() helper.
+ - Revert use of flex_array_size() helper.
+ - Modify MR_DRV_RAID_MAP_ALL structure.
 
 Changes in v2:
- - Update Subject line and changelog text.
+ - None.
 
- drivers/scsi/megaraid/megaraid_sas_base.c   | 2 +-
- drivers/scsi/megaraid/megaraid_sas_fp.c     | 2 +-
  drivers/scsi/megaraid/megaraid_sas_fusion.h | 4 ++--
- 3 files changed, 4 insertions(+), 4 deletions(-)
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index a3e117a4b8e7..c06a346a3eaf 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -5159,7 +5159,7 @@ static void megasas_update_ext_vd_details(struct megasas_instance *instance)
- 	} else {
- 		fusion->old_map_sz =  sizeof(struct MR_FW_RAID_MAP) +
- 					(sizeof(struct MR_LD_SPAN_MAP) *
--					(instance->fw_supported_vd_count - 1));
-+					instance->fw_supported_vd_count);
- 		fusion->new_map_sz =  sizeof(struct MR_FW_RAID_MAP_EXT);
- 
- 		fusion->max_map_sz =
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
-index 83f69c33b01a..b2ec7a3f7650 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fp.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
-@@ -327,7 +327,7 @@ u8 MR_ValidateMapInfo(struct megasas_instance *instance, u64 map_id)
- 		expected_size = sizeof(struct MR_FW_RAID_MAP_EXT);
- 	else
- 		expected_size =
--			(sizeof(struct MR_FW_RAID_MAP) - sizeof(struct MR_LD_SPAN_MAP) +
-+			(sizeof(struct MR_FW_RAID_MAP) +
- 			(sizeof(struct MR_LD_SPAN_MAP) * le16_to_cpu(pDrvRaidMap->ldCount)));
- 
- 	if (le32_to_cpu(pDrvRaidMap->totalSize) != expected_size) {
 diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-index ce84f811e5e1..5530c233fccb 100644
+index 66e13b74fcdc..df92d4369e04 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
 +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-@@ -942,7 +942,7 @@ struct MR_FW_RAID_MAP {
- 	u8                  reserved2[7];
- 	struct MR_ARRAY_INFO       arMapInfo[MAX_RAIDMAP_ARRAYS];
- 	struct MR_DEV_HANDLE_INFO  devHndlInfo[MAX_RAIDMAP_PHYSICAL_DEVICES];
+@@ -1182,7 +1182,7 @@ struct MR_DRV_RAID_MAP {
+ 		devHndlInfo[MAX_RAIDMAP_PHYSICAL_DEVICES_DYN];
+ 	u16 ldTgtIdToLd[MAX_LOGICAL_DRIVES_DYN];
+ 	struct MR_ARRAY_INFO arMapInfo[MAX_API_ARRAYS_DYN];
 -	struct MR_LD_SPAN_MAP      ldSpanMap[1];
 +	struct MR_LD_SPAN_MAP      ldSpanMap[];
+ 
  };
  
- struct IO_REQUEST_INFO {
-@@ -1148,7 +1148,7 @@ typedef struct LOG_BLOCK_SPAN_INFO {
+@@ -1193,7 +1193,7 @@ struct MR_DRV_RAID_MAP {
+ struct MR_DRV_RAID_MAP_ALL {
  
- struct MR_FW_RAID_MAP_ALL {
- 	struct MR_FW_RAID_MAP raidMap;
--	struct MR_LD_SPAN_MAP ldSpanMap[MAX_LOGICAL_DRIVES - 1];
-+	struct MR_LD_SPAN_MAP ldSpanMap[MAX_LOGICAL_DRIVES];
- } __attribute__ ((packed));
+ 	struct MR_DRV_RAID_MAP raidMap;
+-	struct MR_LD_SPAN_MAP ldSpanMap[MAX_LOGICAL_DRIVES_DYN - 1];
++	struct MR_LD_SPAN_MAP ldSpanMap[MAX_LOGICAL_DRIVES_DYN];
+ } __packed;
  
- struct MR_DRV_RAID_MAP {
+ 
 -- 
 2.34.1
 
