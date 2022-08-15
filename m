@@ -2,78 +2,92 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19B02C25B0F
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Aug 2022 04:57:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0ABEBC25B0F
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Aug 2022 05:19:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233834AbiHPE5D (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 16 Aug 2022 00:57:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57140 "EHLO
+        id S233226AbiHPFTe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 16 Aug 2022 01:19:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38608 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234139AbiHPE4Y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Aug 2022 00:56:24 -0400
-Received: from smtp.smtpout.orange.fr (smtp02.smtpout.orange.fr [80.12.242.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0CCE80B51
-        for <linux-scsi@vger.kernel.org>; Mon, 15 Aug 2022 13:52:28 -0700 (PDT)
-Received: from pop-os.home ([90.11.190.129])
-        by smtp.orange.fr with ESMTPA
-        id Nh4To0e9HTLjwNh4TowhXt; Mon, 15 Aug 2022 22:52:26 +0200
-X-ME-Helo: pop-os.home
-X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
-X-ME-Date: Mon, 15 Aug 2022 22:52:26 +0200
-X-ME-IP: 90.11.190.129
-From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-To:     michael.christie@oracle.com,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Subject: [PATCH v2] scsi: target: Save a few cycles in transport_lookup_[cmd|tmr]_lun()
-Date:   Mon, 15 Aug 2022 22:52:24 +0200
-Message-Id: <03705222390bfa3b48ad7658f693fc0fc030b3ae.1660596679.git.christophe.jaillet@wanadoo.fr>
-X-Mailer: git-send-email 2.34.1
+        with ESMTP id S233204AbiHPFTM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Aug 2022 01:19:12 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6DEB1C21DD;
+        Mon, 15 Aug 2022 14:42:46 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id CE500B811BF;
+        Mon, 15 Aug 2022 21:42:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5988DC433D6;
+        Mon, 15 Aug 2022 21:42:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1660599763;
+        bh=J5sILHxjfHL2mngdVIkP+62Tsl5BM29kcszjyaZgtTM=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ULAZ4sTT/Mfp7G7ebqcnzGlna8miB9S2AwB9BgcbB/JuXmMpPr7cfPCQnwDw7PMuA
+         ZMxWtTbU5TDApU6vqxIgSdapoRSZRIcgecgILwrVPGCAkSP9N1toRhWTlCYFgKOPkS
+         PXHu0z/Dva+XPvwEZn1vPXAtSVwNwqblnfTnwMaxxARol7mpnKEVU47iU8tOvLWCkd
+         YqzYylwjgZXD1z+VyG9KUSYPZm0S5hfvUo4UszZr+v5l+NbvwC5r/Qp9nQHAnMk4CL
+         0JH4Jg6wuLFmPKnCphPsmLgXfp2n65rxQKEpr55wPUOPBWba5aFw+eTXMDjR88IElx
+         ykiTveYvARyrQ==
+Date:   Mon, 15 Aug 2022 16:42:21 -0500
+From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
+To:     megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Kees Cook <keescook@chromium.org>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        linux-hardening@vger.kernel.org
+Subject: [PATCH v3 2/6] scsi: megaraid_sas: Replace one-element array with
+ flexible-array member in MR_FW_RAID_MAP_DYNAMIC
+Message-ID: <896476f8fe43cf83b491c6c13f59c9ace780d82c.1660592640.git.gustavoars@kernel.org>
+References: <cover.1660592640.git.gustavoars@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <cover.1660592640.git.gustavoars@kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use percpu_ref_tryget_live_rcu() instead of percpu_ref_tryget_live() to
-save a few cycles when it is known that the rcu lock is already
-taken/released.
+One-element arrays are deprecated, and we are replacing them with
+flexible array members, instead. So, replace one-element array with
+flexible-array member in struct MR_FW_RAID_MAP_DYNAMIC.
 
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+This helps with the ongoing efforts to tighten the FORTIFY_SOURCE
+routines on memcpy().
+
+Link: https://github.com/KSPP/linux/issues/79
+Link: https://github.com/KSPP/linux/issues/109
+Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 ---
-Change in v2:
-  * sync with -next
+Changes in v3:
+ - None.
 
-v1:
-  * https://lore.kernel.org/all/e4a21bc607c39935cb98d4825cd63ba349820550.1635974637.git.christophe.jaillet@wanadoo.fr/
----
- drivers/target/target_core_device.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Changes in v2:
+ - None.
 
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index b7f16ee8aa0e..76c6613a1da7 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -77,7 +77,7 @@ transport_lookup_cmd_lun(struct se_cmd *se_cmd)
+ drivers/scsi/megaraid/megaraid_sas_fusion.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+index 5530c233fccb..66e13b74fcdc 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+@@ -1053,7 +1053,7 @@ struct MR_FW_RAID_MAP_DYNAMIC {
+ 	struct MR_RAID_MAP_DESC_TABLE
+ 			raid_map_desc_table[RAID_MAP_DESC_TYPE_COUNT];
+ 	/* Variable Size buffer containing all data */
+-	u32 raid_map_desc_data[1];
++	u32 raid_map_desc_data[];
+ }; /* Dynamicaly sized RAID MAp structure */
  
- 		se_lun = deve->se_lun;
- 
--		if (!percpu_ref_tryget_live(&se_lun->lun_ref)) {
-+		if (!percpu_ref_tryget_live_rcu(&se_lun->lun_ref)) {
- 			se_lun = NULL;
- 			goto out_unlock;
- 		}
-@@ -154,7 +154,7 @@ int transport_lookup_tmr_lun(struct se_cmd *se_cmd)
- 	if (deve) {
- 		se_lun = deve->se_lun;
- 
--		if (!percpu_ref_tryget_live(&se_lun->lun_ref)) {
-+		if (!percpu_ref_tryget_live_rcu(&se_lun->lun_ref)) {
- 			se_lun = NULL;
- 			goto out_unlock;
- 		}
+ #define IEEE_SGE_FLAGS_ADDR_MASK            (0x03)
 -- 
 2.34.1
 
