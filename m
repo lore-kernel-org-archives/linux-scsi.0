@@ -2,88 +2,131 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C60BC00140
-	for <linux-scsi@archiver.kernel.org>; Mon, 15 Aug 2022 16:44:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F066C00140
+	for <linux-scsi@archiver.kernel.org>; Mon, 15 Aug 2022 16:54:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229801AbiHOQoa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 15 Aug 2022 12:44:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34146 "EHLO
+        id S231920AbiHOQyK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 15 Aug 2022 12:54:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42888 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229533AbiHOQo3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Aug 2022 12:44:29 -0400
-Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA7061658C;
-        Mon, 15 Aug 2022 09:44:27 -0700 (PDT)
-Received: by mail-pj1-x102c.google.com with SMTP id p14-20020a17090a74ce00b001f4d04492faso7226988pjl.4;
-        Mon, 15 Aug 2022 09:44:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc;
-        bh=zdnW8/HnF3fzfN+wPGf0u6fOxn7CNDqF5X85xYp73sg=;
-        b=AMNriioHY+ljxtKHe70MO2ZdyI2UUiyuRD4/roIwOOzyLsyDljL+oIbcR2g6Z3ne+l
-         D+juDlTrbQmNAZpKwWqRgXqfYLWreINF5/F7sy75KdhoVWAPQOk/aKg1Kb+7hlE3VrT7
-         sE2uje/K/tv77FAC/Q9GvKOvHtYzsdhDKebIR0/454C4fno/7uOU8NqUutyZeNFpflXy
-         zn3ScS+sSdOOkDlGBKQOZMBGpCTBki63CnOkhA+gGl4Ij9P64aedFXqYiMK1u0uzpw4v
-         6R6XW8QolR4QrjoMfaVHdO88YlWGhk28j+vhQbNuEFNvTxoedWWBxj6uHjK4maxEVaZa
-         MjjQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc;
-        bh=zdnW8/HnF3fzfN+wPGf0u6fOxn7CNDqF5X85xYp73sg=;
-        b=S8i9cx24vugYZEZlhUyQaBl5qto9XOqPFABDDeLUBbuk7Ow/dG9wBqbkyoQKCCzT6q
-         0P3gO/rCKs7rOU8z0E2Oft7wBLtadRXn+oyXA69nkgkLAxwP9sgv+xNQ0yv9sXWzgMEj
-         IVUUC2CRCKKk2Te0KvRvUQSR7kINwVbOiJIFdMgw2UUYu956olf4l6migvf0irZmX1fc
-         29bZla77FzB9MPoi0HajbmrH1Omb91fVDRz9T7jwE49D5gPzn0ARPglHsBbSRzF1ZzmH
-         xDYca/f5Z7W2BuAUybPkJEbHd4j8RQB1II3SH0/ZDXTcJvDJ4bmWfxkA4J0TrUxQvG7B
-         ugYw==
-X-Gm-Message-State: ACgBeo1A8oClsnNo18mdYQQ1iGSqbNc9MI6Ff6ZJ8DLbcgDfTUMvxI4Q
-        a7/5AH62CTIQeKX0qd2GIEOI0mxpX47oZA==
-X-Google-Smtp-Source: AA6agR64Uo5Pfca0en/5+dTGxB+FKUKN6/5LFVYEtv9Sx9Uri1inap5EclxIZCSClugQKLDF7rVpjg==
-X-Received: by 2002:a17:902:bc49:b0:170:9ba1:f390 with SMTP id t9-20020a170902bc4900b001709ba1f390mr17276673plz.93.1660581867199;
-        Mon, 15 Aug 2022 09:44:27 -0700 (PDT)
-Received: from fedora.. ([60.177.173.246])
-        by smtp.gmail.com with ESMTPSA id h35-20020a631223000000b0040d75537824sm6014358pgl.86.2022.08.15.09.44.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 15 Aug 2022 09:44:26 -0700 (PDT)
-From:   Wenchao Hao <haowenchao22@gmail.com>
-X-Google-Original-From: Wenchao Hao <haowenchao@huawei.com>
-To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        with ESMTP id S230510AbiHOQyI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Aug 2022 12:54:08 -0400
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 171A1255A6;
+        Mon, 15 Aug 2022 09:54:08 -0700 (PDT)
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 27FGlplv019299;
+        Mon, 15 Aug 2022 16:53:52 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=pp1;
+ bh=EwrRiFrSU8LeFB56OUDRDDRbkXfFHbIwJFmOXCKnbUI=;
+ b=Z03mNdRg3K7OnbTafsuwpZ8FUE+7MX+EPHB7MCboqUzsaaX6HGfGJ/H51RfhJ75bfOjv
+ xFldL4za/cSbntrgGrZYAQBJ2+QmdyiYUI5uK8Cxfnhh1z/qIYWa0831QD/tvhFwwiKv
+ /t/mmGH4qIqKoMu2BaRGGTLKVRXuYfNNfQdHAu6PNWD7Hjzxo9Rfqg9HuocQOzV2oS+u
+ bwMlS5R3s9IzcQJBgvTECL9c77vHu81piIOqudVmpUxLddcICEusHpu0/s1bn1CW2++E
+ IU4O2ac9GINIz5HgKwZA3buvMLSSpEworFzOpmhw93s3CfHVQtcclJXlHQUGjE9ZmYpz 3g== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3hyraakmat-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 15 Aug 2022 16:53:51 +0000
+Received: from m0098399.ppops.net (m0098399.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 27FFUO6W018836;
+        Mon, 15 Aug 2022 16:53:51 GMT
+Received: from ppma05fra.de.ibm.com (6c.4a.5195.ip4.static.sl-reverse.com [149.81.74.108])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3hyraakm9c-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 15 Aug 2022 16:53:51 +0000
+Received: from pps.filterd (ppma05fra.de.ibm.com [127.0.0.1])
+        by ppma05fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 27FGpBwl015946;
+        Mon, 15 Aug 2022 16:53:49 GMT
+Received: from b06avi18626390.portsmouth.uk.ibm.com (b06avi18626390.portsmouth.uk.ibm.com [9.149.26.192])
+        by ppma05fra.de.ibm.com with ESMTP id 3hyp8sg4yu-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 15 Aug 2022 16:53:48 +0000
+Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
+        by b06avi18626390.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 27FGp4dc31392028
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 15 Aug 2022 16:51:04 GMT
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 8B062A404D;
+        Mon, 15 Aug 2022 16:53:46 +0000 (GMT)
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id B6894A4040;
+        Mon, 15 Aug 2022 16:53:45 +0000 (GMT)
+Received: from [9.145.14.35] (unknown [9.145.14.35])
+        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Mon, 15 Aug 2022 16:53:45 +0000 (GMT)
+Message-ID: <3ed022dd-3026-542a-c3b0-e4f4005208aa@linux.ibm.com>
+Date:   Mon, 15 Aug 2022 18:53:45 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.12.0
+Subject: Re: [PATCH] scsi: increase scsi device's iodone_cnt in scsi_timeout()
+Content-Language: en-US
+To:     Wenchao Hao <haowenchao22@gmail.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc:     Wenchao Hao <haowenchao@huawei.com>
-Subject: [PATCH] scsi: increase scsi device's iodone_cnt in scsi_timeout()
-Date:   Tue, 16 Aug 2022 00:43:25 +0800
-Message-Id: <20220815164324.645550-1-haowenchao@huawei.com>
-X-Mailer: git-send-email 2.35.3
+References: <20220815164324.645550-1-haowenchao@huawei.com>
+From:   Steffen Maier <maier@linux.ibm.com>
+In-Reply-To: <20220815164324.645550-1-haowenchao@huawei.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: fAB8yWfhos8R4Ni3kqVDQpVgCRlA43O2
+X-Proofpoint-GUID: greW_b_5pyZ0byvvGkKUmPFUyuXgBEK1
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-UnRewURL: 1 URL was un-rewritten
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
+ definitions=2022-08-15_08,2022-08-15_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ spamscore=0 priorityscore=1501 impostorscore=0 malwarescore=0 bulkscore=0
+ phishscore=0 adultscore=0 clxscore=1011 mlxscore=0 mlxlogscore=999
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2207270000 definitions=main-2208150064
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The iodone_cnt might be less than iorequest_cnt because
-we did not increase the iodone_cnt when a command is done
-from timeout.
+On 8/15/22 18:43, Wenchao Hao wrote:
+> The iodone_cnt might be less than iorequest_cnt because
+> we did not increase the iodone_cnt when a command is done
+> from timeout.
+> 
+> Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
+> ---
+>   drivers/scsi/scsi_error.c | 1 +
+>   1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index 448748e3fba5..d21ae0090166 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -355,6 +355,7 @@ enum blk_eh_timer_return scsi_timeout(struct request *req)
+>   		 */
+>   		if (test_and_set_bit(SCMD_STATE_COMPLETE, &scmd->state))
+>   			return BLK_EH_RESET_TIMER;
+> +		atomic_inc(&scmd->device->iodone_cnt);
+>   		if (scsi_abort_command(scmd) != SUCCESS) {
+>   			set_host_byte(scmd, DID_TIME_OUT);
+>   			scsi_eh_scmd_add(scmd);
 
-Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
----
- drivers/scsi/scsi_error.c | 1 +
- 1 file changed, 1 insertion(+)
+Not sure, but can't we still get a (late) regular completion even after the 
+timeout happened (double accounting) and before we successfully aborted the 
+command?
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 448748e3fba5..d21ae0090166 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -355,6 +355,7 @@ enum blk_eh_timer_return scsi_timeout(struct request *req)
- 		 */
- 		if (test_and_set_bit(SCMD_STATE_COMPLETE, &scmd->state))
- 			return BLK_EH_RESET_TIMER;
-+		atomic_inc(&scmd->device->iodone_cnt);
- 		if (scsi_abort_command(scmd) != SUCCESS) {
- 			set_host_byte(scmd, DID_TIME_OUT);
- 			scsi_eh_scmd_add(scmd);
+
 -- 
-2.35.3
+Mit freundlichen Gruessen / Kind regards
+Steffen Maier
 
+Linux on IBM Z and LinuxONE
+
+https://www.ibm.com/privacy/us/en/
+IBM Deutschland Research & Development GmbH
+Vorsitzender des Aufsichtsrats: Gregor Pillen
+Geschaeftsfuehrung: David Faller
+Sitz der Gesellschaft: Boeblingen
+Registergericht: Amtsgericht Stuttgart, HRB 243294
