@@ -2,220 +2,112 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9108C32772
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Aug 2022 19:22:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A262C3F6B0
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Aug 2022 20:21:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237101AbiHPTWT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 16 Aug 2022 15:22:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41734 "EHLO
+        id S236836AbiHPUV3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 16 Aug 2022 16:21:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55138 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237092AbiHPTWS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Aug 2022 15:22:18 -0400
-Received: from mail-pg1-x52b.google.com (mail-pg1-x52b.google.com [IPv6:2607:f8b0:4864:20::52b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1E0D844D4
-        for <linux-scsi@vger.kernel.org>; Tue, 16 Aug 2022 12:22:15 -0700 (PDT)
-Received: by mail-pg1-x52b.google.com with SMTP id 202so10080053pgc.8
-        for <linux-scsi@vger.kernel.org>; Tue, 16 Aug 2022 12:22:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc;
-        bh=UfXlr/WbEItN9aSdIJX4iaTq/XlXVZMlLqhc7nhIv50=;
-        b=LbBNhh6bXMzkijgu81RzGbZKVTzjiDsuC90Y7Vv43r/5OmxsedMbMtkBNzDnIgXj0n
-         t9Pqj6ZzUoo0cfUx1TtUhRZsYY2okOkn2/FfdlGNySntuZr4gXxY1hJz7HS5327Hs1xN
-         nHUYO+K+b3YcCguUk0nqTPOJ2LUjJc++72OZU=
+        with ESMTP id S229887AbiHPUV2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Aug 2022 16:21:28 -0400
+Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 092AA5E579;
+        Tue, 16 Aug 2022 13:21:28 -0700 (PDT)
+Received: by mail-pf1-f174.google.com with SMTP id y141so10281438pfb.7;
+        Tue, 16 Aug 2022 13:21:28 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc;
-        bh=UfXlr/WbEItN9aSdIJX4iaTq/XlXVZMlLqhc7nhIv50=;
-        b=Svk0CKpRlO4s4v63jQzQwzhGvDY3RFhkCVY1FDe43JNdCV7ERJPWSquM81MyTguDdp
-         WaLZt1qagwPfZZtKIkowHfTLmUy/3HOyWePHGYvQylmmottwYWRBIvj73nxfMWyQr7/R
-         4ZCjd7DEmuFQBVjzn8XkhzAWjX1O+1r3jP1/uXWzbNCCpLwzRJM22GnqyTDqcLc1M/XP
-         +un7/InEXt+lrBFXr7LepyiXfLpLLi/Hbw1Am9w32Lv6fyHrOPHO6fi9DaltNmfSd7Id
-         eUQhOI7ApjMOMJzYdA6VpZj0tdFDwsapGvmoJAK2ZJ3cshSYpKok2W81mBAxxvLt9dFZ
-         KbwA==
-X-Gm-Message-State: ACgBeo178zxQ3yPAs+lvasxegLWdAyXnzRq4PSuW7kWEUSnzyjBDWswJ
-        MVsRfS9VfuGlZVhrucJobHT8Mw==
-X-Google-Smtp-Source: AA6agR4ewDb5KpxqmFL9TANETOsh2CoRoqmxiztBenGS5hMalR/nn6+Vm6Yl9PEjQZ4t1VIf1KGtTw==
-X-Received: by 2002:a63:1a53:0:b0:41f:5298:9b5f with SMTP id a19-20020a631a53000000b0041f52989b5fmr18443389pgm.244.1660677735372;
-        Tue, 16 Aug 2022 12:22:15 -0700 (PDT)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id m13-20020a170902db0d00b0016c46ff9741sm9511951plx.67.2022.08.16.12.22.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 16 Aug 2022 12:22:14 -0700 (PDT)
-Date:   Tue, 16 Aug 2022 12:22:13 -0700
-From:   Kees Cook <keescook@chromium.org>
-To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Cc:     megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-hardening@vger.kernel.org
-Subject: Re: [PATCH v3 0/6] Replace one-element arrays with flexible-array
- members
-Message-ID: <202208161220.D225B26C9@keescook>
-References: <cover.1660592640.git.gustavoars@kernel.org>
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc;
+        bh=th+lC17Fiwo20XamRjMxkbAxnNSnosmeVziZqkBDOMs=;
+        b=gVu0NiivUMfgQECcfR3Abw37hHyBYq//M0H37uRr9fAMh+pGIuUJUDX855uBCBYK/1
+         sbOOqVx5TahNmn9e2PgSXjePADpCPwCbFPGVffKn2UeZCr8c9YI2X0sqfbtsH+3PxVdz
+         7hMhWiocSV5x1PpHyU59ZBGOgiKxe6BtjnwU86nYdW4xH6mLtKX3wjvz83pKQATp3Q0x
+         1DNBgYN3TWRaJ2ibXZR2DC18xp2RnoG/5bV+J/0EDMiGQIMFqEmMu64uyQDlPoYzbesB
+         qBIekmJ8gkvud6jIVhKw06e/Sq8lVRwd9o0RA3Ly8tdnuy3A0RXFlH3dWpdYgl4+HZiV
+         CzuQ==
+X-Gm-Message-State: ACgBeo1O3fdmR39cuWgR0LgbenqSgquGfy8oe4RKM/c7wi0k4I1qC4BZ
+        TugDGCmaw/vYT0SPTudXxDw=
+X-Google-Smtp-Source: AA6agR45di+TBD2Dgd1RBlQEBtB16uBAPGH0WxD12cQE9McWLupyyuS0VS2/uH8LE9n7XEx+3EG7ZQ==
+X-Received: by 2002:a63:4e25:0:b0:41c:62a2:ecc3 with SMTP id c37-20020a634e25000000b0041c62a2ecc3mr19472574pgb.596.1660681287364;
+        Tue, 16 Aug 2022 13:21:27 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:ff4b:545d:11c8:da9f? ([2620:15c:211:201:ff4b:545d:11c8:da9f])
+        by smtp.gmail.com with ESMTPSA id 5-20020a621505000000b0052b6ed5ca40sm8782792pfv.192.2022.08.16.13.21.25
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 16 Aug 2022 13:21:26 -0700 (PDT)
+Message-ID: <3c7e338e-332e-fe80-e419-b360535533c5@acm.org>
+Date:   Tue, 16 Aug 2022 13:21:24 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cover.1660592640.git.gustavoars@kernel.org>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+Subject: Re: [PATCH v2 2/2] scsi: sd: Rework asynchronous resume support
+Content-Language: en-US
+To:     Geert Uytterhoeven <geert@linux-m68k.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        scsi <linux-scsi@vger.kernel.org>,
+        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
+        John Garry <john.garry@huawei.com>, ericspero@icloud.com,
+        jason600.groome@gmail.com,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-ide@vger.kernel.org,
+        James Bottomley <James.Bottomley@hansenpartnership.com>
+References: <20220630195703.10155-1-bvanassche@acm.org>
+ <alpine.DEB.2.22.394.2207191125130.1006766@ramsan.of.borg>
+ <db19ed29-e7f9-e5b0-3a6c-f2812078a07d@acm.org>
+ <CAMuHMdVzsgSYtbJQnaigNax_JbxPsQfU+gHcteS-ojWbxUdMfw@mail.gmail.com>
+ <CAMuHMdWtxBj8ug7AHTqentF8UD4jpO2sgoWWcQCOvEKLJtdq8A@mail.gmail.com>
+ <506ca1a6-1122-5755-fc74-60f7c7bfbd0d@acm.org>
+ <CAMuHMdVQ2K2v8jpsFfOMk99DG_sBB4_ioiQRroC7K_Ov1wvp9w@mail.gmail.com>
+ <6f70e742-9d8a-f389-0482-0ba9696bf445@acm.org>
+ <CAMuHMdVc+ATGV-=R3uV6RyF0-mZiuKv7HpmogRBgqGVyO-MKWg@mail.gmail.com>
+ <54e20a27-a10b-b77a-e950-1d3398e2e907@acm.org>
+ <CAMuHMdURQpAEGgv4cY7v0rqzs12v2TT=Amt26Y0OoBSW7YAoaw@mail.gmail.com>
+ <084e7c5a-f98d-d61e-de81-83525851ecf9@acm.org>
+ <CAMuHMdW2vOC8ZsE_XF8TbSNoF9zCrwq7UkGZ5jXen1E1mTZe+g@mail.gmail.com>
+ <14ec47f3-f3b8-61c7-2c64-d96d00dd7076@acm.org>
+ <CAMuHMdW7nGxV_3Z2JV_TCM+WtTdYv5P+0cE6Tw=6krcseNCdAw@mail.gmail.com>
+ <40700595-8c83-1b61-ea93-ea9554bfb2db@acm.org>
+ <CAMuHMdV_hzvd2YkJfRqXm8SmKuibWiUy-c7XpGCnEr86HMx=_Q@mail.gmail.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <CAMuHMdV_hzvd2YkJfRqXm8SmKuibWiUy-c7XpGCnEr86HMx=_Q@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Aug 15, 2022 at 04:35:19PM -0500, Gustavo A. R. Silva wrote:
-> Hi!
+On 8/15/22 11:26, Geert Uytterhoeven wrote:
+> On Mon, Aug 15, 2022 at 3:49 PM Bart Van Assche <bvanassche@acm.org> wrote:
+>> Would it be possible to share the output of the command below? That
+>> should reveal which ATA driver is active on the test setup.
+>>
+>> find /sys -name proc_name | xargs grep -aH .
 > 
-> This series aims to replace one-element arrays with flexible-array
-> members in drivers/scsi/megaraid/
-> 
-> I followed the below steps in order to verify the changes don't
-> significally impact the code (.text) section generated by the compiler,
-> for each object file involved:
-> 
-> 1. Prepare the build with the following settings and configurations:
-> 
->         linux$ KBF="KBUILD_BUILD_TIMESTAMP=1970-01-01 KBUILD_BUILD_USER=user
->                KBUILD_BUILD_HOST=host KBUILD_BUILD_VERSION=1"
->         linux$ make $KBF allyesconfig
->         linux$ ./scripts/config -d GCOV_KERNEL -d KCOV -d GCC_PLUGINS \
->                          -d IKHEADERS -d KASAN -d UBSAN \
->                          -d DEBUG_INFO_NONE \
->                          -e DEBUG_INFO_DWARF_TOOLCHAIN_DEFAULT
->         linux$ make $KBF olddefconfig
-> 
-> 2. Build drivers/scsi/megaraid/ with the same settings and configurations
->    as in Step 1, and copy the generated object files in directory before/
-> 
->         linux$ make -j128 $KBF drivers/scsi/megaraid/
->         linux$ mkdir -p before
->         linux$ cp drivers/scsi/megaraid/*.o before/
-> 
-> 3. Implement all the needed changes and create the patch series. In this
->    case, six patches.
-> 
->         linux$ vi code.c
->                ...do the magic :)
->         linux$ git format-patch ...all the rest
-> 
-> 4. Apply a patch at a time (of the previously created series) and, after
->    applying EACH patch, build (as in Step 2) drivers/scsi/megaraid/ and
->    copy the generated object files in directory after/
-> 
-> 5. Compare the code section (.text) of each before/file.o and
->    after/file.o. I use the following bash script:
-> 
->    compare.sh:
->         ARGS="--disassemble --demangle --reloc --no-show-raw-insn --section=.text"
->         for i in $(cd before && echo *.o); do
->                 echo $i
->                 diff -u <(objdump $ARGS before/$i | sed "0,/^Disassembly/d") \
->                         <(objdump $ARGS after/$i  | sed "0,/^Disassembly/d")
->         done
-> 
->    linux$ ./compare.sh > code_comparison.diff
-> 
-> 6. Open the code_comparison.diff file from the example above, look for
->    any differences that might show up and analyze them in order to
->    determine their impact, and what (if something) should be changed
->    or study further.
-> 
-> The above process (code section comparison of object files) is based on
-> this[0] blog post by Kees Cook. The compiler used to build the code was
-> GCC-12.
-> 
-> In this series I only found the following sorts of differences in files
-> megaraid_sas.o and megaraid_sas_base.o:
-> 
-> ...
-> ...@@ -7094,24 +7094,24 @@
->      6302:      movq   $0x0,0x1e20(%rbx)
->      630d:      test   %r15,%r15
->      6310:      je     6316 <megasas_aen_polling+0x56>
-> -                       6312: R_X86_64_PC32     .text.unlikely+0x3ae3
-> +                       6312: R_X86_64_PC32     .text.unlikely+0x3ae0
->      6316:      mov    0x0(%rip),%eax        # 631c <megasas_aen_polling+0x5c>
->                         6318: R_X86_64_PC32     event_log_level-0x4
->      631c:      mov    0xc(%r15),%r14d
->      6320:      lea    0x2(%rax),%edx
->      6323:      cmp    $0x6,%edx
->      6326:      ja     632c <megasas_aen_polling+0x6c>
-> -                       6328: R_X86_64_PC32     .text.unlikely+0x3ac3
-> +                       6328: R_X86_64_PC32     .text.unlikely+0x3ac0
->      632c:      mov    %r14d,%edx
->      632f:      sar    $0x18,%edx
->      6332:      mov    %edx,%ecx
->      6334:      cmp    %eax,%edx
->      6336:      jge    633c <megasas_aen_polling+0x7c>
-> -                       6338: R_X86_64_PC32     .text.unlikely+0x399c
-> +                       6338: R_X86_64_PC32     .text.unlikely+0x3999
-> ...
-> 
-> All of them have to do with the relocation of symbols in the
-> .text.unlikely subsection and they don't seem to be of any actual
-> relevance. So, we can safely ignore them.
+> /sys/devices/platform/soc/ee300000.sata/ata1/host0/scsi_host/host0/proc_name:sata_rcar
 
-If there's a revision of this series, it might make sense to explicitly
-state "no binary code differences" for these changes. (The location of
-the relocations don't matter, as you say.)
+Thanks Geert for the help. Although I already posted a revert, I'm still 
+trying to root-cause this issue. Do you perhaps know whether sata_rcar 
+controllers support NCQ and if so, what queue depth these controllers 
+support? I think that information is available in sysfs. Here is an 
+example for a VM:
 
-Reviewed-by: Kees Cook <keescook@chromium.org>
+# (cd /sys/class/scsi_device && for a in */device/*/*/ncq_prio_enable; 
+do p=${a%/ncq_prio_enable}; grep -qi ata $p/inquiry || continue; grep 
+-aH . $p/{queue_depth,ncq*}; done)
+2:0:0:0/device/driver/2:0:0:0/queue_depth:32
+2:0:0:0/device/driver/2:0:0:0/ncq_prio_enable:0
+2:0:0:0/device/driver/2:0:0:0/ncq_prio_supported:0
+2:0:0:0/device/generic/device/queue_depth:32
+2:0:0:0/device/generic/device/ncq_prio_enable:0
+2:0:0:0/device/generic/device/ncq_prio_supported:0
+6:0:0:1/device/driver/2:0:0:0/queue_depth:32
+6:0:0:1/device/driver/2:0:0:0/ncq_prio_enable:0
+6:0:0:1/device/driver/2:0:0:0/ncq_prio_supported:0
 
-> Also, notice there is an open issue in bugzilla.kernel.org [1] that's
-> seems could be fixed by this series. :)
-> 
-> This helps with the ongoing efforts to tighten the FORTIFY_SOURCE
-> routines on memcpy() and help us make progress towards globally
-> enabling -fstrict-flex-arrays [2].
-> 
-> Link: https://en.wikipedia.org/wiki/Flexible_array_member
-> Link: https://www.kernel.org/doc/html/v5.10/process/deprecated.html#zero-length-and-one-element-arrays
-> Link: https://github.com/KSPP/linux/issues/79
-> Link: https://github.com/KSPP/linux/issues/109
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=215943 [1]
-> Link: https://reviews.llvm.org/D126864 [2]
-> 
-> Thanks
-> 
-> [0] https://outflux.net/blog/archives/2022/06/24/finding-binary-differences/
-> 
-> Changes in v3:
->  - Split the struct_size() changes into a couple of separate patches.
->  - Use objdump to compare the code (.text) sections of the object
->    files before and after the changes.
->  - Modify MR_FW_RAID_MAP_ALL and MR_DRV_RAID_MAP_ALL structures. Change
->    suggested by Kees Cook.
-> 
-> Changes in v2:
->  - Revert changes in struct MR_FW_RAID_MAP_ALL.
-> 
-> Gustavo A. R. Silva (6):
->   scsi: megaraid_sas: Replace one-element array with flexible-array
->     member in MR_FW_RAID_MAP
->   scsi: megaraid_sas: Replace one-element array with flexible-array
->     member in MR_FW_RAID_MAP_DYNAMIC
->   scsi: megaraid_sas: Replace one-element array with flexible-array
->     member in MR_DRV_RAID_MAP
->   scsi: megaraid_sas: Replace one-element array with flexible-array
->     member in MR_PD_CFG_SEQ_NUM_SYNC
->   scsi: megaraid_sas: Use struct_size() in code related to struct
->     MR_FW_RAID_MAP
->   scsi: megaraid_sas: Use struct_size() in code related to struct
->     MR_PD_CFG_SEQ_NUM_SYNC
-> 
->  drivers/scsi/megaraid/megaraid_sas_base.c   | 20 ++++++++++----------
->  drivers/scsi/megaraid/megaraid_sas_fp.c     |  6 +++---
->  drivers/scsi/megaraid/megaraid_sas_fusion.c |  2 +-
->  drivers/scsi/megaraid/megaraid_sas_fusion.h | 12 ++++++------
->  4 files changed, 20 insertions(+), 20 deletions(-)
-> 
-> -- 
-> 2.34.1
-> 
+Thanks,
 
--- 
-Kees Cook
+Bart.
