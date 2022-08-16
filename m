@@ -2,110 +2,106 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A6E9C25B0F
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Aug 2022 05:23:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7152C2BB41
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Aug 2022 07:43:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231623AbiHPFXz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 16 Aug 2022 01:23:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45440 "EHLO
+        id S232359AbiHPHno (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 16 Aug 2022 03:43:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47244 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231585AbiHPFXk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Aug 2022 01:23:40 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 342EBC13;
-        Mon, 15 Aug 2022 14:51:45 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id C61F0B811C1;
-        Mon, 15 Aug 2022 21:51:43 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18BC8C433C1;
-        Mon, 15 Aug 2022 21:51:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660600302;
-        bh=ort1VpN7VBYM3KDJV+dEWBj27en+cZk8wTHPLkd0HQ4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=V6MMkkaJ4eu1Xty7dVN4Dk3/poYM21tH0ERMKZ1HEZ3rCVFQ34+mKM/z5TNNjqVNP
-         SM3BvLgiKvUSI/D0tqaXAbvFnLbQRXsW92v02sJP4BYFkAVkeSCr4cyGQrhkGDed4k
-         Aea+grLX2CwBcgAM76z9JUgJUbiEbk91+5BSqUoYevGqeOMUTJo+2pKtcko+/Qcl9p
-         leqrt7ct/k3/zjATZ3JeqTXHqpLVvcd4GngjNDMDPpl7YdyBTsZsOBvH2CCFHDai5n
-         WgxpqBJ8mq8tHgXhyZU2n0zj7TxZMyRo2PKWp3zYgzKUYwOM+wfsYlqWe5GAHy2Rv2
-         5icoHVkKXRNQQ==
-Date:   Mon, 15 Aug 2022 16:51:36 -0500
-From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To:     megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Kees Cook <keescook@chromium.org>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        linux-hardening@vger.kernel.org
-Subject: [PATCH v3 5/6] scsi: megaraid_sas: Use struct_size() in code related
- to struct MR_FW_RAID_MAP
-Message-ID: <1211398fb8f7ab332a93f4f8f1a63e8168dbd002.1660592640.git.gustavoars@kernel.org>
-References: <cover.1660592640.git.gustavoars@kernel.org>
+        with ESMTP id S232350AbiHPHnX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Aug 2022 03:43:23 -0400
+Received: from mail-ej1-x629.google.com (mail-ej1-x629.google.com [IPv6:2a00:1450:4864:20::629])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9453E9C53B;
+        Mon, 15 Aug 2022 21:36:54 -0700 (PDT)
+Received: by mail-ej1-x629.google.com with SMTP id i14so16783444ejg.6;
+        Mon, 15 Aug 2022 21:36:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc;
+        bh=mJgV2TbRMYBhyG0pUzyspC3dQe6/h27C+GdQ4x8eYhI=;
+        b=KbZX+lRZQ/8NbexleO3N+VJjhv9Vmq0CJ+0Do/vOBkPR36i/9DgWwfWOAVOFcSH3/y
+         FE7sXalvbrTPyhvnu5GNCF7wC9rdOe9oOVwvdBlT+9dfZBk9vEvX6LKJoXN8VIv2cTra
+         LeVgYU5eljCGgVyarFGUipBvVoWwe5pDJvKZ/3HqkU9iZ57QiGGNPW9snsbREqLFrGvl
+         EkkP3gPxe/Ck4lcmerZIm6AaJkcDO4Bt8aUw0nxT3mNiSYff3XQmbuuSvnwxSOSKQQ2S
+         49Bd4Imsae/ftIc70j3tegWAtiqCTOPi5ialHK72EbL3lYatcQUS5UjSUdl0+0/tE9Tx
+         Skhw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc;
+        bh=mJgV2TbRMYBhyG0pUzyspC3dQe6/h27C+GdQ4x8eYhI=;
+        b=eq8vN2VnT6otKDzy7Vk3FvwnKM/IPgGxTXzaXKHzt3y7BPmInPqDE7FzHeDdQACvYr
+         TcU8Relk4traL3qHKfXJ6pyn3u1w22zKXWXPaa/1EpBw8oK57HAHAcN/NU2VZR+4QmFg
+         aoF4w5IRC18qLNx0Z9hHhXkUwcwxhYeWgUDLjeuDXLq3xecT9ZZ3+Qsant3WCnAqCwDX
+         u/p12PIan0YC/+CMN1jCFzZ6Zaw3+b33l7gmxEa4jgci39c97cjoxL8vCDAG/mQcRMif
+         eG9I/15gRlp0TOxNDYp6g6Tzyz/uvyTVXE0e3/R4JWE3Ts0jgXJx1c3kZxPb0vS/I2iG
+         kzFQ==
+X-Gm-Message-State: ACgBeo0oIO7uE9MUcRNrrZX1b2ciAIGEQXCl1I7h8kUhBMnUmvtmpczr
+        eG+XYNB7KfycmHRrRS7xM8TR2EaAL5Ejx/bJ0EZpvfiBH+ngPwJ6KLU=
+X-Google-Smtp-Source: AA6agR5ADSm2dU6KocBDxJD+F53KZs3OdtemlEgbiSzNT5GBwCk/Q28gr7WNLxxA5ujpTJ5J/8UzPJ8gEDofT0FSWQA=
+X-Received: by 2002:a17:907:2809:b0:730:a723:9ddf with SMTP id
+ eb9-20020a170907280900b00730a7239ddfmr12060393ejc.42.1660624610328; Mon, 15
+ Aug 2022 21:36:50 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cover.1660592640.git.gustavoars@kernel.org>
+References: <20220815164324.645550-1-haowenchao@huawei.com> <3ed022dd-3026-542a-c3b0-e4f4005208aa@linux.ibm.com>
+In-Reply-To: <3ed022dd-3026-542a-c3b0-e4f4005208aa@linux.ibm.com>
+From:   wenchao hao <haowenchao22@gmail.com>
+Date:   Tue, 16 Aug 2022 12:36:38 +0800
+Message-ID: <CAOptpSMqfiApXn2jgmaLu-CdqyGUr7yQ1v3AwQUDev4mFjaqJQ@mail.gmail.com>
+Subject: Re: [PATCH] scsi: increase scsi device's iodone_cnt in scsi_timeout()
+To:     Steffen Maier <maier@linux.ibm.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Wenchao Hao <haowenchao@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Prefer struct_size() over open-coded versions of idiom:
+On Tue, Aug 16, 2022 at 12:53 AM Steffen Maier <maier@linux.ibm.com> wrote:
+>
+> On 8/15/22 18:43, Wenchao Hao wrote:
+> > The iodone_cnt might be less than iorequest_cnt because
+> > we did not increase the iodone_cnt when a command is done
+> > from timeout.
+> >
+> > Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
+> > ---
+> >   drivers/scsi/scsi_error.c | 1 +
+> >   1 file changed, 1 insertion(+)
+> >
+> > diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> > index 448748e3fba5..d21ae0090166 100644
+> > --- a/drivers/scsi/scsi_error.c
+> > +++ b/drivers/scsi/scsi_error.c
+> > @@ -355,6 +355,7 @@ enum blk_eh_timer_return scsi_timeout(struct request *req)
+> >                */
+> >               if (test_and_set_bit(SCMD_STATE_COMPLETE, &scmd->state))
+> >                       return BLK_EH_RESET_TIMER;
+> > +             atomic_inc(&scmd->device->iodone_cnt);
+> >               if (scsi_abort_command(scmd) != SUCCESS) {
+> >                       set_host_byte(scmd, DID_TIME_OUT);
+> >                       scsi_eh_scmd_add(scmd);
+>
+> Not sure, but can't we still get a (late) regular completion even after the
+> timeout happened (double accounting) and before we successfully aborted the
+> command?
+>
+>
+The flag SCMD_STATE_COMPLETE would take care of it, this would make
+sure a scsi command
+is done from timeout or regular completion exclusively.
 
-	sizeof(struct-with-flex-array) + sizeof(type-of-flex-array) * count
+When scsi_abort_command() begins to handle a command, the command
+would be finished by
+scsi_finish_command() or retried by requeue function.
 
-where count is the max number of items the flexible array is supposed to
-have.
+If a command finished by scsi_finish_command(), it would not add the iodone_cnt.
+If a command is requeued, it would call scsi_dispatch_cmd() again and
+another iorequest_cnt would be
+added.
 
-Link: https://github.com/KSPP/linux/issues/160
-Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
----
-Changes in v3:
- - This patch is new in the series.
-
- drivers/scsi/megaraid/megaraid_sas_base.c | 6 +++---
- drivers/scsi/megaraid/megaraid_sas_fp.c   | 6 +++---
- 2 files changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 2dabe0b4823e..09eef1bef430 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -5157,9 +5157,9 @@ static void megasas_update_ext_vd_details(struct megasas_instance *instance)
- 		fusion->current_map_sz = ventura_map_sz;
- 		fusion->max_map_sz = ventura_map_sz;
- 	} else {
--		fusion->old_map_sz =  sizeof(struct MR_FW_RAID_MAP) +
--					(sizeof(struct MR_LD_SPAN_MAP) *
--					instance->fw_supported_vd_count);
-+		fusion->old_map_sz =
-+			struct_size((struct MR_FW_RAID_MAP *)0, ldSpanMap,
-+				    instance->fw_supported_vd_count);
- 		fusion->new_map_sz =  sizeof(struct MR_FW_RAID_MAP_EXT);
- 
- 		fusion->max_map_sz =
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
-index b2ec7a3f7650..da1cad1ee123 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fp.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
-@@ -326,9 +326,9 @@ u8 MR_ValidateMapInfo(struct megasas_instance *instance, u64 map_id)
- 	else if (instance->supportmax256vd)
- 		expected_size = sizeof(struct MR_FW_RAID_MAP_EXT);
- 	else
--		expected_size =
--			(sizeof(struct MR_FW_RAID_MAP) +
--			(sizeof(struct MR_LD_SPAN_MAP) * le16_to_cpu(pDrvRaidMap->ldCount)));
-+		expected_size = struct_size((struct MR_FW_RAID_MAP *)0,
-+					    ldSpanMap,
-+					    le16_to_cpu(pDrvRaidMap->ldCount));
- 
- 	if (le32_to_cpu(pDrvRaidMap->totalSize) != expected_size) {
- 		dev_dbg(&instance->pdev->dev, "megasas: map info structure size 0x%x",
--- 
-2.34.1
-
+According to above analysis, I think it's suitable to increase iodone_cnt here.
