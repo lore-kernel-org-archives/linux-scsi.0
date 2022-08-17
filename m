@@ -2,85 +2,112 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1969C3F6B0
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Aug 2022 21:48:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBADCC25B08
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Aug 2022 07:26:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237710AbiHPVrW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 16 Aug 2022 17:47:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55370 "EHLO
+        id S231670AbiHQH0C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Aug 2022 03:26:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56036 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237713AbiHPVrT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Aug 2022 17:47:19 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF47474B9F
-        for <linux-scsi@vger.kernel.org>; Tue, 16 Aug 2022 14:47:18 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4498161203
-        for <linux-scsi@vger.kernel.org>; Tue, 16 Aug 2022 21:47:18 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 99D3AC433D6
-        for <linux-scsi@vger.kernel.org>; Tue, 16 Aug 2022 21:47:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660686437;
-        bh=uV6xkkqFqNCUH+Q+GbIjZuiuZka9pweMBAsfeqjzb2M=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=C1Nkn3o2l9FRFdcOCp65L2FFjJJY0z3LeMWtgrb/GEQnay5xJXKvksbogYAj8lEqB
-         QZDwZKeecG+r627w25dzzU4MLPPinmS8/yXB0StqMV6NSgHKhJdNKQC4SXbm/G3fh/
-         dugCZZM12T8qPds8VCtp2vHe5We6oHiqlYYSZVwGuGTI6hYvixzI/bLcHfhbi9tDH0
-         VxSeAHyGOzUS4vbJQs3eYrT0A/pFpXI5Q28Nw8rbsqI7fY00vrxNjfvE4qE2SgU5qy
-         gbUA8YWW8VkPC80fNR+0M0w79tJvKZLc6xPUqd6ByjMjXnjtGdO1pcylQFirP1Lwoh
-         ceGlq7jqq1qFA==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 81755C433EA; Tue, 16 Aug 2022 21:47:17 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 215943] UBSAN: array-index-out-of-bounds in
- drivers/scsi/megaraid/megaraid_sas_fp.c:103:32
-Date:   Tue, 16 Aug 2022 21:47:17 +0000
-X-Bugzilla-Reason: AssignedTo
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: None
-X-Bugzilla-Product: IO/Storage
-X-Bugzilla-Component: SCSI
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: gustavo@embeddedor.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: cc
-Message-ID: <bug-215943-11613-T9RqPFZqB6@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-215943-11613@https.bugzilla.kernel.org/>
-References: <bug-215943-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        with ESMTP id S229565AbiHQH0B (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Aug 2022 03:26:01 -0400
+X-Greylist: delayed 312 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 17 Aug 2022 00:26:00 PDT
+Received: from mx.swemel.ru (mx.swemel.ru [95.143.211.150])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90DE06B8F1;
+        Wed, 17 Aug 2022 00:26:00 -0700 (PDT)
+From:   Denis Arefev <arefev@swemel.ru>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=swemel.ru; s=mail;
+        t=1660721158;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=+8trc0HzuNdzJYDIdm9RSEE7rJ+rGGw4sPL4RMjtjlQ=;
+        b=iRtuNf9lzoeIhMzLHY2WYqbjs3nDA+X4xwdAg5v5y1/yECP3yusfpj96vylF8IVSgFfB7q
+        QOIIpvuYQY1HgX7lYgLIBCmwtNE+x2NxXwcE7zWwahTBbmZghTxHPi7A8xDETGkzZzBSH0
+        9DM68Ke+wIOPmnLFmRHyDyv4fzQ7xY0=
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org (open list:SCSI SUBSYSTEM),
+        linux-kernel@vger.kernel.org (open list),
+        ldv-project@linuxtesting.org, trufanov@swemel.ru, vfh@swemel.ru
+Subject: [PATCH] Add qlogicfas408_reset in qlogic_resume
+Date:   Wed, 17 Aug 2022 10:25:58 +0300
+Message-Id: <20220817072558.47163-1-arefev@swemel.ru>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D215943
+Signed-off-by: Denis Arefev <arefev@swemel.ru>
+---
+ drivers/scsi/pcmcia/qlogic_stub.c |  2 +-
+ drivers/scsi/qlogicfas408.c       | 19 +++++++++++++++++++
+ drivers/scsi/qlogicfas408.h       |  1 +
+ 3 files changed, 21 insertions(+), 1 deletion(-)
 
-gustavo@embeddedor.com changed:
+diff --git a/drivers/scsi/pcmcia/qlogic_stub.c b/drivers/scsi/pcmcia/qlogic_stub.c
+index 828d53faf09a..710a0c35bf12 100644
+--- a/drivers/scsi/pcmcia/qlogic_stub.c
++++ b/drivers/scsi/pcmcia/qlogic_stub.c
+@@ -268,7 +268,7 @@ static int qlogic_resume(struct pcmcia_device *link)
+ 		outb(0x04, link->resource[0]->start + 0xd);
+ 	}
+ 	/* Ugggglllyyyy!!! */
+-	qlogicfas408_host_reset(NULL);
++	qlogicfas408_reset(info->host);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/scsi/qlogicfas408.c b/drivers/scsi/qlogicfas408.c
+index 136681ad18a5..c5f9efe044e0 100644
+--- a/drivers/scsi/qlogicfas408.c
++++ b/drivers/scsi/qlogicfas408.c
+@@ -516,6 +516,24 @@ int qlogicfas408_host_reset(struct scsi_cmnd *cmd)
+ 	return SUCCESS;
+ }
+ 
++/*
++ *	Reset SCSI bus
++ */
++
++int qlogicfas408_reset(struct  Scsi_Host *host)
++{
++	struct qlogicfas408_priv *priv = get_priv_by_host(host);
++	unsigned long flags;
++
++	priv->qabort = 2;
++
++	spin_lock_irqsave(host->host_lock, flags);
++	ql_zap(priv);
++	spin_unlock_irqrestore(host->host_lock, flags);
++
++	return SUCCESS;
++}
++
+ /*
+  *	Return info string
+  */
+@@ -608,6 +626,7 @@ EXPORT_SYMBOL(qlogicfas408_info);
+ EXPORT_SYMBOL(qlogicfas408_queuecommand);
+ EXPORT_SYMBOL(qlogicfas408_abort);
+ EXPORT_SYMBOL(qlogicfas408_host_reset);
++EXPORT_SYMBOL(qlogicfas408_reset);
+ EXPORT_SYMBOL(qlogicfas408_biosparam);
+ EXPORT_SYMBOL(qlogicfas408_ihandl);
+ EXPORT_SYMBOL(qlogicfas408_get_chip_type);
+diff --git a/drivers/scsi/qlogicfas408.h b/drivers/scsi/qlogicfas408.h
+index a971db11d293..593e59e1697e 100644
+--- a/drivers/scsi/qlogicfas408.h
++++ b/drivers/scsi/qlogicfas408.h
+@@ -110,6 +110,7 @@ int qlogicfas408_biosparam(struct scsi_device * disk,
+ 			   sector_t capacity, int ip[]);
+ int qlogicfas408_abort(struct scsi_cmnd * cmd);
+ extern int qlogicfas408_host_reset(struct scsi_cmnd *cmd);
++extern int qlogicfas408_reset(struct Scsi_Host *host);
+ const char *qlogicfas408_info(struct Scsi_Host *host);
+ int qlogicfas408_get_chip_type(int qbase, int int_type);
+ void qlogicfas408_setup(int qbase, int id, int int_type);
+-- 
+2.25.1
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |gustavo@embeddedor.com
-
---- Comment #7 from gustavo@embeddedor.com ---
-V3 and, hopefully, the final one. :)=20
-
-https://lore.kernel.org/linux-hardening/cover.1660592640.git.gustavoars@ker=
-nel.org/
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are the assignee for the bug.=
