@@ -2,130 +2,105 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F4031C25B08
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Aug 2022 13:52:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5464C32771
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Aug 2022 14:59:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239663AbiHQNwY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Aug 2022 09:52:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41884 "EHLO
+        id S237492AbiHQO6h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Aug 2022 10:58:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45866 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236307AbiHQNwU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Aug 2022 09:52:20 -0400
-Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BDB9996FF7;
-        Wed, 17 Aug 2022 06:52:17 -0700 (PDT)
-Received: by mail-pf1-f172.google.com with SMTP id a22so11535429pfg.3;
-        Wed, 17 Aug 2022 06:52:17 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc;
-        bh=vvb07CsEA4UGuE0zO/84ZhVWoMg9TxptV9DClaQUYJQ=;
-        b=txZxiXqLmfGW6TCPCMkj4JJYFsVxTXK7OujzL6g2VjA+NW3qWi4wfZuzzfq302WGBs
-         Uftmvwg47KLUbDJpk0CF+PLrUt9OGLFLCTT5HlpFxWUVY3cMT+92LPkw9QBuP/s5NEg2
-         K3KrTlcXelz7HypZqwpV3czwrtGB9vCFB9iVAQA5Kfxe10lBmQMLTP2rZm5NJVabDR6Q
-         DbJO0QUk98vWvbMWzSNPDFl+z1lm9CbCkH1epq9AUXItDlUm0sUuu6ssCjtwwZhToUTD
-         JzPybA6XWKfBxaNv6bwl2yIvgJMm4WzUK8a9J03w2gvBrWj4OWpwPks1fOdbh9Hs/di6
-         vOZg==
-X-Gm-Message-State: ACgBeo1XlyGYWVpF95tf4hfyoGsrQlakpws/GInT2LGmu3rsjOfSBPrB
-        3DibwOHzmxm2KI/8z95BOXY=
-X-Google-Smtp-Source: AA6agR4r+iTGO7JHjATBc8wRWNuVuNqlGWU3KvnpF2F1XDDOLXI54rzA2PUZqh1xddk2wKBgSl/lpQ==
-X-Received: by 2002:a62:a21a:0:b0:532:4191:610a with SMTP id m26-20020a62a21a000000b005324191610amr25682373pff.75.1660744336940;
-        Wed, 17 Aug 2022 06:52:16 -0700 (PDT)
-Received: from [192.168.3.217] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id z8-20020a170903018800b001729da53673sm1578285plg.14.2022.08.17.06.52.15
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 17 Aug 2022 06:52:16 -0700 (PDT)
-Message-ID: <ceba3c96-5f32-9b5a-bacc-0eb942b9b90b@acm.org>
-Date:   Wed, 17 Aug 2022 06:52:14 -0700
+        with ESMTP id S231552AbiHQO6f (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Aug 2022 10:58:35 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A20F2F64D;
+        Wed, 17 Aug 2022 07:58:34 -0700 (PDT)
+Received: from fraeml705-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4M79xt2j7bz67MfB;
+        Wed, 17 Aug 2022 22:53:38 +0800 (CST)
+Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
+ fraeml705-chm.china.huawei.com (10.206.15.54) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2375.24; Wed, 17 Aug 2022 16:58:32 +0200
+Received: from localhost.localdomain (10.69.192.58) by
+ lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Wed, 17 Aug 2022 15:58:29 +0100
+From:   John Garry <john.garry@huawei.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <jinpu.wang@cloud.ionos.com>, <damien.lemoal@opensource.wdc.com>,
+        <yangxingui@huawei.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, <hare@suse.de>,
+        John Garry <john.garry@huawei.com>
+Subject: [PATCH v2 0/6] libsas and drivers: NCQ error handling
+Date:   Wed, 17 Aug 2022 22:52:08 +0800
+Message-ID: <1660747934-60059-1-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.1.2
-Subject: Re: [PATCH] scsi: core: Fix block I/O error of USB card reader during
- resume
-Content-Language: en-US
-To:     Michael Wu <michael@allwinnertech.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20220817083438.118293-1-michael@allwinnertech.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220817083438.118293-1-michael@allwinnertech.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ lhrpeml500003.china.huawei.com (7.191.162.67)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/17/22 01:34, Michael Wu wrote:
-> When accessing storage device via an USB card reader, a block I/O error
-> occurs during resume:
-> 
-> PM: suspend exit
-> sd 0: 0:0:0: [sda] tag#0 UNKNOWN(0x2003) Result: hostbyte=0x00 driverbyte
-> =0x08
-> sd 0: 0:0:0: [sda] tag#0 Sense Key : 0x6 [current]
-> sd 0: 0:0:0: [sda] tag#0 ASC=0x28 ASCQ=0x0
-> sd 0: 0:0:0: [sda] tag#0 CDB: opcode=0x28 28 00 00 17 ce e1 00 00 f0 00
-> blk_update_request: I/O error, dev sda, sector 1560289 op 0x0:(READ) flags
-> 0x84700 phys_seg 19 prio class 0
-> sd 0: 0:0:0: [sda] tag#0 device offline or changed
-> 
-> Fix it by changing the action in scsi_io_completion_action() from
-> ACTION_FAIL to ACTION_RETRY by adding the condition `cmd->device->
-> lockable`.
-> 
-> Signed-off-by: Michael Wu <michael@allwinnertech.com>
-> ---
->   drivers/scsi/scsi_lib.c | 3 ++-
->   1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 4dbd29ab1dcc..4bc480721947 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -704,7 +704,8 @@ static void scsi_io_completion_action(struct scsi_cmnd *cmd, int result)
->   	} else if (sense_valid && sense_current) {
->   		switch (sshdr.sense_key) {
->   		case UNIT_ATTENTION:
-> -			if (cmd->device->removable) {
-> +			if (cmd->device->removable &&
-> +			    cmd->device->lockable) {
->   				/* Detected disc change.  Set a bit
->   				 * and quietly refuse further access.
->   				 */
+As reported in [0], the pm8001 driver NCQ error handling more or less
+duplicates what libata does in link error handling, as follows:
+- abort all commands
+- do autopsy with read log ext 10 command
+- reset the target to recover
 
-To me the above doesn't look like a good way to address this. I don't 
-see why a device being lockable should control whether or not a unit 
-attention results in a retry? Shouldn't the decision taken by 
-scsi_io_completion_action() depend on the ASC and ASCQ codes rather than 
-on whether a device is removable and/or lockable?
+Indeed for the hisi_sas driver we want to add similar handling for NCQ
+errors.
 
-BTW, the code modified by the above patch is old. This is what I found 
-in the 2002 version of scsi_lib.c:
+This series add a new libsas API - sas_ata_device_link_abort() - to handle
+host NCQ errors, and fixes up pm8001 and hisi_sas drivers to use it. As
+mentioned in the pm8001 changeover patch, I would prefer a better place to
+locate the SATA ABORT command (rather that nexus reset callback).
 
-if ((SCpnt->sense_buffer[0] & 0x7f) == 0x70
-     && (SCpnt->sense_buffer[2] & 0xf) == UNIT_ATTENTION) {
-         if (SCpnt->device->removable) {
-                 /* detected disc change.  set a bit and quietly refuse
-                  * further access.
-                  */
-                 SCpnt->device->changed = 1;
-                 SCpnt = scsi_end_request(SCpnt, 0, this_count);
-                 return;
-         } else {
-                 /*
-                  * Must have been a power glitch, or a
-                  * bus reset.  Could not have been a
-                  * media change, so we just retry the
-                  * request and see what happens.
-                  */
-                 scsi_queue_next_request(q, SCpnt);
-                 return;
-}
+Damien kindly tested the v1 series for pm8001, but any further pm8001
+testing would be appreciated as I have since tweaked
+sas_ata_device_link_abort(). This is because the pm8001 driver hangs on my
+arm64 machine read log ext10 command.
 
-Bart.
+Finally with these changes we can make the libsas task alloc/free APIs
+private, which they should always have been.
 
-Thanks,
+Based on v6.0-rc1
 
-Bart.
+[0] https://lore.kernel.org/linux-scsi/8fb3b093-55f0-1fab-81f4-e8519810a978@huawei.com/
+
+Changes since v1:
+- Rename sas_ata_link_abort() -> sas_ata_device_link_abort()
+- Set EH RESET flag in sas_ata_device_link_abort()
+- Add Jack's Ack tags
+- Rebase
+
+John Garry (5):
+  scsi: pm8001: Modify task abort handling for SATA task
+  scsi: libsas: Add sas_ata_device_link_abort()
+  scsi: pm8001: Use sas_ata_device_link_abort() to handle NCQ errors
+  scsi: hisi_sas: Don't issue ATA softreset in hisi_sas_abort_task()
+  scsi: libsas: Make sas_{alloc, alloc_slow, free}_task() private
+
+Xingui Yang (1):
+  scsi: hisi_sas: Add SATA_DISK_ERR bit handling for v3 hw
+
+ drivers/scsi/hisi_sas/hisi_sas_main.c  |   5 +-
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  22 ++-
+ drivers/scsi/libsas/sas_ata.c          |  11 ++
+ drivers/scsi/libsas/sas_init.c         |   3 -
+ drivers/scsi/libsas/sas_internal.h     |   4 +
+ drivers/scsi/pm8001/pm8001_hwi.c       | 194 +++++++------------------
+ drivers/scsi/pm8001/pm8001_sas.c       |  13 ++
+ drivers/scsi/pm8001/pm8001_sas.h       |   8 +-
+ drivers/scsi/pm8001/pm80xx_hwi.c       | 177 ++--------------------
+ include/scsi/libsas.h                  |   4 -
+ include/scsi/sas_ata.h                 |   5 +
+ 11 files changed, 133 insertions(+), 313 deletions(-)
+
+-- 
+2.35.3
+
