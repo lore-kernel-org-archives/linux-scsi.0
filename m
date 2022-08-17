@@ -2,71 +2,134 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5B56C25B08
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Aug 2022 08:34:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F03FCC2BB41
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Aug 2022 08:53:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229951AbiHQIey (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Aug 2022 04:34:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49174 "EHLO
+        id S233306AbiHQIxn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Aug 2022 04:53:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55256 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233113AbiHQIeu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Aug 2022 04:34:50 -0400
-Received: from out29-196.mail.aliyun.com (out29-196.mail.aliyun.com [115.124.29.196])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5332A5852F;
-        Wed, 17 Aug 2022 01:34:46 -0700 (PDT)
-X-Alimail-AntiSpam: AC=CONTINUE;BC=0.14492|-1;BR=01201311R721S26rulernew998_84748_2000303;CH=blue;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.00227074-0.000132166-0.997597;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047209;MF=michael@allwinnertech.com;NM=1;PH=DS;RN=4;RT=4;SR=0;TI=SMTPD_---.OvM4IHQ_1660725283;
-Received: from SunxiBot.allwinnertech.com(mailfrom:michael@allwinnertech.com fp:SMTPD_---.OvM4IHQ_1660725283)
-          by smtp.aliyun-inc.com;
-          Wed, 17 Aug 2022 16:34:43 +0800
-From:   Michael Wu <michael@allwinnertech.com>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: core: Fix block I/O error of USB card reader during resume
-Date:   Wed, 17 Aug 2022 16:34:38 +0800
-Message-Id: <20220817083438.118293-1-michael@allwinnertech.com>
-X-Mailer: git-send-email 2.29.0
+        with ESMTP id S229637AbiHQIxm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Aug 2022 04:53:42 -0400
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74C236745F;
+        Wed, 17 Aug 2022 01:53:39 -0700 (PDT)
+Received: from [192.168.1.103] (178.176.73.252) by msexch01.omp.ru
+ (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Wed, 17 Aug
+ 2022 11:53:30 +0300
+Subject: Re: [PATCH v2 2/2] scsi: sd: Rework asynchronous resume support
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Geert Uytterhoeven <geert@linux-m68k.org>
+CC:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        scsi <linux-scsi@vger.kernel.org>,
+        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
+        John Garry <john.garry@huawei.com>, <ericspero@icloud.com>,
+        <jason600.groome@gmail.com>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>,
+        James Bottomley <James.Bottomley@hansenpartnership.com>
+References: <20220630195703.10155-1-bvanassche@acm.org>
+ <db19ed29-e7f9-e5b0-3a6c-f2812078a07d@acm.org>
+ <CAMuHMdVzsgSYtbJQnaigNax_JbxPsQfU+gHcteS-ojWbxUdMfw@mail.gmail.com>
+ <CAMuHMdWtxBj8ug7AHTqentF8UD4jpO2sgoWWcQCOvEKLJtdq8A@mail.gmail.com>
+ <506ca1a6-1122-5755-fc74-60f7c7bfbd0d@acm.org>
+ <CAMuHMdVQ2K2v8jpsFfOMk99DG_sBB4_ioiQRroC7K_Ov1wvp9w@mail.gmail.com>
+ <6f70e742-9d8a-f389-0482-0ba9696bf445@acm.org>
+ <CAMuHMdVc+ATGV-=R3uV6RyF0-mZiuKv7HpmogRBgqGVyO-MKWg@mail.gmail.com>
+ <54e20a27-a10b-b77a-e950-1d3398e2e907@acm.org>
+ <CAMuHMdURQpAEGgv4cY7v0rqzs12v2TT=Amt26Y0OoBSW7YAoaw@mail.gmail.com>
+ <084e7c5a-f98d-d61e-de81-83525851ecf9@acm.org>
+ <CAMuHMdW2vOC8ZsE_XF8TbSNoF9zCrwq7UkGZ5jXen1E1mTZe+g@mail.gmail.com>
+ <14ec47f3-f3b8-61c7-2c64-d96d00dd7076@acm.org>
+ <CAMuHMdW7nGxV_3Z2JV_TCM+WtTdYv5P+0cE6Tw=6krcseNCdAw@mail.gmail.com>
+ <40700595-8c83-1b61-ea93-ea9554bfb2db@acm.org>
+ <CAMuHMdV_hzvd2YkJfRqXm8SmKuibWiUy-c7XpGCnEr86HMx=_Q@mail.gmail.com>
+ <3c7e338e-332e-fe80-e419-b360535533c5@acm.org>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <56cf0251-159c-3f83-78d2-859048625633@omp.ru>
+Date:   Wed, 17 Aug 2022 11:53:30 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <3c7e338e-332e-fe80-e419-b360535533c5@acm.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [178.176.73.252]
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 08/17/2022 08:36:57
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 59
+X-KSE-AntiSpam-Info: Lua profiles 172266 [Aug 17 2022]
+X-KSE-AntiSpam-Info: Version: 5.9.20.0
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 495 495 bb4e71e2e9e23696ab912b286436360a94c9b107
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {relay has no DNS name}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.73.252 in (user)
+ b.barracudacentral.org}
+X-KSE-AntiSpam-Info: 127.0.0.199:7.1.2;omp.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1
+X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.73.252
+X-KSE-AntiSpam-Info: {DNS response errors}
+X-KSE-AntiSpam-Info: Rate: 59
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 08/17/2022 08:39:00
+X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 8/17/2022 6:00:00 AM
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When accessing storage device via an USB card reader, a block I/O error
-occurs during resume:
+Hello!
 
-PM: suspend exit
-sd 0: 0:0:0: [sda] tag#0 UNKNOWN(0x2003) Result: hostbyte=0x00 driverbyte
-=0x08
-sd 0: 0:0:0: [sda] tag#0 Sense Key : 0x6 [current]
-sd 0: 0:0:0: [sda] tag#0 ASC=0x28 ASCQ=0x0
-sd 0: 0:0:0: [sda] tag#0 CDB: opcode=0x28 28 00 00 17 ce e1 00 00 f0 00
-blk_update_request: I/O error, dev sda, sector 1560289 op 0x0:(READ) flags
-0x84700 phys_seg 19 prio class 0
-sd 0: 0:0:0: [sda] tag#0 device offline or changed
+On 8/16/22 11:21 PM, Bart Van Assche wrote:
 
-Fix it by changing the action in scsi_io_completion_action() from
-ACTION_FAIL to ACTION_RETRY by adding the condition `cmd->device->
-lockable`.
+>> On Mon, Aug 15, 2022 at 3:49 PM Bart Van Assche <bvanassche@acm.org> wrote:
+>>> Would it be possible to share the output of the command below? That
+>>> should reveal which ATA driver is active on the test setup.
+>>>
+>>> find /sys -name proc_name | xargs grep -aH .
+>>
+>> /sys/devices/platform/soc/ee300000.sata/ata1/host0/scsi_host/host0/proc_name:sata_rcar
+> 
+> Thanks Geert for the help. Although I already posted a revert, I'm still trying to
+> root-cause this issue. Do you perhaps know whether sata_rcar controllers support NCQ
 
-Signed-off-by: Michael Wu <michael@allwinnertech.com>
----
- drivers/scsi/scsi_lib.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+   They don't. :-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 4dbd29ab1dcc..4bc480721947 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -704,7 +704,8 @@ static void scsi_io_completion_action(struct scsi_cmnd *cmd, int result)
- 	} else if (sense_valid && sense_current) {
- 		switch (sshdr.sense_key) {
- 		case UNIT_ATTENTION:
--			if (cmd->device->removable) {
-+			if (cmd->device->removable &&
-+			    cmd->device->lockable) {
- 				/* Detected disc change.  Set a bit
- 				 * and quietly refuse further access.
- 				 */
--- 
-2.29.0
+> and if so, what queue depth these controllers support? I think that information is available in sysfs. Here is an example for a VM:
+> 
+> # (cd /sys/class/scsi_device && for a in */device/*/*/ncq_prio_enable; do p=${a%/ncq_prio_enable}; grep -qi ata $p/inquiry || continue; grep -aH . $p/{queue_depth,ncq*}; done)
+> 2:0:0:0/device/driver/2:0:0:0/queue_depth:32
+> 2:0:0:0/device/driver/2:0:0:0/ncq_prio_enable:0
+> 2:0:0:0/device/driver/2:0:0:0/ncq_prio_supported:0
+> 2:0:0:0/device/generic/device/queue_depth:32
+> 2:0:0:0/device/generic/device/ncq_prio_enable:0
+> 2:0:0:0/device/generic/device/ncq_prio_supported:0
+> 6:0:0:1/device/driver/2:0:0:0/queue_depth:32
+> 6:0:0:1/device/driver/2:0:0:0/ncq_prio_enable:0
+> 6:0:0:1/device/driver/2:0:0:0/ncq_prio_supported:0
+> 
+> Thanks,
+> 
+> Bart.
 
+MBR, Sergey
