@@ -2,136 +2,92 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8309C00140
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Aug 2022 20:25:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C8EBC32793
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Aug 2022 21:02:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345956AbiHRUZI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 18 Aug 2022 16:25:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36942 "EHLO
+        id S1346345AbiHRVCF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 18 Aug 2022 17:02:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36902 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346041AbiHRUYm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Aug 2022 16:24:42 -0400
-Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9CE3FFDD;
-        Thu, 18 Aug 2022 13:24:21 -0700 (PDT)
-Received: by mail-pj1-f50.google.com with SMTP id bf22so2735559pjb.4;
-        Thu, 18 Aug 2022 13:24:21 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc;
-        bh=ssxLyq6CQONWY5UbiVJyKpXAkCeoKBNrNN5KQhifA1w=;
-        b=iVwRMc1ONHYg2J9nvigSbnx1W+sGcIKstiDSUGrR9mZZGasCOk/dXmxA/9N0mSqElj
-         bSXR+KDZ2jfQw2CXQvnFI13gHKOf4PPZHOcEF94o0Gbolay8Ky/SjAmm/CrR2JMUrIk/
-         4mUBcFiZP3yXswyNtyr3jguzJppbgqDOE9LVZS36sYmYdNgW9sQpCu5OY9KopKANiwxx
-         zSI3wr1HkSXHaCa57g36fYym3hG2gsXNyFd1kQ+kI2hvW/vgx8qpXFC6ETmsZ+1QXAA1
-         x59mo8Q6JeMv1aIn8NBgopSK2YTuItmuBFaP18i8RaGEpaQlzyK2X0wADUmCCCis613X
-         VBSQ==
-X-Gm-Message-State: ACgBeo2m2AQlOkdYcpA/HXtWftQ6X1vUR46Epq9/BRQFyAkqwTcGb4oY
-        QMXrIkSdIAi6nXunM0z4W9Q=
-X-Google-Smtp-Source: AA6agR6Q1voL2+qaPsOyAGhYxJXcAc+9epgnvg8RdcvtosJC1NL/im0v8Bq8ckmT585++ccQdQH8Yw==
-X-Received: by 2002:a17:90b:4a0a:b0:1f4:e4fc:91d3 with SMTP id kk10-20020a17090b4a0a00b001f4e4fc91d3mr10309941pjb.67.1660854261010;
-        Thu, 18 Aug 2022 13:24:21 -0700 (PDT)
-Received: from [192.168.3.217] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id h12-20020aa79f4c000000b0052e57ed8cdasm2049984pfr.55.2022.08.18.13.24.18
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 18 Aug 2022 13:24:20 -0700 (PDT)
-Message-ID: <02e92b29-9fcd-b52f-3ddb-e5e20e6db604@acm.org>
-Date:   Thu, 18 Aug 2022 13:24:17 -0700
+        with ESMTP id S1346342AbiHRVA6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Aug 2022 17:00:58 -0400
+Received: from mail.zeus03.de (www.zeus03.de [194.117.254.33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1873D3EDA
+        for <linux-scsi@vger.kernel.org>; Thu, 18 Aug 2022 14:00:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple; d=sang-engineering.com; h=
+        from:to:cc:subject:date:message-id:mime-version
+        :content-transfer-encoding; s=k1; bh=rBdv4isDrm0YUiH6qYKHHSdkgaK
+        LpFaAvw4/6ZYu2po=; b=i7jpf2cW0xlLeymkSukRJMY2ShW3TowRwO0/GUUTUYF
+        AQ41GQHTHJIr4rXh/AEHRzLhQ+zN4jiY4fNorMtZ46kSxdKe0EQlgdg1fSgjkgLv
+        fCL/0J90H2/mhvvf+Af+hH7Hc8vE1MIkAEEzzi904E+Un86CA7Z++CBLqaGMLJWI
+        =
+Received: (qmail 3960562 invoked from network); 18 Aug 2022 23:00:29 +0200
+Received: by mail.zeus03.de with ESMTPSA (TLS_AES_256_GCM_SHA384 encrypted, authenticated); 18 Aug 2022 23:00:29 +0200
+X-UD-Smtp-Session: l3s3148p1@AWN2RYrmycEucref
+From:   Wolfram Sang <wsa+renesas@sang-engineering.com>
+To:     linux-kernel@vger.kernel.org
+Cc:     Wolfram Sang <wsa+renesas@sang-engineering.com>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Subject: [PATCH] scsi: message: move from strlcpy with unused retval to strscpy
+Date:   Thu, 18 Aug 2022 23:00:28 +0200
+Message-Id: <20220818210028.6988-1-wsa+renesas@sang-engineering.com>
+X-Mailer: git-send-email 2.35.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.1.2
-Subject: Re: [RFC PATCH v2 1/2] scsi: ufs: Add Multi-Circular Queue support
-Content-Language: en-US
-To:     Manivannan Sadhasivam <mani@kernel.org>,
-        Can Guo <quic_cang@quicinc.com>
-Cc:     quic_asutoshd@quicinc.com, quic_nguyenb@quicinc.com,
-        quic_xiaosenh@quicinc.com, stanley.chu@mediatek.com,
-        adrian.hunter@intel.com, beanhuo@micron.com, avri.altman@wdc.com,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>,
-        jongmin jeong <jjmin.jeong@samsung.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1660213984-37793-1-git-send-email-quic_cang@quicinc.com>
- <1660213984-37793-2-git-send-email-quic_cang@quicinc.com>
- <20220812091012.GB4956@thinkpad>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220812091012.GB4956@thinkpad>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/12/22 02:10, Manivannan Sadhasivam wrote:
-> On Thu, Aug 11, 2022 at 03:33:03AM -0700, Can Guo wrote:
->> +static unsigned int dev_cmd_queue = 1;
->> +static unsigned int read_queues;
-> 
-> Where is this initialized?
+Follow the advice of the below link and prefer 'strscpy' in this
+subsystem. Conversion is 1:1 because the return value is not used.
+Generated by a coccinelle script.
 
-The Linux kernel coding style does not allow to explicitly initialize 
-static variables to zero.
+Link: https://lore.kernel.org/r/CAHk-=wgfRnXz0W3D37d01q3JFkr_i_uTL=V6A6G1oUZcprmknw@mail.gmail.com/
+Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+---
+ drivers/message/fusion/mptbase.c | 4 ++--
+ drivers/message/fusion/mptctl.c  | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
->> +
->> +static int rw_queue_count_set(const char *val, const struct kernel_param *kp)
->> +{
->> +	unsigned int n;
->> +	int ret;
->> +
->> +	ret = kstrtouint(val, 10, &n);
->> +	if (ret)
->> +		return ret;
->> +	if (n > num_possible_cpus())
->> +		return -EINVAL;
->> +	return param_set_uint(val, kp);
->> +}
->> +
->> +static const struct kernel_param_ops rw_queue_count_ops = {
->> +	.set = rw_queue_count_set,
->> +	.get = param_get_uint,
->> +};
->> +
->> +static unsigned int rw_queues = 8;
->> +module_param_cb(rw_queues, &rw_queue_count_ops, &rw_queues, 0644);
->> +MODULE_PARM_DESC(rw_queues, "Number of queues used for rw. Default value is 8");
->> +
-> 
-> Using module params is not encouraged these days. So please switch to Kconfig.
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index 9b3ba2df71c7..fa6b2a51dc20 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -712,7 +712,7 @@ mpt_register(MPT_CALLBACK cbfunc, MPT_DRIVER_CLASS dclass, char *func_name)
+ 			MptDriverClass[cb_idx] = dclass;
+ 			MptEvHandlers[cb_idx] = NULL;
+ 			last_drv_idx = cb_idx;
+-			strlcpy(MptCallbacksName[cb_idx], func_name,
++			strscpy(MptCallbacksName[cb_idx], func_name,
+ 				MPT_MAX_CALLBACKNAME_LEN+1);
+ 			break;
+ 		}
+@@ -7666,7 +7666,7 @@ mpt_display_event_info(MPT_ADAPTER *ioc, EventNotificationReply_t *pEventReply)
+ 		break;
+ 	}
+ 	if (ds)
+-		strlcpy(evStr, ds, EVENT_DESCR_STR_SZ);
++		strscpy(evStr, ds, EVENT_DESCR_STR_SZ);
+ 
+ 
+ 	devtprintk(ioc, printk(MYIOC_s_DEBUG_FMT
+diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
+index f9ee957072c3..9763c9400be7 100644
+--- a/drivers/message/fusion/mptctl.c
++++ b/drivers/message/fusion/mptctl.c
+@@ -2410,7 +2410,7 @@ mptctl_hp_hostinfo(MPT_ADAPTER *ioc, unsigned long arg, unsigned int data_size)
+ 				if (mpt_config(ioc, &cfg) == 0) {
+ 					ManufacturingPage0_t *pdata = (ManufacturingPage0_t *) pbuf;
+ 					if (strlen(pdata->BoardTracerNumber) > 1) {
+-						strlcpy(karg.serial_number,
++						strscpy(karg.serial_number,
+ 							pdata->BoardTracerNumber, 24);
+ 					}
+ 				}
+-- 
+2.35.1
 
-Hmm ... I think using CONFIG_* variables is worse than using module 
-parameters since modifying CONFIG_* variables requires rebuilding the 
-kernel.
-
->> +struct cq_entry {
->> +	/* DW 0-1 */
->> +	__le32 command_desc_base_addr_lo;
->> +	__le32 command_desc_base_addr_hi;
->> +
->> +	/* DW 2 */
->> +	__le16  response_upiu_length;
->> +	__le16  response_upiu_offset;
->> +
->> +	/* DW 3 */
->> +	__le16  prd_table_length;
->> +	__le16  prd_table_offset;
->> +
->> +	/* DW 4 */
->> +	__le32 status;
->> +
->> +	/* DW 5-7 */
->> +	u32 reserved[3];
->> +};
-> 
-> packed?
-
-Using __packed if it is not necessary is wrong since it makes code slower.
-
-Thanks,
-
-Bart.
