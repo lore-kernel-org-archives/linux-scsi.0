@@ -2,82 +2,80 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2201C3F6B0
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Aug 2022 08:31:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5893C25B0E
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Aug 2022 08:42:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347112AbiHSIbc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 Aug 2022 04:31:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53180 "EHLO
+        id S1347456AbiHSImw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 Aug 2022 04:42:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50050 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346799AbiHSIba (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Aug 2022 04:31:30 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3CF2E97F0;
-        Fri, 19 Aug 2022 01:31:28 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 655B9B8265F;
-        Fri, 19 Aug 2022 08:31:27 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D4EDC433D6;
-        Fri, 19 Aug 2022 08:31:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1660897886;
-        bh=Q5Be1+hLtbVanl/3s29/HhIQGdBUTkMhqA84NGRkgPA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=pbIqDyC5m+19uwKDAmIDnMoi+9l9Zyi6X/Yu4gyTdJ8XcLTGvN9OOGqw82yfsaNdW
-         SF1QgzqJRmBzMOm9h/Emw36LgJCWolwwnoIS2Yh3cAPSjjsaiUa3y3b3EarXjFIaMq
-         FKQ/T6hKuttebtgj3WPxwMo9PEW+GZpxyyUWhpMo=
-Date:   Fri, 19 Aug 2022 10:31:23 +0200
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Thinh Nguyen <Thinh.Nguyen@synopsys.com>
-Cc:     Felipe Balbi <balbi@kernel.org>, linux-usb@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org,
-        Dmitry Bogdanov <d.bogdanov@yadro.com>,
-        Nicholas Bellinger <nab@linux-iscsi.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        John Youn <John.Youn@synopsys.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Andrzej Pietrasiewicz <andrzej.p@samsung.com>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2 00/25] usb: gadget: f_tcm: Enhance UASP driver
-Message-ID: <Yv9KWyevXLegwQcK@kroah.com>
-References: <cover.1658192351.git.Thinh.Nguyen@synopsys.com>
+        with ESMTP id S1347014AbiHSIms (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Aug 2022 04:42:48 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 797886172B;
+        Fri, 19 Aug 2022 01:42:46 -0700 (PDT)
+Received: from dggpemm500022.china.huawei.com (unknown [172.30.72.55])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4M8FX70Q0PzXdtM;
+        Fri, 19 Aug 2022 16:38:31 +0800 (CST)
+Received: from dggpemm500007.china.huawei.com (7.185.36.183) by
+ dggpemm500022.china.huawei.com (7.185.36.162) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Fri, 19 Aug 2022 16:42:44 +0800
+Received: from huawei.com (10.175.103.91) by dggpemm500007.china.huawei.com
+ (7.185.36.183) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Fri, 19 Aug
+ 2022 16:42:44 +0800
+From:   Yang Yingliang <yangyingliang@huawei.com>
+To:     <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <martin.petersen@oracle.com>
+CC:     <james.smart@broadcom.com>, <dick.kennedy@broadcom.com>
+Subject: [PATCH -next] scsi: lpfc: add missing destroy_workqueue() on error path in lpfc_sli4_driver_resource_setup()
+Date:   Fri, 19 Aug 2022 16:50:49 +0800
+Message-ID: <20220819085049.1906233-1-yangyingliang@huawei.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cover.1658192351.git.Thinh.Nguyen@synopsys.com>
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.103.91]
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ dggpemm500007.china.huawei.com (7.185.36.183)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Jul 18, 2022 at 06:26:01PM -0700, Thinh Nguyen wrote:
-> The Linux UASP gadget driver is incomplete and remained broken for a long time.
-> It was not implemented for performance either. This series adds some of the
-> required features for the UASP driver to work. It also makes some changes to
-> the target core.
-> 
-> This is tested against UASP CV and DWC_usb3x controller. It still needs some
-> fixes in the target core, which will be separated from this series.
-> 
-> There are still more room for performance improvement and fixes. However, this
-> series should be sufficient to bring up a working UASP device.
-> 
-> 
-> Changes in v2:
->  - Remove most target core changes from this series and only keep the must-have
->    ones
->  - Split the task-management patch to smaller patches
->  - Don't send failure Task Management response to target core, reducing
->    dependency
->  - Add UASP bringup script example in cover page
->  - Make various small updates according to feedbacks
+Add the missing destroy_workqueue() before return from
+lpfc_sli4_driver_resource_setup() in error path.
 
-I would need a review by the target maintainers before being able to
-take any of the USB gadget changes into the USB tree...
+Fixes: 3cee98db2610 ("scsi: lpfc: Fix crash on driver unload in wq free")
+Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
+---
+ drivers/scsi/lpfc/lpfc_init.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-thanks,
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index c69c5a0979ec..a7bb1620fbe1 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -8053,7 +8053,7 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
+ 	/* Allocate device driver memory */
+ 	rc = lpfc_mem_alloc(phba, SGL_ALIGN_SZ);
+ 	if (rc)
+-		return -ENOMEM;
++		goto out_destory_workqueue;
+ 
+ 	/* IF Type 2 ports get initialized now. */
+ 	if (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) >=
+@@ -8481,6 +8481,9 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
+ 	lpfc_destroy_bootstrap_mbox(phba);
+ out_free_mem:
+ 	lpfc_mem_free(phba);
++out_destory_workqueue:
++	destroy_workqueue(phba->wq);
++	phba->wq = NULL;
+ 	return rc;
+ }
+ 
+-- 
+2.25.1
 
-greg k-h
