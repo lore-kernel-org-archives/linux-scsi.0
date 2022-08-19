@@ -2,191 +2,94 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 896AFC00140
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Aug 2022 02:57:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AD1CC28B2B
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Aug 2022 06:09:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245371AbiHSC5g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 18 Aug 2022 22:57:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35042 "EHLO
+        id S1346618AbiHSGJd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 Aug 2022 02:09:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40898 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234988AbiHSC5c (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Aug 2022 22:57:32 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DC0CD4765;
-        Thu, 18 Aug 2022 19:57:31 -0700 (PDT)
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 27J2orfM022561;
-        Fri, 19 Aug 2022 02:57:14 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=eOWeYvnq+hhJ6pgEMpEp5YO8QoMaKAyHxvKs//mf80Y=;
- b=IYTMnKDmJ4CW1hVPP1PtdYAiTw/23EXiawBn8n3jWPsX4aFl73BOLYRyXoGjSQm+AfFO
- W7pageVwfsjjiqexdeMY2eF+kjE/Ctv1eM0OlGbdgKCrU1xJ9/sn1fIQi1kvyF3ncBwT
- /jspt5vui7MTr3kpO1jtFiOWOQJ8BLPdOZkyv4QqjgePMS513T4SVGkx1lqvC6vUyrSj
- A0/pi7WEJVPiMjhA+41UrC5IGYbOZ2EFi+2bySPVtaQG04PUtfk58Q6tY1Ezemx3VM9P
- XmT1UuayHFr1FW68d7NmAQeVA5e56rJfJkBf54NNgLW81EOE6gVWbuXKYu1cyR1feuTT Cg== 
-Received: from nasanppmta03.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3j21v5017c-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 19 Aug 2022 02:57:13 +0000
-Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
-        by NASANPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 27J2vCT3025982
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 19 Aug 2022 02:57:12 GMT
-Received: from [10.110.112.204] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.22; Thu, 18 Aug
- 2022 19:57:12 -0700
-Message-ID: <cd1c0266-a1be-f6c3-fbf3-0b75ecf4e3df@quicinc.com>
-Date:   Thu, 18 Aug 2022 19:57:11 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.0.3
-Subject: Re: [RFC PATCH v2 1/2] scsi: ufs: Add Multi-Circular Queue support
-To:     Manivannan Sadhasivam <mani@kernel.org>,
-        Can Guo <quic_cang@quicinc.com>
-CC:     <quic_nguyenb@quicinc.com>, <quic_xiaosenh@quicinc.com>,
-        <stanley.chu@mediatek.com>, <adrian.hunter@intel.com>,
-        <bvanassche@acm.org>, <beanhuo@micron.com>, <avri.altman@wdc.com>,
-        <linux-scsi@vger.kernel.org>, <kernel-team@android.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        with ESMTP id S1346536AbiHSGIv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Aug 2022 02:08:51 -0400
+Received: from mail-ed1-x529.google.com (mail-ed1-x529.google.com [IPv6:2a00:1450:4864:20::529])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3A3032EDF
+        for <linux-scsi@vger.kernel.org>; Thu, 18 Aug 2022 23:08:27 -0700 (PDT)
+Received: by mail-ed1-x529.google.com with SMTP id w3so4457299edc.2
+        for <linux-scsi@vger.kernel.org>; Thu, 18 Aug 2022 23:08:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ionos.com; s=google;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc;
+        bh=YRpdcaJ4r7VRT3/3i///gd/6IhC/k0ujvr195lrn9Lk=;
+        b=dClsiF8/qquQhG3mTRGsAcbFLgD7BqtxZiG5igXl/tQMnq+DIwQy/n4vJcD74RLzhw
+         rNVuNVbIvfInB6tJAS5ktMLxANQJGYE6tJI++8kwlx0MVpwVvVVWeLX3wqXy/pUq/vXt
+         tuaEzz4CONIC6f00x7TfopRSRwbdWOp3IFUXi28obkv0HnhgvKxHPPtyVoGuwuJlTrPU
+         U6R37X9gq0WGh3ocZ2O7O/uBLi1rv88P3Xx/+z22g4XfE4rMpDNDuXTscJg9kFy7ThsW
+         B/QjpE6PfUWQ8nozGKYds8I2ZhfTUHWPYdiX+rLRN2Xl9LqofiZaXGXKggMh6F+JH6K+
+         KTQg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc;
+        bh=YRpdcaJ4r7VRT3/3i///gd/6IhC/k0ujvr195lrn9Lk=;
+        b=xdGjN7d/ScRquzbV7oNp0NvGoHmDZkutSyB0aDHwTpECOWFxSuj0olLkoZup5jsyI0
+         de/iv4vJ3mdFrYj+nJ+eykhGczsezjDNWJf1v7dBVs9uf8O8XwBw9iYQ8nFNKaOz3qvg
+         iRPAjU7RBASZbjRWLVvPchtoVcJOuUcKqD/Dxl/vUGl0XF6tcFn88bEWc3FrDzFsrsR2
+         h0+KFP0zL5lLGASwhcMxcZPkqXV4MuxXHwPluySA9YgzO96tb+O2tPEbfMblr7hNPn28
+         c43YATRzGMW4XpSH7F66hO3Avd/4rTM1E4nlgAFT7Clda7vfypnMQxGwifgdRSyjN5ZO
+         QCFg==
+X-Gm-Message-State: ACgBeo0jrUOP16Ut4fNGVduui6V6HbJ5te0Gvtvl6XOQrgEaAnzkUNJ6
+        uEMtyRDd90BXfjAoNMDmhpSTwA==
+X-Google-Smtp-Source: AA6agR76uQfP+U8eTNPUlQ2cBewfTbiI+d5oZ56Bftjg4YGeZIcjKUqA7r+vN12AdAnt1dgkLq5dSg==
+X-Received: by 2002:a05:6402:4411:b0:437:b723:72 with SMTP id y17-20020a056402441100b00437b7230072mr5001891eda.38.1660889307277;
+        Thu, 18 Aug 2022 23:08:27 -0700 (PDT)
+Received: from lb02065.fritz.box ([2001:9e8:143b:fd00:5207:8c7f:747a:b80d])
+        by smtp.gmail.com with ESMTPSA id y14-20020a1709063a8e00b0073a644ef803sm1809660ejd.101.2022.08.18.23.08.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 18 Aug 2022 23:08:26 -0700 (PDT)
+From:   Jack Wang <jinpu.wang@ionos.com>
+To:     linux-kernel@vger.kernel.org
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>,
-        jongmin jeong <jjmin.jeong@samsung.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1660213984-37793-1-git-send-email-quic_cang@quicinc.com>
- <1660213984-37793-2-git-send-email-quic_cang@quicinc.com>
- <20220812091012.GB4956@thinkpad>
-From:   "Asutosh Das (asd)" <quic_asutoshd@quicinc.com>
-In-Reply-To: <20220812091012.GB4956@thinkpad>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: oMKno0sqaVorl75j_usux10ICB_V-32r
-X-Proofpoint-GUID: oMKno0sqaVorl75j_usux10ICB_V-32r
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.517,FMLib:17.11.122.1
- definitions=2022-08-18_18,2022-08-18_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- lowpriorityscore=0 mlxscore=0 adultscore=0 bulkscore=0 impostorscore=0
- malwarescore=0 spamscore=0 mlxlogscore=999 phishscore=0 suspectscore=0
- clxscore=1011 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2207270000 definitions=main-2208190010
+        linux-scsi@vger.kernel.org
+Subject: [PATCH v1 16/19] scsi/qlogicpti: Fix dma_map_sg check
+Date:   Fri, 19 Aug 2022 08:07:58 +0200
+Message-Id: <20220819060801.10443-17-jinpu.wang@ionos.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20220819060801.10443-1-jinpu.wang@ionos.com>
+References: <20220819060801.10443-1-jinpu.wang@ionos.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello Manivannan,
+Add the missing error check for dma_map_sg.
 
-Thanks for taking a look.
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-Sorry for the late reponse, was a bit caught up.
+Signed-off-by: Jack Wang <jinpu.wang@ionos.com>
+---
+ drivers/scsi/qlogicpti.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-On 8/12/2022 2:10 AM, Manivannan Sadhasivam wrote:
-> On Thu, Aug 11, 2022 at 03:33:03AM -0700, Can Guo wrote:
->> From: Asutosh Das <quic_asutoshd@quicinc.com>
->>
->> Adds MCQ support to UFS.
->>
->> The design uses shared tags across all the hw queues.
->> The queue-depth is chosen within range supported by controller &
->> device. It also takes EXT_IID into account while choosing the queue
->> depth.
->>
->> It supports default, read, poll and a dev cmd queue.
->> It enables MCQ after determining the queue-depth that the ufs
->> device supports.
->>
->> Co-developed-by: Can Guo <quic_cang@quicinc.com>
-> 
-> As per the Documentation, "Co-developed-by" should be followed by
-> "Signed-off-by" of the author. So you can just move this "Co-developed-by"
-> below Asutosh's S-o-b and that should be fine.
-> 
-Ok.
->> Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
->> Signed-off-by: Can Guo <quic_cang@quicinc.com>
->> ---
->>   drivers/ufs/core/Makefile  |   2 +-
->>   drivers/ufs/core/ufs-mcq.c | 524 +++++++++++++++++++++++++++++++++++++++++++++
->>   drivers/ufs/core/ufshcd.c  | 394 ++++++++++++++++++++++++++--------
->>   include/ufs/ufs.h          |   5 +
->>   include/ufs/ufshcd.h       | 223 ++++++++++++++++++-
->>   include/ufs/ufshci.h       |  77 +++++++
->>   6 files changed, 1135 insertions(+), 90 deletions(-)
-> 
-> This patch is too big to review. Could you please split it into multiple
-> patches?
-> 
-The current changes make up a single functional base MCQ driver.
-Usually splitting into multiple changes are per feature based.
-Since this is a single feature, it makes sense to be separated out into 
-core and host only. Refer 7a3e97b0d - the base ufs driver.
-
-> 
-> 
-> s/qd/depth
-> 
-Here queue depth is abbreviated to qd which I think is inline with what 
-the function does. So I prefer to keep it as qd.
-
->> +
->> +	val = ufshcd_readl(hba, REG_UFS_MCQ_CFG);
-> 
-> 
->> +struct ufs_hw_queue {
->> +	void *sqe_base_addr;
-> 
-> s/sqe_base_addr/sqe_base
->  >> +	dma_addr_t sqe_dma_addr;
-> 
-> s/sqe_dma_addr/sqe_dma
-> 
->> +	struct cq_entry *cqe_base_addr;
-> 
-> s/cqe_base_addr/cqe_base
-> 
->> +	dma_addr_t cqe_dma_addr;
-> 
-> s/cqe_dma_addr/cqe_dma
-> 
-Existing ufs driver dma addresses have the suffix addr, Refer struct 
-ufshcd_lrb. So it is in line with the current naming convention.
-
->> +	u32 max_entries;
->> +	u32 id;
->> +
->> +	void __iomem *mcq_sq_hp;
->> +	void __iomem *mcq_sq_tp;
->> +	void __iomem *mcq_cq_hp;
->> +	void __iomem *mcq_cq_tp;
-[...]
-
->> +			      MCQ_CFG_n(REG_SQATTR, i));
-> If you are writing to the same memory region, like in this case "mcq_base",
-> then you should be able to use _relaxed variants as the writes to the same
-> device memory are guaranteed to be in-order.
-> 
-Not sure if I understand this correctly. Let me check this internally 
-and get back.
-
-> This also removes the overhead associated with __iowmb included in writel.
-> 
-> Please audit this change throught the driver and use _relaxed variants where
-> applicable.
-> 
-
--asd
-
->> -- 
->> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
->>
-> 
+diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
+index 57f2f4135a06..8c961ff03fcd 100644
+--- a/drivers/scsi/qlogicpti.c
++++ b/drivers/scsi/qlogicpti.c
+@@ -909,7 +909,8 @@ static inline int load_cmd(struct scsi_cmnd *Cmnd, struct Command_Entry *cmd,
+ 		sg_count = dma_map_sg(&qpti->op->dev, sg,
+ 				      scsi_sg_count(Cmnd),
+ 				      Cmnd->sc_data_direction);
+-
++		if (!sg_count)
++			return -1;
+ 		ds = cmd->dataseg;
+ 		cmd->segment_cnt = sg_count;
+ 
+-- 
+2.34.1
 
