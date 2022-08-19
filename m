@@ -2,103 +2,98 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7916DC00140
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89619C28B2B
 	for <linux-scsi@archiver.kernel.org>; Fri, 19 Aug 2022 01:18:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239019AbiHSBSS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 18 Aug 2022 21:18:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53410 "EHLO
+        id S238029AbiHSBSR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 18 Aug 2022 21:18:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53400 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233206AbiHSBSQ (ORCPT
+        with ESMTP id S230359AbiHSBSQ (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Aug 2022 21:18:16 -0400
-Received: from mail-qk1-x72a.google.com (mail-qk1-x72a.google.com [IPv6:2607:f8b0:4864:20::72a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F93CCDD
-        for <linux-scsi@vger.kernel.org>; Thu, 18 Aug 2022 18:18:11 -0700 (PDT)
-Received: by mail-qk1-x72a.google.com with SMTP id f4so2407208qkl.7
-        for <linux-scsi@vger.kernel.org>; Thu, 18 Aug 2022 18:18:11 -0700 (PDT)
+Received: from mail-qt1-x82a.google.com (mail-qt1-x82a.google.com [IPv6:2607:f8b0:4864:20::82a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FFBCA9
+        for <linux-scsi@vger.kernel.org>; Thu, 18 Aug 2022 18:18:10 -0700 (PDT)
+Received: by mail-qt1-x82a.google.com with SMTP id h21so2429310qta.3
+        for <linux-scsi@vger.kernel.org>; Thu, 18 Aug 2022 18:18:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc;
-        bh=92o+rEXGNMD4nQyfbUugMGB+odPqfWIsb7XTD9K8WHs=;
-        b=mUl2Cu0FsxqrYn5q9Rnv7kXnvWnLzD0y+htunV2cxijHZcoAjQ6k4+mh0MowxrH69G
-         zPJJ9CS7bp/7+7duUnhIBHtdpqLPj85QEwHuMfP9yHRmViyol5EPwaRwNWHaG6x6QeiY
-         sMeeBbQpNHyPPHXW67tE3asdMAqFZ/CRNV6olgvgYr+jOT5qW2S5tfNqFOwnYiDmeqGE
-         bohXy6aYk7AZV+uyxwVaKyJCc+hKSx3PCjwYgl3iaJhKiw0QOYgxu/NKODPC5a7oe+Zt
-         8/3MgGgApUnt7xzTYG7jcZ8dxdYLQmuKAfvw068UNXSSq2XAW2pZ9lHnW9MI/jZjEVy+
-         09wg==
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc;
+        bh=mw4F1fK1BNg+tEvA5pgPKkP93XPXn2A/5VDm8b0F9wo=;
+        b=fOQbS5huozL2VxXCGcBHZCObbTqsrgcq62znZyI2Q2dmPk569gkEphcArtUBujM/DB
+         p0Gwsn8lE0LG0GeT/UNlgo9XGQ5s3HEWgL/QxlZz+3bTeqdXO2gyXC6JFnCyoX1EF7XA
+         hHyvqdwJWJyvL0mR5UgLejOhN5tsg7gm0Qj1Ha07IEYwtSvz9EA45rjJmY9fGO4hw9A/
+         1Jnkzxk3m5CZtDc1GL6NCRiMToI57ZtNaUdwulc9hFmd8uAsqEql8HsbZE3plDTVzza5
+         RAB4mbxaPDlYtx/CbAM2nMBTtWAr+pe2mPvrSzFkVvaCeGMsw1+Chr2Rs3s8WR1vudQ/
+         t24g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc;
-        bh=92o+rEXGNMD4nQyfbUugMGB+odPqfWIsb7XTD9K8WHs=;
-        b=6OQjqCFnk0tIq9LhedfqKmXuDliECHNZaxltyri5jAytIlo8EUFUMvOIhnM3Kxab05
-         45jGuBTh53yyTqsIYFyzCHJH5z1K9uwfpu9upIHLZOXYWi4G06p84T7TXPEGTgQLO9yj
-         EVsrT95GDX+/ZYeuItp1QmZwOahynb/xu+3OiFT33YHcY2GZeu2IiW+K7ZECx+tfUjFc
-         +YbPB1os3/n2HLG1R9xLgADmfH/y1NDIe4RZUlQkyXd8Cb3bRAUflavEkPZPEw7qcAB3
-         BpW1Sp1x12m4c2cu1ExWlu5LYXi7bz2JQuf2WJb3yiZOvH+ScWUfi+nmc67GxzPsj59n
-         ahiA==
-X-Gm-Message-State: ACgBeo352Ou/UT/lKzPKRBAxXj6fqsv2MKg6E9CfywjsamSDjhP3nHnE
-        uQL7U8bSRRjbq7qBlapelPCTChg5VvM=
-X-Google-Smtp-Source: AA6agR5X3X9C/gkZB6GPuHTdR/iGdaqRnJYsSKO6GT7J/s8lqRE2yQHYCj6tb9PSkJ3tdTWuQ7qe5Q==
-X-Received: by 2002:a05:620a:298d:b0:6b9:bf26:c801 with SMTP id r13-20020a05620a298d00b006b9bf26c801mr3933789qkp.470.1660871890320;
-        Thu, 18 Aug 2022 18:18:10 -0700 (PDT)
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc;
+        bh=mw4F1fK1BNg+tEvA5pgPKkP93XPXn2A/5VDm8b0F9wo=;
+        b=LOcJllrbB1JlAyFw9DpWyOasiJqRhHBRs7sr46ul00CYGeZsp2Kkyuf2V52CRqdsg1
+         OXLSAilJSOcg09PUmOwQKMib5w8jm19jJ3aHwsv4lU1hezjns5OK6F4kYCinSp0aczpG
+         R8Syqccwpd3/fan9oR5aPuNnGsNddmmcFLBDsLMp4O2exTaZ9bmG4pUJgWlQzwP/DImv
+         kzLuPu3KmM00lp0RvaH5ieUPLBk+PF73nDQOTjn70ek8NL+9M8wjlkG08XdkXePe9pdM
+         d2Pqc2npwHCQZbj13O6ovEsDxG87IHdTwVngkyVHgpDussFSuu8iuRpD51WJBVJivTkv
+         29Wg==
+X-Gm-Message-State: ACgBeo2n0Lp4nnx2ESNpYPYgNMVxlzc2J5hRnPR45QlK4f8gJdYekkov
+        eysWmvFLKrQ9YMWlQTRm8aL4FBiXFVo=
+X-Google-Smtp-Source: AA6agR4EKCh3x0sLxruvDA5M5cAgiYDNPhGXMVSyqIVrfQSIZlvBgOdGErnHuU0DpfxXpEJmfhzVBw==
+X-Received: by 2002:ac8:5f09:0:b0:343:67b3:96f5 with SMTP id x9-20020ac85f09000000b0034367b396f5mr4918206qta.470.1660871889267;
+        Thu, 18 Aug 2022 18:18:09 -0700 (PDT)
 Received: from mail-ash-it-01.broadcom.com (ip98-164-255-77.oc.oc.cox.net. [98.164.255.77])
-        by smtp.gmail.com with ESMTPSA id u5-20020a05620a0c4500b006b5e296452csm2612502qki.54.2022.08.18.18.18.09
+        by smtp.gmail.com with ESMTPSA id u5-20020a05620a0c4500b006b5e296452csm2612502qki.54.2022.08.18.18.18.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 18 Aug 2022 18:18:10 -0700 (PDT)
+        Thu, 18 Aug 2022 18:18:08 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Justin Tee <justin.tee@broadcom.com>
-Subject: [PATCH 1/7] lpfc: Fix unsolicited FLOGI receive handling during PT2PT discovery
-Date:   Thu, 18 Aug 2022 18:17:30 -0700
-Message-Id: <20220819011736.14141-2-jsmart2021@gmail.com>
+Cc:     James Smart <jsmart2021@gmail.com>
+Subject: [PATCH 0/7] lpfc: Update lpfc to revision 14.2.0.6
+Date:   Thu, 18 Aug 2022 18:17:29 -0700
+Message-Id: <20220819011736.14141-1-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20220819011736.14141-1-jsmart2021@gmail.com>
-References: <20220819011736.14141-1-jsmart2021@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-During a stress offline/online test in PT2PT topology, target
-rediscovery can fail with a specific target vendor array.
+Update lpfc to revision 14.2.0.6
 
-When the HBA transitions to online mode it is possible to receive an
-unsolicited FLOGI before processing the Link Up event. The received
-FLOGI will set the defer_flogi_acc_flag, which instructs the driver
-to wait until it transmits its own FLOGI before ACKing the received
-FLOGI.  In this failure scenario, the link up processing clears
-the set defer_flogi_acc_flag before we have sent out the FLOGI.
-As the target has the higher WWPN and is responsible for sending
-the PLOGI, the target is stuck waiting for its FLOGI_ACC that the
-driver will never send.
+This patch set contains fixes and removal of dead code.
 
-Remove the clear of defer_flogi_acc_flag from Link Up event
-processing.  In this stress test case, the defer_flogi_acc_flag is
-cleared during the Link Down event processing anyways.
+The patches were cut against Martin's 5.20/scsi-queue tree
 
-Co-developed-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
----
- drivers/scsi/lpfc/lpfc_hbadisc.c | 1 -
- 1 file changed, 1 deletion(-)
+James Smart (7):
+  lpfc: Fix unsolicited FLOGI receive handling during PT2PT discovery
+  lpfc: Fix null ndlp ptr dereference in abnormal exit path for GFT_ID
+  lpfc: Rework MIB Rx Monitor debug info logic
+  lpfc: Add warning notification period to CMF_SYNC_WQE
+  lpfc: Remove SANDiags related code
+  lpfc: Update lpfc version to 14.2.0.6
+  lpfc: Copyright updates for 14.2.0.6 patches
 
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index 2645def612e6..36090e21bb10 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -1392,7 +1392,6 @@ lpfc_linkup(struct lpfc_hba *phba)
- 
- 	/* reinitialize initial HBA flag */
- 	phba->hba_flag &= ~(HBA_FLOGI_ISSUED | HBA_RHBA_CMPL);
--	phba->defer_flogi_acc_flag = false;
- 
- 	return 0;
- }
+ drivers/scsi/lpfc/lpfc.h         |  27 +--
+ drivers/scsi/lpfc/lpfc_attr.c    | 344 +------------------------------
+ drivers/scsi/lpfc/lpfc_crtn.h    |   8 +
+ drivers/scsi/lpfc/lpfc_ct.c      |   7 +-
+ drivers/scsi/lpfc/lpfc_debugfs.c |  59 +-----
+ drivers/scsi/lpfc/lpfc_debugfs.h |   4 +-
+ drivers/scsi/lpfc/lpfc_disc.h    |   3 +-
+ drivers/scsi/lpfc/lpfc_hbadisc.c |  18 --
+ drivers/scsi/lpfc/lpfc_hw4.h     |   4 +
+ drivers/scsi/lpfc/lpfc_init.c    |  83 +++-----
+ drivers/scsi/lpfc/lpfc_mem.c     |  11 +-
+ drivers/scsi/lpfc/lpfc_scsi.c    |  59 ------
+ drivers/scsi/lpfc/lpfc_scsi.h    |   6 +-
+ drivers/scsi/lpfc/lpfc_sli.c     | 196 +++++++++++++++++-
+ drivers/scsi/lpfc/lpfc_version.h |   2 +-
+ drivers/scsi/lpfc/lpfc_vport.c   |  71 -------
+ drivers/scsi/lpfc/lpfc_vport.h   |   6 +-
+ 17 files changed, 263 insertions(+), 645 deletions(-)
+
 -- 
 2.26.2
 
