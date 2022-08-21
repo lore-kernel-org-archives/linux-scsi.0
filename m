@@ -2,38 +2,38 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8523FC00140
-	for <linux-scsi@archiver.kernel.org>; Sun, 21 Aug 2022 14:59:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54E93C00140
+	for <linux-scsi@archiver.kernel.org>; Sun, 21 Aug 2022 15:27:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231201AbiHUO7A (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 21 Aug 2022 10:59:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39740 "EHLO
+        id S231410AbiHUP1y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 21 Aug 2022 11:27:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60786 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230172AbiHUO66 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Aug 2022 10:58:58 -0400
+        with ESMTP id S229919AbiHUP1x (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Aug 2022 11:27:53 -0400
 Received: from bg5.exmail.qq.com (bg4.exmail.qq.com [43.154.54.12])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 72D9413E32;
-        Sun, 21 Aug 2022 07:58:56 -0700 (PDT)
-X-QQ-mid: bizesmtp88t1661093925tvxkcjjm
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31706237F3;
+        Sun, 21 Aug 2022 08:27:51 -0700 (PDT)
+X-QQ-mid: bizesmtp90t1661095655tfv6j94y
 Received: from localhost.localdomain ( [182.148.14.124])
         by bizesmtp.qq.com (ESMTP) with 
-        id ; Sun, 21 Aug 2022 22:58:44 +0800 (CST)
-X-QQ-SSF: 0100000000200010B000B00A0000000
-X-QQ-FEAT: znfcQSa1hKbKZkYhV9HDBhW5K8s8OaP5VjlK5FpvfRLvWySaY0EHwSNuttPD9
-        HxydUy6qQFVBzKIP3Fvex+/gWEffvpuviO+rNAurpq18QMTuRdkr7EU23DQcFY4lNfXQODg
-        W6dKqiu1PlBHJi0oHuuGuBH/VgQ0yiVOVtSTDKw/UK34SBPOWXi6/V2Rk/yKOMenXqJxr/P
-        Tm9RqE4ELN7hxNgWrYlz5HOgg4bO3ijoMQes4qzIRPSpWecW4UbPsM8esjL0OMCUMOGbhLP
-        ZqEmGnQP2fDJWheLZDLTcpdN2PbabWRs7Sh5QJ6JpZOOaQK34vARl/71XKTxoAA0waS7i5J
-        ttkNF5j7TbUIwhFHO6T7AjO/3k8GwDE8TQYpPXFZ6fVOR+KnzY=
+        id ; Sun, 21 Aug 2022 23:27:33 +0800 (CST)
+X-QQ-SSF: 0100000000200020B000B00A0000000
+X-QQ-FEAT: Wp4pj0u9TIfGYEa5O2LPWVWLmI+a4Sh95G0eBNKr6mBebP9K5sq4h3BRTgfDl
+        u9nRDAHfTx2x4NxDyhUyIKNcyhm4gWvA2YF0IS5eVpbdW1wTwL19a/8LPILJ3+mIU1q75m7
+        3+ZQuwTM2d/a+DW8HV6NBSTrR1I2g60RpwYdgbHrOb2R2cqH/GeoMUG4eb5/VIm7AxeMi8C
+        B9JvHZNTAKWFGXOfdlsTtti6DDAe8h4amwEISg1cnNW4H/RP1c8Ccasj5ggYgn5Wort+pEd
+        taR8jR9KJiqpf3DZ+xtct3SBPh4J5y/z5JMJDaO+k6OhXTl2+jOriOHfS1NZLDUqkunUphK
+        KiarPShExHtBAUn6tIg4rs3ZVm52SFbuLy02tvl9CCIYNIeQqA=
 X-QQ-GoodBg: 0
 From:   wangjianli <wangjianli@cdjrlc.com>
-To:     james.smart@broadcom.com, dick.kennedy@broadcom.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com
+To:     Kai.Makisara@kolumbus.fi, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         wangjianli <wangjianli@cdjrlc.com>
-Subject: [PATCH] scsi/lpfc: fix repeated words in comments
-Date:   Sun, 21 Aug 2022 22:58:37 +0800
-Message-Id: <20220821145837.50480-1-wangjianli@cdjrlc.com>
+Subject: [PATCH] drivers/scsi: fix repeated words in comments
+Date:   Sun, 21 Aug 2022 23:27:27 +0800
+Message-Id: <20220821152727.65412-1-wangjianli@cdjrlc.com>
 X-Mailer: git-send-email 2.36.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -43,26 +43,26 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
- Delete the redundant word 'on'.
+ Delete the redundant word 'of'.
 
 Signed-off-by: wangjianli <wangjianli@cdjrlc.com>
 ---
- drivers/scsi/lpfc/lpfc_nportdisc.c | 2 +-
+ drivers/scsi/st.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index 639f86635127..a997cb559ff0 100644
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -240,7 +240,7 @@ lpfc_els_abort(struct lpfc_hba *phba, struct lpfc_nodelist *ndlp)
- 	if (phba->sli_rev == LPFC_SLI_REV4)
- 		spin_lock(&pring->ring_lock);
- 	list_for_each_entry_safe(iocb, next_iocb, &pring->txcmplq, list) {
--	/* Add to abort_list on on NDLP match. */
-+	/* Add to abort_list on NDLP match. */
- 		if (lpfc_check_sli_ndlp(phba, pring, iocb, ndlp))
- 			list_add_tail(&iocb->dlist, &abort_list);
- 	}
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index 56a093a90b92..e65f05615b7f 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -4660,7 +4660,7 @@ static DEVICE_ATTR_RO(read_cnt);
+ /**
+  * read_byte_cnt_show - return read byte count - tape drives
+  * may use blocks less than 512 bytes this gives the raw byte count of
+- * of data read from the tape drive.
++ * data read from the tape drive.
+  * @dev: struct device
+  * @attr: attribute structure
+  * @buf: buffer to return formatted data in
 -- 
 2.36.1
 
