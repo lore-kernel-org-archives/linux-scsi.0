@@ -2,86 +2,67 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7CB4C28D13
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Aug 2022 21:20:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B492C28D13
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Aug 2022 21:45:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237996AbiHVVUQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 Aug 2022 17:20:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46396 "EHLO
+        id S238324AbiHVVpR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 Aug 2022 17:45:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41212 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238014AbiHVVUO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Aug 2022 17:20:14 -0400
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E580451432;
-        Mon, 22 Aug 2022 14:20:13 -0700 (PDT)
-Received: by mail-pl1-f174.google.com with SMTP id x19so11068107plc.5;
-        Mon, 22 Aug 2022 14:20:13 -0700 (PDT)
+        with ESMTP id S238228AbiHVVpP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Aug 2022 17:45:15 -0400
+Received: from mail-io1-f71.google.com (mail-io1-f71.google.com [209.85.166.71])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73026564E8
+        for <linux-scsi@vger.kernel.org>; Mon, 22 Aug 2022 14:45:14 -0700 (PDT)
+Received: by mail-io1-f71.google.com with SMTP id z4-20020a6b0a04000000b006887f66dcf3so6353975ioi.18
+        for <linux-scsi@vger.kernel.org>; Mon, 22 Aug 2022 14:45:14 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
+        h=to:from:subject:message-id:in-reply-to:date:mime-version
          :x-gm-message-state:from:to:cc;
-        bh=OiLq9jWCfKJ4+st1sKCjNqpo8+tt/E7IjyRd3lma/Xk=;
-        b=7grAJXH+3A6fUFD4/4s0bR7FzYfB1v74uTU33yzVRxBFB/gPFdEv03XnSfXX4812b4
-         QURQsL0IWC6tHrmoQSB5n1efzsWlMfrCVqr/DBEa2AwfivERB0NpUv5QTB2YZel/2NmR
-         owNAIhLsV8cg9L2bcUrpEnuhaCL3hzJFVYFgEt5vljSlCFRiV1yyx/Vs2lVmu1TBCDeb
-         NBetWwcKUHS+vT1nWaOK0IBHWIuWSymCWGkOZvi4ygmvS/elAyjPl8VAdFbgwRKKbnA5
-         /4TT0rvErj0MzvfjoQZ01uN74kK+ThofYv3Nei58nLcC7EHjL17g1jTFJyThskWqgPA6
-         9kPQ==
-X-Gm-Message-State: ACgBeo3TKYYd9YkP1rmhOUW09GzYzMHl8q39uCfxDhMC7rzvEP6aWrr3
-        ausyxUqukz4KScfbn39VymU=
-X-Google-Smtp-Source: AA6agR7pGr/VS86cFUj14yul6XaNpS7RjoD2KCfjUwqs9xoQDsolr/nUhyk3zWiZECxTsbOtHrazRw==
-X-Received: by 2002:a17:90a:744c:b0:1fa:c029:7a24 with SMTP id o12-20020a17090a744c00b001fac0297a24mr237385pjk.54.1661203213144;
-        Mon, 22 Aug 2022 14:20:13 -0700 (PDT)
-Received: from [192.168.3.217] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id a6-20020a17090ad80600b001fb1de10a4dsm3204272pjv.33.2022.08.22.14.20.11
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 22 Aug 2022 14:20:12 -0700 (PDT)
-Message-ID: <27a26f00-95dd-c9bc-dab3-3bbd650b0d87@acm.org>
-Date:   Mon, 22 Aug 2022 14:20:10 -0700
+        bh=lvDv3fY56hvUDqlCuuOa5TsCeohcojRJoetuEGrJWa8=;
+        b=Fr0mEZIA+jjTHQ/pYku9E4u/vTGTFJ9fuXhS44qIQcIMwa9+9Q88QUAcOZZax7BFfD
+         rDBHxJ105xHW5fZv6zL5QqSIQEcKsxtcO0VnppJZfAuHx4KLWcoGl7zTJZxSy0HsldJW
+         wsf+gRc9xhmTDNu0XgQ6DWAgt7tRzLD30Qx03Q64IppT9VWYH2LzepSf7loFiQFqqtbN
+         xNzZeoQnkl1rSKztyuUmrYL71ausyc4M1uxySoMiRnDIIv0KBTD0l1+xcNWlR2upoh1n
+         ZGXZxcfSG6SfLJVi+RFJhDum1N1D8vxVvMff1H2ln1ktalWtK16v6mVXfuV+q17xTM6E
+         BoSg==
+X-Gm-Message-State: ACgBeo2f+59B5uBe0UJZbIbPLe7+d/PTCvMeHFvwnNakxIP9BV1b21Ex
+        x5/7pFomfIlIHkTdLMD+MsPU0aA8av+LZuLUhUHTFGJIfUzJ
+X-Google-Smtp-Source: AA6agR4GSvl30pCUuBFcCvh7OLuPyo1OmiddCog13EloqJ5x5ueeFfVOzeBAN4jTBuX2js5urmqVvfypiZhWEPbz3OyDt+YvHOrE
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.1.2
+X-Received: by 2002:a05:6602:29d1:b0:669:428e:8c59 with SMTP id
+ z17-20020a05660229d100b00669428e8c59mr9434201ioq.85.1661204713833; Mon, 22
+ Aug 2022 14:45:13 -0700 (PDT)
+Date:   Mon, 22 Aug 2022 14:45:13 -0700
+In-Reply-To: <3eb3867b-9bd5-3de0-b00e-de77d724636e@acm.org>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <000000000000de0b4205e6db5ce8@google.com>
 Subject: Re: [syzbot] INFO: task hung in scsi_remove_host
-Content-Language: en-US
-To:     syzbot <syzbot+bafeb834708b1bb750bc@syzkaller.appspotmail.com>,
-        dsterba@suse.com, hch@lst.de, hdanton@sina.com, jejb@linux.ibm.com,
+From:   syzbot <syzbot+bafeb834708b1bb750bc@syzkaller.appspotmail.com>
+To:     bvanassche@acm.org, jejb@linux.ibm.com,
         linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, ming.lei@redhat.com, nborisov@suse.com,
-        syzkaller-bugs@googlegroups.com, wqu@suse.com
-References: <0000000000006d456105e6da8d58@google.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <0000000000006d456105e6da8d58@google.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        martin.petersen@oracle.com, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/22/22 13:47, syzbot wrote:
-> syzbot has bisected this issue to:
-> 
-> commit ae643a74ebdb150b004601d0d5fe5a1faba9b04d
-> Author: Qu Wenruo <wqu@suse.com>
-> Date:   Sun May 22 11:47:48 2022 +0000
-> 
->      btrfs: introduce a data checksum checking helper
-> 
-> bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=176ef485080000
-> start commit:   e3f259d33c0e Merge tag 'i2c-for-6.0-rc2' of git://git.kern..
-> git tree:       upstream
-> final oops:     https://syzkaller.appspot.com/x/report.txt?x=14eef485080000
-> console output: https://syzkaller.appspot.com/x/log.txt?x=10eef485080000
-> kernel config:  https://syzkaller.appspot.com/x/.config?x=3bd9363f7b80ef9c
-> dashboard link: https://syzkaller.appspot.com/bug?extid=bafeb834708b1bb750bc
-> syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=108e1a3d080000
-> C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=154720f3080000
-> 
-> Reported-by: syzbot+bafeb834708b1bb750bc@syzkaller.appspotmail.com
-> Fixes: ae643a74ebdb ("btrfs: introduce a data checksum checking helper")
-> 
-> For information about bisection process see: https://goo.gl/tpsmEJ#bisection
+Hello,
 
-Qu, feel free to ignore the above bisection result. I think it is wrong.
+syzbot has tested the proposed patch and the reproducer did not trigger any issue:
 
-Bart.
+Reported-and-tested-by: syzbot+bafeb834708b1bb750bc@syzkaller.appspotmail.com
+
+Tested on:
+
+commit:         0fe8e010 scsi: core: Revert "Make sure that targets ou..
+git tree:       https://github.com/bvanassche/linux.git scsi-for-next
+console output: https://syzkaller.appspot.com/x/log.txt?x=100c7465080000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=312be25752c7fe30
+dashboard link: https://syzkaller.appspot.com/bug?extid=bafeb834708b1bb750bc
+compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
+
+Note: no patches were applied.
+Note: testing is done by a robot and is best-effort only.
