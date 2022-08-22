@@ -2,112 +2,74 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29F67C32774
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Aug 2022 19:32:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABAB6C28D13
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Aug 2022 20:47:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238766AbiHVTcH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 Aug 2022 15:32:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40134 "EHLO
+        id S232564AbiHVUrP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 Aug 2022 16:47:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43430 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239550AbiHVTbp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Aug 2022 15:31:45 -0400
-Received: from mail-qk1-x729.google.com (mail-qk1-x729.google.com [IPv6:2607:f8b0:4864:20::729])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CCAF013DD8;
-        Mon, 22 Aug 2022 12:30:38 -0700 (PDT)
-Received: by mail-qk1-x729.google.com with SMTP id c9so7547194qkk.6;
-        Mon, 22 Aug 2022 12:30:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc;
-        bh=wCrEp0GD1MEQtauUK6wljsgzA5hgr1kFQ31N0O6sheQ=;
-        b=GBt4fe+AK+6R1Jw5a0AFIA6jGoVQowCcIjLNNu3g4fCYTu85ADLCsuwJx6Rh9tE8uK
-         xi/R3bXNFuLWwqjmcucCSL3PFvNwqrWGQuagIY2iVU/l48hTP0fizUfqUkqPN704fxKj
-         Ik6cf1uOFxIV3qwjB9veQtwVthk0Vs/VA3HQF4Vh5UHXjQ0Jl7Dc8fGEJnT3LJD2zWTD
-         NpMTt6REfsOD99YZa0pXBcdhOmgEn/wAiEf7g0uo9+ZwwZSa0Vj4JB+t/KKOLMmW1rYK
-         EfGqJVdbNkkdX2DxlOdDm/zhceK4Nrwy+mOpn1LruAfcTynRdprZPsm/zqv7QB/6LmYs
-         mbtA==
+        with ESMTP id S232069AbiHVUrO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Aug 2022 16:47:14 -0400
+Received: from mail-il1-f197.google.com (mail-il1-f197.google.com [209.85.166.197])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2DC6B558DD
+        for <linux-scsi@vger.kernel.org>; Mon, 22 Aug 2022 13:47:14 -0700 (PDT)
+Received: by mail-il1-f197.google.com with SMTP id h5-20020a056e021d8500b002e9c0ad7c08so2518412ila.6
+        for <linux-scsi@vger.kernel.org>; Mon, 22 Aug 2022 13:47:14 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
+        h=to:from:subject:message-id:in-reply-to:date:mime-version
          :x-gm-message-state:from:to:cc;
-        bh=wCrEp0GD1MEQtauUK6wljsgzA5hgr1kFQ31N0O6sheQ=;
-        b=jqoycGR5qT6FtZOI2DenXAvmjO7+9Bn/P6YFdAiKc5BZHhyU30fw+kEavKRKD9uDmh
-         R2ho8cm5fpMLfqVHA2gQ2IdFulo8o13Y1uQqppL/e17ILLhTcM7VMTPX49qJp9GuLr6e
-         JYCJ4qgoGLqB8cf/Xy6nDb/kSCCs1mZx31f2/WJxTMVljN+PCqaBd+qgMfOb/3I1bELI
-         ahhK6e1MmQjeA6qdMffC0lYH21D8v/jgvToC3hIg47U3W/xUaDtsZiWJky2zgpFTXDnu
-         uHFAR3fC29SCKhaTQJ/K2la9vD/EAZDVHKUXI9k9sxut8nW1BHLLDuF+HyCCc+H75Nfo
-         8Hgw==
-X-Gm-Message-State: ACgBeo0eHn6aQIquxmJZipC3cRt4bxYyF6fsOJfcya8TTFUveDmJ72Wi
-        IMXBGOdcQY6gNf8//O4484o=
-X-Google-Smtp-Source: AA6agR4zCN7cTmZVhR/AZ/dO+6RhM78OlwpvA75LuUAcnPR4qVqLtIVZdBHGFcxDdMkebFRNLwTz0w==
-X-Received: by 2002:a05:620a:6012:b0:6bc:2de8:ae4d with SMTP id dw18-20020a05620a601200b006bc2de8ae4dmr1978044qkb.363.1661196637603;
-        Mon, 22 Aug 2022 12:30:37 -0700 (PDT)
-Received: from [10.69.47.244] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id u13-20020a05622a14cd00b003435983a263sm10069145qtx.46.2022.08.22.12.30.36
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 22 Aug 2022 12:30:37 -0700 (PDT)
-Message-ID: <7cd8ec1b-dd37-756b-0b74-c543fdce1995@gmail.com>
-Date:   Mon, 22 Aug 2022 12:30:35 -0700
+        bh=ckYm9/frTHKg5Q1caJilSY/IDUA7LKV/J33LIJTS+6o=;
+        b=KCi0kUPs30xsaGaeeGMeznlvjvpUpUCJcLQC1GeCDVNHma3giqh/xW/5jR7lK6ogjc
+         xe4qWz8ZxOkqRHvDRWUkZVNqU2eNeiXzfoQxWPHuNngunKaalUkRI5iSWspWnPOBod/4
+         g1kgHeP2aj0OFGHBL5xsXceTYBX4u9wnmKAXEAavNKYWwIqyx11a9a194J8fuJJXgcF8
+         +Lx5t+loiutComzZyFaI1sQkNrmhGiw6jRg3+DxDSgk4HxhU0MAtUJz/Jf2+iGg20AJc
+         OD+qHUlPMHe0zHyTriQh9TzngiCd/qSAFE32VqGtISJsDQd0RFt41ucvvkFGhxUycVLv
+         D9fQ==
+X-Gm-Message-State: ACgBeo30twsKadnlK34mk4g5lcsJICGHh14kpwBmWTjfRsMbqxuNkBkd
+        eaokY/ubKjNZhPWUV+/c1TVT/1aSEohOSsa7oFXsOPaFptFl
+X-Google-Smtp-Source: AA6agR6YKQu5Soa4+q0bPpVeFbN8zg4kkMp/JQTJsc3IEH4Oq0YU6kHxNZ9NCy4plQ/ZFex72UUsvPyPZFK9XSwxn+cG2NVsEMVN
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.1.2
-Subject: Re: [PATCH -next] scsi: lpfc: add missing destroy_workqueue() on
- error path in lpfc_sli4_driver_resource_setup()
-Content-Language: en-US
-To:     Yang Yingliang <yangyingliang@huawei.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com
-Cc:     james.smart@broadcom.com, dick.kennedy@broadcom.com
-References: <20220819085049.1906233-1-yangyingliang@huawei.com>
-From:   James Smart <jsmart2021@gmail.com>
-In-Reply-To: <20220819085049.1906233-1-yangyingliang@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-Received: by 2002:a05:6638:1683:b0:345:9e65:cd07 with SMTP id
+ f3-20020a056638168300b003459e65cd07mr10403135jat.128.1661201233559; Mon, 22
+ Aug 2022 13:47:13 -0700 (PDT)
+Date:   Mon, 22 Aug 2022 13:47:13 -0700
+In-Reply-To: <000000000000b5187d05e6c08086@google.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <0000000000006d456105e6da8d58@google.com>
+Subject: Re: [syzbot] INFO: task hung in scsi_remove_host
+From:   syzbot <syzbot+bafeb834708b1bb750bc@syzkaller.appspotmail.com>
+To:     bvanassche@acm.org, dsterba@suse.com, hch@lst.de, hdanton@sina.com,
+        jejb@linux.ibm.com, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        ming.lei@redhat.com, nborisov@suse.com,
+        syzkaller-bugs@googlegroups.com, wqu@suse.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/19/2022 1:50 AM, Yang Yingliang wrote:
-> Add the missing destroy_workqueue() before return from
-> lpfc_sli4_driver_resource_setup() in error path.
-> 
-> Fixes: 3cee98db2610 ("scsi: lpfc: Fix crash on driver unload in wq free")
-> Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
-> ---
->   drivers/scsi/lpfc/lpfc_init.c | 5 ++++-
->   1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-> index c69c5a0979ec..a7bb1620fbe1 100644
-> --- a/drivers/scsi/lpfc/lpfc_init.c
-> +++ b/drivers/scsi/lpfc/lpfc_init.c
-> @@ -8053,7 +8053,7 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
->   	/* Allocate device driver memory */
->   	rc = lpfc_mem_alloc(phba, SGL_ALIGN_SZ);
->   	if (rc)
-> -		return -ENOMEM;
-> +		goto out_destory_workqueue;
->   
->   	/* IF Type 2 ports get initialized now. */
->   	if (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) >=
-> @@ -8481,6 +8481,9 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
->   	lpfc_destroy_bootstrap_mbox(phba);
->   out_free_mem:
->   	lpfc_mem_free(phba);
-> +out_destory_workqueue:
-> +	destroy_workqueue(phba->wq);
-> +	phba->wq = NULL;
->   	return rc;
->   }
->   
+syzbot has bisected this issue to:
 
-Looks fine
-but label needs spelling error corrected: out_destroy_workqueue
+commit ae643a74ebdb150b004601d0d5fe5a1faba9b04d
+Author: Qu Wenruo <wqu@suse.com>
+Date:   Sun May 22 11:47:48 2022 +0000
 
-Please resend with this fixed
+    btrfs: introduce a data checksum checking helper
 
--- james
+bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=176ef485080000
+start commit:   e3f259d33c0e Merge tag 'i2c-for-6.0-rc2' of git://git.kern..
+git tree:       upstream
+final oops:     https://syzkaller.appspot.com/x/report.txt?x=14eef485080000
+console output: https://syzkaller.appspot.com/x/log.txt?x=10eef485080000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=3bd9363f7b80ef9c
+dashboard link: https://syzkaller.appspot.com/bug?extid=bafeb834708b1bb750bc
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=108e1a3d080000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=154720f3080000
 
+Reported-by: syzbot+bafeb834708b1bb750bc@syzkaller.appspotmail.com
+Fixes: ae643a74ebdb ("btrfs: introduce a data checksum checking helper")
+
+For information about bisection process see: https://goo.gl/tpsmEJ#bisection
