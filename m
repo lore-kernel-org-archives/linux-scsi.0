@@ -2,90 +2,96 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B108DC32792
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Aug 2022 06:00:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E58FCC00140
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Aug 2022 07:50:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232564AbiHXGAk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 24 Aug 2022 02:00:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60514 "EHLO
+        id S234714AbiHXHuY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 24 Aug 2022 03:50:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33218 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230492AbiHXGAi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Aug 2022 02:00:38 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77B804456A
-        for <linux-scsi@vger.kernel.org>; Tue, 23 Aug 2022 23:00:36 -0700 (PDT)
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id 83B571FABA;
-        Wed, 24 Aug 2022 06:00:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1661320834; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=ThFT0lFo/T1lvLwlXVMvcWQuqnGGzpwMMeqOkKvhCLk=;
-        b=HxlXmDr4Jv2JT2zIagQ1VZGFqVBBSF+LWAg00DHHm6Wq0ZG3LjKCgkdLuPJvUVdYbIam6f
-        SydD3TFX64gZzsStnqdckL7cYY5Y7FR4Qy5MLRuw/kilIndHxqfQ3diQklgZmEiQJJ00aZ
-        /OnGXuCoaCxnkoz9uM9tRK9qMzRQ2iU=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1661320834;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=ThFT0lFo/T1lvLwlXVMvcWQuqnGGzpwMMeqOkKvhCLk=;
-        b=kf/pQaN5raDBT12C1dxd705Q9HauaEYJs+wzbidNC8IGFg2Eeocv9+JY7odfY/KyVtuc97
-        fpCeXXAOzb+/zVBw==
-Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 7B9452C142;
-        Wed, 24 Aug 2022 06:00:34 +0000 (UTC)
-Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id 6D05051A9937; Wed, 24 Aug 2022 08:00:34 +0200 (CEST)
-From:   Hannes Reinecke <hare@suse.de>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] lpfc: Return DID_TRANSPORT_DISRUPTED instead of DID_REQUEUE
-Date:   Wed, 24 Aug 2022 08:00:33 +0200
-Message-Id: <20220824060033.138661-1-hare@suse.de>
-X-Mailer: git-send-email 2.35.3
+        with ESMTP id S235133AbiHXHuX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Aug 2022 03:50:23 -0400
+Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 892034AD6A;
+        Wed, 24 Aug 2022 00:50:22 -0700 (PDT)
+Received: by mail-pf1-x42d.google.com with SMTP id 83so10019848pfw.6;
+        Wed, 24 Aug 2022 00:50:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc;
+        bh=Pa1j7+cEMv+Jr0WvV2/oEDE5lx0kvRfB1vxY0gDsATo=;
+        b=T/vPWPgh004DEeQugLUaAVLyShLUdMTVDaN9o0Jzd8TiY8oW9Yk4KOJl9qAzpMi+co
+         KtuW8D0TfY4BpiH3YfifdR8mlz788VtpVXS/koQ0mXwKi2RJBwvE6UftA9yAnUaBv8Md
+         l2Cv13xnseBwthH70WHnMwJs9vNINCZdCI7OFGV5WRpASeuWRhV166pg6+6bYVkC2ZE4
+         4sbojilGYeeq415SXvnEF+HRJwVWjz7WZ0JLWrikAlFcmUwXF66pB7x6VcOsWyzmnN6/
+         d0q+bVEdDlEH8r5ekUud8z7zhVwrQ3dvbH+ombPgJGru7y9qxiUbvS7z7ulVaZ7NstVt
+         8B7Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc;
+        bh=Pa1j7+cEMv+Jr0WvV2/oEDE5lx0kvRfB1vxY0gDsATo=;
+        b=3vQR6N063FwWEdevTJtBPUu45aOZX4Xf0d3h4ontZShKGrsqE6OqhZ+6yy9Efjk/Dq
+         1UqgYoOA/3AuqDPMt5sIf076zl5nSvmUwZwtMaeJXa4w/OByGHc3Id7y3ToOwTUh96FJ
+         XYGM2szSTj79i5j+I0a2COpf4g57B7eru/wKSxFbYN9JyJEo7XJTwxbxcWQretfVxVVI
+         HuEdoQyTVnt3CH/Q3O/F/CVh6b3KLUBjNr42SummiFiQGf7Vt9bR4YxZJj6eM8ETAXk+
+         rxpr0og26GlXTnaq+dYw4xfDdoPQfau3gVqgzWI0B+yPRvOrHOwo2g3V27QwvKcM7svM
+         lnOQ==
+X-Gm-Message-State: ACgBeo35KCVjOSGApES2FX2N62d9qFI8askEF+YN5MzEGSfhn5/NL5kW
+        wxHozAjpbURZ1EqdP9kagBM=
+X-Google-Smtp-Source: AA6agR4c4JUVjv4yb50or8GMkZlXUXuqbZWEsDJ1fd6ClGtEWPBAgW3DSspogpTr/iI6z4yY6h+zHg==
+X-Received: by 2002:a63:e241:0:b0:41b:b374:caf8 with SMTP id y1-20020a63e241000000b0041bb374caf8mr24114497pgj.310.1661327422028;
+        Wed, 24 Aug 2022 00:50:22 -0700 (PDT)
+Received: from localhost.localdomain ([193.203.214.57])
+        by smtp.gmail.com with ESMTPSA id i19-20020a63e913000000b0041a6638b357sm10512593pgh.72.2022.08.24.00.50.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 24 Aug 2022 00:50:21 -0700 (PDT)
+From:   cgel.zte@gmail.com
+X-Google-Original-From: ye.xingchen@zte.com.cn
+To:     martin.petersen@oracle.com
+Cc:     james.smart@broadcom.com, dick.kennedy@broadcom.com,
+        jejb@linux.ibm.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ye xingchen <ye.xingchen@zte.com.cn>,
+        Zeal Robot <zealci@zte.com.cn>
+Subject: [PATCH linux-next] scsi: lpfc: Remove the unneeded result variable
+Date:   Wed, 24 Aug 2022 07:50:17 +0000
+Message-Id: <20220824075017.221244-1-ye.xingchen@zte.com.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When the driver hits on an internal error condition returning
-DID_REQUEUE will cause I/O to be retried on the same ITL nexus.
-This will inhibit multipathing, resulting in endless retries
-even if the error could have been resolved by using a different
-ITL nexus.
-So return DID_TRANSPORT_DISRUPTED to allow for multipath to engage
-and route I/O to another ITL nexus.
+From: ye xingchen <ye.xingchen@zte.com.cn>
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+Return the value from lpfc_sli4_issue_wqe() directly instead of storing it
+ in another redundant variable.
+
+Reported-by: Zeal Robot <zealci@zte.com.cn>
+Signed-off-by: ye xingchen <ye.xingchen@zte.com.cn>
 ---
- drivers/scsi/lpfc/lpfc_scsi.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_sli.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index 084c0f9fdc3a..938a5e435943 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -4272,7 +4272,7 @@ lpfc_fcp_io_cmd_wqe_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
- 		    lpfc_cmd->result == IOERR_ABORT_REQUESTED ||
- 		    lpfc_cmd->result == IOERR_RPI_SUSPENDED ||
- 		    lpfc_cmd->result == IOERR_SLER_CMD_RCV_FAILURE) {
--			cmd->result = DID_REQUEUE << 16;
-+			cmd->result = DID_TRANSPORT_DISRUPTED << 16;
- 			break;
- 		}
- 		if ((lpfc_cmd->result == IOERR_RX_DMA_FAILED ||
-@@ -4562,7 +4562,7 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pIocbIn,
- 			    lpfc_cmd->result == IOERR_NO_RESOURCES ||
- 			    lpfc_cmd->result == IOERR_ABORT_REQUESTED ||
- 			    lpfc_cmd->result == IOERR_SLER_CMD_RCV_FAILURE) {
--				cmd->result = DID_REQUEUE << 16;
-+				cmd->result = DID_TRANSPORT_DISRUPTED << 16;
- 				break;
- 			}
- 			if ((lpfc_cmd->result == IOERR_RX_DMA_FAILED ||
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 608016725db9..1298cea81396 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -10322,12 +10322,10 @@ static int
+ __lpfc_sli_issue_fcp_io_s4(struct lpfc_hba *phba, uint32_t ring_number,
+ 			   struct lpfc_iocbq *piocb, uint32_t flag)
+ {
+-	int rc;
+ 	struct lpfc_io_buf *lpfc_cmd = piocb->io_buf;
+ 
+ 	lpfc_prep_embed_io(phba, lpfc_cmd);
+-	rc = lpfc_sli4_issue_wqe(phba, lpfc_cmd->hdwq, piocb);
+-	return rc;
++	return lpfc_sli4_issue_wqe(phba, lpfc_cmd->hdwq, piocb);
+ }
+ 
+ void
 -- 
-2.35.3
-
+2.25.1
