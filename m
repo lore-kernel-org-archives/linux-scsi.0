@@ -2,78 +2,86 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C2B2C00140
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Aug 2022 16:41:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 304AEC3F6B0
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Aug 2022 20:26:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238540AbiHXQl2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 24 Aug 2022 12:41:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34948 "EHLO
+        id S240354AbiHXU0R (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 24 Aug 2022 16:26:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58230 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238780AbiHXQkR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Aug 2022 12:40:17 -0400
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA323B4AE;
-        Wed, 24 Aug 2022 09:40:14 -0700 (PDT)
-Received: by mail-pl1-f172.google.com with SMTP id c2so16151688plo.3;
-        Wed, 24 Aug 2022 09:40:14 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc;
-        bh=kCL4BW6wndWM8jV/We7eMfUU516GeaRGxdOb22z1qxA=;
-        b=29wWt4rfV4BfD8PqMI+VDB+eVzmrzNr2x1o947HHK9kEKQYEMmR7VOxe0aNxqS9hcm
-         YAOw5Lwko+iu0Z7yopNqxXHNLUNS/q2GUQ9Y6tbHMpFJ7nQauVJMbH2cSFl/nQe4580u
-         aKVzK2cdxIQySnqL8EIet7ZhfjCu2rHqG1Dm1TLuu4V1LHAo+0vwEKv7tdOhCFR6b7qK
-         jvsKhWPddWiHAHWb0Gx+ZE3sk5D7NlFnN8llgneqkM+6i0NxLx1e8eUBhcSTSl1/nOAn
-         l6iLdIXlPAN4RAjQ608xMvPS/RIahOIxaY1BydTmxm9ZmXptXYENpA0VNwez/7H9Wpzf
-         FCxg==
-X-Gm-Message-State: ACgBeo1mOZoYm5P/iR/xZGKoUqF2Fc/pSYNcKO1aIUJiH8+DooqeIjnd
-        f5+RSreDazLQytRmu/q6sO4=
-X-Google-Smtp-Source: AA6agR6uPDXioeTI1NTOxX6jKOOFXqiJrzzdPMLFlc9WedHU9zymkMUveLdDcV9EyfGywdAMjRHegg==
-X-Received: by 2002:a17:90b:3ec9:b0:1f5:7e38:1fd1 with SMTP id rm9-20020a17090b3ec900b001f57e381fd1mr9075919pjb.101.1661359214307;
-        Wed, 24 Aug 2022 09:40:14 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:222f:dc9c:99a3:dfb8? ([2620:15c:211:201:222f:dc9c:99a3:dfb8])
-        by smtp.gmail.com with ESMTPSA id j18-20020a170902da9200b00172a4b6bb15sm6544241plx.13.2022.08.24.09.40.11
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 24 Aug 2022 09:40:12 -0700 (PDT)
-Message-ID: <9bd8c0f6-f7d2-e5ae-fbe9-d9a9a569adaa@acm.org>
-Date:   Wed, 24 Aug 2022 09:40:10 -0700
+        with ESMTP id S240367AbiHXU0N (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Aug 2022 16:26:13 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 945A54D248
+        for <linux-scsi@vger.kernel.org>; Wed, 24 Aug 2022 13:26:12 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 5DBD2B826AB
+        for <linux-scsi@vger.kernel.org>; Wed, 24 Aug 2022 20:26:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 236EAC433B5
+        for <linux-scsi@vger.kernel.org>; Wed, 24 Aug 2022 20:26:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1661372770;
+        bh=X056kOpWC/1rh9IapfKxtSovCXfR3bD94ONZ8puC9io=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=j4yGhauJejCaQrzsVQxeeIguYra0B/gGhQBd+qhqvK36iNabCc7PLBAAiYwT9eK42
+         3v8Nhdbc2XvGkNsiq965nKhrIg9RB64c2OOln6hOUj4xDXUmUALJdJaDbQDsr1oOO+
+         Oxa4T35m4C44HokzOy/hZi2zcb0MHCcC1O55XZ3XLbyzebllGWBKNvSIfRDKv55pZ9
+         KVBiHaYPTaoUUtCGTTNreFAI/bn/rONhWxzGBwqjjPYZKt5Dgjx2ubUO7rmquJDdqN
+         lgHukrzWOTc2sAkNl6a+oEPhcL07QKaF2DnXNUmqtgmpYfp+rIzG1tlqIwKxpP9jZL
+         teJlvrfakhRUg==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 07451C433E4; Wed, 24 Aug 2022 20:26:10 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 215943] UBSAN: array-index-out-of-bounds in
+ drivers/scsi/megaraid/megaraid_sas_fp.c:103:32
+Date:   Wed, 24 Aug 2022 20:26:09 +0000
+X-Bugzilla-Reason: AssignedTo
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: None
+X-Bugzilla-Product: IO/Storage
+X-Bugzilla-Component: SCSI
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: gustavo@embeddedor.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-215943-11613-ESPBwwtqAZ@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-215943-11613@https.bugzilla.kernel.org/>
+References: <bug-215943-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [PATCH] scsi: ufs: ufsfbo: Introduce File Based Optimization
- feature
-Content-Language: en-US
-To:     Bean Huo <huobean@gmail.com>,
-        Jiaming Li <lijiamingsofine@gmail.com>, avri.altman@wdc.com,
-        alim.akhtar@samsung.com, jejb@linux.ibm.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        lijiaming3 <lijiaming3@xiaomi.com>
-References: <20220824084633.14428-1-lijiamingsofine@gmail.com>
- <347dae29c07fe13e6974b0e59e127c399f63ef69.camel@gmail.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <347dae29c07fe13e6974b0e59e127c399f63ef69.camel@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/24/22 07:16, Bean Huo wrote:
-> Is this a UFS extended standard or vendor specific feature?
+https://bugzilla.kernel.org/show_bug.cgi?id=3D215943
 
-Hi Bean,
+--- Comment #8 from Gustavo A. R. Silva (gustavo@embeddedor.com) ---
 
-This feature has been standardized by JEDEC. My feedback to the sponsors 
-of this feature a few months ago was that FBO will become obsolete once 
-all UFS devices support Zoned storage for UFS. The FBO standard defines 
-an interface for telling UFS devices about the relationship between LBAs 
-and files. This allows UFS devices to defragment files. UFS devices 
-won't need that information for zoned LUNs since for zoned LUNs the host 
-software will be responsible for ensuring that files occupy a contiguous 
-range of LBAs.
+(In reply to Gustavo A. R. Silva from comment #7)
+> V3 and, hopefully, the final one. :)=20
+>=20
+> https://lore.kernel.org/linux-hardening/cover.1660592640.git.
+> gustavoars@kernel.org/
 
-Thanks,
+JFYI this patch series has been taken by the scsi/megaraid/ maintainers:
 
-Bart.
+https://lore.kernel.org/linux-hardening/yq1k06z8vaw.fsf@ca-mkp.ca.oracle.co=
+m/
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are the assignee for the bug.=
