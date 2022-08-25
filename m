@@ -2,55 +2,55 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B85CECAA24
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Aug 2022 18:04:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C435DECAA25
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Aug 2022 18:09:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241450AbiHYSEQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 Aug 2022 14:04:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49416 "EHLO
+        id S243003AbiHYSJE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 Aug 2022 14:09:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59198 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232070AbiHYSEP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Aug 2022 14:04:15 -0400
-Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9711AAB06F;
-        Thu, 25 Aug 2022 11:04:14 -0700 (PDT)
-Received: by mail-pj1-f54.google.com with SMTP id s36-20020a17090a69a700b001faad0a7a34so5724003pjj.4;
-        Thu, 25 Aug 2022 11:04:14 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc;
-        bh=Gh8pLFldO50fiVci0OdL141TCfxkxDjEugbgeSSI8T8=;
-        b=DpavOZv0Kd7uDbBG/kQdksF0FCw9jMLRT+e/zQTS/v/DFh4Bdb1vy/Gui7J/q1gew2
-         DOBTczcdVMdgr5Uol7pwesoSd2gPpgf4UE2gzH3lq2iL9KCla1c6Tp90wxnMVyIuHI6h
-         FgO2Sx/Vh/Y5DQlroifac/ZTnsYfWN20SBJL9HtCzNVVBZfu986/tDIVVChtKXFqjcyh
-         K5nroixuw7oQJaegcRq+1aBGrUgZ8bqBgJjzlPDteMaW1VMysDx8CR5sBEcjE9tGq62U
-         R/oA7H34n8GH8BAkKLqPKOmv/EvQKWSujMNlMc9PlVk3jI9zeuc1rn/+yKWc2KE+qt87
-         93Jg==
-X-Gm-Message-State: ACgBeo1hcf5buKoFwV/YyYpMS1ZfZ1xIGnMzf/qq3kiZKlU/oaZFizhr
-        GpJI4lfc1KDXOoI4ukg7KDM=
-X-Google-Smtp-Source: AA6agR7CFU2aM79N22sDwIWnfty4wO7V1f3b8vn4mHtGQRUYT2S9jgvjfervFyydp7hyA4QOghlj2Q==
-X-Received: by 2002:a17:90b:33d2:b0:1fb:971b:c5e9 with SMTP id lk18-20020a17090b33d200b001fb971bc5e9mr251237pjb.90.1661450653976;
-        Thu, 25 Aug 2022 11:04:13 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:349c:3078:d005:5a7e? ([2620:15c:211:201:349c:3078:d005:5a7e])
-        by smtp.gmail.com with ESMTPSA id s16-20020a170902a51000b00172b8e60019sm291701plq.249.2022.08.25.11.04.11
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 25 Aug 2022 11:04:13 -0700 (PDT)
-Message-ID: <3326ad2e-e82f-7254-7e6b-bb0a120288f8@acm.org>
-Date:   Thu, 25 Aug 2022 11:04:10 -0700
+        with ESMTP id S236470AbiHYSJD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Aug 2022 14:09:03 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6AFF8BD14F;
+        Thu, 25 Aug 2022 11:08:51 -0700 (PDT)
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 27PBLHS9015534;
+        Thu, 25 Aug 2022 18:08:21 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=BcXe+Mq2OdbFM6VJjcOacCP0r4hwAGD5KEuc5dav7bA=;
+ b=DjRS/fTc9WjBHEc0kKHaCfYy4ra7aZaRCiGTaDLH05d09kQrsQR24jwHa9aBalZZbgpR
+ jnqrNFKgwsLlgfvuilo736HS+lm0orChmyNWEls5sow8awjumEyUVWFcv3FtA9HxaAPM
+ 05/+uvJhdWV8OMsh+t7+dwakHE1YQkSApClHpj/OxEy+TLO+7r+//GoDyAGb77XCWcOt
+ FdiUNo47TD/vf5qw712GUBeLDxOnJ9VnKQdnzLXpyD0OYagNHLO4NtITzey0ClI24pcB
+ FDDZzC2qM+MCSqg1abS3iQ75YuG+i1t/493JuCk5VhrwwpmNCP0YpXfzSnyZt+CFm3WH vQ== 
+Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3j6072bbrp-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 25 Aug 2022 18:08:21 +0000
+Received: from nasanex01a.na.qualcomm.com (corens_vlan604_snip.qualcomm.com [10.53.140.1])
+        by NASANPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 27PI8KGn008317
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 25 Aug 2022 18:08:20 GMT
+Received: from [10.110.120.38] (10.80.80.8) by nasanex01a.na.qualcomm.com
+ (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.29; Thu, 25 Aug
+ 2022 11:08:19 -0700
+Message-ID: <fd9129d7-5688-20de-a716-738ce5076b50@quicinc.com>
+Date:   Thu, 25 Aug 2022 11:08:18 -0700
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.0.3
 Subject: Re: [RFC PATCH v2 1/2] scsi: ufs: Add Multi-Circular Queue support
-Content-Language: en-US
-To:     "Asutosh Das (asd)" <quic_asutoshd@quicinc.com>,
-        Can Guo <quic_cang@quicinc.com>, quic_nguyenb@quicinc.com,
-        quic_xiaosenh@quicinc.com, stanley.chu@mediatek.com,
-        adrian.hunter@intel.com, beanhuo@micron.com, avri.altman@wdc.com,
-        mani@kernel.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Can Guo <quic_cang@quicinc.com>, <quic_nguyenb@quicinc.com>,
+        <quic_xiaosenh@quicinc.com>, <stanley.chu@mediatek.com>,
+        <adrian.hunter@intel.com>, <beanhuo@micron.com>,
+        <avri.altman@wdc.com>, <mani@kernel.org>,
+        <linux-scsi@vger.kernel.org>, <kernel-team@android.com>
+CC:     Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Jinyoung Choi <j-young.choi@samsung.com>,
@@ -61,93 +61,59 @@ References: <1660213984-37793-1-git-send-email-quic_cang@quicinc.com>
  <1660213984-37793-2-git-send-email-quic_cang@quicinc.com>
  <ea877f4f-1acd-2da4-a6f5-10df02dfee74@acm.org>
  <4471ed41-516c-95d4-003d-28077df7dce4@quicinc.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <4471ed41-516c-95d4-003d-28077df7dce4@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+ <3326ad2e-e82f-7254-7e6b-bb0a120288f8@acm.org>
+From:   "Asutosh Das (asd)" <quic_asutoshd@quicinc.com>
+In-Reply-To: <3326ad2e-e82f-7254-7e6b-bb0a120288f8@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: hzZhKO_tdECaID8Lg1bJzE9wMDsqwhqu
+X-Proofpoint-ORIG-GUID: hzZhKO_tdECaID8Lg1bJzE9wMDsqwhqu
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.517,FMLib:17.11.122.1
+ definitions=2022-08-25_08,2022-08-25_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 impostorscore=0
+ mlxscore=0 malwarescore=0 suspectscore=0 lowpriorityscore=0 phishscore=0
+ spamscore=0 adultscore=0 bulkscore=0 priorityscore=1501 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2207270000
+ definitions=main-2208250069
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/24/22 18:42, Asutosh Das (asd) wrote:
-> On 8/18/2022 7:41 PM, Bart Van Assche wrote:
->> On 8/11/22 03:33, Can Guo wrote:
->>> +static inline void ufshcd_mcq_process_event(struct ufs_hba *hba,
->>> +                        struct ufs_hw_queue *hwq)
->>> +{
->>> +    struct cq_entry *cqe = ufshcd_mcq_cur_cqe(hwq);
->>> +    int tag;
->>> +
->>> +    tag = ufshcd_mcq_get_tag(hba, hwq, cqe);
->>> +    ufshcd_compl_one_task(hba, tag, cqe);
->>> +}
->>
->> Consider changing "process_event" into "process_cqe". Consider 
->> renaming ufshcd_compl_one_task() into ufshcd_compl_one_cqe().
->>
-> The preparatory patch that would precede this change would define 
-> ufshcd_compl_one_task() in ufshcd.c. Since this function would be 
-> invoked both from Single Doorbell mode and MCQ mode, 
-> ufshcd_compl_one_task() sounds more relevant. What say?
+On 8/25/2022 11:04 AM, Bart Van Assche wrote:
+> On 8/24/22 18:42, Asutosh Das (asd) wrote:
+>> On 8/18/2022 7:41 PM, Bart Van Assche wrote:
+>>> On 8/11/22 03:33, Can Guo wrote:
+>>>> +static inline void ufshcd_mcq_process_event(struct ufs_hba *hba,
+>>>> +                        struct ufs_hw_queue *hwq)
+>>>> +{
+>>>> +    struct cq_entry *cqe = ufshcd_mcq_cur_cqe(hwq);
+>>>> +    int tag;
+>>>> +
+>>>> +    tag = ufshcd_mcq_get_tag(hba, hwq, cqe);
+>>>> +    ufshcd_compl_one_task(hba, tag, cqe);
+>>>> +}
+>>>
+>>> Consider changing "process_event" into "process_cqe". Consider 
+>>> renaming ufshcd_compl_one_task() into ufshcd_compl_one_cqe().
+>>>
+>> The preparatory patch that would precede this change would define 
+>> ufshcd_compl_one_task() in ufshcd.c. Since this function would be 
+>> invoked both from Single Doorbell mode and MCQ mode, 
+>> ufshcd_compl_one_task() sounds more relevant. What say?
+> 
+> The name "task" is confusing since in SCSI standard documents it refers 
+> to "task management" while ufshcd_compl_one_task() is not related to 
+> SCSI task management at all. So I would appreciate it if another name is 
+> chosen than ufshcd_compl_one_task().
+> 
+Ok, makes sense. Will change the name in the next version.
 
-The name "task" is confusing since in SCSI standard documents it refers 
-to "task management" while ufshcd_compl_one_task() is not related to 
-SCSI task management at all. So I would appreciate it if another name is 
-chosen than ufshcd_compl_one_task().
-
->>> +static irqreturn_t ufshcd_handle_mcq_cq_events(struct ufs_hba *hba)
->>> +{
->>> +    struct ufs_hw_queue *hwq;
->>> +    unsigned long outstanding_cqs;
->>> +    unsigned int nr_queues;
->>> +    int i, ret;
->>> +    u32 events;
->>> +
->>> +    ret = ufshcd_vops_get_outstanding_cqs(hba, &outstanding_cqs);
->>> +    if (ret)
->>> +        outstanding_cqs = (1U << hba->nr_hw_queues) - 1;
->>> +
->>> +    /* Exclude the poll queues */
->>> +    nr_queues = hba->nr_hw_queues - hba->nr_queues[HCTX_TYPE_POLL];
->>> +    for_each_set_bit(i, &outstanding_cqs, nr_queues) {
->>> +        hwq = &hba->uhq[i];
->>> +
->>> +        events = ufshcd_mcq_read_cqis(hba, i);
->>> +        if (events)
->>> +            ufshcd_mcq_write_cqis(hba, events, i);
->>> +
->>> +        if (events & UFSHCD_MCQ_CQIS_TEPS)
->>> +            ufshcd_mcq_poll_cqe_nolock(hba, hwq);
->>> +    }
->>> +
->>> +    return IRQ_HANDLED;
->>> +}
->>
->> Why the loop over the completion queues? Shouldn't UFSHCI 4.0 
->> compliant controllers support one interrupt per completion queue?
->>
-> MCQ specification doesn't define that UFSHCI 4.0 compliant HC should 
-> support one interrupt per completion queue. I guess it would depend on 
-> HC vendors. But it specifies ESI as an alternate method; which is 
-> implemented in this patch.
-
-It is unfortunate that support for the ESI mechanism is optional in the 
-UFSHCI 4.0 specification since I consider this as one of the most 
-important UFSHCI 4.0 features. I wouldn't mind if MCQ would only be 
-supported for UFSHCI 4.0 controllers that support ESI.
-
->>> +    if (hba->nutrs != old_nutrs) {
->>> +        ufshcd_release_sdb_queue(hba, old_nutrs);
->>> +        ret = ufshcd_memory_alloc(hba);
->>> +        if (ret)
->>> +            return ret;
->>> +        ufshcd_host_memory_configure(hba);
->>> +    }
->>
->> Can this freeing + reallocating be avoided?
->>
-> Umm, we thought about this. Only after reading the device params, the 
-> ext_iid support and the device queue depth be determined. So didn't look 
-> like there's any other way than this. If you have any ideas, please let 
-> us know.
+Thanks,
+-asd
 
