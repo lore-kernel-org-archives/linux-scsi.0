@@ -2,42 +2,42 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B3D4ECAAA3
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Aug 2022 21:27:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 593BBECAAA3
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Aug 2022 21:31:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242072AbiHYV1b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 Aug 2022 17:27:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44958 "EHLO
+        id S231271AbiHYVbC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 Aug 2022 17:31:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49946 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231837AbiHYV1a (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Aug 2022 17:27:30 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D6EEB9FB2
-        for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2022 14:27:29 -0700 (PDT)
+        with ESMTP id S231837AbiHYVbA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Aug 2022 17:31:00 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 291C4BB035
+        for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2022 14:30:59 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id A8239B82E96
-        for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2022 21:27:28 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 64B78C43470
-        for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2022 21:27:27 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 85874CE29C1
+        for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2022 21:30:57 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id C85C9C43470
+        for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2022 21:30:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1661462847;
-        bh=1reNfzHuHsDIUGx5DfAxjr5GQW9UAR24CP8bdRUDSj4=;
+        s=k20201202; t=1661463055;
+        bh=RO8wb5nujwhPwrFI+Qbz23d1UTl8OOrJe2I0fObTC58=;
         h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=Mec/6vMkxk4bzWTjevcCM0o4MZe6tI7ROkp8KrzxTvyKLAJuolHJ6QfJYDI7Bt4TM
-         0Nqj0XhFgTsisOv/mCakpvjxqtGz7pO7eyvkif6tSkK96FwRFRYmURsApKvTtLglC2
-         HmJXwaA1G2Ya2T77X8z3LMiOhw+JsiW47Qe47Ww3OKjHasYtS8drLOphns/88oqWx3
-         1t7rxU5EScSaKUniG7Fc6VCxMnzo5SHJVTi3dqIzQY92S83kk1Uq/eBHGXeDs7Gr7E
-         8wNrCCfEMo2lcdT0S9R4gjOqRECSDZG0hQ0j5HutLQPXUEECYF1jzmE2am1syEHQwJ
-         B3/rs6MIfdxog==
+        b=p0eruGYdrPZ3PBeIZOQIOOQ/u29c7PXo7OsFwNyDyvZlrsNS8v2ofSYl+P3unMu2n
+         EoHO7VRjUZ2vsdSOWRXhF2tztBvZfKZWV/fzhEkKVWvvFnRDVsYL7ihCy43e9nR/Ib
+         oKlzMi4Nss/U40fMRQWFBkRhvS3cWoXssfZse9zlFTt0Bgh856cBQ7uIAX1Nf/gktn
+         Fnpk8EBG9Yxltcg6qp4aJ3zcKbdTuxFvjUmLXRZVDRkhJv/78PaRegroRjdV/VwOz7
+         JwjKqIR6R0x/KDnxrJy2JI+sAj0S+6hvYoVueXZdSCt8ls7K/F5Cs85GNZJ94ShPah
+         bhqNcV8bxPaDg==
 Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 53EC2C433EA; Thu, 25 Aug 2022 21:27:27 +0000 (UTC)
+        id B4CE1C433E4; Thu, 25 Aug 2022 21:30:55 +0000 (UTC)
 From:   bugzilla-daemon@kernel.org
 To:     linux-scsi@vger.kernel.org
 Subject: [Bug 216413] [BISECT INCLUDED] scsi/sd Rework asynchronous resume
  support breaks S2idle and S3 on several systems
-Date:   Thu, 25 Aug 2022 21:27:26 +0000
+Date:   Thu, 25 Aug 2022 21:30:55 +0000
 X-Bugzilla-Reason: CC
 X-Bugzilla-Type: changed
 X-Bugzilla-Watch-Reason: None
@@ -46,14 +46,14 @@ X-Bugzilla-Component: SCSI
 X-Bugzilla-Version: 2.5
 X-Bugzilla-Keywords: 
 X-Bugzilla-Severity: blocking
-X-Bugzilla-Who: bvanassche@acm.org
+X-Bugzilla-Who: todd.e.brandt@intel.com
 X-Bugzilla-Status: NEW
 X-Bugzilla-Resolution: 
 X-Bugzilla-Priority: P1
 X-Bugzilla-Assigned-To: bvanassche@acm.org
 X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-216413-11613-p2Or14S4UC@https.bugzilla.kernel.org/>
+X-Bugzilla-Changed-Fields: attachments.created
+Message-ID: <bug-216413-11613-QLyY8pNksJ@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-216413-11613@https.bugzilla.kernel.org/>
 References: <bug-216413-11613@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
@@ -67,10 +67,12 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 https://bugzilla.kernel.org/show_bug.cgi?id=3D216413
 
---- Comment #1 from Bart Van Assche (bvanassche@acm.org) ---
-A revert for that patch has been posted:
-https://lore.kernel.org/linux-scsi/20220816172638.538734-1-bvanassche@acm.o=
-rg/
+--- Comment #2 from Todd Brandt (todd.e.brandt@intel.com) ---
+Created attachment 301662
+  --> https://bugzilla.kernel.org/attachment.cgi?id=3D301662&action=3Dedit
+otcpl-hp-x360-bsw-dmesg.txt
+
+S3 suspend fail dmesg log for the HP Pavillion x360
 
 --=20
 You may reply to this email to add a comment.
