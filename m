@@ -2,89 +2,122 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EFDEEC32774
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Aug 2022 07:42:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BBF9DC28D13
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Aug 2022 07:42:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238311AbiHYHmm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 Aug 2022 03:42:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37540 "EHLO
+        id S238511AbiHYHmv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 Aug 2022 03:42:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37610 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238280AbiHYHml (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Aug 2022 03:42:41 -0400
-Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E6329D8D5
-        for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2022 00:42:41 -0700 (PDT)
-Received: by mail-pg1-x52c.google.com with SMTP id 12so17177293pga.1
-        for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2022 00:42:41 -0700 (PDT)
+        with ESMTP id S238468AbiHYHmo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Aug 2022 03:42:44 -0400
+Received: from mail-pg1-x52e.google.com (mail-pg1-x52e.google.com [IPv6:2607:f8b0:4864:20::52e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F9279DB4C
+        for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2022 00:42:43 -0700 (PDT)
+Received: by mail-pg1-x52e.google.com with SMTP id bh13so17180746pgb.4
+        for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2022 00:42:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=mime-version:message-id:date:subject:cc:to:from:from:to:cc;
-        bh=A0+/HlVoMhj9K39fjTrpQOFW0XZz/32oI+ErQwftllc=;
-        b=YUmU2mNrqXj82Ropq0unHioiKY9LTtWq7Ys2epCdO7qzA9hM6FRnl/gZomjteIgCip
-         fZ1ugerXDGjGoTSKJhMW/F67IYAiqL6TtWK0auGOaqczHndVWA/Tva+h8axfNJrIats6
-         C1pLD+MYT4wiMhQ2kEccYDba0PQogg9MLzUo8=
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:from:to:cc;
+        bh=h9s46oAmPCQL0s1h3/VJrjMdopyqM1mwca5/TWZPItw=;
+        b=VXhwnLvgpPB7jqfjwxjBI7yjSuPVJPqf5pNjaNlNAlyfbzgDNvVfTht1H74vktDPwO
+         FzNidJuUEei3U7fkX9yU1ish9XuJ/koIodoucanq7rGLBZpfI5iPRfzWEZ6KaDUwF7UO
+         oosLcGAi3uieWm/TgDL1ermPsB5nMFk3yMLWc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=mime-version:message-id:date:subject:cc:to:from:x-gm-message-state
-         :from:to:cc;
-        bh=A0+/HlVoMhj9K39fjTrpQOFW0XZz/32oI+ErQwftllc=;
-        b=a623d8xuPFi7+D1HWP3iYxO9rPcxKv1sXEHbVtF2wyh6CNNXc9O55B3SgVaLB6zWhO
-         ggWtNYXTj0JacCo9LOgdFeJ1H8hFpwRAuwNRKaxTtDgzwwAG9tG+dgHsa1C/FhOQeUFq
-         NMjyPMtGXn7H5w68+wJj0QpKhQchCmh/CmwWtwIuop2BEeOqaYEhmk3Ab5a0AO59giK4
-         alhoFDmIEKrVoo4OlDaWNY2Hb2tL2i0JFPVrq7sZcPqzszPXYGQfi9oy+dlccLCMGdKU
-         a6qD8nzkUcK7hAp6sPSJ5pMjdbwPTaHQATnXPWvE/4ndtb1Bp8d5Fv7T1lBSKmxTIpQ2
-         dusQ==
-X-Gm-Message-State: ACgBeo0U44KnKhRaWP9Kgx/9pyBYePewPQRaRhom4BdbFhjmSUJf9qM2
-        LnsRtGJt+u94SdNSXwkQredXTsYnuLWMtHkZFzVrZfhzcMnVEpVj0V2cdJscnH2J5lHhYIdrMg5
-        K8pqUbpFNFRmfpUE3y13grSixDv/8tfvJvZcJa8v0vbdPDSWVB96HIfW0chGjdSxG50VRK7c0Vg
-        9CX86ePYKg
-X-Google-Smtp-Source: AA6agR6NLmnOZqF9dopjt8ldWHpOIFZ7N5K/wmYlYSPRUfAqLAiufANcyJQhUnZjs/mOgn7bQUAFtw==
-X-Received: by 2002:a63:485a:0:b0:41d:ed37:d937 with SMTP id x26-20020a63485a000000b0041ded37d937mr2293367pgk.336.1661413360159;
-        Thu, 25 Aug 2022 00:42:40 -0700 (PDT)
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:x-gm-message-state:from:to:cc;
+        bh=h9s46oAmPCQL0s1h3/VJrjMdopyqM1mwca5/TWZPItw=;
+        b=Q3YQoprb9o+rxM4pZCPO8BomYlKzRAlUqmrWrW9GRuwVXSHeZeOKTA+ikfQlsHDLjP
+         AG4gruNiXLyPhnp8EBDv9a+RcGvVgnItttQdcDKoY611x/4cbvJPRpWz/bhe5N1wajB0
+         OhyT06faCUY4oV+r6/D3YXchhyMOnvF24Wi4du0fMnl3DayKi3b24dj5wwDBR3s0EYoA
+         T0bENvKMYlqgw+2QGgSkGLuAVeiq3XCrUagiH5wpaWnl697kU3IxWrnPU0GjDBqx6eF3
+         +xq0FY6/uMQenwbZYg4QiR6aCkpqpJ0mvi8CNK+ClqdGAagyqZJ6tymYK1n1qfWtkySR
+         LBPQ==
+X-Gm-Message-State: ACgBeo3S5yNOgJ4Urdpi76jhDKmMMc4I0aFTN5hrckbCxS9Ms3TCzU5M
+        PcfNJlD7jjA32ZrZP4sdqlHVlzmzlUm9akXoj/irdFHN8pOhWfm43mrR6lTFSXHslDMbuhrI2SA
+        jblzWkMnTGXxLZ4G1pubzt++eiZpDWho0q7DDeXD5tzCZWKyIDde1v2S5zxjMbwxwdcImWuiwNF
+        IGeJvpar0w
+X-Google-Smtp-Source: AA6agR7V2155Ow0bsQZucfkwEWyMSUMYSUbnlqI9ouYjfltV7lOjaQyH39Z4eFdzAciY5D9+2/G15Q==
+X-Received: by 2002:a05:6a00:21c2:b0:52b:ff44:6680 with SMTP id t2-20020a056a0021c200b0052bff446680mr2659418pfj.57.1661413361979;
+        Thu, 25 Aug 2022 00:42:41 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id ns3-20020a17090b250300b001fbb0d07363sm644916pjb.39.2022.08.25.00.42.37
+        by smtp.gmail.com with ESMTPSA id ns3-20020a17090b250300b001fbb0d07363sm644916pjb.39.2022.08.25.00.42.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 25 Aug 2022 00:42:39 -0700 (PDT)
+        Thu, 25 Aug 2022 00:42:41 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH v2 0/4] mpt3sas: Few enhancements and fixes
-Date:   Thu, 25 Aug 2022 13:24:53 +0530
-Message-Id: <20220825075457.16422-1-sreekanth.reddy@broadcom.com>
+Subject: [PATCH v2 1/4] mpt3sas: Don't change dma mask while reallocating pools
+Date:   Thu, 25 Aug 2022 13:24:54 +0530
+Message-Id: <20220825075457.16422-2-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20220825075457.16422-1-sreekanth.reddy@broadcom.com>
+References: <20220825075457.16422-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000031248805e70bf1bd"
+        boundary="0000000000004af84005e70bf1f8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000031248805e70bf1bd
+--0000000000004af84005e70bf1f8
 Content-Transfer-Encoding: 8bit
 
-Few enhancements and fixes of mpt3sas driver.
+When a pool crosses the 4gb boundary region then
+before reallocation pools just change the coherent
+dma mask to 32bit and keep the normal dma mask to 63/64 bit.
 
-V2:
- Updated the patch description for patch 3/4 
+Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 21 ++++++++++++++-------
+ 1 file changed, 14 insertions(+), 7 deletions(-)
 
-Sreekanth Reddy (4):
-  mpt3sas: Don't change dma mask while reallocating pools
-  mpt3sas: Fix trace buffer registration failed
-  mpt3sas: Increase cmd_per_lun to 128
-  mpt3sas: Update driver version to 43.100.00.00
-
- drivers/scsi/mpt3sas/mpt3sas_base.c  | 21 ++++++++++++++-------
- drivers/scsi/mpt3sas/mpt3sas_base.h  |  4 ++--
- drivers/scsi/mpt3sas/mpt3sas_ctl.c   |  4 ++++
- drivers/scsi/mpt3sas/mpt3sas_scsih.c |  2 +-
- 4 files changed, 21 insertions(+), 10 deletions(-)
-
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index eeebe80..f8a3b0d 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -2990,19 +2990,26 @@ static int
+ _base_config_dma_addressing(struct MPT3SAS_ADAPTER *ioc, struct pci_dev *pdev)
+ {
+ 	struct sysinfo s;
++	u64 coherent_dma_mask, dma_mask;
+ 
+-	if (ioc->is_mcpu_endpoint ||
+-	    sizeof(dma_addr_t) == 4 || ioc->use_32bit_dma ||
+-	    dma_get_required_mask(&pdev->dev) <= 32)
++	if (ioc->is_mcpu_endpoint || sizeof(dma_addr_t) == 4 ||
++	    dma_get_required_mask(&pdev->dev) <= 32) {
+ 		ioc->dma_mask = 32;
++		coherent_dma_mask = dma_mask = DMA_BIT_MASK(32);
+ 	/* Set 63 bit DMA mask for all SAS3 and SAS35 controllers */
+-	else if (ioc->hba_mpi_version_belonged > MPI2_VERSION)
++	} else if (ioc->hba_mpi_version_belonged > MPI2_VERSION) {
+ 		ioc->dma_mask = 63;
+-	else
++		coherent_dma_mask = dma_mask = DMA_BIT_MASK(63);
++	} else {
+ 		ioc->dma_mask = 64;
++		coherent_dma_mask = dma_mask = DMA_BIT_MASK(64);
++	}
++
++	if (ioc->use_32bit_dma)
++		coherent_dma_mask = DMA_BIT_MASK(32);
+ 
+-	if (dma_set_mask(&pdev->dev, DMA_BIT_MASK(ioc->dma_mask)) ||
+-	    dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(ioc->dma_mask)))
++	if (dma_set_mask(&pdev->dev, dma_mask) ||
++	    dma_set_coherent_mask(&pdev->dev, coherent_dma_mask))
+ 		return -ENODEV;
+ 
+ 	if (ioc->dma_mask > 32) {
 -- 
 2.27.0
 
 
---00000000000031248805e70bf1bd
+--0000000000004af84005e70bf1f8
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -155,13 +188,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEINVzY9mwAiwR5129AM5q
-PXp+p7GA5ncNsAl25u7DU3mYMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDgyNTA3NDI0MFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIDHGkW7fVfk09TRgrZ5o
+46CZwsC5ydvpZtxkMR2kJJWdMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDgyNTA3NDI0MlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQAysycUbz68+3n4jdSCHbdcsidElRK1CYsollP6
-ot09Zx+1bO+vOcAlX17hortQE3DkUHL+a9ef2n4pPcsHe6YTFD7axYnv2qoecTyxoYE8q+dYGuvD
-5pwoAu7oeK0lShZNW+uWcfmQeG5fYWWGQI+3mL6bGovKylz8ppEDmpeGbVLLByaiNIL3LraYgzjU
-cuGhThoDzR8aUKeu+KhxJVxcn/lllvsiZmy+yxmSt+85fAVvBcSahbmPZoTAPPrGu+XDALgbN4f2
-J/P2LtdhGJ8dELt3KSDn2K+Xygt1RhOUBMiRq9xaxuZBJaBkCYFJyjF5e4x93MUwdGptXhHQACOV
---00000000000031248805e70bf1bd--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBNEmflad9iDykoWo1NvJ/k9uI4QgiJXnCp/NBS
+fc3OoxjuxceWfuPbE5Q5XMpZkHCEsh2ftdWPZmIN719Kfshv2hjeJO4jKePL4fTLBu003Nzlme97
+oqLVt1/vfE2jPFdEeijzZ59OWxPCB7G/lhqbd7MJvEXbTu3Z6n/ufRASEnhCYRXK8XwhgTa/QPdZ
+YwtPSFd00ikagtDl8ir94A2GXbRD22+Lvofl/10zCSgAyT0i5xqLC4PIX6OsUmbkofJAiw3W2t6v
+0ZbOj/wXBf+YC2P/Ty9HFpz5nIxwTJPL7pdVA6lvJMGV1LdKCAICz7BQVyLY9AiP6M7v/s0OhPT8
+--0000000000004af84005e70bf1f8--
