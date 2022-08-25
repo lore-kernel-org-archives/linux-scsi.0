@@ -2,60 +2,60 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C93FECAAA0
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Aug 2022 20:31:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B609ECAAA3
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Aug 2022 21:24:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231271AbiHYUbI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 Aug 2022 16:31:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50168 "EHLO
+        id S232671AbiHYVYa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 Aug 2022 17:24:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39502 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243654AbiHYUbG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Aug 2022 16:31:06 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37A82ACA31
-        for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2022 13:31:05 -0700 (PDT)
+        with ESMTP id S229462AbiHYVY2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Aug 2022 17:24:28 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D083BB923
+        for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2022 14:24:27 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5FA31619B0
-        for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2022 20:31:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id BF7D9C43156
-        for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2022 20:31:03 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id B273EB82E96
+        for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2022 21:24:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 5BFB9C43470
+        for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2022 21:24:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1661459463;
-        bh=GfsOKZ9Ae9KzLHZOFlaPw2hGn1XfF6MJD3zInB0Leqg=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=ntRnKFMxhL+6bkMYEifAGWYiReug74li/9MW8QBMeKW9OYqCNDzdQRR7uYfvMTOIy
-         XIyQ282fUBPvG9iz1ypeDpvnwdeoQlfyQMpNdRMaGdoHY/f9D5G2RO6KqS91ow30+V
-         zEBq+vk9KaiVPXJoGQ8UAuoD9SG+hkzQwKUScX34V+dIrLCAKp/5FTep0P1TCaE477
-         or8UzpMosMV1n96T97i9TGzIijLrZQc6Rdu8A3KMM7ze7snXlJ7xVAXzJIHmITNy0y
-         yRSeSPaxP8L1hj09ZpsGcuvgZDu4aDNiOJCZcMuxSadWoCWwJY7sE9ZGIuj5F4VDrn
-         NArMZ7MUgAiRA==
+        s=k20201202; t=1661462664;
+        bh=EGiawnj8tuA1Z+w1fdCpXgqj9BTDBQOYFquyzUCG45g=;
+        h=From:To:Subject:Date:From;
+        b=Gmb9u03kLDqBY3ksPjwxw+ZIerFeky3VdvVRzqw5ICqi7xWU3Z9GOu2Yg8brXYaYI
+         X4ntqmpYmMgKdCtV/u4iDicDEpydO4nhHoxoM2UOztd3E1LDyR4p7Yp2+U7nQvvINu
+         d6cO8Xi+a32N1S7TGLTHBCD3LPKt+hZpCuMB7SKvMlr/YsEAickFo1IC3jbCX0ifDe
+         zCYP8jJjS+kbDKZN+GCJ4QmvonYt4yh08uSYdr0+b2nFdiPtYavdX+r+J9X0iTAOV3
+         cc6EZMNFoA7P37Bnq2Ig4b0e3tkC68MhS519JAEEOK4M3KE4vyc6Xt3c1ysH4GzqLn
+         Cu+17sYrQbLAw==
 Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id B0B12C0422E; Thu, 25 Aug 2022 20:31:03 +0000 (UTC)
+        id 38E22C433E4; Thu, 25 Aug 2022 21:24:24 +0000 (UTC)
 From:   bugzilla-daemon@kernel.org
 To:     linux-scsi@vger.kernel.org
-Subject: [Bug 215880] Resume process hangs for 5-6 seconds starting sometime
- in 5.16
-Date:   Thu, 25 Aug 2022 20:31:02 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: Other
+Subject: [Bug 216413] New: [BISECT INCLUDED] scsi/sd Rework asynchronous
+ resume support breaks S2idle and S3 on several systems
+Date:   Thu, 25 Aug 2022 21:24:23 +0000
+X-Bugzilla-Reason: CC
+X-Bugzilla-Type: new
+X-Bugzilla-Watch-Reason: None
+X-Bugzilla-Product: IO/Storage
+X-Bugzilla-Component: SCSI
 X-Bugzilla-Version: 2.5
 X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: bvanassche@acm.org
+X-Bugzilla-Severity: blocking
+X-Bugzilla-Who: todd.e.brandt@intel.com
 X-Bugzilla-Status: NEW
 X-Bugzilla-Resolution: 
 X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Assigned-To: bvanassche@acm.org
 X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-215880-11613-145qj6CvR1@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-215880-11613@https.bugzilla.kernel.org/>
-References: <bug-215880-11613@https.bugzilla.kernel.org/>
+X-Bugzilla-Changed-Fields: bug_id short_desc product version
+ cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
+ priority component assigned_to reporter cc blocked cf_regression
+Message-ID: <bug-216413-11613@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 X-Bugzilla-URL: https://bugzilla.kernel.org/
@@ -65,67 +65,84 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D215880
+https://bugzilla.kernel.org/show_bug.cgi?id=3D216413
 
---- Comment #37 from Bart Van Assche (bvanassche@acm.org) ---
-On 8/25/22 13:01, bugzilla-daemon@kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=3D215880
->=20
-> --- Comment #36 from jason600 (jason600.groome@gmail.com) ---
-> (In reply to Bart Van Assche from comment #27)
->> Thanks for testing! The patches from the sd-resume branch have been post=
-ed
->> on the linux-scsi mailing list. See also
->>
->> https://lore.kernel.org/linux-scsi/20220628222131.14780-1-bvanassche@acm=
-.org/
->> T/#t
->=20
-> Hi Bart, just an update for you. I noticed this had been removed from the
-> 6.0-rc1 for freezing after suspend.
->=20
-> I've been compiling my kernel with this fix on various 5.18 kernels (with
-> opensuse tumbleweed), it has worked fine, no freezing on resume as others
-> have
-> mentioned.
->=20
-> Yesterday, I updated to 5.19.2 kernel, applied the fix, recompiled, and it
-> froze after the first suspend. Rebooted and the same thing happened again=
-. I
-> recompiled the kernel with the fix, just to make sure i didn't mess it up,
-> and
-> the same happened again.
->=20
-> When you originally did this fix, you based it on 5.18, and indeed, it wo=
-rks
-> fine on 5.18 for me. There were a lot of changes to the drivers/scsi/sd.c
-> file
-> for 5.19, presumably it was those changes that made this fix start freezi=
-ng
-> after suspend.
->=20
-> Perhaps you could check if the other people that experienced freezing were
-> using either 5.19 or 6.0-rc1.
+            Bug ID: 216413
+           Summary: [BISECT INCLUDED] scsi/sd Rework asynchronous resume
+                    support breaks S2idle and S3 on several systems
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 6.0.0-rc1
+          Hardware: Intel
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: blocking
+          Priority: P1
+         Component: SCSI
+          Assignee: bvanassche@acm.org
+          Reporter: todd.e.brandt@intel.com
+                CC: bvanassche@acm.org, lenb@kernel.org,
+                    linux-scsi@vger.kernel.org, martin.petersen@oracle.com
+            Blocks: 178231
+        Regression: No
 
-Multiple people reported issues with freezes during suspend with kernel=20
-v6.0-rc1. Please take a look at the following report:=20
-https://lore.kernel.org/all/dd6844e7-f338-a4e9-2dad-0960e25b2ca1@redhat.com=
-/.=20
-It shows that if zoned ATA disks are present that blk_mq_freeze_queue()=20
-may be called from inside ata_scsi_dev_rescan() on the context of a work=20
-queue. ATA rescanning happens from inside the SCSI error handler. So=20
-there is potential for a lockup because of the following:
-* Execution of the START command being postponed because the SCSI error=20
-handler is active.
-* blk_mq_freeze_queue() waiting for the START command to finish.
-* The START completion handler not being executed because it got queued=20
-on the same work queue as the ATA rescan work.
+A commit in 6.0.0-rc1 has caused S2idle and S3 (freeze & mem) to completely
+hang the system on these 4 machines in our lab:
 
-Unfortunately I do not know enough about the ATA core to proceed. I need=20
-help from an ATA expert.
+1) Clevo System76 Lemur 6
+2) Lenovo Yoga 2 Pro
+3) Dell Inspiron 3493
+4) HP Pavillion x360
 
+To reproduce the issue simply run kernel 6.0.0-rc1 or newer on these systems
+and run "sudo sleepgraph -m freeze" or "sudo sleepgraph -m mem". The system
+will hang after that.
+
+I've bisected the problem to this specific commit:
+
+88f1669019bd62b3009a3cebf772fbaaa21b9f38 is the first bad commit
+commit 88f1669019bd62b3009a3cebf772fbaaa21b9f38
+Author: Bart Van Assche <bvanassche@acm.org>
+Date:   Thu Jun 30 12:57:03 2022 -0700
+
+    scsi: sd: Rework asynchronous resume support
+
+    For some technologies, e.g. an ATA bus, resuming can take multiple
+    seconds. Waiting for resume to finish can cause a very noticeable delay.
+    Hence this commit that restores the behavior from before "scsi: core: p=
+m:
+    Rely on the device driver core for async power management" for most SCSI
+    devices.
+
+    This commit introduces a behavior change: if the START command fails, do
+    not consider this as a SCSI disk resume failure.
+
+    Link: https://bugzilla.kernel.org/show_bug.cgi?id=3D215880
+    Link: https://lore.kernel.org/r/20220630195703.10155-3-bvanassche@acm.o=
+rg
+    Fixes: a19a93e4c6a9 ("scsi: core: pm: Rely on the device driver core for
+async power management")
+    Cc: Ming Lei <ming.lei@redhat.com>
+    Cc: Hannes Reinecke <hare@suse.de>
+    Cc: John Garry <john.garry@huawei.com>
+    Cc: ericspero@icloud.com
+    Cc: jason600.groome@gmail.com
+    Tested-by: jason600.groome@gmail.com
+    Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+    Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+:040000 040000 dbd390c19cfddba2b559b06691404aee4c165384
+54c7fa67e3a1605878999bdf1e39a95ca793238a M      drivers
+
+
+Referenced Bugs:
+
+https://bugzilla.kernel.org/show_bug.cgi?id=3D178231
+[Bug 178231] Meta-bug: Linux suspend-to-mem and freeze performance optimiza=
+tion
 --=20
 You may reply to this email to add a comment.
 
 You are receiving this mail because:
-You are watching the assignee of the bug.=
+You are on the CC list for the bug.=
