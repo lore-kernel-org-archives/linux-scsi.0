@@ -2,223 +2,166 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53B6EC04AA5
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Aug 2022 01:51:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFDEEC32774
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Aug 2022 07:42:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236107AbiHYBvn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 24 Aug 2022 21:51:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40078 "EHLO
+        id S238311AbiHYHmm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 Aug 2022 03:42:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37540 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236289AbiHYBvU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Aug 2022 21:51:20 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A67D677567;
-        Wed, 24 Aug 2022 18:44:59 -0700 (PDT)
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 27P1BJI9003283;
-        Thu, 25 Aug 2022 01:43:00 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=1IqX6MUoNZzcYl6uTl8ytU0e5VUhZBjo8yJiqNMWhSU=;
- b=L4Q2AiJxDLIK0PFWu9KHzsrbALagC3DKsWxrggQQSsexUMzQ6NdL/i3m4FyvL3jh87yd
- mi4+LH4fY9mzFeHlrWdVyVPfEfXxDxKf0dkOvDTI6bce0FJCmloracrKp7Nm6XlI1XX1
- X6ahiIKCH/EeY41p5or9h/He6sFNSPb/6iSi6oQ1UaYL83+Pp5n6223Y1fHpO08rIMOS
- 97hI+gyL8z/t28XVgSFIXduYyxfj7wcRk2uKR0e1sIOAFtBQzqDo8kTQw1WPkLzn1erb
- Kw4u3iqcm4QLsxCn5YUoF8Him91jiICZBMfaeYikKW6C0fNs0JV1w5v1Hy+S50119Of6 Bw== 
-Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3j52pj54wx-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 25 Aug 2022 01:43:00 +0000
-Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
-        by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 27P1gxAx007793
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 25 Aug 2022 01:42:59 GMT
-Received: from [10.110.120.38] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.29; Wed, 24 Aug
- 2022 18:42:58 -0700
-Message-ID: <4471ed41-516c-95d4-003d-28077df7dce4@quicinc.com>
-Date:   Wed, 24 Aug 2022 18:42:57 -0700
+        with ESMTP id S238280AbiHYHml (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Aug 2022 03:42:41 -0400
+Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E6329D8D5
+        for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2022 00:42:41 -0700 (PDT)
+Received: by mail-pg1-x52c.google.com with SMTP id 12so17177293pga.1
+        for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2022 00:42:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=mime-version:message-id:date:subject:cc:to:from:from:to:cc;
+        bh=A0+/HlVoMhj9K39fjTrpQOFW0XZz/32oI+ErQwftllc=;
+        b=YUmU2mNrqXj82Ropq0unHioiKY9LTtWq7Ys2epCdO7qzA9hM6FRnl/gZomjteIgCip
+         fZ1ugerXDGjGoTSKJhMW/F67IYAiqL6TtWK0auGOaqczHndVWA/Tva+h8axfNJrIats6
+         C1pLD+MYT4wiMhQ2kEccYDba0PQogg9MLzUo8=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=mime-version:message-id:date:subject:cc:to:from:x-gm-message-state
+         :from:to:cc;
+        bh=A0+/HlVoMhj9K39fjTrpQOFW0XZz/32oI+ErQwftllc=;
+        b=a623d8xuPFi7+D1HWP3iYxO9rPcxKv1sXEHbVtF2wyh6CNNXc9O55B3SgVaLB6zWhO
+         ggWtNYXTj0JacCo9LOgdFeJ1H8hFpwRAuwNRKaxTtDgzwwAG9tG+dgHsa1C/FhOQeUFq
+         NMjyPMtGXn7H5w68+wJj0QpKhQchCmh/CmwWtwIuop2BEeOqaYEhmk3Ab5a0AO59giK4
+         alhoFDmIEKrVoo4OlDaWNY2Hb2tL2i0JFPVrq7sZcPqzszPXYGQfi9oy+dlccLCMGdKU
+         a6qD8nzkUcK7hAp6sPSJ5pMjdbwPTaHQATnXPWvE/4ndtb1Bp8d5Fv7T1lBSKmxTIpQ2
+         dusQ==
+X-Gm-Message-State: ACgBeo0U44KnKhRaWP9Kgx/9pyBYePewPQRaRhom4BdbFhjmSUJf9qM2
+        LnsRtGJt+u94SdNSXwkQredXTsYnuLWMtHkZFzVrZfhzcMnVEpVj0V2cdJscnH2J5lHhYIdrMg5
+        K8pqUbpFNFRmfpUE3y13grSixDv/8tfvJvZcJa8v0vbdPDSWVB96HIfW0chGjdSxG50VRK7c0Vg
+        9CX86ePYKg
+X-Google-Smtp-Source: AA6agR6NLmnOZqF9dopjt8ldWHpOIFZ7N5K/wmYlYSPRUfAqLAiufANcyJQhUnZjs/mOgn7bQUAFtw==
+X-Received: by 2002:a63:485a:0:b0:41d:ed37:d937 with SMTP id x26-20020a63485a000000b0041ded37d937mr2293367pgk.336.1661413360159;
+        Thu, 25 Aug 2022 00:42:40 -0700 (PDT)
+Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id ns3-20020a17090b250300b001fbb0d07363sm644916pjb.39.2022.08.25.00.42.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 25 Aug 2022 00:42:39 -0700 (PDT)
+From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: [PATCH v2 0/4] mpt3sas: Few enhancements and fixes
+Date:   Thu, 25 Aug 2022 13:24:53 +0530
+Message-Id: <20220825075457.16422-1-sreekanth.reddy@broadcom.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.0.3
-Subject: Re: [RFC PATCH v2 1/2] scsi: ufs: Add Multi-Circular Queue support
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Can Guo <quic_cang@quicinc.com>, <quic_nguyenb@quicinc.com>,
-        <quic_xiaosenh@quicinc.com>, <stanley.chu@mediatek.com>,
-        <adrian.hunter@intel.com>, <beanhuo@micron.com>,
-        <avri.altman@wdc.com>, <mani@kernel.org>,
-        <linux-scsi@vger.kernel.org>, <kernel-team@android.com>
-CC:     Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>,
-        jongmin jeong <jjmin.jeong@samsung.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1660213984-37793-1-git-send-email-quic_cang@quicinc.com>
- <1660213984-37793-2-git-send-email-quic_cang@quicinc.com>
- <ea877f4f-1acd-2da4-a6f5-10df02dfee74@acm.org>
-From:   "Asutosh Das (asd)" <quic_asutoshd@quicinc.com>
-In-Reply-To: <ea877f4f-1acd-2da4-a6f5-10df02dfee74@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: ACHtjs5nBAdx44EA2fh3EbMsc-TM1-7Z
-X-Proofpoint-ORIG-GUID: ACHtjs5nBAdx44EA2fh3EbMsc-TM1-7Z
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.517,FMLib:17.11.122.1
- definitions=2022-08-25_01,2022-08-22_02,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501 mlxscore=0
- bulkscore=0 lowpriorityscore=0 clxscore=1015 impostorscore=0
- malwarescore=0 phishscore=0 mlxlogscore=999 spamscore=0 adultscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2207270000 definitions=main-2208250004
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="00000000000031248805e70bf1bd"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello Bart,
+--00000000000031248805e70bf1bd
+Content-Transfer-Encoding: 8bit
 
-Thanks for taking a look.
+Few enhancements and fixes of mpt3sas driver.
 
-Sorry for the delay in response.
+V2:
+ Updated the patch description for patch 3/4 
 
-Please find the response to your comments below.
+Sreekanth Reddy (4):
+  mpt3sas: Don't change dma mask while reallocating pools
+  mpt3sas: Fix trace buffer registration failed
+  mpt3sas: Increase cmd_per_lun to 128
+  mpt3sas: Update driver version to 43.100.00.00
 
-On 8/18/2022 7:41 PM, Bart Van Assche wrote:
-> On 8/11/22 03:33, Can Guo wrote:
-[...]
->> +    /* One more reserved for dev_cmd_queue */
->> +    hba->nr_hw_queues = host->nr_hw_queues + 1;
-> 
-> Should '1' above perhaps be changed into 'dev_cmd_queue'? Are you sure 
-> that the comment above is in sync with the code?
-> 
->> +    ret = ufshcd_mcq_vops_config_rop(hba);
->> +    if (ret) {
->> +        dev_err(hba->dev, "MCQ Runtime Operation Pointers not 
->> configured\n");
->> +        goto out_err;
->> +    }
-[...]
->> +static inline void ufshcd_mcq_process_event(struct ufs_hba *hba,
->> +                        struct ufs_hw_queue *hwq)
->> +{
->> +    struct cq_entry *cqe = ufshcd_mcq_cur_cqe(hwq);
->> +    int tag;
->> +
->> +    tag = ufshcd_mcq_get_tag(hba, hwq, cqe);
->> +    ufshcd_compl_one_task(hba, tag, cqe);
->> +}
-> 
-> Consider changing "process_event" into "process_cqe". Consider renaming 
-> ufshcd_compl_one_task() into ufshcd_compl_one_cqe().
-> 
-The preparatory patch that would precede this change would define 
-ufshcd_compl_one_task() in ufshcd.c. Since this function would be 
-invoked both from Single Doorbell mode and MCQ mode, 
-ufshcd_compl_one_task() sounds more relevant. What say?
+ drivers/scsi/mpt3sas/mpt3sas_base.c  | 21 ++++++++++++++-------
+ drivers/scsi/mpt3sas/mpt3sas_base.h  |  4 ++--
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c   |  4 ++++
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c |  2 +-
+ 4 files changed, 21 insertions(+), 10 deletions(-)
 
->> +unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
->> +                       struct ufs_hw_queue *hwq)
->> +{
->> +    unsigned long completed_reqs, flags;
->> +
->> +    spin_lock_irqsave(&hwq->cq_lock, flags);
->> +    completed_reqs = ufshcd_mcq_poll_cqe_nolock(hba, hwq);
->> +    spin_unlock_irqrestore(&hwq->cq_lock, flags);
->> +
->> +    return completed_reqs;
->> +}
-> 
-> Why are interrupts disabled around ufshcd_mcq_poll_cqe_nolock() calls?
-> 
-> Why are the ufshcd_mcq_poll_cqe_nolock() protected by a spinlock?
-> 
-Because ufshcd_mcq_poll_cqe_lock() is invoked by ufshcd_poll() which may 
-be invoked simultaneously from different CPUs.
-But only spin_[un]lock() variant can suffice here.
+-- 
+2.27.0
 
-[...]
 
->> +static irqreturn_t ufshcd_handle_mcq_cq_events(struct ufs_hba *hba)
->> +{
->> +    struct ufs_hw_queue *hwq;
->> +    unsigned long outstanding_cqs;
->> +    unsigned int nr_queues;
->> +    int i, ret;
->> +    u32 events;
->> +
->> +    ret = ufshcd_vops_get_outstanding_cqs(hba, &outstanding_cqs);
->> +    if (ret)
->> +        outstanding_cqs = (1U << hba->nr_hw_queues) - 1;
->> +
->> +    /* Exclude the poll queues */
->> +    nr_queues = hba->nr_hw_queues - hba->nr_queues[HCTX_TYPE_POLL];
->> +    for_each_set_bit(i, &outstanding_cqs, nr_queues) {
->> +        hwq = &hba->uhq[i];
->> +
->> +        events = ufshcd_mcq_read_cqis(hba, i);
->> +        if (events)
->> +            ufshcd_mcq_write_cqis(hba, events, i);
->> +
->> +        if (events & UFSHCD_MCQ_CQIS_TEPS)
->> +            ufshcd_mcq_poll_cqe_nolock(hba, hwq);
->> +    }
->> +
->> +    return IRQ_HANDLED;
->> +}
-> 
-> Why the loop over the completion queues? Shouldn't UFSHCI 4.0 compliant 
-> controllers support one interrupt per completion queue?
-> 
-MCQ specification doesn't define that UFSHCI 4.0 compliant HC should 
-support one interrupt per completion queue. I guess it would depend on 
-HC vendors. But it specifies ESI as an alternate method; which is 
-implemented in this patch.
+--00000000000031248805e70bf1bd
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
->> -/* Complete requests that have door-bell cleared */
->> +/*
->> + * Complete requests that have door-bell cleared and/or pending 
->> completion
->> + * entries on completion queues if MCQ is enabled
->> + */
-> 
-> Since the above comment has been changed, please spell the word doorbell 
-> correctly (no hyphen).
-> 
->> @@ -6823,7 +6947,7 @@ static int ufshcd_issue_devman_upiu_cmd(struct 
->> ufs_hba *hba,
->>                       enum query_opcode desc_op)
->>   {
->>       DECLARE_COMPLETION_ONSTACK(wait);
->> -    const u32 tag = hba->reserved_slot;
->> +    u32 tag = hba->reserved_slot;
-> 
-> Why has the 'const' keyword been removed?
-> 
->> +    if (hba->nutrs != old_nutrs) {
->> +        ufshcd_release_sdb_queue(hba, old_nutrs);
->> +        ret = ufshcd_memory_alloc(hba);
->> +        if (ret)
->> +            return ret;
->> +        ufshcd_host_memory_configure(hba);
->> +    }
-> 
-> Can this freeing + reallocating be avoided?
-> 
-Umm, we thought about this. Only after reading the device params, the 
-ext_iid support and the device queue depth be determined. So didn't look 
-like there's any other way than this. If you have any ideas, please let 
-us know.
-
-Agree with the rest of the suggestions, would address it in the next 
-version.
-
--asd/can
+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
+5AGo2E3pe+2yEgkxKvM2fnniZHUiSjbrfKk6nl9RIXPOKUP5HntZFdA5XuNYXWM+HPs3O0AJwBm/
+VCZsZtkjVjxeBmTXiXDnxytdsHdGrHGymPfjJYatDu6d1KRVDlMCAwEAAaOCAd0wggHZMA4GA1Ud
+DwEB/wQEAwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9zZWN1cmUu
+Z2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNydDBBBggr
+BgEFBQcwAYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJj
+YTIwMjAwTQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3
+Lmdsb2JhbHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+oDygOoY4
+aHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcmww
+JwYDVR0RBCAwHoEcc3JlZWthbnRoLnJlZGR5QGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEF
+BQcDBDAfBgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUClVHbAvhzGT8
+s2/6xOf58NkGMQ8wDQYJKoZIhvcNAQELBQADggEBAENRsP1H3calKC2Sstg/8li8byKiqljCFkfi
+IhcJsjPOOR9UZnMFxAoH/s2AlM7mQDR7rZ2MxRuUnIa6Cp5W5w1lUJHktjCUHnQq5nIAZ9GH5SDY
+pgzbFsoYX8U2QCmkAC023FF++ZDJuc9aj0R/nhABxmUYErIze2jV/VO8Pj7TnCrBONZ/Qvf8G5CQ
+X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
+eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
+Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
+MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEINVzY9mwAiwR5129AM5q
+PXp+p7GA5ncNsAl25u7DU3mYMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDgyNTA3NDI0MFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQAysycUbz68+3n4jdSCHbdcsidElRK1CYsollP6
+ot09Zx+1bO+vOcAlX17hortQE3DkUHL+a9ef2n4pPcsHe6YTFD7axYnv2qoecTyxoYE8q+dYGuvD
+5pwoAu7oeK0lShZNW+uWcfmQeG5fYWWGQI+3mL6bGovKylz8ppEDmpeGbVLLByaiNIL3LraYgzjU
+cuGhThoDzR8aUKeu+KhxJVxcn/lllvsiZmy+yxmSt+85fAVvBcSahbmPZoTAPPrGu+XDALgbN4f2
+J/P2LtdhGJ8dELt3KSDn2K+Xygt1RhOUBMiRq9xaxuZBJaBkCYFJyjF5e4x93MUwdGptXhHQACOV
+--00000000000031248805e70bf1bd--
