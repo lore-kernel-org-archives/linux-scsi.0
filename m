@@ -2,174 +2,283 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51A2EC28D13
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Aug 2022 07:43:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F05FC3F6B0
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Aug 2022 08:43:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238665AbiHYHnD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 Aug 2022 03:43:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37606 "EHLO
+        id S238113AbiHYInR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 Aug 2022 04:43:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55556 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238542AbiHYHmw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Aug 2022 03:42:52 -0400
-Received: from mail-pf1-x432.google.com (mail-pf1-x432.google.com [IPv6:2607:f8b0:4864:20::432])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3970A3D0B
-        for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2022 00:42:48 -0700 (PDT)
-Received: by mail-pf1-x432.google.com with SMTP id g19so625877pfb.0
-        for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2022 00:42:48 -0700 (PDT)
+        with ESMTP id S237360AbiHYImr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Aug 2022 04:42:47 -0400
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02B04A6C61;
+        Thu, 25 Aug 2022 01:42:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1661416963; x=1692952963;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=wV0QhS3VCHRQxHowKxbQI1OMW3ad+l1UDIty8PHXJCk=;
+  b=j60/1BdjWA9NVM0aEvUPhEhoxHMTnLIwGuHT60FtVT2yQZuTgQ4goa8M
+   BfPF5EWkU0AXuVUL2vW73Ie9t6U/VjOlQcEK8amlRP5iZMM1kpfPUDvXS
+   maHYk7CKSdw+X3yhnPoMrj3ptGU+8eBFpw++G1WqJflWhreCEi8n0q6nA
+   1iZzMl8DttvaWy53Bx+vcU3M76UzyHSwFg8UCGu85TlqcYRPzNX83yWdW
+   1pY9rhwg23TVmUUXlzhGG0+trkbgkbtWcYtTTr1mRd5M0fA7YtrEEyvmj
+   pVdWQ6AUR3H0CVURWwdHeNIcTkzTPcQgU3O7HjKObZ44EAxkukZ+43zDm
+   A==;
+X-IronPort-AV: E=Sophos;i="5.93,262,1654531200"; 
+   d="scan'208";a="321722909"
+Received: from mail-co1nam11lp2170.outbound.protection.outlook.com (HELO NAM11-CO1-obe.outbound.protection.outlook.com) ([104.47.56.170])
+  by ob1.hgst.iphmx.com with ESMTP; 25 Aug 2022 16:42:42 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=eye6uXYl2kiOVugdZ52l9W+Kqn5s8j5fvj8n+fjX7OCGmvowSgTkiOTwObB4z9ommmMz9yCrZb1DHbqOQAS8QuR69JrdipAtMOkHpYlrQcz2IFlsXv3ypRi01jx+X6yJnWE0nLeQ8yhGKj4Ht3kBRRasXjlMx8DHxirtiBEIN2HMN78zFb1GXX7EFNV3Ttu4UpQq8dTGQkeP3w4foOXPnVXQtfSxSLsxTNLmHaQBaQhSY41mLERPeVtTWsKn1CQk9idlSr03J2URpc1s9zCmWA80Hv5CBcWtFcRmeFDyF5qzc3ta1xZJDJ3P5z2XLT+y6waN+44F1E4sER/++ptW6Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=lrf532u505Q6tIsNHrRaTmQE5Y5P56POullQfRkAg6E=;
+ b=iJTIcPy+4dI7JzN+biw6Wj3al7GSoo7Rep31NE19cI0SArdYZ6zHp382Tqr7EsMf3Axjo91IQY8yVTif+pMofWpswXjm6HCo0xQub6BoQ1xJ10s+UJVkq47YMVXHfMmRxw/1mG9ss2oSxTqJaVQfZmSst7EV864IfK4VDg8JXBwTM3VHh2jjjkKjwVc2tBXBNQYUYf5K5HIFFLOm+fedYVIKj0+kHqg2tTEu6IPpe2q3qBNN2Vxjdu+ey7MRAEdWla2EpMosfUXVfHi/BW0o7ILT8eKNOJ1ExcrY019jC3tIlKTJCSsiVaH9Vbteq460EP3n3CX92k3xKaEf1muqBA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
-         :from:from:to:cc;
-        bh=POTveWBk0AC0nVfmH26mAuwXy3YzHlXkO2s0p1zt3K4=;
-        b=TrPCQe88soFxdXRd7WNGubOrNlGY98gmiEeq/XFbMFi+SVtnsvZxAqHYbqnSSHybfz
-         rR4iPF9L8DjS0GR7y8uHv9vVpWZowa6GFOY3rxb4YqohcNwaToocR7C7E08RlB3RLZlk
-         2eRJYgjx8mXQP/vfnSc0SN+IB0JAf0mZbcK4k=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
-         :from:x-gm-message-state:from:to:cc;
-        bh=POTveWBk0AC0nVfmH26mAuwXy3YzHlXkO2s0p1zt3K4=;
-        b=xbldipsfVk3oc/58jg4PLZqjPaBZtQpatoy0OmZVB7dTGuyadyK7iYQ87kTE7f84cM
-         KG+W9jarBrOhJqNpH7hCBXHdiBJIS0Wy0ZO2RZNttrqPUBau+y/zLu5wxrkVH9FUp66T
-         8ZIiRtSonYrFu0Wmof+v6y7eZyBe51w7CvKaQff/l4a7SxQt/4atkHcOZLIl8xyScfF6
-         ypSGKrKaB63Fy2/zLON3C+oIMmTKXmTSZtzX7eBRJCJXc9QKGYuPyRC8OD4u9CCrvBmI
-         1UrGxkcat/7MdQyYtVOPmGvG3bKaIgLXfPsnAeXPQyPxfPGLqzas7IKKqhEP07Nh8/58
-         2zpw==
-X-Gm-Message-State: ACgBeo1RTBw+f/UmcMZgaA6JeBnV/vGbKDTXf59rcztLpq7nxezDoWmf
-        xLSqkxyGXhR4y+ZlMy1dNf4nhxUrS5Zt7N2e5vevZXyaTPJJ1G5mE690VbIw5ED501Ia9pgm7mj
-        MKNuBn57A2GLblpW9YqoZuRefKNUM5JUsAdiEy9004J3y8gTD5n9DLHAud7VgYPlVu7HuA0vBmL
-        3JxYELfo2X
-X-Google-Smtp-Source: AA6agR6dw0pCuh0IpDlrjyI8/R+Lf/nuV8EWxZk7kREODGkVUNHLJVa3UVLqrBShbe54xANikTF59Q==
-X-Received: by 2002:a63:d16:0:b0:41d:fe52:1d2f with SMTP id c22-20020a630d16000000b0041dfe521d2fmr2286006pgl.416.1661413367401;
-        Thu, 25 Aug 2022 00:42:47 -0700 (PDT)
-Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id ns3-20020a17090b250300b001fbb0d07363sm644916pjb.39.2022.08.25.00.42.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 25 Aug 2022 00:42:47 -0700 (PDT)
-From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     martin.petersen@oracle.com,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH v2 4/4] mpt3sas: Update driver version to 43.100.00.00
-Date:   Thu, 25 Aug 2022 13:24:57 +0530
-Message-Id: <20220825075457.16422-5-sreekanth.reddy@broadcom.com>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20220825075457.16422-1-sreekanth.reddy@broadcom.com>
-References: <20220825075457.16422-1-sreekanth.reddy@broadcom.com>
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=lrf532u505Q6tIsNHrRaTmQE5Y5P56POullQfRkAg6E=;
+ b=o2SaVwDGaBglJ+cQUUvAYqop3p0+mgmaPt/8SnCLdBF/1WlENNkAEMPnQv9IPcRNXbzwYy6DZNFYG53ghS1KVG2De+VnyXz+lfm90brW8TVjUNnSg1+dL7CKKZdBd9ZX2uxAU1O1/zb4SZYR75wNU8z3d/oxO9+VERas9M5SlS8=
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
+ MN2PR04MB6205.namprd04.prod.outlook.com (2603:10b6:208:d5::29) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.5546.21; Thu, 25 Aug 2022 08:42:38 +0000
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::eca7:e175:b67:5002]) by DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::eca7:e175:b67:5002%4]) with mapi id 15.20.5566.015; Thu, 25 Aug 2022
+ 08:42:38 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     Jiaming Li <lijiamingsofine@gmail.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        lijiaming3 <lijiaming3@xiaomi.com>
+Subject: RE: [PATCH] scsi: ufs: ufsfbo: Introduce File Based Optimization
+ feature
+Thread-Topic: [PATCH] scsi: ufs: ufsfbo: Introduce File Based Optimization
+ feature
+Thread-Index: AQHYt5Yd7MdiBMU/V0WwXjppS39zs62/PhVw
+Date:   Thu, 25 Aug 2022 08:42:38 +0000
+Message-ID: <DM6PR04MB657508E997AD3AAE5BB445ACFC729@DM6PR04MB6575.namprd04.prod.outlook.com>
+References: <20220824084633.14428-1-lijiamingsofine@gmail.com>
+In-Reply-To: <20220824084633.14428-1-lijiamingsofine@gmail.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 64d478f4-2a81-4346-2c6d-08da8675c417
+x-ms-traffictypediagnostic: MN2PR04MB6205:EE_
+wdcipoutbound: EOP-TRUE
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: 4ZeaNh/Uj4vfmTwt769IKwK2rD4zIcQgnc/IwvbeqCo+NbsE1WFUxC8i+6r0QB54cYC80Tg6bxHe1qz083Wq0F1h2FxnJNwipWRQbHzRWK3MrQjj+F+noF63eioAl4kNvmnexjy7pF/dm2TvvqrERoI5DYbi6rCWzRcbhb6As0n3Xb3ikAGKI25VrUC3+eVI3KdWrfx0bNd/tUpedp4DPOdJQt2sq7vYQdaVRvsMmI2qGUm+GzkYJRUbIh/zIA2ZTejincCRVVsE7emRqtY1PosYmbZXSE+99JXZ0zAXe2YKk5eSotrzISUBO7Zj0ekiKAFurLixjly/iDmGkVMo29nR/AoRlnE8+uHOjUercDixvK6QQ4twpiswSkCg4K68wc8bJFbmIWGh/uSoeXa3iE9PiW4HpAY4kK65zgGKydQo80rnyxHnTnWPfP4Ig2iFs0T+x4EZTFhe8Rts4VqEgJZYuK4xTgOvhHrYkB4rzSkcs6K2Dj6pDIy2l6P892PtdVEP6LOS5BOVHMeNlhETuEpOKhDEpao62RdQoSQlzfew67WRq5vrgK1i9XoHLSkOZ2yr4864TN3oZk5Kn425qWd4zf83cGhUrmuk4hEDGeSi56+3HJ8FsIDvygw6DBswN5fOsV0ZE5gjH8rzXJC91/VOyvqIt35jNaxPByFtiIVcL6rOLyTtO1C2/F+z9t935i01/3l5TqOzsEsSUM+8MH9ggAN3YEvtX3KgdmWZBFiXpET4EWS96ADqifnVidSzPnDR/BDk0c/mhIU6iloaFA==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(4636009)(376002)(136003)(39860400002)(346002)(396003)(366004)(110136005)(54906003)(52536014)(4326008)(66946007)(8676002)(66476007)(64756008)(55016003)(316002)(66556008)(122000001)(2906002)(8936002)(38100700002)(76116006)(5660300002)(33656002)(66446008)(38070700005)(86362001)(478600001)(7696005)(6506007)(9686003)(82960400001)(83380400001)(26005)(186003)(71200400001)(41300700001);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?HfJtwL1xXacNHqR3MVULPoQOecPvfEApuLsHyPvdb4dtWkjwifEj3hz9h16P?=
+ =?us-ascii?Q?WvTrn4DrprC+dzwcrI6AYnw0jWfYXUpIKju9hHWaVn5nQzrvZDeflpiB7t99?=
+ =?us-ascii?Q?Z7xOe5i5LeDkeNURFAqyMvt62m1lPLKra98NRQJI1ql6MZMDN2CtS3zNbORP?=
+ =?us-ascii?Q?pmm8SK8dOmaV5sYi7piXjo8fujdx1uiO3CZ07kOvv0T10HFv8Dc44yu5wQkg?=
+ =?us-ascii?Q?c8w5cxwqQqvPujwQb5loGkG1MpRzKKlXU3dkZFJdZmvqoA0gUqi+vX9YQf/e?=
+ =?us-ascii?Q?mIHKfi3ImATjunRENOskFMsRZFJi5NCH8ICTl7buGuYHkXKwqmyLSFpUiOPx?=
+ =?us-ascii?Q?0eBzPyofFfAWfmQYjsJ9rn29PPmxPe8wcrBP2mQ9HxNYIFLA39Vge7SsgVi7?=
+ =?us-ascii?Q?MAObsOKNuIqOtj+3Op0HZBaLLcqByvcFHnlYiox2ieDGPUr6Z+bM4iG9KWV4?=
+ =?us-ascii?Q?GepcDde90MQHteXlnZk28gJhzaRSuNUmsAyyv/NQJ8DnecW53JmZllaOKrgk?=
+ =?us-ascii?Q?WD3nVCTqN8XYwMnlSAW6nwXsC/upOCp6Bb6AYmv/SmExvzmZpYXdkqPMj9EG?=
+ =?us-ascii?Q?6w+TTZnYaHHnQ4EYPelk8NNvh/H6WthTLCM7BkVo0R2sbt2+BS1Y87MuFQ4j?=
+ =?us-ascii?Q?xKmYK3BRlc+I2EHi0nNtkaO68QVMLudclV93Jcq+SW19skHniEWzTfjRVAkq?=
+ =?us-ascii?Q?zmfqhtPJZYNJiVMIEDbYQ3TfpmC2NeVHU1SAJn1rylz8t5ipdjBN1jLaqNp4?=
+ =?us-ascii?Q?qXStVX0QHYV8dxcUBXBsNlleR9FPn3NDmXASaPFP52kOfjApwYENYFryfmvI?=
+ =?us-ascii?Q?ZNH40PTNdsRrx4jHkCSUaXIMwrD2smNDG616M8UIjLIXxomBZzPhQXvsNImf?=
+ =?us-ascii?Q?jOAGpl2XencnqKTj8tI9bcZX+iTS3H+t2X30jUugUFbCBVf0HqsnRhPAjrAB?=
+ =?us-ascii?Q?X6ktusl3qLLM36qQnWmFnh2qUvsKHf7AiMQx40vbAtXY/LIchdV6Ypu2wCeU?=
+ =?us-ascii?Q?AqjDnbrGaQx8rAz+R/jyy63vF1FzcmpPT4qq+Ongz5p5HxjYant2Twmzxeqi?=
+ =?us-ascii?Q?94GydWc8tPtRZ/Tmt9VkIHKlO6hrOCSvJ63iGBUt3fJntnFxMqB53m6I6XPh?=
+ =?us-ascii?Q?JjSreTCRW7dQRYsquUN7QiWrQA3QV0n3dqMGq6GlqJBRqS2unhw0GLMolYcq?=
+ =?us-ascii?Q?UcFE+jVnxMl4Jq6c8SJSiHARinMPydv8f+m1lBy0LqA3MHLuGoTgPEjVM3vC?=
+ =?us-ascii?Q?bgSSlbMa7vhwq2W4TbfP4H5WeGK4vG/WJ+gCE/wHkap+WCBhTBGsC25QtIsg?=
+ =?us-ascii?Q?88KFGWgGARTibxAKild9twQ7OXNy6FjqZlYPwdW4qH6X4e9FfSfZEw0QyMrj?=
+ =?us-ascii?Q?8W3Co5HDDR/kP2hzDiI90nMIiRjoiTB9lODi8rEIUpvoH0t//2e8t2PP8aa3?=
+ =?us-ascii?Q?z2Q17JoftsJxwfEr75dz2D3qlzq5QBwvgL+OuSnfe9d2Cda2A+LFt7xq8GIV?=
+ =?us-ascii?Q?PbtZmXA9nUHRRc+dgOjHafetqLuuS6WomiUSzcO2NY+kj5r8CdybfsvncIMB?=
+ =?us-ascii?Q?LQTbts3WVSwdJErukf63RaXsvGeIEP5moZOdqI4a?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000009dc94b05e70bf1d3"
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 64d478f4-2a81-4346-2c6d-08da8675c417
+X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Aug 2022 08:42:38.5182
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: OSxeIG6gJyYxrtzuT8Q3CMVWBCNxS7uhQVtN0fV5+nH6CW1Nrx/qvmZ5do08uSgioo2BMxp6JaXkhltobSLM2A==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR04MB6205
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000009dc94b05e70bf1d3
-Content-Transfer-Encoding: 8bit
+Hi,
 
-Update driver version to 43.100.00.00.
+> From: lijiaming3 <lijiaming3@xiaomi.com>
+>=20
+> Implement File Based Optimization initialization and add sysfs interface.
+>=20
+> Stoage devices have a long lifespan. Device performance over its lifespan=
+ is not
+> constant and may deteriorate over time
+>=20
+> This feature describes a method to improve the performance regression.
+> The host needs to provide File System information to storage device first=
+. Based
+> on that information device analyzes the file system data and provides the=
+ host
+> the level of performance regression. The host then may instruct the devic=
+e to
+> execute optimization procedure to improve the regression level.
+You might want to break this one long patch into a series of smaller patche=
+s.
+One option is to do it per-functional flows: Init flow, analysis phase, and=
+ defrag phase.
+In your cover letter you might want to elaborate what this feature is all a=
+bout,
+And that your design expect a user-space companion that analyze the files.
+Which is a good place to share a reference to an open source code that does=
+ that.
 
-Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 542fb74..05364aa 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -77,8 +77,8 @@
- #define MPT3SAS_DRIVER_NAME		"mpt3sas"
- #define MPT3SAS_AUTHOR "Avago Technologies <MPT-FusionLinux.pdl@avagotech.com>"
- #define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
--#define MPT3SAS_DRIVER_VERSION		"42.100.00.00"
--#define MPT3SAS_MAJOR_VERSION		42
-+#define MPT3SAS_DRIVER_VERSION		"43.100.00.00"
-+#define MPT3SAS_MAJOR_VERSION		43
- #define MPT3SAS_MINOR_VERSION		100
- #define MPT3SAS_BUILD_VERSION		0
- #define MPT3SAS_RELEASE_VERSION	00
--- 
-2.27.0
+> +void ufsfbo_init(struct ufs_hba *hba)
+Maybe ufshbo_probe to note that you are probing the device for this feature=
+?
+
+> +{
+> +       struct ufsfbo_dev *fbo;
+> +       int ret =3D 0;
+> +
+> +       fbo =3D &hba->fbo;
+> +       fbo->hba =3D hba;
+> +
+> +       ret =3D ufsfbo_get_fbo_support_state(fbo);
+You can save reading the device descriptor, if you would call ufsfbo_init f=
+rom ufs_get_device_desc,
+Like ufshcd_wb_probe() does.
 
 
---0000000000009dc94b05e70bf1d3
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
+> +       if (ret) {
+> +               FBO_ERR_MSG("NOT Support FBO. ret(%d)", ret);
+> +               return;
+> +       }
+> +       ret =3D ufsfbo_get_fbo_desc_info(fbo);
+> +       if (ret) {
+> +               FBO_ERR_MSG("Failed getting fbo info. ret(%d)", ret);
+> +               return;
+> +       }
+> +       fbo->fbo_debug =3D false;
+> +       fbo->block_suspend =3D false;
+> +
+> +       if (ufshcd_is_auto_hibern8_supported(fbo->hba))
+> +               fbo->is_auto_enabled =3D true;
+All this power management control code is not needed IMO.
 
-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
-5AGo2E3pe+2yEgkxKvM2fnniZHUiSjbrfKk6nl9RIXPOKUP5HntZFdA5XuNYXWM+HPs3O0AJwBm/
-VCZsZtkjVjxeBmTXiXDnxytdsHdGrHGymPfjJYatDu6d1KRVDlMCAwEAAaOCAd0wggHZMA4GA1Ud
-DwEB/wQEAwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9zZWN1cmUu
-Z2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNydDBBBggr
-BgEFBQcwAYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJj
-YTIwMjAwTQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3
-Lmdsb2JhbHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+oDygOoY4
-aHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcmww
-JwYDVR0RBCAwHoEcc3JlZWthbnRoLnJlZGR5QGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEF
-BQcDBDAfBgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUClVHbAvhzGT8
-s2/6xOf58NkGMQ8wDQYJKoZIhvcNAQELBQADggEBAENRsP1H3calKC2Sstg/8li8byKiqljCFkfi
-IhcJsjPOOR9UZnMFxAoH/s2AlM7mQDR7rZ2MxRuUnIa6Cp5W5w1lUJHktjCUHnQq5nIAZ9GH5SDY
-pgzbFsoYX8U2QCmkAC023FF++ZDJuc9aj0R/nhABxmUYErIze2jV/VO8Pj7TnCrBONZ/Qvf8G5CQ
-X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
-eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
-Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
-MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIKrAphvmCfD00+CSS7VK
-VcxFAWEdAhuVleNs+vBXiaEnMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDgyNTA3NDI0N1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
-BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBGOCXeZiUiDiefFQHIwSK/9t9HB6HgcrrfTPe4
-LJxcs9iGWIYLJ6RUp4zYA9cY5UOPEQBq3A4kOR37zXUZFYYSGh7gL41mMzV7jLopS5i61EXseNDY
-jHuPGM33OwWVsfwfigGAMpPQuH5zIIRFjzHw+yn+MQNJltCyiLyM7IeByUbBtbb84F+mcPWNIgmw
-UycLHDNABDZX2GjlNRDEcUOOCuaFaaqn+u3FFRIQCvOLZ6cjVukc7epCWtaa8/RzyvpXesy4Tt/0
-CZ6Q6Em1WSbjfahdeHff4AlYBsh2+DrEEh6BvOG7fuC0xgP4QzRLx9FUJUDowH/XzZbfyBIvWFWZ
---0000000000009dc94b05e70bf1d3--
+> +
+> +       ret =3D ufsfbo_create_sysfs(fbo);
+You might want to consider splitting your sysfs according to:
+ - FBOWritebuffer & FBOReadbuffer - part of sdev_group
+   it will allow defragmenting files across all luns.
+ - the rest per hba
+
+
+> +static ssize_t ufsfbo_sysfs_show_debug(struct ufsfbo_dev *fbo, char
+> +*buf) {
+> +       FBO_INFO_MSG(fbo, "Debug:%d", fbo->fbo_debug);
+> +       return sysfs_emit(buf, "%d\n", fbo->fbo_debug); }
+I don't think the debug info should be part of your series.
+Maybe add it as the last patch if you must.
+
+
+> +/**
+> + * struct ufsfbo_dev - FBO related structure
+Maybe ufsfbo_ctrl - as it's your main controlling object.
+And split it further to ufsfbo_dev_info - ver, rec_lrs, max_lrs, etc.
+And then all other members
+
+> +int ufsfbo_get_fbo_prog_state(struct ufsfbo_dev *fbo, int *prog_state);
+> +int ufsfbo_operation_control(struct ufsfbo_dev *fbo, int *val); int
+> +ufsfbo_get_exe_level(struct ufsfbo_dev *fbo, int *frag_exe_level); int
+> +ufsfbo_set_exe_level(struct ufsfbo_dev *fbo, int *frag_exe_level); int
+> +ufsfbo_lba_list_write(struct ufsfbo_dev *fbo, const char *buf); int
+> +ufsfbo_read_frag_level(struct ufsfbo_dev *fbo, char *buf); int
+> +ufsfbo_get_fbo_desc_info(struct ufsfbo_dev *fbo); int
+> +ufsfbo_get_fbo_support_state(struct ufsfbo_dev *fbo); int
+> +ufsfbo_get_state(struct ufs_hba *hba); void ufsfbo_set_state(struct
+> +ufs_hba *hba, int state); void ufsfbo_init(struct ufs_hba *hba); void
+> +ufsfbo_reset(struct ufs_hba *hba); void ufsfbo_reset_host(struct
+> +ufs_hba *hba); void ufsfbo_remove(struct ufs_hba *hba); int
+> +ufsfbo_is_not_present(struct ufsfbo_dev *fbo); void
+> +ufsfbo_block_enter_suspend(struct ufsfbo_dev *fbo); void
+> +ufsfbo_allow_enter_suspend(struct ufsfbo_dev *fbo); void
+> +ufsfbo_auto_hibern8_enable(struct ufsfbo_dev *fbo, unsigned int val);
+> +#endif /* _UFSFBO_H_ */
+You should expose functionality outside the module only if you must.
+Otherwise, make it privet to the module.
+
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c index
+> 2f6468f22b48..9c377c514e17 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -4956,6 +4956,14 @@ static void ufshcd_hpb_configure(struct ufs_hba
+> *hba, struct scsi_device *sdev)
+>         ufshpb_init_hpb_lu(hba, sdev);
+>  }
+>=20
+> +static void ufshcd_fbo_configure(struct ufs_hba *hba, struct
+> +scsi_device *sdev) { #ifdef CONFIG_SCSI_UFS_FBO
+> +       if (sdev->lun =3D=3D 0)
+> +               hba->fbo.sdev_ufs_lu =3D sdev; #endif }
+You won't be needing this if you follow my suggestion above.
+
+
+> @@ -8005,6 +8014,9 @@ static void ufshcd_async_scan(void *data,
+> async_cookie_t cookie)
+>=20
+>         /* Probe and add UFS logical units  */
+>         ret =3D ufshcd_add_lus(hba);
+> +#ifdef CONFIG_SCSI_UFS_FBO
+> +       ufsfbo_init(hba);
+> +#endif
+Instead of wrapping it withing other modules,
+Use it in ufsfbo.h
+
+> +#ifdef CONFIG_SCSI_UFS_FBO
+> +#include "ufsfbo.h"
+> +#endif
+Include it in ufshcd.c without the ifdef
+
+>  #define UFSHCD "ufshcd"
+>  #define UFSHCD_DRIVER_VERSION "0.2"
+>=20
+> @@ -916,6 +918,9 @@ struct ufs_hba {
+>         struct dentry *debugfs_root;
+>         struct delayed_work debugfs_ee_work;
+>         u32 debugfs_ee_rate_limit_ms;
+> +#endif
+> +#ifdef CONFIG_SCSI_UFS_FBO
+> +       struct ufsfbo_dev fbo;
+>  #endif
+If you would use a struct pointer here, you won't need the ifdef.
+
+Thanks,
+Avri
