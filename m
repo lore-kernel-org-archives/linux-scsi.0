@@ -2,97 +2,123 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36D6EC28D13
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Aug 2022 07:43:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE794C04AA5
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Aug 2022 07:43:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238603AbiHYHnA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 Aug 2022 03:43:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37842 "EHLO
+        id S236070AbiHYHnC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 Aug 2022 03:43:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37668 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238505AbiHYHmu (ORCPT
+        with ESMTP id S238507AbiHYHmu (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Aug 2022 03:42:50 -0400
-Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F6DBA345C
-        for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2022 00:42:46 -0700 (PDT)
-Received: by mail-pf1-x430.google.com with SMTP id g19so625829pfb.0
-        for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2022 00:42:46 -0700 (PDT)
+Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C9F0A3441
+        for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2022 00:42:45 -0700 (PDT)
+Received: by mail-pj1-x1034.google.com with SMTP id n65-20020a17090a5ac700b001fbb4fad865so518963pji.1
+        for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2022 00:42:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc;
-        bh=C0/KZslt3RnwvJblCqOiiwOGwhAAx8c5x0VLZVy25Qo=;
-        b=QY60k7GO/b6Q4dMJIqB5pTIGIlvxj/8wQud/DSjWfcosRXm3zbHdaxt6/6cPaZ9mHg
-         QrPmy2NGBdj7w1AMLcZvDowzyt6piHnbzYq/32AjVs1snulWMapGCw9sgXqXImUSOEN2
-         FGQRbpCJFzw9nz5z16mAn8tY45iJuW/R94Ci4=
+        bh=QGYWF+NS2PttYj3I8aGAZ/ViUqq7S7cYk1IYTUwu/HY=;
+        b=e+pstbdNl3phss/HI0LC5+XKwx9avnQXLuDIpUJY9cAaZnENnHJFI2ZawRW44su88j
+         Z9DJoPp8q1+ySvweo43pVFImh6OdleY2OaxNkAjvIPPaBDeY7BsTDjdY2cyMTliVU5H8
+         lnbZUSx7y6MY44SjWP+sGMv1MtmwJkXeN4gFA=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc;
-        bh=C0/KZslt3RnwvJblCqOiiwOGwhAAx8c5x0VLZVy25Qo=;
-        b=a9B1VUKj1rm1FtsUvp5K06fVPTzRMjMsF9rHtJsePa4JTstYjB3Ks67hu66Z3VlyOp
-         lFCK6c3h7Dwjt8CPeoPW9zjIIHcyP7dHfUOKMSHF6I9l1wedA/Wjl0mGcTsyUsRUQF1T
-         io2OlqfLRbglbpKinC3PqOTLEtrqR9AdQF3qS1YoWnxiu/yzLiOFkoPemuWF0hlrUB5v
-         qj2rbxusZh/SnNL2VOmHnn04IWNT80RZpV9vmyJP9o6qiA5kig1XCM/VbTP1eEuA9hWQ
-         zzpUoZ9PMgRGYteyBlkES5303X+92B6DnVU0qYJ1b2I/MkZh73dQ2jwak2XIUI6D22kt
-         H9+A==
-X-Gm-Message-State: ACgBeo1IYnIeV1HtBK8W3vUdMX+Gheizrhr4ELA/2qEGc7jVxus+O7EB
-        5x3tdKutQihDEbRZrGL6xcXX81Q5KpXTEKQQ/S2FIBstHN4zFNl1OzYMZgpo9ABl9z0ZTpIo2WA
-        RulMJC8LPv3KZt31XpLXKJckmboZWCXJSz8RFvyTrEa3EKkjaTqUQI4Xaqh4fC9u9xwInoqBSbF
-        H49oaLiAUQ
-X-Google-Smtp-Source: AA6agR7JLLwFy0lf0sge4hJsyetQ0UoHAM2rww/CWIKAaqzgVU3ZNuQkoBr8k0ScRv+77CvsxcxfqQ==
-X-Received: by 2002:a63:88c3:0:b0:42b:33f8:6bc2 with SMTP id l186-20020a6388c3000000b0042b33f86bc2mr2174655pgd.495.1661413365592;
-        Thu, 25 Aug 2022 00:42:45 -0700 (PDT)
+        bh=QGYWF+NS2PttYj3I8aGAZ/ViUqq7S7cYk1IYTUwu/HY=;
+        b=g+ekPpgnsUsKm67ci8F6SOGZD2Ox4tSUXgIkbYueA+W7sW51igmN9l7Fh3BfeXOPiZ
+         PJbxKZrA6ZnTBMNX6q9eR0YNWjD2vcZQJsDAZi9D2Arm7PXlOtPYx84zzkB4hlm93RSC
+         FJCm6QsVTJNLmmDM2zNJnDd7B5ftYX/nPvSyHZpO+rjJ39gXIhedNb6QoTgrr8qTQVbx
+         q5fiEabuQuOuNfVGR3aoqu6SZtCEhFcxhNmzDlgghSG1adI1GLje+XWJNrHhJfBSZZJz
+         LmNdx078chikIYWDmpUxR/h9jjZITjttk2D5k8TG9QaREX0tmstYE5XaaktaMmfpyUih
+         YZuw==
+X-Gm-Message-State: ACgBeo3OLPDLiuMX3GPQ+pQn6NjPZISkM4dBoBU+reg32f1cUSXowY5p
+        ikjGGOj+5G8iEKD6SpMOHnwsjdHK/Ltr57/ehTq1Abdax1lDG3OF+OolySuvGshSccyM4zrgODR
+        wk4c2qdRmyLOefR5i6McdyY9Mq5hrndg+A7693//4lCBwPLj5a8FPmh4aJ9Dl8SqxhIPXx4q1HB
+        7gwuO1pbli
+X-Google-Smtp-Source: AA6agR5t9WBy8zoWEOnre62ftFZZD4ctasTcqwUIj6hJhKqtRNXgRhF4qskJs0Bt9HYUcc0zp2Ih9A==
+X-Received: by 2002:a17:90b:1bca:b0:1fb:7eaf:8955 with SMTP id oa10-20020a17090b1bca00b001fb7eaf8955mr7949729pjb.37.1661413363807;
+        Thu, 25 Aug 2022 00:42:43 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id ns3-20020a17090b250300b001fbb0d07363sm644916pjb.39.2022.08.25.00.42.44
+        by smtp.gmail.com with ESMTPSA id ns3-20020a17090b250300b001fbb0d07363sm644916pjb.39.2022.08.25.00.42.42
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 25 Aug 2022 00:42:45 -0700 (PDT)
+        Thu, 25 Aug 2022 00:42:43 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH v2 3/4] mpt3sas: Increase cmd_per_lun to 128
-Date:   Thu, 25 Aug 2022 13:24:56 +0530
-Message-Id: <20220825075457.16422-4-sreekanth.reddy@broadcom.com>
+Subject: [PATCH v2 2/4] mpt3sas: Fix trace buffer registration failed
+Date:   Thu, 25 Aug 2022 13:24:55 +0530
+Message-Id: <20220825075457.16422-3-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20220825075457.16422-1-sreekanth.reddy@broadcom.com>
 References: <20220825075457.16422-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000008295d305e70bf194"
+        boundary="00000000000068186705e70bf1bd"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000008295d305e70bf194
+--00000000000068186705e70bf1bd
 Content-Transfer-Encoding: 8bit
 
-With cmd_per_lun value 7, a higher number of cache lines (map_nr)
-are needed while allocating sdev->budget_map which is not
-reasonable and hence increasing the cmd_per_lun value to 128.
+The ExtendedType field was set to one in the diag buffer
+register command and hence MPT Endpoint firmware is
+failing the request with Invalid Field IOCStatus.
+
+So, memset the request frame to zero before framing the
+diag buffer register command.
 
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 3507e2a..4ce1c01 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -11975,7 +11975,7 @@ static struct scsi_host_template mpt3sas_driver_template = {
- 	.sg_tablesize			= MPT3SAS_SG_DEPTH,
- 	.max_sectors			= 32767,
- 	.max_segment_size		= 0xffffffff,
--	.cmd_per_lun			= 7,
-+	.cmd_per_lun			= 128,
- 	.shost_groups			= mpt3sas_host_groups,
- 	.sdev_groups			= mpt3sas_dev_groups,
- 	.track_queue_depth		= 1,
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index c47da95..0d8b1e9 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -1694,6 +1694,7 @@ _ctl_diag_register_2(struct MPT3SAS_ADAPTER *ioc,
+ 	ioc->ctl_cmds.status = MPT3_CMD_PENDING;
+ 	memset(ioc->ctl_cmds.reply, 0, ioc->reply_sz);
+ 	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
++	memset(mpi_request, 0, ioc->request_sz);
+ 	ioc->ctl_cmds.smid = smid;
+ 
+ 	request_data = ioc->diag_buffer[buffer_type];
+@@ -1795,6 +1796,7 @@ _ctl_diag_register_2(struct MPT3SAS_ADAPTER *ioc,
+ 	if (rc && request_data) {
+ 		dma_free_coherent(&ioc->pdev->dev, request_data_sz,
+ 		    request_data, request_data_dma);
++		ioc->diag_buffer[buffer_type] = NULL;
+ 		ioc->diag_buffer_status[buffer_type] &=
+ 		    ~MPT3_DIAG_BUFFER_IS_DRIVER_ALLOCATED;
+ 	}
+@@ -2171,6 +2173,7 @@ mpt3sas_send_diag_release(struct MPT3SAS_ADAPTER *ioc, u8 buffer_type,
+ 	ioc->ctl_cmds.status = MPT3_CMD_PENDING;
+ 	memset(ioc->ctl_cmds.reply, 0, ioc->reply_sz);
+ 	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
++	memset(mpi_request, 0, ioc->request_sz);
+ 	ioc->ctl_cmds.smid = smid;
+ 
+ 	mpi_request->Function = MPI2_FUNCTION_DIAG_RELEASE;
+@@ -2425,6 +2428,7 @@ _ctl_diag_read_buffer(struct MPT3SAS_ADAPTER *ioc, void __user *arg)
+ 	ioc->ctl_cmds.status = MPT3_CMD_PENDING;
+ 	memset(ioc->ctl_cmds.reply, 0, ioc->reply_sz);
+ 	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
++	memset(mpi_request, 0, ioc->request_sz);
+ 	ioc->ctl_cmds.smid = smid;
+ 
+ 	mpi_request->Function = MPI2_FUNCTION_DIAG_BUFFER_POST;
 -- 
 2.27.0
 
 
---0000000000008295d305e70bf194
+--00000000000068186705e70bf1bd
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -163,13 +189,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEILQYtrXv27msVZRRodaB
-cZwaUU0dpWmPL+6N+Cl2AmsHMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDgyNTA3NDI0NlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIIHI11rrgcvtGC/dj+Jy
+AORSGpq3qdxRmseu0MTGhn9iMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDgyNTA3NDI0NFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQC+XsTb8Q+fKheP4w7f6JHcdHLakn0KndVubPo9
-Z10Db8SQATXIGeoaUXZTO8My3rC7x0XmtZOeDWrRPElvNwvSHZP7cxJQ+Ag5NpHFN2RGTnRZ05Xx
-RKx6UYHR8J/jB1o9v5tyMe58B0X6HZRADH14v1eJquQwxRlcMN25TBDKWdmpaHqPsfToV2+RRoDQ
-RHtn9OHK6RI70Xw5K8oc2vCLNgW752vbUKOg36RvBNQvyTL/uhH5uJytgh5z2DVQrnN816TBl70B
-hrqIBFwk2Zq4U1uSdutQ9OzmTE2RNDlDK4ds/Zlv993t0ryOkVmUG6W+ZO6z3vpjneWQYwtcpUWx
---0000000000008295d305e70bf194--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBz6dq3k3k3UQ3zHvoc3rBH6Q0RV8DtLsHdXKBa
+gYFhTCakAO3xgvgL00b6coAPMbyH9t0H/NLkomp1Aykn9IZmjx2BJHctWpusnVYK82xezRBn7SpR
+nhtSx9WLWgCMSu0HF7f8wmP6OZNpkZj2RYqLnTr4DGMtiqBvV67+eklInCgVDzCkE3qkuC88kIHd
+du0VBH4md6Atb96pCMhpKNm9RSsk3Y8BqTR3DLAqdFFy+9KOPB/71mXdaT7vxr/1zi00y1cJBMFN
+sAtR0lt5sLh2GsEBgRXjdZue+TflAtZDU96NA1xugCfcWkdIdQJ3t7zTGcpq2b+WIb6SrYRyo7Ax
+--00000000000068186705e70bf1bd--
