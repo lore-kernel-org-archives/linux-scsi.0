@@ -2,116 +2,90 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AA34ECAAD2
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Aug 2022 07:39:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 563FFECAAD2
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Aug 2022 07:48:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245334AbiHZHjV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 26 Aug 2022 03:39:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36206 "EHLO
+        id S245573AbiHZHsH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 26 Aug 2022 03:48:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53246 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241505AbiHZHjU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Aug 2022 03:39:20 -0400
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CE8E9D13D;
-        Fri, 26 Aug 2022 00:39:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1661499555;
-        bh=xbq4JSkJ3q4yhKrUImOqVqkALOzpDY+WNKe5bh9TfsE=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=iFYzrZ3KL4kE56bco4SbddMqnXMMhxbDGoJT2RHMo+n/SpBGk4fb5uTBVNcJvJ4Tl
-         VCDHXU4U6skLqBvB8kBQZoetqAYQ6Z4LGTTB+Gy9eQHX1Rd7qyyjnJTSAitarFbF9R
-         6VGIVjcM44xsuTbD1ExOfNODa9v+YcKLaMUdua/0=
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id D5B5C1280E04;
-        Fri, 26 Aug 2022 03:39:15 -0400 (EDT)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id pEhvqNtTl1gI; Fri, 26 Aug 2022 03:39:15 -0400 (EDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1661499555;
-        bh=xbq4JSkJ3q4yhKrUImOqVqkALOzpDY+WNKe5bh9TfsE=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=iFYzrZ3KL4kE56bco4SbddMqnXMMhxbDGoJT2RHMo+n/SpBGk4fb5uTBVNcJvJ4Tl
-         VCDHXU4U6skLqBvB8kBQZoetqAYQ6Z4LGTTB+Gy9eQHX1Rd7qyyjnJTSAitarFbF9R
-         6VGIVjcM44xsuTbD1ExOfNODa9v+YcKLaMUdua/0=
-Received: from [IPv6:2a00:23c8:1005:a801:e95:68ca:9caa:7c8c] (unknown [IPv6:2a00:23c8:1005:a801:e95:68ca:9caa:7c8c])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (Client did not present a certificate)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id E54EC1280AD2;
-        Fri, 26 Aug 2022 03:39:13 -0400 (EDT)
-Message-ID: <042650172f59fca9836fe523ce14a07daccc4f2d.camel@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 6.0-rc2
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Date:   Fri, 26 Aug 2022 08:39:10 +0100
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.4 
+        with ESMTP id S245560AbiHZHsF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Aug 2022 03:48:05 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC286C2EB9;
+        Fri, 26 Aug 2022 00:48:04 -0700 (PDT)
+Date:   Fri, 26 Aug 2022 09:48:01 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1661500083;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=vJDu6zCHTXsME6CZWLgdPNi6X1pwdx8lv49rwGgdVAk=;
+        b=UGHB04unjwFwj5pQPdB7XoFHJD1V8Qx1rBqhvvV73Pa9duVKBFLM7KS7pwE20KP7scQMEi
+        9yxH/Jf/FclOYF9pxDEGAyl/V6PKrsiUJTI8OLhW79nAiVCBZd7Lur7zo7HMQb1o2wu8XN
+        RcIaf83DGyApc/UbCztbL+hCjDMItnIVi/O+XR2sh+0twcXMmbQGk2MFp1QbazDFN/w7J5
+        7RESJFHgO0a0TtBXDCZlkjrk/UOjPHPzIJO8Hx6sUydmbStMvKTVtY2bPz33VUFQsadDC3
+        W2AlMFkhyth+3XAphuJVBFxLq5+MhjmzUBOD2TL5jGeh1Ui71QhyvkAOmUGsAw==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1661500083;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=vJDu6zCHTXsME6CZWLgdPNi6X1pwdx8lv49rwGgdVAk=;
+        b=/aWdheSkZzYraSdOrvd3S4j9MCl9NQiedCcwVmm0V/xg8NR1Me7JNgotAubIUWiWPUF2AJ
+        Bg5xnhSfxCToOQCw==
+From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To:     Thinh Nguyen <Thinh.Nguyen@synopsys.com>
+Cc:     Felipe Balbi <balbi@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dmitry Bogdanov <d.bogdanov@yadro.com>,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Subject: Re: [PATCH v2 17/25] usb: gadget: f_tcm: Handle abort command
+Message-ID: <Ywh6sUom7d9HqAx6@linutronix.de>
+References: <cover.1658192351.git.Thinh.Nguyen@synopsys.com>
+ <099a4bd5ed02f4c48f4640347379b5127075e453.1658192351.git.Thinh.Nguyen@synopsys.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <099a4bd5ed02f4c48f4640347379b5127075e453.1658192351.git.Thinh.Nguyen@synopsys.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-10 fixes.  Of the three core changes, the two large ones are a complete
-reversion of the async rework and an ALUA timing rework (the latter
-shouldn't affect non-ALUA paths).  The remaining patches are all small
-and all but one in drivers.
+On 2022-07-18 18:27:51 [-0700], Thinh Nguyen wrote:
+> diff --git a/drivers/usb/gadget/function/f_tcm.c b/drivers/usb/gadget/function/f_tcm.c
+> --- a/drivers/usb/gadget/function/f_tcm.c
+> +++ b/drivers/usb/gadget/function/f_tcm.c
+> @@ -1278,6 +1278,22 @@ static void usbg_queue_tm_rsp(struct se_cmd *se_cmd)
+>  
+>  static void usbg_aborted_task(struct se_cmd *se_cmd)
+>  {
+> +	struct usbg_cmd *cmd = container_of(se_cmd, struct usbg_cmd, se_cmd);
+> +	struct f_uas *fu = cmd->fu;
+> +	struct uas_stream *stream = cmd->stream;
+> +	int ret = 0;
+> +
+> +	if (stream->req_out->status == -EINPROGRESS)
+> +		ret = usb_ep_dequeue(fu->ep_out, stream->req_out);
+> +	else if (stream->req_in->status == -EINPROGRESS)
+> +		ret = usb_ep_dequeue(fu->ep_in, stream->req_in);
+> +	else if (stream->req_status->status == -EINPROGRESS)
+> +		ret = usb_ep_dequeue(fu->ep_status, stream->req_status);
+> +
+> +	if (ret)
+> +		pr_err("Unable to dequeue se_cmd out %p\n", se_cmd);
 
-The patch is available here:
+I know I wasn't the best example here. But if you continue to work on
+that one, if would be nice if you could replace all the pr_err() here
+with a dev_err() (or so) so it is bound to an actual device and the
+reader can actually pin point the message to the actually device/
+subsystem. I'm not sure if we lack a device or I was extremely lazy.
+Again, not something you need change now.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+> +	cmd->state = UASP_QUEUE_COMMAND;
+>  }
+>  
+>  static const char *usbg_check_wwn(const char *name)
 
-The short changelog is:
-
-Alim Akhtar (1):
-      scsi: ufs: host: ufs-exynos: Make fsd_ufs_drvs static
-
-Bart Van Assche (2):
-      scsi: sd: Revert "Rework asynchronous resume support"
-      scsi: ufs: core: Reduce the power mode change timeout
-
-Brian Bunker (1):
-      scsi: core: Allow the ALUA transitioning state enough time
-
-Guixin Liu (2):
-      scsi: megaraid_sas: Remove unnecessary kfree()
-      scsi: megaraid_sas: Fix double kfree()
-
-Kiwoong Kim (1):
-      scsi: ufs: core: Enable link lost interrupt
-
-Mike Christie (1):
-      scsi: core: Fix passthrough retry counter handling
-
-Saurabh Sengar (1):
-      scsi: storvsc: Remove WQ_MEM_RECLAIM from storvsc_error_wq
-
-Tony Battersby (1):
-      scsi: qla2xxx: Disable ATIO interrupt coalesce for quad port ISP27XX
-
-And the diffstat:
-
- drivers/scsi/megaraid/megaraid_sas_base.c   |  8 +--
- drivers/scsi/megaraid/megaraid_sas_fusion.c |  1 -
- drivers/scsi/qla2xxx/qla_target.c           | 10 +---
- drivers/scsi/scsi_lib.c                     | 47 +++++++++-------
- drivers/scsi/sd.c                           | 84 +++++++----------------------
- drivers/scsi/sd.h                           |  5 --
- drivers/scsi/storvsc_drv.c                  |  2 +-
- drivers/ufs/core/ufshcd.c                   |  9 +++-
- drivers/ufs/host/ufs-exynos.c               |  2 +-
- include/ufs/ufshci.h                        |  6 +--
- 10 files changed, 60 insertions(+), 114 deletions(-)
-
-With full diff below.
-
-James
-
----
-
-
-
+Sebastian
