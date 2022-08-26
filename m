@@ -2,38 +2,38 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FE6DECAAD2
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Aug 2022 07:18:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0561ECAAD7
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Aug 2022 07:22:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244953AbiHZHSE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 26 Aug 2022 03:18:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49016 "EHLO
+        id S245222AbiHZHWm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 26 Aug 2022 03:22:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58214 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229873AbiHZHSD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Aug 2022 03:18:03 -0400
+        with ESMTP id S229970AbiHZHWk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Aug 2022 03:22:40 -0400
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F39D3C277C;
-        Fri, 26 Aug 2022 00:18:00 -0700 (PDT)
-Date:   Fri, 26 Aug 2022 09:17:58 +0200
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22B5F4DB43;
+        Fri, 26 Aug 2022 00:22:40 -0700 (PDT)
+Date:   Fri, 26 Aug 2022 09:22:37 +0200
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1661498279;
+        s=2020; t=1661498558;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=roUA/JoTmrdvcLvJGyzDfdQUqJ5eOvFRxYS2vR+Gu/8=;
-        b=pmEdvlIbNiaVaLsRDwhIaau1Ol9m983jvlB1rLXvgAImJNnihYIHfPUSYZuuv0geCb5N7Z
-        zA86TkY6QzfgKZcn/29EvE6OBnweCOeZgmKHv0jgXPOVKwitQAER3mJ5GMcXor8NU2u9V2
-        aH9wgbY4CyI3/ad4V2aEpPq02jF4kJFPVfgR1XKrx5yeb6UhB0a7xcPKCAA6lvcRi9Rjhz
-        B15ARorWTcK7COPgC4L1OmlIzrdfiJQc/1zfQPTaIjrEFtrExALjBUYPgDELmh9S02cp/y
-        67ceFN+5LosBIN/Dv0yRc+S83vy6WRZcIKomzTjRdwO2oXBCusXTlEA1Id5Pcg==
+        bh=GQJwizWUZDP3BI9K5yZYcBnhISmXQJvntuw2CVta3II=;
+        b=KZZpkSO4qaRwW67bSXJjY/YP/HPGu14NbRtLiv2aK+v+sYqEIcgMQkEgDnwBMtm6W5HDNB
+        JTzGM5Ne9McUF7ORLicrPYO9ssNEQEoUIlCeb4K9INMi6laExJpeaL5M85XW+lXKw+Pz3Z
+        zGKKKlEaCS6WcNKXmf5RWaBsZRUuzIfkSWbUtQQn0CEoCN4TA8WVrvGS2AOqsOsexL2v28
+        jpl0p96//YJcKBGbQ/O+1I2GtE/sKnrQIrj7rMkzTgUHRQ2LBhXuHO+qull3FwpUXaGHbq
+        4L0baQvDHtybe59BnZXT4LZodIQUJVUnq9R5fHdHlM6/D4CdiQRKiMfFZYxB1w==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1661498279;
+        s=2020e; t=1661498558;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=roUA/JoTmrdvcLvJGyzDfdQUqJ5eOvFRxYS2vR+Gu/8=;
-        b=6L0bjDV5H38ZM1zK9ozWtZjNTsiLzljgdWFH/Ie2s0XXv7LxMHAWf+DiEwd+8EDqFJj0HS
-        khUCs36LCbUAfPDQ==
+        bh=GQJwizWUZDP3BI9K5yZYcBnhISmXQJvntuw2CVta3II=;
+        b=u79Zlqto8+LIFUoD2rNHsPmmDaQEm+HcsZsxCrxqtp96SzJ3nfiQj4OiAxDLb6hTW7Qcgt
+        7Hv4QPzsuOhCLfAw==
 From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 To:     Thinh Nguyen <Thinh.Nguyen@synopsys.com>
 Cc:     Felipe Balbi <balbi@kernel.org>,
@@ -41,24 +41,58 @@ Cc:     Felipe Balbi <balbi@kernel.org>,
         linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
         Dmitry Bogdanov <d.bogdanov@yadro.com>,
         linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Subject: Re: [PATCH v2 15/25] usb: gadget: f_tcm: Cleanup unused variable
-Message-ID: <YwhzppXwheosXCaL@linutronix.de>
+Subject: Re: [PATCH v2 16/25] usb: gadget: f_tcm: Update state on data write
+Message-ID: <Ywh0vQkRLTrSeExk@linutronix.de>
 References: <cover.1658192351.git.Thinh.Nguyen@synopsys.com>
- <420c91967948fb8e7c758ed0857c708b3b070d72.1658192351.git.Thinh.Nguyen@synopsys.com>
+ <dd9069e0527f2da04b6567fd17b19545646f4348.1658192351.git.Thinh.Nguyen@synopsys.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <420c91967948fb8e7c758ed0857c708b3b070d72.1658192351.git.Thinh.Nguyen@synopsys.com>
+In-Reply-To: <dd9069e0527f2da04b6567fd17b19545646f4348.1658192351.git.Thinh.Nguyen@synopsys.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2022-07-18 18:27:39 [-0700], Thinh Nguyen wrote:
-> se_cmd is not used anywhere. Remove it.
+On 2022-07-18 18:27:45 [-0700], Thinh Nguyen wrote:
+> When preparing request for data write state, the next state is
+> UASP_SEND_STATUS. When data write completes, the next state is
+> UASP_QUEUE_COMMAND. Without this change, the command will transition to
+> the wrong state.
 
-This should folded into the original commit where se_cmd has stopped
-been using. I believe it was when target_execute_cmd() has been moved.
+Why is this needed now, what is the outcome of not having it?
+My point is, was this always broken, worked by chance and broke over
+time while code was changed?
 
 > Signed-off-by: Thinh Nguyen <Thinh.Nguyen@synopsys.com>
+> ---
+>  Changes in v2:
+>  - Move a related change from TASK MANAGEMENT updating cmd state to
+>    UASP_QUEUE_COMMAND to here.
+> 
+>  drivers/usb/gadget/function/f_tcm.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/drivers/usb/gadget/function/f_tcm.c b/drivers/usb/gadget/function/f_tcm.c
+> index 1e7d29f8aecb..d7318c84af98 100644
+> --- a/drivers/usb/gadget/function/f_tcm.c
+> +++ b/drivers/usb/gadget/function/f_tcm.c
+> @@ -934,6 +934,8 @@ static void usbg_data_write_cmpl(struct usb_ep *ep, struct usb_request *req)
+>  	struct usbg_cmd *cmd = req->context;
+>  	struct se_cmd *se_cmd = &cmd->se_cmd;
+>  
+> +	cmd->state = UASP_QUEUE_COMMAND;
+> +
+>  	if (req->status < 0) {
+>  		pr_err("%s() state %d transfer failed\n", __func__, cmd->state);
+>  		goto cleanup;
+> @@ -976,6 +978,8 @@ static int usbg_prepare_w_request(struct usbg_cmd *cmd, struct usb_request *req)
+>  	req->complete = usbg_data_write_cmpl;
+>  	req->length = se_cmd->data_length;
+>  	req->context = cmd;
+> +
+> +	cmd->state = UASP_SEND_STATUS;
+>  	return 0;
+>  }
+>  
 
 Sebastian
