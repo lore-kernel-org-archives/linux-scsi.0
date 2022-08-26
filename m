@@ -2,241 +2,215 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C31CDECAAA2
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Aug 2022 00:26:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94912ECAAD6
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Aug 2022 04:28:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235785AbiHZA0u (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 Aug 2022 20:26:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35964 "EHLO
+        id S244329AbiHZE21 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 26 Aug 2022 00:28:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229462AbiHZA0t (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Aug 2022 20:26:49 -0400
-Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09905AF4A6
-        for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2022 17:26:48 -0700 (PDT)
-Received: by mail-pj1-f42.google.com with SMTP id w88-20020a17090a6be100b001fbb0f0b013so507pjj.5
-        for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2022 17:26:48 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc;
-        bh=BXo4LRgKgVTKWW02LRd5WxOgeTQRVas0PwL93Ve9P2Q=;
-        b=OL2SQyFXFOBIn061ogYY2fNCZuR74LY5aZ3FItql4SkJcymlIDCuhZwVCi3hGWXyJD
-         fCm4BDdNoK9FFrQTlUR+gnoIIDOQ86K2viHVzaarwLHX3KbkuWFUSwDmK0tGPBAl25wL
-         6qei4bSu6X3jWFSzQpOrbrrEoc0zz56w7T3b+T24ISL9I0vhNgkKubs6Ss9U84Wn7inL
-         MY8FMVGoUdvvRoQ2tiKFAEyrAr6QsyFI4QyVRBdVRYuA8QdQ3UE4dssxoNRDvMH+wbVl
-         d/cXbAA4o088RQnt5/ZcG0gUJyz5cIMhO485AZP8AR4ylAveZqvQKnqyeBmt7LlkJKSG
-         5Nvw==
-X-Gm-Message-State: ACgBeo2yyVvspBUrfDFNUsGgbVDVuTGwzoc4AEBxfDW9RTJC9TW9ShPT
-        l8gno3Tj6/oEz5p5xh1HR/0=
-X-Google-Smtp-Source: AA6agR6WQrtcypajHdQHMVkGIFBWfeCbJCs7StyxP6fKJMx5miYEHfMp9ZCjGR7OaWd0+XmJuV7qnQ==
-X-Received: by 2002:a17:902:ef4f:b0:173:353:3f6c with SMTP id e15-20020a170902ef4f00b0017303533f6cmr1502882plx.6.1661473607441;
-        Thu, 25 Aug 2022 17:26:47 -0700 (PDT)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:349c:3078:d005:5a7e])
-        by smtp.gmail.com with ESMTPSA id a14-20020a170902710e00b0016d150c6c6dsm172319pll.45.2022.08.25.17.26.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 25 Aug 2022 17:26:46 -0700 (PDT)
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Ming Lei <ming.lei@redhat.com>, Christoph Hellwig <hch@lst.de>,
-        Mike Christie <michael.christie@oracle.com>,
-        Hannes Reinecke <hare@suse.de>,
-        John Garry <john.garry@huawei.com>,
-        Li Zhijian <lizhijian@fujitsu.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH] scsi: core: Fix a use-after-free
-Date:   Thu, 25 Aug 2022 17:26:34 -0700
-Message-Id: <20220826002635.919423-1-bvanassche@acm.org>
-X-Mailer: git-send-email 2.37.2.672.g94769d06f0-goog
+        with ESMTP id S231315AbiHZE2Y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Aug 2022 00:28:24 -0400
+X-Greylist: delayed 6784 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 25 Aug 2022 21:28:24 PDT
+Received: from mx0b-00230701.pphosted.com (mx0b-00230701.pphosted.com [148.163.158.9])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02FD4C990E;
+        Thu, 25 Aug 2022 21:28:23 -0700 (PDT)
+Received: from pps.filterd (m0098572.ppops.net [127.0.0.1])
+        by mx0b-00230701.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 27PNVF22031767;
+        Thu, 25 Aug 2022 19:34:34 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=synopsys.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-id : content-transfer-encoding : mime-version; s=pfptdkimsnps;
+ bh=tDgjqN4zbjgP8B0TglOuFd2MtN6dPXLizG7tRIJgoBI=;
+ b=XXTRu1a6QHQlLoOAJ/TZiuKXF1pg0skW01ghFhqrACcnijNwQNKfnyX1jZiRKCX8jsF/
+ iWk6SLNpgji6bMlIltm8EaOuFaJ7xJ2A5pEyzVO34ArJ6ZG3D0RhaJnugAs7fiL2mBDC
+ 0IoaFPs+iYxQ4nf4klNxS/Y8MxAVRfRAQtW8N4NdCYppHvc/tuI+6yVCQqGMHhDr4COa
+ BWPABEBvjTub1lpB7oB8mxBAK8Klalz45YGMJISAT2zqI/CWWPFo1zyqlN1nY3+6Ji9l
+ SLYm3D/4eIUn7lBsXbK6nvNUlDQKI4NpBQMlaIQVR5RXaO9FE1hnjoGIZnrZp52ev5am nQ== 
+Received: from smtprelay-out1.synopsys.com (smtprelay-out1.synopsys.com [149.117.87.133])
+        by mx0b-00230701.pphosted.com (PPS) with ESMTPS id 3j5abrpyu6-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 25 Aug 2022 19:34:34 -0700
+Received: from mailhost.synopsys.com (sv1-mailhost2.synopsys.com [10.205.2.132])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
+        (Client CN "mailhost.synopsys.com", Issuer "SNPSica2" (verified OK))
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 497F7C00F3;
+        Fri, 26 Aug 2022 02:34:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
+        t=1661481273; bh=tDgjqN4zbjgP8B0TglOuFd2MtN6dPXLizG7tRIJgoBI=;
+        h=From:To:CC:Subject:Date:References:In-Reply-To:From;
+        b=bUzzaTYIT4cVZKtkDRNYQPy50KoHO6fPMq+DxjX2lPHXso2VKI+Ezo53u3pVkByr7
+         ZbKCsFlwyw0WVA1s/WjLtv1/v8vN1QVMFhUMBzZH9nfTNNzeTdtR22i46AIEaT4+rX
+         3jm/W8R15OqkfubbJNyTRrvPEW/mxKUVlN2xhVTaZEVA6KUYqDIXJ0etIreJRsXiN3
+         jQQf5Bubh7iTtBJfUWXGVtTr8A2ZGS21DTupS9+qU+x7wgJHCnWSmjTDXrhZiMs2eE
+         6k1UAhMib815RkcxmjumWYgB3gDv91fKo0Mr1wTGkFynyPfwWCHVUT32HybX+O9wif
+         QnuUKspguhBvg==
+Received: from o365relay-in.synopsys.com (us03-o365relay3.synopsys.com [10.4.161.139])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
+        (Client CN "o365relay-in.synopsys.com", Issuer "Entrust Certification Authority - L1K" (verified OK))
+        by mailhost.synopsys.com (Postfix) with ESMTPS id BD9F8A0076;
+        Fri, 26 Aug 2022 02:34:28 +0000 (UTC)
+Received: from NAM04-MW2-obe.outbound.protection.outlook.com (mail-mw2nam04lp2174.outbound.protection.outlook.com [104.47.73.174])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (Client CN "mail.protection.outlook.com", Issuer "DigiCert Cloud Services CA-1" (verified OK))
+        by o365relay-in.synopsys.com (Postfix) with ESMTPS id 9CF9480199;
+        Fri, 26 Aug 2022 02:34:25 +0000 (UTC)
+Authentication-Results: o365relay-in.synopsys.com; dmarc=pass (p=reject dis=none) header.from=synopsys.com
+Authentication-Results: o365relay-in.synopsys.com; spf=pass smtp.mailfrom=thinhn@synopsys.com
+Authentication-Results: o365relay-in.synopsys.com;
+        dkim=pass (1024-bit key; unprotected) header.d=synopsys.com header.i=@synopsys.com header.b="YE1EY7+u";
+        dkim-atps=neutral
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=oZ9IjhhHlZmBQYaphYW2g9ueSU/bIIy9UF0I9uaSEIVwCXnWh98keV45azBIDQFYOncvFjadRwbPW7Fj2keR0DBl1Ih1X6vdFWX6v0fwehGccbWcPECgewzJndOOHJtHRE8nd4/XQic/R0/0RdGOkJtrzYTXK3o09Tl93Qj04+6ZCckgSBkY5zWRtduRGr5GaoTgTzIYVzAD1i+WxFLIbZle/Uo57I4lFDK5zXH2M/rxl7TjVTLDSvDQvq46I+DPBJKEeXxG2KmeBHajGN4sqfCciR7wP76KULUOUCTKkoE2OA8SgSsKZ2KcL2BPyqs0ii1CgyKM2cTKXW84E+ZdXg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=tDgjqN4zbjgP8B0TglOuFd2MtN6dPXLizG7tRIJgoBI=;
+ b=X8ccExV5MMUvnN1b+rx5uZYzb7zIqthrNSQRPq1CLphQ5vehn7P6TrP+fnGEYkszhOyYlw/lDoQJLWUBGCBTO7GhzKemwGRuZg91b3zEzbjLjluseZxoBoztgrPObErDgafi7qHZmi11n/bXuQYUmA/vfYlhjPfoO5ePRGcTG+lUQQ0DfEOzyBcFX2hy/l2SAnbj38hgmKrfQ1rk3fE9zscLunxC+DqcucDpkSU8zpZ+w38SKS0yLZY7YXaY2JoBWOQRPocq7+lWx2S+YA652yzbcvQG23JHMG8yjQ4ya5orymDgv9RbdEsQcfx9i+nHwlgZXvV0tRS/veje1LjZRg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=synopsys.com; dmarc=pass action=none header.from=synopsys.com;
+ dkim=pass header.d=synopsys.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=synopsys.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=tDgjqN4zbjgP8B0TglOuFd2MtN6dPXLizG7tRIJgoBI=;
+ b=YE1EY7+u2+z7cwMx1ZjY9016zPYRMGiYmLzsp3fJrdW3YfzPFeJPscmBaiBg3Q2/yGLOrp7UfrSMwTJDY7tOApVDCCzezZxmGRIfFg21Yia/AZ9rQFHZgFt6R2tgxleepFw/y3UjaqI/Q9L9FiIQotJ5iGrhVeUSlP668kdSxfQ=
+Received: from BN8PR12MB4787.namprd12.prod.outlook.com (2603:10b6:408:a1::11)
+ by BN6PR12MB1348.namprd12.prod.outlook.com (2603:10b6:404:1f::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5546.18; Fri, 26 Aug
+ 2022 02:34:22 +0000
+Received: from BN8PR12MB4787.namprd12.prod.outlook.com
+ ([fe80::34d0:5282:1e1e:98d5]) by BN8PR12MB4787.namprd12.prod.outlook.com
+ ([fe80::34d0:5282:1e1e:98d5%7]) with mapi id 15.20.5566.015; Fri, 26 Aug 2022
+ 02:34:22 +0000
+X-SNPS-Relay: synopsys.com
+From:   Thinh Nguyen <Thinh.Nguyen@synopsys.com>
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Dmitry Bogdanov <d.bogdanov@yadro.com>,
+        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>
+CC:     Felipe Balbi <balbi@kernel.org>,
+        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Nicholas Bellinger <nab@linux-iscsi.org>,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        John Youn <John.Youn@synopsys.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Andrzej Pietrasiewicz <andrzej.p@samsung.com>,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v2 00/25] usb: gadget: f_tcm: Enhance UASP driver
+Thread-Topic: [PATCH v2 00/25] usb: gadget: f_tcm: Enhance UASP driver
+Thread-Index: AQHYmw6F3vPaFvUH1UezRNMH+EVsTq22FgOAgACTPICACglBAA==
+Date:   Fri, 26 Aug 2022 02:34:21 +0000
+Message-ID: <20220826023404.un6jmymwjfortotu@synopsys.com>
+References: <cover.1658192351.git.Thinh.Nguyen@synopsys.com>
+ <Yv9KWyevXLegwQcK@kroah.com> <20220819171821.estwvvfkkxo64bkq@synopsys.com>
+In-Reply-To: <20220819171821.estwvvfkkxo64bkq@synopsys.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 699505bc-25e8-4298-a64d-08da870b7bf8
+x-ms-traffictypediagnostic: BN6PR12MB1348:EE_
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: 5AOJduuAJG/esqeSTryx2/ln79fuQAgFPs8ODpFDetp5eIgSHONpKSQcsk0/uEH3h5/eJBiJUPh6FTuHJeMz15gWhtbRuzfNsesgVYI1eyYBAwplQTHmXKjqDgJQtsYVg8r9nJMAZXFP5wmfxZkHvadxDD+pfonCg2eI5Q8Kur3PkXE3R/FW9DXVkxP7P4ZjHMP/VRGIxRApjGdA3hzUHcSbRLNOa13hQOg+Y7QTUvVGZxiXu45sLRhbZi9mgHT9FeOfVJLCXp9MglKVyd7ZGkQu4UfiNSFvAs3qgnI2BpWFhHiI2ZLMn/XtmGzAjunDOh+9+xEsvF7v+nmYyrccG8/9aTXktyGvX5NmwfPhEnq0wjvdOGq323o55OB3qF0iNgnerEEcux/D3lnUerKTahB4TkMgUYwnxP2nRx1qZDspf+delZDmq2i4TSfJrZaGRsoPmlwpfb7tJ62tV/to+UwX+jn602y90TAsQU0m48syou6nq8BAC4MQwWrnIemmdHVhiIE1Z5yqTg9abkf3VHT79W1H/32SKYzQTnGq86I0zBDvMYXTwfEsO96pT0TP2JJnKscQcjlYwDEgIFiY8p1p5rPmnmvoxOYGzrGuM6xCgTNj74Gmo35j99xv/2zxfsyfxRqGSg+3AGZK8MkusU4HLH42SJIUwq0ltdq2FyhU819X0tlCSBxs716uA7E1N3BQ0wyvBJ+4Tf7PSEuOHX5sN0YIJ8JP/kRX4tKZORQDj2CkGEMMnmiO5ZsVk9yipPNh9ZxyE9K21s4NEMFcyQ==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN8PR12MB4787.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(346002)(366004)(396003)(39860400002)(136003)(376002)(86362001)(38070700005)(122000001)(38100700002)(91956017)(316002)(54906003)(110136005)(76116006)(2906002)(8936002)(5660300002)(7416002)(66946007)(66556008)(66476007)(66446008)(64756008)(8676002)(4326008)(2616005)(186003)(1076003)(83380400001)(478600001)(71200400001)(6486002)(6506007)(26005)(6512007)(41300700001)(36756003);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?OXI5RGVTSkVZQnA3OTFkV0ZjZ0RWMStrTEU0YzJYVEZOLzdDU3lYbVF2OEEy?=
+ =?utf-8?B?OUtobGR1UFI1Y3dzdlJzbmYwWTh4b0dzZmFjRVpicXd3ZmtYMnJUNnpPdG1U?=
+ =?utf-8?B?d2Uxemh6SDZtNXYxbVBlbDYxK0FiM2lzeERIWU5MMURaSmJ5cTd6aWNOdkQy?=
+ =?utf-8?B?NHhrVkFrS1NGRmcwRlA2WlRwZjZ1TDdsMzVTMkRVNjF6b2gyUFJSeGRZbHJz?=
+ =?utf-8?B?dG5ld1ljbEdmd2xMc0R2a0dWNURWQ0lUWDVHQUZXZjJXekVKWVg5NXJqYVEz?=
+ =?utf-8?B?YllyL3dWbWx6a0NHRml4SG1mRkZuSXB3cjZMYjBpWGlYMHdGSFV3WDRUclF6?=
+ =?utf-8?B?VE9IM09RUFMxZnByaElWd2hCSGhWSzEySXlrVzJrT05NU3dHZ0xhd2FyeDFB?=
+ =?utf-8?B?VlplUlJpNExETEdjUUhjdHcwcmxCdzNPV2lrZmdFb2o0dXBpWmdUbEZpallm?=
+ =?utf-8?B?VFdBenNSeVd6OWlOaHA3d1l6ZWZKY1ZGc1ZuWlBNeVdRaEw2UkYzaDB4ejhP?=
+ =?utf-8?B?NE9OUXRVaWF5MWRqeXVUUjJuUlB2Q0NaYU5UR05mRFh0MzFsNWVsSzJnV09C?=
+ =?utf-8?B?cHI1TDIvb3dTLzBwMUk3bzBHYzJkN2VqUktNaGp3V2FKNktQcWdsdnBkRkd6?=
+ =?utf-8?B?Zzh1OEVETGpOYXBKV1pzUlA1SzMwLzB2ZWhsQ1RKNXdJOEx4UEtoeUttRkxw?=
+ =?utf-8?B?MFB3UVBRWkZGcWo0NHBzb2trYTF2L2cwZjBMRDEyb2tOd1NENSs3MVRDbkdS?=
+ =?utf-8?B?L3NBdTNOTXpqMG1zeDBXVVV4ZHFwUTQ5dlA5RnFPcnlQUVlDbHRscnVmTkdY?=
+ =?utf-8?B?a1Y3Vk5BSmFHaVdsN1dYaHk2OEtwcUhNNnFNNWV6L2dOOVptS1VDTGFXKzFP?=
+ =?utf-8?B?Z0JwNlpWc3JzbHlHRllaNGhXQlF2eDlkaEpiVXg0bFB0SjA2T2ZBZGRLRFVz?=
+ =?utf-8?B?TmI5L1lFTjlHRGwreUlmVStWOEREWG4wODhPVXVFajZoenZkc2VFaWtscm5q?=
+ =?utf-8?B?N1NGT0c5dThlNUM0SU9iK1hxVjJLdUJGR2E5NE9pbmxnU2ZCWEZZTFVFODVL?=
+ =?utf-8?B?UWFKUjRHNmNWZC9ncWMvNk1pcHdPenBYS3k1U1JYeCt4YnFVeUxZMGFLQjdl?=
+ =?utf-8?B?TjRxVytVUnhRQS9aRnRqV1RPTDFCbEcxSGJySUxVd0FxbzBpUW9GUmZnNER6?=
+ =?utf-8?B?bVc3ZmN1NUMxK2JXaVRHblQyUjhWbmdvS3E2enN5T1lGb3JDZGJOckNsQkxq?=
+ =?utf-8?B?NzhVWFd2RVFpWEF3amVtU2xLTVUvMFRUaWdiSVdLUk5uWXh3SDgrdUlOaFQ2?=
+ =?utf-8?B?SjhnSUFBcHlyZ1A2YXZ0MCthWU1xMmp0Sk5HaHMzeDFiUllNeFRLKzFEYThN?=
+ =?utf-8?B?VFVBcFVuOXF0d0prSGJNY0YwbzRKZmdWSHZTTm5iY0w2UXZWTk9ESHZvcXNU?=
+ =?utf-8?B?USt2U2d5em9OOFZ4VmtGaUh6bkFnQWVWRzBWREVSd2I4ODI5NjRTbmplbGdW?=
+ =?utf-8?B?ZEU1enZxZ2hXeEtBbkl4UWpFZ0xKcUR0a3gxS3Z0eXFQREV1OWhjbGUvK0hy?=
+ =?utf-8?B?U1hmT2ZrODdIVU5TU0hVb1VzWkVjVnRKODJWVVdQTkFKcXVNQ2M0TjdQKys2?=
+ =?utf-8?B?Ukxma0p4ME0ydTlHMlRMY3lEbmNPNEZUYllYc3poOU5uSWpxQ3JuSllsN3dC?=
+ =?utf-8?B?eFM1THZZMFhESE5SQmVGVFhRcCtFY2RRTUc3RnQzQjlLR1VyNTB3ZnNwOFh4?=
+ =?utf-8?B?eWw1VVI0MWRYQmdYSWNWS1o4UG5TVkZVUXZsWTk4NUJCSnNvOVc5N0lXTjZN?=
+ =?utf-8?B?UzMwOWF6bTJrNjFlVVlaR09iSXJXRDhnNS9HREtKYVYxZVVmdkJuQktpOFFC?=
+ =?utf-8?B?M1ZJRVNLS2duQ1ErRS9hS1ZRTnVwWHNabmxuUXRHenhYN0RWT1padFJVaXlY?=
+ =?utf-8?B?NldkM2xSMml6RFhVTEVpVHkyVE94WmhaeGRIRFpWd0hRQkZhZHlsNzQrbGZX?=
+ =?utf-8?B?UUNJVDE5dTZ4cmRDVFg3M3RudEkzNHNtb1NxaEZPN1k5ZHcwL0tqcWtUdTRo?=
+ =?utf-8?B?SyszY2FVTnMwK3drcVZndTdwWUswZVNUUzV6dmhPbWY2YkJZcXpDcFY5b1JV?=
+ =?utf-8?Q?JhF4gGzQkNXE5O+d/kiwnX5NH?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <145DE1A491928B46A9A56B2A55336820@namprd12.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: synopsys.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BN8PR12MB4787.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 699505bc-25e8-4298-a64d-08da870b7bf8
+X-MS-Exchange-CrossTenant-originalarrivaltime: 26 Aug 2022 02:34:22.0004
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: c33c9f88-1eb7-4099-9700-16013fd9e8aa
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: bdMq4WqcNsMGPqdeK0LitFVmY9MRedd5w5HdAFREn9d9ZIsBq2sYj7PKxdsSBpoGOQCNzuDQI0QeCU5aLrZqlw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN6PR12MB1348
+X-Proofpoint-GUID: _T5P2zqEA-edt0MWWCG_gf_jRcT0BjuM
+X-Proofpoint-ORIG-GUID: _T5P2zqEA-edt0MWWCG_gf_jRcT0BjuM
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.517,FMLib:17.11.122.1
+ definitions=2022-08-25_11,2022-08-25_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_active_cloned_notspam policy=outbound_active_cloned score=16
+ malwarescore=0 bulkscore=0 adultscore=0 phishscore=0 mlxscore=16
+ spamscore=16 impostorscore=0 priorityscore=1501 suspectscore=0
+ mlxlogscore=73 lowpriorityscore=0 clxscore=1015 classifier=spam adjust=0
+ reason=mlx scancount=1 engine=8.12.0-2207270000
+ definitions=main-2208260008
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-There are two .exit_cmd_priv implementations. Both implementations use
-resources associated with the SCSI host. Make sure that these resources are
-still available when .exit_cmd_priv is called by waiting inside
-scsi_remove_host() until the tag set has been freed.
-
-This patch fixes the following use-after-free:
-
-==================================================================
-BUG: KASAN: use-after-free in srp_exit_cmd_priv+0x27/0xd0 [ib_srp]
-Read of size 8 at addr ffff888100337000 by task multipathd/16727
-Call Trace:
- <TASK>
- dump_stack_lvl+0x34/0x44
- print_report.cold+0x5e/0x5db
- kasan_report+0xab/0x120
- srp_exit_cmd_priv+0x27/0xd0 [ib_srp]
- scsi_mq_exit_request+0x4d/0x70
- blk_mq_free_rqs+0x143/0x410
- __blk_mq_free_map_and_rqs+0x6e/0x100
- blk_mq_free_tag_set+0x2b/0x160
- scsi_host_dev_release+0xf3/0x1a0
- device_release+0x54/0xe0
- kobject_put+0xa5/0x120
- device_release+0x54/0xe0
- kobject_put+0xa5/0x120
- scsi_device_dev_release_usercontext+0x4c1/0x4e0
- execute_in_process_context+0x23/0x90
- device_release+0x54/0xe0
- kobject_put+0xa5/0x120
- scsi_disk_release+0x3f/0x50
- device_release+0x54/0xe0
- kobject_put+0xa5/0x120
- disk_release+0x17f/0x1b0
- device_release+0x54/0xe0
- kobject_put+0xa5/0x120
- dm_put_table_device+0xa3/0x160 [dm_mod]
- dm_put_device+0xd0/0x140 [dm_mod]
- free_priority_group+0xd8/0x110 [dm_multipath]
- free_multipath+0x94/0xe0 [dm_multipath]
- dm_table_destroy+0xa2/0x1e0 [dm_mod]
- __dm_destroy+0x196/0x350 [dm_mod]
- dev_remove+0x10c/0x160 [dm_mod]
- ctl_ioctl+0x2c2/0x590 [dm_mod]
- dm_ctl_ioctl+0x5/0x10 [dm_mod]
- __x64_sys_ioctl+0xb4/0xf0
- dm_ctl_ioctl+0x5/0x10 [dm_mod]
- __x64_sys_ioctl+0xb4/0xf0
- do_syscall_64+0x3b/0x90
- entry_SYSCALL_64_after_hwframe+0x46/0xb0
-
-Cc: Ming Lei <ming.lei@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Mike Christie <michael.christie@oracle.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: John Garry <john.garry@huawei.com>
-Cc: Li Zhijian <lizhijian@fujitsu.com>
-Reported-by: Li Zhijian <lizhijian@fujitsu.com>
-Fixes: 65ca846a5314 ("scsi: core: Introduce {init,exit}_cmd_priv()")
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/hosts.c      | 16 +++++++++++++---
- drivers/scsi/scsi_lib.c   |  6 +++++-
- drivers/scsi/scsi_priv.h  |  2 +-
- drivers/scsi/scsi_scan.c  |  1 +
- drivers/scsi/scsi_sysfs.c |  1 +
- include/scsi/scsi_host.h  |  2 ++
- 6 files changed, 23 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 26bf3b153595..9857dba09c95 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -182,6 +182,15 @@ void scsi_remove_host(struct Scsi_Host *shost)
- 	mutex_unlock(&shost->scan_mutex);
- 	scsi_proc_host_rm(shost);
- 
-+	/*
-+	 * New SCSI devices cannot be attached anymore because of the SCSI host
-+	 * state so drop the tag set refcnt. Wait until the tag set refcnt drops
-+	 * to zero because .exit_cmd_priv implementations may need the host
-+	 * pointer.
-+	 */
-+	kref_put(&shost->tagset_refcnt, scsi_mq_free_tags);
-+	wait_for_completion(&shost->tagset_freed);
-+
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	if (scsi_host_set_state(shost, SHOST_DEL))
- 		BUG_ON(scsi_host_set_state(shost, SHOST_DEL_RECOVERY));
-@@ -245,6 +254,9 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
- 	if (error)
- 		goto fail;
- 
-+	kref_init(&shost->tagset_refcnt);
-+	init_completion(&shost->tagset_freed);
-+
- 	/*
- 	 * Increase usage count temporarily here so that calling
- 	 * scsi_autopm_put_host() will trigger runtime idle if there is
-@@ -317,6 +329,7 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
- 	pm_runtime_disable(&shost->shost_gendev);
- 	pm_runtime_set_suspended(&shost->shost_gendev);
- 	pm_runtime_put_noidle(&shost->shost_gendev);
-+	kref_put(&shost->tagset_refcnt, scsi_mq_free_tags);
-  fail:
- 	return error;
- }
-@@ -350,9 +363,6 @@ static void scsi_host_dev_release(struct device *dev)
- 		kfree(dev_name(&shost->shost_dev));
- 	}
- 
--	if (shost->tag_set.tags)
--		scsi_mq_destroy_tags(shost);
--
- 	kfree(shost->shost_data);
- 
- 	ida_free(&host_index_ida, shost->host_no);
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 4dbd29ab1dcc..1f30e0c54e55 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1976,9 +1976,13 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
- 	return blk_mq_alloc_tag_set(tag_set);
- }
- 
--void scsi_mq_destroy_tags(struct Scsi_Host *shost)
-+void scsi_mq_free_tags(struct kref *kref)
- {
-+	struct Scsi_Host *shost = container_of(kref, typeof(*shost),
-+					       tagset_refcnt);
-+
- 	blk_mq_free_tag_set(&shost->tag_set);
-+	complete(&shost->tagset_freed);
- }
- 
- /**
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index 429663bd78ec..f385b3f04d6e 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -94,7 +94,7 @@ extern void scsi_run_host_queues(struct Scsi_Host *shost);
- extern void scsi_requeue_run_queue(struct work_struct *work);
- extern void scsi_start_queue(struct scsi_device *sdev);
- extern int scsi_mq_setup_tags(struct Scsi_Host *shost);
--extern void scsi_mq_destroy_tags(struct Scsi_Host *shost);
-+extern void scsi_mq_free_tags(struct kref *kref);
- extern void scsi_exit_queue(void);
- extern void scsi_evt_thread(struct work_struct *work);
- 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 91ac901a6682..5d27f5196de6 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -340,6 +340,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- 		kfree(sdev);
- 		goto out;
- 	}
-+	kref_get(&sdev->host->tagset_refcnt);
- 	sdev->request_queue = q;
- 	q->queuedata = sdev;
- 	__scsi_init_queue(sdev->host, q);
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index aa70d9282161..5d61f58399dc 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1476,6 +1476,7 @@ void __scsi_remove_device(struct scsi_device *sdev)
- 	mutex_unlock(&sdev->state_mutex);
- 
- 	blk_mq_destroy_queue(sdev->request_queue);
-+	kref_put(&sdev->host->tagset_refcnt, scsi_mq_free_tags);
- 	cancel_work_sync(&sdev->requeue_work);
- 
- 	if (sdev->host->hostt->slave_destroy)
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index b6e41ee3d566..9b0a028bf053 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -557,6 +557,8 @@ struct Scsi_Host {
- 	struct scsi_host_template *hostt;
- 	struct scsi_transport_template *transportt;
- 
-+	struct kref		tagset_refcnt;
-+	struct completion	tagset_freed;
- 	/* Area to keep a shared tag map */
- 	struct blk_mq_tag_set	tag_set;
- 
+T24gRnJpLCBBdWcgMTksIDIwMjIsIFRoaW5oIE5ndXllbiB3cm90ZToNCj4gSGkgTWFydGluLCBE
+bWl0cnksIGFuZCBvdGhlcnMsDQo+IA0KPiBPbiBGcmksIEF1ZyAxOSwgMjAyMiBhdCAxMDozMToy
+M0FNICswMjAwLCBHcmVnIEtyb2FoLUhhcnRtYW4gd3JvdGU6DQo+ID4gT24gTW9uLCBKdWwgMTgs
+IDIwMjIgYXQgMDY6MjY6MDFQTSAtMDcwMCwgVGhpbmggTmd1eWVuIHdyb3RlOg0KPiA+ID4gVGhl
+IExpbnV4IFVBU1AgZ2FkZ2V0IGRyaXZlciBpcyBpbmNvbXBsZXRlIGFuZCByZW1haW5lZCBicm9r
+ZW4gZm9yIGEgbG9uZyB0aW1lLg0KPiA+ID4gSXQgd2FzIG5vdCBpbXBsZW1lbnRlZCBmb3IgcGVy
+Zm9ybWFuY2UgZWl0aGVyLiBUaGlzIHNlcmllcyBhZGRzIHNvbWUgb2YgdGhlDQo+ID4gPiByZXF1
+aXJlZCBmZWF0dXJlcyBmb3IgdGhlIFVBU1AgZHJpdmVyIHRvIHdvcmsuIEl0IGFsc28gbWFrZXMg
+c29tZSBjaGFuZ2VzIHRvDQo+ID4gPiB0aGUgdGFyZ2V0IGNvcmUuDQo+ID4gPiANCj4gPiA+IFRo
+aXMgaXMgdGVzdGVkIGFnYWluc3QgVUFTUCBDViBhbmQgRFdDX3VzYjN4IGNvbnRyb2xsZXIuIEl0
+IHN0aWxsIG5lZWRzIHNvbWUNCj4gPiA+IGZpeGVzIGluIHRoZSB0YXJnZXQgY29yZSwgd2hpY2gg
+d2lsbCBiZSBzZXBhcmF0ZWQgZnJvbSB0aGlzIHNlcmllcy4NCj4gPiA+IA0KPiA+ID4gVGhlcmUg
+YXJlIHN0aWxsIG1vcmUgcm9vbSBmb3IgcGVyZm9ybWFuY2UgaW1wcm92ZW1lbnQgYW5kIGZpeGVz
+LiBIb3dldmVyLCB0aGlzDQo+ID4gPiBzZXJpZXMgc2hvdWxkIGJlIHN1ZmZpY2llbnQgdG8gYnJp
+bmcgdXAgYSB3b3JraW5nIFVBU1AgZGV2aWNlLg0KPiA+ID4gDQo+ID4gPiANCj4gPiA+IENoYW5n
+ZXMgaW4gdjI6DQo+ID4gPiAgLSBSZW1vdmUgbW9zdCB0YXJnZXQgY29yZSBjaGFuZ2VzIGZyb20g
+dGhpcyBzZXJpZXMgYW5kIG9ubHkga2VlcCB0aGUgbXVzdC1oYXZlDQo+ID4gPiAgICBvbmVzDQo+
+ID4gPiAgLSBTcGxpdCB0aGUgdGFzay1tYW5hZ2VtZW50IHBhdGNoIHRvIHNtYWxsZXIgcGF0Y2hl
+cw0KPiA+ID4gIC0gRG9uJ3Qgc2VuZCBmYWlsdXJlIFRhc2sgTWFuYWdlbWVudCByZXNwb25zZSB0
+byB0YXJnZXQgY29yZSwgcmVkdWNpbmcNCj4gPiA+ICAgIGRlcGVuZGVuY3kNCj4gPiA+ICAtIEFk
+ZCBVQVNQIGJyaW5ndXAgc2NyaXB0IGV4YW1wbGUgaW4gY292ZXIgcGFnZQ0KPiA+ID4gIC0gTWFr
+ZSB2YXJpb3VzIHNtYWxsIHVwZGF0ZXMgYWNjb3JkaW5nIHRvIGZlZWRiYWNrcw0KPiA+IA0KPiA+
+IEkgd291bGQgbmVlZCBhIHJldmlldyBieSB0aGUgdGFyZ2V0IG1haW50YWluZXJzIGJlZm9yZSBi
+ZWluZyBhYmxlIHRvDQo+ID4gdGFrZSBhbnkgb2YgdGhlIFVTQiBnYWRnZXQgY2hhbmdlcyBpbnRv
+IHRoZSBVU0IgdHJlZS4uLg0KPiA+IA0KPiANCj4gRG8geW91IGhhdmUgYW55IGNvbW1lbnQgb24g
+dGhpcyBzZXJpZXM/DQo+IA0KDQpIaSB0YXJnZXQgbWFpbnRhaW5lcnMsDQoNCkdlbnRsZSBwaW5n
+Li4uDQoNCkJSLA0KVGhpbmg=
