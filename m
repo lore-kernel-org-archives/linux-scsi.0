@@ -2,75 +2,79 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC3A9ECAAD6
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Aug 2022 10:52:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5CDFECAAA3
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Aug 2022 17:31:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343939AbiHZKwI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 26 Aug 2022 06:52:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53186 "EHLO
+        id S1344317AbiHZRbq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 26 Aug 2022 13:31:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33824 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343723AbiHZKwH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Aug 2022 06:52:07 -0400
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 967D7C59D5;
-        Fri, 26 Aug 2022 03:52:06 -0700 (PDT)
-Date:   Fri, 26 Aug 2022 12:52:03 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1661511125;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=AcBhOUfjCU0/EpkwIrVCvmsXvHvFxYrl5N/njRsUdYc=;
-        b=ScOCwBbVqwD1I7R7PWDqWaPibViOyq/x5Nzh7T0FlAl614JW3V1Sx0Gq5WnS2J6Fz13ho7
-        wdAb5BRMM+iWoLcjxAkMCLmvRYSoCtMP4WTbWrQBMcIuFWGnpH2E2qnfofUIApc/OO7ra3
-        jaHk6/uG6N+RZ3z2lIXHVse1Wo0U3zAsy2llj0QSjVJSSJ//Q36aUanToUJ2TdyCi73JEk
-        Qy7SgejFtKNSlO9lfilUUW7tfwwc9EB7c/aUszrmH+/D3hocxbFU37xNh9BeTv85rYiIWH
-        DeNcR0h3sbp0Khs7Oc4ydrUF4qXaDx3pMvIsOBAZoRs5LEHiTiiNldb2IB5QLw==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1661511125;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=AcBhOUfjCU0/EpkwIrVCvmsXvHvFxYrl5N/njRsUdYc=;
-        b=bWKqx4HnixDXaaYz3oju6CqNuhoyWH15Q++CzHTNkvS7tR/lPlG+bGohFhelKvt9BPIE9p
-        w//by8Fhf3jRPyBw==
-From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To:     Thinh Nguyen <Thinh.Nguyen@synopsys.com>
-Cc:     Felipe Balbi <balbi@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        Dmitry Bogdanov <d.bogdanov@yadro.com>,
-        Nicholas Bellinger <nab@linux-iscsi.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        John Youn <John.Youn@synopsys.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Andrzej Pietrasiewicz <andrzej.p@samsung.com>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2 00/25] usb: gadget: f_tcm: Enhance UASP driver
-Message-ID: <Ywil0y5I/oXjPJp9@linutronix.de>
-References: <cover.1658192351.git.Thinh.Nguyen@synopsys.com>
+        with ESMTP id S244134AbiHZRbp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Aug 2022 13:31:45 -0400
+Received: from mail-ed1-x536.google.com (mail-ed1-x536.google.com [IPv6:2a00:1450:4864:20::536])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8370EDB06E
+        for <linux-scsi@vger.kernel.org>; Fri, 26 Aug 2022 10:31:44 -0700 (PDT)
+Received: by mail-ed1-x536.google.com with SMTP id m1so2930635edb.7
+        for <linux-scsi@vger.kernel.org>; Fri, 26 Aug 2022 10:31:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc;
+        bh=Jme7uqqc6twTvBXYEnP6kaEZrCfdEsgOykmCLtXGQqQ=;
+        b=cqn8OYgAgusLNPHbU9fDfjR9OHGrc1htGybhgrf3u8IJEBJOaU0/ceKFUnwpb/zB+E
+         U0qrKqpxtNaJ2Ul3dpqZ9YHxZJvsHGbZZQANsomq+14hiAHBqLQ3DvSOElgzwdxSTuAM
+         MPjiakXtex91wUcdaPqdsTaRK2qgDh6M5XOOs=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc;
+        bh=Jme7uqqc6twTvBXYEnP6kaEZrCfdEsgOykmCLtXGQqQ=;
+        b=1G5c4IOAi7PaZeSlLn9XFrxMMil0A+o7+I9XVGCChrt/P4EH58yjBraZU9GDsmF5Na
+         U7qgtIIdSS3Fe870DtYie128YqfPs5FvzaOzE+6y6n2bSpwovUaCS5DcjCb61uq9qTXE
+         FnrxiYsiejAS0wvCvpN8SeCFie6Od6a+JUUvYguEoJjMZgmGSDnaVwgBkwrz+1aixKKs
+         AxRQq5mJEqU98kshsgh7PHtrWGP51bzdcTrPBW8mSYUhIr5Cr33Owp54w31yLt5Wk+cd
+         KuC/d7OqDx6dZUneOFLoruckR3VpiJU2elhlMhRsYZMPzfWBUjqVdKB9uDngLaoOVVfv
+         Vi2g==
+X-Gm-Message-State: ACgBeo2fgvjOrlpdUaA4bsjSKNFJxs5ER7669xRYLmq+Xrvf2D3KtzVg
+        PLcp0Y3ogNDfu+tWcgO9GKdfkcl9fC+kJO9a3oY=
+X-Google-Smtp-Source: AA6agR6fw0oansj3z+7CTuKy12cp7QOo0r27wI1hO1q36K+Q4ZC3Dj4y+JqXBubmvvDDOb1aYNKN4g==
+X-Received: by 2002:a05:6402:369a:b0:43d:75c5:f16c with SMTP id ej26-20020a056402369a00b0043d75c5f16cmr7369906edb.57.1661535102514;
+        Fri, 26 Aug 2022 10:31:42 -0700 (PDT)
+Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com. [209.85.128.48])
+        by smtp.gmail.com with ESMTPSA id gw20-20020a170906f15400b0073cc17cdb92sm1122954ejb.106.2022.08.26.10.31.41
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 26 Aug 2022 10:31:41 -0700 (PDT)
+Received: by mail-wm1-f48.google.com with SMTP id i67-20020a1c3b46000000b003a7b6ae4eb2so11368wma.4
+        for <linux-scsi@vger.kernel.org>; Fri, 26 Aug 2022 10:31:41 -0700 (PDT)
+X-Received: by 2002:a05:600c:657:b0:3a5:e4e6:ee24 with SMTP id
+ p23-20020a05600c065700b003a5e4e6ee24mr407390wmm.68.1661535101292; Fri, 26 Aug
+ 2022 10:31:41 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <cover.1658192351.git.Thinh.Nguyen@synopsys.com>
+References: <042650172f59fca9836fe523ce14a07daccc4f2d.camel@HansenPartnership.com>
+In-Reply-To: <042650172f59fca9836fe523ce14a07daccc4f2d.camel@HansenPartnership.com>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Fri, 26 Aug 2022 10:31:24 -0700
+X-Gmail-Original-Message-ID: <CAHk-=wjcvDA+TtFGiFS1faAX9-sVK_jkMGC+0FX01U+hw9tgkA@mail.gmail.com>
+Message-ID: <CAHk-=wjcvDA+TtFGiFS1faAX9-sVK_jkMGC+0FX01U+hw9tgkA@mail.gmail.com>
+Subject: Re: [GIT PULL] SCSI fixes for 6.0-rc2
+To:     James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2022-07-18 18:26:01 [-0700], Thinh Nguyen wrote:
-> The Linux UASP gadget driver is incomplete and remained broken for a long time.
-> It was not implemented for performance either. This series adds some of the
-> required features for the UASP driver to work. It also makes some changes to
-> the target core.
+On Fri, Aug 26, 2022 at 12:39 AM James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+>
+> With full diff below.
 
-Some patches here have fixes: tags and are in the middle of the series.
-If they are indeed fixes which are needed for the driver function
-regardless of the other changes, which are part of the series, then they
-should be moved to the front of series _or_ submitted independently as
-in "lets first fix the broken things and then make it pretty".
+Nothing there.
 
-All in all I am happy to see that somebody is looking into the target
-USB gadget.
+I assume you noticed that the full diff was unnecessarily big, but
+left the notice..
 
-Sebastian
+               Linus
