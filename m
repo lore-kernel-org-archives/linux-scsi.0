@@ -2,164 +2,87 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4ECB0ECAAD6
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Aug 2022 07:55:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41183ECAAD7
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Aug 2022 09:06:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245749AbiHZHy7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 26 Aug 2022 03:54:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36730 "EHLO
+        id S245591AbiHZJGl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 26 Aug 2022 05:06:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51386 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245678AbiHZHy5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Aug 2022 03:54:57 -0400
-Received: from mail-qv1-f42.google.com (mail-qv1-f42.google.com [209.85.219.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3CD420F6E;
-        Fri, 26 Aug 2022 00:54:54 -0700 (PDT)
-Received: by mail-qv1-f42.google.com with SMTP id h12so516434qvs.3;
-        Fri, 26 Aug 2022 00:54:54 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc;
-        bh=fL8b3+HSS1hWMBgkDRO4fObvjRvb6mb1AqBpq8sCS00=;
-        b=KhR8Nv6UraIf9rbxh2PmeFKQxvsoQ13j4UhsfsD5+2kDQUBwV5he2QzsRwJh++hLHX
-         YAGwiCzhaWi1P9Dwplf5vIqt6R4OO7Dj5zimbYykpAhQLxKvUzWQQlzdiySw1X402otl
-         bYOEbtqN9j+AkvVjaAB8hN1NiDwtLKDhG1bICQjZ1QszgxhwJF26vQqB7PyG80tDmxOc
-         c1zA4c62KR3/WdeG+9vBh748qgYDMzi/3+41OKL7hKWLIwAwM+w8fSuI9Zn0sW7MSbrj
-         Xtj5p/vQRO0gQLi8eZt3wYX6I/cwpY8mTEwymM/N8ms1eNhP2mPW+x8L58UzljscFq8E
-         TFIg==
-X-Gm-Message-State: ACgBeo0eBTv45EieHs8tWFELx6RyTWMireittmRZ+jvZLOGXrNL4OlHu
-        xrf1ciW68D66FspYso27qIjvxYHwc/ImiA==
-X-Google-Smtp-Source: AA6agR6ccNPLs7OnO22pHf0sBU0i3uoYoMfDjeAJs16zV1x7w+X1KvT2TfXn4/w9kH5+OS44XecIyQ==
-X-Received: by 2002:a05:6214:2387:b0:497:15b3:f792 with SMTP id fw7-20020a056214238700b0049715b3f792mr6904617qvb.118.1661500493083;
-        Fri, 26 Aug 2022 00:54:53 -0700 (PDT)
-Received: from mail-yw1-f179.google.com (mail-yw1-f179.google.com. [209.85.128.179])
-        by smtp.gmail.com with ESMTPSA id q30-20020a05620a039e00b006bbf85cad0fsm1217679qkm.20.2022.08.26.00.54.52
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 26 Aug 2022 00:54:52 -0700 (PDT)
-Received: by mail-yw1-f179.google.com with SMTP id 00721157ae682-33dbbf69b3dso17172907b3.1;
-        Fri, 26 Aug 2022 00:54:52 -0700 (PDT)
-X-Received: by 2002:a81:1e45:0:b0:336:bade:e0 with SMTP id e66-20020a811e45000000b00336bade00e0mr7575383ywe.358.1661500491908;
- Fri, 26 Aug 2022 00:54:51 -0700 (PDT)
+        with ESMTP id S245227AbiHZJGi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Aug 2022 05:06:38 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED03DD6304;
+        Fri, 26 Aug 2022 02:06:36 -0700 (PDT)
+Date:   Fri, 26 Aug 2022 11:06:32 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1661504795;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=bWmtCR9K7g8WGM5dbPXeabsChqiWPGxtgX1i922KQpo=;
+        b=VnrvzOJWE1hyoW45ywyZ99N/BWqSF9eAuSZuxEMJxti8RImvw7Lt+CD9mNVet84Ip5N0gG
+        C2LadHZuBIaJRh6PULR17EDSLJ1eRFXI6kUfVWma7hVCLDEeVojvIzhxu9z5HHKR/MNXjp
+        eBpQp4riVw1IuKqyC9xLuVSRevAKWvMB3d5ovkVks++Shw3VW4TqsufjjnCJsavI0jFOlK
+        +buAl2R8h995WOW4HGYqGD+fIly0Kt4+zCpmoyxHnqDSE+1TJFAWLMZDfhu1ptBjVMCynL
+        mBBFVgufrJHU+6mrCDPDTIVjkaUftayTEcIVLeUtTss4L8AKuXY4vYQQHOrB9Q==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1661504795;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=bWmtCR9K7g8WGM5dbPXeabsChqiWPGxtgX1i922KQpo=;
+        b=DoKhqbgdm7w9bGMz/o276aFnYc4vVcFHzC9Pns3HMgBTlVPB/ajJmpSfvqpcndATAhMEZo
+        +crRx60ffDudEcCw==
+From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To:     Thinh Nguyen <Thinh.Nguyen@synopsys.com>
+Cc:     Felipe Balbi <balbi@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dmitry Bogdanov <d.bogdanov@yadro.com>,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Subject: Re: [PATCH v2 21/25] usb: gadget: f_tcm: Get stream by tag
+Message-ID: <YwiNGK3ZZeYi2lN7@linutronix.de>
+References: <cover.1658192351.git.Thinh.Nguyen@synopsys.com>
+ <3fbae6ecb8e9f31807635152a377b076e86fb12e.1658192351.git.Thinh.Nguyen@synopsys.com>
 MIME-Version: 1.0
-References: <20220816172638.538734-1-bvanassche@acm.org> <decc1ef4-ec85-d947-ec81-ebeaa982f53f@redhat.com>
- <CAMuHMdVDWrLs_KusG8vXA_1z8ORdPnpfxzNqw4jCG_G0D-fn+A@mail.gmail.com>
- <ecf878dc-905b-f714-4c44-6c90e81f8391@acm.org> <CAMuHMdW0WzgQjR33hz9om7ahE5StbDCLozVnZzYAS1WEzStR0w@mail.gmail.com>
- <026ad7cc-5be9-e90b-8c95-0649caf68779@acm.org>
-In-Reply-To: <026ad7cc-5be9-e90b-8c95-0649caf68779@acm.org>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Fri, 26 Aug 2022 09:54:40 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdVYqceaamrYXK9bFW1mQ+m7HMUA-jhW_+co3b-GB6fAeA@mail.gmail.com>
-Message-ID: <CAMuHMdVYqceaamrYXK9bFW1mQ+m7HMUA-jhW_+co3b-GB6fAeA@mail.gmail.com>
-Subject: Re: [PATCH] scsi: sd: Revert "Rework asynchronous resume support"
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     Hans de Goede <hdegoede@redhat.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        scsi <linux-scsi@vger.kernel.org>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Hannes Reinecke <hare@suse.de>, gzhqyz@gmail.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <3fbae6ecb8e9f31807635152a377b076e86fb12e.1658192351.git.Thinh.Nguyen@synopsys.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart,
+On 2022-07-18 18:28:16 [-0700], Thinh Nguyen wrote:
+> diff --git a/drivers/usb/gadget/function/f_tcm.c b/drivers/usb/gadget/function/f_tcm.c
+> index 084143213176..a10e74290664 100644
+> --- a/drivers/usb/gadget/function/f_tcm.c
+> +++ b/drivers/usb/gadget/function/f_tcm.c
+> @@ -506,6 +506,22 @@ static void uasp_cleanup_old_alt(struct f_uas *fu)
+>  	uasp_free_cmdreq(fu);
+>  }
+>  
+> +static struct uas_stream *uasp_get_stream_by_tag(struct f_uas *fu, u16 tag)
+> +{
+> +	/*
+> +	 * For simplicity, we use mod operation to quickly find an in-progress
+> +	 * matching command tag to check for overlapped command. The assumption
+> +	 * is that the UASP class driver will limit to using tag id from 1 to
+> +	 * USBG_NUM_CMDS. This is based on observation from the Windows and
+> +	 * Linux UASP storage class driver behavior. If an unusual UASP class
+> +	 * driver uses a tag greater than USBG_NUM_CMDS, then this method may no
+> +	 * longer work due to possible stream id collision. In that case, we
+> +	 * need to use a proper algorithm to fetch the stream (or simply walk
+> +	 * through all active streams to check for overlap).
+> +	 */
+> +	return &fu->stream[tag % USBG_NUM_CMDS];
 
-On Tue, Aug 23, 2022 at 8:10 PM Bart Van Assche <bvanassche@acm.org> wrote:
-> On 8/22/22 23:41, Geert Uytterhoeven wrote:
-> > A lock-up (magic sysrq does not work) during s2idle.
-> > I tried bisecting it yesterday, but failed.
-> > On v6.0-rc1 (and rc2) it happens ca. 25% of the time, but the closer
-> > I get to v5.19, the less likely it is to happen. Apparently 100
-> > successful s2idle cycles was not enough to declare a kernel good...
-> >
-> >      Freezing ...
-> >      Filesystems sync: 0.001 seconds
-> >      Freezing user space processes ... (elapsed 0.001 seconds) done.
-> >      OOM killer disabled.
-> >      Freezing remaining freezable tasks ... (elapsed 0.001 seconds) done.
-> >      sd 0:0:0:0: [sda] Synchronizing SCSI cache
-> >      sd 0:0:0:0: [sda] Stopping disk
-> >
-> > ---> hangs here if it happens
-> >
-> >      ravb e6800000.ethernet eth0: Link is Down
-> >      sd 0:0:0:0: [sda] Starting disk
-> >      Micrel KSZ9031 Gigabit PHY e6800000.ethernet-ffffffff:00: attached
-> > PHY driver (mii_bus:phy_addr=e6800000.ethernet-ffffffff:00, irq=186)
-> >      ata1: link resume succeeded after 1 retries
-> >      ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> >      ata1.00: configured for UDMA/133
-> >      OOM killer enabled.
-> >      Restarting tasks ... done.
-> >      random: crng reseeded on system resumption
-> >      PM: suspend exit
-> >      ravb e6800000.ethernet eth0: Link is Up - 1Gbps/Full - flow control off
->
-> I'm not sure that is enough information to find the root cause. How
+Could you please avoid the assumption what tag actually is?
+Please take a look at hashtable.h, hash_add(), hash_del(),
+hash_for_each_possible_safe() is probably all you need.
+That % looks efficient but gcc will try and remove the div operation
+which is something the hash implementation (as of hash_min()) avoids. So
+the only additional costs here is the additional hashtable which worth
+the price given that you don't assume what tag can be.
 
-Sorry for not making it clear I didn't expect this to be enough
-information.
-
-> about enabling the tp_printk boot option and to enable tracing for
-> suspend/resume operations, e.g. as follows?
->
-> cd /sys/kernel/tracing &&
-> echo 256 > /sys/kernel/tracing/buffer_size_kb &&
-> echo nop > current_tracer &&
-> echo > trace &&
-> echo 1 > events/power/device_pm_callback_start/enable &&
-> echo 1 > events/power/device_pm_callback_end/enable &&
-> echo 1 > events/power/suspend_resume/enable &&
-> echo 1 > tracing_on
-
-Thanks, that generates lots of output (362 KiB/cycle)!
-Unfortunately it also has an impact on the probability of lock-ups.
-Combined with 'scsi: sd: Revert "Rework asynchronous resume support"',
-s2idle now works almost always.
-
-I did manage to trigger the lock-up once with tracing enabled:
-
-     device_pm_callback_end: gpio_rcar e6055400.gpio, err=0
-     device_pm_callback_start: gpio_rcar e6055800.gpio, parent: soc,
-noirq power domain [suspend]
-     device_pm_callback_end: gpio_rcar e6055800.gpio, err=0
-     device_pm_callback_start: renesas-cpg-mssr
-e6150000.clock-controller, parent: soc, noirq driver [suspend]
-     device_pm_callback_end: renesas-cpg-mssr e6150000.clock-controller, err=0
-     device_pm_callback_start: sh-pfc e6060000.pinctrl, parent: soc,
-noirq driver [suspend]
-     device_pm_callback_end: sh-pfc e6060000.pinctrl, err=0
-     suspend_resume: dpm_suspend_noirq[2] end
-     suspend_resume: machine_suspend[1] begin
-     suspend_resume: timekeeping_freeze[5] begin
-
----> hang
-
-     suspend_resume: timekeeping_freeze[0] end
-     suspend_resume: machine_suspend[1] end
-     suspend_resume: dpm_resume_noirq[16] begin
-     device_pm_callback_start: sh-pfc e6060000.pinctrl, parent: soc,
-noirq driver [resume]
-     device_pm_callback_end: sh-pfc e6060000.pinctrl, err=0
-     device_pm_callback_start: renesas-cpg-mssr
-e6150000.clock-controller, parent: soc, noirq driver [resume]
-     device_pm_callback_end: renesas-cpg-mssr e6150000.clock-controller, err=0
-     device_pm_callback_start: gpio_rcar e6055800.gpio, parent: soc,
-noirq power domain [resume]
-
-Oops, timers...
-
-At least it's not related to SCSI ;-)
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Sebastian
