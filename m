@@ -2,295 +2,85 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24C7FECAAD8
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Aug 2022 22:00:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB200C0502A
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Aug 2022 22:05:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238115AbiHZWAg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 26 Aug 2022 18:00:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45132 "EHLO
+        id S237451AbiHZWF5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 26 Aug 2022 18:05:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53584 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231131AbiHZWAf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Aug 2022 18:00:35 -0400
-Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0380B02A6;
-        Fri, 26 Aug 2022 15:00:33 -0700 (PDT)
-Received: by mail-pf1-f177.google.com with SMTP id y127so2765605pfy.5;
-        Fri, 26 Aug 2022 15:00:33 -0700 (PDT)
+        with ESMTP id S230436AbiHZWF4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Aug 2022 18:05:56 -0400
+Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7CD4BC88B8;
+        Fri, 26 Aug 2022 15:05:55 -0700 (PDT)
+Received: by mail-pj1-f51.google.com with SMTP id w88-20020a17090a6be100b001fbb0f0b013so3139951pjj.5;
+        Fri, 26 Aug 2022 15:05:55 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc;
-        bh=drYo/HPpt3swBa4tChpUwjOD5tPA9oSu7mOGrZPzAC8=;
-        b=wbtimq+gfGmXS8rymNOXZR/A08vA4rHJH/Vy9KBRQ5Cl5ZBzhHeJ5xFgpNxUIMszKw
-         tzyxpVSfsu4H4MjbR7yLH3MgMarjetbXj1PlL25oKj0d1QwTi2fxDCp4XicLp3XEQTur
-         MnnwYImjoLkZ9euHfB9I557NP0JG5pxqNroCZ4ZspWsSU9JuhLY7P3GS+jCMMLE78Eo2
-         9kH3/e7wkukICoycbDbiUF7xQk1aiYN08NL9CJxa4IYM2A50gAfHKiUT43YH4QHYHB9A
-         DK5y6wsvadLnWBD8ie9OkQZC/XhaPA+P5Yf5PZD4uOM423HI0jU0ao0iP04DInCm6ETG
-         iAgA==
-X-Gm-Message-State: ACgBeo1RHupsWDYfkn2dPwh6ZiaL1loJT8+wSgNjeJWdk1cSZiD1+iRv
-        Fqs1gvpKDFkEc1f86RGXhQM=
-X-Google-Smtp-Source: AA6agR7vg8/aKDBrWQKRqBLO9T32XbxH+7iIBLMWlJ4dUIvlOM4CNbhI1XRH6aVmXDDnoZFCHOUh+A==
-X-Received: by 2002:a65:42c8:0:b0:41a:8138:f47f with SMTP id l8-20020a6542c8000000b0041a8138f47fmr4831436pgp.476.1661551232944;
-        Fri, 26 Aug 2022 15:00:32 -0700 (PDT)
+        bh=OVWnAlc8YN9XEQA0vd7Y2vromwbsVTjPra3Mrwq+1eU=;
+        b=kZLSfSZqFOHt069kiIDcD0SsK60W63vlEm0L6ZUZ9fk5HfMe3zvkevQG8pq8iumCdI
+         iBkWcbCUZ7zvqmJc8ARXR+UGFEvvPVtxh7XWTDHw+kE/fp684EF/iPgj033/ALB38QZu
+         5VWsoiERAZFsht4XPOMYsk+NZ1xXCD1TMulA2tnWg7fWV7eBvbv98irBM1ealfYNe02h
+         LY9lXCWXRmVmwI6KJIhX7/CQ06kvnA5wAIQgwRgZVYbrAfxj4GKbHrSz96X7BVqL+GOk
+         RRiQrK48HodtZbZ4qNgxWaBGIo2CsNAtq3G/sTFEFOApyx1EDRaktIqhzCfrtsg0Qitp
+         Nw0A==
+X-Gm-Message-State: ACgBeo0Mr9fpqXiFT9FhDh4s+y/yIpEIbiu4IFMFw+CZsE++WAKmISYs
+        v1cwPcJ+n3cZ+q4U8TpkMxM=
+X-Google-Smtp-Source: AA6agR6QYEE4oV/Dk9br5PkInt4VOtU/dvU9A4fNw0WQPmxe3y5EiIuhTpAkWUv+RiF38x2a87VXEw==
+X-Received: by 2002:a17:902:f64d:b0:172:d004:8b2d with SMTP id m13-20020a170902f64d00b00172d0048b2dmr5656685plg.14.1661551554938;
+        Fri, 26 Aug 2022 15:05:54 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:a12:b4b9:f1b3:ec63? ([2620:15c:211:201:a12:b4b9:f1b3:ec63])
-        by smtp.gmail.com with ESMTPSA id x187-20020a6263c4000000b00528c066678csm2248566pfb.72.2022.08.26.15.00.31
+        by smtp.gmail.com with ESMTPSA id e6-20020a170902784600b00168dadc7354sm2103935pln.78.2022.08.26.15.05.53
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 26 Aug 2022 15:00:32 -0700 (PDT)
-Message-ID: <95742dba-1dcd-090a-8920-31d0ef6eef49@acm.org>
-Date:   Fri, 26 Aug 2022 15:00:29 -0700
+        Fri, 26 Aug 2022 15:05:54 -0700 (PDT)
+Message-ID: <5ba28a61-0aa2-14d7-61f0-0e9316844f70@acm.org>
+Date:   Fri, 26 Aug 2022 15:05:51 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.11.0
-Subject: Re: [PATCH] scsi: ufs: ufsfbo: Introduce File Based Optimization
- feature
+Subject: Re: [PATCH] scsi: core: Fix block I/O error of USB card reader during
+ resume
 Content-Language: en-US
-To:     Jiaming Li <lijiamingsofine@gmail.com>, avri.altman@wdc.com,
-        alim.akhtar@samsung.com, jejb@linux.ibm.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        lijiaming3 <lijiaming3@xiaomi.com>
-References: <20220824084633.14428-1-lijiamingsofine@gmail.com>
+To:     Michael Wu <michael@allwinnertech.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20220817083438.118293-1-michael@allwinnertech.com>
+ <ceba3c96-5f32-9b5a-bacc-0eb942b9b90b@acm.org>
+ <6412c518-426a-69a4-e419-83dc97bebe27@allwinnertech.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220824084633.14428-1-lijiamingsofine@gmail.com>
+In-Reply-To: <6412c518-426a-69a4-e419-83dc97bebe27@allwinnertech.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/24/22 01:46, Jiaming Li wrote:
-> diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-> index 432df76e6318..57b0e8b14543 100644
-> --- a/drivers/scsi/ufs/Kconfig
-> +++ b/drivers/scsi/ufs/Kconfig
-> @@ -199,3 +199,12 @@ config SCSI_UFS_FAULT_INJECTION
->   	help
->   	  Enable fault injection support in the UFS driver. This makes it easier
->   	  to test the UFS error handler and abort handler.
-> +
-> +config SCSI_UFS_FBO
-> +	bool "Support UFS File-based Optimization"
-> +	depends on SCSI_UFSHCD
-> +	help
-> +	 The UFS FBO feature improves Sequential read performance. The Host can
+On 8/23/22 03:16, Michael Wu wrote:
+> Yes... My patch did seem suspicious. Here's the scene about the block 
+> I/O error: Some card reader does not respond the command 'MEDIUM REMOVAL 
+> PREVENT' correctly, as a result, the host does not send subsequent cmd 
+> 'MEDIUM REMOVAL ALLOW'/'MEDIUM REMOVAL PREVENT' before/after sleep, 
+> which leads to a enumeration failure after system resume.
+> I wonder, without changing the behavior of the device, is there's a 
+> better way to solve this? -- Modifying the scsi core should not be a 
+> good idea though :(
 
-Sequential -> sequential
-Host -> host
+The above is not clear to me. My understanding is that "MEDIUM REMOVAL 
+PREVENT" is a sense code instead of a SCSI command?
 
-> +	 send the LBA to device. The device will return a fragmented state. It
+> Thanks for your kindly notice. I looked around in the latest linux 
+> mainline repo, but could not find this code. Where can I get this 2002 
+> version of scsi_lib.c? Thank you.
 
-"The host can send the LBA to the device" is misleading since the host 
-typically sends multiple LBAs to the device.
-
-"The device will return a fragmented state." is wrong - did you perhaps 
-want to write that the device will start defragmentation?
-
-> +	FBO_DESC_PARAM_MAX_LBA_RANGE_CONUT	= 0xF,
-
-What is "CONUT"? Did you perhaps want to write "COUNT"?
-
-> +static void ufsfbo_scsi_unblock_requests(struct ufs_hba *hba)
-> +{
-> +	if (atomic_dec_and_test(&hba->scsi_block_reqs_cnt))
-> +		scsi_unblock_requests(hba->host);
-> +}
-> +
-> +static void ufsfbo_scsi_block_requests(struct ufs_hba *hba)
-> +{
-> +	if (atomic_inc_return(&hba->scsi_block_reqs_cnt) == 1)
-> +		scsi_block_requests(hba->host);
-> +}
-
-Please use ufshcd_scsi_unblock_requests() and 
-ufshcd_scsi_block_requests() instead of duplicating these.
-
-> +static int ufsfbo_wait_for_doorbell_clr(struct ufs_hba *hba,
-> +					u64 wait_timeout_us)
-> +{
-> +	unsigned long flags;
-> +	int ret = 0;
-> +	u32 tm_doorbell;
-> +	u32 tr_doorbell;
-> +	bool timeout = false, do_last_check = false;
-> +	ktime_t start;
-> +
-> +	ufshcd_hold(hba, false);
-> +	spin_lock_irqsave(hba->host->host_lock, flags);
-> +	/*
-> +	 * Wait for all the outstanding tasks/transfer requests.
-> +	 * Verify by checking the doorbell registers are clear.
-> +	 */
-> +	start = ktime_get();
-> +	do {
-> +		if (hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL) {
-> +			ret = -EBUSY;
-> +			goto out;
-> +		}
-> +		tm_doorbell = ufshcd_readl(hba, REG_UTP_TASK_REQ_DOOR_BELL);
-> +		tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-> +		if (!tm_doorbell && !tr_doorbell) {
-> +			timeout = false;
-> +			break;
-> +		} else if (do_last_check) {
-> +			break;
-> +		}
-> +		spin_unlock_irqrestore(hba->host->host_lock, flags);
-> +		schedule();
-> +		if (ktime_to_us(ktime_sub(ktime_get(), start)) >
-> +		    wait_timeout_us) {
-> +			timeout = true;
-> +			/*
-> +			 * We might have scheduled out for long time so make
-> +			 * sure to check if doorbells are cleared by this time
-> +			 * or not.
-> +			 */
-> +			do_last_check = true;
-> +		}
-> +		spin_lock_irqsave(hba->host->host_lock, flags);
-> +	} while (tm_doorbell || tr_doorbell);
-> +	if (timeout) {
-> +		dev_err(hba->dev,
-> +			"%s: timedout waiting for doorbell to clear (tm=0x%x, tr=0x%x)\n",
-> +			__func__, tm_doorbell, tr_doorbell);
-> +		ret = -EBUSY;
-> +	}
-> +out:
-> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> +	ufshcd_release(hba);
-> +	return ret;
-> +}
-
-This looks like a copy of ufshcd_wait_for_doorbell_clr()? Please do not 
-duplicate existing code but instead reuse it. The same comment holds for 
-all the functions below that have been copy/pasted from ufshcd.c.
-
-> +int ufsfbo_read_frag_level(struct ufsfbo_dev *fbo, char *buf)
-> +{
-[ ... ]
-> +	hba->host->eh_noresume = 1;
-
-Why is this set? This should be documented.
-
-> +int ufsfbo_init_lba_buffer(struct ufsfbo_dev *fbo, const char *buf, char *lba_buf)
-> +{
-> +	int ret = 0;
-> +	char *buf_ptr;
-> +	char *lba;
-> +	u64 lba_value_pre, lba_value_post;
-> +	int len_index = 1, lba_index = FBO_HEADER_SIZE + FBO_BODY_HEADER_SIZE;
-> +
-> +	buf_ptr = kzalloc(strlen(buf) + 1, GFP_KERNEL);
-> +	if (!buf_ptr) {
-> +		FBO_ERR_MSG("alloc buffer fail");
-> +		ret = -ENOMEM;
-> +		return ret;
-> +	}
-> +	memcpy(buf_ptr, buf, strlen(buf) + 1);
-
-Please use kstrdup() instead of open-coding it.
-
-> +	/*create lba range buf send for device*/
-> +	lba_buf[5] = fbo->fbo_lba_count; //lba range count
-> +	lba_buf[6] = fbo->fbo_wholefile; //calculate whole file
-
-C++-style comments are not allowed in kernel code.
-
-> +	while ((lba = strsep(&buf_ptr, ",")) != NULL) {
-
-Another style violation. Please check patches with checkpatch before 
-posting these.
-
-> +int ufsfbo_lba_list_write(struct ufsfbo_dev *fbo, const char *buf)
-> +{
-
-[ ... ]
-
-> +	hba->host->eh_noresume = 1;
-
-Again, why is this set here? Please document this.
-
-> +void ufsfbo_init(struct ufs_hba *hba)
-> +{
-
-[ ... ]
-
-> +	ret = ufsfbo_create_sysfs(fbo);
-
-Please do not call sysfs_create_file() nor kobject_add() directly but 
-instead add an attribute group to ufshcd_driver_groups.
-
-> +	ufsfbo_set_state(hba, FBO_PRESENT);
-
-Consider renaming FBO_PRESENT into FBO_SUPPORTED.
-
-> +/* SYSFS DEFINE */
-> +#define define_sysfs_ro(_name) __ATTR(_name, 0444,			\
-> +				      ufsfbo_sysfs_show_##_name, NULL)
-> +#define define_sysfs_wo(_name) __ATTR(_name, 0200,			\
-> +				       NULL, ufsfbo_sysfs_store_##_name)
-> +#define define_sysfs_rw(_name) __ATTR(_name, 0644,			\
-> +				      ufsfbo_sysfs_show_##_name,	\
-> +				      ufsfbo_sysfs_store_##_name)
-
-Why are these macros necessary? Why can't any of the existing macros be 
-used to define these sysfs attributes, e.g. DEVICE_ATTR_RO()?
-
-> diff --git a/drivers/scsi/ufs/ufsfbo.h b/drivers/scsi/ufs/ufsfbo.h
-> new file mode 100644
-> index 000000000000..c2549032815e
-> --- /dev/null
-> +++ b/drivers/scsi/ufs/ufsfbo.h
-> @@ -0,0 +1,143 @@
-> +/* SPDX-License-Identifier: GPL-2.0 */
-> +/*
-> + * Universal Flash Storage File-based Optimization
-> + *
-> + * Copyright (C) 2022 Xiaomi Mobile Software Co., Ltd
-> + *
-> + * Authors:
-> + *		lijiaming <lijiaming3@xiaomi.com>
-> + */
-> +
-> +#ifndef _UFSFBO_H_
-> +#define _UFSFBO_H_
-
-Please insert a blank line between the header guard and the include 
-directives.
-
-> +#include <linux/interrupt.h>
-
-Why has this header file been included? Please minimize include directives.
-
-> +#include <linux/blktrace_api.h>
-
-Why has this header file been included?
-
-> +#include <linux/blkdev.h>
-> +#include <linux/bitfield.h>
-
-Why has this header file been included?
-
-
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 2f6468f22b48..9c377c514e17 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -4956,6 +4956,14 @@ static void ufshcd_hpb_configure(struct ufs_hba *hba, struct scsi_device *sdev)
->   	ufshpb_init_hpb_lu(hba, sdev);
->   }
->   
-> +static void ufshcd_fbo_configure(struct ufs_hba *hba, struct scsi_device *sdev)
-> +{
-> +#ifdef CONFIG_SCSI_UFS_FBO
-> +	if (sdev->lun == 0)
-> +		hba->fbo.sdev_ufs_lu = sdev;
-> +#endif
-> +}
-
-Shouldn't this function occur in the file with FBO functions? 
-Additionally, please document why the SCSI device for LUN zero is stored 
-since this is not required by the FBO specification.
-
-Thanks,
+Please take a look at 
+https://stackoverflow.com/questions/3264283/linux-kernel-historical-git-repository-with-full-history. 
+That web page has instructions for how to configure a git repository 
+such that history goes back before the time when Linus started using git.
 
 Bart.
+
+
