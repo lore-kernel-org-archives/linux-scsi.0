@@ -2,112 +2,116 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 215E0ECAAA3
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Aug 2022 07:27:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AA34ECAAD2
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Aug 2022 07:39:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245298AbiHZH1L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 26 Aug 2022 03:27:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38164 "EHLO
+        id S245334AbiHZHjV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 26 Aug 2022 03:39:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36206 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245343AbiHZH0x (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Aug 2022 03:26:53 -0400
-Received: from mail-pj1-x1043.google.com (mail-pj1-x1043.google.com [IPv6:2607:f8b0:4864:20::1043])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 65E3B647D0;
-        Fri, 26 Aug 2022 00:26:52 -0700 (PDT)
-Received: by mail-pj1-x1043.google.com with SMTP id ds12-20020a17090b08cc00b001fae6343d9fso7274516pjb.0;
-        Fri, 26 Aug 2022 00:26:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc;
-        bh=CVd4gipKEyJsCvgUp2zsVtIKTk/IiJZuB69XLQsZ+E4=;
-        b=B4WCc8PPDJZ8v1fAg4UuAOZVblhilW1F14VxOUw6kiDA9CQm8Q63oIBVttIe9UMYN6
-         mpzNMkl3ybGxhgZsUSF+0puLNe3XKsX/fwMHV7uwR/GVeCeOVORyTY6BaIApxngdvbAI
-         B/TcAZgICis+xeWCQiorvZxWCU//KLXWRnxBTKAkAfZxXhyiOHwdKgwULDIfgHMKLC9U
-         8bWWfrYaHeog+9zMcbovgRWqB5yBad+j6u4pzShGDcvgL2Tf1EfK7NRCoDRHwyi75Dxx
-         58yrGcnbCbJDjRz62KjaSLH2NvXicvWZt4iASAcrb3DP/SNKYYQ2NWxCvP7cWMXD4qeT
-         f6Cg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc;
-        bh=CVd4gipKEyJsCvgUp2zsVtIKTk/IiJZuB69XLQsZ+E4=;
-        b=77KWyjv2cq9eBHV1t6AXUIXe2TuamSrX/157p/02VPu3kHh2Fk0YsbttcRrI7jI6ET
-         2KmaxhCUZw7LpEnpNYaI5fQCAfbfUckw5ENpud3TijUji5SUfexZkiZvTWJKjrdGiPmV
-         ARkL5Pm1ngo/LrQn4CRq96Vjvzu6yICammjq0VR+wDFlr44HE2QZWfkXiBfBQF8fxTQZ
-         fJnuyJP05X+SEtSkskCDsaO59EpIQU8RQrrslLcZxFEuAYJzZsGTnEJkXUpJv9CZVKlx
-         HNEzDsccDe2uiIhmNopCfNLERU+FnbRyQ301kmfgl9Ig4ZOSnabNc+Oua7hWPSbYjsIU
-         bWQg==
-X-Gm-Message-State: ACgBeo0RM/wX0TiB62f+ABLwyPluVku95TzRiKl5ksbkZOHHi8gaRTbZ
-        PIdbm/ogI/WHi6JM37eAeDU=
-X-Google-Smtp-Source: AA6agR4GAH1B37Rvc50hoOeSsUAcTY6UdQY23/xmD+dy/fwuOyPhXYytRjFtW/DDIzBUfVuhCODbDw==
-X-Received: by 2002:a17:90a:1d0e:b0:1fa:bf2e:a56e with SMTP id c14-20020a17090a1d0e00b001fabf2ea56emr2978765pjd.23.1661498811909;
-        Fri, 26 Aug 2022 00:26:51 -0700 (PDT)
-Received: from localhost.localdomain ([193.203.214.57])
-        by smtp.gmail.com with ESMTPSA id z4-20020a1709027e8400b0016d5626af4fsm823576pla.21.2022.08.26.00.26.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 26 Aug 2022 00:26:51 -0700 (PDT)
-From:   cgel.zte@gmail.com
-X-Google-Original-From: ye.xingchen@zte.com.cn
-To:     martin.petersen@oracle.com
-Cc:     kartilak@cisco.com, sebaddel@cisco.com, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ye xingchen <ye.xingchen@zte.com.cn>,
-        Zeal Robot <zealci@zte.com.cn>
-Subject: [PATCH linux-next] scsi: snic: Remove the unneeded result variable
-Date:   Fri, 26 Aug 2022 07:26:48 +0000
-Message-Id: <20220826072648.252972-1-ye.xingchen@zte.com.cn>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S241505AbiHZHjU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Aug 2022 03:39:20 -0400
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CE8E9D13D;
+        Fri, 26 Aug 2022 00:39:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1661499555;
+        bh=xbq4JSkJ3q4yhKrUImOqVqkALOzpDY+WNKe5bh9TfsE=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=iFYzrZ3KL4kE56bco4SbddMqnXMMhxbDGoJT2RHMo+n/SpBGk4fb5uTBVNcJvJ4Tl
+         VCDHXU4U6skLqBvB8kBQZoetqAYQ6Z4LGTTB+Gy9eQHX1Rd7qyyjnJTSAitarFbF9R
+         6VGIVjcM44xsuTbD1ExOfNODa9v+YcKLaMUdua/0=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id D5B5C1280E04;
+        Fri, 26 Aug 2022 03:39:15 -0400 (EDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id pEhvqNtTl1gI; Fri, 26 Aug 2022 03:39:15 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1661499555;
+        bh=xbq4JSkJ3q4yhKrUImOqVqkALOzpDY+WNKe5bh9TfsE=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=iFYzrZ3KL4kE56bco4SbddMqnXMMhxbDGoJT2RHMo+n/SpBGk4fb5uTBVNcJvJ4Tl
+         VCDHXU4U6skLqBvB8kBQZoetqAYQ6Z4LGTTB+Gy9eQHX1Rd7qyyjnJTSAitarFbF9R
+         6VGIVjcM44xsuTbD1ExOfNODa9v+YcKLaMUdua/0=
+Received: from [IPv6:2a00:23c8:1005:a801:e95:68ca:9caa:7c8c] (unknown [IPv6:2a00:23c8:1005:a801:e95:68ca:9caa:7c8c])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (Client did not present a certificate)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id E54EC1280AD2;
+        Fri, 26 Aug 2022 03:39:13 -0400 (EDT)
+Message-ID: <042650172f59fca9836fe523ce14a07daccc4f2d.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 6.0-rc2
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Fri, 26 Aug 2022 08:39:10 +0100
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: ye xingchen <ye.xingchen@zte.com.cn>
+10 fixes.  Of the three core changes, the two large ones are a complete
+reversion of the async rework and an ALUA timing rework (the latter
+shouldn't affect non-ALUA paths).  The remaining patches are all small
+and all but one in drivers.
 
-Return the value 0 and -ENOMEM  directly instead of storing it in another
-redundant variable.
+The patch is available here:
 
-Reported-by: Zeal Robot <zealci@zte.com.cn>
-Signed-off-by: ye xingchen <ye.xingchen@zte.com.cn>
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+Alim Akhtar (1):
+      scsi: ufs: host: ufs-exynos: Make fsd_ufs_drvs static
+
+Bart Van Assche (2):
+      scsi: sd: Revert "Rework asynchronous resume support"
+      scsi: ufs: core: Reduce the power mode change timeout
+
+Brian Bunker (1):
+      scsi: core: Allow the ALUA transitioning state enough time
+
+Guixin Liu (2):
+      scsi: megaraid_sas: Remove unnecessary kfree()
+      scsi: megaraid_sas: Fix double kfree()
+
+Kiwoong Kim (1):
+      scsi: ufs: core: Enable link lost interrupt
+
+Mike Christie (1):
+      scsi: core: Fix passthrough retry counter handling
+
+Saurabh Sengar (1):
+      scsi: storvsc: Remove WQ_MEM_RECLAIM from storvsc_error_wq
+
+Tony Battersby (1):
+      scsi: qla2xxx: Disable ATIO interrupt coalesce for quad port ISP27XX
+
+And the diffstat:
+
+ drivers/scsi/megaraid/megaraid_sas_base.c   |  8 +--
+ drivers/scsi/megaraid/megaraid_sas_fusion.c |  1 -
+ drivers/scsi/qla2xxx/qla_target.c           | 10 +---
+ drivers/scsi/scsi_lib.c                     | 47 +++++++++-------
+ drivers/scsi/sd.c                           | 84 +++++++----------------------
+ drivers/scsi/sd.h                           |  5 --
+ drivers/scsi/storvsc_drv.c                  |  2 +-
+ drivers/ufs/core/ufshcd.c                   |  9 +++-
+ drivers/ufs/host/ufs-exynos.c               |  2 +-
+ include/ufs/ufshci.h                        |  6 +--
+ 10 files changed, 60 insertions(+), 114 deletions(-)
+
+With full diff below.
+
+James
+
 ---
- drivers/scsi/snic/snic_trc.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/snic/snic_trc.c b/drivers/scsi/snic/snic_trc.c
-index c2e5ab7e976c..9796bf280775 100644
---- a/drivers/scsi/snic/snic_trc.c
-+++ b/drivers/scsi/snic/snic_trc.c
-@@ -109,16 +109,15 @@ snic_trc_init(void)
- {
- 	struct snic_trc *trc = &snic_glob->trc;
- 	void *tbuf = NULL;
--	int tbuf_sz = 0, ret;
-+	int tbuf_sz = 0;
- 
- 	tbuf_sz = (snic_trace_max_pages * PAGE_SIZE);
- 	tbuf = vzalloc(tbuf_sz);
- 	if (!tbuf) {
- 		SNIC_ERR("Failed to Allocate Trace Buffer Size. %d\n", tbuf_sz);
- 		SNIC_ERR("Trace Facility not enabled.\n");
--		ret = -ENOMEM;
- 
--		return ret;
-+		return -ENOMEM;
- 	}
- 
- 	trc->buf = (struct snic_trc_data *) tbuf;
-@@ -131,9 +130,8 @@ snic_trc_init(void)
- 	trc->enable = true;
- 	SNIC_INFO("Trace Facility Enabled.\n Trace Buffer SZ %lu Pages.\n",
- 		  tbuf_sz / PAGE_SIZE);
--	ret = 0;
- 
--	return ret;
-+	return 0;
- } /* end of snic_trc_init */
- 
- /*
--- 
-2.25.1
+
+
