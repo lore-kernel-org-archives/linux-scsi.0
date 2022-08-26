@@ -2,132 +2,280 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE144ECAAD6
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Aug 2022 10:07:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ABACECAAD7
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Aug 2022 10:07:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343507AbiHZKHW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 26 Aug 2022 06:07:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57646 "EHLO
+        id S1343618AbiHZKH3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 26 Aug 2022 06:07:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32956 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245283AbiHZKGk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Aug 2022 06:06:40 -0400
-X-Greylist: delayed 321 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 26 Aug 2022 03:05:23 PDT
-Received: from smtpout140.security-mail.net (smtpout140.security-mail.net [85.31.212.149])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9B55DA3D8
-        for <linux-scsi@vger.kernel.org>; Fri, 26 Aug 2022 03:05:23 -0700 (PDT)
+        with ESMTP id S245606AbiHZKGy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Aug 2022 06:06:54 -0400
+Received: from smtpout140.security-mail.net (smtpout140.security-mail.net [85.31.212.143])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 557C3D4775
+        for <linux-scsi@vger.kernel.org>; Fri, 26 Aug 2022 03:05:35 -0700 (PDT)
 Received: from localhost (localhost [127.0.0.1])
-        by fx409.security-mail.net (Postfix) with ESMTP id BB6B7323921
-        for <linux-scsi@vger.kernel.org>; Fri, 26 Aug 2022 12:00:12 +0200 (CEST)
+        by fx403.security-mail.net (Postfix) with ESMTP id 7DFC13D8F9A
+        for <linux-scsi@vger.kernel.org>; Fri, 26 Aug 2022 12:00:00 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kalray.eu;
-        s=sec-sig-email; t=1661508012;
-        bh=LBWIlWK30yhfxAVXsimqMHYKnAf89TzPKnQAQf9HFMI=;
+        s=sec-sig-email; t=1661508000;
+        bh=8SEC6V8TwW+rAzqM3ZKHTsFInyS3hMms/3jMmjuxGTI=;
         h=From:To:Cc:Subject:Date;
-        b=s4xOWiKaUMhWGbFoAfyQWefwZM6uODCTId5WCcjsOdHfsFWspOaH7uSOuPScHlWOS
-         6LaQpgOUIAt9oZeZE2zWeb4/01DhtzfbC23NrheMXWmF0EoZcRmEuKomnTrEkyhMtm
-         70k8i5c17/LwqRTNqx0lnyT8qA3GkVQk0v3fbWNc=
-Received: from fx409 (localhost [127.0.0.1])
-        by fx409.security-mail.net (Postfix) with ESMTP id 316B0323887;
-        Fri, 26 Aug 2022 12:00:12 +0200 (CEST)
+        b=CGCmCECNO/FDvC9bzAT6ddBncXZNLtSvjcIVKYH2Tahj3y7JmD7s0ewQU80YvTRcM
+         qUjfjhB5GEmQqh22n6EFMy2I1CYFAb8XUUwUIXXvY9H6jznBhOeBO8OUsMtzW2I2EX
+         XbWvSyu1cge1Nzbl6az8LKTXIPINRtjf8EVCCEVo=
+Received: from fx403 (localhost [127.0.0.1])
+        by fx403.security-mail.net (Postfix) with ESMTP id A40783D8F7D;
+        Fri, 26 Aug 2022 11:59:59 +0200 (CEST)
 X-Virus-Scanned: E-securemail
-Secumail-id: <112df.630899aa.900ff.0>
+Secumail-id: <2178.6308999e.71b86.0>
 Received: from zimbra2.kalray.eu (unknown [217.181.231.53])
-        by fx409.security-mail.net (Postfix) with ESMTPS id B700632363E;
-        Fri, 26 Aug 2022 12:00:10 +0200 (CEST)
+        by fx403.security-mail.net (Postfix) with ESMTPS id 74ACA3D8F55;
+        Fri, 26 Aug 2022 11:59:58 +0200 (CEST)
 Received: from zimbra2.kalray.eu (localhost [127.0.0.1])
-        by zimbra2.kalray.eu (Postfix) with ESMTPS id 71B8027E0396;
-        Fri, 26 Aug 2022 12:00:10 +0200 (CEST)
+        by zimbra2.kalray.eu (Postfix) with ESMTPS id 52F0B27E0396;
+        Fri, 26 Aug 2022 11:59:58 +0200 (CEST)
 Received: from localhost (localhost [127.0.0.1])
-        by zimbra2.kalray.eu (Postfix) with ESMTP id 5BBE227E0392;
-        Fri, 26 Aug 2022 12:00:10 +0200 (CEST)
-DKIM-Filter: OpenDKIM Filter v2.10.3 zimbra2.kalray.eu 5BBE227E0392
+        by zimbra2.kalray.eu (Postfix) with ESMTP id 3B78127E0392;
+        Fri, 26 Aug 2022 11:59:58 +0200 (CEST)
+DKIM-Filter: OpenDKIM Filter v2.10.3 zimbra2.kalray.eu 3B78127E0392
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kalray.eu;
-        s=32AE1B44-9502-11E5-BA35-3734643DEF29; t=1661508010;
-        bh=bs23uoDmvmAdBgCs/WEfBsiYr/X3AOGXBIq7570idWs=;
+        s=32AE1B44-9502-11E5-BA35-3734643DEF29; t=1661507998;
+        bh=6U61obafgawkbchBbv+C90pGAZG4kjyK+xpPMxzA9dA=;
         h=From:To:Date:Message-Id;
-        b=gjm2qMx3TPR+ITEn1OEmCwmTdIzgZ0sIJHbtwcof8mDhcgNjIFbcNg9UGqR9a+Qh/
-         Vgrysfeh2GYnGxC/KtyIDq7qn+5HVuWT/Ro8/CyFNdicHLQhnX2Zx4+jbO9tIIg83e
-         WLznmWCuk6uSzY/276ou1GrI3VCyCH7n3z0K1lsY=
+        b=LsP+I+R5RifRu1lDZRt4wRs6FJnuP1aVKcDYefi9uqS+MxESZGotmq0OhmCOuIMhs
+         gPv+RHfOM0o5sieAUndhkihFeO/B4E0xhDMkHY1kxuNUyOhkzrRf5fZoN8xC1GMpN0
+         Avyg5m5iy29XaZjy9rV0yEO254YPzDTDGbCKRSTw=
 Received: from zimbra2.kalray.eu ([127.0.0.1])
         by localhost (zimbra2.kalray.eu [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id OzMcBCQRqUFW; Fri, 26 Aug 2022 12:00:10 +0200 (CEST)
+        with ESMTP id mF7QrxYqEfgW; Fri, 26 Aug 2022 11:59:58 +0200 (CEST)
 Received: from tellis.lin.mbt.kalray.eu (unknown [192.168.36.206])
-        by zimbra2.kalray.eu (Postfix) with ESMTPSA id 40F1C27E02FA;
-        Fri, 26 Aug 2022 12:00:10 +0200 (CEST)
+        by zimbra2.kalray.eu (Postfix) with ESMTPSA id 2959E27E02FA;
+        Fri, 26 Aug 2022 11:59:58 +0200 (CEST)
 From:   Jules Maselbas <jmaselbas@kalray.eu>
 To:     linux-kernel@vger.kernel.org
 Cc:     Jules Maselbas <jmaselbas@kalray.eu>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org
-Subject: [PATCH] scsi: lpfc: Fix typos in function documentation
-Date:   Fri, 26 Aug 2022 11:53:01 +0200
-Message-Id: <20220826095321.21548-4-jmaselbas@kalray.eu>
+Subject: [PATCH] scsi: Fix repeated words in comments
+Date:   Fri, 26 Aug 2022 11:53:00 +0200
+Message-Id: <20220826095321.21548-3-jmaselbas@kalray.eu>
 X-Mailer: git-send-email 2.17.1
 X-Virus-Scanned: by Secumail
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Replace the redundant `the` in "pointer the the ..." that can be found
-in function parameter documentation with "pointer to the ...".
+Remove redundant words `the` and `by` found in comments.
 
 CC: "James E.J. Bottomley" <jejb@linux.ibm.com>
 CC: "Martin K. Petersen" <martin.petersen@oracle.com>
 CC: linux-scsi@vger.kernel.org
 Signed-off-by: Jules Maselbas <jmaselbas@kalray.eu>
 ---
- drivers/scsi/lpfc/lpfc_attr.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/bfa/bfa_fcs_rport.c              | 2 +-
+ drivers/scsi/fcoe/fcoe_ctlr.c                 | 2 +-
+ drivers/scsi/isci/host.h                      | 2 +-
+ drivers/scsi/isci/remote_device.h             | 2 +-
+ drivers/scsi/isci/remote_node_context.h       | 2 +-
+ drivers/scsi/isci/task.c                      | 2 +-
+ drivers/scsi/isci/unsolicited_frame_control.h | 2 +-
+ drivers/scsi/lpfc/lpfc_els.c                  | 2 +-
+ drivers/scsi/lpfc/lpfc_hbadisc.c              | 2 +-
+ drivers/scsi/lpfc/lpfc_init.c                 | 4 ++--
+ drivers/scsi/lpfc/lpfc_mbox.c                 | 4 ++--
+ drivers/scsi/lpfc/lpfc_nvmet.c                | 2 +-
+ drivers/scsi/lpfc/lpfc_sli.c                  | 2 +-
+ 13 files changed, 15 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index 09cf2cd0ae60..61857d9554ab 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -2438,7 +2438,7 @@ lpfc_sriov_hw_max_virtfn_show(struct device *dev,
+diff --git a/drivers/scsi/bfa/bfa_fcs_rport.c b/drivers/scsi/bfa/bfa_fcs_rport.c
+index c21aa37b8adb..dd78bea3e111 100644
+--- a/drivers/scsi/bfa/bfa_fcs_rport.c
++++ b/drivers/scsi/bfa/bfa_fcs_rport.c
+@@ -1971,7 +1971,7 @@ bfa_fcs_rport_gidpn_response(void *fcsarg, struct bfa_fcxp_s *fcxp, void *cbarg,
+ 			/*
+ 			 * Device's PID has changed. We need to cleanup
+ 			 * and re-login. If there is another device with
+-			 * the the newly discovered pid, send an scn notice
++			 * the newly discovered pid, send an scn notice
+ 			 * so that its new pid can be discovered.
+ 			 */
+ 			list_for_each(qe, &rport->port->rport_q) {
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index 39e16eab47aa..28e8b9f1e1a4 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -205,7 +205,7 @@ static int fcoe_sysfs_fcf_add(struct fcoe_fcf *new)
+ 		 * that doesn't have a priv (fcf was deleted). However,
+ 		 * libfcoe will always delete FCFs before trying to add
+ 		 * them. This is ensured because both recv_adv and
+-		 * age_fcfs are protected by the the fcoe_ctlr's mutex.
++		 * age_fcfs are protected by the fcoe_ctlr's mutex.
+ 		 * This means that we should never get a FCF with a
+ 		 * non-NULL priv pointer.
+ 		 */
+diff --git a/drivers/scsi/isci/host.h b/drivers/scsi/isci/host.h
+index 6bc3f022630a..64e4759f25d7 100644
+--- a/drivers/scsi/isci/host.h
++++ b/drivers/scsi/isci/host.h
+@@ -244,7 +244,7 @@ enum sci_controller_states {
+ 	SCIC_INITIALIZED,
  
+ 	/**
+-	 * This state indicates the the controller is in the process of becoming
++	 * This state indicates the controller is in the process of becoming
+ 	 * ready (i.e. starting).  In this state no new IO operations are permitted.
+ 	 * This state is entered from the INITIALIZED state.
+ 	 */
+diff --git a/drivers/scsi/isci/remote_device.h b/drivers/scsi/isci/remote_device.h
+index 3ad681c4c20a..db097483ff04 100644
+--- a/drivers/scsi/isci/remote_device.h
++++ b/drivers/scsi/isci/remote_device.h
+@@ -198,7 +198,7 @@ enum sci_status sci_remote_device_reset_complete(
+  * permitted.  This state is entered from the INITIAL state.  This state
+  * is entered from the STOPPING state.
+  *
+- * @SCI_DEV_STARTING: This state indicates the the remote device is in
++ * @SCI_DEV_STARTING: This state indicates the remote device is in
+  * the process of becoming ready (i.e. starting).  In this state no new
+  * IO operations are permitted.  This state is entered from the STOPPED
+  * state.
+diff --git a/drivers/scsi/isci/remote_node_context.h b/drivers/scsi/isci/remote_node_context.h
+index c7ee81d01125..f22950b12b8b 100644
+--- a/drivers/scsi/isci/remote_node_context.h
++++ b/drivers/scsi/isci/remote_node_context.h
+@@ -154,7 +154,7 @@ enum sci_remote_node_context_destination_state {
  /**
-  * lpfc_enable_bbcr_set: Sets an attribute value.
-- * @phba: pointer the the adapter structure.
-+ * @phba: pointer to the adapter structure.
-  * @val: integer attribute value.
+  * struct sci_remote_node_context - This structure contains the data
+  *    associated with the remote node context object.  The remote node context
+- *    (RNC) object models the the remote device information necessary to manage
++ *    (RNC) object models the remote device information necessary to manage
+  *    the silicon RNC.
+  */
+ struct sci_remote_node_context {
+diff --git a/drivers/scsi/isci/task.c b/drivers/scsi/isci/task.c
+index c514b20293b2..9a311a58c37c 100644
+--- a/drivers/scsi/isci/task.c
++++ b/drivers/scsi/isci/task.c
+@@ -67,7 +67,7 @@
+ /**
+ * isci_task_refuse() - complete the request to the upper layer driver in
+ *     the case where an I/O needs to be completed back in the submit path.
+-* @ihost: host on which the the request was queued
++* @ihost: host on which the request was queued
+ * @task: request to complete
+ * @response: response code for the completed task.
+ * @status: status code for the completed task.
+diff --git a/drivers/scsi/isci/unsolicited_frame_control.h b/drivers/scsi/isci/unsolicited_frame_control.h
+index 1bc551ec611f..f9c816d9cd38 100644
+--- a/drivers/scsi/isci/unsolicited_frame_control.h
++++ b/drivers/scsi/isci/unsolicited_frame_control.h
+@@ -118,7 +118,7 @@ enum unsolicited_frame_state {
+ 	UNSOLICITED_FRAME_EMPTY,
+ 
+ 	/**
+-	 * This state is set when the frame buffer is in use by by some
++	 * This state is set when the frame buffer is in use by some
+ 	 * object in the system.
+ 	 */
+ 	UNSOLICITED_FRAME_IN_USE,
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 9e69de9eb992..423431fe9563 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -8654,7 +8654,7 @@ lpfc_els_rcv_rtv(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
+  * @rrq: Pointer to the rrq struct.
   *
-  * Description:
-@@ -2529,7 +2529,7 @@ lpfc_##attr##_show(struct device *dev, struct device_attribute *attr, \
-  * takes a default argument, a minimum and maximum argument.
+  * Build a ELS RRQ command and send it to the target. If the issue_iocb is
+- * Successful the the completion handler will clear the RRQ.
++ * Successful the completion handler will clear the RRQ.
   *
-  * lpfc_##attr##_init: Initializes an attribute.
-- * @phba: pointer the the adapter structure.
-+ * @phba: pointer to the adapter structure.
-  * @val: integer attribute value.
+  * Return codes
+  *   0 - Successfully sent rrq els iocb.
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index 2645def612e6..70bd3704f131 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -2452,7 +2452,7 @@ static void lpfc_sli4_fcf_pri_list_del(struct lpfc_hba *phba,
+  * @phba: pointer to lpfc hba data structure.
+  * @fcf_index: the index of the fcf record to update
+  * This routine acquires the hbalock and then set the LPFC_FCF_FLOGI_FAILED
+- * flag so the the round robin slection for the particular priority level
++ * flag so the round robin slection for the particular priority level
+  * will try a different fcf record that does not have this bit set.
+  * If the fcf record is re-read for any reason this flag is cleared brfore
+  * adding it to the priority list.
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index c69c5a0979ec..8d7d5b885af4 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -5497,7 +5497,7 @@ lpfc_sli4_async_link_evt(struct lpfc_hba *phba,
+ 	bf_set(lpfc_mbx_read_top_link_spd, la,
+ 	       (bf_get(lpfc_acqe_link_speed, acqe_link)));
+ 
+-	/* Fake the the following irrelvant fields */
++	/* Fake the following irrelvant fields */
+ 	bf_set(lpfc_mbx_read_top_topology, la, LPFC_TOPOLOGY_PT_PT);
+ 	bf_set(lpfc_mbx_read_top_alpa_granted, la, 0);
+ 	bf_set(lpfc_mbx_read_top_il, la, 0);
+@@ -12494,7 +12494,7 @@ lpfc_cpu_affinity_check(struct lpfc_hba *phba, int vectors)
+ 			/* Mark CPU as IRQ not assigned by the kernel */
+ 			cpup->flag |= LPFC_CPU_MAP_UNASSIGN;
+ 
+-			/* If so, find a new_cpup thats on the the SAME
++			/* If so, find a new_cpup thats on the SAME
+ 			 * phys_id as cpup. start_cpu will start where we
+ 			 * left off so all unassigned entries don't get assgined
+ 			 * the IRQ of the first entry.
+diff --git a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
+index 9858b1743769..cebb3d7598e5 100644
+--- a/drivers/scsi/lpfc/lpfc_mbox.c
++++ b/drivers/scsi/lpfc/lpfc_mbox.c
+@@ -2509,7 +2509,7 @@ lpfc_sli4_dump_page_a0(struct lpfc_hba *phba, struct lpfcMboxq *mbox)
+  * information via a READ_FCF mailbox command. This mailbox command also is used
+  * to indicate where received unsolicited frames from this FCF will be sent. By
+  * default this routine will set up the FCF to forward all unsolicited frames
+- * the the RQ ID passed in the @phba. This can be overridden by the caller for
++ * the RQ ID passed in the @phba. This can be overridden by the caller for
+  * more complicated setups.
+  **/
+ void
+@@ -2577,7 +2577,7 @@ lpfc_reg_fcfi(struct lpfc_hba *phba, struct lpfcMboxq *mbox)
+  * information via a READ_FCF mailbox command. This mailbox command also is used
+  * to indicate where received unsolicited frames from this FCF will be sent. By
+  * default this routine will set up the FCF to forward all unsolicited frames
+- * the the RQ ID passed in the @phba. This can be overridden by the caller for
++ * the RQ ID passed in the @phba. This can be overridden by the caller for
+  * more complicated setups.
+  **/
+ void
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+index f7cfac0da9b6..7517dd55fe91 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -1469,7 +1469,7 @@ lpfc_nvmet_cleanup_io_context(struct lpfc_hba *phba)
+ 	if (!infop)
+ 		return;
+ 
+-	/* Cycle the the entire CPU context list for every MRQ */
++	/* Cycle the entire CPU context list for every MRQ */
+ 	for (i = 0; i < phba->cfg_nvmet_mrq; i++) {
+ 		for_each_present_cpu(j) {
+ 			infop = lpfc_get_ctx_list(phba, j, i);
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 608016725db9..c28127b5a975 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -20540,7 +20540,7 @@ lpfc_log_fw_write_cmpl(struct lpfc_hba *phba, u32 shdr_status,
+  * the offset after the write object mailbox has completed. @size is used to
+  * determine the end of the object and whether the eof bit should be set.
   *
-  * Validates the min and max values then sets the adapter config field
-@@ -2562,7 +2562,7 @@ lpfc_##attr##_init(struct lpfc_hba *phba, uint val) \
-  * into a function with the name lpfc_hba_queue_depth_set
-  *
-  * lpfc_##attr##_set: Sets an attribute value.
-- * @phba: pointer the the adapter structure.
-+ * @phba: pointer to the adapter structure.
-  * @val: integer attribute value.
-  *
-  * Description:
-@@ -2691,7 +2691,7 @@ lpfc_##attr##_show(struct device *dev, struct device_attribute *attr, \
-  * lpfc_##attr##_init: validates the min and max values then sets the
-  * adapter config field accordingly, or uses the default if out of range
-  * and prints an error message.
-- * @phba: pointer the the adapter structure.
-+ * @phba: pointer to the adapter structure.
-  * @val: integer attribute value.
-  *
-  * Returns:
-@@ -2723,7 +2723,7 @@ lpfc_##attr##_init(struct lpfc_vport *vport, uint val) \
-  * lpfc_##attr##_set: validates the min and max values then sets the
-  * adapter config field if in the valid range. prints error message
-  * and does not set the parameter if invalid.
-- * @phba: pointer the the adapter structure.
-+ * @phba: pointer to the adapter structure.
-  * @val:	integer attribute value.
-  *
-  * Returns:
+- * Return 0 is successful and offset will contain the the new offset to use
++ * Return 0 is successful and offset will contain the new offset to use
+  * for the next write.
+  * Return negative value for error cases.
+  **/
 -- 
 2.17.1
 
