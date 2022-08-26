@@ -2,40 +2,38 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1653FECAAD6
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Aug 2022 07:01:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FE6DECAAD2
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Aug 2022 07:18:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245104AbiHZHBW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 26 Aug 2022 03:01:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45326 "EHLO
+        id S244953AbiHZHSE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 26 Aug 2022 03:18:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49016 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245121AbiHZHBC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Aug 2022 03:01:02 -0400
+        with ESMTP id S229873AbiHZHSD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Aug 2022 03:18:03 -0400
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0A0ED274A;
-        Fri, 26 Aug 2022 00:00:47 -0700 (PDT)
-Date:   Fri, 26 Aug 2022 09:00:42 +0200
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F39D3C277C;
+        Fri, 26 Aug 2022 00:18:00 -0700 (PDT)
+Date:   Fri, 26 Aug 2022 09:17:58 +0200
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1661497243;
+        s=2020; t=1661498279;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=mkTtYm2q/9xtcjUEfSGlzSP0DecF5sMix+kg+ulWubI=;
-        b=LDdxH5cVjo4V3SbRmuOHNfXIEenNZLUPqsQEFPgzZtqIJIAfqqWQF7aFjKPuMh+e1iAN2u
-        wImKeRqbrZF1CUrCadKKyB5vwOeRebtGXS4RV6vTls3rHUKc8c7FLmZRvFqDY014dgU6RF
-        N8it/iZ//v6M0vNYbWsZmgFMbbsFWbJ5d1vg5u0f1TC0sTyRp42AjGzrpiqCZvO2MNDwgA
-        sUYwQZzGSpBaoP2xXjnjCCHBpbMIhoNWShgy4uqm8tKRMlo0wHOwdt29yLD+RlVTUVF/9s
-        mSWFVXEZo6lESKDSt/ceStaBE9HO5nclAUWObcoUzd6UnRzLFvNpwrlNayjKhQ==
+        bh=roUA/JoTmrdvcLvJGyzDfdQUqJ5eOvFRxYS2vR+Gu/8=;
+        b=pmEdvlIbNiaVaLsRDwhIaau1Ol9m983jvlB1rLXvgAImJNnihYIHfPUSYZuuv0geCb5N7Z
+        zA86TkY6QzfgKZcn/29EvE6OBnweCOeZgmKHv0jgXPOVKwitQAER3mJ5GMcXor8NU2u9V2
+        aH9wgbY4CyI3/ad4V2aEpPq02jF4kJFPVfgR1XKrx5yeb6UhB0a7xcPKCAA6lvcRi9Rjhz
+        B15ARorWTcK7COPgC4L1OmlIzrdfiJQc/1zfQPTaIjrEFtrExALjBUYPgDELmh9S02cp/y
+        67ceFN+5LosBIN/Dv0yRc+S83vy6WRZcIKomzTjRdwO2oXBCusXTlEA1Id5Pcg==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1661497243;
+        s=2020e; t=1661498279;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=mkTtYm2q/9xtcjUEfSGlzSP0DecF5sMix+kg+ulWubI=;
-        b=keO7wzubCGo7igl4B1c5pmvEm5kpAYCLkM7HbuBc9brjFSVX60XgSeCl+OLB2sHx0Wo4kp
-        Gk1J8w/S9eQJfFBA==
+        bh=roUA/JoTmrdvcLvJGyzDfdQUqJ5eOvFRxYS2vR+Gu/8=;
+        b=6L0bjDV5H38ZM1zK9ozWtZjNTsiLzljgdWFH/Ie2s0XXv7LxMHAWf+DiEwd+8EDqFJj0HS
+        khUCs36LCbUAfPDQ==
 From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 To:     Thinh Nguyen <Thinh.Nguyen@synopsys.com>
 Cc:     Felipe Balbi <balbi@kernel.org>,
@@ -43,47 +41,24 @@ Cc:     Felipe Balbi <balbi@kernel.org>,
         linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
         Dmitry Bogdanov <d.bogdanov@yadro.com>,
         linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Subject: Re: [PATCH v2 11/25] usb: gadget: f_tcm: Execute command on write
- completion
-Message-ID: <YwhvmpdbG8WXhhZ0@linutronix.de>
+Subject: Re: [PATCH v2 15/25] usb: gadget: f_tcm: Cleanup unused variable
+Message-ID: <YwhzppXwheosXCaL@linutronix.de>
 References: <cover.1658192351.git.Thinh.Nguyen@synopsys.com>
- <b030d10834c13aa09bbbba7b33b1957d5ba3664c.1658192351.git.Thinh.Nguyen@synopsys.com>
+ <420c91967948fb8e7c758ed0857c708b3b070d72.1658192351.git.Thinh.Nguyen@synopsys.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-In-Reply-To: <b030d10834c13aa09bbbba7b33b1957d5ba3664c.1658192351.git.Thinh.Nguyen@synopsys.com>
+In-Reply-To: <420c91967948fb8e7c758ed0857c708b3b070d72.1658192351.git.Thinh.Nguyen@synopsys.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2022-07-18 18:27:12 [-0700], Thinh Nguyen wrote:
-> index 6fea80afe2d7..ec83f2f9a858 100644
-> --- a/drivers/usb/gadget/function/f_tcm.c
-> +++ b/drivers/usb/gadget/function/f_tcm.c
-> @@ -955,7 +949,7 @@ static void usbg_data_write_cmpl(struct usb_ep *ep, s=
-truct usb_request *req)
->  				se_cmd->data_length);
->  	}
-> =20
-> -	complete(&cmd->write_complete);
-> +	target_execute_cmd(se_cmd);
+On 2022-07-18 18:27:39 [-0700], Thinh Nguyen wrote:
+> se_cmd is not used anywhere. Remove it.
 
-usbg_data_write_cmpl() is invoked from interrupt service routing which
-may run with disabled interrupts. From looking at target_execute_cmd():
-| void target_execute_cmd(struct se_cmd *cmd)
-| {
-=E2=80=A6
-|         spin_lock_irq(&cmd->t_state_lock);
-=E2=80=A6
-|         spin_unlock_irq(&cmd->t_state_lock);
-=E2=80=A6
-| }
+This should folded into the original commit where se_cmd has stopped
+been using. I believe it was when target_execute_cmd() has been moved.
 
-which means interrupts will remain open after leaving
-target_execute_cmd(). Now, why didn't the WARN_ONCE() in
-__handle_irq_event_percpu() trigger? Am I missing something?
-
->  	return;
+> Signed-off-by: Thinh Nguyen <Thinh.Nguyen@synopsys.com>
 
 Sebastian
