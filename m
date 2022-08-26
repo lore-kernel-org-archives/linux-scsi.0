@@ -2,62 +2,61 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 969B9ECAAD2
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Aug 2022 07:25:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 215E0ECAAA3
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Aug 2022 07:27:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245255AbiHZHZ3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 26 Aug 2022 03:25:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34838 "EHLO
+        id S245298AbiHZH1L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 26 Aug 2022 03:27:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38164 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245253AbiHZHZ1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Aug 2022 03:25:27 -0400
-Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F6AB1B7A0;
-        Fri, 26 Aug 2022 00:25:25 -0700 (PDT)
-Received: by mail-pj1-x1034.google.com with SMTP id o4so840167pjp.4;
-        Fri, 26 Aug 2022 00:25:25 -0700 (PDT)
+        with ESMTP id S245343AbiHZH0x (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Aug 2022 03:26:53 -0400
+Received: from mail-pj1-x1043.google.com (mail-pj1-x1043.google.com [IPv6:2607:f8b0:4864:20::1043])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 65E3B647D0;
+        Fri, 26 Aug 2022 00:26:52 -0700 (PDT)
+Received: by mail-pj1-x1043.google.com with SMTP id ds12-20020a17090b08cc00b001fae6343d9fso7274516pjb.0;
+        Fri, 26 Aug 2022 00:26:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc;
-        bh=RfyA8eZvryHNH4HN+Dlxrz30HGArxWXNdn8L24r2LTE=;
-        b=RA8iQ4VDgIFpZCF/gEPQGHfUhURzT/5vjRgMEh4MRTNfpUC69I1fJkUAlHvdyBwV+4
-         paIlRSovzAqMotSqrS3tBexmymggSbxkRo9kxA0QD8/G7jkkV/l+0/+0oVqQtozrR2vc
-         RS3jYpgfn3ZuTK0kJEjKbI3afrtJNcWsYkpRRQwgF6LjQozLcM/Dg33i2N88TXjHLqyY
-         aZRLVwxksOX0Ypxw0z2jkd+H4HeRfO1x8WUSyIMlthV1uZT7Ebm/1QlOf7iTZejJvLBT
-         XXk0kPnUGI9WdOA1+fEisQu2oi7wqQuxFstLtJg5xz8yeYZv2IbUYEmwkcsmJxS5yS1x
-         8MQg==
+        bh=CVd4gipKEyJsCvgUp2zsVtIKTk/IiJZuB69XLQsZ+E4=;
+        b=B4WCc8PPDJZ8v1fAg4UuAOZVblhilW1F14VxOUw6kiDA9CQm8Q63oIBVttIe9UMYN6
+         mpzNMkl3ybGxhgZsUSF+0puLNe3XKsX/fwMHV7uwR/GVeCeOVORyTY6BaIApxngdvbAI
+         B/TcAZgICis+xeWCQiorvZxWCU//KLXWRnxBTKAkAfZxXhyiOHwdKgwULDIfgHMKLC9U
+         8bWWfrYaHeog+9zMcbovgRWqB5yBad+j6u4pzShGDcvgL2Tf1EfK7NRCoDRHwyi75Dxx
+         58yrGcnbCbJDjRz62KjaSLH2NvXicvWZt4iASAcrb3DP/SNKYYQ2NWxCvP7cWMXD4qeT
+         f6Cg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-message-state:from:to:cc;
-        bh=RfyA8eZvryHNH4HN+Dlxrz30HGArxWXNdn8L24r2LTE=;
-        b=yJFTeVkhOjSIGuT4wGfDlNoSPZFkYk8CQddLIOGrh8bBnKZ6HAm/Ca4Ix22sfK4pja
-         ngdWUGa+CT37TjUMQcLFDCSACE6Ry2TreSSAYQC34Hl4Uc1km7l5bT8LWKFAeevdQD0c
-         WS6hNiwPIKUKJE6ckVP6SQ9EPt5EdimUQGQ6WHL5q8/ZHMPT3pDs3PJ6chGAsPP/QmAD
-         xHQuExu6fsWBYawhj5cUDi21o5L75uX2LUngBMDXu+yRpTIKykS4/m1KFMA3PYTUTlLd
-         TA/o2xqJlSKrz4QfiuPjp9WvlUcQBxqfacIs++FLfFZPeTUVr0weCiNHbES5ayVfWgKT
-         tgpA==
-X-Gm-Message-State: ACgBeo2wfMEhbJ6TvoXq7vdxcqCSY7pxZMzihG+Vfxs2z0E7+vrvl9LA
-        vLHInaKa/lrbJQfLcSXPofM=
-X-Google-Smtp-Source: AA6agR5+ym2go5XHX7sa8kb6KPUcxRMwrsMssaSyoU+DZowdmhq9FzDE+dSfgcvMAgZPkYf94appsg==
-X-Received: by 2002:a17:90a:d90c:b0:1fa:c99f:757d with SMTP id c12-20020a17090ad90c00b001fac99f757dmr3094773pjv.240.1661498724641;
-        Fri, 26 Aug 2022 00:25:24 -0700 (PDT)
+        bh=CVd4gipKEyJsCvgUp2zsVtIKTk/IiJZuB69XLQsZ+E4=;
+        b=77KWyjv2cq9eBHV1t6AXUIXe2TuamSrX/157p/02VPu3kHh2Fk0YsbttcRrI7jI6ET
+         2KmaxhCUZw7LpEnpNYaI5fQCAfbfUckw5ENpud3TijUji5SUfexZkiZvTWJKjrdGiPmV
+         ARkL5Pm1ngo/LrQn4CRq96Vjvzu6yICammjq0VR+wDFlr44HE2QZWfkXiBfBQF8fxTQZ
+         fJnuyJP05X+SEtSkskCDsaO59EpIQU8RQrrslLcZxFEuAYJzZsGTnEJkXUpJv9CZVKlx
+         HNEzDsccDe2uiIhmNopCfNLERU+FnbRyQ301kmfgl9Ig4ZOSnabNc+Oua7hWPSbYjsIU
+         bWQg==
+X-Gm-Message-State: ACgBeo0RM/wX0TiB62f+ABLwyPluVku95TzRiKl5ksbkZOHHi8gaRTbZ
+        PIdbm/ogI/WHi6JM37eAeDU=
+X-Google-Smtp-Source: AA6agR4GAH1B37Rvc50hoOeSsUAcTY6UdQY23/xmD+dy/fwuOyPhXYytRjFtW/DDIzBUfVuhCODbDw==
+X-Received: by 2002:a17:90a:1d0e:b0:1fa:bf2e:a56e with SMTP id c14-20020a17090a1d0e00b001fabf2ea56emr2978765pjd.23.1661498811909;
+        Fri, 26 Aug 2022 00:26:51 -0700 (PDT)
 Received: from localhost.localdomain ([193.203.214.57])
-        by smtp.gmail.com with ESMTPSA id l4-20020a170903244400b00172b0272f1asm820229pls.51.2022.08.26.00.25.22
+        by smtp.gmail.com with ESMTPSA id z4-20020a1709027e8400b0016d5626af4fsm823576pla.21.2022.08.26.00.26.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 26 Aug 2022 00:25:24 -0700 (PDT)
+        Fri, 26 Aug 2022 00:26:51 -0700 (PDT)
 From:   cgel.zte@gmail.com
 X-Google-Original-From: ye.xingchen@zte.com.cn
 To:     martin.petersen@oracle.com
-Cc:     sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
-        suganath-prabu.subramani@broadcom.com, jejb@linux.ibm.com,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, ye xingchen <ye.xingchen@zte.com.cn>,
+Cc:     kartilak@cisco.com, sebaddel@cisco.com, jejb@linux.ibm.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ye xingchen <ye.xingchen@zte.com.cn>,
         Zeal Robot <zealci@zte.com.cn>
-Subject: [PATCH linux-next] scsi: mpt3sas: Remove the unneeded result variable
-Date:   Fri, 26 Aug 2022 07:25:20 +0000
-Message-Id: <20220826072520.252845-1-ye.xingchen@zte.com.cn>
+Subject: [PATCH linux-next] scsi: snic: Remove the unneeded result variable
+Date:   Fri, 26 Aug 2022 07:26:48 +0000
+Message-Id: <20220826072648.252972-1-ye.xingchen@zte.com.cn>
 X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -67,54 +66,48 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: ye xingchen <ye.xingchen@zte.com.cn>
 
-Return the value _base_diag_reset() directly instead of storing it in
-another redundant variable.
+Return the value 0 and -ENOMEM  directly instead of storing it in another
+redundant variable.
 
 Reported-by: Zeal Robot <zealci@zte.com.cn>
 Signed-off-by: ye xingchen <ye.xingchen@zte.com.cn>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+ drivers/scsi/snic/snic_trc.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 565339a0811d..26f5897a5c7c 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -7170,7 +7170,6 @@ static int
- _base_wait_for_iocstate(struct MPT3SAS_ADAPTER *ioc, int timeout)
+diff --git a/drivers/scsi/snic/snic_trc.c b/drivers/scsi/snic/snic_trc.c
+index c2e5ab7e976c..9796bf280775 100644
+--- a/drivers/scsi/snic/snic_trc.c
++++ b/drivers/scsi/snic/snic_trc.c
+@@ -109,16 +109,15 @@ snic_trc_init(void)
  {
- 	u32 ioc_state;
--	int rc;
+ 	struct snic_trc *trc = &snic_glob->trc;
+ 	void *tbuf = NULL;
+-	int tbuf_sz = 0, ret;
++	int tbuf_sz = 0;
  
- 	dinitprintk(ioc, ioc_info(ioc, "%s\n", __func__));
+ 	tbuf_sz = (snic_trace_max_pages * PAGE_SIZE);
+ 	tbuf = vzalloc(tbuf_sz);
+ 	if (!tbuf) {
+ 		SNIC_ERR("Failed to Allocate Trace Buffer Size. %d\n", tbuf_sz);
+ 		SNIC_ERR("Trace Facility not enabled.\n");
+-		ret = -ENOMEM;
  
-@@ -7216,8 +7215,7 @@ _base_wait_for_iocstate(struct MPT3SAS_ADAPTER *ioc, int timeout)
+-		return ret;
++		return -ENOMEM;
  	}
  
-  issue_diag_reset:
--	rc = _base_diag_reset(ioc);
--	return rc;
-+	return _base_diag_reset(ioc);
- }
+ 	trc->buf = (struct snic_trc_data *) tbuf;
+@@ -131,9 +130,8 @@ snic_trc_init(void)
+ 	trc->enable = true;
+ 	SNIC_INFO("Trace Facility Enabled.\n Trace Buffer SZ %lu Pages.\n",
+ 		  tbuf_sz / PAGE_SIZE);
+-	ret = 0;
  
- /**
-@@ -7879,7 +7877,6 @@ int
- mpt3sas_base_make_ioc_ready(struct MPT3SAS_ADAPTER *ioc, enum reset_type type)
- {
- 	u32 ioc_state;
--	int rc;
- 	int count;
+-	return ret;
++	return 0;
+ } /* end of snic_trc_init */
  
- 	dinitprintk(ioc, ioc_info(ioc, "%s\n", __func__));
-@@ -7948,8 +7945,7 @@ mpt3sas_base_make_ioc_ready(struct MPT3SAS_ADAPTER *ioc, enum reset_type type)
- 	}
- 
-  issue_diag_reset:
--	rc = _base_diag_reset(ioc);
--	return rc;
-+	return _base_diag_reset(ioc);
- }
- 
- /**
+ /*
 -- 
 2.25.1
