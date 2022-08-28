@@ -2,83 +2,122 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40FA7C0502A
-	for <linux-scsi@archiver.kernel.org>; Sun, 28 Aug 2022 11:53:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3101ECAAA2
+	for <linux-scsi@archiver.kernel.org>; Sun, 28 Aug 2022 19:54:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229785AbiH1LxE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 28 Aug 2022 07:53:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32932 "EHLO
+        id S229958AbiH1Tyk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 28 Aug 2022 15:54:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60082 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229497AbiH1LxD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Aug 2022 07:53:03 -0400
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [IPv6:2a01:488:42:1000:50ed:8234::])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88CF411A0F;
-        Sun, 28 Aug 2022 04:53:02 -0700 (PDT)
-Received: from [2a02:8108:963f:de38:eca4:7d19:f9a2:22c5]; authenticated
-        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        id 1oSGqb-0007QJ-4K; Sun, 28 Aug 2022 13:53:01 +0200
-Message-ID: <9729ab5f-422d-19a8-d4e0-94de0877736d@leemhuis.info>
-Date:   Sun, 28 Aug 2022 13:52:59 +0200
+        with ESMTP id S229557AbiH1Tyj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Aug 2022 15:54:39 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8818531ECD
+        for <linux-scsi@vger.kernel.org>; Sun, 28 Aug 2022 12:54:37 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 26349B80B95
+        for <linux-scsi@vger.kernel.org>; Sun, 28 Aug 2022 19:54:36 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id D5478C433D7
+        for <linux-scsi@vger.kernel.org>; Sun, 28 Aug 2022 19:54:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1661716474;
+        bh=Y0jKIbaHml36dbuULqChxnm2qAqSQG1EzAEqYNipRsE=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=tZKaVL/iXxPnxlPVriM5TAGHZn+P2lYPfYAbUfB5q/t9NEBxqp5mdFRfNYmqywx/Z
+         qWQZOH4Ad/O89zFigHp7PBCup2nxGJ7zsmZKIXkPxA/ewzmfU/1QmFOgI/QmSvhtSf
+         N4LHNSGYgD2XAY0BfsNNJuY7a7jdLqoIfwkXwucGSEEeLDY/nakJly6ONc/Zj5Q5ti
+         mAEot5C6M08PYSkeyip5yfbYnvoVtiEkQi6+PztzievHhYg9NBdzAj+8JFZ524K69K
+         v3a02sZd1OG0AY+JujQtl8Qd7nnmCaSsSdzp8xiUJbkJHAF2HJjEdxGKbaT8LD305f
+         ZPt9Xj1epQeAg==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id BFA1EC433E4; Sun, 28 Aug 2022 19:54:34 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 199887] Fibre login failure on older adapters
+Date:   Sun, 28 Aug 2022 19:54:34 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-qla2xxx@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: QLOGIC QLA2XXX
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: peak@argo.troja.mff.cuni.cz
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: scsi_drivers-qla2xxx@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: cc attachments.created
+Message-ID: <bug-199887-11613-KCUChxQpmA@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-199887-11613@https.bugzilla.kernel.org/>
+References: <bug-199887-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.0
-Subject: Re: [PATCH v2 2/2] scsi: sd: Rework asynchronous resume support
- #forregzbot
-Content-Language: en-US
-Cc:     scsi <linux-scsi@vger.kernel.org>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-ide@vger.kernel.org
-References: <20220630195703.10155-1-bvanassche@acm.org>
- <alpine.DEB.2.22.394.2207191125130.1006766@ramsan.of.borg>
- <db19ed29-e7f9-e5b0-3a6c-f2812078a07d@acm.org>
- <CAMuHMdVzsgSYtbJQnaigNax_JbxPsQfU+gHcteS-ojWbxUdMfw@mail.gmail.com>
- <CAMuHMdWtxBj8ug7AHTqentF8UD4jpO2sgoWWcQCOvEKLJtdq8A@mail.gmail.com>
- <506ca1a6-1122-5755-fc74-60f7c7bfbd0d@acm.org>
- <CAMuHMdVQ2K2v8jpsFfOMk99DG_sBB4_ioiQRroC7K_Ov1wvp9w@mail.gmail.com>
- <6f70e742-9d8a-f389-0482-0ba9696bf445@acm.org>
- <CAMuHMdVc+ATGV-=R3uV6RyF0-mZiuKv7HpmogRBgqGVyO-MKWg@mail.gmail.com>
- <54e20a27-a10b-b77a-e950-1d3398e2e907@acm.org>
- <CAMuHMdURQpAEGgv4cY7v0rqzs12v2TT=Amt26Y0OoBSW7YAoaw@mail.gmail.com>
- <084e7c5a-f98d-d61e-de81-83525851ecf9@acm.org>
- <CAMuHMdW2vOC8ZsE_XF8TbSNoF9zCrwq7UkGZ5jXen1E1mTZe+g@mail.gmail.com>
- <14ec47f3-f3b8-61c7-2c64-d96d00dd7076@acm.org>
- <CAMuHMdW7nGxV_3Z2JV_TCM+WtTdYv5P+0cE6Tw=6krcseNCdAw@mail.gmail.com>
- <40700595-8c83-1b61-ea93-ea9554bfb2db@acm.org>
- <98592410-dd31-9081-86be-fda67d3b06d2@suse.cz>
-To:     regressions@lists.linux.dev
-From:   Thorsten Leemhuis <regressions@leemhuis.info>
-In-Reply-To: <98592410-dd31-9081-86be-fda67d3b06d2@suse.cz>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1661687582;b4a732ba;
-X-HE-SMSGID: 1oSGqb-0007QJ-4K
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-TWIMC: this mail is primarily send for documentation purposes and for
-regzbot, my Linux kernel regression tracking bot. These mails usually
-contain '#forregzbot' in the subject, to make them easy to spot and filter.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D199887
 
-On 17.08.22 21:07, Vlastimil Babka wrote:
-> Hi, I have a T460 hanging on resume from suspend to ram in 6.0-rc1 that
-> I bisected to this commit.
-> 
->> Unfortunately the above does not learn us anything new. The code 
->> modified by commit 88f1669019bd ("scsi: sd: Rework asynchronous resume 
->> support") is only called if sdev->manage_start_stop != 1. Only the SATA 
->> code, the Firewire code and the manage_start_stop sysfs attribute store 
->> method set that member variable:
-> [...]
-> #regzbot introduced: 88f1669019bd62b3
-> #regzbot monitor: https://lore.kernel.org/all/20220816172638.538734-1-bvanassche@acm.org/
+Pavel Kankovsky (peak@argo.troja.mff.cuni.cz) changed:
 
-#regzbot fixed-by: 785538bfdd682c8e962341d585f9b88262a0475
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |peak@argo.troja.mff.cuni.cz
 
-Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+--- Comment #4 from Pavel Kankovsky (peak@argo.troja.mff.cuni.cz) ---
+Created attachment 301697
+  --> https://bugzilla.kernel.org/attachment.cgi?id=3D301697&action=3Dedit
+kinda fix
 
-P.S.: As the Linux kernel's regression tracker I deal with a lot of
-reports and sometimes miss something important when writing mails like
-this. If that's the case here, don't hesitate to tell me in a public
-reply, it's in everyone's interest to set the public record straight.
+I did some experiments with my old QLA2340 (ISP2312, fw 3.03.28) and the mo=
+st
+recent stable kernel, ie. 5.19.4.
+
+"Async-gnlist" failures seem to be survivable and I decided to ignore them =
+for
+the time being. In fact, the old driver in 4.9.325 was able to work without
+MBC_PORT_NODE_NAME_LIST. There was a function issuing that command, namely
+qla2x00_get_node_name_list(), but AFAICT it was never called.
+
+"Async-gpdb" failures are a real problem because they trigger session delet=
+ion
+(qla24xx_handle_gpdb_event() gets an invalid zero login state).
+
+As far as I can tell, the new asynchronous implementation provides correct
+parameters to MBC_GET_PORT_DATABASE (compare qla24xx_async_gpdb() with
+qla2x00_get_port_database(), HAS_EXTENDED_IDS is true for ISP2312) but
+1. the adapter cannot handle the request when it receives it via the IOCB
+interface, and
+2. the driver would not be able to handle returned data anyway because their
+format is completely different on old non-IS_FWI2_CAPABLE adapters (compare
+qla24xx_handle_gpdb_event() with the final part of
+qla2x00_get_port_database()).
+
+I tried replacing the new code with a small wrapper around a call to the old
+qla2x00_get_port_database() sending the request synchronously via the mbox
+interface... and it worked! The driver was able to finish logins and access
+available FC targets. See the attached patch.
+
+That said, it is a horrible hack done by someone almost totally ignorant of=
+ the
+inner workings of the driver. There is absolutely no guarantee. It might cr=
+ash
+your kernel. It might fail to handle some (newly connected?) remote ports. =
+It
+might brick your adapter. It might wipe all your disk arrays. It might summ=
+on
+the Elder Gods. You have been warned.
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
