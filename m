@@ -2,122 +2,213 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3101ECAAA2
-	for <linux-scsi@archiver.kernel.org>; Sun, 28 Aug 2022 19:54:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EED3CECAAA2
+	for <linux-scsi@archiver.kernel.org>; Sun, 28 Aug 2022 22:19:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229958AbiH1Tyk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 28 Aug 2022 15:54:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60082 "EHLO
+        id S229510AbiH1WTK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 28 Aug 2022 18:19:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59708 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229557AbiH1Tyj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Aug 2022 15:54:39 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8818531ECD
-        for <linux-scsi@vger.kernel.org>; Sun, 28 Aug 2022 12:54:37 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 26349B80B95
-        for <linux-scsi@vger.kernel.org>; Sun, 28 Aug 2022 19:54:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id D5478C433D7
-        for <linux-scsi@vger.kernel.org>; Sun, 28 Aug 2022 19:54:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1661716474;
-        bh=Y0jKIbaHml36dbuULqChxnm2qAqSQG1EzAEqYNipRsE=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=tZKaVL/iXxPnxlPVriM5TAGHZn+P2lYPfYAbUfB5q/t9NEBxqp5mdFRfNYmqywx/Z
-         qWQZOH4Ad/O89zFigHp7PBCup2nxGJ7zsmZKIXkPxA/ewzmfU/1QmFOgI/QmSvhtSf
-         N4LHNSGYgD2XAY0BfsNNJuY7a7jdLqoIfwkXwucGSEEeLDY/nakJly6ONc/Zj5Q5ti
-         mAEot5C6M08PYSkeyip5yfbYnvoVtiEkQi6+PztzievHhYg9NBdzAj+8JFZ524K69K
-         v3a02sZd1OG0AY+JujQtl8Qd7nnmCaSsSdzp8xiUJbkJHAF2HJjEdxGKbaT8LD305f
-         ZPt9Xj1epQeAg==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id BFA1EC433E4; Sun, 28 Aug 2022 19:54:34 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 199887] Fibre login failure on older adapters
-Date:   Sun, 28 Aug 2022 19:54:34 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-qla2xxx@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: QLOGIC QLA2XXX
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: peak@argo.troja.mff.cuni.cz
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: scsi_drivers-qla2xxx@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: cc attachments.created
-Message-ID: <bug-199887-11613-KCUChxQpmA@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-199887-11613@https.bugzilla.kernel.org/>
-References: <bug-199887-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        with ESMTP id S229379AbiH1WTJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Aug 2022 18:19:09 -0400
+Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F4FB2F3B4
+        for <linux-scsi@vger.kernel.org>; Sun, 28 Aug 2022 15:19:08 -0700 (PDT)
+Received: by mail-pj1-x1032.google.com with SMTP id z3-20020a17090abd8300b001fd803e34f1so4265608pjr.1
+        for <linux-scsi@vger.kernel.org>; Sun, 28 Aug 2022 15:19:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc;
+        bh=NgYfug8tl0z4enxYMDU8+sCqKO6l+D8m5UuINcNddOQ=;
+        b=N4ANluPrjZEqWVcI5ToVYX3lzQrQrtycis9YikCcyNgt6feKRCvUxp01vwwYiba+Tn
+         FdkLtuzUgyKWZR+KgtoURKRFssyh6RYV79dEPnd4OdgeE3wY1Fbt6Ps7HiT9yEX2Clyb
+         xNI9+Lze0xB/w3dSlvJuc+UFJlIULzlCUtJ+8=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc;
+        bh=NgYfug8tl0z4enxYMDU8+sCqKO6l+D8m5UuINcNddOQ=;
+        b=PNjGWGhl9K5vGoK0Rwz2V04I8EsbVmExPxU+rSEadc+blduSq3O6AkqD7Hcu8vPqcN
+         UfK9dppF3qxYYOiJs+WxzJiFf3Dxf7j2pETpxy+jVB2i1PfuUnuwdh8eqzQRQkfhh5SY
+         TyLPMFwIm4AUPIyqNWj7CzWXYDa0QSKcbZNWmhfR/EA8IrzopacUkSEwpUmYD4ZzzKm9
+         IQVnLJTcHrTrpkcUHpdeB8LPttDvVH3GpoHE6YsOqbySOx3FwqTFXCk6JbB9fDdk2Xm3
+         x1SFMYpifDzYxTGiSim+nkcEs7bfghv5XW8aqwW02QYMWg+RA9yugwefqBF1grkt79cN
+         lu+A==
+X-Gm-Message-State: ACgBeo0xhr5UBSTe7vGA7MLpcG57suKtJCtO72Gxq9GaRP5hPijQydqh
+        5Wh1QIYj/3R2yAYwZLfnXNTBNg==
+X-Google-Smtp-Source: AA6agR5cJOTNgknm/sg4yIQ7Lakv3kppUSdlmEb9DBCuM4PT6T3bpCrUOSB4lHNeKfv55Kvscz0kPQ==
+X-Received: by 2002:a17:902:6b42:b0:174:4308:ce52 with SMTP id g2-20020a1709026b4200b001744308ce52mr11440814plt.81.1661725147636;
+        Sun, 28 Aug 2022 15:19:07 -0700 (PDT)
+Received: from dlunevwfh.roam.corp.google.com (n122-107-204-138.sbr2.nsw.optusnet.com.au. [122.107.204.138])
+        by smtp.gmail.com with ESMTPSA id a16-20020a170902ecd000b0016b90620910sm5881341plh.71.2022.08.28.15.19.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 28 Aug 2022 15:19:07 -0700 (PDT)
+From:   Daniil Lunev <dlunev@chromium.org>
+To:     Adrian Hunter <adrian.hunter@intel.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Daniil Lunev <dlunev@chromium.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Keoseong Park <keosung.park@samsung.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        Sohaib Mohamed <sohaib.amhmd@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: [PATCH v8] ufs: core: print UFSHCD capabilities in controller's sysfs node
+Date:   Mon, 29 Aug 2022 08:18:58 +1000
+Message-Id: <20220829081845.v8.1.Ibf9efc9be50783eeee55befa2270b7d38552354c@changeid>
+X-Mailer: git-send-email 2.31.0
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D199887
+Userspace may want to manually control when the data should go into
+WriteBooster buffer. The control happens via "wb_on" node, but
+presently, there is no simple way to check if WriteBooster is supported
+and enabled. This change exposes the Write Booster and Clock Scaling
+capabilities to be able to determin if the Write Booster is available
+and if its manual control is blocked by Clock Scaling mechanism.
 
-Pavel Kankovsky (peak@argo.troja.mff.cuni.cz) changed:
+Signed-off-by: Daniil Lunev <dlunev@chromium.org>
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |peak@argo.troja.mff.cuni.cz
+---
 
---- Comment #4 from Pavel Kankovsky (peak@argo.troja.mff.cuni.cz) ---
-Created attachment 301697
-  --> https://bugzilla.kernel.org/attachment.cgi?id=3D301697&action=3Dedit
-kinda fix
+Changes in v8:
+* Expand commit message with motiviation.
 
-I did some experiments with my old QLA2340 (ISP2312, fw 3.03.28) and the mo=
-st
-recent stable kernel, ie. 5.19.4.
+Changes in v7:
+* Move the comment to the documnetation
+* Update the month on the documentation
 
-"Async-gnlist" failures seem to be survivable and I decided to ignore them =
-for
-the time being. In fact, the old driver in 4.9.325 was able to work without
-MBC_PORT_NODE_NAME_LIST. There was a function issuing that command, namely
-qla2x00_get_node_name_list(), but AFAICT it was never called.
+Changes in v6:
+* Add comment to clarify meaning of the "capbilities" sysfs group.
 
-"Async-gpdb" failures are a real problem because they trigger session delet=
-ion
-(qla24xx_handle_gpdb_event() gets an invalid zero login state).
+Changes in v5:
+* Correct wording for clock scaling.
+* Correct wording for the commit message.
 
-As far as I can tell, the new asynchronous implementation provides correct
-parameters to MBC_GET_PORT_DATABASE (compare qla24xx_async_gpdb() with
-qla2x00_get_port_database(), HAS_EXTENDED_IDS is true for ISP2312) but
-1. the adapter cannot handle the request when it receives it via the IOCB
-interface, and
-2. the driver would not be able to handle returned data anyway because their
-format is completely different on old non-IS_FWI2_CAPABLE adapters (compare
-qla24xx_handle_gpdb_event() with the final part of
-qla2x00_get_port_database()).
+Changes in v4:
+* Dropped crypto node per Eric Biggers mentioning it can be queried from
+  disk's queue node
 
-I tried replacing the new code with a small wrapper around a call to the old
-qla2x00_get_port_database() sending the request synchronously via the mbox
-interface... and it worked! The driver was able to finish logins and access
-available FC targets. See the attached patch.
+Changes in v3:
+* Expose each capability individually.
+* Update documentation to represent new scheme.
 
-That said, it is a horrible hack done by someone almost totally ignorant of=
- the
-inner workings of the driver. There is absolutely no guarantee. It might cr=
-ash
-your kernel. It might fail to handle some (newly connected?) remote ports. =
-It
-might brick your adapter. It might wipe all your disk arrays. It might summ=
-on
-the Elder Gods. You have been warned.
+Changes in v2:
+* Add documentation entry for the new sysfs node.
 
---=20
-You may reply to this email to add a comment.
+ Documentation/ABI/testing/sysfs-driver-ufs | 37 ++++++++++++++++++++++
+ drivers/ufs/core/ufs-sysfs.c               | 35 ++++++++++++++++++++
+ 2 files changed, 72 insertions(+)
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
+index 6b248abb1bd71..78f3e393d2498 100644
+--- a/Documentation/ABI/testing/sysfs-driver-ufs
++++ b/Documentation/ABI/testing/sysfs-driver-ufs
+@@ -1591,6 +1591,43 @@ Description:	This entry shows the status of HPB.
+ 
+ 		The file is read only.
+ 
++Contact:	Daniil Lunev <dlunev@chromium.org>
++What:		/sys/bus/platform/drivers/ufshcd/*/capabilities/
++What:		/sys/bus/platform/devices/*.ufs/capabilities/
++Date:		August 2022
++Description:	The group represents the effective capabilities of the
++		host-device pair. i.e. the capabilities which are enabled in the
++		driver for the specific host controller, supported by the host
++		controller and are supported and/or have compatible
++		configuration on the device side.
++
++Contact:	Daniil Lunev <dlunev@chromium.org>
++What:		/sys/bus/platform/drivers/ufshcd/*/capabilities/clock_scaling
++What:		/sys/bus/platform/devices/*.ufs/capabilities/clock_scaling
++Date:		August 2022
++Contact:	Daniil Lunev <dlunev@chromium.org>
++Description:	Indicates status of clock scaling.
++
++		== ============================
++		0  Clock scaling is not supported.
++		1  Clock scaling is supported.
++		== ============================
++
++		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/capabilities/write_booster
++What:		/sys/bus/platform/devices/*.ufs/capabilities/write_booster
++Date:		August 2022
++Contact:	Daniil Lunev <dlunev@chromium.org>
++Description:	Indicates status of Write Booster.
++
++		== ============================
++		0  Write Booster can not be enabled.
++		1  Write Booster can be enabled.
++		== ============================
++
++		The file is read only.
++
+ What:		/sys/class/scsi_device/*/device/hpb_param_sysfs/activation_thld
+ Date:		February 2021
+ Contact:	Avri Altman <avri.altman@wdc.com>
+diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
+index 0a088b47d5570..75d4287657c80 100644
+--- a/drivers/ufs/core/ufs-sysfs.c
++++ b/drivers/ufs/core/ufs-sysfs.c
+@@ -279,6 +279,40 @@ static const struct attribute_group ufs_sysfs_default_group = {
+ 	.attrs = ufs_sysfs_ufshcd_attrs,
+ };
+ 
++static ssize_t clock_scaling_show(struct device *dev, struct device_attribute *attr,
++				  char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++
++	return sysfs_emit(buf, "%d\n", ufshcd_is_clkscaling_supported(hba));
++}
++
++static ssize_t write_booster_show(struct device *dev, struct device_attribute *attr,
++				  char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++
++	return sysfs_emit(buf, "%d\n", ufshcd_is_wb_allowed(hba));
++}
++
++static DEVICE_ATTR_RO(clock_scaling);
++static DEVICE_ATTR_RO(write_booster);
++
++/*
++ * See Documentation/ABI/testing/sysfs-driver-ufs for the semantics of this
++ * group.
++ */
++static struct attribute *ufs_sysfs_capabilities_attrs[] = {
++	&dev_attr_clock_scaling.attr,
++	&dev_attr_write_booster.attr,
++	NULL
++};
++
++static const struct attribute_group ufs_sysfs_capabilities_group = {
++	.name = "capabilities",
++	.attrs = ufs_sysfs_capabilities_attrs,
++};
++
+ static ssize_t monitor_enable_show(struct device *dev,
+ 				   struct device_attribute *attr, char *buf)
+ {
+@@ -1134,6 +1168,7 @@ static const struct attribute_group ufs_sysfs_attributes_group = {
+ 
+ static const struct attribute_group *ufs_sysfs_groups[] = {
+ 	&ufs_sysfs_default_group,
++	&ufs_sysfs_capabilities_group,
+ 	&ufs_sysfs_monitor_group,
+ 	&ufs_sysfs_device_descriptor_group,
+ 	&ufs_sysfs_interconnect_descriptor_group,
+-- 
+2.31.0
+
