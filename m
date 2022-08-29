@@ -2,89 +2,87 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E786EECAAD5
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Aug 2022 11:02:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A054C64991
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Aug 2022 12:26:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229971AbiH2LCk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 29 Aug 2022 07:02:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43394 "EHLO
+        id S231314AbiH2M0y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 29 Aug 2022 08:26:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44904 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230049AbiH2LBz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Aug 2022 07:01:55 -0400
-Received: from mail-pg1-x52b.google.com (mail-pg1-x52b.google.com [IPv6:2607:f8b0:4864:20::52b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 510D42AC5C;
-        Mon, 29 Aug 2022 04:01:43 -0700 (PDT)
-Received: by mail-pg1-x52b.google.com with SMTP id r69so7388538pgr.2;
-        Mon, 29 Aug 2022 04:01:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc;
-        bh=TioeFYjE8HcT3g2Vj0iS9lMouj/gwWFHnvZzq/SpV4U=;
-        b=W89wPTlzGFwuGEyclAjs+gkVcw3yIia/nuLfg8kCAgPcKngXeWGp/LoSHesALiDklj
-         3tWCqPgUq8XJAG+mMPhLGEDVAnX8WYYRruBsPNs/7mmJ46o8IUHBAiIogsFsX1R19jU7
-         iw5YjHKJZPLRcB93p59ppAp2S6oGFL7j7oSquPFUierVItlo9Omif5oisB1YBGPn2Uuk
-         0moPy9A4xsfGVRjH3osJpvJTRtchmm0Ai2rpX2V6+U1HT0kge5Do7nBB2pI9exVObAwZ
-         h18K/bQ8ed7t2kK9U+GcD/IaHR9FdGpYF2nTXVX+GBgIuX8cEXJgiF6L1j5BpkPjEnWr
-         HO6g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc;
-        bh=TioeFYjE8HcT3g2Vj0iS9lMouj/gwWFHnvZzq/SpV4U=;
-        b=pG4LMvaP5peZggKbrY+vJw/OoiPEmhfxSXdyondIJrnl8pY7dgSqYLFZbiS96UFoio
-         uT69nRzi1qMSnLgLE7GAqL1Ml6FHCVT1V0O6JRw3+51PhWzHaiRPbXZWggfLn4qSM4DA
-         7f4lB8g1GKibA+zeecAgB/iOI9gFOftzJUP58nkaKzmj6j+CETKnFDWXldFNItiyhnB1
-         fpN6Mxl8u6k0jWJZjXhwWzirISidr1L5ZKKmw5X/zk0dKfL+0wgVb6NKi067vBF4mewX
-         Sbbswf6Ximiqri2ziez2Zn5MrYyRCJMKkevdnx1fWd/tALZIdJ8nc+5hO9eW/1H4cJs+
-         sPEA==
-X-Gm-Message-State: ACgBeo1kiMfiH+l3AcFPhTwFJXHUGQxVXoKqy8hxO+Zc26Onj6uX11n0
-        e0F5G/NAQOY6TVIUpFgUT6g=
-X-Google-Smtp-Source: AA6agR5UdxPs77+zOqXyVnTbr4j64rU9PoGQmXpUq5i9KUoe+KNFlsNOrC+Dj/Jimt3EjeF3/hfZwg==
-X-Received: by 2002:a63:2a49:0:b0:41d:95d8:3d3d with SMTP id q70-20020a632a49000000b0041d95d83d3dmr13365765pgq.43.1661770902812;
-        Mon, 29 Aug 2022 04:01:42 -0700 (PDT)
-Received: from fanta-arch.localdomain ([2406:da14:61c:6101:4112:4d1:fe7:5105])
-        by smtp.gmail.com with ESMTPSA id x187-20020a6263c4000000b0052dc12cded3sm6834387pfb.196.2022.08.29.04.01.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 29 Aug 2022 04:01:42 -0700 (PDT)
-From:   Letu Ren <fantasquex@gmail.com>
-To:     aradford@gmail.com, jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Letu Ren <fantasquex@gmail.com>, Zheyu Ma <zheyuma97@gmail.com>
-Subject: [PATCH] scsi/3w-9xxx: Avoid disabling device if failing to enable it
-Date:   Mon, 29 Aug 2022 19:01:15 +0800
-Message-Id: <20220829110115.38789-1-fantasquex@gmail.com>
-X-Mailer: git-send-email 2.37.2
+        with ESMTP id S229810AbiH2M00 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Aug 2022 08:26:26 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8968C30F55;
+        Mon, 29 Aug 2022 05:10:23 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id AE09BB80F93;
+        Mon, 29 Aug 2022 12:10:18 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 5EA1FC433D6;
+        Mon, 29 Aug 2022 12:10:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1661775017;
+        bh=fK7S2U9FH3Mh1H4KPhuYrCAu21172KjX+5QYn8bZxhw=;
+        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+        b=TBIvehqlXAnaUEIBMGrGtucuAxZHCjYUbH9gZTzp39B5ATUAioe8WO3EhAjb3uXxe
+         dMkxYY6hb+WC6eHZyS/cPa8r2CKTI01EB9MGyg1IsF1/oZT7KJghqNmyKNC9XH8ves
+         Cj3pIf4EmX/G+vS/jKdpHZhOleUGsARHnbS9xEcHQZhYvclYHJsMAatPyh4hKIzTRv
+         ajwmDjfIKqrpsF4i7DFIPFPAdyZsb0nMzw3IdNk/hNCLbimS7UVtlTLrinQs2UaKDw
+         YTwmujROS5OWbAtqbFtveKef90uGKF6IuQSib+pIDDHdy0cvO/DcGODQekO/LzgUrc
+         qkbrfSs4DNb4A==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 4809AE924D7;
+        Mon, 29 Aug 2022 12:10:17 +0000 (UTC)
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH net-next] genetlink: start to validate reserved header bytes
+From:   patchwork-bot+netdevbpf@kernel.org
+Message-Id: <166177501728.22813.10790787483082655487.git-patchwork-notify@kernel.org>
+Date:   Mon, 29 Aug 2022 12:10:17 +0000
+References: <20220825001830.1911524-1-kuba@kernel.org>
+In-Reply-To: <20220825001830.1911524-1-kuba@kernel.org>
+To:     Jakub Kicinski <kuba@kernel.org>
+Cc:     davem@davemloft.net, netdev@vger.kernel.org, edumazet@google.com,
+        pabeni@redhat.com, jiri@resnulli.us, johannes@sipsolutions.net,
+        linux-block@vger.kernel.org, osmocom-net-gprs@lists.osmocom.org,
+        linux-wpan@vger.kernel.org, wireguard@lists.zx2c4.com,
+        linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-pm@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-cifs@vger.kernel.org, cluster-devel@redhat.com,
+        mptcp@lists.linux.dev, lvs-devel@vger.kernel.org,
+        netfilter-devel@vger.kernel.org,
+        linux-security-module@vger.kernel.org, dev@openvswitch.org,
+        linux-s390@vger.kernel.org, tipc-discussion@lists.sourceforge.net
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The original code will goto out_disable_device and `pci_disable_device`
-if `pci_enable_device` fails. Kernel will generate a warning message
-"3w-9xxx 0000:00:05.0: disabling already-disabled device". We shouldn't
-disable a failed to enable device. A simple return is fine.
+Hello:
 
-Reported-by: Zheyu Ma <zheyuma97@gmail.com>
-Signed-off-by: Letu Ren <fantasquex@gmail.com>
----
- drivers/scsi/3w-9xxx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This patch was applied to netdev/net-next.git (master)
+by David S. Miller <davem@davemloft.net>:
 
-diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
-index cd823ff5deab..6cb9cca9565b 100644
---- a/drivers/scsi/3w-9xxx.c
-+++ b/drivers/scsi/3w-9xxx.c
-@@ -2006,7 +2006,7 @@ static int twa_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
- 	retval = pci_enable_device(pdev);
- 	if (retval) {
- 		TW_PRINTK(host, TW_DRIVER, 0x34, "Failed to enable pci device");
--		goto out_disable_device;
-+		return -ENODEV;
- 	}
- 
- 	pci_set_master(pdev);
+On Wed, 24 Aug 2022 17:18:30 -0700 you wrote:
+> We had historically not checked that genlmsghdr.reserved
+> is 0 on input which prevents us from using those precious
+> bytes in the future.
+> 
+> One use case would be to extend the cmd field, which is
+> currently just 8 bits wide and 256 is not a lot of commands
+> for some core families.
+> 
+> [...]
+
+Here is the summary with links:
+  - [net-next] genetlink: start to validate reserved header bytes
+    https://git.kernel.org/netdev/net-next/c/9c5d03d36251
+
+You are awesome, thank you!
 -- 
-2.37.2
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
+
 
