@@ -2,46 +2,48 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1514DC0502C
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Aug 2022 17:18:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CCBAAECAAA1
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Aug 2022 17:21:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230064AbiH3RSk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 Aug 2022 13:18:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58742 "EHLO
+        id S229583AbiH3RU6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 Aug 2022 13:20:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59728 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229752AbiH3RSf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Aug 2022 13:18:35 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85E59D345B;
-        Tue, 30 Aug 2022 10:18:34 -0700 (PDT)
+        with ESMTP id S229476AbiH3RU1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Aug 2022 13:20:27 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A4B021400A;
+        Tue, 30 Aug 2022 10:19:51 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0947661781;
-        Tue, 30 Aug 2022 17:18:34 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62552C433D7;
-        Tue, 30 Aug 2022 17:18:32 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 60D83B81CD3;
+        Tue, 30 Aug 2022 17:19:43 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BCC57C433D7;
+        Tue, 30 Aug 2022 17:19:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1661879913;
-        bh=KeEa8niuoX+78r0QBUW0t5EQ4R4rJWSESiREHqZApaQ=;
+        s=k20201202; t=1661879982;
+        bh=5QvKRRAHDIo7HHKgbgxqt8ycMrr/leXRZbEgZYnHQDc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PAEsvujdeFelI2/FHZJEEg4DRT+1vyC1xM/O9ZGaIv5OQ7H7r9EfHkz7Ha6nImwDk
-         5RFyRJ7pJ8rrlLW837eWYhd99SPV8IFIvTbEQvPn1bjyOdIkdVkIfOBLerVl/ZD75W
-         jSVmq6/+H8Dm3CbEdPs52vWjkWEdqMiikaGnvYk/TaWUlQs3JuOAV/vJfeHLUL9cc8
-         p2IJ/NTIFssu6MOOl1axmaTSXcpNpx289i9E8Km0U6HEjG+dtL29VYSGA6EAu+1lwR
-         zg1gnTnQKw5ph64RhMX/9NEZrGbZC+Xno9AcBbvLsUZ9PqurwfozO3PQLgIIjnQEmX
-         5aXlqkR3v1iUA==
+        b=eBCtEKRyajrUYKTPT9hUtsMNgrSjio1kOmLhu98UH/W6hGZ/GKwBBUxvQEHFJEnFo
+         UzPZKMR+gmqgY1aZ7O5YsKC03U4VqfDOcDQrOt1wWnq02CoZeIGHt8/jgiBiFpsl9J
+         72oIT2611LRuRG19P90hwaUVNWFQpQTQx+Fd4W75d5iPRvh84tlR6S9anT/GhoE+Z3
+         Nl+Mzgo5/tFG0pfhfpofb5mdJ9yGpePu0VeNH4pUMQScFU8xxnX74+d5qtvJC9jl/T
+         Ad2ZPsXBBQmUqOaxrDpAb51K81nivPgQlCMw9AqlmN/QZEje4stNpxXusZNpOFHsdB
+         hVboHQHkHOKHg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Guixin Liu <kanie@linux.alibaba.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, kashyap.desai@broadcom.com,
-        shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com,
-        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.19 04/33] scsi: megaraid_sas: Fix double kfree()
-Date:   Tue, 30 Aug 2022 13:17:55 -0400
-Message-Id: <20220830171825.580603-4-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
+        matthias.bgg@gmail.com, beanhuo@micron.com, avri.altman@wdc.com,
+        adrian.hunter@intel.com, linux-scsi@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.19 14/33] scsi: ufs: core: Reduce the power mode change timeout
+Date:   Tue, 30 Aug 2022 13:18:05 -0400
+Message-Id: <20220830171825.580603-14-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220830171825.580603-1-sashal@kernel.org>
 References: <20220830171825.580603-1-sashal@kernel.org>
@@ -53,34 +55,52 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Guixin Liu <kanie@linux.alibaba.com>
+From: Bart Van Assche <bvanassche@acm.org>
 
-[ Upstream commit 8c499e49240bd93628368c3588975cfb94169b8b ]
+[ Upstream commit 8f2c96420c6ec3dcb18c8be923e24c6feaa5ccf6 ]
 
-When allocating log_to_span fails, kfree(instance->ctrl_context) is called
-twice. Remove redundant call.
+The current power mode change timeout (180 s) is so large that it can cause
+a watchdog timer to fire. Reduce the power mode change timeout to 10
+seconds.
 
-Link: https://lore.kernel.org/r/1659424729-46502-1-git-send-email-kanie@linux.alibaba.com
-Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
-Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
+Link: https://lore.kernel.org/r/20220811234401.1957911-1-bvanassche@acm.org
+Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/ufs/core/ufshcd.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 5b5885d9732b6..3e9b2b0099c7a 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -5311,7 +5311,6 @@ megasas_alloc_fusion_context(struct megasas_instance *instance)
- 		if (!fusion->log_to_span) {
- 			dev_err(&instance->pdev->dev, "Failed from %s %d\n",
- 				__func__, __LINE__);
--			kfree(instance->ctrl_context);
- 			return -ENOMEM;
- 		}
- 	}
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index a51ca56a0ebe7..829da9cb14a86 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -8723,6 +8723,8 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
+ 	struct scsi_device *sdp;
+ 	unsigned long flags;
+ 	int ret, retries;
++	unsigned long deadline;
++	int32_t remaining;
+ 
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	sdp = hba->ufs_device_wlun;
+@@ -8755,9 +8757,14 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
+ 	 * callbacks hence set the RQF_PM flag so that it doesn't resume the
+ 	 * already suspended childs.
+ 	 */
++	deadline = jiffies + 10 * HZ;
+ 	for (retries = 3; retries > 0; --retries) {
++		ret = -ETIMEDOUT;
++		remaining = deadline - jiffies;
++		if (remaining <= 0)
++			break;
+ 		ret = scsi_execute(sdp, cmd, DMA_NONE, NULL, 0, NULL, &sshdr,
+-				START_STOP_TIMEOUT, 0, 0, RQF_PM, NULL);
++				   remaining / HZ, 0, 0, RQF_PM, NULL);
+ 		if (!scsi_status_is_check_condition(ret) ||
+ 				!scsi_sense_valid(&sshdr) ||
+ 				sshdr.sense_key != UNIT_ATTENTION)
 -- 
 2.35.1
 
