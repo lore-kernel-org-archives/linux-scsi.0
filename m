@@ -2,83 +2,99 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D90DCECAAA1
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Aug 2022 07:56:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12EB1ECAAD4
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Aug 2022 08:07:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231229AbiH3Hz7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 Aug 2022 03:55:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34080 "EHLO
+        id S229729AbiH3IHO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 Aug 2022 04:07:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54826 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230329AbiH3Hz6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Aug 2022 03:55:58 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 866EE9C20F
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Aug 2022 00:55:56 -0700 (PDT)
+        with ESMTP id S229543AbiH3IHN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Aug 2022 04:07:13 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7CE475CCB
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Aug 2022 01:07:12 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id F09031F388;
-        Tue, 30 Aug 2022 07:55:54 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id A3C981F9DC;
+        Tue, 30 Aug 2022 08:07:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1661846154; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1661846830; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=dUfLqjJ/b2ym45DMl8EciNH8RIVz3pewi30XIOBTG+4=;
-        b=BXWjyWRpEDia113BKn2qdJ+Jm57jJw+ukl4cS3cjCDNp1+4xBaKmkscZ9OJD8qLBHhOdJK
-        WS10BpwVuyvbSbpt6GGH7knP/1FXCWjfz+3lifcHABfl7+wu/ebS1zgH+6CMYxpMorj8BZ
-        eCwntU5QsHBFglmMXlmTt71/Y25rquY=
+        bh=jzxmBLyGseKk0aWin8TQgZnrosx7YeA/I6/86QXXZH0=;
+        b=dzOqTzgdEmtPkHztdu1wizrlJ0dvIgdUNBIRiIzDBv2oiqM04ql+LJHCEtefxqGRh4UTFs
+        pO1aAo5DcQex37I3wdQlA7QgNwlrU//eBvRH3y/tXthKg6H6ffyHzjYPJJfYRCdGqRvOzY
+        EfhHMamuU+oh2Szc+zjMeGp+FJfBoUs=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1661846154;
+        s=susede2_ed25519; t=1661846830;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=dUfLqjJ/b2ym45DMl8EciNH8RIVz3pewi30XIOBTG+4=;
-        b=WAmdZ1vu6EKrxqZpQv97Xg9/sCWYQXRdIm4uHqlkzq5cD6HUw4dQPzEXNlVDU7CRIIoGLk
-        pSLlmHeYHkdV6QAg==
+        bh=jzxmBLyGseKk0aWin8TQgZnrosx7YeA/I6/86QXXZH0=;
+        b=iDNtOwH230BdSDqH/5uQBbHnL3Xmq+Uq+0QaDITrPWSqYc107o/CFDpRf1JfvGCiiXK2AX
+        MlBulcCOOKHBirAg==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id D600713B0C;
-        Tue, 30 Aug 2022 07:55:54 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 94E0213B0C;
+        Tue, 30 Aug 2022 08:07:10 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id qPsWNIrCDWNPbQAAMHmgww
-        (envelope-from <dwagner@suse.de>); Tue, 30 Aug 2022 07:55:54 +0000
-Date:   Tue, 30 Aug 2022 09:55:54 +0200
+        id vrdMJC7FDWPbcQAAMHmgww
+        (envelope-from <dwagner@suse.de>); Tue, 30 Aug 2022 08:07:10 +0000
+Date:   Tue, 30 Aug 2022 10:07:10 +0200
 From:   Daniel Wagner <dwagner@suse.de>
-To:     Himanshu Madhani <himanshu.madhani@oracle.com>
-Cc:     Arun Easi <aeasi@marvell.com>, Nilesh Javali <njavali@marvell.com>,
-        Martin Petersen <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "GR-QLogic-Storage-Upstream@marvell.com" 
-        <GR-QLogic-Storage-Upstream@marvell.com>,
-        "bhazarika@marvell.com" <bhazarika@marvell.com>,
-        "agurumurthy@marvell.com" <agurumurthy@marvell.com>,
-        Steven Rostedt <rostedt@goodmis.org>
+To:     Nilesh Javali <njavali@marvell.com>
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        GR-QLogic-Storage-Upstream@marvell.com, bhazarika@marvell.com,
+        agurumurthy@marvell.com
 Subject: Re: [PATCH v2 5/7] qla2xxx: Enhance driver tracing with separate
  tunable and more
-Message-ID: <20220830075554.2pv7fnszi6nyac3m@carbon.lan>
+Message-ID: <20220830080710.sceujw73cqd43rek@carbon.lan>
 References: <20220826102559.17474-1-njavali@marvell.com>
  <20220826102559.17474-6-njavali@marvell.com>
- <773B9D53-D043-42D9-B830-694A3E21A222@oracle.com>
- <ad348f6e-fec6-1ce5-eed5-621f84a5e580@marvell.com>
- <AFBD250B-7F4D-4C63-B05E-E534F9BC5805@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <AFBD250B-7F4D-4C63-B05E-E534F9BC5805@oracle.com>
+In-Reply-To: <20220826102559.17474-6-njavali@marvell.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Aug 29, 2022 at 07:25:34PM +0000, Himanshu Madhani wrote:
-> root@tatoonie~6.0.0-rc1+:/# ls -l /sys/kernel/tracing/
-> total 0
-> root@tatoonie~6.0.0-rc1+:/# ls -l /sys/kernel/debug/tracing/instances/qla2xxx/trace
-> -rw-r----- 1 root root 0 Aug 29 08:54 /sys/kernel/debug/tracing/instances/qla2xxx/trace
+On Fri, Aug 26, 2022 at 03:25:57AM -0700, Nilesh Javali wrote:
+> From: Arun Easi <aeasi@marvell.com>
+> 
+> Older tracing of driver messages was to:
+>     - log only debug messages to kernel main trace buffer AND
+>     - log only if extended logging bits corresponding to this
+>       message is off
+> 
+> This has been modified and extended as follows:
+>     - Tracing is now controlled via ql2xextended_error_logging_ktrace
+>       module parameter. Bit usages same as ql2xextended_error_logging.
+>     - Tracing uses "qla2xxx" trace instance, unless instance creation
+>       have issues.
+>     - Tracing is enabled (compile time tunable).
+>     - All driver messages, include debug and log messages are now traced
+>       in kernel trace buffer.
+> 
+> Trace messages can be viewed by looking at the qla2xxx instance at:
+>     /sys/kernel/tracing/instances/qla2xxx/trace
 
-IIRC, Steven's goal was to get all distros to move the mount point
-from /sys/kernel/debug/tracing to /sys/kernel/tracing. Not sure where we
-stand here.
+Nice! Thanks for getting this working.
+
+> Trace tunable that takes the same bit mask as ql2xextended_error_logging
+> is:
+>     ql2xextended_error_logging_ktrace (default=1)
+> 
+> Suggested-by: Daniel Wagner <dwagner@suse.de>
+> Suggested-by: Steven Rostedt <rostedt@goodmis.org>
+> Signed-off-by: Arun Easi <aeasi@marvell.com>
+> Signed-off-by: Nilesh Javali <njavali@marvell.com>
+
+Reviewed-by: Daniel Wagner <dwagner@suse.de>
+
