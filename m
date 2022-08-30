@@ -2,90 +2,101 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0701EECAAD4
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Aug 2022 08:37:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 467EAECAAA1
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Aug 2022 08:37:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231504AbiH3Ih4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 Aug 2022 04:37:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45058 "EHLO
+        id S231475AbiH3Ih6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 Aug 2022 04:37:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45064 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230353AbiH3Ihy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Aug 2022 04:37:54 -0400
-Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F9FAC57A1
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Aug 2022 01:37:53 -0700 (PDT)
-Received: by mail-pl1-x629.google.com with SMTP id f12so10253008plb.11
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Aug 2022 01:37:53 -0700 (PDT)
+        with ESMTP id S231503AbiH3Ih4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Aug 2022 04:37:56 -0400
+Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F2335E338
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Aug 2022 01:37:55 -0700 (PDT)
+Received: by mail-pf1-x42c.google.com with SMTP id p185so10642464pfb.13
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Aug 2022 01:37:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=mime-version:message-id:date:subject:cc:to:from:from:to:cc;
-        bh=gHUJatn8axhH0alF1VkMJYhy7ehf12x5UiS61cVt9no=;
-        b=CV8MP2XU+DIfp4+8uXBbGGUVW4pyoKTfxnStE3nHbDLFIlOPXDejvX1L3AOX+FWBzi
-         8oLplHlmLRl3nbzDLziYbTIyDsva8qqk8xoE7h2B4xELx4LyulvmTpnf0IqC4CKbp0en
-         5H0JOLinR38N8xINJtChKeeh/KBxOQqb33nlg=
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:from:to:cc;
+        bh=4BU7ExEDlQ3hVSlzpbuZhDu+FhJzO9dYoji6iemdZYs=;
+        b=bFheeLH57fILex4EkHZwVBB5fEKNvEDAQW9O+kTQSzsjhHHTXh9rtRosj09eEO5AEZ
+         ASc59vbo1iTpuFzAlvFohFCy1c+16p6dX0imsNaYEw6W8wsSeHdng3xF1iZWkjtfCDIj
+         ngj7crw/rXfJvWFB09qVQSTf/15apAaUx96bE=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=mime-version:message-id:date:subject:cc:to:from:x-gm-message-state
-         :from:to:cc;
-        bh=gHUJatn8axhH0alF1VkMJYhy7ehf12x5UiS61cVt9no=;
-        b=HWWHckG5L4Hr01f816ibqETfvzdzpUbhUbsXqFecgTNrZwASS4W/gEZYtTBHcjP/lh
-         xy8qeknlOyTwnA3wPW4QbaFdJWtj/6TCiOcKu3Smb2VxMkZsNtM+dMuxZ8uQPkZm6suF
-         AntPh3YxpABJUGksoyiCoQklml6+iKGbAND23HY7dirYkObsLw6sNYR2JPylcTNhENHD
-         gYYMcEfI62zU3TCcbfrmTbZ+5WqH2tE05wbvN5YBEP/EEb/b8JR6zt0NhJFdfE+jbEq8
-         glxVzFi74vnhS+q05Z8LoEhBKGEL4135Bs5kxOrgRYuzq2ekwUeeYvROBn05VXztt3+A
-         23rA==
-X-Gm-Message-State: ACgBeo1BNgK46Ixp9uQcAQhQ2J3QDs0Dbe6GrETbfSexR6+JJGrNZsFl
-        kGCg1gQM+fDZNuuMOdqyXKt2ideR9gdxENGCxgPzTVEpkI+yszXIyWaK1uxT7BBIkepN0RXoP31
-        J7TG2Iv7aba+W67lzkk6pB1+gNu5tm6PT8UiI9i65rUEGrhYpcrQFay+nzlPQTLVrkAcHVZWdNm
-        wDLOnpGpNt
-X-Google-Smtp-Source: AA6agR5Lmq2eMsZ2vFj7sw8BOmm/dS1MqVH/QuD4LGCoItEhzp3PeogfGzR/HNTsk3+NlzeOt+R0mA==
-X-Received: by 2002:a17:902:8b86:b0:170:d739:9a35 with SMTP id ay6-20020a1709028b8600b00170d7399a35mr20542516plb.35.1661848672152;
-        Tue, 30 Aug 2022 01:37:52 -0700 (PDT)
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:x-gm-message-state:from:to:cc;
+        bh=4BU7ExEDlQ3hVSlzpbuZhDu+FhJzO9dYoji6iemdZYs=;
+        b=1fv5yNNG5Z0wb5qiv9cejwxZW3TXPGfduce/L7In3m7Dtdv3J8ebWeAycr4XQVp5aE
+         2G2CwrFv59HZjUsbRaboCA29ghSJpcys7eFqmPmaBQnVWHtLxle4bHHLM5XvlGdlTEr6
+         Zg2z5e2h5D8ftws2BFK2cYiERS7LHV5Hgvqo/fL20JOPxgksFiojoCPsyYriR2fY01Jx
+         Z6ah4fYH2vIIq6ywbi516FqbpLkTweYeqhpJXG/UdVmsiNF2Ravtu2RyB8jmEGU49J7k
+         TtLqALt9Q6jcL2yQmqX8weO/HLhOEAQXTGzBeRZLxX/1duPChGDUi9++oFKo6Gx7gqdW
+         QKrg==
+X-Gm-Message-State: ACgBeo3s53AhUCxX/VzVsDX6jzby/GCDHPdrrVLGUG/QEg7KwP9vwohH
+        zp/W8LZEDrgTPfPKhhmqm3WhtqWss5jCfiaMZ1g4O+u2SUywm8FLcQkH/mQM7oiURAYGnYk8JVb
+        0CqJ/dJZdPOHdMuzS+V5xTnJaeDXcyRUixObs1JCB4D2zY9kAwS9gH0jL89cEqfqjVAoGxvioK8
+        l58t0QXCCv
+X-Google-Smtp-Source: AA6agR5/VxT214rGjpcCgWdoo6/a8UzDZ7nWc0/DI+QbJooRXKliBKDIUwatCn+rt4ufaHMclalFKA==
+X-Received: by 2002:a63:4512:0:b0:427:bc0c:4d5a with SMTP id s18-20020a634512000000b00427bc0c4d5amr17744720pga.114.1661848674565;
+        Tue, 30 Aug 2022 01:37:54 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id p17-20020a63e651000000b0041b667a1b69sm1090054pgj.36.2022.08.30.01.37.50
+        by smtp.gmail.com with ESMTPSA id p17-20020a63e651000000b0041b667a1b69sm1090054pgj.36.2022.08.30.01.37.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 30 Aug 2022 01:37:51 -0700 (PDT)
+        Tue, 30 Aug 2022 01:37:54 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 0/1] mpi3mr: Fix partly outside array bounds type warnings
-Date:   Tue, 30 Aug 2022 14:20:10 +0530
-Message-Id: <20220830085011.26079-1-sreekanth.reddy@broadcom.com>
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        kernel test robot <lkp@intel.com>,
+        Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: [PATCH 1/1] mpi3mr: Fix partly outside array bounds type warnings
+Date:   Tue, 30 Aug 2022 14:20:11 +0530
+Message-Id: <20220830085011.26079-2-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20220830085011.26079-1-sreekanth.reddy@broadcom.com>
+References: <20220830085011.26079-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000ced56505e7714b40"
+        boundary="000000000000f30e6705e7714be5"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000ced56505e7714b40
+--000000000000f30e6705e7714be5
 Content-Transfer-Encoding: 8bit
 
-Fix below compilation warning reported with W=1,
+Fixed 'is partly outside array bounds of' type
+compilation warnings.
 
-include/linux/find.h:40:23: warning: array subscript 'long unsigned int[0]'
-is partly outside array bounds of 'u32[1]' {aka 'unsigned int[1]'}
-[-Warray-bounds]
-      40 |                 val = *addr & GENMASK(size - 1, offset);
-         |                       ^~~~~
-   drivers/scsi/mpi3mr/mpi3mr_transport.c:1610:27: note: while referencing
-'phys_to_be_added'
-    1610 |         u32 phy_mask_xor, phys_to_be_added, phys_to_be_removed;
-         |                           ^~~~~~~~~~~~~~~~
-
-Sreekanth Reddy (1):
-  mpi3mr: Fix partly outside array bounds type warnings
-
+Reported-by: kernel test robot <lkp@intel.com>
+Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+---
  drivers/scsi/mpi3mr/mpi3mr_transport.c | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr/mpi3mr_transport.c
+index 203251c..2367d9f 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
+@@ -1607,7 +1607,8 @@ mpi3mr_update_mr_sas_port(struct mpi3mr_ioc *mrioc, struct host_port *h_port,
+ 	struct mpi3mr_sas_port *mr_sas_port)
+ {
+ 	struct mpi3mr_sas_phy *mr_sas_phy;
+-	u32 phy_mask_xor, phys_to_be_added, phys_to_be_removed;
++	u32 phy_mask_xor;
++	u64 phys_to_be_added, phys_to_be_removed;
+ 	int i;
+ 
+ 	h_port->used = 1;
 -- 
 2.27.0
 
 
---000000000000ced56505e7714b40
+--000000000000f30e6705e7714be5
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -156,13 +167,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIOiN11TShy0s0vMxfasT
-85Sc5+wbP8Vd3CGZfRssEqAIMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDgzMDA4Mzc1MlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIKRKkz89pTZK+C0kOHyK
+MfFishBDPzNrEG9X23a8BthcMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDgzMDA4Mzc1NVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCRl7rPbZh0kGijwuWRG5T/2pDY0qQXcHef4w16
-Zlfz+qVitIQZBGP/za94U1irsdfr+dRQVIF+XKT/IkjndAyV0Xd9PJvo+HcawqFnIF4gDWaaa5c6
-DkrAUjRbc+3Ce6QaAmKf0siBWKqrvjXt6NwiVwaFzoS+Q3hE0uEx5iCFvcUb2XV5ntW95e9ywTWF
-eXmt7ozeLFCWJmgBJJjJggm5Hcl8DtfybA3R2bqBr0SqXwmygTYLDP0wgJ1bxs0jN6dV9mKnFAOE
-zASjktwdDjYq3On0PLWnsB8sUaBcYVK91DWKR+Bnpo7emZdvEVlfClFxsRCD2CeFR2iPjqRATFuK
---000000000000ced56505e7714b40--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBohkv5VxYDuxtfp6EFRBarjA2Rezk7wHtk2VF3
+xsctqyqef5GDr1jPkPU3jrOabALihddNn/b60vE5f8PlsojftF8irSvg8mQov0JSlIRbo6rYkI5w
+NwQ28Xg8KSXonY7WuAGn4cw0HhT3BBJBN9YqFB7cqEiTuZAJD3pdMiz1Gahjo+37hlE4Wk7TohRa
+MWoxjfUcWcI9IzuSZQyuc5TCcWwzXRCcQYR/8Ej5g78BzUtzYbbXMsVsJAWdTZ8Lz5pIRZoLVHvx
+pofZ0f99kifWQsQw7OteFn30azHdf4QAr5fzl+KrQWV1Ki2aBy+xrLmvh0oSJcPYoMDm4t4RnGhy
+--000000000000f30e6705e7714be5--
