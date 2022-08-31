@@ -2,61 +2,60 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CE8DECAAD4
-	for <linux-scsi@archiver.kernel.org>; Wed, 31 Aug 2022 14:04:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05BF6ECAAD4
+	for <linux-scsi@archiver.kernel.org>; Wed, 31 Aug 2022 14:11:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231681AbiHaOD7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 31 Aug 2022 10:03:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43886 "EHLO
+        id S231658AbiHaOLB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 31 Aug 2022 10:11:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55270 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232075AbiHaODo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Aug 2022 10:03:44 -0400
-Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4724D7584;
-        Wed, 31 Aug 2022 07:03:32 -0700 (PDT)
-Received: by mail-pj1-x1034.google.com with SMTP id q3so10985886pjg.3;
-        Wed, 31 Aug 2022 07:03:32 -0700 (PDT)
+        with ESMTP id S231855AbiHaOKy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Aug 2022 10:10:54 -0400
+Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08ED7C0B74;
+        Wed, 31 Aug 2022 07:10:54 -0700 (PDT)
+Received: by mail-pl1-x633.google.com with SMTP id x23so14241656pll.7;
+        Wed, 31 Aug 2022 07:10:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc;
-        bh=RKP/ZYjQ5LLZx8BdjnHeUNuUWKQLAOrkHnnLMRbIo6g=;
-        b=Q3IkbhY2RfoBmt+qrOm3SlTSGuJw+s5kdmR95OQdDMohpQYqiv0JBaEm51XCr1n8+f
-         FxPliqYcGW1IepktBKvaVYfMniyobeP7hi1620AmKrSI4gXaVZDjEO848kMFFsvumPvQ
-         yFVnmltYYqsP0pV4OI3rD11kIaBG7XIutAHIgMAiFG11pfw4bfUAvgUIdFusPY0TCsD3
-         xeT9Xw7KT91eeDMWwc6LZMXyeTvBFZBx/6/lWHyKcd8qFFfkkWKoHd5fiRed9m6Rc3LL
-         UNxJdb40x7tr7FLATfr69ahY4RAjhh5CoaivucoVSzA8PeOpr/oqMdaHRJhS8xUfTtVp
-         OVRA==
+        bh=kboID+a4oCZLB90RjGESjjpmeonElRrw7Xrg2AJLT0Q=;
+        b=G237vnn6SJPjJ/Q2dKvBRQk+gEKFtEXFBcgFhk7UCauh/Q6Bh3gr0YgobdrGeeFCvN
+         HzqjWgnakoRCTG1GonGgfjwW2+PkpmcpoaQGFTRZtuDgXEl1vANbvHhoDE0PDXmzB0k2
+         l2tQqsdjIjU8Fff2Y5/60BRc04dxbIwgFRIsr25IDSR64pdEE6ArjnAT4sQI8heOjpyD
+         LktZ/Vq5/K4ARgqBSdLtvIGFtyuMlMnTsTPsFulFuC1RHvFROIDNov+0Bft1cAW9tgi2
+         LXnQtsX5NytByx3bCqnWHVDxr0tThWeE3+kxpGzouRVmOvPT41IZ9Y0FKW39swNAqYxy
+         mv/Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-message-state:from:to:cc;
-        bh=RKP/ZYjQ5LLZx8BdjnHeUNuUWKQLAOrkHnnLMRbIo6g=;
-        b=GrBvqYeqzOJchxF3e/72xcvM2oUo6aGwCEMRLgiNOy+AxRPZdtET2Y9XU5cmNd7Wtu
-         bJeZ1M1JDceMYhKQ83IfqyqtMd1iXC9WI/GfOCfZJk5sKm+KDIZZev47eB1yvyR14DIf
-         WjUD3O06AFU0ZI29cTVB6iKRPb24gQi3Q5DoIr43r1/Gxm+3bHp/2VvOemO8AZ6Z9ew6
-         77SJ3zfnub/d0VVlEdDHPHxmbVTo/1WwT1xUPCFItF9nWmZTf/hXKQ7XWZLGisXVYES9
-         7DsipobAzhjcH1zvGAMdJKcM7KyID3k3fNXpZVAOseHPXVGRW7i5rX5W/wLBt0zVzpC4
-         Ngnw==
-X-Gm-Message-State: ACgBeo2XW/DxXg91KbrcnSWmh19yIZSFxX0FJbQNpo+W1XrMTDkfrs75
-        pR7mSLS8u/IW4nwLlC4FQ88=
-X-Google-Smtp-Source: AA6agR64POgYbk5BQ45tnGxc5PZdhejfTcLDwh5aFsNEC2MFKbAKuZN+r97xfhvMBYSEfNNJY0XEjw==
-X-Received: by 2002:a17:903:2651:b0:173:3dc3:a19b with SMTP id je17-20020a170903265100b001733dc3a19bmr25616970plb.79.1661954611654;
-        Wed, 31 Aug 2022 07:03:31 -0700 (PDT)
+        bh=kboID+a4oCZLB90RjGESjjpmeonElRrw7Xrg2AJLT0Q=;
+        b=0n3SA1Ms5yFjzk8Gwlg6DqqfRogPfcR7fhgUu9R4+Nq8XCugLxCxeQ7GYMvAFfTRGT
+         lcQ+IcWnYrW4fOYOjf6txLSmm3YJwcYd9H9NwQI3jRx4EJDbhjFepc9r5gEcQh/7+KUX
+         Hli4spmcJ/pB5+V/T4Q1NmnNx38n9ylzgAKRGmt+XTblfYglDnfPdqbCoIUafoGDSTxf
+         dbMECB6jAA1gJiJ4oeet5BHlhiZdaBawlflPdqyN1UkzUUD2AXxRaRrmUHK4xr5qW1U0
+         DvHnVF+MEICXE11Rl5Qv/gGJocgELmDyfBxRjhIo2XoyflqIXC3mg3vWh32bwJMmOJgw
+         ZDnw==
+X-Gm-Message-State: ACgBeo0I8SslGmscE1LIiVqetKqQXefD6F8GcnrJnatu8XNnvY/xsEXO
+        hybbPtoJcbHHO2wTCN7YIG4=
+X-Google-Smtp-Source: AA6agR6zZs1DfYBUFLrRGp/kxkTVOOhcBnsJx3jUKapVRMAnhDXzGKMdfxYktw39QZ994YkoKW7+lQ==
+X-Received: by 2002:a17:903:4ce:b0:171:2cbb:ba27 with SMTP id jm14-20020a17090304ce00b001712cbbba27mr25703420plb.72.1661955053245;
+        Wed, 31 Aug 2022 07:10:53 -0700 (PDT)
 Received: from carlis-virtual-machine.localdomain ([156.236.96.164])
-        by smtp.gmail.com with ESMTPSA id ik21-20020a170902ab1500b0016f057b88c9sm11627936plb.26.2022.08.31.07.03.29
+        by smtp.gmail.com with ESMTPSA id h16-20020aa796d0000000b0053ae018a91esm365011pfq.173.2022.08.31.07.10.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 31 Aug 2022 07:03:31 -0700 (PDT)
+        Wed, 31 Aug 2022 07:10:52 -0700 (PDT)
 From:   Xuezhi Zhang <zhangxuezhi3@gmail.com>
-To:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, zhangxuezhi3@gmail.com,
-        Xuezhi Zhang <zhangxuezhi1@coolpad.com>
-Subject: [PATCH] scsi: megaraid: convert sysfs snprintf to sysfs_emit
-Date:   Wed, 31 Aug 2022 22:03:25 +0800
-Message-Id: <20220831140325.396295-1-zhangxuezhi3@gmail.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com, bvanassche@acm.org,
+        johannes.thumshirn@wdc.com, himanshu.madhani@oracle.com,
+        zhangxuezhi1@coolpad.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        zhangxuezhi3@gmail.com
+Subject: [PATCH] scsi: csiostor: convert sysfs snprintf to sysfs_emit
+Date:   Wed, 31 Aug 2022 22:10:46 +0800
+Message-Id: <20220831141046.406837-1-zhangxuezhi3@gmail.com>
 X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -70,31 +69,43 @@ Fix up all sysfs show entries to use sysfs_emit
 
 Signed-off-by: Xuezhi Zhang <zhangxuezhi1@coolpad.com>
 ---
- drivers/scsi/megaraid/megaraid_mbox.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/csiostor/csio_scsi.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
-index 157c3bdb50be..132de68c14e9 100644
---- a/drivers/scsi/megaraid/megaraid_mbox.c
-+++ b/drivers/scsi/megaraid/megaraid_mbox.c
-@@ -3979,7 +3979,7 @@ megaraid_mbox_app_hndl_show(struct device *dev, struct device_attribute *attr, c
+diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
+index 9aafe0002ab1..39e8c3c26a19 100644
+--- a/drivers/scsi/csiostor/csio_scsi.c
++++ b/drivers/scsi/csiostor/csio_scsi.c
+@@ -1366,9 +1366,9 @@ csio_show_hw_state(struct device *dev,
+ 	struct csio_hw *hw = csio_lnode_to_hw(ln);
  
- 	app_hndl = mraid_mm_adapter_app_handle(adapter->unique_id);
- 
--	return snprintf(buf, 8, "%u\n", app_hndl);
-+	return sysfs_emit(buf, "%u\n", app_hndl);
+ 	if (csio_is_hw_ready(hw))
+-		return snprintf(buf, PAGE_SIZE, "ready\n");
++		return sysfs_emit(buf, "ready\n");
+ 	else
+-		return snprintf(buf, PAGE_SIZE, "not ready\n");
++		return sysfs_emit(buf,  "not ready\n");
  }
  
+ /* Device reset */
+@@ -1430,7 +1430,7 @@ csio_show_dbg_level(struct device *dev,
+ {
+ 	struct csio_lnode *ln = shost_priv(class_to_shost(dev));
  
-@@ -4048,7 +4048,7 @@ megaraid_mbox_ld_show(struct device *dev, struct device_attribute *attr, char *b
- 		}
- 	}
- 
--	return snprintf(buf, 36, "%d %d %d %d\n", scsi_id, logical_drv,
-+	return sysfs_emit(buf, "%d %d %d %d\n", scsi_id, logical_drv,
- 			ldid_map, app_hndl);
+-	return snprintf(buf, PAGE_SIZE, "%x\n", ln->params.log_level);
++	return sysfs_emit(buf, "%x\n", ln->params.log_level);
  }
  
+ /* Store debug level */
+@@ -1476,7 +1476,7 @@ csio_show_num_reg_rnodes(struct device *dev,
+ {
+ 	struct csio_lnode *ln = shost_priv(class_to_shost(dev));
+ 
+-	return snprintf(buf, PAGE_SIZE, "%d\n", ln->num_reg_rnodes);
++	return sysfs_emit(buf, "%d\n", ln->num_reg_rnodes);
+ }
+ 
+ static DEVICE_ATTR(num_reg_rnodes, S_IRUGO, csio_show_num_reg_rnodes, NULL);
 -- 
 2.25.1
 
