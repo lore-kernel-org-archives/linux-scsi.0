@@ -2,125 +2,76 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7335ECAAD1
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Sep 2022 12:54:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 122D1ECAAD1
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Sep 2022 13:42:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232631AbiIAMy1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Sep 2022 08:54:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43790 "EHLO
+        id S233950AbiIANmQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Sep 2022 09:42:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43060 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229555AbiIAMy0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Sep 2022 08:54:26 -0400
-Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5ADC2DC3;
-        Thu,  1 Sep 2022 05:54:25 -0700 (PDT)
-Received: by mail-pj1-x102b.google.com with SMTP id m10-20020a17090a730a00b001fa986fd8eeso2382514pjk.0;
-        Thu, 01 Sep 2022 05:54:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date;
-        bh=ZBXyYbYjQ1AsjxuVxx4OCp5VVoXL3nUBzDg8QRR75Cw=;
-        b=WnHhs39GjiACyx1YZGfcMNOiD+GKbXQiXCm71Qomry9SIGHoGWdN+80ZFj9VXdhEYI
-         dq7PMFNY+y9281NgJD+VbB2thOod2gj5nTmUx+7c9QiZY+d3l3jDo/lYLaqJ+LcKPrY3
-         ZuNo0bmvR4FWCpJh3yhmCTKvIY0ZdKoEB4lvhqYdlftEWIjesaQEi6Y4ExeIqDkVSW0y
-         TE5o5gIzY3KT2nFpFOGXyXJwWydTTGPKmS2n98hr20yKyvZZJvoxNi+4BVkfu+v5IOZF
-         eOm4ObIPC29EcBd8mn+3tB8eiwzQN/5IDQIaz3+uiFtTCHL15yM7PB2l4ecCsvgP+XsK
-         SIbA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date;
-        bh=ZBXyYbYjQ1AsjxuVxx4OCp5VVoXL3nUBzDg8QRR75Cw=;
-        b=Df7YmwS/8fBxd5jYlHTbxVV7P0kCK2RRQUHRtf3UvcEqtp1XI0jLP3dx2RLY/SDR07
-         Ni1gaA2iTrggppsTlD5lOAe8mVtWXg+UQtHJZf8FrTZ2Y7w5WJl/Ufl2vBVOKQAhZBuQ
-         Zy+btVucgj0lwNF4zasnkq+5rAJ5TbL+BNE81lL4puhR+HEX91HCtLpdSo8oNT8Il3g1
-         l6rirxxvYpxpThfQTDJgXAbt5uzCuZsAkgwsDmr6VbNNxyoqART7VFIj1csFRwM4Xq2R
-         0zFmIX6NFKlXs6jtJJDB9KxnYRtrBdB8lOYMUE1H3kF5/pO1N/A1dRoqfLzrmGt7hu2h
-         Ebxw==
-X-Gm-Message-State: ACgBeo2a5CAvUXO0iHqHv39VklKtsAJJoQ3mZUu+FcgYwSW5svyzhZjM
-        CvQL6d0S9nna9BFtLF5fCwA=
-X-Google-Smtp-Source: AA6agR66J9l8BTovYfePaPwqu67KsA/hbYWIKHaprzXv47is6c5uEGMxUGnkuVOEjfvcyxQuY1Xg6w==
-X-Received: by 2002:a17:902:e552:b0:16d:2a83:e751 with SMTP id n18-20020a170902e55200b0016d2a83e751mr29383363plf.39.1662036865113;
-        Thu, 01 Sep 2022 05:54:25 -0700 (PDT)
-Received: from localhost ([166.111.139.139])
-        by smtp.gmail.com with ESMTPSA id lj13-20020a17090b344d00b001fac8076cd8sm1507048pjb.46.2022.09.01.05.54.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 01 Sep 2022 05:54:23 -0700 (PDT)
-From:   Zixuan Fu <r33s3n6@gmail.com>
-To:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, baijiaju1990@gmail.com,
-        Zixuan Fu <r33s3n6@gmail.com>,
-        TOTE Robot <oslab@tsinghua.edu.cn>
-Subject: [PATCH] scsi: megaraid: fix a possible double-free bug caused by incorrect error handling in megasas_alloc_cmdlist_fusion()
-Date:   Thu,  1 Sep 2022 20:54:18 +0800
-Message-Id: <20220901125418.2323348-1-r33s3n6@gmail.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S233729AbiIANlf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Sep 2022 09:41:35 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1D704D254
+        for <linux-scsi@vger.kernel.org>; Thu,  1 Sep 2022 06:40:33 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id CAF8761460
+        for <linux-scsi@vger.kernel.org>; Thu,  1 Sep 2022 13:40:32 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 407A6C433C1;
+        Thu,  1 Sep 2022 13:40:31 +0000 (UTC)
+Date:   Thu, 1 Sep 2022 09:41:02 -0400
+From:   Steven Rostedt <rostedt@goodmis.org>
+To:     Daniel Wagner <dwagner@suse.de>
+Cc:     Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Arun Easi <aeasi@marvell.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        Martin Petersen <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "GR-QLogic-Storage-Upstream@marvell.com" 
+        <GR-QLogic-Storage-Upstream@marvell.com>,
+        "bhazarika@marvell.com" <bhazarika@marvell.com>,
+        "agurumurthy@marvell.com" <agurumurthy@marvell.com>
+Subject: Re: [PATCH v2 5/7] qla2xxx: Enhance driver tracing with separate
+ tunable and more
+Message-ID: <20220901094102.76b0bb1e@gandalf.local.home>
+In-Reply-To: <20220830075554.2pv7fnszi6nyac3m@carbon.lan>
+References: <20220826102559.17474-1-njavali@marvell.com>
+        <20220826102559.17474-6-njavali@marvell.com>
+        <773B9D53-D043-42D9-B830-694A3E21A222@oracle.com>
+        <ad348f6e-fec6-1ce5-eed5-621f84a5e580@marvell.com>
+        <AFBD250B-7F4D-4C63-B05E-E534F9BC5805@oracle.com>
+        <20220830075554.2pv7fnszi6nyac3m@carbon.lan>
+X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In megasas_alloc_cmdlist_fusion(), when kzalloc() fails, it frees
-fusion->cmd_list but does not clear it. Then, the error is propagated to
-its caller megasas_alloc_cmds_fusion(), which calls
-megasas_free_cmds_fusion(). In megasas_free_cmds_fusion(), it frees
-fusion->cmd_list again, which causes a double-free bug.
+On Tue, 30 Aug 2022 09:55:54 +0200
+Daniel Wagner <dwagner@suse.de> wrote:
 
-To fix this possible bug, in megasas_alloc_cmdlist_fusion(),
-fusion->cmd_list should be cleared after it is freed.
+> On Mon, Aug 29, 2022 at 07:25:34PM +0000, Himanshu Madhani wrote:
+> > root@tatoonie~6.0.0-rc1+:/# ls -l /sys/kernel/tracing/
+> > total 0
+> > root@tatoonie~6.0.0-rc1+:/# ls -l /sys/kernel/debug/tracing/instances/qla2xxx/trace
+> > -rw-r----- 1 root root 0 Aug 29 08:54 /sys/kernel/debug/tracing/instances/qla2xxx/trace  
+> 
+> IIRC, Steven's goal was to get all distros to move the mount point
+> from /sys/kernel/debug/tracing to /sys/kernel/tracing. Not sure where we
+> stand here.
 
-The error log in our fault-injection testing is shown as follows:
+I believe Fedora and Debian both have added it there.
 
-[ 4152.707452][   T21] BUG: KASAN: use-after-free in megasas_free_cmds_fusion+0x2d0/0x1294 [megaraid_sas]
-...
-[ 4152.756117][   T21] Call trace:
-...
-[ 4152.795950][   T21]  megasas_free_cmds_fusion+0x2d0/0x1294 [megaraid_sas]
-[ 4152.803329][   T21]  megasas_alloc_cmds_fusion+0x4de0/0x53bc [megaraid_sas]
-[ 4152.810887][   T21]  megasas_init_adapter_fusion+0xab4/0x30dc [megaraid_sas]
-[ 4152.818539][   T21]  megasas_init_fw+0x4874/0x925c [megaraid_sas]
-[ 4152.825245][   T21]  megasas_probe_one+0x978/0x2dd4 [megaraid_sas]
-...
-[ 4152.864486][   T21] Allocated by task 21:
-...
-[ 4152.883339][   T21]  megasas_alloc_cmds_fusion+0x2a40/0x53bc [megaraid_sas]
-[ 4152.890796][   T21]  megasas_init_adapter_fusion+0xab4/0x30dc [megaraid_sas]
-[ 4152.898331][   T21]  megasas_init_fw+0x4874/0x925c [megaraid_sas]
-[ 4152.904901][   T21]  megasas_probe_one+0x978/0x2dd4 [megaraid_sas]
-...
-[ 4152.943038][   T21] Freed by task 21:
-...
-[ 4152.972830][   T21]  kfree+0x100/0x374
-[ 4152.976998][   T21]  megasas_alloc_cmds_fusion+0x45c4/0x53bc [megaraid_sas]
-[ 4152.984379][   T21]  megasas_init_adapter_fusion+0xab4/0x30dc [megaraid_sas]
-[ 4152.991856][   T21]  megasas_init_fw+0x4874/0x925c [megaraid_sas]
-[ 4152.998384][   T21]  megasas_probe_one+0x978/0x2dd4 [megaraid_sas]
+Note, when mounting the debugfs file system to /sys/kernel/debug, tracefs
+is automatically mounted at /sys/kernel/debug/tracing for backward
+compatibility.
 
+But the correct place to mount tracefs, is at /sys/kernel/tracing. Perhaps
+I will remove the autmatic mounting of tracefs on debugfs when that becomes
+the norm.
 
-Fixes: 70c54e210ee9a ("scsi: megaraid_sas: fix memleak in megasas_alloc_cmdlist_fusion")
-Reported-by: TOTE Robot <oslab@tsinghua.edu.cn>
-Signed-off-by: Zixuan Fu <r33s3n6@gmail.com>
----
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 09c5fe37754c..238103e7a028 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -613,6 +613,7 @@ megasas_alloc_cmdlist_fusion(struct megasas_instance *instance)
- 			for (j = 0; j < i; j++)
- 				kfree(fusion->cmd_list[j]);
- 			kfree(fusion->cmd_list);
-+			fusion->cmd_list = NULL;
- 			dev_err(&instance->pdev->dev,
- 				"Failed from %s %d\n",  __func__, __LINE__);
- 			return -ENOMEM;
--- 
-2.25.1
-
+-- Steve
