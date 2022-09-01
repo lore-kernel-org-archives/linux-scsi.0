@@ -2,116 +2,163 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74967ECAAD1
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Sep 2022 01:27:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 887B9ECAAD4
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Sep 2022 01:29:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231660AbiIAB1G (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 31 Aug 2022 21:27:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44286 "EHLO
+        id S232662AbiIAB3M (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 31 Aug 2022 21:29:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45420 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229459AbiIAB1F (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Aug 2022 21:27:05 -0400
-X-Greylist: delayed 905 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 31 Aug 2022 18:27:03 PDT
-Received: from m13124.mail.163.com (m13124.mail.163.com [220.181.13.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5807DF8ED0;
-        Wed, 31 Aug 2022 18:27:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=Date:From:Subject:MIME-Version:Message-ID; bh=wklvF
-        McU6a1O/ieCwawStIn4ZJ23CQ5U9F/SjOyVnuQ=; b=fndzgPbnVx87DSou+W9fF
-        KtD5VtGjL6M3UXMjr2mTfqjyvHuN9l8nmGydOl2rizSr613GyD9C+sxq3qJ1G5b3
-        5aOIT1dVmYBPKvz5cQP/nIoPFWaBp061lhQpT8ZYvW6GM7vfkua2lQ6umhzEWZ7m
-        wf7kKrZhT4eRK0EiimIGss=
-Received: from 15815827059$163.com ( [116.128.244.169] ) by
- ajax-webmail-wmsvr124 (Coremail) ; Thu, 1 Sep 2022 09:11:13 +0800 (CST)
-X-Originating-IP: [116.128.244.169]
-Date:   Thu, 1 Sep 2022 09:11:13 +0800 (CST)
-From:   huhai <15815827059@163.com>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
-        suganath-prabu.subramani@broadcom.com,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, huhai <huhai@kylinos.cn>,
-        stable@vger.kernel.org, "Jackie Liu" <liuyun01@kylinos.cn>
-Subject: Re:[PATCH] scsi: mpt3sas: Fix NULL pointer crash due to missing
- check device hostdata
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version XT5.0.13 build 20220113(9671e152)
- Copyright (c) 2002-2022 www.mailtech.cn 163com
-In-Reply-To: <20220825092645.326953-1-15815827059@163.com>
-References: <20220825092645.326953-1-15815827059@163.com>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=GBK
+        with ESMTP id S232655AbiIAB2u (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Aug 2022 21:28:50 -0400
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4688A155A42
+        for <linux-scsi@vger.kernel.org>; Wed, 31 Aug 2022 18:28:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1661995721; x=1693531721;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=icU2K6t7QUTC4ZFl028n9Bj57lT6StOkRAYSsEDFFF8=;
+  b=Q0CYsKPAr1c8JhKZYoCBVD9FrVSYOu3Hw444k/F7P7FCExnEn6sPsJE6
+   Md3f3zpOiTDI6KTwjMDuC+4uyq0AIjXUf8yq6mlCuHXR3opwL926hpKZA
+   3ZK0JxLepp9EFBSq3TWfv4M8aJoJEG/izbrRHOt2mbP6Zaj9zsOTMtXe1
+   REUWuG1AiAy3DrRp5I7+V5NKYfyW9mFgr3L98Q0o98sOadetfAUIobzRY
+   yV3tygCtqB7M7tdVd0YoBhAly45Orgty0xwFPvniFzkQxENc3Oa+orlK9
+   Jhj+hWtCnKjzWUnfy3davVxSJjwRPCM9bJz9cT06RQs0EQ0r7o8pXqhSx
+   A==;
+X-IronPort-AV: E=Sophos;i="5.93,279,1654531200"; 
+   d="scan'208";a="215341587"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 01 Sep 2022 09:28:34 +0800
+IronPort-SDR: HKD4Bw9vdv5+rEvi5ST0lpq7QdlelejANGl5vQCFbACIMyjiGqsqARyYuj/80CtNvh4zGdAaae
+ nMJM4NlCH+HzRQXgZU1UTow8ArXgCAw2NrfZJXAwH20HegGa4dPaeWytxpL54tE06AKQ/V9e79
+ 5+hyoOeMsQb8IeEaouV8VJxhrWsIHKT2ZFQVLk72rtsyBzVcOe1esoyr+u7wSCdPAYavIJ31lf
+ NGbb/+ZLkcLtDPoPrqQI5fO3iIwSyo/rjwnEffs1qtuobVB/V8ptW+kzzZrv56qgpbhvhSYqWw
+ dhlibhX+G5WMKh+9YkkCi+Bf
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 31 Aug 2022 17:49:03 -0700
+IronPort-SDR: QvIm8TTZDnLmb4bPRbJkhjNq3ASoaV10wk7cwh09qo8FZBrRuP3xkrKdBx/PkSJ9TOhjwa60eA
+ IgaJv1AcyJGrrEbahPKABURkvzr+sabHnBVs/kgc/xMzCk3JrZOhYdRhQ0WDx07q+Qyr5R1HPA
+ 8O2xOOzQlG5SRrcHBN1PUz+Ej7IaLMkRMSZZY4PyAlGG3JFlfPoLJGL78NtnyXGp5IkhA7JYhw
+ JrTILHBBZ3o2YonSMKY/g+qlDYWKF6mdm33vSRVWHQUTmqHHI7IELl7eVfQIguuNbH8xDXPqgZ
+ Xeg=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 31 Aug 2022 18:28:34 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MJ3N16KtWz1RwtC
+        for <linux-scsi@vger.kernel.org>; Wed, 31 Aug 2022 18:28:33 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1661995713; x=1664587714; bh=icU2K6t7QUTC4ZFl028n9Bj57lT6StOkRAY
+        SsEDFFF8=; b=g5Rh75KhttA1kCHsxhyYAocHkDqpMQ7KfdnjXXiQujmHS4i6WV+
+        RhrW2KVVMV9/uhdt5uL1N0Ff7e9ecDo+Uk07KcV65GBRclk2Xn4B10OGTy2fGph4
+        aWYWBeZAZsv/g+eX3MqOppKG5g6b3v6gKcSwDtJnTdZ2528zvrYaKvKrNUhZ8mUS
+        p2o3sUIA5hNrfoSBEFf09UCy1iVlIRRBVB+f8zZM5HjNiskAzHevhEMo0GPMtlrk
+        vVpvzin7VQ+9K1XHhkILy4alDYMju56+RcwJ/gJThD6pt/TbsRq2HPmpCvu2tUuu
+        Gvi8d2073rYT+5QU40fwpEZ6vXEL9iIZ9ag==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id LzuS-LwzM8v9 for <linux-scsi@vger.kernel.org>;
+        Wed, 31 Aug 2022 18:28:33 -0700 (PDT)
+Received: from [10.225.163.56] (unknown [10.225.163.56])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MJ3Mz5WSVz1RvLy;
+        Wed, 31 Aug 2022 18:28:31 -0700 (PDT)
+Message-ID: <ed952992-8c6f-48db-8d53-ad662da1ea81@opensource.wdc.com>
+Date:   Thu, 1 Sep 2022 10:28:30 +0900
 MIME-Version: 1.0
-Message-ID: <49b0768d.96d.182f69a26f6.Coremail.15815827059@163.com>
-X-Coremail-Locale: zh_CN
-X-CM-TRANSID: fMGowAB3OWGyBhBjz2NIAA--.53649W
-X-CM-SenderInfo: rprvmiivyslimvzbiqqrwthudrp/1tbiHQ9phWI66iLJ0wACs2
-X-Coremail-Antispam: 1U5529EdanIXcx71UUUUU7vcSsGvfC2KfnxnUU==
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.2.0
+Subject: Re: [PATCH v2] scsi: csiostor: convert sysfs snprintf to sysfs_emit
+Content-Language: en-US
+To:     Xuezhi Zhang <zhangxuezhi3@gmail.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, bvanassche@acm.org,
+        johannes.thumshirn@wdc.com, himanshu.madhani@oracle.com,
+        zhangxuezhi1@coolpad.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20220901005554.417043-1-zhangxuezhi3@gmail.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <20220901005554.417043-1-zhangxuezhi3@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-RnJpZW5kbHkgcGluZy4KCgpBdCAyMDIyLTA4LTI1IDE3OjI2OjQ1LCAiaHVoYWkiIDwxNTgxNTgy
-NzA1OUAxNjMuY29tPiB3cm90ZToKPkZyb206IGh1aGFpIDxodWhhaUBreWxpbm9zLmNuPgo+Cj5J
-ZiBfc2NzaWhfaW9fZG9uZSgpIGlzIGNhbGxlZCB3aXRoIHNjbWQtPmRldmljZS0+aG9zdGRhdGE9
-TlVMTCwgaXQgY2FuIGxlYWQKPnRvIHRoZSBmb2xsb3dpbmcgcGFuaWM6Cj4KPiAgQlVHOiB1bmFi
-bGUgdG8gaGFuZGxlIGtlcm5lbCBOVUxMIHBvaW50ZXIgZGVyZWZlcmVuY2UgYXQgMDAwMDAwMDAw
-MDAwMDAxOAo+ICBQR0QgNDU0N2E0MDY3IFA0RCA0NTQ3YTQwNjcgUFVEIDAKPiAgT29wczogMDAw
-MiBbIzFdIFNNUCBOT1BUSQo+ICBDUFU6IDYyIFBJRDogMCBDb21tOiBzd2FwcGVyLzYyIEtkdW1w
-OiBsb2FkZWQgTm90IHRhaW50ZWQgNC4xOS45MC0yNC40LnYyMTAxLmt5MTAueDg2XzY0ICMxCj4g
-IEhhcmR3YXJlIG5hbWU6IFN0b3JhZ2UgU2VydmVyLzY1TjMyLVVTLCBCSU9TIFNRTDEwNDEyMTcg
-MDUvMzAvMjAyMgo+ICBSSVA6IDAwMTA6X3Njc2loX3NldF9zYXRsX3BlbmRpbmcrMHgyZC8weDUw
-IFttcHQzc2FzXQo+ICBDb2RlOiAwMCAwMCA0OCA4YiA4NyA2MCAwMSAwMCAwMCAwZiBiNiAxMCA4
-MCBmYSBhMSA3NCAwOSAzMSBjMCA4MCBmYSA4NSA3NCAwMiBmMyBjMyA0OCA4YiA0NyAzOCA0MCA4
-NCBmNiA0OCA4YiA4MCA5OCAwMCAwMCAwMCA3NSAwOCA8ZjA+IDgwIDYwIDE4IGZlIDMxIGMwIGMz
-IGYwIDQ4IDBmIGJhIDY4IDE4IDAwIDBmIDkyIGMwIDBmIGI2IGMwIGMzCj4gIFJTUDogMDAxODpm
-ZmZmOGVjMjJmYzAzZTAwIEVGTEFHUzogMDAwMTAwNDYKPiAgUkFYOiAwMDAwMDAwMDAwMDAwMDAw
-IFJCWDogZmZmZjhlYmExYjA3MjUxOCBSQ1g6IDAwMDAwMDAwMDAwMDAwMDEKPiAgUkRYOiAwMDAw
-MDAwMDAwMDAwMDg1IFJTSTogMDAwMDAwMDAwMDAwMDAwMCBSREk6IGZmZmY4ZWJhMWIwNzI1MTgK
-PiAgUkJQOiAwMDAwMDAwMDAwMDAwZGJkIFIwODogMDAwMDAwMDAwMDAwMDAwMCBSMDk6IDAwMDAw
-MDAwMDAwMjk3MDAKPiAgUjEwOiBmZmZmOGVjMjJmYzAzZjgwIFIxMTogMDAwMDAwMDAwMDAwMDAw
-MCBSMTI6IGZmZmY4ZWJlMmQzNjA5ZTgKPiAgUjEzOiBmZmZmOGViZTJhNzJiNjAwIFIxNDogZmZm
-ZjhlY2E0NzI3MDdlMCBSMTU6IDAwMDAwMDAwMDAwMDAwMjAKPiAgRlM6ICAwMDAwMDAwMDAwMDAw
-MDAwKDAwMDApIEdTOmZmZmY4ZWMyMmZjMDAwMDAoMDAwMCkga25sR1M6MDAwMDAwMDAwMDAwMDAw
-MAo+ICBDUzogIDAwMTAgRFM6IDAwMDAgRVM6IDAwMDAgQ1IwOiAwMDAwMDAwMDgwMDUwMDMzCj4g
-IENSMjogMDAwMDAwMDAwMDAwMDAxOCBDUjM6IDAwMDAwMDA0NmU1ZjYwMDAgQ1I0OiAwMDAwMDAw
-MDAwMzQwNmUwCj4gIENhbGwgVHJhY2U6Cj4gICA8SVJRPgo+ICAgX3Njc2loX2lvX2RvbmUrMHg0
-YS8weDlmMCBbbXB0M3Nhc10KPiAgIF9iYXNlX2ludGVycnVwdCsweDIzZi8weGUxMCBbbXB0M3Nh
-c10KPiAgIF9faGFuZGxlX2lycV9ldmVudF9wZXJjcHUrMHg0MC8weDE5MAo+ICAgaGFuZGxlX2ly
-cV9ldmVudF9wZXJjcHUrMHgzMC8weDcwCj4gICBoYW5kbGVfaXJxX2V2ZW50KzB4MzYvMHg2MAo+
-ICAgaGFuZGxlX2VkZ2VfaXJxKzB4N2UvMHgxOTAKPiAgIGhhbmRsZV9pcnErMHhhOC8weDExMAo+
-ICAgZG9fSVJRKzB4NDkvMHhlMAo+Cj5GaXggaXQgYnkgbW92ZSBzY21kLT5kZXZpY2UtPmhvc3Rk
-YXRhIGNoZWNrIGJlZm9yZSBfc2NzaWhfc2V0X3NhdGxfcGVuZGluZwo+Y2FsbGVkLgo+Cj5PdGhl
-ciBjaGFuZ2VzOgo+LSBJdCBsb29rcyBjbGVhciB0byBtb3ZlIGdldCBtcGlfcmVwbHkgdG8gbmVh
-ciBpdHMgY2hlY2suCj4KPkZpeGVzOiBmZmI1ODQ1NjU4OTQgKCJzY3NpOiBtcHQzc2FzOiBmaXgg
-aGFuZyBvbiBhdGEgcGFzc3Rocm91Z2ggY29tbWFuZHMiKQo+Q2M6IDxzdGFibGVAdmdlci5rZXJu
-ZWwub3JnPiAjIHY0LjkrCj5Dby1kZXZlbG9wZWQtYnk6IEphY2tpZSBMaXUgPGxpdXl1bjAxQGt5
-bGlub3MuY24+Cj5TaWduZWQtb2ZmLWJ5OiBKYWNraWUgTGl1IDxsaXV5dW4wMUBreWxpbm9zLmNu
-Pgo+U2lnbmVkLW9mZi1ieTogaHVoYWkgPGh1aGFpQGt5bGlub3MuY24+Cj4tLS0KPiBkcml2ZXJz
-L3Njc2kvbXB0M3Nhcy9tcHQzc2FzX3Njc2loLmMgfCAxNSArKysrKysrLS0tLS0tLS0KPiAxIGZp
-bGUgY2hhbmdlZCwgNyBpbnNlcnRpb25zKCspLCA4IGRlbGV0aW9ucygtKQo+Cj5kaWZmIC0tZ2l0
-IGEvZHJpdmVycy9zY3NpL21wdDNzYXMvbXB0M3Nhc19zY3NpaC5jIGIvZHJpdmVycy9zY3NpL21w
-dDNzYXMvbXB0M3Nhc19zY3NpaC5jCj5pbmRleCBkZWYzN2E3ZTU5ODAuLjg1ZjU3NDlhMDQyMSAx
-MDA2NDQKPi0tLSBhL2RyaXZlcnMvc2NzaS9tcHQzc2FzL21wdDNzYXNfc2NzaWguYwo+KysrIGIv
-ZHJpdmVycy9zY3NpL21wdDNzYXMvbXB0M3Nhc19zY3NpaC5jCj5AQCAtNTcwNCwyNyArNTcwNCwy
-NiBAQCBfc2NzaWhfaW9fZG9uZShzdHJ1Y3QgTVBUM1NBU19BREFQVEVSICppb2MsIHUxNiBzbWlk
-LCB1OCBtc2l4X2luZGV4LCB1MzIgcmVwbHkpCj4gCXN0cnVjdCBNUFQzU0FTX0RFVklDRSAqc2Fz
-X2RldmljZV9wcml2X2RhdGE7Cj4gCXUzMiByZXNwb25zZV9jb2RlID0gMDsKPiAKPi0JbXBpX3Jl
-cGx5ID0gbXB0M3Nhc19iYXNlX2dldF9yZXBseV92aXJ0X2FkZHIoaW9jLCByZXBseSk7Cj4tCj4g
-CXNjbWQgPSBtcHQzc2FzX3Njc2loX3Njc2lfbG9va3VwX2dldChpb2MsIHNtaWQpOwo+IAlpZiAo
-c2NtZCA9PSBOVUxMKQo+IAkJcmV0dXJuIDE7Cj4gCj4rCXNhc19kZXZpY2VfcHJpdl9kYXRhID0g
-c2NtZC0+ZGV2aWNlLT5ob3N0ZGF0YTsKPisJaWYgKCFzYXNfZGV2aWNlX3ByaXZfZGF0YSB8fCAh
-c2FzX2RldmljZV9wcml2X2RhdGEtPnNhc190YXJnZXQgfHwKPisJICAgICBzYXNfZGV2aWNlX3By
-aXZfZGF0YS0+c2FzX3RhcmdldC0+ZGVsZXRlZCkgewo+KwkJc2NtZC0+cmVzdWx0ID0gRElEX05P
-X0NPTk5FQ1QgPDwgMTY7Cj4rCQlnb3RvIG91dDsKPisJfQo+IAlfc2NzaWhfc2V0X3NhdGxfcGVu
-ZGluZyhzY21kLCBmYWxzZSk7Cj4gCj4gCW1waV9yZXF1ZXN0ID0gbXB0M3Nhc19iYXNlX2dldF9t
-c2dfZnJhbWUoaW9jLCBzbWlkKTsKPiAKPisJbXBpX3JlcGx5ID0gbXB0M3Nhc19iYXNlX2dldF9y
-ZXBseV92aXJ0X2FkZHIoaW9jLCByZXBseSk7Cj4gCWlmIChtcGlfcmVwbHkgPT0gTlVMTCkgewo+
-IAkJc2NtZC0+cmVzdWx0ID0gRElEX09LIDw8IDE2Owo+IAkJZ290byBvdXQ7Cj4gCX0KPiAKPi0J
-c2FzX2RldmljZV9wcml2X2RhdGEgPSBzY21kLT5kZXZpY2UtPmhvc3RkYXRhOwo+LQlpZiAoIXNh
-c19kZXZpY2VfcHJpdl9kYXRhIHx8ICFzYXNfZGV2aWNlX3ByaXZfZGF0YS0+c2FzX3RhcmdldCB8
-fAo+LQkgICAgIHNhc19kZXZpY2VfcHJpdl9kYXRhLT5zYXNfdGFyZ2V0LT5kZWxldGVkKSB7Cj4t
-CQlzY21kLT5yZXN1bHQgPSBESURfTk9fQ09OTkVDVCA8PCAxNjsKPi0JCWdvdG8gb3V0Owo+LQl9
-Cj4gCWlvY19zdGF0dXMgPSBsZTE2X3RvX2NwdShtcGlfcmVwbHktPklPQ1N0YXR1cyk7Cj4gCj4g
-CS8qCj4tLSAKPjIuMjcuMAo+Cj4KPk5vIHZpcnVzIGZvdW5kCj4JCUNoZWNrZWQgYnkgSGlsbHN0
-b25lIE5ldHdvcmsgQW50aVZpcnVzCg==
+On 9/1/22 09:55, Xuezhi Zhang wrote:
+> From: Xuezhi Zhang <zhangxuezhi1@coolpad.com>
+> 
+> Fix up all sysfs show entries to use sysfs_emit
+> 
+> Signed-off-by: Xuezhi Zhang <zhangxuezhi1@coolpad.com>
+> ---
+> v2: delete 'else' and extra space.
+> ---
+>  arch/arm64/configs/defconfig      |  2 ++
+>  drivers/scsi/csiostor/csio_scsi.c | 10 +++++-----
+>  2 files changed, 7 insertions(+), 5 deletions(-)
+> 
+> diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+> index 91e58cf59c99..6a0af8a5a8b2 100644
+> --- a/arch/arm64/configs/defconfig
+> +++ b/arch/arm64/configs/defconfig
+> @@ -1328,3 +1328,5 @@ CONFIG_DEBUG_FS=y
+>  # CONFIG_DEBUG_PREEMPT is not set
+>  # CONFIG_FTRACE is not set
+>  CONFIG_MEMTEST=y
+> +CONFIG_SCSI_CHELSIO_FCOE=y
+> +CONFIG_MEGARAID_MAILBOX=y
+
+This hunk is new in the patch and not explained in the commit message.
+This likely needs to be a different patch if this is a valid change.
+
+> diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
+> index 9aafe0002ab1..05e1a63e00c3 100644
+> --- a/drivers/scsi/csiostor/csio_scsi.c
+> +++ b/drivers/scsi/csiostor/csio_scsi.c
+> @@ -1366,9 +1366,9 @@ csio_show_hw_state(struct device *dev,
+>  	struct csio_hw *hw = csio_lnode_to_hw(ln);
+>  
+>  	if (csio_is_hw_ready(hw))
+> -		return snprintf(buf, PAGE_SIZE, "ready\n");
+> -	else
+> -		return snprintf(buf, PAGE_SIZE, "not ready\n");
+> +		return sysfs_emit(buf, "ready\n");
+> +
+> +	return sysfs_emit(buf, "not ready\n");
+>  }
+>  
+>  /* Device reset */
+> @@ -1430,7 +1430,7 @@ csio_show_dbg_level(struct device *dev,
+>  {
+>  	struct csio_lnode *ln = shost_priv(class_to_shost(dev));
+>  
+> -	return snprintf(buf, PAGE_SIZE, "%x\n", ln->params.log_level);
+> +	return sysfs_emit(buf, "%x\n", ln->params.log_level);
+>  }
+>  
+>  /* Store debug level */
+> @@ -1476,7 +1476,7 @@ csio_show_num_reg_rnodes(struct device *dev,
+>  {
+>  	struct csio_lnode *ln = shost_priv(class_to_shost(dev));
+>  
+> -	return snprintf(buf, PAGE_SIZE, "%d\n", ln->num_reg_rnodes);
+> +	return sysfs_emit(buf, "%d\n", ln->num_reg_rnodes);
+>  }
+>  
+>  static DEVICE_ATTR(num_reg_rnodes, S_IRUGO, csio_show_num_reg_rnodes, NULL);
+
+This part looks OK.
+
+-- 
+Damien Le Moal
+Western Digital Research
+
