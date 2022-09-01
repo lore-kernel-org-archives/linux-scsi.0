@@ -2,114 +2,134 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64D51C54EE9
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Sep 2022 20:57:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98377C54EE9
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Sep 2022 21:48:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233222AbiIAU5g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Sep 2022 16:57:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54262 "EHLO
+        id S234112AbiIAVsI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Sep 2022 17:48:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44650 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234526AbiIAU5e (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Sep 2022 16:57:34 -0400
-Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA83C80EA2
-        for <linux-scsi@vger.kernel.org>; Thu,  1 Sep 2022 13:57:32 -0700 (PDT)
-Received: by mail-pl1-x635.google.com with SMTP id d12so18178099plr.6
-        for <linux-scsi@vger.kernel.org>; Thu, 01 Sep 2022 13:57:32 -0700 (PDT)
+        with ESMTP id S232865AbiIAVr5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Sep 2022 17:47:57 -0400
+Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F33667A535
+        for <linux-scsi@vger.kernel.org>; Thu,  1 Sep 2022 14:47:56 -0700 (PDT)
+Received: by mail-pl1-x62c.google.com with SMTP id p18so62275plr.8
+        for <linux-scsi@vger.kernel.org>; Thu, 01 Sep 2022 14:47:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
+        d=purestorage.com; s=google;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc;
-        bh=6bNaco3dz7IXQ11OXE5kaxXCKtEGcZVScgtt1VLo0BY=;
-        b=lz9bmAcSmJgqr7GHx+GhotVgFEl7+NLMUFsxU/Z8181ZKalwXzq956AcPOKxCTD6fS
-         5EyA5gCbMzEjufG7GCMLoVPUiKr6r3Ua1lDVdOrMmzUG6PjXUgoSqajP6vOAef2Ssjww
-         VXIx89M/XqRQw5ntFMdvGg93Oj8t/Z/2Ubc8M=
+         :to:from:from:to:cc:subject:date;
+        bh=1qFLmuAicj9UlAmGP9DJpM6tW9KNPkfsUBI3P/CldSo=;
+        b=Kt5ESBIY/nOktHtszvwN8rVzSAuAv1zqdRtPmURYDqoDXBxn0VcwlJ0MbBk1SaHL28
+         QSjhwzXFaAhx67H7rPhx5jabv9ujI86pQ5Pc6cB+uMlIX7FBaQh4nORss1n2l4SGOI6N
+         xzlV4YIlwMJP339g0DHn2vV+bWTYDJ94aF6yw=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc;
-        bh=6bNaco3dz7IXQ11OXE5kaxXCKtEGcZVScgtt1VLo0BY=;
-        b=fESsDqOb2Cnjhyu0rJMqgk0vxjce7JV6zYxpmkUlc57FMMk3a+BHhxSdyFoPFCGY5o
-         9+HJkp6GNPWCLnIf9ySF87ytNrhAaJ+BdwAhEGRli3bZMxzOdrOnS3u6otpkDQDZOyHb
-         Y0uK23DQXBSkyKJ8RoGlRL9yloF4wkyex7BIetUKlwOOG2OOM8Id1qYcwpU7BtaI969l
-         rRIQF1ZkNwMml/LqSxrXV7d5xAomUqU/OQvDo3damo+d+z/vmum9YM2yzbGGg5M5t1IX
-         zHcj49yCmd1dU7r7Pe1rNpJqnTxAHoGhDl3NzbD9xnN59dFGa83WJiextR2yS/OpgWbt
-         vG9w==
-X-Gm-Message-State: ACgBeo2IDTcfxr85tbPeVBukWPDbdS/KkBq5GEFYlIUWA4RjtwxIvxYI
-        FYaNeiIOwI66GFRfhA6wNIWfpQ==
-X-Google-Smtp-Source: AA6agR7iYr8HTflzB5me0MkRmvnvfYeC6NEJ6l7HP5sKFbAtQiONSlkryqRFPN1gOjYeKmeUHaOT2Q==
-X-Received: by 2002:a17:902:e549:b0:174:d234:6116 with SMTP id n9-20020a170902e54900b00174d2346116mr19871188plf.131.1662065852382;
-        Thu, 01 Sep 2022 13:57:32 -0700 (PDT)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id k6-20020aa79d06000000b005379dd2deb5sm26442pfp.137.2022.09.01.13.57.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 01 Sep 2022 13:57:31 -0700 (PDT)
-From:   Kees Cook <keescook@chromium.org>
-To:     Bradley Grove <linuxdrivers@attotech.com>
-Cc:     Kees Cook <keescook@chromium.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-hardening@vger.kernel.org
-Subject: [PATCH] esas2r: Use flex array destination for memcpy()
-Date:   Thu,  1 Sep 2022 13:57:29 -0700
-Message-Id: <20220901205729.2260982-1-keescook@chromium.org>
-X-Mailer: git-send-email 2.34.1
+         :to:from:x-gm-message-state:from:to:cc:subject:date;
+        bh=1qFLmuAicj9UlAmGP9DJpM6tW9KNPkfsUBI3P/CldSo=;
+        b=M0eicqZVZwpE/HHamC4v2NEyCUB/9glS07u3IxQkSsS8Dijsu4eVFg+OMV/RDJjvoL
+         apYZR2rUs9p7k2XQNCCCRv/7+xkMMZA7zkonBTqdQ80nyXjElhvkeuURn4qnn6pOherO
+         cZl8y0fkecMrXVEPjsi45SFJG2lPamzljgy9sXu92ZVlkqrBLTy649ECjBYx6hQskoTA
+         THsDJsrT/fk/rDEVfFqLJMGwD86Qst/vioAFYrR8FbxLZpecha9vkqzzr/MAVqTldkKO
+         hMD0jVYMJdV79HYWIczX8KeUuxrI+xdKcIk5c95q+dyANWlC9Ia79Hxv4M/mfVM8NZ3m
+         aWXw==
+X-Gm-Message-State: ACgBeo0zkogbJGrmdiX8Yf3Ffs+mPFFGdpW93x++NolEIFgRfI7xjnrV
+        JHyFQliQWJwohjrd1vYBuRUFl9zZJrwUSmWqtdeM3jA6cX4d+VWrgoJxzrmVEfRrN1z9UuZefjS
+        F28co4XC3vutyfzZvjNlrMneixez7DU6j6DV1S3afFcKQHRxpgFrLwTEEIi8dYoQ8JJCtHuyQUX
+        hD
+X-Google-Smtp-Source: AA6agR4FR8LZik9Jo3cU/LNblu1VdX9Zqjx2iNKvsAdHhmo4ptURKltHGcUZnDjDJnT5YV7qx01erQ==
+X-Received: by 2002:a17:902:e5c3:b0:175:534:1735 with SMTP id u3-20020a170902e5c300b0017505341735mr16522770plf.87.1662068875979;
+        Thu, 01 Sep 2022 14:47:55 -0700 (PDT)
+Received: from brian--MacBookPro18.purestorage.com ([136.226.79.10])
+        by smtp.gmail.com with ESMTPSA id w5-20020a17090ac98500b001f216407204sm90667pjt.36.2022.09.01.14.47.53
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Thu, 01 Sep 2022 14:47:54 -0700 (PDT)
+From:   Brian Bunker <brian@purestorage.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     Brian Bunker <brian@purestorage.com>,
+        Krishna Kant <krishna.kant@purestorage.com>,
+        Seamus Connor <sconnor@purestorage.com>
+Subject: [PATCH] scsi: core: Remove ACTION_RETRY since it is redundant
+Date:   Thu,  1 Sep 2022 14:47:49 -0700
+Message-Id: <20220901214749.18875-1-brian@purestorage.com>
+X-Mailer: git-send-email 2.32.1 (Apple Git-133)
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1755; h=from:subject; bh=oUzuUGbXdkp1+ygGE/o7VtLMEMLuK7W2INwNNN66ZAM=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBjERy4i+Rf8Ayy4CrbV48DD/6X4DpAkroVm50Cj5uh sv71xE2JAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYxEcuAAKCRCJcvTf3G3AJpDzEA Cd8W1sY7X84DJ0FrmFfuLa+ZjlQQUatfnd7b0ruJ68IJaDPeOBHvXksHzTL/lgsx7soHMIkKWKCSPu RrqxHmvFixKDblA8BpS7hbIIJeegU7sBtdnAki9ia8p9FApIdmXhPFyMMz2fM4FA3CyZgfnRayc48+ 6Smxu+Q99NPoleFhpCsmXinnnJTDd503wTO4NiGpTbcDWrPYeJ5e0x8GnUEAVROhULxlkRlbxpHqI3 6gqMM5Ph1XMND9OCIXJfZcYeLz7SvsMGOEHRmd4w8IhVI//X9y58Q2Cbsx8mY+wIVUgqOCfp85Dg6G m7W2S5lHhnXDb05xNwS5YGl7mS8ThrQ7nJE7lD33AfHhJJlYYgJn2gNah6DT4106PKIO6UcZaVByJE 8PWIl91PWIQ4QNPUqv0n/mnp6B/NP/Mg74OSl2CY0WJaDtHATF/jd20/8QyF4XZB+LlN9ET110uehr lSz3IVpK9tAaZFo0fceOl5ugCL817Up04qN0w+QP5s+DwzvfW5Pg/VgtL2SRHh7vz6odv0UTLW/t5H EuKeL51g+Fr4i1v/AUseF/TmkBqIbnSbs1a9skbGAqagXtVVvITH51oRMKmQYiTe2fICbLIuMHoaw+ A4CNBWPQU66jahnexI3eWPFDQFN/axCMKgHgkMo7CDFwpzIFY1NwOe8EebMw==
-X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In preparation for FORTIFY_SOURCE performing run-time destination buffer
-bounds checking for memcpy(), specify the destination output buffer
-explicitly, instead of asking memcpy() to write past the end of what
-looked like a fixed-size object. Silences future run-time warning:
+The case of ACTION_RETRY in scsi_io_completion_action does nothing
+different than ACTION_DELAYED_RETRY, and by name gives the idea
+that it does.
 
-  memcpy: detected field-spanning write (size 80) of single field "trc + 1" (size 64)
+Following ACTION_RETRY:
+__scsi_queue_insert(cmd, SCSI_MLQUEUE_EH_RETRY, false);
 
-There is no binary code output differences from this change.
+Following ACTION_DELAYED_RETRY:
+__scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY, false);
 
-Cc: Bradley Grove <linuxdrivers@attotech.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Kees Cook <keescook@chromium.org>
+Then __scsi_queue_insert calls scsi_set_blocked(cmd, reason) where
+both of the reasons set by ACTION_RETRY and ACTION_DELAYED_RETRY
+fall into the same case.
+
+    case SCSI_MLQUEUE_DEVICE_BUSY:
+    case SCSI_MLQUEUE_EH_RETRY:
+        atomic_set(&device->device_blocked,
+               device->max_device_blocked);
+        break;
+
+Acked-by: Krishna Kant <krishna.kant@purestorage.com>
+Acked-by: Seamus Connor <sconnor@purestorage.com>
+Signed-off-by: Brian Bunker <brian@purestorage.com>
 ---
- drivers/scsi/esas2r/atioctl.h      | 1 +
- drivers/scsi/esas2r/esas2r_ioctl.c | 3 +--
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/scsi_lib.c | 10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/esas2r/atioctl.h b/drivers/scsi/esas2r/atioctl.h
-index ff2ad9b38575..dd3437412ffc 100644
---- a/drivers/scsi/esas2r/atioctl.h
-+++ b/drivers/scsi/esas2r/atioctl.h
-@@ -831,6 +831,7 @@ struct __packed atto_hba_trace {
- 	u32 total_length;
- 	u32 trace_mask;
- 	u8 reserved2[48];
-+	u8 contents[];
- };
- 
- #define ATTO_FUNC_SCSI_PASS_THRU     0x04
-diff --git a/drivers/scsi/esas2r/esas2r_ioctl.c b/drivers/scsi/esas2r/esas2r_ioctl.c
-index 08f4e43c7d9e..e003d923acbf 100644
---- a/drivers/scsi/esas2r/esas2r_ioctl.c
-+++ b/drivers/scsi/esas2r/esas2r_ioctl.c
-@@ -947,10 +947,9 @@ static int hba_ioctl_callback(struct esas2r_adapter *a,
- 					break;
- 				}
- 
--				memcpy(trc + 1,
-+				memcpy(trc->contents,
- 				       a->fw_coredump_buff + offset,
- 				       len);
--
- 				hi->data_length = len;
- 			} else if (trc->trace_func == ATTO_TRC_TF_RESET) {
- 				memset(a->fw_coredump_buff, 0,
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index ef08029a0079..d85d72bc01f2 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -687,7 +687,7 @@ static void scsi_io_completion_action(struct scsi_cmnd *cmd, int result)
+ 	struct request *req = scsi_cmd_to_rq(cmd);
+ 	int level = 0;
+ 	enum {ACTION_FAIL, ACTION_REPREP, ACTION_DELAYED_REPREP,
+-	      ACTION_RETRY, ACTION_DELAYED_RETRY} action;
++	      ACTION_DELAYED_RETRY} action;
+ 	struct scsi_sense_hdr sshdr;
+ 	bool sense_valid;
+ 	bool sense_current = true;      /* false implies "deferred sense" */
+@@ -704,7 +704,7 @@ static void scsi_io_completion_action(struct scsi_cmnd *cmd, int result)
+ 		 * reasons.  Just retry the command and see what
+ 		 * happens.
+ 		 */
+-		action = ACTION_RETRY;
++		action = ACTION_DELAYED_RETRY;
+ 	} else if (sense_valid && sense_current) {
+ 		switch (sshdr.sense_key) {
+ 		case UNIT_ATTENTION:
+@@ -720,7 +720,7 @@ static void scsi_io_completion_action(struct scsi_cmnd *cmd, int result)
+ 				 * media change, so we just retry the
+ 				 * command and see what happens.
+ 				 */
+-				action = ACTION_RETRY;
++				action = ACTION_DELAYED_RETRY;
+ 			}
+ 			break;
+ 		case ILLEGAL_REQUEST:
+@@ -841,10 +841,6 @@ static void scsi_io_completion_action(struct scsi_cmnd *cmd, int result)
+ 	case ACTION_DELAYED_REPREP:
+ 		scsi_mq_requeue_cmd(cmd, ALUA_TRANSITION_REPREP_DELAY);
+ 		break;
+-	case ACTION_RETRY:
+-		/* Retry the same command immediately */
+-		__scsi_queue_insert(cmd, SCSI_MLQUEUE_EH_RETRY, false);
+-		break;
+ 	case ACTION_DELAYED_RETRY:
+ 		/* Retry the same command after a delay */
+ 		__scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY, false);
 -- 
-2.34.1
+2.32.1 (Apple Git-133)
 
