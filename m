@@ -2,289 +2,149 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA0D5ECAAD4
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Sep 2022 02:47:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A828ECAAD1
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Sep 2022 04:09:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231645AbiIACrx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 31 Aug 2022 22:47:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56246 "EHLO
+        id S231447AbiIAEJe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Sep 2022 00:09:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40988 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231441AbiIACrv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Aug 2022 22:47:51 -0400
-Received: from mail1.bemta37.messagelabs.com (mail1.bemta37.messagelabs.com [85.158.142.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52848F4935
-        for <linux-scsi@vger.kernel.org>; Wed, 31 Aug 2022 19:47:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
-        s=170520fj; t=1662000467; i=@fujitsu.com;
-        bh=+Y8nd+eZrZ315LpSmWo0jalQbY1Q6sUAbzM5b56m6LM=;
-        h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-         In-Reply-To:Content-Type:Content-Transfer-Encoding;
-        b=CgUPP0ybwgepUtgpNR9eZAhlBdu7xc/uAo2rDqSVnv4KD6y7s1sUmNgnb9v7nx8m3
-         BSYqBlXnWpAnOvGuN3zSjFjXlbPKr+EU2jJ1Q7KStR9OpTGrGMdDYVCbozogPCLtWr
-         +QD2SROoqj4F9xL8Qyrhv76xKAqUWE8xMwdxFbmspe2kd6VthQlA82DBU5rv8fF0k8
-         P0S+maUPTse7XzODAl0umPhWEaGT+rWZmAYqvsoE/DahHXF/+1995azi7ip+cZPThZ
-         0tCvxxKGSx6LvEy0VwIkCq9YhsUViXlpnPzHKlFxszWeLUtdaaV3y1dBIK7bs095Yz
-         9BKQzMrpCWaqQ==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrKKsWRWlGSWpSXmKPExsViZ8MxSTdIViD
-  Z4ORPSYtpH34yW+xZNInJYuXqo0wWi25sY7LYtL+J1aL7+g42i+XH/zFZ/J10g9Xi0ORmJgdO
-  j8tXvD1ajrxl9Ziw6ACjx+6bDWweH5/eYvF4v+8qm8fm09UenzfJBXBEsWbmJeVXJLBmfD6+n
-  anggUXF7hcNjA2MBw26GLk4hAS2MEos7HnKBOGsYJL41XOKDcLZxihxdNFj9i5GTg5eATuJyV
-  0vwGwWARWJqydnQMUFJU7OfMICYosKREg8fDQJzBYWMJVYO3UhG4jNLCAucevJfCYQW0QgVmJ
-  Z6zxWkAXMAo1MEhP37GUGSQgJWEi8bf/ICmKzCWhI3Gu5yQhicwpYSqzf3skOMchCYvGbg1C2
-  vMT2t3PAeiUEFCWOdP5lgbArJVo//IKy1SSuntvEPIFReBaSW2chuWkWkrGzkIxdwMiyitE2q
-  SgzPaMkNzEzR9fQwEDX0NAUQlua6yVW6SbqpZbq5uUXlWToGuollhfrpRYX6xVX5ibnpOjlpZ
-  ZsYgTGb0pxytEdjMf2/dI7xCjJwaQkyluxmD9ZiC8pP6UyI7E4I76oNCe1+BCjDAeHkgTvB3G
-  BZCHBotT01Iq0zBxgKoFJS3DwKInwcosApXmLCxJzizPTIVKnGO05ps7+t5+ZYzmYnPm17QAz
-  x6Z9XQeYhVjy8vNSpcR5K6WB2gRA2jJK8+CGwlLfJUZZKWFeRgYGBiGegtSi3MwSVPlXjOIcj
-  ErCvLukgKbwZOaVwO1+BXQWE9BZ02fyg5xVkoiQkmpgUtpx9syHC/EOvD8D9v+qO6C9lTO58D
-  FLfNTT4HB73Rn8HxyLmjfoLN34q3K25yltTYXXRuHK2XUOxx62vN6zL0My+0PM85+RJ2YVdyv
-  xaPu9yhL12CdRF83MXzQl2n9WuaSyZWyUxErhPHHfyYpeW4Pf8L28Hahndrfic2h3yZzpIncq
-  m29qf9t46BRPeY23M88e7Tf7jS8wFbmXHrdpEp/I/N3Y/cK9iVtkl5p7FPn7rr4VtDtz75rVd
-  S9PGPcLf63oa9+ofU006JbRvYOpjp813t2vu9vKsGnpxfwlWk+eLhUXkNJ7tGp7885j360WN5
-  xVntxrO/2uS1vPJcEdbR6xOsHiUiF7ty7vEH6hxFKckWioxVxUnAgArwMcW/gDAAA=
-X-Env-Sender: lizhijian@fujitsu.com
-X-Msg-Ref: server-3.tower-732.messagelabs.com!1662000465!411293!1
-X-Originating-IP: [62.60.8.146]
-X-SYMC-ESS-Client-Auth: outbound-route-from=pass
-X-StarScan-Received: 
-X-StarScan-Version: 9.87.3; banners=-,-,-
-X-VirusChecked: Checked
-Received: (qmail 23291 invoked from network); 1 Sep 2022 02:47:46 -0000
-Received: from unknown (HELO n03ukasimr02.n03.fujitsu.local) (62.60.8.146)
-  by server-3.tower-732.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 1 Sep 2022 02:47:46 -0000
-Received: from n03ukasimr02.n03.fujitsu.local (localhost [127.0.0.1])
-        by n03ukasimr02.n03.fujitsu.local (Postfix) with ESMTP id B98661000CC;
-        Thu,  1 Sep 2022 03:47:45 +0100 (BST)
-Received: from R01UKEXCASM223.r01.fujitsu.local (R01UKEXCASM223 [10.182.185.121])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by n03ukasimr02.n03.fujitsu.local (Postfix) with ESMTPS id AC9DD1000C2;
-        Thu,  1 Sep 2022 03:47:45 +0100 (BST)
-Received: from [10.167.226.45] (10.167.226.45) by
- R01UKEXCASM223.r01.fujitsu.local (10.182.185.121) with Microsoft SMTP Server
- (TLS) id 15.0.1497.32; Thu, 1 Sep 2022 03:47:41 +0100
-Message-ID: <7c8c4726-2244-3396-b2a3-9e7d02fc441a@fujitsu.com>
-Date:   Thu, 1 Sep 2022 10:46:51 +0800
+        with ESMTP id S229473AbiIAEJd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Sep 2022 00:09:33 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 21F44ACA3C
+        for <linux-scsi@vger.kernel.org>; Wed, 31 Aug 2022 21:09:31 -0700 (PDT)
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 27VNmmlZ028371;
+        Thu, 1 Sep 2022 04:09:29 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2022-7-12;
+ bh=8mNRgWTqTbdu2ZgEZjMIM2yRvFl6S5G/Ged+uMqlL+k=;
+ b=C045HEYsz4xEQptuPginFxwVQx2ZCma/Sv3hzhQkJ2Qh6pUatBKc2MB2/HeSwYnIpyiC
+ IwpBompVCxIwryEsKuISBD938o3uQ5PR39Ai7kpDrqYGYg+GHjLdrB+vltsPiELtna0R
+ +yIhBtz0vYMUPmC557dxyMZyOW0Mcm3zlbjARFZJHM6USiTOVUXfJV6E4IXEpYkFRCU0
+ 0rv7E38txha3+k93TRXBKvuERyuS3wEam6vUXX9kl6VdrhEwGkzdTaBWn1q3wL599Tq9
+ k0yXK2rzN7yEFotKp7rq8AOQXOBItREsDdUOJz+VeCxX3R7mevyIoGq5DgeCTf+xYuRa Iw== 
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3j7a22awuu-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 01 Sep 2022 04:09:29 +0000
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2813j4rT037809;
+        Thu, 1 Sep 2022 04:09:28 GMT
+Received: from nam02-bn1-obe.outbound.protection.outlook.com (mail-bn1nam07lp2040.outbound.protection.outlook.com [104.47.51.40])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3j79q5rp1u-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 01 Sep 2022 04:09:28 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=VjJQVdT0KGdlwQEsQuZeuffmBcT88hJxozB5I7iCjEasahHTWCaoqN+ubJImcQ42x+y0Zu7Zk5/bbYPEVf2LL6996fCcFQ1OI9HHyD2QGBPr8P7L5TzlK4UVV1lYCKL5tFEXtyNgHwZZhm3sBG4vBSjoWeZCvq9KGrVyfn3hFEHt0O31T7+O59GbhlT46h4PYyqP5ub0aJqiXmIcHVsWHt0wjNCFxT0QwjemEyosbIt8UeA6MCT6yBdViwSQ9Nw6Ma9gxmlPYQgFKLLk29K5+LujgJfnsOdC4cGfmEoVS++27f3CWF7c+mY3nsYffKFlL902lEpmYlaIcUq8A8BeAQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=8mNRgWTqTbdu2ZgEZjMIM2yRvFl6S5G/Ged+uMqlL+k=;
+ b=MLZFtVOpV1BBeJHBrBT+7abm1lAybYFQMqMitPPKF9vvqkomDD85/t6tTy4OsdZidPN3PysJrc8p1zk2FfYz22LwyawUOb6jw7KLDCexhGjbRUSv1pBDC3OEIWMVdJJyI8lb28uQm4YX06dLbc8TXBimq+uTB9BI5OKehMASfjYCJKqzCCadhaKpw7JsqjV3hfKOUQWz5jnMuMeq0aE5HBEvx2KA4EyuYKEtZZXPbLpnMfbgvS5FntE3uLp8UQIPwhUs23aNZEcXyH9yRZCx+Iv1VBgiKlqvAlx6yS0ILTXWTdIo7G9ncxgabZjEDcB7XJE2rsw3V+2jEBkfX9GERw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=8mNRgWTqTbdu2ZgEZjMIM2yRvFl6S5G/Ged+uMqlL+k=;
+ b=XMT29YYJbJHVgzzPlPjS6ZSFteZOV4JMya4PfZHDu2Ujxp96CITpA7ks0Y6aGzvVg91d/NTzeePBTFSiHpz+DeTVn1xDoYDyJLX/Oi31bOKanAtYt7ethjFSXllFHz0+gZvWh0yJbpeiaXskVCOfFJivCH2qlQ6Q5Fw1bSiDtcQ=
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by SA1PR10MB5867.namprd10.prod.outlook.com (2603:10b6:806:22b::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5588.10; Thu, 1 Sep
+ 2022 04:09:26 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::297f:836:f424:cd75]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::297f:836:f424:cd75%3]) with mapi id 15.20.5566.021; Thu, 1 Sep 2022
+ 04:09:26 +0000
+To:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
+Subject: Re: [PATCH] mpt3sas: Stop Error handler escalation when device removed
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1pmgfn3bp.fsf@ca-mkp.ca.oracle.com>
+References: <20220816080801.13929-1-sreekanth.reddy@broadcom.com>
+Date:   Thu, 01 Sep 2022 00:09:23 -0400
+In-Reply-To: <20220816080801.13929-1-sreekanth.reddy@broadcom.com> (Sreekanth
+        Reddy's message of "Tue, 16 Aug 2022 13:38:01 +0530")
+Content-Type: text/plain
+X-ClientProxiedBy: SN6PR01CA0010.prod.exchangelabs.com (2603:10b6:805:b6::23)
+ To PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [PATCH] scsi: core: Fix a use-after-free
-Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, Ming Lei <ming.lei@redhat.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Mike Christie <michael.christie@oracle.com>,
-        Hannes Reinecke <hare@suse.de>,
-        John Garry <john.garry@huawei.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20220826002635.919423-1-bvanassche@acm.org>
-From:   Li Zhijian <lizhijian@fujitsu.com>
-In-Reply-To: <20220826002635.919423-1-bvanassche@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.167.226.45]
-X-ClientProxiedBy: G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) To
- R01UKEXCASM223.r01.fujitsu.local (10.182.185.121)
-X-Virus-Scanned: ClamAV using ClamSMTP
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: f0573728-9b2e-4684-4b9c-08da8bcfc29c
+X-MS-TrafficTypeDiagnostic: SA1PR10MB5867:EE_
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: NDaDjUMkviHHH5NXNYbd3FwuWhHc4sGgTOcKeki6K+4ej1KuRSmRgHD6QI6N1UV5iKtgMn5iZ7lYmlHvPeohmvUDvmh+tkqNb72pwLBIN1+dqT/zKYwFr8LOPyBYm+IX4TI5INTDfchDqRMe4Tpj4he9qtiNrjZ5F/HZf15zwN1Ofj3m3onrzUTOV1PzW6CX0bLsidrbT/AZ98xt+QegGMzsh/4T7joN+qzHA8OcpNpy4O3vN7NriKcAvZuEVeqorJShILJuraUfryyvnxwOa2ZB2AEb0AW4T0bCc7H/TwLJIqLO4lSFAoi8BnwAvmktUoWO9nNNzQPryuXJEST77mrZnqifrJvupQNHpa8NoHYzE1bnIWcYERoyctsd+hTPo6yBdjXdlfJHEqtdnw4Kuw7eUVlfxu/eSmTEsxkEjQyA/LskSQq4tlqMXTFsO5/LKD2jDRpGvunerijxnceeowJo/mBFVeE4E5WNRjqMkvN6HOFsxP7OCPSSTkZmfboHcD1cE+xGimsEOkXjFEaDsrfmFA60yEtMMwpioy3TWGrYmzH7iQc/aD7pYSWO7InM1ycF6THzbMIElvCuOuHfq97zQyRkDAfSOUuStEg3SP29QXpII+BmXl0JRhyjT7QBWFWxOElgXYL/mZsW29RWbx/c0onL0Sm1gzYd9ZOqJnwkjjBU8UqmO1r+3sZelNnr6zEktwW1bONTysPayuWluMhxkK/ojzxx2BsmN4h61JHm2lNEDi0Yuw1yBPZA3vOAWQAEpk5cfXv4DgMXTB1SRwTcFMqy6XDx9alXAqGJlI4=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(136003)(376002)(346002)(396003)(366004)(39860400002)(41300700001)(186003)(6512007)(38100700002)(26005)(6666004)(107886003)(8936002)(66556008)(66476007)(66946007)(4326008)(8676002)(2906002)(4744005)(5660300002)(6486002)(86362001)(316002)(478600001)(6916009)(6506007)(52116002)(36916002)(38350700002)(32563001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?urMN3dG8R+XE+r7JOTdU0p8Qd6ikLCXdQFUt8n/NbmLFzYjhnzyIdxm9KsqB?=
+ =?us-ascii?Q?gWSDDzGZOVz6c4Mjbc9nHcMh5xD8wMFD5Gq04YDp4QddH2MejbV2cUTnasGQ?=
+ =?us-ascii?Q?jlcfkMDGADhrw4HvZIye8QL5a69mCZQmkdi8u99V2o1JffDQMXAJG9mxlIA4?=
+ =?us-ascii?Q?KDkBXDpBWt982jgykdMOxJHBVDzlyZfREG9g0Fma0EdsORJ3mPXzPISzy1av?=
+ =?us-ascii?Q?IggVxjz/eFYUOsSuo1/anCSr6RjSxQF/mFEPAhXsW4XMtdJkwfn259Ugk35R?=
+ =?us-ascii?Q?msq97mCojczs4pRCTD8SK5aKSO/vc8qXs8v9qTLPM4Uk5Et1FcfIt7gb6bFQ?=
+ =?us-ascii?Q?+QNLdCpt1e5pzrkC2Mk0G4jjEmWf6mv4BysJxTaAEQYJnGfiJ9mW37JnFRgo?=
+ =?us-ascii?Q?P7OrnTbYxcy9H2bChjw3o+SSBdYpFpohZ/mXYnYFz3uoPj6Nda6lh5ZXm3An?=
+ =?us-ascii?Q?a3zEfDqRsvPbYe4aqyJpbBqBmAGuLVygNdGZ1jIbhUPHAXMnBQegXtADoQ8o?=
+ =?us-ascii?Q?DGK0lKggrwj5xToxOrPUBgUhxk6VR4Nm5AvdSiGWQg4ZzvZHNDH6O42UsUGo?=
+ =?us-ascii?Q?qaqh8FbvHUCO/oxib2jGqzkyvV9z7KwAKd1l2wIftJQ4R7TTjdQxa5b3IppJ?=
+ =?us-ascii?Q?gA57qmqigfX2tTcRiQZW8v64gz1j3a1ahmezV/xn1ilTkfgOsUt7s1EBIU4w?=
+ =?us-ascii?Q?Z03cTVjUBCEjy9UrFIr61U4CPIhfDJV8ARE1b83b2y0xWAuOEb6eZTRcw/nu?=
+ =?us-ascii?Q?ODhvnPUrYVy6d2p0TSGjnil0Nj8JXS+hMt9Xsyi6LtnJmlxkOEkjCtRpEqJl?=
+ =?us-ascii?Q?5BZ0/9Lxy5hFNxjccMBLwKsaVw3Ceqdd/gPpKyztbLpTHMUDqXPcTM4UWWyo?=
+ =?us-ascii?Q?BYABoO5PIGFDdMGBPyKa7pW0ALijzC+zFwDq+2L04pcg3Xqowm1GdJsLyuH7?=
+ =?us-ascii?Q?EWRI0LYKkPW7nAvllASgwJndTB9M2u7r4ohxdAXyWjxeCOHTr4NBcQdS6pi0?=
+ =?us-ascii?Q?PRk5ikZEmtNHek7PSYQQ3gVYZfQ/r7zjqA8f87CTtnG/ER4l55Wom9wrMKq3?=
+ =?us-ascii?Q?iGex2wAgF/VSaWySqMrW1NUyTW6c+TkSjlFqTrB53p3oUBAkITiQ5tgzdO+X?=
+ =?us-ascii?Q?oe8VUuYVbttMFY1QJyokcGq+YEBU0CUD9GA6Ohdza/64TCriH53zaYOhLevd?=
+ =?us-ascii?Q?hp8B6G4aTVYavNwZpoge3XcXAqQRsZ+RB/V8H382Odz6DEUigrL1Voh2WzAA?=
+ =?us-ascii?Q?RHgqPtt9+VlVWf8ykWmTdnlbt0hrL3wCUOZz0OyHseI2k2mLdx5Z8vXyVyk/?=
+ =?us-ascii?Q?OA6JG0vIugV8uFNElGaJTXna6RrgN71FPwx7TNRqn3ZQ3ItxPyhxlpLyQbph?=
+ =?us-ascii?Q?lOQ/K8MsFnHGpnCAksXxGaITCOjMpYH3V2JgEC57u/S9WdFzrgl90G3npSm/?=
+ =?us-ascii?Q?xIIlBsS8Y/7edx/mvWnhEnCs6rE82cV5BsVmxjnP1DuIAWecFOs8WMsOhKj5?=
+ =?us-ascii?Q?c2le+mQdGzyVx7iMei8pSxFB1TmSptOQFRd/vR8uvwfqAqI0BMYqTn9wzf88?=
+ =?us-ascii?Q?ROgkT/SQB4sVI+T+IYDVHCcPVqZAOc/KVvTad+lrz1QXthNRJwX7guKewd6E?=
+ =?us-ascii?Q?wA=3D=3D?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f0573728-9b2e-4684-4b9c-08da8bcfc29c
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Sep 2022 04:09:26.7266
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: kRpp9xf9Aw9wiTZPrA+8GRn3dS6+VZqrRfLVWG+NHDG/xWvgeEyciujvNHQyFhOyyyiSGvwrwHQVwfvmLgm+OdBnMNDfh62eaXPUne7m1qI=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR10MB5867
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.517,FMLib:17.11.122.1
+ definitions=2022-09-01_02,2022-08-31_03,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxscore=0 malwarescore=0
+ suspectscore=0 spamscore=0 adultscore=0 mlxlogscore=990 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2207270000
+ definitions=main-2209010019
+X-Proofpoint-GUID: n0t8oesGmNK1dOMdyPbjOrMzc2a9vZeu
+X-Proofpoint-ORIG-GUID: n0t8oesGmNK1dOMdyPbjOrMzc2a9vZeu
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
+Sreekanth,
 
-On 26/08/2022 08:26, Bart Van Assche wrote:
-> There are two .exit_cmd_priv implementations. Both implementations use
-> resources associated with the SCSI host. Make sure that these resources are
-> still available when .exit_cmd_priv is called by waiting inside
-> scsi_remove_host() until the tag set has been freed.
->
-> This patch fixes the following use-after-free:
->
-> ==================================================================
-> BUG: KASAN: use-after-free in srp_exit_cmd_priv+0x27/0xd0 [ib_srp]
-> Read of size 8 at addr ffff888100337000 by task multipathd/16727
-> Call Trace:
->   <TASK>
->   dump_stack_lvl+0x34/0x44
->   print_report.cold+0x5e/0x5db
->   kasan_report+0xab/0x120
->   srp_exit_cmd_priv+0x27/0xd0 [ib_srp]
->   scsi_mq_exit_request+0x4d/0x70
->   blk_mq_free_rqs+0x143/0x410
->   __blk_mq_free_map_and_rqs+0x6e/0x100
->   blk_mq_free_tag_set+0x2b/0x160
->   scsi_host_dev_release+0xf3/0x1a0
->   device_release+0x54/0xe0
->   kobject_put+0xa5/0x120
->   device_release+0x54/0xe0
->   kobject_put+0xa5/0x120
->   scsi_device_dev_release_usercontext+0x4c1/0x4e0
->   execute_in_process_context+0x23/0x90
->   device_release+0x54/0xe0
->   kobject_put+0xa5/0x120
->   scsi_disk_release+0x3f/0x50
->   device_release+0x54/0xe0
->   kobject_put+0xa5/0x120
->   disk_release+0x17f/0x1b0
->   device_release+0x54/0xe0
->   kobject_put+0xa5/0x120
->   dm_put_table_device+0xa3/0x160 [dm_mod]
->   dm_put_device+0xd0/0x140 [dm_mod]
->   free_priority_group+0xd8/0x110 [dm_multipath]
->   free_multipath+0x94/0xe0 [dm_multipath]
->   dm_table_destroy+0xa2/0x1e0 [dm_mod]
->   __dm_destroy+0x196/0x350 [dm_mod]
->   dev_remove+0x10c/0x160 [dm_mod]
->   ctl_ioctl+0x2c2/0x590 [dm_mod]
->   dm_ctl_ioctl+0x5/0x10 [dm_mod]
->   __x64_sys_ioctl+0xb4/0xf0
->   dm_ctl_ioctl+0x5/0x10 [dm_mod]
->   __x64_sys_ioctl+0xb4/0xf0
->   do_syscall_64+0x3b/0x90
->   entry_SYSCALL_64_after_hwframe+0x46/0xb0
->
-> Cc: Ming Lei <ming.lei@redhat.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Mike Christie <michael.christie@oracle.com>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: John Garry <john.garry@huawei.com>
-> Cc: Li Zhijian <lizhijian@fujitsu.com>
-> Reported-by: Li Zhijian <lizhijian@fujitsu.com>
-> Fixes: 65ca846a5314 ("scsi: core: Introduce {init,exit}_cmd_priv()")
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> If SCSI Error Handler is going on for timedout I/Os on a drive and
+> that corresponding drive is removed then stop escalating to higher
+> level of reset by returning the TUR with "I_T NEXUS LOSS OCCURRED"
+> sense key.
 
-I tested this after reverted previous 4 patches(https://lore.kernel.org/linux-scsi/20220821220502.13685-1-bvanassche@acm.org/).
-Above UFA is gone, feel free to add my tested-by :)
+Applied to 6.1/scsi-staging, thanks!
 
-Thanks
-Zhijian
-
-
-> ---
->   drivers/scsi/hosts.c      | 16 +++++++++++++---
->   drivers/scsi/scsi_lib.c   |  6 +++++-
->   drivers/scsi/scsi_priv.h  |  2 +-
->   drivers/scsi/scsi_scan.c  |  1 +
->   drivers/scsi/scsi_sysfs.c |  1 +
->   include/scsi/scsi_host.h  |  2 ++
->   6 files changed, 23 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-> index 26bf3b153595..9857dba09c95 100644
-> --- a/drivers/scsi/hosts.c
-> +++ b/drivers/scsi/hosts.c
-> @@ -182,6 +182,15 @@ void scsi_remove_host(struct Scsi_Host *shost)
->   	mutex_unlock(&shost->scan_mutex);
->   	scsi_proc_host_rm(shost);
->   
-> +	/*
-> +	 * New SCSI devices cannot be attached anymore because of the SCSI host
-> +	 * state so drop the tag set refcnt. Wait until the tag set refcnt drops
-> +	 * to zero because .exit_cmd_priv implementations may need the host
-> +	 * pointer.
-> +	 */
-> +	kref_put(&shost->tagset_refcnt, scsi_mq_free_tags);
-> +	wait_for_completion(&shost->tagset_freed);
-> +
->   	spin_lock_irqsave(shost->host_lock, flags);
->   	if (scsi_host_set_state(shost, SHOST_DEL))
->   		BUG_ON(scsi_host_set_state(shost, SHOST_DEL_RECOVERY));
-> @@ -245,6 +254,9 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
->   	if (error)
->   		goto fail;
->   
-> +	kref_init(&shost->tagset_refcnt);
-> +	init_completion(&shost->tagset_freed);
-> +
->   	/*
->   	 * Increase usage count temporarily here so that calling
->   	 * scsi_autopm_put_host() will trigger runtime idle if there is
-> @@ -317,6 +329,7 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
->   	pm_runtime_disable(&shost->shost_gendev);
->   	pm_runtime_set_suspended(&shost->shost_gendev);
->   	pm_runtime_put_noidle(&shost->shost_gendev);
-> +	kref_put(&shost->tagset_refcnt, scsi_mq_free_tags);
->    fail:
->   	return error;
->   }
-> @@ -350,9 +363,6 @@ static void scsi_host_dev_release(struct device *dev)
->   		kfree(dev_name(&shost->shost_dev));
->   	}
->   
-> -	if (shost->tag_set.tags)
-> -		scsi_mq_destroy_tags(shost);
-> -
->   	kfree(shost->shost_data);
->   
->   	ida_free(&host_index_ida, shost->host_no);
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 4dbd29ab1dcc..1f30e0c54e55 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1976,9 +1976,13 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
->   	return blk_mq_alloc_tag_set(tag_set);
->   }
->   
-> -void scsi_mq_destroy_tags(struct Scsi_Host *shost)
-> +void scsi_mq_free_tags(struct kref *kref)
->   {
-> +	struct Scsi_Host *shost = container_of(kref, typeof(*shost),
-> +					       tagset_refcnt);
-> +
->   	blk_mq_free_tag_set(&shost->tag_set);
-> +	complete(&shost->tagset_freed);
->   }
->   
->   /**
-> diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-> index 429663bd78ec..f385b3f04d6e 100644
-> --- a/drivers/scsi/scsi_priv.h
-> +++ b/drivers/scsi/scsi_priv.h
-> @@ -94,7 +94,7 @@ extern void scsi_run_host_queues(struct Scsi_Host *shost);
->   extern void scsi_requeue_run_queue(struct work_struct *work);
->   extern void scsi_start_queue(struct scsi_device *sdev);
->   extern int scsi_mq_setup_tags(struct Scsi_Host *shost);
-> -extern void scsi_mq_destroy_tags(struct Scsi_Host *shost);
-> +extern void scsi_mq_free_tags(struct kref *kref);
->   extern void scsi_exit_queue(void);
->   extern void scsi_evt_thread(struct work_struct *work);
->   
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index 91ac901a6682..5d27f5196de6 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -340,6 +340,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
->   		kfree(sdev);
->   		goto out;
->   	}
-> +	kref_get(&sdev->host->tagset_refcnt);
->   	sdev->request_queue = q;
->   	q->queuedata = sdev;
->   	__scsi_init_queue(sdev->host, q);
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index aa70d9282161..5d61f58399dc 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -1476,6 +1476,7 @@ void __scsi_remove_device(struct scsi_device *sdev)
->   	mutex_unlock(&sdev->state_mutex);
->   
->   	blk_mq_destroy_queue(sdev->request_queue);
-> +	kref_put(&sdev->host->tagset_refcnt, scsi_mq_free_tags);
->   	cancel_work_sync(&sdev->requeue_work);
->   
->   	if (sdev->host->hostt->slave_destroy)
-> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-> index b6e41ee3d566..9b0a028bf053 100644
-> --- a/include/scsi/scsi_host.h
-> +++ b/include/scsi/scsi_host.h
-> @@ -557,6 +557,8 @@ struct Scsi_Host {
->   	struct scsi_host_template *hostt;
->   	struct scsi_transport_template *transportt;
->   
-> +	struct kref		tagset_refcnt;
-> +	struct completion	tagset_freed;
->   	/* Area to keep a shared tag map */
->   	struct blk_mq_tag_set	tag_set;
->   
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
