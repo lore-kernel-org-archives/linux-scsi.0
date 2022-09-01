@@ -2,137 +2,131 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54D4DECAAD4
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Sep 2022 00:25:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CC93ECAAD1
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Sep 2022 00:51:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231863AbiIAAZB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 31 Aug 2022 20:25:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39366 "EHLO
+        id S231955AbiIAAv0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 31 Aug 2022 20:51:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48536 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231873AbiIAAY4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Aug 2022 20:24:56 -0400
-Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E4E518B3B
-        for <linux-scsi@vger.kernel.org>; Wed, 31 Aug 2022 17:24:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1661991894; x=1693527894;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=ooxA17H90r4EJBbz/H4WAry0ZgcsiZQD5fz0PPvFxIs=;
-  b=gDG7io/KQCQUIvFDnjlaROER3QEXzb2lW/iN0bnIi+hTfzeMfjXtCBkf
-   wx/PJ54ynS6KeByChXxJmFjGyxMWJICByVeNWPA7tAqt+ly2dYyhbuYn4
-   BJXOk0+ZN1oTY9MJ/fieZjNXKfFgUvgK6/ukPbWU74lqEgiPxN25HVLO3
-   1utrznlbGf+OXK5px5G1QKKwOR15pqkFNV61lbxVTu+NIqCkAR7D5KtKA
-   uG9HwWbxvayOMKaF6+tcPQirCRAG7zT/YbUkTu/z1GCMtMT4X3GcOGvff
-   f4fpANUKNz7+bMPIhpv7oPf2iKFlmeLLAdcJsXWAJUX/QAcWPi47SFBQ9
-   w==;
-X-IronPort-AV: E=Sophos;i="5.93,279,1654531200"; 
-   d="scan'208";a="210170854"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 01 Sep 2022 08:24:50 +0800
-IronPort-SDR: PXYWlCerEt5sbOONEPV0sGc3r9j45koWaXjz4Zqv028SscVL0zHZh2p9Mx0wUJ0DTIJyJpVSFh
- k5yXM7OFVxCIrcjR7ScyvrLqEWBg3fI1XJAI6kpdgmHOMOopl8laFRlrZ9Sw7rIat8V0CmsXHe
- ZvPBSkkoi0Hw+K8kzHm69KVz22uFwaRyu6+c59wrDsJa0fROvKtK6VYJNMUXQlol1Rq/jfYBUl
- tQR3cZMpVTnfHYsly50LUxDzriIOjBwamG+e5IHHhgN5d3ivcvxkxnND0WYSGfNKxhC1YA+NEs
- jM+Kvt0hpm85ntxC+/YsFleo
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 31 Aug 2022 16:45:21 -0700
-IronPort-SDR: fPtupGXV4K2Fuuk6aWyVoo6cKaigTwBqoC1NNgTNEY2RSVjzxL2YtGdAdMeoH0BE+t6cH+JOzD
- JDmqV/57FdC7ckUbsdyFl87Rq9X5FVdcufXdoJ2+nij+Lujdgk2C326zyW+9/m6m+vPkR83UrJ
- LDcfz9tE6gM233EZGJrwoXXCTd0MBiwOv5jrionCi4nmEKfHENLTmDQpzM4x90/oL5d8RV1Xpj
- avxqEK1uc5Q5yEHUIEsclHDMDgpvZmb6BtNlStA6hkof8LnngDjyyf34mA3ZBpZjd1g+uQVl3S
- kyE=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 31 Aug 2022 17:24:52 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MJ1yW2DSMz1RwvT
-        for <linux-scsi@vger.kernel.org>; Wed, 31 Aug 2022 17:24:51 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1661991890; x=1664583891; bh=ooxA17H90r4EJBbz/H4WAry0ZgcsiZQD5fz
-        0PPvFxIs=; b=sm28BkyJoQu2n/DP7jG1tYAQzBzENRq2rbMtWbMtT9u0tjKbVHg
-        xZ0mNNRQgboxwzmIzm7RRWP1g9+xKjxDd5KI0XG8Ic6qs1daIZeT9y8PLK+e2C1H
-        EGhZKRQhg7dNBJvNaY+5uSNjYqHbuZYBXv9gLY+zFy8WP3ngddfinR0uKCugEgZH
-        giVD5RjYgCPlVFgdQz9YYHd2BAhQPFRrfmcEcDrZcmNZiJleFFy5N1gzeWnFDHbT
-        6I4IbHFwYp/5NorqHFZr+H2tVysbxYBBEzU0V+3MYU3ermRweU/QxGUXbL6VTRmk
-        JGkjBp1qMVXesiHFCmn3cz3WXFyA4sEQHIQ==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id Pw_i5QxVoTJr for <linux-scsi@vger.kernel.org>;
-        Wed, 31 Aug 2022 17:24:50 -0700 (PDT)
-Received: from [10.225.163.56] (unknown [10.225.163.56])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MJ1yT0sCjz1RvLy;
-        Wed, 31 Aug 2022 17:24:48 -0700 (PDT)
-Message-ID: <a4a486b3-7acc-090f-d9c5-bac7a2239482@opensource.wdc.com>
-Date:   Thu, 1 Sep 2022 09:24:48 +0900
+        with ESMTP id S229737AbiIAAvZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Aug 2022 20:51:25 -0400
+Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF917D87E6;
+        Wed, 31 Aug 2022 17:51:22 -0700 (PDT)
+Received: by mail-pf1-x431.google.com with SMTP id p185so16027379pfb.13;
+        Wed, 31 Aug 2022 17:51:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:from:to:cc:subject:date;
+        bh=L02Sp50hPwKNmfsR7li6CwKxaHvMpyrjFzMp+2/RDYc=;
+        b=YifSQirQGhLAjW66wrrOh4zVneYTdfs1QnXaG48PYfcduXj4zsFO077Z/ZDE0cDM2q
+         YfbcDVb5XJAp2l/Qxug9wF150vOWJvZaJCT5P0SpLPkPASaOxxr4Nnu3vg76nIW/xEEV
+         BtGeqxUQEtVJ7mA/0ddwxHYmjKGboY7hpx2TCvgmvc5no+ksC2UFDwshDIkpyJiNKHr5
+         tXxWsq76ISWPQj+WmuWNb6V7NH+wB7MjLL2Gss/cR8g06jWvQ8FR+W3B9ME5rT7/cqbK
+         hYq+sef+l77lOoYSQlkyyymIEsXKN6q8U7k5gWcDbz8tlb6WoXNIK3Az5ujmv1bOmlZB
+         VAkA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:x-gm-message-state:from:to:cc
+         :subject:date;
+        bh=L02Sp50hPwKNmfsR7li6CwKxaHvMpyrjFzMp+2/RDYc=;
+        b=ZnsTq/ZkhxCHlUkYkXoCNxlyw4QxuQU97V7+89mFsYrLId4fX3xPRHXDvHHx/NfKNS
+         /603BUBC54j4reATSEu3RVPg2xGURSAnOQ073Bu7QHf9yZ0i8YZgKbbiJcxIi8u6JZJh
+         P3VmHVH29DToT9JFJwRq5bSL/JED4UZZNaABz4smsb9Sa/3GumvlAhBEeuRWl7+X287+
+         5sgPf1fHpMbgn69cZePU45lUkA5KLvUazcRA/kHSbjdh96aC+mPrXzTJg//E/RQgIrQl
+         U/VE+FVl0iFwIWAoWw6opjBt75/S1NgXray6d5ZOTzfpbDC50V7+gpzYAF8FE2t+5irk
+         osBw==
+X-Gm-Message-State: ACgBeo3/cggA4b1KCsNUAQCt5hF0sn6PxtqqtBPOKxH5p37l4OAjm5NT
+        zpSmSCtwND0q9JYB1zfK8mo=
+X-Google-Smtp-Source: AA6agR6gpVpjALUClbmTEgMzN+B80iOVObZm2fd2eiysi4JbneIjQ7VClEXw/bKexeeYHktLEdRIIw==
+X-Received: by 2002:a63:d1f:0:b0:422:7774:1969 with SMTP id c31-20020a630d1f000000b0042277741969mr23785234pgl.88.1661993481278;
+        Wed, 31 Aug 2022 17:51:21 -0700 (PDT)
+Received: from carlis-virtual-machine ([156.236.96.164])
+        by smtp.gmail.com with ESMTPSA id d81-20020a621d54000000b0052ac12e7596sm11771524pfd.114.2022.08.31.17.51.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 31 Aug 2022 17:51:20 -0700 (PDT)
+Date:   Thu, 1 Sep 2022 08:51:14 +0800
+From:   <zhangxuezhi3@gmail.com>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com, bvanassche@acm.org,
+        johannes.thumshirn@wdc.com, himanshu.madhani@oracle.com,
+        zhangxuezhi1@coolpad.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: csiostor: convert sysfs snprintf to sysfs_emit
+Message-ID: <20220901085114.4a6a5a99@carlis-virtual-machine>
+In-Reply-To: <b2a4ba8c-c67b-3041-9b81-783611de0763@opensource.wdc.com>
+References: <20220831141046.406837-1-zhangxuezhi3@gmail.com>
+        <b2a4ba8c-c67b-3041-9b81-783611de0763@opensource.wdc.com>
+X-Mailer: Claws Mail 3.17.5 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.0
-Subject: Re: [PATCH] scsi: megaraid: convert sysfs snprintf to sysfs_emit
-Content-Language: en-US
-To:     Xuezhi Zhang <zhangxuezhi3@gmail.com>, kashyap.desai@broadcom.com,
-        sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Xuezhi Zhang <zhangxuezhi1@coolpad.com>
-References: <20220831140325.396295-1-zhangxuezhi3@gmail.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <20220831140325.396295-1-zhangxuezhi3@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/31/22 23:03, Xuezhi Zhang wrote:
-> From: Xuezhi Zhang <zhangxuezhi1@coolpad.com>
+On Thu, 1 Sep 2022 09:23:58 +0900
+Damien Le Moal <damien.lemoal@opensource.wdc.com> wrote:
+
+> On 8/31/22 23:10, Xuezhi Zhang wrote:
+> > From: Xuezhi Zhang <zhangxuezhi1@coolpad.com>
+> > 
+> > Fix up all sysfs show entries to use sysfs_emit
+> > 
+> > Signed-off-by: Xuezhi Zhang <zhangxuezhi1@coolpad.com>
+> > ---
+> >  drivers/scsi/csiostor/csio_scsi.c | 8 ++++----
+> >  1 file changed, 4 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/drivers/scsi/csiostor/csio_scsi.c
+> > b/drivers/scsi/csiostor/csio_scsi.c index
+> > 9aafe0002ab1..39e8c3c26a19 100644 ---
+> > a/drivers/scsi/csiostor/csio_scsi.c +++
+> > b/drivers/scsi/csiostor/csio_scsi.c @@ -1366,9 +1366,9 @@
+> > csio_show_hw_state(struct device *dev, struct csio_hw *hw =
+> > csio_lnode_to_hw(ln); 
+> >  	if (csio_is_hw_ready(hw))
+> > -		return snprintf(buf, PAGE_SIZE, "ready\n");
+> > +		return sysfs_emit(buf, "ready\n");
+> >  	else  
 > 
-> Fix up all sysfs show entries to use sysfs_emit
+> While at it, you could remove this useless else here.
 > 
-> Signed-off-by: Xuezhi Zhang <zhangxuezhi1@coolpad.com>
-
-Looks OK.
-
-Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-
-> ---
->  drivers/scsi/megaraid/megaraid_mbox.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+> > -		return snprintf(buf, PAGE_SIZE, "not ready\n");
+> > +		return sysfs_emit(buf,  "not ready\n");  
 > 
-> diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
-> index 157c3bdb50be..132de68c14e9 100644
-> --- a/drivers/scsi/megaraid/megaraid_mbox.c
-> +++ b/drivers/scsi/megaraid/megaraid_mbox.c
-> @@ -3979,7 +3979,7 @@ megaraid_mbox_app_hndl_show(struct device *dev, struct device_attribute *attr, c
->  
->  	app_hndl = mraid_mm_adapter_app_handle(adapter->unique_id);
->  
-> -	return snprintf(buf, 8, "%u\n", app_hndl);
-> +	return sysfs_emit(buf, "%u\n", app_hndl);
->  }
->  
->  
-> @@ -4048,7 +4048,7 @@ megaraid_mbox_ld_show(struct device *dev, struct device_attribute *attr, char *b
->  		}
->  	}
->  
-> -	return snprintf(buf, 36, "%d %d %d %d\n", scsi_id, logical_drv,
-> +	return sysfs_emit(buf, "%d %d %d %d\n", scsi_id, logical_drv,
->  			ldid_map, app_hndl);
->  }
->  
+> Extra space after the ",".
+Hi,
+  OK, I see.
 
--- 
-Damien Le Moal
-Western Digital Research
+Thanks.
+> 
+> >  }
+> >  
+> >  /* Device reset */
+> > @@ -1430,7 +1430,7 @@ csio_show_dbg_level(struct device *dev,
+> >  {
+> >  	struct csio_lnode *ln = shost_priv(class_to_shost(dev));
+> >  
+> > -	return snprintf(buf, PAGE_SIZE, "%x\n",
+> > ln->params.log_level);
+> > +	return sysfs_emit(buf, "%x\n", ln->params.log_level);
+> >  }
+> >  
+> >  /* Store debug level */
+> > @@ -1476,7 +1476,7 @@ csio_show_num_reg_rnodes(struct device *dev,
+> >  {
+> >  	struct csio_lnode *ln = shost_priv(class_to_shost(dev));
+> >  
+> > -	return snprintf(buf, PAGE_SIZE, "%d\n",
+> > ln->num_reg_rnodes);
+> > +	return sysfs_emit(buf, "%d\n", ln->num_reg_rnodes);
+> >  }
+> >  
+> >  static DEVICE_ATTR(num_reg_rnodes, S_IRUGO,
+> > csio_show_num_reg_rnodes, NULL);  
+> 
 
