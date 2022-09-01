@@ -2,128 +2,125 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C09F2ECAAD1
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Sep 2022 07:26:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7335ECAAD1
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Sep 2022 12:54:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234060AbiIAH0n (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Sep 2022 03:26:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46168 "EHLO
+        id S232631AbiIAMy1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Sep 2022 08:54:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43790 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233958AbiIAHZp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Sep 2022 03:25:45 -0400
-Received: from mail-wm1-x334.google.com (mail-wm1-x334.google.com [IPv6:2a00:1450:4864:20::334])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AFA7CD7;
-        Thu,  1 Sep 2022 00:24:47 -0700 (PDT)
-Received: by mail-wm1-x334.google.com with SMTP id k6-20020a05600c1c8600b003a54ecc62f6so867380wms.5;
-        Thu, 01 Sep 2022 00:24:46 -0700 (PDT)
+        with ESMTP id S229555AbiIAMy0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Sep 2022 08:54:26 -0400
+Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5ADC2DC3;
+        Thu,  1 Sep 2022 05:54:25 -0700 (PDT)
+Received: by mail-pj1-x102b.google.com with SMTP id m10-20020a17090a730a00b001fa986fd8eeso2382514pjk.0;
+        Thu, 01 Sep 2022 05:54:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date;
-        bh=cY+l91tY+B7VM/dwzAL+zzuJF29Y5udGdyhz4umwy4c=;
-        b=JMBTTuo92KjqPR1nvLS7pzREKSahOWSc59GZOXo6jLd42B8esThrfa6K0hDo3alo2s
-         Od/aXaTam70uLvGtpyqd/qF0Diaz+xx0vyookpI9wDKyd45zoFpnTNjJZqmCk7TBY0Fz
-         uUyzMqTGcAGpLoarv2Y9l5iqaS5lIw6LEWJJDem5mz9++3NABZNJObnAjq7uy8U0gS5b
-         kfLsSOPyuHZ1jz5EaKOEH+/m/+sFdsytwlIVZiQDarH9mM5ndjyqIkdgAdqSPKHAzykw
-         9J9Z62jF5oAU3YyJtFLBP4AuewKXwQ3rp9PYRzN8hbiLxBWpGx3HTxU55pDhntfGLPTh
-         DnUg==
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date;
+        bh=ZBXyYbYjQ1AsjxuVxx4OCp5VVoXL3nUBzDg8QRR75Cw=;
+        b=WnHhs39GjiACyx1YZGfcMNOiD+GKbXQiXCm71Qomry9SIGHoGWdN+80ZFj9VXdhEYI
+         dq7PMFNY+y9281NgJD+VbB2thOod2gj5nTmUx+7c9QiZY+d3l3jDo/lYLaqJ+LcKPrY3
+         ZuNo0bmvR4FWCpJh3yhmCTKvIY0ZdKoEB4lvhqYdlftEWIjesaQEi6Y4ExeIqDkVSW0y
+         TE5o5gIzY3KT2nFpFOGXyXJwWydTTGPKmS2n98hr20yKyvZZJvoxNi+4BVkfu+v5IOZF
+         eOm4ObIPC29EcBd8mn+3tB8eiwzQN/5IDQIaz3+uiFtTCHL15yM7PB2l4ecCsvgP+XsK
+         SIbA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date;
-        bh=cY+l91tY+B7VM/dwzAL+zzuJF29Y5udGdyhz4umwy4c=;
-        b=Z6kL2P3tRIUHJyI/jIR1Ec879/cGUl2wcLg5UifZ8M0S4BpFO+ywdSukHqpaIYyilb
-         vM5bPhApNrkLaLDTtFyeWKXyd/d37InASh7yz5sOOQVN1hMjVZJ6JThINOMfVdBxCzPA
-         mw3LMCqGwCINTMDV5UqMw6JpLeePVqdbP3mIjUmQFIvkMH7o12Mj4no+ZLfCjmHZDpcH
-         3Y9WUe/EFTPvMrU+Of+jt3MCAG99gzfAWuPH2mmiiYAm1GTdZjAtfhcSSYSv7PMMa0BH
-         t7ZKp1kWgb7vRYfCTbEeN+KWePJkuFGSVJepIXbVnQOl2fYtS/nQ2Zh/KLdhqQJTJUSm
-         B2Tg==
-X-Gm-Message-State: ACgBeo2VhGjYNIK/H+5LXWqggT5jvEf8g6V0MsCHCu+CFZ3wiO+kp/R2
-        l4MrHTaKzvMt4ducsmoH8eY=
-X-Google-Smtp-Source: AA6agR5IOp0jyrkB6srkGByyAJaQ8JbsPW7iUCbNEpviTFAoIvUnxByzaCjG+dWybZU8uW4Dvgk7mg==
-X-Received: by 2002:a05:600c:4ec6:b0:3a5:ff4e:54d4 with SMTP id g6-20020a05600c4ec600b003a5ff4e54d4mr4153923wmq.25.1662017085601;
-        Thu, 01 Sep 2022 00:24:45 -0700 (PDT)
-Received: from localhost (87-126-55-15.ip.btc-net.bg. [87.126.55.15])
-        by smtp.gmail.com with ESMTPSA id n18-20020a05600c501200b003a32251c3f9sm5173723wmr.5.2022.09.01.00.24.43
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 01 Sep 2022 00:24:45 -0700 (PDT)
-From:   Iskren Chernev <iskren.chernev@gmail.com>
-To:     Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>
-Cc:     phone-devel@vger.kernel.org, ~postmarketos/upstreaming@lists.sr.ht,
-        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        Iskren Chernev <iskren.chernev@gmail.com>,
-        Andy Gross <agross@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@somainline.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 08/14] dt-bindings: ufs: qcom: Add sm6115 binding
-Date:   Thu,  1 Sep 2022 10:24:07 +0300
-Message-Id: <20220901072414.1923075-9-iskren.chernev@gmail.com>
-X-Mailer: git-send-email 2.37.2
-In-Reply-To: <20220901072414.1923075-1-iskren.chernev@gmail.com>
-References: <20220901072414.1923075-1-iskren.chernev@gmail.com>
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date;
+        bh=ZBXyYbYjQ1AsjxuVxx4OCp5VVoXL3nUBzDg8QRR75Cw=;
+        b=Df7YmwS/8fBxd5jYlHTbxVV7P0kCK2RRQUHRtf3UvcEqtp1XI0jLP3dx2RLY/SDR07
+         Ni1gaA2iTrggppsTlD5lOAe8mVtWXg+UQtHJZf8FrTZ2Y7w5WJl/Ufl2vBVOKQAhZBuQ
+         Zy+btVucgj0lwNF4zasnkq+5rAJ5TbL+BNE81lL4puhR+HEX91HCtLpdSo8oNT8Il3g1
+         l6rirxxvYpxpThfQTDJgXAbt5uzCuZsAkgwsDmr6VbNNxyoqART7VFIj1csFRwM4Xq2R
+         0zFmIX6NFKlXs6jtJJDB9KxnYRtrBdB8lOYMUE1H3kF5/pO1N/A1dRoqfLzrmGt7hu2h
+         Ebxw==
+X-Gm-Message-State: ACgBeo2a5CAvUXO0iHqHv39VklKtsAJJoQ3mZUu+FcgYwSW5svyzhZjM
+        CvQL6d0S9nna9BFtLF5fCwA=
+X-Google-Smtp-Source: AA6agR66J9l8BTovYfePaPwqu67KsA/hbYWIKHaprzXv47is6c5uEGMxUGnkuVOEjfvcyxQuY1Xg6w==
+X-Received: by 2002:a17:902:e552:b0:16d:2a83:e751 with SMTP id n18-20020a170902e55200b0016d2a83e751mr29383363plf.39.1662036865113;
+        Thu, 01 Sep 2022 05:54:25 -0700 (PDT)
+Received: from localhost ([166.111.139.139])
+        by smtp.gmail.com with ESMTPSA id lj13-20020a17090b344d00b001fac8076cd8sm1507048pjb.46.2022.09.01.05.54.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 01 Sep 2022 05:54:23 -0700 (PDT)
+From:   Zixuan Fu <r33s3n6@gmail.com>
+To:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
+        shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, baijiaju1990@gmail.com,
+        Zixuan Fu <r33s3n6@gmail.com>,
+        TOTE Robot <oslab@tsinghua.edu.cn>
+Subject: [PATCH] scsi: megaraid: fix a possible double-free bug caused by incorrect error handling in megasas_alloc_cmdlist_fusion()
+Date:   Thu,  1 Sep 2022 20:54:18 +0800
+Message-Id: <20220901125418.2323348-1-r33s3n6@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add SM6115 UFS to DT schema.
+In megasas_alloc_cmdlist_fusion(), when kzalloc() fails, it frees
+fusion->cmd_list but does not clear it. Then, the error is propagated to
+its caller megasas_alloc_cmds_fusion(), which calls
+megasas_free_cmds_fusion(). In megasas_free_cmds_fusion(), it frees
+fusion->cmd_list again, which causes a double-free bug.
 
-Signed-off-by: Iskren Chernev <iskren.chernev@gmail.com>
+To fix this possible bug, in megasas_alloc_cmdlist_fusion(),
+fusion->cmd_list should be cleared after it is freed.
+
+The error log in our fault-injection testing is shown as follows:
+
+[ 4152.707452][   T21] BUG: KASAN: use-after-free in megasas_free_cmds_fusion+0x2d0/0x1294 [megaraid_sas]
+...
+[ 4152.756117][   T21] Call trace:
+...
+[ 4152.795950][   T21]  megasas_free_cmds_fusion+0x2d0/0x1294 [megaraid_sas]
+[ 4152.803329][   T21]  megasas_alloc_cmds_fusion+0x4de0/0x53bc [megaraid_sas]
+[ 4152.810887][   T21]  megasas_init_adapter_fusion+0xab4/0x30dc [megaraid_sas]
+[ 4152.818539][   T21]  megasas_init_fw+0x4874/0x925c [megaraid_sas]
+[ 4152.825245][   T21]  megasas_probe_one+0x978/0x2dd4 [megaraid_sas]
+...
+[ 4152.864486][   T21] Allocated by task 21:
+...
+[ 4152.883339][   T21]  megasas_alloc_cmds_fusion+0x2a40/0x53bc [megaraid_sas]
+[ 4152.890796][   T21]  megasas_init_adapter_fusion+0xab4/0x30dc [megaraid_sas]
+[ 4152.898331][   T21]  megasas_init_fw+0x4874/0x925c [megaraid_sas]
+[ 4152.904901][   T21]  megasas_probe_one+0x978/0x2dd4 [megaraid_sas]
+...
+[ 4152.943038][   T21] Freed by task 21:
+...
+[ 4152.972830][   T21]  kfree+0x100/0x374
+[ 4152.976998][   T21]  megasas_alloc_cmds_fusion+0x45c4/0x53bc [megaraid_sas]
+[ 4152.984379][   T21]  megasas_init_adapter_fusion+0xab4/0x30dc [megaraid_sas]
+[ 4152.991856][   T21]  megasas_init_fw+0x4874/0x925c [megaraid_sas]
+[ 4152.998384][   T21]  megasas_probe_one+0x978/0x2dd4 [megaraid_sas]
+
+
+Fixes: 70c54e210ee9a ("scsi: megaraid_sas: fix memleak in megasas_alloc_cmdlist_fusion")
+Reported-by: TOTE Robot <oslab@tsinghua.edu.cn>
+Signed-off-by: Zixuan Fu <r33s3n6@gmail.com>
 ---
- .../devicetree/bindings/ufs/qcom,ufs.yaml     | 26 +++++++++++++++++++
- 1 file changed, 26 insertions(+)
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-index f2d6298d926c..7c5f6e2e6d4c 100644
---- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-+++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-@@ -28,6 +28,7 @@ properties:
-           - qcom,msm8998-ufshc
-           - qcom,sc8280xp-ufshc
-           - qcom,sdm845-ufshc
-+          - qcom,sm6115-ufshc
-           - qcom,sm6350-ufshc
-           - qcom,sm8150-ufshc
-           - qcom,sm8250-ufshc
-@@ -178,6 +179,31 @@ allOf:
-           minItems: 1
-           maxItems: 1
- 
-+  - if:
-+      properties:
-+        compatible:
-+          contains:
-+            enum:
-+              - qcom,sm6115-ufshc
-+    then:
-+      properties:
-+        clocks:
-+          minItems: 8
-+          maxItems: 8
-+        clock-names:
-+          items:
-+            - const: core_clk
-+            - const: bus_aggr_clk
-+            - const: iface_clk
-+            - const: core_clk_unipro
-+            - const: core_clk_ice
-+            - const: ref_clk
-+            - const: tx_lane0_sync_clk
-+            - const: rx_lane0_sync_clk
-+        reg:
-+          minItems: 1
-+          maxItems: 1
-+
-     # TODO: define clock bindings for qcom,msm8994-ufshc
- 
- unevaluatedProperties: false
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index 09c5fe37754c..238103e7a028 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -613,6 +613,7 @@ megasas_alloc_cmdlist_fusion(struct megasas_instance *instance)
+ 			for (j = 0; j < i; j++)
+ 				kfree(fusion->cmd_list[j]);
+ 			kfree(fusion->cmd_list);
++			fusion->cmd_list = NULL;
+ 			dev_err(&instance->pdev->dev,
+ 				"Failed from %s %d\n",  __func__, __LINE__);
+ 			return -ENOMEM;
 -- 
-2.37.2
+2.25.1
 
