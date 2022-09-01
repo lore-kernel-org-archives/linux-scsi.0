@@ -2,134 +2,145 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98377C54EE9
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Sep 2022 21:48:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16999C6FA82
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Sep 2022 22:14:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234112AbiIAVsI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Sep 2022 17:48:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44650 "EHLO
+        id S232561AbiIAWOi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Sep 2022 18:14:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37206 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232865AbiIAVr5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Sep 2022 17:47:57 -0400
-Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F33667A535
-        for <linux-scsi@vger.kernel.org>; Thu,  1 Sep 2022 14:47:56 -0700 (PDT)
-Received: by mail-pl1-x62c.google.com with SMTP id p18so62275plr.8
-        for <linux-scsi@vger.kernel.org>; Thu, 01 Sep 2022 14:47:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=purestorage.com; s=google;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date;
-        bh=1qFLmuAicj9UlAmGP9DJpM6tW9KNPkfsUBI3P/CldSo=;
-        b=Kt5ESBIY/nOktHtszvwN8rVzSAuAv1zqdRtPmURYDqoDXBxn0VcwlJ0MbBk1SaHL28
-         QSjhwzXFaAhx67H7rPhx5jabv9ujI86pQ5Pc6cB+uMlIX7FBaQh4nORss1n2l4SGOI6N
-         xzlV4YIlwMJP339g0DHn2vV+bWTYDJ94aF6yw=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date;
-        bh=1qFLmuAicj9UlAmGP9DJpM6tW9KNPkfsUBI3P/CldSo=;
-        b=M0eicqZVZwpE/HHamC4v2NEyCUB/9glS07u3IxQkSsS8Dijsu4eVFg+OMV/RDJjvoL
-         apYZR2rUs9p7k2XQNCCCRv/7+xkMMZA7zkonBTqdQ80nyXjElhvkeuURn4qnn6pOherO
-         cZl8y0fkecMrXVEPjsi45SFJG2lPamzljgy9sXu92ZVlkqrBLTy649ECjBYx6hQskoTA
-         THsDJsrT/fk/rDEVfFqLJMGwD86Qst/vioAFYrR8FbxLZpecha9vkqzzr/MAVqTldkKO
-         hMD0jVYMJdV79HYWIczX8KeUuxrI+xdKcIk5c95q+dyANWlC9Ia79Hxv4M/mfVM8NZ3m
-         aWXw==
-X-Gm-Message-State: ACgBeo0zkogbJGrmdiX8Yf3Ffs+mPFFGdpW93x++NolEIFgRfI7xjnrV
-        JHyFQliQWJwohjrd1vYBuRUFl9zZJrwUSmWqtdeM3jA6cX4d+VWrgoJxzrmVEfRrN1z9UuZefjS
-        F28co4XC3vutyfzZvjNlrMneixez7DU6j6DV1S3afFcKQHRxpgFrLwTEEIi8dYoQ8JJCtHuyQUX
-        hD
-X-Google-Smtp-Source: AA6agR4FR8LZik9Jo3cU/LNblu1VdX9Zqjx2iNKvsAdHhmo4ptURKltHGcUZnDjDJnT5YV7qx01erQ==
-X-Received: by 2002:a17:902:e5c3:b0:175:534:1735 with SMTP id u3-20020a170902e5c300b0017505341735mr16522770plf.87.1662068875979;
-        Thu, 01 Sep 2022 14:47:55 -0700 (PDT)
-Received: from brian--MacBookPro18.purestorage.com ([136.226.79.10])
-        by smtp.gmail.com with ESMTPSA id w5-20020a17090ac98500b001f216407204sm90667pjt.36.2022.09.01.14.47.53
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Thu, 01 Sep 2022 14:47:54 -0700 (PDT)
-From:   Brian Bunker <brian@purestorage.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     Brian Bunker <brian@purestorage.com>,
-        Krishna Kant <krishna.kant@purestorage.com>,
-        Seamus Connor <sconnor@purestorage.com>
-Subject: [PATCH] scsi: core: Remove ACTION_RETRY since it is redundant
-Date:   Thu,  1 Sep 2022 14:47:49 -0700
-Message-Id: <20220901214749.18875-1-brian@purestorage.com>
-X-Mailer: git-send-email 2.32.1 (Apple Git-133)
+        with ESMTP id S235341AbiIAWOT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Sep 2022 18:14:19 -0400
+X-Greylist: delayed 90 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 01 Sep 2022 15:14:13 PDT
+Received: from omta035.useast.a.cloudfilter.net (omta035.useast.a.cloudfilter.net [44.202.169.34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 142A02198
+        for <linux-scsi@vger.kernel.org>; Thu,  1 Sep 2022 15:14:12 -0700 (PDT)
+Received: from eig-obgw-5019a.ext.cloudfilter.net ([10.0.29.142])
+        by cmsmtp with ESMTP
+        id TfweoDuCiVgqJTsQToFkQd; Thu, 01 Sep 2022 22:12:41 +0000
+Received: from gator4166.hostgator.com ([108.167.133.22])
+        by cmsmtp with ESMTP
+        id TsQRoQ4y3RnBsTsQSodRlY; Thu, 01 Sep 2022 22:12:40 +0000
+X-Authority-Analysis: v=2.4 cv=Z6L/oVdA c=1 sm=1 tr=0 ts=63112e58
+ a=1YbLdUo/zbTtOZ3uB5T3HA==:117 a=72JPPVIfIzSNxL7kpSG7Lw==:17
+ a=dLZJa+xiwSxG16/P+YVxDGlgEgI=:19 a=IkcTkHD0fZMA:10 a=xOM3xZuef0cA:10
+ a=wYkD_t78qR0A:10 a=jYsEJFciAAAA:8 a=VnNF1IyMAAAA:8 a=yPCof4ZbAAAA:8
+ a=VwQbUJbxAAAA:8 a=cm27Pg_UAAAA:8 a=6onvJrg5vSmBz42BuywA:9 a=QEXdDO2ut3YA:10
+ a=cMfT0svooCsP4Al2A5dO:22 a=AjGcO6oz07-iQ99wixmX:22 a=xmb-EsYY8bH0VWELuYED:22
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
+        In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=Q6ukgrEbB6qAjtGfaPyoouWhUSMHIGJkP/IXfkGbr5w=; b=pRlfgfuF4uCfH/UwxDBWg0lzyX
+        fuCKYgsk010mLwphdLD37+hTdNSyiB3ZOZz6e799RDGlTB04az1h7QpVGAxhHbOfI9hkA37PBRgJ5
+        RLj1N5jpiia6Q/4ef10sTfFpjh9EOcUZubOUb6tlCXDpHFnXhN1jOcCkxv4/8+w4FyomqM2G5tDg2
+        WnIMb/6A5ULDqkR0aJFFK4TSo1Q9xnu4eq2aFVqEP9aS53ECidTcWeNM07igJvbedJ2W+Dpzh2IUM
+        Zo9S77CfRiCrVl/Hvcll2OHNXyhLDNTgEHzPaYyRSXZHFAB+0O+JKr0ghrdrgEfjwEXfb09K3lwoM
+        PqeGZ1JA==;
+Received: from 51-171-241-192-dynamic.agg2.bbh.bbh-prp.eircom.net ([51.171.241.192]:47140 helo=[192.168.1.33])
+        by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.95)
+        (envelope-from <gustavo@embeddedor.com>)
+        id 1oTsQQ-002xVq-U0;
+        Thu, 01 Sep 2022 17:12:39 -0500
+Message-ID: <0255091d-e3df-7a4a-fa4c-7f9ae7226c73@embeddedor.com>
+Date:   Thu, 1 Sep 2022 23:12:30 +0100
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+Subject: Re: [PATCH] esas2r: Use flex array destination for memcpy()
+Content-Language: en-US
+To:     Kees Cook <keescook@chromium.org>,
+        Bradley Grove <linuxdrivers@attotech.com>
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-hardening@vger.kernel.org
+References: <20220901205729.2260982-1-keescook@chromium.org>
+From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+In-Reply-To: <20220901205729.2260982-1-keescook@chromium.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - embeddedor.com
+X-BWhitelist: no
+X-Source-IP: 51.171.241.192
+X-Source-L: No
+X-Exim-ID: 1oTsQQ-002xVq-U0
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-Source-Sender: 51-171-241-192-dynamic.agg2.bbh.bbh-prp.eircom.net ([192.168.1.33]) [51.171.241.192]:47140
+X-Source-Auth: gustavo@embeddedor.com
+X-Email-Count: 3
+X-Org:  HG=hgshared;ORG=hostgator;
+X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
+X-Local-Domain: yes
+X-CMAE-Envelope: MS4xfItNRYN5CGTq/YC1zeX3g0TY+2rj+nazWiTdhzoWiPEQBhsl1NyzoSOzVDWgxj1jyE0u7QtnX8Z5817j5XpkYebWxJZFHeRAKE63EGlkM9L5puc9VU9t
+ ffA+/2J0wRRDCZDCLesxFO2jKIqav25dQwJrYnxTnpGdtqU6fzn6USVPUPr05XQHHSRkuvpOTVOxtZKl+vVKQP8XoA9cSkxFw9OXqdNbjF8K2ozxuCdyCCZv
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The case of ACTION_RETRY in scsi_io_completion_action does nothing
-different than ACTION_DELAYED_RETRY, and by name gives the idea
-that it does.
 
-Following ACTION_RETRY:
-__scsi_queue_insert(cmd, SCSI_MLQUEUE_EH_RETRY, false);
 
-Following ACTION_DELAYED_RETRY:
-__scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY, false);
+On 9/1/22 15:57, Kees Cook wrote:
+> In preparation for FORTIFY_SOURCE performing run-time destination buffer
+> bounds checking for memcpy(), specify the destination output buffer
+> explicitly, instead of asking memcpy() to write past the end of what
+> looked like a fixed-size object. Silences future run-time warning:
+> 
+>    memcpy: detected field-spanning write (size 80) of single field "trc + 1" (size 64)
+> 
+> There is no binary code output differences from this change.
+> 
+> Cc: Bradley Grove <linuxdrivers@attotech.com>
+> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> Cc: linux-scsi@vger.kernel.org
+> Signed-off-by: Kees Cook <keescook@chromium.org>
 
-Then __scsi_queue_insert calls scsi_set_blocked(cmd, reason) where
-both of the reasons set by ACTION_RETRY and ACTION_DELAYED_RETRY
-fall into the same case.
+Reviewed-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 
-    case SCSI_MLQUEUE_DEVICE_BUSY:
-    case SCSI_MLQUEUE_EH_RETRY:
-        atomic_set(&device->device_blocked,
-               device->max_device_blocked);
-        break;
+Thanks
+--
+Gustavo
 
-Acked-by: Krishna Kant <krishna.kant@purestorage.com>
-Acked-by: Seamus Connor <sconnor@purestorage.com>
-Signed-off-by: Brian Bunker <brian@purestorage.com>
----
- drivers/scsi/scsi_lib.c | 10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index ef08029a0079..d85d72bc01f2 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -687,7 +687,7 @@ static void scsi_io_completion_action(struct scsi_cmnd *cmd, int result)
- 	struct request *req = scsi_cmd_to_rq(cmd);
- 	int level = 0;
- 	enum {ACTION_FAIL, ACTION_REPREP, ACTION_DELAYED_REPREP,
--	      ACTION_RETRY, ACTION_DELAYED_RETRY} action;
-+	      ACTION_DELAYED_RETRY} action;
- 	struct scsi_sense_hdr sshdr;
- 	bool sense_valid;
- 	bool sense_current = true;      /* false implies "deferred sense" */
-@@ -704,7 +704,7 @@ static void scsi_io_completion_action(struct scsi_cmnd *cmd, int result)
- 		 * reasons.  Just retry the command and see what
- 		 * happens.
- 		 */
--		action = ACTION_RETRY;
-+		action = ACTION_DELAYED_RETRY;
- 	} else if (sense_valid && sense_current) {
- 		switch (sshdr.sense_key) {
- 		case UNIT_ATTENTION:
-@@ -720,7 +720,7 @@ static void scsi_io_completion_action(struct scsi_cmnd *cmd, int result)
- 				 * media change, so we just retry the
- 				 * command and see what happens.
- 				 */
--				action = ACTION_RETRY;
-+				action = ACTION_DELAYED_RETRY;
- 			}
- 			break;
- 		case ILLEGAL_REQUEST:
-@@ -841,10 +841,6 @@ static void scsi_io_completion_action(struct scsi_cmnd *cmd, int result)
- 	case ACTION_DELAYED_REPREP:
- 		scsi_mq_requeue_cmd(cmd, ALUA_TRANSITION_REPREP_DELAY);
- 		break;
--	case ACTION_RETRY:
--		/* Retry the same command immediately */
--		__scsi_queue_insert(cmd, SCSI_MLQUEUE_EH_RETRY, false);
--		break;
- 	case ACTION_DELAYED_RETRY:
- 		/* Retry the same command after a delay */
- 		__scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY, false);
--- 
-2.32.1 (Apple Git-133)
-
+> ---
+>   drivers/scsi/esas2r/atioctl.h      | 1 +
+>   drivers/scsi/esas2r/esas2r_ioctl.c | 3 +--
+>   2 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/esas2r/atioctl.h b/drivers/scsi/esas2r/atioctl.h
+> index ff2ad9b38575..dd3437412ffc 100644
+> --- a/drivers/scsi/esas2r/atioctl.h
+> +++ b/drivers/scsi/esas2r/atioctl.h
+> @@ -831,6 +831,7 @@ struct __packed atto_hba_trace {
+>   	u32 total_length;
+>   	u32 trace_mask;
+>   	u8 reserved2[48];
+> +	u8 contents[];
+>   };
+>   
+>   #define ATTO_FUNC_SCSI_PASS_THRU     0x04
+> diff --git a/drivers/scsi/esas2r/esas2r_ioctl.c b/drivers/scsi/esas2r/esas2r_ioctl.c
+> index 08f4e43c7d9e..e003d923acbf 100644
+> --- a/drivers/scsi/esas2r/esas2r_ioctl.c
+> +++ b/drivers/scsi/esas2r/esas2r_ioctl.c
+> @@ -947,10 +947,9 @@ static int hba_ioctl_callback(struct esas2r_adapter *a,
+>   					break;
+>   				}
+>   
+> -				memcpy(trc + 1,
+> +				memcpy(trc->contents,
+>   				       a->fw_coredump_buff + offset,
+>   				       len);
+> -
+>   				hi->data_length = len;
+>   			} else if (trc->trace_func == ATTO_TRC_TF_RESET) {
+>   				memset(a->fw_coredump_buff, 0,
