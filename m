@@ -2,151 +2,271 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0BE3ECAAD1
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Sep 2022 04:46:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F7F6ECAAD2
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Sep 2022 05:08:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232007AbiIAEqW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Sep 2022 00:46:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59032 "EHLO
+        id S232786AbiIAFIf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Sep 2022 01:08:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39974 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232723AbiIAEpx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Sep 2022 00:45:53 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABDF313CDF;
-        Wed, 31 Aug 2022 21:45:50 -0700 (PDT)
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 27VNn7wH030499;
-        Thu, 1 Sep 2022 04:45:42 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : content-type :
- mime-version; s=corp-2022-7-12;
- bh=nrH0L4SrqeWKOAYnQmqhVSVG2MGXd5MMXwOtMNE61qI=;
- b=YzxMsrMZgJlAAMHoK8aokHyZOdR60gTU8qDzy+7MZyIYMLlpy/uLPLcjCTrvI1f+PISS
- LKpVID8vMHz/xn5hMLE7K5ZJsQ22tzxCAP+F987nsw7zjFf3xANu12HHRYdcE9DVbrZo
- J7q9ER1CPIBaAOpExEJwweZnR72nyO//9/SyfeLeXyP3eGUU9IW8jpddTW2DQz/tAUgj
- DEN7sIZv3DlBYjMMZimgrGWqey8c7D9asFmyAu+t11wP+wpddkWwK+rQ1q/roTIARe0i
- L6GULwnbFqMWEYT447UdJi0MPHl6JinuvRjxwJfyoM5BvdD2LRsc4s4o/LU4XZ3eQgXf Eg== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3j7a22ayek-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 01 Sep 2022 04:45:42 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2813i4Se022867;
-        Thu, 1 Sep 2022 04:45:41 GMT
-Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2174.outbound.protection.outlook.com [104.47.57.174])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3j79q611hm-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 01 Sep 2022 04:45:41 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=alhP0ZMABdLYOaUJU+P9McDf7iSfjhO8q/pHqUYci0bfq3/8XwGv0IV5MqylBFd4nR/q3YwBxYN0E/52voq5INp+Eokz/6f3KfPrlI2mFU6EZIzCZGIRxHpKfIz5DePf3C8UGuexUKqrbOuc6LWKScS6a+1vOUNUuIgiVHi1lxNe9A+IONVALTAdsa4uZ4I1HNwBjm5tiHDITxUxzE6tpCbUETp0b2liI+o+3MHB86g9j5wLCTgrqI+pEmAfQgoIyvt90U7OJRS/bjwoi3QBSl+YxnseHlwyQA2k89gyjYBi6OSjcq6POMVfCYGqi1yEyVZFi/2x9LX92g9fxOx6Kg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=nrH0L4SrqeWKOAYnQmqhVSVG2MGXd5MMXwOtMNE61qI=;
- b=Bb0WZxroLspoA8kq9nRix9VCAmwVZRIrE1dkTWZF85SiwujuK+O6zu+zgVKPqIZvfRqUAUNqk/T+oqmKK8o1IkGfSPgQAzJpugfdfZ/y2OZKbbepwuHM4oBSpKyHd2y0giUr+7AYo2X4Yx+MyW78hua+Cmes62RATN8UVyjqFam32IHR4EETWGcJTcWkXSFBjQ/tpEEnZGGcQz3mSJiMJ2qzcUcfiuaEXRUyZ8jVv9l8z+WxQGpmaqVvBQ5cqM8zETmebXD1/axsFWmBu7PgG/fRAdfbz5vk6G2jneLBgvbV+by5Yh84Z85Dm0nsEbjyKIF7z/c5NRCNrovnCMroag==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+        with ESMTP id S231530AbiIAFId (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Sep 2022 01:08:33 -0400
+Received: from mail-ed1-x536.google.com (mail-ed1-x536.google.com [IPv6:2a00:1450:4864:20::536])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 335A4112ECA
+        for <linux-scsi@vger.kernel.org>; Wed, 31 Aug 2022 22:08:32 -0700 (PDT)
+Received: by mail-ed1-x536.google.com with SMTP id t5so21002800edc.11
+        for <linux-scsi@vger.kernel.org>; Wed, 31 Aug 2022 22:08:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=nrH0L4SrqeWKOAYnQmqhVSVG2MGXd5MMXwOtMNE61qI=;
- b=QI1IOfH8R4oU1uR8TsuHfUM9uuBuNwrOpd6I6/KJjzD7exlZV5psOpCeqzSBgb1dfdHgBXa5HXgpPbeE5pNVKP3a2lRJC18gnaxXpm1gtsOwgANAc5qKa2mAIxngoaSr/oKGsgQuvcJb2aGBnFr4pZYmKUEKWPcZJ2JzqcMH/eQ=
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
- by SA1PR10MB6344.namprd10.prod.outlook.com (2603:10b6:806:257::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5566.15; Thu, 1 Sep
- 2022 04:45:39 +0000
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::297f:836:f424:cd75]) by PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::297f:836:f424:cd75%3]) with mapi id 15.20.5566.021; Thu, 1 Sep 2022
- 04:45:39 +0000
-To:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Cc:     Don Brace <don.brace@microchip.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        storagedev@microchip.com, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 1/2] scsi: hpsa: Use the bitmap API to allocate bitmaps
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq1fshbln2w.fsf@ca-mkp.ca.oracle.com>
-References: <5f975ef43f8b7306e4ac4e2e8ce4bcd53f6092bb.1658340441.git.christophe.jaillet@wanadoo.fr>
-Date:   Thu, 01 Sep 2022 00:45:36 -0400
-In-Reply-To: <5f975ef43f8b7306e4ac4e2e8ce4bcd53f6092bb.1658340441.git.christophe.jaillet@wanadoo.fr>
-        (Christophe JAILLET's message of "Wed, 20 Jul 2022 20:13:54 +0200")
-Content-Type: text/plain
-X-ClientProxiedBy: SJ0PR03CA0049.namprd03.prod.outlook.com
- (2603:10b6:a03:33e::24) To PH0PR10MB4759.namprd10.prod.outlook.com
- (2603:10b6:510:3d::12)
+        d=broadcom.com; s=google;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc;
+        bh=kcTqDZxO7dJ7nWcyS5ekkbXUAi4LwbUgDOCOC40/4v4=;
+        b=byHYYxc/YwGb5cFAPCInp2dNkT8AtRke0XvGC7cqRdKESLOp9f3fGFwEolgSwVr5Nq
+         ii99esIy80K4+eu86+cVcKtJQI87Bvplcx8StCL/BWp/tveWnBgHTj7zh8Dzljj6bxzh
+         eJ47bfQtgdCvOWUI1YBCbs1/p8XE+k5GmZg2k=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc;
+        bh=kcTqDZxO7dJ7nWcyS5ekkbXUAi4LwbUgDOCOC40/4v4=;
+        b=ByAPEcTKYHkf7ik07rjE2+c10LzQ1ytohG5+atwWn163gtDS2AX/cpjJaxVUOoZPSE
+         PoLn8BwPmeKC6p9hIbw01m95HZi+n34AGfUyfy8ypf3kwx02a+HFfvJdTthYwtjfvK2s
+         2q+PUD6h2VEK7mgkckELgRxPS3EgydQK7i5NIMXUg/bMZUc96M+70fhgVv6ZFKPSKJ0c
+         X8j6NPUdsJWFR/X0YMWbmGGhAIdSlL5a8AcLTVkRLuXqf3wWndBOH73qsI5hw7OcvDmf
+         Gt0h5BgZH/khihSIZPER1/XfGMLZLwUnP0LJzr98vtAZgjUPXWzfqCdx1LwWn+WTHuWZ
+         xzsQ==
+X-Gm-Message-State: ACgBeo2DzE8OtsJ1+ZfSR3zxDt1PUy0nLMdmqTmZqTm+TLVW9P8SoRwb
+        3FJiknQxqtfDI8kn3YzTrCP/gvBuFK04lYejypo1MFSdJJ7aEZN7AwWiqzF0Ni8vZqv9CxeGS/7
+        NjKOPUbtUOAFEj9otbRcEa/mioP4=
+X-Google-Smtp-Source: AA6agR6Hg4p3kqa0Bzu0bPb6v6Ymp7+v17GWbnjWdVbsPPMeD6/wsjJFnMLaA2E/q/njxj89y+eNKpcLKoUSrW1wlcM=
+X-Received: by 2002:a50:fa87:0:b0:447:87f3:ee7e with SMTP id
+ w7-20020a50fa87000000b0044787f3ee7emr28203981edr.182.1662008910651; Wed, 31
+ Aug 2022 22:08:30 -0700 (PDT)
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: a19b952a-be71-46ca-ff61-08da8bd4d18f
-X-MS-TrafficTypeDiagnostic: SA1PR10MB6344:EE_
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: YXHu8y+6eMuV2rXf0K50nPIX1Ex8pRdwPPYAaVJeF3MYvseHateVFFc6xTBl9xrbDcB1lF+sP/gCf+jWq4G9E0pSQmh10/fXG5Dfskh/IHpPEMjahktraHVhMNzfD75M6zchT9cSDov8WqVZUPWLu9sj6or58sP5554x+w1Ih9vvxXOtJpevPILYVBAUPBzH2uQoNwkT+IJAVd1HOYjaNaHXoW2WhJGoC2fQu3O3pbfkPdVIYIorEiH4lBA0E5R4qjsxofwCCqU1L2mnV+AepTK7sockj5QLU2WZyKdd1Z3ZTOmrn2+u5SGEBfRrzkZEKAtpueUB74gkAE8uHYs7yG2mKczTKO0NkEuWmpEf0F3PKhtUir31sVF5wskJ7qCQWd1m8hbZ7SougnoD9A8XynfxYHZqUf0QT0zz1TaHLZiFJovZxrqy894PYX5wgr7daVSLrjs7TF777Xs19G03hsGeKMa55kB4Cms3nPCi1k4tbd2iwMlEkI64V9mffg7iUlc5vle7fgHKMcwndA1I8r2LHsX9O9N0uJZV8W+aqFIjN3ZfyqM9ysgr5J5a6EbJh9FTofWU9mARqbC++gPBVedcOFa+C8w9BZBqXCFfcQwAcmZ6l7f4A8Q1J/e90bgdLnwBRVK/G97qbpMff4XUC7HUbd956HUintPzrF+ZC/GlQaT9ZGH31x55sVLxF1N1EKfLPzDlm0s9wZrW72FqmViVg8hUYk59rSndDCEJ28xmQbVvVpo1DRPFnE9mcM73FO4a1jpsvObBU+fElCzaBA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(346002)(39860400002)(376002)(136003)(366004)(396003)(8676002)(4326008)(66556008)(66946007)(38350700002)(38100700002)(86362001)(558084003)(186003)(6506007)(41300700001)(6512007)(26005)(478600001)(6486002)(6666004)(316002)(52116002)(36916002)(66476007)(6916009)(2906002)(54906003)(5660300002)(8936002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?iugIRvxQugd5gdS5T7Tw4PyovZuadcqeKz31aCq0xXmBaM8xvNRNRQ7wbPc0?=
- =?us-ascii?Q?/4EJHUR4rYTusJ6wei3cty+5Ig4BY5nxMsBBInk6gH0gpDSyn/RJJrAq8NbB?=
- =?us-ascii?Q?3sWeA09VLUSq5BunmWT7ElnAOuegtlAja2zugVJd7BIKeKsvhrPN/3IdU4gf?=
- =?us-ascii?Q?hkQo+kK1twhbT9S0H9iH+MF4OLSn3lNYd/TQWKUZNJFfIxS2fer5TKon4lWZ?=
- =?us-ascii?Q?iM7WHYQzhvqDTwzs9YNvIu7ncW3uxLvDon4tyKZUTv8UpxCpESJ+5iz57spm?=
- =?us-ascii?Q?dKvMjrSYA3TXZ6UU3XKBwZbLItIoLgHh8CO5Oci8usujaMykj4NM4IM9TEDY?=
- =?us-ascii?Q?HlNhgP72Jdzn6v2VV6928Jx0NAYCzDhus18CAJrj82o7P9/VR9FvstdOQGNf?=
- =?us-ascii?Q?/2kZVf38zi96WoyqXsomlbhvVmni1Ier3OzD7HMsO43BNWsrRCqdG2dUB3sI?=
- =?us-ascii?Q?ds9m+odCZ6R8e8tk7V52H9Wisn9SChOIRjuwlnwqNC4yFBwuG/iVeP8x3uwE?=
- =?us-ascii?Q?WGQH4jE8ny8m9LhAjyXMDILoecbyLrAX3kFgnmwNLYJ3sE9NETWqTbZuGt0g?=
- =?us-ascii?Q?mM9V7ry2gvCilZKrT4g1JZqSusu0n8qOQkgRx6jc0LXWCdd7gePBlGM3kji5?=
- =?us-ascii?Q?SNOVyR6fIXfAk1w2q++FXKkpmxQRfRhRhcjF8wA1XbrQTAbDWOuwELF/TFNA?=
- =?us-ascii?Q?YrBZWZNYLRgAZm0ltLqhWXViq10Cq28kjyDpbXQ1bBz0MAisGpb2heFcG8/R?=
- =?us-ascii?Q?DmCdgcFPdpyTBh99kbc5rdkVu8qV3iMLP6L2DppqkejqTbkksbP0SP7SR1Bb?=
- =?us-ascii?Q?DiXH5GV8c+d7fuKlCbWAYR5ZO/OLPIsUO+Nq8ylaHPPR2MTJ7l7WFHDpuDGI?=
- =?us-ascii?Q?6a+4BtE9oJUIWilr3/C5WerI++OeWIODU6sTnIxFLt0D5GVPXpGxrTKFfQgj?=
- =?us-ascii?Q?kvmZhNZDMGRUjOCkPJ/In8b3PEG6dJW+IE7qPOxY5Iui73EHlPv1VO7fFYUx?=
- =?us-ascii?Q?CZ+avKUMi9BVtUDitbpkBReZDq+aPeVX5wPr0DmFIAr4VJzQ6Z3h76mQedw8?=
- =?us-ascii?Q?3mwLDw0LUE/KOCdR0qY/x37q6k2oR+t2pCfwc0WJLt/yUVYOOUkAiUAh2/sn?=
- =?us-ascii?Q?QdIEElIGJuBoP74f1NQ8zc+52zS+5pSajel9i8rwQwgjheZaBhHMd82lbbfj?=
- =?us-ascii?Q?nO1SaoRZlxyVF1ccz3AL9tUvad7XmzArPWAYh0SIH2dPXSvSJwRzNNnfeykD?=
- =?us-ascii?Q?Pk33BzR61mQ0CR8sn72cLiOdduJcsnYyx8DtkGNvJxv5fVTiBmOWU+eEKlzW?=
- =?us-ascii?Q?6v02Ttij9hgsdtsXHZVmqMtc+ULs2g1kFLcxQfP2iuIBj8RP6OXBAbaiJ2Ku?=
- =?us-ascii?Q?K2DG+fJ6tWeu1kDU0JpLL0FKTxY3QnhmWM4+A8CB8JmDjVolEhrF3aOGmVC1?=
- =?us-ascii?Q?aNyx9f2Q9bOIWl4bUJK3Qabk/+lyQcy/9HRKr2MCRUQBf7dbAOSYHR4dEsU0?=
- =?us-ascii?Q?KK2pbQFapJzD64pPCATnCvK3umnuKCJLNB1XJ3HcLVxG8mJAbF86O2hi7vhS?=
- =?us-ascii?Q?YPLws8U540ahge6Yewv3h+WG4w9qidUdW3GyN8AQzqDjxFsRDbQbnhWK4RY9?=
- =?us-ascii?Q?Eg=3D=3D?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a19b952a-be71-46ca-ff61-08da8bd4d18f
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Sep 2022 04:45:39.6860
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: dog6uHGTXkwtL3ovVmFHj82XaW3XNoOvHAF2gURTgVOzqjmpsMVRsDpsiUu8JPnmAONgw23q1NR4G1wo5Qdz7mGSQ0N08UPHQvydBm0T83c=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR10MB6344
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.517,FMLib:17.11.122.1
- definitions=2022-09-01_02,2022-08-31_03,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0 spamscore=0
- adultscore=0 mlxscore=0 mlxlogscore=833 suspectscore=0 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2207270000
- definitions=main-2209010020
-X-Proofpoint-GUID: dMm0hPmPVwEHEkf1Pf5AN6hZ8Kjgr7tm
-X-Proofpoint-ORIG-GUID: dMm0hPmPVwEHEkf1Pf5AN6hZ8Kjgr7tm
+References: <20220825092645.326953-1-15815827059@163.com> <49b0768d.96d.182f69a26f6.Coremail.15815827059@163.com>
+In-Reply-To: <49b0768d.96d.182f69a26f6.Coremail.15815827059@163.com>
+From:   Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
+Date:   Wed, 31 Aug 2022 23:08:14 -0600
+Message-ID: <CAFdVvOzAWcFLgPi_y8HW5Jx5JbC1AgBtADnwvd9usq8veU0vOg@mail.gmail.com>
+Subject: Re: [PATCH] scsi: mpt3sas: Fix NULL pointer crash due to missing
+ check device hostdata
+To:     huhai <15815827059@163.com>
+Cc:     jejb@linux.ibm.com,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        huhai <huhai@kylinos.cn>, stable@vger.kernel.org,
+        Jackie Liu <liuyun01@kylinos.cn>
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="000000000000c060bd05e7969ace"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+--000000000000c060bd05e7969ace
+Content-Type: text/plain; charset="UTF-8"
 
-Christophe,
+The patch could be improved to clear the ata_cmd_pending bit for the
+cases !sas_device_priv_data->sas_target and
+sas_device_priv_data->sas_target->deleted before returning
+DID_NO_CONNECT to retain the current functionality.
 
-> Use bitmap_zalloc()/bitmap_free() instead of hand-writing them.
 
-Applied 1+2 to 6.1/scsi-staging, thanks!
+On Wed, Aug 31, 2022 at 7:11 PM huhai <15815827059@163.com> wrote:
+>
+> Friendly ping.
+>
+>
+> At 2022-08-25 17:26:45, "huhai" <15815827059@163.com> wrote:
+> >From: huhai <huhai@kylinos.cn>
+> >
+> >If _scsih_io_done() is called with scmd->device->hostdata=NULL, it can lead
+> >to the following panic:
+> >
+> >  BUG: unable to handle kernel NULL pointer dereference at 0000000000000018
+> >  PGD 4547a4067 P4D 4547a4067 PUD 0
+> >  Oops: 0002 [#1] SMP NOPTI
+> >  CPU: 62 PID: 0 Comm: swapper/62 Kdump: loaded Not tainted 4.19.90-24.4.v2101.ky10.x86_64 #1
+> >  Hardware name: Storage Server/65N32-US, BIOS SQL1041217 05/30/2022
+> >  RIP: 0010:_scsih_set_satl_pending+0x2d/0x50 [mpt3sas]
+> >  Code: 00 00 48 8b 87 60 01 00 00 0f b6 10 80 fa a1 74 09 31 c0 80 fa 85 74 02 f3 c3 48 8b 47 38 40 84 f6 48 8b 80 98 00 00 00 75 08 <f0> 80 60 18 fe 31 c0 c3 f0 48 0f ba 68 18 00 0f 92 c0 0f b6 c0 c3
+> >  RSP: 0018:ffff8ec22fc03e00 EFLAGS: 00010046
+> >  RAX: 0000000000000000 RBX: ffff8eba1b072518 RCX: 0000000000000001
+> >  RDX: 0000000000000085 RSI: 0000000000000000 RDI: ffff8eba1b072518
+> >  RBP: 0000000000000dbd R08: 0000000000000000 R09: 0000000000029700
+> >  R10: ffff8ec22fc03f80 R11: 0000000000000000 R12: ffff8ebe2d3609e8
+> >  R13: ffff8ebe2a72b600 R14: ffff8eca472707e0 R15: 0000000000000020
+> >  FS:  0000000000000000(0000) GS:ffff8ec22fc00000(0000) knlGS:0000000000000000
+> >  CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> >  CR2: 0000000000000018 CR3: 000000046e5f6000 CR4: 00000000003406e0
+> >  Call Trace:
+> >   <IRQ>
+> >   _scsih_io_done+0x4a/0x9f0 [mpt3sas]
+> >   _base_interrupt+0x23f/0xe10 [mpt3sas]
+> >   __handle_irq_event_percpu+0x40/0x190
+> >   handle_irq_event_percpu+0x30/0x70
+> >   handle_irq_event+0x36/0x60
+> >   handle_edge_irq+0x7e/0x190
+> >   handle_irq+0xa8/0x110
+> >   do_IRQ+0x49/0xe0
+> >
+> >Fix it by move scmd->device->hostdata check before _scsih_set_satl_pending
+> >called.
+> >
+> >Other changes:
+> >- It looks clear to move get mpi_reply to near its check.
+> >
+> >Fixes: ffb584565894 ("scsi: mpt3sas: fix hang on ata passthrough commands")
+> >Cc: <stable@vger.kernel.org> # v4.9+
+> >Co-developed-by: Jackie Liu <liuyun01@kylinos.cn>
+> >Signed-off-by: Jackie Liu <liuyun01@kylinos.cn>
+> >Signed-off-by: huhai <huhai@kylinos.cn>
+> >---
+> > drivers/scsi/mpt3sas/mpt3sas_scsih.c | 15 +++++++--------
+> > 1 file changed, 7 insertions(+), 8 deletions(-)
+> >
+> >diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> >index def37a7e5980..85f5749a0421 100644
+> >--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> >+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> >@@ -5704,27 +5704,26 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+> >       struct MPT3SAS_DEVICE *sas_device_priv_data;
+> >       u32 response_code = 0;
+> >
+> >-      mpi_reply = mpt3sas_base_get_reply_virt_addr(ioc, reply);
+> >-
+> >       scmd = mpt3sas_scsih_scsi_lookup_get(ioc, smid);
+> >       if (scmd == NULL)
+> >               return 1;
+> >
+> >+      sas_device_priv_data = scmd->device->hostdata;
+> >+      if (!sas_device_priv_data || !sas_device_priv_data->sas_target ||
+> >+           sas_device_priv_data->sas_target->deleted) {
+> >+              scmd->result = DID_NO_CONNECT << 16;
+> >+              goto out;
+> >+      }
+> >       _scsih_set_satl_pending(scmd, false);
+> >
+> >       mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
+> >
+> >+      mpi_reply = mpt3sas_base_get_reply_virt_addr(ioc, reply);
+> >       if (mpi_reply == NULL) {
+> >               scmd->result = DID_OK << 16;
+> >               goto out;
+> >       }
+> >
+> >-      sas_device_priv_data = scmd->device->hostdata;
+> >-      if (!sas_device_priv_data || !sas_device_priv_data->sas_target ||
+> >-           sas_device_priv_data->sas_target->deleted) {
+> >-              scmd->result = DID_NO_CONNECT << 16;
+> >-              goto out;
+> >-      }
+> >       ioc_status = le16_to_cpu(mpi_reply->IOCStatus);
+> >
+> >       /*
+> >--
+> >2.27.0
+> >
+> >
+> >No virus found
+> >               Checked by Hillstone Network AntiVirus
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+This electronic communication and the information and any files transmitted 
+with it, or attached to it, are confidential and are intended solely for 
+the use of the individual or entity to whom it is addressed and may contain 
+information that is confidential, legally privileged, protected by privacy 
+laws, or otherwise restricted from disclosure to anyone else. If you are 
+not the intended recipient or the person responsible for delivering the 
+e-mail to the intended recipient, you are hereby notified that any use, 
+copying, distributing, dissemination, forwarding, printing, or copying of 
+this e-mail is strictly prohibited. If you received this e-mail in error, 
+please return the e-mail to the sender, delete it from your computer, and 
+destroy any printed copy of it.
+
+--000000000000c060bd05e7969ace
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+AYPMVSim4+pTItuq9IB5a3B4lXktI8GoZ4icvNq/tDUC+UQBkiyx41thyEA3MCL+kgpIDnw1yNbe
+DuhEcmBxC3E4cziK/swLRngmgXt+5vyInAJZt7HlQxtmx5IEZ4mXQ9lv/ZbRm6xdAgMBAAGjggHc
+MIIB2DAOBgNVHQ8BAf8EBAMCBaAwgaMGCCsGAQUFBwEBBIGWMIGTME4GCCsGAQUFBzAChkJodHRw
+Oi8vc2VjdXJlLmdsb2JhbHNpZ24uY29tL2NhY2VydC9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAy
+MC5jcnQwQQYIKwYBBQUHMAGGNWh0dHA6Ly9vY3NwLmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJz
+b25hbHNpZ24yY2EyMDIwME0GA1UdIARGMEQwQgYKKwYBBAGgMgEoCjA0MDIGCCsGAQUFBwIBFiZo
+dHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAJBgNVHRMEAjAAMEkGA1UdHwRC
+MEAwPqA8oDqGOGh0dHA6Ly9jcmwuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJj
+YTIwMjAuY3JsMCYGA1UdEQQfMB2BG3NhdGh5YS5wcmFrYXNoQGJyb2FkY29tLmNvbTATBgNVHSUE
+DDAKBggrBgEFBQcDBDAfBgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQU
+pgsVbwKDpO1jbwtH74jMrhpldKgwDQYJKoZIhvcNAQELBQADggEBAAs3g9+OH401HDPcsiK943D1
+29CLPOuPWwMLezDdRvDcSqXw/gHia/3hEqnSZiSNEHi7WJ+bhd7c/kLupVhlae5tQwGMchue4U6R
+/3Ck8BQ5wivGrL3n0hksKHrXs+pPI96sat0kZCX/OVLJ6KfZoNBnl4lgXkgjfrWs/2U+gcMU2lmw
+zhujPHSNF2UIyRNtvcw0NozAtiov/KGLHocfrD39IAsX9SpKaqH6W0lFtOeevTeAg7Y0yXo7HXKY
+t+RqMzkDTXFXS6MXhqwXQHf6laWJkR9smRePlZ7BHSurIjHbpKhVaYCd6aKI4gUlq2t/zr+ct4Ls
+WZg6a7glbWLB4YExggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxT
+aWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAy
+MDIwAgx1ZyicYAvHT9A0GRQwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIIXU+2SW
+PQu2XLxgYnmeTYlxN0SETXH7duuDenfINvrQMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
+KoZIhvcNAQkFMQ8XDTIyMDkwMTA1MDgzMFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
+CwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZI
+hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBO8VQ8jSTJ0ULW4tlhwIB1ihoY
+wuh/CMQ9+VXSac6VwwugNPeoPqrVyXVN2/DVqO/uhEjX6WqvztFXEWN4s5AeaKhvbVVfyL7nTlwG
+3BdAU5NmGcMoVYL/mSbooBPJmr3i81OBkcHh5C7et3iBvwTA2E6QefgZaCkFebvRgROulC1QZiyc
+QBvZPDqpnoQmef97ONXb2VxsYcxKNbRvXAuJdR0IpnAcQS8Y16TA3CGyWRwUWIETT+z/E5XNaAJt
+5vKn3ylsZhd9TT9UAmQ5l27hyEM6OLmSls5V1C1efn9G5qYEN+0GdIOgudeeVEEjba+h8jxKiIyC
+xu6kBvsO2uDb
+--000000000000c060bd05e7969ace--
