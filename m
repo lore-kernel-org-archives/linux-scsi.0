@@ -2,126 +2,55 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45DD3C54EE9
-	for <linux-scsi@archiver.kernel.org>; Fri,  2 Sep 2022 07:51:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3D3DECAAA1
+	for <linux-scsi@archiver.kernel.org>; Fri,  2 Sep 2022 08:16:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235430AbiIBHvy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 2 Sep 2022 03:51:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40652 "EHLO
+        id S235488AbiIBIQz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 2 Sep 2022 04:16:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36864 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235297AbiIBHvx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Sep 2022 03:51:53 -0400
-Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E32CBABF32;
-        Fri,  2 Sep 2022 00:51:52 -0700 (PDT)
-Received: by mail-pf1-x435.google.com with SMTP id x19so1159822pfr.1;
-        Fri, 02 Sep 2022 00:51:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date;
-        bh=ytaS2HDgiOt5YedCmHjB6NzOPHEeyztGDe+t4/ynB9g=;
-        b=IHU8HZzHDz1NEVK1FUbzsCmji46rKwPkkP6V5APfvELxfEBciQ/CRE6h9rPnWVJutq
-         lXwvQcNCOo23Lx17Ed09B1zXE0eK9xg6qUjPVvL64o8BZHVHQeXSCLIb68p9UOGYV8db
-         IZrg70C0r8OepEyY6Pit6wqxkDgo8olaiAG7uStVg352gB/08tYVa8YKcPKMSah+rhCj
-         amg1gp9KU3rxAsvjTbgaRJQbgtjg6YflC3BqlaI+O5J+BJEzt84kJgv2igjgi19nwm9d
-         GUDqD9SXI0qRZnvIv8SVgp3t6Gab7Dky/FgR8kF9pjS1PEgk+hZ1bgGTi+5Ck9curGXv
-         SaAQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date;
-        bh=ytaS2HDgiOt5YedCmHjB6NzOPHEeyztGDe+t4/ynB9g=;
-        b=fKfT6+rkgqyxVOCaA4nNzl524fNd/uHr/CCmIeX51MfknEJPHaU0bidnt4feMAUdXC
-         vEaHIzL+USfFKV2SHtE7hqXtwqZJgOujTK2FJRl0hr8CuEIDC/V+phxHm8Xa8JBIHcDE
-         bQbDKL60hXiFr2eOPejOIgz+9aAhFLBpWvWxpXO3Khyh4JwuxLEiISrfsd88UOTieNle
-         OqIAjnHVYnpv3EWd/dUKQ+VqTyK/oQTaxuA2grRTT3CthvF2t5nB8cPcJAJX8RT7If5t
-         GU3Srs2urDSymQaROHK5oxNOfSALPflpEzHmQUyb3PERZ28fVeM5gyVppKJ6b4kr6LbV
-         7LdA==
-X-Gm-Message-State: ACgBeo32WuiHTq6VHwjX3wdQPICPsD+h9h9xsbhRzi2EOm0SNYHz8ZAO
-        f6it/XK3Pb8fJyeYt0GX49g/YE6pR1vN3jCs
-X-Google-Smtp-Source: AA6agR4c8S/vuJdq6qi+8Z/hdP5FiMeDGwDeuB/GfKYqAnrtTz7U1k0exR83AM0TwSLRrB00WK5vRw==
-X-Received: by 2002:a63:8643:0:b0:42b:66ab:b051 with SMTP id x64-20020a638643000000b0042b66abb051mr30526063pgd.259.1662105112467;
-        Fri, 02 Sep 2022 00:51:52 -0700 (PDT)
-Received: from localhost ([166.111.139.139])
-        by smtp.gmail.com with ESMTPSA id s22-20020a170902b19600b00174fa8cbf6dsm898927plr.161.2022.09.02.00.51.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 02 Sep 2022 00:51:51 -0700 (PDT)
-From:   Zixuan Fu <r33s3n6@gmail.com>
-To:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, baijiaju1990@gmail.com,
-        TOTE Robot <oslab@tsinghua.edu.cn>
-Subject: [BUG] scsi: megaraid_sas: possible null pointer dereference in megasas_slave_alloc()
-Date:   Fri,  2 Sep 2022 15:51:48 +0800
-Message-Id: <20220902075148.2391710-1-r33s3n6@gmail.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S233481AbiIBIQy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Sep 2022 04:16:54 -0400
+Received: from mail.connexion24.pl (mail.connexion24.pl [141.94.21.111])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3A2AB9599
+        for <linux-scsi@vger.kernel.org>; Fri,  2 Sep 2022 01:16:53 -0700 (PDT)
+Received: by mail.connexion24.pl (Postfix, from userid 1002)
+        id E1DACAEF13; Fri,  2 Sep 2022 07:56:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=connexion24.pl;
+        s=mail; t=1662105453;
+        bh=ChRcLNpIfKnVgp03/tSyWuRw1tWSTk/OEiEnuZMWs58=;
+        h=Date:From:To:Subject:From;
+        b=nOC5xAGuI7UcH+vzy+onCNDalRf+CJF3hZBnlLlKMuqqbma+2C7isOx8VZ86KeUy3
+         kCcJwUQdMoaQx5s4ycfODFBFhLUiX/W0UzjPCaTDKya0ER/vqUG15k0q0RTK4lZfxb
+         5syFRXAOiwZj0r5OqNHumyQ2Cj8jBuJOqgpMN1FVJiMJjBOD5czsNJuiH4G62ZB03N
+         KLAZHd3Nysi3B9JItMDXjbDS8f6FhsbsGesTABV2aYc4u/n46pagh3p5AQxytx/4kP
+         riQ66MnlXhboVAXefbmWzvrqcXTQ0dhZqRzwjU+xcO2QnDNXStRgyYvSJE6/IPT5ai
+         CFgZDHX66xxDA==
+Received: by mail.connexion24.pl for <linux-scsi@vger.kernel.org>; Fri,  2 Sep 2022 07:55:42 GMT
+Message-ID: <20220902064500-0.1.5l.ytup.0.prghbaa9wq@connexion24.pl>
+Date:   Fri,  2 Sep 2022 07:55:42 GMT
+From:   "Norbert Karecki" <norbert.karecki@connexion24.pl>
+To:     <linux-scsi@vger.kernel.org>
+Subject: Wycena paneli fotowoltaicznych
+X-Mailer: mail.connexion24.pl
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello,
+Dzie=C5=84 dobry,
 
-Our fault injection tool finds a possible null-pointer dereference in the
-megaraid_sas driver in Linux 5.10.0:
+dostrzegam mo=C5=BCliwo=C5=9B=C4=87 wsp=C3=B3=C5=82pracy z Pa=C5=84stwa f=
+irm=C4=85.
 
-In the file drivers/scsi/megaraid/megaraid_sas_base.c:
-In megasas_get_seq_num(), the call to dma_alloc_coherent() may fail: 
-6459: el_info = dma_alloc_coherent(&instance->pdev->dev,
-                                   sizeof(struct megasas_evt_log_info),
-                                   &el_info_h,
-                                   GFP_KERNEL);
+=C5=9Awiadczymy kompleksow=C4=85 obs=C5=82ug=C4=99 inwestycji w fotowolta=
+ik=C4=99, kt=C3=B3ra obni=C5=BCa koszty energii elektrycznej nawet o 90%.
 
-This error is propagated to its caller megasas_start_aen().
-6749: if (megasas_get_seq_num(instance, &eli))
-6750:     return -1;
+Czy s=C4=85 Pa=C5=84stwo zainteresowani weryfikacj=C4=85 wst=C4=99pnych p=
+ropozycji?
 
-Then it is propagated again to its caller megasas_probe_one().
-7428: if (megasas_start_aen(instance)) {
-7429:     dev_printk(KERN_DEBUG, &pdev->dev, "start aen failed\n");
-7430:     goto fail_start_aen;
-7431: }
 
-In error handling code of megasas_probe_one(), it removes the pointer
-`instance` from `megasas_mgmt_info.instance`:
-7445: megasas_mgmt_info.instance[megasas_mgmt_info.max_index] = NULL;
-
-But it stores the pointer `instance` in the pdev by calling pci_set_drvdata()
-before and do nothing about it in error handling code:
-7401: pci_set_drvdata(pdev, instance);
-
-Then, in another thread, megasas_slave_alloc() is called. This function calls
-megasas_lookup_instance() to get the pointer `instance`, which can not be
-found in `megasas_mgmt_info.instance`. Therefore, NULL is returned:
-2087: instance = megasas_lookup_instance(sdev->host->host_no);
-
-This causes a null-pointer dereference bug:
-2095: if ((instance->pd_list_not_supported || 
-           instance->pd_list[pd_index].driveState == MR_PD_STATE_SYSTEM))
-
-If we just add a check for `instance`, another bug is found.
-megasas_fault_detect_work() is called by a thread. and it retrieves the
-pointer `instance` from `work`:
-In the file drivers/scsi/megaraid/megaraid_sas_base.c:
-1901: struct megasas_instance *instance = 
-        container_of(work, struct megasas_instance, fw_fault_work.work);
-
-Because the structure `instance` points to is broken, the following calls
-about `instance` causes some page-faults:
-1907: fw_state = instance->instancet->read_fw_status_reg(instance) &
-                 MFI_STATE_MASK;
-1911: dma_state = instance->instancet->read_fw_status_reg(instance) &
-                  MFI_STATE_DMADONE;
-...
-
-I am not quite sure how to fix this possible bug. Any feedback would be
-appreciated, thanks!
-
-Reported-by: TOTE Robot <oslab@tsinghua.edu.cn>
-
-Best wishes,
-Zixuan Fu
+Pozdrawiam,
+Norbert Karecki
