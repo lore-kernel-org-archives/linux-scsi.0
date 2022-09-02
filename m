@@ -2,145 +2,126 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16999C6FA82
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Sep 2022 22:14:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45DD3C54EE9
+	for <linux-scsi@archiver.kernel.org>; Fri,  2 Sep 2022 07:51:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232561AbiIAWOi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Sep 2022 18:14:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37206 "EHLO
+        id S235430AbiIBHvy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 2 Sep 2022 03:51:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40652 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235341AbiIAWOT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Sep 2022 18:14:19 -0400
-X-Greylist: delayed 90 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 01 Sep 2022 15:14:13 PDT
-Received: from omta035.useast.a.cloudfilter.net (omta035.useast.a.cloudfilter.net [44.202.169.34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 142A02198
-        for <linux-scsi@vger.kernel.org>; Thu,  1 Sep 2022 15:14:12 -0700 (PDT)
-Received: from eig-obgw-5019a.ext.cloudfilter.net ([10.0.29.142])
-        by cmsmtp with ESMTP
-        id TfweoDuCiVgqJTsQToFkQd; Thu, 01 Sep 2022 22:12:41 +0000
-Received: from gator4166.hostgator.com ([108.167.133.22])
-        by cmsmtp with ESMTP
-        id TsQRoQ4y3RnBsTsQSodRlY; Thu, 01 Sep 2022 22:12:40 +0000
-X-Authority-Analysis: v=2.4 cv=Z6L/oVdA c=1 sm=1 tr=0 ts=63112e58
- a=1YbLdUo/zbTtOZ3uB5T3HA==:117 a=72JPPVIfIzSNxL7kpSG7Lw==:17
- a=dLZJa+xiwSxG16/P+YVxDGlgEgI=:19 a=IkcTkHD0fZMA:10 a=xOM3xZuef0cA:10
- a=wYkD_t78qR0A:10 a=jYsEJFciAAAA:8 a=VnNF1IyMAAAA:8 a=yPCof4ZbAAAA:8
- a=VwQbUJbxAAAA:8 a=cm27Pg_UAAAA:8 a=6onvJrg5vSmBz42BuywA:9 a=QEXdDO2ut3YA:10
- a=cMfT0svooCsP4Al2A5dO:22 a=AjGcO6oz07-iQ99wixmX:22 a=xmb-EsYY8bH0VWELuYED:22
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=Q6ukgrEbB6qAjtGfaPyoouWhUSMHIGJkP/IXfkGbr5w=; b=pRlfgfuF4uCfH/UwxDBWg0lzyX
-        fuCKYgsk010mLwphdLD37+hTdNSyiB3ZOZz6e799RDGlTB04az1h7QpVGAxhHbOfI9hkA37PBRgJ5
-        RLj1N5jpiia6Q/4ef10sTfFpjh9EOcUZubOUb6tlCXDpHFnXhN1jOcCkxv4/8+w4FyomqM2G5tDg2
-        WnIMb/6A5ULDqkR0aJFFK4TSo1Q9xnu4eq2aFVqEP9aS53ECidTcWeNM07igJvbedJ2W+Dpzh2IUM
-        Zo9S77CfRiCrVl/Hvcll2OHNXyhLDNTgEHzPaYyRSXZHFAB+0O+JKr0ghrdrgEfjwEXfb09K3lwoM
-        PqeGZ1JA==;
-Received: from 51-171-241-192-dynamic.agg2.bbh.bbh-prp.eircom.net ([51.171.241.192]:47140 helo=[192.168.1.33])
-        by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.95)
-        (envelope-from <gustavo@embeddedor.com>)
-        id 1oTsQQ-002xVq-U0;
-        Thu, 01 Sep 2022 17:12:39 -0500
-Message-ID: <0255091d-e3df-7a4a-fa4c-7f9ae7226c73@embeddedor.com>
-Date:   Thu, 1 Sep 2022 23:12:30 +0100
+        with ESMTP id S235297AbiIBHvx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Sep 2022 03:51:53 -0400
+Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E32CBABF32;
+        Fri,  2 Sep 2022 00:51:52 -0700 (PDT)
+Received: by mail-pf1-x435.google.com with SMTP id x19so1159822pfr.1;
+        Fri, 02 Sep 2022 00:51:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date;
+        bh=ytaS2HDgiOt5YedCmHjB6NzOPHEeyztGDe+t4/ynB9g=;
+        b=IHU8HZzHDz1NEVK1FUbzsCmji46rKwPkkP6V5APfvELxfEBciQ/CRE6h9rPnWVJutq
+         lXwvQcNCOo23Lx17Ed09B1zXE0eK9xg6qUjPVvL64o8BZHVHQeXSCLIb68p9UOGYV8db
+         IZrg70C0r8OepEyY6Pit6wqxkDgo8olaiAG7uStVg352gB/08tYVa8YKcPKMSah+rhCj
+         amg1gp9KU3rxAsvjTbgaRJQbgtjg6YflC3BqlaI+O5J+BJEzt84kJgv2igjgi19nwm9d
+         GUDqD9SXI0qRZnvIv8SVgp3t6Gab7Dky/FgR8kF9pjS1PEgk+hZ1bgGTi+5Ck9curGXv
+         SaAQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date;
+        bh=ytaS2HDgiOt5YedCmHjB6NzOPHEeyztGDe+t4/ynB9g=;
+        b=fKfT6+rkgqyxVOCaA4nNzl524fNd/uHr/CCmIeX51MfknEJPHaU0bidnt4feMAUdXC
+         vEaHIzL+USfFKV2SHtE7hqXtwqZJgOujTK2FJRl0hr8CuEIDC/V+phxHm8Xa8JBIHcDE
+         bQbDKL60hXiFr2eOPejOIgz+9aAhFLBpWvWxpXO3Khyh4JwuxLEiISrfsd88UOTieNle
+         OqIAjnHVYnpv3EWd/dUKQ+VqTyK/oQTaxuA2grRTT3CthvF2t5nB8cPcJAJX8RT7If5t
+         GU3Srs2urDSymQaROHK5oxNOfSALPflpEzHmQUyb3PERZ28fVeM5gyVppKJ6b4kr6LbV
+         7LdA==
+X-Gm-Message-State: ACgBeo32WuiHTq6VHwjX3wdQPICPsD+h9h9xsbhRzi2EOm0SNYHz8ZAO
+        f6it/XK3Pb8fJyeYt0GX49g/YE6pR1vN3jCs
+X-Google-Smtp-Source: AA6agR4c8S/vuJdq6qi+8Z/hdP5FiMeDGwDeuB/GfKYqAnrtTz7U1k0exR83AM0TwSLRrB00WK5vRw==
+X-Received: by 2002:a63:8643:0:b0:42b:66ab:b051 with SMTP id x64-20020a638643000000b0042b66abb051mr30526063pgd.259.1662105112467;
+        Fri, 02 Sep 2022 00:51:52 -0700 (PDT)
+Received: from localhost ([166.111.139.139])
+        by smtp.gmail.com with ESMTPSA id s22-20020a170902b19600b00174fa8cbf6dsm898927plr.161.2022.09.02.00.51.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 02 Sep 2022 00:51:51 -0700 (PDT)
+From:   Zixuan Fu <r33s3n6@gmail.com>
+To:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
+        shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, baijiaju1990@gmail.com,
+        TOTE Robot <oslab@tsinghua.edu.cn>
+Subject: [BUG] scsi: megaraid_sas: possible null pointer dereference in megasas_slave_alloc()
+Date:   Fri,  2 Sep 2022 15:51:48 +0800
+Message-Id: <20220902075148.2391710-1-r33s3n6@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [PATCH] esas2r: Use flex array destination for memcpy()
-Content-Language: en-US
-To:     Kees Cook <keescook@chromium.org>,
-        Bradley Grove <linuxdrivers@attotech.com>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-hardening@vger.kernel.org
-References: <20220901205729.2260982-1-keescook@chromium.org>
-From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-In-Reply-To: <20220901205729.2260982-1-keescook@chromium.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - embeddedor.com
-X-BWhitelist: no
-X-Source-IP: 51.171.241.192
-X-Source-L: No
-X-Exim-ID: 1oTsQQ-002xVq-U0
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: 51-171-241-192-dynamic.agg2.bbh.bbh-prp.eircom.net ([192.168.1.33]) [51.171.241.192]:47140
-X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 3
-X-Org:  HG=hgshared;ORG=hostgator;
-X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
-X-Local-Domain: yes
-X-CMAE-Envelope: MS4xfItNRYN5CGTq/YC1zeX3g0TY+2rj+nazWiTdhzoWiPEQBhsl1NyzoSOzVDWgxj1jyE0u7QtnX8Z5817j5XpkYebWxJZFHeRAKE63EGlkM9L5puc9VU9t
- ffA+/2J0wRRDCZDCLesxFO2jKIqav25dQwJrYnxTnpGdtqU6fzn6USVPUPr05XQHHSRkuvpOTVOxtZKl+vVKQP8XoA9cSkxFw9OXqdNbjF8K2ozxuCdyCCZv
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Hello,
 
+Our fault injection tool finds a possible null-pointer dereference in the
+megaraid_sas driver in Linux 5.10.0:
 
-On 9/1/22 15:57, Kees Cook wrote:
-> In preparation for FORTIFY_SOURCE performing run-time destination buffer
-> bounds checking for memcpy(), specify the destination output buffer
-> explicitly, instead of asking memcpy() to write past the end of what
-> looked like a fixed-size object. Silences future run-time warning:
-> 
->    memcpy: detected field-spanning write (size 80) of single field "trc + 1" (size 64)
-> 
-> There is no binary code output differences from this change.
-> 
-> Cc: Bradley Grove <linuxdrivers@attotech.com>
-> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> Cc: linux-scsi@vger.kernel.org
-> Signed-off-by: Kees Cook <keescook@chromium.org>
+In the file drivers/scsi/megaraid/megaraid_sas_base.c:
+In megasas_get_seq_num(), the call to dma_alloc_coherent() may fail: 
+6459: el_info = dma_alloc_coherent(&instance->pdev->dev,
+                                   sizeof(struct megasas_evt_log_info),
+                                   &el_info_h,
+                                   GFP_KERNEL);
 
-Reviewed-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+This error is propagated to its caller megasas_start_aen().
+6749: if (megasas_get_seq_num(instance, &eli))
+6750:     return -1;
 
-Thanks
---
-Gustavo
+Then it is propagated again to its caller megasas_probe_one().
+7428: if (megasas_start_aen(instance)) {
+7429:     dev_printk(KERN_DEBUG, &pdev->dev, "start aen failed\n");
+7430:     goto fail_start_aen;
+7431: }
 
-> ---
->   drivers/scsi/esas2r/atioctl.h      | 1 +
->   drivers/scsi/esas2r/esas2r_ioctl.c | 3 +--
->   2 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/esas2r/atioctl.h b/drivers/scsi/esas2r/atioctl.h
-> index ff2ad9b38575..dd3437412ffc 100644
-> --- a/drivers/scsi/esas2r/atioctl.h
-> +++ b/drivers/scsi/esas2r/atioctl.h
-> @@ -831,6 +831,7 @@ struct __packed atto_hba_trace {
->   	u32 total_length;
->   	u32 trace_mask;
->   	u8 reserved2[48];
-> +	u8 contents[];
->   };
->   
->   #define ATTO_FUNC_SCSI_PASS_THRU     0x04
-> diff --git a/drivers/scsi/esas2r/esas2r_ioctl.c b/drivers/scsi/esas2r/esas2r_ioctl.c
-> index 08f4e43c7d9e..e003d923acbf 100644
-> --- a/drivers/scsi/esas2r/esas2r_ioctl.c
-> +++ b/drivers/scsi/esas2r/esas2r_ioctl.c
-> @@ -947,10 +947,9 @@ static int hba_ioctl_callback(struct esas2r_adapter *a,
->   					break;
->   				}
->   
-> -				memcpy(trc + 1,
-> +				memcpy(trc->contents,
->   				       a->fw_coredump_buff + offset,
->   				       len);
-> -
->   				hi->data_length = len;
->   			} else if (trc->trace_func == ATTO_TRC_TF_RESET) {
->   				memset(a->fw_coredump_buff, 0,
+In error handling code of megasas_probe_one(), it removes the pointer
+`instance` from `megasas_mgmt_info.instance`:
+7445: megasas_mgmt_info.instance[megasas_mgmt_info.max_index] = NULL;
+
+But it stores the pointer `instance` in the pdev by calling pci_set_drvdata()
+before and do nothing about it in error handling code:
+7401: pci_set_drvdata(pdev, instance);
+
+Then, in another thread, megasas_slave_alloc() is called. This function calls
+megasas_lookup_instance() to get the pointer `instance`, which can not be
+found in `megasas_mgmt_info.instance`. Therefore, NULL is returned:
+2087: instance = megasas_lookup_instance(sdev->host->host_no);
+
+This causes a null-pointer dereference bug:
+2095: if ((instance->pd_list_not_supported || 
+           instance->pd_list[pd_index].driveState == MR_PD_STATE_SYSTEM))
+
+If we just add a check for `instance`, another bug is found.
+megasas_fault_detect_work() is called by a thread. and it retrieves the
+pointer `instance` from `work`:
+In the file drivers/scsi/megaraid/megaraid_sas_base.c:
+1901: struct megasas_instance *instance = 
+        container_of(work, struct megasas_instance, fw_fault_work.work);
+
+Because the structure `instance` points to is broken, the following calls
+about `instance` causes some page-faults:
+1907: fw_state = instance->instancet->read_fw_status_reg(instance) &
+                 MFI_STATE_MASK;
+1911: dma_state = instance->instancet->read_fw_status_reg(instance) &
+                  MFI_STATE_DMADONE;
+...
+
+I am not quite sure how to fix this possible bug. Any feedback would be
+appreciated, thanks!
+
+Reported-by: TOTE Robot <oslab@tsinghua.edu.cn>
+
+Best wishes,
+Zixuan Fu
