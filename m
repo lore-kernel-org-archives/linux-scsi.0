@@ -2,122 +2,109 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A5B6ECAAD5
-	for <linux-scsi@archiver.kernel.org>; Fri,  2 Sep 2022 15:19:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44A71ECAAD5
+	for <linux-scsi@archiver.kernel.org>; Fri,  2 Sep 2022 16:19:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235217AbiIBPTz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 2 Sep 2022 11:19:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37594 "EHLO
+        id S232659AbiIBQTw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 2 Sep 2022 12:19:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55478 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235922AbiIBPTa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Sep 2022 11:19:30 -0400
-Received: from mail-wr1-x432.google.com (mail-wr1-x432.google.com [IPv6:2a00:1450:4864:20::432])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3027C4AD5B
-        for <linux-scsi@vger.kernel.org>; Fri,  2 Sep 2022 07:52:18 -0700 (PDT)
-Received: by mail-wr1-x432.google.com with SMTP id s7so2655815wro.2
-        for <linux-scsi@vger.kernel.org>; Fri, 02 Sep 2022 07:52:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date;
-        bh=vT12WjiAInI7Lcjts5MEkYbQ521nhvXexq63yVl3jIw=;
-        b=RXlCahQIcJ/VdQ4G4Rw6q1c2WcM4wewzYSnmK3vT6vKSFAtBukzsTSy08e5H5z7D3t
-         +L4TMpBbrTY7Nqo2f+jtAYOZ71dajpr48gOPFtibbwneFZ5xYDVLRtq6Fk1Dv1dLsrGf
-         KiWJ7Uj09yUTegf3C/a9WZSNBWmoNDQz6N/zUMC3XYE0ToYr4eGP6enxGkb4fDZOscrO
-         KU0F6gh/JbrS0ebUbnuJPdWssSxm9cYayM+gvU1AuWRFcCP+bBNX8RUUs0oOLJwW3qMY
-         fHuDzfdtJLVYP/G1xozYamGK7ekLdcjp0JeB2+us2U4cnPU4GZQTCoBwJUSZC3gy5hlZ
-         IOtw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date;
-        bh=vT12WjiAInI7Lcjts5MEkYbQ521nhvXexq63yVl3jIw=;
-        b=CK9APV78Zi9gDTFid9UktMoewgYTAh4XLlX4P1ZEwlEgMVptFZmflYKbhEi1h5BMvb
-         mkGORbBt93VXZ1nErCs10XqMudLjEEtxdt3mIMAG/esTcJxdG7tCXoBX8cswKUa8ZrVN
-         EmOQzY9oxoqYwotyWPDEvTAwXAgJGCZcbq/u5LmQyVwkEolm4qbeuVoP1JTKWruo8yVf
-         Rd57vIp0pbsJO/fchqH2euGSAkWPUaQX9+H919ih3mjxQL0tEkZvHtM91XqJ2qsjhhnf
-         yAZmXbT7Vav14+k5r5EExN4YePsmCJ2oCiVQSk7B6VRRt6es+/5zudrk8x8A2b4opPyn
-         rTGw==
-X-Gm-Message-State: ACgBeo15BUV3UOwIpa0miS+8DUgKVEuPbPI34yvm1cby8jQ3USv6Q7wq
-        Fa/66nlxScO1n0xq4Ebfyhk=
-X-Google-Smtp-Source: AA6agR4cNbIQ8/QHGzNiT4n6e3BSXZ+re1SthNfKZEUQh5V8GzYdEd9/2ymQm/IaePn51vC3VJ1ZUA==
-X-Received: by 2002:a05:6000:1d82:b0:220:5f9b:9a77 with SMTP id bk2-20020a0560001d8200b002205f9b9a77mr17587906wrb.622.1662130322254;
-        Fri, 02 Sep 2022 07:52:02 -0700 (PDT)
-Received: from [10.176.234.249] ([137.201.254.41])
-        by smtp.googlemail.com with ESMTPSA id o21-20020a05600c4fd500b003a32297598csm9608904wmq.43.2022.09.02.07.52.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 02 Sep 2022 07:52:01 -0700 (PDT)
-Message-ID: <ea43b861ac1c7b87a11934d2e5606fa37b2ae7fe.camel@gmail.com>
-Subject: Re: [PATCH v3] scsi: ufs: Increase the maximum data buffer size
-From:   Bean Huo <huobean@gmail.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "yohan.joung@sk.com" <yohan.joung@sk.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>
-Date:   Fri, 02 Sep 2022 16:52:00 +0200
-In-Reply-To: <6263c2a5-e7b6-c9e5-69e8-b6d93604d82d@acm.org>
-References: <20220726225232.1362251-1-bvanassche@acm.org>
-         <55fce3baaabf4e33aeaccbe5b4e1f145@sk.com>
-         <6263c2a5-e7b6-c9e5-69e8-b6d93604d82d@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.1-0ubuntu1 
+        with ESMTP id S230257AbiIBQTv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Sep 2022 12:19:51 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 107641ED;
+        Fri,  2 Sep 2022 09:19:42 -0700 (PDT)
+Received: from fraeml736-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MK34v1YjTz67NHg;
+        Sat,  3 Sep 2022 00:18:55 +0800 (CST)
+Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
+ fraeml736-chm.china.huawei.com (10.206.15.217) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Fri, 2 Sep 2022 18:19:40 +0200
+Received: from [10.195.34.23] (10.195.34.23) by lhrpeml500003.china.huawei.com
+ (7.191.162.67) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Fri, 2 Sep
+ 2022 17:19:39 +0100
+Message-ID: <4b471300-a912-c3c0-ead4-7165c57cbbf8@huawei.com>
+Date:   Fri, 2 Sep 2022 17:19:37 +0100
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+From:   John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH v2 2/6] scsi: libsas: Add sas_ata_device_link_abort()
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <jinpu.wang@cloud.ionos.com>, <yangxingui@huawei.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, <hare@suse.de>
+References: <1660747934-60059-1-git-send-email-john.garry@huawei.com>
+ <1660747934-60059-3-git-send-email-john.garry@huawei.com>
+ <0bb6b134-7bad-7c39-ad6d-25d57bd343eb@opensource.wdc.com>
+ <018080d5-fbc4-7f04-0d3f-587f2397cd20@huawei.com>
+ <baf63982-810c-85eb-b28f-99ab0517c6ba@opensource.wdc.com>
+ <eb3465a2-335e-a605-ba8a-4cce790b5b02@huawei.com>
+In-Reply-To: <eb3465a2-335e-a605-ba8a-4cce790b5b02@huawei.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.195.34.23]
+X-ClientProxiedBy: lhrpeml500004.china.huawei.com (7.191.163.9) To
+ lhrpeml500003.china.huawei.com (7.191.162.67)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2022-08-03 at 09:23 -0700, Bart Van Assche wrote:
-> On 8/2/22 16:40, yohan.joung@sk.com=C2=A0wrote:
-> > Is it possible by adding only max_sector to increase the data
-> > buffer size?
->=20
-> Yes.
->=20
-> > I think the data buffer will split to 512 KiB, because the sg_table
-> > size is SG_ALL
->=20
-> I don't think so. With this patch applied, the limits supported by
-> the=20
-> UFS driver are as follows:
->=20
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0.sg_tablesize=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=3D SG_ALL,=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0 /* 128 */
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0.max_segment_size=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=3D PRDT_DATA_BYTE_COUNT_MAX, /* 256
-> KiB*/
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0.max_sectors=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=3D (1 << 20) /=
- SECTOR_SIZE,=C2=A0 /* 1 MiB
-> */
->=20
-> So the maximum data buffer size is min(max_sectors * 512,
-> sg_tablesize *=20
-> max_segment_size) =3D min(1 MiB, 128 * 256 KiB) =3D 1 MiB. On a system
-> with=20
-> 4 KiB pages, the data buffer size will be 128 * 4 KiB =3D 512 MiB if
-> none=20
-> of the pages involved in the I/O are contiguous.
->=20
-> Bart.
+Hi Damien,
 
+>>>
+>>> But the pm8001 manual and current driver indicate that the
+>>> OPC_INB_SATA_ABORT command should be sent after read log ext when
+>>> handling NCQ error, regardless of an autopsy. I send OPC_INB_SATA_ABORT
+>>> in ata_eh_reset() -> pm8001_I_T_nexus_reset() -> pm8001_send_abort_all()
+>> You lost me: ata_eh_recover() will call ata_eh_reset() only if the 
+>> ATA_EH_RESET
+>> action flag is set. So are you saying that even though it is not 
+>> needed, you
+>> still need to set ATA_EH_RESET for pm8001 ?
+> 
+> As below, it was the only location I found suitable to call 
+> pm8001_send_abort_all().
+> 
+> However I am not really sure it is required now. For pm8001 NCQ error 
+> handling we require 2x steps:
+> - read log ext
+> - Send OPC_INB_SATA_ABORT - we do this in pm8001_send_abort_all()
+> 
+> pm8001_send_abort_all() sends OPC_INB_SATA_ABORT in "device abort all" 
+> mode, meaning any IO in the HBA is aborted for the device. But we are 
+> also earlier in EH sending OPC_INB_SATA_ABORT for individual IOs in 
+> sas_eh_handle_sas_errors() -> sas_scsi_find_task() -> 
+> pm8001_abort_task() -> sas_execute_internal_abort_single() -> ... 
+> send_abort_task()
+> 
+> So I don't think that the pm8001_send_abort_all() call has any effect, 
+> as we're already aborting any outstanding IO earlier.
+> 
+> Admittedly the order of the 2x steps is different, but 
+> OPC_INB_SATA_ABORT does not send any protocol message to the disk, so 
+> would not affect anything subsequently read with read log ext.
+> 
+> Having said all that, it may be wise to still send 
+> pm8001_send_abort_all()..
 
-Bart,=20
+Have you had a chance to consider all this yet?
 
-This change just increases the shost->max_sectors limit from 501KB to
-1Mb, but the final value will be overridden by the optimal transfer
-length defined in the VPD, right?
+I am now starting to think that it is not necessary to call 
+pm8001_send_abort_all(), and instead rely only on 
+sas_eh_handle_sas_errors() -> sas_scsi_find_task() -> 
+pm8001_abort_task() -> sas_execute_internal_abort_single() -> ... -> 
+send_abort_task() to abort each outstanding IO. Then we would not have 
+the issue of forcing the reset in $subject (to lead to calling 
+pm8001_send_abort_all()).
 
-Kind regards,
-Bean
+This idea could simply be tested by stubbing pm8001_send_abort_all()
+(and dropping the |= ATA_EH_RESET in $subject).
+
+Thanks,
+John
+
