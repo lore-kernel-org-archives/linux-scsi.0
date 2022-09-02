@@ -2,109 +2,118 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44A71ECAAD5
-	for <linux-scsi@archiver.kernel.org>; Fri,  2 Sep 2022 16:19:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C616BC6FA82
+	for <linux-scsi@archiver.kernel.org>; Fri,  2 Sep 2022 22:42:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232659AbiIBQTw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 2 Sep 2022 12:19:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55478 "EHLO
+        id S229701AbiIBWm5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 2 Sep 2022 18:42:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40922 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230257AbiIBQTv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Sep 2022 12:19:51 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 107641ED;
-        Fri,  2 Sep 2022 09:19:42 -0700 (PDT)
-Received: from fraeml736-chm.china.huawei.com (unknown [172.18.147.226])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MK34v1YjTz67NHg;
-        Sat,  3 Sep 2022 00:18:55 +0800 (CST)
-Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml736-chm.china.huawei.com (10.206.15.217) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Fri, 2 Sep 2022 18:19:40 +0200
-Received: from [10.195.34.23] (10.195.34.23) by lhrpeml500003.china.huawei.com
- (7.191.162.67) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Fri, 2 Sep
- 2022 17:19:39 +0100
-Message-ID: <4b471300-a912-c3c0-ead4-7165c57cbbf8@huawei.com>
-Date:   Fri, 2 Sep 2022 17:19:37 +0100
+        with ESMTP id S229500AbiIBWmz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Sep 2022 18:42:55 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70015E725F;
+        Fri,  2 Sep 2022 15:42:53 -0700 (PDT)
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 282KFRek013313;
+        Fri, 2 Sep 2022 22:42:24 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=qcppdkim1;
+ bh=DMpRXlBJEPMO1B/g5veB7Bj4BDZBa0GEsIo0IPwimq8=;
+ b=Tz8mnj0sY64ja2xd6V6NSERV1sUbtLFk8D5pSqZrIzBavpSeka0yDiEHA/zV0Z7/642g
+ p1E43onlwGUQ4sPv0WlaAvbhT22oWQHZaK57XJkAwPoh10JocAzQ9/0f4bvHv9B1PeFL
+ OkVNbb/TOQWcW2fLCg7DQBSTXUf7jcHBmbkhtOHpbt2Fr094aGm7VU5x+AvgWEc393qS
+ OOvtvlh4XZS0lKu5JCstK7mNllR7SBS0f1Cjpzc0C1CO9sXpwEeGpkP6uIj+9L+ny1eR
+ n7obaTzI08F39AjwWHEBhijHUTMxpg22NnmPVSHLeenbGqmtSRHfjhlv4eUTV3X2E9Ut 2A== 
+Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3jashfe9n7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 02 Sep 2022 22:42:24 +0000
+Received: from nasanex01a.na.qualcomm.com (corens_vlan604_snip.qualcomm.com [10.53.140.1])
+        by NASANPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 282MgNF0007683
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 2 Sep 2022 22:42:23 GMT
+Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
+ nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.29; Fri, 2 Sep 2022 15:42:23 -0700
+From:   Asutosh Das <quic_asutoshd@quicinc.com>
+To:     <quic_nguyenb@quicinc.com>, <quic_xiaosenh@quicinc.com>,
+        <stanley.chu@mediatek.com>, <adrian.hunter@intel.com>,
+        <bvanassche@acm.org>, <avri.altman@wdc.com>, <mani@kernel.org>,
+        <quic_cang@quicinc.com>, <beanhuo@micron.com>,
+        <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>
+CC:     Asutosh Das <quic_asutoshd@quicinc.com>,
+        <linux-arm-msm@vger.kernel.org>
+Subject: [RFC PATCH v3 0/4] UFS Multi-Circular Queue (MCQ) 
+Date:   Fri, 2 Sep 2022 15:41:36 -0700
+Message-ID: <cover.1662157846.git.quic_asutoshd@quicinc.com>
+X-Mailer: git-send-email 2.7.4
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-From:   John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH v2 2/6] scsi: libsas: Add sas_ata_device_link_abort()
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <jinpu.wang@cloud.ionos.com>, <yangxingui@huawei.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>, <hare@suse.de>
-References: <1660747934-60059-1-git-send-email-john.garry@huawei.com>
- <1660747934-60059-3-git-send-email-john.garry@huawei.com>
- <0bb6b134-7bad-7c39-ad6d-25d57bd343eb@opensource.wdc.com>
- <018080d5-fbc4-7f04-0d3f-587f2397cd20@huawei.com>
- <baf63982-810c-85eb-b28f-99ab0517c6ba@opensource.wdc.com>
- <eb3465a2-335e-a605-ba8a-4cce790b5b02@huawei.com>
-In-Reply-To: <eb3465a2-335e-a605-ba8a-4cce790b5b02@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.195.34.23]
-X-ClientProxiedBy: lhrpeml500004.china.huawei.com (7.191.163.9) To
- lhrpeml500003.china.huawei.com (7.191.162.67)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: FyOsImqxk4e0V8qq-rO8w6jW7_Bd8rgA
+X-Proofpoint-ORIG-GUID: FyOsImqxk4e0V8qq-rO8w6jW7_Bd8rgA
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.517,FMLib:17.11.122.1
+ definitions=2022-09-02_06,2022-08-31_03,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 adultscore=0
+ malwarescore=0 impostorscore=0 phishscore=0 clxscore=1011 mlxscore=0
+ bulkscore=0 mlxlogscore=888 lowpriorityscore=0 spamscore=0
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2207270000 definitions=main-2209020101
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Damien,
+UFS Multi-Circular Queue (MCQ) has been added in UFSHCI v4.0 to improve storage performance.
+This patch series is a RFC implementation of this.
 
->>>
->>> But the pm8001 manual and current driver indicate that the
->>> OPC_INB_SATA_ABORT command should be sent after read log ext when
->>> handling NCQ error, regardless of an autopsy. I send OPC_INB_SATA_ABORT
->>> in ata_eh_reset() -> pm8001_I_T_nexus_reset() -> pm8001_send_abort_all()
->> You lost me: ata_eh_recover() will call ata_eh_reset() only if the 
->> ATA_EH_RESET
->> action flag is set. So are you saying that even though it is not 
->> needed, you
->> still need to set ATA_EH_RESET for pm8001 ?
-> 
-> As below, it was the only location I found suitable to call 
-> pm8001_send_abort_all().
-> 
-> However I am not really sure it is required now. For pm8001 NCQ error 
-> handling we require 2x steps:
-> - read log ext
-> - Send OPC_INB_SATA_ABORT - we do this in pm8001_send_abort_all()
-> 
-> pm8001_send_abort_all() sends OPC_INB_SATA_ABORT in "device abort all" 
-> mode, meaning any IO in the HBA is aborted for the device. But we are 
-> also earlier in EH sending OPC_INB_SATA_ABORT for individual IOs in 
-> sas_eh_handle_sas_errors() -> sas_scsi_find_task() -> 
-> pm8001_abort_task() -> sas_execute_internal_abort_single() -> ... 
-> send_abort_task()
-> 
-> So I don't think that the pm8001_send_abort_all() call has any effect, 
-> as we're already aborting any outstanding IO earlier.
-> 
-> Admittedly the order of the 2x steps is different, but 
-> OPC_INB_SATA_ABORT does not send any protocol message to the disk, so 
-> would not affect anything subsequently read with read log ext.
-> 
-> Having said all that, it may be wise to still send 
-> pm8001_send_abort_all()..
+This is the initial driver implementation and it has been verified by booting on an emulation
+platform. During testing, all low power modes were disabled and it was in HS-G1 mode.
 
-Have you had a chance to consider all this yet?
+Please take a look and let us know your thoughts.
 
-I am now starting to think that it is not necessary to call 
-pm8001_send_abort_all(), and instead rely only on 
-sas_eh_handle_sas_errors() -> sas_scsi_find_task() -> 
-pm8001_abort_task() -> sas_execute_internal_abort_single() -> ... -> 
-send_abort_task() to abort each outstanding IO. Then we would not have 
-the issue of forcing the reset in $subject (to lead to calling 
-pm8001_send_abort_all()).
+v2 -> v3:
+- Split the changes based on functionality
+- Addressed queue configuration issues
+- Faster SQE tail pointer increments
+- Addressed comments from Bart and Manivannan
 
-This idea could simply be tested by stubbing pm8001_send_abort_all()
-(and dropping the |= ATA_EH_RESET in $subject).
+v1 -> v2:
+- Enabled host_tagset
+- Added queue num configuration support
+- Added one more vops to allow vendor provide the wanted MAC
+- Determine nutrs and can_queue by considering both MAC, bqueuedepth and EXT_IID support
+- Postponed MCQ initialization and scsi_add_host() to async probe
+- Used (EXT_IID, Task Tag) tuple to support up to 4096 tasks (theoretically)
 
-Thanks,
-John
+
+Asutosh Das (2):
+  ufs: core: prepare ufs for multi circular queue support
+  ufs: core: mcq: Adds Multi-Circular Queue support
+
+Can Guo (2):
+  ufs: core: Add Event Specific Interrupt configuration vendor specific
+    ops
+  ufs: host: qcom: Add MCQ support
+
+ drivers/ufs/core/Makefile      |   2 +-
+ drivers/ufs/core/ufs-mcq.c     | 474 +++++++++++++++++++++++++++++++++++++++++
+ drivers/ufs/core/ufshcd-priv.h | 102 +++++++++
+ drivers/ufs/core/ufshcd.c      | 370 +++++++++++++++++++++++++-------
+ drivers/ufs/host/ufs-qcom.c    | 134 ++++++++++++
+ drivers/ufs/host/ufs-qcom.h    |  13 ++
+ include/ufs/ufs.h              |   6 +
+ include/ufs/ufshcd.h           | 137 ++++++++++++
+ include/ufs/ufshci.h           |  79 +++++++
+ 9 files changed, 1238 insertions(+), 79 deletions(-)
+ create mode 100644 drivers/ufs/core/ufs-mcq.c
+
+-- 
+2.7.4
 
