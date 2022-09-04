@@ -2,135 +2,142 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D297FECAAD3
-	for <linux-scsi@archiver.kernel.org>; Sun,  4 Sep 2022 18:35:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66D1AC6FA82
+	for <linux-scsi@archiver.kernel.org>; Sun,  4 Sep 2022 19:10:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234334AbiIDSfk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 4 Sep 2022 14:35:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44158 "EHLO
+        id S234419AbiIDTKS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 4 Sep 2022 15:10:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45520 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229938AbiIDSff (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Sep 2022 14:35:35 -0400
-X-Greylist: delayed 398 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 04 Sep 2022 11:35:34 PDT
-Received: from mx-out.tlen.pl (mx-out.tlen.pl [193.222.135.175])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 446242A942
-        for <linux-scsi@vger.kernel.org>; Sun,  4 Sep 2022 11:35:33 -0700 (PDT)
-Received: (wp-smtpd smtp.tlen.pl 34374 invoked from network); 4 Sep 2022 20:28:51 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=o2.pl; s=1024a;
-          t=1662316131; bh=RMbg8JoOTW9l4AYVWEZ+YFzFJD8KFu2BndOpYJRW1Cw=;
-          h=To:From:Subject;
-          b=Tr+NF08r1TL2k8sMMNh7Fgh5V/B6HDJ+JQSpSnE3pzk637FgF7oeDRk5lMX4UmVpR
-           SthKBi24B+HO68FWGKvwptm5V24O1hIl8D52IcsnrEfxw41N1yhUk5y2g0wF4lYNwT
-           gNHOTekpjX/yqUS++60RuwU/6RLcUUYOAiJsoWUA=
-Received: from aaey104.neoplus.adsl.tpnet.pl (HELO [192.168.1.22]) (mat.jonczyk@o2.pl@[83.4.128.104])
-          (envelope-sender <mat.jonczyk@o2.pl>)
-          by smtp.tlen.pl (WP-SMTPD) with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP
-          for <linux-kernel@vger.kernel.org>; 4 Sep 2022 20:28:51 +0200
-Message-ID: <fbd28a8c-858d-8891-f6be-a5c2ca3131da@o2.pl>
-Date:   Sun, 4 Sep 2022 20:28:47 +0200
+        with ESMTP id S231339AbiIDTKR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Sep 2022 15:10:17 -0400
+Received: from mail-lj1-x236.google.com (mail-lj1-x236.google.com [IPv6:2a00:1450:4864:20::236])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9EAD71834D
+        for <linux-scsi@vger.kernel.org>; Sun,  4 Sep 2022 12:10:15 -0700 (PDT)
+Received: by mail-lj1-x236.google.com with SMTP id bx38so7247032ljb.10
+        for <linux-scsi@vger.kernel.org>; Sun, 04 Sep 2022 12:10:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date;
+        bh=Zg+iO2cHAZ4r3CwVknTSd9WpAQ+T+PmH9eUM+TKxTdc=;
+        b=BOb1TQqLBg3Vo9NOObXNapdN3fX1o2A47xccVzPBEh3W6eETgX0cVeJZJ+Pbu3sUUd
+         e3VT1m7M2ht2A1QeJwtWSMgFH7REHFEKHtriZLobW2N6MRbsxmSI8Qf6WkuPkS4l3kyb
+         8tXScDm6Z6GeBQ6iDmT4s1HOvBCpvagV2Jiizr64YjxGMl0jv3Z3+j+KfscEOZwqfzUy
+         Oy478r+iOEZHRIC/xZoNu719WhIlen/bWReEhsqTmZ5mEbAWLY5PmUq6FKRpQHbwdgQH
+         ezy6GprCjx7XKx5F0g81Aajc8WvDtmmxc5ZtW7U0q9dtyNQZsJDl0AYj8ZWQ4c6IS7c3
+         O4pA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date;
+        bh=Zg+iO2cHAZ4r3CwVknTSd9WpAQ+T+PmH9eUM+TKxTdc=;
+        b=SHQ7AS/TTnTyn5rlOOYEQc2AMRVQTrJlj2viF4GsjT2gIH4WnAvB5qpy8KcFvUDUYM
+         1f/RbLHQdeE+ABXq3dPFF/5k23HNG4n6HVLSNbEWMjMd1H6PctrVZf7FhUXv+5KIjQfk
+         UF0ii68kg9F8UGKBrrf5/Sb+bENwWwW3Kko1eHbTlRjhcHQGJ0+9QQAiohrqau0CWc2T
+         uLSq0ulPwTBxY1mxneZxmVayVf3+9jtC/KjPI9tFMQEn7M36QHAcU6GbJizwa4vgOSBx
+         +HjqwylVWyVKY7BNiXmeTNiG9mQYKKqaUIR8NMaQl76oQa1CFMSgn+zIvadznxYfX5Dj
+         G4eA==
+X-Gm-Message-State: ACgBeo2D5aBZrM6y6QrDIE4B/F/ibUMjIAdpwz+bTbFPRtus4b4pQWbH
+        AWyFDwjliHhavDJk8kf16aBaDA==
+X-Google-Smtp-Source: AA6agR4G1EVK6Vkm3ynfxZbN+nIgBnYZIWjL6IipexTk4VhVtEQ6oXIt2rHZsPBpI/X/zmGj4u3Fqw==
+X-Received: by 2002:a2e:a99b:0:b0:261:b1a1:4ee9 with SMTP id x27-20020a2ea99b000000b00261b1a14ee9mr14389646ljq.366.1662318613931;
+        Sun, 04 Sep 2022 12:10:13 -0700 (PDT)
+Received: from [192.168.0.21] (78-11-189-27.static.ip.netia.com.pl. [78.11.189.27])
+        by smtp.gmail.com with ESMTPSA id k6-20020ac257c6000000b00490b5f09973sm992560lfo.92.2022.09.04.12.10.12
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 04 Sep 2022 12:10:13 -0700 (PDT)
+Message-ID: <199167f2-0420-8c56-5156-35005069549d@linaro.org>
+Date:   Sun, 4 Sep 2022 22:10:11 +0300
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.1
-Content-Language: en-GB
-To:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-scsi@vger.kernel.org, adrian.hunter@intel.com,
-        martin.petersen@oracle.com, bvanassche@acm.org, jaegeuk@kernel.org,
-        michael.christie@oracle.com, hch@lst.de, ming.lei@redhat.com,
-        hare@suse.de, john.garry@huawei.com
-From:   =?UTF-8?Q?Mateusz_Jo=c5=84czyk?= <mat.jonczyk@o2.pl>
-Subject: [Bisected] Disconnecting pendrive with opened files causes trouble on
- 6.0.0-rc3
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.13.0
+Subject: Re: [PATCH 08/14] dt-bindings: ufs: qcom: Add sm6115 binding
+Content-Language: en-US
+To:     Iskren Chernev <iskren.chernev@gmail.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>
+Cc:     phone-devel@vger.kernel.org, ~postmarketos/upstreaming@lists.sr.ht,
+        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+        Andy Gross <agross@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@somainline.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20220901072414.1923075-1-iskren.chernev@gmail.com>
+ <20220901072414.1923075-9-iskren.chernev@gmail.com>
+ <7804ffbe-4e27-d8bd-dbe2-75d1323da064@linaro.org>
+ <89e6a200-d9af-7263-5e09-d7d824277a30@gmail.com>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+In-Reply-To: <89e6a200-d9af-7263-5e09-d7d824277a30@gmail.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-WP-MailID: be67303d4fa038a8d3bd0e6b3f824a8e
-X-WP-AV: skaner antywirusowy Poczty o2
-X-WP-SPAM: NO 0000001 [oQIx]                               
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello,
+On 03/09/2022 19:54, Iskren Chernev wrote:
+> 
+> 
+> On 9/1/22 19:11, Krzysztof Kozlowski wrote:
+>> On 01/09/2022 10:24, Iskren Chernev wrote:
+>>> Add SM6115 UFS to DT schema.
+>>>
+>>> Signed-off-by: Iskren Chernev <iskren.chernev@gmail.com>
+>>> ---
+>>>  .../devicetree/bindings/ufs/qcom,ufs.yaml     | 26 +++++++++++++++++++
+>>>  1 file changed, 26 insertions(+)
+>>>
+>>> diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+>>> index f2d6298d926c..7c5f6e2e6d4c 100644
+>>> --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+>>> +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+>>> @@ -28,6 +28,7 @@ properties:
+>>>            - qcom,msm8998-ufshc
+>>>            - qcom,sc8280xp-ufshc
+>>>            - qcom,sdm845-ufshc
+>>> +          - qcom,sm6115-ufshc
+>>>            - qcom,sm6350-ufshc
+>>>            - qcom,sm8150-ufshc
+>>>            - qcom,sm8250-ufshc
+>>> @@ -178,6 +179,31 @@ allOf:
+>>>            minItems: 1
+>>>            maxItems: 1
+>>>
+>>> +  - if:
+>>> +      properties:
+>>> +        compatible:
+>>> +          contains:
+>>> +            enum:
+>>> +              - qcom,sm6115-ufshc
+>>> +    then:
+>>> +      properties:
+>>> +        clocks:
+>>> +          minItems: 8
+>>> +          maxItems: 8
+>>> +        clock-names:
+>>> +          items:
+>>> +            - const: core_clk
+>>> +            - const: bus_aggr_clk
+>>> +            - const: iface_clk
+>>> +            - const: core_clk_unipro
+>>> +            - const: core_clk_ice
+>>
+>> Use existing name and put it in the same place as existing variant - sdm845:
+>> ice_core_clk
+> 
+> The only problem with sdm845 bindings is the presence of rx_lane1_sync_clk
+> clock. I'm guessing I could pass zeros there, because it shouldn't be used. Or
+> it could be moved to last property and then min/maxItems to guard, but that is
+> a change to something more-or-less immutable.
 
-On Linux 6.0.0-rc3, disconnecting a mounted pendrive with opened files causes these symptoms:
-
-- "task kworker/X blocked for more than Y seconds" warnings (see below) are repeatedly printed in dmesg,
-- after reconnecting the pendrive (or possibly other USB devices), it is not detected,
-- the login screen (Gnome on Ubuntu 20.04) freezes for some time (around 20s), due to a hang in colord-sane.
-
-These symptoms disappear after closing the opened files (and perhaps also directories) on the pendrive.
-
-I am aware that disconnecting a pendrive with a mounted filesystem is unwise, but many people do so
-nonetheless.
-
-I have bisected this down to
-commit 16728aaba62e ("scsi: core: Make sure that hosts outlive targets")
-
-With the previous
-commit fe442604199e ("scsi: core: Make sure that targets outlive devices")
-the problem does not happen.
-
-To reproduce:
-
-1. Plug a pendrive into a USB port (checked with a pendrive formatted with a FAT32 filesystem).
-2. Mount it, open a file on this pendrive with the "less" command-line program.
-3. Optionally suspend the system to RAM.
-4. Disconnect the pendrive.
-5. Resume the system, if it was suspended.
-
-Warnings from dmesg:
-
-[   76.212690] usb 1-3.4.3: USB disconnect, device number 6
-[   76.219765] device offline error, dev sdc, sector 2049 op 0x1:(WRITE) flags 0x100000 phys_seg 1 prio class 2
-[   76.219791] Buffer I/O error on dev sdc1, logical block 1, lost async page write
-[  242.764446] INFO: task kworker/0:7:1701 blocked for more than 120 seconds.
-[  242.764463]       Tainted: G            E      6.0.0-rc3mj6 #239
-[  242.764470] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[  242.764474] task:kworker/0:7     state:D stack:    0 pid: 1701 ppid:     2 flags:0x00004000
-[  242.764488] Workqueue: usb_hub_wq hub_event
-[  242.764504] Call Trace:
-[  242.764507]  <TASK>
-[  242.764514]  __schedule+0x2c5/0xcd0
-[  242.764527]  schedule+0x5d/0xf0
-[  242.764535]  scsi_remove_host+0x163/0x1b0
-[  242.764547]  ? var_wake_function+0x60/0x60
-[  242.764559]  usb_stor_disconnect+0x50/0xd0 [usb_storage]
-[  242.764571]  usb_unbind_interface+0x8c/0x240
-[  242.764581]  device_remove+0x64/0x70
-[  242.764590]  device_release_driver_internal+0xd1/0x160
-[  242.764599]  device_release_driver+0x12/0x20
-[  242.764608]  bus_remove_device+0xde/0x150
-[  242.764616]  device_del+0x192/0x3e0
-[  242.764621]  ? usb_remove_ep_devs+0x1f/0x30
-[  242.764632]  usb_disable_device+0xab/0x240
-[  242.764639]  usb_disconnect+0xc7/0x260
-[  242.764647]  ? set_port_feature+0x37/0x40
-[  242.764656]  hub_event+0xeb0/0x17c0
-[  242.764668]  ? __schedule+0x2cd/0xcd0
-[  242.764675]  ? queue_rcu_work+0x2c/0x40
-[  242.764684]  process_one_work+0x21c/0x3c0
-[  242.764693]  worker_thread+0x4a/0x3b0
-[  242.764703]  ? process_one_work+0x3c0/0x3c0
-[  242.764711]  kthread+0xcf/0xf0
-[  242.764719]  ? kthread_complete_and_exit+0x20/0x20
-[  242.764728]  ret_from_fork+0x22/0x30
-[  242.764737]  </TASK>
-
-The kernel is tainted AFAIK because of the following:
-
-[    0.442486] backlight: module verification failed: signature and/or required key missing - tainting kernel
-[...]
-[    0.446462] Loading compiled-in X.509 certificates
-[    0.447431] Loaded X.509 cert 'Build time autogenerated kernel key: cbf6b5d58385db4124f3ddd5fa0457b112415dcb'
-
-The module was loaded before the signing keys were processed - which is an unrelated bug, present since a long time.
+I don't understand - what is the problem here. How presence of some
+clock affects name of other clock and its place/location in list of clocks?
 
 
-System information:
-- Ubuntu 20.04 amd64,
-- HP 17-by0001nw laptop,
-- problem happens also when using an external USB 3.0 UNITEK hub.
-
-Greetings,
-
-Mateusz Jończyk
-
+Best regards,
+Krzysztof
