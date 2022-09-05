@@ -2,161 +2,167 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E00BC6FA83
-	for <linux-scsi@archiver.kernel.org>; Mon,  5 Sep 2022 10:03:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3527FC6FA83
+	for <linux-scsi@archiver.kernel.org>; Mon,  5 Sep 2022 10:27:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236332AbiIEKDW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 5 Sep 2022 06:03:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59134 "EHLO
+        id S236215AbiIEK1S (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 5 Sep 2022 06:27:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50074 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237155AbiIEKDV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Sep 2022 06:03:21 -0400
-Received: from mail-lf1-x132.google.com (mail-lf1-x132.google.com [IPv6:2a00:1450:4864:20::132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DF3023148
-        for <linux-scsi@vger.kernel.org>; Mon,  5 Sep 2022 03:03:19 -0700 (PDT)
-Received: by mail-lf1-x132.google.com with SMTP id p7so12423649lfu.3
-        for <linux-scsi@vger.kernel.org>; Mon, 05 Sep 2022 03:03:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date;
-        bh=teZIYNw0Fgke9Op5/gTN1ZRD/QOncOzj4BAdZFEwFdA=;
-        b=HdDCQI6Q+HJCwXp3FgMfTyaA02W4zxJofsFCwnYxj88HQFIEAKtpQ480Ft6m7Jdkg1
-         q5vnmjGoDcjdCqF6KfR+P9e1otoTo6Pr13lDZqwT2EzMCrziCt92NioVPtRKwM9PsIFT
-         2mhVuDHwvw7sEeBqQPx39eirCmal//zTOveYliRx1yadi/NNfObwMOzRN8xYyiVYzBwA
-         DG5Yt5isUdHzF+TEZSyb57nh7ieQ266LNyhexy/hvHrFJhACD3OLjhpGVCn4MKvsSc7y
-         DWolu+poofnVw8PGVkIGjuG+/jtkl5Fpy0N5981KWdq1qqeNM4O+Gdfnm2gFm0Aa2P8l
-         ET0A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date;
-        bh=teZIYNw0Fgke9Op5/gTN1ZRD/QOncOzj4BAdZFEwFdA=;
-        b=HpkIYvlYsJkGnu36AkPQdKqkkHWP0OwarQiuvip13n+Ej3CdkewLnTbErpPEwo0eJe
-         DQZgg/Yt4xMioRpp9dr7sWcS62IcMMWGSESiRkIHSqSxokl657GO/FTZZ94c49GE5p9z
-         kEt9TrDxzOUYx/PTtEM2d1WtxOvHOxXvPPpyH6uGVIrW6H0jG9YCjS3zCq9e7j18bVPz
-         9L1A0zlcvVuRTxFQ31KoePZEvVgSKCBxnmizgq4FEC/JNPpy3krhRBf09SYjAussfYyT
-         rh/FrKP9b4EJBUXhrXn8B80XLPVlOFmQQhU2sTKo7/A6Tpb56/DMC2s5qyKVvc+IarRC
-         5GWA==
-X-Gm-Message-State: ACgBeo3wteR0P22Wa5bqwYCfOTcDaV89mo6SHv7f8rMjbYPFwYMTVw1g
-        dL9GHmYXyIzd3Ns3pc0HXykPAQ==
-X-Google-Smtp-Source: AA6agR6wA0dmt6SDnTvjKayaQZYpX4H6ra1OL8OH9mAIg2hnrbyfR5RqQ0HGgN92n8+sBnJ34bdK8w==
-X-Received: by 2002:a05:6512:234e:b0:494:8a27:ddca with SMTP id p14-20020a056512234e00b004948a27ddcamr7538561lfu.656.1662372197390;
-        Mon, 05 Sep 2022 03:03:17 -0700 (PDT)
-Received: from [192.168.0.21] (78-11-189-27.static.ip.netia.com.pl. [78.11.189.27])
-        by smtp.gmail.com with ESMTPSA id p1-20020a05651238c100b00492cfecf1c0sm1139985lft.245.2022.09.05.03.03.16
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 05 Sep 2022 03:03:16 -0700 (PDT)
-Message-ID: <5e947462-d8f4-350e-22ad-b048b0e494bf@linaro.org>
-Date:   Mon, 5 Sep 2022 12:03:15 +0200
+        with ESMTP id S237123AbiIEK1R (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Sep 2022 06:27:17 -0400
+Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [IPv6:2a01:488:42:1000:50ed:8234::])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B714F62E4;
+        Mon,  5 Sep 2022 03:27:15 -0700 (PDT)
+Received: from [2a02:8108:963f:de38:eca4:7d19:f9a2:22c5]; authenticated
+        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        id 1oV9Jx-0001WI-TV; Mon, 05 Sep 2022 12:27:13 +0200
+Message-ID: <59c57de8-580e-a761-e69c-7b1bdbfb8dd4@leemhuis.info>
+Date:   Mon, 5 Sep 2022 12:27:13 +0200
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.13.0
-Subject: Re: [PATCH 08/14] dt-bindings: ufs: qcom: Add sm6115 binding
-Content-Language: en-US
-To:     Iskren Chernev <iskren.chernev@gmail.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>
-Cc:     phone-devel@vger.kernel.org, ~postmarketos/upstreaming@lists.sr.ht,
-        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        Andy Gross <agross@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@somainline.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20220901072414.1923075-1-iskren.chernev@gmail.com>
- <20220901072414.1923075-9-iskren.chernev@gmail.com>
- <7804ffbe-4e27-d8bd-dbe2-75d1323da064@linaro.org>
- <89e6a200-d9af-7263-5e09-d7d824277a30@gmail.com>
- <199167f2-0420-8c56-5156-35005069549d@linaro.org>
- <72f86c4f-79fa-bff4-f14e-4cd7fa7ce41f@gmail.com>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <72f86c4f-79fa-bff4-f14e-4cd7fa7ce41f@gmail.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.2.1
+Subject: Re: [Bisected] Disconnecting pendrive with opened files causes
+ trouble on 6.0.0-rc3 #forregzbot
+To:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-scsi@vger.kernel.org,
+        "regressions@lists.linux.dev" <regressions@lists.linux.dev>
+References: <fbd28a8c-858d-8891-f6be-a5c2ca3131da@o2.pl>
+Content-Language: en-US, de-DE
+From:   Thorsten Leemhuis <regressions@leemhuis.info>
+In-Reply-To: <fbd28a8c-858d-8891-f6be-a5c2ca3131da@o2.pl>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1662373635;54257e65;
+X-HE-SMSGID: 1oV9Jx-0001WI-TV
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 05/09/2022 09:29, Iskren Chernev wrote:
-> 
-> 
-> On 9/4/22 22:10, Krzysztof Kozlowski wrote:
->> On 03/09/2022 19:54, Iskren Chernev wrote:
->>>
->>>
->>> On 9/1/22 19:11, Krzysztof Kozlowski wrote:
->>>> On 01/09/2022 10:24, Iskren Chernev wrote:
->>>>> Add SM6115 UFS to DT schema.
->>>>>
->>>>> Signed-off-by: Iskren Chernev <iskren.chernev@gmail.com>
->>>>> ---
->>>>>  .../devicetree/bindings/ufs/qcom,ufs.yaml     | 26 +++++++++++++++++++
->>>>>  1 file changed, 26 insertions(+)
->>>>>
->>>>> diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
->>>>> index f2d6298d926c..7c5f6e2e6d4c 100644
->>>>> --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
->>>>> +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
->>>>> @@ -28,6 +28,7 @@ properties:
->>>>>            - qcom,msm8998-ufshc
->>>>>            - qcom,sc8280xp-ufshc
->>>>>            - qcom,sdm845-ufshc
->>>>> +          - qcom,sm6115-ufshc
->>>>>            - qcom,sm6350-ufshc
->>>>>            - qcom,sm8150-ufshc
->>>>>            - qcom,sm8250-ufshc
->>>>> @@ -178,6 +179,31 @@ allOf:
->>>>>            minItems: 1
->>>>>            maxItems: 1
->>>>>
->>>>> +  - if:
->>>>> +      properties:
->>>>> +        compatible:
->>>>> +          contains:
->>>>> +            enum:
->>>>> +              - qcom,sm6115-ufshc
->>>>> +    then:
->>>>> +      properties:
->>>>> +        clocks:
->>>>> +          minItems: 8
->>>>> +          maxItems: 8
->>>>> +        clock-names:
->>>>> +          items:
->>>>> +            - const: core_clk
->>>>> +            - const: bus_aggr_clk
->>>>> +            - const: iface_clk
->>>>> +            - const: core_clk_unipro
->>>>> +            - const: core_clk_ice
->>>>
->>>> Use existing name and put it in the same place as existing variant - sdm845:
->>>> ice_core_clk
->>>
->>> The only problem with sdm845 bindings is the presence of rx_lane1_sync_clk
->>> clock. I'm guessing I could pass zeros there, because it shouldn't be used. Or
->>> it could be moved to last property and then min/maxItems to guard, but that is
->>> a change to something more-or-less immutable.
->>
->> I don't understand - what is the problem here. How presence of some
->> clock affects name of other clock and its place/location in list of clocks?
-> 
-> qcom,sdm845-ufshc has 9 clocks, one of which is rx_lane1_sync_clk.
-> qcom,sm6115-ufshc has 8 clocks (all of the ones in sdm845 without
-> rx_lane1_sync_clk). So if I'm understanding correctly, you want to put the
-> sm6115 with sdm845, which means re-use the clocks and reg specification from
-> sdm845, which means sm6115 will "inherit" this rx_lane1_sync_clk, and then
-> I have to put it in DT (otherwise the schema would complain), and I'm asking if
-> I can put an empty (i.e <0 0>) value, so schema is satisfied but clock is still
-> not really passed.
+TWIMC: this mail is primarily send for documentation purposes and for
+regzbot, my Linux kernel regression tracking bot. These mails usually
+contain '#forregzbot' in the subject, to make them easy to spot and filter.
 
-No. I want to use the same order and naming as sdm845 variant, but in
-your own/dedicated if:else: entry. Just do not create inconsistencies
-when not needed. If inconsistency is needed here (which I think is not),
-please explain more.
+[TLDR: I'm adding this regression report to the list of tracked
+regressions; all text from me you find below is based on a few templates
+paragraphs you might have encountered already already in similar form.]
 
-Best regards,
-Krzysztof
+Hi, this is your Linux kernel regression tracker. CCing the regression
+mailing list, as it should be in the loop for all regressions, as
+explained here:
+https://www.kernel.org/doc/html/latest/admin-guide/reporting-issues.html
+
+On 04.09.22 20:28, Mateusz Jończyk wrote:
+> Hello,
+> 
+> On Linux 6.0.0-rc3, disconnecting a mounted pendrive with opened files causes these symptoms:
+> 
+> - "task kworker/X blocked for more than Y seconds" warnings (see below) are repeatedly printed in dmesg,
+> - after reconnecting the pendrive (or possibly other USB devices), it is not detected,
+> - the login screen (Gnome on Ubuntu 20.04) freezes for some time (around 20s), due to a hang in colord-sane.
+> 
+> These symptoms disappear after closing the opened files (and perhaps also directories) on the pendrive.
+> 
+> I am aware that disconnecting a pendrive with a mounted filesystem is unwise, but many people do so
+> nonetheless.
+> 
+> I have bisected this down to
+> commit 16728aaba62e ("scsi: core: Make sure that hosts outlive targets")
+> 
+> With the previous
+> commit fe442604199e ("scsi: core: Make sure that targets outlive devices")
+> the problem does not happen.
+> 
+> To reproduce:
+> 
+> 1. Plug a pendrive into a USB port (checked with a pendrive formatted with a FAT32 filesystem).
+> 2. Mount it, open a file on this pendrive with the "less" command-line program.
+> 3. Optionally suspend the system to RAM.
+> 4. Disconnect the pendrive.
+> 5. Resume the system, if it was suspended.
+> 
+> Warnings from dmesg:
+> 
+> [   76.212690] usb 1-3.4.3: USB disconnect, device number 6
+> [   76.219765] device offline error, dev sdc, sector 2049 op 0x1:(WRITE) flags 0x100000 phys_seg 1 prio class 2
+> [   76.219791] Buffer I/O error on dev sdc1, logical block 1, lost async page write
+> [  242.764446] INFO: task kworker/0:7:1701 blocked for more than 120 seconds.
+> [  242.764463]       Tainted: G            E      6.0.0-rc3mj6 #239
+> [  242.764470] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> [  242.764474] task:kworker/0:7     state:D stack:    0 pid: 1701 ppid:     2 flags:0x00004000
+> [  242.764488] Workqueue: usb_hub_wq hub_event
+> [  242.764504] Call Trace:
+> [  242.764507]  <TASK>
+> [  242.764514]  __schedule+0x2c5/0xcd0
+> [  242.764527]  schedule+0x5d/0xf0
+> [  242.764535]  scsi_remove_host+0x163/0x1b0
+> [  242.764547]  ? var_wake_function+0x60/0x60
+> [  242.764559]  usb_stor_disconnect+0x50/0xd0 [usb_storage]
+> [  242.764571]  usb_unbind_interface+0x8c/0x240
+> [  242.764581]  device_remove+0x64/0x70
+> [  242.764590]  device_release_driver_internal+0xd1/0x160
+> [  242.764599]  device_release_driver+0x12/0x20
+> [  242.764608]  bus_remove_device+0xde/0x150
+> [  242.764616]  device_del+0x192/0x3e0
+> [  242.764621]  ? usb_remove_ep_devs+0x1f/0x30
+> [  242.764632]  usb_disable_device+0xab/0x240
+> [  242.764639]  usb_disconnect+0xc7/0x260
+> [  242.764647]  ? set_port_feature+0x37/0x40
+> [  242.764656]  hub_event+0xeb0/0x17c0
+> [  242.764668]  ? __schedule+0x2cd/0xcd0
+> [  242.764675]  ? queue_rcu_work+0x2c/0x40
+> [  242.764684]  process_one_work+0x21c/0x3c0
+> [  242.764693]  worker_thread+0x4a/0x3b0
+> [  242.764703]  ? process_one_work+0x3c0/0x3c0
+> [  242.764711]  kthread+0xcf/0xf0
+> [  242.764719]  ? kthread_complete_and_exit+0x20/0x20
+> [  242.764728]  ret_from_fork+0x22/0x30
+> [  242.764737]  </TASK>
+> 
+> The kernel is tainted AFAIK because of the following:
+> 
+> [    0.442486] backlight: module verification failed: signature and/or required key missing - tainting kernel
+> [...]
+> [    0.446462] Loading compiled-in X.509 certificates
+> [    0.447431] Loaded X.509 cert 'Build time autogenerated kernel key: cbf6b5d58385db4124f3ddd5fa0457b112415dcb'
+> 
+> The module was loaded before the signing keys were processed - which is an unrelated bug, present since a long time.
+> 
+> 
+> System information:
+> - Ubuntu 20.04 amd64,
+> - HP 17-by0001nw laptop,
+> - problem happens also when using an external USB 3.0 UNITEK hub.
+> 
+> Greetings,
+> 
+> Mateusz Jończyk
+> 
+
+Thanks for the report. To be sure below issue doesn't fall through the
+cracks unnoticed, I'm adding it to regzbot, my Linux kernel regression
+tracking bot:
+
+#regzbot ^introduced 16728aaba62e
+#regzbot title scsi: core: Disconnecting pendrive with opened files
+suddenly causes trouble
+#regzbot ignore-activity
+
+This isn't a regression? This issue or a fix for it are already
+discussed somewhere else? It was fixed already? You want to clarify when
+the regression started to happen? Or point out I got the title or
+something else totally wrong? Then just reply -- ideally with also
+telling regzbot about it, as explained here:
+https://linux-regtracking.leemhuis.info/tracked-regression/
+
+Reminder for developers: When fixing the issue, add 'Link:' tags
+pointing to the report (the mail this one replies to), as explained for
+in the Linux kernel's documentation; above webpage explains why this is
+important for tracked regressions.
+
+Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+
+P.S.: As the Linux kernel's regression tracker I deal with a lot of
+reports and sometimes miss something important when writing mails like
+this. If that's the case here, don't hesitate to tell me in a public
+reply, it's in everyone's interest to set the public record straight.
