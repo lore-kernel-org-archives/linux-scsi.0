@@ -2,154 +2,103 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EFB5C6FA8B
-	for <linux-scsi@archiver.kernel.org>; Mon,  5 Sep 2022 07:29:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FC6CECAAA1
+	for <linux-scsi@archiver.kernel.org>; Mon,  5 Sep 2022 09:00:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236195AbiIEH3j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 5 Sep 2022 03:29:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39422 "EHLO
+        id S238054AbiIEJAy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 5 Sep 2022 05:00:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33206 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237883AbiIEH33 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Sep 2022 03:29:29 -0400
-Received: from mail-ed1-x536.google.com (mail-ed1-x536.google.com [IPv6:2a00:1450:4864:20::536])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47101B9B;
-        Mon,  5 Sep 2022 00:29:26 -0700 (PDT)
-Received: by mail-ed1-x536.google.com with SMTP id w2so10228354edc.0;
-        Mon, 05 Sep 2022 00:29:26 -0700 (PDT)
+        with ESMTP id S237338AbiIEJAs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Sep 2022 05:00:48 -0400
+Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB5B832D8F;
+        Mon,  5 Sep 2022 02:00:42 -0700 (PDT)
+Received: by mail-pj1-x102f.google.com with SMTP id q15-20020a17090a304f00b002002ac83485so4115911pjl.0;
+        Mon, 05 Sep 2022 02:00:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date;
-        bh=c8Fp7xbOBPiDPrMPRWEI6qZ2LdwuEUkMDG7mK0etL1w=;
-        b=mBcg+E2QMt+vbq77hTaeEwZbI7isR5fFJ9AcKdE7PabR9iPEeB9pBvPZB6u5z1bPWt
-         w6DGxEg/O3FFwZwb8Pr3PXeY1Ki+DilNKybSR6R310fAfiRF7xfW2mAlvLd0xPT3pHtx
-         fUuQ1b5liC+HOaQIZM0rtXHW+pQ8ftZ+NBnIerhICHPvWpqQOJamHGQSMN1oXCzg/6Qg
-         hnnqqQfkIGNeV+EQZj0BF1VtAt/j+BpXDxm8SpoTDwOBVhP4Spw/Lv5PbKm2PCxziDLw
-         g0w3c21MdX1rZAB8pgxYNHabow58GHY2nW7Q6Zd8dFpur41d9xNs3YLswTZMw1Rt+VwV
-         Z2yQ==
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date;
+        bh=O5yNDW8gq4TOGDNM0FxBpVT4WeyabT0T2v8ISLdqFXw=;
+        b=W2IdgowNjSwepq3IUD0NLDF7NezaIWTQTxtO4CxoRGOqbZWhrrazd8zmFNjYZnY/fz
+         y6W5oFlPGRI0Cv0NbRLkOwK+qJw5EFi6577wTUuqB+NoyxugSfby1qQwvlB/l1gKoQKx
+         d3HKEw95T4GhXS4RdMAxIMq2FzDm62XTVvwh5zBKt9giQEQvKbYnk1sQYx3P7R2ogDDc
+         LW8JNpga1P91ZbEOQ3/XCToYOfKTM9wPunYFJhyrQNLpzOZRvpWRxaaU9llSLlMBzzWG
+         TzdmVWuNVvBUDvHPsvHmr6my5YuraF2+A49/vxuUcfX+YWf2a7lHy0xgcX1MEnWraXgg
+         pozA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date;
-        bh=c8Fp7xbOBPiDPrMPRWEI6qZ2LdwuEUkMDG7mK0etL1w=;
-        b=gJC9mRRnl2SB/XRTnM3IzlV7KyIK05MQVo7EloPYli2L9oiMHRILRRdk6tPcRrapfE
-         pZUNxAFP80252bIc68AS+c+/i/a/HqgkaowGuyHF8+5hUwtyTk7rD4OSLBb+hQzffX2N
-         jqJuTvk0SVhunXHiYzb+GgXC30uhWnubw5OgdWQwle21wWRtdlpuNsHbycWYgio2hlrB
-         NecWzK6Nbt3iDl7seSanwD/iQ7u2uwGPuVDKEZeDJxWHJSFV2qm2T6pJVcPSfHfPSGZX
-         Ot5RyeJRUdQIfOy6QyoWfo0b6VbCA/51pETwxoWn24YzquH/qTnj8OSvMH/O51FQWQlb
-         2cbQ==
-X-Gm-Message-State: ACgBeo0cS4O2Hd9qBiMChSUvN7Wpqqo0SAWASaymBBngUAiclJa0SVXo
-        /IvQLcZWGPgAaw4Jk9V9juk=
-X-Google-Smtp-Source: AA6agR5XhI9SkUjAGjQeiLowNt+ajuGy8A24Y72F/JDl54cU7/bjBhLmv6/V+HDiSvoY0YvXqWwgbA==
-X-Received: by 2002:a05:6402:538b:b0:446:34f:2232 with SMTP id ew11-20020a056402538b00b00446034f2232mr40398081edb.4.1662362964700;
-        Mon, 05 Sep 2022 00:29:24 -0700 (PDT)
-Received: from [192.168.74.101] ([77.78.20.135])
-        by smtp.gmail.com with ESMTPSA id e5-20020a50d4c5000000b0044e983132c3sm831915edj.60.2022.09.05.00.29.23
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 05 Sep 2022 00:29:23 -0700 (PDT)
-Message-ID: <72f86c4f-79fa-bff4-f14e-4cd7fa7ce41f@gmail.com>
-Date:   Mon, 5 Sep 2022 10:29:23 +0300
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date;
+        bh=O5yNDW8gq4TOGDNM0FxBpVT4WeyabT0T2v8ISLdqFXw=;
+        b=EOEp2gL71eDJL0d5FIe6t+X0HbU4qV1+TlLXSQZwNuwbEEGFtAgX7k2yKzwrKiqShf
+         2iSWSE7ck+rmB/F6rmS4K8dI23hNEVz+ryOuWlOkeNrqBCA9Cpbcz0yQXLnRevDLX1LP
+         cdXajgnfVmc/q7DuQxbr92/55duAyd2RDA0s951QxGllTTPSL0e3VgyA9VyhuENH9Iqp
+         kWwIb3MJBQporemm0KoicYt+mItwoIaqe8LnUSs3vwgacYJku1cxj9P3GK0iPzfMnGfy
+         eb5cfl3WO9lvZPqV7I0dDxJKIqz70Lr4MhZHiWJwumXpzCK1XB4lir4LdTBmyFR6UnGH
+         RorA==
+X-Gm-Message-State: ACgBeo0IUzxa24x2y7tNDrpjzyXMdjCMlgwHrgVKuKRVF61ewanqCZpL
+        bzf02VX2SpHeSriwaMvR65kcVxAzhqQ=
+X-Google-Smtp-Source: AA6agR5QtYRSaXdw2jhoG6yx+1Ml+qm6wyiLk2RuE0yXzUMGxGcej90wQ8bIOmW/ffx0Tpld28PnWQ==
+X-Received: by 2002:a17:903:11c7:b0:170:cde7:d24a with SMTP id q7-20020a17090311c700b00170cde7d24amr48336085plh.91.1662368442306;
+        Mon, 05 Sep 2022 02:00:42 -0700 (PDT)
+Received: from localhost.localdomain ([193.203.214.57])
+        by smtp.gmail.com with ESMTPSA id d124-20020a621d82000000b0053dd1bba6a0sm1148192pfd.145.2022.09.05.02.00.40
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 05 Sep 2022 02:00:41 -0700 (PDT)
+From:   cgel.zte@gmail.com
+X-Google-Original-From: ye.xingchen@zte.com.cn
+To:     sathya.prakash@broadcom.com
+Cc:     sreekanth.reddy@broadcom.com,
+        suganath-prabu.subramani@broadcom.com,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ye xingchen <ye.xingchen@zte.com.cn>,
+        Zeal Robot <zealci@zte.com.cn>
+Subject: [PATCH linux-next] scsi: message: Remove the unneeded result variable
+Date:   Mon,  5 Sep 2022 09:00:37 +0000
+Message-Id: <20220905090037.335055-1-ye.xingchen@zte.com.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.12.0
-Subject: Re: [PATCH 08/14] dt-bindings: ufs: qcom: Add sm6115 binding
-Content-Language: en-US
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>
-Cc:     phone-devel@vger.kernel.org, ~postmarketos/upstreaming@lists.sr.ht,
-        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        Andy Gross <agross@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@somainline.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20220901072414.1923075-1-iskren.chernev@gmail.com>
- <20220901072414.1923075-9-iskren.chernev@gmail.com>
- <7804ffbe-4e27-d8bd-dbe2-75d1323da064@linaro.org>
- <89e6a200-d9af-7263-5e09-d7d824277a30@gmail.com>
- <199167f2-0420-8c56-5156-35005069549d@linaro.org>
-From:   Iskren Chernev <iskren.chernev@gmail.com>
-In-Reply-To: <199167f2-0420-8c56-5156-35005069549d@linaro.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+From: ye xingchen <ye.xingchen@zte.com.cn>
 
+Return the value mptctl_do_mpt_command() directly instead of storing it in
+ another redundant variable.
 
-On 9/4/22 22:10, Krzysztof Kozlowski wrote:
-> On 03/09/2022 19:54, Iskren Chernev wrote:
->>
->>
->> On 9/1/22 19:11, Krzysztof Kozlowski wrote:
->>> On 01/09/2022 10:24, Iskren Chernev wrote:
->>>> Add SM6115 UFS to DT schema.
->>>>
->>>> Signed-off-by: Iskren Chernev <iskren.chernev@gmail.com>
->>>> ---
->>>>  .../devicetree/bindings/ufs/qcom,ufs.yaml     | 26 +++++++++++++++++++
->>>>  1 file changed, 26 insertions(+)
->>>>
->>>> diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
->>>> index f2d6298d926c..7c5f6e2e6d4c 100644
->>>> --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
->>>> +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
->>>> @@ -28,6 +28,7 @@ properties:
->>>>            - qcom,msm8998-ufshc
->>>>            - qcom,sc8280xp-ufshc
->>>>            - qcom,sdm845-ufshc
->>>> +          - qcom,sm6115-ufshc
->>>>            - qcom,sm6350-ufshc
->>>>            - qcom,sm8150-ufshc
->>>>            - qcom,sm8250-ufshc
->>>> @@ -178,6 +179,31 @@ allOf:
->>>>            minItems: 1
->>>>            maxItems: 1
->>>>
->>>> +  - if:
->>>> +      properties:
->>>> +        compatible:
->>>> +          contains:
->>>> +            enum:
->>>> +              - qcom,sm6115-ufshc
->>>> +    then:
->>>> +      properties:
->>>> +        clocks:
->>>> +          minItems: 8
->>>> +          maxItems: 8
->>>> +        clock-names:
->>>> +          items:
->>>> +            - const: core_clk
->>>> +            - const: bus_aggr_clk
->>>> +            - const: iface_clk
->>>> +            - const: core_clk_unipro
->>>> +            - const: core_clk_ice
->>>
->>> Use existing name and put it in the same place as existing variant - sdm845:
->>> ice_core_clk
->>
->> The only problem with sdm845 bindings is the presence of rx_lane1_sync_clk
->> clock. I'm guessing I could pass zeros there, because it shouldn't be used. Or
->> it could be moved to last property and then min/maxItems to guard, but that is
->> a change to something more-or-less immutable.
->
-> I don't understand - what is the problem here. How presence of some
-> clock affects name of other clock and its place/location in list of clocks?
+Reported-by: Zeal Robot <zealci@zte.com.cn>
+Signed-off-by: ye xingchen <ye.xingchen@zte.com.cn>
+---
+ drivers/message/fusion/mptctl.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-qcom,sdm845-ufshc has 9 clocks, one of which is rx_lane1_sync_clk.
-qcom,sm6115-ufshc has 8 clocks (all of the ones in sdm845 without
-rx_lane1_sync_clk). So if I'm understanding correctly, you want to put the
-sm6115 with sdm845, which means re-use the clocks and reg specification from
-sdm845, which means sm6115 will "inherit" this rx_lane1_sync_clk, and then
-I have to put it in DT (otherwise the schema would complain), and I'm asking if
-I can put an empty (i.e <0 0>) value, so schema is satisfied but clock is still
-not really passed.
-
-> Best regards,
-> Krzysztof
+diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
+index f9ee957072c3..1e13c41fd58e 100644
+--- a/drivers/message/fusion/mptctl.c
++++ b/drivers/message/fusion/mptctl.c
+@@ -1702,8 +1702,6 @@ mptctl_mpt_command (MPT_ADAPTER *ioc, unsigned long arg)
+ {
+ 	struct mpt_ioctl_command __user *uarg = (void __user *) arg;
+ 	struct mpt_ioctl_command  karg;
+-	int		rc;
+-
+ 
+ 	if (copy_from_user(&karg, uarg, sizeof(struct mpt_ioctl_command))) {
+ 		printk(KERN_ERR MYNAM "%s@%d::mptctl_mpt_command - "
+@@ -1712,9 +1710,7 @@ mptctl_mpt_command (MPT_ADAPTER *ioc, unsigned long arg)
+ 		return -EFAULT;
+ 	}
+ 
+-	rc = mptctl_do_mpt_command (ioc, karg, &uarg->MF);
+-
+-	return rc;
++	return mptctl_do_mpt_command(ioc, karg, &uarg->MF);
+ }
+ 
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+-- 
+2.25.1
