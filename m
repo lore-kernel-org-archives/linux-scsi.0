@@ -2,129 +2,120 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF787ECAAA1
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Sep 2022 07:43:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EAE7ECAAA1
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Sep 2022 07:57:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231785AbiIFHny (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Sep 2022 03:43:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41004 "EHLO
+        id S238897AbiIFH5Y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Sep 2022 03:57:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34944 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229531AbiIFHnx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Sep 2022 03:43:53 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 600A326AE7
-        for <linux-scsi@vger.kernel.org>; Tue,  6 Sep 2022 00:43:52 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S238977AbiIFH5U (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Sep 2022 03:57:20 -0400
+Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C31F671704;
+        Tue,  6 Sep 2022 00:57:19 -0700 (PDT)
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 163DD44F8B;
+        Tue,  6 Sep 2022 07:57:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        content-type:content-type:content-transfer-encoding:mime-version
+        :x-mailer:message-id:date:date:subject:subject:from:from
+        :received:received:received:received; s=mta-01; t=1662451036; x=
+        1664265437; bh=XL5F/oXsCoOIFfj/qDCbchJ8n++/oI50YVboIcVfVwA=; b=l
+        uzIgEbaU34wEsa9CE8jpC8qgCC9wRwG2IIWDOyGZXqckW8UdsQDhYBfGqNph27lQ
+        dHWfiChsNrc8UcVIwCnJkWj8LYA4G92mRC5+4EnAvtbKuSJUBERMgINEBhjdq/T0
+        szOI3qCKm1I1owgD22YGkZ9yi06r6VxTCG79boeV70=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id 0U2t-D0uZS4s; Tue,  6 Sep 2022 10:57:16 +0300 (MSK)
+Received: from T-EXCH-02.corp.yadro.com (T-EXCH-02.corp.yadro.com [172.17.10.102])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 2CA9DB815A0
-        for <linux-scsi@vger.kernel.org>; Tue,  6 Sep 2022 07:43:51 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id E4AECC433B5
-        for <linux-scsi@vger.kernel.org>; Tue,  6 Sep 2022 07:43:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1662450229;
-        bh=jSigw2SxWWoL+4P/fVyaPZq8tl2ygvYvQW+RzFGLZ4Q=;
-        h=From:To:Subject:Date:From;
-        b=XECdZUk0mmqi517DIUSYe4DVm7usksg1JnG3RUTsOwBttDyCrh3Y6iHZeo3gcevYp
-         6RgFyGqha7TjbJdWW1IImVQvNyf++0jcSIfTsnqfMJ8WsMFjDV+P1ka/HQ3IVLJYyL
-         c4NndRemjQov7uTY5UNpyNOYIIcAIrD1bBEs3bP4lLcdRExtjXp3Kj/5H3kP+dLArw
-         RSVh4WFZDK8KIrQuKgI+5Sdti6ITvm0XDq5VEzx3kspJRP+rXyg66b5/wH6FIiP7Y3
-         YpPHt4KsiU142ZTtvxC7ZrGozIbp6bVtqeTjxGzOXaeiSGotVujJ6M6Gdu+fJdwy2R
-         5Ncvz4bFPxpdQ==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id CDF06C433E6; Tue,  6 Sep 2022 07:43:49 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 216454] New: scsi: megaraid_sas: possible use-after-free caused
- by bad error handling in megasas_probe_one()
-Date:   Tue, 06 Sep 2022 07:43:49 +0000
-X-Bugzilla-Reason: AssignedTo
-X-Bugzilla-Type: new
-X-Bugzilla-Watch-Reason: None
-X-Bugzilla-Product: IO/Storage
-X-Bugzilla-Component: SCSI
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: r33s3n6@gmail.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: bug_id short_desc product version
- cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
- priority component assigned_to reporter cf_regression
-Message-ID: <bug-216454-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        by mta-01.yadro.com (Postfix) with ESMTPS id 64F1056164;
+        Tue,  6 Sep 2022 10:48:56 +0300 (MSK)
+Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
+ T-EXCH-02.corp.yadro.com (172.17.10.102) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
+ 15.1.669.32; Tue, 6 Sep 2022 10:48:56 +0300
+Received: from NB-591.corp.yadro.com (10.178.114.42) by
+ T-EXCH-08.corp.yadro.com (172.17.11.58) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.2.1118.9; Tue, 6 Sep 2022 10:48:55 +0300
+From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
+To:     Martin Petersen <martin.petersen@oracle.com>,
+        <target-devel@vger.kernel.org>
+CC:     <linux-scsi@vger.kernel.org>, <linux@yadro.com>,
+        Dmitry Bogdanov <d.bogdanov@yadro.com>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
+Subject: [PATCH] scsi: target: core: Set MULTIP bit in INQUIRY
+Date:   Tue, 6 Sep 2022 10:48:20 +0300
+Message-ID: <20220906074820.18685-1-d.bogdanov@yadro.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.178.114.42]
+X-ClientProxiedBy: T-EXCH-02.corp.yadro.com (172.17.10.102) To
+ T-EXCH-08.corp.yadro.com (172.17.11.58)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D216454
+SAM-5 4.8.3 (SCSI target device with multiple SCSI ports structure)
+obligates to set MULTIP bit when there's multiple SCSI target ports:
 
-            Bug ID: 216454
-           Summary: scsi: megaraid_sas: possible use-after-free caused by
-                    bad error handling in megasas_probe_one()
-           Product: IO/Storage
-           Version: 2.5
-    Kernel Version: 5.10.0
-          Hardware: All
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: SCSI
-          Assignee: linux-scsi@vger.kernel.org
-          Reporter: r33s3n6@gmail.com
-        Regression: No
+> Each device server shall indicate the presence of multiple SCSI target
+> ports by setting the MULTIP bit to one in its standard INQUIRY data
+> (see SPC-4).
 
-Hello,
+The change sets MULTIP bit automatically to indicate the presence of
+multiple SCSI target ports within standard inquiry response data if
+there are multiple target ports in all target port groups of the
+se_device.
 
-Our fault injection tool finds a possible use-after-free in the=20
-megaraid_sas driver in Linux 5.10.0:
+Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
+Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
+---
+The patch is intended for 6.1/scsi-queue branch.
+---
+ drivers/target/target_core_spc.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-In the file drivers/scsi/megaraid/megaraid_sas_base.c:
-In megasas_io_attach(), the call to scsi_add_host() may fail:=20
-6814:   if (scsi_add_host(host, &instance->pdev->dev)) {
-            ...
-6818:           return -ENODEV;
-6819:   }
+diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
+index c14441c89bed..32fb38ce98f4 100644
+--- a/drivers/target/target_core_spc.c
++++ b/drivers/target/target_core_spc.c
+@@ -75,6 +75,8 @@ spc_emulate_inquiry_std(struct se_cmd *cmd, unsigned char *buf)
+ 	struct se_portal_group *tpg = lun->lun_tpg;
+ 	struct se_device *dev = cmd->se_dev;
+ 	struct se_session *sess = cmd->se_sess;
++	struct se_lun *tmp_lun;
++	size_t dev_ports = 0;
+ 
+ 	/* Set RMB (removable media) for tape devices */
+ 	if (dev->transport->get_device_type(dev) == TYPE_TAPE)
+@@ -115,6 +117,20 @@ spc_emulate_inquiry_std(struct se_cmd *cmd, unsigned char *buf)
+ 			buf[5] |= 0x1;
+ 	}
+ 
++	spin_lock(&dev->se_port_lock);
++	list_for_each_entry(tmp_lun, &dev->dev_sep_list, lun_dev_link) {
++		dev_ports++;
++		/* Exact number of ports does not matter for MULTIP bit */
++		if (dev_ports > 1)
++			break;
++	}
++	spin_unlock(&dev->se_port_lock);
++	/*
++	 * Set MULTIP bit to indicate presence of multiple SCSI target ports
++	 */
++	if (dev_ports > 1)
++		buf[6] |= 0x10;
++
+ 	buf[7] = 0x2; /* CmdQue=1 */
+ 
+ 	/*
+-- 
+2.25.1
 
-This error is then propagated to its caller megasas_probe_one().
-7414:   if (megasas_io_attach(instance))
-7415:           goto fail_io_attach;
-
-In error handling code of megasas_probe_one(), it calls scsi_host_put():
-7457:   scsi_host_put(host);
-
-The function scsi_host_put() calls scsi_host_dev_release() to free `host`,
-which contains a variable `instance`.
-
-But megasas_probe_one() calls megasas_init_fw() before:
-7372:   if (megasas_init_fw(instance))
-
-In megasas_init_fw(), it starts a timer:
-6369:   megasas_start_timer(instance);
-
-And megasas_probe_one() does nothing about it in error handling code. When
-the timer expires, it accesses `instance`, causing a use-after-free bug.
-
-I am not quite sure how to fix this possible bug. Any feedback would be
-appreciated, thanks!
-
-Reported-by: TOTE Robot <oslab@tsinghua.edu.cn>
-
-Best wishes,
-Zixuan Fu
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are the assignee for the bug.=
