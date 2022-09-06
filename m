@@ -2,80 +2,91 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 308FAECAAD5
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Sep 2022 15:05:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56CEDECAAD5
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Sep 2022 15:11:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232380AbiIFPFT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Sep 2022 11:05:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38336 "EHLO
+        id S233459AbiIFPL1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Sep 2022 11:11:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51054 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230382AbiIFPEz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Sep 2022 11:04:55 -0400
-Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F20AF1B7AC;
-        Tue,  6 Sep 2022 07:19:51 -0700 (PDT)
-Received: by mail-pf1-f182.google.com with SMTP id r12so2295447pfl.10;
-        Tue, 06 Sep 2022 07:19:51 -0700 (PDT)
+        with ESMTP id S234323AbiIFPK5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Sep 2022 11:10:57 -0400
+Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 315C0326C9
+        for <linux-scsi@vger.kernel.org>; Tue,  6 Sep 2022 07:24:48 -0700 (PDT)
+Received: by mail-pj1-x1032.google.com with SMTP id o15-20020a17090a3d4f00b002004ed4d77eso6021900pjf.5
+        for <linux-scsi@vger.kernel.org>; Tue, 06 Sep 2022 07:24:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date;
+        bh=KJe7cUArJsscTz1vjyjyyJ54+0VOPq+pCJ9MmTqp+ow=;
+        b=etc0ZQHNbmVKEbvCwHLL2XNRPMeLwIjp6JDxEwPiFo1rG59guyZHYpxyxY/DAS6Rxj
+         ZXmzAGP9IuJ0xxVoHSNngh/21n4tV7kt2NnmcHaYZw9fVwHwGBafXCljN3rKK0zDIrEm
+         OUbyEZaJN93R+iWsbOpY24HOu2bYu7N5swfaXxFQKjqw8a/tsy7Rpsjqy2Ofqr1zMajm
+         1DnV4Y8/wil+CAa8trBzQNtr72sqxhGruj6jEgIduK9UV6w6/CqqWPdA24TpbUsKFXz8
+         P+eJoosZDmYJfygKc4EWwS9+gr4vio4RNzd/vnJKACJ6RXO0khPngiILUT2M4JjOTdQu
+         B1eA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date;
-        bh=8z+ngUdgRfZSNBd8l0oMIcTPjlLmd2UOWV/IwBCVAfU=;
-        b=p+8PH4SH5P4k0l/GnRHFkZNZG1JQn3N/83GpgO+3gAnuUA4nEPIvwBMqy5Bo46eSw+
-         f/4i9EzXVA3hhpwdeJXNNahHjQssXF0WhGqGV3/fF5jKodHP9/gVNM9K6/sNXI3eRv+j
-         3lKmdC4zYLgVgLHkXCPALPGJpRnKcDHUzCHkh0mvIzBvg+abLwv61tbk4Y7Yn46gme9M
-         Kll3l5W33LA1fCtKn/zvZ6VN9o1rydoIm5Yl8WPpII+yqg8mTTivWzp2R3bpuV40y7ZE
-         GTNHebbntddrB8bUeDlKFa8162574UWJJn7vpGhevt3ok4+MYLNu1Ly1QtqFyFSnXUHV
-         YzJQ==
-X-Gm-Message-State: ACgBeo1H3qaDqOY15p+AF6y1pEtuyw5BNhFc3FLuybmMxNJ06t5cy4Tk
-        m8cS0yxFNdodrN8Z2dXUr2U=
-X-Google-Smtp-Source: AA6agR6XOdN2aEBhWvd4c7pK+bXTS/Ch8bb+Y6PEzCwePrt21LVWKFUu9naCrelNpPV7MTJyZP2hVA==
-X-Received: by 2002:aa7:9f82:0:b0:538:5e1e:86dc with SMTP id z2-20020aa79f82000000b005385e1e86dcmr40711351pfr.54.1662473886337;
-        Tue, 06 Sep 2022 07:18:06 -0700 (PDT)
-Received: from [192.168.3.219] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id z27-20020aa7991b000000b005385e2e86eesm9608397pff.18.2022.09.06.07.18.04
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 06 Sep 2022 07:18:05 -0700 (PDT)
-Message-ID: <97f7a666-39b5-0132-368d-06985436c377@acm.org>
-Date:   Tue, 6 Sep 2022 07:18:04 -0700
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:x-gm-message-state:from:to:cc
+         :subject:date;
+        bh=KJe7cUArJsscTz1vjyjyyJ54+0VOPq+pCJ9MmTqp+ow=;
+        b=7GyPYx2OZa04DTd1HnXfhiehoBhbbEyyH8pbQ4ZaeR5GlPg1hjzrabQ9Tpb5PPtaUx
+         JU1nTA2I7TYI9uqcYd9JL0mhCBexgT414mc4IGbOkmohANwCSdH3FcOEKig09+zdQJQr
+         UcqvifrWLcyHgG2LpQCB0ptf0jYujgVuc9QhT/a/t2JdpgMZ563hQHMs2LJDJBrOvK03
+         Z8KpMQcQ5MfL3NjxqpSv3ZrZD6lYsh82aYzMt4ylAGWuDiWC0d62mlT1P7XahuWDMDSK
+         S9vUtrSXUgZ1l+TBP2hkWDdHlarHJznytxPBOmaqWhfhN3tuKoCMqTqq7mIz8+jP5zAC
+         Zcsg==
+X-Gm-Message-State: ACgBeo3pmtp36dzch7xQVpzd5UZV2jt2fLj9fsv3YPeLZFig614V3jLI
+        bTH+ncN3DHx4bfKyjtq5jpc=
+X-Google-Smtp-Source: AA6agR7kbW5+qE+4J4TYdkQYqAoU914RafrJKUnLK7H1uvjTRhIasqwDVCScmAAU8N5Zj4SdDKHXAg==
+X-Received: by 2002:a17:902:a40f:b0:172:d0c7:ede1 with SMTP id p15-20020a170902a40f00b00172d0c7ede1mr55181905plq.88.1662474205962;
+        Tue, 06 Sep 2022 07:23:25 -0700 (PDT)
+Received: from server.roeck-us.net ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
+        by smtp.gmail.com with ESMTPSA id b8-20020a170902d50800b0017440342b5bsm1792646plg.206.2022.09.06.07.23.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 06 Sep 2022 07:23:24 -0700 (PDT)
+Sender: Guenter Roeck <groeck7@gmail.com>
+Date:   Tue, 6 Sep 2022 07:23:22 -0700
+From:   Guenter Roeck <linux@roeck-us.net>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Ming Lei <ming.lei@redhat.com>, Christoph Hellwig <hch@lst.de>,
+        Mike Christie <michael.christie@oracle.com>,
+        Hannes Reinecke <hare@suse.de>,
+        John Garry <john.garry@huawei.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Subject: Re: [PATCH v5 2/4] scsi: core: Make sure that hosts outlive targets
+Message-ID: <20220906142322.GA3698227@roeck-us.net>
+References: <20220728221851.1822295-1-bvanassche@acm.org>
+ <20220728221851.1822295-3-bvanassche@acm.org>
+ <20220905173905.GA3405134@roeck-us.net>
+ <5462c15b-3ae2-21b7-2f1d-79103b196c34@acm.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.1
-Subject: Re: [Bisected] Disconnecting pendrive with opened files causes
- trouble on 6.0.0-rc3
-Content-Language: en-US
-To:     =?UTF-8?Q?Mateusz_Jo=c5=84czyk?= <mat.jonczyk@o2.pl>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-scsi@vger.kernel.org, adrian.hunter@intel.com,
-        martin.petersen@oracle.com, jaegeuk@kernel.org,
-        michael.christie@oracle.com, hch@lst.de, ming.lei@redhat.com,
-        hare@suse.de, john.garry@huawei.com
-References: <fbd28a8c-858d-8891-f6be-a5c2ca3131da@o2.pl>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <fbd28a8c-858d-8891-f6be-a5c2ca3131da@o2.pl>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <5462c15b-3ae2-21b7-2f1d-79103b196c34@acm.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/4/22 11:28, Mateusz Jończyk wrote:
-> I have bisected this down to
-> commit 16728aaba62e ("scsi: core: Make sure that hosts outlive targets")
+On Tue, Sep 06, 2022 at 07:16:15AM -0700, Bart Van Assche wrote:
+> On 9/5/22 10:40, Guenter Roeck wrote:
+> > I understand that it looks like the problem is caused by the shutdown
+> > function in the imx driver calling remove_device, but that is not really
+> > the problem.
 > 
-> With the previous
-> commit fe442604199e ("scsi: core: Make sure that targets outlive devices")
-> the problem does not happen.
+> Hi Guenter,
+> 
+> A revert for this patch series has been queued and is expected to be sent
+> soon to Linus. See also
+> https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/log/?h=6.0/scsi-fixes
+> 
 
-Hi Mateusz,
+Excellent, thanks!
 
-A revert for the patch series "Call blk_mq_free_tag_set() earlier" has been
-queued and is expected to be sent soon to Linus. See also
-https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/log/?h=6.0/scsi-fixes
-
-Thanks,
-
-Bart.
-
-
+Guenter
