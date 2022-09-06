@@ -2,136 +2,79 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 159D4C6FA83
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Sep 2022 08:43:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C240BECAAA1
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Sep 2022 10:02:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239540AbiIFInA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Sep 2022 04:43:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54932 "EHLO
+        id S233147AbiIFKCK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Sep 2022 06:02:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57950 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233147AbiIFImc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Sep 2022 04:42:32 -0400
-Received: from mail-ed1-x529.google.com (mail-ed1-x529.google.com [IPv6:2a00:1450:4864:20::529])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2EC8578216;
-        Tue,  6 Sep 2022 01:38:52 -0700 (PDT)
-Received: by mail-ed1-x529.google.com with SMTP id s11so14129824edd.13;
-        Tue, 06 Sep 2022 01:38:52 -0700 (PDT)
+        with ESMTP id S234047AbiIFKBb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Sep 2022 06:01:31 -0400
+Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD0BD786E6;
+        Tue,  6 Sep 2022 03:01:06 -0700 (PDT)
+Received: by mail-pj1-x1030.google.com with SMTP id p1-20020a17090a2d8100b0020040a3f75eso5939463pjd.4;
+        Tue, 06 Sep 2022 03:01:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date;
-        bh=7aKcWrHN0iy5lXqS6WWR60dmN/jKxbkqMcVmWFyZOLI=;
-        b=cDuUtI7zVTHj675gi9AY7ykpUUvRcTJd8av+hapb1tW/ieoFruFNFltdwC2epnpHi9
-         Dx2eQg86oLemuVU+I+p2fRyXfTZsQTbV2uSTrBLdNVRdLNA/dMw1C1SCeGpKqI2iop9v
-         vnoHhLsgptMUa6WYb0A7O8tS6DQvYw3KK+opl4x9ABOSQrSFrtTdDkVSs/yNpXawo0M9
-         wefnuU7QAI9bkBGsDXl4yJW/moWdUezMOBIbHX7UBcC4KuUhT6K1VPZpnjvWNk1IAQXv
-         SRFrvNKztVPJQmyElsZ3p5SRsjiolqN7jf6CcyJaUFLzIBggKs6kok9a0ZP3r4LAaWkg
-         A8TQ==
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date;
+        bh=YKSHnIDLbk0AOTJw59kitMI5uEp3xXvtgpVkSTjCkzM=;
+        b=H4kMv845J9bYxtEKRZDhNBqclS6L0jLOyG2wkW9mw1r6JHSUY/loXrG7v9/6KXbFhC
+         LIgwRkq+DG8+eR3EhVLg+eaBusmwi7B+Wra6hTbnNpaqmgHjt+H7fRP8DkaF0azLhZLK
+         OEijzWDlZ1FyOzrSDGNsS4LTkrDTb7I3ZyfioHeslVHHOL0HoinNfpz7FKt+PV2Xzlts
+         ihLo5dnospLa23Lo2RP8wxxSLlX4JzRhW36NgS7ddt1cBntwaQKHFaxPqsk+3zFdorKq
+         E3Im6vhSB1NH3jwXioIma4Qq6jyFQTVhNkAizUB8utpzg/aQeCVdxBXV8eQL/pEKnW98
+         tBuw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date;
-        bh=7aKcWrHN0iy5lXqS6WWR60dmN/jKxbkqMcVmWFyZOLI=;
-        b=saG59GXTFexjfvYoyjxyH4sJZg8nPSxAO3l4DEcFAWlwezafd7uQfdYYcDjqIwacpY
-         oKlIKlvDPhK3wc0LVgDE8Tzku9fJVFxXJDymAR1QzI8aFRXUPaFP7O1HfVMV0fXwXh+D
-         d7GBosVQWXJSJ//XgDTwQr2HR7PCoEf+HPHunmUCZWAHdnhI/5FDMxm/Sx76eUonDjov
-         7XV4LL517BZJYvT02MBXzyOfRlIWq70+vLj7KbqtOq7LTybCyVjJZ3GkOp5uIOru/3Fl
-         IaJ/ZnG1Rto10cAxNowvCkPkjgZZpoO5AqZdLWGvOhA+UQSqGjgFT9mxqIKhdNI7vpCZ
-         ubKQ==
-X-Gm-Message-State: ACgBeo3WrkaSc/puzYZRwwJtmL/6kUEHME2FZJVpTmfW98NLHGiOMc8O
-        9LQYPqb15Jucc59hfyDKbH8=
-X-Google-Smtp-Source: AA6agR59/EsDw+4IIUjpBCdyYu05A7w7PVNvttbU27dBMXxkQJLsZm9LX/0Y0hoNNKfHdXaLMRsXVg==
-X-Received: by 2002:aa7:c506:0:b0:44e:6abd:1fb8 with SMTP id o6-20020aa7c506000000b0044e6abd1fb8mr8841675edq.308.1662453530666;
-        Tue, 06 Sep 2022 01:38:50 -0700 (PDT)
-Received: from [192.168.74.101] ([77.78.20.135])
-        by smtp.gmail.com with ESMTPSA id b23-20020a170906039700b00715a02874acsm6228600eja.35.2022.09.06.01.38.49
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 06 Sep 2022 01:38:50 -0700 (PDT)
-Message-ID: <4fe6c7ea-38e6-2a6e-fa78-29664f819aca@gmail.com>
-Date:   Tue, 6 Sep 2022 11:38:50 +0300
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date;
+        bh=YKSHnIDLbk0AOTJw59kitMI5uEp3xXvtgpVkSTjCkzM=;
+        b=G63MyYUk1goP/6kOFIYjXG7/R/MRSbV2X/QAs7kXP7MseHb3ybZNbxbEzvGgY2xQ6k
+         8B3ndyz3sKQa5ukGNVHK1vOsRE3ypyth6H79r4wLTLhDaCasPOHZFnL+fTVVeDZwSrO2
+         tEqc6yzWZgp4qQ+jYUR7jRl8KiMd5ztWyHJxi9wCuqbyH5O/8eZA4O6oIx20axZioymp
+         KlAGT6F7CXEXWLgj2cHRkEX9fqlfG3kvrr2Lv/a/v3UZxsJf9oe4mFQqv8wrE6xX/5Ps
+         BeclZj1G7GBOXC/880UW04DvbwVheFk2Lnk72T9EZIsvoqSqB0kGr4/pi0dAyCCAJoOc
+         DDrw==
+X-Gm-Message-State: ACgBeo0Jb+aV6rJWigoDa58d6HTUe3LSScIm50zLBrt96uc0fNDSDQU6
+        1g4mi5RAmj+fgnMXCT8b4AQ6sLbsd+zA9FZSnhw=
+X-Google-Smtp-Source: AA6agR46YAPLjMSYp7Kanoo0p3TW1lBtmX3+X7oA6gNMSU+WNlt0CEM4uGqfh6I6eB99C87Z8N2NMj2CSl61ps815CQ=
+X-Received: by 2002:a17:90a:1d0:b0:1fa:c551:5e83 with SMTP id
+ 16-20020a17090a01d000b001fac5515e83mr23953494pjd.106.1662458466109; Tue, 06
+ Sep 2022 03:01:06 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.12.0
-Subject: Re: [PATCH v2 1/9] dt-bindings: ufs: qcom: Add sm6115 binding
-Content-Language: en-US
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>
-Cc:     phone-devel@vger.kernel.org, ~postmarketos/upstreaming@lists.sr.ht,
-        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        Andy Gross <agross@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@somainline.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20220903174150.3566935-1-iskren.chernev@gmail.com>
- <20220903174150.3566935-2-iskren.chernev@gmail.com>
- <14abb0cd-4f65-030e-5479-bf1487979624@linaro.org>
-From:   Iskren Chernev <iskren.chernev@gmail.com>
-In-Reply-To: <14abb0cd-4f65-030e-5479-bf1487979624@linaro.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <20211112120641.16073-1-fantasquex@gmail.com> <DM6PR18MB303406C9CF97E2B42CEC63ACD2499@DM6PR18MB3034.namprd18.prod.outlook.com>
+In-Reply-To: <DM6PR18MB303406C9CF97E2B42CEC63ACD2499@DM6PR18MB3034.namprd18.prod.outlook.com>
+From:   Letu Ren <fantasquex@gmail.com>
+Date:   Tue, 6 Sep 2022 18:00:54 +0800
+Message-ID: <CAEUwDuD0ZMNqwdi-zkH_s7Gj6SkSJpvrcVzhtMz_1HRrXN=dpA@mail.gmail.com>
+Subject: Re: [EXT] [PATCH] scsi: qedf: Fix a UAF bug in __qedf_probe
+To:     Saurav Kashyap <skashyap@marvell.com>
+Cc:     Javed Hasan <jhasan@marvell.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Zheyu Ma <zheyuma97@gmail.com>, Wende Tan <twd2.me@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Hi Saurav,
+
+> Thanks for the patch.
+>
+> Acked-by: Saurav Kashyap <skashyap@marvell.com>
 
 
-On 9/6/22 11:29, Krzysztof Kozlowski wrote:
-> On 03/09/2022 19:41, Iskren Chernev wrote:
->> Add SM6115 UFS to DT schema.
->>
->> Signed-off-by: Iskren Chernev <iskren.chernev@gmail.com>
->> ---
->>  .../devicetree/bindings/ufs/qcom,ufs.yaml     | 26 +++++++++++++++++++
->>  1 file changed, 26 insertions(+)
->>
->> diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
->> index f2d6298d926c..be55a5dfc68f 100644
->> --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
->> +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
->> @@ -28,6 +28,7 @@ properties:
->>            - qcom,msm8998-ufshc
->>            - qcom,sc8280xp-ufshc
->>            - qcom,sdm845-ufshc
->> +          - qcom,sm6115-ufshc
->>            - qcom,sm6350-ufshc
->>            - qcom,sm8150-ufshc
->>            - qcom,sm8250-ufshc
->> @@ -178,6 +179,31 @@ allOf:
->>            minItems: 1
->>            maxItems: 1
->>  
->> +  - if:
->> +      properties:
->> +        compatible:
->> +          contains:
->> +            enum:
->> +              - qcom,sm6115-ufshc
->> +    then:
->> +      properties:
->> +        clocks:
->> +          minItems: 8
->> +          maxItems: 8
->> +        clock-names:
->> +          items:
->> +            - const: core_clk
->> +            - const: bus_aggr_clk
->> +            - const: iface_clk
->> +            - const: core_clk_unipro
->> +            - const: core_clk_ice
-> 
-> This still is not naming and order of sdm845.
+This is a friendly reminder. I wonder the review progress of this
+patch. Almost a year has passed since I submitted the patch. And we
+have tested qedf on Linux 6.0-rc0. This UAF problem still exists. If
+there's anything I can do to help with this issue please let me know.
+I'm willing to help.
 
-Yes, this will come in v3. v2 was released before we finished discussing this issue.
-
->> +            - const: ref_clk
->> +            - const: tx_lane0_sync_clk
->> +            - const: rx_lane0_sync_clk
-> 
-> Best regards,
-> Krzysztof
+Letu Ren
