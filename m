@@ -2,122 +2,106 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02D9EC6FA86
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Sep 2022 13:44:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CAC0ECAAA1
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Sep 2022 13:44:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232970AbiIFNor (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Sep 2022 09:44:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53478 "EHLO
+        id S233325AbiIFNov (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Sep 2022 09:44:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53236 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235598AbiIFNng (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Sep 2022 09:43:36 -0400
-Received: from mail-pg1-x535.google.com (mail-pg1-x535.google.com [IPv6:2607:f8b0:4864:20::535])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E4237EFCF
-        for <linux-scsi@vger.kernel.org>; Tue,  6 Sep 2022 06:38:02 -0700 (PDT)
-Received: by mail-pg1-x535.google.com with SMTP id 73so10691646pga.1
-        for <linux-scsi@vger.kernel.org>; Tue, 06 Sep 2022 06:38:02 -0700 (PDT)
+        with ESMTP id S238737AbiIFNnb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Sep 2022 09:43:31 -0400
+Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 724807EFD5
+        for <linux-scsi@vger.kernel.org>; Tue,  6 Sep 2022 06:38:04 -0700 (PDT)
+Received: by mail-pf1-x42a.google.com with SMTP id c198so1533947pfc.13
+        for <linux-scsi@vger.kernel.org>; Tue, 06 Sep 2022 06:38:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=mime-version:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date;
-        bh=kmJtFeqDL9N10DD2egyFQOk7tiIeoxTQTaNqFOwRaTA=;
-        b=g7EzWkt6xvTtnqHtAVzG3oODuHQHJVgS6R9WjwZwnOH1Iib3/CUtyPTjDhUi7BSad7
-         mD2PWNQVvuIKs7XxXWg8upY0UGkAGr8aqVKk9mWtWeLJuL70DfHOSB+lqURXzbs1Tiou
-         6elxSaupec7UaUlpoW7KRtPU/RWp72voaXJSc=
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:from:to:cc:subject:date;
+        bh=48xR+Te4j3PlRH2UTM+0AemQxLblQ/wg0HrKcq2aWPQ=;
+        b=WA92gxrdIvyooE+Pu70IUTdajK+Nd+QgQ+gfnmvFjECD9ssvQf9AgNTElAbwcEpdXH
+         yDAj70TyWN3aqe+r/PQtj8l6s6+CuBc+Pt1heGuhWsFwxVZbaFJiuC/2whK2IWsefk4h
+         5yazE5L9NcnTRSlbenTPnLE6DKZuzjjl56J2g=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=mime-version:message-id:date:subject:cc:to:from:x-gm-message-state
-         :from:to:cc:subject:date;
-        bh=kmJtFeqDL9N10DD2egyFQOk7tiIeoxTQTaNqFOwRaTA=;
-        b=xssKQN92royGdBoLzMryC4nvCnlFgttv19+ALWH7/Fvl5svxQoxW4wrrhsU4Z32qBE
-         mWtrAbQY4FYI5JhwEZwyy4A8wtDDC7jucq0BvddUFY1rPfc0w0CBAcptqliP4N0DuwW5
-         v28y52ibLXFyHRpAu01KrjllLMR5ofKm+TeFlz1VUZliF0pbJy4yMOHBZaDS1uMHUnYm
-         e0Yv0QJWJTjdd2W2D1uaCElXgObqTVTlVyh3garXe+rUsoV4nNXFzB43O4csO4HNVNAw
-         1Kr3jnWaAyVJi9H5lrdylFgDvyb8js2DOPrcdXCswnQWKJZApxQS6AS9XIpF6cln/OCA
-         nSzg==
-X-Gm-Message-State: ACgBeo2CW4rN/SCqaxo/Vz8gM788QoSiEOPNm5mOdkcnApZVlO680KMM
-        USwfbmI2ZucpQL8N+NqlJw6NDfzJTd4f2wIUaFzBklaG03iH3Qr6HcEqV9iqfQunJV8WrYGeB6J
-        F4TCPDj4aY6tCeVeVRpC+sbapWAkvcRhUy/UXJUoUyO/gtlURe84YmYCUiR8b96SiVZaBIdIG6x
-        hXGJ5Y6zU5
-X-Google-Smtp-Source: AA6agR4xwJFqq09M4B7vnLxPGvnkmsI1bu8/TjNM0jgNjZIqi3hMgJaRNQC5V0BPcEuxDPqB1CUONw==
-X-Received: by 2002:a05:6a00:3406:b0:535:f76f:c971 with SMTP id cn6-20020a056a00340600b00535f76fc971mr55601370pfb.5.1662471409874;
-        Tue, 06 Sep 2022 06:36:49 -0700 (PDT)
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:x-gm-message-state:from:to:cc:subject:date;
+        bh=48xR+Te4j3PlRH2UTM+0AemQxLblQ/wg0HrKcq2aWPQ=;
+        b=6KBdZU0qunpdFBSD56TDTGL6wW4l50ZAa9cYZun0r4/Ddd4kTYlXx+ThwK1ke5bGX4
+         QfIFHAANC7nPKCU5lu361ALVe+IzfUaW2N9Cb8bS06a+Ion6T4zPS/Wl2o7wckkixGDz
+         CA2O1ub7fqy1KCSNVEJss9nSw3hI6dqdEmGxHaWQWmt6XdDjhB8fA/vZunm96m2m47S6
+         xqlJrMfm8CMscCgi7EADI2TtMJQAnPiZaxH4NpkR285sMsJJPhJgGwLi9/WnWGpSFcqa
+         xWQl1p2J52ud+kADPgJG1CJHGQ/0ceko3EuL7y8nCjrXWFsx3QncNOjYSGey9CWHjWkk
+         oj/w==
+X-Gm-Message-State: ACgBeo2CWDxKLs/wTzRIGMLipX43qvpu7kGB3goW9YCZl0lIHrJeBot3
+        yaOPZWyoZWtKBLwHRSNsY8jiLbLbwPqChnfXvRV9TFbWZgLdWseZySsX0A4MGMmvsutiRB6i23f
+        Xot387wa9YeE0kfTGBqr6CNWiYWZL/zTybN+sSar7NpMJ7jAaY9kcKr8CdsIPckomio3R/D94yE
+        zkIH5Wfv4y
+X-Google-Smtp-Source: AA6agR4ugp3djj5HH9bcD4oTWDzURqtuLFE0hoC+h2vv012RTxkGgBr5GXckq+WWc2OJhhtoQBFMow==
+X-Received: by 2002:a05:6a00:4ac3:b0:53e:5683:49c with SMTP id ds3-20020a056a004ac300b0053e5683049cmr615928pfb.41.1662471412106;
+        Tue, 06 Sep 2022 06:36:52 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id d6-20020a170902654600b00172dc6e1916sm4890750pln.220.2022.09.06.06.36.47
+        by smtp.gmail.com with ESMTPSA id d6-20020a170902654600b00172dc6e1916sm4890750pln.220.2022.09.06.06.36.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 06 Sep 2022 06:36:48 -0700 (PDT)
+        Tue, 06 Sep 2022 06:36:51 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, thenzl@redhat.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 0/1] mpt3sas: Fix use-after-free warning
-Date:   Tue,  6 Sep 2022 19:19:07 +0530
-Message-Id: <20220906134908.1039-1-sreekanth.reddy@broadcom.com>
+Subject: [PATCH 1/1] mpt3sas: Fix use-after-free warning
+Date:   Tue,  6 Sep 2022 19:19:08 +0530
+Message-Id: <20220906134908.1039-2-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20220906134908.1039-1-sreekanth.reddy@broadcom.com>
+References: <20220906134908.1039-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000de248605e802490d"
+        boundary="000000000000ff7b9305e8024959"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000de248605e802490d
+--000000000000ff7b9305e8024959
 Content-Transfer-Encoding: 8bit
 
 Fix below use-after-free warning which is observed during
 controller reset.
- 
-[ 1765.313756] ------------[ cut here ]------------
-[ 1765.313759] refcount_t: underflow; use-after-free.
-[ 1765.313774] WARNING: CPU: 23 PID: 5399 at lib/refcount.c:28 refcount_warn_saturate+0xa6/0xf0
-[ 1765.313783] Modules linked in: mpt3sas(OE) joydev uinput snd_seq_dummy snd_hrtimer nft_fib_inet nft_fib_ipv4 nft_fib_ipv6 nft_fib nft_reject_inet nf_reject_ipv4 nf_reject_ipv6 nft_reject nft_ct nft_chain_nat nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 ip_set rfkill nf_tables nfnetlink qrtr vfat fat snd_hda_codec_generic ledtrig_audio snd_hda_intel snd_intel_dspcfg snd_intel_sdw_acpi snd_hda_codec snd_hda_core snd_hwdep snd_seq snd_seq_device snd_pcm snd_timer iTCO_wdt iTCO_vendor_support snd soundcore ses enclosure intel_rapl_msr intel_rapl_common lpc_ich i2c_i801 virtio_balloon i2c_smbus pcspkr xfs libcrc32c sd_mod t10_pi qxl drm_ttm_helper ttm drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops cec ahci sr_mod libahci cdrom crct10dif_pclmul sg crc32_pclmul crc32c_intel raid_class libata drm ghash_clmulni_intel serio_raw e1000 scsi_transport_sas virtio_console virtio_blk virtio_scsi dm_mirror dm_region_hash dm_log dm_mod ipmi_devintf ipmi_msghandler fuse
-[ 1765.313851]  [last unloaded: mpt3sas]
-[ 1765.313854] CPU: 23 PID: 5399 Comm: sg_reset Kdump: loaded Tainted: G           OE    --------- ---  5.14.0-70.13.1.rt21.83.el9_0.x86_64 #1
-[ 1765.313858] Hardware name: Red Hat KVM/RHEL-AV, BIOS 0.0.0 02/06/2015
-[ 1765.313860] RIP: 0010:refcount_warn_saturate+0xa6/0xf0
-[ 1765.313863] Code: 05 fd 59 ac 01 01 e8 82 83 53 00 0f 0b c3 80 3d eb 59 ac 01 00 75 95 48 c7 c7 b0 02 38 96 c6 05 db 59 ac 01 01 e8 63 83 53 00 <0f> 0b c3 80 3d ca 59 ac 01 00 0f 85 72 ff ff ff 48 c7 c7 08 03 38
-[ 1765.313866] RSP: 0018:ffffa5aa4238fd78 EFLAGS: 00010286
-[ 1765.313868] RAX: 0000000000000000 RBX: ffff91c9037fe9a0 RCX: 0000000000000000
-[ 1765.313870] RDX: 0000000000000000 RSI: ffffffff9636e23c RDI: 00000000ffffffff
-[ 1765.313872] RBP: ffff91c9099b2200 R08: ffffffff96a72740 R09: ffffa5aa4238fd10
-[ 1765.313873] R10: 0000000000000001 R11: ffffffffffffffff R12: ffff91c9037fec40
-[ 1765.313875] R13: 00000000ffffffff R14: ffff91c9037fec60 R15: ffff91c9099b22b8
-[ 1765.313879] FS:  00007fd16c624600(0000) GS:ffff91d05fdc0000(0000) knlGS:0000000000000000
-[ 1765.313884] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[ 1765.313886] CR2: 00007fd16c5d78ab CR3: 0000000106228000 CR4: 0000000000350ee0
-[ 1765.313887] Call Trace:
-[ 1765.313911]  _scsih_fw_event_cleanup_queue+0x1ce/0x200 [mpt3sas]
-[ 1765.313936]  mpt3sas_scsih_clear_outstanding_scsi_tm_commands+0xd1/0x140 [mpt3sas]
-[ 1765.313955]  mpt3sas_base_hard_reset_handler+0x17f/0x260 [mpt3sas]
-[ 1765.313973]  _scsih_host_reset+0x88/0xca [mpt3sas]
-[ 1765.313996]  scsi_try_host_reset+0x3a/0xd0
-[ 1765.314003]  scsi_ioctl_reset+0x22b/0x290
-[ 1765.314006]  scsi_ioctl+0x18/0x60
-[ 1765.314011]  blkdev_ioctl+0x13e/0x280
-[ 1765.314017]  __x64_sys_ioctl+0x82/0xb0
-[ 1765.314021]  do_syscall_64+0x3b/0x90
-[ 1765.314026]  entry_SYSCALL_64_after_hwframe+0x44/0xae
-[ 1765.314031] RIP: 0033:0x7fd16c45cc0b
-[ 1765.314034] Code: 73 01 c3 48 8b 0d 1d 62 1b 00 f7 d8 64 89 01 48 83 c8 ff c3 66 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa b8 10 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d ed 61 1b 00 f7 d8 64 89 01 48
-[ 1765.314051] RSP: 002b:00007ffeffd46b48 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
-[ 1765.314053] RAX: ffffffffffffffda RBX: 0000000000000003 RCX: 00007fd16c45cc0b
-[ 1765.314055] RDX: 00007ffeffd46b74 RSI: 0000000000002284 RDI: 0000000000000003
-[ 1765.314056] RBP: 0000000000000003 R08: 0000000000000001 R09: 0000000000000000
-[ 1765.314057] R10: 0000000000000000 R11: 0000000000000246 R12: 00007ffeffd46b74
-[ 1765.314059] R13: 00007ffeffd48618 R14: 0000557f24af890d R15: 0000557f24afa020
-[ 1765.314062] ---[ end trace 0000000000000002 ]---
 
-Sreekanth Reddy (1):
-  mpt3sas: Fix use-after-free warning
+refcount_t: underflow; use-after-free.
+WARNING: CPU: 23 PID: 5399 at lib/refcount.c:28 refcount_warn_saturate+0xa6/0xf0
 
+Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+---
  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 3507e2ace903..1ca26851260e 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -3670,6 +3670,7 @@ static struct fw_event_work *dequeue_next_fw_event(struct MPT3SAS_ADAPTER *ioc)
+ 		fw_event = list_first_entry(&ioc->fw_event_list,
+ 				struct fw_event_work, list);
+ 		list_del_init(&fw_event->list);
++		fw_event_work_put(fw_event);
+ 	}
+ 	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
+ 
+@@ -3751,7 +3752,6 @@ _scsih_fw_event_cleanup_queue(struct MPT3SAS_ADAPTER *ioc)
+ 		if (cancel_work_sync(&fw_event->work))
+ 			fw_event_work_put(fw_event);
+ 
+-		fw_event_work_put(fw_event);
+ 	}
+ 	ioc->fw_events_cleanup = 0;
+ }
 -- 
 2.27.0
 
 
---000000000000de248605e802490d
+--000000000000ff7b9305e8024959
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -188,13 +172,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIHB3bTvMjTT68Y8ek++Q
-XE2nycVoHjh6doTHoMNxUrsnMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDkwNjEzMzY1MFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIGtpd7UVCvPozkCasZRB
+SstjmMK9yq1PXBBj2waS14OAMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDkwNjEzMzY1MlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQDJ5SlMdKzFmUWz+OZZfYqlCTBHHMUp8Y/knNaD
-NKdqbSK44eX6xdoQ5lam9xiS9vc2hz5GuQ5EjoLGdXpXQTlE7CqQSolQrzslVPxF213UpS+luTCs
-FzwnIaI8S2GGoUPO2d4ZjZ2NPm6tpvvkSkNMzeNS8MvWi9AMmbp+gZ/BGTzUv1sJWmbtlaufmsHb
-V+y/ulLg19pFbSUPNOTw0ifYIvzOYjD6m82gwuq1Z6R68mEh1KWeFwwpnDBP2IW6V7j/v6Om4iOp
-t+4gQakJA5hgjYgTBpFyJxSzADRG7HBn+Rtewa+NGknLZ6u5ljubVBUf9PFk8REp3heqc3BaOe4A
---000000000000de248605e802490d--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCsmPaKc/sGvp/8gJKZcbixCuEDONpPKqS5FTjZ
+iAJqxxRTkUe9gUIM7Rr24++oDjDAm6/K4XCfvPfWrZFbMjbv63ia8ETBC8LRIP06kl4hwBQvWRVS
+dLs24tcX1l98jKj6DIfxy4l7kBv/pUmEvA+hb/y/ZefvFHD3gRDIhnTVNnJtSH3BR1QNVCZZCvVI
+tIka77IqhQNBoK2hF0r8Xng1+oDoh08qD1T6naAbDro+AyIRkCQeZFyL6uETqKI6xZChkGUIMr6o
+/HgbNG/GHvLihgxguHvW01an2iVx7gVHGprucAUcNBJwx+PYvWgcaF1RHUArxpM6QNBQnOnaGcWy
+--000000000000ff7b9305e8024959--
