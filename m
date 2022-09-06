@@ -2,61 +2,61 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43792C54EE9
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Sep 2022 08:29:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 159D4C6FA83
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Sep 2022 08:43:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239203AbiIFI3W (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Sep 2022 04:29:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52816 "EHLO
+        id S239540AbiIFInA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Sep 2022 04:43:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54932 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239199AbiIFI3M (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Sep 2022 04:29:12 -0400
-Received: from mail-lf1-x131.google.com (mail-lf1-x131.google.com [IPv6:2a00:1450:4864:20::131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE31E760F8
-        for <linux-scsi@vger.kernel.org>; Tue,  6 Sep 2022 01:29:07 -0700 (PDT)
-Received: by mail-lf1-x131.google.com with SMTP id w8so16172157lft.12
-        for <linux-scsi@vger.kernel.org>; Tue, 06 Sep 2022 01:29:07 -0700 (PDT)
+        with ESMTP id S233147AbiIFImc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Sep 2022 04:42:32 -0400
+Received: from mail-ed1-x529.google.com (mail-ed1-x529.google.com [IPv6:2a00:1450:4864:20::529])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2EC8578216;
+        Tue,  6 Sep 2022 01:38:52 -0700 (PDT)
+Received: by mail-ed1-x529.google.com with SMTP id s11so14129824edd.13;
+        Tue, 06 Sep 2022 01:38:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
+        d=gmail.com; s=20210112;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date;
-        bh=FhRE8lkrzD8kMfuZSVw/65OUGXiAlHvWxW/GDqr7GIU=;
-        b=kDKlYj5eCRkqtWaGExLZuCpi+SiQLIVR3pYHffvNbB/3GFbZtVOvEQ/msomHad34/Y
-         XjPsrwEXOivhOlshLOEBSkgNOdB921p4dYUvd/0jR2RXt8KbYZh+IqkuJUDhifYhTcsj
-         iKGibSlAhHzdH8JgPgrJMx2rtHcQK9YGf5iT7iMHq0zbZhb1nZq6pqDBDNMDjja3+9zK
-         1NPiJ67RHuuRQJKt1CiBOv9c/I8ikRtEygW+jHwwcrH0tfnxpsDAclBf/Iky8io03lbe
-         wDkkvuxXXCwXZRK29yW29YUzPf4RsU3jPDp6uGSCAoILbJYegI7+V2vzuUhh0yBd9Rlc
-         LiaA==
+        bh=7aKcWrHN0iy5lXqS6WWR60dmN/jKxbkqMcVmWFyZOLI=;
+        b=cDuUtI7zVTHj675gi9AY7ykpUUvRcTJd8av+hapb1tW/ieoFruFNFltdwC2epnpHi9
+         Dx2eQg86oLemuVU+I+p2fRyXfTZsQTbV2uSTrBLdNVRdLNA/dMw1C1SCeGpKqI2iop9v
+         vnoHhLsgptMUa6WYb0A7O8tS6DQvYw3KK+opl4x9ABOSQrSFrtTdDkVSs/yNpXawo0M9
+         wefnuU7QAI9bkBGsDXl4yJW/moWdUezMOBIbHX7UBcC4KuUhT6K1VPZpnjvWNk1IAQXv
+         SRFrvNKztVPJQmyElsZ3p5SRsjiolqN7jf6CcyJaUFLzIBggKs6kok9a0ZP3r4LAaWkg
+         A8TQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date;
-        bh=FhRE8lkrzD8kMfuZSVw/65OUGXiAlHvWxW/GDqr7GIU=;
-        b=cKGfvWXWkZwo7TSrSDmXPC6K9s5GE2J7lK5iz1UtN5j1dSEoZtIsbrGjjCfXI3dXvz
-         JOX+JTSQdKw0Fy6ILieN2hjvmxO9xgdl5LvYoh2M0gA+wicR1t6TDeVBwsptSOyotvNH
-         jXlWwOQ+dIyNEiu+93PD3Muo4BhyrCyv0w8EM9vRHAVe989X/O1kmp0IVa/t+IaMUuCM
-         L0xRrK/wylPQ6L/WivGYiO+zclLIG3ZWpI9/WcQA0Ut/sD1ZeQ5SxVxjIVW+DEmWeBzC
-         ARSQEmqc7PSr3hRhpRDjVbg8ESCWyF3pY/YPD5Naoj9lBzti3QKXGOsZFNrFnR4D2znW
-         5NmA==
-X-Gm-Message-State: ACgBeo1wrJDR/mfxo7ch3i3m9/RM3KBkXV7pxbTaq1q4cf7j+Z2mesg4
-        ZqQAgGnkHvzcgq3BlN4h+UWllQ==
-X-Google-Smtp-Source: AA6agR4q7yqpC2fGtbF404qBqRC1jFok+/yK7oqWz5D86QZtbPk6XZ9Y/3OFGLOOwZ/02/v7wO0Rlg==
-X-Received: by 2002:a05:6512:1312:b0:492:e14d:54d4 with SMTP id x18-20020a056512131200b00492e14d54d4mr16579896lfu.469.1662452946261;
-        Tue, 06 Sep 2022 01:29:06 -0700 (PDT)
-Received: from [192.168.0.21] (78-11-189-27.static.ip.netia.com.pl. [78.11.189.27])
-        by smtp.gmail.com with ESMTPSA id c15-20020a056512238f00b004974da17c2bsm282419lfv.0.2022.09.06.01.29.04
+        bh=7aKcWrHN0iy5lXqS6WWR60dmN/jKxbkqMcVmWFyZOLI=;
+        b=saG59GXTFexjfvYoyjxyH4sJZg8nPSxAO3l4DEcFAWlwezafd7uQfdYYcDjqIwacpY
+         oKlIKlvDPhK3wc0LVgDE8Tzku9fJVFxXJDymAR1QzI8aFRXUPaFP7O1HfVMV0fXwXh+D
+         d7GBosVQWXJSJ//XgDTwQr2HR7PCoEf+HPHunmUCZWAHdnhI/5FDMxm/Sx76eUonDjov
+         7XV4LL517BZJYvT02MBXzyOfRlIWq70+vLj7KbqtOq7LTybCyVjJZ3GkOp5uIOru/3Fl
+         IaJ/ZnG1Rto10cAxNowvCkPkjgZZpoO5AqZdLWGvOhA+UQSqGjgFT9mxqIKhdNI7vpCZ
+         ubKQ==
+X-Gm-Message-State: ACgBeo3WrkaSc/puzYZRwwJtmL/6kUEHME2FZJVpTmfW98NLHGiOMc8O
+        9LQYPqb15Jucc59hfyDKbH8=
+X-Google-Smtp-Source: AA6agR59/EsDw+4IIUjpBCdyYu05A7w7PVNvttbU27dBMXxkQJLsZm9LX/0Y0hoNNKfHdXaLMRsXVg==
+X-Received: by 2002:aa7:c506:0:b0:44e:6abd:1fb8 with SMTP id o6-20020aa7c506000000b0044e6abd1fb8mr8841675edq.308.1662453530666;
+        Tue, 06 Sep 2022 01:38:50 -0700 (PDT)
+Received: from [192.168.74.101] ([77.78.20.135])
+        by smtp.gmail.com with ESMTPSA id b23-20020a170906039700b00715a02874acsm6228600eja.35.2022.09.06.01.38.49
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 06 Sep 2022 01:29:05 -0700 (PDT)
-Message-ID: <14abb0cd-4f65-030e-5479-bf1487979624@linaro.org>
-Date:   Tue, 6 Sep 2022 10:29:03 +0200
+        Tue, 06 Sep 2022 01:38:50 -0700 (PDT)
+Message-ID: <4fe6c7ea-38e6-2a6e-fa78-29664f819aca@gmail.com>
+Date:   Tue, 6 Sep 2022 11:38:50 +0300
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.13.0
+ Thunderbird/91.12.0
 Subject: Re: [PATCH v2 1/9] dt-bindings: ufs: qcom: Add sm6115 binding
 Content-Language: en-US
-To:     Iskren Chernev <iskren.chernev@gmail.com>,
+To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
         Bjorn Andersson <bjorn.andersson@linaro.org>,
         Rob Herring <robh+dt@kernel.org>
 Cc:     phone-devel@vger.kernel.org, ~postmarketos/upstreaming@lists.sr.ht,
@@ -70,62 +70,68 @@ Cc:     phone-devel@vger.kernel.org, ~postmarketos/upstreaming@lists.sr.ht,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 References: <20220903174150.3566935-1-iskren.chernev@gmail.com>
  <20220903174150.3566935-2-iskren.chernev@gmail.com>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <20220903174150.3566935-2-iskren.chernev@gmail.com>
+ <14abb0cd-4f65-030e-5479-bf1487979624@linaro.org>
+From:   Iskren Chernev <iskren.chernev@gmail.com>
+In-Reply-To: <14abb0cd-4f65-030e-5479-bf1487979624@linaro.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 03/09/2022 19:41, Iskren Chernev wrote:
-> Add SM6115 UFS to DT schema.
+
+
+On 9/6/22 11:29, Krzysztof Kozlowski wrote:
+> On 03/09/2022 19:41, Iskren Chernev wrote:
+>> Add SM6115 UFS to DT schema.
+>>
+>> Signed-off-by: Iskren Chernev <iskren.chernev@gmail.com>
+>> ---
+>>  .../devicetree/bindings/ufs/qcom,ufs.yaml     | 26 +++++++++++++++++++
+>>  1 file changed, 26 insertions(+)
+>>
+>> diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+>> index f2d6298d926c..be55a5dfc68f 100644
+>> --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+>> +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+>> @@ -28,6 +28,7 @@ properties:
+>>            - qcom,msm8998-ufshc
+>>            - qcom,sc8280xp-ufshc
+>>            - qcom,sdm845-ufshc
+>> +          - qcom,sm6115-ufshc
+>>            - qcom,sm6350-ufshc
+>>            - qcom,sm8150-ufshc
+>>            - qcom,sm8250-ufshc
+>> @@ -178,6 +179,31 @@ allOf:
+>>            minItems: 1
+>>            maxItems: 1
+>>  
+>> +  - if:
+>> +      properties:
+>> +        compatible:
+>> +          contains:
+>> +            enum:
+>> +              - qcom,sm6115-ufshc
+>> +    then:
+>> +      properties:
+>> +        clocks:
+>> +          minItems: 8
+>> +          maxItems: 8
+>> +        clock-names:
+>> +          items:
+>> +            - const: core_clk
+>> +            - const: bus_aggr_clk
+>> +            - const: iface_clk
+>> +            - const: core_clk_unipro
+>> +            - const: core_clk_ice
 > 
-> Signed-off-by: Iskren Chernev <iskren.chernev@gmail.com>
-> ---
->  .../devicetree/bindings/ufs/qcom,ufs.yaml     | 26 +++++++++++++++++++
->  1 file changed, 26 insertions(+)
+> This still is not naming and order of sdm845.
+
+Yes, this will come in v3. v2 was released before we finished discussing this issue.
+
+>> +            - const: ref_clk
+>> +            - const: tx_lane0_sync_clk
+>> +            - const: rx_lane0_sync_clk
 > 
-> diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> index f2d6298d926c..be55a5dfc68f 100644
-> --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> @@ -28,6 +28,7 @@ properties:
->            - qcom,msm8998-ufshc
->            - qcom,sc8280xp-ufshc
->            - qcom,sdm845-ufshc
-> +          - qcom,sm6115-ufshc
->            - qcom,sm6350-ufshc
->            - qcom,sm8150-ufshc
->            - qcom,sm8250-ufshc
-> @@ -178,6 +179,31 @@ allOf:
->            minItems: 1
->            maxItems: 1
->  
-> +  - if:
-> +      properties:
-> +        compatible:
-> +          contains:
-> +            enum:
-> +              - qcom,sm6115-ufshc
-> +    then:
-> +      properties:
-> +        clocks:
-> +          minItems: 8
-> +          maxItems: 8
-> +        clock-names:
-> +          items:
-> +            - const: core_clk
-> +            - const: bus_aggr_clk
-> +            - const: iface_clk
-> +            - const: core_clk_unipro
-> +            - const: core_clk_ice
-
-This still is not naming and order of sdm845.
-
-> +            - const: ref_clk
-> +            - const: tx_lane0_sync_clk
-> +            - const: rx_lane0_sync_clk
-
-Best regards,
-Krzysztof
+> Best regards,
+> Krzysztof
