@@ -2,676 +2,163 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76107C6FA9D
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Sep 2022 10:47:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9624ECAAD5
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Sep 2022 11:04:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239817AbiIFKr3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Sep 2022 06:47:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34606 "EHLO
+        id S239788AbiIFLEi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Sep 2022 07:04:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239841AbiIFKqf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Sep 2022 06:46:35 -0400
-Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 560E77C191;
-        Tue,  6 Sep 2022 03:45:27 -0700 (PDT)
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id DC59D448FE;
-        Tue,  6 Sep 2022 10:45:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        content-type:content-type:content-transfer-encoding:mime-version
-        :references:in-reply-to:x-mailer:message-id:date:date:subject
-        :subject:from:from:received:received:received:received; s=
-        mta-01; t=1662461112; x=1664275513; bh=GMxfsHa4lO98PsGtvn+1GQMtd
-        +lPCms68TzX9MmBgBM=; b=B1BbJeHHPE5O0nOiSQIU06sIHzhdLHQPPMgvrv55d
-        um593uv1qCVBY2kxgjpFmDndHXoAww1X3TZTdzkV4+W8426M5Tiu5pepql2YqWBt
-        DGkgrmoNe8dN2Me16wbwPm6p8/fn89XfohMXQzPBN+50H9mEbhcWutRPtCXLVdcl
-        N4=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id pfM_uf6tFTOk; Tue,  6 Sep 2022 13:45:12 +0300 (MSK)
-Received: from T-EXCH-02.corp.yadro.com (T-EXCH-02.corp.yadro.com [172.17.10.102])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 9AA9556591;
-        Tue,  6 Sep 2022 13:34:44 +0300 (MSK)
-Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
- T-EXCH-02.corp.yadro.com (172.17.10.102) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
- 15.1.669.32; Tue, 6 Sep 2022 13:34:44 +0300
-Received: from NB-591.corp.yadro.com (10.199.18.20) by
- T-EXCH-08.corp.yadro.com (172.17.11.58) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.2.1118.9; Tue, 6 Sep 2022 13:34:40 +0300
-From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
-To:     Martin Petersen <martin.petersen@oracle.com>,
-        <target-devel@vger.kernel.org>
-CC:     Mike Christie <michael.christie@oracle.com>,
-        <linux-scsi@vger.kernel.org>, <linux@yadro.com>,
-        Dmitry Bogdanov <d.bogdanov@yadro.com>,
-        Roman Bolshakov <r.bolshakov@yadro.com>
-Subject: [PATCH v2 2/6] scsi: target: core: add list of opcodes for RSOC
-Date:   Tue, 6 Sep 2022 13:34:17 +0300
-Message-ID: <20220906103421.22348-3-d.bogdanov@yadro.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220906103421.22348-1-d.bogdanov@yadro.com>
-References: <20220906103421.22348-1-d.bogdanov@yadro.com>
+        with ESMTP id S239780AbiIFLEh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Sep 2022 07:04:37 -0400
+Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 344929FCF;
+        Tue,  6 Sep 2022 04:04:35 -0700 (PDT)
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 285Kn9qa017117;
+        Tue, 6 Sep 2022 04:04:33 -0700
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3jc6epru6k-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 06 Sep 2022 04:04:33 -0700
+Received: from m0045851.ppops.net (m0045851.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 286B25wE002588;
+        Tue, 6 Sep 2022 04:04:32 -0700
+Received: from nam02-dm3-obe.outbound.protection.outlook.com (mail-dm3nam02lp2040.outbound.protection.outlook.com [104.47.56.40])
+        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3jc6epru6f-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 06 Sep 2022 04:04:32 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=iUhRqEtjk3nRyxsNDAQEWMGAUu3SVuyUvdsOpZNdJNdM2zAx8aZPUXC1rhGSkEg3cQTO4X4OW9475rTZ8EvA7fwCGVwVdCo4sicPbjrlUX5mZaUNGw79iWUP5WATQ5qTPp8RE7g5jAzNW6VCoMxn+6XIHG1xi15ZwWBw0/oIKwn+pbLxanP1QaUcIjynLy8sDAS0aqrs1FEoE69y30THsixvQUa6dvfrRCQmWq3TthwFIyZX6V32cSsUa0fHTumbLRFyXtLMPKZZum6rgm8c1WsWaEZxhApb4GXjxcImApmcFQKw+3BkDn8R03z6ZB8WuBlaT1f7azPxn8MElp3ktg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=bh85AQYDcsGj91zxrD8MBrNh7USTV/D9rip8km7nDqs=;
+ b=IwtQeDPVH8OOvXbnBXuAndMqizsG1ixIVmhk5oyQrXxii1+x65YMItDjlMVtjiVb5+MWfgP9Dz4+cAHv6ZBJ/AKDqouNFWGrzJ8/GGIilT83NVQcFClVhvdaCw3G5YEBj3YuY3JiVzjfGPywD4/WD+ry9slICdYEMkKDR6TflIzSWj4uQolMdhW3b6XiKc4jNNY2ICN289FdA+fkgBDw/3jiNP1YT7xh4y7cBGXne6uQqnu1SyoGZfXxH18ct4g66OUHH2GAJbZ2VOzng1lcmlJT1VGuIZoWEanT+UEb+HrK2DtRA4WtZENd8DBMA/nejKJfijNejGDWGH+U+1+msw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=marvell.com; dmarc=pass action=none header.from=marvell.com;
+ dkim=pass header.d=marvell.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=marvell.onmicrosoft.com; s=selector1-marvell-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=bh85AQYDcsGj91zxrD8MBrNh7USTV/D9rip8km7nDqs=;
+ b=SrTUCgT3m5cw6Ztb7YTvx9vonWgtgdKmW57KgdjVrsqkKaLyxRiM8UgqNCAXVQ2tIpTKMo14w9IhK7KPW1RfdT4qYuRbw/4l8z1mUVL6VFypKxg03kTB7t4ipYP5QSSnt3tFG2KaytwhWW7AfeQQlOAigkBjgaJIVuwsOng+fPk=
+Received: from DM4PR18MB5220.namprd18.prod.outlook.com (2603:10b6:8:53::16) by
+ MW3PR18MB3450.namprd18.prod.outlook.com (2603:10b6:303:5b::12) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.5588.17; Tue, 6 Sep 2022 11:04:28 +0000
+Received: from DM4PR18MB5220.namprd18.prod.outlook.com
+ ([fe80::64b2:db89:aab9:bbfd]) by DM4PR18MB5220.namprd18.prod.outlook.com
+ ([fe80::64b2:db89:aab9:bbfd%4]) with mapi id 15.20.5588.011; Tue, 6 Sep 2022
+ 11:04:28 +0000
+From:   Saurav Kashyap <skashyap@marvell.com>
+To:     Letu Ren <fantasquex@gmail.com>
+CC:     Javed Hasan <jhasan@marvell.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Zheyu Ma <zheyuma97@gmail.com>, Wende Tan <twd2.me@gmail.com>
+Subject: RE: [EXT] [PATCH] scsi: qedf: Fix a UAF bug in __qedf_probe
+Thread-Topic: [EXT] [PATCH] scsi: qedf: Fix a UAF bug in __qedf_probe
+Thread-Index: AQHX173JoyzXmxer+Uu3rvvmwZsxL6xRK+DQgYLTvwCAABFngA==
+Date:   Tue, 6 Sep 2022 11:04:28 +0000
+Message-ID: <DM4PR18MB52209E449FCBD1209F7ACBE1D27E9@DM4PR18MB5220.namprd18.prod.outlook.com>
+References: <20211112120641.16073-1-fantasquex@gmail.com>
+ <DM6PR18MB303406C9CF97E2B42CEC63ACD2499@DM6PR18MB3034.namprd18.prod.outlook.com>
+ <CAEUwDuD0ZMNqwdi-zkH_s7Gj6SkSJpvrcVzhtMz_1HRrXN=dpA@mail.gmail.com>
+In-Reply-To: <CAEUwDuD0ZMNqwdi-zkH_s7Gj6SkSJpvrcVzhtMz_1HRrXN=dpA@mail.gmail.com>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: e53af7d6-e2f1-4541-f8ca-08da8ff79190
+x-ms-traffictypediagnostic: MW3PR18MB3450:EE_
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: 0W1iVkbz6DcuYbP4p2ci2pS1A5TrLUHzj01VoycoX/EeQmUDg6uv+dNJ6DzWRGRAjGg8S2/uOGgopfq1jiwqNLi/KXVeiUuITC1Za0voEWZ1HZTYdNo/FmQnXayc0U6so+pS35srU9mGczVKc1/eOaLXu1Z1sOSexSzT5N811MVZaaKcMBS9k2nCNH/SJzhUZxMS+e9Sp8nvw9y2r0cFPXl3DrVnao2zBQT+bzYsBwtG8UUyn8oP1M1CY1eQVXUSQoVdHWpxPQhoOnFlv30NXFVTunQMO5LW/bHKx/Dq2O71QZC4zVNZAwJYHrSszAcngwK1CfQrBY5LhjUO+naNu/UQJG3E/DKSNZwYzstZEX082vhdXImAM8r5vW35yhS8+lc9nfwhTw7Xg/sD5FF3yIK72jQu0ngrCdo3T7hSnTDQ0sarS7FlftTUKhIXs5nroCDriiQkkrPstOzQOsR/A8ZnLlaJZh0Sn4jsrMsJIsc4eb9sGXxv9yHx00673KbbUgv+El6nTtfkUuh9z1TeIXyTR0/epPhcKFBMP2rVrB9WDy074TKwPJGZGh242oxocKSZVcWBxMi+8pvKxjXD5BPLqTYnnVXCvkkHeWKArlmUh4fVK6F+2U4hdjdFhR5ScNivhjH/7tBBKtQUSkeQswEr4QoeRMEhn00fTIi+27IiCULV7mwxJ1wiFMjZ99KHvFqJ1kzkS4gGZ6mnzY+gQ3z6N/y5LAYvv3gRjLKchlNi2pqiXdZCYgTLDIZvJjFzVS+bJ0UdP7JxB0Lq8KgQLg==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM4PR18MB5220.namprd18.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(4636009)(396003)(366004)(376002)(136003)(39860400002)(346002)(52536014)(186003)(9686003)(4744005)(2906002)(8936002)(5660300002)(55016003)(83380400001)(86362001)(33656002)(53546011)(6506007)(478600001)(71200400001)(7696005)(41300700001)(122000001)(38100700002)(6916009)(38070700005)(76116006)(66946007)(66556008)(66476007)(4326008)(8676002)(64756008)(66446008)(316002)(54906003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?cFBhWUxiSFNTNWNsYTRkdlI1aGJBSDRjRXBKY1dyNlpXU3JKbHM3MmJrenZm?=
+ =?utf-8?B?SWRKTWZmRTZWSjdHWFBLOUtNTVZDeDhJMW9TODl4WWpla1pTMk8wdThGR0xv?=
+ =?utf-8?B?ckJaaVRHMWhCVkkxRUJnS3NndlpCYXJyVXJLWTZobG4zNkNQMjZpRUpzL012?=
+ =?utf-8?B?MHBWWVlONFFneFpPT1U1d29ZYnQ0K2d0dVd4ZE14YkhSemJPdUtIU2xtdG1q?=
+ =?utf-8?B?M3FrdG1ldCtPSTA4MmZCQXRJb09OVlAvb0QvUUpsTE13OHNENzJuY1FPRVhC?=
+ =?utf-8?B?d3p4YWlvODhSa0dzTE0vT3J6THB3aHNEbFpLOTVoK3MveEl4UzVGYnhBdGN6?=
+ =?utf-8?B?YkZ6QlBIYlp0eDlKZ3pMMzI0V25hZDFYQUlTeWhjRXlKQ0NIZ0tYTWNNends?=
+ =?utf-8?B?SnAzMTZZekFjRlZEMjdja3EyUkhyWFAyaUZWVmcvNFpQV0c5bjljTTU3SVk2?=
+ =?utf-8?B?UDVSVDlqNXdJMmFrQmdxdGUreE1aWGVhWFl3SWdlaW9YQVZDU0RzV0tmTVdk?=
+ =?utf-8?B?QkdhMjBxWHdxdkQ0YUc2U3NNVDJ2d0JVZkZJNC9tTjNHNDNwSGJwb3oxc2hK?=
+ =?utf-8?B?a1ppMmoxM3RMMG5XZTVreEFxelo3R3pCOGpnSWNhOUlCR0V5Q1BBdTJRVUdZ?=
+ =?utf-8?B?eVBoWjZiT1BxVTUwdjRORkxySXpxdmF5eStYa3JnMDlXU1hpTnlncHZUcXI3?=
+ =?utf-8?B?TEl0NmJPRnBxZTE0NUVEUy9yRlpjTVV2b2EvcmJDV09FcGNIdDE0a1pqdGNB?=
+ =?utf-8?B?UnhTQkp0U05pWmcyOXdNVDlGMitFckxiZTRvRHYzMmVqQUVwcXdHVFl5eERQ?=
+ =?utf-8?B?eENFcXBqVkVQdUZUUkF5TlZNUFpka0JEVXhYRXlkNTNqMXUxM0RvRUJDNjI2?=
+ =?utf-8?B?cXhBd3hsMkxqMTQvRCttalVzUnJUMWdOMjgycGpaTnpGazV6VG5SSzM3cWtS?=
+ =?utf-8?B?TDFWOUNoc3lzaWVSRGxOY2YyMmZaZUoxM2J6UnZaUTBUemZrb1lPc3ZHTk9O?=
+ =?utf-8?B?S0RCYWpXZEJMTGMxOHhiL2VMOTROY1E1K1F0dTJxUU9EZkFRajB4UFFLS2lp?=
+ =?utf-8?B?dVBuc011VXlsZTNFVitvWkhtekpldG12K2Rmb3hYQlVZWmR5bGYzanBKN1gz?=
+ =?utf-8?B?Um1LUjdOUi9KNEh6c1ZpU1RLSTlvc0x4b1k5clFFOTFEZnpuZExaODA3aEZR?=
+ =?utf-8?B?RE5GeE80aE13SEdoTEFHWDBDZ0dVdmZOTnFtM3orWjJTOGZxSUYzL2wzWWlX?=
+ =?utf-8?B?WTlHWDBNRmFUY2NUdlZsSkdKdlQyLzFsbm9aNmtuL2VGcjlDTGpSNDFkZm5n?=
+ =?utf-8?B?SWsxR0lZWXZUYVpFUHNpbS9pbWRVK05rU0xWZm41ZW9oR2Y2c1I5eXNBazI5?=
+ =?utf-8?B?cUhKalM0NmlKVWc1VnpHVzZXTmt4c0NMbmFKRUFNbnJDN056enNDNXlISU5W?=
+ =?utf-8?B?K3Fpd0g3dEVIdG5sREh0ZDVSN1FjRjJ6aC9wMGcrbnY0VVZWNkQ0NnhCeCtp?=
+ =?utf-8?B?L3doclpFMWZvWGJyellVQ3RiejV1L09tMnRFRVNURzVhV1lQakc4UEZkZzdw?=
+ =?utf-8?B?L3dYN3JCTkYwSUFiRFpMVllId2RHU3ZBQ2dJZVlUOWJRTW5QY3dwUmF1YVJQ?=
+ =?utf-8?B?UVhaZmkyOWtMWk9GV2ZxdVpnMXI4ZGszZTFpQUh3azhtRzVTeFQ5M1dHVmxv?=
+ =?utf-8?B?ajRNbzRKY09CSkY3QzIzaC9qakNvUTg4QXYybytjODU5dk1lUHh6Sk5pN0Ru?=
+ =?utf-8?B?OVpERVIyaTVFeXZLcHlkMG1ncXR2a3E0T2Z3R09PN1VtSDFoSmlVV3c2TDFB?=
+ =?utf-8?B?UlQ0djFGQ3NlL1NyUXdOaXNsZmdzcHg0ZDNzUWxUMEV6Q2VGbmx0TU9CM2hy?=
+ =?utf-8?B?R3lOQ0x2bjhBdEQzS09sUVpESXk1NjE4UDAyaWFzZC9QckZZZG5nU3IrTGh2?=
+ =?utf-8?B?OGNZbGtGSDhlYlFES2J2K2VHZW1PWXp4ZElmcGxvVmx3OE1MUC9YaktSa0Yz?=
+ =?utf-8?B?RkVxQnF1UTNFME5pRUVLdk9uWlNCYzZRYTRCQ0lDTUlKTzJHMHJETmtTWFp6?=
+ =?utf-8?B?QlJhckVUa0QwaGpKWHVjcWZrY1I1SFAxNnhHWEdCRk5jNXVtTXpVMVRCdXpp?=
+ =?utf-8?B?ckc1V3BuMW1xRFd2K3dIUWZtc1oyQTRrOXl2TTQvOUk3TG1HaDBCdHRkZFl5?=
+ =?utf-8?Q?CvTzQtEkeHEC0C07oNkGuhjWia8jOxleU5cyLui9NmmF?=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.199.18.20]
-X-ClientProxiedBy: T-EXCH-02.corp.yadro.com (172.17.10.102) To
- T-EXCH-08.corp.yadro.com (172.17.11.58)
+X-OriginatorOrg: marvell.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM4PR18MB5220.namprd18.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e53af7d6-e2f1-4541-f8ca-08da8ff79190
+X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Sep 2022 11:04:28.7925
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: IDmea1bFcNvT+0zBdwJUoKNfbuLAyehtdFR0gyyX0nGEFl5/enjrNeD3QIf3favJ5bVZ8PqHxBRk0rgp/GGk4A==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW3PR18MB3450
+X-Proofpoint-ORIG-GUID: uzTQscbpQhkB9V1nX3ZH4q33b0qcrmH0
+X-Proofpoint-GUID: xRQILxpibPo2N4_32wLj2PblLckKDN8i
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
+ definitions=2022-09-06_05,2022-09-06_01,2022-06-22_01
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fill the strucures for supported Opcodes and Usage Bits that is reported
-in REPORT SUPPORTED OPERATION CODES command response.
-
-Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
-Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
----
-v2:
-  remove XDWRITEREAD_*
----
- drivers/target/target_core_spc.c | 568 +++++++++++++++++++++++++++++++
- include/scsi/scsi_proto.h        |   3 +
- 2 files changed, 571 insertions(+)
-
-diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
-index 7e61c0e45034..043c08abf338 100644
---- a/drivers/target/target_core_spc.c
-+++ b/drivers/target/target_core_spc.c
-@@ -1308,8 +1308,576 @@ spc_emulate_testunitready(struct se_cmd *cmd)
- 	return 0;
- }
- 
-+static struct target_opcode_descriptor tcm_opcode_read6 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = READ_6,
-+	.cdb_size = 6,
-+	.usage_bits = {READ_6, 0x1f, 0xff, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_read10 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = READ_10,
-+	.cdb_size = 10,
-+	.usage_bits = {READ_10, 0xf8, 0xff, 0xff,
-+		       0xff, 0xff, SCSI_GROUP_NUMBER_MASK, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_read12 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = READ_12,
-+	.cdb_size = 12,
-+	.usage_bits = {READ_12, 0xf8, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, SCSI_GROUP_NUMBER_MASK, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_read16 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = READ_16,
-+	.cdb_size = 16,
-+	.usage_bits = {READ_16, 0xf8, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, SCSI_GROUP_NUMBER_MASK, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_write6 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = WRITE_6,
-+	.cdb_size = 6,
-+	.usage_bits = {WRITE_6, 0x1f, 0xff, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_write10 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = WRITE_10,
-+	.cdb_size = 10,
-+	.usage_bits = {WRITE_10, 0xf8, 0xff, 0xff,
-+		       0xff, 0xff, SCSI_GROUP_NUMBER_MASK, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_write_verify10 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = WRITE_VERIFY,
-+	.cdb_size = 10,
-+	.usage_bits = {WRITE_VERIFY, 0xf0, 0xff, 0xff,
-+		       0xff, 0xff, SCSI_GROUP_NUMBER_MASK, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_write12 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = WRITE_12,
-+	.cdb_size = 12,
-+	.usage_bits = {WRITE_12, 0xf8, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, SCSI_GROUP_NUMBER_MASK, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_write16 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = WRITE_16,
-+	.cdb_size = 16,
-+	.usage_bits = {WRITE_16, 0xf8, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, SCSI_GROUP_NUMBER_MASK, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_write_verify16 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = WRITE_VERIFY_16,
-+	.cdb_size = 16,
-+	.usage_bits = {WRITE_VERIFY_16, 0xf0, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, SCSI_GROUP_NUMBER_MASK, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_write_same32 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = VARIABLE_LENGTH_CMD,
-+	.service_action = WRITE_SAME_32,
-+	.cdb_size = 32,
-+	.usage_bits = {VARIABLE_LENGTH_CMD, SCSI_CONTROL_MASK, 0x00, 0x00,
-+		       0x00, 0x00, SCSI_GROUP_NUMBER_MASK, 0x18,
-+		       0x00, WRITE_SAME_32, 0xe8, 0x00,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0x00, 0x00, 0x00, 0x00,
-+		       0x00, 0x00, 0x00, 0x00,
-+		       0xff, 0xff, 0xff, 0xff},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_compare_write = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = COMPARE_AND_WRITE,
-+	.cdb_size = 16,
-+	.usage_bits = {COMPARE_AND_WRITE, 0x18, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, 0x00, 0x00,
-+		       0x00, 0xff, SCSI_GROUP_NUMBER_MASK, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_read_capacity = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = READ_CAPACITY,
-+	.cdb_size = 10,
-+	.usage_bits = {READ_CAPACITY, 0x00, 0xff, 0xff,
-+		       0xff, 0xff, 0x00, 0x00,
-+		       0x01, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_read_capacity16 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = SERVICE_ACTION_IN_16,
-+	.service_action = SAI_READ_CAPACITY_16,
-+	.cdb_size = 16,
-+	.usage_bits = {SERVICE_ACTION_IN_16, SAI_READ_CAPACITY_16, 0x00, 0x00,
-+		       0x00, 0x00, 0x00, 0x00,
-+		       0x00, 0x00, 0xff, 0xff,
-+		       0xff, 0xff, 0x00, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_read_report_refferals = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = SERVICE_ACTION_IN_16,
-+	.service_action = SAI_REPORT_REFERRALS,
-+	.cdb_size = 16,
-+	.usage_bits = {SERVICE_ACTION_IN_16, SAI_REPORT_REFERRALS, 0x00, 0x00,
-+		       0x00, 0x00, 0x00, 0x00,
-+		       0x00, 0x00, 0xff, 0xff,
-+		       0xff, 0xff, 0x00, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_sync_cache = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = SYNCHRONIZE_CACHE,
-+	.cdb_size = 10,
-+	.usage_bits = {SYNCHRONIZE_CACHE, 0x02, 0xff, 0xff,
-+		       0xff, 0xff, SCSI_GROUP_NUMBER_MASK, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_sync_cache16 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = SYNCHRONIZE_CACHE_16,
-+	.cdb_size = 16,
-+	.usage_bits = {SYNCHRONIZE_CACHE_16, 0x02, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, SCSI_GROUP_NUMBER_MASK, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_unmap = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = UNMAP,
-+	.cdb_size = 10,
-+	.usage_bits = {UNMAP, 0x00, 0x00, 0x00,
-+		       0x00, 0x00, SCSI_GROUP_NUMBER_MASK, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_write_same = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = WRITE_SAME,
-+	.cdb_size = 10,
-+	.usage_bits = {WRITE_SAME, 0xe8, 0xff, 0xff,
-+		       0xff, 0xff, SCSI_GROUP_NUMBER_MASK, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_write_same16 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = WRITE_SAME_16,
-+	.cdb_size = 16,
-+	.usage_bits = {WRITE_SAME_16, 0xe8, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, SCSI_GROUP_NUMBER_MASK, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_verify = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = VERIFY,
-+	.cdb_size = 10,
-+	.usage_bits = {VERIFY, 0x00, 0xff, 0xff,
-+		       0xff, 0xff, SCSI_GROUP_NUMBER_MASK, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_verify16 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = VERIFY_16,
-+	.cdb_size = 16,
-+	.usage_bits = {VERIFY_16, 0x00, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, SCSI_GROUP_NUMBER_MASK, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_start_stop = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = START_STOP,
-+	.cdb_size = 6,
-+	.usage_bits = {START_STOP, 0x01, 0x00, 0x00,
-+		       0x01, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_mode_select = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = MODE_SELECT,
-+	.cdb_size = 6,
-+	.usage_bits = {MODE_SELECT, 0x10, 0x00, 0x00,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_mode_select10 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = MODE_SELECT_10,
-+	.cdb_size = 10,
-+	.usage_bits = {MODE_SELECT_10, 0x10, 0x00, 0x00,
-+		       0x00, 0x00, 0x00, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_mode_sense = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = MODE_SENSE,
-+	.cdb_size = 6,
-+	.usage_bits = {MODE_SENSE, 0x08, 0xff, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_mode_sense10 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = MODE_SENSE_10,
-+	.cdb_size = 10,
-+	.usage_bits = {MODE_SENSE_10, 0x18, 0xff, 0xff,
-+		       0x00, 0x00, 0x00, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_pri_read_keys = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = PERSISTENT_RESERVE_IN,
-+	.service_action = PRI_READ_KEYS,
-+	.cdb_size = 10,
-+	.usage_bits = {PERSISTENT_RESERVE_IN, PRI_READ_KEYS, 0x00, 0x00,
-+		       0x00, 0x00, 0x00, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_pri_read_resrv = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = PERSISTENT_RESERVE_IN,
-+	.service_action = PRI_READ_RESERVATION,
-+	.cdb_size = 10,
-+	.usage_bits = {PERSISTENT_RESERVE_IN, PRI_READ_RESERVATION, 0x00, 0x00,
-+		       0x00, 0x00, 0x00, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_pri_read_caps = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = PERSISTENT_RESERVE_IN,
-+	.service_action = PRI_REPORT_CAPABILITIES,
-+	.cdb_size = 10,
-+	.usage_bits = {PERSISTENT_RESERVE_IN, PRI_REPORT_CAPABILITIES, 0x00, 0x00,
-+		       0x00, 0x00, 0x00, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_pri_read_full_status = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = PERSISTENT_RESERVE_IN,
-+	.service_action = PRI_READ_FULL_STATUS,
-+	.cdb_size = 10,
-+	.usage_bits = {PERSISTENT_RESERVE_IN, PRI_READ_FULL_STATUS, 0x00, 0x00,
-+		       0x00, 0x00, 0x00, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_pro_register = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = PERSISTENT_RESERVE_OUT,
-+	.service_action = PRO_REGISTER,
-+	.cdb_size = 10,
-+	.usage_bits = {PERSISTENT_RESERVE_OUT, PRO_REGISTER, 0xff, 0x00,
-+		       0x00, 0xff, 0xff, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_pro_reserve = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = PERSISTENT_RESERVE_OUT,
-+	.service_action = PRO_RESERVE,
-+	.cdb_size = 10,
-+	.usage_bits = {PERSISTENT_RESERVE_OUT, PRO_RESERVE, 0xff, 0x00,
-+		       0x00, 0xff, 0xff, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_pro_release = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = PERSISTENT_RESERVE_OUT,
-+	.service_action = PRO_RELEASE,
-+	.cdb_size = 10,
-+	.usage_bits = {PERSISTENT_RESERVE_OUT, PRO_RELEASE, 0xff, 0x00,
-+		       0x00, 0xff, 0xff, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_pro_clear = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = PERSISTENT_RESERVE_OUT,
-+	.service_action = PRO_CLEAR,
-+	.cdb_size = 10,
-+	.usage_bits = {PERSISTENT_RESERVE_OUT, PRO_CLEAR, 0xff, 0x00,
-+		       0x00, 0xff, 0xff, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_pro_preempt = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = PERSISTENT_RESERVE_OUT,
-+	.service_action = PRO_PREEMPT,
-+	.cdb_size = 10,
-+	.usage_bits = {PERSISTENT_RESERVE_OUT, PRO_PREEMPT, 0xff, 0x00,
-+		       0x00, 0xff, 0xff, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_pro_preempt_abort = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = PERSISTENT_RESERVE_OUT,
-+	.service_action = PRO_PREEMPT_AND_ABORT,
-+	.cdb_size = 10,
-+	.usage_bits = {PERSISTENT_RESERVE_OUT, PRO_PREEMPT_AND_ABORT, 0xff, 0x00,
-+		       0x00, 0xff, 0xff, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_pro_reg_ign_exist = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = PERSISTENT_RESERVE_OUT,
-+	.service_action = PRO_REGISTER_AND_IGNORE_EXISTING_KEY,
-+	.cdb_size = 10,
-+	.usage_bits = {
-+		PERSISTENT_RESERVE_OUT, PRO_REGISTER_AND_IGNORE_EXISTING_KEY,
-+		0xff, 0x00,
-+		0x00, 0xff, 0xff, 0xff,
-+		0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_pro_register_move = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = PERSISTENT_RESERVE_OUT,
-+	.service_action = PRO_REGISTER_AND_MOVE,
-+	.cdb_size = 10,
-+	.usage_bits = {PERSISTENT_RESERVE_OUT, PRO_REGISTER_AND_MOVE, 0xff, 0x00,
-+		       0x00, 0xff, 0xff, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_release = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = RELEASE,
-+	.cdb_size = 6,
-+	.usage_bits = {RELEASE, 0x00, 0x00, 0x00,
-+		       0x00, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_release10 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = RELEASE_10,
-+	.cdb_size = 10,
-+	.usage_bits = {RELEASE_10, 0x00, 0x00, 0x00,
-+		       0x00, 0x00, 0x00, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_reserve = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = RESERVE,
-+	.cdb_size = 6,
-+	.usage_bits = {RESERVE, 0x00, 0x00, 0x00,
-+		       0x00, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_reserve10 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = RESERVE_10,
-+	.cdb_size = 10,
-+	.usage_bits = {RESERVE_10, 0x00, 0x00, 0x00,
-+		       0x00, 0x00, 0x00, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_request_sense = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = REQUEST_SENSE,
-+	.cdb_size = 6,
-+	.usage_bits = {REQUEST_SENSE, 0x00, 0x00, 0x00,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_inquiry = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = INQUIRY,
-+	.cdb_size = 6,
-+	.usage_bits = {INQUIRY, 0x01, 0xff, 0xff,
-+		       0xff, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_extended_copy_lid1 = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = EXTENDED_COPY,
-+	.cdb_size = 16,
-+	.usage_bits = {EXTENDED_COPY, 0x00, 0x00, 0x00,
-+		       0x00, 0x00, 0x00, 0x00,
-+		       0x00, 0x00, 0xff, 0xff,
-+		       0xff, 0xff, 0x00, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_rcv_copy_res_op_params = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = RECEIVE_COPY_RESULTS,
-+	.service_action = RCR_SA_OPERATING_PARAMETERS,
-+	.cdb_size = 16,
-+	.usage_bits = {RECEIVE_COPY_RESULTS, RCR_SA_OPERATING_PARAMETERS,
-+		       0x00, 0x00,
-+		       0x00, 0x00, 0x00, 0x00,
-+		       0x00, 0x00, 0xff, 0xff,
-+		       0xff, 0xff, 0x00, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_report_luns = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = REPORT_LUNS,
-+	.cdb_size = 12,
-+	.usage_bits = {REPORT_LUNS, 0x00, 0xff, 0x00,
-+		       0x00, 0x00, 0xff, 0xff,
-+		       0xff, 0xff, 0x00, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_test_unit_ready = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.opcode = TEST_UNIT_READY,
-+	.cdb_size = 6,
-+	.usage_bits = {TEST_UNIT_READY, 0x00, 0x00, 0x00,
-+		       0x00, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_report_target_pgs = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = MAINTENANCE_IN,
-+	.service_action = MI_REPORT_TARGET_PGS,
-+	.cdb_size = 12,
-+	.usage_bits = {MAINTENANCE_IN, 0xE0 | MI_REPORT_TARGET_PGS, 0x00, 0x00,
-+		       0x00, 0x00, 0xff, 0xff,
-+		       0xff, 0xff, 0x00, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_report_supp_opcodes = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = MAINTENANCE_IN,
-+	.service_action = MI_REPORT_SUPPORTED_OPERATION_CODES,
-+	.cdb_size = 12,
-+	.usage_bits = {MAINTENANCE_IN, MI_REPORT_SUPPORTED_OPERATION_CODES,
-+		       0x87, 0xff,
-+		       0xff, 0xff, 0xff, 0xff,
-+		       0xff, 0xff, 0x00, SCSI_CONTROL_MASK},
-+};
-+
-+static struct target_opcode_descriptor tcm_opcode_set_tpg = {
-+	.support = SCSI_SUPPORT_FULL,
-+	.serv_action_valid = 1,
-+	.opcode = MAINTENANCE_OUT,
-+	.service_action = MO_SET_TARGET_PGS,
-+	.cdb_size = 12,
-+	.usage_bits = {MAINTENANCE_OUT, MO_SET_TARGET_PGS, 0x00, 0x00,
-+		       0x00, 0x00, 0xff, 0xff,
-+		       0xff, 0xff, 0x00, SCSI_CONTROL_MASK},
-+};
- 
- static struct target_opcode_descriptor *tcm_supported_opcodes[] = {
-+	&tcm_opcode_read6,
-+	&tcm_opcode_read10,
-+	&tcm_opcode_read12,
-+	&tcm_opcode_read16,
-+	&tcm_opcode_write6,
-+	&tcm_opcode_write10,
-+	&tcm_opcode_write_verify10,
-+	&tcm_opcode_write12,
-+	&tcm_opcode_write16,
-+	&tcm_opcode_write_verify16,
-+	&tcm_opcode_write_same32,
-+	&tcm_opcode_compare_write,
-+	&tcm_opcode_read_capacity,
-+	&tcm_opcode_read_capacity16,
-+	&tcm_opcode_read_report_refferals,
-+	&tcm_opcode_sync_cache,
-+	&tcm_opcode_sync_cache16,
-+	&tcm_opcode_unmap,
-+	&tcm_opcode_write_same,
-+	&tcm_opcode_write_same16,
-+	&tcm_opcode_verify,
-+	&tcm_opcode_verify16,
-+	&tcm_opcode_start_stop,
-+	&tcm_opcode_mode_select,
-+	&tcm_opcode_mode_select10,
-+	&tcm_opcode_mode_sense,
-+	&tcm_opcode_mode_sense10,
-+	&tcm_opcode_pri_read_keys,
-+	&tcm_opcode_pri_read_resrv,
-+	&tcm_opcode_pri_read_caps,
-+	&tcm_opcode_pri_read_full_status,
-+	&tcm_opcode_pro_register,
-+	&tcm_opcode_pro_reserve,
-+	&tcm_opcode_pro_release,
-+	&tcm_opcode_pro_clear,
-+	&tcm_opcode_pro_preempt,
-+	&tcm_opcode_pro_preempt_abort,
-+	&tcm_opcode_pro_reg_ign_exist,
-+	&tcm_opcode_pro_register_move,
-+	&tcm_opcode_release,
-+	&tcm_opcode_release10,
-+	&tcm_opcode_reserve,
-+	&tcm_opcode_reserve10,
-+	&tcm_opcode_request_sense,
-+	&tcm_opcode_inquiry,
-+	&tcm_opcode_extended_copy_lid1,
-+	&tcm_opcode_rcv_copy_res_op_params,
-+	&tcm_opcode_report_luns,
-+	&tcm_opcode_test_unit_ready,
-+	&tcm_opcode_report_target_pgs,
-+	&tcm_opcode_report_supp_opcodes,
-+	&tcm_opcode_set_tpg,
- };
- 
- static int
-diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
-index 651b5183451c..cb722225b3bc 100644
---- a/include/scsi/scsi_proto.h
-+++ b/include/scsi/scsi_proto.h
-@@ -349,4 +349,7 @@ enum scsi_support_opcode {
- 	SCSI_SUPPORT_VENDOR		= 5,
- };
- 
-+#define SCSI_CONTROL_MASK 0
-+#define SCSI_GROUP_NUMBER_MASK 0
-+
- #endif /* _SCSI_PROTO_H_ */
--- 
-2.25.1
-
+SGkgTGV0dSBSZW4sDQpJIGhhdmUgYWxyZWFkeSBhY2stZWQgdGhpcyBwYXRjaCwgc28gbm90aGlu
+ZyB0byBiZSBkb25lIGZyb20gbXkgc2lkZS4NCg0KSGkgTWFydGluLA0KSSBoYXZlIGFjay1lZCB0
+aGlzIHBhdGNoLCBraW5kbHkgcHVsbCBpdC4NCg0KVGhhbmtzLA0KfnNhdXJhdg0KDQo+IC0tLS0t
+T3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IExldHUgUmVuIDxmYW50YXNxdWV4QGdtYWls
+LmNvbT4NCj4gU2VudDogVHVlc2RheSwgU2VwdGVtYmVyIDYsIDIwMjIgMzozMSBQTQ0KPiBUbzog
+U2F1cmF2IEthc2h5YXAgPHNrYXNoeWFwQG1hcnZlbGwuY29tPg0KPiBDYzogSmF2ZWQgSGFzYW4g
+PGpoYXNhbkBtYXJ2ZWxsLmNvbT47IGplamJAbGludXguaWJtLmNvbTsNCj4gbWFydGluLnBldGVy
+c2VuQG9yYWNsZS5jb207IEdSLVFMb2dpYy1TdG9yYWdlLVVwc3RyZWFtIDxHUi1RTG9naWMtDQo+
+IFN0b3JhZ2UtVXBzdHJlYW1AbWFydmVsbC5jb20+OyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9y
+ZzsgbGludXgtDQo+IGtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IFpoZXl1IE1hIDx6aGV5dW1hOTdA
+Z21haWwuY29tPjsgV2VuZGUgVGFuDQo+IDx0d2QyLm1lQGdtYWlsLmNvbT4NCj4gU3ViamVjdDog
+UmU6IFtFWFRdIFtQQVRDSF0gc2NzaTogcWVkZjogRml4IGEgVUFGIGJ1ZyBpbiBfX3FlZGZfcHJv
+YmUNCj4gDQo+IEhpIFNhdXJhdiwNCj4gDQo+ID4gVGhhbmtzIGZvciB0aGUgcGF0Y2guDQo+ID4N
+Cj4gPiBBY2tlZC1ieTogU2F1cmF2IEthc2h5YXAgPHNrYXNoeWFwQG1hcnZlbGwuY29tPg0KPiAN
+Cj4gDQo+IFRoaXMgaXMgYSBmcmllbmRseSByZW1pbmRlci4gSSB3b25kZXIgdGhlIHJldmlldyBw
+cm9ncmVzcyBvZiB0aGlzDQo+IHBhdGNoLiBBbG1vc3QgYSB5ZWFyIGhhcyBwYXNzZWQgc2luY2Ug
+SSBzdWJtaXR0ZWQgdGhlIHBhdGNoLiBBbmQgd2UNCj4gaGF2ZSB0ZXN0ZWQgcWVkZiBvbiBMaW51
+eCA2LjAtcmMwLiBUaGlzIFVBRiBwcm9ibGVtIHN0aWxsIGV4aXN0cy4gSWYNCj4gdGhlcmUncyBh
+bnl0aGluZyBJIGNhbiBkbyB0byBoZWxwIHdpdGggdGhpcyBpc3N1ZSBwbGVhc2UgbGV0IG1lIGtu
+b3cuDQo+IEknbSB3aWxsaW5nIHRvIGhlbHAuDQo+IA0KPiBMZXR1IFJlbg0K
