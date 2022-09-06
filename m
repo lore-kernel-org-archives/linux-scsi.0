@@ -2,79 +2,98 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C240BECAAA1
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Sep 2022 10:02:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93556ECAAA1
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Sep 2022 10:47:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233147AbiIFKCK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Sep 2022 06:02:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57950 "EHLO
+        id S239604AbiIFKrX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Sep 2022 06:47:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58600 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234047AbiIFKBb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Sep 2022 06:01:31 -0400
-Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD0BD786E6;
-        Tue,  6 Sep 2022 03:01:06 -0700 (PDT)
-Received: by mail-pj1-x1030.google.com with SMTP id p1-20020a17090a2d8100b0020040a3f75eso5939463pjd.4;
-        Tue, 06 Sep 2022 03:01:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date;
-        bh=YKSHnIDLbk0AOTJw59kitMI5uEp3xXvtgpVkSTjCkzM=;
-        b=H4kMv845J9bYxtEKRZDhNBqclS6L0jLOyG2wkW9mw1r6JHSUY/loXrG7v9/6KXbFhC
-         LIgwRkq+DG8+eR3EhVLg+eaBusmwi7B+Wra6hTbnNpaqmgHjt+H7fRP8DkaF0azLhZLK
-         OEijzWDlZ1FyOzrSDGNsS4LTkrDTb7I3ZyfioHeslVHHOL0HoinNfpz7FKt+PV2Xzlts
-         ihLo5dnospLa23Lo2RP8wxxSLlX4JzRhW36NgS7ddt1cBntwaQKHFaxPqsk+3zFdorKq
-         E3Im6vhSB1NH3jwXioIma4Qq6jyFQTVhNkAizUB8utpzg/aQeCVdxBXV8eQL/pEKnW98
-         tBuw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date;
-        bh=YKSHnIDLbk0AOTJw59kitMI5uEp3xXvtgpVkSTjCkzM=;
-        b=G63MyYUk1goP/6kOFIYjXG7/R/MRSbV2X/QAs7kXP7MseHb3ybZNbxbEzvGgY2xQ6k
-         8B3ndyz3sKQa5ukGNVHK1vOsRE3ypyth6H79r4wLTLhDaCasPOHZFnL+fTVVeDZwSrO2
-         tEqc6yzWZgp4qQ+jYUR7jRl8KiMd5ztWyHJxi9wCuqbyH5O/8eZA4O6oIx20axZioymp
-         KlAGT6F7CXEXWLgj2cHRkEX9fqlfG3kvrr2Lv/a/v3UZxsJf9oe4mFQqv8wrE6xX/5Ps
-         BeclZj1G7GBOXC/880UW04DvbwVheFk2Lnk72T9EZIsvoqSqB0kGr4/pi0dAyCCAJoOc
-         DDrw==
-X-Gm-Message-State: ACgBeo0Jb+aV6rJWigoDa58d6HTUe3LSScIm50zLBrt96uc0fNDSDQU6
-        1g4mi5RAmj+fgnMXCT8b4AQ6sLbsd+zA9FZSnhw=
-X-Google-Smtp-Source: AA6agR46YAPLjMSYp7Kanoo0p3TW1lBtmX3+X7oA6gNMSU+WNlt0CEM4uGqfh6I6eB99C87Z8N2NMj2CSl61ps815CQ=
-X-Received: by 2002:a17:90a:1d0:b0:1fa:c551:5e83 with SMTP id
- 16-20020a17090a01d000b001fac5515e83mr23953494pjd.106.1662458466109; Tue, 06
- Sep 2022 03:01:06 -0700 (PDT)
+        with ESMTP id S239867AbiIFKqn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Sep 2022 06:46:43 -0400
+Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9712B72B59;
+        Tue,  6 Sep 2022 03:45:42 -0700 (PDT)
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id E72535657C;
+        Tue,  6 Sep 2022 10:45:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        content-type:content-type:content-transfer-encoding:mime-version
+        :references:in-reply-to:x-mailer:message-id:date:date:subject
+        :subject:from:from:received:received:received:received; s=
+        mta-01; t=1662461115; x=1664275516; bh=Fpimq6VMnQbeROvd1zyJqnwMp
+        JjLfHSfpqs8/l7gDSQ=; b=UEbxkTqTHGecj8s7RT9lne4V9KIhs6EXzC0Iky57D
+        6Trr91o0lW+qwsZXC+E0Dd/m5doW+7jB27EhivMFOVGC8v6SrXa5xfKL0OaqnhdP
+        jGDZeCTzwWl3KleAhgFpdQ2H4JHu+46U32DZnF7Ktxqb2nAiT8yCLhwXiSsx1k4+
+        9I=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id D5Qu9S4NW8Dw; Tue,  6 Sep 2022 13:45:15 +0300 (MSK)
+Received: from T-EXCH-02.corp.yadro.com (T-EXCH-02.corp.yadro.com [172.17.10.102])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id CB3CF56594;
+        Tue,  6 Sep 2022 13:34:44 +0300 (MSK)
+Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
+ T-EXCH-02.corp.yadro.com (172.17.10.102) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
+ 15.1.669.32; Tue, 6 Sep 2022 13:34:44 +0300
+Received: from NB-591.corp.yadro.com (10.199.18.20) by
+ T-EXCH-08.corp.yadro.com (172.17.11.58) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.2.1118.9; Tue, 6 Sep 2022 13:34:41 +0300
+From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
+To:     Martin Petersen <martin.petersen@oracle.com>,
+        <target-devel@vger.kernel.org>
+CC:     Mike Christie <michael.christie@oracle.com>,
+        <linux-scsi@vger.kernel.org>, <linux@yadro.com>,
+        Dmitry Bogdanov <d.bogdanov@yadro.com>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
+Subject: [PATCH v2 5/6] scsi: target: check emulate_3pc for RECEIVE COPY
+Date:   Tue, 6 Sep 2022 13:34:20 +0300
+Message-ID: <20220906103421.22348-6-d.bogdanov@yadro.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220906103421.22348-1-d.bogdanov@yadro.com>
+References: <20220906103421.22348-1-d.bogdanov@yadro.com>
 MIME-Version: 1.0
-References: <20211112120641.16073-1-fantasquex@gmail.com> <DM6PR18MB303406C9CF97E2B42CEC63ACD2499@DM6PR18MB3034.namprd18.prod.outlook.com>
-In-Reply-To: <DM6PR18MB303406C9CF97E2B42CEC63ACD2499@DM6PR18MB3034.namprd18.prod.outlook.com>
-From:   Letu Ren <fantasquex@gmail.com>
-Date:   Tue, 6 Sep 2022 18:00:54 +0800
-Message-ID: <CAEUwDuD0ZMNqwdi-zkH_s7Gj6SkSJpvrcVzhtMz_1HRrXN=dpA@mail.gmail.com>
-Subject: Re: [EXT] [PATCH] scsi: qedf: Fix a UAF bug in __qedf_probe
-To:     Saurav Kashyap <skashyap@marvell.com>
-Cc:     Javed Hasan <jhasan@marvell.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Zheyu Ma <zheyuma97@gmail.com>, Wende Tan <twd2.me@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.199.18.20]
+X-ClientProxiedBy: T-EXCH-02.corp.yadro.com (172.17.10.102) To
+ T-EXCH-08.corp.yadro.com (172.17.11.58)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Saurav,
+RECEIVE COPY RESULTS is an opcode from 3rd party copy command set and
+shall be rejected if emulate_3pc attribute is off like EXTENDED COPY.
 
-> Thanks for the patch.
->
-> Acked-by: Saurav Kashyap <skashyap@marvell.com>
+Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
+Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
+---
+ drivers/target/target_core_xcopy.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
+diff --git a/drivers/target/target_core_xcopy.c b/drivers/target/target_core_xcopy.c
+index 8713cda0c2fb..edf522208285 100644
+--- a/drivers/target/target_core_xcopy.c
++++ b/drivers/target/target_core_xcopy.c
+@@ -1009,8 +1009,14 @@ sense_reason_t target_do_receive_copy_results(struct se_cmd *se_cmd)
+ {
+ 	unsigned char *cdb = &se_cmd->t_task_cdb[0];
+ 	int sa = (cdb[1] & 0x1f), list_id = cdb[2];
++	struct se_device *dev = se_cmd->se_dev;
+ 	sense_reason_t rc = TCM_NO_SENSE;
+ 
++	if (!dev->dev_attrib.emulate_3pc) {
++		pr_debug("Third-party copy operations explicitly disabled\n");
++		return TCM_UNSUPPORTED_SCSI_OPCODE;
++	}
++
+ 	pr_debug("Entering target_do_receive_copy_results: SA: 0x%02x, List ID:"
+ 		" 0x%02x, AL: %u\n", sa, list_id, se_cmd->data_length);
+ 
+-- 
+2.25.1
 
-This is a friendly reminder. I wonder the review progress of this
-patch. Almost a year has passed since I submitted the patch. And we
-have tested qedf on Linux 6.0-rc0. This UAF problem still exists. If
-there's anything I can do to help with this issue please let me know.
-I'm willing to help.
-
-Letu Ren
