@@ -2,114 +2,153 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71D11C38145
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Sep 2022 23:13:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44AEFECAAD3
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Sep 2022 23:33:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229913AbiIGXNA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Sep 2022 19:13:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47986 "EHLO
+        id S229822AbiIGXd0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Sep 2022 19:33:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45110 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229488AbiIGXM7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Sep 2022 19:12:59 -0400
-Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D297FA50F5;
-        Wed,  7 Sep 2022 16:12:58 -0700 (PDT)
-Received: by mail-pj1-f48.google.com with SMTP id x1-20020a17090ab00100b001fda21bbc90so467623pjq.3;
-        Wed, 07 Sep 2022 16:12:58 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date;
-        bh=+mAH+RQ3OE7PV+wLNUVMSP/CMxHD/ZzKpKBm8PFhiYw=;
-        b=bvbQscssYgcGX0Mwdcemta8vHhr/rtY25iDICORTf1cV9mHND0YV+DjPxTU4+lUF95
-         lrEKdU0zohIuq/0DKcf1I3DN03jdph/XuQ+aeW+q3z+CvpnSoLt0WoOIkC0Q7kzjQw/s
-         H/JAOVWqL4kdgLQwyN/Wb0Q6OTIK0dJYdYnLI6wfGSe6KTwpMQMAgQCc343AGlSLQGgp
-         Iutp54AYwazl9RAATMFt8F7ivudiy8IOjAgNqzetP0pBgxUzjren9df5PkycogMbErRn
-         2W97USZEq1TvcZ9jIFs+EDLEyIdnmFAW2YElQkTj3ChsuFKo2vM6WJxtiRwz6Dk3mCSE
-         lNAQ==
-X-Gm-Message-State: ACgBeo28umxb+BsncK2IXWBvGF0CpBMghhxI1422CYTb7RNV02cAFAWf
-        p6M2D4Q2DWwuVjHNaYRXxZc=
-X-Google-Smtp-Source: AA6agR6Bl1mXUO2jFKiEOfk2ABAs7Bo70cNFHlgrwf+rv5PVWu0KSqwGfe39hPQ07RCwGHvOhQTuzg==
-X-Received: by 2002:a17:902:8c93:b0:172:bb10:214c with SMTP id t19-20020a1709028c9300b00172bb10214cmr6354897plo.135.1662592378191;
-        Wed, 07 Sep 2022 16:12:58 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:71db:3cdf:3590:2e95? ([2620:15c:211:201:71db:3cdf:3590:2e95])
-        by smtp.gmail.com with ESMTPSA id s7-20020a170902988700b00172ad9674e5sm12825359plp.291.2022.09.07.16.12.56
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 07 Sep 2022 16:12:57 -0700 (PDT)
-Message-ID: <c3dc1171-a625-a84a-e2be-a71e5cbbe97a@acm.org>
-Date:   Wed, 7 Sep 2022 16:12:55 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.12.0
-Subject: Re: [EXT] Re: [PATCH v2 1/1] tracing: Fix compile error in
- trace_array calls when TRACING is disabled
-Content-Language: en-US
-To:     Arun Easi <aeasi@marvell.com>
-Cc:     Steven Rostedt <rostedt@goodmis.org>,
+        with ESMTP id S229515AbiIGXdZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Sep 2022 19:33:25 -0400
+Received: from mx0b-0016f401.pphosted.com (mx0a-0016f401.pphosted.com [67.231.148.174])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62091C2FA9;
+        Wed,  7 Sep 2022 16:33:24 -0700 (PDT)
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 287FVgrd029959;
+        Wed, 7 Sep 2022 16:33:21 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-type; s=pfpt0220; bh=fkLI69yY9og5PGkGh5F14ERUIAdaHE9ELXJB76cLAQY=;
+ b=RISkZtofJI2K1F/7dMlPDhcjRNX5qSLaVwGN91cHDJmy7MpGjUf+kA69ayz8uPw1u+yI
+ 9y4H7i1DnYzAqQ4F6wLke665DypNdZ0UJD7rt5TEF80FkNsXJB1IMUwOebAMdTiKs16s
+ JMdQ9zFQLMZAbgkyRFul/LI/x7vFfeRTtiKUHpnkdROCaCQaOVsvgkHWaRAkObOUWOkd
+ Iqj1uB7LYMS88bi6VyVSibiU2LG3Oj5vcUi7nnux/lEqHIPZVwTlIy9ue2q98lwAJpH/
+ qxv7aa48K/uOc1NZSOFnu/RcepsCeS5CEEPvwh8ZRbqQNVAfsQXFGvOtuAZ8AP7DX89M Kw== 
+Received: from dc5-exch01.marvell.com ([199.233.59.181])
+        by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 3jen9wv0cj-2
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Wed, 07 Sep 2022 16:33:21 -0700
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 7 Sep
+ 2022 16:33:19 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.18 via Frontend
+ Transport; Wed, 7 Sep 2022 16:33:19 -0700
+Received: from dut6246.localdomain (unknown [10.112.88.36])
+        by maili.marvell.com (Postfix) with ESMTP id E2A313F70FD;
+        Wed,  7 Sep 2022 16:33:19 -0700 (PDT)
+Received: by dut6246.localdomain (Postfix, from userid 0)
+        id CA57D88D34D; Wed,  7 Sep 2022 16:33:19 -0700 (PDT)
+From:   Arun Easi <aeasi@marvell.com>
+To:     Steven Rostedt <rostedt@goodmis.org>,
         Martin Petersen <martin.petersen@oracle.com>,
         Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
         James Bottomley <jejb@linux.ibm.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-next@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com
-References: <20220907185745.14382-1-aeasi@marvell.com>
- <20220907185745.14382-2-aeasi@marvell.com>
- <60870376-3518-896b-7a6b-a4b9ea05264f@acm.org>
- <32dee739-58fb-e371-2808-d40a2ee90ee0@marvell.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <32dee739-58fb-e371-2808-d40a2ee90ee0@marvell.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-next@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>,
+        Arun Easi <aeasi@marvell.com>
+Subject: [PATCH v3 1/1] tracing: Fix compile error in trace_array calls when TRACING is disabled
+Date:   Wed, 7 Sep 2022 16:33:08 -0700
+Message-ID: <20220907233308.4153-2-aeasi@marvell.com>
+X-Mailer: git-send-email 2.9.5
+In-Reply-To: <20220907233308.4153-1-aeasi@marvell.com>
+References: <20220907233308.4153-1-aeasi@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+X-Proofpoint-ORIG-GUID: SkJXdhcTpjCLOQ4dwiv3tz-TuRcPEQ_e
+X-Proofpoint-GUID: SkJXdhcTpjCLOQ4dwiv3tz-TuRcPEQ_e
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
+ definitions=2022-09-07_10,2022-09-07_02,2022-06-22_01
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/7/22 15:52, Arun Easi wrote:
-> On Wed, 7 Sep 2022, 12:27pm, Bart Van Assche wrote:
->>> +static inline int
->>> +trace_array_printk(struct trace_array *tr, unsigned long ip,
->>> +		       const char *fmt, ...)
->>
->> This is not the recommended way to format a function definition.
-> 
-> That was mostly a Y&P from the prototype earlier in the file. Is it the
-> linebreak after "int" you are referring to, or are there more?
+Fix this compilation error seen when CONFIG_TRACING is not enabled:
 
-In allmost all kernel code I have seen the function name is on the same 
-line as the return type. Additionally, a common style is to align the 
-second line with arguments with the opening parenthesis. From 
-Documentation/process/coding-style.rst: "A very commonly used style
-is to align descendants to a function open parenthesis."
+drivers/scsi/qla2xxx/qla_os.c: In function 'qla_trace_init':
+drivers/scsi/qla2xxx/qla_os.c:2854:25: error: implicit declaration of function
+'trace_array_get_by_name'; did you mean 'trace_array_set_clr_event'?
+[-Werror=implicit-function-declaration]
+ 2854 |         qla_trc_array = trace_array_get_by_name("qla2xxx");
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~
+      |                         trace_array_set_clr_event
 
->> Consider running git clang-format HEAD^.
-> 
-> It is a bit cryptic to me what it is complaining about (sorry
-> clang-format newbie here):
-> 
-> # git clang-format -v HEAD^
-> Running clang-format on the following files:
->      include/linux/trace.h
-> YAML:671:20: error: unknown enumerated scalar
-> SpaceBeforeParens: ControlStatementsExceptForEachMacros
->                     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> Error reading /root/aeasi/src/mkp.git/.clang-format: Invalid argument
-> error: `clang-format -lines=29:30 -lines=51:84 include/linux/trace.h` failed
-> 
-> Perhaps my clang-tools are not recent enough.
-> 
-> # clang-format --version
-> clang-format version 10.0.1 (Red Hat 10.0.1-1.module+el8.3.0+7459+90c24896)
-> 
-> Still digging..
+drivers/scsi/qla2xxx/qla_os.c: In function 'qla_trace_uninit':
+drivers/scsi/qla2xxx/qla_os.c:2869:9: error: implicit declaration of function
+'trace_array_put' [-Werror=implicit-function-declaration]
+ 2869 |         trace_array_put(qla_trc_array);
+      |         ^~~~~~~~~~~~~~~
 
-git clang-format HEAD^ reformats the topmost commit according to the 
-rules in the .clang-format file in the top-level directory. Please 
-review any changes made by that command before amending these to the 
-original commit.
+Reported-by: kernel test robot <lkp@intel.com>
+Signed-off-by: Arun Easi <aeasi@marvell.com>
+---
+ include/linux/trace.h | 36 ++++++++++++++++++++++++++++++++++--
+ 1 file changed, 34 insertions(+), 2 deletions(-)
 
-I think the error messages above indicate that your version of 
-clang-format is too old.
+diff --git a/include/linux/trace.h b/include/linux/trace.h
+index bf16961..b5e16e4 100644
+--- a/include/linux/trace.h
++++ b/include/linux/trace.h
+@@ -2,8 +2,6 @@
+ #ifndef _LINUX_TRACE_H
+ #define _LINUX_TRACE_H
+ 
+-#ifdef CONFIG_TRACING
+-
+ #define TRACE_EXPORT_FUNCTION	BIT(0)
+ #define TRACE_EXPORT_EVENT	BIT(1)
+ #define TRACE_EXPORT_MARKER	BIT(2)
+@@ -28,6 +26,8 @@ struct trace_export {
+ 	int flags;
+ };
+ 
++#ifdef CONFIG_TRACING
++
+ int register_ftrace_export(struct trace_export *export);
+ int unregister_ftrace_export(struct trace_export *export);
+ 
+@@ -48,6 +48,38 @@ void osnoise_arch_unregister(void);
+ void osnoise_trace_irq_entry(int id);
+ void osnoise_trace_irq_exit(int id, const char *desc);
+ 
++#else /* CONFIG_TRACING */
++static inline int register_ftrace_export(struct trace_export *export)
++{
++	return -EINVAL;
++}
++static inline int unregister_ftrace_export(struct trace_export *export)
++{
++	return 0;
++}
++static inline void trace_printk_init_buffers(void)
++{
++}
++static inline int trace_array_printk(struct trace_array *tr, unsigned long ip,
++				     const char *fmt, ...)
++{
++	return 0;
++}
++static inline int trace_array_init_printk(struct trace_array *tr)
++{
++	return -EINVAL;
++}
++static inline void trace_array_put(struct trace_array *tr)
++{
++}
++static inline struct trace_array *trace_array_get_by_name(const char *name)
++{
++	return NULL;
++}
++static inline int trace_array_destroy(struct trace_array *tr)
++{
++	return 0;
++}
+ #endif	/* CONFIG_TRACING */
+ 
+ #endif	/* _LINUX_TRACE_H */
+-- 
+2.9.5
 
-Thanks,
-
-Bart.
