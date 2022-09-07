@@ -2,58 +2,58 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94409C6FA8B
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Sep 2022 07:46:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99892C38145
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Sep 2022 07:52:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230042AbiIGHqR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Sep 2022 03:46:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39746 "EHLO
+        id S229807AbiIGHwD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Sep 2022 03:52:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56030 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230027AbiIGHqN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Sep 2022 03:46:13 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48FF782FA3
-        for <linux-scsi@vger.kernel.org>; Wed,  7 Sep 2022 00:46:12 -0700 (PDT)
+        with ESMTP id S230045AbiIGHvx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Sep 2022 03:51:53 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 763DE86057
+        for <linux-scsi@vger.kernel.org>; Wed,  7 Sep 2022 00:51:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1662536771;
+        s=mimecast20190719; t=1662537105;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=q3eQegbyNUNUZfQN4Vuu2Y+4sgIIke5mBIO94daHPAk=;
-        b=FH8JJ1jXsEyZ935BfXuOghYkFtoF/0Hm1Cn/TAae13pLxR4tRvEk9k+SIAkZTQf6wHPw33
-        mSDWZdIoRkaxbwCbSLC4NqxBVlBoMdtgGfRNdj6qggeMfN9XJuCe5VQhZM6EBsl7RKXKQy
-        vDy99W7oqeKE5g0rdntK8MDXyMBt5HY=
-Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
- [209.85.221.71]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=8KMdampSVOfSjQJ+eYUB/+euJ05288b13jRxouoL8v4=;
+        b=f9qW33gZuL22wnajU0IOAp3kQ19FGqpnVE3BxzM1cm/KZSZWdUOp2otyB0LTPstvg2UaC5
+        B5dkFFA5IT2rmuOgHvWF4GaklQ/mOne4jUzWt1RDFWPZPts4SPkvmXT9c9zp+iqypEgUpU
+        hQ2zzUts3Rzs56YLGc9ZginO0pLuFKY=
+Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com
+ [209.85.221.69]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-441-z_h2jOvBPzer9pKUunk6Xw-1; Wed, 07 Sep 2022 03:46:10 -0400
-X-MC-Unique: z_h2jOvBPzer9pKUunk6Xw-1
-Received: by mail-wr1-f71.google.com with SMTP id u27-20020adfa19b000000b0022863c08ac4so2722142wru.11
-        for <linux-scsi@vger.kernel.org>; Wed, 07 Sep 2022 00:46:10 -0700 (PDT)
+ us-mta-664-CgEltQk2NnKWooRKW4QZtA-1; Wed, 07 Sep 2022 03:51:44 -0400
+X-MC-Unique: CgEltQk2NnKWooRKW4QZtA-1
+Received: by mail-wr1-f69.google.com with SMTP id i29-20020adfa51d000000b00228fa8325c0so308068wrb.15
+        for <linux-scsi@vger.kernel.org>; Wed, 07 Sep 2022 00:51:44 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date;
-        bh=q3eQegbyNUNUZfQN4Vuu2Y+4sgIIke5mBIO94daHPAk=;
-        b=F+rQUV3pb/H8qhWr6Wiy9S9LNb0OBt54kl9lSuq2lBqoenVEdxUj4vig6jw0ZqshlN
-         2w7mGxeBoHqa8y/6jVCZVWVvN6SlQ1FvgbqOOlsFz4URQsMy86jiTY3gQV2pO/MJ1R+B
-         lKpzlX5xLketgegvbGWBTVwc5tLF7sMVmoxw11Yfbxb95m0WgBYOgzsyqBaaGDU5ayGY
-         YzcBL8JntmfmqirwaducQ+qsPxdyJ7sXUROMeXpJ98v5IidukIqmw9pJbGQdA9/OS17a
-         O4leEP6kvNHBW+gp1o2RWE/PYNxnkMv9UyjCgVzAQobhZIC2E3dluPEnSCx5dszli7hO
-         753g==
-X-Gm-Message-State: ACgBeo29jXptTcP4Vqv1cJXTqR9Gq5d96cq3RYbHP6aubfDAC7Nu3YpJ
-        fvr66ZR56dwXHB1t6xyRDBMQaO/1C1rzMyopwK2KaPE6ftnw+R6nuHsYo9wHNX2Gweiazkr8Hqs
-        qB8fLFy5GNV12kkbvmMwBrA==
-X-Received: by 2002:adf:ed81:0:b0:226:a509:14b6 with SMTP id c1-20020adfed81000000b00226a50914b6mr1211082wro.150.1662536769194;
-        Wed, 07 Sep 2022 00:46:09 -0700 (PDT)
-X-Google-Smtp-Source: AA6agR44JqlJBu3NM8POTUmZPOMnuC7An3N2YQMeTdJEE/AQ3Rtm8kSGa0vZZHfwxjXMROy9TOM4iQ==
-X-Received: by 2002:adf:ed81:0:b0:226:a509:14b6 with SMTP id c1-20020adfed81000000b00226a50914b6mr1211058wro.150.1662536768934;
-        Wed, 07 Sep 2022 00:46:08 -0700 (PDT)
+        bh=8KMdampSVOfSjQJ+eYUB/+euJ05288b13jRxouoL8v4=;
+        b=0D0RL0SzxOu27/7NFUR8w/cnz5/KCnXdjhhdVI9uP7CwHaZ6lK8bvgS74QxrzpTceG
+         wlNd1fSPzf+E1OPNrSZx90RDxwG9jt0AOv4TyC7gFhVO9Qs2sNh+Fsq2A6UhihCR1Son
+         TXwGJhA9hfC9/EVx4VCEOUC7sEdz6rtQPqEWsQ9fY6Q1yta0AJmUWW8zwSyKhLn5zMG9
+         j+6ryp6ZWTU8/KkncgAQw7WSRyLM1DIkPFQYvfQ5fI1rt4mNwWl5wNqSWZlXRg7wOYiQ
+         3OCLYCCdyDm+meW4QvkfoXxBPzfKazO1ptsw+55KvdLbu8hta9HEuRmBSxgLB/FwJ+Ea
+         O4Mw==
+X-Gm-Message-State: ACgBeo3LEG4N2Cc/UZlwKvInvUoCKdLnHj77dGaUiBcc1tCpiYScTcxe
+        jKWyDapPbWEb/Oppic5j381u/Bm2kxM63bld8mSASk06deDCXFS+39GyBM7c+dFrLwUsRsb8Ton
+        OE5BBA4XSQO5Dvady5u0I2g==
+X-Received: by 2002:a5d:6f19:0:b0:228:d8e8:3ac8 with SMTP id ay25-20020a5d6f19000000b00228d8e83ac8mr1149255wrb.101.1662537103863;
+        Wed, 07 Sep 2022 00:51:43 -0700 (PDT)
+X-Google-Smtp-Source: AA6agR6ThqBf88YF8iut0HC9FOIofHwvY/fghW1g6YgYSZwxQVisX9JDtm6hidIgh47utu42naZpeA==
+X-Received: by 2002:a5d:6f19:0:b0:228:d8e8:3ac8 with SMTP id ay25-20020a5d6f19000000b00228d8e83ac8mr1149243wrb.101.1662537103667;
+        Wed, 07 Sep 2022 00:51:43 -0700 (PDT)
 Received: from sgarzare-redhat (host-87-11-6-69.retail.telecomitalia.it. [87.11.6.69])
-        by smtp.gmail.com with ESMTPSA id e3-20020a5d5303000000b0022584e771adsm16009397wrv.113.2022.09.07.00.46.07
+        by smtp.gmail.com with ESMTPSA id d14-20020adff2ce000000b00228d6edade0sm6597943wrp.46.2022.09.07.00.51.42
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 07 Sep 2022 00:46:08 -0700 (PDT)
-Date:   Wed, 7 Sep 2022 09:45:58 +0200
+        Wed, 07 Sep 2022 00:51:43 -0700 (PDT)
+Date:   Wed, 7 Sep 2022 09:51:38 +0200
 From:   Stefano Garzarella <sgarzare@redhat.com>
 To:     vdasa@vmware.com
 Cc:     vbhakta@vmware.com, namit@vmware.com, bryantan@vmware.com,
@@ -63,32 +63,28 @@ Cc:     vbhakta@vmware.com, namit@vmware.com, bryantan@vmware.com,
         linux-input@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org,
         virtualization@lists.linux-foundation.org
-Subject: Re: [PATCH 3/3] MAINTAINERS: Add a new entry for VMWARE VSOCK VMCI
- TRANSPORT DRIVER
-Message-ID: <20220907074558.75v3ucll6eo66zky@sgarzare-redhat>
+Subject: Re: [PATCH 0/3] MAINTAINERS: Update entries for some VMware drivers
+Message-ID: <20220907075138.ph3bbitnev72rei3@sgarzare-redhat>
 References: <20220906172722.19862-1-vdasa@vmware.com>
- <20220906172722.19862-4-vdasa@vmware.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Disposition: inline
-In-Reply-To: <20220906172722.19862-4-vdasa@vmware.com>
+In-Reply-To: <20220906172722.19862-1-vdasa@vmware.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Sep 06, 2022 at 10:27:22AM -0700, vdasa@vmware.com wrote:
+On Tue, Sep 06, 2022 at 10:27:19AM -0700, vdasa@vmware.com wrote:
 >From: Vishnu Dasa <vdasa@vmware.com>
 >
->Add a new entry for VMWARE VSOCK VMCI TRANSPORT DRIVER in the
->MAINTAINERS file.
+>This series updates a few existing maintainer entries for VMware
+>supported drivers and adds a new entry for vsock vmci transport
+>driver.
 >
->Signed-off-by: Vishnu Dasa <vdasa@vmware.com>
->---
-> MAINTAINERS | 8 ++++++++
-> 1 file changed, 8 insertions(+)
 
-Thanks for adding this entry!
-Will be very useful to review vsock patches for vmci transport.
+Since you are updating MAINTAINERS, what about adding 
+"include/linux/vmw_vmci*" under "VMWARE VMCI DRIVER"?
 
-Acked-by: Stefano Garzarella <sgarzare@redhat.com>
+Thanks,
+Stefano
 
