@@ -2,76 +2,88 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB47BC38145
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 14:52:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1330C54EE9
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 15:04:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232754AbiIHOwE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Sep 2022 10:52:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32946 "EHLO
+        id S232801AbiIHPEr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Sep 2022 11:04:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57628 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231806AbiIHOvi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2022 10:51:38 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2EA6D4BFC
-        for <linux-scsi@vger.kernel.org>; Thu,  8 Sep 2022 07:51:37 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7FCDC61D3F
-        for <linux-scsi@vger.kernel.org>; Thu,  8 Sep 2022 14:51:37 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 893B0C433C1;
-        Thu,  8 Sep 2022 14:51:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1662648696;
-        bh=0/S//AJUuRbzRSsj+tbT3RKzOBNX9Rf0BhZwulh1t9s=;
-        h=From:To:Cc:Subject:Date:From;
-        b=VubCA7z6mf0AVn2ga47cdK3F8/XVY2fn7kQUtKUBplBT16m2Gx/zyXreLD2yr42gj
-         4Fd7bmivGLkEOWuBpyL9chvg3H6td6Uzd3Lz6hlzjkixXoX7iEFe3+lAoF66ZY7Wzk
-         PtkXaNmEyG5Fw3+YBQxNkfpEdOGOeuYuKdDBsWqo=
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        hdthky <hdthky0@gmail.com>, stable <stable@kernel.org>,
-        Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [PATCH] scsi: stex: properly zero out the passthrough command structure
-Date:   Thu,  8 Sep 2022 16:51:54 +0200
-Message-Id: <20220908145154.2284098-1-gregkh@linuxfoundation.org>
-X-Mailer: git-send-email 2.37.3
+        with ESMTP id S232806AbiIHPEn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2022 11:04:43 -0400
+Received: from mail-lf1-x131.google.com (mail-lf1-x131.google.com [IPv6:2a00:1450:4864:20::131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06F211C921
+        for <linux-scsi@vger.kernel.org>; Thu,  8 Sep 2022 08:04:39 -0700 (PDT)
+Received: by mail-lf1-x131.google.com with SMTP id i26so12462100lfp.11
+        for <linux-scsi@vger.kernel.org>; Thu, 08 Sep 2022 08:04:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date;
+        bh=zNFutFccZT6f6iuYGNI8lXkDka4OOINY+aGWpjk7wGk=;
+        b=iVZ/SYDZx1v252YZLFQsnEGK+gB2G9E/S8LCryr60OUZ2ORINLyw0Rk3fCnT9TWeNv
+         qu/UlLr7euqcgpTvHBp7VsLkdzFU4Ilvr/4P4wmDV8Cz1Oul4q4Zxndyi6AGXHHJxDR8
+         LlB9rMeh/YB4hYf2iNVYNqfPE138ZGjwsqTxTdnuqlNHsLtINsIYNLvkM9HDQ7D3xav1
+         IhVyrJtHmdoW0pHt3movFeNu2GHJyJLrP7sP+BHWWDFtlBYM9fw6+wLwsamvxrllcLUW
+         fQ5oS2loXNvB3wH4HDU0wXaIn/l4oibJFqdl6FDXnAMmcSQydFDwajMK/cLIskWiuGpY
+         rKkg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date;
+        bh=zNFutFccZT6f6iuYGNI8lXkDka4OOINY+aGWpjk7wGk=;
+        b=a0FbtPyCdkLDyyCv93Ci5JWd54WCPp59CgGDRqRLsYNKrrdZTtBSXrclCiW1kCE5Xu
+         nEWJx5+DfaCHxl4nKg++SytTNe/wRwvVmNsI/dwQrwM8CVpKXQEowt3edmHqI+Ahj4yO
+         uWyQu8uuFUNbE6rvJ7yJRRHmLXqMdbEFibRqC9KW5uiP6w/g4/M8nE/l/h6CxIR+Np1r
+         CqBSmJSLKCJ2vBA0E6+NzulRmgXgrW6d03MHZ7lgxIqGwroI611/aZBIeF+VY27Y7WII
+         aWFInCfPRLr8OrQAMj0ER3vi+c5L4933KzLYsoqQ3pGVQQbUZwpZkj3+tMUVug2mNKsy
+         6LOQ==
+X-Gm-Message-State: ACgBeo3latiIFTFHsT1lacyPwU7+8zgnmyh2ulox5TzNu8+kdCulQDWz
+        aa+leQDlCS9VX2NqFCVxNg3HKEII5+0Dtg==
+X-Google-Smtp-Source: AA6agR4OcuIE7HLJ1utkPyvJLKZ305HRhk00gp/ZvZBnKlBS/jhFempGJHli2uO1lQlobv9kFoqPmg==
+X-Received: by 2002:a05:6512:1316:b0:48d:2549:1158 with SMTP id x22-20020a056512131600b0048d25491158mr2686132lfu.626.1662649477395;
+        Thu, 08 Sep 2022 08:04:37 -0700 (PDT)
+Received: from [192.168.0.21] (78-11-189-27.static.ip.netia.com.pl. [78.11.189.27])
+        by smtp.gmail.com with ESMTPSA id g1-20020a0565123b8100b00494767f1a4fsm3070507lfv.21.2022.09.08.08.04.36
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 08 Sep 2022 08:04:36 -0700 (PDT)
+Message-ID: <e22609d9-f5bc-4e03-b6d6-1393e8df6214@linaro.org>
+Date:   Thu, 8 Sep 2022 17:04:35 +0200
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=957; i=gregkh@linuxfoundation.org; h=from:subject; bh=0/S//AJUuRbzRSsj+tbT3RKzOBNX9Rf0BhZwulh1t9s=; b=owGbwMvMwCRo6H6F97bub03G02pJDMlSjO0be3eYtB9MdF33bHN9+7V3J76Kr8mbs/7Xp+MPNLIT NW9od8SyMAgyMciKKbJ82cZzdH/FIUUvQ9vTMHNYmUCGMHBxCsBEzsUzzA/z6Ez5lvg7dlGUn9+7E7 3Ldx8WeMuw4NyJP+zO99IP7c0+khL90j9Q7Z/jLwA=
-X-Developer-Key: i=gregkh@linuxfoundation.org; a=openpgp; fpr=F4B60CC5BF78C2214A313DCB3147D40DDB2DFB29
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.13.0
+Subject: Re: [PATCH v2 0/2] Prepare for constifying SCSI host templates
+Content-Language: en-US
+To:     John Garry <john.garry@huawei.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>
+Cc:     linux-scsi@vger.kernel.org
+References: <20220830210509.1919493-1-bvanassche@acm.org>
+ <9e9a24a0-3d04-306f-b8f6-dfe5fe03efab@huawei.com>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+In-Reply-To: <9e9a24a0-3d04-306f-b8f6-dfe5fe03efab@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The passthrough structure is declared off of the stack, so it needs to
-be zeroed out before copied back to userspace to prevent any
-unintentional data leakage.
+On 01/09/2022 16:23, John Garry wrote:
+> On 30/08/2022 22:05, Bart Van Assche wrote:
+> 
+> + Krzysztof
+> 
+> This is the same topic as what Krzysztof was working on in 
+> https://lore.kernel.org/linux-scsi/6f28acde-2177-0bc7-b06d-c704153489c0@linaro.org/
+> 
+> And at least we have the scsi_host_template.module issue to solve - any 
+> plan or progress for that?
 
-Reported-by: hdthky <hdthky0@gmail.com>
-Cc: stable <stable@kernel.org>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Reviewed-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
- drivers/scsi/stex.c | 1 +
- 1 file changed, 1 insertion(+)
+I won't have time to work on that anytime soon, so feel free to pickup
+my patchset and rework or continue on your own.
 
-diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
-index e6420f2127ce..fc5880a35723 100644
---- a/drivers/scsi/stex.c
-+++ b/drivers/scsi/stex.c
-@@ -668,6 +668,7 @@ static int stex_queuecommand_lck(struct scsi_cmnd *cmd)
- 			struct st_drvver ver;
- 			size_t cp_len = sizeof(ver);
- 
-+			memset(&ver, 0x00, sizeof(ver));
- 			ver.major = ST_VER_MAJOR;
- 			ver.minor = ST_VER_MINOR;
- 			ver.oem = ST_OEM;
--- 
-2.37.3
-
+Best regards,
+Krzysztof
