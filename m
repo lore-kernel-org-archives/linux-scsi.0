@@ -2,81 +2,133 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DCD8C38145
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 16:53:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18658C6FA8B
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 16:56:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232079AbiIHQxK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Sep 2022 12:53:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45164 "EHLO
+        id S232076AbiIHQ4v (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Sep 2022 12:56:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35606 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232084AbiIHQwn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2022 12:52:43 -0400
-Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 401BDF2D4E
-        for <linux-scsi@vger.kernel.org>; Thu,  8 Sep 2022 09:50:38 -0700 (PDT)
-Received: by mail-pj1-f52.google.com with SMTP id q15-20020a17090a304f00b002002ac83485so3095559pjl.0
-        for <linux-scsi@vger.kernel.org>; Thu, 08 Sep 2022 09:50:38 -0700 (PDT)
+        with ESMTP id S231556AbiIHQ4e (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2022 12:56:34 -0400
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55DFB476D0;
+        Thu,  8 Sep 2022 09:55:52 -0700 (PDT)
+Received: by mail-pl1-f169.google.com with SMTP id c2so18502839plo.3;
+        Thu, 08 Sep 2022 09:55:52 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+        h=content-transfer-encoding:in-reply-to:from:references:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date;
-        bh=/fEOBF6YfcQnf1oNjSnbHNXKGzwnTyLYhdq3ULSSkSs=;
-        b=lHjJAbpH2C8w0uqNl5dWHpEHEIkPNuwmqEcatSMMC/F7qIJwz7MRyOVbWcwDxQUQlI
-         OYTpS8ASU09Kfv5WahMooU1f9BURlNCTwMxIdhs83rCeipp2eZjDgDMM78fean/MOK1L
-         mxzOcl43nkE3hKwgHq9C+t4dJmH/S8pFYhd8Z3Dp2YtSUZSTTbKOwS4CKytRgZmblmA/
-         753lHMtqIAkDxq1gl14OEyaJ2NqtZOGnJdXhmrXffo37SjpCMnu7iXxR9ir4wjAtWHON
-         WqzQL/CbLhVkbZZmEyVb6oyUEeTR3e82sOIRLrSv+TeBrrNHAwhv+SyzBi8N/RpTX4C2
-         UYvw==
-X-Gm-Message-State: ACgBeo1JFUSusY2HmeRq+FCTZaI0wPRICu1OzOMH8PkKjfCJimQJfA4T
-        SlUTiS077BbXI/GPsJiP3nA=
-X-Google-Smtp-Source: AA6agR5ITCjjwnqGhrAHWnTwSyHCeFOZUJhSQHY92aVxGIvVIrKwDRLWKcqwM1vfybbNFnFnTPZJvA==
-X-Received: by 2002:a17:902:f08a:b0:176:b477:8be0 with SMTP id p10-20020a170902f08a00b00176b4778be0mr9974312pla.66.1662655823867;
-        Thu, 08 Sep 2022 09:50:23 -0700 (PDT)
+        bh=4gnfYGW7hkW/eLBVsc13buXA0Lfe7uhj1byHBiJTDRI=;
+        b=Ohbh45gaMmMICGgFtp37FFHwFP1Nw8eZ4Sv60CgaGDJO8DIuodhXzaxmpkHihlDr/V
+         RSWLmSXwnN4IktZP0deSc+RC6V3YbaCDyTUlnzNOcbOZQaI0l5dcnhTcPRwz9gwYs1Q/
+         +R1Bem68MiC5KpYF86rVuWBA7FWsVb4WVZi05w+qLuimvn5tsvbPJ8/QD+oWiuznZYd3
+         6EfLysn+2MhEARAfR092UOZyg78k/OAfpNyMtygsi+foQkF+4YX/S6Ko8HE+jyFrQ8pu
+         TfEInkk5GbOnG0iPtEKMOMSSZT0VVwzv4eCZDSBaNUHKoGXVBPQrkpYdDcamdyKVKnlV
+         VJoA==
+X-Gm-Message-State: ACgBeo3kLtqShlAvtJEjRW1sQmO3AHANNB5fvvgrHDT73Ov4lGnpKvo9
+        9wvKDnAxL3ByfrbwqNEIHGI=
+X-Google-Smtp-Source: AA6agR6l1KwW3pBEJAIDjWnoVF/aSh6gjMWbcDfanQE4KJyUAulbcj25bFqBdc1hXVQ0Ohdnmqj6+w==
+X-Received: by 2002:a17:903:2449:b0:174:49c0:542 with SMTP id l9-20020a170903244900b0017449c00542mr9593480pls.113.1662656151659;
+        Thu, 08 Sep 2022 09:55:51 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:71db:3cdf:3590:2e95? ([2620:15c:211:201:71db:3cdf:3590:2e95])
-        by smtp.gmail.com with ESMTPSA id x14-20020aa79a4e000000b0053e22fc5b4fsm7041650pfj.0.2022.09.08.09.50.21
+        by smtp.gmail.com with ESMTPSA id c6-20020a170902c1c600b00176d4b093e1sm6545631plc.16.2022.09.08.09.55.50
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 08 Sep 2022 09:50:23 -0700 (PDT)
-Message-ID: <19c5a7c7-3c43-be1a-71c7-b1d5c4edd1d5@acm.org>
-Date:   Thu, 8 Sep 2022 09:50:20 -0700
+        Thu, 08 Sep 2022 09:55:50 -0700 (PDT)
+Message-ID: <28bd97af-2932-f75e-ecf5-6c5e42f8d7ad@acm.org>
+Date:   Thu, 8 Sep 2022 09:55:48 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.12.0
-Subject: Re: [PATCH v2 0/2] Prepare for constifying SCSI host templates
+Subject: Re: [PATCH v3 1/1] tracing: Fix compile error in trace_array calls
+ when TRACING is disabled
 Content-Language: en-US
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        John Garry <john.garry@huawei.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>
-Cc:     linux-scsi@vger.kernel.org
-References: <20220830210509.1919493-1-bvanassche@acm.org>
- <9e9a24a0-3d04-306f-b8f6-dfe5fe03efab@huawei.com>
- <e22609d9-f5bc-4e03-b6d6-1393e8df6214@linaro.org>
+To:     Arun Easi <aeasi@marvell.com>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Martin Petersen <martin.petersen@oracle.com>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+        James Bottomley <jejb@linux.ibm.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-next@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com
+References: <20220907233308.4153-1-aeasi@marvell.com>
+ <20220907233308.4153-2-aeasi@marvell.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <e22609d9-f5bc-4e03-b6d6-1393e8df6214@linaro.org>
+In-Reply-To: <20220907233308.4153-2-aeasi@marvell.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/8/22 08:04, Krzysztof Kozlowski wrote:
-> On 01/09/2022 16:23, John Garry wrote:
->> On 30/08/2022 22:05, Bart Van Assche wrote:
->>
->> + Krzysztof
->>
->> This is the same topic as what Krzysztof was working on in
->> https://lore.kernel.org/linux-scsi/6f28acde-2177-0bc7-b06d-c704153489c0@linaro.org/
->>
->> And at least we have the scsi_host_template.module issue to solve - any
->> plan or progress for that?
-> 
-> I won't have time to work on that anytime soon, so feel free to pickup
-> my patchset and rework or continue on your own.
+On 9/7/22 16:33, Arun Easi wrote:
+> diff --git a/include/linux/trace.h b/include/linux/trace.h
+> index bf16961..b5e16e4 100644
+> --- a/include/linux/trace.h
+> +++ b/include/linux/trace.h
+> @@ -2,8 +2,6 @@
+>   #ifndef _LINUX_TRACE_H
+>   #define _LINUX_TRACE_H
+>   
+> -#ifdef CONFIG_TRACING
+> -
+>   #define TRACE_EXPORT_FUNCTION	BIT(0)
+>   #define TRACE_EXPORT_EVENT	BIT(1)
+>   #define TRACE_EXPORT_MARKER	BIT(2)
+> @@ -28,6 +26,8 @@ struct trace_export {
+>   	int flags;
+>   };
+>   
+> +#ifdef CONFIG_TRACING
+> +
+>   int register_ftrace_export(struct trace_export *export);
+>   int unregister_ftrace_export(struct trace_export *export);
+>   
+> @@ -48,6 +48,38 @@ void osnoise_arch_unregister(void);
+>   void osnoise_trace_irq_entry(int id);
+>   void osnoise_trace_irq_exit(int id, const char *desc);
+>   
+> +#else /* CONFIG_TRACING */
+> +static inline int register_ftrace_export(struct trace_export *export)
+> +{
+> +	return -EINVAL;
+> +}
+> +static inline int unregister_ftrace_export(struct trace_export *export)
+> +{
+> +	return 0;
+> +}
+> +static inline void trace_printk_init_buffers(void)
+> +{
+> +}
+> +static inline int trace_array_printk(struct trace_array *tr, unsigned long ip,
+> +				     const char *fmt, ...)
+> +{
+> +	return 0;
+> +}
+> +static inline int trace_array_init_printk(struct trace_array *tr)
+> +{
+> +	return -EINVAL;
+> +}
+> +static inline void trace_array_put(struct trace_array *tr)
+> +{
+> +}
+> +static inline struct trace_array *trace_array_get_by_name(const char *name)
+> +{
+> +	return NULL;
+> +}
+> +static inline int trace_array_destroy(struct trace_array *tr)
+> +{
+> +	return 0;
+> +}
+>   #endif	/* CONFIG_TRACING */
+>   
+>   #endif	/* _LINUX_TRACE_H */
 
-Thanks for the feedback Krzysztof. I will keep you in Cc when I repost 
-this patch series.
+Thanks for having addressed my feedback. The above looks good to me. 
+However, I'm not very familiar with the tracing framework so I will 
+leave it to others to formally review this patch.
+
+Thanks,
 
 Bart.
-
