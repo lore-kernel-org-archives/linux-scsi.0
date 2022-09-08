@@ -2,119 +2,65 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43BFFC38145
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 18:16:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A25C9C38145
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 18:50:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230367AbiIHSQ4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Sep 2022 14:16:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49678 "EHLO
+        id S232310AbiIHSum (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Sep 2022 14:50:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60954 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229826AbiIHSQz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2022 14:16:55 -0400
-Received: from mail-ej1-x641.google.com (mail-ej1-x641.google.com [IPv6:2a00:1450:4864:20::641])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D564FE2924
-        for <linux-scsi@vger.kernel.org>; Thu,  8 Sep 2022 11:16:53 -0700 (PDT)
-Received: by mail-ej1-x641.google.com with SMTP id r18so12731208eja.11
-        for <linux-scsi@vger.kernel.org>; Thu, 08 Sep 2022 11:16:53 -0700 (PDT)
+        with ESMTP id S230338AbiIHSui (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2022 14:50:38 -0400
+Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2872EB869
+        for <linux-scsi@vger.kernel.org>; Thu,  8 Sep 2022 11:50:37 -0700 (PDT)
+Received: by mail-pf1-x430.google.com with SMTP id b144so14055569pfb.7
+        for <linux-scsi@vger.kernel.org>; Thu, 08 Sep 2022 11:50:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google;
-        h=cc:to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date;
-        bh=pvbtmDWFw1+oebbNoWaOZ3pv66gdbjKsCPTlqgDvJRA=;
-        b=J3NxVxe/8xObB/W+TxLUYyG+EUqUtr+GyWR3vxMM5H0bks0ctavZwaW9ymzkuCLI4T
-         5kavRXXC2ArKECpSyGPVOTdlFkqBhrLHwFivgXZ9YxoLocWxe92pX1vNXUh3nQBLKnPd
-         r0f5XwfNJ5zH3+HNZ5/HwQu8J6qUU05uVLWqw=
+        d=purestorage.com; s=google;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date;
+        bh=NIuAShfOd9MdSAw81tVwkJjrAx6iTypgi/tnmlqzrY4=;
+        b=Z90Xu4IgC+FWThgWEiytVCEFvA427s+v0bzCqVuNfwZq2WL1JVSFbzktvCCDvrquMd
+         2BgEoWsrOuwRrrd3OllgaIUuMV25dx96n9cO59Jv+XYfeGWJUFPnw1RxI0ccJSd9qjmw
+         7Ql/LBVKJPxMIFfADltxdNCI8xwW9U5JhoUFk=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date;
-        bh=pvbtmDWFw1+oebbNoWaOZ3pv66gdbjKsCPTlqgDvJRA=;
-        b=S5zBP3OEG93qPVVyFLCfkYXYg5kR22Lg83ulgyKW9SvGt2VvbROmTkumotgnzzPeAO
-         4PvxTjF3FkUP2htfxxAOZHIfv68tFKjHOW62ILhHxUKx6wEXXb1TunrVBkRSyzC9gFv1
-         lvz6R4LOWrasYphea82LCYeKKuAhmMxUwRrURqLCzUkE5jvoHoXhA7GYaDpY51+GXrL2
-         yZVFyn4v2tgWq6Z83xengCLeWHXCL1aMuoR64eVk14zt9wl9hz4EOf2o43F/V7LdUuHD
-         gtFF1PLkGc6lG0pP2mHnh4o8TrFouuivMuJv/PQ76AiCJnzJKDMJAEsU38DBMCXOkZM0
-         PiLA==
-X-Gm-Message-State: ACgBeo2HeLDmOEQ/n+uGzffhUlXwNBtkyMg73Fj/xH5O7BJBvGNndcBG
-        +fRt6Pvqo2p0KCY4lZnZY1OJuqzQeHeEe45T
-X-Google-Smtp-Source: AA6agR4XSCA5MtE7vVDUFooB//YdiLIref7Kf6+l7vIok1+/G4NO+qcxCnfGblZw3KltU1qBRXU5Qw==
-X-Received: by 2002:a17:907:60c7:b0:731:17e4:7fcc with SMTP id hv7-20020a17090760c700b0073117e47fccmr6977260ejc.73.1662661012168;
-        Thu, 08 Sep 2022 11:16:52 -0700 (PDT)
-Received: from mail-wr1-f45.google.com (mail-wr1-f45.google.com. [209.85.221.45])
-        by smtp.gmail.com with ESMTPSA id y13-20020a50eb0d000000b00443d657d8a4sm12655133edp.61.2022.09.08.11.16.49
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 08 Sep 2022 11:16:50 -0700 (PDT)
-Received: by mail-wr1-f45.google.com with SMTP id bz13so24106939wrb.2
-        for <linux-scsi@vger.kernel.org>; Thu, 08 Sep 2022 11:16:49 -0700 (PDT)
-X-Received: by 2002:adf:f484:0:b0:228:6489:5da3 with SMTP id
- l4-20020adff484000000b0022864895da3mr5937849wro.193.1662661009279; Thu, 08
- Sep 2022 11:16:49 -0700 (PDT)
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date;
+        bh=NIuAShfOd9MdSAw81tVwkJjrAx6iTypgi/tnmlqzrY4=;
+        b=I7oYOs1I+znqodfGXiE4WBrv1frdAwZi7o3agcg7k53w/qqNi0aIJTI9nd4+3OMGJd
+         QqEKReOlNUffuJC7oyLVq09y2J9rR/mZyl0TKI5I0iUY9cFfwy03pErOEHEqij81yFEf
+         jsAkOBtxoTJAMXl8i4s3ElY8mzwMRmUR0neTIYDCM4YBC/v+KNLWjdobQMCH0L6t5zVR
+         vHCOonQdYU2E3PfOujwVSmULu3ISvh450NbcVdkplQDBnFSas05e+rYAtgF8GI1dKaB5
+         9GJrfw3//AfAxitmJ/w3s6iSl+6QYxbCxBTC7gyXx6oi6Jk296m/oHdtIuuMX6//Mi2I
+         SxRw==
+X-Gm-Message-State: ACgBeo3ymcN8jhjDPVM4l+FU+JEJDS/ujbTPqUi0F0xmxY+LHS7rH9K7
+        D8Lx8c27zivjhwy3qanQoPVXBg==
+X-Google-Smtp-Source: AA6agR63zbZGkByDDCFMkRNQcB+jpRKvffxsvUFkMo8VsYzlEFjRZqDxOXYbk8lTGslyLJYqQzztLA==
+X-Received: by 2002:a65:464a:0:b0:434:883:ea21 with SMTP id k10-20020a65464a000000b004340883ea21mr9355137pgr.152.1662663037369;
+        Thu, 08 Sep 2022 11:50:37 -0700 (PDT)
+Received: from dev-ushankar.dev.purestorage.com ([2620:125:9007:640:7:70:36:0])
+        by smtp.gmail.com with ESMTPSA id w10-20020a65534a000000b0043014f9a4c9sm12962868pgr.93.2022.09.08.11.50.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 08 Sep 2022 11:50:36 -0700 (PDT)
+Date:   Thu, 8 Sep 2022 12:50:34 -0600
+From:   Uday Shankar <ushankar@purestorage.com>
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     Brian Bunker <brian@purestorage.com>, linux-scsi@vger.kernel.org,
+        Ewan Milne <emilne@redhat.com>
+Subject: Re: [PATCH] scsi: scsi_scan purge devices no longer in reported LUN
+ list
+Message-ID: <20220908185034.GA3389976@dev-ushankar.dev.purestorage.com>
+References: <CAHZQxyKNqnFro33VrirfkdS8ZNga9vWwJDDu8gQtRdr-yW57iQ@mail.gmail.com>
+ <CAGtn9rmV=SCxPEegyPc_9zxd9u4+R02LKc3B2X6uK0osY-zWww@mail.gmail.com>
+ <20220729233839.GA578093@dev-ushankar.dev.purestorage.com>
 MIME-Version: 1.0
-From:   Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Thu, 8 Sep 2022 14:16:33 -0400
-X-Gmail-Original-Message-ID: <CAHk-=wjXO3=VDjwrtWPCdzQtmWS19UmoUGEXy-zbg5R0fMpJkg@mail.gmail.com>
-Message-ID: <CAHk-=wjXO3=VDjwrtWPCdzQtmWS19UmoUGEXy-zbg5R0fMpJkg@mail.gmail.com>
-Subject: Re: PATCH] scsi: stex: properly zero out the passthrough command structure
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        James Bottomley <James.Bottomley@hansenpartnership.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        hdthky <hdthky0@gmail.com>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
-        Dan Carpenter <dan.carpenter@oracle.com>
-Content-Type: multipart/mixed; boundary="000000000000d74da105e82e6e75"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220729233839.GA578093@dev-ushankar.dev.purestorage.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000d74da105e82e6e75
-Content-Type: text/plain; charset="UTF-8"
-
-Sorry for bad message ID threading, but I don't have the original
-email from Greg in my email, just a link to it on lore..
-
-I'd suggest perhaps a slightly bigger patch than just adding the memset().
-
-Something like the attached?
-
-Entirely untested, but it would seem to be the cleaner way to go about this. No?
-
-            Linus
-
---000000000000d74da105e82e6e75
-Content-Type: text/x-patch; charset="US-ASCII"; name="patch.diff"
-Content-Disposition: attachment; filename="patch.diff"
-Content-Transfer-Encoding: base64
-Content-ID: <f_l7tdd2580>
-X-Attachment-Id: f_l7tdd2580
-
-IGRyaXZlcnMvc2NzaS9zdGV4LmMgICAgICB8IDE3ICsrKysrKysrKy0tLS0tLS0tCiBpbmNsdWRl
-L3Njc2kvc2NzaV9jbW5kLmggfCAgMiArLQogMiBmaWxlcyBjaGFuZ2VkLCAxMCBpbnNlcnRpb25z
-KCspLCA5IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9zdGV4LmMgYi9k
-cml2ZXJzL3Njc2kvc3RleC5jCmluZGV4IGU2NDIwZjIxMjdjZS4uOGRlZjI0MjY3NWVmIDEwMDY0
-NAotLS0gYS9kcml2ZXJzL3Njc2kvc3RleC5jCisrKyBiL2RyaXZlcnMvc2NzaS9zdGV4LmMKQEAg
-LTY2NSwxNiArNjY1LDE3IEBAIHN0YXRpYyBpbnQgc3RleF9xdWV1ZWNvbW1hbmRfbGNrKHN0cnVj
-dCBzY3NpX2NtbmQgKmNtZCkKIAkJcmV0dXJuIDA7CiAJY2FzZSBQQVNTVEhSVV9DTUQ6CiAJCWlm
-IChjbWQtPmNtbmRbMV0gPT0gUEFTU1RIUlVfR0VUX0RSVlZFUikgewotCQkJc3RydWN0IHN0X2Ry
-dnZlciB2ZXI7CisJCQljb25zdCBzdHJ1Y3Qgc3RfZHJ2dmVyIHZlciA9IHsKKwkJCQkubWFqb3Ig
-PSBTVF9WRVJfTUFKT1IsCisJCQkJLm1pbm9yID0gU1RfVkVSX01JTk9SLAorCQkJCS5vZW0gPSBT
-VF9PRU0sCisJCQkJLmJ1aWxkID0gU1RfQlVJTERfVkVSLAorCQkJCS5zaWduYXR1cmVbMF0gPSBQ
-QVNTVEhSVV9TSUdOQVRVUkUsCisJCQkJLmNvbnNvbGVfaWQgPSBob3N0LT5tYXhfaWQgLSAxLAor
-CQkJCS5ob3N0X25vID0gaGJhLT5ob3N0LT5ob3N0X25vLAorCQkJfTsKIAkJCXNpemVfdCBjcF9s
-ZW4gPSBzaXplb2YodmVyKTsKIAotCQkJdmVyLm1ham9yID0gU1RfVkVSX01BSk9SOwotCQkJdmVy
-Lm1pbm9yID0gU1RfVkVSX01JTk9SOwotCQkJdmVyLm9lbSA9IFNUX09FTTsKLQkJCXZlci5idWls
-ZCA9IFNUX0JVSUxEX1ZFUjsKLQkJCXZlci5zaWduYXR1cmVbMF0gPSBQQVNTVEhSVV9TSUdOQVRV
-UkU7Ci0JCQl2ZXIuY29uc29sZV9pZCA9IGhvc3QtPm1heF9pZCAtIDE7Ci0JCQl2ZXIuaG9zdF9u
-byA9IGhiYS0+aG9zdC0+aG9zdF9ubzsKIAkJCWNwX2xlbiA9IHNjc2lfc2dfY29weV9mcm9tX2J1
-ZmZlcihjbWQsICZ2ZXIsIGNwX2xlbik7CiAJCQlpZiAoc2l6ZW9mKHZlcikgPT0gY3BfbGVuKQog
-CQkJCWNtZC0+cmVzdWx0ID0gRElEX09LIDw8IDE2OwpkaWZmIC0tZ2l0IGEvaW5jbHVkZS9zY3Np
-L3Njc2lfY21uZC5oIGIvaW5jbHVkZS9zY3NpL3Njc2lfY21uZC5oCmluZGV4IGJhYzU1ZGVjZjkw
-MC4uN2QzNjIyZGIzOGVkIDEwMDY0NAotLS0gYS9pbmNsdWRlL3Njc2kvc2NzaV9jbW5kLmgKKysr
-IGIvaW5jbHVkZS9zY3NpL3Njc2lfY21uZC5oCkBAIC0yMDEsNyArMjAxLDcgQEAgc3RhdGljIGlu
-bGluZSB1bnNpZ25lZCBpbnQgc2NzaV9nZXRfcmVzaWQoc3RydWN0IHNjc2lfY21uZCAqY21kKQog
-CWZvcl9lYWNoX3NnKHNjc2lfc2dsaXN0KGNtZCksIHNnLCBuc2VnLCBfX2kpCiAKIHN0YXRpYyBp
-bmxpbmUgaW50IHNjc2lfc2dfY29weV9mcm9tX2J1ZmZlcihzdHJ1Y3Qgc2NzaV9jbW5kICpjbWQs
-Ci0JCQkJCSAgIHZvaWQgKmJ1ZiwgaW50IGJ1ZmxlbikKKwkJCQkJICAgY29uc3Qgdm9pZCAqYnVm
-LCBpbnQgYnVmbGVuKQogewogCXJldHVybiBzZ19jb3B5X2Zyb21fYnVmZmVyKHNjc2lfc2dsaXN0
-KGNtZCksIHNjc2lfc2dfY291bnQoY21kKSwKIAkJCQkgICBidWYsIGJ1Zmxlbik7Cg==
---000000000000d74da105e82e6e75--
+Bump?
