@@ -2,37 +2,37 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00FC9C54EE9
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 13:05:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5C71C38145
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 13:08:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231806AbiIHNFB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Sep 2022 09:05:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51730 "EHLO
+        id S232160AbiIHNI4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Sep 2022 09:08:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60472 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231357AbiIHNFA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2022 09:05:00 -0400
+        with ESMTP id S231899AbiIHNIt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2022 09:08:49 -0400
 Received: from bg4.exmail.qq.com (bg4.exmail.qq.com [43.154.221.58])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF12E40E29;
-        Thu,  8 Sep 2022 06:04:55 -0700 (PDT)
-X-QQ-mid: bizesmtp85t1662642285t338icw9
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D1B9C59F1;
+        Thu,  8 Sep 2022 06:08:41 -0700 (PDT)
+X-QQ-mid: bizesmtp63t1662642492tnlj5i5r
 Received: from localhost.localdomain ( [182.148.14.0])
         by bizesmtp.qq.com (ESMTP) with 
-        id ; Thu, 08 Sep 2022 21:04:43 +0800 (CST)
+        id ; Thu, 08 Sep 2022 21:08:11 +0800 (CST)
 X-QQ-SSF: 01000000002000B0C000B00A0000000
-X-QQ-FEAT: xqT8U4SkSpheaBwLeHRIsZ+CJLd0+Sq1Wvs/GKi5K/1WUroXMoJfyLrEgZYyq
-        FLcnkfkIJLtDIhbdSqiv36IQ/B0Kqfo/r8AyBK7JQ0mnyT+7hvsRqeW/jJ3fAdAQR18jRJB
-        sL7nDdIn/6S75zQC2+8+V8bozaVfo9CMZBfui0LSItdJYVI1SZfb8OURvnCF6DTRP3MAAuS
-        FKQXdXRPvR2YoIOW7OMuX0jvkn8vnnRP5em8ho8G3sPhUiuYi4UGPsjIr9kGTVdaXrDf5P8
-        sMHs1cH2pwLXQvATrn7DUPncnQiL2KPZ/WCcvFeNx2vfPPAodwhEFVVQYWaanNes+3j4rl9
-        GpEfPQ94FNoEDYgXiZwhQSEo3HWnavoPKelV+Rbc2G/RiLhgsk=
+X-QQ-FEAT: D6RqbDSxuq6+r8ef+kw6Z75XjCwsOgMcZO1hDR10kAbH3EtZRXkH37pYTsg8e
+        YB4K+QwesppJix51TZbKg32k6cD33mP9sw92mbBLzAwYw2iyBEJifoJyMytA4M7eJSlO15z
+        VXsF0OThAmCU8o5Ua69SmVI4TpioYTs7FjPQx7Jzf5GZwBozr/DQzvuSmvkxGca00oh+c5V
+        Yfvr2gXyQS3iIYSCOY3HFZaE5/hzWIQkGgk0Nq4Vx5j90mhisjDQlm0aLbY4ISIigavCr5b
+        +TeDG0XU1cHZ/sSuFwJj5IYVQHWNGxKeIygnJzEMUTIqdkzL3XCsSegcQd6mrIEM/fymGwD
+        00XHHatPmjOWLcVvGlMcfD9fGI/1Izbh2+KBr4xFFuQxHNDKGkcH/7O8o0XhQ==
 X-QQ-GoodBg: 0
 From:   wangjianli <wangjianli@cdjrlc.com>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+Cc:     linux-hyperv@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org, wangjianli <wangjianli@cdjrlc.com>
-Subject: [PATCH] scsi/mpt3sas: fix repeated words in comments
-Date:   Thu,  8 Sep 2022 21:04:20 +0800
-Message-Id: <20220908130420.33130-1-wangjianli@cdjrlc.com>
+Subject: [PATCH] drivers/scsi: fix repeated words in comments
+Date:   Thu,  8 Sep 2022 21:07:54 +0800
+Message-Id: <20220908130754.34999-1-wangjianli@cdjrlc.com>
 X-Mailer: git-send-email 2.36.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -46,22 +46,22 @@ Delete the redundant word 'to'.
 
 Signed-off-by: wangjianli <wangjianli@cdjrlc.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.h | 2 +-
+ drivers/scsi/storvsc_drv.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 05364aa15ecd..c8443f69d15d 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -836,7 +836,7 @@ struct _enclosure_node {
- /**
-  * enum reset_type - reset state
-  * @FORCE_BIG_HAMMER: issue diagnostic reset
-- * @SOFT_RESET: issue message_unit_reset, if fails to to big hammer
-+ * @SOFT_RESET: issue message_unit_reset, if fails to big hammer
-  */
- enum reset_type {
- 	FORCE_BIG_HAMMER,
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 573f89eade3b..9f7c71a8c80e 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -2059,7 +2059,7 @@ static int storvsc_probe(struct hv_device *device,
+ err_out2:
+ 	/*
+ 	 * Once we have connected with the host, we would need to
+-	 * to invoke storvsc_dev_remove() to rollback this state and
++	 * invoke storvsc_dev_remove() to rollback this state and
+ 	 * this call also frees up the stor_device; hence the jump around
+ 	 * err_out1 label.
+ 	 */
 -- 
 2.36.1
 
