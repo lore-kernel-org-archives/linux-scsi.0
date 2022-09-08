@@ -2,85 +2,79 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D413C38145
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 22:02:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E894C54EE9
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 22:30:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229636AbiIHWCy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Sep 2022 18:02:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60780 "EHLO
+        id S229781AbiIHWaf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Sep 2022 18:30:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55176 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229534AbiIHWCx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2022 18:02:53 -0400
-Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31046226;
-        Thu,  8 Sep 2022 15:02:52 -0700 (PDT)
-Received: by mail-pj1-f42.google.com with SMTP id t6-20020a17090a950600b0020063f8f964so4295933pjo.0;
-        Thu, 08 Sep 2022 15:02:52 -0700 (PDT)
+        with ESMTP id S229552AbiIHWaf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2022 18:30:35 -0400
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADD9A98368;
+        Thu,  8 Sep 2022 15:30:31 -0700 (PDT)
+Received: by mail-pl1-f171.google.com with SMTP id v1so78480plo.9;
+        Thu, 08 Sep 2022 15:30:31 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date;
-        bh=b12taMnIzdMKm4jddAntJRZjOPMuOvjwagtVtJORdzI=;
-        b=pq1zBUWfMR3nUFc4rN2pj6sxK5EUoYvSLnQlNAWedj6PaZR6LUZ7BRxohIpYGzRZI3
-         f1PMQwIkNnW+huLZSsP34rVpxdowygya+BHc0EA7TiYrhjezC4+h8dUnrMTFqi+4N2dW
-         IqV9lt1ax2dAPYkdSRK/UNLS8BYTCO2ewjeUqy9sKOJ3n4vNs8KRz8URIrHnJkb/tlKh
-         56pFJNLjimWb3xOQHx8JOmwHIp50bCk3T+eQx588kwp3t2AK6oxmvE5LUABh0y/rDig7
-         qmO60H1ujiAAWOv7zoX35LbxvWXFzkXFyMEe89RsJrzzowVYpiLiUnPgQrEsJG0JCn6g
-         b1kw==
-X-Gm-Message-State: ACgBeo0xyZK73aB8ZnzZVW9vHi5R0x2O/BzgFBAldNT9r9BwDpVdayKA
-        9zB/kISUdbv8uOrxsh18Xvk=
-X-Google-Smtp-Source: AA6agR6pTB2tPVoMwzw7k4ZKmtCcnvQ4r6tBR0MR1NlBGJdXUd+qKpMCTXAozXCSSiKuB1tqLquBXA==
-X-Received: by 2002:a17:90b:3a89:b0:200:5a01:e3a6 with SMTP id om9-20020a17090b3a8900b002005a01e3a6mr6334666pjb.64.1662674571626;
-        Thu, 08 Sep 2022 15:02:51 -0700 (PDT)
+        bh=owRTZNGDqD8OkXSsM5EZ0PBzmfLvZiHCsKH36J3GWzE=;
+        b=IW5wfUNojOUdLksrhQ8M1jLaDtbvk0JEhw/CbA0gvUsmftc9A/Grf5XNs/HPYMAfS1
+         uzbfEOerhMV6bc1STzE00vVlmTA69Tp4J4GNmPH7LeAQjAD4dIk3O1I8YLRssPGBJJ4P
+         NeuOakTfVaLpxnuRLct7k6ut/m1PA9eBFXchie5mDWeceBRobPy1Opn4iLGX30+Oyrvf
+         X0h4t4yP1aD2cuaWQJQQKDH416C7349dm6EZ6W/Gsz/7uoCGnJx6aUVTEY1PThkxpMuC
+         mWNvrFi2Z6nZ3cQwfs8b6RfNajkPNzoFbqdZXdVgTFcLLUyFo0lOqRc21SS6i3THrGyW
+         c5VA==
+X-Gm-Message-State: ACgBeo2zl5lVSRUrWSOQul8+hcbNeAnI9o2nQKM0MKXXWGjF/XTEq+Eq
+        1wMNfNyguJ+woICFU4tYX3A=
+X-Google-Smtp-Source: AA6agR4AmdI6ANzSvSg1QHamHjGKyR0vgTuxKkPqN8q60s3wZZMMIHAj845AlqJX3oSCxLYcNzsYjQ==
+X-Received: by 2002:a17:902:850a:b0:176:72af:65c1 with SMTP id bj10-20020a170902850a00b0017672af65c1mr11040922plb.81.1662676230853;
+        Thu, 08 Sep 2022 15:30:30 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:c18a:7410:112c:aa7c? ([2620:15c:211:201:c18a:7410:112c:aa7c])
-        by smtp.gmail.com with ESMTPSA id 201-20020a6217d2000000b0053e5daf1a25sm108199pfx.45.2022.09.08.15.02.48
+        by smtp.gmail.com with ESMTPSA id q1-20020a17090a7a8100b001faf7a88138sm60776pjf.42.2022.09.08.15.30.28
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 08 Sep 2022 15:02:50 -0700 (PDT)
-Message-ID: <877d782d-8fb1-44bc-6de9-1c3c7f8667f3@acm.org>
-Date:   Thu, 8 Sep 2022 15:02:47 -0700
+        Thu, 08 Sep 2022 15:30:30 -0700 (PDT)
+Message-ID: <3ea54f9b-896d-c70b-9024-4dc4f99ec2d4@acm.org>
+Date:   Thu, 8 Sep 2022 15:30:27 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.12.0
-Subject: Re: [RFC PATCH v3 2/4] ufs: core: mcq: Adds Multi-Circular Queue
- support
+Subject: Re: [RFC PATCH v3 4/4] ufs: host: qcom: Add MCQ support
 Content-Language: en-US
-To:     Bean Huo <huobean@gmail.com>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        quic_nguyenb@quicinc.com, quic_xiaosenh@quicinc.com,
-        stanley.chu@mediatek.com, adrian.hunter@intel.com,
-        avri.altman@wdc.com, mani@kernel.org, quic_cang@quicinc.com,
-        beanhuo@micron.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org
+To:     Asutosh Das <quic_asutoshd@quicinc.com>, quic_nguyenb@quicinc.com,
+        quic_xiaosenh@quicinc.com, stanley.chu@mediatek.com,
+        adrian.hunter@intel.com, avri.altman@wdc.com, mani@kernel.org,
+        quic_cang@quicinc.com, beanhuo@micron.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc:     linux-arm-msm@vger.kernel.org,
         Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
         Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Jinyoung Choi <j-young.choi@samsung.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
         open list <linux-kernel@vger.kernel.org>
 References: <cover.1662157846.git.quic_asutoshd@quicinc.com>
- <04f4949e4dea991a93bdf6727bf12948ecc586be.1662157846.git.quic_asutoshd@quicinc.com>
- <c3d2d8b307f7e11b7a2be751673220049b9a1a77.camel@gmail.com>
+ <260533ec3a80442b73d3999727bf0a9861462eba.1662157846.git.quic_asutoshd@quicinc.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <c3d2d8b307f7e11b7a2be751673220049b9a1a77.camel@gmail.com>
+In-Reply-To: <260533ec3a80442b73d3999727bf0a9861462eba.1662157846.git.quic_asutoshd@quicinc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/5/22 09:27, Bean Huo wrote:
-> static read_queues is not initialized.
+On 9/2/22 15:41, Asutosh Das wrote:
+> +static int ufs_qcom_get_hba_mac(struct ufs_hba *hba)
+> +{
+> +	return MAX_SUPP_MAC;
+> +}
 
-Hi Bean,
-
-The Linux kernel coding style guide does not allow to explicitly 
-initialize static variables to zero. The C standard requires that static 
-variables that are not initialized explicitly are initialized to zero. 
- From https://en.wikipedia.org/wiki/.bss: "In C, statically allocated 
-objects without an explicit initializer are initialized to zero (for 
-arithmetic types) or a null pointer (for pointer types)."
+The above implementation is not sufficient to convince me that the 
+get_hba_mac vop is useful. Please remove this vop and use MAX_SUPP_MAC 
+directly where ufshcd_mcq_vops_get_hba_mac() is called.
 
 Thanks,
 
