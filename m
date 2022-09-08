@@ -2,38 +2,37 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D14FCC54EE9
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 13:03:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00FC9C54EE9
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 13:05:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231592AbiIHNDo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Sep 2022 09:03:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49326 "EHLO
+        id S231806AbiIHNFB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Sep 2022 09:05:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51730 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230451AbiIHNDn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2022 09:03:43 -0400
-Received: from bg4.exmail.qq.com (bg4.exmail.qq.com [43.155.67.158])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E269BD5700;
-        Thu,  8 Sep 2022 06:03:41 -0700 (PDT)
-X-QQ-mid: bizesmtp79t1662642156tspq0fel
+        with ESMTP id S231357AbiIHNFA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2022 09:05:00 -0400
+Received: from bg4.exmail.qq.com (bg4.exmail.qq.com [43.154.221.58])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF12E40E29;
+        Thu,  8 Sep 2022 06:04:55 -0700 (PDT)
+X-QQ-mid: bizesmtp85t1662642285t338icw9
 Received: from localhost.localdomain ( [182.148.14.0])
         by bizesmtp.qq.com (ESMTP) with 
-        id ; Thu, 08 Sep 2022 21:02:35 +0800 (CST)
+        id ; Thu, 08 Sep 2022 21:04:43 +0800 (CST)
 X-QQ-SSF: 01000000002000B0C000B00A0000000
-X-QQ-FEAT: xqT8U4SkSphxglenF3k2bqXozjf3d5MHDrSli2VYeA9+TjNEa+EjhBXGYRSx9
-        +WTZE3XNwzFqgKl6kPULQhfHSpW7u7X7gpbSI0JYdzaurB2RVFQk58UEDelXIretHmR3zmO
-        FyvbLfk1AoFkZ8WwQL+wq5B+h3jyFcux5oHZXKPAv5C20M3uq7TS/s4UZK94sLyLiBydi/3
-        tI6GOQu7t6QvXdFLUttQ4rSDZ4hSQIovXDD+062zU5Ny0416jo9bm2gnZvrLoufqGsUu53J
-        u0TqDloIjKYTdLKTHFhekvQ0+PvR7vsmwXfYVtJgYy1ZAJINu8b8rne5E7++xNg8jn+Q19+
-        4i+au2EvhUcchWh2uZ9YOEUb/26ckTGIya4N9Msqc5u6RcjYAQcXCNAG9PWww==
+X-QQ-FEAT: xqT8U4SkSpheaBwLeHRIsZ+CJLd0+Sq1Wvs/GKi5K/1WUroXMoJfyLrEgZYyq
+        FLcnkfkIJLtDIhbdSqiv36IQ/B0Kqfo/r8AyBK7JQ0mnyT+7hvsRqeW/jJ3fAdAQR18jRJB
+        sL7nDdIn/6S75zQC2+8+V8bozaVfo9CMZBfui0LSItdJYVI1SZfb8OURvnCF6DTRP3MAAuS
+        FKQXdXRPvR2YoIOW7OMuX0jvkn8vnnRP5em8ho8G3sPhUiuYi4UGPsjIr9kGTVdaXrDf5P8
+        sMHs1cH2pwLXQvATrn7DUPncnQiL2KPZ/WCcvFeNx2vfPPAodwhEFVVQYWaanNes+3j4rl9
+        GpEfPQ94FNoEDYgXiZwhQSEo3HWnavoPKelV+Rbc2G/RiLhgsk=
 X-QQ-GoodBg: 0
 From:   wangjianli <wangjianli@cdjrlc.com>
-To:     kartilak@cisco.com, sebaddel@cisco.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        wangjianli <wangjianli@cdjrlc.com>
-Subject: [PATCH] scsi/snic: fix repeated words in comments
-Date:   Thu,  8 Sep 2022 21:02:13 +0800
-Message-Id: <20220908130213.32075-1-wangjianli@cdjrlc.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, wangjianli <wangjianli@cdjrlc.com>
+Subject: [PATCH] scsi/mpt3sas: fix repeated words in comments
+Date:   Thu,  8 Sep 2022 21:04:20 +0800
+Message-Id: <20220908130420.33130-1-wangjianli@cdjrlc.com>
 X-Mailer: git-send-email 2.36.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -47,22 +46,22 @@ Delete the redundant word 'to'.
 
 Signed-off-by: wangjianli <wangjianli@cdjrlc.com>
 ---
- drivers/scsi/snic/snic_debugfs.c | 2 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.h | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/snic/snic_debugfs.c b/drivers/scsi/snic/snic_debugfs.c
-index 57bdc3ba49d9..a03493ca1e87 100644
---- a/drivers/scsi/snic/snic_debugfs.c
-+++ b/drivers/scsi/snic/snic_debugfs.c
-@@ -362,7 +362,7 @@ void snic_stats_debugfs_init(struct snic *snic)
-  *
-  * Description:
-  * When Debufs is configured this routine removes debugfs file system
-- * elements that are specific to to snic stats
-+ * elements that are specific to snic stats
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index 05364aa15ecd..c8443f69d15d 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -836,7 +836,7 @@ struct _enclosure_node {
+ /**
+  * enum reset_type - reset state
+  * @FORCE_BIG_HAMMER: issue diagnostic reset
+- * @SOFT_RESET: issue message_unit_reset, if fails to to big hammer
++ * @SOFT_RESET: issue message_unit_reset, if fails to big hammer
   */
- void
- snic_stats_debugfs_remove(struct snic *snic)
+ enum reset_type {
+ 	FORCE_BIG_HAMMER,
 -- 
 2.36.1
 
