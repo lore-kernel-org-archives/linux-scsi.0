@@ -2,65 +2,147 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A25C9C38145
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 18:50:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F7D6C6FA86
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 19:12:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232310AbiIHSum (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Sep 2022 14:50:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60954 "EHLO
+        id S231340AbiIHTMp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Sep 2022 15:12:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46676 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230338AbiIHSui (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2022 14:50:38 -0400
-Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2872EB869
-        for <linux-scsi@vger.kernel.org>; Thu,  8 Sep 2022 11:50:37 -0700 (PDT)
-Received: by mail-pf1-x430.google.com with SMTP id b144so14055569pfb.7
-        for <linux-scsi@vger.kernel.org>; Thu, 08 Sep 2022 11:50:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=purestorage.com; s=google;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date;
-        bh=NIuAShfOd9MdSAw81tVwkJjrAx6iTypgi/tnmlqzrY4=;
-        b=Z90Xu4IgC+FWThgWEiytVCEFvA427s+v0bzCqVuNfwZq2WL1JVSFbzktvCCDvrquMd
-         2BgEoWsrOuwRrrd3OllgaIUuMV25dx96n9cO59Jv+XYfeGWJUFPnw1RxI0ccJSd9qjmw
-         7Ql/LBVKJPxMIFfADltxdNCI8xwW9U5JhoUFk=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date;
-        bh=NIuAShfOd9MdSAw81tVwkJjrAx6iTypgi/tnmlqzrY4=;
-        b=I7oYOs1I+znqodfGXiE4WBrv1frdAwZi7o3agcg7k53w/qqNi0aIJTI9nd4+3OMGJd
-         QqEKReOlNUffuJC7oyLVq09y2J9rR/mZyl0TKI5I0iUY9cFfwy03pErOEHEqij81yFEf
-         jsAkOBtxoTJAMXl8i4s3ElY8mzwMRmUR0neTIYDCM4YBC/v+KNLWjdobQMCH0L6t5zVR
-         vHCOonQdYU2E3PfOujwVSmULu3ISvh450NbcVdkplQDBnFSas05e+rYAtgF8GI1dKaB5
-         9GJrfw3//AfAxitmJ/w3s6iSl+6QYxbCxBTC7gyXx6oi6Jk296m/oHdtIuuMX6//Mi2I
-         SxRw==
-X-Gm-Message-State: ACgBeo3ymcN8jhjDPVM4l+FU+JEJDS/ujbTPqUi0F0xmxY+LHS7rH9K7
-        D8Lx8c27zivjhwy3qanQoPVXBg==
-X-Google-Smtp-Source: AA6agR63zbZGkByDDCFMkRNQcB+jpRKvffxsvUFkMo8VsYzlEFjRZqDxOXYbk8lTGslyLJYqQzztLA==
-X-Received: by 2002:a65:464a:0:b0:434:883:ea21 with SMTP id k10-20020a65464a000000b004340883ea21mr9355137pgr.152.1662663037369;
-        Thu, 08 Sep 2022 11:50:37 -0700 (PDT)
-Received: from dev-ushankar.dev.purestorage.com ([2620:125:9007:640:7:70:36:0])
-        by smtp.gmail.com with ESMTPSA id w10-20020a65534a000000b0043014f9a4c9sm12962868pgr.93.2022.09.08.11.50.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 08 Sep 2022 11:50:36 -0700 (PDT)
-Date:   Thu, 8 Sep 2022 12:50:34 -0600
-From:   Uday Shankar <ushankar@purestorage.com>
-To:     Hannes Reinecke <hare@suse.de>
-Cc:     Brian Bunker <brian@purestorage.com>, linux-scsi@vger.kernel.org,
-        Ewan Milne <emilne@redhat.com>
-Subject: Re: [PATCH] scsi: scsi_scan purge devices no longer in reported LUN
- list
-Message-ID: <20220908185034.GA3389976@dev-ushankar.dev.purestorage.com>
-References: <CAHZQxyKNqnFro33VrirfkdS8ZNga9vWwJDDu8gQtRdr-yW57iQ@mail.gmail.com>
- <CAGtn9rmV=SCxPEegyPc_9zxd9u4+R02LKc3B2X6uK0osY-zWww@mail.gmail.com>
- <20220729233839.GA578093@dev-ushankar.dev.purestorage.com>
+        with ESMTP id S229437AbiIHTMo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2022 15:12:44 -0400
+Received: from mx0b-0016f401.pphosted.com (mx0a-0016f401.pphosted.com [67.231.148.174])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1C43B0B27;
+        Thu,  8 Sep 2022 12:12:42 -0700 (PDT)
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 288DXUHm030055;
+        Thu, 8 Sep 2022 12:12:27 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=date : from : to :
+ cc : subject : in-reply-to : message-id : references : mime-version :
+ content-type; s=pfpt0220; bh=r6H+40G9lUVv1D9oybKjQC82BdNb3VOZVa28rXz8QAQ=;
+ b=Qa0mf3qeW3IWdmWB/eQqvJCtwLa/eEKtu1WFXVs6cdpnQsQnTg9NxTVSK1fdqoeuEz/P
+ Pc/tM4/rnMUo0ppTq3K7DT4P/uSTrf5LXgL+tyVylmTfUmM3mSPO0kyKVCnxm25rXuIH
+ LZmS9rGsi2tdRxtkw5ZJaM+zNzoIMI4bYyzxv0VWOlLvhEhIjj+xPvoFK6AZWqBQo2Rv
+ aoxQF7GKpbKeFXLUImDsud1gEP9z0yonjXwQiMwcJ+1WBGWAiopufULq8lMu3yCXJtTP
+ GBpKEdGAIAKeoLmwc7AJq6/hbzu1jL4iWWymIygtsrso6XCmSV+CqWCUirh2BJ7+qiyw Gw== 
+Received: from dc5-exch02.marvell.com ([199.233.59.182])
+        by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 3jen9x0kjq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Thu, 08 Sep 2022 12:12:27 -0700
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Thu, 8 Sep
+ 2022 12:12:26 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.18 via Frontend
+ Transport; Thu, 8 Sep 2022 12:12:26 -0700
+Received: from mvluser05.qlc.com (unknown [10.112.10.135])
+        by maili.marvell.com (Postfix) with ESMTP id CB6633F7054;
+        Thu,  8 Sep 2022 12:12:25 -0700 (PDT)
+Received: from localhost (aeasi@localhost)
+        by mvluser05.qlc.com (8.14.4/8.14.4/Submit) with ESMTP id 288JCPxS025295;
+        Thu, 8 Sep 2022 12:12:25 -0700
+X-Authentication-Warning: mvluser05.qlc.com: aeasi owned process doing -bs
+Date:   Thu, 8 Sep 2022 12:12:24 -0700
+From:   Arun Easi <aeasi@marvell.com>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Steven Rostedt <rostedt@goodmis.org>
+CC:     Martin Petersen <martin.petersen@oracle.com>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+        James Bottomley <jejb@linux.ibm.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-next@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>
+Subject: Re: [EXT] Re: [PATCH v3 1/1] tracing: Fix compile error in trace_array
+ calls when TRACING is disabled
+In-Reply-To: <28bd97af-2932-f75e-ecf5-6c5e42f8d7ad@acm.org>
+Message-ID: <b642171e-441f-7117-2ed0-74619c27e376@marvell.com>
+References: <20220907233308.4153-1-aeasi@marvell.com>
+ <20220907233308.4153-2-aeasi@marvell.com>
+ <28bd97af-2932-f75e-ecf5-6c5e42f8d7ad@acm.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220729233839.GA578093@dev-ushankar.dev.purestorage.com>
+Content-Type: text/plain; charset="US-ASCII"
+X-Proofpoint-ORIG-GUID: 2OE3AJtW7n-CwmfESgNfPI7ewXNk8cjy
+X-Proofpoint-GUID: 2OE3AJtW7n-CwmfESgNfPI7ewXNk8cjy
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
+ definitions=2022-09-08_11,2022-09-08_01,2022-06-22_01
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Bump?
+On Thu, 8 Sep 2022, 9:55am, Bart Van Assche wrote:
+
+> 
+> ----------------------------------------------------------------------
+> On 9/7/22 16:33, Arun Easi wrote:
+> > diff --git a/include/linux/trace.h b/include/linux/trace.h
+> > index bf16961..b5e16e4 100644
+> > --- a/include/linux/trace.h
+> > +++ b/include/linux/trace.h
+> > @@ -2,8 +2,6 @@
+> >   #ifndef _LINUX_TRACE_H
+> >   #define _LINUX_TRACE_H
+> >   -#ifdef CONFIG_TRACING
+> > -
+> >   #define TRACE_EXPORT_FUNCTION	BIT(0)
+> >   #define TRACE_EXPORT_EVENT	BIT(1)
+> >   #define TRACE_EXPORT_MARKER	BIT(2)
+> > @@ -28,6 +26,8 @@ struct trace_export {
+> >   	int flags;
+> >   };
+> >   +#ifdef CONFIG_TRACING
+> > +
+> >   int register_ftrace_export(struct trace_export *export);
+> >   int unregister_ftrace_export(struct trace_export *export);
+> >   @@ -48,6 +48,38 @@ void osnoise_arch_unregister(void);
+> >   void osnoise_trace_irq_entry(int id);
+> >   void osnoise_trace_irq_exit(int id, const char *desc);
+> >   +#else /* CONFIG_TRACING */
+> > +static inline int register_ftrace_export(struct trace_export *export)
+> > +{
+> > +	return -EINVAL;
+> > +}
+> > +static inline int unregister_ftrace_export(struct trace_export *export)
+> > +{
+> > +	return 0;
+> > +}
+> > +static inline void trace_printk_init_buffers(void)
+> > +{
+> > +}
+> > +static inline int trace_array_printk(struct trace_array *tr, unsigned long
+> > ip,
+> > +				     const char *fmt, ...)
+> > +{
+> > +	return 0;
+> > +}
+> > +static inline int trace_array_init_printk(struct trace_array *tr)
+> > +{
+> > +	return -EINVAL;
+> > +}
+> > +static inline void trace_array_put(struct trace_array *tr)
+> > +{
+> > +}
+> > +static inline struct trace_array *trace_array_get_by_name(const char *name)
+> > +{
+> > +	return NULL;
+> > +}
+> > +static inline int trace_array_destroy(struct trace_array *tr)
+> > +{
+> > +	return 0;
+> > +}
+> >   #endif	/* CONFIG_TRACING */
+> >     #endif	/* _LINUX_TRACE_H */
+> 
+> Thanks for having addressed my feedback. The above looks good to me. However,
+> I'm not very familiar with the tracing framework so I will leave it to others
+> to formally review this patch.
+> 
+
+Thanks for the review and suggestion of the clang-format command line, 
+Bart. That is a useful one to remember.
+
+Steve, does this look ok? If so, your approval is appreciated, as this is 
+a build blocker fix.
+
+Regards,
+-Arun
