@@ -2,38 +2,37 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98B3CC38145
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 12:26:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59318C38145
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 12:27:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231737AbiIHM0C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Sep 2022 08:26:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55826 "EHLO
+        id S231792AbiIHM1Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Sep 2022 08:27:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58520 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231576AbiIHM0B (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2022 08:26:01 -0400
+        with ESMTP id S231715AbiIHM1Y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2022 08:27:24 -0400
 Received: from bg4.exmail.qq.com (bg4.exmail.qq.com [43.154.221.58])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51BF8C59CB;
-        Thu,  8 Sep 2022 05:25:58 -0700 (PDT)
-X-QQ-mid: bizesmtp79t1662639947th9pafrx
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3996E5800;
+        Thu,  8 Sep 2022 05:27:22 -0700 (PDT)
+X-QQ-mid: bizesmtp84t1662640035tmpac29j
 Received: from localhost.localdomain ( [182.148.14.0])
         by bizesmtp.qq.com (ESMTP) with 
-        id ; Thu, 08 Sep 2022 20:25:46 +0800 (CST)
+        id ; Thu, 08 Sep 2022 20:27:14 +0800 (CST)
 X-QQ-SSF: 0100000000200090C000B00A0000000
-X-QQ-FEAT: LG+NUo/f6sH17zbjV4I0WjCDUKCcmxd2yaCeECp/PwM5GxfX4RCLbyJnPKwWC
-        IcH5g3/u41AhlcnSvBHheBhiy30Kw2jbpXngQ/wzlh3sp0xV+ZUjdQ+7Op6UCbA1UbmYH1z
-        Lz4Djiz4/e+iKCSNoQKrA9tP847EuWoVrp48GNtNkEmrDgDU9zlb0gjZ8LY7tMS3l839S7X
-        t/Zprnj2jBp40XL3sf6s0hcBUl7eewGR1jOHhfDc+tVUZ7V6Rql71+kOy++uIoifooBmHs6
-        DXDQrSjrZ8S1Rxm5tjIVJXz5WTruskW3JGYVELaCidfejGxLlceom7DOsFMcOPw8ifGcPoo
-        ReZe7me9VpANwLlvVrjSrilxZIuEVfFs/SDB5Ra9C2yBPr+HLw=
+X-QQ-FEAT: xqT8U4SkSph6l9lNGy1RzrnprUWRUbAh++gyNgtQGnbyBotsZCotqOTSVf2vg
+        eek3kjIXZ+5Rhhv097gzvf5mPzb4pD1g2G/23PGbmt3lNtjm6WjsCCk2R/omaE6mUQsOkvK
+        jpNj6bfm2IER39XLhbROKDCQPSQf9SO1gt3XR2qqHxga6Ejamz6EjZIIlEkCjS/YI2xT03o
+        nsB4eG2TiZXHXtSLAF93U+H27rK6D3X1ZOWHHqGc1QbedGz5VQkqJGCoSi5LgOaAfhOuGEE
+        0kqcrOPR8kox8c5/mH8vM2C8qB8YAEGy7n5PPNqHsJnXuvYGt9p0Nsx7ETR0S2aW57UjmWU
+        F44SVjdqDj7RbJnXC4+8ij5Cq2SrDtr9IrI6aGknRqCchjhLmWoZ0LOfHCqoQ==
 X-QQ-GoodBg: 0
 From:   wangjianli <wangjianli@cdjrlc.com>
-To:     james.smart@broadcom.com, dick.kennedy@broadcom.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         wangjianli <wangjianli@cdjrlc.com>
-Subject: [PATCH] scsi/lpfc: fix repeated words in comments
-Date:   Thu,  8 Sep 2022 20:25:38 +0800
-Message-Id: <20220908122538.12317-1-wangjianli@cdjrlc.com>
+Subject: [PATCH] drivers/scsi: fix repeated words in comments
+Date:   Thu,  8 Sep 2022 20:27:07 +0800
+Message-Id: <20220908122707.13222-1-wangjianli@cdjrlc.com>
 X-Mailer: git-send-email 2.36.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -47,22 +46,22 @@ Delete the redundant word 'in'.
 
 Signed-off-by: wangjianli <wangjianli@cdjrlc.com>
 ---
- drivers/scsi/lpfc/lpfc_ct.c | 2 +-
+ drivers/scsi/wd33c93.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index b555ccb5ae34..75eaac273a89 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -889,7 +889,7 @@ lpfc_ns_rsp(struct lpfc_vport *vport, struct lpfc_dmabuf *mp, uint8_t fc4_type,
- 	}
- 
- 	/* All GID_FT entries processed.  If the driver is running in
--	 * in target mode, put impacted nodes into recovery and drop
-+	 * target mode, put impacted nodes into recovery and drop
- 	 * the RPI to flush outstanding IO.
- 	 */
- 	if (vport->phba->nvmet_support) {
+diff --git a/drivers/scsi/wd33c93.c b/drivers/scsi/wd33c93.c
+index 3fe562047d85..a087e681805d 100644
+--- a/drivers/scsi/wd33c93.c
++++ b/drivers/scsi/wd33c93.c
+@@ -821,7 +821,7 @@ wd33c93_intr(struct Scsi_Host *instance)
+ /* After starting a DMA transfer, the next interrupt
+  * is guaranteed to be in response to completion of
+  * the transfer. Since the Amiga DMA hardware runs in
+- * in an open-ended fashion, it needs to be told when
++ * an open-ended fashion, it needs to be told when
+  * to stop; do that here if D_DMA_RUNNING is true.
+  * Also, we have to update 'this_residual' and 'ptr'
+  * based on the contents of the TRANSFER_COUNT register,
 -- 
 2.36.1
 
