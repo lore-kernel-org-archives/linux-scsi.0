@@ -2,224 +2,201 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6603EC38145
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 01:12:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BEE5C38145
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 03:01:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230144AbiIHBMt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Sep 2022 21:12:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60218 "EHLO
+        id S229535AbiIHDBt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Sep 2022 23:01:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39904 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229955AbiIHBMs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Sep 2022 21:12:48 -0400
-Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1376AC6CF3;
-        Wed,  7 Sep 2022 18:12:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1662599565; x=1694135565;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=DzghnYU0wzVB6WTARjWFLQMkyj0Z+o+JZG+YW32sRcI=;
-  b=E5z6Ct8Ads2mENGAiRlVbooC7SFV1xrWwSpE69e0k0yMwu4vS+SH4fw+
-   1bhmIfOFGVv9RJquUn84P0N2OyHfBZ1Mm07tdc+x1K1ot4smGzVhR/Jp8
-   4PMen07ghcKPdgd7N3oycMlUwY+Y+361I3w8M1A8QWTOAt7ZpjMjNR0LS
-   8/aLCvunrAcAR2vnZx2zyOD29KXXWVKjImqx7UcCu4f6kzcf1WF9K6cfo
-   5RUiC2G6qXojQn14uRclusXcT67jysnaHIZm8b/mhGCGIQvA/eUVQ/Ppm
-   P65ULyfLWcSxI/DDeRdblWREbg1XY2ZdtBNOFrFyOF0zUA6HVxmhzq8K6
-   g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10463"; a="297036097"
-X-IronPort-AV: E=Sophos;i="5.93,298,1654585200"; 
-   d="scan'208";a="297036097"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Sep 2022 18:12:44 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.93,298,1654585200"; 
-   d="scan'208";a="683033955"
-Received: from lkp-server02.sh.intel.com (HELO 95dfd251caa2) ([10.239.97.151])
-  by fmsmga004.fm.intel.com with ESMTP; 07 Sep 2022 18:12:42 -0700
-Received: from kbuild by 95dfd251caa2 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1oW65x-0007C3-1W;
-        Thu, 08 Sep 2022 01:12:41 +0000
-Date:   Thu, 08 Sep 2022 09:12:15 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Andrew Morton <akpm@linux-foundation.org>
-Cc:     linux-scsi@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        dri-devel@lists.freedesktop.org, bpf@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, alsa-devel@alsa-project.org,
-        Linux Memory Management List <linux-mm@kvack.org>
-Subject: [linux-next:master] BUILD REGRESSION
- 5957ac6635a1a12d4aa2661bbf04d3085a73372a
-Message-ID: <6319416f.h232K5rqqAPQe4ZI%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        with ESMTP id S229476AbiIHDBr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Sep 2022 23:01:47 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C07DC2775;
+        Wed,  7 Sep 2022 20:01:41 -0700 (PDT)
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28821R2r015754;
+        Thu, 8 Sep 2022 03:00:59 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=ySt9FJ6x3mGnRfyzAKzow8pvjFUROJ1IzTdK3nLCeMU=;
+ b=j7/Xi8at2D9OlFS+dd5R5s80Ou0Sm9el+rRU1gQ3CNngKTQPfvvJWpcV/APMAXB8kjEZ
+ 1ujb7iLSsBOBDFofR/Zg9tOGb66dP3FROzMbwF/z4MuGrDik101prwM7mkhCZFBxVYkt
+ SHOM795DFQ1L9yQihKTXuOzrZXbSahgctkFnlWiJ5FT+ThgT1rJLPZpDRn20cXS+VHTi
+ QKJ8LHUhWSqefdvk85qKxAykljTlcUgWuOJqGRCAtAuOn8yGn9xVc6H3WE7uXqIOQSeD
+ yZRJpV/uKylSOcnqQo7FfZHIj7FgbJbRrb4gUfJZWQp3C34zTqeuzRg5leskUSJ3o2Wx 5A== 
+Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3jer7nk8wx-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 08 Sep 2022 03:00:58 +0000
+Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
+        by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 28830wxJ021453
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 8 Sep 2022 03:00:58 GMT
+Received: from [10.110.102.110] (10.80.80.8) by nasanex01a.na.qualcomm.com
+ (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.29; Wed, 7 Sep 2022
+ 20:00:57 -0700
+Message-ID: <df32bbd5-4109-903b-c7ba-7777a298f5aa@quicinc.com>
+Date:   Wed, 7 Sep 2022 20:00:56 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.2.1
+Subject: Re: [RFC PATCH v3 1/4] ufs: core: prepare ufs for multi circular
+ queue support
+To:     Bean Huo <huobean@gmail.com>, <quic_nguyenb@quicinc.com>,
+        <quic_xiaosenh@quicinc.com>, <stanley.chu@mediatek.com>,
+        <adrian.hunter@intel.com>, <bvanassche@acm.org>,
+        <avri.altman@wdc.com>, <mani@kernel.org>, <quic_cang@quicinc.com>,
+        <beanhuo@micron.com>, <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>
+CC:     <linux-arm-msm@vger.kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        open list <linux-kernel@vger.kernel.org>
+References: <cover.1662157846.git.quic_asutoshd@quicinc.com>
+ <757bbfe36629b7c31ef2630971f8678a7801223f.1662157846.git.quic_asutoshd@quicinc.com>
+ <6e594dc2ce6103884b7768c2fed55eabec0d5ed8.camel@gmail.com>
+From:   "Asutosh Das (asd)" <quic_asutoshd@quicinc.com>
+In-Reply-To: <6e594dc2ce6103884b7768c2fed55eabec0d5ed8.camel@gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: aHbGIs9xG8BwgCooqlkcgG6Z4IhUCl21
+X-Proofpoint-GUID: aHbGIs9xG8BwgCooqlkcgG6Z4IhUCl21
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
+ definitions=2022-09-08_02,2022-09-07_02,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 phishscore=0
+ clxscore=1011 mlxscore=0 mlxlogscore=999 lowpriorityscore=0 spamscore=0
+ priorityscore=1501 suspectscore=0 impostorscore=0 bulkscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2207270000 definitions=main-2209080008
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
-branch HEAD: 5957ac6635a1a12d4aa2661bbf04d3085a73372a  Add linux-next specific files for 20220907
+Hello Bean
+Thanks for your comments. Responses inline.
 
-Error/Warning reports:
+On 9/5/2022 5:26 AM, Bean Huo wrote:
+> Asutosh,
+> 
+> 
+[...]
+> 
+>>   static inline
+>> -void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
+>> +void ufshcd_send_command(struct ufs_hba *hba, struct ufshcd_lrb
+>> *lrbp)
+>>   {
+>> -       struct ufshcd_lrb *lrbp = &hba->lrb[task_tag];
+>> +       int task_tag = lrbp->task_tag;
+>>          unsigned long flags;
+>>   
+>>          lrbp->issue_time_stamp = ktime_get();
+>>          lrbp->compl_time_stamp = ktime_set(0, 0);
+>> -       ufshcd_add_command_trace(hba, task_tag, UFS_CMD_SEND);
+>> +       ufshcd_add_command_trace(hba, lrbp, UFS_CMD_SEND);
+>>          ufshcd_clk_scaling_start_busy(hba);
+>>          if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
+>>                  ufshcd_start_monitor(hba, lrbp);
+>> @@ -2553,9 +2554,10 @@ void ufshcd_prepare_utp_scsi_cmd_upiu(struct
+>> ufshcd_lrb *lrbp, u8 upiu_flags)
+>>          /* command descriptor fields */
+>>          ucd_req_ptr->header.dword_0 = UPIU_HEADER_DWORD(
+>>                                  UPIU_TRANSACTION_COMMAND, upiu_flags,
+>> -                               lrbp->lun, lrbp->task_tag);
+>> +                               lrbp->lun, lrbp->task_tag & 0xff);
+>>          ucd_req_ptr->header.dword_1 = UPIU_HEADER_DWORD(
+>> -                               UPIU_COMMAND_SET_TYPE_SCSI, 0, 0, 0);
+>> +                               UPIU_COMMAND_SET_TYPE_SCSI, 0, 0,
+>> +                               (lrbp->task_tag & 0xf00) << 4);
+>>   
+> 
+> Are you sure here "(lrbp->task_tag & 0xf00) << 4" is correct?
+> 
+EXT_IID is the higher nibble in DWORD1. So this looks correct to me.
 
-https://lore.kernel.org/linux-mm/202209070728.o3stvgVt-lkp@intel.com
-https://lore.kernel.org/linux-mm/202209080545.qMIVj7YM-lkp@intel.com
-https://lore.kernel.org/linux-mm/202209080718.y5QmlNKH-lkp@intel.com
+COMMAND UPIU
+0 	    1 	  2 	3
+xx000001b Flags LUN Task Tag
+4 			5 	6 	7
+IID Command Set Type Reserved Reserved EXT_IID | Reserved
+> 
+> this will overwrite other fields, see UPIU_HEADER_DWORD:
+> 
+> #define UPIU_HEADER_DWORD(byte3, byte2, byte1, byte0)\
+>                          cpu_to_be32((byte3 << 24) | (byte2 << 16) |\
+>                           (byte1 << 8) | (byte0))
+> 
+> 
+> 
+>>
+>>   
+>> -       ufshcd_send_command(hba, tag);
+>> +       ufshcd_send_command(hba, lrbp);
+>>          err = ufshcd_wait_for_dev_cmd(hba, lrbp, timeout);
+>>          ufshcd_add_query_upiu_trace(hba, err ? UFS_QUERY_ERR :
+>> UFS_QUERY_COMP,
+>>                                      (struct utp_upiu_req *)lrbp-
+>>> ucd_rsp_ptr);
+>> @@ -4513,6 +4515,7 @@ int ufshcd_make_hba_operational(struct ufs_hba
+>> *hba)
+>>                          REG_UTP_TRANSFER_REQ_LIST_BASE_L);
+>>          ufshcd_writel(hba, upper_32_bits(hba->utrdl_dma_addr),
+>>                          REG_UTP_TRANSFER_REQ_LIST_BASE_H);
+>> +
+>>          ufshcd_writel(hba, lower_32_bits(hba->utmrdl_dma_addr),
+>>                          REG_UTP_TASK_REQ_LIST_BASE_L);
+>>          ufshcd_writel(hba, upper_32_bits(hba->utmrdl_dma_addr),
+>> @@ -5320,6 +5323,32 @@ static void ufshcd_release_scsi_cmd(struct
+>> ufs_hba *hba,
+>>          ufshcd_clk_scaling_update_busy(hba);
+>>   }
+>>   
+>> +void ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag)
+> 
+> This function does only complete one task. What does cqe stand for?
+> 
+CQE - Completion Queue Entry. The term 'task' is used for TM commands in 
+scsi, hence there was a comment to change it to CQE.
 
-Error/Warning: (recently discovered and may have been fixed)
+>> +{
+>> +       struct ufshcd_lrb *lrbp;
+>> +       struct scsi_cmnd *cmd;
+>> +
+>> +       lrbp = &hba->lrb[task_tag];
+>> +       lrbp->compl_time_stamp = ktime_get();
+>> +       cmd = lrbp->cmd;
+>> +       if (cmd) {
+>> +               if (unlikely(ufshcd_should_inform_monitor(hba,
+>> lrbp)))
+>> +                       ufshcd_update_monitor(hba, lrbp);
+>> +               ufshcd_add_command_trace(hba, lrbp, UFS_CMD_COMP);
+>> +               cmd->result = ufshcd_transfer_rsp_status(hba, lrbp);
+>> +               ufshcd_release_scsi_cmd(hba, lrbp);
+>> +               /* Do not touch lrbp after scsi done */
+>> +               scsi_done(cmd);
+>> +       } else if (lrbp->command_type == UTP_CMD_TYPE_DEV_MANAGE ||
+>> +                  lrbp->command_type == UTP_CMD_TYPE_UFS_STORAGE) {
+>> +               if (hba->dev_cmd.complete) {
+>> +                       ufshcd_add_command_trace(hba, lrbp,
+>> UFS_DEV_COMP);
+>> +                       complete(hba->dev_cmd.complete);
+>> +                       ufshcd_clk_scaling_update_busy(hba);
+>> +               }
+>> +       }
+>> +}
+>> +
+> 
+> 
+> Kind regards,
+> Bean
+> 
 
-ERROR: modpost: "__divdi3" [drivers/gpu/drm/vkms/vkms.ko] undefined!
-ERROR: modpost: "__udivdi3" [drivers/gpu/drm/vkms/vkms.ko] undefined!
-arm-linux-gnueabi-ld: vkms_formats.c:(.text+0x824): undefined reference to `__aeabi_ldivmod'
-arm-linux-gnueabi-ld: warning: orphan section `.data.rel.ro.local' from `arch/arm/boot/compressed/fdt.o' being placed in section `.data.rel.ro.local'
-arm-linux-gnueabi-ld: warning: orphan section `.data.rel.ro.local' from `arch/arm/boot/compressed/fdt_ro.o' being placed in section `.data.rel.ro.local'
-arm-linux-gnueabi-ld: warning: orphan section `.data.rel.ro.local' from `arch/arm/boot/compressed/fdt_rw.o' being placed in section `.data.rel.ro.local'
-arm-linux-gnueabi-ld: warning: orphan section `.data.rel.ro.local' from `arch/arm/boot/compressed/fdt_wip.o' being placed in section `.data.rel.ro.local'
-arm-linux-gnueabi-ld: warning: orphan section `.printk_index' from `arch/arm/boot/compressed/fdt.o' being placed in section `.printk_index'
-arm-linux-gnueabi-ld: warning: orphan section `.printk_index' from `arch/arm/boot/compressed/fdt_ro.o' being placed in section `.printk_index'
-arm-linux-gnueabi-ld: warning: orphan section `.printk_index' from `arch/arm/boot/compressed/fdt_rw.o' being placed in section `.printk_index'
-arm-linux-gnueabi-ld: warning: orphan section `.printk_index' from `arch/arm/boot/compressed/fdt_wip.o' being placed in section `.printk_index'
-drivers/base/regmap/regmap-mmio.c:221:17: error: implicit declaration of function 'writesb'; did you mean 'writeb'? [-Werror=implicit-function-declaration]
-drivers/base/regmap/regmap-mmio.c:224:17: error: implicit declaration of function 'writesw'; did you mean 'writew'? [-Werror=implicit-function-declaration]
-drivers/base/regmap/regmap-mmio.c:227:17: error: implicit declaration of function 'writesl'; did you mean 'writel'? [-Werror=implicit-function-declaration]
-drivers/base/regmap/regmap-mmio.c:231:17: error: implicit declaration of function 'writesq'; did you mean 'writeq'? [-Werror=implicit-function-declaration]
-drivers/base/regmap/regmap-mmio.c:231:17: error: implicit declaration of function 'writesq'; did you mean 'writesl'? [-Werror=implicit-function-declaration]
-drivers/base/regmap/regmap-mmio.c:358:17: error: implicit declaration of function 'readsb'; did you mean 'readb'? [-Werror=implicit-function-declaration]
-drivers/base/regmap/regmap-mmio.c:361:17: error: implicit declaration of function 'readsw'; did you mean 'readw'? [-Werror=implicit-function-declaration]
-drivers/base/regmap/regmap-mmio.c:364:17: error: implicit declaration of function 'readsl'; did you mean 'readl'? [-Werror=implicit-function-declaration]
-drivers/base/regmap/regmap-mmio.c:368:17: error: implicit declaration of function 'readsq'; did you mean 'readq'? [-Werror=implicit-function-declaration]
-drivers/base/regmap/regmap-mmio.c:368:17: error: implicit declaration of function 'readsq'; did you mean 'readsl'? [-Werror=implicit-function-declaration]
-drivers/clk/xilinx/clk-xlnx-clock-wizard.c:431: undefined reference to `devm_platform_ioremap_resource'
-drivers/gpu/drm/amd/amdgpu/imu_v11_0_3.c:139:6: warning: no previous prototype for 'imu_v11_0_3_program_rlc_ram' [-Wmissing-prototypes]
-drivers/gpu/drm/drm_atomic_helper.c:802: warning: expecting prototype for drm_atomic_helper_check_wb_connector_state(). Prototype was for drm_atomic_helper_check_wb_encoder_state() instead
-drivers/gpu/drm/vkms/vkms_plane.c:110 vkms_plane_atomic_update() warn: variable dereferenced before check 'fb' (see line 108)
-drivers/scsi/qla2xxx/qla_os.c:2854:23: warning: assignment to 'struct trace_array *' from 'int' makes pointer from integer without a cast [-Wint-conversion]
-fs/btrfs/volumes.c:6549 __btrfs_map_block() error: we previously assumed 'mirror_num_ret' could be null (see line 6376)
-include/linux/string.h:303:42: warning: 'strnlen' specified bound 4 exceeds source size 3 [-Wstringop-overread]
-kernel/bpf/memalloc.c:499 bpf_mem_alloc_destroy() error: potentially dereferencing uninitialized 'c'.
-ld: vkms_formats.c:(.text+0x3ba): undefined reference to `__divdi3'
-microblaze-linux-ld: vkms_formats.o:(.text+0xc74): undefined reference to `__divdi3'
-mips-linux-ld: vkms_formats.c:(.text+0x384): undefined reference to `__divdi3'
-mips-linux-ld: vkms_formats.c:(.text.argb_u16_to_RGB565+0xd0): undefined reference to `__divdi3'
-sound/soc/codecs/tas2562.c:442:13: warning: variable 'ret' set but not used [-Wunused-but-set-variable]
-vkms_formats.c:(.text+0x266): undefined reference to `__divdi3'
-vkms_formats.c:(.text+0x364): undefined reference to `__divdi3'
-vkms_formats.c:(.text+0x390): undefined reference to `__divdi3'
-vkms_formats.c:(.text+0x804): undefined reference to `__aeabi_ldivmod'
-vkms_formats.c:(.text.argb_u16_to_RGB565+0xb0): undefined reference to `__divdi3'
-vkms_formats.o:(.text+0xb28): undefined reference to `__divdi3'
-xtensa-linux-ld: vkms_formats.c:(.text+0x560): undefined reference to `__divdi3'
-
-Error/Warning ids grouped by kconfigs:
-
-gcc_recent_errors
-|-- alpha-allyesconfig
-|   |-- drivers-base-regmap-regmap-mmio.c:error:implicit-declaration-of-function-readsb
-|   |-- drivers-base-regmap-regmap-mmio.c:error:implicit-declaration-of-function-readsl
-|   |-- drivers-base-regmap-regmap-mmio.c:error:implicit-declaration-of-function-readsq
-|   |-- drivers-base-regmap-regmap-mmio.c:error:implicit-declaration-of-function-readsw
-|   |-- drivers-base-regmap-regmap-mmio.c:error:implicit-declaration-of-function-writesb
-|   |-- drivers-base-regmap-regmap-mmio.c:error:implicit-declaration-of-function-writesl
-|   |-- drivers-base-regmap-regmap-mmio.c:error:implicit-declaration-of-function-writesq
-|   |-- drivers-base-regmap-regmap-mmio.c:error:implicit-declaration-of-function-writesw
-|   |-- drivers-gpu-drm-amd-amdgpu-imu_v11_0_3.c:warning:no-previous-prototype-for-imu_v11_0_3_program_rlc_ram
-|   |-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|   |-- drivers-scsi-qla2xxx-qla_os.c:warning:assignment-to-struct-trace_array-from-int-makes-pointer-from-integer-without-a-cast
-|   `-- sound-soc-codecs-tas2562.c:warning:variable-ret-set-but-not-used
-|-- alpha-randconfig-r015-20220907
-|   |-- drivers-base-regmap-regmap-mmio.c:error:implicit-declaration-of-function-readsb
-|   |-- drivers-base-regmap-regmap-mmio.c:error:implicit-declaration-of-function-readsl
-|   |-- drivers-base-regmap-regmap-mmio.c:error:implicit-declaration-of-function-readsq
-|   |-- drivers-base-regmap-regmap-mmio.c:error:implicit-declaration-of-function-readsw
-|   |-- drivers-base-regmap-regmap-mmio.c:error:implicit-declaration-of-function-writesb
-|   |-- drivers-base-regmap-regmap-mmio.c:error:implicit-declaration-of-function-writesl
-|   |-- drivers-base-regmap-regmap-mmio.c:error:implicit-declaration-of-function-writesq
-|   `-- drivers-base-regmap-regmap-mmio.c:error:implicit-declaration-of-function-writesw
-|-- arc-allyesconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-imu_v11_0_3.c:warning:no-previous-prototype-for-imu_v11_0_3_program_rlc_ram
-|   |-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|   `-- sound-soc-codecs-tas2562.c:warning:variable-ret-set-but-not-used
-|-- arc-randconfig-r001-20220907
-|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|-- arm-allyesconfig
-|   |-- arm-linux-gnueabi-ld:vkms_formats.c:(.text):undefined-reference-to-__aeabi_ldivmod
-|   |-- drivers-gpu-drm-amd-amdgpu-imu_v11_0_3.c:warning:no-previous-prototype-for-imu_v11_0_3_program_rlc_ram
-|   |-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|   |-- sound-soc-codecs-tas2562.c:warning:variable-ret-set-but-not-used
-|   `-- vkms_formats.c:(.text):undefined-reference-to-__aeabi_ldivmod
-|-- arm-buildonly-randconfig-r006-20220907
-|   |-- arm-linux-gnueabi-ld:warning:orphan-section-data.rel.ro.local-from-arch-arm-boot-compressed-fdt.o-being-placed-in-section-.data.rel.ro.local
-|   |-- arm-linux-gnueabi-ld:warning:orphan-section-data.rel.ro.local-from-arch-arm-boot-compressed-fdt_ro.o-being-placed-in-section-.data.rel.ro.local
-|   |-- arm-linux-gnueabi-ld:warning:orphan-section-data.rel.ro.local-from-arch-arm-boot-compressed-fdt_rw.o-being-placed-in-section-.data.rel.ro.local
-|   |-- arm-linux-gnueabi-ld:warning:orphan-section-data.rel.ro.local-from-arch-arm-boot-compressed-fdt_wip.o-being-placed-in-section-.data.rel.ro.local
-|   |-- arm-linux-gnueabi-ld:warning:orphan-section-printk_index-from-arch-arm-boot-compressed-fdt.o-being-placed-in-section-.printk_index
-|   |-- arm-linux-gnueabi-ld:warning:orphan-section-printk_index-from-arch-arm-boot-compressed-fdt_ro.o-being-placed-in-section-.printk_index
-|   |-- arm-linux-gnueabi-ld:warning:orphan-section-printk_index-from-arch-arm-boot-compressed-fdt_rw.o-being-placed-in-section-.printk_index
-|   `-- arm-linux-gnueabi-ld:warning:orphan-section-printk_index-from-arch-arm-boot-compressed-fdt_wip.o-being-placed-in-section-.printk_index
-|-- arm-defconfig
-|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|-- arm64-allyesconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-imu_v11_0_3.c:warning:no-previous-prototype-for-imu_v11_0_3_program_rlc_ram
-|   |-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|   `-- sound-soc-codecs-tas2562.c:warning:variable-ret-set-but-not-used
-|-- arm64-randconfig-r033-20220907
-clang_recent_errors
-|-- i386-randconfig-a006
-|   `-- ld.lld:error:undefined-symbol:__udivdi3
-|-- i386-randconfig-a013
-|   `-- ld.lld:error:undefined-symbol:__udivdi3
-|-- powerpc-randconfig-r013-20220907
-|   `-- drivers-extcon-extcon-usbc-tusb320.c:warning:expecting-prototype-for-drivers-extcon-extcon-tusb320c().-Prototype-was-for-TUSB320_REG8()-instead
-`-- riscv-randconfig-r021-20220907
-    `-- drivers-extcon-extcon-usbc-tusb320.c:warning:expecting-prototype-for-drivers-extcon-extcon-tusb320c().-Prototype-was-for-TUSB320_REG8()-instead
-
-elapsed time: 723m
-
-configs tested: 35
-configs skipped: 2
-
-gcc tested configs:
-um                             i386_defconfig
-um                           x86_64_defconfig
-i386                                defconfig
-x86_64                    rhel-8.3-kselftests
-x86_64                          rhel-8.3-func
-x86_64                              defconfig
-arc                  randconfig-r043-20220907
-x86_64                         rhel-8.3-kunit
-x86_64                           rhel-8.3-kvm
-x86_64                               rhel-8.3
-x86_64                           rhel-8.3-syz
-x86_64                        randconfig-a013
-x86_64                           allyesconfig
-x86_64                        randconfig-a011
-x86_64                        randconfig-a004
-m68k                             allyesconfig
-arm                                 defconfig
-m68k                             allmodconfig
-alpha                            allyesconfig
-powerpc                           allnoconfig
-arc                              allyesconfig
-ia64                             allmodconfig
-arm                              allyesconfig
-arm64                            allyesconfig
-sh                               allmodconfig
-mips                             allyesconfig
-powerpc                          allmodconfig
-i386                             allyesconfig
-
-clang tested configs:
-hexagon              randconfig-r041-20220907
-riscv                randconfig-r042-20220907
-hexagon              randconfig-r045-20220907
-s390                 randconfig-r044-20220907
-i386                          randconfig-a013
-i386                          randconfig-a006
-x86_64                          rhel-8.3-rust
-
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
