@@ -2,38 +2,38 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E103C54EE9
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 12:24:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98B3CC38145
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 12:26:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231706AbiIHMY5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Sep 2022 08:24:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48168 "EHLO
+        id S231737AbiIHM0C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Sep 2022 08:26:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55826 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231744AbiIHMYm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2022 08:24:42 -0400
-Received: from bg4.exmail.qq.com (bg4.exmail.qq.com [43.155.67.158])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 189132F3BC;
-        Thu,  8 Sep 2022 05:24:39 -0700 (PDT)
-X-QQ-mid: bizesmtp91t1662639866twn5qpkl
+        with ESMTP id S231576AbiIHM0B (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2022 08:26:01 -0400
+Received: from bg4.exmail.qq.com (bg4.exmail.qq.com [43.154.221.58])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51BF8C59CB;
+        Thu,  8 Sep 2022 05:25:58 -0700 (PDT)
+X-QQ-mid: bizesmtp79t1662639947th9pafrx
 Received: from localhost.localdomain ( [182.148.14.0])
         by bizesmtp.qq.com (ESMTP) with 
-        id ; Thu, 08 Sep 2022 20:24:24 +0800 (CST)
+        id ; Thu, 08 Sep 2022 20:25:46 +0800 (CST)
 X-QQ-SSF: 0100000000200090C000B00A0000000
-X-QQ-FEAT: D6RqbDSxuq4EWm4mj5Jkr816U6oKErZvKJVT9g0PL9ZWubgTTrxBT3LbAyMmH
-        vynW1jFrMl8b8c/DR1z7uLgLtqssN+oJxi0ReeIL9+CIb/caGIvaGN3xCtb3iK8qzywac4E
-        IR2ymYZXfjSbC6kfcTx+CDZf7z92KYfnpqf0kceq0eAoFaxgEvHvbszZC1ebaGjmGdQgho5
-        xd5bX+rcc0RD3Su2TPukh46CLi0KwKF51cOiOUdLZiys/ES7f0eL0hdcW4ZSCVQRHg4wplD
-        SGk+cg46eLnpMic/kULVwIyQpESsyahHXC2ar/yS4c1OOtMdUq6ysz2yMdHaNwLmNnWQkP2
-        m7v+/Qn6gkfiWtjB+WlNaM808DIVK8KPWkQ8KEK1ngIJ7u1d8/R7vzrA5X//w==
+X-QQ-FEAT: LG+NUo/f6sH17zbjV4I0WjCDUKCcmxd2yaCeECp/PwM5GxfX4RCLbyJnPKwWC
+        IcH5g3/u41AhlcnSvBHheBhiy30Kw2jbpXngQ/wzlh3sp0xV+ZUjdQ+7Op6UCbA1UbmYH1z
+        Lz4Djiz4/e+iKCSNoQKrA9tP847EuWoVrp48GNtNkEmrDgDU9zlb0gjZ8LY7tMS3l839S7X
+        t/Zprnj2jBp40XL3sf6s0hcBUl7eewGR1jOHhfDc+tVUZ7V6Rql71+kOy++uIoifooBmHs6
+        DXDQrSjrZ8S1Rxm5tjIVJXz5WTruskW3JGYVELaCidfejGxLlceom7DOsFMcOPw8ifGcPoo
+        ReZe7me9VpANwLlvVrjSrilxZIuEVfFs/SDB5Ra9C2yBPr+HLw=
 X-QQ-GoodBg: 0
 From:   wangjianli <wangjianli@cdjrlc.com>
-To:     oliver@neukum.org, aliakc@web.de, lenehan@twibble.org,
+To:     james.smart@broadcom.com, dick.kennedy@broadcom.com,
         jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     dc395x@twibble.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, wangjianli <wangjianli@cdjrlc.com>
-Subject: [PATCH] drivers/scsi: fix repeated words in comments
-Date:   Thu,  8 Sep 2022 20:24:18 +0800
-Message-Id: <20220908122418.11728-1-wangjianli@cdjrlc.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        wangjianli <wangjianli@cdjrlc.com>
+Subject: [PATCH] scsi/lpfc: fix repeated words in comments
+Date:   Thu,  8 Sep 2022 20:25:38 +0800
+Message-Id: <20220908122538.12317-1-wangjianli@cdjrlc.com>
 X-Mailer: git-send-email 2.36.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -47,22 +47,22 @@ Delete the redundant word 'in'.
 
 Signed-off-by: wangjianli <wangjianli@cdjrlc.com>
 ---
- drivers/scsi/dc395x.c | 2 +-
+ drivers/scsi/lpfc/lpfc_ct.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
-index 670a836a6ba1..aea82007dd61 100644
---- a/drivers/scsi/dc395x.c
-+++ b/drivers/scsi/dc395x.c
-@@ -4226,7 +4226,7 @@ static void adapter_init_params(struct AdapterCtlBlk *acb)
-  * values that we have already stored in the adapter instance. There's
-  * some mention that a lot of these are deprecated, so we won't use
-  * them (we'll use the ones in the adapter instance) but we'll fill
-- * them in in case something else needs them.
-+ * them in case something else needs them.
-  *
-  * The eeprom structure, irq and io ports in the adapter need to have
-  * been set before calling this function.
+diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+index b555ccb5ae34..75eaac273a89 100644
+--- a/drivers/scsi/lpfc/lpfc_ct.c
++++ b/drivers/scsi/lpfc/lpfc_ct.c
+@@ -889,7 +889,7 @@ lpfc_ns_rsp(struct lpfc_vport *vport, struct lpfc_dmabuf *mp, uint8_t fc4_type,
+ 	}
+ 
+ 	/* All GID_FT entries processed.  If the driver is running in
+-	 * in target mode, put impacted nodes into recovery and drop
++	 * target mode, put impacted nodes into recovery and drop
+ 	 * the RPI to flush outstanding IO.
+ 	 */
+ 	if (vport->phba->nvmet_support) {
 -- 
 2.36.1
 
