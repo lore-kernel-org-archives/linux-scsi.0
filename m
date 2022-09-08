@@ -2,147 +2,148 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CD1EC38145
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 12:41:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86E21C54EE9
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 12:42:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231928AbiIHMlw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Sep 2022 08:41:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60906 "EHLO
+        id S231979AbiIHMmB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Sep 2022 08:42:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60548 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231927AbiIHMlf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2022 08:41:35 -0400
-Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD337E5838
-        for <linux-scsi@vger.kernel.org>; Thu,  8 Sep 2022 05:41:27 -0700 (PDT)
-Received: by mail-pj1-x102a.google.com with SMTP id fv3so11535949pjb.0
-        for <linux-scsi@vger.kernel.org>; Thu, 08 Sep 2022 05:41:27 -0700 (PDT)
+        with ESMTP id S231913AbiIHMlt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2022 08:41:49 -0400
+Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55BFFE620F
+        for <linux-scsi@vger.kernel.org>; Thu,  8 Sep 2022 05:41:30 -0700 (PDT)
+Received: by mail-pl1-x633.google.com with SMTP id f24so17743784plr.1
+        for <linux-scsi@vger.kernel.org>; Thu, 08 Sep 2022 05:41:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date;
-        bh=b5vDrWo6iGBaLBDiG+7DhbGO2eN47CGSvmCRNshTjBs=;
-        b=QyKaSFtoltNN7tFBToDWudYbilNX69fH8srHhpj7YP49b0ALLxhMYswBK+jusfORuK
-         xTmKNMdU+WRC4rR7EgeO2LzviR8cS1QR1KzL2+KnRMCLabx5Z+svuNhLTRte4SG6rGZs
-         WWJZzH4GaC4/y3DgygcUEwkKvZektr2vLkyTs=
+        bh=DgkPzch0GJaaX4latt/og8QbRMzv6ceAAwTJCl3C6eA=;
+        b=V5L2uQ7apYIGFmxX1ies6p4JfIX+jR1l7eVEi1k5Ki1K5gMhAWW0AsEGkdUq10oNch
+         +LUJItDf/FXC8kEy55tpVk2Gor7SZTa9Q5rIBYvvGhIwasKK2Tm2r/9yYvvJjJApbZLE
+         soYeJzvSWFLy4/rO02DE6p0GiZYYeAkgx8kmc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date;
-        bh=b5vDrWo6iGBaLBDiG+7DhbGO2eN47CGSvmCRNshTjBs=;
-        b=hSDLe3VvAEOLqUNelvd8XzGHV0XOt6oK5dG/jcjOFLP9biDaThyNxkTQItsfSAi+qR
-         yMDsH4DMmVxGw5Z7MTzqFRyP8tmAGy81Nymg3LHL3/dEMViqSfauwnZMVvdQRjCfDnrC
-         twG+dkUt9wjdzw0OeQjgvHsagRjvx61p6cuVzYzYUi8jFNvyJxIMRG3qIoQpM8hHYtdU
-         vDRn/8ofaAYrHeYvhnxwfH4mqZvR0FnPHajOni6VuqABZzx+aLe66/FaK5hxZIImp+LU
-         tuAKSk3MI8WQspbAFOwvQ1SSlOsI6UEHCdkm+DFLg7iiwzCvgty0KMbvE9YuMaIRl72J
-         AvGw==
-X-Gm-Message-State: ACgBeo2OZUXBncBIuQIMPzpXfVA+YNMwhB/HodVKO+6iDDpD9ymxmVlD
-        JgZtQMnEPNKV+0LdG0gXB3NbnJ1L29NPvsH+COWdI3qD1rraF+U5jrcChD22IIWMcIBrTWchxzN
-        sne6G6a/qDCLF9xUDJlRmDbtl4zrfOXxeCV6ejbfNYeACOU2GxXe1s+D5STelOKkTnxUOJEqFbO
-        MS59wILBCn
-X-Google-Smtp-Source: AA6agR7LJ/n2MY8g9+uWaqV21gBOj/tnexfRVS+0Ar0h7KPWWdddqude/e3WojIRmuWXaSvPnEnCbw==
-X-Received: by 2002:a17:90b:507:b0:1fd:9b50:d5de with SMTP id r7-20020a17090b050700b001fd9b50d5demr3956582pjz.178.1662640886762;
-        Thu, 08 Sep 2022 05:41:26 -0700 (PDT)
+        bh=DgkPzch0GJaaX4latt/og8QbRMzv6ceAAwTJCl3C6eA=;
+        b=NCdyOya4WTemJnKxaKTiKiBqpuGWNfMu1dwQgVIi1ng4YzENQf4tkup8xM1xTxR9ar
+         MmpA5/PiYc48Xoq4Wd9gz2OSi8hu6j8b+ucI9vK8ATMYgaDfQpkttqL45n0X8AUQ7iGF
+         kGrZnVP+FbE0BHMZiaDnzcqcBn2qUJYQk7ZnPnaQxEgb4q66L16QWm0aEmH7So/iwHzc
+         SomjRf85K0ZHsOHkXOFFZWAWIS27n9hJFDxFvC6v2Xve+5sAE8i3r37be7yh9kXN7S2M
+         C1yoesGFPL1NnnlnkuVZcpTmMfE2szUd1rknOKULUhIIo/V5WG7eGQj3qYOJyBv/Hdry
+         0GgA==
+X-Gm-Message-State: ACgBeo3kKjJUmvm+5RCfIJzHkUlR5i9UkCdERz37g5f42sXget3oDTxV
+        BqAMfWcNV6HB7HqhwHqCT+/zh2rLEVehp3rYRHl77uCQ47+NNnTIuVURzFYCas4PNCSqwQOpbRE
+        aUwSuwuG/w0vbUXyihBIbkWjBRcihO130USy1c5Glgt8uYUxn+hx/x1+X/zfXT1+/cqMR14aAQR
+        Ra/9RLUYMZ
+X-Google-Smtp-Source: AA6agR7lDpHqT0h6GZydxmUNw4IdluktwvMc3YpNMWJeEjgYYZXGsEZsSJiSpgWr7gLAK1A12p+Bug==
+X-Received: by 2002:a17:90b:2704:b0:1fd:aaa9:6d0b with SMTP id px4-20020a17090b270400b001fdaaa96d0bmr4031187pjb.128.1662640889079;
+        Thu, 08 Sep 2022 05:41:29 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id c17-20020a63ef51000000b0043395af24f6sm11106807pgk.25.2022.09.08.05.41.25
+        by smtp.gmail.com with ESMTPSA id c17-20020a63ef51000000b0043395af24f6sm11106807pgk.25.2022.09.08.05.41.27
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 08 Sep 2022 05:41:26 -0700 (PDT)
+        Thu, 08 Sep 2022 05:41:28 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 6/9] mpi3mr: Free enclosure objects during driver unload
-Date:   Thu,  8 Sep 2022 18:23:29 +0530
-Message-Id: <20220908125332.21110-7-sreekanth.reddy@broadcom.com>
+Subject: [PATCH 7/9] mpi3mr: Scan the devices during resume time
+Date:   Thu,  8 Sep 2022 18:23:30 +0530
+Message-Id: <20220908125332.21110-8-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20220908125332.21110-1-sreekanth.reddy@broadcom.com>
 References: <20220908125332.21110-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000792c9705e829bfe1"
+        boundary="0000000000009ca7f705e829bf3d"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000792c9705e829bfe1
+--0000000000009ca7f705e829bf3d
 Content-Transfer-Encoding: 8bit
 
-Free the enclosure device objects during driver unload and
-before rescanning the target devices during controller reset.
+Scan the target devices during system resume time and
+add or remove the target device with the SML if the
+corresponding target device is newly added or removed
+respectively.
 
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr.h    |  1 +
- drivers/scsi/mpi3mr/mpi3mr_fw.c |  4 ++++
- drivers/scsi/mpi3mr/mpi3mr_os.c | 19 +++++++++++++++++++
- 3 files changed, 24 insertions(+)
+ drivers/scsi/mpi3mr/mpi3mr.h    | 2 ++
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 8 +++-----
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 4 ++++
+ 3 files changed, 9 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 0eb0647..883ed59 100644
+index 883ed59..5b10504 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr.h
 +++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -1392,4 +1392,5 @@ void mpi3mr_refresh_expanders(struct mpi3mr_ioc *mrioc);
- void mpi3mr_add_event_wait_for_device_refresh(struct mpi3mr_ioc *mrioc);
- void mpi3mr_flush_drv_cmds(struct mpi3mr_ioc *mrioc);
- void mpi3mr_flush_cmds_for_unrecovered_controller(struct mpi3mr_ioc *mrioc);
-+void mpi3mr_free_enclosure_list(struct mpi3mr_ioc *mrioc);
- #endif /*MPI3MR_H_INCLUDED*/
+@@ -132,6 +132,8 @@ extern atomic64_t event_counter;
+ 
+ #define MPI3MR_DEFAULT_CFG_PAGE_SZ		1024 /* in bytes */
+ 
++#define MPI3MR_RESET_TOPOLOGY_SETTLE_TIME	10
++
+ #define MPI3MR_SCMD_TIMEOUT    (60 * HZ)
+ #define MPI3MR_EH_SCMD_TIMEOUT (60 * HZ)
+ 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 5447fda..1289bbe 100644
+index 1289bbe..ad78b9b 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -4247,6 +4247,8 @@ void mpi3mr_free_mem(struct mpi3mr_ioc *mrioc)
- 	u16 i;
- 	struct mpi3mr_intr_info *intr_info;
+@@ -4039,10 +4039,8 @@ retry_init:
+ 		goto out_failed;
+ 	}
  
-+	mpi3mr_free_enclosure_list(mrioc);
-+
- 	if (mrioc->sense_buf_pool) {
- 		if (mrioc->sense_buf)
- 			dma_pool_free(mrioc->sense_buf_pool, mrioc->sense_buf,
-@@ -4894,6 +4896,8 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
- 	mpi3mr_flush_host_io(mrioc);
- 	mpi3mr_cleanup_fwevt_list(mrioc);
- 	mpi3mr_invalidate_devhandles(mrioc);
-+	mpi3mr_free_enclosure_list(mrioc);
-+
- 	if (mrioc->prepare_for_reset) {
- 		mrioc->prepare_for_reset = 0;
- 		mrioc->prepare_for_reset_timeout_counter = 0;
+-	if (!is_resume) {
+-		mrioc->device_refresh_on = 1;
+-		mpi3mr_add_event_wait_for_device_refresh(mrioc);
+-	}
++	mrioc->device_refresh_on = 1;
++	mpi3mr_add_event_wait_for_device_refresh(mrioc);
+ 
+ 	ioc_info(mrioc, "sending port enable\n");
+ 	retval = mpi3mr_issue_port_enable(mrioc, 1);
+@@ -4909,7 +4907,7 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
+ 		    mrioc->name, reset_reason);
+ 		goto out;
+ 	}
+-	ssleep(10);
++	ssleep(MPI3MR_RESET_TOPOLOGY_SETTLE_TIME);
+ 
+ out:
+ 	if (!retval) {
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index a5b6402..bb276b5 100644
+index bb276b5..f474c56 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -1334,6 +1334,25 @@ out:
- 		mpi3mr_tgtdev_put(tgtdev);
- }
+@@ -5228,13 +5228,17 @@ mpi3mr_resume(struct device *dev)
+ 	}
  
-+/**
-+ * mpi3mr_free_enclosure_list - release enclosures
-+ * @mrioc: Adapter instance reference
-+ *
-+ * Free memory allocated during encloure add.
-+ *
-+ * Return nothing.
-+ */
-+void mpi3mr_free_enclosure_list(struct mpi3mr_ioc *mrioc)
-+{
-+	struct mpi3mr_enclosure_node *enclosure_dev, *enclosure_dev_next;
-+
-+	list_for_each_entry_safe(enclosure_dev,
-+	    enclosure_dev_next, &mrioc->enclosure_list, list) {
-+		list_del(&enclosure_dev->list);
-+		kfree(enclosure_dev);
-+	}
-+}
-+
- /**
-  * mpi3mr_enclosure_find_by_handle - enclosure search by handle
-  * @mrioc: Adapter instance reference
+ 	mrioc->stop_drv_processing = 0;
++	mpi3mr_invalidate_devhandles(mrioc);
++	mpi3mr_free_enclosure_list(mrioc);
+ 	mpi3mr_memset_buffers(mrioc);
+ 	r = mpi3mr_reinit_ioc(mrioc, 1);
+ 	if (r) {
+ 		ioc_err(mrioc, "resuming controller failed[%d]\n", r);
+ 		return r;
+ 	}
++	ssleep(MPI3MR_RESET_TOPOLOGY_SETTLE_TIME);
+ 	scsi_unblock_requests(shost);
++	mrioc->device_refresh_on = 0;
+ 	mpi3mr_start_watchdog(mrioc);
+ 
+ 	return 0;
 -- 
 2.27.0
 
 
---000000000000792c9705e829bfe1
+--0000000000009ca7f705e829bf3d
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -213,13 +214,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIJe6qAPx7OSgC9DSXTEQ
-UkpJzJQyRomnxt7MmD0ZUiiTMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDkwODEyNDEyN1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIHMbAi+cmYXk7b/0ZirP
+GSJFQbzgjQ/JUCbMbuuQKWFnMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDkwODEyNDEyOVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBudTyuuH+SpUhsXz1OIEyU30nf9afGdUch02eq
-6PyU5fcuf/I537TVqyxUWjHsAGAFOOr60/eNd2gC0RhVwNtyREIoFizPUz8zvvmLjdhJShx5YuH/
-63CFTAhRJ/eu0QebnxzSeur88kpTchyR1gHhDxC+bdqxo8/yVnyQ4S3cSzE5HQFHAngC2hQ60DWg
-RcEaIUyoQACRKkbEks7MqbAH5ydbI4Q8fWJ3Gmm5exiOhFCaw678wHawL7hyMMQoG1aMta+fWhiQ
-5zNbAFrDbl5V5DpdLBXXEiVQuz0FNAFDsALrGhfIIqJJvD5zTIbOBAR/jLpOu0mQoVxJDACSi9di
---000000000000792c9705e829bfe1--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQAeVm7plxnVC8JvXVQ25G0LUbb61KYNKc0zVbCs
+u5tAXSOjJ/ws/kAcj88MXtoZML9R3QkBvsxUE1u1/E3oCww6docw26DRz6zKt3YK6BFkhUY5H3jL
+HQb01Iw9Xg5Khe75bN10xVEbRAu+w3A1skSy6HrWY5fqXWbOAeYqIbTBgtYt+n27vcMccjjdtlJv
+jeZeFU0f6m2W613NvtXziBKsKH9u9x/AGmPZxIhfhqEpGfEOyXLc2ToGuU8JW2fQOgHQZUJxb+As
+1OmRDkr9OZOWP9CT7/B4antPMK87m2g0lpBmHTfduPJBpu6Rq+j7xFu5rvlhcOE2Xrk4Th1oItOc
+--0000000000009ca7f705e829bf3d--
