@@ -2,189 +2,151 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C6D4C38145
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 12:41:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67479C54EE9
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 12:41:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231889AbiIHMlY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Sep 2022 08:41:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60438 "EHLO
+        id S231899AbiIHMlf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Sep 2022 08:41:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60516 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231867AbiIHMlV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2022 08:41:21 -0400
-Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35111C6EB8
-        for <linux-scsi@vger.kernel.org>; Thu,  8 Sep 2022 05:41:20 -0700 (PDT)
-Received: by mail-pl1-x62c.google.com with SMTP id iw17so11072790plb.0
-        for <linux-scsi@vger.kernel.org>; Thu, 08 Sep 2022 05:41:20 -0700 (PDT)
+        with ESMTP id S231904AbiIHMlX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2022 08:41:23 -0400
+Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 177FDD076C
+        for <linux-scsi@vger.kernel.org>; Thu,  8 Sep 2022 05:41:22 -0700 (PDT)
+Received: by mail-pl1-x635.google.com with SMTP id t3so12644641ply.2
+        for <linux-scsi@vger.kernel.org>; Thu, 08 Sep 2022 05:41:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date;
-        bh=h1dxwDuMZd2O5oc8n0W+zvdyekt9HoR9nJ2NBcHcz38=;
-        b=bhluyEN0tL/zuqEiqZzwyJEx68ABmfKH94eUW+FSXUYXfRigPFRSTu7qf+9/ZJ2LnA
-         gzFkj+aNmSNEberls0ca2MEa67hWMiM063nm6IXMaTZzK+MZ+cS2CuHKXWvqCIBHZG0m
-         /WCYA/57FugEja27NDe9BpjxngOg18x71u6Ys=
+        bh=FQ98sBpGcvy+EEwifOpxCNgdcwc2Mdk46wztXTap1zE=;
+        b=QbUy2ZNJ++y1IZFMQXZi8usvYIcFc00/DkL8XzuwZWSQTv/1aMHXRiEwqARArVzRyW
+         H/bplcASLhoMnuRpl6cnbxUZ7sKsV9Y/SdHtDPKVwhUITfa0/PGGkJ9g9zCkavVc0HSV
+         6cyD5U9jxEx7CDVE5rOwxRp7OgkNCK9nlD55M=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date;
-        bh=h1dxwDuMZd2O5oc8n0W+zvdyekt9HoR9nJ2NBcHcz38=;
-        b=L0UquzH/YaStO/paG4nAictAZ1j8nYWBr7GvjQpQqCOZpYNmmsHXPSs2J1EHPOcNqY
-         /Kth75uiPv8z2deRpODneJo45rcE+1yxQc86ARRzwnVtqg8/cnlc+tunmOKIivlYEoQT
-         lp+mVpuSlAvi+lkAVwuQzyHgxafvuLaFVnQYONsOkjzGkQcZZGkvIbn3/M/svmD99GEi
-         XEbK+K/1L/WD4EjXDjInynaYUbg5bBQJN/CVjwyEm5HHCT5+X2rSUzMavswtsrlUgXfe
-         dPK+29rOicNdDR1uqDO8lAlsnxHyghSp5AUj13AoeRDePtmIWog+dcw9EA92oZvWI612
-         BHDg==
-X-Gm-Message-State: ACgBeo1jyQ0TkgmLjEZ8Ej2dnLTpXmI6kQdQvKPb1sMagCeyiaWCFYcy
-        ty0Bm4KbKhXTu0hHUJxAWCWPrbtQifPuSKmOUsQP+Ok6C1a0JCBOOcEfy9uMwpH+yRu/E9+evyy
-        G0agiatpT8QU0vjULahswXXDt8Xx48PkXHCcZgoZiXsNDAA16+TeebE6hZCyphEICoGKrFA9Q94
-        5+2QBvJgo4
-X-Google-Smtp-Source: AA6agR4thqZz1u+wu9AITSFt75MRefVqBRGqo03x3OPn8nM7c/r0X2fEGHdAdzncA1swOZJI9WTP/w==
-X-Received: by 2002:a17:90b:4d92:b0:1fd:aec0:1c26 with SMTP id oj18-20020a17090b4d9200b001fdaec01c26mr3984777pjb.133.1662640879197;
-        Thu, 08 Sep 2022 05:41:19 -0700 (PDT)
+        bh=FQ98sBpGcvy+EEwifOpxCNgdcwc2Mdk46wztXTap1zE=;
+        b=m+AQgIOvsgbMJfu1IDMuY1zow0ukAZap6dZNtKUjhrQwcCpzIED5f/B4raCz2d4094
+         a6G9Ni57yo2m0afGDNSCsD/1+kT9eLFJ1HdMnHB6SSm2AM31I7cK7fqo4y2yf+RrsbJa
+         ajEf1mn9D+eUJpX1B3W7hiJktkPF/Rra5qeecoGmYI4YqiDr0X9JYCBMV/QzVz0cx1Gw
+         Txhj7NFOjr1niMbMJraiHj10/rRX80wYNtL3ki8wUypNgQmEjl0O6AXmV01h5/XAn9/k
+         OuFkLGEL4SENkoxfkU7t/tpNFqwZiU11Y+1QAg4oHfpVYlAJgOazR7xdoL0ZArxJsQ9S
+         Ow8g==
+X-Gm-Message-State: ACgBeo0qdErXyBvc+1NzRwZuwmgvrCpbVsNUmELw+ymuoLG/nBGssb4J
+        mcE+xY/6sCEEAqvYs6/4Sx7fS/oNcvgg3MnCFXWsUVUQ7hs75SN61Bv7REqCpjvdz9lQrQkk9rt
+        hBqAwsvq2qluLYAEDk2lq6pL45dzeZuPzrUdoT0JoVcpyrONdInFsc9Fpbn9vupGl5F555wFqoj
+        l96FJQwiMh
+X-Google-Smtp-Source: AA6agR565BsHV/lscIKR/5q4B6UYzhiWZ1Uk4gNL7RbeQKvAFfH5s/qp9QzJnaejufwO5ZvsFVPSMw==
+X-Received: by 2002:a17:90b:38c1:b0:200:8f03:63d8 with SMTP id nn1-20020a17090b38c100b002008f0363d8mr4006489pjb.148.1662640881031;
+        Thu, 08 Sep 2022 05:41:21 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id c17-20020a63ef51000000b0043395af24f6sm11106807pgk.25.2022.09.08.05.41.17
+        by smtp.gmail.com with ESMTPSA id c17-20020a63ef51000000b0043395af24f6sm11106807pgk.25.2022.09.08.05.41.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 08 Sep 2022 05:41:18 -0700 (PDT)
+        Thu, 08 Sep 2022 05:41:20 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 2/9] mpi3mr: Support new power management framework
-Date:   Thu,  8 Sep 2022 18:23:25 +0530
-Message-Id: <20220908125332.21110-3-sreekanth.reddy@broadcom.com>
+Subject: [PATCH 3/9] mpi3mr: Schedule IRQ kthreads only on non-RT kernels
+Date:   Thu,  8 Sep 2022 18:23:26 +0530
+Message-Id: <20220908125332.21110-4-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20220908125332.21110-1-sreekanth.reddy@broadcom.com>
 References: <20220908125332.21110-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000059f3c05e829bfed"
+        boundary="00000000000022eb7f05e829bfda"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000059f3c05e829bfed
+--00000000000022eb7f05e829bfda
 Content-Transfer-Encoding: 8bit
 
-Switched to the new generic PCI PM (Power Management)
-framework. Also, removed unnecessary calls to the
-PCI Helper functions (such as pci_set_power_state(),
-pci_enable_wake(), pci_save_state(), pci_restore_state()
-etc).
+In RT kernels, the IRQ handler's code is executed as a
+kernel thread. So, the driver is modified not to explicitly
+schedule the IRQ kernel thread.
 
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr_os.c | 33 +++++++++++++--------------------
- 1 file changed, 13 insertions(+), 20 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 16 +++++++++++++++-
+ 1 file changed, 15 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 22f1a06..f1a6448 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -5094,22 +5094,21 @@ static void mpi3mr_shutdown(struct pci_dev *pdev)
- 	mpi3mr_cleanup_resources(mrioc);
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index cc700e2..78792f2 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -537,6 +537,7 @@ int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mrioc,
+ 		if ((le16_to_cpu(reply_desc->reply_flags) &
+ 		    MPI3_REPLY_DESCRIPT_FLAGS_PHASE_MASK) != exp_phase)
+ 			break;
++#ifndef CONFIG_PREEMPT_RT
+ 		/*
+ 		 * Exit completion loop to avoid CPU lockup
+ 		 * Ensure remaining completion happens from threaded ISR.
+@@ -545,7 +546,7 @@ int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mrioc,
+ 			op_reply_q->enable_irq_poll = true;
+ 			break;
+ 		}
+-
++#endif
+ 	} while (1);
+ 
+ 	writel(reply_ci,
+@@ -614,6 +615,8 @@ static irqreturn_t mpi3mr_isr_primary(int irq, void *privdata)
+ 		return IRQ_NONE;
  }
  
--#ifdef CONFIG_PM
- /**
-  * mpi3mr_suspend - PCI power management suspend callback
-- * @pdev: PCI device instance
-- * @state: New power state
-+ * @dev: Device struct
-  *
-  * Change the power state to the given value and cleanup the IOC
-  * by issuing MUR and shutdown notification
-  *
-  * Return: 0 always.
-  */
--static int mpi3mr_suspend(struct pci_dev *pdev, pm_message_t state)
-+static int __maybe_unused
-+mpi3mr_suspend(struct device *dev)
- {
-+	struct pci_dev *pdev = to_pci_dev(dev);
- 	struct Scsi_Host *shost = pci_get_drvdata(pdev);
- 	struct mpi3mr_ioc *mrioc;
--	pci_power_t device_state;
- 
- 	if (!shost)
- 		return 0;
-@@ -5123,27 +5122,26 @@ static int mpi3mr_suspend(struct pci_dev *pdev, pm_message_t state)
- 	mpi3mr_stop_watchdog(mrioc);
- 	mpi3mr_cleanup_ioc(mrioc);
- 
--	device_state = pci_choose_state(pdev, state);
--	ioc_info(mrioc, "pdev=0x%p, slot=%s, entering operating state [D%d]\n",
--	    pdev, pci_name(pdev), device_state);
--	pci_save_state(pdev);
-+	ioc_info(mrioc, "pdev=0x%p, slot=%s, entering operating state\n",
-+	    pdev, pci_name(pdev));
- 	mpi3mr_cleanup_resources(mrioc);
--	pci_set_power_state(pdev, device_state);
- 
- 	return 0;
- }
- 
- /**
-  * mpi3mr_resume - PCI power management resume callback
-- * @pdev: PCI device instance
-+ * @dev: Device struct
-  *
-  * Restore the power state to D0 and reinitialize the controller
-  * and resume I/O operations to the target devices
-  *
-  * Return: 0 on success, non-zero on failure
-  */
--static int mpi3mr_resume(struct pci_dev *pdev)
-+static int __maybe_unused
-+mpi3mr_resume(struct device *dev)
- {
-+	struct pci_dev *pdev = to_pci_dev(dev);
- 	struct Scsi_Host *shost = pci_get_drvdata(pdev);
- 	struct mpi3mr_ioc *mrioc;
- 	pci_power_t device_state = pdev->current_state;
-@@ -5156,9 +5154,6 @@ static int mpi3mr_resume(struct pci_dev *pdev)
- 
- 	ioc_info(mrioc, "pdev=0x%p, slot=%s, previous operating state [D%d]\n",
- 	    pdev, pci_name(pdev), device_state);
--	pci_set_power_state(pdev, PCI_D0);
--	pci_enable_wake(pdev, PCI_D0, 0);
--	pci_restore_state(pdev);
- 	mrioc->pdev = pdev;
- 	mrioc->cpu_count = num_online_cpus();
- 	r = mpi3mr_setup_resources(mrioc);
-@@ -5180,7 +5175,6 @@ static int mpi3mr_resume(struct pci_dev *pdev)
- 
- 	return 0;
- }
--#endif
- 
- static const struct pci_device_id mpi3mr_pci_id_table[] = {
- 	{
-@@ -5191,16 +5185,15 @@ static const struct pci_device_id mpi3mr_pci_id_table[] = {
- };
- MODULE_DEVICE_TABLE(pci, mpi3mr_pci_id_table);
- 
-+static SIMPLE_DEV_PM_OPS(mpi3mr_pm_ops, mpi3mr_suspend, mpi3mr_resume);
++#ifndef CONFIG_PREEMPT_RT
 +
- static struct pci_driver mpi3mr_pci_driver = {
- 	.name = MPI3MR_DRIVER_NAME,
- 	.id_table = mpi3mr_pci_id_table,
- 	.probe = mpi3mr_probe,
- 	.remove = mpi3mr_remove,
- 	.shutdown = mpi3mr_shutdown,
--#ifdef CONFIG_PM
--	.suspend = mpi3mr_suspend,
--	.resume = mpi3mr_resume,
--#endif
-+	.driver.pm = &mpi3mr_pm_ops,
- };
+ static irqreturn_t mpi3mr_isr(int irq, void *privdata)
+ {
+ 	struct mpi3mr_intr_info *intr_info = privdata;
+@@ -691,6 +694,8 @@ static irqreturn_t mpi3mr_isr_poll(int irq, void *privdata)
+ 	return IRQ_HANDLED;
+ }
  
- static ssize_t event_counter_show(struct device_driver *dd, char *buf)
++#endif
++
+ /**
+  * mpi3mr_request_irq - Request IRQ and register ISR
+  * @mrioc: Adapter instance reference
+@@ -713,8 +718,13 @@ static inline int mpi3mr_request_irq(struct mpi3mr_ioc *mrioc, u16 index)
+ 	snprintf(intr_info->name, MPI3MR_NAME_LENGTH, "%s%d-msix%d",
+ 	    mrioc->driver_name, mrioc->id, index);
+ 
++#ifndef CONFIG_PREEMPT_RT
+ 	retval = request_threaded_irq(pci_irq_vector(pdev, index), mpi3mr_isr,
+ 	    mpi3mr_isr_poll, IRQF_SHARED, intr_info->name, intr_info);
++#else
++	retval = request_threaded_irq(pci_irq_vector(pdev, index), mpi3mr_isr_primary,
++	    NULL, IRQF_SHARED, intr_info->name, intr_info);
++#endif
+ 	if (retval) {
+ 		ioc_err(mrioc, "%s: Unable to allocate interrupt %d!\n",
+ 		    intr_info->name, pci_irq_vector(pdev, index));
+@@ -2179,9 +2189,13 @@ int mpi3mr_op_request_post(struct mpi3mr_ioc *mrioc,
+ 		pi = 0;
+ 	op_req_q->pi = pi;
+ 
++#ifndef CONFIG_PREEMPT_RT
+ 	if (atomic_inc_return(&mrioc->op_reply_qinfo[reply_qidx].pend_ios)
+ 	    > MPI3MR_IRQ_POLL_TRIGGER_IOCOUNT)
+ 		mrioc->op_reply_qinfo[reply_qidx].enable_irq_poll = true;
++#else
++	atomic_inc_return(&mrioc->op_reply_qinfo[reply_qidx].pend_ios);
++#endif
+ 
+ 	writel(op_req_q->pi,
+ 	    &mrioc->sysif_regs->oper_queue_indexes[reply_qidx].producer_index);
 -- 
 2.27.0
 
 
---000000000000059f3c05e829bfed
+--00000000000022eb7f05e829bfda
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -255,13 +217,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIEM5P3GnAUSKZWdbIFa3
-EliCoAqA9HEV8iAC7kRkd0D+MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDkwODEyNDExOVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEINIMJaUdRIbpfcdAaFwl
+k4oPydcbiCBhP4YusJIGiCpOMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDkwODEyNDEyMVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQAKtKHmM4mctuR7NSGNDUV2Za4rtGAtXfRzvfVX
-tG2UXHWR//Locl8shSNGk3JuL7wQjE3Ii8g+XHNJluyw/7teSl5VWzW/cI/UpsVBoDpIy0BcOmJT
-blVvgM9fiHaHPhGEqdN0lIxrKQ77xazBTnA/h6M78EVp0EaL2hCS+vZ6USnqpxREw6rSPzW1j2Yl
-4mVlcL24bc59gI0ED/JGzfJxH49/OYkZUt5m71eNZgo+6Vm/Wf78kGAwnSwkb77vJ3bJw4R8JS6w
-tTjfmi+Lxb0Pucto/itF+RdMH2O0lS8Z0kI/h9DycTnTHeGfcjR6cp9oPrPYuT2V2NcFlDA8umyV
---000000000000059f3c05e829bfed--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCJloqmZMkw/nhcwsA3Gp2UUBxLI65EsAbo0mRZ
+LhFmaSEzw5wZunm+sBHEf7G4pynHva73FHbPy9vtnYv9KL4KoNXNDPPFyTGGzl3BdI7yf0yUZDFF
+eqi2GzaPvqhbRPTEnAuspBXfWHHI04Bt4aPMg/pkK41GIAFvVSjdPbQJndSNEU8xPLSCEg/neDaJ
+9a89HN9aFdVlD+ay0JDXsM1454jJpaYYowzEqMDlYZKAggVwkY3tsX+KeV2XURemKng/EqLLSFb/
+G6fAfW5YJjGMMATpefJpL0sbcLpwmD/350Y7I8eEP04m7JGztSl40Uq6SmG0YuSXP8MWpFw0EiX1
+--00000000000022eb7f05e829bfda--
