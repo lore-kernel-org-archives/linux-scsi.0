@@ -2,81 +2,115 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C2F0C54EE9
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 08:39:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01A18ECAAD5
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 09:08:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231474AbiIHIja (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Sep 2022 04:39:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40494 "EHLO
+        id S231754AbiIHJI4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Sep 2022 05:08:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43172 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231473AbiIHIjT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2022 04:39:19 -0400
-Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54EB6112E43;
-        Thu,  8 Sep 2022 01:39:18 -0700 (PDT)
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 088DB44B1B;
-        Thu,  8 Sep 2022 08:39:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        in-reply-to:content-disposition:content-type:content-type
-        :mime-version:references:message-id:subject:subject:from:from
-        :date:date:received:received:received:received; s=mta-01; t=
-        1662626355; x=1664440756; bh=gJybNLxkrdA9/Sd4hOvjupmPM3dFiBVQUj/
-        HbJ5cj5I=; b=opQmWqcKy8F2j8bQdgjbRCrx6e1oCTbx0ugYeafwtUuxecOPbX+
-        LbFPtd5M6EL4+uSqJN1lwssFJD4ZFW6aq9uVI1cSb32hL1kZ+Uedenml9SYDOKPr
-        VcY1A/HGLGh+I5hfe4Poz1Yl8SMB0sxAwAQVRQhPHSPb85ykuTNdLzY0=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id kMeUtALw46wW; Thu,  8 Sep 2022 11:39:15 +0300 (MSK)
-Received: from T-EXCH-02.corp.yadro.com (T-EXCH-02.corp.yadro.com [172.17.10.102])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 0CA2744F8B;
-        Thu,  8 Sep 2022 11:39:15 +0300 (MSK)
-Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
- T-EXCH-02.corp.yadro.com (172.17.10.102) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
- 15.1.669.32; Thu, 8 Sep 2022 11:39:14 +0300
-Received: from yadro.com (10.199.18.20) by T-EXCH-08.corp.yadro.com
- (172.17.11.58) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1118.9; Thu, 8 Sep 2022
- 11:39:14 +0300
-Date:   Thu, 8 Sep 2022 11:39:14 +0300
-From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-CC:     Martin Petersen <martin.petersen@oracle.com>,
-        <target-devel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux@yadro.com>
-Subject: Re: [PATCH 4/4] target: core: new key must be used for moved PR
-Message-ID: <20220908083914.GB9218@yadro.com>
-References: <20220907135851.3756-1-d.bogdanov@yadro.com>
- <20220907135851.3756-5-d.bogdanov@yadro.com>
- <73091ce3-5412-b3f8-94c5-c6224ffcc08c@acm.org>
+        with ESMTP id S229776AbiIHJIx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2022 05:08:53 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38D61FCA3A
+        for <linux-scsi@vger.kernel.org>; Thu,  8 Sep 2022 02:08:52 -0700 (PDT)
+Received: from dggpeml500024.china.huawei.com (unknown [172.30.72.56])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4MNY9S1gqgzlVkc;
+        Thu,  8 Sep 2022 17:05:00 +0800 (CST)
+Received: from dggpeml500019.china.huawei.com (7.185.36.137) by
+ dggpeml500024.china.huawei.com (7.185.36.10) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Thu, 8 Sep 2022 17:08:50 +0800
+Received: from [10.174.179.189] (10.174.179.189) by
+ dggpeml500019.china.huawei.com (7.185.36.137) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Thu, 8 Sep 2022 17:08:49 +0800
+Message-ID: <f2fdc142-eabb-8aad-412c-6b3ed3785ab5@huawei.com>
+Date:   Thu, 8 Sep 2022 17:08:49 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <73091ce3-5412-b3f8-94c5-c6224ffcc08c@acm.org>
-X-Originating-IP: [10.199.18.20]
-X-ClientProxiedBy: T-EXCH-02.corp.yadro.com (172.17.10.102) To
- T-EXCH-08.corp.yadro.com (172.17.11.58)
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: [PATCH RESEND] scsi: core: Add io timeout count for scsi device
+Content-Language: en-US
+References: <f081b7ca-64d9-add3-2ebb-48b80614d107@huawei.com>
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <qiuchangqi.qiu@huawei.com>,
+        <wubo40@huawei.com>
+From:   Wu Bo <wubo40@huawei.com>
+In-Reply-To: <f081b7ca-64d9-add3-2ebb-48b80614d107@huawei.com>
+X-Forwarded-Message-Id: <f081b7ca-64d9-add3-2ebb-48b80614d107@huawei.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.179.189]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ dggpeml500019.china.huawei.com (7.185.36.137)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Sep 07, 2022 at 09:19:46AM -0700, Bart Van Assche wrote:
-> 
-> On 9/7/22 06:58, Dmitry Bogdanov wrote:
-> > +     } else {
-> > +     /*
-> > +      * e) Retain the reservation key specified in the SERVICE ACTION
-> > +      *    RESERVATION KEY field and associated information;
-> > +      */
-> > +             dest_pr_reg->pr_res_key = sa_res_key;
-> >       }
-> 
-> The indentation of the new comment looks wrong to me. Please fix.
-Oh, yes, forgot to add a tab there.
+Current the scsi device has iorequest count, iodone count
+and ioerr count, but lack of io timeout count.
 
-BR,
- Dmitry 
+For better tracking of scsi io, So add it now.
+
+Signed-off-by: Wu Bo <wubo40@huawei.com>
+---
+  drivers/scsi/scsi_error.c  | 1 +
+  drivers/scsi/scsi_sysfs.c  | 2 ++
+  include/scsi/scsi_device.h | 1 +
+  3 files changed, 4 insertions(+)
+
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 448748e..e84aea9 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -334,6 +334,7 @@ enum blk_eh_timer_return scsi_timeout(struct request 
+*req)
+         trace_scsi_dispatch_cmd_timeout(scmd);
+         scsi_log_completion(scmd, TIMEOUT_ERROR);
+
++       atomic_inc(&scmd->device->iotmo_cnt);
+         if (host->eh_deadline != -1 && !host->last_reset)
+                 host->last_reset = jiffies;
+
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 9dad2fd..72e702c 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -970,6 +970,7 @@ static DEVICE_ATTR(field, S_IRUGO, 
+show_iostat_##field, NULL)
+  show_sdev_iostat(iorequest_cnt);
+  show_sdev_iostat(iodone_cnt);
+  show_sdev_iostat(ioerr_cnt);
++show_sdev_iostat(iotmo_cnt);
+
+  static ssize_t
+  sdev_show_modalias(struct device *dev, struct device_attribute *attr, 
+char *buf)
+@@ -1289,6 +1290,7 @@ static umode_t 
+scsi_sdev_bin_attr_is_visible(struct kobject *kobj,
+         &dev_attr_iorequest_cnt.attr,
+         &dev_attr_iodone_cnt.attr,
+         &dev_attr_ioerr_cnt.attr,
++       &dev_attr_iotmo_cnt.attr,
+         &dev_attr_modalias.attr,
+         &dev_attr_queue_depth.attr,
+         &dev_attr_queue_type.attr,
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 3113471..78039d1 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -231,6 +231,7 @@ struct scsi_device {
+         atomic_t iorequest_cnt;
+         atomic_t iodone_cnt;
+         atomic_t ioerr_cnt;
++       atomic_t iotmo_cnt;
+
+         struct device           sdev_gendev,
+                                 sdev_dev;
+--
+1.8.3.1
+-- 
+Wu Bo
