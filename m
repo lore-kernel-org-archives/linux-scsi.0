@@ -2,535 +2,189 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E703C6FA82
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 12:41:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C6D4C38145
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 12:41:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231895AbiIHMlW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Sep 2022 08:41:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60394 "EHLO
+        id S231889AbiIHMlY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Sep 2022 08:41:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60438 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231887AbiIHMlU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2022 08:41:20 -0400
-Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5EE4BC697A
-        for <linux-scsi@vger.kernel.org>; Thu,  8 Sep 2022 05:41:18 -0700 (PDT)
-Received: by mail-pl1-x629.google.com with SMTP id c2so17723970plo.3
-        for <linux-scsi@vger.kernel.org>; Thu, 08 Sep 2022 05:41:18 -0700 (PDT)
+        with ESMTP id S231867AbiIHMlV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2022 08:41:21 -0400
+Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35111C6EB8
+        for <linux-scsi@vger.kernel.org>; Thu,  8 Sep 2022 05:41:20 -0700 (PDT)
+Received: by mail-pl1-x62c.google.com with SMTP id iw17so11072790plb.0
+        for <linux-scsi@vger.kernel.org>; Thu, 08 Sep 2022 05:41:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date;
-        bh=cQ7iMFWyGHa8e8D9DsZO/KtpEB1o7p+tVKzIHoPH88k=;
-        b=N+MEhOwxeCG6siit8EtWS+uJjL3ar0y0FqTueNfCMd5RXiUvdXOb/dYxpuiboIF958
-         IApeIFU2C6lLXUjQSRLJGSWCcOGPrikpzmXyvtBPgOPtBHAoE05LvMSdknefJ3v9SfhB
-         XbFjZz+6hFn3eCyIsv2zQmigB7a2GIqQ5SYns=
+        bh=h1dxwDuMZd2O5oc8n0W+zvdyekt9HoR9nJ2NBcHcz38=;
+        b=bhluyEN0tL/zuqEiqZzwyJEx68ABmfKH94eUW+FSXUYXfRigPFRSTu7qf+9/ZJ2LnA
+         gzFkj+aNmSNEberls0ca2MEa67hWMiM063nm6IXMaTZzK+MZ+cS2CuHKXWvqCIBHZG0m
+         /WCYA/57FugEja27NDe9BpjxngOg18x71u6Ys=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date;
-        bh=cQ7iMFWyGHa8e8D9DsZO/KtpEB1o7p+tVKzIHoPH88k=;
-        b=SGwj5ZZXQSbgoqP9YoeCmK79qlu3EoFyXNS9KwVC+87TKI9wq1jk41+dkSvoGIkRSb
-         /r2VMsf5cjPFegVqNWH7eb2FKss65UvpNB9jKZb0/e994PTD8y19X+mQzszfucylzAOJ
-         X53l1dCG0cXJrZW91IhnZnPetLvJwzoXM2D7Y5WYTpinppF+qsuX51NPtbkJHSdr9Sp3
-         vmnFdsX18Ulvhr9NWaBbYyfGtUyFvfUj4KyOQ+qXmn/nVbxamwBtVfyfY8tRYNPwIPOq
-         VJpKT0l8ruLNvcJ7+CAvT2c7Fhao24wPP2Y26/rSdiTwpSN1lDggpolirW6nzDZoYmx+
-         QYeA==
-X-Gm-Message-State: ACgBeo0sEtnkZVFNdNMPtLuN0YTzA2Ty3O8FXE2Z0fTPrl/ga4nh2/yj
-        AdjKFda17pHTHzzP8vKbulBjUBhlxbiLsOQ75aICUjmwdMUzeRV5VcBysqPS7KhRDxAF8BOlitD
-        scgxyvHQ6AyxUjIQyv76NlbtZ8ozuBfDzBRNPcPIJZ5lLgAVW+P51bRecT61mu5pfX8YcOABSWy
-        UIpRNRFpdN
-X-Google-Smtp-Source: AA6agR7ftoX3f3RAfx5RV4A8iTmPrUj+wfayIEWBTAGB4Uk+5Bgzw+6p2POi4y4RzjpeB8dOhTMVew==
-X-Received: by 2002:a17:903:28c:b0:176:ba0a:8cb2 with SMTP id j12-20020a170903028c00b00176ba0a8cb2mr8985934plr.81.1662640877309;
-        Thu, 08 Sep 2022 05:41:17 -0700 (PDT)
+        bh=h1dxwDuMZd2O5oc8n0W+zvdyekt9HoR9nJ2NBcHcz38=;
+        b=L0UquzH/YaStO/paG4nAictAZ1j8nYWBr7GvjQpQqCOZpYNmmsHXPSs2J1EHPOcNqY
+         /Kth75uiPv8z2deRpODneJo45rcE+1yxQc86ARRzwnVtqg8/cnlc+tunmOKIivlYEoQT
+         lp+mVpuSlAvi+lkAVwuQzyHgxafvuLaFVnQYONsOkjzGkQcZZGkvIbn3/M/svmD99GEi
+         XEbK+K/1L/WD4EjXDjInynaYUbg5bBQJN/CVjwyEm5HHCT5+X2rSUzMavswtsrlUgXfe
+         dPK+29rOicNdDR1uqDO8lAlsnxHyghSp5AUj13AoeRDePtmIWog+dcw9EA92oZvWI612
+         BHDg==
+X-Gm-Message-State: ACgBeo1jyQ0TkgmLjEZ8Ej2dnLTpXmI6kQdQvKPb1sMagCeyiaWCFYcy
+        ty0Bm4KbKhXTu0hHUJxAWCWPrbtQifPuSKmOUsQP+Ok6C1a0JCBOOcEfy9uMwpH+yRu/E9+evyy
+        G0agiatpT8QU0vjULahswXXDt8Xx48PkXHCcZgoZiXsNDAA16+TeebE6hZCyphEICoGKrFA9Q94
+        5+2QBvJgo4
+X-Google-Smtp-Source: AA6agR4thqZz1u+wu9AITSFt75MRefVqBRGqo03x3OPn8nM7c/r0X2fEGHdAdzncA1swOZJI9WTP/w==
+X-Received: by 2002:a17:90b:4d92:b0:1fd:aec0:1c26 with SMTP id oj18-20020a17090b4d9200b001fdaec01c26mr3984777pjb.133.1662640879197;
+        Thu, 08 Sep 2022 05:41:19 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id c17-20020a63ef51000000b0043395af24f6sm11106807pgk.25.2022.09.08.05.41.15
+        by smtp.gmail.com with ESMTPSA id c17-20020a63ef51000000b0043395af24f6sm11106807pgk.25.2022.09.08.05.41.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 08 Sep 2022 05:41:16 -0700 (PDT)
+        Thu, 08 Sep 2022 05:41:18 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 1/9] mpi3mr: Update mpi3 header files
-Date:   Thu,  8 Sep 2022 18:23:24 +0530
-Message-Id: <20220908125332.21110-2-sreekanth.reddy@broadcom.com>
+Subject: [PATCH 2/9] mpi3mr: Support new power management framework
+Date:   Thu,  8 Sep 2022 18:23:25 +0530
+Message-Id: <20220908125332.21110-3-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20220908125332.21110-1-sreekanth.reddy@broadcom.com>
 References: <20220908125332.21110-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000eb6e7805e829be86"
+        boundary="000000000000059f3c05e829bfed"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000eb6e7805e829be86
+--000000000000059f3c05e829bfed
 Content-Transfer-Encoding: 8bit
 
-Update the mpi3 header files.
+Switched to the new generic PCI PM (Power Management)
+framework. Also, removed unnecessary calls to the
+PCI Helper functions (such as pci_set_power_state(),
+pci_enable_wake(), pci_save_state(), pci_restore_state()
+etc).
 
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h      | 171 +++++++++++++++++-----
- drivers/scsi/mpi3mr/mpi/mpi30_image.h     |   6 +-
- drivers/scsi/mpi3mr/mpi/mpi30_init.h      |   5 +-
- drivers/scsi/mpi3mr/mpi/mpi30_ioc.h       |  22 ++-
- drivers/scsi/mpi3mr/mpi/mpi30_pci.h       |   2 +-
- drivers/scsi/mpi3mr/mpi/mpi30_sas.h       |   3 +-
- drivers/scsi/mpi3mr/mpi/mpi30_transport.h |   8 +-
- 7 files changed, 165 insertions(+), 52 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 33 +++++++++++++--------------------
+ 1 file changed, 13 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h b/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
-index 4cd9f24..0a2af48 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
-@@ -1,7 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0-or-later */
- /*
-- *  Copyright 2017-2021 Broadcom Inc. All rights reserved.
-- *
-+ *  Copyright 2017-2022 Broadcom Inc. All rights reserved.
-  */
- #ifndef MPI30_CNFG_H
- #define MPI30_CNFG_H     1
-@@ -100,6 +99,7 @@ struct mpi3_config_page_header {
- #define MPI3_SAS_NEG_LINK_RATE_LOGICAL_MASK             (0xf0)
- #define MPI3_SAS_NEG_LINK_RATE_LOGICAL_SHIFT            (4)
- #define MPI3_SAS_NEG_LINK_RATE_PHYSICAL_MASK            (0x0f)
-+#define MPI3_SAS_NEG_LINK_RATE_PHYSICAL_SHIFT           (0)
- #define MPI3_SAS_NEG_LINK_RATE_UNKNOWN_LINK_RATE        (0x00)
- #define MPI3_SAS_NEG_LINK_RATE_PHY_DISABLED             (0x01)
- #define MPI3_SAS_NEG_LINK_RATE_NEGOTIATION_FAILED       (0x02)
-@@ -135,6 +135,16 @@ struct mpi3_config_page_header {
- #define MPI3_SAS_PHYINFO_PHY_POWER_CONDITION_ACTIVE     (0x00000000)
- #define MPI3_SAS_PHYINFO_PHY_POWER_CONDITION_PARTIAL    (0x08000000)
- #define MPI3_SAS_PHYINFO_PHY_POWER_CONDITION_SLUMBER    (0x10000000)
-+#define MPI3_SAS_NEG_LINK_RATE_PHYSICAL_SHIFT                 (0)
-+#define MPI3_SAS_PHYINFO_REQUESTED_INSIDE_ZPSDS_CHANGED_MASK  (0x04000000)
-+#define MPI3_SAS_PHYINFO_REQUESTED_INSIDE_ZPSDS_CHANGED_SHIFT (26)
-+#define MPI3_SAS_PHYINFO_INSIDE_ZPSDS_PERSISTENT_MASK         (0x02000000)
-+#define MPI3_SAS_PHYINFO_INSIDE_ZPSDS_PERSISTENT_SHIFT        (25)
-+#define MPI3_SAS_PHYINFO_REQUESTED_INSIDE_ZPSDS_MASK          (0x01000000)
-+#define MPI3_SAS_PHYINFO_REQUESTED_INSIDE_ZPSDS_SHIFT         (24)
-+#define MPI3_SAS_PHYINFO_ZONE_GROUP_PERSISTENT                (0x00400000)
-+#define MPI3_SAS_PHYINFO_INSIDE_ZPSDS_WITHIN                  (0x00200000)
-+#define MPI3_SAS_PHYINFO_ZONING_ENABLED                       (0x00100000)
- #define MPI3_SAS_PHYINFO_REASON_MASK                    (0x000f0000)
- #define MPI3_SAS_PHYINFO_REASON_UNKNOWN                 (0x00000000)
- #define MPI3_SAS_PHYINFO_REASON_POWER_ON                (0x00010000)
-@@ -210,7 +220,7 @@ struct mpi3_man_page0 {
- 	u8                                 board_rework_day;
- 	u8                                 board_rework_month;
- 	__le16                             board_rework_year;
--	__le64                             board_revision;
-+	u8                                 board_revision[8];
- 	u8                                 e_pack_fru[16];
- 	u8                                 product_name[256];
- };
-@@ -226,6 +236,15 @@ struct mpi3_man_page1 {
- };
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index 22f1a06..f1a6448 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -5094,22 +5094,21 @@ static void mpi3mr_shutdown(struct pci_dev *pdev)
+ 	mpi3mr_cleanup_resources(mrioc);
+ }
  
- #define MPI3_MAN1_PAGEVERSION                                 (0x00)
-+struct mpi3_man_page2 {
-+	struct mpi3_config_page_header         header;
-+	u8                                 flags;
-+	u8                                 reserved09[3];
-+	__le32                             reserved0c[3];
-+	u8                                 oem_board_tracer_number[32];
-+};
-+#define MPI3_MAN2_PAGEVERSION                                 (0x00)
-+#define MPI3_MAN2_FLAGS_TRACER_PRESENT                        (0x01)
- struct mpi3_man5_phy_entry {
- 	__le64     ioc_wwid;
- 	__le64     device_name;
-@@ -338,6 +357,8 @@ struct mpi3_man7_receptacle_info {
- #define MPI3_MAN7_LOCATION_INTERNAL                        (0x01)
- #define MPI3_MAN7_LOCATION_EXTERNAL                        (0x02)
- #define MPI3_MAN7_LOCATION_VIRTUAL                         (0x03)
-+#define MPI3_MAN7_LOCATION_HOST                            (0x04)
-+#define MPI3_MAN7_CONNECTOR_TYPE_NO_INFO                   (0x00)
- #define MPI3_MAN7_PEDCLK_ROUTING_MASK                      (0x10)
- #define MPI3_MAN7_PEDCLK_ROUTING_DIRECT                    (0x00)
- #define MPI3_MAN7_PEDCLK_ROUTING_CLOCK_BUFFER              (0x10)
-@@ -369,7 +390,8 @@ struct mpi3_man8_phy_info {
- 	__le32                             reserved0c;
- };
- 
--#define MPI3_MAN8_PHY_INFO_RECEPTACLE_ID_HOST_PHY          (0xff)
-+#define MPI3_MAN8_PHY_INFO_RECEPTACLE_ID_NOT_ASSOCIATED    (0xff)
-+#define MPI3_MAN8_PHY_INFO_CONNECTOR_LANE_NOT_ASSOCIATED   (0xff)
- #ifndef MPI3_MAN8_PHY_INFO_MAX
- #define MPI3_MAN8_PHY_INFO_MAX                      (1)
- #endif
-@@ -536,6 +558,10 @@ struct mpi3_man11_bkplane_spec_non_ubm_format {
- #define MPI3_MAN11_BKPLANE_NON_UBM_FLAGS_GROUP_MASK                    (0xf000)
- #define MPI3_MAN11_BKPLANE_NON_UBM_FLAGS_GROUP_SHIFT                   (12)
- #define MPI3_MAN11_BKPLANE_NON_UBM_FLAGS_REFCLK_POLICY_ALWAYS_ENABLED  (0x0200)
-+#define MPI3_MAN11_BKPLANE_NON_UBM_FLAGS_LINKWIDTH_MASK                (0x00c0)
-+#define MPI3_MAN11_BKPLANE_NON_UBM_FLAGS_LINKWIDTH_4                   (0x0000)
-+#define MPI3_MAN11_BKPLANE_NON_UBM_FLAGS_LINKWIDTH_2                   (0x0040)
-+#define MPI3_MAN11_BKPLANE_NON_UBM_FLAGS_LINKWIDTH_1                   (0x0080)
- #define MPI3_MAN11_BKPLANE_NON_UBM_FLAGS_PRESENCE_DETECT_MASK          (0x0030)
- #define MPI3_MAN11_BKPLANE_NON_UBM_FLAGS_PRESENCE_DETECT_GPIO          (0x0000)
- #define MPI3_MAN11_BKPLANE_NON_UBM_FLAGS_PRESENCE_DETECT_REG           (0x0010)
-@@ -825,19 +851,16 @@ struct mpi3_man_page21 {
- };
- 
- #define MPI3_MAN21_PAGEVERSION                                       (0x00)
--#define MPI3_MAN21_FLAGS_HOST_METADATA_CAPABILITY_MASK               (0x80)
--#define MPI3_MAN21_FLAGS_HOST_METADATA_CAPABILITY_ENABLED            (0x80)
--#define MPI3_MAN21_FLAGS_HOST_METADATA_CAPABILITY_DISABLED           (0x00)
--#define MPI3_MAN21_FLAGS_UNCERTIFIED_DRIVES_MASK                     (0x60)
--#define MPI3_MAN21_FLAGS_UNCERTIFIED_DRIVES_BLOCK                    (0x00)
--#define MPI3_MAN21_FLAGS_UNCERTIFIED_DRIVES_ALLOW                    (0x20)
--#define MPI3_MAN21_FLAGS_UNCERTIFIED_DRIVES_WARN                     (0x40)
--#define MPI3_MAN21_FLAGS_BLOCK_SSD_WR_CACHE_CHANGE_MASK              (0x08)
--#define MPI3_MAN21_FLAGS_BLOCK_SSD_WR_CACHE_CHANGE_ALLOW             (0x00)
--#define MPI3_MAN21_FLAGS_BLOCK_SSD_WR_CACHE_CHANGE_PREVENT           (0x08)
--#define MPI3_MAN21_FLAGS_SES_VPD_ASSOC_MASK                          (0x01)
--#define MPI3_MAN21_FLAGS_SES_VPD_ASSOC_DEFAULT                       (0x00)
--#define MPI3_MAN21_FLAGS_SES_VPD_ASSOC_OEM_SPECIFIC                  (0x01)
-+#define MPI3_MAN21_FLAGS_UNCERTIFIED_DRIVES_MASK                     (0x00000060)
-+#define MPI3_MAN21_FLAGS_UNCERTIFIED_DRIVES_BLOCK                    (0x00000000)
-+#define MPI3_MAN21_FLAGS_UNCERTIFIED_DRIVES_ALLOW                    (0x00000020)
-+#define MPI3_MAN21_FLAGS_UNCERTIFIED_DRIVES_WARN                     (0x00000040)
-+#define MPI3_MAN21_FLAGS_BLOCK_SSD_WR_CACHE_CHANGE_MASK              (0x00000008)
-+#define MPI3_MAN21_FLAGS_BLOCK_SSD_WR_CACHE_CHANGE_ALLOW             (0x00000000)
-+#define MPI3_MAN21_FLAGS_BLOCK_SSD_WR_CACHE_CHANGE_PREVENT           (0x00000008)
-+#define MPI3_MAN21_FLAGS_SES_VPD_ASSOC_MASK                          (0x00000001)
-+#define MPI3_MAN21_FLAGS_SES_VPD_ASSOC_DEFAULT                       (0x00000000)
-+#define MPI3_MAN21_FLAGS_SES_VPD_ASSOC_OEM_SPECIFIC                  (0x00000001)
- #ifndef MPI3_MAN_PROD_SPECIFIC_MAX
- #define MPI3_MAN_PROD_SPECIFIC_MAX                      (1)
- #endif
-@@ -995,7 +1018,12 @@ struct mpi3_io_unit_page5 {
- #define MPI3_IOUNIT5_DEVICE_SHUTDOWN_SATA_SSD_MASK         (0x000c)
- #define MPI3_IOUNIT5_DEVICE_SHUTDOWN_SATA_SSD_SHIFT        (2)
- #define MPI3_IOUNIT5_DEVICE_SHUTDOWN_SAS_SSD_MASK          (0x0003)
--#define MPI3_IOUNIT5_DEVICE_SHUTDOWN_SAA_SSD_SHIFT         (0)
-+#define MPI3_IOUNIT5_DEVICE_SHUTDOWN_SAS_SSD_SHIFT         (0)
-+#define MPI3_IOUNIT5_FLAGS_SATAPUIS_MASK                   (0x0c)
-+#define MPI3_IOUNIT5_FLAGS_SATAPUIS_NOT_SUPPORTED          (0x00)
-+#define MPI3_IOUNIT5_FLAGS_SATAPUIS_OS_CONTROLLED          (0x04)
-+#define MPI3_IOUNIT5_FLAGS_SATAPUIS_APP_CONTROLLED         (0x08)
-+#define MPI3_IOUNIT5_FLAGS_SATAPUIS_BLOCKED                (0x0c)
- #define MPI3_IOUNIT5_FLAGS_POWER_CAPABLE_SPINUP            (0x02)
- #define MPI3_IOUNIT5_FLAGS_AUTO_PORT_ENABLE                (0x01)
- #define MPI3_IOUNIT5_PHY_SPINUP_GROUP_MASK                 (0x03)
-@@ -1027,7 +1055,8 @@ struct mpi3_io_unit_page8 {
- 	u8                                 slots_available;
- 	u8                                 current_key_encryption_algo;
- 	u8                                 key_digest_hash_algo;
--	__le32                             reserved10[2];
-+	union mpi3_version_union              current_svn;
-+	__le32                             reserved14;
- 	__le32                             current_key[128];
- 	union mpi3_iounit8_digest             digest[MPI3_IOUNIT8_DIGEST_MAX];
- };
-@@ -1036,6 +1065,7 @@ struct mpi3_io_unit_page8 {
- #define MPI3_IOUNIT8_SBMODE_SECURE_DEBUG          (0x04)
- #define MPI3_IOUNIT8_SBMODE_HARD_SECURE           (0x02)
- #define MPI3_IOUNIT8_SBMODE_CONFIG_SECURE         (0x01)
-+#define MPI3_IOUNIT8_SBSTATE_SVN_UPDATE_PENDING   (0x04)
- #define MPI3_IOUNIT8_SBSTATE_KEY_UPDATE_PENDING   (0x02)
- #define MPI3_IOUNIT8_SBSTATE_SECURE_BOOT_ENABLED  (0x01)
- struct mpi3_io_unit_page9 {
-@@ -1045,9 +1075,14 @@ struct mpi3_io_unit_page9 {
- 	__le16                             reserved0e;
- };
- 
--#define MPI3_IOUNIT9_PAGEVERSION                  (0x00)
--#define MPI3_IOUNIT9_FLAGS_VDFIRST_ENABLED         (0x01)
--#define MPI3_IOUNIT9_FIRSTDEVICE_UNKNOWN          (0xffff)
-+#define MPI3_IOUNIT9_PAGEVERSION                                  (0x00)
-+#define MPI3_IOUNIT9_FLAGS_UBM_ENCLOSURE_ORDER_MASK               (0x00000006)
-+#define MPI3_IOUNIT9_FLAGS_UBM_ENCLOSURE_ORDER_SHIFT              (1)
-+#define MPI3_IOUNIT9_FLAGS_UBM_ENCLOSURE_ORDER_NONE               (0x00000000)
-+#define MPI3_IOUNIT9_FLAGS_UBM_ENCLOSURE_ORDER_RECEPTACLE         (0x00000002)
-+#define MPI3_IOUNIT9_FLAGS_UBM_ENCLOSURE_ORDER_BACKPLANE_TYPE     (0x00000004)
-+#define MPI3_IOUNIT9_FLAGS_VDFIRST_ENABLED                        (0x00000001)
-+#define MPI3_IOUNIT9_FIRSTDEVICE_UNKNOWN                          (0xffff)
- struct mpi3_io_unit_page10 {
- 	struct mpi3_config_page_header         header;
- 	u8                                 flags;
-@@ -1090,6 +1125,57 @@ struct mpi3_io_unit_page11 {
- 	struct mpi3_iounit11_profile           profile[MPI3_IOUNIT11_PROFILE_MAX];
- };
- #define MPI3_IOUNIT11_PAGEVERSION                  (0x00)
-+#ifndef MPI3_IOUNIT12_BUCKET_MAX
-+#define MPI3_IOUNIT12_BUCKET_MAX                   (1)
-+#endif
-+struct mpi3_iounit12_bucket {
-+	u8                                 coalescing_depth;
-+	u8                                 coalescing_timeout;
-+	__le16                             io_count_low_boundary;
-+	__le32                             reserved04;
-+};
-+struct mpi3_io_unit_page12 {
-+	struct mpi3_config_page_header         header;
-+	__le32                             flags;
-+	__le32                             reserved0c[4];
-+	u8                                 num_buckets;
-+	u8                                 reserved1d[3];
-+	struct mpi3_iounit12_bucket            bucket[MPI3_IOUNIT12_BUCKET_MAX];
-+};
-+#define MPI3_IOUNIT12_PAGEVERSION                  (0x00)
-+#define MPI3_IOUNIT12_FLAGS_NUMPASSES_MASK         (0x00000300)
-+#define MPI3_IOUNIT12_FLAGS_NUMPASSES_SHIFT        (8)
-+#define MPI3_IOUNIT12_FLAGS_NUMPASSES_8            (0x00000000)
-+#define MPI3_IOUNIT12_FLAGS_NUMPASSES_16           (0x00000100)
-+#define MPI3_IOUNIT12_FLAGS_NUMPASSES_32           (0x00000200)
-+#define MPI3_IOUNIT12_FLAGS_NUMPASSES_64           (0x00000300)
-+#define MPI3_IOUNIT12_FLAGS_PASSPERIOD_MASK        (0x00000003)
-+#define MPI3_IOUNIT12_FLAGS_PASSPERIOD_DISABLED    (0x00000000)
-+#define MPI3_IOUNIT12_FLAGS_PASSPERIOD_500US       (0x00000001)
-+#define MPI3_IOUNIT12_FLAGS_PASSPERIOD_1MS         (0x00000002)
-+#define MPI3_IOUNIT12_FLAGS_PASSPERIOD_2MS         (0x00000003)
-+#ifndef MPI3_IOUNIT13_FUNC_MAX
-+#define MPI3_IOUNIT13_FUNC_MAX                                     (1)
-+#endif
-+struct mpi3_iounit13_allowed_function {
-+	__le16                             sub_function;
-+	u8                                 function_code;
-+	u8                                 fuction_flags;
-+};
-+#define MPI3_IOUNIT13_FUNCTION_FLAGS_ADMIN_BLOCKED                 (0x04)
-+#define MPI3_IOUNIT13_FUNCTION_FLAGS_OOB_BLOCKED                   (0x02)
-+#define MPI3_IOUNIT13_FUNCTION_FLAGS_CHECK_SUBFUNCTION_ENABLED     (0x01)
-+struct mpi3_io_unit_page13 {
-+	struct mpi3_config_page_header         header;
-+	__le16                             flags;
-+	__le16                             reserved0a;
-+	u8                                 num_allowed_functions;
-+	u8                                 reserved0d[3];
-+	struct mpi3_iounit13_allowed_function  allowed_function[MPI3_IOUNIT13_FUNC_MAX];
-+};
-+#define MPI3_IOUNIT13_PAGEVERSION                                  (0x00)
-+#define MPI3_IOUNIT13_FLAGS_ADMIN_BLOCKED                          (0x0002)
-+#define MPI3_IOUNIT13_FLAGS_OOB_BLOCKED                            (0x0001)
- struct mpi3_ioc_page0 {
- 	struct mpi3_config_page_header         header;
- 	__le32                             reserved08;
-@@ -1182,6 +1268,7 @@ struct mpi3_driver_page0 {
- 	__le32                             reserved18;
- };
- #define MPI3_DRIVER0_PAGEVERSION               (0x00)
-+#define MPI3_DRIVER0_BSDOPTS_HEADLESS_MODE_ENABLE           (0x00000008)
- #define MPI3_DRIVER0_BSDOPTS_DIS_HII_CONFIG_UTIL            (0x00000004)
- #define MPI3_DRIVER0_BSDOPTS_REGISTRATION_MASK              (0x00000003)
- #define MPI3_DRIVER0_BSDOPTS_REGISTRATION_IOC_AND_DEVS      (0x00000000)
-@@ -1906,19 +1993,30 @@ struct mpi3_pcie_io_unit_page1 {
- };
- 
- #define MPI3_PCIEIOUNIT1_PAGEVERSION                                           (0x00)
--#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_LINK_OVERRIDE_DISABLE                   (0x80)
--#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_CLOCK_OVERRIDE_DISABLE                  (0x40)
--#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_CLOCK_OVERRIDE_MODE_MASK                (0x30)
-+#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_PERST_OVERRIDE_MASK                     (0xe0000000)
-+#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_PERST_OVERRIDE_NONE                     (0x00000000)
-+#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_PERST_OVERRIDE_DEASSERT                 (0x20000000)
-+#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_PERST_OVERRIDE_ASSERT                   (0x40000000)
-+#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_PERST_OVERRIDE_BACKPLANE_ERROR          (0x60000000)
-+#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_REFCLK_OVERRIDE_MASK                    (0x1c000000)
-+#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_REFCLK_OVERRIDE_NONE                    (0x00000000)
-+#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_REFCLK_OVERRIDE_DEASSERT                (0x04000000)
-+#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_REFCLK_OVERRIDE_ASSERT                  (0x08000000)
-+#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_REFCLK_OVERRIDE_BACKPLANE_ERROR         (0x0c000000)
-+#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_LINK_OVERRIDE_DISABLE                   (0x00000080)
-+#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_CLOCK_OVERRIDE_DISABLE                  (0x00000040)
-+#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_CLOCK_OVERRIDE_MODE_MASK                (0x00000030)
- #define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_CLOCK_OVERRIDE_MODE_SHIFT               (4)
--#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_CLOCK_OVERRIDE_MODE_SRIS_SRNS_DISABLED  (0x00)
--#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_CLOCK_OVERRIDE_MODE_SRIS_ENABLED        (0x10)
--#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_CLOCK_OVERRIDE_MODE_SRNS_ENABLED        (0x20)
--#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_LINK_RATE_OVERRIDE_MASK                 (0x0f)
--#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_LINK_RATE_OVERRIDE_MAX_2_5              (0x02)
--#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_LINK_RATE_OVERRIDE_MAX_5_0              (0x03)
--#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_LINK_RATE_OVERRIDE_MAX_8_0              (0x04)
--#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_LINK_RATE_OVERRIDE_MAX_16_0             (0x05)
--#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_LINK_RATE_OVERRIDE_MAX_32_0             (0x06)
-+#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_CLOCK_OVERRIDE_MODE_SRIS_SRNS_DISABLED  (0x00000000)
-+#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_CLOCK_OVERRIDE_MODE_SRIS_ENABLED        (0x00000010)
-+#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_CLOCK_OVERRIDE_MODE_SRNS_ENABLED        (0x00000020)
-+#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_LINK_RATE_OVERRIDE_MASK                 (0x0000000f)
-+#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_LINK_RATE_OVERRIDE_USE_BACKPLANE        (0x00000000)
-+#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_LINK_RATE_OVERRIDE_MAX_2_5              (0x00000002)
-+#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_LINK_RATE_OVERRIDE_MAX_5_0              (0x00000003)
-+#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_LINK_RATE_OVERRIDE_MAX_8_0              (0x00000004)
-+#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_LINK_RATE_OVERRIDE_MAX_16_0             (0x00000005)
-+#define MPI3_PCIEIOUNIT1_CONTROL_FLAGS_LINK_RATE_OVERRIDE_MAX_32_0             (0x00000006)
- #define MPI3_PCIEIOUNIT1_ASPM_SWITCH_MASK                                 (0x0c)
- #define MPI3_PCIEIOUNIT1_ASPM_SWITCH_SHIFT                                   (2)
- #define MPI3_PCIEIOUNIT1_ASPM_DIRECT_MASK                                 (0x03)
-@@ -2169,10 +2267,7 @@ struct mpi3_device0_vd_format {
- #define MPI3_DEVICE0_VD_DEVICE_INFO_SATA                    (0x0002)
- #define MPI3_DEVICE0_VD_DEVICE_INFO_SAS                     (0x0001)
- #define MPI3_DEVICE0_VD_FLAGS_IO_THROTTLE_GROUP_QD_MASK     (0xf000)
--#define MPI3_DEVICE0_VD_FLAGS_METADATA_MODE_MASK            (0x0003)
--#define MPI3_DEVICE0_VD_FLAGS_METADATA_MODE_NONE            (0x0000)
--#define MPI3_DEVICE0_VD_FLAGS_METADATA_MODE_HOST            (0x0001)
--#define MPI3_DEVICE0_VD_FLAGS_METADATA_MODE_IOC             (0x0002)
-+#define MPI3_DEVICE0_VD_FLAGS_IO_THROTTLE_GROUP_QD_SHIFT    (12)
- union mpi3_device0_dev_spec_format {
- 	struct mpi3_device0_sas_sata_format        sas_sata_format;
- 	struct mpi3_device0_pcie_format            pcie_format;
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_image.h b/drivers/scsi/mpi3mr/mpi/mpi30_image.h
-index c29b87d..64c5881 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_image.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_image.h
-@@ -1,7 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0-or-later */
- /*
-- *  Copyright 2018-2021 Broadcom Inc. All rights reserved.
-- *
-+ *  Copyright 2018-2022 Broadcom Inc. All rights reserved.
-  */
- #ifndef MPI30_IMAGE_H
- #define MPI30_IMAGE_H     1
-@@ -63,6 +62,9 @@ struct mpi3_component_image_header {
- #define MPI3_IMAGE_HEADER_SIGNATURE1_PBLP                     (0x504c4250)
- #define MPI3_IMAGE_HEADER_SIGNATURE1_MANIFEST                 (0x464e414d)
- #define MPI3_IMAGE_HEADER_SIGNATURE1_OEM                      (0x204d454f)
-+#define MPI3_IMAGE_HEADER_SIGNATURE1_RMC                      (0x20434d52)
-+#define MPI3_IMAGE_HEADER_SIGNATURE1_SMM                      (0x204d4d53)
-+#define MPI3_IMAGE_HEADER_SIGNATURE1_PSW                      (0x20575350)
- #define MPI3_IMAGE_HEADER_SIGNATURE2_VALUE                    (0x50584546)
- #define MPI3_IMAGE_HEADER_FLAGS_DEVICE_KEY_BASIS_MASK         (0x00000030)
- #define MPI3_IMAGE_HEADER_FLAGS_DEVICE_KEY_BASIS_CDI          (0x00000000)
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_init.h b/drivers/scsi/mpi3mr/mpi/mpi30_init.h
-index aac11c5..3c03610 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_init.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_init.h
-@@ -1,13 +1,12 @@
- /* SPDX-License-Identifier: GPL-2.0-or-later */
- /*
-- *  Copyright 2016-2021 Broadcom Inc. All rights reserved.
-- *
-+ *  Copyright 2016-2022 Broadcom Inc. All rights reserved.
-  */
- #ifndef MPI30_INIT_H
- #define MPI30_INIT_H     1
- struct mpi3_scsi_io_cdb_eedp32 {
- 	u8                 cdb[20];
--	__be32          primary_reference_tag;
-+	__be32             primary_reference_tag;
- 	__le16             primary_application_tag;
- 	__le16             primary_application_tag_mask;
- 	__le32             transfer_length;
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h b/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
-index 214e4c6..1c6c673 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
-@@ -1,7 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0-or-later */
- /*
-- *  Copyright 2016-2021 Broadcom Inc. All rights reserved.
-- *
-+ *  Copyright 2016-2022 Broadcom Inc. All rights reserved.
-  */
- #ifndef MPI30_IOC_H
- #define MPI30_IOC_H     1
-@@ -158,6 +157,7 @@ struct mpi3_ioc_facts_data {
- #define MPI3_IOCFACTS_FLAGS_PERSONALITY_EHBA                  (0x00000000)
- #define MPI3_IOCFACTS_FLAGS_PERSONALITY_RAID_DDR              (0x00000002)
- #define MPI3_IOCFACTS_IO_THROTTLE_DATA_LENGTH_NOT_REQUIRED    (0x0000)
-+#define MPI3_IOCFACTS_MAX_IO_THROTTLE_GROUP_NOT_REQUIRED      (0x0000)
- struct mpi3_mgmt_passthrough_request {
- 	__le16                 host_tag;
- 	u8                     ioc_use_only02;
-@@ -637,6 +637,23 @@ struct mpi3_event_data_diag_buffer_status_change {
- #define MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_RELEASED             (0x01)
- #define MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_PAUSED               (0x02)
- #define MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_RESUMED              (0x03)
-+#define MPI3_PEL_LOCALE_FLAGS_NON_BLOCKING_BOOT_EVENT   (0x0200)
-+#define MPI3_PEL_LOCALE_FLAGS_BLOCKING_BOOT_EVENT       (0x0100)
-+#define MPI3_PEL_LOCALE_FLAGS_PCIE                      (0x0080)
-+#define MPI3_PEL_LOCALE_FLAGS_CONFIGURATION             (0x0040)
-+#define MPI3_PEL_LOCALE_FLAGS_CONTROLER                 (0x0020)
-+#define MPI3_PEL_LOCALE_FLAGS_SAS                       (0x0010)
-+#define MPI3_PEL_LOCALE_FLAGS_EPACK                     (0x0008)
-+#define MPI3_PEL_LOCALE_FLAGS_ENCLOSURE                 (0x0004)
-+#define MPI3_PEL_LOCALE_FLAGS_PD                        (0x0002)
-+#define MPI3_PEL_LOCALE_FLAGS_VD                        (0x0001)
-+#define MPI3_PEL_CLASS_DEBUG                            (0x00)
-+#define MPI3_PEL_CLASS_PROGRESS                         (0x01)
-+#define MPI3_PEL_CLASS_INFORMATIONAL                    (0x02)
-+#define MPI3_PEL_CLASS_WARNING                          (0x03)
-+#define MPI3_PEL_CLASS_CRITICAL                         (0x04)
-+#define MPI3_PEL_CLASS_FATAL                            (0x05)
-+#define MPI3_PEL_CLASS_FAULT                            (0x06)
- #define MPI3_PEL_CLEARTYPE_CLEAR                        (0x00)
- #define MPI3_PEL_WAITTIME_INFINITE_WAIT                 (0x00)
- #define MPI3_PEL_ACTION_GET_SEQNUM                      (0x01)
-@@ -924,6 +941,7 @@ struct mpi3_ci_download_reply {
- };
- 
- #define MPI3_CI_DOWNLOAD_FLAGS_DOWNLOAD_IN_PROGRESS                  (0x80)
-+#define MPI3_CI_DOWNLOAD_FLAGS_ACTIVATION_FAILURE                    (0x40)
- #define MPI3_CI_DOWNLOAD_FLAGS_OFFLINE_ACTIVATION_REQUIRED           (0x20)
- #define MPI3_CI_DOWNLOAD_FLAGS_KEY_UPDATE_PENDING                    (0x10)
- #define MPI3_CI_DOWNLOAD_FLAGS_ACTIVATION_STATUS_MASK                (0x0e)
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_pci.h b/drivers/scsi/mpi3mr/mpi/mpi30_pci.h
-index 901dbd7..b7a5df0 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_pci.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_pci.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0-or-later */
- /*
-- *  Copyright 2016-2021 Broadcom Inc. All rights reserved.
-+ *  Copyright 2016-2022 Broadcom Inc. All rights reserved.
+-#ifdef CONFIG_PM
+ /**
+  * mpi3mr_suspend - PCI power management suspend callback
+- * @pdev: PCI device instance
+- * @state: New power state
++ * @dev: Device struct
   *
+  * Change the power state to the given value and cleanup the IOC
+  * by issuing MUR and shutdown notification
+  *
+  * Return: 0 always.
   */
- #ifndef MPI30_PCI_H
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_sas.h b/drivers/scsi/mpi3mr/mpi/mpi30_sas.h
-index 298d895..e587f77 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_sas.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_sas.h
-@@ -1,7 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0-or-later */
- /*
-- *  Copyright 2016-2021 Broadcom Inc. All rights reserved.
-- *
-+ *  Copyright 2016-2022 Broadcom Inc. All rights reserved.
-  */
- #ifndef MPI30_SAS_H
- #define MPI30_SAS_H     1
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_transport.h b/drivers/scsi/mpi3mr/mpi/mpi30_transport.h
-index ba05ea5..9b76b96 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_transport.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_transport.h
-@@ -1,7 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0-or-later */
- /*
-- *  Copyright 2016-2021 Broadcom Inc. All rights reserved.
-- *
-+ *  Copyright 2016-2022 Broadcom Inc. All rights reserved.
-  */
- #ifndef MPI30_TRANSPORT_H
- #define MPI30_TRANSPORT_H     1
-@@ -19,8 +18,8 @@ union mpi3_version_union {
+-static int mpi3mr_suspend(struct pci_dev *pdev, pm_message_t state)
++static int __maybe_unused
++mpi3mr_suspend(struct device *dev)
+ {
++	struct pci_dev *pdev = to_pci_dev(dev);
+ 	struct Scsi_Host *shost = pci_get_drvdata(pdev);
+ 	struct mpi3mr_ioc *mrioc;
+-	pci_power_t device_state;
  
- #define MPI3_VERSION_MAJOR                                              (3)
- #define MPI3_VERSION_MINOR                                              (0)
--#define MPI3_VERSION_UNIT                                               (23)
--#define MPI3_VERSION_DEV                                                (1)
-+#define MPI3_VERSION_UNIT                                               (26)
-+#define MPI3_VERSION_DEV                                                (0)
- #define MPI3_DEVHANDLE_INVALID                                          (0xffff)
- struct mpi3_sysif_oper_queue_indexes {
- 	__le16         producer_index;
-@@ -212,6 +211,7 @@ struct mpi3_default_reply_descriptor {
- #define MPI3_REPLY_DESCRIPT_FLAGS_TYPE_SUCCESS                     (0x1000)
- #define MPI3_REPLY_DESCRIPT_FLAGS_TYPE_TARGET_COMMAND_BUFFER       (0x2000)
- #define MPI3_REPLY_DESCRIPT_FLAGS_TYPE_STATUS                      (0x3000)
-+#define MPI3_REPLY_DESCRIPT_REQUEST_QUEUE_ID_INVALID               (0xffff)
- struct mpi3_address_reply_descriptor {
- 	__le64             reply_frame_address;
- 	__le16             request_queue_ci;
+ 	if (!shost)
+ 		return 0;
+@@ -5123,27 +5122,26 @@ static int mpi3mr_suspend(struct pci_dev *pdev, pm_message_t state)
+ 	mpi3mr_stop_watchdog(mrioc);
+ 	mpi3mr_cleanup_ioc(mrioc);
+ 
+-	device_state = pci_choose_state(pdev, state);
+-	ioc_info(mrioc, "pdev=0x%p, slot=%s, entering operating state [D%d]\n",
+-	    pdev, pci_name(pdev), device_state);
+-	pci_save_state(pdev);
++	ioc_info(mrioc, "pdev=0x%p, slot=%s, entering operating state\n",
++	    pdev, pci_name(pdev));
+ 	mpi3mr_cleanup_resources(mrioc);
+-	pci_set_power_state(pdev, device_state);
+ 
+ 	return 0;
+ }
+ 
+ /**
+  * mpi3mr_resume - PCI power management resume callback
+- * @pdev: PCI device instance
++ * @dev: Device struct
+  *
+  * Restore the power state to D0 and reinitialize the controller
+  * and resume I/O operations to the target devices
+  *
+  * Return: 0 on success, non-zero on failure
+  */
+-static int mpi3mr_resume(struct pci_dev *pdev)
++static int __maybe_unused
++mpi3mr_resume(struct device *dev)
+ {
++	struct pci_dev *pdev = to_pci_dev(dev);
+ 	struct Scsi_Host *shost = pci_get_drvdata(pdev);
+ 	struct mpi3mr_ioc *mrioc;
+ 	pci_power_t device_state = pdev->current_state;
+@@ -5156,9 +5154,6 @@ static int mpi3mr_resume(struct pci_dev *pdev)
+ 
+ 	ioc_info(mrioc, "pdev=0x%p, slot=%s, previous operating state [D%d]\n",
+ 	    pdev, pci_name(pdev), device_state);
+-	pci_set_power_state(pdev, PCI_D0);
+-	pci_enable_wake(pdev, PCI_D0, 0);
+-	pci_restore_state(pdev);
+ 	mrioc->pdev = pdev;
+ 	mrioc->cpu_count = num_online_cpus();
+ 	r = mpi3mr_setup_resources(mrioc);
+@@ -5180,7 +5175,6 @@ static int mpi3mr_resume(struct pci_dev *pdev)
+ 
+ 	return 0;
+ }
+-#endif
+ 
+ static const struct pci_device_id mpi3mr_pci_id_table[] = {
+ 	{
+@@ -5191,16 +5185,15 @@ static const struct pci_device_id mpi3mr_pci_id_table[] = {
+ };
+ MODULE_DEVICE_TABLE(pci, mpi3mr_pci_id_table);
+ 
++static SIMPLE_DEV_PM_OPS(mpi3mr_pm_ops, mpi3mr_suspend, mpi3mr_resume);
++
+ static struct pci_driver mpi3mr_pci_driver = {
+ 	.name = MPI3MR_DRIVER_NAME,
+ 	.id_table = mpi3mr_pci_id_table,
+ 	.probe = mpi3mr_probe,
+ 	.remove = mpi3mr_remove,
+ 	.shutdown = mpi3mr_shutdown,
+-#ifdef CONFIG_PM
+-	.suspend = mpi3mr_suspend,
+-	.resume = mpi3mr_resume,
+-#endif
++	.driver.pm = &mpi3mr_pm_ops,
+ };
+ 
+ static ssize_t event_counter_show(struct device_driver *dd, char *buf)
 -- 
 2.27.0
 
 
---000000000000eb6e7805e829be86
+--000000000000059f3c05e829bfed
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -601,13 +255,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIAKPGRYIydb9yjBmQIr3
-VO7kAcEsD5w9w+R9w1iDUVyFMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDkwODEyNDExN1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIEM5P3GnAUSKZWdbIFa3
+EliCoAqA9HEV8iAC7kRkd0D+MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDkwODEyNDExOVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQAGuetR3l6LFTFnSRJdyYtoEZayaRA4588J9wzf
-fF6i/9B5+7nBn+E6q7HmEDhFjaFWPiWjLQ0Tm/Tg7qTTLhEx1O/TmUDTI4AKAjohQoGlEU+QE8yC
-R+rpLUQmsIEDom26IOSsTD81obYQ5KqzyZyBCY+eWIHI43URHp8LgZBNKGq5R2e6zrBkR2IpDXDI
-kWoqe3pKaK+K6vV66ctZNDeTBfyH/qmk0bskIsdXNz6bEw1tgL2LdtoJAUr84sBQJKyZLQWkN+N6
-MfTN1oJSmviE+ZZv/jCWRVwxrYThsOtUYOaqQ/4Z0sU4zvES9UkQprf6enETonrROh5VwZvVCcCS
---000000000000eb6e7805e829be86--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQAKtKHmM4mctuR7NSGNDUV2Za4rtGAtXfRzvfVX
+tG2UXHWR//Locl8shSNGk3JuL7wQjE3Ii8g+XHNJluyw/7teSl5VWzW/cI/UpsVBoDpIy0BcOmJT
+blVvgM9fiHaHPhGEqdN0lIxrKQ77xazBTnA/h6M78EVp0EaL2hCS+vZ6USnqpxREw6rSPzW1j2Yl
+4mVlcL24bc59gI0ED/JGzfJxH49/OYkZUt5m71eNZgo+6Vm/Wf78kGAwnSwkb77vJ3bJw4R8JS6w
+tTjfmi+Lxb0Pucto/itF+RdMH2O0lS8Z0kI/h9DycTnTHeGfcjR6cp9oPrPYuT2V2NcFlDA8umyV
+--000000000000059f3c05e829bfed--
