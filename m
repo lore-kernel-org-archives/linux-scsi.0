@@ -2,115 +2,67 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01A18ECAAD5
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 09:08:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E103C54EE9
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 12:24:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231754AbiIHJI4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Sep 2022 05:08:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43172 "EHLO
+        id S231706AbiIHMY5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Sep 2022 08:24:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48168 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229776AbiIHJIx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2022 05:08:53 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38D61FCA3A
-        for <linux-scsi@vger.kernel.org>; Thu,  8 Sep 2022 02:08:52 -0700 (PDT)
-Received: from dggpeml500024.china.huawei.com (unknown [172.30.72.56])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4MNY9S1gqgzlVkc;
-        Thu,  8 Sep 2022 17:05:00 +0800 (CST)
-Received: from dggpeml500019.china.huawei.com (7.185.36.137) by
- dggpeml500024.china.huawei.com (7.185.36.10) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Thu, 8 Sep 2022 17:08:50 +0800
-Received: from [10.174.179.189] (10.174.179.189) by
- dggpeml500019.china.huawei.com (7.185.36.137) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Thu, 8 Sep 2022 17:08:49 +0800
-Message-ID: <f2fdc142-eabb-8aad-412c-6b3ed3785ab5@huawei.com>
-Date:   Thu, 8 Sep 2022 17:08:49 +0800
+        with ESMTP id S231744AbiIHMYm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2022 08:24:42 -0400
+Received: from bg4.exmail.qq.com (bg4.exmail.qq.com [43.155.67.158])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 189132F3BC;
+        Thu,  8 Sep 2022 05:24:39 -0700 (PDT)
+X-QQ-mid: bizesmtp91t1662639866twn5qpkl
+Received: from localhost.localdomain ( [182.148.14.0])
+        by bizesmtp.qq.com (ESMTP) with 
+        id ; Thu, 08 Sep 2022 20:24:24 +0800 (CST)
+X-QQ-SSF: 0100000000200090C000B00A0000000
+X-QQ-FEAT: D6RqbDSxuq4EWm4mj5Jkr816U6oKErZvKJVT9g0PL9ZWubgTTrxBT3LbAyMmH
+        vynW1jFrMl8b8c/DR1z7uLgLtqssN+oJxi0ReeIL9+CIb/caGIvaGN3xCtb3iK8qzywac4E
+        IR2ymYZXfjSbC6kfcTx+CDZf7z92KYfnpqf0kceq0eAoFaxgEvHvbszZC1ebaGjmGdQgho5
+        xd5bX+rcc0RD3Su2TPukh46CLi0KwKF51cOiOUdLZiys/ES7f0eL0hdcW4ZSCVQRHg4wplD
+        SGk+cg46eLnpMic/kULVwIyQpESsyahHXC2ar/yS4c1OOtMdUq6ysz2yMdHaNwLmNnWQkP2
+        m7v+/Qn6gkfiWtjB+WlNaM808DIVK8KPWkQ8KEK1ngIJ7u1d8/R7vzrA5X//w==
+X-QQ-GoodBg: 0
+From:   wangjianli <wangjianli@cdjrlc.com>
+To:     oliver@neukum.org, aliakc@web.de, lenehan@twibble.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     dc395x@twibble.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, wangjianli <wangjianli@cdjrlc.com>
+Subject: [PATCH] drivers/scsi: fix repeated words in comments
+Date:   Thu,  8 Sep 2022 20:24:18 +0800
+Message-Id: <20220908122418.11728-1-wangjianli@cdjrlc.com>
+X-Mailer: git-send-email 2.36.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.0
-Subject: [PATCH RESEND] scsi: core: Add io timeout count for scsi device
-Content-Language: en-US
-References: <f081b7ca-64d9-add3-2ebb-48b80614d107@huawei.com>
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <qiuchangqi.qiu@huawei.com>,
-        <wubo40@huawei.com>
-From:   Wu Bo <wubo40@huawei.com>
-In-Reply-To: <f081b7ca-64d9-add3-2ebb-48b80614d107@huawei.com>
-X-Forwarded-Message-Id: <f081b7ca-64d9-add3-2ebb-48b80614d107@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.179.189]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- dggpeml500019.china.huawei.com (7.185.36.137)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: bizesmtp:cdjrlc.com:qybglogicsvr:qybglogicsvr7
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Current the scsi device has iorequest count, iodone count
-and ioerr count, but lack of io timeout count.
+Delete the redundant word 'in'.
 
-For better tracking of scsi io, So add it now.
-
-Signed-off-by: Wu Bo <wubo40@huawei.com>
+Signed-off-by: wangjianli <wangjianli@cdjrlc.com>
 ---
-  drivers/scsi/scsi_error.c  | 1 +
-  drivers/scsi/scsi_sysfs.c  | 2 ++
-  include/scsi/scsi_device.h | 1 +
-  3 files changed, 4 insertions(+)
+ drivers/scsi/dc395x.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 448748e..e84aea9 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -334,6 +334,7 @@ enum blk_eh_timer_return scsi_timeout(struct request 
-*req)
-         trace_scsi_dispatch_cmd_timeout(scmd);
-         scsi_log_completion(scmd, TIMEOUT_ERROR);
-
-+       atomic_inc(&scmd->device->iotmo_cnt);
-         if (host->eh_deadline != -1 && !host->last_reset)
-                 host->last_reset = jiffies;
-
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 9dad2fd..72e702c 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -970,6 +970,7 @@ static DEVICE_ATTR(field, S_IRUGO, 
-show_iostat_##field, NULL)
-  show_sdev_iostat(iorequest_cnt);
-  show_sdev_iostat(iodone_cnt);
-  show_sdev_iostat(ioerr_cnt);
-+show_sdev_iostat(iotmo_cnt);
-
-  static ssize_t
-  sdev_show_modalias(struct device *dev, struct device_attribute *attr, 
-char *buf)
-@@ -1289,6 +1290,7 @@ static umode_t 
-scsi_sdev_bin_attr_is_visible(struct kobject *kobj,
-         &dev_attr_iorequest_cnt.attr,
-         &dev_attr_iodone_cnt.attr,
-         &dev_attr_ioerr_cnt.attr,
-+       &dev_attr_iotmo_cnt.attr,
-         &dev_attr_modalias.attr,
-         &dev_attr_queue_depth.attr,
-         &dev_attr_queue_type.attr,
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 3113471..78039d1 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -231,6 +231,7 @@ struct scsi_device {
-         atomic_t iorequest_cnt;
-         atomic_t iodone_cnt;
-         atomic_t ioerr_cnt;
-+       atomic_t iotmo_cnt;
-
-         struct device           sdev_gendev,
-                                 sdev_dev;
---
-1.8.3.1
+diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
+index 670a836a6ba1..aea82007dd61 100644
+--- a/drivers/scsi/dc395x.c
++++ b/drivers/scsi/dc395x.c
+@@ -4226,7 +4226,7 @@ static void adapter_init_params(struct AdapterCtlBlk *acb)
+  * values that we have already stored in the adapter instance. There's
+  * some mention that a lot of these are deprecated, so we won't use
+  * them (we'll use the ones in the adapter instance) but we'll fill
+- * them in in case something else needs them.
++ * them in case something else needs them.
+  *
+  * The eeprom structure, irq and io ports in the adapter need to have
+  * been set before calling this function.
 -- 
-Wu Bo
+2.36.1
+
