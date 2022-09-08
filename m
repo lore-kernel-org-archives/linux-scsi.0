@@ -2,398 +2,100 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4354BC38145
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 12:41:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FBF0C54EE9
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Sep 2022 12:41:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231934AbiIHMlg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Sep 2022 08:41:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60574 "EHLO
+        id S231952AbiIHMlv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Sep 2022 08:41:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60882 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231903AbiIHMlZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2022 08:41:25 -0400
-Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E608BCD501
-        for <linux-scsi@vger.kernel.org>; Thu,  8 Sep 2022 05:41:23 -0700 (PDT)
-Received: by mail-pj1-x1034.google.com with SMTP id m10-20020a17090a730a00b001fa986fd8eeso2278955pjk.0
-        for <linux-scsi@vger.kernel.org>; Thu, 08 Sep 2022 05:41:23 -0700 (PDT)
+        with ESMTP id S231887AbiIHMlf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2022 08:41:35 -0400
+Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2FF76D0769
+        for <linux-scsi@vger.kernel.org>; Thu,  8 Sep 2022 05:41:26 -0700 (PDT)
+Received: by mail-pj1-x102b.google.com with SMTP id o4so17639054pjp.4
+        for <linux-scsi@vger.kernel.org>; Thu, 08 Sep 2022 05:41:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date;
-        bh=haMBP14o/PkzMPK995Ew2XJwuBgfLJ0mjBf4zakAwbU=;
-        b=XTXx0Cq0hHAC+UO4CvFSNSgVKB3MT22C214Fg3SufZrwyV85B7+b6Ox6yQLbc5pN/Z
-         iwD6bMTOSABxoSCy+5JqZ4zXlnlVNVh+Pbuko5r03eD96QMnQpUkkQHO6GGH4oTWyaoQ
-         BW2efItXbJM+z2H3BZyGVmTfcKbmDkhYQhc4c=
+        bh=u1oHpGo/fYa87fX64El+pacFUrzQjidJYlItbx53b4E=;
+        b=ADj3MzqOBPPhDqFaaXx3PM+rn0jwglBmfGIbeqDeRcyDc8En1EcbiuMxH4TBHNYshA
+         Nhp0L6O2kFYUr6D+EbtsmE9hzHRVXzz9Zpa5cFUGpa8uarEXvpz8f3edZzduE2XZdTGP
+         LCoOOFJC6tRtCEBSBImcG2FSghX4PP1S0ZeUA=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date;
-        bh=haMBP14o/PkzMPK995Ew2XJwuBgfLJ0mjBf4zakAwbU=;
-        b=AZr+EP0LQVCdlYZ0DzS2Kn1lI5j/DHuqC8YR0sev7wGUGOvh3TYjFTLSW5rE3DAdBC
-         B6gS9xTwQ6CsDuJdKcW6/iXJwW4P6e2j6AJ/xMd0mBOuvVCIE6KnZbCK8E51CTJbGcsK
-         b7iymNiGCVFrkX8qv3gNH+x02pzd63lgVn/br5MYwaDaw+etorkgln9pdcjfB/4Djq3o
-         xVrWte4SzgF2RvlXGZEM+RoNBpnYmgFtKFvzu8+cR0n4Ern+spiLPBdIjtgUpp765Byd
-         gO6JkpxDQwVofmN1t0lofEf63vn3aNUryl8TZesfC0r5sf/td0giAohh4kmZU4X2V5hP
-         MibQ==
-X-Gm-Message-State: ACgBeo15pNvKIdSAu9p3VMIA0babKQyk2jVXb08LGKN3abDKD9CMpjau
-        1+2Ci251mko8aqbVJJEVT6O7L5RAf6skuzuCAwrnBNU76i2/1znVt2YyytW5kt0Ypyxr4eLqVe0
-        J/OigtxjKSziQKxCKzWBmAy2TdBTM5ScxpDuOTICFEI577mWRjPhqc1yr5HEGnw3wT+kfByhHo3
-        GxHuRz+8ND
-X-Google-Smtp-Source: AA6agR7Ayg+nuvEWkBlV5SN9l15FlQAbmGHKlFC+kofG4mX6Jm60ZI7Y7Tsu6ilrNeR38PaylwosTA==
-X-Received: by 2002:a17:90b:3e84:b0:1fd:ce48:979 with SMTP id rj4-20020a17090b3e8400b001fdce480979mr3988430pjb.54.1662640882844;
-        Thu, 08 Sep 2022 05:41:22 -0700 (PDT)
+        bh=u1oHpGo/fYa87fX64El+pacFUrzQjidJYlItbx53b4E=;
+        b=jSA1JW2Zgqgn8NBy+94on3SKbqOoZyGsmvz4Mjk4TBnsvF1NfP7es/3GoNw2V393aJ
+         NYlm67IF040qVqZHEtemi9yb4IzANwJGPdkmBeLCLCFyuaSS4Jujm2OXWTbUN+q1FSpc
+         sHK7a+4cVQ/ZBcWGZK8JEstI1EYvA94S4Tfs5EfUg+uZc3Chn5uBRbpIO1STrqj3kcP/
+         j6I/60+6ffhJQFohRRdbno+2VbQ5yE+SUHyfrwhf3TiWM4k22sogmZV4jZqFUYMR/RnJ
+         9OxZQWDmwOCiUxRPPD1tByvXylDaj3K6CDZ4yJWq/C/4ezpu8CFIuFZ/4rlJL908omi6
+         sNSQ==
+X-Gm-Message-State: ACgBeo3T12D/hA+A3wRCLRFc9B/lop/vUa97fUAiQHBvaBHw3NZN98yt
+        mlcZELx1aK+x4UWf1nqIF/GzDh6KjWAZJ3qej7IERiUst4XFZmJZTeVFlxisnqGKnSvx14Yi22o
+        M1tJR47kY7D5yzz+iLFrgFHjl2Ea+axEGTt+GFs4OgLjf7uLfgRvMcsa0bfwsMPuls331JUShXX
+        8VFaeXyKil
+X-Google-Smtp-Source: AA6agR4StM2zqypp2vXwVzXHgMqnFtlOeRAjVUac72SqYWTnWkozv8GAWDbNQkFll/xtDfJ56Dz+ow==
+X-Received: by 2002:a17:90b:380e:b0:1fe:8e4:96be with SMTP id mq14-20020a17090b380e00b001fe08e496bemr4016227pjb.18.1662640884844;
+        Thu, 08 Sep 2022 05:41:24 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id c17-20020a63ef51000000b0043395af24f6sm11106807pgk.25.2022.09.08.05.41.21
+        by smtp.gmail.com with ESMTPSA id c17-20020a63ef51000000b0043395af24f6sm11106807pgk.25.2022.09.08.05.41.23
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 08 Sep 2022 05:41:22 -0700 (PDT)
+        Thu, 08 Sep 2022 05:41:24 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 4/9] mpi3mr: Graceful handling of surprise removal of PCIe HBA
-Date:   Thu,  8 Sep 2022 18:23:27 +0530
-Message-Id: <20220908125332.21110-5-sreekanth.reddy@broadcom.com>
+Subject: [PATCH 5/9] mpi3mr: Handle 0xF003 Fault Code
+Date:   Thu,  8 Sep 2022 18:23:28 +0530
+Message-Id: <20220908125332.21110-6-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20220908125332.21110-1-sreekanth.reddy@broadcom.com>
 References: <20220908125332.21110-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000003eeaec05e829bf60"
+        boundary="0000000000005b33e005e829bfbf"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000003eeaec05e829bf60
+--0000000000005b33e005e829bfbf
 Content-Transfer-Encoding: 8bit
 
-Graceful handling of surprise or orderly removal of PCIe HBA with
-below changes,
-- Detect a hot removal of the controller at certain critical places
- in the driver. Early detection will help to reduce the time taken for
- cleaning up the hot removed controller at the driver level.
-- Poll the status of the port enable issued after reset once in every
- 5 seconds to avoid a long delay in detecting unavailable controller.
+Handle the 0xF003 controller fault code as a special case by
+marking the controller as unrecoverable with logging a
+message indicating the driver marks the controller as
+unrecoverable due to the specific fault.
 
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr.h    |   3 +
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 102 +++++++++++++++++++++++++++++---
- drivers/scsi/mpi3mr/mpi3mr_os.c |  45 ++++++++++++++
- 3 files changed, 142 insertions(+), 8 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 0f47b45..0eb0647 100644
---- a/drivers/scsi/mpi3mr/mpi3mr.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -118,6 +118,7 @@ extern atomic64_t event_counter;
- /* command/controller interaction timeout definitions in seconds */
- #define MPI3MR_INTADMCMD_TIMEOUT		60
- #define MPI3MR_PORTENABLE_TIMEOUT		300
-+#define MPI3MR_PORTENABLE_POLL_INTERVAL		5
- #define MPI3MR_ABORTTM_TIMEOUT			60
- #define MPI3MR_RESETTM_TIMEOUT			60
- #define MPI3MR_RESET_HOST_IOWAIT_TIMEOUT	5
-@@ -1389,4 +1390,6 @@ void mpi3mr_print_device_event_notice(struct mpi3mr_ioc *mrioc,
- void mpi3mr_refresh_sas_ports(struct mpi3mr_ioc *mrioc);
- void mpi3mr_refresh_expanders(struct mpi3mr_ioc *mrioc);
- void mpi3mr_add_event_wait_for_device_refresh(struct mpi3mr_ioc *mrioc);
-+void mpi3mr_flush_drv_cmds(struct mpi3mr_ioc *mrioc);
-+void mpi3mr_flush_cmds_for_unrecovered_controller(struct mpi3mr_ioc *mrioc);
- #endif /*MPI3MR_H_INCLUDED*/
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 78792f2..9f03f1c 100644
+index 9f03f1c..5447fda 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -431,6 +431,9 @@ static int mpi3mr_process_admin_reply_q(struct mpi3mr_ioc *mrioc)
- 		return 0;
+@@ -2502,8 +2502,9 @@ static void mpi3mr_watchdog_work(struct work_struct *work)
+ 	mrioc->diagsave_timeout = 0;
  
- 	do {
-+		if (mrioc->unrecoverable)
-+			break;
-+
- 		mrioc->admin_req_ci = le16_to_cpu(reply_desc->request_queue_ci);
- 		mpi3mr_process_admin_reply_desc(mrioc, reply_desc, &reply_dma);
- 		if (reply_dma)
-@@ -516,6 +519,9 @@ int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mrioc,
- 	}
- 
- 	do {
-+		if (mrioc->unrecoverable)
-+			break;
-+
- 		req_q_idx = le16_to_cpu(reply_desc->request_queue_id) - 1;
- 		op_req_q = &mrioc->req_qinfo[req_q_idx];
- 
-@@ -577,7 +583,8 @@ int mpi3mr_blk_mq_poll(struct Scsi_Host *shost, unsigned int queue_num)
- 
- 	mrioc = (struct mpi3mr_ioc *)shost->hostdata;
- 
--	if ((mrioc->reset_in_progress || mrioc->prepare_for_reset))
-+	if ((mrioc->reset_in_progress || mrioc->prepare_for_reset ||
-+	    mrioc->unrecoverable))
- 		return 0;
- 
- 	num_entries = mpi3mr_process_op_reply_q(mrioc,
-@@ -673,7 +680,7 @@ static irqreturn_t mpi3mr_isr_poll(int irq, void *privdata)
- 
- 	/* Poll for pending IOs completions */
- 	do {
--		if (!mrioc->intr_enabled)
-+		if (!mrioc->intr_enabled || mrioc->unrecoverable)
- 			break;
- 
- 		if (!midx)
-@@ -1220,6 +1227,14 @@ static int mpi3mr_bring_ioc_ready(struct mpi3mr_ioc *mrioc)
- 			msleep(100);
- 		} while (--timeout);
- 
-+		if (!pci_device_is_present(mrioc->pdev)) {
-+			mrioc->unrecoverable = 1;
-+			ioc_err(mrioc,
-+			    "controller is not present while waiting to reset\n");
-+			retval = -1;
-+			goto out_device_not_present;
-+		}
-+
- 		ioc_state = mpi3mr_get_iocstate(mrioc);
- 		ioc_info(mrioc,
- 		    "controller is in %s state after waiting to reset\n",
-@@ -1277,6 +1292,13 @@ static int mpi3mr_bring_ioc_ready(struct mpi3mr_ioc *mrioc)
- 			    mpi3mr_iocstate_name(ioc_state));
- 			return 0;
- 		}
-+		if (!pci_device_is_present(mrioc->pdev)) {
-+			mrioc->unrecoverable = 1;
-+			ioc_err(mrioc,
-+			    "controller is not present at the bringup\n");
-+			retval = -1;
-+			goto out_device_not_present;
-+		}
- 		msleep(100);
- 	} while (--timeout);
- 
-@@ -1285,6 +1307,7 @@ out_failed:
- 	ioc_err(mrioc,
- 	    "failed to bring to ready state,  current state: %s\n",
- 	    mpi3mr_iocstate_name(ioc_state));
-+out_device_not_present:
- 	return retval;
- }
- 
-@@ -2223,6 +2246,17 @@ void mpi3mr_check_rh_fault_ioc(struct mpi3mr_ioc *mrioc, u32 reason_code)
- {
- 	u32 ioc_status, host_diagnostic, timeout;
- 
-+	if (mrioc->unrecoverable) {
-+		ioc_err(mrioc, "controller is unrecoverable\n");
-+		return;
-+	}
-+
-+	if (!pci_device_is_present(mrioc->pdev)) {
-+		mrioc->unrecoverable = 1;
-+		ioc_err(mrioc, "controller is not present\n");
-+		return;
-+	}
-+
- 	ioc_status = readl(&mrioc->sysif_regs->ioc_status);
- 	if ((ioc_status & MPI3_SYSIF_IOC_STATUS_RESET_HISTORY) ||
- 	    (ioc_status & MPI3_SYSIF_IOC_STATUS_FAULT)) {
-@@ -2414,9 +2448,21 @@ static void mpi3mr_watchdog_work(struct work_struct *work)
- 	u32 fault, host_diagnostic, ioc_status;
- 	u32 reset_reason = MPI3MR_RESET_FROM_FAULT_WATCH;
- 
--	if (mrioc->reset_in_progress || mrioc->unrecoverable)
-+	if (mrioc->reset_in_progress)
- 		return;
- 
-+	if (!mrioc->unrecoverable && !pci_device_is_present(mrioc->pdev)) {
-+		ioc_err(mrioc, "watchdog could not detect the controller\n");
-+		mrioc->unrecoverable = 1;
-+	}
-+
-+	if (mrioc->unrecoverable) {
-+		ioc_err(mrioc,
-+		    "flush pending commands for unrecoverable controller\n");
-+		mpi3mr_flush_cmds_for_unrecovered_controller(mrioc);
-+		return;
-+	}
-+
- 	if (mrioc->ts_update_counter++ >= MPI3MR_TSUPDATE_INTERVAL) {
- 		mrioc->ts_update_counter = 0;
- 		mpi3mr_sync_timestamp(mrioc);
-@@ -2460,7 +2506,7 @@ static void mpi3mr_watchdog_work(struct work_struct *work)
- 		ioc_info(mrioc,
+ 	switch (fault) {
++	case MPI3_SYSIF_FAULT_CODE_COMPLETE_RESET_NEEDED:
+ 	case MPI3_SYSIF_FAULT_CODE_POWER_CYCLE_REQUIRED:
+-		ioc_info(mrioc,
++		ioc_warn(mrioc,
  		    "controller requires system power cycle, marking controller as unrecoverable\n");
  		mrioc->unrecoverable = 1;
--		return;
-+		goto schedule_work;
- 	case MPI3_SYSIF_FAULT_CODE_SOFT_RESET_IN_PROGRESS:
- 		return;
- 	case MPI3_SYSIF_FAULT_CODE_CI_ACTIVATION_RESET:
-@@ -3396,10 +3442,13 @@ out_failed:
- static void mpi3mr_port_enable_complete(struct mpi3mr_ioc *mrioc,
- 	struct mpi3mr_drv_cmd *drv_cmd)
- {
--	drv_cmd->state = MPI3MR_CMD_NOTUSED;
- 	drv_cmd->callback = NULL;
--	mrioc->scan_failed = drv_cmd->ioc_status;
- 	mrioc->scan_started = 0;
-+	if (drv_cmd->state & MPI3MR_CMD_RESET)
-+		mrioc->scan_failed = MPI3_IOCSTATUS_INTERNAL_ERROR;
-+	else
-+		mrioc->scan_failed = drv_cmd->ioc_status;
-+	drv_cmd->state = MPI3MR_CMD_NOTUSED;
- }
- 
- /**
-@@ -3897,6 +3946,7 @@ int mpi3mr_reinit_ioc(struct mpi3mr_ioc *mrioc, u8 is_resume)
- 	int retval = 0;
- 	u8 retry = 0;
- 	struct mpi3_ioc_facts_data facts_data;
-+	u32 pe_timeout, ioc_status;
- 
- retry_init:
- 	dprint_reset(mrioc, "bringing up the controller to ready state\n");
-@@ -3994,11 +4044,46 @@ retry_init:
- 	}
- 
- 	ioc_info(mrioc, "sending port enable\n");
--	retval = mpi3mr_issue_port_enable(mrioc, 0);
-+	retval = mpi3mr_issue_port_enable(mrioc, 1);
- 	if (retval) {
- 		ioc_err(mrioc, "failed to issue port enable\n");
- 		goto out_failed;
- 	}
-+	do {
-+		ssleep(MPI3MR_PORTENABLE_POLL_INTERVAL);
-+		if (mrioc->init_cmds.state == MPI3MR_CMD_NOTUSED)
-+			break;
-+		if (!pci_device_is_present(mrioc->pdev))
-+			mrioc->unrecoverable = 1;
-+		if (mrioc->unrecoverable) {
-+			retval = -1;
-+			goto out_failed_noretry;
-+		}
-+		ioc_status = readl(&mrioc->sysif_regs->ioc_status);
-+		if ((ioc_status & MPI3_SYSIF_IOC_STATUS_RESET_HISTORY) ||
-+		    (ioc_status & MPI3_SYSIF_IOC_STATUS_FAULT)) {
-+			mpi3mr_print_fault_info(mrioc);
-+			mrioc->init_cmds.is_waiting = 0;
-+			mrioc->init_cmds.callback = NULL;
-+			mrioc->init_cmds.state = MPI3MR_CMD_NOTUSED;
-+			goto out_failed;
-+		}
-+	} while (--pe_timeout);
-+
-+	if (!pe_timeout) {
-+		ioc_err(mrioc, "port enable timed out\n");
-+		mpi3mr_check_rh_fault_ioc(mrioc,
-+		    MPI3MR_RESET_FROM_PE_TIMEOUT);
-+		mrioc->init_cmds.is_waiting = 0;
-+		mrioc->init_cmds.callback = NULL;
-+		mrioc->init_cmds.state = MPI3MR_CMD_NOTUSED;
-+		goto out_failed;
-+	} else if (mrioc->scan_failed) {
-+		ioc_err(mrioc,
-+		    "port enable failed with status=0x%04x\n",
-+		    mrioc->scan_failed);
-+	} else
-+		ioc_info(mrioc, "port enable completed successfully\n");
- 
- 	ioc_info(mrioc, "controller %s completed successfully\n",
- 	    (is_resume)?"resume":"re-initialization");
-@@ -4417,7 +4502,7 @@ static inline void mpi3mr_drv_cmd_comp_reset(struct mpi3mr_ioc *mrioc,
-  *
-  * Return: Nothing.
-  */
--static void mpi3mr_flush_drv_cmds(struct mpi3mr_ioc *mrioc)
-+void mpi3mr_flush_drv_cmds(struct mpi3mr_ioc *mrioc)
- {
- 	struct mpi3mr_drv_cmd *cmdptr;
- 	u8 i;
-@@ -4850,6 +4935,7 @@ out:
- 		mrioc->unrecoverable = 1;
- 		mrioc->reset_in_progress = 0;
- 		retval = -1;
-+		mpi3mr_flush_cmds_for_unrecovered_controller(mrioc);
- 	}
- 	mrioc->prev_reset_result = retval;
- 	mutex_unlock(&mrioc->reset_mutex);
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index f1a6448..a5b6402 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -582,6 +582,39 @@ void mpi3mr_flush_host_io(struct mpi3mr_ioc *mrioc)
- 	    mrioc->flush_io_count);
- }
- 
-+/**
-+ * mpi3mr_flush_cmds_for_unrecovered_controller- Flush all pend cmds
-+ * @mrioc: Adapter instance reference
-+ *
-+ * This function waits for currently running IO poll threads to
-+ * exit and then flushes all host I/Os and any internal pending
-+ * cmds. This is executed after controller is marked as
-+ * unrecoverable.
-+ *
-+ * Return: Nothing.
-+ */
-+void mpi3mr_flush_cmds_for_unrecovered_controller(struct mpi3mr_ioc *mrioc)
-+{
-+	struct Scsi_Host *shost = mrioc->shost;
-+	int i;
-+
-+	if (!mrioc->unrecoverable)
-+		return;
-+
-+	if (mrioc->op_reply_qinfo) {
-+		for (i = 0; i < mrioc->num_queues; i++) {
-+			while (atomic_read(&mrioc->op_reply_qinfo[i].in_use))
-+				udelay(500);
-+			atomic_set(&mrioc->op_reply_qinfo[i].pend_ios, 0);
-+		}
-+	}
-+	mrioc->flush_io_count = 0;
-+	blk_mq_tagset_busy_iter(&shost->tag_set,
-+	    mpi3mr_flush_scmd, (void *)mrioc);
-+	mpi3mr_flush_delayed_cmd_lists(mrioc);
-+	mpi3mr_flush_drv_cmds(mrioc);
-+}
-+
- /**
-  * mpi3mr_alloc_tgtdev - target device allocator
-  *
-@@ -1815,6 +1848,13 @@ static void mpi3mr_fwevt_bh(struct mpi3mr_ioc *mrioc,
- 	if (mrioc->stop_drv_processing)
- 		goto out;
- 
-+	if (mrioc->unrecoverable) {
-+		dprint_event_bh(mrioc,
-+		    "ignoring event(0x%02x) in bottom half handler due to unrecoverable controller\n",
-+		    fwevt->event_id);
-+		goto out;
-+	}
-+
- 	if (!fwevt->process_evt)
- 		goto evt_ack;
- 
-@@ -5024,6 +5064,11 @@ static void mpi3mr_remove(struct pci_dev *pdev)
- 	while (mrioc->reset_in_progress || mrioc->is_driver_loading)
- 		ssleep(1);
- 
-+	if (!pci_device_is_present(mrioc->pdev)) {
-+		mrioc->unrecoverable = 1;
-+		mpi3mr_flush_cmds_for_unrecovered_controller(mrioc);
-+	}
-+
- 	mpi3mr_bsg_exit(mrioc);
- 	mrioc->stop_drv_processing = 1;
- 	mpi3mr_cleanup_fwevt_list(mrioc);
+ 		goto schedule_work;
 -- 
 2.27.0
 
 
---0000000000003eeaec05e829bf60
+--0000000000005b33e005e829bfbf
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -464,13 +166,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIGjoxlq2oVvy6yeNeSCX
-IhTS/H4ANnbLgtGTYawZxj5oMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDkwODEyNDEyM1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIP758gEzCsvoGgOBzqZ3
+ZMwVt5E2om9PDvZUzhyRmrh9MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDkwODEyNDEyNVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBP3t0y7huUoG0qi3+MSpjzfQXCGCRLKdjkFz+x
-sP1A+M65nJKvQlIxhf3RL34P1SvmzcAkrFKi3hu3CIqoqf9+/FuB+4DxN8oUGJm2kO+3CiSVecF3
-x2+bIF+acGsBKjaCgF7x3dBZSc/05mrY9u5JxRjDrjOWXiujVliWIljVGDUuE8SeQNWlz4zAmRGE
-C+z6RllRYnzDNoaXyRTtkf9Kb8RKUHyoAxLO3/8MDbHxi0qpboyTiqBr67pKRVmKxzkMcLplwH3I
-oZiCiB/o+MahhuaPYYugwAU/F+kaoDRk0/geL8tdI4jN9aC1eYZAzMnAZHkTRTAz4qh+sUW9puLU
---0000000000003eeaec05e829bf60--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQA2S01EAKaB7Es+Hs0adaiLVrGpf2+LLjh6qIVC
+2cO/bBgZXVFYNSER4nIdBPAOVA2r8V/6L/xowmgCKa4MXS9mU+J3DJ7X71dZ3DbcbHb1jRZ7FbD+
+b0pTTU/QUjX3DbRRZtw2mXjSsWk4yE70L4y5V/to3cF6ybHGsYKuJ+gSPded2YiT5aD+L4yu+phr
+O83UxvnXmH8lkEgb1SxctBJdsX7B0cm7gSSij02QxJcG3NaPi2fEg6mcA9vnC+EQxlONaf9Bal2n
+vN/0TIxQvF2OkivfdrIEka4bIUlv31qzQs2E6lcgXFwA2ZeLSYk76gq4oeF8B1kbzk2SBBo810ze
+--0000000000005b33e005e829bfbf--
