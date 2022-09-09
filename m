@@ -2,171 +2,455 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0977ECAAA1
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Sep 2022 17:25:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BF5DECAAD3
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Sep 2022 19:46:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229961AbiIIRZA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Sep 2022 13:25:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54824 "EHLO
+        id S231907AbiIITqj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Sep 2022 15:46:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54872 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229548AbiIIRY6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2022 13:24:58 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4201930F7E;
-        Fri,  9 Sep 2022 10:24:57 -0700 (PDT)
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 289G9k9t016419;
-        Fri, 9 Sep 2022 17:24:56 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2022-7-12;
- bh=jxF0z6fHbBrKzObFZ4FIocHuUUrxeSIabHWzO87XQpE=;
- b=a+EyPq+zBGpDLoXSuRZNZtpyMes05+fClZ2UGBKp/1dreTMojrnSHsYky5pCWNnvR4Kx
- t4oedaz8kIVxVDOQEOoeD75NwU+FCvxGEHsWirivbLhVMBnlygFExVmBQQnODyyLxYkv
- 1lt3QliusiYNiGPfQFxDyS+VgoPTAmOXvyFaUhdL9BZlNnwN9ptniSBql8jjTHWx/d5r
- uNFnyhLC4fj35ZuYCGNdEuTOSt5l71qICYTtXLAKfl1gmyL6XMOqNpUpuiTSSpSytumd
- 7Njz4vwMbFi3dErEWPAkoYphpIyNud6wDVq292NWpu/zS0Ekeuj/orijqGugkz+isRzL OA== 
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3jbyftywar-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 09 Sep 2022 17:24:56 +0000
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 289G6NjA008641;
-        Fri, 9 Sep 2022 17:24:55 GMT
-Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2044.outbound.protection.outlook.com [104.47.66.44])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3jbwc8eu45-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 09 Sep 2022 17:24:55 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=C/NR/R3PeV2L+vcQM7IeszUAmciWjcK6HdbcySbasbT9jPsJtOuLy6GUvYaWALuEG0H+3yxPp5kG41FRhjLV2l3P6yqiEKM8YJWHQl1b7ZoTFIjF0DEnYadAMPiyUzcqnfSHX8j/Uk8G++2nWZNySsTAOqEccrwtgUshnaAyKiQksFlIaD2LFddCTY5NV6fWe2U3nFC/w8K4VoTqKXWnrBH3tjJ1qBp4HjWSDC8CwJG++qVD9Sr2tRCbox5MhJZn185PnwDAoF+cQoEuGQaph7Qi7YqBYtVJ5YzHVu6VCz7jWZGNzBBzpDolQQv9JMZHVn9VUbZFg+F5bFODIU33bA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=jxF0z6fHbBrKzObFZ4FIocHuUUrxeSIabHWzO87XQpE=;
- b=ddk9bVZcuwa3WwcZ+sUpPLB/Rfl+dhXI5/aEoC1AyK8IvTa05DjH3s4Ve6wFIwQBApKIEEn6QO1PHNCwOBzpriCUYLtfpsQ+4MpPF2zTeLRCyjekq+Ieehfz6rH2L6zKh2sH5VkxaDkUFxa7ZwZ3fMa46XlRjM/YrM6UbwhiCwHZSm5UwwTlAKIS/SDsDt0lhkrFQ0CLrDdvp3Cp7/i/JcNkWEZm5WS3gN9roKZZwt4gZICzSNXi+puUzPdoiiY7d8tT1WeAlyo90MZyevkZViyI6S/LVNIGvOGMcyIhR7iZ6ofaxJzYGAqLUJF+NK/2BuZjpi4DBoeDbb2PO+iSEA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=jxF0z6fHbBrKzObFZ4FIocHuUUrxeSIabHWzO87XQpE=;
- b=qAqmoinweAUMRUSkr77k/8v3Kzunku6u8qTpk+up/1mHoSOdu4hVZuAufEe1Oj5sn81XrcjxDCB+mJNs8ScHbASZ3HSf1qy8tuzwUYW2IVHtssugI+50KP/qF9JB+HaYpFtGzmF2s3P+bXnw+0eDwzutTEPjXYqRyWNUWogCZdE=
-Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
- SA2PR10MB4780.namprd10.prod.outlook.com (2603:10b6:806:118::5) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5612.19; Fri, 9 Sep 2022 17:24:53 +0000
-Received: from DM5PR10MB1466.namprd10.prod.outlook.com
- ([fe80::8dee:d667:f326:1d50]) by DM5PR10MB1466.namprd10.prod.outlook.com
- ([fe80::8dee:d667:f326:1d50%6]) with mapi id 15.20.5612.021; Fri, 9 Sep 2022
- 17:24:53 +0000
-Message-ID: <b5dc6104-04e1-c3f0-b22d-ff9043cd9f36@oracle.com>
-Date:   Fri, 9 Sep 2022 12:24:51 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.1
-Subject: Re: [PATCH] scsi: target: core: Add a way to hide a port group
-Content-Language: en-US
-To:     Konstantin Shelekhin <k.shelekhin@yadro.com>,
-        Dmitry Bogdanov <d.bogdanov@yadro.com>
-Cc:     Martin Petersen <martin.petersen@oracle.com>,
-        target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux@yadro.com, Roman Bolshakov <r.bolshakov@yadro.com>
-References: <20220906074903.18755-1-d.bogdanov@yadro.com>
- <f85ec171-f3c6-cc14-daa1-84ef1b20898a@oracle.com>
- <20220909112235.GD9218@yadro.com> <YxskUBeZeMPi5By2@yadro.com>
-From:   Mike Christie <michael.christie@oracle.com>
-In-Reply-To: <YxskUBeZeMPi5By2@yadro.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: CH0PR03CA0330.namprd03.prod.outlook.com
- (2603:10b6:610:118::22) To DM5PR10MB1466.namprd10.prod.outlook.com
- (2603:10b6:3:b::7)
+        with ESMTP id S231936AbiIITqM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2022 15:46:12 -0400
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 126FF4D83D;
+        Fri,  9 Sep 2022 12:42:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1662752536;
+        bh=0TA1fcaFjxj+h7LH77I89nvRe2vOysHdnuYBeaVbeOc=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=GLengYwFvWR0AxO91XgZjGVCS7jR5seMK4uxIg7pHJHJ82vj6O603zva1IxD4Yrse
+         sikmnM6rsANrTe13wom5dR4KD9Lpeso0WDClmEbLkynjFqIR6UQdKP9k/V0WyzCaao
+         /tc9jt8cV9dBhNL9gyqCiNCEvIGgGAAcid1yjBq8=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id C49161281BCA;
+        Fri,  9 Sep 2022 15:42:16 -0400 (EDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id vSxFHI8WL_qV; Fri,  9 Sep 2022 15:42:16 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1662752536;
+        bh=0TA1fcaFjxj+h7LH77I89nvRe2vOysHdnuYBeaVbeOc=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=GLengYwFvWR0AxO91XgZjGVCS7jR5seMK4uxIg7pHJHJ82vj6O603zva1IxD4Yrse
+         sikmnM6rsANrTe13wom5dR4KD9Lpeso0WDClmEbLkynjFqIR6UQdKP9k/V0WyzCaao
+         /tc9jt8cV9dBhNL9gyqCiNCEvIGgGAAcid1yjBq8=
+Received: from lingrow.int.hansenpartnership.com (c-67-166-174-65.hsd1.va.comcast.net [67.166.174.65])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (Client did not present a certificate)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 2D0BD1281B54;
+        Fri,  9 Sep 2022 15:42:16 -0400 (EDT)
+Message-ID: <1dd06978292c5c1979b79b1a94b4af4d7175d7aa.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 6.0-rc4
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Fri, 09 Sep 2022 15:42:14 -0400
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM5PR10MB1466:EE_|SA2PR10MB4780:EE_
-X-MS-Office365-Filtering-Correlation-Id: f4885155-53da-43b9-dea7-08da92883512
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: Og/wZb5DLM/t/jQzjMBhvtkuXhLjdK/tFvippAGeTRkcLHlzXJMRys8qp1uA7PaWou//p9RnOh7yQfmrwGrkQ7OYZdXMU4oJk+GdQde8skx7LtimFnbAxN0eGSY3lDS8chX3avahdfngARPzgOU00kwes3YBPkx1gzmy4QabJUOIeqp9f4WbrFwauSwKVpfHtDfo6rSYqddQVV6IvFUXsU97+wAipzkCoyqTZFijKSW8AoHn23y8fjE8njcU2CgpkWVgGhXbJp4cLAsNv53DF36IQzk+PfpPdOOeWYsiaZY0hFe1fN25yX2J35S83WuOVVWJIXq6voeWsBh2184gIbMMirq9MxaB8vlJ3plsFQOvHdlR7E7mMrXJcIUANY3N96Oorcxf8OuQEsu3XkxNy8nGQft0O6sGn18H7fbcPnmR7PdZr02wDtrc6EpTsZoYno5rQPzU3yPimqhXEWQGJ/qfcrnzckBjKHPG7Wa/iQVo53vKogF2fSGt6gpjeXFqUjGPUn1TF/Jw/lLEXiNII9bAxh3oBVftALExJB/HC43Pmc8l1ibPfmqHw3FLuRag5uMnOxGOfNYpDHcq3wKzWx2zf3yhr+NSju6LcRBzjbE32XKfHGQeRghmRPFH9nMbaGbJ8YWUWJqJkHCcLPnCsLldbK7V+YAs+2UPwVjQzDiTeCeLfvCQI84AnjmGDKzmK1mgxnNc2AMrDBXkdcVfisaU+oOd5FKNe8uieGBTVqkZ1LPtfjEdJ2kiVrccerA2vnB9jFJCXOjq2H/OrQK70Kzto5m/vrgDbmAonuqkhYtrk11UgN1fFQxX2AowFDZ4WA1R8pSNDNZBUi7iLPnjsA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(346002)(376002)(39860400002)(366004)(396003)(136003)(316002)(6486002)(110136005)(54906003)(31696002)(86362001)(2616005)(186003)(478600001)(6506007)(38100700002)(53546011)(26005)(6512007)(4744005)(2906002)(66556008)(8936002)(5660300002)(31686004)(41300700001)(8676002)(4326008)(66476007)(66946007)(36756003)(43043002)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?MjlrV2txd2w2dFUzbFhlQ25yTGpXc1ZmNjhtZmd5VFpzZ3dIQ2RuRVllVzVX?=
- =?utf-8?B?Y3FFSmVIMVBlcU5rNW5QMXVHYnJkcXFzNlBmVUM3TjJSVkpGelFabDZKdVZH?=
- =?utf-8?B?akhsWVlOUmdqQ3F1d3FCSkVkaHZWUWEraWxLSStWQUgwZEtXUGdnTDZLdFBL?=
- =?utf-8?B?cUtYdUpoNDlIZnhDMXNFeVhmaG1uYXlsSi9kZ3dKdGVpUlhiMFJ3dEJNLzh2?=
- =?utf-8?B?Qi9QSmQ1OFRUaHFGMlJnbGNxRnhPUTd2UW1TcnNnR0svaTFEc3N0RnRwYnBm?=
- =?utf-8?B?dy9Uckd3SkJKeXQ2WGtoTFg1YnhsamI1Vzc2WFYwbS96MEQ5blZCOW54dzJp?=
- =?utf-8?B?di96dmhHK2luaVBtNHBKS2ZuWldBTlp4bWs0a1NZVStKcDRtdnVRN2oyTEQ0?=
- =?utf-8?B?YkprU1FBSDJpb0xsTHRKcFI3c09FdENPR1owdTlyV0dkWktJZ2dDcVZvcVVU?=
- =?utf-8?B?VHVkVi9NNjlIckowd2Qybk1DSFVvYjJlTWtJRUw3N2ZVRFE0cHdRUUMzbFZU?=
- =?utf-8?B?R1FlRHp4UThIdHJpVmJqZ2VPUTlzRSt6K2gvSS95U1Znc3NuSkpJeEVYdUI3?=
- =?utf-8?B?Q0NQU1NnampTMm1XaWU1b1V4cTFVbG5WVzBkd3VXRXM4Z1VVVklPYjlKRDRU?=
- =?utf-8?B?YW1aMVJES0FlbmZZa0szMFlLM1RYeFRYQmtZek9WeS9oblFaWFhUWGJHdkt3?=
- =?utf-8?B?MU1DNEdvdG5tYzh2UHpJTENsRTlvNlFSRmtCQVYwY1Z5STVxZzJOa1JUdmN1?=
- =?utf-8?B?eFBEa2RURmJ2NXd0VHRScVYwaSs3eWV0UnBGVVBJVi9FSEszSXQza2JxRVQ4?=
- =?utf-8?B?ZGhzNHFSbkk4aEsxc2liS1JCakZMMW9tTC9BR2FUU2xhRmdoNW5vRWUyMmpm?=
- =?utf-8?B?L0x6Zmk1K0VyUDVyWVRyY0JDNnhIbXdwcU9VbTgzSnhqRDZkaGlaUnVkQUNk?=
- =?utf-8?B?ZnFHVGpGRktpcUczL1ovK3owNjBOOWxUMzI2Y1R4bHh4RWxsYnhxM3crNDIy?=
- =?utf-8?B?ZkRCalNKWWswSmRQeGJBRnNKVERoZDJTK3NsSWZDWVJwcHArUjNNVVJGcHR3?=
- =?utf-8?B?TDBUM3N4cElKd1h5eWtjTVFEYlJjTlRaRzhLU3N4VUhXZitpQ0p3K1JZWTBo?=
- =?utf-8?B?NC9OM2doM0hlR0pOMW9sVktaUkN4U1BYR3ZiYW1TU2llR1ZhL09OWm1WUTIz?=
- =?utf-8?B?b2pMb3Z5QlpnZXBOdWpXa2NDN3hjNVlDQVJycDZNRmZJNE1XS2lwQXhhSXN5?=
- =?utf-8?B?MFdhS0hLcGVzVlBmK2VCMlFiK3RJeXpWSEdtdzFPZlNsdTdoVVM5YTdRM083?=
- =?utf-8?B?TDA1U1dtRnJPVlk1M1BzeXNVTFJLcE01N285ZkFYYmovZEljM3FTdGxVNWg3?=
- =?utf-8?B?M3BpM1VJQzBXRkZrRzY0ZE13OVBHTW5xbVFqN2JwWnJkN2tjTjNlcmx6bERm?=
- =?utf-8?B?WThUVmJXWHpSY1N1RE14bU5tY1R0aFpkeG80Q1FZY3FIaGJ6Vjk3Sm9lbnZ3?=
- =?utf-8?B?VkxvYTI4VStwaEFPcFliTTU2ZkhBMEg1T1hDRGVtcVlnWE1hbU4wVTlUbDU3?=
- =?utf-8?B?NThMSStlOXg5QlpnYmxldVgyU2h3VXVQdTVaUm9ZU1U0KzJ2blZiSlBESjg1?=
- =?utf-8?B?VThNUnVMSWhrc3JCQ20rS1FCeHNoSWp3dklqQU0xRVFkRHdDdjBCOU5pOVM4?=
- =?utf-8?B?eklSNlBPNTI3ZVNLcnJWNXRmSXFYQXJKTTNOS2xBcDBlVGIybUNuUS9FWEpS?=
- =?utf-8?B?OENMbjB1VEErZ29PMjZpdFdqOE1CdFRtMGt1bGlVQi82RGk5OFNOOUpXcGhC?=
- =?utf-8?B?d25YY0N3UWsrcUhNSnhxR3R5TFcxYm5Nd2F2eHF4V0Jzc3gwSzArVkdROStW?=
- =?utf-8?B?WFBOemxhRU51c0dIanB3dzRoRytiN1FJb0pJYXd6RGdWRnBoQ1A1T3Nrckho?=
- =?utf-8?B?Slo0M2RVYU5PWWN2c0Y2MFl1dyt5WUFNaVE0YWxpc05EazlLblowMGZFN1hz?=
- =?utf-8?B?UUs1YTNuejdFRU1adEM3K3lTcEtXcnd3U2JaeFVpcDVWVTQzREVVL082bkRr?=
- =?utf-8?B?QzE1VDRrREg3d0RzbVdWWE1wQkg2VTJXeUVkOTVNQ1FQNTZndVRrMllvNkNL?=
- =?utf-8?B?MWdPdkpldWVtdVBUTUNtU3N6VzNmT2JNUS91RlVialEyMldzUCtZZlVXWlZ3?=
- =?utf-8?B?WUE9PQ==?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f4885155-53da-43b9-dea7-08da92883512
-X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Sep 2022 17:24:53.1545
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 6QCP1QWpTfac85nZl+4ZPb/X4mYvK7FHex2fiSScWg9vSMFR03Iwvg/W2z9LWP0LsUUvA+uEECey3lUp9V35ijaQ8/XBrFRhOmhmLL7qReY=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA2PR10MB4780
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
- definitions=2022-09-09_08,2022-09-09_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0 mlxscore=0
- suspectscore=0 mlxlogscore=999 phishscore=0 adultscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2207270000
- definitions=main-2209090061
-X-Proofpoint-ORIG-GUID: kdGmbIBTz01Pkr4vRc0Tro1Kul-GkAEd
-X-Proofpoint-GUID: kdGmbIBTz01Pkr4vRc0Tro1Kul-GkAEd
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/9/22 6:32 AM, Konstantin Shelekhin wrote:
->> The patch solves the presence of non-deletable empty default_tg_pt_gp
->> in RTPG.
->> May be, a global attribute like target/core/alua/hide_emtpy_tpg would
->> fit better than an attribute per each port group?
->>
->> I would always hide the empty default_lu_gp (not configurable) but I am
->> afraid that it will be considered as not backward compatible change. 🙁
-> A module parameter perhaps? Or a CONFIG definition.
+Eight patches which looks like quite a large core change, but most of
+the diffstat is reverting the attempt to rejig reference counting
+introduced in the last merge window which caused issues with device and
+module removal.  Of the remaining four patches, only the fix use-after-
+free is substantial.
 
-For the ceph iscsi project we wanted this same behavior for a while and
-we had to use distro kernels. There are probably others that need the same
-thing so a kernel config option wouldn't work for them.
+The patch is available here:
 
-Module param or a global attr in target/core/alua like Dimitry mentioned
-seem fine. If the new variable is set are you guys thinking that
-core_tpg_add_lun would just not call target_attach_tg_pt_gp? So the variable
-would be "make_default_tg_pt_gp"?
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+Bart Van Assche (5):
+      scsi: core: Fix a use-after-free
+      scsi: core: Revert "Make sure that targets outlive devices"
+      scsi: core: Revert "Make sure that hosts outlive targets"
+      scsi: core: Revert "Simplify LLD module reference counting"
+      scsi: core: Revert "Call blk_mq_free_tag_set() earlier"
+
+Hannes Reinecke (1):
+      scsi: lpfc: Return DID_TRANSPORT_DISRUPTED instead of DID_REQUEUE
+
+Sreekanth Reddy (1):
+      scsi: mpt3sas: Fix use-after-free warning
+
+Yang Yingliang (1):
+      scsi: lpfc: Add missing destroy_workqueue() in error path
+
+And the diffstat:
+
+ drivers/scsi/hosts.c                 | 28 +++++++++++++++-------------
+ drivers/scsi/lpfc/lpfc_init.c        |  5 ++++-
+ drivers/scsi/lpfc/lpfc_scsi.c        |  4 ++--
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c |  2 +-
+ drivers/scsi/scsi.c                  |  9 +++------
+ drivers/scsi/scsi_lib.c              |  6 +++++-
+ drivers/scsi/scsi_priv.h             |  2 +-
+ drivers/scsi/scsi_scan.c             | 10 +---------
+ drivers/scsi/scsi_sysfs.c            | 30 +++++++++++++-----------------
+ include/scsi/scsi_device.h           |  2 --
+ include/scsi/scsi_host.h             |  5 ++---
+ 11 files changed, 47 insertions(+), 56 deletions(-)
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 0738238ed6cc..9857dba09c95 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -182,6 +182,15 @@ void scsi_remove_host(struct Scsi_Host *shost)
+ 	mutex_unlock(&shost->scan_mutex);
+ 	scsi_proc_host_rm(shost);
+ 
++	/*
++	 * New SCSI devices cannot be attached anymore because of the SCSI host
++	 * state so drop the tag set refcnt. Wait until the tag set refcnt drops
++	 * to zero because .exit_cmd_priv implementations may need the host
++	 * pointer.
++	 */
++	kref_put(&shost->tagset_refcnt, scsi_mq_free_tags);
++	wait_for_completion(&shost->tagset_freed);
++
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	if (scsi_host_set_state(shost, SHOST_DEL))
+ 		BUG_ON(scsi_host_set_state(shost, SHOST_DEL_RECOVERY));
+@@ -190,15 +199,6 @@ void scsi_remove_host(struct Scsi_Host *shost)
+ 	transport_unregister_device(&shost->shost_gendev);
+ 	device_unregister(&shost->shost_dev);
+ 	device_del(&shost->shost_gendev);
+-
+-	/*
+-	 * After scsi_remove_host() has returned the scsi LLD module can be
+-	 * unloaded and/or the host resources can be released. Hence wait until
+-	 * the dependent SCSI targets and devices are gone before returning.
+-	 */
+-	wait_event(shost->targets_wq, atomic_read(&shost->target_count) == 0);
+-
+-	scsi_mq_destroy_tags(shost);
+ }
+ EXPORT_SYMBOL(scsi_remove_host);
+ 
+@@ -254,6 +254,9 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+ 	if (error)
+ 		goto fail;
+ 
++	kref_init(&shost->tagset_refcnt);
++	init_completion(&shost->tagset_freed);
++
+ 	/*
+ 	 * Increase usage count temporarily here so that calling
+ 	 * scsi_autopm_put_host() will trigger runtime idle if there is
+@@ -309,8 +312,8 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+ 	return error;
+ 
+ 	/*
+-	 * Any resources associated with the SCSI host in this function except
+-	 * the tag set will be freed by scsi_host_dev_release().
++	 * Any host allocation in this function will be freed in
++	 * scsi_host_dev_release().
+ 	 */
+  out_del_dev:
+ 	device_del(&shost->shost_dev);
+@@ -326,7 +329,7 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+ 	pm_runtime_disable(&shost->shost_gendev);
+ 	pm_runtime_set_suspended(&shost->shost_gendev);
+ 	pm_runtime_put_noidle(&shost->shost_gendev);
+-	scsi_mq_destroy_tags(shost);
++	kref_put(&shost->tagset_refcnt, scsi_mq_free_tags);
+  fail:
+ 	return error;
+ }
+@@ -406,7 +409,6 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 	INIT_LIST_HEAD(&shost->starved_list);
+ 	init_waitqueue_head(&shost->host_wait);
+ 	mutex_init(&shost->scan_mutex);
+-	init_waitqueue_head(&shost->targets_wq);
+ 
+ 	index = ida_alloc(&host_index_ida, GFP_KERNEL);
+ 	if (index < 0) {
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index c69c5a0979ec..55a1ad6eed03 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -8053,7 +8053,7 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
+ 	/* Allocate device driver memory */
+ 	rc = lpfc_mem_alloc(phba, SGL_ALIGN_SZ);
+ 	if (rc)
+-		return -ENOMEM;
++		goto out_destroy_workqueue;
+ 
+ 	/* IF Type 2 ports get initialized now. */
+ 	if (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) >=
+@@ -8481,6 +8481,9 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
+ 	lpfc_destroy_bootstrap_mbox(phba);
+ out_free_mem:
+ 	lpfc_mem_free(phba);
++out_destroy_workqueue:
++	destroy_workqueue(phba->wq);
++	phba->wq = NULL;
+ 	return rc;
+ }
+ 
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index 084c0f9fdc3a..938a5e435943 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -4272,7 +4272,7 @@ lpfc_fcp_io_cmd_wqe_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
+ 		    lpfc_cmd->result == IOERR_ABORT_REQUESTED ||
+ 		    lpfc_cmd->result == IOERR_RPI_SUSPENDED ||
+ 		    lpfc_cmd->result == IOERR_SLER_CMD_RCV_FAILURE) {
+-			cmd->result = DID_REQUEUE << 16;
++			cmd->result = DID_TRANSPORT_DISRUPTED << 16;
+ 			break;
+ 		}
+ 		if ((lpfc_cmd->result == IOERR_RX_DMA_FAILED ||
+@@ -4562,7 +4562,7 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pIocbIn,
+ 			    lpfc_cmd->result == IOERR_NO_RESOURCES ||
+ 			    lpfc_cmd->result == IOERR_ABORT_REQUESTED ||
+ 			    lpfc_cmd->result == IOERR_SLER_CMD_RCV_FAILURE) {
+-				cmd->result = DID_REQUEUE << 16;
++				cmd->result = DID_TRANSPORT_DISRUPTED << 16;
+ 				break;
+ 			}
+ 			if ((lpfc_cmd->result == IOERR_RX_DMA_FAILED ||
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index def37a7e5980..bd6a5f1bd532 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -3670,6 +3670,7 @@ static struct fw_event_work *dequeue_next_fw_event(struct MPT3SAS_ADAPTER *ioc)
+ 		fw_event = list_first_entry(&ioc->fw_event_list,
+ 				struct fw_event_work, list);
+ 		list_del_init(&fw_event->list);
++		fw_event_work_put(fw_event);
+ 	}
+ 	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
+ 
+@@ -3751,7 +3752,6 @@ _scsih_fw_event_cleanup_queue(struct MPT3SAS_ADAPTER *ioc)
+ 		if (cancel_work_sync(&fw_event->work))
+ 			fw_event_work_put(fw_event);
+ 
+-		fw_event_work_put(fw_event);
+ 	}
+ 	ioc->fw_events_cleanup = 0;
+ }
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 086ec5b5862d..c59eac7a32f2 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -586,13 +586,10 @@ EXPORT_SYMBOL(scsi_device_get);
+  */
+ void scsi_device_put(struct scsi_device *sdev)
+ {
+-	/*
+-	 * Decreasing the module reference count before the device reference
+-	 * count is safe since scsi_remove_host() only returns after all
+-	 * devices have been removed.
+-	 */
+-	module_put(sdev->host->hostt->module);
++	struct module *mod = sdev->host->hostt->module;
++
+ 	put_device(&sdev->sdev_gendev);
++	module_put(mod);
+ }
+ EXPORT_SYMBOL(scsi_device_put);
+ 
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index ef08029a0079..96e7e3eaca29 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1983,9 +1983,13 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
+ 	return blk_mq_alloc_tag_set(tag_set);
+ }
+ 
+-void scsi_mq_destroy_tags(struct Scsi_Host *shost)
++void scsi_mq_free_tags(struct kref *kref)
+ {
++	struct Scsi_Host *shost = container_of(kref, typeof(*shost),
++					       tagset_refcnt);
++
+ 	blk_mq_free_tag_set(&shost->tag_set);
++	complete(&shost->tagset_freed);
+ }
+ 
+ /**
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index 429663bd78ec..f385b3f04d6e 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -94,7 +94,7 @@ extern void scsi_run_host_queues(struct Scsi_Host *shost);
+ extern void scsi_requeue_run_queue(struct work_struct *work);
+ extern void scsi_start_queue(struct scsi_device *sdev);
+ extern int scsi_mq_setup_tags(struct Scsi_Host *shost);
+-extern void scsi_mq_destroy_tags(struct Scsi_Host *shost);
++extern void scsi_mq_free_tags(struct kref *kref);
+ extern void scsi_exit_queue(void);
+ extern void scsi_evt_thread(struct work_struct *work);
+ 
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index ac6059702d13..5d27f5196de6 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -340,6 +340,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+ 		kfree(sdev);
+ 		goto out;
+ 	}
++	kref_get(&sdev->host->tagset_refcnt);
+ 	sdev->request_queue = q;
+ 	q->queuedata = sdev;
+ 	__scsi_init_queue(sdev->host, q);
+@@ -406,14 +407,9 @@ static void scsi_target_destroy(struct scsi_target *starget)
+ static void scsi_target_dev_release(struct device *dev)
+ {
+ 	struct device *parent = dev->parent;
+-	struct Scsi_Host *shost = dev_to_shost(parent);
+ 	struct scsi_target *starget = to_scsi_target(dev);
+ 
+ 	kfree(starget);
+-
+-	if (atomic_dec_return(&shost->target_count) == 0)
+-		wake_up(&shost->targets_wq);
+-
+ 	put_device(parent);
+ }
+ 
+@@ -526,10 +522,6 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
+ 	starget->state = STARGET_CREATED;
+ 	starget->scsi_level = SCSI_2;
+ 	starget->max_target_blocked = SCSI_DEFAULT_TARGET_BLOCKED;
+-	init_waitqueue_head(&starget->sdev_wq);
+-
+-	atomic_inc(&shost->target_count);
+-
+  retry:
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 9dad2fd5297f..5d61f58399dc 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -443,15 +443,18 @@ static void scsi_device_cls_release(struct device *class_dev)
+ 
+ static void scsi_device_dev_release_usercontext(struct work_struct *work)
+ {
+-	struct scsi_device *sdev = container_of(work, struct scsi_device,
+-						ew.work);
+-	struct scsi_target *starget = sdev->sdev_target;
++	struct scsi_device *sdev;
+ 	struct device *parent;
+ 	struct list_head *this, *tmp;
+ 	struct scsi_vpd *vpd_pg80 = NULL, *vpd_pg83 = NULL;
+ 	struct scsi_vpd *vpd_pg0 = NULL, *vpd_pg89 = NULL;
+ 	struct scsi_vpd *vpd_pgb0 = NULL, *vpd_pgb1 = NULL, *vpd_pgb2 = NULL;
+ 	unsigned long flags;
++	struct module *mod;
++
++	sdev = container_of(work, struct scsi_device, ew.work);
++
++	mod = sdev->host->hostt->module;
+ 
+ 	scsi_dh_release_device(sdev);
+ 
+@@ -513,16 +516,19 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
+ 	kfree(sdev->inquiry);
+ 	kfree(sdev);
+ 
+-	if (starget && atomic_dec_return(&starget->sdev_count) == 0)
+-		wake_up(&starget->sdev_wq);
+-
+ 	if (parent)
+ 		put_device(parent);
++	module_put(mod);
+ }
+ 
+ static void scsi_device_dev_release(struct device *dev)
+ {
+ 	struct scsi_device *sdp = to_scsi_device(dev);
++
++	/* Set module pointer as NULL in case of module unloading */
++	if (!try_module_get(sdp->host->hostt->module))
++		sdp->host->hostt->module = NULL;
++
+ 	execute_in_process_context(scsi_device_dev_release_usercontext,
+ 				   &sdp->ew);
+ }
+@@ -1470,6 +1476,7 @@ void __scsi_remove_device(struct scsi_device *sdev)
+ 	mutex_unlock(&sdev->state_mutex);
+ 
+ 	blk_mq_destroy_queue(sdev->request_queue);
++	kref_put(&sdev->host->tagset_refcnt, scsi_mq_free_tags);
+ 	cancel_work_sync(&sdev->requeue_work);
+ 
+ 	if (sdev->host->hostt->slave_destroy)
+@@ -1529,14 +1536,6 @@ static void __scsi_remove_target(struct scsi_target *starget)
+ 		goto restart;
+ 	}
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+-
+-	/*
+-	 * After scsi_remove_target() returns its caller can remove resources
+-	 * associated with @starget, e.g. an rport or session. Wait until all
+-	 * devices associated with @starget have been removed to prevent that
+-	 * a SCSI error handling callback function triggers a use-after-free.
+-	 */
+-	wait_event(starget->sdev_wq, atomic_read(&starget->sdev_count) == 0);
+ }
+ 
+ /**
+@@ -1647,9 +1646,6 @@ void scsi_sysfs_device_initialize(struct scsi_device *sdev)
+ 	list_add_tail(&sdev->same_target_siblings, &starget->devices);
+ 	list_add_tail(&sdev->siblings, &shost->__devices);
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+-
+-	atomic_inc(&starget->sdev_count);
+-
+ 	/*
+ 	 * device can now only be removed via __scsi_remove_device() so hold
+ 	 * the target.  Target will be held in CREATED state until something
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 3113471ca375..2493bd65351a 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -309,8 +309,6 @@ struct scsi_target {
+ 	struct list_head	devices;
+ 	struct device		dev;
+ 	struct kref		reap_ref; /* last put renders target invisible */
+-	atomic_t		sdev_count;
+-	wait_queue_head_t	sdev_wq;
+ 	unsigned int		channel;
+ 	unsigned int		id; /* target id ... replace
+ 				     * scsi_device.id eventually */
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index aa7b7496c93a..9b0a028bf053 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -557,6 +557,8 @@ struct Scsi_Host {
+ 	struct scsi_host_template *hostt;
+ 	struct scsi_transport_template *transportt;
+ 
++	struct kref		tagset_refcnt;
++	struct completion	tagset_freed;
+ 	/* Area to keep a shared tag map */
+ 	struct blk_mq_tag_set	tag_set;
+ 
+@@ -690,9 +692,6 @@ struct Scsi_Host {
+ 	/* ldm bits */
+ 	struct device		shost_gendev, shost_dev;
+ 
+-	atomic_t		target_count;
+-	wait_queue_head_t	targets_wq;
+-
+ 	/*
+ 	 * Points to the transport data (if any) which is allocated
+ 	 * separately
+
