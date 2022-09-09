@@ -2,69 +2,107 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA9B3ECAAA1
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Sep 2022 21:48:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5704FECAAA1
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Sep 2022 22:44:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231666AbiIIVsr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Sep 2022 17:48:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47796 "EHLO
+        id S230165AbiIIWoq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Sep 2022 18:44:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34534 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231627AbiIIVso (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2022 17:48:44 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DF66F22F5;
-        Fri,  9 Sep 2022 14:48:43 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 3A112B82320;
-        Fri,  9 Sep 2022 21:48:42 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id DBE24C433D7;
-        Fri,  9 Sep 2022 21:48:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1662760120;
-        bh=faNyvVTtA9QVwsXzpsorT5yjPAXHpaEUefjieYo0pkw=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=am4GC8KpkI4j3383Gk6HeERUNtmcFd6apwv5DqdmduC0goksOgT1cKBM9Ot+AXhpc
-         VaASEWe62FznItw6PtkoqzKVPaVc+cygdMhM4XO5SNYKSZ4Ql4fZC+IkhYBG7MiS8y
-         HEKaWQlowrMkcPvxfFHRgd2CXU/5DlejtvhGMBywOhSsn5UuK2Sn35f4J5MgWPM9wH
-         mqQMVpqd6+YOMyIIDf9HKZibtdVGCg8W2k4Xp11iPg8+Ojws3MeBHTEmK1lUposUn3
-         y1OejvGmnvC9Gf/99nrdoZp5JXKOPvHoCVMqkT3yT0e+HJbk8iHh0LDsnCfcRnMNmW
-         MHZ7ExdfMmHow==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id CA64BC4166F;
-        Fri,  9 Sep 2022 21:48:40 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI fixes for 6.0-rc4
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <1dd06978292c5c1979b79b1a94b4af4d7175d7aa.camel@HansenPartnership.com>
-References: <1dd06978292c5c1979b79b1a94b4af4d7175d7aa.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
-X-PR-Tracked-Message-Id: <1dd06978292c5c1979b79b1a94b4af4d7175d7aa.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: 991df3dd5144f2e6b1c38b8d20ed3d4d21e20b34
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: ce888220d5c7a805e0e155302a318d5d23e62950
-Message-Id: <166276012082.19580.866003150784058636.pr-tracker-bot@kernel.org>
-Date:   Fri, 09 Sep 2022 21:48:40 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        with ESMTP id S229948AbiIIWoo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2022 18:44:44 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 503B125EB;
+        Fri,  9 Sep 2022 15:44:42 -0700 (PDT)
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 289MeJrX015693;
+        Fri, 9 Sep 2022 22:43:34 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=5VSAvl4MpEJJL3ZgqfEcxzGo7P0NUZPOM8t93DEhOo0=;
+ b=BidfJ3Wxc0W2V8ubNp+Y34pA3hzbO3wrlmkYG3RnNYa8s0UnA5d2CSbFRtH0RK+lreNs
+ ZPj4ImKHM2TO/RWv4g8RSL9yUpKSPQo0qTM1v+kkGyAICtqn1hlhLeCCfTBdgb/0CU08
+ lLL3kAkwC3Wtpo4JlAwGjAG3WGP/cRXHBaEY1mO2dJp9Nlkr/Oa+GozxgUjS4IMrf1I2
+ GsCXY88VuFPr/UNWzAz8BKEv9iJ40efPsUtQ2dUPeMrRGpx6fe4RHtDTuZAroydgKRh5
+ cgS3C/ex2C3o+YmvvJiR3XZWltGqlP1of/RS9RVlfvTiR0G/vGLDo/byLgZK6QVH1Vld UQ== 
+Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3jg3c227nk-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 09 Sep 2022 22:43:33 +0000
+Received: from nasanex01a.na.qualcomm.com (corens_vlan604_snip.qualcomm.com [10.53.140.1])
+        by NASANPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 289MhXaL017376
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 9 Sep 2022 22:43:33 GMT
+Received: from [10.110.3.137] (10.80.80.8) by nasanex01a.na.qualcomm.com
+ (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.29; Fri, 9 Sep 2022
+ 15:43:32 -0700
+Message-ID: <6e703439-6269-e7ff-33c0-93a204f329d2@quicinc.com>
+Date:   Fri, 9 Sep 2022 15:43:31 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.2.1
+Subject: Re: [RFC PATCH v3 4/4] ufs: host: qcom: Add MCQ support
+To:     Bart Van Assche <bvanassche@acm.org>, <quic_nguyenb@quicinc.com>,
+        <quic_xiaosenh@quicinc.com>, <stanley.chu@mediatek.com>,
+        <adrian.hunter@intel.com>, <avri.altman@wdc.com>,
+        <mani@kernel.org>, <quic_cang@quicinc.com>, <beanhuo@micron.com>,
+        <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>
+CC:     <linux-arm-msm@vger.kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        open list <linux-kernel@vger.kernel.org>
+References: <cover.1662157846.git.quic_asutoshd@quicinc.com>
+ <260533ec3a80442b73d3999727bf0a9861462eba.1662157846.git.quic_asutoshd@quicinc.com>
+ <3ea54f9b-896d-c70b-9024-4dc4f99ec2d4@acm.org>
+From:   "Asutosh Das (asd)" <quic_asutoshd@quicinc.com>
+In-Reply-To: <3ea54f9b-896d-c70b-9024-4dc4f99ec2d4@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: ipXi89kmF6va25GTgp_-oumEUfO78jLS
+X-Proofpoint-ORIG-GUID: ipXi89kmF6va25GTgp_-oumEUfO78jLS
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
+ definitions=2022-09-09_10,2022-09-09_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 spamscore=0
+ priorityscore=1501 phishscore=0 clxscore=1015 malwarescore=0
+ suspectscore=0 mlxlogscore=999 mlxscore=0 adultscore=0 lowpriorityscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2207270000 definitions=main-2209090078
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Fri, 09 Sep 2022 15:42:14 -0400:
+Hello Bart,
+Thanks for taking a look.
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+On 9/8/2022 3:30 PM, Bart Van Assche wrote:
+> On 9/2/22 15:41, Asutosh Das wrote:
+>> +static int ufs_qcom_get_hba_mac(struct ufs_hba *hba)
+>> +{
+>> +    return MAX_SUPP_MAC;
+>> +}
+> 
+> The above implementation is not sufficient to convince me that the 
+> get_hba_mac vop is useful. Please remove this vop and use MAX_SUPP_MAC 
+> directly where ufshcd_mcq_vops_get_hba_mac() is called.
+> 
+The default value of MAC is 32 but it can have a max value of 256.
+Here it has a value of 64.
+So I think this vops would be helpful for other HC vendors as well who 
+may have a different value than the default.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/ce888220d5c7a805e0e155302a318d5d23e62950
+> Thanks,
+> 
+> Bart.
 
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+-asd
