@@ -2,103 +2,95 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7319BECAAA1
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Sep 2022 22:48:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F8C2C6FA82
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Sep 2022 23:38:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231244AbiIIWsw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Sep 2022 18:48:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42818 "EHLO
+        id S231153AbiIIXiU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Sep 2022 19:38:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52566 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231298AbiIIWss (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2022 18:48:48 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCF12100421;
-        Fri,  9 Sep 2022 15:48:43 -0700 (PDT)
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 289MCdE8013639;
-        Fri, 9 Sep 2022 22:48:20 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=vJqz4Sf2ynYKhog3L8aleacU7e4uBAMVgmldEM6Ws2s=;
- b=Lik72sw9MqN8g15Nr6f/D8TZXztwX6cMPNdWmZjZeSM6ejNmoW8EYqFAX7jxViNxakkj
- YtzLsc4xDUdmmO/WweAHCY1BoHgiNHTjRhpEmkbM900F/F+qtNI6f3s7C8DWp3w27Ofr
- ClVxzfrVoFqvlmhqdiTxmSxB2/BtmvcX0rtFGp48TiCKtpZchLkkrEZxVQLMJXnTupjY
- VgZEPhAo2tLUDyGe4cdDBoYtK2ckOAaBUeO1dHifsg4/zZSWxqqyjl6awVBm5pU2NB6m
- nG+P3RMJ1ZgNXbQhxCFf7C5SjzPUa52VxvIr7qELO/c2QwCWFuLSTFnq3d3tAoUWhfCA Sg== 
-Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3jg68c1kfr-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 09 Sep 2022 22:48:20 +0000
-Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
-        by NASANPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 289MmJGL009003
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 9 Sep 2022 22:48:19 GMT
-Received: from [10.110.3.137] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.29; Fri, 9 Sep 2022
- 15:48:19 -0700
-Message-ID: <4ef3ee8f-1210-3a03-da14-1bfdf6def297@quicinc.com>
-Date:   Fri, 9 Sep 2022 15:48:18 -0700
+        with ESMTP id S229953AbiIIXiT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2022 19:38:19 -0400
+Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA985ABF15;
+        Fri,  9 Sep 2022 16:38:17 -0700 (PDT)
+Received: by mail-pj1-f45.google.com with SMTP id j6-20020a17090a694600b00200bba67dadso3005150pjm.5;
+        Fri, 09 Sep 2022 16:38:17 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date;
+        bh=9nKlQ9Dbx5obc3qdOBegZ5d8VUInUyb/dGuThOLDpF0=;
+        b=b6PEv+pliHOHODYBgrX6iRvy9Tqv+Hs9Hr71OG1VLyyBZOwFGASFJmuBVWcvJL2bdB
+         8w1LQGnDiZKxZOYTZrXOL1B2g0+cpA0oqD63IlsSX7GE9zPGVXZx1euY0EdOowyhwFJi
+         EpC9crPc9QKXdi90B6d2Qju9Xh6tpTPDJFkcw5kg/4jRLl3sCkcHb8Qvv8PSNC0+zk4U
+         3HCjT2POPn8WWR7jEjS3JscCBPWlg4ju/jqQ3VX8QgzDfY+3myqx8v7IFwo+1hF991eI
+         dJhrOzGmQE+X74MafZA5xrfyHvFDh0qSB0HTYavwyRN0ck/fattFmZn5IXkfq7ABODKk
+         oCxA==
+X-Gm-Message-State: ACgBeo1fYdY67+IA1Gcr2NiQr59glG+dzRYlSplMfR026emcFbNFfx7G
+        5xWVypGZSf2myJItjjO80pM=
+X-Google-Smtp-Source: AA6agR7taukX9V0LD0Kf8VdNFALATvaMZsi3zPOKlcH2b0pE3tYU4oRDgFAil4Is8lxfVqSesFl/DQ==
+X-Received: by 2002:a17:90b:4a4c:b0:1fe:24ac:2bb3 with SMTP id lb12-20020a17090b4a4c00b001fe24ac2bb3mr12141351pjb.79.1662766696852;
+        Fri, 09 Sep 2022 16:38:16 -0700 (PDT)
+Received: from [192.168.51.14] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id 7-20020a630b07000000b0041cef96cab0sm1016389pgl.90.2022.09.09.16.38.14
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 09 Sep 2022 16:38:16 -0700 (PDT)
+Message-ID: <c85af2ae-42b2-89e4-0dc1-17658379ac3a@acm.org>
+Date:   Fri, 9 Sep 2022 16:38:14 -0700
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.1
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.12.0
 Subject: Re: [RFC PATCH v3 1/4] ufs: core: prepare ufs for multi circular
  queue support
-To:     Bart Van Assche <bvanassche@acm.org>, <quic_nguyenb@quicinc.com>,
-        <quic_xiaosenh@quicinc.com>, <stanley.chu@mediatek.com>,
-        <adrian.hunter@intel.com>, <avri.altman@wdc.com>,
-        <mani@kernel.org>, <quic_cang@quicinc.com>, <beanhuo@micron.com>,
-        <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>
-CC:     <linux-arm-msm@vger.kernel.org>,
+Content-Language: en-US
+To:     "Asutosh Das (asd)" <quic_asutoshd@quicinc.com>,
+        quic_nguyenb@quicinc.com, quic_xiaosenh@quicinc.com,
+        stanley.chu@mediatek.com, adrian.hunter@intel.com,
+        avri.altman@wdc.com, mani@kernel.org, quic_cang@quicinc.com,
+        beanhuo@micron.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org
+Cc:     linux-arm-msm@vger.kernel.org,
         Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         open list <linux-kernel@vger.kernel.org>
 References: <cover.1662157846.git.quic_asutoshd@quicinc.com>
  <757bbfe36629b7c31ef2630971f8678a7801223f.1662157846.git.quic_asutoshd@quicinc.com>
  <37d36dd9-f467-233c-babd-4e7c1c953c6c@acm.org>
-From:   "Asutosh Das (asd)" <quic_asutoshd@quicinc.com>
-In-Reply-To: <37d36dd9-f467-233c-babd-4e7c1c953c6c@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: JAORX9ddPRm-pe-gpt27r2tbldjYqp85
-X-Proofpoint-GUID: JAORX9ddPRm-pe-gpt27r2tbldjYqp85
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
- definitions=2022-09-09_10,2022-09-09_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 mlxlogscore=987
- bulkscore=0 impostorscore=0 malwarescore=0 lowpriorityscore=0 phishscore=0
- suspectscore=0 adultscore=0 clxscore=1015 priorityscore=1501 spamscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2207270000
- definitions=main-2209090078
+ <4ef3ee8f-1210-3a03-da14-1bfdf6def297@quicinc.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <4ef3ee8f-1210-3a03-da14-1bfdf6def297@quicinc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello Bart,
-Thanks for the comments.
-
-On 9/8/2022 2:58 PM, Bart Van Assche wrote:
-> On 9/2/22 15:41, Asutosh Das wrote:
->> Preparatory changes for upcoming multi circular queue.
+On 9/9/22 15:48, Asutosh Das (asd) wrote:
+> Hello Bart,
+> Thanks for the comments.
 > 
-> One patch per change please and also describe each individual change. 
->  From 
-> https://www.kernel.org/doc/html/latest/process/submitting-patches.html#split-changes: "Separate each logical change into a separate patch".
-> 
-The intent of this change was to have all the non-mcq related changes to 
-the ufshcd as a separate patch.
-I would add more details to the commit message of this change.
-If there's anything specific in this patch that may need changes, please 
-let me know.
+> On 9/8/2022 2:58 PM, Bart Van Assche wrote:
+>> On 9/2/22 15:41, Asutosh Das wrote:
+>>> Preparatory changes for upcoming multi circular queue.
+>>
+>> One patch per change please and also describe each individual change. 
+>>  From 
+>> https://www.kernel.org/doc/html/latest/process/submitting-patches.html#split-changes: 
+>> "Separate each logical change into a separate patch".
+>>
+> The intent of this change was to have all the non-mcq related changes to 
+> the ufshcd as a separate patch.
+> I would add more details to the commit message of this change.
+> If there's anything specific in this patch that may need changes, please 
+> let me know.
 
-> Thanks,
-> 
-> Bart.
+Please follow the "one change per patch" rule. This is a widely followed 
+rule in the Linux kernel community. This rule exists because it is the 
+responsibility of the developer(s) who post a patch series to make it 
+easy for reviewers to review their work.
 
--asd
+Thanks,
+
+Bart.
