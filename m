@@ -2,39 +2,38 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03D5EC6FA83
-	for <linux-scsi@archiver.kernel.org>; Sun, 11 Sep 2022 11:39:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1805AECAAA1
+	for <linux-scsi@archiver.kernel.org>; Sun, 11 Sep 2022 11:40:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230301AbiIKLjI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 11 Sep 2022 07:39:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56480 "EHLO
+        id S230199AbiIKLkt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 11 Sep 2022 07:40:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33082 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230196AbiIKLjH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Sep 2022 07:39:07 -0400
-Received: from bg4.exmail.qq.com (bg4.exmail.qq.com [43.155.67.158])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7AEF2371A4;
-        Sun, 11 Sep 2022 04:39:05 -0700 (PDT)
-X-QQ-mid: bizesmtp67t1662896336t04kzr9q
+        with ESMTP id S230133AbiIKLks (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Sep 2022 07:40:48 -0400
+Received: from bg4.exmail.qq.com (bg4.exmail.qq.com [43.154.221.58])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AE9E356EF;
+        Sun, 11 Sep 2022 04:40:44 -0700 (PDT)
+X-QQ-mid: bizesmtp86t1662896435t3wpl56d
 Received: from localhost.localdomain ( [182.148.14.0])
         by bizesmtp.qq.com (ESMTP) with 
-        id ; Sun, 11 Sep 2022 19:38:55 +0800 (CST)
+        id ; Sun, 11 Sep 2022 19:40:34 +0800 (CST)
 X-QQ-SSF: 01000000002000E0G000B00A0000000
-X-QQ-FEAT: xqT8U4SkSphzMKfEGs0QyuhaKf797xLAa5Od7wlXI2tAjzrwLvWhPbDKLOtFp
-        PEbyv9joEiKEcQJsuf4j5CMgB54ZuRTBV4dvaMZEAIMAJhnUMfPdwJwsSyAbS9rLVxGtzzE
-        p/gLdBAI5qgSqjjvQmMCEGxK1KHdRvM6x1nI1U7GLueE8qvWcl4o9JDJhkoTwuO+PiU6vMi
-        mUozZThHVgY7lMuVD2Lz8A5XD2ZrngvpQF6b4q+pxfVTQiaAW5LyAkGF3WAS+L6OIvRTf+x
-        FfOqH6UK6XB3SlO78hJ9rceWGwNh8Cfgg/ySu+dLZN5FjcIQDuOSnU4RNkLkjI1v7nfwEdo
-        XdYG4WcTtnjOLfgviSyiv6LQiyDqLeH2y8MyJGZfmwSe3UqATIXBf2QgnXRfw==
+X-QQ-FEAT: 83ShfzFP0oCS9RCHpkBXn9KTMohWsUEWJPYARlmVinaDtrsRT3tZlkmzTVDls
+        AmWdje4lropRfcVZlL7B/CT7H2QeHtHsZKU0zTJ265dUcJPC7RHgImySQ4oE/xV8KBaD3as
+        BOWrwak3xjSGm2xnJKDqfA1DICssHEvBYFFc8416Z4Do99E9C1+QLDAfaP3QsS/lrnXVclQ
+        8pD3TNFyswcyFKYZR80VgfmATZSpGaS9bnEYS6DJsxXJhyURGp5iR7Pqc6226qL9CVCwpeA
+        mJTaOSBcb1Z/o19NCuuasYrEzrYpoKwOSNTEy+BC4bW1Lilgl7KrE/xBMDSqqpnloK9q0dQ
+        2HoAHNPwrgPLf6OlCGkhC4qS5m1GFik7iJVfyjew07lY9+u/4t5TwkhCXnxIw==
 X-QQ-GoodBg: 0
 From:   Jilin Yuan <yuanjilin@cdjrlc.com>
-To:     njavali@marvell.com, mrangankar@marvell.com,
-        GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
+To:     mikecyr@linux.ibm.com, jejb@linux.ibm.com,
         martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jilin Yuan <yuanjilin@cdjrlc.com>
-Subject: [PATCH] scsi: qla4xxx: fix repeated words in comments
-Date:   Sun, 11 Sep 2022 19:38:49 +0800
-Message-Id: <20220911113849.13228-1-yuanjilin@cdjrlc.com>
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Jilin Yuan <yuanjilin@cdjrlc.com>
+Subject: [PATCH] scsi: ibmvscsis: fix repeated words in comments
+Date:   Sun, 11 Sep 2022 19:40:27 +0800
+Message-Id: <20220911114027.14615-1-yuanjilin@cdjrlc.com>
 X-Mailer: git-send-email 2.36.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -44,26 +43,36 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Delete the redundant word 'should'.
+Delete the redundant word 'the'.
+Delete the redundant word 'to'.
 
 Signed-off-by: Jilin Yuan <yuanjilin@cdjrlc.com>
 ---
- drivers/scsi/qla4xxx/ql4_os.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 9e849f6b0d0f..6449823eca48 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -8726,7 +8726,7 @@ static int qla4xxx_probe_adapter(struct pci_dev *pdev,
- 		 * NOTE: If ql4dontresethba==1, set IDC_CTRL DONTRESET_BIT0.
- 		 * If DONRESET_BIT0 is set, drivers should not set dev_state
- 		 * to NEED_RESET. But if NEED_RESET is set, drivers should
--		 * should honor the reset.
-+		 * honor the reset.
- 		 */
- 		if (ql4xdontresethba == 1)
- 			qla4_83xx_set_idc_dontreset(ha);
+diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+index eee1a24f7e15..0e253f961c6c 100644
+--- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
++++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+@@ -401,7 +401,7 @@ static long ibmvscsis_check_init_msg(struct scsi_info *vscsi, uint *format)
+  * and the driver is requesting that the command queue be de-registered
+  * in a safe manner. If there is no outstanding I/O then we can stop the
+  * queue. If we are restarting the queue it will be reflected in the
+- * the state of the adapter.
++ * state of the adapter.
+  *
+  * EXECUTION ENVIRONMENT:
+  *	Process environment
+@@ -444,7 +444,7 @@ static void ibmvscsis_disconnect(struct work_struct *work)
+ 		break;
+ 
+ 	/*
+-	 * Can transition from this state to to unconfiguring
++	 * Can transition from this state to unconfiguring
+ 	 * or err disconnect.
+ 	 */
+ 	case ERR_DISCONNECT_RECONNECT:
 -- 
 2.36.1
 
