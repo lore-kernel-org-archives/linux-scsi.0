@@ -2,39 +2,39 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C37CAC6FA83
-	for <linux-scsi@archiver.kernel.org>; Sun, 11 Sep 2022 11:37:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03D5EC6FA83
+	for <linux-scsi@archiver.kernel.org>; Sun, 11 Sep 2022 11:39:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230329AbiIKLhn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 11 Sep 2022 07:37:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55540 "EHLO
+        id S230301AbiIKLjI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 11 Sep 2022 07:39:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56480 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230331AbiIKLhl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Sep 2022 07:37:41 -0400
+        with ESMTP id S230196AbiIKLjH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Sep 2022 07:39:07 -0400
 Received: from bg4.exmail.qq.com (bg4.exmail.qq.com [43.155.67.158])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 167C337FAB;
-        Sun, 11 Sep 2022 04:37:38 -0700 (PDT)
-X-QQ-mid: bizesmtp74t1662896251t1oizu1u
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7AEF2371A4;
+        Sun, 11 Sep 2022 04:39:05 -0700 (PDT)
+X-QQ-mid: bizesmtp67t1662896336t04kzr9q
 Received: from localhost.localdomain ( [182.148.14.0])
         by bizesmtp.qq.com (ESMTP) with 
-        id ; Sun, 11 Sep 2022 19:37:30 +0800 (CST)
+        id ; Sun, 11 Sep 2022 19:38:55 +0800 (CST)
 X-QQ-SSF: 01000000002000E0G000B00A0000000
-X-QQ-FEAT: D6RqbDSxuq5VZDIBwursjKDSb8FhlU75tDo1iQBAtkAO+5MvaXDG6eK+cFunX
-        m0RbF1KWGWUidA1lznlZnf4/ycE810KxyDT1ySpsl80qJrTfDZjYR/1hqOQYi+psdqSdvaS
-        qHVloC54Fy2JqyPrQf08lpC7eeFcxFIXl4NAmPfhBjJQd1VSLP4BmKFs3UaMXCH0jV2faXy
-        QfOUTx8S7Tfr9Ft6C3HLvXrCoKV/wglxEMqOLTI4H/wkohOeegjFpb94mWHldz/RwC30ga7
-        K7tsgiE1kOB4BPl65zorJp8vfjNgpZvJbQuWFYxeMrRDtxyfKhZSXN59Fe5J6aZj58hP/n0
-        3TnwOcrB3tuexlvRMraK2Xn81VHOr0tLTYtPoGoWU57wisNKR8VSmL/2d2nRQ==
+X-QQ-FEAT: xqT8U4SkSphzMKfEGs0QyuhaKf797xLAa5Od7wlXI2tAjzrwLvWhPbDKLOtFp
+        PEbyv9joEiKEcQJsuf4j5CMgB54ZuRTBV4dvaMZEAIMAJhnUMfPdwJwsSyAbS9rLVxGtzzE
+        p/gLdBAI5qgSqjjvQmMCEGxK1KHdRvM6x1nI1U7GLueE8qvWcl4o9JDJhkoTwuO+PiU6vMi
+        mUozZThHVgY7lMuVD2Lz8A5XD2ZrngvpQF6b4q+pxfVTQiaAW5LyAkGF3WAS+L6OIvRTf+x
+        FfOqH6UK6XB3SlO78hJ9rceWGwNh8Cfgg/ySu+dLZN5FjcIQDuOSnU4RNkLkjI1v7nfwEdo
+        XdYG4WcTtnjOLfgviSyiv6LQiyDqLeH2y8MyJGZfmwSe3UqATIXBf2QgnXRfw==
 X-QQ-GoodBg: 0
 From:   Jilin Yuan <yuanjilin@cdjrlc.com>
-To:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com,
+To:     njavali@marvell.com, mrangankar@marvell.com,
+        GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
         martin.petersen@oracle.com
-Cc:     megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jilin Yuan <yuanjilin@cdjrlc.com>
-Subject: [PATCH] scsi: megaraid_sas: fix repeated words in comments
-Date:   Sun, 11 Sep 2022 19:37:24 +0800
-Message-Id: <20220911113724.10873-1-yuanjilin@cdjrlc.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jilin Yuan <yuanjilin@cdjrlc.com>
+Subject: [PATCH] scsi: qla4xxx: fix repeated words in comments
+Date:   Sun, 11 Sep 2022 19:38:49 +0800
+Message-Id: <20220911113849.13228-1-yuanjilin@cdjrlc.com>
 X-Mailer: git-send-email 2.36.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -44,34 +44,26 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Delete the redundant word 'and'.
+Delete the redundant word 'should'.
 
 Signed-off-by: Jilin Yuan <yuanjilin@cdjrlc.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/qla4xxx/ql4_os.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 6650f8c8e9b0..9864e0e5b7f1 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -2548,14 +2548,14 @@ megasas_set_pd_lba(struct MPI2_RAID_SCSI_IO_REQUEST *io_request, u8 cdb_len,
- }
- 
- /**
-- * megasas_stream_detect -	stream detection on read and and write IOs
-+ * megasas_stream_detect -	stream detection on read and write IOs
-  * @instance:		Adapter soft state
-  * @cmd:		    Command to be prepared
-  * @io_info:		IO Request info
-  *
-  */
- 
--/** stream detection on read and and write IOs */
-+/** stream detection on read and write IOs */
- static void megasas_stream_detect(struct megasas_instance *instance,
- 				  struct megasas_cmd_fusion *cmd,
- 				  struct IO_REQUEST_INFO *io_info)
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 9e849f6b0d0f..6449823eca48 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -8726,7 +8726,7 @@ static int qla4xxx_probe_adapter(struct pci_dev *pdev,
+ 		 * NOTE: If ql4dontresethba==1, set IDC_CTRL DONTRESET_BIT0.
+ 		 * If DONRESET_BIT0 is set, drivers should not set dev_state
+ 		 * to NEED_RESET. But if NEED_RESET is set, drivers should
+-		 * should honor the reset.
++		 * honor the reset.
+ 		 */
+ 		if (ql4xdontresethba == 1)
+ 			qla4_83xx_set_idc_dontreset(ha);
 -- 
 2.36.1
 
