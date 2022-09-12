@@ -2,103 +2,79 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00538C6FA82
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Sep 2022 21:46:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEBD7C6FA83
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Sep 2022 22:19:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230137AbiILVqX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Sep 2022 17:46:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53846 "EHLO
+        id S230171AbiILWT2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Sep 2022 18:19:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37864 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230083AbiILVqD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Sep 2022 17:46:03 -0400
-Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 112824D161;
-        Mon, 12 Sep 2022 14:46:03 -0700 (PDT)
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id A5DE6453FB;
-        Mon, 12 Sep 2022 21:46:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        content-type:content-type:content-transfer-encoding:mime-version
-        :x-mailer:message-id:date:date:subject:subject:from:from
-        :received:received:received:received; s=mta-01; t=1663019160; x=
-        1664833561; bh=hpTp6LvnefmUUmUgQkrJc7InovoeactjAYbbLsGrqic=; b=a
-        68n88L2Ymb/e9eYeNZebntwd1zOF/+tbtf32EKqeaWYnj4WpeuK0AW15CvDSmk/e
-        yq5pLRpFQcLsTuCyvSG0jryc+zhOv1BH0sVhHgKkVlB/H7xugXq4d7EpNWlaCkBV
-        om5pXNvZoG4ovZd/OROML9BPdd7AeY5+f3Ao5E4F1c=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id X1JqmwsPGO1e; Tue, 13 Sep 2022 00:46:00 +0300 (MSK)
-Received: from T-EXCH-02.corp.yadro.com (T-EXCH-02.corp.yadro.com [172.17.10.102])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 3BD2F453CC;
-        Tue, 13 Sep 2022 00:46:00 +0300 (MSK)
-Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
- T-EXCH-02.corp.yadro.com (172.17.10.102) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
- 15.1.669.32; Tue, 13 Sep 2022 00:45:59 +0300
-Received: from NB-591.corp.yadro.com (10.199.18.20) by
- T-EXCH-08.corp.yadro.com (172.17.11.58) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.2.1118.9; Tue, 13 Sep 2022 00:45:56 +0300
-From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
-To:     Martin Petersen <martin.petersen@oracle.com>,
-        <target-devel@vger.kernel.org>
-CC:     Mike Christie <michael.christie@oracle.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        <linux-scsi@vger.kernel.org>, <linux@yadro.com>,
-        "Dmitry Bogdanov" <d.bogdanov@yadro.com>
-Subject: [PATCH v3] scsi: target: alua: do not report emtpy port group
-Date:   Tue, 13 Sep 2022 00:45:49 +0300
-Message-ID: <20220912214549.27882-1-d.bogdanov@yadro.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S230287AbiILWTF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Sep 2022 18:19:05 -0400
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D75D1EECB
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Sep 2022 15:17:57 -0700 (PDT)
+Received: by mail-pj1-f48.google.com with SMTP id m10-20020a17090a730a00b001fa986fd8eeso13761645pjk.0
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Sep 2022 15:17:57 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date;
+        bh=huXRUucL2UuMwUKszMPjjatMAjW2/Nq4jWwUvq+Tbjg=;
+        b=lKOtDurQQkwAMTdE3CXkiSlag/VF2O2STfDeP/SLSCajrVBmgNFpELJG0k9dAaImht
+         b4VTiD8ybqeHXObqMrbhhoCHew6JAStYIocQdhGbJcKtkY3xDZH2skARV5hcRX61fU8h
+         bfRVaAC5UrOp7X+6tqQOqLri31GsPH2OssAncTqUYXeqTschYFer1mokM5I9t7LZhDDf
+         D2kfXoDb7JqZvsokdrWopoKA2V98GgO9/rZ9nFGl/bOHBEeFoMNnOVeaKcZx1Bn6fmdN
+         2qL1uF3VaWaPrjf5H10Q5QTUyvOfvscVGduCswH5CcX+u2OfAEaU4pYirVNznXe5uXHZ
+         VzFw==
+X-Gm-Message-State: ACgBeo0th9zVSKJhCyKXfnK+W0L2gJe/OhaOic1ZI8RRcHjpAmv3c7nq
+        COoucb8sN8xGoqtDdB31WR4=
+X-Google-Smtp-Source: AA6agR6AjkWPlKa3lpjYENpGpLSKGJf5OkNLlmOM1zDrAFoZEW910NqO5Nl/u6zupSZ0GuuWHsBRDg==
+X-Received: by 2002:a17:90b:3811:b0:202:9e26:bc00 with SMTP id mq17-20020a17090b381100b002029e26bc00mr540575pjb.223.1663021076635;
+        Mon, 12 Sep 2022 15:17:56 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:b206:445a:9717:79df? ([2620:15c:211:201:b206:445a:9717:79df])
+        by smtp.gmail.com with ESMTPSA id u17-20020a170903125100b001780e4e6b65sm6440651plh.114.2022.09.12.15.17.54
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 12 Sep 2022 15:17:54 -0700 (PDT)
+Message-ID: <e1d7dcf5-975e-ef90-fea4-2ca089e97493@acm.org>
+Date:   Mon, 12 Sep 2022 15:17:52 -0700
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.199.18.20]
-X-ClientProxiedBy: T-EXCH-02.corp.yadro.com (172.17.10.102) To
- T-EXCH-08.corp.yadro.com (172.17.11.58)
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.12.0
+Subject: Re: Another DP for Revert "scsi: core: Call blk_mq_free_tag_set()
+ earlier"
+Content-Language: en-US
+To:     "Kenneth R. Crudup" <kenny@panix.com>
+Cc:     linux-scsi@vger.kernel.org
+References: <9dc65f12-7692-7f2f-b3a7-41befb47d9a6@panix.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <9dc65f12-7692-7f2f-b3a7-41befb47d9a6@panix.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Default target port group is always returned in the list of port
-groups, even if the behaviour is unwanted, i.e. it has no members and
-non-default port groups are primary port groups.
+On 8/30/22 13:19, Kenneth R. Crudup wrote:
+> I have a power-hungry NVMe-to-USB-C enclosure that sometimes falls offline
+> under heavy load and disconnects from the USB. Normally I curse and re-plug
+> it into a powered hub and go on with things. But I'm running Linus' master
+> (6.0-rc3 of Sunday August 28th, which also has the asynchronous resume support
+> rework reverted) and I was seeing a lot of the below (along with a hanging up
+> of the USB).
+> 
+> Reverting f323896f (and setting it up to reproduce the disk error/disconnect)
+> seems to have fixed the "usb_hub_wq hub_event" hangup, at least at first glance.
 
-That violates SPC-4 "6.37 REPORT TARGET PORT GROUPS command":
- Every target port group shall contain at least one target port. The
- target port group descriptor shall include one target port descriptor
- for each target port in the target port group.
+Hi Kenneth,
 
-This patch hides port groups with no ports in REPORT TARGET PORT GROUPS
-response.
+Thanks for having reported this. The revert mentioned above has been 
+included in Linus' master branch as commit 2b36209ca818 ("scsi: core: 
+Revert "Call blk_mq_free_tag_set() earlier""). Further feedback is welcome.
 
-Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
----
-v3:
-  update commit message
-v2:
-  new solution - just skip all empty groups
----
- drivers/target/target_core_alua.c | 3 +++
- 1 file changed, 3 insertions(+)
+Thanks,
 
-diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
-index fb91423a4e2e..c8470e7c0e10 100644
---- a/drivers/target/target_core_alua.c
-+++ b/drivers/target/target_core_alua.c
-@@ -164,6 +164,9 @@ target_emulate_report_target_port_groups(struct se_cmd *cmd)
- 	spin_lock(&dev->t10_alua.tg_pt_gps_lock);
- 	list_for_each_entry(tg_pt_gp, &dev->t10_alua.tg_pt_gps_list,
- 			tg_pt_gp_list) {
-+		/* Skip empty port groups */
-+		if (!tg_pt_gp->tg_pt_gp_members)
-+			continue;
- 		/*
- 		 * Check if the Target port group and Target port descriptor list
- 		 * based on tg_pt_gp_members count will fit into the response payload.
--- 
-2.25.1
+Bart.
+
 
