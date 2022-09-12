@@ -2,103 +2,109 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E4B2ECAAA1
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Sep 2022 11:48:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7F09C6FA83
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Sep 2022 12:30:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229620AbiILLsc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Sep 2022 07:48:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40222 "EHLO
+        id S229541AbiILMaU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Sep 2022 08:30:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32790 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229608AbiILLsb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Sep 2022 07:48:31 -0400
-Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0E193C8CA
-        for <linux-scsi@vger.kernel.org>; Mon, 12 Sep 2022 04:48:30 -0700 (PDT)
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28BMw36Z017006;
-        Mon, 12 Sep 2022 04:48:28 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-type; s=pfpt0220;
- bh=EhajUTYuhAPW5kV9VP0eYgqRp6qcDnVZ4PcmU6Ql09M=;
- b=jvBMx/2jw1sZ5w647g2Z+ITqyATqlAXsDyjSFA3WJdrf2qOnkjf6i4HFLFQeM8YPJ2t3
- SU7kDu0GmWxrxh8aOH4F7bTwep48B6K1KQ5xmpvi74m1tHKdZdrMnru7HwM9ofOmOuYN
- fIbBVJA6p8sRgMywB8BjOxipj2TNdAENEsh7GRdCCawg6R4bD3L9Y0YWXBk5lTIyoCBz
- pNf4PgKWOo74EvFCHMjDCKA+XguTqlLZl+9XR1YZI5C/JojU2g3ThifNqkNk02S8masQ
- gpSC6+W/5YlSiW/KaWbc8OgocwsOs+o8uf6Su+AJspWeaydyi6Xuf7gtx42uCAOsmDvX sg== 
-Received: from dc5-exch01.marvell.com ([199.233.59.181])
-        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3jgt3mxhg5-2
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Mon, 12 Sep 2022 04:48:28 -0700
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 12 Sep
- 2022 04:48:26 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Mon, 12 Sep 2022 04:48:26 -0700
-Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id 5773D3F705A;
-        Mon, 12 Sep 2022 04:48:26 -0700 (PDT)
-From:   Nilesh Javali <njavali@marvell.com>
-To:     <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <jmeneghi@redhat.com>,
-        <guazhang@redhat.com>, <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: [PATCH] qedf: Populate sysfs attributes for vport
-Date:   Mon, 12 Sep 2022 04:48:03 -0700
-Message-ID: <20220912114803.7644-1-njavali@marvell.com>
-X-Mailer: git-send-email 2.12.0
+        with ESMTP id S229808AbiILMaO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Sep 2022 08:30:14 -0400
+Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F05F3EE0B;
+        Mon, 12 Sep 2022 05:30:11 -0700 (PDT)
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id B28EC57E84;
+        Mon, 12 Sep 2022 12:30:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        in-reply-to:content-transfer-encoding:content-disposition
+        :content-type:content-type:mime-version:references:message-id
+        :subject:subject:from:from:date:date:received:received:received
+        :received; s=mta-01; t=1662985808; x=1664800209; bh=ZOgukxGWg7DP
+        dVGOSa7aV1kjMKfqVkLg8HhCD07XkGo=; b=qXfo8QA3SIv7/1x9LAraL5ciHJbZ
+        5uYfYMBK7YgzkQyeU3wwiYhCFHupfLq/IMPGkaEsYV1clKmt1ql9gqH4mpJ6LqtS
+        Dl4K51r+tC/RTePPqzXnD3BxlPIJ3N3H2qz1rNOJEhGUz8oYV0aBTpOwc1X3wbtZ
+        qsdv0NV2s/exvKU=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id BML3nGlguWdj; Mon, 12 Sep 2022 15:30:08 +0300 (MSK)
+Received: from T-EXCH-02.corp.yadro.com (T-EXCH-02.corp.yadro.com [172.17.10.102])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 915A657E76;
+        Mon, 12 Sep 2022 15:30:07 +0300 (MSK)
+Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
+ T-EXCH-02.corp.yadro.com (172.17.10.102) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
+ 15.1.669.32; Mon, 12 Sep 2022 15:30:07 +0300
+Received: from yadro.com (10.199.18.20) by T-EXCH-08.corp.yadro.com
+ (172.17.11.58) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1118.9; Mon, 12 Sep
+ 2022 15:30:06 +0300
+Date:   Mon, 12 Sep 2022 15:30:02 +0300
+From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
+To:     Mike Christie <michael.christie@oracle.com>
+CC:     Konstantin Shelekhin <k.shelekhin@yadro.com>,
+        Martin Petersen <martin.petersen@oracle.com>,
+        <target-devel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux@yadro.com>, Roman Bolshakov <r.bolshakov@yadro.com>
+Subject: Re: [PATCH] scsi: target: core: Add a way to hide a port group
+Message-ID: <20220912123002.GE9218@yadro.com>
+References: <20220906074903.18755-1-d.bogdanov@yadro.com>
+ <f85ec171-f3c6-cc14-daa1-84ef1b20898a@oracle.com>
+ <20220909112235.GD9218@yadro.com>
+ <YxskUBeZeMPi5By2@yadro.com>
+ <b5dc6104-04e1-c3f0-b22d-ff9043cd9f36@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-ORIG-GUID: aJKSLKhK7qyFDa1GVHC7O7p0raJrVcnR
-X-Proofpoint-GUID: aJKSLKhK7qyFDa1GVHC7O7p0raJrVcnR
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
- definitions=2022-09-12_08,2022-09-12_01,2022-06-22_01
+Content-Type: text/plain; charset="utf-8"
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <b5dc6104-04e1-c3f0-b22d-ff9043cd9f36@oracle.com>
+X-Originating-IP: [10.199.18.20]
+X-ClientProxiedBy: T-EXCH-02.corp.yadro.com (172.17.10.102) To
+ T-EXCH-08.corp.yadro.com (172.17.11.58)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Saurav Kashyap <skashyap@marvell.com>
+On Fri, Sep 09, 2022 at 12:24:51PM -0500, Mike Christie wrote:
+> 
+> On 9/9/22 6:32 AM, Konstantin Shelekhin wrote:
+> >> The patch solves the presence of non-deletable empty default_tg_pt_gp
+> >> in RTPG.
+> >> May be, a global attribute like target/core/alua/hide_emtpy_tpg would
+> >> fit better than an attribute per each port group?
+> >>
+> >> I would always hide the empty default_lu_gp (not configurable) but I am
+> >> afraid that it will be considered as not backward compatible change. 🙁
+> > A module parameter perhaps? Or a CONFIG definition.
+> 
+> For the ceph iscsi project we wanted this same behavior for a while and
+> we had to use distro kernels. There are probably others that need the same
+> thing so a kernel config option wouldn't work for them.
+> 
+> Module param or a global attr in target/core/alua like Dimitry mentioned
+> seem fine. If the new variable is set are you guys thinking that
+> core_tpg_add_lun would just not call target_attach_tg_pt_gp? So the variable
+> would be "make_default_tg_pt_gp"?
+I thought it over one more time.
 
-Copy speed, supported_speed, frame_size and update port_type for NPIV port.
+1. To not report empty port group is a completely backward compatible
+change becasue there is no impact on userspace at all. The only change
+is in the network response.
 
-Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
----
- drivers/scsi/qedf/qedf_main.c | 21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
+2. SPC-4 ("5.15.2.7 Target port asymmetric access state reporting")
+tells that a target MAY not provide info about port groups that do not
+contain the current port through that the RTPG is received. 
 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index 3d6b137314f3..cc6d9decf62c 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -1921,6 +1921,27 @@ static int qedf_vport_create(struct fc_vport *vport, bool disabled)
- 		fc_vport_setlink(vn_port);
- 	}
- 
-+	/* Set symbolic node name */
-+	if (base_qedf->pdev->device == QL45xxx)
-+		snprintf(fc_host_symbolic_name(vn_port->host), 256,
-+			 "Marvell FastLinQ 45xxx FCoE v%s", QEDF_VERSION);
-+
-+	if (base_qedf->pdev->device == QL41xxx)
-+		snprintf(fc_host_symbolic_name(vn_port->host), 256,
-+			 "Marvell FastLinQ 41xxx FCoE v%s", QEDF_VERSION);
-+
-+	/* Set supported speed */
-+	fc_host_supported_speeds(vn_port->host) = n_port->link_supported_speeds;
-+
-+	/* Set speed */
-+	vn_port->link_speed = n_port->link_speed;
-+
-+	/* Set port type */
-+	fc_host_port_type(vn_port->host) = FC_PORTTYPE_NPIV;
-+
-+	/* Set maxframe size */
-+	fc_host_maxframe_size(vn_port->host) = n_port->mfs;
-+
- 	QEDF_INFO(&(base_qedf->dbg_ctx), QEDF_LOG_NPIV, "vn_port=%p.\n",
- 		   vn_port);
- 
--- 
-2.23.1
+So, according to SPC it is expected behaviour to not report the empty
+port groups.
+
+I will prepare new version of the patch with always skipping any empty
+port group in RTPG response.
+
+BR,
+ Dmitry
 
