@@ -2,151 +2,147 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EE9BECAAD5
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Sep 2022 13:45:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60787C6FA86
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Sep 2022 13:45:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229923AbiILNpo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Sep 2022 09:45:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36370 "EHLO
+        id S229924AbiILNpq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Sep 2022 09:45:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36602 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229561AbiILNpg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Sep 2022 09:45:36 -0400
-Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23C411CFCD
-        for <linux-scsi@vger.kernel.org>; Mon, 12 Sep 2022 06:45:33 -0700 (PDT)
-Received: by mail-pj1-x1032.google.com with SMTP id m3so8126507pjo.1
-        for <linux-scsi@vger.kernel.org>; Mon, 12 Sep 2022 06:45:33 -0700 (PDT)
+        with ESMTP id S229893AbiILNpn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Sep 2022 09:45:43 -0400
+Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E3BA1FCD8
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Sep 2022 06:45:39 -0700 (PDT)
+Received: by mail-pf1-x436.google.com with SMTP id y127so8670783pfy.5
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Sep 2022 06:45:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date;
-        bh=Pq6t3y1inB024n03NV+rzOjSt8qvQc/pVIQNNBZYI/A=;
-        b=PUrIKKfcmPBLkGXvReCRwGfrSjSbIb9tx05b0Y4ZETgASKBp7t4GlnYLWcfLkmjquW
-         ywsBl7dkjemEug3jhMyyiQLLqQDXq6p/8MC5fBOHZSJIsr0Jw4xTjSAKiQbGQdP2Xoxq
-         wAS73Dj1iV7Ug2dK1l9/8ZEQ/aOxHAp+Lmf+Q=
+        bh=1cz8cJddhv/UgFa7XsIYYwuNzFE3YN92ZTJq73Pl1Qc=;
+        b=a5z+y1xMNN6XuV6W0isJc6VvM5gTW6uKg1ra7XVNTtEgfzOXH6JTj1scw5oHcSytL8
+         ALbnuQOUWt9qxZIwePVTQSfBiXd8/wHfnpatbUZ3iq2VGbJITSs7RZlFq08WMcHjP6oH
+         gdBrztJ/T5uJlpBn5KxEP5BkQi+9YyUHpjf9I=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date;
-        bh=Pq6t3y1inB024n03NV+rzOjSt8qvQc/pVIQNNBZYI/A=;
-        b=xi24NF86ZwRaPn0I4jWmSVBc+c32xYs7uV7MvYqlpIY2ttqE6Sk03un2Brhir+mFUL
-         nCry6GFZhXEwg6MkHpG2h+ybO/wfDVvzhQ/DVA2z4wzmJfztEDfmdLlwJtwtof++bjwh
-         qQM2SxanumGx8dja2Z2a/ssBxCrsPh6ANfsN6Nv0ouyYZGR5CCgJ4Iv2tmDRrxuer3aO
-         b5gr6z3FkjBmMfobACj/6DPLNHdraTYiedsXsAUrnnYG4ZVF9F2Of3jhXhHfSbQZ2cig
-         t1oqocGdfINdMhgiQfByFhz+GzAeFQvmdrpxpYOlp9cM3wVNXpf6gsub3hFVWLk3oeP/
-         2kOQ==
-X-Gm-Message-State: ACgBeo0v+j+MNyg5zA9IAODsPNcGLjxRqSn8lB045uo2CgC7Fi8rkEhI
-        rkRsE9iKYX1qC5UhwmlY56V1oW8N0Ep6yCXitAI+Jn3VBczCV+u9/akzs/wTbFjTtnwTppfwln1
-        T5VnJHQd/+5XJCtjX/8TA28Q7C9k7sSzMwCdJdbP1MB9Tw4inJGZyerj4IK3Ccq3vYLJJwMPdwd
-        q8sphMTwoA
-X-Google-Smtp-Source: AA6agR6gWEhmbYEk4H+AobVCV2bcRtZPKCWNIAumeDDELRI3V/uIbGnNkTKmUIg+bQhqxSknFH/Egw==
-X-Received: by 2002:a17:90b:3a82:b0:1fe:45db:2c2b with SMTP id om2-20020a17090b3a8200b001fe45db2c2bmr23564720pjb.102.1662990332104;
-        Mon, 12 Sep 2022 06:45:32 -0700 (PDT)
+        bh=1cz8cJddhv/UgFa7XsIYYwuNzFE3YN92ZTJq73Pl1Qc=;
+        b=gFtecKTMEkQPmIJaotN5ZFu4ljTBZn1xEJvh+waWdusARXV3GFMsWCL4DXOqtBEPyG
+         Ss/OIlMqDne1MEqJwgH6Wk/TNDleffuXmcDOTCOxYnphD/ijxpDeXp+0vRMebpm4V2//
+         AnfjKY7jGRQ9e0EoBkUoHcTj80pCjBCVTeF+GTZsgXEH73iyHSMpfes/eFEQmQBZiWQV
+         XU3QkCIZUdwMRAL59vn8beCn+oScJypwVuZj3p8eUnZ30eutZXHzv+beZj8Kf+3igfQ0
+         ek88N6IWpZEmTXIXmCgtnatD6O/MVQYxDkneYIcgu43Q4902YJbumZNt1rUheAYvgSnP
+         Er9Q==
+X-Gm-Message-State: ACgBeo1E8agUIHwzMQWbeN/FRv5KpbuUjY+x0GXmAlL6Y9cnFgt6PzXO
+        5EyhMpL7fNq42YKux9x6KARl2fAHmVClzhxnpdY6XeR9iFnu6xI0mzb6CXs6pRvugv7QUZqdr5o
+        g9olCDwJzrk6i0KSiOQ9DswDtXteFH80ShJsKqfSToHxMNR09ahgzNxcIQZLfwJx4zlTySlmivK
+        bzZHZK19I9
+X-Google-Smtp-Source: AA6agR7ARvU8ukwJ07nFXCRORLyMIXvymdWlZHpx+bXosYoW5viDdGYOvECmsSKE3hKLF81lAIu4qw==
+X-Received: by 2002:a63:8641:0:b0:434:c1cf:9546 with SMTP id x62-20020a638641000000b00434c1cf9546mr23312431pgd.109.1662990338381;
+        Mon, 12 Sep 2022 06:45:38 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id u7-20020a170903124700b00176e8f85146sm6112900plh.185.2022.09.12.06.45.30
+        by smtp.gmail.com with ESMTPSA id u7-20020a170903124700b00176e8f85146sm6112900plh.185.2022.09.12.06.45.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 12 Sep 2022 06:45:31 -0700 (PDT)
+        Mon, 12 Sep 2022 06:45:37 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH v2 3/9] mpi3mr: Schedule IRQ kthreads only on non-RT kernels
-Date:   Mon, 12 Sep 2022 19:27:36 +0530
-Message-Id: <20220912135742.11764-4-sreekanth.reddy@broadcom.com>
+Subject: [PATCH v2 6/9] mpi3mr: Free enclosure objects during driver unload
+Date:   Mon, 12 Sep 2022 19:27:39 +0530
+Message-Id: <20220912135742.11764-7-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20220912135742.11764-1-sreekanth.reddy@broadcom.com>
 References: <20220912135742.11764-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000000be63d05e87b1c6e"
+        boundary="0000000000006c112005e87b1cf0"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000000be63d05e87b1c6e
+--0000000000006c112005e87b1cf0
 Content-Transfer-Encoding: 8bit
 
-In RT kernels, the IRQ handler's code is executed as a
-kernel thread. So, the driver is modified not to explicitly
-schedule the IRQ kernel thread.
+Free the enclosure device objects during driver unload and
+before rescanning the target devices during controller reset.
 
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 16 +++++++++++++++-
- 1 file changed, 15 insertions(+), 1 deletion(-)
+ drivers/scsi/mpi3mr/mpi3mr.h    |  1 +
+ drivers/scsi/mpi3mr/mpi3mr_fw.c |  4 ++++
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 19 +++++++++++++++++++
+ 3 files changed, 24 insertions(+)
 
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index 0eb0647..883ed59 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -1392,4 +1392,5 @@ void mpi3mr_refresh_expanders(struct mpi3mr_ioc *mrioc);
+ void mpi3mr_add_event_wait_for_device_refresh(struct mpi3mr_ioc *mrioc);
+ void mpi3mr_flush_drv_cmds(struct mpi3mr_ioc *mrioc);
+ void mpi3mr_flush_cmds_for_unrecovered_controller(struct mpi3mr_ioc *mrioc);
++void mpi3mr_free_enclosure_list(struct mpi3mr_ioc *mrioc);
+ #endif /*MPI3MR_H_INCLUDED*/
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index cc700e2..78792f2 100644
+index abdccff..e3df044 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -537,6 +537,7 @@ int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mrioc,
- 		if ((le16_to_cpu(reply_desc->reply_flags) &
- 		    MPI3_REPLY_DESCRIPT_FLAGS_PHASE_MASK) != exp_phase)
- 			break;
-+#ifndef CONFIG_PREEMPT_RT
- 		/*
- 		 * Exit completion loop to avoid CPU lockup
- 		 * Ensure remaining completion happens from threaded ISR.
-@@ -545,7 +546,7 @@ int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mrioc,
- 			op_reply_q->enable_irq_poll = true;
- 			break;
- 		}
--
-+#endif
- 	} while (1);
+@@ -4250,6 +4250,8 @@ void mpi3mr_free_mem(struct mpi3mr_ioc *mrioc)
+ 	u16 i;
+ 	struct mpi3mr_intr_info *intr_info;
  
- 	writel(reply_ci,
-@@ -614,6 +615,8 @@ static irqreturn_t mpi3mr_isr_primary(int irq, void *privdata)
- 		return IRQ_NONE;
- }
- 
-+#ifndef CONFIG_PREEMPT_RT
++	mpi3mr_free_enclosure_list(mrioc);
 +
- static irqreturn_t mpi3mr_isr(int irq, void *privdata)
- {
- 	struct mpi3mr_intr_info *intr_info = privdata;
-@@ -691,6 +694,8 @@ static irqreturn_t mpi3mr_isr_poll(int irq, void *privdata)
- 	return IRQ_HANDLED;
+ 	if (mrioc->sense_buf_pool) {
+ 		if (mrioc->sense_buf)
+ 			dma_pool_free(mrioc->sense_buf_pool, mrioc->sense_buf,
+@@ -4897,6 +4899,8 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
+ 	mpi3mr_flush_host_io(mrioc);
+ 	mpi3mr_cleanup_fwevt_list(mrioc);
+ 	mpi3mr_invalidate_devhandles(mrioc);
++	mpi3mr_free_enclosure_list(mrioc);
++
+ 	if (mrioc->prepare_for_reset) {
+ 		mrioc->prepare_for_reset = 0;
+ 		mrioc->prepare_for_reset_timeout_counter = 0;
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index a5b6402..bb276b5 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -1334,6 +1334,25 @@ out:
+ 		mpi3mr_tgtdev_put(tgtdev);
  }
  
-+#endif
++/**
++ * mpi3mr_free_enclosure_list - release enclosures
++ * @mrioc: Adapter instance reference
++ *
++ * Free memory allocated during encloure add.
++ *
++ * Return nothing.
++ */
++void mpi3mr_free_enclosure_list(struct mpi3mr_ioc *mrioc)
++{
++	struct mpi3mr_enclosure_node *enclosure_dev, *enclosure_dev_next;
++
++	list_for_each_entry_safe(enclosure_dev,
++	    enclosure_dev_next, &mrioc->enclosure_list, list) {
++		list_del(&enclosure_dev->list);
++		kfree(enclosure_dev);
++	}
++}
 +
  /**
-  * mpi3mr_request_irq - Request IRQ and register ISR
+  * mpi3mr_enclosure_find_by_handle - enclosure search by handle
   * @mrioc: Adapter instance reference
-@@ -713,8 +718,13 @@ static inline int mpi3mr_request_irq(struct mpi3mr_ioc *mrioc, u16 index)
- 	snprintf(intr_info->name, MPI3MR_NAME_LENGTH, "%s%d-msix%d",
- 	    mrioc->driver_name, mrioc->id, index);
- 
-+#ifndef CONFIG_PREEMPT_RT
- 	retval = request_threaded_irq(pci_irq_vector(pdev, index), mpi3mr_isr,
- 	    mpi3mr_isr_poll, IRQF_SHARED, intr_info->name, intr_info);
-+#else
-+	retval = request_threaded_irq(pci_irq_vector(pdev, index), mpi3mr_isr_primary,
-+	    NULL, IRQF_SHARED, intr_info->name, intr_info);
-+#endif
- 	if (retval) {
- 		ioc_err(mrioc, "%s: Unable to allocate interrupt %d!\n",
- 		    intr_info->name, pci_irq_vector(pdev, index));
-@@ -2179,9 +2189,13 @@ int mpi3mr_op_request_post(struct mpi3mr_ioc *mrioc,
- 		pi = 0;
- 	op_req_q->pi = pi;
- 
-+#ifndef CONFIG_PREEMPT_RT
- 	if (atomic_inc_return(&mrioc->op_reply_qinfo[reply_qidx].pend_ios)
- 	    > MPI3MR_IRQ_POLL_TRIGGER_IOCOUNT)
- 		mrioc->op_reply_qinfo[reply_qidx].enable_irq_poll = true;
-+#else
-+	atomic_inc_return(&mrioc->op_reply_qinfo[reply_qidx].pend_ios);
-+#endif
- 
- 	writel(op_req_q->pi,
- 	    &mrioc->sysif_regs->oper_queue_indexes[reply_qidx].producer_index);
 -- 
 2.27.0
 
 
---0000000000000be63d05e87b1c6e
+--0000000000006c112005e87b1cf0
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -217,13 +213,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEINIMJaUdRIbpfcdAaFwl
-k4oPydcbiCBhP4YusJIGiCpOMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDkxMjEzNDUzMlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIMI/E943Nry/N+fRMwRC
+jIPzpTvL0d8h9AwtxGpYJoZXMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDkxMjEzNDUzOVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBhsfTeS2PrbAbIUSlp10SIZVGoGzAfzI80EALr
-3DycTdTgS+y0yO4TXn9iboabiXXOg87OJTFxpg4iZWKR0uTCxN3b2tVDmi6eGx1joupFgRmQLdv6
-auf7nvPvufnZi7m7q6kgUOPgJQajsqW48jklqPJC9KAmFgpMxmtc/enG25PMA9mE66S3Jy5SNUBq
-sOx3301LHSzvUFLLebsFaYuubbLn98t92SgWjCE+/htg0Y6fUHd/goDsKdtfk2cVKtOr17rItim9
-xzpEaT4DDoSxo8NSbuekeAqTmvp06spiFThInFL/WsdcNa/t+gIj29kAjKQ7Z8lvf8ntgk7D4iVp
---0000000000000be63d05e87b1c6e--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQAUQ2uKeLDGaoawqyEpyYZJcCxl9WvZKg3lUFXc
+ftaGv3295MNvBPx91pBNUn4LZuC4VxFurMlU3eXLJYZPWKqMPnkyt8ibhr8V7a8UGdkqVTWQdnc+
+uK2l+l/iEkTCZoQFtxAFMmzSlBY3upxoG6830kPwgazBjlTTVo4nhsTzeFeNx3H7c0MUs6Rdx2h0
++P5hszcUosGv/I6nfsfaPjaxX/Gd8YrTqbaPJqllM+BqY6r2kDavp9fghUtCxhUJ+xkfQ0s8vJLx
+RdcUi2NBM5kgLp8/gjTDEbbO2dxFqDP12pqtZwNVWiSnCMu6JfiKo+TByM+jwbgL6d52/+lquNm3
+--0000000000006c112005e87b1cf0--
