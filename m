@@ -2,115 +2,92 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C253C6FA82
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Sep 2022 18:19:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A074FC6FA82
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Sep 2022 21:29:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230091AbiILSTY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Sep 2022 14:19:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42958 "EHLO
+        id S229804AbiILV30 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Sep 2022 17:29:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59036 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229668AbiILSTW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Sep 2022 14:19:22 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26B3E42AC1;
-        Mon, 12 Sep 2022 11:19:22 -0700 (PDT)
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28CFkEPi032703;
-        Mon, 12 Sep 2022 18:18:59 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=R5hKuMdv6LMrIyP1zvUTwecK/eE0/c7+ayjM1uGMEGk=;
- b=NgleLbSRkfoZiMw0m1CYisl5GuvOhNOcIt84pwBZCeSk7mLnbdsKrdhvuH5xiGxc6MpX
- sIT/iOblNoxwE3NwCMcguirqg4pFrrQvpLQ0WRP93n+KLoutYwUBhTbMb6UPKj+x7uKn
- q61yF4K8KYWsav2NVAZ8rH9OUfgnARfNsL7KDuZ9+BKXbQf4/T+z+c0lQ1aVHDlH1Ab1
- i9IXgpjYR0jm/sDsRQphnoo7U9nAmCEq5fDWNvE8o/YQAYmq+W+Yqt1B0VhShzw2VwIn
- gE+X7tJCLbIv1PECwFnIMA0fHqdsfX/8M3hA719uyS7v7Jq1VOs9a45bOJHPQhzKR4rE 3w== 
-Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3jgkve5u4e-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 12 Sep 2022 18:18:58 +0000
-Received: from nasanex01a.na.qualcomm.com (corens_vlan604_snip.qualcomm.com [10.53.140.1])
-        by NASANPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 28CIIwlI022551
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 12 Sep 2022 18:18:58 GMT
-Received: from [10.46.161.58] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.29; Mon, 12 Sep
- 2022 11:18:57 -0700
-Message-ID: <7b513cc3-b218-fe57-1d24-6a10b225b6da@quicinc.com>
-Date:   Mon, 12 Sep 2022 11:18:57 -0700
+        with ESMTP id S229629AbiILV3Z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Sep 2022 17:29:25 -0400
+Received: from mail-wm1-x334.google.com (mail-wm1-x334.google.com [IPv6:2a00:1450:4864:20::334])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8B2727FD2;
+        Mon, 12 Sep 2022 14:29:24 -0700 (PDT)
+Received: by mail-wm1-x334.google.com with SMTP id i203-20020a1c3bd4000000b003b3df9a5ecbso7229113wma.1;
+        Mon, 12 Sep 2022 14:29:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date;
+        bh=Zx7jjBB5IBx0W7EnQ+S3p3BxnBrqMDtfQs/QT9RTn9w=;
+        b=R8y3gaH+ySTgnCTx0+q7LRdt6jIO4EYnwFI/Kvn/Zc+TQJhDpJfsAW4AGjb8zBcvjI
+         Nvb1Fa0ohte+AAQ4bmGmSaftcwu/dr5qoQOx4kIw5eLqhWqbw9paz/K+kU1H+Hdme/V7
+         Bwwnvjkw1Qg1LNHOxA1WShCscPHLezN71l99o7LC3ZKMnzMg6TYqy/DqyITiWARyGLTp
+         Hhh4G1QgCZp6TSMl6CYjyX8aYE1+fLcNEugXaO4Gnud8Qualg1yVSX+wAJKshA/rsIAH
+         ZsXIVDSCwkrHcvbAXUW9liovgeHzLq+uqEAmLEezdcpkNGBF3jxqWQUCNNLMUMs+LhXd
+         lz+g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date;
+        bh=Zx7jjBB5IBx0W7EnQ+S3p3BxnBrqMDtfQs/QT9RTn9w=;
+        b=cJ6KH/VfLtyRy+6dzB8nzwqCZxFAmmAePPNZ1FfArBPCgAoAy9K6qC+sQQ52D8ATDS
+         nUobyQLmo41uixh4EhiE/Ys8QQfcJVgm1MQjs/kXBNSNNL6AdFHoRggPqW2IfvIJRjl9
+         yMgLEUmszYPyEkdcl/xlHUcSTaP3BLiWe1JDqxAlxHfP5VOH5zE6v09jSdPILJgxl+ia
+         0L8iczDHzO7MN74VpR78EcRqJjmOO3Wj0MD5UOgcFO6SxQ197rNr1IVsTxkBRiHI58J/
+         Bi5a14sSAheW/3qoO6bnux3TQpNycVyx+/oz/V91jX+ITosYRwAoa9/oGDAwJzLw2oo4
+         MA4w==
+X-Gm-Message-State: ACgBeo0t5+3K88NiFyG/QcI4yTgIk+ZM+qWP1u4GTnCRhl9i6NM4QucX
+        YKjTCQPKjbEGT1pq5SXHJQ==
+X-Google-Smtp-Source: AA6agR4TVfH17t5eyskeR7ch6bJRAqAnCPQO11rKYxsO+lxm6BfieTQ2mgnZHMctB3Z0qMmW9vgioA==
+X-Received: by 2002:a05:600c:4591:b0:3a6:755b:8e6 with SMTP id r17-20020a05600c459100b003a6755b08e6mr182534wmo.147.1663018163093;
+        Mon, 12 Sep 2022 14:29:23 -0700 (PDT)
+Received: from playground (host-92-29-143-165.as13285.net. [92.29.143.165])
+        by smtp.gmail.com with ESMTPSA id b11-20020a05600c4e0b00b003b492753826sm2329064wmq.43.2022.09.12.14.29.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 12 Sep 2022 14:29:22 -0700 (PDT)
+Date:   Mon, 12 Sep 2022 22:29:11 +0100
+From:   Jules Irenge <jbi.octave@gmail.com>
+To:     jejb@linux.ibm.com
+Cc:     martin.petersen@oracle.com, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, mpi3mr-linuxdrv.pdl@broadcom.com
+Subject: [PATCH] scsi: mpi3mr: Remove useless casting value returned by
+ kcalloc to structure
+Message-ID: <Yx+kp8NxHvDHs7dv@playground>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.1
-Subject: Re: [RFC PATCH v3 1/4] ufs: core: prepare ufs for multi circular
- queue support
-To:     Bart Van Assche <bvanassche@acm.org>, <quic_nguyenb@quicinc.com>,
-        <quic_xiaosenh@quicinc.com>, <stanley.chu@mediatek.com>,
-        <adrian.hunter@intel.com>, <avri.altman@wdc.com>,
-        <mani@kernel.org>, <quic_cang@quicinc.com>, <beanhuo@micron.com>,
-        <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>
-CC:     <linux-arm-msm@vger.kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <cover.1662157846.git.quic_asutoshd@quicinc.com>
- <757bbfe36629b7c31ef2630971f8678a7801223f.1662157846.git.quic_asutoshd@quicinc.com>
- <37d36dd9-f467-233c-babd-4e7c1c953c6c@acm.org>
- <4ef3ee8f-1210-3a03-da14-1bfdf6def297@quicinc.com>
- <c85af2ae-42b2-89e4-0dc1-17658379ac3a@acm.org>
-From:   "Asutosh Das (asd)" <quic_asutoshd@quicinc.com>
-In-Reply-To: <c85af2ae-42b2-89e4-0dc1-17658379ac3a@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: LyWqzIGMq7EyProtKPnGTRc0yOjKfsf9
-X-Proofpoint-GUID: LyWqzIGMq7EyProtKPnGTRc0yOjKfsf9
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
- definitions=2022-09-12_12,2022-09-12_02,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 clxscore=1015
- adultscore=0 mlxlogscore=999 spamscore=0 suspectscore=0 bulkscore=0
- impostorscore=0 malwarescore=0 lowpriorityscore=0 phishscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2207270000 definitions=main-2209120063
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/9/2022 4:38 PM, Bart Van Assche wrote:
-> On 9/9/22 15:48, Asutosh Das (asd) wrote:
->> Hello Bart,
->> Thanks for the comments.
->>
->> On 9/8/2022 2:58 PM, Bart Van Assche wrote:
->>> On 9/2/22 15:41, Asutosh Das wrote:
->>>> Preparatory changes for upcoming multi circular queue.
->>>
->>> One patch per change please and also describe each individual change. 
->>>  From 
->>> https://www.kernel.org/doc/html/latest/process/submitting-patches.html#split-changes: "Separate each logical change into a separate patch".
->>>
->> The intent of this change was to have all the non-mcq related changes 
->> to the ufshcd as a separate patch.
->> I would add more details to the commit message of this change.
->> If there's anything specific in this patch that may need changes, 
->> please let me know.
-> 
-> Please follow the "one change per patch" rule. This is a widely followed 
-> rule in the Linux kernel community. This rule exists because it is the 
-> responsibility of the developer(s) who post a patch series to make it 
-> easy for reviewers to review their work.
-> 
-Let me review and restructure the code and push it again.
-I would like to remove the RFC tag in the next version.
-Please let me know if that's _not_ OK.
+coccinelle reports a warning
 
-> Thanks,
-> 
-> Bart.
+WARNING: casting value returned by memory allocation function
+to (struct mpi3mr_throttle_group_info *) is useless
+
+To fix this the useless cast is removed.
+
+Signed-off-by: Jules Irenge <jbi.octave@gmail.com>
+---
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 0866dfd43318..ee3c695ece9a 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -3795,8 +3795,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc)
+ 	if (!mrioc->throttle_groups && mrioc->num_io_throttle_group) {
+ 		dprint_init(mrioc, "allocating memory for throttle groups\n");
+ 		sz = sizeof(struct mpi3mr_throttle_group_info);
+-		mrioc->throttle_groups = (struct mpi3mr_throttle_group_info *)
+-		    kcalloc(mrioc->num_io_throttle_group, sz, GFP_KERNEL);
++		mrioc->throttle_groups = kcalloc(mrioc->num_io_throttle_group, sz, GFP_KERNEL);
+ 		if (!mrioc->throttle_groups)
+ 			goto out_failed_noretry;
+ 	}
+-- 
+2.35.1
 
