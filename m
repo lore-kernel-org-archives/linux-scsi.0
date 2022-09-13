@@ -2,133 +2,110 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE18EC6FA82
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Sep 2022 17:43:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACC3AC54EE9
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Sep 2022 18:53:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233406AbiIMRnM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Sep 2022 13:43:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37196 "EHLO
+        id S232982AbiIMSxL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Sep 2022 14:53:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46194 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233210AbiIMRmj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Sep 2022 13:42:39 -0400
-Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DDDF9B864;
-        Tue, 13 Sep 2022 09:36:25 -0700 (PDT)
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 0B372452C0;
-        Tue, 13 Sep 2022 16:36:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        content-type:content-type:content-transfer-encoding:mime-version
-        :x-mailer:message-id:date:date:subject:subject:from:from
-        :received:received:received:received; s=mta-01; t=1663086982; x=
-        1664901383; bh=r0CwdQ0aYnZ3almcA+1OnRUGEpZIizTOz5cKY7PpPfg=; b=Z
-        aU2vX7qltX1PfLn5owQR7TKvUvfsBqMzeG8TkPFCljAmPbJMDYZsgSp4hCSmiDu6
-        Tx/Gjw09x1EdDCo/+zbLln3g+VEpmZ2ey1qda10OgS7qWavXz9LhXx9kEPPtgnse
-        AjkpC3+75+L28wVySFfPTg9Xy9S382/Cwpi+/a6teI=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id hzlHwMt33NPP; Tue, 13 Sep 2022 19:36:22 +0300 (MSK)
-Received: from T-EXCH-02.corp.yadro.com (T-EXCH-02.corp.yadro.com [172.17.10.102])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id AB5CA452CB;
-        Tue, 13 Sep 2022 19:36:21 +0300 (MSK)
-Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
- T-EXCH-02.corp.yadro.com (172.17.10.102) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
- 15.1.669.32; Tue, 13 Sep 2022 19:36:21 +0300
-Received: from NB-591.corp.yadro.com (10.199.18.20) by
- T-EXCH-08.corp.yadro.com (172.17.11.58) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.2.1118.9; Tue, 13 Sep 2022 19:36:20 +0300
-From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
-To:     Martin Petersen <martin.petersen@oracle.com>,
-        <target-devel@vger.kernel.org>
-CC:     <linux-scsi@vger.kernel.org>, <linux@yadro.com>,
-        Dmitry Bogdanov <d.bogdanov@yadro.com>
-Subject: [PATCH] target: core: UA on all luns after reset
-Date:   Tue, 13 Sep 2022 19:36:02 +0300
-Message-ID: <20220913163602.20597-1-d.bogdanov@yadro.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S233005AbiIMSwc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Sep 2022 14:52:32 -0400
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 155F3B39
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Sep 2022 11:38:35 -0700 (PDT)
+Received: by mail-pl1-f182.google.com with SMTP id b21so12713692plz.7
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Sep 2022 11:38:35 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date;
+        bh=btl+MY5ALJhiZ/peFx7FmUskDDUuRc6Zo47jLvuCKaw=;
+        b=uFtt4dph32SffHWl8NRYrJoGuWhu4p8mj6j674EdyLHkLoVaJ2E39mt2d7rpi5T6W9
+         REjkhjKM6SotznI7/2GfiuxNgAJKI4D4uLphW9I0cIPUvopm6RYpjOqM8byf/RxU6kQf
+         opNVCS5whUxjRdmLHd6F18m3zJwDmlmw5ImNsJImsdl9XtRpECM1dqJVrb6VKOOAvaUm
+         J4FVjQXIETZFqCUxfwgX0ReC5wKd3FopxxibOwCE8fBXTo9hfkKTM0kufCIyvTiXDuPz
+         0u3xf/9Xfarcyed1wJUh1Y5XbrcYZHPK21z6hcsVxNagsbQbyBYwm8lZ2PbRtpzm6Tl2
+         1PFA==
+X-Gm-Message-State: ACrzQf2b8qnPlXSbxIkbKza1hHCrq9SARKoM2dbm4ngpwTkrryuuCA69
+        9yA7iBlVZFiQqQx+NSvHE7M=
+X-Google-Smtp-Source: AMsMyM5xxoEkL3uWSQfb8wDj++wIiARy7jMeTHImiiWJFP4CXqmGvxK3vZ310aZ9yl2JPMql5g5DYQ==
+X-Received: by 2002:a17:90b:1d8a:b0:203:6db:ed6f with SMTP id pf10-20020a17090b1d8a00b0020306dbed6fmr612850pjb.228.1663094314450;
+        Tue, 13 Sep 2022 11:38:34 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:b206:445a:9717:79df? ([2620:15c:211:201:b206:445a:9717:79df])
+        by smtp.gmail.com with ESMTPSA id h9-20020a056a00000900b0053e5daf1a25sm8288227pfk.45.2022.09.13.11.38.32
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 13 Sep 2022 11:38:33 -0700 (PDT)
+Message-ID: <bf551369-5a0c-cbe9-7175-525bfb3c4e47@acm.org>
+Date:   Tue, 13 Sep 2022 11:38:31 -0700
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.12.0
+Subject: Re: [PATCH v3 2/3] scsi: core: Introduce a new list for SCSI proc
+ directory entries
+Content-Language: en-US
+To:     John Garry <john.garry@huawei.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
+        Mike Christie <michael.christie@oracle.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+References: <20220908233600.3043271-1-bvanassche@acm.org>
+ <20220908233600.3043271-3-bvanassche@acm.org>
+ <4dc1a0ba-75f3-d7f6-16c3-daddfaa05cf4@huawei.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <4dc1a0ba-75f3-d7f6-16c3-daddfaa05cf4@huawei.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.199.18.20]
-X-ClientProxiedBy: T-EXCH-02.corp.yadro.com (172.17.10.102) To
- T-EXCH-08.corp.yadro.com (172.17.11.58)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Allocate UA "BUS DEVICE RESET OCCURRED" on all LUNs on all
-target ports of the device upon reception of TMF LUN RESET.
+On 9/13/22 07:26, John Garry wrote:
+> On 09/09/2022 00:35, Bart Van Assche wrote:
+>> +struct scsi_proc_entry {
+>> +    struct list_head    entry;
+>> +    const struct scsi_host_template *sht;
+>> +    struct proc_dir_entry    *proc_dir;
+>> +    unsigned char        present;
+> 
+> is there really a hard limit of 255 hosts?
 
-The patch passes a libiscsi test SCSI.MultipathIO.Reset.
+Apparently that limit exists today. I can use a wider data type for the 
+'present' member if you want.
 
-Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
----
- drivers/target/target_core_device.c    | 19 +++++++++++++++++++
- drivers/target/target_core_internal.h  |  1 +
- drivers/target/target_core_transport.c |  3 +--
- 3 files changed, 21 insertions(+), 2 deletions(-)
+>> +static struct scsi_proc_entry *
+>> +__scsi_lookup_proc_entry(const struct scsi_host_template *sht)
+>> +{
+>> +    struct scsi_proc_entry *e;
+>> +
+>> +    lockdep_assert_held(&global_host_template_mutex);
+> 
+> I'm not sure we really need this - maybe a comment would be better. I 
+> don't care too much either way.
 
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index 2209660261d0..b8ab744783ed 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -284,6 +284,25 @@ void target_pr_kref_release(struct kref *kref)
- 	complete(&deve->pr_comp);
- }
- 
-+/*
-+ * Establish UA condition on SCSI device - all LUNs
-+ */
-+void target_dev_ua_allocate(struct se_device *dev, u8 asc, u8 ascq)
-+{
-+	struct se_dev_entry *se_deve;
-+	struct se_lun *lun;
-+
-+	spin_lock(&dev->se_port_lock);
-+	list_for_each_entry(lun, &dev->dev_sep_list, lun_dev_link) {
-+
-+		spin_lock(&lun->lun_deve_lock);
-+		list_for_each_entry(se_deve, &lun->lun_deve_list, lun_link)
-+			core_scsi3_ua_allocate(se_deve, asc, ascq);
-+		spin_unlock(&lun->lun_deve_lock);
-+	}
-+	spin_unlock(&dev->se_port_lock);
-+}
-+
- static void
- target_luns_data_has_changed(struct se_node_acl *nacl, struct se_dev_entry *new,
- 			     bool skip_new)
-diff --git a/drivers/target/target_core_internal.h b/drivers/target/target_core_internal.h
-index d4ace697edb0..4b608a282579 100644
---- a/drivers/target/target_core_internal.h
-+++ b/drivers/target/target_core_internal.h
-@@ -88,6 +88,7 @@ int	target_configure_device(struct se_device *dev);
- void	target_free_device(struct se_device *);
- int	target_for_each_device(int (*fn)(struct se_device *dev, void *data),
- 			       void *data);
-+void	target_dev_ua_allocate(struct se_device *dev, u8 asc, u8 ascq);
- 
- /* target_core_configfs.c */
- extern struct configfs_item_operations target_core_dev_item_ops;
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 7838dc20f713..5926316252eb 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -3531,8 +3531,7 @@ static void target_tmr_work(struct work_struct *work)
- 		tmr->response = (!ret) ? TMR_FUNCTION_COMPLETE :
- 					 TMR_FUNCTION_REJECTED;
- 		if (tmr->response == TMR_FUNCTION_COMPLETE) {
--			target_ua_allocate_lun(cmd->se_sess->se_node_acl,
--					       cmd->orig_fe_lun, 0x29,
-+			target_dev_ua_allocate(dev, 0x29,
- 					       ASCQ_29H_BUS_DEVICE_RESET_FUNCTION_OCCURRED);
- 		}
- 		break;
--- 
-2.25.1
+lockdep_assert_held() statements get verified at runtime if lockdep is 
+enabled but comments not. This is why I prefer lockdep_assert_held() 
+over a comment.
 
+>> +    if (e->present++) {
+>> +        e = NULL;
+>> +        goto unlock;
+>> +    }
+>> +    e->proc_dir = proc_mkdir(sht->proc_name, proc_scsi);
+>> +    if (!e->proc_dir) {
+>> +        printk(KERN_ERR "%s: proc_mkdir failed for %s\n", __func__,
+>> +               sht->proc_name);
+>> +        goto unlock;
+> 
+> hmmm... in this case we don't add e to the list. As unlikely as it 
+> seems, if a subsequent attempt to create the proc dir passes for another 
+> host with the same sht, then e->present would be incorrect, right?
+
+Right, this needs to be fixed.
+
+Thanks,
+
+Bart.
