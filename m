@@ -2,98 +2,83 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E67BCC6FA82
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Sep 2022 11:52:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 236BEC54EE9
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Sep 2022 11:51:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231963AbiIMLv7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Sep 2022 07:51:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45860 "EHLO
+        id S231951AbiIMLvx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Sep 2022 07:51:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45802 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231827AbiIMLvy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Sep 2022 07:51:54 -0400
-Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 055E45AC53
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Sep 2022 04:51:54 -0700 (PDT)
-Received: by mail-pf1-x42f.google.com with SMTP id y127so11520680pfy.5
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Sep 2022 04:51:54 -0700 (PDT)
+        with ESMTP id S231191AbiIMLvv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Sep 2022 07:51:51 -0400
+Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECB365D0EC
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Sep 2022 04:51:50 -0700 (PDT)
+Received: by mail-pl1-x629.google.com with SMTP id u22so11535744plq.12
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Sep 2022 04:51:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
-         :from:from:to:cc:subject:date;
-        bh=gvCDaxDhUq4mcgLUXno0g7d85tTxqPv/78wOvbhemRc=;
-        b=WG9GYaLst3gJD7CGd0EaRuPlVGYCg3iviPT9ejnMGm/SEo8lbyymxxVNNecYZr7f2x
-         wNbjlYUEul2HL6dl3a8oxo37J+a9fnslk7S5UNxDgzPMPHQSOr27pBxPsTxKEdgDHLyL
-         RMXfdeXGdJlW+UaitD9Gt3eVS/GLo8Q5cbM14=
+        h=mime-version:message-id:date:subject:cc:to:from:from:to:cc:subject
+         :date;
+        bh=NfyQ6nNepO7sW+4XJtChCYNp0wf1sW82VU6HqynBJAU=;
+        b=b+Nf6yUVghFhxSsDs7piXB0Oah409cqOORmsEk+oR0woLw9Mrzy10h3FXO/uYC/4Ee
+         lSFQz4N1tIsyD+dpKIObqI1K6+r/XLeox0NrHp8w/hJgDCNccmyDHiywu2fyaCzSo+EW
+         ihWcS+WnHqrBSiuDcL39pC1GyG3XfV1AsQJOo=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
-         :from:x-gm-message-state:from:to:cc:subject:date;
-        bh=gvCDaxDhUq4mcgLUXno0g7d85tTxqPv/78wOvbhemRc=;
-        b=MvaCkppTxZ2HFvSBjSrMe99SYbH9IcQFvtLQSEEVH8fhaJTTXFuXqJqE2oeqU1ELlH
-         UoIQMCBAsRT0432XnuK0sY/6BBsMMHahDAxsJlyy4C+Oj/j/Ta7bmNv2qFfPUi5BLizX
-         jXF2lJw0J6ZF3donmYIJEstM8G/gKBLyDO8qSnlFsU3lZSVF/SJDvgNt30cKB12o1L30
-         VEUDlHiOQYCMfjEFLx4VnKMdHWv6NyVq0AHUjRkgJRTWT5+ShMOFQVrLLGlIMaA121za
-         un2vHwmAMbE95REvkxgR6DnFU9RN++w3+Sl7aeG5wmbNHVZhWZaJUX0d4IR6514t3ii6
-         La+Q==
-X-Gm-Message-State: ACgBeo1aTUS6BoJyBfVM3cF2uVrk/CbP5dF5S7SeFRMAG1pBDJX38u6z
-        JqB/MfBz0auPZKgnKFj4nYClAzpoOn/1afVhuSpd656zf6VLMLtT1oM1Y+P7JCW85dqiwHz84S9
-        8SNRSIulsZtPBMdJ8Ev6TvBv0yxV8ia0vuZIQwv0U3we1NOmOdC2g98AdzorDVByVy4MlsWyavv
-        hoH7qOq47S
-X-Google-Smtp-Source: AA6agR7Sgav4s3FVByQipkTNFeTRJzfVJPm9JKKL3ZFpUWsleNKEPiB/LGcoIb4NEhvjaeXh3+hDaQ==
-X-Received: by 2002:a05:6a02:208:b0:438:a981:8cee with SMTP id bh8-20020a056a02020800b00438a9818ceemr15425749pgb.536.1663069912579;
-        Tue, 13 Sep 2022 04:51:52 -0700 (PDT)
+        h=mime-version:message-id:date:subject:cc:to:from:x-gm-message-state
+         :from:to:cc:subject:date;
+        bh=NfyQ6nNepO7sW+4XJtChCYNp0wf1sW82VU6HqynBJAU=;
+        b=1GRL6EZUiELeCda/lAU60HUC0uiuzWzUNBzBmWQqt5rauQQdd9pXhnViFKLQp74ZAE
+         PcX3sCSZ7IZvHnC/KcCeA/BBjJr7n22OCWZoAtvdIj9B7NX+kBhc2ABSf2tw64SuFW3y
+         oKBuG/fgLmrSs34qEqasvQHjaoBijJDYj171yIoV92lrBSXMUj1Y7pUzo5VWnOELl/f8
+         ZC/rpZAI2UMTFJfctBjTqGlYIUjnRyTPmxMvIEftyprtGnlEC7Z+WxY9fhqFkx3m3Cj/
+         C3ysgxj8eTbouCYI9PucK+XRvG8+/e0o15iz9pAcGOBjn2R3PFjFXsLArFSp/EFtsg7K
+         Qsqg==
+X-Gm-Message-State: ACgBeo0z6Vqx43dnD6NKmOTcx/0sgVv+BzJMuZIzMwLaNf2Gjc0X5hoL
+        9uY1oMYj+cdrvenAiIHC28OZAIuRBbgvTBbm6SKJbdzdCY71q7LvO0W5s81J+OJaxryNrMYtGd0
+        mjAzEoucUL7CZHoQ3X9fdUJShlBajdgXDmN6wwGRvFlci8Vy/HNl497D5Z5v8tjuqWrQoN1pEvq
+        0N0Pv9oT3j
+X-Google-Smtp-Source: AA6agR5trKnaUo+/7ypsbiS3zU7bkSozZdIBiR2WLedXUPV5sCa65TRyp2fljcRGjKajIGLBiinx2Q==
+X-Received: by 2002:a17:902:d2d2:b0:178:a68:f40f with SMTP id n18-20020a170902d2d200b001780a68f40fmr20052638plc.149.1663069909467;
+        Tue, 13 Sep 2022 04:51:49 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id r2-20020aa79ec2000000b00545f5046372sm1692151pfq.208.2022.09.13.04.51.49
+        by smtp.gmail.com with ESMTPSA id r2-20020aa79ec2000000b00545f5046372sm1692151pfq.208.2022.09.13.04.51.46
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 13 Sep 2022 04:51:51 -0700 (PDT)
+        Tue, 13 Sep 2022 04:51:47 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 1/1] mpt3sas: Fix return value check of dma_get_required_mask
-Date:   Tue, 13 Sep 2022 17:35:38 +0530
-Message-Id: <20220913120538.18759-2-sreekanth.reddy@broadcom.com>
+Subject: [PATCH 0/1] mpt3sas: Fix return value check of dma_get_required_mask
+Date:   Tue, 13 Sep 2022 17:35:37 +0530
+Message-Id: <20220913120538.18759-1-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20220913120538.18759-1-sreekanth.reddy@broadcom.com>
-References: <20220913120538.18759-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000684c1405e88da3d7"
+        boundary="00000000000038f6e105e88da3fe"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000684c1405e88da3d7
+--00000000000038f6e105e88da3fe
 Content-Transfer-Encoding: 8bit
 
 Fix the incorrect return value check of dma_get_required_mask().
 Due to this incorrect check, the driver was always setting the
-dma mask to 63 bit.
+dma mask to 63 bit. 
 
-Fixes: ba27c5cf286d ("scsi: mpt3sas: Don't change the DMA coherent mask after allocations")
-Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
----
+Sreekanth Reddy (1):
+  mpt3sas: Fix return value check of dma_get_required_mask
+
  drivers/scsi/mpt3sas/mpt3sas_base.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index f8a3b0d..c6366ce 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -2993,7 +2993,7 @@ _base_config_dma_addressing(struct MPT3SAS_ADAPTER *ioc, struct pci_dev *pdev)
- 	u64 coherent_dma_mask, dma_mask;
- 
- 	if (ioc->is_mcpu_endpoint || sizeof(dma_addr_t) == 4 ||
--	    dma_get_required_mask(&pdev->dev) <= 32) {
-+	    dma_get_required_mask(&pdev->dev) <= DMA_BIT_MASK(32)) {
- 		ioc->dma_mask = 32;
- 		coherent_dma_mask = dma_mask = DMA_BIT_MASK(32);
- 	/* Set 63 bit DMA mask for all SAS3 and SAS35 controllers */
 -- 
 2.27.0
 
 
---000000000000684c1405e88da3d7
+--00000000000038f6e105e88da3fe
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -164,13 +149,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIEskBXyKhkANsecqQ6uD
-bu/mVZeL8cXN9bVcimGn9daJMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDkxMzExNTE1M1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIMCToch13jHYUjxSluF+
+y/x4a99Lt0jeLsKkg1qspwKdMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDkxMzExNTE1MFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCl/4SsNSE2PhMj9hE9k3IgU4lKqiwo882BKT0b
-4z2BoiDOxil3oWO+byVQcHQnB78sdaHQ5PQafVdWiLFMTifX4e79iD54gButSp4Y4GvUvy6yIVBY
-YOJ4WxMqI+aJaJgmpdNfJj4UlcBffCrkWaidsKpchm3iEG9CyjMEVnyz8Kc2Tae/t3+0dM07UzmH
-61EnZ5U/FoF10nkBH6feahmuTXwWil/rhvjDHxN4/LHTVuQtYiRxjPGVU+CL5Lhhu6d5DK5XB97O
-BsIfS+y0Uys4UkiT4kHsyCN0Up5UTVhtydjURuws1fRLU99tqfCF9B5IzwemYcLQ1VEXXRhu+0nO
---000000000000684c1405e88da3d7--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBPXItne7Ndes4yWBbTciofhyujR30HQlpwdw9I
+cSHMBtKRim9+urvby+lqhWOdHiBvvXSxTLpi0RtP3fFuxXkTpA0WG428JR7o/mDX3izvOTeNsO3b
+pIyntufjXOTRyIPFHyXZI4qKVW3g6fNGM9wpckfpYE7I2eCm2qwPzrbCWnKd5zEldjxx1UPwzZUY
+AKH/C0MTuZgU7Bn02uG0eMV/Yw8BRG4JRXfo/ULeW0zdntxzIbgUW04kg9AEoJXAaEluH/HN8ww4
+596lz/Y+oOYoUEYEi+jTYTfeZbQ+S9t/eacTX+bNpWo4vM8Yb5EcXPUawCwPJ08VDDG0BqIn5vCy
+--00000000000038f6e105e88da3fe--
