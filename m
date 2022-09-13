@@ -2,253 +2,275 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 804C5C54EE9
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Sep 2022 04:20:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 274A0C6FA82
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Sep 2022 07:47:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230242AbiIMEU2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Sep 2022 00:20:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37888 "EHLO
+        id S231196AbiIMHr2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Sep 2022 03:47:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55280 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229893AbiIMEUC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Sep 2022 00:20:02 -0400
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A828D41
-        for <linux-scsi@vger.kernel.org>; Mon, 12 Sep 2022 21:19:36 -0700 (PDT)
-Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20220913041931epoutp04d0f8c2c4b263ee7e22cf1bd9dbfbbcd6~UUJbeBBAj1903419034epoutp04d
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Sep 2022 04:19:31 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20220913041931epoutp04d0f8c2c4b263ee7e22cf1bd9dbfbbcd6~UUJbeBBAj1903419034epoutp04d
+        with ESMTP id S231147AbiIMHr0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Sep 2022 03:47:26 -0400
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 677302228C
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Sep 2022 00:47:22 -0700 (PDT)
+Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20220913074716epoutp024f8575efffc49c530934a3f5a8ae9a5a~UW_0Zuli_2195921959epoutp02t
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Sep 2022 07:47:16 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20220913074716epoutp024f8575efffc49c530934a3f5a8ae9a5a~UW_0Zuli_2195921959epoutp02t
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1663042771;
-        bh=q6UhaAbrAvqjY4jiBf1SsYMS2OYviW61fcualYF1754=;
+        s=mail20170921; t=1663055236;
+        bh=CgjXg2SCTLfM9Jgj1tahlnR33ieCMLJXRXEg1u9cTZQ=;
         h=From:To:In-Reply-To:Subject:Date:References:From;
-        b=EdB+xK9ESdAh7ckgQX3G8snl/+ExoPCkzAAoOu3TnuwirJeg45TDnjVhbNWFS0fG5
-         zIzex2xRsGB66ym8ldfogRcOoCm7IQ5UmqGOG2Stkn9uXvuql063DQLWwHB4MWnlHj
-         yLgIm9wuM7eMlH/1qHY7suvF14GthkpXaInchfjQ=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-        epcas5p3.samsung.com (KnoxPortal) with ESMTP id
-        20220913041930epcas5p39995c0270e74c2fa128840a840bf4739~UUJbBa5DN1940819408epcas5p31;
-        Tue, 13 Sep 2022 04:19:30 +0000 (GMT)
-Received: from epsmges5p3new.samsung.com (unknown [182.195.38.177]) by
-        epsnrtp2.localdomain (Postfix) with ESMTP id 4MRVbh1zDtz4x9Py; Tue, 13 Sep
-        2022 04:19:28 +0000 (GMT)
-Received: from epcas5p4.samsung.com ( [182.195.41.42]) by
-        epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        4E.86.54060.0D400236; Tue, 13 Sep 2022 13:19:28 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-        20220913041927epcas5p102034c1619414864d734c2f53e4c6f66~UUJXylF_l2375523755epcas5p1o;
-        Tue, 13 Sep 2022 04:19:27 +0000 (GMT)
-Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20220913041927epsmtrp2116aad6dec2e5b87bc6feb82d58fadff~UUJXxsavV0807708077epsmtrp2O;
-        Tue, 13 Sep 2022 04:19:27 +0000 (GMT)
-X-AuditID: b6c32a4b-be1ff7000000d32c-c6-632004d0d773
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        A0.52.18644.FC400236; Tue, 13 Sep 2022 13:19:27 +0900 (KST)
-Received: from alimakhtar03 (unknown [107.122.12.5]) by epsmtip2.samsung.com
+        b=nCPoPMaH/MdnN3uQgyfoaBkPczh/BdrMiBom8yFUVUbFq3TR07UoszGnQ6ZqguZCB
+         nfIkERyvjbEdwNqqnx729zYKwHp9rtkbJllEo1CRyd8CuIL8LmVLtKWr9omt81kAT4
+         YibEWloR+GJBWBmEb1LiUYYjtjFQfLEDj1W6TBqk=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+        20220913074715epcas2p4ef4664b7470af955cafc34023ece3957~UW_zqI0pO1341413414epcas2p42;
+        Tue, 13 Sep 2022 07:47:15 +0000 (GMT)
+Received: from epsmges2p1.samsung.com (unknown [182.195.36.100]) by
+        epsnrtp4.localdomain (Postfix) with ESMTP id 4MRbCQ75S7z4x9Pv; Tue, 13 Sep
+        2022 07:47:14 +0000 (GMT)
+Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
+        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        32.17.18832.28530236; Tue, 13 Sep 2022 16:47:14 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTPA id
+        20220913074714epcas2p469bce22e4504dd82349970c1ab0e845f~UW_yuN0-J1566115661epcas2p4P;
+        Tue, 13 Sep 2022 07:47:14 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20220913074714epsmtrp18dc7e12f989471a617f7a7742a18a61b~UW_ytFQXb2873728737epsmtrp14;
+        Tue, 13 Sep 2022 07:47:14 +0000 (GMT)
+X-AuditID: b6c32a45-f31fb70000014990-da-632035827668
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        91.CB.14392.28530236; Tue, 13 Sep 2022 16:47:14 +0900 (KST)
+Received: from KORDO040863 (unknown [10.229.8.56]) by epsmtip1.samsung.com
         (KnoxPortal) with ESMTPA id
-        20220913041925epsmtip2f8fc64bc8633c11878143c4a22ab8d52~UUJWBdmNI2533325333epsmtip2x;
-        Tue, 13 Sep 2022 04:19:25 +0000 (GMT)
-From:   "Alim Akhtar" <alim.akhtar@samsung.com>
-To:     "'SEO HOYOUNG'" <hy50.seo@samsung.com>,
+        20220913074714epsmtip15368a13a3f19604ce5e9c6d4eae78371~UW_ygzTXa2825028250epsmtip1k;
+        Tue, 13 Sep 2022 07:47:14 +0000 (GMT)
+From:   "Hoyoung SEO" <hy50.seo@samsung.com>
+To:     "'Alim Akhtar'" <alim.akhtar@samsung.com>,
         <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <avri.altman@wdc.com>, <jejb@linux.ibm.com>,
         <martin.petersen@oracle.com>, <beanhuo@micron.com>,
         <asutoshd@codeaurora.org>, <cang@codeaurora.org>,
         <bvanassche@acm.org>, <bhoon95.kim@samsung.com>,
         <kwmad.kim@samsung.com>
-In-Reply-To: <20220912140000.95483-1-hy50.seo@samsung.com>
+In-Reply-To: <000001d8c728$030bbdb0$09233910$@samsung.com>
 Subject: RE: [PATCH v1] scsi: ufs: add a variant operation in struct
  ufs_hba_variant_ops
-Date:   Tue, 13 Sep 2022 09:49:24 +0530
-Message-ID: <000001d8c728$030bbdb0$09233910$@samsung.com>
+Date:   Tue, 13 Sep 2022 16:47:14 +0900
+Message-ID: <150001d8c745$0a13cbd0$1e3b6370$@samsung.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQEcao4nPtwVTObTQc0w1QKI2Ly9EwFvEqAzr0oBWuA=
-Content-Language: en-us
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrIJsWRmVeSWpSXmKPExsWy7bCmlu4FFoVkgzfreCz2tp1gt3j58yqb
-        xcGHnSwWX5c+Y7WY9uEns8Wn9ctYLVYvfsBisejGNiaLm1uOslhc3jWHzaL7+g42i+XH/zE5
-        8HhcvuLtcbmvl8ljwqIDjB7f13eweXx8eovFo2/LKkaPz5vkPNoPdDMFcERl22SkJqakFimk
-        5iXnp2TmpdsqeQfHO8ebmhkY6hpaWpgrKeQl5qbaKrn4BOi6ZeYAXaukUJaYUwoUCkgsLlbS
-        t7Mpyi8tSVXIyC8usVVKLUjJKTAp0CtOzC0uzUvXy0stsTI0MDAyBSpMyM64tO8SY8ExlYoz
-        E+ezNzC2yncxcnJICJhI7F/2laWLkYtDSGA3o8SFB3/YIZxPjBLnXk5lhHA+M0q8nvQUKMMB
-        1rLpoBREfBejRMOBa2wQzktGiSd9M9hB5rIJ6ErsWNwGlhAROMsksXriWrBuTgEriR8bc0Fq
-        hAWiJO4d2coKYrMIqEosvHyBEcTmFbCU2LOhgwnCFpQ4OfMJC4jNLKAtsWzha2aIuxUkfj5d
-        BtYrAjRy2677TBA14hIvjx4Be0FC4AiHxJbVPxkhGlwk1k9cww5hC0u8Or4FypaS+PxuLxvE
-        Zx4Si/5IQYQzJN4uXw/Vai9x4MocFpASZgFNifW79CFW8Un0/n7CBNHJK9HRJgRRrSrR/O4q
-        C4QtLTGxu5sVwvaQ6N97EhpUvYwSPxdPZJnAqDALyZezkHw5C8k3sxA2L2BkWcUomVpQnJue
-        WmxaYJyXWg6P7+T83E2M4LSs5b2D8dGDD3qHGJk4GA8xSnAwK4nwbleVTxbiTUmsrEotyo8v
-        Ks1JLT7EaAoM+onMUqLJ+cDMkFcSb2hiaWBiZmZmYmlsZqgkzjtFmzFZSCA9sSQ1OzW1ILUI
-        po+Jg1OqgenBTg/dfWZ931Mmvop2WZv0fQ/bLesOZo5f/QGJyot1lmfM370l4LHN2vcmy2cW
-        PuuMnb3BdtMb03m39bf0GibI+P+w5825s8nxylOP68b8whEpP37NkZ6gE3iWg+9SgL+uXc7H
-        7PP2UgFXV/e6Wy3cdPOrqeqqmNvb7jdNrHpm8ogt0ezJ67bbE3ljMiVNGQMP9aa8Dmud86nm
-        mHXa1oJTLEERwtIs74t8lmW/0f94OuHk0d/nXG1Fnsc1RQYaxv/Y/fd442LBx8sZrO4r31+S
-        9y1JIUDrYaPHlwRR6Wqb+4db25cd+1Nw+dTMHz63WvnmWMk9X/6f6Wm8hLB7eeWNSqm5k5lO
-        HFBT+bUt3FmJpTgj0VCLuag4EQC20ry0VAQAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprLIsWRmVeSWpSXmKPExsWy7bCSvO55FoVkg+dPBSz2tp1gt3j58yqb
-        xcGHnSwWX5c+Y7WY9uEns8Wn9ctYLVYvfsBisejGNiaLm1uOslhc3jWHzaL7+g42i+XH/zE5
-        8HhcvuLtcbmvl8ljwqIDjB7f13eweXx8eovFo2/LKkaPz5vkPNoPdDMFcERx2aSk5mSWpRbp
-        2yVwZSxb9pG1YJFyxaXeZcwNjA9luxg5OCQETCQ2HZTqYuTiEBLYwShx6Nkb9i5GTqC4tMT1
-        jROgbGGJlf+es0MUPWeUmPbmBDNIgk1AV2LH4jY2EFtE4DaTxIxzQhBF3YwSX5rnsYFs4BSw
-        kvixMRekRlggQuLbtpWsIDaLgKrEwssXGEFsXgFLiT0bOpggbEGJkzOfsIDYzALaEk9vPoWz
-        ly18zQxxkILEz6fLWCH2Wkls23WfCaJGXOLl0SPsExiFZiEZNQvJqFlIRs1C0rKAkWUVo2Rq
-        QXFuem6xYYFRXmq5XnFibnFpXrpecn7uJkZwDGpp7WDcs+qD3iFGJg7GQ4wSHMxKIrzbVeWT
-        hXhTEiurUovy44tKc1KLDzFKc7AoifNe6DoZLySQnliSmp2aWpBaBJNl4uCUamCS5vC25Uzk
-        27lplX6tjLO7hEJ/85nDfelscxanBD45UJC8u/4b34GAusPqulMPVZzWtLy15yfT2YT0XJ1P
-        m6NsSwVNEvk4T/NoaUzYoGjPpbnyFc8lnhnHSlZ7+fHrLrqsP//edwshvd670+/YTBXaG143
-        +fo/qeuCO6JTTH7yXHuW/VhHdtXPhSZ9V5bkyCldMW2y47y/ZeHkvhQWtUlZ26dd0LbZsd15
-        mwBrzSt3b/EFXmHNL7PnMx9pTLdyf3qBgaFesfGIdv2niNs3lz3L5JCOuzWLtVfUPeNbpcXW
-        z6cOv00KDvX4yBH4heHJaov3JQExGm80TJd4la/8yCUR4vPun8oKQ4lplneeMyuxFGckGmox
-        FxUnAgBkuHoiMAMAAA==
-X-CMS-MailID: 20220913041927epcas5p102034c1619414864d734c2f53e4c6f66
+Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 14.0
+Thread-Index: AQEcao4nPtwVTObTQc0w1QKI2Ly9EwFvEqAzAlL76ZyvN5gLcA==
+Content-Language: ko
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrHJsWRmVeSWpSXmKPExsWy7bCmuW6TqUKywd7HFhYP5m1js9jbdoLd
+        4uXPq2wWBx92slh8XfqM1WLah5/MFp/WL2O1WHRjG5PFzS1HWSwu75rDZtF9fQebxfLj/5gc
+        eDwuX/H2uNzXy+QxYdEBRo/v6zvYPD4+vcXi0bdlFaPH501yHu0HupkCOKKybTJSE1NSixRS
+        85LzUzLz0m2VvIPjneNNzQwMdQ0tLcyVFPISc1NtlVx8AnTdMnOArlVSKEvMKQUKBSQWFyvp
+        29kU5ZeWpCpk5BeX2CqlFqTkFJgX6BUn5haX5qXr5aWWWBkaGBiZAhUmZGec3riSqeCMdsWK
+        KQuZGhh7VboYOTkkBEwkLj+6xtLFyMUhJLCDUWLyug+MIAkhgU+MEg3TdCES3xgl7vXuY4Lp
+        eDDxIxtEYi+jxKqrb6Cc54wSz1ccYAGpYhPQkrg+8S0zSEJE4AKTxPzbrewgCU4BK4mfB86A
+        2cICURL3jmxlBbFZBFQlbkycxAZi8wpYSnRtmssCYQtKnJz5BMxmFpCX2P52DjPEGQoSO86+
+        BrtVRMBJYsPHf2wQNSISszvbwBZLCBzhkJhysYcFosFFYnXLD6gfhCVeHd/CDmFLSbzsb4Oy
+        iyV+vFnNBNHcwCixtP0Y1DZjiVnP2oG2cQBt0JRYv0sfxJQQUJY4cgvqNj6JjsN/2SHCvBId
+        bUIQjUoSZ+behgpLSBycnQMR9pDo33uSbQKj4iwkT85C8uQsJM/MQli7gJFlFaNYakFxbnpq
+        sVGBITyyk/NzNzGCE7KW6w7GyW8/6B1iZOJgPMQowcGsJMK7XVU+WYg3JbGyKrUoP76oNCe1
+        +BCjKTDYJzJLiSbnA3NCXkm8oYmlgYmZmaG5kamBuZI4r6s2Y7KQQHpiSWp2ampBahFMHxMH
+        p1QD08zPNxc+tlaXvH2aXyH8y779J8tdVBOeNMgKe5vZ3n110SSr2qzoQrzWwauuIhcybM8a
+        iC+7d8k6rGlB0ZLyCxxh/sLKu2412nw/8Vh47a5S9oOedifcb/AG/979aYmNzpZ9PXf9LzsI
+        SgWX24TH7bKZZN5WdHxzSG/LJ/k9O1dqnHqm5vF9/saWL5GSx/YrGzfKv3t9afP3r/ZHTtRu
+        Ydhy3nx1/uLolf8z+99ks/I++75au+aibKK+x/fLfPF3RNNiRRz797+9Vyc9x9nxwKpX9qf/
+        z+Pq0kzjzdhnM+XsQYkPHfP4ZqVwpejqqfxgnXX+qt+kg7da4hMKtXLXPpzEner3lWdGldp9
+        mbJni5VYijMSDbWYi4oTAZsPDqdRBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrAIsWRmVeSWpSXmKPExsWy7bCSnG6TqUKyweEtEhYP5m1js9jbdoLd
+        4uXPq2wWBx92slh8XfqM1WLah5/MFp/WL2O1WHRjG5PFzS1HWSwu75rDZtF9fQebxfLj/5gc
+        eDwuX/H2uNzXy+QxYdEBRo/v6zvYPD4+vcXi0bdlFaPH501yHu0HupkCOKK4bFJSczLLUov0
+        7RK4Mk5vXMlUcEa7YsWUhUwNjL0qXYycHBICJhIPJn5k62Lk4hAS2M0ocXLiP3aIhITE/8VN
+        TBC2sMT9liOsEEVPGSW29y9iBkmwCWhJXJ/4lhkkISJwj0mi5ct8qFE7GSUOXzjIAlLFKWAl
+        8fPAGbCxwgIREt+2rWQFsVkEVCVuTJzEBmLzClhKdG2aywJhC0qcnPkEzGYW0JbofdjKCGHL
+        S2x/O4cZ4iQFiR1nX4PFRQScJDZ8/McGUSMiMbuzjXkCo9AsJKNmIRk1C8moWUhaFjCyrGKU
+        TC0ozk3PLTYsMMxLLdcrTswtLs1L10vOz93ECI5ELc0djNtXfdA7xMjEwXiIUYKDWUmEd7uq
+        fLIQb0piZVVqUX58UWlOavEhRmkOFiVx3gtdJ+OFBNITS1KzU1MLUotgskwcnFINTD3Gi9RS
+        VExvp6etv/jWoab5cbfA/qvpPi57908xDTm2uCifZdJrnpmZ78M7Z+9oyjYTPPOKre/PAnub
+        l3O7s+6YMxf7bBH+sTtmEcMki9A1l0w3eYrYXp7o/zAx8f/dqlut0SeWJO35G37W9mfDvD+s
+        tsennvArWud0f+GnnK0CB2Q+NVyYtofZxuJ027/wkpfvd770vFvkvJmr/hGfAceLdIui0ysn
+        91pUKL8P3/dhEU/fx3Lj3H1Sn1d8Dgu57fjvz8oAS5mgmF98VZ5psr+co04ri709PNeZe+tr
+        hQ1V+c9OhZYZn35yxL96UYvHnNSulGshO/KWrLyZs4ZLS0K0/LWxiKtv+gqJ19z5X5RYijMS
+        DbWYi4oTAfbsJW0zAwAA
+X-CMS-MailID: 20220913074714epcas2p469bce22e4504dd82349970c1ab0e845f
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
 DLP-Filter: Pass
 X-CFilter-Loop: Reflected
 X-CMS-RootMailID: 20220913021716epcas2p1efd3b034f92e0e6df1544f067acbe73f
 References: <CGME20220913021716epcas2p1efd3b034f92e0e6df1544f067acbe73f@epcas2p1.samsung.com>
         <20220912140000.95483-1-hy50.seo@samsung.com>
+        <000001d8c728$030bbdb0$09233910$@samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
 
->-----Original Message-----
->From: SEO HOYOUNG =5Bmailto:hy50.seo=40samsung.com=5D
->Sent: Monday, September 12, 2022 7:30 PM
->To: linux-scsi=40vger.kernel.org; linux-kernel=40vger.kernel.org;
->alim.akhtar=40samsung.com; avri.altman=40wdc.com; jejb=40linux.ibm.com;
->martin.petersen=40oracle.com; beanhuo=40micron.com;
->asutoshd=40codeaurora.org; cang=40codeaurora.org; bvanassche=40acm.org;
->bhoon95.kim=40samsung.com; kwmad.kim=40samsung.com
->Cc: SEO HOYOUNG <hy50.seo=40samsung.com>
->Subject: =5BPATCH v1=5D scsi: ufs: add a variant operation in struct
->ufs_hba_variant_ops
->
->Add ufs_hba_variant_ops about vendor error in check_error.
->It need to reset when occurred ah8 related error.
->At that time could not recovery with pwr cmd.
->So add vendor error check function at ufs_hba_variant_ops.
->
-I didn't understand why you need this, looks like you are using AH8.
-So IS (interrupt status) bit=5B5=5D, bit=5B6=5D , HIBERNATE_EXIT and HIBERN=
-ATE_ENTRY should still give you the error status?
+> -----Original Message-----
+> From: Alim Akhtar [mailto:alim.akhtar@samsung.com]
+> Sent: Tuesday, September 13, 2022 1:19 PM
+> To: 'SEO HOYOUNG'; linux-scsi@vger.kernel.org; linux-
+> kernel@vger.kernel.org; avri.altman@wdc.com; jejb@linux.ibm.com;
+> martin.petersen@oracle.com; beanhuo@micron.com; asutoshd@codeaurora.org;
+> cang@codeaurora.org; bvanassche@acm.org; bhoon95.kim@samsung.com;
+> kwmad.kim@samsung.com
+> Subject: RE: [PATCH v1] scsi: ufs: add a variant operation in struct
+> ufs_hba_variant_ops
+> 
+> 
+> 
+> >-----Original Message-----
+> >From: SEO HOYOUNG [mailto:hy50.seo@samsung.com]
+> >Sent: Monday, September 12, 2022 7:30 PM
+> >To: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org;
+> >alim.akhtar@samsung.com; avri.altman@wdc.com; jejb@linux.ibm.com;
+> >martin.petersen@oracle.com; beanhuo@micron.com;
+> >asutoshd@codeaurora.org; cang@codeaurora.org; bvanassche@acm.org;
+> >bhoon95.kim@samsung.com; kwmad.kim@samsung.com
+> >Cc: SEO HOYOUNG <hy50.seo@samsung.com>
+> >Subject: [PATCH v1] scsi: ufs: add a variant operation in struct
+> >ufs_hba_variant_ops
+> >
+> >Add ufs_hba_variant_ops about vendor error in check_error.
+> >It need to reset when occurred ah8 related error.
+> >At that time could not recovery with pwr cmd.
+> >So add vendor error check function at ufs_hba_variant_ops.
+> >
+> I didn't understand why you need this, looks like you are using AH8.
+> So IS (interrupt status) bit[5], bit[6] , HIBERNATE_EXIT and
+> HIBERNATE_ENTRY should still give you the error status?
 
+The AH8 FSM machine check power_local result.
+If the expected value of power_local is different 
+during hibern8 Enter/Exit, then will occur UHES/UHXS.
+Other than that, errors could not occurred IS(interrupt status)
+bit[5], bit[6].
+So we need to check 'vendor IS' for checking error of AH8 FSM.
 
->Change-Id: I24c76a372931e702b357c86a5dc36e93ce4b5fda
-This is something unwanted
-
->Signed-off-by: SEO HOYOUNG <hy50.seo=40samsung.com>
->---
-> drivers/ufs/core/ufshcd-priv.h =7C  7 +++++++
-> drivers/ufs/core/ufshcd.c      =7C  2 ++
-> drivers/ufs/host/ufs-exynos.c  =7C 19 +++++++++++++++++++
-> include/ufs/ufshcd.h           =7C  1 +
-> 4 files changed, 29 insertions(+)
->
->diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv=
-.h
->index d00dba17297d..6172da4d3484 100644
->--- a/drivers/ufs/core/ufshcd-priv.h
->+++ b/drivers/ufs/core/ufshcd-priv.h
->=40=40 -221,6 +221,13 =40=40 static inline void
->ufshcd_vops_config_scaling_param(struct ufs_hba *hba,
-> 		hba->vops->config_scaling_param(hba, p, data);  =7D
->
->+static inline void ufshcd_vops_check_int_error(struct ufs_hba *hba,
->+					       bool *queue_eh_work)
->+=7B
->+	if (hba->vops & hba->vops->check_int_error)
->+		hba->vops->check_int_error(hba, queue_eh_work); =7D
->+
-> extern const struct ufs_pm_lvl_states ufs_pm_lvl_states=5B=5D;
->
-> /**
->diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c index
->7c15cbc737b4..39ee5192f26a 100644
->--- a/drivers/ufs/core/ufshcd.c
->+++ b/drivers/ufs/core/ufshcd.c
->=40=40 -6542,6 +6542,8 =40=40 static irqreturn_t ufshcd_check_errors(struc=
-t
->ufs_hba *hba, u32 intr_status)
-> 		queue_eh_work =3D true;
-> 	=7D
->
->+	ufshcd_vops_check_int_error(hba, &queue_eh_work);
->+
-> 	if (queue_eh_work) =7B
-> 		/*
-> 		 * update the transfer error masks to sticky bits, let's do this
->diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
->index eced97538082..b351b8e48b08 100644
->--- a/drivers/ufs/host/ufs-exynos.c
->+++ b/drivers/ufs/host/ufs-exynos.c
->=40=40 -67,6 +67,10 =40=40
-> =23define CLK_CTRL_EN_MASK	(REFCLK_CTRL_EN =7C=5C
-> 				 UNIPRO_PCLK_CTRL_EN =7C=5C
-> 				 UNIPRO_MCLK_CTRL_EN)
->+
->+=23define HCI_AH8_STATE		0x50C
->+=23define HCI_AH8_STATE_ERROR	BIT(16)
->+
-> /* Device fatal error */
-> =23define DFES_ERR_EN		BIT(31)
-> =23define DFES_DEF_L2_ERRS	(UIC_DATA_LINK_LAYER_ERROR_RX_BUF_OF
->=7C=5C
->=40=40 -1376,6 +1380,20 =40=40 static void exynos_ufs_hibern8_notify(struc=
-t
->ufs_hba *hba,
-> 	=7D
-> =7D
->
->+static void exynos_ufs_check_int_error(struct ufs_hba *hba, bool
->+*queue_eh_work) =7B
->+	struct exynos_ufs *ufs =3D ufshcd_get_variant(hba);
->+
->+	if (ufshcd_is_auto_hibern8_supported(hba)) =7B
->+		val =3D hci_readl(ufs, HCI_AH8_STATE);
->+
->+		if (val & HCI_AH8_STATE_ERROR) =7B
->+			 ufshcd_set_link_broken(hba);
->+			 queue_eh_work =3D true;
->+		=7D
->+	=7D
->+=7D
->+
-> static int exynos_ufs_suspend(struct ufs_hba *hba, enum ufs_pm_op
->pm_op,
-> 	enum ufs_notify_change_status status)
-> =7B
->=40=40 -1569,6 +1587,7 =40=40 static const struct ufs_hba_variant_ops
->ufs_hba_exynos_ops =3D =7B
-> 	.setup_xfer_req			=3D
->exynos_ufs_specify_nexus_t_xfer_req,
-> 	.setup_task_mgmt		=3D
->exynos_ufs_specify_nexus_t_tm_req,
-> 	.hibern8_notify			=3D exynos_ufs_hibern8_notify,
->+	.check_int_error		=3D exynos_ufs_check_int_error,
-> 	.suspend			=3D exynos_ufs_suspend,
-> 	.resume				=3D exynos_ufs_resume,
-> =7D;
->diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h index
->24c97e0772bb..40078c4b9f55 100644
->--- a/include/ufs/ufshcd.h
->+++ b/include/ufs/ufshcd.h
->=40=40 -335,6 +335,7 =40=40 struct ufs_hba_variant_ops =7B
-> 			       const union ufs_crypto_cfg_entry *cfg, int slot);
-> 	void	(*event_notify)(struct ufs_hba *hba,
-> 				enum ufs_event_type evt, void *data);
->+	void	(*check_int_error)(struct ufs_hba *hba, bool
->*queue_eh_work);
-> =7D;
->
-> /* clock gating state  */
->--
->2.26.0
+> 
+> 
+> >Change-Id: I24c76a372931e702b357c86a5dc36e93ce4b5fda
+> This is something unwanted
+> 
+> >Signed-off-by: SEO HOYOUNG <hy50.seo@samsung.com>
+> >---
+> > drivers/ufs/core/ufshcd-priv.h |  7 +++++++
+> > drivers/ufs/core/ufshcd.c      |  2 ++
+> > drivers/ufs/host/ufs-exynos.c  | 19 +++++++++++++++++++
+> > include/ufs/ufshcd.h           |  1 +
+> > 4 files changed, 29 insertions(+)
+> >
+> >diff --git a/drivers/ufs/core/ufshcd-priv.h
+> >b/drivers/ufs/core/ufshcd-priv.h index d00dba17297d..6172da4d3484
+> >100644
+> >--- a/drivers/ufs/core/ufshcd-priv.h
+> >+++ b/drivers/ufs/core/ufshcd-priv.h
+> >@@ -221,6 +221,13 @@ static inline void
+> >ufshcd_vops_config_scaling_param(struct ufs_hba *hba,
+> > 		hba->vops->config_scaling_param(hba, p, data);  }
+> >
+> >+static inline void ufshcd_vops_check_int_error(struct ufs_hba *hba,
+> >+					       bool *queue_eh_work)
+> >+{
+> >+	if (hba->vops & hba->vops->check_int_error)
+> >+		hba->vops->check_int_error(hba, queue_eh_work); }
+> >+
+> > extern const struct ufs_pm_lvl_states ufs_pm_lvl_states[];
+> >
+> > /**
+> >diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> >index 7c15cbc737b4..39ee5192f26a 100644
+> >--- a/drivers/ufs/core/ufshcd.c
+> >+++ b/drivers/ufs/core/ufshcd.c
+> >@@ -6542,6 +6542,8 @@ static irqreturn_t ufshcd_check_errors(struct
+> >ufs_hba *hba, u32 intr_status)
+> > 		queue_eh_work = true;
+> > 	}
+> >
+> >+	ufshcd_vops_check_int_error(hba, &queue_eh_work);
+> >+
+> > 	if (queue_eh_work) {
+> > 		/*
+> > 		 * update the transfer error masks to sticky bits, let's do
+> this
+> >diff --git a/drivers/ufs/host/ufs-exynos.c
+> >b/drivers/ufs/host/ufs-exynos.c index eced97538082..b351b8e48b08 100644
+> >--- a/drivers/ufs/host/ufs-exynos.c
+> >+++ b/drivers/ufs/host/ufs-exynos.c
+> >@@ -67,6 +67,10 @@
+> > #define CLK_CTRL_EN_MASK	(REFCLK_CTRL_EN |\
+> > 				 UNIPRO_PCLK_CTRL_EN |\
+> > 				 UNIPRO_MCLK_CTRL_EN)
+> >+
+> >+#define HCI_AH8_STATE		0x50C
+> >+#define HCI_AH8_STATE_ERROR	BIT(16)
+> >+
+> > /* Device fatal error */
+> > #define DFES_ERR_EN		BIT(31)
+> > #define DFES_DEF_L2_ERRS	(UIC_DATA_LINK_LAYER_ERROR_RX_BUF_OF
+> >|\
+> >@@ -1376,6 +1380,20 @@ static void exynos_ufs_hibern8_notify(struct
+> >ufs_hba *hba,
+> > 	}
+> > }
+> >
+> >+static void exynos_ufs_check_int_error(struct ufs_hba *hba, bool
+> >+*queue_eh_work) {
+> >+	struct exynos_ufs *ufs = ufshcd_get_variant(hba);
+> >+
+> >+	if (ufshcd_is_auto_hibern8_supported(hba)) {
+> >+		val = hci_readl(ufs, HCI_AH8_STATE);
+> >+
+> >+		if (val & HCI_AH8_STATE_ERROR) {
+> >+			 ufshcd_set_link_broken(hba);
+> >+			 queue_eh_work = true;
+> >+		}
+> >+	}
+> >+}
+> >+
+> > static int exynos_ufs_suspend(struct ufs_hba *hba, enum ufs_pm_op
+> >pm_op,
+> > 	enum ufs_notify_change_status status)  { @@ -1569,6 +1587,7 @@
+> static
+> >const struct ufs_hba_variant_ops ufs_hba_exynos_ops = {
+> > 	.setup_xfer_req			=
+> >exynos_ufs_specify_nexus_t_xfer_req,
+> > 	.setup_task_mgmt		=
+> >exynos_ufs_specify_nexus_t_tm_req,
+> > 	.hibern8_notify			= exynos_ufs_hibern8_notify,
+> >+	.check_int_error		= exynos_ufs_check_int_error,
+> > 	.suspend			= exynos_ufs_suspend,
+> > 	.resume				= exynos_ufs_resume,
+> > };
+> >diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h index
+> >24c97e0772bb..40078c4b9f55 100644
+> >--- a/include/ufs/ufshcd.h
+> >+++ b/include/ufs/ufshcd.h
+> >@@ -335,6 +335,7 @@ struct ufs_hba_variant_ops {
+> > 			       const union ufs_crypto_cfg_entry *cfg, int slot);
+> > 	void	(*event_notify)(struct ufs_hba *hba,
+> > 				enum ufs_event_type evt, void *data);
+> >+	void	(*check_int_error)(struct ufs_hba *hba, bool
+> >*queue_eh_work);
+> > };
+> >
+> > /* clock gating state  */
+> >--
+> >2.26.0
+> 
 
 
