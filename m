@@ -2,332 +2,224 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04639ECAAD8
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Sep 2022 19:57:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BC2BC6FA8B
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Sep 2022 22:48:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229681AbiIMT5f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Sep 2022 15:57:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45858 "EHLO
+        id S229716AbiIMWsB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Sep 2022 18:48:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55982 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229669AbiIMT53 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Sep 2022 15:57:29 -0400
-Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E4E072EFA
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Sep 2022 12:57:28 -0700 (PDT)
-Received: by mail-pj1-f45.google.com with SMTP id go6so8184421pjb.2
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Sep 2022 12:57:28 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date;
-        bh=Tc0Yo88uQfzIugZTyXtB+wWedqy1ibPn7Tcz49L6SPA=;
-        b=hkWZEjEXxq4KyBgzrfccKRHJEG3K+KtE5ipkybnDgI0YqyeTxmlOP2m1w/pEmySod/
-         ScogAlqog1/THJKT4ThsIVVWcbC0FDK982VYiqHGmEwJrn+HXkx0zZK0hxnrhDs+nILW
-         jxuOKJA+umF0IbvFUTXtxrepmN605Xt9uiYA3GY3yw0WTr2Wbt8VpBns2hDbIvKNa0z6
-         5IC7fNDjvDN6+jq+0YGwrr2WKmqRR3vhZdeRm2T3Zw+0ch36QZAoONT/NM9xFka0sYMT
-         AWCFlfEOvfDkm2Ty7q6K1wRGpV99zv1j8H0tLuWqxNMkkWv/7N+0mpT17MvXSUxcFb30
-         qEvg==
-X-Gm-Message-State: ACrzQf0tkI4sUCAUzs+ph4jXHf4IUgkmMgfbYgUugLEPpVwrHtC1fLMU
-        WAZnvDhzeA3hsbC50hhGcFWfIb5PR+k=
-X-Google-Smtp-Source: AMsMyM4jqtcQ3yehqWvebG5eWEKGTrh8SBz2rDyV7pJBHe85vufcwxCWt+PAmSS1eyAzfMtEJZrvyQ==
-X-Received: by 2002:a17:90a:9309:b0:1fa:d28b:3751 with SMTP id p9-20020a17090a930900b001fad28b3751mr846339pjo.189.1663099047644;
-        Tue, 13 Sep 2022 12:57:27 -0700 (PDT)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:515b:d33a:21be:45a])
-        by smtp.gmail.com with ESMTPSA id p15-20020a1709027ecf00b0017825ab5320sm6739987plb.251.2022.09.13.12.57.25
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 13 Sep 2022 12:57:26 -0700 (PDT)
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
-        Hannes Reinecke <hare@suse.de>,
-        John Garry <john.garry@huawei.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v4 3/4] scsi: core: Introduce a new list for SCSI proc directory entries
-Date:   Tue, 13 Sep 2022 12:57:15 -0700
-Message-Id: <20220913195716.3966875-4-bvanassche@acm.org>
-X-Mailer: git-send-email 2.37.2.789.g6183377224-goog
-In-Reply-To: <20220913195716.3966875-1-bvanassche@acm.org>
-References: <20220913195716.3966875-1-bvanassche@acm.org>
+        with ESMTP id S229487AbiIMWr7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Sep 2022 18:47:59 -0400
+Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A4BB552DCA;
+        Tue, 13 Sep 2022 15:47:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1663109278; x=1694645278;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=7vuGPrjvpnP8JElr2b5KXy1+oZKLBwocK710pEgM2W4=;
+  b=acMlU++0f/JvE4f+o/Mc4qinBfmGaQoC8B4JidDyHcAod/UeDgyaExVD
+   P6AGeIdDIhSYrt9gkUf44fA4U2uzGfo1Nsl5OqWUlYgVxiS24bY1y9wzZ
+   bRgWgBrzXXFYNybz6uvYuAKm/FzD6rBFed2Ro9Sm371vcARvCR6xpxEOt
+   6keeBQwTe6XRNAi+S2OcX9dM0HmkIKOMM+00OoZQZxz/4EUBWmTxwS0Ic
+   Ee+ia5KKOP9x5Doi9Ll0m2Ijlp83IfvwReRcW/5nlNPglEi83i8FQuUkv
+   g91+cRWaUhPXlZ1LGQIiT4rbxJAtV4beXyIhgUcZyMyIcUKuzLhjyqlGF
+   Q==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10469"; a="278008848"
+X-IronPort-AV: E=Sophos;i="5.93,313,1654585200"; 
+   d="scan'208";a="278008848"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Sep 2022 15:47:58 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.93,313,1654585200"; 
+   d="scan'208";a="678778744"
+Received: from lkp-server02.sh.intel.com (HELO 4011df4f4fd3) ([10.239.97.151])
+  by fmsmga008.fm.intel.com with ESMTP; 13 Sep 2022 15:47:55 -0700
+Received: from kbuild by 4011df4f4fd3 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1oYEh8-00045Z-2P;
+        Tue, 13 Sep 2022 22:47:54 +0000
+Date:   Wed, 14 Sep 2022 06:47:23 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Andrew Morton <akpm@linux-foundation.org>
+Cc:     linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-pm@vger.kernel.org, linux-mm@kvack.org,
+        linux-hwmon@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        damon@lists.linux.dev, bpf@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org, alsa-devel@alsa-project.org,
+        Linux Memory Management List <linux-mm@kvack.org>
+Subject: [linux-next:master] BUILD REGRESSION
+ 0caac1da994900d12a9be6106edb8e98696712a3
+Message-ID: <6321087b.WsDIw5m+1a7xRREp%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Instead of using scsi_host_template members to track the SCSI proc
-directory entries, track these entries in a list. This patch changes the
-time needed for looking up the proc dir pointer from O(1) into O(n). I
-think this is acceptable since the number of SCSI host adapter types per
-host is usually small (less than ten).
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
+branch HEAD: 0caac1da994900d12a9be6106edb8e98696712a3  Add linux-next specific files for 20220913
 
-This patch has been tested by attaching two USB storage devices to a
-qemu host:
+Error/Warning reports:
 
-$ grep -aH . /proc/scsi/usb-storage/*
-/proc/scsi/usb-storage/7:   Host scsi7: usb-storage
-/proc/scsi/usb-storage/7:       Vendor: QEMU
-/proc/scsi/usb-storage/7:      Product: QEMU USB HARDDRIVE
-/proc/scsi/usb-storage/7:Serial Number: 1-0000:00:02.1:00.0-6
-/proc/scsi/usb-storage/7:     Protocol: Transparent SCSI
-/proc/scsi/usb-storage/7:    Transport: Bulk
-/proc/scsi/usb-storage/7:       Quirks: SANE_SENSE
-/proc/scsi/usb-storage/8:   Host scsi8: usb-storage
-/proc/scsi/usb-storage/8:       Vendor: QEMU
-/proc/scsi/usb-storage/8:      Product: QEMU USB HARDDRIVE
-/proc/scsi/usb-storage/8:Serial Number: 1-0000:00:02.1:00.0-7
-/proc/scsi/usb-storage/8:     Protocol: Transparent SCSI
-/proc/scsi/usb-storage/8:    Transport: Bulk
-/proc/scsi/usb-storage/8:       Quirks: SANE_SENSE
+https://lore.kernel.org/linux-mm/202209042337.FQi69rLV-lkp@intel.com
+https://lore.kernel.org/linux-mm/202209060229.dVuyxjBv-lkp@intel.com
+https://lore.kernel.org/linux-mm/202209080718.y5QmlNKH-lkp@intel.com
 
-This patch prepares for constifying most SCSI host templates.
+Error/Warning: (recently discovered and may have been fixed)
 
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Ming Lei <ming.lei@redhat.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: John Garry <john.garry@huawei.com>
-Cc: Mike Christie <michael.christie@oracle.com>
-Cc: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/scsi_priv.h |   4 +-
- drivers/scsi/scsi_proc.c | 111 +++++++++++++++++++++++++++++++++------
- include/scsi/scsi_host.h |  12 -----
- 3 files changed, 96 insertions(+), 31 deletions(-)
+drivers/gpu/drm/amd/amdgpu/imu_v11_0_3.c:139:6: warning: no previous prototype for 'imu_v11_0_3_program_rlc_ram' [-Wmissing-prototypes]
+drivers/gpu/drm/drm_atomic_helper.c:802: warning: expecting prototype for drm_atomic_helper_check_wb_connector_state(). Prototype was for drm_atomic_helper_check_wb_encoder_state() instead
+drivers/hwmon/emc2305.c:194 emc2305_set_cur_state() warn: impossible condition '(val > 255) => (0-255 > 255)'
+drivers/scsi/qla2xxx/qla_os.c:2854:23: warning: assignment to 'struct trace_array *' from 'int' makes pointer from integer without a cast [-Wint-conversion]
+drivers/scsi/qla2xxx/qla_os.c:2854:25: error: implicit declaration of function 'trace_array_get_by_name'; did you mean 'trace_array_set_clr_event'? [-Werror=implicit-function-declaration]
+drivers/scsi/qla2xxx/qla_os.c:2869:9: error: implicit declaration of function 'trace_array_put' [-Werror=implicit-function-declaration]
+kernel/bpf/memalloc.c:499 bpf_mem_alloc_destroy() error: potentially dereferencing uninitialized 'c'.
+mm/damon/vaddr.c:158 __damon_va_three_regions() error: uninitialized symbol 'start'.
+net/mac80211/iface.c:251 ieee80211_can_powered_addr_change() warn: inconsistent returns '&local->mtx'.
+sound/soc/codecs/tas2562.c:442:13: warning: variable 'ret' set but not used [-Wunused-but-set-variable]
 
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index f385b3f04d6e..be5d7c9b7f39 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -100,8 +100,8 @@ extern void scsi_evt_thread(struct work_struct *work);
- 
- /* scsi_proc.c */
- #ifdef CONFIG_SCSI_PROC_FS
--extern void scsi_proc_hostdir_add(struct scsi_host_template *);
--extern void scsi_proc_hostdir_rm(struct scsi_host_template *);
-+extern void scsi_proc_hostdir_add(const struct scsi_host_template *);
-+extern void scsi_proc_hostdir_rm(const struct scsi_host_template *);
- extern void scsi_proc_host_add(struct Scsi_Host *);
- extern void scsi_proc_host_rm(struct Scsi_Host *);
- extern int scsi_init_procfs(void);
-diff --git a/drivers/scsi/scsi_proc.c b/drivers/scsi/scsi_proc.c
-index 456b43097288..7dffa73d6f92 100644
---- a/drivers/scsi/scsi_proc.c
-+++ b/drivers/scsi/scsi_proc.c
-@@ -43,8 +43,23 @@
- 
- static struct proc_dir_entry *proc_scsi;
- 
--/* Protect sht->present and sht->proc_dir */
-+/* Protects scsi_proc_list */
- static DEFINE_MUTEX(global_host_template_mutex);
-+static LIST_HEAD(scsi_proc_list);
-+
-+/**
-+ * struct scsi_proc_entry - (host template, SCSI proc dir) association
-+ * @entry: entry in scsi_proc_list.
-+ * @sht: SCSI host template associated with the procfs directory.
-+ * @proc_dir: procfs directory associated with the SCSI host template.
-+ * @present: Number of SCSI hosts instantiated for @sht.
-+ */
-+struct scsi_proc_entry {
-+	struct list_head	entry;
-+	const struct scsi_host_template *sht;
-+	struct proc_dir_entry	*proc_dir;
-+	unsigned int		present;
-+};
- 
- static ssize_t proc_scsi_host_write(struct file *file, const char __user *buf,
-                            size_t count, loff_t *ppos)
-@@ -83,6 +98,32 @@ static int proc_scsi_host_open(struct inode *inode, struct file *file)
- 				4 * PAGE_SIZE);
- }
- 
-+static struct scsi_proc_entry *
-+__scsi_lookup_proc_entry(const struct scsi_host_template *sht)
-+{
-+	struct scsi_proc_entry *e;
-+
-+	lockdep_assert_held(&global_host_template_mutex);
-+
-+	list_for_each_entry(e, &scsi_proc_list, entry)
-+		if (e->sht == sht)
-+			return e;
-+
-+	return NULL;
-+}
-+
-+static struct scsi_proc_entry *
-+scsi_lookup_proc_entry(const struct scsi_host_template *sht)
-+{
-+	struct scsi_proc_entry *e;
-+
-+	mutex_lock(&global_host_template_mutex);
-+	e = __scsi_lookup_proc_entry(sht);
-+	mutex_unlock(&global_host_template_mutex);
-+
-+	return e;
-+}
-+
- /**
-  * scsi_template_proc_dir() - returns the procfs dir for a SCSI host template
-  * @sht: SCSI host template pointer.
-@@ -90,7 +131,9 @@ static int proc_scsi_host_open(struct inode *inode, struct file *file)
- struct proc_dir_entry *
- scsi_template_proc_dir(const struct scsi_host_template *sht)
- {
--	return sht->proc_dir;
-+	struct scsi_proc_entry *e = scsi_lookup_proc_entry(sht);
-+
-+	return e ? e->proc_dir : NULL;
- }
- EXPORT_SYMBOL_GPL(scsi_template_proc_dir);
- 
-@@ -109,34 +152,57 @@ static const struct proc_ops proc_scsi_ops = {
-  * Sets sht->proc_dir to the new directory.
-  */
- 
--void scsi_proc_hostdir_add(struct scsi_host_template *sht)
-+void scsi_proc_hostdir_add(const struct scsi_host_template *sht)
- {
-+	struct scsi_proc_entry *e;
-+
- 	if (!sht->show_info)
- 		return;
- 
- 	mutex_lock(&global_host_template_mutex);
--	if (!sht->present++) {
--		sht->proc_dir = proc_mkdir(sht->proc_name, proc_scsi);
--        	if (!sht->proc_dir)
--			printk(KERN_ERR "%s: proc_mkdir failed for %s\n",
--			       __func__, sht->proc_name);
-+	e = __scsi_lookup_proc_entry(sht);
-+	if (!e) {
-+		e = kzalloc(sizeof(*e), GFP_KERNEL);
-+		if (!e)
-+			goto unlock;
- 	}
-+	if (e->present++) {
-+		e = NULL;
-+		goto unlock;
-+	}
-+	e->proc_dir = proc_mkdir(sht->proc_name, proc_scsi);
-+	if (!e->proc_dir) {
-+		printk(KERN_ERR "%s: proc_mkdir failed for %s\n", __func__,
-+		       sht->proc_name);
-+		e->present--;
-+		goto unlock;
-+	}
-+	e->sht = sht;
-+	list_add_tail(&e->entry, &scsi_proc_list);
-+	e = NULL;
-+unlock:
- 	mutex_unlock(&global_host_template_mutex);
-+
-+	kfree(e);
- }
- 
- /**
-  * scsi_proc_hostdir_rm - remove directory in /proc for a scsi host
-  * @sht: owner of directory
-  */
--void scsi_proc_hostdir_rm(struct scsi_host_template *sht)
-+void scsi_proc_hostdir_rm(const struct scsi_host_template *sht)
- {
-+	struct scsi_proc_entry *e;
-+
- 	if (!sht->show_info)
- 		return;
- 
- 	mutex_lock(&global_host_template_mutex);
--	if (!--sht->present && sht->proc_dir) {
-+	e = __scsi_lookup_proc_entry(sht);
-+	if (e && !--e->present) {
- 		remove_proc_entry(sht->proc_name, proc_scsi);
--		sht->proc_dir = NULL;
-+		list_del(&e->entry);
-+		kfree(e);
- 	}
- 	mutex_unlock(&global_host_template_mutex);
- }
-@@ -148,16 +214,21 @@ void scsi_proc_hostdir_rm(struct scsi_host_template *sht)
-  */
- void scsi_proc_host_add(struct Scsi_Host *shost)
- {
--	struct scsi_host_template *sht = shost->hostt;
-+	const struct scsi_host_template *sht = shost->hostt;
-+	struct scsi_proc_entry *e;
- 	struct proc_dir_entry *p;
- 	char name[10];
- 
--	if (!sht->proc_dir)
-+	if (!sht->show_info)
-+		return;
-+
-+	e = scsi_lookup_proc_entry(sht);
-+	if (!e)
- 		return;
- 
- 	sprintf(name,"%d", shost->host_no);
--	p = proc_create_data(name, S_IRUGO | S_IWUSR,
--		sht->proc_dir, &proc_scsi_ops, shost);
-+	p = proc_create_data(name, S_IRUGO | S_IWUSR, e->proc_dir,
-+			     &proc_scsi_ops, shost);
- 	if (!p)
- 		printk(KERN_ERR "%s: Failed to register host %d in"
- 		       "%s\n", __func__, shost->host_no,
-@@ -170,13 +241,19 @@ void scsi_proc_host_add(struct Scsi_Host *shost)
-  */
- void scsi_proc_host_rm(struct Scsi_Host *shost)
- {
-+	const struct scsi_host_template *sht = shost->hostt;
-+	struct scsi_proc_entry *e;
- 	char name[10];
- 
--	if (!shost->hostt->proc_dir)
-+	if (!sht->show_info)
-+		return;
-+
-+	e = scsi_lookup_proc_entry(sht);
-+	if (!e)
- 		return;
- 
- 	sprintf(name,"%d", shost->host_no);
--	remove_proc_entry(name, shost->hostt->proc_dir);
-+	remove_proc_entry(name, e->proc_dir);
- }
- /**
-  * proc_print_scsidevice - return data about this host
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 030faca947d2..fb8184d87384 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -357,12 +357,6 @@ struct scsi_host_template {
- 	 */
- 	const char *proc_name;
- 
--	/*
--	 * Used to store the procfs directory if a driver implements the
--	 * show_info method.
--	 */
--	struct proc_dir_entry *proc_dir;
--
- 	/*
- 	 * This determines if we will use a non-interrupt driven
- 	 * or an interrupt driven scheme.  It is set to the maximum number
-@@ -423,12 +417,6 @@ struct scsi_host_template {
- 	 */
- 	short cmd_per_lun;
- 
--	/*
--	 * present contains counter indicating how many boards of this
--	 * type were found when we did the scan.
--	 */
--	unsigned char present;
--
- 	/* If use block layer to manage tags, this is tag allocation policy */
- 	int tag_alloc_policy;
- 
+Error/Warning ids grouped by kconfigs:
+
+gcc_recent_errors
+|-- alpha-allyesconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-imu_v11_0_3.c:warning:no-previous-prototype-for-imu_v11_0_3_program_rlc_ram
+|   |-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
+|   |-- drivers-scsi-qla2xxx-qla_os.c:error:implicit-declaration-of-function-trace_array_get_by_name
+|   |-- drivers-scsi-qla2xxx-qla_os.c:error:implicit-declaration-of-function-trace_array_put
+|   |-- drivers-scsi-qla2xxx-qla_os.c:warning:assignment-to-struct-trace_array-from-int-makes-pointer-from-integer-without-a-cast
+|   `-- sound-soc-codecs-tas2562.c:warning:variable-ret-set-but-not-used
+|-- alpha-buildonly-randconfig-r003-20220911
+|   |-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
+|   `-- sound-soc-codecs-tas2562.c:warning:variable-ret-set-but-not-used
+|-- arc-allyesconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-imu_v11_0_3.c:warning:no-previous-prototype-for-imu_v11_0_3_program_rlc_ram
+|   |-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
+|   `-- sound-soc-codecs-tas2562.c:warning:variable-ret-set-but-not-used
+|-- arc-buildonly-randconfig-r002-20220912
+|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
+|-- arc-randconfig-r012-20220913
+|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
+|-- arc-randconfig-r021-20220911
+|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
+|-- arc-randconfig-r043-20220911
+|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
+|-- arc-randconfig-r043-20220912
+|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
+|-- arc-randconfig-s052-20220911
+|   |-- kernel-bpf-hashtab.c:sparse:sparse:cast-removes-address-space-__percpu-of-expression
+|   |-- kernel-bpf-hashtab.c:sparse:sparse:incorrect-type-in-assignment-(different-address-spaces)-expected-void-noderef-__percpu-assigned-pptr-got-void
+|   |-- kernel-bpf-hashtab.c:sparse:sparse:incorrect-type-in-assignment-(different-address-spaces)-expected-void-ptr_to_pptr-got-void-noderef-__percpu-assigned-pptr
+|   |-- kernel-bpf-memalloc.c:sparse:sparse:incorrect-type-in-argument-(different-address-spaces)-expected-void-noderef-__percpu-__pdata-got-void
+|   |-- kernel-bpf-memalloc.c:sparse:sparse:incorrect-type-in-argument-(different-address-spaces)-expected-void-noderef-__percpu-__pdata-got-void-pptr
+|   |-- kernel-bpf-memalloc.c:sparse:sparse:incorrect-type-in-initializer-(different-address-spaces)-expected-void-pptr-got-void-noderef-__percpu
+|   `-- kernel-exit.c:sparse:sparse:incorrect-type-in-initializer-(different-address-spaces)-expected-struct-sighand_struct-sighand-got-struct-sighand_struct-noderef-__rcu-sighand
+|-- arm-allyesconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-imu_v11_0_3.c:warning:no-previous-prototype-for-imu_v11_0_3_program_rlc_ram
+|   |-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
+|   `-- sound-soc-codecs-tas2562.c:warning:variable-ret-set-but-not-used
+|-- arm-defconfig
+|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
+|-- arm-randconfig-r001-20220911
+|   |-- drivers-gpu-drm-amd-amdgpu-imu_v11_0_3.c:warning:no-previous-prototype-for-imu_v11_0_3_program_rlc_ram
+|   |-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
+|   `-- sound-soc-codecs-tas2562.c:warning:variable-ret-set-but-not-used
+|-- arm-randconfig-r006-20220911
+|   |-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
+|   `-- sound-soc-codecs-tas2562.c:warning:variable-ret-set-but-not-used
+|-- arm64-allyesconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-imu_v11_0_3.c:warning:no-previous-prototype-for-imu_v11_0_3_program_rlc_ram
+|   |-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
+|   `-- sound-soc-codecs-tas2562.c:warning:variable-ret-set-but-not-used
+|-- csky-buildonly-randconfig-r001-20220911
+clang_recent_errors
+|-- i386-randconfig-a012-20220912
+|   `-- sound-soc-intel-skylake-skl.c:warning:unused-variable-skl
+|-- i386-randconfig-a015-20220912
+|   `-- drivers-extcon-extcon-usbc-tusb320.c:warning:expecting-prototype-for-drivers-extcon-extcon-tusb320c().-Prototype-was-for-TUSB320_REG8()-instead
+|-- powerpc-buildonly-randconfig-r006-20220912
+|   `-- drivers-extcon-extcon-usbc-tusb320.c:warning:expecting-prototype-for-drivers-extcon-extcon-tusb320c().-Prototype-was-for-TUSB320_REG8()-instead
+|-- powerpc-randconfig-r004-20220911
+|   `-- drivers-gpu-drm-amd-amdgpu-imu_v11_0_3.c:warning:no-previous-prototype-for-function-imu_v11_0_3_program_rlc_ram
+`-- riscv-randconfig-r042-20220912
+    `-- drivers-extcon-extcon-usbc-tusb320.c:warning:expecting-prototype-for-drivers-extcon-extcon-tusb320c().-Prototype-was-for-TUSB320_REG8()-instead
+
+elapsed time: 725m
+
+configs tested: 63
+configs skipped: 2
+
+gcc tested configs:
+um                             i386_defconfig
+um                           x86_64_defconfig
+i386                 randconfig-a001-20220912
+i386                 randconfig-a002-20220912
+x86_64                              defconfig
+i386                 randconfig-a004-20220912
+x86_64                           rhel-8.3-kvm
+i386                 randconfig-a003-20220912
+x86_64                          rhel-8.3-func
+i386                 randconfig-a006-20220912
+x86_64                               rhel-8.3
+x86_64                         rhel-8.3-kunit
+i386                 randconfig-a005-20220912
+x86_64                    rhel-8.3-kselftests
+m68k                             allmodconfig
+x86_64                           rhel-8.3-syz
+arc                              allyesconfig
+x86_64                           allyesconfig
+alpha                            allyesconfig
+i386                                defconfig
+m68k                             allyesconfig
+powerpc                           allnoconfig
+powerpc                          allmodconfig
+arm                                 defconfig
+mips                             allyesconfig
+x86_64               randconfig-a001-20220912
+x86_64               randconfig-a006-20220912
+sh                               allmodconfig
+x86_64               randconfig-a004-20220912
+riscv                randconfig-r042-20220911
+x86_64               randconfig-a002-20220912
+i386                             allyesconfig
+arc                  randconfig-r043-20220912
+x86_64               randconfig-a005-20220912
+arm64                            allyesconfig
+x86_64               randconfig-a003-20220912
+arm                              allyesconfig
+arc                  randconfig-r043-20220911
+s390                 randconfig-r044-20220911
+ia64                             allmodconfig
+csky                              allnoconfig
+arc                               allnoconfig
+alpha                             allnoconfig
+riscv                             allnoconfig
+
+clang tested configs:
+i386                 randconfig-a014-20220912
+i386                 randconfig-a013-20220912
+x86_64               randconfig-a014-20220912
+i386                 randconfig-a011-20220912
+x86_64               randconfig-a011-20220912
+i386                 randconfig-a015-20220912
+x86_64               randconfig-a012-20220912
+i386                 randconfig-a012-20220912
+x86_64               randconfig-a016-20220912
+i386                 randconfig-a016-20220912
+x86_64               randconfig-a013-20220912
+riscv                randconfig-r042-20220912
+x86_64               randconfig-a015-20220912
+hexagon              randconfig-r041-20220912
+hexagon              randconfig-r045-20220911
+hexagon              randconfig-r041-20220911
+hexagon              randconfig-r045-20220912
+s390                 randconfig-r044-20220912
+x86_64                          rhel-8.3-rust
+
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
