@@ -2,220 +2,175 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6ED04C54EE9
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Sep 2022 07:54:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E67BCC6FA82
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Sep 2022 11:52:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231296AbiIMHyT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Sep 2022 03:54:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37662 "EHLO
+        id S231963AbiIMLv7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Sep 2022 07:51:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45860 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231287AbiIMHyP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Sep 2022 03:54:15 -0400
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F07B54651
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Sep 2022 00:54:11 -0700 (PDT)
-Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20220913075409epoutp01f8d80a38aa8748fa3de2e4936340caf3~UXE1DXFDC1109311093epoutp01P
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Sep 2022 07:54:09 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20220913075409epoutp01f8d80a38aa8748fa3de2e4936340caf3~UXE1DXFDC1109311093epoutp01P
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1663055649;
-        bh=ERW53Oyymk9MuhMw46n630lKTvxMsEdOQBltMJN71Ps=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=hjUuMY4ohrDDPQ3+WkK1ONS+2vrqkCaogyfAHJHI8buV86TpkmLAisur7bI2tVnKU
-         r8enVo9Vsslg8pZxwMYPHjJmBE5Q+EQ8uZ8LLrM21CsZaPQF3OyCR7R2inMdJP5rnx
-         9c5xvZ1hKSGtFOlsN8cgg3MN1eZno9ifVtbXB4a4=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
-        20220913075408epcas2p4c597f06c76143fd96c6ac562226437a9~UXE0UeNZM2256922569epcas2p4h;
-        Tue, 13 Sep 2022 07:54:08 +0000 (GMT)
-Received: from epsmges2p1.samsung.com (unknown [182.195.36.70]) by
-        epsnrtp4.localdomain (Postfix) with ESMTP id 4MRbMN0080z4x9QK; Tue, 13 Sep
-        2022 07:54:07 +0000 (GMT)
-Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
-        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
-        93.CC.18832.F1730236; Tue, 13 Sep 2022 16:54:07 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas2p1.samsung.com (KnoxPortal) with ESMTPA id
-        20220913075407epcas2p1075426e0ef45b6969e50823d59c374d3~UXEzc_oPO1025310253epcas2p1_;
-        Tue, 13 Sep 2022 07:54:07 +0000 (GMT)
-Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20220913075407epsmtrp13ec1c6fd71bb474ae86cce8a4a77e406~UXEzcLYCO3251432514epsmtrp1-;
-        Tue, 13 Sep 2022 07:54:07 +0000 (GMT)
-X-AuditID: b6c32a45-cdfff70000014990-b7-6320371f2995
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        8A.FA.18644.F1730236; Tue, 13 Sep 2022 16:54:07 +0900 (KST)
-Received: from rack03.dsn.sec.samsung.com (unknown [10.229.95.126]) by
-        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20220913075407epsmtip16590d1e0c89026163947332c542ddcb7~UXEzQ-Rac3034330343epsmtip1I;
-        Tue, 13 Sep 2022 07:54:07 +0000 (GMT)
-From:   SEO HOYOUNG <hy50.seo@samsung.com>
-To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com, bvanassche@acm.org,
-        bhoon95.kim@samsung.com, kwmad.kim@samsung.com
-Cc:     SEO HOYOUNG <hy50.seo@samsung.com>
-Subject: [PATCH v2] scsi: ufs: add a variant operation in struct
- ufs_hba_variant_ops
-Date:   Tue, 13 Sep 2022 04:37:03 +0900
-Message-Id: <20220912193703.102267-1-hy50.seo@samsung.com>
-X-Mailer: git-send-email 2.26.0
-In-Reply-To: <sc.suh@samsung.com; hy50.seo@samsung.com;>
+        with ESMTP id S231827AbiIMLvy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Sep 2022 07:51:54 -0400
+Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 055E45AC53
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Sep 2022 04:51:54 -0700 (PDT)
+Received: by mail-pf1-x42f.google.com with SMTP id y127so11520680pfy.5
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Sep 2022 04:51:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:from:to:cc:subject:date;
+        bh=gvCDaxDhUq4mcgLUXno0g7d85tTxqPv/78wOvbhemRc=;
+        b=WG9GYaLst3gJD7CGd0EaRuPlVGYCg3iviPT9ejnMGm/SEo8lbyymxxVNNecYZr7f2x
+         wNbjlYUEul2HL6dl3a8oxo37J+a9fnslk7S5UNxDgzPMPHQSOr27pBxPsTxKEdgDHLyL
+         RMXfdeXGdJlW+UaitD9Gt3eVS/GLo8Q5cbM14=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:x-gm-message-state:from:to:cc:subject:date;
+        bh=gvCDaxDhUq4mcgLUXno0g7d85tTxqPv/78wOvbhemRc=;
+        b=MvaCkppTxZ2HFvSBjSrMe99SYbH9IcQFvtLQSEEVH8fhaJTTXFuXqJqE2oeqU1ELlH
+         UoIQMCBAsRT0432XnuK0sY/6BBsMMHahDAxsJlyy4C+Oj/j/Ta7bmNv2qFfPUi5BLizX
+         jXF2lJw0J6ZF3donmYIJEstM8G/gKBLyDO8qSnlFsU3lZSVF/SJDvgNt30cKB12o1L30
+         VEUDlHiOQYCMfjEFLx4VnKMdHWv6NyVq0AHUjRkgJRTWT5+ShMOFQVrLLGlIMaA121za
+         un2vHwmAMbE95REvkxgR6DnFU9RN++w3+Sl7aeG5wmbNHVZhWZaJUX0d4IR6514t3ii6
+         La+Q==
+X-Gm-Message-State: ACgBeo1aTUS6BoJyBfVM3cF2uVrk/CbP5dF5S7SeFRMAG1pBDJX38u6z
+        JqB/MfBz0auPZKgnKFj4nYClAzpoOn/1afVhuSpd656zf6VLMLtT1oM1Y+P7JCW85dqiwHz84S9
+        8SNRSIulsZtPBMdJ8Ev6TvBv0yxV8ia0vuZIQwv0U3we1NOmOdC2g98AdzorDVByVy4MlsWyavv
+        hoH7qOq47S
+X-Google-Smtp-Source: AA6agR7Sgav4s3FVByQipkTNFeTRJzfVJPm9JKKL3ZFpUWsleNKEPiB/LGcoIb4NEhvjaeXh3+hDaQ==
+X-Received: by 2002:a05:6a02:208:b0:438:a981:8cee with SMTP id bh8-20020a056a02020800b00438a9818ceemr15425749pgb.536.1663069912579;
+        Tue, 13 Sep 2022 04:51:52 -0700 (PDT)
+Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id r2-20020aa79ec2000000b00545f5046372sm1692151pfq.208.2022.09.13.04.51.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 13 Sep 2022 04:51:51 -0700 (PDT)
+From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: [PATCH 1/1] mpt3sas: Fix return value check of dma_get_required_mask
+Date:   Tue, 13 Sep 2022 17:35:38 +0530
+Message-Id: <20220913120538.18759-2-sreekanth.reddy@broadcom.com>
+X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20220913120538.18759-1-sreekanth.reddy@broadcom.com>
+References: <20220913120538.18759-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrJJsWRmVeSWpSXmKPExsWy7bCmma68uUKyQVuTlcWDedvYLF7+vMpm
-        cfBhJ4vF16XPWC2mffjJbLF68QMWi0U3tjFZ3NxylMXi8q45bBbd13ewWSw//o/Jgdvj8hVv
-        jwmLDjB6fF/fwebx8ektFo++LasYPT5vkvNoP9DNFMAelW2TkZqYklqkkJqXnJ+SmZduq+Qd
-        HO8cb2pmYKhraGlhrqSQl5ibaqvk4hOg65aZA3SjkkJZYk4pUCggsbhYSd/Opii/tCRVISO/
-        uMRWKbUgJafAvECvODG3uDQvXS8vtcTK0MDAyBSoMCE7Y/uph8wF/TIVEyeuZG9g3CDexcjJ
-        ISFgIvFz5R2mLkYuDiGBHYwSN+asgXI+MUqcmLaKFcL5zCgxZeknFpiWFxuPQ1XtYpR4+OYl
-        G4Tzg1Fi38SXrCBVbAIaEmuOHQKrEgFJfL24ggkkwSygJvH57jKwUcICYRLnTk9hA7FZBFQl
-        zj/bBGbzClhJTF62jQlinbzEoobfYDangIVE/7cpzBA1ghInZz5hgZgpL9G8dTYzyDIJgYkc
-        EtN372PvYuQAclwk7qzQgZgjLPHq+BZ2CFtK4mV/G5RdLPHjzWomiN4GRoml7ceYIRLGErOe
-        tTOCzGEW0JRYv0sfYqSyxJFbUGv5JDoO/4XaxCvR0SYE0agkcWbubaiwhMTB2TkQYQ+Jxy8O
-        MUOCqptRYv+cA8wTGBVmIXlmFpJnZiHsXcDIvIpRLLWgODc9tdiowBAew8n5uZsYwWlWy3UH
-        4+S3H/QOMTJxMB5ilOBgVhLh3a4qnyzEm5JYWZValB9fVJqTWnyI0RQY1BOZpUST84GJPq8k
-        3tDE0sDEzMzQ3MjUwFxJnNdVmzFZSCA9sSQ1OzW1ILUIpo+Jg1Oqgcm6/7r1PVWZkgVTLzdO
-        YjLkfrF6beUXoVfnJ81tSpzK9DivuviOvOK+c894F8x6t2HG6m2vfGvE8476xJzuXPr+hKXU
-        DbnCGcazqx3dMld3FTBFyjm0CCzbq6N1qn3l+3sS7I+v/y76vy7wquelW+6snmWp/2Yzx97e
-        dOW95Uc9pUmP2xKPbeqql7h2+qfVy9rFOW/1Ug+Lz1G2O3mpIuLzXMWjyytkLD7e3rbkYavK
-        Gt6SuRnsSbNZvfuOXzmo+9rvWvJhzfCW+ZIXSxRj5CW8nh3TPLvV45m9d/csps9BYmvz+ma1
-        u21ZfuQTswGr4FZ250kX7/vb57wV8k0OOvvhvu72xalP6yY7lz5cukJIiaU4I9FQi7moOBEA
-        x6Ej/TwEAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrCLMWRmVeSWpSXmKPExsWy7bCSnK68uUKywbpj8hYP5m1js3j58yqb
-        xcGHnSwWX5c+Y7WY9uEns8XqxQ9YLBbd2MZkcXPLURaLy7vmsFl0X9/BZrH8+D8mB26Py1e8
-        PSYsOsDo8X19B5vHx6e3WDz6tqxi9Pi8Sc6j/UA3UwB7FJdNSmpOZllqkb5dAlfG9lMPmQv6
-        ZSomTlzJ3sC4QbyLkZNDQsBE4sXG40xdjFwcQgI7GCX2zL7ODpGQkPi/uIkJwhaWuN9yhBXE
-        FhL4xijx+KEiiM0moCGx5tghsGYRgRYmidbXr5hBEswCahKf7y5jAbGFBUIkrky6wgZiswio
-        Spx/tgnM5hWwkpi8bBvUAnmJRQ2/wWxOAQuJ/m9TmCGWmUv8eAhh8woISpyc+YQFYr68RPPW
-        2cwTGAVmIUnNQpJawMi0ilEytaA4Nz232LDAKC+1XK84Mbe4NC9dLzk/dxMjOCK0tHYw7ln1
-        Qe8QIxMH4yFGCQ5mJRHe7aryyUK8KYmVValF+fFFpTmpxYcYpTlYlMR5L3SdjBcSSE8sSc1O
-        TS1ILYLJMnFwSjUwufj8UPZdZvpz2k6mRS/tvmp3S69bIK1SFMdeevxva1OQQtLO1VEOFVqC
-        1022TM0T+1cSpv3HoEiIt153+tbtpw5pf5BnrnRbVmJ9hbf8Pvv5pn/1XBMPsB25sed7U63L
-        2j+evxgfqpQnRch7f75zXeH/1PabaaILbwuZzhYpqGjvkv/TxXAqhSuo7ciLZZwfVrjMi736
-        wqrF5PVxE7cfT76e+rqR6VSuf6dIa3FBs3WOe3Tj+4V2rSxb5Ld5BGaqWa0/x8iqtO7QyZ/b
-        xBtXpUmeWpx30/WD6BW5sppL7hlSQr9i4kzdq/Jlfxp+LDwvU69vdvrcj6uftp+cxSgTetvt
-        /IvQ7clVQt8/LF6ixFKckWioxVxUnAgAz/1nofcCAAA=
-X-CMS-MailID: 20220913075407epcas2p1075426e0ef45b6969e50823d59c374d3
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20220913075407epcas2p1075426e0ef45b6969e50823d59c374d3
-References: <sc.suh@samsung.com; hy50.seo@samsung.com;>
-        <CGME20220913075407epcas2p1075426e0ef45b6969e50823d59c374d3@epcas2p1.samsung.com>
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="000000000000684c1405e88da3d7"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add ufs_hba_variant_ops about vendor error in check_error.
-It need to reset when occurred ah8 related error.
-At that time could not recovery with pwr cmd.
-So add vendor error check function at ufs_hba_variant_ops.
+--000000000000684c1405e88da3d7
+Content-Transfer-Encoding: 8bit
 
-v1->v2
-fixed warm message of auto build test
+Fix the incorrect return value check of dma_get_required_mask().
+Due to this incorrect check, the driver was always setting the
+dma mask to 63 bit.
 
-Signed-off-by: SEO HOYOUNG <hy50.seo@samsung.com>
+Fixes: ba27c5cf286d ("scsi: mpt3sas: Don't change the DMA coherent mask after allocations")
+Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/ufs/core/ufshcd-priv.h |  7 +++++++
- drivers/ufs/core/ufshcd.c      |  2 ++
- drivers/ufs/host/ufs-exynos.c  | 20 ++++++++++++++++++++
- include/ufs/ufshcd.h           |  1 +
- 4 files changed, 30 insertions(+)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index d00dba17297d..6172da4d3484 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -221,6 +221,13 @@ static inline void ufshcd_vops_config_scaling_param(struct ufs_hba *hba,
- 		hba->vops->config_scaling_param(hba, p, data);
- }
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index f8a3b0d..c6366ce 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -2993,7 +2993,7 @@ _base_config_dma_addressing(struct MPT3SAS_ADAPTER *ioc, struct pci_dev *pdev)
+ 	u64 coherent_dma_mask, dma_mask;
  
-+static inline void ufshcd_vops_check_int_error(struct ufs_hba *hba,
-+					       bool *queue_eh_work)
-+{
-+	if (hba->vops & hba->vops->check_int_error)
-+		hba->vops->check_int_error(hba, queue_eh_work);
-+}
-+
- extern const struct ufs_pm_lvl_states ufs_pm_lvl_states[];
- 
- /**
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 7c15cbc737b4..39ee5192f26a 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -6542,6 +6542,8 @@ static irqreturn_t ufshcd_check_errors(struct ufs_hba *hba, u32 intr_status)
- 		queue_eh_work = true;
- 	}
- 
-+	ufshcd_vops_check_int_error(hba, &queue_eh_work);
-+
- 	if (queue_eh_work) {
- 		/*
- 		 * update the transfer error masks to sticky bits, let's do this
-diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
-index eced97538082..5d9db6870a66 100644
---- a/drivers/ufs/host/ufs-exynos.c
-+++ b/drivers/ufs/host/ufs-exynos.c
-@@ -67,6 +67,10 @@
- #define CLK_CTRL_EN_MASK	(REFCLK_CTRL_EN |\
- 				 UNIPRO_PCLK_CTRL_EN |\
- 				 UNIPRO_MCLK_CTRL_EN)
-+
-+#define HCI_AH8_STATE		0x50C
-+#define HCI_AH8_STATE_ERROR	BIT(16)
-+
- /* Device fatal error */
- #define DFES_ERR_EN		BIT(31)
- #define DFES_DEF_L2_ERRS	(UIC_DATA_LINK_LAYER_ERROR_RX_BUF_OF |\
-@@ -1376,6 +1380,21 @@ static void exynos_ufs_hibern8_notify(struct ufs_hba *hba,
- 	}
- }
- 
-+static void exynos_ufs_check_int_error(struct ufs_hba *hba, bool *queue_eh_work)
-+{
-+	struct exynos_ufs *ufs = ufshcd_get_variant(hba);
-+	u32 val;
-+
-+	if (ufshcd_is_auto_hibern8_supported(hba)) {
-+		val = hci_readl(ufs, HCI_AH8_STATE);
-+
-+		if (val & HCI_AH8_STATE_ERROR) {
-+			ufshcd_set_link_broken(hba);
-+			*queue_eh_work = true;
-+		}
-+	}
-+}
-+
- static int exynos_ufs_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
- 	enum ufs_notify_change_status status)
- {
-@@ -1569,6 +1588,7 @@ static const struct ufs_hba_variant_ops ufs_hba_exynos_ops = {
- 	.setup_xfer_req			= exynos_ufs_specify_nexus_t_xfer_req,
- 	.setup_task_mgmt		= exynos_ufs_specify_nexus_t_tm_req,
- 	.hibern8_notify			= exynos_ufs_hibern8_notify,
-+	.check_int_error		= exynos_ufs_check_int_error,
- 	.suspend			= exynos_ufs_suspend,
- 	.resume				= exynos_ufs_resume,
- };
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 24c97e0772bb..40078c4b9f55 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -335,6 +335,7 @@ struct ufs_hba_variant_ops {
- 			       const union ufs_crypto_cfg_entry *cfg, int slot);
- 	void	(*event_notify)(struct ufs_hba *hba,
- 				enum ufs_event_type evt, void *data);
-+	void	(*check_int_error)(struct ufs_hba *hba, bool *queue_eh_work);
- };
- 
- /* clock gating state  */
+ 	if (ioc->is_mcpu_endpoint || sizeof(dma_addr_t) == 4 ||
+-	    dma_get_required_mask(&pdev->dev) <= 32) {
++	    dma_get_required_mask(&pdev->dev) <= DMA_BIT_MASK(32)) {
+ 		ioc->dma_mask = 32;
+ 		coherent_dma_mask = dma_mask = DMA_BIT_MASK(32);
+ 	/* Set 63 bit DMA mask for all SAS3 and SAS35 controllers */
 -- 
-2.26.0
+2.27.0
 
+
+--000000000000684c1405e88da3d7
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+5AGo2E3pe+2yEgkxKvM2fnniZHUiSjbrfKk6nl9RIXPOKUP5HntZFdA5XuNYXWM+HPs3O0AJwBm/
+VCZsZtkjVjxeBmTXiXDnxytdsHdGrHGymPfjJYatDu6d1KRVDlMCAwEAAaOCAd0wggHZMA4GA1Ud
+DwEB/wQEAwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9zZWN1cmUu
+Z2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNydDBBBggr
+BgEFBQcwAYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJj
+YTIwMjAwTQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3
+Lmdsb2JhbHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+oDygOoY4
+aHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcmww
+JwYDVR0RBCAwHoEcc3JlZWthbnRoLnJlZGR5QGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEF
+BQcDBDAfBgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUClVHbAvhzGT8
+s2/6xOf58NkGMQ8wDQYJKoZIhvcNAQELBQADggEBAENRsP1H3calKC2Sstg/8li8byKiqljCFkfi
+IhcJsjPOOR9UZnMFxAoH/s2AlM7mQDR7rZ2MxRuUnIa6Cp5W5w1lUJHktjCUHnQq5nIAZ9GH5SDY
+pgzbFsoYX8U2QCmkAC023FF++ZDJuc9aj0R/nhABxmUYErIze2jV/VO8Pj7TnCrBONZ/Qvf8G5CQ
+X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
+eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
+Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
+MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIEskBXyKhkANsecqQ6uD
+bu/mVZeL8cXN9bVcimGn9daJMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDkxMzExNTE1M1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCl/4SsNSE2PhMj9hE9k3IgU4lKqiwo882BKT0b
+4z2BoiDOxil3oWO+byVQcHQnB78sdaHQ5PQafVdWiLFMTifX4e79iD54gButSp4Y4GvUvy6yIVBY
+YOJ4WxMqI+aJaJgmpdNfJj4UlcBffCrkWaidsKpchm3iEG9CyjMEVnyz8Kc2Tae/t3+0dM07UzmH
+61EnZ5U/FoF10nkBH6feahmuTXwWil/rhvjDHxN4/LHTVuQtYiRxjPGVU+CL5Lhhu6d5DK5XB97O
+BsIfS+y0Uys4UkiT4kHsyCN0Up5UTVhtydjURuws1fRLU99tqfCF9B5IzwemYcLQ1VEXXRhu+0nO
+--000000000000684c1405e88da3d7--
