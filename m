@@ -2,122 +2,97 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E14B4ECAAD3
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Sep 2022 09:54:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88EBAECAAD8
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Sep 2022 12:00:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231671AbiINJyc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Sep 2022 05:54:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52846 "EHLO
+        id S230064AbiINMA0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Sep 2022 08:00:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54182 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231701AbiINJyF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Sep 2022 05:54:05 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76EE0696F2
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Sep 2022 02:53:21 -0700 (PDT)
-Received: from fraeml736-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MSFwS0y0lz67y6K;
-        Wed, 14 Sep 2022 17:51:36 +0800 (CST)
-Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml736-chm.china.huawei.com (10.206.15.217) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Wed, 14 Sep 2022 11:52:58 +0200
-Received: from [10.48.151.55] (10.48.151.55) by lhrpeml500003.china.huawei.com
- (7.191.162.67) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Wed, 14 Sep
- 2022 10:52:57 +0100
-Message-ID: <011da034-b67a-c232-ebe0-d6d7d802247f@huawei.com>
-Date:   Wed, 14 Sep 2022 10:52:56 +0100
+        with ESMTP id S230130AbiINMAB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Sep 2022 08:00:01 -0400
+Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 814E82E9DF
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Sep 2022 04:59:58 -0700 (PDT)
+Received: by mail-pj1-x102a.google.com with SMTP id ge9so2819993pjb.1
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Sep 2022 04:59:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date;
+        bh=Y6s7NE2L0D+TeexOIWPbL9vKDjRfpSqj54lhPgRGOAA=;
+        b=oWqpCruVR1MxdYpIebHjiun0qVTgcHKvDlmNzWWS+1oc2tHlCd1aZnCG+MVqrD2+k+
+         bYsWTqJWQHnRSaorc/cymPXpuJmkqkHI8rNfGzMPVy9FHUEUCSPNGpwtP3NZ1REUw7tH
+         UJJBuZCrgo5GsJv/V3XTYtfUHBuL3NM6DGTpA=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date;
+        bh=Y6s7NE2L0D+TeexOIWPbL9vKDjRfpSqj54lhPgRGOAA=;
+        b=FM2N5lC/o2ROPqRx8NEah+ZVzquAIggYwfVdqhthLY5uZj80RzbeVM6+IbMyITudW/
+         ur1JrxgCAvTiK+mQ9gOmMc+YPJ9lfydeYkSLQPLjdWspJWZCS6xP+TTWGY+wGrR1iBqo
+         broXevtunB1vfOwxbQ0yfl2JNPxH8K3wPARWMNh4l4occwbhiLSnALO2OkeGc7m2K4kt
+         fTFYqneaT2U184P41repFpZUBM9ySnef8cdqq6HW3ZbHAkNKF7AKRPpk/Yde/ZEOZ0Tz
+         JUNxEal+BNLuNc7Uze3dhANQdqlGQNAl+4ytmwkW+uUtqCTgM0SDKnVqO6tk9OpCrsDc
+         43SQ==
+X-Gm-Message-State: ACgBeo0jAqyoFH4oOTeDWQ/44tlENIkbqZa1H5cdH4EjC04RlzSMW2rC
+        s9qPDxh5IEh/LlJhfIyGwI2OBA==
+X-Google-Smtp-Source: AA6agR51qC/3Mw3pxBy7uVb+w1THEnZyfb3ejZeBbnmyMXm5XocV75MVAnkIA+VdzzjwnzQvEw/JCw==
+X-Received: by 2002:a17:902:aa8c:b0:178:9b2:d0c7 with SMTP id d12-20020a170902aa8c00b0017809b2d0c7mr24115956plr.23.1663156797937;
+        Wed, 14 Sep 2022 04:59:57 -0700 (PDT)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id ik21-20020a170902ab1500b00172d0c7edf4sm10494607plb.106.2022.09.14.04.59.56
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 14 Sep 2022 04:59:57 -0700 (PDT)
+From:   Kees Cook <keescook@chromium.org>
+To:     Hannes Reinecke <hare@suse.com>
+Cc:     Kees Cook <keescook@chromium.org>,
+        David Malcolm <dmalcolm@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-hardening@vger.kernel.org
+Subject: [PATCH] scsi: aic79xx: Use __ro_after_init explicitly
+Date:   Wed, 14 Sep 2022 04:59:53 -0700
+Message-Id: <20220914115953.3854029-1-keescook@chromium.org>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH v4 4/4] scsi: core: Rework the code for dropping the LLD
- module reference
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>,
-        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
-        Mike Christie <michael.christie@oracle.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20220913195716.3966875-1-bvanassche@acm.org>
- <20220913195716.3966875-5-bvanassche@acm.org>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <20220913195716.3966875-5-bvanassche@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.48.151.55]
-X-ClientProxiedBy: lhrpeml500006.china.huawei.com (7.191.161.198) To
- lhrpeml500003.china.huawei.com (7.191.162.67)
-X-CFilter-Loop: Reflected
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1347; h=from:subject; bh=5w/wmdKWZU/pSg2LpMWVH1zxUWjxAexvoeiA3VOoiak=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBjIcI4PgRgiVGlSskmNczjF2jITudgAGSbSl/C6KuX pvUNmICJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYyHCOAAKCRCJcvTf3G3AJiGAEA CCRcitpoKLPKaOtyjMOu7c4bKHZWHD0/LZbYOez5QZ15ApFNOOWAYjRqf0N1vltKAkRzAP+rlHoa6Y LZQ/i2exEqQX/2wZ6ax5x+iki1o9++DI2GjyM1BZT64YCJOazt0w1vRTKuJsVLW0rTI6q260dZhZZR XDsQ3OL2cPMOIoE6FV/WiW004TKnyiOZuytMXfELoBg3DVJWZJMP4lA5n7JBrQKVGU4fdTECWvQc4u Q3LjFFynKd6SYL85eM9VhhmgL4CuF8ORr6uS+fUY7UG/ce8ccKxXEdVfXSBWQjv9RCFIIaQ4iKOkBk RbxuytNaGb0encH18LZvc2zcTt/Q2ZCZv4SXdk603R1/f2JJ5tybg7VirfpFhOv4P/DcaYF+CH21dF f8BVq0OgOUzYlMhU2Kj0z/eCAl8PP2dXiFum0hckLO1FIi5SUt3YSUA02XK62PGO6WEDkCpjc+L02K LKS+uv05gLNd0IcnDGwsvxN3ca1IFWRirDfFa7+hi5TkmB98o9GVkeeT5ikVot+yHeieK73/cMWflp c5IAxbOQuk2KANmsv1yEYvg9POhSfAuerj1Af8MdSGC2h4HdLaeV0DiwaiLOD+v97xYMG778yHHOUP GaSj9GQkPEOJrYXKcbAWm2gGYKDtFaykPJmPahlMKd6WOVvTsMEvfpOEyZbg==
+X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 13/09/2022 20:57, Bart Van Assche wrote:
-> Instead of clearing the host template module pointer if the LLD kernel
-> module is being unloaded, set the 'drop_module_ref' SCSI device member.
-> This patch prepares for constifying the SCSI host template.
-> 
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Ming Lei <ming.lei@redhat.com>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: John Garry <john.garry@huawei.com>
-> Cc: Mike Christie <michael.christie@oracle.com>
-> Cc: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->   drivers/scsi/scsi_sysfs.c  | 7 +++----
->   include/scsi/scsi_device.h | 1 +
->   2 files changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index 5d61f58399dc..822ae60a64b9 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -454,7 +454,7 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
->   
->   	sdev = container_of(work, struct scsi_device, ew.work);
->   
-> -	mod = sdev->host->hostt->module;
-> +	mod = sdev->drop_module_ref ? sdev->host->hostt->module : NULL;
+ahd_linux_setup_iocell_info() intentionally writes to the const-marked
+aic79xx_iocell_info array, but is called during __init, so the location
+is actually writable at this point on most architectures. Annotate this
+explicitly with __ro_after_init to avoid static analysis confusion.
 
-I suppose that this works.
+Reported-by: David Malcolm <dmalcolm@redhat.com>
+Link: https://lpc.events/event/16/contributions/1175/attachments/1109/2128/2022-LPC-analyzer-talk.pdf
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ drivers/scsi/aic7xxx/aic79xx_osm.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-My reservation is that there were some concerns of current module 
-referencing solution, so may not be better to build directly on it:
-
-https://lore.kernel.org/linux-scsi/Ynt0aFMX+z%2FUhGJ2@infradead.org/
-
-Thanks,
-John
-
->   
->   	scsi_dh_release_device(sdev);
->   
-> @@ -525,9 +525,8 @@ static void scsi_device_dev_release(struct device *dev)
->   {
->   	struct scsi_device *sdp = to_scsi_device(dev);
->   
-> -	/* Set module pointer as NULL in case of module unloading */
-> -	if (!try_module_get(sdp->host->hostt->module))
-> -		sdp->host->hostt->module = NULL;
-> +	if (try_module_get(sdp->host->hostt->module))
-> +		sdp->drop_module_ref = true;
->   
->   	execute_in_process_context(scsi_device_dev_release_usercontext,
->   				   &sdp->ew);
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index 2493bd65351a..b03176b69056 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -214,6 +214,7 @@ struct scsi_device {
->   					 * creation time */
->   	unsigned ignore_media_change:1; /* Ignore MEDIA CHANGE on resume */
->   	unsigned silence_suspend:1;	/* Do not print runtime PM related messages */
-> +	unsigned drop_module_ref:1;
->   
->   	unsigned int queue_stopped;	/* request queue is quiesced */
->   	bool offline_already;		/* Device offline message logged */
-> 
-> .
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
+index 928099163f0f..f2f3405cdec5 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -194,7 +194,7 @@ struct ahd_linux_iocell_opts
+ #define AIC79XX_PRECOMP_INDEX	0
+ #define AIC79XX_SLEWRATE_INDEX	1
+ #define AIC79XX_AMPLITUDE_INDEX	2
+-static const struct ahd_linux_iocell_opts aic79xx_iocell_info[] =
++static struct ahd_linux_iocell_opts aic79xx_iocell_info[] __ro_after_init =
+ {
+ 	AIC79XX_DEFAULT_IOOPTS,
+ 	AIC79XX_DEFAULT_IOOPTS,
+-- 
+2.34.1
 
