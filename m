@@ -2,71 +2,71 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E2F7ECAAD3
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Sep 2022 16:54:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08091C6FA82
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Sep 2022 17:06:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229696AbiINQx7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Sep 2022 12:53:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57884 "EHLO
+        id S229518AbiINRG4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Sep 2022 13:06:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51978 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229825AbiINQxf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Sep 2022 12:53:35 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E585816B4
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Sep 2022 09:53:33 -0700 (PDT)
-Received: from fraeml738-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MSRFh0MrBz67PvV;
-        Thu, 15 Sep 2022 00:52:08 +0800 (CST)
-Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml738-chm.china.huawei.com (10.206.15.219) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Wed, 14 Sep 2022 18:53:30 +0200
-Received: from [10.48.151.55] (10.48.151.55) by lhrpeml500003.china.huawei.com
- (7.191.162.67) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Wed, 14 Sep
- 2022 17:53:29 +0100
-Message-ID: <16bee2e1-ed9d-8fc5-da55-90cee8f90316@huawei.com>
-Date:   Wed, 14 Sep 2022 17:53:28 +0100
+        with ESMTP id S229472AbiINRGz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Sep 2022 13:06:55 -0400
+Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5848646A
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Sep 2022 10:06:54 -0700 (PDT)
+Received: by mail-pj1-f51.google.com with SMTP id fs14so15191642pjb.5
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Sep 2022 10:06:54 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date;
+        bh=m1jvSnG4OFoD1hM2t1Em5XHiAWNHCkLT2PaFzLV80og=;
+        b=gCaEioCo1KKhGK8x2A656O+Rb1u8iohl+lnQXuqKMzL+1nKUAeqFpe723osbn/iCVs
+         J6XwIyiGOzY7X80+427JYTQqpM7sZDt/It04nHGwd1QJCxrPjQmIf1H0l2srrijNe8cZ
+         W1yJf89vQFzso86b/McmVIo1h/SKTKyqphXhTkJxPHFc8YSZmgyw4r8gFfqPW3yV7uwF
+         TgugtElQwKLH9c7kCFvqbI5k73OOMIxrJOzoj/Rm9DojzdSvGl+6YrKQKwE24ikEdw4l
+         g/ZFxjsSPNWo5564LSv96FyKQ38ZR5GM0rUW/I1yYz3crc2EOJLzXlmvMZUMtUf2bIxF
+         Qh1w==
+X-Gm-Message-State: ACgBeo27rD1EwLb05Ld+SzzoyVKvk8b9x02N72kpQElO/7cx4iRTA6YL
+        pEwsjZpdDZb6jiQzQZRXCdvmk6FLzxE=
+X-Google-Smtp-Source: AA6agR54vdSIF873JIGvpWvT2C7GDFo4V50PZqj3ZHdL5HD4FoUMFsNk02MPNNN/MTdY0rH7qn+Vcg==
+X-Received: by 2002:a17:902:d18c:b0:178:292b:a89f with SMTP id m12-20020a170902d18c00b00178292ba89fmr18556438plb.85.1663175214313;
+        Wed, 14 Sep 2022 10:06:54 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:44a3:d997:5eda:cf2b? ([2620:15c:211:201:44a3:d997:5eda:cf2b])
+        by smtp.gmail.com with ESMTPSA id n5-20020a63e045000000b0041cd2417c66sm9804423pgj.18.2022.09.14.10.06.53
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 14 Sep 2022 10:06:53 -0700 (PDT)
+Message-ID: <264043c8-f4ab-d8f4-cd5c-6e91424181dd@acm.org>
+Date:   Wed, 14 Sep 2022 10:06:51 -0700
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH v4 2/4] scsi: esas2r: Introduce scsi_template_proc_dir()
-To:     Bart Van Assche <bvanassche@acm.org>,
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.12.0
+Subject: Re: [PATCH v4 0/4] Prepare for constifying SCSI host templates
+Content-Language: en-US
+To:     John Garry <john.garry@huawei.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        Bradley Grove <linuxdrivers@attotech.com>,
-        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
-        "Hannes Reinecke" <hare@suse.de>,
-        Mike Christie <michael.christie@oracle.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc:     linux-scsi@vger.kernel.org
 References: <20220913195716.3966875-1-bvanassche@acm.org>
- <20220913195716.3966875-3-bvanassche@acm.org>
- <d63c326b-fa17-694c-cb72-aa746919218c@huawei.com>
- <3ee85c43-161f-58a1-0319-8062547a630b@acm.org>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <3ee85c43-161f-58a1-0319-8062547a630b@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+ <0c708d51-e853-f5e6-dc93-cb43ff2e4109@huawei.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <0c708d51-e853-f5e6-dc93-cb43ff2e4109@huawei.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.48.151.55]
-X-ClientProxiedBy: lhrpeml100004.china.huawei.com (7.191.162.219) To
- lhrpeml500003.china.huawei.com (7.191.162.67)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 14/09/2022 17:43, Bart Van Assche wrote:
-> On 9/14/22 02:06, John Garry wrote:
->> On 13/09/2022 20:57, Bart Van Assche wrote:
->>> This patch does not change any functionality.
->>
->> ... intentionally :)
+On 9/14/22 02:21, John Garry wrote:
+> note: I find that this series does not apply cleanly to mkp-scsi 6.1 
+> staging (which I guess it should), but ok for v6.0-c5
 
-I was just half-joking, so please ignore me.
+Hi John,
 
-It's common to write that there is no intentional change in 
-functionality, as maybe there is some unknown change in functionality.
+A few reverts have been sent to Linus and are present in his tree but 
+not in Martin's for-next branch. Hence the choice to base this patch 
+series on Linus' master branch.
 
 Thanks,
-John
+
+Bart.
