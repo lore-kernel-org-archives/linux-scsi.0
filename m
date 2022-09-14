@@ -2,66 +2,97 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EAF63ECAAD3
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Sep 2022 08:48:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97EC5C6FA89
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Sep 2022 09:02:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229820AbiINIsp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Sep 2022 04:48:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53600 "EHLO
+        id S230338AbiINJCU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Sep 2022 05:02:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48298 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230134AbiINIsj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Sep 2022 04:48:39 -0400
-Received: from out30-133.freemail.mail.aliyun.com (out30-133.freemail.mail.aliyun.com [115.124.30.133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 462916A487
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Sep 2022 01:48:38 -0700 (PDT)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R881e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018046056;MF=kanie@linux.alibaba.com;NM=1;PH=DS;RN=7;SR=0;TI=SMTPD_---0VPmWGJJ_1663145311;
-Received: from localhost(mailfrom:kanie@linux.alibaba.com fp:SMTPD_---0VPmWGJJ_1663145311)
-          by smtp.aliyun-inc.com;
-          Wed, 14 Sep 2022 16:48:36 +0800
-From:   Guixin Liu <kanie@linux.alibaba.com>
-To:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH 5/5] scsi: megaraid_sas: move megasas_dbg_lvl init to megasas_init
-Date:   Wed, 14 Sep 2022 16:48:03 +0800
-Message-Id: <1663145283-4872-6-git-send-email-kanie@linux.alibaba.com>
-X-Mailer: git-send-email 1.8.3.1
-In-Reply-To: <1663145283-4872-1-git-send-email-kanie@linux.alibaba.com>
-References: <1663145283-4872-1-git-send-email-kanie@linux.alibaba.com>
+        with ESMTP id S230335AbiINJBm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Sep 2022 05:01:42 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09C7274DDA;
+        Wed, 14 Sep 2022 02:01:31 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 71B93619A0;
+        Wed, 14 Sep 2022 09:01:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C264C433D6;
+        Wed, 14 Sep 2022 09:01:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1663146089;
+        bh=GtJ5TpsEJOeHEM2xrGD8mq6ipmdMTYtj9haYmKc0evk=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=XRrLlXBQunWWguF/0kV8n14OrWWcbKVdRN12XexN3ZHISfa6RNmlH9eIRlrQzZEuE
+         D64wklm65PBBQdXl51V7Z6aO1ccrInBIJibSd5NcIfizv8kyNiMPo3tLEiNMxbZ1YL
+         xf8Q70Lvn2khN+wzxkqqxFyzI+0iOdB0rWW9LNRpRSkQNZPOZdgf7uTRiBOzSWqfhW
+         dsbmiHE7pkjH2oHfNSklw626qPoBJItnBl7Eucg0IfTqpaURZshJjL0kFZIcSmk2ax
+         ois9JwAbKX2T2mTF707Xdg5jRjbJgOv48m3u5e3U1qMFe/IemoBT88BAwe4yJ/bZfY
+         rKfSd2W02k+Og==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Hannes Reinecke <hare@suse.de>, James Smart <jsmart2021@gmail.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.19 07/22] scsi: lpfc: Return DID_TRANSPORT_DISRUPTED instead of DID_REQUEUE
+Date:   Wed, 14 Sep 2022 05:00:48 -0400
+Message-Id: <20220914090103.470630-7-sashal@kernel.org>
+X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20220914090103.470630-1-sashal@kernel.org>
+References: <20220914090103.470630-1-sashal@kernel.org>
+MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The megasas_dbg_lvl is a driver level parameter, dont init in
-probe path, otherwise we can not see any debug print when bind
-a device to megaraid driver.
+From: Hannes Reinecke <hare@suse.de>
 
-Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
+[ Upstream commit c0a50cd389c3ed54831e240023dd12bafa56b3a6 ]
+
+When the driver hits an internal error condition returning DID_REQUEUE the
+I/O will be retried on the same ITL nexus.  This will inhibit multipathing,
+resulting in endless retries even if the error could have been resolved by
+using a different ITL nexus.  Return DID_TRANSPORT_DISRUPTED to allow for
+multipath to engage and route I/O to another ITL nexus.
+
+Link: https://lore.kernel.org/r/20220824060033.138661-1-hare@suse.de
+Reviewed-by: James Smart <jsmart2021@gmail.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_scsi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index b5503f9..66f84b5 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -7439,7 +7439,6 @@ static inline void megasas_init_ctrl_params(struct megasas_instance *instance)
- 	    (instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0071SKINNY))
- 		instance->flag_ieee = 1;
- 
--	megasas_dbg_lvl = 0;
- 	instance->flag = 0;
- 	instance->unload = 1;
- 	instance->last_time = 0;
-@@ -9011,6 +9010,7 @@ static int __init megasas_init(void)
- 	 */
- 	pr_info("megasas: %s\n", MEGASAS_VERSION);
- 
-+	megasas_dbg_lvl = 0;
- 	support_poll_for_event = 2;
- 	support_device_change = 1;
- 	support_nvme_encapsulation = true;
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index 084c0f9fdc3a6..938a5e4359436 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -4272,7 +4272,7 @@ lpfc_fcp_io_cmd_wqe_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
+ 		    lpfc_cmd->result == IOERR_ABORT_REQUESTED ||
+ 		    lpfc_cmd->result == IOERR_RPI_SUSPENDED ||
+ 		    lpfc_cmd->result == IOERR_SLER_CMD_RCV_FAILURE) {
+-			cmd->result = DID_REQUEUE << 16;
++			cmd->result = DID_TRANSPORT_DISRUPTED << 16;
+ 			break;
+ 		}
+ 		if ((lpfc_cmd->result == IOERR_RX_DMA_FAILED ||
+@@ -4562,7 +4562,7 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pIocbIn,
+ 			    lpfc_cmd->result == IOERR_NO_RESOURCES ||
+ 			    lpfc_cmd->result == IOERR_ABORT_REQUESTED ||
+ 			    lpfc_cmd->result == IOERR_SLER_CMD_RCV_FAILURE) {
+-				cmd->result = DID_REQUEUE << 16;
++				cmd->result = DID_TRANSPORT_DISRUPTED << 16;
+ 				break;
+ 			}
+ 			if ((lpfc_cmd->result == IOERR_RX_DMA_FAILED ||
 -- 
-1.8.3.1
+2.35.1
 
