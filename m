@@ -2,94 +2,74 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BFD3BECAAD8
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Sep 2022 09:13:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54703ECAAD8
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Sep 2022 09:15:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231410AbiINJNR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Sep 2022 05:13:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54454 "EHLO
+        id S232017AbiINJPB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Sep 2022 05:15:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53646 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231375AbiINJMo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Sep 2022 05:12:44 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B98C87B794;
-        Wed, 14 Sep 2022 02:05:39 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 51CED619BF;
-        Wed, 14 Sep 2022 09:05:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E735C43140;
-        Wed, 14 Sep 2022 09:05:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1663146305;
-        bh=hFLVpwtabUKVtVTADCpcFltI/BeaZikvrAsHRjCcEDk=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=o+0GywOjuJo1D3zflVNW+asFCcnLuTrYxthtwrHcUXqo3fh+JhJ64TZvTdUQEHxrb
-         4X+Bkjwd72IaQ6BloyrJyM7tmM2X7SexsB9WrlQPsi9EYcjyntk2wbWbXq1kd6GOLi
-         P9XGESzwmGMEbiTmOsrrlrLwSUfyZDP839F08K51pAosvW3R4RL2KAXWYI0VUE5Xtx
-         weT8y8qXQt6/TwonWFPsr9sZI4p2txih66XzHGSRtPpoZBU4YL0T9LxXg68qBWAj/J
-         rMXIo8X2MjAEaJ5Zdx9eHZyIk+/mACcGdSdHqYC+vrBRErt2y5aS7ClHMTlGypQn5E
-         ceO41mpsBRxyw==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, sathya.prakash@broadcom.com,
-        suganath-prabu.subramani@broadcom.com, jejb@linux.ibm.com,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 7/9] scsi: mpt3sas: Fix use-after-free warning
-Date:   Wed, 14 Sep 2022 05:04:41 -0400
-Message-Id: <20220914090445.471489-7-sashal@kernel.org>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220914090445.471489-1-sashal@kernel.org>
-References: <20220914090445.471489-1-sashal@kernel.org>
+        with ESMTP id S231495AbiINJNI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Sep 2022 05:13:08 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B9B3E7B797
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Sep 2022 02:05:38 -0700 (PDT)
+Received: from fraeml738-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MSDsB4pJWz67frp;
+        Wed, 14 Sep 2022 17:03:42 +0800 (CST)
+Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
+ fraeml738-chm.china.huawei.com (10.206.15.219) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Wed, 14 Sep 2022 11:05:04 +0200
+Received: from [10.48.151.55] (10.48.151.55) by lhrpeml500003.china.huawei.com
+ (7.191.162.67) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Wed, 14 Sep
+ 2022 10:05:03 +0100
+Message-ID: <60ab3783-e996-598c-6426-18285f60c53f@huawei.com>
+Date:   Wed, 14 Sep 2022 10:05:02 +0100
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH v4 1/4] scsi: esas2r: Initialize two host template members
+ implicitly
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        Bradley Grove <linuxdrivers@attotech.com>,
+        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
+        "Hannes Reinecke" <hare@suse.de>,
+        Mike Christie <michael.christie@oracle.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+References: <20220913195716.3966875-1-bvanassche@acm.org>
+ <20220913195716.3966875-2-bvanassche@acm.org>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <20220913195716.3966875-2-bvanassche@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.48.151.55]
+X-ClientProxiedBy: lhrpeml500003.china.huawei.com (7.191.162.67) To
+ lhrpeml500003.china.huawei.com (7.191.162.67)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+On 13/09/2022 20:57, Bart Van Assche wrote:
+> Prepare for removing the 'proc_dir' and 'present' members from the SCSI
+> host template by implicitly initializing 'present' and 'emulated' in
+> 'driver_template'.
+> 
+> Cc: Bradley Grove <linuxdrivers@attotech.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Ming Lei <ming.lei@redhat.com>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: John Garry <john.garry@huawei.com>
+> Cc: Mike Christie <michael.christie@oracle.com>
+> Cc: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
 
-[ Upstream commit 991df3dd5144f2e6b1c38b8d20ed3d4d21e20b34 ]
 
-Fix the following use-after-free warning which is observed during
-controller reset:
 
-refcount_t: underflow; use-after-free.
-WARNING: CPU: 23 PID: 5399 at lib/refcount.c:28 refcount_warn_saturate+0xa6/0xf0
-
-Link: https://lore.kernel.org/r/20220906134908.1039-2-sreekanth.reddy@broadcom.com
-Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index d899f216245e5..c8d97dc2ca63d 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -3215,6 +3215,7 @@ static struct fw_event_work *dequeue_next_fw_event(struct MPT3SAS_ADAPTER *ioc)
- 		fw_event = list_first_entry(&ioc->fw_event_list,
- 				struct fw_event_work, list);
- 		list_del_init(&fw_event->list);
-+		fw_event_work_put(fw_event);
- 	}
- 	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
- 
-@@ -3249,7 +3250,6 @@ _scsih_fw_event_cleanup_queue(struct MPT3SAS_ADAPTER *ioc)
- 		if (cancel_work_sync(&fw_event->work))
- 			fw_event_work_put(fw_event);
- 
--		fw_event_work_put(fw_event);
- 	}
- }
- 
--- 
-2.35.1
-
+Reviewed-by: John Garry <john.garry@huawei.com>
