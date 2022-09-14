@@ -2,200 +2,238 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45F1AECAAD3
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Sep 2022 19:18:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93868C6FA82
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Sep 2022 19:52:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229564AbiINTSz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Sep 2022 15:18:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60852 "EHLO
+        id S229705AbiINTwe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Sep 2022 15:52:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35546 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229449AbiINTSy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Sep 2022 15:18:54 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DBFD80F55;
-        Wed, 14 Sep 2022 12:18:50 -0700 (PDT)
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28EJDloi023963;
-        Wed, 14 Sep 2022 19:18:44 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2022-7-12;
- bh=GPmZbr97xzNlsQK8kZYBUdQqD0koDVV+SSbfvdQqzLM=;
- b=OOx6U7U6f0RgQOqTFKAlZ6hwYxwuTr5tnNMNTjzxOSp9lUqRmK81kJZ/7D9fL21bFmT5
- Y/0cLLyHTZFIAETX6Q97pDcuQ1syixbZ5Mgtt4L5DVyVw6WDlGB1hL4g5J5bcyNLITdA
- RnlCUjfaU2LDSpIATtqrfVBx1onKTMVb0bwlGV9aDaQuc/ZTYh8EXJHs5OthZKxT0+S5
- 0qopDh/aAjR8MRd7r7841myYn/7dPXBmhYcR0DaCWsFVVSc/ImtittzRq5wifK8FQbhk
- hnjT5yLT3CtFWgafTsmWBhEDMUf+tANidmufqqq8K2zExhLJAp/r1xLlyO2G6tyTUVe4 gw== 
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3jjxydua9s-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 14 Sep 2022 19:18:44 +0000
-Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 28EIvhbH006515;
-        Wed, 14 Sep 2022 19:18:43 GMT
-Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2168.outbound.protection.outlook.com [104.47.58.168])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3jjy2bc7be-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 14 Sep 2022 19:18:43 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=I5tcu2nxPkpwkIQLUZTfAO0dpeYzcY8Vus2x+X6J32mcjbUSyfis/U/+heuVxlPz5vEWgUFa5DbN3kYOvGEuS+iRphVtgyCQ7wkD3TpFqaZo51GkMvOqbePKuWYAx1ZUQcGBmBAJ9zeTvfFOg3jKeNTy7neaZyOpYZuPI8H9slgaBSmNDm2K3Xye1sLd7+cyDayGnMUSkRldtI/CQukgofPfn7ccS4bQKD5X8yrHCjowcEBVEU9xTo1rK/84oRtk3WLlHu2HK3MyJX0woKxAP5Cd2atY5eg7UEuLlaNjiYE9awTUDx4oH4mgYDqm+KpQhnVxZE7jqNBmc2nCxnTvfg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=GPmZbr97xzNlsQK8kZYBUdQqD0koDVV+SSbfvdQqzLM=;
- b=Ubq32MXjySyNJmrkUguP485C1ehR79BU3+2BrGitphm40QnWHYENxLLGLouKi4Kjm+LJeMYQw2qB9cbRjMvrXJJZrpSFUhuvryJPcEhaQ1SFZDjH+PxZ0RQfX3yR9ZrGDKuQ1f0OoEz7uwkrOcLpCcHZcccc9xZiy+7PJ+eu5ECVb+NR/sjfyDpogOYKzrphntYw3E4+30N20a7K665oViCa6NYnAj7EQSdjTuZza7S6EztnC6LZwptmCqX7TNrh8oAq64dgkn26tZupeXRUvGfH01lTf1AmXZIihLMGOdrpbFRjP+SrXPPBpBcn7qgy+GvA0bV9pRYF87pfvwGZ5w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=GPmZbr97xzNlsQK8kZYBUdQqD0koDVV+SSbfvdQqzLM=;
- b=WRO2bSas8egkmTHn4sxJs3R+r2AMCnCMDULFzC11Cay88yPRUr23JBaupbdyQTqQVBynfeZtsyzUDeVlQjKLnkPlBFoYq4l33Ynjg0Tqdh2L4lnEKR5d2ufXXKwXmvK1WkUSvCUpqfpF9Y5AclEBonr9/H+Kb9R8VsHzT5l6T/A=
-Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
- DM6PR10MB4218.namprd10.prod.outlook.com (2603:10b6:5:222::18) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5612.19; Wed, 14 Sep 2022 19:18:42 +0000
-Received: from DM5PR10MB1466.namprd10.prod.outlook.com
- ([fe80::8dee:d667:f326:1d50]) by DM5PR10MB1466.namprd10.prod.outlook.com
- ([fe80::8dee:d667:f326:1d50%6]) with mapi id 15.20.5612.022; Wed, 14 Sep 2022
- 19:18:42 +0000
-Message-ID: <82d31d9d-700c-d961-d284-a5a117487adc@oracle.com>
-Date:   Wed, 14 Sep 2022 14:18:40 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.1
-Subject: Re: [PATCH v2] scsi: target: alua: do not report emtpy port group
-Content-Language: en-US
-To:     Dmitry Bogdanov <d.bogdanov@yadro.com>
-Cc:     Martin Petersen <martin.petersen@oracle.com>,
-        target-devel@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        linux-scsi@vger.kernel.org, linux@yadro.com
-References: <20220912125457.22573-1-d.bogdanov@yadro.com>
- <92f6024a-7898-e281-099a-c79b67fecafe@oracle.com>
- <20220912214521.GF9218@yadro.com>
-From:   Mike Christie <michael.christie@oracle.com>
-In-Reply-To: <20220912214521.GF9218@yadro.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: CH2PR05CA0026.namprd05.prod.outlook.com (2603:10b6:610::39)
- To DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7)
+        with ESMTP id S229708AbiINTwd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Sep 2022 15:52:33 -0400
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19FE376965;
+        Wed, 14 Sep 2022 12:52:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1663185152; x=1694721152;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=jZqDuUhr02I6XM8gbXAnzYh6mgvieDOasy2R0lTbdVk=;
+  b=iTmmgsItuu4pOoiTizEQD2pA6l49rP3dDJo3qOii43Nqn1cuj82rbUzN
+   m1iDA3HJrRp838wsUDgnoBOyMDVcVUZxlt+uJ9sQunvhO46b64iiBhxgU
+   lZ5SQY/LlKwc6Vyw1NW7bpHp281qzT7byUn1VL4ZyajFOdEMJ9RvpFHtk
+   KaraKYLi3JhNwqIdkmIca0xqeYHhgCS7Ptgo/KXicWwxXxV8TyrRlAWqR
+   I+czSRzy2/FyIfzYEsd0E0TagGYtf1VHXbqFeCGWYtAVXwdQyF2eyjq2U
+   vtdr/ssKv2nxLeESWgs39Q5vvuBXbRz+xDjqrjXnTGvry3J6NVanQE0xj
+   w==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10470"; a="299887513"
+X-IronPort-AV: E=Sophos;i="5.93,315,1654585200"; 
+   d="scan'208";a="299887513"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Sep 2022 12:52:31 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.93,315,1654585200"; 
+   d="scan'208";a="647527197"
+Received: from lkp-server01.sh.intel.com (HELO d6e6b7c4e5a2) ([10.239.97.150])
+  by orsmga008.jf.intel.com with ESMTP; 14 Sep 2022 12:52:28 -0700
+Received: from kbuild by d6e6b7c4e5a2 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1oYYQu-0000XM-0a;
+        Wed, 14 Sep 2022 19:52:28 +0000
+Date:   Thu, 15 Sep 2022 03:51:28 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Andrew Morton <akpm@linux-foundation.org>
+Cc:     linux-scsi@vger.kernel.org, linux-riscv@lists.infradead.org,
+        linux-parisc@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        dri-devel@lists.freedesktop.org, alsa-devel@alsa-project.org,
+        Linux Memory Management List <linux-mm@kvack.org>
+Subject: [linux-next:master] BUILD REGRESSION
+ f117c01187301a087412bd6697fcf5463cb427d8
+Message-ID: <632230c0.yN3SHeeFUHUYU1ys%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM5PR10MB1466:EE_|DM6PR10MB4218:EE_
-X-MS-Office365-Filtering-Correlation-Id: 1ba45c06-3270-406f-9413-08da9685ef6e
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: GtWqve2nDe+i6aSLFuwxwAVZkhg04jbClQ8jyIqANxPJSosmIH1tkjbDX5O6QfaRIKrqLeYo4FwI+avaFqmBNmdYq6aznlR/zOdHtWaqImASogVS38iOdiBCK3ir5mxKdHTM6bLnnXBhh0Z5McmETWiPQ5yhuS0doHWcbzRmaQKNAa9/qe45voebQEtIT0eWVP6u0VzzC964n1Rg8iNEs/cyMk2OqcKg+aRGXbv5NM8NfrQM1yty7bZ4NPz676xAcmrZSFedcLj+aac2QgMi6V+jOZE8yNwouGXjrhfZl6H4bdNHf7QLOwUK9Gis0E+1cYMHwombO2V0RoWX6h+JnLVRDL+bC1OGU3TMAMg5hQok7mtGDy5tBaZLAOODAb38SWy1c9hZCwlA3UsFPkEnJQsD22YGmdwc5e5ej+WHVzE8OViT1uiEtRdsoPn+wY3naFpNbuSljLI4NyPnIM0qVam18oRSCvafBbcbpQ7bo+DMo1xHHw1jXDCWM7PGqZGeX3TnhzBFQLKolpGoffzg2+HWvC6wvWCwCe93FWmaHPBn3z2in82O/eAhCsX1EdNvayvDGAnCB3+tPVClxYhJZ6cgrb4skA5TzRgIW5QO9Apsc/GGvhCt09/n/zWQSzqmP6OpiyRPtYTuneSuw0Kzock7KcPCHVqDM5u4AAo6o+ffYfG2Aw329GX3bokJB0VPUe6A/xVWlZkIi9N1RkQHOFj+nZeHDOI3fLqpUzweR3djW37cYOO+WxYv3jjryimAUrUakOqPW40rAlteJazO0+NBlh/gFCwa/Bg6Z66fenY=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(396003)(366004)(136003)(376002)(39860400002)(346002)(451199015)(8936002)(31696002)(6486002)(86362001)(316002)(53546011)(41300700001)(4326008)(36756003)(478600001)(54906003)(83380400001)(31686004)(38100700002)(6916009)(66556008)(186003)(6506007)(6512007)(2616005)(66946007)(5660300002)(26005)(8676002)(66476007)(2906002)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?c2kxNUh3c0ZTWjRJNk1ZLzdYeFU1OHdoMnMrUktwT3NTdW54bytUelVOOVI1?=
- =?utf-8?B?dzVNQkgrMGwwQUNPbXAyamxsc01jRUZRbkFibXQyMkhVQ3g5TFNTTXA4RHdx?=
- =?utf-8?B?VzZmV3RwcUZyeGtQb1VJMDEzRDJOLzJ5YW1XM09BaFFkTjdyTUFWWUMzMkcr?=
- =?utf-8?B?aXhhcHhJeXpXNVJQZC8wYjFqV3V2UzdxbElMMDNsUlFPSU5oclUyODJNZnNU?=
- =?utf-8?B?MzBMZ0hteXZ0M290M3F3Rm41UTFJam9xY05LZDlOQ0ZKclRDNEdEYllmQy9z?=
- =?utf-8?B?ZTV3dDBGajJxcnBmci8xWXhGUGVwK0J5Ym4raTRIdjcwWE5PbldoUFlVWXNK?=
- =?utf-8?B?L1RNZW92SnM2bm95Tk9uTlJ5YlVKTnB3NmJEdUZ2NGc1eGg2aURiQ2h2V2kx?=
- =?utf-8?B?SUpkVzhodS9vVE9pY3NlZllaSHpEVE1mT1BqTDcyUmNObW5xbVlTWjROM056?=
- =?utf-8?B?bVBWdWYzNm9QYlBQQUQvYjZvamQxOE53bjErSGNLR2xCeWY4SjFKQXp1WVhS?=
- =?utf-8?B?VGN3MlVyRnVnZUE0WDZ6M0JCVk9jK0JsNDQzQnZCWXByTjRvTThicU1HRmJX?=
- =?utf-8?B?ZFJGVjA4UExIWEV3YUtIaTNobEdZZjEwU0hORXZyS2duaHc0SW5JalpHemUr?=
- =?utf-8?B?NXcrWUswQzliMTVWQmpVTithQVh1dzZlcFdsS0xiQy9UUVlYb1hDR3dmK0x0?=
- =?utf-8?B?V1NmV0dBWVJGa0ZSdnltcFBGNGFXdnB3S1A1UHB1UlMxeGdHOHNSTm1YZlla?=
- =?utf-8?B?Z1hyOW1FcC9UVkJmSGlFaWtpdnNScXZoTkdFTFM4RkEzczFJN3N6b1d1MzBx?=
- =?utf-8?B?Lzd3cDhlUnZkRDJZZmQ4TU80ZnJtYlZVc2ZNYXpjc2pZQTJWVDNMaHp1VWxS?=
- =?utf-8?B?R2JyTUV0MWgyRFBVSEpZTkEzb0tqTG94TDd4ZFhQS1hnWEhlOW1QSGt6MlBV?=
- =?utf-8?B?OTRlZFBVQm9JTUpxcjBxTHRsWklNSVk2N3VvUjRMNHNFeFl5TmtENjl3KzYr?=
- =?utf-8?B?YTV4VENsbnhLVHpVY2lERWk3TGpLcS9jTjhLYnNlMmRjK1hWMEVhUzBLbWI1?=
- =?utf-8?B?Q3NzWThsWENBTEhTazVidktBSVMvM1gzNUg0VElTKzVoY0p6Q2hNN3p0d1Bs?=
- =?utf-8?B?OGVQcnlnZkZWQm8xN3VITkNSWHFOQldVcEhPbE52b2F3S1hrTi8yOWFZcDdl?=
- =?utf-8?B?Rjc4a0F4bHY0YkhxWFI5Mmg3MFQ5ZWQ3OGJ2OS83UjNCcjhqMVdnVXNJWDl6?=
- =?utf-8?B?SEJYSHAxU0ZwSnNwYXIvVlM5L0ZWT1g5UHR0VFRpY0IyY1Z1V1g2VHZUcEtW?=
- =?utf-8?B?VlMyUUNPb3NKR3Q4MzFlaFpvQndXVTlaOUxFajNRTFRVUlUzQzR5TlE3YWsw?=
- =?utf-8?B?b1pNb0syUmN4QkxBck5DQVdmRFBEbWlad2J6S0ovMmRIdDNHbjc1Z1pOdGVY?=
- =?utf-8?B?Ums1NG9hMkh5NE0rVDA0U05WWkExc2V5NExMaUdFTTdrQ1poV21Ba2dkMUE2?=
- =?utf-8?B?ZVM0azZFR0NnUmhqLzVTVFlNOTQ5dnpybUlpbHNoSTZKOUdyS09qR3lTOEl1?=
- =?utf-8?B?MVk0TDN1K29TWTlMeE5vdG8vTG5VNVE0U001ZDZtOGdhNjJ2cnQyb0pnOE1M?=
- =?utf-8?B?cEVCSTJhTUJpZVR0TFFxQlhsRmdadnJySnJ6eERtUmt4RTlDQTJxQ3NaKy9K?=
- =?utf-8?B?VGFDNnlzenBLYWNxbmYyNVZIRWpobi9UWUlTcmtSS3lUaDRoeHhNbGZpbDl0?=
- =?utf-8?B?RURMNk05RmhIUkVtMHVOTFVST3h6dTZ2ZWJwZGNCRmVWWUVncGsvM3FxNWNP?=
- =?utf-8?B?YzcrcVFndUY4SUZqWDdDYkg4bHFZL01GTnBVUGtXMWNnbjhVSWcvZkRjSHVu?=
- =?utf-8?B?Tm9rdEtNQ0o2THMzdzdUTGdQRzQ3Q1VwZXc1dWlGT2RjRGJteXJ6M3BRT1gv?=
- =?utf-8?B?Q1BhVDVsNU1rWmtPRVpNRU9JWUg4VmNhV21KN0wreFpOeDFQVnA1a3ViOU8z?=
- =?utf-8?B?MXhocFozaDhIbGtvYllRMXh3NUYxS0dzaXlkeFFZM2ZISmxIRDQwc1lqRENj?=
- =?utf-8?B?NDJJMGxGWmtRU2ZTUlZKNGtHR3JDMVNtUmxyb2ZEM0o0VUo0emEyZVVDN1hu?=
- =?utf-8?B?SDhNcUs4VWc3Y2tlbzIxRnpaUDZkbzE3WVpLbEFoOGpvK0N6R2N6eXkyWC9k?=
- =?utf-8?B?TVE9PQ==?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1ba45c06-3270-406f-9413-08da9685ef6e
-X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Sep 2022 19:18:42.0196
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Qp5b7PbV7SwrSEk1AfEkQEj9lJk4B8E14Ltjr/TzB9zYE4n9fRZybnKJqpuHBBIRf7ArHQSomyPsV61WRMrPVCYDAzKoiZLe+QfilNJWLfY=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR10MB4218
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
- definitions=2022-09-14_09,2022-09-14_04,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 adultscore=0
- malwarescore=0 spamscore=0 bulkscore=0 mlxscore=0 mlxlogscore=999
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2208220000 definitions=main-2209140094
-X-Proofpoint-ORIG-GUID: Aagi1R5k9zpFfTm0NzDbe3o-4-R18ZqA
-X-Proofpoint-GUID: Aagi1R5k9zpFfTm0NzDbe3o-4-R18ZqA
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/12/22 4:45 PM, Dmitry Bogdanov wrote:
->> Remember how ESX used to send a RTPG to one port and expect that it got
->> every group and that the state info was all in sync (basically opposite
->> if what's in the spec now)?
->>
->> The spec and ESX were updated, but I don't know if other OSs did this and
->> if/when everyone was updated. Do you know this info? Are the old ESX versions
->> that worked like that end of life?
-> ESXi is kinda a pain. But fortunately it has nothing to do with that
-> patch 😄
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
+branch HEAD: f117c01187301a087412bd6697fcf5463cb427d8  Add linux-next specific files for 20220914
 
-I didn't get why that is. How do you set up a distributed/cluster/HA target? I'm
-probably missing that part.
+Error/Warning reports:
 
-Software drivers like iscsi I get, but for HW drivers I didn't see how you do it.
+https://lore.kernel.org/linux-mm/202209150141.WgbAKqmX-lkp@intel.com
+https://lore.kernel.org/llvm/202209141913.Nxzv3hwM-lkp@intel.com
 
-For example, if you have 2 systems/nodes running LIO which each export the same
-device via 1 port each where one is active/optimized and the other is standby and you
-are using qla2xxx, then on the local node would you create 2 groups:
+Error/Warning: (recently discovered and may have been fixed)
 
-[root@ol8n4 alua]# pwd
-/sys/kernel/config/target/core/iblock_0/device0/alua
+ERROR: modpost: "devm_ioremap_resource" [drivers/dma/fsl-edma.ko] undefined!
+ERROR: modpost: "devm_memremap" [drivers/misc/open-dice.ko] undefined!
+ERROR: modpost: "devm_memunmap" [drivers/misc/open-dice.ko] undefined!
+ERROR: modpost: "devm_platform_ioremap_resource" [drivers/char/xillybus/xillybus_of.ko] undefined!
+ERROR: modpost: "devm_platform_ioremap_resource" [drivers/clk/xilinx/clk-xlnx-clock-wizard.ko] undefined!
+ERROR: modpost: "ioremap" [drivers/tty/ipwireless/ipwireless.ko] undefined!
+ERROR: modpost: "iounmap" [drivers/net/ethernet/8390/pcnet_cs.ko] undefined!
+ERROR: modpost: "iounmap" [drivers/tty/ipwireless/ipwireless.ko] undefined!
+arch/parisc/lib/iomap.c:363:5: warning: no previous prototype for 'ioread64_lo_hi' [-Wmissing-prototypes]
+arch/parisc/lib/iomap.c:373:5: warning: no previous prototype for 'ioread64_hi_lo' [-Wmissing-prototypes]
+arch/parisc/lib/iomap.c:448:6: warning: no previous prototype for 'iowrite64_lo_hi' [-Wmissing-prototypes]
+arch/parisc/lib/iomap.c:454:6: warning: no previous prototype for 'iowrite64_hi_lo' [-Wmissing-prototypes]
+drivers/gpu/drm/drm_atomic_helper.c:802: warning: expecting prototype for drm_atomic_helper_check_wb_connector_state(). Prototype was for drm_atomic_helper_check_wb_encoder_state() instead
+drivers/scsi/qla2xxx/qla_os.c:2854:23: warning: assignment to 'struct trace_array *' from 'int' makes pointer from integer without a cast [-Wint-conversion]
+drivers/scsi/qla2xxx/qla_os.c:2854:25: error: implicit declaration of function 'trace_array_get_by_name'; did you mean 'trace_array_set_clr_event'? [-Werror=implicit-function-declaration]
+drivers/scsi/qla2xxx/qla_os.c:2869:9: error: implicit declaration of function 'trace_array_put' [-Werror=implicit-function-declaration]
+sound/soc/codecs/tas2562.c:442:13: warning: variable 'ret' set but not used [-Wunused-but-set-variable]
 
-[root@ol8n4 alua]# ls
-default_tg_pt_gp  local  remote
+Error/Warning ids grouped by kconfigs:
 
-Then under the mapped lun:
+gcc_recent_errors
+|-- alpha-allyesconfig
+|   |-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
+|   |-- drivers-scsi-qla2xxx-qla_os.c:error:implicit-declaration-of-function-trace_array_get_by_name
+|   |-- drivers-scsi-qla2xxx-qla_os.c:error:implicit-declaration-of-function-trace_array_put
+|   |-- drivers-scsi-qla2xxx-qla_os.c:warning:assignment-to-struct-trace_array-from-int-makes-pointer-from-integer-without-a-cast
+|   `-- sound-soc-codecs-tas2562.c:warning:variable-ret-set-but-not-used
+|-- arc-allyesconfig
+|   |-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
+|   `-- sound-soc-codecs-tas2562.c:warning:variable-ret-set-but-not-used
+|-- arc-randconfig-r043-20220914
+|   |-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
+|   `-- sound-soc-codecs-tas2562.c:warning:variable-ret-set-but-not-used
+|-- arm-allyesconfig
+|   |-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
+|   `-- sound-soc-codecs-tas2562.c:warning:variable-ret-set-but-not-used
+|-- arm-buildonly-randconfig-r003-20220914
+|   |-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
+|   `-- sound-soc-codecs-tas2562.c:warning:variable-ret-set-but-not-used
+|-- arm-defconfig
+|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
+|-- arm64-allyesconfig
+|   |-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
+|   `-- sound-soc-codecs-tas2562.c:warning:variable-ret-set-but-not-used
+|-- arm64-randconfig-r036-20220914
+|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
+|-- i386-allyesconfig
+|   |-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
+|   `-- sound-soc-codecs-tas2562.c:warning:variable-ret-set-but-not-used
+|-- i386-defconfig
+|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
+|-- i386-randconfig-a003
+|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
+|-- i386-randconfig-a012
+|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
+|-- i386-randconfig-a014
+|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
+|-- i386-randconfig-a016
+|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
+|-- ia64-allmodconfig
+|   |-- drivers-scsi-qla2xxx-qla_os.c:error:implicit-declaration-of-function-trace_array_get_by_name
+|   |-- drivers-scsi-qla2xxx-qla_os.c:error:implicit-declaration-of-function-trace_array_put
+|   `-- drivers-scsi-qla2xxx-qla_os.c:warning:assignment-to-struct-trace_array-from-int-makes-pointer-from-integer-without-a-cast
+|-- ia64-randconfig-r013-20220914
+|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
+|-- loongarch-randconfig-r026-20220914
+|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
+|-- m68k-allmodconfig
+|   |-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
+|   `-- sound-soc-codecs-tas2562.c:warning:variable-ret-set-but-not-used
+|-- m68k-allyesconfig
+clang_recent_errors
+|-- arm-randconfig-r032-20220914
+|   `-- drivers-extcon-extcon-usbc-tusb320.c:warning:expecting-prototype-for-drivers-extcon-extcon-tusb320c().-Prototype-was-for-TUSB320_REG8()-instead
+|-- arm64-randconfig-r021-20220914
+|   `-- arch-arm64-kernel-alternative.c:warning:no-previous-prototype-for-function-apply_alternatives_vdso
+|-- i386-randconfig-a002
+|   `-- drivers-extcon-extcon-usbc-tusb320.c:warning:expecting-prototype-for-drivers-extcon-extcon-tusb320c().-Prototype-was-for-TUSB320_REG8()-instead
+|-- i386-randconfig-a015
+|   `-- drivers-extcon-extcon-usbc-tusb320.c:warning:expecting-prototype-for-drivers-extcon-extcon-tusb320c().-Prototype-was-for-TUSB320_REG8()-instead
+|-- powerpc-randconfig-r022-20220914
+|   `-- drivers-extcon-extcon-usbc-tusb320.c:warning:expecting-prototype-for-drivers-extcon-extcon-tusb320c().-Prototype-was-for-TUSB320_REG8()-instead
+|-- riscv-randconfig-r042-20220914
+|   |-- arch-riscv-errata-thead-errata.c:error:use-of-undeclared-identifier-riscv_cbom_block_size
+|   `-- drivers-extcon-extcon-usbc-tusb320.c:warning:expecting-prototype-for-drivers-extcon-extcon-tusb320c().-Prototype-was-for-TUSB320_REG8()-instead
+|-- s390-randconfig-r044-20220914
+|   `-- drivers-extcon-extcon-usbc-tusb320.c:warning:expecting-prototype-for-drivers-extcon-extcon-tusb320c().-Prototype-was-for-TUSB320_REG8()-instead
+|-- x86_64-randconfig-a003
+|   `-- drivers-extcon-extcon-usbc-tusb320.c:warning:expecting-prototype-for-drivers-extcon-extcon-tusb320c().-Prototype-was-for-TUSB320_REG8()-instead
+|-- x86_64-randconfig-a012
+|   `-- drivers-extcon-extcon-usbc-tusb320.c:warning:expecting-prototype-for-drivers-extcon-extcon-tusb320c().-Prototype-was-for-TUSB320_REG8()-instead
+`-- x86_64-randconfig-a016
+    `-- drivers-extcon-extcon-usbc-tusb320.c:warning:expecting-prototype-for-drivers-extcon-extcon-tusb320c().-Prototype-was-for-TUSB320_REG8()-instead
 
-[root@ol8n4 lun_0]# pwd
-/sys/kernel/config/target/..../tpgt_1/lun/lun_0
+elapsed time: 726m
 
-in the alua_tg_pt_gp file you set that to local. That would then have tg_pt_gp_members
-set, but remote would not.
+configs tested: 62
+configs skipped: 2
 
-Before your patch, windows and ESX could do a RTPG to just one port/path and we would
-return the default, local and remote groups. We don't want the default group, but we
-wanted the local and remote one returned. With your patch we only return the the local
-one now. I wasn't sure how that works for drivers like qla2xxx.
+gcc tested configs:
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                           allyesconfig
+i386                          randconfig-a001
+i386                          randconfig-a003
+x86_64                        randconfig-a004
+um                             i386_defconfig
+x86_64                        randconfig-a002
+i386                          randconfig-a005
+arc                                 defconfig
+um                           x86_64_defconfig
+x86_64                        randconfig-a006
+s390                             allmodconfig
+i386                                defconfig
+powerpc                          allmodconfig
+alpha                               defconfig
+s390                                defconfig
+mips                             allyesconfig
+s390                             allyesconfig
+powerpc                           allnoconfig
+sh                               allmodconfig
+arc                  randconfig-r043-20220914
+arm                                 defconfig
+x86_64                        randconfig-a013
+x86_64                        randconfig-a011
+i386                          randconfig-a014
+x86_64                          rhel-8.3-func
+x86_64                         rhel-8.3-kunit
+i386                          randconfig-a012
+i386                             allyesconfig
+x86_64                           rhel-8.3-kvm
+i386                          randconfig-a016
+x86_64                        randconfig-a015
+x86_64                    rhel-8.3-kselftests
+x86_64                           rhel-8.3-syz
+arc                              allyesconfig
+alpha                            allyesconfig
+m68k                             allmodconfig
+m68k                             allyesconfig
+ia64                             allmodconfig
+arm                              allyesconfig
+arm64                            allyesconfig
+arc                               allnoconfig
+alpha                             allnoconfig
+riscv                             allnoconfig
+csky                              allnoconfig
 
-For iscsi, you could just mirror the remote node locally, so you would have a second
-tpg:
+clang tested configs:
+i386                          randconfig-a002
+i386                          randconfig-a004
+x86_64                        randconfig-a001
+x86_64                        randconfig-a003
+i386                          randconfig-a006
+x86_64                        randconfig-a005
+riscv                randconfig-r042-20220914
+hexagon              randconfig-r045-20220914
+hexagon              randconfig-r041-20220914
+i386                          randconfig-a013
+x86_64                        randconfig-a016
+s390                 randconfig-r044-20220914
+i386                          randconfig-a011
+x86_64                        randconfig-a012
+i386                          randconfig-a015
+x86_64                        randconfig-a014
 
-[root@ol8n4 lun_0]# pwd
-/sys/kernel/config/target/..../tpgt_2/lun/lun_0
-
-and in there set alua_tg_pt_gp to remote. Your patch works fine for that because both
-groups then have tg_pt_gp_members set so if the OS just does a RTPG to one path/port
-you get all the groups.
-
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
