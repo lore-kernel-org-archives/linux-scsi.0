@@ -2,45 +2,45 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66EC3ECAAD3
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Sep 2022 09:05:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AB7FC6FA89
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Sep 2022 09:06:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231173AbiINJF4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Sep 2022 05:05:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48042 "EHLO
+        id S231199AbiINJGY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Sep 2022 05:06:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47678 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230518AbiINJFM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Sep 2022 05:05:12 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 690C97696A;
-        Wed, 14 Sep 2022 02:03:01 -0700 (PDT)
+        with ESMTP id S230440AbiINJFU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Sep 2022 05:05:20 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 736E175CEA;
+        Wed, 14 Sep 2022 02:03:09 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id DE18CB8170C;
-        Wed, 14 Sep 2022 09:02:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9DED7C433D6;
-        Wed, 14 Sep 2022 09:02:35 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 20792B81673;
+        Wed, 14 Sep 2022 09:03:07 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BBB92C4314D;
+        Wed, 14 Sep 2022 09:03:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1663146157;
-        bh=NOkSZjzNwkQdsEJhlqGS7BmGu7T4EL8MsBPS/P34FX8=;
+        s=k20201202; t=1663146185;
+        bh=6dcuDmi7PC/WSzKG5gCXBtomTTwjNNuNYkM3mq6b45g=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=m8xm5UGv0dE8nKHBGSV4D0ats3ygI/6BP4t5YSj5l7IzkTeujwM9UPsrh22dK2d+S
-         W8n2c35qk6pUbC3FNxB6FFms6k4aiu5garnhpO5JudzaIf7BQbRStgAisGM+qabq+u
-         6Ce3/GF7pAYEuh4kNvfdhxJpk/joMr4v0WpwXWdh891VK7eMw0p00bxIAup8D6TqCA
-         ZDnsoSyuFC9TZlEqJOQJPNXHMaQVSNAZHPdk/LjNhIM8ye/tv5KRXze4x2TaB3Vehc
-         YzSYOnwG+dwGObRD4I3xtQamfXgrz5flJSrIx+6H11Kp3pJLidXU6u03VyPIUFv7La
-         DKIg/x+BP5aBw==
+        b=lMiGZAQFZeEF6fomPt82wx56anddkAOdfJd8dE5Sh+CahAqyIrgr0B1buytK/xH6o
+         nLkwfQ9NXGZ7zDiMDw4Ae66lp6oFcYL4PpvNPCYyp7souPkfP0eT0CP8u0lWPu/neH
+         I83khdW6KogfB9zBG+UUdPckL44U9Sy3tx/EhIUCgFdhu45LHaqPDcjg2PJDR2Hcur
+         uj073CmZPntIkFGeKzuNpscKZd24diXrmzzQuyZsLTC9O8aDwljUBrjVRlYEGGo5OQ
+         9FDrzrsm0KG0VKmVNZDZrqug6a0GmKIX6sEog9aXQKb8pI/hbsSkWXGIWOzbyA8otM
+         bS8nhgpM1NX3A==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Hannes Reinecke <hare@suse.de>, James Smart <jsmart2021@gmail.com>,
+Cc:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 04/16] scsi: lpfc: Return DID_TRANSPORT_DISRUPTED instead of DID_REQUEUE
-Date:   Wed, 14 Sep 2022 05:02:12 -0400
-Message-Id: <20220914090224.470913-4-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, sathya.prakash@broadcom.com,
+        suganath-prabu.subramani@broadcom.com, jejb@linux.ibm.com,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.15 13/16] scsi: mpt3sas: Fix use-after-free warning
+Date:   Wed, 14 Sep 2022 05:02:21 -0400
+Message-Id: <20220914090224.470913-13-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220914090224.470913-1-sashal@kernel.org>
 References: <20220914090224.470913-1-sashal@kernel.org>
@@ -52,47 +52,44 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Hannes Reinecke <hare@suse.de>
+From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 
-[ Upstream commit c0a50cd389c3ed54831e240023dd12bafa56b3a6 ]
+[ Upstream commit 991df3dd5144f2e6b1c38b8d20ed3d4d21e20b34 ]
 
-When the driver hits an internal error condition returning DID_REQUEUE the
-I/O will be retried on the same ITL nexus.  This will inhibit multipathing,
-resulting in endless retries even if the error could have been resolved by
-using a different ITL nexus.  Return DID_TRANSPORT_DISRUPTED to allow for
-multipath to engage and route I/O to another ITL nexus.
+Fix the following use-after-free warning which is observed during
+controller reset:
 
-Link: https://lore.kernel.org/r/20220824060033.138661-1-hare@suse.de
-Reviewed-by: James Smart <jsmart2021@gmail.com>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+refcount_t: underflow; use-after-free.
+WARNING: CPU: 23 PID: 5399 at lib/refcount.c:28 refcount_warn_saturate+0xa6/0xf0
+
+Link: https://lore.kernel.org/r/20220906134908.1039-2-sreekanth.reddy@broadcom.com
+Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_scsi.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index 7da8e4c845df8..41313fcaf84a3 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -4278,7 +4278,7 @@ lpfc_fcp_io_cmd_wqe_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
- 		    lpfc_cmd->result == IOERR_NO_RESOURCES ||
- 		    lpfc_cmd->result == IOERR_ABORT_REQUESTED ||
- 		    lpfc_cmd->result == IOERR_SLER_CMD_RCV_FAILURE) {
--			cmd->result = DID_REQUEUE << 16;
-+			cmd->result = DID_TRANSPORT_DISRUPTED << 16;
- 			break;
- 		}
- 		if ((lpfc_cmd->result == IOERR_RX_DMA_FAILED ||
-@@ -4567,7 +4567,7 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pIocbIn,
- 			    lpfc_cmd->result == IOERR_NO_RESOURCES ||
- 			    lpfc_cmd->result == IOERR_ABORT_REQUESTED ||
- 			    lpfc_cmd->result == IOERR_SLER_CMD_RCV_FAILURE) {
--				cmd->result = DID_REQUEUE << 16;
-+				cmd->result = DID_TRANSPORT_DISRUPTED << 16;
- 				break;
- 			}
- 			if ((lpfc_cmd->result == IOERR_RX_DMA_FAILED ||
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 5351959fbaba3..9eb3d0b4891dd 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -3670,6 +3670,7 @@ static struct fw_event_work *dequeue_next_fw_event(struct MPT3SAS_ADAPTER *ioc)
+ 		fw_event = list_first_entry(&ioc->fw_event_list,
+ 				struct fw_event_work, list);
+ 		list_del_init(&fw_event->list);
++		fw_event_work_put(fw_event);
+ 	}
+ 	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
+ 
+@@ -3751,7 +3752,6 @@ _scsih_fw_event_cleanup_queue(struct MPT3SAS_ADAPTER *ioc)
+ 		if (cancel_work_sync(&fw_event->work))
+ 			fw_event_work_put(fw_event);
+ 
+-		fw_event_work_put(fw_event);
+ 	}
+ 	ioc->fw_events_cleanup = 0;
+ }
 -- 
 2.35.1
 
