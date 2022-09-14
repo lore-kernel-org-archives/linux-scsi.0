@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AB7FC6FA89
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Sep 2022 09:06:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 219A7C6FA8E
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Sep 2022 09:09:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231199AbiINJGY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Sep 2022 05:06:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47678 "EHLO
+        id S230484AbiINJJD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Sep 2022 05:09:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37140 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230440AbiINJFU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Sep 2022 05:05:20 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 736E175CEA;
-        Wed, 14 Sep 2022 02:03:09 -0700 (PDT)
+        with ESMTP id S231220AbiINJIR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Sep 2022 05:08:17 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F82179695;
+        Wed, 14 Sep 2022 02:04:03 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 20792B81673;
-        Wed, 14 Sep 2022 09:03:07 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BBB92C4314D;
-        Wed, 14 Sep 2022 09:03:03 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 40AA9619A0;
+        Wed, 14 Sep 2022 09:03:57 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2CAF1C433D7;
+        Wed, 14 Sep 2022 09:03:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1663146185;
-        bh=6dcuDmi7PC/WSzKG5gCXBtomTTwjNNuNYkM3mq6b45g=;
+        s=k20201202; t=1663146236;
+        bh=6fdwHswGx4I/VerGvisinaIEZiipO/oEowjYo/FWE98=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=lMiGZAQFZeEF6fomPt82wx56anddkAOdfJd8dE5Sh+CahAqyIrgr0B1buytK/xH6o
-         nLkwfQ9NXGZ7zDiMDw4Ae66lp6oFcYL4PpvNPCYyp7souPkfP0eT0CP8u0lWPu/neH
-         I83khdW6KogfB9zBG+UUdPckL44U9Sy3tx/EhIUCgFdhu45LHaqPDcjg2PJDR2Hcur
-         uj073CmZPntIkFGeKzuNpscKZd24diXrmzzQuyZsLTC9O8aDwljUBrjVRlYEGGo5OQ
-         9FDrzrsm0KG0VKmVNZDZrqug6a0GmKIX6sEog9aXQKb8pI/hbsSkWXGIWOzbyA8otM
-         bS8nhgpM1NX3A==
+        b=DZJOynhZpQlJyxLcEPnyzn2ZbZWTO+iNHvoQI7n7JIfqW1zgk/H7WVEDB1DVnH9ra
+         IqOx3eMaYyt1nif0bRmGQtkCqvubPvkZpzpsGaBmeY6B0MfeS8g0v9LyRhSBucLjhn
+         qBRLpPV35DpPkfOvcyUoIqaRz61p18VyaOGNmY5uhdlubGLFmkUMCweXZlZxdzGsef
+         EqpddqB+aosR5xR1GYffAfq4Q8XO8XlyL2ujPHN+tAcq/AgDWgA+DZOIWTtgJp8z3C
+         iR8TtaRG2hy5BnyfMOZ7oNcfmUVSWbvkSAFZVcr9+8nLIQbvzyBIMSqjGF3udMZbJT
+         tyQ3/KS1NK1OQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
@@ -38,12 +38,12 @@ Cc:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
         Sasha Levin <sashal@kernel.org>, sathya.prakash@broadcom.com,
         suganath-prabu.subramani@broadcom.com, jejb@linux.ibm.com,
         MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 13/16] scsi: mpt3sas: Fix use-after-free warning
-Date:   Wed, 14 Sep 2022 05:02:21 -0400
-Message-Id: <20220914090224.470913-13-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 11/13] scsi: mpt3sas: Fix use-after-free warning
+Date:   Wed, 14 Sep 2022 05:03:13 -0400
+Message-Id: <20220914090317.471116-11-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220914090224.470913-1-sashal@kernel.org>
-References: <20220914090224.470913-1-sashal@kernel.org>
+In-Reply-To: <20220914090317.471116-1-sashal@kernel.org>
+References: <20220914090317.471116-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -71,10 +71,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 5351959fbaba3..9eb3d0b4891dd 100644
+index 8418b59b3743b..c3a5978b0efac 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -3670,6 +3670,7 @@ static struct fw_event_work *dequeue_next_fw_event(struct MPT3SAS_ADAPTER *ioc)
+@@ -3501,6 +3501,7 @@ static struct fw_event_work *dequeue_next_fw_event(struct MPT3SAS_ADAPTER *ioc)
  		fw_event = list_first_entry(&ioc->fw_event_list,
  				struct fw_event_work, list);
  		list_del_init(&fw_event->list);
@@ -82,7 +82,7 @@ index 5351959fbaba3..9eb3d0b4891dd 100644
  	}
  	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
  
-@@ -3751,7 +3752,6 @@ _scsih_fw_event_cleanup_queue(struct MPT3SAS_ADAPTER *ioc)
+@@ -3559,7 +3560,6 @@ _scsih_fw_event_cleanup_queue(struct MPT3SAS_ADAPTER *ioc)
  		if (cancel_work_sync(&fw_event->work))
  			fw_event_work_put(fw_event);
  
