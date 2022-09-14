@@ -2,224 +2,97 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BC2BC6FA8B
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Sep 2022 22:48:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA731ECAAD8
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Sep 2022 02:49:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229716AbiIMWsB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Sep 2022 18:48:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55982 "EHLO
+        id S229538AbiINCtn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Sep 2022 22:49:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52414 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229487AbiIMWr7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Sep 2022 18:47:59 -0400
-Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A4BB552DCA;
-        Tue, 13 Sep 2022 15:47:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1663109278; x=1694645278;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=7vuGPrjvpnP8JElr2b5KXy1+oZKLBwocK710pEgM2W4=;
-  b=acMlU++0f/JvE4f+o/Mc4qinBfmGaQoC8B4JidDyHcAod/UeDgyaExVD
-   P6AGeIdDIhSYrt9gkUf44fA4U2uzGfo1Nsl5OqWUlYgVxiS24bY1y9wzZ
-   bRgWgBrzXXFYNybz6uvYuAKm/FzD6rBFed2Ro9Sm371vcARvCR6xpxEOt
-   6keeBQwTe6XRNAi+S2OcX9dM0HmkIKOMM+00OoZQZxz/4EUBWmTxwS0Ic
-   Ee+ia5KKOP9x5Doi9Ll0m2Ijlp83IfvwReRcW/5nlNPglEi83i8FQuUkv
-   g91+cRWaUhPXlZ1LGQIiT4rbxJAtV4beXyIhgUcZyMyIcUKuzLhjyqlGF
-   Q==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10469"; a="278008848"
-X-IronPort-AV: E=Sophos;i="5.93,313,1654585200"; 
-   d="scan'208";a="278008848"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Sep 2022 15:47:58 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.93,313,1654585200"; 
-   d="scan'208";a="678778744"
-Received: from lkp-server02.sh.intel.com (HELO 4011df4f4fd3) ([10.239.97.151])
-  by fmsmga008.fm.intel.com with ESMTP; 13 Sep 2022 15:47:55 -0700
-Received: from kbuild by 4011df4f4fd3 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1oYEh8-00045Z-2P;
-        Tue, 13 Sep 2022 22:47:54 +0000
-Date:   Wed, 14 Sep 2022 06:47:23 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Andrew Morton <akpm@linux-foundation.org>
-Cc:     linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-pm@vger.kernel.org, linux-mm@kvack.org,
-        linux-hwmon@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        damon@lists.linux.dev, bpf@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, alsa-devel@alsa-project.org,
-        Linux Memory Management List <linux-mm@kvack.org>
-Subject: [linux-next:master] BUILD REGRESSION
- 0caac1da994900d12a9be6106edb8e98696712a3
-Message-ID: <6321087b.WsDIw5m+1a7xRREp%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        with ESMTP id S229489AbiINCtl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Sep 2022 22:49:41 -0400
+Received: from mail-ot1-x333.google.com (mail-ot1-x333.google.com [IPv6:2607:f8b0:4864:20::333])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DE57765C;
+        Tue, 13 Sep 2022 19:49:37 -0700 (PDT)
+Received: by mail-ot1-x333.google.com with SMTP id t8-20020a9d5908000000b0063b41908168so9409948oth.8;
+        Tue, 13 Sep 2022 19:49:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date;
+        bh=XvoxIxNm6r324uzuQRoEB36eGqnqA+beuzCfqCOhNpc=;
+        b=PMzYJcMM2PfeR12kcaegVo8a6pPn1FLQLdqtNRUjiHaGmKxqunE35dLvd62mWvPhjd
+         KQgRUmFWjMclHiviBV7JD1tWqFFnLmGARbgfoqeKM5oS3E01hWNnG7MS37GtyBi88nfV
+         hBBHxZPzeLKXvpdaZ0+JJPH44zaN38W0dCdY5QCYPK7byLfT+i5/uOPim3SRyCWTyEwI
+         IeWdhVcN51cQpCIeedYXWWMfNhqX/rsOqXlD/RWlK8LsRPQ1oc4N6Qp7iVj/KrLFC0IG
+         Zx0lWYfV9GGL5gwoI13Bf7FuMtdKbCUHz3QO58PjDQ/1pE53hcUES6omTeEsRikkHlkX
+         14hQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date;
+        bh=XvoxIxNm6r324uzuQRoEB36eGqnqA+beuzCfqCOhNpc=;
+        b=DU+T+42o+ipbJRmNnQtXbEsmoS5iIeAVDgqxewZG2xMG9tv2nzUac+vbsG/xBSaiyK
+         Y72Ds2CqZXy6Z+5GoDp4cBc8VxP+Yq5cVV/YiIr4gbQXu9oJEdk7aUu4Jz8XTp/XXQsa
+         zL7ctxMXuuxCgDQJ1lq49D5LpLx90mb9Kp5d3hGvYQ2Vtv7kkKgtcoLH8sNv/B/uOnR+
+         KByH9uqkru/5gW5rp82/25cI7CVXHlOKQ7igJrhLE/YfwYSAsxUPlvEiF3SpLjh7zqhw
+         NJMdRajUqXW2TUWxKUUGFKOZ0HmQuu3Pd1Ov6JAz0n0jpE6aXSzFOGxxrkqKWRTWrGo+
+         xjmw==
+X-Gm-Message-State: ACgBeo0GyYJwP40qe7KJCvKoOu94Siob9iPWirp/10TZdP0LkD+3ddGE
+        rgn0LUIwJv0qoK+xzj9dBIY=
+X-Google-Smtp-Source: AA6agR7OyArx7cQ4MzbTReUrMVx+Jvh3sz9oHw/PoQaazd26ES6H/Ceg+IUAkd4oc76UwgiiGv8a5A==
+X-Received: by 2002:a9d:400c:0:b0:656:4c5:ad86 with SMTP id m12-20020a9d400c000000b0065604c5ad86mr3456557ote.134.1663123776499;
+        Tue, 13 Sep 2022 19:49:36 -0700 (PDT)
+Received: from macondo.. ([2804:431:e7cd:8cb3:94e2:ccf7:1a63:3c59])
+        by smtp.gmail.com with ESMTPSA id x14-20020a54400e000000b003436fa2c23bsm5794407oie.7.2022.09.13.19.49.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 13 Sep 2022 19:49:36 -0700 (PDT)
+From:   Rafael Mendonca <rafaelmendsr@gmail.com>
+To:     Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>
+Cc:     Rafael Mendonca <rafaelmendsr@gmail.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: qla2xxx: Fix memory leak in __qlt_24xx_handle_abts()
+Date:   Tue, 13 Sep 2022 23:49:24 -0300
+Message-Id: <20220914024924.695604-1-rafaelmendsr@gmail.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
-branch HEAD: 0caac1da994900d12a9be6106edb8e98696712a3  Add linux-next specific files for 20220913
+Commit 8f394da36a36 ("scsi: qla2xxx: Drop TARGET_SCF_LOOKUP_LUN_FROM_TAG")
+made the __qlt_24xx_handle_abts() function return early if
+tcm_qla2xxx_find_cmd_by_tag() doesn't find a command, but it missed to
+clean up the allocated memory for the management command in such a case.
 
-Error/Warning reports:
+Fixes: 8f394da36a36 ("scsi: qla2xxx: Drop TARGET_SCF_LOOKUP_LUN_FROM_TAG")
+Signed-off-by: Rafael Mendonca <rafaelmendsr@gmail.com>
+---
+ drivers/scsi/qla2xxx/qla_target.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-https://lore.kernel.org/linux-mm/202209042337.FQi69rLV-lkp@intel.com
-https://lore.kernel.org/linux-mm/202209060229.dVuyxjBv-lkp@intel.com
-https://lore.kernel.org/linux-mm/202209080718.y5QmlNKH-lkp@intel.com
-
-Error/Warning: (recently discovered and may have been fixed)
-
-drivers/gpu/drm/amd/amdgpu/imu_v11_0_3.c:139:6: warning: no previous prototype for 'imu_v11_0_3_program_rlc_ram' [-Wmissing-prototypes]
-drivers/gpu/drm/drm_atomic_helper.c:802: warning: expecting prototype for drm_atomic_helper_check_wb_connector_state(). Prototype was for drm_atomic_helper_check_wb_encoder_state() instead
-drivers/hwmon/emc2305.c:194 emc2305_set_cur_state() warn: impossible condition '(val > 255) => (0-255 > 255)'
-drivers/scsi/qla2xxx/qla_os.c:2854:23: warning: assignment to 'struct trace_array *' from 'int' makes pointer from integer without a cast [-Wint-conversion]
-drivers/scsi/qla2xxx/qla_os.c:2854:25: error: implicit declaration of function 'trace_array_get_by_name'; did you mean 'trace_array_set_clr_event'? [-Werror=implicit-function-declaration]
-drivers/scsi/qla2xxx/qla_os.c:2869:9: error: implicit declaration of function 'trace_array_put' [-Werror=implicit-function-declaration]
-kernel/bpf/memalloc.c:499 bpf_mem_alloc_destroy() error: potentially dereferencing uninitialized 'c'.
-mm/damon/vaddr.c:158 __damon_va_three_regions() error: uninitialized symbol 'start'.
-net/mac80211/iface.c:251 ieee80211_can_powered_addr_change() warn: inconsistent returns '&local->mtx'.
-sound/soc/codecs/tas2562.c:442:13: warning: variable 'ret' set but not used [-Wunused-but-set-variable]
-
-Error/Warning ids grouped by kconfigs:
-
-gcc_recent_errors
-|-- alpha-allyesconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-imu_v11_0_3.c:warning:no-previous-prototype-for-imu_v11_0_3_program_rlc_ram
-|   |-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|   |-- drivers-scsi-qla2xxx-qla_os.c:error:implicit-declaration-of-function-trace_array_get_by_name
-|   |-- drivers-scsi-qla2xxx-qla_os.c:error:implicit-declaration-of-function-trace_array_put
-|   |-- drivers-scsi-qla2xxx-qla_os.c:warning:assignment-to-struct-trace_array-from-int-makes-pointer-from-integer-without-a-cast
-|   `-- sound-soc-codecs-tas2562.c:warning:variable-ret-set-but-not-used
-|-- alpha-buildonly-randconfig-r003-20220911
-|   |-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|   `-- sound-soc-codecs-tas2562.c:warning:variable-ret-set-but-not-used
-|-- arc-allyesconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-imu_v11_0_3.c:warning:no-previous-prototype-for-imu_v11_0_3_program_rlc_ram
-|   |-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|   `-- sound-soc-codecs-tas2562.c:warning:variable-ret-set-but-not-used
-|-- arc-buildonly-randconfig-r002-20220912
-|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|-- arc-randconfig-r012-20220913
-|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|-- arc-randconfig-r021-20220911
-|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|-- arc-randconfig-r043-20220911
-|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|-- arc-randconfig-r043-20220912
-|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|-- arc-randconfig-s052-20220911
-|   |-- kernel-bpf-hashtab.c:sparse:sparse:cast-removes-address-space-__percpu-of-expression
-|   |-- kernel-bpf-hashtab.c:sparse:sparse:incorrect-type-in-assignment-(different-address-spaces)-expected-void-noderef-__percpu-assigned-pptr-got-void
-|   |-- kernel-bpf-hashtab.c:sparse:sparse:incorrect-type-in-assignment-(different-address-spaces)-expected-void-ptr_to_pptr-got-void-noderef-__percpu-assigned-pptr
-|   |-- kernel-bpf-memalloc.c:sparse:sparse:incorrect-type-in-argument-(different-address-spaces)-expected-void-noderef-__percpu-__pdata-got-void
-|   |-- kernel-bpf-memalloc.c:sparse:sparse:incorrect-type-in-argument-(different-address-spaces)-expected-void-noderef-__percpu-__pdata-got-void-pptr
-|   |-- kernel-bpf-memalloc.c:sparse:sparse:incorrect-type-in-initializer-(different-address-spaces)-expected-void-pptr-got-void-noderef-__percpu
-|   `-- kernel-exit.c:sparse:sparse:incorrect-type-in-initializer-(different-address-spaces)-expected-struct-sighand_struct-sighand-got-struct-sighand_struct-noderef-__rcu-sighand
-|-- arm-allyesconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-imu_v11_0_3.c:warning:no-previous-prototype-for-imu_v11_0_3_program_rlc_ram
-|   |-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|   `-- sound-soc-codecs-tas2562.c:warning:variable-ret-set-but-not-used
-|-- arm-defconfig
-|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|-- arm-randconfig-r001-20220911
-|   |-- drivers-gpu-drm-amd-amdgpu-imu_v11_0_3.c:warning:no-previous-prototype-for-imu_v11_0_3_program_rlc_ram
-|   |-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|   `-- sound-soc-codecs-tas2562.c:warning:variable-ret-set-but-not-used
-|-- arm-randconfig-r006-20220911
-|   |-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|   `-- sound-soc-codecs-tas2562.c:warning:variable-ret-set-but-not-used
-|-- arm64-allyesconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-imu_v11_0_3.c:warning:no-previous-prototype-for-imu_v11_0_3_program_rlc_ram
-|   |-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|   `-- sound-soc-codecs-tas2562.c:warning:variable-ret-set-but-not-used
-|-- csky-buildonly-randconfig-r001-20220911
-clang_recent_errors
-|-- i386-randconfig-a012-20220912
-|   `-- sound-soc-intel-skylake-skl.c:warning:unused-variable-skl
-|-- i386-randconfig-a015-20220912
-|   `-- drivers-extcon-extcon-usbc-tusb320.c:warning:expecting-prototype-for-drivers-extcon-extcon-tusb320c().-Prototype-was-for-TUSB320_REG8()-instead
-|-- powerpc-buildonly-randconfig-r006-20220912
-|   `-- drivers-extcon-extcon-usbc-tusb320.c:warning:expecting-prototype-for-drivers-extcon-extcon-tusb320c().-Prototype-was-for-TUSB320_REG8()-instead
-|-- powerpc-randconfig-r004-20220911
-|   `-- drivers-gpu-drm-amd-amdgpu-imu_v11_0_3.c:warning:no-previous-prototype-for-function-imu_v11_0_3_program_rlc_ram
-`-- riscv-randconfig-r042-20220912
-    `-- drivers-extcon-extcon-usbc-tusb320.c:warning:expecting-prototype-for-drivers-extcon-extcon-tusb320c().-Prototype-was-for-TUSB320_REG8()-instead
-
-elapsed time: 725m
-
-configs tested: 63
-configs skipped: 2
-
-gcc tested configs:
-um                             i386_defconfig
-um                           x86_64_defconfig
-i386                 randconfig-a001-20220912
-i386                 randconfig-a002-20220912
-x86_64                              defconfig
-i386                 randconfig-a004-20220912
-x86_64                           rhel-8.3-kvm
-i386                 randconfig-a003-20220912
-x86_64                          rhel-8.3-func
-i386                 randconfig-a006-20220912
-x86_64                               rhel-8.3
-x86_64                         rhel-8.3-kunit
-i386                 randconfig-a005-20220912
-x86_64                    rhel-8.3-kselftests
-m68k                             allmodconfig
-x86_64                           rhel-8.3-syz
-arc                              allyesconfig
-x86_64                           allyesconfig
-alpha                            allyesconfig
-i386                                defconfig
-m68k                             allyesconfig
-powerpc                           allnoconfig
-powerpc                          allmodconfig
-arm                                 defconfig
-mips                             allyesconfig
-x86_64               randconfig-a001-20220912
-x86_64               randconfig-a006-20220912
-sh                               allmodconfig
-x86_64               randconfig-a004-20220912
-riscv                randconfig-r042-20220911
-x86_64               randconfig-a002-20220912
-i386                             allyesconfig
-arc                  randconfig-r043-20220912
-x86_64               randconfig-a005-20220912
-arm64                            allyesconfig
-x86_64               randconfig-a003-20220912
-arm                              allyesconfig
-arc                  randconfig-r043-20220911
-s390                 randconfig-r044-20220911
-ia64                             allmodconfig
-csky                              allnoconfig
-arc                               allnoconfig
-alpha                             allnoconfig
-riscv                             allnoconfig
-
-clang tested configs:
-i386                 randconfig-a014-20220912
-i386                 randconfig-a013-20220912
-x86_64               randconfig-a014-20220912
-i386                 randconfig-a011-20220912
-x86_64               randconfig-a011-20220912
-i386                 randconfig-a015-20220912
-x86_64               randconfig-a012-20220912
-i386                 randconfig-a012-20220912
-x86_64               randconfig-a016-20220912
-i386                 randconfig-a016-20220912
-x86_64               randconfig-a013-20220912
-riscv                randconfig-r042-20220912
-x86_64               randconfig-a015-20220912
-hexagon              randconfig-r041-20220912
-hexagon              randconfig-r045-20220911
-hexagon              randconfig-r041-20220911
-hexagon              randconfig-r045-20220912
-s390                 randconfig-r044-20220912
-x86_64                          rhel-8.3-rust
-
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 62666df1a59e..4acff4e84b90 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -2151,8 +2151,10 @@ static int __qlt_24xx_handle_abts(struct scsi_qla_host *vha,
+ 
+ 	abort_cmd = ha->tgt.tgt_ops->find_cmd_by_tag(sess,
+ 				le32_to_cpu(abts->exchange_addr_to_abort));
+-	if (!abort_cmd)
++	if (!abort_cmd) {
++		mempool_free(mcmd, qla_tgt_mgmt_cmd_mempool);
+ 		return -EIO;
++	}
+ 	mcmd->unpacked_lun = abort_cmd->se_cmd.orig_fe_lun;
+ 
+ 	if (abort_cmd->qpair) {
 -- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+2.34.1
+
