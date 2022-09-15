@@ -2,190 +2,115 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53A3AC6FA86
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Sep 2022 22:57:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16A31C6FA82
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Sep 2022 00:57:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229622AbiINW5K (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Sep 2022 18:57:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37976 "EHLO
+        id S229814AbiIOA5T (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Sep 2022 20:57:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39800 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229772AbiINW5A (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Sep 2022 18:57:00 -0400
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E969083059;
-        Wed, 14 Sep 2022 15:56:58 -0700 (PDT)
-Received: by mail-pl1-f175.google.com with SMTP id l10so16568348plb.10;
-        Wed, 14 Sep 2022 15:56:58 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date;
-        bh=hIeIUTsBV4QxjBZVDpe2dp3qI8fehLgRx48IHpHPzW8=;
-        b=wdIrNcyTufCnLE2MrarhWcgNI47ziV7uNfT9DSr4fNIANC8H59e3bIu4qvfIjcaOmS
-         9w27RE8tuYJEGH6jqrrbqSN7++hKQJQ7+muFaEPzS3pJ0Ap1kqihckqKZ/OlB9IgaH7J
-         wNudswNnMFHg+EjA0AkgCbGsf231t+qvtoxX5lVEECfK9wkqPYplQpga6lr87jL1/wus
-         cSSOINTUHvtavMGymA440x9VbPvgxUuKVymo+AfRiT6/6+JPsXnEvxPYcOQxxrV6Bghn
-         YZYzLq3Wp3+FRTcyr9XpORH79uc+mxG9UVWE3sqRh0PkTYWRPaBTu3ej+zDidPw7lg5x
-         Uo8Q==
-X-Gm-Message-State: ACrzQf0ammYT0b7vP2LZwSdp16c61gRQQqUJ9UILsgELsigOJLjqwh6o
-        Zknmx938O9syRXCWVxtjCao=
-X-Google-Smtp-Source: AMsMyM7xbb0K/O3zh7pzBk0SS0ANyvZ/W2+59zP+9cC7ZtIfUPFv4j7NqiRjg9PlRZ0Cr9vyvQoM7g==
-X-Received: by 2002:a17:90b:b06:b0:200:aff0:2e68 with SMTP id bf6-20020a17090b0b0600b00200aff02e68mr7411578pjb.159.1663196218342;
-        Wed, 14 Sep 2022 15:56:58 -0700 (PDT)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:9147:e0c1:9227:cf53])
-        by smtp.gmail.com with ESMTPSA id w9-20020a170902d70900b0016d1b70872asm2606926ply.134.2022.09.14.15.56.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 14 Sep 2022 15:56:57 -0700 (PDT)
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
-        Hannes Reinecke <hare@suse.de>,
-        John Garry <john.garry@huawei.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-modules@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Tejun Heo <tj@kernel.org>
-Subject: [PATCH v5 6/7] module: Improve support for asynchronous module exit code
-Date:   Wed, 14 Sep 2022 15:56:20 -0700
-Message-Id: <20220914225621.415631-7-bvanassche@acm.org>
-X-Mailer: git-send-email 2.37.2.789.g6183377224-goog
-In-Reply-To: <20220914225621.415631-1-bvanassche@acm.org>
-References: <20220914225621.415631-1-bvanassche@acm.org>
+        with ESMTP id S229487AbiIOA5R (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Sep 2022 20:57:17 -0400
+Received: from m1383.mail.163.com (m1383.mail.163.com [220.181.13.83])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C3DA17C773;
+        Wed, 14 Sep 2022 17:57:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=Date:From:Subject:MIME-Version:Message-ID; bh=SkIS1
+        Oz89ZrQgYsvTqea/Y/rETUbm0bJ3j0rTOEbpV8=; b=erOcHMWtRdTJ67QvBvLir
+        3pAzaMVo/2Nt5PH2Ojs9h3zpq4Ba49e2jqf96ubvLxeknLjK/lN+dSch+n+fvTCw
+        Mc14hn8/fiqgJ9xUNvx2aEdWEJVPEcz3LOuGFmu2ks+S/aO3YMjr93VclLStTUtQ
+        4HQCFuUxcNl7xen7q1Gz4c=
+Received: from 15815827059$163.com ( [223.147.18.37] ) by
+ ajax-webmail-wmsvr83 (Coremail) ; Thu, 15 Sep 2022 08:56:30 +0800 (CST)
+X-Originating-IP: [223.147.18.37]
+Date:   Thu, 15 Sep 2022 08:56:30 +0800 (CST)
+From:   huhai <15815827059@163.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
+        suganath-prabu.subramani@broadcom.com,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, huhai <huhai@kylinos.cn>,
+        stable@vger.kernel.org, "Jackie Liu" <liuyun01@kylinos.cn>
+Subject: Re:[PATCH v2] scsi: mpt3sas: Fix NULL pointer crash due to missing
+ check device hostdata
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version XT5.0.13 build 20220113(9671e152)
+ Copyright (c) 2002-2022 www.mailtech.cn 163com
+In-Reply-To: <20220901063409.85272-1-15815827059@163.com>
+References: <20220901063409.85272-1-15815827059@163.com>
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=GBK
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Message-ID: <6af4d139.731.1833ea5b2c9.Coremail.15815827059@163.com>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID: U8GowADncqQ+eCJjwltAAA--.1428W
+X-CM-SenderInfo: rprvmiivyslimvzbiqqrwthudrp/xtbB0xp2hVXlwwFJgQABsB
+X-Coremail-Antispam: 1U5529EdanIXcx71UUUUU7vcSsGvfC2KfnxnUU==
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Some kernel modules call device_del() from their module exit code and
-schedule asynchronous work from inside the .release callback without waiting
-until that callback has finished. As an example, many SCSI LLD drivers call
-scsi_remove_host() from their module exit code. scsi_remove_host() may
-invoke scsi_device_dev_release_usercontext() asynchronously.
-scsi_device_dev_release_usercontext() uses the host template pointer and
-that pointer usually exists in static storage in the SCSI LLD. Support
-using the module reference count to keep the module around until
-asynchronous module exiting has completed by waiting in the delete_module()
-system call until the module reference count drops to zero.
-
-The following debug patch has been used to make the new wait_event()
-call wait:
-
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 8be8e08fb67d..fead694ff95a 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -14,6 +14,7 @@
- #include <linux/device.h>
- #include <linux/pm_runtime.h>
- #include <linux/bsg.h>
-+#include <linux/delay.h>
-
- #include <scsi/scsi.h>
- #include <scsi/scsi_device.h>
-@@ -518,6 +519,7 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
-
- 	if (parent)
- 		put_device(parent);
-+	msleep(100);
- 	module_put(mod);
- }
-
-diff --git a/kernel/module/main.c b/kernel/module/main.c
-index a271126d7d59..0bf75ec3f5a8 100644
---- a/kernel/module/main.c
-+++ b/kernel/module/main.c
-@@ -756,8 +756,10 @@ SYSCALL_DEFINE2(delete_module, const char __user *, name_user,
- 	 * unloading is not forced, wait for the module reference count to drop
- 	 * to zero again.
- 	 */
--	if (!forced)
-+	if (!forced) {
-+		WARN_ON_ONCE(atomic_read(&mod->refcnt));
- 		wait_event(mod->refcnt_wq, atomic_read(&mod->refcnt) == 0);
-+	}
- 	blocking_notifier_call_chain(&module_notify_list,
- 				     MODULE_STATE_GOING, mod);
- 	klp_module_going(mod);
-diff --git a/kernel/workqueue.c b/kernel/workqueue.c
-index aeea9731ef80..f021625f2caa 100644
---- a/kernel/workqueue.c
-+++ b/kernel/workqueue.c
-@@ -3355,7 +3355,7 @@ int schedule_on_each_cpu(work_func_t func)
-  */
- int execute_in_process_context(work_func_t fn, struct execute_work *ew)
- {
--	if (!in_interrupt()) {
-+	if (false && !in_interrupt()) {
- 		fn(&ew->work);
- 		return 0;
- 	}
-
-Cc: Luis Chamberlain <mcgrof@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Ming Lei <ming.lei@redhat.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: John Garry <john.garry@huawei.com>
-Cc: Mike Christie <michael.christie@oracle.com>
-Cc: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-modules@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- include/linux/module.h |  1 +
- kernel/module/main.c   | 10 ++++++++++
- 2 files changed, 11 insertions(+)
-
-diff --git a/include/linux/module.h b/include/linux/module.h
-index 518296ea7f73..3a77d2bd4198 100644
---- a/include/linux/module.h
-+++ b/include/linux/module.h
-@@ -533,6 +533,7 @@ struct module {
- 	/* Destruction function. */
- 	void (*exit)(void);
- 
-+	wait_queue_head_t refcnt_wq;
- 	atomic_t refcnt;
- #endif
- 
-diff --git a/kernel/module/main.c b/kernel/module/main.c
-index a4e4d84b6f4e..a271126d7d59 100644
---- a/kernel/module/main.c
-+++ b/kernel/module/main.c
-@@ -550,6 +550,7 @@ static int module_unload_init(struct module *mod)
- 
- 	/* Hold reference count during initialization. */
- 	atomic_inc(&mod->refcnt);
-+	init_waitqueue_head(&mod->refcnt_wq);
- 
- 	return 0;
- }
-@@ -750,6 +751,13 @@ SYSCALL_DEFINE2(delete_module, const char __user *, name_user,
- 	/* Final destruction now no one is using it. */
- 	if (mod->exit != NULL)
- 		mod->exit();
-+	/*
-+	 * If the module reference count was increased by mod->exit() and if
-+	 * unloading is not forced, wait for the module reference count to drop
-+	 * to zero again.
-+	 */
-+	if (!forced)
-+		wait_event(mod->refcnt_wq, atomic_read(&mod->refcnt) == 0);
- 	blocking_notifier_call_chain(&module_notify_list,
- 				     MODULE_STATE_GOING, mod);
- 	klp_module_going(mod);
-@@ -854,6 +862,8 @@ void module_put(struct module *module)
- 		WARN_ON(ret < 0);	/* Failed to put refcount */
- 		trace_module_put(module, _RET_IP_);
- 		preempt_enable();
-+		if (ret == 0)
-+			wake_up(&module->refcnt_wq);
- 	}
- }
- EXPORT_SYMBOL(module_put);
+cGluZy4uLgoKCkF0IDIwMjItMDktMDEgMTQ6MzQ6MDksICJodWhhaSIgPDE1ODE1ODI3MDU5QDE2
+My5jb20+IHdyb3RlOgo+RnJvbTogaHVoYWkgPGh1aGFpQGt5bGlub3MuY24+Cj4KPklmIF9zY3Np
+aF9pb19kb25lKCkgaXMgY2FsbGVkIHdpdGggc2NtZC0+ZGV2aWNlLT5ob3N0ZGF0YT1OVUxMLCBp
+dCBjYW4gbGVhZAo+dG8gdGhlIGZvbGxvd2luZyBwYW5pYzoKPgo+ICBCVUc6IHVuYWJsZSB0byBo
+YW5kbGUga2VybmVsIE5VTEwgcG9pbnRlciBkZXJlZmVyZW5jZSBhdCAwMDAwMDAwMDAwMDAwMDE4
+Cj4gIFBHRCA0NTQ3YTQwNjcgUDREIDQ1NDdhNDA2NyBQVUQgMAo+ICBPb3BzOiAwMDAyIFsjMV0g
+U01QIE5PUFRJCj4gIENQVTogNjIgUElEOiAwIENvbW06IHN3YXBwZXIvNjIgS2R1bXA6IGxvYWRl
+ZCBOb3QgdGFpbnRlZCA0LjE5LjkwLTI0LjQudjIxMDEua3kxMC54ODZfNjQgIzEKPiAgSGFyZHdh
+cmUgbmFtZTogU3RvcmFnZSBTZXJ2ZXIvNjVOMzItVVMsIEJJT1MgU1FMMTA0MTIxNyAwNS8zMC8y
+MDIyCj4gIFJJUDogMDAxMDpfc2NzaWhfc2V0X3NhdGxfcGVuZGluZysweDJkLzB4NTAgW21wdDNz
+YXNdCj4gIENvZGU6IDAwIDAwIDQ4IDhiIDg3IDYwIDAxIDAwIDAwIDBmIGI2IDEwIDgwIGZhIGEx
+IDc0IDA5IDMxIGMwIDgwIGZhIDg1IDc0IDAyIGYzIGMzIDQ4IDhiIDQ3IDM4IDQwIDg0IGY2IDQ4
+IDhiIDgwIDk4IDAwIDAwIDAwIDc1IDA4IDxmMD4gODAgNjAgMTggZmUgMzEgYzAgYzMgZjAgNDgg
+MGYgYmEgNjggMTggMDAgMGYgOTIgYzAgMGYgYjYgYzAgYzMKPiAgUlNQOiAwMDE4OmZmZmY4ZWMy
+MmZjMDNlMDAgRUZMQUdTOiAwMDAxMDA0Ngo+ICBSQVg6IDAwMDAwMDAwMDAwMDAwMDAgUkJYOiBm
+ZmZmOGViYTFiMDcyNTE4IFJDWDogMDAwMDAwMDAwMDAwMDAwMQo+ICBSRFg6IDAwMDAwMDAwMDAw
+MDAwODUgUlNJOiAwMDAwMDAwMDAwMDAwMDAwIFJESTogZmZmZjhlYmExYjA3MjUxOAo+ICBSQlA6
+IDAwMDAwMDAwMDAwMDBkYmQgUjA4OiAwMDAwMDAwMDAwMDAwMDAwIFIwOTogMDAwMDAwMDAwMDAy
+OTcwMAo+ICBSMTA6IGZmZmY4ZWMyMmZjMDNmODAgUjExOiAwMDAwMDAwMDAwMDAwMDAwIFIxMjog
+ZmZmZjhlYmUyZDM2MDllOAo+ICBSMTM6IGZmZmY4ZWJlMmE3MmI2MDAgUjE0OiBmZmZmOGVjYTQ3
+MjcwN2UwIFIxNTogMDAwMDAwMDAwMDAwMDAyMAo+ICBGUzogIDAwMDAwMDAwMDAwMDAwMDAoMDAw
+MCkgR1M6ZmZmZjhlYzIyZmMwMDAwMCgwMDAwKSBrbmxHUzowMDAwMDAwMDAwMDAwMDAwCj4gIENT
+OiAgMDAxMCBEUzogMDAwMCBFUzogMDAwMCBDUjA6IDAwMDAwMDAwODAwNTAwMzMKPiAgQ1IyOiAw
+MDAwMDAwMDAwMDAwMDE4IENSMzogMDAwMDAwMDQ2ZTVmNjAwMCBDUjQ6IDAwMDAwMDAwMDAzNDA2
+ZTAKPiAgQ2FsbCBUcmFjZToKPiAgIDxJUlE+Cj4gICBfc2NzaWhfaW9fZG9uZSsweDRhLzB4OWYw
+IFttcHQzc2FzXQo+ICAgX2Jhc2VfaW50ZXJydXB0KzB4MjNmLzB4ZTEwIFttcHQzc2FzXQo+ICAg
+X19oYW5kbGVfaXJxX2V2ZW50X3BlcmNwdSsweDQwLzB4MTkwCj4gICBoYW5kbGVfaXJxX2V2ZW50
+X3BlcmNwdSsweDMwLzB4NzAKPiAgIGhhbmRsZV9pcnFfZXZlbnQrMHgzNi8weDYwCj4gICBoYW5k
+bGVfZWRnZV9pcnErMHg3ZS8weDE5MAo+ICAgaGFuZGxlX2lycSsweGE4LzB4MTEwCj4gICBkb19J
+UlErMHg0OS8weGUwCj4KPkZpeCBpdCBieSBtb3ZlIHNjbWQtPmRldmljZS0+aG9zdGRhdGEgY2hl
+Y2sgYmVmb3JlIF9zY3NpaF9zZXRfc2F0bF9wZW5kaW5nCj5jYWxsZWQuCj4KPk90aGVyIGNoYW5n
+ZXM6Cj4tIEl0IGxvb2tzIGNsZWFyIHRvIG1vdmUgZ2V0IG1waV9yZXBseSB0byBuZWFyIGl0cyBj
+aGVjay4KPgo+Rml4ZXM6IGZmYjU4NDU2NTg5NCAoInNjc2k6IG1wdDNzYXM6IGZpeCBoYW5nIG9u
+IGF0YSBwYXNzdGhyb3VnaCBjb21tYW5kcyIpCj5DYzogPHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmc+
+ICMgdjQuOSsKPlN1Z2dlc3RlZC1ieTogU2F0aHlhIFByYWthc2ggVmVlcmljaGV0dHkgPHNhdGh5
+YS5wcmFrYXNoQGJyb2FkY29tLmNvbT4KPkNvLWRldmVsb3BlZC1ieTogSmFja2llIExpdSA8bGl1
+eXVuMDFAa3lsaW5vcy5jbj4KPlNpZ25lZC1vZmYtYnk6IEphY2tpZSBMaXUgPGxpdXl1bjAxQGt5
+bGlub3MuY24+Cj5TaWduZWQtb2ZmLWJ5OiBodWhhaSA8aHVoYWlAa3lsaW5vcy5jbj4KPi0tLQo+
+IGRyaXZlcnMvc2NzaS9tcHQzc2FzL21wdDNzYXNfc2NzaWguYyB8IDEyICsrKysrKystLS0tLQo+
+IDEgZmlsZSBjaGFuZ2VkLCA3IGluc2VydGlvbnMoKyksIDUgZGVsZXRpb25zKC0pCj4KPmRpZmYg
+LS1naXQgYS9kcml2ZXJzL3Njc2kvbXB0M3Nhcy9tcHQzc2FzX3Njc2loLmMgYi9kcml2ZXJzL3Nj
+c2kvbXB0M3Nhcy9tcHQzc2FzX3Njc2loLmMKPmluZGV4IGRlZjM3YTdlNTk4MC4uNzk5MGJkOTUw
+MmUxIDEwMDY0NAo+LS0tIGEvZHJpdmVycy9zY3NpL21wdDNzYXMvbXB0M3Nhc19zY3NpaC5jCj4r
+KysgYi9kcml2ZXJzL3Njc2kvbXB0M3Nhcy9tcHQzc2FzX3Njc2loLmMKPkBAIC01NzA0LDI0ICs1
+NzA0LDI2IEBAIF9zY3NpaF9pb19kb25lKHN0cnVjdCBNUFQzU0FTX0FEQVBURVIgKmlvYywgdTE2
+IHNtaWQsIHU4IG1zaXhfaW5kZXgsIHUzMiByZXBseSkKPiAJc3RydWN0IE1QVDNTQVNfREVWSUNF
+ICpzYXNfZGV2aWNlX3ByaXZfZGF0YTsKPiAJdTMyIHJlc3BvbnNlX2NvZGUgPSAwOwo+IAo+LQlt
+cGlfcmVwbHkgPSBtcHQzc2FzX2Jhc2VfZ2V0X3JlcGx5X3ZpcnRfYWRkcihpb2MsIHJlcGx5KTsK
+Pi0KPiAJc2NtZCA9IG1wdDNzYXNfc2NzaWhfc2NzaV9sb29rdXBfZ2V0KGlvYywgc21pZCk7Cj4g
+CWlmIChzY21kID09IE5VTEwpCj4gCQlyZXR1cm4gMTsKPiAKPisJc2FzX2RldmljZV9wcml2X2Rh
+dGEgPSBzY21kLT5kZXZpY2UtPmhvc3RkYXRhOwo+KwlpZiAoIXNhc19kZXZpY2VfcHJpdl9kYXRh
+IHx8ICFzYXNfZGV2aWNlX3ByaXZfZGF0YS0+c2FzX3RhcmdldCkgewo+KwkJc2NtZC0+cmVzdWx0
+ID0gRElEX05PX0NPTk5FQ1QgPDwgMTY7Cj4rCQlnb3RvIG91dDsKPisJfQo+IAlfc2NzaWhfc2V0
+X3NhdGxfcGVuZGluZyhzY21kLCBmYWxzZSk7Cj4gCj4gCW1waV9yZXF1ZXN0ID0gbXB0M3Nhc19i
+YXNlX2dldF9tc2dfZnJhbWUoaW9jLCBzbWlkKTsKPiAKPisJbXBpX3JlcGx5ID0gbXB0M3Nhc19i
+YXNlX2dldF9yZXBseV92aXJ0X2FkZHIoaW9jLCByZXBseSk7Cj4gCWlmIChtcGlfcmVwbHkgPT0g
+TlVMTCkgewo+IAkJc2NtZC0+cmVzdWx0ID0gRElEX09LIDw8IDE2Owo+IAkJZ290byBvdXQ7Cj4g
+CX0KPiAKPi0Jc2FzX2RldmljZV9wcml2X2RhdGEgPSBzY21kLT5kZXZpY2UtPmhvc3RkYXRhOwo+
+LQlpZiAoIXNhc19kZXZpY2VfcHJpdl9kYXRhIHx8ICFzYXNfZGV2aWNlX3ByaXZfZGF0YS0+c2Fz
+X3RhcmdldCB8fAo+LQkgICAgIHNhc19kZXZpY2VfcHJpdl9kYXRhLT5zYXNfdGFyZ2V0LT5kZWxl
+dGVkKSB7Cj4rCWlmIChzYXNfZGV2aWNlX3ByaXZfZGF0YS0+c2FzX3RhcmdldC0+ZGVsZXRlZCkg
+ewo+IAkJc2NtZC0+cmVzdWx0ID0gRElEX05PX0NPTk5FQ1QgPDwgMTY7Cj4gCQlnb3RvIG91dDsK
+PiAJfQo+LS0gCj4yLjI3LjAKPgo+Cj5ObyB2aXJ1cyBmb3VuZAo+CQlDaGVja2VkIGJ5IEhpbGxz
+dG9uZSBOZXR3b3JrIEFudGlWaXJ1cwo=
