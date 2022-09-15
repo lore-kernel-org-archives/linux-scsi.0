@@ -2,129 +2,77 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10D08ECAAA1
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Sep 2022 06:08:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CA3FECAAA1
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Sep 2022 07:25:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229495AbiIOGIv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 15 Sep 2022 02:08:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34566 "EHLO
+        id S229713AbiIOHY6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Sep 2022 03:24:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49758 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229548AbiIOGIq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Sep 2022 02:08:46 -0400
-Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0ACC4923E3;
-        Wed, 14 Sep 2022 23:08:45 -0700 (PDT)
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 801754540D;
-        Thu, 15 Sep 2022 06:08:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        in-reply-to:content-transfer-encoding:content-disposition
-        :content-type:content-type:mime-version:references:message-id
-        :subject:subject:from:from:date:date:received:received:received
-        :received; s=mta-01; t=1663222122; x=1665036523; bh=PdApB1kMEyqu
-        pzQ/4fpOS0LO0BizTf0W/oH4UuXKdSc=; b=gjs0NK6nxSVlF2/37JsbGPtg9NMx
-        1KtR1paYJL2yXVdkJuth+g34VumkxArSzGO0WsnIcRWlG7GERXtRA8UxrKiBtmTz
-        V96dYbaQgZwp89VAKIOD/ACOQ9ZjMUfJguqjM6OYAB4eHyQ2oAnlJ7wCGGq6KOYz
-        73AHFc6/ON3yBVg=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 2y9JOqWYMKYi; Thu, 15 Sep 2022 09:08:42 +0300 (MSK)
-Received: from T-EXCH-02.corp.yadro.com (T-EXCH-02.corp.yadro.com [172.17.10.102])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        with ESMTP id S229511AbiIOHY5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Sep 2022 03:24:57 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 098832A243;
+        Thu, 15 Sep 2022 00:24:54 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id D689045409;
-        Thu, 15 Sep 2022 09:08:40 +0300 (MSK)
-Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
- T-EXCH-02.corp.yadro.com (172.17.10.102) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
- 15.1.669.32; Thu, 15 Sep 2022 09:08:40 +0300
-Received: from yadro.com (10.199.18.20) by T-EXCH-08.corp.yadro.com
- (172.17.11.58) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1118.9; Thu, 15 Sep
- 2022 09:08:40 +0300
-Date:   Thu, 15 Sep 2022 09:08:40 +0300
-From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
-To:     Mike Christie <michael.christie@oracle.com>
-CC:     Martin Petersen <martin.petersen@oracle.com>,
-        <target-devel@vger.kernel.org>,
-        Bart Van Assche <bvanassche@acm.org>,
-        <linux-scsi@vger.kernel.org>, <linux@yadro.com>
-Subject: Re: [PATCH v2] scsi: target: alua: do not report emtpy port group
-Message-ID: <20220915060840.GG9218@yadro.com>
-References: <20220912125457.22573-1-d.bogdanov@yadro.com>
- <92f6024a-7898-e281-099a-c79b67fecafe@oracle.com>
- <20220912214521.GF9218@yadro.com>
- <82d31d9d-700c-d961-d284-a5a117487adc@oracle.com>
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8A8E962152;
+        Thu, 15 Sep 2022 07:24:54 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 94BAEC433D7;
+        Thu, 15 Sep 2022 07:24:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1663226694;
+        bh=0aoY9jAPeP1iaMtU9S62GisNAxOIxu+F67GJSsoRT7c=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=TrexW+Fu/l5QwrL7gje6PAlzhjF87HujHmCO4CCBUFvb3MaDb0Tda752b2bs+Vk0x
+         +46xVX5Z7mXbVO4ug0uS5T3D6sU33TY49OkmyMS5uUxuFWoWfKlxSuk0RiY5UzEySI
+         qUjco3SGK0vW60zFJm+SR9NxjZxO5DMx/riHJZDo=
+Date:   Thu, 15 Sep 2022 09:25:18 +0200
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Jason Wittlin-Cohen <jwittlincohen@gmail.com>
+Cc:     regressions@lists.linux.dev, stable@vger.kernel.org,
+        linux-scsi@vger.kernel.org, alim.akhtar@samsung.com,
+        bvanassche@acm.org, Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: Re: [REGRESSION] introduced in 5.10.140 causes drives to drop from
+ LSI SAS controller (Bisected to 6d17a112e9a63ff6a5edffd1676b99e0ffbcd269)
+Message-ID: <YyLTXk4RlTcFgCQY@kroah.com>
+References: <CADy0EvLGJmZe-x9wzWSB6+tDKNuLHd8Km3J5MiWWYQRR2ctS3A@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <82d31d9d-700c-d961-d284-a5a117487adc@oracle.com>
-X-Originating-IP: [10.199.18.20]
-X-ClientProxiedBy: T-EXCH-02.corp.yadro.com (172.17.10.102) To
- T-EXCH-08.corp.yadro.com (172.17.11.58)
+In-Reply-To: <CADy0EvLGJmZe-x9wzWSB6+tDKNuLHd8Km3J5MiWWYQRR2ctS3A@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Sep 14, 2022 at 02:18:40PM -0500, Mike Christie wrote:
+On Wed, Sep 14, 2022 at 10:21:04PM -0400, Jason Wittlin-Cohen wrote:
+> #regzbot introduced 6d17a112e9a63ff6a5edffd1676b99e0ffbcd269
 > 
-> On 9/12/22 4:45 PM, Dmitry Bogdanov wrote:
-> >> Remember how ESX used to send a RTPG to one port and expect that it got
-> >> every group and that the state info was all in sync (basically opposite
-> >> if what's in the spec now)?
-> >>
-> >> The spec and ESX were updated, but I don't know if other OSs did this and
-> >> if/when everyone was updated. Do you know this info? Are the old ESX versions
-> >> that worked like that end of life?
-> > ESXi is kinda a pain. But fortunately it has nothing to do with that
-> > patch 😄
+> Issue: When running a 5.10.140 kernel compiled from kernel.org source, or a
+> bisected kernel with commit 6d17a112e9a63ff6a5edffd1676b99e0ffbcd269, 6 of
+> the 48 drives attached to my LSI 9207-8e SAS HBA (P20 firmware, IT mode)
+> will drop from the controller shortly after the boot process completes.  At
+> this point, the drives are not visible to the LSI controller, verified
+> using LSI's lsiutil.x86_64 to list all attached devices, nor are the drives
+> enumerated in /dev/disk/by-id. Attempts to access the drives result in I/O
+> errors reported in syslog. At some point thereafter, the drives reappear
+> and are accessible.
 > 
-> I didn't get why that is. How do you set up a distributed/cluster/HA target? I'm
-> probably missing that part.
-> 
-> Software drivers like iscsi I get, but for HW drivers I didn't see how you do it.
-> 
-> For example, if you have 2 systems/nodes running LIO which each export the same
-> device via 1 port each where one is active/optimized and the other is standby and you
-> are using qla2xxx, then on the local node would you create 2 groups:
-> 
-> [root@ol8n4 alua]# pwd
-> /sys/kernel/config/target/core/iblock_0/device0/alua
-> 
-> [root@ol8n4 alua]# ls
-> default_tg_pt_gp  local  remote
-> 
-> Then under the mapped lun:
-> 
-> [root@ol8n4 lun_0]# pwd
-> /sys/kernel/config/target/..../tpgt_1/lun/lun_0
-> 
-> in the alua_tg_pt_gp file you set that to local. That would then have tg_pt_gp_members
-> set, but remote would not.
-> 
-> Before your patch, windows and ESX could do a RTPG to just one port/path and we would
-> return the default, local and remote groups. We don't want the default group, but we
-> wanted the local and remote one returned. With your patch we only return the the local
-> one now. I wasn't sure how that works for drivers like qla2xxx.
-> 
-> For iscsi, you could just mirror the remote node locally, so you would have a second
-> tpg:
-> 
-> [root@ol8n4 lun_0]# pwd
-> /sys/kernel/config/target/..../tpgt_2/lun/lun_0
-> 
-> and in there set alua_tg_pt_gp to remote. Your patch works fine for that because both
-> groups then have tg_pt_gp_members set so if the OS just does a RTPG to one path/port
-> you get all the groups.
->
-I use a virtual remote fabric driver to configure wwn/iqn-tpg-lun of
-remote peers at each local node. In that way 'remote' alua port group
-will have ports(RTPI) too. That allows RTPG (and other discovery-like
-commands) report all ports in all port groups in the cluster.
-I sent it within the RFC patchset:
-https://patchwork.kernel.org/project/target-devel/patch/20220803162857.27770-36-d.bogdanov@yadro.com/
+> Running a vanilla 5.10.139 kernel or a bisected kernel with commit
+> 6d17a112e9a63ff6a5edffd1676b99e0ffbcd269 removed, all 48 drives appear
+> correctly, are listed in LSI's lsiutil tool, and appear in /dev/disk/by-id.
+> No I/O errors are reported from any drive and none of the drives drop off
+> the controller as experienced in 5.10.140.  SMART testing shows normal
+> results for all impacted drives.
 
-BR,
- Dmitry
+Does this also have problems in the latest 5.15 and 5.19 release, or is
+it somehow limited to 5.10.y?
+
+Also, html emails are rejected by the mailing lists, so you might want
+to resend it all in text-only mode so that everyone can see the full
+details.
+
+thanks,
+
+greg k-h
