@@ -2,78 +2,112 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3684ECAAA1
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Sep 2022 16:45:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46524C6FA86
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Sep 2022 17:31:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229890AbiIOQpn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 15 Sep 2022 12:45:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46202 "EHLO
+        id S229850AbiIORbb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Sep 2022 13:31:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49230 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230031AbiIOQpj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Sep 2022 12:45:39 -0400
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE5624F64E;
-        Thu, 15 Sep 2022 09:45:37 -0700 (PDT)
-Received: by mail-pl1-f176.google.com with SMTP id l10so18887770plb.10;
-        Thu, 15 Sep 2022 09:45:37 -0700 (PDT)
+        with ESMTP id S229487AbiIORb3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Sep 2022 13:31:29 -0400
+Received: from mail-ej1-x634.google.com (mail-ej1-x634.google.com [IPv6:2a00:1450:4864:20::634])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43B7E9DB66
+        for <linux-scsi@vger.kernel.org>; Thu, 15 Sep 2022 10:31:28 -0700 (PDT)
+Received: by mail-ej1-x634.google.com with SMTP id go34so43750149ejc.2
+        for <linux-scsi@vger.kernel.org>; Thu, 15 Sep 2022 10:31:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date;
+        bh=FQjGdIcJdN4Rln05k+P43b+dDaom5atC7Q5YoKO6+4Q=;
+        b=XusZ+hEpOBFGF3BV9wA1MJHxIm39QhMS+X9vLXT9JNtpZHh0wmUMG0LmvCsZI0yEBU
+         byL0Jjg1fFO3nu9oS2ecCjy6EwbMddqFNHltL/m9HPO6jHHT8mDSz3KmRIpvRuiUy/c1
+         VWVK5E5wBIJ/tymi6OLAcnzyyq9oDC/D6nA3s=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date;
-        bh=dGTAfwMFVda3M657H9jeHsvdIZrvS+apidMKmSoUdQU=;
-        b=31849xoRPHnEdNuhtjtzHwa4OT8237Tg+K7K9eXwmwvm9Pemimqbt+PNpnRZkJ044t
-         jtU6kslLrtlF7mHH+L4PIrXHIztNHcLH13J4qMff8p+6xuJaGtXCf51QyDOb0fbA1Tzi
-         bwirRU4Ht4Kzu/kIH2nnfNCKgqNUsxdhJbrVsVtCy7992bZHldIUsNAlIMPAIhN+aZex
-         Tp+qPMr4Jr05lB+JxCnkMdVzflwvk6S19TAc/cK8qnrOZpQBDzcvsblVzpE5pfXsz7gq
-         oXyp5aWwyh0uQJX3ABuuJCkz5NQaHtb0GXye1FxT8mQi4LZyw88SSv4qil/ytj547PFZ
-         znHw==
-X-Gm-Message-State: ACrzQf2r8CJkPACt7yJhDe668zIRiAuEDAnr70bRJB8Wkb95aAfejpLk
-        bilOGXqQHN/6rG1G5QMOGlQ=
-X-Google-Smtp-Source: AMsMyM7EfbikQBm6Q9xOadLhTHcJLIYNE1vIOPqRX/gogHjL3BbhwRBPZV76KrAe3F9Q71EXBNF/KQ==
-X-Received: by 2002:a17:90a:5aa2:b0:200:30aa:c773 with SMTP id n31-20020a17090a5aa200b0020030aac773mr11284848pji.182.1663260337245;
-        Thu, 15 Sep 2022 09:45:37 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:3e2c:d8db:6573:bb97? ([2620:15c:211:201:3e2c:d8db:6573:bb97])
-        by smtp.gmail.com with ESMTPSA id x12-20020a170902ec8c00b001709b9d292esm13449354plg.268.2022.09.15.09.45.35
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 15 Sep 2022 09:45:36 -0700 (PDT)
-Message-ID: <04e4a2f5-03b9-a226-f3ef-9f9fcec1255d@acm.org>
-Date:   Thu, 15 Sep 2022 09:45:33 -0700
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date;
+        bh=FQjGdIcJdN4Rln05k+P43b+dDaom5atC7Q5YoKO6+4Q=;
+        b=a/3CVZ2l44SOkT5l8OAyb7dQf2LQp+AqwWdiyknG1hcJkxLfI2f36DhkpT/QyWLiPL
+         sp+rD8drLtnm+0fcJPMrDzifOrai1Mm9tv7C4YwtOo2fCTeoHYbrdqh/cwugTvr/Q2pO
+         nrSaDf9xfOHWC7p5fN37acR/EquCXxJHbv+PqU7TcuHkyecfpIY6z4YLDjMSckqWVdLM
+         GIPkSL7iLA2eqnXEEXtzEGMUiZmBIIhFoR/jDdUyxCAPTf2ReF4QoQ6hIb3++XXqvI5n
+         jGe8RJEmsrImpYvxU1yljC9G/FzDVAHv10Rkn5laoF9vdanD2sIUV8HDUJ0LSmfV+kNQ
+         yhog==
+X-Gm-Message-State: ACrzQf0FTlDcC44Pw0sifK58dBlXwVEqEnYLNeoH15mRpPHlx5509ovG
+        wttQpW8r1IQnM3IeFQ2tnHORZIwLGtfrREfuK28nT93Yr9K1PD/uHZtvWxgY0MfL7klpnXRQvAE
+        TpXjSeZL/g/d46rBJrtRZTAUfmHg=
+X-Google-Smtp-Source: AMsMyM5Y9ZMsG8Mo1SA48Y0QEQSxOQciRtdl2FgrFzLhqIfJgeBrYjJj1XTWMDfbS3UOO9Nn/TyxpiwXnZxzZhSe4jk=
+X-Received: by 2002:a17:907:3e95:b0:780:559f:6339 with SMTP id
+ hs21-20020a1709073e9500b00780559f6339mr718094ejc.618.1663263086666; Thu, 15
+ Sep 2022 10:31:26 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.12.0
-Subject: Re: BUG: unable to handle kernel paging request in scsi_device_unbusy
-Content-Language: en-US
-To:     Rondreis <linhaoguo86@gmail.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <CAB7eexKijKtCak4xh0JiyuQ0BmpryRLGm+_psrzjV+7KkKzA_g@mail.gmail.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <CAB7eexKijKtCak4xh0JiyuQ0BmpryRLGm+_psrzjV+7KkKzA_g@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <YyMIJh1HU2Qz9+Rs@kili> <YyMISJzVDARpVwrr@kili>
+In-Reply-To: <YyMISJzVDARpVwrr@kili>
+From:   Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
+Date:   Thu, 15 Sep 2022 11:31:10 -0600
+Message-ID: <CAFdVvOzCHqurEAMTFGwUAtOnqEecoiH9NLyw83B92VfdqmbwYw@mail.gmail.com>
+Subject: Re: [PATCH 2/2] scsi: mpi3mr: Fix error code in mpi3mr_transport_smp_handler()
+To:     Dan Carpenter <dan.carpenter@oracle.com>
+Cc:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        mpi3mr-drvr-developers <mpi3mr-linuxdrv.pdl@broadcom.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/15/22 08:56, Rondreis wrote:
-> CPU: 0 PID: 12256 Comm: usb-storage Not tainted 6.0.0-rc4+ #20
-> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
+ACK. Thanks for fixing it.
 
-Does the above indicate an x86 CPU?
 
-> Call Trace:
->   <TASK>
->   instrument_atomic_write include/linux/instrumented.h:86 [inline]
->   set_bit include/asm-generic/bitops/instrumented-atomic.h:28 [inline]
->   sbitmap_deferred_clear_bit include/linux/sbitmap.h:327 [inline]
->   sbitmap_put include/linux/sbitmap.h:336 [inline]
->   scsi_device_unbusy+0x1aa/0x380 drivers/scsi/scsi_lib.c:301
+On Thu, Sep 15, 2022 at 5:11 AM Dan Carpenter <dan.carpenter@oracle.com> wrote:
+>
+> The error code from mpi3mr_post_transport_req() is supposed to be
+> passed to bsg_job_done(job, rc, reslen), but it isn't.
+>
+> Fixes: 176d4aa69c6e ("scsi: mpi3mr: Support SAS transport class callbacks")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> ---
+>  drivers/scsi/mpi3mr/mpi3mr_transport.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr/mpi3mr_transport.c
+> index 74313cf68ad3..3fc897336b5e 100644
+> --- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
+> +++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
+> @@ -3245,8 +3245,10 @@ mpi3mr_transport_smp_handler(struct bsg_job *job, struct Scsi_Host *shost,
+>
+>         dprint_transport_info(mrioc, "sending SMP request\n");
+>
+> -       if (mpi3mr_post_transport_req(mrioc, &mpi_request, request_sz,
+> -           &mpi_reply, reply_sz, MPI3MR_INTADMCMD_TIMEOUT, &ioc_status))
+> +       rc = mpi3mr_post_transport_req(mrioc, &mpi_request, request_sz,
+> +                                      &mpi_reply, reply_sz,
+> +                                      MPI3MR_INTADMCMD_TIMEOUT, &ioc_status);
+> +       if (rc)
+>                 goto unmap_in;
+>
+>         dprint_transport_info(mrioc,
+> --
+> 2.35.1
+>
 
-There is some tricky code in the sbitmap implementation. How about 
-checking the implementation of that code to see whether any memory 
-barriers are missing?
-
-Thanks,
-
-Bart.
+-- 
+This electronic communication and the information and any files transmitted 
+with it, or attached to it, are confidential and are intended solely for 
+the use of the individual or entity to whom it is addressed and may contain 
+information that is confidential, legally privileged, protected by privacy 
+laws, or otherwise restricted from disclosure to anyone else. If you are 
+not the intended recipient or the person responsible for delivering the 
+e-mail to the intended recipient, you are hereby notified that any use, 
+copying, distributing, dissemination, forwarding, printing, or copying of 
+this e-mail is strictly prohibited. If you received this e-mail in error, 
+please return the e-mail to the sender, delete it from your computer, and 
+destroy any printed copy of it.
