@@ -2,163 +2,78 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A18B3C6FA89
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Sep 2022 15:57:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3684ECAAA1
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Sep 2022 16:45:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229951AbiIOP5T (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 15 Sep 2022 11:57:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43302 "EHLO
+        id S229890AbiIOQpn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Sep 2022 12:45:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46202 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229931AbiIOP47 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Sep 2022 11:56:59 -0400
-Received: from mail-vs1-xe32.google.com (mail-vs1-xe32.google.com [IPv6:2607:f8b0:4864:20::e32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3515829CB5;
-        Thu, 15 Sep 2022 08:56:58 -0700 (PDT)
-Received: by mail-vs1-xe32.google.com with SMTP id c3so19773877vsc.6;
-        Thu, 15 Sep 2022 08:56:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date;
-        bh=Cpx6Ue6kcbAqAmm3o63GbqmR3hXAwmbhhjniKqsolTA=;
-        b=djKR/ACyEjzELqWQdflGOLkjP5O4FnvHcpRNIr4KoX1OuD4cj/g4SIzeY1+K6h9Ubu
-         311kad8AavjGl+Kd8/Bntc3wmciQKk7hZ/JFdzGGYMlsgbiTk4/PhNxmreFNN3RkYMGi
-         cun7BlCa3isOp8qwbvdyhmpqRnjwTj+InJvAgaxAl9g+7yEJwTRbUq9iwj7r3yJRxL2I
-         wB37J9NLGoBr4L1S/QO0PZM36wIfSDyEveW234ZNMC00RPRCX21MVHYBpJokdbYscBEc
-         EvD3nZY723hAUx1nC5fBblTTGF8rO/EZvS2PaSOjBI5vtX9FACOcadng4a9nXQMqLAoR
-         TfTQ==
+        with ESMTP id S230031AbiIOQpj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Sep 2022 12:45:39 -0400
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE5624F64E;
+        Thu, 15 Sep 2022 09:45:37 -0700 (PDT)
+Received: by mail-pl1-f176.google.com with SMTP id l10so18887770plb.10;
+        Thu, 15 Sep 2022 09:45:37 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date;
-        bh=Cpx6Ue6kcbAqAmm3o63GbqmR3hXAwmbhhjniKqsolTA=;
-        b=2mnRD8b/Uqdk9jh0+j+Dy5qFcvC4YovUC84uEEtIlnOr8PaE2XWZBUlYKv4T2tEgpN
-         wR2IvhKijFvyPgjSwnhqCWyjZwcHNWeUbzSwOpS6jto81cbs61sG41sXait7Uc1FSp8Q
-         PVOkf0oO0YLdQa1UqwsdYjx8EEHo8RSg/iLBWQ8Hsda8GTwRabM3QvTEyPZGl19ypBhA
-         BdNzJFyTo8Vo/onnL90+cSYBmgcB9d9y/3zxv5+I2dyfIhAJKmJcH1ii+b8yrCwoVdbZ
-         EaRUgdWh3HyQ1thJV4PezWAed4L3+rG4iDQOlwO+qGRAYHtSr9XHrQxmGyYSehFaULOU
-         Ya+g==
-X-Gm-Message-State: ACrzQf3LR0cZ+D2MrYATchP/CJf21HrbYOQO35CoI8BTtJnEolexOv45
-        r1zC/aXAhH8JjvtkV0EwhlZB5xgKLESEwCimrElOMuY/n8J7nyFe
-X-Google-Smtp-Source: AMsMyM74hFhzbGA0aVl4xpDlCwWZw3Bz7cYs6qi2bNRHv+CdZ7ScK7xAoVccX9pDN2omzMCbW7fL0k5BEfNqOOsjyrY=
-X-Received: by 2002:a67:8c43:0:b0:398:6815:d340 with SMTP id
- o64-20020a678c43000000b003986815d340mr410092vsd.42.1663257417326; Thu, 15 Sep
- 2022 08:56:57 -0700 (PDT)
+        h=content-transfer-encoding:in-reply-to:from:references:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date;
+        bh=dGTAfwMFVda3M657H9jeHsvdIZrvS+apidMKmSoUdQU=;
+        b=31849xoRPHnEdNuhtjtzHwa4OT8237Tg+K7K9eXwmwvm9Pemimqbt+PNpnRZkJ044t
+         jtU6kslLrtlF7mHH+L4PIrXHIztNHcLH13J4qMff8p+6xuJaGtXCf51QyDOb0fbA1Tzi
+         bwirRU4Ht4Kzu/kIH2nnfNCKgqNUsxdhJbrVsVtCy7992bZHldIUsNAlIMPAIhN+aZex
+         Tp+qPMr4Jr05lB+JxCnkMdVzflwvk6S19TAc/cK8qnrOZpQBDzcvsblVzpE5pfXsz7gq
+         oXyp5aWwyh0uQJX3ABuuJCkz5NQaHtb0GXye1FxT8mQi4LZyw88SSv4qil/ytj547PFZ
+         znHw==
+X-Gm-Message-State: ACrzQf2r8CJkPACt7yJhDe668zIRiAuEDAnr70bRJB8Wkb95aAfejpLk
+        bilOGXqQHN/6rG1G5QMOGlQ=
+X-Google-Smtp-Source: AMsMyM7EfbikQBm6Q9xOadLhTHcJLIYNE1vIOPqRX/gogHjL3BbhwRBPZV76KrAe3F9Q71EXBNF/KQ==
+X-Received: by 2002:a17:90a:5aa2:b0:200:30aa:c773 with SMTP id n31-20020a17090a5aa200b0020030aac773mr11284848pji.182.1663260337245;
+        Thu, 15 Sep 2022 09:45:37 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:3e2c:d8db:6573:bb97? ([2620:15c:211:201:3e2c:d8db:6573:bb97])
+        by smtp.gmail.com with ESMTPSA id x12-20020a170902ec8c00b001709b9d292esm13449354plg.268.2022.09.15.09.45.35
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 15 Sep 2022 09:45:36 -0700 (PDT)
+Message-ID: <04e4a2f5-03b9-a226-f3ef-9f9fcec1255d@acm.org>
+Date:   Thu, 15 Sep 2022 09:45:33 -0700
 MIME-Version: 1.0
-From:   Rondreis <linhaoguo86@gmail.com>
-Date:   Thu, 15 Sep 2022 23:56:46 +0800
-Message-ID: <CAB7eexKijKtCak4xh0JiyuQ0BmpryRLGm+_psrzjV+7KkKzA_g@mail.gmail.com>
-Subject: BUG: unable to handle kernel paging request in scsi_device_unbusy
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.12.0
+Subject: Re: BUG: unable to handle kernel paging request in scsi_device_unbusy
+Content-Language: en-US
+To:     Rondreis <linhaoguo86@gmail.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <CAB7eexKijKtCak4xh0JiyuQ0BmpryRLGm+_psrzjV+7KkKzA_g@mail.gmail.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <CAB7eexKijKtCak4xh0JiyuQ0BmpryRLGm+_psrzjV+7KkKzA_g@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello,
+On 9/15/22 08:56, Rondreis wrote:
+> CPU: 0 PID: 12256 Comm: usb-storage Not tainted 6.0.0-rc4+ #20
+> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
 
-When fuzzing the Linux kernel driver v6.0-rc4, the following crash was
-triggered.
+Does the above indicate an x86 CPU?
 
-HEAD commit: 7e18e42e4b280c85b76967a9106a13ca61c16179
-git tree: upstream
+> Call Trace:
+>   <TASK>
+>   instrument_atomic_write include/linux/instrumented.h:86 [inline]
+>   set_bit include/asm-generic/bitops/instrumented-atomic.h:28 [inline]
+>   sbitmap_deferred_clear_bit include/linux/sbitmap.h:327 [inline]
+>   sbitmap_put include/linux/sbitmap.h:336 [inline]
+>   scsi_device_unbusy+0x1aa/0x380 drivers/scsi/scsi_lib.c:301
 
-kernel config: https://pastebin.com/raw/xtrgsXP3
-console output: https://pastebin.com/raw/T6bLnbiJ
+There is some tricky code in the sbitmap implementation. How about 
+checking the implementation of that code to see whether any memory 
+barriers are missing?
 
-Sorry I dont have any C reproducer on this bug, however, I would
-appreciate it if you have any idea how to solve this bug.
+Thanks,
 
-The crash report is as follows:
-
-BUG: unable to handle page fault for address: ffffed104565bc78
-#PF: supervisor read access in kernel mode
-#PF: error_code(0x0000) - not-present page
-PGD 7ffd0067 P4D 7ffd0067 PUD 0
-Oops: 0000 [#1] PREEMPT SMP KASAN
-CPU: 0 PID: 12256 Comm: usb-storage Not tainted 6.0.0-rc4+ #20
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
-1.13.0-1ubuntu1.1 04/01/2014
-RIP: 0010:bytes_is_nonzero mm/kasan/generic.c:85 [inline]
-RIP: 0010:memory_is_nonzero mm/kasan/generic.c:102 [inline]
-RIP: 0010:memory_is_poisoned_n mm/kasan/generic.c:128 [inline]
-RIP: 0010:memory_is_poisoned mm/kasan/generic.c:159 [inline]
-RIP: 0010:check_region_inline mm/kasan/generic.c:180 [inline]
-RIP: 0010:kasan_check_range+0xe0/0x190 mm/kasan/generic.c:189
-Code: 80 38 00 74 ee 49 89 c0 b8 01 00 00 00 4d 85 c0 75 57 5b 5d 41
-5c c3 4d 85 c9 74 71 49 01 d9 eb 09 48 83 c0 01 4c 39 c8 74 63 <80> 38
-00 74 f2 eb d4 41 bc 08 00 00 00 45 29 c4 49 89 d8 4d 8d 0c
-RSP: 0018:ffffc90018cbfd30 EFLAGS: 00010282
-RAX: ffffed104565bc78 RBX: ffffed104565bc78 RCX: ffffffff84ab8eaa
-RDX: 0000000000000001 RSI: 0000000000000008 RDI: ffff88822b2de3c0
-RBP: ffffed104565bc79 R08: ffffffff84ab8e81 R09: ffffed104565bc79
-R10: ffff88822b2de3c7 R11: ffffed104565bc78 R12: 000000000000003f
-R13: ffff88806620b120 R14: 00000000ffffffff R15: ffff88806620b1f4
-FS:  0000000000000000(0000) GS:ffff88802cc00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: ffffed104565bc78 CR3: 0000000056ea7000 CR4: 0000000000350ef0
-Call Trace:
- <TASK>
- instrument_atomic_write include/linux/instrumented.h:86 [inline]
- set_bit include/asm-generic/bitops/instrumented-atomic.h:28 [inline]
- sbitmap_deferred_clear_bit include/linux/sbitmap.h:327 [inline]
- sbitmap_put include/linux/sbitmap.h:336 [inline]
- scsi_device_unbusy+0x1aa/0x380 drivers/scsi/scsi_lib.c:301
- scsi_finish_command+0x86/0x530 drivers/scsi/scsi.c:166
- scsi_complete+0x126/0x260 drivers/scsi/scsi_lib.c:1438
- blk_mq_complete_request_direct include/linux/blk-mq.h:814 [inline]
- scsi_done_internal+0x1de/0x490 drivers/scsi/scsi_lib.c:1627
- usb_stor_control_thread+0x72c/0x960 drivers/usb/storage/usb.c:420
- kthread+0x2e9/0x3a0 kernel/kthread.c:376
- ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:306
- </TASK>
-Modules linked in:
-CR2: ffffed104565bc78
----[ end trace 0000000000000000 ]---
-RIP: 0010:bytes_is_nonzero mm/kasan/generic.c:85 [inline]
-RIP: 0010:memory_is_nonzero mm/kasan/generic.c:102 [inline]
-RIP: 0010:memory_is_poisoned_n mm/kasan/generic.c:128 [inline]
-RIP: 0010:memory_is_poisoned mm/kasan/generic.c:159 [inline]
-RIP: 0010:check_region_inline mm/kasan/generic.c:180 [inline]
-RIP: 0010:kasan_check_range+0xe0/0x190 mm/kasan/generic.c:189
-Code: 80 38 00 74 ee 49 89 c0 b8 01 00 00 00 4d 85 c0 75 57 5b 5d 41
-5c c3 4d 85 c9 74 71 49 01 d9 eb 09 48 83 c0 01 4c 39 c8 74 63 <80> 38
-00 74 f2 eb d4 41 bc 08 00 00 00 45 29 c4 49 89 d8 4d 8d 0c
-RSP: 0018:ffffc90018cbfd30 EFLAGS: 00010282
-RAX: ffffed104565bc78 RBX: ffffed104565bc78 RCX: ffffffff84ab8eaa
-RDX: 0000000000000001 RSI: 0000000000000008 RDI: ffff88822b2de3c0
-RBP: ffffed104565bc79 R08: ffffffff84ab8e81 R09: ffffed104565bc79
-R10: ffff88822b2de3c7 R11: ffffed104565bc78 R12: 000000000000003f
-R13: ffff88806620b120 R14: 00000000ffffffff R15: ffff88806620b1f4
-FS:  0000000000000000(0000) GS:ffff88802cc00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: ffffed104565bc78 CR3: 0000000056ea7000 CR4: 0000000000350ef0
-----------------
-Code disassembly (best guess):
-   0: 80 38 00              cmpb   $0x0,(%rax)
-   3: 74 ee                je     0xfffffff3
-   5: 49 89 c0              mov    %rax,%r8
-   8: b8 01 00 00 00        mov    $0x1,%eax
-   d: 4d 85 c0              test   %r8,%r8
-  10: 75 57                jne    0x69
-  12: 5b                    pop    %rbx
-  13: 5d                    pop    %rbp
-  14: 41 5c                pop    %r12
-  16: c3                    retq
-  17: 4d 85 c9              test   %r9,%r9
-  1a: 74 71                je     0x8d
-  1c: 49 01 d9              add    %rbx,%r9
-  1f: eb 09                jmp    0x2a
-  21: 48 83 c0 01          add    $0x1,%rax
-  25: 4c 39 c8              cmp    %r9,%rax
-  28: 74 63                je     0x8d
-* 2a: 80 38 00              cmpb   $0x0,(%rax) <-- trapping instruction
-  2d: 74 f2                je     0x21
-  2f: eb d4                jmp    0x5
-  31: 41 bc 08 00 00 00    mov    $0x8,%r12d
-  37: 45 29 c4              sub    %r8d,%r12d
-  3a: 49 89 d8              mov    %rbx,%r8
-  3d: 4d                    rex.WRB
-  3e: 8d                    .byte 0x8d
-  3f: 0c                    .byte 0xc
+Bart.
