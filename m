@@ -2,84 +2,129 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C425ECAAD3
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Sep 2022 02:48:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10D08ECAAA1
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Sep 2022 06:08:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229669AbiIOCsX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Sep 2022 22:48:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49954 "EHLO
+        id S229495AbiIOGIv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Sep 2022 02:08:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34566 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229521AbiIOCsW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Sep 2022 22:48:22 -0400
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 217DD8C03B;
-        Wed, 14 Sep 2022 19:48:21 -0700 (PDT)
-Received: by mail-pl1-f182.google.com with SMTP id v1so16996283plo.9;
-        Wed, 14 Sep 2022 19:48:21 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date;
-        bh=iT4cNzTqaeWtOVogFt+yHUwJZZ1CJKXyTGfZWcy5x20=;
-        b=zXE4ulDF/0DTGV03eHzYsxa8xnflIEo3AIFVAa8I94nNmkJp/ijssvd/ZtQnpSZyg7
-         xqEPIOyFp7iZLSU9ZfniLWuTCIJpWvYjHYslolE6tZzWigqa624O45r2Qf8N9H6MA7dk
-         2yHwFYiI7Ot59qGLmWsXL9ccC+2q0dooqLDT7ekOEBY+F9fA5KZ6Q1ZScTwvhWUqeVmP
-         CfUYtB3n7pasZiEFSw5eXyomVVzyrO8JIeJXfbJQQj7t0oShVaOE+5DqIkcd84g3X1ei
-         UK0tD4yagPw/+PvTAbPksdv2mkcV7yf3f62Iesx9oU+Y4aEZhGpO2DyHGqST035JC7qQ
-         W7GQ==
-X-Gm-Message-State: ACrzQf3AzxiFXMhl+T8FkConXzWCsHNPhdvdt/h3ru2Yf+lZpd5GyBGW
-        qRjuTv6JnV2lXN3yC52imZ7if2bCTxo=
-X-Google-Smtp-Source: AMsMyM4gngiPyMz2ZPiGEJ3aOuJoiPcAxSmx+pJYNvBI6fIM0Ii9K8bs69+CMbcVtf278yc5nwFljQ==
-X-Received: by 2002:a17:90b:4d07:b0:1ef:521c:f051 with SMTP id mw7-20020a17090b4d0700b001ef521cf051mr8210222pjb.164.1663210100258;
-        Wed, 14 Sep 2022 19:48:20 -0700 (PDT)
-Received: from [192.168.3.219] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id y10-20020a62640a000000b0053e6bda08e0sm10937487pfb.219.2022.09.14.19.48.18
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 14 Sep 2022 19:48:19 -0700 (PDT)
-Message-ID: <350ec615-ffe8-2e0e-149d-4bf45932a585@acm.org>
-Date:   Wed, 14 Sep 2022 19:48:17 -0700
+        with ESMTP id S229548AbiIOGIq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Sep 2022 02:08:46 -0400
+Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0ACC4923E3;
+        Wed, 14 Sep 2022 23:08:45 -0700 (PDT)
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 801754540D;
+        Thu, 15 Sep 2022 06:08:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        in-reply-to:content-transfer-encoding:content-disposition
+        :content-type:content-type:mime-version:references:message-id
+        :subject:subject:from:from:date:date:received:received:received
+        :received; s=mta-01; t=1663222122; x=1665036523; bh=PdApB1kMEyqu
+        pzQ/4fpOS0LO0BizTf0W/oH4UuXKdSc=; b=gjs0NK6nxSVlF2/37JsbGPtg9NMx
+        1KtR1paYJL2yXVdkJuth+g34VumkxArSzGO0WsnIcRWlG7GERXtRA8UxrKiBtmTz
+        V96dYbaQgZwp89VAKIOD/ACOQ9ZjMUfJguqjM6OYAB4eHyQ2oAnlJ7wCGGq6KOYz
+        73AHFc6/ON3yBVg=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id 2y9JOqWYMKYi; Thu, 15 Sep 2022 09:08:42 +0300 (MSK)
+Received: from T-EXCH-02.corp.yadro.com (T-EXCH-02.corp.yadro.com [172.17.10.102])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id D689045409;
+        Thu, 15 Sep 2022 09:08:40 +0300 (MSK)
+Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
+ T-EXCH-02.corp.yadro.com (172.17.10.102) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
+ 15.1.669.32; Thu, 15 Sep 2022 09:08:40 +0300
+Received: from yadro.com (10.199.18.20) by T-EXCH-08.corp.yadro.com
+ (172.17.11.58) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1118.9; Thu, 15 Sep
+ 2022 09:08:40 +0300
+Date:   Thu, 15 Sep 2022 09:08:40 +0300
+From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
+To:     Mike Christie <michael.christie@oracle.com>
+CC:     Martin Petersen <martin.petersen@oracle.com>,
+        <target-devel@vger.kernel.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        <linux-scsi@vger.kernel.org>, <linux@yadro.com>
+Subject: Re: [PATCH v2] scsi: target: alua: do not report emtpy port group
+Message-ID: <20220915060840.GG9218@yadro.com>
+References: <20220912125457.22573-1-d.bogdanov@yadro.com>
+ <92f6024a-7898-e281-099a-c79b67fecafe@oracle.com>
+ <20220912214521.GF9218@yadro.com>
+ <82d31d9d-700c-d961-d284-a5a117487adc@oracle.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.1
-Subject: Re: [REGRESSION] introduced in 5.10.140 causes drives to drop from
- LSI SAS controller (Bisected to 6d17a112e9a63ff6a5edffd1676b99e0ffbcd269)
-Content-Language: en-US
-To:     Jason Wittlin-Cohen <jwittlincohen@gmail.com>,
-        regressions@lists.linux.dev
-Cc:     stable@vger.kernel.org, linux-scsi@vger.kernel.org,
-        alim.akhtar@samsung.com, Kiwoong Kim <kwmad.kim@samsung.com>
-References: <CADy0EvLGJmZe-x9wzWSB6+tDKNuLHd8Km3J5MiWWYQRR2ctS3A@mail.gmail.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <CADy0EvLGJmZe-x9wzWSB6+tDKNuLHd8Km3J5MiWWYQRR2ctS3A@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <82d31d9d-700c-d961-d284-a5a117487adc@oracle.com>
+X-Originating-IP: [10.199.18.20]
+X-ClientProxiedBy: T-EXCH-02.corp.yadro.com (172.17.10.102) To
+ T-EXCH-08.corp.yadro.com (172.17.11.58)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/14/22 19:21, Jason Wittlin-Cohen wrote:
-> 8d5c106fe216bf16080d7070c37adf56a9227e60 is the first bad commit
-> commit 8d5c106fe216bf16080d7070c37adf56a9227e60
-> Author: Kiwoong Kim <kwmad.kim@samsung.com <mailto:kwmad.kim@samsung.com>>
-> Date: Tue Aug 2 10:42:31 2022 +0900
+On Wed, Sep 14, 2022 at 02:18:40PM -0500, Mike Christie wrote:
 > 
-> scsi: ufs: core: Enable link lost interrupt
+> On 9/12/22 4:45 PM, Dmitry Bogdanov wrote:
+> >> Remember how ESX used to send a RTPG to one port and expect that it got
+> >> every group and that the state info was all in sync (basically opposite
+> >> if what's in the spec now)?
+> >>
+> >> The spec and ESX were updated, but I don't know if other OSs did this and
+> >> if/when everyone was updated. Do you know this info? Are the old ESX versions
+> >> that worked like that end of life?
+> > ESXi is kinda a pain. But fortunately it has nothing to do with that
+> > patch 😄
 > 
-> commit 6d17a112e9a63ff6a5edffd1676b99e0ffbcd269 upstream.
+> I didn't get why that is. How do you set up a distributed/cluster/HA target? I'm
+> probably missing that part.
 > 
-> Link lost is treated as fatal error with commit c99b9b230149 ("scsi: ufs:
-> Treat link loss as fatal error"), but the event isn't registered as
-> interrupt source. Enable it.
+> Software drivers like iscsi I get, but for HW drivers I didn't see how you do it.
+> 
+> For example, if you have 2 systems/nodes running LIO which each export the same
+> device via 1 port each where one is active/optimized and the other is standby and you
+> are using qla2xxx, then on the local node would you create 2 groups:
+> 
+> [root@ol8n4 alua]# pwd
+> /sys/kernel/config/target/core/iblock_0/device0/alua
+> 
+> [root@ol8n4 alua]# ls
+> default_tg_pt_gp  local  remote
+> 
+> Then under the mapped lun:
+> 
+> [root@ol8n4 lun_0]# pwd
+> /sys/kernel/config/target/..../tpgt_1/lun/lun_0
+> 
+> in the alua_tg_pt_gp file you set that to local. That would then have tg_pt_gp_members
+> set, but remote would not.
+> 
+> Before your patch, windows and ESX could do a RTPG to just one port/path and we would
+> return the default, local and remote groups. We don't want the default group, but we
+> wanted the local and remote one returned. With your patch we only return the the local
+> one now. I wasn't sure how that works for drivers like qla2xxx.
+> 
+> For iscsi, you could just mirror the remote node locally, so you would have a second
+> tpg:
+> 
+> [root@ol8n4 lun_0]# pwd
+> /sys/kernel/config/target/..../tpgt_2/lun/lun_0
+> 
+> and in there set alua_tg_pt_gp to remote. Your patch works fine for that because both
+> groups then have tg_pt_gp_members set so if the OS just does a RTPG to one path/port
+> you get all the groups.
+>
+I use a virtual remote fabric driver to configure wwn/iqn-tpg-lun of
+remote peers at each local node. In that way 'remote' alua port group
+will have ports(RTPI) too. That allows RTPG (and other discovery-like
+commands) report all ports in all port groups in the cluster.
+I sent it within the RFC patchset:
+https://patchwork.kernel.org/project/target-devel/patch/20220803162857.27770-36-d.bogdanov@yadro.com/
 
-Hi Jason,
-
-Something must have gone wrong during the bisection process. Commit
-8d5c106fe216 ("scsi: ufs: core: Enable link lost interrupt") only 
-affects the UFS driver and hence cannot change the behavior of a SAS 
-controller. How about repeating the bisection process?
-
-Thanks,
-
-Bart.
-
+BR,
+ Dmitry
