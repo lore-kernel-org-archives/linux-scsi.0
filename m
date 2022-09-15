@@ -2,182 +2,69 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C712DECAAA1
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Sep 2022 17:36:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1235BC32771
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Sep 2022 19:56:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229758AbiIORgH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 15 Sep 2022 13:36:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54048 "EHLO
+        id S229685AbiIOT44 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Sep 2022 15:56:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43260 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229538AbiIORgF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Sep 2022 13:36:05 -0400
-Received: from mail-ej1-x630.google.com (mail-ej1-x630.google.com [IPv6:2a00:1450:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F28D59E104
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Sep 2022 10:36:03 -0700 (PDT)
-Received: by mail-ej1-x630.google.com with SMTP id a26so15042071ejc.4
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Sep 2022 10:36:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date;
-        bh=xxprw39tRPkSL4ZeO72Twpa1ttQ9qdSpWu5XWi0LeF8=;
-        b=DeDexu417J9RVs5lVxFI0JVku3YggtVVq2Rb1vQPXW+7hCa24y6KPOFV7U+lrXUvnJ
-         aE/3C0bIg2dO8kjVKUUidFGfZpsks2r1JuOIVbO7donMP8zttHMx1zafPUPcmo0hdxaI
-         zlZzL58YqJ6ViMoclSxn4eEDnQCukYPjCGPN8=
+        with ESMTP id S229515AbiIOT4z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Sep 2022 15:56:55 -0400
+Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5459895AF5;
+        Thu, 15 Sep 2022 12:56:53 -0700 (PDT)
+Received: by mail-pj1-f44.google.com with SMTP id d64-20020a17090a6f4600b00202ce056566so14008917pjk.4;
+        Thu, 15 Sep 2022 12:56:53 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date;
-        bh=xxprw39tRPkSL4ZeO72Twpa1ttQ9qdSpWu5XWi0LeF8=;
-        b=FWB1QiWf/cXZ9AmxV8TizGW27pfmEIGudmLIuFU1ANwfQUN8qJp5mx/s0RKVKEDixp
-         gqS0UocG3CeBe/S4uB9MI/ZjcCEMvlVKcTnF+HxZn8JrF/0Jsje/Ldd02KaophvnNxXP
-         heyNoTrjhwMNtiG9ukWpRspJT+FopyqoPWkkpfP/O+7D8SaR53BZ4UjpoZ/PccNJWbmp
-         FrghBWtLTwMCB0x3BxTSU48Xm08Dqm7l2lJ2/VGsXzBTTSMTVf/Vy8W7KRWISJKnqNCA
-         RGm2kxo9UMWmJb793YqQUdFLX4ARoV6xHEQUrJpk2GL8sWIJmogQ27W2W6qPDVZrCgYt
-         XKgQ==
-X-Gm-Message-State: ACrzQf1G98Tdjf9lpoLWz6ZXVqGkoNC1mqdV04M17SB0S2NaZUSF1dqK
-        GtyKABzmyoAwFSK53VYAIX1hznkObwATeHEWQOq51HNF6OAJZ3ITFK27Z2++lUS7VtxNcawTmHc
-        AD01bqUBTlbI6cGGTNDyAmKAim7E=
-X-Google-Smtp-Source: AMsMyM4ekZhjwQRKaE++1fa2Uwz321P/xEA2Yipgrcckw541PRpGssjbGUQLqonrbbCKwTiYm2dXTb0iwuxqnrR0ze4=
-X-Received: by 2002:a17:907:2da6:b0:741:608f:718c with SMTP id
- gt38-20020a1709072da600b00741608f718cmr728838ejc.271.1663263362245; Thu, 15
- Sep 2022 10:36:02 -0700 (PDT)
+        h=content-transfer-encoding:in-reply-to:from:references:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date;
+        bh=gyQyTPpOZ8LGCjvpI2ddL5xmk77BHkTjwD50wytUqtQ=;
+        b=6yHX4yM+QXfnxcWc58gXRzr4muqzLMtQepRBP2l4MeU2r3rPoJGtDbZT+E225w1Avq
+         tGgCHC0NG6UcFHpDrS3FXlgwbI8ldBKKkXkk2cMoa23avO6rtf4mGoaZNKWJyIO6btr7
+         gy9SyID2VeQzVrV5kAPyXs95z00CVK0Rkfvn9e7JXtplW9D7CGWtP/sPe6zfCoQJstdQ
+         OpTiHOT/JzZsv2cEd8VsvGzYfarU6GVWcnscuSY/xkfiVv2O4CKEeAlv3Y3k+3KvM3Dv
+         tK79UXl/383k50t9eGIxN9sx+8OliTfJ7Ww0uyUe6v6lWDF/yNePmnvmBueiI1aWdWWq
+         7LgA==
+X-Gm-Message-State: ACrzQf1VFENR78Zym9ULarKIKvk+2LneS04OnEZvXxG8ldQi/RdRODNl
+        LwBDLUMcDb1h5TCAMDC5aq8=
+X-Google-Smtp-Source: AMsMyM55hVXIV0ScNgLxoKaWpwj9fO2GuHp8i0aZm9VTfQfTRzkCbTSBYnXjvmPe+MZlBs1DbfaF4w==
+X-Received: by 2002:a17:902:8301:b0:178:7a61:c01e with SMTP id bd1-20020a170902830100b001787a61c01emr1239258plb.90.1663271812660;
+        Thu, 15 Sep 2022 12:56:52 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:c3e3:32a8:d0fd:8248? ([2620:15c:211:201:c3e3:32a8:d0fd:8248])
+        by smtp.gmail.com with ESMTPSA id p18-20020a170902e75200b0017849a2b56asm6881371plf.46.2022.09.15.12.56.50
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 15 Sep 2022 12:56:51 -0700 (PDT)
+Message-ID: <df1b5b6e-5a98-00b3-0e23-6048463480a9@acm.org>
+Date:   Thu, 15 Sep 2022 12:56:49 -0700
 MIME-Version: 1.0
-References: <YyMIJh1HU2Qz9+Rs@kili>
-In-Reply-To: <YyMIJh1HU2Qz9+Rs@kili>
-From:   Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
-Date:   Thu, 15 Sep 2022 11:35:46 -0600
-Message-ID: <CAFdVvOxYKD9RVPo6ZHhwRXM5BGDqftNbE5m-hK+s149OYwMasg@mail.gmail.com>
-Subject: Re: [PATCH 1/2] scsi: mpi3mr: fix error codes in mpi3mr_report_manufacture()
-To:     Dan Carpenter <dan.carpenter@oracle.com>
-Cc:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        mpi3mr-drvr-developers <mpi3mr-linuxdrv.pdl@broadcom.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.12.0
+Subject: Re: [PATCH v2] scsi: ufs: add a variant operation in struct
+ ufs_hba_variant_ops
+Content-Language: en-US
+To:     SEO HOYOUNG <hy50.seo@samsung.com>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        bhoon95.kim@samsung.com, kwmad.kim@samsung.com
+References: <sc.suh@samsung.com; hy50.seo@samsung.com;>
+ <CGME20220913075407epcas2p1075426e0ef45b6969e50823d59c374d3@epcas2p1.samsung.com>
+ <20220912193703.102267-1-hy50.seo@samsung.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20220912193703.102267-1-hy50.seo@samsung.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-ACK.
+On 9/12/22 12:37, SEO HOYOUNG wrote:
+> Add ufs_hba_variant_ops about vendor error in check_error.
+> It need to reset when occurred ah8 related error.
+> At that time could not recovery with pwr cmd.
+> So add vendor error check function at ufs_hba_variant_ops.
 
-On Thu, Sep 15, 2022 at 5:10 AM Dan Carpenter <dan.carpenter@oracle.com> wrote:
->
-> There are three error paths which return success:
-> 1) Propagate the error code from mpi3mr_post_transport_req() if it fails.
-> 2) Return -EINVAL if "ioc_status != MPI3_IOCSTATUS_SUCCESS".
-> 3) Return -EINVAL if "le16_to_cpu(mpi_reply.response_data_length) !=
->    sizeof(struct rep_manu_reply)"
->
-> Fixes: 2bd37e284914 ("scsi: mpi3mr: Add framework to issue MPT transport cmds")
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> ---
->  drivers/scsi/mpi3mr/mpi3mr_transport.c | 58 ++++++++++++++------------
->  1 file changed, 32 insertions(+), 26 deletions(-)
->
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr/mpi3mr_transport.c
-> index 2367d9fe3fb9..74313cf68ad3 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
-> +++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
-> @@ -145,6 +145,7 @@ static int mpi3mr_report_manufacture(struct mpi3mr_ioc *mrioc,
->         u16 request_sz = sizeof(struct mpi3_smp_passthrough_request);
->         u16 reply_sz = sizeof(struct mpi3_smp_passthrough_reply);
->         u16 ioc_status;
-> +       u8 *tmp;
->
->         if (mrioc->reset_in_progress) {
->                 ioc_err(mrioc, "%s: host reset in progress!\n", __func__);
-> @@ -186,41 +187,46 @@ static int mpi3mr_report_manufacture(struct mpi3mr_ioc *mrioc,
->             "sending report manufacturer SMP request to sas_address(0x%016llx), port(%d)\n",
->             (unsigned long long)sas_address, port_id);
->
-> -       if (mpi3mr_post_transport_req(mrioc, &mpi_request, request_sz,
-> -           &mpi_reply, reply_sz, MPI3MR_INTADMCMD_TIMEOUT, &ioc_status))
-> +       rc = mpi3mr_post_transport_req(mrioc, &mpi_request, request_sz,
-> +                                      &mpi_reply, reply_sz,
-> +                                      MPI3MR_INTADMCMD_TIMEOUT, &ioc_status);
-> +       if (rc)
->                 goto out;
->
->         dprint_transport_info(mrioc,
->             "report manufacturer SMP request completed with ioc_status(0x%04x)\n",
->             ioc_status);
->
-> -       if (ioc_status == MPI3_IOCSTATUS_SUCCESS) {
-> -               u8 *tmp;
-> +       if (ioc_status != MPI3_IOCSTATUS_SUCCESS) {
-> +               rc = -EINVAL;
-> +               goto out;
-> +       }
->
-> -               dprint_transport_info(mrioc,
-> -                   "report manufacturer - reply data transfer size(%d)\n",
-> -                   le16_to_cpu(mpi_reply.response_data_length));
-> +       dprint_transport_info(mrioc,
-> +           "report manufacturer - reply data transfer size(%d)\n",
-> +           le16_to_cpu(mpi_reply.response_data_length));
->
-> -               if (le16_to_cpu(mpi_reply.response_data_length) !=
-> -                   sizeof(struct rep_manu_reply))
-> -                       goto out;
-> +       if (le16_to_cpu(mpi_reply.response_data_length) !=
-> +           sizeof(struct rep_manu_reply)) {
-> +               rc = -EINVAL;
-> +               goto out;
-> +       }
->
-> -               strscpy(edev->vendor_id, manufacture_reply->vendor_id,
-> -                    SAS_EXPANDER_VENDOR_ID_LEN);
-> -               strscpy(edev->product_id, manufacture_reply->product_id,
-> -                    SAS_EXPANDER_PRODUCT_ID_LEN);
-> -               strscpy(edev->product_rev, manufacture_reply->product_rev,
-> -                    SAS_EXPANDER_PRODUCT_REV_LEN);
-> -               edev->level = manufacture_reply->sas_format & 1;
-> -               if (edev->level) {
-> -                       strscpy(edev->component_vendor_id,
-> -                           manufacture_reply->component_vendor_id,
-> -                            SAS_EXPANDER_COMPONENT_VENDOR_ID_LEN);
-> -                       tmp = (u8 *)&manufacture_reply->component_id;
-> -                       edev->component_id = tmp[0] << 8 | tmp[1];
-> -                       edev->component_revision_id =
-> -                           manufacture_reply->component_revision_id;
-> -               }
-> +       strscpy(edev->vendor_id, manufacture_reply->vendor_id,
-> +            SAS_EXPANDER_VENDOR_ID_LEN);
-> +       strscpy(edev->product_id, manufacture_reply->product_id,
-> +            SAS_EXPANDER_PRODUCT_ID_LEN);
-> +       strscpy(edev->product_rev, manufacture_reply->product_rev,
-> +            SAS_EXPANDER_PRODUCT_REV_LEN);
-> +       edev->level = manufacture_reply->sas_format & 1;
-> +       if (edev->level) {
-> +               strscpy(edev->component_vendor_id,
-> +                   manufacture_reply->component_vendor_id,
-> +                    SAS_EXPANDER_COMPONENT_VENDOR_ID_LEN);
-> +               tmp = (u8 *)&manufacture_reply->component_id;
-> +               edev->component_id = tmp[0] << 8 | tmp[1];
-> +               edev->component_revision_id =
-> +                   manufacture_reply->component_revision_id;
->         }
->
->  out:
-> --
-> 2.35.1
->
-
--- 
-This electronic communication and the information and any files transmitted 
-with it, or attached to it, are confidential and are intended solely for 
-the use of the individual or entity to whom it is addressed and may contain 
-information that is confidential, legally privileged, protected by privacy 
-laws, or otherwise restricted from disclosure to anyone else. If you are 
-not the intended recipient or the person responsible for delivering the 
-e-mail to the intended recipient, you are hereby notified that any use, 
-copying, distributing, dissemination, forwarding, printing, or copying of 
-this e-mail is strictly prohibited. If you received this e-mail in error, 
-please return the e-mail to the sender, delete it from your computer, and 
-destroy any printed copy of it.
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
