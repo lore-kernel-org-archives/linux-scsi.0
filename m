@@ -2,77 +2,68 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CA3FECAAA1
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Sep 2022 07:25:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23ACCECAAD3
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Sep 2022 10:24:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229713AbiIOHY6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 15 Sep 2022 03:24:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49758 "EHLO
+        id S229774AbiIOKYJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Sep 2022 06:24:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51414 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229511AbiIOHY5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Sep 2022 03:24:57 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 098832A243;
-        Thu, 15 Sep 2022 00:24:54 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8A8E962152;
-        Thu, 15 Sep 2022 07:24:54 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 94BAEC433D7;
-        Thu, 15 Sep 2022 07:24:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1663226694;
-        bh=0aoY9jAPeP1iaMtU9S62GisNAxOIxu+F67GJSsoRT7c=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=TrexW+Fu/l5QwrL7gje6PAlzhjF87HujHmCO4CCBUFvb3MaDb0Tda752b2bs+Vk0x
-         +46xVX5Z7mXbVO4ug0uS5T3D6sU33TY49OkmyMS5uUxuFWoWfKlxSuk0RiY5UzEySI
-         qUjco3SGK0vW60zFJm+SR9NxjZxO5DMx/riHJZDo=
-Date:   Thu, 15 Sep 2022 09:25:18 +0200
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Jason Wittlin-Cohen <jwittlincohen@gmail.com>
-Cc:     regressions@lists.linux.dev, stable@vger.kernel.org,
-        linux-scsi@vger.kernel.org, alim.akhtar@samsung.com,
-        bvanassche@acm.org, Kiwoong Kim <kwmad.kim@samsung.com>
-Subject: Re: [REGRESSION] introduced in 5.10.140 causes drives to drop from
- LSI SAS controller (Bisected to 6d17a112e9a63ff6a5edffd1676b99e0ffbcd269)
-Message-ID: <YyLTXk4RlTcFgCQY@kroah.com>
-References: <CADy0EvLGJmZe-x9wzWSB6+tDKNuLHd8Km3J5MiWWYQRR2ctS3A@mail.gmail.com>
+        with ESMTP id S229457AbiIOKYH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Sep 2022 06:24:07 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B302A481CD
+        for <linux-scsi@vger.kernel.org>; Thu, 15 Sep 2022 03:24:05 -0700 (PDT)
+Received: from fraeml742-chm.china.huawei.com (unknown [172.18.147.207])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MStYn6sx5z67b2s;
+        Thu, 15 Sep 2022 18:22:37 +0800 (CST)
+Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
+ fraeml742-chm.china.huawei.com (10.206.15.223) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Thu, 15 Sep 2022 12:24:03 +0200
+Received: from [10.126.175.63] (10.126.175.63) by
+ lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Thu, 15 Sep 2022 11:24:02 +0100
+Message-ID: <d76925ce-e751-9fb8-a647-c9dbb141f62f@huawei.com>
+Date:   Thu, 15 Sep 2022 11:24:02 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CADy0EvLGJmZe-x9wzWSB6+tDKNuLHd8Km3J5MiWWYQRR2ctS3A@mail.gmail.com>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH v5 3/7] scsi: core: Fail host creation if creating the
+ proc directory fails
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>,
+        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
+        Mike Christie <michael.christie@oracle.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+References: <20220914225621.415631-1-bvanassche@acm.org>
+ <20220914225621.415631-4-bvanassche@acm.org>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <20220914225621.415631-4-bvanassche@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.126.175.63]
+X-ClientProxiedBy: lhrpeml100001.china.huawei.com (7.191.160.183) To
+ lhrpeml500003.china.huawei.com (7.191.162.67)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Sep 14, 2022 at 10:21:04PM -0400, Jason Wittlin-Cohen wrote:
-> #regzbot introduced 6d17a112e9a63ff6a5edffd1676b99e0ffbcd269
+On 14/09/2022 23:56, Bart Van Assche wrote:
+> Users expect that the contents of /proc/scsi is in sync with the contents
+> of /sys/class/scsi_host. Hence fail host creation if creating the proc
+> directory fails.
 > 
-> Issue: When running a 5.10.140 kernel compiled from kernel.org source, or a
-> bisected kernel with commit 6d17a112e9a63ff6a5edffd1676b99e0ffbcd269, 6 of
-> the 48 drives attached to my LSI 9207-8e SAS HBA (P20 firmware, IT mode)
-> will drop from the controller shortly after the boot process completes.  At
-> this point, the drives are not visible to the LSI controller, verified
-> using LSI's lsiutil.x86_64 to list all attached devices, nor are the drives
-> enumerated in /dev/disk/by-id. Attempts to access the drives result in I/O
-> errors reported in syslog. At some point thereafter, the drives reappear
-> and are accessible.
-> 
-> Running a vanilla 5.10.139 kernel or a bisected kernel with commit
-> 6d17a112e9a63ff6a5edffd1676b99e0ffbcd269 removed, all 48 drives appear
-> correctly, are listed in LSI's lsiutil tool, and appear in /dev/disk/by-id.
-> No I/O errors are reported from any drive and none of the drives drop off
-> the controller as experienced in 5.10.140.  SMART testing shows normal
-> results for all impacted drives.
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Ming Lei <ming.lei@redhat.com>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: John Garry <john.garry@huawei.com>
+> Cc: Mike Christie <michael.christie@oracle.com>
+> Cc: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
-Does this also have problems in the latest 5.15 and 5.19 release, or is
-it somehow limited to 5.10.y?
-
-Also, html emails are rejected by the mailing lists, so you might want
-to resend it all in text-only mode so that everyone can see the full
-details.
-
-thanks,
-
-greg k-h
+Reviewed-by: John Garry <john.garry@huawei.com>
