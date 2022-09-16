@@ -2,158 +2,149 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 667C2ECAAA1
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Sep 2022 01:55:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22D76C32771
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Sep 2022 01:59:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229863AbiIPBzD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 15 Sep 2022 21:55:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44372 "EHLO
+        id S229766AbiIPB7x (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Sep 2022 21:59:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52824 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229561AbiIPBzC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Sep 2022 21:55:02 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 820F713F6D;
-        Thu, 15 Sep 2022 18:55:01 -0700 (PDT)
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28FNnFqp013537;
-        Fri, 16 Sep 2022 01:54:57 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : content-type :
- mime-version; s=corp-2022-7-12;
- bh=SnHO15QjOnEElQWEUsZN8hidkT/LrbviWDzTQBrQn3M=;
- b=XHNi0Swpa7iQIJJK5uh7PpRTPqYb3l1Zp8KpK3hXc5ILr9+loLr95n4Iz9cHZq6uOeel
- eewZzP6NbtqVVxJtEMlEh2W+StP9fKI+n5NLTRnVxvd9qbGHQ+pfJ+/HReQZVDgy2M8P
- bnbOVCLx77b/BXtHUKtTnBhn2leC/HvpTQ94k5kOhcUo+pljUxeL6Fhip7h42DOfJ388
- eswVfk3AxNfQE5i4BMVq74stsSFjfVRbKM6szBbrrGjazTqzPUO0EvHlvJLl8Uf1DaWw
- SmATWf6DnpnPQeeWMSNafeYhJ5iO+Hq5K+iTwyDJ1LUBQeLNY+yGdxCWS+33njarJz80 HA== 
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3jm8xbs5v8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 16 Sep 2022 01:54:56 +0000
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 28G04PIu019689;
-        Fri, 16 Sep 2022 01:54:55 GMT
-Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2169.outbound.protection.outlook.com [104.47.55.169])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3jm8xfdgv9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 16 Sep 2022 01:54:55 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=jIKwAWnhrHlSH+f1rr9JnT1WUUSDfV3b4aIPY7WkX25UZ6TjPBr4r/ZEw3Uj+F0cqMbL7B2dSaaYcarjqIQnxoEo8lPJUGPvgm++S4Q1DNSn9mcBWBf5h9hssHu2YcViYDfKam8HXHwOfhvB2KbmvmZBAoQrKVliwrl6xRcMyVI+frroEWxzA2f8t+fR/APUMBK3gpPAENWD9Md4EErrCaQ4hLzkqkG2YaPxrjEq8zsazwVAPUtNW0NKJPUhKnluoH8LsP62RGaipWM4tOAyFnact7CecY6DJromua+crTCLa2R8x5VP9maW8RShjZw5RAh05lC+JppEP5FzichVDw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=SnHO15QjOnEElQWEUsZN8hidkT/LrbviWDzTQBrQn3M=;
- b=fwlvz09ZBDlrTjzxU1fxJtCJK7D3bs8vU0DczWak9TgHHWjaFmK3Q7SwASKWt7NZBUc7Mo1826/HxrlohyQqBXbxXqW2MTcg5V2myN+EwZxuHmNTtc45jpiCFA7s9BhjlsBilUC++2ZmcAPNg5BgmgGlwihZO4ZvXRjCiql1KvfZkgiV3c1UjoiJOhVd+4s8ZROzwQHplIu7+zPkgLCH8eW/ukEFdQSS8AyLRJy28giuyANtRyHWfEDZg2qbCgaaCjTyhNRCmYez7frPiNKJ4oZWk9prdUk2J9vm+imGJZl2bKuFZ4W6LsWPqiOsqRn+/lk3n+f7Sg0A9HNLzzokWA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=SnHO15QjOnEElQWEUsZN8hidkT/LrbviWDzTQBrQn3M=;
- b=tRvD4a7vMXAIcyTnMix3l39l5wXtN0/ElVLuHy9tE116O/rKoH7mjnSqZNkOUajsU6DtgPcgT+273fAQuYjiLlxAX9v7M0ZhOuP2ere+OAus/kDE2ZKRsZKz/AT6MDJZgI8S8KhSyAorIaq+UD10Z46U9l4InKdTh9x5zgxvBto=
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
- by DM4PR10MB6013.namprd10.prod.outlook.com (2603:10b6:8:ae::6) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5612.19; Fri, 16 Sep 2022 01:54:54 +0000
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::297f:836:f424:cd75]) by PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::297f:836:f424:cd75%3]) with mapi id 15.20.5632.015; Fri, 16 Sep 2022
- 01:54:53 +0000
-To:     SEO HOYOUNG <hy50.seo@samsung.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com, bvanassche@acm.org,
-        bhoon95.kim@samsung.com, kwmad.kim@samsung.com
-Subject: Re: [PATCH v2] scsi: ufs: add a variant operation in struct
+        with ESMTP id S229604AbiIPB7v (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Sep 2022 21:59:51 -0400
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5BD0D17073
+        for <linux-scsi@vger.kernel.org>; Thu, 15 Sep 2022 18:59:46 -0700 (PDT)
+Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20220916015940epoutp012a74330fbef73f54f3b5f90b7479bd4c~VNLMFXl2c2800628006epoutp01G
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Sep 2022 01:59:40 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20220916015940epoutp012a74330fbef73f54f3b5f90b7479bd4c~VNLMFXl2c2800628006epoutp01G
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1663293580;
+        bh=9G0ppnqCwIQ7bDdIKHP51/CzqD6B6ZK0tZT2BI4TquQ=;
+        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+        b=eyihuuVLtCFtuD6kve0yIcfg5RSKY16SqLfg69vvcVEbSOniPiAuSTMjhyC14VIpn
+         y7frmMJXcN0ZdOPc8NHFRym5EFyBVXYgfuIb2IlDItIZNJANLf4AZ3/j+PbP4r7FVn
+         YtXcROnKFQ3keI2XNS87SV2Nxs7YIAWB0/i1tTSI=
+Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+        20220916015940epcas2p42993e6a2335e42ac91587b8421c652d9~VNLLhZXH60158101581epcas2p4s;
+        Fri, 16 Sep 2022 01:59:40 +0000 (GMT)
+Received: from epsmges2p1.samsung.com (unknown [182.195.36.90]) by
+        epsnrtp3.localdomain (Postfix) with ESMTP id 4MTHLz5FvYz4x9Q0; Fri, 16 Sep
+        2022 01:59:39 +0000 (GMT)
+Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
+        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        C5.30.61565.B88D3236; Fri, 16 Sep 2022 10:59:39 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTPA id
+        20220916015938epcas2p49da7df282a581ba109cb3ed94ddc77cd~VNLKJw2N03027730277epcas2p4t;
+        Fri, 16 Sep 2022 01:59:38 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20220916015938epsmtrp100be8cfd8cef5ff0d5b40edf98500e6d~VNLKIw2gz2687026870epsmtrp1Z;
+        Fri, 16 Sep 2022 01:59:38 +0000 (GMT)
+X-AuditID: b6c32a45-643fb7000001f07d-9b-6323d88bd4cb
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        CF.95.18644.A88D3236; Fri, 16 Sep 2022 10:59:38 +0900 (KST)
+Received: from KORDO040863 (unknown [10.229.8.56]) by epsmtip1.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20220916015938epsmtip1ebe5b77a7960d1d2b72853540f72747f~VNLJ8l47J1798417984epsmtip1P;
+        Fri, 16 Sep 2022 01:59:38 +0000 (GMT)
+From:   "Hoyoung SEO" <hy50.seo@samsung.com>
+To:     "'Martin K. Petersen'" <martin.petersen@oracle.com>
+Cc:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <alim.akhtar@samsung.com>, <avri.altman@wdc.com>,
+        <jejb@linux.ibm.com>, <beanhuo@micron.com>, <bvanassche@acm.org>,
+        <bhoon95.kim@samsung.com>, <kwmad.kim@samsung.com>
+In-Reply-To: <yq1czbw2ihu.fsf@ca-mkp.ca.oracle.com>
+Subject: RE: [PATCH v2] scsi: ufs: add a variant operation in struct
  ufs_hba_variant_ops
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq1czbw2ihu.fsf@ca-mkp.ca.oracle.com>
+Date:   Fri, 16 Sep 2022 10:59:38 +0900
+Message-ID: <18d501d8c96f$fa5fba00$ef1f2e00$@samsung.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="Windows-1252"
+Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 14.0
+Thread-Index: AQH6/1cAF6qSg90m2bD6JVyUXcFHdQLDRczJAaloHG6teXuWMA==
+Content-Language: ko
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrIJsWRmVeSWpSXmKPExsWy7bCmqW73DeVkgz/TNSwezNvGZvHy51U2
+        i4MPO1ksvi59xmox7cNPZotFN7YxWdzccpTF4vKuOWwW3dd3sFksP/6PyYHL4/IVb48Jiw4w
+        enxf38Hm8fHpLRaPvi2rGD0+b5LzaD/QzRTAHpVtk5GamJJapJCal5yfkpmXbqvkHRzvHG9q
+        ZmCoa2hpYa6kkJeYm2qr5OIToOuWmQN0npJCWWJOKVAoILG4WEnfzqYov7QkVSEjv7jEVim1
+        ICWnwLxArzgxt7g0L10vL7XEytDAwMgUqDAhO+P2mt2MBU/ZKtYt+cHawHiCtYuRg0NCwETi
+        6vmULkYuDiGBHYwSmzeeYoJwPjFKHDzQxwjhfGaUOHn5CVsXIydYx7+2iWwQiV2MEv/3vodq
+        ec4osabhAjNIFZuAlsT1iW/BbBEBc4mJE46ygBQxC7xjlNjX3w6W4BQwlliz6TYjiC0sECXx
+        sfkhK4jNIqAqMfvScrA4r4ClxJ1bz5kgbEGJkzOfsIDYzAIGEu/PzWeGsOUltr+dwwxxnoLE
+        jrOvGSEWO0nse/aSHaJGRGJ2ZxszyBESAls4JNqvbYP6x0Vi7+qHULawxKvjW9ghbCmJl/1t
+        UHaxxI83q5kgmhsYJZa2H4PaZiwx61k7IyQolSWO3II6jk+i4/Bfdogwr0RHmxBEtZLEmbm3
+        ocISEgdn50xgVJqF5LNZSD6bheSzWUg+WMDIsopRLLWgODc9tdiowBAe3cn5uZsYwWlXy3UH
+        4+S3H/QOMTJxMB5ilOBgVhLh7QtRSBbiTUmsrEotyo8vKs1JLT7EaAoM7InMUqLJ+cDEn1cS
+        b2hiaWBiZmZobmRqYK4kzuuqzZgsJJCeWJKanZpakFoE08fEwSnVwGRUNnOpmy2bZqfv/4X/
+        FzaI31ArSf8dYCWjVZTsY3PDNtlfo9yKY33LdY3rz+5ualdPemt/Nn17m4HvY/FjlUvsONmf
+        /Zsk95ljVoxYXaDQ/J9OV3NWPNbdXbBLJeyunHs5a4/rBW3GZ52+UTc9hJdzsHwpsL7df1Du
+        0rRP9YFKP5ee+TzhwG1lifqCe9o8k368T1ZeqCZd7dT/+nOdWKLLHZvvnYfqjy0oXivMo7+x
+        pCw++PQ8A6Yvz5hjtHcWLnL0v2G16lrhy6j/X+qVtlkKdayIfr2Zr4mDJ/J/45Kqh/NqXp4M
+        3Pefs3Lu9MVxStaru3/O9pfVe6g8tfTKG+luqYKY4Ajd6Bf/jr2YpMRSnJFoqMVcVJwIAE6Q
+        FB9EBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprNIsWRmVeSWpSXmKPExsWy7bCSnG7XDeVkg3+XdCwezNvGZvHy51U2
+        i4MPO1ksvi59xmox7cNPZotFN7YxWdzccpTF4vKuOWwW3dd3sFksP/6PyYHL4/IVb48Jiw4w
+        enxf38Hm8fHpLRaPvi2rGD0+b5LzaD/QzRTAHsVlk5Kak1mWWqRvl8CVcXvNbsaCp2wV65b8
+        YG1gPMHaxcjJISFgIvGvbSJbFyMXh5DADkaJvieToBISEv8XNzFB2MIS91uOgMWFBJ4ySrw7
+        XARiswloSVyf+JYZxBYRMJeYOOEoC4jNLPCDUWLCXieIoZsZJc7MuQ1WxClgLLFm021GEFtY
+        IELi2tvjYHEWAVWJ2ZeWg8V5BSwl7tx6zgRhC0qcnPkEaqiRxLlD+9kgbHmJ7W/nMEMcpyCx
+        4+xrRogjnCT2PXvJDlEjIjG7s415AqPwLCSjZiEZNQvJqFlIWhYwsqxilEwtKM5Nzy02LDDK
+        Sy3XK07MLS7NS9dLzs/dxAiOPy2tHYx7Vn3QO8TIxMF4iFGCg1lJhLcvRCFZiDclsbIqtSg/
+        vqg0J7X4EKM0B4uSOO+FrpPxQgLpiSWp2ampBalFMFkmDk6pBqaqB93Cf97yROm5ev5dvstr
+        r9HOe/e/RhZ6+d5kLYx9rHdx2Qt2FxWe+ckCP9qyd+udPe/jnV7G+S2iqITh7eSD82ad0usR
+        LbkbyHZCs8u04u8E2a5rSXoMu5yPJq9c+kk3VCVYvMr1lWe12ee47mqzbRzHdXV0Nu+JCdou
+        2eb6TrTSoz81pz7vJJ9Y5k8p7srfXMfXZvu2z+iZcO3CiZ35c9bNXGm248BewzBN7cOeXO5Z
+        /9dObn/+/5LlkRdByjXXmL+UM/ZUaSy+GjxbeOcMbj8rIa+fxYI/N71mvcPpLnpH5YPLSt8T
+        Kndj/659sllXe7/W4p0xOgVNvaGOmcsCajsFVSf8Vt7nYsqmqcRSnJFoqMVcVJwIANRBkGku
+        AwAA
+X-CMS-MailID: 20220916015938epcas2p49da7df282a581ba109cb3ed94ddc77cd
+X-Msg-Generator: CA
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20220913075407epcas2p1075426e0ef45b6969e50823d59c374d3
 References: <CGME20220913075407epcas2p1075426e0ef45b6969e50823d59c374d3@epcas2p1.samsung.com>
         <20220912193703.102267-1-hy50.seo@samsung.com>
-Date:   Thu, 15 Sep 2022 21:54:50 -0400
-In-Reply-To: <20220912193703.102267-1-hy50.seo@samsung.com> (SEO HOYOUNG's
-        message of "Tue, 13 Sep 2022 04:37:03 +0900")
-Content-Type: text/plain
-X-ClientProxiedBy: SA9PR13CA0023.namprd13.prod.outlook.com
- (2603:10b6:806:21::28) To PH0PR10MB4759.namprd10.prod.outlook.com
- (2603:10b6:510:3d::12)
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH0PR10MB4759:EE_|DM4PR10MB6013:EE_
-X-MS-Office365-Filtering-Correlation-Id: 7ad6e104-2d77-40b2-f068-08da978672ce
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: IFR4INiSlVOPf2rv/+Hg3+tbD05wwKhOQQL4hKgdeaP+XwfjtmXAZ8LK7aCJFUiZkLX/l95XagaDrBaatYDXKeqPAcY81ny07ik1MwgHDGL4S7+3kM3ttCrBaqmKHTS6Ah0WuY4RKze+xzKLgCCNRHwD7FAs9aWYhFxsCO/8xwH+Mjk2HJMoLTM8JCp/tpkMea6/ZC2l7RYyxFEt7w17Rah9KAOYNhNsEpT1i3kTRjOBtYfCYtQ9A/KYQT3qAie/gFp5AcJF+cqzPgYvECfBR9FLnGBHzk4NaIRP2YpPEAGgMM8kAwJzrePqFNvd0gYb+6X6x8Dpa5ArnEfdMQ8XkUCbmb+Mmc8eYZMO6ErgN2Z4aoD4KITUfBIil0Tzq4gzFi6tf60AhS8i9SeRuxkS46iwqqrOOkO7Ty9FS6H/fjPxgF+oNxMFc+lscOE6apUyMIwYwAFrsWHdUFsbJ2k7OGJDuE1D0uVhp4BWBUsoczvKqIoccszNjI+ZrBomKJ+ZyyhcKn4rtwQ4Tpa9op3dHyh8sWNZnFOG30nMs2y/dHLkIv0y1Urq9EadqxWBnUJR8KaVhJclLkO4tk+G4RNU1n/mp1uXkQA/1F/4E0eHx52fK34445Gi5VklmePc8cub4VEaHNiSFJuQJ5u2KwaGzJIee1KlbF8UOL4Wrow2POutUePM/JtKrYcuqxyIJosloamQXbSPCQYFRp67p8HRnQ==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(136003)(346002)(376002)(39860400002)(366004)(396003)(451199015)(478600001)(558084003)(7416002)(2906002)(316002)(86362001)(36916002)(66946007)(8676002)(8936002)(6506007)(4326008)(6512007)(66556008)(66476007)(6486002)(6916009)(38100700002)(26005)(41300700001)(186003)(5660300002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?Xy38+C6Mv0HGy6SsmwP8KvxEZIChBNC6rx/jg7y9gUqVaM3g7lnYd/JPk9c/?=
- =?us-ascii?Q?49OAIinxe+6Q65YbKYmijUh7sTjuoNjIzsDyyzQ2NSvpz2gWYPJjg1KvSj9k?=
- =?us-ascii?Q?aY9K+WOKjd5nnp+nGyHyuwuKdup2PouQp+p8mNe+pXuNlxHCg+AG3uYDharO?=
- =?us-ascii?Q?rjGO8Yb+bay2R4KwFdlygxD7wkzn9PLAErgUw3jUH8SNdhb0FqafhbnfzhlL?=
- =?us-ascii?Q?Hn6deaSt76H9uYyswf/PWHdPMrm5/tG8qHF6aoZlMSItPy2G8NCC84hW8DqX?=
- =?us-ascii?Q?4Mxb8tXQZTZDH6JYsNPtm8IhqlnD+lfzoNGzwIi8hKjoV6SI1ULCY4eSfFeX?=
- =?us-ascii?Q?3UaJOF5/29juSrg2l/MLECSR8IqYumSG6OtCEgiHqnCRXK/scUYc2cPNTg1H?=
- =?us-ascii?Q?2Go1gDX9vtzpSzUJU0qJtG32MMXXKRsvhTctRgONuCs8OWVPNJOVXa5/ZrK5?=
- =?us-ascii?Q?YIu8YA9s36iEY6wrUYNbyKr8y58BsHdkx3JNAW2xWAEfpEk/M+a4O2z/3tfu?=
- =?us-ascii?Q?hx7gze4GZuUELSpYDNWZZYwM3E6OgaHUuOoig8CLNZDHBsAfF97uNSEh/D9T?=
- =?us-ascii?Q?NhQ1oOzLey1Q194MfBjRuSB0bHbuSI9mSthdcEO1s0aRVviMCFd3eTblr14G?=
- =?us-ascii?Q?X2PH/BV+lv6KxP9+/3zASw7H3cLziUAn+M72o5fBqtdifsQ7Fs5KkPTrhhiM?=
- =?us-ascii?Q?rNHknn5JPFWefLPtn59joHmPeP99nZdPfEXsf2UOAkK1tYMQgTg4zwuRKZGN?=
- =?us-ascii?Q?Hefl9zwBcOMJkPkO3NmkU94b5WmddA8rlmwlWoDFYBJ8RhGx0P7JzTuivhyQ?=
- =?us-ascii?Q?aGsmF2Pk8MoqNh6XC9rtYVjqOvgZ1QLYymxAGRdLMDnXPEPWgbKFC8kxokqJ?=
- =?us-ascii?Q?s/bZ/33dxlzjJ5ceKfIjsAqtBbsboBHvZ+qxkJxRe6u/flaD90jNpIBw2WY4?=
- =?us-ascii?Q?9skeaFA7m2EjKeOMMcml9bDH32IxWxhrZztMo6z++b1zePjMopgxnAv8Y+U/?=
- =?us-ascii?Q?hiIwyq55Km2OmkBx7tXoAZJjc3FPhRe0hQl4wNBPSg1oc5j+Y/KNBXaMl9HP?=
- =?us-ascii?Q?GhghPxgqJdx7KbZkcwDcPdKNh2Ul3/IDsgJLrhDK3VrfbNKN6cP/V4DOaFmQ?=
- =?us-ascii?Q?8AcNul33mF2NxQv0zXeHDb0cRK+KK1dn3+iKeNKMoY1XHgY0E9m+eORMNQxE?=
- =?us-ascii?Q?QTkVRVwcDDn2kW+6htVSZDVofS4lLRZuigGiYJyHOZduuI4oegO9vEU/sS4S?=
- =?us-ascii?Q?Ueep2jLfPGRQ1+ZZOZzHb2bdxZSAJXmLNakXaV+nQRYf2SqSDf3mvs5+k8CA?=
- =?us-ascii?Q?hia5KKLS1aicyrcySsTh5AdVuq0lDzP/IgYyw939D2sI48eC2cMWVa7yG4gs?=
- =?us-ascii?Q?TC8XKmchVbk8fz2hJHgng8iEhbNq5Nobz+4zvjwKodpJ2hqZ7xBmzxCfJBlX?=
- =?us-ascii?Q?fq0h3P+C0El4VodDYy73DB+gtTmTmHRRwCsZFzUwa66kjgICF+r/MEnEytxu?=
- =?us-ascii?Q?wvB/Y58Ls4R1jHnAd8l6jZA40k+xAUkWD8H/PNHoB/jxj6PdwFFRBTpI12yt?=
- =?us-ascii?Q?gIBo5Dqux11bGqwnNaiZJ0YU84mBpbtEnas7vTc0eM1A+EHTVOwpTxLrAW6p?=
- =?us-ascii?Q?Nw=3D=3D?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7ad6e104-2d77-40b2-f068-08da978672ce
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Sep 2022 01:54:53.8624
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: jl02DApuEmgtEqCpltUa1cjXQ1pWy3Tk/LiEkhifwzhmhGvaIIoERZHRWn+DIk2ayg3bpNyF8XJJGrZvdK1OQdjODw+1nwyEEwrgfo9e0Z0=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR10MB6013
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
- definitions=2022-09-15_10,2022-09-14_04,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlogscore=999 mlxscore=0
- adultscore=0 malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2209130000
- definitions=main-2209160012
-X-Proofpoint-GUID: BoMFt60prbkgWwYckY5ych4yNYf-BxED
-X-Proofpoint-ORIG-GUID: BoMFt60prbkgWwYckY5ych4yNYf-BxED
+        <yq1czbw2ihu.fsf@ca-mkp.ca.oracle.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
-Seo,
 
-> +static inline void ufshcd_vops_check_int_error(struct ufs_hba *hba,
-> +					       bool *queue_eh_work)
-> +{
-> +	if (hba->vops & hba->vops->check_int_error)
+> -----Original Message-----
+> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
+> Sent: Friday, September 16, 2022 10:55 AM
+> To: SEO HOYOUNG
+> Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org;
+> alim.akhtar@samsung.com; avri.altman@wdc.com; jejb@linux.ibm.com;
+> martin.petersen@oracle.com; beanhuo@micron.com; bvanassche@acm.org;
+> bhoon95.kim@samsung.com; kwmad.kim@samsung.com
+> Subject: Re: [PATCH v2] scsi: ufs: add a variant operation in struct
+> ufs_hba_variant_ops
+> 
+> 
+> Seo,
+> 
+> > +static inline void ufshcd_vops_check_int_error(struct ufs_hba *hba,
+> > +					       bool *queue_eh_work)
+> > +{
+> > +	if (hba->vops & hba->vops->check_int_error)
+> 
+> Uhm?
+> 
+I will fixed it.
+Thanks.
 
-Uhm?
+> > +		hba->vops->check_int_error(hba, queue_eh_work); }
+> > +
+> 
+> --
+> Martin K. Petersen	Oracle Linux Engineering
 
-> +		hba->vops->check_int_error(hba, queue_eh_work);
-> +}
-> +
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
