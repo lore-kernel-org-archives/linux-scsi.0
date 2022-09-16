@@ -2,91 +2,123 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70510C32771
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Sep 2022 03:02:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EED3C54EE9
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Sep 2022 03:59:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229987AbiIPDCl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 15 Sep 2022 23:02:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46150 "EHLO
+        id S229863AbiIPD7h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Sep 2022 23:59:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52740 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229838AbiIPDCJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Sep 2022 23:02:09 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77A6598D21;
-        Thu, 15 Sep 2022 20:02:05 -0700 (PDT)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28G1x7XW004152;
-        Fri, 16 Sep 2022 03:02:02 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2022-7-12;
- bh=9kFFqQZdJlfi8fk9MtgdWYfAQjp0OHCJwsm8IiKbfpc=;
- b=qbJTBPk+vLr+fa72JVHK12cvyv7rtomUJdniJx/z3nbvTAaYc+/hX0FXwtU3Avq9cGyF
- U64/kw9J2igY9zEIsHMXICrgch5heU6Qu+y1kPM2W+4xrHWmalXVxgUPLYnim5O+pL++
- a04Q3WX/bEpWNmm4s9QqVUPyIv3QoZJfYteMgAj3/3XjFp9O9oR5CF5nbxf9SfI3KuQ+
- JrvghAjejf2KX5TOpQYK9APvsOQYLZ/51QXvFk4BtOD7J0Pm5RfPxkkx9dJb7JbUdLq1
- wLvIK04G3u4F/Pg6e3SpmDsrISq5A0r0VVkwhwHO3HevX1oZaGouQtl5XoDZxv0XkRoE 8g== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3jm8xah2vp-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 16 Sep 2022 03:02:02 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 28G04bH1015932;
-        Fri, 16 Sep 2022 03:02:01 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3jm8x8pjwu-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 16 Sep 2022 03:02:01 +0000
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 28G31xOZ014516;
-        Fri, 16 Sep 2022 03:02:00 GMT
-Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3jm8x8pjv1-2;
-        Fri, 16 Sep 2022 03:02:00 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Himanshu Madhani <himanshu.madhani@oracle.com>,
+        with ESMTP id S229612AbiIPD7f (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Sep 2022 23:59:35 -0400
+Received: from mail-oa1-x31.google.com (mail-oa1-x31.google.com [IPv6:2001:4860:4864:20::31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 442DBC78;
+        Thu, 15 Sep 2022 20:59:28 -0700 (PDT)
+Received: by mail-oa1-x31.google.com with SMTP id 586e51a60fabf-1280590722dso50464817fac.1;
+        Thu, 15 Sep 2022 20:59:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date;
+        bh=1Q4Q9Drjvqq1OzQpeLiPQrhsLdnCghR5eiThiTgj0LA=;
+        b=OFqboWUmjs/WYzHvErueQTrw09F5eFZuMDajiKvEPpDG8FZ35D/lr5vkWi/vYVRsKM
+         9GK3qIPVvi/B/kkUS+StxyQoxTASuOVhbs5ZsY1qN95e6xaqJOQA9wmZQCx79PMdsh7P
+         kSu1ior1aFxXjTZ6QQOuuK5VWmmt+l+s5M6oh20B26X/Iyo+hqiXY9HMSU2YOVXooHVw
+         gL3r5EAUMxdLCp3DM0Mt8cai0AP9iLixRUb8x25GsTt5oIo/CbXwWbokBh6+s2RpnYVD
+         wIs1WeMCAOTIH1ceVgGOmON/Z8iPjuIgUBm8RcbJXQiMnkbd41NASg/lIitHAnYAHL0x
+         BaKg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date;
+        bh=1Q4Q9Drjvqq1OzQpeLiPQrhsLdnCghR5eiThiTgj0LA=;
+        b=weSClYkUfSUGlpR4lLxMI5rrH0PWJI27FVACxluArgw6i6iS+DGRaSyQsQYwSGnvuk
+         QjmySDivrpg36MunyZ2f2bRNxZxAA/N79FYlnoZk++Ig6sBAywo8y2oGrl1twLwiP44S
+         EnV45cJyctDEOsSEV43UHZHvuniCVjwXtQ8pSb+VQgafcUYbrdkOKs0Kd5ylXQA3hs28
+         vqXvIzvFXB8Fupf9t9EOHcbfEnJLOT3lOKpiVv7Hlde4y8irPvRU1OV9MS2TtJTeiVCg
+         rqyfIYMyT5ZhWiA3uAwEPrV0QLvm14NQz2fSwM9eyXHpWhS9B4gAqQouoPjCOq5pLdgH
+         PQ8g==
+X-Gm-Message-State: ACgBeo2ArmYCWC4sGsh8zGxTQi1Outd9cbyZJfh1fZ4kTMv0rbqbU1dl
+        257rAcRJQEp8A3/JBxRW4/0=
+X-Google-Smtp-Source: AA6agR7xj+5OeYbULd3eX6Qwve+ZgXBIf/zRlJXE/JNQe/Hop8uxIj6QG+rIq/IIlJy0a9W+hUU1KQ==
+X-Received: by 2002:a05:6870:3116:b0:11d:342a:4419 with SMTP id v22-20020a056870311600b0011d342a4419mr7100187oaa.251.1663300767511;
+        Thu, 15 Sep 2022 20:59:27 -0700 (PDT)
+Received: from macondo.. ([2804:431:e7cd:8cb3:f8d3:a3e1:53c:3ab3])
+        by smtp.gmail.com with ESMTPSA id m189-20020aca58c6000000b003450abf4404sm8566200oib.21.2022.09.15.20.59.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 15 Sep 2022 20:59:27 -0700 (PDT)
+From:   Rafael Mendonca <rafaelmendsr@gmail.com>
+To:     James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Rafael Mendonca <rafaelmendsr@gmail.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        GR-QLogic-Storage-Upstream@marvell.com
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: qla2xxx: Fix memory leak in __qlt_24xx_handle_abts()
-Date:   Thu, 15 Sep 2022 23:01:56 -0400
-Message-Id: <166329729478.12731.14401759516196987191.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.36.1
-In-Reply-To: <20220914024924.695604-1-rafaelmendsr@gmail.com>
-References: <20220914024924.695604-1-rafaelmendsr@gmail.com>
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Gaurav Srivastava <gaurav.srivastava@broadcom.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Muneendra Kumar <muneendra.kumar@broadcom.com>
+Cc:     Rafael Mendonca <rafaelmendsr@gmail.com>,
+        James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: lpfc: Fix memory leak in lpfc_create_port()
+Date:   Fri, 16 Sep 2022 00:59:07 -0300
+Message-Id: <20220916035908.712799-1-rafaelmendsr@gmail.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
- definitions=2022-09-15_10,2022-09-14_04,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=711 phishscore=0
- malwarescore=0 mlxscore=0 spamscore=0 suspectscore=0 bulkscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2209130000 definitions=main-2209160020
-X-Proofpoint-GUID: oJG7VFHPGjJCkLcAu_pqbmZTlG92tkW-
-X-Proofpoint-ORIG-GUID: oJG7VFHPGjJCkLcAu_pqbmZTlG92tkW-
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 13 Sep 2022 23:49:24 -0300, Rafael Mendonca wrote:
+Commit 5e633302ace1 ("scsi: lpfc: vmid: Add support for VMID in mailbox
+command") introduced allocations for the VMID resources in
+lpfc_create_port() after the call to scsi_host_alloc(). Upon failure on the
+VMID allocations, the new code would branch to the 'out' label, which
+returns NULL without unwinding anything, thus skipping the call to
+scsi_host_put().
 
-> Commit 8f394da36a36 ("scsi: qla2xxx: Drop TARGET_SCF_LOOKUP_LUN_FROM_TAG")
-> made the __qlt_24xx_handle_abts() function return early if
-> tcm_qla2xxx_find_cmd_by_tag() doesn't find a command, but it missed to
-> clean up the allocated memory for the management command in such a case.
-> 
-> 
+Fix the problem by creating a separate label 'out_free_vmid' to unwind the
+VMID resources and make the 'out_put_shost' label call only
+scsi_host_put(), as was done before the introduction of allocations for
+VMID.
 
-Applied to 6.0/scsi-fixes, thanks!
+Fixes: 5e633302ace1 ("scsi: lpfc: vmid: Add support for VMID in mailbox command")
+Signed-off-by: Rafael Mendonca <rafaelmendsr@gmail.com>
+---
+ drivers/scsi/lpfc/lpfc_init.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-[1/1] scsi: qla2xxx: Fix memory leak in __qlt_24xx_handle_abts()
-      https://git.kernel.org/mkp/scsi/c/601be20fc6a1
-
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 55a1ad6eed03..6f572f0c5c45 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -4819,7 +4819,7 @@ lpfc_create_port(struct lpfc_hba *phba, int instance, struct device *dev)
+ 	rc = lpfc_vmid_res_alloc(phba, vport);
+ 
+ 	if (rc)
+-		goto out;
++		goto out_put_shost;
+ 
+ 	/* Initialize all internally managed lists. */
+ 	INIT_LIST_HEAD(&vport->fc_nodes);
+@@ -4837,16 +4837,17 @@ lpfc_create_port(struct lpfc_hba *phba, int instance, struct device *dev)
+ 
+ 	error = scsi_add_host_with_dma(shost, dev, &phba->pcidev->dev);
+ 	if (error)
+-		goto out_put_shost;
++		goto out_free_vmid;
+ 
+ 	spin_lock_irq(&phba->port_list_lock);
+ 	list_add_tail(&vport->listentry, &phba->port_list);
+ 	spin_unlock_irq(&phba->port_list_lock);
+ 	return vport;
+ 
+-out_put_shost:
++out_free_vmid:
+ 	kfree(vport->vmid);
+ 	bitmap_free(vport->vmid_priority_range);
++out_put_shost:
+ 	scsi_host_put(shost);
+ out:
+ 	return NULL;
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.34.1
+
