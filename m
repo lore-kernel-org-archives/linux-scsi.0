@@ -2,81 +2,121 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 798D4ECAAD8
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Sep 2022 16:19:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20741ECAAD8
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Sep 2022 18:42:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229822AbiIPQTh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 16 Sep 2022 12:19:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34082 "EHLO
+        id S230113AbiIPSm4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 16 Sep 2022 14:42:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40388 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229454AbiIPQTd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Sep 2022 12:19:33 -0400
-Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E9EE321
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Sep 2022 09:19:27 -0700 (PDT)
-Received: by mail-pj1-f50.google.com with SMTP id x1-20020a17090ab00100b001fda21bbc90so152850pjq.3
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Sep 2022 09:19:27 -0700 (PDT)
+        with ESMTP id S230249AbiIPSmi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Sep 2022 14:42:38 -0400
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D437CB8F28
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Sep 2022 11:42:26 -0700 (PDT)
+Received: by mail-pl1-f169.google.com with SMTP id k21so11693936pls.11
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Sep 2022 11:42:26 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date;
-        bh=XiQfLejD+ikYTrirS2m9xfoWAcYSxqAJLJbjvmNRJ5g=;
-        b=uq6DbZDbYQ57FegLuXEOKoF5ibZPyIprgT+tmlMODEy/0VgKWZ0dmo67V9vKQYbVMJ
-         Bfxh03YlYTMhETsmkI0voca2pvK+ja+o+yXtRSpVzvTkEqQX5qmSAEKL5zRCMrhVDxl/
-         OI1kYu1/EnFP596NDvWWvuD6pDORJKFNfx8kk5ktuWG4XXhIGLOhcEJhnyVJZRCkNSxv
-         5tI6BiOsvfZ5lBW7nwsG7yj9+Wapim9dwYnXn3F9z2LKoUbfVijvc0DkOE78PLZ7vPjF
-         m31U08GheJiTNNc4xVM4uxsd19s1P+7SEc8Sg5tsYoD6JdW/fjevTIL9cSuBCx5z+qss
-         fKKg==
-X-Gm-Message-State: ACrzQf0nB/9z9kj3fWoSN1sghSB8dQ7jyLRimoXil0xAJR+10UHQlZAD
-        CDaL3+O/GfAzDdJObFB7Azm6efi1veQ=
-X-Google-Smtp-Source: AMsMyM67L2wMYb4XBi/1nrWiY7FWzUA74iYsva05MGEf1MxvtX9UZRYW42O47ZKVIyEJfPbZwsO0Gg==
-X-Received: by 2002:a17:902:ce85:b0:178:292b:a87a with SMTP id f5-20020a170902ce8500b00178292ba87amr558180plg.167.1663345166195;
-        Fri, 16 Sep 2022 09:19:26 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:b2fd:791c:a216:ceef? ([2620:15c:211:201:b2fd:791c:a216:ceef])
-        by smtp.gmail.com with ESMTPSA id c2-20020a170903234200b001786b712bf7sm4242548plh.151.2022.09.16.09.19.24
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 16 Sep 2022 09:19:25 -0700 (PDT)
-Message-ID: <44e17063-3e69-98b8-b6e8-b73f8e449715@acm.org>
-Date:   Fri, 16 Sep 2022 09:19:23 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.12.0
-Subject: Re: [PATCH] scsi: core: Add io timeout count for scsi device
-Content-Language: en-US
-To:     Wu Bo <wubo40@huawei.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        qiuchangqi.qiu@huawei.com
-References: <32aff63d-1b79-916a-50e2-1e6c113ed9ef@huawei.com>
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date;
+        bh=fgGk5ZlTzagiFFEIY9ZlkyjyaTEOKb5EwjaNFdAYWw4=;
+        b=WPwyh6xY19Q2WorHmEh6kqfVzZ0JddbkL5ELoIBJrTmPqrHYR5mhezErjLQ+63MCR8
+         swB9mMh6NpWruwa2vgyA3ZVIsmwLjrdAaHxtQcKGCMUGuL/Yl5zUksPrr2oZ9S1Be22z
+         113jPz+yRtkuNtuGnre/jBh/sXYDBJN9cvPeBmUrW+bczKbwmi8pOvagKJ70FBYPEmPz
+         Rlp1+Dm6q5iCjSWIxafQhs0MKf/0tBUVNrEix1grn8gErDrWWKWPsxcnEQGil1Obpjm7
+         aWbzROw3yoUZLTfo5gt+LFcUbnu3QpttRvvZ1Xktw0mWNvDh+WMc0p1te/QPmjqmwcd3
+         T/aA==
+X-Gm-Message-State: ACrzQf3zDEUa1kIbHaiM3yRriDafq99HTaCAkk9TjOIS7CMwNpSIkrWQ
+        xMiOFw4fBmrZsoFxujB9CIktRcMxOvE=
+X-Google-Smtp-Source: AMsMyM7/GSTfDBtslL883++8n4NCbSqij0w3YxftFrh5ItgIcYyR2z15H7si3q0PHnrqh6J1R5ewfw==
+X-Received: by 2002:a17:90b:2245:b0:200:57df:44cf with SMTP id hk5-20020a17090b224500b0020057df44cfmr18023165pjb.135.1663353746056;
+        Fri, 16 Sep 2022 11:42:26 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:b2fd:791c:a216:ceef])
+        by smtp.gmail.com with ESMTPSA id b15-20020a170903228f00b001784a45511asm8427077plh.79.2022.09.16.11.42.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 16 Sep 2022 11:42:25 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <32aff63d-1b79-916a-50e2-1e6c113ed9ef@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        dh0421.hwang@samsung.com, Asutosh Das <asutoshd@codeaurora.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Jinyoung Choi <j-young.choi@samsung.com>
+Subject: [PATCH] scsi: ufs: Fix deadlocks between power management and error handler
+Date:   Fri, 16 Sep 2022 11:42:06 -0700
+Message-Id: <20220916184220.867535-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.37.3.968.ga6b4b080e4-goog
+MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/15/22 19:01, Wu Bo wrote:
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index 448748e..e84aea9 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -334,6 +334,7 @@ enum blk_eh_timer_return scsi_timeout(struct request 
-> *req)
->          trace_scsi_dispatch_cmd_timeout(scmd);
->          scsi_log_completion(scmd, TIMEOUT_ERROR);
-> 
-> +       atomic_inc(&scmd->device->iotmo_cnt);
->          if (host->eh_deadline != -1 && !host->last_reset)
->                  host->last_reset = jiffies;
+The following deadlocks have been observed on multiple test setups:
 
-Please rebase this patch on top of Martin's for-next branch and repost 
-this patch. I cannot apply this patch with "git am" on Martin's for-next 
-branch.
+* ufshcd_wl_suspend() is waiting for blk_execute_rq() to complete while it
+  holds host_sem.
+* ufshcd_eh_host_reset_handler() invokes ufshcd_err_handler() and the
+  latter function tries to obtain host_sem.
+This is a deadlock because blk_execute_rq() can't execute SCSI commands
+while the host is in the SHOST_RECOVERY state and because the error
+handler cannot make progress either.
 
-Thanks,
+* ufshcd_wl_runtime_resume() is waiting for blk_execute_rq() to finish
+  while it holds host_sem.
+* ufshcd_eh_host_reset_handler() invokes ufshcd_err_handler() and the
+  latter function calls pm_runtime_resume().
+This is a deadlock because of the same reason as the previous scenario.
 
-Bart.
+Fix both deadlocks by not obtaining host_sem from the power management
+code paths. Removing the host_sem locking from the power management code
+is safe because the ufshcd_err_handler() is already serialized against
+SCSI command execution.
 
+The ufshcd_rpm_get_sync() call at the start of
+ufshcd_err_handling_prepare() may deadlock since calling scsi_execute()
+is required by the UFS runtime resume implementation. Fixing that
+deadlock falls outside the scope of this patch.
+
+Cc: dh0421.hwang@samsung.com
+Cc: Asutosh Das <asutoshd@codeaurora.org>
+Fixes: b294ff3e3449 ("scsi: ufs: core: Enable power management for wlun")
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/ufs/core/ufshcd.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 7c15cbc737b4..cd3c2aa981c6 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -9254,16 +9254,13 @@ static int ufshcd_wl_suspend(struct device *dev)
+ 	ktime_t start = ktime_get();
+ 
+ 	hba = shost_priv(sdev->host);
+-	down(&hba->host_sem);
+ 
+ 	if (pm_runtime_suspended(dev))
+ 		goto out;
+ 
+ 	ret = __ufshcd_wl_suspend(hba, UFS_SYSTEM_PM);
+-	if (ret) {
++	if (ret)
+ 		dev_err(&sdev->sdev_gendev, "%s failed: %d\n", __func__,  ret);
+-		up(&hba->host_sem);
+-	}
+ 
+ out:
+ 	if (!ret)
+@@ -9296,7 +9293,6 @@ static int ufshcd_wl_resume(struct device *dev)
+ 		hba->curr_dev_pwr_mode, hba->uic_link_state);
+ 	if (!ret)
+ 		hba->is_sys_suspended = false;
+-	up(&hba->host_sem);
+ 	return ret;
+ }
+ #endif
