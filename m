@@ -2,118 +2,92 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBCB7ECAAD8
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Sep 2022 21:22:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98380ECAAA1
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Sep 2022 21:40:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229655AbiIPVWk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 16 Sep 2022 17:22:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42338 "EHLO
+        id S229743AbiIPVkB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 16 Sep 2022 17:40:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229436AbiIPVWj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Sep 2022 17:22:39 -0400
-Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91DBF95E40;
-        Fri, 16 Sep 2022 14:22:38 -0700 (PDT)
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28GIA0a2019380;
-        Fri, 16 Sep 2022 14:22:34 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=date : from : to :
- cc : subject : in-reply-to : message-id : references : mime-version :
- content-type; s=pfpt0220; bh=VYI6/00owk0O6G3XDM77cjPICoPf+pMVR+2coYAax/I=;
- b=JmByx+yO3nZYV+PpsyLXu3FRZbZxs+ckSMo3sJVsf+YWafhg3hV44WY3J5p0BvnB2rSh
- i8j/8bGxT0iJvbDk//PZimwckvklKyb4l58vY10n46i+L7pAyn8sxLS72ImJ69dvmpu4
- RmeL9+qkuBzv77NWz33VwwPpMaBN19FUDVpZi16eSEELCaodCHoyJXRYoAJncgvFXoaC
- soPeFKajmZaOVPNmxTcQHoEATLG+Ie6mgNqFOjArdmXJ9KEJpzYEw6wJRokwjejxi4Dk
- IeOmIWYoONq0ZzyJ+nLjkonN0E7QM5x/oF0U69/Bwjc+2xlvLWurRPBI6a7QizFKY5v0 rw== 
-Received: from dc5-exch02.marvell.com ([199.233.59.182])
-        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3jm8y758uk-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Fri, 16 Sep 2022 14:22:34 -0700
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Fri, 16 Sep
- 2022 14:22:32 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.18 via Frontend
- Transport; Fri, 16 Sep 2022 14:22:32 -0700
-Received: from mvluser05.qlc.com (unknown [10.112.10.135])
-        by maili.marvell.com (Postfix) with ESMTP id 94C1A3F7044;
-        Fri, 16 Sep 2022 14:22:32 -0700 (PDT)
-Received: from localhost (aeasi@localhost)
-        by mvluser05.qlc.com (8.14.4/8.14.4/Submit) with ESMTP id 28GLMTVi015156;
-        Fri, 16 Sep 2022 14:22:29 -0700
-X-Authentication-Warning: mvluser05.qlc.com: aeasi owned process doing -bs
-Date:   Fri, 16 Sep 2022 14:22:29 -0700
-From:   Arun Easi <aeasi@marvell.com>
-To:     Ingo Molnar <mingo@redhat.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     Steven Rostedt <rostedt@goodmis.org>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        James Bottomley <jejb@linux.ibm.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-next@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: Re: [EXT] Re: [PATCH v3 1/1] tracing: Fix compile error in trace_array
- calls when TRACING is disabled
-In-Reply-To: <yq15yho3y0s.fsf@ca-mkp.ca.oracle.com>
-Message-ID: <77936835-03cf-fcc1-b563-da141d7ccbe0@marvell.com>
-References: <20220907233308.4153-1-aeasi@marvell.com>
- <20220907233308.4153-2-aeasi@marvell.com>
- <yq15yho3y0s.fsf@ca-mkp.ca.oracle.com>
+        with ESMTP id S229748AbiIPVj7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Sep 2022 17:39:59 -0400
+Received: from mail-pg1-f181.google.com (mail-pg1-f181.google.com [209.85.215.181])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9797E1FCFC
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Sep 2022 14:39:58 -0700 (PDT)
+Received: by mail-pg1-f181.google.com with SMTP id bh13so21515852pgb.4
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Sep 2022 14:39:58 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date;
+        bh=Feo+txNMREv9gGYCjdzt5aBtj7MBH0ePNzjWAS9UyuM=;
+        b=ovgpZ+lIg1Z+el0aixzkh6dZyuQTllEvWuzbb5YlgG55CJ+uIDvFBq1W2zaLSPd8+g
+         PN3jMsxzmCUCAxr99byXlhci4RIxLosfAZRNFKGK/1t4EIrcQUgCr8q+QwGSiTTKJsiW
+         tmPIZm89eWa8B+VqaNudycVofnLcWBxdVAog9bqeBb2afXv5Kn7stYqVGvlghbQeRrmr
+         5mk8L8JN6FoNn2q9RKO3VFvb9r9tGV7oM81cHu+NiKQAL1pMp73NSLq72GyTyND/v0Kh
+         fhMdCLBfcjyQcqOMvaIfjToFLnSU7OMgFP+mAHbuQbVARBAchIT0zw/4NhJN2fLRqQs+
+         k/tQ==
+X-Gm-Message-State: ACrzQf03XGR/ZaewQeTlEc6JNdlUB3Dhg91chnBBKpP5fmMzdNANN3ND
+        xiPgcDLrIXVsd+12UMreleZ9FBddCz0=
+X-Google-Smtp-Source: AMsMyM6p8gWMfSJV3B4FCygHSVhBVqmPBmHt/1vOfGsiDEZrbQB9Ri2VCzj+jj+rqlXZpQV8lyJQow==
+X-Received: by 2002:a63:4f08:0:b0:438:d81c:2d32 with SMTP id d8-20020a634f08000000b00438d81c2d32mr6218859pgb.411.1663364397672;
+        Fri, 16 Sep 2022 14:39:57 -0700 (PDT)
+Received: from [192.168.3.219] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id y3-20020a17090a134300b001fe2ab750bbsm1949644pjf.29.2022.09.16.14.39.55
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 16 Sep 2022 14:39:56 -0700 (PDT)
+Message-ID: <4fadab02-5ab7-03d5-e849-55eaa26113cf@acm.org>
+Date:   Fri, 16 Sep 2022 14:39:54 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-X-Proofpoint-ORIG-GUID: RtYJ4Gf6Hhzj7uXicuut5eU3m_7yJf-z
-X-Proofpoint-GUID: RtYJ4Gf6Hhzj7uXicuut5eU3m_7yJf-z
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
- definitions=2022-09-16_14,2022-09-16_01,2022-06-22_01
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.2.1
+Subject: Re: [PATCH v1] ufs: core: bypass get rpm when err handling with
+ pm_op_in_progress
+Content-Language: en-US
+To:     peter.wang@mediatek.com, stanley.chu@mediatek.com,
+        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com
+Cc:     wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
+        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
+        cc.chou@mediatek.com, chaotian.jing@mediatek.com,
+        jiajie.hao@mediatek.com, powen.kao@mediatek.com,
+        qilin.tan@mediatek.com, lin.gui@mediatek.com
+References: <20220915115858.7642-1-peter.wang@mediatek.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20220915115858.7642-1-peter.wang@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Since Steve is travelling, trying Ingo, who is a co-maintainer of trace 
-stuff.
+On 9/15/22 04:58, peter.wang@mediatek.com wrote:
+> -static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
+> +static void ufshcd_err_handling_prepare(struct ufs_hba *hba, bool *rpm_put)
+>   {
+> -	ufshcd_rpm_get_sync(hba);
+> +	if (!hba->pm_op_in_progress) {
+> +		ufshcd_rpm_get_sync(hba);
+> +		*rpm_put = true;
+> +	}
+> +
 
-Hi Ingo,
+Hi Peter,
 
-If you could review/approve the patch, that would be very helpful, as this 
-is a build breaker fix.
+I don't think that this patch is sufficient. If 
+ufshcd_err_handling_prepare() is called by the host reset handler 
+(ufshcd_eh_host_reset_handler()) then the host state will be 
+SHOST_RECOVERY. In that state SCSI command submission will hang and 
+hence any ufshcd_rpm_get_sync() call will hang.
 
-Please see the link below for more context:
+How about removing the ufshcd_rpm_get_sync() call from 
+ufshcd_err_handling_prepare() and the ufshcd_rpm_put() call from 
+ufshcd_err_handling_unprepare()? It is guaranteed that no commands are 
+in progress for a runtime suspended LUN so the code for aborting pending 
+requests in the UFS error handler will be skipped anyway if it is 
+invoked for a runtime suspended device.
 
-Most recent (v3) patch posting:
-https://lore.kernel.org/linux-scsi/20220907233308.4153-2-aeasi@marvell.com/
+Thanks,
 
-Steve suggesting to take the patch via SCSI tree:
-https://lore.kernel.org/linux-scsi/20220906174140.41b46a5f@gandalf.local.home/
-
-Regards,
--Arun
-
-On Thu, 15 Sep 2022, 6:32pm, Martin K. Petersen wrote:
-
-> External Email
-> 
-> ----------------------------------------------------------------------
-> 
-> Steven,
-> 
-> Can you please review Arun's patch?
-> 
-> > Fix this compilation error seen when CONFIG_TRACING is not enabled:
-> >
-> > drivers/scsi/qla2xxx/qla_os.c: In function 'qla_trace_init':
-> > drivers/scsi/qla2xxx/qla_os.c:2854:25: error: implicit declaration of function
-> > 'trace_array_get_by_name'; did you mean 'trace_array_set_clr_event'?
-> > [-Werror=implicit-function-declaration]
-> >  2854 |         qla_trc_array = trace_array_get_by_name("qla2xxx");
-> >       |                         ^~~~~~~~~~~~~~~~~~~~~~~
-> >       |                         trace_array_set_clr_event
-> >
-> > drivers/scsi/qla2xxx/qla_os.c: In function 'qla_trace_uninit':
-> > drivers/scsi/qla2xxx/qla_os.c:2869:9: error: implicit declaration of function
-> > 'trace_array_put' [-Werror=implicit-function-declaration]
-> >  2869 |         trace_array_put(qla_trc_array);
-> >       |         ^~~~~~~~~~~~~~~
-> >
-> 
-> 
+Bart.
