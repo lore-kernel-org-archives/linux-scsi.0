@@ -2,88 +2,76 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88F5EC6FA8B
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Sep 2022 12:12:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D837C54EE9
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Sep 2022 12:12:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230311AbiIPMMV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 16 Sep 2022 08:12:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37976 "EHLO
+        id S229484AbiIPMMj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 16 Sep 2022 08:12:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38322 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229484AbiIPMMU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Sep 2022 08:12:20 -0400
+        with ESMTP id S231366AbiIPMMf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Sep 2022 08:12:35 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 777815F102;
-        Fri, 16 Sep 2022 05:12:19 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F369B089B;
+        Fri, 16 Sep 2022 05:12:26 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 2BA72B82681;
-        Fri, 16 Sep 2022 12:12:18 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B99F4C433C1;
-        Fri, 16 Sep 2022 12:12:12 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 0C259B825ED;
+        Fri, 16 Sep 2022 12:12:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42111C433D6;
+        Fri, 16 Sep 2022 12:12:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1663330336;
-        bh=avDYvG2aCI5qbbRVHFWoG6998vd8DKq7JCfEt0kpfYY=;
-        h=From:To:Cc:Subject:Date:From;
-        b=UGMqFk01x7rdBerClFtSJZB/0BKcR+m3pecxM7j8LZWxYttSh9T406YWX49/iFC9o
-         y8ikGUzYeR2olfa4jAoIG/nqklGEGWW76XGgBJH5CvhiSBU2FTPdOKxanEQaT6+2lG
-         qobsmiCWvdijlkdqEDqnP6NN3tyNFQte+Sn5NbXRS8KgS2wyn0ffo+2YF9sRYZSzxV
-         v4O3n1+t3akZVgEsc5Eqh6oO1NstqSx8bhz81CLhbcJZNYS46jrDfM7AINOpubQAGT
-         4rfmh6J8snObPkEJN+ufwrrKiutAPf0El8I5Izi4FwMMnxPxDJJtMxQwniFaQQSgz4
-         CZRvJ5Ygvldaw==
+        s=k20201202; t=1663330343;
+        bh=1yC4yByue2GYH632QAml0xc+/AbTMt75z9T2KM9E5/8=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=KzBWuMVdTPhMTe7OZeES5V8+g4vhkw12tj9mM/M25RaibgJwfS7C3Jsb7o4GhrMgJ
+         RbsmLfuReB/1BCYW9OP5T/V663gzk1deObXpWwfAm/cLR/HV2MPB7MpTPjWmDE27tX
+         dpM73KAvVZVNQatnfqQtU9Ud0T/rpYZqt4ZlWHrX8kzljTh6frj3apEUTjPRG1esBu
+         BhY8Od0s0ZdU8/MLsXWFAc9JlzJL6TgsTHSzLKNIIV2Lnbh5OuNgai3t7G57b5hIk5
+         cJGFo9nwiE/t/OJKdR7RiPHPjqoNczIdKS9jB2OHFzdGTMiJkDvTPl7bzSVg095lhi
+         2/83eGzL+6yCQ==
 From:   Vinod Koul <vkoul@kernel.org>
-To:     Bjorn Andersson <andersson@kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Bjorn Andersson <andersson@kernel.org>
 Cc:     linux-arm-msm@vger.kernel.org, Vinod Koul <vkoul@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         Bart Van Assche <bvanassche@acm.org>,
-        linux-scsi@vger.kernel.org, Wesley Cheng <quic_wcheng@quicinc.com>,
-        linux-usb@vger.kernel.org
-Subject: [PATCH 0/6] Introduce the SC8180x devices
-Date:   Fri, 16 Sep 2022 17:41:58 +0530
-Message-Id: <20220916121204.3880182-1-vkoul@kernel.org>
+        linux-scsi@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 2/6] scsi: ufs: dt-bindings: Add SC8180x binding
+Date:   Fri, 16 Sep 2022 17:42:00 +0530
+Message-Id: <20220916121204.3880182-3-vkoul@kernel.org>
 X-Mailer: git-send-email 2.37.3
+In-Reply-To: <20220916121204.3880182-1-vkoul@kernel.org>
+References: <20220916121204.3880182-1-vkoul@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This add Qualcomm SC8180x SoC which features in Lenovo Flex 5G laptop. This
-also adds support for Primus platform as well as Lenovo Flex 5G laptop.
+Document the UFS HC for SC8180x SoC
 
-I would be great if Martin and Greg can ack the binding patch so that
-everything can go thru qcom tree
+Signed-off-by: Vinod Koul <vkoul@kernel.org>
+---
+ Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 1 +
+ 1 file changed, 1 insertion(+)
 
-Bjorn Andersson (3):
-  arm64: dts: qcom: Introduce the SC8180x platform
-  arm64: dts: qcom: sc8180x: Introduce Primus
-  arm64: dts: qcom: sc8180x: Introduce Lenovo Flex 5G
-
-Vinod Koul (3):
-  dt-bindings: firmware: document Qualcomm SC8180x SCM
-  scsi: ufs: dt-bindings: Add SC8180x binding
-  dt-bindings: usb: qcom,dwc3: Add SC8180x binding
-
- .../bindings/firmware/qcom,scm.yaml           |    1 +
- .../devicetree/bindings/ufs/qcom,ufs.yaml     |    1 +
- .../devicetree/bindings/usb/qcom,dwc3.yaml    |    1 +
- arch/arm64/boot/dts/qcom/Makefile             |    2 +
- .../boot/dts/qcom/sc8180x-lenovo-flex-5g.dts  |  590 +++
- arch/arm64/boot/dts/qcom/sc8180x-pmics.dtsi   |  326 ++
- arch/arm64/boot/dts/qcom/sc8180x-primus.dts   |  706 +++
- arch/arm64/boot/dts/qcom/sc8180x.dtsi         | 3939 +++++++++++++++++
- 8 files changed, 5566 insertions(+)
- create mode 100644 arch/arm64/boot/dts/qcom/sc8180x-lenovo-flex-5g.dts
- create mode 100644 arch/arm64/boot/dts/qcom/sc8180x-pmics.dtsi
- create mode 100644 arch/arm64/boot/dts/qcom/sc8180x-primus.dts
- create mode 100644 arch/arm64/boot/dts/qcom/sc8180x.dtsi
-
+diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+index f2d6298d926c..dd0256357247 100644
+--- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
++++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+@@ -26,6 +26,7 @@ properties:
+           - qcom,msm8994-ufshc
+           - qcom,msm8996-ufshc
+           - qcom,msm8998-ufshc
++          - qcom,sc8180x-ufshc
+           - qcom,sc8280xp-ufshc
+           - qcom,sdm845-ufshc
+           - qcom,sm6350-ufshc
 -- 
 2.37.3
 
