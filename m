@@ -2,46 +2,46 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF8E7ECAAD8
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Sep 2022 14:10:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 798D4ECAAD8
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Sep 2022 16:19:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231825AbiIPOKf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 16 Sep 2022 10:10:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49732 "EHLO
+        id S229822AbiIPQTh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 16 Sep 2022 12:19:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34082 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231628AbiIPOKd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Sep 2022 10:10:33 -0400
-Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C5C090839
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Sep 2022 07:10:32 -0700 (PDT)
-Received: by mail-pj1-f51.google.com with SMTP id fs14so21200987pjb.5
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Sep 2022 07:10:32 -0700 (PDT)
+        with ESMTP id S229454AbiIPQTd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Sep 2022 12:19:33 -0400
+Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E9EE321
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Sep 2022 09:19:27 -0700 (PDT)
+Received: by mail-pj1-f50.google.com with SMTP id x1-20020a17090ab00100b001fda21bbc90so152850pjq.3
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Sep 2022 09:19:27 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date;
-        bh=NEyG8j4IjaWlO7jCwgl1iFccURQgBDA/O4Ce316I9RY=;
-        b=rZi+zWoIIpTKWsu0kMSSB8bLFFVarn+Ovl9vjE8l5HLfCmgLmoYnqNtVG5p1iL+0+X
-         5WFMVtIsLL0kXjUAkOxjkFctaMy8BRbXa+UFEh3zALGRgyZ4VvYY/DvXqEcb9BDf5Ck3
-         S+m78VRd9O2c5ddrV6dsPsMWpnWJPt3UolmSsSTOA8cgqECLTgV0O+Ft/IDvW/nbh/gE
-         CacJBRtgGQYWpX88iU2JpRE2RmazglwqxW/KEwfEnnVZQKM6iaVI5CJNXwzuqSWSrB3q
-         4bLoTkFyLiLXb898B3Y69Z7bxwUe8KRJqI3W2o+B2rYNpDfwbVXpqTWA8NjmEPiWTKEQ
-         IbLQ==
-X-Gm-Message-State: ACrzQf0YaqDss3TucBXJtaEGag9pKAIdOcv9J7RITGJN6H8YbHs32S9y
-        mD2G9P37mkGep4kTFv0VyD0=
-X-Google-Smtp-Source: AMsMyM70RlDiqUuxBeFMaBEF39vhtEmPMaLrPpxoO1VW+3dXWZWoNQlzngCJOZbuO3XFgeoGn/So1A==
-X-Received: by 2002:a17:902:cec1:b0:178:cdb:8458 with SMTP id d1-20020a170902cec100b001780cdb8458mr5128plg.161.1663337431256;
-        Fri, 16 Sep 2022 07:10:31 -0700 (PDT)
-Received: from [192.168.50.14] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id q7-20020a170902a3c700b00176dc72ad88sm14748304plb.287.2022.09.16.07.10.29
+        bh=XiQfLejD+ikYTrirS2m9xfoWAcYSxqAJLJbjvmNRJ5g=;
+        b=uq6DbZDbYQ57FegLuXEOKoF5ibZPyIprgT+tmlMODEy/0VgKWZ0dmo67V9vKQYbVMJ
+         Bfxh03YlYTMhETsmkI0voca2pvK+ja+o+yXtRSpVzvTkEqQX5qmSAEKL5zRCMrhVDxl/
+         OI1kYu1/EnFP596NDvWWvuD6pDORJKFNfx8kk5ktuWG4XXhIGLOhcEJhnyVJZRCkNSxv
+         5tI6BiOsvfZ5lBW7nwsG7yj9+Wapim9dwYnXn3F9z2LKoUbfVijvc0DkOE78PLZ7vPjF
+         m31U08GheJiTNNc4xVM4uxsd19s1P+7SEc8Sg5tsYoD6JdW/fjevTIL9cSuBCx5z+qss
+         fKKg==
+X-Gm-Message-State: ACrzQf0nB/9z9kj3fWoSN1sghSB8dQ7jyLRimoXil0xAJR+10UHQlZAD
+        CDaL3+O/GfAzDdJObFB7Azm6efi1veQ=
+X-Google-Smtp-Source: AMsMyM67L2wMYb4XBi/1nrWiY7FWzUA74iYsva05MGEf1MxvtX9UZRYW42O47ZKVIyEJfPbZwsO0Gg==
+X-Received: by 2002:a17:902:ce85:b0:178:292b:a87a with SMTP id f5-20020a170902ce8500b00178292ba87amr558180plg.167.1663345166195;
+        Fri, 16 Sep 2022 09:19:26 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:b2fd:791c:a216:ceef? ([2620:15c:211:201:b2fd:791c:a216:ceef])
+        by smtp.gmail.com with ESMTPSA id c2-20020a170903234200b001786b712bf7sm4242548plh.151.2022.09.16.09.19.24
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 16 Sep 2022 07:10:30 -0700 (PDT)
-Message-ID: <d40ed9f0-1149-6c49-0888-211a21808e2c@acm.org>
-Date:   Fri, 16 Sep 2022 07:10:29 -0700
+        Fri, 16 Sep 2022 09:19:25 -0700 (PDT)
+Message-ID: <44e17063-3e69-98b8-b6e8-b73f8e449715@acm.org>
+Date:   Fri, 16 Sep 2022 09:19:23 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.13.0
+ Thunderbird/91.12.0
 Subject: Re: [PATCH] scsi: core: Add io timeout count for scsi device
 Content-Language: en-US
 To:     Wu Bo <wubo40@huawei.com>,
@@ -53,13 +53,30 @@ References: <32aff63d-1b79-916a-50e2-1e6c113ed9ef@huawei.com>
 From:   Bart Van Assche <bvanassche@acm.org>
 In-Reply-To: <32aff63d-1b79-916a-50e2-1e6c113ed9ef@huawei.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 9/15/22 19:01, Wu Bo wrote:
-> Current the scsi device has iorequest count, iodone count
-> and ioerr count, but lack of io timeout count.
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index 448748e..e84aea9 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -334,6 +334,7 @@ enum blk_eh_timer_return scsi_timeout(struct request 
+> *req)
+>          trace_scsi_dispatch_cmd_timeout(scmd);
+>          scsi_log_completion(scmd, TIMEOUT_ERROR);
+> 
+> +       atomic_inc(&scmd->device->iotmo_cnt);
+>          if (host->eh_deadline != -1 && !host->last_reset)
+>                  host->last_reset = jiffies;
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Please rebase this patch on top of Martin's for-next branch and repost 
+this patch. I cannot apply this patch with "git am" on Martin's for-next 
+branch.
+
+Thanks,
+
+Bart.
+
