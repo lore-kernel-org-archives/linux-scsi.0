@@ -2,89 +2,118 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51CFAC54EE9
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Sep 2022 07:17:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92F95C54EE9
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Sep 2022 08:21:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229778AbiISHRZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Sep 2022 03:17:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58162 "EHLO
+        id S229690AbiISIVN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Sep 2022 04:21:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38436 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229588AbiISHRY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Sep 2022 03:17:24 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 203D213F79;
-        Mon, 19 Sep 2022 00:17:23 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id D24F01F88B;
-        Mon, 19 Sep 2022 07:17:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1663571841; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=fA7npP5z7rFFxTvYsv/Mfbqal+4K1ZZ4Ee0H7eQXkyo=;
-        b=xH1eScaphBpRPR3BOlaAqxFofYzSr6kIa7depl5KhucZXLf58DOpSHs+uB8JvD3DjPsfvQ
-        +PYxu2LxfV+g1wJIIlERBR3OhfNF+n1qQvZt7HU6nWSsswq4g+nTghwXWVe2oOm/0pfF84
-        50RQWZlOrHO9vDqe/0Oa5S7fpzA1ZlA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1663571841;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=fA7npP5z7rFFxTvYsv/Mfbqal+4K1ZZ4Ee0H7eQXkyo=;
-        b=FLCKaSEGbFJk8yVJXYq2R2mv5f3Jh7p0Ne8KiJSrJPEYWjPMQf09RwEfF12vm3hmUBSkTy
-        zNpmrdLbRcUbiWAA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id C3FF613A96;
-        Mon, 19 Sep 2022 07:17:21 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id aiDRL4EXKGN/HAAAMHmgww
-        (envelope-from <dwagner@suse.de>); Mon, 19 Sep 2022 07:17:21 +0000
-Date:   Mon, 19 Sep 2022 09:17:21 +0200
-From:   Daniel Wagner <dwagner@suse.de>
-To:     Ren Zhijie <renzhijie2@huawei.com>
-Cc:     njavali@marvell.com, GR-QLogic-Storage-Upstream@marvell.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com, aeasi@marvell.com,
-        himanshu.madhani@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH -next] scsi: qla2xxx: Fix build error
- implicit-function-declaration
-Message-ID: <20220919071721.upsccdkhzp3zanui@carbon.lan>
-References: <20220919030810.1626-1-renzhijie2@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220919030810.1626-1-renzhijie2@huawei.com>
+        with ESMTP id S229484AbiISIVM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Sep 2022 04:21:12 -0400
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 207BD1FCCE;
+        Mon, 19 Sep 2022 01:21:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1663575671; x=1695111671;
+  h=from:to:cc:subject:date:message-id;
+  bh=deyOOXlYqnmDLE5BpLkNWI5st6/3bKZVJDo+6iqfkKk=;
+  b=keo0uY7KA3ZgLPXOX48xHyYlDJEGAkGGeYl7XHEI0jYS/mG7UGkJGlEJ
+   W8MXOULQAYhEljmUQuhUnQdUfNO3jO+oR2g4zQhAl/eF1IVxdIdr54Uhg
+   RzKnE6mHO0Pu5GygNOyFmdwU1+o5HWVR+fWPEhKZyP0qAew1/Zj0+T82y
+   ZLK1SSQauly8D10+vaTm3Iklk38LoT5Jzv5wb3w8Cf/r726BBrrKXrwE0
+   ArncR2Z8Z9bZtQwAtc7Duq9Qi9GISNWAYrKNh8vc15pI9FRofwp+vZfgw
+   o0TiOxYxBXjxsUPPwuf/2lpcQPfiYOtvjK3w7ERrRPgRKMMgMlGE0CXS+
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.93,327,1654531200"; 
+   d="scan'208";a="216867412"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 19 Sep 2022 16:21:10 +0800
+IronPort-SDR: I7UHmAF3TULBRMkxXUW6VXc0b2UYuJVeHPKH0eoBB3hjunrhjhplTRSrS/3h5/0QtM5ST6HuhJ
+ 2crA75jHLjs3JURr39wVyibRnDaxeU2+dhp29dJQIp3PIoKGMJennyCZ0UMVYI9jRcocw7SbdG
+ 2t2xlaBHos+PAMEzykV/Ykv6KDF9d/bGTb1o0JuQjYCqOBDBFdlNxTb1eMztx6ZNiYncyD5eCQ
+ jkpBx9J1m2zFu5YGFl9XAUyBduwd6qOeX6M5dk2DtmChmWOAyiN7lYgORrydpMBV/1IDBBXJes
+ 8r4ePbjI+FaIHqRzITtsSMgA
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 19 Sep 2022 00:41:17 -0700
+IronPort-SDR: xRCYHA67KaJSvBH7QQSzYbnz0wjqMhBvJKf6dX2OTIR5e7MBcQotLJTJ8N3842nEt47CTovFJF
+ FLscJwsyIPwulocuS9znhSLKFa8b9JDXNiaTf+GvplKz8S1FXFJv9Egr9O6jlN5fTVKy01/Z+E
+ p+6pBdX8mG2fvhWwM0foZJRp+zbypomv/aYfx3Mtquv+TjYl1gFCocQTqIxybSQSryGFxnr1cW
+ VM3HI6vu5hiLjeiE9xttXyDWsm3dKtVoby5NxP/foE1omcw1WXWNnnpG8sgd6Y06aYcdY97IeI
+ Mqk=
+WDCIronportException: Internal
+Received: from ilb001078.ad.shared (HELO ilb001078.sdcorp.global.sandisk.com) ([10.45.31.219])
+  by uls-op-cesaip02.wdc.com with ESMTP; 19 Sep 2022 01:21:08 -0700
+From:   Arthur Simchaev <Arthur.Simchaev@wdc.com>
+To:     martin.petersen@oracle.com
+Cc:     avri.altman@wdc.com, Avi.Shchislowski@wdc.com, beanhuo@micron.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        bvanassche@acm.org, Arthur Simchaev <Arthur.Simchaev@wdc.com>
+Subject: [PATCH] scsi: ufs: Remove redundant function definitions from ufshcd.h
+Date:   Mon, 19 Sep 2022 11:21:04 +0300
+Message-Id: <1663575664-27358-1-git-send-email-Arthur.Simchaev@wdc.com>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Sep 19, 2022 at 11:08:10AM +0800, Ren Zhijie wrote:
-> +#ifdef CONFIG_TRACING
->  static void
->  qla_trace_init(void)
->  {
-> @@ -2868,7 +2871,7 @@ qla_trace_uninit(void)
->  		return;
->  	trace_array_put(qla_trc_array);
->  }
-> -
-> +#endif
+This patch removes Query-Request API functions declaration from
+from include/ufs/ufshcd.h. Those declarations belongs solely to
+ufs core privet header.
 
-FWIW, the qla2xxx driver uses a different pattern for ifdefs
+Signed-off-by: Arthur Simchaev <Arthur.Simchaev@wdc.com>
+---
+ drivers/ufs/core/ufshcd-priv.h |  5 +++++
+ include/ufs/ufshcd.h           | 19 +------------------
+ 2 files changed, 6 insertions(+), 18 deletions(-)
 
-	static void
-	qla_trace_init(void)
-	{
-	#ifdef CONFIG_TRACING
-	[...]
-        #endif
-        }
+diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
+index d00dba1..f68ca33 100644
+--- a/drivers/ufs/core/ufshcd-priv.h
++++ b/drivers/ufs/core/ufshcd-priv.h
+@@ -42,6 +42,11 @@ static inline void ufs_hwmon_remove(struct ufs_hba *hba) {}
+ static inline void ufs_hwmon_notify_event(struct ufs_hba *hba, u8 ee_mask) {}
+ #endif
+ 
++int ufshcd_query_descriptor_retry(struct ufs_hba *hba,
++				  enum query_opcode opcode,
++				  enum desc_idn idn, u8 index,
++				  u8 selector,
++				  u8 *desc_buf, int *buf_len);
+ int ufshcd_read_desc_param(struct ufs_hba *hba,
+ 			   enum desc_idn desc_id,
+ 			   int desc_index,
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index 24c97e0..3647a71 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -1176,24 +1176,7 @@ static inline int ufshcd_disable_host_tx_lcc(struct ufs_hba *hba)
+ }
+ 
+ /* Expose Query-Request API */
+-int ufshcd_query_descriptor_retry(struct ufs_hba *hba,
+-				  enum query_opcode opcode,
+-				  enum desc_idn idn, u8 index,
+-				  u8 selector,
+-				  u8 *desc_buf, int *buf_len);
+-int ufshcd_read_desc_param(struct ufs_hba *hba,
+-			   enum desc_idn desc_id,
+-			   int desc_index,
+-			   u8 param_offset,
+-			   u8 *param_read_buf,
+-			   u8 param_size);
+-int ufshcd_query_attr_retry(struct ufs_hba *hba, enum query_opcode opcode,
+-			    enum attr_idn idn, u8 index, u8 selector,
+-			    u32 *attr_val);
+-int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,
+-		      enum attr_idn idn, u8 index, u8 selector, u32 *attr_val);
+-int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
+-	enum flag_idn idn, u8 index, bool *flag_res);
++
+ 
+ void ufshcd_auto_hibern8_enable(struct ufs_hba *hba);
+ void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit);
+-- 
+2.7.4
 
-This avoid to updated the callside with ifdefs.
