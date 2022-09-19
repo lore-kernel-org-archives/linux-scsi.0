@@ -2,139 +2,97 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47401ECAAD8
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Sep 2022 03:12:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 956C3ECAAD3
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Sep 2022 06:02:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229847AbiISDL6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 18 Sep 2022 23:11:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33054 "EHLO
+        id S229581AbiISGCf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Sep 2022 02:02:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43054 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229825AbiISDLz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Sep 2022 23:11:55 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 258321A3A4;
-        Sun, 18 Sep 2022 20:11:54 -0700 (PDT)
-Received: from dggpeml500021.china.huawei.com (unknown [172.30.72.57])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4MW8kD0D5QzlVyk;
-        Mon, 19 Sep 2022 11:07:48 +0800 (CST)
-Received: from dggpeml500008.china.huawei.com (7.185.36.147) by
- dggpeml500021.china.huawei.com (7.185.36.21) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Mon, 19 Sep 2022 11:11:52 +0800
-Received: from huawei.com (10.67.175.34) by dggpeml500008.china.huawei.com
- (7.185.36.147) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Mon, 19 Sep
- 2022 11:11:51 +0800
-From:   Ren Zhijie <renzhijie2@huawei.com>
-To:     <njavali@marvell.com>, <GR-QLogic-Storage-Upstream@marvell.com>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <aeasi@marvell.com>, <dwagner@suse.de>,
-        <himanshu.madhani@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Ren Zhijie <renzhijie2@huawei.com>
-Subject: [PATCH -next] scsi: qla2xxx: Fix build error implicit-function-declaration
-Date:   Mon, 19 Sep 2022 11:08:10 +0800
-Message-ID: <20220919030810.1626-1-renzhijie2@huawei.com>
+        with ESMTP id S229551AbiISGCd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Sep 2022 02:02:33 -0400
+Received: from mail-ed1-x533.google.com (mail-ed1-x533.google.com [IPv6:2a00:1450:4864:20::533])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7238F13E9A;
+        Sun, 18 Sep 2022 23:02:32 -0700 (PDT)
+Received: by mail-ed1-x533.google.com with SMTP id b35so39779694edf.0;
+        Sun, 18 Sep 2022 23:02:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:date:subject:cc:to:from:from:to:cc:subject:date;
+        bh=vvDnxWxa/4IpF0mTrVEUOhaygWRJT9ag8AWxwB/A5f0=;
+        b=iPcjgjqo7NH6joxD4DrSCYNYa8T3j8M1sRcC1AzfvxMnqmpchieDty9C0eTeaL5Ugn
+         m5iWgzi63D/bK8HsL6rMH5OoCPAJH2EXbrynIisfRuIo3ExqU5mOdSHvFQtRQp09jEEJ
+         5uBEeW9opYs3WMiAx3xkGGxgtrXoGJwJNlqIwEsYheKpfs3KBKXccJw8rhu1/oeDzNLi
+         yniVS2hiKYnQ5qYEeSxDiaRrz99FyEzmx3mE1PcndnCeHUxVPGDFYGVql0H2VUQEh3Ms
+         fXSgpwdaJ19T5f/oMdoo9Lty3ZnF00KEsq9cz+UTr+foXMcSBl9HCn3ep6o02e38gvqY
+         1gdw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date;
+        bh=vvDnxWxa/4IpF0mTrVEUOhaygWRJT9ag8AWxwB/A5f0=;
+        b=K0nriZ2375Sdmdnm4T/bVYNLsvbvtLK3yWtWlKqMSyuECsz5JyN2gLdP2csv2mhVNO
+         nkXoV2MoUS2ZQiz8SMcgZxNYuEQFo2H67ihCe0hVc3B6iBmmFYTrShJM8nkcYeiih/Up
+         fP0fog2Lryy2rBvb43fc7zgtbao6Rg+JU8LumeblOWTDoPERzKC+0BXyAxBQlac6NmUM
+         7/daDvBeDa1vgpwG3iM26WD+/B5CTXekxokWHvah1PeXVo3gIuzlhTLv2Wju/L4r/aXI
+         luesy8fLkdeFXB1dFRH9iyO0Z0ZIVFi+x9lGnfU5FjWkhIMvuH7r+oDd8U9pDstveAxk
+         FIDw==
+X-Gm-Message-State: ACrzQf1WNfS+TtAL1Z4E7aeF/1RopyTWXkS0tGWSohimLnhOtG484fES
+        vu579qCXRFOOdlhtNB52+GQ=
+X-Google-Smtp-Source: AMsMyM7Iy5nRkInrGFeHKFOj3c9mXsDPpHAXk4qm3cZS7A/toiyJ8OY4FEhbA0b9LGGS/LhKf8aGzg==
+X-Received: by 2002:a05:6402:298d:b0:451:5fc5:d423 with SMTP id eq13-20020a056402298d00b004515fc5d423mr14079159edb.102.1663567350851;
+        Sun, 18 Sep 2022 23:02:30 -0700 (PDT)
+Received: from felia.fritz.box (200116b826812b0018444688cfe72784.dip.versatel-1u1.de. [2001:16b8:2681:2b00:1844:4688:cfe7:2784])
+        by smtp.gmail.com with ESMTPSA id kv13-20020a17090778cd00b0072b33e91f96sm15045329ejc.190.2022.09.18.23.02.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 18 Sep 2022 23:02:30 -0700 (PDT)
+From:   Lukas Bulwahn <lukas.bulwahn@gmail.com>
+To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Lukas Bulwahn <lukas.bulwahn@gmail.com>
+Subject: [PATCH] scsi: make SCSI_MOD depend on BLOCK for cleaner .config files
+Date:   Mon, 19 Sep 2022 08:01:12 +0200
+Message-Id: <20220919060112.24802-1-lukas.bulwahn@gmail.com>
 X-Mailer: git-send-email 2.17.1
-MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.67.175.34]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- dggpeml500008.china.huawei.com (7.185.36.147)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-If CONFIG_TRACING is not set,
-make ARCH=x86_64 CROSS_COMPILE=x86_64-linux-gnu-,
-will be failed, like this:
+SCSI_MOD is a helper config symbol for configuring RAID_ATTRS properly,
+i.e., RAID_ATTRS needs to be m when SCSI=m.
 
-drivers/scsi/qla2xxx/qla_os.c: In function ‘qla_trace_init’:
-drivers/scsi/qla2xxx/qla_os.c:2854:18: error: implicit declaration of function ‘trace_array_get_by_name’; did you mean ‘trace_array_set_clr_event’? [-Werror=implicit-function-declaration]
-  qla_trc_array = trace_array_get_by_name("qla2xxx");
-                  ^~~~~~~~~~~~~~~~~~~~~~~
-                  trace_array_set_clr_event
-drivers/scsi/qla2xxx/qla_os.c:2854:16: error: assignment makes pointer from integer without a cast [-Werror=int-conversion]
-  qla_trc_array = trace_array_get_by_name("qla2xxx");
-                ^
-drivers/scsi/qla2xxx/qla_os.c: In function ‘qla_trace_uninit’:
-drivers/scsi/qla2xxx/qla_os.c:2869:2: error: implicit declaration of function ‘trace_array_put’; did you mean ‘trace_seq_putc’? [-Werror=implicit-function-declaration]
-  trace_array_put(qla_trc_array);
-  ^~~~~~~~~~~~~~~
-  trace_seq_putc
-cc1: all warnings being treated as errors
+This helper config symbol SCSI_MOD still shows up even in kernel
+configurations that do not select the block subsystem and where SCSI is
+not even a configuration option mentioned and selectable.
 
-To fix this error, wrap up all the relevant code with CONFIG_TRACING.
+Make this SCSI_MOD depend on BLOCK, so that it only shows up when it is
+slightly relevant in the kernel configuration.
 
-Fixes: 8bfc149ba24c ("scsi: qla2xxx: Enhance driver tracing with separate tunable and more")
-Signed-off-by: Ren Zhijie <renzhijie2@huawei.com>
+Signed-off-by: Lukas Bulwahn <lukas.bulwahn@gmail.com>
 ---
- drivers/scsi/qla2xxx/qla_os.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ drivers/scsi/Kconfig | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 2c85f3cce726..e445105ee16d 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -37,7 +37,9 @@ static int apidev_major;
-  */
- struct kmem_cache *srb_cachep;
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 955cb69a5418..03e71e3d5e5b 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -2,9 +2,10 @@
+ menu "SCSI device support"
  
-+#ifdef CONFIG_TRACING
- static struct trace_array *qla_trc_array;
-+#endif
+ config SCSI_MOD
+-       tristate
+-       default y if SCSI=n || SCSI=y
+-       default m if SCSI=m
++	tristate
++	default y if SCSI=n || SCSI=y
++	default m if SCSI=m
++	depends on BLOCK
  
- int ql2xfulldump_on_mpifail;
- module_param(ql2xfulldump_on_mpifail, int, S_IRUGO | S_IWUSR);
-@@ -2848,6 +2850,7 @@ static void qla2x00_iocb_work_fn(struct work_struct *work)
- 	spin_unlock_irqrestore(&vha->work_lock, flags);
- }
- 
-+#ifdef CONFIG_TRACING
- static void
- qla_trace_init(void)
- {
-@@ -2868,7 +2871,7 @@ qla_trace_uninit(void)
- 		return;
- 	trace_array_put(qla_trc_array);
- }
--
-+#endif
- /*
-  * PCI driver interface
-  */
-@@ -8209,7 +8212,9 @@ qla2x00_module_init(void)
- 	BUILD_BUG_ON(sizeof(sw_info_t) != 32);
- 	BUILD_BUG_ON(sizeof(target_id_t) != 2);
- 
-+#ifdef CONFIG_TRACING
- 	qla_trace_init();
-+#endif
- 
- 	/* Allocate cache for SRBs. */
- 	srb_cachep = kmem_cache_create("qla2xxx_srbs", sizeof(srb_t), 0,
-@@ -8290,7 +8295,9 @@ qla2x00_module_init(void)
- destroy_cache:
- 	kmem_cache_destroy(srb_cachep);
- 
-+#ifdef CONFIG_TRACING
- 	qla_trace_uninit();
-+#endif
- 	return ret;
- }
- 
-@@ -8309,7 +8316,9 @@ qla2x00_module_exit(void)
- 	fc_release_transport(qla2xxx_transport_template);
- 	qlt_exit();
- 	kmem_cache_destroy(srb_cachep);
-+#ifdef CONFIG_TRACING
- 	qla_trace_uninit();
-+#endif
- }
- 
- module_init(qla2x00_module_init);
+ config RAID_ATTRS
+ 	tristate "RAID Transport Class"
 -- 
 2.17.1
 
