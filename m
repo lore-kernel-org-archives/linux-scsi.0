@@ -2,112 +2,129 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFB2BC54EE9
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Sep 2022 13:44:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D096BECAAD3
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Sep 2022 13:54:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230090AbiISNot (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Sep 2022 09:44:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52736 "EHLO
+        id S229750AbiISNyZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Sep 2022 09:54:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36900 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230111AbiISNor (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Sep 2022 09:44:47 -0400
-Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A31EE60DE
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Sep 2022 06:44:43 -0700 (PDT)
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28J5EZ7L010921;
-        Mon, 19 Sep 2022 06:44:41 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-type; s=pfpt0220;
- bh=N/wSG2cg3fr7REXUAezyUtq1AzgV0Rsrtevf626KGio=;
- b=PoWTtjfu+w8EmvtnIokyaZM9pjISkOVIAVd7h2ljB4nbcrHzdSIXf6unYX4p9y5N2Wdw
- ysK/JU+bmGeyUA6MHkjuo88sr+6uLbDkPkJMuvrC6DbBNEOsmKKl2aNE8BZ73VZz5Rsi
- JNttf3+qbKhbbKJo+iVVd5dzxTv8xyhg148MRP09MmJnIY3z2Z40uGNH4+HRxqXNeN1m
- 2NACf1eg/0OweDwMNALYF43f4nD0v+gAEv19JUgkSwTNF6CCcKOGi6kTk3E//9/ivU32
- oJBr/jwRwwpHWu5qp5N1gKKQ3RSYD/hnPNw8GegAHO+jEAnNvxMwZDI3kCTLhdkfkK2p jg== 
-Received: from dc5-exch01.marvell.com ([199.233.59.181])
-        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3jndrmpeb3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Mon, 19 Sep 2022 06:44:41 -0700
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 19 Sep
- 2022 06:44:39 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.18 via Frontend
- Transport; Mon, 19 Sep 2022 06:44:39 -0700
-Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id D75B33F7067;
-        Mon, 19 Sep 2022 06:44:38 -0700 (PDT)
-From:   Nilesh Javali <njavali@marvell.com>
-To:     <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <jmeneghi@redhat.com>,
-        <guazhang@redhat.com>, <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: [PATCH v2] qedf: Populate sysfs attributes for vport
-Date:   Mon, 19 Sep 2022 06:44:34 -0700
-Message-ID: <20220919134434.3513-1-njavali@marvell.com>
-X-Mailer: git-send-email 2.12.0
+        with ESMTP id S229844AbiISNyX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Sep 2022 09:54:23 -0400
+Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C519C220C0
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Sep 2022 06:54:22 -0700 (PDT)
+Received: by mail-pg1-f172.google.com with SMTP id v4so26807510pgi.10
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Sep 2022 06:54:22 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date;
+        bh=Aw/3MnWTGb8Jqn9vYqcMwJeVw1rb4axfXLcTclYmo80=;
+        b=b2HiU++8fyKhQ8sba5YnPRakoYmC6G1oWykTNO5fkbHBhBa+3FQu506O1X8jLZxVno
+         96xUnrl6sE7pVp6VJy+x3BP/hpc5NHpDrAa3k7UZIC6F2oZ8qySI/C5mTIm2fMiaFyie
+         w99CtizKpwzEZDbeimUHTrDkzbbG2Nyt1suixDMJZI5/57dVqnKLeci46ESZtcRbn2OT
+         m/M/gwEV0SO67vEc9++X/88DJ4s3CIYQxJl3QU6x/0Qlpi34Rp7X/Ti6lKZwUgU1+ZOC
+         NRIW1S7+nCbXlsyr3JmOC9gr7wvwb8vKWuwi73j9J7P0G5AKrp2+Zv5uYUIbvbIZ9YQI
+         4u2A==
+X-Gm-Message-State: ACrzQf2JxvZg193c4UuCM+luPGqcXFTXeHhiomF1Fr4SZUf1Yo8U6AZf
+        c2PKInE3dKBxAK1rOQdN6gA=
+X-Google-Smtp-Source: AMsMyM5JMsG6i7GXf6xoRaXLSGdTb9BJprWNTJgxUs2JOBBaYQZr7d65Na78/Py0b9EvHFjd0bPjBg==
+X-Received: by 2002:a63:2bcc:0:b0:439:36bb:c036 with SMTP id r195-20020a632bcc000000b0043936bbc036mr15721493pgr.447.1663595662021;
+        Mon, 19 Sep 2022 06:54:22 -0700 (PDT)
+Received: from [192.168.51.14] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id m12-20020a17090a4d8c00b00202aa2b5295sm6666747pjh.36.2022.09.19.06.54.20
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 19 Sep 2022 06:54:21 -0700 (PDT)
+Message-ID: <913f72ad-7f6f-9067-df36-f9507359c816@acm.org>
+Date:   Mon, 19 Sep 2022 06:54:19 -0700
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-GUID: Rk0IPDbCJD8CZEPGCR1uA4fhvNgbpqnk
-X-Proofpoint-ORIG-GUID: Rk0IPDbCJD8CZEPGCR1uA4fhvNgbpqnk
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
- definitions=2022-09-19_05,2022-09-16_01,2022-06-22_01
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.13.0
+Subject: Re: [PATCH] scsi: ufs: Fix deadlocks between power management and
+ error handler
+Content-Language: en-US
+To:     Adrian Hunter <adrian.hunter@intel.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        dh0421.hwang@samsung.com, Asutosh Das <asutoshd@codeaurora.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Jinyoung Choi <j-young.choi@samsung.com>
+References: <20220916184220.867535-1-bvanassche@acm.org>
+ <3712590b-20cb-7d27-3017-4567f1fcddc2@intel.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <3712590b-20cb-7d27-3017-4567f1fcddc2@intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Saurav Kashyap <skashyap@marvell.com>
+On 9/19/22 04:34, Adrian Hunter wrote:
+> Did you consider something like:
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 7256e6c43ca6..dc83b38dfde9 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -7374,6 +7374,9 @@ static int ufshcd_eh_host_reset_handler(struct scsi_cmnd *cmd)
+>   
+>   	hba = shost_priv(cmd->device->host);
+>   
+> +	if (hba->pm_op_in_progress)
+> +		return FAST_IO_FAIL;
+> +
+>   	spin_lock_irqsave(hba->host->host_lock, flags);
+>   	hba->force_reset = true;
+>   	ufshcd_schedule_eh_work(hba);
 
-Few vport parameters were displayed by systool as
-'Unknown' or 'NULL'.
-Copy speed, supported_speed, frame_size and update
-port_type for NPIV port.
+The above change could cause error handling to be skipped if an error 
+happened that requires the link to be reset. That seems wrong to me.
 
-Tested-by: Guangwu Zhang <guazhang@redhat.com>
-Reviewed-by: John Meneghini <jmeneghi@redhat.com>
-Cc: stable@vger.kernel.org
-Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
----
-v1 -> v2:
-Add more description, add Tested-by, Reviewed-by, Cc tags.
+> The original commit for host_sem was aimed at sysfs (see commit below).
+> Did you consider how sysfs access is affected?
+> 
+>    commit 9cd20d3f473619d8d482551d15d4cebfb3ce73c8
+>    Author: Can Guo <cang@codeaurora.org>
+>    Date:   Wed Jan 13 19:13:28 2021 -0800
+> 
+>      scsi: ufs: Protect PM ops and err_handler from user access through sysfs
+>      
+>      User layer may access sysfs nodes when system PM ops or error handling is
+>      running. This can cause various problems. Rename eh_sem to host_sem and use
+>      it to protect PM ops and error handling from user layer intervention.
 
- drivers/scsi/qedf/qedf_main.c | 21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
+The sysfs and debugfs attribute callback methods already call 
+pm_runtime_get_sync() and pm_runtime_put_sync() so how could the power 
+state change while a sysfs or debugfs attribute callback method is in 
+progress?
 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index 3d6b137314f3..cc6d9decf62c 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -1921,6 +1921,27 @@ static int qedf_vport_create(struct fc_vport *vport, bool disabled)
- 		fc_vport_setlink(vn_port);
- 	}
- 
-+	/* Set symbolic node name */
-+	if (base_qedf->pdev->device == QL45xxx)
-+		snprintf(fc_host_symbolic_name(vn_port->host), 256,
-+			 "Marvell FastLinQ 45xxx FCoE v%s", QEDF_VERSION);
-+
-+	if (base_qedf->pdev->device == QL41xxx)
-+		snprintf(fc_host_symbolic_name(vn_port->host), 256,
-+			 "Marvell FastLinQ 41xxx FCoE v%s", QEDF_VERSION);
-+
-+	/* Set supported speed */
-+	fc_host_supported_speeds(vn_port->host) = n_port->link_supported_speeds;
-+
-+	/* Set speed */
-+	vn_port->link_speed = n_port->link_speed;
-+
-+	/* Set port type */
-+	fc_host_port_type(vn_port->host) = FC_PORTTYPE_NPIV;
-+
-+	/* Set maxframe size */
-+	fc_host_maxframe_size(vn_port->host) = n_port->mfs;
-+
- 	QEDF_INFO(&(base_qedf->dbg_ctx), QEDF_LOG_NPIV, "vn_port=%p.\n",
- 		   vn_port);
- 
--- 
-2.23.1
+>> The ufshcd_rpm_get_sync() call at the start of
+>> ufshcd_err_handling_prepare() may deadlock since calling scsi_execute()
+>> is required by the UFS runtime resume implementation. Fixing that
+>> deadlock falls outside the scope of this patch.
+> 
+> Do you mean:
+> 
+> static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
+> {
+> 	ufshcd_rpm_get_sync(hba);
+> 
+> because that is the host controller, not the UFS device, that is
+> being resumed.
 
+Hmm ... I think that ufshcd_rpm_get_sync() affects the power state of 
+the UFS device and not the power state of the UFS host controller. From 
+ufshcd-priv.h:
+
+static inline int ufshcd_rpm_get_sync(struct ufs_hba *hba)
+{
+	return pm_runtime_get_sync(&hba->ufs_device_wlun->sdev_gendev);
+}
+
+Thanks,
+
+Bart.
