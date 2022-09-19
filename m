@@ -2,120 +2,94 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E459ECAAD3
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Sep 2022 14:48:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC5A5C54EE9
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Sep 2022 16:25:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230237AbiISOs0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Sep 2022 10:48:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58914 "EHLO
+        id S229952AbiISQZU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Sep 2022 12:25:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56212 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230211AbiISOsO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Sep 2022 10:48:14 -0400
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F8C4186F1
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Sep 2022 07:48:05 -0700 (PDT)
-X-UUID: 71ea4f612a6c445ca166fc19b8419838-20220919
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:References:CC:To:Subject:MIME-Version:Date:Message-ID; bh=oxH0OAbVbF8ycLTM4t+gjA7Q9pGz9lgX7RdhQzUrskA=;
-        b=GfL1A4iEZFAGSoH7xM8W7ilaskz0rHva6FTvYCmSt6Y/Y8YhkE2UtRez3/G4ITDEeov1rR9EB9sFwCjLOq5eHeQH0F6HCR8OF02DLFFzoiAm0gMkXvoaFwViWcmDqobGAe/q36qB0DMDY3Z6zVgXOuRa5XDFqDpqSKBR4xUxIbI=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.11,REQID:ed461966-b698-4cf7-ae68-936d4fb0cfae,IP:0,U
-        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:45,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-        :release,TS:45
-X-CID-INFO: VERSION:1.1.11,REQID:ed461966-b698-4cf7-ae68-936d4fb0cfae,IP:0,URL
-        :0,TC:0,Content:0,EDM:0,RT:0,SF:45,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
-        elease,TS:45
-X-CID-META: VersionHash:39a5ff1,CLOUDID:289ce9f6-6e85-48d9-afd8-0504bbfe04cb,B
-        ulkID:220919224803PST2KTQR,BulkQuantity:0,Recheck:0,SF:28|17|19|48|823|824
-        ,TC:nil,Content:0,EDM:-3,IP:nil,URL:11|1,File:nil,Bulk:nil,QS:nil,BEC:nil,
-        COL:0
-X-UUID: 71ea4f612a6c445ca166fc19b8419838-20220919
-Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw01.mediatek.com
-        (envelope-from <peter.wang@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1165372847; Mon, 19 Sep 2022 22:48:01 +0800
-Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.792.15; Mon, 19 Sep 2022 22:48:00 +0800
-Received: from [172.21.84.99] (172.21.84.99) by mtkmbs11n2.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.2.792.15 via Frontend
- Transport; Mon, 19 Sep 2022 22:47:59 +0800
-Message-ID: <647e3423-94dc-f2c6-0fad-7896e709f291@mediatek.com>
-Date:   Mon, 19 Sep 2022 22:47:59 +0800
+        with ESMTP id S229972AbiISQZR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Sep 2022 12:25:17 -0400
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 246FC31DCD
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Sep 2022 09:25:15 -0700 (PDT)
+Received: by mail-pl1-f181.google.com with SMTP id w20so16311680ply.12
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Sep 2022 09:25:15 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date;
+        bh=PdD332cfLSFspbljbqZ3rL5eMxMc8503UuRtPaoqp88=;
+        b=1tWCtTqIhYlA0iiXDYqCdwcs/OFu2Gve1wyt6CDzd+bEkU//hmOuxCg56ceEECqjZL
+         NmNu39lUcfiHCNSEcg1fiVWjU6DPdbe1C+duhDvd4IB+XOCMaFwFAjeENBJ3DQxbDeO6
+         lckGa+Ec6/6EBSHh3Jkb7hDpieso5N9mnXpDl7U/NzsrPOiiY+3mgFXl2RCjD8aQTAq3
+         ktrnkdaP7JauANjjdwGajnMTlizl4U/awllKT1VZaAEGSY9bS9LY8FzmzQwjNYwP+rGb
+         yp6PVwusSBCLZgDw+XjH0Ko8lcv0fsdxiItB1yTsmGOqCaSuYUrKERKVnDIoISd7qWgo
+         benw==
+X-Gm-Message-State: ACrzQf3gCf+7x2ZU/g7WgyU++QGsJ637vxurndKMkN8ubYTb+yWdp294
+        4nJjRBCorx/F2WYr3OKXQyQ=
+X-Google-Smtp-Source: AMsMyM51d4bdzZ9v0QKCiJcEzOa6v0GxOCk3hpbzBEq7ihgMU/5VClVVxRpNZrN/C1mmhPzB2UoZNA==
+X-Received: by 2002:a17:90b:3ec1:b0:203:5eef:fe1e with SMTP id rm1-20020a17090b3ec100b002035eeffe1emr16248910pjb.143.1663604715134;
+        Mon, 19 Sep 2022 09:25:15 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:9b5b:c086:d392:8ccb? ([2620:15c:211:201:9b5b:c086:d392:8ccb])
+        by smtp.gmail.com with ESMTPSA id t20-20020a62d154000000b0053653c6b9f9sm20463114pfl.204.2022.09.19.09.25.13
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 19 Sep 2022 09:25:14 -0700 (PDT)
+Message-ID: <4acf4f39-f6f8-6b65-2bc6-a4c5225d9a04@acm.org>
+Date:   Mon, 19 Sep 2022 09:25:11 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.1
+ Thunderbird/91.13.0
 Subject: Re: [PATCH v1] ufs: core: bypass get rpm when err handling with
  pm_op_in_progress
 Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>, <stanley.chu@mediatek.com>,
-        <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
-        <jejb@linux.ibm.com>
-CC:     <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-        <chun-hung.wu@mediatek.com>, <alice.chao@mediatek.com>,
-        <cc.chou@mediatek.com>, <chaotian.jing@mediatek.com>,
-        <jiajie.hao@mediatek.com>, <powen.kao@mediatek.com>,
-        <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>
+To:     Peter Wang <peter.wang@mediatek.com>, stanley.chu@mediatek.com,
+        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com
+Cc:     wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
+        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
+        cc.chou@mediatek.com, chaotian.jing@mediatek.com,
+        jiajie.hao@mediatek.com, powen.kao@mediatek.com,
+        qilin.tan@mediatek.com, lin.gui@mediatek.com
 References: <20220915115858.7642-1-peter.wang@mediatek.com>
  <4fadab02-5ab7-03d5-e849-55eaa26113cf@acm.org>
-From:   Peter Wang <peter.wang@mediatek.com>
-In-Reply-To: <4fadab02-5ab7-03d5-e849-55eaa26113cf@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
+ <647e3423-94dc-f2c6-0fad-7896e709f291@mediatek.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <647e3423-94dc-f2c6-0fad-7896e709f291@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 9/19/22 07:47, Peter Wang wrote:
+> If the scsi error happened and need do ufshcd_eh_host_reset_handler, the 
+> rpm state should in RPM_ACTIVE.
+> Because scsi need wakeup suspended LUN, and send command to LUN then get 
+> error, right?
 
-On 9/17/22 05:39, Bart Van Assche wrote:
-> On 9/15/22 04:58, peter.wang@mediatek.com wrote:
->> -static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
->> +static void ufshcd_err_handling_prepare(struct ufs_hba *hba, bool 
->> *rpm_put)
->>   {
->> -    ufshcd_rpm_get_sync(hba);
->> +    if (!hba->pm_op_in_progress) {
->> +        ufshcd_rpm_get_sync(hba);
->> +        *rpm_put = true;
->> +    }
->> +
->
-> Hi Peter,
->
-> I don't think that this patch is sufficient. If 
-> ufshcd_err_handling_prepare() is called by the host reset handler 
-> (ufshcd_eh_host_reset_handler()) then the host state will be 
-> SHOST_RECOVERY. In that state SCSI command submission will hang and 
-> hence any ufshcd_rpm_get_sync() call will hang.
->
-> How about removing the ufshcd_rpm_get_sync() call from 
-> ufshcd_err_handling_prepare() and the ufshcd_rpm_put() call from 
-> ufshcd_err_handling_unprepare()? It is guaranteed that no commands are 
-> in progress for a runtime suspended LUN so the code for aborting 
-> pending requests in the UFS error handler will be skipped anyway if it 
-> is invoked for a runtime suspended device.
->
-> Thanks,
->
-> Bart.
+The following sequence may activate the SCSI error handler while the RPM 
+state is RPM_RESUMING:
+* The RPM state is RPM_SUSPENDED.
+* The RPM state is changed into RPM_RESUMING and ufshcd_wl_resume() is 
+called.
+* ufshcd_set_dev_pwr_mode() calls scsi_execute() and the START STOP UNIT 
+command times out.
+* Because of this timeout the SCSI error handler is activated.
 
-Hi Bart,
+> If remove ufshcd_rpm_get_sync directly, think about this case.
+> ufshcd_err_handler is on going and try to abort some task (which may get 
+> stuck and timeout too).
+> Then rpm count down try to suspend. Finally runtime suspend callback may 
+> return IO error and IO hang.
 
-If the scsi error happened and need do ufshcd_eh_host_reset_handler, the 
-rpm state should in RPM_ACTIVE.
-Because scsi need wakeup suspended LUN, and send command to LUN then get 
-error, right?
-So, ufshcd_rpm_get_sync should not hang in this case.
+Hmm ... suspending a UFS device involves calling ufshcd_wl_shutdown(), 
+ufshcd_set_dev_pwr_mode() and scsi_execute(). scsi_execute() is 
+serialized against the UFS error handler because the latter calls 
+ufshcd_scsi_block_requests().
 
-If remove ufshcd_rpm_get_sync directly, think about this case.
-ufshcd_err_handler is on going and try to abort some task (which may get 
-stuck and timeout too).
-Then rpm count down try to suspend. Finally runtime suspend callback may 
-return IO error and IO hang.
+Thanks,
 
-Thanks.
-Peter
-
-
+Bart.
