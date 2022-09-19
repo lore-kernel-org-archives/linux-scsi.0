@@ -2,130 +2,84 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30738ECAAD3
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Sep 2022 18:06:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E876ECAAD3
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Sep 2022 18:50:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231178AbiISSGe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Sep 2022 14:06:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58726 "EHLO
+        id S229562AbiISSu6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Sep 2022 14:50:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51844 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230206AbiISSGc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Sep 2022 14:06:32 -0400
-Received: from mail-wr1-x42d.google.com (mail-wr1-x42d.google.com [IPv6:2a00:1450:4864:20::42d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 82B0815A23;
-        Mon, 19 Sep 2022 11:06:31 -0700 (PDT)
-Received: by mail-wr1-x42d.google.com with SMTP id k9so487185wri.0;
-        Mon, 19 Sep 2022 11:06:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date;
-        bh=fcEevRZ0SucZvq2o64TKWJQCCIRt2vtZIyxf3obxZMg=;
-        b=HfS/6FMh6neVb+T6OTZCfaSlL8cB27aeX4f9r2OY+3iNRBtPLN6jI12mENcwQg5rub
-         RT9sQXQ91VkjWWDDarsun4W1I6nWh5Sdpg5zDqIIChwxbriksgWV19M7lm69sRUsbUgQ
-         wrkLAGtpRk/ct1cHA4GJ0TpTul5VDdo1msejkWFQdrpzCT8PyiRCp1jV+Tj6VaEtci1L
-         cUIcx6qRbg6fjNeUaW5KHbq6B4CehHTYf8FzJpTho0fxRciWpSglFAV2Pz6feTYqGcG3
-         yiq0HL04G++9opyRL4veXfPZNI9u78ZjJd4WEHjoHjfyWwaR2MkDQ/o2out8pkLknjiF
-         S4cQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date;
-        bh=fcEevRZ0SucZvq2o64TKWJQCCIRt2vtZIyxf3obxZMg=;
-        b=X7fDVsoWp0LYJ1DKPSz6F4AUZw1QKVeToakE13p3LwkMTzOkqMBw2dnuBlZwjeRvuP
-         6Af3J1fq2MegbqxaPwXmr2w+ReDR5s/hAPc+p5Bz/rfbPOr1WeWBd9OX+o8Dp9kJolv5
-         i7To4/wpR7lKWUWQ1aRgzN1sZO4t07DDCvpConDP/6SCTyywn2sitB0A1xwD+OLSCv3B
-         xvuXasAjm8yfltW3MNGMX1nqGzWuhxVxwPIw1Hr7oOP7UALuGFXXTY8REdogXCiNQdzo
-         PEs0P5pJdZg7cva5ya3Y3I/i1QH1QAAKiWhQPFerlGoduhyKTKyOGL1kNIngBsAEDn5E
-         PhIA==
-X-Gm-Message-State: ACrzQf1Nldwo3xfmt+g67yXdbNVyodlrOI+/vyEGfqA1vAdAmPTP/pPT
-        cJ2jfLR8W+ybYryxHWgXEuI=
-X-Google-Smtp-Source: AMsMyM6xCLp+Ifwl03CPU6QtAwUp+0S4UvqUhhukFRjzmHlMERNv08HcepYTx1GCWMCiE7OqY7e2gA==
-X-Received: by 2002:a5d:628e:0:b0:228:6961:aa6f with SMTP id k14-20020a5d628e000000b002286961aa6fmr11998172wru.36.1663610790045;
-        Mon, 19 Sep 2022 11:06:30 -0700 (PDT)
-Received: from localhost ([77.78.20.135])
-        by smtp.gmail.com with ESMTPSA id l3-20020a5d4bc3000000b002238ea5750csm17227126wrt.72.2022.09.19.11.06.23
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 19 Sep 2022 11:06:29 -0700 (PDT)
-From:   Iskren Chernev <iskren.chernev@gmail.com>
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>
-Cc:     phone-devel@vger.kernel.org, ~postmarketos/upstreaming@lists.sr.ht,
-        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        Iskren Chernev <iskren.chernev@gmail.com>,
-        Andy Gross <agross@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@somainline.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        with ESMTP id S229461AbiISSu5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Sep 2022 14:50:57 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25B9A474F9;
+        Mon, 19 Sep 2022 11:50:56 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id C93221F8F9;
+        Mon, 19 Sep 2022 18:50:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1663613454; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=wkWuCzKb9bPAoZh8TMHUdjbSwVJQ0FdQlwmfCmRG1vc=;
+        b=h5wubktu/QPdcSkVL99adscgeG965muOWbLrXvXw4Glv2agSheRDxG/TcyVQ3ugB6Agdd2
+        xKDFI2Tj7M5etZiGWGWqkd0CQpAn0CPVCfNTZ3NXH6XQr+GKsb61oodkHcTSxGMMNRtZ1M
+        h14h+0egskkBIG2x6f+uD15xEv+6TRg=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1663613454;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=wkWuCzKb9bPAoZh8TMHUdjbSwVJQ0FdQlwmfCmRG1vc=;
+        b=csVEK7bVJPDp7SL9ilGGcmxLenSrtm647UCLdnmC4NCogf7ZEk+lpHXQEbI2p4WcxZC9Aj
+        5llEGQf+1gXYPjBg==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id BCB0913ABD;
+        Mon, 19 Sep 2022 18:50:54 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id SNYHLg66KGPaSAAAMHmgww
+        (envelope-from <dwagner@suse.de>); Mon, 19 Sep 2022 18:50:54 +0000
+Date:   Mon, 19 Sep 2022 20:50:54 +0200
+From:   Daniel Wagner <dwagner@suse.de>
+To:     Arun Easi <aeasi@marvell.com>
+Cc:     Ren Zhijie <renzhijie2@huawei.com>, njavali@marvell.com,
+        GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, himanshu.madhani@oracle.com,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v4 1/8] dt-bindings: ufs: qcom: Add sm6115 binding
-Date:   Mon, 19 Sep 2022 21:06:11 +0300
-Message-Id: <20220919180618.1840194-2-iskren.chernev@gmail.com>
-X-Mailer: git-send-email 2.37.3
-In-Reply-To: <20220919180618.1840194-1-iskren.chernev@gmail.com>
-References: <20220919180618.1840194-1-iskren.chernev@gmail.com>
+Subject: Re: [EXT] [PATCH v2 -next] scsi: qla2xxx: Fix build error
+ implicit-function-declaration
+Message-ID: <20220919185054.bjjsdplthy7alozo@carbon.lan>
+References: <20220919133404.85425-1-renzhijie2@huawei.com>
+ <dfc510ef-a181-3832-f16c-74f1d7fb5608@marvell.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <dfc510ef-a181-3832-f16c-74f1d7fb5608@marvell.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add SM6115 UFS to DT schema.
+On Mon, Sep 19, 2022 at 10:54:24AM -0700, Arun Easi wrote:
+> NAK.
+> 
+> Please see these threads for a fix in "trace.h" to address this issue and 
+> a related discussion.
+> 
+> Most recent (v3) patch posting:
+> https://lore.kernel.org/linux-scsi/20220907233308.4153-2-aeasi@marvell.com/
+> 
+> Steve suggesting to take the patch via SCSI tree:
+> https://lore.kernel.org/linux-scsi/20220906174140.41b46a5f@gandalf.local.home/
+> 
+> Hoping this would get a nod soon and can get merged.
 
-Signed-off-by: Iskren Chernev <iskren.chernev@gmail.com>
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
----
- .../devicetree/bindings/ufs/qcom,ufs.yaml     | 26 +++++++++++++++++++
- 1 file changed, 26 insertions(+)
-
-diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-index f2d6298d926c..b517d76215e3 100644
---- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-+++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-@@ -28,6 +28,7 @@ properties:
-           - qcom,msm8998-ufshc
-           - qcom,sc8280xp-ufshc
-           - qcom,sdm845-ufshc
-+          - qcom,sm6115-ufshc
-           - qcom,sm6350-ufshc
-           - qcom,sm8150-ufshc
-           - qcom,sm8250-ufshc
-@@ -178,6 +179,31 @@ allOf:
-           minItems: 1
-           maxItems: 1
- 
-+  - if:
-+      properties:
-+        compatible:
-+          contains:
-+            enum:
-+              - qcom,sm6115-ufshc
-+    then:
-+      properties:
-+        clocks:
-+          minItems: 8
-+          maxItems: 8
-+        clock-names:
-+          items:
-+            - const: core_clk
-+            - const: bus_aggr_clk
-+            - const: iface_clk
-+            - const: core_clk_unipro
-+            - const: ref_clk
-+            - const: tx_lane0_sync_clk
-+            - const: rx_lane0_sync_clk
-+            - const: ice_core_clk
-+        reg:
-+          minItems: 2
-+          maxItems: 2
-+
-     # TODO: define clock bindings for qcom,msm8994-ufshc
- 
- unevaluatedProperties: false
--- 
-2.37.3
-
+Ah indeed. Forgot about this one. I thought this is on top of the above
+fix. Note, many folks were attending the Plumbers hence they might still
+be traveling.
