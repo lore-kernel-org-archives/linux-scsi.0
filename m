@@ -2,283 +2,134 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5822DC6FA8E
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Sep 2022 23:07:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDEFDC6FA8B
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Sep 2022 23:15:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229833AbiISXH2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Sep 2022 19:07:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57570 "EHLO
+        id S229597AbiISXPe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Sep 2022 19:15:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42568 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229692AbiISXH1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Sep 2022 19:07:27 -0400
-Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C46EC459A8;
-        Mon, 19 Sep 2022 16:07:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1663628845; x=1695164845;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=705WJOdue58NafhZ3jROr0GP9JgBUxIfi5dZH5hR6WA=;
-  b=AWbpcuzxL0uvn27TLIDdn9o5rAO05RZr+f5gXX6xiY41A7QIqCXyvihi
-   GamgraO8Mi3TrlehnX46yO1McGvXt/dRGind8usFh8NiZLiPsqyMYaR0Z
-   SCkGD7blH6zZoLJ9L80lCnAlrCuy6bjwYDlKvAzZbTz0J5aYXMk5kra4R
-   NVnnspPjcJP2VNKGfldhiV8GcpBoI0b92r4O0xiygNCg6e1ZgH55hDWF9
-   gQ7gPk82m5EW6hYfw6Xtk3Em1hSNpBZexj4GNqGBkfruO6LPwk3Swp5PS
-   vGgm9jQHxIqN1jhDi4XvE2YcYBa4X+tQcDFcx7BH1ZnW5cGdyOeDUykv0
-   w==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10475"; a="279272091"
-X-IronPort-AV: E=Sophos;i="5.93,329,1654585200"; 
-   d="scan'208";a="279272091"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Sep 2022 16:07:25 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.93,329,1654585200"; 
-   d="scan'208";a="569841395"
-Received: from lkp-server01.sh.intel.com (HELO c0a60f19fe7e) ([10.239.97.150])
-  by orsmga003.jf.intel.com with ESMTP; 19 Sep 2022 16:07:22 -0700
-Received: from kbuild by c0a60f19fe7e with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1oaPrF-0002Hl-1e;
-        Mon, 19 Sep 2022 23:07:21 +0000
-Date:   Tue, 20 Sep 2022 07:06:48 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Andrew Morton <akpm@linux-foundation.org>
-Cc:     linux-scsi@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        linux-parisc@vger.kernel.org, linux-mm@kvack.org,
-        linux-btrfs@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        iommu@lists.linux.dev, dri-devel@lists.freedesktop.org,
-        Linux Memory Management List <linux-mm@kvack.org>
-Subject: [linux-next:master] BUILD REGRESSION
- 4c9ca5b1597e3222177ba2a94658f78fa5ef4f58
-Message-ID: <6328f608.UcWATT4z3JbSJozt%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        with ESMTP id S229566AbiISXPc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Sep 2022 19:15:32 -0400
+Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A8D549B7A
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Sep 2022 16:15:31 -0700 (PDT)
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28JG4xnM010918;
+        Mon, 19 Sep 2022 16:15:19 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=date : from : to :
+ cc : subject : in-reply-to : message-id : references : mime-version :
+ content-type; s=pfpt0220; bh=VtxQQO78bSnmvcvs2YuHHFQT/3/aayrYTsmQ2RTicvA=;
+ b=gpYcQeRHf3iDeeWPGCt2otyU/TejDYH6pRQwSAM3iiygJ/x1frLfYnjLlaOuGp5evmSO
+ G5iyT4oc45MmVpuvYEXWaSNKFSc5732sT6hleVyFp2L/RbVe+E7GjxYq56+watg1qWtT
+ 4gX7Uv4lGC8M90sa5/1D/fiOCA1CCKh9xroyoTzM6TSgWOHKLfOFH5D4gGK80AA3r9ju
+ ZM7RuZmUzqYhVR1zB6FH7bEH1vw+D9ChAzMMhoJpbOEqTSIxe/S4wQSCVsiioaAzzh9S
+ hTeGyd0ZoqsPPNCsPpNcsp+99b71wToZVwVMA/Y8Xth+DY3/4UiHKKBcARg2p197Dbvo 0g== 
+Received: from dc5-exch02.marvell.com ([199.233.59.182])
+        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3jndrmrcsy-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Mon, 19 Sep 2022 16:15:18 -0700
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Mon, 19 Sep
+ 2022 16:15:16 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Mon, 19 Sep 2022 16:15:16 -0700
+Received: from mvluser05.qlc.com (unknown [10.112.10.135])
+        by maili.marvell.com (Postfix) with ESMTP id 53F213F70C6;
+        Mon, 19 Sep 2022 16:15:16 -0700 (PDT)
+Received: from localhost (aeasi@localhost)
+        by mvluser05.qlc.com (8.14.4/8.14.4/Submit) with ESMTP id 28JNFDOY031515;
+        Mon, 19 Sep 2022 16:15:14 -0700
+X-Authentication-Warning: mvluser05.qlc.com: aeasi owned process doing -bs
+Date:   Mon, 19 Sep 2022 16:15:13 -0700
+From:   Arun Easi <aeasi@marvell.com>
+To:     Guenter Roeck <linux@roeck-us.net>
+CC:     Nilesh Javali <njavali@marvell.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>,
+        Bikash Hazarika <bhazarika@marvell.com>,
+        Anil Gurumurthy <agurumurthy@marvell.com>
+Subject: Re: [PATCH v2 5/7] qla2xxx: Enhance driver tracing with separate
+ tunable and more
+In-Reply-To: <20220919220110.GA352230@roeck-us.net>
+Message-ID: <99caf0ec-c4c5-4333-bcec-1f2ffa5a7e94@marvell.com>
+References: <20220826102559.17474-1-njavali@marvell.com>
+ <20220826102559.17474-6-njavali@marvell.com>
+ <20220919220110.GA352230@roeck-us.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="US-ASCII"
+X-Proofpoint-GUID: 9bLbao6NHtmW3MEa59BqiKOKNk4lRepJ
+X-Proofpoint-ORIG-GUID: 9bLbao6NHtmW3MEa59BqiKOKNk4lRepJ
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
+ definitions=2022-09-19_05,2022-09-16_01,2022-06-22_01
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
-branch HEAD: 4c9ca5b1597e3222177ba2a94658f78fa5ef4f58  Add linux-next specific files for 20220919
+Hi Guenter,
 
-Error/Warning reports:
+On Mon, 19 Sep 2022, 3:01pm, Guenter Roeck wrote:
 
-https://lore.kernel.org/linux-doc/202209200314.tChS7q2Y-lkp@intel.com
-https://lore.kernel.org/linux-doc/202209200341.be18yIBM-lkp@intel.com
-https://lore.kernel.org/linux-mm/202209150141.WgbAKqmX-lkp@intel.com
-https://lore.kernel.org/linux-mm/202209200603.Hpvoa8Ii-lkp@intel.com
-https://lore.kernel.org/llvm/202209192243.d80zUWVW-lkp@intel.com
-https://lore.kernel.org/llvm/202209200834.EFwaTsIj-lkp@intel.com
+> On Fri, Aug 26, 2022 at 03:25:57AM -0700, Nilesh Javali wrote:
+> > From: Arun Easi <aeasi@marvell.com>
+> > 
+> > Older tracing of driver messages was to:
+> >     - log only debug messages to kernel main trace buffer AND
+> >     - log only if extended logging bits corresponding to this
+> >       message is off
+> > 
+> > This has been modified and extended as follows:
+> >     - Tracing is now controlled via ql2xextended_error_logging_ktrace
+> >       module parameter. Bit usages same as ql2xextended_error_logging.
+> >     - Tracing uses "qla2xxx" trace instance, unless instance creation
+> >       have issues.
+> >     - Tracing is enabled (compile time tunable).
+> >     - All driver messages, include debug and log messages are now traced
+> >       in kernel trace buffer.
+> > 
+> > Trace messages can be viewed by looking at the qla2xxx instance at:
+> >     /sys/kernel/tracing/instances/qla2xxx/trace
+> > 
+> > Trace tunable that takes the same bit mask as ql2xextended_error_logging
+> > is:
+> >     ql2xextended_error_logging_ktrace (default=1)
+> > 
+> > Suggested-by: Daniel Wagner <dwagner@suse.de>
+> > Suggested-by: Steven Rostedt <rostedt@goodmis.org>
+> > Signed-off-by: Arun Easi <aeasi@marvell.com>
+> > Signed-off-by: Nilesh Javali <njavali@marvell.com>
+> 
+> I understand this has already been reported early September, but then
+> the problem disapppeared in next-20220912 and reappeared in next-20220919.
+> 
+> This patch results in various test build failures. Example:
+> 
+> Building powerpc:skiroot_defconfig ... failed
+> --------------
+> Error log:
+> drivers/scsi/qla2xxx/qla_os.c: In function 'qla_trace_init':
+> drivers/scsi/qla2xxx/qla_os.c:2854:25: error:
+> 	implicit declaration of function 'trace_array_get_by_name'; did you mean 'trace_array_set_clr_event'?
+> 
+> Guenter
+> 
 
-Error/Warning: (recently discovered and may have been fixed)
+Apologies for the troubles this patch has caused.
 
-ERROR: modpost: "devm_ioremap_resource" [drivers/dma/fsl-edma.ko] undefined!
-ERROR: modpost: "devm_memremap" [drivers/misc/open-dice.ko] undefined!
-ERROR: modpost: "devm_memunmap" [drivers/misc/open-dice.ko] undefined!
-ERROR: modpost: "devm_platform_ioremap_resource" [drivers/char/xillybus/xillybus_of.ko] undefined!
-ERROR: modpost: "devm_platform_ioremap_resource" [drivers/clk/xilinx/clk-xlnx-clock-wizard.ko] undefined!
-ERROR: modpost: "ioremap" [drivers/tty/ipwireless/ipwireless.ko] undefined!
-ERROR: modpost: "iounmap" [drivers/net/ethernet/8390/pcnet_cs.ko] undefined!
-ERROR: modpost: "iounmap" [drivers/tty/ipwireless/ipwireless.ko] undefined!
-arch/parisc/lib/iomap.c:363:5: warning: no previous prototype for 'ioread64_lo_hi' [-Wmissing-prototypes]
-arch/parisc/lib/iomap.c:373:5: warning: no previous prototype for 'ioread64_hi_lo' [-Wmissing-prototypes]
-arch/parisc/lib/iomap.c:448:6: warning: no previous prototype for 'iowrite64_lo_hi' [-Wmissing-prototypes]
-arch/parisc/lib/iomap.c:454:6: warning: no previous prototype for 'iowrite64_hi_lo' [-Wmissing-prototypes]
-drivers/gpu/drm/drm_atomic_helper.c:802: warning: expecting prototype for drm_atomic_helper_check_wb_connector_state(). Prototype was for drm_atomic_helper_check_wb_encoder_state() instead
-drivers/iommu/ipmmu-vmsa.c:946:34: warning: unused variable 'ipmmu_of_ids' [-Wunused-const-variable]
-drivers/scsi/qla2xxx/qla_os.c:2854:23: warning: assignment to 'struct trace_array *' from 'int' makes pointer from integer without a cast [-Wint-conversion]
-drivers/scsi/qla2xxx/qla_os.c:2854:25: error: implicit declaration of function 'trace_array_get_by_name'; did you mean 'trace_array_set_clr_event'? [-Werror=implicit-function-declaration]
-drivers/scsi/qla2xxx/qla_os.c:2869:9: error: implicit declaration of function 'trace_array_put' [-Werror=implicit-function-declaration]
-fs/btrfs/extent-io-tree.c:165: warning: This comment starts with '/**', but isn't a kernel-doc comment. Refer Documentation/doc-guide/kernel-doc.rst
-fs/btrfs/extent-io-tree.c:217: warning: This comment starts with '/**', but isn't a kernel-doc comment. Refer Documentation/doc-guide/kernel-doc.rst
-mm/hugetlb.c:5565:14: warning: variable 'reserve_alloc' set but not used [-Wunused-but-set-variable]
+A fix for this is already posted (in trace.h), but is awaiting a final 
+approval from the maintainer:
 
-Unverified Error/Warning (likely false positive, please contact us if interested):
+https://lore.kernel.org/linux-scsi/20220907233308.4153-2-aeasi@marvell.com/
 
-ERROR: modpost: "__tsan_memcpy" [arch/s390/crypto/chacha_s390.ko] undefined!
-ERROR: modpost: "__tsan_memcpy" [arch/s390/crypto/ghash_s390.ko] undefined!
-ERROR: modpost: "__tsan_memcpy" [arch/s390/crypto/prng.ko] undefined!
-ERROR: modpost: "__tsan_memcpy" [arch/s390/crypto/sha3_512_s390.ko] undefined!
-ERROR: modpost: "__tsan_memset" [arch/s390/crypto/chacha_s390.ko] undefined!
-ERROR: modpost: "__tsan_memset" [arch/s390/crypto/ghash_s390.ko] undefined!
-ERROR: modpost: "__tsan_memset" [arch/s390/crypto/prng.ko] undefined!
-ERROR: modpost: "__tsan_memset" [arch/s390/crypto/sha3_512_s390.ko] undefined!
-ERROR: modpost: "__tsan_memset" [kernel/rcu/refscale.ko] undefined!
-ERROR: modpost: "__tsan_memset" [kernel/scftorture.ko] undefined!
+Martin,
 
-Error/Warning ids grouped by kconfigs:
+In the interest of time, and with more people running into the build 
+failures, if you want to pick up "Ren Zhijie"'s fix posted earlier today 
+with the fix all contained within the qla2xxx driver, feel free to go 
+ahead (I will NAK my NAK in that case :o )
 
-gcc_recent_errors
-|-- alpha-allyesconfig
-|   |-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|   |-- drivers-scsi-qla2xxx-qla_os.c:error:implicit-declaration-of-function-trace_array_get_by_name
-|   |-- drivers-scsi-qla2xxx-qla_os.c:error:implicit-declaration-of-function-trace_array_put
-|   `-- drivers-scsi-qla2xxx-qla_os.c:warning:assignment-to-struct-trace_array-from-int-makes-pointer-from-integer-without-a-cast
-|-- alpha-randconfig-r026-20220919
-|   `-- fs-btrfs-extent-io-tree.c:warning:This-comment-starts-with-but-isn-t-a-kernel-doc-comment.-Refer-Documentation-doc-guide-kernel-doc.rst
-|-- arc-allyesconfig
-|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|-- arc-randconfig-r043-20220919
-|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|-- arm-allyesconfig
-|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|-- arm-defconfig
-|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|-- arm64-allyesconfig
-|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|-- i386-allyesconfig
-|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|-- i386-defconfig
-|   |-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|   `-- mm-hugetlb.c:warning:variable-reserve_alloc-set-but-not-used
-|-- i386-randconfig-a011-20220919
-|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|-- i386-randconfig-a012-20220919
-|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|-- i386-randconfig-a015-20220919
-|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|-- ia64-allmodconfig
-|   |-- drivers-scsi-qla2xxx-qla_os.c:error:implicit-declaration-of-function-trace_array_get_by_name
-|   |-- drivers-scsi-qla2xxx-qla_os.c:error:implicit-declaration-of-function-trace_array_put
-|   `-- drivers-scsi-qla2xxx-qla_os.c:warning:assignment-to-struct-trace_array-from-int-makes-pointer-from-integer-without-a-cast
-|-- loongarch-buildonly-randconfig-r004-20220919
-|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|-- loongarch-randconfig-r015-20220919
-|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|-- m68k-allmodconfig
-|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|-- m68k-allyesconfig
-|   |-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|   `-- fs-btrfs-extent-io-tree.c:warning:This-comment-starts-with-but-isn-t-a-kernel-doc-comment.-Refer-Documentation-doc-guide-kernel-doc.rst
-|-- mips-allyesconfig
-|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|-- nios2-randconfig-r025-20220919
-|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|-- openrisc-randconfig-r003-20220919
-|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|-- openrisc-randconfig-r004-20220919
-|   `-- drivers-gpu-drm-drm_atomic_helper.c:warning:expecting-prototype-for-drm_atomic_helper_check_wb_connector_state().-Prototype-was-for-drm_atomic_helper_check_wb_encoder_state()-instead
-|-- parisc-allyesconfig
-clang_recent_errors
-|-- arm-buildonly-randconfig-r001-20220919
-|   |-- drivers-extcon-extcon-usbc-tusb320.c:warning:expecting-prototype-for-drivers-extcon-extcon-tusb320c().-Prototype-was-for-TUSB320_REG8()-instead
-|   `-- drivers-gpu-drm-tests-drm_mm_test.c:warning:stack-frame-size-()-exceeds-limit-()-in-__drm_test_mm_reserve
-|-- arm-defconfig
-|   |-- drivers-clk-rockchip-clk-rv1126.c:warning:unused-variable-mux_aclk_pdispp_p
-|   |-- drivers-clk-rockchip-clk-rv1126.c:warning:unused-variable-mux_aclk_pdnpu_p
-|   |-- drivers-clk-rockchip-clk-rv1126.c:warning:unused-variable-mux_aclk_pdvi_p
-|   |-- drivers-clk-rockchip-clk-rv1126.c:warning:unused-variable-mux_cif_out2io_p
-|   |-- drivers-clk-rockchip-clk-rv1126.c:warning:unused-variable-mux_clk_isp_p
-|   |-- drivers-clk-rockchip-clk-rv1126.c:warning:unused-variable-mux_clk_ispp_p
-|   |-- drivers-clk-rockchip-clk-rv1126.c:warning:unused-variable-mux_clk_npu_p
-|   |-- drivers-clk-rockchip-clk-rv1126.c:warning:unused-variable-mux_cpll_gpll_hpll_p
-|   |-- drivers-clk-rockchip-clk-rv1126.c:warning:unused-variable-mux_cpll_hpll_gpll_p
-|   |-- drivers-clk-rockchip-clk-rv1126.c:warning:unused-variable-mux_dclk_vop_p
-|   |-- drivers-clk-rockchip-clk-rv1126.c:warning:unused-variable-mux_gpll_cpll_apll_hpll_p
-|   |-- drivers-clk-rockchip-clk-rv1126.c:warning:unused-variable-mux_gpll_cpll_hpll_p
-|   |-- drivers-clk-rockchip-clk-rv1126.c:warning:unused-variable-mux_gpll_usb480m_p
-|   `-- drivers-clk-rockchip-clk-rv1126.c:warning:unused-variable-mux_mipicsi_out2io_p
-|-- arm64-buildonly-randconfig-r005-20220919
-|   |-- arch-arm64-kernel-alternative.c:warning:no-previous-prototype-for-function-apply_alternatives_vdso
-|   `-- drivers-extcon-extcon-usbc-tusb320.c:warning:expecting-prototype-for-drivers-extcon-extcon-tusb320c().-Prototype-was-for-TUSB320_REG8()-instead
-|-- arm64-randconfig-r033-20220919
-|   `-- arch-arm64-kernel-alternative.c:warning:no-previous-prototype-for-function-apply_alternatives_vdso
-|-- hexagon-randconfig-r041-20220919
-|   `-- drivers-extcon-extcon-usbc-tusb320.c:warning:expecting-prototype-for-drivers-extcon-extcon-tusb320c().-Prototype-was-for-TUSB320_REG8()-instead
-|-- hexagon-randconfig-r045-20220919
-|   `-- drivers-extcon-extcon-usbc-tusb320.c:warning:expecting-prototype-for-drivers-extcon-extcon-tusb320c().-Prototype-was-for-TUSB320_REG8()-instead
-|-- i386-randconfig-a002-20220919
-|   `-- drivers-extcon-extcon-usbc-tusb320.c:warning:expecting-prototype-for-drivers-extcon-extcon-tusb320c().-Prototype-was-for-TUSB320_REG8()-instead
-|-- i386-randconfig-a005-20220919
-|   `-- drivers-extcon-extcon-usbc-tusb320.c:warning:expecting-prototype-for-drivers-extcon-extcon-tusb320c().-Prototype-was-for-TUSB320_REG8()-instead
-|-- i386-randconfig-a006-20220919
-|   `-- drivers-extcon-extcon-usbc-tusb320.c:warning:expecting-prototype-for-drivers-extcon-extcon-tusb320c().-Prototype-was-for-TUSB320_REG8()-instead
-|-- s390-randconfig-r005-20220919
-|   |-- ERROR:__tsan_memcpy-arch-s390-crypto-chacha_s390.ko-undefined
-|   |-- ERROR:__tsan_memcpy-arch-s390-crypto-ghash_s390.ko-undefined
-|   |-- ERROR:__tsan_memcpy-arch-s390-crypto-prng.ko-undefined
-|   |-- ERROR:__tsan_memcpy-arch-s390-crypto-sha3_512_s390.ko-undefined
-|   |-- ERROR:__tsan_memset-arch-s390-crypto-chacha_s390.ko-undefined
-|   |-- ERROR:__tsan_memset-arch-s390-crypto-ghash_s390.ko-undefined
-|   |-- ERROR:__tsan_memset-arch-s390-crypto-prng.ko-undefined
-|   |-- ERROR:__tsan_memset-arch-s390-crypto-sha3_512_s390.ko-undefined
-|   |-- ERROR:__tsan_memset-kernel-rcu-refscale.ko-undefined
-|   |-- ERROR:__tsan_memset-kernel-scftorture.ko-undefined
-|   `-- drivers-iommu-ipmmu-vmsa.c:warning:unused-variable-ipmmu_of_ids
-|-- x86_64-randconfig-a001-20220919
-|   `-- fs-btrfs-extent-io-tree.c:warning:This-comment-starts-with-but-isn-t-a-kernel-doc-comment.-Refer-Documentation-doc-guide-kernel-doc.rst
-|-- x86_64-randconfig-a003-20220919
-|   `-- drivers-extcon-extcon-usbc-tusb320.c:warning:expecting-prototype-for-drivers-extcon-extcon-tusb320c().-Prototype-was-for-TUSB320_REG8()-instead
-|-- x86_64-randconfig-a006-20220919
-
-elapsed time: 726m
-
-configs tested: 57
-configs skipped: 2
-
-gcc tested configs:
-um                             i386_defconfig
-um                           x86_64_defconfig
-x86_64               randconfig-a012-20220919
-x86_64                              defconfig
-x86_64               randconfig-a011-20220919
-x86_64               randconfig-a013-20220919
-x86_64                               rhel-8.3
-x86_64               randconfig-a014-20220919
-powerpc                           allnoconfig
-x86_64               randconfig-a015-20220919
-x86_64               randconfig-a016-20220919
-x86_64                           allyesconfig
-i386                                defconfig
-sh                               allmodconfig
-mips                             allyesconfig
-powerpc                          allmodconfig
-arm                                 defconfig
-x86_64                          rhel-8.3-func
-x86_64                         rhel-8.3-kunit
-riscv                randconfig-r042-20220919
-x86_64                           rhel-8.3-kvm
-arc                  randconfig-r043-20220919
-arm64                            allyesconfig
-i386                             allyesconfig
-s390                 randconfig-r044-20220919
-arm                              allyesconfig
-x86_64                    rhel-8.3-kselftests
-x86_64                           rhel-8.3-syz
-ia64                             allmodconfig
-alpha                            allyesconfig
-arc                              allyesconfig
-i386                 randconfig-a012-20220919
-i386                 randconfig-a011-20220919
-i386                 randconfig-a013-20220919
-i386                 randconfig-a014-20220919
-m68k                             allmodconfig
-i386                 randconfig-a015-20220919
-arc                                 defconfig
-alpha                               defconfig
-m68k                             allyesconfig
-s390                             allmodconfig
-s390                                defconfig
-s390                             allyesconfig
-
-clang tested configs:
-x86_64               randconfig-a003-20220919
-x86_64               randconfig-a001-20220919
-x86_64               randconfig-a002-20220919
-i386                 randconfig-a001-20220919
-x86_64               randconfig-a004-20220919
-i386                 randconfig-a006-20220919
-i386                 randconfig-a002-20220919
-x86_64               randconfig-a006-20220919
-hexagon              randconfig-r041-20220919
-x86_64               randconfig-a005-20220919
-i386                 randconfig-a003-20220919
-hexagon              randconfig-r045-20220919
-i386                 randconfig-a004-20220919
-i386                 randconfig-a005-20220919
-
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+Regards,
+-Arun
