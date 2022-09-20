@@ -2,38 +2,38 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52DC8ECAAD8
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Sep 2022 10:36:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06C62C54EE9
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Sep 2022 10:36:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231322AbiITKgh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Sep 2022 06:36:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46402 "EHLO
+        id S231377AbiITKgl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Sep 2022 06:36:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46302 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231172AbiITKf5 (ORCPT
+        with ESMTP id S230315AbiITKf5 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Sep 2022 06:35:57 -0400
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DAEA74CF5;
-        Tue, 20 Sep 2022 03:34:03 -0700 (PDT)
-Received: from fraeml737-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MWyYN2gMQz6H73Y;
-        Tue, 20 Sep 2022 18:32:56 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 293CB719AD;
+        Tue, 20 Sep 2022 03:34:09 -0700 (PDT)
+Received: from fraeml714-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MWyYY1Khnz6873f;
+        Tue, 20 Sep 2022 18:33:05 +0800 (CST)
 Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml737-chm.china.huawei.com (10.206.15.218) with Microsoft SMTP Server
+ fraeml714-chm.china.huawei.com (10.206.15.33) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Tue, 20 Sep 2022 12:33:58 +0200
+ 15.1.2375.31; Tue, 20 Sep 2022 12:34:07 +0200
 Received: from localhost.localdomain (10.69.192.58) by
  lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Tue, 20 Sep 2022 11:33:55 +0100
+ 15.1.2375.31; Tue, 20 Sep 2022 11:34:04 +0100
 From:   John Garry <john.garry@huawei.com>
 To:     <damien.lemoal@opensource.wdc.com>, <jejb@linux.ibm.com>,
         <martin.petersen@oracle.com>, <hare@suse.de>, <hch@lst.de>
 CC:     <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linux-scsi@vger.kernel.org>, <brking@us.ibm.com>,
         John Garry <john.garry@huawei.com>
-Subject: [PATCH RFC 3/6] scsi: core: Add scsi_get_dev()
-Date:   Tue, 20 Sep 2022 18:27:07 +0800
-Message-ID: <1663669630-21333-4-git-send-email-john.garry@huawei.com>
+Subject: [PATCH RFC 6/6] ata: libata-scsi: Allocate sdev early in port probe
+Date:   Tue, 20 Sep 2022 18:27:10 +0800
+Message-ID: <1663669630-21333-7-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1663669630-21333-1-git-send-email-john.garry@huawei.com>
 References: <1663669630-21333-1-git-send-email-john.garry@huawei.com>
@@ -47,66 +47,89 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add a function which allows use to alloc a sdev with configurable
-device parent, and channel:id:lun.
+Currently the per-ata device sdev is allocated as part of the scsi target
+scan, which is after the ata port probe.
 
-This is useful for separating adding a scsi device into separate alloc
-and scan steps.
+However it is useful to have the sdev available in the port probe. As an
+example of an advantage, if the request queue is available in the probe
+(which it would be if the sdev is available), then it is possible to use
+a SCSI cmnd for ATA internal commands. The benefit of this is then we can
+put the ATA qc structure in the SCSI cmnd private data. It will also be
+useful if we want to send ATA internal commands as requests.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/scsi_scan.c | 25 +++++++++++++++++++++++++
- include/scsi/scsi_host.h |  3 +++
- 2 files changed, 28 insertions(+)
+ drivers/ata/libata-eh.c   |  4 ++++
+ drivers/ata/libata-scsi.c | 20 ++++++--------------
+ 2 files changed, 10 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 3759b1a77504..fd15ddac01b6 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1988,3 +1988,28 @@ void scsi_forget_host(struct Scsi_Host *shost)
- 	spin_unlock_irqrestore(shost->host_lock, flags);
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 7c128c89b454..35375873a464 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -2971,6 +2971,10 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
+ 			 */
+ 			dev->class = ehc->classes[dev->devno];
+ 
++			rc = ata_scsi_setup_sdev(dev);
++			if (rc)
++				goto err;
++
+ 			if (dev->class == ATA_DEV_PMP)
+ 				rc = sata_pmp_attach(dev);
+ 			else
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 88f39ab10a92..0e26860a82e2 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1111,7 +1111,9 @@ int ata_scsi_dev_config(struct scsi_device *sdev, struct ata_device *dev)
+ 	if (dev->flags & ATA_DFLAG_TRUSTED)
+ 		sdev->security_supported = 1;
+ 
+-	dev->sdev = sdev;
++	/* Put extra reference which we get when allocating the starget initially */
++	scsi_target_reap(scsi_target(sdev));
++
+ 	return 0;
  }
  
-+struct scsi_device *scsi_get_dev(struct device *parent, int channel, uint id, u64 lun)
-+{
-+	struct Scsi_Host *shost = dev_to_shost(parent);
-+	struct scsi_device *sdev = NULL;
-+	struct scsi_target *starget;
-+
-+	mutex_lock(&shost->scan_mutex);
-+	if (!scsi_host_scan_allowed(shost))
-+		goto out;
-+
-+	starget = scsi_alloc_target(parent, 0, id);
-+	if (!starget)
-+		goto out;
-+
-+	sdev = scsi_alloc_sdev(starget, 0, NULL);
-+	if (sdev)
-+		sdev->borken = 0;
-+	else
-+		scsi_target_reap(starget);
-+	put_device(&starget->dev);
-+ out:
-+	mutex_unlock(&shost->scan_mutex);
-+	return sdev;
-+}
-+EXPORT_SYMBOL(scsi_get_dev);
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index aa7b7496c93a..5142c7df7647 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -794,7 +794,10 @@ void scsi_host_busy_iter(struct Scsi_Host *,
+@@ -4279,6 +4281,7 @@ int ata_scsi_setup_sdev(struct ata_device *dev)
+ 	if (!sdev)
+ 		return -ENODEV;
+ 	dev->sdev = sdev;
++	ata_scsi_assign_ofnode(dev, ap);
+ 	return 0;
+ }
  
- struct class_container;
+@@ -4292,26 +4295,15 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
+  repeat:
+ 	ata_for_each_link(link, ap, EDGE) {
+ 		ata_for_each_dev(dev, link, ENABLED) {
+-			struct scsi_device *sdev;
++			struct Scsi_Host *shost = ap->scsi_host;
+ 			int channel = 0, id = 0;
  
-+extern struct scsi_device *scsi_get_dev(struct device *parent, int channel, uint id, u64 lun);
-+
- /*
-+
-  * DIF defines the exchange of protection information between
-  * initiator and SBC block device.
-  *
+-			if (dev->sdev)
+-				continue;
+-
+ 			if (ata_is_host_link(link))
+ 				id = dev->devno;
+ 			else
+ 				channel = link->pmp;
+ 
+-			sdev = __scsi_add_device(ap->scsi_host, channel, id, 0,
+-						 NULL);
+-			if (!IS_ERR(sdev)) {
+-				dev->sdev = sdev;
+-				ata_scsi_assign_ofnode(dev, ap);
+-				scsi_device_put(sdev);
+-			} else {
+-				dev->sdev = NULL;
+-			}
++			scsi_scan_target(&shost->shost_gendev, channel, id, 0, SCSI_SCAN_INITIAL);
+ 		}
+ 	}
+ 
 -- 
 2.35.3
 
