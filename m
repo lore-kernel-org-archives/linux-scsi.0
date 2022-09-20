@@ -2,102 +2,132 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88C30C6FA8B
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Sep 2022 09:38:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C80FC54EE9
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Sep 2022 10:36:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230153AbiITJi2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Sep 2022 05:38:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46700 "EHLO
+        id S230041AbiITKgG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Sep 2022 06:36:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45906 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229681AbiITJi1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Sep 2022 05:38:27 -0400
-Received: from mail-ej1-x62e.google.com (mail-ej1-x62e.google.com [IPv6:2a00:1450:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED56F66A70;
-        Tue, 20 Sep 2022 02:38:23 -0700 (PDT)
-Received: by mail-ej1-x62e.google.com with SMTP id 13so4762523ejn.3;
-        Tue, 20 Sep 2022 02:38:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date;
-        bh=1ACvBNS/BmPcZghXQgeH0xRzJtAbKL6tPXfSnoaBoJQ=;
-        b=XaP21kFUG88BKe4RytNxQVkBU7oeorpYQLBbWW8pNETJyNJU75ehFxaxDGf+0huQDv
-         rUBLuaEXXfRGUstiD80bGBRlXZjbt/cxnv/XoeGRw8rRUghQahgn12j3d6Y/0RiFEC0I
-         VVPRibKngjYq+nrdJZ3+Lm7DReCnjK68y3hnNghoisv4bGa7DMGSEs0xa+M8nrPVW1sr
-         Mt0EeTfCRUb1K7Uq24FD8PlwV5zN9zMSR2IgRLStmP7ctig9UO2K/uA7NSF531JNK2Oq
-         fpeD+kQ9llFF4fa4rluiPET0zpWoU+gXPR6nY/8bMb3Tys7zMQR15zEE4/ltmPDv/2c3
-         t5OA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date;
-        bh=1ACvBNS/BmPcZghXQgeH0xRzJtAbKL6tPXfSnoaBoJQ=;
-        b=r5/k3w2Azqmr41DIIv0mkzRvFWEEU9NrbRuRrYak+ElJWjoVhwSWwoiuqtXasbBJEm
-         77iFF41aZ+DlLgclu1tW/33ADHzPuUU+yT9jgT+M37kTkqxvyEnUj9M8YnajcR6FI6iR
-         pG4EzBd8VRFKREu0o2yAF0+TRq2Z7l+Ghz5+gtFNsHep0yYVqOa6Y1/GnhOgufQNSjQH
-         BgNdChkodf0zEXnJs/X+GS/oCUHhh8p3ZsjLl40kjaG0QhSMyFztkRqsknqRfwnSuJEE
-         Ad9TdcFjWNbdAbHfyfOKqo2TD2k2/nG1uCDxP79dxmi/pGlOb2bO6TAXTJx+KuBn+dgY
-         v/gw==
-X-Gm-Message-State: ACrzQf1weE6z7ooatcxWo4YoHVtycC6mxGif5SiQKJulplGf8yGYAcam
-        boVeW72h6miQnkFve0aRZBQ=
-X-Google-Smtp-Source: AMsMyM5DKlUx30EnlT+m8b/NyFhKRw1MZqDFyfqzrrGCGN0FvzidzIvezsle0sfFHUcjRwmF5tByHA==
-X-Received: by 2002:a17:906:9756:b0:781:bc50:abe3 with SMTP id o22-20020a170906975600b00781bc50abe3mr1976678ejy.291.1663666702457;
-        Tue, 20 Sep 2022 02:38:22 -0700 (PDT)
-Received: from [10.176.234.249] ([137.201.254.41])
-        by smtp.googlemail.com with ESMTPSA id e6-20020a170906314600b0073ddd36ba8csm553544eje.145.2022.09.20.02.38.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 20 Sep 2022 02:38:22 -0700 (PDT)
-Message-ID: <87e6fdb49d9d76c468712e1b42cbc130273b5635.camel@gmail.com>
-Subject: Re: [PATCH] scsi: ufs-bsg: Remove ufs_bsg_get_query_desc_size
- function
-From:   Bean Huo <huobean@gmail.com>
-To:     Arthur Simchaev <Arthur.Simchaev@wdc.com>, James@vger.kernel.org,
-        E.J.Bottomley@vger.kernel.org, jejb@linux.vnet.ibm.com,
-        Martin@vger.kernel.org, K.Petersen@vger.kernel.org,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Bean@vger.kernel.org, Huo@vger.kernel.org, beanhuo@micron.com
-Date:   Tue, 20 Sep 2022 11:38:20 +0200
-In-Reply-To: <1655727966-31584-1-git-send-email-Arthur.Simchaev@wdc.com>
-References: <1655727966-31584-1-git-send-email-Arthur.Simchaev@wdc.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.1-0ubuntu1 
+        with ESMTP id S229895AbiITKfr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Sep 2022 06:35:47 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C3F274CF6;
+        Tue, 20 Sep 2022 03:34:04 -0700 (PDT)
+Received: from fraeml736-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MWyYK2Gz9z67xNS;
+        Tue, 20 Sep 2022 18:32:53 +0800 (CST)
+Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
+ fraeml736-chm.china.huawei.com (10.206.15.217) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Tue, 20 Sep 2022 12:33:55 +0200
+Received: from localhost.localdomain (10.69.192.58) by
+ lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Tue, 20 Sep 2022 11:33:52 +0100
+From:   John Garry <john.garry@huawei.com>
+To:     <damien.lemoal@opensource.wdc.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <hare@suse.de>, <hch@lst.de>
+CC:     <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <brking@us.ibm.com>,
+        John Garry <john.garry@huawei.com>
+Subject: [PATCH RFC 2/6] scsi: scsi_transport_sas: Allocate end device target id in the rphy alloc
+Date:   Tue, 20 Sep 2022 18:27:06 +0800
+Message-ID: <1663669630-21333-3-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
+In-Reply-To: <1663669630-21333-1-git-send-email-john.garry@huawei.com>
+References: <1663669630-21333-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ lhrpeml500003.china.huawei.com (7.191.162.67)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Arthur,
+Currently the per-end device target id is allocated when adding the rphy,
+which is when we execute the scan of the target.
 
+However it will be useful to have the target id allocated earlier when
+allocating the rphy for the end device. For libata we want to move to a
+scheme of allocating the sdev early in the probe process and then later
+executing the scan (for that target). As such, users of would libata would
+require that the target id allocated earlier here (before the scan).
 
-On Mon, 2022-06-20 at 15:26 +0300, Arthur Simchaev wrote:
-> The bsg driver allows user space to send device management commands.
-> As such, it is often used by field application engineers to debug
-> various problems,
-> and as a test bed for new features as well.
->=20
-> Let's not bound ourself to hard coded descriptor sizes, as the new
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ drivers/scsi/scsi_transport_sas.c | 25 +++++++++++++++++--------
+ 1 file changed, 17 insertions(+), 8 deletions(-)
 
-UFS descriptor size is no longer hardcoded (defined in the driver), the
-size of the descriptor is reported by UFS itself, check the latest
-kernel.
-
-
-> Descriptors that supports new features are not defined yet.
->=20
-> Signed-off-by: Arthur Simchaev <Arthur.Simchaev@wdc.com>
-> ---
-> =C2=A0drivers/scsi/ufs/ufs_bsg.c | 28 ++++------------------------
-> =C2=A01 file changed, 4 insertions(+), 24 deletions(-)
->=20
-> diff --git a/drivers/scsi/ufs/ufs_bsg.c b/drivers/scsi/ufs/ufs_bsg.c
-
-This UFS driver is in the wrong location, I assume you are using an
-older kernel version?
-
-Kind regards,
-Bean
+diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+index 2f88c61216ee..56d325665bc7 100644
+--- a/drivers/scsi/scsi_transport_sas.c
++++ b/drivers/scsi/scsi_transport_sas.c
+@@ -1433,6 +1433,7 @@ static void sas_rphy_initialize(struct sas_rphy *rphy)
+ struct sas_rphy *sas_end_device_alloc(struct sas_port *parent)
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(&parent->dev);
++	struct sas_host_attrs *sas_host = to_sas_host_attrs(shost);
+ 	struct sas_end_device *rdev;
+ 
+ 	rdev = kzalloc(sizeof(*rdev), GFP_KERNEL);
+@@ -1455,6 +1456,10 @@ struct sas_rphy *sas_end_device_alloc(struct sas_port *parent)
+ 	sas_rphy_initialize(&rdev->rphy);
+ 	transport_setup_device(&rdev->rphy.dev);
+ 
++	mutex_lock(&sas_host->lock);
++	rdev->rphy.scsi_target_id = sas_host->next_target_id++;
++	mutex_unlock(&sas_host->lock);
++
+ 	return &rdev->rphy;
+ }
+ EXPORT_SYMBOL(sas_end_device_alloc);
+@@ -1500,6 +1505,16 @@ struct sas_rphy *sas_expander_alloc(struct sas_port *parent,
+ }
+ EXPORT_SYMBOL(sas_expander_alloc);
+ 
++static bool sas_rphy_end_device_valid_tproto(struct sas_rphy *rphy)
++{
++	struct sas_identify *identify = &rphy->identify;
++
++	if (identify->target_port_protocols &
++	    (SAS_PROTOCOL_SSP | SAS_PROTOCOL_STP | SAS_PROTOCOL_SATA))
++		return true;
++	return false;
++}
++
+ /**
+  * sas_rphy_add  -  add a SAS remote PHY to the device hierarchy
+  * @rphy:	The remote PHY to be added
+@@ -1529,16 +1544,10 @@ int sas_rphy_add(struct sas_rphy *rphy)
+ 
+ 	mutex_lock(&sas_host->lock);
+ 	list_add_tail(&rphy->list, &sas_host->rphy_list);
+-	if (identify->device_type == SAS_END_DEVICE &&
+-	    (identify->target_port_protocols &
+-	     (SAS_PROTOCOL_SSP | SAS_PROTOCOL_STP | SAS_PROTOCOL_SATA)))
+-		rphy->scsi_target_id = sas_host->next_target_id++;
+-	else if (identify->device_type == SAS_END_DEVICE)
+-		rphy->scsi_target_id = -1;
+ 	mutex_unlock(&sas_host->lock);
+ 
+ 	if (identify->device_type == SAS_END_DEVICE &&
+-	    rphy->scsi_target_id != -1) {
++	    sas_rphy_end_device_valid_tproto(rphy)) {
+ 		int lun;
+ 
+ 		if (identify->target_port_protocols & SAS_PROTOCOL_SSP)
+@@ -1667,7 +1676,7 @@ static int sas_user_scan(struct Scsi_Host *shost, uint channel,
+ 	mutex_lock(&sas_host->lock);
+ 	list_for_each_entry(rphy, &sas_host->rphy_list, list) {
+ 		if (rphy->identify.device_type != SAS_END_DEVICE ||
+-		    rphy->scsi_target_id == -1)
++		    !sas_rphy_end_device_valid_tproto(rphy))
+ 			continue;
+ 
+ 		if ((channel == SCAN_WILD_CARD || channel == 0) &&
+-- 
+2.35.3
 
