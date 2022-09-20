@@ -2,332 +2,82 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D02D6ECAAD8
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Sep 2022 07:09:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C74EDC54EE9
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Sep 2022 08:07:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229911AbiITHJM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Sep 2022 03:09:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34550 "EHLO
+        id S230150AbiITIHp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Sep 2022 04:07:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60228 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229582AbiITHJL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Sep 2022 03:09:11 -0400
-Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5AB95F101;
-        Tue, 20 Sep 2022 00:09:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1663657749; x=1695193749;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=d35d0xMsVeQ5khCIa9tYi0pmR1rIIBJci9gPgkbTF0U=;
-  b=bxwHWTemuMQmXut+GQRRHWaxogzFykY3qmfI1u3yUx+6OZ6vl4sw83QE
-   jDXPTKJBYrLIZ8X76R/G6Ih8DSGlMvKi2vlxfnHjzisTYUgwR2CVAj/nV
-   pU15gavfZZAu0XmSKH6ApmWoJONZgWJi4SIF0Aee+aNwnqxWYhbboX1YR
-   zhZzFdjHFf3rE4/3Ritn3lVk11JDID21gkjc41Bx064NSCV/feyAgaaId
-   K/1mtE4VGZxKJ3eQiMwZOZmO93H3tTaHUxVgd77EfHecKpXtvptfsPg42
-   9EgzYn2VN0ONR/ZagEOSQw6qDGufSBTbPB3e3FYxgMKTVeuvIh9IG1mD5
-   g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10475"; a="298343712"
-X-IronPort-AV: E=Sophos;i="5.93,329,1654585200"; 
-   d="scan'208";a="298343712"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Sep 2022 00:09:09 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.93,329,1654585200"; 
-   d="scan'208";a="687291627"
-Received: from lkp-server01.sh.intel.com (HELO c0a60f19fe7e) ([10.239.97.150])
-  by fmsmga004.fm.intel.com with ESMTP; 20 Sep 2022 00:09:07 -0700
-Received: from kbuild by c0a60f19fe7e with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1oaXNS-0002Yy-05;
-        Tue, 20 Sep 2022 07:09:06 +0000
-Date:   Tue, 20 Sep 2022 15:09:02 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Yihao Han <hanyihao@vivo.com>, Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     kbuild-all@lists.01.org, Yihao Han <hanyihao@vivo.com>
-Subject: Re: [PATCH] scsi: qla2xxx: fix excluded_middle.cocci warnings
-Message-ID: <202209201406.fHVcccRp-lkp@intel.com>
-References: <20220920024554.2606-1-hanyihao@vivo.com>
+        with ESMTP id S231307AbiITIGZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Sep 2022 04:06:25 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA21F6564D
+        for <linux-scsi@vger.kernel.org>; Tue, 20 Sep 2022 01:03:36 -0700 (PDT)
+Received: from dggpeml500023.china.huawei.com (unknown [172.30.72.57])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4MWv8X3XhHzcn2X;
+        Tue, 20 Sep 2022 15:59:40 +0800 (CST)
+Received: from dggpeml500019.china.huawei.com (7.185.36.137) by
+ dggpeml500023.china.huawei.com (7.185.36.114) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Tue, 20 Sep 2022 16:03:34 +0800
+Received: from [10.174.179.189] (10.174.179.189) by
+ dggpeml500019.china.huawei.com (7.185.36.137) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Tue, 20 Sep 2022 16:03:34 +0800
+Message-ID: <306f0d31-5fc2-8ed4-eded-f0c280c5f63d@huawei.com>
+Date:   Tue, 20 Sep 2022 16:03:33 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220920024554.2606-1-hanyihao@vivo.com>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [PATCH] scsi: core: Add io timeout count for scsi device
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        <qiuchangqi.qiu@huawei.com>
+References: <32aff63d-1b79-916a-50e2-1e6c113ed9ef@huawei.com>
+ <44e17063-3e69-98b8-b6e8-b73f8e449715@acm.org>
+From:   Wu Bo <wubo40@huawei.com>
+In-Reply-To: <44e17063-3e69-98b8-b6e8-b73f8e449715@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.174.179.189]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ dggpeml500019.china.huawei.com (7.185.36.137)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Yihao,
+On 2022/9/17 0:19, Bart Van Assche wrote:
+> On 9/15/22 19:01, Wu Bo wrote:
+>> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+>> index 448748e..e84aea9 100644
+>> --- a/drivers/scsi/scsi_error.c
+>> +++ b/drivers/scsi/scsi_error.c
+>> @@ -334,6 +334,7 @@ enum blk_eh_timer_return scsi_timeout(struct 
+>> request *req)
+>>          trace_scsi_dispatch_cmd_timeout(scmd);
+>>          scsi_log_completion(scmd, TIMEOUT_ERROR);
+>>
+>> +       atomic_inc(&scmd->device->iotmo_cnt);
+>>          if (host->eh_deadline != -1 && !host->last_reset)
+>>                  host->last_reset = jiffies;
+> 
+> Please rebase this patch on top of Martin's for-next branch and repost 
+> this patch. I cannot apply this patch with "git am" on Martin's for-next 
+> branch.
+> 
+> Thanks,
+> 
+> Bart.
+> 
+> 
+> .
+Sorry. I will repost the patch.
 
-Thank you for the patch! Yet something to improve:
+Thanks,
 
-[auto build test ERROR on jejb-scsi/for-next]
-[also build test ERROR on mkp-scsi/for-next linus/master v6.0-rc6 next-20220919]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Yihao-Han/scsi-qla2xxx-fix-excluded_middle-cocci-warnings/20220920-104643
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-config: ia64-allyesconfig (https://download.01.org/0day-ci/archive/20220920/202209201406.fHVcccRp-lkp@intel.com/config)
-compiler: ia64-linux-gcc (GCC) 12.1.0
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/81672bb39d1900d22e851a7cfb0b9a0aa35df8af
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Yihao-Han/scsi-qla2xxx-fix-excluded_middle-cocci-warnings/20220920-104643
-        git checkout 81672bb39d1900d22e851a7cfb0b9a0aa35df8af
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=ia64 SHELL=/bin/bash drivers/scsi/
-
-If you fix the issue, kindly add following tag where applicable
-Reported-by: kernel test robot <lkp@intel.com>
-
-All errors (new ones prefixed by >>):
-
-   drivers/scsi/qla2xxx/qla_target.c: In function 'qlt_free_session_done':
->> drivers/scsi/qla2xxx/qla_target.c:1031:78: error: expected ')' before '{' token
-    1031 |                     (!own || (own->iocb.u.isp24.status_subcode == ELS_PLOGI)) {
-         |                                                                              ^~
-         |                                                                              )
-   drivers/scsi/qla2xxx/qla_target.c:1030:20: note: to match this '('
-    1030 |                 if (ha->flags.edif_enabled &&
-         |                    ^
->> drivers/scsi/qla2xxx/qla_target.c:1047:9: error: expected expression before '}' token
-    1047 |         }
-         |         ^
-
-
-vim +1031 drivers/scsi/qla2xxx/qla_target.c
-
-   961	
-   962	void qlt_free_session_done(struct work_struct *work)
-   963	{
-   964		struct fc_port *sess = container_of(work, struct fc_port,
-   965		    free_work);
-   966		struct qla_tgt *tgt = sess->tgt;
-   967		struct scsi_qla_host *vha = sess->vha;
-   968		struct qla_hw_data *ha = vha->hw;
-   969		unsigned long flags;
-   970		bool logout_started = false;
-   971		scsi_qla_host_t *base_vha = pci_get_drvdata(ha->pdev);
-   972		struct qlt_plogi_ack_t *own =
-   973			sess->plogi_link[QLT_PLOGI_LINK_SAME_WWN];
-   974	
-   975		ql_dbg(ql_dbg_disc, vha, 0xf084,
-   976			"%s: se_sess %p / sess %p from port %8phC loop_id %#04x"
-   977			" s_id %02x:%02x:%02x logout %d keep %d els_logo %d\n",
-   978			__func__, sess->se_sess, sess, sess->port_name, sess->loop_id,
-   979			sess->d_id.b.domain, sess->d_id.b.area, sess->d_id.b.al_pa,
-   980			sess->logout_on_delete, sess->keep_nport_handle,
-   981			sess->send_els_logo);
-   982	
-   983		if (!IS_SW_RESV_ADDR(sess->d_id)) {
-   984			qla2x00_mark_device_lost(vha, sess, 0);
-   985	
-   986			if (sess->send_els_logo) {
-   987				qlt_port_logo_t logo;
-   988	
-   989				logo.id = sess->d_id;
-   990				logo.cmd_count = 0;
-   991				INIT_LIST_HEAD(&logo.list);
-   992				if (!own)
-   993					qlt_send_first_logo(vha, &logo);
-   994				sess->send_els_logo = 0;
-   995			}
-   996	
-   997			if (sess->logout_on_delete && sess->loop_id != FC_NO_LOOP_ID) {
-   998				int rc;
-   999	
-  1000				if (!own ||
-  1001				     (own->iocb.u.isp24.status_subcode == ELS_PLOGI)) {
-  1002					sess->logout_completed = 0;
-  1003					rc = qla2x00_post_async_logout_work(vha, sess,
-  1004					    NULL);
-  1005					if (rc != QLA_SUCCESS)
-  1006						ql_log(ql_log_warn, vha, 0xf085,
-  1007						    "Schedule logo failed sess %p rc %d\n",
-  1008						    sess, rc);
-  1009					else
-  1010						logout_started = true;
-  1011				} else if (own && (own->iocb.u.isp24.status_subcode ==
-  1012					ELS_PRLI) && ha->flags.rida_fmt2) {
-  1013					rc = qla2x00_post_async_prlo_work(vha, sess,
-  1014					    NULL);
-  1015					if (rc != QLA_SUCCESS)
-  1016						ql_log(ql_log_warn, vha, 0xf085,
-  1017						    "Schedule PRLO failed sess %p rc %d\n",
-  1018						    sess, rc);
-  1019					else
-  1020						logout_started = true;
-  1021				}
-  1022			} /* if sess->logout_on_delete */
-  1023	
-  1024			if (sess->nvme_flag & NVME_FLAG_REGISTERED &&
-  1025			    !(sess->nvme_flag & NVME_FLAG_DELETING)) {
-  1026				sess->nvme_flag |= NVME_FLAG_DELETING;
-  1027				qla_nvme_unregister_remote_port(sess);
-  1028			}
-  1029	
-  1030			if (ha->flags.edif_enabled &&
-> 1031			    (!own || (own->iocb.u.isp24.status_subcode == ELS_PLOGI)) {
-  1032				sess->edif.authok = 0;
-  1033				if (!ha->flags.host_shutting_down) {
-  1034					ql_dbg(ql_dbg_edif, vha, 0x911e,
-  1035					       "%s wwpn %8phC calling qla2x00_release_all_sadb\n",
-  1036					       __func__, sess->port_name);
-  1037					qla2x00_release_all_sadb(vha, sess);
-  1038				} else {
-  1039					ql_dbg(ql_dbg_edif, vha, 0x911e,
-  1040					       "%s bypassing release_all_sadb\n",
-  1041					       __func__);
-  1042				}
-  1043	
-  1044				qla_edif_clear_appdata(vha, sess);
-  1045				qla_edif_sess_down(vha, sess);
-  1046			}
-> 1047		}
-  1048	
-  1049		/*
-  1050		 * Release the target session for FC Nexus from fabric module code.
-  1051		 */
-  1052		if (sess->se_sess != NULL)
-  1053			ha->tgt.tgt_ops->free_session(sess);
-  1054	
-  1055		if (logout_started) {
-  1056			bool traced = false;
-  1057			u16 cnt = 0;
-  1058	
-  1059			while (!READ_ONCE(sess->logout_completed)) {
-  1060				if (!traced) {
-  1061					ql_dbg(ql_dbg_disc, vha, 0xf086,
-  1062						"%s: waiting for sess %p logout\n",
-  1063						__func__, sess);
-  1064					traced = true;
-  1065				}
-  1066				msleep(100);
-  1067				cnt++;
-  1068				/*
-  1069				 * Driver timeout is set to 22 Sec, update count value to loop
-  1070				 * long enough for log-out to complete before advancing. Otherwise,
-  1071				 * straddling logout can interfere with re-login attempt.
-  1072				 */
-  1073				if (cnt > 230)
-  1074					break;
-  1075			}
-  1076	
-  1077			ql_dbg(ql_dbg_disc, vha, 0xf087,
-  1078			    "%s: sess %p logout completed\n", __func__, sess);
-  1079		}
-  1080	
-  1081		if (sess->logo_ack_needed) {
-  1082			sess->logo_ack_needed = 0;
-  1083			qla24xx_async_notify_ack(vha, sess,
-  1084				(struct imm_ntfy_from_isp *)sess->iocb, SRB_NACK_LOGO);
-  1085		}
-  1086	
-  1087		spin_lock_irqsave(&vha->work_lock, flags);
-  1088		sess->flags &= ~FCF_ASYNC_SENT;
-  1089		spin_unlock_irqrestore(&vha->work_lock, flags);
-  1090	
-  1091		spin_lock_irqsave(&ha->tgt.sess_lock, flags);
-  1092		if (sess->se_sess) {
-  1093			sess->se_sess = NULL;
-  1094			if (tgt && !IS_SW_RESV_ADDR(sess->d_id))
-  1095				tgt->sess_count--;
-  1096		}
-  1097	
-  1098		qla2x00_set_fcport_disc_state(sess, DSC_DELETED);
-  1099		sess->fw_login_state = DSC_LS_PORT_UNAVAIL;
-  1100		sess->deleted = QLA_SESS_DELETED;
-  1101	
-  1102		if (sess->login_succ && !IS_SW_RESV_ADDR(sess->d_id)) {
-  1103			vha->fcport_count--;
-  1104			sess->login_succ = 0;
-  1105		}
-  1106	
-  1107		qla2x00_clear_loop_id(sess);
-  1108	
-  1109		if (sess->conflict) {
-  1110			sess->conflict->login_pause = 0;
-  1111			sess->conflict = NULL;
-  1112			if (!test_bit(UNLOADING, &vha->dpc_flags))
-  1113				set_bit(RELOGIN_NEEDED, &vha->dpc_flags);
-  1114		}
-  1115	
-  1116		{
-  1117			struct qlt_plogi_ack_t *con =
-  1118			    sess->plogi_link[QLT_PLOGI_LINK_CONFLICT];
-  1119			struct imm_ntfy_from_isp *iocb;
-  1120	
-  1121			own = sess->plogi_link[QLT_PLOGI_LINK_SAME_WWN];
-  1122	
-  1123			if (con) {
-  1124				iocb = &con->iocb;
-  1125				ql_dbg(ql_dbg_tgt_mgt, vha, 0xf099,
-  1126					 "se_sess %p / sess %p port %8phC is gone,"
-  1127					 " %s (ref=%d), releasing PLOGI for %8phC (ref=%d)\n",
-  1128					 sess->se_sess, sess, sess->port_name,
-  1129					 own ? "releasing own PLOGI" : "no own PLOGI pending",
-  1130					 own ? own->ref_count : -1,
-  1131					 iocb->u.isp24.port_name, con->ref_count);
-  1132				qlt_plogi_ack_unref(vha, con);
-  1133				sess->plogi_link[QLT_PLOGI_LINK_CONFLICT] = NULL;
-  1134			} else {
-  1135				ql_dbg(ql_dbg_tgt_mgt, vha, 0xf09a,
-  1136				    "se_sess %p / sess %p port %8phC is gone, %s (ref=%d)\n",
-  1137				    sess->se_sess, sess, sess->port_name,
-  1138				    own ? "releasing own PLOGI" :
-  1139				    "no own PLOGI pending",
-  1140				    own ? own->ref_count : -1);
-  1141			}
-  1142	
-  1143			if (own) {
-  1144				sess->fw_login_state = DSC_LS_PLOGI_PEND;
-  1145				qlt_plogi_ack_unref(vha, own);
-  1146				sess->plogi_link[QLT_PLOGI_LINK_SAME_WWN] = NULL;
-  1147			}
-  1148		}
-  1149	
-  1150		sess->explicit_logout = 0;
-  1151		spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
-  1152		sess->free_pending = 0;
-  1153	
-  1154		qla2x00_dfs_remove_rport(vha, sess);
-  1155	
-  1156		ql_dbg(ql_dbg_disc, vha, 0xf001,
-  1157		    "Unregistration of sess %p %8phC finished fcp_cnt %d\n",
-  1158			sess, sess->port_name, vha->fcport_count);
-  1159	
-  1160		if (tgt && (tgt->sess_count == 0))
-  1161			wake_up_all(&tgt->waitQ);
-  1162	
-  1163		if (!test_bit(PFLG_DRIVER_REMOVING, &base_vha->pci_flags) &&
-  1164		    !(vha->vp_idx && test_bit(VPORT_DELETE, &vha->dpc_flags)) &&
-  1165		    (!tgt || !tgt->tgt_stop) && !LOOP_TRANSITION(vha)) {
-  1166			switch (vha->host->active_mode) {
-  1167			case MODE_INITIATOR:
-  1168			case MODE_DUAL:
-  1169				set_bit(RELOGIN_NEEDED, &vha->dpc_flags);
-  1170				qla2xxx_wake_dpc(vha);
-  1171				break;
-  1172			case MODE_TARGET:
-  1173			default:
-  1174				/* no-op */
-  1175				break;
-  1176			}
-  1177		}
-  1178	
-  1179		if (vha->fcport_count == 0)
-  1180			wake_up_all(&vha->fcport_waitQ);
-  1181	}
-  1182	
-
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+Wu Bo.
