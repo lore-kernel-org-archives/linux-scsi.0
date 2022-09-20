@@ -2,108 +2,105 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9205EECAAD8
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Sep 2022 08:52:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 896DBC54EE9
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Sep 2022 09:09:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229813AbiITIwG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Sep 2022 04:52:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44664 "EHLO
+        id S230116AbiITJJL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Sep 2022 05:09:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49022 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229557AbiITIwE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Sep 2022 04:52:04 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EBB4062AA2
-        for <linux-scsi@vger.kernel.org>; Tue, 20 Sep 2022 01:52:02 -0700 (PDT)
-Received: from dggpeml500025.china.huawei.com (unknown [172.30.72.55])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4MWwFj4hb4zpT6w;
-        Tue, 20 Sep 2022 16:49:13 +0800 (CST)
-Received: from dggpeml500019.china.huawei.com (7.185.36.137) by
- dggpeml500025.china.huawei.com (7.185.36.35) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Tue, 20 Sep 2022 16:52:01 +0800
-Received: from huawei.com (10.175.124.27) by dggpeml500019.china.huawei.com
- (7.185.36.137) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Tue, 20 Sep
- 2022 16:52:00 +0800
-From:   Wu Bo <wubo40@huawei.com>
-To:     <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <bvanassche@acm.org>,
-        <qiuchangqi.qiu@huawei.com>, <wubo40@huawei.com>
-Subject: [PATCH V2] scsi: core: Add io timeout count for scsi device
-Date:   Tue, 20 Sep 2022 17:32:19 +0800
-Message-ID: <1663666339-17560-1-git-send-email-wubo40@huawei.com>
-X-Mailer: git-send-email 1.8.3.1
+        with ESMTP id S231348AbiITJIS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Sep 2022 05:08:18 -0400
+Received: from mail-ej1-x635.google.com (mail-ej1-x635.google.com [IPv6:2a00:1450:4864:20::635])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CBB3A1057E;
+        Tue, 20 Sep 2022 02:06:47 -0700 (PDT)
+Received: by mail-ej1-x635.google.com with SMTP id r18so4483017eja.11;
+        Tue, 20 Sep 2022 02:06:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date;
+        bh=AmCAcnHGGiwJk7wwWsNfVxFK/3b3sztbC0O1Vae3nNE=;
+        b=Ozai8tkslzkea/8DIQ83DCxlVrZjdlILmfRSGlzTo7VBAGX40x7fLNYdHxHly8IrVd
+         u9WlE578h31fvzCe1eyglLsA3HrH8rRkNB0KhRHmP1dnhc4pAJWqbHrbgj5xiFm4fphe
+         PB4m3iEVkS3J5qkpURmxshgsSgZDIP+DNNEd1g6DH+KOqE6LoTJBj3P24Zxj0PKsyIu/
+         CuBAmdF4mpS1EeTm7iRzA7aFO50a7ur6sD4HZCDKnQSMRvZNkkLqXaXUJeDRJmcmO24J
+         W18KrlgRDRwR9XRT9vRuX3bBHjC3SyCkIhdIlA3SwUaVrFQasJMJSVPUjb3tJid4/cZ+
+         dpJw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date;
+        bh=AmCAcnHGGiwJk7wwWsNfVxFK/3b3sztbC0O1Vae3nNE=;
+        b=FgMQVstrXHa3XyrPMSYbM2u4jB1JNAc9gvH+SQkBPhHpJ2+evQJULhNzZPT5unyYTD
+         oUIinMbItXpJnpa1ZQioIqaFmucNkGc2ifKeJ+G4ZCsdcpIsXNiUz1IV2BLTWENdZEaR
+         RnEM/V95J/uWkqfobRs0ME588DRfZROoDULz9J9OkfmSq8P3rw+tJTASz7kDEzHSXMDP
+         xFtFnYcFZIC7mjZ1/Q3Y69z+rX7Lh1AuicDUJqwwDa3Df7rjp8CTWKrajCOC9iae42Sj
+         oa7k8qyHLwHrjYaWO7t9vsOSAV+ImjwrKe6e9jAFfE99PoFR/1DMMnjBrJ9fW+Hb8J7R
+         ob4Q==
+X-Gm-Message-State: ACrzQf15IqF/ivsPDY2wa/De47k0DLYTcbk+nQG7e92/2pYgMv8GYfUL
+        1eyT+VOxlnnLBeHWcZOfhKTYaCTE05xyrl4r
+X-Google-Smtp-Source: AMsMyM61yxzK4HcfVYb0NsyAno7BvcQxUSILJtD/6MWtjwOCDRQfQ6nesRJymFp22XGw2JytA73dcA==
+X-Received: by 2002:a17:907:7d9e:b0:771:db66:7b7c with SMTP id oz30-20020a1709077d9e00b00771db667b7cmr15937954ejc.393.1663664806106;
+        Tue, 20 Sep 2022 02:06:46 -0700 (PDT)
+Received: from [10.176.234.249] ([137.201.254.41])
+        by smtp.googlemail.com with ESMTPSA id q22-20020a17090676d600b00777557d1ea2sm532764ejn.47.2022.09.20.02.06.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 20 Sep 2022 02:06:45 -0700 (PDT)
+Message-ID: <f1f0a0a55d8c6ef3e02ca210eaa1096ebe71f9a9.camel@gmail.com>
+Subject: Re: [PATCH] scsi: ufs: Remove redundant function definitions from
+ ufshcd.h
+From:   Bean Huo <huobean@gmail.com>
+To:     Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+        martin.petersen@oracle.com
+Cc:     avri.altman@wdc.com, Avi.Shchislowski@wdc.com, beanhuo@micron.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        bvanassche@acm.org
+Date:   Tue, 20 Sep 2022 11:06:44 +0200
+In-Reply-To: <1663575664-27358-1-git-send-email-Arthur.Simchaev@wdc.com>
+References: <1663575664-27358-1-git-send-email-Arthur.Simchaev@wdc.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: base64
+User-Agent: Evolution 3.44.1-0ubuntu1 
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.175.124.27]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- dggpeml500019.china.huawei.com (7.185.36.137)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Wu Bo <wubo40@huawei.com>
-
-Current the scsi device has iorequest count, iodone count
-and ioerr count, but lack of io timeout count.
-
-For better tracking of scsi io, So add it now.
-
-Signed-off-by: Wu Bo <wubo40@huawei.com>
----
-v1->v2
-Rebase this patch on top of Martin's for-next branch.
----
- drivers/scsi/scsi_error.c  | 1 +
- drivers/scsi/scsi_sysfs.c  | 2 ++
- include/scsi/scsi_device.h | 1 +
- 3 files changed, 4 insertions(+)
-
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 448748e..e84aea9 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -334,6 +334,7 @@ enum blk_eh_timer_return scsi_timeout(struct request *req)
- 	trace_scsi_dispatch_cmd_timeout(scmd);
- 	scsi_log_completion(scmd, TIMEOUT_ERROR);
- 
-+	atomic_inc(&scmd->device->iotmo_cnt);
- 	if (host->eh_deadline != -1 && !host->last_reset)
- 		host->last_reset = jiffies;
- 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 5d61f58..c95177c 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -976,6 +976,7 @@ static DEVICE_ATTR(field, S_IRUGO, show_iostat_##field, NULL)
- show_sdev_iostat(iorequest_cnt);
- show_sdev_iostat(iodone_cnt);
- show_sdev_iostat(ioerr_cnt);
-+show_sdev_iostat(iotmo_cnt);
- 
- static ssize_t
- sdev_show_modalias(struct device *dev, struct device_attribute *attr, char *buf)
-@@ -1295,6 +1296,7 @@ static umode_t scsi_sdev_bin_attr_is_visible(struct kobject *kobj,
- 	&dev_attr_iorequest_cnt.attr,
- 	&dev_attr_iodone_cnt.attr,
- 	&dev_attr_ioerr_cnt.attr,
-+	&dev_attr_iotmo_cnt.attr,
- 	&dev_attr_modalias.attr,
- 	&dev_attr_queue_depth.attr,
- 	&dev_attr_queue_type.attr,
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 2493bd6..c36656d 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -231,6 +231,7 @@ struct scsi_device {
- 	atomic_t iorequest_cnt;
- 	atomic_t iodone_cnt;
- 	atomic_t ioerr_cnt;
-+	atomic_t iotmo_cnt;
- 
- 	struct device		sdev_gendev,
- 				sdev_dev;
--- 
-1.8.3.1
+SGksIEFydGh1ciwKCgpPbiBNb24sIDIwMjItMDktMTkgYXQgMTE6MjEgKzAzMDAsIEFydGh1ciBT
+aW1jaGFldiB3cm90ZToKPiBUaGlzIHBhdGNoIHJlbW92ZXMgUXVlcnktUmVxdWVzdCBBUEkgZnVu
+Y3Rpb25zIGRlY2xhcmF0aW9uIGZyb20KPiBmcm9tIGluY2x1ZGUvdWZzL3Vmc2hjZC5oLiBUaG9z
+ZSBkZWNsYXJhdGlvbnMgYmVsb25ncyBzb2xlbHkgdG8KICAgXiB1bm5lY2Vzc2FyeSAiZnJvbSIg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgIF5iZWxvbmcKCj4gdWZzIGNvcmUgcHJpdmV0IGhl
+YWRlci4KPiAKPiBTaWduZWQtb2ZmLWJ5OiBBcnRodXIgU2ltY2hhZXYgPEFydGh1ci5TaW1jaGFl
+dkB3ZGMuY29tPgo+IC0tLQo+IMKgZHJpdmVycy91ZnMvY29yZS91ZnNoY2QtcHJpdi5oIHzCoCA1
+ICsrKysrCj4gwqBpbmNsdWRlL3Vmcy91ZnNoY2QuaMKgwqDCoMKgwqDCoMKgwqDCoMKgIHwgMTkg
+Ky0tLS0tLS0tLS0tLS0tLS0tLQo+IMKgMiBmaWxlcyBjaGFuZ2VkLCA2IGluc2VydGlvbnMoKyks
+IDE4IGRlbGV0aW9ucygtKQo+IAo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Vmcy9jb3JlL3Vmc2hj
+ZC1wcml2LmgKPiBiL2RyaXZlcnMvdWZzL2NvcmUvdWZzaGNkLXByaXYuaAo+IGluZGV4IGQwMGRi
+YTEuLmY2OGNhMzMgMTAwNjQ0Cj4gLS0tIGEvZHJpdmVycy91ZnMvY29yZS91ZnNoY2QtcHJpdi5o
+Cj4gKysrIGIvZHJpdmVycy91ZnMvY29yZS91ZnNoY2QtcHJpdi5oCj4gQEAgLTQyLDYgKzQyLDEx
+IEBAIHN0YXRpYyBpbmxpbmUgdm9pZCB1ZnNfaHdtb25fcmVtb3ZlKHN0cnVjdCB1ZnNfaGJhCj4g
+KmhiYSkge30KPiDCoHN0YXRpYyBpbmxpbmUgdm9pZCB1ZnNfaHdtb25fbm90aWZ5X2V2ZW50KHN0
+cnVjdCB1ZnNfaGJhICpoYmEsIHU4Cj4gZWVfbWFzaykge30KPiDCoCNlbmRpZgo+IMKgCj4gK2lu
+dCB1ZnNoY2RfcXVlcnlfZGVzY3JpcHRvcl9yZXRyeShzdHJ1Y3QgdWZzX2hiYSAqaGJhLAo+ICvC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgIGVudW0gcXVlcnlfb3Bjb2RlIG9wY29kZSwKPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBlbnVtIGRlc2NfaWRu
+IGlkbiwgdTggaW5kZXgsCj4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgdTggc2VsZWN0b3IsCj4gK8KgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgdTggKmRl
+c2NfYnVmLCBpbnQgKmJ1Zl9sZW4pOwo+IMKgaW50IHVmc2hjZF9yZWFkX2Rlc2NfcGFyYW0oc3Ry
+dWN0IHVmc19oYmEgKmhiYSwKPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgIGVudW0gZGVzY19pZG4gZGVzY19pZCwKPiDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIGludCBkZXNjX2luZGV4LAo+IGRp
+ZmYgLS1naXQgYS9pbmNsdWRlL3Vmcy91ZnNoY2QuaCBiL2luY2x1ZGUvdWZzL3Vmc2hjZC5oCj4g
+aW5kZXggMjRjOTdlMC4uMzY0N2E3MSAxMDA2NDQKPiAtLS0gYS9pbmNsdWRlL3Vmcy91ZnNoY2Qu
+aAo+ICsrKyBiL2luY2x1ZGUvdWZzL3Vmc2hjZC5oCj4gQEAgLTExNzYsMjQgKzExNzYsNyBAQCBz
+dGF0aWMgaW5saW5lIGludAo+IHVmc2hjZF9kaXNhYmxlX2hvc3RfdHhfbGNjKHN0cnVjdCB1ZnNf
+aGJhICpoYmEpCj4gwqB9Cj4gwqAKPiDCoC8qIEV4cG9zZSBRdWVyeS1SZXF1ZXN0IEFQSSAqLwpU
+aGlzIGNvbW1lbnQgc2hvdWxkIGJlIHJlbW92ZWQsIHRvbz8KCgoKUmV2aWV3ZWQtYnk6IEJlYW4g
+SHVvIDxiZWFuaHVvQG1pY3Jvbi5jb20+CgoKS2luZCByZWdhcmRzLApCZWFuCg==
 
