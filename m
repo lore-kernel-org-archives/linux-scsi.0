@@ -2,82 +2,94 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C74EDC54EE9
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Sep 2022 08:07:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CBD4C6FA82
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Sep 2022 08:21:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230150AbiITIHp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Sep 2022 04:07:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60228 "EHLO
+        id S230174AbiITIVF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Sep 2022 04:21:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33204 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231307AbiITIGZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Sep 2022 04:06:25 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA21F6564D
-        for <linux-scsi@vger.kernel.org>; Tue, 20 Sep 2022 01:03:36 -0700 (PDT)
-Received: from dggpeml500023.china.huawei.com (unknown [172.30.72.57])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4MWv8X3XhHzcn2X;
-        Tue, 20 Sep 2022 15:59:40 +0800 (CST)
-Received: from dggpeml500019.china.huawei.com (7.185.36.137) by
- dggpeml500023.china.huawei.com (7.185.36.114) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Tue, 20 Sep 2022 16:03:34 +0800
-Received: from [10.174.179.189] (10.174.179.189) by
- dggpeml500019.china.huawei.com (7.185.36.137) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Tue, 20 Sep 2022 16:03:34 +0800
-Message-ID: <306f0d31-5fc2-8ed4-eded-f0c280c5f63d@huawei.com>
-Date:   Tue, 20 Sep 2022 16:03:33 +0800
+        with ESMTP id S231173AbiITIUM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Sep 2022 04:20:12 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E082B48B
+        for <linux-scsi@vger.kernel.org>; Tue, 20 Sep 2022 01:18:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1663661912;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=nYBXnM221OKkMmYnX56agU4HA29O1+0qE07dmbgFr1Y=;
+        b=UYQL6cEZya3EUjGuAX728tyovitTPhL9jkC0WN7/7QCtsPIrwcJ+AxME126OXPejI6Jpo0
+        OR4D/2h/lpa8hU9NR/KxM7EYRApNN4J2C204Zt5ulVc5l7W8qmtPlfWQpjFjQXVjYD7FR1
+        X/o3F4atgzIWhZLcyjuwVDMW4/R8vC4=
+Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
+ [209.85.221.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-210-yyRNnJiUOeaOMyiZkviQeg-1; Tue, 20 Sep 2022 04:18:31 -0400
+X-MC-Unique: yyRNnJiUOeaOMyiZkviQeg-1
+Received: by mail-wr1-f70.google.com with SMTP id e18-20020adfa452000000b00228a420c389so827211wra.16
+        for <linux-scsi@vger.kernel.org>; Tue, 20 Sep 2022 01:18:31 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date;
+        bh=nYBXnM221OKkMmYnX56agU4HA29O1+0qE07dmbgFr1Y=;
+        b=Y5c2ir8lNSn3Cwtx4usGPKsQ3RIExbv/TVpdWJrOQay+s0tTjFJ8RvngkfybPi1jXd
+         PWJpqFeNYaD3HHbjGp5YToulqMitIVIvrhOFLSMc9n4Q+e3kbsSTEeyxI8cdd8jSOzPM
+         anFLyEJxOlgx904P9qBs3GFgQfbsI2/enec6f+TMT3GHKO4P5SPdOZIGv4DvE58S50gO
+         kwcBzBJpv+Ygu/njBtfNUYrR7DsaifSq18DkqWkfugU0Z53ED9sbD1wauAE8okRghlM5
+         73Ec4786XQYIQeK5npVPXaOuwEtwIjW4WYCTZhVUkLcRNQ7Hk95bl9y3QynMEko5557M
+         Cqpw==
+X-Gm-Message-State: ACrzQf1p5W2PZb6eut3TSi+bvDfpXVCUBMfiWLCOagICu4l0B2Cpje5w
+        tZA67HiRgYL5gHg5CHXpCkAm0BBVTt/DTmHaALtZveOcG+NybNMmEeqazTgMq0nBk121GWUA33y
+        IJhkgJ1/tk9A4R9cJrtGkZw==
+X-Received: by 2002:a5d:4ec5:0:b0:228:6707:8472 with SMTP id s5-20020a5d4ec5000000b0022867078472mr13700973wrv.12.1663661910616;
+        Tue, 20 Sep 2022 01:18:30 -0700 (PDT)
+X-Google-Smtp-Source: AMsMyM5Gc746EtqOMp12PC/ZhI3qlffavJ9O8HKgnaDgO6702xNdn3VPX99CEZYZBDDZBLY3QzW+vw==
+X-Received: by 2002:a5d:4ec5:0:b0:228:6707:8472 with SMTP id s5-20020a5d4ec5000000b0022867078472mr13700953wrv.12.1663661910369;
+        Tue, 20 Sep 2022 01:18:30 -0700 (PDT)
+Received: from sgarzare-redhat (host-87-11-6-69.retail.telecomitalia.it. [87.11.6.69])
+        by smtp.gmail.com with ESMTPSA id z22-20020a05600c0a1600b003b4868eb6bbsm1749112wmp.23.2022.09.20.01.18.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 20 Sep 2022 01:18:29 -0700 (PDT)
+Date:   Tue, 20 Sep 2022 10:18:24 +0200
+From:   Stefano Garzarella <sgarzare@redhat.com>
+To:     Jakub Kicinski <kuba@kernel.org>
+Cc:     vdasa@vmware.com, vbhakta@vmware.com, namit@vmware.com,
+        bryantan@vmware.com, zackr@vmware.com,
+        linux-graphics-maintainer@vmware.com, doshir@vmware.com,
+        gregkh@linuxfoundation.org, davem@davemloft.net,
+        pv-drivers@vmware.com, joe@perches.com, netdev@vger.kernel.org,
+        linux-input@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org,
+        virtualization@lists.linux-foundation.org
+Subject: Re: [PATCH 0/3] MAINTAINERS: Update entries for some VMware drivers
+Message-ID: <20220920081824.vshwiv3lt5crlxdj@sgarzare-redhat>
+References: <20220906172722.19862-1-vdasa@vmware.com>
+ <20220919104147.1373eac1@kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.0
-Subject: Re: [PATCH] scsi: core: Add io timeout count for scsi device
-Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        <qiuchangqi.qiu@huawei.com>
-References: <32aff63d-1b79-916a-50e2-1e6c113ed9ef@huawei.com>
- <44e17063-3e69-98b8-b6e8-b73f8e449715@acm.org>
-From:   Wu Bo <wubo40@huawei.com>
-In-Reply-To: <44e17063-3e69-98b8-b6e8-b73f8e449715@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.174.179.189]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- dggpeml500019.china.huawei.com (7.185.36.137)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+In-Reply-To: <20220919104147.1373eac1@kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2022/9/17 0:19, Bart Van Assche wrote:
-> On 9/15/22 19:01, Wu Bo wrote:
->> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
->> index 448748e..e84aea9 100644
->> --- a/drivers/scsi/scsi_error.c
->> +++ b/drivers/scsi/scsi_error.c
->> @@ -334,6 +334,7 @@ enum blk_eh_timer_return scsi_timeout(struct 
->> request *req)
->>          trace_scsi_dispatch_cmd_timeout(scmd);
->>          scsi_log_completion(scmd, TIMEOUT_ERROR);
+On Mon, Sep 19, 2022 at 10:41:47AM -0700, Jakub Kicinski wrote:
+>On Tue,  6 Sep 2022 10:27:19 -0700 vdasa@vmware.com wrote:
+>> From: Vishnu Dasa <vdasa@vmware.com>
 >>
->> +       atomic_inc(&scmd->device->iotmo_cnt);
->>          if (host->eh_deadline != -1 && !host->last_reset)
->>                  host->last_reset = jiffies;
-> 
-> Please rebase this patch on top of Martin's for-next branch and repost 
-> this patch. I cannot apply this patch with "git am" on Martin's for-next 
-> branch.
-> 
-> Thanks,
-> 
-> Bart.
-> 
-> 
-> .
-Sorry. I will repost the patch.
+>> This series updates a few existing maintainer entries for VMware
+>> supported drivers and adds a new entry for vsock vmci transport
+>> driver.
+>
+>Just to be sure - who are you expecting to take these in?
+>
+
+FYI Greg already queued this series in his char-misc-next branch:
+https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/char-misc.git/log/?h=char-misc-next
 
 Thanks,
+Stefano
 
-Wu Bo.
