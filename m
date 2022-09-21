@@ -2,45 +2,46 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 562FAECAAD8
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Sep 2022 09:19:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3D4EC32771
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Sep 2022 09:22:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231476AbiIUJTq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Sep 2022 05:19:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47728 "EHLO
+        id S231512AbiIUJWw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Sep 2022 05:22:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33970 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231404AbiIUJTI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Sep 2022 05:19:08 -0400
+        with ESMTP id S229842AbiIUJWV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Sep 2022 05:22:21 -0400
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D41D6901B6;
-        Wed, 21 Sep 2022 02:18:28 -0700 (PDT)
-Received: from fraeml701-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MXXq16XT9z67M3B;
-        Wed, 21 Sep 2022 17:16:45 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A6991116;
+        Wed, 21 Sep 2022 02:22:01 -0700 (PDT)
+Received: from fraeml707-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MXXv34nPHz687SH;
+        Wed, 21 Sep 2022 17:20:15 +0800 (CST)
 Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml701-chm.china.huawei.com (10.206.15.50) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2375.31; Wed, 21 Sep 2022 11:17:49 +0200
+ fraeml707-chm.china.huawei.com (10.206.15.35) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Wed, 21 Sep 2022 11:21:59 +0200
 Received: from [10.195.245.235] (10.195.245.235) by
  lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Wed, 21 Sep 2022 10:17:49 +0100
-Message-ID: <7d271ce3-b289-4ecb-3555-c31dfa6091de@huawei.com>
-Date:   Wed, 21 Sep 2022 10:17:48 +0100
+ 15.1.2375.31; Wed, 21 Sep 2022 10:21:58 +0100
+Message-ID: <55ee46e7-a07d-d1ef-72fd-1f99b2a04684@huawei.com>
+Date:   Wed, 21 Sep 2022 10:21:57 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.6.1
-Subject: Re: [PATCH RFC 3/6] scsi: core: Add scsi_get_dev()
+Subject: Re: [PATCH RFC 2/6] scsi: scsi_transport_sas: Allocate end device
+ target id in the rphy alloc
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         <jejb@linux.ibm.com>, <martin.petersen@oracle.com>, <hare@suse.de>,
         <hch@lst.de>
 CC:     <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linux-scsi@vger.kernel.org>, <brking@us.ibm.com>
 References: <1663669630-21333-1-git-send-email-john.garry@huawei.com>
- <1663669630-21333-4-git-send-email-john.garry@huawei.com>
- <c444fad0-7e7f-0940-84ce-a6fdaa99c493@opensource.wdc.com>
+ <1663669630-21333-3-git-send-email-john.garry@huawei.com>
+ <ecde5199-bb9e-6df4-832a-f3707babd3d6@opensource.wdc.com>
 From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <c444fad0-7e7f-0940-84ce-a6fdaa99c493@opensource.wdc.com>
+In-Reply-To: <ecde5199-bb9e-6df4-832a-f3707babd3d6@opensource.wdc.com>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
 X-Originating-IP: [10.195.245.235]
@@ -51,22 +52,67 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 20/09/2022 22:58, Damien Le Moal wrote:
->> +extern struct scsi_device *scsi_get_dev(struct device *parent, int 
->> channel, uint id, u64 lun);
-> 
-> You should not need extern here, and long line...
-> 
+On 20/09/2022 23:02, Damien Le Moal wrote:
+>>
+>>       return &rdev->rphy;
+>>   }
+>>   EXPORT_SYMBOL(sas_end_device_alloc);
+>> @@ -1500,6 +1505,16 @@ struct sas_rphy *sas_expander_alloc(struct 
+>> sas_port *parent,
+>>   }
+>>   EXPORT_SYMBOL(sas_expander_alloc);
+>> +static bool sas_rphy_end_device_valid_tproto(struct sas_rphy *rphy)
+>> +{
+>> +    struct sas_identify *identify = &rphy->identify;
 >> +
->>   /*
->> +
+>> +    if (identify->target_port_protocols &
+>> +        (SAS_PROTOCOL_SSP | SAS_PROTOCOL_STP | SAS_PROTOCOL_SATA))
+>> +        return true;
+>> +    return false;
 > 
-> white line change.
+> You could just do:
 > 
->>    * DIF defines the exchange of protection information between
->>    * initiator and SBC block device. 
+> return identify->target_port_protocols &
+>      (SAS_PROTOCOL_SSP | SAS_PROTOCOL_STP | SAS_PROTOCOL_SATA))
 
-ok, I'll tidy them.
+OK
+
+> 
+>> +}
+>> +
+>>   /**
+>>    * sas_rphy_add  -  add a SAS remote PHY to the device hierarchy
+>>    * @rphy:    The remote PHY to be added
+>> @@ -1529,16 +1544,10 @@ int sas_rphy_add(struct sas_rphy *rphy)
+>>       mutex_lock(&sas_host->lock);
+>>       list_add_tail(&rphy->list, &sas_host->rphy_list);
+>> -    if (identify->device_type == SAS_END_DEVICE &&
+>> -        (identify->target_port_protocols &
+>> -         (SAS_PROTOCOL_SSP | SAS_PROTOCOL_STP | SAS_PROTOCOL_SATA)))
+>> -        rphy->scsi_target_id = sas_host->next_target_id++;
+>> -    else if (identify->device_type == SAS_END_DEVICE)
+>> -        rphy->scsi_target_id = -1;
+>>       mutex_unlock(&sas_host->lock);
+>>       if (identify->device_type == SAS_END_DEVICE &&
+> 
+> You could move this check inside sas_rphy_end_device_valid_tproto(),
+> no ?
+> 
+
+Yeah, I suppose I could. I might require a function rename with that.
+
+>> -        rphy->scsi_target_id != -1) {
+>> +        sas_rphy_end_device_valid_tproto(rphy)) {
+>>           int lun;
+>>           if (identify->target_port_protocols & SAS_PROTOCOL_SSP)
+>> @@ -1667,7 +1676,7 @@ static int sas_user_scan(struct Scsi_Host 
+>> *shost, uint channel,
+>>       mutex_lock(&sas_host->lock);
+>>       list_for_each_entry(rphy, &sas_host->rphy_list, list) {
+>>           if (rphy->identify.device_type != SAS_END_DEVICE ||
+>> -            rphy->scsi_target_id == -1)
+>> +            !sas_rphy_end_device_valid_tproto(rphy))
+>>               continue; 
 
 Thanks,
 John
