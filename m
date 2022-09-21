@@ -2,172 +2,90 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE2C3C6FA8B
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Sep 2022 20:43:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A72EC6FA82
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Sep 2022 20:52:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229637AbiIUUnu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Sep 2022 16:43:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37928 "EHLO
+        id S229926AbiIUUwB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Sep 2022 16:52:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46468 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229473AbiIUUns (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Sep 2022 16:43:48 -0400
-Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF5419AFDB
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Sep 2022 13:43:47 -0700 (PDT)
-Received: by mail-pf1-x434.google.com with SMTP id y136so7182444pfb.3
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Sep 2022 13:43:47 -0700 (PDT)
+        with ESMTP id S229563AbiIUUwA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Sep 2022 16:52:00 -0400
+Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 988589F743
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Sep 2022 13:51:59 -0700 (PDT)
+Received: by mail-pf1-x435.google.com with SMTP id a29so7190617pfk.5
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Sep 2022 13:51:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date;
-        bh=+9OaKKw+f5Eb96ZFTHe9X6aWN64IeJY6epSMS2pCfKg=;
-        b=aBWMDGVO2EuQ0pdfIdwdY8oYkulZhFSs1PL1d4P8AY5mPTBI8OV5JY+hVPJHeKyq8A
-         ja7ykzgew4FgnoP7ny3CiwFn3BbQAN0naurK7Zk48MBZgkFp0+51sQd/XazRn4/AszYm
-         GMjevlr3QFhm8MNG/Cox/7tr5MNBN3DCvIA7M=
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date;
+        bh=D80WZfucxT3T2jixHx4bvU4f4glNNHDVHDNbaBiNbuQ=;
+        b=WJ7vftjYdQLkD940fWG48kQOGPwWIwtjmcDQBLyGs95BRKwv0eoPa5OFr2AYkC7V80
+         f9B+0Sc+QNYibiS0EvcxPrGaKU8d1DlLXvuipvj3lUidU4MeLT2/VJ/g68UHwbB1RVcw
+         8+U02lIJ/hhK3v+qc4033/gXZISHphYuDQHfo=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date;
-        bh=+9OaKKw+f5Eb96ZFTHe9X6aWN64IeJY6epSMS2pCfKg=;
-        b=ydsfLNpNspDNXlRZ+erIrY1Evgyq8PXzFT+aacUVhcPhGwEl62gF1c8XaEAUT+XBL8
-         yzB3Mz10dgwm5QJuucj3fyHfIj24l92dpoJ/miwokt4XFU8FylODBj59gExGfOraEDI4
-         1xaSJxPh0uwsgL6EuIDc8JWR/JEkMtx5LibT9JFjb0ClYqNTqLSWG6zo3PoB97f6txyA
-         jX8DZN3+dQh0kx2iO5BaAUf95RUQgFEfzUKoAzmHmdPNBN+qxAZgJDs2M9SA4uK10nlq
-         xyqtDUgIL3p9+xbkyprwub2cHXrkhAZt2UytKNhTjzeTxdLjEo+FNNeY94WZq7fNRZWV
-         3dQg==
-X-Gm-Message-State: ACrzQf3PeCrUGK6tV6ytZS0E7vCoagFkq7gwdNLV96iRCGZs8958BXDr
-        GXyU/nojd0Ug0D1PQw6xWVqu/G4htMuCug==
-X-Google-Smtp-Source: AMsMyM43TlaD1mWxHHmwOSc7yEy5vOkmXTWjVDTlRTL7yKd9eijaZT1RzwWyUheoSsg4a3VxxSFFxg==
-X-Received: by 2002:a63:d456:0:b0:43b:f4a3:81b5 with SMTP id i22-20020a63d456000000b0043bf4a381b5mr32659pgj.200.1663793027111;
-        Wed, 21 Sep 2022 13:43:47 -0700 (PDT)
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date;
+        bh=D80WZfucxT3T2jixHx4bvU4f4glNNHDVHDNbaBiNbuQ=;
+        b=nH8EZCQGD7+M/90NVfrFs/nXGYiwOCWJ4/JRG3pvbYEvjQJxMekM+x1Apo2NGg8uP8
+         4a9ss0Hlo53e6iXzYJ4nikM2TTPPapuww4OJttT+MBNYUka/0VW3aIuWv35NaSTd61JX
+         f3LNjYn+Qwvpb92Zr1S9sjXzBUxqEWDQL5VoCXyjLPecbxKVF5M3YP2QsMUKnPCmTCOX
+         0wV8QL8A3leWj3bQPoWYFoNea0tY7tMFRumRYs0iUf+Sk1C7eegQrIUBywWGvLHpHIII
+         fC3VCyBjU6p5bBQgAcHkQx3HK/prI5GN4+IkUkU0xyI7n5jzME6QenYgZSrhulUS2/g7
+         PPlQ==
+X-Gm-Message-State: ACrzQf2x3aTaZwS6MtsjwPQILFALYz4zE8iND+al4x4tyji50k1A5oAZ
+        auAXy8NbfrhNlRtxGcgj1C+FoA==
+X-Google-Smtp-Source: AMsMyM5x/YqAvJnNkuP3s9sudYjK2UWyxBpl4qhk/dsQz/kD2YM+cCHOYeHwTWoTCsY65S3tY/T91g==
+X-Received: by 2002:a65:4c85:0:b0:43b:f860:98f9 with SMTP id m5-20020a654c85000000b0043bf86098f9mr48699pgt.368.1663793519127;
+        Wed, 21 Sep 2022 13:51:59 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id q59-20020a17090a4fc100b001fd7fe7d369sm2259843pjh.54.2022.09.21.13.43.46
+        by smtp.gmail.com with ESMTPSA id i32-20020a632220000000b00422c003cf78sm2267673pgi.82.2022.09.21.13.51.58
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Sep 2022 13:43:46 -0700 (PDT)
-Date:   Wed, 21 Sep 2022 13:43:45 -0700
+        Wed, 21 Sep 2022 13:51:58 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
-To:     Sachin Sant <sachinp@linux.ibm.com>
-Cc:     linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-        linux-scsi@vger.kernel.org, linux-next@vger.kernel.org
-Subject: Re: [powerpc] memcpy warning drivers/scsi/scsi_transport_fc.c:581
- (next-20220921)
-Message-ID: <202209211250.3049C29@keescook>
-References: <42404B5E-198B-4FD3-94D6-5E16CF579EF3@linux.ibm.com>
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc:     Kees Cook <keescook@chromium.org>,
+        Sachin Sant <sachinp@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-hardening@vger.kernel.org
+Subject: [PATCH] scsi: scsi_transport_fc: Adjust struct fc_nl_event flex array usage
+Date:   Wed, 21 Sep 2022 13:51:55 -0700
+Message-Id: <20220921205155.1451649-1-keescook@chromium.org>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <42404B5E-198B-4FD3-94D6-5E16CF579EF3@linux.ibm.com>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3180; h=from:subject; bh=HTYO6DRAcJ0YYvNgnwbkgU3hR5o+67BVqpamWRTBFhs=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBjK3lqCxkl8/+3fSy7f7uw22pne0hq/v2+EXdc5unX 3g0ywfSJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYyt5agAKCRCJcvTf3G3AJgxsEA CRYo81nzmI4fc8o5wOEqs7W5LE56q0N+KDpzyoinEebkPkLBy9cfnnZ9IZ4uqGx6ql3/k5AfUbjIN1 VOlNweshUp4eFbH9dvygIwI4A1iMBIMYflwNw1nzFzEfMF5ivWNA1625KTcxaaXy2MFPqyAfKcKhKQ Ah6CSfZ80NPSV9Ku41sbuV1dbvmI9cLn+vHkzTeCt4JI+c3KQ7FCdVYgZT5ezS2bNfCLsJrp9tc2Qc mHMqxsGQYYfsBLd+l418aqM9EsgNxZB0/WvsWnxvZEMlsvcYK3qrTJ1cEYuqsfakUMsneAPGfBgPm7 TtvT1T+BVEzuPUynHHMKOAUdKhLV5tDynM/0ILQb5whePXTw3G9MXZE65Nd5yNOjmsAiBWTLhRxl67 luoxLNmyBF0N3ayCoDFgUocr1NNsjSpGKX39IPzTT85h0f6A/pgLML5l5SBpiihEZEOBOcCC69dyPT lO3CTNvu3yelHnrIb+CX+weji6t0ty5gJklkQPZUiVr4SGiluhDoZFNDIlAOM2p/QOoLqR9bQStJA9 WZzCGqSrXJammpEt2Xt3C5zDkun6J4n+x3JWZPJcJxPwL1kGJmZxQkwIv3YS1/k1Y7mqsyJi86tnW/ AtlIF07G7jUvINEO67RaAT2Sx99E3FCKCIG+3chWg3EdXVSuDNY1BnIwW9qQ==
+X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Sep 21, 2022 at 09:21:52PM +0530, Sachin Sant wrote:
-> While booting recent linux-next kernel on a Power server following
-> warning is seen:
-> 
-> [    6.427054] lpfc 0022:01:00.0: 0:6468 Set host date / time: Status x10:
-> [    6.471457] lpfc 0022:01:00.0: 0:6448 Dual Dump is enabled
-> [    7.432161] ------------[ cut here ]------------
-> [    7.432178] memcpy: detected field-spanning write (size 8) of single field "&event->event_data" at drivers/scsi/scsi_transport_fc.c:581 (size 4)
+In order to help the compiler reason about the destination buffer in
+struct fc_nl_event, add a flexible array member for this purpose.
+However, since the header is UAPI, it must not change size or layout, so
+a union is used.
 
-Interesting!
+The allocation size calculations are also corrected (it was potentially
+allocating an extra 8 bytes), and the padding is zeroed to avoid leaking
+kernel heap memory contents.
 
-The memcpy() is this one:
+Detected at run-time by the recently added memcpy() bounds checking:
 
-                memcpy(&event->event_data, data_buf, data_len);
+  memcpy: detected field-spanning write (size 8) of single field "&event->event_data" at drivers/scsi/scsi_transport_fc.c:581 (size 4)
 
-The struct member, "event_data" is defined as u32:
-
-...
- * Note: if Vendor Unique message, &event_data will be  start of
- * Note: if Vendor Unique message, event_data_flex will be start of
- *      vendor unique payload, and the length of the payload is
- *       per event_datalen
-...
-struct fc_nl_event {
-        struct scsi_nl_hdr snlh;                /* must be 1st element !  */
-        __u64 seconds;
-        __u64 vendor_id;
-        __u16 host_no;
-        __u16 event_datalen;
-        __u32 event_num;
-        __u32 event_code;
-        __u32 event_data;
-} __attribute__((aligned(sizeof(__u64))));
-
-The warning says memcpy is trying to write 8 bytes into the 4 byte
-member, so the compiler is seeing it "correctly", but I think this is
-partially a false positive. It looks like there is also a small bug in
-the allocation size calculation and therefore a small leak of kernel
-heap memory contents. My notes:
-
-void
-fc_host_post_fc_event(struct Scsi_Host *shost, u32 event_number,
-                enum fc_host_event_code event_code,
-                u32 data_len, char *data_buf, u64 vendor_id)
-{
-	...
-        struct fc_nl_event *event;
-	...
-        if (!data_buf || data_len < 4)
-                data_len = 0;
-
-This wants a data_buf and a data_len >= 4, so it does look like it's
-expected to be variable sized. There does appear to be an alignment
-and padding expectation, though:
-
-/* macro to round up message lengths to 8byte boundary */
-#define FC_NL_MSGALIGN(len)             (((len) + 7) & ~7)
-
-	...
-        len = FC_NL_MSGALIGN(sizeof(*event) + data_len);
-
-But this is immediately suspicious: sizeof(*event) _includes_ event_data,
-so the alignment is going to be bumped up incorrectly. Note that
-struct fc_nl_event is 8 * 5 == 40 bytes, which allows for 4 bytes in
-event_data. But setting data_len to 4 (i.e. no "overflow") means we're
-asking for 44 bytes, which is aligned to 48.
-
-So, in all cases, there is uninitialized memory being sent...
-
-        skb = nlmsg_new(len, GFP_KERNEL);
-	...
-        nlh = nlmsg_put(skb, 0, 0, SCSI_TRANSPORT_MSG, len, 0);
-	...
-        event = nlmsg_data(nlh);
-	...
-        event->event_datalen = data_len;        /* bytes */
-
-Comments in the struct say this is counting from start of event_data.
-
-	...
-        if (data_len)
-                memcpy(&event->event_data, data_buf, data_len);
-
-And here is the reported memcpy().
-
-The callers of fc_host_post_fc_event() are:
-
-        fc_host_post_fc_event(shost, event_number, event_code,
-                (u32)sizeof(u32), (char *)&event_data, 0);
-
-Fixed-size of 4 bytes: no "overflow".
-
-        fc_host_post_fc_event(shost, event_number, FCH_EVT_VENDOR_UNIQUE,
-                data_len, data_buf, vendor_id);
-
-        fc_host_post_fc_event(shost, fc_get_event_number(),
-                                FCH_EVT_LINK_FPIN, fpin_len, fpin_buf, 0);
-
-These two appear to be of arbitrary length, but I didn't look more
-deeply.
-
-Given that the only user of struct fc_nl_event is fc_host_post_fc_event()
-in drivers/scsi/scsi_transport_fc.c, it looks safe to say that changing
-the struct to use a flexible array is the thing to do in the kernel, but
-we can't actually change the size or layout because it's a UAPI header.
-
-Are you able to test this patch:
+Reported-by: Sachin Sant <sachinp@linux.ibm.com>
+Link: https://lore.kernel.org/linux-next/42404B5E-198B-4FD3-94D6-5E16CF579EF3@linux.ibm.com/
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ drivers/scsi/scsi_transport_fc.c    | 8 +++++---
+ include/uapi/scsi/scsi_netlink_fc.h | 7 +++++--
+ 2 files changed, 10 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
 index a2524106206d..0d798f11dc34 100644
@@ -227,8 +145,6 @@ index 7535253f1a96..b46e9cbeb001 100644
  } __attribute__((aligned(sizeof(__u64))));
  
  
-
-
-
 -- 
-Kees Cook
+2.34.1
+
