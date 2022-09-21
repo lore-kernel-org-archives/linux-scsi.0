@@ -2,149 +2,264 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A72EC6FA82
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Sep 2022 20:52:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC864C6FA91
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Sep 2022 22:09:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229926AbiIUUwB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Sep 2022 16:52:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46468 "EHLO
+        id S230510AbiIUWJw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Sep 2022 18:09:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51864 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229563AbiIUUwA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Sep 2022 16:52:00 -0400
-Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 988589F743
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Sep 2022 13:51:59 -0700 (PDT)
-Received: by mail-pf1-x435.google.com with SMTP id a29so7190617pfk.5
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Sep 2022 13:51:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date;
-        bh=D80WZfucxT3T2jixHx4bvU4f4glNNHDVHDNbaBiNbuQ=;
-        b=WJ7vftjYdQLkD940fWG48kQOGPwWIwtjmcDQBLyGs95BRKwv0eoPa5OFr2AYkC7V80
-         f9B+0Sc+QNYibiS0EvcxPrGaKU8d1DlLXvuipvj3lUidU4MeLT2/VJ/g68UHwbB1RVcw
-         8+U02lIJ/hhK3v+qc4033/gXZISHphYuDQHfo=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date;
-        bh=D80WZfucxT3T2jixHx4bvU4f4glNNHDVHDNbaBiNbuQ=;
-        b=nH8EZCQGD7+M/90NVfrFs/nXGYiwOCWJ4/JRG3pvbYEvjQJxMekM+x1Apo2NGg8uP8
-         4a9ss0Hlo53e6iXzYJ4nikM2TTPPapuww4OJttT+MBNYUka/0VW3aIuWv35NaSTd61JX
-         f3LNjYn+Qwvpb92Zr1S9sjXzBUxqEWDQL5VoCXyjLPecbxKVF5M3YP2QsMUKnPCmTCOX
-         0wV8QL8A3leWj3bQPoWYFoNea0tY7tMFRumRYs0iUf+Sk1C7eegQrIUBywWGvLHpHIII
-         fC3VCyBjU6p5bBQgAcHkQx3HK/prI5GN4+IkUkU0xyI7n5jzME6QenYgZSrhulUS2/g7
-         PPlQ==
-X-Gm-Message-State: ACrzQf2x3aTaZwS6MtsjwPQILFALYz4zE8iND+al4x4tyji50k1A5oAZ
-        auAXy8NbfrhNlRtxGcgj1C+FoA==
-X-Google-Smtp-Source: AMsMyM5x/YqAvJnNkuP3s9sudYjK2UWyxBpl4qhk/dsQz/kD2YM+cCHOYeHwTWoTCsY65S3tY/T91g==
-X-Received: by 2002:a65:4c85:0:b0:43b:f860:98f9 with SMTP id m5-20020a654c85000000b0043bf86098f9mr48699pgt.368.1663793519127;
-        Wed, 21 Sep 2022 13:51:59 -0700 (PDT)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id i32-20020a632220000000b00422c003cf78sm2267673pgi.82.2022.09.21.13.51.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Sep 2022 13:51:58 -0700 (PDT)
-From:   Kees Cook <keescook@chromium.org>
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc:     Kees Cook <keescook@chromium.org>,
-        Sachin Sant <sachinp@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-hardening@vger.kernel.org
-Subject: [PATCH] scsi: scsi_transport_fc: Adjust struct fc_nl_event flex array usage
-Date:   Wed, 21 Sep 2022 13:51:55 -0700
-Message-Id: <20220921205155.1451649-1-keescook@chromium.org>
-X-Mailer: git-send-email 2.34.1
+        with ESMTP id S229523AbiIUWJv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Sep 2022 18:09:51 -0400
+Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7014665551;
+        Wed, 21 Sep 2022 15:09:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1663798188; x=1695334188;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=R3CpDz+xL1Orecl3r244JO/sBWMMsfvYdEmeOk70BlE=;
+  b=C12UoqBnYvsW1c/X3Rm38o8gamGjJWilueGRW2lQ4s3iYq3DtfGTCMcb
+   5jftulS8M6M8zuvoelUBR76c2bejqf29Cs8e2ExNH9nETCx9WVZCX8eEV
+   AvjecWChpBVXQiHHXTlK/p+y/IIk1CMIjGT+MYsnIYqk7Geq/K6NNbqmh
+   Gv+RMwfgCJXU+E0z4ywA8xEnbI6PQlP9ZN8S/JosxdGr0sluw9Ws/IaZQ
+   v8q4y6PwXSqfyPG7NzQ1b9cRsOKz/yk5i95pSvry2KxJTbmO5TIjD6wFC
+   /9Qyk4YPZ680K9Ox1CwmLTm7u30o3tt8wpJ2jZvrfxUV7b0fca9Nz5GF0
+   A==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10477"; a="283185948"
+X-IronPort-AV: E=Sophos;i="5.93,334,1654585200"; 
+   d="scan'208";a="283185948"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2022 15:09:48 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.93,334,1654585200"; 
+   d="scan'208";a="652717033"
+Received: from lkp-server01.sh.intel.com (HELO c0a60f19fe7e) ([10.239.97.150])
+  by orsmga001.jf.intel.com with ESMTP; 21 Sep 2022 15:09:44 -0700
+Received: from kbuild by c0a60f19fe7e with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1ob7ua-00041Y-0D;
+        Wed, 21 Sep 2022 22:09:44 +0000
+Date:   Thu, 22 Sep 2022 06:09:29 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Andrew Morton <akpm@linux-foundation.org>
+Cc:     linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-parisc@vger.kernel.org, linux-mm@kvack.org,
+        linux-ia64@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        dri-devel@lists.freedesktop.org, bpf@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org, alsa-devel@alsa-project.org,
+        Linux Memory Management List <linux-mm@kvack.org>
+Subject: [linux-next:master] BUILD REGRESSION
+ 483fed3b5dc8ce3644c83d24240cf5756fb0993e
+Message-ID: <632b8b99.vfbuiC8J3oDCVZh4%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3180; h=from:subject; bh=HTYO6DRAcJ0YYvNgnwbkgU3hR5o+67BVqpamWRTBFhs=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBjK3lqCxkl8/+3fSy7f7uw22pne0hq/v2+EXdc5unX 3g0ywfSJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYyt5agAKCRCJcvTf3G3AJgxsEA CRYo81nzmI4fc8o5wOEqs7W5LE56q0N+KDpzyoinEebkPkLBy9cfnnZ9IZ4uqGx6ql3/k5AfUbjIN1 VOlNweshUp4eFbH9dvygIwI4A1iMBIMYflwNw1nzFzEfMF5ivWNA1625KTcxaaXy2MFPqyAfKcKhKQ Ah6CSfZ80NPSV9Ku41sbuV1dbvmI9cLn+vHkzTeCt4JI+c3KQ7FCdVYgZT5ezS2bNfCLsJrp9tc2Qc mHMqxsGQYYfsBLd+l418aqM9EsgNxZB0/WvsWnxvZEMlsvcYK3qrTJ1cEYuqsfakUMsneAPGfBgPm7 TtvT1T+BVEzuPUynHHMKOAUdKhLV5tDynM/0ILQb5whePXTw3G9MXZE65Nd5yNOjmsAiBWTLhRxl67 luoxLNmyBF0N3ayCoDFgUocr1NNsjSpGKX39IPzTT85h0f6A/pgLML5l5SBpiihEZEOBOcCC69dyPT lO3CTNvu3yelHnrIb+CX+weji6t0ty5gJklkQPZUiVr4SGiluhDoZFNDIlAOM2p/QOoLqR9bQStJA9 WZzCGqSrXJammpEt2Xt3C5zDkun6J4n+x3JWZPJcJxPwL1kGJmZxQkwIv3YS1/k1Y7mqsyJi86tnW/ AtlIF07G7jUvINEO67RaAT2Sx99E3FCKCIG+3chWg3EdXVSuDNY1BnIwW9qQ==
-X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In order to help the compiler reason about the destination buffer in
-struct fc_nl_event, add a flexible array member for this purpose.
-However, since the header is UAPI, it must not change size or layout, so
-a union is used.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
+branch HEAD: 483fed3b5dc8ce3644c83d24240cf5756fb0993e  Add linux-next specific files for 20220921
 
-The allocation size calculations are also corrected (it was potentially
-allocating an extra 8 bytes), and the padding is zeroed to avoid leaking
-kernel heap memory contents.
+Error/Warning reports:
 
-Detected at run-time by the recently added memcpy() bounds checking:
+https://lore.kernel.org/linux-mm/202209042337.FQi69rLV-lkp@intel.com
+https://lore.kernel.org/linux-mm/202209060229.dVuyxjBv-lkp@intel.com
+https://lore.kernel.org/linux-mm/202209150141.WgbAKqmX-lkp@intel.com
+https://lore.kernel.org/linux-mm/202209160607.sE3qvgTy-lkp@intel.com
+https://lore.kernel.org/linux-mm/202209200603.Hpvoa8Ii-lkp@intel.com
+https://lore.kernel.org/linux-mm/202209200949.Vl3xrUYD-lkp@intel.com
+https://lore.kernel.org/llvm/202209220009.8nYpIPST-lkp@intel.com
+https://lore.kernel.org/llvm/202209220019.Yr2VuXhg-lkp@intel.com
 
-  memcpy: detected field-spanning write (size 8) of single field "&event->event_data" at drivers/scsi/scsi_transport_fc.c:581 (size 4)
+Error/Warning: (recently discovered and may have been fixed)
 
-Reported-by: Sachin Sant <sachinp@linux.ibm.com>
-Link: https://lore.kernel.org/linux-next/42404B5E-198B-4FD3-94D6-5E16CF579EF3@linux.ibm.com/
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
- drivers/scsi/scsi_transport_fc.c    | 8 +++++---
- include/uapi/scsi/scsi_netlink_fc.h | 7 +++++--
- 2 files changed, 10 insertions(+), 5 deletions(-)
+ERROR: modpost: "devm_ioremap_resource" [drivers/dma/fsl-edma.ko] undefined!
+ERROR: modpost: "devm_ioremap_resource" [drivers/dma/idma64.ko] undefined!
+ERROR: modpost: "devm_ioremap_resource" [drivers/dma/qcom/hdma.ko] undefined!
+ERROR: modpost: "devm_memremap" [drivers/misc/open-dice.ko] undefined!
+ERROR: modpost: "devm_memunmap" [drivers/misc/open-dice.ko] undefined!
+ERROR: modpost: "devm_platform_ioremap_resource" [drivers/char/xillybus/xillybus_of.ko] undefined!
+ERROR: modpost: "devm_platform_ioremap_resource" [drivers/clk/xilinx/clk-xlnx-clock-wizard.ko] undefined!
+ERROR: modpost: "ioremap" [drivers/tty/ipwireless/ipwireless.ko] undefined!
+ERROR: modpost: "iounmap" [drivers/net/ethernet/8390/pcnet_cs.ko] undefined!
+ERROR: modpost: "iounmap" [drivers/tty/ipwireless/ipwireless.ko] undefined!
+arch/arm64/kernel/alternative.c:199:6: warning: no previous prototype for 'apply_alternatives_vdso' [-Wmissing-prototypes]
+arch/arm64/kernel/alternative.c:295:14: warning: no previous prototype for 'alt_cb_patch_nops' [-Wmissing-prototypes]
+arch/ia64/kernel/sys_ia64.c:188:17: sparse: sparse: typename in expression
+arch/ia64/kernel/sys_ia64.c:188:31: sparse: sparse: Trying to use reserved word 'typeof' as identifier
+arch/ia64/kernel/sys_ia64.c:188:31: sparse: sparse: Trying to use reserved word 'void' as identifier
+arch/ia64/kernel/sys_ia64.c:189:60: sparse: sparse: invalid initializer
+arch/ia64/kernel/sys_ia64.c:190:17: sparse: sparse: Trying to use reserved word 'return' as identifier
+arch/parisc/lib/iomap.c:363:5: warning: no previous prototype for 'ioread64_lo_hi' [-Wmissing-prototypes]
+arch/parisc/lib/iomap.c:373:5: warning: no previous prototype for 'ioread64_hi_lo' [-Wmissing-prototypes]
+arch/parisc/lib/iomap.c:448:6: warning: no previous prototype for 'iowrite64_lo_hi' [-Wmissing-prototypes]
+arch/parisc/lib/iomap.c:454:6: warning: no previous prototype for 'iowrite64_hi_lo' [-Wmissing-prototypes]
+drivers/scsi/qla2xxx/qla_os.c:2854:23: warning: assignment to 'struct trace_array *' from 'int' makes pointer from integer without a cast [-Wint-conversion]
+drivers/scsi/qla2xxx/qla_os.c:2854:25: error: implicit declaration of function 'trace_array_get_by_name'; did you mean 'trace_array_set_clr_event'? [-Werror=implicit-function-declaration]
+drivers/scsi/qla2xxx/qla_os.c:2869:9: error: implicit declaration of function 'trace_array_put' [-Werror=implicit-function-declaration]
+mm/hugetlb.c:5539:14: warning: variable 'reserve_alloc' set but not used [-Wunused-but-set-variable]
 
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index a2524106206d..0d798f11dc34 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -543,7 +543,7 @@ fc_host_post_fc_event(struct Scsi_Host *shost, u32 event_number,
- 	struct nlmsghdr	*nlh;
- 	struct fc_nl_event *event;
- 	const char *name;
--	u32 len;
-+	size_t len, padding;
- 	int err;
- 
- 	if (!data_buf || data_len < 4)
-@@ -554,7 +554,7 @@ fc_host_post_fc_event(struct Scsi_Host *shost, u32 event_number,
- 		goto send_fail;
- 	}
- 
--	len = FC_NL_MSGALIGN(sizeof(*event) + data_len);
-+	len = FC_NL_MSGALIGN(sizeof(*event) - sizeof(event->event_data) + data_len);
- 
- 	skb = nlmsg_new(len, GFP_KERNEL);
- 	if (!skb) {
-@@ -578,7 +578,9 @@ fc_host_post_fc_event(struct Scsi_Host *shost, u32 event_number,
- 	event->event_num = event_number;
- 	event->event_code = event_code;
- 	if (data_len)
--		memcpy(&event->event_data, data_buf, data_len);
-+		memcpy(event->event_data_flex, data_buf, data_len);
-+	padding = len - offsetof(typeof(*event), event_data_flex) - data_len;
-+	memset(event->event_data_flex + data_len, 0, padding);
- 
- 	nlmsg_multicast(scsi_nl_sock, skb, 0, SCSI_NL_GRP_FC_EVENTS,
- 			GFP_KERNEL);
-diff --git a/include/uapi/scsi/scsi_netlink_fc.h b/include/uapi/scsi/scsi_netlink_fc.h
-index 7535253f1a96..b46e9cbeb001 100644
---- a/include/uapi/scsi/scsi_netlink_fc.h
-+++ b/include/uapi/scsi/scsi_netlink_fc.h
-@@ -35,7 +35,7 @@
-  * FC Transport Broadcast Event Message :
-  *   FC_NL_ASYNC_EVENT
-  *
-- * Note: if Vendor Unique message, &event_data will be  start of
-+ * Note: if Vendor Unique message, event_data_flex will be start of
-  * 	 vendor unique payload, and the length of the payload is
-  *       per event_datalen
-  *
-@@ -50,7 +50,10 @@ struct fc_nl_event {
- 	__u16 event_datalen;
- 	__u32 event_num;
- 	__u32 event_code;
--	__u32 event_data;
-+	union {
-+		__u32 event_data;
-+		__DECLARE_FLEX_ARRAY(__u8, event_data_flex);
-+	};
- } __attribute__((aligned(sizeof(__u64))));
- 
- 
+Error/Warning ids grouped by kconfigs:
+
+gcc_recent_errors
+|-- alpha-allyesconfig
+|   |-- drivers-scsi-qla2xxx-qla_os.c:error:implicit-declaration-of-function-trace_array_get_by_name
+|   |-- drivers-scsi-qla2xxx-qla_os.c:error:implicit-declaration-of-function-trace_array_put
+|   `-- drivers-scsi-qla2xxx-qla_os.c:warning:assignment-to-struct-trace_array-from-int-makes-pointer-from-integer-without-a-cast
+|-- alpha-randconfig-s033-20220921
+|   `-- kernel-exit.c:sparse:sparse:incorrect-type-in-initializer-(different-address-spaces)-expected-struct-sighand_struct-sighand-got-struct-sighand_struct-noderef-__rcu-sighand
+|-- arm64-allyesconfig
+|   |-- arch-arm64-kernel-alternative.c:warning:no-previous-prototype-for-alt_cb_patch_nops
+|   |-- arch-arm64-kernel-alternative.c:warning:no-previous-prototype-for-apply_alternatives_vdso
+|   `-- mm-hugetlb.c:warning:variable-reserve_alloc-set-but-not-used
+|-- arm64-randconfig-r013-20220921
+|   |-- arch-arm64-kernel-alternative.c:warning:no-previous-prototype-for-alt_cb_patch_nops
+|   `-- arch-arm64-kernel-alternative.c:warning:no-previous-prototype-for-apply_alternatives_vdso
+|-- i386-allyesconfig
+|   `-- mm-hugetlb.c:warning:variable-reserve_alloc-set-but-not-used
+|-- i386-defconfig
+|   `-- mm-hugetlb.c:warning:variable-reserve_alloc-set-but-not-used
+|-- i386-randconfig-c021
+|   `-- mm-hugetlb.c:warning:variable-reserve_alloc-set-but-not-used
+|-- i386-randconfig-m021
+|   `-- drivers-gpu-drm-display-drm_dp_helper.c-drm_dp_phy_name()-warn:unsigned-dp_phy-is-never-less-than-zero.
+|-- i386-randconfig-s001
+|   |-- arch-x86-kernel-signal.c:sparse:sparse:incorrect-type-in-argument-(different-address-spaces)-expected-void-noderef-__user-to-got-unsigned-long-long-usertype
+|   |-- drivers-gpu-drm-tiny-simpledrm.c:sparse:sparse:incorrect-type-in-initializer-(different-address-spaces)-expected-void-vaddr-got-void-noderef-__iomem-screen_base
+|   |-- drivers-gpu-drm-vkms-vkms_formats.c:sparse:sparse:cast-to-restricted-__le16
+|   |-- drivers-gpu-drm-vkms-vkms_formats.c:sparse:sparse:incorrect-type-in-assignment-(different-base-types)-expected-unsigned-short-usertype-got-restricted-__le16-usertype
+|   `-- kernel-exit.c:sparse:sparse:incorrect-type-in-initializer-(different-address-spaces)-expected-struct-sighand_struct-sighand-got-struct-sighand_struct-noderef-__rcu-sighand
+|-- i386-randconfig-s002
+|   |-- arch-x86-kernel-signal.c:sparse:sparse:incorrect-type-in-argument-(different-address-spaces)-expected-void-noderef-__user-to-got-unsigned-long-long-usertype
+|   |-- drivers-gpu-drm-tiny-simpledrm.c:sparse:sparse:incorrect-type-in-initializer-(different-address-spaces)-expected-void-vaddr-got-void-noderef-__iomem-screen_base
+|   |-- kernel-exit.c:sparse:sparse:incorrect-type-in-initializer-(different-address-spaces)-expected-struct-sighand_struct-sighand-got-struct-sighand_struct-noderef-__rcu-sighand
+|   `-- mm-hugetlb.c:warning:variable-reserve_alloc-set-but-not-used
+|-- i386-randconfig-s003
+|   |-- arch-x86-kernel-signal.c:sparse:sparse:incorrect-type-in-argument-(different-address-spaces)-expected-void-noderef-__user-to-got-unsigned-long-long-usertype
+|   |-- drivers-gpu-drm-tiny-simpledrm.c:sparse:sparse:incorrect-type-in-initializer-(different-address-spaces)-expected-void-vaddr-got-void-noderef-__iomem-screen_base
+|   |-- kernel-exit.c:sparse:sparse:incorrect-type-in-initializer-(different-address-spaces)-expected-struct-sighand_struct-sighand-got-struct-sighand_struct-noderef-__rcu-sighand
+|   |-- mm-hugetlb.c:warning:variable-reserve_alloc-set-but-not-used
+|   `-- sound-soc-generic-simple-card-utils.c:sparse:sparse:incorrect-type-in-initializer-(different-base-types)-expected-unsigned-int-usertype-val-got-restricted-snd_pcm_format_t-usertype
+|-- ia64-allmodconfig
+|   |-- drivers-scsi-qla2xxx-qla_os.c:error:implicit-declaration-of-function-trace_array_get_by_name
+|   |-- drivers-scsi-qla2xxx-qla_os.c:error:implicit-declaration-of-function-trace_array_put
+|   |-- drivers-scsi-qla2xxx-qla_os.c:warning:assignment-to-struct-trace_array-from-int-makes-pointer-from-integer-without-a-cast
+|   `-- mm-hugetlb.c:warning:variable-reserve_alloc-set-but-not-used
+|-- ia64-randconfig-s052-20220921
+|   |-- arch-ia64-kernel-sys_ia64.c:sparse:sparse:Trying-to-use-reserved-word-return-as-identifier
+|   |-- arch-ia64-kernel-sys_ia64.c:sparse:sparse:Trying-to-use-reserved-word-typeof-as-identifier
+|   |-- arch-ia64-kernel-sys_ia64.c:sparse:sparse:Trying-to-use-reserved-word-void-as-identifier
+|   |-- arch-ia64-kernel-sys_ia64.c:sparse:sparse:invalid-initializer
+|   |-- arch-ia64-kernel-sys_ia64.c:sparse:sparse:typename-in-expression
+|   |-- kernel-bpf-hashtab.c:sparse:sparse:cast-removes-address-space-__percpu-of-expression
+clang_recent_errors
+|-- arm-randconfig-r014-20220921
+|   `-- make:No-rule-to-make-target-drivers-crypto-aspeed-aspeed_crypto.o-needed-by-drivers-crypto-aspeed-built-in.a-.
+|-- arm-randconfig-r026-20220921
+|   |-- drivers-scsi-qla2xxx-qla_os.c:error:call-to-undeclared-function-trace_array_get_by_name-ISO-C99-and-later-do-not-support-implicit-function-declarations
+|   |-- drivers-scsi-qla2xxx-qla_os.c:error:call-to-undeclared-function-trace_array_put-ISO-C99-and-later-do-not-support-implicit-function-declarations
+|   `-- drivers-scsi-qla2xxx-qla_os.c:error:incompatible-integer-to-pointer-conversion-assigning-to-struct-trace_array-from-int
+|-- i386-randconfig-a015
+|   |-- ERROR:__cpuhp_remove_state-arch-x86-events-intel-intel-cstate.ko-undefined
+|   |-- ERROR:__cpuhp_setup_state-arch-x86-events-intel-intel-cstate.ko-undefined
+|   |-- ERROR:_printk-arch-x86-events-intel-intel-cstate.ko-undefined
+|   |-- ERROR:boot_cpu_data-arch-x86-events-intel-intel-cstate.ko-undefined
+|   |-- ERROR:cpu_bit_bitmap-arch-x86-events-intel-intel-cstate.ko-undefined
+|   |-- ERROR:perf_msr_probe-arch-x86-events-intel-intel-cstate.ko-undefined
+|   |-- ERROR:perf_pmu_register-arch-x86-events-intel-intel-cstate.ko-undefined
+|   |-- ERROR:perf_pmu_unregister-arch-x86-events-intel-intel-cstate.ko-undefined
+|   |-- ERROR:x86_match_cpu-arch-x86-events-intel-intel-cstate.ko-undefined
+|   `-- drivers-extcon-extcon-usbc-tusb320.c:warning:expecting-prototype-for-drivers-extcon-extcon-tusb320c().-Prototype-was-for-TUSB320_REG8()-instead
+|-- powerpc-randconfig-r006-20220921
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-virtual-virtual_link_hwss.c:warning:no-previous-prototype-for-function-virtual_disable_link_output
+|   `-- ld.lld:error:undefined-symbol:__udivdi3
+|-- x86_64-allyesconfig
+|   |-- drivers-extcon-extcon-usbc-tusb320.c:warning:expecting-prototype-for-drivers-extcon-extcon-tusb320c().-Prototype-was-for-TUSB320_REG8()-instead
+|   `-- mm-hugetlb.c:warning:variable-reserve_alloc-set-but-not-used
+`-- x86_64-randconfig-a016
+    `-- drivers-extcon-extcon-usbc-tusb320.c:warning:expecting-prototype-for-drivers-extcon-extcon-tusb320c().-Prototype-was-for-TUSB320_REG8()-instead
+
+elapsed time: 728m
+
+configs tested: 67
+configs skipped: 2
+
+gcc tested configs:
+um                             i386_defconfig
+um                           x86_64_defconfig
+i386                                defconfig
+arm                                 defconfig
+x86_64                        randconfig-a004
+x86_64                        randconfig-a002
+arc                      axs103_smp_defconfig
+arc                  randconfig-r043-20220921
+arc                                 defconfig
+x86_64                              defconfig
+m68k                             allmodconfig
+powerpc                          allmodconfig
+loongarch                         allnoconfig
+riscv                randconfig-r042-20220921
+sh                               allmodconfig
+x86_64                           rhel-8.3-kvm
+x86_64                    rhel-8.3-kselftests
+s390                 randconfig-r044-20220921
+x86_64                           rhel-8.3-syz
+x86_64                          rhel-8.3-func
+x86_64                         rhel-8.3-kunit
+arc                               allnoconfig
+arm                           viper_defconfig
+alpha                             allnoconfig
+arm                          lpd270_defconfig
+riscv                             allnoconfig
+csky                              allnoconfig
+m68k                          sun3x_defconfig
+sh                          sdk7780_defconfig
+sh                             sh03_defconfig
+sh                              ul2_defconfig
+i386                          randconfig-a016
+powerpc                      ppc6xx_defconfig
+powerpc                    klondike_defconfig
+powerpc                 mpc837x_mds_defconfig
+arm                        trizeps4_defconfig
+sh                        dreamcast_defconfig
+riscv             nommu_k210_sdcard_defconfig
+powerpc                    sam440ep_defconfig
+powerpc                      pcm030_defconfig
+sh                           se7780_defconfig
+i386                          randconfig-c001
+powerpc                         wii_defconfig
+powerpc                           allnoconfig
+alpha                               defconfig
+x86_64                               rhel-8.3
+m68k                             allyesconfig
+s390                                defconfig
+x86_64                           allyesconfig
+s390                             allmodconfig
+arc                              allyesconfig
+alpha                            allyesconfig
+s390                             allyesconfig
+mips                             allyesconfig
+i386                             allyesconfig
+ia64                             allmodconfig
+arm64                            allyesconfig
+arm                              allyesconfig
+
+clang tested configs:
+hexagon              randconfig-r041-20220921
+hexagon              randconfig-r045-20220921
+arm                         hackkit_defconfig
+s390                             alldefconfig
+x86_64                        randconfig-a016
+i386                          randconfig-a015
+powerpc                      katmai_defconfig
+arm                        mvebu_v5_defconfig
+x86_64                        randconfig-k001
+x86_64                           allyesconfig
+
 -- 
-2.34.1
-
+0-DAY CI Kernel Test Service
+https://01.org/lkp
