@@ -2,158 +2,332 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 743E3C6FA82
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Sep 2022 04:05:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8B43C32771
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Sep 2022 05:32:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230293AbiIUEFF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Sep 2022 00:05:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47610 "EHLO
+        id S229703AbiIUFcK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Sep 2022 01:32:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34802 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229841AbiIUEFD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Sep 2022 00:05:03 -0400
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D21161116
-        for <linux-scsi@vger.kernel.org>; Tue, 20 Sep 2022 21:05:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1663733102; x=1695269102;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=svKOck3oyqxOGmX/wIBYWDNycIDz93EQP6gWTNu82pc=;
-  b=dZWootTqBDdnH5m15fYmp0FOq5z+yFodSQNlf7P4K2FATPYNQBu7Sxve
-   iB7Xbj8tXKRXWmvaUCYGzjKjk0wokTbVQlprshLknZwIgnFwaW1v6DqRi
-   t/kLPV6PN7DDOEbfVL0FPeUPQl9u3PZitvKYWFl0alPgPVTjk8AtP0LHB
-   tZm2eqYZwpI63ukNJ9G3aDXFrYJgr6/4IkAXwl11nRjAE5l1vxpkzduMh
-   QRz9nt9jmDCKaPQih9rLpq5D6ZP8cgXVu9Sr/+TUySCUYXvMzxeQILC4O
-   F7AwctZ8AR3ZbjpirKuqopFc1E3AZEqp+nU30Zaqup7zOCepR8xIGs+A3
+        with ESMTP id S229599AbiIUFcJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Sep 2022 01:32:09 -0400
+Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F38F7269B;
+        Tue, 20 Sep 2022 22:32:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1663738328; x=1695274328;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=L7r9JhoLAVWcL9IVhZgpSIrSK1y0jQjeL3Vcqf/VTeE=;
+  b=XnjqfM1ZqS1gUyZ6nkbX/Ml1O5OyfwgP7ym9HvLv6n7Qq6eZEZEX6eEM
+   CFdj0p8EU3Ly1KJfiMzRh7QdbTRIjwBAB1Alcr0yCkCX+jsn9rjNJkdZ7
+   WkGy84XYcSmyPwiufQubn9RkJyaW0y7jtUwaRjSl0K7x/NmO1hKL2Y6mn
+   C/X9MbTF+N2PGjAF9J69Byaa7CRH9MWmafzGWMiZ+ph1auC/0rmDfptv4
+   cFsWh3Ql2c0GOz8HyUJXFq47SM2QyDpSzqvVr1Xu4XwlSAHHZPp9rnlRs
+   YEQz1PFAmdJjkotAHeWF3g1cEl6Mr/Hvn+/KoXdRWdpp862QOqmq+2n0C
    A==;
-X-IronPort-AV: E=Sophos;i="5.93,332,1654531200"; 
-   d="scan'208";a="316158379"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 21 Sep 2022 12:04:59 +0800
-IronPort-SDR: aIve2q054YKycEFKnSzpRkDJhSu7tCHx2FWE6xxOR98Y8RQYGyHIF+kZ90k5xYy/wKttvcUb0P
- 9q2x1h5v1XCYIaFMj4HEtVUCDShjrnkhhg7YAkItsYEmNzqudbIZEqIicuKN2UTA+d+XZW7waH
- XMcg0CHpFymzfNs0B/zYltkYM4rnRC0SirKsqIBRsLVOoz2u8BFw0Jw6YuOwfhDoWn+AlpSnDS
- RRTiwAZ6m/SWkTbu8jKOPHw2HOx9JZCSajwp2OqONQxMblRF+J2uGU5yGyP2CFpVTFyt1vGYLF
- n8NvcJZX90us4teznfwYAZvm
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 20 Sep 2022 20:25:04 -0700
-IronPort-SDR: c2YjSbI0jqxO0H8z4NtpHTZL75R0z17oHC5G3Nuc2mGigYlncsubnp17HxASKIoWFItrHRrJH7
- NbkHfQ4skzZclTbVhPmEIsYoNN3U25wDlP5Irr96Lw7hACHtxH01VbZf8LURWYznyrOaouVpRd
- Ii0U8F+MTkO7lZ5UOICo8I6uUggd9J7aUnmxiMzBJgHvSNtJRq7AFouW2fmG54MyJPLDYXkMCU
- 8BkchQpy6dgE6DEgyRJ77Tgzm9Tq99EkxaERQ8GudTVGNEN0OoGNjN97rIt6an/tCfEomWjq46
- N24=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 20 Sep 2022 21:05:00 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MXPvG70y9z1Rwtm
-        for <linux-scsi@vger.kernel.org>; Tue, 20 Sep 2022 21:04:58 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1663733098; x=1666325099; bh=svKOck3oyqxOGmX/wIBYWDNycIDz93EQP6g
-        WTNu82pc=; b=cNiO4y5MwHm7QceJhqfX1yJLF6V/01fLp34oiAA1oBv5pq4qqUz
-        qQKs8z+1hVWuQAsVXCI3GUyO5jJMRVQkG7UGznWRtdBFIvIPklqXM/js4yjqS0cQ
-        UIAXdJqf2D08e7qX3l3nl2/aJSl0/mp6jK1IcmQ/8BxBFMwc8njxWAwMWmYtkNbB
-        dnxFyP2W8n6n/PE1JgbuPuj4KTYhEHc2+64cbSsLt/+Ez1eeM5wso8/w2Ekc2jMe
-        ocEYCBvs1zd335osegG2+E/yZ6RQn2vB07MOcXFUMaa3IDpxIgqsJgHFNmhzdOX6
-        WcQaDYPZZTdjxE6d3mDU2UqDbHtSSYFpjFA==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id Q68cNWHJ-TVg for <linux-scsi@vger.kernel.org>;
-        Tue, 20 Sep 2022 21:04:58 -0700 (PDT)
-Received: from [10.149.53.254] (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MXPvB5DRZz1RvLy;
-        Tue, 20 Sep 2022 21:04:54 -0700 (PDT)
-Message-ID: <40b9e090-5ba3-1191-4fe9-80467284ae72@opensource.wdc.com>
-Date:   Wed, 21 Sep 2022 13:04:51 +0900
+X-IronPort-AV: E=McAfee;i="6500,9779,10476"; a="299891839"
+X-IronPort-AV: E=Sophos;i="5.93,332,1654585200"; 
+   d="scan'208";a="299891839"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Sep 2022 22:32:07 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.93,332,1654585200"; 
+   d="scan'208";a="708296404"
+Received: from lkp-server01.sh.intel.com (HELO c0a60f19fe7e) ([10.239.97.150])
+  by FMSMGA003.fm.intel.com with ESMTP; 20 Sep 2022 22:32:05 -0700
+Received: from kbuild by c0a60f19fe7e with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1oasL6-0003Gr-2Q;
+        Wed, 21 Sep 2022 05:32:04 +0000
+Date:   Wed, 21 Sep 2022 13:31:55 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Yihao Han <hanyihao@vivo.com>, Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org,
+        Yihao Han <hanyihao@vivo.com>
+Subject: Re: [PATCH] scsi: qla2xxx: fix excluded_middle.cocci warnings
+Message-ID: <202209211330.Evw4tUuR-lkp@intel.com>
+References: <20220920024554.2606-1-hanyihao@vivo.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.1
-Subject: Re: [PATCH RFC 0/6] libata/scsi/libsas: Allocate SCSI device earlier
- for ata port probe
-Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, hare@suse.de, hch@lst.de
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, brking@us.ibm.com
-References: <1663669630-21333-1-git-send-email-john.garry@huawei.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <1663669630-21333-1-git-send-email-john.garry@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220920024554.2606-1-hanyihao@vivo.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/20/22 19:27, John Garry wrote:
-> Currently for libata the SCSI device (sdev) associated with an ata_device
-> is allocated when the port probe has completed.
-> 
-> It's useful to have the SCSI device and its associated request queue
-> available earlier for the port probe. Specifically if we have the
-> request queue available, then we can:
-> - Easily put ATA qc in SCSI cmnd priv data
-> - Send ATA internal commands on SCSI device request queue for [0]. The
->    current solution there is to use the shost sdev request queue, which
->    isn't great.
->    
-> This series changes the ata port probe to alloc the sdev in the
-> ata_device revalidation, and then just do a SCSI starget scan afterwards.
-> 
-> Why an RFC?
-> 1. IPR  driver needs to be fixed up - it does not use ATA EH port probe
->     Mail [1] needs following up
+Hi Yihao,
 
-Yes. If IPR could be converted to ata error_handler, a lot of code can 
-be simplified in libata too.
+Thank you for the patch! Yet something to improve:
 
-> 2. SATA PMP support needs verification, but I don't have a setup
+[auto build test ERROR on jejb-scsi/for-next]
+[also build test ERROR on mkp-scsi/for-next linus/master v6.0-rc6 next-20220920]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-Port multiplier behind a sas HBA will be challenging to setup :)
-I can try, but I will need to open up one of my servers and hook a small 
-PMP box to one of the pm8001 plugs. I may have the cables for that... 
-Let me check.
+url:    https://github.com/intel-lab-lkp/linux/commits/Yihao-Han/scsi-qla2xxx-fix-excluded_middle-cocci-warnings/20220920-104643
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+config: x86_64-randconfig-a006-20220919 (https://download.01.org/0day-ci/archive/20220921/202209211330.Evw4tUuR-lkp@intel.com/config)
+compiler: clang version 14.0.6 (https://github.com/llvm/llvm-project f28c006a5895fc0e329fe15fead81e37457cb1d1)
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/81672bb39d1900d22e851a7cfb0b9a0aa35df8af
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Yihao-Han/scsi-qla2xxx-fix-excluded_middle-cocci-warnings/20220920-104643
+        git checkout 81672bb39d1900d22e851a7cfb0b9a0aa35df8af
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=x86_64 SHELL=/bin/bash
 
-> 3. This series needs to be merged into or go after [0]
-> 
-> Patch 1/6 could be merged now.
-> 
-> [0] https://lore.kernel.org/linux-ide/1654770559-101375-1-git-send-email-john.garry@huawei.com/
-> [1] https://lore.kernel.org/linux-ide/369448ed-f89a-c2db-1850-91450d8b5998@opensource.wdc.com/
-> 
-> Any comments welcome - please have a look.
-> 
-> Based on v6.0-rc4 and tested for QEMU AHCI and libsas.
-> 
-> John Garry (6):
->    scsi: core: Use SCSI_SCAN_RESCAN in  __scsi_add_device()
->    scsi: scsi_transport_sas: Allocate end device target id in the rphy
->      alloc
->    scsi: core: Add scsi_get_dev()
->    ata: libata-scsi: Add ata_scsi_setup_sdev()
->    scsi: libsas: Add sas_ata_setup_device()
->    ata: libata-scsi: Allocate sdev early in port probe
-> 
->   drivers/ata/libata-eh.c           |  4 +++
->   drivers/ata/libata-scsi.c         | 45 +++++++++++++++++++++----------
->   drivers/ata/libata.h              |  1 +
->   drivers/scsi/libsas/sas_ata.c     | 20 ++++++++++++++
->   drivers/scsi/scsi_scan.c          | 28 ++++++++++++++++++-
->   drivers/scsi/scsi_transport_sas.c | 25 +++++++++++------
->   include/linux/libata.h            |  2 ++
->   include/scsi/scsi_host.h          |  3 +++
->   8 files changed, 105 insertions(+), 23 deletions(-)
-> 
+If you fix the issue, kindly add following tag where applicable
+| Reported-by: kernel test robot <lkp@intel.com>
+
+All errors (new ones prefixed by >>):
+
+>> drivers/scsi/qla2xxx/qla_target.c:1031:65: error: expected ')'
+                       (!own || (own->iocb.u.isp24.status_subcode == ELS_PLOGI)) {
+                                                                                 ^
+   drivers/scsi/qla2xxx/qla_target.c:1030:6: note: to match this '('
+                   if (ha->flags.edif_enabled &&
+                      ^
+>> drivers/scsi/qla2xxx/qla_target.c:1047:2: error: expected statement
+           }
+           ^
+   2 errors generated.
+
+
+vim +1031 drivers/scsi/qla2xxx/qla_target.c
+
+   961	
+   962	void qlt_free_session_done(struct work_struct *work)
+   963	{
+   964		struct fc_port *sess = container_of(work, struct fc_port,
+   965		    free_work);
+   966		struct qla_tgt *tgt = sess->tgt;
+   967		struct scsi_qla_host *vha = sess->vha;
+   968		struct qla_hw_data *ha = vha->hw;
+   969		unsigned long flags;
+   970		bool logout_started = false;
+   971		scsi_qla_host_t *base_vha = pci_get_drvdata(ha->pdev);
+   972		struct qlt_plogi_ack_t *own =
+   973			sess->plogi_link[QLT_PLOGI_LINK_SAME_WWN];
+   974	
+   975		ql_dbg(ql_dbg_disc, vha, 0xf084,
+   976			"%s: se_sess %p / sess %p from port %8phC loop_id %#04x"
+   977			" s_id %02x:%02x:%02x logout %d keep %d els_logo %d\n",
+   978			__func__, sess->se_sess, sess, sess->port_name, sess->loop_id,
+   979			sess->d_id.b.domain, sess->d_id.b.area, sess->d_id.b.al_pa,
+   980			sess->logout_on_delete, sess->keep_nport_handle,
+   981			sess->send_els_logo);
+   982	
+   983		if (!IS_SW_RESV_ADDR(sess->d_id)) {
+   984			qla2x00_mark_device_lost(vha, sess, 0);
+   985	
+   986			if (sess->send_els_logo) {
+   987				qlt_port_logo_t logo;
+   988	
+   989				logo.id = sess->d_id;
+   990				logo.cmd_count = 0;
+   991				INIT_LIST_HEAD(&logo.list);
+   992				if (!own)
+   993					qlt_send_first_logo(vha, &logo);
+   994				sess->send_els_logo = 0;
+   995			}
+   996	
+   997			if (sess->logout_on_delete && sess->loop_id != FC_NO_LOOP_ID) {
+   998				int rc;
+   999	
+  1000				if (!own ||
+  1001				     (own->iocb.u.isp24.status_subcode == ELS_PLOGI)) {
+  1002					sess->logout_completed = 0;
+  1003					rc = qla2x00_post_async_logout_work(vha, sess,
+  1004					    NULL);
+  1005					if (rc != QLA_SUCCESS)
+  1006						ql_log(ql_log_warn, vha, 0xf085,
+  1007						    "Schedule logo failed sess %p rc %d\n",
+  1008						    sess, rc);
+  1009					else
+  1010						logout_started = true;
+  1011				} else if (own && (own->iocb.u.isp24.status_subcode ==
+  1012					ELS_PRLI) && ha->flags.rida_fmt2) {
+  1013					rc = qla2x00_post_async_prlo_work(vha, sess,
+  1014					    NULL);
+  1015					if (rc != QLA_SUCCESS)
+  1016						ql_log(ql_log_warn, vha, 0xf085,
+  1017						    "Schedule PRLO failed sess %p rc %d\n",
+  1018						    sess, rc);
+  1019					else
+  1020						logout_started = true;
+  1021				}
+  1022			} /* if sess->logout_on_delete */
+  1023	
+  1024			if (sess->nvme_flag & NVME_FLAG_REGISTERED &&
+  1025			    !(sess->nvme_flag & NVME_FLAG_DELETING)) {
+  1026				sess->nvme_flag |= NVME_FLAG_DELETING;
+  1027				qla_nvme_unregister_remote_port(sess);
+  1028			}
+  1029	
+  1030			if (ha->flags.edif_enabled &&
+> 1031			    (!own || (own->iocb.u.isp24.status_subcode == ELS_PLOGI)) {
+  1032				sess->edif.authok = 0;
+  1033				if (!ha->flags.host_shutting_down) {
+  1034					ql_dbg(ql_dbg_edif, vha, 0x911e,
+  1035					       "%s wwpn %8phC calling qla2x00_release_all_sadb\n",
+  1036					       __func__, sess->port_name);
+  1037					qla2x00_release_all_sadb(vha, sess);
+  1038				} else {
+  1039					ql_dbg(ql_dbg_edif, vha, 0x911e,
+  1040					       "%s bypassing release_all_sadb\n",
+  1041					       __func__);
+  1042				}
+  1043	
+  1044				qla_edif_clear_appdata(vha, sess);
+  1045				qla_edif_sess_down(vha, sess);
+  1046			}
+> 1047		}
+  1048	
+  1049		/*
+  1050		 * Release the target session for FC Nexus from fabric module code.
+  1051		 */
+  1052		if (sess->se_sess != NULL)
+  1053			ha->tgt.tgt_ops->free_session(sess);
+  1054	
+  1055		if (logout_started) {
+  1056			bool traced = false;
+  1057			u16 cnt = 0;
+  1058	
+  1059			while (!READ_ONCE(sess->logout_completed)) {
+  1060				if (!traced) {
+  1061					ql_dbg(ql_dbg_disc, vha, 0xf086,
+  1062						"%s: waiting for sess %p logout\n",
+  1063						__func__, sess);
+  1064					traced = true;
+  1065				}
+  1066				msleep(100);
+  1067				cnt++;
+  1068				/*
+  1069				 * Driver timeout is set to 22 Sec, update count value to loop
+  1070				 * long enough for log-out to complete before advancing. Otherwise,
+  1071				 * straddling logout can interfere with re-login attempt.
+  1072				 */
+  1073				if (cnt > 230)
+  1074					break;
+  1075			}
+  1076	
+  1077			ql_dbg(ql_dbg_disc, vha, 0xf087,
+  1078			    "%s: sess %p logout completed\n", __func__, sess);
+  1079		}
+  1080	
+  1081		if (sess->logo_ack_needed) {
+  1082			sess->logo_ack_needed = 0;
+  1083			qla24xx_async_notify_ack(vha, sess,
+  1084				(struct imm_ntfy_from_isp *)sess->iocb, SRB_NACK_LOGO);
+  1085		}
+  1086	
+  1087		spin_lock_irqsave(&vha->work_lock, flags);
+  1088		sess->flags &= ~FCF_ASYNC_SENT;
+  1089		spin_unlock_irqrestore(&vha->work_lock, flags);
+  1090	
+  1091		spin_lock_irqsave(&ha->tgt.sess_lock, flags);
+  1092		if (sess->se_sess) {
+  1093			sess->se_sess = NULL;
+  1094			if (tgt && !IS_SW_RESV_ADDR(sess->d_id))
+  1095				tgt->sess_count--;
+  1096		}
+  1097	
+  1098		qla2x00_set_fcport_disc_state(sess, DSC_DELETED);
+  1099		sess->fw_login_state = DSC_LS_PORT_UNAVAIL;
+  1100		sess->deleted = QLA_SESS_DELETED;
+  1101	
+  1102		if (sess->login_succ && !IS_SW_RESV_ADDR(sess->d_id)) {
+  1103			vha->fcport_count--;
+  1104			sess->login_succ = 0;
+  1105		}
+  1106	
+  1107		qla2x00_clear_loop_id(sess);
+  1108	
+  1109		if (sess->conflict) {
+  1110			sess->conflict->login_pause = 0;
+  1111			sess->conflict = NULL;
+  1112			if (!test_bit(UNLOADING, &vha->dpc_flags))
+  1113				set_bit(RELOGIN_NEEDED, &vha->dpc_flags);
+  1114		}
+  1115	
+  1116		{
+  1117			struct qlt_plogi_ack_t *con =
+  1118			    sess->plogi_link[QLT_PLOGI_LINK_CONFLICT];
+  1119			struct imm_ntfy_from_isp *iocb;
+  1120	
+  1121			own = sess->plogi_link[QLT_PLOGI_LINK_SAME_WWN];
+  1122	
+  1123			if (con) {
+  1124				iocb = &con->iocb;
+  1125				ql_dbg(ql_dbg_tgt_mgt, vha, 0xf099,
+  1126					 "se_sess %p / sess %p port %8phC is gone,"
+  1127					 " %s (ref=%d), releasing PLOGI for %8phC (ref=%d)\n",
+  1128					 sess->se_sess, sess, sess->port_name,
+  1129					 own ? "releasing own PLOGI" : "no own PLOGI pending",
+  1130					 own ? own->ref_count : -1,
+  1131					 iocb->u.isp24.port_name, con->ref_count);
+  1132				qlt_plogi_ack_unref(vha, con);
+  1133				sess->plogi_link[QLT_PLOGI_LINK_CONFLICT] = NULL;
+  1134			} else {
+  1135				ql_dbg(ql_dbg_tgt_mgt, vha, 0xf09a,
+  1136				    "se_sess %p / sess %p port %8phC is gone, %s (ref=%d)\n",
+  1137				    sess->se_sess, sess, sess->port_name,
+  1138				    own ? "releasing own PLOGI" :
+  1139				    "no own PLOGI pending",
+  1140				    own ? own->ref_count : -1);
+  1141			}
+  1142	
+  1143			if (own) {
+  1144				sess->fw_login_state = DSC_LS_PLOGI_PEND;
+  1145				qlt_plogi_ack_unref(vha, own);
+  1146				sess->plogi_link[QLT_PLOGI_LINK_SAME_WWN] = NULL;
+  1147			}
+  1148		}
+  1149	
+  1150		sess->explicit_logout = 0;
+  1151		spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
+  1152		sess->free_pending = 0;
+  1153	
+  1154		qla2x00_dfs_remove_rport(vha, sess);
+  1155	
+  1156		ql_dbg(ql_dbg_disc, vha, 0xf001,
+  1157		    "Unregistration of sess %p %8phC finished fcp_cnt %d\n",
+  1158			sess, sess->port_name, vha->fcport_count);
+  1159	
+  1160		if (tgt && (tgt->sess_count == 0))
+  1161			wake_up_all(&tgt->waitQ);
+  1162	
+  1163		if (!test_bit(PFLG_DRIVER_REMOVING, &base_vha->pci_flags) &&
+  1164		    !(vha->vp_idx && test_bit(VPORT_DELETE, &vha->dpc_flags)) &&
+  1165		    (!tgt || !tgt->tgt_stop) && !LOOP_TRANSITION(vha)) {
+  1166			switch (vha->host->active_mode) {
+  1167			case MODE_INITIATOR:
+  1168			case MODE_DUAL:
+  1169				set_bit(RELOGIN_NEEDED, &vha->dpc_flags);
+  1170				qla2xxx_wake_dpc(vha);
+  1171				break;
+  1172			case MODE_TARGET:
+  1173			default:
+  1174				/* no-op */
+  1175				break;
+  1176			}
+  1177		}
+  1178	
+  1179		if (vha->fcport_count == 0)
+  1180			wake_up_all(&vha->fcport_waitQ);
+  1181	}
+  1182	
 
 -- 
-Damien Le Moal
-Western Digital Research
-
+0-DAY CI Kernel Test Service
+https://01.org/lkp
