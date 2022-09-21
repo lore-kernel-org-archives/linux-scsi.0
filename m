@@ -2,99 +2,94 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0F56ECAAD8
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Sep 2022 08:09:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E6B4C6FA8E
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Sep 2022 08:24:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230108AbiIUIJ7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Sep 2022 04:09:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49886 "EHLO
+        id S231225AbiIUIYP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Sep 2022 04:24:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47724 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230282AbiIUIJy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Sep 2022 04:09:54 -0400
+        with ESMTP id S229750AbiIUIYJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Sep 2022 04:24:09 -0400
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68F3E1EEC9;
-        Wed, 21 Sep 2022 01:09:51 -0700 (PDT)
-Received: from fraeml708-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MXWHm2MXrz687YJ;
-        Wed, 21 Sep 2022 16:08:04 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97EFB54C82;
+        Wed, 21 Sep 2022 01:24:07 -0700 (PDT)
+Received: from fraeml736-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MXWd117pLz688JQ;
+        Wed, 21 Sep 2022 16:23:01 +0800 (CST)
 Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml708-chm.china.huawei.com (10.206.15.36) with Microsoft SMTP Server
+ fraeml736-chm.china.huawei.com (10.206.15.217) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Wed, 21 Sep 2022 10:09:47 +0200
+ 15.1.2375.31; Wed, 21 Sep 2022 10:24:04 +0200
 Received: from [10.195.245.235] (10.195.245.235) by
  lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Wed, 21 Sep 2022 09:09:47 +0100
-Message-ID: <4d257e48-f7e3-4de3-fea1-ca6b0d21ea04@huawei.com>
-Date:   Wed, 21 Sep 2022 09:09:46 +0100
+ 15.1.2375.31; Wed, 21 Sep 2022 09:24:03 +0100
+Message-ID: <0ae5000d-8e9a-da0f-b470-9f87f1b5e290@huawei.com>
+Date:   Wed, 21 Sep 2022 09:24:02 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.6.1
-Subject: Re: [PATCH v3 0/6] libsas and drivers: NCQ error handling
+Subject: Re: [PATCH RFC 0/6] libata/scsi/libsas: Allocate SCSI device earlier
+ for ata port probe
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <jinpu.wang@cloud.ionos.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>, <yangxingui@huawei.com>, <hare@suse.de>
-References: <1662476890-15467-1-git-send-email-john.garry@huawei.com>
- <d2ff0ebf-e22f-85ac-6964-27bafadaf8f3@opensource.wdc.com>
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>, <hare@suse.de>,
+        <hch@lst.de>
+CC:     <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <brking@us.ibm.com>
+References: <1663669630-21333-1-git-send-email-john.garry@huawei.com>
+ <40b9e090-5ba3-1191-4fe9-80467284ae72@opensource.wdc.com>
 From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <d2ff0ebf-e22f-85ac-6964-27bafadaf8f3@opensource.wdc.com>
+In-Reply-To: <40b9e090-5ba3-1191-4fe9-80467284ae72@opensource.wdc.com>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
 X-Originating-IP: [10.195.245.235]
-X-ClientProxiedBy: lhrpeml500001.china.huawei.com (7.191.163.213) To
+X-ClientProxiedBy: lhrpeml100003.china.huawei.com (7.191.160.210) To
  lhrpeml500003.china.huawei.com (7.191.162.67)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 21/09/2022 04:59, Damien Le Moal wrote:
-> I tested this series on top of the current Linus tree. All look good. As 
-> ususal, I hammered an SMR drive connected to a pm80xx adapter and 
-> generated lots of invalid commands to check EH. No issues that I can see.
-> E.g., an unaligned write error look like this:
+On 21/09/2022 05:04, Damien Le Moal wrote:
+> On 9/20/22 19:27, John Garry wrote:
+>> Currently for libata the SCSI device (sdev) associated with an ata_device
+>> is allocated when the port probe has completed.
+>>
+>> It's useful to have the SCSI device and its associated request queue
+>> available earlier for the port probe. Specifically if we have the
+>> request queue available, then we can:
+>> - Easily put ATA qc in SCSI cmnd priv data
+>> - Send ATA internal commands on SCSI device request queue for [0]. The
+>>    current solution there is to use the shost sdev request queue, which
+>>    isn't great.
+>> This series changes the ata port probe to alloc the sdev in the
+>> ata_device revalidation, and then just do a SCSI starget scan afterwards.
+>>
+>> Why an RFC?
+>> 1. IPR  driver needs to be fixed up - it does not use ATA EH port probe
+>>     Mail [1] needs following up
 > 
-> [ 5384.194853] pm80xx0:: mpi_sata_event 2685: SATA EVENT 0x23
-> [ 5384.238720] sas: Enter sas_scsi_recover_host busy: 1 failed: 1
-> [ 5384.246171] sas: sas_scsi_find_task: aborting task 0x0000000050be2a4b
-> [ 5384.254654] pm80xx0:: mpi_sata_completion 2292: task null, freeing 
-> CCB tag 2
-> [ 5384.254676] sas: sas_scsi_find_task: task 0x0000000050be2a4b is aborted
-> [ 5384.294659] sas: sas_eh_handle_sas_errors: task 0x0000000050be2a4b is 
-> aborted
-> [ 5384.318691] ata22.00: exception Emask 0x0 SAct 0x200000 SErr 0x0 
-> action 0x0
-> [ 5384.328425] ata22.00: failed command: WRITE FPDMA QUEUED
-> [ 5384.336277] ata22.00: cmd 61/01:00:01:00:ea/00:00:02:00:00/40 tag 21 
-> ncq dma 4096 out
-> [ 5384.336277]          res 43/04:01:01:00:ea/00:00:02:00:00/00 Emask 
-> 0x400 (NCQ error) <F>
-> [ 5384.357299] ata22.00: status: { DRDY SENSE ERR }
-> [ 5384.364459] ata22.00: error: { ABRT }
-> [ 5384.553177] ata22.00: configured for UDMA/133
-> [ 5384.560343] sd 19:0:3:0: [sdl] tag#80 FAILED Result: hostbyte=DID_OK 
-> driverbyte=DRIVER_OK cmd_age=0s
-> [ 5384.572175] sd 19:0:3:0: [sdl] tag#80 Sense Key : Illegal Request 
-> [current]
-> [ 5384.581765] sd 19:0:3:0: [sdl] tag#80 Add. Sense: Unaligned write 
-> command
-> [ 5384.591126] sd 19:0:3:0: [sdl] tag#80 CDB: Write(16) 8a 00 00 00 00 
-> 00 02 ea 00 01 00 00 00 01 00 00
-> [ 5384.602938] I/O error, dev sdl, sector 391118856 op 0x1:(WRITE) flags 
-> 0x8800 phys_seg 1 prio class 2
-> [ 5384.613854] ata22: EH complete
-> [ 5384.618570] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 1 
-> tries: 1
-> 
-> So looks good to me.
-> 
-> Feel free to add:
-> 
-> Tested-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> Yes. If IPR could be converted to ata error_handler, a lot of code can 
+> be simplified in libata too.
 
-Great, thanks very much. I'll send an updated version based on mkp-scsi 
-6.1 queue today.
+Hmmm... yeah, it would be good to see progress there.
 
+> 
+>> 2. SATA PMP support needs verification, but I don't have a setup
+> 
+> Port multiplier behind a sas HBA will be challenging to setup :)
+> I can try, but I will need to open up one of my servers and hook a small 
+> PMP box to one of the pm8001 plugs. I may have the cables for that... 
+> Let me check.
+
+I was more thinking of just AHCI with a port multiplier.
+
+As for SAS controllers, I don't think it's something to be concerned 
+about. For a start, I know for sure that hisi_sas HW does not support 
+port multipliers, and I don't think that pm8001 does either. In 
+addition, libsas does not even support it - I did see a series in the 
+scsi list from years ago (to support it), but it did not progress.
+
+Thanks,
 John
