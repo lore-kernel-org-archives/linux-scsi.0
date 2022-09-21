@@ -2,53 +2,53 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A652C32771
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Sep 2022 03:59:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 743E3C6FA82
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Sep 2022 04:05:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229811AbiIUD7w (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Sep 2022 23:59:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43290 "EHLO
+        id S230293AbiIUEFF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Sep 2022 00:05:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47610 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230293AbiIUD7s (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Sep 2022 23:59:48 -0400
-Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 721D313D4C
-        for <linux-scsi@vger.kernel.org>; Tue, 20 Sep 2022 20:59:47 -0700 (PDT)
+        with ESMTP id S229841AbiIUEFD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Sep 2022 00:05:03 -0400
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D21161116
+        for <linux-scsi@vger.kernel.org>; Tue, 20 Sep 2022 21:05:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1663732787; x=1695268787;
+  t=1663733102; x=1695269102;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=/Mby3RcaccXTpAuP1MtHipLkQzfzXB20Lb9u7VhsKeA=;
-  b=FNKZm53aa2P3nzdq9GXO5YciJ9n9pwEP1jAD+DuGhlDa20o9fuUehCEQ
-   UPswH8IbqqGyqH66ZtQm+DIQYQQ4/LuuAWrces1mpcND8Ha/deCKXK2ZU
-   UAHGYAUkPlikeCP3qgtFueJ073vTJHYVo4l0Lmw6vorhG4AhLtHWCnW+7
-   eAXw+VrFTrQ81QP8hoF08ABP9G7j4ZYF/KGmSv3UO7ObBoaRhw43uX0X/
-   MiZFx5B20ihJoM+AIMeTwFene7cjvrSGLVEf19VQDz/eEk0HF2xWH2Njs
-   goOP0hE4umaptTHOOEyTzEuuEItjz0WUk448yn5Fv326/MyVzO1HUrl5V
-   g==;
+  bh=svKOck3oyqxOGmX/wIBYWDNycIDz93EQP6gWTNu82pc=;
+  b=dZWootTqBDdnH5m15fYmp0FOq5z+yFodSQNlf7P4K2FATPYNQBu7Sxve
+   iB7Xbj8tXKRXWmvaUCYGzjKjk0wokTbVQlprshLknZwIgnFwaW1v6DqRi
+   t/kLPV6PN7DDOEbfVL0FPeUPQl9u3PZitvKYWFl0alPgPVTjk8AtP0LHB
+   tZm2eqYZwpI63ukNJ9G3aDXFrYJgr6/4IkAXwl11nRjAE5l1vxpkzduMh
+   QRz9nt9jmDCKaPQih9rLpq5D6ZP8cgXVu9Sr/+TUySCUYXvMzxeQILC4O
+   F7AwctZ8AR3ZbjpirKuqopFc1E3AZEqp+nU30Zaqup7zOCepR8xIGs+A3
+   A==;
 X-IronPort-AV: E=Sophos;i="5.93,332,1654531200"; 
-   d="scan'208";a="323978828"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 21 Sep 2022 11:59:43 +0800
-IronPort-SDR: +1VgIu4xX81Deqv0QKl2WoOxX0c73+dcZiTOFsOLKe4UdQu0V8r/C7zNgHeMTvyJFnwpwDuJzq
- 2EesBHL61BUtFJqY4oWf+YLknh/NZVENTdKA0P7CHDuWmrULK2Rj5fO5OEMVVY94liuSIztDMm
- V8m/80ALcRX7o/jxaGq2e0QOpwwp80b8RyDCSb0cFRbEtCR/KHUMKnNvZCwyZ11x5U8ACUyPfZ
- cn8wRsJShj2IjkWRqbRQtUNkO3LA7kpgpOqivkm3qDGbMHx+eVcXVZySnMCCHNlXsmHjvxwgi1
- UMlf4qFk4/cgwfP0ezycLpLk
+   d="scan'208";a="316158379"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 21 Sep 2022 12:04:59 +0800
+IronPort-SDR: aIve2q054YKycEFKnSzpRkDJhSu7tCHx2FWE6xxOR98Y8RQYGyHIF+kZ90k5xYy/wKttvcUb0P
+ 9q2x1h5v1XCYIaFMj4HEtVUCDShjrnkhhg7YAkItsYEmNzqudbIZEqIicuKN2UTA+d+XZW7waH
+ XMcg0CHpFymzfNs0B/zYltkYM4rnRC0SirKsqIBRsLVOoz2u8BFw0Jw6YuOwfhDoWn+AlpSnDS
+ RRTiwAZ6m/SWkTbu8jKOPHw2HOx9JZCSajwp2OqONQxMblRF+J2uGU5yGyP2CFpVTFyt1vGYLF
+ n8NvcJZX90us4teznfwYAZvm
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 20 Sep 2022 20:14:19 -0700
-IronPort-SDR: MGwBx664hZbC1XjmMaE1xyETGPagR9lR2jAY3eEGKIHKyn/uptdSZHMj8nuxf27DFU3uIsiZsW
- d3vNWQPT55lv1L/pxM5wTQnPYY3VJ4bewN2XCkn5DKXdaPldwuEyJT9MsDPLC/Cj5RQU2pMTB7
- FGNqj64DzZbq6O9Ud23O1Nhx9IZLeuHB3jSMabY6AfQNkxv8pFkTdwbI+mGoyQZ82GcEjsf88Z
- SlejUb6Lk9XuToWimoBD38Tbccknijv3eDmrk+17Skgjd9vnTIxbgZth2XI0lYpUUnVIEXbEcv
- 0BU=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 20 Sep 2022 20:25:04 -0700
+IronPort-SDR: c2YjSbI0jqxO0H8z4NtpHTZL75R0z17oHC5G3Nuc2mGigYlncsubnp17HxASKIoWFItrHRrJH7
+ NbkHfQ4skzZclTbVhPmEIsYoNN3U25wDlP5Irr96Lw7hACHtxH01VbZf8LURWYznyrOaouVpRd
+ Ii0U8F+MTkO7lZ5UOICo8I6uUggd9J7aUnmxiMzBJgHvSNtJRq7AFouW2fmG54MyJPLDYXkMCU
+ 8BkchQpy6dgE6DEgyRJ77Tgzm9Tq99EkxaERQ8GudTVGNEN0OoGNjN97rIt6an/tCfEomWjq46
+ N24=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 20 Sep 2022 20:59:44 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 20 Sep 2022 21:05:00 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MXPnC3d5wz1RvTr
-        for <linux-scsi@vger.kernel.org>; Tue, 20 Sep 2022 20:59:43 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MXPvG70y9z1Rwtm
+        for <linux-scsi@vger.kernel.org>; Tue, 20 Sep 2022 21:04:58 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,146 +56,101 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1663732782; x=1666324783; bh=/Mby3RcaccXTpAuP1MtHipLkQzfzXB20Lb9
-        u7VhsKeA=; b=F+lAWLwMMoMdsUGgZUIrgokVDK0SvCpsmemngbw4no5lrVNkP6d
-        hXTUzbOdO1CH02qLfF3nXJO6cZqw2H3//U6urPK0AGUc9grGsIQW4zyPdu562eqj
-        6A9JWWTWQt8+a09WBl+5oGDoRgPr3ZUC0MtdQwJgOFEcgvTByD/hTEVWYLi51TJV
-        q4nrh4heEwB1OThkf+T8jNLdZ6aOeK0qrOt16gr63nAp219QKFmacFdL0MIUxDjS
-        UHOvA4hetg04T+P4x6R/h2iSeVAsLeWzJWFQTSDSoJ3G9knI/+8YFNgU2Xr5Q3ch
-        p9YUYK6VTEUZbG7J+n7sNI04Od6ORO7UTxA==
+        1663733098; x=1666325099; bh=svKOck3oyqxOGmX/wIBYWDNycIDz93EQP6g
+        WTNu82pc=; b=cNiO4y5MwHm7QceJhqfX1yJLF6V/01fLp34oiAA1oBv5pq4qqUz
+        qQKs8z+1hVWuQAsVXCI3GUyO5jJMRVQkG7UGznWRtdBFIvIPklqXM/js4yjqS0cQ
+        UIAXdJqf2D08e7qX3l3nl2/aJSl0/mp6jK1IcmQ/8BxBFMwc8njxWAwMWmYtkNbB
+        dnxFyP2W8n6n/PE1JgbuPuj4KTYhEHc2+64cbSsLt/+Ez1eeM5wso8/w2Ekc2jMe
+        ocEYCBvs1zd335osegG2+E/yZ6RQn2vB07MOcXFUMaa3IDpxIgqsJgHFNmhzdOX6
+        WcQaDYPZZTdjxE6d3mDU2UqDbHtSSYFpjFA==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id Kwi4ByJUYRsV for <linux-scsi@vger.kernel.org>;
-        Tue, 20 Sep 2022 20:59:42 -0700 (PDT)
+        with ESMTP id Q68cNWHJ-TVg for <linux-scsi@vger.kernel.org>;
+        Tue, 20 Sep 2022 21:04:58 -0700 (PDT)
 Received: from [10.149.53.254] (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MXPn71qspz1RvLy;
-        Tue, 20 Sep 2022 20:59:38 -0700 (PDT)
-Message-ID: <d2ff0ebf-e22f-85ac-6964-27bafadaf8f3@opensource.wdc.com>
-Date:   Wed, 21 Sep 2022 12:59:35 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MXPvB5DRZz1RvLy;
+        Tue, 20 Sep 2022 21:04:54 -0700 (PDT)
+Message-ID: <40b9e090-5ba3-1191-4fe9-80467284ae72@opensource.wdc.com>
+Date:   Wed, 21 Sep 2022 13:04:51 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.2.1
-Subject: Re: [PATCH v3 0/6] libsas and drivers: NCQ error handling
+Subject: Re: [PATCH RFC 0/6] libata/scsi/libsas: Allocate SCSI device earlier
+ for ata port probe
 Content-Language: en-US
 To:     John Garry <john.garry@huawei.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, jinpu.wang@cloud.ionos.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linuxarm@huawei.com, yangxingui@huawei.com, hare@suse.de
-References: <1662476890-15467-1-git-send-email-john.garry@huawei.com>
+        martin.petersen@oracle.com, hare@suse.de, hch@lst.de
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, brking@us.ibm.com
+References: <1663669630-21333-1-git-send-email-john.garry@huawei.com>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <1662476890-15467-1-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1663669630-21333-1-git-send-email-john.garry@huawei.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/7/22 00:08, John Garry wrote:
-> As reported in [0], the pm8001 driver NCQ error handling more or less
-> duplicates what libata does in link error handling, as follows:
-> - abort all commands
-> - do autopsy with read log ext 10 command
-> - reset the target to recover, if necessary
+On 9/20/22 19:27, John Garry wrote:
+> Currently for libata the SCSI device (sdev) associated with an ata_device
+> is allocated when the port probe has completed.
 > 
-> Indeed for the hisi_sas driver we want to add similar handling for NCQ
-> errors.
+> It's useful to have the SCSI device and its associated request queue
+> available earlier for the port probe. Specifically if we have the
+> request queue available, then we can:
+> - Easily put ATA qc in SCSI cmnd priv data
+> - Send ATA internal commands on SCSI device request queue for [0]. The
+>    current solution there is to use the shost sdev request queue, which
+>    isn't great.
+>    
+> This series changes the ata port probe to alloc the sdev in the
+> ata_device revalidation, and then just do a SCSI starget scan afterwards.
 > 
-> This series add a new libsas API - sas_ata_device_link_abort() - to handle
-> host NCQ errors, and fixes up pm8001 and hisi_sas drivers to use it.
-> 
-> A difference in the pm8001 driver NCQ error handling is that we send
-> SATA_ABORT per-task prior to read log ext10, but I feel that this should
-> not make a difference to the error handling.
-> 
-> Damien kindly tested previous the series for pm8001, but any further pm8001
-> testing would be appreciated as I have since tweaked pm8001 handling again.
-> This is because the pm8001 driver hangs on my arm64 machine read log ext10
-> command.
+> Why an RFC?
+> 1. IPR  driver needs to be fixed up - it does not use ATA EH port probe
+>     Mail [1] needs following up
 
-I tested this series on top of the current Linus tree. All look good. As 
-ususal, I hammered an SMR drive connected to a pm80xx adapter and 
-generated lots of invalid commands to check EH. No issues that I can see.
-E.g., an unaligned write error look like this:
+Yes. If IPR could be converted to ata error_handler, a lot of code can 
+be simplified in libata too.
 
-[ 5384.194853] pm80xx0:: mpi_sata_event 2685: SATA EVENT 0x23
-[ 5384.238720] sas: Enter sas_scsi_recover_host busy: 1 failed: 1
-[ 5384.246171] sas: sas_scsi_find_task: aborting task 0x0000000050be2a4b
-[ 5384.254654] pm80xx0:: mpi_sata_completion 2292: task null, freeing 
-CCB tag 2
-[ 5384.254676] sas: sas_scsi_find_task: task 0x0000000050be2a4b is aborted
-[ 5384.294659] sas: sas_eh_handle_sas_errors: task 0x0000000050be2a4b is 
-aborted
-[ 5384.318691] ata22.00: exception Emask 0x0 SAct 0x200000 SErr 0x0 
-action 0x0
-[ 5384.328425] ata22.00: failed command: WRITE FPDMA QUEUED
-[ 5384.336277] ata22.00: cmd 61/01:00:01:00:ea/00:00:02:00:00/40 tag 21 
-ncq dma 4096 out
-[ 5384.336277]          res 43/04:01:01:00:ea/00:00:02:00:00/00 Emask 
-0x400 (NCQ error) <F>
-[ 5384.357299] ata22.00: status: { DRDY SENSE ERR }
-[ 5384.364459] ata22.00: error: { ABRT }
-[ 5384.553177] ata22.00: configured for UDMA/133
-[ 5384.560343] sd 19:0:3:0: [sdl] tag#80 FAILED Result: hostbyte=DID_OK 
-driverbyte=DRIVER_OK cmd_age=0s
-[ 5384.572175] sd 19:0:3:0: [sdl] tag#80 Sense Key : Illegal Request 
-[current]
-[ 5384.581765] sd 19:0:3:0: [sdl] tag#80 Add. Sense: Unaligned write command
-[ 5384.591126] sd 19:0:3:0: [sdl] tag#80 CDB: Write(16) 8a 00 00 00 00 
-00 02 ea 00 01 00 00 00 01 00 00
-[ 5384.602938] I/O error, dev sdl, sector 391118856 op 0x1:(WRITE) flags 
-0x8800 phys_seg 1 prio class 2
-[ 5384.613854] ata22: EH complete
-[ 5384.618570] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 1 
-tries: 1
+> 2. SATA PMP support needs verification, but I don't have a setup
 
-So looks good to me.
+Port multiplier behind a sas HBA will be challenging to setup :)
+I can try, but I will need to open up one of my servers and hook a small 
+PMP box to one of the pm8001 plugs. I may have the cables for that... 
+Let me check.
 
-Feel free to add:
-
-Tested-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-
+> 3. This series needs to be merged into or go after [0]
 > 
-> Finally with these changes we can make the libsas task alloc/free APIs
-> private, which they should always have been.
+> Patch 1/6 could be merged now.
 > 
-> Based on v6.0-rc4
+> [0] https://lore.kernel.org/linux-ide/1654770559-101375-1-git-send-email-john.garry@huawei.com/
+> [1] https://lore.kernel.org/linux-ide/369448ed-f89a-c2db-1850-91450d8b5998@opensource.wdc.com/
 > 
-> [0] https://lore.kernel.org/linux-scsi/8fb3b093-55f0-1fab-81f4-e8519810a978@huawei.com/
+> Any comments welcome - please have a look.
 > 
-> Changes since v2:
-> - Stop sending SATA_ABORT all for pm8001 handling
-> - Make "reset" optional in sas_ata_device_link_abort()
+> Based on v6.0-rc4 and tested for QEMU AHCI and libsas.
 > 
-> Changes since v1:
-> - Rename sas_ata_link_abort() -> sas_ata_device_link_abort()
-> - Set EH RESET flag in sas_ata_device_link_abort()
-> - Add Jack's Ack tags
-> - Rebase
+> John Garry (6):
+>    scsi: core: Use SCSI_SCAN_RESCAN in  __scsi_add_device()
+>    scsi: scsi_transport_sas: Allocate end device target id in the rphy
+>      alloc
+>    scsi: core: Add scsi_get_dev()
+>    ata: libata-scsi: Add ata_scsi_setup_sdev()
+>    scsi: libsas: Add sas_ata_setup_device()
+>    ata: libata-scsi: Allocate sdev early in port probe
 > 
-> John Garry (5):
->    scsi: pm8001: Modify task abort handling for SATA task
->    scsi: libsas: Add sas_ata_device_link_abort()
->    scsi: pm8001: Use sas_ata_device_link_abort() to handle NCQ errors
->    scsi: hisi_sas: Don't issue ATA softreset in hisi_sas_abort_task()
->    scsi: libsas: Make sas_{alloc, alloc_slow, free}_task() private
-> 
-> Xingui Yang (1):
->    scsi: hisi_sas: Add SATA_DISK_ERR bit handling for v3 hw
-> 
->   drivers/scsi/hisi_sas/hisi_sas_main.c  |   5 +-
->   drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  22 ++-
->   drivers/scsi/libsas/sas_ata.c          |  12 ++
->   drivers/scsi/libsas/sas_init.c         |   3 -
->   drivers/scsi/libsas/sas_internal.h     |   4 +
->   drivers/scsi/pm8001/pm8001_hwi.c       | 186 ++++---------------------
->   drivers/scsi/pm8001/pm8001_sas.c       |   8 ++
->   drivers/scsi/pm8001/pm8001_sas.h       |   4 -
->   drivers/scsi/pm8001/pm80xx_hwi.c       | 177 +++--------------------
->   include/scsi/libsas.h                  |   4 -
->   include/scsi/sas_ata.h                 |   6 +
->   11 files changed, 96 insertions(+), 335 deletions(-)
+>   drivers/ata/libata-eh.c           |  4 +++
+>   drivers/ata/libata-scsi.c         | 45 +++++++++++++++++++++----------
+>   drivers/ata/libata.h              |  1 +
+>   drivers/scsi/libsas/sas_ata.c     | 20 ++++++++++++++
+>   drivers/scsi/scsi_scan.c          | 28 ++++++++++++++++++-
+>   drivers/scsi/scsi_transport_sas.c | 25 +++++++++++------
+>   include/linux/libata.h            |  2 ++
+>   include/scsi/scsi_host.h          |  3 +++
+>   8 files changed, 105 insertions(+), 23 deletions(-)
 > 
 
 -- 
