@@ -2,69 +2,93 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5000FC54EE9
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Sep 2022 21:52:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DCA2C6FA86
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Sep 2022 22:04:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231683AbiIVVwm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Sep 2022 17:52:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57768 "EHLO
+        id S229904AbiIVWEv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Sep 2022 18:04:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46198 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230020AbiIVVwl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Sep 2022 17:52:41 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98CAD193F1;
-        Thu, 22 Sep 2022 14:52:40 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 35BEB60C00;
-        Thu, 22 Sep 2022 21:52:40 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 952B1C433D7;
-        Thu, 22 Sep 2022 21:52:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1663883559;
-        bh=ujKmTNIn7mi6zx2EojvxsNyv0E0/U+9Sx4gzniCZb7Q=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=g/FJ+pKmUPkc7Ny3QK9bgoffZhwMnYDiRVMEvg9YYavqIC7MZDl1uYi1iHgKb9Vfk
-         R3aVbPGLISaF/d3XCPTpJx3JkoHU9/xDBhwT1oC7NVNbaXBIyn4ehYnCEGo9AsaiRr
-         zU4OPHETV9r8rofdiUzNVUEo01nhEOywsCyAhwFVgD3KAQ5UxBhnrt9cFtXPon+O2E
-         2ge88SVyEoBB8XJ2grjPP8s2edOGYpsWmziEIBHSlgVkhM7Rq+IzyTSGNoAyKDi+3y
-         kZkuyfJttgNQGgV5oIS2dgBlRH46KFl1BHsc5Uhj4R0Pn+L6D4h3j0dOQ8vys9Mx+4
-         SjksEvoMkAkGA==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 7FF30E4D03C;
-        Thu, 22 Sep 2022 21:52:39 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI fixes for 6.0-rc6
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <72da0a69339074e2bad5295fe54a291c1e5cd206.camel@HansenPartnership.com>
-References: <72da0a69339074e2bad5295fe54a291c1e5cd206.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <72da0a69339074e2bad5295fe54a291c1e5cd206.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: e0e0747de0ea3dd87cdbb0393311e17471a9baf1
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: bf682942cd26ce9cd5e87f73ae099b383041e782
-Message-Id: <166388355951.15587.1956697213604770182.pr-tracker-bot@kernel.org>
-Date:   Thu, 22 Sep 2022 21:52:39 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        with ESMTP id S229449AbiIVWEt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Sep 2022 18:04:49 -0400
+Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 686B1222B2;
+        Thu, 22 Sep 2022 15:04:44 -0700 (PDT)
+Received: by mail-pj1-f54.google.com with SMTP id i15-20020a17090a4b8f00b0020073b4ac27so3549298pjh.3;
+        Thu, 22 Sep 2022 15:04:44 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date;
+        bh=h5AeR2Bv8Dmhp1ZsnQsoCSdDP4WCc012K56hRvRjwgo=;
+        b=g9xpnNhFMqFVg60cu7rBMD7xF4hPLXzbAiJ59mzWWABdXSPMVUYj26h3tqj+V4Vtu8
+         /6/XBkLMkrMw6QriCh4/FjIjlMPtGMDiTYVG/c9Smz8d2t1Tdy0LEGw5vllWPpLtL6T3
+         Vkak6r0US98QWC83s6oftEXw8oFVaYKfvKCssuLXImsQQmNSfPcyeGar7hzycjEp/AAM
+         8sXodsyZPa3WacKZPUH7RsmwVhtOGQm88n+Bu30P7M3iTakVVoinYSzWKrNpDuTJcWhv
+         3dCuYC0XX3TJb164rUbgXXnLgxZUwVAYl4nCY3QbofIdvUGwd7I3Y7ZjheNp/bFEf4nw
+         r/xw==
+X-Gm-Message-State: ACrzQf1BFwmoRKDQ/+6WF/fv4A3Jmb3xPUrEaraCkKgIPgReFvit2Gj2
+        c5ZSiDyd/CdnWzyIlnMHMW4LQNPkmUw=
+X-Google-Smtp-Source: AMsMyM6o1fHJUmnqzIYecrS7jtpvJ5Gy8wrnm+ZMJIpWig/k2WyUboNIQ9/eXx411rHD09XTWDSgiA==
+X-Received: by 2002:a17:903:284:b0:178:2a94:9b6a with SMTP id j4-20020a170903028400b001782a949b6amr5433156plr.135.1663884283829;
+        Thu, 22 Sep 2022 15:04:43 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:7c7b:f882:f26a:23ca? ([2620:15c:211:201:7c7b:f882:f26a:23ca])
+        by smtp.gmail.com with ESMTPSA id x14-20020a170902ec8e00b001780e4e1a0fsm4650634plg.125.2022.09.22.15.04.42
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 22 Sep 2022 15:04:42 -0700 (PDT)
+Message-ID: <f69110ac-0be6-7e87-bf27-1d9544038910@acm.org>
+Date:   Thu, 22 Sep 2022 15:04:41 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.13.0
+Subject: Re: [PATCH] scsi: make SCSI_MOD depend on BLOCK for cleaner .config
+ files
+Content-Language: en-US
+To:     Lukas Bulwahn <lukas.bulwahn@gmail.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20220919060112.24802-1-lukas.bulwahn@gmail.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20220919060112.24802-1-lukas.bulwahn@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Thu, 22 Sep 2022 16:57:06 -0400:
+On 9/18/22 23:01, Lukas Bulwahn wrote:
+> SCSI_MOD is a helper config symbol for configuring RAID_ATTRS properly,
+> i.e., RAID_ATTRS needs to be m when SCSI=m.
+> 
+> This helper config symbol SCSI_MOD still shows up even in kernel
+> configurations that do not select the block subsystem and where SCSI is
+> not even a configuration option mentioned and selectable.
+> 
+> Make this SCSI_MOD depend on BLOCK, so that it only shows up when it is
+> slightly relevant in the kernel configuration.
+> 
+> Signed-off-by: Lukas Bulwahn <lukas.bulwahn@gmail.com>
+> ---
+>   drivers/scsi/Kconfig | 7 ++++---
+>   1 file changed, 4 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+> index 955cb69a5418..03e71e3d5e5b 100644
+> --- a/drivers/scsi/Kconfig
+> +++ b/drivers/scsi/Kconfig
+> @@ -2,9 +2,10 @@
+>   menu "SCSI device support"
+>   
+>   config SCSI_MOD
+> -       tristate
+> -       default y if SCSI=n || SCSI=y
+> -       default m if SCSI=m
+> +	tristate
+> +	default y if SCSI=n || SCSI=y
+> +	default m if SCSI=m
+> +	depends on BLOCK
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/bf682942cd26ce9cd5e87f73ae099b383041e782
-
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
