@@ -2,46 +2,46 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62897ECAAD8
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Sep 2022 19:08:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A541C6FA82
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Sep 2022 19:30:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232421AbiIVTIx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Sep 2022 15:08:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50578 "EHLO
+        id S230143AbiIVTaj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Sep 2022 15:30:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47544 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232278AbiIVTIw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Sep 2022 15:08:52 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 507A4FCA70;
-        Thu, 22 Sep 2022 12:08:51 -0700 (PDT)
+        with ESMTP id S229969AbiIVTah (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Sep 2022 15:30:37 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 215527F0A0;
+        Thu, 22 Sep 2022 12:30:37 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id DF34663792;
-        Thu, 22 Sep 2022 19:08:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 996B5C433D7;
-        Thu, 22 Sep 2022 19:08:48 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id C582CB83A37;
+        Thu, 22 Sep 2022 19:30:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB6FDC433D6;
+        Thu, 22 Sep 2022 19:30:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1663873730;
-        bh=RvoDarC6U/fJABhMRerQJHoq4Ys6450eyjNtBdNlByk=;
+        s=k20201202; t=1663875034;
+        bh=vqFQno4mcDNf9adb3pKJgK0yhZw6i/lB0mWMPuO/jgo=;
         h=Date:From:To:Cc:Subject:From;
-        b=Qp8tGMn8EsST1hu+HRRx8YpEJqMvJSGxm2n68qULxO7b0Au25DDkHLpqI7P3v/zQa
-         en7biq6cVEUKGmy9aaxgqbOU0N36ML/sg/CeHFzOoViBhyXKitDTyhvfmaSOIvypcX
-         9sAsUjBqkSGKfGpPfp5KJe0HUJhtoOE3OBhKMwyYU8Zd9bCovV21SWb77cUZZzKKrC
-         z2OKXi/rOFf31CkXUm85AMwvhvXZX2DU3Y3EEyBae507rAAbQeW0BlDWGPOuJLK25A
-         xAkUKlQzyjvwGlcBfw6IB35jewCqv41ykEAK8u74QHQgrMTDeG07hxWvHwgpWIGm2V
-         qNwLCBbKjJPHA==
-Date:   Thu, 22 Sep 2022 14:08:44 -0500
+        b=ej6nGhbI6wgK7QB9ktkzYQYIVLi6f0tvrt13oKgLQnfuiFgLVef4FwW4Ox5Vj8T2F
+         9IkpcCdIXAIIdBt8e25w8zX+PlSeCE0Mcy1WzTIleF47YhRowp7TRtvx7lXwEhWii0
+         DAJEGyhUjqZxg5MYdephpf69O7VpTdOxRlL/9vz/vNuejBgiAOsc4uKmZmtC6mPL5K
+         rm5gfCf41/N4FFMxXTYY5dqYCiEqTfaoNmvDuFxOui/qlkuCEmQIzobs+MaXLepyFk
+         jB/bild6k65pPkADSFDgaJI96IvLu+bRJ19XpvA6jcZrOAnphiZtpBhcWd5elPhljW
+         9hq1CeCIrpBnw==
+Date:   Thu, 22 Sep 2022 14:30:28 -0500
 From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To:     Adam Radford <aradford@gmail.com>,
+To:     Jack Wang <jinpu.wang@cloud.ionos.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         "Gustavo A. R. Silva" <gustavoars@kernel.org>,
         linux-hardening@vger.kernel.org
-Subject: [PATCH][next] scsi: 3w-xxxx: Replace one-element array with
- flexible-array member
-Message-ID: <YyyyvB30jnjRaw/F@work>
+Subject: [PATCH] scsi: pm8001: Replace one-element array with flexible-array
+ member
+Message-ID: <Yyy31OuBza1FJCXP@work>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -51,90 +51,33 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 One-element arrays are deprecated, and we are replacing them with flexible
 array members instead. So, replace one-element array with flexible-array
-member in struct TAG_TW_New_Ioctl and refactor the rest of the code,
-accordingly.
+member in struct fw_control_info.
 
-Notice that, in multiple places, the subtraction of 1 from
-sizeof(TW_New_Ioctl) is removed, as this operation is now implicit
-after the flex-array transformation.
+This helps with the ongoing efforts to tighten the FORTIFY_SOURCE
+routines on memcpy() and help us make progress towards globally
+enabling -fstrict-flex-arrays=3 [1].
 
 Link: https://github.com/KSPP/linux/issues/79
-Link: https://github.com/KSPP/linux/issues/206
+Link: https://github.com/KSPP/linux/issues/207
+Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=101836 [1]
 Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 ---
- drivers/scsi/3w-xxxx.c | 14 +++++++-------
- drivers/scsi/3w-xxxx.h |  2 +-
- 2 files changed, 8 insertions(+), 8 deletions(-)
+ drivers/scsi/pm8001/pm8001_sas.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
-index a853c5497af6..ffdecb12d654 100644
---- a/drivers/scsi/3w-xxxx.c
-+++ b/drivers/scsi/3w-xxxx.c
-@@ -912,7 +912,7 @@ static long tw_chrdev_ioctl(struct file *file, unsigned int cmd, unsigned long a
- 	data_buffer_length_adjusted = (data_buffer_length + 511) & ~511;
- 
- 	/* Now allocate ioctl buf memory */
--	cpu_addr = dma_alloc_coherent(&tw_dev->tw_pci_dev->dev, data_buffer_length_adjusted+sizeof(TW_New_Ioctl) - 1, &dma_handle, GFP_KERNEL);
-+	cpu_addr = dma_alloc_coherent(&tw_dev->tw_pci_dev->dev, data_buffer_length_adjusted + sizeof(TW_New_Ioctl), &dma_handle, GFP_KERNEL);
- 	if (cpu_addr == NULL) {
- 		retval = -ENOMEM;
- 		goto out;
-@@ -921,7 +921,7 @@ static long tw_chrdev_ioctl(struct file *file, unsigned int cmd, unsigned long a
- 	tw_ioctl = (TW_New_Ioctl *)cpu_addr;
- 
- 	/* Now copy down the entire ioctl */
--	if (copy_from_user(tw_ioctl, argp, data_buffer_length + sizeof(TW_New_Ioctl) - 1))
-+	if (copy_from_user(tw_ioctl, argp, data_buffer_length + sizeof(TW_New_Ioctl)))
- 		goto out2;
- 
- 	passthru = (TW_Passthru *)&tw_ioctl->firmware_command;
-@@ -966,15 +966,15 @@ static long tw_chrdev_ioctl(struct file *file, unsigned int cmd, unsigned long a
- 			/* Load the sg list */
- 			switch (TW_SGL_OUT(tw_ioctl->firmware_command.opcode__sgloffset)) {
- 			case 2:
--				tw_ioctl->firmware_command.byte8.param.sgl[0].address = dma_handle + sizeof(TW_New_Ioctl) - 1;
-+				tw_ioctl->firmware_command.byte8.param.sgl[0].address = dma_handle + sizeof(TW_New_Ioctl);
- 				tw_ioctl->firmware_command.byte8.param.sgl[0].length = data_buffer_length_adjusted;
- 				break;
- 			case 3:
--				tw_ioctl->firmware_command.byte8.io.sgl[0].address = dma_handle + sizeof(TW_New_Ioctl) - 1;
-+				tw_ioctl->firmware_command.byte8.io.sgl[0].address = dma_handle + sizeof(TW_New_Ioctl);
- 				tw_ioctl->firmware_command.byte8.io.sgl[0].length = data_buffer_length_adjusted;
- 				break;
- 			case 5:
--				passthru->sg_list[0].address = dma_handle + sizeof(TW_New_Ioctl) - 1;
-+				passthru->sg_list[0].address = dma_handle + sizeof(TW_New_Ioctl);
- 				passthru->sg_list[0].length = data_buffer_length_adjusted;
- 				break;
- 			}
-@@ -1017,12 +1017,12 @@ static long tw_chrdev_ioctl(struct file *file, unsigned int cmd, unsigned long a
- 	}
- 
- 	/* Now copy the response to userspace */
--	if (copy_to_user(argp, tw_ioctl, sizeof(TW_New_Ioctl) + data_buffer_length - 1))
-+	if (copy_to_user(argp, tw_ioctl, sizeof(TW_New_Ioctl) + data_buffer_length))
- 		goto out2;
- 	retval = 0;
- out2:
- 	/* Now free ioctl buf memory */
--	dma_free_coherent(&tw_dev->tw_pci_dev->dev, data_buffer_length_adjusted+sizeof(TW_New_Ioctl) - 1, cpu_addr, dma_handle);
-+	dma_free_coherent(&tw_dev->tw_pci_dev->dev, data_buffer_length_adjusted + sizeof(TW_New_Ioctl), cpu_addr, dma_handle);
- out:
- 	mutex_unlock(&tw_dev->ioctl_lock);
- 	mutex_unlock(&tw_mutex);
-diff --git a/drivers/scsi/3w-xxxx.h b/drivers/scsi/3w-xxxx.h
-index e8f3f081b7d8..120a087bdf3c 100644
---- a/drivers/scsi/3w-xxxx.h
-+++ b/drivers/scsi/3w-xxxx.h
-@@ -348,7 +348,7 @@ typedef struct TAG_TW_New_Ioctl {
- 	unsigned int data_buffer_length;
- 	unsigned char padding [508];
- 	TW_Command firmware_command;
--	char data_buffer[1];
-+	char data_buffer[];
- } TW_New_Ioctl;
- 
- /* GetParam descriptor */
+diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
+index c5e3f380a01c..b08f52673889 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.h
++++ b/drivers/scsi/pm8001/pm8001_sas.h
+@@ -612,7 +612,7 @@ struct fw_control_info {
+ 	operations.*/
+ 	u32			reserved;/* padding required for 64 bit
+ 	alignment */
+-	u8			buffer[1];/* Start of buffer */
++	u8			buffer[];/* Start of buffer */
+ };
+ struct fw_control_ex {
+ 	struct fw_control_info *fw_control;
 -- 
 2.34.1
 
