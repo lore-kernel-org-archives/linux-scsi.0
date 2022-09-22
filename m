@@ -2,212 +2,187 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A373C6FA82
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Sep 2022 05:29:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 334A9C6FA90
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Sep 2022 05:36:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229959AbiIVF3v (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Sep 2022 01:29:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45660 "EHLO
+        id S229610AbiIVFgS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Sep 2022 01:36:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57030 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229825AbiIVF3u (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Sep 2022 01:29:50 -0400
+        with ESMTP id S229471AbiIVFgR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Sep 2022 01:36:17 -0400
 Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D62F31229;
-        Wed, 21 Sep 2022 22:29:47 -0700 (PDT)
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28M4eE9R003145;
-        Thu, 22 Sep 2022 05:29:41 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=content-type :
- mime-version : subject : from : in-reply-to : date : cc :
- content-transfer-encoding : message-id : references : to; s=pp1;
- bh=onCbqLp8wm+Z6OjTP02Ay3zCXQgaBksEKDZPTkzLOqQ=;
- b=Ac215hGADXTytsYU7/4+TBvPTTlbmGWAhrAUg3pR/JBAVTIYJJOonzUuuKU9hH3YBi9W
- J7I+041tZwQKpcI/IuGiEvqj7xU0SDq9/vJqndksZs0vghXvXgOpXaf+gnO4obGC+vMB
- oGE5qKl5QNVqjVcVp84sMrRD/+ccEno+/+I5HVN0I6rskFtgzFdVtYhOz7OuzVrAEtqW
- 3/kmsgXUyug2PLKJp77Rfhz4OPlsmXtqLzbxR6/HdzMfyP4klIeA4GS2eLkmG8ybA7tq
- QDScM3B1407JwiusQNqR2TwYvJlAg/vTynAUD5i3cH7cFxK6WpFsTth7TLGWI0ofvApy MA== 
-Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3jrg6a9qsc-1
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 397D8B07D3;
+        Wed, 21 Sep 2022 22:36:16 -0700 (PDT)
+Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28M4l6cn020296;
+        Thu, 22 Sep 2022 05:36:13 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=content-type : subject :
+ from : in-reply-to : date : cc : message-id : references : to :
+ content-transfer-encoding : mime-version; s=pp1;
+ bh=1VkmmVMcotah7R98FCFQ+CstXcddcst1nSO+Q2M3PiE=;
+ b=Me+ADMAj6WpkngtMnAFwYoZqKblg7yFMPXOzN/p7szQX6tW3rjyL6v3vVemFufbA+A57
+ 4WnNe3Pz9S/KguJ6aD4fiwRFN4wssfNPptNYEUAm9Owmb/o62Jl6T03jOagap1KgDfVt
+ 80RrNhRCvgRTzdoopm4+EgGqHHj3vAfUl2rGPI9fKsMITF79+O20v5iT//SXTTXstEZv
+ rphLMk+w2AGR1WICcHXkhKlXL4k88I57X/h2WtQOZxNdjH2nBGxsGpnWCdNX/CxHCs1e
+ lCemA9Oe3Y7GeP/G7UDboJrE1abD0EONPapC2WH+TGtgdmRGDAlx7ZSeqd+D7OHvEmYB yg== 
+Received: from ppma06ams.nl.ibm.com (66.31.33a9.ip4.static.sl-reverse.com [169.51.49.102])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3jrh01sa8j-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 22 Sep 2022 05:29:41 +0000
-Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
-        by ppma03ams.nl.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 28M5LmJP006984;
-        Thu, 22 Sep 2022 05:29:39 GMT
-Received: from b06cxnps4076.portsmouth.uk.ibm.com (d06relay13.portsmouth.uk.ibm.com [9.149.109.198])
-        by ppma03ams.nl.ibm.com with ESMTP id 3jn5v9649v-1
+        Thu, 22 Sep 2022 05:36:13 +0000
+Received: from pps.filterd (ppma06ams.nl.ibm.com [127.0.0.1])
+        by ppma06ams.nl.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 28M5L9Gl001349;
+        Thu, 22 Sep 2022 05:31:11 GMT
+Received: from b06avi18878370.portsmouth.uk.ibm.com (b06avi18878370.portsmouth.uk.ibm.com [9.149.26.194])
+        by ppma06ams.nl.ibm.com with ESMTP id 3jn5gj63t1-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 22 Sep 2022 05:29:39 +0000
+        Thu, 22 Sep 2022 05:31:11 +0000
 Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
-        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 28M5TbHg37880294
+        by b06avi18878370.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 28M5VZ8D40370454
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 22 Sep 2022 05:29:37 GMT
+        Thu, 22 Sep 2022 05:31:35 GMT
 Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 0DB08A4051;
-        Thu, 22 Sep 2022 05:29:37 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 5F2FBA404D;
+        Thu, 22 Sep 2022 05:31:09 +0000 (GMT)
 Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 02D91A4040;
-        Thu, 22 Sep 2022 05:29:36 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 0CAC7A4053;
+        Thu, 22 Sep 2022 05:31:08 +0000 (GMT)
 Received: from smtpclient.apple (unknown [9.43.104.67])
         by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Thu, 22 Sep 2022 05:29:35 +0000 (GMT)
+        Thu, 22 Sep 2022 05:31:07 +0000 (GMT)
 Content-Type: text/plain;
-        charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3696.120.41.1.1\))
-Subject: Re: [powerpc] memcpy warning drivers/scsi/scsi_transport_fc.c:581
- (next-20220921)
+        charset=us-ascii
+Subject: Re: [PATCH] scsi: scsi_transport_fc: Adjust struct fc_nl_event flex
+ array usage
 From:   Sachin Sant <sachinp@linux.ibm.com>
-In-Reply-To: <202209211250.3049C29@keescook>
-Date:   Thu, 22 Sep 2022 10:59:34 +0530
-Cc:     linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-        linux-scsi@vger.kernel.org, linux-next@vger.kernel.org
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <941B194C-3BB4-453B-822C-7280778AB3D0@linux.ibm.com>
-References: <42404B5E-198B-4FD3-94D6-5E16CF579EF3@linux.ibm.com>
- <202209211250.3049C29@keescook>
+In-Reply-To: <20220921205155.1451649-1-keescook@chromium.org>
+Date:   Thu, 22 Sep 2022 11:01:06 +0530
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-hardening@vger.kernel.org
+Message-Id: <AD7C74D0-D13E-479E-91D1-2FB3B6CD85FE@linux.ibm.com>
+References: <20220921205155.1451649-1-keescook@chromium.org>
 To:     Kees Cook <keescook@chromium.org>
 X-Mailer: Apple Mail (2.3696.120.41.1.1)
 X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: CzI29J32q84GGrJpMa3XLWEaX2k6dc36
-X-Proofpoint-GUID: CzI29J32q84GGrJpMa3XLWEaX2k6dc36
+X-Proofpoint-ORIG-GUID: SJntG_tunA7ccnyJmdSvKxK4C188Hfbe
+X-Proofpoint-GUID: SJntG_tunA7ccnyJmdSvKxK4C188Hfbe
+Content-Transfer-Encoding: quoted-printable
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+MIME-Version: 1.0
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
  definitions=2022-09-22_02,2022-09-20_02,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0 mlxscore=0
- suspectscore=0 mlxlogscore=999 priorityscore=1501 spamscore=0 bulkscore=0
- clxscore=1015 impostorscore=0 phishscore=0 adultscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2209130000
- definitions=main-2209220032
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 mlxscore=0
+ lowpriorityscore=0 malwarescore=0 mlxlogscore=999 clxscore=1011
+ spamscore=0 priorityscore=1501 adultscore=0 phishscore=0 bulkscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2209130000 definitions=main-2209220036
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
 
-> On 22-Sep-2022, at 2:13 AM, Kees Cook <keescook@chromium.org> wrote:
+> On 22-Sep-2022, at 2:21 AM, Kees Cook <keescook@chromium.org> wrote:
 >=20
-> On Wed, Sep 21, 2022 at 09:21:52PM +0530, Sachin Sant wrote:
->> While booting recent linux-next kernel on a Power server following
->> warning is seen:
->>=20
->> [    6.427054] lpfc 0022:01:00.0: 0:6468 Set host date / time: Status =
-x10:
->> [    6.471457] lpfc 0022:01:00.0: 0:6448 Dual Dump is enabled
->> [    7.432161] ------------[ cut here ]------------
->> [    7.432178] memcpy: detected field-spanning write (size 8) of =
-single field "&event->event_data" at =
-drivers/scsi/scsi_transport_fc.c:581 (size 4)
+> In order to help the compiler reason about the destination buffer in
+> struct fc_nl_event, add a flexible array member for this purpose.
+> However, since the header is UAPI, it must not change size or layout, so
+> a union is used.
 >=20
-> Interesting!
+> The allocation size calculations are also corrected (it was potentially
+> allocating an extra 8 bytes), and the padding is zeroed to avoid leaking
+> kernel heap memory contents.
 >=20
-> The memcpy() is this one:
+> Detected at run-time by the recently added memcpy() bounds checking:
 >=20
->                memcpy(&event->event_data, data_buf, data_len);
+>  memcpy: detected field-spanning write (size 8) of single field "&event->=
+event_data" at drivers/scsi/scsi_transport_fc.c:581 (size 4)
 >=20
-> The struct member, "event_data" is defined as u32:
+> Reported-by: Sachin Sant <sachinp@linux.ibm.com>
+> Link: https://lore.kernel.org/linux-next/42404B5E-198B-4FD3-94D6-5E16CF57=
+9EF3@linux.ibm.com/
+> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> Cc: linux-scsi@vger.kernel.org
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> ---
+
+Thanks for the fix. With this patch applied the warning is no longer seen.
+
+Tested-by: Sachin Sant <sachinp@linux.ibm.com>
+
+> drivers/scsi/scsi_transport_fc.c    | 8 +++++---
+> include/uapi/scsi/scsi_netlink_fc.h | 7 +++++--
+> 2 files changed, 10 insertions(+), 5 deletions(-)
 >=20
-> ...
-> * Note: if Vendor Unique message, &event_data will be  start of
-> * Note: if Vendor Unique message, event_data_flex will be start of
-> *      vendor unique payload, and the length of the payload is
-> *       per event_datalen
-> ...
-> struct fc_nl_event {
->        struct scsi_nl_hdr snlh;                /* must be 1st element =
-!  */
->        __u64 seconds;
->        __u64 vendor_id;
->        __u16 host_no;
->        __u16 event_datalen;
->        __u32 event_num;
->        __u32 event_code;
->        __u32 event_data;
+> diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transpo=
+rt_fc.c
+> index a2524106206d..0d798f11dc34 100644
+> --- a/drivers/scsi/scsi_transport_fc.c
+> +++ b/drivers/scsi/scsi_transport_fc.c
+> @@ -543,7 +543,7 @@ fc_host_post_fc_event(struct Scsi_Host *shost, u32 ev=
+ent_number,
+> 	struct nlmsghdr	*nlh;
+> 	struct fc_nl_event *event;
+> 	const char *name;
+> -	u32 len;
+> +	size_t len, padding;
+> 	int err;
+>=20
+> 	if (!data_buf || data_len < 4)
+> @@ -554,7 +554,7 @@ fc_host_post_fc_event(struct Scsi_Host *shost, u32 ev=
+ent_number,
+> 		goto send_fail;
+> 	}
+>=20
+> -	len =3D FC_NL_MSGALIGN(sizeof(*event) + data_len);
+> +	len =3D FC_NL_MSGALIGN(sizeof(*event) - sizeof(event->event_data) + dat=
+a_len);
+>=20
+> 	skb =3D nlmsg_new(len, GFP_KERNEL);
+> 	if (!skb) {
+> @@ -578,7 +578,9 @@ fc_host_post_fc_event(struct Scsi_Host *shost, u32 ev=
+ent_number,
+> 	event->event_num =3D event_number;
+> 	event->event_code =3D event_code;
+> 	if (data_len)
+> -		memcpy(&event->event_data, data_buf, data_len);
+> +		memcpy(event->event_data_flex, data_buf, data_len);
+> +	padding =3D len - offsetof(typeof(*event), event_data_flex) - data_len;
+> +	memset(event->event_data_flex + data_len, 0, padding);
+>=20
+> 	nlmsg_multicast(scsi_nl_sock, skb, 0, SCSI_NL_GRP_FC_EVENTS,
+> 			GFP_KERNEL);
+> diff --git a/include/uapi/scsi/scsi_netlink_fc.h b/include/uapi/scsi/scsi=
+_netlink_fc.h
+> index 7535253f1a96..b46e9cbeb001 100644
+> --- a/include/uapi/scsi/scsi_netlink_fc.h
+> +++ b/include/uapi/scsi/scsi_netlink_fc.h
+> @@ -35,7 +35,7 @@
+>  * FC Transport Broadcast Event Message :
+>  *   FC_NL_ASYNC_EVENT
+>  *
+> - * Note: if Vendor Unique message, &event_data will be  start of
+> + * Note: if Vendor Unique message, event_data_flex will be start of
+>  * 	 vendor unique payload, and the length of the payload is
+>  *       per event_datalen
+>  *
+> @@ -50,7 +50,10 @@ struct fc_nl_event {
+> 	__u16 event_datalen;
+> 	__u32 event_num;
+> 	__u32 event_code;
+> -	__u32 event_data;
+> +	union {
+> +		__u32 event_data;
+> +		__DECLARE_FLEX_ARRAY(__u8, event_data_flex);
+> +	};
 > } __attribute__((aligned(sizeof(__u64))));
 >=20
-> The warning says memcpy is trying to write 8 bytes into the 4 byte
-> member, so the compiler is seeing it "correctly", but I think this is
-> partially a false positive. It looks like there is also a small bug in
-> the allocation size calculation and therefore a small leak of kernel
-> heap memory contents. My notes:
 >=20
-> void
-> fc_host_post_fc_event(struct Scsi_Host *shost, u32 event_number,
->                enum fc_host_event_code event_code,
->                u32 data_len, char *data_buf, u64 vendor_id)
-> {
-> 	...
->        struct fc_nl_event *event;
-> 	...
->        if (!data_buf || data_len < 4)
->                data_len =3D 0;
+> --=20
+> 2.34.1
 >=20
-> This wants a data_buf and a data_len >=3D 4, so it does look like it's
-> expected to be variable sized. There does appear to be an alignment
-> and padding expectation, though:
->=20
-> /* macro to round up message lengths to 8byte boundary */
-> #define FC_NL_MSGALIGN(len)             (((len) + 7) & ~7)
->=20
-> 	...
->        len =3D FC_NL_MSGALIGN(sizeof(*event) + data_len);
->=20
-> But this is immediately suspicious: sizeof(*event) _includes_ =
-event_data,
-> so the alignment is going to be bumped up incorrectly. Note that
-> struct fc_nl_event is 8 * 5 =3D=3D 40 bytes, which allows for 4 bytes =
-in
-> event_data. But setting data_len to 4 (i.e. no "overflow") means we're
-> asking for 44 bytes, which is aligned to 48.
->=20
-> So, in all cases, there is uninitialized memory being sent...
->=20
->        skb =3D nlmsg_new(len, GFP_KERNEL);
-> 	...
->        nlh =3D nlmsg_put(skb, 0, 0, SCSI_TRANSPORT_MSG, len, 0);
-> 	...
->        event =3D nlmsg_data(nlh);
-> 	...
->        event->event_datalen =3D data_len;        /* bytes */
->=20
-> Comments in the struct say this is counting from start of event_data.
->=20
-> 	...
->        if (data_len)
->                memcpy(&event->event_data, data_buf, data_len);
->=20
-> And here is the reported memcpy().
->=20
-> The callers of fc_host_post_fc_event() are:
->=20
->        fc_host_post_fc_event(shost, event_number, event_code,
->                (u32)sizeof(u32), (char *)&event_data, 0);
->=20
-> Fixed-size of 4 bytes: no "overflow".
->=20
->        fc_host_post_fc_event(shost, event_number, =
-FCH_EVT_VENDOR_UNIQUE,
->                data_len, data_buf, vendor_id);
->=20
->        fc_host_post_fc_event(shost, fc_get_event_number(),
->                                FCH_EVT_LINK_FPIN, fpin_len, fpin_buf, =
-0);
->=20
-> These two appear to be of arbitrary length, but I didn't look more
-> deeply.
->=20
-> Given that the only user of struct fc_nl_event is =
-fc_host_post_fc_event()
-> in drivers/scsi/scsi_transport_fc.c, it looks safe to say that =
-changing
-> the struct to use a flexible array is the thing to do in the kernel, =
-but
-> we can't actually change the size or layout because it's a UAPI =
-header.
->=20
-> Are you able to test this patch:
-
-Thank you for the detailed analysis.
-With this patch applied I don=E2=80=99t see the warning.
-
-Thanks
-- Sachin
 
