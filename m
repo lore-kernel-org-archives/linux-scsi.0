@@ -2,102 +2,115 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5DB6C6FA86
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Sep 2022 22:24:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AC1EECAAD8
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Sep 2022 22:35:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230092AbiIVWY0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Sep 2022 18:24:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38756 "EHLO
+        id S229913AbiIVWek (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Sep 2022 18:34:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56352 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231382AbiIVWYF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Sep 2022 18:24:05 -0400
-Received: from mail-qv1-xf2f.google.com (mail-qv1-xf2f.google.com [IPv6:2607:f8b0:4864:20::f2f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0143EDF6B3;
-        Thu, 22 Sep 2022 15:22:59 -0700 (PDT)
-Received: by mail-qv1-xf2f.google.com with SMTP id g4so7888150qvo.3;
-        Thu, 22 Sep 2022 15:22:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date;
-        bh=saa8hbo25uKBMMnwllcdWtUt/fTmT1MDVrESCvd9sc0=;
-        b=m9IYzd96OwCCGbZKlOlHILYET6GEZh8HJ7g1jfrPgeWuB/Zl3zvc9VnSS2nL/z56MF
-         vYLMEaeoSno4oWIfY6CYZx1Ld4xTGq9EgMRH31BOUDoD0t6tZwgQ8bVZQqLtwrGufge1
-         MppvjwBuvp6mAltIi1PGARevxAMYJGk0mBytrRMUE16+f2gPF96ZnTWJ7rVCMDQcVMJ8
-         gutJa/08z3G9fEixvtQgu2MpSAPXVp0vBjpvqwH+nDddtPIvNYxYiyvI5C/2EWh2OOrD
-         7puvduluaG2MDY7gSslGHnDUlJ11GfhssZnoTMOOnwcam9o6LwI+tyXJM8EOpgqhy2Tz
-         YINg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date;
-        bh=saa8hbo25uKBMMnwllcdWtUt/fTmT1MDVrESCvd9sc0=;
-        b=oe+E46kDRhv3JLf0tmvOLaHyNsMkcQZNK0laxIZ7dN4p5RA2sig3FtR+A2F08Cw43P
-         YnVgYh443YhZ13qQAReIb44X9KnlK2Dhu/EXBf1VSYcXJG3pJdWVzHx8vIjr7IE4bRxJ
-         vW3JLby60xn2L+iLusvhx4abEGgoWHzKhv1+mnDmmNSXR/8uN+Bjm8YtjAubBBeaWwIq
-         BYYSeiUHE3geKapXSnNpMwE39OarknKyQwv0Cw1MRghmFYNkOS+GB4YcZIaQiq/c2MHF
-         uWI2dlbWY0eNYqp5PUZS77c7Yf9DfU3Yu6ukNE/d4u6coAlI5YqW+GZaWuEfBOGs6wU0
-         qT6Q==
-X-Gm-Message-State: ACrzQf2NeJl7vWpqLsHRPL8WT9Ds5s6JRMBeQT1vM2g9VlV0YWNSljG2
-        cF2TyVj6HtVtnIAUTYTEErY=
-X-Google-Smtp-Source: AMsMyM4AhmVrlNhzspkffG7J1M2X5fjKSA1cZOr6DRvbJTSPZJuCxDQ9YHUwVOL15V3tpUF/YfM3vw==
-X-Received: by 2002:a05:6214:2528:b0:4ad:6fa4:4170 with SMTP id gg8-20020a056214252800b004ad6fa44170mr4491105qvb.113.1663885378872;
-        Thu, 22 Sep 2022 15:22:58 -0700 (PDT)
-Received: from [10.69.46.142] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id m17-20020a05620a291100b006cdd0939ffbsm4738880qkp.86.2022.09.22.15.22.57
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 22 Sep 2022 15:22:58 -0700 (PDT)
-Message-ID: <87648374-a8fe-8830-793e-eb3c15e4ac54@gmail.com>
-Date:   Thu, 22 Sep 2022 15:22:56 -0700
+        with ESMTP id S229709AbiIVWe1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Sep 2022 18:34:27 -0400
+Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51CB0F9624;
+        Thu, 22 Sep 2022 15:34:26 -0700 (PDT)
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28MHV1VG032713;
+        Thu, 22 Sep 2022 15:34:17 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=date : from : to :
+ cc : subject : in-reply-to : message-id : references : mime-version :
+ content-type; s=pfpt0220; bh=SSbXnJllTcSdwV1OjvT1gPaK/LBACiszJevnCuno0qA=;
+ b=DEq1Jpy3GENGSt83MZEziFApU4j5wTlF8/HwiAtKNd4/iGuJDazU/veSxH6dAw4OZZJC
+ F93bf68/nWIboibGa1M5vAntNAiY2/bIQdCpHfxsjlMtcJ9Ycy34L4n0/Q8MjetPNHqp
+ Bs7TYBhBEXvrM+4rPyGNKuPWhUEGap2K9UJdJbud+MT5nFFUH4junod7sAcQnc1iNomf
+ F37DBQaIxboI/x+wBPxvE6/Hv8lMncKhYJNZB3RuCo4JCYe/ReeMgjUsB0dldxizdV04
+ 92P7Vyeha9DSM0yLsZhJmEjL+1lRYf+t/JGBHaK2qG7h6Z/8KMf2LHbQodCZNkg0YvEI Bg== 
+Received: from dc5-exch02.marvell.com ([199.233.59.182])
+        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3jr1qmq727-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Thu, 22 Sep 2022 15:34:16 -0700
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Thu, 22 Sep
+ 2022 15:34:14 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.18 via Frontend
+ Transport; Thu, 22 Sep 2022 15:34:14 -0700
+Received: from mvluser05.qlc.com (unknown [10.112.10.135])
+        by maili.marvell.com (Postfix) with ESMTP id 2F66A3F7089;
+        Thu, 22 Sep 2022 15:34:14 -0700 (PDT)
+Received: from localhost (aeasi@localhost)
+        by mvluser05.qlc.com (8.14.4/8.14.4/Submit) with ESMTP id 28MMYDiP029376;
+        Thu, 22 Sep 2022 15:34:13 -0700
+X-Authentication-Warning: mvluser05.qlc.com: aeasi owned process doing -bs
+Date:   Thu, 22 Sep 2022 15:34:12 -0700
+From:   Arun Easi <aeasi@marvell.com>
+To:     Steven Rostedt <rostedt@goodmis.org>
+CC:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+        James Bottomley <jejb@linux.ibm.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-next@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>
+Subject: Re: [EXT] Re: [PATCH v3 1/1] tracing: Fix compile error in trace_array
+ calls when TRACING is disabled
+In-Reply-To: <20220922170204.08f91a68@gandalf.local.home>
+Message-ID: <86d9d0f8-ae29-3875-cbf1-b609f4f59421@marvell.com>
+References: <20220907233308.4153-1-aeasi@marvell.com>
+ <20220907233308.4153-2-aeasi@marvell.com>
+ <yq15yho3y0s.fsf@ca-mkp.ca.oracle.com>
+ <20220922170204.08f91a68@gandalf.local.home>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.0
-Subject: Re: [PATCH] scsi: scsi_transport_fc: Adjust struct fc_nl_event flex
- array usage
-Content-Language: en-US
-To:     Kees Cook <keescook@chromium.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc:     Sachin Sant <sachinp@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-hardening@vger.kernel.org
-References: <20220921205155.1451649-1-keescook@chromium.org>
-From:   James Smart <jsmart2021@gmail.com>
-In-Reply-To: <20220921205155.1451649-1-keescook@chromium.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="US-ASCII"
+X-Proofpoint-GUID: ezwOTDrCN-KZ8btyCLQnHElypukXsCpy
+X-Proofpoint-ORIG-GUID: ezwOTDrCN-KZ8btyCLQnHElypukXsCpy
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
+ definitions=2022-09-22_14,2022-09-22_02,2022-06-22_01
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/21/2022 1:51 PM, Kees Cook wrote:
-> In order to help the compiler reason about the destination buffer in
-> struct fc_nl_event, add a flexible array member for this purpose.
-> However, since the header is UAPI, it must not change size or layout, so
-> a union is used.
+Thanks for the review, Steve.
+
+Regards,
+-Arun
+
+On Thu, 22 Sep 2022, 2:02pm, Steven Rostedt wrote:
+
+> External Email
 > 
-> The allocation size calculations are also corrected (it was potentially
-> allocating an extra 8 bytes), and the padding is zeroed to avoid leaking
-> kernel heap memory contents.
+> ----------------------------------------------------------------------
+> On Thu, 15 Sep 2022 21:32:59 -0400
+> "Martin K. Petersen" <martin.petersen@oracle.com> wrote:
 > 
-> Detected at run-time by the recently added memcpy() bounds checking:
+> > Steven,
+> > 
+> > Can you please review Arun's patch?
 > 
->    memcpy: detected field-spanning write (size 8) of single field "&event->event_data" at drivers/scsi/scsi_transport_fc.c:581 (size 4)
+> Sorry, was busy running a conference ;-)
 > 
-> Reported-by: Sachin Sant <sachinp@linux.ibm.com>
-> Link: https://lore.kernel.org/linux-next/42404B5E-198B-4FD3-94D6-5E16CF579EF3@linux.ibm.com/
-> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> Cc: linux-scsi@vger.kernel.org
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> ---
-
-Kinda crazy way to resolve it, but looks fine.
-
-Reviewed-by: James Smart <jsmart2021@gmail.com>
-
--- james
-
-
+> > 
+> > > Fix this compilation error seen when CONFIG_TRACING is not enabled:
+> > >
+> > > drivers/scsi/qla2xxx/qla_os.c: In function 'qla_trace_init':
+> > > drivers/scsi/qla2xxx/qla_os.c:2854:25: error: implicit declaration of function
+> > > 'trace_array_get_by_name'; did you mean 'trace_array_set_clr_event'?
+> > > [-Werror=implicit-function-declaration]
+> > >  2854 |         qla_trc_array = trace_array_get_by_name("qla2xxx");
+> > >       |                         ^~~~~~~~~~~~~~~~~~~~~~~
+> > >       |                         trace_array_set_clr_event
+> > >
+> > > drivers/scsi/qla2xxx/qla_os.c: In function 'qla_trace_uninit':
+> > > drivers/scsi/qla2xxx/qla_os.c:2869:9: error: implicit declaration of function
+> > > 'trace_array_put' [-Werror=implicit-function-declaration]
+> > >  2869 |         trace_array_put(qla_trc_array);
+> > >       |         ^~~~~~~~~~~~~~~
+> > >  
+> > 
+> 
+> The patch looks good to me.
+> 
+> Reviewed-by: Steven Rostedt (Google) <rostedt@goodmis.org>
+> 
+> -- Steve
+> 
