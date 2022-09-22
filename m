@@ -2,45 +2,45 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54BD8C54EE9
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Sep 2022 14:14:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DEB1C6FA82
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Sep 2022 14:25:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231425AbiIVOOM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Sep 2022 10:14:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53528 "EHLO
+        id S229740AbiIVOYr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Sep 2022 10:24:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40266 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231424AbiIVOOL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Sep 2022 10:14:11 -0400
+        with ESMTP id S229448AbiIVOYf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Sep 2022 10:24:35 -0400
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6AF1BF3119;
-        Thu, 22 Sep 2022 07:14:10 -0700 (PDT)
-Received: from fraeml741-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MYHG86tvcz689lY;
-        Thu, 22 Sep 2022 22:09:20 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11C619FE7;
+        Thu, 22 Sep 2022 07:24:34 -0700 (PDT)
+Received: from fraeml737-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MYHV84HPxz67M1h;
+        Thu, 22 Sep 2022 22:19:44 +0800 (CST)
 Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml741-chm.china.huawei.com (10.206.15.222) with Microsoft SMTP Server
+ fraeml737-chm.china.huawei.com (10.206.15.218) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Thu, 22 Sep 2022 16:14:08 +0200
+ 15.1.2375.31; Thu, 22 Sep 2022 16:24:31 +0200
 Received: from [10.195.244.8] (10.195.244.8) by lhrpeml500003.china.huawei.com
  (7.191.162.67) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Thu, 22 Sep
- 2022 15:14:07 +0100
-Message-ID: <650e35b7-9d90-fe03-7d92-48207644536b@huawei.com>
-Date:   Thu, 22 Sep 2022 15:14:06 +0100
+ 2022 15:24:31 +0100
+Message-ID: <0034eff3-70a5-becb-0821-f9c36371e6d9@huawei.com>
+Date:   Thu, 22 Sep 2022 15:24:30 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.6.1
-Subject: Re: [PATCH 1/7] scsi: libsas: introduce sas address conversion and
- comparation helpers
+Subject: Re: [PATCH 6/7] scsi: pm8001: use dev_and_phy_addr_same() instead of
+ open coded
 To:     Jason Yan <yanaijie@huawei.com>, <martin.petersen@oracle.com>,
         <jejb@linux.ibm.com>
 CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <hare@suse.com>, <hch@lst.de>, <bvanassche@acm.org>,
         <jinpu.wang@cloud.ionos.com>
 References: <20220917104311.1878250-1-yanaijie@huawei.com>
- <20220917104311.1878250-2-yanaijie@huawei.com>
+ <20220917104311.1878250-7-yanaijie@huawei.com>
 From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <20220917104311.1878250-2-yanaijie@huawei.com>
+In-Reply-To: <20220917104311.1878250-7-yanaijie@huawei.com>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [10.195.244.8]
@@ -52,79 +52,34 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 17/09/2022 11:43, Jason Yan wrote:
-> Sas address conversion and comparation is widely used in libsas and
-> drivers. However they are all opencoded and to avoid the line spill over
-> 80 columns, are mostly split into multi-lines. Introduce some helpers to
-> prepare some refactor.
+> The sas address comparation of domain device and expander phy is open
+> coded. Now we can replace it with dev_and_phy_addr_same().
 > 
 > Signed-off-by: Jason Yan <yanaijie@huawei.com>
 > ---
->   include/scsi/libsas.h | 32 ++++++++++++++++++++++++++++++++
->   1 file changed, 32 insertions(+)
+>   drivers/scsi/pm8001/pm8001_sas.c | 3 +--
+>   1 file changed, 1 insertion(+), 2 deletions(-)
 > 
-> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-> index 2dbead74a2af..382aedf31fa4 100644
-> --- a/include/scsi/libsas.h
-> +++ b/include/scsi/libsas.h
-> @@ -648,6 +648,38 @@ static inline bool sas_is_internal_abort(struct sas_task *task)
->   	return task->task_proto == SAS_PROTOCOL_INTERNAL_ABORT;
->   }
->   
-> +static inline unsigned long long ex_phy_addr(struct ex_phy *phy)
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+> index 8e3f2f9ddaac..bb1b1722f3ee 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.c
+> +++ b/drivers/scsi/pm8001/pm8001_sas.c
+> @@ -649,8 +649,7 @@ static int pm8001_dev_found_notify(struct domain_device *dev)
+>   		for (phy_id = 0; phy_id < parent_dev->ex_dev.num_phys;
 
-This is a public header, so I would hope that any function would have 
-"sas_" prefix
-
-> +{
-> +	return SAS_ADDR(phy->attached_sas_addr);
-> +}
-> +
-> +static inline unsigned long long dev_addr(struct domain_device *dev)
-> +{
-> +	return SAS_ADDR(dev->sas_addr);
-> +}
-> +
-> +static inline unsigned long long port_addr(struct asd_sas_port *port)
-> +{
-> +	return SAS_ADDR(port->sas_addr);
-
-As below, I don't really see how these simple functions help much
-
-> +}
-> +
-> +static inline bool dev_and_phy_addr_same(struct domain_device *dev,
-> +					 struct ex_phy *phy)
-> +{
-> +	return dev_addr(dev) == ex_phy_addr(phy);
-> +}
-> +
-> +static inline bool port_and_phy_addr_same(struct asd_sas_port *port,
-> +					  struct ex_phy *phy)
-
-I'd say sas_phy_match_port_addr() could be a better name.
-
-> +{
-> +	return port_addr(port) == ex_phy_addr(phy);
-
-I think the following is just as good:
-
-	return SAS_ADDR(port->sas_addr) == SAS_ADDR(phy->attached_sas_addr)
-
-port_addr() is only used once AFAICS, so the code would not be less concise
-
-> +}
-> +
-> +static inline bool ex_phy_addr_same(struct ex_phy *phy1, struct ex_phy *phy2)
-> +{
-> +	return  ex_phy_addr(phy1) ==  ex_phy_addr(phy2);
-
-nit: 2x double whitespace
-
-> +}
-> +
->   struct sas_domain_function_template {
->   	/* The class calls these to notify the LLDD of an event. */
->   	void (*lldd_port_formed)(struct asd_sas_phy *);
+This code seems the same between many libsas LLDDs - could we factor it 
+out into libsas? If so, then maybe those new helpers could be put in 
+sas_internal.h
 
 Thanks,
 John
+
+>   		phy_id++) {
+>   			phy = &parent_dev->ex_dev.ex_phy[phy_id];
+> -			if (SAS_ADDR(phy->attached_sas_addr)
+> -				== SAS_ADDR(dev->sas_addr)) {
+> +			if (dev_and_phy_addr_same(dev, phy)) {
+>   				pm8001_device->attached_phy = phy_id;
+>   				break;
+>   			}
+
