@@ -2,74 +2,83 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F871C54EE9
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Sep 2022 18:19:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE8E8C54EE9
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Sep 2022 18:31:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229635AbiIVST1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Sep 2022 14:19:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58156 "EHLO
+        id S232686AbiIVSbW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Sep 2022 14:31:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51134 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229482AbiIVSTZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Sep 2022 14:19:25 -0400
-Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4087C107586
-        for <linux-scsi@vger.kernel.org>; Thu, 22 Sep 2022 11:19:25 -0700 (PDT)
-Received: by mail-pf1-f173.google.com with SMTP id v186so2180699pfv.11
-        for <linux-scsi@vger.kernel.org>; Thu, 22 Sep 2022 11:19:25 -0700 (PDT)
+        with ESMTP id S232700AbiIVSax (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Sep 2022 14:30:53 -0400
+Received: from mail-io1-xd2d.google.com (mail-io1-xd2d.google.com [IPv6:2607:f8b0:4864:20::d2d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A66810B23D
+        for <linux-scsi@vger.kernel.org>; Thu, 22 Sep 2022 11:28:08 -0700 (PDT)
+Received: by mail-io1-xd2d.google.com with SMTP id c4so8468818iof.3
+        for <linux-scsi@vger.kernel.org>; Thu, 22 Sep 2022 11:28:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date;
+        bh=ZXkuoJN7DK7qQfm5r7ECOHzIgNY6d3HZTieo4WxgmDg=;
+        b=TC+pJhfEN/PyAXFz9y6nGede4tCH/WFNjMjWPIjHTuEQpw8cxk7XrbKNF2DJmY48jP
+         OMXtozYtcQaXjwXQIh5dyupZ3vsYSgI3pgg54c3aV1P0/lVY5wsRWyr3OjpKpoupjlif
+         xHeHXkQHHz9zloxEyG/49pm8yN6eRu4Z+6bll/V6pIjIYBC8iar5KFGGbanhuD827JQJ
+         zLfsxwUt2iPe7PTqqrqNLFDdgeavsSr69K+zKE1VqxLJwY8YLHH6EfGDkXi7mK6UVC8H
+         GX0VrV6IEWs24StfNrAtfWZrKGeTBhtsmuxiH/X7MuV+/Mw0FvM1uleEODvJNUFG722z
+         1LEg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date;
-        bh=WUxLqhU1xor3GBi6CHNRELKAW7C+MaUX6mfJsNyeQ7s=;
-        b=qc6co8Ui8CUUKV6/yLrxKFDOo0aLmAPtFM0/cDVvdD79ZSZupC0Ix3gqzB+JbdmB7e
-         Jk0386lpEWpm7sKEVya6wNe2QudnKm26U7FS/BJXLid8OhU88R2kXblGj1aG7bQhIU/F
-         7YuTw2757OPRKgf0MW6H4Cz53gu3HCL3Q4EWGP12T2VyckXtkuaYZqLKpG7HtD1gDFDX
-         8FmyObnvryH5sWoSr7UM9funP265pCHE2H9ocppzpsE7bOFn14Jg0EnqRnNCDBqRLAok
-         4L65KTI6ov+G0m8r/jvJRUQXvkaJN275DDwxrhyBOlgvP4ruzEwyd4W9sXsrZv3Cr3xX
-         UGnw==
-X-Gm-Message-State: ACrzQf01IveFnNW169jwgo0mh0cTyO9/gdQ5jZzsyYrQRHRyAoMcVJoo
-        6XBE7jXL7OwxCHKBwBMKQRU/HIGUNzI=
-X-Google-Smtp-Source: AMsMyM5fWsrcqY5mffK1DCU+TAqhB4cVdxWc7bJmuDi4WwGvxs9Kbg7BvnQiT0ZIwtbMhBWzzm+sKg==
-X-Received: by 2002:a63:eb0e:0:b0:429:aefa:9fa9 with SMTP id t14-20020a63eb0e000000b00429aefa9fa9mr4003730pgh.122.1663870764644;
-        Thu, 22 Sep 2022 11:19:24 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:7c7b:f882:f26a:23ca? ([2620:15c:211:201:7c7b:f882:f26a:23ca])
-        by smtp.gmail.com with ESMTPSA id i3-20020a170902c94300b00176acd80f69sm4442253pla.102.2022.09.22.11.19.23
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 22 Sep 2022 11:19:23 -0700 (PDT)
-Message-ID: <ed334e51-21aa-62e7-9a08-df4904dc8174@acm.org>
-Date:   Thu, 22 Sep 2022 11:19:22 -0700
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date;
+        bh=ZXkuoJN7DK7qQfm5r7ECOHzIgNY6d3HZTieo4WxgmDg=;
+        b=r+3O5TZyPi2KMP6LEd0I7E4Te16tlJAh+h7DFW2CDjnp7XrTSD1EIZLsXDmX2Upwr7
+         +/4tptHVT9yfZdfLNmZukUYVqT87bljRN/ftlzz+yeHLMyy36jWypVFMyum/rJHUmtCa
+         brovkvjZquIfhrn07PoJbfAA7nNKfNiiNeuaeByYqVS0w8nJjcq2A2djMobF0B6fjPCy
+         LlOHT5yzHVDsjrZwcVnrotF8WuDMVvqotOQe/Jl69poWTpJBniLxw+PSqYBtnIDqDl0x
+         XB8vlEp7X5lBXBW0rmelmf1JsI5WjzckK3gBvqbU186hiZiqVp5FYTU24YuxU277N9Sp
+         CuWQ==
+X-Gm-Message-State: ACrzQf0KjPF6+yBZQd374Owa7AeHv64oRVoGHCT31PcARWL3gcP2jwIg
+        k+8ikUPoutEiyZooFZB/RgRMEp4LB3XJbA==
+X-Google-Smtp-Source: AMsMyM5/mw+f8DSISvPa79cGNBFPKxngRjSrKI07M17BHrjwAKNBmZT/eBpWILXqY0PAsnK6yyWCzQ==
+X-Received: by 2002:a05:6638:300e:b0:35a:ab7a:4509 with SMTP id r14-20020a056638300e00b0035aab7a4509mr2787464jak.82.1663871287586;
+        Thu, 22 Sep 2022 11:28:07 -0700 (PDT)
+Received: from m1max.localdomain ([207.135.234.126])
+        by smtp.gmail.com with ESMTPSA id q20-20020a05663810d400b0035a468b7fbesm2440646jad.71.2022.09.22.11.28.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 22 Sep 2022 11:28:07 -0700 (PDT)
+From:   Jens Axboe <axboe@kernel.dk>
+To:     linux-block@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
+Subject: [PATCHSET 0/5] Enable alloc caching and batched freeing for passthrough
+Date:   Thu, 22 Sep 2022 12:28:00 -0600
+Message-Id: <20220922182805.96173-1-axboe@kernel.dk>
+X-Mailer: git-send-email 2.35.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.13.0
-Subject: Re: [PATCH RFC 01/22] scsi: Add helper to prep sense during error
- handling
-Content-Language: en-US
-To:     michael.christie@oracle.com, mwilck@suse.com, hch@lst.de,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        james.bottomley@hansenpartnership.com
-References: <20220922100704.753666-1-michael.christie@oracle.com>
- <20220922100704.753666-2-michael.christie@oracle.com>
- <d31df5c9-3e5c-224a-c8f8-296402e4cb58@acm.org>
- <ea1c4d77-0712-b782-1e02-5d92f9584b6e@oracle.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <ea1c4d77-0712-b782-1e02-5d92f9584b6e@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/22/22 10:36, michael.christie@oracle.com wrote:
-> On 9/22/22 11:57 AM, Bart Van Assche wrote:
->> On 9/22/22 03:06, Mike Christie wrote:
->>> +static enum scsi_disposition scsi_prep_sense(struct scsi_cmnd *scmd,
->>> +                         struct scsi_sense_hdr *sshdr)
->>
->> How about choosing another name for this function? All other functions with "prep" in their name are called before a command is submitted while this function is called from the completion path.
-> 
-> I'll think of something. scsi_init_sense_processing or scsi_start_sense_processing?
+Hi,
 
-Thanks - I like the second name a bit better than the first :-)
+The passthrough IO path currently doesn't do any request allocation
+batching like we do for normal IO. Wire this up through the usual
+blk_mq_alloc_request() allocation helper.
 
-Bart.
+Similarly, we don't currently supported batched completions for
+passthrough IO. Allow the request->end_io() handler to return back
+whether or not it retains ownership of the request. By default all
+handlers are converted to returning RQ_END_IO_NONE, which retains
+the existing behavior. But with that in place, we can tweak the
+nvme uring_cmd end_io handler to pass back ownership, and hence enable
+completion batching for passthrough requests as well.
+
+This is good for a 10% improvement for passthrough performance. For
+a non-drive limited test case, passthrough IO is now more efficient
+than the regular bdev O_DIRECT path.
+
+-- 
+Jens Axboe
+
+
