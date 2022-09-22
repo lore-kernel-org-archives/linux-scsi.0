@@ -2,84 +2,116 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DEB1C6FA82
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Sep 2022 14:25:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24014C54EE9
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Sep 2022 15:47:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229740AbiIVOYr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Sep 2022 10:24:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40266 "EHLO
+        id S230350AbiIVPrK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Sep 2022 11:47:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60212 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229448AbiIVOYf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Sep 2022 10:24:35 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11C619FE7;
-        Thu, 22 Sep 2022 07:24:34 -0700 (PDT)
-Received: from fraeml737-chm.china.huawei.com (unknown [172.18.147.226])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MYHV84HPxz67M1h;
-        Thu, 22 Sep 2022 22:19:44 +0800 (CST)
-Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml737-chm.china.huawei.com (10.206.15.218) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Thu, 22 Sep 2022 16:24:31 +0200
-Received: from [10.195.244.8] (10.195.244.8) by lhrpeml500003.china.huawei.com
- (7.191.162.67) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Thu, 22 Sep
- 2022 15:24:31 +0100
-Message-ID: <0034eff3-70a5-becb-0821-f9c36371e6d9@huawei.com>
-Date:   Thu, 22 Sep 2022 15:24:30 +0100
+        with ESMTP id S230340AbiIVPrI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Sep 2022 11:47:08 -0400
+X-Greylist: delayed 1078 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 22 Sep 2022 08:47:03 PDT
+Received: from mail.cybernetics.com (mail.cybernetics.com [173.71.130.66])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 72E92AE204
+        for <linux-scsi@vger.kernel.org>; Thu, 22 Sep 2022 08:47:01 -0700 (PDT)
+X-ASG-Debug-ID: 1663860542-1cf439169517d3d0001-ziuLRu
+Received: from cybernetics.com ([10.10.4.126]) by mail.cybernetics.com with ESMTP id a7k4Z7g3FghNomFD; Thu, 22 Sep 2022 11:29:02 -0400 (EDT)
+X-Barracuda-Envelope-From: tonyb@cybernetics.com
+X-ASG-Whitelist: Client
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cybernetics.com; s=mail;
+        bh=5U2RBudcjywn4CTHzyszUL0A5NmB4r+q6fespbQn9io=;
+        h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:References:To:
+        Content-Language:Subject:MIME-Version:Date:Message-ID; b=gkR260TX+WWpGwir/3+k
+        j0CLCkcxJVnAPoCaM4rsHSGTlVwf242le1gfjPUrkfVqbwbdht8zgo87ApthBB/CT8vk58LCSq7kx
+        Vc+62lpNYMv7561WFL4RPLRveGK1f1Xd/dYMz3xDOyVZJPjmJj+BwG1grc/0lrfhIIoD0+xJww=
+Received: from [10.157.2.224] (HELO [192.168.200.1])
+  by cybernetics.com (CommuniGate Pro SMTP 7.1.1)
+  with ESMTPS id 12221171; Thu, 22 Sep 2022 11:29:02 -0400
+Message-ID: <404508f8-37bb-a3bd-4319-6b6d7a7e076e@cybernetics.com>
+Date:   Thu, 22 Sep 2022 11:29:02 -0400
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH 6/7] scsi: pm8001: use dev_and_phy_addr_same() instead of
- open coded
-To:     Jason Yan <yanaijie@huawei.com>, <martin.petersen@oracle.com>,
-        <jejb@linux.ibm.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <hare@suse.com>, <hch@lst.de>, <bvanassche@acm.org>,
-        <jinpu.wang@cloud.ionos.com>
-References: <20220917104311.1878250-1-yanaijie@huawei.com>
- <20220917104311.1878250-7-yanaijie@huawei.com>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <20220917104311.1878250-7-yanaijie@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.195.244.8]
-X-ClientProxiedBy: lhrpeml100003.china.huawei.com (7.191.160.210) To
- lhrpeml500003.china.huawei.com (7.191.162.67)
-X-CFilter-Loop: Reflected
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+Subject: Re: KASAN: use-after-free Read in sg_release
+Content-Language: en-US
+X-ASG-Orig-Subj: Re: KASAN: use-after-free Read in sg_release
+To:     Rondreis <linhaoguo86@gmail.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Douglas Gilbert <dgilbert@interlog.com>
+References: <CAB7eexK_jr1LWOO9RWrBF9as7gAS9kpHjrZFRuRrRJF=1H4W6A@mail.gmail.com>
+From:   Tony Battersby <tonyb@cybernetics.com>
+In-Reply-To: <CAB7eexK_jr1LWOO9RWrBF9as7gAS9kpHjrZFRuRrRJF=1H4W6A@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Barracuda-Connect: UNKNOWN[10.10.4.126]
+X-Barracuda-Start-Time: 1663860542
+X-Barracuda-URL: https://10.10.4.122:443/cgi-mod/mark.cgi
+X-Virus-Scanned: by bsmtpd at cybernetics.com
+X-Barracuda-Scan-Msg-Size: 2052
+X-Barracuda-BRTS-Status: 1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 17/09/2022 11:43, Jason Yan wrote:
-> The sas address comparation of domain device and expander phy is open
-> coded. Now we can replace it with dev_and_phy_addr_same().
-> 
-> Signed-off-by: Jason Yan <yanaijie@huawei.com>
-> ---
->   drivers/scsi/pm8001/pm8001_sas.c | 3 +--
->   1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-> index 8e3f2f9ddaac..bb1b1722f3ee 100644
-> --- a/drivers/scsi/pm8001/pm8001_sas.c
-> +++ b/drivers/scsi/pm8001/pm8001_sas.c
-> @@ -649,8 +649,7 @@ static int pm8001_dev_found_notify(struct domain_device *dev)
->   		for (phy_id = 0; phy_id < parent_dev->ex_dev.num_phys;
+On 9/20/22 10:46, Rondreis wrote:
+> Hello,
+>
+> When fuzzing the Linux kernel driver v6.0-rc6, the following crash was
+> triggered.
+>
+> HEAD commit: 521a547ced6477c54b4b0cc206000406c221b4d6
+> git tree: upstream
+>
+> kernel config: https://pastebin.com/raw/hekxU61F
+> console output: https://pastebin.com/raw/73a8RzBY
+>
+> Sorry for failing to extract the reproducer. But on other versions of
+> Linux, I also triggered this crash.
+>
+> I would appreciate it if you have any idea how to solve this bug.
+>
+sg_release() calls "kref_put(&sfp->f_ref, sg_remove_sfp)" which
+eventually does "kref_put(&sdp->d_ref, sg_device_destroy)" which does
+"kfree(sdp)", but sg_release() continues to access sdp afterward.  Try
+the following patch.
 
-This code seems the same between many libsas LLDDs - could we factor it 
-out into libsas? If so, then maybe those new helpers could be put in 
-sas_internal.h
+From 82ca6785c40eded6229183a53752fc5e43db4a94 Mon Sep 17 00:00:00 2001
+From: Tony Battersby <tonyb@cybernetics.com>
+Date: Thu, 22 Sep 2022 11:05:30 -0400
+Subject: [PATCH] scsi: sg: fix memory-use-after-free on device removal
 
-Thanks,
-John
+Fix memory-use-after-free race when closing a sg fd to a removed device.
 
->   		phy_id++) {
->   			phy = &parent_dev->ex_dev.ex_phy[phy_id];
-> -			if (SAS_ADDR(phy->attached_sas_addr)
-> -				== SAS_ADDR(dev->sas_addr)) {
-> +			if (dev_and_phy_addr_same(dev, phy)) {
->   				pm8001_device->attached_phy = phy_id;
->   				break;
->   			}
+Link: https://lore.kernel.org/linux-scsi/CAB7eexK_jr1LWOO9RWrBF9as7gAS9kpHjrZFRuRrRJF=1H4W6A@mail.gmail.com/
+Reported-by: Rondreis <linhaoguo86@gmail.com>
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
+---
+ drivers/scsi/sg.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 340b050ad28d..f44cbe42dba9 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -388,6 +388,7 @@ sg_release(struct inode *inode, struct file *filp)
+ 		return -ENXIO;
+ 	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp, "sg_release\n"));
+ 
++	kref_get(&sdp->d_ref);
+ 	mutex_lock(&sdp->open_rel_lock);
+ 	scsi_autopm_put_device(sdp->device);
+ 	kref_put(&sfp->f_ref, sg_remove_sfp);
+@@ -402,6 +403,7 @@ sg_release(struct inode *inode, struct file *filp)
+ 		wake_up_interruptible(&sdp->open_wait);
+ 	}
+ 	mutex_unlock(&sdp->open_rel_lock);
++	kref_put(&sdp->d_ref, sg_device_destroy);
+ 	return 0;
+ }
+ 
+-- 
+2.25.1
 
