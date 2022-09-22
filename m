@@ -2,38 +2,38 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C1BCC6FA82
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Sep 2022 09:54:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADFCCC6FA86
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Sep 2022 09:54:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231368AbiIVJyX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Sep 2022 05:54:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48998 "EHLO
+        id S231392AbiIVJyj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Sep 2022 05:54:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48960 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231294AbiIVJxq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Sep 2022 05:53:46 -0400
+        with ESMTP id S231278AbiIVJxz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Sep 2022 05:53:55 -0400
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 861E4D5778;
-        Thu, 22 Sep 2022 02:53:34 -0700 (PDT)
-Received: from fraeml734-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MY9TT5Ksjz67Ph9;
-        Thu, 22 Sep 2022 17:48:45 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 21D64D5896;
+        Thu, 22 Sep 2022 02:53:39 -0700 (PDT)
+Received: from fraeml715-chm.china.huawei.com (unknown [172.18.147.207])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MY9TZ54Zfz687m2;
+        Thu, 22 Sep 2022 17:48:50 +0800 (CST)
 Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml734-chm.china.huawei.com (10.206.15.215) with Microsoft SMTP Server
+ fraeml715-chm.china.huawei.com (10.206.15.34) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Thu, 22 Sep 2022 11:53:32 +0200
+ 15.1.2375.31; Thu, 22 Sep 2022 11:53:37 +0200
 Received: from localhost.localdomain (10.69.192.58) by
  lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Thu, 22 Sep 2022 10:53:29 +0100
+ 15.1.2375.31; Thu, 22 Sep 2022 10:53:34 +0100
 From:   John Garry <john.garry@huawei.com>
 To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
         <jinpu.wang@cloud.ionos.com>, <damien.lemoal@opensource.wdc.com>
 CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linuxarm@huawei.com>, <yangxingui@huawei.com>,
         John Garry <john.garry@huawei.com>
-Subject: [PATCH v4 3/7] scsi: hisi_sas: Add SATA_DISK_ERR bit handling for v3 hw
-Date:   Thu, 22 Sep 2022 17:46:54 +0800
-Message-ID: <1663840018-50161-4-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v4 5/7] scsi: pm8001: Modify task abort handling for SATA task
+Date:   Thu, 22 Sep 2022 17:46:56 +0800
+Message-ID: <1663840018-50161-6-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1663840018-50161-1-git-send-email-john.garry@huawei.com>
 References: <1663840018-50161-1-git-send-email-john.garry@huawei.com>
@@ -47,171 +47,116 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Xingui Yang <yangxingui@huawei.com>
+When we try to abort a SATA task, the CCB of the task which we are trying
+to avoid may still complete. In this case, we should not touch the task
+associated with that CCB as we can race with libsas freeing the last later
+in sas_eh_handle_sas_errors() -> sas_eh_finish_cmd() for when
+TASK_IS_ABORTED is returned from sas_scsi_find_task()
 
-When CQ header dw3 SATA_DISK_ERR is set it means this SATA disk is in error
-state and the current IPTT is invalid. An invalid IPTT does not correspond
-to any slot.
-
-In this scenario, new I/Os that delivered to disk will be rejected by the
-controller and all I/Os remaining in the disk should be aborted, which we
-add here with the sas_ata_device_link_abort() call.
-
-In hisi_sas_abort_task() we don't want to issue a softreset as it may
-cause info to be lost in the target disk for the ATA EH autopsy. In this
-case, just release resources - the disk won't return other I/Os normally
-after NCQ Error, so this is safe.
-
-Signed-off-by: Xingui Yang <yangxingui@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
+Acked-by: Jack Wang <jinpu.wang@ionos.com>
+Tested-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       |  1 +
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 18 +++++++++-
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 48 ++++++++++++++++++++++++--
- 3 files changed, 64 insertions(+), 3 deletions(-)
+ drivers/scsi/pm8001/pm8001_hwi.c | 15 +++++++++++++--
+ drivers/scsi/pm8001/pm8001_sas.c |  8 ++++++++
+ drivers/scsi/pm8001/pm80xx_hwi.c | 14 ++++++++++----
+ 3 files changed, 31 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 9aebf4a26b13..6f8a52a1b808 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -104,6 +104,7 @@ enum {
- enum dev_status {
- 	HISI_SAS_DEV_INIT,
- 	HISI_SAS_DEV_NORMAL,
-+	HISI_SAS_DEV_NCQ_ERR,
- };
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+index 91d78d0a38fe..1c8a43bf54ad 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.c
++++ b/drivers/scsi/pm8001/pm8001_hwi.c
+@@ -2295,7 +2295,9 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 		if (t->dev && (t->dev->lldd_dev))
+ 			pm8001_dev = t->dev->lldd_dev;
+ 	} else {
+-		pm8001_dbg(pm8001_ha, FAIL, "task null\n");
++		pm8001_dbg(pm8001_ha, FAIL, "task null, freeing CCB tag %d\n",
++			   ccb->ccb_tag);
++		pm8001_ccb_free(pm8001_ha, ccb);
+ 		return;
+ 	}
  
- enum {
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 8303aa5eaf25..4c37ae9eb6b6 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1604,13 +1604,26 @@ static int hisi_sas_abort_task(struct sas_task *task)
- 	} else if (task->task_proto & SAS_PROTOCOL_SATA ||
- 		task->task_proto & SAS_PROTOCOL_STP) {
- 		if (task->dev->dev_type == SAS_SATA_DEV) {
-+			struct ata_queued_cmd *qc = task->uldd_task;
+@@ -2675,8 +2677,17 @@ static void mpi_sata_event(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 	pm8001_dev = ccb->device;
+ 	if (event)
+ 		pm8001_dbg(pm8001_ha, FAIL, "sata IO status 0x%x\n", event);
+-	if (unlikely(!t || !t->lldd_task || !t->dev))
 +
- 			rc = hisi_sas_internal_task_abort_dev(sas_dev, false);
- 			if (rc < 0) {
- 				dev_err(dev, "abort task: internal abort failed\n");
- 				goto out;
- 			}
- 			hisi_sas_dereg_device(hisi_hba, device);
--			rc = hisi_sas_softreset_ata_disk(device);
++	if (unlikely(!t)) {
++		pm8001_dbg(pm8001_ha, FAIL, "task null, freeing CCB tag %d\n",
++			   ccb->ccb_tag);
++		pm8001_ccb_free(pm8001_ha, ccb);
+ 		return;
++	}
 +
++	if (unlikely(!t->lldd_task || !t->dev))
++		return;
++
+ 	ts = &t->task_status;
+ 	pm8001_dbg(pm8001_ha, DEVIO,
+ 		   "port_id:0x%x, device_id:0x%x, tag:0x%x, event:0x%x\n",
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+index 8e3f2f9ddaac..d5ec29f69be3 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -983,6 +983,7 @@ int pm8001_query_task(struct sas_task *task)
+ /*  mandatory SAM-3, still need free task/ccb info, abort the specified task */
+ int pm8001_abort_task(struct sas_task *task)
+ {
++	struct pm8001_ccb_info *ccb = task->lldd_task;
+ 	unsigned long flags;
+ 	u32 tag;
+ 	struct domain_device *dev ;
+@@ -1113,6 +1114,13 @@ int pm8001_abort_task(struct sas_task *task)
+ 				pm8001_dev, DS_OPERATIONAL);
+ 			wait_for_completion(&completion);
+ 		} else {
 +			/*
-+			 * If an ATA internal command times out in ATA EH, it
-+			 * need to execute soft reset, so check the scsicmd
++			 * Ensure that if we see a completion for the ccb
++			 * associated with the task which we are trying to
++			 * abort then we should not touch the sas_task as it
++			 * may race with libsas freeing it when return here.
 +			 */
-+			if ((sas_dev->dev_status == HISI_SAS_DEV_NCQ_ERR) &&
-+			    qc && qc->scsicmd) {
-+				hisi_sas_do_release_task(hisi_hba, task, slot);
-+				rc = TMF_RESP_FUNC_COMPLETE;
-+			} else {
-+				rc = hisi_sas_softreset_ata_disk(device);
-+			}
++			ccb->task = NULL;
+ 			ret = sas_execute_internal_abort_single(dev, tag, 0, NULL);
  		}
- 	} else if (slot && task->task_proto & SAS_PROTOCOL_SMP) {
- 		/* SMP */
-@@ -1727,6 +1740,9 @@ static int hisi_sas_I_T_nexus_reset(struct domain_device *device)
- 	struct device *dev = hisi_hba->dev;
- 	int rc;
+ 		rc = TMF_RESP_FUNC_COMPLETE;
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+index f8b8624458f7..dd0e06983cd3 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -2396,7 +2396,9 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha,
+ 		if (t->dev && (t->dev->lldd_dev))
+ 			pm8001_dev = t->dev->lldd_dev;
+ 	} else {
+-		pm8001_dbg(pm8001_ha, FAIL, "task null\n");
++		pm8001_dbg(pm8001_ha, FAIL, "task null, freeing CCB tag %d\n",
++			   ccb->ccb_tag);
++		pm8001_ccb_free(pm8001_ha, ccb);
+ 		return;
+ 	}
  
-+	if (sas_dev->dev_status == HISI_SAS_DEV_NCQ_ERR)
-+		sas_dev->dev_status = HISI_SAS_DEV_NORMAL;
-+
- 	rc = hisi_sas_internal_task_abort_dev(sas_dev, false);
- 	if (rc < 0) {
- 		dev_err(dev, "I_T nexus reset: internal abort (%d)\n", rc);
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 10b55cef5cf5..4278d3482ebb 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -404,6 +404,11 @@
- #define CMPLT_HDR_CMPLT_MSK		(0x3 << CMPLT_HDR_CMPLT_OFF)
- #define CMPLT_HDR_ERROR_PHASE_OFF   2
- #define CMPLT_HDR_ERROR_PHASE_MSK   (0xff << CMPLT_HDR_ERROR_PHASE_OFF)
-+/* bit[9:2] Error Phase */
-+#define ERR_PHASE_RESPONSE_FRAME_REV_STAGE_OFF	\
-+					8
-+#define ERR_PHASE_RESPONSE_FRAME_REV_STAGE_MSK	\
-+	(0x1 << ERR_PHASE_RESPONSE_FRAME_REV_STAGE_OFF)
- #define CMPLT_HDR_RSPNS_XFRD_OFF	10
- #define CMPLT_HDR_RSPNS_XFRD_MSK	(0x1 << CMPLT_HDR_RSPNS_XFRD_OFF)
- #define CMPLT_HDR_RSPNS_GOOD_OFF	11
-@@ -423,8 +428,15 @@
- #define CMPLT_HDR_DEV_ID_OFF		16
- #define CMPLT_HDR_DEV_ID_MSK		(0xffff << CMPLT_HDR_DEV_ID_OFF)
- /* dw3 */
-+#define CMPLT_HDR_SATA_DISK_ERR_OFF	16
-+#define CMPLT_HDR_SATA_DISK_ERR_MSK	(0x1 << CMPLT_HDR_SATA_DISK_ERR_OFF)
- #define CMPLT_HDR_IO_IN_TARGET_OFF	17
- #define CMPLT_HDR_IO_IN_TARGET_MSK	(0x1 << CMPLT_HDR_IO_IN_TARGET_OFF)
-+/* bit[23:18] ERR_FIS_ATA_STATUS */
-+#define FIS_ATA_STATUS_ERR_OFF		18
-+#define FIS_ATA_STATUS_ERR_MSK		(0x1 << FIS_ATA_STATUS_ERR_OFF)
-+#define FIS_TYPE_SDB_OFF		31
-+#define FIS_TYPE_SDB_MSK		(0x1 << FIS_TYPE_SDB_OFF)
+@@ -2813,12 +2815,16 @@ static void mpi_sata_event(struct pm8001_hba_info *pm8001_ha,
+ 	ccb = &pm8001_ha->ccb_info[tag];
+ 	t = ccb->task;
+ 	pm8001_dev = ccb->device;
+-
+-	if (unlikely(!t || !t->lldd_task || !t->dev)) {
+-		pm8001_dbg(pm8001_ha, FAIL, "task or dev null\n");
++	if (unlikely(!t)) {
++		pm8001_dbg(pm8001_ha, FAIL, "task null, freeing CCB tag %d\n",
++			   ccb->ccb_tag);
++		pm8001_ccb_free(pm8001_ha, ccb);
+ 		return;
+ 	}
  
- /* ITCT header */
- /* qw0 */
-@@ -2148,6 +2160,18 @@ static irqreturn_t fatal_axi_int_v3_hw(int irq_no, void *p)
- 	return IRQ_HANDLED;
- }
- 
-+static bool is_ncq_err_v3_hw(struct hisi_sas_complete_v3_hdr *complete_hdr)
-+{
-+	u32 dw0, dw3;
++	if (unlikely(!t->lldd_task || !t->dev))
++		return;
 +
-+	dw0 = le32_to_cpu(complete_hdr->dw0);
-+	dw3 = le32_to_cpu(complete_hdr->dw3);
-+
-+	return (dw0 & ERR_PHASE_RESPONSE_FRAME_REV_STAGE_MSK) &&
-+	       (dw3 & FIS_TYPE_SDB_MSK) &&
-+	       (dw3 & FIS_ATA_STATUS_ERR_MSK);
-+}
-+
- static bool
- slot_err_v3_hw(struct hisi_hba *hisi_hba, struct sas_task *task,
- 	       struct hisi_sas_slot *slot)
-@@ -2381,14 +2405,34 @@ static irqreturn_t  cq_thread_v3_hw(int irq_no, void *p)
- 	while (rd_point != wr_point) {
- 		struct hisi_sas_complete_v3_hdr *complete_hdr;
- 		struct device *dev = hisi_hba->dev;
--		u32 dw1;
-+		u32 dw0, dw1, dw3;
- 		int iptt;
- 
- 		complete_hdr = &complete_queue[rd_point];
-+		dw0 = le32_to_cpu(complete_hdr->dw0);
- 		dw1 = le32_to_cpu(complete_hdr->dw1);
-+		dw3 = le32_to_cpu(complete_hdr->dw3);
- 
- 		iptt = dw1 & CMPLT_HDR_IPTT_MSK;
--		if (likely(iptt < HISI_SAS_COMMAND_ENTRIES_V3_HW)) {
-+		if (unlikely((dw0 & CMPLT_HDR_CMPLT_MSK) == 0x3) &&
-+			     (dw3 & CMPLT_HDR_SATA_DISK_ERR_MSK)) {
-+			int device_id = (dw1 & CMPLT_HDR_DEV_ID_MSK) >>
-+					CMPLT_HDR_DEV_ID_OFF;
-+			struct hisi_sas_itct *itct =
-+				&hisi_hba->itct[device_id];
-+			struct hisi_sas_device *sas_dev =
-+				&hisi_hba->devices[device_id];
-+			struct domain_device *device = sas_dev->sas_device;
-+
-+			dev_err(dev, "erroneous completion disk err dev id=%d sas_addr=0x%llx CQ hdr: 0x%x 0x%x 0x%x 0x%x\n",
-+				device_id, itct->sas_addr, dw0, dw1,
-+				complete_hdr->act, dw3);
-+
-+			if (is_ncq_err_v3_hw(complete_hdr))
-+				sas_dev->dev_status = HISI_SAS_DEV_NCQ_ERR;
-+
-+			sas_ata_device_link_abort(device, true);
-+		} else if (likely(iptt < HISI_SAS_COMMAND_ENTRIES_V3_HW)) {
- 			slot = &hisi_hba->slot_info[iptt];
- 			slot->cmplt_queue_slot = rd_point;
- 			slot->cmplt_queue = queue;
+ 	ts = &t->task_status;
+ 	pm8001_dbg(pm8001_ha, IOERR, "port_id:0x%x, tag:0x%x, event:0x%x\n",
+ 		   port_id, tag, event);
 -- 
 2.35.3
 
