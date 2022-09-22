@@ -2,79 +2,112 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB5D6ECAAD8
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Sep 2022 21:01:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3DB2ECAAD8
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Sep 2022 21:08:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230220AbiIVVBO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Sep 2022 17:01:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43352 "EHLO
+        id S230355AbiIVVI7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Sep 2022 17:08:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54118 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229810AbiIVVBJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Sep 2022 17:01:09 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D8E2D69F5;
-        Thu, 22 Sep 2022 14:01:06 -0700 (PDT)
+        with ESMTP id S229813AbiIVVI5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Sep 2022 17:08:57 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3330111DD1;
+        Thu, 22 Sep 2022 14:08:56 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id A1248CE2346;
-        Thu, 22 Sep 2022 21:01:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0CEF7C433D6;
-        Thu, 22 Sep 2022 21:01:01 +0000 (UTC)
-Date:   Thu, 22 Sep 2022 17:02:04 -0400
-From:   Steven Rostedt <rostedt@goodmis.org>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Arun Easi <aeasi@marvell.com>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        James Bottomley <jejb@linux.ibm.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-next@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: Re: [PATCH v3 1/1] tracing: Fix compile error in trace_array calls
- when TRACING is disabled
-Message-ID: <20220922170204.08f91a68@gandalf.local.home>
-In-Reply-To: <yq15yho3y0s.fsf@ca-mkp.ca.oracle.com>
-References: <20220907233308.4153-1-aeasi@marvell.com>
-        <20220907233308.4153-2-aeasi@marvell.com>
-        <yq15yho3y0s.fsf@ca-mkp.ca.oracle.com>
-X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5F74163344;
+        Thu, 22 Sep 2022 21:08:56 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F2E9C433C1;
+        Thu, 22 Sep 2022 21:08:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1663880935;
+        bh=Gs1easMEUixl0oFKypteShhqardlbobN+iwArzVzzxI=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=Ail1Z8lWsVe2AZcWMJhdoj5Dv1rS1X+P6kDATJnbQGX6WpxbizbzFaGOgsFfzeThS
+         VrLZN5RhwDn8YVI/6RnyAulzF6fn6Xvfq+dQrL4tR0FGqVk9Csr4C0YvJl2UTy3YvB
+         EPLI81GxHt1kd2qC8XJ/uBwegiF2nO7SnLL4BGziDDgXXmViIH2+zY7t2RsN9HXQ4q
+         ObwF6dRDlMai49sEHgBSq80J96Wf6guMvcarpZiZOaW1LKhvF70HDrEzroeZnFnO90
+         6aa3MqfIT3b3PG09+phRqvPcfOoTxGZnImar0DzMmwgdLDVY5BRk/98zH9LiMhlH0w
+         eyrtuPJ4rN+EA==
+Date:   Thu, 22 Sep 2022 16:08:53 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Zhuo Chen <chenzhuo.1@bytedance.com>
+Cc:     fancer.lancer@gmail.com, jdmason@kudzu.us, dave.jiang@intel.com,
+        allenbh@gmail.com, bhelgaas@google.com, ruscur@russell.cc,
+        oohall@gmail.com, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ntb@lists.linux.dev, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH 2/3] PCI/ERR: Clear fatal status in pcie_do_recovery()
+Message-ID: <20220922210853.GA1335665@bhelgaas>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220901181634.99591-3-chenzhuo.1@bytedance.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 15 Sep 2022 21:32:59 -0400
-"Martin K. Petersen" <martin.petersen@oracle.com> wrote:
+On Fri, Sep 02, 2022 at 02:16:33AM +0800, Zhuo Chen wrote:
+> When state is pci_channel_io_frozen in pcie_do_recovery(),
+> the severity is fatal and fatal status should be cleared.
+> So we add pci_aer_clear_fatal_status().
 
-> Steven,
+Seems sensible to me.  Did you find this by code inspection or by
+debugging a problem?  If the latter, it would be nice to mention the
+symptoms of the problem in the commit log.
+
+> Since pcie_aer_is_native() in pci_aer_clear_fatal_status()
+> and pci_aer_clear_nonfatal_status() contains the function of
+> 'if (host->native_aer || pcie_ports_native)', so we move them
+> out of it.
+
+Wrap commit log to fill 75 columns.
+
+> Signed-off-by: Zhuo Chen <chenzhuo.1@bytedance.com>
+> ---
+>  drivers/pci/pcie/err.c | 8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
 > 
-> Can you please review Arun's patch?
+> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+> index 0c5a143025af..e0a8ade4c3fe 100644
+> --- a/drivers/pci/pcie/err.c
+> +++ b/drivers/pci/pcie/err.c
+> @@ -243,10 +243,14 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+>  	 * it is responsible for clearing this status.  In that case, the
+>  	 * signaling device may not even be visible to the OS.
+>  	 */
+> -	if (host->native_aer || pcie_ports_native) {
+> +	if (host->native_aer || pcie_ports_native)
+>  		pcie_clear_device_status(dev);
 
-Sorry, was busy running a conference ;-)
+pcie_clear_device_status() doesn't check for pcie_aer_is_native()
+internally, but after 068c29a248b6 ("PCI/ERR: Clear PCIe Device Status
+errors only if OS owns AER") and aa344bc8b727 ("PCI/ERR: Clear AER
+status only when we control AER"), both callers check before calling
+it.
 
+I think we should move the check inside pcie_clear_device_status().
+That could be a separate preliminary patch.
+
+There are a couple other places (aer_root_reset() and
+get_port_device_capability()) that do the same check and could be
+changed to use pcie_aer_is_native() instead.  That could be another
+preliminary patch.
+
+
+> +	if (state == pci_channel_io_frozen)
+> +		pci_aer_clear_fatal_status(dev);
+> +	else
+>  		pci_aer_clear_nonfatal_status(dev);
+> -	}
+> +
+>  	pci_info(bridge, "device recovery successful\n");
+>  	return status;
+>  
+> -- 
+> 2.30.1 (Apple Git-130)
 > 
-> > Fix this compilation error seen when CONFIG_TRACING is not enabled:
-> >
-> > drivers/scsi/qla2xxx/qla_os.c: In function 'qla_trace_init':
-> > drivers/scsi/qla2xxx/qla_os.c:2854:25: error: implicit declaration of function
-> > 'trace_array_get_by_name'; did you mean 'trace_array_set_clr_event'?
-> > [-Werror=implicit-function-declaration]
-> >  2854 |         qla_trc_array = trace_array_get_by_name("qla2xxx");
-> >       |                         ^~~~~~~~~~~~~~~~~~~~~~~
-> >       |                         trace_array_set_clr_event
-> >
-> > drivers/scsi/qla2xxx/qla_os.c: In function 'qla_trace_uninit':
-> > drivers/scsi/qla2xxx/qla_os.c:2869:9: error: implicit declaration of function
-> > 'trace_array_put' [-Werror=implicit-function-declaration]
-> >  2869 |         trace_array_put(qla_trc_array);
-> >       |         ^~~~~~~~~~~~~~~
-> >  
-> 
-
-The patch looks good to me.
-
-Reviewed-by: Steven Rostedt (Google) <rostedt@goodmis.org>
-
--- Steve
