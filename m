@@ -2,115 +2,200 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AC1EECAAD8
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Sep 2022 22:35:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1EB5C54EE9
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Sep 2022 23:13:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229913AbiIVWek (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Sep 2022 18:34:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56352 "EHLO
+        id S230211AbiIVXNx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Sep 2022 19:13:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44172 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229709AbiIVWe1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Sep 2022 18:34:27 -0400
-Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51CB0F9624;
-        Thu, 22 Sep 2022 15:34:26 -0700 (PDT)
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28MHV1VG032713;
-        Thu, 22 Sep 2022 15:34:17 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=date : from : to :
- cc : subject : in-reply-to : message-id : references : mime-version :
- content-type; s=pfpt0220; bh=SSbXnJllTcSdwV1OjvT1gPaK/LBACiszJevnCuno0qA=;
- b=DEq1Jpy3GENGSt83MZEziFApU4j5wTlF8/HwiAtKNd4/iGuJDazU/veSxH6dAw4OZZJC
- F93bf68/nWIboibGa1M5vAntNAiY2/bIQdCpHfxsjlMtcJ9Ycy34L4n0/Q8MjetPNHqp
- Bs7TYBhBEXvrM+4rPyGNKuPWhUEGap2K9UJdJbud+MT5nFFUH4junod7sAcQnc1iNomf
- F37DBQaIxboI/x+wBPxvE6/Hv8lMncKhYJNZB3RuCo4JCYe/ReeMgjUsB0dldxizdV04
- 92P7Vyeha9DSM0yLsZhJmEjL+1lRYf+t/JGBHaK2qG7h6Z/8KMf2LHbQodCZNkg0YvEI Bg== 
-Received: from dc5-exch02.marvell.com ([199.233.59.182])
-        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3jr1qmq727-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Thu, 22 Sep 2022 15:34:16 -0700
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Thu, 22 Sep
- 2022 15:34:14 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.18 via Frontend
- Transport; Thu, 22 Sep 2022 15:34:14 -0700
-Received: from mvluser05.qlc.com (unknown [10.112.10.135])
-        by maili.marvell.com (Postfix) with ESMTP id 2F66A3F7089;
-        Thu, 22 Sep 2022 15:34:14 -0700 (PDT)
-Received: from localhost (aeasi@localhost)
-        by mvluser05.qlc.com (8.14.4/8.14.4/Submit) with ESMTP id 28MMYDiP029376;
-        Thu, 22 Sep 2022 15:34:13 -0700
-X-Authentication-Warning: mvluser05.qlc.com: aeasi owned process doing -bs
-Date:   Thu, 22 Sep 2022 15:34:12 -0700
-From:   Arun Easi <aeasi@marvell.com>
-To:     Steven Rostedt <rostedt@goodmis.org>
-CC:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        James Bottomley <jejb@linux.ibm.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-next@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: Re: [EXT] Re: [PATCH v3 1/1] tracing: Fix compile error in trace_array
- calls when TRACING is disabled
-In-Reply-To: <20220922170204.08f91a68@gandalf.local.home>
-Message-ID: <86d9d0f8-ae29-3875-cbf1-b609f4f59421@marvell.com>
-References: <20220907233308.4153-1-aeasi@marvell.com>
- <20220907233308.4153-2-aeasi@marvell.com>
- <yq15yho3y0s.fsf@ca-mkp.ca.oracle.com>
- <20220922170204.08f91a68@gandalf.local.home>
+        with ESMTP id S230100AbiIVXNw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Sep 2022 19:13:52 -0400
+Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A854D1138E9;
+        Thu, 22 Sep 2022 16:13:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1663888429; x=1695424429;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=YYJtZOcit6qkgm5ch3A2v2ShoL6n5q9+tFdrt48fuV4=;
+  b=SSFu5f2X0MVzVi0SWzL7ciIOgKtunBjAN+mS4+PZCGttNG/8FwUZ20V+
+   nljPoBXMiHteiKFHn8yeesuXyWhe6v2WG8UWXt8mAPNv1w8mobtP9unIg
+   KLVvgo6BJvtb2nHK20GdIEO2iV8pqkON9Pg8QhMSkgZ9hLcrTHv68Upim
+   HO0k3ULd2xV/jzCu+F8/w1KlLle1bMfpuUdXds/YLjMg8f8r/PKGOc6FO
+   SYW2UqNb+MAHoyPqGuKoQPTOhmqBuDrJY+betFjQmc9GJMD99b30rUcxQ
+   m2f6EJQqQXEtBGbsDW+z/NdT9oITlNXCgdb4rjNW4orrjVAtDG7UL4CEV
+   w==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10478"; a="362263336"
+X-IronPort-AV: E=Sophos;i="5.93,337,1654585200"; 
+   d="scan'208";a="362263336"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2022 16:13:49 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.93,337,1654585200"; 
+   d="scan'208";a="653187817"
+Received: from lkp-server01.sh.intel.com (HELO c0a60f19fe7e) ([10.239.97.150])
+  by orsmga001.jf.intel.com with ESMTP; 22 Sep 2022 16:13:46 -0700
+Received: from kbuild by c0a60f19fe7e with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1obVO5-00054D-2w;
+        Thu, 22 Sep 2022 23:13:45 +0000
+Date:   Fri, 23 Sep 2022 07:13:38 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Yihao Han <hanyihao@vivo.com>, Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     kbuild-all@lists.01.org, Yihao Han <hanyihao@vivo.com>
+Subject: Re: [PATCH] scsi: qla2xxx: fix excluded_middle.cocci warnings
+Message-ID: <202209230711.vQKIDdtE-lkp@intel.com>
+References: <20220920024554.2606-1-hanyihao@vivo.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-X-Proofpoint-GUID: ezwOTDrCN-KZ8btyCLQnHElypukXsCpy
-X-Proofpoint-ORIG-GUID: ezwOTDrCN-KZ8btyCLQnHElypukXsCpy
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
- definitions=2022-09-22_14,2022-09-22_02,2022-06-22_01
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220920024554.2606-1-hanyihao@vivo.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Thanks for the review, Steve.
+Hi Yihao,
 
-Regards,
--Arun
+Thank you for the patch! Yet something to improve:
 
-On Thu, 22 Sep 2022, 2:02pm, Steven Rostedt wrote:
+[auto build test ERROR on jejb-scsi/for-next]
+[also build test ERROR on mkp-scsi/for-next linus/master v6.0-rc6 next-20220921]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-> External Email
-> 
-> ----------------------------------------------------------------------
-> On Thu, 15 Sep 2022 21:32:59 -0400
-> "Martin K. Petersen" <martin.petersen@oracle.com> wrote:
-> 
-> > Steven,
-> > 
-> > Can you please review Arun's patch?
-> 
-> Sorry, was busy running a conference ;-)
-> 
-> > 
-> > > Fix this compilation error seen when CONFIG_TRACING is not enabled:
-> > >
-> > > drivers/scsi/qla2xxx/qla_os.c: In function 'qla_trace_init':
-> > > drivers/scsi/qla2xxx/qla_os.c:2854:25: error: implicit declaration of function
-> > > 'trace_array_get_by_name'; did you mean 'trace_array_set_clr_event'?
-> > > [-Werror=implicit-function-declaration]
-> > >  2854 |         qla_trc_array = trace_array_get_by_name("qla2xxx");
-> > >       |                         ^~~~~~~~~~~~~~~~~~~~~~~
-> > >       |                         trace_array_set_clr_event
-> > >
-> > > drivers/scsi/qla2xxx/qla_os.c: In function 'qla_trace_uninit':
-> > > drivers/scsi/qla2xxx/qla_os.c:2869:9: error: implicit declaration of function
-> > > 'trace_array_put' [-Werror=implicit-function-declaration]
-> > >  2869 |         trace_array_put(qla_trc_array);
-> > >       |         ^~~~~~~~~~~~~~~
-> > >  
-> > 
-> 
-> The patch looks good to me.
-> 
-> Reviewed-by: Steven Rostedt (Google) <rostedt@goodmis.org>
-> 
-> -- Steve
-> 
+url:    https://github.com/intel-lab-lkp/linux/commits/Yihao-Han/scsi-qla2xxx-fix-excluded_middle-cocci-warnings/20220920-104643
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+config: microblaze-randconfig-r032-20220922 (https://download.01.org/0day-ci/archive/20220923/202209230711.vQKIDdtE-lkp@intel.com/config)
+compiler: microblaze-linux-gcc (GCC) 12.1.0
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/81672bb39d1900d22e851a7cfb0b9a0aa35df8af
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Yihao-Han/scsi-qla2xxx-fix-excluded_middle-cocci-warnings/20220920-104643
+        git checkout 81672bb39d1900d22e851a7cfb0b9a0aa35df8af
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=microblaze SHELL=/bin/bash drivers/scsi/qla2xxx/
+
+If you fix the issue, kindly add following tag where applicable
+| Reported-by: kernel test robot <lkp@intel.com>
+
+All error/warnings (new ones prefixed by >>):
+
+   drivers/scsi/qla2xxx/qla_target.c: In function 'qlt_free_session_done':
+>> drivers/scsi/qla2xxx/qla_target.c:7409:2: error: unterminated argument list invoking macro "if"
+    7409 | }
+         |  ^
+>> drivers/scsi/qla2xxx/qla_target.c:7410: error: expected '(' at end of input
+   drivers/scsi/qla2xxx/qla_target.c:1030:17: note: '-Wmisleading-indentation' is disabled from this point onwards, since column-tracking was disabled due to the size of the code/headers
+    1030 |                 if (ha->flags.edif_enabled &&
+         |                 ^~
+   drivers/scsi/qla2xxx/qla_target.c:1030:17: note: adding '-flarge-source-files' will allow for more column-tracking support, at the expense of compilation time and memory
+>> drivers/scsi/qla2xxx/qla_target.c:1030:17: error: expected declaration or statement at end of input
+>> drivers/scsi/qla2xxx/qla_target.c:1030:17: error: expected declaration or statement at end of input
+   drivers/scsi/qla2xxx/qla_target.c:971:26: warning: unused variable 'base_vha' [-Wunused-variable]
+     971 |         scsi_qla_host_t *base_vha = pci_get_drvdata(ha->pdev);
+         |                          ^~~~~~~~
+>> drivers/scsi/qla2xxx/qla_target.c:970:14: warning: variable 'logout_started' set but not used [-Wunused-but-set-variable]
+     970 |         bool logout_started = false;
+         |              ^~~~~~~~~~~~~~
+   drivers/scsi/qla2xxx/qla_target.c:969:23: warning: unused variable 'flags' [-Wunused-variable]
+     969 |         unsigned long flags;
+         |                       ^~~~~
+   drivers/scsi/qla2xxx/qla_target.c:966:25: warning: unused variable 'tgt' [-Wunused-variable]
+     966 |         struct qla_tgt *tgt = sess->tgt;
+         |                         ^~~
+   drivers/scsi/qla2xxx/qla_target.c: At top level:
+>> drivers/scsi/qla2xxx/qla_target.c:101:13: warning: 'qlt_24xx_atio_pkt' used but never defined
+     101 | static void qlt_24xx_atio_pkt(struct scsi_qla_host *ha,
+         |             ^~~~~~~~~~~~~~~~~
+>> drivers/scsi/qla2xxx/qla_target.c:103:13: warning: 'qlt_response_pkt' used but never defined
+     103 | static void qlt_response_pkt(struct scsi_qla_host *ha, struct rsp_que *rsp,
+         |             ^~~~~~~~~~~~~~~~
+   drivers/scsi/qla2xxx/qla_target.c:105:12: warning: 'qlt_issue_task_mgmt' declared 'static' but never defined [-Wunused-function]
+     105 | static int qlt_issue_task_mgmt(struct fc_port *sess, u64 lun,
+         |            ^~~~~~~~~~~~~~~~~~~
+>> drivers/scsi/qla2xxx/qla_target.c:107:13: warning: 'qlt_send_term_exchange' used but never defined
+     107 | static void qlt_send_term_exchange(struct qla_qpair *, struct qla_tgt_cmd
+         |             ^~~~~~~~~~~~~~~~~~~~~~
+   drivers/scsi/qla2xxx/qla_target.c:109:13: warning: 'qlt_alloc_qfull_cmd' declared 'static' but never defined [-Wunused-function]
+     109 | static void qlt_alloc_qfull_cmd(struct scsi_qla_host *vha,
+         |             ^~~~~~~~~~~~~~~~~~~
+   drivers/scsi/qla2xxx/qla_target.c:111:13: warning: 'qlt_disable_vha' declared 'static' but never defined [-Wunused-function]
+     111 | static void qlt_disable_vha(struct scsi_qla_host *vha);
+         |             ^~~~~~~~~~~~~~~
+   drivers/scsi/qla2xxx/qla_target.c:112:13: warning: 'qlt_clear_tgt_db' declared 'static' but never defined [-Wunused-function]
+     112 | static void qlt_clear_tgt_db(struct qla_tgt *tgt);
+         |             ^~~~~~~~~~~~~~~~
+   drivers/scsi/qla2xxx/qla_target.c:113:13: warning: 'qlt_send_notify_ack' declared 'static' but never defined [-Wunused-function]
+     113 | static void qlt_send_notify_ack(struct qla_qpair *qpair,
+         |             ^~~~~~~~~~~~~~~~~~~
+>> drivers/scsi/qla2xxx/qla_target.c:117:13: warning: 'qlt_send_term_imm_notif' used but never defined
+     117 | static void qlt_send_term_imm_notif(struct scsi_qla_host *vha,
+         |             ^~~~~~~~~~~~~~~~~~~~~~~
+>> drivers/scsi/qla2xxx/qla_target.c:119:24: warning: 'qlt_create_sess' used but never defined
+     119 | static struct fc_port *qlt_create_sess(struct scsi_qla_host *vha,
+         |                        ^~~~~~~~~~~~~~~
+>> drivers/scsi/qla2xxx/qla_target.c:122:13: warning: 'qlt_24xx_handle_abts' used but never defined
+     122 | static void qlt_24xx_handle_abts(struct scsi_qla_host *,
+         |             ^~~~~~~~~~~~~~~~~~~~
+   drivers/scsi/qla2xxx/qla_target.c:124:13: warning: 'qlt_send_busy' declared 'static' but never defined [-Wunused-function]
+     124 | static void qlt_send_busy(struct qla_qpair *, struct atio_from_isp *,
+         |             ^~~~~~~~~~~~~
+   drivers/scsi/qla2xxx/qla_target.c:126:12: warning: 'qlt_check_reserve_free_req' declared 'static' but never defined [-Wunused-function]
+     126 | static int qlt_check_reserve_free_req(struct qla_qpair *qpair, uint32_t);
+         |            ^~~~~~~~~~~~~~~~~~~~~~~~~~
+   drivers/scsi/qla2xxx/qla_target.c:127:24: warning: 'qlt_make_handle' declared 'static' but never defined [-Wunused-function]
+     127 | static inline uint32_t qlt_make_handle(struct qla_qpair *);
+         |                        ^~~~~~~~~~~~~~~
+   drivers/scsi/qla2xxx/qla_target.c:793:1: warning: 'qlt_plogi_ack_find_add' defined but not used [-Wunused-function]
+     793 | qlt_plogi_ack_find_add(struct scsi_qla_host *vha, port_id_t *id,
+         | ^~~~~~~~~~~~~~~~~~~~~~
+   drivers/scsi/qla2xxx/qla_target.c:332:13: warning: 'qlt_24xx_atio_pkt_all_vps' defined but not used [-Wunused-function]
+     332 | static bool qlt_24xx_atio_pkt_all_vps(struct scsi_qla_host *vha,
+         |             ^~~~~~~~~~~~~~~~~~~~~~~~~
+   drivers/scsi/qla2xxx/qla_target.c:139:20: warning: 'prot_op_str' defined but not used [-Wunused-function]
+     139 | static const char *prot_op_str(u32 prot_op)
+         |                    ^~~~~~~~~~~
+   drivers/scsi/qla2xxx/qla_target.c:135:33: warning: 'qla_tgt_wq' defined but not used [-Wunused-variable]
+     135 | static struct workqueue_struct *qla_tgt_wq;
+         |                                 ^~~~~~~~~~
+   drivers/scsi/qla2xxx/qla_target.c:134:19: warning: 'qla_tgt_mgmt_cmd_mempool' defined but not used [-Wunused-variable]
+     134 | static mempool_t *qla_tgt_mgmt_cmd_mempool;
+         |                   ^~~~~~~~~~~~~~~~~~~~~~~~
+   drivers/scsi/qla2xxx/qla_target.c:132:27: warning: 'qla_tgt_mgmt_cmd_cachep' defined but not used [-Wunused-variable]
+     132 | static struct kmem_cache *qla_tgt_mgmt_cmd_cachep;
+         |                           ^~~~~~~~~~~~~~~~~~~~~~~
+   drivers/scsi/qla2xxx/qla_target.c:61:12: warning: 'tc_sam_status' defined but not used [-Wunused-variable]
+      61 | static int tc_sam_status = SAM_STAT_TASK_SET_FULL; /* target core */
+         |            ^~~~~~~~~~~~~
+   drivers/scsi/qla2xxx/qla_target.c:60:12: warning: 'qla_sam_status' defined but not used [-Wunused-variable]
+      60 | static int qla_sam_status = SAM_STAT_BUSY;
+         |            ^~~~~~~~~~~~~~
+
+
+vim +/if +7409 drivers/scsi/qla2xxx/qla_target.c
+
+2d70c103fd2a066 Nicholas Bellinger 2012-05-15  7399  
+2d70c103fd2a066 Nicholas Bellinger 2012-05-15  7400  void qlt_exit(void)
+2d70c103fd2a066 Nicholas Bellinger 2012-05-15  7401  {
+2d70c103fd2a066 Nicholas Bellinger 2012-05-15  7402  	if (!QLA_TGT_MODE_ENABLED())
+2d70c103fd2a066 Nicholas Bellinger 2012-05-15  7403  		return;
+2d70c103fd2a066 Nicholas Bellinger 2012-05-15  7404  
+2d70c103fd2a066 Nicholas Bellinger 2012-05-15  7405  	destroy_workqueue(qla_tgt_wq);
+2d70c103fd2a066 Nicholas Bellinger 2012-05-15  7406  	mempool_destroy(qla_tgt_mgmt_cmd_mempool);
+b7bd104e6f1c3be Alexei Potashnik   2015-12-17  7407  	kmem_cache_destroy(qla_tgt_plogi_cachep);
+2d70c103fd2a066 Nicholas Bellinger 2012-05-15  7408  	kmem_cache_destroy(qla_tgt_mgmt_cmd_cachep);
+2d70c103fd2a066 Nicholas Bellinger 2012-05-15 @7409  }
+
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
