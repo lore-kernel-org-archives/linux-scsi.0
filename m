@@ -2,92 +2,94 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5CD0ECAAD8
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Sep 2022 01:12:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65B81C54EE9
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Sep 2022 01:55:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232253AbiIWBMD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Sep 2022 21:12:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34278 "EHLO
+        id S231872AbiIWBzN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Sep 2022 21:55:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57724 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231520AbiIWBLg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Sep 2022 21:11:36 -0400
-Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5AB784D4E3
-        for <linux-scsi@vger.kernel.org>; Thu, 22 Sep 2022 18:11:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1663895479; x=1695431479;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version;
-  bh=OBB2IUjlk3Tku5HcCdkZTFHCcqZ3cJIKTd4Gu75oCbU=;
-  b=wnZ9deZqT9FtT4lvQwYjjl+JvOFxR3cUjwYcu3jt0+AW/b15iGWWUiE7
-   aOyCa7SNzPOixolx5LBqBQSg6gUcnITAdNaPjZdT/+2+kvt+6Rro1V8+o
-   iTM7p4M3eMlbxOJBQt9s6/v0v07tVaftQYlTY0qyoWGDv+B57Y40y4jMH
-   c=;
-Received: from unknown (HELO ironmsg04-sd.qualcomm.com) ([10.53.140.144])
-  by alexa-out-sd-01.qualcomm.com with ESMTP; 22 Sep 2022 18:08:48 -0700
-X-QCInternal: smtphost
-Received: from unknown (HELO nasanex01a.na.qualcomm.com) ([10.52.223.231])
-  by ironmsg04-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2022 18:08:48 -0700
-Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
- nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.29; Thu, 22 Sep 2022 18:08:47 -0700
-From:   Asutosh Das <quic_asutoshd@quicinc.com>
-To:     <mani@kernel.org>, <quic_nguyenb@quicinc.com>,
-        <quic_xiaosenh@quicinc.com>, <quic_cang@quicinc.com>,
-        <quic_nitirawa@quicinc.com>, <quic_rampraka@quicinc.com>,
-        <quic_richardp@quicinc.com>, <stanley.chu@mediatek.com>,
-        <adrian.hunter@intel.com>, <bvanassche@acm.org>,
-        <avri.altman@wdc.com>, <beanhuo@micron.com>,
-        <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-mediatek@lists.infradead.org>
-Subject: [PATCH v1 15/16] ufs: core: mcq: Enable Multi Circular Queue
-Date:   Thu, 22 Sep 2022 18:05:22 -0700
-Message-ID: <c670b4f07fec06652d281ff0a390f3d2ef347d70.1663894792.git.quic_asutoshd@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <cover.1663894792.git.quic_asutoshd@quicinc.com>
-References: <cover.1663894792.git.quic_asutoshd@quicinc.com>
+        with ESMTP id S230042AbiIWBzM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Sep 2022 21:55:12 -0400
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A85056B85;
+        Thu, 22 Sep 2022 18:55:10 -0700 (PDT)
+Received: from canpemm500004.china.huawei.com (unknown [172.30.72.53])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4MYZt11nZszHqFf;
+        Fri, 23 Sep 2022 09:52:57 +0800 (CST)
+Received: from [10.174.179.14] (10.174.179.14) by
+ canpemm500004.china.huawei.com (7.192.104.92) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Fri, 23 Sep 2022 09:55:08 +0800
+Subject: Re: [PATCH 6/7] scsi: pm8001: use dev_and_phy_addr_same() instead of
+ open coded
+To:     John Garry <john.garry@huawei.com>, <martin.petersen@oracle.com>,
+        <jejb@linux.ibm.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <hare@suse.com>, <hch@lst.de>, <bvanassche@acm.org>,
+        <jinpu.wang@cloud.ionos.com>
+References: <20220917104311.1878250-1-yanaijie@huawei.com>
+ <20220917104311.1878250-7-yanaijie@huawei.com>
+ <0034eff3-70a5-becb-0821-f9c36371e6d9@huawei.com>
+From:   Jason Yan <yanaijie@huawei.com>
+Message-ID: <cb4591d2-1e71-c04d-fd7a-c8536716000b@huawei.com>
+Date:   Fri, 23 Sep 2022 09:55:07 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
+In-Reply-To: <0034eff3-70a5-becb-0821-f9c36371e6d9@huawei.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.174.179.14]
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ canpemm500004.china.huawei.com (7.192.104.92)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-MCQ is enabled in the Host Controller.
 
-Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
----
- drivers/ufs/core/ufshcd.c | 4 ++++
- 1 file changed, 4 insertions(+)
+On 2022/9/22 22:24, John Garry wrote:
+> On 17/09/2022 11:43, Jason Yan wrote:
+>> The sas address comparation of domain device and expander phy is open
+>> coded. Now we can replace it with dev_and_phy_addr_same().
+>>
+>> Signed-off-by: Jason Yan <yanaijie@huawei.com>
+>> ---
+>>   drivers/scsi/pm8001/pm8001_sas.c | 3 +--
+>>   1 file changed, 1 insertion(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/scsi/pm8001/pm8001_sas.c 
+>> b/drivers/scsi/pm8001/pm8001_sas.c
+>> index 8e3f2f9ddaac..bb1b1722f3ee 100644
+>> --- a/drivers/scsi/pm8001/pm8001_sas.c
+>> +++ b/drivers/scsi/pm8001/pm8001_sas.c
+>> @@ -649,8 +649,7 @@ static int pm8001_dev_found_notify(struct 
+>> domain_device *dev)
+>>           for (phy_id = 0; phy_id < parent_dev->ex_dev.num_phys;
+> 
+> This code seems the same between many libsas LLDDs - could we factor it 
+> out into libsas?
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 44b6c0b..a230897 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -8312,6 +8312,10 @@ static int ufshcd_config_mcq(struct ufs_hba *hba)
- 
- 	hba->host->can_queue = hba->nutrs - UFSHCD_NUM_RESERVED;
- 	hba->reserved_slot = hba->nutrs - UFSHCD_NUM_RESERVED;
-+	/* Select MCQ mode */
-+	ufshcd_writel(hba, ufshcd_readl(hba, REG_UFS_MEM_CFG) | 0x1,
-+		      REG_UFS_MEM_CFG);
-+	hba->mcq_enabled = true;
- 	dev_info(hba->dev, "MCQ configured, nr_queues=%d, io_queues=%d, read_queue=%d, poll_queues=%d, queue_depth=%d\n",
- 		 hba->nr_hw_queues, hba->nr_queues[HCTX_TYPE_DEFAULT],
- 		 hba->nr_queues[HCTX_TYPE_READ], hba->nr_queues[HCTX_TYPE_POLL],
--- 
-2.7.4
+Sure we can. I will try to factor it out in the next revision.
 
+Thanks,
+Jason
+
+  If so, then maybe those new helpers could be put in
+> sas_internal.h
+> 
+> Thanks,
+> John
+> 
+>>           phy_id++) {
+>>               phy = &parent_dev->ex_dev.ex_phy[phy_id];
+>> -            if (SAS_ADDR(phy->attached_sas_addr)
+>> -                == SAS_ADDR(dev->sas_addr)) {
+>> +            if (dev_and_phy_addr_same(dev, phy)) {
+>>                   pm8001_device->attached_phy = phy_id;
+>>                   break;
+>>               }
+> 
+> .
