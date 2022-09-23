@@ -2,98 +2,91 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD8B0ECAAD8
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Sep 2022 15:23:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EE0DC04A95
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Sep 2022 20:11:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229765AbiIWPXI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 23 Sep 2022 11:23:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39734 "EHLO
+        id S231277AbiIWULq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 23 Sep 2022 16:11:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37356 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232432AbiIWPXF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Sep 2022 11:23:05 -0400
-Received: from mail-io1-xd29.google.com (mail-io1-xd29.google.com [IPv6:2607:f8b0:4864:20::d29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F9CF148A2F
-        for <linux-scsi@vger.kernel.org>; Fri, 23 Sep 2022 08:22:58 -0700 (PDT)
-Received: by mail-io1-xd29.google.com with SMTP id b23so196265iof.2
-        for <linux-scsi@vger.kernel.org>; Fri, 23 Sep 2022 08:22:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date;
-        bh=aj427EoyOIOpXGm7xFat3kqE/v++sDMs91pMGtHoDng=;
-        b=RuQ488wvYkdtTlucK5RLBdMTThXD3sbSSbXW2cXsiqxLGIQK9mZXy5XJwisC727RR2
-         v1mOFOB7KncwMOjpCHSAXz3qJc2PzLN0zAd98/cbaGvOlm+ps5VKAnLSRfoJV34OlrrG
-         JFdo/85HBFYbI6eFHMMj1Th5685EbncE1VUJ6bizqOlthoM+mwyji6AGoxxTRvpyQncm
-         +SSO5GLwHgMMD8fKQ3gaCWhXQJQvkMJCt2NX3QddiRi23dN7pVD+rPrYWNE4oqp81NKM
-         OQIa9oXnaJZYufjF49owWISPcocZ781LqwxyhEOPEcT8FOD8SiV4w1FitmMR9Oo0QFqr
-         +9OA==
+        with ESMTP id S231235AbiIWULp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Sep 2022 16:11:45 -0400
+Received: from mail-pg1-f179.google.com (mail-pg1-f179.google.com [209.85.215.179])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47945122045
+        for <linux-scsi@vger.kernel.org>; Fri, 23 Sep 2022 13:11:45 -0700 (PDT)
+Received: by mail-pg1-f179.google.com with SMTP id q9so1216992pgq.8
+        for <linux-scsi@vger.kernel.org>; Fri, 23 Sep 2022 13:11:45 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date;
-        bh=aj427EoyOIOpXGm7xFat3kqE/v++sDMs91pMGtHoDng=;
-        b=p/HOOIQ6CwZmb6gTDDB8mwS7iILFFOKEbEXizuHK5byXLqd+Qe4u5/dFPqJFlqoBlz
-         xNG4k9SoWbhP4hG4lF5PQQEwf4bOY28qdhuigUHYtXBcbAQj+r8BTj18Q2g8qBXs7n02
-         NjZ+/1JjVYciS7bJbUKBXi9N1AWJd5jfrncTQVPXTzLwRacqaos1hTYaLptlYhmgHfnV
-         Hyl/SJ36WkyT3X/FQydUS6RPnbECrFl1tu0mzTIPzOD7nlu+C6RuLLJu8UN9ZhEhngic
-         G+AbNjKyAC5ijZ5BlVxo+dB33vZ7j+N/dxLG3iEHSfwUWgife6+ThaExpOWE5PX1VwoK
-         kbNw==
-X-Gm-Message-State: ACrzQf1KqvZ3eT4Q+otyA+r+zuO8p0CUty+w204BUDQ08j05VUw8IbMm
-        GjoezaT2LHZVcbffjwXRTyMphA==
-X-Google-Smtp-Source: AMsMyM66wPHtkFQ9IeC/C8z8JolIyiwSxGByINDT3QSo+pKmW5TeLs+OL/+8aAXBzDYx8annuJPNzA==
-X-Received: by 2002:a05:6602:2d44:b0:6a1:b558:272d with SMTP id d4-20020a0566022d4400b006a1b558272dmr4127633iow.7.1663946572978;
-        Fri, 23 Sep 2022 08:22:52 -0700 (PDT)
-Received: from [192.168.1.94] ([207.135.234.126])
-        by smtp.gmail.com with ESMTPSA id x3-20020a056602160300b006a19872663bsm3575750iow.53.2022.09.23.08.22.52
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 23 Sep 2022 08:22:52 -0700 (PDT)
-Message-ID: <11a6e8c4-690c-d1bc-70fd-8dd33825fadf@kernel.dk>
-Date:   Fri, 23 Sep 2022 09:22:51 -0600
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date;
+        bh=g39mT2+aIiK3JVV6XscjN6Cts528Fe5xlzGunO748Vk=;
+        b=p8Jpy6UaerzNbnCU3glFuOdJ4YjhSiUUXYUYKw94D7TcTW4f3eVRcM1OcbLBT4uYs8
+         2X38lYp5aTmq1L9DBProsE68BhrAZ8vTTiwQyarFGnCqB/WVM44qzbw2U/d9+P9IIb7k
+         25ZrLli30vE1BkchAXRRCUCiMvpo7EDmVQNBBU9BW890nw7Bvwyb/siaa6Ga0Z21Xi2D
+         1QWSDv/dwONW2mNHPY1tMFGusaapjIQouxW2fqgyL69yWByjjRqFuL1QTFGVVua9ZXFf
+         FMZuYrwesG+X4wOFucEEFApEPStRHeozOgbVcSjdTdgwjR9EinQXEtiitW19FcrATr7M
+         e9+Q==
+X-Gm-Message-State: ACrzQf0E4nxyGVcnV4KqqlZ8FXyKhfniVEWUQWpMd20bHOcPvGL7C8S0
+        HT2rbOm1hRFNmXN2EAWWlf0=
+X-Google-Smtp-Source: AMsMyM6ySP9ZvmngFTZALwW/c+eQ636vusMlLuUDrwqpxQo6r0cMJH0xewhUzJaINlasN3qi4MqU7g==
+X-Received: by 2002:a05:6a00:234b:b0:545:fec9:abca with SMTP id j11-20020a056a00234b00b00545fec9abcamr10929759pfj.14.1663963904537;
+        Fri, 23 Sep 2022 13:11:44 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:aa13:bc38:2a63:318e])
+        by smtp.gmail.com with ESMTPSA id b7-20020a170902650700b001754fa42065sm6388435plk.143.2022.09.23.13.11.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 23 Sep 2022 13:11:43 -0700 (PDT)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH 0/8] Fix a deadlock in the UFS driver
+Date:   Fri, 23 Sep 2022 13:11:30 -0700
+Message-Id: <20220923201138.2113123-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.37.3.998.g577e59143f-goog
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.2
-Subject: Re: [PATCHSET 0/5] Enable alloc caching and batched freeing for
- passthrough
-Content-Language: en-US
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org
-References: <20220922182805.96173-1-axboe@kernel.dk>
- <Yy3NyACongSfayY+@infradead.org>
- <6f7600be-d4b9-aeac-7dd1-71992a4dd5e8@kernel.dk>
- <Yy3PEjD2pkSq84RW@infradead.org>
-From:   Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <Yy3PEjD2pkSq84RW@infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/23/22 9:21 AM, Christoph Hellwig wrote:
-> On Fri, Sep 23, 2022 at 09:19:15AM -0600, Jens Axboe wrote:
->> On 9/23/22 9:16 AM, Christoph Hellwig wrote:
->>> On Thu, Sep 22, 2022 at 12:28:00PM -0600, Jens Axboe wrote:
->>>> This is good for a 10% improvement for passthrough performance. For
->>>> a non-drive limited test case, passthrough IO is now more efficient
->>>> than the regular bdev O_DIRECT path.
->>>
->>> How so?  If it ends up faster we are doing something wrong in the
->>> normal path as there should be no fundamental difference in the work
->>> that is being done.
->>
->> There's no fundamental difference, but the bdev path is more involved
->> than the simple passthrough path.
-> 
-> Well, I guess that means there is some more fat we need to trim
-> then..
+Hi Martin,
 
-Yes and no, there's always more fat to trim. But some of it is
-inevitable, so...
+This patch series fixes a deadlock in the UFS driver between the suspend/resume
+code and the SCSI error handler. Please consider this patch series for the next
+merge window.
 
--- 
-Jens Axboe
+Thanks,
 
+Bart.
+
+Bart Van Assche (8):
+  scsi: core: Fix a race between scsi_done() and scsi_times_out()
+  scsi: core: Change the return type of .eh_timed_out()
+  scsi: ufs: Remove an outdated comment
+  scsi: ufs: Use 'else' in ufshcd_set_dev_pwr_mode()
+  scsi: ufs: Try harder to change the power mode
+  scsi: ufs: Split ufshcd_err_handler()
+  scsi: ufs: Add a PM notifier
+  scsi: ufs: Fix deadlock between power management and error handler
+
+ Documentation/scsi/scsi_eh.rst            |  7 +-
+ drivers/message/fusion/mptsas.c           |  8 +-
+ drivers/scsi/libiscsi.c                   | 26 +++---
+ drivers/scsi/megaraid/megaraid_sas_base.c |  7 +-
+ drivers/scsi/mvumi.c                      |  4 +-
+ drivers/scsi/qla4xxx/ql4_os.c             |  8 +-
+ drivers/scsi/scsi_error.c                 | 38 ++++-----
+ drivers/scsi/scsi_transport_fc.c          |  8 +-
+ drivers/scsi/scsi_transport_srp.c         |  8 +-
+ drivers/scsi/storvsc_drv.c                |  4 +-
+ drivers/scsi/virtio_scsi.c                |  4 +-
+ drivers/ufs/core/ufshcd.c                 | 98 ++++++++++++++++++-----
+ include/scsi/libiscsi.h                   |  2 +-
+ include/scsi/scsi_host.h                  | 14 +++-
+ include/scsi/scsi_transport_fc.h          |  2 +-
+ include/scsi/scsi_transport_srp.h         |  2 +-
+ include/ufs/ufshcd.h                      |  7 +-
+ 17 files changed, 161 insertions(+), 86 deletions(-)
 
