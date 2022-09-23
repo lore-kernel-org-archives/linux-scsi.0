@@ -2,82 +2,157 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B4BAC6FA90
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Sep 2022 10:43:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 371B8ECAAD8
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Sep 2022 11:38:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231642AbiIWKnp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 23 Sep 2022 06:43:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46502 "EHLO
+        id S229991AbiIWLif (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 23 Sep 2022 07:38:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47330 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231726AbiIWKnj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Sep 2022 06:43:39 -0400
-Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32CC7106F7B;
-        Fri, 23 Sep 2022 03:43:36 -0700 (PDT)
-Received: by mail-wm1-f43.google.com with SMTP id e10-20020a05600c4e4a00b003b4eff4ab2cso3022965wmq.4;
-        Fri, 23 Sep 2022 03:43:36 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date;
-        bh=eNfIgiLSNV6f0ZyHgCkJcOePoKamQ5V91T6STNV4q+w=;
-        b=sy29S1qDwGnYjHNxfg/JFv955zHVaHrCpAt2CjhRuhwb/YQtICPPMvVWb4Y7/34P21
-         TKi2Pk5C+vot8P07Tsnhu4aPjvssuNpWD89ZsEMcRUXfX7VKpF/aNXh18H3lDUCh3W4J
-         VO7wOgRtsuddN4xxOipuCZtAyY09tNxkbwJyFYkdOg1WVYVfIBK1dGZmEqrhUApMjutH
-         LdsPffgAwbZJAPiH4V7iFb9YmQ+gc9J7SSOJlv7WutuqjW2hIM6F9hqsmCmHLnsNhv4D
-         CZ0PAuUQhWgB2Y0P03KRREBVb1w+Uu6Bu2nz1EkSN3SIBTLEyN20c/PK8mKNCMjVzpyd
-         8N5Q==
-X-Gm-Message-State: ACrzQf3E3sFIiysDwrtdDhJOFdhug391yFSr4WXUShXgMfVYU624MpaK
-        207X3v715diQSvaW4notLRc=
-X-Google-Smtp-Source: AMsMyM4j0IYUy0eqBd/jiz7HRuaIDFcUisGkN52qei1q/PDTAzwzRA4KgNW7F2Vb71cpjUnlKm6jiQ==
-X-Received: by 2002:a05:600c:4e90:b0:3b4:cb93:7d11 with SMTP id f16-20020a05600c4e9000b003b4cb937d11mr5425540wmq.43.1663929814791;
-        Fri, 23 Sep 2022 03:43:34 -0700 (PDT)
-Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
-        by smtp.gmail.com with ESMTPSA id m10-20020a05600c3b0a00b003b47b913901sm10472621wms.1.2022.09.23.03.43.33
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 23 Sep 2022 03:43:34 -0700 (PDT)
-Date:   Fri, 23 Sep 2022 10:43:32 +0000
-From:   Wei Liu <wei.liu@kernel.org>
-To:     wangjianli <wangjianli@cdjrlc.com>
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-hyperv@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Wei Liu <wei.liu@kernel.org>
-Subject: Re: [PATCH] drivers/scsi: fix repeated words in comments
-Message-ID: <Yy2N1JhuuR3+B9eI@liuwe-devbox-debian-v2>
-References: <20220908130754.34999-1-wangjianli@cdjrlc.com>
+        with ESMTP id S231576AbiIWLib (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Sep 2022 07:38:31 -0400
+Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB632C8416;
+        Fri, 23 Sep 2022 04:38:29 -0700 (PDT)
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 95B794120B;
+        Fri, 23 Sep 2022 11:38:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        in-reply-to:content-transfer-encoding:content-disposition
+        :content-type:content-type:mime-version:references:message-id
+        :subject:subject:from:from:date:date:received:received:received
+        :received; s=mta-01; t=1663933107; x=1665747508; bh=Ds1p6cNo0J+I
+        /GCMJAkeUhAsubCkPuQTIHBHTO59LGQ=; b=WtagGNArv/Ysq71OthcA+SHDk+i3
+        OFmJ94x437zx5n4qJuBYQt6SVIKal5lr2nV7qLy0pTQi6iQL7EpDnTNg0WTt4ood
+        jB8W5g9+mcvGVWr+ZjjydmyeuxOnvRI6vpmKV/qJIcvB+9rbOMntbuauj3v3PdI1
+        /p8D8mkrJnCRSHE=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id w_J96565X1Ax; Fri, 23 Sep 2022 14:38:27 +0300 (MSK)
+Received: from T-EXCH-02.corp.yadro.com (T-EXCH-02.corp.yadro.com [172.17.10.102])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 898CB41235;
+        Fri, 23 Sep 2022 14:38:25 +0300 (MSK)
+Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
+ T-EXCH-02.corp.yadro.com (172.17.10.102) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
+ 15.1.669.32; Fri, 23 Sep 2022 14:38:25 +0300
+Received: from yadro.com (10.178.114.42) by T-EXCH-08.corp.yadro.com
+ (172.17.11.58) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1118.9; Fri, 23 Sep
+ 2022 14:38:24 +0300
+Date:   Fri, 23 Sep 2022 14:38:24 +0300
+From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
+To:     <michael.christie@oracle.com>
+CC:     Martin Petersen <martin.petersen@oracle.com>,
+        <target-devel@vger.kernel.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        <linux-scsi@vger.kernel.org>, <linux@yadro.com>
+Subject: Re: [PATCH v2] scsi: target: alua: do not report emtpy port group
+Message-ID: <20220923113824.GH9218@yadro.com>
+References: <20220912125457.22573-1-d.bogdanov@yadro.com>
+ <92f6024a-7898-e281-099a-c79b67fecafe@oracle.com>
+ <20220912214521.GF9218@yadro.com>
+ <82d31d9d-700c-d961-d284-a5a117487adc@oracle.com>
+ <20220915060840.GG9218@yadro.com>
+ <e84419da-2950-3750-e6a1-af873c1253ac@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Content-Disposition: inline
-In-Reply-To: <20220908130754.34999-1-wangjianli@cdjrlc.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <e84419da-2950-3750-e6a1-af873c1253ac@oracle.com>
+X-Originating-IP: [10.178.114.42]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-08.corp.yadro.com (172.17.11.58)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Sep 08, 2022 at 09:07:54PM +0800, wangjianli wrote:
-> Delete the redundant word 'to'.
+On Thu, Sep 22, 2022 at 11:26:29AM -0500, michael.christie@oracle.com wrote:
 > 
-> Signed-off-by: wangjianli <wangjianli@cdjrlc.com>
+> On 9/15/22 1:08 AM, Dmitry Bogdanov wrote:
+> > On Wed, Sep 14, 2022 at 02:18:40PM -0500, Mike Christie wrote:
+> >>
+> >> On 9/12/22 4:45 PM, Dmitry Bogdanov wrote:
+> >>>> Remember how ESX used to send a RTPG to one port and expect that it got
+> >>>> every group and that the state info was all in sync (basically opposite
+> >>>> if what's in the spec now)?
+> >>>>
+> >>>> The spec and ESX were updated, but I don't know if other OSs did this and
+> >>>> if/when everyone was updated. Do you know this info? Are the old ESX versions
+> >>>> that worked like that end of life?
+> >>> ESXi is kinda a pain. But fortunately it has nothing to do with that
+> >>> patch 😄
+> >>
+> >> I didn't get why that is. How do you set up a distributed/cluster/HA target? I'm
+> >> probably missing that part.
+> >>
+> >> Software drivers like iscsi I get, but for HW drivers I didn't see how you do it.
+> >>
+> >> For example, if you have 2 systems/nodes running LIO which each export the same
+> >> device via 1 port each where one is active/optimized and the other is standby and you
+> >> are using qla2xxx, then on the local node would you create 2 groups:
+> >>
+> >> [root@ol8n4 alua]# pwd
+> >> /sys/kernel/config/target/core/iblock_0/device0/alua
+> >>
+> >> [root@ol8n4 alua]# ls
+> >> default_tg_pt_gp  local  remote
+> >>
+> >> Then under the mapped lun:
+> >>
+> >> [root@ol8n4 lun_0]# pwd
+> >> /sys/kernel/config/target/..../tpgt_1/lun/lun_0
+> >>
+> >> in the alua_tg_pt_gp file you set that to local. That would then have tg_pt_gp_members
+> >> set, but remote would not.
+> >>
+> >> Before your patch, windows and ESX could do a RTPG to just one port/path and we would
+> >> return the default, local and remote groups. We don't want the default group, but we
+> >> wanted the local and remote one returned. With your patch we only return the the local
+> >> one now. I wasn't sure how that works for drivers like qla2xxx.
+> >>
+> >> For iscsi, you could just mirror the remote node locally, so you would have a second
+> >> tpg:
+> >>
+> >> [root@ol8n4 lun_0]# pwd
+> >> /sys/kernel/config/target/..../tpgt_2/lun/lun_0
+> >>
+> 
+> >> and in there set alua_tg_pt_gp to remote. Your patch works fine for that because both
+> >> groups then have tg_pt_gp_members set so if the OS just does a RTPG to one path/port
+> >> you get all the groups.
+> >>
+> > I use a virtual remote fabric driver to configure wwn/iqn-tpg-lun of
+> > remote peers at each local node. In that way 'remote' alua port group
+> > will have ports(RTPI) too. That allows RTPG (and other discovery-like
+> > commands) report all ports in all port groups in the cluster.
+> > I sent it within the RFC patchset:
+> 
+> Ok shoot. I think this type of setup is not common, so the patch should be ok for most
+> users. However, I know people did do some complex setups and I'm worried those might
+> break.
 
-I changed the commit message a bit and pushed this patch to hyperv-next.
-Thanks.
+I am not sure that any kind of cluster configuration is available now.
+Because RTPI (without my patchset) is not configurable and normally it
+is the same on the ports(LUNs now) on different nodes. That prevents
+a correct reporting of ports in RTPG.
 
-> ---
->  drivers/scsi/storvsc_drv.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index 573f89eade3b..9f7c71a8c80e 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -2059,7 +2059,7 @@ static int storvsc_probe(struct hv_device *device,
->  err_out2:
->  	/*
->  	 * Once we have connected with the host, we would need to
-> -	 * to invoke storvsc_dev_remove() to rollback this state and
-> +	 * invoke storvsc_dev_remove() to rollback this state and
->  	 * this call also frees up the stor_device; hence the jump around
->  	 * err_out1 label.
->  	 */
-> -- 
-> 2.36.1
+> I think the remote target patch is fine. Did that require any additional patches?
+Remote target patch is self-sufficient but it is not useful alone I think.
+Together with RTPI patchset it allows to report in RTPG all ports in a
+cluster.
+
+> Maybe we could add that patch and your patch in this email at the same time and we
+> could migrate users.
 > 
+> What's your take?
+I will send the remote target patch soon, but as I said, it is useful
+only together with RTPI patchset (published but not yet merged to
+scsi-queue).
+
+BR,
+ Dmitry
