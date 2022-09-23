@@ -2,96 +2,110 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97738C6FA82
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Sep 2022 14:51:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8ACFC6FA82
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Sep 2022 14:52:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232136AbiIWOvY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 23 Sep 2022 10:51:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47424 "EHLO
+        id S231221AbiIWOw7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 23 Sep 2022 10:52:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49194 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230055AbiIWOvW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Sep 2022 10:51:22 -0400
-Received: from mail-wr1-x433.google.com (mail-wr1-x433.google.com [IPv6:2a00:1450:4864:20::433])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6199B12849B
-        for <linux-scsi@vger.kernel.org>; Fri, 23 Sep 2022 07:51:20 -0700 (PDT)
-Received: by mail-wr1-x433.google.com with SMTP id c11so330574wrp.11
-        for <linux-scsi@vger.kernel.org>; Fri, 23 Sep 2022 07:51:20 -0700 (PDT)
+        with ESMTP id S231340AbiIWOwt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Sep 2022 10:52:49 -0400
+Received: from mail-lf1-x134.google.com (mail-lf1-x134.google.com [IPv6:2a00:1450:4864:20::134])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E02413A380;
+        Fri, 23 Sep 2022 07:52:42 -0700 (PDT)
+Received: by mail-lf1-x134.google.com with SMTP id a2so668612lfb.6;
+        Fri, 23 Sep 2022 07:52:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date;
-        bh=jzpvzviXTgxdaGIkP6ni8Vu+qZd6ChhilJYt2SFB8Os=;
-        b=WGq6+dSwvF+C8MsdQQ7TSk0E8wYwP197dxpGzG4woN3Rb4JVINsKKTrfY+ZJCYG5eV
-         NI3FjwsEwTmQD4S8NePH/XTZ7x5hODdJjPi/r3WXoIe/zhHGjuM8hzJLnMmdAfj+JspU
-         A67RwTtFSSiephEElByGGdxe2isMYG6yfvWyb9ImKgtR5DEw2o4YEIzxvAG5gpOCrwun
-         KKN+0GYgtwqKC2NDTwvDiuD6+OEQ6K4HA4x+Wjkgrtg7bNocpbgqmJOG0yv1yeuCckIc
-         PTt8I2Ncl4XmzNLcZxFVWxBHhXmr4CwbZAycK0ZQPCSn3sxXx08ZvM3h5hAq7/Tnjdzy
-         IIWw==
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date;
+        bh=9en01QcZoVRB/nyuHix8atR26FaNJkFbsXv8c0H0Ewc=;
+        b=PVuPZKBRqWaUP5aS/sM77IUimjHSDr9CQTadF85aA5q4O90CpCTMdaFBCYFy7EUFXz
+         h2GNkjwON4xJaInS2D1O6t9ZUYI3n0jPsgeRluS3TCyfw6hB+baKudhs603HocyP4RWZ
+         uA/S+BxHmq1DEjRf0na3JK9q171ECwNyKC/yRhSCmt2mpExCxJRLc0nqHtgVc7z5p33D
+         dYFbTwIxvEIWV3ALkDpzQV3KNMjl82CdJikqWLsqO2zBZgiH8GBJWzoM0uyU/5LHQsYZ
+         W0MtIBbrUaeQMxhsby/3QPjlPoUirew/kZRvI4Ts1vqlEWn4hAJlVxqKaPj3u2oHq6Pe
+         tZTQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date;
-        bh=jzpvzviXTgxdaGIkP6ni8Vu+qZd6ChhilJYt2SFB8Os=;
-        b=QxwcuUMg4AhRiwU1Mpov7i7Sa8iAkP35tPGh8ve9UXx5YzISR5aiVd8aEj+u+XOUT6
-         aloGmXv+u3kgVD496AW89FMa2QOaTnQ3XGE1i1yhTjm1Db130SKy2ZV3sco+jh9wlKi0
-         YNV71/YSM/4+SQlrT9k1fKYj6iDLZvONw7krBCQwESSFn37CSQm8sgUdPOZhgySef5cj
-         O4I3mvZWxL7exYApkq4PDeEPdLdQkEZ+twDzjHYJSQ/9inXX3hILk/4qUAfXMq6gbden
-         JRG8Q630GNo3zfn9xtGupx651c0bIj3mHs2hcWjd4wNge1S7uux8YXrga1ZEGJtZ9Ut7
-         DPtQ==
-X-Gm-Message-State: ACrzQf0jV3tkQWCtaryCXs7Bg68kONRa/989Y5GBDmAohUDZUp/moavf
-        maiJrJ/iEa+dzFvbyKjIoquOrncVhPNV6NIInArno/v/9usUJg==
-X-Google-Smtp-Source: AMsMyM4o6uO6/+pDEZdsqvYToD9aHUbyC/9X3oOTvUNC7PGGmgU90ASAaMcebM90CJgm7FTd4/zO9MG5IwP/NpmVkEw=
-X-Received: by 2002:adf:e186:0:b0:22a:3329:540f with SMTP id
- az6-20020adfe186000000b0022a3329540fmr5424962wrb.278.1663944678867; Fri, 23
- Sep 2022 07:51:18 -0700 (PDT)
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date;
+        bh=9en01QcZoVRB/nyuHix8atR26FaNJkFbsXv8c0H0Ewc=;
+        b=LWitlc0nkg0QCvj0chdI2l3xMIhYNpRijraq/1kJBMbbK37Jvq1UoABtO5qxWbm6pT
+         y7vwBP9aNyHnogn4Tlama7Nq/7bXE/9jRbogLls8Or2yexKJLyQdZw/nUbR8XBCYYe8O
+         eHRUQko7oaQfOkpspkEc6IeeGpMW3WajBudJcvFG1BHF1x9alC1Sy8J0iQsXGpR50deC
+         j9dM61eiD0k5V4Z/tDbnkhZPgof7YFzG4F5+liouUR/g0EK9M9Ky1pLPxkKBtEjnZUOX
+         rvTAweAV/zgHM9Rjeh7CubnKdq8xN4I+kr2zPnaTw1SSYrgEZgcX3ajB7U9Fl06N8Saj
+         0XqQ==
+X-Gm-Message-State: ACrzQf0KQrV7GzO2++DVYtgBHioAEb59z0HXUNtVR8JREF3wCz3Rn8Jo
+        ujhrv+NIPBwxTIgy4wHeJLbiaCUJ2ZM=
+X-Google-Smtp-Source: AMsMyM6oT3NunHaRFH/pM9NAACYneBSq+ek5ly7lVSal3ZJ0a4JDlTxrbOSd4U+7r34vtj5BJRZzOA==
+X-Received: by 2002:a05:6512:10d6:b0:49a:1fc0:cc62 with SMTP id k22-20020a05651210d600b0049a1fc0cc62mr3653475lfg.138.1663944760226;
+        Fri, 23 Sep 2022 07:52:40 -0700 (PDT)
+Received: from localhost (80-62-116-219-mobile.dk.customer.tdc.net. [80.62.116.219])
+        by smtp.gmail.com with ESMTPSA id i16-20020a2ea230000000b0026aba858fbfsm1032999ljm.137.2022.09.23.07.52.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 23 Sep 2022 07:52:39 -0700 (PDT)
+Date:   Fri, 23 Sep 2022 16:52:36 +0200
+From:   Pankaj Raghav <pankydev8@gmail.com>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvme@lists.infradead.org,
+        Pankaj Raghav <p.raghav@samsung.com>, joshi.k@samsung.com
+Subject: Re: [PATCH 1/5] block: enable batched allocation for
+ blk_mq_alloc_request()
+Message-ID: <20220923145236.pr7ssckko4okklo2@quentin>
+References: <20220922182805.96173-1-axboe@kernel.dk>
+ <20220922182805.96173-2-axboe@kernel.dk>
 MIME-Version: 1.0
-From:   Hao Peng <flyingpenghao@gmail.com>
-Date:   Fri, 23 Sep 2022 22:51:07 +0800
-Message-ID: <CAPm50aJ_aW4RmL3_n=5CpGL9D3dXENenFuo5QG0Q2DJO9Gv_1w@mail.gmail.com>
-Subject: [PATCH ] scsi/ipr: keep the order of locks
-To:     "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220922182805.96173-2-axboe@kernel.dk>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Peng Hao <flyingpeng@tencent.com>
+On Thu, Sep 22, 2022 at 12:28:01PM -0600, Jens Axboe wrote:
+> The filesystem IO path can take advantage of allocating batches of
+> requests, if the underlying submitter tells the block layer about it
+> through the blk_plug. For passthrough IO, the exported API is the
+> blk_mq_alloc_request() helper, and that one does not allow for
+> request caching.
+> 
+> Wire up request caching for blk_mq_alloc_request(), which is generally
+> done without having a bio available upfront.
+> 
+> Signed-off-by: Jens Axboe <axboe@kernel.dk>
+> ---
+>  block/blk-mq.c | 80 ++++++++++++++++++++++++++++++++++++++++++++------
+>  1 file changed, 71 insertions(+), 9 deletions(-)
+> 
+I think we need this patch to ensure correct behaviour for passthrough:
 
-ipr_ata_post_internal:
-    acquire host_lock
-       acquire hrrq->_lock
-             ipr_device_reset
-                 ipr_send_blocking_cmd
-                    release host_lock
-                    acquire host_lock
-       release hrrq->_lock
-    release host_lock
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index c11949d66163..840541c1ab40 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -1213,7 +1213,7 @@ void blk_execute_rq_nowait(struct request *rq, bool at_head)
+        WARN_ON(!blk_rq_is_passthrough(rq));
+ 
+        blk_account_io_start(rq);
+-       if (current->plug)
++       if (blk_mq_plug(rq->bio))
+                blk_add_rq_to_plug(current->plug, rq);
+        else
+                blk_mq_sched_insert_request(rq, at_head, true, false);
 
-As shown above, there are two lock acquisition order changes.
-At the same time, when ipr_device_reset is executed, the lock
-hrrq->_lock does not need to be held.
+As the passthrough path can now support request caching via blk_mq_alloc_request(),
+and it uses blk_execute_rq_nowait(), bad things can happen at least for zoned
+devices:
 
-Signed-off-by: Peng Hao <flyingpeng@tencent.com>
----
- drivers/scsi/ipr.c | 2 ++
- 1 file changed, 2 insertions(+)
+static inline struct blk_plug *blk_mq_plug( struct bio *bio)
+{
+	/* Zoned block device write operation case: do not plug the BIO */
+	if (bdev_is_zoned(bio->bi_bdev) && op_is_write(bio_op(bio)))
+		return NULL;
+..
 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 9d01a3e3c26a..6ca987dda397 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -6837,7 +6837,9 @@ static void ipr_ata_post_internal(struct
-ata_queued_cmd *qc)
-                spin_lock(&hrrq->_lock);
-                list_for_each_entry(ipr_cmd, &hrrq->hrrq_pending_q, queue) {
-                        if (ipr_cmd->qc == qc) {
-+                               spin_unlock(&hrrq->_lock);
-                                ipr_device_reset(ioa_cfg, sata_port->res);
-+                               spin_lock(&hrrq->_lock);
-                                break;
-                        }
-                }
---
-2.27.0
+Am I missing something?
