@@ -2,25 +2,25 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21492C6FA82
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Sep 2022 10:11:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1B5CECAAD8
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Sep 2022 10:13:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231741AbiIWKLR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 23 Sep 2022 06:11:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53392 "EHLO
+        id S231741AbiIWKNv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 23 Sep 2022 06:13:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57052 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232078AbiIWKKt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Sep 2022 06:10:49 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F03C127561;
-        Fri, 23 Sep 2022 03:10:44 -0700 (PDT)
+        with ESMTP id S231970AbiIWKNk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Sep 2022 06:13:40 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E652128710;
+        Fri, 23 Sep 2022 03:13:38 -0700 (PDT)
 Received: from canpemm500004.china.huawei.com (unknown [172.30.72.56])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4MYnqX5WdnzlXNP;
-        Fri, 23 Sep 2022 18:06:32 +0800 (CST)
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4MYntD5JZqzMmxq;
+        Fri, 23 Sep 2022 18:08:52 +0800 (CST)
 Received: from [10.174.179.14] (10.174.179.14) by
  canpemm500004.china.huawei.com (7.192.104.92) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Fri, 23 Sep 2022 18:10:42 +0800
+ 15.1.2375.31; Fri, 23 Sep 2022 18:13:35 +0800
 Subject: Re: [PATCH 6/7] scsi: pm8001: use dev_and_phy_addr_same() instead of
  open coded
 To:     John Garry <john.garry@huawei.com>, <martin.petersen@oracle.com>,
@@ -34,8 +34,8 @@ References: <20220917104311.1878250-1-yanaijie@huawei.com>
  <3c1aa262-7e9b-cb6c-e8a1-a1a201050a10@huawei.com>
  <6c299e8f-80be-0276-c8b1-9df1946434da@huawei.com>
 From:   Jason Yan <yanaijie@huawei.com>
-Message-ID: <93c7a2e5-60e8-bafc-b35d-60b7d5972b95@huawei.com>
-Date:   Fri, 23 Sep 2022 18:10:41 +0800
+Message-ID: <d3c7285f-6318-8254-2bfa-d836f12fcd88@huawei.com>
+Date:   Fri, 23 Sep 2022 18:13:35 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
  Thunderbird/78.12.0
 MIME-Version: 1.0
@@ -44,13 +44,12 @@ Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 X-Originating-IP: [10.174.179.14]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
  canpemm500004.china.huawei.com (7.192.104.92)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
-
 
 
 On 2022/9/23 18:00, John Garry wrote:
@@ -69,6 +68,13 @@ On 2022/9/23 18:00, John Garry wrote:
 > I would assume that if those helpers were only used in libsas code (and 
 > not LLDDs) then they could be put in sas_internal.h and no need for export
 > 
+
+
+Sorry, I did not make it clear. I mean we need to export 
+sas_find_attathed_phy() below. Not the sas address comparation helpers.
+
+
+
 >> I think it's not worth to do this because they are very small. I'd 
 >> still like to make them inline functions in libsas.h such as:
 >>
@@ -98,26 +104,6 @@ On 2022/9/23 18:00, John Garry wrote:
 >> +       return ex_dev->num_phys;
 > 
 > I will note that this code does not use your new helpers
-
-NO, this code above will use my new helpers.(Unless we skip this part)
-
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 635039557bdb..9283462704f0 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -673,8 +673,7 @@ static inline int sas_find_attathed_phy(struct 
-expander_device *ex_dev,
-
-         for (phy_id = 0; phy_id < ex_dev->num_phys; phy_id++) {
-                 phy = &ex_dev->ex_phy[phy_id];
--               if (SAS_ADDR(phy->attached_sas_addr)
--                       == SAS_ADDR(dev->sas_addr))
-+               if (sas_phy_match_dev_addr(dev, phy))
-                         return phy_id;
-
-
-
-
 > 
 >> +}
 >> +
