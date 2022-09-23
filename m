@@ -2,42 +2,37 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DCA1ECAAD8
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Sep 2022 01:09:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A396C54EE9
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Sep 2022 01:11:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231745AbiIWBJl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Sep 2022 21:09:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55360 "EHLO
+        id S231976AbiIWBLq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Sep 2022 21:11:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59124 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231560AbiIWBJN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Sep 2022 21:09:13 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6C8C1166D4;
-        Thu, 22 Sep 2022 18:09:05 -0700 (PDT)
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28N0wxED020043;
-        Fri, 23 Sep 2022 01:08:50 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=qcppdkim1;
- bh=AabAOxUY3w5ehAHkcNB5sRfg/2gh4ddNyHuVC49D5gw=;
- b=UXmJPpro4YdxTzJ+IWXRjJlBJqW7LFlNymbHkn7wTawrDipMhEObt87ciayc87hquZ16
- mEtMLYYjfQZovktjzZmALUqXbXQNBkUC8+vbj27/u6SL3qrv/DSmY5AhcWHMsGkv7I5+
- 5bVGa237qFemrTLWrwxf6Obb2/V8If3jmK5MVtzcwX5AyvczZvgP11hds2F5n//GRg6V
- jvREy9Ug3izMaRvyoeu9b/EbNogUDHjY5O+DzySMtNOzw8NfsX4loxGqWu6PECsxkP9z
- HP8/tueSsPU2kU9ee0U5q2vxSpq5ch4ZGNbsLNj8ncPSuu7jkNQHFCNeMwRyNjgaT5RK 4g== 
-Received: from nasanppmta03.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3jr8y1usyh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 23 Sep 2022 01:08:49 +0000
-Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
-        by NASANPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 28N18ml2010754
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 23 Sep 2022 01:08:48 GMT
+        with ESMTP id S232193AbiIWBLT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Sep 2022 21:11:19 -0400
+Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 186A18C441
+        for <linux-scsi@vger.kernel.org>; Thu, 22 Sep 2022 18:11:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1663895472; x=1695431472;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version;
+  bh=66yALVos8vbenfmLPDF16xxikZzpF7R/dW4qgi3gNfs=;
+  b=L4vfLgQxUovEZRDuMgULOcrC1FfAIMGoMN551BIibWTXnQtQ0fB8Jk6D
+   /QaUIB45mYZMPlbNNgs0fUlyByXALBvNI242ph84sCMjSu/gD/Z23ag/5
+   cqLr4Q6c09jstuTbAWq8YPNW1UOKXl7LhsGQvysHbpctkltp1q/dFWE4m
+   s=;
+Received: from unknown (HELO ironmsg04-sd.qualcomm.com) ([10.53.140.144])
+  by alexa-out-sd-01.qualcomm.com with ESMTP; 22 Sep 2022 18:08:45 -0700
+X-QCInternal: smtphost
+Received: from unknown (HELO nasanex01a.na.qualcomm.com) ([10.52.223.231])
+  by ironmsg04-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2022 18:08:45 -0700
 Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
  nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.29; Thu, 22 Sep 2022 18:08:48 -0700
+ 15.2.986.29; Thu, 22 Sep 2022 18:08:45 -0700
 From:   Asutosh Das <quic_asutoshd@quicinc.com>
 To:     <mani@kernel.org>, <quic_nguyenb@quicinc.com>,
         <quic_xiaosenh@quicinc.com>, <quic_cang@quicinc.com>,
@@ -48,19 +43,18 @@ To:     <mani@kernel.org>, <quic_nguyenb@quicinc.com>,
         <martin.petersen@oracle.com>
 CC:     <linux-scsi@vger.kernel.org>,
         Asutosh Das <quic_asutoshd@quicinc.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Matthias Brugger <matthias.bgg@gmail.com>,
-        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
+        "Krzysztof Kozlowski" <krzysztof.kozlowski@linaro.org>,
         open list <linux-kernel@vger.kernel.org>,
         "moderated list:ARM/Mediatek SoC support" 
         <linux-arm-kernel@lists.infradead.org>,
         "moderated list:ARM/Mediatek SoC support" 
         <linux-mediatek@lists.infradead.org>
-Subject: [PATCH v1 16/16] ufs: qcom-host: Enable multi circular queue capability
-Date:   Thu, 22 Sep 2022 18:05:23 -0700
-Message-ID: <33868968d028272ecee2c9f45f7efb1c95315a45.1663894792.git.quic_asutoshd@quicinc.com>
+Subject: [PATCH v1 14/16] ufs: core: mcq: Add completion support in poll
+Date:   Thu, 22 Sep 2022 18:05:21 -0700
+Message-ID: <a6ae9ca3f2aa41d3fe36ced88e58cac3813f8eb5.1663894792.git.quic_asutoshd@quicinc.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1663894792.git.quic_asutoshd@quicinc.com>
 References: <cover.1663894792.git.quic_asutoshd@quicinc.com>
@@ -69,41 +63,107 @@ Content-Type: text/plain
 X-Originating-IP: [10.80.80.8]
 X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: f7hrhw9abDRQjK_2oQOdC2PRG2x0GAM2
-X-Proofpoint-GUID: f7hrhw9abDRQjK_2oQOdC2PRG2x0GAM2
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
- definitions=2022-09-22_16,2022-09-22_02,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- clxscore=1015 bulkscore=0 adultscore=0 spamscore=0 malwarescore=0
- suspectscore=0 phishscore=0 impostorscore=0 mlxlogscore=999
- priorityscore=1501 mlxscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2209130000 definitions=main-2209230005
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Enable MCQ for Qualcomm UFS controllers
+Complete cqe requests in poll. Assumption is that
+several poll completion may happen in different CPUs
+for the same Completion Queue. Hence a spin lock
+protection is added.
 
+Co-developed-by: Can Guo <quic_cang@quicinc.com>
+Signed-off-by: Can Guo <quic_cang@quicinc.com>
 Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
 ---
- drivers/ufs/host/ufs-qcom.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/ufs/core/ufs-mcq.c     | 13 +++++++++++++
+ drivers/ufs/core/ufshcd-priv.h |  2 ++
+ drivers/ufs/core/ufshcd.c      |  7 +++++++
+ include/ufs/ufshcd.h           |  2 ++
+ 4 files changed, 24 insertions(+)
 
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index df7db01..69d35ee 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -853,6 +853,7 @@ static void ufs_qcom_set_caps(struct ufs_hba *hba)
- 	hba->caps |= UFSHCD_CAP_CRYPTO;
- 	hba->caps |= UFSHCD_CAP_AGGR_POWER_COLLAPSE;
- 	hba->caps |= UFSHCD_CAP_RPM_AUTOSUSPEND;
-+	hba->caps |= UFSHCD_CAP_MCQ_EN;
+diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+index 46221c4..a8ca4c9 100644
+--- a/drivers/ufs/core/ufs-mcq.c
++++ b/drivers/ufs/core/ufs-mcq.c
+@@ -392,6 +392,18 @@ unsigned long ufshcd_mcq_poll_cqe_nolock(struct ufs_hba *hba,
+ 	return completed_reqs;
+ }
  
- 	if (host->hw_ver.major >= 0x2) {
- 		host->caps = UFS_QCOM_CAP_QUNIPRO |
++unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
++				       struct ufs_hw_queue *hwq)
++{
++	unsigned long completed_reqs;
++
++	spin_lock(&hwq->cq_lock);
++	completed_reqs = ufshcd_mcq_poll_cqe_nolock(hba, hwq);
++	spin_unlock(&hwq->cq_lock);
++
++	return completed_reqs;
++}
++
+ void ufshcd_mcq_make_queues_operational(struct ufs_hba *hba)
+ {
+ 	struct ufs_hw_queue *hwq;
+@@ -485,6 +497,7 @@ int ufshcd_mcq_init(struct ufs_hba *hba)
+ 		hwq = &hba->uhq[i];
+ 		hwq->max_entries = hba->nutrs;
+ 		spin_lock_init(&hwq->sq_lock);
++		spin_lock_init(&hwq->cq_lock);
+ 	}
+ 
+ 	/* The very first HW queue is to serve device command */
+diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
+index 417e2ca..6e9bec6 100644
+--- a/drivers/ufs/core/ufshcd-priv.h
++++ b/drivers/ufs/core/ufshcd-priv.h
+@@ -64,6 +64,8 @@ unsigned long ufshcd_mcq_poll_cqe_nolock(struct ufs_hba *hba,
+ 					 struct ufs_hw_queue *hwq);
+ struct ufs_hw_queue *ufshcd_mcq_req_to_hwq(struct ufs_hba *hba,
+ 					   struct request *req);
++unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
++				       struct ufs_hw_queue *hwq);
+ 
+ #define UFSHCD_MCQ_IO_QUEUE_OFFSET	1
+ #define SD_ASCII_STD true
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 0705861..44b6c0b 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -5426,6 +5426,13 @@ static int ufshcd_poll(struct Scsi_Host *shost, unsigned int queue_num)
+ 	struct ufs_hba *hba = shost_priv(shost);
+ 	unsigned long completed_reqs, flags;
+ 	u32 tr_doorbell;
++	struct ufs_hw_queue *hwq;
++
++	if (is_mcq_enabled(hba)) {
++		hwq = &hba->uhq[queue_num + UFSHCD_MCQ_IO_QUEUE_OFFSET];
++
++		return ufshcd_mcq_poll_cqe_lock(hba, hwq);
++	}
+ 
+ 	spin_lock_irqsave(&hba->outstanding_lock, flags);
+ 	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index 5731c01..efaa7c2 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -1062,6 +1062,7 @@ struct ufs_hba {
+  * @sq_lock: serialize submission queue access
+  * @cq_tail_slot: current slot to which CQ tail pointer is pointing
+  * @cq_head_slot: current slot to which CQ head pointer is pointing
++ * @cq_lock: Synchronize between multiple polling instances
+  */
+ struct ufs_hw_queue {
+ 	void __iomem *mcq_sq_head;
+@@ -1079,6 +1080,7 @@ struct ufs_hw_queue {
+ 	spinlock_t sq_lock;
+ 	u32 cq_tail_slot;
+ 	u32 cq_head_slot;
++	spinlock_t cq_lock;
+ };
+ 
+ static inline bool is_mcq_enabled(struct ufs_hba *hba)
 -- 
 2.7.4
 
