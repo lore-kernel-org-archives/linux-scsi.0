@@ -2,100 +2,82 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9685ECAAD8
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Sep 2022 10:31:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B4BAC6FA90
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Sep 2022 10:43:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231425AbiIWKbJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 23 Sep 2022 06:31:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56104 "EHLO
+        id S231642AbiIWKnp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 23 Sep 2022 06:43:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46502 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231418AbiIWKaz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Sep 2022 06:30:55 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8941111E95E;
-        Fri, 23 Sep 2022 03:30:53 -0700 (PDT)
-Received: from fraeml739-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MYpG12Tpsz6HHxp;
-        Fri, 23 Sep 2022 18:26:01 +0800 (CST)
-Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml739-chm.china.huawei.com (10.206.15.220) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Fri, 23 Sep 2022 12:30:50 +0200
-Received: from [10.48.153.47] (10.48.153.47) by lhrpeml500003.china.huawei.com
- (7.191.162.67) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Fri, 23 Sep
- 2022 11:30:50 +0100
-Message-ID: <569cb47c-af63-cf70-ae1a-4c5116dd4877@huawei.com>
-Date:   Fri, 23 Sep 2022 11:30:49 +0100
+        with ESMTP id S231726AbiIWKnj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Sep 2022 06:43:39 -0400
+Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32CC7106F7B;
+        Fri, 23 Sep 2022 03:43:36 -0700 (PDT)
+Received: by mail-wm1-f43.google.com with SMTP id e10-20020a05600c4e4a00b003b4eff4ab2cso3022965wmq.4;
+        Fri, 23 Sep 2022 03:43:36 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date;
+        bh=eNfIgiLSNV6f0ZyHgCkJcOePoKamQ5V91T6STNV4q+w=;
+        b=sy29S1qDwGnYjHNxfg/JFv955zHVaHrCpAt2CjhRuhwb/YQtICPPMvVWb4Y7/34P21
+         TKi2Pk5C+vot8P07Tsnhu4aPjvssuNpWD89ZsEMcRUXfX7VKpF/aNXh18H3lDUCh3W4J
+         VO7wOgRtsuddN4xxOipuCZtAyY09tNxkbwJyFYkdOg1WVYVfIBK1dGZmEqrhUApMjutH
+         LdsPffgAwbZJAPiH4V7iFb9YmQ+gc9J7SSOJlv7WutuqjW2hIM6F9hqsmCmHLnsNhv4D
+         CZ0PAuUQhWgB2Y0P03KRREBVb1w+Uu6Bu2nz1EkSN3SIBTLEyN20c/PK8mKNCMjVzpyd
+         8N5Q==
+X-Gm-Message-State: ACrzQf3E3sFIiysDwrtdDhJOFdhug391yFSr4WXUShXgMfVYU624MpaK
+        207X3v715diQSvaW4notLRc=
+X-Google-Smtp-Source: AMsMyM4j0IYUy0eqBd/jiz7HRuaIDFcUisGkN52qei1q/PDTAzwzRA4KgNW7F2Vb71cpjUnlKm6jiQ==
+X-Received: by 2002:a05:600c:4e90:b0:3b4:cb93:7d11 with SMTP id f16-20020a05600c4e9000b003b4cb937d11mr5425540wmq.43.1663929814791;
+        Fri, 23 Sep 2022 03:43:34 -0700 (PDT)
+Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
+        by smtp.gmail.com with ESMTPSA id m10-20020a05600c3b0a00b003b47b913901sm10472621wms.1.2022.09.23.03.43.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 23 Sep 2022 03:43:34 -0700 (PDT)
+Date:   Fri, 23 Sep 2022 10:43:32 +0000
+From:   Wei Liu <wei.liu@kernel.org>
+To:     wangjianli <wangjianli@cdjrlc.com>
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-hyperv@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Wei Liu <wei.liu@kernel.org>
+Subject: Re: [PATCH] drivers/scsi: fix repeated words in comments
+Message-ID: <Yy2N1JhuuR3+B9eI@liuwe-devbox-debian-v2>
+References: <20220908130754.34999-1-wangjianli@cdjrlc.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH 6/7] scsi: pm8001: use dev_and_phy_addr_same() instead of
- open coded
-To:     Jason Yan <yanaijie@huawei.com>, <martin.petersen@oracle.com>,
-        <jejb@linux.ibm.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <hare@suse.com>, <hch@lst.de>, <bvanassche@acm.org>,
-        <jinpu.wang@cloud.ionos.com>
-References: <20220917104311.1878250-1-yanaijie@huawei.com>
- <20220917104311.1878250-7-yanaijie@huawei.com>
- <0034eff3-70a5-becb-0821-f9c36371e6d9@huawei.com>
- <3c1aa262-7e9b-cb6c-e8a1-a1a201050a10@huawei.com>
- <6c299e8f-80be-0276-c8b1-9df1946434da@huawei.com>
- <d3c7285f-6318-8254-2bfa-d836f12fcd88@huawei.com>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <d3c7285f-6318-8254-2bfa-d836f12fcd88@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.48.153.47]
-X-ClientProxiedBy: lhrpeml100006.china.huawei.com (7.191.160.224) To
- lhrpeml500003.china.huawei.com (7.191.162.67)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220908130754.34999-1-wangjianli@cdjrlc.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 23/09/2022 11:13, Jason Yan wrote:
->>
->> Please explain why.
->>
->> I would assume that if those helpers were only used in libsas code 
->> (and not LLDDs) then they could be put in sas_internal.h and no need 
->> for export
->>
+On Thu, Sep 08, 2022 at 09:07:54PM +0800, wangjianli wrote:
+> Delete the redundant word 'to'.
 > 
+> Signed-off-by: wangjianli <wangjianli@cdjrlc.com>
+
+I changed the commit message a bit and pushed this patch to hyperv-next.
+Thanks.
+
+> ---
+>  drivers/scsi/storvsc_drv.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> Sorry, I did not make it clear. I mean we need to export 
-> sas_find_attathed_phy() below. Not the sas address comparation helpers.
-
-That seems fine to me.
-
-About sas_find_attathed_phy() implementation,
-
- > +static inline int sas_find_attathed_phy(struct expander_device *ex_dev,
- > +                                       struct domain_device *dev)
- > +{
- > +       struct ex_phy *phy;
- > +       int phy_id;
- > +
- > +       for (phy_id = 0; phy_id < ex_dev->num_phys; phy_id++) {
- > +               phy = &ex_dev->ex_phy[phy_id];
- > +               if (SAS_ADDR(phy->attached_sas_addr)
- > +                       == SAS_ADDR(dev->sas_addr))
- > +                       return phy_id;
- > +       }
- > +
- > +       return ex_dev->num_phys;
-
-Returning ex_dev->num_phys would seem ok, but then the LLDD needs to 
-check that return against ex_dev->num_phys. It seems ok, but I'm still 
-not 100% comfortable with that. Maybe returning -ENODEV may be better.
-
-Or return boolean and pass phy_id as pointer to be filled in when 
-returning true.
-
- > +}
-
-Thanks,
-John
-
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index 573f89eade3b..9f7c71a8c80e 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -2059,7 +2059,7 @@ static int storvsc_probe(struct hv_device *device,
+>  err_out2:
+>  	/*
+>  	 * Once we have connected with the host, we would need to
+> -	 * to invoke storvsc_dev_remove() to rollback this state and
+> +	 * invoke storvsc_dev_remove() to rollback this state and
+>  	 * this call also frees up the stor_device; hence the jump around
+>  	 * err_out1 label.
+>  	 */
+> -- 
+> 2.36.1
+> 
