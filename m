@@ -2,74 +2,69 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1055BC6FA93
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Sep 2022 09:29:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0A4DECAAD8
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Sep 2022 09:40:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231878AbiIWJ3f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 23 Sep 2022 05:29:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41638 "EHLO
+        id S231880AbiIWJku (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 23 Sep 2022 05:40:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58486 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232062AbiIWJ2r (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Sep 2022 05:28:47 -0400
-Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57B64F5971;
-        Fri, 23 Sep 2022 02:28:17 -0700 (PDT)
-Received: by mail-wr1-f52.google.com with SMTP id bq9so19513496wrb.4;
-        Fri, 23 Sep 2022 02:28:16 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date;
-        bh=fI2lO/p0Tgu9FuD6GUmjhPF/627CFAkNm/iJ5jz3IKc=;
-        b=DPPARzT2KsWkpAqZByKqbenZPdTtt7JMVUAhHmIRRuZtefqceyw28bepsGXPGgvvTp
-         ZaHkoJcicTOUzneNZRzgQQuQSjHVFOCg7oQkVYoPOcMyJxwkxycB6IfK/RnXVV9hJRcW
-         pjjKIbQjWfZRJe2wl/ZKxey3x5IfsHBnBAAg9GcBKEyYEU0FX+d91+I9QSFX0qcJUgOM
-         52COLBcsXX2CwRmO2y3Se9DolCtqxGUgtpVfe7t5XS53lFNDPJAEHqq50MWT2eHgCCyX
-         2WdgoM+TR2U35oUxb+fImuifYIzIYcseqOJktiPwprIlfk2pbR+62jK5sV8Z3MG8ZUtz
-         Kllg==
-X-Gm-Message-State: ACrzQf3rcGcJjWjvKhRkejowv4qNoD/mdX7z3/W68fUH/U3PvDo9I2yX
-        B9MFuxDKZ8mhu/TCfMucEYU=
-X-Google-Smtp-Source: AMsMyM6d4MFsmIRMHMVoz1pAsgjMy4X3kVPesZ4ZQ1zGtKpyqvBlXnSQrg3dQn54qGcGLUueJdZg9g==
-X-Received: by 2002:a5d:574a:0:b0:228:b90c:e5ee with SMTP id q10-20020a5d574a000000b00228b90ce5eemr4546269wrw.328.1663925279780;
-        Fri, 23 Sep 2022 02:27:59 -0700 (PDT)
-Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
-        by smtp.gmail.com with ESMTPSA id n6-20020a5d4206000000b0022b315b4649sm3628846wrq.26.2022.09.23.02.27.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 23 Sep 2022 02:27:59 -0700 (PDT)
-Date:   Fri, 23 Sep 2022 09:27:57 +0000
-From:   Wei Liu <wei.liu@kernel.org>
-To:     Saurabh Sengar <ssengar@linux.microsoft.com>
-Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        wei.liu@kernel.org, decui@microsoft.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-hyperv@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] Drivers: hv: vmbus: Optimize vmbus_on_event
-Message-ID: <Yy18HV8iAFLhF3P/@liuwe-devbox-debian-v2>
-References: <1658741848-4210-1-git-send-email-ssengar@linux.microsoft.com>
- <20220815153141.x7q6qryxv25gvjgy@liuwe-devbox-debian-v2>
+        with ESMTP id S232019AbiIWJis (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Sep 2022 05:38:48 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8395F1874;
+        Fri, 23 Sep 2022 02:38:09 -0700 (PDT)
+Received: from dggemv711-chm.china.huawei.com (unknown [172.30.72.53])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4MYn695dm8zWgqX;
+        Fri, 23 Sep 2022 17:34:09 +0800 (CST)
+Received: from kwepemm600008.china.huawei.com (7.193.23.88) by
+ dggemv711-chm.china.huawei.com (10.1.198.66) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Fri, 23 Sep 2022 17:38:08 +0800
+Received: from huawei.com (10.175.100.227) by kwepemm600008.china.huawei.com
+ (7.193.23.88) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Fri, 23 Sep
+ 2022 17:38:07 +0800
+From:   Shang XiaoJing <shangxiaojing@huawei.com>
+To:     <agross@kernel.org>, <andersson@kernel.org>,
+        <konrad.dybcio@somainline.org>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <linux-arm-msm@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>
+CC:     <shangxiaojing@huawei.com>
+Subject: [PATCH -next] scsi: ufs: Remove redundant dev_err call
+Date:   Fri, 23 Sep 2022 18:12:17 +0800
+Message-ID: <20220923101217.18345-1-shangxiaojing@huawei.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220815153141.x7q6qryxv25gvjgy@liuwe-devbox-debian-v2>
+Content-Type: text/plain
+X-Originating-IP: [10.175.100.227]
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ kwepemm600008.china.huawei.com (7.193.23.88)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Aug 15, 2022 at 03:31:41PM +0000, Wei Liu wrote:
-> On Mon, Jul 25, 2022 at 02:37:28AM -0700, Saurabh Sengar wrote:
-> > In the vmbus_on_event loop, 2 jiffies timer will not serve the purpose if
-> > callback_fn takes longer. For effective use move this check inside of
-> > callback functions where needed. Out of all the VMbus drivers using
-> > vmbus_on_event, only storvsc has a high packet volume, thus add this limit
-> > only in storvsc callback for now.
-> > There is no apparent benefit of loop itself because this tasklet will be
-> > scheduled anyway again if there are packets left in ring buffer. This
-> > patch removes this unnecessary loop as well.
-> > 
-> > Signed-off-by: Saurabh Sengar <ssengar@linux.microsoft.com>
-> 
-> Unfortunately this missed the recent merge window so it will be picked
-> up for the next release.
-> 
+devm_ioremap_resource() prints error message in itself. Remove the
+dev_err call to avoid redundant error message.
 
-Applied to hyperv-next. Thanks.
+Signed-off-by: Shang XiaoJing <shangxiaojing@huawei.com>
+---
+ drivers/ufs/host/ufs-qcom-ice.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/ufs/host/ufs-qcom-ice.c b/drivers/ufs/host/ufs-qcom-ice.c
+index 745e48ec598f..62387ccd5b30 100644
+--- a/drivers/ufs/host/ufs-qcom-ice.c
++++ b/drivers/ufs/host/ufs-qcom-ice.c
+@@ -118,7 +118,6 @@ int ufs_qcom_ice_init(struct ufs_qcom_host *host)
+ 	host->ice_mmio = devm_ioremap_resource(dev, res);
+ 	if (IS_ERR(host->ice_mmio)) {
+ 		err = PTR_ERR(host->ice_mmio);
+-		dev_err(dev, "Failed to map ICE registers; err=%d\n", err);
+ 		return err;
+ 	}
+ 
+-- 
+2.17.1
+
