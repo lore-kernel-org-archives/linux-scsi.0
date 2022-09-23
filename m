@@ -2,152 +2,162 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8039C04A95
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Sep 2022 20:13:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96AC1C6FA83
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Sep 2022 20:53:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231642AbiIWUNM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 23 Sep 2022 16:13:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38688 "EHLO
+        id S232360AbiIWUxC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 23 Sep 2022 16:53:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33900 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231698AbiIWUNL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Sep 2022 16:13:11 -0400
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB5E41231D5
-        for <linux-scsi@vger.kernel.org>; Fri, 23 Sep 2022 13:13:09 -0700 (PDT)
-Received: by mail-pl1-f173.google.com with SMTP id f23so1138339plr.6
-        for <linux-scsi@vger.kernel.org>; Fri, 23 Sep 2022 13:13:09 -0700 (PDT)
+        with ESMTP id S232661AbiIWUxA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Sep 2022 16:53:00 -0400
+Received: from mail-il1-x12f.google.com (mail-il1-x12f.google.com [IPv6:2607:f8b0:4864:20::12f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B00D8F1D78
+        for <linux-scsi@vger.kernel.org>; Fri, 23 Sep 2022 13:52:56 -0700 (PDT)
+Received: by mail-il1-x12f.google.com with SMTP id a2so754305iln.13
+        for <linux-scsi@vger.kernel.org>; Fri, 23 Sep 2022 13:52:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date;
+        bh=0pguD5ERzMg1kriRPNLUHasBeFWgUGfxhoverUsEc0M=;
+        b=W4fL5OpwMiLHCLHE6MA2VCMfatp1lEDsHdXjApFf75g7A4o+b8aKbVcI2KDIo696Sf
+         ts4bZDR0j+B276oegyXKnN+/RxXID8cue/ScCc97/2L+SgbpwsyoD/qVuEJ3vgHecKgm
+         QhBq/Coo3EkCwb0NWw1nV3SYN8cZYAfdGPOV2KuoKrZ2uXLiKOMUW5Zq4h1e9brDFza7
+         KZYpR/a7iPwI7CH9yCogOVqua9QX48YTJgn6iLkamB8YCjrs38jCEChdL4oWULr37DVZ
+         vEbPIOVck+OooX2/aeTEvnEsSJgpQh79dHs4hOCXuzbmiIFdBvTolv7lLs+kfig45Bfj
+         YE2A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date;
-        bh=GgUKP3izHtHyEqj3vDDDrexbU6/XWurhT0kSFKGCtZw=;
-        b=dmO62MzlOxqkNk5fSpZxo0pzHQ3WAGIdO6OxQ9fwAWPuOfKCSw9C9lKinGVex07Npt
-         CvIAJKSzmIluONd9/1+9iYEqmvsjBpdmDHWLxhlDu4UuVuQdisuVnbSZtSIAO9rINWCK
-         pQjZsEKJS4j3ENom437Zj/ACKGoLr7eOJarAVW0rAu5NdA/YMJI3JGxJr4GuF071Wdbp
-         Ci7bpRLqBxuQrGeAr8o8751Ci/mLTwUV+y5+79Wim3CTa4gWGeyJTphMwGVHGFaWXyzW
-         gq2NBjRBKb9vysWKomowcrf5TcsyWJ7l0vbulvzKEvQpbICotPps8l50GSSoVXPK6NLc
-         FFfg==
-X-Gm-Message-State: ACrzQf1wQuOoY6pTfxT8ZGaxnYuAj57XJRCnxJW23a2BWGWwp6Uz4q2Y
-        2FJNzdmf2JHqQYQhdBOYjO8=
-X-Google-Smtp-Source: AMsMyM5Usf0PSS7C8xVHl4URtPMzGPqti54+aAr98zgxpew5TuhkgMnFh0e9O3v5gf9BLb0+edIpig==
-X-Received: by 2002:a17:902:bc44:b0:176:909f:f636 with SMTP id t4-20020a170902bc4400b00176909ff636mr10150871plz.21.1663963989224;
-        Fri, 23 Sep 2022 13:13:09 -0700 (PDT)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:aa13:bc38:2a63:318e])
-        by smtp.gmail.com with ESMTPSA id b7-20020a170902650700b001754fa42065sm6388435plk.143.2022.09.23.13.13.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 23 Sep 2022 13:13:08 -0700 (PDT)
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>
-Subject: [PATCH 8/8] scsi: ufs: Fix deadlock between power management and error handler
-Date:   Fri, 23 Sep 2022 13:11:38 -0700
-Message-Id: <20220923201138.2113123-9-bvanassche@acm.org>
-X-Mailer: git-send-email 2.37.3.998.g577e59143f-goog
-In-Reply-To: <20220923201138.2113123-1-bvanassche@acm.org>
-References: <20220923201138.2113123-1-bvanassche@acm.org>
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date;
+        bh=0pguD5ERzMg1kriRPNLUHasBeFWgUGfxhoverUsEc0M=;
+        b=NFQEeDdDpzqzZHAzIToS/Gh47ixTUg+AUzRT5BVd4NOmQ+/MQ7cEXV7Y3LH0rwlG+I
+         I/ZlQsR2uYqSyHoXhNltKqJ6kePCl0q8Gz6bUcdKLf/XHcpBsOdg1s+Nq/CSm2HsNA9j
+         JPBqXr98dbxztYX+kTrVyFvjkDs52NHViwj6Q960XLZ1hzXU5VB7a8CEwZ3C2lI2UrrK
+         6QeAe0YtG0uF4D7sSoBxH+yZ6AdScPrvVl7IWyGjMz/e4MbxTuZg3bPhO0pumb4SlwJ8
+         +sJCQRxifMcl1kXBVAT+BW7hCVV3IcnRukB7i4/bw6lop7xKFjh5I3xWBIoZpWPP8lSM
+         /Mug==
+X-Gm-Message-State: ACrzQf1ACEZvzvghCqazAUxaiyPxs+GAikymnXvbqCcTp9ZqG6ra618l
+        VFhPspnyIHDkKkz0uwKgXfgjcg==
+X-Google-Smtp-Source: AMsMyM51Ya2I8nFxvsCDC+9xPjmakd9dYpKCi1drkHVeMaH4beOmC4A8dpyYLut3dXaUzPsJEosJQQ==
+X-Received: by 2002:a05:6e02:15c5:b0:2d7:a1cf:6f87 with SMTP id q5-20020a056e0215c500b002d7a1cf6f87mr5040089ilu.30.1663966376003;
+        Fri, 23 Sep 2022 13:52:56 -0700 (PDT)
+Received: from [192.168.1.94] ([207.135.234.126])
+        by smtp.gmail.com with ESMTPSA id e23-20020a0566380cd700b00352ce4f5e72sm1201219jak.179.2022.09.23.13.52.55
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 23 Sep 2022 13:52:55 -0700 (PDT)
+Message-ID: <d09e1645-919f-9239-f86d-a8e85a133e5c@kernel.dk>
+Date:   Fri, 23 Sep 2022 14:52:54 -0600
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
+ Thunderbird/102.2.2
+Subject: Re: [PATCH 4/5] nvme: split out metadata vs non metadata end_io
+ uring_cmd completions
+Content-Language: en-US
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvme@lists.infradead.org, Stefan Roesch <shr@fb.com>
+References: <20220922182805.96173-1-axboe@kernel.dk>
+ <20220922182805.96173-5-axboe@kernel.dk> <Yy3O7wH16t6AhC3j@infradead.org>
+From:   Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <Yy3O7wH16t6AhC3j@infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The following deadlock has been observed on multiple test setups:
-* ufshcd_wl_suspend() is waiting for blk_execute_rq() to complete while it
-  holds host_sem.
-* ufshcd_eh_host_reset_handler() invokes ufshcd_err_handler() and the
-  latter function tries to obtain host_sem.
-This is a deadlock because blk_execute_rq() can't execute SCSI commands
-while the host is in the SHOST_RECOVERY state and because the error
-handler cannot make progress either.
+On 9/23/22 9:21 AM, Christoph Hellwig wrote:
+>> +	union {
+>> +		struct {
+>> +			void *meta; /* kernel-resident buffer */
+>> +			void __user *meta_buffer;
+>> +		};
+>> +		struct {
+>> +			u32 nvme_flags;
+>> +			u32 nvme_status;
+>> +			u64 result;
+>> +		};
+>> +	};
+> 
+> Without naming the arms of the union this is becoming a bit too much
+> of a mess..
+> 
+>> +static void nvme_uring_task_cb(struct io_uring_cmd *ioucmd)
+>> +{
+>> +	struct nvme_uring_cmd_pdu *pdu = nvme_uring_cmd_pdu(ioucmd);
+>> +	int status;
+>> +
+>> +	if (pdu->nvme_flags & NVME_REQ_CANCELLED)
+>> +		status = -EINTR;
+>> +	else
+>> +		status = pdu->nvme_status;
+> 
+> If you add a signed int field you only need one field instead of
+> two in the pdu for this (the nvme status is only 15 bits anyway).
 
-Fix this deadlock by calling the UFS error handler directly during system
-suspend instead of relying on the error handling mechanism in the SCSI
-core.
+For both of these, how about we just simplify like below? I think
+at that point it's useless to name them anyway.
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufshcd.c | 43 ++++++++++++++++++++++++++++++++++++---
- 1 file changed, 40 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index abeb120b12eb..996641fc1176 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -6405,9 +6405,19 @@ static void ufshcd_err_handler(struct work_struct *work)
+diff --git a/drivers/nvme/host/ioctl.c b/drivers/nvme/host/ioctl.c
+index 25f2f6df1602..6f955984ca14 100644
+--- a/drivers/nvme/host/ioctl.c
++++ b/drivers/nvme/host/ioctl.c
+@@ -350,16 +350,13 @@ struct nvme_uring_cmd_pdu {
+ 		struct request *req;
+ 	};
+ 	u32 meta_len;
++	u32 nvme_status;
+ 	union {
+ 		struct {
+ 			void *meta; /* kernel-resident buffer */
+ 			void __user *meta_buffer;
+ 		};
+-		struct {
+-			u32 nvme_flags;
+-			u32 nvme_status;
+-			u64 result;
+-		};
++		u64 result;
+ 	};
+ };
+ 
+@@ -396,17 +393,11 @@ static void nvme_uring_task_meta_cb(struct io_uring_cmd *ioucmd)
+ static void nvme_uring_task_cb(struct io_uring_cmd *ioucmd)
  {
- 	struct ufs_hba *hba = container_of(work, struct ufs_hba, eh_work);
+ 	struct nvme_uring_cmd_pdu *pdu = nvme_uring_cmd_pdu(ioucmd);
+-	int status;
+-
+-	if (pdu->nvme_flags & NVME_REQ_CANCELLED)
+-		status = -EINTR;
+-	else
+-		status = pdu->nvme_status;
  
--	down(&hba->host_sem);
--	ufshcd_recover_link(hba);
--	up(&hba->host_sem);
-+	/*
-+	 * Serialize suspend/resume and error handling because a deadlock
-+	 * occurs if the error handler runs concurrently with
-+	 * ufshcd_set_dev_pwr_mode().
-+	 */
-+	if (mutex_trylock(&system_transition_mutex)) {
-+		down(&hba->host_sem);
-+		ufshcd_recover_link(hba);
-+		up(&hba->host_sem);
-+		mutex_unlock(&system_transition_mutex);
-+	} else {
-+		pr_info("%s: suspend or resume is ongoing\n", __func__);
-+	}
+ 	if (pdu->bio)
+ 		blk_rq_unmap_user(pdu->bio);
+ 
+-	io_uring_cmd_done(ioucmd, status, pdu->result);
++	io_uring_cmd_done(ioucmd, pdu->nvme_status, pdu->result);
  }
  
- /**
-@@ -8298,6 +8308,25 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
- 	}
- }
+ static enum rq_end_io_ret nvme_uring_cmd_end_io(struct request *req,
+@@ -417,8 +408,10 @@ static enum rq_end_io_ret nvme_uring_cmd_end_io(struct request *req,
+ 	void *cookie = READ_ONCE(ioucmd->cookie);
  
-+static enum scsi_timeout_action ufshcd_eh_timed_out(struct scsi_cmnd *scmd)
-+{
-+	struct ufs_hba *hba = shost_priv(scmd->device->host);
-+
-+	if (!hba->system_suspending) {
-+		/* Apply the SCSI core error handling strategy. */
-+		return SCSI_EH_NOT_HANDLED;
-+	}
-+
-+	/*
-+	 * Fail START STOP UNIT commands without activating the SCSI error
-+	 * handler to prevent a deadlock between ufshcd_set_dev_pwr_mode() and
-+	 * ufshcd_err_handler().
-+	 */
-+	set_host_byte(scmd, DID_TIME_OUT);
-+	scsi_done(scmd);
-+	return SCSI_EH_DONE;
-+}
-+
- static const struct attribute_group *ufshcd_driver_groups[] = {
- 	&ufs_sysfs_unit_descriptor_group,
- 	&ufs_sysfs_lun_attributes_group,
-@@ -8332,6 +8361,7 @@ static struct scsi_host_template ufshcd_driver_template = {
- 	.eh_abort_handler	= ufshcd_abort,
- 	.eh_device_reset_handler = ufshcd_eh_device_reset_handler,
- 	.eh_host_reset_handler   = ufshcd_eh_host_reset_handler,
-+	.eh_timed_out		= ufshcd_eh_timed_out,
- 	.this_id		= -1,
- 	.sg_tablesize		= SG_ALL,
- 	.cmd_per_lun		= UFSHCD_CMD_PER_LUN,
-@@ -8791,6 +8821,13 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
- 			break;
- 		if (host_byte(ret) == 0 && scsi_status_is_good(ret))
- 			break;
-+		/*
-+		 * Calling the error handler directly when suspending or
-+		 * resuming the system since the callers of this function hold
-+		 * hba->host_sem in that case.
-+		 */
-+		if (host_byte(ret) != 0 && hba->system_suspending)
-+			ufshcd_recover_link(hba);
- 	}
- 	if (ret) {
- 		sdev_printk(KERN_WARNING, sdp,
+ 	req->bio = pdu->bio;
+-	pdu->nvme_flags = nvme_req(req)->flags;
+-	pdu->nvme_status = nvme_req(req)->status;
++	if (nvme_req(req)->flags & NVME_REQ_CANCELLED)
++		pdu->nvme_status = -EINTR;
++	else
++		pdu->nvme_status = nvme_req(req)->status;
+ 	pdu->result = le64_to_cpu(nvme_req(req)->result.u64);
+ 
+ 	/*
+
+-- 
+Jens Axboe
