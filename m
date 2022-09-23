@@ -2,62 +2,74 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EAEAECAAD8
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Sep 2022 07:41:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1055BC6FA93
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Sep 2022 09:29:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229688AbiIWHlD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 23 Sep 2022 03:41:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54410 "EHLO
+        id S231878AbiIWJ3f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 23 Sep 2022 05:29:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41638 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229706AbiIWHlB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Sep 2022 03:41:01 -0400
-Received: from mail.fadrush.pl (mail.fadrush.pl [54.37.225.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B31FF11C156
-        for <linux-scsi@vger.kernel.org>; Fri, 23 Sep 2022 00:40:59 -0700 (PDT)
-Received: by mail.fadrush.pl (Postfix, from userid 1002)
-        id 0C4BC235FF; Fri, 23 Sep 2022 07:37:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=fadrush.pl; s=mail;
-        t=1663918817; bh=bD6j9gIFU6CLTaCGl0Ow9oeIxtirvTfMeNZSfLEZQ+I=;
-        h=Date:From:To:Subject:From;
-        b=mQURpiHCCaaPMHdpjrnq6MEHp9wuhFja9Ds6msdI66+D6vYEpNdVZ9gvopL/hBxUF
-         LiJuqI79RiwmbysqUAa28LN68JpLcmKcHrY8h0AHrOSuOt94yKYrIyMcV2G5Lk/W1P
-         QygseEgqdM0SSJ4Ubq6RjWU3MYupAbm+73uj2w0pL3ICYPZtA1fzhzmJyPWyfzjrYW
-         eFLsRnYX5ijezdyAIQIrZgGS58flmO2EyQNmtZtQwhPnSpz4eaJhMChZYl5eHQt+3k
-         GBmvtWf8exszqekNYIKvm/0lYMtQ/0ejEEM60dcSJzaSg3JCQWP8Mt6iUZU8rdPFoy
-         2qIyjZ8zd5osw==
-Received: by mail.fadrush.pl for <linux-scsi@vger.kernel.org>; Fri, 23 Sep 2022 07:36:05 GMT
-Message-ID: <20220923064500-0.1.1t.h9xq.0.8l1x89kepu@fadrush.pl>
-Date:   Fri, 23 Sep 2022 07:36:05 GMT
-From:   "Jakub Olejniczak" <jakub.olejniczak@fadrush.pl>
-To:     <linux-scsi@vger.kernel.org>
-Subject: =?UTF-8?Q?Zwi=C4=99kszenie_p=C5=82ynno=C5=9Bci_finansowej?=
-X-Mailer: mail.fadrush.pl
+        with ESMTP id S232062AbiIWJ2r (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Sep 2022 05:28:47 -0400
+Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57B64F5971;
+        Fri, 23 Sep 2022 02:28:17 -0700 (PDT)
+Received: by mail-wr1-f52.google.com with SMTP id bq9so19513496wrb.4;
+        Fri, 23 Sep 2022 02:28:16 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date;
+        bh=fI2lO/p0Tgu9FuD6GUmjhPF/627CFAkNm/iJ5jz3IKc=;
+        b=DPPARzT2KsWkpAqZByKqbenZPdTtt7JMVUAhHmIRRuZtefqceyw28bepsGXPGgvvTp
+         ZaHkoJcicTOUzneNZRzgQQuQSjHVFOCg7oQkVYoPOcMyJxwkxycB6IfK/RnXVV9hJRcW
+         pjjKIbQjWfZRJe2wl/ZKxey3x5IfsHBnBAAg9GcBKEyYEU0FX+d91+I9QSFX0qcJUgOM
+         52COLBcsXX2CwRmO2y3Se9DolCtqxGUgtpVfe7t5XS53lFNDPJAEHqq50MWT2eHgCCyX
+         2WdgoM+TR2U35oUxb+fImuifYIzIYcseqOJktiPwprIlfk2pbR+62jK5sV8Z3MG8ZUtz
+         Kllg==
+X-Gm-Message-State: ACrzQf3rcGcJjWjvKhRkejowv4qNoD/mdX7z3/W68fUH/U3PvDo9I2yX
+        B9MFuxDKZ8mhu/TCfMucEYU=
+X-Google-Smtp-Source: AMsMyM6d4MFsmIRMHMVoz1pAsgjMy4X3kVPesZ4ZQ1zGtKpyqvBlXnSQrg3dQn54qGcGLUueJdZg9g==
+X-Received: by 2002:a5d:574a:0:b0:228:b90c:e5ee with SMTP id q10-20020a5d574a000000b00228b90ce5eemr4546269wrw.328.1663925279780;
+        Fri, 23 Sep 2022 02:27:59 -0700 (PDT)
+Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
+        by smtp.gmail.com with ESMTPSA id n6-20020a5d4206000000b0022b315b4649sm3628846wrq.26.2022.09.23.02.27.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 23 Sep 2022 02:27:59 -0700 (PDT)
+Date:   Fri, 23 Sep 2022 09:27:57 +0000
+From:   Wei Liu <wei.liu@kernel.org>
+To:     Saurabh Sengar <ssengar@linux.microsoft.com>
+Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        wei.liu@kernel.org, decui@microsoft.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-hyperv@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] Drivers: hv: vmbus: Optimize vmbus_on_event
+Message-ID: <Yy18HV8iAFLhF3P/@liuwe-devbox-debian-v2>
+References: <1658741848-4210-1-git-send-email-ssengar@linux.microsoft.com>
+ <20220815153141.x7q6qryxv25gvjgy@liuwe-devbox-debian-v2>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220815153141.x7q6qryxv25gvjgy@liuwe-devbox-debian-v2>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Dzie=C5=84 dobry,
+On Mon, Aug 15, 2022 at 03:31:41PM +0000, Wei Liu wrote:
+> On Mon, Jul 25, 2022 at 02:37:28AM -0700, Saurabh Sengar wrote:
+> > In the vmbus_on_event loop, 2 jiffies timer will not serve the purpose if
+> > callback_fn takes longer. For effective use move this check inside of
+> > callback functions where needed. Out of all the VMbus drivers using
+> > vmbus_on_event, only storvsc has a high packet volume, thus add this limit
+> > only in storvsc callback for now.
+> > There is no apparent benefit of loop itself because this tasklet will be
+> > scheduled anyway again if there are packets left in ring buffer. This
+> > patch removes this unnecessary loop as well.
+> > 
+> > Signed-off-by: Saurabh Sengar <ssengar@linux.microsoft.com>
+> 
+> Unfortunately this missed the recent merge window so it will be picked
+> up for the next release.
+> 
 
-kontaktuj=C4=99 si=C4=99 z Pa=C5=84stwem, poniewa=C5=BC chcia=C5=82bym za=
-proponowa=C4=87 wygodne rozwi=C4=85zanie, kt=C3=B3re umo=C5=BCliwi Pa=C5=84=
-stwa firmie stabilny rozw=C3=B3j.=20
-
-Konkurencyjne otoczenie wymaga ci=C4=85g=C5=82ego ulepszania i poszerzeni=
-a oferty, co z kolei wi=C4=85=C5=BCe si=C4=99 z konieczno=C5=9Bci=C4=85 i=
-nwestowania. Brak odpowiedniego kapita=C5=82u powa=C5=BCnie ogranicza tem=
-po rozwoju firmy.
-
-Od wielu lat z powodzeniem pomagam firmom w uzyskaniu najlepszej formy fi=
-nansowania z banku oraz UE. Mam sta=C5=82ych Klient=C3=B3w, kt=C3=B3rzy n=
-adal ch=C4=99tnie korzystaj=C4=85 z moich us=C5=82ug, a tak=C5=BCe poleca=
-j=C4=85 je innym.
-
-Czy chcieliby Pa=C5=84stwo skorzysta=C4=87 z pomocy wykwalifikowanego i d=
-o=C5=9Bwiadczonego doradcy finansowego?
-
-
-Pozdrawiam
-Jakub Olejniczak
+Applied to hyperv-next. Thanks.
