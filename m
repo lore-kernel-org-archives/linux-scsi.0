@@ -2,200 +2,261 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1EB5C54EE9
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Sep 2022 23:13:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12582C54EE9
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Sep 2022 01:06:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230211AbiIVXNx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Sep 2022 19:13:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44172 "EHLO
+        id S229744AbiIWBGp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Sep 2022 21:06:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52122 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230100AbiIVXNw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Sep 2022 19:13:52 -0400
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A854D1138E9;
-        Thu, 22 Sep 2022 16:13:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1663888429; x=1695424429;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=YYJtZOcit6qkgm5ch3A2v2ShoL6n5q9+tFdrt48fuV4=;
-  b=SSFu5f2X0MVzVi0SWzL7ciIOgKtunBjAN+mS4+PZCGttNG/8FwUZ20V+
-   nljPoBXMiHteiKFHn8yeesuXyWhe6v2WG8UWXt8mAPNv1w8mobtP9unIg
-   KLVvgo6BJvtb2nHK20GdIEO2iV8pqkON9Pg8QhMSkgZ9hLcrTHv68Upim
-   HO0k3ULd2xV/jzCu+F8/w1KlLle1bMfpuUdXds/YLjMg8f8r/PKGOc6FO
-   SYW2UqNb+MAHoyPqGuKoQPTOhmqBuDrJY+betFjQmc9GJMD99b30rUcxQ
-   m2f6EJQqQXEtBGbsDW+z/NdT9oITlNXCgdb4rjNW4orrjVAtDG7UL4CEV
-   w==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10478"; a="362263336"
-X-IronPort-AV: E=Sophos;i="5.93,337,1654585200"; 
-   d="scan'208";a="362263336"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2022 16:13:49 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.93,337,1654585200"; 
-   d="scan'208";a="653187817"
-Received: from lkp-server01.sh.intel.com (HELO c0a60f19fe7e) ([10.239.97.150])
-  by orsmga001.jf.intel.com with ESMTP; 22 Sep 2022 16:13:46 -0700
-Received: from kbuild by c0a60f19fe7e with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1obVO5-00054D-2w;
-        Thu, 22 Sep 2022 23:13:45 +0000
-Date:   Fri, 23 Sep 2022 07:13:38 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Yihao Han <hanyihao@vivo.com>, Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
+        with ESMTP id S229545AbiIWBGo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Sep 2022 21:06:44 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B68DA10D652;
+        Thu, 22 Sep 2022 18:06:43 -0700 (PDT)
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28N0wx69027206;
+        Fri, 23 Sep 2022 01:06:22 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type; s=qcppdkim1;
+ bh=gw2Gdgpn8Ht4iyxJDDite/jx7DHeuksCMQ2zYFoOOYw=;
+ b=GsIbHycRT3sGpLnp8VX5X33GTdfBLo9JLFfB5t9dtP5it15x7qOFJGbqp/44YjMetFzG
+ xJQCS2wfT/W64xIfGuc0PlL+8a7yuAt97iiJCVjvv7DjjGE9fY68/l0tPolCr4aqBbkc
+ VFsC+/UMOfSuX4jik1FCi9ttGdJX7Uv1SlE7+QKGilym4PIl0x6Ii4sBvCni3zp5/VTO
+ 0gFzPSgLz7EonfvFlu67X6/2kFUUu8QAUcWP4/IlpUB6M4co9QDA//oZFW9JYuIE9saA
+ WFM+whTL192MuMdn0RResT4uAclrGMHbwBu9t+hMPMNXwMMtoTbKGFVE4RvIbJokrQsT NQ== 
+Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3jrdnmk5nn-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 23 Sep 2022 01:06:22 +0000
+Received: from nasanex01a.na.qualcomm.com (corens_vlan604_snip.qualcomm.com [10.53.140.1])
+        by NASANPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 28N16Li3031020
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 23 Sep 2022 01:06:21 GMT
+Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
+ nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.29; Thu, 22 Sep 2022 18:06:20 -0700
+From:   Asutosh Das <quic_asutoshd@quicinc.com>
+To:     <mani@kernel.org>, <quic_nguyenb@quicinc.com>,
+        <quic_xiaosenh@quicinc.com>, <quic_cang@quicinc.com>,
+        <quic_nitirawa@quicinc.com>, <quic_rampraka@quicinc.com>,
+        <quic_richardp@quicinc.com>, <stanley.chu@mediatek.com>,
+        <adrian.hunter@intel.com>, <bvanassche@acm.org>,
+        <avri.altman@wdc.com>, <beanhuo@micron.com>,
+        <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     kbuild-all@lists.01.org, Yihao Han <hanyihao@vivo.com>
-Subject: Re: [PATCH] scsi: qla2xxx: fix excluded_middle.cocci warnings
-Message-ID: <202209230711.vQKIDdtE-lkp@intel.com>
-References: <20220920024554.2606-1-hanyihao@vivo.com>
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        "Jinyoung Choi" <j-young.choi@samsung.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        "open list" <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-mediatek@lists.infradead.org>
+Subject: [PATCH v1 01/16] ufs: core: Probe for ext_iid support
+Date:   Thu, 22 Sep 2022 18:05:08 -0700
+Message-ID: <ff7cdcdef82f6c9d709e2b6ed5d91e255327b780.1663894792.git.quic_asutoshd@quicinc.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <cover.1663894792.git.quic_asutoshd@quicinc.com>
+References: <cover.1663894792.git.quic_asutoshd@quicinc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220920024554.2606-1-hanyihao@vivo.com>
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: ePRIkcpIpq9JAtOihC-6g9K_7n2cCjtz
+X-Proofpoint-GUID: ePRIkcpIpq9JAtOihC-6g9K_7n2cCjtz
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
+ definitions=2022-09-22_16,2022-09-22_02,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999
+ lowpriorityscore=0 suspectscore=0 bulkscore=0 priorityscore=1501
+ spamscore=0 impostorscore=0 phishscore=0 clxscore=1015 adultscore=0
+ mlxscore=0 malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2209130000 definitions=main-2209230005
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Yihao,
+Task Tag is limited to 8 bits and this restricts the number
+of active IOs to 255.
+In Multi-circular queue mode, this may not be enough.
+The specification provides EXT_IID which can be used to increase
+the number of IOs if the UFS device and UFSHC support it.
+This patch adds support to probe for ext_iid support in
+ufs device and UFSHC.
 
-Thank you for the patch! Yet something to improve:
+Co-developed-by: Can Guo <quic_cang@quicinc.com>
+Signed-off-by: Can Guo <quic_cang@quicinc.com>
+Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
+---
+ drivers/ufs/core/ufshcd.c | 32 ++++++++++++++++++++++++++++++++
+ include/ufs/ufs.h         |  4 ++++
+ include/ufs/ufshcd.h      |  4 ++++
+ include/ufs/ufshci.h      |  7 +++++++
+ 4 files changed, 47 insertions(+)
 
-[auto build test ERROR on jejb-scsi/for-next]
-[also build test ERROR on mkp-scsi/for-next linus/master v6.0-rc6 next-20220921]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Yihao-Han/scsi-qla2xxx-fix-excluded_middle-cocci-warnings/20220920-104643
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-config: microblaze-randconfig-r032-20220922 (https://download.01.org/0day-ci/archive/20220923/202209230711.vQKIDdtE-lkp@intel.com/config)
-compiler: microblaze-linux-gcc (GCC) 12.1.0
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/81672bb39d1900d22e851a7cfb0b9a0aa35df8af
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Yihao-Han/scsi-qla2xxx-fix-excluded_middle-cocci-warnings/20220920-104643
-        git checkout 81672bb39d1900d22e851a7cfb0b9a0aa35df8af
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=microblaze SHELL=/bin/bash drivers/scsi/qla2xxx/
-
-If you fix the issue, kindly add following tag where applicable
-| Reported-by: kernel test robot <lkp@intel.com>
-
-All error/warnings (new ones prefixed by >>):
-
-   drivers/scsi/qla2xxx/qla_target.c: In function 'qlt_free_session_done':
->> drivers/scsi/qla2xxx/qla_target.c:7409:2: error: unterminated argument list invoking macro "if"
-    7409 | }
-         |  ^
->> drivers/scsi/qla2xxx/qla_target.c:7410: error: expected '(' at end of input
-   drivers/scsi/qla2xxx/qla_target.c:1030:17: note: '-Wmisleading-indentation' is disabled from this point onwards, since column-tracking was disabled due to the size of the code/headers
-    1030 |                 if (ha->flags.edif_enabled &&
-         |                 ^~
-   drivers/scsi/qla2xxx/qla_target.c:1030:17: note: adding '-flarge-source-files' will allow for more column-tracking support, at the expense of compilation time and memory
->> drivers/scsi/qla2xxx/qla_target.c:1030:17: error: expected declaration or statement at end of input
->> drivers/scsi/qla2xxx/qla_target.c:1030:17: error: expected declaration or statement at end of input
-   drivers/scsi/qla2xxx/qla_target.c:971:26: warning: unused variable 'base_vha' [-Wunused-variable]
-     971 |         scsi_qla_host_t *base_vha = pci_get_drvdata(ha->pdev);
-         |                          ^~~~~~~~
->> drivers/scsi/qla2xxx/qla_target.c:970:14: warning: variable 'logout_started' set but not used [-Wunused-but-set-variable]
-     970 |         bool logout_started = false;
-         |              ^~~~~~~~~~~~~~
-   drivers/scsi/qla2xxx/qla_target.c:969:23: warning: unused variable 'flags' [-Wunused-variable]
-     969 |         unsigned long flags;
-         |                       ^~~~~
-   drivers/scsi/qla2xxx/qla_target.c:966:25: warning: unused variable 'tgt' [-Wunused-variable]
-     966 |         struct qla_tgt *tgt = sess->tgt;
-         |                         ^~~
-   drivers/scsi/qla2xxx/qla_target.c: At top level:
->> drivers/scsi/qla2xxx/qla_target.c:101:13: warning: 'qlt_24xx_atio_pkt' used but never defined
-     101 | static void qlt_24xx_atio_pkt(struct scsi_qla_host *ha,
-         |             ^~~~~~~~~~~~~~~~~
->> drivers/scsi/qla2xxx/qla_target.c:103:13: warning: 'qlt_response_pkt' used but never defined
-     103 | static void qlt_response_pkt(struct scsi_qla_host *ha, struct rsp_que *rsp,
-         |             ^~~~~~~~~~~~~~~~
-   drivers/scsi/qla2xxx/qla_target.c:105:12: warning: 'qlt_issue_task_mgmt' declared 'static' but never defined [-Wunused-function]
-     105 | static int qlt_issue_task_mgmt(struct fc_port *sess, u64 lun,
-         |            ^~~~~~~~~~~~~~~~~~~
->> drivers/scsi/qla2xxx/qla_target.c:107:13: warning: 'qlt_send_term_exchange' used but never defined
-     107 | static void qlt_send_term_exchange(struct qla_qpair *, struct qla_tgt_cmd
-         |             ^~~~~~~~~~~~~~~~~~~~~~
-   drivers/scsi/qla2xxx/qla_target.c:109:13: warning: 'qlt_alloc_qfull_cmd' declared 'static' but never defined [-Wunused-function]
-     109 | static void qlt_alloc_qfull_cmd(struct scsi_qla_host *vha,
-         |             ^~~~~~~~~~~~~~~~~~~
-   drivers/scsi/qla2xxx/qla_target.c:111:13: warning: 'qlt_disable_vha' declared 'static' but never defined [-Wunused-function]
-     111 | static void qlt_disable_vha(struct scsi_qla_host *vha);
-         |             ^~~~~~~~~~~~~~~
-   drivers/scsi/qla2xxx/qla_target.c:112:13: warning: 'qlt_clear_tgt_db' declared 'static' but never defined [-Wunused-function]
-     112 | static void qlt_clear_tgt_db(struct qla_tgt *tgt);
-         |             ^~~~~~~~~~~~~~~~
-   drivers/scsi/qla2xxx/qla_target.c:113:13: warning: 'qlt_send_notify_ack' declared 'static' but never defined [-Wunused-function]
-     113 | static void qlt_send_notify_ack(struct qla_qpair *qpair,
-         |             ^~~~~~~~~~~~~~~~~~~
->> drivers/scsi/qla2xxx/qla_target.c:117:13: warning: 'qlt_send_term_imm_notif' used but never defined
-     117 | static void qlt_send_term_imm_notif(struct scsi_qla_host *vha,
-         |             ^~~~~~~~~~~~~~~~~~~~~~~
->> drivers/scsi/qla2xxx/qla_target.c:119:24: warning: 'qlt_create_sess' used but never defined
-     119 | static struct fc_port *qlt_create_sess(struct scsi_qla_host *vha,
-         |                        ^~~~~~~~~~~~~~~
->> drivers/scsi/qla2xxx/qla_target.c:122:13: warning: 'qlt_24xx_handle_abts' used but never defined
-     122 | static void qlt_24xx_handle_abts(struct scsi_qla_host *,
-         |             ^~~~~~~~~~~~~~~~~~~~
-   drivers/scsi/qla2xxx/qla_target.c:124:13: warning: 'qlt_send_busy' declared 'static' but never defined [-Wunused-function]
-     124 | static void qlt_send_busy(struct qla_qpair *, struct atio_from_isp *,
-         |             ^~~~~~~~~~~~~
-   drivers/scsi/qla2xxx/qla_target.c:126:12: warning: 'qlt_check_reserve_free_req' declared 'static' but never defined [-Wunused-function]
-     126 | static int qlt_check_reserve_free_req(struct qla_qpair *qpair, uint32_t);
-         |            ^~~~~~~~~~~~~~~~~~~~~~~~~~
-   drivers/scsi/qla2xxx/qla_target.c:127:24: warning: 'qlt_make_handle' declared 'static' but never defined [-Wunused-function]
-     127 | static inline uint32_t qlt_make_handle(struct qla_qpair *);
-         |                        ^~~~~~~~~~~~~~~
-   drivers/scsi/qla2xxx/qla_target.c:793:1: warning: 'qlt_plogi_ack_find_add' defined but not used [-Wunused-function]
-     793 | qlt_plogi_ack_find_add(struct scsi_qla_host *vha, port_id_t *id,
-         | ^~~~~~~~~~~~~~~~~~~~~~
-   drivers/scsi/qla2xxx/qla_target.c:332:13: warning: 'qlt_24xx_atio_pkt_all_vps' defined but not used [-Wunused-function]
-     332 | static bool qlt_24xx_atio_pkt_all_vps(struct scsi_qla_host *vha,
-         |             ^~~~~~~~~~~~~~~~~~~~~~~~~
-   drivers/scsi/qla2xxx/qla_target.c:139:20: warning: 'prot_op_str' defined but not used [-Wunused-function]
-     139 | static const char *prot_op_str(u32 prot_op)
-         |                    ^~~~~~~~~~~
-   drivers/scsi/qla2xxx/qla_target.c:135:33: warning: 'qla_tgt_wq' defined but not used [-Wunused-variable]
-     135 | static struct workqueue_struct *qla_tgt_wq;
-         |                                 ^~~~~~~~~~
-   drivers/scsi/qla2xxx/qla_target.c:134:19: warning: 'qla_tgt_mgmt_cmd_mempool' defined but not used [-Wunused-variable]
-     134 | static mempool_t *qla_tgt_mgmt_cmd_mempool;
-         |                   ^~~~~~~~~~~~~~~~~~~~~~~~
-   drivers/scsi/qla2xxx/qla_target.c:132:27: warning: 'qla_tgt_mgmt_cmd_cachep' defined but not used [-Wunused-variable]
-     132 | static struct kmem_cache *qla_tgt_mgmt_cmd_cachep;
-         |                           ^~~~~~~~~~~~~~~~~~~~~~~
-   drivers/scsi/qla2xxx/qla_target.c:61:12: warning: 'tc_sam_status' defined but not used [-Wunused-variable]
-      61 | static int tc_sam_status = SAM_STAT_TASK_SET_FULL; /* target core */
-         |            ^~~~~~~~~~~~~
-   drivers/scsi/qla2xxx/qla_target.c:60:12: warning: 'qla_sam_status' defined but not used [-Wunused-variable]
-      60 | static int qla_sam_status = SAM_STAT_BUSY;
-         |            ^~~~~~~~~~~~~~
-
-
-vim +/if +7409 drivers/scsi/qla2xxx/qla_target.c
-
-2d70c103fd2a066 Nicholas Bellinger 2012-05-15  7399  
-2d70c103fd2a066 Nicholas Bellinger 2012-05-15  7400  void qlt_exit(void)
-2d70c103fd2a066 Nicholas Bellinger 2012-05-15  7401  {
-2d70c103fd2a066 Nicholas Bellinger 2012-05-15  7402  	if (!QLA_TGT_MODE_ENABLED())
-2d70c103fd2a066 Nicholas Bellinger 2012-05-15  7403  		return;
-2d70c103fd2a066 Nicholas Bellinger 2012-05-15  7404  
-2d70c103fd2a066 Nicholas Bellinger 2012-05-15  7405  	destroy_workqueue(qla_tgt_wq);
-2d70c103fd2a066 Nicholas Bellinger 2012-05-15  7406  	mempool_destroy(qla_tgt_mgmt_cmd_mempool);
-b7bd104e6f1c3be Alexei Potashnik   2015-12-17  7407  	kmem_cache_destroy(qla_tgt_plogi_cachep);
-2d70c103fd2a066 Nicholas Bellinger 2012-05-15  7408  	kmem_cache_destroy(qla_tgt_mgmt_cmd_cachep);
-2d70c103fd2a066 Nicholas Bellinger 2012-05-15 @7409  }
-
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index f4f8ded..4b9ae83 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -88,6 +88,7 @@
+ /* Polling time to wait for fDeviceInit */
+ #define FDEVICEINIT_COMPL_TIMEOUT 1500 /* millisecs */
+ 
++#define EXT_IID_CAP_SHIFT 10
+ #define ufshcd_toggle_vreg(_dev, _vreg, _on)				\
+ 	({                                                              \
+ 		int _ret;                                               \
+@@ -2239,6 +2240,10 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
+ 	if (err)
+ 		dev_err(hba->dev, "crypto setup failed\n");
+ 
++	hba->mcq_capabilities = ufshcd_readl(hba, REG_MCQCAP);
++	hba->ext_iid_sup = (hba->mcq_capabilities & MASK_EXT_IID_SUPPORT) >>
++		EXT_IID_CAP_SHIFT;
++
+ 	return err;
+ }
+ 
+@@ -7664,6 +7669,30 @@ static void ufshcd_temp_notif_probe(struct ufs_hba *hba, const u8 *desc_buf)
+ 	}
+ }
+ 
++static void ufshcd_ext_iid_probe(struct ufs_hba *hba, u8 *desc_buf)
++{
++	struct ufs_dev_info *dev_info = &hba->dev_info;
++	u32 ext_ufs_feature;
++	u32 ext_iid_en = 0;
++	int err;
++
++	if (dev_info->wspecversion < 0x400)
++		goto out;
++
++	ext_ufs_feature = get_unaligned_be32(desc_buf + DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP);
++
++	if (!(ext_ufs_feature & UFS_DEV_EXT_IID_SUP))
++		goto out;
++
++	err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
++				      QUERY_ATTR_IDN_EXT_IID_EN, 0, 0, &ext_iid_en);
++	if (err)
++		dev_err(hba->dev, "failed reading bEXTIIDEn. err = %d\n", err);
++
++out:
++	dev_info->b_ext_iid_en = !!ext_iid_en;
++}
++
+ void ufshcd_fixup_dev_quirks(struct ufs_hba *hba,
+ 			     const struct ufs_dev_quirk *fixups)
+ {
+@@ -7762,6 +7791,9 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
+ 
+ 	ufshcd_temp_notif_probe(hba, desc_buf);
+ 
++	if (hba->ext_iid_sup)
++		ufshcd_ext_iid_probe(hba, desc_buf);
++
+ 	/*
+ 	 * ufshcd_read_string_desc returns size of the string
+ 	 * reset the error value
+diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
+index 1bba3fe..ba2a1d8 100644
+--- a/include/ufs/ufs.h
++++ b/include/ufs/ufs.h
+@@ -165,6 +165,7 @@ enum attr_idn {
+ 	QUERY_ATTR_IDN_AVAIL_WB_BUFF_SIZE       = 0x1D,
+ 	QUERY_ATTR_IDN_WB_BUFF_LIFE_TIME_EST    = 0x1E,
+ 	QUERY_ATTR_IDN_CURR_WB_BUFF_SIZE        = 0x1F,
++	QUERY_ATTR_IDN_EXT_IID_EN		= 0x2A,
+ };
+ 
+ /* Descriptor idn for Query requests */
+@@ -352,6 +353,7 @@ enum {
+ 	UFS_DEV_EXT_TEMP_NOTIF		= BIT(6),
+ 	UFS_DEV_HPB_SUPPORT		= BIT(7),
+ 	UFS_DEV_WRITE_BOOSTER_SUP	= BIT(8),
++	UFS_DEV_EXT_IID_SUP		= BIT(16),
+ };
+ #define UFS_DEV_HPB_SUPPORT_VERSION		0x310
+ 
+@@ -601,6 +603,8 @@ struct ufs_dev_info {
+ 
+ 	bool	b_rpm_dev_flush_capable;
+ 	u8	b_presrv_uspc_en;
++	/* UFS EXT_IID Enable */
++	bool	b_ext_iid_en;
+ };
+ 
+ /*
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index 7fe1a92..da1eb8a 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -737,6 +737,7 @@ struct ufs_hba_monitor {
+  * @outstanding_lock: Protects @outstanding_reqs.
+  * @outstanding_reqs: Bits representing outstanding transfer requests
+  * @capabilities: UFS Controller Capabilities
++ * @mcq_capabilities: UFS Multi Command Queue capabilities
+  * @nutrs: Transfer Request Queue depth supported by controller
+  * @nutmrs: Task Management Queue depth supported by controller
+  * @reserved_slot: Used to submit device commands. Protected by @dev_cmd.lock.
+@@ -818,6 +819,7 @@ struct ufs_hba_monitor {
+  *	device
+  * @complete_put: whether or not to call ufshcd_rpm_put() from inside
+  *	ufshcd_resume_complete()
++ * @ext_iid_sup: is EXT_IID is supported by UFSHC
+  */
+ struct ufs_hba {
+ 	void __iomem *mmio_base;
+@@ -859,6 +861,7 @@ struct ufs_hba {
+ 
+ 	u32 capabilities;
+ 	int nutrs;
++	u32 mcq_capabilities;
+ 	int nutmrs;
+ 	u32 reserved_slot;
+ 	u32 ufs_version;
+@@ -965,6 +968,7 @@ struct ufs_hba {
+ #endif
+ 	u32 luns_avail;
+ 	bool complete_put;
++	bool ext_iid_sup;
+ };
+ 
+ /* Returns true if clocks can be gated. Otherwise false */
+diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
+index f81aa95..ef5c3a8 100644
+--- a/include/ufs/ufshci.h
++++ b/include/ufs/ufshci.h
+@@ -22,6 +22,7 @@ enum {
+ /* UFSHCI Registers */
+ enum {
+ 	REG_CONTROLLER_CAPABILITIES		= 0x00,
++	REG_MCQCAP				= 0x04,
+ 	REG_UFS_VERSION				= 0x08,
+ 	REG_CONTROLLER_DEV_ID			= 0x10,
+ 	REG_CONTROLLER_PROD_ID			= 0x14,
+@@ -68,6 +69,12 @@ enum {
+ 	MASK_OUT_OF_ORDER_DATA_DELIVERY_SUPPORT	= 0x02000000,
+ 	MASK_UIC_DME_TEST_MODE_SUPPORT		= 0x04000000,
+ 	MASK_CRYPTO_SUPPORT			= 0x10000000,
++	MASK_MCQ_SUPPORT			= 0x40000000,
++};
++
++/* MCQ capability mask */
++enum {
++	MASK_EXT_IID_SUPPORT = 0x00000400,
+ };
+ 
+ #define UFS_MASK(mask, offset)		((mask) << (offset))
 -- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+2.7.4
+
