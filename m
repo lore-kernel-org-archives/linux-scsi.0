@@ -2,34 +2,34 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E33F0C6FA83
-	for <linux-scsi@archiver.kernel.org>; Sat, 24 Sep 2022 07:24:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04A2BC07E9D
+	for <linux-scsi@archiver.kernel.org>; Sat, 24 Sep 2022 07:24:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233249AbiIXHYV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 24 Sep 2022 03:24:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57552 "EHLO
+        id S233442AbiIXHYX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 24 Sep 2022 03:24:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57560 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232759AbiIXHYT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 24 Sep 2022 03:24:19 -0400
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3253013D867;
-        Sat, 24 Sep 2022 00:24:18 -0700 (PDT)
-Received: from canpemm500004.china.huawei.com (unknown [172.30.72.56])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4MZL514Ts0z1P6mK;
-        Sat, 24 Sep 2022 15:20:05 +0800 (CST)
+        with ESMTP id S233412AbiIXHYU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 24 Sep 2022 03:24:20 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4273813D863;
+        Sat, 24 Sep 2022 00:24:19 -0700 (PDT)
+Received: from canpemm500004.china.huawei.com (unknown [172.30.72.57])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4MZL5F3YSrzWgrK;
+        Sat, 24 Sep 2022 15:20:17 +0800 (CST)
 Received: from huawei.com (10.175.127.227) by canpemm500004.china.huawei.com
  (7.192.104.92) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Sat, 24 Sep
- 2022 15:24:15 +0800
+ 2022 15:24:16 +0800
 From:   Jason Yan <yanaijie@huawei.com>
 To:     <martin.petersen@oracle.com>, <jejb@linux.ibm.com>
 CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <hare@suse.com>, <hch@lst.de>, <bvanassche@acm.org>,
         <john.garry@huawei.com>, <jinpu.wang@cloud.ionos.com>,
         Jason Yan <yanaijie@huawei.com>
-Subject: [PATCH v2 1/8] scsi: libsas: introduce sas_find_attached_phy() helper
-Date:   Sat, 24 Sep 2022 15:34:48 +0800
-Message-ID: <20220924073455.2186805-2-yanaijie@huawei.com>
+Subject: [PATCH v2 3/8] scsi: mvsas: use sas_find_attached_phy() instead of open coded
+Date:   Sat, 24 Sep 2022 15:34:50 +0800
+Message-ID: <20220924073455.2186805-4-yanaijie@huawei.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20220924073455.2186805-1-yanaijie@huawei.com>
 References: <20220924073455.2186805-1-yanaijie@huawei.com>
@@ -44,56 +44,46 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-LLDDs are implementing their own attached phy finding code repeatedly.
-Factor it out to libsas.
+The attached phy finding is open coded. Now we can replace it with
+sas_find_attached_phy().
 
 Signed-off-by: Jason Yan <yanaijie@huawei.com>
 ---
- drivers/scsi/libsas/sas_expander.c | 17 +++++++++++++++++
- include/scsi/libsas.h              |  2 ++
- 2 files changed, 19 insertions(+)
+ drivers/scsi/mvsas/mv_sas.c | 15 ++++-----------
+ 1 file changed, 4 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index fa2209080cc2..a5effff3d1c3 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -2107,6 +2107,23 @@ int sas_ex_revalidate_domain(struct domain_device *port_dev)
- 	return res;
- }
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index a6867dae0e7c..f6576ffabe9f 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -1190,23 +1190,16 @@ static int mvs_dev_found_notify(struct domain_device *dev, int lock)
+ 	mvi_device->sas_device = dev;
+ 	if (parent_dev && dev_is_expander(parent_dev->dev_type)) {
+ 		int phy_id;
+-		u8 phy_num = parent_dev->ex_dev.num_phys;
+-		struct ex_phy *phy;
+-		for (phy_id = 0; phy_id < phy_num; phy_id++) {
+-			phy = &parent_dev->ex_dev.ex_phy[phy_id];
+-			if (SAS_ADDR(phy->attached_sas_addr) ==
+-				SAS_ADDR(dev->sas_addr)) {
+-				mvi_device->attached_phy = phy_id;
+-				break;
+-			}
+-		}
  
-+int sas_find_attached_phy(struct expander_device *ex_dev,
-+			  struct domain_device *dev)
-+{
-+	struct ex_phy *phy;
-+	int phy_id;
-+
-+	for (phy_id = 0; phy_id < ex_dev->num_phys; phy_id++) {
-+		phy = &ex_dev->ex_phy[phy_id];
-+		if (SAS_ADDR(phy->attached_sas_addr)
-+			== SAS_ADDR(dev->sas_addr))
-+			return phy_id;
-+	}
-+
-+	return -ENODEV;
-+}
-+EXPORT_SYMBOL_GPL(sas_find_attached_phy);
-+
- void sas_smp_handler(struct bsg_job *job, struct Scsi_Host *shost,
- 		struct sas_rphy *rphy)
- {
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 2dbead74a2af..75faf2308eae 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -750,6 +750,8 @@ int sas_clear_task_set(struct domain_device *dev, u8 *lun);
- int sas_lu_reset(struct domain_device *dev, u8 *lun);
- int sas_query_task(struct sas_task *task, u16 tag);
- int sas_abort_task(struct sas_task *task, u16 tag);
-+int sas_find_attached_phy(struct expander_device *ex_dev,
-+			  struct domain_device *dev);
+-		if (phy_id == phy_num) {
++		phy_id = sas_find_attached_phy(&parent_dev->ex_dev, dev);
++		if (phy_id == -ENODEV) {
+ 			mv_printk("Error: no attached dev:%016llx"
+ 				"at ex:%016llx.\n",
+ 				SAS_ADDR(dev->sas_addr),
+ 				SAS_ADDR(parent_dev->sas_addr));
+ 			res = -1;
++		} else {
++			mvi_device->attached_phy = phy_id;
+ 		}
+ 	}
  
- void sas_notify_port_event(struct asd_sas_phy *phy, enum port_event event,
- 			   gfp_t gfp_flags);
 -- 
 2.31.1
 
