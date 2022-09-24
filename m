@@ -2,107 +2,92 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49272C32771
-	for <linux-scsi@archiver.kernel.org>; Sat, 24 Sep 2022 03:22:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA7BDC32771
+	for <linux-scsi@archiver.kernel.org>; Sat, 24 Sep 2022 05:21:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232621AbiIXDWi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 23 Sep 2022 23:22:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36286 "EHLO
+        id S233346AbiIXFVj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 24 Sep 2022 01:21:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45266 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231833AbiIXDWh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Sep 2022 23:22:37 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4BD7212059A;
-        Fri, 23 Sep 2022 20:22:35 -0700 (PDT)
-Received: from canpemm500004.china.huawei.com (unknown [172.30.72.53])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4MZDk659q7zlWnR;
-        Sat, 24 Sep 2022 11:18:22 +0800 (CST)
-Received: from [10.174.179.14] (10.174.179.14) by
- canpemm500004.china.huawei.com (7.192.104.92) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Sat, 24 Sep 2022 11:22:33 +0800
-Subject: Re: [PATCH 6/7] scsi: pm8001: use dev_and_phy_addr_same() instead of
- open coded
-To:     John Garry <john.garry@huawei.com>, <martin.petersen@oracle.com>,
-        <jejb@linux.ibm.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <hare@suse.com>, <hch@lst.de>, <bvanassche@acm.org>,
-        <jinpu.wang@cloud.ionos.com>
-References: <20220917104311.1878250-1-yanaijie@huawei.com>
- <20220917104311.1878250-7-yanaijie@huawei.com>
- <0034eff3-70a5-becb-0821-f9c36371e6d9@huawei.com>
- <3c1aa262-7e9b-cb6c-e8a1-a1a201050a10@huawei.com>
- <6c299e8f-80be-0276-c8b1-9df1946434da@huawei.com>
- <d3c7285f-6318-8254-2bfa-d836f12fcd88@huawei.com>
- <569cb47c-af63-cf70-ae1a-4c5116dd4877@huawei.com>
-From:   Jason Yan <yanaijie@huawei.com>
-Message-ID: <d303aa1d-a397-4bb0-394d-46bd8c0db27d@huawei.com>
-Date:   Sat, 24 Sep 2022 11:22:32 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        with ESMTP id S233308AbiIXFVi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 24 Sep 2022 01:21:38 -0400
+Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 717C413A3BC
+        for <linux-scsi@vger.kernel.org>; Fri, 23 Sep 2022 22:21:36 -0700 (PDT)
+Received: by mail-pf1-x431.google.com with SMTP id y136so1943462pfb.3
+        for <linux-scsi@vger.kernel.org>; Fri, 23 Sep 2022 22:21:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date;
+        bh=PPRXlLTYZ3zKwK3ad/AozhJnwUlEmFf37ZAwcK6Vux0=;
+        b=bRJXy8HIQ7D6BUQDEqhfdStJXXZPFcATdYsA3rCgRlPoLjgYgY5pIsXL1oREfpTrlq
+         r+HKkeru+wwduG9JSy6j462a31Q+ODUAvGRE0Nzs/yT/tmihFFPGrSRBuAng65iiMuzv
+         Ys9IftdSKHBvGu0i0NGbCSw0nd2mCLt5qQj5o=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date;
+        bh=PPRXlLTYZ3zKwK3ad/AozhJnwUlEmFf37ZAwcK6Vux0=;
+        b=kS+aSdTzkgMRedAn0SJ6bpYe+sF1AmwtbArxDskYV1wfgCI0kVjf0XHCcOFduMLZen
+         tc2VagwewOpBrxLKP2aMiTj3nuzecaIdB18TdZ2yXNS5wLSDr+5j15wgtQGp/2hwaAaO
+         9fnWrHyn07v23QOxAi+nXRR35T4rVkrhdeLruTuUTGIDbUmUAn+SUE8co48RcKlJEcuG
+         kAsJKG0jGrU7CWfg+PoMCxIP1x5CiKuqmGP7OaLAjmcIZ3/wK791VVxFt920i4MnOhMC
+         Tm81VHr3dQOefX5Z0NzQ8tStb74HpB60jInCeyNgWnV8KQ8eXXzUNfcIfirRKZ1PpmIs
+         U1cQ==
+X-Gm-Message-State: ACrzQf36ypq1NfNz0wWgvnloPEn+cqkLgEGxOSvMS8yHwZYTzGiZRML+
+        DcxUeqX6fMqUeX2vgDNnUd+z+A==
+X-Google-Smtp-Source: AMsMyM4XsIuTS/5fCoS42BuVeEKj1MdwRkTAi8gz+gbjVvEbLwrI//toZFaRVR1w62R1BSjWFLQd9w==
+X-Received: by 2002:a05:6a00:2409:b0:54e:a3ad:d32d with SMTP id z9-20020a056a00240900b0054ea3add32dmr12611930pfh.70.1663996895927;
+        Fri, 23 Sep 2022 22:21:35 -0700 (PDT)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id w16-20020a170902e89000b00176d8e33601sm6937804plg.203.2022.09.23.22.21.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 23 Sep 2022 22:21:35 -0700 (PDT)
+Date:   Fri, 23 Sep 2022 22:21:34 -0700
+From:   Kees Cook <keescook@chromium.org>
+To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Cc:     Jack Wang <jinpu.wang@cloud.ionos.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-hardening@vger.kernel.org
+Subject: Re: [PATCH] scsi: pm8001: Replace one-element array with
+ flexible-array member
+Message-ID: <202209232203.2F77ADD1CA@keescook>
+References: <Yyy31OuBza1FJCXP@work>
 MIME-Version: 1.0
-In-Reply-To: <569cb47c-af63-cf70-ae1a-4c5116dd4877@huawei.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.174.179.14]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- canpemm500004.china.huawei.com (7.192.104.92)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Yyy31OuBza1FJCXP@work>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Thu, Sep 22, 2022 at 02:30:28PM -0500, Gustavo A. R. Silva wrote:
+> One-element arrays are deprecated, and we are replacing them with flexible
+> array members instead. So, replace one-element array with flexible-array
+> member in struct fw_control_info.
 
-On 2022/9/23 18:30, John Garry wrote:
-> On 23/09/2022 11:13, Jason Yan wrote:
->>>
->>> Please explain why.
->>>
->>> I would assume that if those helpers were only used in libsas code 
->>> (and not LLDDs) then they could be put in sas_internal.h and no need 
->>> for export
->>>
->>
->>
->> Sorry, I did not make it clear. I mean we need to export 
->> sas_find_attathed_phy() below. Not the sas address comparation helpers.
-> 
-> That seems fine to me.
-> 
-> About sas_find_attathed_phy() implementation,
-> 
->  > +static inline int sas_find_attathed_phy(struct expander_device *ex_dev,
->  > +                                       struct domain_device *dev)
->  > +{
->  > +       struct ex_phy *phy;
->  > +       int phy_id;
->  > +
->  > +       for (phy_id = 0; phy_id < ex_dev->num_phys; phy_id++) {
->  > +               phy = &ex_dev->ex_phy[phy_id];
->  > +               if (SAS_ADDR(phy->attached_sas_addr)
->  > +                       == SAS_ADDR(dev->sas_addr))
->  > +                       return phy_id;
->  > +       }
->  > +
->  > +       return ex_dev->num_phys;
-> 
-> Returning ex_dev->num_phys would seem ok, but then the LLDD needs to 
-> check that return against ex_dev->num_phys. It seems ok, but I'm still 
-> not 100% comfortable with that. Maybe returning -ENODEV may be better.
-> 
-> Or return boolean and pass phy_id as pointer to be filled in when 
-> returning true.
-> 
+I think this changelog should include some explanation of why this change
+is safe. As far as I can see, it would be:
 
-I've been thinking about this for a while too. Thank you for the advise.
+This is the only change needed; struct fw_control_info is only ever used
+for casting to existing allocations. No sizeof() is used on any of the
+resulting variables.
 
-Thanks,
-Jason
+> This helps with the ongoing efforts to tighten the FORTIFY_SOURCE
+> routines on memcpy() and help us make progress towards globally
+> enabling -fstrict-flex-arrays=3 [1].
+> 
+> Link: https://github.com/KSPP/linux/issues/79
+> Link: https://github.com/KSPP/linux/issues/207
+> Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=101836 [1]
+> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 
->  > +}
-> 
-> Thanks,
-> John
-> 
-> .
+Another one down! :)
+
+Reviewed-by: Kees Cook <keescook@chromium.org>
+
+-- 
+Kees Cook
