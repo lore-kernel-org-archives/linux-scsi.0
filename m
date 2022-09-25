@@ -2,151 +2,154 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BC92C04A95
-	for <linux-scsi@archiver.kernel.org>; Sun, 25 Sep 2022 18:28:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53741C6FA82
+	for <linux-scsi@archiver.kernel.org>; Sun, 25 Sep 2022 23:00:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232707AbiIYS2i (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 25 Sep 2022 14:28:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54020 "EHLO
+        id S229867AbiIYXA0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 25 Sep 2022 19:00:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58334 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232645AbiIYS2e (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Sep 2022 14:28:34 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BAB492981A
-        for <linux-scsi@vger.kernel.org>; Sun, 25 Sep 2022 11:28:33 -0700 (PDT)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28P9RRdr012930;
-        Sun, 25 Sep 2022 18:28:21 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : content-type :
- mime-version; s=corp-2022-7-12;
- bh=bKSxJ/bKOsjzTIpgIt9I5k6HjGPou4mIzAIZGgNCjfg=;
- b=m8vvFMPmsJcWrqAUiggL00vLPgfDe16eAwx+pnvgNowAoyN+ty/dxi/mnHnKQo0bZ70A
- mOOcyc0QMJ5YjWgY4YcvRVpXM0gYd7TLU7U06lUt/8Xnhy1XrzElhnwMHumJWZdcPkXj
- F+aZkW2SeTtdGki5tePIGQ0OWfsTrociiWu7b3EhI+w6mh2YJEuN9bnkUJ9wZib65wq/
- tljb1uzqP8uf7E2xh31xdmRhatO1d4uUbcMU1JjfLEAcaZ26pTfTGlAVSrRzLCMODHlD
- APtZpFvs9A77KKIUnF0Io0ita+munltLbdlhsxWUumr/uyQU46u5V+Fm8wA4byitcFoe 8w== 
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3jsstpj0f8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 25 Sep 2022 18:28:21 +0000
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 28PCAYxs002696;
-        Sun, 25 Sep 2022 18:28:20 GMT
-Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2169.outbound.protection.outlook.com [104.47.58.169])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3jtprsmc20-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 25 Sep 2022 18:28:20 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=L/2A9Sy244WSXNto5oCyG3BDvmCiTe+nFqKyCzokA2Z1BMwVXAPA6jEsmiq+FXffae6bvSTPyGD34peHqCggvNr/mnH6RJJ8dkjlHmymXqZWtrcakH1ismsw4Olo65YxTNWT3cfwCu6UUKXTYG20sqsOYuEc5q712tAQmTChP02h3asu5mPac2PXrsBT3ib16u+id9EVeX4AWEUx8Rk4BFlFpEaVyI7lAfF/lC7FwXGHS2sods55uZX8HCRhZfqe4sBEu8AX8YH6X7fDyYdajndHBs1rIbURwCHJIbnik37zDzASo4EdD0v8hNYc8j5OB5k/gSdV8tmA622kwb6j+g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=bKSxJ/bKOsjzTIpgIt9I5k6HjGPou4mIzAIZGgNCjfg=;
- b=SEKd4mogmpGXbquNac9djYYN8ddTLMp8QNhrmavkDCVMQ/purrE9Np0v8YdfJU2LBEUUXzYO/5wepE1BL1SZJaPsE1dCY3GVV8PBe+gB+NOYVHUtMyxhOYaoRNHIWpE8+ENH7RvgmBbwME8JT43xUChxr+WCph4qIiZwoP4httx8z2tFc0DYmfBYHXcN4n5xMOryKLMhxIJBKZx95cDX8HBSOKYasoc+GsLyO0+lASWbvw8khQjnpA3CeaWSkhCGj4n6hz7cRsKyFXj4roYM0aPbnTb0JQmv10zOd9d5RnrFbhGJrr/lGgHqvsSKXlXlQKogT25RQpW0WnJoN75ibw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=bKSxJ/bKOsjzTIpgIt9I5k6HjGPou4mIzAIZGgNCjfg=;
- b=o9aqAiGFEC813h+gKWovIyk4Btef9gXZi1AGp+giZ/VmGAo0g1qY4uHDn58FZzUR9zBa0p0yWUj4Re/YALDEIpooVcGmmShU4ULa4QCwGsMgPavcbTU+kVc2Jyc6/RwXSrbv0V4qHLZv04nR7gzPeQjADGfINq+KGsmkuxzFrao=
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
- by DS7PR10MB4862.namprd10.prod.outlook.com (2603:10b6:5:38c::15) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5654.25; Sun, 25 Sep
- 2022 18:28:17 +0000
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::a497:8929:2c6f:7351]) by PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::a497:8929:2c6f:7351%5]) with mapi id 15.20.5654.020; Sun, 25 Sep 2022
- 18:28:17 +0000
-To:     Mike Christie <michael.christie@oracle.com>
-Cc:     lijinlin3@huawei.com, lduncan@suse.com, cleech@redhat.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        jejb@linux.ibm.com
-Subject: Re: [PATCH v2 1/1] scsi: iscsi_tcp: Fix null-ptr-deref while
- calling getpeername
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq14jwvpavm.fsf@ca-mkp.ca.oracle.com>
-References: <20220907221700.10302-1-michael.christie@oracle.com>
-Date:   Sun, 25 Sep 2022 14:28:14 -0400
-In-Reply-To: <20220907221700.10302-1-michael.christie@oracle.com> (Mike
-        Christie's message of "Wed, 7 Sep 2022 17:17:00 -0500")
-Content-Type: text/plain
-X-ClientProxiedBy: DM6PR06CA0057.namprd06.prod.outlook.com
- (2603:10b6:5:54::34) To PH0PR10MB4759.namprd10.prod.outlook.com
- (2603:10b6:510:3d::12)
+        with ESMTP id S229567AbiIYXAY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Sep 2022 19:00:24 -0400
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20BF71A3AE
+        for <linux-scsi@vger.kernel.org>; Sun, 25 Sep 2022 16:00:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1664146823; x=1695682823;
+  h=message-id:date:mime-version:subject:to:references:from:
+   in-reply-to:content-transfer-encoding;
+  bh=q5ndYG7MZM8fplI0Sb0WNEkoAhj3lIM1QuGfdBfeGOk=;
+  b=OleJSQOg/XjEavwtwPa57KTBS/i5x5nqnscWoWlhXSuHw1HA77JrWQKk
+   mQ+gFRk6xziAAXjhJgnTkrJszYeLaiiPmYqWXuiXi1UDPATS+mVqtONeA
+   P8M8QbK3UifalkDjqpazXpZQv5JLDuLLbnCdF+4By/J12lCaby8iLMxTw
+   Z5CvIH9iQgoQrN0t2jPqt54R64EkWAf+sZjTaSBCJ5g5IiYuLHyqToDOO
+   lawZBjDN01Sibcg1bs/1F4lP5ZQKRtW8wWHqcDOkqg5QBOjhuXC3WIFh1
+   9vDMcKJjCJHLq16xs7L88gO5qzg+zbb/Q22RBK59NAEt01PLM5eslEBXe
+   w==;
+X-IronPort-AV: E=Sophos;i="5.93,345,1654531200"; 
+   d="scan'208";a="210603481"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 26 Sep 2022 07:00:23 +0800
+IronPort-SDR: Bv8npLXCBFkYSK8AwFcHoQZbZpc8TuHceQjYIXvHWlUgUUwvHQyWuQiTrrrlzCIu7QT2PH9dkx
+ fHXCXv3QcBItFSpQkwLoG5oXD0mwW2yrDtVuo8EdsLLMnEkDdh+gqruqhQhZxaIOWG2FyM1ghp
+ /F2P4A/sjWLmAdzwJGcRgw7La8GoWssgxFqbu1mg6r5zW9o3sRl5kGDNW8ovz0SEA+EcKXYZmp
+ rB9Fwem6jzYKq/P98YFcgjc1sH09B8ngw/LIuyCTXntQVlsp2HFy9gDUtnox/bMikbqOG+ssjP
+ uk1yPm5YpLGkT1wRUF5JOsTK
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 25 Sep 2022 15:14:51 -0700
+IronPort-SDR: E4EDQgB/5+foIQGymo+eJr9ZkSkphtXByg0yf0JSFVfBdT7Ks/JGM//MNA8rcaVwiA+T06tiVa
+ AnenYOTqvpbvT11aQkAiaSZ41o1l//JSNisaREpiMKUNNDvnJQdSnLfEiqWDC28CTXrtrHrEac
+ Hh8/aA/JSffV5jGEXxSk3A5y+5vDiiur+RgXTFw8CPhcOd/+9UtVFPFgeNckxUVT/zvvgFbdvy
+ K1brCOEVHbXBgxK0esdn7FG6lYxfmopVGYxOg94O3GWbRVufMigJ6QRUVw/e6M6PY7kvBswY3j
+ h+U=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 25 Sep 2022 16:00:24 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MbLvW1jbLz1RvTp
+        for <linux-scsi@vger.kernel.org>; Sun, 25 Sep 2022 16:00:23 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1664146822; x=1666738823; bh=q5ndYG7MZM8fplI0Sb0WNEkoAhj3lIM1QuG
+        fdBfeGOk=; b=lsNeTbULWgKw1J5oWILOI0VmdMUIpWUfaLGZdPXS+73vFh6ghwD
+        qzhdb7fyqatLAqdrZQhtSXTt3cj1NTXNk8P7WYoVGr/+eb5qoSwaFNikln25puCz
+        LV76ejvbSWTWyRMxsP3ReUczQ4EIUTR8WP8iIW151m2KUjJ8TM0rb4u8hYKiaXYs
+        WRBSBNZADa9cbNIO/p1dUX+v2KRP2dc/2qsKd5rbWx5LbtSXFRREbAXFuAiAv93q
+        dsA0fpV/fROB3DyeVVY+CjR6mepnYO6pXhmPDBqlZ3yhTdejVo87M/bXDv4rry0I
+        EXaMXuO+hRn/7O6KT1LOCAgfvOZJA2nOP1A==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id 2-q8weGYbLwt for <linux-scsi@vger.kernel.org>;
+        Sun, 25 Sep 2022 16:00:22 -0700 (PDT)
+Received: from [10.149.53.254] (washi.fujisawa.hgst.com [10.149.53.254])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MbLvV06yvz1RvLy;
+        Sun, 25 Sep 2022 16:00:21 -0700 (PDT)
+Message-ID: <0e2ff01a-d972-1765-ee50-3b04476fa696@opensource.wdc.com>
+Date:   Mon, 26 Sep 2022 08:00:20 +0900
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH0PR10MB4759:EE_|DS7PR10MB4862:EE_
-X-MS-Office365-Filtering-Correlation-Id: 022f80fd-da2e-4ca4-e4f9-08da9f23b71b
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: bGaGnmP6CoXaRWN7Q9BHYjcNP3C4+yhUzXylHhN55BWt5qeEm6nxdkDQApNSCIv/0BbiA6yZmTb7bOe2W9Vb8F5OwC9s6rhVIEYlv68UmhDCJZ3F2AAKlu2GT19RSM+XbgiwB6Jt0u1wPPaR4DiyeRBCkloPSe5zOsNGuk7CoPOdnLcsGrGqfH5u9Rj0dzo+5GJyNYs0fUvE/CLlzbbD6rCQ9IladE3DVCLcGjqUwaAm157S2WnCKuHmzYTqBDayhXz8KvjzZ98X1bYg935Lb3yZuFswurwwIkelHAPk/RP4rW2v/JkOFylF9e9hdAstzdydb/wmM2DOI56jnZ4TCYEeggh7gaeMrK4Ezezz+THjFwBnGe6tpX8n80L7VIgy+CvwNUKPNu9ungDVFs7WH2RJ2QMPlACJj0Ss4tq4KsnpiPHEvusjMspqyiqjD0PkIp483h4TBEDKon7YOYsDxj8NKDNCdvo08JCQrbquJwXZn5+GGXWjPg7Y035NTQJR3ZdL6bQFpmbPpbh11XTbsjYtwxHhA92G/nZ7qt2Ni1uRSqZo7tXZUtN66XFwWRdVZvwfucm9hJw2/RqlR4dlQ+VtI5v40+pj7iAKiXM14dJJ26XIsFASDf6ok0rneFH3XauLKNaZLeOHJbu2MUvz0bCQ3R4ikLw2/XA3l+hINuRieCRobsxaT8hAqOTFLm7YemCq4FN5rLlbOjR+3lQIng==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(396003)(346002)(366004)(136003)(39860400002)(376002)(451199015)(83380400001)(38100700002)(66476007)(66556008)(8676002)(558084003)(66946007)(4326008)(8936002)(2906002)(6862004)(5660300002)(86362001)(6666004)(41300700001)(36916002)(6506007)(6486002)(478600001)(186003)(26005)(6512007)(316002)(6636002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?GsqzD2fBHhe/YYwU9RBHxnuP8cMW0TQ2P1m1oXpt9YPBncAO/SNst4N+zCMO?=
- =?us-ascii?Q?Z2C1dNUgk0K+5CoGb1RblxcMt27z86cVHrYVRMfHIFzzVjCw/mHvvTD8eeBp?=
- =?us-ascii?Q?ZFlEBsNOnoOCl/07+QIbWiuloC/+SYEfzpN3maEijU54v5po0wgQKSD4ygLf?=
- =?us-ascii?Q?pDhIIHK4M9/koPNmhkW1l568MvdjwbNNFIgx4MdFm1KwJFz/d5seOxx06LO/?=
- =?us-ascii?Q?rsVTJTNGHNWtVr/9s0hLBw574zwMI0uljzOv7cY+KoqXASzUPn4iaWLgitCn?=
- =?us-ascii?Q?8apGejL1Ri2DDj1a+6chbcGDuBI7Mom0Q6M17de1bRMW5Mlll2xxpdQLmjdv?=
- =?us-ascii?Q?DCX+78G/8uiIc0p3nP+F2L94YOjdDISf4NnSM2VKBDhkz0LbBsyyzP22iQgC?=
- =?us-ascii?Q?VC3Zg/lJGispzXal664jGLJXamqKFd1dXnwCSL2ZXutwAwDhtHXrDPIpYyRj?=
- =?us-ascii?Q?0/1fLnY7qnObGSuo8DX3qe+RnPnsNklEpnqFBcGrarJoTvqBO1vn2g2YlMj8?=
- =?us-ascii?Q?GlRy+NZlKN4kSZhGKYi6R+2eaO5Hp/5G5+vhheUeXDt7zamAxe0FwaUX0WWG?=
- =?us-ascii?Q?o+dwhVfFj8AlXWKn3heal+02MGo842nlUfd7pzrS3YEApCGYTFB8230wBj4p?=
- =?us-ascii?Q?vQ76W0hOW4fC4ZPjbxdjvU0uOBgHLf/XgqIGc9CyB234K7Jm0pZdAJUGtoBh?=
- =?us-ascii?Q?reFzED+o9Vb57TooPjphpqB1rXg5C0LWR9qdQzq1PIQPR4D3RjO4lCzk7wcL?=
- =?us-ascii?Q?7hCUrtH0/qVSje2srbmMo/KiFHdS763Hzxc7HuPqbXnjGRzatwpgorSmrLOz?=
- =?us-ascii?Q?q9e7D2F2I3zTeJSpUKISH1WEYq4RBPdvNyTDtndhYqTVqQ5UA896IwyLZr9y?=
- =?us-ascii?Q?Kbuy22hkDhNYqZHAb1iVwFRevG0I+jUNwHMHnlILbpz6OvaJgMokN/Zh9zmQ?=
- =?us-ascii?Q?Fd+RCCDfJ84wwxqTaKDMNYPKPgJ3dbNm2oKQTd1LjJn3096PZb4t8QeGGFVd?=
- =?us-ascii?Q?Cy90K+ZoaJsTAE8vDKGNEx05t9d8rxUZFK92kTFyORHslXhCKx0WHgMt9wP1?=
- =?us-ascii?Q?ZOAdTgCIF57XmeIsgyw8q5y8uaqlj8CjFDYgn29ZTb7B08oHcqbp1OQiyPLy?=
- =?us-ascii?Q?PAg5uNoXlvWryXAyWCC1LQ+OBqDJjNmyq8LjFL+9Pf+pvW6zDkTs24ChHT+G?=
- =?us-ascii?Q?chP4C+YTFeyfYg09E4ElhCN8eGPacQ4UxdimV9kAR1rMKkyIEUsbUpzgsmpg?=
- =?us-ascii?Q?BSv3+PDbv3Jvi4AWQS6eO+B3cDSlFDP81qdSgzs0mFEpggPo+C7a54zQmQpH?=
- =?us-ascii?Q?hZOcUJsHWLx+Ylyh78OxEscvQ2hvfUs+Y5+ENbdjemrUGOZIS52ggdzlothE?=
- =?us-ascii?Q?kqV6jkgobj76jCmN4ci5RYCpNGUKe7Y0J1pqHHjSuHQcr+5n2LsvFOWkPO0c?=
- =?us-ascii?Q?VHDtoiEWLwr60dDyJTjFX4V0+oqPqBx8wuHUWqwO3gQ7a66InsLw6yxzy+g6?=
- =?us-ascii?Q?jNJZ0+uppo1X+JFmxnRvQJ+v2TGxkzvz/yf15sFcXdhVIg4ri45P31yrjOhi?=
- =?us-ascii?Q?bsV0va3cENOwAJzeRYliD77SynJ4h6+Js7HrvuLxlnQGzW37L5JADIfPXi+2?=
- =?us-ascii?Q?dQ=3D=3D?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 022f80fd-da2e-4ca4-e4f9-08da9f23b71b
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Sep 2022 18:28:17.2951
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: GvIINXuEg0p+2emQFUlo2d/XTA7yLxMO1nOeeM3LMU4CQFBywuz/04F/jPo0PNGRm+aKxj5NWqH5a96BEe0dmxOJLS2D3/38RtDoG/u0SRg=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR10MB4862
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
- definitions=2022-09-25_01,2022-09-22_02,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 adultscore=0
- suspectscore=0 phishscore=0 mlxscore=0 mlxlogscore=838 spamscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2209130000 definitions=main-2209250134
-X-Proofpoint-ORIG-GUID: baIpByF06EFAxoo6kLTzGIuQ6q-AonEr
-X-Proofpoint-GUID: baIpByF06EFAxoo6kLTzGIuQ6q-AonEr
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.0
+Subject: Re: [PATCH 2/2] ata: libata-sata: Fix device queue depth control
+Content-Language: en-US
+To:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org,
+        linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        John Garry <john.garry@huawei.com>
+References: <20220924062907.959856-1-damien.lemoal@opensource.wdc.com>
+ <20220924062907.959856-3-damien.lemoal@opensource.wdc.com>
+ <b1595afb-49cd-2e19-1b5f-bfbe9836784e@omp.ru>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <b1595afb-49cd-2e19-1b5f-bfbe9836784e@omp.ru>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 9/24/22 18:49, Sergey Shtylyov wrote:
+> Hello!
+> 
+> On 9/24/22 9:29 AM, Damien Le Moal wrote:
+> 
+>> The function __ata_change_queue_depth() uses the helper
+>> ata_scsi_find_dev() to get the ata_device structure of a scsi device and
+>> set that device maximum queue depth. However, when the ata device is
+>> managed by libsas, ata_scsi_find_dev() return NULL, turning
+> 
+>    Returns?
+> 
+>> __ata_change_queue_depth() into a nop, which prevents the user from
+>> setting the maximum queue depth of ATA devices used with libsas based
+>> HBAs.
+>>
+>> Fix this by renaming __ata_change_queue_depth() to
+>> ata_change_queue_depth() and adding a pointer to the ata_device
+>> structure of the target device as argument. This pointer is provided by
+>> ata_scsi_change_queue_depth() using ata_scsi_find_dev() in the case ofi
+> 
+>    Of?
+> 
+>> a libata managed device and by sas_change_queue_depth() using
+>> sas_to_ata_dev() in the case of a libsas managed ata device.
+>>
+>> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> [...]
+> 
+>> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+>> index ff9602a0e54e..c63bb50323c1 100644
+>> --- a/drivers/ata/libata-scsi.c
+>> +++ b/drivers/ata/libata-scsi.c
+>> @@ -1101,6 +1101,11 @@ int ata_scsi_dev_config(struct scsi_device *sdev, struct ata_device *dev)
+>>  	if (dev->flags & ATA_DFLAG_AN)
+>>  		set_bit(SDEV_EVT_MEDIA_CHANGE, sdev->supported_events);
+>>  
+>> +	pr_info("#### can queue %d, ata qd %d, scsi qd %d\n",
+> 
+>     Hm... isn't this a debugging pr_info() call you forgot to remove?
 
-Mike,
+Oops. Yes. Sending an update. Thanks for the review.
 
-> This patch fixes a NULL pointer crash that occurs when we are freeing
-> the socket at the same time we access it via sysfs.
-
-Applied to 6.1/scsi-staging, thanks!
+> 
+>> +		sdev->host->can_queue,
+>> +		ata_id_queue_depth(dev->id),
+>> +		sdev->queue_depth);
+>> +
+>>  	if (dev->flags & ATA_DFLAG_NCQ)
+>>  		depth = min(sdev->host->can_queue, ata_id_queue_depth(dev->id));
+>>  	depth = min(ATA_MAX_QUEUE, depth);
+> [...]
+> 
+> MBR, Sergey
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Damien Le Moal
+Western Digital Research
+
