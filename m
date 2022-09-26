@@ -2,342 +2,206 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F33EEC07E9D
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Sep 2022 16:52:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B33C1C6FA82
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Sep 2022 16:58:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230024AbiIZQwo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Sep 2022 12:52:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41094 "EHLO
+        id S230122AbiIZQ6M (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Sep 2022 12:58:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42828 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229997AbiIZQwQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2022 12:52:16 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0F456A4A9;
-        Mon, 26 Sep 2022 08:45:55 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 3F2D9B802C6;
-        Mon, 26 Sep 2022 15:45:53 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4FD35C433D6;
-        Mon, 26 Sep 2022 15:45:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664207152;
-        bh=6hyTFJAEj3/dM5VsZlBu/+ra5mc/qGQXYL8EHYeBUig=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=QITwqRN2zwUk3y5wcXVWLSaoiuE1y/mvDSVYjLnr/Qk+hGIToRX9aonS2/Z2AG1FW
-         FZmaKqi1ihyT1G3eELpWrzB9rwWhCO0C/BXVBmRkqiAdSC/MCAwbBRH6PJ78HYp1Le
-         3yAAR+3F0HeuuiwDdGy6mWvfg26u/JM0aIyb6s/CcmncUHRqQ1GghUmQav691soYp4
-         J4YMJuSuxuFHGerfaxxBKnyJ1SFO22wWof5ZjOSroYUfIaUZxMXdiYgmfIiYE6Og59
-         7LLvB7LmYJmmmjakBZ/afW6XKdPl5vG/UpjLROiUqagn3GglEU+QRD1I1TxIiWpEL6
-         oOEsShl/1o7oQ==
-Date:   Mon, 26 Sep 2022 21:15:32 +0530
-From:   Manivannan Sadhasivam <mani@kernel.org>
-To:     Asutosh Das <quic_asutoshd@quicinc.com>
-Cc:     quic_nguyenb@quicinc.com, quic_xiaosenh@quicinc.com,
-        quic_cang@quicinc.com, quic_nitirawa@quicinc.com,
-        quic_rampraka@quicinc.com, quic_richardp@quicinc.com,
-        stanley.chu@mediatek.com, adrian.hunter@intel.com,
-        bvanassche@acm.org, avri.altman@wdc.com, beanhuo@micron.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-mediatek@lists.infradead.org>
-Subject: Re: [PATCH v1 07/16] ufs: core: mcq: Allocate memory for mcq mode
-Message-ID: <20220926154532.GH101994@thinkpad>
-References: <cover.1663894792.git.quic_asutoshd@quicinc.com>
- <66d2f7b0794b4f95ad8db223408b710d7a5e2b8c.1663894792.git.quic_asutoshd@quicinc.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+        with ESMTP id S230099AbiIZQ55 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2022 12:57:57 -0400
+Received: from EUR01-DB5-obe.outbound.protection.outlook.com (mail-eopbgr150077.outbound.protection.outlook.com [40.107.15.77])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14ABD11C29
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Sep 2022 08:54:33 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=QVzXwJEoP8T7HmmB4zhJgmfdFTfsN6oX3AwY5SwB2KSzf3dc1fJIucqTADkmeiFW7XNLbATogIiaqUkzpmvGIlb0GY9GOqYWX3wO8ykVTpYU7C+jWBMrYlTfJvuaxbX0SwctjXmAKdk5kjJ0RKUSPEKkB2W+91gpSQLPb1P1qvj4EG9nA3rBrmQGbMRG20f1BPkQHJ+tPRyhiliMU2Tc2vK7DdgUmKuaXn5PwEkrAg28mEyifFXT7/RBKWd2kjYP9SA8TIfYUZRI0jSLvxdZ1K/SdP5VUrA+XF8Z1Ycud4y7ZUjNMqaqsqVCx5rzuZpB7mxoeZUYXEH3mNebdn+mzg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=a3QAhkYF6efzEfg3J95zdlO5VXSWOACkepCUCdcI9i8=;
+ b=gRaco9Jx8XoJ3MdaET3UDC+L7QT+ZidyioT5mQ4rCq7IEau8WQ6FufR4/erTBOxwb86PJ+bdtIj54IlP0pwMKRAZGBS08org9miJgGePNSUFmIMAN9fdvF3nL6mr+qDKBl3NVLBjzuAiXO1VBqNROF2sSrJ2kd0AN5ENHtcNLrebPC1Xk3ZuzM2kj6ySdHWUMCWM5RX6PPhUJcgl9eX1UrgGhmUWByhxu93R1W1wI/8aWVRlwayAiEhXCHWe1DXG/2X9cKpgFNq/PAX5wqfFgQ1vt3XwXVM7FCUHIJzVhcJ4Rw2ggDkHmH06VdmbjHK7cAPwWY6/HXkojcadl33jJQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
+ dkim=pass header.d=suse.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=a3QAhkYF6efzEfg3J95zdlO5VXSWOACkepCUCdcI9i8=;
+ b=ANQSO1GGJ5gWzCxcO4dV4Gbta1ljWp7xfAcmnxShZ1KRhdn5J5Ff+9zsdGGgievgW8vPDbxJK25KVgPUh5QG3UTLDGqZGdv31h/mSZ9/j0ndSZmsRlStxhdqSzGvYUnfEri35n3zw/lV5LZ2cO/1n1MDSpK9/QXegU+GEt37JwhrhF8RfHwYTHsdB7EoVMl7q2UMYjDMrunXskKuqaNzoVYHig5jnJu4U63px7ffwLz6441I73+FgQ6A2v5f3aLSpqDhuaqxNZSuEy0+93jaN8nz6pNMcX10P55WS1CPhvOQfFoYf/387s2mPHauCjuvFLVbBoFfW4Q4CenOWDXf9Q==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=suse.com;
+Received: from AM5PR04MB3089.eurprd04.prod.outlook.com (2603:10a6:206:b::28)
+ by AM9PR04MB8713.eurprd04.prod.outlook.com (2603:10a6:20b:43c::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5654.25; Mon, 26 Sep
+ 2022 15:54:31 +0000
+Received: from AM5PR04MB3089.eurprd04.prod.outlook.com
+ ([fe80::78bf:cbbb:dea8:7e4f]) by AM5PR04MB3089.eurprd04.prod.outlook.com
+ ([fe80::78bf:cbbb:dea8:7e4f%6]) with mapi id 15.20.5654.025; Mon, 26 Sep 2022
+ 15:54:31 +0000
+Message-ID: <6ee86af6-6a0d-4c8d-439d-0ea58dc7c743@suse.com>
+Date:   Mon, 26 Sep 2022 08:54:24 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.2.2
+Subject: Re: [PATCH v2] scsi: stex: properly zero out the passthrough command
+ structure
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi@vger.kernel.org, hdthky <hdthky0@gmail.com>,
+        stable <stable@kernel.org>,
+        Dan Carpenter <dan.carpenter@oracle.com>
+References: <20220908145154.2284098-1-gregkh@linuxfoundation.org>
+ <YxrjN3OOw2HHl9tx@kroah.com> <fd6a94cd-6d71-f241-fc7b-d8613c1c2616@acm.org>
+From:   Lee Duncan <lduncan@suse.com>
+In-Reply-To: <fd6a94cd-6d71-f241-fc7b-d8613c1c2616@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <66d2f7b0794b4f95ad8db223408b710d7a5e2b8c.1663894792.git.quic_asutoshd@quicinc.com>
+X-ClientProxiedBy: FR3P281CA0161.DEUP281.PROD.OUTLOOK.COM
+ (2603:10a6:d10:a2::20) To AM5PR04MB3089.eurprd04.prod.outlook.com
+ (2603:10a6:206:b::28)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: AM5PR04MB3089:EE_|AM9PR04MB8713:EE_
+X-MS-Office365-Filtering-Correlation-Id: 9d4e2f18-68d4-41af-535b-08da9fd7667e
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: T/T/gCuL3BCtB8xddqnNX0/B/ZDNts77tM4gSRFUYsnSqOjHNjaB6Ciyx3kzHgllmmRI/mhBv2K/5aVV5cQN8igSOCMzoQsqsm9wHCYbFGaeKeZGA04wDh0P0TV5orwH/8FdQu8vWGY+LWJML++Cu49Li4zItcHgmPHwmfO14QHMpTJ3vh4PLLCzSL0Fs75fALhavtGcxLET1uoDBalmY8fDLpZM6VsPcPV7g/z6T9x5zauK8XMzUQhioKdQeuoy03pB+43Tl2ZYyWYaKQ40Gr+5tIpTgFYpIcOZH4jvJZpXd9LiwTEI6hE9Sy6VwuP+IcYlXzRm2CYqvxrmJ6KFibL12TsTGh7CdzqRX8njieUfXXIV6h3/saCuXCAp2Em8jkLxwYJDNidUMuHq6R/9e+wqqkpJ0of3ElzftCmQuBbm/AMUzLMWMyOOgbIC3MScqSR/0T1zVQ6G2JnltiiMS+kahinS5yrTv45/+8CFtJY0L7uxaTN8t9idgN1SUDF6wfpuv9LaEljTWQ6mN6Wop0zi+bQex6hxMQ9GwI77ddAheitARvMhMwdrxtZNnPuq4CMCD0qfpaJPB82R2F7AvLvnTAya+AdleioUREfO8FPj+rMXROSdSbyEznUTK9t0UeubRX/Fhf+6Z3OykeOVlNOpUkkE0oPAxyHHweUdnLyB5y/fSujxJZZvUTXlLnhTgCT5ehkO687XL11fgd2cs0Ytspqf7G7X6GwSg9ZFbYqp2cJV9JX61ArSlELyqOZ1Xi+TWwmiC9Cy+p50ykj0IoSIQTyk7kASEjI6jeOcp1Q=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM5PR04MB3089.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(346002)(396003)(376002)(39860400002)(136003)(366004)(451199015)(38100700002)(86362001)(6486002)(31686004)(31696002)(478600001)(8936002)(83380400001)(110136005)(6666004)(6506007)(53546011)(316002)(5660300002)(26005)(6512007)(2906002)(54906003)(8676002)(2616005)(66946007)(66556008)(4326008)(66476007)(36756003)(41300700001)(186003)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?MU5CeHpnb2JoNVpWaldYYThGVDZyL0JJYzJUODJ1Q1pyUVNiL0VtaC9xQjdC?=
+ =?utf-8?B?Q3NiZFNzcG1Wc1JOcytXdkM3VnpqSElKSnpza2ZaczhCY1l2elE1TjBPM0NW?=
+ =?utf-8?B?YnljY1JNU0x6ZVpRdlR0TThOUVVKTnpYZDlYL05vTmMyOXJCY1c5Myt3bEJi?=
+ =?utf-8?B?cUpyamVnRG5WbDQ2VVYxUVV3S3pmMnhxQlNva29iQ09wNGVuRDVtaTFPdTJS?=
+ =?utf-8?B?MHFUNll5MHFTY2pVR0lDMmFMSFpoVXJUb1lmUTAwUmd6dHRUaU4vUmxYeUUw?=
+ =?utf-8?B?WW9aK2NPa0ZONDB6eG55K2VWbS9qYm43MlZ1akgzbU82VGM4dG94VndmMlFP?=
+ =?utf-8?B?NUJtaS8vOWhpZEJqNWNWYSs2NnJYNnZFVmpUbEhZVUdILy8vTFV3NURTTE0w?=
+ =?utf-8?B?aU55eVY4ZTlvUkpEOXFOTFFPMmxRWE5iU1I3Z0crUWRUZEVHNkdjdHpTdjVr?=
+ =?utf-8?B?dHhOdXlMVjF5b3hUL1ZhNEg1OFIydWlrVG9xZDU4WU55MVZlbUxaN0FZa2gx?=
+ =?utf-8?B?RnpCM3RkRWU1RXVRcGJQa2JVR2toaDI3UWhsaXlQM2ZnNXNSU1NkTy9yaUwx?=
+ =?utf-8?B?MEZ0aTBOMUFpS3ZTUUtwN0RRaWtWdUhoUnlTb1A2Q0NIN1ozbjkveEtwUk1s?=
+ =?utf-8?B?MmRmelZheC8va1BiUDZnL2szWEU2SWNPQTVQZEdDTjU0Qm1uYk5tR3IvVHd3?=
+ =?utf-8?B?OHAwUDl5eFduN3k5QUFoSDNpL1l5bFpGS0RTOUxHaXZybkpTUWk5YmVkQlZu?=
+ =?utf-8?B?dkFoUWhFZVNTQ1F1bE91d1FKODNYMWFVTFFNaHZJczJlUUR1QTRMYUdyZXNE?=
+ =?utf-8?B?S3VZQ01PWGRGZjh1ck1yT2ZHTnZlYUVtYTdQY1BJbEZQODh5SjhJTXgyVFVT?=
+ =?utf-8?B?bEN0U1NKN1dsQnJqTlREcVRvcCtZZk9EK1JCSmdVZlRac3RqNmlKWjgyL2dJ?=
+ =?utf-8?B?Kyt6Ry9vTU5wYldlYzJXcXpNblpGMU4wN0lVY2NLYThuNHBQVUZULzFJVWM4?=
+ =?utf-8?B?WURua0JWQTJwN0pQQXNrL3dzbExtR2x5OS9tOG00V1FTOG9PUzkvUi9ZSkk4?=
+ =?utf-8?B?Ni8vWGJmSGQyd2ZueXdtM24ybUhEZXFmYmk0UlcycHA2L1JROHdQQlVtVzAy?=
+ =?utf-8?B?ekt5bVgyWUNFTjZuZlN6SzJFU25SWll3cU1OUVErdHlhYzFxekdEZkJpY0s2?=
+ =?utf-8?B?UGhQc2N6ZDNOTU02QkhBaVY2ckdRaUNtM015ZURUc2JDMGxBMlFXSHBYUDdI?=
+ =?utf-8?B?VjF6VkZFaEN3RzhHTkd0MVVycTJyM1FsV2F5QkYycGZXczRQWjE3VWxSSWYz?=
+ =?utf-8?B?aE00cTJXM3VWRXY3Q1FlK1V2eHBKd1UxZXFKRlNLMGJ0N1Q4YWpVTm14Snlh?=
+ =?utf-8?B?SjNDUmwzLzV2ZHNzcm9HTUtwWXh1N2VNM09MLzJwYVhqMjZBUUN6QVBMQkRW?=
+ =?utf-8?B?QlRRUC9ndlo2amp5QkFQY2x3T1RUczc3cU1VZVVPS2dUSWI0QmMyUVlqNkhM?=
+ =?utf-8?B?MnpaRWJ2YW1CQWtGZGV4YjI1N2VOd3E0UVBEMlBQNTNWSkVRUi9tV1VmMU5R?=
+ =?utf-8?B?Y3gzU3ovMEFOVGtzM1VpYVFldmovYkVDc1ppSFh2VmYyY29TcHAySDFoNGYw?=
+ =?utf-8?B?Z0dHeFBwOWpETkhOaDJyNDA5SmZYb1VOQjkySlY2NjB2M2JmTUtpRHFzRlR3?=
+ =?utf-8?B?TXE5UHVhRVJLTzR1aUFDTnV2YlhIOEovK0xYZXc0bGVqWTlVNnNaaUtCZld6?=
+ =?utf-8?B?SGdWbU1rRjlqNytDSXhocVVtT01Oekl4MjJuY3NWdEtQbmg4S282MlNsbTdO?=
+ =?utf-8?B?TjFxTUJEN0s5dEIwNmx3cmlMby9sOFM2WU5SOUh5d1JkTXFnYXBlaU1UdU91?=
+ =?utf-8?B?TlJhclRNRUVsNHFTU25uMEN6VUYyZjBoT1NVdVUvazNQTnRiSXVQVm9weFBG?=
+ =?utf-8?B?NXBNVHNpcFNXanVlZE9QeTMrOFVENjkwM2d1S0w3SVZnbHNvOWhMYzFnYTcx?=
+ =?utf-8?B?TFBaSmliNUJkRDl2WFhrUjhQeEI2blVPR00rOFQ2Y1RzeldSRVZFK2RKeTJ1?=
+ =?utf-8?B?bnhSK09KRVFmYWpYVGZmVW5KbCtkcjBkMjlLejlDd29sdk9LVDhqUGRPNEsx?=
+ =?utf-8?Q?ONZu+8Y0IiwUyo4QDYtEKI8P/?=
+X-OriginatorOrg: suse.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9d4e2f18-68d4-41af-535b-08da9fd7667e
+X-MS-Exchange-CrossTenant-AuthSource: AM5PR04MB3089.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Sep 2022 15:54:31.6904
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: /KXP0bk5vL/BMX5vLf3o27Tezn8jnrjFeGfA371HZ5L5Ppm17wHeb2wbAUxgpk/1Ck+zcQSuwnwSYCB3nTSIKQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9PR04MB8713
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Sep 22, 2022 at 06:05:14PM -0700, Asutosh Das wrote:
-> To read the bqueuedepth, the device descriptor is fetched
-> in Single Doorbell Mode. This allocated memory may not be
-> enough for MCQ mode because the number of tags supported
-> in MCQ mode may be larger than in SDB mode.
-> Hence, release the memory allocated in SDB mode and allocate
-> memory for MCQ mode operation.
-> Defines the ufs hardware queue and Completion Queue Entry.
+On 9/9/22 09:24, Bart Van Assche wrote:
+> On 9/8/22 23:54, Greg Kroah-Hartman wrote:
+>> From: Linus Torvalds <torvalds@linux-foundation.org>
+>>
+>> The passthrough structure is declared off of the stack, so it needs to
+>> be set to zero before copied back to userspace to prevent any
+>> unintentional data leakage.  Switch things to be statically allocated
+>> which will fill the unused fields with 0 automatically.
+>>
+>> Reported-by: hdthky <hdthky0@gmail.com>
+>> Cc: stable <stable@kernel.org>
+>> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+>> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+>> Cc: Dan Carpenter <dan.carpenter@oracle.com>
+>> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>> ---
+>>   v2: Linus's updated version that moves the initialization to be
+>>       statically defined and changes the function prototype and structure
+>>       to be const.
+>>
+>>   drivers/scsi/stex.c      | 17 +++++++++--------
+>>   include/scsi/scsi_cmnd.h |  2 +-
+>>   2 files changed, 10 insertions(+), 9 deletions(-)
+>>
+>> diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+>> index e6420f2127ce..8def242675ef 100644
+>> --- a/drivers/scsi/stex.c
+>> +++ b/drivers/scsi/stex.c
+>> @@ -665,16 +665,17 @@ static int stex_queuecommand_lck(struct 
+>> scsi_cmnd *cmd)
+>>           return 0;
+>>       case PASSTHRU_CMD:
+>>           if (cmd->cmnd[1] == PASSTHRU_GET_DRVVER) {
+>> -            struct st_drvver ver;
+>> +            const struct st_drvver ver = {
+>> +                .major = ST_VER_MAJOR,
+>> +                .minor = ST_VER_MINOR,
+>> +                .oem = ST_OEM,
+>> +                .build = ST_BUILD_VER,
+>> +                .signature[0] = PASSTHRU_SIGNATURE,
+>> +                .console_id = host->max_id - 1,
+>> +                .host_no = hba->host->host_no,
+>> +            };
+>>               size_t cp_len = sizeof(ver);
+>> -            ver.major = ST_VER_MAJOR;
+>> -            ver.minor = ST_VER_MINOR;
+>> -            ver.oem = ST_OEM;
+>> -            ver.build = ST_BUILD_VER;
+>> -            ver.signature[0] = PASSTHRU_SIGNATURE;
+>> -            ver.console_id = host->max_id - 1;
+>> -            ver.host_no = hba->host->host_no;
+>>               cp_len = scsi_sg_copy_from_buffer(cmd, &ver, cp_len);
+>>               if (sizeof(ver) == cp_len)
+>>                   cmd->result = DID_OK << 16;
+>> diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+>> index bac55decf900..7d3622db38ed 100644
+>> --- a/include/scsi/scsi_cmnd.h
+>> +++ b/include/scsi/scsi_cmnd.h
+>> @@ -201,7 +201,7 @@ static inline unsigned int scsi_get_resid(struct 
+>> scsi_cmnd *cmd)
+>>       for_each_sg(scsi_sglist(cmd), sg, nseg, __i)
+>>   static inline int scsi_sg_copy_from_buffer(struct scsi_cmnd *cmd,
+>> -                       void *buf, int buflen)
+>> +                       const void *buf, int buflen)
+>>   {
+>>       return sg_copy_from_buffer(scsi_sglist(cmd), scsi_sg_count(cmd),
+>>                      buf, buflen);
 > 
-> Co-developed-by: Can Guo <quic_cang@quicinc.com>
-> Signed-off-by: Can Guo <quic_cang@quicinc.com>
-> Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
-> ---
->  drivers/ufs/core/ufs-mcq.c     | 59 ++++++++++++++++++++++++++++++++++++++++--
->  drivers/ufs/core/ufshcd-priv.h |  1 +
->  drivers/ufs/core/ufshcd.c      | 39 +++++++++++++++++++++++++---
->  include/ufs/ufshcd.h           | 19 ++++++++++++++
->  include/ufs/ufshci.h           | 21 +++++++++++++++
->  5 files changed, 134 insertions(+), 5 deletions(-)
+> Please split this patch into one patch for the SCSI core and another patch
+> for the STEX driver.
 > 
-> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-> index e52066e..e2854a3 100644
-> --- a/drivers/ufs/core/ufs-mcq.c
-> +++ b/drivers/ufs/core/ufs-mcq.c
-> @@ -251,14 +251,69 @@ static int ufshcd_mcq_config_nr_queues(struct ufs_hba *hba)
->  	return 0;
->  }
->  
-> +int ufshcd_mcq_memory_alloc(struct ufs_hba *hba)
-> +{
-> +	struct ufs_hw_queue *hwq;
-> +	size_t utrdl_size, cqe_size;
-> +	int i;
-> +
-> +	for (i = 0; i < hba->nr_hw_queues; i++) {
-> +		hwq = &hba->uhq[i];
-> +
-> +		utrdl_size = sizeof(struct utp_transfer_req_desc) *
-> +			     hwq->max_entries;
-> +		hwq->sqe_base_addr = dmam_alloc_coherent(hba->dev, utrdl_size,
-> +							 &hwq->sqe_dma_addr,
-> +							 GFP_KERNEL);
-> +		if (!hwq->sqe_dma_addr) {
-> +			dev_err(hba->dev, "SQE allocation failed\n");
-> +			return -ENOMEM;
-> +		}
-> +
-> +		cqe_size = sizeof(struct cq_entry) * hwq->max_entries;
-> +		hwq->cqe_base_addr = dmam_alloc_coherent(hba->dev, cqe_size,
-> +							 &hwq->cqe_dma_addr,
-> +							 GFP_KERNEL);
-> +		if (!hwq->cqe_dma_addr) {
-> +			dev_err(hba->dev, "CQE allocation failed\n");
-> +			return -ENOMEM;
-> +		}
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  int ufshcd_mcq_init(struct ufs_hba *hba)
->  {
-> -	int ret;
-> +	int ret, i;
-> +	struct ufs_hw_queue *hwq;
->  
->  	ret = ufshcd_mcq_config_nr_queues(hba);
->  	if (ret)
->  		return ret;
->  	ret = ufshcd_mcq_config_resource(hba);
-> -	return ret;
-> +	if (ret)
-> +		return ret;
-> +
-> +	hba->uhq = devm_kmalloc(hba->dev,
-> +				hba->nr_hw_queues * sizeof(struct ufs_hw_queue),
-> +				GFP_KERNEL);
-> +	if (!hba->uhq) {
-> +		dev_err(hba->dev, "Alloc ufs hw queue failed\n");
-
-"Failed to allocate memory for UFS hw queues"
-
-> +		ret = -ENOMEM;
-> +		return ret;
-
-return -ENOMEM
-
-> +	}
-> +
-> +	for (i = 0; i < hba->nr_hw_queues; i++) {
-> +		hwq = &hba->uhq[i];
-> +		hwq->max_entries = hba->nutrs;
-> +	}
-> +
-> +	/* The very first HW queue is to serve device command */
-> +	hba->dev_cmd_queue = &hba->uhq[0];
-> +	/* Give dev_cmd_queue the minimal number of entries */
-> +	hba->dev_cmd_queue->max_entries = 2;
-
-Perhaps add a define for 2? Not a big deal but it adds readability.
-
-> +
-> +	return 0;
->  }
->  
-> diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-> index 6d16beb..f624682 100644
-> --- a/drivers/ufs/core/ufshcd-priv.h
-> +++ b/drivers/ufs/core/ufshcd-priv.h
-> @@ -52,6 +52,7 @@ int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
->  void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit);
->  int ufshcd_mcq_init(struct ufs_hba *hba);
->  u32 ufshcd_mcq_decide_queue_depth(struct ufs_hba *hba);
-> +int ufshcd_mcq_memory_alloc(struct ufs_hba *hba);
->  
->  #define SD_ASCII_STD true
->  #define SD_RAW false
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index a71b57e..5fc1e5e 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -3676,6 +3676,8 @@ static int ufshcd_memory_alloc(struct ufs_hba *hba)
->  		goto out;
->  	}
->  
-> +	if (hba->utmrdl_base_addr)
-> +		goto skip_utmrdl;
-
-Is this change belongs to this patch?
-
->  	/*
->  	 * Allocate memory for UTP Task Management descriptors
->  	 * UFSHCI requires 1024 byte alignment of UTMRD
-> @@ -3692,6 +3694,7 @@ static int ufshcd_memory_alloc(struct ufs_hba *hba)
->  		goto out;
->  	}
->  
-> +skip_utmrdl:
->  	/* Allocate memory for local reference block */
->  	hba->lrb = devm_kcalloc(hba->dev,
->  				hba->nutrs, sizeof(struct ufshcd_lrb),
-> @@ -8173,6 +8176,22 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
->  	return ret;
->  }
->  
-> +/* SDB - Single Doorbell */
-> +static void ufshcd_release_sdb_queue(struct ufs_hba *hba, int nutrs)
-> +{
-> +	size_t ucdl_size, utrdl_size;
-> +
-> +	ucdl_size = sizeof(struct utp_transfer_cmd_desc) * nutrs;
-> +	dmam_free_coherent(hba->dev, ucdl_size, hba->ucdl_base_addr,
-> +			   hba->ucdl_dma_addr);
-> +
-> +	utrdl_size = sizeof(struct utp_transfer_req_desc) * nutrs;
-> +	dmam_free_coherent(hba->dev, utrdl_size, hba->utrdl_base_addr,
-> +			   hba->utrdl_dma_addr);
-> +
-> +	devm_kfree(hba->dev, hba->lrb);
-> +}
-> +
->  static int ufshcd_config_mcq(struct ufs_hba *hba)
->  {
->  	int ret;
-> @@ -8180,11 +8199,25 @@ static int ufshcd_config_mcq(struct ufs_hba *hba)
->  
->  	hba->nutrs = ufshcd_mcq_decide_queue_depth(hba);
->  	ret = ufshcd_mcq_init(hba);
-> -	if (ret) {
-> -		hba->nutrs = old_nutrs;
-> -		return ret;
-> +	if (ret)
-> +		goto err;
-> +
-
-Please add a comment here on what the check is for and what the code below
-does.
-
-> +	if (hba->nutrs != old_nutrs) {
-> +		ufshcd_release_sdb_queue(hba, old_nutrs);
-> +		ret = ufshcd_memory_alloc(hba);
-> +		if (ret)
-> +			goto err;
-> +		ufshcd_host_memory_configure(hba);
->  	}
-> +
-> +	ret = ufshcd_mcq_memory_alloc(hba);
-> +	if (ret)
-> +		goto err;
-> +
->  	return 0;
-> +err:
-> +	hba->nutrs = old_nutrs;
-> +	return ret;
->  }
->  
->  /**
-> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-> index 630a0eb..e54d624 100644
-> --- a/include/ufs/ufshcd.h
-> +++ b/include/ufs/ufshcd.h
-> @@ -857,6 +857,8 @@ enum ufshcd_res {
->   * @nr_queues: number of Queues of different queue types
->   * @res: array of resource info of MCQ registers
->   * @mcq_base: Multi circular queue registers base address
-> + * @uhq: array of supported hardware queues
-> + * @dev_cmd_queue: Queue for issuing device management commands
->   */
->  struct ufs_hba {
->  	void __iomem *mmio_base;
-> @@ -1011,6 +1013,23 @@ struct ufs_hba {
->  	unsigned int nr_queues[HCTX_MAX_TYPES];
->  	struct ufshcd_res_info_t res[RES_MAX];
->  	void __iomem *mcq_base;
-> +	struct ufs_hw_queue *uhq;
-
-s/uhq/hw_queues
-
-Thanks,
-Mani
-
-> +	struct ufs_hw_queue *dev_cmd_queue;
-> +};
-> +
-> +/**
-> + * @sqe_base_addr: submission queue entry base address
-> + * @sqe_dma_addr: submission queue dma address
-> + * @cqe_base_addr: completion queue base address
-> + * @cqe_dma_addr: completion queue dma address
-> + * @max_entries: max number of slots in this hardware queue
-> + */
-> +struct ufs_hw_queue {
-> +	void *sqe_base_addr;
-> +	dma_addr_t sqe_dma_addr;
-> +	struct cq_entry *cqe_base_addr;
-> +	dma_addr_t cqe_dma_addr;
-> +	u32 max_entries;
->  };
->  
->  static inline bool is_mcq_supported(struct ufs_hba *hba)
-> diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
-> index ca7db49d..7fa8faf 100644
-> --- a/include/ufs/ufshci.h
-> +++ b/include/ufs/ufshci.h
-> @@ -490,6 +490,27 @@ struct utp_transfer_req_desc {
->  	__le16  prd_table_offset;
->  };
->  
-> +struct cq_entry {
-> +	/* DW 0-1 */
-> +	__le64 command_desc_base_addr;
-> +
-> +	/* DW 2 */
-> +	__le16  response_upiu_length;
-> +	__le16  response_upiu_offset;
-> +
-> +	/* DW 3 */
-> +	__le16  prd_table_length;
-> +	__le16  prd_table_offset;
-> +
-> +	/* DW 4 */
-> +	__le32 status;
-> +
-> +	/* DW 5-7 */
-> +	u32 reserved[3];
-> +};
-> +
-> +static_assert(sizeof(struct cq_entry) == 32);
-> +
->  /*
->   * UTMRD structure.
->   */
-> -- 
-> 2.7.4
+> Thanks,
 > 
+> Bart.
 
+Ping? Is this patch going to stand as is, or are we going to get a V3 
+that addresses Bart's request?
+
+I'd like to know so I can backport the proper patch(es) to address this 
+issue.
 -- 
-மணிவண்ணன் சதாசிவம்
+Lee Duncan
