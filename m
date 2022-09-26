@@ -2,330 +2,108 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16584C07E9D
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Sep 2022 16:02:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7692CC6FA90
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Sep 2022 16:03:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235001AbiIZQCo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Sep 2022 12:02:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44642 "EHLO
+        id S234972AbiIZQDL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Sep 2022 12:03:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47660 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233534AbiIZQCI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2022 12:02:08 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53F0957BF0;
-        Mon, 26 Sep 2022 07:50:09 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E35F860DEE;
-        Mon, 26 Sep 2022 14:50:07 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C27EBC433D6;
-        Mon, 26 Sep 2022 14:50:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664203807;
-        bh=89tkwdlJ8MMrAXQqIF+dkY5sEKAlYgkh9zDXoiDkyiA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=mBg4ovLme5zoarWLqRsVfgji0h8aLcgjg+qeNWjVKtqlDYk9Zj/9/4EcfIf3TKo9k
-         1eT4hBsLI9oriPXZQpnAl7ojVBPmKtClZRsDjVC2gJwkOja/xqjaNZW3rZLOEPQMFt
-         LEZPQLnjjOaBvL3xpzmw3V2OJKtdkzLibk+OpvIBPllZkiVx/sKmj+7lJD1uXFanU1
-         eiCOneQotiQ/r57xLOb7PrQgrmeFDHCmq/oHtffaFXULbz4M/4sYrqsxriM1aY81V6
-         cUIVI3bcKnukmA2iuDCymz+M6fYJfJjtt82VoLIToby6+ZcEdGzm9+pg5aH4fjsYv+
-         dvXktc19ugF8Q==
-Date:   Mon, 26 Sep 2022 20:19:57 +0530
-From:   Manivannan Sadhasivam <mani@kernel.org>
-To:     Asutosh Das <quic_asutoshd@quicinc.com>
-Cc:     quic_nguyenb@quicinc.com, quic_xiaosenh@quicinc.com,
-        quic_cang@quicinc.com, quic_nitirawa@quicinc.com,
-        quic_rampraka@quicinc.com, quic_richardp@quicinc.com,
-        stanley.chu@mediatek.com, adrian.hunter@intel.com,
-        bvanassche@acm.org, avri.altman@wdc.com, beanhuo@micron.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-mediatek@lists.infradead.org>
-Subject: Re: [PATCH v1 04/16] ufs: core: mcq: Introduce Multi Circular Queue
-Message-ID: <20220926144957.GE101994@thinkpad>
-References: <cover.1663894792.git.quic_asutoshd@quicinc.com>
- <e0ae0fccc579fa17b6cfcf3b8bcf963f5ebe67fa.1663894792.git.quic_asutoshd@quicinc.com>
+        with ESMTP id S234914AbiIZQCg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2022 12:02:36 -0400
+Received: from mail-io1-xd2e.google.com (mail-io1-xd2e.google.com [IPv6:2607:f8b0:4864:20::d2e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48B31AC39C
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Sep 2022 07:50:45 -0700 (PDT)
+Received: by mail-io1-xd2e.google.com with SMTP id 138so5392306iou.9
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Sep 2022 07:50:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date;
+        bh=pTDxk9oXLcyzLIlge9oEls0XIl60bM4FjSB09bCJi7I=;
+        b=HYvDGszNu1gu6URMqy5VyPO0q1CjLZEc24iAopQm0fNr/8L0QweBd44p9s0Sy+yCiB
+         ugqpaw+OzNCG5QFs9LmXrwSLt+OFDxXFtU4qrSW5Mq0MX75/UGFUftTXqK0UyXjEvFdh
+         ZeP3ryaZrtP2yaocnW4b6ax+wiab+q3J3a23bPfNR12QrJRBe0vsqZMWHh4geLH+zGNv
+         MdXBFXHKqXiFB0Dr9J4bRDOIJj2sfngS7KX7Y037Im/Fw/LEQdF6a5q6XT1ypWs7P+Jb
+         JuwmSEAcV/ZQ4/YnWr3LwJEHbMHze15ZmdqBs68ASLe4yJWt1rSMDR4ipzZbTmfoTGpC
+         6shg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date;
+        bh=pTDxk9oXLcyzLIlge9oEls0XIl60bM4FjSB09bCJi7I=;
+        b=XVzxrTFywln/ZL2FlZBFmxnncNtcWc03BJxBXBXf84jWZflFtjecZFX/mLhU0Xoe1j
+         GNb2JspTZARn5ZQ00jd6JZ+aDnf0WQ8hUXkjWr23vICDVVDH8yuh4mv7hUdLoSa0Fd9K
+         S84uU7/gaqH3Wwh67bAMcO7BceDLjaoVNMPmHMYMKKrhnyt2DzHjZ06Qqk6NGn5Sc0Vm
+         Wmvar8eRcR4bYAJtc7kcQ9mdycEOrSiVD28qRL6jjfwu3WxKr+B9n91wVPp9skEeoEbC
+         ypdwsbhiF+u0aPqNF/yu21hgdYos/dNW2RjclmAb3n5pM9Ok+onsqHFhZdUsfDjLrRVm
+         MeXQ==
+X-Gm-Message-State: ACrzQf30n17QtXodE8wFYeDOVSPgW61G9TdUq4XoN56LyYM5p8Fawh6c
+        7xHF2t41EOKLLA7wmKDH3JI00918crjcHA==
+X-Google-Smtp-Source: AMsMyM4ezesDcR/VrCIT8c4MqwXXAKedbbvzEcJmc1qxfhQgzw/YFvqad1860zJhGdYZ9FeErmdgJw==
+X-Received: by 2002:a02:b681:0:b0:349:b7d5:7c25 with SMTP id i1-20020a02b681000000b00349b7d57c25mr11526271jam.228.1664203844319;
+        Mon, 26 Sep 2022 07:50:44 -0700 (PDT)
+Received: from [192.168.1.94] ([207.135.234.126])
+        by smtp.gmail.com with ESMTPSA id e21-20020a056602159500b0067ba7abc4cesm7638553iow.50.2022.09.26.07.50.43
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 26 Sep 2022 07:50:43 -0700 (PDT)
+Message-ID: <25b9899f-0c60-39f2-179b-789b914e0f0a@kernel.dk>
+Date:   Mon, 26 Sep 2022 08:50:41 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <e0ae0fccc579fa17b6cfcf3b8bcf963f5ebe67fa.1663894792.git.quic_asutoshd@quicinc.com>
+User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
+ Thunderbird/102.2.2
+Subject: Re: [PATCH 4/5] nvme: split out metadata vs non metadata end_io
+ uring_cmd completions
+Content-Language: en-US
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvme@lists.infradead.org, Stefan Roesch <shr@fb.com>
+References: <20220922182805.96173-1-axboe@kernel.dk>
+ <20220922182805.96173-5-axboe@kernel.dk> <Yy3O7wH16t6AhC3j@infradead.org>
+ <d09e1645-919f-9239-f86d-a8e85a133e5c@kernel.dk>
+ <YzG5/1zSdiMlMLnB@infradead.org>
+ <69598e37-fb91-5b92-bb80-b68457a7b6f8@kernel.dk>
+ <YzG6mZhtd/QysvdH@infradead.org>
+From:   Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <YzG6mZhtd/QysvdH@infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Sep 22, 2022 at 06:05:11PM -0700, Asutosh Das wrote:
-> Introduce multi-circular queue (MCQ) which has been added
-> in UFSHC v4.0 standard in addition to the Single Doorbell mode.
-> The MCQ mode supports multiple submission and completion queues.
-> Add support to configure the number of queues.
+On 9/26/22 8:43 AM, Christoph Hellwig wrote:
+> On Mon, Sep 26, 2022 at 08:41:38AM -0600, Jens Axboe wrote:
+>> Sure, I don't really care. What name do you want for it?
 > 
-> Co-developed-by: Can Guo <quic_cang@quicinc.com>
-> Signed-off-by: Can Guo <quic_cang@quicinc.com>
-> Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
-> ---
->  drivers/ufs/core/Makefile      |   2 +-
->  drivers/ufs/core/ufs-mcq.c     | 132 +++++++++++++++++++++++++++++++++++++++++
->  drivers/ufs/core/ufshcd-priv.h |   1 +
->  drivers/ufs/core/ufshcd.c      |  12 ++++
->  include/ufs/ufshcd.h           |   4 ++
->  5 files changed, 150 insertions(+), 1 deletion(-)
->  create mode 100644 drivers/ufs/core/ufs-mcq.c
-> 
-> diff --git a/drivers/ufs/core/Makefile b/drivers/ufs/core/Makefile
-> index 62f38c5..4d02e0f 100644
-> --- a/drivers/ufs/core/Makefile
-> +++ b/drivers/ufs/core/Makefile
-> @@ -1,7 +1,7 @@
->  # SPDX-License-Identifier: GPL-2.0
->  
->  obj-$(CONFIG_SCSI_UFSHCD)		+= ufshcd-core.o
-> -ufshcd-core-y				+= ufshcd.o ufs-sysfs.o
-> +ufshcd-core-y				+= ufshcd.o ufs-sysfs.o ufs-mcq.o
->  ufshcd-core-$(CONFIG_DEBUG_FS)		+= ufs-debugfs.o
->  ufshcd-core-$(CONFIG_SCSI_UFS_BSG)	+= ufs_bsg.o
->  ufshcd-core-$(CONFIG_SCSI_UFS_CRYPTO)	+= ufshcd-crypto.o
-> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-> new file mode 100644
-> index 0000000..934556f
-> --- /dev/null
-> +++ b/drivers/ufs/core/ufs-mcq.c
-> @@ -0,0 +1,132 @@
-> +// SPDX-License-Identifier: GPL-2.0-only
-> +/*
-> + * Copyright (c) 2022 Qualcomm Innovation Center. All rights reserved.
-> + *
-> + * Authors:
-> + *	Asutosh Das <quic_asutoshd@quicinc.com>
-> + *	Can Guo <quic_cang@quicinc.com>
-> + */
-> +
-> +#include <asm/unaligned.h>
-> +#include <linux/dma-mapping.h>
-> +#include <linux/module.h>
-> +#include <linux/platform_device.h>
-> +#include "ufshcd-priv.h"
-> +
-> +#define UFS_MCQ_MIN_RW_QUEUES 2
-> +#define UFS_MCQ_MIN_READ_QUEUES 0
-> +#define UFS_MCQ_MIN_POLL_QUEUES 0
-> +
-> +static unsigned int dev_cmd_queue = 1;
+> Maybe slow and fast?  Or simple and meta?
 
-This looks like a constant, so consider switching to a macro.
+So you want 'result' in a named struct too then? Because right now
+it looks like this:
 
-> +
-> +static int rw_queue_count_set(const char *val, const struct kernel_param *kp)
-> +{
-> +	unsigned int n;
-> +	int ret;
-> +
-> +	ret = kstrtouint(val, 10, &n);
+struct nvme_uring_cmd_pdu {
+         union {
+                 struct bio *bio;
+                 struct request *req;
+         };
+         u32 meta_len;
+         u32 nvme_status;
+         union {
+                 struct {
+                         void *meta; /* kernel-resident buffer */
+                         void __user *meta_buffer;
+                 };
+                 u64 result;
+         };
+};
 
-n is not used? While fixing, please use a better name.
+Or just the union named so it's clear it's a union? That'd make it
 
-> +	if (ret)
-> +		return ret;
+pdu->u.meta
 
-Newline
-
-> +	return param_set_uint_minmax(val, kp, UFS_MCQ_MIN_RW_QUEUES,
-> +				     num_possible_cpus());
-> +}
-> +
-> +static const struct kernel_param_ops rw_queue_count_ops = {
-> +	.set = rw_queue_count_set,
-> +	.get = param_get_uint,
-> +};
-> +
-> +static unsigned int rw_queues;
-> +module_param_cb(rw_queues, &rw_queue_count_ops, &rw_queues, 0644);
-> +MODULE_PARM_DESC(rw_queues,
-> +		 "Number of interrupt driven I/O queues used for rw. Default value is nr_cpus");
-> +
-> +static int read_queue_count_set(const char *val, const struct kernel_param *kp)
-> +{
-> +	unsigned int n;
-> +	int ret;
-> +
-> +	ret = kstrtouint(val, 10, &n);
-> +	if (ret)
-> +		return ret;
-
-Same as above
-
-> +	return param_set_uint_minmax(val, kp, UFS_MCQ_MIN_READ_QUEUES,
-> +				     num_possible_cpus());
-> +}
-> +
-> +static const struct kernel_param_ops read_queue_count_ops = {
-> +	.set = read_queue_count_set,
-> +	.get = param_get_uint,
-> +};
-> +
-> +static unsigned int read_queues;
-> +module_param_cb(read_queues, &read_queue_count_ops, &read_queues, 0644);
-> +MODULE_PARM_DESC(read_queues,
-> +		 "Number of interrupt driven read queues used for read. Default value is 0");
-> +
-> +static int poll_queue_count_set(const char *val, const struct kernel_param *kp)
-> +{
-> +	unsigned int n;
-> +	int ret;
-> +
-> +	ret = kstrtouint(val, 10, &n);
-> +	if (ret)
-> +		return ret;
-
-Same as above
-
-> +	return param_set_uint_minmax(val, kp, UFS_MCQ_MIN_POLL_QUEUES,
-> +				     num_possible_cpus());
-> +}
-> +
-> +static const struct kernel_param_ops poll_queue_count_ops = {
-> +	.set = poll_queue_count_set,
-> +	.get = param_get_uint,
-> +};
-> +
-> +static unsigned int poll_queues = 1;
-> +module_param_cb(poll_queues, &poll_queue_count_ops, &poll_queues, 0644);
-> +MODULE_PARM_DESC(poll_queues,
-> +		 "Number of poll queues used for r/w. Default value is 1");
-> +
-> +static int ufshcd_mcq_config_nr_queues(struct ufs_hba *hba)
-> +{
-> +	int i, rem;
-> +	u32 hbaq_cap, cmp, tot_queues;
-> +	struct Scsi_Host *host = hba->host;
-> +
-> +	hbaq_cap = hba->mcq_capabilities & 0xff;
-
-Define 0xff
-
-hbaq_cap should be named after the define used for 0xff. It is not quite
-understandable now.
-
-> +
-> +	if (!rw_queues)
-> +		rw_queues = num_possible_cpus();
-> +
-> +	tot_queues = dev_cmd_queue + read_queues + poll_queues + rw_queues;
-> +	if (hbaq_cap < tot_queues) {
-> +		dev_err(hba->dev, "Total queues (%d) exceeds HC capacity (%d)\n",
-> +			tot_queues, hbaq_cap);
-> +		return -EOPNOTSUPP;
-> +	}
-> +
-> +	rem = hbaq_cap - dev_cmd_queue;
-> +	cmp = rem;
-> +	hba->nr_queues[HCTX_TYPE_DEFAULT] = min3(cmp, rw_queues,
-> +						 num_possible_cpus());
-> +	rem -= hba->nr_queues[HCTX_TYPE_DEFAULT];
-> +	cmp = rem;
-> +	hba->nr_queues[HCTX_TYPE_POLL] = min(cmp, poll_queues);
-
-Hmm, so the driver is not using the number of queues set by the user?
-If the number varies, I don't think it should be configurable.
-
-Thanks,
-Mani
-
-> +	rem -= hba->nr_queues[HCTX_TYPE_POLL];
-> +	cmp = rem;
-> +	hba->nr_queues[HCTX_TYPE_READ] = min(cmp, read_queues);
-> +
-> +	for (i = 0; i < HCTX_MAX_TYPES; i++)
-> +		host->nr_hw_queues += hba->nr_queues[i];
-> +
-> +	hba->nr_hw_queues = host->nr_hw_queues + dev_cmd_queue;
-> +	return 0;
-> +}
-> +
-> +int ufshcd_mcq_init(struct ufs_hba *hba)
-> +{
-> +	int ret;
-> +
-> +	ret = ufshcd_mcq_config_nr_queues(hba);
-> +
-> +	return ret;
-> +}
-> +
-> diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-> index 8f67db2..cf6bdd8e 100644
-> --- a/drivers/ufs/core/ufshcd-priv.h
-> +++ b/drivers/ufs/core/ufshcd-priv.h
-> @@ -50,6 +50,7 @@ int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,
->  int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
->  	enum flag_idn idn, u8 index, bool *flag_res);
->  void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit);
-> +int ufshcd_mcq_init(struct ufs_hba *hba);
->  
->  #define SD_ASCII_STD true
->  #define SD_RAW false
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 426867b..f4bb402 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -8172,6 +8172,15 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
->  	return ret;
->  }
->  
-> +static int ufshcd_config_mcq(struct ufs_hba *hba)
-> +{
-> +	int ret;
-> +
-> +	ret = ufshcd_mcq_init(hba);
-> +
-> +	return ret;
-> +}
-> +
->  /**
->   * ufshcd_probe_hba - probe hba to detect device and initialize it
->   * @hba: per-adapter instance
-> @@ -8221,6 +8230,9 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool init_dev_params)
->  			goto out;
->  
->  		if (is_mcq_supported(hba)) {
-> +			ret = ufshcd_config_mcq(hba);
-> +			if (ret)
-> +				goto out;
->  			ret = scsi_add_host(host, hba->dev);
->  			if (ret) {
->  				dev_err(hba->dev, "scsi_add_host failed\n");
-> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-> index da7ec0c..298e103 100644
-> --- a/include/ufs/ufshcd.h
-> +++ b/include/ufs/ufshcd.h
-> @@ -827,6 +827,8 @@ struct ufs_hba_monitor {
->   *	ufshcd_resume_complete()
->   * @ext_iid_sup: is EXT_IID is supported by UFSHC
->   * @mcq_sup: is mcq supported by UFSHC
-> + * @nr_hw_queues: number of hardware queues configured
-> + * @nr_queues: number of Queues of different queue types
->   */
->  struct ufs_hba {
->  	void __iomem *mmio_base;
-> @@ -977,6 +979,8 @@ struct ufs_hba {
->  	bool complete_put;
->  	bool ext_iid_sup;
->  	bool mcq_sup;
-> +	unsigned int nr_hw_queues;
-> +	unsigned int nr_queues[HCTX_MAX_TYPES];
->  };
->  
->  static inline bool is_mcq_supported(struct ufs_hba *hba)
-> -- 
-> 2.7.4
-> 
+and so forth. I think that might be cleaner.
 
 -- 
-மணிவண்ணன் சதாசிவம்
+Jens Axboe
