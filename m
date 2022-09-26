@@ -2,107 +2,74 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B81ABC6FA82
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Sep 2022 06:37:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC0E8C6FA83
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Sep 2022 10:51:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233293AbiIZGho (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Sep 2022 02:37:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46056 "EHLO
+        id S236703AbiIZKvi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Sep 2022 06:51:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37070 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229684AbiIZGhd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2022 02:37:33 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AFE04101C8;
-        Sun, 25 Sep 2022 23:37:31 -0700 (PDT)
-Received: from canpemm500004.china.huawei.com (unknown [172.30.72.54])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4MbXxS00xZzHthl;
-        Mon, 26 Sep 2022 14:32:43 +0800 (CST)
-Received: from [10.174.179.14] (10.174.179.14) by
- canpemm500004.china.huawei.com (7.192.104.92) with Microsoft SMTP Server
+        with ESMTP id S237022AbiIZKu1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2022 06:50:27 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8ED1158B5A;
+        Mon, 26 Sep 2022 03:27:21 -0700 (PDT)
+Received: from fraeml709-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Mbf6k5v0Hz688XS;
+        Mon, 26 Sep 2022 18:26:06 +0800 (CST)
+Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
+ fraeml709-chm.china.huawei.com (10.206.15.37) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Mon, 26 Sep 2022 14:37:29 +0800
-Subject: Re: [PATCH v2 0/8] scsi: libsas: sas address comparation refactor
-To:     Jinpu Wang <jinpu.wang@ionos.com>
-CC:     <martin.petersen@oracle.com>, <jejb@linux.ibm.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <hare@suse.com>, <hch@lst.de>, <bvanassche@acm.org>,
-        <john.garry@huawei.com>
-References: <20220924073455.2186805-1-yanaijie@huawei.com>
- <CAMGffE=6BGVLqTbO3SGFZhCYDjo0U=Ay+JO4h+pNi10Hcb0w9g@mail.gmail.com>
-From:   Jason Yan <yanaijie@huawei.com>
-Message-ID: <b1cd66fa-411c-2d68-45d7-89aa6219c3cf@huawei.com>
-Date:   Mon, 26 Sep 2022 14:37:28 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+ 15.1.2375.31; Mon, 26 Sep 2022 12:27:17 +0200
+Received: from [10.48.156.245] (10.48.156.245) by
+ lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Mon, 26 Sep 2022 11:27:17 +0100
+Message-ID: <0b9ce76d-4c0d-615d-3345-5803fb29db45@huawei.com>
+Date:   Mon, 26 Sep 2022 11:27:19 +0100
 MIME-Version: 1.0
-In-Reply-To: <CAMGffE=6BGVLqTbO3SGFZhCYDjo0U=Ay+JO4h+pNi10Hcb0w9g@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.179.14]
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- canpemm500004.china.huawei.com (7.192.104.92)
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH v4 0/7] libsas and drivers: NCQ error handling
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     <jejb@linux.ibm.com>, <jinpu.wang@cloud.ionos.com>,
+        <damien.lemoal@opensource.wdc.com>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>,
+        <yangxingui@huawei.com>
+References: <1663840018-50161-1-git-send-email-john.garry@huawei.com>
+ <yq1a66npc3b.fsf@ca-mkp.ca.oracle.com>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <yq1a66npc3b.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.48.156.245]
+X-ClientProxiedBy: lhrpeml100003.china.huawei.com (7.191.160.210) To
+ lhrpeml500003.china.huawei.com (7.191.162.67)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 25/09/2022 19:02, Martin K. Petersen wrote:
 
-On 2022/9/26 14:09, Jinpu Wang wrote:
-> On Sat, Sep 24, 2022 at 9:24 AM Jason Yan <yanaijie@huawei.com> wrote:
->>
->> Sas address conversion and comparation is widely used in libsas and
->> drivers. However they are all opencoded and to avoid the line spill over
->> 80 columns, are mostly split into multi-lines.
->>
->> To make the code easier to read, introduce some helpers with clearer
->> semantics and replace the opencoded segments with them.
->>
->> v1->v2:
->>    First factor out sas_find_attached_phy() and replace LLDDs's code
->>          with it.
->>    Remove three too simple helpers.
->>    Rename the helpers with 'sas_' prefix.
->>
-> Hi Jason,
-> 
-> Thx for doing this.
->> Jason Yan (8):
->>    scsi: libsas: introduce sas_find_attached_phy() helper
->>    scsi: pm8001: use sas_find_attached_phy() instead of open coded
->>    scsi: mvsas: use sas_find_attached_phy() instead of open coded
->>    scsi: hisi_sas: use sas_find_attathed_phy() instead of open coded
-> These 4 look good to me.
-> Reviewed-by: Jack Wang <jinpu.wang@ionos.com>
+Hi Martin,
 
-Hi Jack,
-Thank you very much for the review.
+>> Based on mkp-scsi @ 6.1/scsi-staging 7f615c1b5986 ("scsi:
+>> scsi_transport_fc: Use %u for dev_loss_tmo")
+> Can you please rebase on top of the latest staging? There are a couple
+> of pm8001 conflicts.
 
->>    scsi: libsas: introduce sas address comparation helpers
->>    scsi: libsas: use sas_phy_match_dev_addr() instead of open coded
->>    scsi: libsas: use sas_phy_addr_same() instead of open coded
->>    scsi: libsas: use sas_phy_match_port_addr() instead of open coded
-> These helpers are too simple to replace, we add more loc in the end.
+Sorry about that, I did test that it applied ok but I did not test 
+building it again. Anyway, this is the only issue I saw:
 
-The initial purpose to introduce these helpers is to stop cutting 
-compare expressions into two lines and to make the code looks clean. We 
-add more loc in the end because of function declaration and more blank 
-lines between them.
+drivers/scsi/pm8001/pm8001_hwi.c: In function ‘pm8001_mpi_task_abort_resp’:
+drivers/scsi/pm8001/pm8001_hwi.c:3520:15: error: ‘pm8001_dev’ undeclared 
+(first use in this function); did you mean ‘pm8001_dbg’?
+  3520 |   atomic_dec(&pm8001_dev->running_req);
+       |               ^~~~~~~~~~
+       |               pm8001_dbg
+
+Was there another issue?
 
 Thanks,
-Jason
-
->>
->>   drivers/scsi/hisi_sas/hisi_sas_main.c | 12 ++------
->>   drivers/scsi/libsas/sas_expander.c    | 40 ++++++++++++++++-----------
->>   drivers/scsi/libsas/sas_internal.h    | 17 ++++++++++++
->>   drivers/scsi/mvsas/mv_sas.c           | 15 +++-------
->>   drivers/scsi/pm8001/pm8001_sas.c      | 16 ++++-------
->>   include/scsi/libsas.h                 |  2 ++
->>   6 files changed, 54 insertions(+), 48 deletions(-)
->>
->> --
->> 2.31.1
->>
-> .
-> 
+John
