@@ -2,153 +2,256 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39D44C6FA90
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Sep 2022 15:17:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23830C6FA92
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Sep 2022 15:24:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236069AbiIZPRJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Sep 2022 11:17:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36098 "EHLO
+        id S236157AbiIZPYP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Sep 2022 11:24:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56914 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235661AbiIZPQg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2022 11:16:36 -0400
-Received: from mail-pg1-x534.google.com (mail-pg1-x534.google.com [IPv6:2607:f8b0:4864:20::534])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F05731EC62
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Sep 2022 07:02:04 -0700 (PDT)
-Received: by mail-pg1-x534.google.com with SMTP id s26so6627453pgv.7
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Sep 2022 07:02:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date;
-        bh=1yGPnS7+tabIF9f3YGZrIJUzZlCgUowefj3Ak6tgbc8=;
-        b=Cml+idqKmgZLlpiIB8rfPG/ng2lFM3Uc9sHJGoyFG7EKF7hZNke7PI/XfWak9pHRFi
-         efod9Ah4zEqgORi+dMraA2Sbgo/pbkOsElfL2aD04OOna/C7XRrRxw0DfgIIfFkuQBtl
-         cmmg93A0HBEzFfB1+OSXJZfXPeyzl0IgyhatrNNxgm2ohJf5RdnnNFXZNdgo7YaW0/yv
-         LuuQM2kgG/3u1LhXdaEb1jXfGr5iRHnQ+eWfqiHMVUElxVxahOJVNf9IRTzA3BIZLfv3
-         zqpVrMthiVdLVBUkfIC5c7/0nUDogIn6jR/lCahdK1UXLrg6UQyGo+qF4+waB/51xAs+
-         2x6w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date;
-        bh=1yGPnS7+tabIF9f3YGZrIJUzZlCgUowefj3Ak6tgbc8=;
-        b=CC3xxVUOkGZClYs7kW4ft3RgHotxEyQUQH7SjzaMXfaKr0nnyPhVkHhM3MLd2yr+Cv
-         HErxyC2sm685fZbLM+VXPkcy0BLA/QcFid89cfEdWKL88BXyjRThAH0U/ILafvaxlcmJ
-         IT2h4Q25YgWGgAtgDxRgUZsnIHe6F7WJs0Wcqo/UuRtWef/vzGr7tV4zZ0vlEFXejNfG
-         w/pl9GuJm0qXeoa+QDfzgE8xCVgI5TmiZzQ+9mI+iV+Jv6cb/MP2dsNou1Frg3ympibh
-         WMl+r8L7HYIS+NbX0vstKnU+3kPmXCViINDt492zMlbkWbA6dcId8BOoqOC2AjyJJc7H
-         ZEBQ==
-X-Gm-Message-State: ACrzQf046psbsGRydWhqENvhVVuleyGO3WbWXJHwJBI7VVhFi6wc0kZ2
-        P58O3m2PDaqYHnct0Vm9gl0IHw==
-X-Google-Smtp-Source: AMsMyM56mNVNCK934eTJEzhPKz0Kgne9owdo04+/JMJy5BNbxI/i4itBQ3mjMLHU+WUWOj1bBuUPqA==
-X-Received: by 2002:aa7:9f0c:0:b0:546:c556:ac86 with SMTP id g12-20020aa79f0c000000b00546c556ac86mr23732346pfr.55.1664200924322;
-        Mon, 26 Sep 2022 07:02:04 -0700 (PDT)
-Received: from [10.2.223.68] ([61.120.150.77])
-        by smtp.gmail.com with ESMTPSA id b15-20020a63d30f000000b004393cb720afsm10769098pgg.38.2022.09.26.07.01.58
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 26 Sep 2022 07:02:03 -0700 (PDT)
-Message-ID: <1de80c28-33ec-b1bd-a557-91e4166d2da7@bytedance.com>
-Date:   Mon, 26 Sep 2022 22:01:55 +0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.3.0
-Subject: Re: [PATCH 2/3] PCI/ERR: Clear fatal status in pcie_do_recovery()
-Content-Language: en-US
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     fancer.lancer@gmail.com, jdmason@kudzu.us, dave.jiang@intel.com,
-        allenbh@gmail.com, bhelgaas@google.com, ruscur@russell.cc,
-        oohall@gmail.com, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        with ESMTP id S236308AbiIZPWr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2022 11:22:47 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 607AC5D115;
+        Mon, 26 Sep 2022 07:09:04 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 738BF60DD6;
+        Mon, 26 Sep 2022 14:09:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1049FC43150;
+        Mon, 26 Sep 2022 14:08:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1664201342;
+        bh=rqkp6bJXgU7Uu/k1ZisPoN8JNAGp0zmSPs5x+aM9Irs=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=WvAZDPSk/ijQh8WSq5yeRncXQBYeASs3IoqT6uEwHeA3LHD8MOj27K+Jt4sXD4Hsh
+         TJ9ygtRTbdGmqnGVPqBWY3tNCy0tx4qExVdDpetDLYGKXT8vT6697RYuqHDNCIPdzR
+         L+8iQZYEQ1CQaWn6tXCQw+2wL9UBVtGvJcE+xHfIwX/lkiQaP5xP94Spmu/ED/GN+0
+         8pBKDTuoEpmxPHr9RRnS8dmY95bUUu4+rnQsgVRJoqiSYu98AOrKE94jE0ddKjHnv+
+         3sOg5TU2FjKDP2Re0X+kIzTX3E3vBAEU+xs2h0zsBu0+TC32N4JF3meZTQ/Or86Po1
+         Lc4OR56MHPGdg==
+Date:   Mon, 26 Sep 2022 19:38:53 +0530
+From:   Manivannan Sadhasivam <mani@kernel.org>
+To:     Asutosh Das <quic_asutoshd@quicinc.com>
+Cc:     quic_nguyenb@quicinc.com, quic_xiaosenh@quicinc.com,
+        quic_cang@quicinc.com, quic_nitirawa@quicinc.com,
+        quic_rampraka@quicinc.com, quic_richardp@quicinc.com,
+        stanley.chu@mediatek.com, adrian.hunter@intel.com,
+        bvanassche@acm.org, avri.altman@wdc.com, beanhuo@micron.com,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ntb@lists.linux.dev, linuxppc-dev@lists.ozlabs.org
-References: <20220922210853.GA1335665@bhelgaas>
-From:   Zhuo Chen <chenzhuo.1@bytedance.com>
-In-Reply-To: <20220922210853.GA1335665@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Jinyoung Choi <j-young.choi@samsung.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-mediatek@lists.infradead.org>
+Subject: Re: [PATCH v1 01/16] ufs: core: Probe for ext_iid support
+Message-ID: <20220926140853.GC101994@thinkpad>
+References: <cover.1663894792.git.quic_asutoshd@quicinc.com>
+ <ff7cdcdef82f6c9d709e2b6ed5d91e255327b780.1663894792.git.quic_asutoshd@quicinc.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <ff7cdcdef82f6c9d709e2b6ed5d91e255327b780.1663894792.git.quic_asutoshd@quicinc.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Thu, Sep 22, 2022 at 06:05:08PM -0700, Asutosh Das wrote:
+> Task Tag is limited to 8 bits and this restricts the number
+> of active IOs to 255.
+> In Multi-circular queue mode, this may not be enough.
+> The specification provides EXT_IID which can be used to increase
+> the number of IOs if the UFS device and UFSHC support it.
+> This patch adds support to probe for ext_iid support in
+> ufs device and UFSHC.
+> 
+> Co-developed-by: Can Guo <quic_cang@quicinc.com>
+> Signed-off-by: Can Guo <quic_cang@quicinc.com>
+> Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
+> ---
+>  drivers/ufs/core/ufshcd.c | 32 ++++++++++++++++++++++++++++++++
+>  include/ufs/ufs.h         |  4 ++++
+>  include/ufs/ufshcd.h      |  4 ++++
+>  include/ufs/ufshci.h      |  7 +++++++
+>  4 files changed, 47 insertions(+)
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index f4f8ded..4b9ae83 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -88,6 +88,7 @@
+>  /* Polling time to wait for fDeviceInit */
+>  #define FDEVICEINIT_COMPL_TIMEOUT 1500 /* millisecs */
+>  
+> +#define EXT_IID_CAP_SHIFT 10
+>  #define ufshcd_toggle_vreg(_dev, _vreg, _on)				\
+>  	({                                                              \
+>  		int _ret;                                               \
+> @@ -2239,6 +2240,10 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
+>  	if (err)
+>  		dev_err(hba->dev, "crypto setup failed\n");
+>  
+> +	hba->mcq_capabilities = ufshcd_readl(hba, REG_MCQCAP);
+> +	hba->ext_iid_sup = (hba->mcq_capabilities & MASK_EXT_IID_SUPPORT) >>
+> +		EXT_IID_CAP_SHIFT;
+> +
 
+Can you use FIELD_* macros for the field manipulations throughout the series?
+This will avoid the use of additional _SHIFT macros.
 
-On 9/23/22 5:08 AM, Bjorn Helgaas wrote:
-> On Fri, Sep 02, 2022 at 02:16:33AM +0800, Zhuo Chen wrote:
->> When state is pci_channel_io_frozen in pcie_do_recovery(),
->> the severity is fatal and fatal status should be cleared.
->> So we add pci_aer_clear_fatal_status().
-> 
-> Seems sensible to me.  Did you find this by code inspection or by
-> debugging a problem?  If the latter, it would be nice to mention the
-> symptoms of the problem in the commit log.
+>  	return err;
+>  }
+>  
+> @@ -7664,6 +7669,30 @@ static void ufshcd_temp_notif_probe(struct ufs_hba *hba, const u8 *desc_buf)
+>  	}
+>  }
+>  
+> +static void ufshcd_ext_iid_probe(struct ufs_hba *hba, u8 *desc_buf)
 
-I found this by code inspection so I may not enumerate what kind of 
-problems this code will cause.
-> 
->> Since pcie_aer_is_native() in pci_aer_clear_fatal_status()
->> and pci_aer_clear_nonfatal_status() contains the function of
->> 'if (host->native_aer || pcie_ports_native)', so we move them
->> out of it.
-> 
-> Wrap commit log to fill 75 columns.
-> 
->> Signed-off-by: Zhuo Chen <chenzhuo.1@bytedance.com>
->> ---
->>   drivers/pci/pcie/err.c | 8 ++++++--
->>   1 file changed, 6 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
->> index 0c5a143025af..e0a8ade4c3fe 100644
->> --- a/drivers/pci/pcie/err.c
->> +++ b/drivers/pci/pcie/err.c
->> @@ -243,10 +243,14 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
->>   	 * it is responsible for clearing this status.  In that case, the
->>   	 * signaling device may not even be visible to the OS.
->>   	 */
->> -	if (host->native_aer || pcie_ports_native) {
->> +	if (host->native_aer || pcie_ports_native)
->>   		pcie_clear_device_status(dev);
-> 
-> pcie_clear_device_status() doesn't check for pcie_aer_is_native()
-> internally, but after 068c29a248b6 ("PCI/ERR: Clear PCIe Device Status
-> errors only if OS owns AER") and aa344bc8b727 ("PCI/ERR: Clear AER
-> status only when we control AER"), both callers check before calling
-> it.
-> 
-> I think we should move the check inside pcie_clear_device_status().
-> That could be a separate preliminary patch.
-> 
-> There are a couple other places (aer_root_reset() and
-> get_port_device_capability()) that do the same check and could be
-> changed to use pcie_aer_is_native() instead.  That could be another
-> preliminary patch.
-> 
-Good suggestion. But I have only one doubt. In aer_root_reset(), if we 
-use "if (pcie_aer_is_native(dev) && aer)", when dev->aer_cap
-is NULL and root->aer_cap is not NULL, pcie_aer_is_native() will return 
-false. It's different from just using "(host->native_aer ||
-pcie_ports_native)".
-Or if we can use "if (pcie_aer_is_native(root))", at this time a NULL 
-pointer check should be added in pcie_aer_is_native() because root may 
-be NULL.
+ufshcd_device_ext_iid_probe?
 
+> +{
+> +	struct ufs_dev_info *dev_info = &hba->dev_info;
+> +	u32 ext_ufs_feature;
+> +	u32 ext_iid_en = 0;
+> +	int err;
+> +
+> +	if (dev_info->wspecversion < 0x400)
+> +		goto out;
+> +
+> +	ext_ufs_feature = get_unaligned_be32(desc_buf + DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP);
+> +
+
+No need of a newline
+
+Thanks,
+Mani
+
+> +	if (!(ext_ufs_feature & UFS_DEV_EXT_IID_SUP))
+> +		goto out;
+> +
+> +	err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
+> +				      QUERY_ATTR_IDN_EXT_IID_EN, 0, 0, &ext_iid_en);
+> +	if (err)
+> +		dev_err(hba->dev, "failed reading bEXTIIDEn. err = %d\n", err);
+> +
+> +out:
+> +	dev_info->b_ext_iid_en = !!ext_iid_en;
+> +}
+> +
+>  void ufshcd_fixup_dev_quirks(struct ufs_hba *hba,
+>  			     const struct ufs_dev_quirk *fixups)
+>  {
+> @@ -7762,6 +7791,9 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
+>  
+>  	ufshcd_temp_notif_probe(hba, desc_buf);
+>  
+> +	if (hba->ext_iid_sup)
+> +		ufshcd_ext_iid_probe(hba, desc_buf);
+> +
+>  	/*
+>  	 * ufshcd_read_string_desc returns size of the string
+>  	 * reset the error value
+> diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
+> index 1bba3fe..ba2a1d8 100644
+> --- a/include/ufs/ufs.h
+> +++ b/include/ufs/ufs.h
+> @@ -165,6 +165,7 @@ enum attr_idn {
+>  	QUERY_ATTR_IDN_AVAIL_WB_BUFF_SIZE       = 0x1D,
+>  	QUERY_ATTR_IDN_WB_BUFF_LIFE_TIME_EST    = 0x1E,
+>  	QUERY_ATTR_IDN_CURR_WB_BUFF_SIZE        = 0x1F,
+> +	QUERY_ATTR_IDN_EXT_IID_EN		= 0x2A,
+>  };
+>  
+>  /* Descriptor idn for Query requests */
+> @@ -352,6 +353,7 @@ enum {
+>  	UFS_DEV_EXT_TEMP_NOTIF		= BIT(6),
+>  	UFS_DEV_HPB_SUPPORT		= BIT(7),
+>  	UFS_DEV_WRITE_BOOSTER_SUP	= BIT(8),
+> +	UFS_DEV_EXT_IID_SUP		= BIT(16),
+>  };
+>  #define UFS_DEV_HPB_SUPPORT_VERSION		0x310
+>  
+> @@ -601,6 +603,8 @@ struct ufs_dev_info {
+>  
+>  	bool	b_rpm_dev_flush_capable;
+>  	u8	b_presrv_uspc_en;
+> +	/* UFS EXT_IID Enable */
+> +	bool	b_ext_iid_en;
+>  };
+>  
+>  /*
+> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+> index 7fe1a92..da1eb8a 100644
+> --- a/include/ufs/ufshcd.h
+> +++ b/include/ufs/ufshcd.h
+> @@ -737,6 +737,7 @@ struct ufs_hba_monitor {
+>   * @outstanding_lock: Protects @outstanding_reqs.
+>   * @outstanding_reqs: Bits representing outstanding transfer requests
+>   * @capabilities: UFS Controller Capabilities
+> + * @mcq_capabilities: UFS Multi Command Queue capabilities
+>   * @nutrs: Transfer Request Queue depth supported by controller
+>   * @nutmrs: Task Management Queue depth supported by controller
+>   * @reserved_slot: Used to submit device commands. Protected by @dev_cmd.lock.
+> @@ -818,6 +819,7 @@ struct ufs_hba_monitor {
+>   *	device
+>   * @complete_put: whether or not to call ufshcd_rpm_put() from inside
+>   *	ufshcd_resume_complete()
+> + * @ext_iid_sup: is EXT_IID is supported by UFSHC
+>   */
+>  struct ufs_hba {
+>  	void __iomem *mmio_base;
+> @@ -859,6 +861,7 @@ struct ufs_hba {
+>  
+>  	u32 capabilities;
+>  	int nutrs;
+> +	u32 mcq_capabilities;
+>  	int nutmrs;
+>  	u32 reserved_slot;
+>  	u32 ufs_version;
+> @@ -965,6 +968,7 @@ struct ufs_hba {
+>  #endif
+>  	u32 luns_avail;
+>  	bool complete_put;
+> +	bool ext_iid_sup;
+>  };
+>  
+>  /* Returns true if clocks can be gated. Otherwise false */
+> diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
+> index f81aa95..ef5c3a8 100644
+> --- a/include/ufs/ufshci.h
+> +++ b/include/ufs/ufshci.h
+> @@ -22,6 +22,7 @@ enum {
+>  /* UFSHCI Registers */
+>  enum {
+>  	REG_CONTROLLER_CAPABILITIES		= 0x00,
+> +	REG_MCQCAP				= 0x04,
+>  	REG_UFS_VERSION				= 0x08,
+>  	REG_CONTROLLER_DEV_ID			= 0x10,
+>  	REG_CONTROLLER_PROD_ID			= 0x14,
+> @@ -68,6 +69,12 @@ enum {
+>  	MASK_OUT_OF_ORDER_DATA_DELIVERY_SUPPORT	= 0x02000000,
+>  	MASK_UIC_DME_TEST_MODE_SUPPORT		= 0x04000000,
+>  	MASK_CRYPTO_SUPPORT			= 0x10000000,
+> +	MASK_MCQ_SUPPORT			= 0x40000000,
+> +};
+> +
+> +/* MCQ capability mask */
+> +enum {
+> +	MASK_EXT_IID_SUPPORT = 0x00000400,
+>  };
+>  
+>  #define UFS_MASK(mask, offset)		((mask) << (offset))
+> -- 
+> 2.7.4
 > 
->> +	if (state == pci_channel_io_frozen)
->> +		pci_aer_clear_fatal_status(dev);
->> +	else
->>   		pci_aer_clear_nonfatal_status(dev);
->> -	}
->> +
->>   	pci_info(bridge, "device recovery successful\n");
->>   	return status;
->>   
->> -- 
->> 2.30.1 (Apple Git-130)
->>
 
 -- 
-Thanks,
-Zhuo Chen
+மணிவண்ணன் சதாசிவம்
