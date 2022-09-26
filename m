@@ -2,128 +2,157 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14900C07E9D
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Sep 2022 15:31:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4AAEC6FA82
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Sep 2022 15:44:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236671AbiIZPbh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Sep 2022 11:31:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52270 "EHLO
+        id S236542AbiIZPon (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Sep 2022 11:44:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44338 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237435AbiIZPar (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2022 11:30:47 -0400
-Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5DAEA81690
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Sep 2022 07:16:32 -0700 (PDT)
-Received: by mail-pj1-x1032.google.com with SMTP id s90-20020a17090a2f6300b00203a685a1aaso6975864pjd.1
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Sep 2022 07:16:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date;
-        bh=f9x4Js9aJ8GGYBn29EvIVTQooQM7+4F6Gd+zw2Mc6M8=;
-        b=zbi+yH6owkuseZsPd8cID/9/WJR+WXOO72huZu1wJYjkboy+f0MsZabCpreRAfu0Sf
-         3BZmYRBcwpD7wi8A/IOpfuJVOl1A8rCJFaIcGSG0jKTrF8oCvuPQ+RBCTLvziQZNwC1g
-         Jd9oklGK6EvDETceCFaUoZePQcW8L05Zcov7bvOd0XZhHHpbvz9QNXl7DZPgxMgKI0QQ
-         vLCHPHYSGblBh6eb+LQZr1TrgBNIz+T+/FWuQZnJCYJQz7wXYaPUaM7LuExyVVf5TwXJ
-         ct7K8VAqw2t9I2n0tte3U2h0Rk0Ver57AT66B18Yzk80ZWyfj9mzyHlAE/JXkq2hSxLS
-         3r+g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date;
-        bh=f9x4Js9aJ8GGYBn29EvIVTQooQM7+4F6Gd+zw2Mc6M8=;
-        b=zNTAWZ6wvLZ+a0LE2wIAOGWobxdYdiPqtcIVwnowtYzFJoafwW9iW5m73eTlA/D5oy
-         CaliGnB8FwDZAZjBUj9zDb7KHNEvoOqjBKzZ5eV0V4QBuUuHEOuRjGlknGsJSTmTqRvk
-         4e5d7ZHBhIxVTCE16pAykS+Vo8LFwF1ROdh+kW5ZJCmGS7djYgO3RuUmB/gTcaFLsRwt
-         HsO0x8MUq3YejpPYRhYmtHvpsZSdIjC+eclaeYtiei7RiIsmprRh7hBhiY3huBWHJEnR
-         vpIIx7PT19e+8JSJJ3Crb+JkCt+4TVmf4crTOTCUMA+aqzXhvv6P6OTptbX1QPzMuNzz
-         BF3w==
-X-Gm-Message-State: ACrzQf0sO+UTAfiK+uVtajqRF24SvCZRz32NLWPAH5NNFgRXh5Yn11LY
-        FAi2UoXaMdlzv/JzPZ8aA2R6kQ==
-X-Google-Smtp-Source: AMsMyM5TPoPvq12bpXj85IzcoD1FO5FB0fyyNhOKXktO0s3dtYc0w3EMmyW5x+a7mrmCCw2DD9kjgw==
-X-Received: by 2002:a17:902:6b0a:b0:178:9a17:5b89 with SMTP id o10-20020a1709026b0a00b001789a175b89mr21933535plk.113.1664201791912;
-        Mon, 26 Sep 2022 07:16:31 -0700 (PDT)
-Received: from [10.2.223.68] ([61.120.150.77])
-        by smtp.gmail.com with ESMTPSA id b11-20020a170903228b00b001781cad59e3sm11362897plh.108.2022.09.26.07.16.25
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 26 Sep 2022 07:16:31 -0700 (PDT)
-Message-ID: <3e025745-06af-c5c6-aa70-6ff1f9ad0962@bytedance.com>
-Date:   Mon, 26 Sep 2022 22:16:23 +0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.3.0
-Subject: Re: [PATCH 3/3] PCI/AER: Use pci_aer_raw_clear_status() to clear root
- port's AER error status
-Content-Language: en-US
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     fancer.lancer@gmail.com, jdmason@kudzu.us, dave.jiang@intel.com,
-        allenbh@gmail.com, bhelgaas@google.com, ruscur@russell.cc,
-        oohall@gmail.com, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        with ESMTP id S236479AbiIZPoV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2022 11:44:21 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4436A1D0C9;
+        Mon, 26 Sep 2022 07:27:46 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id E2F9AB80AC0;
+        Mon, 26 Sep 2022 14:27:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3F470C433D6;
+        Mon, 26 Sep 2022 14:27:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1664202463;
+        bh=6XhwjXcZLlj11shsoIVoitYifkIL8KJ18fK8qdwwJaA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=K6BO0l+twKh0uOwzbNup4x8XNE5qQ3DVeM7zC8zziatoxj7iovnihxWrTl72tT+YX
+         g1yl5O3LK3Tau44JkbBBXNDCn6X2cSB9yu+qJVu269GvQIfGuu9tCJZFtoDmMylnkf
+         IIRYOTKBv9aMeyWR9G0qvdpv/PQvcf/LspKLCZZLJEWLL89scU/VjfGmWIDGwhVVTa
+         PljFRM3zMuEgs26zt98cYvBItT640NVZPhMwlYjf3E+T6N/LJaAS3sd9DxOsRnh4F9
+         3ADscsCVxm9M7aGzjRbBA3unk5xVg0Digff9Nz86F4RF8vmUz+euOET4pFOB5v5mN5
+         7YXCFbXTWve0A==
+Date:   Mon, 26 Sep 2022 19:57:34 +0530
+From:   Manivannan Sadhasivam <mani@kernel.org>
+To:     Asutosh Das <quic_asutoshd@quicinc.com>
+Cc:     quic_nguyenb@quicinc.com, quic_xiaosenh@quicinc.com,
+        quic_cang@quicinc.com, quic_nitirawa@quicinc.com,
+        quic_rampraka@quicinc.com, quic_richardp@quicinc.com,
+        stanley.chu@mediatek.com, adrian.hunter@intel.com,
+        bvanassche@acm.org, avri.altman@wdc.com, beanhuo@micron.com,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ntb@lists.linux.dev, linuxppc-dev@lists.ozlabs.org
-References: <20220922215030.GA1341314@bhelgaas>
-From:   Zhuo Chen <chenzhuo.1@bytedance.com>
-In-Reply-To: <20220922215030.GA1341314@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-mediatek@lists.infradead.org>
+Subject: Re: [PATCH v1 02/16] ufs: core: Introduce Multi-circular queue
+ capability
+Message-ID: <20220926142734.GD101994@thinkpad>
+References: <cover.1663894792.git.quic_asutoshd@quicinc.com>
+ <fa3d70c1642c64ce75461f630eabe84b3b974d4e.1663894792.git.quic_asutoshd@quicinc.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <fa3d70c1642c64ce75461f630eabe84b3b974d4e.1663894792.git.quic_asutoshd@quicinc.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Thu, Sep 22, 2022 at 06:05:09PM -0700, Asutosh Das wrote:
+> Adds support to check for MCQ capability in the UFSHC.
+> This capability can be used by host drivers to control
+> MCQ enablement.
+> 
+> Co-developed-by: Can Guo <quic_cang@quicinc.com>
+> Signed-off-by: Can Guo <quic_cang@quicinc.com>
+> Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
+> ---
+>  drivers/ufs/core/ufshcd.c |  5 +++++
+>  include/ufs/ufshcd.h      | 13 +++++++++++++
+>  2 files changed, 18 insertions(+)
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 4b9ae83..24661fc 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -89,6 +89,7 @@
+>  #define FDEVICEINIT_COMPL_TIMEOUT 1500 /* millisecs */
+>  
+>  #define EXT_IID_CAP_SHIFT 10
+> +#define MCQ_SUPP_SHIFT 30
+>  #define ufshcd_toggle_vreg(_dev, _vreg, _on)				\
+>  	({                                                              \
+>  		int _ret;                                               \
+> @@ -2240,6 +2241,10 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
+>  	if (err)
+>  		dev_err(hba->dev, "crypto setup failed\n");
+>  
+> +	hba->mcq_sup = (hba->capabilities & MASK_MCQ_SUPPORT) >> MCQ_SUPP_SHIFT;
 
+Again, if you use FIELD_* macro, addtional *_SHIFT macro is not needed.
 
-On 9/23/22 5:50 AM, Bjorn Helgaas wrote:
-> On Fri, Sep 02, 2022 at 02:16:34AM +0800, Zhuo Chen wrote:
->> Statements clearing AER error status in aer_enable_rootport() has the
->> same function as pci_aer_raw_clear_status(). So we replace them, which
->> has no functional changes.
->>
->> Signed-off-by: Zhuo Chen <chenzhuo.1@bytedance.com>
->> ---
->>   drivers/pci/pcie/aer.c | 7 +------
->>   1 file changed, 1 insertion(+), 6 deletions(-)
->>
->> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
->> index d2996afa80f6..eb0193f279f2 100644
->> --- a/drivers/pci/pcie/aer.c
->> +++ b/drivers/pci/pcie/aer.c
->> @@ -1287,12 +1287,7 @@ static void aer_enable_rootport(struct aer_rpc *rpc)
->>   				   SYSTEM_ERROR_INTR_ON_MESG_MASK);
->>   
->>   	/* Clear error status */
->> -	pci_read_config_dword(pdev, aer + PCI_ERR_ROOT_STATUS, &reg32);
->> -	pci_write_config_dword(pdev, aer + PCI_ERR_ROOT_STATUS, reg32);
->> -	pci_read_config_dword(pdev, aer + PCI_ERR_COR_STATUS, &reg32);
->> -	pci_write_config_dword(pdev, aer + PCI_ERR_COR_STATUS, reg32);
->> -	pci_read_config_dword(pdev, aer + PCI_ERR_UNCOR_STATUS, &reg32);
->> -	pci_write_config_dword(pdev, aer + PCI_ERR_UNCOR_STATUS, reg32);
->> +	pci_aer_raw_clear_status(pdev);
-> 
-> It's true that this is functionally equivalent.
-> 
-> But 20e15e673b05 ("PCI/AER: Add pci_aer_raw_clear_status() to
-> unconditionally clear Error Status") says pci_aer_raw_clear_status()
-> is only for use in the EDR path (this should have been included in the
-> function comment), so I think we should preserve that property and use
-> pci_aer_clear_status() here.
-> 
-> pci_aer_raw_clear_status() is the same as pci_aer_clear_status()
-> except it doesn't check pcie_aer_is_native().  And I'm pretty sure we
-> can't get to aer_enable_rootport() *unless* pcie_aer_is_native(),
-> because get_port_device_capability() checks the same thing, so they
-> should be equivalent here.
-> 
-> Bjorn
-Thanks Bjorn, this very detailed correction is helpful. By the way, 
-'only for use in the EDR path' obviously written in the function 
-comments may be better. So far only commit log has included these.
+> +	if (!hba->mcq_sup)
+> +		return err;
 
-I will change to use pci_aer_clear_status() in next patch.
+Since this is not an error case, you can return 0 explicitly.
+
+> +
+>  	hba->mcq_capabilities = ufshcd_readl(hba, REG_MCQCAP);
+>  	hba->ext_iid_sup = (hba->mcq_capabilities & MASK_EXT_IID_SUPPORT) >>
+>  		EXT_IID_CAP_SHIFT;
+> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+> index da1eb8a..da7ec0c 100644
+> --- a/include/ufs/ufshcd.h
+> +++ b/include/ufs/ufshcd.h
+> @@ -660,6 +660,12 @@ enum ufshcd_caps {
+>  	 * notification if it is supported by the UFS device.
+>  	 */
+>  	UFSHCD_CAP_TEMP_NOTIF				= 1 << 11,
+> +
+> +	/*
+> +	 * This capability allows the host controller driver to turn on/off
+> +	 * MCQ mode. MCQ mode may be used to increase performance.
+> +	 */
+> +	UFSHCD_CAP_MCQ_EN				= 1 << 12,
+>  };
+>  
+>  struct ufs_hba_variant_params {
+> @@ -820,6 +826,7 @@ struct ufs_hba_monitor {
+>   * @complete_put: whether or not to call ufshcd_rpm_put() from inside
+>   *	ufshcd_resume_complete()
+>   * @ext_iid_sup: is EXT_IID is supported by UFSHC
+> + * @mcq_sup: is mcq supported by UFSHC
+>   */
+>  struct ufs_hba {
+>  	void __iomem *mmio_base;
+> @@ -969,8 +976,14 @@ struct ufs_hba {
+>  	u32 luns_avail;
+>  	bool complete_put;
+>  	bool ext_iid_sup;
+> +	bool mcq_sup;
+>  };
+>  
+> +static inline bool is_mcq_supported(struct ufs_hba *hba)
+
+No inline please. Compiler is the best judge.
+
+Thanks,
+Mani
+
+> +{
+> +	return hba->mcq_sup && (hba->caps & UFSHCD_CAP_MCQ_EN);
+> +}
+> +
+>  /* Returns true if clocks can be gated. Otherwise false */
+>  static inline bool ufshcd_is_clkgating_allowed(struct ufs_hba *hba)
+>  {
+> -- 
+> 2.7.4
+> 
 
 -- 
-Thanks,
-Zhuo Chen
+மணிவண்ணன் சதாசிவம்
