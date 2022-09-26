@@ -2,93 +2,283 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70402C07E9D
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Sep 2022 16:06:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1FF0C32771
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Sep 2022 16:19:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235955AbiIZQGv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Sep 2022 12:06:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50178 "EHLO
+        id S236679AbiIZQTo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Sep 2022 12:19:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53764 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234079AbiIZQGF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2022 12:06:05 -0400
-Received: from mail-io1-xd2a.google.com (mail-io1-xd2a.google.com [IPv6:2607:f8b0:4864:20::d2a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3E9E25CC
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Sep 2022 07:54:08 -0700 (PDT)
-Received: by mail-io1-xd2a.google.com with SMTP id v128so5398023ioe.12
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Sep 2022 07:54:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date;
-        bh=GFgIjACJN9ef5+O5Og9/DlD2wJW0SUIxL2QcgPrbsYc=;
-        b=O6BuwalmwwYXOzo+C/YM69mwnYKMYr8o+VXsmRvl4i7rwPH1XHeNiAWtZYlhHu3x1k
-         ABZI2Iw0Glk+PwbhLkcVqjJy13+aSHZm9s3Za2oqc6nV1K1AmDgOUSWmX+KVKGph4Bsa
-         Vtj+9n4D2sLGmdmjZz12dBLj6rklBdCVvkckfXkH3xFBKgBm0ee3A3hFOrrsiu3uqHWL
-         QeYHgJscKTg88T8/KrFdITuLCVfqvWVszV2ZOaRIBC4FpVne0XcJSgLpIGqCWMsv2qPj
-         EMSpHNc0Vb+ilgIJ+rleGG9DdET7ZoUGxEQYCqREFz0goJgMZzIWRJ5BoAvEDg1n17i7
-         1Wbw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date;
-        bh=GFgIjACJN9ef5+O5Og9/DlD2wJW0SUIxL2QcgPrbsYc=;
-        b=10jyotJ/M/lN6Ra/aEMmtqrfXhrLeA7Y1EiS0xI35S5C9xKXJX1KSg2VUIiiUGVudk
-         99N575FyLY3FNG1ubshi2CmX9v0OzNJ9g2B7eeqxzA0UW8hKXw6CZjjXPuwM1fpF09HU
-         WuVPxPDlxVv4zwB1PlV6XS89N4aEf/ZSFMsiqSU5cKiSpO+60IoCVxqfSOzxhaPffJJX
-         rvoD36XwDFf2LcZbgMIqTe4l6EHLijf0tR/nXKEvLg9m7obfM/5uOznsXP2PBbEjVaCa
-         Lk87ZM46Ek1jw+PDPb9eRC4lrjxDLWipREvdcqWkNz/i298hEVp5h3kWLjGxMVt/uNcN
-         oYfA==
-X-Gm-Message-State: ACrzQf2uVPVnnIjsk66bxDCpbgGKHP4ObgPj+aBoNbANZN7IP5o9jris
-        9HLdzqQSpmUZ6DBM60nkRLtbqA==
-X-Google-Smtp-Source: AMsMyM4hzRj1NCt5qjQmyZkoVCT9OWmRSxwmpvJsL6WjnZ+oLf++I8kF1xpoVmAbCJWyaZoIbUOzKQ==
-X-Received: by 2002:a05:6602:2b06:b0:67f:fdf6:ffc2 with SMTP id p6-20020a0566022b0600b0067ffdf6ffc2mr9866886iov.111.1664204048218;
-        Mon, 26 Sep 2022 07:54:08 -0700 (PDT)
-Received: from [192.168.1.94] ([207.135.234.126])
-        by smtp.gmail.com with ESMTPSA id t23-20020a02b197000000b00346e7ca2463sm6868577jah.135.2022.09.26.07.54.07
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 26 Sep 2022 07:54:07 -0700 (PDT)
-Message-ID: <f7b92f52-8a33-4cf0-b8b6-328c573ad1bd@kernel.dk>
-Date:   Mon, 26 Sep 2022 08:54:06 -0600
+        with ESMTP id S236655AbiIZQTX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2022 12:19:23 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95169F34FA;
+        Mon, 26 Sep 2022 08:08:20 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id A3143B80AC7;
+        Mon, 26 Sep 2022 15:08:18 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4918DC433D6;
+        Mon, 26 Sep 2022 15:08:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1664204897;
+        bh=ck8LAR0C3+inTkPwB1+T0RQ3M06BtkVKhVhA8h6PDBI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=CVwzF2G1iF0Kle/rqKf+Uv2SJkXkuz9ormVLF2xMMMrmO0qK8EpNdQEiXFSkZVdxW
+         mFBMA8xbgQtKzP9mUz1KsgM6dFWuSd/6Lt1kT/Lw4a85ZODlS0IlqZB8OeoRuWUN8W
+         QG5cmpE0jRSibwRVdphvPVa4emXnr1OlMdmhCVJWi1/ZhxgLbd9ttKROsGzq+1VW5y
+         ZBjPinWN82L3gQC9ylj9gUqz0kQl4BwVyg6RNlW8DCq9aZEvKNWsCaeaMnViVWfixG
+         oTbohbiI4dXDtghS3Wdc2KYavMLSQvCH1RHg2Q8SNK4HddnwYHCWoWclyEXTB3Dq+h
+         3xJv1YVy1WJdg==
+Date:   Mon, 26 Sep 2022 20:37:50 +0530
+From:   Manivannan Sadhasivam <mani@kernel.org>
+To:     Asutosh Das <quic_asutoshd@quicinc.com>
+Cc:     quic_nguyenb@quicinc.com, quic_xiaosenh@quicinc.com,
+        quic_cang@quicinc.com, quic_nitirawa@quicinc.com,
+        quic_rampraka@quicinc.com, quic_richardp@quicinc.com,
+        stanley.chu@mediatek.com, adrian.hunter@intel.com,
+        bvanassche@acm.org, avri.altman@wdc.com, beanhuo@micron.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-mediatek@lists.infradead.org>
+Subject: Re: [PATCH v1 05/16] ufs: core: mcq: Configure resource regions
+Message-ID: <20220926150750.GF101994@thinkpad>
+References: <cover.1663894792.git.quic_asutoshd@quicinc.com>
+ <4d4df6ad6353b93253fb22deefb772dc59f5c84e.1663894792.git.quic_asutoshd@quicinc.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.2
-Subject: Re: [PATCH 4/5] nvme: split out metadata vs non metadata end_io
- uring_cmd completions
-Content-Language: en-US
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org, Stefan Roesch <shr@fb.com>
-References: <20220922182805.96173-1-axboe@kernel.dk>
- <20220922182805.96173-5-axboe@kernel.dk> <Yy3O7wH16t6AhC3j@infradead.org>
- <d09e1645-919f-9239-f86d-a8e85a133e5c@kernel.dk>
- <YzG5/1zSdiMlMLnB@infradead.org>
- <69598e37-fb91-5b92-bb80-b68457a7b6f8@kernel.dk>
- <YzG6mZhtd/QysvdH@infradead.org>
- <25b9899f-0c60-39f2-179b-789b914e0f0a@kernel.dk>
- <YzG8vsR8j0VIt6Nx@infradead.org>
-From:   Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <YzG8vsR8j0VIt6Nx@infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <4d4df6ad6353b93253fb22deefb772dc59f5c84e.1663894792.git.quic_asutoshd@quicinc.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/26/22 8:52 AM, Christoph Hellwig wrote:
-> On Mon, Sep 26, 2022 at 08:50:41AM -0600, Jens Axboe wrote:
->> Or just the union named so it's clear it's a union? That'd make it
->>
->> pdu->u.meta
->>
->> and so forth. I think that might be cleaner.
+On Thu, Sep 22, 2022 at 06:05:12PM -0700, Asutosh Das wrote:
+> Define the mcq resources and add support to ioremap
+> the resource regions.
 > 
-> Ok, that's at least a bit of a warning sign.
+> Co-developed-by: Can Guo <quic_cang@quicinc.com>
+> Signed-off-by: Can Guo <quic_cang@quicinc.com>
+> Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
+> ---
+>  drivers/ufs/core/ufs-mcq.c | 100 ++++++++++++++++++++++++++++++++++++++++++++-
+>  include/ufs/ufshcd.h       |  28 +++++++++++++
+>  2 files changed, 127 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+> index 934556f..e5cc7ab 100644
+> --- a/drivers/ufs/core/ufs-mcq.c
+> +++ b/drivers/ufs/core/ufs-mcq.c
+> @@ -17,6 +17,12 @@
+>  #define UFS_MCQ_MIN_READ_QUEUES 0
+>  #define UFS_MCQ_MIN_POLL_QUEUES 0
+>  
+> +#define MCQ_QCFGPTR_MASK	GENMASK(7, 0)
+> +#define MCQ_QCFGPTR_UNIT	0x200
+> +#define MCQ_SQATTR_OFFSET(c) \
+> +	((((c) >> 16) & MCQ_QCFGPTR_MASK) * MCQ_QCFGPTR_UNIT)
+> +#define MCQ_QCFG_SIZE	0x40
+> +
+>  static unsigned int dev_cmd_queue = 1;
+>  
+>  static int rw_queue_count_set(const char *val, const struct kernel_param *kp)
+> @@ -85,6 +91,96 @@ module_param_cb(poll_queues, &poll_queue_count_ops, &poll_queues, 0644);
+>  MODULE_PARM_DESC(poll_queues,
+>  		 "Number of poll queues used for r/w. Default value is 1");
+>  
+> +/* Resources */
+> +static const struct ufshcd_res_info_t ufshcd_res_info[RES_MAX] = {
+> +	{.name = "ufs_mem", .resource = NULL, .base = NULL},
+> +	{.name = "mcq", .resource = NULL, .base = NULL},
+> +	/* Submission Queue DAO */
+> +	{.name = "mcq_sqd", .resource = NULL, .base = NULL},
+> +	/* Submission Queue Interrupt Status */
+> +	{.name = "mcq_sqis", .resource = NULL, .base = NULL},
+> +	/* Completion Queue DAO */
+> +	{.name = "mcq_cqd", .resource = NULL, .base = NULL},
+> +	/* Completion Queue Interrupt Status */
+> +	{.name = "mcq_cqis", .resource = NULL, .base = NULL},
+> +	/* MCQ vendor specific */
+> +	{.name = "mcq_vs", .resource = NULL, .base = NULL},
+> +};
+> +
+> +static int ufshcd_mcq_config_resource(struct ufs_hba *hba)
+> +{
+> +	struct platform_device *pdev = to_platform_device(hba->dev);
+> +	struct ufshcd_res_info_t *res;
+> +	struct resource *res_mem, *res_mcq;
+> +	int i, ret = 0;
+> +
+> +	memcpy(hba->res, ufshcd_res_info, sizeof(ufshcd_res_info));
+> +
+> +	for (i = 0; i < RES_MAX; i++) {
+> +		res = &hba->res[i];
+> +		res->resource = platform_get_resource_byname(pdev,
+> +							     IORESOURCE_MEM,
+> +							     res->name);
+> +		if (!res->resource) {
+> +			dev_info(hba->dev, "Resource %s not provided\n", res->name);
 
-I'll go with that.
+This is an error if below condition gets satisfied.
+
+> +			if (i == RES_MEM)
+> +				return -ENOMEM;
+> +			continue;
+> +		} else if (i == RES_MEM) {
+> +			res_mem = res->resource;
+> +			res->base = hba->mmio_base;
+> +			continue;
+> +		}
+> +
+> +		res->base = devm_ioremap_resource(hba->dev, res->resource);
+> +		if (IS_ERR(res->base)) {
+> +			dev_err(hba->dev, "Failed to map res %s, err=%d\n",
+> +					 res->name, (int)PTR_ERR(res->base));
+> +			res->base = NULL;
+> +			ret = PTR_ERR(res->base);
+> +			return ret;
+> +		}
+> +	}
+> +
+> +	res = &hba->res[RES_MCQ];
+> +	/* MCQ resource provided in DT */
+
+Perhaps move the comment above and use, "Bail out if MCQ resource is provided by
+the platform".
+
+> +	if (res->base)
+> +		goto out;
+> +
+> +	/* Manually allocate MCQ resource */
+
+/* Manually allocate "mcq" resource from "ufs_mem" */
+
+> +	res_mcq = res->resource;
+> +	res_mcq = devm_kzalloc(hba->dev, sizeof(*res_mcq), GFP_KERNEL);
+> +	if (!res_mcq) {
+> +		dev_err(hba->dev, "Failed to alloate MCQ resource\n");
+
+allocate
+
+> +		return ret;
+> +	}
+> +
+> +	res_mcq->start = res_mem->start +
+> +			 MCQ_SQATTR_OFFSET(hba->mcq_capabilities);
+> +	res_mcq->end = res_mcq->start + hba->nr_hw_queues * MCQ_QCFG_SIZE - 1;
+> +	res_mcq->flags = res_mem->flags;
+> +	res_mcq->name = "mcq";
+> +
+> +	ret = insert_resource(&iomem_resource, res_mcq);
+> +	if (ret) {
+> +		dev_err(hba->dev, "Failed to insert MCQ resource %d\n", ret);
+> +		return ret;
+> +	}
+> +
+> +	res->base = devm_ioremap_resource(hba->dev, res_mcq);
+> +	if (IS_ERR(res->base)) {
+> +		dev_err(hba->dev, "Map MCQ registers failed, err=%d\n",
+
+"MCQ registers mapping failed, err=%d"
+
+> +			(int)PTR_ERR(res->base));
+> +		ret = PTR_ERR(res->base);
+> +		res->base = NULL;
+> +		return ret;
+> +	}
+> +
+> +out:
+> +	hba->mcq_base = res->base;
+> +	return 0;
+> +}
+> +
+>  static int ufshcd_mcq_config_nr_queues(struct ufs_hba *hba)
+>  {
+>  	int i, rem;
+> @@ -126,7 +222,9 @@ int ufshcd_mcq_init(struct ufs_hba *hba)
+>  	int ret;
+>  
+>  	ret = ufshcd_mcq_config_nr_queues(hba);
+> -
+> +	if (ret)
+> +		return ret;
+
+Newline
+
+> +	ret = ufshcd_mcq_config_resource(hba);
+>  	return ret;
+>  }
+>  
+> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+> index 298e103..54d742a 100644
+> --- a/include/ufs/ufshcd.h
+> +++ b/include/ufs/ufshcd.h
+> @@ -720,6 +720,30 @@ struct ufs_hba_monitor {
+>  };
+>  
+>  /**
+> + * struct ufshcd_res_info_t - MCQ related resource regions
+> + *
+> + * @name: resource name
+> + * @resource: pointer to resource region
+> + * @base: register base address
+> + */
+> +struct ufshcd_res_info_t {
+> +	const char *name;
+> +	struct resource *resource;
+> +	void __iomem *base;
+> +};
+> +
+> +enum ufshcd_res {
+> +	RES_MEM,
+
+RES_UFS since the resource name is "ufs_mem"?
+
+Thanks,
+Mani
+
+> +	RES_MCQ,
+> +	RES_MCQ_SQD,
+> +	RES_MCQ_SQIS,
+> +	RES_MCQ_CQD,
+> +	RES_MCQ_CQIS,
+> +	RES_MCQ_VS,
+> +	RES_MAX,
+> +};
+> +
+> +/**
+>   * struct ufs_hba - per adapter private structure
+>   * @mmio_base: UFSHCI base register address
+>   * @ucdl_base_addr: UFS Command Descriptor base address
+> @@ -829,6 +853,8 @@ struct ufs_hba_monitor {
+>   * @mcq_sup: is mcq supported by UFSHC
+>   * @nr_hw_queues: number of hardware queues configured
+>   * @nr_queues: number of Queues of different queue types
+> + * @res: array of resource info of MCQ registers
+> + * @mcq_base: Multi circular queue registers base address
+>   */
+>  struct ufs_hba {
+>  	void __iomem *mmio_base;
+> @@ -981,6 +1007,8 @@ struct ufs_hba {
+>  	bool mcq_sup;
+>  	unsigned int nr_hw_queues;
+>  	unsigned int nr_queues[HCTX_MAX_TYPES];
+> +	struct ufshcd_res_info_t res[RES_MAX];
+> +	void __iomem *mcq_base;
+>  };
+>  
+>  static inline bool is_mcq_supported(struct ufs_hba *hba)
+> -- 
+> 2.7.4
+> 
 
 -- 
-Jens Axboe
-
-
+மணிவண்ணன் சதாசிவம்
