@@ -2,131 +2,153 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8716DC07E9D
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Sep 2022 15:12:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39D44C6FA90
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Sep 2022 15:17:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235817AbiIZPMV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Sep 2022 11:12:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50248 "EHLO
+        id S236069AbiIZPRJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Sep 2022 11:17:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36098 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235798AbiIZPLj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2022 11:11:39 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6215D1BE85
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Sep 2022 06:49:52 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3FD6960DC4
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Sep 2022 13:49:52 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B0A8C433C1;
-        Mon, 26 Sep 2022 13:49:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664200191;
-        bh=8cBSY/c98zhLzt9mBybVF6c7J50QLah1jmN2uLzVuJg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ABQmkoWDYpQtHx3IK4N83Qx41nJzfsuDrVPsjLsj4crqZjSNEsMfU0ndG58BDZACH
-         S28U4rnLKBvykxPqtYv8qQ6q3KtBvl3fGXaKTJ6cP5X2uYJv6jV2c/B8NjczMr+Mw2
-         /qJpUrbm0EWnYJ9PFw094OityW0gFeS8Lriv67nHEgjBEzojxoyq7TZHpBGajtpRDt
-         R1Bj3NRKjg0Oi46GJg5yJpur4uBBcPQgBuC92FTfIl5VKt63jOhTNu9oI6ITGv+uMm
-         Y3xhs4GzdSUz+mQ3sQ4502NO+2W9hUTU+jAVQrm5xMS8i6n1COCT4MW9vLz9KQLFWz
-         UMEwlkTghHeLA==
-Date:   Mon, 26 Sep 2022 19:19:42 +0530
-From:   Manivannan Sadhasivam <mani@kernel.org>
-To:     Asutosh Das <quic_asutoshd@quicinc.com>
-Cc:     quic_nguyenb@quicinc.com, quic_xiaosenh@quicinc.com,
-        quic_cang@quicinc.com, quic_nitirawa@quicinc.com,
-        quic_rampraka@quicinc.com, quic_richardp@quicinc.com,
-        stanley.chu@mediatek.com, adrian.hunter@intel.com,
-        bvanassche@acm.org, avri.altman@wdc.com, beanhuo@micron.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-mediatek@lists.infradead.org>
-Subject: Re: [PATCH v1 00/16] Add Multi Circular Queue Support
-Message-ID: <20220926134942.GB101994@thinkpad>
-References: <cover.1663894792.git.quic_asutoshd@quicinc.com>
+        with ESMTP id S235661AbiIZPQg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2022 11:16:36 -0400
+Received: from mail-pg1-x534.google.com (mail-pg1-x534.google.com [IPv6:2607:f8b0:4864:20::534])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F05731EC62
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Sep 2022 07:02:04 -0700 (PDT)
+Received: by mail-pg1-x534.google.com with SMTP id s26so6627453pgv.7
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Sep 2022 07:02:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date;
+        bh=1yGPnS7+tabIF9f3YGZrIJUzZlCgUowefj3Ak6tgbc8=;
+        b=Cml+idqKmgZLlpiIB8rfPG/ng2lFM3Uc9sHJGoyFG7EKF7hZNke7PI/XfWak9pHRFi
+         efod9Ah4zEqgORi+dMraA2Sbgo/pbkOsElfL2aD04OOna/C7XRrRxw0DfgIIfFkuQBtl
+         cmmg93A0HBEzFfB1+OSXJZfXPeyzl0IgyhatrNNxgm2ohJf5RdnnNFXZNdgo7YaW0/yv
+         LuuQM2kgG/3u1LhXdaEb1jXfGr5iRHnQ+eWfqiHMVUElxVxahOJVNf9IRTzA3BIZLfv3
+         zqpVrMthiVdLVBUkfIC5c7/0nUDogIn6jR/lCahdK1UXLrg6UQyGo+qF4+waB/51xAs+
+         2x6w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date;
+        bh=1yGPnS7+tabIF9f3YGZrIJUzZlCgUowefj3Ak6tgbc8=;
+        b=CC3xxVUOkGZClYs7kW4ft3RgHotxEyQUQH7SjzaMXfaKr0nnyPhVkHhM3MLd2yr+Cv
+         HErxyC2sm685fZbLM+VXPkcy0BLA/QcFid89cfEdWKL88BXyjRThAH0U/ILafvaxlcmJ
+         IT2h4Q25YgWGgAtgDxRgUZsnIHe6F7WJs0Wcqo/UuRtWef/vzGr7tV4zZ0vlEFXejNfG
+         w/pl9GuJm0qXeoa+QDfzgE8xCVgI5TmiZzQ+9mI+iV+Jv6cb/MP2dsNou1Frg3ympibh
+         WMl+r8L7HYIS+NbX0vstKnU+3kPmXCViINDt492zMlbkWbA6dcId8BOoqOC2AjyJJc7H
+         ZEBQ==
+X-Gm-Message-State: ACrzQf046psbsGRydWhqENvhVVuleyGO3WbWXJHwJBI7VVhFi6wc0kZ2
+        P58O3m2PDaqYHnct0Vm9gl0IHw==
+X-Google-Smtp-Source: AMsMyM56mNVNCK934eTJEzhPKz0Kgne9owdo04+/JMJy5BNbxI/i4itBQ3mjMLHU+WUWOj1bBuUPqA==
+X-Received: by 2002:aa7:9f0c:0:b0:546:c556:ac86 with SMTP id g12-20020aa79f0c000000b00546c556ac86mr23732346pfr.55.1664200924322;
+        Mon, 26 Sep 2022 07:02:04 -0700 (PDT)
+Received: from [10.2.223.68] ([61.120.150.77])
+        by smtp.gmail.com with ESMTPSA id b15-20020a63d30f000000b004393cb720afsm10769098pgg.38.2022.09.26.07.01.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 26 Sep 2022 07:02:03 -0700 (PDT)
+Message-ID: <1de80c28-33ec-b1bd-a557-91e4166d2da7@bytedance.com>
+Date:   Mon, 26 Sep 2022 22:01:55 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <cover.1663894792.git.quic_asutoshd@quicinc.com>
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.3.0
+Subject: Re: [PATCH 2/3] PCI/ERR: Clear fatal status in pcie_do_recovery()
+Content-Language: en-US
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     fancer.lancer@gmail.com, jdmason@kudzu.us, dave.jiang@intel.com,
+        allenbh@gmail.com, bhelgaas@google.com, ruscur@russell.cc,
+        oohall@gmail.com, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ntb@lists.linux.dev, linuxppc-dev@lists.ozlabs.org
+References: <20220922210853.GA1335665@bhelgaas>
+From:   Zhuo Chen <chenzhuo.1@bytedance.com>
+In-Reply-To: <20220922210853.GA1335665@bhelgaas>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Sep 22, 2022 at 06:05:07PM -0700, Asutosh Das wrote:
-> 
-> UFS Multi-Circular Queue (MCQ) has been added in UFSHCI v4.0 to improve storage performance.
-> This patch series is a RFC implementation of this.
 
-This is no more an RFC series. Also, it would be good if you can provide a
-summary on how the implementation has been done.
 
-Thanks,
-Mani
+On 9/23/22 5:08 AM, Bjorn Helgaas wrote:
+> On Fri, Sep 02, 2022 at 02:16:33AM +0800, Zhuo Chen wrote:
+>> When state is pci_channel_io_frozen in pcie_do_recovery(),
+>> the severity is fatal and fatal status should be cleared.
+>> So we add pci_aer_clear_fatal_status().
+> 
+> Seems sensible to me.  Did you find this by code inspection or by
+> debugging a problem?  If the latter, it would be nice to mention the
+> symptoms of the problem in the commit log.
+
+I found this by code inspection so I may not enumerate what kind of 
+problems this code will cause.
+> 
+>> Since pcie_aer_is_native() in pci_aer_clear_fatal_status()
+>> and pci_aer_clear_nonfatal_status() contains the function of
+>> 'if (host->native_aer || pcie_ports_native)', so we move them
+>> out of it.
+> 
+> Wrap commit log to fill 75 columns.
+> 
+>> Signed-off-by: Zhuo Chen <chenzhuo.1@bytedance.com>
+>> ---
+>>   drivers/pci/pcie/err.c | 8 ++++++--
+>>   1 file changed, 6 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+>> index 0c5a143025af..e0a8ade4c3fe 100644
+>> --- a/drivers/pci/pcie/err.c
+>> +++ b/drivers/pci/pcie/err.c
+>> @@ -243,10 +243,14 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+>>   	 * it is responsible for clearing this status.  In that case, the
+>>   	 * signaling device may not even be visible to the OS.
+>>   	 */
+>> -	if (host->native_aer || pcie_ports_native) {
+>> +	if (host->native_aer || pcie_ports_native)
+>>   		pcie_clear_device_status(dev);
+> 
+> pcie_clear_device_status() doesn't check for pcie_aer_is_native()
+> internally, but after 068c29a248b6 ("PCI/ERR: Clear PCIe Device Status
+> errors only if OS owns AER") and aa344bc8b727 ("PCI/ERR: Clear AER
+> status only when we control AER"), both callers check before calling
+> it.
+> 
+> I think we should move the check inside pcie_clear_device_status().
+> That could be a separate preliminary patch.
+> 
+> There are a couple other places (aer_root_reset() and
+> get_port_device_capability()) that do the same check and could be
+> changed to use pcie_aer_is_native() instead.  That could be another
+> preliminary patch.
+> 
+Good suggestion. But I have only one doubt. In aer_root_reset(), if we 
+use "if (pcie_aer_is_native(dev) && aer)", when dev->aer_cap
+is NULL and root->aer_cap is not NULL, pcie_aer_is_native() will return 
+false. It's different from just using "(host->native_aer ||
+pcie_ports_native)".
+Or if we can use "if (pcie_aer_is_native(root))", at this time a NULL 
+pointer check should be added in pcie_aer_is_native() because root may 
+be NULL.
 
 > 
-> This is the initial driver implementation and it has been verified by booting on an emulation
-> platform. During testing, all low power modes were disabled and it was in HS-G1 mode.
-> 
-> Please take a look and let us know your thoughts.
-> 
-> v1:
-> - Split the changes
-> - Addressed Bart's comments
-> - Addressed Bean's comments
-> 
-> * RFC versions:
-> v2 -> v3:
-> - Split the changes based on functionality
-> - Addressed queue configuration issues
-> - Faster SQE tail pointer increments
-> - Addressed comments from Bart and Manivannan
-> 
-> v1 -> v2:
-> - Enabled host_tagset
-> - Added queue num configuration support
-> - Added one more vops to allow vendor provide the wanted MAC
-> - Determine nutrs and can_queue by considering both MAC, bqueuedepth and EXT_IID support
-> - Postponed MCQ initialization and scsi_add_host() to async probe
-> - Used (EXT_IID, Task Tag) tuple to support up to 4096 tasks (theoretically)
-> 
-> Asutosh Das (16):
->   ufs: core: Probe for ext_iid support
->   ufs: core: Introduce Multi-circular queue capability
->   ufs: core: Defer adding host to scsi if mcq is supported
->   ufs: core: mcq: Introduce Multi Circular Queue
->   ufs: core: mcq: Configure resource regions
->   ufs: core: mcq: Calculate queue depth
->   ufs: core: mcq: Allocate memory for mcq mode
->   ufs: core: mcq: Configure operation and runtime interface
->   ufs: core: mcq: Use shared tags for MCQ mode
->   ufs: core: Prepare ufshcd_send_command for mcq
->   ufs: core: mcq: Find hardware queue to queue request
->   ufs: core: Prepare for completion in mcq
->   ufs: mcq: Add completion support of a cqe
->   ufs: core: mcq: Add completion support in poll
->   ufs: core: mcq: Enable Multi Circular Queue
->   ufs: qcom-host: Enable multi circular queue capability
-> 
->  drivers/ufs/core/Makefile      |   2 +-
->  drivers/ufs/core/ufs-mcq.c     | 511 +++++++++++++++++++++++++++++++++++++++++
->  drivers/ufs/core/ufshcd-priv.h |  84 ++++++-
->  drivers/ufs/core/ufshcd.c      | 322 +++++++++++++++++++++-----
->  drivers/ufs/host/ufs-qcom.c    |  49 ++++
->  drivers/ufs/host/ufs-qcom.h    |   4 +
->  include/ufs/ufs.h              |   6 +
->  include/ufs/ufshcd.h           | 136 +++++++++++
->  include/ufs/ufshci.h           |  63 +++++
->  9 files changed, 1117 insertions(+), 60 deletions(-)
->  create mode 100644 drivers/ufs/core/ufs-mcq.c
-> 
-> -- 
-> 2.7.4
-> 
+>> +	if (state == pci_channel_io_frozen)
+>> +		pci_aer_clear_fatal_status(dev);
+>> +	else
+>>   		pci_aer_clear_nonfatal_status(dev);
+>> -	}
+>> +
+>>   	pci_info(bridge, "device recovery successful\n");
+>>   	return status;
+>>   
+>> -- 
+>> 2.30.1 (Apple Git-130)
+>>
 
 -- 
-மணிவண்ணன் சதாசிவம்
+Thanks,
+Zhuo Chen
