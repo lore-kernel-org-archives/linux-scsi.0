@@ -2,217 +2,98 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC1D1C32771
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Sep 2022 18:41:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3C5FC32771
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Sep 2022 18:56:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231248AbiIZSlu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Sep 2022 14:41:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47818 "EHLO
+        id S230047AbiIZS41 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Sep 2022 14:56:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40478 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230072AbiIZSl0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2022 14:41:26 -0400
-Received: from mail-wr1-x42b.google.com (mail-wr1-x42b.google.com [IPv6:2a00:1450:4864:20::42b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1B6233E35;
-        Mon, 26 Sep 2022 11:40:28 -0700 (PDT)
-Received: by mail-wr1-x42b.google.com with SMTP id y5so11611996wrh.3;
-        Mon, 26 Sep 2022 11:40:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :from:to:cc:subject:date;
-        bh=9HwkT/dgvdk+/Bs2VftN0JRDOow0i0YQfPP4YBXd1P8=;
-        b=WY2WSwRRvoZNaRIY6SnMIK/stfFzBKTbReHLeXAqSDPv2LJwC0ZcPdLvUZ4wGWyh+J
-         uT3UGI63KJphlf8pGSU2zL+Y5/CSgOoV8UwgNbzdbjJ9DVXnKW8P3nBYY9CL8Rchkm7O
-         nISPMryDIuUizq3YjZBKdf97+Fn+UWDOR0+1I3z8pMLjO5kiLT3W7Ug8U5khvxQ6qyRI
-         xh3N1PdO0P/8KSe+6ADjV45Gx9nFkn5CUddqNL/I6RIuH10b9rgtcn/YRWjxbSHV1NIr
-         3tmr3UjSoUjWSt1HBTGr+6HLgM3pg4I99PCgS+D7ws0VywI/CRP+C+H3Pl0WBkS4UxXK
-         Yfpw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date;
-        bh=9HwkT/dgvdk+/Bs2VftN0JRDOow0i0YQfPP4YBXd1P8=;
-        b=S3+DEYe/hBTDd0xYl1Hp8T9uA+auAoIeFTZODqcJZcHXJUBhLYLNV+GQU1dp44f/ed
-         4u8vSumiUPqpxJf+Q8zgIU+efgLE+e5IymXjQCWslfDVmN3olC3/aLJ+jOM53ghSe3ac
-         AM3lnlvQizPKVbHStGnnf2SnmzWLQS1bz1ps+cYvwug+qFc0+inZ9XknnnnhZQy4U6Bb
-         EHNnRBLoBJc3sxWNXfGk2W1+eN+AZPrfndzeBM96bIRlNPHD0dSNCr+W+m6IK+KigzL+
-         aOn/Mwik8B/wRKu85IOBn9rPXRr5+JAG1PKtUdsuYtq9AbuaEiLV/oHmsTs04Hza/5RE
-         oV6g==
-X-Gm-Message-State: ACrzQf3bpVvxzDI+B4TZpAPjxn7ORHGjEziuLXgzVsfLr9ZCVGO2kFIR
-        gl15tby0mU3LQpqS0jWmPSlb7jz6/w==
-X-Google-Smtp-Source: AMsMyM4MjB5hNdbjU2RS6KBO2Asfh8w3Z4vLm++q18Ah5zWt7sTP25Y6BpOa7HeKLnTB4lWN85SMEg==
-X-Received: by 2002:adf:e7c2:0:b0:228:8733:3a6d with SMTP id e2-20020adfe7c2000000b0022887333a6dmr14108007wrn.215.1664217613644;
-        Mon, 26 Sep 2022 11:40:13 -0700 (PDT)
-Received: from fedora (88-106-97-87.dynamic.dsl.as9105.com. [88.106.97.87])
-        by smtp.gmail.com with ESMTPSA id n21-20020a05600c4f9500b003b4cba4ef71sm12456802wmq.41.2022.09.26.11.40.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Sep 2022 11:40:13 -0700 (PDT)
-Date:   Mon, 26 Sep 2022 19:40:11 +0100
-From:   Jules Irenge <jbi.octave@gmail.com>
-To:     jejb@linux.ibm.com
-Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 2/7] scsi: Convert snprintf() to scnprintf()
-Message-ID: <YzHyC191CIXZSfc5@fedora>
+        with ESMTP id S230429AbiIZS4Z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2022 14:56:25 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2FE6561DBC
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Sep 2022 11:56:24 -0700 (PDT)
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28QIc0TX029109;
+        Mon, 26 Sep 2022 18:55:58 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=date : from : to :
+ cc : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=qcppdkim1; bh=bvdXHN6vP4kNBt6JcBzJk7vmEspEQD7GvxU0iOUauTk=;
+ b=JlhX7g7k7d4uXvEArOUecEzUqebw31Sa/UXcr7v9avZfvGo/PE4nROYWE0b4g/RfhWyl
+ 4GpmKGfwQRVwVR+6Uw0xV5K+FbMn+JkR88CCK6vEb3VyI54scCk+wMdiUpuf7/8Ud+Df
+ b1jJ2FRwhwM+B2KMTd01qkp+ztCAIiPlxr1jFH0qIYgJO9LCYIGSlAQgnbUBuZaolXxe
+ a/Nxcj9FGxENcWndV0hdIQIUxAdSiUjAt85g8cdWHSFVMlFUtBXDZaxLTZKI8JnOxzwK
+ ogLy/A0Vz20liBc4cdc2F04a4MFh+P102yzXPOUADklmJCK/1gbKF48FUQVBfLmxmTO9 sQ== 
+Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3jue008p5k-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 26 Sep 2022 18:55:58 +0000
+Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
+        by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 28QItvdr007229
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 26 Sep 2022 18:55:57 GMT
+Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
+ nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.29; Mon, 26 Sep 2022 11:55:57 -0700
+Date:   Mon, 26 Sep 2022 11:55:29 -0700
+From:   Asutosh Das <quic_asutoshd@quicinc.com>
+To:     Manivannan Sadhasivam <mani@kernel.org>
+CC:     <quic_nguyenb@quicinc.com>, <quic_xiaosenh@quicinc.com>,
+        <quic_cang@quicinc.com>, <quic_nitirawa@quicinc.com>,
+        <quic_rampraka@quicinc.com>, <quic_richardp@quicinc.com>,
+        <stanley.chu@mediatek.com>, <adrian.hunter@intel.com>,
+        <bvanassche@acm.org>, <avri.altman@wdc.com>, <beanhuo@micron.com>,
+        <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-mediatek@lists.infradead.org>
+Subject: Re: [PATCH v1 00/16] Add Multi Circular Queue Support
+Message-ID: <20220926185529.GA15228@asutoshd-linux1.qualcomm.com>
+References: <cover.1663894792.git.quic_asutoshd@quicinc.com>
+ <20220926134942.GB101994@thinkpad>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Content-Disposition: inline
+In-Reply-To: <20220926134942.GB101994@thinkpad>
+User-Agent: Mutt/1.5.24 (2015-08-30)
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: kktRfshA7eazCiLO_cRa7J83I4G7Y9pa
+X-Proofpoint-ORIG-GUID: kktRfshA7eazCiLO_cRa7J83I4G7Y9pa
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
+ definitions=2022-09-26_09,2022-09-22_02,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0
+ lowpriorityscore=0 mlxlogscore=941 suspectscore=0 spamscore=0 bulkscore=0
+ adultscore=0 impostorscore=0 malwarescore=0 priorityscore=1501
+ clxscore=1015 mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2209130000 definitions=main-2209260117
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Coccinnelle reports a warning
-Warning: Use scnprintf or sprintf
-Adding to that, there has been a slow migration from snprintf to scnprintf.
-This LWN article explains the rationale for this change
-https: //lwn.net/Articles/69419/
-Ie. snprintf() returns what *would* be the resulting length,
-while scnprintf() returns the actual length.
+Hello Mani,
+Thanks for taking a look at the series.
 
-Signed-off-by: Jules Irenge <jbi.octave@gmail.com>
----
- drivers/scsi/scsi_sysfs.c | 30 +++++++++++++++---------------
- 1 file changed, 15 insertions(+), 15 deletions(-)
+On Mon, Sep 26 2022 at 06:50 -0700, Manivannan Sadhasivam wrote:
+>On Thu, Sep 22, 2022 at 06:05:07PM -0700, Asutosh Das wrote:
+>>
+>> UFS Multi-Circular Queue (MCQ) has been added in UFSHCI v4.0 to improve storage performance.
+>> This patch series is a RFC implementation of this.
+>
+>This is no more an RFC series. Also, it would be good if you can provide a
+>summary on how the implementation has been done.
+>
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 5d61f58399dc..b1bfb8af0760 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -228,7 +228,7 @@ show_shost_state(struct device *dev, struct device_attribute *attr, char *buf)
- 	if (!name)
- 		return -EINVAL;
- 
--	return snprintf(buf, 20, "%s\n", name);
-+	return scnprintf(buf, 20, "%s\n", name);
- }
- 
- /* DEVICE_ATTR(state) clashes with dev_attr_state for sdev */
-@@ -274,7 +274,7 @@ show_shost_active_mode(struct device *dev,
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 
- 	if (shost->active_mode == MODE_UNKNOWN)
--		return snprintf(buf, 20, "unknown\n");
-+		return scnprintf(buf, 20, "unknown\n");
- 	else
- 		return show_shost_mode(shost->active_mode, buf);
- }
-@@ -324,7 +324,7 @@ show_shost_eh_deadline(struct device *dev,
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 
- 	if (shost->eh_deadline == -1)
--		return snprintf(buf, strlen("off") + 2, "off\n");
-+		return scnprintf(buf, strlen("off") + 2, "off\n");
- 	return sprintf(buf, "%u\n", shost->eh_deadline / HZ);
- }
- 
-@@ -382,7 +382,7 @@ static ssize_t
- show_host_busy(struct device *dev, struct device_attribute *attr, char *buf)
- {
- 	struct Scsi_Host *shost = class_to_shost(dev);
--	return snprintf(buf, 20, "%d\n", scsi_host_busy(shost));
-+	return scnprintf(buf, 20, "%d\n", scsi_host_busy(shost));
- }
- static DEVICE_ATTR(host_busy, S_IRUGO, show_host_busy, NULL);
- 
-@@ -399,7 +399,7 @@ show_nr_hw_queues(struct device *dev, struct device_attribute *attr, char *buf)
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 	struct blk_mq_tag_set *tag_set = &shost->tag_set;
- 
--	return snprintf(buf, 20, "%d\n", tag_set->nr_hw_queues);
-+	return scnprintf(buf, 20, "%d\n", tag_set->nr_hw_queues);
- }
- static DEVICE_ATTR(nr_hw_queues, S_IRUGO, show_nr_hw_queues, NULL);
- 
-@@ -692,7 +692,7 @@ sdev_show_device_busy(struct device *dev, struct device_attribute *attr,
- 		char *buf)
- {
- 	struct scsi_device *sdev = to_scsi_device(dev);
--	return snprintf(buf, 20, "%d\n", scsi_device_busy(sdev));
-+	return scnprintf(buf, 20, "%d\n", scsi_device_busy(sdev));
- }
- static DEVICE_ATTR(device_busy, S_IRUGO, sdev_show_device_busy, NULL);
- 
-@@ -701,7 +701,7 @@ sdev_show_device_blocked(struct device *dev, struct device_attribute *attr,
- 		char *buf)
- {
- 	struct scsi_device *sdev = to_scsi_device(dev);
--	return snprintf(buf, 20, "%d\n", atomic_read(&sdev->device_blocked));
-+	return scnprintf(buf, 20, "%d\n", atomic_read(&sdev->device_blocked));
- }
- static DEVICE_ATTR(device_blocked, S_IRUGO, sdev_show_device_blocked, NULL);
- 
-@@ -713,7 +713,7 @@ sdev_show_timeout (struct device *dev, struct device_attribute *attr, char *buf)
- {
- 	struct scsi_device *sdev;
- 	sdev = to_scsi_device(dev);
--	return snprintf(buf, 20, "%d\n", sdev->request_queue->rq_timeout / HZ);
-+	return scnprintf(buf, 20, "%d\n", sdev->request_queue->rq_timeout / HZ);
- }
- 
- static ssize_t
-@@ -734,7 +734,7 @@ sdev_show_eh_timeout(struct device *dev, struct device_attribute *attr, char *bu
- {
- 	struct scsi_device *sdev;
- 	sdev = to_scsi_device(dev);
--	return snprintf(buf, 20, "%u\n", sdev->eh_timeout / HZ);
-+	return scnprintf(buf, 20, "%u\n", sdev->eh_timeout / HZ);
- }
- 
- static ssize_t
-@@ -862,7 +862,7 @@ show_state_field(struct device *dev, struct device_attribute *attr, char *buf)
- 	if (!name)
- 		return -EINVAL;
- 
--	return snprintf(buf, 20, "%s\n", name);
-+	return scnprintf(buf, 20, "%s\n", name);
- }
- 
- static DEVICE_ATTR(state, S_IRUGO | S_IWUSR, show_state_field, store_state_field);
-@@ -877,7 +877,7 @@ show_queue_type_field(struct device *dev, struct device_attribute *attr,
- 	if (sdev->simple_tags)
- 		name = "simple";
- 
--	return snprintf(buf, 20, "%s\n", name);
-+	return scnprintf(buf, 20, "%s\n", name);
- }
- 
- static ssize_t
-@@ -957,7 +957,7 @@ static ssize_t
- show_iostat_counterbits(struct device *dev, struct device_attribute *attr,
- 			char *buf)
- {
--	return snprintf(buf, 20, "%d\n", (int)sizeof(atomic_t) * 8);
-+	return scnprintf(buf, 20, "%d\n", (int)sizeof(atomic_t) * 8);
- }
- 
- static DEVICE_ATTR(iocounterbits, S_IRUGO, show_iostat_counterbits, NULL);
-@@ -982,7 +982,7 @@ sdev_show_modalias(struct device *dev, struct device_attribute *attr, char *buf)
- {
- 	struct scsi_device *sdev;
- 	sdev = to_scsi_device(dev);
--	return snprintf (buf, 20, SCSI_DEVICE_MODALIAS_FMT "\n", sdev->type);
-+	return scnprintf (buf, 20, SCSI_DEVICE_MODALIAS_FMT "\n", sdev->type);
- }
- static DEVICE_ATTR(modalias, S_IRUGO, sdev_show_modalias, NULL);
- 
-@@ -1115,7 +1115,7 @@ sdev_show_dh_state(struct device *dev, struct device_attribute *attr,
- 	struct scsi_device *sdev = to_scsi_device(dev);
- 
- 	if (!sdev->handler)
--		return snprintf(buf, 20, "detached\n");
-+		return scnprintf(buf, 20, "detached\n");
- 
- 	return snprintf(buf, 20, "%s\n", sdev->handler->name);
- }
-@@ -1205,7 +1205,7 @@ sdev_show_queue_ramp_up_period(struct device *dev,
- {
- 	struct scsi_device *sdev;
- 	sdev = to_scsi_device(dev);
--	return snprintf(buf, 20, "%u\n",
-+	return scnprintf(buf, 20, "%u\n",
- 			jiffies_to_msecs(sdev->queue_ramp_up_period));
- }
- 
--- 
-2.37.3
+Sure, I will add it.
+I shall wait for more comments from others for some more time before pushing the
+next version.
 
+-asd
