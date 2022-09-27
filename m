@@ -2,53 +2,53 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D8E1C32771
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Sep 2022 02:23:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39635C07E9D
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Sep 2022 02:24:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230017AbiI0CXR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Sep 2022 22:23:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43448 "EHLO
+        id S230073AbiI0CY1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Sep 2022 22:24:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44570 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229457AbiI0CXQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2022 22:23:16 -0400
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8731A9C24
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Sep 2022 19:23:14 -0700 (PDT)
+        with ESMTP id S229552AbiI0CY0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2022 22:24:26 -0400
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FF50AB19A
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Sep 2022 19:24:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1664245394; x=1695781394;
+  t=1664245463; x=1695781463;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=CcydczoRB1wShpaonoeda496cVy8GQEVlia89fuRyPU=;
-  b=Uzt6jw0Xx7iTDoxLSzer443cSyx6oHJ/LBXooARq+/oHgx/QPn/eGtnb
-   lS7B29WH0Tzqc1wvntbvdfNNU2dkOrqr/1yIq4Zt79nsSHJLb5D4Xr8C9
-   pNJe0iL7AwzkcHSdIrE2UGqTsMGy4Tm32mP0lrQ95w/KOx9UKfRJHhyW3
-   kA3iQDRedXNczbsm32mMxFoql8gJXrb8mMEYMBGxRdjUi0oJqMEMMx0RX
-   dSscdphLHFl5/Q26/+agWZRE75u9kdPzdjKbpXzplZ1c7QyOxSuIGCLG/
-   bs6QDQpun1aj82M5S47lSimOeWOQyzflEA9BH+Q5AGPF231EUGC4Rdpbc
-   A==;
+  bh=0iSGZW8cmukJH3UL3PwqWyDwnkfTJaj1NMHHrP/i+As=;
+  b=NySM6YhBfF5VR8bwZb9SoFjyGx1UBcQ5MRbTatuVKc/OTdOvZWLLpV4h
+   41AUzsppMz94kVmMIvlhN6wdPQFSqVlpKJO181e/akl5HVrEiX+qnANPb
+   JHL8esehv9vdqOCRE/u3izftjIWBs+UdjiKh2x8ES7hcX2OO7XuElB0xs
+   1xV4DFH7PyIKVEWDdAQ+TYqvaKCmXm6rfBmtZYRNCY8cPePeigdJ48L18
+   AOAffSznnjtcNwDqtFmtysmee6qy4Q6hB8kvABVtDIAEdn5TT2Z0qc9WD
+   MzK8MXWHc+PFX14Z37ZFsby8T+mLV1ow95YS9jW27ipCXvv8BoFagiALm
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.93,347,1654531200"; 
-   d="scan'208";a="210704489"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 27 Sep 2022 10:23:14 +0800
-IronPort-SDR: VyPRcwZsxf9grCCJbGbC1bDy27Yi6W2Fn1rVhyotVIGlABf8pcBLBysEZRDTvSCeLx6ToQT92W
- A4c03Cn0Nvl8oPAnkaCYu1lIaoq45SVyZ/DyyljigGetC3cp977DRJBnudXt9hftZXBFztzuwA
- dGCcqXt2Qn2lJ3OMWB+1+cqAzE5D0NTNFsqmTA9rYRDONKTX+VqPV2UqU9VbTL1SY98C0g7fKx
- E7ML6Nmc3/gwm4TJLQSZ7Vw4xxLESBNGcFZIoXq6nLFuZYiXMJgfb7QYys0tXT87JNN2zhS1us
- Y9Bj7/KiWPVz532ESqXD2N6X
+   d="scan'208";a="324440595"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 27 Sep 2022 10:24:22 +0800
+IronPort-SDR: LJCjGX3VlJ6UrUivD+nOAbYOssKmbete0MNnyEDCnCWzIf3raEDGiRyXOUV913WXUWcEF57nRY
+ sJhqw51NiUZcG5kL8mHTvdbxjRKAI4mEEKkU+NQ8M1keqjKtrLkEBAQA2oxMsPVlGhaUGSiHjm
+ zzVdds6PUr+9zv78fT2CDJwXZdmJllzCa8RwqGdeqqAEXKgJTgdZf9mc/36Sy073/rOrUpAFUm
+ wH6hzTF0JA4ngFjoLIibaCOyDitT/Hcn1WMIIBLf3FCqS11LkkcV3Pzo33nbLpUbd/lF83Ka1n
+ SAxAjX8tYZVw5EOkwCfyvdfR
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 26 Sep 2022 18:37:40 -0700
-IronPort-SDR: cHmnFGiN0Jgh+/yTobs7/FaRqe4T6R2cokS+IyPXFCwfZnqMypeE9/+OaY7PFdfw92F6eQDKsP
- suseGhiDwM4RR7/UFesUhuzPHbm0ok4KeMMtoWTrEe41NPej0fE8oJ2rfdKSM9/ifoqRd2uo6u
- vcFrqG8OuQaPyBe4hq8nglbfMphIkYKBUaXKKP5SlQhp+I9s+J2apx216u3zEQKJm08N0BXC9C
- DDaaUqQDKiEU+BXFErqUcoD9Gi8aiJZIQhMiyLJSPe6R4DZppavEPIwBbXliGAWzV1YY3ZhrsV
- ACY=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 26 Sep 2022 18:38:48 -0700
+IronPort-SDR: LlSNC0fVa7y8fkGrWxd0zS5UN2CbZR0dSvxYDtRq68Xdgbi+2VnbN+yIojROlKsiDVu6XGg5SY
+ l4aknVMhSb0CNap7QecRmGxlO+jAYIVw9u8u+A5moCVjuTl7o96+b8Jk15si+1yQUwhjYWkc6H
+ YRQSuYYpOy6Osnx09ojdTXr2zo6HkVRBeZbCfsct2fbb2pn7WtFokjsHVshi6gBmhWV2q5EUJ2
+ 9c1DIE2sg6p2rVgw1+Wi3H3WCwLKA2hVMGAsqVNBAx2AfY54ezoItu+E/mEwtI7fgafyPQAX/a
+ Wqk=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 26 Sep 2022 19:23:13 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 26 Sep 2022 19:24:22 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Mc3M54gZxz1RvTr
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Sep 2022 19:23:13 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Mc3NQ1yrcz1Rwt8
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Sep 2022 19:24:22 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,39 +56,40 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1664245393; x=1666837394; bh=CcydczoRB1wShpaonoeda496cVy8GQEVlia
-        89fuRyPU=; b=RCASez9hpIQxk/TENgJZvKTUug33qAtamS/J2XKyOWc6AY4zRSI
-        aXJKuwZFPmm5fXHUqgk94P6tJPgBk69ITciOJb9GawXxZuh4FNrmXbb2Yo9wnFRb
-        auFtFqPj89AP/qRhHGuKH7+wcjXv6Kzr1mupQRbC2yui9FyIgw2CcGbbQ8oG1wXK
-        V2LuxpcmnhJLyGPaIhrnZdcwiCKTiTed9fnpgMFH45F3kNr/MOs0izhOQr9vrBpI
-        OM9erGxUK3FwAckRO88l5wznbYpWQIZMUxhwGcdhfvYNVqaptY2T+MRozoq93HKL
-        CaxeQeafB3hMZ8L5xs5NQf69mkG3IfmBnUg==
+        1664245461; x=1666837462; bh=0iSGZW8cmukJH3UL3PwqWyDwnkfTJaj1NMH
+        HrP/i+As=; b=EiVEoKOWXSjiVURoS0JrEpq9nzO62yscc8KL1cxsJaZr4dN3C5o
+        6/3JvNpIuKtSzw7ivz3mj9efCGnyMRlVnKZDMXmeq/0So0qDOgDMO4VJyl4uMo3q
+        MFd20oodm1/8SZDvPnM2unpLlU3fHdx+kRc+20sMDWrhNDpx25QSW06mF3L40MGx
+        QMI13MBnhvK2NUEZz+68TUbwt77fqQcAmBNkkwIhvcGa3gyYG/6MppCYOsC/N7P2
+        trJ7r978d1EHgdYcd9rohaI+Kk0t/C+7sQ18G1hM1/JuEZer9Y92Xo2BOIoD+rNz
+        UQm/LbFRLoDwZ1GTtbPGHedoi1HMu7RjGhQ==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id BfzCq8kztb7x for <linux-scsi@vger.kernel.org>;
-        Mon, 26 Sep 2022 19:23:13 -0700 (PDT)
+        with ESMTP id 5qlzb7HrHMnQ for <linux-scsi@vger.kernel.org>;
+        Mon, 26 Sep 2022 19:24:21 -0700 (PDT)
 Received: from [10.225.163.91] (unknown [10.225.163.91])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Mc3M31B1rz1RvLy;
-        Mon, 26 Sep 2022 19:23:10 -0700 (PDT)
-Message-ID: <4e829dd7-6db3-4dbf-1b8e-9f7bb805f723@opensource.wdc.com>
-Date:   Tue, 27 Sep 2022 11:23:09 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Mc3NM6LGQz1RvLy;
+        Mon, 26 Sep 2022 19:24:19 -0700 (PDT)
+Message-ID: <0939e5df-9e2c-8471-b704-9520225b5759@opensource.wdc.com>
+Date:   Tue, 27 Sep 2022 11:24:18 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.3.0
-Subject: Re: [PATCH v3 1/8] scsi: libsas: introduce sas address comparation
- helpers
+Subject: Re: [PATCH v3 2/8] scsi: libsas: introduce sas_find_attached_phy()
+ helper
 Content-Language: en-US
 To:     Jason Yan <yanaijie@huawei.com>, martin.petersen@oracle.com,
         jejb@linux.ibm.com
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         hare@suse.com, hch@lst.de, bvanassche@acm.org,
-        john.garry@huawei.com, jinpu.wang@cloud.ionos.com
+        john.garry@huawei.com, jinpu.wang@cloud.ionos.com,
+        Jack Wang <jinpu.wang@ionos.com>
 References: <20220927022941.4029476-1-yanaijie@huawei.com>
- <20220927022941.4029476-2-yanaijie@huawei.com>
+ <20220927022941.4029476-3-yanaijie@huawei.com>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <20220927022941.4029476-2-yanaijie@huawei.com>
+In-Reply-To: <20220927022941.4029476-3-yanaijie@huawei.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -96,52 +97,59 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 9/27/22 11:29, Jason Yan wrote:
-> Sas address comparation is widely used in libsas. However they are all
-
-s/comparation/comparison
-
-Here and in the patch title.
-
-Other than that, Looks OK to me.
+> LLDDs are implementing their own attached phy finding code repeatedly.
+> Factor it out to libsas.
+> 
+> Signed-off-by: Jason Yan <yanaijie@huawei.com>
+> Reviewed-by: Jack Wang <jinpu.wang@ionos.com>
 
 Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
-> opencoded and to avoid the line spill over 80 columns, are mostly split
-> into multi-lines. Introduce some helpers to prepare some refactor.
-> 
-> Signed-off-by: Jason Yan <yanaijie@huawei.com>
 > ---
->  drivers/scsi/libsas/sas_internal.h | 17 +++++++++++++++++
->  1 file changed, 17 insertions(+)
+>  drivers/scsi/libsas/sas_expander.c | 16 ++++++++++++++++
+>  include/scsi/libsas.h              |  2 ++
+>  2 files changed, 18 insertions(+)
 > 
-> diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
-> index 8d0ad3abc7b5..3384429b7eb0 100644
-> --- a/drivers/scsi/libsas/sas_internal.h
-> +++ b/drivers/scsi/libsas/sas_internal.h
-> @@ -111,6 +111,23 @@ static inline void sas_smp_host_handler(struct bsg_job *job,
+> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+> index fa2209080cc2..df5a64ad902f 100644
+> --- a/drivers/scsi/libsas/sas_expander.c
+> +++ b/drivers/scsi/libsas/sas_expander.c
+> @@ -2107,6 +2107,22 @@ int sas_ex_revalidate_domain(struct domain_device *port_dev)
+>  	return res;
 >  }
->  #endif
 >  
-> +static inline bool sas_phy_match_dev_addr(struct domain_device *dev,
-> +					 struct ex_phy *phy)
+> +int sas_find_attached_phy(struct expander_device *ex_dev,
+> +			  struct domain_device *dev)
 > +{
-> +	return SAS_ADDR(dev->sas_addr) == SAS_ADDR(phy->attached_sas_addr);
-> +}
+> +	struct ex_phy *phy;
+> +	int phy_id;
 > +
-> +static inline bool sas_phy_match_port_addr(struct asd_sas_port *port,
-> +					   struct ex_phy *phy)
-> +{
-> +	return SAS_ADDR(port->sas_addr) == SAS_ADDR(phy->attached_sas_addr);
-> +}
+> +	for (phy_id = 0; phy_id < ex_dev->num_phys; phy_id++) {
+> +		phy = &ex_dev->ex_phy[phy_id];
+> +		if (sas_phy_match_dev_addr(dev, phy))
+> +			return phy_id;
+> +	}
 > +
-> +static inline bool sas_phy_addr_match(struct ex_phy *p1, struct ex_phy *p2)
-> +{
-> +	return  SAS_ADDR(p1->attached_sas_addr) == SAS_ADDR(p2->attached_sas_addr);
+> +	return -ENODEV;
 > +}
+> +EXPORT_SYMBOL_GPL(sas_find_attached_phy);
 > +
->  static inline void sas_fail_probe(struct domain_device *dev, const char *func, int err)
+>  void sas_smp_handler(struct bsg_job *job, struct Scsi_Host *shost,
+>  		struct sas_rphy *rphy)
 >  {
->  	pr_warn("%s: for %s device %016llx returned %d\n",
+> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+> index 2dbead74a2af..75faf2308eae 100644
+> --- a/include/scsi/libsas.h
+> +++ b/include/scsi/libsas.h
+> @@ -750,6 +750,8 @@ int sas_clear_task_set(struct domain_device *dev, u8 *lun);
+>  int sas_lu_reset(struct domain_device *dev, u8 *lun);
+>  int sas_query_task(struct sas_task *task, u16 tag);
+>  int sas_abort_task(struct sas_task *task, u16 tag);
+> +int sas_find_attached_phy(struct expander_device *ex_dev,
+> +			  struct domain_device *dev);
+>  
+>  void sas_notify_port_event(struct asd_sas_phy *phy, enum port_event event,
+>  			   gfp_t gfp_flags);
 
 -- 
 Damien Le Moal
