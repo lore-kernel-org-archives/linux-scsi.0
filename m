@@ -2,484 +2,181 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88DC0C07E9D
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Sep 2022 11:34:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0667C6FA8E
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Sep 2022 11:52:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231661AbiI0Les (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Sep 2022 07:34:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34626 "EHLO
+        id S231386AbiI0LwA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Sep 2022 07:52:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231559AbiI0Leq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Sep 2022 07:34:46 -0400
-Received: from mail-pf1-x443.google.com (mail-pf1-x443.google.com [IPv6:2607:f8b0:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93BE64C629;
-        Tue, 27 Sep 2022 04:34:44 -0700 (PDT)
-Received: by mail-pf1-x443.google.com with SMTP id i6so5238797pfb.2;
-        Tue, 27 Sep 2022 04:34:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date;
-        bh=hKVtQAwnVa1yA0DBDx9GBM794IiTF2YgOfvvntIUx3w=;
-        b=Vd4Z2d1dCQxHn7Pk8xckvV36IVZ2fCTCrRg02KCj4v7ZZSDVJ1PAxV61zoxTupP6xY
-         BpVQYhxYlL5F0Ky/5VASsyZT/oZl/VWFgC51p25NyQWsmFDYLpgbUJboYwyO9uRgP9KQ
-         sR//aFkhhXGDLPtoX4Fz8SYnNgKG4UVbjOrk8ghY0/fkT5X93XW2uEZAOs81XEXOerUv
-         cvpUTHuPG71idEtLLc+7A9WhmyosPCSi0tu/ilC+h4S5FJyitr5ijK5wXWkPpftqhr8x
-         qznys6X0MKvpzGZ5C4MLa8IWCDiF3KWEMlBUHIRhQmH28NUeRzU57A1JukUCh0NxB2sw
-         lirg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date;
-        bh=hKVtQAwnVa1yA0DBDx9GBM794IiTF2YgOfvvntIUx3w=;
-        b=omGw8uduQ/TjwU6vBPFLbD9UXqf/gcyk8XMQhXNkWXATFBK+HHKqI3NVAd+YoUFlRC
-         jMtErK08Hi/tOOzecvFin6bWz/v3ATt4vZIb2eho/Vgh87ZGFbgsitlCTPUrV1P/1pko
-         POvrEZqZR8XO+FH4pqiqqlvay+R0yOjcJX8Yi7CL9f2tYDvCdXHFNYX/r54tgaXHZJrv
-         rxhaFzUqQ3CBl5vPKp972SBD+QeZXtmlDeEsHCG6Cbd4z9egFiJTUwgig8FgtDCH2NnE
-         qm+1fHyeNTagLW74NYQu3l+Ncm/eufpiQp4cOQuxTMtyOQP/zGICWo3AlZ0KOfavrszL
-         8chw==
-X-Gm-Message-State: ACrzQf12fKhsFAi9RhjMaA3HKrHC3D5Lv+g39J85E9FZEdeWWODw8tQ8
-        mUtYBG2yCpeXqIxfB5GU45oEaqPBpJMCsmtl
-X-Google-Smtp-Source: AMsMyM5MqrQBuzBRzbjNmVYD71uT2kvnFr0CcCXu66EDrPs1+u5tJgTFD/WiUysKJuFcZ40b/TYOvA==
-X-Received: by 2002:a63:da02:0:b0:439:cc64:27fd with SMTP id c2-20020a63da02000000b00439cc6427fdmr24694374pgh.313.1664278483788;
-        Tue, 27 Sep 2022 04:34:43 -0700 (PDT)
-Received: from localhost.localdomain ([193.203.214.57])
-        by smtp.gmail.com with ESMTPSA id ix9-20020a170902f80900b0017837d30a8csm1262870plb.254.2022.09.27.04.34.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Sep 2022 04:34:43 -0700 (PDT)
-From:   zhangsongyi.cgel@gmail.com
-X-Google-Original-From: zhang.songyi@zte.com.cn
-To:     martin.petersen@oracle.com
-Cc:     zhang.songyi@zte.com.cn, mgurtovoy@nvidia.com,
-        michael.christie@oracle.com, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Zeal Robot <zealci@zte.com.cn>
-Subject: [PATCH linux-next] scsi: target: use sysfs_emit() to instead of snprintf()
-Date:   Tue, 27 Sep 2022 11:34:37 +0000
-Message-Id: <20220927113437.259529-1-zhang.songyi@zte.com.cn>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S230430AbiI0Lvf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Sep 2022 07:51:35 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13D73A221D;
+        Tue, 27 Sep 2022 04:51:31 -0700 (PDT)
+Received: from fraeml735-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4McHxN2xl7z688Yy;
+        Tue, 27 Sep 2022 19:50:16 +0800 (CST)
+Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
+ fraeml735-chm.china.huawei.com (10.206.15.216) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Tue, 27 Sep 2022 13:51:29 +0200
+Received: from [10.48.156.245] (10.48.156.245) by
+ lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Tue, 27 Sep 2022 12:51:28 +0100
+Message-ID: <db84e61a-1069-982a-5659-297fcffc14f4@huawei.com>
+Date:   Tue, 27 Sep 2022 12:51:31 +0100
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH v2 2/2] ata: libata-sata: Fix device queue depth control
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <linux-ide@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+References: <20220925230817.91542-1-damien.lemoal@opensource.wdc.com>
+ <20220925230817.91542-3-damien.lemoal@opensource.wdc.com>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <20220925230817.91542-3-damien.lemoal@opensource.wdc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.48.156.245]
+X-ClientProxiedBy: lhrpeml100003.china.huawei.com (7.191.160.210) To
+ lhrpeml500003.china.huawei.com (7.191.162.67)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: zhang songyi <zhang.songyi@zte.com.cn>
+On 26/09/2022 00:08, Damien Le Moal wrote:
+> The function __ata_change_queue_depth() uses the helper
+> ata_scsi_find_dev() to get the ata_device structure of a scsi device and
+> set that device maximum queue depth. However, when the ata device is
+> managed by libsas, ata_scsi_find_dev() returns NULL, turning
+> __ata_change_queue_depth() into a nop, which prevents the user from
+> setting the maximum queue depth of ATA devices used with libsas based
+> HBAs.
+> 
+> Fix this by renaming __ata_change_queue_depth() to
+> ata_change_queue_depth() and adding a pointer to the ata_device
+> structure of the target device as argument. This pointer is provided by
+> ata_scsi_change_queue_depth() using ata_scsi_find_dev() in the case of
+> a libata managed device and by sas_change_queue_depth() using
+> sas_to_ata_dev() in the case of a libsas managed ata device.
+> 
+> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
-Follow the advice of the Documentation/filesystems/sysfs.rst and show()
-should only use sysfs_emit() or sysfs_emit_at() when formatting the value
-to be returned to user space.
+Tested-by: John Garry <john.garry@huawei.com>
 
-Reported-by: Zeal Robot <zealci@zte.com.cn>
-Signed-off-by: zhang songyi <zhang.songyi@zte.com.cn>
----
- drivers/target/iscsi/iscsi_target_stat.c | 94 ++++++++++++------------
- 1 file changed, 47 insertions(+), 47 deletions(-)
+However - a big however - I will note that this following behaviour is 
+strange for a SATA device for libsas:
 
-diff --git a/drivers/target/iscsi/iscsi_target_stat.c b/drivers/target/iscsi/iscsi_target_stat.c
-index 367c6468b8e1..64a3fa7965a6 100644
---- a/drivers/target/iscsi/iscsi_target_stat.c
-+++ b/drivers/target/iscsi/iscsi_target_stat.c
-@@ -50,39 +50,39 @@ static struct iscsi_tiqn *iscsi_instance_tiqn(struct config_item *item)
- static ssize_t iscsi_stat_instance_inst_show(struct config_item *item,
- 		char *page)
- {
--	return snprintf(page, PAGE_SIZE, "%u\n",
-+	return sysfs_emit(page, "%u\n",
- 			iscsi_instance_tiqn(item)->tiqn_index);
- }
- 
- static ssize_t iscsi_stat_instance_min_ver_show(struct config_item *item,
- 		char *page)
- {
--	return snprintf(page, PAGE_SIZE, "%u\n", ISCSI_DRAFT20_VERSION);
-+	return sysfs_emit(page, "%u\n", ISCSI_DRAFT20_VERSION);
- }
- 
- static ssize_t iscsi_stat_instance_max_ver_show(struct config_item *item,
- 		char *page)
- {
--	return snprintf(page, PAGE_SIZE, "%u\n", ISCSI_DRAFT20_VERSION);
-+	return sysfs_emit(page, "%u\n", ISCSI_DRAFT20_VERSION);
- }
- 
- static ssize_t iscsi_stat_instance_portals_show(struct config_item *item,
- 		char *page)
- {
--	return snprintf(page, PAGE_SIZE, "%u\n",
-+	return sysfs_emit(page, "%u\n",
- 			iscsi_instance_tiqn(item)->tiqn_num_tpg_nps);
- }
- 
- static ssize_t iscsi_stat_instance_nodes_show(struct config_item *item,
- 		char *page)
- {
--	return snprintf(page, PAGE_SIZE, "%u\n", ISCSI_INST_NUM_NODES);
-+	return sysfs_emit(page, "%u\n", ISCSI_INST_NUM_NODES);
- }
- 
- static ssize_t iscsi_stat_instance_sessions_show(struct config_item *item,
- 		char *page)
- {
--	return snprintf(page, PAGE_SIZE, "%u\n",
-+	return sysfs_emit(page, "%u\n",
- 		iscsi_instance_tiqn(item)->tiqn_nsessions);
- }
- 
-@@ -99,7 +99,7 @@ static ssize_t iscsi_stat_instance_fail_sess_show(struct config_item *item,
- 			  sess_err->pdu_format_errors);
- 	spin_unlock_bh(&sess_err->lock);
- 
--	return snprintf(page, PAGE_SIZE, "%u\n", sess_err_count);
-+	return sysfs_emit(page, "%u\n", sess_err_count);
- }
- 
- static ssize_t iscsi_stat_instance_fail_type_show(struct config_item *item,
-@@ -108,7 +108,7 @@ static ssize_t iscsi_stat_instance_fail_type_show(struct config_item *item,
- 	struct iscsi_tiqn *tiqn = iscsi_instance_tiqn(item);
- 	struct iscsi_sess_err_stats *sess_err = &tiqn->sess_err_stats;
- 
--	return snprintf(page, PAGE_SIZE, "%u\n",
-+	return sysfs_emit(page, "%u\n",
- 			sess_err->last_sess_failure_type);
- }
- 
-@@ -118,7 +118,7 @@ static ssize_t iscsi_stat_instance_fail_rem_name_show(struct config_item *item,
- 	struct iscsi_tiqn *tiqn = iscsi_instance_tiqn(item);
- 	struct iscsi_sess_err_stats *sess_err = &tiqn->sess_err_stats;
- 
--	return snprintf(page, PAGE_SIZE, "%s\n",
-+	return sysfs_emit(page, "%s\n",
- 			sess_err->last_sess_fail_rem_name[0] ?
- 			sess_err->last_sess_fail_rem_name : NONE);
- }
-@@ -126,25 +126,25 @@ static ssize_t iscsi_stat_instance_fail_rem_name_show(struct config_item *item,
- static ssize_t iscsi_stat_instance_disc_time_show(struct config_item *item,
- 		char *page)
- {
--	return snprintf(page, PAGE_SIZE, "%u\n", ISCSI_DISCONTINUITY_TIME);
-+	return sysfs_emit(page, "%u\n", ISCSI_DISCONTINUITY_TIME);
- }
- 
- static ssize_t iscsi_stat_instance_description_show(struct config_item *item,
- 		char *page)
- {
--	return snprintf(page, PAGE_SIZE, "%s\n", ISCSI_INST_DESCR);
-+	return sysfs_emit(page, "%s\n", ISCSI_INST_DESCR);
- }
- 
- static ssize_t iscsi_stat_instance_vendor_show(struct config_item *item,
- 		char *page)
- {
--	return snprintf(page, PAGE_SIZE, "Datera, Inc. iSCSI-Target\n");
-+	return sysfs_emit(page, "Datera, Inc. iSCSI-Target\n");
- }
- 
- static ssize_t iscsi_stat_instance_version_show(struct config_item *item,
- 		char *page)
- {
--	return snprintf(page, PAGE_SIZE, "%s\n", ISCSIT_VERSION);
-+	return sysfs_emit(page, "%s\n", ISCSIT_VERSION);
- }
- 
- CONFIGFS_ATTR_RO(iscsi_stat_instance_, inst);
-@@ -196,7 +196,7 @@ static struct iscsi_tiqn *iscsi_sess_err_tiqn(struct config_item *item)
- static ssize_t iscsi_stat_sess_err_inst_show(struct config_item *item,
- 		char *page)
- {
--	return snprintf(page, PAGE_SIZE, "%u\n",
-+	return sysfs_emit(page, "%u\n",
- 		iscsi_sess_err_tiqn(item)->tiqn_index);
- }
- 
-@@ -206,7 +206,7 @@ static ssize_t iscsi_stat_sess_err_digest_errors_show(struct config_item *item,
- 	struct iscsi_tiqn *tiqn = iscsi_sess_err_tiqn(item);
- 	struct iscsi_sess_err_stats *sess_err = &tiqn->sess_err_stats;
- 
--	return snprintf(page, PAGE_SIZE, "%u\n", sess_err->digest_errors);
-+	return sysfs_emit(page, "%u\n", sess_err->digest_errors);
- }
- 
- static ssize_t iscsi_stat_sess_err_cxn_errors_show(struct config_item *item,
-@@ -215,7 +215,7 @@ static ssize_t iscsi_stat_sess_err_cxn_errors_show(struct config_item *item,
- 	struct iscsi_tiqn *tiqn = iscsi_sess_err_tiqn(item);
- 	struct iscsi_sess_err_stats *sess_err = &tiqn->sess_err_stats;
- 
--	return snprintf(page, PAGE_SIZE, "%u\n", sess_err->cxn_timeout_errors);
-+	return sysfs_emit(page, "%u\n", sess_err->cxn_timeout_errors);
- }
- 
- static ssize_t iscsi_stat_sess_err_format_errors_show(struct config_item *item,
-@@ -224,7 +224,7 @@ static ssize_t iscsi_stat_sess_err_format_errors_show(struct config_item *item,
- 	struct iscsi_tiqn *tiqn = iscsi_sess_err_tiqn(item);
- 	struct iscsi_sess_err_stats *sess_err = &tiqn->sess_err_stats;
- 
--	return snprintf(page, PAGE_SIZE, "%u\n", sess_err->pdu_format_errors);
-+	return sysfs_emit(page, "%u\n", sess_err->pdu_format_errors);
- }
- 
- CONFIGFS_ATTR_RO(iscsi_stat_sess_err_, inst);
-@@ -258,14 +258,14 @@ static struct iscsi_tiqn *iscsi_tgt_attr_tiqn(struct config_item *item)
- static ssize_t iscsi_stat_tgt_attr_inst_show(struct config_item *item,
- 		char *page)
- {
--	return snprintf(page, PAGE_SIZE, "%u\n",
-+	return sysfs_emit(page, "%u\n",
- 			iscsi_tgt_attr_tiqn(item)->tiqn_index);
- }
- 
- static ssize_t iscsi_stat_tgt_attr_indx_show(struct config_item *item,
- 		char *page)
- {
--	return snprintf(page, PAGE_SIZE, "%u\n", ISCSI_NODE_INDEX);
-+	return sysfs_emit(page, "%u\n", ISCSI_NODE_INDEX);
- }
- 
- static ssize_t iscsi_stat_tgt_attr_login_fails_show(struct config_item *item,
-@@ -281,7 +281,7 @@ static ssize_t iscsi_stat_tgt_attr_login_fails_show(struct config_item *item,
- 			lstat->other_fails);
- 	spin_unlock(&lstat->lock);
- 
--	return snprintf(page, PAGE_SIZE, "%u\n", fail_count);
-+	return sysfs_emit(page, "%u\n", fail_count);
- }
- 
- static ssize_t iscsi_stat_tgt_attr_last_fail_time_show(struct config_item *item,
-@@ -297,7 +297,7 @@ static ssize_t iscsi_stat_tgt_attr_last_fail_time_show(struct config_item *item,
- 				INITIAL_JIFFIES) * 100 / HZ) : 0;
- 	spin_unlock(&lstat->lock);
- 
--	return snprintf(page, PAGE_SIZE, "%u\n", last_fail_time);
-+	return sysfs_emit(page, "%u\n", last_fail_time);
- }
- 
- static ssize_t iscsi_stat_tgt_attr_last_fail_type_show(struct config_item *item,
-@@ -311,7 +311,7 @@ static ssize_t iscsi_stat_tgt_attr_last_fail_type_show(struct config_item *item,
- 	last_fail_type = lstat->last_fail_type;
- 	spin_unlock(&lstat->lock);
- 
--	return snprintf(page, PAGE_SIZE, "%u\n", last_fail_type);
-+	return sysfs_emit(page, "%u\n", last_fail_type);
- }
- 
- static ssize_t iscsi_stat_tgt_attr_fail_intr_name_show(struct config_item *item,
-@@ -326,7 +326,7 @@ static ssize_t iscsi_stat_tgt_attr_fail_intr_name_show(struct config_item *item,
- 				lstat->last_intr_fail_name : NONE);
- 	spin_unlock(&lstat->lock);
- 
--	return snprintf(page, PAGE_SIZE, "%s\n", buf);
-+	return sysfs_emit(page, "%s\n", buf);
- }
- 
- static ssize_t iscsi_stat_tgt_attr_fail_intr_addr_type_show(struct config_item *item,
-@@ -338,9 +338,9 @@ static ssize_t iscsi_stat_tgt_attr_fail_intr_addr_type_show(struct config_item *
- 
- 	spin_lock(&lstat->lock);
- 	if (lstat->last_intr_fail_ip_family == AF_INET6)
--		ret = snprintf(page, PAGE_SIZE, "ipv6\n");
-+		ret = sysfs_emit(page, "ipv6\n");
- 	else
--		ret = snprintf(page, PAGE_SIZE, "ipv4\n");
-+		ret = sysfs_emit(page, "ipv4\n");
- 	spin_unlock(&lstat->lock);
- 
- 	return ret;
-@@ -354,7 +354,7 @@ static ssize_t iscsi_stat_tgt_attr_fail_intr_addr_show(struct config_item *item,
- 	int ret;
- 
- 	spin_lock(&lstat->lock);
--	ret = snprintf(page, PAGE_SIZE, "%pISc\n", &lstat->last_intr_fail_sockaddr);
-+	ret = sysfs_emit(page, "%pISc\n", &lstat->last_intr_fail_sockaddr);
- 	spin_unlock(&lstat->lock);
- 
- 	return ret;
-@@ -398,14 +398,14 @@ static struct iscsi_tiqn *iscsi_login_stat_tiqn(struct config_item *item)
- 
- static ssize_t iscsi_stat_login_inst_show(struct config_item *item, char *page)
- {
--	return snprintf(page, PAGE_SIZE, "%u\n",
-+	return sysfs_emit(page, "%u\n",
- 		iscsi_login_stat_tiqn(item)->tiqn_index);
- }
- 
- static ssize_t iscsi_stat_login_indx_show(struct config_item *item,
- 		char *page)
- {
--	return snprintf(page, PAGE_SIZE, "%u\n", ISCSI_NODE_INDEX);
-+	return sysfs_emit(page, "%u\n", ISCSI_NODE_INDEX);
- }
- 
- static ssize_t iscsi_stat_login_accepts_show(struct config_item *item,
-@@ -416,7 +416,7 @@ static ssize_t iscsi_stat_login_accepts_show(struct config_item *item,
- 	ssize_t ret;
- 
- 	spin_lock(&lstat->lock);
--	ret = snprintf(page, PAGE_SIZE, "%u\n", lstat->accepts);
-+	ret = sysfs_emit(page, "%u\n", lstat->accepts);
- 	spin_unlock(&lstat->lock);
- 
- 	return ret;
-@@ -430,7 +430,7 @@ static ssize_t iscsi_stat_login_other_fails_show(struct config_item *item,
- 	ssize_t ret;
- 
- 	spin_lock(&lstat->lock);
--	ret = snprintf(page, PAGE_SIZE, "%u\n", lstat->other_fails);
-+	ret = sysfs_emit(page, "%u\n", lstat->other_fails);
- 	spin_unlock(&lstat->lock);
- 
- 	return ret;
-@@ -444,7 +444,7 @@ static ssize_t iscsi_stat_login_redirects_show(struct config_item *item,
- 	ssize_t ret;
- 
- 	spin_lock(&lstat->lock);
--	ret = snprintf(page, PAGE_SIZE, "%u\n", lstat->redirects);
-+	ret = sysfs_emit(page, "%u\n", lstat->redirects);
- 	spin_unlock(&lstat->lock);
- 
- 	return ret;
-@@ -458,7 +458,7 @@ static ssize_t iscsi_stat_login_authorize_fails_show(struct config_item *item,
- 	ssize_t ret;
- 
- 	spin_lock(&lstat->lock);
--	ret = snprintf(page, PAGE_SIZE, "%u\n", lstat->authorize_fails);
-+	ret = sysfs_emit(page, "%u\n", lstat->authorize_fails);
- 	spin_unlock(&lstat->lock);
- 
- 	return ret;
-@@ -472,7 +472,7 @@ static ssize_t iscsi_stat_login_authenticate_fails_show(
- 	ssize_t ret;
- 
- 	spin_lock(&lstat->lock);
--	ret = snprintf(page, PAGE_SIZE, "%u\n", lstat->authenticate_fails);
-+	ret = sysfs_emit(page, "%u\n", lstat->authenticate_fails);
- 	spin_unlock(&lstat->lock);
- 
- 	return ret;
-@@ -486,7 +486,7 @@ static ssize_t iscsi_stat_login_negotiate_fails_show(struct config_item *item,
- 	ssize_t ret;
- 
- 	spin_lock(&lstat->lock);
--	ret = snprintf(page, PAGE_SIZE, "%u\n", lstat->negotiate_fails);
-+	ret = sysfs_emit(page, "%u\n", lstat->negotiate_fails);
- 	spin_unlock(&lstat->lock);
- 
- 	return ret;
-@@ -530,13 +530,13 @@ static struct iscsi_tiqn *iscsi_logout_stat_tiqn(struct config_item *item)
- 
- static ssize_t iscsi_stat_logout_inst_show(struct config_item *item, char *page)
- {
--	return snprintf(page, PAGE_SIZE, "%u\n",
-+	return sysfs_emit(page, "%u\n",
- 		iscsi_logout_stat_tiqn(item)->tiqn_index);
- }
- 
- static ssize_t iscsi_stat_logout_indx_show(struct config_item *item, char *page)
- {
--	return snprintf(page, PAGE_SIZE, "%u\n", ISCSI_NODE_INDEX);
-+	return sysfs_emit(page, "%u\n", ISCSI_NODE_INDEX);
- }
- 
- static ssize_t iscsi_stat_logout_normal_logouts_show(struct config_item *item,
-@@ -545,7 +545,7 @@ static ssize_t iscsi_stat_logout_normal_logouts_show(struct config_item *item,
- 	struct iscsi_tiqn *tiqn = iscsi_logout_stat_tiqn(item);
- 	struct iscsi_logout_stats *lstats = &tiqn->logout_stats;
- 
--	return snprintf(page, PAGE_SIZE, "%u\n", lstats->normal_logouts);
-+	return sysfs_emit(page, "%u\n", lstats->normal_logouts);
- }
- 
- static ssize_t iscsi_stat_logout_abnormal_logouts_show(struct config_item *item,
-@@ -554,7 +554,7 @@ static ssize_t iscsi_stat_logout_abnormal_logouts_show(struct config_item *item,
- 	struct iscsi_tiqn *tiqn = iscsi_logout_stat_tiqn(item);
- 	struct iscsi_logout_stats *lstats = &tiqn->logout_stats;
- 
--	return snprintf(page, PAGE_SIZE, "%u\n", lstats->abnormal_logouts);
-+	return sysfs_emit(page, "%u\n", lstats->abnormal_logouts);
- }
- 
- CONFIGFS_ATTR_RO(iscsi_stat_logout_, inst);
-@@ -592,7 +592,7 @@ static ssize_t iscsi_stat_sess_inst_show(struct config_item *item, char *page)
- 	struct iscsi_tiqn *tiqn = container_of(wwn,
- 			struct iscsi_tiqn, tiqn_wwn);
- 
--	return snprintf(page, PAGE_SIZE, "%u\n", tiqn->tiqn_index);
-+	return sysfs_emit(page, "%u\n", tiqn->tiqn_index);
- }
- 
- static ssize_t iscsi_stat_sess_node_show(struct config_item *item, char *page)
-@@ -608,7 +608,7 @@ static ssize_t iscsi_stat_sess_node_show(struct config_item *item, char *page)
- 	if (se_sess) {
- 		sess = se_sess->fabric_sess_ptr;
- 		if (sess)
--			ret = snprintf(page, PAGE_SIZE, "%u\n",
-+			ret = sysfs_emit(page, "%u\n",
- 				sess->sess_ops->SessionType ? 0 : ISCSI_NODE_INDEX);
- 	}
- 	spin_unlock_bh(&se_nacl->nacl_sess_lock);
-@@ -629,7 +629,7 @@ static ssize_t iscsi_stat_sess_indx_show(struct config_item *item, char *page)
- 	if (se_sess) {
- 		sess = se_sess->fabric_sess_ptr;
- 		if (sess)
--			ret = snprintf(page, PAGE_SIZE, "%u\n",
-+			ret = sysfs_emit(page, "%u\n",
- 					sess->session_index);
- 	}
- 	spin_unlock_bh(&se_nacl->nacl_sess_lock);
-@@ -651,7 +651,7 @@ static ssize_t iscsi_stat_sess_cmd_pdus_show(struct config_item *item,
- 	if (se_sess) {
- 		sess = se_sess->fabric_sess_ptr;
- 		if (sess)
--			ret = snprintf(page, PAGE_SIZE, "%lu\n",
-+			ret = sysfs_emit(page, "%lu\n",
- 				       atomic_long_read(&sess->cmd_pdus));
- 	}
- 	spin_unlock_bh(&se_nacl->nacl_sess_lock);
-@@ -673,7 +673,7 @@ static ssize_t iscsi_stat_sess_rsp_pdus_show(struct config_item *item,
- 	if (se_sess) {
- 		sess = se_sess->fabric_sess_ptr;
- 		if (sess)
--			ret = snprintf(page, PAGE_SIZE, "%lu\n",
-+			ret = sysfs_emit(page, "%lu\n",
- 				       atomic_long_read(&sess->rsp_pdus));
- 	}
- 	spin_unlock_bh(&se_nacl->nacl_sess_lock);
-@@ -695,7 +695,7 @@ static ssize_t iscsi_stat_sess_txdata_octs_show(struct config_item *item,
- 	if (se_sess) {
- 		sess = se_sess->fabric_sess_ptr;
- 		if (sess)
--			ret = snprintf(page, PAGE_SIZE, "%lu\n",
-+			ret = sysfs_emit(page, "%lu\n",
- 				       atomic_long_read(&sess->tx_data_octets));
- 	}
- 	spin_unlock_bh(&se_nacl->nacl_sess_lock);
-@@ -717,7 +717,7 @@ static ssize_t iscsi_stat_sess_rxdata_octs_show(struct config_item *item,
- 	if (se_sess) {
- 		sess = se_sess->fabric_sess_ptr;
- 		if (sess)
--			ret = snprintf(page, PAGE_SIZE, "%lu\n",
-+			ret = sysfs_emit(page, "%lu\n",
- 				       atomic_long_read(&sess->rx_data_octets));
- 	}
- 	spin_unlock_bh(&se_nacl->nacl_sess_lock);
-@@ -739,7 +739,7 @@ static ssize_t iscsi_stat_sess_conn_digest_errors_show(struct config_item *item,
- 	if (se_sess) {
- 		sess = se_sess->fabric_sess_ptr;
- 		if (sess)
--			ret = snprintf(page, PAGE_SIZE, "%lu\n",
-+			ret = sysfs_emit(page, "%lu\n",
- 				       atomic_long_read(&sess->conn_digest_errors));
- 	}
- 	spin_unlock_bh(&se_nacl->nacl_sess_lock);
-@@ -761,7 +761,7 @@ static ssize_t iscsi_stat_sess_conn_timeout_errors_show(
- 	if (se_sess) {
- 		sess = se_sess->fabric_sess_ptr;
- 		if (sess)
--			ret = snprintf(page, PAGE_SIZE, "%lu\n",
-+			ret = sysfs_emit(page, "%lu\n",
- 				       atomic_long_read(&sess->conn_timeout_errors));
- 	}
- 	spin_unlock_bh(&se_nacl->nacl_sess_lock);
--- 
-2.25.1
+root@(none)$ echo 33 > 0:0:2:0/device/queue_depth
+root@(none)$ echo 33 > 0:0:2:0/device/queue_depth
+sh: echo: write error: Invalid argument
+root@(none)$
 
+I also note that setting a value out of range is just rejected for a SAS 
+device, and not capped to the max range (like it is for SATA).
+
+AHCI rejects out of range values it as it exceeds the shost can_queue in 
+sdev_store_queue_depth().
+
+Thanks,
+John
+
+> ---
+>   drivers/ata/libata-sata.c           | 24 ++++++++++++------------
+>   drivers/scsi/libsas/sas_scsi_host.c |  3 ++-
+>   include/linux/libata.h              |  4 ++--
+>   3 files changed, 16 insertions(+), 15 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+> index 7a5fe41aa5ae..13b9d0fdd42c 100644
+> --- a/drivers/ata/libata-sata.c
+> +++ b/drivers/ata/libata-sata.c
+> @@ -1018,26 +1018,25 @@ DEVICE_ATTR(sw_activity, S_IWUSR | S_IRUGO, ata_scsi_activity_show,
+>   EXPORT_SYMBOL_GPL(dev_attr_sw_activity);
+>   
+>   /**
+> - *	__ata_change_queue_depth - helper for ata_scsi_change_queue_depth
+> - *	@ap: ATA port to which the device change the queue depth
+> + *	ata_change_queue_depth - Set a device maximum queue depth
+> + *	@ap: ATA port of the target device
+> + *	@dev: target ATA device
+>    *	@sdev: SCSI device to configure queue depth for
+>    *	@queue_depth: new queue depth
+>    *
+> - *	libsas and libata have different approaches for associating a sdev to
+> - *	its ata_port.
+> + *	Helper to set a device maximum queue depth, usable with both libsas
+> + *	and libata.
+>    *
+>    */
+> -int __ata_change_queue_depth(struct ata_port *ap, struct scsi_device *sdev,
+> -			     int queue_depth)
+> +int ata_change_queue_depth(struct ata_port *ap, struct ata_device *dev,
+> +			   struct scsi_device *sdev, int queue_depth)
+>   {
+> -	struct ata_device *dev;
+>   	unsigned long flags;
+>   
+> -	if (queue_depth < 1 || queue_depth == sdev->queue_depth)
+> +	if (!dev || !ata_dev_enabled(dev))
+>   		return sdev->queue_depth;
+>   
+> -	dev = ata_scsi_find_dev(ap, sdev);
+> -	if (!dev || !ata_dev_enabled(dev))
+> +	if (queue_depth < 1 || queue_depth == sdev->queue_depth)
+>   		return sdev->queue_depth;
+>   
+>   	/* NCQ enabled? */
+> @@ -1059,7 +1058,7 @@ int __ata_change_queue_depth(struct ata_port *ap, struct scsi_device *sdev,
+>   
+>   	return scsi_change_queue_depth(sdev, queue_depth);
+>   }
+> -EXPORT_SYMBOL_GPL(__ata_change_queue_depth);
+> +EXPORT_SYMBOL_GPL(ata_change_queue_depth);
+>   
+>   /**
+>    *	ata_scsi_change_queue_depth - SCSI callback for queue depth config
+> @@ -1080,7 +1079,8 @@ int ata_scsi_change_queue_depth(struct scsi_device *sdev, int queue_depth)
+>   {
+>   	struct ata_port *ap = ata_shost_to_port(sdev->host);
+>   
+> -	return __ata_change_queue_depth(ap, sdev, queue_depth);
+> +	return ata_change_queue_depth(ap, ata_scsi_find_dev(ap, sdev),
+> +				      sdev, queue_depth);
+>   }
+>   EXPORT_SYMBOL_GPL(ata_scsi_change_queue_depth);
+>   
+> diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+> index 9c82e5dc4fcc..a36fa1c128a8 100644
+> --- a/drivers/scsi/libsas/sas_scsi_host.c
+> +++ b/drivers/scsi/libsas/sas_scsi_host.c
+> @@ -872,7 +872,8 @@ int sas_change_queue_depth(struct scsi_device *sdev, int depth)
+>   	struct domain_device *dev = sdev_to_domain_dev(sdev);
+>   
+>   	if (dev_is_sata(dev))
+> -		return __ata_change_queue_depth(dev->sata_dev.ap, sdev, depth);
+> +		return ata_change_queue_depth(dev->sata_dev.ap,
+> +					      sas_to_ata_dev(dev), sdev, depth);
+>   
+>   	if (!sdev->tagged_supported)
+>   		depth = 1;
+> diff --git a/include/linux/libata.h b/include/linux/libata.h
+> index 698032e5ef2d..20765d1c5f80 100644
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+> @@ -1136,8 +1136,8 @@ extern int ata_scsi_slave_config(struct scsi_device *sdev);
+>   extern void ata_scsi_slave_destroy(struct scsi_device *sdev);
+>   extern int ata_scsi_change_queue_depth(struct scsi_device *sdev,
+>   				       int queue_depth);
+> -extern int __ata_change_queue_depth(struct ata_port *ap, struct scsi_device *sdev,
+> -				    int queue_depth);
+> +extern int ata_change_queue_depth(struct ata_port *ap, struct ata_device *dev,
+> +				  struct scsi_device *sdev, int queue_depth);
+>   extern struct ata_device *ata_dev_pair(struct ata_device *adev);
+>   extern int ata_do_set_mode(struct ata_link *link, struct ata_device **r_failed_dev);
+>   extern void ata_scsi_port_error_handler(struct Scsi_Host *host, struct ata_port *ap);
 
