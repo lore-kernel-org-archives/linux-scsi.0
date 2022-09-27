@@ -2,95 +2,120 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C4A4C54EE9
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Sep 2022 07:05:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5EB0C6FA86
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Sep 2022 07:11:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230219AbiI0HFL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Sep 2022 03:05:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54542 "EHLO
+        id S230190AbiI0HLd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Sep 2022 03:11:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39504 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230256AbiI0HFF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Sep 2022 03:05:05 -0400
+        with ESMTP id S229967AbiI0HLc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Sep 2022 03:11:32 -0400
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4FDC8A7F1;
-        Tue, 27 Sep 2022 00:05:01 -0700 (PDT)
-Received: from fraeml711-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Mc9Zp47z1z685K1;
-        Tue, 27 Sep 2022 15:03:46 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6BC2A6C65;
+        Tue, 27 Sep 2022 00:11:31 -0700 (PDT)
+Received: from fraeml709-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Mc9lh4qPJz689NN;
+        Tue, 27 Sep 2022 15:11:28 +0800 (CST)
 Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml711-chm.china.huawei.com (10.206.15.60) with Microsoft SMTP Server
+ fraeml709-chm.china.huawei.com (10.206.15.37) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Tue, 27 Sep 2022 09:04:58 +0200
-Received: from [10.48.156.245] (10.48.156.245) by
+ 15.1.2375.31; Tue, 27 Sep 2022 09:11:29 +0200
+Received: from localhost.localdomain (10.69.192.58) by
  lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Tue, 27 Sep 2022 08:04:58 +0100
-Message-ID: <f3e90970-5153-f6bc-5be8-c2c379be0d7f@huawei.com>
-Date:   Tue, 27 Sep 2022 08:05:00 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH v2 2/2] ata: libata-sata: Fix device queue depth control
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-ide@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-References: <20220925230817.91542-1-damien.lemoal@opensource.wdc.com>
- <20220925230817.91542-3-damien.lemoal@opensource.wdc.com>
- <5bab7eb9-7b91-8c06-e8c3-f2076bac78dc@huawei.com>
- <92d87d6c-9bd0-0cf9-1ced-bac104ea2d66@opensource.wdc.com>
+ 15.1.2375.31; Tue, 27 Sep 2022 08:11:26 +0100
 From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <92d87d6c-9bd0-0cf9-1ced-bac104ea2d66@opensource.wdc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.48.156.245]
-X-ClientProxiedBy: lhrpeml100005.china.huawei.com (7.191.160.25) To
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <jinpu.wang@cloud.ionos.com>, <damien.lemoal@opensource.wdc.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, <yangxingui@huawei.com>,
+        <yanaijie@huawei.com>, "John Garry" <john.garry@huawei.com>
+Subject: [PATCH v5 0/7] libsas and drivers: NCQ error handling 
+Date:   Tue, 27 Sep 2022 15:04:51 +0800
+Message-ID: <1664262298-239952-1-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
+MIME-Version: 1.0
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
  lhrpeml500003.china.huawei.com (7.191.162.67)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 27/09/2022 00:05, Damien Le Moal wrote:
->>> ata_scsi_find_dev() returns NULL, turning
->>> __ata_change_queue_depth() into a nop, which prevents the user from
->>> setting the maximum queue depth of ATA devices used with libsas based
->>> HBAs.
->>>
->>> Fix this by renaming __ata_change_queue_depth() to
->>> ata_change_queue_depth() and adding a pointer to the ata_device
->>> structure of the target device as argument. This pointer is provided by
->>> ata_scsi_change_queue_depth() using ata_scsi_find_dev() in the case of
->>> a libata managed device and by sas_change_queue_depth() using
->>> sas_to_ata_dev() in the case of a libsas managed ata device.
->> This seems ok. But could you alternatively use ata_for_each_dev() and
->> match by ata_device.sdev pointer? That pointer is set quite late in the
->> probe, though, so maybe it would not work.
-> Not sure I understand why we should search for the ata device again using
-> ata_for_each_dev() when sas_to_ata_dev() gives us directly what we need
-> for the libsas controlled device... Can you clarify ?
-> 
+As reported in [0], the pm8001 driver NCQ error handling more or less
+duplicates what libata does in link error handling, as follows:
+- abort all commands
+- do autopsy with read log ext 10 command
+- reset the target to recover, if necessary
 
-Sure, we can use sas_to_ata_dev() to get the ata_device.
+Indeed for the hisi_sas driver we want to add similar handling for NCQ
+errors.
 
-I am just suggesting my way such that we can have a consistent method to 
-get the ata_device between all libata users and we don't need to change 
-the ata_change_queue_depth() interface. It would be something like:
+This series add a new libsas API - sas_ata_device_link_abort() - to handle
+host NCQ errors, and fixes up pm8001 and hisi_sas drivers to use it.
 
-struct ata_device *ata_scsi_find_dev(struct ata_port *ap, const struct 
-scsi_device *scsidev)
-{
-	struct ata_link *link;
-	struct ata_device *dev;
+A difference in the pm8001 driver NCQ error handling is that we send
+SATA_ABORT per-task prior to read log ext10, but I feel that this should
+not make a difference to the error handling.
 
-	ata_for_each_link(link, ap, EDGE) {
-		ata_for_each_dev(dev, link, ENABLED) {
-			if (scsidev == dev->sdev)
-				return dev;
-		}
-	}
-	// todo: check pmp
-	return NULL;
-}
+Damien kindly tested previous the series for pm8001, but any further pm8001
+testing would be appreciated as I have since tweaked pm8001 handling again.
+This is because the pm8001 driver hangs on my arm64 machine read log ext10
+command.
 
-Thanks,
-John
+Finally with these changes we can make the libsas task alloc/free APIs
+private, which they should always have been.
+
+Based on mkp-scsi @ 6.1/scsi-staging 57569c37f0ad ("scsi: iscsi:
+iscsi_tcp: Fix null-ptr-deref while calling getpeername()")
+
+[0] https://lore.kernel.org/linux-scsi/8fb3b093-55f0-1fab-81f4-e8519810a978@huawei.com/
+
+Changes since v4:
+- Add Jason's tags (thanks)
+- Rebase
+
+Changes since v3:
+- Add Damien's tags (thanks)
+- Modify hisi_sas processing as follows:
+  - use sas_task_abort() for rejected IO
+  - Modify abort task processing to issue softreset in certain circumstances
+- rebase
+
+Changes since v2:
+- Stop sending SATA_ABORT all for pm8001 handling
+- Make "reset" optional in sas_ata_device_link_abort()
+- Drop Jack's ACK
+
+John Garry (5):
+  scsi: libsas: Add sas_ata_device_link_abort()
+  scsi: hisi_sas: Move slot variable definition in hisi_sas_abort_task()
+  scsi: pm8001: Modify task abort handling for SATA task
+  scsi: pm8001: Use sas_ata_device_link_abort() to handle NCQ errors
+  scsi: libsas: Make sas_{alloc, alloc_slow, free}_task() private
+
+Xingui Yang (2):
+  scsi: hisi_sas: Add SATA_DISK_ERR bit handling for v3 hw
+  scsi: hisi_sas: Modify v3 HW SATA disk error state completion
+    processing
+
+ drivers/scsi/hisi_sas/hisi_sas.h       |   1 +
+ drivers/scsi/hisi_sas/hisi_sas_main.c  |  26 +++-
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  53 ++++++-
+ drivers/scsi/libsas/sas_ata.c          |  12 ++
+ drivers/scsi/libsas/sas_init.c         |   3 -
+ drivers/scsi/libsas/sas_internal.h     |   4 +
+ drivers/scsi/pm8001/pm8001_hwi.c       | 186 ++++---------------------
+ drivers/scsi/pm8001/pm8001_sas.c       |   8 ++
+ drivers/scsi/pm8001/pm8001_sas.h       |   4 -
+ drivers/scsi/pm8001/pm80xx_hwi.c       | 177 +++--------------------
+ include/scsi/libsas.h                  |   4 -
+ include/scsi/sas_ata.h                 |   6 +
+ 12 files changed, 143 insertions(+), 341 deletions(-)
+
+-- 
+2.35.3
+
