@@ -2,98 +2,100 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7981C6FA83
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Sep 2022 15:41:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EAEBC6FA93
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Sep 2022 15:55:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232363AbiI0PlE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Sep 2022 11:41:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51854 "EHLO
+        id S232726AbiI0PzI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Sep 2022 11:55:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36604 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232378AbiI0PkB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Sep 2022 11:40:01 -0400
-Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5EBC558B6C
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Sep 2022 08:37:53 -0700 (PDT)
-Received: by mail-pj1-x1032.google.com with SMTP id s90-20020a17090a2f6300b00203a685a1aaso10440905pjd.1
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Sep 2022 08:37:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date;
-        bh=AFdCbuK2STwU1a0Nvf1lTDCDj1ToB//H9Q+bBUP1Qko=;
-        b=NvRgdBCT61Gudxqofirgx5th8IhGdXVH8ploDF6qA3ooguYlkZg71QV76whvsg9N6l
-         R4KzgPkWN0h5/4Wa+jfAUT3X64/ZrWIc657LewcLsRa8odQNcnMLsWGTFDRG8vyEoBXq
-         TJavhn1JY3shjpKopxaVJH4TRh6fLbyxkkYpmDlWls5S86f+jRYvc4HcSKwwjuTZetKu
-         nRDD15OmlhogeMrBS17ayxlWc9/04/Cg6th9rUmLkxtuPjumSS559ESr/I/y3Z9c7fIn
-         wpKIHX66ByA5ce2JXGh+pHeaqv7pxm0/5tBguNnJcxWHUMej+FaDDZah39r9lluVzFcQ
-         XCgA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date;
-        bh=AFdCbuK2STwU1a0Nvf1lTDCDj1ToB//H9Q+bBUP1Qko=;
-        b=e8vnhuA3RBHHTeQIyf4YJ+To5vuXvPjRXALlVKu9bjEALaszcq/ewK0aeHjT+CKXZe
-         HPiQKSFVgM+6fLE34tQGiF+N1y31x7MYRkw4zQLy9xuiuCW3jJre1rtnt9LAcEtONJhk
-         dKIaTLn+H9zmXVtiml34p4kiU+QGzVML3MW7t95BEmJsT9GnNid9lAna9U8KEFMPJqAW
-         tczi7ZBokCitQvD3E9yzQg5Ik0EYjzJId7GG0zbONPy34F1hsvD4qG0aLpjbqAceM16a
-         JkyOEftAHn8F9cICldUNmY+vN3yhjr9RuKwYdCEjIxxWNM1Bi89qga7EnV9H8yJcOpyy
-         aB+A==
-X-Gm-Message-State: ACrzQf2xNG6RHel+o2C/9h5VyHUSJpWpsw11u3CkNcIWK6JVOyft+Q68
-        eMMl+ucZRvsNvii65TGvlZ5fIi+yfQOogw==
-X-Google-Smtp-Source: AMsMyM5jyEmlaQH+Y1BsFMdvCalgfAKFQCnd9GdR1AeXlRDMfov29pS4+9anTO+gz3gmL+s4K9nTMQ==
-X-Received: by 2002:a17:90a:6405:b0:203:6eaa:4999 with SMTP id g5-20020a17090a640500b002036eaa4999mr5266575pjj.8.1664293039489;
-        Tue, 27 Sep 2022 08:37:19 -0700 (PDT)
-Received: from C02F63J9MD6R.bytedance.net ([61.120.150.77])
-        by smtp.gmail.com with ESMTPSA id w16-20020aa79a10000000b0053639773ad8sm1933087pfj.119.2022.09.27.08.37.13
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 27 Sep 2022 08:37:19 -0700 (PDT)
-From:   Zhuo Chen <chenzhuo.1@bytedance.com>
-To:     bhelgaas@google.com, ruscur@russell.cc, oohall@gmail.com,
-        fancer.lancer@gmail.com, jdmason@kudzu.us, dave.jiang@intel.com,
-        allenbh@gmail.com, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     chenzhuo.1@bytedance.com, linuxppc-dev@lists.ozlabs.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ntb@lists.linux.dev, linux-scsi@vger.kernel.org
-Subject: [PATCH v2 8/9] PCI/ERR: Clear fatal status when pci_channel_io_frozen
-Date:   Tue, 27 Sep 2022 23:35:23 +0800
-Message-Id: <20220927153524.49172-9-chenzhuo.1@bytedance.com>
-X-Mailer: git-send-email 2.30.1 (Apple Git-130)
-In-Reply-To: <20220927153524.49172-1-chenzhuo.1@bytedance.com>
-References: <20220927153524.49172-1-chenzhuo.1@bytedance.com>
+        with ESMTP id S232790AbiI0Pym (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Sep 2022 11:54:42 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35FF01B95C8;
+        Tue, 27 Sep 2022 08:54:27 -0700 (PDT)
+Received: from fraeml707-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4McPJj3F7cz67yqL;
+        Tue, 27 Sep 2022 23:52:21 +0800 (CST)
+Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
+ fraeml707-chm.china.huawei.com (10.206.15.35) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Tue, 27 Sep 2022 17:54:24 +0200
+Received: from [10.48.156.245] (10.48.156.245) by
+ lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Tue, 27 Sep 2022 16:54:24 +0100
+Message-ID: <f24d0eb1-a578-2221-c8da-17ddbd35e96d@huawei.com>
+Date:   Tue, 27 Sep 2022 16:54:26 +0100
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH 5.10] scsi: hisi_sas: Revert "scsi: hisi_sas: Limit max hw
+ sectors for v3 HW"
+To:     Yu Kuai <yukuai1@huaweicloud.com>, <gregkh@linuxfoundation.org>,
+        <stable@vger.kernel.org>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <yi.zhang@huawei.com>,
+        "yukuai (C)" <yukuai3@huawei.com>
+References: <20220927130116.1013775-1-yukuai3@huawei.com>
+ <a1fe584c-5001-9983-3a3d-65d3bd396642@huawei.com>
+ <2bcb72eb-b9a7-8fed-f17d-3f1df4da9ee5@huaweicloud.com>
+ <f50cc744-f522-259a-e670-809d65361548@huawei.com>
+ <5b8cc025-0755-74c1-3df5-a95718d23861@huaweicloud.com>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <5b8cc025-0755-74c1-3df5-a95718d23861@huaweicloud.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.48.156.245]
+X-ClientProxiedBy: lhrpeml500003.china.huawei.com (7.191.162.67) To
+ lhrpeml500003.china.huawei.com (7.191.162.67)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When state is pci_channel_io_frozen in pcie_do_recovery(),
-the severity is fatal and fatal status should be cleared.
-So we add pci_aer_clear_fatal_status().
+On 27/09/2022 15:05, Yu Kuai wrote:
+>>
+>> However both 5.15 stable and 5.19 mainline include fce54ed02757 - it 
+>> was automatically backported for 5.15 stable. Please double check that.
+>>
+>> And can you also check performance there for those kernels?
+> 
+> I'm pretty sure io split can decline performance, especially for HDD,
+> because blk-mq can't guarantee that split io can be dispatched to disk
+> sequentially. However, this is usually not common with proper
+> max_sectors_kb.
+> 
+> Here is an example that if max_sector_kb is 128k, performance will
+> drop a lot under high concurrency:
+> 
+> https://lore.kernel.org/all/20220408073916.1428590-1-yukuai3@huawei.com/
+> 
+> Here I set max_sectors_kb to 128k manually, and 1m random io performance
+> will drop while io concurrency increase:
+> 
+> | numjobs | v5.18-rc1 |
+> | ------- | --------- |
+> | 1       | 67.7      |
+> | 2       | 67.7      |
+> | 4       | 67.7      |
+> | 8       | 67.7      |
+> | 16      | 64.8      |
+> | 32      | 59.8      |
+> | 64      | 54.9      |
+> | 128     | 49        |
+> | 256     | 37.7      |
+> | 512     | 31.8      |
 
-Signed-off-by: Zhuo Chen <chenzhuo.1@bytedance.com>
----
- drivers/pci/pcie/err.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+Commit fce54ed02757 was to circumvent a terrible performance hit for 
+IOMMU enabled from 4e89dce72521 - have you ever tested with IOMMU enabled?
 
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index f80b21244ef1..b46f1d36c090 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -241,7 +241,10 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
- 	pci_walk_bridge(bridge, report_resume, &status);
- 
- 	pcie_clear_device_status(dev);
--	pci_aer_clear_nonfatal_status(dev);
-+	if (state == pci_channel_io_frozen)
-+		pci_aer_clear_fatal_status(dev);
-+	else
-+		pci_aer_clear_nonfatal_status(dev);
- 
- 	pci_info(bridge, "device recovery successful\n");
- 	return status;
--- 
-2.30.1 (Apple Git-130)
+If fce54ed02757 really does cause a performance regression in some 
+scenarios, then we can consider reverting it from any stable kernel and 
+also backporting [0] when it is included in Linus' kernel
 
+[0] 
+https://lore.kernel.org/linux-iommu/495de02c-59ce-917f-1cb4-5425a37063ed@huawei.com/T/#m6a655d596fdf30e4e8b90100e16f75ae5d67341a
+
+thanks,
+John
