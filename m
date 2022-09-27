@@ -2,52 +2,52 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DF5FC07E9D
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Sep 2022 15:40:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92843C6FA82
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Sep 2022 15:41:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232691AbiI0Pks (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Sep 2022 11:40:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49930 "EHLO
+        id S232868AbiI0PlD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Sep 2022 11:41:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53598 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232772AbiI0Pjl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Sep 2022 11:39:41 -0400
-Received: from mail-pg1-x535.google.com (mail-pg1-x535.google.com [IPv6:2607:f8b0:4864:20::535])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96B7E1CFBA2
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Sep 2022 08:37:42 -0700 (PDT)
-Received: by mail-pg1-x535.google.com with SMTP id v4so9719841pgi.10
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Sep 2022 08:37:42 -0700 (PDT)
+        with ESMTP id S232741AbiI0PkA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Sep 2022 11:40:00 -0400
+Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0290A1D05C1
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Sep 2022 08:37:56 -0700 (PDT)
+Received: by mail-pl1-x636.google.com with SMTP id b21so9424207plz.7
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Sep 2022 08:37:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20210112.gappssmtp.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date;
-        bh=u9XQU41RsTUx8hAj0GByCivfHFYNLe/LcJ7HOx2cRk8=;
-        b=fsCBG+DPjSI2nTALjsV1M/duBiunTKI6jkFKOOGmtIR6r5bAo2o2uEDMVUtUArXGVW
-         fTKfg77exYvCPT+Mzd0FRfvrUOIrPM0DrH3XCnFfLmLZAzuiZ2q+x3gMaVyQqyuZbgoc
-         mGw37ZG9ieu06mhPTRrMnhx0rx5zACS7/QMWCatKRH3/B8MceesI9gSMJlvNlTGtys+s
-         ZpK4iFTZ+b88nfx2U5yAVmqtVht2gc9J38/VXFStCvpAzAuNNnvoupyJoxQ0dC/t5q0l
-         0LCVpcQakk9Ng6ATtk5ggTfQOe2Fv4tFHfwKswt99YRJayi96CpsLFwM80CWJJkYBuZB
-         ajRw==
+        bh=jrue3xDv2fahH0oRb0ZfoidxKvGLRwE7ZIzpUZAJ4Nw=;
+        b=t97e6+ByJ/znAh9op7r/0INVD9/ePdia6obzzM84V/fa4k0PkB8CTggLpqdkmQSQxw
+         jPd7dB99HsoumE0BHyoTkal01PjHX2wkJpeP/6HmLwxHhvMSpGCr5ibn6dD8EZ7Sj/rn
+         04VNNXm7c68IcpJ6T3+yeEWknEZodWqZ3I31OZesH5Zmc7YMzL/EcDynSOKl5JP9zdPe
+         V6dsr5jfhPndCyvIe921MSiKUupw6yBVmtvJgVplkpl+lgCfgsl+uXky/HN/txddQC8i
+         QRxcmp/RPPC82K6CC8WaHFIjjhjraR6rlUGNHe5BKYQPpOqfKmOPFXtuNA/EangO43bl
+         K+sA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date;
-        bh=u9XQU41RsTUx8hAj0GByCivfHFYNLe/LcJ7HOx2cRk8=;
-        b=gJT8i9Bb0CPkaymIp0JWk0BNjdXyxHEazWZ3V24R2JXS8jeArLTZuRTpP2ceky3OMm
-         JIYMmTiZejAFEqgisN2qlLUxrI4r47pUQLLuAKv58GYK9BvXQ6ECeAWbtJt9bOurzZK+
-         LUErn/ZqZ3N+nHnzBaHArKkllS8Q958Btwr2UeZNJK/7API8IADAgqsh0SattTmfXw8Q
-         TA+5NiDubPquYWczsyAXejyFHWC1nCd4gRbYNXirjamWmQiq+1oqty6FFePcOjySMUyd
-         CmrQT3/fcl+3AH250u8rZoK4SZFJEHDzCdVZoMNMoCBJggq81vdlxgv/yzqcP2uQDc5v
-         BsQg==
-X-Gm-Message-State: ACrzQf0w71WjYmgdVCyYhGqXtpbpFTGRQOblRTA1VrPHmKlZm5b2j1Sa
-        v+4165R8jxqNwIasqfgYY3n3Yw==
-X-Google-Smtp-Source: AMsMyM5AGc7YKPpik/CYAdx7+YLoe2LePT9l6+aEGScdw+MnDkvA4e2T5mugdpwTheK1NxozIxwQbQ==
-X-Received: by 2002:a63:d40b:0:b0:43b:e86f:d384 with SMTP id a11-20020a63d40b000000b0043be86fd384mr24815734pgh.167.1664293032304;
-        Tue, 27 Sep 2022 08:37:12 -0700 (PDT)
+        bh=jrue3xDv2fahH0oRb0ZfoidxKvGLRwE7ZIzpUZAJ4Nw=;
+        b=j4wz7lH/7a84UIicyJlFQvKE9MWLXcgLTMnRrkp7cRSKfLLE7Nt7hfzSubIX5/d+Jg
+         fndar5ziJNpahX1lfsT9Kl47Toz9qGKpNkqcKoYCpmskRreLG42yFayqb+66msYEEMCJ
+         rrp9KnzrdU18MmuH9uHIAl1CMRNLn2QenRB26nStqs/xfjN35S3Tw16v1rp28tki+fXa
+         E3eg0zkVqRPxrYc5m0SMXLcikPqY22yuQTVDOGpNFEfz+pmn8XZZ7BmiF+GkRd6MKJiE
+         yzCONTHD67R03DhGqhK6aNlgSqYgQmdQdZ/cKVaYKtxlg6fEAgVa21v4rvee0pv4Em4U
+         kmgw==
+X-Gm-Message-State: ACrzQf0NWNQmpqDWaaCotcAWqkyP1ZnHF7FbBSwjqHvkyTA0OXBVm76s
+        D1c8J+BvQQETuZ0tctIOSL10CQ==
+X-Google-Smtp-Source: AMsMyM4mzGSMzMrGQb4AEYHMI3z1A4zjn9jLaUxhhhISN8nn4Omuv8b/L9w4e1lSWVjTg9NQtpY+TA==
+X-Received: by 2002:a17:903:32cf:b0:178:3d49:45b0 with SMTP id i15-20020a17090332cf00b001783d4945b0mr27706370plr.5.1664293046628;
+        Tue, 27 Sep 2022 08:37:26 -0700 (PDT)
 Received: from C02F63J9MD6R.bytedance.net ([61.120.150.77])
-        by smtp.gmail.com with ESMTPSA id w16-20020aa79a10000000b0053639773ad8sm1933087pfj.119.2022.09.27.08.37.06
+        by smtp.gmail.com with ESMTPSA id w16-20020aa79a10000000b0053639773ad8sm1933087pfj.119.2022.09.27.08.37.20
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 27 Sep 2022 08:37:12 -0700 (PDT)
+        Tue, 27 Sep 2022 08:37:26 -0700 (PDT)
 From:   Zhuo Chen <chenzhuo.1@bytedance.com>
 To:     bhelgaas@google.com, ruscur@russell.cc, oohall@gmail.com,
         fancer.lancer@gmail.com, jdmason@kudzu.us, dave.jiang@intel.com,
@@ -57,9 +57,9 @@ To:     bhelgaas@google.com, ruscur@russell.cc, oohall@gmail.com,
 Cc:     chenzhuo.1@bytedance.com, linuxppc-dev@lists.ozlabs.org,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         ntb@lists.linux.dev, linux-scsi@vger.kernel.org
-Subject: [PATCH v2 7/9] PCI/AER: Use pcie_aer_is_native() to judge whether OS owns AER
-Date:   Tue, 27 Sep 2022 23:35:22 +0800
-Message-Id: <20220927153524.49172-8-chenzhuo.1@bytedance.com>
+Subject: [PATCH v2 9/9] PCI/AER: Refine status clearing process with api
+Date:   Tue, 27 Sep 2022 23:35:24 +0800
+Message-Id: <20220927153524.49172-10-chenzhuo.1@bytedance.com>
 X-Mailer: git-send-email 2.30.1 (Apple Git-130)
 In-Reply-To: <20220927153524.49172-1-chenzhuo.1@bytedance.com>
 References: <20220927153524.49172-1-chenzhuo.1@bytedance.com>
@@ -69,63 +69,59 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use pcie_aer_is_native() in place of "host->native_aer ||
-pcie_ports_native" to judge whether OS owns AER in aer_root_reset().
+Statements clearing status in aer_enable_rootport() is functionally
+equivalent with pcie_clear_device_status() and pci_aer_clear_status().
+So we replace them, which has no functional changes.
 
-Replace "dev->aer_cap && (pcie_ports_native || host->native_aer)" in
-get_port_device_capability() with pcie_aer_is_native(), which has no
-functional changes.
+After commit 20e15e673b05 ("PCI/AER: Add pci_aer_raw_clear_status()
+to unconditionally clear Error Status"), pci_aer_raw_clear_status()
+is only used by the EDR path, so we add note in function comment.
 
 Signed-off-by: Zhuo Chen <chenzhuo.1@bytedance.com>
 ---
- drivers/pci/pcie/aer.c          | 5 ++---
- drivers/pci/pcie/portdrv_core.c | 3 +--
- 2 files changed, 3 insertions(+), 5 deletions(-)
+ drivers/pci/pcie/aer.c | 13 ++++---------
+ 1 file changed, 4 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index e2320ab27a31..a6d29269ccf2 100644
+index a6d29269ccf2..bd5ecfa4860f 100644
 --- a/drivers/pci/pcie/aer.c
 +++ b/drivers/pci/pcie/aer.c
-@@ -1403,7 +1403,6 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
- 	int type = pci_pcie_type(dev);
- 	struct pci_dev *root;
- 	int aer;
--	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
+@@ -306,6 +306,8 @@ EXPORT_SYMBOL_GPL(pci_aer_clear_uncorrect_error_status);
+  * Clearing AER error status registers unconditionally, regardless of
+  * whether they're owned by firmware or the OS.
+  *
++ * Used only by the EDR path. Other paths should use pci_aer_clear_status().
++ *
+  * Returns 0 on success, or negative on failure.
+  */
+ int pci_aer_raw_clear_status(struct pci_dev *dev)
+@@ -1277,24 +1279,17 @@ static void aer_enable_rootport(struct aer_rpc *rpc)
+ {
+ 	struct pci_dev *pdev = rpc->rpd;
+ 	int aer = pdev->aer_cap;
+-	u16 reg16;
  	u32 reg32;
- 	int rc;
  
-@@ -1424,7 +1423,7 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
- 	 */
- 	aer = root ? root->aer_cap : 0;
+ 	/* Clear PCIe Capability's Device Status */
+-	pcie_capability_read_word(pdev, PCI_EXP_DEVSTA, &reg16);
+-	pcie_capability_write_word(pdev, PCI_EXP_DEVSTA, reg16);
++	pcie_clear_device_status(pdev);
  
--	if ((host->native_aer || pcie_ports_native) && aer) {
-+	if (aer && pcie_aer_is_native(root)) {
- 		/* Disable Root's interrupt in response to error messages */
- 		pci_read_config_dword(root, aer + PCI_ERR_ROOT_COMMAND, &reg32);
- 		reg32 &= ~ROOT_PORT_INTR_ON_MESG_MASK;
-@@ -1443,7 +1442,7 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
- 			pci_is_root_bus(dev->bus) ? "Root" : "Downstream", rc);
- 	}
+ 	/* Disable system error generation in response to error messages */
+ 	pcie_capability_clear_word(pdev, PCI_EXP_RTCTL,
+ 				   SYSTEM_ERROR_INTR_ON_MESG_MASK);
  
--	if ((host->native_aer || pcie_ports_native) && aer) {
-+	if (aer && pcie_aer_is_native(root)) {
- 		/* Clear Root Error Status */
- 		pci_read_config_dword(root, aer + PCI_ERR_ROOT_STATUS, &reg32);
- 		pci_write_config_dword(root, aer + PCI_ERR_ROOT_STATUS, reg32);
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 1ac7fec47d6f..844297c0c85e 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -221,8 +221,7 @@ static int get_port_device_capability(struct pci_dev *dev)
- 	}
+ 	/* Clear error status */
+-	pci_read_config_dword(pdev, aer + PCI_ERR_ROOT_STATUS, &reg32);
+-	pci_write_config_dword(pdev, aer + PCI_ERR_ROOT_STATUS, reg32);
+-	pci_read_config_dword(pdev, aer + PCI_ERR_COR_STATUS, &reg32);
+-	pci_write_config_dword(pdev, aer + PCI_ERR_COR_STATUS, reg32);
+-	pci_read_config_dword(pdev, aer + PCI_ERR_UNCOR_STATUS, &reg32);
+-	pci_write_config_dword(pdev, aer + PCI_ERR_UNCOR_STATUS, reg32);
++	pci_aer_clear_status(pdev);
  
- #ifdef CONFIG_PCIEAER
--	if (dev->aer_cap && pci_aer_available() &&
--	    (pcie_ports_native || host->native_aer))
-+	if (pcie_aer_is_native(dev) && pci_aer_available())
- 		services |= PCIE_PORT_SERVICE_AER;
- #endif
- 
+ 	/*
+ 	 * Enable error reporting for the root port device and downstream port
 -- 
 2.30.1 (Apple Git-130)
 
