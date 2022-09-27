@@ -2,158 +2,101 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58FFEC07E9D
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Sep 2022 13:41:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFDE0C6FA83
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Sep 2022 13:45:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232835AbiI0NlX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Sep 2022 09:41:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47886 "EHLO
+        id S232138AbiI0Np3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Sep 2022 09:45:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58392 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231934AbiI0NlV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Sep 2022 09:41:21 -0400
-Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6293DED42
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Sep 2022 06:41:18 -0700 (PDT)
-Received: by mail-pl1-x62b.google.com with SMTP id c24so9127177plo.3
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Sep 2022 06:41:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date;
-        bh=4pzwYFff+/gp6imXGz+Xr/QW1tSB5Pck/AS91fsmU3k=;
-        b=LePq5aNygaRO4JwWo4786w9RJBPiOvEJaaocpUnMfXBoPwzGPk2aH8F8r0Y192UysC
-         /GVZyqPuEod63zVf/SLGKIbUrkaA1NHkdRx5Ihl8zSriN6TdOCVIqyAOEWdTeu9SEJRm
-         zVlJiU5ca/DSoQoraxCyph66is6b6yPPfVDrIOQX1R2GboUsqZXSN9giX+ystSq6zU+e
-         OpFstFBRjZX66JhUETQen00Nqpf2MnEK2uhahuwX5CrCMMekAjTst7VBZrvM2mOVNWPu
-         +cy5+6fA0vS8uG5yYR50nl8aenZjMrkYrvaFwhjmN9+DYFoG0v9UAN/K7Iu39dqeOnPp
-         SjZQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date;
-        bh=4pzwYFff+/gp6imXGz+Xr/QW1tSB5Pck/AS91fsmU3k=;
-        b=pgZE6LHwBr+EYkFlFh4tluPoYiyHjIhF9RlXQ3ipxC8cE8GMIt7CDwQ27FRmtaFHIZ
-         ghahlnzK7voXGoCBkSWb1j3JI5Va1kUU3FnhFvln0MbKSFufdP06/PldlsCFDgC44e3X
-         zelbBdwgO8sqRdTjLCUFE4SQUyMVuDgIi+6fIL6MhjjCWP/nIZe1fEJjyeracvzLDrCF
-         R0tn662u2RYlqXQVFFo9uobtYgkHHkQmaWLow+hn2u3fDVYbUsMosAWE20TZEXByU0Ge
-         u6qA3a+FCn9iYaOLnburuq0sIak2EvBsubKdBK5Qw29ogw+VIbITY1wFcjsuyGyIGgU4
-         6yUQ==
-X-Gm-Message-State: ACrzQf2IDSzrUcTeNgdE9vg+xK4HMv7en2KINoAQI76k9AJp64Y6BXiY
-        Ta7+ZkufmNZR1i59xJUiI8iKhw==
-X-Google-Smtp-Source: AMsMyM77LunLFCmKosQx6Onu7WC4eGvOAvGGQe2jOricoTl6inaR33JtDw1CPTh3n9Pc1Mv0wYQf5g==
-X-Received: by 2002:a17:90a:3f89:b0:205:a54e:2db8 with SMTP id m9-20020a17090a3f8900b00205a54e2db8mr4622868pjc.36.1664286078324;
-        Tue, 27 Sep 2022 06:41:18 -0700 (PDT)
-Received: from [10.2.223.68] ([61.120.150.77])
-        by smtp.gmail.com with ESMTPSA id n16-20020a634d50000000b0042c0ffa0e62sm1516141pgl.47.2022.09.27.06.41.12
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 27 Sep 2022 06:41:17 -0700 (PDT)
-Message-ID: <97ac6c82-81a0-2f63-7d8f-e56d702bc874@bytedance.com>
-Date:   Tue, 27 Sep 2022 21:41:09 +0800
+        with ESMTP id S231684AbiI0Np1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Sep 2022 09:45:27 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6AE116E2D4;
+        Tue, 27 Sep 2022 06:45:25 -0700 (PDT)
+Received: from fraeml701-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4McLRr5wSxz67KvJ;
+        Tue, 27 Sep 2022 21:43:20 +0800 (CST)
+Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
+ fraeml701-chm.china.huawei.com (10.206.15.50) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2375.31; Tue, 27 Sep 2022 15:45:23 +0200
+Received: from [10.48.156.245] (10.48.156.245) by
+ lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Tue, 27 Sep 2022 14:45:23 +0100
+Message-ID: <f50cc744-f522-259a-e670-809d65361548@huawei.com>
+Date:   Tue, 27 Sep 2022 14:45:25 +0100
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.3.0
-Subject: Re: [External] Re: [PATCH 2/3] PCI/ERR: Clear fatal status in
- pcie_do_recovery()
-Content-Language: en-US
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     allenbh@gmail.com, dave.jiang@intel.com,
-        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        linux-pci@vger.kernel.org, jejb@linux.ibm.com, jdmason@kudzu.us,
-        james.smart@broadcom.com, fancer.lancer@gmail.com,
-        linux-kernel@vger.kernel.org, ntb@lists.linux.dev,
-        oohall@gmail.com, bhelgaas@google.com, dick.kennedy@broadcom.com,
-        linuxppc-dev@lists.ozlabs.org
-References: <20220926180906.GA1609498@bhelgaas>
-From:   Zhuo Chen <chenzhuo.1@bytedance.com>
-In-Reply-To: <20220926180906.GA1609498@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH 5.10] scsi: hisi_sas: Revert "scsi: hisi_sas: Limit max hw
+ sectors for v3 HW"
+To:     Yu Kuai <yukuai1@huaweicloud.com>, <gregkh@linuxfoundation.org>,
+        <stable@vger.kernel.org>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <yi.zhang@huawei.com>,
+        "yukuai (C)" <yukuai3@huawei.com>
+References: <20220927130116.1013775-1-yukuai3@huawei.com>
+ <a1fe584c-5001-9983-3a3d-65d3bd396642@huawei.com>
+ <2bcb72eb-b9a7-8fed-f17d-3f1df4da9ee5@huaweicloud.com>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <2bcb72eb-b9a7-8fed-f17d-3f1df4da9ee5@huaweicloud.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.48.156.245]
+X-ClientProxiedBy: lhrpeml100002.china.huawei.com (7.191.160.241) To
+ lhrpeml500003.china.huawei.com (7.191.162.67)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-On 9/27/22 2:09 AM, Bjorn Helgaas wrote:
-> On Mon, Sep 26, 2022 at 10:01:55PM +0800, Zhuo Chen wrote:
->> On 9/23/22 5:08 AM, Bjorn Helgaas wrote:
->>> On Fri, Sep 02, 2022 at 02:16:33AM +0800, Zhuo Chen wrote:
->>>> When state is pci_channel_io_frozen in pcie_do_recovery(),
->>>> the severity is fatal and fatal status should be cleared.
->>>> So we add pci_aer_clear_fatal_status().
+On 27/09/2022 14:14, Yu Kuai wrote:
+> Hi, John
+> 
+> 在 2022/09/27 21:06, John Garry 写道:
+>> On 27/09/2022 14:01, Yu Kuai wrote:
+>>> This reverts commit 24cd0b9bfdff126c066032b0d40ab0962d35e777.
 >>>
->>> Seems sensible to me.  Did you find this by code inspection or by
->>> debugging a problem?  If the latter, it would be nice to mention the
->>> symptoms of the problem in the commit log.
+>>> 1) commit 4e89dce72521 ("iommu/iova: Retry from last rb tree node if
+>>> iova search fails") tries to fix that iova allocation can fail while
+>>> there are still free space available. This is not backported to 5.10
+>>> stable.
 >>
->> I found this by code inspection so I may not enumerate what kind of problems
->> this code will cause.
->>>
->>>> Since pcie_aer_is_native() in pci_aer_clear_fatal_status()
->>>> and pci_aer_clear_nonfatal_status() contains the function of
->>>> 'if (host->native_aer || pcie_ports_native)', so we move them
->>>> out of it.
->>>
->>> Wrap commit log to fill 75 columns.
->>>
->>>> Signed-off-by: Zhuo Chen <chenzhuo.1@bytedance.com>
->>>> ---
->>>>    drivers/pci/pcie/err.c | 8 ++++++--
->>>>    1 file changed, 6 insertions(+), 2 deletions(-)
->>>>
->>>> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
->>>> index 0c5a143025af..e0a8ade4c3fe 100644
->>>> --- a/drivers/pci/pcie/err.c
->>>> +++ b/drivers/pci/pcie/err.c
->>>> @@ -243,10 +243,14 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
->>>>    	 * it is responsible for clearing this status.  In that case, the
->>>>    	 * signaling device may not even be visible to the OS.
->>>>    	 */
->>>> -	if (host->native_aer || pcie_ports_native) {
->>>> +	if (host->native_aer || pcie_ports_native)
->>>>    		pcie_clear_device_status(dev);
->>>
->>> pcie_clear_device_status() doesn't check for pcie_aer_is_native()
->>> internally, but after 068c29a248b6 ("PCI/ERR: Clear PCIe Device Status
->>> errors only if OS owns AER") and aa344bc8b727 ("PCI/ERR: Clear AER
->>> status only when we control AER"), both callers check before calling
->>> it.
->>>
->>> I think we should move the check inside pcie_clear_device_status().
->>> That could be a separate preliminary patch.
->>>
->>> There are a couple other places (aer_root_reset() and
->>> get_port_device_capability()) that do the same check and could be
->>> changed to use pcie_aer_is_native() instead.  That could be another
->>> preliminary patch.
->>>
->> Good suggestion. But I have only one doubt. In aer_root_reset(), if we use
->> "if (pcie_aer_is_native(dev) && aer)", when dev->aer_cap
->> is NULL and root->aer_cap is not NULL, pcie_aer_is_native() will return
->> false. It's different from just using "(host->native_aer ||
->> pcie_ports_native)".
->> Or if we can use "if (pcie_aer_is_native(root))", at this time a NULL
->> pointer check should be added in pcie_aer_is_native() because root may be
->> NULL.
+>> This arrived in 5.11, I think
+>>
+>>> 2) commit fce54ed02757 ("scsi: hisi_sas: Limit max hw sectors for v3
+>>> HW") fix the performance regression introduced by 1), however, this
+>>> is just a temporary solution and will cause io performance regression
+>>> because it limit max io size to PAGE_SIZE * 32(128k for 4k page_size).
+>>
+>> Did you really notice a performance regression? In what scenario? 
+>> which kernel versions?
 > 
-> Good point.  In aer_root_reset(), we're updating Root Port registers,
-> so I think they should look like:
-> 
->    if (pcie_aer_is_native(root) && aer) {
->      ...
->    }
-> 
-> Does that seem safe and equivalent to you?
-> 
-> Bjorn
+> We are using 5.10, and test tool is fs_mark and it's doing writeback,
+> and benefits from io merge, before this patch, avgqusz is 300+, and this
+> patch will limit avgqusz to 128.
 
-I think ‘if (aer && pcie_aer_is_native(root))’ might be safer,
-because when root is NULL, 'aer' will be NUll as well, and the
-predicate will return false without entering pcie_aer_is_native(root).
+OK, so I think it's ok to revert for 5.10
 
+> 
+> I think that in any other case that io size is greater than 128k, this
+> patch will probably have defects.
 
--- 
+However both 5.15 stable and 5.19 mainline include fce54ed02757 - it was 
+automatically backported for 5.15 stable. Please double check that.
+
+And can you also check performance there for those kernels?
+
+The reason which we had fce54ed02757 was because 4e89dce72521 hammered 
+performance when IOMMU enabled, and at least I saw no performance 
+regression for fce54ed02757 in other scenarios.
+
 Thanks,
-Zhuo Chen
+John
+
+
+
+
+
