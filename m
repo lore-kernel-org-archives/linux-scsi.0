@@ -2,121 +2,58 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BA51C6FA83
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Sep 2022 07:12:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E29A8C6FA90
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Sep 2022 07:50:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229969AbiI0HMU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Sep 2022 03:12:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40038 "EHLO
+        id S231204AbiI0Huu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Sep 2022 03:50:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49150 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229885AbiI0HMH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Sep 2022 03:12:07 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1311AA8971;
-        Tue, 27 Sep 2022 00:11:53 -0700 (PDT)
-Received: from fraeml745-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Mc9kl1xwxz685Yk;
-        Tue, 27 Sep 2022 15:10:39 +0800 (CST)
-Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml745-chm.china.huawei.com (10.206.15.226) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Tue, 27 Sep 2022 09:11:51 +0200
-Received: from localhost.localdomain (10.69.192.58) by
- lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Tue, 27 Sep 2022 08:11:48 +0100
-From:   John Garry <john.garry@huawei.com>
-To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <jinpu.wang@cloud.ionos.com>, <damien.lemoal@opensource.wdc.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>, <yangxingui@huawei.com>,
-        <yanaijie@huawei.com>, "John Garry" <john.garry@huawei.com>
-Subject: [PATCH v5 7/7] scsi: libsas: Make sas_{alloc, alloc_slow, free}_task() private
-Date:   Tue, 27 Sep 2022 15:04:58 +0800
-Message-ID: <1664262298-239952-8-git-send-email-john.garry@huawei.com>
-X-Mailer: git-send-email 2.8.1
-In-Reply-To: <1664262298-239952-1-git-send-email-john.garry@huawei.com>
-References: <1664262298-239952-1-git-send-email-john.garry@huawei.com>
+        with ESMTP id S230337AbiI0HuZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Sep 2022 03:50:25 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C0D91C435;
+        Tue, 27 Sep 2022 00:50:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=0sifwQyqnhpHngKxzCHkDyc0Tyn50ZsV3oCXOspJ4q8=; b=2bIKZsxlAx9aXhDgXX+HxBPjVT
+        sfBioXFBqoJn9DYtuzDJWpzkJcpFP+wCx8gHLYOknL2LqM4EIJXT9GyOK0zq1IzarIeMSLOZAsBkT
+        fScgQWaVO2G/MU3Tj1ClskLHpdwlIVG6JLItD7DFXEViZuvh68FrKSjdNGzOBdGjCJs1ehBPtAeHc
+        LLy3gSYG7EYxXk/ryL7vsFNFwo06pHcZ3IFT1ScjUCnT22icjMMcgnWLA4M0H5S6o8hCdWUUDv5YX
+        S52w+dRaGYmUXTs2XusPzIZ8Tn1mu7a0A+uO5CVRbaKXey8unRBx1fs5AWzE/F9xPXysNUYiumjd7
+        OaLGI7qg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1od5ME-008sTT-6b; Tue, 27 Sep 2022 07:50:22 +0000
+Date:   Tue, 27 Sep 2022 00:50:22 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvme@lists.infradead.org, Stefan Roesch <shr@fb.com>
+Subject: Re: [PATCH 4/5] nvme: split out metadata vs non metadata end_io
+ uring_cmd completions
+Message-ID: <YzKrPrUvr3wJWCCd@infradead.org>
+References: <20220927014420.71141-1-axboe@kernel.dk>
+ <20220927014420.71141-5-axboe@kernel.dk>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- lhrpeml500003.china.huawei.com (7.191.162.67)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220927014420.71141-5-axboe@kernel.dk>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-We have no users outside libsas any longer, so make sas_alloc_task(),
-sas_alloc_slow_task(), and sas_free_task() private.
+On Mon, Sep 26, 2022 at 07:44:19PM -0600, Jens Axboe wrote:
+> By splitting up the metadata and non-metadata end_io handling, we can
+> remove any request dependencies on the normal non-metadata IO path. This
+> is in preparation for enabling the normal IO passthrough path to pass
+> the ownership of the request back to the block layer.
+> 
+> Co-developed-by: Stefan Roesch <shr@fb.com>
+> Signed-off-by: Jens Axboe <axboe@kernel.dk>
 
-Signed-off-by: John Garry <john.garry@huawei.com>
-Tested-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Reviewed-by: Jason Yan <yanaijie@huawei.com>
----
- drivers/scsi/libsas/sas_init.c     | 3 ---
- drivers/scsi/libsas/sas_internal.h | 4 ++++
- include/scsi/libsas.h              | 4 ----
- 3 files changed, 4 insertions(+), 7 deletions(-)
+Looks good:
 
-diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
-index e4f77072a58d..f2c05ebeb72f 100644
---- a/drivers/scsi/libsas/sas_init.c
-+++ b/drivers/scsi/libsas/sas_init.c
-@@ -35,7 +35,6 @@ struct sas_task *sas_alloc_task(gfp_t flags)
- 
- 	return task;
- }
--EXPORT_SYMBOL_GPL(sas_alloc_task);
- 
- struct sas_task *sas_alloc_slow_task(gfp_t flags)
- {
-@@ -56,7 +55,6 @@ struct sas_task *sas_alloc_slow_task(gfp_t flags)
- 
- 	return task;
- }
--EXPORT_SYMBOL_GPL(sas_alloc_slow_task);
- 
- void sas_free_task(struct sas_task *task)
- {
-@@ -65,7 +63,6 @@ void sas_free_task(struct sas_task *task)
- 		kmem_cache_free(sas_task_cache, task);
- 	}
- }
--EXPORT_SYMBOL_GPL(sas_free_task);
- 
- /*------------ SAS addr hash -----------*/
- void sas_hash_addr(u8 *hashed, const u8 *sas_addr)
-diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
-index 8d0ad3abc7b5..b54bcf3c9a9d 100644
---- a/drivers/scsi/libsas/sas_internal.h
-+++ b/drivers/scsi/libsas/sas_internal.h
-@@ -52,6 +52,10 @@ void sas_unregister_phys(struct sas_ha_struct *sas_ha);
- struct asd_sas_event *sas_alloc_event(struct asd_sas_phy *phy, gfp_t gfp_flags);
- void sas_free_event(struct asd_sas_event *event);
- 
-+struct sas_task *sas_alloc_task(gfp_t flags);
-+struct sas_task *sas_alloc_slow_task(gfp_t flags);
-+void sas_free_task(struct sas_task *task);
-+
- int  sas_register_ports(struct sas_ha_struct *sas_ha);
- void sas_unregister_ports(struct sas_ha_struct *sas_ha);
- 
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 2dbead74a2af..f86b56bf7833 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -639,10 +639,6 @@ struct sas_task_slow {
- #define SAS_TASK_STATE_ABORTED      4
- #define SAS_TASK_NEED_DEV_RESET     8
- 
--extern struct sas_task *sas_alloc_task(gfp_t flags);
--extern struct sas_task *sas_alloc_slow_task(gfp_t flags);
--extern void sas_free_task(struct sas_task *task);
--
- static inline bool sas_is_internal_abort(struct sas_task *task)
- {
- 	return task->task_proto == SAS_PROTOCOL_INTERNAL_ABORT;
--- 
-2.35.3
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
