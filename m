@@ -2,159 +2,161 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56EACC6FA82
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Sep 2022 20:00:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE3A9C07E9D
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Sep 2022 22:57:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232637AbiI0UAm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Sep 2022 16:00:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53906 "EHLO
+        id S232158AbiI0W5u (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Sep 2022 18:57:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49746 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232142AbiI0T7i (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Sep 2022 15:59:38 -0400
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E844E1C483D;
-        Tue, 27 Sep 2022 12:59:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1664308770; x=1695844770;
+        with ESMTP id S232010AbiI0W5r (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Sep 2022 18:57:47 -0400
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28D08EF08C
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Sep 2022 15:57:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1664319465; x=1695855465;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=hHMW6dKcSr50LmzJxBbJqerolMIPg6Gn2+JmAaKAzHQ=;
-  b=HkjBZn39TzCR4sNt6SAAne2GnMObisw+JDT9ogoCVOPz9I0B42IClLBE
-   jw0ap1E0VATm9PrwrlDIMF23cbxiY8ig+ZlTWR1c2qQBks3c+EVZx7LSt
-   P2MxgAtLPYIjuuFACPBznDNLQ4680QNo49zAnZtbDCXq+moleNH1wXZBt
-   nN/a8u/xRsxDk3V5XV3aQA2z72GkNj9W9R5MYaQwHPUGkoehCIkU76VT5
-   CHlj+7g9ZcSfNeouJ9eqMtRUaSsE4gdSQFVqI3mxUORSdJZP42LRg9Fh1
-   yJpNUuCncnnv1tAX/h+BtPh9ViZLdQracOlDl6Q6aYH/MFtszE3uw0wHE
-   A==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10483"; a="363256903"
-X-IronPort-AV: E=Sophos;i="5.93,350,1654585200"; 
-   d="scan'208";a="363256903"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Sep 2022 12:59:29 -0700
-X-IronPort-AV: E=McAfee;i="6500,9779,10483"; a="684116462"
-X-IronPort-AV: E=Sophos;i="5.93,350,1654585200"; 
-   d="scan'208";a="684116462"
-Received: from weimingg-mobl.amr.corp.intel.com (HELO [10.212.244.112]) ([10.212.244.112])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Sep 2022 12:59:28 -0700
-Message-ID: <8bf3e3c0-78b6-7121-1951-300175ede3b9@linux.intel.com>
-Date:   Tue, 27 Sep 2022 12:59:27 -0700
+  bh=+XgzzH+/89MenioakUEmHr4D5h4BOnJMF4ck9V+QoSc=;
+  b=Cy2k6nAOcjFEL3If60yOF7QkBtwLi3Ia4EoIXprZbxxMFMpWHUqFybIf
+   Qya6HWJQhyKxwSobqYyhmffwKUsUQY+Ujv5Yd7Z3zBzgyZ9X7atVQ0qY0
+   CDBJs7JvrGbmYmH73YJmvv15w64A1zw1JVaVtlsOPsaKslLiY/ztyYSN7
+   AJvpZx0BUBc2CmTvFEC7HWR+5FVBYRJpuX7ZLSSPNdfOHBPMG1OGjjvhU
+   OnfWVg2oorpT7zjNXVdXeRAIZUUb6UNJ5tC3kizVXp8qafC92qZRGxEVV
+   oaw9XhAg0gzWJLfDIbSaA/56JAH2UReMrqB4eGVR/vrHUyjbcghBpuKbJ
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.93,350,1654531200"; 
+   d="scan'208";a="324523623"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 28 Sep 2022 06:57:43 +0800
+IronPort-SDR: zyQP5EJZ/NUjcBGay3Jy+MVPlhb/RmK2N3mFi7Cyz4JwZ4WGQpqLqs7xfJiIz8UolZ22EJOJa1
+ EUkgs51wqMzAnBDRI8oyA8pZ5ER/zbHYrM4lt1iOBSdRjsWefNJUhm2CFCMhzhenPXEpXvAUKp
+ 5oysFPxo7diYcHWdUrHioR2CjcHSyJjyyUYzua2X54lYDBF3LdjBHPNDx7mvxEYqVXVh21kUbW
+ eCFLozWakV2KVaS7omUoycRjuwN9g1eszuslUmC97Ghvvp8OgYZpKhrYjNSBug8vuoHX9d2146
+ n0zJBA8JhVf9Jc+CRIiMLFc2
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Sep 2022 15:12:08 -0700
+IronPort-SDR: of0NLn2DXkMez51mr5yIpyivQ0F1qsM1uJ9c0pplU/sKUN56/lR9L2cfaqC3qbj6/cFvwWc9iw
+ IIO07KrBEsy4KsIZFqRhai/bwHyZpKKoRBHdRvGIBxdZet0JOpY/F7VvU2NLiKVxYq1I1EW6Qr
+ M8bDNa35UQhrAiiQhQdcKqzZuX3OwLTT10fFK9jwQzPhvVjs35t/lHFi2v24ISlJg141td8lib
+ Gyfn8GS8rqGbMCJJuyjk1DBXKMCh9yvDtlD2mUwhdOt3Oq39A6lzdcLQZrrNB4lZolf3kY6OJQ
+ XYU=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Sep 2022 15:57:44 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4McZlW3RpVz1RwtC
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Sep 2022 15:57:43 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1664319462; x=1666911463; bh=+XgzzH+/89MenioakUEmHr4D5h4BOnJMF4c
+        k9V+QoSc=; b=lLiJVZLMsF6t0bTUYQV0Fqsh8PLOzaul0tJXNnD2z5W1QRiQZz3
+        srsHrqDGJt2zb3VE2nn6IvR/eFBLrXgPbiXgOXo7v8mV7ymkkt/RPJmUsezKBm1Y
+        J0rk4sNzmS2bxk22MljzR20A26wwBju1aCr8U7XrdPDX1fOiCEE3gXv6BpurJ9O1
+        X+JoyYpsfyj3tIhO625fiQXuhm6S4+omm7dIk3ywANRqkz23qSKP9z13XVDBtdOq
+        gqlb5v+AnhA1PmLMMU1VbgW/c6Hkct75YUpb1lvdaP+/rfvC2EkMTNWh4s8G/1c5
+        HjYXTZEYonsG93MLypSumQTg3F13fV72a6w==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id I2br0rn2rDog for <linux-scsi@vger.kernel.org>;
+        Tue, 27 Sep 2022 15:57:42 -0700 (PDT)
+Received: from [10.225.163.91] (unknown [10.225.163.91])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4McZlS5Yfvz1RvLy;
+        Tue, 27 Sep 2022 15:57:40 -0700 (PDT)
+Message-ID: <caa8552b-3bb4-5824-aa99-82386d367479@opensource.wdc.com>
+Date:   Wed, 28 Sep 2022 07:57:39 +0900
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Firefox/91.0 Thunderbird/91.11.0
-Subject: Re: [PATCH v2 5/9] PCI/AER: Unexport pci_aer_clear_nonfatal_status()
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.0
+Subject: Re: [PATCH v5 3/8] scsi: pm8001: use sas_find_attached_phy_id()
+ instead of open coded
 Content-Language: en-US
-To:     Zhuo Chen <chenzhuo.1@bytedance.com>, bhelgaas@google.com,
-        ruscur@russell.cc, oohall@gmail.com, fancer.lancer@gmail.com,
-        jdmason@kudzu.us, dave.jiang@intel.com, allenbh@gmail.com,
-        james.smart@broadcom.com, dick.kennedy@broadcom.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, ntb@lists.linux.dev,
-        linux-scsi@vger.kernel.org
-References: <20220927153524.49172-1-chenzhuo.1@bytedance.com>
- <20220927153524.49172-6-chenzhuo.1@bytedance.com>
-From:   Sathyanarayanan Kuppuswamy 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>
-In-Reply-To: <20220927153524.49172-6-chenzhuo.1@bytedance.com>
+To:     Jason Yan <yanaijie@huawei.com>, martin.petersen@oracle.com,
+        jejb@linux.ibm.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        hare@suse.com, hch@lst.de, bvanassche@acm.org,
+        john.garry@huawei.com, jinpu.wang@cloud.ionos.com,
+        Jack Wang <jinpu.wang@ionos.com>
+References: <20220927123926.953297-1-yanaijie@huawei.com>
+ <20220927123926.953297-4-yanaijie@huawei.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <20220927123926.953297-4-yanaijie@huawei.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-On 9/27/22 8:35 AM, Zhuo Chen wrote:
-> Since pci_aer_clear_nonfatal_status() is used only internally, move
-> its declaration to the PCI internal header file. Also, no one cares
-> about return value of pci_aer_clear_nonfatal_status(), so make it void.
+On 9/27/22 21:39, Jason Yan wrote:
+> The attached phy id finding is open coded. Now we can replace it with
+> sas_find_attached_phy_id(). To keep consistent, the return value of
+> pm8001_dev_found_notify() is also changed to -ENODEV after calling
+> sas_find_attathed_phy_id() failed.
 > 
-> Signed-off-by: Zhuo Chen <chenzhuo.1@bytedance.com>
+> Signed-off-by: Jason Yan <yanaijie@huawei.com>
+> Reviewed-by: Jack Wang <jinpu.wang@ionos.com>
+> Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 > ---
-
-Looks good to me.
-
->  drivers/pci/pci.h      | 2 ++
->  drivers/pci/pcie/aer.c | 7 ++-----
->  include/linux/aer.h    | 5 -----
->  3 files changed, 4 insertions(+), 10 deletions(-)
+>  drivers/scsi/pm8001/pm8001_sas.c | 18 ++++++------------
+>  1 file changed, 6 insertions(+), 12 deletions(-)
 > 
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 785f31086313..a114175d08e4 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -684,6 +684,7 @@ void pci_aer_init(struct pci_dev *dev);
->  void pci_aer_exit(struct pci_dev *dev);
->  extern const struct attribute_group aer_stats_attr_group;
->  void pci_aer_clear_fatal_status(struct pci_dev *dev);
-> +void pci_aer_clear_nonfatal_status(struct pci_dev *dev);
->  int pci_aer_clear_status(struct pci_dev *dev);
->  int pci_aer_raw_clear_status(struct pci_dev *dev);
->  #else
-> @@ -691,6 +692,7 @@ static inline void pci_no_aer(void) { }
->  static inline void pci_aer_init(struct pci_dev *d) { }
->  static inline void pci_aer_exit(struct pci_dev *d) { }
->  static inline void pci_aer_clear_fatal_status(struct pci_dev *dev) { }
-> +static inline void pci_aer_clear_nonfatal_status(struct pci_dev *dev) { }
->  static inline int pci_aer_clear_status(struct pci_dev *dev) { return -EINVAL; }
->  static inline int pci_aer_raw_clear_status(struct pci_dev *dev) { return -EINVAL; }
->  #endif
-> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> index 4e637121be23..e2ebd108339d 100644
-> --- a/drivers/pci/pcie/aer.c
-> +++ b/drivers/pci/pcie/aer.c
-> @@ -251,13 +251,13 @@ int pci_disable_pcie_error_reporting(struct pci_dev *dev)
->  }
->  EXPORT_SYMBOL_GPL(pci_disable_pcie_error_reporting);
->  
-> -int pci_aer_clear_nonfatal_status(struct pci_dev *dev)
-> +void pci_aer_clear_nonfatal_status(struct pci_dev *dev)
->  {
->  	int aer = dev->aer_cap;
->  	u32 status, sev;
->  
->  	if (!pcie_aer_is_native(dev))
-> -		return -EIO;
-> +		return;
->  
->  	/* Clear status bits for ERR_NONFATAL errors only */
->  	pci_read_config_dword(dev, aer + PCI_ERR_UNCOR_STATUS, &status);
-> @@ -265,10 +265,7 @@ int pci_aer_clear_nonfatal_status(struct pci_dev *dev)
->  	status &= ~sev;
->  	if (status)
->  		pci_write_config_dword(dev, aer + PCI_ERR_UNCOR_STATUS, status);
-> -
-> -	return 0;
->  }
-> -EXPORT_SYMBOL_GPL(pci_aer_clear_nonfatal_status);
->  
->  void pci_aer_clear_fatal_status(struct pci_dev *dev)
->  {
-> diff --git a/include/linux/aer.h b/include/linux/aer.h
-> index 154690c278cb..f638ad955deb 100644
-> --- a/include/linux/aer.h
-> +++ b/include/linux/aer.h
-> @@ -44,7 +44,6 @@ struct aer_capability_regs {
->  /* PCIe port driver needs this function to enable AER */
->  int pci_enable_pcie_error_reporting(struct pci_dev *dev);
->  int pci_disable_pcie_error_reporting(struct pci_dev *dev);
-> -int pci_aer_clear_nonfatal_status(struct pci_dev *dev);
->  int pci_aer_clear_uncorrect_error_status(struct pci_dev *dev);
->  void pci_save_aer_state(struct pci_dev *dev);
->  void pci_restore_aer_state(struct pci_dev *dev);
-> @@ -57,10 +56,6 @@ static inline int pci_disable_pcie_error_reporting(struct pci_dev *dev)
->  {
->  	return -EINVAL;
->  }
-> -static inline int pci_aer_clear_nonfatal_status(struct pci_dev *dev)
-> -{
-> -	return -EINVAL;
-> -}
->  static inline int pci_aer_clear_uncorrect_error_status(struct pci_dev *dev)
->  {
->  	return -EINVAL;
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+> index 8e3f2f9ddaac..042c0843de1a 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.c
+> +++ b/drivers/scsi/pm8001/pm8001_sas.c
+> @@ -645,22 +645,16 @@ static int pm8001_dev_found_notify(struct domain_device *dev)
+>  	pm8001_device->dcompletion = &completion;
+>  	if (parent_dev && dev_is_expander(parent_dev->dev_type)) {
+>  		int phy_id;
+> -		struct ex_phy *phy;
+> -		for (phy_id = 0; phy_id < parent_dev->ex_dev.num_phys;
+> -		phy_id++) {
+> -			phy = &parent_dev->ex_dev.ex_phy[phy_id];
+> -			if (SAS_ADDR(phy->attached_sas_addr)
+> -				== SAS_ADDR(dev->sas_addr)) {
+> -				pm8001_device->attached_phy = phy_id;
+> -				break;
+> -			}
+> -		}
+> -		if (phy_id == parent_dev->ex_dev.num_phys) {
+> +
+> +		phy_id = sas_find_attached_phy_id(&parent_dev->ex_dev, dev);
+> +		if (phy_id == -ENODEV) {
+>  			pm8001_dbg(pm8001_ha, FAIL,
+>  				   "Error: no attached dev:%016llx at ex:%016llx.\n",
+>  				   SAS_ADDR(dev->sas_addr),
+>  				   SAS_ADDR(parent_dev->sas_addr));
+> -			res = -1;
+> +			res = phy_id;
+
+Nit:
+
+res = -ENODEV would be a lot clearer.
+Or do:
+
+		if (phy_id < 0) {
+			...
+			ret = phy_id;
+		} ...
+
+No ?
+
+> +		} else {
+> +			pm8001_device->attached_phy = phy_id;
+>  		}
+>  	} else {
+>  		if (dev->dev_type == SAS_SATA_DEV) {
 
 -- 
-Sathyanarayanan Kuppuswamy
-Linux Kernel Developer
+Damien Le Moal
+Western Digital Research
+
