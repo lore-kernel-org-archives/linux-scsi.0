@@ -2,154 +2,144 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EEEFDC54EE9
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Sep 2022 19:30:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26948C54EE9
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Sep 2022 19:32:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229515AbiI0TaP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Sep 2022 15:30:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52806 "EHLO
+        id S230202AbiI0Tb6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Sep 2022 15:31:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57682 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229616AbiI0TaO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Sep 2022 15:30:14 -0400
-Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 917D362ABC
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Sep 2022 12:30:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1664307013; x=1695843013;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=r9BWVKd8K3LtmUg8HyjZVYvQeK+ryfU9c5mcPQKOxxY=;
-  b=wq8MBrNX6w7GuxVKb3Xgyz3a+h0mZl4jlspaAhE7ezqhNy7vg8nqfJj0
-   d/bXdxGXmcE/RwHst/3JAWzQUvxcrDuzNzWpWThqUI/rcu2PBOtHDZo+p
-   jhIMw0Q0ILOGshn/ouUS0IQBdmu8+01alViw62MLArUkbkF/qjcFCTxUp
-   8=;
-Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
-  by alexa-out-sd-01.qualcomm.com with ESMTP; 27 Sep 2022 12:30:13 -0700
-X-QCInternal: smtphost
-Received: from unknown (HELO nasanex01a.na.qualcomm.com) ([10.52.223.231])
-  by ironmsg-SD-alpha.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Sep 2022 12:30:13 -0700
-Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
- nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.29; Tue, 27 Sep 2022 12:30:12 -0700
-Date:   Tue, 27 Sep 2022 12:30:12 -0700
-From:   Asutosh Das <quic_asutoshd@quicinc.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-CC:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, <linux-scsi@vger.kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>
-Subject: Re: [PATCH v2 8/8] scsi: ufs: Fix a deadlock between PM and the SCSI
- error handler
-Message-ID: <20220927193012.GE15228@asutoshd-linux1.qualcomm.com>
-References: <20220927184309.2223322-1-bvanassche@acm.org>
- <20220927184309.2223322-9-bvanassche@acm.org>
+        with ESMTP id S229870AbiI0Tb5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Sep 2022 15:31:57 -0400
+Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DAFB3057B;
+        Tue, 27 Sep 2022 12:31:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1664307115; x=1695843115;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=Uboi46HtitzGzAeJcxV+sy5FI8yISydqs8FYVzxay40=;
+  b=KVmNnRVZPNIvZOIqrNK+ng1bKbEKTWBfE7H/G/pBmvwaNhfjCNWhgLEd
+   PNzsJdKnEAw/sb8g03aw6Oyjv8rhvrYRBBCT36WH9uVorgA2GPWlQxyGn
+   IkziCVcXFpUCNI5DY+8fCee9zzpwAmNVMCo8npn7L/JmAjI0XAMnt+1D3
+   ftJK/9YPpFb0YPiU2MKofewW9lMfSXNZMIGEf/HP7hNROPnNvrxf7C0jt
+   XbSGGbCLaHbJzNBNqjRsp7wJYG2FjBxw2MlM/PVOHmHLSouiehl3QAp/m
+   7htmSxw0Tme0Wtekb89bK3mkUZm83STQPDh56dBQbBQj+ccsaN1kWVfVi
+   Q==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10483"; a="327773178"
+X-IronPort-AV: E=Sophos;i="5.93,350,1654585200"; 
+   d="scan'208";a="327773178"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Sep 2022 12:31:50 -0700
+X-IronPort-AV: E=McAfee;i="6500,9779,10483"; a="652399393"
+X-IronPort-AV: E=Sophos;i="5.93,350,1654585200"; 
+   d="scan'208";a="652399393"
+Received: from weimingg-mobl.amr.corp.intel.com (HELO [10.212.244.112]) ([10.212.244.112])
+  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Sep 2022 12:31:49 -0700
+Message-ID: <564e778a-4ed8-3907-1cb3-34af109d0ce0@linux.intel.com>
+Date:   Tue, 27 Sep 2022 12:31:48 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
-Content-Disposition: inline
-In-Reply-To: <20220927184309.2223322-9-bvanassche@acm.org>
-User-Agent: Mutt/1.5.24 (2015-08-30)
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Firefox/91.0 Thunderbird/91.11.0
+Subject: Re: [PATCH v2 1/9] PCI/AER: Add
+ pci_aer_clear_uncorrect_error_status() to PCI core
+Content-Language: en-US
+To:     Zhuo Chen <chenzhuo.1@bytedance.com>, bhelgaas@google.com,
+        ruscur@russell.cc, oohall@gmail.com, fancer.lancer@gmail.com,
+        jdmason@kudzu.us, dave.jiang@intel.com, allenbh@gmail.com,
+        james.smart@broadcom.com, dick.kennedy@broadcom.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ntb@lists.linux.dev,
+        linux-scsi@vger.kernel.org
+References: <20220927153524.49172-1-chenzhuo.1@bytedance.com>
+ <20220927153524.49172-2-chenzhuo.1@bytedance.com>
+From:   Sathyanarayanan Kuppuswamy 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>
+In-Reply-To: <20220927153524.49172-2-chenzhuo.1@bytedance.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Sep 27 2022 at 11:45 -0700, Bart Van Assche wrote:
->The following deadlock has been observed on multiple test setups:
->* ufshcd_wl_suspend() is waiting for blk_execute_rq() to complete while it
->  holds host_sem.
->* ufshcd_eh_host_reset_handler() invokes ufshcd_err_handler() and the
->  latter function tries to obtain host_sem.
->This is a deadlock because blk_execute_rq() can't execute SCSI commands
->while the host is in the SHOST_RECOVERY state and because the error
->handler cannot make progress either.
->
->Fix this deadlock as follows:
->* Fail attempts to suspend the system while the SCSI error handler is in
->  progress.
->* If the system is suspending and a START STOP UNIT command times out,
->  handle the SCSI command timeout from inside the context of the SCSI
->  timeout handler instead of activating the SCSI error handler.
->* Reduce the START STOP UNIT command timeout to one second since on
->  Android devices a kernel panic is triggered if an attempt to suspend
->  the system takes more than 20 seconds. One second should be enough for
->  the START STOP UNIT command since this command completes in less than
->  a millisecond for the UFS devices I have access to.
->
->The runtime power management code is not affected by this deadlock since
->hba->host_sem is not touched by the runtime power management functions
->in the UFS driver.
->
->Signed-off-by: Bart Van Assche <bvanassche@acm.org>
->---
-> drivers/ufs/core/ufshcd.c | 51 ++++++++++++++++++++++++++++++++++++++-
-> 1 file changed, 50 insertions(+), 1 deletion(-)
->
->diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
->index 5507d93a4bba..010a5d1b984b 100644
->--- a/drivers/ufs/core/ufshcd.c
->+++ b/drivers/ufs/core/ufshcd.c
->@@ -8295,6 +8295,54 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
-> 	}
-> }
->
->+static enum scsi_timeout_action ufshcd_eh_timed_out(struct scsi_cmnd *scmd)
->+{
->+	struct ufs_hba *hba = shost_priv(scmd->device->host);
->+	bool reset_controller = false;
->+	int tag, ret;
->+
->+	if (!hba->system_suspending) {
->+		/* Activate the error handler in the SCSI core. */
->+		return SCSI_EH_NOT_HANDLED;
->+	}
->+
->+	/*
->+	 * Handle errors directly to prevent a deadlock between
->+	 * ufshcd_set_dev_pwr_mode() and ufshcd_err_handler().
->+	 */
->+	for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs) {
->+		ret = ufshcd_try_to_abort_task(hba, tag);
->+		dev_info(hba->dev, "Aborting tag %d / CDB %#02x %s\n", tag,
->+			 hba->lrb[tag].cmd ? hba->lrb[tag].cmd->cmnd[0] : -1,
->+			 ret == 0 ? "succeeded" : "failed");
->+		if (ret != 0) {
->+			reset_controller = true;
->+			break;
->+		}
->+	}
->+	for_each_set_bit(tag, &hba->outstanding_tasks, hba->nutmrs) {
->+		ret = ufshcd_clear_tm_cmd(hba, tag);
+Hi,
 
-If reset_controller is true, then the HC would be reset and it would
-anyway clear up all resources. Would this be needed if reset_controller is true?
+On 9/27/22 8:35 AM, Zhuo Chen wrote:
+> Sometimes we need to clear aer uncorrectable error status, so we add
 
->
->+		dev_info(hba->dev, "Aborting TMF %d %s\n", tag,
->+			 ret == 0 ? "succeeded" : "failed");
->+		if (ret != 0) {
->+			reset_controller = true;
->+			break;
->+		}
->+	}
->+	if (reset_controller) {
->+		dev_info(hba->dev, "Resetting controller\n");
->+		ufshcd_reset_and_restore(hba);
->+		if (ufshcd_clear_cmds(hba, 0xffffffff))
-ufshcd_reset_and_restore() would reset the host and the device.
-So is the ufshcd_clear_cmds() needed after that?
+Adding n actual use case will help.
 
->+			dev_err(hba->dev,
->+				"Clearing outstanding commands failed\n");
->+	}
->+	ufshcd_complete_requests(hba);
->+	dev_info(hba->dev, "%s() finished; outstanding_tasks = %#lx.\n",
->+		 __func__, hba->outstanding_tasks);
->+
->+	return hba->outstanding_tasks ? SCSI_EH_RESET_TIMER : SCSI_EH_DONE;
+> pci_aer_clear_uncorrect_error_status() to PCI core.
+
+If possible, try to avoid "we" usage in commit log. Just say "so add
+pci_aer_clear_uncorrect_error_status() function" 
+
+> 
+> Signed-off-by: Zhuo Chen <chenzhuo.1@bytedance.com>
+> ---
+>  drivers/pci/pcie/aer.c | 16 ++++++++++++++++
+>  include/linux/aer.h    |  5 +++++
+>  2 files changed, 21 insertions(+)
+> 
+> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+> index e2d8a74f83c3..4e637121be23 100644
+> --- a/drivers/pci/pcie/aer.c
+> +++ b/drivers/pci/pcie/aer.c
+> @@ -286,6 +286,22 @@ void pci_aer_clear_fatal_status(struct pci_dev *dev)
+>  		pci_write_config_dword(dev, aer + PCI_ERR_UNCOR_STATUS, status);
+>  }
+>  
+> +int pci_aer_clear_uncorrect_error_status(struct pci_dev *dev)
+> +{
+> +	int aer = dev->aer_cap;
+> +	u32 status;
+> +
+> +	if (!pcie_aer_is_native(dev))
+> +		return -EIO;
+> +
+> +	pci_read_config_dword(dev, aer + PCI_ERR_UNCOR_STATUS, &status);
+> +	if (status)
+> +		pci_write_config_dword(dev, aer + PCI_ERR_UNCOR_STATUS, status);
+
+Why not just write all '1' and clear it? Why read and write?
+
+> +
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_aer_clear_uncorrect_error_status);
+
+Add details about why you want to export in commit log.
+
+> +
+>  /**
+>   * pci_aer_raw_clear_status - Clear AER error registers.
+>   * @dev: the PCI device
+> diff --git a/include/linux/aer.h b/include/linux/aer.h
+> index 97f64ba1b34a..154690c278cb 100644
+> --- a/include/linux/aer.h
+> +++ b/include/linux/aer.h
+> @@ -45,6 +45,7 @@ struct aer_capability_regs {
+>  int pci_enable_pcie_error_reporting(struct pci_dev *dev);
+>  int pci_disable_pcie_error_reporting(struct pci_dev *dev);
+>  int pci_aer_clear_nonfatal_status(struct pci_dev *dev);
+> +int pci_aer_clear_uncorrect_error_status(struct pci_dev *dev);
+>  void pci_save_aer_state(struct pci_dev *dev);
+>  void pci_restore_aer_state(struct pci_dev *dev);
+>  #else
+> @@ -60,6 +61,10 @@ static inline int pci_aer_clear_nonfatal_status(struct pci_dev *dev)
+>  {
+>  	return -EINVAL;
+>  }
+> +static inline int pci_aer_clear_uncorrect_error_status(struct pci_dev *dev)
+> +{
+> +	return -EINVAL;
+> +}
+>  static inline void pci_save_aer_state(struct pci_dev *dev) {}
+>  static inline void pci_restore_aer_state(struct pci_dev *dev) {}
+>  #endif
+
+-- 
+Sathyanarayanan Kuppuswamy
+Linux Kernel Developer
