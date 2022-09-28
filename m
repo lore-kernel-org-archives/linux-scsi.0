@@ -2,79 +2,74 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FA0DC32771
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Sep 2022 10:54:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A235C32771
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Sep 2022 10:55:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233903AbiI1KyX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Sep 2022 06:54:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38288 "EHLO
+        id S233919AbiI1Kzn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Sep 2022 06:55:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33432 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233899AbiI1Kxz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2022 06:53:55 -0400
-Received: from mail-ed1-x536.google.com (mail-ed1-x536.google.com [IPv6:2a00:1450:4864:20::536])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D0F4E5127
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2022 03:51:05 -0700 (PDT)
-Received: by mail-ed1-x536.google.com with SMTP id a13so1594516edj.0
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2022 03:51:05 -0700 (PDT)
+        with ESMTP id S233914AbiI1KzU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2022 06:55:20 -0400
+Received: from mail-ej1-x631.google.com (mail-ej1-x631.google.com [IPv6:2a00:1450:4864:20::631])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B32A74B8A
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2022 03:53:33 -0700 (PDT)
+Received: by mail-ej1-x631.google.com with SMTP id a26so26318630ejc.4
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2022 03:53:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc:subject:date;
-        bh=IUIUmI84L3032ql2yNDfzrWjmHXgSWyoIWFnDX3R340=;
-        b=bP6F3HrcQCGUbuhF98NUraLeQXt6CkX0/lKlj5S1PwzIwBflXx5iH2NMtyeqg2dF/r
-         XDCI84ukGA86rq6X0EIbntjliyY3p2Cu8gEu6StrW52Ypmm1rNIUDrzfuBpIelU552ab
-         mNT1g3+ErXW5wIhDLipn/Y/JMIvUO2JU7zrMM=
+        bh=P73iFHlUFF/GiU1BFLDo7/c8K9SFgBJnAGlCrXNOWZI=;
+        b=E9tc/XusMfsR5jgkhrMb6OOlLDPzBhO+qIJYteO52s8A0S8wRx0rMh1D1PWhQ+AiNH
+         glOm+gLMtmXdSjEHQLeGz3306PhpARluCN/cZ7PXKlxXnK2fVzlITMDKYUP0jksQFx8z
+         ODRpVg2scOQAmcdYy/VbTEfkcbUSi/klMqRRw=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:x-gm-message-state:from:to:cc:subject:date;
-        bh=IUIUmI84L3032ql2yNDfzrWjmHXgSWyoIWFnDX3R340=;
-        b=CB3/Sky2BuWdWaPoJlgp/Y9hRO275oTE/Xh/hD+k8ez+FfuilkIxrDSRjzQxT5ES52
-         x7o7k59DE1xXusHbtVgReqOkxEQ0ETk0A4Eiw48qo1xXk8WhhRoJ5J5/bOl4c0gUtnLe
-         TBx51digyeZgZ9MgcqSm/N39MVCOI9uBlf1LRYnsF7p1tJ2NPO94TmMjc7Sew9fnflTr
-         IvirytmXGOQAtmmWEJx2prOcugpIIurM/6/EDdumHsU2VNd+cow/alOOyoBXzrvyRCIO
-         ST3gpLEQPRv+rKwck5/2vV0yZOSKdVoLxXOM8MjYV7KChNXAp9oJf6JzzANO/Ipdjzk7
-         WcCA==
-X-Gm-Message-State: ACrzQf2ENA/Y8rbr+GGdn7UXQZEEkUDkMfa/ijFkrDaxw4Q936URdcod
-        w7mjW6mTB67yMapoIX32DZY/A9uqWbvlr26cxlyV2w==
-X-Google-Smtp-Source: AMsMyM4coLxphCj5lpY+XAJa8pNJ1mtZ5KDQsvh0xyV/i4sgCMMFiqIJnCK53msSnjy5T1o5hlvTiq8DezfdkLXesWw=
-X-Received: by 2002:a05:6402:5ca:b0:43b:6e01:482c with SMTP id
- n10-20020a05640205ca00b0043b6e01482cmr33249201edx.189.1664362263966; Wed, 28
- Sep 2022 03:51:03 -0700 (PDT)
+        bh=P73iFHlUFF/GiU1BFLDo7/c8K9SFgBJnAGlCrXNOWZI=;
+        b=GnA5/o++byBs/rqKWkx0pKts2DNd8ZcWrPjHKCd2D/KmOAqMT8e3MiXE3lxAYYoEvW
+         tzaSkcvEkO4fQZB5pIrGXol2uDUSGZQaEaEbSjEif3q1BhJ0xs+da/SrGf3SMquFj8a8
+         B9ZhTKPffEZf7b+C7znVYltot8GtrdKt14Udd4nSzN7u07vBVcegyJ2ecamiUHAzApGG
+         +mm4C0B9EES8TEHXdP+0UTei/NoZsKAFhyACig7uLqXAVPK7EucCfPXwshRmbKDavu3Y
+         zTZ0vAID/v6HoydPCLKQkaoAXGCDS7MT9/tWqt9MaHDeVpQUFnoekrMEK1JQ1AldodXs
+         kKcg==
+X-Gm-Message-State: ACrzQf2FvJGIpL2ORAad1p60exdWG4jtGF0WFGeuH34fOJKNlF3/9nlj
+        IcXYjBvDPQ4g1raAqLRl+DN7oFoev68EmblL3wVVMw==
+X-Google-Smtp-Source: AMsMyM4TSDF41Z1OXhjhtO9wTObVHHiTuWipz/TwK8E1u0Z3Li/AW25M2V+eAwnaqFgRE35HAMaZrHr4STofMqi26+o=
+X-Received: by 2002:a17:907:7b9e:b0:783:10cb:2826 with SMTP id
+ ne30-20020a1709077b9e00b0078310cb2826mr17076919ejc.208.1664362350529; Wed, 28
+ Sep 2022 03:52:30 -0700 (PDT)
 MIME-Version: 1.0
-References: <1663145283-4872-1-git-send-email-kanie@linux.alibaba.com> <1663145283-4872-2-git-send-email-kanie@linux.alibaba.com>
-In-Reply-To: <1663145283-4872-2-git-send-email-kanie@linux.alibaba.com>
+References: <1663145283-4872-1-git-send-email-kanie@linux.alibaba.com> <1663145283-4872-3-git-send-email-kanie@linux.alibaba.com>
+In-Reply-To: <1663145283-4872-3-git-send-email-kanie@linux.alibaba.com>
 From:   Sumit Saxena <sumit.saxena@broadcom.com>
-Date:   Wed, 28 Sep 2022 16:20:35 +0530
-Message-ID: <CAL2rwxr8NuLrgOYeFUT_vhOeHYqKPa2Owm0Z+BM29T2=RV4tMw@mail.gmail.com>
-Subject: Re: [PATCH 1/5] scsi: megaraid_sas: correct the parameter of scsi_device_lookup
+Date:   Wed, 28 Sep 2022 16:22:03 +0530
+Message-ID: <CAL2rwxoKLQqpJ8F2Xmzk0SQJb2BZ-MGzx5rNLjGtRs3CaDB9QQ@mail.gmail.com>
+Subject: Re: [PATCH 2/5] scsi: megaraid_sas: correct an error message
 To:     Guixin Liu <kanie@linux.alibaba.com>
 Cc:     kashyap.desai@broadcom.com,
         shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com,
         martin.petersen@oracle.com, megaraidlinux.pdl@broadcom.com,
         linux-scsi@vger.kernel.org
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000008a5eec05e9ba8969"
+        boundary="000000000000b3e7c605e9ba8e1d"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000008a5eec05e9ba8969
+--000000000000b3e7c605e9ba8e1d
 Content-Type: text/plain; charset="UTF-8"
 
 On Wed, Sep 14, 2022 at 2:18 PM Guixin Liu <kanie@linux.alibaba.com> wrote:
 >
-> When a delete event is received, find the scsi_device and remove it,
-> the scsi_device_lookup`s parameter id should be "ld_target_id %
-> MEGASAS_MAX_DEV_PER_CHANNEL".
+> Correct the error message when alloc init request fail.
 >
-> Fixes: ae6874ba4b43 ("scsi: megaraid_sas: Early detection of VD deletion through RaidMap update")
 > Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
-
-Looks good to me.
 Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
 
---0000000000008a5eec05e9ba8969
+--000000000000b3e7c605e9ba8e1d
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -145,13 +140,13 @@ nERsqENeyGfUTJLcDSURb49qpFqqWweJ7ifC64Iak8wCK2CxCe8lHfTyEgC9MuEa586NMQJDguvw
 jlC7kxrgwf4sZ/9Wj/GS2HLzZPkxWCcQIrgNJm2wceHQwPBpM0ZoqL1D2tsFgOA8BvYxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwdgevXLIdo6fbCNI8w
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIEdIf5iKoBgZ36bEXy/QwcaSwEeTiQQK
-+juXpU5RzZ+FMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIyMDky
-ODEwNTEwNFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIJoGe9FOulwdG+62Uxc40hXm9aGEROyR
+gbSkhzzKSUIBMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIyMDky
+ODEwNTIzMFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQB/hjqUx8KKfY+Ho1LBxfHBckb6jtjojtCKa0RU9oBHr9KkZ4m7
-yAe8FX7CU8FQ0GqQs300lkQRRpSOK7ByDgn9mx1LoPacnPnt8uoyPtQi0PLL3YfJT5dVP4VyJk2r
-FJkG3/bjLPG2aE6hUMS6Yqm0YHGODA7U/gLjCTGta7EOU4aEWPkQ61z+iQZtpcvrULxRljb8tzCV
-DKOop02sZXcyrmseURlHG2lE9XB9RGsPxtHm7+5MJcW6Vx8+TvnXxtjo3heQQNbNmReujMGZOqjR
-cCu7TAxzUbBHfpIYYseGd420GLFSLaIUWGsWUT96cmcgYURf9fvLC8mJaalIzevY
---0000000000008a5eec05e9ba8969--
+ATANBgkqhkiG9w0BAQEFAASCAQBbHoYS4UFtPSj1hhcxBVE133aULovZJD7dDeqa2Xnp98NMnyRw
+/T9nm82DLVAg8RVSziApIQr/3rH32MO1YX9ScXeHF9p0KZvWlvj03NNJe/p7dxBjPCK3zess70hG
+s7W5fGI1iRVzweaHYBscX1TnbnK1/M36K15osexM8dB8DrGFR38kd6TWOXBFT09eXvDBLwMBY59/
+l3iy5BAlPASRaxhwZBm9ItyWbxPS/todIzIv/XCGQhIdT/vT/MPflS1RbRceGYRwlf7U5ni391l/
+aukRe1wnV0LwvXD0Ftr6TXlAkiD3SYJR9Ayuyv+tnsCD8BMjfauwWKGv38MnbZkq
+--000000000000b3e7c605e9ba8e1d--
