@@ -2,120 +2,130 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86F14C07E9D
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Sep 2022 02:17:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A996CC04A95
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Sep 2022 04:20:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232802AbiI1CRK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Sep 2022 22:17:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55820 "EHLO
+        id S232166AbiI1EUm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Sep 2022 00:20:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43718 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232326AbiI1CRJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Sep 2022 22:17:09 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E99D7D62CF;
-        Tue, 27 Sep 2022 19:17:06 -0700 (PDT)
-Received: from canpemm500004.china.huawei.com (unknown [172.30.72.57])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Mcg4134bNzHtlN;
-        Wed, 28 Sep 2022 10:12:17 +0800 (CST)
-Received: from [10.174.179.14] (10.174.179.14) by
- canpemm500004.china.huawei.com (7.192.104.92) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Wed, 28 Sep 2022 10:17:02 +0800
-Subject: Re: [PATCH v5 3/8] scsi: pm8001: use sas_find_attached_phy_id()
- instead of open coded
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <martin.petersen@oracle.com>, <jejb@linux.ibm.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <hare@suse.com>, <hch@lst.de>, <bvanassche@acm.org>,
-        <john.garry@huawei.com>, <jinpu.wang@cloud.ionos.com>,
-        Jack Wang <jinpu.wang@ionos.com>
-References: <20220927123926.953297-1-yanaijie@huawei.com>
- <20220927123926.953297-4-yanaijie@huawei.com>
- <caa8552b-3bb4-5824-aa99-82386d367479@opensource.wdc.com>
-From:   Jason Yan <yanaijie@huawei.com>
-Message-ID: <b58846fa-5c1c-ad73-a363-68ddf99d4da5@huawei.com>
-Date:   Wed, 28 Sep 2022 10:17:02 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        with ESMTP id S229862AbiI1EUl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2022 00:20:41 -0400
+Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7267E1D35B8
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Sep 2022 21:20:39 -0700 (PDT)
+Received: by mail-pf1-x435.google.com with SMTP id b75so11458200pfb.7
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Sep 2022 21:20:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date;
+        bh=yFiQRqenBnP9hKkiD46tWPwfT0QDu8/bSPBGZoBlzgg=;
+        b=hooLisGajE4+4MwjNaS+l0+/mZZQz4+CXmfDaAvTbcp9Vb50hZQ8aJX/wZVVTmklb8
+         n6kAK0pb7T39ni+nyQij+Z33mFANX2gP59HOmQ2XVe9TpjPpvoK1f31TcXv/n0YN4Bbg
+         oS0dvXxSAH+KGgT83rhf206mzkxGsmpGkXwP3xhud1dynDIW1Yi7bNpwtojs8D5EWod6
+         3xDmV6JqIpMjZ3OETd+JUcNTA6KSjVFhr1gGxbBi0ltsZvxy/Lu2xv4k9gusJ2nJ0p2J
+         1TEuv26ILz7fv5H1uHRQbi5VKSiuCyR7YSF24qohAlC1hw9HPvEcGBSYype8ptPffYj2
+         W0Qg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date;
+        bh=yFiQRqenBnP9hKkiD46tWPwfT0QDu8/bSPBGZoBlzgg=;
+        b=a1c4qII8kizWLHbcqa1TmC9M1r1Eed440VZokDgyAh4cOCUduKP7evU2AS6ZQvbxts
+         6gYg8nKHV7ZaiMydxXXtfVLaL7wOqLg5zhIOu9bdAFoli4LjcSTlBlQxaUIrsRrs/2Sb
+         PlC261JdMP6QKnj4XrkOEgQgmsxBiLLO8vdyFL2y9pyeurRvStfUvvPJpuR6rtqpKNN6
+         TWzeiE3e4u9KNQbhJ0zaXx0zQ7tn1EJqhUiJrR0ToKlNcCezTv2EukK5/ZgCACob7/tP
+         STzJUXYUgrz/lInFifrOA/35pt2/UlATTn9dIGCqhTNX509B9O3fd9N4kOGquzHH4SJW
+         Pl8g==
+X-Gm-Message-State: ACrzQf3sxaZscfTdBRQQEMcvtgf/8l0UK/DUJylNjys1xJz1Pg7U9myd
+        ruYdbaAs31XhUxb/NtkDnR1vyA==
+X-Google-Smtp-Source: AMsMyM50itfQ0DRAQQIEThIt2ysECjrFQ4ghVKeFxS0QdAhHPdJh+YEyANskKckc0yUejONhTF50Sg==
+X-Received: by 2002:a65:644c:0:b0:43c:e614:ae0e with SMTP id s12-20020a65644c000000b0043ce614ae0emr7481081pgv.491.1664338839008;
+        Tue, 27 Sep 2022 21:20:39 -0700 (PDT)
+Received: from ?IPV6:fdbd:ff1:ce00:f:181d:9138:3f2b:d59e? ([2400:8800:1f02:83:4000::7])
+        by smtp.gmail.com with ESMTPSA id h8-20020a170902680800b0017a018221e2sm324111plk.70.2022.09.27.21.20.33
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 27 Sep 2022 21:20:38 -0700 (PDT)
+Message-ID: <1d62d0ac-b47c-94b5-dd75-b7df71817d0d@bytedance.com>
+Date:   Wed, 28 Sep 2022 12:20:31 +0800
 MIME-Version: 1.0
-In-Reply-To: <caa8552b-3bb4-5824-aa99-82386d367479@opensource.wdc.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.3.0
+Subject: Re: [External] Re: [PATCH v2 3/9] NTB: Change to use
+ pci_aer_clear_uncorrect_error_status()
 Content-Language: en-US
+To:     Sathyanarayanan Kuppuswamy 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>, bhelgaas@google.com,
+        ruscur@russell.cc, oohall@gmail.com, fancer.lancer@gmail.com,
+        jdmason@kudzu.us, dave.jiang@intel.com, allenbh@gmail.com,
+        james.smart@broadcom.com, dick.kennedy@broadcom.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ntb@lists.linux.dev,
+        linux-scsi@vger.kernel.org
+References: <20220927153524.49172-1-chenzhuo.1@bytedance.com>
+ <20220927153524.49172-4-chenzhuo.1@bytedance.com>
+ <d8123aa3-a5e0-6131-bd0d-109f67923ff2@linux.intel.com>
+From:   Zhuo Chen <chenzhuo.1@bytedance.com>
+In-Reply-To: <d8123aa3-a5e0-6131-bd0d-109f67923ff2@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.179.14]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- canpemm500004.china.huawei.com (7.192.104.92)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
-On 2022/9/28 6:57, Damien Le Moal wrote:
-> On 9/27/22 21:39, Jason Yan wrote:
->> The attached phy id finding is open coded. Now we can replace it with
->> sas_find_attached_phy_id(). To keep consistent, the return value of
->> pm8001_dev_found_notify() is also changed to -ENODEV after calling
->> sas_find_attathed_phy_id() failed.
+
+On 9/28/22 3:39 AM, Sathyanarayanan Kuppuswamy wrote:
+> 
+> 
+> On 9/27/22 8:35 AM, Zhuo Chen wrote:
+>> Status bits for ERR_NONFATAL errors only are cleared in
+>> pci_aer_clear_nonfatal_status(), but we want clear uncorrectable
+>> error status in idt_init_pci(), so we change to use
+>> pci_aer_clear_uncorrect_error_status().
+> 
+> You mean currently driver does not clear fatal errors now, and it is
+> a problem? Any error reported?
+> 
+Hi Sathyanarayanan,
+
+No error reports yet, I just changes the behavior back to what it was 
+before commit e7b0b847de6d ("PCI/AER: Clear only ERR_NONFATAL bits 
+during non-fatal recovery"), because this commit change the original 
+function in commit bf2a952d31d2 ("NTB: Add IDT 89HPESxNTx PCIe-switches 
+support").
+
+> Also, I am wondering why is it required to clear errors during init
+> code. Is it a norm?
+> 
+I think there is no need to clear errors during init code.
 >>
->> Signed-off-by: Jason Yan <yanaijie@huawei.com>
->> Reviewed-by: Jack Wang <jinpu.wang@ionos.com>
->> Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+>> Signed-off-by: Zhuo Chen <chenzhuo.1@bytedance.com>
 >> ---
->>   drivers/scsi/pm8001/pm8001_sas.c | 18 ++++++------------
->>   1 file changed, 6 insertions(+), 12 deletions(-)
+>>   drivers/ntb/hw/idt/ntb_hw_idt.c | 4 ++--
+>>   1 file changed, 2 insertions(+), 2 deletions(-)
 >>
->> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
->> index 8e3f2f9ddaac..042c0843de1a 100644
->> --- a/drivers/scsi/pm8001/pm8001_sas.c
->> +++ b/drivers/scsi/pm8001/pm8001_sas.c
->> @@ -645,22 +645,16 @@ static int pm8001_dev_found_notify(struct domain_device *dev)
->>   	pm8001_device->dcompletion = &completion;
->>   	if (parent_dev && dev_is_expander(parent_dev->dev_type)) {
->>   		int phy_id;
->> -		struct ex_phy *phy;
->> -		for (phy_id = 0; phy_id < parent_dev->ex_dev.num_phys;
->> -		phy_id++) {
->> -			phy = &parent_dev->ex_dev.ex_phy[phy_id];
->> -			if (SAS_ADDR(phy->attached_sas_addr)
->> -				== SAS_ADDR(dev->sas_addr)) {
->> -				pm8001_device->attached_phy = phy_id;
->> -				break;
->> -			}
->> -		}
->> -		if (phy_id == parent_dev->ex_dev.num_phys) {
->> +
->> +		phy_id = sas_find_attached_phy_id(&parent_dev->ex_dev, dev);
->> +		if (phy_id == -ENODEV) {
->>   			pm8001_dbg(pm8001_ha, FAIL,
->>   				   "Error: no attached dev:%016llx at ex:%016llx.\n",
->>   				   SAS_ADDR(dev->sas_addr),
->>   				   SAS_ADDR(parent_dev->sas_addr));
->> -			res = -1;
->> +			res = phy_id;
-> 
-> Nit:
-> 
-> res = -ENODEV would be a lot clearer.
-> Or do:
-> 
-> 		if (phy_id < 0) {
-> 			...
-> 			ret = phy_id;
-> 		} ...
+>> diff --git a/drivers/ntb/hw/idt/ntb_hw_idt.c b/drivers/ntb/hw/idt/ntb_hw_idt.c
+>> index 0ed6f809ff2e..d5f0aa87f817 100644
+>> --- a/drivers/ntb/hw/idt/ntb_hw_idt.c
+>> +++ b/drivers/ntb/hw/idt/ntb_hw_idt.c
+>> @@ -2657,8 +2657,8 @@ static int idt_init_pci(struct idt_ntb_dev *ndev)
+>>   	ret = pci_enable_pcie_error_reporting(pdev);
+>>   	if (ret != 0)
+>>   		dev_warn(&pdev->dev, "PCIe AER capability disabled\n");
+>> -	else /* Cleanup nonfatal error status before getting to init */
+>> -		pci_aer_clear_nonfatal_status(pdev);
+>> +	else /* Cleanup uncorrectable error status before getting to init */
+>> +		pci_aer_clear_uncorrect_error_status(pdev);
+>>   
+>>   	/* First enable the PCI device */
+>>   	ret = pcim_enable_device(pdev);
 > 
 
-This boils down to personal preferences. I'd like to change to the 
-latter one if no objections.
-
+-- 
 Thanks,
-Jason
-
-> No ?
-> 
->> +		} else {
->> +			pm8001_device->attached_phy = phy_id;
->>   		}
->>   	} else {
->>   		if (dev->dev_type == SAS_SATA_DEV) {
-> 
+Zhuo Chen
