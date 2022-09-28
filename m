@@ -2,132 +2,62 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7A6DC6FA8E
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Sep 2022 01:35:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36BE4C07E9D
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Sep 2022 01:40:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232524AbiI1Bfl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Sep 2022 21:35:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43454 "EHLO
+        id S232524AbiI1Bki (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Sep 2022 21:40:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49810 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232494AbiI1Bfi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Sep 2022 21:35:38 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4BF4E11264B;
-        Tue, 27 Sep 2022 18:35:35 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4McfCb28yNzl6Mx;
-        Wed, 28 Sep 2022 09:33:47 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP2 (Coremail) with SMTP id Syh0CgD3SXPipDNjDYkFBg--.56693S3;
-        Wed, 28 Sep 2022 09:35:32 +0800 (CST)
-Subject: Re: [PATCH 5.10] scsi: hisi_sas: Revert "scsi: hisi_sas: Limit max hw
- sectors for v3 HW"
-To:     John Garry <john.garry@huawei.com>,
-        Yu Kuai <yukuai1@huaweicloud.com>, gregkh@linuxfoundation.org,
-        stable@vger.kernel.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, yi.zhang@huawei.com,
-        "yukuai (C)" <yukuai3@huawei.com>
-References: <20220927130116.1013775-1-yukuai3@huawei.com>
- <a1fe584c-5001-9983-3a3d-65d3bd396642@huawei.com>
- <2bcb72eb-b9a7-8fed-f17d-3f1df4da9ee5@huaweicloud.com>
- <f50cc744-f522-259a-e670-809d65361548@huawei.com>
- <5b8cc025-0755-74c1-3df5-a95718d23861@huaweicloud.com>
- <f24d0eb1-a578-2221-c8da-17ddbd35e96d@huawei.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <4734dd2d-8a32-98b5-3fda-9def720724c9@huaweicloud.com>
-Date:   Wed, 28 Sep 2022 09:35:30 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
-MIME-Version: 1.0
-In-Reply-To: <f24d0eb1-a578-2221-c8da-17ddbd35e96d@huawei.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: Syh0CgD3SXPipDNjDYkFBg--.56693S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7uF4rCFWxAFyrGw15Jw4fKrg_yoW8tr1Upa
-        yrJ3WUtryUJr1fGw47K3yUXFy0qr95Jw1UJFW5GF4xAr4UGr1jqF4UXrWFgrWUCr48GF1j
-        vr1UXr1qvrWktrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUkC14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
-        IcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
-        v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkG
-        c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
-        0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_
-        Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjfUoOJ5UU
-        UUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+        with ESMTP id S229771AbiI1Bkh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Sep 2022 21:40:37 -0400
+Received: from mail.nfschina.com (unknown [124.16.136.209])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5565D160E60;
+        Tue, 27 Sep 2022 18:40:36 -0700 (PDT)
+Received: from localhost (unknown [127.0.0.1])
+        by mail.nfschina.com (Postfix) with ESMTP id 4A7671E80D33;
+        Wed, 28 Sep 2022 09:36:19 +0800 (CST)
+X-Virus-Scanned: amavisd-new at test.com
+Received: from mail.nfschina.com ([127.0.0.1])
+        by localhost (mail.nfschina.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id 01LCsSIfww9e; Wed, 28 Sep 2022 09:36:16 +0800 (CST)
+Received: from localhost.localdomain (unknown [219.141.250.2])
+        (Authenticated sender: zhoujie@nfschina.com)
+        by mail.nfschina.com (Postfix) with ESMTPA id 1F5A61E80D70;
+        Wed, 28 Sep 2022 09:36:16 +0800 (CST)
+From:   Zhou jie <zhoujie@nfschina.com>
+To:     hare@suse.de, jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Zhou jie <zhoujie@nfschina.com>
+Subject: [PATCH] scsi: Remove unnecessary (void*) conversions
+Date:   Wed, 28 Sep 2022 09:40:20 +0800
+Message-Id: <20220928014020.10746-1-zhoujie@nfschina.com>
+X-Mailer: git-send-email 2.18.2
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi, John
+The void pointer object can be directly assigned to different structure
+objects, it does not need to be cast.
 
-在 2022/09/27 23:54, John Garry 写道:
-> On 27/09/2022 15:05, Yu Kuai wrote:
->>>
->>> However both 5.15 stable and 5.19 mainline include fce54ed02757 - it 
->>> was automatically backported for 5.15 stable. Please double check that.
->>>
->>> And can you also check performance there for those kernels?
->>
->> I'm pretty sure io split can decline performance, especially for HDD,
->> because blk-mq can't guarantee that split io can be dispatched to disk
->> sequentially. However, this is usually not common with proper
->> max_sectors_kb.
->>
->> Here is an example that if max_sector_kb is 128k, performance will
->> drop a lot under high concurrency:
->>
->> https://lore.kernel.org/all/20220408073916.1428590-1-yukuai3@huawei.com/
->>
->> Here I set max_sectors_kb to 128k manually, and 1m random io performance
->> will drop while io concurrency increase:
->>
->> | numjobs | v5.18-rc1 |
->> | ------- | --------- |
->> | 1       | 67.7      |
->> | 2       | 67.7      |
->> | 4       | 67.7      |
->> | 8       | 67.7      |
->> | 16      | 64.8      |
->> | 32      | 59.8      |
->> | 64      | 54.9      |
->> | 128     | 49        |
->> | 256     | 37.7      |
->> | 512     | 31.8      |
-> 
-> Commit fce54ed02757 was to circumvent a terrible performance hit for 
-> IOMMU enabled from 4e89dce72521 - have you ever tested with IOMMU enabled?
+Signed-off-by: Zhou jie <zhoujie@nfschina.com>
+---
+ include/scsi/libfcoe.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I understand that fce54ed02757 fix a terrible performance regression,
-and I'm not familiar with IOMMU and I never test that.
-> 
-> If fce54ed02757 really does cause a performance regression in some 
-> scenarios, then we can consider reverting it from any stable kernel and 
-> also backporting [0] when it is included in Linus' kernel
-
-That sounds good.
-
-For 5.10 stable, I think it's ok to revert it for now, and if someone
-cares about the problem 4e89dce72521 fixed, they can try to backport it
-together with follow up patches.
-
-Thanks,
-Kuai
-
-> 
-> [0] 
-> https://lore.kernel.org/linux-iommu/495de02c-59ce-917f-1cb4-5425a37063ed@huawei.com/T/#m6a655d596fdf30e4e8b90100e16f75ae5d67341a 
-> 
-> 
-> thanks,
-> John
-> .
-> 
+diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
+index fac8e89aed81..e6be85dfa249 100644
+--- a/include/scsi/libfcoe.h
++++ b/include/scsi/libfcoe.h
+@@ -364,7 +364,7 @@ struct fcoe_port {
+  */
+ static inline struct net_device *fcoe_get_netdev(const struct fc_lport *lport)
+ {
+-	struct fcoe_port *port = ((struct fcoe_port *)lport_priv(lport));
++	struct fcoe_port *port = lport_priv(lport);
+ 
+ 	return (port->get_netdev) ? port->get_netdev(lport) : NULL;
+ }
+-- 
+2.18.2
 
