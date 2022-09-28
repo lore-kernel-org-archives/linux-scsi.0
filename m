@@ -2,94 +2,85 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A719C54EE9
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Sep 2022 13:24:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C8E7C32771
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Sep 2022 13:37:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233544AbiI1NYF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Sep 2022 09:24:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43572 "EHLO
+        id S233724AbiI1Nhn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Sep 2022 09:37:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45350 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233327AbiI1NYE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2022 09:24:04 -0400
-Received: from mail-vs1-xe2f.google.com (mail-vs1-xe2f.google.com [IPv6:2607:f8b0:4864:20::e2f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A7BDA1D04;
-        Wed, 28 Sep 2022 06:24:03 -0700 (PDT)
-Received: by mail-vs1-xe2f.google.com with SMTP id p4so12659592vsa.9;
-        Wed, 28 Sep 2022 06:24:02 -0700 (PDT)
+        with ESMTP id S234117AbiI1Nhe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2022 09:37:34 -0400
+Received: from mail-wr1-x42e.google.com (mail-wr1-x42e.google.com [IPv6:2a00:1450:4864:20::42e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E56DCA405A
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2022 06:37:32 -0700 (PDT)
+Received: by mail-wr1-x42e.google.com with SMTP id n10so19800358wrw.12
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2022 06:37:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date;
-        bh=M84FFzTMi9h6oICE7y6YgmOmaedFbJztaEjMgsP60GA=;
-        b=UQq3nN3gztbrniSqexDrn4v7PkItW7CpPH/KcfuYAUD26dpvM6A+Z1ppytRi9QJU0h
-         SibNAUP3E5PUR0VD6A8+2jFi4423oDZEAOFCtrSDMAef7fvfR/dQUGQqgwK97vv69/+S
-         03CeucNoQ6I2JlzDRTVoX5DD2n3plcFbnIY9YYBTOSVfsXS3eqI0t+ZZffTWaMrrBOwE
-         rIlnK2bsPqtsj+/cBEJtft7eEaYssu86yFAeBDzcSKKK04SPYynDvy68ynAhFS8TjSxW
-         XXmEx8dRxbnSyxtAdqp3PSrlsQtT3pQDiln4s3FZY8k5Wfx0CLF8Qo5A6kezx6P6Wba1
-         NmDg==
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date;
+        bh=aTP29VLwmHzF+BlZpTUnzV80oUgoBdNLoxbkZcqcm+0=;
+        b=B0RBVRnQtl51Q2qfyZiLLH1R3o5D6GzH6b9vAeoJmsTSsCLNh7DWHspsYsdWq2LihA
+         fOiPJ8bi5LKRkWibWDlPeXo6Xl1u/AF8RGFBnOq85/ClZbWA+T5CkvqRRvzJy3Lj/u4W
+         diuYhtmTCPT8BlNyiECuVpYhm/MCYv2GE3OItMKnw169tDGEsp66YhEGr/QqgGo/o0IQ
+         wJ8eNT+Qz0xh5ZE/oH7TFURtez0edU8TztxaQGwdp4+AkSnMh68ARrUpu4Y3lleyxFf3
+         Xr4LZv0d9k7+/olq0osYrfFkF8aPz57BgHvuwFstEyQlsFR7607J+pdT/AMbXIE10uwI
+         vSQw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date;
-        bh=M84FFzTMi9h6oICE7y6YgmOmaedFbJztaEjMgsP60GA=;
-        b=VeT3lEAPzGDREQcYp8gvUvmHIafq+iXnNjwv4e+uvjsatPewMxjidnAtQM1Zl/3P1i
-         wGcjJ3LSFESc3bWpukuCEPcncIvI70Y7lEfNsdamyedvb/EP9BYC0OnzIaEFmbOYJCla
-         2aXiTlRbNbWYKMyuHhS4o2Hxlb28RmYHkyYZH1RviEgTHEIcVLe5IlIhpdxZjzl+S/kh
-         tVV7yyrko5SkLjB2I24sUA77A2hp3t7PGfAQbWPoP3/DDr2OOyY79kFN/iJLIrywKQCl
-         FkDlhdw8U2z96qfPNEZKNJ3k196TlxNyw5gt8/4wbja5CJGl5zbhPcuJQvDj2CB7fqY1
-         imzQ==
-X-Gm-Message-State: ACrzQf1jyvDpOVGY+GUQmQuC21CXYWa0BXA0XB4zRDBojNY44HNWMBkl
-        M6Uz2+2hZq3Zcq0s1O00swjPIAKIN9vmTXWYMg==
-X-Google-Smtp-Source: AMsMyM6/5w8wyMAkWnRZyW1kzS8Or+a2Mjp2kGlSOJEyaCX+PfkjFmwnO3J6PHWhJ61G1pDVoEEBVAv1tBoX1pc+Ov4=
-X-Received: by 2002:a05:6102:21db:b0:398:28b9:5c0c with SMTP id
- r27-20020a05610221db00b0039828b95c0cmr13561532vsg.56.1664371442093; Wed, 28
- Sep 2022 06:24:02 -0700 (PDT)
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date;
+        bh=aTP29VLwmHzF+BlZpTUnzV80oUgoBdNLoxbkZcqcm+0=;
+        b=O6kH8FqXsr4TSod/ZngEyRN5TMPuybMZFIwVUByaJkFpT93stZANXs40fbLuQWHpvy
+         M+hN85J6rdko1S4SLqRCYfe5KI7FEpVmlSA4IAtRgMPEDsUgaBcXk2CEyAYihw6YM3xL
+         bXdUvrN2RQHYuL/FTU0/6wwzPElTEgFA7zbKl8oIpC5PwbXuQXoxMop+GqXm87oCaDMz
+         2bZfG/2bUVNevRzfnGIJLIduqt37rew2/v6eXlJK/H/JFqEzqtRFXOO/R6RIOt+7xLgp
+         kIO7dFupOeiL+cfESYDe0m6kCp9Cs3gZy1jykpOXUbgjudf3LJYoTEfL4vPz7peyNc0X
+         m37w==
+X-Gm-Message-State: ACrzQf0laS2J0yKm97s+9LyhEFXM812L8SCHsMXi9qcrnFQdeaPo6rA8
+        aFjhinN1d7r2VfcEthhOtj8mh4TuBA==
+X-Google-Smtp-Source: AMsMyM5+//wPAlKeYnSHXLgq+jsRUFX9zLHBxvDqxSFYWGm3zpejpMDCV72ktNjGcdKh0mKg+gS24A==
+X-Received: by 2002:a05:6000:1f0c:b0:22c:c601:a824 with SMTP id bv12-20020a0560001f0c00b0022cc601a824mr3257355wrb.215.1664372251215;
+        Wed, 28 Sep 2022 06:37:31 -0700 (PDT)
+Received: from octinomon ([2a00:23c8:2f02:3b01:3ea1:40:8650:189])
+        by smtp.gmail.com with ESMTPSA id o2-20020adfeac2000000b00228c375d81bsm4402616wrn.2.2022.09.28.06.37.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 28 Sep 2022 06:37:30 -0700 (PDT)
+Date:   Wed, 28 Sep 2022 14:37:29 +0100
+From:   Jules Irenge <jbi.octave@gmail.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 2/7] scsi: Convert snprintf() to scnprintf()
+Message-ID: <YzROGS934MbKlwxQ@octinomon>
+References: <YzHyC191CIXZSfc5@fedora>
+ <ea00dcab-e4f6-f672-e754-9ddec67da83d@acm.org>
 MIME-Version: 1.0
-References: <20220927014420.71141-1-axboe@kernel.dk>
-In-Reply-To: <20220927014420.71141-1-axboe@kernel.dk>
-From:   Anuj gupta <anuj1072538@gmail.com>
-Date:   Wed, 28 Sep 2022 18:53:25 +0530
-Message-ID: <CACzX3AumYMDVPwvRYpMi6vvcPTzR0W0bUT1-545HvArpH+7Uwg@mail.gmail.com>
-Subject: Re: [PATCHSET v2 0/5] Enable alloc caching and batched freeing for passthrough
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ea00dcab-e4f6-f672-e754-9ddec67da83d@acm.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Sep 27, 2022 at 7:14 AM Jens Axboe <axboe@kernel.dk> wrote:
->
-> Hi,
->
-> The passthrough IO path currently doesn't do any request allocation
-> batching like we do for normal IO. Wire this up through the usual
-> blk_mq_alloc_request() allocation helper.
->
-> Similarly, we don't currently supported batched completions for
-> passthrough IO. Allow the request->end_io() handler to return back
-> whether or not it retains ownership of the request. By default all
-> handlers are converted to returning RQ_END_IO_NONE, which retains
-> the existing behavior. But with that in place, we can tweak the
-> nvme uring_cmd end_io handler to pass back ownership, and hence enable
-> completion batching for passthrough requests as well.
->
-> This is good for a 10% improvement for passthrough performance. For
-> a non-drive limited test case, passthrough IO is now more efficient
-> than the regular bdev O_DIRECT path.
->
-> Changes since v1:
-> - Remove spurious semicolon
-> - Cleanup struct nvme_uring_cmd_pdu handling
->
-> --
-> Jens Axboe
->
->
-I see an improvement of ~12% (2.34 to 2.63 MIOPS) with polling enabled and
-an improvement of ~4% (1.84 to 1.92 MIOPS) with polling disabled using the
-t/io_uring utility (in fio) in my setup with this patch series!
+On Mon, Sep 26, 2022 at 12:14:05PM -0700, Bart Van Assche wrote:
+> On 9/26/22 11:40, Jules Irenge wrote:
+> > Coccinnelle reports a warning
+> > Warning: Use scnprintf or sprintf
+> > Adding to that, there has been a slow migration from snprintf to scnprintf.
+> > This LWN article explains the rationale for this change
+> > https: //lwn.net/Articles/69419/
+> > Ie. snprintf() returns what *would* be the resulting length,
+> > while scnprintf() returns the actual length.
+> 
+> Isn't using snprintf() or scnprintf() inside sysfs show callbacks considered
+> deprecated?
+> 
+You are right.
 
---
-Anuj Gupta
+sysfs_emit() is preferred here.
+If I have the blessing of the maintainer, I will go ahead and send a
+second version with those changes.
+
+Thanks,
+Jules
