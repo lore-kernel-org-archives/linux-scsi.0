@@ -2,76 +2,76 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 992AFC04A95
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Sep 2022 11:18:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32A40C32771
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Sep 2022 11:19:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232932AbiI1LSB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Sep 2022 07:18:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51378 "EHLO
+        id S232959AbiI1LTn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Sep 2022 07:19:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52728 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232518AbiI1LSA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2022 07:18:00 -0400
-Received: from mail-ej1-x629.google.com (mail-ej1-x629.google.com [IPv6:2a00:1450:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23C3EAA362
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2022 04:17:57 -0700 (PDT)
-Received: by mail-ej1-x629.google.com with SMTP id dv25so26346150ejb.12
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2022 04:17:57 -0700 (PDT)
+        with ESMTP id S232557AbiI1LTk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2022 07:19:40 -0400
+Received: from mail-ed1-x52b.google.com (mail-ed1-x52b.google.com [IPv6:2a00:1450:4864:20::52b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D10AE006
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2022 04:19:36 -0700 (PDT)
+Received: by mail-ed1-x52b.google.com with SMTP id e18so16841718edj.3
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2022 04:19:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc:subject:date;
-        bh=V3DH5UdirTiACKRndNi40oFSrv+nZgMFh0bXcwfvf28=;
-        b=MBgqJMYQt/8cyZkd36jtZ1Il9p5ydnKEy0dR2F4rTLIaYeehIxv5gPqFKznIySRU63
-         j8Ifhi+24kJdLdqX2KN0xH/BYTBOI6XPdvsuZJhVdx6HvGr1l5hqbbZAOENgvCgdFWaD
-         2M8j+1cbMFNJ+ZEOefQ1Rz662CMPZwGMTeGyM=
+        bh=JdzMabZcejgAx5/Z7vsQJAAyt4x2bFFcqFt+3RO3LTg=;
+        b=VpLDvVL89rSYz+HLX/v/80vkB2iLKdIHXx8ndhcOAu1MLJMwG9HoD88+GW8a4kbc+W
+         5eFQ2Cn6Xmak0Gl0AMadjVcX2F+lnFIIdiE+3filnOfvloHSETRdUlUDfEzZj+KNa4uP
+         ZfZlmDYgoBwjnmwpPHXkp+sC2TUlz1slkyMxI=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:x-gm-message-state:from:to:cc:subject:date;
-        bh=V3DH5UdirTiACKRndNi40oFSrv+nZgMFh0bXcwfvf28=;
-        b=yEqJetz44DaelmKD0DA4khGsxop0aMBgVnHAOc6eLunIo35ehRfZhtUEuCpNwPrb3i
-         hIYWSKYCQsBKlgUb+VQNGB8+TDLvE3SwCrP51uH4E9qO4SXpEEQ0mozKEXbHIYv1da/r
-         d9xYPxKRD1t+nCQK6X2lQB7ZIKUyvkbWzODVQVhB4JsZRwmDhv80nm0Nk84biBYQLrXn
-         kvCZXVoE4Vl9MDJJOdiOiZ0sr5hgpTW5FO95ocdAXwFqns8bmWf3s4326MbAcwykhlAY
-         JTtmW34zNwfnvqAF198/6rsr7WlrPSuTDkOEJL0IyVEc/uXuJnIAwo/g59Xr+U/xLeao
-         9Wlw==
-X-Gm-Message-State: ACrzQf1daXtpR685t/LjIE+oTmhm/ndiumhw7KkIJJ+bLns7Gd2PIFda
-        M+Bv2NGnq6D76d4gEHrQB+fq1jBSC6wUv5aGb+3jCA==
-X-Google-Smtp-Source: AMsMyM7XYpzsk86lU/aKJuPRoDdVlWuqKz7cU4+MchMLLicnsxG56+ZtZNuM4nzuP3bfN6jNYOcqdx5zZHvsvyQaXMk=
-X-Received: by 2002:a17:906:5a4c:b0:76f:3e98:b453 with SMTP id
- my12-20020a1709065a4c00b0076f3e98b453mr27044996ejc.509.1664363876156; Wed, 28
- Sep 2022 04:17:56 -0700 (PDT)
+        bh=JdzMabZcejgAx5/Z7vsQJAAyt4x2bFFcqFt+3RO3LTg=;
+        b=793WpH60CgqDis+5mpOECODp6EV9iMxc9Bs/I3QYgDC+Zh0/sTJx/x6WPsMgE5HnFg
+         t0QkbTLzfmKDl6VDfTW44PbL9ZqnE9ukXsj6kXMIcPSJBv+JiotoPisU4siOIdlpfFak
+         K8584h6Qv29nnDwJY66Ve4PTGNJI1YIiQtgJXLltaHfMsDtrvRW1wR5MPSrzN9i1nKDQ
+         qJuqxKG3CQokHYu8lXmjy9IpplWuC825x6bs9u8l90R+9qYa0YcbJPCxOlqZCubg9fBj
+         gcXBom5izVpRbA3zZHaMhOjyZchXFTxHbQXT4e9vSrUaqYpZpeg1j5qvH0jdGqFjpcYa
+         gzgQ==
+X-Gm-Message-State: ACrzQf39X6CgSzK23Dd9vxPofUmxH3Ot/1R9icTv13gOOwZhRl0R9wfR
+        zo6sr7CkAYz6ZDVmNEqR2kQxHv+Z1gTShsmRpzv2eisDkWyrdA==
+X-Google-Smtp-Source: AMsMyM4BghfHor3ocJLvgBX2tC3CpKKOoBHWqmlWT2fgbKhcMgs9hWoZ36j8+4K56twoNOsyxCM1RGI7pNi5enbbtn4=
+X-Received: by 2002:aa7:ce85:0:b0:44e:7f2f:134f with SMTP id
+ y5-20020aa7ce85000000b0044e7f2f134fmr33036284edv.361.1664363974585; Wed, 28
+ Sep 2022 04:19:34 -0700 (PDT)
 MIME-Version: 1.0
-References: <1663145283-4872-1-git-send-email-kanie@linux.alibaba.com> <1663145283-4872-5-git-send-email-kanie@linux.alibaba.com>
-In-Reply-To: <1663145283-4872-5-git-send-email-kanie@linux.alibaba.com>
+References: <1663145283-4872-1-git-send-email-kanie@linux.alibaba.com> <1663145283-4872-6-git-send-email-kanie@linux.alibaba.com>
+In-Reply-To: <1663145283-4872-6-git-send-email-kanie@linux.alibaba.com>
 From:   Sumit Saxena <sumit.saxena@broadcom.com>
-Date:   Wed, 28 Sep 2022 16:47:28 +0530
-Message-ID: <CAL2rwxqKVZU03GR+==nYaXT5MyXHE0np7X=xoJua2mTGAJ5qaw@mail.gmail.com>
-Subject: Re: [PATCH 4/5] scsi: megaraid_sas: remove unnecessary memset
+Date:   Wed, 28 Sep 2022 16:49:07 +0530
+Message-ID: <CAL2rwxr4yqv5C8J7S4FDFf3PN092_awKu7jfX4Rk1shopD86Nw@mail.gmail.com>
+Subject: Re: [PATCH 5/5] scsi: megaraid_sas: move megasas_dbg_lvl init to megasas_init
 To:     Guixin Liu <kanie@linux.alibaba.com>
 Cc:     kashyap.desai@broadcom.com,
         shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com,
         martin.petersen@oracle.com, megaraidlinux.pdl@broadcom.com,
         linux-scsi@vger.kernel.org
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000a2649005e9bae9c7"
+        boundary="00000000000080b2a505e9baef9c"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000a2649005e9bae9c7
+--00000000000080b2a505e9baef9c
 Content-Type: text/plain; charset="UTF-8"
 
 On Wed, Sep 14, 2022 at 2:18 PM Guixin Liu <kanie@linux.alibaba.com> wrote:
 >
-> Remove memset pd_list and ld_ids in megasas_get_device_list,
-> because they will be memset in megasas_host_device_list_query
-> or megasas_get_pd_list and megasas_ld_list_query.
+> The megasas_dbg_lvl is a driver level parameter, dont init in
+> probe path, otherwise we can not see any debug print when bind
+> a device to megaraid driver.
 >
 > Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
 Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
 
---000000000000a2649005e9bae9c7
+--00000000000080b2a505e9baef9c
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -142,13 +142,13 @@ nERsqENeyGfUTJLcDSURb49qpFqqWweJ7ifC64Iak8wCK2CxCe8lHfTyEgC9MuEa586NMQJDguvw
 jlC7kxrgwf4sZ/9Wj/GS2HLzZPkxWCcQIrgNJm2wceHQwPBpM0ZoqL1D2tsFgOA8BvYxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwdgevXLIdo6fbCNI8w
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEINU3MtmEHUL6aNcZEPaa1i6eeR/F0Ruq
-3+XZ7jzXqv/gMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIyMDky
-ODExMTc1NlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIFLl9T+z7JgYuzEmz5wqIHzDbS6ViDK/
+PMEuANNnDlZvMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIyMDky
+ODExMTkzNFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQAO+DVbbl1Ci0ZstVs20pfcjwmGBUPCwGe+oWpGArnNhU3DGufa
-B7LWMea2QJ+Ec3Lccg9WCf68RRYfzgEq31PlTZc8+Ma/OQX3ubfBABCQob4YecHyAZQ80cw/CGF8
-dLDkLZ/qu4vbluQeSKNu4XHmvMnr7YJSBklaGrbrQN0voB10MCMs4qiBZ9kH8qLocxr8jV4cm1d2
-GpJ9BL6FWvQAh33n6SU/pRxA5e9g+cOODCsmORsE6q3EZ8RykZYrgHe7S0laUMaGFXD2OHob2H/I
-Qo0mRlFer/cdjnF8E7RjU8WOZm+fEvP00L708qDG5ejSCl33RUq5a8P/wg9M43Lp
---000000000000a2649005e9bae9c7--
+ATANBgkqhkiG9w0BAQEFAASCAQAHAuakInNzt9teIFT+GhLGu/lCJ8qVlpDs0tuGAVjGK5U0LpXV
+ZKvi2HyQrYRDQBHPIww7VKTsRRnUqghBlgKeB7PQy1L+mrpmlR+0VJFX31BG0nI49+UlmhHsm6En
+anBPZMM5ycpOni8iroDK92GfMMsfK+a9YQh5MNtD+9gMSuaG4xEXHIemoraopTjz9nH9QdQ3JEfo
+FBrEnLkGBdkvZvhl1yIpf3kov4GJeY2PRhj8PbOUtpWhwbt0O1eCq4Rk4zAUqGPY13tAtr8XJlc4
+UP+NI0y8F6B5bJKHQawkDilbj9MJc73c7yqlmhPKSWdOItfzKS2dxphvdAgOQrcb
+--00000000000080b2a505e9baef9c--
