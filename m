@@ -2,81 +2,110 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6455AC32771
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Sep 2022 13:56:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A3B5C04A95
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Sep 2022 14:22:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234182AbiI1N43 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Sep 2022 09:56:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34422 "EHLO
+        id S233473AbiI1OWZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Sep 2022 10:22:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39840 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231703AbiI1N42 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2022 09:56:28 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B4FB2B196;
-        Wed, 28 Sep 2022 06:56:25 -0700 (PDT)
-Received: from fraeml738-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4McyhK6qbhz6HJG9;
-        Wed, 28 Sep 2022 21:56:17 +0800 (CST)
-Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml738-chm.china.huawei.com (10.206.15.219) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Wed, 28 Sep 2022 15:56:22 +0200
-Received: from [10.126.175.219] (10.126.175.219) by
- lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Wed, 28 Sep 2022 14:56:22 +0100
-Message-ID: <99efb876-69b1-eb7c-dfa6-8ac621a25438@huawei.com>
-Date:   Wed, 28 Sep 2022 14:56:24 +0100
+        with ESMTP id S234348AbiI1OWX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2022 10:22:23 -0400
+Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E90DA9C0A
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2022 07:22:22 -0700 (PDT)
+Received: by mail-pf1-x42a.google.com with SMTP id l65so12652557pfl.8
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2022 07:22:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date;
+        bh=IcCOVXLXxHvpPopGpnPv2T7v0pTrQ2ZxamJTkqROX/w=;
+        b=OVthF5MHuPVJkukGFSTKTOGeIm/VAPIlqbGb4ZI3VhVbiXd7CCeipL3Z2NIOuzENzf
+         3Ef8ix6aDPiparDKFbNeUNTcpieYLTvPQpeE3QH3omb33G4XaYOemLITYqSzwt2FDay1
+         VtMQE+nBTFJO39jXgTr9dK4HiuT311Ln+8nPYNGeGv2qGLVokMKtfBThJTAwAdHvGLIp
+         XO8ug3d320Dte0I7VJiQiyZLR0OVfS0bA6mfWe6aP7iuPR7U5ZnQITGO6zCkYgah59u4
+         GZ2BVY7GZ5v022yqAbE+kvMqUC0THUSWJtRqY0vXjiY+Xjm6gYbxa8NbOt06guIMNVYZ
+         Puxw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date;
+        bh=IcCOVXLXxHvpPopGpnPv2T7v0pTrQ2ZxamJTkqROX/w=;
+        b=7n1vuvBuEBHsbRhiKtKlSrOTsi7xp5Tin9MfQAYNGfuKFwyre3lkBArucUODJht151
+         4Jzue1Hy5noy8I92mUDgq+XlEwov0Nq+a0hVU5812iLLZPGDAQCvDEw7RiReSuZImQeZ
+         CCqmOTzUFDvNBpTomwQx9qmU5xazb37FFjPaZU925IibLlfzzPwD+iz8qjvMoaqyWHuz
+         lyraKikZvrhtdnK/tPzEI5qQp1L/+vo3YXHeYOzBkq4TdeV8X2ytnCWmaaajpqPovqIJ
+         xwU33TM4CN8GyuQEwjWW6wJg/OKT5R/ayPxX5A+cYLc0aWcYpdMXCNhP+VsuPT5mluFo
+         m9BQ==
+X-Gm-Message-State: ACrzQf2pfzMTLV9FnDgV+jyxoSyB5i1D19rCNzw4o83aLmjxFxHFH7Zw
+        jxnEaB4E6KJRRXapmG+gvoTEElflXcFTqA==
+X-Google-Smtp-Source: AMsMyM7WUWGY9QTF0hxnqJ85z036FKxylq0a0QVbQjy5vAHIr/PaRgrZPyG6ppoteztUtzf1jxTEsw==
+X-Received: by 2002:a65:42cc:0:b0:431:af8c:77e1 with SMTP id l12-20020a6542cc000000b00431af8c77e1mr29052177pgp.308.1664374941478;
+        Wed, 28 Sep 2022 07:22:21 -0700 (PDT)
+Received: from [192.168.1.136] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id d9-20020a621d09000000b005484d133127sm4028417pfd.129.2022.09.28.07.22.20
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 28 Sep 2022 07:22:21 -0700 (PDT)
+Message-ID: <45fef5c6-8945-a140-a3ce-34bb4b287dc4@kernel.dk>
+Date:   Wed, 28 Sep 2022 08:22:20 -0600
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH 1/6] scsi: libsas: Add sas_task_find_rq()
-To:     Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "jinpu.wang@cloud.ionos.com" <jinpu.wang@cloud.ionos.com>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>
-CC:     "hare@suse.de" <hare@suse.de>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linuxarm@huawei.com" <linuxarm@huawei.com>,
-        "ipylypiv@google.com" <ipylypiv@google.com>,
-        "changyuanl@google.com" <changyuanl@google.com>,
-        "hch@lst.de" <hch@lst.de>
-References: <1664368034-114991-1-git-send-email-john.garry@huawei.com>
- <1664368034-114991-2-git-send-email-john.garry@huawei.com>
- <PH0PR04MB74164CE477846FFDB843D5419B549@PH0PR04MB7416.namprd04.prod.outlook.com>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <PH0PR04MB74164CE477846FFDB843D5419B549@PH0PR04MB7416.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.0
+Subject: Re: [PATCHSET v2 0/5] Enable alloc caching and batched freeing for
+ passthrough
+Content-Language: en-US
+To:     Anuj gupta <anuj1072538@gmail.com>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvme@lists.infradead.org
+References: <20220927014420.71141-1-axboe@kernel.dk>
+ <CACzX3AumYMDVPwvRYpMi6vvcPTzR0W0bUT1-545HvArpH+7Uwg@mail.gmail.com>
+From:   Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <CACzX3AumYMDVPwvRYpMi6vvcPTzR0W0bUT1-545HvArpH+7Uwg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.126.175.219]
-X-ClientProxiedBy: lhrpeml100006.china.huawei.com (7.191.160.224) To
- lhrpeml500003.china.huawei.com (7.191.162.67)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 28/09/2022 14:17, Johannes Thumshirn wrote:
->> +static inline struct request *sas_task_find_rq(struct sas_task *task)
->> +{
->> +	struct scsi_cmnd *scmd;
->> +
->> +	if (!task || !task->uldd_task)
->> +		return NULL;
-> Is anyone actually calling sas_task_find_rq with a NULL task?
+On 9/28/22 7:23 AM, Anuj gupta wrote:
+> On Tue, Sep 27, 2022 at 7:14 AM Jens Axboe <axboe@kernel.dk> wrote:
+>>
+>> Hi,
+>>
+>> The passthrough IO path currently doesn't do any request allocation
+>> batching like we do for normal IO. Wire this up through the usual
+>> blk_mq_alloc_request() allocation helper.
+>>
+>> Similarly, we don't currently supported batched completions for
+>> passthrough IO. Allow the request->end_io() handler to return back
+>> whether or not it retains ownership of the request. By default all
+>> handlers are converted to returning RQ_END_IO_NONE, which retains
+>> the existing behavior. But with that in place, we can tweak the
+>> nvme uring_cmd end_io handler to pass back ownership, and hence enable
+>> completion batching for passthrough requests as well.
+>>
+>> This is good for a 10% improvement for passthrough performance. For
+>> a non-drive limited test case, passthrough IO is now more efficient
+>> than the regular bdev O_DIRECT path.
+>>
+>> Changes since v1:
+>> - Remove spurious semicolon
+>> - Cleanup struct nvme_uring_cmd_pdu handling
+>>
+>> --
+>> Jens Axboe
+>>
+>>
+> I see an improvement of ~12% (2.34 to 2.63 MIOPS) with polling enabled and
+> an improvement of ~4% (1.84 to 1.92 MIOPS) with polling disabled using the
+> t/io_uring utility (in fio) in my setup with this patch series!
 
-Yeah, unfortunately. An example - the only one I think - is in the 
-pm8001 driver: pm8001_ccb_alloc() function which takes a task pointer 
-which may be NULL, and this function calls sas_task_find_rq()
+Thanks for your testing! I'll add your reviewed-by to the series.
 
-> That doesn't make a lot of sense from an API POV for me, having
-> the only argument allowed to be NULL (and not being a *free()
-> kind of function).
+-- 
+Jens Axboe
 
-I suppose that I could change to only call sas_task_find_rq() for 
-non-NULL sas_task pointers (and remove the task check).
 
-Thanks,
-John
