@@ -2,91 +2,93 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02589C54EE9
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Sep 2022 00:02:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A96E1C6FA83
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Sep 2022 01:10:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231736AbiI1ACy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Sep 2022 20:02:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54126 "EHLO
+        id S231804AbiI1BKX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Sep 2022 21:10:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49196 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229489AbiI1ACx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Sep 2022 20:02:53 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 624E7B6D54;
-        Tue, 27 Sep 2022 17:02:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=guf6A20S3MwV/sozfojk73A9a5gLzuwZOHcY81yWs9s=; b=V+2f75PvljF3lRCCcfchpHgtNm
-        Cb5hEGrH1L7Clwr8w8F7ZIUtHCA9POwQ/uCm0CYoJu+DUAoAMFK8Dbg9Wn6nkXqLQ9zBgNLPKvlYG
-        7iv7QdXWG0OAjOWs4gprIa7W2gbycW42Cw1Yr1Y0mTNY7N9zVAi9hJh3154PBmlK0vkYTeQ3BBWNp
-        UE8exWdMXdRjbMME6NZF08HjFatVITEMX2av+3crRXQDLtkeQYPW0COvoZLi7/69j0YWfZzodsGoP
-        jQg1zzz4940cYoA39xTRhJc6Ff/82hZ/QTZZX2Evyn9i5Khn2aY31vjgF6+GXzAj239pUHPHfLzW8
-        ns9Wsx+Q==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1odKXE-00DELX-JK; Wed, 28 Sep 2022 00:02:44 +0000
-Date:   Tue, 27 Sep 2022 17:02:44 -0700
-From:   Luis Chamberlain <mcgrof@kernel.org>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>
+        with ESMTP id S231848AbiI1BKT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Sep 2022 21:10:19 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A10D55C97B
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Sep 2022 18:10:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1664327409;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=yuhYrI3O2et4AQDqfdAc7XVomQ7XZIW92EUt5M6cRFY=;
+        b=NhSx1CSg7wa/QETmbkSR3WGIhJ8dUxlfg8y9C14aIsOtd6Qu4KLBwmZSPkSQJBwILYEW9O
+        3rSd8vW6niic0UjV8XGEX7BbRZgh/ustKPLJXL0ahss6vQKf7olJEHqanBbEPAKtMbsXBN
+        0yC3gnxwoh/579CWRK5E0T/cO7QqrWc=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-434-53R5vA26MeOJJtwaB5DeVw-1; Tue, 27 Sep 2022 21:10:06 -0400
+X-MC-Unique: 53R5vA26MeOJJtwaB5DeVw-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.rdu2.redhat.com [10.11.54.8])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 8801A185A78F;
+        Wed, 28 Sep 2022 01:10:05 +0000 (UTC)
+Received: from T590 (ovpn-8-16.pek2.redhat.com [10.72.8.16])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 350B1C15BA4;
+        Wed, 28 Sep 2022 01:09:55 +0000 (UTC)
+Date:   Wed, 28 Sep 2022 09:09:50 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Bart Van Assche <bvanassche@acm.org>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
+        linux-scsi@vger.kernel.org, Luis Chamberlain <mcgrof@kernel.org>,
+        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
         John Garry <john.garry@huawei.com>,
         Mike Christie <michael.christie@oracle.com>,
         Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-modules@vger.kernel.org, linux-kernel@vger.kernel.org,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Tejun Heo <tj@kernel.org>
+        Tejun Heo <tj@kernel.org>, ming.lei@redhat.com
 Subject: Re: [PATCH v5 6/7] module: Improve support for asynchronous module
  exit code
-Message-ID: <YzOPJHSQsPtc5o0Y@bombadil.infradead.org>
+Message-ID: <YzOe3pYmn5qO9lFb@T590>
 References: <20220914225621.415631-1-bvanassche@acm.org>
  <20220914225621.415631-7-bvanassche@acm.org>
- <a4084b27-dd2d-10df-493c-35998eed664c@acm.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <a4084b27-dd2d-10df-493c-35998eed664c@acm.org>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+In-Reply-To: <20220914225621.415631-7-bvanassche@acm.org>
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.8
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Sep 20, 2022 at 10:13:40AM -0700, Bart Van Assche wrote:
-> On 9/14/22 15:56, Bart Van Assche wrote:
-> > Some kernel modules call device_del() from their module exit code and
-> > schedule asynchronous work from inside the .release callback without waiting
-> > until that callback has finished. As an example, many SCSI LLD drivers call
-> > scsi_remove_host() from their module exit code. scsi_remove_host() may
-> > invoke scsi_device_dev_release_usercontext() asynchronously.
-> > scsi_device_dev_release_usercontext() uses the host template pointer and
-> > that pointer usually exists in static storage in the SCSI LLD. Support
-> > using the module reference count to keep the module around until
-> > asynchronous module exiting has completed by waiting in the delete_module()
-> > system call until the module reference count drops to zero.
-> 
-> Hi Luis,
-> 
-> I'd like to know your opinion about this patch since you are the maintainer
-> of the kernel module system.
+On Wed, Sep 14, 2022 at 03:56:20PM -0700, Bart Van Assche wrote:
+> Some kernel modules call device_del() from their module exit code and
+> schedule asynchronous work from inside the .release callback without waiting
+> until that callback has finished. As an example, many SCSI LLD drivers call
 
-See this patch which extends the documentation of try_module_get():
+It isn't only related with device, any kobject has such issue, or any
+reference counter usage has similar potential risk, see previous discussion:
 
-https://lkml.kernel.org/r/20211029184500.2821444-7-mcgrof@kernel.org
+https://lore.kernel.org/lkml/YsZm7lSXYAHT14ui@T590/
 
-You can ignore discussion around the thread as sadly it is just
-irrelevant stuff not about that patch. But the logic it spells out
-is still true.
+IMO, it is one fundamental problem wrt. module vs. reference counting or
+kobject uses at least, since the callback depends on module code
+segment.
 
-So, in short, using try_module_get() on exit is actually the wrong
-thing to do and it is no surprise it would fail. I haven't gotten
-yet around to reviewing Mauro's driver API which let's you unbind
-drivers, but it sounds related so I CC'd you on that.
+> scsi_remove_host() from their module exit code. scsi_remove_host() may
+> invoke scsi_device_dev_release_usercontext() asynchronously.
+> scsi_device_dev_release_usercontext() uses the host template pointer and
+> that pointer usually exists in static storage in the SCSI LLD. Support
+> using the module reference count to keep the module around until
+> asynchronous module exiting has completed by waiting in the delete_module()
+> system call until the module reference count drops to zero.
 
-So I'd like to ask instead if an alternative to using try_module_get()
-on exit would be better here and for the future.
+The issue can't be addressed by the normal mod->refcnt, since user need
+to unload module when the device isn't used.
 
-  Luis
+
+thanks,
+Ming
+
