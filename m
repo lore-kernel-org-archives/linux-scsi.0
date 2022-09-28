@@ -2,51 +2,52 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 036C3C6FA82
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Sep 2022 11:01:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E85EC6FA94
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Sep 2022 11:01:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234060AbiI1LBP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Sep 2022 07:01:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53512 "EHLO
+        id S234075AbiI1LBS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Sep 2022 07:01:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52288 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233850AbiI1LAr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2022 07:00:47 -0400
-Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BEED47EFC4
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2022 03:59:59 -0700 (PDT)
-Received: by mail-pl1-x629.google.com with SMTP id w20so11440976ply.12
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2022 03:59:59 -0700 (PDT)
+        with ESMTP id S233585AbiI1LAv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2022 07:00:51 -0400
+Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1872814C5
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2022 04:00:14 -0700 (PDT)
+Received: by mail-pj1-x102c.google.com with SMTP id e11-20020a17090a77cb00b00205edbfd646so1752942pjs.1
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2022 04:00:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date;
-        bh=fo4HmuLb/yqh2kDNnoKinrIdDSvba5fowzMna9C2QUg=;
-        b=SJyC2mJGff3oqgJGbJ2CIG5odbv/+k+1zDOycX2oUS4T2LLeoqU3dGE1ZjN4uoa9Nl
-         L1NfMbijmpRASuYUSNvspDxj8CM+rmq+/DcgF1yNslYBahnv7Jb+1k0YpGpi6O/VoXyp
-         GCrRgidVi8vWTLkSPgT8qrawa1Xty5l7bByP6CdG/DOYYe0SpUcqP9wk9r9hQ/Ioqxav
-         LHNhhGOS8rnJwxzopvjmpsVw3e+VTF33QopJR0QRACOzuMj/kpD0CM6KmvStlb4Og72e
-         DEiv3fFrzOIVDxsWfTKuL64jyIYcqAOGQi6b6EG9tMIphMP2u9SnfieVTmst7pefV5rv
-         zROQ==
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date;
+        bh=hqHsGeDKe0t7ifwT22YFmx420oJcPi+zdGlDsAhLUb0=;
+        b=m+h1aSlRyOmyWLPEegkC4UTOP5mPnZb/u7MDJuDqO7L0oSlCnQoyJhUm3SWgCH00mF
+         +4ujgBYFq2vlJ2WRylNv/WHQ5qJlHSfvxyY9LrO5aufZZS9Sc1omuaJhkAHcj0qBr8y6
+         39gHedQoOOfGN/PofAoqNRkBKCo0PSVhB4/blu7M03tzfCb5REYVvITZevtJbJ8KQYbQ
+         eRcN4dzRCZRBWc/f5UZFCe2JWbhiFs+jqRa7UzCLfrvuit8SQUOZVv6lzNOvsW7qAllk
+         n1heNKwq4tOo4KNg/bito9QLe9QeNk63Rbrab/wZsmr9npT0K5U+1EVIP96nrXfB2KmT
+         0FYw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date;
-        bh=fo4HmuLb/yqh2kDNnoKinrIdDSvba5fowzMna9C2QUg=;
-        b=Jf8eZ3aPmmvg0Cy+7qEO/uLkjJVFY2aR+65GI3IOyeL9xGTBQB8QKhuyHTx5/RWXMf
-         h/FzQi5kol0BwWEi+UuWjmlPn0Rik7J8k6pt9Gm8AszU+duiehxmswoy4hbnnyunpm/h
-         FouEbUReiQLJnQl7Fa/iCcaai4OP6Pt89MRbbO7lOkegcZVN3MjjiFvNVewuNrVV2q1q
-         +GkWyKDHJToicwkHR6jHV3+wBgSGRu9ikmXsNU0BFC+FHIfpKLAnwXXqoZJsvT6QTb15
-         zRicSkVagqHyhNPk/l6pgmoDrGEw0Gz/hlQYC+doxCKOsAApdZJXPS+TJbcIRn9m16jg
-         zmcQ==
-X-Gm-Message-State: ACrzQf1tTRB31YMoeSfxh9DhyS5JAkkNcpsqIQ2pQ4UoCw6yAftFHpJq
-        +dIKjLrmaKYY4ZOj197OYBPsfA==
-X-Google-Smtp-Source: AMsMyM6I8LxP5weTVzsQIxACRMckvsr0iobx2qFTGVa4rjJZfzUFY8aCAwEoIseeeiNOKAkMUe7yDQ==
-X-Received: by 2002:a17:90b:38c3:b0:205:d6b5:582d with SMTP id nn3-20020a17090b38c300b00205d6b5582dmr9053345pjb.229.1664362798761;
-        Wed, 28 Sep 2022 03:59:58 -0700 (PDT)
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date;
+        bh=hqHsGeDKe0t7ifwT22YFmx420oJcPi+zdGlDsAhLUb0=;
+        b=hwf7gDHMr2Gvui0m2xe1xu43dhvolenXAe/eq8bxlS89njXnRw8XQMpvH4vyAQJO9P
+         Xzq6q9L0lqeViQ3BfLrUG/xzSnqQMUy/WAYuONawoAgAVjfqYrfKnaB7BOHNy4lisJud
+         XXpDi9yD4cigVDvQr0Grqx7amifJ+qIQdGRlvMQKh2S1OtR1R9b8CGHn6TM//R5B3SpR
+         xeL59p99E/P8sGg1eAzqAEZCBsvSsVMsPwQPk+gnn14kwTnAPOo3BEAfGXuxOiJ58uOO
+         N+RsORrq0J6Nw6iGJ4Vbdz8XB65tP43A15ppyB60Dg0iIB9+4jvzGijX1mCkjaw0Wnl1
+         jEew==
+X-Gm-Message-State: ACrzQf2CHhmUZ6RlJ+o6oHyq6y5WrmI3HARnoSB/ctcsEGY0n27H12dt
+        01uoQ+tF7/VY86iU/jhfXm+IqQ==
+X-Google-Smtp-Source: AMsMyM5C26cGEuhYulr7S2jFc6VQqD+oKgKzpNLlpxnRs14brLWhNpxe/xWjjleGrOws83qXpNbKMw==
+X-Received: by 2002:a17:903:24e:b0:179:b755:b82f with SMTP id j14-20020a170903024e00b00179b755b82fmr29636731plh.34.1664362814279;
+        Wed, 28 Sep 2022 04:00:14 -0700 (PDT)
 Received: from C02F63J9MD6R.bytedance.net ([61.120.150.77])
-        by smtp.gmail.com with ESMTPSA id b13-20020a170902d50d00b00177efb56475sm1539524plg.85.2022.09.28.03.59.51
+        by smtp.gmail.com with ESMTPSA id b13-20020a170902d50d00b00177efb56475sm1539524plg.85.2022.09.28.04.00.07
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 28 Sep 2022 03:59:58 -0700 (PDT)
+        Wed, 28 Sep 2022 04:00:14 -0700 (PDT)
 From:   Zhuo Chen <chenzhuo.1@bytedance.com>
 To:     sathyanarayanan.kuppuswamy@linux.intel.com, bhelgaas@google.com,
         ruscur@russell.cc, oohall@gmail.com, fancer.lancer@gmail.com,
@@ -56,52 +57,41 @@ To:     sathyanarayanan.kuppuswamy@linux.intel.com, bhelgaas@google.com,
 Cc:     chenzhuo.1@bytedance.com, linuxppc-dev@lists.ozlabs.org,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         ntb@lists.linux.dev, linux-scsi@vger.kernel.org
-Subject: [PATCH v3 0/9] PCI/AER: Fix and optimize usage of status clearing api
-Date:   Wed, 28 Sep 2022 18:59:37 +0800
-Message-Id: <20220928105946.12469-1-chenzhuo.1@bytedance.com>
+Subject: [PATCH v3 2/9] PCI/DPC: Use pci_aer_clear_uncorrect_error_status() to clear uncorrectable error status
+Date:   Wed, 28 Sep 2022 18:59:39 +0800
+Message-Id: <20220928105946.12469-3-chenzhuo.1@bytedance.com>
 X-Mailer: git-send-email 2.30.1 (Apple Git-130)
+In-Reply-To: <20220928105946.12469-1-chenzhuo.1@bytedance.com>
+References: <20220928105946.12469-1-chenzhuo.1@bytedance.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello.
+pci_aer_clear_uncorrect_error_status() clears both fatal and non-fatal
+errors. So use it in place of pci_aer_clear_nonfatal_status()
+and pci_aer_clear_fatal_status().
 
-Here comes patch v3, which contains some fixes and optimizations of
-aer api usage. The v1 and v2 can be found on the mailing list.
+Signed-off-by: Zhuo Chen <chenzhuo.1@bytedance.com>
+---
+ drivers/pci/pcie/dpc.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-v3:
-- Modifications to comments proposed by Sathyanarayanan. Remove
-  pci_aer_clear_nonfatal_status() call in NTB and improve commit log. 
-
-v2:
-- Modifications to comments proposed by Bjorn. Split patch into more
-  obvious parts.
-
-Zhuo Chen (9):
-  PCI/AER: Add pci_aer_clear_uncorrect_error_status() to PCI core
-  PCI/DPC: Use pci_aer_clear_uncorrect_error_status() to clear
-    uncorrectable error status
-  NTB: Remove pci_aer_clear_nonfatal_status() call
-  scsi: lpfc: Change to use pci_aer_clear_uncorrect_error_status()
-  PCI/AER: Unexport pci_aer_clear_nonfatal_status()
-  PCI/AER: Move check inside pcie_clear_device_status().
-  PCI/AER: Use pcie_aer_is_native() to judge whether OS owns AER
-  PCI/ERR: Clear fatal error status when pci_channel_io_frozen
-  PCI/AER: Refine status clearing process with api
-
- drivers/ntb/hw/idt/ntb_hw_idt.c |  2 --
- drivers/pci/pci.c               |  7 +++--
- drivers/pci/pci.h               |  2 ++
- drivers/pci/pcie/aer.c          | 45 +++++++++++++++++++--------------
- drivers/pci/pcie/dpc.c          |  3 +--
- drivers/pci/pcie/err.c          | 15 ++++-------
- drivers/pci/pcie/portdrv_core.c |  3 +--
- drivers/scsi/lpfc/lpfc_attr.c   |  4 +--
- include/linux/aer.h             |  4 +--
- 9 files changed, 44 insertions(+), 41 deletions(-)
-
+diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+index 3e9afee02e8d..7942073fbb34 100644
+--- a/drivers/pci/pcie/dpc.c
++++ b/drivers/pci/pcie/dpc.c
+@@ -288,8 +288,7 @@ void dpc_process_error(struct pci_dev *pdev)
+ 		 dpc_get_aer_uncorrect_severity(pdev, &info) &&
+ 		 aer_get_device_error_info(pdev, &info)) {
+ 		aer_print_error(pdev, &info);
+-		pci_aer_clear_nonfatal_status(pdev);
+-		pci_aer_clear_fatal_status(pdev);
++		pci_aer_clear_uncorrect_error_status(pdev);
+ 	}
+ }
+ 
 -- 
 2.30.1 (Apple Git-130)
 
