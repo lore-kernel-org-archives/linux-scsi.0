@@ -2,177 +2,194 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10FF0C32771
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Sep 2022 16:47:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E03FC04A95
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Sep 2022 17:02:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232900AbiI1Qrx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Sep 2022 12:47:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34182 "EHLO
+        id S234232AbiI1RCF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Sep 2022 13:02:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40646 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232439AbiI1Qrw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2022 12:47:52 -0400
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6AEB071737
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2022 09:47:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1664383671; x=1695919671;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=0k4ata89o8XSPrW5DrYMuU2Om5bPSJSie0h0k/DIHJI=;
-  b=kefzlsgQXLBSnLvjybUpc+35eu3hupaxK+r6o5/OHN4nEqdVpIqzPaAf
-   +TulcEsEU7lIE5qBCHLDqNKXoYp7SrJBa+yWX5YjMF3KlG2JdvCJRdtuI
-   2jG9skchIowX2stmG+mLlF8HWUNRZSyDpOKdtdZc2vmhSBlJrodMM4R0C
-   5X7oRfI/53SbAlD640sLzIfjuB1ozul4eoB5GgJvdzvUbjcfjm2q9uOeT
-   VyRjS5almM8Cy/RyUSnfdiDAeA3m5RZkgtZl97l4NGKgIAV/tN8m9dKyL
-   w6Kmqh3L7HhAmUmAQgwLz4lXHGU68uDmZc/AiV/CkXerF9NLSqxwUSrD2
-   g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10484"; a="303138162"
-X-IronPort-AV: E=Sophos;i="5.93,352,1654585200"; 
-   d="scan'208";a="303138162"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Sep 2022 09:47:35 -0700
-X-IronPort-AV: E=McAfee;i="6500,9779,10484"; a="599647488"
-X-IronPort-AV: E=Sophos;i="5.93,352,1654585200"; 
-   d="scan'208";a="599647488"
-Received: from ahunter6-mobl1.ger.corp.intel.com (HELO [10.0.2.15]) ([10.252.61.24])
-  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Sep 2022 09:47:32 -0700
-Message-ID: <9272d8ad-75b5-e521-c77c-24c72112e832@intel.com>
-Date:   Wed, 28 Sep 2022 19:47:26 +0300
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Firefox/91.0 Thunderbird/91.11.0
-Subject: Re: [PATCH v2 8/8] scsi: ufs: Fix a deadlock between PM and the SCSI
- error handler
+        with ESMTP id S234308AbiI1RB5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2022 13:01:57 -0400
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11B05DB95A;
+        Wed, 28 Sep 2022 10:01:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1664384511; x=1695920511;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=VlQ5GTpECTEAeHmiAGAGWgunC7WcM9uw9HtjP4STZlA=;
+  b=LlqzmNft1Y/2dfl9w5GhLUBCCY3WxSJtg1y4QKZCuk9065M0zHLxWgMn
+   /1u0Re9+2c8k2+LAY2LkSL6wahZEcVcQhmCvck/tFogm9K8MoRmWUouvj
+   x+POaagH1P7P3sXrmemoWZxnxJrZk1wErPhzfVBuJqyAfu6ulgFyQWRCB
+   mIXlTzmZANmLaQ/idSOviT/maIcolVz3de+vxeeoe7GJKtqIADh4J7441
+   AFfZixB1GYu0jTOGpDth+JtGxenIAZ8i0iYqK6+a2jGUOXTWP+dJ8//7F
+   wL+PKgZj1jnl4Rm45kZm7hCiMeMrwGRbC1QPsIpE7WKZo9S+S/2Kwx2hA
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.93,352,1654531200"; 
+   d="scan'208";a="316788019"
+Received: from mail-dm6nam12lp2169.outbound.protection.outlook.com (HELO NAM12-DM6-obe.outbound.protection.outlook.com) ([104.47.59.169])
+  by ob1.hgst.iphmx.com with ESMTP; 29 Sep 2022 01:01:48 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=jfZP9gJ9nPWmFcxFOx/KNnYjk2aR69ncDr0bsLya0nW9BnAZMJvtjND4e7jl2RTU2/bJ/E40j2Xhl6QS5saMjWKCw0vuBN4F2IbThY9ENAy7gIUifqBKlyhj7+/t41JCdZ7KY9Rd2kGVSaKu06liH2N5pkQcsKXsqHKkLOc9CrsbHKuE00IhWVMJeJciR50iKW4ggogTRkbuU4as9322YEYkgbfNj1930FXnGWHlI3cB8HMO0mCBSPrZxnM7bSsRMl+N4Mde0ukf6tDHlZ4cdUWJOZpnKz49IEx0MSEv+8AtS4j1+SF8PSKr4+7vfZ/9SkTm0CW0lK1oM+KlntKIQg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=VlQ5GTpECTEAeHmiAGAGWgunC7WcM9uw9HtjP4STZlA=;
+ b=EAsmLInpXNvm8mNOSJq+xK0KRytX2UfloYCi7gO8SMvRM3YLjYzaKBk5vyptlNwu/vGfBij6WcG/nGMNPEGCm+l1GfuZiAY0mW4TjW6oQ9t13Soq6nqTcbZMqK1G/IdAVq3O4WJ9Vp3cZgFvZTCNIXCRhoLcPSYnpCqQOh8uUAryG1wbKprLdwRnmBLQtgCap6o9C1ldXdZyPkRdCkUoaJT2rzYUPfWkGypmpcIRg2nGEbufWwF1X2r30ZPsW+NEKoeTzuAe9bGFX4tNIwMO7YEGxF15xeSIjFJuqykA2IjdFLnxWtRT8yZGowkROMWsNXHm3FiDsD5f8tqxWTgkZA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=VlQ5GTpECTEAeHmiAGAGWgunC7WcM9uw9HtjP4STZlA=;
+ b=IDhV1j7FZXApvWTBC/MR4MtkyG82jALayjgcxdSrBNsWXFWijRb4CaEFqcNg1jDtyneSgriY6c/ALxl+kqz90sAOBZ7phBAEBrpDwxF0dnE07JPYKA0ymNko1jxQTdJ7o4g8iAA/t8yemIbJVX2P4AHcUSSL8sZpQ0NXrhcEwT4=
+Received: from BY5PR04MB6327.namprd04.prod.outlook.com (2603:10b6:a03:1e8::20)
+ by BN0PR04MB8159.namprd04.prod.outlook.com (2603:10b6:408:15f::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5676.16; Wed, 28 Sep
+ 2022 17:01:47 +0000
+Received: from BY5PR04MB6327.namprd04.prod.outlook.com
+ ([fe80::b116:fb8d:6e10:37b7]) by BY5PR04MB6327.namprd04.prod.outlook.com
+ ([fe80::b116:fb8d:6e10:37b7%2]) with mapi id 15.20.5676.018; Wed, 28 Sep 2022
+ 17:01:46 +0000
+From:   Arthur Simchaev <Arthur.Simchaev@wdc.com>
+To:     Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+        Bean Huo <huobean@gmail.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Daniil Lunev <dlunev@chromium.org>,
+        Avri Altman <Avri.Altman@wdc.com>,
+        Avi Shchislowski <Avi.Shchislowski@wdc.com>
+Subject: RE: [PATCH] scsi: ufs-bsg: Remove ufs_bsg_get_query_desc_size
+ function
+Thread-Topic: [PATCH] scsi: ufs-bsg: Remove ufs_bsg_get_query_desc_size
+ function
+Thread-Index: AQHYhKDynvKkVtaQm0SrWhB5D1T9dq3ooC4AgAGVWkCACuorUIAAI1gAgABD8GCAACWBcA==
+Date:   Wed, 28 Sep 2022 17:01:46 +0000
+Message-ID: <BY5PR04MB63270395126089C821E9B72DED549@BY5PR04MB6327.namprd04.prod.outlook.com>
+References: <1655727966-31584-1-git-send-email-Arthur.Simchaev@wdc.com>
+         <87e6fdb49d9d76c468712e1b42cbc130273b5635.camel@gmail.com>
+         <BY5PR04MB6327B8C5001E315009E3AC6EED4F9@BY5PR04MB6327.namprd04.prod.outlook.com>
+         <BY5PR04MB6327ED5C6D91CBD3A024F709ED549@BY5PR04MB6327.namprd04.prod.outlook.com>
+ <0e2334ebc4ba0ba137e83c60a090fde536be7f26.camel@gmail.com>
+ <BY5PR04MB6327294F1E861DD13771EAAAED549@BY5PR04MB6327.namprd04.prod.outlook.com>
+In-Reply-To: <BY5PR04MB6327294F1E861DD13771EAAAED549@BY5PR04MB6327.namprd04.prod.outlook.com>
+Accept-Language: en-US
 Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>
-References: <20220927184309.2223322-1-bvanassche@acm.org>
- <20220927184309.2223322-9-bvanassche@acm.org>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-In-Reply-To: <20220927184309.2223322-9-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: BY5PR04MB6327:EE_|BN0PR04MB8159:EE_
+x-ms-office365-filtering-correlation-id: 603f0150-4b42-4cdb-3525-08daa17320a4
+wdcipoutbound: EOP-TRUE
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: IruxO+aBaKF/KGZcfwtIDAuQTd+FRtjGrwwCMhmEDj5CE61BZPPtcpdOqaq7VKLsDsuBLB0c/Y5nHQaojCKH+0JSkZf091o51KzsYkgaLQqc8tpd6O2CgPUv61JWpNZPva+jG7udqdtFgTxF8oTiZZo/iGNUv73CY+RPWatgvFSRZCb0LULZG5/QNu2agNPP+wjUQvwAoQHSsu5VN/AH/n6Vis5966K13/X3+tAuj1V6LDCh2PNfEp4RBanmWtzEILPsLPg88FkfkK8LFLciBHkklxp76ZdpAu2f97h0s38rCa7OMnrxJAY95UYCsrhyXGYOztFkouHVssHLSwx/biMzFgLiICa2mnzxk+PQ6tWcZLkBK2c74IkgnovydVmlcrabAZfETFjkLJxZV49CRDSRozzio1PjzZx/MOx1U6oH/NVhp5FpKJVv54LGcA1ybMwg+j1LLI1WVfaNOl7KpFDm++FuMiW9gcTUTTk9vEWoPy0KRFo67yV3aMyuX1LayEVhymmJCmj8zOK389ItahFBJCfCWasjsyETuYVLSdfmQXrx0HAHe2ixNTN0EcGZI9Fw655CltKlem/OmxIiTEtLogGZp1ZYeJXfRwq/b/okJqFmKeP9hPS4ZynitmwnVhmilzH09G6+NuCTWMuRBRJmlNw8tNDOPLXnSUJPllRsKa/vYtm7Ki41tcTdnA9uRJZl92qPRkV4FXDo18h9TNcLpsBD+jI1dXw/a6p8hahrZy5jRVjz57Ybeipy8+EdrkjRfZPnSQjrrYSxrHVczg==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR04MB6327.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(4636009)(396003)(136003)(346002)(366004)(39860400002)(376002)(451199015)(8936002)(33656002)(82960400001)(38100700002)(2906002)(110136005)(86362001)(55016003)(38070700005)(54906003)(9686003)(6506007)(316002)(122000001)(53546011)(26005)(7696005)(41300700001)(66446008)(478600001)(2940100002)(71200400001)(76116006)(66476007)(66946007)(64756008)(66556008)(4326008)(5660300002)(83380400001)(186003)(52536014)(8676002);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?dUxwMWgvOUNFYU1NR3A4Unl6Tm0wbUxxTFgvdFdnZVRXN3BLNG5sNFNKZldX?=
+ =?utf-8?B?U3lOcGRjc2FZdjJPV0JMWVR1THZKdUxaeFVRNlZUbVRLbW1lMjRzb3BtZFZu?=
+ =?utf-8?B?aHkrcnV6VUhlQmRXTk1GMWYvY2FWSlY0WWxkYUhFaWFPV09SejNHWjljS2xX?=
+ =?utf-8?B?VDg3aVMxRXN5eldnd3NwK2dxNTFwN3JVUmdXT3pkaHUvUVVlbXZ6ZzdHVDdD?=
+ =?utf-8?B?TnlXM1BkMkJSL0NZVDROODJPT2tieGp1TGhvV0JLWkNLZnJQTS9GVkZNMTl4?=
+ =?utf-8?B?a014RW4vZlltQUlFQXhCMlA3YytBZWhJV3RnMTdmVFhCcFR0QXUvVmoxVDNL?=
+ =?utf-8?B?ZHhkdGVEQXRxb3FodEVtTmhld0pzS1hCTllybnZnQ05aZ2NhVGZ0QW14cm1H?=
+ =?utf-8?B?Q0lTc3JobXMyS2FwTTZhd0hkTTJTR3ZMUUVOT25CQ0dLR0dtNkhoWFBjalRG?=
+ =?utf-8?B?bEsyckRoRU5tY0xEMk93VDlpRzhKQ3Z1WkRYZEZSOWdiNDRYUTVVT3NadjJI?=
+ =?utf-8?B?Yzg0V0c4ZEJGQ3RoNGl3TmovM3ZSRWdSdUxQMDhjeHVKb2lsaGNSUm5RMDJX?=
+ =?utf-8?B?R3N3SWVCRlRNMHBEdkZwZUxOUG1Bb2FwSml1TkpVNGJWNnR3anBpaStpemNo?=
+ =?utf-8?B?d3lVQUJuUWpSdUhoV3hvMjFGMHczTGtXQUtUemM2TGpKYWtGaHhwT21rSEN3?=
+ =?utf-8?B?eTBPSU9MK3g3ckdxZWpRc0kyWVFlM1h4cVA5RWZaQ1YrT3RyKzlGU0RUWlNj?=
+ =?utf-8?B?Sk4xQllZYlpscVcwcGYvaFc1anZBb01TUXhSbC9iazJEK0g3bGhuRm5RbFAx?=
+ =?utf-8?B?R0VvaTB1aFBQbkNQcnhUM3Q2cC9sbEY3ZHlZY2UreXlkOGk4aU4yNUpoQjll?=
+ =?utf-8?B?SStpd2tiR3ZMbFdQdG9qVTZURFd1MUQ1NTZocTlwY1MxVDZqSEtQNHRVd3Ay?=
+ =?utf-8?B?TlU5YlpteVRrc3pobkZMSm1zZStmUlgrVndvU1oxQmhQWUVXTmxOSDYxa3BQ?=
+ =?utf-8?B?T0MrL1JvcVNuMTFYek5Ta2R5U2RVL2hhUEpSYUtVVHBLZnoraTF3cDlHN2lT?=
+ =?utf-8?B?cG1tTEFPRTZ1citMTTFEUzVBN2t6aVdBeHY0V0t5bXlZYkY2QmI0K2ZYdUo4?=
+ =?utf-8?B?eVc3Z3pzK0RucEhMRGhJcEkwZ2lhUmFHZGY3R3ptLzFicjNKMlFGREtndFBx?=
+ =?utf-8?B?cjM3bFQzSkFQbzY4VWEycGRXemh0enFieUlZWXAvNi81SVE5UkNOdGlXQ0NL?=
+ =?utf-8?B?REdsRXdTUElkU0dUR05SdWVQdXpzY0krempzU0RpOFNFNjBSeVArcTMydUdi?=
+ =?utf-8?B?cE9JQ2V6dlZ5RFNLKyt1Z1VrSUtwZFFVMlN6MEdyaEpIalFGY09pR0tsTElF?=
+ =?utf-8?B?L3VYOVNsODNPVkhNV21wNHg0eG1zWVhrZ202c2hiL2E3U2d1ZWZsdEN4WjJZ?=
+ =?utf-8?B?TjAyRzVxZHF1WGcwZjg1WC9FbENhcjFGZXB4MU9sSFowWDBvdlFFalB1ZHM3?=
+ =?utf-8?B?WTI1T1cxdFlaUVZaaVBzU1d0VFNtejljdGN2RVhvV01xQVZNemdrTmFoTjRT?=
+ =?utf-8?B?NlJHY015MkhyaUh0Sk9XTkpua09VS0JWNmVnZ1UwU0MvdFV3aU9rWituWDV1?=
+ =?utf-8?B?Y3JQZXpIc09oM3ZyNVBVQWVYeEVPbWJuaFpOSlZnZ3BYRTZCcFpPZVBxZFZk?=
+ =?utf-8?B?RGxYZHptUE4rOVFXRk0xQm84UjdsWjgveTJOWlphM1RFQ0poMHJSbmRIMDBR?=
+ =?utf-8?B?U0tEb050dk9Xa09iZDhPMzAxY1VLRWh3a2J5MHZzUnpQTXdiWTMwaS9uTVZs?=
+ =?utf-8?B?anpxNnRMWjE1TE9sMU1tdmNlcmFlc1p0RXVGYTF3RnVNa294em9McFVINnZr?=
+ =?utf-8?B?OE5wa2xXeEFPV2h0d3hXSW13VzlzVHdRRFdtMVpydGwvM0wzYThjd3prelVC?=
+ =?utf-8?B?SUk4MkVNZUpjS0xxeVpmMXpWQTZ5S1JodlJXTzJCWkNXaC9qd3VYNk01Y04z?=
+ =?utf-8?B?dXV6VHpWano4TnBUUG5JSUhPRlk2REh2aWxlL1pCWDZpM2VDVXAzOUZSYUEw?=
+ =?utf-8?B?SndqZnErWnl0V1duUXJpVm45ckttR2I2R1BWVWxVdnE1dkNxQkJ3ZkFMRjhI?=
+ =?utf-8?Q?aBVbZ4EtCgzTA/DCm3fNVKteu?=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BY5PR04MB6327.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 603f0150-4b42-4cdb-3525-08daa17320a4
+X-MS-Exchange-CrossTenant-originalarrivaltime: 28 Sep 2022 17:01:46.6977
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 1IDoMLBbUhQVTEel/aVy72bPFqr36P5Gcr9asD1SQmd2Bi079rWWSrTbJbFuUpADNm/FO4EakIMhERXgbMOWxA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN0PR04MB8159
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 27/09/22 21:43, Bart Van Assche wrote:
-> The following deadlock has been observed on multiple test setups:
-> * ufshcd_wl_suspend() is waiting for blk_execute_rq() to complete while it
->   holds host_sem.
-> * ufshcd_eh_host_reset_handler() invokes ufshcd_err_handler() and the
->   latter function tries to obtain host_sem.
-> This is a deadlock because blk_execute_rq() can't execute SCSI commands
-> while the host is in the SHOST_RECOVERY state and because the error
-> handler cannot make progress either.
-> 
-> Fix this deadlock as follows:
-> * Fail attempts to suspend the system while the SCSI error handler is in
->   progress.
-> * If the system is suspending and a START STOP UNIT command times out,
->   handle the SCSI command timeout from inside the context of the SCSI
->   timeout handler instead of activating the SCSI error handler.
-> * Reduce the START STOP UNIT command timeout to one second since on
->   Android devices a kernel panic is triggered if an attempt to suspend
->   the system takes more than 20 seconds. One second should be enough for
->   the START STOP UNIT command since this command completes in less than
->   a millisecond for the UFS devices I have access to.
-> 
-> The runtime power management code is not affected by this deadlock since
-> hba->host_sem is not touched by the runtime power management functions
-> in the UFS driver.
-> 
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->  drivers/ufs/core/ufshcd.c | 51 ++++++++++++++++++++++++++++++++++++++-
->  1 file changed, 50 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 5507d93a4bba..010a5d1b984b 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -8295,6 +8295,54 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
->  	}
->  }
->  
-> +static enum scsi_timeout_action ufshcd_eh_timed_out(struct scsi_cmnd *scmd)
-> +{
-> +	struct ufs_hba *hba = shost_priv(scmd->device->host);
-> +	bool reset_controller = false;
-> +	int tag, ret;
-> +
-> +	if (!hba->system_suspending) {
-> +		/* Activate the error handler in the SCSI core. */
-> +		return SCSI_EH_NOT_HANDLED;
-> +	}
-> +
-> +	/*
-> +	 * Handle errors directly to prevent a deadlock between
-> +	 * ufshcd_set_dev_pwr_mode() and ufshcd_err_handler().
-> +	 */
-> +	for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs) {
-> +		ret = ufshcd_try_to_abort_task(hba, tag);
-> +		dev_info(hba->dev, "Aborting tag %d / CDB %#02x %s\n", tag,
-> +			 hba->lrb[tag].cmd ? hba->lrb[tag].cmd->cmnd[0] : -1,
-> +			 ret == 0 ? "succeeded" : "failed");
-> +		if (ret != 0) {
-> +			reset_controller = true;
-> +			break;
-> +		}
-> +	}
-> +	for_each_set_bit(tag, &hba->outstanding_tasks, hba->nutmrs) {
-> +		ret = ufshcd_clear_tm_cmd(hba, tag);
-> +		dev_info(hba->dev, "Aborting TMF %d %s\n", tag,
-> +			 ret == 0 ? "succeeded" : "failed");
-> +		if (ret != 0) {
-> +			reset_controller = true;
-> +			break;
-> +		}
-> +	}
-> +	if (reset_controller) {
-> +		dev_info(hba->dev, "Resetting controller\n");
-> +		ufshcd_reset_and_restore(hba);
-> +		if (ufshcd_clear_cmds(hba, 0xffffffff))
-> +			dev_err(hba->dev,
-> +				"Clearing outstanding commands failed\n");
-> +	}
-> +	ufshcd_complete_requests(hba);
-> +	dev_info(hba->dev, "%s() finished; outstanding_tasks = %#lx.\n",
-> +		 __func__, hba->outstanding_tasks);
-
-Would it be possible to reuse the existing error handler rather
-than creating a mini version?
-
-> +
-> +	return hba->outstanding_tasks ? SCSI_EH_RESET_TIMER : SCSI_EH_DONE;
-> +}
-> +
->  static const struct attribute_group *ufshcd_driver_groups[] = {
->  	&ufs_sysfs_unit_descriptor_group,
->  	&ufs_sysfs_lun_attributes_group,
-> @@ -8329,6 +8377,7 @@ static struct scsi_host_template ufshcd_driver_template = {
->  	.eh_abort_handler	= ufshcd_abort,
->  	.eh_device_reset_handler = ufshcd_eh_device_reset_handler,
->  	.eh_host_reset_handler   = ufshcd_eh_host_reset_handler,
-> +	.eh_timed_out		= ufshcd_eh_timed_out,
->  	.this_id		= -1,
->  	.sg_tablesize		= SG_ALL,
->  	.cmd_per_lun		= UFSHCD_CMD_PER_LUN,
-> @@ -8783,7 +8832,7 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
->  	 */
->  	for (retries = 3; retries > 0; --retries) {
->  		ret = scsi_execute(sdp, cmd, DMA_NONE, NULL, 0, NULL, &sshdr,
-> -				START_STOP_TIMEOUT, 0, 0, RQF_PM, NULL);
-> +				   1 * HZ, 0, REQ_FAILFAST_DEV, RQF_PM, NULL);
->  		if (ret < 0)
->  			break;
->  		if (host_byte(ret) == 0 && scsi_status_is_good(ret))
-
+SGkgQmVhbi4gDQoNCkkgdGhpbmsgaW4gYW55IGNhc2Ugd2UgbmVlZCByZW1vdmUgdGhlIHJlZHVu
+ZGFudCAgdWZzX2JzZ19nZXRfcXVlcnlfZGVzY19zaXplDQpmdW5jdGlvbiBmcm9tIHVmc19ic2cu
+IEFzIGRvbmUgaW4gdGhpcyBwYXRjaCBhbmQgc3VibWl0IHRoZSBhbm90aGVyIG9uZSBpbiBvcmRl
+ciB0byByZW1vdmUgDQp0aGUgZGVzYyBzaXplIGNoZWNrIGluIHVmc2hjZC5jIGVudGlyZWx5LiAN
+CkFyZSB5b3UgYWdyZWU/ICANCg0KUmVnYXJkcw0KQXJ0aHVyDQoNCj4gLS0tLS1PcmlnaW5hbCBN
+ZXNzYWdlLS0tLS0NCj4gRnJvbTogQXJ0aHVyIFNpbWNoYWV2IDxBcnRodXIuU2ltY2hhZXZAd2Rj
+LmNvbT4NCj4gU2VudDogV2VkbmVzZGF5LCBTZXB0ZW1iZXIgMjgsIDIwMjIgNTo0MiBQTQ0KPiBU
+bzogQmVhbiBIdW8gPGh1b2JlYW5AZ21haWwuY29tPjsgbWFydGluLnBldGVyc2VuQG9yYWNsZS5j
+b207DQo+IGJlYW5odW9AbWljcm9uLmNvbQ0KPiBDYzogbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5v
+cmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IERhbmlpbCBMdW5ldg0KPiA8ZGx1bmV2
+QGNocm9taXVtLm9yZz47IEF2cmkgQWx0bWFuIDxBdnJpLkFsdG1hbkB3ZGMuY29tPjsgQXZpDQo+
+IFNoY2hpc2xvd3NraSA8QXZpLlNoY2hpc2xvd3NraUB3ZGMuY29tPg0KPiBTdWJqZWN0OiBSRTog
+W1BBVENIXSBzY3NpOiB1ZnMtYnNnOiBSZW1vdmUgdWZzX2JzZ19nZXRfcXVlcnlfZGVzY19zaXpl
+DQo+IGZ1bmN0aW9uDQo+IA0KPiBDQVVUSU9OOiBUaGlzIGVtYWlsIG9yaWdpbmF0ZWQgZnJvbSBv
+dXRzaWRlIG9mIFdlc3Rlcm4gRGlnaXRhbC4gRG8gbm90IGNsaWNrDQo+IG9uIGxpbmtzIG9yIG9w
+ZW4gYXR0YWNobWVudHMgdW5sZXNzIHlvdSByZWNvZ25pemUgdGhlIHNlbmRlciBhbmQga25vdyB0
+aGF0DQo+IHRoZSBjb250ZW50IGlzIHNhZmUuDQo+IA0KPiANCj4gQWdyZWUgd2l0aCB5b3UuIFdp
+bGwgY2hhbmdlICYgc2VuZCB0aGUgcGF0Y2guDQo+IA0KPiBSZWdhcmRzDQo+IEFydGh1cg0KPiAN
+Cj4gPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiA+IEZyb206IEJlYW4gSHVvIDxodW9i
+ZWFuQGdtYWlsLmNvbT4NCj4gPiBTZW50OiBXZWRuZXNkYXksIFNlcHRlbWJlciAyOCwgMjAyMiAx
+OjM2IFBNDQo+ID4gVG86IEFydGh1ciBTaW1jaGFldiA8QXJ0aHVyLlNpbWNoYWV2QHdkYy5jb20+
+Ow0KPiA+IG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tOyBiZWFuaHVvQG1pY3Jvbi5jb20NCj4g
+PiBDYzogbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5l
+bC5vcmc7IERhbmlpbCBMdW5ldg0KPiA+IDxkbHVuZXZAY2hyb21pdW0ub3JnPjsgQXZyaSBBbHRt
+YW4gPEF2cmkuQWx0bWFuQHdkYy5jb20+OyBBdmkNCj4gPiBTaGNoaXNsb3dza2kgPEF2aS5TaGNo
+aXNsb3dza2lAd2RjLmNvbT4NCj4gPiBTdWJqZWN0OiBSZTogW1BBVENIXSBzY3NpOiB1ZnMtYnNn
+OiBSZW1vdmUgdWZzX2JzZ19nZXRfcXVlcnlfZGVzY19zaXplDQo+ID4gZnVuY3Rpb24NCj4gPg0K
+PiA+IENBVVRJT046IFRoaXMgZW1haWwgb3JpZ2luYXRlZCBmcm9tIG91dHNpZGUgb2YgV2VzdGVy
+biBEaWdpdGFsLiBEbyBub3QgY2xpY2sNCj4gPiBvbiBsaW5rcyBvciBvcGVuIGF0dGFjaG1lbnRz
+IHVubGVzcyB5b3UgcmVjb2duaXplIHRoZSBzZW5kZXIgYW5kIGtub3cNCj4gdGhhdA0KPiA+IHRo
+ZSBjb250ZW50IGlzIHNhZmUuDQo+ID4NCj4gPg0KPiA+IE9uIFdlZCwgMjAyMi0wOS0yOCBhdCAw
+ODozMyArMDAwMCwgQXJ0aHVyIFNpbWNoYWV2IHdyb3RlOg0KPiA+ID4gSGkgQmVhbg0KPiA+ID4N
+Cj4gPiA+IEluIGNhc2UgeW91IGRvbid0IGhhdmUgYW55IGNvbW1lbnRzIEkgd2lsbCBhcHByZWNp
+YXRlIGlmIHlvdSB3aWxsIGFkZA0KPiA+ID4gInJldmlld2VkIGJ5IiB0byB0aGUgcGF0Y2guDQo+
+ID4gPg0KPiA+ID4gUmVnYXJkcw0KPiA+ID4gQXJ0aHVyDQo+ID4NCj4gPg0KPiA+IEhpIEFydGh1
+ciwNCj4gPg0KPiA+IEknbSB0aGlua2luZyB3ZSBzaG91bGQgcmVtb3ZlIHRoZSBkZXNjIHNpemUg
+Y2hlY2sgaW4gdWZzaGNkLmMgZW50aXJlbHkuDQo+ID4gSnVzdCByZWFkIGFueSBkZXNjcmlwdG9y
+IHdpdGggYSBtYXhpbXVtIHNpemUgb2YgUVVFUllfREVTQ19NQVhfU0laRSAuDQo+ID4gRm9yIHVz
+ZXIgc3BhY2UgcXVlcmllcywgdWZzX2JzZyByZWFkcyBkYXRhIG9mIHRoZSBtYXhpbXVtIGxlbmd0
+aCBhbmQNCj4gPiByZXR1cm5zIHRoZSByZXF1ZXN0ZWQgbGVuZ3RoIGRhdGEuIFRodXMgY2FuIGlt
+cHJvdmUgY29kZSByZWFkYWJpbGl0eQ0KPiA+IGFuZCBzYXZlIENQVSBjeWNsZXMsIGFsc28gY2Fu
+IGZpeCB5b3VyIGNvbmNlcm4uDQo+ID4NCj4gPiBJIGRvbid0IGtub3cgaG93IGFib3V0IG90aGVy
+cycgb3Bpbmlvbj8NCj4gPg0KPiA+IEtpbmQgcmVnYXJkcywNCj4gPiBCZWFuDQo+ID4NCj4gPg0K
+DQo=
