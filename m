@@ -2,62 +2,120 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36BE4C07E9D
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Sep 2022 01:40:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86F14C07E9D
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Sep 2022 02:17:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232524AbiI1Bki (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Sep 2022 21:40:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49810 "EHLO
+        id S232802AbiI1CRK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Sep 2022 22:17:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55820 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229771AbiI1Bkh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Sep 2022 21:40:37 -0400
-Received: from mail.nfschina.com (unknown [124.16.136.209])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5565D160E60;
-        Tue, 27 Sep 2022 18:40:36 -0700 (PDT)
-Received: from localhost (unknown [127.0.0.1])
-        by mail.nfschina.com (Postfix) with ESMTP id 4A7671E80D33;
-        Wed, 28 Sep 2022 09:36:19 +0800 (CST)
-X-Virus-Scanned: amavisd-new at test.com
-Received: from mail.nfschina.com ([127.0.0.1])
-        by localhost (mail.nfschina.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 01LCsSIfww9e; Wed, 28 Sep 2022 09:36:16 +0800 (CST)
-Received: from localhost.localdomain (unknown [219.141.250.2])
-        (Authenticated sender: zhoujie@nfschina.com)
-        by mail.nfschina.com (Postfix) with ESMTPA id 1F5A61E80D70;
-        Wed, 28 Sep 2022 09:36:16 +0800 (CST)
-From:   Zhou jie <zhoujie@nfschina.com>
-To:     hare@suse.de, jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Zhou jie <zhoujie@nfschina.com>
-Subject: [PATCH] scsi: Remove unnecessary (void*) conversions
-Date:   Wed, 28 Sep 2022 09:40:20 +0800
-Message-Id: <20220928014020.10746-1-zhoujie@nfschina.com>
-X-Mailer: git-send-email 2.18.2
+        with ESMTP id S232326AbiI1CRJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Sep 2022 22:17:09 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E99D7D62CF;
+        Tue, 27 Sep 2022 19:17:06 -0700 (PDT)
+Received: from canpemm500004.china.huawei.com (unknown [172.30.72.57])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Mcg4134bNzHtlN;
+        Wed, 28 Sep 2022 10:12:17 +0800 (CST)
+Received: from [10.174.179.14] (10.174.179.14) by
+ canpemm500004.china.huawei.com (7.192.104.92) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Wed, 28 Sep 2022 10:17:02 +0800
+Subject: Re: [PATCH v5 3/8] scsi: pm8001: use sas_find_attached_phy_id()
+ instead of open coded
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <martin.petersen@oracle.com>, <jejb@linux.ibm.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <hare@suse.com>, <hch@lst.de>, <bvanassche@acm.org>,
+        <john.garry@huawei.com>, <jinpu.wang@cloud.ionos.com>,
+        Jack Wang <jinpu.wang@ionos.com>
+References: <20220927123926.953297-1-yanaijie@huawei.com>
+ <20220927123926.953297-4-yanaijie@huawei.com>
+ <caa8552b-3bb4-5824-aa99-82386d367479@opensource.wdc.com>
+From:   Jason Yan <yanaijie@huawei.com>
+Message-ID: <b58846fa-5c1c-ad73-a363-68ddf99d4da5@huawei.com>
+Date:   Wed, 28 Sep 2022 10:17:02 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
+MIME-Version: 1.0
+In-Reply-To: <caa8552b-3bb4-5824-aa99-82386d367479@opensource.wdc.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.179.14]
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ canpemm500004.china.huawei.com (7.192.104.92)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The void pointer object can be directly assigned to different structure
-objects, it does not need to be cast.
 
-Signed-off-by: Zhou jie <zhoujie@nfschina.com>
----
- include/scsi/libfcoe.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On 2022/9/28 6:57, Damien Le Moal wrote:
+> On 9/27/22 21:39, Jason Yan wrote:
+>> The attached phy id finding is open coded. Now we can replace it with
+>> sas_find_attached_phy_id(). To keep consistent, the return value of
+>> pm8001_dev_found_notify() is also changed to -ENODEV after calling
+>> sas_find_attathed_phy_id() failed.
+>>
+>> Signed-off-by: Jason Yan <yanaijie@huawei.com>
+>> Reviewed-by: Jack Wang <jinpu.wang@ionos.com>
+>> Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+>> ---
+>>   drivers/scsi/pm8001/pm8001_sas.c | 18 ++++++------------
+>>   1 file changed, 6 insertions(+), 12 deletions(-)
+>>
+>> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+>> index 8e3f2f9ddaac..042c0843de1a 100644
+>> --- a/drivers/scsi/pm8001/pm8001_sas.c
+>> +++ b/drivers/scsi/pm8001/pm8001_sas.c
+>> @@ -645,22 +645,16 @@ static int pm8001_dev_found_notify(struct domain_device *dev)
+>>   	pm8001_device->dcompletion = &completion;
+>>   	if (parent_dev && dev_is_expander(parent_dev->dev_type)) {
+>>   		int phy_id;
+>> -		struct ex_phy *phy;
+>> -		for (phy_id = 0; phy_id < parent_dev->ex_dev.num_phys;
+>> -		phy_id++) {
+>> -			phy = &parent_dev->ex_dev.ex_phy[phy_id];
+>> -			if (SAS_ADDR(phy->attached_sas_addr)
+>> -				== SAS_ADDR(dev->sas_addr)) {
+>> -				pm8001_device->attached_phy = phy_id;
+>> -				break;
+>> -			}
+>> -		}
+>> -		if (phy_id == parent_dev->ex_dev.num_phys) {
+>> +
+>> +		phy_id = sas_find_attached_phy_id(&parent_dev->ex_dev, dev);
+>> +		if (phy_id == -ENODEV) {
+>>   			pm8001_dbg(pm8001_ha, FAIL,
+>>   				   "Error: no attached dev:%016llx at ex:%016llx.\n",
+>>   				   SAS_ADDR(dev->sas_addr),
+>>   				   SAS_ADDR(parent_dev->sas_addr));
+>> -			res = -1;
+>> +			res = phy_id;
+> 
+> Nit:
+> 
+> res = -ENODEV would be a lot clearer.
+> Or do:
+> 
+> 		if (phy_id < 0) {
+> 			...
+> 			ret = phy_id;
+> 		} ...
+> 
 
-diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
-index fac8e89aed81..e6be85dfa249 100644
---- a/include/scsi/libfcoe.h
-+++ b/include/scsi/libfcoe.h
-@@ -364,7 +364,7 @@ struct fcoe_port {
-  */
- static inline struct net_device *fcoe_get_netdev(const struct fc_lport *lport)
- {
--	struct fcoe_port *port = ((struct fcoe_port *)lport_priv(lport));
-+	struct fcoe_port *port = lport_priv(lport);
- 
- 	return (port->get_netdev) ? port->get_netdev(lport) : NULL;
- }
--- 
-2.18.2
+This boils down to personal preferences. I'd like to change to the 
+latter one if no objections.
 
+Thanks,
+Jason
+
+> No ?
+> 
+>> +		} else {
+>> +			pm8001_device->attached_phy = phy_id;
+>>   		}
+>>   	} else {
+>>   		if (dev->dev_type == SAS_SATA_DEV) {
+> 
