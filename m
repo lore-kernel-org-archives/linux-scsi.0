@@ -2,122 +2,112 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 766B5C32771
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Sep 2022 21:45:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3F61C32771
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Sep 2022 22:21:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234411AbiI1Vpe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Sep 2022 17:45:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57794 "EHLO
+        id S233907AbiI1WV0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Sep 2022 18:21:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37616 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231949AbiI1Vpc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2022 17:45:32 -0400
-Received: from mp-relay-01.fibernetics.ca (mp-relay-01.fibernetics.ca [208.85.217.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB0AB67469;
-        Wed, 28 Sep 2022 14:45:26 -0700 (PDT)
-Received: from mailpool-fe-01.fibernetics.ca (mailpool-fe-01.fibernetics.ca [208.85.217.144])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mp-relay-01.fibernetics.ca (Postfix) with ESMTPS id BEEAAE16B4;
-        Wed, 28 Sep 2022 21:45:24 +0000 (UTC)
-Received: from localhost (mailpool-mx-02.fibernetics.ca [208.85.217.141])
-        by mailpool-fe-01.fibernetics.ca (Postfix) with ESMTP id B4DD48DDA6;
-        Wed, 28 Sep 2022 21:45:24 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at 
-Received: from mailpool-fe-01.fibernetics.ca ([208.85.217.144])
-        by localhost (mail-mx-02.fibernetics.ca [208.85.217.141]) (amavisd-new, port 10024)
-        with ESMTP id QcOqa6ItpgDk; Wed, 28 Sep 2022 21:45:24 +0000 (UTC)
-Received: from [10.60.2.196] (unknown [213.52.86.138])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        (Authenticated sender: dgilbert@interlog.com)
-        by mail.ca.inter.net (Postfix) with ESMTPSA id B59658DDA3;
-        Wed, 28 Sep 2022 21:45:22 +0000 (UTC)
-Message-ID: <af3d2628-bf00-d897-d140-415985c29bfd@interlog.com>
-Date:   Wed, 28 Sep 2022 23:45:18 +0200
+        with ESMTP id S234264AbiI1WVV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2022 18:21:21 -0400
+Received: from mail-wm1-x32f.google.com (mail-wm1-x32f.google.com [IPv6:2a00:1450:4864:20::32f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DF60F185B;
+        Wed, 28 Sep 2022 15:21:18 -0700 (PDT)
+Received: by mail-wm1-x32f.google.com with SMTP id e10-20020a05600c4e4a00b003b4eff4ab2cso2154579wmq.4;
+        Wed, 28 Sep 2022 15:21:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date;
+        bh=Wi426/C5OCiR5xNNz3hvTRVexYsTtTPGdXxj34f8Kp8=;
+        b=JiEggR/MF06JHR5dYMCJei+y1uf0Yd+FZSPdr2e+9UtML22r1XBe8igzZYuvp//D56
+         Bl5C3LVTW485F7h9pHFIugWD+8merXwEAu8+Vkl1DdEcME7JfuB9guoYx+o6/39NIgRl
+         BUHCnAjV3/ytFTZ6DqK8rW8yJo0z3RJBhr/wBLRTWUxAkR4tcfYqTZlVwn+x35ByIVdF
+         17MhGjQpDhbN74tmI8UyRs4W2IckugZw3J25sIgUhk3e6+e6FIWRX0XxLGe7mA3Rgw8/
+         EUDryQoTIuVIX3l96Q0um2zn4RsPk91A5FdZM5ICUxvdv2+N4Vlk/7u/kmF/kUXjqPg6
+         z5TA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date;
+        bh=Wi426/C5OCiR5xNNz3hvTRVexYsTtTPGdXxj34f8Kp8=;
+        b=nGGU8x5bA6FH4KgxRzAZwzvrIG+db5rEOeWKdwKb4XkCj3oyF+A+OSGfi9I5TPkoFJ
+         1kjBkUxk9OZ7vNTqp8ohZrBoyTGqvCzutZT379rs9sasOe1QrCLF9P83xYBhmbDghNFx
+         S87R6F4tTyD4W6BwrgfG944es/J+F5zJDtmuNrd7MFA7Ak6TpDzveTy7kpOV1JsnCDA/
+         OLltr/HkYBD1qH1rLu6vrwx50aesqqfmPltPcPnIMncPuw0aOpJZowhxcViIrXMbhB8o
+         2ymuhOojq0ETu5Pas8Qqa7Mehm4MSMHcCxJW9+05KE2Ksh7qUSqXx07Eu54bKntitUxv
+         6BOw==
+X-Gm-Message-State: ACrzQf268FQgu9w3Mn7/K2QeKTRsW5G2FKIQBDicH+j5IYeW+Gthkxzr
+        ugTgb7iCUdyo9ztFNJftVlk=
+X-Google-Smtp-Source: AMsMyM7sjJNt8F/25DP65Qd9rESmJhYbPfew3piOcnzoKjMMnGPyN4Ylz7RtgSB7vCCj0qGJ69gByg==
+X-Received: by 2002:a7b:ca53:0:b0:3b4:90c4:e07 with SMTP id m19-20020a7bca53000000b003b490c40e07mr127772wml.150.1664403677213;
+        Wed, 28 Sep 2022 15:21:17 -0700 (PDT)
+Received: from localhost (cpc154979-craw9-2-0-cust193.16-3.cable.virginm.net. [80.193.200.194])
+        by smtp.gmail.com with ESMTPSA id 2-20020a05600c228200b003a6a3595edasm2753094wmf.27.2022.09.28.15.21.16
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 28 Sep 2022 15:21:16 -0700 (PDT)
+From:   Colin Ian King <colin.i.king@gmail.com>
+To:     James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: lpfc: Fix spelling mistake "unsolicted" -> "unsolicited"
+Date:   Wed, 28 Sep 2022 23:21:16 +0100
+Message-Id: <20220928222116.68294-1-colin.i.king@gmail.com>
+X-Mailer: git-send-email 2.37.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.0
-Reply-To: dgilbert@interlog.com
-Subject: Re: KASAN: use-after-free Read in sg_release
-Content-Language: en-CA
-To:     Rondreis <linhaoguo86@gmail.com>,
-        Tony Battersby <tonyb@cybernetics.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <CAB7eexK_jr1LWOO9RWrBF9as7gAS9kpHjrZFRuRrRJF=1H4W6A@mail.gmail.com>
- <404508f8-37bb-a3bd-4319-6b6d7a7e076e@cybernetics.com>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-In-Reply-To: <404508f8-37bb-a3bd-4319-6b6d7a7e076e@cybernetics.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2022-09-22 17:29, Tony Battersby wrote:
-> On 9/20/22 10:46, Rondreis wrote:
->> Hello,
->>
->> When fuzzing the Linux kernel driver v6.0-rc6, the following crash was
->> triggered.
->>
->> HEAD commit: 521a547ced6477c54b4b0cc206000406c221b4d6
->> git tree: upstream
->>
->> kernel config: https://pastebin.com/raw/hekxU61F
->> console output: https://pastebin.com/raw/73a8RzBY
->>
->> Sorry for failing to extract the reproducer. But on other versions of
->> Linux, I also triggered this crash.
->>
->> I would appreciate it if you have any idea how to solve this bug.
->>
-> sg_release() calls "kref_put(&sfp->f_ref, sg_remove_sfp)" which
-> eventually does "kref_put(&sdp->d_ref, sg_device_destroy)" which does
-> "kfree(sdp)", but sg_release() continues to access sdp afterward.  Try
-> the following patch.
-> 
->>From 82ca6785c40eded6229183a53752fc5e43db4a94 Mon Sep 17 00:00:00 2001
-> From: Tony Battersby <tonyb@cybernetics.com>
-> Date: Thu, 22 Sep 2022 11:05:30 -0400
-> Subject: [PATCH] scsi: sg: fix memory-use-after-free on device removal
-> 
-> Fix memory-use-after-free race when closing a sg fd to a removed device.
-> 
-> Link: https://lore.kernel.org/linux-scsi/CAB7eexK_jr1LWOO9RWrBF9as7gAS9kpHjrZFRuRrRJF=1H4W6A@mail.gmail.com/
-> Reported-by: Rondreis <linhaoguo86@gmail.com>
-> Cc: <stable@vger.kernel.org>
-> Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
-> ---
->   drivers/scsi/sg.c | 2 ++
->   1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-> index 340b050ad28d..f44cbe42dba9 100644
-> --- a/drivers/scsi/sg.c
-> +++ b/drivers/scsi/sg.c
-> @@ -388,6 +388,7 @@ sg_release(struct inode *inode, struct file *filp)
->   		return -ENXIO;
->   	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp, "sg_release\n"));
->   
-> +	kref_get(&sdp->d_ref);
->   	mutex_lock(&sdp->open_rel_lock);
->   	scsi_autopm_put_device(sdp->device);
->   	kref_put(&sfp->f_ref, sg_remove_sfp);
-> @@ -402,6 +403,7 @@ sg_release(struct inode *inode, struct file *filp)
->   		wake_up_interruptible(&sdp->open_wait);
->   	}
->   	mutex_unlock(&sdp->open_rel_lock);
-> +	kref_put(&sdp->d_ref, sg_device_destroy);
->   	return 0;
->   }
->  
+There are spelling mistakes in a log message and two comments. Fix them.
 
+Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
+---
+ drivers/scsi/lpfc/lpfc_bsg.c | 4 ++--
+ drivers/scsi/lpfc/lpfc_ct.c  | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-Hi Rondreis,
-Have you been able to test the above patch from Tony?
-
-Doug Gilbert
+diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+index ac0c7ccf2eae..852b025e2fec 100644
+--- a/drivers/scsi/lpfc/lpfc_bsg.c
++++ b/drivers/scsi/lpfc/lpfc_bsg.c
+@@ -2582,7 +2582,7 @@ static int lpfcdiag_loop_self_unreg(struct lpfc_hba *phba, uint16_t rpi)
+  *
+  * This function obtains the transmit and receive ids required to send
+  * an unsolicited ct command with a payload. A special lpfc FsType and CmdRsp
+- * flags are used to the unsolicted response handler is able to process
++ * flags are used to the unsolicited response handler is able to process
+  * the ct command sent on the same port.
+  **/
+ static int lpfcdiag_loop_get_xri(struct lpfc_hba *phba, uint16_t rpi,
+@@ -2874,7 +2874,7 @@ diag_cmd_data_alloc(struct lpfc_hba *phba,
+  * @len: Number of data bytes
+  *
+  * This function allocates and posts a data buffer of sufficient size to receive
+- * an unsolicted CT command.
++ * an unsolicited CT command.
+  **/
+ static int lpfcdiag_sli3_loop_post_rxbufs(struct lpfc_hba *phba, uint16_t rxxri,
+ 					  size_t len)
+diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+index 75fd2bfc212b..e941a99aa965 100644
+--- a/drivers/scsi/lpfc/lpfc_ct.c
++++ b/drivers/scsi/lpfc/lpfc_ct.c
+@@ -90,7 +90,7 @@ lpfc_ct_ignore_hbq_buffer(struct lpfc_hba *phba, struct lpfc_iocbq *piocbq,
+ 				get_job_ulpstatus(phba, piocbq));
+ 	}
+ 	lpfc_printf_log(phba, KERN_INFO, LOG_ELS,
+-			"0145 Ignoring unsolicted CT HBQ Size:%d "
++			"0145 Ignoring unsolicited CT HBQ Size:%d "
+ 			"status = x%x\n",
+ 			size, get_job_ulpstatus(phba, piocbq));
+ }
+-- 
+2.37.1
 
