@@ -2,112 +2,95 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3F61C32771
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Sep 2022 22:21:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69E30C04A95
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Sep 2022 22:23:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233907AbiI1WV0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Sep 2022 18:21:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37616 "EHLO
+        id S234620AbiI1WXs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Sep 2022 18:23:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39802 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234264AbiI1WVV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2022 18:21:21 -0400
-Received: from mail-wm1-x32f.google.com (mail-wm1-x32f.google.com [IPv6:2a00:1450:4864:20::32f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DF60F185B;
-        Wed, 28 Sep 2022 15:21:18 -0700 (PDT)
-Received: by mail-wm1-x32f.google.com with SMTP id e10-20020a05600c4e4a00b003b4eff4ab2cso2154579wmq.4;
-        Wed, 28 Sep 2022 15:21:18 -0700 (PDT)
+        with ESMTP id S233907AbiI1WXq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2022 18:23:46 -0400
+Received: from mail-ej1-x630.google.com (mail-ej1-x630.google.com [IPv6:2a00:1450:4864:20::630])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9291F1845;
+        Wed, 28 Sep 2022 15:23:45 -0700 (PDT)
+Received: by mail-ej1-x630.google.com with SMTP id nb11so29954976ejc.5;
+        Wed, 28 Sep 2022 15:23:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date;
-        bh=Wi426/C5OCiR5xNNz3hvTRVexYsTtTPGdXxj34f8Kp8=;
-        b=JiEggR/MF06JHR5dYMCJei+y1uf0Yd+FZSPdr2e+9UtML22r1XBe8igzZYuvp//D56
-         Bl5C3LVTW485F7h9pHFIugWD+8merXwEAu8+Vkl1DdEcME7JfuB9guoYx+o6/39NIgRl
-         BUHCnAjV3/ytFTZ6DqK8rW8yJo0z3RJBhr/wBLRTWUxAkR4tcfYqTZlVwn+x35ByIVdF
-         17MhGjQpDhbN74tmI8UyRs4W2IckugZw3J25sIgUhk3e6+e6FIWRX0XxLGe7mA3Rgw8/
-         EUDryQoTIuVIX3l96Q0um2zn4RsPk91A5FdZM5ICUxvdv2+N4Vlk/7u/kmF/kUXjqPg6
-         z5TA==
+        bh=WDKi9txDnR96mWTFi3TxoUHk50O1PPK5PS3apLyu50E=;
+        b=Q420+RDZ9YEImmbhuVex18abBnGNeUJaYkULZCE8MjRpGLkAWraDBnm6acQt441jzu
+         RjeaPZsS63KonbulSz8DMxk8X+imZFpCnh9pJqW0SGcB8zFAdOGRkhSmAzhH8IVJPRmB
+         Y8DljLGoLv3Q6M0C4hBOcy00fuZYZwE0rBICqMbHUJKn1j92nUEHXKUInKQm4IvNUNu0
+         ZbLp2Lw0GWNKfdfohKOpNY2o8evaC+b842lHyu4VFiid5JfYoWJ3tvrdzyEcnJ11sf3s
+         sCnlgdumCwyTRSzDRQajZndUn+pOz62W6ZM3oCRtURFdFnP4W16tSLjpybhpZzAqwYNx
+         a/9g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-message-state:from:to:cc:subject:date;
-        bh=Wi426/C5OCiR5xNNz3hvTRVexYsTtTPGdXxj34f8Kp8=;
-        b=nGGU8x5bA6FH4KgxRzAZwzvrIG+db5rEOeWKdwKb4XkCj3oyF+A+OSGfi9I5TPkoFJ
-         1kjBkUxk9OZ7vNTqp8ohZrBoyTGqvCzutZT379rs9sasOe1QrCLF9P83xYBhmbDghNFx
-         S87R6F4tTyD4W6BwrgfG944es/J+F5zJDtmuNrd7MFA7Ak6TpDzveTy7kpOV1JsnCDA/
-         OLltr/HkYBD1qH1rLu6vrwx50aesqqfmPltPcPnIMncPuw0aOpJZowhxcViIrXMbhB8o
-         2ymuhOojq0ETu5Pas8Qqa7Mehm4MSMHcCxJW9+05KE2Ksh7qUSqXx07Eu54bKntitUxv
-         6BOw==
-X-Gm-Message-State: ACrzQf268FQgu9w3Mn7/K2QeKTRsW5G2FKIQBDicH+j5IYeW+Gthkxzr
-        ugTgb7iCUdyo9ztFNJftVlk=
-X-Google-Smtp-Source: AMsMyM7sjJNt8F/25DP65Qd9rESmJhYbPfew3piOcnzoKjMMnGPyN4Ylz7RtgSB7vCCj0qGJ69gByg==
-X-Received: by 2002:a7b:ca53:0:b0:3b4:90c4:e07 with SMTP id m19-20020a7bca53000000b003b490c40e07mr127772wml.150.1664403677213;
-        Wed, 28 Sep 2022 15:21:17 -0700 (PDT)
-Received: from localhost (cpc154979-craw9-2-0-cust193.16-3.cable.virginm.net. [80.193.200.194])
-        by smtp.gmail.com with ESMTPSA id 2-20020a05600c228200b003a6a3595edasm2753094wmf.27.2022.09.28.15.21.16
+        bh=WDKi9txDnR96mWTFi3TxoUHk50O1PPK5PS3apLyu50E=;
+        b=TT31nLoZO6xo0MjP0XOgE00DGF+YFUBREaTOhypw6yeRxB3HVkTCBPgnNvjgDTcs/a
+         3f5J6TTTa2o5itTuEgU6WIBaZWAHYHP/lCJITxkY7W7BFWWfy+jIDtT77l96achLvHq/
+         XhtVBLa8L1PH68nzrfaA45haswQbWP4DHNnbSORTGT5vYY1vRaFTmO5aOnPUOdEvNquG
+         F1tkNjvX1tjJKfMNWx+AHZXZWBUDmlataUWlPgUb5F41hsoFRwyMBd6jvUPn9CUx53jH
+         fBPIu7ZztT6JbR8q5r6Om4Kjx9U+37r0ZfRPKsYbepZD2ZTA2nxpY9OzvXXiWkRVcs4/
+         9Zhw==
+X-Gm-Message-State: ACrzQf0j5Kxb/ROnG36hYKE2UAnV3ELeWfRlZ4a7s0RQcqbhzkssxQ8u
+        pL0oCSU55dWnH2hcZq1Ir8z0UBm7/0k=
+X-Google-Smtp-Source: AMsMyM5JP6IoEv35aAYdToM34wFs3ep9GC12AMZr1h0AB7Qa5VpmC8ivQ9oOPASEe+12mtWYAGlxlw==
+X-Received: by 2002:a17:907:6d98:b0:782:a1b5:9636 with SMTP id sb24-20020a1709076d9800b00782a1b59636mr86475ejc.177.1664403824416;
+        Wed, 28 Sep 2022 15:23:44 -0700 (PDT)
+Received: from localhost.localdomain ([2a02:810d:6e40:e18:7e7c:1993:f196:df58])
+        by smtp.gmail.com with ESMTPSA id kt27-20020a170906aadb00b0073d9a0d0cbcsm2939537ejb.72.2022.09.28.15.23.42
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Sep 2022 15:21:16 -0700 (PDT)
-From:   Colin Ian King <colin.i.king@gmail.com>
-To:     James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: lpfc: Fix spelling mistake "unsolicted" -> "unsolicited"
-Date:   Wed, 28 Sep 2022 23:21:16 +0100
-Message-Id: <20220928222116.68294-1-colin.i.king@gmail.com>
-X-Mailer: git-send-email 2.37.1
+        Wed, 28 Sep 2022 15:23:43 -0700 (PDT)
+From:   Markus Fuchs <mklntf@gmail.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kernel-janitors@vger.kernel.org, Markus Fuchs <mklntf@gmail.com>
+Subject: [PATCH] scsi: ufs: Remove unneeded casts from void *
+Date:   Thu, 29 Sep 2022 00:22:42 +0200
+Message-Id: <20220928222241.131334-1-mklntf@gmail.com>
+X-Mailer: git-send-email 2.37.3
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-There are spelling mistakes in a log message and two comments. Fix them.
+The end_io_data member of the "struct request" type has type "void *", so no
+cast is necessary.
 
-Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
+Signed-off-by: Markus Fuchs <mklntf@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_bsg.c | 4 ++--
- drivers/scsi/lpfc/lpfc_ct.c  | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/ufs/core/ufshpb.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
-index ac0c7ccf2eae..852b025e2fec 100644
---- a/drivers/scsi/lpfc/lpfc_bsg.c
-+++ b/drivers/scsi/lpfc/lpfc_bsg.c
-@@ -2582,7 +2582,7 @@ static int lpfcdiag_loop_self_unreg(struct lpfc_hba *phba, uint16_t rpi)
-  *
-  * This function obtains the transmit and receive ids required to send
-  * an unsolicited ct command with a payload. A special lpfc FsType and CmdRsp
-- * flags are used to the unsolicted response handler is able to process
-+ * flags are used to the unsolicited response handler is able to process
-  * the ct command sent on the same port.
-  **/
- static int lpfcdiag_loop_get_xri(struct lpfc_hba *phba, uint16_t rpi,
-@@ -2874,7 +2874,7 @@ diag_cmd_data_alloc(struct lpfc_hba *phba,
-  * @len: Number of data bytes
-  *
-  * This function allocates and posts a data buffer of sufficient size to receive
-- * an unsolicted CT command.
-+ * an unsolicited CT command.
-  **/
- static int lpfcdiag_sli3_loop_post_rxbufs(struct lpfc_hba *phba, uint16_t rxxri,
- 					  size_t len)
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index 75fd2bfc212b..e941a99aa965 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -90,7 +90,7 @@ lpfc_ct_ignore_hbq_buffer(struct lpfc_hba *phba, struct lpfc_iocbq *piocbq,
- 				get_job_ulpstatus(phba, piocbq));
- 	}
- 	lpfc_printf_log(phba, KERN_INFO, LOG_ELS,
--			"0145 Ignoring unsolicted CT HBQ Size:%d "
-+			"0145 Ignoring unsolicited CT HBQ Size:%d "
- 			"status = x%x\n",
- 			size, get_job_ulpstatus(phba, piocbq));
+diff --git a/drivers/ufs/core/ufshpb.c b/drivers/ufs/core/ufshpb.c
+index a1a7a1175a5a..0ce5063bedc5 100644
+--- a/drivers/ufs/core/ufshpb.c
++++ b/drivers/ufs/core/ufshpb.c
+@@ -615,14 +615,14 @@ static void ufshpb_activate_subregion(struct ufshpb_lu *hpb,
+ 
+ static void ufshpb_umap_req_compl_fn(struct request *req, blk_status_t error)
+ {
+-	struct ufshpb_req *umap_req = (struct ufshpb_req *)req->end_io_data;
++	struct ufshpb_req *umap_req = req->end_io_data;
+ 
+ 	ufshpb_put_req(umap_req->hpb, umap_req);
  }
+ 
+ static void ufshpb_map_req_compl_fn(struct request *req, blk_status_t error)
+ {
+-	struct ufshpb_req *map_req = (struct ufshpb_req *) req->end_io_data;
++	struct ufshpb_req *map_req = req->end_io_data;
+ 	struct ufshpb_lu *hpb = map_req->hpb;
+ 	struct ufshpb_subregion *srgn;
+ 	unsigned long flags;
 -- 
-2.37.1
+2.37.3
 
