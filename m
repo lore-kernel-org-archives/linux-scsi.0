@@ -2,25 +2,25 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D21DCC32771
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Sep 2022 06:39:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B85DC6FA86
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Sep 2022 06:39:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233112AbiI1Gjm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Sep 2022 02:39:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50024 "EHLO
+        id S233117AbiI1Gjo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Sep 2022 02:39:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50028 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233015AbiI1Gji (ORCPT
+        with ESMTP id S233049AbiI1Gji (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2022 02:39:38 -0400
 Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B2D31ED204;
-        Tue, 27 Sep 2022 23:39:31 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D80FE1F;
+        Tue, 27 Sep 2022 23:39:32 -0700 (PDT)
 Received: from canpemm500004.china.huawei.com (unknown [172.30.72.56])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Mcmvb4t7szWgy6;
-        Wed, 28 Sep 2022 14:35:23 +0800 (CST)
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Mcmvd0CY2zWgyd;
+        Wed, 28 Sep 2022 14:35:25 +0800 (CST)
 Received: from huawei.com (10.175.127.227) by canpemm500004.china.huawei.com
  (7.192.104.92) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Wed, 28 Sep
- 2022 14:39:28 +0800
+ 2022 14:39:30 +0800
 From:   Jason Yan <yanaijie@huawei.com>
 To:     <martin.petersen@oracle.com>, <jejb@linux.ibm.com>
 CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
@@ -29,9 +29,9 @@ CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <damien.lemoal@opensource.wdc.com>,
         Jason Yan <yanaijie@huawei.com>,
         Jack Wang <jinpu.wang@ionos.com>
-Subject: [PATCH v6 3/8] scsi: pm8001: use sas_find_attached_phy_id() instead of open coded
-Date:   Wed, 28 Sep 2022 15:01:25 +0800
-Message-ID: <20220928070130.3657183-4-yanaijie@huawei.com>
+Subject: [PATCH v6 5/8] scsi: hisi_sas: use sas_find_attathed_phy_id() instead of open coded
+Date:   Wed, 28 Sep 2022 15:01:27 +0800
+Message-ID: <20220928070130.3657183-6-yanaijie@huawei.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20220928070130.3657183-1-yanaijie@huawei.com>
 References: <20220928070130.3657183-1-yanaijie@huawei.com>
@@ -46,51 +46,48 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The attached phy id finding is open coded. Now we can replace it with
+The attached phy finding is open coded. Now we can replace it with
 sas_find_attached_phy_id(). To keep consistent, the return value of
-pm8001_dev_found_notify() is also changed to -ENODEV after calling
+hisi_sas_dev_found() is also changed to -ENODEV after calling
 sas_find_attathed_phy_id() failed.
 
 Signed-off-by: Jason Yan <yanaijie@huawei.com>
 Reviewed-by: Jack Wang <jinpu.wang@ionos.com>
 Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 ---
- drivers/scsi/pm8001/pm8001_sas.c | 18 ++++++------------
- 1 file changed, 6 insertions(+), 12 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 14 +++-----------
+ 1 file changed, 3 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index 8e3f2f9ddaac..b4007c4f157d 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -645,22 +645,16 @@ static int pm8001_dev_found_notify(struct domain_device *dev)
- 	pm8001_device->dcompletion = &completion;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 33af5b8dede2..13415cfd3575 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -792,22 +792,14 @@ static int hisi_sas_dev_found(struct domain_device *device)
+ 
  	if (parent_dev && dev_is_expander(parent_dev->dev_type)) {
- 		int phy_id;
+ 		int phy_no;
+-		u8 phy_num = parent_dev->ex_dev.num_phys;
 -		struct ex_phy *phy;
--		for (phy_id = 0; phy_id < parent_dev->ex_dev.num_phys;
--		phy_id++) {
--			phy = &parent_dev->ex_dev.ex_phy[phy_id];
--			if (SAS_ADDR(phy->attached_sas_addr)
--				== SAS_ADDR(dev->sas_addr)) {
--				pm8001_device->attached_phy = phy_id;
+ 
+-		for (phy_no = 0; phy_no < phy_num; phy_no++) {
+-			phy = &parent_dev->ex_dev.ex_phy[phy_no];
+-			if (SAS_ADDR(phy->attached_sas_addr) ==
+-				SAS_ADDR(device->sas_addr))
 -				break;
--			}
 -		}
--		if (phy_id == parent_dev->ex_dev.num_phys) {
-+
-+		phy_id = sas_find_attached_phy_id(&parent_dev->ex_dev, dev);
-+		if (phy_id < 0) {
- 			pm8001_dbg(pm8001_ha, FAIL,
- 				   "Error: no attached dev:%016llx at ex:%016llx.\n",
- 				   SAS_ADDR(dev->sas_addr),
- 				   SAS_ADDR(parent_dev->sas_addr));
--			res = -1;
-+			res = phy_id;
-+		} else {
-+			pm8001_device->attached_phy = phy_id;
+-
+-		if (phy_no == phy_num) {
++		phy_no = sas_find_attached_phy_id(&parent_dev->ex_dev, device);
++		if (phy_no < 0) {
+ 			dev_info(dev, "dev found: no attached "
+ 				 "dev:%016llx at ex:%016llx\n",
+ 				 SAS_ADDR(device->sas_addr),
+ 				 SAS_ADDR(parent_dev->sas_addr));
+-			rc = -EINVAL;
++			rc = phy_no;
+ 			goto err_out;
  		}
- 	} else {
- 		if (dev->dev_type == SAS_SATA_DEV) {
+ 	}
 -- 
 2.31.1
 
