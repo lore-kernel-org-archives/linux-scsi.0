@@ -2,142 +2,157 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 489B6C04A95
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Sep 2022 07:49:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FD7BC07E9D
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Sep 2022 07:56:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235442AbiI2Htb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 29 Sep 2022 03:49:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43820 "EHLO
+        id S235106AbiI2H4k (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 29 Sep 2022 03:56:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35082 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235379AbiI2Ht0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Sep 2022 03:49:26 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2BCC13A956;
-        Thu, 29 Sep 2022 00:49:20 -0700 (PDT)
-Received: from fraeml714-chm.china.huawei.com (unknown [172.18.147.226])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MdQVG5gGkz6HJTS;
-        Thu, 29 Sep 2022 15:49:10 +0800 (CST)
-Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml714-chm.china.huawei.com (10.206.15.33) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Thu, 29 Sep 2022 09:49:17 +0200
-Received: from [10.126.170.84] (10.126.170.84) by
- lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Thu, 29 Sep 2022 08:49:17 +0100
-Message-ID: <e4aa7b2b-3fab-14f9-8af5-8b4c37afb13f@huawei.com>
-Date:   Thu, 29 Sep 2022 08:49:20 +0100
+        with ESMTP id S234900AbiI2H4f (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Sep 2022 03:56:35 -0400
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26D7E13A077
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Sep 2022 00:56:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1664438194; x=1695974194;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=8+7jrNgrZjInF4YQCngqsA8zpNl71K0ZbDC0AH3WGWQ=;
+  b=c4nhZVKJRddFSiNqrmtpHhN3n6n35rKv/HN0k3gcyvviiQj6CVymqb4E
+   vAXr2sHJ1x/W9XNoDmPJ/HH/dP5L0hV1hQ9pZjPnvjvp6zqvifE0OqLCK
+   n9UV/gg8DHOVa5fb6EgTb9rBl7UOOYDxkRgflRwPchXIpQtZbmLw1aEGM
+   aOZwfsXkIA8gTe1R6wGKDMMG3VpFiGxQr9wdpGzf3VxSeTom05GJu+VfD
+   svpf56j6PvCfAiBjYBl00mE354hlm+fvsfNb3sLEEtMlllRPxAT1bzMA+
+   9xqlFFFfeYwOfDebFcrhb5i7jaJRQT9/xVo7FsKW6yywZG+C9Y/3HVReA
+   A==;
+X-IronPort-AV: E=Sophos;i="5.93,354,1654531200"; 
+   d="scan'208";a="212560705"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 29 Sep 2022 15:56:33 +0800
+IronPort-SDR: 7FguYqFiJ+xHKXt0/9pjLUKVoYdHkK94l0P6lj3F1q7ttCSd+C46e5+6RmwV3cBZfizTj88YpF
+ v+wzN9z1v1V+Bsht/KUGmYhUYz5FcPyh1spsFSTy6KUpUV4IQ3ucJBCacX3SpX73h/EWegf/aN
+ k0zrFt/8HFjBUzrNu4CmHAtgKej82Qje9eBjPJzv2PFhM2xlZSI/Y2norllIFA5bXaxnK8gR+y
+ 0/5OeM16e1u7Bcg2j8w/vhVZC5sRFwYV3So6d+wT8Wqyi5uPXcvhuN65JG2eRry/HO3k5A2fmF
+ JLa1rJdDGJoTQ+pkW5l3/qOl
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 29 Sep 2022 00:10:55 -0700
+IronPort-SDR: 9HObrkdm/OtmJKhMMfdNuoRpw8V0TMnr9KTaAGbmvGvMnYp8gpKxVbTyutcNu5teGDJAyHnc/j
+ JdGXK6G9TfP+w1/8FRAQzZVrdym09lvFaJTNgPJz4mk9j5Z7hIxw9awNh6PFv3XCGAvL8PXHWt
+ SOoldHVQwGt5SwyX0wpzmhDFZOfXopB6xYivrgMQggitAj4ysrN+gqqL/4K3DRadxwFXPudhOn
+ qALxeRsEhFwBWgc4YdSXOmse/gJOVgyKz6/rp9hH5dV7y4NhLPpM+IEonMpSa4GSk7Id0Ey3yh
+ u0c=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 29 Sep 2022 00:56:34 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MdQfm6rLrz1Rwt8
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Sep 2022 00:56:32 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:content-language:references:to
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1664438192; x=1667030193; bh=8+7jrNgrZjInF4YQCngqsA8zpNl71K0ZbDC
+        0AH3WGWQ=; b=XZIhT6abVWLd/1XfGbSyhyg+CGiApcQkN85nUAQbY/seNhVqRZ0
+        45EFQgddcjyQrmQ//JzeWHbPyucw6DV6E8e1JxLYQqthYGgy9o9kSIgovTAj9TVu
+        rq5EeanXiY3oh9OccYqzDwi5UynCZ810Ytu/mX2T9Lsn7IOK1BoC7qsMnxnVUW+J
+        LNTe1tHPetezm9rbTziXoLw1Z99nIz51I8zcojpgCauLWSU8zbwBS1rmthsERyGN
+        +bxHpqQv0nQM/thC/DeXbhBWm2nedfZqRdRZ/78Z4OkZAPzm8yZ8TRCuj9QXALH2
+        XkWAC8D/i9bO7pvceahC3scwCkSvTrufPXQ==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id nDmROra-zqjF for <linux-scsi@vger.kernel.org>;
+        Thu, 29 Sep 2022 00:56:32 -0700 (PDT)
+Received: from [10.225.163.96] (unknown [10.225.163.96])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MdQfk1SrDz1RvLy;
+        Thu, 29 Sep 2022 00:56:29 -0700 (PDT)
+Message-ID: <d938ff8d-caaf-9221-e598-62e7e04aa907@opensource.wdc.com>
+Date:   Thu, 29 Sep 2022 16:56:28 +0900
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-From:   John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH 6/6] scsi: mvsas: Use sas_task_find_rq() for tagging
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <jinpu.wang@cloud.ionos.com>, <damien.lemoal@wdc.com>
-CC:     <hare@suse.de>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>,
-        <ipylypiv@google.com>, <changyuanl@google.com>, <hch@lst.de>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.0
+Subject: Re: [PATCH 1/6] scsi: libsas: Add sas_task_find_rq()
+To:     John Garry <john.garry@huawei.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, jinpu.wang@cloud.ionos.com,
+        damien.lemoal@wdc.com
+Cc:     hare@suse.de, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linuxarm@huawei.com,
+        ipylypiv@google.com, changyuanl@google.com, hch@lst.de
 References: <1664368034-114991-1-git-send-email-john.garry@huawei.com>
- <1664368034-114991-7-git-send-email-john.garry@huawei.com>
- <53e304b4-c025-e884-c8f5-6c2e96cc0052@opensource.wdc.com>
-In-Reply-To: <53e304b4-c025-e884-c8f5-6c2e96cc0052@opensource.wdc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+ <1664368034-114991-2-git-send-email-john.garry@huawei.com>
+ <0c0306d7-2645-874a-9745-8aa5dcfeede1@opensource.wdc.com>
+ <1356c5b0-5cd7-b006-1b34-a66a34e23fb4@huawei.com>
+Content-Language: en-US
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <1356c5b0-5cd7-b006-1b34-a66a34e23fb4@huawei.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.126.170.84]
-X-ClientProxiedBy: lhrpeml100006.china.huawei.com (7.191.160.224) To
- lhrpeml500003.china.huawei.com (7.191.162.67)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 29/09/2022 03:22, Damien Le Moal wrote:
-> On 9/28/22 21:27, John Garry wrote:
->> The request associated with a scsi command coming from the block layer
->> has a unique tag, so use that when possible for getting a slot.
+On 9/29/22 16:33, John Garry wrote:
+> On 29/09/2022 03:09, Damien Le Moal wrote:
+>> On 9/28/22 21:27, John Garry wrote:
+>>> blk-mq already provides a unique tag per request. Some libsas LLDDs - like
+>>> hisi_sas - already use this tag as the unique per-IO HW tag.
+>>>
+>>> Add a common function to provide the request associated with a sas_task
+>>> for all libsas LLDDs.
+>>>
+>>> Signed-off-by: John Garry <john.garry@huawei.com>
+>>> ---
+>>>   include/scsi/libsas.h | 22 ++++++++++++++++++++++
+>>>   1 file changed, 22 insertions(+)
+>>>
+>>> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+>>> index f86b56bf7833..bc51756a3317 100644
+>>> --- a/include/scsi/libsas.h
+>>> +++ b/include/scsi/libsas.h
+>>> @@ -644,6 +644,28 @@ static inline bool sas_is_internal_abort(struct sas_task *task)
+>>>   	return task->task_proto == SAS_PROTOCOL_INTERNAL_ABORT;
+>>>   }
+>>>   
+>>> +static inline struct request *sas_task_find_rq(struct sas_task *task)
+>>> +{
+>>> +	struct scsi_cmnd *scmd;
+>>> +
+>>> +	if (!task || !task->uldd_task)
+>>> +		return NULL;
+>>> +
+>>> +	if (task->task_proto & SAS_PROTOCOL_STP_ALL) {
+>>> +		struct ata_queued_cmd *qc;
+>>> +
+>>> +		qc = task->uldd_task;
 >>
->> Unfortunately we don't support reserved commands in the SCSI midlayer yet.
->> As such, SMP tasks - as an example - will not have a request associated, so
->> in the interim continue to manage those tags for that type of sas_task
->> internally.
+>> I would change these 2 lines into a single line:
 >>
->> We reserve an arbitrary 4 tags for these internal tags. Indeed, we already
->> decrement MVS_RSVD_SLOTS by 2 for the shost can_queue when flag
->> MVF_FLAG_SOC is set. This change was made in commit 20b09c2992fef
->> ("[PATCH] [SCSI] mvsas: add support for 94xx; layout change; bug fixes"),
->> but what those 2 slots are used for is not obvious.
+>> 		struct ata_queued_cmd *qc = task->uldd_task;
 >>
->> Signed-off-by: John Garry <john.garry@huawei.com>
->> ---
->>   drivers/scsi/mvsas/mv_defs.h |  1 +
->>   drivers/scsi/mvsas/mv_init.c |  4 ++--
->>   drivers/scsi/mvsas/mv_sas.c  | 22 +++++++++++++++++-----
->>   drivers/scsi/mvsas/mv_sas.h  |  1 -
->>   4 files changed, 20 insertions(+), 8 deletions(-)
+>> And no cast as suggested.
 >>
->> diff --git a/drivers/scsi/mvsas/mv_defs.h b/drivers/scsi/mvsas/mv_defs.h
->> index 7123a2efbf58..8ef174cd4d37 100644
->> --- a/drivers/scsi/mvsas/mv_defs.h
->> +++ b/drivers/scsi/mvsas/mv_defs.h
->> @@ -40,6 +40,7 @@ enum driver_configuration {
->>   	MVS_ATA_CMD_SZ		= 96,	/* SATA command table buffer size */
->>   	MVS_OAF_SZ		= 64,	/* Open address frame buffer size */
->>   	MVS_QUEUE_SIZE		= 64,	/* Support Queue depth */
->> +	MVS_RSVD_SLOTS		= 4,
->>   	MVS_SOC_CAN_QUEUE	= MVS_SOC_SLOTS - 2,
->>   };
->>   
->> diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
->> index c85fb812ad43..d834ed9e8e4a 100644
->> --- a/drivers/scsi/mvsas/mv_init.c
->> +++ b/drivers/scsi/mvsas/mv_init.c
->> @@ -284,7 +284,7 @@ static int mvs_alloc(struct mvs_info *mvi, struct Scsi_Host *shost)
->>   			printk(KERN_DEBUG "failed to create dma pool %s.\n", pool_name);
->>   			goto err_out;
->>   	}
->> -	mvi->tags_num = slot_nr;
->> +	mvi->tags_num = MVS_RSVD_SLOTS;
+>>> +		scmd = qc->scsicmd;
 > 
-> Same comment as for pm8001: do you really need this field if the value
-> is always MVS_RSVD_SLOTS ?
+> So do you prefer:
+> 
+>   scmd = ((struct ata_queued_cmd *)task->uldd_task)->scsicmd
 
-Right, I don't need this struct member. Again I can just use this macro 
-directly.
+Not a fan of the cast approach suggested by Jason. I prefer my above
+suggestion, but no strong feeling about it. Either way will be OK.
 
 > 
->>   
->>   	return 0;
->>   err_out:
->> @@ -367,7 +367,7 @@ static struct mvs_info *mvs_pci_alloc(struct pci_dev *pdev,
->>   	mvi->sas = sha;
->>   	mvi->shost = shost;
->>   
->> -	mvi->tags = kzalloc(MVS_CHIP_SLOT_SZ>>3, GFP_KERNEL);
->> +	mvi->tags = kzalloc(MVS_RSVD_SLOTS, GFP_KERNEL);
+> As Jason suggested?
 > 
-> Field name ? reserved_tags ?
-> Also, the alloc seems wrong. This will allocate 4 bytes, but you only
-> need 4 bits. You could make this an unsigned long and not allocate
-> anything. 
+> Thanks,
+> John
 
-Well spotted. I should have questioned more why they had >>3 previously.
-
-But I would rather keep as a bitmap, i.e. *unsigned long for simplicity.
-
-> Same remark for pm8001 by the way.
-
-I think it's ok as it uses bitmap_zalloc()
-
-> 
-> That would cap MVS_RSVD_SLOTS to BITS_PER_LONG maximum, but that is easy
-> to check at compile time with a #if/#error.
-> 
-
-As above, I'd rather keep as a bitmap. It's a little inefficient, but is 
-a one off in the driver.
-
-Thanks,
-John
-
+-- 
+Damien Le Moal
+Western Digital Research
 
