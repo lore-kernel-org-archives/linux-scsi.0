@@ -2,46 +2,39 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70F5AC433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Sep 2022 13:26:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D418AC4332F
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Sep 2022 13:26:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235688AbiI2N0N (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 29 Sep 2022 09:26:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57760 "EHLO
+        id S235732AbiI2N02 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 29 Sep 2022 09:26:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59502 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235421AbiI2NZp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Sep 2022 09:25:45 -0400
+        with ESMTP id S235651AbiI2N0D (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Sep 2022 09:26:03 -0400
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB1F86554F;
-        Thu, 29 Sep 2022 06:25:42 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA500EDD15;
+        Thu, 29 Sep 2022 06:26:02 -0700 (PDT)
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id B78D268BFE; Thu, 29 Sep 2022 15:25:38 +0200 (CEST)
-Date:   Thu, 29 Sep 2022 15:25:38 +0200
+        id 7800E68BFE; Thu, 29 Sep 2022 15:25:59 +0200 (CEST)
+Date:   Thu, 29 Sep 2022 15:25:59 +0200
 From:   Christoph Hellwig <hch@lst.de>
 To:     Anuj Gupta <anuj20.g@samsung.com>
 Cc:     axboe@kernel.dk, hch@lst.de, kbusch@kernel.org,
         io-uring@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-block@vger.kernel.org, gost.dev@samsung.com,
-        linux-scsi@vger.kernel.org, Kanchan Joshi <joshi.k@samsung.com>
-Subject: Re: [PATCH for-next v11 04/13] nvme: refactor nvme_alloc_request
-Message-ID: <20220929132538.GA27768@lst.de>
-References: <20220929120632.64749-1-anuj20.g@samsung.com> <CGME20220929121643epcas5p4c58f6ebb794bde58981272cd33c69f9f@epcas5p4.samsung.com> <20220929120632.64749-5-anuj20.g@samsung.com>
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH for-next v11 05/13] block: rename bio_map_put to
+ blk_mq_map_bio_put
+Message-ID: <20220929132559.GB27768@lst.de>
+References: <20220929120632.64749-1-anuj20.g@samsung.com> <CGME20220929121647epcas5p2d4ca8ae0b83a1fce230914f586ee3cc0@epcas5p2.samsung.com> <20220929120632.64749-6-anuj20.g@samsung.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220929120632.64749-5-anuj20.g@samsung.com>
+In-Reply-To: <20220929120632.64749-6-anuj20.g@samsung.com>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
-
-On Thu, Sep 29, 2022 at 05:36:23PM +0530, Anuj Gupta wrote:
-> From: Kanchan Joshi <joshi.k@samsung.com>
-> 
-> nvme_alloc_request expects a large number of parameters.
-> Split this out into two functions to reduce number of parameters.
-> First one retains the name nvme_alloc_request, while second one is
-> named nvme_map_user_request.
 
 Looks good:
 
