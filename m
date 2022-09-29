@@ -2,146 +2,142 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07D77C433FE
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Sep 2022 14:13:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5D45C433FE
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Sep 2022 14:16:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235636AbiI2ON2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 29 Sep 2022 10:13:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57674 "EHLO
+        id S235587AbiI2OQ3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 29 Sep 2022 10:16:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36204 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235653AbiI2ONZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Sep 2022 10:13:25 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A1C21B8687
-        for <linux-scsi@vger.kernel.org>; Thu, 29 Sep 2022 07:13:23 -0700 (PDT)
+        with ESMTP id S235022AbiI2OQ2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Sep 2022 10:16:28 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6BD1153ED9
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Sep 2022 07:16:26 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 923D32189C;
-        Thu, 29 Sep 2022 14:13:22 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 4DA1E1F976;
+        Thu, 29 Sep 2022 14:16:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1664460802; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+        t=1664460985; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=U49k6+NWaxmQG7rz+tTdOPBp9QAGweACa79Ho9s7SxA=;
-        b=M/ur+Wo4e75EJNgOoxajQhoyLjGBmThB1KNSh/ehVaSHR0MaAepBsNnjsUmhnpDJ+0EKGE
-        Q1kQBZURZ6qSKtOszu3D/CoSbyRUzGt+WGKhgWCcSJ3YNlcrngldMVFxfIa5CQigNnufjP
-        V9o2yGNJ/55MlAru6+MeeXaEKADBaYY=
+        bh=uTfPcPotHuHkeuVC8PIQfVO+dJ2mVTIEBd6Wyabu8qc=;
+        b=AlbagWoW5QOZAOzIav69pUwxGQC/9fWd3Ji6dVAR8kqkpynKk/80jk1Wv3Cw8ubF900lga
+        GG0Plze/bKpmNtUmZxQ6mvu0Z8quEw0su5hzMMKouFzwmyx8FNkC/paPBA1HNCx7Es2wpp
+        F4Ixx4f/rDV4QKAaYLNQaPP93wt1ma0=
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 54EA013A71;
-        Thu, 29 Sep 2022 14:13:22 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 13A1713A71;
+        Thu, 29 Sep 2022 14:16:25 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id 8EeJEgKoNWM2OwAAMHmgww
-        (envelope-from <mwilck@suse.com>); Thu, 29 Sep 2022 14:13:22 +0000
-Message-ID: <80aa76848bb316781953775922e3509410734dd6.camel@suse.com>
-Subject: Re: [PATCH v2 23/35] scsi: Have scsi-ml retry sd_spinup_disk errors
+        id 5XI7A7moNWMNPQAAMHmgww
+        (envelope-from <mwilck@suse.com>); Thu, 29 Sep 2022 14:16:25 +0000
+Message-ID: <b9909eb1604176071fa26f59904fd620f9e47a10.camel@suse.com>
+Subject: Re: [PATCH v2 24/35] scsi: hp_sw: Have scsi-ml retry scsi_exec_req
+ errors
 From:   Martin Wilck <mwilck@suse.com>
 To:     Mike Christie <michael.christie@oracle.com>, bvanassche@acm.org,
         hch@lst.de, martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         james.bottomley@hansenpartnership.com
-Date:   Thu, 29 Sep 2022 16:13:21 +0200
-In-Reply-To: <20220929025407.119804-24-michael.christie@oracle.com>
+Date:   Thu, 29 Sep 2022 16:16:24 +0200
+In-Reply-To: <20220929025407.119804-25-michael.christie@oracle.com>
 References: <20220929025407.119804-1-michael.christie@oracle.com>
-         <20220929025407.119804-24-michael.christie@oracle.com>
+         <20220929025407.119804-25-michael.christie@oracle.com>
 Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: base64
 User-Agent: Evolution 3.44.4 
 MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2022-09-28 at 21:53 -0500, Mike Christie wrote:
-> This simplifies sd_spinup_disk so scsi-ml retries errors for it. Note
-> that
-> we retried specifically on a UA and also if scsi_status_is_good
-> returned
-> failed which could happen for all check conditions, so in this patch
-> we
-> don't check for only UAs.
->=20
-> We do not handle the outside loop's retries because we want to sleep
-> between tried and we don't support that yet.
->=20
-> Signed-off-by: Mike Christie <michael.christie@oracle.com>
-> ---
-> =A0drivers/scsi/sd.c | 76 ++++++++++++++++++++++++++++-----------------
-> --
-> =A01 file changed, 45 insertions(+), 31 deletions(-)
->=20
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index a35c089c3097..716e0c8ffa57 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -2064,50 +2064,64 @@ sd_spinup_disk(struct scsi_disk *sdkp)
-> =A0{
-> =A0=A0=A0=A0=A0=A0=A0=A0unsigned char cmd[10];
-> =A0=A0=A0=A0=A0=A0=A0=A0unsigned long spintime_expire =3D 0;
-> -=A0=A0=A0=A0=A0=A0=A0int retries, spintime;
-> +=A0=A0=A0=A0=A0=A0=A0int spintime;
-> =A0=A0=A0=A0=A0=A0=A0=A0unsigned int the_result;
-> =A0=A0=A0=A0=A0=A0=A0=A0struct scsi_sense_hdr sshdr;
-> =A0=A0=A0=A0=A0=A0=A0=A0int sense_valid =3D 0;
-> +=A0=A0=A0=A0=A0=A0=A0struct scsi_failure failures[] =3D {
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0{
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0.se=
-nse =3D SCMD_FAILURE_SENSE_ANY,
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0.as=
-c =3D SCMD_FAILURE_ASC_ANY,
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0.as=
-cq =3D SCMD_FAILURE_ASCQ_ANY,
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0.al=
-lowed =3D 3,
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0.re=
-sult =3D SAM_STAT_CHECK_CONDITION,
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0},
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0{
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0/*
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 * =
-Retry scsi status and host errors that
-> return
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 * =
-failure in scsi_status_is_good.
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 */
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0.re=
-sult =3D SAM_STAT_BUSY |
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0 SAM_STAT_RESERVATION_CONFLICT |
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0 SAM_STAT_TASK_SET_FULL |
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0 SAM_STAT_ACA_ACTIVE |
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0 SAM_STAT_TASK_ABORTED |
-
-I fail to understand how bitwise-or would work here. IIUC, this tries
-to replicate the logic to retry if (!scsi_status_is_good()). The result
-of this bitwise-or operation is 0x78, which matches all SAM_ codes
-except SAM_STAT_GOOD, SAM_STAT_CHECK_CONDITION and
-SAM_STAT_CONDITION_MET. SAM_STAT_CHECK_CONDITION is covered by the
-first failure. But unless I'm mistaken, we'd now retry on
-SAM_STAT_INTERMEDIATE, SAM_STAT_INTERMEDIATE_CONDITION_MET, and
-SAM_STAT_COMMAND_TERMINATED, on which the old code did not retry. Am I
-overlooking something?
-
-At least this deserves an in-depth comment; in general, as noted
-for patch 02/35, I find using bitwise or for SAM status counter-
-intuitive.
-
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0 DID_NO_CONNECT << 16,
-
-Shouldn't .allowed be set to 3 here? OTOH that would cause the number
-of retries to add up to 6, see my reply to 22/35. But don't see what
-effect a failure with allowed =3D 0 would have.
-
-
-Regards
-Martin
+T24gV2VkLCAyMDIyLTA5LTI4IGF0IDIxOjUzIC0wNTAwLCBNaWtlIENocmlzdGllIHdyb3RlOgo+
+IFRoaXMgaGFzIGhwX3N3IGhhdmUgc2NzaS1tbCByZXRyeSBzY3NpX2V4ZWNfcmVxIGVycm9ycyBp
+bnN0ZWFkIG9mCj4gZHJpdmluZwo+IHRoZW0gaXRzZWxmLgo+IAo+IFNpZ25lZC1vZmYtYnk6IE1p
+a2UgQ2hyaXN0aWUgPG1pY2hhZWwuY2hyaXN0aWVAb3JhY2xlLmNvbT4KPiAtLS0KPiCgZHJpdmVy
+cy9zY3NpL2RldmljZV9oYW5kbGVyL3Njc2lfZGhfaHBfc3cuYyB8IDU4ICsrKysrKysrKysrKyst
+LS0tLS0KPiAtLQo+IKAxIGZpbGUgY2hhbmdlZCwgMzUgaW5zZXJ0aW9ucygrKSwgMjMgZGVsZXRp
+b25zKC0pCj4gCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9kZXZpY2VfaGFuZGxlci9zY3Np
+X2RoX2hwX3N3LmMKPiBiL2RyaXZlcnMvc2NzaS9kZXZpY2VfaGFuZGxlci9zY3NpX2RoX2hwX3N3
+LmMKPiBpbmRleCBhZGNiZTNiODgzYjcuLmMxODY4MDlmMmUxNyAxMDA2NDQKPiAtLS0gYS9kcml2
+ZXJzL3Njc2kvZGV2aWNlX2hhbmRsZXIvc2NzaV9kaF9ocF9zdy5jCj4gKysrIGIvZHJpdmVycy9z
+Y3NpL2RldmljZV9oYW5kbGVyL3Njc2lfZGhfaHBfc3cuYwo+IEBAIC00Niw5ICs0Niw2IEBAIHN0
+YXRpYyBpbnQgdHVyX2RvbmUoc3RydWN0IHNjc2lfZGV2aWNlICpzZGV2LAo+IHN0cnVjdCBocF9z
+d19kaF9kYXRhICpoLAo+IKCgoKCgoKCgaW50IHJldCA9IFNDU0lfREhfSU87Cj4goAo+IKCgoKCg
+oKCgc3dpdGNoIChzc2hkci0+c2Vuc2Vfa2V5KSB7Cj4gLaCgoKCgoKBjYXNlIFVOSVRfQVRURU5U
+SU9OOgo+IC2goKCgoKCgoKCgoKCgoKByZXQgPSBTQ1NJX0RIX0lNTV9SRVRSWTsKPiAtoKCgoKCg
+oKCgoKCgoKCgYnJlYWs7Cj4goKCgoKCgoKBjYXNlIE5PVF9SRUFEWToKPiCgoKCgoKCgoKCgoKCg
+oKCgaWYgKHNzaGRyLT5hc2MgPT0gMHgwNCAmJiBzc2hkci0+YXNjcSA9PSAyKSB7Cj4goKCgoKCg
+oKCgoKCgoKCgoKCgoKCgoKCgLyoKPiBAQCAtODUsOCArODIsMTcgQEAgc3RhdGljIGludCBocF9z
+d190dXIoc3RydWN0IHNjc2lfZGV2aWNlICpzZGV2LAo+IHN0cnVjdCBocF9zd19kaF9kYXRhICpo
+KQo+IKCgoKCgoKCgaW50IHJldCA9IFNDU0lfREhfT0ssIHJlczsKPiCgoKCgoKCgoGJsa19vcGZf
+dCByZXFfZmxhZ3MgPSBSRVFfRkFJTEZBU1RfREVWIHwKPiBSRVFfRkFJTEZBU1RfVFJBTlNQT1JU
+IHwKPiCgoKCgoKCgoKCgoKCgoKCgUkVRX0ZBSUxGQVNUX0RSSVZFUjsKPiAroKCgoKCgoHN0cnVj
+dCBzY3NpX2ZhaWx1cmUgZmFpbHVyZXNbXSA9IHsKPiAroKCgoKCgoKCgoKCgoKCgewo+ICugoKCg
+oKCgoKCgoKCgoKCgoKCgoKCgoC5zZW5zZSA9IFVOSVRfQVRURU5USU9OLAo+ICugoKCgoKCgoKCg
+oKCgoKCgoKCgoKCgoC5hc2MgPSBTQ01EX0ZBSUxVUkVfQVNDX0FOWSwKPiAroKCgoKCgoKCgoKCg
+oKCgoKCgoKCgoKAuYXNjcSA9IFNDTURfRkFJTFVSRV9BU0NRX0FOWSwKPiAroKCgoKCgoKCgoKCg
+oKCgoKCgoKCgoKAuYWxsb3dlZCA9IFNDTURfRkFJTFVSRV9OT19MSU1JVCwKPiAroKCgoKCgoKCg
+oKCgoKCgoKCgoKCgoKAucmVzdWx0ID0gU0FNX1NUQVRfQ0hFQ0tfQ09ORElUSU9OLAo+ICugoKCg
+oKCgoKCgoKCgoKB9LAo+ICugoKCgoKCgoKCgoKCgoKB7fSwKPiAroKCgoKCgoH07Cj4goAo+IC1y
+ZXRyeToKPiCgoKCgoKCgoHJlcyA9IHNjc2lfZXhlY19yZXEoKChzdHJ1Y3Qgc2NzaV9leGVjX2Fy
+Z3MpIHsKPiCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoC5zZGV2ID0gc2RldiwKPiCg
+oKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoC5jbWQgPSBjbWQsCj4gQEAgLTk0LDcgKzEw
+MCw4IEBAIHN0YXRpYyBpbnQgaHBfc3dfdHVyKHN0cnVjdCBzY3NpX2RldmljZSAqc2RldiwKPiBz
+dHJ1Y3QgaHBfc3dfZGhfZGF0YSAqaCkKPiCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCg
+oC5zc2hkciA9ICZzc2hkciwKPiCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoC50aW1l
+b3V0ID0gSFBfU1dfVElNRU9VVCwKPiCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoC5y
+ZXRyaWVzID0gSFBfU1dfUkVUUklFUywKPiAtoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCg
+oC5vcF9mbGFncyA9IHJlcV9mbGFncyB9KSk7Cj4gK6CgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCg
+oKCgoKAub3BfZmxhZ3MgPSByZXFfZmxhZ3MsCj4gK6CgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCg
+oKCgoKAuZmFpbHVyZXMgPSBmYWlsdXJlcyB9KSk7Cj4goKCgoKCgoKBpZiAocmVzKSB7Cj4goKCg
+oKCgoKCgoKCgoKCgoGlmIChzY3NpX3NlbnNlX3ZhbGlkKCZzc2hkcikpCj4goKCgoKCgoKCgoKCg
+oKCgoKCgoKCgoKCgcmV0ID0gdHVyX2RvbmUoc2RldiwgaCwgJnNzaGRyKTsKPiBAQCAtMTA4LDgg
+KzExNSw2IEBAIHN0YXRpYyBpbnQgaHBfc3dfdHVyKHN0cnVjdCBzY3NpX2RldmljZSAqc2RldiwK
+PiBzdHJ1Y3QgaHBfc3dfZGhfZGF0YSAqaCkKPiCgoKCgoKCgoKCgoKCgoKCgaC0+cGF0aF9zdGF0
+ZSA9IEhQX1NXX1BBVEhfQUNUSVZFOwo+IKCgoKCgoKCgoKCgoKCgoKByZXQgPSBTQ1NJX0RIX09L
+Owo+IKCgoKCgoKCgfQo+IC2goKCgoKCgaWYgKHJldCA9PSBTQ1NJX0RIX0lNTV9SRVRSWSkKPiAt
+oKCgoKCgoKCgoKCgoKCgZ290byByZXRyeTsKPiCgCj4goKCgoKCgoKByZXR1cm4gcmV0Owo+IKB9
+Cj4gQEAgLTEyNiwxOSArMTMxLDMzIEBAIHN0YXRpYyBpbnQgaHBfc3dfc3RhcnRfc3RvcChzdHJ1
+Y3QKPiBocF9zd19kaF9kYXRhICpoKQo+IKCgoKCgoKCgc3RydWN0IHNjc2lfc2Vuc2VfaGRyIHNz
+aGRyOwo+IKCgoKCgoKCgc3RydWN0IHNjc2lfZGV2aWNlICpzZGV2ID0gaC0+c2RldjsKPiCgoKCg
+oKCgoGludCByZXMsIHJjID0gU0NTSV9ESF9PSzsKPiAtoKCgoKCgoGludCByZXRyeV9jbnQgPSBI
+UF9TV19SRVRSSUVTOwo+IKCgoKCgoKCgYmxrX29wZl90IHJlcV9mbGFncyA9IFJFUV9GQUlMRkFT
+VF9ERVYgfAo+IFJFUV9GQUlMRkFTVF9UUkFOU1BPUlQgfAo+IKCgoKCgoKCgoKCgoKCgoKBSRVFf
+RkFJTEZBU1RfRFJJVkVSOwo+ICugoKCgoKCgc3RydWN0IHNjc2lfZmFpbHVyZSBmYWlsdXJlc1td
+ID0gewo+ICugoKCgoKCgoKCgoKCgoKB7Cj4gK6CgoKCgoKCgoKCgoKCgoKCgoKCgoKCgLyoKPiAr
+oKCgoKCgoKCgoKCgoKCgoKCgoKCgoKAgKiBMVU4gbm90IHJlYWR5IC0gbWFudWFsIGludGVydmVu
+dGlvbgo+IHJlcXVpcmVkCj4gK6CgoKCgoKCgoKCgoKCgoKCgoKCgoKCgICoKPiAroKCgoKCgoKCg
+oKCgoKCgoKCgoKCgoKAgKiBTd2l0Y2gtb3ZlciBpbiBwcm9ncmVzcywgcmV0cnkuCj4gK6CgoKCg
+oKCgoKCgoKCgoKCgoKCgoKCgICovCj4gK6CgoKCgoKCgoKCgoKCgoKCgoKCgoKCgLnNlbnNlID0g
+Tk9UX1JFQURZLAo+ICugoKCgoKCgoKCgoKCgoKCgoKCgoKCgoC5hc2MgPSAweDA0LAo+ICugoKCg
+oKCgoKCgoKCgoKCgoKCgoKCgoC5hc2NxID0gMHgwMywKPiAroKCgoKCgoKCgoKCgoKCgoKCgoKCg
+oKAuYWxsb3dlZCA9IEhQX1NXX1JFVFJJRVMsCj4gK6CgoKCgoKCgoKCgoKCgoKCgoKCgoKCgLnJl
+c3VsdCA9IFNBTV9TVEFUX0NIRUNLX0NPTkRJVElPTiwKPiAroKCgoKCgoKCgoKCgoKCgfSwKPiAr
+oKCgoKCgoKCgoKCgoKCge30sCj4gK6CgoKCgoKB9Owo+IKAKPiAtcmV0cnk6Cj4goKCgoKCgoKBy
+ZXMgPSBzY3NpX2V4ZWNfcmVxKCgoc3RydWN0IHNjc2lfZXhlY19hcmdzKSB7Cj4gLaCgoKCgoKCg
+oKCgoKCgoKCgoKCgoKCgoKCgoKCgoKAuc2RldiA9IHNkZXYsCj4gLaCgoKCgoKCgoKCgoKCgoKCg
+oKCgoKCgoKCgoKCgoKAuY21kID0gY21kLAo+IC2goKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCg
+oKCgLmRhdGFfZGlyID0gRE1BX05PTkUsCj4gLaCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCg
+oKAuc3NoZHIgPSAmc3NoZHIsCj4gLaCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKAudGlt
+ZW91dCA9IEhQX1NXX1RJTUVPVVQsCj4gLaCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKAu
+cmV0cmllcyA9IEhQX1NXX1JFVFJJRVMsCj4gLaCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCg
+oKAub3BfZmxhZ3MgPSByZXFfZmxhZ3MgfSkpOwo+ICugoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCg
+oKCgoKCgoKCgoKCgoKAuc2RldiA9IHNkZXYsCj4gK6CgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCg
+oKCgoKCgoKCgoKCgoC5jbWQgPSBjbWQsCj4gK6CgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCg
+oKCgoKCgoKCgoC5kYXRhX2RpciA9IERNQV9OT05FLAo+ICugoKCgoKCgoKCgoKCgoKCgoKCgoKCg
+oKCgoKCgoKCgoKCgoKCgoKAuc3NoZHIgPSAmc3NoZHIsCj4gK6CgoKCgoKCgoKCgoKCgoKCgoKCg
+oKCgoKCgoKCgoKCgoKCgoKCgoC50aW1lb3V0ID0gSFBfU1dfVElNRU9VVCwKPiAroKCgoKCgoKCg
+oKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgLnJldHJpZXMgPSBIUF9TV19SRVRSSUVTLAo+
+ICugoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKAub3BfZmxhZ3MgPSByZXFf
+ZmxhZ3MsCj4gK6CgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoC5mYWlsdXJl
+cyA9IGZhaWx1cmVzIH0pKTsKCk5pdHBpY2s6IHRoaXMgbG9va3MgYXMgaWYgeW91IGhhZG4ndCBn
+b3QgdGhlIGluZGVudGF0aW9uIHJpZ2h0IGluCjA4LzM1LgoKTWFydGluCgo=
 
