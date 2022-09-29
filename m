@@ -2,53 +2,53 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B38DC54EE9
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Sep 2022 02:11:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 935CBC04A95
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Sep 2022 02:13:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234661AbiI2CLn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Sep 2022 22:11:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49450 "EHLO
+        id S234724AbiI2CNy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Sep 2022 22:13:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51854 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234640AbiI2CLl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2022 22:11:41 -0400
+        with ESMTP id S234478AbiI2CNu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2022 22:13:50 -0400
 Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8CA5C109113
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2022 19:11:40 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0AF311231CB
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2022 19:13:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1664417500; x=1695953500;
+  t=1664417616; x=1695953616;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=EZZKvbac486IIAN23kbUEoaUH8EfeBcildhXhph5gaw=;
-  b=Sc/BEQoB59LvS0DkbUY2Mr3MEDoWZUEHuLIinFXM7i4P3beH109qqTal
-   jU7vnkp5EottxMMHnAydrHCSFJsWPsbM13k7jMIk/AqhfO45gOoKHtbDj
-   kTfY7n98++UxRRSZ81dwrit2xwenMVvC5kCnrbN9hnZIeT636GXwRC3ZW
-   FS7eWI1RpAmhHGtquFu9koHOcD5H1Mzz8qbKwNCLXhpPS51BKorubXHTN
-   0RPGJctVBnFzrFvtSuT8MAu5az0iLtjQdFqidp42y52FRHg8QFkYm7gri
-   WfqlBr1NIRHg7PtLPKDWmgSW7C3rlkw3WOnQYL+9gTB3Mrf26CaNbamdl
-   g==;
+  bh=zO7nZwjO+4icIzTbYvPkCSib8Umt5/wCg9niVHxMLlk=;
+  b=jbqjKJbSWX1DQUFqHBuCbNM5sIiwysmCS/1ZC2zXaHZtFqUgHs+lAOho
+   Y+RDR+llLNDmB69FpxgnuuWIXhqmwhAlpNAtxHV3nO8S3UqWLq5qVKd4B
+   GrCa7UMjT5J2VkI9vGoMePRnsAtzhE73dUKmdofelDAmLSmi6yY6NjiP5
+   lbTsl+NbJl1L9lgxZc2b7iQMrUoDBDv5vLFVK2wyyxa8mradWnbVQ7J4a
+   jBhCamDfjHE48JfR0D6jCB0cTHd+ldbTZrgB+U+m2IdpbWMjjeyF6s9iK
+   v4YnaPyq2yv7BRqcBzyU9bs3qgDRCqctBJUkWU1xASj1sYOXBI89KU2pF
+   A==;
 X-IronPort-AV: E=Sophos;i="5.93,353,1654531200"; 
-   d="scan'208";a="217715548"
+   d="scan'208";a="217715652"
 Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 29 Sep 2022 10:11:39 +0800
-IronPort-SDR: yNOvUtjJl+7x8BcearrjbQ1X7IHUGfU3VinBb1S3Wt9jQ0/r+wsenTrnZOts+IDPH9yoTOCJvs
- bjW22z+7RLlatGe+xTuYfJuZAVRoEepOqCbCPeoQC88868G+6/d6algUoaymX5siGck9PQIZT7
- fL96Tfz8COFrFaDvtHlbibtFmgFJ+IS+yAfkF3sq8xEz+15sMdee3iRSE3fW7rTTsHRsjcjDDL
- qV90nk9VNAD+U+2KYW5kPo2CfJY3wtLGxIPvCPuwLORmj/Mf+9N+uZfU46HMhOT+74wikjLXLY
- z2qoAYxjvR2mfG2FqRggd/iS
+  by ob1.hgst.iphmx.com with ESMTP; 29 Sep 2022 10:13:21 +0800
+IronPort-SDR: G9AYORYaYD6Tulpl8d7UceNItZm9h2Yzd9ELqkbyTWGQxXncDtJ4ex7BUtQnnTK+dWDqyVgTem
+ WfniSlunSfov3uvj8muDgltp16G9yU160aLGTcSuf/PIb/oa3/0iaktFesuhR12HIxr2ECTkRH
+ eKpjrpZgn45vOMeQyoCVAvnbYz1c9h6aEJ0pkibsYNSvShW/Gdn7d/JJLunStQjMrtwE6gd3YL
+ n4d1r5esWODlyq5x07xyXmSXho+OeQeOpS/Kv5liNYEhYa8GGwxBQFRNOKxDspsbRB6DYpvDZI
+ uqHcLnH4A0XBzPTDmRPeeNv/
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Sep 2022 18:26:02 -0700
-IronPort-SDR: PG/Cn51H6zaDEyABqLFzBdI/us3I18yiEoTSHPIb430CQEdcRR7BkoGgGVqA9ustjkNYw+0CF5
- R/W0gcUdTkZ+wenN3KX2v7BSnB38ipJH760EqnFGPKuQ6HHQ5xLqru07nJUfptdgYLVd99P+Ho
- UYbXmLNmjCc9ALYB478RAxEDJC06bPYKOr9k8j3Ql3agHs6GRmpZD2ZDGBJNyrTDKz5OOkrTPH
- 1NP65SBaPECIts/EvbnaxxxWrGxp1zgofvvQclUbSvlpWc8MIyvtY3q+zXs0VRwfx+MGqtjB9f
- Cqc=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Sep 2022 18:27:44 -0700
+IronPort-SDR: KzxdbnNbOxRSGyVu1HCxldIiQCq6WAnHajPF4MmOKxYEsZegtQyXrHUWcHGX5vm4cFJvoA4Nlb
+ PTQ4sPw0oEeKlJRNBepgYcZO4+FsonzA96TY2b9igacXf4LyQlZx7RmpL73ssux1KNnHoiGSs8
+ W9DZ6sDMe716aR3lm+12BorKRSBAOvSYHyxT3cqDsN0vws8svV7MElBXm/uS1D0GTKHGefK4ZU
+ FU01il/iEq8wEyQTFdgo5KirPQecZ78gU2jMoDVqkJKsbjs9Ls3DyOZG+WqPiFH2XD6fdMsZaU
+ RH0=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Sep 2022 19:11:39 -0700
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Sep 2022 19:13:21 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MdH0p6gGhz1RwvT
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2022 19:11:38 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MdH2m3d8gz1RwvL
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2022 19:13:20 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,39 +56,38 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1664417498; x=1667009499; bh=EZZKvbac486IIAN23kbUEoaUH8EfeBcildh
-        Xhph5gaw=; b=Y08MyqDnpu03x7czKjvF9Gy76l0kbXLOSN9l/5PXkIy0bRTR+iO
-        O6c+2yllrQiWJvU0BqK4wEjW6J96Bmk90u2CRLac3ERFKtlfdj8UcbKeeChmLqWh
-        UWV52/zxmOm2MBDQ92JGIwaHiuWmup1R4KTJiSgUQ2DOLd7YpcyASlUbQXnUU3zb
-        9fOu2I1f19CqigOgG+u4zTdbhfNwnOkiSpudabxYlvBf1ySqpgPeeLbtbTz2FcgP
-        7GADU3ks7KOjiQm3oRQq8KLYPCHx6XSxidcbkpNI0Sci3edVxMRjEVZHjfPGJOab
-        hhlRVxg4ZFe+5ui9kDO5tMKsv4+5tSkW5pA==
+        1664417599; x=1667009600; bh=zO7nZwjO+4icIzTbYvPkCSib8Umt5/wCg9n
+        iVHxMLlk=; b=eippMOJlvNt9a/oYKGcweuLpNIa2Tfj3QAdweFFp1BpnpC3/pqC
+        A279Yy3Y3sSe32l40mZUaIyoP0JT0ZZZ91OmKEAzf2z5yo4i/Z/N60KCt2vYC/KO
+        aCzbY/3iIQ5uXv4n0xDMnuxT8/b07h+JRjRD/MwRBcU03sOsvmtLhKw69nnvbXhu
+        dehKy8uPhaeDVX74a/WGemLfk+Rq6f22yeFxZSUyjp5Sl0O30F/nN3LIrrPqWm8n
+        gHp4wn4K0dCm3xy3DY1lcbT5m2gO3qoL0WhRuDs3v4qsOyUvQgsc8pxEVzGQZLt3
+        En//iJWiiROTP6LqXJwHh1EBHQnKKjx8AeQ==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id shLMWdmKvtEi for <linux-scsi@vger.kernel.org>;
-        Wed, 28 Sep 2022 19:11:38 -0700 (PDT)
+        with ESMTP id qkXdXN3vfjpU for <linux-scsi@vger.kernel.org>;
+        Wed, 28 Sep 2022 19:13:19 -0700 (PDT)
 Received: from [10.149.53.254] (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MdH0l6t3hz1RvLy;
-        Wed, 28 Sep 2022 19:11:35 -0700 (PDT)
-Message-ID: <4737cbca-6250-00b8-a2be-1d98e2b8d04a@opensource.wdc.com>
-Date:   Thu, 29 Sep 2022 11:11:34 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MdH2j6QtYz1RvLy;
+        Wed, 28 Sep 2022 19:13:17 -0700 (PDT)
+Message-ID: <8163fce3-5ecb-193d-bec7-abca704e9e07@opensource.wdc.com>
+Date:   Thu, 29 Sep 2022 11:13:16 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.3.0
-Subject: Re: [PATCH 2/6] scsi: hisi_sas: Use sas_task_find_rq()
+Subject: Re: [PATCH 3/6] scsi: pm8001: Remove pm8001_tag_init()
 Content-Language: en-US
 To:     John Garry <john.garry@huawei.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, jinpu.wang@cloud.ionos.com,
-        damien.lemoal@wdc.com
+        martin.petersen@oracle.com, jinpu.wang@cloud.ionos.com
 Cc:     hare@suse.de, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org, linuxarm@huawei.com,
         ipylypiv@google.com, changyuanl@google.com, hch@lst.de
 References: <1664368034-114991-1-git-send-email-john.garry@huawei.com>
- <1664368034-114991-3-git-send-email-john.garry@huawei.com>
+ <1664368034-114991-4-git-send-email-john.garry@huawei.com>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <1664368034-114991-3-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1664368034-114991-4-git-send-email-john.garry@huawei.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -96,90 +95,93 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 9/28/22 21:27, John Garry wrote:
-> Use sas_task_find_rq() to lookup the request per task for its driver tag.
+> From: Igor Pylypiv <ipylypiv@google.com>
 > 
+> In commit 5a141315ed7c ("scsi: pm80xx: Increase the number of outstanding
+> I/O supported to 1024") the pm8001_ha->tags allocation was moved into
+> pm8001_init_ccb_tag(). This changed the execution order of allocation.
+> pm8001_tag_init() used to be called after the pm8001_ha->tags allocation
+> and now it is called before the allocation.
+> 
+> Before:
+> 
+> pm8001_pci_probe()
+> `--> pm8001_pci_alloc()
+>      `--> pm8001_alloc()
+>           `--> pm8001_ha->tags = kzalloc(...)
+>           `--> pm8001_tag_init(pm8001_ha); // OK: tags are allocated
+> 
+> After:
+> 
+> pm8001_pci_probe()
+> `--> pm8001_pci_alloc()
+> |    `--> pm8001_alloc()
+> |         `--> pm8001_tag_init(pm8001_ha); // NOK: tags are not allocated
+> |
+> `--> pm8001_init_ccb_tag()
+>      `-->  pm8001_ha->tags = kzalloc(...) // today it is bitmap_zalloc()
+> 
+> Since pm8001_ha->tags_num is zero when pm8001_tag_init() is called it does
+> nothing. Tags memory is allocated with bitmap_zalloc() so there is no need
+> to manually clear each bit with pm8001_tag_free().
+> 
+> Reviewed-by: Changyuan Lyu <changyuanl@google.com>
+> Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
 > Signed-off-by: John Garry <john.garry@huawei.com>
 
-Looks good, modulo the question below.
+Looks good.
 
 Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
 > ---
->  drivers/scsi/hisi_sas/hisi_sas_main.c | 26 ++++++++------------------
->  1 file changed, 8 insertions(+), 18 deletions(-)
+>  drivers/scsi/pm8001/pm8001_init.c | 2 --
+>  drivers/scsi/pm8001/pm8001_sas.c  | 7 -------
+>  drivers/scsi/pm8001/pm8001_sas.h  | 1 -
+>  3 files changed, 10 deletions(-)
 > 
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-> index 4c37ae9eb6b6..1011dffed51f 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-> @@ -177,13 +177,13 @@ static void hisi_sas_slot_index_set(struct hisi_hba *hisi_hba, int slot_idx)
+> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+> index a0028e130a7e..0edc9857a8bd 100644
+> --- a/drivers/scsi/pm8001/pm8001_init.c
+> +++ b/drivers/scsi/pm8001/pm8001_init.c
+> @@ -436,8 +436,6 @@ static int pm8001_alloc(struct pm8001_hba_info *pm8001_ha,
+>  		atomic_set(&pm8001_ha->devices[i].running_req, 0);
+>  	}
+>  	pm8001_ha->flags = PM8001F_INIT_TIME;
+> -	/* Initialize tags */
+> -	pm8001_tag_init(pm8001_ha);
+>  	return 0;
+>  
+>  err_out_nodev:
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+> index d5ec29f69be3..066dfa9f4683 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.c
+> +++ b/drivers/scsi/pm8001/pm8001_sas.c
+> @@ -96,13 +96,6 @@ int pm8001_tag_alloc(struct pm8001_hba_info *pm8001_ha, u32 *tag_out)
+>  	return 0;
 >  }
 >  
->  static int hisi_sas_slot_index_alloc(struct hisi_hba *hisi_hba,
-> -				     struct scsi_cmnd *scsi_cmnd)
-> +				     struct request *rq)
->  {
->  	int index;
->  	void *bitmap = hisi_hba->slot_index_tags;
->  
-> -	if (scsi_cmnd)
-> -		return scsi_cmd_to_rq(scsi_cmnd)->tag;
-> +	if (rq)
-> +		return rq->tag;
->  
->  	spin_lock(&hisi_hba->lock);
->  	index = find_next_zero_bit(bitmap, hisi_hba->slot_index_count,
-> @@ -461,11 +461,11 @@ static int hisi_sas_queue_command(struct sas_task *task, gfp_t gfp_flags)
->  	struct asd_sas_port *sas_port = device->port;
->  	struct hisi_sas_device *sas_dev = device->lldd_dev;
->  	bool internal_abort = sas_is_internal_abort(task);
-> -	struct scsi_cmnd *scmd = NULL;
->  	struct hisi_sas_dq *dq = NULL;
->  	struct hisi_sas_port *port;
->  	struct hisi_hba *hisi_hba;
->  	struct hisi_sas_slot *slot;
-> +	struct request *rq = NULL;
-
-Do you really need the NULL initialization here ?
-
->  	struct device *dev;
->  	int rc;
->  
-> @@ -520,22 +520,12 @@ static int hisi_sas_queue_command(struct sas_task *task, gfp_t gfp_flags)
->  				return -ECOMM;
->  		}
->  
-> -		if (task->uldd_task) {
-> -			struct ata_queued_cmd *qc;
+> -void pm8001_tag_init(struct pm8001_hba_info *pm8001_ha)
+> -{
+> -	int i;
+> -	for (i = 0; i < pm8001_ha->tags_num; ++i)
+> -		pm8001_tag_free(pm8001_ha, i);
+> -}
 > -
-> -			if (dev_is_sata(device)) {
-> -				qc = task->uldd_task;
-> -				scmd = qc->scsicmd;
-> -			} else {
-> -				scmd = task->uldd_task;
-> -			}
-> -		}
-> -
-> -		if (scmd) {
-> +		rq = sas_task_find_rq(task);
-> +		if (rq) {
->  			unsigned int dq_index;
->  			u32 blk_tag;
+>  /**
+>   * pm8001_mem_alloc - allocate memory for pm8001.
+>   * @pdev: pci device.
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
+> index 8ab0654327f9..9acaadf02150 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.h
+> +++ b/drivers/scsi/pm8001/pm8001_sas.h
+> @@ -632,7 +632,6 @@ extern struct workqueue_struct *pm8001_wq;
 >  
-> -			blk_tag = blk_mq_unique_tag(scsi_cmd_to_rq(scmd));
-> +			blk_tag = blk_mq_unique_tag(rq);
->  			dq_index = blk_mq_unique_tag_to_hwq(blk_tag);
->  			dq = &hisi_hba->dq[dq_index];
->  		} else {
-> @@ -580,7 +570,7 @@ static int hisi_sas_queue_command(struct sas_task *task, gfp_t gfp_flags)
->  	if (!internal_abort && hisi_hba->hw->slot_index_alloc)
->  		rc = hisi_hba->hw->slot_index_alloc(hisi_hba, device);
->  	else
-> -		rc = hisi_sas_slot_index_alloc(hisi_hba, scmd);
-> +		rc = hisi_sas_slot_index_alloc(hisi_hba, rq);
->  
->  	if (rc < 0)
->  		goto err_out_dif_dma_unmap;
+>  /******************** function prototype *********************/
+>  int pm8001_tag_alloc(struct pm8001_hba_info *pm8001_ha, u32 *tag_out);
+> -void pm8001_tag_init(struct pm8001_hba_info *pm8001_ha);
+>  u32 pm8001_get_ncq_tag(struct sas_task *task, u32 *tag);
+>  void pm8001_ccb_task_free(struct pm8001_hba_info *pm8001_ha,
+>  			  struct pm8001_ccb_info *ccb);
 
 -- 
 Damien Le Moal
