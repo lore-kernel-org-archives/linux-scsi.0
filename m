@@ -2,107 +2,153 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07EAFC54EE9
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Sep 2022 01:10:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BDB5C32771
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Sep 2022 02:09:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233766AbiI2BKv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Sep 2022 21:10:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38374 "EHLO
+        id S234300AbiI2CJq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Sep 2022 22:09:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43196 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232166AbiI2BKu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2022 21:10:50 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79134AF4AC
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2022 18:10:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1664413845;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=2btDcA0Eb0Lbvuk+gmwVVQo3+wu4HeJ6n54Ununsy7E=;
-        b=CBev4uWiG+tqJwdNY6FZvko+1g6pyD0+Kl5BN6dkSqvk1WyYl9wJ7F5gpc+FQnMUzwpLyC
-        +MIeFor3YXYN5UumctukKLK9fUk+ib9awgZADjebYtkqkF3FCBebxphw2NhZgRNbxLIQt3
-        9YRYrk8mMUCVARg6LDscg7Hyn4z12+Q=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-183-XS4IEKxKMMCpFzgb3vguXg-1; Wed, 28 Sep 2022 21:10:42 -0400
-X-MC-Unique: XS4IEKxKMMCpFzgb3vguXg-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 5C4D980206D;
-        Thu, 29 Sep 2022 01:10:41 +0000 (UTC)
-Received: from T590 (ovpn-8-20.pek2.redhat.com [10.72.8.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 13B301121315;
-        Thu, 29 Sep 2022 01:10:32 +0000 (UTC)
-Date:   Thu, 29 Sep 2022 09:10:27 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Luis Chamberlain <mcgrof@kernel.org>,
-        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
-        John Garry <john.garry@huawei.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-modules@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v5 6/7] module: Improve support for asynchronous module
- exit code
-Message-ID: <YzTwgxX+WMuJyAJy@T590>
-References: <20220914225621.415631-1-bvanassche@acm.org>
- <20220914225621.415631-7-bvanassche@acm.org>
- <YzOe3pYmn5qO9lFb@T590>
- <2acc2220-65dc-4af5-ffd3-997f779d41c0@acm.org>
+        with ESMTP id S234059AbiI2CJo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2022 22:09:44 -0400
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9219B12D24
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2022 19:09:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1664417382; x=1695953382;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=UePg92TmQirppI3fLER8oTy0F5vGd/zU7VLVsuGJ+60=;
+  b=IymH++R+oeZV8Uo4J8ueJIwsKFBH9DYWg817T3UtEdxRQRGGVjnE+Mnc
+   vhjz9bXj22chrP0zuqjufTP/Mo+WKvgDHIluOsOIMoup3l1cYfrBMypQk
+   NekpIVkfOQTxpmdQwA0aljJpfppSOv7WRmk6L+tgpcKsDQd9oRHdmbI3g
+   1mnVF0cK3+16bji7q7t65fAIR96AYs+ZeTfYDZ1qmpv+5Yx11ShhhdFRV
+   ktUCuwH/f2T3VPWseMUoi75qovyw8Sg9ub5sRwsuo64a6l7tfqlfuZKR/
+   8Oq+r/BANSZTBWQkFxQotpaM8+Yj9n4aTiwnhtRROCt5C6j/lwJYXgakD
+   A==;
+X-IronPort-AV: E=Sophos;i="5.93,353,1654531200"; 
+   d="scan'208";a="212540170"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 29 Sep 2022 10:09:39 +0800
+IronPort-SDR: NZcFsj45MD0529/YWG14QytI2pWPhbaM8t88PG7YG9oMGL2zCdj4ZyUzSl93eBq6p1ExpM5nBi
+ iRzneJehv+dNyQDhdOvdF32asOi4nT0qeZ6C8KkYanRMCT606QnYhGAwfJoIbsQPI/pW4O9mnH
+ YM2xdHINJYysHqlXJnFRIjIoWW2KERIgIrODtl8NByGb8+fPCD2nshdY8jWJcHtI2p+bAf2zyq
+ 8mMMfmpsjYTVK605DLW41aCPheXWk97e6DaHiLhzdJuba9kU93coFboIrX0OZsuBcRkS9hijE/
+ zd74tnfKFT4IHA0k2DXA9EWl
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Sep 2022 18:29:35 -0700
+IronPort-SDR: mOkwFRgqe7K4ydZaSyrETxKiO2JgH6B31SXhE18Vgj8fTS05h95Q7y0Q6R7p/FlgIY4j0RSE93
+ xflFYrliRzKHmwjnwC6+LBJtifoX1+V2tkjeGm3UQvkSqtM71mjYHsLJNYAJAi932AHz0I2Q24
+ 2BJvzV/q6FCCDBE919d7IeGCfeqTdrQhY0fWB1vH3HPHsZzeQUwDnZTgqWgxhb0AHrsbf6Dmrr
+ qonEbXDD4S/IXGGR5InbzrK0TU9Dz4fp6YrkU1WbGPryhWvvJ+igIC+JrGYjZA8aL8E8kyvRxx
+ KR8=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Sep 2022 19:09:39 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MdGyW12tLz1RwvT
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2022 19:09:39 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1664417378; x=1667009379; bh=UePg92TmQirppI3fLER8oTy0F5vGd/zU7VL
+        VsuGJ+60=; b=oTuOwkz/6D3sY84sla1wrNVLi37KJq23/Gf9FMfUcXNN1qNSoN9
+        eE5wEtPuHlfnMsPKjLrp3okD7CzojRh83fYwuoEFQyF9F9SzGDZioFpG6IRSD/gF
+        PWhBzDQgIfvGWK52/xHC2QPdUjrx1Sees2LDMAfRcIi5nsn+Gnnwsrt+C2heQDEr
+        KKJowu5huCFN5fZkJ+O+cVKfI2zk0OiIO96m2D/mXa7tE8AbhL7d1KdZrzcwDRqF
+        fzyKaPsHmeeU0cGvn60sZQhCSAYe/CWALn7ulXG3Lc7OBjZG5K+4TrXDH6CR40IJ
+        SYFPVai/8ODd1FhhZfPtSPaxUEzC+qDOl5Q==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id 3O83OcgfezTQ for <linux-scsi@vger.kernel.org>;
+        Wed, 28 Sep 2022 19:09:38 -0700 (PDT)
+Received: from [10.149.53.254] (washi.fujisawa.hgst.com [10.149.53.254])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MdGyS20pzz1RvLy;
+        Wed, 28 Sep 2022 19:09:36 -0700 (PDT)
+Message-ID: <0c0306d7-2645-874a-9745-8aa5dcfeede1@opensource.wdc.com>
+Date:   Thu, 29 Sep 2022 11:09:35 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2acc2220-65dc-4af5-ffd3-997f779d41c0@acm.org>
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.3
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.0
+Subject: Re: [PATCH 1/6] scsi: libsas: Add sas_task_find_rq()
+Content-Language: en-US
+To:     John Garry <john.garry@huawei.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, jinpu.wang@cloud.ionos.com,
+        damien.lemoal@wdc.com
+Cc:     hare@suse.de, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linuxarm@huawei.com,
+        ipylypiv@google.com, changyuanl@google.com, hch@lst.de
+References: <1664368034-114991-1-git-send-email-john.garry@huawei.com>
+ <1664368034-114991-2-git-send-email-john.garry@huawei.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <1664368034-114991-2-git-send-email-john.garry@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Sep 28, 2022 at 12:27:07PM -0700, Bart Van Assche wrote:
-> On 9/27/22 18:09, Ming Lei wrote:
-> > On Wed, Sep 14, 2022 at 03:56:20PM -0700, Bart Van Assche wrote:
-> > > Some kernel modules call device_del() from their module exit code and
-> > > schedule asynchronous work from inside the .release callback without waiting
-> > > until that callback has finished. As an example, many SCSI LLD drivers call
-> > 
-> > It isn't only related with device, any kobject has such issue, or any
-> > reference counter usage has similar potential risk, see previous discussion:
-> > 
-> > https://lore.kernel.org/lkml/YsZm7lSXYAHT14ui@T590/
-> > 
-> > IMO, it is one fundamental problem wrt. module vs. reference counting or
-> > kobject uses at least, since the callback depends on module code
-> > segment.
-> > 
-> > > scsi_remove_host() from their module exit code. scsi_remove_host() may
-> > > invoke scsi_device_dev_release_usercontext() asynchronously.
-> > > scsi_device_dev_release_usercontext() uses the host template pointer and
-> > > that pointer usually exists in static storage in the SCSI LLD. Support
-> > > using the module reference count to keep the module around until
-> > > asynchronous module exiting has completed by waiting in the delete_module()
-> > > system call until the module reference count drops to zero.
-> > 
-> > The issue can't be addressed by the normal mod->refcnt, since user need
-> > to unload module when the device isn't used.
+On 9/28/22 21:27, John Garry wrote:
+> blk-mq already provides a unique tag per request. Some libsas LLDDs - like
+> hisi_sas - already use this tag as the unique per-IO HW tag.
 > 
-> Hi Ming,
+> Add a common function to provide the request associated with a sas_task
+> for all libsas LLDDs.
 > 
-> How about removing support for calling scsi_device_put() from atomic context
-> as is done in the untested patch below?
+> Signed-off-by: John Garry <john.garry@huawei.com>
+> ---
+>  include/scsi/libsas.h | 22 ++++++++++++++++++++++
+>  1 file changed, 22 insertions(+)
+> 
+> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+> index f86b56bf7833..bc51756a3317 100644
+> --- a/include/scsi/libsas.h
+> +++ b/include/scsi/libsas.h
+> @@ -644,6 +644,28 @@ static inline bool sas_is_internal_abort(struct sas_task *task)
+>  	return task->task_proto == SAS_PROTOCOL_INTERNAL_ABORT;
+>  }
+>  
+> +static inline struct request *sas_task_find_rq(struct sas_task *task)
+> +{
+> +	struct scsi_cmnd *scmd;
+> +
+> +	if (!task || !task->uldd_task)
+> +		return NULL;
+> +
+> +	if (task->task_proto & SAS_PROTOCOL_STP_ALL) {
+> +		struct ata_queued_cmd *qc;
+> +
+> +		qc = task->uldd_task;
 
-That can't work.
+I would change these 2 lines into a single line:
 
-The problem is that no existed mechanism can guarantee that kobject reference
-drops to zero inside module_exit().
+		struct ata_queued_cmd *qc = task->uldd_task;
 
+And no cast as suggested.
 
-Thanks,
-Ming
+> +		scmd = qc->scsicmd;
+> +	} else {
+> +		scmd = task->uldd_task;
+> +	}
+> +
+> +	if (!scmd)
+> +		return NULL;
+> +
+> +	return scsi_cmd_to_rq(scmd);
+> +}
+> +
+>  struct sas_domain_function_template {
+>  	/* The class calls these to notify the LLDD of an event. */
+>  	void (*lldd_port_formed)(struct asd_sas_phy *);
+
+-- 
+Damien Le Moal
+Western Digital Research
 
