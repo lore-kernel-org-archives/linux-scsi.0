@@ -2,53 +2,53 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85C85C32771
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Sep 2022 02:18:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45879C32771
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Sep 2022 02:22:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234718AbiI2CSn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Sep 2022 22:18:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34842 "EHLO
+        id S231499AbiI2CWx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Sep 2022 22:22:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47466 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234755AbiI2CSi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2022 22:18:38 -0400
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0C9D123D95
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2022 19:18:34 -0700 (PDT)
+        with ESMTP id S231340AbiI2CWw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2022 22:22:52 -0400
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25EBDA9C08
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2022 19:22:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1664417914; x=1695953914;
+  t=1664418171; x=1695954171;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=3C7CtpOb0l54DwObhkR3R54ov4xRYh0NR5cxz71mUVw=;
-  b=hfVsSI26lRjmMjLNmsowN14/RPVYKNEm+obAU9IYrDfYvYwbsRvKc1sU
-   HNzXoS1HxL6AtxaBu7s1P5U0Iue1LOXhNTZW5wE4C0R8Xe4cXjW1oVSU0
-   cmcGk3IH4SYCQIvx7pyw4g0PzQD/ETtbLL2TpGlLeniDg3oqngafCVfaI
-   Mt8OW/YlRBKWIpcBZNeQrYxzJ8i6XPULAcX2lXqDloL6pzBa8lJcX+HHY
-   eqG7rxoLyi98EQm4BUgE7J1cYFEJVnZpyg0IARpQmdB+Kye7eYXkSKZj9
-   dzAB390W98XkUrdLgWv85hEOtiCnWbqt8JEhnsecOZqHWBBruPOzhTj1Y
-   A==;
+  bh=Pt2aH54v9i+iacS/08TVfDzHKkj6DRdkLDfQI/R0fGs=;
+  b=car2VrMB2INwC3q6xJ1vsfQJy0bVKcpwfzzGVRuSUkLjTio2x19Kx5Bz
+   vsTmzMPNIkYqC7FHxic4aWzZFLTBwh3Z1y1vLsX3DMBetZ37dvQ5EVmo/
+   VZtWZ4azFHdhJwVgXFKQcorsz9nV9zOo/KPwXMZ/MR4oBUcFUCRTkwZ9T
+   InW3VyGQf0/efPhPTJeUW4O/eyNZCyy04CTh/kqxsa+nwlv1Qv0xNESNh
+   Re1lUT0PHxO3jtqJ+beL0Hflhkuv1/KXGhc4hGGbITwMQ+ENcyTKCScAY
+   TGu3dbZd4LncfcVv4R7ImIUjLD2fhYQHjzz2krB66l5zHMPDlxM5pTiz2
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.93,353,1654531200"; 
-   d="scan'208";a="212947464"
+   d="scan'208";a="212540874"
 Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 29 Sep 2022 10:18:30 +0800
-IronPort-SDR: gGpF/uFveGcOTFqex4w7vHkhwylMFzDE2hQOZiKfjOucDOAiq+LvzSkdJ9OO/tH+Fh45Tzzv8Y
- AwEFd9Perh31G1kElM+X6yn7CxOxKhnncaCm/vDDvmwU2pYSMuDqGeoeNiFoqZwYvslfz+f50O
- c1MwvxBULYGtgw750FUdW7MfEOyW01agCLSHZkkZUkXgGlwBXTpS6HL25DNgGA+uBtvthQaKLg
- zF0Q70Y8dPXFWlOtDUwnac1ja0I44i+5/0UnNHbDkev2+nPoZd1JKP9+icdegiD4QNhZqxelI3
- r0WYH5froQugg/PyjQ7Oc1vT
+  by ob1.hgst.iphmx.com with ESMTP; 29 Sep 2022 10:22:50 +0800
+IronPort-SDR: onez2G+SwGOnfrbV2E0iQxTWzU9dk1p9dxzNQaQYBDCN1GsSdxXiMwB1ZhUQyid2Qvjq1mAP0i
+ nj/b106MxEjY5akbLJXU8cWzLzbOwbICMtSXrQID2lpcFy78Iq/yc0GHxCodaUHvrwf9rDb9mk
+ W0bRMdwzJpiEkfX1MU7i0XHGd/jRD7JZQ692MgsUhXaEx45XkiZJvaYXGeeHi2BBwWODD3iiXE
+ nh5wVb4ClsNsy8VF//lUjNN+267ZjQY44Sbxq+g5h6+cJK0BSEAlE9x5kxdtY6p/U5TSakqZdO
+ jubRMDXisuD3M04AVX7mfuQb
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Sep 2022 18:38:25 -0700
-IronPort-SDR: n/OI0OsiD0FGMWKdbndrJFX6PcM7zuup7YABs+uy4A1ZQWV9bvlVEREgfnY0L9jTRFTvsxJowv
- a6EXhQTF/NzUjXCPA0pI0al8wAfoOxn58TEAV0VjONqtDDhqAoJVyFvKi8wNPPlFgPbVhhAp16
- Qm5HAqbklhrN8JKi6JtNR/LlncRJjG5Wr29622Xm+/YxBvWGZTPtpUQQLq8qeRrGgkMXbknT2f
- cVZUeEB4wTZvxQYSsofE3CP2d4KvjEh3nyTdTuLPoBRoSj795lDNOTM159dOb/R8GVgLITGWzI
- +0o=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Sep 2022 18:42:45 -0700
+IronPort-SDR: xX32YPDA67YrVaHhFiGGF388kn3YxhDNsnuTCj0XokCocoxVoZE1JLFPFAxPkhoDyPV3vIxhJ9
+ w1f7HvyMgDvahITPp5zV3IdQBSqMY4Z5+wouX62AIuvpPfoLxN9mhUAssyPJRQBMeW2yikGFrC
+ WQGYddvjAFjIlg6LNhtxj6RKTluV49Wkcs2lp3/qXD9fL0g+ii0PpIma808S3QdP+dK/8E5+cy
+ aW+dYjBF11ElNmLd6o/T3mAgc9m/BYbg7CyWOQnMMiGOhggPiHvQFOknmanqtIg4CHu8wYmh1y
+ Lko=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Sep 2022 19:18:30 -0700
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Sep 2022 19:22:51 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MdH8k0y1Hz1RvTr
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2022 19:18:30 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MdHFk2xW2z1RwtC
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2022 19:22:50 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,38 +56,39 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1664417909; x=1667009910; bh=3C7CtpOb0l54DwObhkR3R54ov4xRYh0NR5c
-        xz71mUVw=; b=tI8DR50vqiC2j/8wIJUjpJtRnK6KvK0GZRlw1aE9mmaLzwCxePb
-        B8tLvpChjjEk1TM47jRMKRN7PHaptnNscM/v3sD8VaV8O5iXTqH7zjB3nrkwj5Qj
-        GUGfrTvG7LsGU0CQMU4L/npcc1Ya3plbh9wScKz/cvgnJfzZbL505M38pHSPXDCU
-        AuA8IxWMUNWPQKclYSM2TwB4+rCp4jYBilSftkl2jN9JFizDbwCIuTRjjiim21qz
-        CVgo/Fuhl5WaAzjZ5/HQmth6Fa2VcN9YHiK3B7Fqr2QBytPaJ5diQJLLpZ79DQSs
-        nn2ou/6Utx4fZi++LqYtX7blKc1/rPw2nAA==
+        1664418169; x=1667010170; bh=Pt2aH54v9i+iacS/08TVfDzHKkj6DRdkLDf
+        QI/R0fGs=; b=UaBZKKWu/zMAKVNtwwB9h28/nsfi9yCcNOax11OZ5Xycph/agG4
+        Y24Q1og9YJI4C1RINHI+OjcD8AJAsKsIZqy2cBgI2sGenkFbc51aBd039AwO3Mp7
+        vx8vihAi7fE7oy0p2tn6zPGm4O3hJ5b+AYDWp+NTWAF0SA7+yg44jEIcJhhQ2q/e
+        41Fxe28nzz27fYCfVGd7o7AqvuNYqxNpNRx9ngPFwu1zz3BuEosY8DORUtsNNAaQ
+        sP0+Lw3+rcw4+rO165kauWeYxu6304DresoUQot8pPNoIasWykWkAvQPkXTSKjqX
+        g7LLR+8lUDFJXbJ+4+NQT6oRyCZWY05yk8A==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id UbryYPqg3WdY for <linux-scsi@vger.kernel.org>;
-        Wed, 28 Sep 2022 19:18:29 -0700 (PDT)
+        with ESMTP id 7ZtLs45vCQP7 for <linux-scsi@vger.kernel.org>;
+        Wed, 28 Sep 2022 19:22:49 -0700 (PDT)
 Received: from [10.149.53.254] (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MdH8h010vz1RvLy;
-        Wed, 28 Sep 2022 19:18:27 -0700 (PDT)
-Message-ID: <f2c1bfa1-536b-7214-f997-b360d6db3207@opensource.wdc.com>
-Date:   Thu, 29 Sep 2022 11:18:26 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MdHFf6vmMz1RvLy;
+        Wed, 28 Sep 2022 19:22:46 -0700 (PDT)
+Message-ID: <53e304b4-c025-e884-c8f5-6c2e96cc0052@opensource.wdc.com>
+Date:   Thu, 29 Sep 2022 11:22:45 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.3.0
-Subject: Re: [PATCH 5/6] scsi: mvsas: Delete mvs_tag_init()
+Subject: Re: [PATCH 6/6] scsi: mvsas: Use sas_task_find_rq() for tagging
 Content-Language: en-US
 To:     John Garry <john.garry@huawei.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, jinpu.wang@cloud.ionos.com
+        martin.petersen@oracle.com, jinpu.wang@cloud.ionos.com,
+        damien.lemoal@wdc.com
 Cc:     hare@suse.de, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org, linuxarm@huawei.com,
         ipylypiv@google.com, changyuanl@google.com, hch@lst.de
 References: <1664368034-114991-1-git-send-email-john.garry@huawei.com>
- <1664368034-114991-6-git-send-email-john.garry@huawei.com>
+ <1664368034-114991-7-git-send-email-john.garry@huawei.com>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <1664368034-114991-6-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1664368034-114991-7-git-send-email-john.garry@huawei.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -95,63 +96,156 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 9/28/22 21:27, John Garry wrote:
-> All mvs_tag_init() does is zero the tag bitmap, but this is already done
-> with the kzalloc() call to alloc the tags, so delete this unneeded
-> function.
+> The request associated with a scsi command coming from the block layer
+> has a unique tag, so use that when possible for getting a slot.
+> 
+> Unfortunately we don't support reserved commands in the SCSI midlayer yet.
+> As such, SMP tasks - as an example - will not have a request associated, so
+> in the interim continue to manage those tags for that type of sas_task
+> internally.
+> 
+> We reserve an arbitrary 4 tags for these internal tags. Indeed, we already
+> decrement MVS_RSVD_SLOTS by 2 for the shost can_queue when flag
+> MVF_FLAG_SOC is set. This change was made in commit 20b09c2992fef
+> ("[PATCH] [SCSI] mvsas: add support for 94xx; layout change; bug fixes"),
+> but what those 2 slots are used for is not obvious.
 > 
 > Signed-off-by: John Garry <john.garry@huawei.com>
-
-Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-
 > ---
->  drivers/scsi/mvsas/mv_init.c | 2 --
->  drivers/scsi/mvsas/mv_sas.c  | 7 -------
->  drivers/scsi/mvsas/mv_sas.h  | 1 -
->  3 files changed, 10 deletions(-)
+>  drivers/scsi/mvsas/mv_defs.h |  1 +
+>  drivers/scsi/mvsas/mv_init.c |  4 ++--
+>  drivers/scsi/mvsas/mv_sas.c  | 22 +++++++++++++++++-----
+>  drivers/scsi/mvsas/mv_sas.h  |  1 -
+>  4 files changed, 20 insertions(+), 8 deletions(-)
 > 
+> diff --git a/drivers/scsi/mvsas/mv_defs.h b/drivers/scsi/mvsas/mv_defs.h
+> index 7123a2efbf58..8ef174cd4d37 100644
+> --- a/drivers/scsi/mvsas/mv_defs.h
+> +++ b/drivers/scsi/mvsas/mv_defs.h
+> @@ -40,6 +40,7 @@ enum driver_configuration {
+>  	MVS_ATA_CMD_SZ		= 96,	/* SATA command table buffer size */
+>  	MVS_OAF_SZ		= 64,	/* Open address frame buffer size */
+>  	MVS_QUEUE_SIZE		= 64,	/* Support Queue depth */
+> +	MVS_RSVD_SLOTS		= 4,
+>  	MVS_SOC_CAN_QUEUE	= MVS_SOC_SLOTS - 2,
+>  };
+>  
 > diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-> index 2fde496fff5f..c85fb812ad43 100644
+> index c85fb812ad43..d834ed9e8e4a 100644
 > --- a/drivers/scsi/mvsas/mv_init.c
 > +++ b/drivers/scsi/mvsas/mv_init.c
-> @@ -286,8 +286,6 @@ static int mvs_alloc(struct mvs_info *mvi, struct Scsi_Host *shost)
+> @@ -284,7 +284,7 @@ static int mvs_alloc(struct mvs_info *mvi, struct Scsi_Host *shost)
+>  			printk(KERN_DEBUG "failed to create dma pool %s.\n", pool_name);
+>  			goto err_out;
 >  	}
->  	mvi->tags_num = slot_nr;
+> -	mvi->tags_num = slot_nr;
+> +	mvi->tags_num = MVS_RSVD_SLOTS;
+
+Same comment as for pm8001: do you really need this field if the value
+is always MVS_RSVD_SLOTS ?
+
 >  
-> -	/* Initialize tags */
-> -	mvs_tag_init(mvi);
 >  	return 0;
 >  err_out:
->  	return 1;
+> @@ -367,7 +367,7 @@ static struct mvs_info *mvs_pci_alloc(struct pci_dev *pdev,
+>  	mvi->sas = sha;
+>  	mvi->shost = shost;
+>  
+> -	mvi->tags = kzalloc(MVS_CHIP_SLOT_SZ>>3, GFP_KERNEL);
+> +	mvi->tags = kzalloc(MVS_RSVD_SLOTS, GFP_KERNEL);
+
+Field name ? reserved_tags ?
+Also, the alloc seems wrong. This will allocate 4 bytes, but you only
+need 4 bits. You could make this an unsigned long and not allocate
+anything. Same remark for pm8001 by the way.
+
+That would cap MVS_RSVD_SLOTS to BITS_PER_LONG maximum, but that is easy
+to check at compile time with a #if/#error.
+
+
+>  	if (!mvi->tags)
+>  		goto err_out;
+>  
 > diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-> index a6867dae0e7c..0810e6c930e1 100644
+> index 0810e6c930e1..549d2ec89f60 100644
 > --- a/drivers/scsi/mvsas/mv_sas.c
 > +++ b/drivers/scsi/mvsas/mv_sas.c
-> @@ -51,13 +51,6 @@ inline int mvs_tag_alloc(struct mvs_info *mvi, u32 *tag_out)
+> @@ -20,7 +20,7 @@ static int mvs_find_tag(struct mvs_info *mvi, struct sas_task *task, u32 *tag)
 >  	return 0;
 >  }
 >  
-> -void mvs_tag_init(struct mvs_info *mvi)
-> -{
-> -	int i;
-> -	for (i = 0; i < mvi->tags_num; ++i)
-> -		mvs_tag_clear(mvi, i);
-> -}
-> -
->  static struct mvs_info *mvs_find_dev_mvi(struct domain_device *dev)
+> -void mvs_tag_clear(struct mvs_info *mvi, u32 tag)
+> +static void mvs_tag_clear(struct mvs_info *mvi, u32 tag)
 >  {
->  	unsigned long i = 0, j = 0, hi = 0;
+>  	void *bitmap = mvi->tags;
+>  	clear_bit(tag, bitmap);
+> @@ -28,6 +28,11 @@ void mvs_tag_clear(struct mvs_info *mvi, u32 tag)
+>  
+>  void mvs_tag_free(struct mvs_info *mvi, u32 tag)
+>  {
+> +	if (tag < mvi->shost->can_queue)
+> +		return;
+> +
+> +	tag -= mvi->shost->can_queue;
+> +
+>  	mvs_tag_clear(mvi, tag);
+>  }
+>  
+> @@ -47,6 +52,7 @@ inline int mvs_tag_alloc(struct mvs_info *mvi, u32 *tag_out)
+>  	if (tag >= mvi->tags_num)
+>  		return -SAS_QUEUE_FULL;
+>  	mvs_tag_set(mvi, tag);
+> +	tag += mvi->shost->can_queue;
+>  	*tag_out = tag;
+>  	return 0;
+>  }
+> @@ -696,6 +702,7 @@ static int mvs_task_prep(struct sas_task *task, struct mvs_info *mvi, int is_tmf
+>  	struct mvs_task_exec_info tei;
+>  	struct mvs_slot_info *slot;
+>  	u32 tag = 0xdeadbeef, n_elem = 0;
+> +	struct request *rq;
+>  	int rc = 0;
+>  
+>  	if (!dev->port) {
+> @@ -760,9 +767,14 @@ static int mvs_task_prep(struct sas_task *task, struct mvs_info *mvi, int is_tmf
+>  		n_elem = task->num_scatter;
+>  	}
+>  
+> -	rc = mvs_tag_alloc(mvi, &tag);
+> -	if (rc)
+> -		goto err_out;
+> +	rq = sas_task_find_rq(task);
+> +	if (rq) {
+> +		tag = rq->tag;
+> +	} else {
+> +		rc = mvs_tag_alloc(mvi, &tag);
+> +		if (rc)
+> +			goto err_out;
+> +	}
+>  
+>  	slot = &mvi->slot_info[tag];
+>  
+> @@ -857,7 +869,7 @@ int mvs_queue_command(struct sas_task *task, gfp_t gfp_flags)
+>  static void mvs_slot_free(struct mvs_info *mvi, u32 rx_desc)
+>  {
+>  	u32 slot_idx = rx_desc & RXQ_SLOT_MASK;
+> -	mvs_tag_clear(mvi, slot_idx);
+> +	mvs_tag_free(mvi, slot_idx);
+>  }
+>  
+>  static void mvs_slot_task_free(struct mvs_info *mvi, struct sas_task *task,
 > diff --git a/drivers/scsi/mvsas/mv_sas.h b/drivers/scsi/mvsas/mv_sas.h
-> index 509d8f32a04f..fe57665bdb50 100644
+> index fe57665bdb50..e6c70786ded9 100644
 > --- a/drivers/scsi/mvsas/mv_sas.h
 > +++ b/drivers/scsi/mvsas/mv_sas.h
-> @@ -428,7 +428,6 @@ void mvs_tag_clear(struct mvs_info *mvi, u32 tag);
+> @@ -424,7 +424,6 @@ struct mvs_task_exec_info {
+>  
+>  /******************** function prototype *********************/
+>  void mvs_get_sas_addr(void *buf, u32 buflen);
+> -void mvs_tag_clear(struct mvs_info *mvi, u32 tag);
 >  void mvs_tag_free(struct mvs_info *mvi, u32 tag);
 >  void mvs_tag_set(struct mvs_info *mvi, unsigned int tag);
 >  int mvs_tag_alloc(struct mvs_info *mvi, u32 *tag_out);
-> -void mvs_tag_init(struct mvs_info *mvi);
->  void mvs_iounmap(void __iomem *regs);
->  int mvs_ioremap(struct mvs_info *mvi, int bar, int bar_ex);
->  void mvs_phys_reset(struct mvs_info *mvi, u32 phy_mask, int hard);
 
 -- 
 Damien Le Moal
