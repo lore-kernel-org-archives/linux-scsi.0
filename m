@@ -2,136 +2,190 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91D9CC32771
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Sep 2022 03:01:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F9EBC04A95
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Sep 2022 03:05:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234726AbiI2DBo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Sep 2022 23:01:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48942 "EHLO
+        id S234144AbiI2DF5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Sep 2022 23:05:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57568 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234648AbiI2DBm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2022 23:01:42 -0400
-Received: from mail-ua1-x92d.google.com (mail-ua1-x92d.google.com [IPv6:2607:f8b0:4864:20::92d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F1162CDD0;
-        Wed, 28 Sep 2022 20:01:41 -0700 (PDT)
-Received: by mail-ua1-x92d.google.com with SMTP id x17so13276uai.11;
-        Wed, 28 Sep 2022 20:01:41 -0700 (PDT)
+        with ESMTP id S233713AbiI2DFy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2022 23:05:54 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5EA157F258
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2022 20:05:53 -0700 (PDT)
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28SNiRoL003459;
+        Thu, 29 Sep 2022 03:05:44 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references :
+ content-transfer-encoding : content-type : mime-version; s=corp-2022-7-12;
+ bh=o5Ps0Clqi5d+VS8MrwF4D6dP3/XDtGXvuRdGiUNkATM=;
+ b=3HGQL1S1swsRk4jhBylt1qwMZf81j3GQtB4oSt8yTvi0G36lW/SYxqeIbmHYWkvLTJ/W
+ 2C2sTN5qH8Wgz1SWa6F0/ytoRjdfnRCz7Ejr2+HCVB6xe3xdwe3xSryiNxWKJTggDo3I
+ UZNBbPWdHslGjvribKKzG4BmmVjn80PoPk3EFbxZSeDl8NXLDf64atbS+4JV/3lGXq6F
+ Ku0MamaecM0aBJwz3iH5SVXxCYfkFXaEl7mpaapQAUGnuqcruZqMjFc5z8bs95c+ql3l
+ jcFJP8p29HMPyKSdvP8o2Ir+zOsGp/kqTZYXZZKXgNq1GwteyEZtUQw7Di1Gezfu8opc fQ== 
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3jssrwkjqu-2
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 29 Sep 2022 03:05:44 +0000
+Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 28SMvNCH033540;
+        Thu, 29 Sep 2022 02:54:34 GMT
+Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2171.outbound.protection.outlook.com [104.47.56.171])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3jtpv22qta-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 29 Sep 2022 02:54:34 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=NiT9bQyL98qjCc3HGoZeGetqrGlcJalEf0pkEEYgf+HIlzXr3UjW4fs7RPS90YdMgiBdmn2/cLitXMHypcw2eEkbblY+UaKMGkVAgOTZ15vNDvCLq1n0R/GGEV/WgcdOWSF0KGCAE9/whr99VbieMUwpzcNV0GmUSEb/w5esv4ThrCe2MSMmdy/0WXrvISMZuMDzTg/s7et6D5R9VO8qcpzfRoSDgoSO6L414R1U3bUNASPUdmPgiL2jshdGQ/hcRFQrsprLRcxJW24VSN8QndZquJXasfipuKVen9ycC0wJIpJXcB3md4kHie97o2yqld10z/73xEbQSKkHud+j0Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=o5Ps0Clqi5d+VS8MrwF4D6dP3/XDtGXvuRdGiUNkATM=;
+ b=g+P7YuglWfgSWb2M02uAt7z/m7iGF9+E3Xp0bSlfpoRUOQZzibJovi97wuahEGlXVJhTwAsZ6B4qM1lVH3IV2FjlDx95KKCzOAwyYcBzpE71LlnosaisUfqFvRhBvZ/8R59E/yXs3A/ZaucyHN+FPpXQ2dFbovo23/ihTBpXzv0bAsBcLefOm6z01e2Huz0ulZtDCVB7No59c7JwQYzjnova2Gpp3AO8or8+OPHZokCIYAlREvGe5XKAqRUbpJYK3swRGXjwfEhXUc4JoTkl8nAOAfqCBxikd6xw9A0haXhEjTfF/ggAvhXmtvTm/P5Y7Gw0Z+Y4MljlhTv+9+hFBQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date;
-        bh=138hauZAuEksj4SEPaWiskeQij9mz5A2aU/o8ozjnHk=;
-        b=aVPLrrxVa04StoVYIny/i3QNO7j3nt/KqmDhi4qdZvnRzzbDfMdxveuWO1eBNHHv1c
-         4hklN1Id7RO/S83XwxAcC8dJX1mXR3ur9WM+3R5LIyj0Igf3IG+F+iJKZRaHqeQhA3oQ
-         2gKfHypJI3BJYC3qj1+tBoKL2f5W2mXXvelLxXzUgoJP7Rcob6HRyaT6hS3ZwG5i/8Qf
-         4K8v8pseJvkSWFlxcr8P4USbWXf8kWLpkAv2nTyWCHQz9gVn0bjR8GXNDu8bu75tjo0J
-         yIzPWqxrIIn9Hz53iUEGuNyLhtXdd0hxFC5KqKGC6e5zqgkc4vT0OIv8Dgs1RUFeFjrp
-         44FQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date;
-        bh=138hauZAuEksj4SEPaWiskeQij9mz5A2aU/o8ozjnHk=;
-        b=3lbVq65uTIXGvMUS9UQvmcExoikEDGJxOlBUW3hQnbpdiLJl584zM/mc60t050E+oF
-         9TIXxAJlLdK7cMhYCG7a8AauuA1XuUzuwrBNTqnwmE7XeCF1iPiJPxrSFde9BNhzqka+
-         j8/ARSGwkll/MpHQtU+p2b/fmSo2hmNo9dszzkz6NkbBb7YY2V6Se1O5qTNc2M8bHwiq
-         iG7cOc6mHXHxK6SF6M9Yqe7Wisbo6fC9iJ/h+HP5Dp0wVUtpVbnNMjskruOViov6SXHe
-         8rTM+I7YTNxcKbOha7Akxa2XZCqvi7HAuwoDbxF4IH6mG6ih2b3s4MKPdyNDrAG5v39K
-         lI5A==
-X-Gm-Message-State: ACrzQf3xyFCLs+Tzkp2hPzWef0RZcQ6ZksYSwmBaHZuC+lG9ChRvmAcn
-        In/8HKIXRYg7n+vb9GRNUDTJHRY74p+cRTu2Cm8D9mpS7ZBkh9Nlqiw=
-X-Google-Smtp-Source: AMsMyM7invLzfRmtHGlacWelt1bfdvxKJNUTpc3kU+BuxHgYkawtMvyu5Osv0D6g6/2tqMwIaQ7lX2qtgGB23kg9omc=
-X-Received: by 2002:ab0:25d3:0:b0:3ae:6580:2adc with SMTP id
- y19-20020ab025d3000000b003ae65802adcmr520430uan.23.1664420499071; Wed, 28 Sep
- 2022 20:01:39 -0700 (PDT)
-MIME-Version: 1.0
-References: <CAB7eexK_jr1LWOO9RWrBF9as7gAS9kpHjrZFRuRrRJF=1H4W6A@mail.gmail.com>
- <404508f8-37bb-a3bd-4319-6b6d7a7e076e@cybernetics.com> <af3d2628-bf00-d897-d140-415985c29bfd@interlog.com>
-In-Reply-To: <af3d2628-bf00-d897-d140-415985c29bfd@interlog.com>
-From:   Rondreis <linhaoguo86@gmail.com>
-Date:   Thu, 29 Sep 2022 11:01:27 +0800
-Message-ID: <CAB7eexKm-0eO11KO2Brp_djcgXHO=1gARfkUN13ZV8BNHBxURw@mail.gmail.com>
-Subject: Re: KASAN: use-after-free Read in sg_release
-To:     dgilbert@interlog.com
-Cc:     Tony Battersby <tonyb@cybernetics.com>, jejb@linux.ibm.com,
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=o5Ps0Clqi5d+VS8MrwF4D6dP3/XDtGXvuRdGiUNkATM=;
+ b=VWrqyMGw/A4CnvjYTcv/CdptG1sQX1LolNYfv9HwqTkKpZGlJlG4czwHunS/o/Nz4x57HW3aPjK5/t6XTJVMkhLDcbHfY6uXVN/GF0tNh+eDjYtoxgUgN3RQcHJVI/ZBDW4HQ3HurkefPm2U0ityFXr10ztUqDvT0Su5Z5VjoBU=
+Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
+ SN4PR10MB5653.namprd10.prod.outlook.com (2603:10b6:806:20c::6) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.5676.19; Thu, 29 Sep 2022 02:54:32 +0000
+Received: from DM5PR10MB1466.namprd10.prod.outlook.com
+ ([fe80::5503:f2f0:f101:9a22]) by DM5PR10MB1466.namprd10.prod.outlook.com
+ ([fe80::5503:f2f0:f101:9a22%8]) with mapi id 15.20.5654.025; Thu, 29 Sep 2022
+ 02:54:32 +0000
+From:   Mike Christie <michael.christie@oracle.com>
+To:     bvanassche@acm.org, mwilck@suse.com, hch@lst.de,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        james.bottomley@hansenpartnership.com
+Cc:     Mike Christie <michael.christie@oracle.com>
+Subject: [PATCH v2 13/35] scsi: ses: Convert to scsi_exec_req
+Date:   Wed, 28 Sep 2022 21:53:45 -0500
+Message-Id: <20220929025407.119804-14-michael.christie@oracle.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220929025407.119804-1-michael.christie@oracle.com>
+References: <20220929025407.119804-1-michael.christie@oracle.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: CH0PR04CA0079.namprd04.prod.outlook.com
+ (2603:10b6:610:74::24) To DM5PR10MB1466.namprd10.prod.outlook.com
+ (2603:10b6:3:b::7)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM5PR10MB1466:EE_|SN4PR10MB5653:EE_
+X-MS-Office365-Filtering-Correlation-Id: 3174114c-3f65-4ffa-6bdd-08daa1c5ef81
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 0PUHTi7wbMh12cKEYXDnAmiREyVlWRjPG5S7ew64KOba+VhLSIFm8E+oeiCG258ePDLtVVJa+ow1zsqYidZcOGHBUkCPPjiq9aYc2e762GXd3znOjWUzyQ1fx0wdKNs5RC4ywbzPYVdnz6y/0zg+9B0DZSSOuTZg4Bys5hvkDdzlCvO731g5p0pPzkU6YkolylmXBlK8jebMkWhzEDxI80/dbAmjHwZVhD3ckl2CIjVcCcARSqDh3GxBZAXLM/PDjn704n6AmU0Cv67BDe/MdjThi7g4OXe6PDzGFhL55PaalbuhoUyaqjy6jCKaWGl8gQjTOA9FMQTuNw3h+S+58/MIP4NEemNhejr1d2GY0ANDv94CSdxHkYtSuUZ/jXh9PjVtn+nT7gyt2BeLwK4XdhBaeacgOjeX9neJPUYg+BxfP641jzaPMoO70EmD8YkVMDdJBc20Z11udCIfnsDsWn/71U87Q4G7Bot8DI1y028vXnatLFk0Ek11CqLrg0aBxoQKQuAr/99WTatQGm85wDNPWJlyBxMQr1i5vOBV9NUeQDS3m7fKYyBJBaNnswAZhR5a8eBtejs5H8pmkQARz46QrKghJxVLuU0NFkEJZDtmMZ10zd1CAMJ34C3c82ZVtuZDwyyVbOfxmXu5XRRvrwYgs0mUw2fLI+MUVz6l5+P24RQptsm5jEFr27uw8iDju72UUnamnKRWc8arm+8nxw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(366004)(396003)(39860400002)(376002)(136003)(346002)(451199015)(66476007)(26005)(6512007)(1076003)(186003)(2616005)(36756003)(478600001)(6506007)(38100700002)(316002)(83380400001)(2906002)(6486002)(6666004)(107886003)(8936002)(5660300002)(66556008)(4326008)(8676002)(66946007)(41300700001)(86362001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?KJv84Ha/SvB5gT6XfG8a1Bs3qm5McSrFNZF4rpeRpfzikV63X/SMzcsdx+3T?=
+ =?us-ascii?Q?fG3fGUzVNk2hMbxTCDubTiEVSEXnUX4SeyZ5MTaW7953cD0VK+ICcbwFnsFa?=
+ =?us-ascii?Q?5GEaBM/TgOVP3nZ/XerylJLq0HVNwk/vUwXtAqBpXeBSI69SgRIC/wuUo29+?=
+ =?us-ascii?Q?pypYLTMA+o/zomp5Ag8AIwcy2wLfNajocVKwKuCOsin0fQniXlfZmAGyyXIz?=
+ =?us-ascii?Q?aEFNZgwXNSEGFEp1BRoUbxh8SOzP722ES6okl3DrCVNPeHOpVVsvzOO/t5gw?=
+ =?us-ascii?Q?Ua2k73xS+VqSmSf4nNBVJgiZQAUleQkT0BhOmWWwjOouVccvGppaxitIUgEK?=
+ =?us-ascii?Q?WkCsvjQs3maKV+/al0KAcF+2F9kd33rqskTbNsrk8+CbOSuJFLFPLVd9ozZt?=
+ =?us-ascii?Q?lpdgh1q66hNecO4b8+zArZQkKzXv1L7UxQYXCp6W9JFi+yvf2g/grCWLH3Ca?=
+ =?us-ascii?Q?cNcDQ5wPR4qFpaNGtmr/HO/MUuBKf1PVSaWuXhSnXhm/txkK1xJv7jdJ2UMK?=
+ =?us-ascii?Q?47Zswb+IAh8bxswR+1c8hJgSUFmJPKDTH0S6kK3Vyz85dczWEJu1l3hFaPmF?=
+ =?us-ascii?Q?P1yO5k3CJEVf4qfgAEksVb0O3KWBtzLt/FwBwXqDJuERrS03kBpCb9FxGtv8?=
+ =?us-ascii?Q?MXpzxSA+FfFLlG9FHsmpJS7A6kp3c5/CxB4daOIEZ7bCSls8Q2d1Cjveurrw?=
+ =?us-ascii?Q?qPdFsMyBVw3CvxnXcOLidjNL9+M4jVlRj/WF5WSaOr6y/mSLvCfcCZmyuRGd?=
+ =?us-ascii?Q?j4ZKPXvq6RZr7PoFLHe1FfpdtGnkuA6IapbgiCw/kT3PwpUarGXUgVJrJIFF?=
+ =?us-ascii?Q?8S60jn5ax2+26O8y3KFUO7VSXnEPqXhvTc2HIJA80ESYyqpkdGttkZYucJup?=
+ =?us-ascii?Q?fEzY6hj5i/sRVbyYHMj7k5Jb3YTS1N5JrXWFSSU+eMFzwW0Era3doNLA8qeX?=
+ =?us-ascii?Q?gHOeD6UuAT+BjAfysZSgtw33qxvCPrsvJH03PrDOQZnaWbUjF4UG/tqyEwVS?=
+ =?us-ascii?Q?LSSR390T5BP1PD2hsjayNRaJUDrYC7HBL2MJNuaNHMFyJNyPJHuD+n5FH05z?=
+ =?us-ascii?Q?DoCYGWzP8sVSICusVfzIYFyu9A1d2R5oYjBBGiveSR1DZY8+aZugVb2dOSsJ?=
+ =?us-ascii?Q?WQvGgS0hH6pQMoEbkwYgKFkLw9O++76bUWHQSgFQv9uFW+J36fdP34kvRm5J?=
+ =?us-ascii?Q?OuRDshCGv87ELpTgwUYGWgNxZMGMtuatF5+BKVeVc4p12TqM6p6spi3ak5Fc?=
+ =?us-ascii?Q?G4M/IsjyYqtKYWBEbuHLihP4QnrDxfJd2ahtKfXzpXuWc/SgzXMclNljRJ4K?=
+ =?us-ascii?Q?uIGc8ZoOYD5pH1oLjqdbC1J2tcEnPpiZMtqSse0sfNVtTahdqLIYvHngMlVF?=
+ =?us-ascii?Q?OC7QDrxDHaQ7ht4QGOxmB9b36C3RqWYj82lC5na17kaYPaYdG4eFFTXsJ+dR?=
+ =?us-ascii?Q?kxGMcNwKeV2O0dw9fJV68yys3c4fnUu0B8KjdcuVPoAmm9jJ95WcoNFOOGk2?=
+ =?us-ascii?Q?HwLuT9QJ882fO83x6h6bxNAku9sPx/1AfG9/vfofmZY9ItuH+Dd7PCQ0gGdC?=
+ =?us-ascii?Q?Jn0xu9XQUo1JNqS2eEilc0jtnxC6Bqp8CYN9GBFkkSHN6gxyJ8U17+A944Wy?=
+ =?us-ascii?Q?cA=3D=3D?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3174114c-3f65-4ffa-6bdd-08daa1c5ef81
+X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Sep 2022 02:54:32.6305
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: DBPUgwtxGpoxECuUwpNG7kNUqdmawMsK3I9BkFPEFFk2o832ek8lqT67NHYAwZdQcCmjkmEjTIov/lr4688Pvj2HqDnYJIJJL8wY1fR0itE=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN4PR10MB5653
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
+ definitions=2022-09-29_02,2022-09-28_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 bulkscore=0 phishscore=0
+ mlxscore=0 mlxlogscore=999 adultscore=0 spamscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2209130000
+ definitions=main-2209290017
+X-Proofpoint-ORIG-GUID: EablzX-PXClsa-aw0gO6kCtcSgtODe9F
+X-Proofpoint-GUID: EablzX-PXClsa-aw0gO6kCtcSgtODe9F
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Thank you for your solution! I am sorry that I was not able to extract
-the reproducer. But I am improving the solution to reproduce the crash.
-If I succeed in reproducing it, I will check it for you as soon as possible!
+scsi_execute* is going to be removed. Convert to scsi_exec_req so
+we pass all args in a scsi_exec_args struct.
 
-Best Regards,
-Rondreis
+Signed-off-by: Mike Christie <michael.christie@oracle.com>
+---
+ drivers/scsi/ses.c | 22 ++++++++++++++++++----
+ 1 file changed, 18 insertions(+), 4 deletions(-)
 
-On Thu, Sep 29, 2022 at 5:45 AM Douglas Gilbert <dgilbert@interlog.com> wrote:
->
-> On 2022-09-22 17:29, Tony Battersby wrote:
-> > On 9/20/22 10:46, Rondreis wrote:
-> >> Hello,
-> >>
-> >> When fuzzing the Linux kernel driver v6.0-rc6, the following crash was
-> >> triggered.
-> >>
-> >> HEAD commit: 521a547ced6477c54b4b0cc206000406c221b4d6
-> >> git tree: upstream
-> >>
-> >> kernel config: https://pastebin.com/raw/hekxU61F
-> >> console output: https://pastebin.com/raw/73a8RzBY
-> >>
-> >> Sorry for failing to extract the reproducer. But on other versions of
-> >> Linux, I also triggered this crash.
-> >>
-> >> I would appreciate it if you have any idea how to solve this bug.
-> >>
-> > sg_release() calls "kref_put(&sfp->f_ref, sg_remove_sfp)" which
-> > eventually does "kref_put(&sdp->d_ref, sg_device_destroy)" which does
-> > "kfree(sdp)", but sg_release() continues to access sdp afterward.  Try
-> > the following patch.
-> >
-> >>From 82ca6785c40eded6229183a53752fc5e43db4a94 Mon Sep 17 00:00:00 2001
-> > From: Tony Battersby <tonyb@cybernetics.com>
-> > Date: Thu, 22 Sep 2022 11:05:30 -0400
-> > Subject: [PATCH] scsi: sg: fix memory-use-after-free on device removal
-> >
-> > Fix memory-use-after-free race when closing a sg fd to a removed device.
-> >
-> > Link: https://lore.kernel.org/linux-scsi/CAB7eexK_jr1LWOO9RWrBF9as7gAS9kpHjrZFRuRrRJF=1H4W6A@mail.gmail.com/
-> > Reported-by: Rondreis <linhaoguo86@gmail.com>
-> > Cc: <stable@vger.kernel.org>
-> > Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
-> > ---
-> >   drivers/scsi/sg.c | 2 ++
-> >   1 file changed, 2 insertions(+)
-> >
-> > diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-> > index 340b050ad28d..f44cbe42dba9 100644
-> > --- a/drivers/scsi/sg.c
-> > +++ b/drivers/scsi/sg.c
-> > @@ -388,6 +388,7 @@ sg_release(struct inode *inode, struct file *filp)
-> >               return -ENXIO;
-> >       SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp, "sg_release\n"));
-> >
-> > +     kref_get(&sdp->d_ref);
-> >       mutex_lock(&sdp->open_rel_lock);
-> >       scsi_autopm_put_device(sdp->device);
-> >       kref_put(&sfp->f_ref, sg_remove_sfp);
-> > @@ -402,6 +403,7 @@ sg_release(struct inode *inode, struct file *filp)
-> >               wake_up_interruptible(&sdp->open_wait);
-> >       }
-> >       mutex_unlock(&sdp->open_rel_lock);
-> > +     kref_put(&sdp->d_ref, sg_device_destroy);
-> >       return 0;
-> >   }
-> >
->
->
-> Hi Rondreis,
-> Have you been able to test the above patch from Tony?
->
-> Doug Gilbert
->
+diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+index 0a1734f34587..c90722aa552c 100644
+--- a/drivers/scsi/ses.c
++++ b/drivers/scsi/ses.c
+@@ -91,8 +91,15 @@ static int ses_recv_diag(struct scsi_device *sdev, int page_code,
+ 	struct scsi_sense_hdr sshdr;
+ 
+ 	do {
+-		ret = scsi_execute_req(sdev, cmd, DMA_FROM_DEVICE, buf, bufflen,
+-				       &sshdr, SES_TIMEOUT, 1, NULL);
++		ret = scsi_exec_req(((struct scsi_exec_args) {
++					.sdev = sdev,
++					.cmd = cmd,
++					.data_dir = DMA_FROM_DEVICE,
++					.buf = buf,
++					.buf_len = bufflen,
++					.sshdr = &sshdr,
++					.timeout = SES_TIMEOUT,
++					.retries = 1 }));
+ 	} while (ret > 0 && --retries && scsi_sense_valid(&sshdr) &&
+ 		 (sshdr.sense_key == NOT_READY ||
+ 		  (sshdr.sense_key == UNIT_ATTENTION && sshdr.asc == 0x29)));
+@@ -132,8 +139,15 @@ static int ses_send_diag(struct scsi_device *sdev, int page_code,
+ 	unsigned int retries = SES_RETRIES;
+ 
+ 	do {
+-		result = scsi_execute_req(sdev, cmd, DMA_TO_DEVICE, buf, bufflen,
+-					  &sshdr, SES_TIMEOUT, 1, NULL);
++		result = scsi_exec_req(((struct scsi_exec_args) {
++						.sdev = sdev,
++						.cmd = cmd,
++						.data_dir = DMA_TO_DEVICE,
++						.buf = buf,
++						.buf_len = bufflen,
++						.sshdr = &sshdr,
++						.timeout = SES_TIMEOUT,
++						.retries = 1 }));
+ 	} while (result > 0 && --retries && scsi_sense_valid(&sshdr) &&
+ 		 (sshdr.sense_key == NOT_READY ||
+ 		  (sshdr.sense_key == UNIT_ATTENTION && sshdr.asc == 0x29)));
+-- 
+2.25.1
+
