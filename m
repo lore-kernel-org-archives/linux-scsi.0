@@ -2,97 +2,97 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 300C7C433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Sep 2022 17:15:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76636C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Sep 2022 17:30:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231605AbiI3RPc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 30 Sep 2022 13:15:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39904 "EHLO
+        id S232342AbiI3RaU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 30 Sep 2022 13:30:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41096 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229479AbiI3RPa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Sep 2022 13:15:30 -0400
-Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0C2C52DFF
-        for <linux-scsi@vger.kernel.org>; Fri, 30 Sep 2022 10:15:28 -0700 (PDT)
-Received: by mail-pj1-f41.google.com with SMTP id 8-20020a17090a0b8800b00205d8564b11so4791093pjr.5
-        for <linux-scsi@vger.kernel.org>; Fri, 30 Sep 2022 10:15:28 -0700 (PDT)
+        with ESMTP id S232343AbiI3R3s (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Sep 2022 13:29:48 -0400
+Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B5AC75595
+        for <linux-scsi@vger.kernel.org>; Fri, 30 Sep 2022 10:29:35 -0700 (PDT)
+Received: by mail-pj1-f50.google.com with SMTP id l12so4690543pjh.2
+        for <linux-scsi@vger.kernel.org>; Fri, 30 Sep 2022 10:29:35 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+        h=content-transfer-encoding:in-reply-to:from:references:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date;
-        bh=xR4oWCXP/1A4sed8uTbE7zi6ZXvy/1vu+w5Pg0KPjDI=;
-        b=cs6b/jquTrtvit0WZO2Qs9IoEqu2W5y2hfo5MYsGP2oT12hGS+umjoJ9Aw2tAGiSCt
-         9UPrpqHx9AAUjQBHmnlLo4zdvIwJ6hoDDS+FCmHeuxTHceAfMar4QLYmoezYqZvY4UZK
-         2PZAknchpOM/lLea1Q5JE+KA/B4SBPogu4gHl8NAM6qilWRI7yrJj+P8pGmLN3g8vdLx
-         lLy9WUqH6KxVonrCAR7ByKe14YuNm8Dmp8k04urR0czsiwSlzw8bIcQqs3b1gRw1fYrh
-         +Ki6RDfJakeHDcdJsyiQtsBsWeACV/tSjjhBTBEpFlVzc3vxD6xXq/OxCQMvmtsCQezo
-         9xGw==
-X-Gm-Message-State: ACrzQf1WW0lOLKmflEG9AKxxLlfwTwHBDxfm8pxE0GpTyXpPKNJIHXa9
-        quk6DGE546wsU5CaBTd+lsw=
-X-Google-Smtp-Source: AMsMyM57wUCQ9zvosmPHy8Riwfwy+u7UV/Hk7RMMuUtHWX8lyM9TZyeFFh0NwIA6NBu4aTRT2pgAng==
-X-Received: by 2002:a17:90b:4f86:b0:203:bbe8:137c with SMTP id qe6-20020a17090b4f8600b00203bbe8137cmr10998712pjb.47.1664558127977;
-        Fri, 30 Sep 2022 10:15:27 -0700 (PDT)
+        bh=tn9sPQBOfapCrDR0qpefAdWhRDg0rs6ZB+tDSMM2Kq8=;
+        b=nQUchIRcnuH3atDykuf6O0tsaLLC2juwrHAaQISo+nTcqjN13jbN+sxRTv9RmHlsHb
+         iaGwglSOTIJzoX+AfWd3KTrZht4voNUbK3/+5RMzVHdtdVAx4e1LYStcLcAs4I/nj49p
+         duiBojnCuvo0ArhFo08XBWPlbvxExkxM+4PyrctEamHSEuOMLx7Pr2q7rUIQBJ65U5L1
+         +ns3gRVVdMkPFeYIuAfT/DiQOXKf0YaeKPAhIwB3k4FFE/sYssGDs/WG5O62Xrj4zQUt
+         cmWj0zWIzwNLBsCqJgW+W8jt2km3jN4qUbnez/KTKEbD5JcV+O2BBprhZ3R+Dk06UUCU
+         UMaQ==
+X-Gm-Message-State: ACrzQf3o2EMn7gOy47WujOznVP3fkfl3wQA/L1K37ymm8H9mNTl14+Rf
+        gpwT88tn4ezgjDgJt1LLsWCIsq4WJJI=
+X-Google-Smtp-Source: AMsMyM6Ynfzl2hTkD/JVMFeajvm0kCRrfjISQmndlLaTi6EooMP8HdOq6yDyaGwDMWae31arrr0dcg==
+X-Received: by 2002:a17:902:cf4c:b0:179:ecff:ea5b with SMTP id e12-20020a170902cf4c00b00179ecffea5bmr10186500plg.117.1664558973797;
+        Fri, 30 Sep 2022 10:29:33 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:56f2:482f:20c2:1d35? ([2620:15c:211:201:56f2:482f:20c2:1d35])
-        by smtp.gmail.com with ESMTPSA id k19-20020a63d853000000b0043be496f3f3sm1927882pgj.57.2022.09.30.10.15.25
+        by smtp.gmail.com with ESMTPSA id q12-20020a170902eb8c00b0016bf5557690sm2170533plg.4.2022.09.30.10.29.32
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 30 Sep 2022 10:15:27 -0700 (PDT)
-Message-ID: <af357394-7329-b218-ccf9-65944a35fc6e@acm.org>
-Date:   Fri, 30 Sep 2022 10:15:24 -0700
+        Fri, 30 Sep 2022 10:29:32 -0700 (PDT)
+Message-ID: <b4153196-23b6-8687-f56b-c875dc5fbd62@acm.org>
+Date:   Fri, 30 Sep 2022 10:29:30 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.13.0
-Subject: Re: [PATCH v3 8/8] scsi: ufs: Fix a deadlock between PM and the SCSI
- error handler
+Subject: Re: [PATCH v2 03/35] scsi: Add struct for args to execution functions
 Content-Language: en-US
-To:     Bean Huo <huobean@gmail.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>
-References: <20220929220021.247097-1-bvanassche@acm.org>
- <20220929220021.247097-9-bvanassche@acm.org>
- <67bfe4a2175da74b686a4990a6ebe0b91017599f.camel@gmail.com>
+To:     Mike Christie <michael.christie@oracle.com>, mwilck@suse.com,
+        hch@lst.de, martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        james.bottomley@hansenpartnership.com
+References: <20220929025407.119804-1-michael.christie@oracle.com>
+ <20220929025407.119804-4-michael.christie@oracle.com>
+ <046b3307-7a7a-80e0-e34a-9fb11171e241@acm.org>
+ <9f501492-415e-f7fc-137a-bd5b96a806ed@oracle.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <67bfe4a2175da74b686a4990a6ebe0b91017599f.camel@gmail.com>
+In-Reply-To: <9f501492-415e-f7fc-137a-bd5b96a806ed@oracle.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/30/22 08:03, Bean Huo wrote:
-> On Thu, 2022-09-29 at 15:00 -0700, Bart Van Assche wrote:
->> +       ufshcd_link_recovery(hba);
->> +       dev_info(hba->dev, "%s() finished; outstanding_tasks =
->> %#lx.\n",
->> +                __func__, hba->outstanding_tasks);
->> +
->> +       return hba->outstanding_tasks ? SCSI_EH_RESET_TIMER :
->> SCSI_EH_DONE;
+On 9/29/22 19:43, Mike Christie wrote:
+> On 9/29/22 7:12 PM, Bart Van Assche wrote:
+>> On 9/28/22 19:53, Mike Christie wrote:
+>>> +int __scsi_exec_req(struct scsi_exec_args *args)
+>>
+>> Has it been considered to change the argument list into "const struct
+>> scsi_exec_args *args"?
 > 
-> Bart,
+> Yeah I meant to ask you about this. We do end up updating resid, sense
+> buf, and sshdr, but because those are pointers I can make it
+> "const struct scsi_exec_args *args" and it's fine since we are not
+> updating fields like buf_len.
 > 
-> you have reset the device and host,  in the case, there are pending
-> TMs, Should be cleared locally, just like ufshcd_err_handler() does?
+> I was thinking you wanted fields like cmd const though. So do you want
+> 
+> 1. "const struct scsi_exec_args *args"
+> 
+> plus
+> 
+> 2. pointers on that struct that we don't modify like cmd and sdev also
+> const.
+> 
+> ?
+  Hi Mike,
 
-Hi Bean,
+I care more about (1) than about (2). The following code:
 
-Do you agree with the following?
-* SCSI task management functions are only submitted by the SCSI error
-   handler.
-* The ufshcd_link_recovery() call added by this patch can only be
-   invoked during system suspend.
-* System suspend only happens after processes and kernel threads have
-   been frozen and after sync() finished. Hence, no I/O should be in
-   progress when ufshcd_wl_suspend() is called and the SCSI error handler
-   should not be running either.
-* Hence, no SCSI commands other than START STOP UNIT should be in
-   progress when the ufshcd_link_recovery() call added by this
-   patch is invoked. No TMFs should be in progress either.
+__scsi_exec_req(&((struct scsi_exec_args){...}));
+
+creates a temporary struct on the stack and passes the address of that 
+temporary to __scsi_exec_req(). Changing the argument type of 
+__scsi_exec_req() from struct scsi_exec_args *args into const struct 
+scsi_exec_args *args ensures that __scsi_exec_req() cannot modify *args 
+if 'args' points at a temporary data structure on the stack.
 
 Thanks,
 
