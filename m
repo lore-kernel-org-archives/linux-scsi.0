@@ -2,83 +2,168 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2181C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Sep 2022 12:14:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 878F6C4332F
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Sep 2022 13:42:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231518AbiI3MOl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 30 Sep 2022 08:14:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34684 "EHLO
+        id S231491AbiI3NmU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 30 Sep 2022 09:42:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52484 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231473AbiI3MOh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Sep 2022 08:14:37 -0400
-Received: from mail-ed1-x534.google.com (mail-ed1-x534.google.com [IPv6:2a00:1450:4864:20::534])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B079BE6
-        for <linux-scsi@vger.kernel.org>; Fri, 30 Sep 2022 05:14:32 -0700 (PDT)
-Received: by mail-ed1-x534.google.com with SMTP id 29so5727217edv.7
-        for <linux-scsi@vger.kernel.org>; Fri, 30 Sep 2022 05:14:32 -0700 (PDT)
+        with ESMTP id S231539AbiI3NmL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Sep 2022 09:42:11 -0400
+Received: from mail-io1-xd35.google.com (mail-io1-xd35.google.com [IPv6:2607:f8b0:4864:20::d35])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E4B9198685
+        for <linux-scsi@vger.kernel.org>; Fri, 30 Sep 2022 06:42:08 -0700 (PDT)
+Received: by mail-io1-xd35.google.com with SMTP id e205so3279955iof.1
+        for <linux-scsi@vger.kernel.org>; Fri, 30 Sep 2022 06:42:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date;
-        bh=AhQZCclErhQSpww0W0nKUHtggP3rdl6LVzisBlHT4KQ=;
-        b=F7AXB/eGEtQCgxhyBXhib7k2IcFbO8TeNMBB/64MPmiw6LyRpTBw0nljnXRx4Wuion
-         5puhyZiJPJJnBoLLKQUOJNHW1BDeYj7sn/beGpwRQBCS4Cr8lQl11Hdfgcm4BlIFuLkw
-         vUwRZswlaJ0/ZFk3lqgetrocoPvTFbpvMT0/1os9PHBTDMlUlTwiCTP0geZjVhkB/hns
-         Ee71xXBCDqNoLwG6kM/oz3RlL+ZPtYaccMbObt2PAyBP/7Qd5q3DrTl4kY+mfdFgYm4N
-         FGusJsdNdKiFD+tezzCr5e5MVZUba9vNO7A0QQ7IcNorzSUzUHrG11GYMPfkAeOU3KNJ
-         mUIA==
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date;
+        bh=xqlNMZQ3D1AS+gGJtbQ5nwPfHLNZekdJiLeGB/2P0Oo=;
+        b=g/SZlfEnW/xtL+38NFDeER7npa/YEubRwkLHoo7w9fm/7CxnBOtSpUYdY2mj8BA0Zs
+         0oGpWEt4q45AGsJo6T8vpUTuRGV7Arl8LoU48M6d65vi+Kb8kfT8Lwi4ZxCaLuKCBxyZ
+         xTqB13NvJVsAycKAY8x4J2NFMBqpPnf6YDMYXj6068D10m7OxZOK0zsVynWpRHUH+der
+         Y8lxqnZlpfL/AvT/Se1lXMGoEEk409Lqu6W2OHwmAnoKHM0E2+T8U8drsN+CSTfUAm1A
+         xGiejsbM8mDML6UBOFft3rtgMR3brw30FEz9h1IBIv51w7absU4zHRrgH4SudrGfWNEH
+         sj7g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date;
-        bh=AhQZCclErhQSpww0W0nKUHtggP3rdl6LVzisBlHT4KQ=;
-        b=SRdthHHC3tbVKvqRcfi8jlLxBqVd967liR8CzAXW2YjVb7hHr/OAvEKQboj6goBtlT
-         MZ5o12+qSdwjU8klHlXA8JP5/8DyJQ1hiTtHIKJ/5zdnL1AAOznQ+A/0gpqNFLn4I3pl
-         Ee8ErgD5wHtpJbtGe/zHk+28seFrNE6Cg8ouKMvGPPCI1c/oNnAROXoHWaeDP+TjxDuL
-         a6sfCD9WP4OIUUWuXyFUxGcfRfdRylw3ZdiaHFtO+pyFDlmWOPPwOo47kqJFpT6eHZMR
-         d8Jqgs/op9CCxA5d81up2910GDg8XJI3GxaOx/eCRWBDyDYOudnscSkPdmBaq9K7XLRc
-         uj7g==
-X-Gm-Message-State: ACrzQf1nf+dEWKre02ZA3AdCqMgKVD151naRLdkEW/uCcJ043sB67LM4
-        Wa3htMtWjbCQsmYmQ24C5Dc=
-X-Google-Smtp-Source: AMsMyM6xrPH0W1hSwOpAbaO+b/FSl+b5nPn+VCewbOPbGkzt0f6ezcRnmCwej+PQK6lVwzuKVl4zYw==
-X-Received: by 2002:a05:6402:35c5:b0:450:4b7d:9c49 with SMTP id z5-20020a05640235c500b004504b7d9c49mr7718322edc.149.1664540071074;
-        Fri, 30 Sep 2022 05:14:31 -0700 (PDT)
-Received: from [10.176.234.249] ([137.201.254.41])
-        by smtp.googlemail.com with ESMTPSA id x13-20020a50d60d000000b004482dd03fe8sm1540935edi.91.2022.09.30.05.14.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 30 Sep 2022 05:14:30 -0700 (PDT)
-Message-ID: <3f511c07618adc5958c1eba474676ca5a5d3826f.camel@gmail.com>
-Subject: Re: [PATCH v3 6/8] scsi: ufs: Try harder to change the power mode
-From:   Bean Huo <huobean@gmail.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>
-Date:   Fri, 30 Sep 2022 14:14:29 +0200
-In-Reply-To: <20220929220021.247097-7-bvanassche@acm.org>
-References: <20220929220021.247097-1-bvanassche@acm.org>
-         <20220929220021.247097-7-bvanassche@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.1-0ubuntu1 
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date;
+        bh=xqlNMZQ3D1AS+gGJtbQ5nwPfHLNZekdJiLeGB/2P0Oo=;
+        b=pkm1hW7gyYHoZH+wYo8PBNYXSWKRvkrz9L69kGrIcroy6tKyKot+g7jGLGt6e4TZ/u
+         EfYrNxjAaW7+giZ55Vfi563Qb0eXCwO3EH7Q/gMgceaiBncdOKUl2SuaHeYsDOoK95Z7
+         CIye2jjiGScOBbM7uApewB4CEKwfWzQPNrhwy9VEw4cb2GLhIZYB9f5HgwpWhl7Wpokb
+         ADcSaXncmVwRrtYzju/2Jl3EV10+P/zeSfGiwQlicP39vyRamGP0mHuPr8iLdsaKtDpM
+         UxQHwEkd7sYRU/hlYvWLizmRjA9DYJjqjRMZQIaKdiYhqpW1qRuMlhsjRFg96m0bw0H6
+         bBgw==
+X-Gm-Message-State: ACrzQf2K+rZ5hRQFi+r3YKQX7D/wO2zBoC7KQdDBq9AzQLKB/6BHT2ks
+        R1cay1ZJl97R6LAf6v/hxFufyQ==
+X-Google-Smtp-Source: AMsMyM68NxJth0vMZTHBU5g6/kMmGIAZO++J6bTpObKSqOmiBAa83Dd5SOy69a0F9kxxELXGdjUJww==
+X-Received: by 2002:a05:6638:22c5:b0:35a:88fa:3d3a with SMTP id j5-20020a05663822c500b0035a88fa3d3amr4803594jat.115.1664545327131;
+        Fri, 30 Sep 2022 06:42:07 -0700 (PDT)
+Received: from [192.168.1.94] ([207.135.234.126])
+        by smtp.gmail.com with ESMTPSA id d17-20020a0566022bf100b006a10d068d39sm1111030ioy.41.2022.09.30.06.42.05
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 30 Sep 2022 06:42:06 -0700 (PDT)
+Message-ID: <a08df763-b84f-0360-f1bf-4dd1da3a97bc@kernel.dk>
+Date:   Fri, 30 Sep 2022 07:42:04 -0600
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.0
+Subject: Re: [PATCH for-next v12 02/12] io_uring: introduce fixed buffer
+ support for io_uring_cmd
+To:     Anuj Gupta <anuj20.g@samsung.com>, hch@lst.de, kbusch@kernel.org
+Cc:     io-uring@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-block@vger.kernel.org, gost.dev@samsung.com,
+        linux-scsi@vger.kernel.org, Kanchan Joshi <joshi.k@samsung.com>
+References: <20220930062749.152261-1-anuj20.g@samsung.com>
+ <CGME20220930063809epcas5p328b9e14ead49e9612b905e6f5b6682f7@epcas5p3.samsung.com>
+ <20220930062749.152261-3-anuj20.g@samsung.com>
+Content-Language: en-US
+From:   Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <20220930062749.152261-3-anuj20.g@samsung.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 2022-09-29 at 15:00 -0700, Bart Van Assche wrote:
-> Instead of only retrying the START STOP UNIT command if a unit
-> attention
-> is reported, repeat it if any SCSI error is reported by the device or
-> if
-> the command timed out.
->=20
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+On 9/30/22 12:27 AM, Anuj Gupta wrote:
+> Add IORING_URING_CMD_FIXED flag that is to be used for sending io_uring
+> command with previously registered buffers. User-space passes the buffer
+> index in sqe->buf_index, same as done in read/write variants that uses
+> fixed buffers.
+> 
+> Signed-off-by: Anuj Gupta <anuj20.g@samsung.com>
+> Signed-off-by: Kanchan Joshi <joshi.k@samsung.com>
+> ---
+>  include/linux/io_uring.h      |  2 +-
+>  include/uapi/linux/io_uring.h |  9 +++++++++
+>  io_uring/uring_cmd.c          | 18 +++++++++++++++++-
+>  3 files changed, 27 insertions(+), 2 deletions(-)
+> 
+> diff --git a/include/linux/io_uring.h b/include/linux/io_uring.h
+> index 1dbf51115c30..e10c5cc81082 100644
+> --- a/include/linux/io_uring.h
+> +++ b/include/linux/io_uring.h
+> @@ -28,7 +28,7 @@ struct io_uring_cmd {
+>  		void *cookie;
+>  	};
+>  	u32		cmd_op;
+> -	u32		pad;
+> +	u32		flags;
+>  	u8		pdu[32]; /* available inline for free use */
+>  };
+>  
+> diff --git a/include/uapi/linux/io_uring.h b/include/uapi/linux/io_uring.h
+> index 92f29d9505a6..ab7458033ee3 100644
+> --- a/include/uapi/linux/io_uring.h
+> +++ b/include/uapi/linux/io_uring.h
+> @@ -56,6 +56,7 @@ struct io_uring_sqe {
+>  		__u32		hardlink_flags;
+>  		__u32		xattr_flags;
+>  		__u32		msg_ring_flags;
+> +		__u32		uring_cmd_flags;
+>  	};
+>  	__u64	user_data;	/* data to be passed back at completion time */
+>  	/* pack this to avoid bogus arm OABI complaints */
+> @@ -219,6 +220,14 @@ enum io_uring_op {
+>  	IORING_OP_LAST,
+>  };
+>  
+> +/*
+> + * sqe->uring_cmd_flags
+> + * IORING_URING_CMD_FIXED	use registered buffer; pass thig flag
+> + *				along with setting sqe->buf_index.
+> + */
+> +#define IORING_URING_CMD_FIXED	(1U << 0)
+> +
+> +
+>  /*
+>   * sqe->fsync_flags
+>   */
+> diff --git a/io_uring/uring_cmd.c b/io_uring/uring_cmd.c
+> index 6a6d69523d75..05e8ad8cef87 100644
+> --- a/io_uring/uring_cmd.c
+> +++ b/io_uring/uring_cmd.c
+> @@ -4,6 +4,7 @@
+>  #include <linux/file.h>
+>  #include <linux/io_uring.h>
+>  #include <linux/security.h>
+> +#include <linux/nospec.h>
+>  
+>  #include <uapi/linux/io_uring.h>
+>  
+> @@ -77,7 +78,22 @@ int io_uring_cmd_prep(struct io_kiocb *req, const struct io_uring_sqe *sqe)
+>  {
+>  	struct io_uring_cmd *ioucmd = io_kiocb_to_cmd(req, struct io_uring_cmd);
+>  
+> -	if (sqe->rw_flags || sqe->__pad1)
+> +	if (sqe->__pad1)
+> +		return -EINVAL;
+> +
+> +	ioucmd->flags = READ_ONCE(sqe->uring_cmd_flags);
+> +	if (ioucmd->flags & IORING_URING_CMD_FIXED) {
+> +		struct io_ring_ctx *ctx = req->ctx;
+> +		u16 index;
+> +
+> +		req->buf_index = READ_ONCE(sqe->buf_index);
+> +		if (unlikely(req->buf_index >= ctx->nr_user_bufs))
+> +			return -EFAULT;
+> +		index = array_index_nospec(req->buf_index, ctx->nr_user_bufs);
+> +		req->imu = ctx->user_bufs[index];
+> +		io_req_set_rsrc_node(req, ctx, 0);
+> +	}
+> +	if (ioucmd->flags & ~IORING_URING_CMD_FIXED)
+>  		return -EINVAL;
 
-Reviewed-by: Bean Huo <beanhuo@micron.com>
+Not that it _really_ matters, but why isn't this check the first thing
+that is done after reading the flags? No need to respin, I can just move
+it myself.
+
+-- 
+Jens Axboe
