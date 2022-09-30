@@ -2,112 +2,81 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DDF5C4332F
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Sep 2022 19:39:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13974C433FE
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Sep 2022 20:33:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231284AbiI3Tjv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 30 Sep 2022 15:39:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45908 "EHLO
+        id S232042AbiI3UdJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 30 Sep 2022 16:33:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59186 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232101AbiI3Tjm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Sep 2022 15:39:42 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8AD1510CA;
-        Fri, 30 Sep 2022 12:39:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=UuJ7YHD62NCWF87PoNQIRR0XqMDKifEIJpbvX6nWbGI=; b=b7wpEEBn/MeUzb65Jo1nFFoOd6
-        jF4HQcj1wjX70b82ALDjAbucDEWO+Cbdp8AEbjBxghOqYTvKPMqKJDtvLIIZrslw8yUW3eZ1SnBot
-        +BhTIxFVQe9z2gF63BVmhZdj0gB5TcL+nxe34vRGG1f4WMvr/UNCiQ27dXkEfd7fVmQB+sioZZtZU
-        zLJk2XbtP4G7BwBPPweydaE0RP+E7L82R1YcMkE6xmor9kzdyBBqRR5Yq5WZvKth3wNAKz3dJ3Ij3
-        VrjdzoQ/19zray8jQP9lA9mNo1UaGLMI3s7otk4jatYjD9FMpYdRPvpxpvGbhQmnB6RN+injfwPSp
-        dfMe0ZZA==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1oeLr5-00BEOb-M4; Fri, 30 Sep 2022 19:39:27 +0000
-Date:   Fri, 30 Sep 2022 12:39:27 -0700
-From:   Luis Chamberlain <mcgrof@kernel.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     Mauro Carvalho Chehab <mchehab@kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
-        John Garry <john.garry@huawei.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-modules@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v5 6/7] module: Improve support for asynchronous module
- exit code
-Message-ID: <YzdF72yRae7lnZAy@bombadil.infradead.org>
-References: <20220914225621.415631-1-bvanassche@acm.org>
- <20220914225621.415631-7-bvanassche@acm.org>
- <a4084b27-dd2d-10df-493c-35998eed664c@acm.org>
- <YzOPJHSQsPtc5o0Y@bombadil.infradead.org>
- <33ee1c3a-d37a-b81f-68be-d1901c7dd6e8@acm.org>
+        with ESMTP id S231408AbiI3UdG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Sep 2022 16:33:06 -0400
+Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D76BC1D7BFC;
+        Fri, 30 Sep 2022 13:33:02 -0700 (PDT)
+Received: by mail-pf1-f182.google.com with SMTP id w2so5233321pfb.0;
+        Fri, 30 Sep 2022 13:33:02 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date;
+        bh=yZ3CLoEWbUsNwnFTHokhMiNfQQdxMtKbg95qd8xX+Qs=;
+        b=76OxGXMV28zLtnRfRipcIJHTBx3g9NNiwoOp8ozjTcWGYJPKG3GewZkAgFFq3MpNjq
+         kV/wYaDl3PHAbRvEa51DJl77r8nQsaidPe1RKPM5ztSPrTqgYZEHWIfkdT8oVRnHobrM
+         4oJRGqUkkTC/OUPcMyDK2AQLYM8ba7m5nz0cSpnYQWPE+7b79ocHtJRE0RzR/WJ943fB
+         nLYzCecGJGLFSAXrWJMkNtqfhvMhhnD06Jnb0omW/MIa/emb3JLZiBGW5d5TexUAdxAy
+         MPIrA8zfaNEtZ+LWfUZoiIoE5KS7x3M+D3hgw09SnipR7bYB2SXnGyqS19Ac46O8rWHv
+         Piag==
+X-Gm-Message-State: ACrzQf0byMLDAPguRLRKzTffchNdr28m5sVcywDub24tl7Mlid5mV36Q
+        9cB3Th4qpLK1ifKHjNhzxIw=
+X-Google-Smtp-Source: AMsMyM7cg0Nv3Oa527FRcJVGwCF4Q6c3aQHYr58EDZimjc5R13fS3zWqoKMxu5ewbftHD+1yDp8sog==
+X-Received: by 2002:a05:6a00:2314:b0:546:ce91:89a3 with SMTP id h20-20020a056a00231400b00546ce9189a3mr10703571pfh.77.1664569981596;
+        Fri, 30 Sep 2022 13:33:01 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:9b89:d9c:f74c:7711? ([2620:15c:211:201:9b89:d9c:f74c:7711])
+        by smtp.gmail.com with ESMTPSA id im23-20020a170902bb1700b001755e4278a6sm2301441plb.261.2022.09.30.13.32.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 30 Sep 2022 13:33:00 -0700 (PDT)
+Message-ID: <c3673ae6-4300-4709-febd-953552a9c81c@acm.org>
+Date:   Fri, 30 Sep 2022 13:32:57 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <33ee1c3a-d37a-b81f-68be-d1901c7dd6e8@acm.org>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.13.0
+Subject: Re: [PATCH v1 15/16] ufs: core: mcq: Enable Multi Circular Queue
+Content-Language: en-US
+To:     Asutosh Das <quic_asutoshd@quicinc.com>, mani@kernel.org,
+        quic_nguyenb@quicinc.com, quic_xiaosenh@quicinc.com,
+        quic_cang@quicinc.com, quic_nitirawa@quicinc.com,
+        quic_rampraka@quicinc.com, quic_richardp@quicinc.com,
+        stanley.chu@mediatek.com, adrian.hunter@intel.com,
+        avri.altman@wdc.com, beanhuo@micron.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-mediatek@lists.infradead.org>
+References: <cover.1663894792.git.quic_asutoshd@quicinc.com>
+ <c670b4f07fec06652d281ff0a390f3d2ef347d70.1663894792.git.quic_asutoshd@quicinc.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <c670b4f07fec06652d281ff0a390f3d2ef347d70.1663894792.git.quic_asutoshd@quicinc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Sep 28, 2022 at 11:17:02AM -0700, Bart Van Assche wrote:
-> On 9/27/22 17:02, Luis Chamberlain wrote:
-> > On Tue, Sep 20, 2022 at 10:13:40AM -0700, Bart Van Assche wrote:
-> > > On 9/14/22 15:56, Bart Van Assche wrote:
-> > > > Some kernel modules call device_del() from their module exit code and
-> > > > schedule asynchronous work from inside the .release callback without waiting
-> > > > until that callback has finished. As an example, many SCSI LLD drivers call
-> > > > scsi_remove_host() from their module exit code. scsi_remove_host() may
-> > > > invoke scsi_device_dev_release_usercontext() asynchronously.
-> > > > scsi_device_dev_release_usercontext() uses the host template pointer and
-> > > > that pointer usually exists in static storage in the SCSI LLD. Support
-> > > > using the module reference count to keep the module around until
-> > > > asynchronous module exiting has completed by waiting in the delete_module()
-> > > > system call until the module reference count drops to zero.
-> > > 
-> > > Hi Luis,
-> > > 
-> > > I'd like to know your opinion about this patch since you are the maintainer
-> > > of the kernel module system.
-> > 
-> > See this patch which extends the documentation of try_module_get():
-> > 
-> > https://lkml.kernel.org/r/20211029184500.2821444-7-mcgrof@kernel.org
-> > 
-> > You can ignore discussion around the thread as sadly it is just
-> > irrelevant stuff not about that patch. But the logic it spells out
-> > is still true.
-> > 
-> > So, in short, using try_module_get() on exit is actually the wrong
-> > thing to do and it is no surprise it would fail. I haven't gotten
-> > yet around to reviewing Mauro's driver API which let's you unbind
-> > drivers, but it sounds related so I CC'd you on that.
-> > 
-> > So I'd like to ask instead if an alternative to using try_module_get()
-> > on exit would be better here and for the future.
-> 
-> Hi Luis,
-> 
-> The extended documentation of try_module_get() is very helpful. But please
-> note that this patch is not related to try_module_get() at all. See also
-> patch 7/7 in this series (https://lore.kernel.org/linux-scsi/20220914225621.415631-8-bvanassche@acm.org/).
+On 9/22/22 18:05, Asutosh Das wrote:
+> MCQ is enabled in the Host Controller.
 
-I cannot see how this patch set is no way related to try_module_get()
-given the 7/7 patch you posted replaces try_module_get() with __module_get().
-My point, and hint, is that the original construct that added try_module_get()
-on removal was flawed and I'm not sure trying to expand on that idea would
-or even *should* be fruitful given the issues / tribal knowledge I tried
-extending documentation for.
+Patch descriptions should be written in the imperative mood so please 
+change the above into something like the following:
 
-It would beg the question if instead re-evaluating the goal could be
-done in such a way that the new documentation I suggested on try_module_get()
-would be seriously taken into account.
+Enable MCQ in the host controller.
 
-  Luis
+Thanks,
+
+Bart.
+
