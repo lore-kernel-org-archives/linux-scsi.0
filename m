@@ -2,108 +2,112 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBA98C433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Sep 2022 18:42:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DDF5C4332F
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Sep 2022 19:39:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231995AbiI3Sm7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 30 Sep 2022 14:42:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40728 "EHLO
+        id S231284AbiI3Tjv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 30 Sep 2022 15:39:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45908 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231281AbiI3Sm6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Sep 2022 14:42:58 -0400
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 715B41B7D81;
-        Fri, 30 Sep 2022 11:42:57 -0700 (PDT)
-Received: by mail-pl1-f176.google.com with SMTP id c24so4703164plo.3;
-        Fri, 30 Sep 2022 11:42:57 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date;
-        bh=aFuTCSgiQ1q3axsguxuz+z/zfzJxetBKH5EU8cOHNE0=;
-        b=8SIAVzwT9wehcB5zg4cImwVG3BTRacWVc/GxAnPKJumy3K/DSuI5xyYncJWYho7qnK
-         sVBD8mXkdofs+9A6PFm6p4lCQt4PpRbwIb8hk+a+t0O8nCiAej2lalNeTo3fEGPwD6Hn
-         aRdQwmrHilSnjA/ZmKxHF4p/cxVYIvJfAinVQPv0noHW/QIJCWF52nBphGrVLlRxZ83H
-         Ks+3lGJXRD9puB53J77UNhmwVmqYRt8Gn5YDf/GRfLQoFYIv3jc4SCEr8ALbMu7eVe9l
-         WAMmWpTMFb7GJdlSHfcvC6PRA1f9PVmOa+FKyjZgB1eojNEkVoS0gqAr0bi04893/GyX
-         UArg==
-X-Gm-Message-State: ACrzQf3HP3Fo590v4TspFyXqYYFaR7DzSK5XxactKwuAKIOQYK8Iltgq
-        uHQwa89fkKszAnZ2BZnoKtU=
-X-Google-Smtp-Source: AMsMyM63hj0JZwb61O8N3SA/97MjlXhh7TAt954QlO2qGZP4zZRlJKTN9QDiw/tHJI3V9Tc4QCy9vw==
-X-Received: by 2002:a17:902:7897:b0:178:9292:57b9 with SMTP id q23-20020a170902789700b00178929257b9mr10403947pll.102.1664563376850;
-        Fri, 30 Sep 2022 11:42:56 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:56f2:482f:20c2:1d35? ([2620:15c:211:201:56f2:482f:20c2:1d35])
-        by smtp.gmail.com with ESMTPSA id e10-20020a17090301ca00b00172d9f6e22bsm2291650plh.15.2022.09.30.11.42.54
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 30 Sep 2022 11:42:56 -0700 (PDT)
-Message-ID: <2a25bce5-aad2-cc01-5879-73005cafb371@acm.org>
-Date:   Fri, 30 Sep 2022 11:42:53 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.13.0
-Subject: Re: [PATCH v1 05/16] ufs: core: mcq: Configure resource regions
-Content-Language: en-US
-To:     Asutosh Das <quic_asutoshd@quicinc.com>, mani@kernel.org,
-        quic_nguyenb@quicinc.com, quic_xiaosenh@quicinc.com,
-        quic_cang@quicinc.com, quic_nitirawa@quicinc.com,
-        quic_rampraka@quicinc.com, quic_richardp@quicinc.com,
-        stanley.chu@mediatek.com, adrian.hunter@intel.com,
-        avri.altman@wdc.com, beanhuo@micron.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
+        with ESMTP id S232101AbiI3Tjm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Sep 2022 15:39:42 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8AD1510CA;
+        Fri, 30 Sep 2022 12:39:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
+        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=UuJ7YHD62NCWF87PoNQIRR0XqMDKifEIJpbvX6nWbGI=; b=b7wpEEBn/MeUzb65Jo1nFFoOd6
+        jF4HQcj1wjX70b82ALDjAbucDEWO+Cbdp8AEbjBxghOqYTvKPMqKJDtvLIIZrslw8yUW3eZ1SnBot
+        +BhTIxFVQe9z2gF63BVmhZdj0gB5TcL+nxe34vRGG1f4WMvr/UNCiQ27dXkEfd7fVmQB+sioZZtZU
+        zLJk2XbtP4G7BwBPPweydaE0RP+E7L82R1YcMkE6xmor9kzdyBBqRR5Yq5WZvKth3wNAKz3dJ3Ij3
+        VrjdzoQ/19zray8jQP9lA9mNo1UaGLMI3s7otk4jatYjD9FMpYdRPvpxpvGbhQmnB6RN+injfwPSp
+        dfMe0ZZA==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1oeLr5-00BEOb-M4; Fri, 30 Sep 2022 19:39:27 +0000
+Date:   Fri, 30 Sep 2022 12:39:27 -0700
+From:   Luis Chamberlain <mcgrof@kernel.org>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Mauro Carvalho Chehab <mchehab@kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
+        John Garry <john.garry@huawei.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-modules@vger.kernel.org, linux-kernel@vger.kernel.org,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-mediatek@lists.infradead.org>
-References: <cover.1663894792.git.quic_asutoshd@quicinc.com>
- <4d4df6ad6353b93253fb22deefb772dc59f5c84e.1663894792.git.quic_asutoshd@quicinc.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <4d4df6ad6353b93253fb22deefb772dc59f5c84e.1663894792.git.quic_asutoshd@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v5 6/7] module: Improve support for asynchronous module
+ exit code
+Message-ID: <YzdF72yRae7lnZAy@bombadil.infradead.org>
+References: <20220914225621.415631-1-bvanassche@acm.org>
+ <20220914225621.415631-7-bvanassche@acm.org>
+ <a4084b27-dd2d-10df-493c-35998eed664c@acm.org>
+ <YzOPJHSQsPtc5o0Y@bombadil.infradead.org>
+ <33ee1c3a-d37a-b81f-68be-d1901c7dd6e8@acm.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <33ee1c3a-d37a-b81f-68be-d1901c7dd6e8@acm.org>
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/22/22 18:05, Asutosh Das wrote:
-> +/* Resources */
-> +static const struct ufshcd_res_info_t ufshcd_res_info[RES_MAX] = {
-> +	{.name = "ufs_mem", .resource = NULL, .base = NULL},
-> +	{.name = "mcq", .resource = NULL, .base = NULL},
-> +	/* Submission Queue DAO */
-> +	{.name = "mcq_sqd", .resource = NULL, .base = NULL},
-> +	/* Submission Queue Interrupt Status */
-> +	{.name = "mcq_sqis", .resource = NULL, .base = NULL},
-> +	/* Completion Queue DAO */
-> +	{.name = "mcq_cqd", .resource = NULL, .base = NULL},
-> +	/* Completion Queue Interrupt Status */
-> +	{.name = "mcq_cqis", .resource = NULL, .base = NULL},
-> +	/* MCQ vendor specific */
-> +	{.name = "mcq_vs", .resource = NULL, .base = NULL},
-> +};
+On Wed, Sep 28, 2022 at 11:17:02AM -0700, Bart Van Assche wrote:
+> On 9/27/22 17:02, Luis Chamberlain wrote:
+> > On Tue, Sep 20, 2022 at 10:13:40AM -0700, Bart Van Assche wrote:
+> > > On 9/14/22 15:56, Bart Van Assche wrote:
+> > > > Some kernel modules call device_del() from their module exit code and
+> > > > schedule asynchronous work from inside the .release callback without waiting
+> > > > until that callback has finished. As an example, many SCSI LLD drivers call
+> > > > scsi_remove_host() from their module exit code. scsi_remove_host() may
+> > > > invoke scsi_device_dev_release_usercontext() asynchronously.
+> > > > scsi_device_dev_release_usercontext() uses the host template pointer and
+> > > > that pointer usually exists in static storage in the SCSI LLD. Support
+> > > > using the module reference count to keep the module around until
+> > > > asynchronous module exiting has completed by waiting in the delete_module()
+> > > > system call until the module reference count drops to zero.
+> > > 
+> > > Hi Luis,
+> > > 
+> > > I'd like to know your opinion about this patch since you are the maintainer
+> > > of the kernel module system.
+> > 
+> > See this patch which extends the documentation of try_module_get():
+> > 
+> > https://lkml.kernel.org/r/20211029184500.2821444-7-mcgrof@kernel.org
+> > 
+> > You can ignore discussion around the thread as sadly it is just
+> > irrelevant stuff not about that patch. But the logic it spells out
+> > is still true.
+> > 
+> > So, in short, using try_module_get() on exit is actually the wrong
+> > thing to do and it is no surprise it would fail. I haven't gotten
+> > yet around to reviewing Mauro's driver API which let's you unbind
+> > drivers, but it sounds related so I CC'd you on that.
+> > 
+> > So I'd like to ask instead if an alternative to using try_module_get()
+> > on exit would be better here and for the future.
+> 
+> Hi Luis,
+> 
+> The extended documentation of try_module_get() is very helpful. But please
+> note that this patch is not related to try_module_get() at all. See also
+> patch 7/7 in this series (https://lore.kernel.org/linux-scsi/20220914225621.415631-8-bvanassche@acm.org/).
 
-Please leave out the members that are NULL (.resource and .base) since 
-the compiler will initialize these for you.
+I cannot see how this patch set is no way related to try_module_get()
+given the 7/7 patch you posted replaces try_module_get() with __module_get().
+My point, and hint, is that the original construct that added try_module_get()
+on removal was flawed and I'm not sure trying to expand on that idea would
+or even *should* be fruitful given the issues / tribal knowledge I tried
+extending documentation for.
 
->   /**
-> + * struct ufshcd_res_info_t - MCQ related resource regions
-> + *
-> + * @name: resource name
-> + * @resource: pointer to resource region
-> + * @base: register base address
-> + */
-> +struct ufshcd_res_info_t {
-> +	const char *name;
-> +	struct resource *resource;
-> +	void __iomem *base;
-> +};
+It would beg the question if instead re-evaluating the goal could be
+done in such a way that the new documentation I suggested on try_module_get()
+would be seriously taken into account.
 
-Please remove the suffix "_t" since that suffix is typically used for 
-typedefs and not for data structures.
-
-Thanks,
-
-Bart.
+  Luis
