@@ -2,48 +2,47 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D820C433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Sep 2022 18:32:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFD6DC433FE
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Sep 2022 18:37:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232005AbiI3Sck (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 30 Sep 2022 14:32:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42664 "EHLO
+        id S231777AbiI3Shm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 30 Sep 2022 14:37:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57026 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231668AbiI3Scj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Sep 2022 14:32:39 -0400
-Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C3631B14D4;
-        Fri, 30 Sep 2022 11:32:38 -0700 (PDT)
-Received: by mail-pj1-f54.google.com with SMTP id d1-20020a17090a6a4100b002095b319b9aso3959987pjm.0;
-        Fri, 30 Sep 2022 11:32:38 -0700 (PDT)
+        with ESMTP id S230246AbiI3Shl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Sep 2022 14:37:41 -0400
+Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 157FC1739D3;
+        Fri, 30 Sep 2022 11:37:40 -0700 (PDT)
+Received: by mail-pf1-f175.google.com with SMTP id v186so4968651pfv.11;
+        Fri, 30 Sep 2022 11:37:40 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date;
-        bh=pGmxq8tDBSfiPNAIZ25qzZIB0dRZb2RCLRuZ0IccZag=;
-        b=RHFqR+mFKMnhwJo60iqtqrqdeOp2oig7jwnCzyVCI/SLVIxC/MXDAjR0ycHQo3CJGP
-         NHZEdAiMlXb701ldXKNljAlGyDDvg/CTn8ZCoW7c6EO3+GU+nRHEgdDb2cbiD27siwmh
-         tSfRhhj7LNeQY0ypbGR/98VN/PWtBO2VyHWRUdD94nSz9WNd1NWmC4KH7F3G+BgkbIrL
-         QYO40migr0/B4iDlrEKJDatnnKr8IeQMls25f2RksCAk/6luImp+QxBKXIuLbcYlY+K3
-         Rf7WMIEJp2gh1OXo3U1aOOr4bJy/q7UJ1dKQlbhpf2893WmhyXTu4pYibLf0ScjYitgu
-         csaA==
-X-Gm-Message-State: ACrzQf2RNJdJbziD1QTj4XoFmL04jAW3O4AXC/H9Ip+l1FktVejx0I6y
-        DlsegeR1ysfOwq+QRWRBPXo=
-X-Google-Smtp-Source: AMsMyM6x9mzhkst02rDj+5NHQLQ9eMpWzm75K1RoD0MiFIcFrYfU9xdTvfahB327EwcQNCkFcvulvA==
-X-Received: by 2002:a17:90b:1c8e:b0:205:783b:fe32 with SMTP id oo14-20020a17090b1c8e00b00205783bfe32mr24053856pjb.39.1664562757664;
-        Fri, 30 Sep 2022 11:32:37 -0700 (PDT)
+        bh=efafKPDXaotfifV7ioMYf9voysdJTvPoHFHiRmXnzh8=;
+        b=LZGhsiDt9MC9Hok9KYNy7YetGAACSYQMMHGoZ9dxFUdFlTMnOF4McjiMI+02W46cA7
+         pCa0YEMLl08esZpJ22opF4KBoKINv+EgnOvG3R5QXj7axS26odgEaPJShO6OK+WibMeq
+         16nNyiyugavkjBsuN6qRtY04t0odotQDrrOHruT5H0mn8Abih/2ZOd0xr1nFFRIFG79r
+         Kb5Eon03GFH5bKPzG7Et8r0NsIQJeghLg3p5EFoOq60vUJWjL26uYKm+aKoKKIF1bD66
+         nTuxbpVw4JwWaqvtEEKfww4IzGI7Yb2kyg2/1tiyb/v0NV1sS251okjIGgNcy7WT15/i
+         qcGA==
+X-Gm-Message-State: ACrzQf2l5vxoXI8seZCXmtxEc75GJqrNuZfETzmPGpTbyHaGkAqmnjev
+        lCVGsjua4xvEDnjD0Y2n2qI=
+X-Google-Smtp-Source: AMsMyM7pHUBp9AyBR4mQyCzjDLxGnbHWvFKk4bh5EdnF2qd0BzZ9SwQ7YzOyXC+UxyR5MekpDcDBOw==
+X-Received: by 2002:a63:d30b:0:b0:42b:9ca4:15f4 with SMTP id b11-20020a63d30b000000b0042b9ca415f4mr8631548pgg.146.1664563059451;
+        Fri, 30 Sep 2022 11:37:39 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:56f2:482f:20c2:1d35? ([2620:15c:211:201:56f2:482f:20c2:1d35])
-        by smtp.gmail.com with ESMTPSA id w27-20020aa7955b000000b00535d3caa66fsm2106983pfq.197.2022.09.30.11.32.35
+        by smtp.gmail.com with ESMTPSA id p8-20020a635b08000000b0043bed49f31fsm2064027pgb.8.2022.09.30.11.37.36
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 30 Sep 2022 11:32:36 -0700 (PDT)
-Message-ID: <4767355d-e7b0-d38b-88f3-c070ed0b5e5b@acm.org>
-Date:   Fri, 30 Sep 2022 11:32:34 -0700
+        Fri, 30 Sep 2022 11:37:38 -0700 (PDT)
+Message-ID: <feb4295c-e31d-1bf0-2176-a844c1c9197e@acm.org>
+Date:   Fri, 30 Sep 2022 11:37:35 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.13.0
-Subject: Re: [PATCH v1 03/16] ufs: core: Defer adding host to scsi if mcq is
- supported
+Subject: Re: [PATCH v1 04/16] ufs: core: mcq: Introduce Multi Circular Queue
 Content-Language: en-US
 To:     Asutosh Das <quic_asutoshd@quicinc.com>, mani@kernel.org,
         quic_nguyenb@quicinc.com, quic_xiaosenh@quicinc.com,
@@ -54,15 +53,16 @@ To:     Asutosh Das <quic_asutoshd@quicinc.com>, mani@kernel.org,
 Cc:     linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Matthias Brugger <matthias.bgg@gmail.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
         open list <linux-kernel@vger.kernel.org>,
         "moderated list:ARM/Mediatek SoC support" 
         <linux-arm-kernel@lists.infradead.org>,
         "moderated list:ARM/Mediatek SoC support" 
         <linux-mediatek@lists.infradead.org>
 References: <cover.1663894792.git.quic_asutoshd@quicinc.com>
- <197a8bcca288f9c36586099aa07606ed3f067c9b.1663894792.git.quic_asutoshd@quicinc.com>
+ <e0ae0fccc579fa17b6cfcf3b8bcf963f5ebe67fa.1663894792.git.quic_asutoshd@quicinc.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <197a8bcca288f9c36586099aa07606ed3f067c9b.1663894792.git.quic_asutoshd@quicinc.com>
+In-Reply-To: <e0ae0fccc579fa17b6cfcf3b8bcf963f5ebe67fa.1663894792.git.quic_asutoshd@quicinc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -70,46 +70,44 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 9/22/22 18:05, Asutosh Das wrote:
-> @@ -8218,6 +8219,14 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool init_dev_params)
->   		ret = ufshcd_device_params_init(hba);
->   		if (ret)
->   			goto out;
+> +static int ufshcd_mcq_config_nr_queues(struct ufs_hba *hba)
+> +{
+> +	int i, rem;
+> +	u32 hbaq_cap, cmp, tot_queues;
+> +	struct Scsi_Host *host = hba->host;
 > +
-> +		if (is_mcq_supported(hba)) {
-> +			ret = scsi_add_host(host, hba->dev);
-> +			if (ret) {
-> +				dev_err(hba->dev, "scsi_add_host failed\n");
-> +				goto out;
-> +			}
-> +		}
->   	}
+> +	hbaq_cap = hba->mcq_capabilities & 0xff;
+> +
+> +	if (!rw_queues)
+> +		rw_queues = num_possible_cpus();
+> +
+> +	tot_queues = dev_cmd_queue + read_queues + poll_queues + rw_queues;
+> +	if (hbaq_cap < tot_queues) {
+> +		dev_err(hba->dev, "Total queues (%d) exceeds HC capacity (%d)\n",
+> +			tot_queues, hbaq_cap);
+> +		return -EOPNOTSUPP;
+> +	}
+> +
+> +	rem = hbaq_cap - dev_cmd_queue;
+> +	cmp = rem;
+> +	hba->nr_queues[HCTX_TYPE_DEFAULT] = min3(cmp, rw_queues,
+> +						 num_possible_cpus());
+> +	rem -= hba->nr_queues[HCTX_TYPE_DEFAULT];
+> +	cmp = rem;
+> +	hba->nr_queues[HCTX_TYPE_POLL] = min(cmp, poll_queues);
+> +	rem -= hba->nr_queues[HCTX_TYPE_POLL];
+> +	cmp = rem;
+> +	hba->nr_queues[HCTX_TYPE_READ] = min(cmp, read_queues);
+> +
+> +	for (i = 0; i < HCTX_MAX_TYPES; i++)
+> +		host->nr_hw_queues += hba->nr_queues[i];
+> +
+> +	hba->nr_hw_queues = host->nr_hw_queues + dev_cmd_queue;
+> +	return 0;
+> +}
 
-Calling scsi_add_host() from ufshcd_probe_hba() seems wrong to me since 
-that function is not only called when probing a host controller but also 
-when resetting a host controller. See also ufshcd_host_reset_and_restore().
-
->   
->   	ufshcd_tune_unipro_params(hba);
-> @@ -9764,10 +9773,12 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
->   		hba->is_irq_enabled = true;
->   	}
->   
-> -	err = scsi_add_host(host, hba->dev);
-> -	if (err) {
-> -		dev_err(hba->dev, "scsi_add_host failed\n");
-> -		goto out_disable;
-> +	if (!is_mcq_supported(hba)) {
-> +		err = scsi_add_host(host, hba->dev);
-> +		if (err) {
-> +			dev_err(hba->dev, "scsi_add_host failed\n");
-> +			goto out_disable;
-> +		}
->   	}
->   
->   	hba->tmf_tag_set = (struct blk_mq_tag_set) {
-
-Please make sure there is only a single scsi_add_host() call in the UFS 
-host controller driver.
+Please consider removing the variable 'cmp' and instead use min_t() or a 
+type cast.
 
 Thanks,
 
