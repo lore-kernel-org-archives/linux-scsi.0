@@ -2,83 +2,83 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EEA9C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Sep 2022 11:19:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2181C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Sep 2022 12:14:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232433AbiI3LTV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 30 Sep 2022 07:19:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58308 "EHLO
+        id S231518AbiI3MOl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 30 Sep 2022 08:14:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34684 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231702AbiI3LS7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Sep 2022 07:18:59 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74A1A10461F;
-        Fri, 30 Sep 2022 04:05:57 -0700 (PDT)
-Received: from fraeml744-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Mf6nL1Dk2z6H780;
-        Fri, 30 Sep 2022 19:04:38 +0800 (CST)
-Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml744-chm.china.huawei.com (10.206.15.225) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Fri, 30 Sep 2022 13:05:55 +0200
-Received: from [10.126.175.8] (10.126.175.8) by lhrpeml500003.china.huawei.com
- (7.191.162.67) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Fri, 30 Sep
- 2022 12:05:54 +0100
-Message-ID: <32b0f929-4534-450b-b19c-d3404db63202@huawei.com>
-Date:   Fri, 30 Sep 2022 12:05:59 +0100
+        with ESMTP id S231473AbiI3MOh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Sep 2022 08:14:37 -0400
+Received: from mail-ed1-x534.google.com (mail-ed1-x534.google.com [IPv6:2a00:1450:4864:20::534])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B079BE6
+        for <linux-scsi@vger.kernel.org>; Fri, 30 Sep 2022 05:14:32 -0700 (PDT)
+Received: by mail-ed1-x534.google.com with SMTP id 29so5727217edv.7
+        for <linux-scsi@vger.kernel.org>; Fri, 30 Sep 2022 05:14:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date;
+        bh=AhQZCclErhQSpww0W0nKUHtggP3rdl6LVzisBlHT4KQ=;
+        b=F7AXB/eGEtQCgxhyBXhib7k2IcFbO8TeNMBB/64MPmiw6LyRpTBw0nljnXRx4Wuion
+         5puhyZiJPJJnBoLLKQUOJNHW1BDeYj7sn/beGpwRQBCS4Cr8lQl11Hdfgcm4BlIFuLkw
+         vUwRZswlaJ0/ZFk3lqgetrocoPvTFbpvMT0/1os9PHBTDMlUlTwiCTP0geZjVhkB/hns
+         Ee71xXBCDqNoLwG6kM/oz3RlL+ZPtYaccMbObt2PAyBP/7Qd5q3DrTl4kY+mfdFgYm4N
+         FGusJsdNdKiFD+tezzCr5e5MVZUba9vNO7A0QQ7IcNorzSUzUHrG11GYMPfkAeOU3KNJ
+         mUIA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date;
+        bh=AhQZCclErhQSpww0W0nKUHtggP3rdl6LVzisBlHT4KQ=;
+        b=SRdthHHC3tbVKvqRcfi8jlLxBqVd967liR8CzAXW2YjVb7hHr/OAvEKQboj6goBtlT
+         MZ5o12+qSdwjU8klHlXA8JP5/8DyJQ1hiTtHIKJ/5zdnL1AAOznQ+A/0gpqNFLn4I3pl
+         Ee8ErgD5wHtpJbtGe/zHk+28seFrNE6Cg8ouKMvGPPCI1c/oNnAROXoHWaeDP+TjxDuL
+         a6sfCD9WP4OIUUWuXyFUxGcfRfdRylw3ZdiaHFtO+pyFDlmWOPPwOo47kqJFpT6eHZMR
+         d8Jqgs/op9CCxA5d81up2910GDg8XJI3GxaOx/eCRWBDyDYOudnscSkPdmBaq9K7XLRc
+         uj7g==
+X-Gm-Message-State: ACrzQf1nf+dEWKre02ZA3AdCqMgKVD151naRLdkEW/uCcJ043sB67LM4
+        Wa3htMtWjbCQsmYmQ24C5Dc=
+X-Google-Smtp-Source: AMsMyM6xrPH0W1hSwOpAbaO+b/FSl+b5nPn+VCewbOPbGkzt0f6ezcRnmCwej+PQK6lVwzuKVl4zYw==
+X-Received: by 2002:a05:6402:35c5:b0:450:4b7d:9c49 with SMTP id z5-20020a05640235c500b004504b7d9c49mr7718322edc.149.1664540071074;
+        Fri, 30 Sep 2022 05:14:31 -0700 (PDT)
+Received: from [10.176.234.249] ([137.201.254.41])
+        by smtp.googlemail.com with ESMTPSA id x13-20020a50d60d000000b004482dd03fe8sm1540935edi.91.2022.09.30.05.14.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 30 Sep 2022 05:14:30 -0700 (PDT)
+Message-ID: <3f511c07618adc5958c1eba474676ca5a5d3826f.camel@gmail.com>
+Subject: Re: [PATCH v3 6/8] scsi: ufs: Try harder to change the power mode
+From:   Bean Huo <huobean@gmail.com>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Jinyoung Choi <j-young.choi@samsung.com>
+Date:   Fri, 30 Sep 2022 14:14:29 +0200
+In-Reply-To: <20220929220021.247097-7-bvanassche@acm.org>
+References: <20220929220021.247097-1-bvanassche@acm.org>
+         <20220929220021.247097-7-bvanassche@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.1-0ubuntu1 
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH v2 4/6] scsi: pm8001: Use sas_task_find_rq() for tagging
-From:   John Garry <john.garry@huawei.com>
-To:     Jinpu Wang <jinpu.wang@ionos.com>, <damien.lemoal@wdc.com>
-CC:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>, <hare@suse.de>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>, <ipylypiv@google.com>,
-        <changyuanl@google.com>, <hch@lst.de>, <yanaijie@huawei.com>
-References: <1664528184-162714-1-git-send-email-john.garry@huawei.com>
- <1664528184-162714-5-git-send-email-john.garry@huawei.com>
- <CAMGffEkgR6VmfMV1eLVeTn+b8b0GC_B9=vj3HxF6cn5Er6+CTg@mail.gmail.com>
- <5e570c35-ed98-a29b-736f-677aa896f654@huawei.com>
-In-Reply-To: <5e570c35-ed98-a29b-736f-677aa896f654@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.126.175.8]
-X-ClientProxiedBy: lhrpeml100002.china.huawei.com (7.191.160.241) To
- lhrpeml500003.china.huawei.com (7.191.162.67)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 30/09/2022 11:20, John Garry wrote:
-> BTW, I do notice that we still have this global lock in delivery path 
-> which should be removed at some stage:
-> > int mvs_queue_command(struct sas_task *task, gfp_t gfp_flags)
-> {
->      ...
-> 
->      spin_lock_irqsave(&mvi->lock, flags);
->      rc = mvs_task_prep(task, mvi, is_tmf, tmf, &pass);
->      ...
->      spin_unlock_irqrestore(&mvi->lock, flags);
-> }
-> 
+On Thu, 2022-09-29 at 15:00 -0700, Bart Van Assche wrote:
+> Instead of only retrying the START STOP UNIT command if a unit
+> attention
+> is reported, repeat it if any SCSI error is reported by the device or
+> if
+> the command timed out.
+>=20
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
-oops... that's mvsas. But pm8001 does still use a big lock (which we 
-should get rid off):
-
-int pm8001_queue_command(struct sas_task *task, gfp_t gfp_flags)
-{
-	...
-	pm8001_dbg(pm8001_ha, IO, "pm8001_task_exec device\n");
-
-	spin_lock_irqsave(&pm8001_ha->lock, flags);
-
-
-Thanks,
-John
-
-> That really will affect performance...
-
+Reviewed-by: Bean Huo <beanhuo@micron.com>
