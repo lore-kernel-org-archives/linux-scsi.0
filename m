@@ -2,242 +2,110 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F5EEC433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Sep 2022 09:04:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1984C433FE
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Sep 2022 09:15:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231400AbiI3JEx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 30 Sep 2022 05:04:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32858 "EHLO
+        id S231335AbiI3JPt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 30 Sep 2022 05:15:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39420 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231360AbiI3JEW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Sep 2022 05:04:22 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C1521FBC86;
-        Fri, 30 Sep 2022 02:04:07 -0700 (PDT)
-Received: from fraeml710-chm.china.huawei.com (unknown [172.18.147.226])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Mf43j0tZlz67N4y;
-        Fri, 30 Sep 2022 17:01:53 +0800 (CST)
-Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml710-chm.china.huawei.com (10.206.15.59) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Fri, 30 Sep 2022 11:04:04 +0200
-Received: from localhost.localdomain (10.69.192.58) by
- lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Fri, 30 Sep 2022 10:04:01 +0100
-From:   John Garry <john.garry@huawei.com>
-To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <jinpu.wang@cloud.ionos.com>, <damien.lemoal@wdc.com>
-CC:     <hare@suse.de>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>,
-        <ipylypiv@google.com>, <changyuanl@google.com>, <hch@lst.de>,
-        <yanaijie@huawei.com>, John Garry <john.garry@huawei.com>
-Subject: [PATCH v2 6/6] scsi: mvsas: Use sas_task_find_rq() for tagging
-Date:   Fri, 30 Sep 2022 16:56:24 +0800
-Message-ID: <1664528184-162714-7-git-send-email-john.garry@huawei.com>
-X-Mailer: git-send-email 2.8.1
-In-Reply-To: <1664528184-162714-1-git-send-email-john.garry@huawei.com>
-References: <1664528184-162714-1-git-send-email-john.garry@huawei.com>
+        with ESMTP id S229479AbiI3JPs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Sep 2022 05:15:48 -0400
+Received: from mail-lj1-x232.google.com (mail-lj1-x232.google.com [IPv6:2a00:1450:4864:20::232])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73F3665678
+        for <linux-scsi@vger.kernel.org>; Fri, 30 Sep 2022 02:15:46 -0700 (PDT)
+Received: by mail-lj1-x232.google.com with SMTP id j24so4146741lja.4
+        for <linux-scsi@vger.kernel.org>; Fri, 30 Sep 2022 02:15:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ionos.com; s=google;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date;
+        bh=mbCUi7iIwW+0leOB/DED62AZnjPutuu1M7qHobOoUY0=;
+        b=b6Y+t900tkk8sCgvmxAKWfib14pmW7NpkkAn4LCccmwzs18wsekXHsCP1tEBed3fj7
+         eLY7cvRh2gtvp0LDx7ITuxove/RTHoifW9Jtq1GWrj0ocRSe2p93ywKPJq1vyB0Ka1ZS
+         cNBfUzaKDceAeQGeMnjaEXg1wPl5KaIg/jh+yaxsbVMAQyGngJY/DMXy1YeWsnaLV1m5
+         9gc7Qc6m85+DtEPPBHZu+vhyZlXPp86SjW5REx0CIfWjYmFOrp7/4LGAofpojQRDDm9/
+         zB2GQ0vUJUPKP/F1JUcHOCb4edk1GeNq38g9TcFZdgreLS03wNAiuA+Zni69YPTlbnou
+         JDww==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date;
+        bh=mbCUi7iIwW+0leOB/DED62AZnjPutuu1M7qHobOoUY0=;
+        b=NJ/JGItB6bbvzIGvjX1nH71tKrPph02t2l/NGBmbm5ymrwwp5aaLsQjcQb656GHTqC
+         /d1VJJlEimlJkJAu7scy0tUmXfBCTdVrXwuq0xtQixCAA5MAsuihRgHZJa0QWknk+3K0
+         xMTKHNuc2+cJg2Z/5g2Er/KA8635lT5MWrcnsusKgVEhLri5BtJo6I0jeD/7h6DK5Elv
+         p+dXlmbQaq8xN7C/lQBwmCaGHOyb89gOA0oOLRZXQ9Sv1wzURdEDs2k3f1x5G3Rf5bbp
+         kbLP0n1XNtFDQM9PY8KN3Mdfc1TsfJ+vW3BLHhkZQVXcU4P/NH/IGwOrDlQUkJPf1Axc
+         KQPA==
+X-Gm-Message-State: ACrzQf27EPDkyc3PdPg2du3hmjD94baAPzjcNrdKwKCa5hUJiHEISSYu
+        82azrZBocAl3guXBmi5YmlYHLM2Oge0QB/HQF4eVMA==
+X-Google-Smtp-Source: AMsMyM6yn6iTkJhXXc2P8mYh3w7Sajwdyn6q8vghlTMvAjkLMMVVO+n3jyw6LfO+HJwjTufywcXThjenoBhaX/phE8w=
+X-Received: by 2002:a2e:a37a:0:b0:26d:8b41:9fe8 with SMTP id
+ i26-20020a2ea37a000000b0026d8b419fe8mr2521993ljn.383.1664529344820; Fri, 30
+ Sep 2022 02:15:44 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- lhrpeml500003.china.huawei.com (7.191.162.67)
-X-CFilter-Loop: Reflected
+References: <1664528184-162714-1-git-send-email-john.garry@huawei.com> <1664528184-162714-2-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1664528184-162714-2-git-send-email-john.garry@huawei.com>
+From:   Jinpu Wang <jinpu.wang@ionos.com>
+Date:   Fri, 30 Sep 2022 11:15:33 +0200
+Message-ID: <CAMGffE=PtSczoDckYPFO4azsrVqqAaGgp6Upup8WVYhk=O4X7w@mail.gmail.com>
+Subject: Re: [PATCH v2 1/6] scsi: libsas: Add sas_task_find_rq()
+To:     John Garry <john.garry@huawei.com>
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        jinpu.wang@ionos.com, damien.lemoal@wdc.com, hare@suse.de,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linuxarm@huawei.com, ipylypiv@google.com, changyuanl@google.com,
+        hch@lst.de, yanaijie@huawei.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The request associated with a scsi command coming from the block layer
-has a unique tag, so use that when possible for getting a slot.
-
-Unfortunately we don't support reserved commands in the SCSI midlayer yet.
-As such, SMP tasks - as an example - will not have a request associated, so
-in the interim continue to manage those tags for that type of sas_task
-internally.
-
-We reserve an arbitrary 4 tags for these internal tags. Indeed, we already
-decrement MVS_RSVD_SLOTS by 2 for the shost can_queue when flag
-MVF_FLAG_SOC is set. This change was made in commit 20b09c2992fef
-("[PATCH] [SCSI] mvsas: add support for 94xx; layout change; bug fixes"),
-but what those 2 slots are used for is not obvious.
-
-Also make the tag management functions static, where possible.
-
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- drivers/scsi/mvsas/mv_defs.h |  1 +
- drivers/scsi/mvsas/mv_init.c |  9 +++++----
- drivers/scsi/mvsas/mv_sas.c  | 38 ++++++++++++++++++++++++------------
- drivers/scsi/mvsas/mv_sas.h  |  7 +------
- 4 files changed, 32 insertions(+), 23 deletions(-)
-
-diff --git a/drivers/scsi/mvsas/mv_defs.h b/drivers/scsi/mvsas/mv_defs.h
-index 7123a2efbf58..8ef174cd4d37 100644
---- a/drivers/scsi/mvsas/mv_defs.h
-+++ b/drivers/scsi/mvsas/mv_defs.h
-@@ -40,6 +40,7 @@ enum driver_configuration {
- 	MVS_ATA_CMD_SZ		= 96,	/* SATA command table buffer size */
- 	MVS_OAF_SZ		= 64,	/* Open address frame buffer size */
- 	MVS_QUEUE_SIZE		= 64,	/* Support Queue depth */
-+	MVS_RSVD_SLOTS		= 4,
- 	MVS_SOC_CAN_QUEUE	= MVS_SOC_SLOTS - 2,
- };
- 
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index c85fb812ad43..cfe84473a515 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -142,7 +142,7 @@ static void mvs_free(struct mvs_info *mvi)
- 		scsi_host_put(mvi->shost);
- 	list_for_each_entry(mwq, &mvi->wq_list, entry)
- 		cancel_delayed_work(&mwq->work_q);
--	kfree(mvi->tags);
-+	kfree(mvi->rsvd_tags);
- 	kfree(mvi);
- }
- 
-@@ -284,7 +284,6 @@ static int mvs_alloc(struct mvs_info *mvi, struct Scsi_Host *shost)
- 			printk(KERN_DEBUG "failed to create dma pool %s.\n", pool_name);
- 			goto err_out;
- 	}
--	mvi->tags_num = slot_nr;
- 
- 	return 0;
- err_out:
-@@ -367,8 +366,8 @@ static struct mvs_info *mvs_pci_alloc(struct pci_dev *pdev,
- 	mvi->sas = sha;
- 	mvi->shost = shost;
- 
--	mvi->tags = kzalloc(MVS_CHIP_SLOT_SZ>>3, GFP_KERNEL);
--	if (!mvi->tags)
-+	mvi->rsvd_tags = bitmap_zalloc(MVS_RSVD_SLOTS, GFP_KERNEL);
-+	if (!mvi->rsvd_tags)
- 		goto err_out;
- 
- 	if (MVS_CHIP_DISP->chip_ioremap(mvi))
-@@ -469,6 +468,8 @@ static void  mvs_post_sas_ha_init(struct Scsi_Host *shost,
- 	else
- 		can_queue = MVS_CHIP_SLOT_SZ;
- 
-+	can_queue -= MVS_RSVD_SLOTS;
-+
- 	shost->sg_tablesize = min_t(u16, SG_ALL, MVS_MAX_SG);
- 	shost->can_queue = can_queue;
- 	mvi->shost->cmd_per_lun = MVS_QUEUE_SIZE;
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index 0810e6c930e1..00b3a2781d21 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -20,33 +20,39 @@ static int mvs_find_tag(struct mvs_info *mvi, struct sas_task *task, u32 *tag)
- 	return 0;
- }
- 
--void mvs_tag_clear(struct mvs_info *mvi, u32 tag)
-+static void mvs_tag_clear(struct mvs_info *mvi, u32 tag)
- {
--	void *bitmap = mvi->tags;
-+	void *bitmap = mvi->rsvd_tags;
- 	clear_bit(tag, bitmap);
- }
- 
--void mvs_tag_free(struct mvs_info *mvi, u32 tag)
-+static void mvs_tag_free(struct mvs_info *mvi, u32 tag)
- {
-+	if (tag < mvi->shost->can_queue)
-+		return;
-+
-+	tag -= mvi->shost->can_queue;
-+
- 	mvs_tag_clear(mvi, tag);
- }
- 
--void mvs_tag_set(struct mvs_info *mvi, unsigned int tag)
-+static void mvs_tag_set(struct mvs_info *mvi, unsigned int tag)
- {
--	void *bitmap = mvi->tags;
-+	void *bitmap = mvi->rsvd_tags;
- 	set_bit(tag, bitmap);
- }
- 
--inline int mvs_tag_alloc(struct mvs_info *mvi, u32 *tag_out)
-+static int mvs_tag_alloc(struct mvs_info *mvi, u32 *tag_out)
- {
- 	unsigned int index, tag;
--	void *bitmap = mvi->tags;
-+	void *bitmap = mvi->rsvd_tags;
- 
--	index = find_first_zero_bit(bitmap, mvi->tags_num);
-+	index = find_first_zero_bit(bitmap, MVS_RSVD_SLOTS);
- 	tag = index;
--	if (tag >= mvi->tags_num)
-+	if (tag >= MVS_RSVD_SLOTS)
- 		return -SAS_QUEUE_FULL;
- 	mvs_tag_set(mvi, tag);
-+	tag += mvi->shost->can_queue;
- 	*tag_out = tag;
- 	return 0;
- }
-@@ -696,6 +702,7 @@ static int mvs_task_prep(struct sas_task *task, struct mvs_info *mvi, int is_tmf
- 	struct mvs_task_exec_info tei;
- 	struct mvs_slot_info *slot;
- 	u32 tag = 0xdeadbeef, n_elem = 0;
-+	struct request *rq;
- 	int rc = 0;
- 
- 	if (!dev->port) {
-@@ -760,9 +767,14 @@ static int mvs_task_prep(struct sas_task *task, struct mvs_info *mvi, int is_tmf
- 		n_elem = task->num_scatter;
- 	}
- 
--	rc = mvs_tag_alloc(mvi, &tag);
--	if (rc)
--		goto err_out;
-+	rq = sas_task_find_rq(task);
-+	if (rq) {
-+		tag = rq->tag;
-+	} else {
-+		rc = mvs_tag_alloc(mvi, &tag);
-+		if (rc)
-+			goto err_out;
-+	}
- 
- 	slot = &mvi->slot_info[tag];
- 
-@@ -857,7 +869,7 @@ int mvs_queue_command(struct sas_task *task, gfp_t gfp_flags)
- static void mvs_slot_free(struct mvs_info *mvi, u32 rx_desc)
- {
- 	u32 slot_idx = rx_desc & RXQ_SLOT_MASK;
--	mvs_tag_clear(mvi, slot_idx);
-+	mvs_tag_free(mvi, slot_idx);
- }
- 
- static void mvs_slot_task_free(struct mvs_info *mvi, struct sas_task *task,
-diff --git a/drivers/scsi/mvsas/mv_sas.h b/drivers/scsi/mvsas/mv_sas.h
-index fe57665bdb50..68df771e2975 100644
---- a/drivers/scsi/mvsas/mv_sas.h
-+++ b/drivers/scsi/mvsas/mv_sas.h
-@@ -370,8 +370,7 @@ struct mvs_info {
- 	u32 chip_id;
- 	const struct mvs_chip_info *chip;
- 
--	int tags_num;
--	unsigned long *tags;
-+	unsigned long *rsvd_tags;
- 	/* further per-slot information */
- 	struct mvs_phy phy[MVS_MAX_PHYS];
- 	struct mvs_port port[MVS_MAX_PHYS];
-@@ -424,10 +423,6 @@ struct mvs_task_exec_info {
- 
- /******************** function prototype *********************/
- void mvs_get_sas_addr(void *buf, u32 buflen);
--void mvs_tag_clear(struct mvs_info *mvi, u32 tag);
--void mvs_tag_free(struct mvs_info *mvi, u32 tag);
--void mvs_tag_set(struct mvs_info *mvi, unsigned int tag);
--int mvs_tag_alloc(struct mvs_info *mvi, u32 *tag_out);
- void mvs_iounmap(void __iomem *regs);
- int mvs_ioremap(struct mvs_info *mvi, int bar, int bar_ex);
- void mvs_phys_reset(struct mvs_info *mvi, u32 phy_mask, int hard);
--- 
-2.35.3
-
+On Fri, Sep 30, 2022 at 11:03 AM John Garry <john.garry@huawei.com> wrote:
+>
+> blk-mq already provides a unique tag per request. Some libsas LLDDs - like
+> hisi_sas - already use this tag as the unique per-IO HW tag.
+>
+> Add a common function to provide the request associated with a sas_task
+> for all libsas LLDDs.
+>
+> Signed-off-by: John Garry <john.garry@huawei.com>
+lgtm
+Reviewed-by: Jack Wang <jinpu.wang@ionos.com>
+> ---
+>  include/scsi/libsas.h | 18 ++++++++++++++++++
+>  1 file changed, 18 insertions(+)
+>
+> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+> index f86b56bf7833..f498217961db 100644
+> --- a/include/scsi/libsas.h
+> +++ b/include/scsi/libsas.h
+> @@ -644,6 +644,24 @@ static inline bool sas_is_internal_abort(struct sas_task *task)
+>         return task->task_proto == SAS_PROTOCOL_INTERNAL_ABORT;
+>  }
+>
+> +static inline struct request *sas_task_find_rq(struct sas_task *task)
+> +{
+> +       struct scsi_cmnd *scmd;
+> +
+> +       if (task->task_proto & SAS_PROTOCOL_STP_ALL) {
+> +               struct ata_queued_cmd *qc = task->uldd_task;
+> +
+> +               scmd = qc ? qc->scsicmd : NULL;
+> +       } else {
+> +               scmd = task->uldd_task;
+> +       }
+> +
+> +       if (!scmd)
+> +               return NULL;
+> +
+> +       return scsi_cmd_to_rq(scmd);
+> +}
+> +
+>  struct sas_domain_function_template {
+>         /* The class calls these to notify the LLDD of an event. */
+>         void (*lldd_port_formed)(struct asd_sas_phy *);
+> --
+> 2.35.3
+>
