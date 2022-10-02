@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E09C1C43217
-	for <linux-scsi@archiver.kernel.org>; Sun,  2 Oct 2022 23:00:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75A7EC433FE
+	for <linux-scsi@archiver.kernel.org>; Sun,  2 Oct 2022 23:05:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230252AbiJBW7c (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 2 Oct 2022 18:59:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46522 "EHLO
+        id S230042AbiJBXFC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 2 Oct 2022 19:05:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34744 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230274AbiJBW6W (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Oct 2022 18:58:22 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD48B40575;
-        Sun,  2 Oct 2022 15:55:43 -0700 (PDT)
+        with ESMTP id S230466AbiJBXE0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Oct 2022 19:04:26 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 693F244573;
+        Sun,  2 Oct 2022 16:00:21 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 927D160F2C;
-        Sun,  2 Oct 2022 22:52:49 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B55BCC433C1;
-        Sun,  2 Oct 2022 22:52:47 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 451DAB80DCF;
+        Sun,  2 Oct 2022 22:53:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1428C4347C;
+        Sun,  2 Oct 2022 22:53:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664751169;
-        bh=3z4xjd6rC4Y+qNEmVpMFVeGkTQLZ9ph+XAsHLmwze58=;
+        s=k20201202; t=1664751194;
+        bh=ruyn6ny/iz6Zqxp+/ivNz+r7BDWMhMcf5ChJDxysrYo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=KN/vcRmTb3ppOCDK+8V5cFmGbN+bBrVlQXIn2eIubuAkvBm+hOMlefpYlZKbLCxzK
-         FjDm1IcUyKeuK5DAmXRf+8rfaMyGop/MjWJsD4Fu9nHklCt6jS61yjmL6PzY1DYyhO
-         vSgq7KHtwCFlpYDHdLZdGCF9LJnlz5V/FRylz0vw43D8ukjOhe0u/wbSYBxwpWwGyv
-         R43EY2mSjjE7eIsV3Lt+lHt8749Urt091o7LwRRLwugnx5hfzh4VgK6dcluix1m4rI
-         9uaxcZ1qCNdZ1FbOMGeqY8/Bf0YGntH4dF0PYfNONIHwzN8/g6OtdfjAB+4fPm1QRW
-         wOWq4EjBplCZA==
+        b=RcKaj90rBB1CZOIoJa9WdViHj8Z323EOeDhBjAlOeECpktoMIVcluAbfabc8Paydy
+         5myHHZSNIKvH7C2wg6S6ymhe8cf+32haaKhAC/nOenDDRXTqZM2VWVpTrXoHMDgRvF
+         HPEjiqedidgFDv4l2o9hUGTn8I6xwE7MRkHojqhtYyaqpcoF3lHlTMPKSotlZoKdpO
+         mTlBXLABcRmQKEKxdIwSbxp/tVEOJP8EaonSEF+JWJOt7GgswaADg0kaHGZmJExed8
+         r7Rvxkji/sgBi8hMovGKLJ/UDRh6MCZzwFgno/3uRgveFpHGBUoqEgDju9l4Tnhx5n
+         V3rK2O/gP0Vdw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Letu Ren <fantasquex@gmail.com>, Zheyu Ma <zheyuma97@gmail.com>,
@@ -40,12 +40,12 @@ Cc:     Letu Ren <fantasquex@gmail.com>, Zheyu Ma <zheyuma97@gmail.com>,
         Sasha Levin <sashal@kernel.org>, jhasan@marvell.com,
         GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 5/9] scsi: qedf: Fix a UAF bug in __qedf_probe()
-Date:   Sun,  2 Oct 2022 18:52:32 -0400
-Message-Id: <20221002225236.239675-5-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 5/8] scsi: qedf: Fix a UAF bug in __qedf_probe()
+Date:   Sun,  2 Oct 2022 18:52:57 -0400
+Message-Id: <20221002225300.239982-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20221002225236.239675-1-sashal@kernel.org>
-References: <20221002225236.239675-1-sashal@kernel.org>
+In-Reply-To: <20221002225300.239982-1-sashal@kernel.org>
+References: <20221002225300.239982-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -107,10 +107,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 5 deletions(-)
 
 diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index c95e04cc6424..f864ef059d29 100644
+index b253523217b8..01e27285b26b 100644
 --- a/drivers/scsi/qedf/qedf_main.c
 +++ b/drivers/scsi/qedf/qedf_main.c
-@@ -3544,11 +3544,6 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
+@@ -3345,11 +3345,6 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
  err1:
  	scsi_host_put(lport->host);
  err0:
