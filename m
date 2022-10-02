@@ -2,125 +2,190 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA0FBC433F5
-	for <linux-scsi@archiver.kernel.org>; Sun,  2 Oct 2022 21:21:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3938C433FE
+	for <linux-scsi@archiver.kernel.org>; Sun,  2 Oct 2022 22:22:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229588AbiJBVVk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 2 Oct 2022 17:21:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41170 "EHLO
+        id S229599AbiJBWWL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 2 Oct 2022 18:22:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40230 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229529AbiJBVVj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Oct 2022 17:21:39 -0400
-Received: from mail-ed1-x536.google.com (mail-ed1-x536.google.com [IPv6:2a00:1450:4864:20::536])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3250D360B6
-        for <linux-scsi@vger.kernel.org>; Sun,  2 Oct 2022 14:21:38 -0700 (PDT)
-Received: by mail-ed1-x536.google.com with SMTP id s2so1628624edd.2
-        for <linux-scsi@vger.kernel.org>; Sun, 02 Oct 2022 14:21:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date;
-        bh=Qav1UbQj4K/40HDBj0h8dUca0Pd31wpiYJpsff6IXWw=;
-        b=inWtio3KK0uQdajOJh0LCEC+oGCa/p1l+iMCXcNc7i0m5eGwcJIBRHd1E/RKMHRyF5
-         SfDQozJ6/jQfWx8cb74iAAHs7TmIKow7xXlrEdNLvu//yuNJCirTvhkAkqb7tooDWcXl
-         Um605sqbTSraKcUaMdzgFphy2BTyaYmmSXpU64UIpwGMC9uJhZ6LZpkqDxGkI5+NWZ5E
-         W7zEnf4/wZtsI+wbvWkrzWdTufzlLoU6POAlKhHGF+gzLRxxG9iSuQCeEoIoOm60UnoB
-         i5QB4mMd2sf42Rfzr/1FRyvIzXTRYrRnyI0piCKT5/NhM3wLcXb/LHZBEdK2AU48M/zI
-         bmkg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date;
-        bh=Qav1UbQj4K/40HDBj0h8dUca0Pd31wpiYJpsff6IXWw=;
-        b=2EOn0oAYizfczwvSrjorX4VhobrzN6mejOiN7Wx5XoJwDNaWNTbI+PUF1+dOFO8Gl3
-         bhD+v+CEZbg+xxj+8kJuWTvKmerVKQ7Hnhl5cG7qWJ7aAKpT5e1OiKcsbNPYDGbArGjw
-         ppY2YlA50AANOCMe2eMoq6NIP0oS2Mca8oQoD4TzxzwMC7BeETJc8p7Y0Z85nb36Nd8l
-         +8nScG/54Nn6EWns5eyRbR0sH5pZcqwIMAuMs2GJuqh9hsVVJusmaieEmo6DkIsEwxue
-         wfNXQtlig6+sYDRY8vYqsMu9A/dWtj/T/ObxLC42IDF4kUOz4hbHjbhUy+AD8S5mXmQc
-         /QAA==
-X-Gm-Message-State: ACrzQf0kRQLALSztx0qtPbNHDLvHvtgBLfVXrWEOxAaoHTQDUYXeDT3k
-        bqTgPiboHxtGfbaBcS0jbyg=
-X-Google-Smtp-Source: AMsMyM4Ew1VzTfsI2TUEM5xD3J8iHTrHjOZtW144nJHWx9JsdktmHjCCrLISnqACZF+5sdlhiIqcag==
-X-Received: by 2002:aa7:d392:0:b0:458:800a:c47 with SMTP id x18-20020aa7d392000000b00458800a0c47mr10953920edq.5.1664745696699;
-        Sun, 02 Oct 2022 14:21:36 -0700 (PDT)
-Received: from p200300c5872283a57e3dfef7e307be58.dip0.t-ipconnect.de (p200300c5872283a57e3dfef7e307be58.dip0.t-ipconnect.de. [2003:c5:8722:83a5:7e3d:fef7:e307:be58])
-        by smtp.googlemail.com with ESMTPSA id w13-20020a1709060a0d00b0078b83968ad4sm773737ejf.24.2022.10.02.14.21.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 02 Oct 2022 14:21:36 -0700 (PDT)
-Message-ID: <27eaae3fe2b3eb715091f09b38e8d500bc9def52.camel@gmail.com>
-Subject: Re: [PATCH v3 8/8] scsi: ufs: Fix a deadlock between PM and the
- SCSI error handler
-From:   Bean Huo <huobean@gmail.com>
+        with ESMTP id S229865AbiJBWVv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Oct 2022 18:21:51 -0400
+Received: from EUR05-DB8-obe.outbound.protection.outlook.com (mail-db8eur05on2053.outbound.protection.outlook.com [40.107.20.53])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC729399D1;
+        Sun,  2 Oct 2022 15:21:44 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=lY3VUqr+ou5JYsTGHFbVLyg3hHv4qmMt0Pfrk6/5vm/Sy5A1Ll/H0MQTiAVdjhNbHidXWQvvrTCBKIq6i+sYfy43N7fphxKofR4haX7uU4PQ18KVbvyQtdv4qIRWXVr341qGDq1D9A6gaJw7gLzB5M6zISeNqkgDwCg5uCzAPwb5E0Ax/WEI4zm06wokaeXkFZlErPwFtScB2QT/rWAtDbXAEGipDPQz/1DU1X8IsTlQnITNBA2zdBuqT0HbNejq9herpwlgS6g03HUPM+r3FrhOI6dueKY5OmO0yCUZPATi/+kzP4W4NhFF3vQ/tp6xmF8EY+V4QQ1/lcK3vfcuKA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=F1AWSo2aMvNylLI0erdj8U55sOqliGhmmVaFeHM7lwI=;
+ b=HDHM4gdtzrbNrDZIeoCCcJL7lh9Pd7NVzDg+w0denovFKuLxXVpcmX3Rql3Y9Op7Pc8+ZnNSTCnIrTnnqcZqNniUzLUl9RKwKV+vIoOHoEahOCoAz79ivDbV8LdCkM8Nln/5UinR/MuxmNPsY+7NaNeYZGqwMW1vfAY187EKuxp9KjLCQ505T21TUIwP+yzIoF0qccoz6w3W+LPm85WoTkTQgHbch7zvefnfczK3/kCPyawM99ggdmSd9G6H8fXs6oSL4i6VOHhe9oOW9yiRjYrMMVIWW6wjYNXnPwgtmgqXwOotLIMLko8vVoYoDbJVfQxvqKCUQbeWXwBjROQBdA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
+ dkim=pass header.d=suse.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=F1AWSo2aMvNylLI0erdj8U55sOqliGhmmVaFeHM7lwI=;
+ b=CQB/02H7kMqp9hO6iN6ccJw1JpOUL5UbWW2XMHR4lv7vNdD1oN0jvXJtK0dTNLlkqSOKf1UHbSGuxCMGUk5Ll8YBMmBFziNIFW2P4FnKwX3sI/pPHcbp1oHfGZrdrnjkpN1wKXhoF0r9ovXZSGWDgKLzDcFoLuCLMqcZbVNJGnYURWHyp7NoQ72Y1Jut1tZzhpj2pfM8VW50C3BeGAYdTuDxBiA9Gmm0MTSrmKK4bRRELEqaZ88QLMAGQ0YloOYIbvc66mEkjHOGmc6IURcZgrIjysC1OfhQAYjSEKaX9VtiZdYgjElZQ+Zr5BAZ78Ultf/1nQGtEuYZndMvS9bBHQ==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=suse.com;
+Received: from AM5PR04MB3089.eurprd04.prod.outlook.com (2603:10a6:206:b::28)
+ by VE1PR04MB7360.eurprd04.prod.outlook.com (2603:10a6:800:1a3::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5676.28; Sun, 2 Oct
+ 2022 22:21:40 +0000
+Received: from AM5PR04MB3089.eurprd04.prod.outlook.com
+ ([fe80::d69:1f41:4b62:4ff1]) by AM5PR04MB3089.eurprd04.prod.outlook.com
+ ([fe80::d69:1f41:4b62:4ff1%3]) with mapi id 15.20.5676.028; Sun, 2 Oct 2022
+ 22:21:40 +0000
+Message-ID: <bdb69723-269d-3c1f-2501-7db0e6246890@suse.com>
+Date:   Sun, 2 Oct 2022 15:21:34 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.2.2
+Subject: Re: [PATCH] scsi: core: Add BLIST_NO_ASK_VPD_SIZE for some VDASD
+Content-Language: en-US
 To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
-        Adrian Hunter <adrian.hunter@intel.com>,
+        Lee Duncan <leeman.duncan@gmail.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>
-Date:   Sun, 02 Oct 2022 23:21:35 +0200
-In-Reply-To: <af357394-7329-b218-ccf9-65944a35fc6e@acm.org>
-References: <20220929220021.247097-1-bvanassche@acm.org>
-         <20220929220021.247097-9-bvanassche@acm.org>
-         <67bfe4a2175da74b686a4990a6ebe0b91017599f.camel@gmail.com>
-         <af357394-7329-b218-ccf9-65944a35fc6e@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.1-0ubuntu1 
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Martin Wilck <mwilck@suse.com>, Hannes Reinecke <hare@suse.de>
+References: <20220928181350.9948-1-leeman.duncan@gmail.com>
+ <11a582f0-723c-95e1-0e44-0a19e1a8a9a8@acm.org>
+From:   Lee Duncan <lduncan@suse.com>
+In-Reply-To: <11a582f0-723c-95e1-0e44-0a19e1a8a9a8@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: FR3P281CA0046.DEUP281.PROD.OUTLOOK.COM
+ (2603:10a6:d10:4a::12) To AM5PR04MB3089.eurprd04.prod.outlook.com
+ (2603:10a6:206:b::28)
 MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: AM5PR04MB3089:EE_|VE1PR04MB7360:EE_
+X-MS-Office365-Filtering-Correlation-Id: 4268e265-67c8-4f06-8c90-08daa4c47a6a
+X-LD-Processed: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba,ExtFwd
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: G/8Czh4DkKYc9Eyj1bj2jne5o7cTTcRFxv0DC5fAG7SrLjaaD4g854M6NhNzzU8oXUMzfl61BMTFZp0h0Wogym01K+pWlap0aGxkhAfUpiY5Jatpvxb7VXRNNzCeihfjQmIdgZWawwdZnAOn0dyWoVVEQRnZQi1+nsGQb5ffVWrgq4K2i5UC/NqyyMZaUcuziQPR02pLM9k9FnYlRTLTrBFfO+l8UlUSr3dOytQb/0GgLuVVVKETrHYYo6T/YG8l+YIIphMBw8lAoIVCbnzPyp3HcvN4SfUz2Z8alcjoMCv1cCH46STxybykHOr/uXHqBuVydCcJcr/Fy2b2j4z1csh8g2LCSarJfyrnqjrNepp4SgfYKmV/XpbhX+ZnyCmZ/6Ff3CgbhQwGutlE/AD6Vdi9MNeOxHwr3BLRt86a/RoKz63l2pnmp52F8M9eUY2CYFIh9WzQcBw5IwNSNVVo2suIVGA5q9EuGEo3VCKPhzEeds/YkvovVw64xc9Xklue0le12D15bTKhlG9lHX8jfzgGRMysIWbLM+eLIcTp5+fuojGdEwkiAScpJAPqoY7VgIBDdK1U8463ERQ/a8H0z/RzeSvw0eOlEIKc2URKmCUtj28uVihmBhG21soAbARIUIf5+LpV61jgpq/6S8lm6BWjbdc6kksi7Mfp3Aah9paTAyi/Jd6Z3T+5Jqs/MwLhdYeYAlGLLXGoMFQw4YRWieeiZViTKTlH8NjBeHc+zyA++IrN6sRO1mzirlkXm6FnwX66wnqzPfq1OZOheXhudAxqI36j71HlUhT5mfsL0Bs=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM5PR04MB3089.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(396003)(366004)(346002)(376002)(136003)(39850400004)(451199015)(66556008)(66946007)(66476007)(41300700001)(8676002)(4326008)(6666004)(38100700002)(186003)(2616005)(2906002)(83380400001)(6506007)(31696002)(53546011)(8936002)(36756003)(86362001)(6512007)(5660300002)(26005)(31686004)(54906003)(478600001)(110136005)(6486002)(316002)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?ck1YWDV0Zk8xaHg5VGZyZWI0UFV3KzNlQW1rRkRIdldGaDRVSW5Td0hBZFpu?=
+ =?utf-8?B?eEI5dUwrb0laenNRNzZBOWtzWWtlTjhCMjhsOHI1YTcwVTQ2YmpNVGVwbWN6?=
+ =?utf-8?B?MW9RTENaZzVmNkJuQXN0UW9Bb1kzczhOcjI4OFMzaStUMHNlK2haVU1FZERu?=
+ =?utf-8?B?R1h4eGdFWWNuK0xzZW05YVEwQzFGU0JnWDlySC9uOGNPRTd4SWtVT0FLd2ZR?=
+ =?utf-8?B?L0NDSGVKbkhXUWJaTGlhRlM5dnVCWkR2REJMTjJ3UkNxVEVUWHN2RGoyR0JT?=
+ =?utf-8?B?YlJBK08rdmVjdXZiTGZBNVZnTWJURHJWMzlka3MrSG1PS0FEZXBCdVJpV09V?=
+ =?utf-8?B?Zy9RZnFsaWI5WUlxbWZ5L1lSV1lIcFBwQjNwb3JGOEFIT1RQSzB0WEJCWThR?=
+ =?utf-8?B?NjFtV05RV0QxMThlY285MUUyb3JPTFFvRXl3NDBmeHZob3RkdS9ub2U0dW1N?=
+ =?utf-8?B?QTBNbFp6NEY0SnNIU0hFRWR3SU9PM0tucEdFY2Y3YVJPYXlWMFZOek1kWGg2?=
+ =?utf-8?B?cmJFNVZRRk1RN2FxanhoUGxydEFCQklBOVozcEllKzJzcUhFNlRwSjVlVm0y?=
+ =?utf-8?B?b1FpVi9QZjM5dkJMc25iaVJaTTdKc2UvL0dScnlUL1ZZYTM1bk90WFkvaFow?=
+ =?utf-8?B?akE5L0tSa25oTHc5VWIvb0hZb2ZUNGtHckFzVEh3ODVyZUk4RGhOdW03NGNS?=
+ =?utf-8?B?NEtxTnFIbUZldFBsSitFVVhmYVNXeTYrU005ZjJrUERMc20yS245Z0kvU1l0?=
+ =?utf-8?B?c1JCSTY5WDdPVVJWWE13L0FiOU1VNkJGbmZkeG9kUDl0RjRLRjB3ZXhiMGhS?=
+ =?utf-8?B?eEUxdjlTbWNBMGk3a01aelNpZzNTZkdIUXpNd0dtU3FIWEV6ejgvdHVVaU12?=
+ =?utf-8?B?TkV6dldnQTRRN3FLWnllbVBYYmNybkZDNVlvNEw5S05YdGJSRWh5UTlsQXV0?=
+ =?utf-8?B?ZDNzTWRhTnA2anlId3hTWTY5alZzYnFld0J4OGpTc1N2NmNLMXczUUpIMVVy?=
+ =?utf-8?B?a1Vwb3FnK05qK3hoWCtaYllFb3R6UnhLVW80R1FSc0lONklIWjViYTJoa3Zn?=
+ =?utf-8?B?WjhORDhIVElzZjZxdGlJTjVpTnU0c1VITnNIL1hWWGRmcm9pamFQWnFhbFV3?=
+ =?utf-8?B?TXV1WnRvdzZSSDJrMFA2YWZQWURPdjE4WVYzR2E5UXBsNHMyVkRHNDQ3c1Fz?=
+ =?utf-8?B?a24wb3IwMTRsK1ZGQk5VTVVmUEk3aVg2RGJiOHNtWmJheGlkTTV5TUVnSjJs?=
+ =?utf-8?B?T3N4dlZpODJOWjlqeEJVckJUb3pRNGFBOUNBNENLVi91QzlUWHNVNFZ3VHhY?=
+ =?utf-8?B?RFh5Ym1pUEZVTlBDTUhoc0NMWWlyQW9ubU1PeWtkYVlLUlZLWFZRZVZmbnlE?=
+ =?utf-8?B?eVAwVmN4ZmlwUkFYMGQ5VThIbng3djE2R1E3MVJjWDF1VWF4QVUrRHF4SVpQ?=
+ =?utf-8?B?akJxc29FdFdrUmo4V0JBZ2ZJNUxHWDBzaTJSeFRETUNNZkY0YkRaSGM5S2Fs?=
+ =?utf-8?B?V1EwRUx3c2ptWS9oRXZvZTc3TmdtNjFOSWdKYkVCaGlGYnB6eVBzSkMrK25h?=
+ =?utf-8?B?UzVsQW1OY0FNZGI3SnVUa2VOQnZnZnpKems2NHJCU09VUlR3MHhtYjdQMCtG?=
+ =?utf-8?B?YkNlblJicFM0NzBMRmYxcE9lRGRwSFVPenJ4REQxZXR0ejRHNXpRUUd6TWh2?=
+ =?utf-8?B?S3BlSGdNak02c1l3b1RBNTNyY1lNMHZteWM2NlBoT3RPZy9EcldEV3FwOXcx?=
+ =?utf-8?B?cE9rY09idEkxd1FOdm4yQ2VHMWxMMk0wNU5NTERYYnJMV0lHcjdOQWtzK1Fp?=
+ =?utf-8?B?RlNxT0lWelQ4QU9WOW16WSs3RUYrQjZJQ0Vab1VTS2tsYkY0a3F5VnNReXg1?=
+ =?utf-8?B?Y0p6bkVXRXVKMjJaZTdML0tkS3NBUVZvbkVtZkRVbTY3QmN5YWJybUtvL1No?=
+ =?utf-8?B?OFRiVmF2VWtxTVFrc0R0OTJqUm1zTXExR1ZEOWxzbkFxajY4TXg4Z2tmMFh6?=
+ =?utf-8?B?SVZ2N2dXMWZRZ01LNkNya3lNU0crUnRTMHZodHpaaGtKNjJhZFhnUHJTejcw?=
+ =?utf-8?B?TGQxdk1iNU9LWEQvcHF3c2RzRlVnVW1lWC9EdU5yMFJVd0taV3laMFRoRHUv?=
+ =?utf-8?Q?uab08MwlPoe8WOe46ebvObyoF?=
+X-OriginatorOrg: suse.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4268e265-67c8-4f06-8c90-08daa4c47a6a
+X-MS-Exchange-CrossTenant-AuthSource: AM5PR04MB3089.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Oct 2022 22:21:40.1944
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: bOEui0IhI1/GDa8GvzGhyaHShQ95p38Izl2SIHudSynsxM7ogVXr66IUJlm/FriMSELvp2/8E3NgWms0qBjeYw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: VE1PR04MB7360
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 2022-09-30 at 10:15 -0700, Bart Van Assche wrote:
-> > > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0ufshcd_link_recovery(hba);
-> > > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0dev_info(hba->dev, "%s() f=
-inished; outstanding_tasks =3D
-> > > %#lx.\n",
-> > > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0 __func__, hba->outstanding_tasks);
-> > > +
-> > > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0return hba->outstanding_ta=
-sks ? SCSI_EH_RESET_TIMER :
-> > > SCSI_EH_DONE;
-> >=20
-> > Bart,
-> >=20
-> > you have reset the device and host,=C2=A0 in the case, there are pendin=
-g
-> > TMs, Should be cleared locally, just like ufshcd_err_handler()
-> > does?
->=20
-> Hi Bean,
->=20
-> Do you agree with the following?
-> * SCSI task management functions are only submitted by the SCSI error
-> =C2=A0=C2=A0 handler.
-> * The ufshcd_link_recovery() call added by this patch can only be
-> =C2=A0=C2=A0 invoked during system suspend.
-> * System suspend only happens after processes and kernel threads have
-> =C2=A0=C2=A0 been frozen and after sync() finished. Hence, no I/O should =
-be in
-> =C2=A0=C2=A0 progress when ufshcd_wl_suspend() is called and the SCSI err=
-or
-> handler
-> =C2=A0=C2=A0 should not be running either.
-> * Hence, no SCSI commands other than START STOP UNIT should be in
-> =C2=A0=C2=A0 progress when the ufshcd_link_recovery() call added by this
-> =C2=A0=C2=A0 patch is invoked. No TMFs should be in progress either.
->=20
+On 10/2/22 14:16, Bart Van Assche wrote:
+> On 9/28/22 11:13, Lee Duncan wrote:
+>> From: Lee Duncan <lduncan@suse.com>
+>>
+>> Some storage, such as AIX VDASD (virtual storage) and IBM 2076
+>> (front end) do not like the recent commit:
+>>
+>> commit c92a6b5d6335 ("scsi: core: Query VPD size before getting full 
+>> page")
+>>
+>> That commit changed getting SCSI VPD pages so that we now read
+>> just enough of the page to get the actual page size, then read
+>> the whole page in a second read. The problem is that the above
+>> mentioned hardware returns zero for the page size, because of
+>> a firmware error. In such cases, until the firmware is fixed,
+>> this new black flag says to revert to the original method of
+>> reading the VPD pages, i.e. try to read as a whole buffer's
+>> worth on the first try.
+>>
+>> Fixes: c92a6b5d6335 ("scsi: core: Query VPD size before getting full 
+>> page")
+> 
+> Hi Lee,
+> 
+> If we introduce a blacklist flag to skip querying the VPD page size then 
+> we will have to find all SCSI devices that do not handle querying the 
+> VPD page size correctly. Has it been considered instead of introducing a 
+> blacklist flag to not use the reported VPD page size if the device 
+> reports that the VPD page size is zero? I am not aware of any VPD pages 
+> for which zero is a valid size.
+> 
 > Thanks,
->=20
+> 
 > Bart.
 
-Hi Bart,
+Hi Bart:
 
-Yes, install the whole series of changes, ufshcd_link_recovery() will
-be called during the system is in suspending in the case of SSU
-timeouts. in this case, outstanding_tasks should be 0?=20
+The problem with the broken firmware in my case is that it reports a 
+size of zero, but it actually has the data! So the "size" returned for 
+this one VPD page is just wrong. And I haven't researched it yet, but I 
+assume that this hardware returned the failing page in question as a 
+page it supported. In other words, you can't count on this hardware to 
+report correctly. [I will check and update this email thread if this is 
+wrong.]
 
-Kind regards,
-Bean
+This broken firmware was never an issue before commit c92a6b5d6335, 
+since we used to just try to read 255 bytes, expecting that we would get 
+back 255 or less. This worked almost all the time -- except for buggy 
+hardware!
+
+I suspect there isn't many pieces of hardware that return zero length 
+incorrectly, and that if such hardware shoes up then they'll be able to 
+use this flag to work around it.
+
+So, for my hardware use case, if I add my commit, the VPD page shows up 
+in sysfs, and before my commit no VPD page showed up. [Also, reverting 
+commit c92a6b5d6335 made the VPD page show up, as a side note.]
+
+Lastly, as for pages that might validly return size zero, Hannes seems 
+to think some of the older hardware (under the older standards) returned 
+zero as a valid page size for some VPD pages. For this reason I decided 
+to not use a simpler approach of just trying to read the VPD page with a 
+size of 255 if the "read length" returned zero (as in this case), i.e. 
+since Hannes thinks some hardware might legitimately do this.
+
+-- 
+Lee
