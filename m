@@ -2,88 +2,77 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22835C4332F
-	for <linux-scsi@archiver.kernel.org>; Sun,  2 Oct 2022 01:41:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1B67C433FE
+	for <linux-scsi@archiver.kernel.org>; Sun,  2 Oct 2022 04:14:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229570AbiJBBlO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 1 Oct 2022 21:41:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41648 "EHLO
+        id S229503AbiJBEOp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 2 Oct 2022 00:14:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57818 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229529AbiJBBlN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Oct 2022 21:41:13 -0400
-Received: from zju.edu.cn (spam.zju.edu.cn [61.164.42.155])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 44ABC564FF;
-        Sat,  1 Oct 2022 18:41:10 -0700 (PDT)
-Received: from ubuntu.localdomain (unknown [10.190.65.158])
-        by mail-app3 (Coremail) with SMTP id cC_KCgAXaLQg7DhjDY5WBw--.53562S2;
-        Sun, 02 Oct 2022 09:41:00 +0800 (CST)
-From:   Duoming Zhou <duoming@zju.edu.cn>
-To:     linux-kernel@vger.kernel.org
-Cc:     martin.petersen@oracle.com, kuba@kernel.org, davem@davemloft.net,
-        andrii@kernel.org, gregkh@linuxfoundation.org,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        Duoming Zhou <duoming@zju.edu.cn>
-Subject: [PATCH] scsi: target: iscsi: cxgbit: fix sleep-in-atomic-context bug in cxgbit_abort_conn
-Date:   Sun,  2 Oct 2022 09:40:47 +0800
-Message-Id: <20221002014047.23066-1-duoming@zju.edu.cn>
-X-Mailer: git-send-email 2.17.1
-X-CM-TRANSID: cC_KCgAXaLQg7DhjDY5WBw--.53562S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7ZrykKF18trW7uw43Aw1fZwb_yoW8XrW5pF
-        4v9348AF4kG3y5WF48AF40kr4Sv3W5JFy3Ga47uws8Zws0vr98KrsYya4xZay5WFykWF47
-        XF4ruw1UGF4qyrUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUka1xkIjI8I6I8E6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AE
-        w4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2
-        IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr1UM28EF7xvwVC2
-        z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AIxVAIcxkEcV
-        Aq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j
-        6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64
-        vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxAIw28IcxkI7VAKI48JMxAIw28IcVCjz48v
-        1sIEY20_GFWkJr1UJwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r
-        18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vI
-        r41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr
-        1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvE
-        x4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUdHUDUUUUU=
-X-CM-SenderInfo: qssqjiasttq6lmxovvfxof0/1tbiAgIKAVZdtbvX2gBFsG
+        with ESMTP id S229449AbiJBEOo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Oct 2022 00:14:44 -0400
+Received: from mail-wr1-x435.google.com (mail-wr1-x435.google.com [IPv6:2a00:1450:4864:20::435])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7AF61147F
+        for <linux-scsi@vger.kernel.org>; Sat,  1 Oct 2022 21:14:41 -0700 (PDT)
+Received: by mail-wr1-x435.google.com with SMTP id c11so12317379wrp.11
+        for <linux-scsi@vger.kernel.org>; Sat, 01 Oct 2022 21:14:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date;
+        bh=xhWDVjIWcb0O3KXIeVKabzOofst4Rlo9p33agfkMikY=;
+        b=jpE8sw4uNbPwY5HkQQZjst9r6z1+OLngU09uJMnbs16nADGMkGe8foq+thOCnHC/N4
+         p0m4yAD6oGKHUbJbc9Mo99aCpR5gGijScclPabFY6ocrJvnk3OZSMGObURUjTqx4NbKJ
+         Gi4CK3fTzZuK4R6c5hIDMiEZZx8/k4pQmVa5MwUBqrHYIOs2LclAZ3UhJw5Sy4qpud4I
+         4/cXPL2F11+rBU0sSLjOdq3BOs1a7cT1ajKGvloymkmkgnpPUptqZvXyRp7BhMani230
+         v3kvjjp3XZFA87pIfKjDre9aCK3mrQpPMXPclpuKyXtOSVQwt3W0FFxgATsDmuuwJHG5
+         kKsA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date;
+        bh=xhWDVjIWcb0O3KXIeVKabzOofst4Rlo9p33agfkMikY=;
+        b=fWe0R+0j91vzcaT1X3b4hBhlq+WgStkrmXZzMUC/CBHdsSlmxoOXzk4XmpSEuykSYo
+         wIR29pHyQw/9wWqNXrh/4uagib4b84Cx1LjvzcPxUwxFnO28dufSaezeF8AGI6b4IX4V
+         0gn0x+6y9g+W9vCfTcp5pTrKSPaOnPqPfASlbxkzuj/yio/aDD+7fwO5jaongcrn7I1M
+         01JVGqARkY13JCGHanZt1ZGskfE7E24u3gvd4JhdjEAAoBrJTgNwaVe6ZivSGM58ZMAD
+         3S64vG0fAV1M7HubCe/K5ZPXueteXhEqL/YxSuf4NtxM8bIo31q6tBx9zvOpe9ujzzr4
+         lm2A==
+X-Gm-Message-State: ACrzQf0PZ98kgI7GK3xzthTR8QWDVkHhoyun6lqp1JqJ68tAnYdoHCJl
+        1PiMdQID8bH+G5N/rkFYh+DY6/IendyJ1t9bO/8lGCjCrB8=
+X-Google-Smtp-Source: AMsMyM4OFUWxOoiYKh5R6oXc4GbSZmO4T/I1YJRZCZuA8y8KoK2DtmY7h/zPMrhv2NZEddeFT+B4AmblRGg6Y0JHQuo=
+X-Received: by 2002:a5d:6e92:0:b0:22c:c09c:8f23 with SMTP id
+ k18-20020a5d6e92000000b0022cc09c8f23mr9604798wrz.389.1664684080386; Sat, 01
+ Oct 2022 21:14:40 -0700 (PDT)
+MIME-Version: 1.0
+References: <CAPm50aJ_aW4RmL3_n=5CpGL9D3dXENenFuo5QG0Q2DJO9Gv_1w@mail.gmail.com>
+ <yq135c7lwlu.fsf@ca-mkp.ca.oracle.com>
+In-Reply-To: <yq135c7lwlu.fsf@ca-mkp.ca.oracle.com>
+From:   Hao Peng <flyingpenghao@gmail.com>
+Date:   Sun, 2 Oct 2022 12:14:28 +0800
+Message-ID: <CAPm50a+wLmqB0ocCQC-2RVfQqWRzv+AMxJ4grFfSei2C2JdY3w@mail.gmail.com>
+Subject: Re: [PATCH ] scsi/ipr: keep the order of locks
+To:     brking@us.ibm.com
+Cc:     "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The function iscsit_handle_time2retain_timeout() is a timer handler that
-runs in an atomic context, but it calls "alloc_skb(0, GFP_KERNEL | ...)"
-that may sleep. As a result, the sleep-in-atomic-context bug will happen.
-The process is shown below:
-
-iscsit_handle_time2retain_timeout()
- iscsit_close_session()
-  iscsit_free_connection_recovery_entries()
-   iscsit_free_cmd()
-    __iscsit_free_cmd()
-     cxgbit_unmap_cmd()
-      cxgbit_abort_conn()
-       alloc_skb(0, GFP_KERNEL | ...) //may sleep
-
-This patch changes the gfp_t parameter of alloc_skb() from GFP_KERNEL to
-GFP_ATOMIC in order to mitigate the bug.
-
-Fixes: 1ae01724ae92 ("cxgbit: Abort the TCP connection in case of data out timeout")
-Signed-off-by: Duoming Zhou <duoming@zju.edu.cn>
----
- drivers/target/iscsi/cxgbit/cxgbit_cm.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/target/iscsi/cxgbit/cxgbit_cm.c b/drivers/target/iscsi/cxgbit/cxgbit_cm.c
-index 3336d2b78bf..eb3da6d2c62 100644
---- a/drivers/target/iscsi/cxgbit/cxgbit_cm.c
-+++ b/drivers/target/iscsi/cxgbit/cxgbit_cm.c
-@@ -697,7 +697,7 @@ __cxgbit_abort_conn(struct cxgbit_sock *csk, struct sk_buff *skb)
- 
- void cxgbit_abort_conn(struct cxgbit_sock *csk)
- {
--	struct sk_buff *skb = alloc_skb(0, GFP_KERNEL | __GFP_NOFAIL);
-+	struct sk_buff *skb = alloc_skb(0, GFP_ATOMIC | __GFP_NOFAIL);
- 
- 	cxgbit_get_csk(csk);
- 	cxgbit_init_wr_wait(&csk->com.wr_wait);
--- 
-2.17.1
-
+On Sat, Oct 1, 2022 at 5:33 PM Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>
+>
+> > As shown above, there are two lock acquisition order changes.  At the
+> > same time, when ipr_device_reset is executed, the lock hrrq->_lock
+> > does not need to be held.
+>
+> Please make sure to copy the driver maintainer when submitting patches:
+>
+> $ ./scripts/get_maintainer.pl drivers/scsi/ipr.c | head -1
+> Brian King <brking@us.ibm.com> (supporter:IBM Power Linux RAID adapter)
+>
+> --
+> Martin K. Petersen      Oracle Linux Engineering
