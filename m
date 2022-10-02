@@ -2,77 +2,102 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1B67C433FE
-	for <linux-scsi@archiver.kernel.org>; Sun,  2 Oct 2022 04:14:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 377C5C433FE
+	for <linux-scsi@archiver.kernel.org>; Sun,  2 Oct 2022 16:48:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229503AbiJBEOp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 2 Oct 2022 00:14:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57818 "EHLO
+        id S229928AbiJBQsx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 2 Oct 2022 12:48:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43822 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229449AbiJBEOo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Oct 2022 00:14:44 -0400
-Received: from mail-wr1-x435.google.com (mail-wr1-x435.google.com [IPv6:2a00:1450:4864:20::435])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7AF61147F
-        for <linux-scsi@vger.kernel.org>; Sat,  1 Oct 2022 21:14:41 -0700 (PDT)
-Received: by mail-wr1-x435.google.com with SMTP id c11so12317379wrp.11
-        for <linux-scsi@vger.kernel.org>; Sat, 01 Oct 2022 21:14:41 -0700 (PDT)
+        with ESMTP id S229766AbiJBQsv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Oct 2022 12:48:51 -0400
+Received: from mail-qk1-x730.google.com (mail-qk1-x730.google.com [IPv6:2607:f8b0:4864:20::730])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 772F13BC65;
+        Sun,  2 Oct 2022 09:48:50 -0700 (PDT)
+Received: by mail-qk1-x730.google.com with SMTP id i17so5489571qkk.12;
+        Sun, 02 Oct 2022 09:48:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date;
-        bh=xhWDVjIWcb0O3KXIeVKabzOofst4Rlo9p33agfkMikY=;
-        b=jpE8sw4uNbPwY5HkQQZjst9r6z1+OLngU09uJMnbs16nADGMkGe8foq+thOCnHC/N4
-         p0m4yAD6oGKHUbJbc9Mo99aCpR5gGijScclPabFY6ocrJvnk3OZSMGObURUjTqx4NbKJ
-         Gi4CK3fTzZuK4R6c5hIDMiEZZx8/k4pQmVa5MwUBqrHYIOs2LclAZ3UhJw5Sy4qpud4I
-         4/cXPL2F11+rBU0sSLjOdq3BOs1a7cT1ajKGvloymkmkgnpPUptqZvXyRp7BhMani230
-         v3kvjjp3XZFA87pIfKjDre9aCK3mrQpPMXPclpuKyXtOSVQwt3W0FFxgATsDmuuwJHG5
-         kKsA==
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date;
+        bh=Zq0igB25OgS0yzOrs53xrvSd8tEF6kV3kvafs6KNIIU=;
+        b=VFUY7+y8fAQRbwHJbFIYddgErlbUYizbMkrdGTp5nlTd3xupd++BU6jH5/POS9gerR
+         CQFd5LCXJvmZzJebyG/YKZz88nKInLovQafPapvLxmpwU14uFcswQXk6w5gwb2xAv8WZ
+         lk1z1zLsNcwKnn2mAx6PLeZkq0iQWmZv28qpuxBsbH26zH9kj/3UA6SK6oE+PH2N4iFD
+         BpQPEymCAXQq4tanIb40UdGW5OUf3Z3LTJbNJFzI15pBB3kmlYGTDXKWHKOkquicvOjx
+         tXWF1yE3RTqOe2fVL8idnhTjH0jLd2PoBDsE3bxcGQqPaIGe3Jws8S8zBYcwsjLAEUF3
+         U44Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date;
-        bh=xhWDVjIWcb0O3KXIeVKabzOofst4Rlo9p33agfkMikY=;
-        b=fWe0R+0j91vzcaT1X3b4hBhlq+WgStkrmXZzMUC/CBHdsSlmxoOXzk4XmpSEuykSYo
-         wIR29pHyQw/9wWqNXrh/4uagib4b84Cx1LjvzcPxUwxFnO28dufSaezeF8AGI6b4IX4V
-         0gn0x+6y9g+W9vCfTcp5pTrKSPaOnPqPfASlbxkzuj/yio/aDD+7fwO5jaongcrn7I1M
-         01JVGqARkY13JCGHanZt1ZGskfE7E24u3gvd4JhdjEAAoBrJTgNwaVe6ZivSGM58ZMAD
-         3S64vG0fAV1M7HubCe/K5ZPXueteXhEqL/YxSuf4NtxM8bIo31q6tBx9zvOpe9ujzzr4
-         lm2A==
-X-Gm-Message-State: ACrzQf0PZ98kgI7GK3xzthTR8QWDVkHhoyun6lqp1JqJ68tAnYdoHCJl
-        1PiMdQID8bH+G5N/rkFYh+DY6/IendyJ1t9bO/8lGCjCrB8=
-X-Google-Smtp-Source: AMsMyM4OFUWxOoiYKh5R6oXc4GbSZmO4T/I1YJRZCZuA8y8KoK2DtmY7h/zPMrhv2NZEddeFT+B4AmblRGg6Y0JHQuo=
-X-Received: by 2002:a5d:6e92:0:b0:22c:c09c:8f23 with SMTP id
- k18-20020a5d6e92000000b0022cc09c8f23mr9604798wrz.389.1664684080386; Sat, 01
- Oct 2022 21:14:40 -0700 (PDT)
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date;
+        bh=Zq0igB25OgS0yzOrs53xrvSd8tEF6kV3kvafs6KNIIU=;
+        b=bRp7YwxLNHPdGuzSAGqFRf6QUPt8S4HxPom4t7ghAOCnW80mvzgub4ncC9SCgOe1SO
+         lqjQn8CdTbuw6RaroAcslmdrv35UV1QmN52p8ryXtNhQnHIZg4eD1h0Th4vRKffZuHwp
+         baj8nUqRH/xzT6S4C1iZhQL17a8CI3qDq7ck6srdp5he70zfWk/OktPz6AsTf1zYD9Zz
+         yTdra2xG90VvA56794myNuSO/3yYq8NUlE/aSD0UCqU23jWb32wRX0n14L/KIZ39DRe2
+         HlZfvJCCdsYI0UHNxDwKg1lzIWqAMhzzV6MVS6m32kQ8dQ+hSzZrjFIE9GfwGMYHaWPQ
+         jLVA==
+X-Gm-Message-State: ACrzQf2u1iDCBSNjJQPmarOwFPNrBgBAFjr14GsD3+/wj/J7BnUQ92ax
+        exmMeXw+uS1bAckMyAMFEAo=
+X-Google-Smtp-Source: AMsMyM79+I24oCTIgpZyNz3siNy8kKl8pU3kysYTaRtwEKQ8FxufbDQWAkjwLy69LfutF4ZHgCIFMg==
+X-Received: by 2002:a05:620a:45a5:b0:6ce:7320:60d4 with SMTP id bp37-20020a05620a45a500b006ce732060d4mr11803205qkb.775.1664729329539;
+        Sun, 02 Oct 2022 09:48:49 -0700 (PDT)
+Received: from [192.168.50.208] (ip98-164-255-77.oc.oc.cox.net. [98.164.255.77])
+        by smtp.gmail.com with ESMTPSA id l5-20020ac80785000000b0035cf31005e2sm7187720qth.73.2022.10.02.09.48.47
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 02 Oct 2022 09:48:49 -0700 (PDT)
+Message-ID: <8f30bdb4-05b9-d85c-cf78-80f8589ffeb5@gmail.com>
+Date:   Sun, 2 Oct 2022 09:48:46 -0700
 MIME-Version: 1.0
-References: <CAPm50aJ_aW4RmL3_n=5CpGL9D3dXENenFuo5QG0Q2DJO9Gv_1w@mail.gmail.com>
- <yq135c7lwlu.fsf@ca-mkp.ca.oracle.com>
-In-Reply-To: <yq135c7lwlu.fsf@ca-mkp.ca.oracle.com>
-From:   Hao Peng <flyingpenghao@gmail.com>
-Date:   Sun, 2 Oct 2022 12:14:28 +0800
-Message-ID: <CAPm50a+wLmqB0ocCQC-2RVfQqWRzv+AMxJ4grFfSei2C2JdY3w@mail.gmail.com>
-Subject: Re: [PATCH ] scsi/ipr: keep the order of locks
-To:     brking@us.ibm.com
-Cc:     "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.0
+Subject: Re: [PATCH] scsi: lpfc: Fix memory leak in lpfc_create_port()
+Content-Language: en-US
+To:     Rafael Mendonca <rafaelmendsr@gmail.com>,
+        James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Gaurav Srivastava <gaurav.srivastava@broadcom.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Muneendra Kumar <muneendra.kumar@broadcom.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20220916035908.712799-1-rafaelmendsr@gmail.com>
+From:   James Smart <jsmart2021@gmail.com>
+In-Reply-To: <20220916035908.712799-1-rafaelmendsr@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Oct 1, 2022 at 5:33 PM Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->
->
-> > As shown above, there are two lock acquisition order changes.  At the
-> > same time, when ipr_device_reset is executed, the lock hrrq->_lock
-> > does not need to be held.
->
-> Please make sure to copy the driver maintainer when submitting patches:
->
-> $ ./scripts/get_maintainer.pl drivers/scsi/ipr.c | head -1
-> Brian King <brking@us.ibm.com> (supporter:IBM Power Linux RAID adapter)
->
-> --
-> Martin K. Petersen      Oracle Linux Engineering
+On 9/15/2022 8:59 PM, Rafael Mendonca wrote:
+> Commit 5e633302ace1 ("scsi: lpfc: vmid: Add support for VMID in mailbox
+> command") introduced allocations for the VMID resources in
+> lpfc_create_port() after the call to scsi_host_alloc(). Upon failure on the
+> VMID allocations, the new code would branch to the 'out' label, which
+> returns NULL without unwinding anything, thus skipping the call to
+> scsi_host_put().
+> 
+> Fix the problem by creating a separate label 'out_free_vmid' to unwind the
+> VMID resources and make the 'out_put_shost' label call only
+> scsi_host_put(), as was done before the introduction of allocations for
+> VMID.
+> 
+> Fixes: 5e633302ace1 ("scsi: lpfc: vmid: Add support for VMID in mailbox command")
+> Signed-off-by: Rafael Mendonca <rafaelmendsr@gmail.com>
+> ---
+>   drivers/scsi/lpfc/lpfc_init.c | 7 ++++---
+>   1 file changed, 4 insertions(+), 3 deletions(-)
+> 
+
+Looks good
+
+Reviewed-by: James Smart <jsmart2021@gmail.com>
+
+-- james
+
+
