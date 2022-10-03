@@ -2,82 +2,123 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4D25C433FE
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Oct 2022 06:40:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A568FC4332F
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Oct 2022 14:46:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229573AbiJCGkM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 Oct 2022 02:40:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44618 "EHLO
+        id S229814AbiJCOqJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 Oct 2022 10:46:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50130 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229602AbiJCGkK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2022 02:40:10 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8369662E7
-        for <linux-scsi@vger.kernel.org>; Sun,  2 Oct 2022 23:40:06 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S229611AbiJCOqH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2022 10:46:07 -0400
+Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E785A2CC99;
+        Mon,  3 Oct 2022 07:46:02 -0700 (PDT)
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 4F8B04014D;
+        Mon,  3 Oct 2022 14:46:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        in-reply-to:content-disposition:content-type:content-type
+        :mime-version:references:message-id:subject:subject:from:from
+        :date:date:received:received:received:received; s=mta-01; t=
+        1664808359; x=1666622760; bh=f28REBdwbZdrdcPTca7rbkrfq1ht6ZdCGpO
+        41DAmRLg=; b=WqGHMYAcBuNTCREijAVP30718Csy1K1QNSUk9P8n1tXHIHqDxvY
+        w66U9G8G+RbOhbmplOXnRdVHGgBEqJuu89RkSPYIV9GOrJakE94LPx38hdCh8nsN
+        PWQLvtuhZenm3E557Ig9bqGkPpLp4RXiHbhRWFz/XMKI8DCbe0qsoFkM=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id IgLBIl9YdqaE; Mon,  3 Oct 2022 17:45:59 +0300 (MSK)
+Received: from T-EXCH-02.corp.yadro.com (T-EXCH-02.corp.yadro.com [172.17.10.102])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7294860F5F
-        for <linux-scsi@vger.kernel.org>; Mon,  3 Oct 2022 06:40:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id D2F73C433D6
-        for <linux-scsi@vger.kernel.org>; Mon,  3 Oct 2022 06:40:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664779205;
-        bh=CHd79w2ztyIuy2EVR7R4Ukeb6HhpXggmnre1jU8z7Uk=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=ZKVEBytsDNupabmbg/QoAyZ3p1WZKBwjy6tuhqQ/ZtEPT7chSCIA4gHKN31uEHGc0
-         5HR9Ug+V5SWcByDtcZOT3FksYM4JV+l6lsUqccbFsP53IrrJv6Td82KzqX0poHTrY/
-         xQhwRPuZevraQVZVYd2BzjWEjeeV0cwqz6hkljhtLIcY3yUDP4Bzifu6nfJufFZf4W
-         M5/bhdA7VG43lF2SJFQo9rpE0pYeEJflcfZ8yRobGTZJamgCoXK3WmqDrTG1q5Kvr/
-         b/aFGmvSAnooiegB2PLrrlu2Fl/NuzNiSLDFg7mG6PKW6SL0+gshVJtGUtrqVhcU5H
-         R5VAoZO0F7fbg==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id C17CCC433E4; Mon,  3 Oct 2022 06:40:05 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 214311] megaraid_sas - no disks detected
-Date:   Mon, 03 Oct 2022 06:40:05 +0000
-X-Bugzilla-Reason: AssignedTo
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: None
-X-Bugzilla-Product: IO/Storage
-X-Bugzilla-Component: SCSI
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: blocking
-X-Bugzilla-Who: jaikumar.sharma@gmail.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-214311-11613-teutCbNOwL@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-214311-11613@https.bugzilla.kernel.org/>
-References: <bug-214311-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        by mta-01.yadro.com (Postfix) with ESMTPS id 714CE400F6;
+        Mon,  3 Oct 2022 17:45:55 +0300 (MSK)
+Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
+ T-EXCH-02.corp.yadro.com (172.17.10.102) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
+ 15.1.669.32; Mon, 3 Oct 2022 17:45:55 +0300
+Received: from yadro.com (10.199.18.20) by T-EXCH-08.corp.yadro.com
+ (172.17.11.58) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1118.9; Mon, 3 Oct 2022
+ 17:45:55 +0300
+Date:   Mon, 3 Oct 2022 17:46:02 +0300
+From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
+To:     Duoming Zhou <duoming@zju.edu.cn>
+CC:     <linux-kernel@vger.kernel.org>, <martin.petersen@oracle.com>,
+        <kuba@kernel.org>, <davem@davemloft.net>, <andrii@kernel.org>,
+        <gregkh@linuxfoundation.org>, <linux-scsi@vger.kernel.org>,
+        <target-devel@vger.kernel.org>
+Subject: Re: [PATCH] scsi: target: iscsi: cxgbit: fix sleep-in-atomic-context
+ bug in cxgbit_abort_conn
+Message-ID: <20221003144602.GA10901@yadro.com>
+References: <20221002014047.23066-1-duoming@zju.edu.cn>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20221002014047.23066-1-duoming@zju.edu.cn>
+X-Originating-IP: [10.199.18.20]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-08.corp.yadro.com (172.17.11.58)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D214311
+On Sun, Oct 02, 2022 at 09:40:47AM +0800, Duoming Zhou wrote:
+> 
+> The function iscsit_handle_time2retain_timeout() is a timer handler that
+> runs in an atomic context, but it calls "alloc_skb(0, GFP_KERNEL | ...)"
+> that may sleep. As a result, the sleep-in-atomic-context bug will happen.
+> The process is shown below:
+> 
+> iscsit_handle_time2retain_timeout()
+>  iscsit_close_session()
+>   iscsit_free_connection_recovery_entries()
+>    iscsit_free_cmd()
+>     __iscsit_free_cmd()
+>      cxgbit_unmap_cmd()
+>       cxgbit_abort_conn()
+>        alloc_skb(0, GFP_KERNEL | ...) //may sleep
+> 
+> This patch changes the gfp_t parameter of alloc_skb() from GFP_KERNEL to
+> GFP_ATOMIC in order to mitigate the bug.
+> 
+> Fixes: 1ae01724ae92 ("cxgbit: Abort the TCP connection in case of data out timeout")
+> Signed-off-by: Duoming Zhou <duoming@zju.edu.cn>
+> ---
+>  drivers/target/iscsi/cxgbit/cxgbit_cm.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/target/iscsi/cxgbit/cxgbit_cm.c b/drivers/target/iscsi/cxgbit/cxgbit_cm.c
+> index 3336d2b78bf..eb3da6d2c62 100644
+> --- a/drivers/target/iscsi/cxgbit/cxgbit_cm.c
+> +++ b/drivers/target/iscsi/cxgbit/cxgbit_cm.c
+> @@ -697,7 +697,7 @@ __cxgbit_abort_conn(struct cxgbit_sock *csk, struct sk_buff *skb)
+> 
+>  void cxgbit_abort_conn(struct cxgbit_sock *csk)
+>  {
+> -       struct sk_buff *skb = alloc_skb(0, GFP_KERNEL | __GFP_NOFAIL);
+> +       struct sk_buff *skb = alloc_skb(0, GFP_ATOMIC | __GFP_NOFAIL);
+> 
+>         cxgbit_get_csk(csk);
+>         cxgbit_init_wr_wait(&csk->com.wr_wait);
+> --
+> 2.17.1
+>
 
---- Comment #4 from Sharma, Jaikumar (jaikumar.sharma@gmail.com) ---
-Hi,
+The last line in cxgbit_abort_conn is cxgbit_wait_for_reply() which
+also should not be called in interrupt context.
 
-In fact this bug is blocker for us with respect to bug tracker
-https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D992304 , is there any
-workaround available for this or an early fix is anticipated?=20
+Anyway this issue is not due to cxgbit, it is common for iSCSI itself:
+iscsit_close_session()
+  iscsit_free_connection_recovery_entries()
+    iscsit_free_cmd()
+      transport_generic_free_cmd()
+        target_wait_free_cmd()
+          wait_for_completion_timeout()
 
-Regards,
-Jaikumar
+IMHO, there is no reason to call iscsit_close_session in an atomic context.
+I have two patches relaited Time2Retain timer. I will share them today.
 
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are the assignee for the bug.=
+BR,
+ Dmitry 
