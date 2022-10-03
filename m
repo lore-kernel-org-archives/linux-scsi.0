@@ -2,123 +2,90 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A568FC4332F
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Oct 2022 14:46:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5971DC4332F
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Oct 2022 14:57:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229814AbiJCOqJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 Oct 2022 10:46:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50130 "EHLO
+        id S229990AbiJCO5e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 Oct 2022 10:57:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40020 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229611AbiJCOqH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2022 10:46:07 -0400
-Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E785A2CC99;
-        Mon,  3 Oct 2022 07:46:02 -0700 (PDT)
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 4F8B04014D;
-        Mon,  3 Oct 2022 14:46:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        in-reply-to:content-disposition:content-type:content-type
-        :mime-version:references:message-id:subject:subject:from:from
-        :date:date:received:received:received:received; s=mta-01; t=
-        1664808359; x=1666622760; bh=f28REBdwbZdrdcPTca7rbkrfq1ht6ZdCGpO
-        41DAmRLg=; b=WqGHMYAcBuNTCREijAVP30718Csy1K1QNSUk9P8n1tXHIHqDxvY
-        w66U9G8G+RbOhbmplOXnRdVHGgBEqJuu89RkSPYIV9GOrJakE94LPx38hdCh8nsN
-        PWQLvtuhZenm3E557Ig9bqGkPpLp4RXiHbhRWFz/XMKI8DCbe0qsoFkM=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id IgLBIl9YdqaE; Mon,  3 Oct 2022 17:45:59 +0300 (MSK)
-Received: from T-EXCH-02.corp.yadro.com (T-EXCH-02.corp.yadro.com [172.17.10.102])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 714CE400F6;
-        Mon,  3 Oct 2022 17:45:55 +0300 (MSK)
-Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
- T-EXCH-02.corp.yadro.com (172.17.10.102) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
- 15.1.669.32; Mon, 3 Oct 2022 17:45:55 +0300
-Received: from yadro.com (10.199.18.20) by T-EXCH-08.corp.yadro.com
- (172.17.11.58) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1118.9; Mon, 3 Oct 2022
- 17:45:55 +0300
-Date:   Mon, 3 Oct 2022 17:46:02 +0300
-From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
-To:     Duoming Zhou <duoming@zju.edu.cn>
-CC:     <linux-kernel@vger.kernel.org>, <martin.petersen@oracle.com>,
-        <kuba@kernel.org>, <davem@davemloft.net>, <andrii@kernel.org>,
-        <gregkh@linuxfoundation.org>, <linux-scsi@vger.kernel.org>,
-        <target-devel@vger.kernel.org>
-Subject: Re: [PATCH] scsi: target: iscsi: cxgbit: fix sleep-in-atomic-context
- bug in cxgbit_abort_conn
-Message-ID: <20221003144602.GA10901@yadro.com>
+        with ESMTP id S229445AbiJCO5d (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2022 10:57:33 -0400
+Received: from zju.edu.cn (spam.zju.edu.cn [61.164.42.155])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A52C51836C;
+        Mon,  3 Oct 2022 07:57:06 -0700 (PDT)
+Received: by ajax-webmail-mail-app4 (Coremail) ; Mon, 3 Oct 2022 22:56:23
+ +0800 (GMT+08:00)
+X-Originating-IP: [218.12.19.40]
+Date:   Mon, 3 Oct 2022 22:56:23 +0800 (GMT+08:00)
+X-CM-HeaderCharset: UTF-8
+From:   duoming@zju.edu.cn
+To:     "Dmitry Bogdanov" <d.bogdanov@yadro.com>
+Cc:     linux-kernel@vger.kernel.org, martin.petersen@oracle.com,
+        kuba@kernel.org, davem@davemloft.net, andrii@kernel.org,
+        gregkh@linuxfoundation.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Subject: Re: [PATCH] scsi: target: iscsi: cxgbit: fix
+ sleep-in-atomic-context bug in cxgbit_abort_conn
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version XT5.0.13 build 20210104(ab8c30b6)
+ Copyright (c) 2002-2022 www.mailtech.cn zju.edu.cn
+In-Reply-To: <20221003144602.GA10901@yadro.com>
 References: <20221002014047.23066-1-duoming@zju.edu.cn>
+ <20221003144602.GA10901@yadro.com>
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <20221002014047.23066-1-duoming@zju.edu.cn>
-X-Originating-IP: [10.199.18.20]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-08.corp.yadro.com (172.17.11.58)
+Message-ID: <2c8985b8.107370.1839e591d73.Coremail.duoming@zju.edu.cn>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID: cS_KCgA3OMwY+Dpjor_ZBg--.64103W
+X-CM-SenderInfo: qssqjiasttq6lmxovvfxof0/1tbiAgMMAVZdtbwWwAAfsH
+X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
+        CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
+        daVFxhVjvjDU=
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, Oct 02, 2022 at 09:40:47AM +0800, Duoming Zhou wrote:
-> 
-> The function iscsit_handle_time2retain_timeout() is a timer handler that
-> runs in an atomic context, but it calls "alloc_skb(0, GFP_KERNEL | ...)"
-> that may sleep. As a result, the sleep-in-atomic-context bug will happen.
-> The process is shown below:
-> 
-> iscsit_handle_time2retain_timeout()
->  iscsit_close_session()
->   iscsit_free_connection_recovery_entries()
->    iscsit_free_cmd()
->     __iscsit_free_cmd()
->      cxgbit_unmap_cmd()
->       cxgbit_abort_conn()
->        alloc_skb(0, GFP_KERNEL | ...) //may sleep
-> 
-> This patch changes the gfp_t parameter of alloc_skb() from GFP_KERNEL to
-> GFP_ATOMIC in order to mitigate the bug.
-> 
-> Fixes: 1ae01724ae92 ("cxgbit: Abort the TCP connection in case of data out timeout")
-> Signed-off-by: Duoming Zhou <duoming@zju.edu.cn>
-> ---
->  drivers/target/iscsi/cxgbit/cxgbit_cm.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/target/iscsi/cxgbit/cxgbit_cm.c b/drivers/target/iscsi/cxgbit/cxgbit_cm.c
-> index 3336d2b78bf..eb3da6d2c62 100644
-> --- a/drivers/target/iscsi/cxgbit/cxgbit_cm.c
-> +++ b/drivers/target/iscsi/cxgbit/cxgbit_cm.c
-> @@ -697,7 +697,7 @@ __cxgbit_abort_conn(struct cxgbit_sock *csk, struct sk_buff *skb)
-> 
->  void cxgbit_abort_conn(struct cxgbit_sock *csk)
->  {
-> -       struct sk_buff *skb = alloc_skb(0, GFP_KERNEL | __GFP_NOFAIL);
-> +       struct sk_buff *skb = alloc_skb(0, GFP_ATOMIC | __GFP_NOFAIL);
-> 
->         cxgbit_get_csk(csk);
->         cxgbit_init_wr_wait(&csk->com.wr_wait);
-> --
-> 2.17.1
->
-
-The last line in cxgbit_abort_conn is cxgbit_wait_for_reply() which
-also should not be called in interrupt context.
-
-Anyway this issue is not due to cxgbit, it is common for iSCSI itself:
-iscsit_close_session()
-  iscsit_free_connection_recovery_entries()
-    iscsit_free_cmd()
-      transport_generic_free_cmd()
-        target_wait_free_cmd()
-          wait_for_completion_timeout()
-
-IMHO, there is no reason to call iscsit_close_session in an atomic context.
-I have two patches relaited Time2Retain timer. I will share them today.
-
-BR,
- Dmitry 
+SGVsbG8sCgpPbiBNb24sIDMgT2N0IDIwMjIgMTc6NDY6MDIgKzAzMDAgRG1pdHJ5IEJvZ2Rhbm92
+IHdyb3RlOgoKPiBPbiBTdW4sIE9jdCAwMiwgMjAyMiBhdCAwOTo0MDo0N0FNICswODAwLCBEdW9t
+aW5nIFpob3Ugd3JvdGU6Cj4gPiAKPiA+IFRoZSBmdW5jdGlvbiBpc2NzaXRfaGFuZGxlX3RpbWUy
+cmV0YWluX3RpbWVvdXQoKSBpcyBhIHRpbWVyIGhhbmRsZXIgdGhhdAo+ID4gcnVucyBpbiBhbiBh
+dG9taWMgY29udGV4dCwgYnV0IGl0IGNhbGxzICJhbGxvY19za2IoMCwgR0ZQX0tFUk5FTCB8IC4u
+LikiCj4gPiB0aGF0IG1heSBzbGVlcC4gQXMgYSByZXN1bHQsIHRoZSBzbGVlcC1pbi1hdG9taWMt
+Y29udGV4dCBidWcgd2lsbCBoYXBwZW4uCj4gPiBUaGUgcHJvY2VzcyBpcyBzaG93biBiZWxvdzoK
+PiA+IAo+ID4gaXNjc2l0X2hhbmRsZV90aW1lMnJldGFpbl90aW1lb3V0KCkKPiA+ICBpc2NzaXRf
+Y2xvc2Vfc2Vzc2lvbigpCj4gPiAgIGlzY3NpdF9mcmVlX2Nvbm5lY3Rpb25fcmVjb3ZlcnlfZW50
+cmllcygpCj4gPiAgICBpc2NzaXRfZnJlZV9jbWQoKQo+ID4gICAgIF9faXNjc2l0X2ZyZWVfY21k
+KCkKPiA+ICAgICAgY3hnYml0X3VubWFwX2NtZCgpCj4gPiAgICAgICBjeGdiaXRfYWJvcnRfY29u
+bigpCj4gPiAgICAgICAgYWxsb2Nfc2tiKDAsIEdGUF9LRVJORUwgfCAuLi4pIC8vbWF5IHNsZWVw
+Cj4gPiAKPiA+IFRoaXMgcGF0Y2ggY2hhbmdlcyB0aGUgZ2ZwX3QgcGFyYW1ldGVyIG9mIGFsbG9j
+X3NrYigpIGZyb20gR0ZQX0tFUk5FTCB0bwo+ID4gR0ZQX0FUT01JQyBpbiBvcmRlciB0byBtaXRp
+Z2F0ZSB0aGUgYnVnLgo+ID4gCj4gPiBGaXhlczogMWFlMDE3MjRhZTkyICgiY3hnYml0OiBBYm9y
+dCB0aGUgVENQIGNvbm5lY3Rpb24gaW4gY2FzZSBvZiBkYXRhIG91dCB0aW1lb3V0IikKPiA+IFNp
+Z25lZC1vZmYtYnk6IER1b21pbmcgWmhvdSA8ZHVvbWluZ0B6anUuZWR1LmNuPgo+ID4gLS0tCj4g
+PiAgZHJpdmVycy90YXJnZXQvaXNjc2kvY3hnYml0L2N4Z2JpdF9jbS5jIHwgMiArLQo+ID4gIDEg
+ZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMSBkZWxldGlvbigtKQo+ID4gCj4gPiBkaWZm
+IC0tZ2l0IGEvZHJpdmVycy90YXJnZXQvaXNjc2kvY3hnYml0L2N4Z2JpdF9jbS5jIGIvZHJpdmVy
+cy90YXJnZXQvaXNjc2kvY3hnYml0L2N4Z2JpdF9jbS5jCj4gPiBpbmRleCAzMzM2ZDJiNzhiZi4u
+ZWIzZGE2ZDJjNjIgMTAwNjQ0Cj4gPiAtLS0gYS9kcml2ZXJzL3RhcmdldC9pc2NzaS9jeGdiaXQv
+Y3hnYml0X2NtLmMKPiA+ICsrKyBiL2RyaXZlcnMvdGFyZ2V0L2lzY3NpL2N4Z2JpdC9jeGdiaXRf
+Y20uYwo+ID4gQEAgLTY5Nyw3ICs2OTcsNyBAQCBfX2N4Z2JpdF9hYm9ydF9jb25uKHN0cnVjdCBj
+eGdiaXRfc29jayAqY3NrLCBzdHJ1Y3Qgc2tfYnVmZiAqc2tiKQo+ID4gCj4gPiAgdm9pZCBjeGdi
+aXRfYWJvcnRfY29ubihzdHJ1Y3QgY3hnYml0X3NvY2sgKmNzaykKPiA+ICB7Cj4gPiAtICAgICAg
+IHN0cnVjdCBza19idWZmICpza2IgPSBhbGxvY19za2IoMCwgR0ZQX0tFUk5FTCB8IF9fR0ZQX05P
+RkFJTCk7Cj4gPiArICAgICAgIHN0cnVjdCBza19idWZmICpza2IgPSBhbGxvY19za2IoMCwgR0ZQ
+X0FUT01JQyB8IF9fR0ZQX05PRkFJTCk7Cj4gPiAKPiA+ICAgICAgICAgY3hnYml0X2dldF9jc2so
+Y3NrKTsKPiA+ICAgICAgICAgY3hnYml0X2luaXRfd3Jfd2FpdCgmY3NrLT5jb20ud3Jfd2FpdCk7
+Cj4gPiAtLQo+ID4gMi4xNy4xCj4gPgo+IAo+IFRoZSBsYXN0IGxpbmUgaW4gY3hnYml0X2Fib3J0
+X2Nvbm4gaXMgY3hnYml0X3dhaXRfZm9yX3JlcGx5KCkgd2hpY2gKPiBhbHNvIHNob3VsZCBub3Qg
+YmUgY2FsbGVkIGluIGludGVycnVwdCBjb250ZXh0LgoKSSBhZ3JlZSB3aXRoIHlvdS4KCj4gQW55
+d2F5IHRoaXMgaXNzdWUgaXMgbm90IGR1ZSB0byBjeGdiaXQsIGl0IGlzIGNvbW1vbiBmb3IgaVND
+U0kgaXRzZWxmOgo+IGlzY3NpdF9jbG9zZV9zZXNzaW9uKCkKPiAgIGlzY3NpdF9mcmVlX2Nvbm5l
+Y3Rpb25fcmVjb3ZlcnlfZW50cmllcygpCj4gICAgIGlzY3NpdF9mcmVlX2NtZCgpCj4gICAgICAg
+dHJhbnNwb3J0X2dlbmVyaWNfZnJlZV9jbWQoKQo+ICAgICAgICAgdGFyZ2V0X3dhaXRfZnJlZV9j
+bWQoKQo+ICAgICAgICAgICB3YWl0X2Zvcl9jb21wbGV0aW9uX3RpbWVvdXQoKQoKSSB1bmRlcnN0
+YW5kLgoKPiBJTUhPLCB0aGVyZSBpcyBubyByZWFzb24gdG8gY2FsbCBpc2NzaXRfY2xvc2Vfc2Vz
+c2lvbiBpbiBhbiBhdG9taWMgY29udGV4dC4KPiBJIGhhdmUgdHdvIHBhdGNoZXMgcmVsYWl0ZWQg
+VGltZTJSZXRhaW4gdGltZXIuIEkgd2lsbCBzaGFyZSB0aGVtIHRvZGF5LgoKVGhhdCdzIGdyZWF0
+LCB0aGFuayB5b3UhCgpCZXN0IHJlZ2FyZHMsCkR1b21pbmcgWmhvdQo=
