@@ -2,100 +2,123 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69CA6C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Oct 2022 20:27:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 979F8C4332F
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Oct 2022 23:57:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229660AbiJCU1z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 Oct 2022 16:27:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43312 "EHLO
+        id S229994AbiJCX5F (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 Oct 2022 19:57:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38742 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229885AbiJCU1v (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2022 16:27:51 -0400
-Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EEB993E771;
-        Mon,  3 Oct 2022 13:27:49 -0700 (PDT)
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id A6673411F8;
-        Mon,  3 Oct 2022 20:27:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        content-type:content-type:content-transfer-encoding:mime-version
-        :references:in-reply-to:x-mailer:message-id:date:date:subject
-        :subject:from:from:received:received:received:received; s=
-        mta-01; t=1664828867; x=1666643268; bh=BlqpQ5lIMULqb1JjlXGVS3eHU
-        p/CLKPTsZvHH0M03Rs=; b=E4+r8JK/MwOfEy35B0/d+CHgbeiT6Ik2A7cnOTdTw
-        SBu6RTr/reOsQ0EMqooqNb7oq3SHShp4XjIKinc5AV7cHt9KX1iXGJ9VQveY2nd9
-        sVpyZNzb+IPynN0Bcf4KwYjAj3p6S2wqofKozJykUwZAWyEmvgjkUp22qf9TiU55
-        rI=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id jEze6DcVS8Mg; Mon,  3 Oct 2022 23:27:47 +0300 (MSK)
-Received: from T-EXCH-01.corp.yadro.com (T-EXCH-01.corp.yadro.com [172.17.10.101])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 743E34120E;
-        Mon,  3 Oct 2022 23:27:43 +0300 (MSK)
-Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
- T-EXCH-01.corp.yadro.com (172.17.10.101) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
- 15.1.669.32; Mon, 3 Oct 2022 23:27:36 +0300
-Received: from NB-591.corp.yadro.com (10.199.18.20) by
- T-EXCH-08.corp.yadro.com (172.17.11.58) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.2.1118.9; Mon, 3 Oct 2022 23:27:36 +0300
-From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
-To:     Martin Petersen <martin.petersen@oracle.com>,
-        <target-devel@vger.kernel.org>
-CC:     <linux-scsi@vger.kernel.org>, <linux@yadro.com>,
-        Duoming Zhou <duoming@zju.edu.cn>,
-        Dmitry Bogdanov <d.bogdanov@yadro.com>
-Subject: [PATCH 3/3] target: iscsi: close session without connections
-Date:   Mon, 3 Oct 2022 23:27:23 +0300
-Message-ID: <20221003202723.22714-4-d.bogdanov@yadro.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20221003202723.22714-1-d.bogdanov@yadro.com>
-References: <20221003202723.22714-1-d.bogdanov@yadro.com>
+        with ESMTP id S229950AbiJCX4u (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2022 19:56:50 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6077F27CDB;
+        Mon,  3 Oct 2022 16:56:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
+        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=G37LnXkC8VTdsMvruTDa2+n50xVxzxAz9mNwqVDycIY=; b=XTOqMBWME2UGab0kwjo1gzrMRW
+        gB+DuURn9NS4zcZSmoeMs18rQmqAsTNNa6uuhzopJE7oJUzHFGX+qVY7cdxQlfhPuwqLeXoDvetBs
+        CcsdjMo+/vbb/SNGM9xa8ArXmcyHMYiLJbgqoh53RFxan4Zh6rxIM0KwecTCGmVw7g/2QE2XOPexA
+        zmbGEaVvP9cKgoIuClztMdTyR+b3wnCwudN9YEIqi1v33/NbiEad2VssWmt64gBQQnGlv4v+/ejDr
+        cvjhjQ2lZjbHT91+3gOMqh0aGmftMrWfQC/SD1FT/gQY7QqVITbhlMYVu9rTYP2v6z59AYKycxcnF
+        095W7VAA==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1ofVIh-0086q0-0V; Mon, 03 Oct 2022 23:56:43 +0000
+Date:   Mon, 3 Oct 2022 16:56:42 -0700
+From:   Luis Chamberlain <mcgrof@kernel.org>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Mauro Carvalho Chehab <mchehab@kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
+        John Garry <john.garry@huawei.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-modules@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v5 6/7] module: Improve support for asynchronous module
+ exit code
+Message-ID: <Yzt2upqiG2i/eHnV@bombadil.infradead.org>
+References: <20220914225621.415631-1-bvanassche@acm.org>
+ <20220914225621.415631-7-bvanassche@acm.org>
+ <a4084b27-dd2d-10df-493c-35998eed664c@acm.org>
+ <YzOPJHSQsPtc5o0Y@bombadil.infradead.org>
+ <33ee1c3a-d37a-b81f-68be-d1901c7dd6e8@acm.org>
+ <YzdF72yRae7lnZAy@bombadil.infradead.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.199.18.20]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-08.corp.yadro.com (172.17.11.58)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YzdF72yRae7lnZAy@bombadil.infradead.org>
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-During Time2Retain timer there are no connections in the session.
-A session stop due to ACL/TPG removal is done by stopping its
-connections. For session in recovery it stops Time2Retain timer and
-that's it. The session hanges forever.
+On Fri, Sep 30, 2022 at 12:39:27PM -0700, Luis Chamberlain wrote:
+> On Wed, Sep 28, 2022 at 11:17:02AM -0700, Bart Van Assche wrote:
+> > On 9/27/22 17:02, Luis Chamberlain wrote:
+> > > On Tue, Sep 20, 2022 at 10:13:40AM -0700, Bart Van Assche wrote:
+> > > > On 9/14/22 15:56, Bart Van Assche wrote:
+> > > > > Some kernel modules call device_del() from their module exit code and
+> > > > > schedule asynchronous work from inside the .release callback without waiting
+> > > > > until that callback has finished. As an example, many SCSI LLD drivers call
+> > > > > scsi_remove_host() from their module exit code. scsi_remove_host() may
+> > > > > invoke scsi_device_dev_release_usercontext() asynchronously.
+> > > > > scsi_device_dev_release_usercontext() uses the host template pointer and
+> > > > > that pointer usually exists in static storage in the SCSI LLD. Support
+> > > > > using the module reference count to keep the module around until
+> > > > > asynchronous module exiting has completed by waiting in the delete_module()
+> > > > > system call until the module reference count drops to zero.
+> > > > 
+> > > > Hi Luis,
+> > > > 
+> > > > I'd like to know your opinion about this patch since you are the maintainer
+> > > > of the kernel module system.
+> > > 
+> > > See this patch which extends the documentation of try_module_get():
+> > > 
+> > > https://lkml.kernel.org/r/20211029184500.2821444-7-mcgrof@kernel.org
+> > > 
+> > > You can ignore discussion around the thread as sadly it is just
+> > > irrelevant stuff not about that patch. But the logic it spells out
+> > > is still true.
+> > > 
+> > > So, in short, using try_module_get() on exit is actually the wrong
+> > > thing to do and it is no surprise it would fail. I haven't gotten
+> > > yet around to reviewing Mauro's driver API which let's you unbind
+> > > drivers, but it sounds related so I CC'd you on that.
+> > > 
+> > > So I'd like to ask instead if an alternative to using try_module_get()
+> > > on exit would be better here and for the future.
+> > 
+> > Hi Luis,
+> > 
+> > The extended documentation of try_module_get() is very helpful. But please
+> > note that this patch is not related to try_module_get() at all. See also
+> > patch 7/7 in this series (https://lore.kernel.org/linux-scsi/20220914225621.415631-8-bvanassche@acm.org/).
+> 
+> I cannot see how this patch set is no way related to try_module_get()
+> given the 7/7 patch you posted replaces try_module_get() with __module_get().
+> My point, and hint, is that the original construct that added try_module_get()
+> on removal was flawed and I'm not sure trying to expand on that idea would
+> or even *should* be fruitful given the issues / tribal knowledge I tried
+> extending documentation for.
+> 
+> It would beg the question if instead re-evaluating the goal could be
+> done in such a way that the new documentation I suggested on try_module_get()
+> would be seriously taken into account.
 
-Call directly a session closure when no connections in the session.
-Do it in other context to make it possible to wait for session usage
-counter, that is decreased always after invocation of session stop.
+Yeah I've gone ahead and re-read your original patch again the issue
+with that is it waits *once* for the refcnt to go to 0, but that does
+not forbit it from going back up, at which point you have a race which
+can still create the situation. Every subsystem is different, but for
+instance simply running a loop opening a device block file should
+suffice to bump the refcnt of a respective block driver module. So
+at least the patch itself won't ultimately address this issue I'm
+afraid.
 
-Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
----
- drivers/target/iscsi/iscsi_target.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index 3e91523e540b..967c969cfc10 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -4738,6 +4738,12 @@ void iscsit_stop_session(
- 	struct iscsit_conn *conn, *conn_tmp = NULL;
- 	int is_last;
- 
-+	if (!conn_count) {
-+		/* during Time2Retain timer there is no connections */
-+		schedule_work(&sess->session_close_worker);
-+		return;
-+	}
-+
- 	spin_lock_bh(&sess->conn_lock);
- 
- 	if (connection_sleep) {
--- 
-2.25.1
-
+  Luis
