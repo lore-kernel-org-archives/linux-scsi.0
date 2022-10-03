@@ -2,41 +2,41 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A01FAC4332F
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Oct 2022 20:27:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9415CC433FE
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Oct 2022 20:27:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229730AbiJCU1t (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 Oct 2022 16:27:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43258 "EHLO
+        id S229896AbiJCU1v (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 Oct 2022 16:27:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43264 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229495AbiJCU1s (ORCPT
+        with ESMTP id S229549AbiJCU1s (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2022 16:27:48 -0400
 Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98A2A303EA;
-        Mon,  3 Oct 2022 13:27:46 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8343A3E771;
+        Mon,  3 Oct 2022 13:27:47 -0700 (PDT)
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id B27E241220;
-        Mon,  3 Oct 2022 20:27:44 +0000 (UTC)
+        by mta-01.yadro.com (Postfix) with ESMTP id 1C4CD4120A;
+        Mon,  3 Oct 2022 20:27:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received:received; s=
-        mta-01; t=1664828863; x=1666643264; bh=ZFc/bde9yLuE7HUIDHaFgyP5c
-        k6fy8KYB1sxGMvL1+U=; b=SZTQjlDW3y7yhZfxQvAT4SDwO3zlIhci4MPDgcxvD
-        pdfIe23NIpGeZwH9QPD2yEvkxbxtls9OryAmiSKWR2LkeFPH/s7z4ua+rWMM9reo
-        jU56Jahxqk3wzHewbBkjDJJ1yigj/UPw5Xx3Ek8WXuKL0ZLfF+eS1PPMq2Gmn+lK
-        0M=
+        mta-01; t=1664828864; x=1666643265; bh=l8noP737ebxNzhobzoU0QPz+R
+        SYdA8cPCJ9qKGVOn9s=; b=T/hHJEgWYnnxu0UTj01jXZUkJkcTeH/iKiw2Petfi
+        yzGgC+xK5ZyxMrnW1xhHiEKm8qxhTvPIFux3Z4V/n18a6bhZE4HNerntmuxoeA0a
+        l4DctXg8p6Pif8M6fSj6ZkroVbwBIOnuTbCOGizYE4dBqLz6rzd0RjZ/TB0yAr4n
+        Hw=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id D8mbbN7LCgmk; Mon,  3 Oct 2022 23:27:43 +0300 (MSK)
-Received: from T-EXCH-01.corp.yadro.com (T-EXCH-01.corp.yadro.com [172.17.10.101])
+        with ESMTP id Y2c-weysgCFy; Mon,  3 Oct 2022 23:27:44 +0300 (MSK)
+Received: from T-EXCH-02.corp.yadro.com (T-EXCH-02.corp.yadro.com [172.17.10.102])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id E1F374120A;
-        Mon,  3 Oct 2022 23:27:36 +0300 (MSK)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 7439D4120D;
+        Mon,  3 Oct 2022 23:27:43 +0300 (MSK)
 Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
- T-EXCH-01.corp.yadro.com (172.17.10.101) with Microsoft SMTP Server
+ T-EXCH-02.corp.yadro.com (172.17.10.102) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
  15.1.669.32; Mon, 3 Oct 2022 23:27:36 +0300
 Received: from NB-591.corp.yadro.com (10.199.18.20) by
@@ -49,9 +49,9 @@ To:     Martin Petersen <martin.petersen@oracle.com>,
 CC:     <linux-scsi@vger.kernel.org>, <linux@yadro.com>,
         Duoming Zhou <duoming@zju.edu.cn>,
         Dmitry Bogdanov <d.bogdanov@yadro.com>
-Subject: [PATCH 1/3] target: iscsi: schedule close_session at timeout
-Date:   Mon, 3 Oct 2022 23:27:21 +0300
-Message-ID: <20221003202723.22714-2-d.bogdanov@yadro.com>
+Subject: [PATCH 2/3] target: iscsi: forbid call iscsit_close_session() from atomic context
+Date:   Mon, 3 Oct 2022 23:27:22 +0300
+Message-ID: <20221003202723.22714-3-d.bogdanov@yadro.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20221003202723.22714-1-d.bogdanov@yadro.com>
 References: <20221003202723.22714-1-d.bogdanov@yadro.com>
@@ -65,100 +65,137 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-iscsit_close_session in depth has sleepable dependencies, like:
-
-iscsit_close_session()
-  iscsit_free_connection_recovery_entries()
-    iscsit_free_cmd()
-      transport_generic_free_cmd()
-        target_wait_free_cmd()
-          wait_for_completion_timeout()
-
-But iscsit_handle_time2retain_timeout calls it in timer-context that
-leads to WARN on might_sleep();
-
-Schedule iscsit_close_session in work queue.
+Since all calls iscsit_close_session() are now from non-atomic context,
+remove can_sleep argument and forbid call iscsit_close_session() from
+an atomic context in the future.
 
 Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
 ---
- drivers/target/iscsi/iscsi_target.c       | 8 ++++++++
- drivers/target/iscsi/iscsi_target.h       | 1 +
- drivers/target/iscsi/iscsi_target_erl0.c  | 4 +++-
- drivers/target/iscsi/iscsi_target_login.c | 1 +
- include/target/iscsi/iscsi_target_core.h  | 1 +
- 5 files changed, 14 insertions(+), 1 deletion(-)
+ drivers/target/iscsi/iscsi_target.c      | 22 +++++++++-------------
+ drivers/target/iscsi/iscsi_target.h      |  2 +-
+ drivers/target/iscsi/iscsi_target_util.c |  5 +----
+ drivers/target/iscsi/iscsi_target_util.h |  2 +-
+ 4 files changed, 12 insertions(+), 19 deletions(-)
 
 diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index baf4da7bb3b4..36166eabf595 100644
+index 36166eabf595..3e91523e540b 100644
 --- a/drivers/target/iscsi/iscsi_target.c
 +++ b/drivers/target/iscsi/iscsi_target.c
-@@ -4495,6 +4495,14 @@ int iscsit_close_connection(
- 	}
+@@ -4460,7 +4460,7 @@ int iscsit_close_connection(
+ 	     atomic_read(&sess->session_fall_back_to_erl0)) {
+ 		spin_unlock_bh(&sess->conn_lock);
+ 		complete_all(&sess->session_wait_comp);
+-		iscsit_close_session(sess, true);
++		iscsit_close_session(sess);
+ 
+ 		return 0;
+ 	} else if (atomic_read(&sess->session_logout)) {
+@@ -4470,7 +4470,7 @@ int iscsit_close_connection(
+ 		if (atomic_read(&sess->session_close)) {
+ 			spin_unlock_bh(&sess->conn_lock);
+ 			complete_all(&sess->session_wait_comp);
+-			iscsit_close_session(sess, true);
++			iscsit_close_session(sess);
+ 		} else {
+ 			spin_unlock_bh(&sess->conn_lock);
+ 		}
+@@ -4486,7 +4486,7 @@ int iscsit_close_connection(
+ 		if (atomic_read(&sess->session_close)) {
+ 			spin_unlock_bh(&sess->conn_lock);
+ 			complete_all(&sess->session_wait_comp);
+-			iscsit_close_session(sess, true);
++			iscsit_close_session(sess);
+ 		} else {
+ 			spin_unlock_bh(&sess->conn_lock);
+ 		}
+@@ -4500,18 +4500,20 @@ void iscsit_session_close_worker(struct work_struct *workp)
+ 	struct iscsit_session *sess = container_of(workp, struct iscsit_session,
+ 						   session_close_worker);
+ 
+-	iscsit_close_session(sess, true);
++	iscsit_close_session(sess);
  }
  
-+void iscsit_session_close_worker(struct work_struct *workp)
-+{
-+	struct iscsit_session *sess = container_of(workp, struct iscsit_session,
-+						   session_close_worker);
-+
-+	iscsit_close_session(sess, true);
-+}
-+
  /*
   * If the iSCSI Session for the iSCSI Initiator Node exists,
   * forcefully shutdown the iSCSI NEXUS.
+  */
+-int iscsit_close_session(struct iscsit_session *sess, bool can_sleep)
++int iscsit_close_session(struct iscsit_session *sess)
+ {
+ 	struct iscsi_portal_group *tpg = sess->tpg;
+ 	struct se_portal_group *se_tpg = &tpg->tpg_se_tpg;
+ 
++	might_sleep();
++
+ 	if (atomic_read(&sess->nconn)) {
+ 		pr_err("%d connection(s) still exist for iSCSI session"
+ 			" to %s\n", atomic_read(&sess->nconn),
+@@ -4536,15 +4538,9 @@ int iscsit_close_session(struct iscsit_session *sess, bool can_sleep)
+ 
+ 	/*
+ 	 * If any other processes are accessing this session pointer we must
+-	 * wait until they have completed.  If we are in an interrupt (the
+-	 * time2retain handler) and contain and active session usage count we
+-	 * restart the timer and exit.
++	 * wait until they have completed.
+ 	 */
+-	if (iscsit_check_session_usage_count(sess, can_sleep)) {
+-		atomic_set(&sess->session_logout, 0);
+-		iscsit_start_time2retain_handler(sess);
+-		return 0;
+-	}
++	iscsit_check_session_usage_count(sess);
+ 
+ 	transport_deregister_session(sess->se_sess);
+ 
 diff --git a/drivers/target/iscsi/iscsi_target.h b/drivers/target/iscsi/iscsi_target.h
-index 0c997a08adec..a529294a21ce 100644
+index a529294a21ce..054a47711bed 100644
 --- a/drivers/target/iscsi/iscsi_target.h
 +++ b/drivers/target/iscsi/iscsi_target.h
-@@ -42,6 +42,7 @@ extern int iscsi_target_tx_thread(void *);
+@@ -41,7 +41,7 @@ extern void iscsit_thread_get_cpumask(struct iscsit_conn *);
+ extern int iscsi_target_tx_thread(void *);
  extern int iscsi_target_rx_thread(void *);
  extern int iscsit_close_connection(struct iscsit_conn *);
- extern int iscsit_close_session(struct iscsit_session *, bool can_sleep);
-+extern void iscsit_session_close_worker(struct work_struct *workp);
+-extern int iscsit_close_session(struct iscsit_session *, bool can_sleep);
++extern int iscsit_close_session(struct iscsit_session *sess);
+ extern void iscsit_session_close_worker(struct work_struct *workp);
  extern void iscsit_fail_session(struct iscsit_session *);
  extern void iscsit_stop_session(struct iscsit_session *, int, int);
- extern int iscsit_release_sessions_for_tpg(struct iscsi_portal_group *, int);
-diff --git a/drivers/target/iscsi/iscsi_target_erl0.c b/drivers/target/iscsi/iscsi_target_erl0.c
-index 07e9cf431edd..63890a72555b 100644
---- a/drivers/target/iscsi/iscsi_target_erl0.c
-+++ b/drivers/target/iscsi/iscsi_target_erl0.c
-@@ -764,8 +764,10 @@ void iscsit_handle_time2retain_timeout(struct timer_list *t)
- 			" iSCSI session.\n", sess->sid);
- 
- 	iscsit_fill_cxn_timeout_err_stats(sess);
-+	atomic_set(&sess->session_logout, 1);
- 	spin_unlock_bh(&se_tpg->session_lock);
--	iscsit_close_session(sess, false);
-+
-+	schedule_work(&sess->session_close_worker);
+diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/target/iscsi/iscsi_target_util.c
+index 8d9f21372b67..b618468e766c 100644
+--- a/drivers/target/iscsi/iscsi_target_util.c
++++ b/drivers/target/iscsi/iscsi_target_util.c
+@@ -762,15 +762,12 @@ void iscsit_free_cmd(struct iscsit_cmd *cmd, bool shutdown)
  }
+ EXPORT_SYMBOL(iscsit_free_cmd);
  
- void iscsit_start_time2retain_handler(struct iscsit_session *sess)
-diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
-index 27e448c2d066..cc1895c56dd9 100644
---- a/drivers/target/iscsi/iscsi_target_login.c
-+++ b/drivers/target/iscsi/iscsi_target_login.c
-@@ -288,6 +288,7 @@ static int iscsi_login_zero_tsih_s1(
- 	spin_lock_init(&sess->cr_i_lock);
- 	spin_lock_init(&sess->session_usage_lock);
- 	spin_lock_init(&sess->ttt_lock);
-+	INIT_WORK(&sess->session_close_worker, iscsit_session_close_worker);
+-bool iscsit_check_session_usage_count(struct iscsit_session *sess,
+-				      bool can_sleep)
++bool iscsit_check_session_usage_count(struct iscsit_session *sess)
+ {
+ 	spin_lock_bh(&sess->session_usage_lock);
+ 	if (sess->session_usage_count != 0) {
+ 		sess->session_waiting_on_uc = 1;
+ 		spin_unlock_bh(&sess->session_usage_lock);
+-		if (!can_sleep)
+-			return true;
  
- 	timer_setup(&sess->time2retain_timer,
- 		    iscsit_handle_time2retain_timeout, 0);
-diff --git a/include/target/iscsi/iscsi_target_core.h b/include/target/iscsi/iscsi_target_core.h
-index 94d06ddfd80a..92436b3dd17b 100644
---- a/include/target/iscsi/iscsi_target_core.h
-+++ b/include/target/iscsi/iscsi_target_core.h
-@@ -684,6 +684,7 @@ struct iscsit_session {
- 	struct completion	session_wait_comp;
- 	struct completion	session_waiting_on_uc_comp;
- 	struct timer_list	time2retain_timer;
-+	struct work_struct	session_close_worker;
- 	struct iscsi_sess_ops	*sess_ops;
- 	struct se_session	*se_sess;
- 	struct iscsi_portal_group *tpg;
+ 		wait_for_completion(&sess->session_waiting_on_uc_comp);
+ 		return false;
+diff --git a/drivers/target/iscsi/iscsi_target_util.h b/drivers/target/iscsi/iscsi_target_util.h
+index 33ea799a0850..8f99971c0f2d 100644
+--- a/drivers/target/iscsi/iscsi_target_util.h
++++ b/drivers/target/iscsi/iscsi_target_util.h
+@@ -40,7 +40,7 @@ extern void iscsit_free_queue_reqs_for_conn(struct iscsit_conn *);
+ extern void iscsit_release_cmd(struct iscsit_cmd *);
+ extern void __iscsit_free_cmd(struct iscsit_cmd *, bool);
+ extern void iscsit_free_cmd(struct iscsit_cmd *, bool);
+-extern bool iscsit_check_session_usage_count(struct iscsit_session *sess, bool can_sleep);
++extern bool iscsit_check_session_usage_count(struct iscsit_session *sess);
+ extern void iscsit_dec_session_usage_count(struct iscsit_session *);
+ extern void iscsit_inc_session_usage_count(struct iscsit_session *);
+ extern struct iscsit_conn *iscsit_get_conn_from_cid(struct iscsit_session *, u16);
 -- 
 2.25.1
 
