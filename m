@@ -2,138 +2,138 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4458C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Oct 2022 17:54:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21760C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Oct 2022 17:54:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229884AbiJCRy3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 Oct 2022 13:54:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51394 "EHLO
+        id S229630AbiJCRy5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 Oct 2022 13:54:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51868 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229882AbiJCRyJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2022 13:54:09 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 775EF3D5BC
-        for <linux-scsi@vger.kernel.org>; Mon,  3 Oct 2022 10:53:54 -0700 (PDT)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 293GOIcu006279;
-        Mon, 3 Oct 2022 17:53:44 GMT
+        with ESMTP id S229897AbiJCRyP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2022 13:54:15 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABDBD3F1F6
+        for <linux-scsi@vger.kernel.org>; Mon,  3 Oct 2022 10:54:01 -0700 (PDT)
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 293GOYgI015780;
+        Mon, 3 Oct 2022 17:53:52 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references :
  content-transfer-encoding : content-type : mime-version; s=corp-2022-7-12;
- bh=PUx6rqGj9Rtobn8tQlQI4sSQVmc5HfGpS9S8mQbe93o=;
- b=kps/wElJkOyf0sCU6GFVs5z5Wy56niaKAZUSNc8EO1YnHn0GdC7LeIwIedW88KaffWJQ
- 824PjR0zl3qUwZY2/1NjSImVSFcjHDvl/zziSYT6NPpxs56zdFHUPOXRe9fkJicP/YZ2
- q8w17UhTDVVJri/RvfJm83Bo5K0sj+lfjjqX23My0b6JQN49gnEldh4iRaqvnSgVqFo/
- cUrYlyG8TtrGOPXa+APnMxdZCijohfSI0ZnNJdTSZLnzwHKJy81D+bi6T/WBIeZ8TxeV
- tu85Aq72cQlI4lg1xohVHR/QhimvYjjObNQi2LMQiwgwsx4COfhe3+Skyh0sfepD/oj3 3g== 
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3jxbyn48t8-1
+ bh=JMMWtd9DwyGfO1igmZaTVNwQ0aJIzfeNWlYS/fG9Gkw=;
+ b=Hxg4Ofxmye7j9Em6uV+tkiizzhMpMBqBIohLqct8Nnlmc5jJYWx8en9QsmDfQwnmQ2r7
+ dKXFho2KpajKcZZZ4KMkAAwMhiUtwS7rqItmEFKlvom3Oynqj5zByNFNzPziGr5+TocU
+ ENThEgyhs7Y0c8nQs1fCXKXAhXF//SjozGfdcXGdbVM7z0aixoAopLLUEpwU9UWfifrh
+ OVZLN1VYpgbtrQxN4TFAhBHSUn28gnjY9GlawytX/4VgcoXNHWWyeXBZ51pchnvamP2D
+ Rvd1PDQa33QvwTf5D2KJvcQzCvA7oPv3Sl+WejaHSifK9wCL4h1sYRsVsoprk7uRFJfy AA== 
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3jxdea4cw3-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 03 Oct 2022 17:53:44 +0000
-Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 293Hd0xl015519;
-        Mon, 3 Oct 2022 17:53:43 GMT
-Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2046.outbound.protection.outlook.com [104.47.66.46])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3jxc03g3m0-7
+        Mon, 03 Oct 2022 17:53:51 +0000
+Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 293HXvHg008322;
+        Mon, 3 Oct 2022 17:53:51 GMT
+Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2105.outbound.protection.outlook.com [104.47.58.105])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3jxc03q5x7-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 03 Oct 2022 17:53:43 +0000
+        Mon, 03 Oct 2022 17:53:51 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=RxY0i7gTTJNv+OIEvLqT4OJk7oYQijzMoIi7wsGi4UQPFYZ25PideLe9NLUDmIbhfqcHhUCxPY3y/V9nuBvCX4jaIQICmesvrbUaM96gd/uj7vA8qKknMVKLFwSKCptqcmadem9Wrv39OAvkJIlRKzRyPc/0SyDpAzAbkrpeEAPCm7+kCSViNdGp4BaS0zoq+/XWEfViG5z6neL/2XQ8cn7tfiRrr5ofgwGgKGHGxR03Wb+w3VL62mYduOBvXeLbI41qzbcZIZMZh4bpl3xGK/3YDzTKRazHPHYInw4O7D/tZPzAwsmzJXWeyPCFFqN4P+bfvIP8EggliScN1Z0l4g==
+ b=MMqL267o8Ts33O35IvyhVBr6C7CpA6GYvw4Mv4+pkpMqoyBRH43i9DZAh1DaNa4OTmi7cXE4wSK6IFDqxvOjtCWj0FvJbpWDLWhqDKD6wH8egcGegRKumEthHzoIbqPE5H4aLo2QsMm3TltUwiBqyOnvKCYeTMLGL/1yjjp2YPy9b8Q4stZ/bRYXRJKkCwk0DUFUqW/hKwjllca7jfUsxVUw/HX4TBpjYb44dHRx0AU8FH97v4nK2RNNQ54E7BYUfMclp7tJYVWpWvOZQqayW9h/oFe60b/qzzv75sbaSKvyQGXWMoM8KzRaKqmENWoydknOjtMNbN1SWke0u4lk/A==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=PUx6rqGj9Rtobn8tQlQI4sSQVmc5HfGpS9S8mQbe93o=;
- b=nNyE7jcXF9PC3y+I2nCc/9p9w9Gl8hSvPsWUuaHMhJxnKCyTnmVBSmnRcO+UeF/doVSI1pLoBRxKZUovzgfFNNWkPuul/cKIKwRBrrdbu/+ciSGcUwUrBt45tn9YCZqw6VHjl2dh+Q40lCgrxyVxbdhZRBL1uhtVbvwpFA4e7NM4FBfZvFZsc6mtrMbwMyAV5PAXr3C3IsX4Adf62DBVGF1ztcAVHKPefGAcxmliKpZoN6aTM+KF/lARmaQxxNEr/3BhDV4AAkj9SzWxQvSt6uLazrsB+pUX9NJDANUhmSHFV2v5Dk5lD3x9Z/DLUSqb4RxVQbfFXJQMrh9ySW3IWA==
+ bh=JMMWtd9DwyGfO1igmZaTVNwQ0aJIzfeNWlYS/fG9Gkw=;
+ b=QWifzdWoQqW51oJzQydGgi8sHoYzhRM7q6JVw0nl7HC8wSXKGh6xE7ADp9wgUUDi8zPjtFbE6S1XH5Y5NEvYMo569Mx21x/b2qGDAPhyQAmy/zRnxkUAgIPGuu1Gy20fT9dmmYHh87KR9R2TrUU5l5Ny2NMczK1A2QDstCzqqL45em+PYKVWTYtP9/+8KqCulIrN/MRKSp2FGnkyHE3wsXp5ngzr999cGddwUo0BFaJYy+8qAkIwGKCWMqaxyMspe2Wt5lzZc1YfsBsbR/PVltIfw3YKGpgTcDe0BOFNAzUrn9jhuARvrPsGQsi3whQ0UV9CunP58ynoK7xpNh3D6w==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=PUx6rqGj9Rtobn8tQlQI4sSQVmc5HfGpS9S8mQbe93o=;
- b=WWM0k/Ox3dDq52u8kqt5UqyedY030Yp1dQqkdxRceln1w5tbfLQoGeYMv5zzxU85bxIu32Baoj2Zkb7SXa/Bxs5/U7yfXye3YkdtOjQq4d/9SNv3+YYpw1DJuo1ba0y0JVZdiAJF3sZ8PPAOzw0Fdl2kfVJTCcVC0gsxy7E469c=
+ bh=JMMWtd9DwyGfO1igmZaTVNwQ0aJIzfeNWlYS/fG9Gkw=;
+ b=k0konUG5fMoEDaQ91IHzczYdDlqbWPEvl1n3GObkNNMHzsTaebGmTXNbWaoNsI2l1AUhzoIbv8a+8QbtQ2lDq8cVPQjxwl4PwhAqZdtIUR5HUMqfMUlgCtR/seMIlVG3Ofoa8FutFO4doFvCl/VBAHR9mqQifTQAusdaV8XT3fc=
 Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
- BLAPR10MB4834.namprd10.prod.outlook.com (2603:10b6:208:307::8) with Microsoft
+ DS0PR10MB6824.namprd10.prod.outlook.com (2603:10b6:8:11f::12) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5676.24; Mon, 3 Oct 2022 17:53:37 +0000
+ 15.20.5654.24; Mon, 3 Oct 2022 17:53:49 +0000
 Received: from DM5PR10MB1466.namprd10.prod.outlook.com
  ([fe80::5503:f2f0:f101:9a22]) by DM5PR10MB1466.namprd10.prod.outlook.com
  ([fe80::5503:f2f0:f101:9a22%9]) with mapi id 15.20.5676.030; Mon, 3 Oct 2022
- 17:53:37 +0000
+ 17:53:49 +0000
 From:   Mike Christie <michael.christie@oracle.com>
 To:     bvanassche@acm.org, mwilck@suse.com, hch@lst.de,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         james.bottomley@hansenpartnership.com
 Cc:     Mike Christie <michael.christie@oracle.com>
-Subject: [PATCH v3 09/35] scsi: core: Convert to scsi_exec_req
-Date:   Mon,  3 Oct 2022 12:52:55 -0500
-Message-Id: <20221003175321.8040-10-michael.christie@oracle.com>
+Subject: [PATCH v3 17/35] scsi: ufshcd: Convert to scsi_exec_req
+Date:   Mon,  3 Oct 2022 12:53:03 -0500
+Message-Id: <20221003175321.8040-18-michael.christie@oracle.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20221003175321.8040-1-michael.christie@oracle.com>
 References: <20221003175321.8040-1-michael.christie@oracle.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: CH2PR03CA0020.namprd03.prod.outlook.com
- (2603:10b6:610:59::30) To DM5PR10MB1466.namprd10.prod.outlook.com
+X-ClientProxiedBy: CH0PR08CA0002.namprd08.prod.outlook.com
+ (2603:10b6:610:33::7) To DM5PR10MB1466.namprd10.prod.outlook.com
  (2603:10b6:3:b::7)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM5PR10MB1466:EE_|BLAPR10MB4834:EE_
-X-MS-Office365-Filtering-Correlation-Id: 09213e44-4779-4073-fdf6-08daa56832b1
+X-MS-TrafficTypeDiagnostic: DM5PR10MB1466:EE_|DS0PR10MB6824:EE_
+X-MS-Office365-Filtering-Correlation-Id: 2df87baa-31d5-4d79-fa48-08daa56839cc
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: Z69DugpGxTeplIznFUD5sHp/0Z1HR2Ru2P9tX0wanH87mCdXF2jdJngaTacmDInWv5V3UYuu2Sx/Pdw5hrUczBkDQiVsk2yjGcPRIYky8zqfk0HJB2TTFDjP+Fz9IgjhoXfBwFiOvd/G1aC25tRD659w2QokATjS36M5dOD53/VqE7HxqooDwhCei0CNPh9GN70fWbCIl4xJZF9ictO194udGy88rbo3Aau9Z+QoLePrfp1MN9Gw20QhgCr7ZM1md9ZXag/mCafI2Tg7Sd13TKJDrbLQYOzrkjKoMJt5luZd17rLzokhXi/YNWfFUxQq+eL8QXmFnGRgiy8VhxLdv29z8jiC2qT6L4vdiIrYYN9IGnsMxqWV1CHDEwMafb9y3xRc+SyVBtXvSHK2WG7gqg28OmCqio6C8So/th3aztdCZ6iNDRnrEX+sCvsRJGzfYQtvEWae6qi9mMlfheGvz78Li+DyApBx+OBemsCYt+yzxCBke7u6n8j98RrDMDFy6aOYK8S0rJTue0nmMnYfAPYT13FfG23xlK4iZnb+WgXN+g449fHirfhOQA++8qB5XquTviaBjmx64Xh1/HvrUkIzIrok29VmjpidiyBuBvfj/Ct2ehB9xbwYmh9P5hhwaVlHdFMaEL+q+OcaaVr6hSsH53CYvNhN/TEJ+j7uJlO6SO0xKXor05LyvjN8Z3A0AAQPyZAS+heXgtbPg9ykhg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(396003)(366004)(346002)(376002)(136003)(39860400002)(451199015)(86362001)(83380400001)(38100700002)(186003)(41300700001)(8936002)(5660300002)(316002)(8676002)(66946007)(66556008)(66476007)(4326008)(6506007)(6666004)(107886003)(26005)(1076003)(2616005)(2906002)(6512007)(478600001)(6486002)(36756003);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: wSviX/H3gqbeL9oBQ1o/BrlXdTEBPLP+x6IvB3/l/rGNT8qkE5WQO8DmzIn3+WI4UGxdUpyxZ3fUH6WaBxulMQ27gMSFq2LIFhnPqE1CTS7kXoICV70FeYzo4Ao2Q9vUMnM0hi3RLMXYCYrxOUcyQMf8LKwoRAvQvmKNecLxpnUIajnLnSAsF2nBa7HtIK25ZZwMRM3k86rW80y5jKox+c8sFKSzX8h7SsXnK3K1LVD6yZ9TCRmyCUcBVPTBh6H1tWTd3/K7cg7hQtu/gjkXfKX0JZeN5aNAj3UwaFe2hF5qO143sOD0Qthctp0cZMka4Zz/RYUd7bR1hq3g41yCWJKLa8/dBC9qzuShudFv4vKhILIXN8a9DIF0hxgbczDQIAF87nc90WhouIEz0jx9WkULVaGsNJUN23z4L6NKjR4mZA7OpW0xaohRe+L6olVo+Rw7DxR8MSk+SKjt3c+82l1nkwdq3IJJh7hKbPpp7Pqc38TWtm1NUbCN75vjxFrt7QUK5vi/suJJQoI64AXzOcQcXbxPCdZ7Gese6Qua4NcCX8xM4+JFlP/bdNTxkuHe3Sirgh3V9CQy6+yininqw+cWsW5Zh7hDeZMNUZeBP1B1vA64Nqqd7qUZAhB60n0490dtASMqAAgr3X5f/lyMoNmUJTQeXfSugt2aiY3RUlFVJ/tdjzXlQ/xAZJFa2fl7gSiDVSAgPChqFZwSLi29cQ==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(346002)(396003)(376002)(136003)(366004)(39860400002)(451199015)(6512007)(6486002)(1076003)(478600001)(26005)(38100700002)(66556008)(86362001)(316002)(107886003)(6506007)(83380400001)(6666004)(186003)(2616005)(8936002)(8676002)(66946007)(41300700001)(4326008)(2906002)(36756003)(5660300002)(66476007);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?1owXNJqhIVbpSMtdwfj7o1wzpEoBRlRbwToWI+kbwWURzyYQYw79YPj95v4J?=
- =?us-ascii?Q?xQ3l5KcyzihIP/XVzalUtag8InSdfaaJ0Vd/IEtpYYAZh62ExpboQyuN3t1I?=
- =?us-ascii?Q?E3WFwavqFVuyQcIcNlIg2dzTmtqdKFOaiyDEfWC657ZUntP0xSX+ecRiFmqI?=
- =?us-ascii?Q?9CHyOTybq1mGAwypaNbwsHOCRfu6LlIHTQdxA9RZet8MqdvHqt9H64ssoQIc?=
- =?us-ascii?Q?Hj9pXrLzwHfBpI3m0YPaBYpNiSgU8vSgSeeNd02j+GNwMMmozGXscCikxNk+?=
- =?us-ascii?Q?WCLAEuHghcDKcx1QzFtmNXpo2mUmDje8o4Feypen41mV1fvCA5Q9ybs4HtYS?=
- =?us-ascii?Q?om7+c3uYYFlfC9nHB13wdDS4k7BYKVVW9WSeELC4NSQW5F87vUeWGC609hUZ?=
- =?us-ascii?Q?hukoNHbh6UIPOVIBp4omIMii+tCV59RF+lHOdswR4CRJGilU0gGYHI8ttdTs?=
- =?us-ascii?Q?Ln1BPkcWoua5Uf/0631N/6kGvPr9GK/9BIxIqQYry/kEBO2jbRDlbwmgmWEg?=
- =?us-ascii?Q?Bkm0t05mzvWeBf655nuZZJyqOSFoniM8RPNkNPOqwX3aJxoavW8p5J18ML9F?=
- =?us-ascii?Q?3Cziu2eETsXooKjGZTWvqAPPX7CkuCxPexGCIB6ONh2s3CPfOabrsEbrfuKj?=
- =?us-ascii?Q?A0jr2wijTbMXd3W/gKYuO41mKxd2R4G7lmWQgK3byLoPH4sY1UzN5miNZwdl?=
- =?us-ascii?Q?1n1Mv2sQMgZqegs7kZ+RY+grIdXqSi/OEZZ/OQ3YuiUCf23GU1Rq4FbXG5Ai?=
- =?us-ascii?Q?Lv5HfWMwarEjRW17a8GGTOBNXQh21GvK5Sl2JE5x1og2+NDOVKJU34p5Bs4D?=
- =?us-ascii?Q?RVt3LCArwXgUQJA+TbVM1fRbMO1m4Vc8uvnSQH+lIZKw0O+6bwMIB/5mDlNj?=
- =?us-ascii?Q?P9JownLjWBmZJUBBqMIG59k+V//q3jY4yFXm9TyFZjyL3NuI+bQ/fvHCYoZ9?=
- =?us-ascii?Q?mveKbh/9LazD5abRIr7o9IZHpW74md2vh1TxUFVxamqXIsrecCAjTxy1sgvn?=
- =?us-ascii?Q?GhUt7kqJKBnJu9VZvpc3qJbkEknOkvRpxWRdUaBa3Ou8ANAb8prWjfwEjnpq?=
- =?us-ascii?Q?gW6sm4P42aZ3U+Z2F48yJXLjhi9FPtkgC2S5rFA9oJtXTFi6FzJuCO870ujp?=
- =?us-ascii?Q?hUOFVpxclY7aEBC6I5QqI6m1fgxo0QUQxeF1sCPTcJssbchFzbZ9MhfkpDdV?=
- =?us-ascii?Q?4zla84dA8dqWabZw8+elQd+4sORzB7VH2eFFwzc45WHgWJ2NfNmQLeyKjmiR?=
- =?us-ascii?Q?KJ5dQMKJpdQIwEXoTAnnjGjPWgSRF0xGqE75HHye+RUntCZP5AQo3WR5TdbC?=
- =?us-ascii?Q?UCCmUS/lUwf4sGD07ZAGH9xtECicqjGVaxF4rGsQeeXEty17nAhGxHA/M8RJ?=
- =?us-ascii?Q?Z4o++S/O8UMtW/4AgvyowFhkOt3S6LWxZylS2N4bIy7Q6/ThgV65DvJ9AexE?=
- =?us-ascii?Q?roPKw2NUUf5who9uHcSw+thNoA1uNmf+80GBQwKFlrRvEhiACfzvRWvYHr3o?=
- =?us-ascii?Q?XFwwXokykxzMo5PEbzdfd2GVQFEA/V5kem1Z4SaX99msMfYW/P/Lz5UqAsG/?=
- =?us-ascii?Q?ov5zodyqQuyzk/GgeyvedCFv2pglPoVNb64NIh9JPxOOWGLjYidOkcZeAfnB?=
- =?us-ascii?Q?5Q=3D=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?LInCykvvp2kx9vHhfO3ZFIGeNMMoTq0DljwPCSFq2DcPkAkjtFiFQ5tkMVMd?=
+ =?us-ascii?Q?6IArESWyaZfQlQifzRmKes0ZS7CGHs8Wwz8jK0+qJ6ld5jEEp3I3YNV4Z0YR?=
+ =?us-ascii?Q?3h0Wo6u1TxNsbZikid/jY1zjeY/bW4PFJAt1TB7ys4tVW9nHV5Y6KnkfCp3Y?=
+ =?us-ascii?Q?QDb1sbFpRumo4c0D8p2kPR9MxrsZo75BIvvmNQg6wBIoVq4eIq2vwVmEiQcr?=
+ =?us-ascii?Q?yxKTlQlKpRD9tvBi5XKDHPKATF+p/Xq8rUpVHZ2uz3NBIOIHlhc401pX1JmM?=
+ =?us-ascii?Q?2DSHHOe/qBGO76y++AR13/60WgVW5k4j/86G177S2hBEHBkV8b3Z5riNqwf/?=
+ =?us-ascii?Q?XmnLXfR90BapmUg90vpT1i2WIywAb8W8EZS/o0u0uPtQPo6SiRBn1x/IqSas?=
+ =?us-ascii?Q?6yts0X2/dwqbc/ybT29TgIGR9AnnPRDLeY3uSTKwZuweQA5OusHezEWyYcXH?=
+ =?us-ascii?Q?jyMf7fILqbZq+qCXeDl+7LgphlbuYaqZi077Rt6TxD+AfuohFIGtUQvHDjOa?=
+ =?us-ascii?Q?u8s8d4YSx1GRV/B4DNFpf8NZ1gcElVf/s/yuk1xrUgskHaBAjtu3vPN81HDN?=
+ =?us-ascii?Q?nlmhqlHCR2XFoSXeDGQ0nhodr8MtU3I+LrW6v/mkoLI5KBQFBHQ55FGDAeH1?=
+ =?us-ascii?Q?sWbTKKeAZ4n023qoeiGyaAG6MfujV3xPX5w4drsH0JJur+t620OroonHhRHJ?=
+ =?us-ascii?Q?E8ItCCmYyam5PE9tjnEmTNVDLCF1ws66LwzATRqIZk2GzmjqIG4CEyowh1mg?=
+ =?us-ascii?Q?h1d7FsTFSMu0r7EC7bnunHCRodvxMAozuZxp7ohKbSczlCVMaUgV9i/r96Dm?=
+ =?us-ascii?Q?20YOOsYkjWZJg/K/H6feflqCYs1gJBKA45s8JpefSXURmPuLAIcMtqDxBcPq?=
+ =?us-ascii?Q?KS4jqLyWF2MBr9Gw6JrgGJr4MQ/KSX8K5dKSQS7/nJJFcgksV1fc75cTHUUj?=
+ =?us-ascii?Q?wkrPBnnIGSyukBGQee5yB/jrnnupor7++xXG5yEWWUDweDih3Rwm0TKL4GcR?=
+ =?us-ascii?Q?ERslkSeclhdq9YMZ6WucElv7shlD2gYXNGg2sneri+FlJ5hpuVwI1iHYMjmK?=
+ =?us-ascii?Q?KToaYhDUY0v4jPHlhkcycMVTPAIWkvz6kGHs18do5iz19NdiDfKnxmQOglju?=
+ =?us-ascii?Q?Irn0dDYBSZXoIL/NNWt8/c690ImOVcRuEC5Alk1IjM24iMrbZyLDQWvE6ayk?=
+ =?us-ascii?Q?z1K0ptCs60XO4KJAmPsSd6iAR65Cp9pZKYCV5S8vD3msggJ6z1A68Ng5BIJs?=
+ =?us-ascii?Q?WoRwD7oW7iVjVCsG4Tv6zEZiHlbR2UIiTA/4YUzHffPZydZQ93SD39u5Xl00?=
+ =?us-ascii?Q?p0lnvJlLBmT1VKKXPOFhfoyzxQQQh6BQ4qAr6tUgCHLDkANFfBlQR+kIUl/R?=
+ =?us-ascii?Q?NumYVyt06H9/4EmicH43SH95Z8dzj5sjJsItry7XsFc6tyXZ/aFWFZTXBJvM?=
+ =?us-ascii?Q?n3hxnxrhRVzDEv+DcW6d0xoMwVV3df2i6B4nKaZsYg2ne/U84O16hfLMbX/m?=
+ =?us-ascii?Q?bosWAt53i8nzYvQFmmLFh8MDiIkvvQvMMUZhnmunRI5UEgttK+X8XPG98gPt?=
+ =?us-ascii?Q?jfVPRaTCw88XW69MujpE42q9jYu7vH7fI2dywNHGd6exvgEk6Z+lxPCrsfa+?=
+ =?us-ascii?Q?sw=3D=3D?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 09213e44-4779-4073-fdf6-08daa56832b1
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2df87baa-31d5-4d79-fa48-08daa56839cc
 X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Oct 2022 17:53:37.3928
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Oct 2022 17:53:49.2356
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 2FuOycf+7sBr/k9OyN7HQtwFtYx9CnBiBZkFwMXbz26qnZXmMyUGJV37pbOnOUh+3DUGRnvvbHagCAJIlJ99V/15a2WtNkv0jkHZJIiesjo=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BLAPR10MB4834
+X-MS-Exchange-CrossTenant-UserPrincipalName: kCjMN8J+aOobT54pFtignRXkdqVvI0tKeygdnqwlDwep+pvuPd/Rkewlz4JgD4VcIy3yOiKlFf80afPq2rJeUHXe1jNW9TRMyXkWcnwx+yY=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR10MB6824
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
  definitions=2022-10-03_02,2022-09-29_03,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 phishscore=0 bulkscore=0
- suspectscore=0 mlxlogscore=999 mlxscore=0 spamscore=0 adultscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ bulkscore=0 malwarescore=0 adultscore=0 phishscore=0 suspectscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2209130000
  definitions=main-2210030108
-X-Proofpoint-GUID: RGYUFNYkDG1BTc7BT9Q3ZU2hPnU6a_OP
-X-Proofpoint-ORIG-GUID: RGYUFNYkDG1BTc7BT9Q3ZU2hPnU6a_OP
+X-Proofpoint-GUID: gPVlRs8gZ8g2LnKd_xeHJIxPnQVsFHTG
+X-Proofpoint-ORIG-GUID: gPVlRs8gZ8g2LnKd_xeHJIxPnQVsFHTG
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -143,190 +143,31 @@ we pass all args in a scsi_exec_args struct.
 
 Signed-off-by: Mike Christie <michael.christie@oracle.com>
 Reviewed-by: Martin Wilck <mwilck@suse.com>
+Acked-by: Bart Van Assche <bvanassche@acm.org> 
 ---
- drivers/scsi/scsi.c       | 21 +++++++++++++++++----
- drivers/scsi/scsi_ioctl.c |  9 +++++++--
- drivers/scsi/scsi_lib.c   | 31 +++++++++++++++++++++++++------
- drivers/scsi/scsi_scan.c  | 37 ++++++++++++++++++++++++++++---------
- 4 files changed, 77 insertions(+), 21 deletions(-)
+ drivers/ufs/core/ufshcd.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index c59eac7a32f2..8d8090c8fb05 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -309,8 +309,14 @@ static int scsi_vpd_inquiry(struct scsi_device *sdev, unsigned char *buffer,
- 	 * I'm not convinced we need to try quite this hard to get VPD, but
- 	 * all the existing users tried this hard.
- 	 */
--	result = scsi_execute_req(sdev, cmd, DMA_FROM_DEVICE, buffer,
--				  len, NULL, 30 * HZ, 3, NULL);
-+	result = scsi_exec_req(((struct scsi_exec_args) {
-+					.sdev = sdev,
-+					.cmd = cmd,
-+					.data_dir = DMA_FROM_DEVICE,
-+					.buf = buffer,
-+					.buf_len = len,
-+					.timeout = 30 * HZ,
-+					.retries = 3 }));
- 	if (result)
- 		return -EIO;
- 
-@@ -531,8 +537,15 @@ int scsi_report_opcode(struct scsi_device *sdev, unsigned char *buffer,
- 	put_unaligned_be32(request_len, &cmd[6]);
- 	memset(buffer, 0, len);
- 
--	result = scsi_execute_req(sdev, cmd, DMA_FROM_DEVICE, buffer,
--				  request_len, &sshdr, 30 * HZ, 3, NULL);
-+	result = scsi_exec_req(((struct scsi_exec_args) {
-+					.sdev = sdev,
-+					.cmd = cmd,
-+					.data_dir = DMA_FROM_DEVICE,
-+					.buf = buffer,
-+					.buf_len = request_len,
-+					.sshdr = &sshdr,
-+					.timeout = 30 * HZ,
-+					.retries = 3 }));
- 
- 	if (result < 0)
- 		return result;
-diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
-index 729e309e6034..5708af4485bb 100644
---- a/drivers/scsi/scsi_ioctl.c
-+++ b/drivers/scsi/scsi_ioctl.c
-@@ -73,8 +73,13 @@ static int ioctl_internal_command(struct scsi_device *sdev, char *cmd,
- 	SCSI_LOG_IOCTL(1, sdev_printk(KERN_INFO, sdev,
- 				      "Trying ioctl with scsi command %d\n", *cmd));
- 
--	result = scsi_execute_req(sdev, cmd, DMA_NONE, NULL, 0,
--				  &sshdr, timeout, retries, NULL);
-+	result = scsi_exec_req(((struct scsi_exec_args) {
-+					.sdev = sdev,
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index a202d7d5240d..fdea6809ec5c 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -8781,8 +8781,13 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
+ 		remaining = deadline - jiffies;
+ 		if (remaining <= 0)
+ 			break;
+-		ret = scsi_execute(sdp, cmd, DMA_NONE, NULL, 0, NULL, &sshdr,
+-				   remaining / HZ, 0, 0, RQF_PM, NULL);
++		ret = scsi_exec_req(((struct scsi_exec_args) {
++					.sdev = sdp,
 +					.cmd = cmd,
 +					.data_dir = DMA_NONE,
 +					.sshdr = &sshdr,
-+					.timeout = timeout,
-+					.retries = retries }));
- 
- 	SCSI_LOG_IOCTL(2, sdev_printk(KERN_INFO, sdev,
- 				      "Ioctl returned  0x%x\n", result));
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 685f2245d222..2f36b65fe0f1 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2123,8 +2123,15 @@ int scsi_mode_select(struct scsi_device *sdev, int pf, int sp,
- 		cmd[4] = len;
- 	}
- 
--	ret = scsi_execute_req(sdev, cmd, DMA_TO_DEVICE, real_buffer, len,
--			       sshdr, timeout, retries, NULL);
-+	ret = scsi_exec_req(((struct scsi_exec_args) {
-+					.sdev = sdev,
-+					.cmd = cmd,
-+					.data_dir = DMA_TO_DEVICE,
-+					.buf = real_buffer,
-+					.buf_len = len,
-+					.sshdr = sshdr,
-+					.timeout = timeout,
-+					.retries = retries }));
- 	kfree(real_buffer);
- 	return ret;
- }
-@@ -2188,8 +2195,15 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
- 
- 	memset(buffer, 0, len);
- 
--	result = scsi_execute_req(sdev, cmd, DMA_FROM_DEVICE, buffer, len,
--				  sshdr, timeout, retries, NULL);
-+	result = scsi_exec_req(((struct scsi_exec_args) {
-+					.sdev = sdev,
-+					.cmd = cmd,
-+					.data_dir = DMA_FROM_DEVICE,
-+					.buf = buffer,
-+					.buf_len = len,
-+					.sshdr = sshdr,
-+					.timeout = timeout,
-+					.retries = retries }));
- 	if (result < 0)
- 		return result;
- 
-@@ -2273,8 +2287,13 @@ scsi_test_unit_ready(struct scsi_device *sdev, int timeout, int retries,
- 
- 	/* try to eat the UNIT_ATTENTION if there are enough retries */
- 	do {
--		result = scsi_execute_req(sdev, cmd, DMA_NONE, NULL, 0, sshdr,
--					  timeout, 1, NULL);
-+		result = scsi_exec_req(((struct scsi_exec_args) {
-+						.sdev = sdev,
-+						.cmd = cmd,
-+						.data_dir = DMA_NONE,
-+						.sshdr = sshdr,
-+						.timeout = timeout,
-+						.retries = 1 }));
- 		if (sdev->removable && scsi_sense_valid(sshdr) &&
- 		    sshdr->sense_key == UNIT_ATTENTION)
- 			sdev->changed = 1;
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 5d27f5196de6..58edd5d641f8 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -210,8 +210,14 @@ static void scsi_unlock_floptical(struct scsi_device *sdev,
- 	scsi_cmd[3] = 0;
- 	scsi_cmd[4] = 0x2a;     /* size */
- 	scsi_cmd[5] = 0;
--	scsi_execute_req(sdev, scsi_cmd, DMA_FROM_DEVICE, result, 0x2a, NULL,
--			 SCSI_TIMEOUT, 3, NULL);
-+	scsi_exec_req(((struct scsi_exec_args) {
-+				.sdev = sdev,
-+				.cmd = scsi_cmd,
-+				.data_dir = DMA_FROM_DEVICE,
-+				.buf = result,
-+				.buf_len = 0x2a,
-+				.timeout = SCSI_TIMEOUT,
-+				.retries = 3 }));
- }
- 
- static int scsi_realloc_sdev_budget_map(struct scsi_device *sdev,
-@@ -674,10 +680,17 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 
- 		memset(inq_result, 0, try_inquiry_len);
- 
--		result = scsi_execute_req(sdev,  scsi_cmd, DMA_FROM_DEVICE,
--					  inq_result, try_inquiry_len, &sshdr,
--					  HZ / 2 + HZ * scsi_inq_timeout, 3,
--					  &resid);
-+		result = scsi_exec_req(((struct scsi_exec_args) {
-+						.sdev = sdev,
-+						.cmd = scsi_cmd,
-+						.data_dir = DMA_FROM_DEVICE,
-+						.buf = inq_result,
-+						.buf_len = try_inquiry_len,
-+						.sshdr = &sshdr,
-+						.timeout = HZ / 2 +
-+							HZ * scsi_inq_timeout,
-+						.retries = 3,
-+						.resid = &resid }));
- 
- 		SCSI_LOG_SCAN_BUS(3, sdev_printk(KERN_INFO, sdev,
- 				"scsi scan: INQUIRY %s with code 0x%x\n",
-@@ -1477,9 +1490,15 @@ static int scsi_report_lun_scan(struct scsi_target *starget, blist_flags_t bflag
- 				"scsi scan: Sending REPORT LUNS to (try %d)\n",
- 				retries));
- 
--		result = scsi_execute_req(sdev, scsi_cmd, DMA_FROM_DEVICE,
--					  lun_data, length, &sshdr,
--					  SCSI_REPORT_LUNS_TIMEOUT, 3, NULL);
-+		result = scsi_exec_req(((struct scsi_exec_args) {
-+						.sdev = sdev,
-+						.cmd = scsi_cmd,
-+						.data_dir = DMA_FROM_DEVICE,
-+						.buf = lun_data,
-+						.buf_len = length,
-+						.sshdr = &sshdr,
-+						.timeout = SCSI_REPORT_LUNS_TIMEOUT,
-+						.retries = 3 }));
- 
- 		SCSI_LOG_SCAN_BUS(3, sdev_printk (KERN_INFO, sdev,
- 				"scsi scan: REPORT LUNS"
++					.timeout = remaining / HZ,
++					.req_flags = RQF_PM }));
+ 		if (!scsi_status_is_check_condition(ret) ||
+ 				!scsi_sense_valid(&sshdr) ||
+ 				sshdr.sense_key != UNIT_ATTENTION)
 -- 
 2.25.1
 
