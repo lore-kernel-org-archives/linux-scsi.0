@@ -2,109 +2,84 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1197C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Oct 2022 10:57:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 439C7C433FE
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Oct 2022 12:55:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229940AbiJDK5p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Oct 2022 06:57:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40102 "EHLO
+        id S229602AbiJDMzK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Oct 2022 08:55:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59078 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229943AbiJDK5T (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Oct 2022 06:57:19 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE97553D16;
-        Tue,  4 Oct 2022 03:57:01 -0700 (PDT)
-Received: from fraeml740-chm.china.huawei.com (unknown [172.18.147.226])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MhZQF5J70z689Q8;
-        Tue,  4 Oct 2022 18:56:37 +0800 (CST)
-Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml740-chm.china.huawei.com (10.206.15.221) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Tue, 4 Oct 2022 12:56:59 +0200
-Received: from localhost.localdomain (10.69.192.58) by
- lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Tue, 4 Oct 2022 11:56:56 +0100
-From:   John Garry <john.garry@huawei.com>
-To:     <jinpu.wang@cloud.ionos.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>
-CC:     <hare@suse.de>, <damien.lemoal@opensource.wdc.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>, <ipylypiv@google.com>,
-        <changyuanl@google.com>, <yanaijie@huawei.com>,
-        John Garry <john.garry@huawei.com>
-Subject: [PATCH v3 6/7] scsi: mvsas: Delete mvs_tag_init()
-Date:   Tue, 4 Oct 2022 19:27:12 +0800
-Message-ID: <1664882833-39804-7-git-send-email-john.garry@huawei.com>
-X-Mailer: git-send-email 2.8.1
-In-Reply-To: <1664882833-39804-1-git-send-email-john.garry@huawei.com>
-References: <1664882833-39804-1-git-send-email-john.garry@huawei.com>
+        with ESMTP id S229549AbiJDMyt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Oct 2022 08:54:49 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B62E4642C
+        for <linux-scsi@vger.kernel.org>; Tue,  4 Oct 2022 05:51:31 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id BB83FB81A55
+        for <linux-scsi@vger.kernel.org>; Tue,  4 Oct 2022 12:51:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 33873C4347C
+        for <linux-scsi@vger.kernel.org>; Tue,  4 Oct 2022 12:51:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1664887888;
+        bh=MDxl1P/1TJyX/N6h9sW+72P1vbmVtpq/VbTVCLsfHIM=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=LvxowjpIL1EujNDs5mBQZ9Xru6ZBq6V9VfpKGHa33Q8k3yPlDpU7fevHhEnV7AcBf
+         911xsCvassWJFQCrJm8MSLKHnKACRFciu8wqqOV/x3DF52/cBAKJqshTvba6g+keel
+         2FpYmHZeqph+M4hIOykGkYP3z4msBvFf6eaUmNdW4HjJUQQTSURAZrWZuZKorYWc/r
+         R1hsnL/YLDEFIdtoDyuU2QCPecGy7FKp7/ESeX611dyrW4JeI6ajaPEuRvh9Rj8B26
+         lsOw2o/2C1A2dZxZMi1iZJ4PxX+hgMSPeewtHWW0WHCiJmrp+8v0d97UD52CgvINPL
+         1cKKEHhb4MwQA==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 0CE94C433E9; Tue,  4 Oct 2022 12:51:28 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 214311] megaraid_sas - no disks detected
+Date:   Tue, 04 Oct 2022 12:51:27 +0000
+X-Bugzilla-Reason: AssignedTo
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: None
+X-Bugzilla-Product: IO/Storage
+X-Bugzilla-Component: SCSI
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: blocking
+X-Bugzilla-Who: jaikumar.sharma@gmail.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-214311-11613-fUcy9mkVV1@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-214311-11613@https.bugzilla.kernel.org/>
+References: <bug-214311-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- lhrpeml500003.china.huawei.com (7.191.162.67)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-All mvs_tag_init() does is zero the tag bitmap, but this is already done
-with the kzalloc() call to alloc the tags, so delete this unneeded
-function.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D214311
 
-Signed-off-by: John Garry <john.garry@huawei.com>
-Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/mvsas/mv_init.c | 2 --
- drivers/scsi/mvsas/mv_sas.c  | 7 -------
- drivers/scsi/mvsas/mv_sas.h  | 1 -
- 3 files changed, 10 deletions(-)
+--- Comment #6 from Sharma, Jaikumar (jaikumar.sharma@gmail.com) ---
+But surprisingly, Debian 10 has no issues in terms of disk detection and
+installation of OS in headless mode but on Debian 11 it fails?
+Debian 10 has 4.19.x kernel and Debian 11 has 5.10.x kernel (which is expos=
+ing
+this behavior)? Just out of curiosity, what leads to this failure?
+So, 5.10 kernel interaction with same RAID controller firmware is suspiciou=
+sly
+broken?
+More clarity on this would lead to issues detection and fixes.
+Thanks!
 
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index 2fde496fff5f..c85fb812ad43 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -286,8 +286,6 @@ static int mvs_alloc(struct mvs_info *mvi, struct Scsi_Host *shost)
- 	}
- 	mvi->tags_num = slot_nr;
- 
--	/* Initialize tags */
--	mvs_tag_init(mvi);
- 	return 0;
- err_out:
- 	return 1;
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index a6867dae0e7c..0810e6c930e1 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -51,13 +51,6 @@ inline int mvs_tag_alloc(struct mvs_info *mvi, u32 *tag_out)
- 	return 0;
- }
- 
--void mvs_tag_init(struct mvs_info *mvi)
--{
--	int i;
--	for (i = 0; i < mvi->tags_num; ++i)
--		mvs_tag_clear(mvi, i);
--}
--
- static struct mvs_info *mvs_find_dev_mvi(struct domain_device *dev)
- {
- 	unsigned long i = 0, j = 0, hi = 0;
-diff --git a/drivers/scsi/mvsas/mv_sas.h b/drivers/scsi/mvsas/mv_sas.h
-index 509d8f32a04f..fe57665bdb50 100644
---- a/drivers/scsi/mvsas/mv_sas.h
-+++ b/drivers/scsi/mvsas/mv_sas.h
-@@ -428,7 +428,6 @@ void mvs_tag_clear(struct mvs_info *mvi, u32 tag);
- void mvs_tag_free(struct mvs_info *mvi, u32 tag);
- void mvs_tag_set(struct mvs_info *mvi, unsigned int tag);
- int mvs_tag_alloc(struct mvs_info *mvi, u32 *tag_out);
--void mvs_tag_init(struct mvs_info *mvi);
- void mvs_iounmap(void __iomem *regs);
- int mvs_ioremap(struct mvs_info *mvi, int bar, int bar_ex);
- void mvs_phys_reset(struct mvs_info *mvi, u32 phy_mask, int hard);
--- 
-2.25.1
+--=20
+You may reply to this email to add a comment.
 
+You are receiving this mail because:
+You are the assignee for the bug.=
