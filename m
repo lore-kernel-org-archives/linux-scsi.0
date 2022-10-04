@@ -2,84 +2,88 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01855C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Oct 2022 07:37:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15063C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Oct 2022 08:42:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229697AbiJDHhG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Oct 2022 03:37:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33744 "EHLO
+        id S230234AbiJDImC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Oct 2022 04:42:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60284 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229556AbiJDHhF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Oct 2022 03:37:05 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F75A41984;
-        Tue,  4 Oct 2022 00:37:01 -0700 (PDT)
-Received: from fraeml706-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MhTx63z1Nz67PH4;
-        Tue,  4 Oct 2022 15:34:34 +0800 (CST)
-Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml706-chm.china.huawei.com (10.206.15.55) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2375.31; Tue, 4 Oct 2022 09:36:58 +0200
-Received: from [10.48.156.84] (10.48.156.84) by lhrpeml500003.china.huawei.com
- (7.191.162.67) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Tue, 4 Oct
- 2022 08:36:57 +0100
-Message-ID: <9e405f1d-621e-d1f7-55c5-21ba5c8a85a8@huawei.com>
-Date:   Tue, 4 Oct 2022 08:37:06 +0100
+        with ESMTP id S230230AbiJDIl6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Oct 2022 04:41:58 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D78A193CD
+        for <linux-scsi@vger.kernel.org>; Tue,  4 Oct 2022 01:41:57 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 3B6D0B819A3
+        for <linux-scsi@vger.kernel.org>; Tue,  4 Oct 2022 08:41:56 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id BF4CAC43149
+        for <linux-scsi@vger.kernel.org>; Tue,  4 Oct 2022 08:41:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1664872914;
+        bh=hGMWLIS65teipO6riN4cIU+mVd+VcJI7JPrNbglgEyU=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=uWaaUIsRk27+zL7RwdssZyGlj2h//+3xRz2yCfreZ98EkmTVHQhoFPgbwg5KpG2bC
+         H6a+YhIpYP9bRMVc2z8W7v45Xq21TIMpyXvZDvMVBloa7nE+J2w+ai5SFInyrfyORr
+         xSwNrUDf5wQK46wWjx3VOvgusdCB6F/N6s8qcx4XGg2U0dC/xK0Mn3G8FtJRb+kSPC
+         L0oybbsS3F5Ygcx/nr1LRH0IEt2PlaZd3p3qxeHfK2Qqn+zOOk56q5COoCcrZxB1ox
+         NDm53kR1MJtzsfd46whGEFJF2ct1D4eBPXoX6hp2UHRxF2TauUtkQhKn9kGUymoChF
+         0nNxMoWWGqRBQ==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 9AC6BC433E9; Tue,  4 Oct 2022 08:41:54 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 214311] megaraid_sas - no disks detected
+Date:   Tue, 04 Oct 2022 08:41:54 +0000
+X-Bugzilla-Reason: AssignedTo
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: None
+X-Bugzilla-Product: IO/Storage
+X-Bugzilla-Component: SCSI
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: blocking
+X-Bugzilla-Who: sumit.saxena@broadcom.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: cc
+Message-ID: <bug-214311-11613-5vFqM8SPf7@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-214311-11613@https.bugzilla.kernel.org/>
+References: <bug-214311-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH v2 4/6] scsi: pm8001: Use sas_task_find_rq() for tagging
-To:     Hannes Reinecke <hare@suse.de>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <jinpu.wang@cloud.ionos.com>,
-        <damien.lemoal@wdc.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>, <ipylypiv@google.com>,
-        <changyuanl@google.com>, <hch@lst.de>, <yanaijie@huawei.com>
-References: <1664528184-162714-1-git-send-email-john.garry@huawei.com>
- <1664528184-162714-5-git-send-email-john.garry@huawei.com>
- <fdbb5c5f-05d9-93fa-83d4-2f0129221641@suse.de>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <fdbb5c5f-05d9-93fa-83d4-2f0129221641@suse.de>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.48.156.84]
-X-ClientProxiedBy: lhrpeml100006.china.huawei.com (7.191.160.224) To
- lhrpeml500003.china.huawei.com (7.191.162.67)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 04/10/2022 06:53, Hannes Reinecke wrote:
->> -    void *bitmap = pm8001_ha->tags;
->> +    void *bitmap = pm8001_ha->rsvd_tags;
->>       unsigned long flags;
->>       unsigned int tag;
->>       spin_lock_irqsave(&pm8001_ha->bitmap_lock, flags);
->> -    tag = find_first_zero_bit(bitmap, pm8001_ha->tags_num);
->> -    if (tag >= pm8001_ha->tags_num) {
->> +    tag = find_first_zero_bit(bitmap, PM8001_RESERVE_SLOT);
->> +    if (tag >= PM8001_RESERVE_SLOT) {
->>           spin_unlock_irqrestore(&pm8001_ha->bitmap_lock, flags);
->>           return -SAS_QUEUE_FULL;
->>       }
->>       __set_bit(tag, bitmap);
->>       spin_unlock_irqrestore(&pm8001_ha->bitmap_lock, flags);
->> +
->> +    /* reserved tags are in the upper region of the tagset */
->> +    tag += pm8001_ha->shost->can_queue;
->>       *tag_out = tag;
->>       return 0;
->>   }
-> Can you move the reserved tags to the _lower_ region of the tagset?
-> That way the tag allocation scheme matches with what the block-layer 
-> does, and the eventual conversion to reserved tags becomes easier.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D214311
 
-Yeah, I agree that having a scheme which matches the block layer would 
-be good for consistency and I will make that change, but I am not sure 
-how it helps conversion to reserved tags.
+Sumit Saxena (sumit.saxena@broadcom.com) changed:
 
-Thanks,
-John
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |sumit.saxena@broadcom.com
+
+--- Comment #5 from Sumit Saxena (sumit.saxena@broadcom.com) ---
+Driver fails to get controller information from controller firmware which l=
+eads
+to the driver load failure and disks don't get exposed to OS.
+It may be the controller firmware problem. Please ensure the latest control=
+ler
+firmware is flashed. If the issue persists with the latest controller firmw=
+are,
+please contact Broadcom support channel.
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are the assignee for the bug.=
