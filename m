@@ -2,137 +2,80 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54302C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Oct 2022 14:05:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8C93C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Oct 2022 16:12:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229547AbiJDOE7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Oct 2022 10:04:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41220 "EHLO
+        id S229916AbiJDQMF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Oct 2022 12:12:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40860 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229506AbiJDOE4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Oct 2022 10:04:56 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B8D6DFE6;
-        Tue,  4 Oct 2022 07:04:53 -0700 (PDT)
-Received: from fraeml714-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MhfYr2tm3z688JN;
-        Tue,  4 Oct 2022 22:03:28 +0800 (CST)
-Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml714-chm.china.huawei.com (10.206.15.33) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Tue, 4 Oct 2022 16:04:43 +0200
-Received: from [10.202.227.197] (10.202.227.197) by
- lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Tue, 4 Oct 2022 15:04:42 +0100
-Message-ID: <cfa52b91-db81-a179-76c2-8a61266c099d@huawei.com>
-Date:   Tue, 4 Oct 2022 15:04:51 +0100
+        with ESMTP id S229867AbiJDQME (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Oct 2022 12:12:04 -0400
+Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BAC752C124;
+        Tue,  4 Oct 2022 09:12:02 -0700 (PDT)
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id B3783400F8;
+        Tue,  4 Oct 2022 16:12:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        in-reply-to:content-disposition:content-type:content-type
+        :mime-version:references:message-id:subject:subject:from:from
+        :date:date:received:received:received:received; s=mta-01; t=
+        1664899919; x=1666714320; bh=dH7lqXY01Swks/S07+FWlWZZlhTdRKPvKgr
+        auZGZClU=; b=B0ZKSsBwJYdrsH0WravGkm+nbsPf6+FI0RoCEGsOxvBbxB6+SOL
+        GnDS4jNKwlrb01E7wPzd6a8EYi+05DD5lkvfRvKfjBsn57RS9YTrb6BAW8+nERkn
+        Qy8j0yxj6AYAYmLyaQQAplIYJhWtAiKN3KCbwO4EPm7ENYe8RyNV9Rtc=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id K9-A9XpbS_E8; Tue,  4 Oct 2022 19:11:59 +0300 (MSK)
+Received: from T-EXCH-01.corp.yadro.com (T-EXCH-01.corp.yadro.com [172.17.10.101])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id B7CB0400F6;
+        Tue,  4 Oct 2022 19:11:58 +0300 (MSK)
+Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
+ T-EXCH-01.corp.yadro.com (172.17.10.101) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
+ 15.1.669.32; Tue, 4 Oct 2022 19:11:58 +0300
+Received: from yadro.com (10.199.18.20) by T-EXCH-08.corp.yadro.com
+ (172.17.11.58) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1118.9; Tue, 4 Oct 2022
+ 19:11:57 +0300
+Date:   Tue, 4 Oct 2022 19:11:57 +0300
+From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
+To:     Mike Christie <michael.christie@oracle.com>
+CC:     Martin Petersen <martin.petersen@oracle.com>,
+        <target-devel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux@yadro.com>, Roman Bolshakov <r.bolshakov@yadro.com>
+Subject: Re: [PATCH 2/7] scsi: target: core: Add RTPI field to target port
+Message-ID: <20221004161157.GB10901@yadro.com>
+References: <20220906154519.27487-1-d.bogdanov@yadro.com>
+ <20220906154519.27487-3-d.bogdanov@yadro.com>
+ <6f4dba25-33af-b268-bf6f-541febf3c939@oracle.com>
+ <056b4919-e1c1-55f7-3fdb-74053ae9909e@oracle.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH v5 0/7] libsas and drivers: NCQ error handling
-To:     Niklas Cassel <Niklas.Cassel@wdc.com>
-CC:     "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "jinpu.wang@cloud.ionos.com" <jinpu.wang@cloud.ionos.com>,
-        "damien.lemoal@opensource.wdc.com" <damien.lemoal@opensource.wdc.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linuxarm@huawei.com" <linuxarm@huawei.com>,
-        "yangxingui@huawei.com" <yangxingui@huawei.com>,
-        "yanaijie@huawei.com" <yanaijie@huawei.com>
-References: <1664262298-239952-1-git-send-email-john.garry@huawei.com>
- <YzwvpUUftX6Ziurt@x1-carbon>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <YzwvpUUftX6Ziurt@x1-carbon>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.227.197]
-X-ClientProxiedBy: lhrpeml100001.china.huawei.com (7.191.160.183) To
- lhrpeml500003.china.huawei.com (7.191.162.67)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <056b4919-e1c1-55f7-3fdb-74053ae9909e@oracle.com>
+X-Originating-IP: [10.199.18.20]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-08.corp.yadro.com (172.17.11.58)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 04/10/2022 14:05, Niklas Cassel wrote:
->> 2.35.3
->>
-> For pm80xx (pm8001 changes untested):
-> Tested-by: Niklas Cassel<niklas.cassel@wdc.com>
+On Thu, Sep 29, 2022 at 06:57:03PM -0500, Mike Christie wrote:
 > 
+> On 9/29/22 5:26 PM, Mike Christie wrote:
+> >
+> > I think you could just use an ida.
+> >
 > 
+> After seeing the other patches I guess you need a idr.
+> 
+
+idr is deprecated, I looked at xarray. Looks good, I will rewrite
+the patches using it. 
 
 Thanks!
-
-> 
-> Notes unrelated to this patch:
-> 
-> Both before and after this series, this driver prints:
-> [  215.845053] ata21.00: exception Emask 0x0 SAct 0xfc0000 SErr 0x0 action 0x6
-> [  215.852308] ata21.00: failed command: WRITE FPDMA QUEUED
-> [  215.857801] ata21.00: cmd 61/00:00:00:3a:d3/01:00:b3:04:00/40 tag 18 ncq dma 131072 out
->                          res 43/04:00:ff:3a:d3/00:00:b3:04:00/40 Emask 0x400 (NCQ error) <F>
-> [  215.874396] ata21.00: status: { DRDY SENSE ERR }
-> [  215.879192] ata21.00: error: { ABRT }
-> [  215.882997] ata21.00: failed command: WRITE FPDMA QUEUED
-> [  215.888479] ata21.00: cmd 61/00:00:00:3b:d3/01:00:b3:04:00/40 tag 19 ncq dma 131072 out
->                          res 00/00:00:00:00:00/00:00:00:00:00/00 Emask 0x2 (HSM violation)
-> [  215.904814] ata21.00: failed command: WRITE FPDMA QUEUED
-> [  215.910311] ata21.00: cmd 61/00:00:00:3c:d3/01:00:b3:04:00/40 tag 20 ncq dma 131072 out
->                          res 00/00:00:00:00:00/00:00:00:00:00/00 Emask 0x2 (HSM violation)
-> [  215.932679] ata21.00: failed command: WRITE FPDMA QUEUED
-> [  215.941203] ata21.00: cmd 61/00:00:00:3d:d3/01:00:b3:04:00/40 tag 21 ncq dma 131072 out
->                          res 00/00:00:00:00:00/00:00:00:00:00/00 Emask 0x2 (HSM violation)
-> [  215.963616] ata21.00: failed command: WRITE FPDMA QUEUED
-> [  215.972150] ata21.00: cmd 61/00:00:00:3e:d3/01:00:b3:04:00/40 tag 22 ncq dma 131072 out
->                          res 00/00:00:00:00:00/00:00:00:00:00/00 Emask 0x2 (HSM violation)
-> [  215.994532] ata21.00: failed command: WRITE FPDMA QUEUED
-> [  216.003124] ata21.00: cmd 61/00:00:00:3f:d3/01:00:b3:04:00/40 tag 23 ncq dma 131072 out
->                          res 00/00:00:00:00:00/00:00:00:00:00/00 Emask 0x2 (HSM violation)
-> 
-> HSM (Host State Machine) violation errors.
-> 
-> For the same SATA drive connected via AHCI this will instead give:
-> 
-> [ 3796.944923] ata14.00: exception Emask 0x0 SAct 0x80800003 SErr 0xc0000 action 0x0
-> [ 3796.959375] ata14.00: irq_stat 0x40000008
-> [ 3796.970140] ata14: SError: { CommWake 10B8B }
-> [ 3796.981231] ata14.00: failed command: WRITE FPDMA QUEUED
-> [ 3796.993237] ata14.00: cmd 61/00:08:00:7e:73/02:00:8e:08:00/40 tag 1 ncq dma 262144 out
->                          res 43/04:01:00:00:00/00:00:00:00:00/40 Emask 0x1 (device error)
-> [ 3797.017984] ata14.00: status: { DRDY SENSE ERR }
-> [ 3797.026833] ata14.00: error: { ABRT }
-> [ 3797.034664] ata14.00: failed command: WRITE FPDMA QUEUED
-> [ 3797.043015] ata14.00: cmd 61/00:b8:00:60:73/0a:00:8e:08:00/40 tag 23 ncq dma 1310720 out
->                          res 43/04:00:df:67:73/00:00:8e:08:00/40 Emask 0x400 (NCQ error) <F>
-> [ 3797.065224] ata14.00: status: { DRDY SENSE ERR }
-> [ 3797.072914] ata14.00: error: { ABRT }
-> [ 3797.079598] ata14.00: failed command: WRITE FPDMA QUEUED
-> [ 3797.087920] ata14.00: cmd 61/00:f8:00:6a:73/0a:00:8e:08:00/40 tag 31 ncq dma 1310720 out
->                          res 43/04:00:00:00:00/00:00:00:00:00/00 Emask 0x1 (device error)
-> [ 3797.109800] ata14.00: status: { DRDY SENSE ERR }
-> [ 3797.117451] ata14.00: error: { ABRT }
-> 
-> device error errors.
-> 
-> 
-> Except for the I/O that caused the NCQ error, the remaining outstanding I/Os,
-> regardless if they were aborted by the drive, as a side-effect of reading the
-> NCQ error log (see 13.7.4 Queued Error Log (10h) in SATA 3.5a spec),
-> or if they were aborted by the host (by sas_ata_device_link_abort()),
-> I don't think it is correct to report these as HSM violation errors.
-> 
-> HSM violation errors are e.g. when you try to issue a command to a drive
-> that has ATA_BUSY bit set.
-
-We had a similar issue for hisi_sas and solved in patch 4/7: don't set 
-ATA_ERR in the fis for those IO which complete with error, but abort the 
-IO via sas_abort_task().
-
-For pm80xx the IO is either rejected (actually completes with rejection) 
-or is aborted via internal abort command. Maybe we can do similar for 
-pm8001 as we allow the IO to complete in both cases with error. I'll check.
-
-Thanks,
-John
