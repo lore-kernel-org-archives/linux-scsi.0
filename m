@@ -2,123 +2,84 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58E33C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Oct 2022 06:01:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01855C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Oct 2022 07:37:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229656AbiJDGBC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Oct 2022 02:01:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56724 "EHLO
+        id S229697AbiJDHhG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Oct 2022 03:37:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33744 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229653AbiJDGBB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Oct 2022 02:01:01 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14A0521250;
-        Mon,  3 Oct 2022 23:01:00 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id A2E85219B4;
-        Tue,  4 Oct 2022 06:00:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1664863258; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=XVUlkoaDmwsWB5tjrAEJpUY3Q7CPwdx0+TpErkfvy8Y=;
-        b=yJhiGpi32zwaZcXCCVzGVt/muOCj8E+/EyzFFs6CgUC3s/mGCp0ZjkTifWMXiL2yDPLRfj
-        WYY3Nvtg3Tx0FL8Z2a0bHCSTM4TKUWLR2ryg1Sa359cYGW6e13l1e2be0Hk8yTnb+FgW/9
-        5F7cutRyn6jP+4budDm3aLHSzgXarr8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1664863258;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=XVUlkoaDmwsWB5tjrAEJpUY3Q7CPwdx0+TpErkfvy8Y=;
-        b=7PZ3Vrh7pt8X6QiY7WDwLppLMuS1Vo/QKPiPQFdVBVrGJhuWBIg6X/bPsOvdFrTMW8fhGC
-        qtK/jKTIBnrVBxAQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id C9C08139EF;
-        Tue,  4 Oct 2022 06:00:56 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id EpgTJxjMO2PVEQAAMHmgww
-        (envelope-from <hare@suse.de>); Tue, 04 Oct 2022 06:00:56 +0000
-Message-ID: <4a1da181-8a54-d2f8-6d19-d9c1982ab044@suse.de>
-Date:   Tue, 4 Oct 2022 08:00:56 +0200
+        with ESMTP id S229556AbiJDHhF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Oct 2022 03:37:05 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F75A41984;
+        Tue,  4 Oct 2022 00:37:01 -0700 (PDT)
+Received: from fraeml706-chm.china.huawei.com (unknown [172.18.147.206])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MhTx63z1Nz67PH4;
+        Tue,  4 Oct 2022 15:34:34 +0800 (CST)
+Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
+ fraeml706-chm.china.huawei.com (10.206.15.55) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2375.31; Tue, 4 Oct 2022 09:36:58 +0200
+Received: from [10.48.156.84] (10.48.156.84) by lhrpeml500003.china.huawei.com
+ (7.191.162.67) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Tue, 4 Oct
+ 2022 08:36:57 +0100
+Message-ID: <9e405f1d-621e-d1f7-55c5-21ba5c8a85a8@huawei.com>
+Date:   Tue, 4 Oct 2022 08:37:06 +0100
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.2
-Subject: Re: [PATCH] scsi: core: Add BLIST_NO_ASK_VPD_SIZE for some VDASD
-Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Lee Duncan <leeman.duncan@gmail.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     Lee Duncan <lduncan@suse.com>, Martin Wilck <mwilck@suse.com>
-References: <20220928181350.9948-1-leeman.duncan@gmail.com>
- <11a582f0-723c-95e1-0e44-0a19e1a8a9a8@acm.org>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <11a582f0-723c-95e1-0e44-0a19e1a8a9a8@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH v2 4/6] scsi: pm8001: Use sas_task_find_rq() for tagging
+To:     Hannes Reinecke <hare@suse.de>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <jinpu.wang@cloud.ionos.com>,
+        <damien.lemoal@wdc.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, <ipylypiv@google.com>,
+        <changyuanl@google.com>, <hch@lst.de>, <yanaijie@huawei.com>
+References: <1664528184-162714-1-git-send-email-john.garry@huawei.com>
+ <1664528184-162714-5-git-send-email-john.garry@huawei.com>
+ <fdbb5c5f-05d9-93fa-83d4-2f0129221641@suse.de>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <fdbb5c5f-05d9-93fa-83d4-2f0129221641@suse.de>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.48.156.84]
+X-ClientProxiedBy: lhrpeml100006.china.huawei.com (7.191.160.224) To
+ lhrpeml500003.china.huawei.com (7.191.162.67)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/2/22 23:16, Bart Van Assche wrote:
-> On 9/28/22 11:13, Lee Duncan wrote:
->> From: Lee Duncan <lduncan@suse.com>
->>
->> Some storage, such as AIX VDASD (virtual storage) and IBM 2076
->> (front end) do not like the recent commit:
->>
->> commit c92a6b5d6335 ("scsi: core: Query VPD size before getting full 
->> page")
->>
->> That commit changed getting SCSI VPD pages so that we now read
->> just enough of the page to get the actual page size, then read
->> the whole page in a second read. The problem is that the above
->> mentioned hardware returns zero for the page size, because of
->> a firmware error. In such cases, until the firmware is fixed,
->> this new black flag says to revert to the original method of
->> reading the VPD pages, i.e. try to read as a whole buffer's
->> worth on the first try.
->>
->> Fixes: c92a6b5d6335 ("scsi: core: Query VPD size before getting full 
->> page")
-> 
-> Hi Lee,
-> 
-> If we introduce a blacklist flag to skip querying the VPD page size then 
-> we will have to find all SCSI devices that do not handle querying the 
-> VPD page size correctly. Has it been considered instead of introducing a 
-> blacklist flag to not use the reported VPD page size if the device 
-> reports that the VPD page size is zero? I am not aware of any VPD pages 
-> for which zero is a valid size.
-> 
-True.
-But pre-SPC drives will ignore the VPD bit in the inquiry size. And 
-these devices do not set an additional length in the inquiry data we 
-will interpret the VPD page response as a zero-length VPD page.
-Not good.
+On 04/10/2022 06:53, Hannes Reinecke wrote:
+>> -    void *bitmap = pm8001_ha->tags;
+>> +    void *bitmap = pm8001_ha->rsvd_tags;
+>>       unsigned long flags;
+>>       unsigned int tag;
+>>       spin_lock_irqsave(&pm8001_ha->bitmap_lock, flags);
+>> -    tag = find_first_zero_bit(bitmap, pm8001_ha->tags_num);
+>> -    if (tag >= pm8001_ha->tags_num) {
+>> +    tag = find_first_zero_bit(bitmap, PM8001_RESERVE_SLOT);
+>> +    if (tag >= PM8001_RESERVE_SLOT) {
+>>           spin_unlock_irqrestore(&pm8001_ha->bitmap_lock, flags);
+>>           return -SAS_QUEUE_FULL;
+>>       }
+>>       __set_bit(tag, bitmap);
+>>       spin_unlock_irqrestore(&pm8001_ha->bitmap_lock, flags);
+>> +
+>> +    /* reserved tags are in the upper region of the tagset */
+>> +    tag += pm8001_ha->shost->can_queue;
+>>       *tag_out = tag;
+>>       return 0;
+>>   }
+> Can you move the reserved tags to the _lower_ region of the tagset?
+> That way the tag allocation scheme matches with what the block-layer 
+> does, and the eventual conversion to reserved tags becomes easier.
 
-And really, we've seen only _one_ instance of this particular behaviour.
-And even that could arguably been fixed with a firmware update on the 
-target side. But to not introduce regressions we've opted for this flag.
+Yeah, I agree that having a scheme which matches the block layer would 
+be good for consistency and I will make that change, but I am not sure 
+how it helps conversion to reserved tags.
 
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
-Myers, Andrew McDonald, Martje Boudien Moerman
-
+Thanks,
+John
