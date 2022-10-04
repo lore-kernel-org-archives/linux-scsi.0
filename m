@@ -2,209 +2,115 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E043C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Oct 2022 05:55:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58E33C433FE
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Oct 2022 06:01:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229611AbiJDFzu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Oct 2022 01:55:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49246 "EHLO
+        id S229656AbiJDGBC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Oct 2022 02:01:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56724 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229453AbiJDFzr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Oct 2022 01:55:47 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A5AC1E714;
-        Mon,  3 Oct 2022 22:55:46 -0700 (PDT)
+        with ESMTP id S229653AbiJDGBB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Oct 2022 02:01:01 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14A0521250;
+        Mon,  3 Oct 2022 23:01:00 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 1A1841F8FB;
-        Tue,  4 Oct 2022 05:55:45 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id A2E85219B4;
+        Tue,  4 Oct 2022 06:00:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1664862945; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1664863258; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=lkmFtYmmX+2BenHfW53ftCivWbwKa9jY3LRyOCkro6M=;
-        b=hFgPL0dvbQA7HMOXybgNs637sPm1hQS0Hg/RWeEQXIZz/3xmXwvV5Pk4CT1u+8k3CSNcCh
-        tzFrKYoqcGpSRDEXaOasofIvdCnez8VHMdI7V6jKj6JxJET33Bqz0b3dM7FJNyL9oRTt4Z
-        EI+60XV8joydCmLu7nlyHdDPDDi9d54=
+        bh=XVUlkoaDmwsWB5tjrAEJpUY3Q7CPwdx0+TpErkfvy8Y=;
+        b=yJhiGpi32zwaZcXCCVzGVt/muOCj8E+/EyzFFs6CgUC3s/mGCp0ZjkTifWMXiL2yDPLRfj
+        WYY3Nvtg3Tx0FL8Z2a0bHCSTM4TKUWLR2ryg1Sa359cYGW6e13l1e2be0Hk8yTnb+FgW/9
+        5F7cutRyn6jP+4budDm3aLHSzgXarr8=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1664862945;
+        s=susede2_ed25519; t=1664863258;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=lkmFtYmmX+2BenHfW53ftCivWbwKa9jY3LRyOCkro6M=;
-        b=obHj3oZnLSAX/BeO9yPzm+SPJFRi6+2D5gNs36P9F6kmrXsSABWs+lcb/Es+q/ark3sW1W
-        cMIL4KuMh2BlnQCQ==
+        bh=XVUlkoaDmwsWB5tjrAEJpUY3Q7CPwdx0+TpErkfvy8Y=;
+        b=7PZ3Vrh7pt8X6QiY7WDwLppLMuS1Vo/QKPiPQFdVBVrGJhuWBIg6X/bPsOvdFrTMW8fhGC
+        qtK/jKTIBnrVBxAQ==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id D3CEE139EF;
-        Tue,  4 Oct 2022 05:55:44 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id C9C08139EF;
+        Tue,  4 Oct 2022 06:00:56 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id G8fcLuDKO2NrDwAAMHmgww
-        (envelope-from <hare@suse.de>); Tue, 04 Oct 2022 05:55:44 +0000
-Message-ID: <08d85db7-679b-b099-485b-744b8bb22839@suse.de>
-Date:   Tue, 4 Oct 2022 07:55:44 +0200
+        id EpgTJxjMO2PVEQAAMHmgww
+        (envelope-from <hare@suse.de>); Tue, 04 Oct 2022 06:00:56 +0000
+Message-ID: <4a1da181-8a54-d2f8-6d19-d9c1982ab044@suse.de>
+Date:   Tue, 4 Oct 2022 08:00:56 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.2.2
-Subject: Re: [PATCH v2 6/6] scsi: mvsas: Use sas_task_find_rq() for tagging
+Subject: Re: [PATCH] scsi: core: Add BLIST_NO_ASK_VPD_SIZE for some VDASD
 Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, jinpu.wang@cloud.ionos.com,
-        damien.lemoal@wdc.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linuxarm@huawei.com, ipylypiv@google.com, changyuanl@google.com,
-        hch@lst.de, yanaijie@huawei.com
-References: <1664528184-162714-1-git-send-email-john.garry@huawei.com>
- <1664528184-162714-7-git-send-email-john.garry@huawei.com>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Lee Duncan <leeman.duncan@gmail.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Lee Duncan <lduncan@suse.com>, Martin Wilck <mwilck@suse.com>
+References: <20220928181350.9948-1-leeman.duncan@gmail.com>
+ <11a582f0-723c-95e1-0e44-0a19e1a8a9a8@acm.org>
 From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <1664528184-162714-7-git-send-email-john.garry@huawei.com>
+In-Reply-To: <11a582f0-723c-95e1-0e44-0a19e1a8a9a8@acm.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/30/22 10:56, John Garry wrote:
-> The request associated with a scsi command coming from the block layer
-> has a unique tag, so use that when possible for getting a slot.
+On 10/2/22 23:16, Bart Van Assche wrote:
+> On 9/28/22 11:13, Lee Duncan wrote:
+>> From: Lee Duncan <lduncan@suse.com>
+>>
+>> Some storage, such as AIX VDASD (virtual storage) and IBM 2076
+>> (front end) do not like the recent commit:
+>>
+>> commit c92a6b5d6335 ("scsi: core: Query VPD size before getting full 
+>> page")
+>>
+>> That commit changed getting SCSI VPD pages so that we now read
+>> just enough of the page to get the actual page size, then read
+>> the whole page in a second read. The problem is that the above
+>> mentioned hardware returns zero for the page size, because of
+>> a firmware error. In such cases, until the firmware is fixed,
+>> this new black flag says to revert to the original method of
+>> reading the VPD pages, i.e. try to read as a whole buffer's
+>> worth on the first try.
+>>
+>> Fixes: c92a6b5d6335 ("scsi: core: Query VPD size before getting full 
+>> page")
 > 
-> Unfortunately we don't support reserved commands in the SCSI midlayer yet.
-> As such, SMP tasks - as an example - will not have a request associated, so
-> in the interim continue to manage those tags for that type of sas_task
-> internally.
+> Hi Lee,
 > 
-> We reserve an arbitrary 4 tags for these internal tags. Indeed, we already
-> decrement MVS_RSVD_SLOTS by 2 for the shost can_queue when flag
-> MVF_FLAG_SOC is set. This change was made in commit 20b09c2992fef
-> ("[PATCH] [SCSI] mvsas: add support for 94xx; layout change; bug fixes"),
-> but what those 2 slots are used for is not obvious.
+> If we introduce a blacklist flag to skip querying the VPD page size then 
+> we will have to find all SCSI devices that do not handle querying the 
+> VPD page size correctly. Has it been considered instead of introducing a 
+> blacklist flag to not use the reported VPD page size if the device 
+> reports that the VPD page size is zero? I am not aware of any VPD pages 
+> for which zero is a valid size.
 > 
-> Also make the tag management functions static, where possible.
-> 
-> Signed-off-by: John Garry <john.garry@huawei.com>
-> ---
->   drivers/scsi/mvsas/mv_defs.h |  1 +
->   drivers/scsi/mvsas/mv_init.c |  9 +++++----
->   drivers/scsi/mvsas/mv_sas.c  | 38 ++++++++++++++++++++++++------------
->   drivers/scsi/mvsas/mv_sas.h  |  7 +------
->   4 files changed, 32 insertions(+), 23 deletions(-)
-> 
-> diff --git a/drivers/scsi/mvsas/mv_defs.h b/drivers/scsi/mvsas/mv_defs.h
-> index 7123a2efbf58..8ef174cd4d37 100644
-> --- a/drivers/scsi/mvsas/mv_defs.h
-> +++ b/drivers/scsi/mvsas/mv_defs.h
-> @@ -40,6 +40,7 @@ enum driver_configuration {
->   	MVS_ATA_CMD_SZ		= 96,	/* SATA command table buffer size */
->   	MVS_OAF_SZ		= 64,	/* Open address frame buffer size */
->   	MVS_QUEUE_SIZE		= 64,	/* Support Queue depth */
-> +	MVS_RSVD_SLOTS		= 4,
->   	MVS_SOC_CAN_QUEUE	= MVS_SOC_SLOTS - 2,
->   };
->   
-> diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-> index c85fb812ad43..cfe84473a515 100644
-> --- a/drivers/scsi/mvsas/mv_init.c
-> +++ b/drivers/scsi/mvsas/mv_init.c
-> @@ -142,7 +142,7 @@ static void mvs_free(struct mvs_info *mvi)
->   		scsi_host_put(mvi->shost);
->   	list_for_each_entry(mwq, &mvi->wq_list, entry)
->   		cancel_delayed_work(&mwq->work_q);
-> -	kfree(mvi->tags);
-> +	kfree(mvi->rsvd_tags);
->   	kfree(mvi);
->   }
->   
-> @@ -284,7 +284,6 @@ static int mvs_alloc(struct mvs_info *mvi, struct Scsi_Host *shost)
->   			printk(KERN_DEBUG "failed to create dma pool %s.\n", pool_name);
->   			goto err_out;
->   	}
-> -	mvi->tags_num = slot_nr;
->   
->   	return 0;
->   err_out:
-> @@ -367,8 +366,8 @@ static struct mvs_info *mvs_pci_alloc(struct pci_dev *pdev,
->   	mvi->sas = sha;
->   	mvi->shost = shost;
->   
-> -	mvi->tags = kzalloc(MVS_CHIP_SLOT_SZ>>3, GFP_KERNEL);
-> -	if (!mvi->tags)
-> +	mvi->rsvd_tags = bitmap_zalloc(MVS_RSVD_SLOTS, GFP_KERNEL);
-> +	if (!mvi->rsvd_tags)
->   		goto err_out;
->   
->   	if (MVS_CHIP_DISP->chip_ioremap(mvi))
-> @@ -469,6 +468,8 @@ static void  mvs_post_sas_ha_init(struct Scsi_Host *shost,
->   	else
->   		can_queue = MVS_CHIP_SLOT_SZ;
->   
-> +	can_queue -= MVS_RSVD_SLOTS;
-> +
->   	shost->sg_tablesize = min_t(u16, SG_ALL, MVS_MAX_SG);
->   	shost->can_queue = can_queue;
->   	mvi->shost->cmd_per_lun = MVS_QUEUE_SIZE;
-> diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-> index 0810e6c930e1..00b3a2781d21 100644
-> --- a/drivers/scsi/mvsas/mv_sas.c
-> +++ b/drivers/scsi/mvsas/mv_sas.c
-> @@ -20,33 +20,39 @@ static int mvs_find_tag(struct mvs_info *mvi, struct sas_task *task, u32 *tag)
->   	return 0;
->   }
->   
-> -void mvs_tag_clear(struct mvs_info *mvi, u32 tag)
-> +static void mvs_tag_clear(struct mvs_info *mvi, u32 tag)
->   {
-> -	void *bitmap = mvi->tags;
-> +	void *bitmap = mvi->rsvd_tags;
->   	clear_bit(tag, bitmap);
->   }
->   
-> -void mvs_tag_free(struct mvs_info *mvi, u32 tag)
-> +static void mvs_tag_free(struct mvs_info *mvi, u32 tag)
->   {
-> +	if (tag < mvi->shost->can_queue)
-> +		return;
-> +
-> +	tag -= mvi->shost->can_queue;
-> +
->   	mvs_tag_clear(mvi, tag);
->   }
->   
-> -void mvs_tag_set(struct mvs_info *mvi, unsigned int tag)
-> +static void mvs_tag_set(struct mvs_info *mvi, unsigned int tag)
->   {
-> -	void *bitmap = mvi->tags;
-> +	void *bitmap = mvi->rsvd_tags;
->   	set_bit(tag, bitmap);
->   }
->   
-> -inline int mvs_tag_alloc(struct mvs_info *mvi, u32 *tag_out)
-> +static int mvs_tag_alloc(struct mvs_info *mvi, u32 *tag_out)
->   {
->   	unsigned int index, tag;
-> -	void *bitmap = mvi->tags;
-> +	void *bitmap = mvi->rsvd_tags;
->   
-> -	index = find_first_zero_bit(bitmap, mvi->tags_num);
-> +	index = find_first_zero_bit(bitmap, MVS_RSVD_SLOTS);
->   	tag = index;
-> -	if (tag >= mvi->tags_num)
-> +	if (tag >= MVS_RSVD_SLOTS)
->   		return -SAS_QUEUE_FULL;
->   	mvs_tag_set(mvi, tag);
-> +	tag += mvi->shost->can_queue;
->   	*tag_out = tag;
->   	return 0;
->   }
+True.
+But pre-SPC drives will ignore the VPD bit in the inquiry size. And 
+these devices do not set an additional length in the inquiry data we 
+will interpret the VPD page response as a zero-length VPD page.
+Not good.
 
-Also here: please move the reserved tags to the front, such that the tag 
-allocation scheme matches with the blk-mq tag allocation scheme.
+And really, we've seen only _one_ instance of this particular behaviour.
+And even that could arguably been fixed with a firmware update on the 
+target side. But to not introduce regressions we've opted for this flag.
 
 Cheers,
 
