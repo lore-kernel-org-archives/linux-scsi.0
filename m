@@ -2,82 +2,90 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12C41C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Oct 2022 00:21:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E395FC433F5
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Oct 2022 00:24:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230034AbiJDAVT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 Oct 2022 20:21:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50490 "EHLO
+        id S229861AbiJDAYJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 Oct 2022 20:24:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52162 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230036AbiJDAVR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2022 20:21:17 -0400
-Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88461255AF
-        for <linux-scsi@vger.kernel.org>; Mon,  3 Oct 2022 17:21:16 -0700 (PDT)
-Received: by mail-pl1-f171.google.com with SMTP id 10so7528532pli.0
-        for <linux-scsi@vger.kernel.org>; Mon, 03 Oct 2022 17:21:16 -0700 (PDT)
+        with ESMTP id S229662AbiJDAYH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2022 20:24:07 -0400
+Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A80C2252B7;
+        Mon,  3 Oct 2022 17:24:06 -0700 (PDT)
+Received: by mail-pl1-f173.google.com with SMTP id n7so11155807plp.1;
+        Mon, 03 Oct 2022 17:24:06 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date;
-        bh=ePeo67OueUShifC7omagh9Y9HGwV2S/D/PEZ8LZM2wI=;
-        b=ZhgtrHe4DeIkT+Jtmy0FNXZa6sZvCBgyqJud2UVoQ5sRSxg6ZE0ZG3vkRFMU4cfMZ4
-         7C0L49YvjhqGVWZB3sxLup0R5g7wXiiFAKI1/SxX6Xj97xEwUsF5nzpb7PwnoAx5waUD
-         sGqN83oSlyvs9nmFwhYhdtR/DwLj+JCLH9EpevHlmXVUl+spL9MSsxyzYbeRnwAPdRID
-         q4D/O3L94ho8G7R9lAA2eXTEJD05Bw4RlMI3PcDc0qunJZmahuZMeSGMXhZ34bdRd74D
-         XkyxT0GDvnN01Mr+3HXZ0YaXsfRsVMTvqlz4O54BdEeIrjShCbFfuWe1aYdUwRlJejtI
-         bigw==
-X-Gm-Message-State: ACrzQf1Oqf5Yyb++dKIkY73mTAvZkUMP6JoGxBvmzUAEtjRtc5N+m0zI
-        JTtrx98QXcA1G0xttYM+3B0D5Zr+zyY=
-X-Google-Smtp-Source: AMsMyM62jf3k1osndDHhpnydaJ7VOfif+AnP1CSEX89pA7tPtLSt0zJG2Y6sI8KF7GrkpCJMM4mvww==
-X-Received: by 2002:a17:902:f550:b0:178:5b6a:3a1c with SMTP id h16-20020a170902f55000b001785b6a3a1cmr24167849plf.36.1664842875901;
-        Mon, 03 Oct 2022 17:21:15 -0700 (PDT)
+        bh=ZlIEylRGLBdWzVOp9/7uT68mfePWL3R9HT/LBHC0RSk=;
+        b=rXVsLNWeDEkK0hkqyYFKy8w8ommLTLIAl6au+GPL9NJwwW9zENh80F9YHFrTMgwdcW
+         BKLbC7hYQr0I9SZDCSyP/jSai4gVF+aWZiHQwjS2/YAtLS+4dLu6zwH4V/TVdjbjiIjr
+         2dDiy5PX9LRccYVpkRZUBRS5kVltawTZ7CKvNiOpCZfc5fQ3x3znWKB+XtAyO3OKEx/H
+         7fz5v3yG5SfgZ2y5R3n6sDA8sGprwziDx/X6pXe004MpTd/VyPohAW/+KzQVGlp+6flv
+         W6wyAyWLurxnqYvMlk7/2E2CM2qaGMeRj9VaGl6k5rETaLLUtNcw04qtyO3+P6DIpehA
+         hWxQ==
+X-Gm-Message-State: ACrzQf2WXJrhl4u+mjqPT9+7YL8RXTYiREUegaTBSmvW9RXvIx0ktxSr
+        zqYscRf4wX0qoT19GDEVqNA=
+X-Google-Smtp-Source: AMsMyM4ww3P9R1BBmvg/a2newHXvdFWHzuvV0JG7sF2Yjly01BtaIMSCGTYeCJ4scPy6hGdvU5yCZA==
+X-Received: by 2002:a17:90b:1a89:b0:20a:a3d8:b05a with SMTP id ng9-20020a17090b1a8900b0020aa3d8b05amr7362421pjb.224.1664843046134;
+        Mon, 03 Oct 2022 17:24:06 -0700 (PDT)
 Received: from [192.168.3.219] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id b188-20020a621bc5000000b005604b8f226csm4732241pfb.2.2022.10.03.17.21.14
+        by smtp.gmail.com with ESMTPSA id d17-20020aa797b1000000b0054a1534516dsm8221618pfq.97.2022.10.03.17.24.04
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 03 Oct 2022 17:21:15 -0700 (PDT)
-Message-ID: <81761c95-5903-bf37-bdb8-27d14b3c8043@acm.org>
-Date:   Mon, 3 Oct 2022 17:21:13 -0700
+        Mon, 03 Oct 2022 17:24:05 -0700 (PDT)
+Message-ID: <d87e5f8c-c221-f5cb-0ae7-969867fbc9b5@acm.org>
+Date:   Mon, 3 Oct 2022 17:24:03 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.3.0
-Subject: Re: [PATCH v3 8/8] scsi: ufs: Fix a deadlock between PM and the SCSI
- error handler
+Subject: Re: [PATCH v5 6/7] module: Improve support for asynchronous module
+ exit code
 Content-Language: en-US
-To:     Bean Huo <huobean@gmail.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
-        Adrian Hunter <adrian.hunter@intel.com>,
+To:     Luis Chamberlain <mcgrof@kernel.org>
+Cc:     Mauro Carvalho Chehab <mchehab@kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
+        John Garry <john.garry@huawei.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-modules@vger.kernel.org, linux-kernel@vger.kernel.org,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>
-References: <20220929220021.247097-1-bvanassche@acm.org>
- <20220929220021.247097-9-bvanassche@acm.org>
- <67bfe4a2175da74b686a4990a6ebe0b91017599f.camel@gmail.com>
- <af357394-7329-b218-ccf9-65944a35fc6e@acm.org>
- <27eaae3fe2b3eb715091f09b38e8d500bc9def52.camel@gmail.com>
+        Tejun Heo <tj@kernel.org>
+References: <20220914225621.415631-1-bvanassche@acm.org>
+ <20220914225621.415631-7-bvanassche@acm.org>
+ <a4084b27-dd2d-10df-493c-35998eed664c@acm.org>
+ <YzOPJHSQsPtc5o0Y@bombadil.infradead.org>
+ <33ee1c3a-d37a-b81f-68be-d1901c7dd6e8@acm.org>
+ <YzdF72yRae7lnZAy@bombadil.infradead.org>
+ <Yzt2upqiG2i/eHnV@bombadil.infradead.org>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <27eaae3fe2b3eb715091f09b38e8d500bc9def52.camel@gmail.com>
+In-Reply-To: <Yzt2upqiG2i/eHnV@bombadil.infradead.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/2/22 14:21, Bean Huo wrote:
-> Yes, install the whole series of changes, ufshcd_link_recovery() will
-> be called during the system is in suspending in the case of SSU
-> timeouts. in this case, outstanding_tasks should be 0?
-  Hi Bean,
+On 10/3/22 16:56, Luis Chamberlain wrote:
+> Yeah I've gone ahead and re-read your original patch again the issue
+> with that is it waits *once* for the refcnt to go to 0, but that does
+> not forbit it from going back up, at which point you have a race which
+> can still create the situation. Every subsystem is different, but for
+> instance simply running a loop opening a device block file should
+> suffice to bump the refcnt of a respective block driver module. So
+> at least the patch itself won't ultimately address this issue I'm
+> afraid.
 
-'outstanding_tasks' needs to be changed into 'outstanding_reqs' in patch 
-8/8. My understanding is that ufshcd_link_recovery() calls 
-ufshcd_complete_requests() indirectly. That causes the bits 
-corresponding to completed requests to be cleared from outstanding_reqs 
-but does not guarantee that outstanding_reqs will be zero.
+Hi Luis,
 
-Thanks,
+Thanks for the feedback. I will try to find a solution that does not 
+require to modify the kernel module code.
 
 Bart.
+
