@@ -2,127 +2,139 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63BBAC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Oct 2022 16:42:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD565C433FE
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Oct 2022 18:53:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230160AbiJDQl7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Oct 2022 12:41:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37488 "EHLO
+        id S229639AbiJDSw7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Oct 2022 14:52:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59692 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229603AbiJDQl6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Oct 2022 12:41:58 -0400
-Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE5F35F122;
-        Tue,  4 Oct 2022 09:41:57 -0700 (PDT)
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 4D03F4014D;
-        Tue,  4 Oct 2022 16:41:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        in-reply-to:content-disposition:content-type:content-type
-        :mime-version:references:message-id:subject:subject:from:from
-        :date:date:received:received:received:received; s=mta-01; t=
-        1664901715; x=1666716116; bh=Mn5n5/aLSFk9+XxZkn0JrBd8SKCv+h6JPfY
-        9TH3SyjQ=; b=rKTcDviSw2wb6TKQjUUIPnV5FgRZigzC8NOUtygwHhg41lMW3RO
-        rJBBa/3yKsMSBwusc4ZavFhsAcAZ3QXHEfoLEHfcXlm3wjS3+6ofbty+B3ybNPiA
-        +fBO4rfXg5AYVdp+anFGtu4gj86Ufl+7dbWrE11ph52RzRMrIWGEx3f4=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id WxOFlWq5jGMK; Tue,  4 Oct 2022 19:41:55 +0300 (MSK)
-Received: from T-EXCH-02.corp.yadro.com (T-EXCH-02.corp.yadro.com [172.17.10.102])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 1CBE2400F8;
-        Tue,  4 Oct 2022 19:41:54 +0300 (MSK)
-Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
- T-EXCH-02.corp.yadro.com (172.17.10.102) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
- 15.1.669.32; Tue, 4 Oct 2022 19:41:54 +0300
-Received: from yadro.com (10.199.18.20) by T-EXCH-08.corp.yadro.com
- (172.17.11.58) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1118.9; Tue, 4 Oct 2022
- 19:41:53 +0300
-Date:   Tue, 4 Oct 2022 19:41:52 +0300
-From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
-To:     <michael.christie@oracle.com>
-CC:     Martin Petersen <martin.petersen@oracle.com>,
-        <target-devel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux@yadro.com>
-Subject: Re: [PATCH 7/7] target: core: check RTPI uniquity for enabled TPG
-Message-ID: <20221004164152.GE10901@yadro.com>
-References: <20220906154519.27487-1-d.bogdanov@yadro.com>
- <20220906154519.27487-8-d.bogdanov@yadro.com>
- <5f730538-6738-86b9-fefe-da09ad9e0a47@oracle.com>
- <f4d08857-204e-f0ff-600f-8e8c87b6a02d@oracle.com>
+        with ESMTP id S229760AbiJDSwp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Oct 2022 14:52:45 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 129346AA39;
+        Tue,  4 Oct 2022 11:52:37 -0700 (PDT)
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 294F8Tef026458;
+        Tue, 4 Oct 2022 18:52:01 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=date : from : to :
+ cc : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=qcppdkim1; bh=zzbBuykHboidDhljzKC9UhaXjiSeCNufM3SCTwx7jYo=;
+ b=Rh0IVUe/vCAPMaEzssEuy6lxbfgr2OJgefuUF+i+IDFhikPdXOdXZQmRy8wra8zsqxC6
+ KWF65NCiXu6tfRayFz61rAsWJN9Uyg58g6jKtsYQyhjtcy8F4nCOlD9uGk2tBaqjKjWn
+ sOt6etq9pXvp3Wjtz6Uav2s/pJTJMdxltMd6Uf3+iM9HZ1HEu3uxntVx/HErQfKkuewX
+ bd7INt+LM4CTReTJeJUIQtOYGQXa6919/u1GBiCc49berR35yrx8fxWi6hgnIfa3MukR
+ wp40QxcXULePIPZ8HPKQJKZSNqqWKbLtYwM0HocID7oKhOomND+c7x2H7xxJbwPh7+dk iQ== 
+Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3k0escskkx-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 04 Oct 2022 18:52:01 +0000
+Received: from nasanex01a.na.qualcomm.com (corens_vlan604_snip.qualcomm.com [10.53.140.1])
+        by NASANPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 294Iq0De002119
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 4 Oct 2022 18:52:00 GMT
+Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
+ nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.29; Tue, 4 Oct 2022 11:52:00 -0700
+Date:   Tue, 4 Oct 2022 11:51:59 -0700
+From:   Asutosh Das <quic_asutoshd@quicinc.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+CC:     <mani@kernel.org>, <quic_nguyenb@quicinc.com>,
+        <quic_xiaosenh@quicinc.com>, <quic_cang@quicinc.com>,
+        <quic_nitirawa@quicinc.com>, <quic_rampraka@quicinc.com>,
+        <quic_richardp@quicinc.com>, <stanley.chu@mediatek.com>,
+        <adrian.hunter@intel.com>, <avri.altman@wdc.com>,
+        <beanhuo@micron.com>, <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-mediatek@lists.infradead.org>
+Subject: Re: [PATCH v1 03/16] ufs: core: Defer adding host to scsi if mcq is
+ supported
+Message-ID: <20221004185159.GB25671@asutoshd-linux1.qualcomm.com>
+References: <cover.1663894792.git.quic_asutoshd@quicinc.com>
+ <197a8bcca288f9c36586099aa07606ed3f067c9b.1663894792.git.quic_asutoshd@quicinc.com>
+ <4767355d-e7b0-d38b-88f3-c070ed0b5e5b@acm.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Content-Disposition: inline
-In-Reply-To: <f4d08857-204e-f0ff-600f-8e8c87b6a02d@oracle.com>
-X-Originating-IP: [10.199.18.20]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-08.corp.yadro.com (172.17.11.58)
+In-Reply-To: <4767355d-e7b0-d38b-88f3-c070ed0b5e5b@acm.org>
+User-Agent: Mutt/1.5.24 (2015-08-30)
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: cWhwDJ6lki4eghnjMnQjS6I_7wh4dhvX
+X-Proofpoint-ORIG-GUID: cWhwDJ6lki4eghnjMnQjS6I_7wh4dhvX
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
+ definitions=2022-10-04_08,2022-09-29_03,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 mlxscore=0
+ lowpriorityscore=0 malwarescore=0 adultscore=0 mlxlogscore=999
+ phishscore=0 bulkscore=0 clxscore=1015 impostorscore=0 priorityscore=1501
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2209130000 definitions=main-2210040122
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Oct 01, 2022 at 11:19:45AM -0500, michael.christie@oracle.com wrote:
-> 
-> On 9/29/22 7:02 PM, Mike Christie wrote:
-> > On 9/6/22 10:45 AM, Dmitry Bogdanov wrote:
-> >> Garantee uniquity of RTPI only for enabled target port groups.
-> >> Allow any RPTI for disabled tpg until it is enabled.
-> >>
-> >> Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
-> >> ---
-> >>  drivers/target/target_core_fabric_configfs.c | 29 +++++++++++++-
-> >>  drivers/target/target_core_internal.h        |  2 +
-> >>  drivers/target/target_core_tpg.c             | 40 +++++++++++++-------
-> >>  3 files changed, 56 insertions(+), 15 deletions(-)
-> >>
-> >> diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
-> >> index a34b5db4eec5..fc1b8f54fb54 100644
-> >> --- a/drivers/target/target_core_fabric_configfs.c
-> >> +++ b/drivers/target/target_core_fabric_configfs.c
-> >> @@ -857,6 +857,7 @@ static ssize_t target_fabric_tpg_base_enable_store(struct config_item *item,
-> >>                                                 size_t count)
-> >>  {
-> >>      struct se_portal_group *se_tpg = to_tpg(item);
-> >> +    struct se_portal_group *tpg;
-> >>      int ret;
-> >>      bool op;
-> >>
-> >> @@ -867,11 +868,37 @@ static ssize_t target_fabric_tpg_base_enable_store(struct config_item *item,
-> >>      if (se_tpg->enabled == op)
-> >>              return count;
-> >>
-> >> +    spin_lock(&g_tpg_lock);
-> >> +
-> >> +    if (op) {
-> >> +            tpg = core_get_tpg_by_rtpi(se_tpg->tpg_rtpi);
-> >> +            if (tpg) {
-> >> +                    spin_unlock(&g_tpg_lock);
-> >> +
-> >> +                    pr_err("TARGET_CORE[%s]->TPG[%u] - RTPI %#x conflicts with TARGET_CORE[%s]->TPG[%u]\n",
-> >> +                           se_tpg->se_tpg_tfo->fabric_name,
-> >> +                           se_tpg->se_tpg_tfo->tpg_get_tag(tpg),
-> >> +                           se_tpg->tpg_rtpi,
-> >> +                           tpg->se_tpg_tfo->fabric_name,
-> >> +                           tpg->se_tpg_tfo->tpg_get_tag(tpg));
-> >> +                    return -EINVAL;
-> >> +            }
-> >> +    }
-> >> +
-> >> +    se_tpg->enabled |= 0x10; /* transient state */
-> >
-> > Just use a mutex and hold it the entire time if
-> I was looking at the configfs code and am now not sure what the transient state
-> is for. It looks like when doing a read or write configfs holds the buffer->mutex,
-> so I don't think userspace would ever see the transient state.
-> 
-> Can you just drop it?
+On Fri, Sep 30 2022 at 11:32 -0700, Bart Van Assche wrote:
+>On 9/22/22 18:05, Asutosh Das wrote:
+>>@@ -8218,6 +8219,14 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool init_dev_params)
+>>  		ret = ufshcd_device_params_init(hba);
+>>  		if (ret)
+>>  			goto out;
+>>+
+>>+		if (is_mcq_supported(hba)) {
+>>+			ret = scsi_add_host(host, hba->dev);
+>>+			if (ret) {
+>>+				dev_err(hba->dev, "scsi_add_host failed\n");
+>>+				goto out;
+>>+			}
+>>+		}
+>>  	}
+>
+>Calling scsi_add_host() from ufshcd_probe_hba() seems wrong to me 
+>since that function is not only called when probing a host controller 
+>but also when resetting a host controller. See also 
+>ufshcd_host_reset_and_restore().
+>
+The scsi_add_host() is only invoked from ufshcd_probe_hba() if init_dev_params
+is true. That flag is false when ufshcd_probe_hba() is invoked from
+ufshcd_host_reset_and_restore(). So scsi_add_host() won't be invoked from
+ufshcd_host_reset_and_restore(). Even ufshcd_device_params_init() is invoked the
+same way now.
 
-sysfs lock is per file, so 'enable' and 'rtpi' files can be written in
-parallel. But after rewriting of the patchset, this part will be
-dropped.
+>>  	ufshcd_tune_unipro_params(hba);
+>>@@ -9764,10 +9773,12 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+>>  		hba->is_irq_enabled = true;
+>>  	}
+>>-	err = scsi_add_host(host, hba->dev);
+>>-	if (err) {
+>>-		dev_err(hba->dev, "scsi_add_host failed\n");
+>>-		goto out_disable;
+>>+	if (!is_mcq_supported(hba)) {
+>>+		err = scsi_add_host(host, hba->dev);
+>>+		if (err) {
+>>+			dev_err(hba->dev, "scsi_add_host failed\n");
+>>+			goto out_disable;
+>>+		}
+>>  	}
+>>  	hba->tmf_tag_set = (struct blk_mq_tag_set) {
+>
+>Please make sure there is only a single scsi_add_host() call in the 
+>UFS host controller driver.
+>
+One way would be to move the scsi_add_host() to ufshcd_probe_hba().
+PLMK if you think this is not OK.
 
-
+>Thanks,
+>
+>Bart.
