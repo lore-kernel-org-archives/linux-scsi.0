@@ -2,90 +2,100 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E395FC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Oct 2022 00:24:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 539B4C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Oct 2022 04:51:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229861AbiJDAYJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 Oct 2022 20:24:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52162 "EHLO
+        id S229609AbiJDEvv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Oct 2022 00:51:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34520 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229662AbiJDAYH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2022 20:24:07 -0400
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A80C2252B7;
-        Mon,  3 Oct 2022 17:24:06 -0700 (PDT)
-Received: by mail-pl1-f173.google.com with SMTP id n7so11155807plp.1;
-        Mon, 03 Oct 2022 17:24:06 -0700 (PDT)
+        with ESMTP id S229583AbiJDEvu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Oct 2022 00:51:50 -0400
+Received: from mail-lj1-x234.google.com (mail-lj1-x234.google.com [IPv6:2a00:1450:4864:20::234])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DD1643308
+        for <linux-scsi@vger.kernel.org>; Mon,  3 Oct 2022 21:51:48 -0700 (PDT)
+Received: by mail-lj1-x234.google.com with SMTP id b6so14019861ljr.10
+        for <linux-scsi@vger.kernel.org>; Mon, 03 Oct 2022 21:51:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ionos.com; s=google;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=To5KIWjQ/k8Pkoizz5oF7c+oALOtLlXJkcAnbt5DAwY=;
+        b=BVsOFVlL0LK5p09g+T8lPowb7PD6WbiAqJHjSWIesIHoOWjt6bqc/xWAZw/1TDb72w
+         tmMK1nQgH1Aw35ybK54V7PgUrb67JQkNdJPS2oZaQ6tsKVETZYVlRcgVKc2DlDKj+Ign
+         nObvAiinoo2Vd1NZoKh/JQHscEXQPM8F34pbLGKgBWTrgU6atB+e/cp7qHiHyl6KwpFL
+         TSeXK3N9cR036vUf3OHyGa7No6641ieTL8w7hnZyrc9ND7RzNAyviRkeHE59KTwzl+xq
+         t3OlRTLe4Odsd+u/AvcVi3OxFJo7eQzL1DQDnXnS2pWBAmdK973hz9xZ5DC9P0NZ4VvQ
+         qr5A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date;
-        bh=ZlIEylRGLBdWzVOp9/7uT68mfePWL3R9HT/LBHC0RSk=;
-        b=rXVsLNWeDEkK0hkqyYFKy8w8ommLTLIAl6au+GPL9NJwwW9zENh80F9YHFrTMgwdcW
-         BKLbC7hYQr0I9SZDCSyP/jSai4gVF+aWZiHQwjS2/YAtLS+4dLu6zwH4V/TVdjbjiIjr
-         2dDiy5PX9LRccYVpkRZUBRS5kVltawTZ7CKvNiOpCZfc5fQ3x3znWKB+XtAyO3OKEx/H
-         7fz5v3yG5SfgZ2y5R3n6sDA8sGprwziDx/X6pXe004MpTd/VyPohAW/+KzQVGlp+6flv
-         W6wyAyWLurxnqYvMlk7/2E2CM2qaGMeRj9VaGl6k5rETaLLUtNcw04qtyO3+P6DIpehA
-         hWxQ==
-X-Gm-Message-State: ACrzQf2WXJrhl4u+mjqPT9+7YL8RXTYiREUegaTBSmvW9RXvIx0ktxSr
-        zqYscRf4wX0qoT19GDEVqNA=
-X-Google-Smtp-Source: AMsMyM4ww3P9R1BBmvg/a2newHXvdFWHzuvV0JG7sF2Yjly01BtaIMSCGTYeCJ4scPy6hGdvU5yCZA==
-X-Received: by 2002:a17:90b:1a89:b0:20a:a3d8:b05a with SMTP id ng9-20020a17090b1a8900b0020aa3d8b05amr7362421pjb.224.1664843046134;
-        Mon, 03 Oct 2022 17:24:06 -0700 (PDT)
-Received: from [192.168.3.219] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id d17-20020aa797b1000000b0054a1534516dsm8221618pfq.97.2022.10.03.17.24.04
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 03 Oct 2022 17:24:05 -0700 (PDT)
-Message-ID: <d87e5f8c-c221-f5cb-0ae7-969867fbc9b5@acm.org>
-Date:   Mon, 3 Oct 2022 17:24:03 -0700
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=To5KIWjQ/k8Pkoizz5oF7c+oALOtLlXJkcAnbt5DAwY=;
+        b=5aLymtieZdwIS5z/e4eucyEFPaIY4hfgMneJNq1SMLCu+erU26lmvNGyD0rsawHroZ
+         ULD+77pWebisMdhFgc7L4fgqZcPltXFek9w4tqcC74Z3QbjZarJEznIgvt7rkqlHlCOn
+         nvgB90BZuZ4ne+VufzX1+T2i8IpIdyVOh41hUfr70HPSonrziacNLCx2aHaxr9LMEplR
+         gX7G64zPLc/nfe6roSLdA9iDXqoUe9P9OAGdmmte22kJxeB6/J/R9A7fZGLc5gS8hOTz
+         Nh4+Ic4lejQscibFrajaTHiZqts5M6qyM/8Un7doQ4Z1SaVjODm+7okh0/Ft/8m+1kFG
+         py2g==
+X-Gm-Message-State: ACrzQf1FtlFJ/vKfeXXiJPY9UJcRQYbPbhCS/OJ87OLDlh82bZVksO89
+        ymu69vazQachNi/0z6gagOCI/vhhYjsObmjMxj0+vw==
+X-Google-Smtp-Source: AMsMyM5Gh5QGHx7dBiX81TyO/glq2fj2eYXDxCW4GQyDfJy9rpSOIWfY8zN0S86476LtADxDm5xQw4S4sJQQKXYvZ3s=
+X-Received: by 2002:a05:651c:101:b0:250:896d:f870 with SMTP id
+ a1-20020a05651c010100b00250896df870mr7952627ljb.235.1664859106609; Mon, 03
+ Oct 2022 21:51:46 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.0
-Subject: Re: [PATCH v5 6/7] module: Improve support for asynchronous module
- exit code
-Content-Language: en-US
-To:     Luis Chamberlain <mcgrof@kernel.org>
-Cc:     Mauro Carvalho Chehab <mchehab@kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
-        John Garry <john.garry@huawei.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-modules@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Tejun Heo <tj@kernel.org>
-References: <20220914225621.415631-1-bvanassche@acm.org>
- <20220914225621.415631-7-bvanassche@acm.org>
- <a4084b27-dd2d-10df-493c-35998eed664c@acm.org>
- <YzOPJHSQsPtc5o0Y@bombadil.infradead.org>
- <33ee1c3a-d37a-b81f-68be-d1901c7dd6e8@acm.org>
- <YzdF72yRae7lnZAy@bombadil.infradead.org>
- <Yzt2upqiG2i/eHnV@bombadil.infradead.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <Yzt2upqiG2i/eHnV@bombadil.infradead.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <1664528184-162714-1-git-send-email-john.garry@huawei.com>
+ <1664528184-162714-5-git-send-email-john.garry@huawei.com>
+ <CAMGffEkgR6VmfMV1eLVeTn+b8b0GC_B9=vj3HxF6cn5Er6+CTg@mail.gmail.com>
+ <5e570c35-ed98-a29b-736f-677aa896f654@huawei.com> <32b0f929-4534-450b-b19c-d3404db63202@huawei.com>
+In-Reply-To: <32b0f929-4534-450b-b19c-d3404db63202@huawei.com>
+From:   Jinpu Wang <jinpu.wang@ionos.com>
+Date:   Tue, 4 Oct 2022 06:51:35 +0200
+Message-ID: <CAMGffEkPnrjjzZMca5YQ8NT-xnBFPfFoBxs63jY431FtpFvF3A@mail.gmail.com>
+Subject: Re: [PATCH v2 4/6] scsi: pm8001: Use sas_task_find_rq() for tagging
+To:     John Garry <john.garry@huawei.com>
+Cc:     damien.lemoal@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, hare@suse.de,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linuxarm@huawei.com, ipylypiv@google.com, changyuanl@google.com,
+        hch@lst.de, yanaijie@huawei.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/3/22 16:56, Luis Chamberlain wrote:
-> Yeah I've gone ahead and re-read your original patch again the issue
-> with that is it waits *once* for the refcnt to go to 0, but that does
-> not forbit it from going back up, at which point you have a race which
-> can still create the situation. Every subsystem is different, but for
-> instance simply running a loop opening a device block file should
-> suffice to bump the refcnt of a respective block driver module. So
-> at least the patch itself won't ultimately address this issue I'm
-> afraid.
-
-Hi Luis,
-
-Thanks for the feedback. I will try to find a solution that does not 
-require to modify the kernel module code.
-
-Bart.
-
+On Fri, Sep 30, 2022 at 1:05 PM John Garry <john.garry@huawei.com> wrote:
+>
+> On 30/09/2022 11:20, John Garry wrote:
+> > BTW, I do notice that we still have this global lock in delivery path
+> > which should be removed at some stage:
+> > > int mvs_queue_command(struct sas_task *task, gfp_t gfp_flags)
+> > {
+> >      ...
+> >
+> >      spin_lock_irqsave(&mvi->lock, flags);
+> >      rc = mvs_task_prep(task, mvi, is_tmf, tmf, &pass);
+> >      ...
+> >      spin_unlock_irqrestore(&mvi->lock, flags);
+> > }
+> >
+>
+> oops... that's mvsas. But pm8001 does still use a big lock (which we
+> should get rid off):
+Yes, would be great to get rid of the per ha lock.
+>
+> int pm8001_queue_command(struct sas_task *task, gfp_t gfp_flags)
+> {
+>         ...
+>         pm8001_dbg(pm8001_ha, IO, "pm8001_task_exec device\n");
+>
+>         spin_lock_irqsave(&pm8001_ha->lock, flags);
+>
+>
+> Thanks,
+> John
+>
+> > That really will affect performance...
+>
