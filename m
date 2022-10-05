@@ -2,204 +2,155 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C872C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Oct 2022 08:53:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A19B0C4167D
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Oct 2022 09:48:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229880AbiJEIxu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 5 Oct 2022 04:53:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36320 "EHLO
+        id S229725AbiJEJsQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 5 Oct 2022 05:48:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35250 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229479AbiJEIxs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Oct 2022 04:53:48 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F40175B05F;
-        Wed,  5 Oct 2022 01:53:46 -0700 (PDT)
-Received: from fraeml740-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Mj7cN2cncz6864m;
-        Wed,  5 Oct 2022 16:52:20 +0800 (CST)
-Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml740-chm.china.huawei.com (10.206.15.221) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Wed, 5 Oct 2022 10:53:44 +0200
-Received: from [10.48.148.227] (10.48.148.227) by
- lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Wed, 5 Oct 2022 09:53:43 +0100
-Message-ID: <27148ec5-d1ae-d9a2-1b00-a4c34d2da198@huawei.com>
-Date:   Wed, 5 Oct 2022 09:53:52 +0100
+        with ESMTP id S229774AbiJEJsN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Oct 2022 05:48:13 -0400
+Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E6506E8A5
+        for <linux-scsi@vger.kernel.org>; Wed,  5 Oct 2022 02:48:11 -0700 (PDT)
+Received: by mail-pj1-x102c.google.com with SMTP id p3-20020a17090a284300b0020a85fa3ffcso1145524pjf.2
+        for <linux-scsi@vger.kernel.org>; Wed, 05 Oct 2022 02:48:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date;
+        bh=uAiOjs73GnPtRWDKlCBYpOmHeG3ElDSPTXYVbLmJn3Y=;
+        b=dh/s9gbrJ1NP2il6j7m7392rb5m/0olUhLw6ywfYrwbm+b05mgthbXGVeHCne6faSe
+         nEB8FWIww9/Mh3TPJYBTwQxHk9YQhBfOYEWSgISGS3x2V+1PSzpPW0fGwHCNvRUrDmsC
+         V4LPjNBP1ZNWd2lWycmQ+cVlk2hOYpk0wbD3BQW90ktRdTfHVQoOGdzFfsVLA+UV8P0L
+         yaYjHeb70WMgWdHpn0iX5L8LgNN78O1ThcYXr+GHqSaFRNBAWLFYqLr8IpSUK6wbVOaM
+         BO7XUtm7Hdl6sqI52mxM7YweUuOKwjFV07IZc9k6gah2y9PsEzpdZlxqQ3TbFVT9xR+n
+         gOow==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date;
+        bh=uAiOjs73GnPtRWDKlCBYpOmHeG3ElDSPTXYVbLmJn3Y=;
+        b=nss66YMezhTb/hm1MjhWXAXON8SkuCu+6xqPCRY7S5zl4gxJETM1JFQg5MfbwcxDWf
+         zF0+I826B7x7t+QP7rIGCu2HUvPvS3i6OdoAgNpJeNcPSSmfXwW2IgZ9XszGhIZDFlCK
+         0zkmBSKcS5mCdUeTZNwNomVCGqs39vzpbJVOlSa8XlDP4q0m3iBO9Y4aYljrrBXaXgDa
+         mD4ksCWLf9ZBIYA0AwFXfQpLnosDkyo5PmpuALoYUBz9IrBfq0av607l9IDmyl+SbCBs
+         SICl+R4eOTRn3DxDpqSVSqfCpeJkOA3xgbn56FOX7L4MsO9MaRkDkuhS4jI6MJl2fLNC
+         6uxQ==
+X-Gm-Message-State: ACrzQf22KGuXa305+IY8CqZzI37BmJLeOFauVxuYHuQCPNLcKRsq9tn/
+        e0yVzOpkw5bCMWKcEjORI3yTyF4EuglC+jaS+99uUg==
+X-Google-Smtp-Source: AMsMyM6eqXlNc1atZOkkKgiG1yV3Y78Coz+AbzCXphLyt0GPdUFcokJxxEDnXeFGnrVe0bHv3fHf9rWqZFSPgK8TTJI=
+X-Received: by 2002:a17:90b:4d07:b0:1ef:521c:f051 with SMTP id
+ mw7-20020a17090b4d0700b001ef521cf051mr4350723pjb.164.1664963290949; Wed, 05
+ Oct 2022 02:48:10 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH v5 0/7] libsas and drivers: NCQ error handling
-From:   John Garry <john.garry@huawei.com>
-To:     Niklas Cassel <Niklas.Cassel@wdc.com>
-CC:     "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "jinpu.wang@cloud.ionos.com" <jinpu.wang@cloud.ionos.com>,
-        "damien.lemoal@opensource.wdc.com" <damien.lemoal@opensource.wdc.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Linuxarm <linuxarm@huawei.com>,
-        yangxingui <yangxingui@huawei.com>,
-        yanaijie <yanaijie@huawei.com>
-References: <1664262298-239952-1-git-send-email-john.garry@huawei.com>
- <YzwvpUUftX6Ziurt@x1-carbon>
- <cfa52b91-db81-a179-76c2-8a61266c099d@huawei.com>
-In-Reply-To: <cfa52b91-db81-a179-76c2-8a61266c099d@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.48.148.227]
-X-ClientProxiedBy: lhrpeml100003.china.huawei.com (7.191.160.210) To
- lhrpeml500003.china.huawei.com (7.191.162.67)
-X-CFilter-Loop: Reflected
+References: <20221005032257.80681-1-kch@nvidia.com> <20221005032257.80681-2-kch@nvidia.com>
+ <6fee2d7a-7fd1-73ee-2911-87a4ed3e8769@opensource.wdc.com>
+In-Reply-To: <6fee2d7a-7fd1-73ee-2911-87a4ed3e8769@opensource.wdc.com>
+From:   Ulf Hansson <ulf.hansson@linaro.org>
+Date:   Wed, 5 Oct 2022 11:47:34 +0200
+Message-ID: <CAPDyKFpBpiydQn+=24CqtaH_qa3tQfN2gQSiUrHCjnLSuy4=Kg@mail.gmail.com>
+Subject: Re: [RFC PATCH 01/21] block: add and use init tagset helper
+To:     Chaitanya Kulkarni <kch@nvidia.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-omap@vger.kernel.org, linux-remoteproc@vger.kernel.org,
+        linux-mmc@vger.kernel.org, linux-mtd@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
+        linux-scsi@vger.kernel.org, axboe@kernel.dk, efremov@linux.com,
+        josef@toxicpanda.com, idryomov@gmail.com,
+        dongsheng.yang@easystack.cn, haris.iqbal@ionos.com,
+        jinpu.wang@ionos.com, mst@redhat.com, jasowang@redhat.com,
+        pbonzini@redhat.com, stefanha@redhat.com, ohad@wizery.com,
+        andersson@kernel.org, baolin.wang@linux.alibaba.com,
+        richard@nod.at, miquel.raynal@bootlin.com, vigneshr@ti.com,
+        marcan@marcan.st, sven@svenpeter.dev, alyssa@rosenzweig.io,
+        kbusch@kernel.org, hch@lst.de, sagi@grimberg.me, sth@linux.ibm.com,
+        hoeppner@linux.ibm.com, hca@linux.ibm.com, gor@linux.ibm.com,
+        agordeev@linux.ibm.com, borntraeger@linux.ibm.com,
+        svens@linux.ibm.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, hare@suse.de, bhelgaas@google.com,
+        john.garry@huawei.com, mcgrof@kernel.org,
+        christophe.jaillet@wanadoo.fr, vaibhavgupta40@gmail.com,
+        wsa+renesas@sang-engineering.com, johannes.thumshirn@wdc.com,
+        bvanassche@acm.org, ming.lei@redhat.com,
+        shinichiro.kawasaki@wdc.com, vincent.fu@samsung.com,
+        christoph.boehmwalder@linbit.com, joel@jms.id.au,
+        vincent.whitchurch@axis.com, nbd@other.debian.org,
+        ceph-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org, asahi@lists.linux.dev
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 04/10/2022 15:04, John Garry wrote:
->> Notes unrelated to this patch:
->>
->> Both before and after this series, this driver prints:
->> [  215.845053] ata21.00: exception Emask 0x0 SAct 0xfc0000 SErr 0x0 action 0x6
->> [  215.852308] ata21.00: failed command: WRITE FPDMA QUEUED
->> [  215.857801] ata21.00: cmd 61/00:00:00:3a:d3/01:00:b3:04:00/40 tag 18 ncq dma 131072 out
->>                           res 43/04:00:ff:3a:d3/00:00:b3:04:00/40 Emask 0x400 (NCQ error) <F>
->> [  215.874396] ata21.00: status: { DRDY SENSE ERR }
->> [  215.879192] ata21.00: error: { ABRT }
->> [  215.882997] ata21.00: failed command: WRITE FPDMA QUEUED
->> [  215.888479] ata21.00: cmd 61/00:00:00:3b:d3/01:00:b3:04:00/40 tag 19 ncq dma 131072 out
->>                           res 00/00:00:00:00:00/00:00:00:00:00/00 Emask 0x2 (HSM violation)
->> [  215.904814] ata21.00: failed command: WRITE FPDMA QUEUED
->> [  215.910311] ata21.00: cmd 61/00:00:00:3c:d3/01:00:b3:04:00/40 tag 20 ncq dma 131072 out
->>                           res 00/00:00:00:00:00/00:00:00:00:00/00 Emask 0x2 (HSM violation)
->> [  215.932679] ata21.00: failed command: WRITE FPDMA QUEUED
->> [  215.941203] ata21.00: cmd 61/00:00:00:3d:d3/01:00:b3:04:00/40 tag 21 ncq dma 131072 out
->>                           res 00/00:00:00:00:00/00:00:00:00:00/00 Emask 0x2 (HSM violation)
->> [  215.963616] ata21.00: failed command: WRITE FPDMA QUEUED
->> [  215.972150] ata21.00: cmd 61/00:00:00:3e:d3/01:00:b3:04:00/40 tag 22 ncq dma 131072 out
->>                           res 00/00:00:00:00:00/00:00:00:00:00/00 Emask 0x2 (HSM violation)
->> [  215.994532] ata21.00: failed command: WRITE FPDMA QUEUED
->> [  216.003124] ata21.00: cmd 61/00:00:00:3f:d3/01:00:b3:04:00/40 tag 23 ncq dma 131072 out
->>                           res 00/00:00:00:00:00/00:00:00:00:00/00 Emask 0x2 (HSM violation)
->>
->> HSM (Host State Machine) violation errors.
->>
->> For the same SATA drive connected via AHCI this will instead give:
->>
->> [ 3796.944923] ata14.00: exception Emask 0x0 SAct 0x80800003 SErr 0xc0000 action 0x0
->> [ 3796.959375] ata14.00: irq_stat 0x40000008
->> [ 3796.970140] ata14: SError: { CommWake 10B8B }
->> [ 3796.981231] ata14.00: failed command: WRITE FPDMA QUEUED
->> [ 3796.993237] ata14.00: cmd 61/00:08:00:7e:73/02:00:8e:08:00/40 tag 1 ncq dma 262144 out
->>                           res 43/04:01:00:00:00/00:00:00:00:00/40 Emask 0x1 (device error)
->> [ 3797.017984] ata14.00: status: { DRDY SENSE ERR }
->> [ 3797.026833] ata14.00: error: { ABRT }
->> [ 3797.034664] ata14.00: failed command: WRITE FPDMA QUEUED
->> [ 3797.043015] ata14.00: cmd 61/00:b8:00:60:73/0a:00:8e:08:00/40 tag 23 ncq dma 1310720 out
->>                           res 43/04:00:df:67:73/00:00:8e:08:00/40 Emask 0x400 (NCQ error) <F>
->> [ 3797.065224] ata14.00: status: { DRDY SENSE ERR }
->> [ 3797.072914] ata14.00: error: { ABRT }
->> [ 3797.079598] ata14.00: failed command: WRITE FPDMA QUEUED
->> [ 3797.087920] ata14.00: cmd 61/00:f8:00:6a:73/0a:00:8e:08:00/40 tag 31 ncq dma 1310720 out
->>                           res 43/04:00:00:00:00/00:00:00:00:00/00 Emask 0x1 (device error)
->> [ 3797.109800] ata14.00: status: { DRDY SENSE ERR }
->> [ 3797.117451] ata14.00: error: { ABRT }
->>
->> device error errors.
->>
->>
->> Except for the I/O that caused the NCQ error, the remaining outstanding I/Os,
->> regardless if they were aborted by the drive, as a side-effect of reading the
->> NCQ error log (see 13.7.4 Queued Error Log (10h) in SATA 3.5a spec),
->> or if they were aborted by the host (by sas_ata_device_link_abort()),
->> I don't think it is correct to report these as HSM violation errors.
->>
->> HSM violation errors are e.g. when you try to issue a command to a drive
->> that has ATA_BUSY bit set.
-> We had a similar issue for hisi_sas and solved in patch 4/7: don't set
-> ATA_ERR in the fis for those IO which complete with error, but abort the
-> IO via sas_abort_task().
-> 
-> For pm80xx the IO is either rejected (actually completes with rejection)
-> or is aborted via internal abort command. Maybe we can do similar for
-> pm8001 as we allow the IO to complete in both cases with error. I'll check.
+On Wed, 5 Oct 2022 at 07:11, Damien Le Moal
+<damien.lemoal@opensource.wdc.com> wrote:
+>
+> On 10/5/22 12:22, Chaitanya Kulkarni wrote:
+> > Add and use the helper to initialize the common fields of the tag_set
+> > such as blk_mq_ops, number of h/w queues, queue depth, command size,
+> > numa_node, timeout, BLK_MQ_F_XXX flags, driver data. This initialization
+> > is spread all over the block drivers. This avoids the code repetation of
+> > the inialization code of the tag set in current block drivers and any
+>
+> s/inialization/initialization
+> s/repetation/repetition
+>
+> > future ones.
+> >
+> > Signed-off-by: Chaitanya Kulkarni <kch@nvidia.com>
+> > ---
+> >  block/blk-mq.c                | 20 ++++++++++++++++++++
+> >  drivers/block/null_blk/main.c | 10 +++-------
+> >  include/linux/blk-mq.h        |  5 +++++
+> >  3 files changed, 28 insertions(+), 7 deletions(-)
+> >
+> > diff --git a/block/blk-mq.c b/block/blk-mq.c
+> > index 8070b6c10e8d..e3a8dd81bbe2 100644
+> > --- a/block/blk-mq.c
+> > +++ b/block/blk-mq.c
+> > @@ -4341,6 +4341,26 @@ static int blk_mq_alloc_tag_set_tags(struct blk_mq_tag_set *set,
+> >       return blk_mq_realloc_tag_set_tags(set, 0, new_nr_hw_queues);
+> >  }
+> >
+> > +void blk_mq_init_tag_set(struct blk_mq_tag_set *set,
+> > +             const struct blk_mq_ops *ops, unsigned int nr_hw_queues,
+> > +             unsigned int queue_depth, unsigned int cmd_size, int numa_node,
+> > +             unsigned int timeout, unsigned int flags, void *driver_data)
+>
+> That is an awful lot of arguments... I would be tempted to say pack all
+> these into a struct but then that would kind of negate this patchset goal.
+> Using a function with that many arguments will be error prone, and hard to
+> review... Not a fan.
 
-Hi Niklas,
+I completely agree.
 
-Could you try a change like this on top:
+But there is also another problem going down this route. If/when we
+realize that there is another parameter needed in the blk_mq_tag_set.
+Today that's quite easy to add (assuming the parameter can be
+optional), without changing the blk_mq_init_tag_set() interface.
 
-void sas_ata_device_link_abort(struct domain_device *device, bool 
-force_reset)
-{
-	struct ata_port *ap = device->sata_dev.ap;
-	struct ata_link *link = &ap->link;
+>
+> > +{
+> > +     if (!set)
+> > +             return;
+> > +
+> > +     set->ops = ops;
+> > +     set->nr_hw_queues = nr_hw_queues;
+> > +     set->queue_depth = queue_depth;
+> > +     set->cmd_size = cmd_size;
+> > +     set->numa_node = numa_node;
+> > +     set->timeout = timeout;
+> > +     set->flags = flags;
+> > +     set->driver_data = driver_data;
+> > +}
+> > +
+>
 
-+	device->sata_dev.fis[2] = ATA_ERR | ATA_DRDY;
-+	device->sata_dev.fis[3] = 0x04;
+[...]
 
-	link->eh_info.err_mask |= AC_ERR_DEV;
-	if (force_reset)
-		link->eh_info.action |= ATA_EH_RESET;
-	ata_link_abort(link);
-}
-EXPORT_SYMBOL_GPL(sas_ata_device_link_abort);
-
-I tried it myself and it looked to work ok, except I have a problem with 
-my arm64 system in that the read log ext times-out and all TF show 
-"device error", like:
-
-[  350.257870] ata1.00: qc timeout (cmd 0x47)
-[  350.262054] pm80xx0:: mpi_sata_completion 2293: task null, freeing 
-CCB tag 2
-[  350.269128] ata1.00: Read log 0x10 page 0x00 failed, Emask 0x40
-
-[  350.281581] ata1: failed to read log page 10h (errno=-5)
-[  350.577181] ata1.00: exception Emask 0x1 SAct 0xffffffff SErr 0x0 
-action 0x6 frozen
-[  350.584836] ata1.00: failed command: READ FPDMA QUEUED
-[  350.589970] ata1.00: cmd 60/00:00:80:26:00/01:00:00:00:00/40 tag 0 
-ncq dma 131072 in
-          res 41/04:00:00:00:00/00:00:00:00:00/00 Emask 0x1 (device 
-error)
-[  350.605533] ata1.00: status: { DRDY ERR }
-[  350.609541] ata1.00: error: { ABRT }
-[  350.613115] ata1.00: failed command: READ FPDMA QUEUED
-[  350.618248] ata1.00: cmd 60/00:00:80:26:00/01:00:00:00:00/40 tag 1 
-ncq dma 131072 in
-          res 41/04:00:00:00:00/00:00:00:00:00/00 Emask 0x1 (device 
-error)
-[  350.633809] ata1.00: status: { DRDY ERR
-[  350.637813] ata1.00: error: { ABRT }
-[  350.641384] ata1.00: failed command: READ FPDMA QUEUED
-[  350.646515] ata1.00: cmd 60/00:00:80:26:00/01:00:00:00:00/40 tag 2 
-ncq dma 131072 in
-          res 41/04:00:00:00:00/00:00:00:00:00/00 Emask 0x1 (device 
-error)
-[  350.662076] ata1.00: status: { DRDY ERR
-[  350.666080] ata1.00: error: { ABRT }
-[  350.669652] ata1.00: failed command: READ FPDMA QUEUED
-[  350.674784] ata1.00: cmd 60/00:00:d8:26:00/01:00:00:00:00/40 tag 3 
-ncq dma 131072 in
-          res 41/04:00:00:00:00/00:00:00:00:00/00 Emask 0x1 (device 
-error)
-[  350.690344] ata1.00: status: { DRDY ERR
-[  350.694348] ata1.00: error: { ABRT }
-[  350.697919] ata1.00: failed command: READ FPDMA QUEUED
-[  350.703051] ata1.00: cmd 60/00:00:e0:26:00/01:00:00:00:00/40 tag 4 
-ncq dma 131072 in
-          res 41/04:00:00:00:00/00:00:00:00:00/00 Emask 0x1 (device 
-error)
-[  350.718612] ata1.00: status: { DRDY ERR
-[  350.722623] ata1.00: error: { ABRT }
-[  350.726196] ata1.00: failed command: READ FPDMA QUEUED
-[  350.731329] ata1.00: cmd 60/00:00:c8:26:00/01:00:00:00:00/40 tag 5 
-ncq dma 131072 in
-          res 41/04:00:00:00:00/00:00:00:00:00/00 Emask 0x1 (device 
-error)
-
-...
-
-
-Thanks,
-John
-
+Kind regards
+Uffe
