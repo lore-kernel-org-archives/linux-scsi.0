@@ -2,69 +2,186 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EA6EC433FE
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Oct 2022 23:47:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69D01C4332F
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Oct 2022 03:23:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229555AbiJDXrh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Oct 2022 19:47:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59086 "EHLO
+        id S229751AbiJEDXY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Oct 2022 23:23:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56154 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229582AbiJDXrg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Oct 2022 19:47:36 -0400
-Received: from mail-pg1-f181.google.com (mail-pg1-f181.google.com [209.85.215.181])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0180295B8
-        for <linux-scsi@vger.kernel.org>; Tue,  4 Oct 2022 16:47:34 -0700 (PDT)
-Received: by mail-pg1-f181.google.com with SMTP id s206so13965050pgs.3
-        for <linux-scsi@vger.kernel.org>; Tue, 04 Oct 2022 16:47:33 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date;
-        bh=K4bvHpuVcqZ10ZZ3PYid45qPQGGLjHZW1yXv/nu1Hps=;
-        b=piD1oDaKPi6Tm5Y75uHL3r8Ya8U+8K1QNx9JQDnQ55QFXiopByCjuOL0rf0lWrGjUr
-         vQ+Xz6pakoI9ptPc8Mee6mMTL9RaF0gawQwWn6xCnV/aRzcbLJrWyqrUQkDbE7unf020
-         eITcB5AcOSrR9eanULWiHNCNHGqSBkg1PGpErXnmBsGDXm4y6f7SkofEzlJ6fL+6L5uw
-         CTh3hqNbKIvVDBla0b/HasHQRJF4OKiwAzNc4uoUKfmON4oTLy3EiHxt2hKoiCroa80z
-         N1IHSbiUmy2GL9mohh7rXU6S9vLmsh75Y+g200koyNIqZr33CZN6ejd3j5nV+4otX2aA
-         8o/A==
-X-Gm-Message-State: ACrzQf0ZdNSuNCI1V9KQk5rs8AROqX9izU1a/SHsNkI0+gc7r8vzFs0C
-        Xpg2pJ+q5p0fdZ1CnOW1Pp8=
-X-Google-Smtp-Source: AMsMyM559W7hv1uBOBTWfvG4kBKytyyunazNyFTHWy2MSyR1XfloUdbISe5BDfrGez1WcbPMpQYbyw==
-X-Received: by 2002:a63:5547:0:b0:456:c63b:7139 with SMTP id f7-20020a635547000000b00456c63b7139mr3292263pgm.179.1664927253342;
-        Tue, 04 Oct 2022 16:47:33 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:b6b5:f763:ff03:8283? ([2620:15c:211:201:b6b5:f763:ff03:8283])
-        by smtp.gmail.com with ESMTPSA id z29-20020a634c1d000000b0040caab35e5bsm8938614pga.89.2022.10.04.16.47.31
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 04 Oct 2022 16:47:32 -0700 (PDT)
-Message-ID: <8284352c-985d-fece-ce06-4855f6b42bdd@acm.org>
-Date:   Tue, 4 Oct 2022 16:47:30 -0700
+        with ESMTP id S229530AbiJEDXT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Oct 2022 23:23:19 -0400
+Received: from NAM10-BN7-obe.outbound.protection.outlook.com (mail-bn7nam10on2047.outbound.protection.outlook.com [40.107.92.47])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6AAB719BF;
+        Tue,  4 Oct 2022 20:23:18 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=EAnP4nz11d924n5Ea6rkfbTTWZkOcBMR/h7ZkQJ1oHltLxDJaeH/Iez5BS7J79qQ2VcFFwKYgIGmCiYXjOb76HvhXSy2EaAQdXrVxivVboL/NYUst26hybzA8F8XTgXAFdbEcsSJMarnV5z3mvpNv6/2qB++DsmW8q+cjiY5mYdZRhiZtGSYFd3lR+A2iFGBWA/Ij8OWKnFTulTcMU+8KAKsLHdCYRDn4ExerGOo0Cz+trXQUARNz81ypcs8fpGxbeso3FeGPHnm9ypVjlCvgTaHFSZVumbmAN2zpDwlny92lM3GEdkISUQHh9Y61BlOgXREHFsrbzCGQ5y2BJTFOg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=YrgGetB/TLOjMS3vQknhv/SINTgMiPk7KqpkdclIcUs=;
+ b=Xdz1XM9XgHs5tzhGy60K1VMGf7QyJWaVPAJhDsbnmp5W/XTYb8Bi8f8nb1UQ9e1IMXiPYTTYFi+RlZ3dI4B1Y65Z0QQl37FH3c1C70lf2zoeoThJTzvL5pDhglUPoxYHgg6oC5ZPXVTzZ7fI8eRAMYUPXqTcCbnYF3bAL97S2ILwtM1l2jXOjFCoIw/7vNwUKgtUw5eRwCmMqR8F6tJ6kWA6QAr1QEgGdFMtX9EEuzAUXyUW/5oQ5M9j8wHfEwj0ontzAsr9fQnTHG8LgEDXWpyAJq2jM6WEwKhEfCq2J7ZwlH6dHyJLv/NzzbtfG8MmACbtqAtD5iuTsSetceIsug==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.117.161) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=YrgGetB/TLOjMS3vQknhv/SINTgMiPk7KqpkdclIcUs=;
+ b=iW3jsrpo9QXt4SmTdh80KE4thGPDh8fejFIagobwIQSERcoWvLGWdLcnqwJhThlAROWm8mvRxQA47EVCi2eq5eIqa5WE0yHiZwRofiP/64oBAIcTBy9/FMHs0x/UhCYe76qnqD/RIxdsnzqz50SrhQQ5XHpX7WIjLrthz2kNv59+A3mkKtYd3h3MQR4rPdtfo4TK1QbuPLEW/MLJ9voFSb02DML6kB8S+aqt7c7YeYtZ6sH/cLX22f9gL/69KTjRMugSIK3H29HTjUPGFQd45Kix5z6Vce1d/4Amspy1WZOvPhvdO4CpC2PD1IOhhn2ZmJ7Dkg4nMNlIVcZcz5zeig==
+Received: from BN8PR04CA0001.namprd04.prod.outlook.com (2603:10b6:408:70::14)
+ by DM6PR12MB4863.namprd12.prod.outlook.com (2603:10b6:5:1b9::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5676.24; Wed, 5 Oct
+ 2022 03:23:16 +0000
+Received: from BN8NAM11FT062.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:408:70:cafe::c8) by BN8PR04CA0001.outlook.office365.com
+ (2603:10b6:408:70::14) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5676.26 via Frontend
+ Transport; Wed, 5 Oct 2022 03:23:16 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.161)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.161) by
+ BN8NAM11FT062.mail.protection.outlook.com (10.13.177.34) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.5709.10 via Frontend Transport; Wed, 5 Oct 2022 03:23:16 +0000
+Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
+ (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.26; Tue, 4 Oct 2022
+ 20:23:08 -0700
+Received: from dev.nvidia.com (10.126.230.35) by rnnvmail201.nvidia.com
+ (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.29; Tue, 4 Oct 2022
+ 20:23:05 -0700
+From:   Chaitanya Kulkarni <kch@nvidia.com>
+To:     <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>, <linux-remoteproc@vger.kernel.org>,
+        <linux-mmc@vger.kernel.org>, <linux-mtd@lists.infradead.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-nvme@lists.infradead.org>, <linux-s390@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>
+CC:     <axboe@kernel.dk>, <efremov@linux.com>, <josef@toxicpanda.com>,
+        <idryomov@gmail.com>, <dongsheng.yang@easystack.cn>,
+        <haris.iqbal@ionos.com>, <jinpu.wang@ionos.com>, <mst@redhat.com>,
+        <jasowang@redhat.com>, <pbonzini@redhat.com>,
+        <stefanha@redhat.com>, <ohad@wizery.com>, <andersson@kernel.org>,
+        <baolin.wang@linux.alibaba.com>, <ulf.hansson@linaro.org>,
+        <richard@nod.at>, <miquel.raynal@bootlin.com>, <vigneshr@ti.com>,
+        <marcan@marcan.st>, <sven@svenpeter.dev>, <alyssa@rosenzweig.io>,
+        <kbusch@kernel.org>, <hch@lst.de>, <sagi@grimberg.me>,
+        <sth@linux.ibm.com>, <hoeppner@linux.ibm.com>, <hca@linux.ibm.com>,
+        <gor@linux.ibm.com>, <agordeev@linux.ibm.com>,
+        <borntraeger@linux.ibm.com>, <svens@linux.ibm.com>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>, <hare@suse.de>,
+        <kch@nvidia.com>, <bhelgaas@google.com>, <john.garry@huawei.com>,
+        <mcgrof@kernel.org>, <christophe.jaillet@wanadoo.fr>,
+        <vaibhavgupta40@gmail.com>, <wsa+renesas@sang-engineering.com>,
+        <damien.lemoal@opensource.wdc.com>, <johannes.thumshirn@wdc.com>,
+        <bvanassche@acm.org>, <ming.lei@redhat.com>,
+        <shinichiro.kawasaki@wdc.com>, <vincent.fu@samsung.com>,
+        <christoph.boehmwalder@linbit.com>, <joel@jms.id.au>,
+        <vincent.whitchurch@axis.com>, <nbd@other.debian.org>,
+        <ceph-devel@vger.kernel.org>,
+        <virtualization@lists.linux-foundation.org>,
+        <asahi@lists.linux.dev>
+Subject: [RFC PATCH 00/21] block: add and use init tagset helper
+Date:   Tue, 4 Oct 2022 20:22:36 -0700
+Message-ID: <20221005032257.80681-1-kch@nvidia.com>
+X-Mailer: git-send-email 2.29.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.13.0
-Subject: Re: [PATCH v3 22/35] scsi: Have scsi-ml retry read_capacity_16 errors
-Content-Language: en-US
-To:     Mike Christie <michael.christie@oracle.com>, mwilck@suse.com,
-        hch@lst.de, martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        james.bottomley@hansenpartnership.com
-References: <20221003175321.8040-1-michael.christie@oracle.com>
- <20221003175321.8040-23-michael.christie@oracle.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20221003175321.8040-23-michael.christie@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.126.230.35]
+X-ClientProxiedBy: rnnvmail203.nvidia.com (10.129.68.9) To
+ rnnvmail201.nvidia.com (10.129.68.8)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BN8NAM11FT062:EE_|DM6PR12MB4863:EE_
+X-MS-Office365-Filtering-Correlation-Id: fce348ec-947a-4641-efb6-08daa680f183
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 9FlJpRPPWo/UczTdTCd5SyHamL/pqbpEL/Ib+DcXgEmnGmZ9HEQsxCsQSSaqCQcTZjccDkXjj6u6yhsKWFHSidDTY7fUyBz2KqAnbklpfj1swJc7PjxXCgzNELZVysLo4szooec2ZY8lzfdkSE6HtdY+DtVcTMVjT8/jV+DKt5E6leNDKjVvSwh8EQ+Et7lmmqiT5dBceOsWFEahHF9xDSoPAe8cAus+8SNEDsQM/6NnzlmMJLTqU3TNS2er/HUj3CSYob4ij3EhgCsbqwKE9P/opr4klhGiEvSjB3DqbxFBhoQWFGh3JkLy/bkJIE9ynCNZz144NHMITmR5CHCTeusxffP0uhFo7kUdiQBTkgxqKecyfPQnuhlX/bH6m9Szl15GpW7txUmH/1j62W3KaE9uc5ouAyMtQlwD5YGw+snHXJjYVq7VluiZGSPIx5lNKrFTs9brAjh+oHAqB/n511BLraQb8GC6Uxu2tRGuunDb47VIS8P+D/hbiblfD/8mXucfE4lBfj0SIMlLUoPlKp0fkZ4FwsXtU2X1Gkn+mFFL+PnaG2Bvhazs80UG8ITqBnJHvmm8BR0hiA5I9yOwQqNN/La6BsPmng/IjQ0jXZDQtHd5tXAwu7XpWpAsOHNrnNQejJI1nT3M/dr+3H7VZ902lZCeV4RpYrjbSktdNLt+0q4Qgde1mX3VLGrvRqUzqyMBNIPAnRd4/ehBsgzMWgL1bZOGZzvOa9nJKokVBQEo8fw8n1c1PismK7nqoMDbHtoaNR1b+Woq9GxppbdQ+Uk3j/bTNKU/oQZ46LetuLMSQ2+S8Aek1LfTGwDQtcXmq39TIGsaevKwgzMGZjrTtWGxjjuYVEglp3ZjLIPlBV0=
+X-Forefront-Antispam-Report: CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230022)(4636009)(346002)(376002)(39860400002)(136003)(396003)(451199015)(46966006)(40470700004)(36840700001)(7696005)(41300700001)(36756003)(6666004)(82740400003)(5660300002)(7366002)(7406005)(7416002)(8936002)(26005)(8676002)(316002)(70206006)(70586007)(4326008)(336012)(40480700001)(83380400001)(47076005)(426003)(82310400005)(16526019)(186003)(1076003)(921005)(356005)(7636003)(40460700003)(2906002)(2616005)(36860700001)(478600001)(110136005)(54906003)(21314003)(2101003)(83996005);DIR:OUT;SFP:1101;
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Oct 2022 03:23:16.2764
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: fce348ec-947a-4641-efb6-08daa680f183
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT062.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB4863
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/3/22 10:53, Mike Christie wrote:
-> +	memset(cmd, 0, 16);
-> +	cmd[0] = SERVICE_ACTION_IN_16;
-> +	cmd[1] = SAI_READ_CAPACITY_16;
-> +	cmd[13] = RC16_LEN;
+Hi,
 
-Can the cmd[] declaration be changed into a static const array declaration?
+Add and use the helper to initialize the common fields of the tag_set
+such as blk_mq_ops, number of h/w queues, queue depth, command size,
+numa_node, timeout, BLK_MQ_F_XXX flags, driver data. This initialization
+is spread all over the block drivers. This avoids repetation of
+inialization code of the tag set in current block drivers and any future
+ones.
 
-Thanks,
+P.S. I'm aware of the EXPORT_SYMBOL_GPL() checkpatch warn just to make
+get some feedback to so I can remove the RFC tag.
 
-Bart.
+-ck
+
+Chaitanya Kulkarni (21):
+  block: add and use init tagset helper
+  loop: use lib tagset init helper
+  nbd: use lib tagset init helper
+  rnbd: use lib tagset init helper
+  bsg-lib: use lib tagset init helper
+  rnbd-clt: use lib tagset init helper
+  virtio-blk: use lib tagset init helper
+  scsi: use lib tagset init helper
+  block: use lib tagset init helper
+  amiflop: use lib tagset init helper
+  floppy: use lib tagset init helper
+  mtip32xx: use lib tagset init helper
+  z3ram: use lib tagset init helper
+  scm_blk: use lib tagset init helper
+  ubi: use lib tagset init helper
+  mmc: core: use lib tagset init helper
+  dasd: use lib tagset init helper
+  nvme-core: use lib tagset init helper for I/O q
+  nvme-core: use lib tagset init helper for adminq
+  nvme-apple: use lib tagset init helper
+  nvme-pci: use lib tagset init helper
+
+ block/blk-mq.c                    | 27 ++++++++++++++++++++++-----
+ block/bsg-lib.c                   |  9 +++------
+ drivers/block/amiflop.c           |  8 +++-----
+ drivers/block/floppy.c            |  7 ++-----
+ drivers/block/loop.c              | 12 ++++--------
+ drivers/block/mtip32xx/mtip32xx.c | 13 ++++---------
+ drivers/block/nbd.c               | 11 +++--------
+ drivers/block/null_blk/main.c     | 10 +++-------
+ drivers/block/rbd.c               | 11 +++++------
+ drivers/block/rnbd/rnbd-clt.c     | 25 +++++++++++--------------
+ drivers/block/virtio_blk.c        | 14 +++++---------
+ drivers/block/z2ram.c             |  7 ++-----
+ drivers/mmc/core/queue.c          |  9 +++------
+ drivers/mtd/ubi/block.c           | 11 +++--------
+ drivers/nvme/host/apple.c         | 25 ++++++++-----------------
+ drivers/nvme/host/core.c          | 21 +++++----------------
+ drivers/nvme/host/pci.c           | 25 +++++++------------------
+ drivers/s390/block/dasd_genhd.c   |  9 +++------
+ drivers/s390/block/scm_blk.c      | 10 +++-------
+ drivers/scsi/scsi_lib.c           | 13 +++++--------
+ include/linux/blk-mq.h            |  5 +++++
+ 21 files changed, 109 insertions(+), 173 deletions(-)
+
+-- 
+2.29.0
+
