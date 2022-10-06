@@ -2,171 +2,248 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26FAAC433FE
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Oct 2022 11:14:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16222C4321E
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Oct 2022 13:01:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230502AbiJFLOF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 Oct 2022 07:14:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45934 "EHLO
+        id S231330AbiJFNBv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 6 Oct 2022 09:01:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43884 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230089AbiJFLN5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Oct 2022 07:13:57 -0400
-Received: from FRA01-PR2-obe.outbound.protection.outlook.com (mail-eopbgr120052.outbound.protection.outlook.com [40.107.12.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0237A447;
-        Thu,  6 Oct 2022 04:13:55 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=dPlhJWmLKGA33cZxhDERX+goIahfnnMF5hcvVWZl0UQSbtk5Sko0FtzJ4Q5yrUe0ulMVa2yGWHAOPNLu7inLhSt5z5rWKbB9/FqSQRQWw+ebu8EJ4SAHXaXcPRLJG121dt1l5lEE55P+DCeUkryUukvnz2QwVg3+Hb/Ue5BWMwRkWp3hXSoN5EeX6+VJgZ/F3BxjzjFcz1Wh8QMiczvNYNSlF9tl3rJCjBXuTsdDpDDvYdtKImXpOwqyevMCqksmw587pcp07Sjwjh+Kl41SNuedksqd0xLOPHV4T7IkXnaNgDDBZysn7z7zNLVnbiy6FMz0eIaPiuT+NmAt93ewFw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=aA2pjTt5+iGpDfPTdBQRDAEOpVzSFlwzo/B8XyhGDgg=;
- b=LA/teqsAeYszC395906Uaa0NbqSPxAUSqqkVrLykC5yZov2LVVgG/fDRGZoezA/50psZ2cZW1ggjp7lpIsiMP3GyE39xkD8IUnyAtYXVskgY5laCw3vjmIvht5NDfsMKpPDYvHfVF2cVcMrKO6ID6fvfzB5YH/eFC6eCFOsLv/C6tc62VDm6SiTB8fRtrKvqS0F4rVRhgNPHgHGAo84SqHMwRcwSGvx4UlIIfO4B1tJJZN5qGpieCmxI9LKm13csbPGr9mFYj0PLG0axVoBWuQI3xJg0L32+QD4QvDOjqgIDi1jFSxqWAnMGaC9SjKd5NGHXhqs6gV0Eyz9rc43aMQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=csgroup.eu; dmarc=pass action=none header.from=csgroup.eu;
- dkim=pass header.d=csgroup.eu; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=csgroup.eu;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=aA2pjTt5+iGpDfPTdBQRDAEOpVzSFlwzo/B8XyhGDgg=;
- b=FvFEik8etN+mrz55tSYj5rQfbbtnX5UnnSyYbQbbuXLiSPZT2bj8ckxzL3csojXYqmZ1yadCbf46NdMn0rSQoSQiMBxIybvwoDhm+ugPcKw0qcWecvX8PyqCHrCqWu44LeQDRIrU+DyAVx2LfgAKT1VXHJ6qVgDUHYNbFWhoeaK4EiXUypGyIN30x0v7vG5s1B+tGoplHZiOM20N1densY9B5BpHdo4CAG/jAsnVIzxcGIq81cSQupt8MEhXzmbBKsiScZeWi/mmL04iLXEfF4LnT0xGpp8e8A2Sl/yYuoPA30uTOXfYqQhD/fY593M9OXxYaPkphdYX2Z4P79IxOw==
-Received: from MRZP264MB2988.FRAP264.PROD.OUTLOOK.COM (2603:10a6:501:31::15)
- by PR1P264MB1439.FRAP264.PROD.OUTLOOK.COM (2603:10a6:102:1e::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5676.34; Thu, 6 Oct
- 2022 11:13:52 +0000
-Received: from MRZP264MB2988.FRAP264.PROD.OUTLOOK.COM
- ([fe80::c854:380d:c901:45af]) by MRZP264MB2988.FRAP264.PROD.OUTLOOK.COM
- ([fe80::c854:380d:c901:45af%5]) with mapi id 15.20.5676.036; Thu, 6 Oct 2022
- 11:13:52 +0000
-From:   Christophe Leroy <christophe.leroy@csgroup.eu>
-To:     Finn Thain <fthain@linux-m68k.org>
-CC:     Michael Schmitz <schmitzmic@gmail.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: Re: [PATCH] scsi: mac_scsi: Replace NO_IRQ by 0
-Thread-Topic: [PATCH] scsi: mac_scsi: Replace NO_IRQ by 0
-Thread-Index: AQHY2UT/Y9mxrmgzokKDa+p4K7gASq4BGIwAgAAeWAA=
-Date:   Thu, 6 Oct 2022 11:13:52 +0000
-Message-ID: <009bf4b2-ab5d-b583-20bd-8eee397e251a@csgroup.eu>
-References: <f11593e75ba2e18e3b76989255cbb2e53a0213b4.1665034244.git.christophe.leroy@csgroup.eu>
- <5fb75ac2-678a-dd6e-2e68-7485b2d2ce5f@linux-m68k.org>
-In-Reply-To: <5fb75ac2-678a-dd6e-2e68-7485b2d2ce5f@linux-m68k.org>
-Accept-Language: fr-FR, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-user-agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.1
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=csgroup.eu;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: MRZP264MB2988:EE_|PR1P264MB1439:EE_
-x-ms-office365-filtering-correlation-id: 97c0e79a-b435-4333-1423-08daa78bda25
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: g55z4ekSpH1RM3LcZJsp3F1KVkJmCo1/vRb7JEG1x1E6sIkvqRoogGjL3tudynxclxTin74s7n06fauXKI2uov6LLXMdozFGuiJ1Jh+KGlNR+xA8xMPjekWDUSz+Wf1dlXpm3DHHN5Fs0qKv9sqvNf923ggN06CEgtzJGt4UqgUdercokBqPYgqaBC48zk4cyXXOChVwpGuq3jseMCZXQgIkWCQXbR4lPR3HGTScnjZRMQiWzEf4McnxIKhJvEfUUB02/Ho3rHtxNM7Xg8EcQUunjKEWv/eLayU6wE4nln52z7bygPtMN5zlmQ8CfS6TvkmFdt4V2LPnwDMI3kgidsN7+efek3reUyE83cObo29FPVjXSRKhmygtSPSf6WhPxanB9O8Fa2ZnimyPe+9GgCSKgKpf6PrhTbVAa9L+SdWB9a/XWDldTVPcr2sYEbcuXb6wcgw+xPayY02jsMdhb14y8m7lLSCxBtft2ttKkRaq6u2GhB3h5RBcQQXfxZBOCTXOp4jcHFUCo9VuaQeEr4W/UnUNLVQOCgJD7QroOnuSZ2MBr3jaDcpG4OA+i/1xkqBdJREkkBUR7pL19Vv1R4h+ILnBfHQVV8lnuiGwlcNcF3X7XtmHDXx2S31gMSKIjN12rvy+BYnbdtrDbhIeqWuoQpuadrblImXkc/Bslr0kQlf3+ZoUTOJok/7h46ELbwQtBok6Y1GvOXw+AcWUwQ2b+jGHjX/4wQ6vPzSSW1ekt/HOBRX+CQNhAGl+N4cIqLGSyOMcOmMh42wrqSj4/de1Z1cKXnmXKbem2+MNug5s21wbVARrcz9C6lHqu1AnNXAQDzD5AAPGLRxtGEuFMiSy44lrQ7oq5gW6d4Aov3g=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MRZP264MB2988.FRAP264.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230022)(4636009)(39860400002)(366004)(396003)(346002)(376002)(136003)(451199015)(8676002)(83380400001)(6916009)(316002)(38070700005)(86362001)(4326008)(31696002)(38100700002)(122000001)(76116006)(6486002)(2906002)(71200400001)(91956017)(8936002)(41300700001)(44832011)(66946007)(66556008)(64756008)(5660300002)(66446008)(6512007)(66476007)(186003)(54906003)(66574015)(2616005)(478600001)(966005)(26005)(6506007)(31686004)(36756003)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?YjR5L1V2TFJITjdkaUcraHBTVHhPb04rMEJRekdyenc3dHlyZGxMUDdBbEFQ?=
- =?utf-8?B?SFJreVZIbUt3T0Z6OThQaEFNY3k1ci9EZTJmTW5LRnhoSUZkRTBQalFEc09I?=
- =?utf-8?B?bllHZWR5NjErKytlMitqd0x5Y1JrYkJORW9lQXpLV0F3RUNncTIyL3lUNWND?=
- =?utf-8?B?Nm90VlhLRW9BQ2NWSm5KdnVpWmVveUQ3WjlFVVdvK0NNWVByRUJONUlGRlRa?=
- =?utf-8?B?YVYweWZCV21tZjI5ZjlnNXZ3bXFhMzh2VzFyc3RjRjVzZGNRcGh6clExNXdQ?=
- =?utf-8?B?OWpyVjI2Z0RpUWU3WDNTK212SGxFdUZGaWY5YXZQczF1cTZacXhkemZaQzht?=
- =?utf-8?B?aWY2cWJNQXRLRWF0WWFaMTdvRjJvQjZvb3BxaWUwUUUxV2xWdHVTMGduTnBi?=
- =?utf-8?B?bjIxWVJFSS9aSENzQnVScUVwNWl0YlFHZ1ZJdktZN3YzdU1DSUNYSU5OOHBH?=
- =?utf-8?B?WmxScmNqTWN1Q1ZBRkl4QmJobVJ3ckZ3STNld3VQUVFsUFdvbUlWYjA1Snlx?=
- =?utf-8?B?dEJKRHRHQmpBbU5jMEVlc0JrSzlhTXBsUnE0dStFU1UxNVllUjNEczhiQTIz?=
- =?utf-8?B?Y1R3cTdsenZWcEZpdGllOGxrbGQrZmVqbkthamptNmU5UVBiNWlwa3djeVFs?=
- =?utf-8?B?Y211WDhyQmRqNVdkZTJ2NzhHcEE4UU40dXZNSzNkVUNKcVpKNzZjNmMxeDNP?=
- =?utf-8?B?NG8zSERqOEN1QVF5clJPbngyM0t3VWRtWHZ1blMvenY5NFVsQ1hHNkZzQ2JV?=
- =?utf-8?B?ZmMrc3NVYzdHZThBS3pLMDNwK1dScWVnT0g1bjVzMG9lV1FWSUdMeWpYWVJL?=
- =?utf-8?B?djUyQlJnbHRlR3pNUFFaSUNZLzBwcnJGS0RyTmg0SFF1cDBQa3laS2FCOHZ0?=
- =?utf-8?B?eHh6SkdSbjdyQVFzeElYckdWY3hoSkMxM3lRVVNJWUVJT2llcXFEejJRaUFE?=
- =?utf-8?B?Qmw1WTE1c0ZSeDA5Z1JGeHF1T01oNXA0ck1zOW1DSDJnejlmdmdOMTVWckNO?=
- =?utf-8?B?Q2VxbzBJWmhJeENOL1g3WFJWSmQ2dktuZ0Zmb2ZHRGFtaGMvMWhmRGZkRnpF?=
- =?utf-8?B?N2R2RVFaZ01za3NQNndlM24zMkR4dGZkUTM5UVB1UmR3Yzk2dWtTaEdLa2cx?=
- =?utf-8?B?N0h0bHRrZkhUY1dMSmNSRmJ5eFlSQzFRSHZxNUJLdU90WTNwYVVvdTVnZWFI?=
- =?utf-8?B?dnFtS3Q5WEo3M2liNkRQQWtvcGV4aDVJSXN4c2hqNHIzcDU1dmhYVE5HQW9R?=
- =?utf-8?B?TGc3RERXdkc1VmI2NVpvNkRERmdEN0pKQXNlQnV4amZwRngvUi9PS0tvcmlT?=
- =?utf-8?B?Qk9MVWh3ME1HRzBnemdqQ2RwdFdCemNxNXM4TW9yamtGZjJHd05pRXFqU2F1?=
- =?utf-8?B?djZ2eDJPakNpTUZ2b3VtQ2hMTHcyQVcvSGllaWllY2JBZlhFUGwwbHFFcy85?=
- =?utf-8?B?SFNxNGpLNFZxUENFT05nMk1Zd204TFhhV2hlMWVQSi9ZYVRVRyszTTBoVkR2?=
- =?utf-8?B?UXQ0TzlNMzNUb3NuTUNndURjUy8wNFBnTko0MXlYcEVTUm0xTGZua0dQUHds?=
- =?utf-8?B?MXhRSTY3TVBSdHdteUg0OTFXMnpOQ0Vtai9kQmVGZkpvSVI5RTB2OGZraytp?=
- =?utf-8?B?NnhRaDErTWJoQlJncDdPUUJVbGxVclZpNXlzWkgxZzRac2toWnVTOU9yc3dt?=
- =?utf-8?B?SVAyMzZnY3JNTnpqRThDMzh1UUdQTG9sUCs1QldoeGtjeUVwUk1tNkxQT3RR?=
- =?utf-8?B?NkdsWFFZTDJzaDBESnBDbERKdzQwdjFxdFhpbmszQWdhRDJFMGlRVzE2YXVQ?=
- =?utf-8?B?MGRrVU1tbi9FRTdvcnVzcGxkdm5yTlJkQzdKWVVCL1plYm9qNG53QjhDUWtZ?=
- =?utf-8?B?RnZxQkpYZlVUZ3h6RkY5YkdTR3BieUZ5WFBVb2tRNGNORVFJNkliRlhHM1lL?=
- =?utf-8?B?N2pZVUZaVlRWVy95Y1dmWW1ZWkpVcm12UHRRdjh4V204TWZaUjduR0s4Z1dM?=
- =?utf-8?B?c09mYUFZTi9waHFtZllxZkFudzlqNlowS0VLMGxadlhuMkQvTHZoTmZlaEZM?=
- =?utf-8?B?SXhiejFTOVRxYklmOTZXSnJhRTlDeW1zNlkwVHRUY1lJZ3hjZGpSZG9ielpL?=
- =?utf-8?B?MFk5NGpoRkxRMVNaeE1ReEVmUkZHeFprWGFpREcwd3puamwyenc1TnY0T011?=
- =?utf-8?Q?MBWEd75oNXZogCknGxmdILE=3D?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <A0438347B5017D458A1FAF2D41E66BE7@FRAP264.PROD.OUTLOOK.COM>
-Content-Transfer-Encoding: base64
+        with ESMTP id S230133AbiJFNBn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Oct 2022 09:01:43 -0400
+Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2C8E8A1FC;
+        Thu,  6 Oct 2022 06:01:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1665061302; x=1696597302;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=Ru6CnBvVhIEhYJCAeuuxpRt9HHeJLOxAuoa9BjBuh8k=;
+  b=AGWKWrAmNTte351h2k1feYl2fEi8rMwITVCJk7pNUXa1Ng0fQ3b2azOq
+   uKuvJLxK0mA9Tqu3UQrxcvZhNBZH7+ufyXr/eCl51aK2E+6alzDUNMpev
+   Nal/AmQePVXxf51aw66W9WRCAYm+XU/TtJLHLlzK0fLBMpvOkNSKnYU6a
+   G0RPB2YNDasi333P00LsC+HLiCjUDiLmBkQrJ9Dt5KAHtZ7QeMOcScwI0
+   yVVxu3xrA0z8zp+mB6pCuwFd+t1IPnDGoJrgOtk/mfFAE1KbrDX96OsuA
+   Q6dzk7SPLhjyK1/yFBt+FIYuNforlaW4X0SnFFSBR/uzfXEGd3cKuEo3f
+   g==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10491"; a="283804515"
+X-IronPort-AV: E=Sophos;i="5.95,163,1661842800"; 
+   d="scan'208";a="283804515"
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Oct 2022 06:01:41 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6500,9779,10491"; a="767139765"
+X-IronPort-AV: E=Sophos;i="5.95,163,1661842800"; 
+   d="scan'208";a="767139765"
+Received: from smile.fi.intel.com ([10.237.72.54])
+  by fmsmga001.fm.intel.com with ESMTP; 06 Oct 2022 06:01:22 -0700
+Received: from andy by smile.fi.intel.com with local (Exim 4.96)
+        (envelope-from <andriy.shevchenko@linux.intel.com>)
+        id 1ogQUx-0039Oq-2J;
+        Thu, 06 Oct 2022 16:01:11 +0300
+Date:   Thu, 6 Oct 2022 16:01:11 +0300
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     "Jason A. Donenfeld" <Jason@zx2c4.com>
+Cc:     Jan Kara <jack@suse.cz>, Andrew Lunn <andrew@lunn.ch>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        dri-devel@lists.freedesktop.org,
+        Andrii Nakryiko <andrii@kernel.org>,
+        Hans Verkuil <hverkuil@xs4all.nl>, linux-sctp@vger.kernel.org,
+        "Md . Haris Iqbal" <haris.iqbal@ionos.com>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Andy Gospodarek <andy@greyhouse.net>,
+        Sergey Matyukevich <geomatsi@gmail.com>,
+        Rohit Maheshwari <rohitm@chelsio.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        ceph-devel@vger.kernel.org,
+        Christophe Leroy <christophe.leroy@csgroup.eu>,
+        Jozsef Kadlecsik <kadlec@netfilter.org>,
+        Nilesh Javali <njavali@marvell.com>,
+        Jean-Paul Roubelat <jpr@f6fbb.org>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        Jay Vosburgh <j.vosburgh@gmail.com>,
+        Potnuri Bharat Teja <bharat@chelsio.com>,
+        Vinay Kumar Yadav <vinay.yadav@chelsio.com>,
+        linux-nfs@vger.kernel.org, Nicholas Piggin <npiggin@gmail.com>,
+        Igor Mitsyanko <imitsyanko@quantenna.com>,
+        Andy Lutomirski <luto@kernel.org>, linux-hams@vger.kernel.org,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        linux-raid@vger.kernel.org, Neil Horman <nhorman@tuxdriver.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-usb@vger.kernel.org,
+        Michael Chan <michael.chan@broadcom.com>,
+        linux-kernel@vger.kernel.org, Varun Prakash <varun@chelsio.com>,
+        Chuck Lever <chuck.lever@oracle.com>,
+        netfilter-devel@vger.kernel.org,
+        Masami Hiramatsu <mhiramat@kernel.org>,
+        Jiri Olsa <jolsa@kernel.org>, Jan Kara <jack@suse.com>,
+        linux-fsdevel@vger.kernel.org,
+        Lars Ellenberg <lars.ellenberg@linbit.com>,
+        linux-media@vger.kernel.org,
+        Claudiu Beznea <claudiu.beznea@microchip.com>,
+        Sharvari Harisangam <sharvari.harisangam@nxp.com>,
+        linux-fbdev@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-mmc@vger.kernel.org,
+        Dave Hansen <dave.hansen@linux.intel.com>,
+        Song Liu <song@kernel.org>, Eric Dumazet <edumazet@google.com>,
+        target-devel@vger.kernel.org, John Stultz <jstultz@google.com>,
+        Stanislav Fomichev <sdf@google.com>,
+        Gregory Greenman <gregory.greenman@intel.com>,
+        drbd-dev@lists.linbit.com, dev@openvswitch.org,
+        Leon Romanovsky <leon@kernel.org>,
+        Helge Deller <deller@gmx.de>, Hugh Dickins <hughd@google.com>,
+        James Smart <james.smart@broadcom.com>,
+        Anil S Keshavamurthy <anil.s.keshavamurthy@intel.com>,
+        Pravin B Shelar <pshelar@ovn.org>,
+        Julian Anastasov <ja@ssi.bg>, coreteam@netfilter.org,
+        Veaceslav Falico <vfalico@gmail.com>,
+        Yonghong Song <yhs@fb.com>,
+        Namjae Jeon <linkinjeon@kernel.org>,
+        linux-crypto@vger.kernel.org,
+        Santosh Shilimkar <santosh.shilimkar@oracle.com>,
+        Ganapathi Bhat <ganapathi017@gmail.com>,
+        linux-actions@lists.infradead.org,
+        Simon Horman <horms@verge.net.au>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+        Hao Luo <haoluo@google.com>, Theodore Ts'o <tytso@mit.edu>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
+        Florian Westphal <fw@strlen.de>,
+        Andreas =?iso-8859-1?Q?F=E4rber?= <afaerber@suse.de>,
+        Jon Maloy <jmaloy@redhat.com>,
+        Vlad Yasevich <vyasevich@gmail.com>,
+        Anna Schumaker <anna@kernel.org>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Haoyue Xu <xuhaoyue1@hisilicon.com>,
+        Heiner Kallweit <hkallweit1@gmail.com>,
+        linux-wireless@vger.kernel.org,
+        Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>,
+        Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+        linux-nvme@lists.infradead.org,
+        Michal Januszewski <spock@gentoo.org>,
+        linux-mtd@lists.infradead.org, kasan-dev@googlegroups.com,
+        Cong Wang <xiyou.wangcong@gmail.com>,
+        Thomas Sailer <t.sailer@alumni.ethz.ch>,
+        Ajay Singh <ajay.kathat@microchip.com>,
+        Xiubo Li <xiubli@redhat.com>, Sagi Grimberg <sagi@grimberg.me>,
+        Daniel Borkmann <daniel@iogearbox.net>,
+        Jonathan Corbet <corbet@lwn.net>, linux-rdma@vger.kernel.org,
+        lvs-devel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        "Naveen N . Rao" <naveen.n.rao@linux.ibm.com>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Pablo Neira Ayuso <pablo@netfilter.org>,
+        Marco Elver <elver@google.com>,
+        Kees Cook <keescook@chromium.org>,
+        Yury Norov <yury.norov@gmail.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Jamal Hadi Salim <jhs@mojatatu.com>,
+        KP Singh <kpsingh@kernel.org>, Borislav Petkov <bp@alien8.de>,
+        Keith Busch <kbusch@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Arend van Spriel <aspriel@gmail.com>,
+        linux-ext4@vger.kernel.org,
+        Wenpeng Liang <liangwenpeng@huawei.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Xinming Hu <huxinming820@gmail.com>,
+        linux-stm32@st-md-mailman.stormreply.com,
+        Jeff Layton <jlayton@kernel.org>, linux-xfs@vger.kernel.org,
+        netdev@vger.kernel.org, Ying Xue <ying.xue@windriver.com>,
+        Manish Rangankar <mrangankar@marvell.com>,
+        "David S . Miller" <davem@davemloft.net>,
+        Toke =?iso-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        "H . Peter Anvin" <hpa@zytor.com>,
+        Alexandre Torgue <alexandre.torgue@foss.st.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>, linux-mm@kvack.org,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Ayush Sawal <ayush.sawal@chelsio.com>,
+        Andreas Noever <andreas.noever@gmail.com>,
+        Jiri Pirko <jiri@resnulli.us>,
+        linux-f2fs-devel@lists.sourceforge.net,
+        Jack Wang <jinpu.wang@ionos.com>,
+        Steffen Klassert <steffen.klassert@secunet.com>,
+        rds-devel@oss.oracle.com, Herbert Xu <herbert@gondor.apana.org.au>,
+        linux-scsi@vger.kernel.org, dccp@vger.kernel.org,
+        Richard Weinberger <richard@nod.at>,
+        Russell King <linux@armlinux.org.uk>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        SHA-cyfmac-dev-list@infineon.com, Ingo Molnar <mingo@redhat.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        John Fastabend <john.fastabend@gmail.com>,
+        Maxime Coquelin <mcoquelin.stm32@gmail.com>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Michael Jamet <michael.jamet@intel.com>,
+        Kalle Valo <kvalo@kernel.org>,
+        Akinobu Mita <akinobu.mita@gmail.com>,
+        linux-block@vger.kernel.org, dmaengine@vger.kernel.org,
+        Hannes Reinecke <hare@suse.de>,
+        Dmitry Vyukov <dvyukov@google.com>,
+        Jens Axboe <axboe@kernel.dk>, cake@lists.bufferbloat.net,
+        brcm80211-dev-list.pdl@broadcom.com,
+        Yishai Hadas <yishaih@nvidia.com>,
+        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+        linuxppc-dev@lists.ozlabs.org, David Ahern <dsahern@kernel.org>,
+        Philipp Reisner <philipp.reisner@linbit.com>,
+        Stephen Hemminger <stephen@networkplumber.org>,
+        Christoph =?iso-8859-1?Q?B=F6hmwalder?= 
+        <christoph.boehmwalder@linbit.com>, Vinod Koul <vkoul@kernel.org>,
+        tipc-discussion@lists.sourceforge.net, Thomas Graf <tgraf@suug.ch>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Sungjong Seo <sj1557.seo@samsung.com>,
+        Martin KaFai Lau <martin.lau@linux.dev>
+Subject: Re: [f2fs-dev] [PATCH v1 3/5] treewide: use get_random_u32() when
+ possible
+Message-ID: <Yz7Rl7BXamKQhRzH@smile.fi.intel.com>
+References: <20221005214844.2699-1-Jason@zx2c4.com>
+ <20221005214844.2699-4-Jason@zx2c4.com>
+ <20221006084331.4bdktc2zlvbaszym@quack3>
+ <Yz7LCyIAHC6l5mG9@zx2c4.com>
 MIME-Version: 1.0
-X-OriginatorOrg: csgroup.eu
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: MRZP264MB2988.FRAP264.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-Network-Message-Id: 97c0e79a-b435-4333-1423-08daa78bda25
-X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Oct 2022 11:13:52.8189
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 9914def7-b676-4fda-8815-5d49fb3b45c8
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: JYpH24md60g1Hq5wCB9KEebRqfltmdGXlM2nbM5atRQADGo8LiG9tyV9QWvM9REvZQb5JRrnzBWtEs8mlW4DXUnovKPsX2QPajkvWxT4RTc=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PR1P264MB1439
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Yz7LCyIAHC6l5mG9@zx2c4.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-DQoNCkxlIDA2LzEwLzIwMjIgw6AgMTE6MjUsIEZpbm4gVGhhaW4gYSDDqWNyaXTCoDoNCj4gT24g
-VGh1LCA2IE9jdCAyMDIyLCBDaHJpc3RvcGhlIExlcm95IHdyb3RlOg0KPiANCj4+IE5PX0lSUSBp
-cyB1c2VkIHRvIGNoZWNrIHRoZSByZXR1cm4gb2YgaXJxX29mX3BhcnNlX2FuZF9tYXAoKS4NCj4+
-DQo+PiBPbiBzb21lIGFyY2hpdGVjdHVyZSBOT19JUlEgaXMgMCwgb24gb3RoZXIgYXJjaGl0ZWN0
-dXJlcyBpdCBpcyAtMS4NCj4+DQo+IA0KPiBZZXMuIFRoZSBjb3JlIE5DUjUzODAgZHJpdmVyIGlz
-IHVzZWQgb24gQVJNIGV0Yy4gd2hlcmUgTk9fSVJRIGlzIC0xIGFzDQo+IHdlbGwgYXMgb24gcG93
-ZXJwYyB3aGVyZSBpdCBpcyAwLg0KPiANCj4+IGlycV9vZl9wYXJzZV9hbmRfbWFwKCkgcmV0dXJu
-cyAwIG9uIGVycm9yLCBpbmRlcGVuZGVudCBvZiBOT19JUlEuDQo+Pg0KPj4gU28gdXNlIDAgaW5z
-dGVhZCBvZiB1c2luZyBOT19JUlEuDQo+Pg0KPiANCj4gU29ycnksIEkgbXVzdCBiZSBtaXNzaW5n
-IHNvbWV0aGluZy4NCg0KTXkgbWlzdGFrZS4NCg0KSSBzdGFydGVkIGJ5IHJlbW92aW5nIE5PX0lS
-USBkZWZpbml0aW9uIGluIHBvd2VycGMgYW5kIHRoZW4gZml4ZWQgYWxsIA0KYnVpbGQgZmFpbHVy
-ZXMgYnkgcmVwbGFjaW5nIE5PX0lSUSBieSAwLiBUaGVuIEkgc3BsaXR0ZWQgdGhlIHBhdGNoIGlu
-dG8gDQpvbmUgcGVyIHN1YnN5c3RlbSwgYWxsIHdpdGggdGhlIHNhbWUgZXhwbGFpbmF0aW9uLg0K
-DQpNb3N0IHBsYWNlcyBpdCB3YXMganVzdCBhIHZlcmlmaWNhdGlvbiBvZiB0aGUgdmFsdWUgcmV0
-dXJuZWQgYnkgDQppcnFfb2ZfcGFyc2VfYW5kX21hcCgpIHdoZXJlIGl0IGlzIG9idmlvdXNseSB3
-cm9uZyB0byB1c2UgTk9fSVJRLCANCmVzcGVjaWFsbHkgb24gQVJNIHdoZXJlIE5PX0lSUSBkb2Vz
-bid0IG1hdGNoIHdoYXQgaXJxX29mX3BhcnNlX2FuZF9tYXAoKSANCnJldHVybnMgaW4gY2FzZSBv
-biBlcnJvci4NCg0KQnV0IGhlcmUgaW4gdGhlIG1hY19zY3NpIGRyaXZlciBpdCBzZWVtcyBhIGJp
-dCBkaWZmZXJlbnQgYW5kIEkgaGF2ZSBhIA0KbG9vayBtb3JlIGNsb3NlbHkuDQoNCg0KPiANCj4g
-WW91IHNlZW0gdG8gYmUgc2F5aW5nIHRoYXQgdGhpcyBkcml2ZXIgY291bGQgYmUgcmUtdXNlZCBp
-biB0aGUgY29udGV4dCBvZg0KPiBvcGVuZmlybXdhcmUvZGV2aWNlIHRyZWVzIGlmIGl0IGF2b2lk
-ZWQgdXNpbmcgdGhlIE5PX0lSUS4gRG8gSSBoYXZlIHRoYXQNCj4gcmlnaHQ/DQo+IA0KPiBPciBh
-cmUgeW91IGNoYW5naW5nIE5PX0lSUSBzZW1hbnRpY3MgdHJlZS13aWRlIGZvciBzb21lIHJlYXNv
-biBleHBsYWluZWQNCj4gc29tZXdoZXJlIGVsc2U/DQoNCk5vLCBJIG9ubHkgc2F5IHRoYXQgTk9f
-SVJRIGRvZXNuJ3QgbWF0Y2ggdGhlIHZhbHVlIHJldHVybmVkIGJ5IA0KaXJxX29mX3BhcnNlX2Fu
-ZF9tYXAoKS4gVWx0aW1hdGVseSBJIHdhbnQgdG8gcmVtb3ZlIHRoZSAjZGVmaW5lIE5PX0lSUSAN
-CmZyb20gYXJjaC9wb3dlcnBjL2luY2x1ZGUvYXNtL2lycS5oDQoNClRoYXQncyB0byBiZSBsaW5r
-ZWQgdG8gZm9sbG93aW5nIG1lc3NhZ2UgZnJvbSBMaW51cyA6IA0KaHR0cHM6Ly9sa21sLm9yZy9s
-a21sLzIwMDUvMTEvMjEvMjIxDQoNCj4gDQo+IElmIGl0IGlzIHRoZSBmb3JtZXIsIHNob3VsZG4n
-dCB5b3UgcmV2ZXJzZSB0aGUgY29tbWVudCBpbg0KPiBhcmNoL3Bvd2VycGMvaW5jbHVkZS9hc20v
-aXJxLmgsIHdoaWNoIHNheXMgdGhlIG1hY3JvIGlzIHRvIGJlIHVzZWQgaW4gdGhlDQo+IHdheSB0
-aGlzIGRyaXZlciAoYW5kIG90aGVycykgdXNlIGl0Pw0KPiANCj4gSWYgaXQgaXMgdGhlIGxhdHRl
-ciwgc2hvdWxkbid0IHlvdSBhZGRyZXNzIHRoZSB1c2Ugb2YgTk9fSVJRIGluIHRoZSBjb3JlDQo+
-IE5DUjUzODAgZHJpdmVyIHJhdGhlciB0aGFuIGp1c3QgdGhpcyB3cmFwcGVyPw0KDQpZZXMgSSBn
-dWVzcyBzby4NCg0KPiANCj4gTW9yZW92ZXIsIHdvdWxkbid0IGl0IG1ha2UgbW9yZSBzZW5zZSB0
-byBmaXggdGhlIGNhbGxlcnMgb2YNCj4gaXJxX29mX3BhcnNlX2FuZF9tYXAoKSwgc2luY2UgdGhl
-eSBhcHBlYXIgdG8gYmUgYWJ1c2luZyB0aGUgTk9fSVJRIG1hY3JvPw0KDQpJbmRlZWQuIFRoYXQn
-cyB3aGF0IGlzIGJlaW5nIGRvbmUgbW9zdCBwbGFjZXMuDQoNCj4gDQo+IEZvciBleGFtcGxlLCBk
-cml2ZXJzL2F0YS9zYXRhX2R3Y180NjBleC5jIGFjdHVhbGx5IGRvZXMgI2RlZmluZSBOT19JUlEg
-MA0KPiBhbmQgdGhlbiBleHBlY3RzIGlycV9vZl9wYXJzZV9hbmRfbWFwKCkgd2lsbCBzb21laG93
-IHVzZSB0aGUgc2FtZSB2YWx1ZSB0bw0KPiBtZWFuIHRoZSBzYW1lIHRoaW5nLi4uDQoNCkl0IGRp
-ZG4ndCBwb3AgdXAgZHVyaW5nIHRoZSBtdWx0aS1idWlsZCBJIGRpZCBmb3IgcG93ZXJwYywgc28g
-SSBndWVzcyANCnRoYXQgZHJpdmVyIGlzIG5vdCB1c2VkIGZvciBwb3dlcnBjID8gSW4gdGhlIGF0
-YSBzdWJzeXN0ZW0gSSBmaXhlZCANCnBhdGFfbXBjNTJ4eC4NCg0KVGhhbmtzDQpDaHJpc3RvcGhl
+On Thu, Oct 06, 2022 at 06:33:15AM -0600, Jason A. Donenfeld wrote:
+> On Thu, Oct 06, 2022 at 10:43:31AM +0200, Jan Kara wrote:
+
+...
+
+> > The code here is effectively doing the
+> > 
+> > 	parent_group = prandom_u32_max(ngroups);
+> > 
+> > Similarly here we can use prandom_u32_max(ngroups) like:
+> > 
+> > 		if (qstr) {
+> > 			...
+> > 			parent_group = hinfo.hash % ngroups;
+> > 		} else
+> > 			parent_group = prandom_u32_max(ngroups);
+> 
+> Nice catch. I'll move these to patch #1.
+
+I believe coccinelle is able to handle this kind of code as well, so Kees'
+proposal to use it seems more plausible since it's less error prone and more
+flexible / powerful.
+
+-- 
+With Best Regards,
+Andy Shevchenko
+
+
