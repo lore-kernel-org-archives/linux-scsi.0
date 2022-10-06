@@ -2,33 +2,33 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A824C43219
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Oct 2022 01:07:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A832C433FE
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Oct 2022 01:07:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229966AbiJFBHA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 5 Oct 2022 21:07:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55272 "EHLO
+        id S229968AbiJFBHB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 5 Oct 2022 21:07:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55238 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229900AbiJFBGz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Oct 2022 21:06:55 -0400
+        with ESMTP id S229883AbiJFBGx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Oct 2022 21:06:53 -0400
 Received: from alexa-out-sd-02.qualcomm.com (alexa-out-sd-02.qualcomm.com [199.106.114.39])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DC946EF34;
-        Wed,  5 Oct 2022 18:06:54 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 020D563FF1;
+        Wed,  5 Oct 2022 18:06:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1665018414; x=1696554414;
+  t=1665018413; x=1696554413;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version;
-  bh=5IOON2fwpi/K3POyb1nEEJCGvHKLw4d+ZRfrx5giEHw=;
-  b=VB9bidbe4INQgG8kkH7eXoE72WcfOoTvQSGk1AF2GYxcvCfKo7lhISMU
-   llFMUQ2y9lzH3RleUgi43xrsyJXu1AVkBExRKseRH6Msd4/EgolJ6V9tl
-   S3dxAEjvsJEhmPzuv26XLLizzsTg++xjWeOFRKrZ4OS27sC82iIPcpSlq
-   s=;
+  bh=vsJe5wuyPPaV7JJNWHbqU/kYTHaKLuMKJausR1YOpCw=;
+  b=LYMjbwTanQ9B+E7KMTpH5ZkQCDeMUvgtGgHsT/I/HeRjxrDCNyY0NT+1
+   EH3rhayEiJWSNZVtZaqjW4jlL+gTXzh8EPTC4nuOfWygehjNbcOIP1blC
+   k0xPWftihMw3VC71Dgqfe5jBTD9oKckgGl6JSu9XvZIH/oD+5LjPmnzHi
+   M=;
 Received: from unknown (HELO ironmsg04-sd.qualcomm.com) ([10.53.140.144])
-  by alexa-out-sd-02.qualcomm.com with ESMTP; 05 Oct 2022 18:06:54 -0700
+  by alexa-out-sd-02.qualcomm.com with ESMTP; 05 Oct 2022 18:06:52 -0700
 X-QCInternal: smtphost
 Received: from unknown (HELO nasanex01a.na.qualcomm.com) ([10.52.223.231])
-  by ironmsg04-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Oct 2022 18:06:54 -0700
+  by ironmsg04-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Oct 2022 18:06:52 -0700
 Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
  nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
@@ -41,9 +41,9 @@ CC:     Asutosh Das <quic_asutoshd@quicinc.com>,
         <linux-arm-msm@vger.kernel.org>, <quic_nguyenb@quicinc.com>,
         <quic_xiaosenh@quicinc.com>, <bvanassche@acm.org>,
         <avri.altman@wdc.com>, <mani@kernel.org>, <beanhuo@micron.com>
-Subject: [PATCH v2 12/17] ufs: core: mcq: Find hardware queue to queue request
-Date:   Wed, 5 Oct 2022 18:06:11 -0700
-Message-ID: <6a800b5e4fb8ff04024a8644cac5dc724a659ee1.1665017636.git.quic_asutoshd@quicinc.com>
+Subject: [PATCH v2 10/17] ufs: core: mcq: Use shared tags for MCQ mode
+Date:   Wed, 5 Oct 2022 18:06:09 -0700
+Message-ID: <51b792b524b59b805019d5a9c626fe059c47418c.1665017636.git.quic_asutoshd@quicinc.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1665017636.git.quic_asutoshd@quicinc.com>
 References: <cover.1665017636.git.quic_asutoshd@quicinc.com>
@@ -56,82 +56,87 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Adds support to find the hardware queue on which the request
-would be queued.
-Since the very first queue is to serve device commands, an offset
-of 1 is added to the index of the hardware queue.
+Enable shared taggs for MCQ. For UFS, this should
+not have a huge performance impact. It however
+simplifies the MCQ implementation and reuses most of
+the existing code in the issue and completion path.
+Also add multiple queue mapping to map_queue().
 
 Co-developed-by: Can Guo <quic_cang@quicinc.com>
 Signed-off-by: Can Guo <quic_cang@quicinc.com>
 Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
 ---
- drivers/ufs/core/ufs-mcq.c     | 22 ++++++++++++++++++++++
- drivers/ufs/core/ufshcd-priv.h |  3 +++
- drivers/ufs/core/ufshcd.c      |  3 +++
- 3 files changed, 28 insertions(+)
+ drivers/ufs/core/ufs-mcq.c |  2 ++
+ drivers/ufs/core/ufshcd.c  | 31 +++++++++++++++++--------------
+ 2 files changed, 19 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index 9c4fd78..cd668fa 100644
+index 1109182..4302722 100644
 --- a/drivers/ufs/core/ufs-mcq.c
 +++ b/drivers/ufs/core/ufs-mcq.c
-@@ -94,6 +94,28 @@ static const struct ufshcd_res_info ufs_res_info[RES_MAX] = {
- };
+@@ -364,6 +364,7 @@ int ufshcd_mcq_init(struct ufs_hba *hba)
+ {
+ 	int ret, i;
+ 	struct ufs_hw_queue *hwq;
++	struct Scsi_Host *host = hba->host;
  
- /**
-+ * ufshcd_mcq_req_to_hwq - find the hardware queue on which the
-+ * request would be issued.
-+ * @hba - per adapter instance
-+ * @req - pointer to the request to be issued
-+ *
-+ * Returns the hardware queue instance on which the request would
-+ * be queued.
-+ */
-+struct ufs_hw_queue *ufshcd_mcq_req_to_hwq(struct ufs_hba *hba,
-+					 struct request *req)
-+{
-+	u32 utag, hwq;
-+
-+	utag = blk_mq_unique_tag(req);
-+	hwq = blk_mq_unique_tag_to_hwq(utag);
-+
-+	/* uhq[0] is to serve device commands */
-+	return &hba->uhq[hwq + UFSHCD_MCQ_IO_QUEUE_OFFSET];
-+}
-+
-+
-+/**
-  * ufshcd_mcq_decide_queue_depth - decide the queue depth
-  * @hba - per adapter instance
-  *
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index 7df2d92..44ef266 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -56,7 +56,10 @@ int ufshcd_mcq_memory_alloc(struct ufs_hba *hba);
- void ufshcd_mcq_make_queues_operational(struct ufs_hba *hba);
- void ufshcd_mcq_config_mac(struct ufs_hba *hba, u32 max_active_cmds);
- void ufshcd_mcq_select_mcq_mode(struct ufs_hba *hba);
-+struct ufs_hw_queue *ufshcd_mcq_req_to_hwq(struct ufs_hba *hba,
-+					   struct request *req);
+ 	ret = ufshcd_mcq_config_nr_queues(hba);
+ 	if (ret)
+@@ -397,6 +398,7 @@ int ufshcd_mcq_init(struct ufs_hba *hba)
+ 	/* Give dev_cmd_queue the minimal number of entries */
+ 	hba->dev_cmd_queue->max_entries = MAX_DEV_CMD_ENTRIES;
  
-+#define UFSHCD_MCQ_IO_QUEUE_OFFSET	1
- #define SD_ASCII_STD true
- #define SD_RAW false
- int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
++	host->host_tagset = 1;
+ 	return 0;
+ }
+ 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 04a36a6..e514c20 100644
+index d7f2baa0..93bb931 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -2888,6 +2888,9 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 		goto out;
+@@ -2728,25 +2728,28 @@ static inline bool is_device_wlun(struct scsi_device *sdev)
+  */
+ static int ufshcd_map_queues(struct Scsi_Host *shost)
+ {
+-	int i, ret;
++	int i, queue_offset = 0;
++	struct ufs_hba *hba = shost_priv(shost);
++
++	if (!is_mcq_supported(hba)) {
++		hba->nr_queues[HCTX_TYPE_DEFAULT] = 1;
++		hba->nr_queues[HCTX_TYPE_READ] = 0;
++		hba->nr_queues[HCTX_TYPE_POLL] = 1;
++		hba->nr_hw_queues = 1;
++	}
+ 
+ 	for (i = 0; i < shost->nr_maps; i++) {
+ 		struct blk_mq_queue_map *map = &shost->tag_set.map[i];
+ 
+-		switch (i) {
+-		case HCTX_TYPE_DEFAULT:
+-		case HCTX_TYPE_POLL:
+-			map->nr_queues = 1;
+-			break;
+-		case HCTX_TYPE_READ:
+-			map->nr_queues = 0;
++		map->nr_queues = hba->nr_queues[i];
++		if (!map->nr_queues)
+ 			continue;
+-		default:
+-			WARN_ON_ONCE(true);
+-		}
+-		map->queue_offset = 0;
+-		ret = blk_mq_map_queues(map);
+-		WARN_ON_ONCE(ret);
++		map->queue_offset = queue_offset;
++		if (i == HCTX_TYPE_POLL && !is_mcq_supported(hba))
++			map->queue_offset = 0;
++
++		blk_mq_map_queues(map);
++		queue_offset += map->nr_queues;
  	}
  
-+	if (is_mcq_enabled(hba))
-+		hwq = ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(cmd));
-+
- 	ufshcd_send_command(hba, tag, hwq);
- 
- out:
+ 	return 0;
 -- 
 2.7.4
 
