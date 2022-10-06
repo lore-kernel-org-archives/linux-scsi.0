@@ -2,107 +2,115 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C6FBC433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Oct 2022 02:53:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF902C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Oct 2022 03:50:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230247AbiJFCxW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 5 Oct 2022 22:53:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37890 "EHLO
+        id S230020AbiJFDuq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 5 Oct 2022 23:50:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34544 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230110AbiJFCvz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Oct 2022 22:51:55 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E718888DC7;
-        Wed,  5 Oct 2022 19:51:19 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id C87D3B81ED2;
-        Thu,  6 Oct 2022 02:51:17 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B0C0C433C1;
-        Thu,  6 Oct 2022 02:51:15 +0000 (UTC)
-Authentication-Results: smtp.kernel.org;
-        dkim=pass (1024-bit key) header.d=zx2c4.com header.i=@zx2c4.com header.b="ZjRINvwJ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=zx2c4.com; s=20210105;
-        t=1665024674;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Mw6mQIkw0EUTS+KZQ2KSjRHdoL9NDRAH5QoihL5z5WY=;
-        b=ZjRINvwJ8Y9RjW9mEsxvsruTRD/kCfvgVCkQ7u/7FdIMuudgLfBeipJujcK5PkA7gRibAE
-        3JueW/NR7m/oXbBMBVnvqYoxLNjKuH/oJSyVnlnwJCBcUbNW9D0yGDKzhSBYRR6jQJKX/l
-        SKoNsI97C5YuUj19TWpVavwkTswS1bY=
-Received: by mail.zx2c4.com (ZX2C4 Mail Server) with ESMTPSA id a3526377 (TLSv1.3:TLS_AES_256_GCM_SHA384:256:NO);
-        Thu, 6 Oct 2022 02:51:14 +0000 (UTC)
-From:   "Jason A. Donenfeld" <Jason@zx2c4.com>
-To:     linux-kernel@vger.kernel.org
-Cc:     "Jason A. Donenfeld" <Jason@zx2c4.com>,
-        brcm80211-dev-list.pdl@broadcom.com, cake@lists.bufferbloat.net,
-        ceph-devel@vger.kernel.org, coreteam@netfilter.org,
-        dccp@vger.kernel.org, dev@openvswitch.org,
-        dmaengine@vger.kernel.org, drbd-dev@lists.linbit.com,
-        dri-devel@lists.freedesktop.org, kasan-dev@googlegroups.com,
-        linux-actions@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org,
-        linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-hams@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-mm@kvack.org, linux-mmc@vger.kernel.org,
-        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-raid@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-sctp@vger.kernel.org,
-        linux-stm32@st-md-mailman.stormreply.com,
-        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        lvs-devel@vger.kernel.org, netdev@vger.kernel.org,
-        netfilter-devel@vger.kernel.org, rds-devel@oss.oracle.com,
-        SHA-cyfmac-dev-list@infineon.com, target-devel@vger.kernel.org,
-        tipc-discussion@lists.sourceforge.net
-Subject: [PATCH v1 5/5] prandom: remove unused functions
-Date:   Wed,  5 Oct 2022 23:48:44 +0200
-Message-Id: <20221005214844.2699-6-Jason@zx2c4.com>
-In-Reply-To: <20221005214844.2699-1-Jason@zx2c4.com>
-References: <20221005214844.2699-1-Jason@zx2c4.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        with ESMTP id S229875AbiJFDuo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Oct 2022 23:50:44 -0400
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 107985AA2E
+        for <linux-scsi@vger.kernel.org>; Wed,  5 Oct 2022 20:50:41 -0700 (PDT)
+Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20221006035038epoutp02fe5e91439655b570d8a7222307324761~bXlyFx6dU0176501765epoutp02c
+        for <linux-scsi@vger.kernel.org>; Thu,  6 Oct 2022 03:50:38 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20221006035038epoutp02fe5e91439655b570d8a7222307324761~bXlyFx6dU0176501765epoutp02c
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1665028238;
+        bh=LzQDMp/vgcthjbAiSfM0vqm/Rw8HxYTxiy78W5X/IwM=;
+        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
+        b=qSXgycsEYnHEXkftofV7BREyr7YIJ2foz/+ebuP4yy4BPCaZ0qcvUU5D979X7Qo0a
+         UilbuFo2n3n/JFcc2q+TvdH/FdL2ge1aYY8RNDLucmAC5KT9kWN8sAX8Ybmpyqbz4d
+         G+B7G3SP8PHX8yRSfcmict2ZeXskYDDcrrF+2S5g=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
+        20221006035038epcas2p3dae69a1be35c30c65f01e86135fd757f~bXlxe1Bpq1288812888epcas2p3m;
+        Thu,  6 Oct 2022 03:50:38 +0000 (GMT)
+Received: from epsmges2p4.samsung.com (unknown [182.195.36.99]) by
+        epsnrtp4.localdomain (Postfix) with ESMTP id 4Mjcsn4rbPz4x9Q7; Thu,  6 Oct
+        2022 03:50:37 +0000 (GMT)
+X-AuditID: b6c32a48-1cffb7000000186f-a3-633e508db6b3
+Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
+        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
+        60.7C.06255.D805E336; Thu,  6 Oct 2022 12:50:37 +0900 (KST)
+Mime-Version: 1.0
+Subject: RE: [PATCH v2 01/17] ufs: core: Probe for ext_iid support
+Reply-To: daejun7.park@samsung.com
+Sender: Daejun Park <daejun7.park@samsung.com>
+From:   Daejun Park <daejun7.park@samsung.com>
+To:     Asutosh Das <quic_asutoshd@quicinc.com>,
+        "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
+        "quic_nitirawa@quicinc.com" <quic_nitirawa@quicinc.com>,
+        "quic_rampraka@quicinc.com" <quic_rampraka@quicinc.com>,
+        "quic_bhaskarv@quicinc.com" <quic_bhaskarv@quicinc.com>,
+        "quic_richardp@quicinc.com" <quic_richardp@quicinc.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Daejun Park <daejun7.park@samsung.com>,
+        cpgsproxy3 <cpgsproxy3@samsung.com>
+CC:     "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+        "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
+        "quic_xiaosenh@quicinc.com" <quic_xiaosenh@quicinc.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "mani@kernel.org" <mani@kernel.org>,
+        "beanhuo@micron.com" <beanhuo@micron.com>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <1d21e634e86f26e3a22be3c380a85bd4dd17f1ae.1665017636.git.quic_asutoshd@quicinc.com>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20221006035037epcms2p3053f17ec4b42f48657803b98345d843a@epcms2p3>
+Date:   Thu, 06 Oct 2022 12:50:37 +0900
+X-CMS-MailID: 20221006035037epcms2p3053f17ec4b42f48657803b98345d843a
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+CMS-TYPE: 102P
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrBJsWRmVeSWpSXmKPExsWy7bCmuW5vgF2ywYG5KhYvf15lszj4sJPF
+        YtqHn8wWLw9pWjy6/YzRYtWDcIuJ+8+yW3Rf38FmceDDKkaLhR1zWSyOPH7PbDHp2gY2i6kv
+        jrNb7Ljfzmhx6lCoxfcJ29ktri6+yu4g6HH5irfHplWdbB7f13eweUzcU+fRt2UVo8fnTXIe
+        7Qe6mQLYo7JtMlITU1KLFFLzkvNTMvPSbZW8g+Od403NDAx1DS0tzJUU8hJzU22VXHwCdN0y
+        c4CuV1IoS8wpBQoFJBYXK+nb2RTll5akKmTkF5fYKqUWpOQUmBfoFSfmFpfmpevlpZZYGRoY
+        GJkCFSZkZ5y7m1ZwkK3i3tG0BsZVbF2MnBwSAiYSnbt/snYxcnEICexglLhy8DBjFyMHB6+A
+        oMTfHcIgNcICThIPNz8AqxcSUJJYf3EWO0RcT+LWwzWMIDabgI7E9BP32UHmiAhcY5bY9+sc
+        WBGzwFMmiX1NsRDLeCVmtD9lgbClJbYv3wq2i1MgQeLnGlmIsIbEj2W9zBC2qMTN1W/ZYez3
+        x+YzQtgiEq33zkLVCEo8+LkbKi4pcXvuJqj6fIn/V5ZD2TUS2w7Mg7L1Ja51bGSBeNFXoul1
+        GYjJIqAqsXtRHkSFi8Te1h3MEMdrSyxb+JoZpIRZQFNi/S59EFNCQFniyC0WmJcaNv5mR2cz
+        C/BJdBz+CxffMe8JE4StJrHu53qmCYzKsxChPAvJrlkIuxYwMq9iFEstKM5NTy02KjCBR2ty
+        fu4mRnAS1vLYwTj77Qe9Q4xMHIyHGCU4mJVEeLtm2yYL8aYkVlalFuXHF5XmpBYfYjQFenIi
+        s5Rocj4wD+SVxBuaWBqYmJkZmhuZGpgrifN2zdBKFhJITyxJzU5NLUgtgulj4uCUamAy9q87
+        NmF54QVup6M1vydXyqk0FSfZPbmTwS3cddFgu8Nzw0eWPytvz7q8wk9ibcovrnM7jZ9lvoq4
+        c/vYxRZNNbedxjefmjS17eZ+F5yyzaKnddKD811MTlNNzR4ETp9Uk3+w0umW/PaNVzcJq4S4
+        aErPZ1d2v8H4TypAuCp1V1X4muz9a1nCNI55vgq7E3Run+Har08lQ5vSCkIOz37W/jdTZ/+y
+        B2rl7cW/Jthv1KqZ/Ww3y0lvfr0Ff43UixzvS/z8q8sQc/Ijz3a3ZYXvayLzwsWTOg+8kVl6
+        Xi7z1c3VtjUVGZvmfJg1+cGaIxxZaUwGi67L75pmx+6yYYX+OkWHvifdGXabNe4JmHYqsRRn
+        JBpqMRcVJwIAoFXxZ0sEAAA=
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20221006010736epcas2p20777225a537d4f2124e9a7264b2fffcf
+References: <1d21e634e86f26e3a22be3c380a85bd4dd17f1ae.1665017636.git.quic_asutoshd@quicinc.com>
+        <cover.1665017636.git.quic_asutoshd@quicinc.com>
+        <CGME20221006010736epcas2p20777225a537d4f2124e9a7264b2fffcf@epcms2p3>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-With no callers left of prandom_u32() and prandom_bytes(), remove these
-deprecated wrappers.
-
-Signed-off-by: Jason A. Donenfeld <Jason@zx2c4.com>
----
- include/linux/prandom.h | 12 ------------
- 1 file changed, 12 deletions(-)
-
-diff --git a/include/linux/prandom.h b/include/linux/prandom.h
-index 78db003bc290..e0a0759dd09c 100644
---- a/include/linux/prandom.h
-+++ b/include/linux/prandom.h
-@@ -12,18 +12,6 @@
- #include <linux/percpu.h>
- #include <linux/random.h>
- 
--/* Deprecated: use get_random_u32 instead. */
--static inline u32 prandom_u32(void)
--{
--	return get_random_u32();
--}
--
--/* Deprecated: use get_random_bytes instead. */
--static inline void prandom_bytes(void *buf, size_t nbytes)
--{
--	return get_random_bytes(buf, nbytes);
--}
--
- struct rnd_state {
- 	__u32 s1, s2, s3, s4;
- };
--- 
-2.37.3
-
+Hi Asutosh=C2=A0Das,=0D=0A=0D=0A>diff=C2=A0--git=C2=A0a/include/ufs/ufshcd.=
+h=C2=A0b/include/ufs/ufshcd.h=0D=0A>index=C2=A07fe1a92..da1eb8a=C2=A0100644=
+=0D=0A>---=C2=A0a/include/ufs/ufshcd.h=0D=0A>+++=C2=A0b/include/ufs/ufshcd.=
+h=0D=0A>=40=40=C2=A0-737,6=C2=A0+737,7=C2=A0=40=40=C2=A0struct=C2=A0ufs_hba=
+_monitor=C2=A0=7B=0D=0A>=C2=A0=C2=A0*=C2=A0=40outstanding_lock:=C2=A0Protec=
+ts=C2=A0=40outstanding_reqs.=0D=0A>=C2=A0=C2=A0*=C2=A0=40outstanding_reqs:=
+=C2=A0Bits=C2=A0representing=C2=A0outstanding=C2=A0transfer=C2=A0requests=
+=0D=0A>=C2=A0=C2=A0*=C2=A0=40capabilities:=C2=A0UFS=C2=A0Controller=C2=A0Ca=
+pabilities=0D=0A>+=C2=A0*=C2=A0=40mcq_capabilities:=C2=A0UFS=C2=A0Multi=C2=
+=A0Command=C2=A0Queue=C2=A0capabilities=0D=0A=0D=0AMaybe=20UFS=C2=A0Multi=
+=20Circular=20Queue?=0D=0A=0D=0AThanks,=0D=0ADaejun=0D=0A
