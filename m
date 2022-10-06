@@ -2,114 +2,129 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40F7AC433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Oct 2022 07:35:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02955C433FE
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Oct 2022 08:33:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230346AbiJFHfs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 Oct 2022 03:35:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58818 "EHLO
+        id S230460AbiJFIdd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 6 Oct 2022 04:33:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47146 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230335AbiJFHfl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Oct 2022 03:35:41 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A22080BF5;
-        Thu,  6 Oct 2022 00:35:38 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 59D59219D5;
-        Thu,  6 Oct 2022 07:35:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1665041737; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=O8DbckLKl3ACIgeTMPkNYKhRb5hT2FKBqtCkFzH0OmA=;
-        b=D95DDKCOB9bfu/h7JUqbVof3gfEnYT27zOvbt8tG2A04GpZOdBhopjFqcJxLUJM1BRjDKk
-        6vvEsU2DHuIlUyrDICncimwF3LKHJHReGPTQMd/XDYU8FzfUeSZSM0VGnaslsbhHft7/5A
-        DxLOxj9c9c4NbFSYE4PJBgT0HPLcpxk=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1665041737;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=O8DbckLKl3ACIgeTMPkNYKhRb5hT2FKBqtCkFzH0OmA=;
-        b=zVQ7ZDbAGQTku4btQl+NxejdKdg01ZylkLBedGivds8G+HqRyvqhuTN79JVmvGi4NrL1wX
-        RAG+KbZRuJaKpOBA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 2123613AC8;
-        Thu,  6 Oct 2022 07:35:37 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id 5Vd5BkmFPmOGHAAAMHmgww
-        (envelope-from <hare@suse.de>); Thu, 06 Oct 2022 07:35:37 +0000
-Message-ID: <6c1f12d2-9211-85ef-dfd5-e091ea1559d7@suse.de>
-Date:   Thu, 6 Oct 2022 09:35:36 +0200
+        with ESMTP id S230397AbiJFId3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Oct 2022 04:33:29 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E04F92F56;
+        Thu,  6 Oct 2022 01:33:27 -0700 (PDT)
+Received: from fraeml740-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Mjl5B1JSNz67Lm9;
+        Thu,  6 Oct 2022 16:30:54 +0800 (CST)
+Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
+ fraeml740-chm.china.huawei.com (10.206.15.221) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Thu, 6 Oct 2022 10:33:24 +0200
+Received: from [10.126.169.169] (10.126.169.169) by
+ lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Thu, 6 Oct 2022 09:33:23 +0100
+Message-ID: <f190f19e-34b2-611c-1cf4-f8f34d12fe74@huawei.com>
+Date:   Thu, 6 Oct 2022 09:33:23 +0100
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.2
-Subject: Re: Do we still need the scsi IPR driver ?
-Content-Language: en-US
-To:     Brian King <brking@linux.vnet.ibm.com>,
-        John Garry <john.garry@huawei.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Brian King <brking@us.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
-References: <a5a3527c-d662-5bd1-e1dd-ad4930d10b3a@opensource.wdc.com>
- <3dbd9ae4-a101-e55d-79c8-9b3a96ab5b17@linux.vnet.ibm.com>
- <be79092f-fdd6-9f0f-4ffa-95ffc4b778c5@linux.vnet.ibm.com>
- <369448ed-f89a-c2db-1850-91450d8b5998@opensource.wdc.com>
- <dc892956-56bf-19aa-f206-b3bbcc781fea@huawei.com>
- <5f2efa8a-8207-403c-12e8-74f43d8d8a14@linux.vnet.ibm.com>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <5f2efa8a-8207-403c-12e8-74f43d8d8a14@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+From:   John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH v5 0/7] libsas and drivers: NCQ error handling
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Niklas Cassel <Niklas.Cassel@wdc.com>
+CC:     "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "jinpu.wang@cloud.ionos.com" <jinpu.wang@cloud.ionos.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>,
+        yangxingui <yangxingui@huawei.com>,
+        yanaijie <yanaijie@huawei.com>
+References: <1664262298-239952-1-git-send-email-john.garry@huawei.com>
+ <YzwvpUUftX6Ziurt@x1-carbon>
+ <cfa52b91-db81-a179-76c2-8a61266c099d@huawei.com>
+ <27148ec5-d1ae-d9a2-1b00-a4c34d2da198@huawei.com>
+ <Yz33FGwd3YvQUAqT@x1-carbon>
+ <5db6a7bc-dfeb-76e1-6899-7041daa934cf@opensource.wdc.com>
+ <Yz4BLTPkXqyjW4a4@x1-carbon>
+ <64ab35a7-f1ff-92ee-890e-89a5aee935a4@opensource.wdc.com>
+In-Reply-To: <64ab35a7-f1ff-92ee-890e-89a5aee935a4@opensource.wdc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.126.169.169]
+X-ClientProxiedBy: lhrpeml500002.china.huawei.com (7.191.160.78) To
+ lhrpeml500003.china.huawei.com (7.191.162.67)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/5/22 19:20, Brian King wrote:
-> On 9/20/22 8:07 AM, John Garry wrote:
->> On 21/06/2022 23:12, Damien Le Moal wrote:
->>>>> We still need it around for now. IBM still sells these adapters
->>>>> and they can still be ordered even on our latest Power 10 systems.
->>>> At one point I did look into modifying ipr to use an ->error_handler.
->>>> I recall I ran into some issues that resulted in this getting put
->>>> on the shelf, but its been a while. I'll go dig that code up and
->>>> see what it looks like.
->>> Thanks. It would be really great if you can convert to using
->>> error_handler. This is really the last ata/libsas driver that does not use
->>> this.
->>>
+On 05/10/2022 23:42, Damien Le Moal wrote:
+>> Hello Damien,
 >>
->> Hi Brian,
+>> John explained that he got a timeout from EH when reading the log:
+>> [  350.281581] ata1: failed to read log page 10h (errno=-5)
+>> [  350.577181] ata1.00: exception Emask 0x1 SAct 0xffffffff SErr 0x0 action 0x6 frozen
 >>
->> I am wondering if there is any update here?
+>> ata_eh_read_log_10h() uses ata_read_log_page(), which will first try to read
+>> the log using READ LOG DMA EXT. If that fails, it will retry using READ LOG EXT.
 >>
->> As you may have seen in [0], I think that we need to make progress on this topic first to keep the solution there a bit simpler.
+>> Therefore, to see if this is a driver specific bug, I suggested to try to read
+>> the NCQ Command Error log using ATA16 passthrough commands:
 >>
->> [0] https://lore.kernel.org/linux-scsi/1663669630-21333-1-git-send-email-john.garry@huawei.com/T/#mf890cb4f1627112652831524dca62cbde4a0a637
+>> $ sudo sg_sat_read_gplog -d --log=0x10 /dev/sdc
+>> will read the log using READ LOG DMA EXT.
+>>
+>> $ sudo sg_sat_read_gplog --log=0x10 /dev/sdc
+>> will read the log using READ LOG EXT.
+
+Note that I can't get a distro to boot on this system from the HDD for 
+the same timeout problem (so no tools easily available).
+
+>>
+>> Neither of these two suggested commands are NCQ commands.
+>> (Neither command is encapsulated in a RECEIVE FPDMA QUEUED,
+>> so I'm not sure what you mean.)
+>>
+>>
+>> Garry, I now see that:
+>> [  350.577181] ata1.00: exception Emask 0x1 SAct 0xffffffff SErr 0x0 action 0x6 frozen
+>> Your port is frozen.
+>>
+>> ata_read_log_page() calls ata_exec_internal() which calls ata_exec_internal_sg(),
+>> which will simply return an error without sending down the command to the drive,
+>> if the port is frozen.
+>>
+>> Not sure why your port is frozen, mine is obviously not.
+
+I think that it gets frozen when the internal command for read log ext 
+times out. More below about that timeout.
+
+>>
+>> ata_do_link_abort() calls ata_eh_set_pending() without activating fast drain:
+>> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/ata/libata-eh.c?h=v6.0#n989
+>>
+>> So I'm not sure why your port is frozen.
+>> (The fast drain timer does freeze the port, but it shouldn't be enabled.)
+>> It might be worthwhile to see who freezes the port in your case.
+> Might come from the command timeout. John has had many problems with the
+> pm80xx HBA in his Arm machine from a while back. Likely not a driver issue
+> but a hw one... No-one seems to be able to recreate the same problem.
 > 
-> I've made some progress. I was able to dig up the code to move ipr to use error_handler
-> and have gotten it to compile, but haven't gotten to trying it in the lab yet.
+> We need to try the HBA on our Arm board to see what happens.
 > 
-Hmm. In which machines can I find an IPR installed? I could go hunting 
-in our lab, maybe I can locate one and aid testing/development ...
 
-Cheers,
+Yeah, it just looks to be the longstanding issue of using this card on 
+my arm64 machine - that is that I get IO timeouts quite regularly. I 
+should have mentioned that yesterday. This just seems to be a driver issue.
 
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
-Myers, Andrew McDonald, Martje Boudien Moerman
+Interestingly this read log ext always seems to timeout, so maybe I 
+could see if there is anything specific about this command which could 
+give a clue to the underlying issue. But I have spent much time trying 
+to debug this issue, so not too motivated any more if I’m completely 
+honest ...
 
+Thanks,
+John
