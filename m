@@ -2,128 +2,107 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AE9DC433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Oct 2022 19:27:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3CDCC433FE
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Oct 2022 19:54:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231586AbiJFT1q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 Oct 2022 15:27:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41438 "EHLO
+        id S232149AbiJFTyF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 6 Oct 2022 15:54:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56978 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229955AbiJFT1p (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Oct 2022 15:27:45 -0400
-Received: from mail-io1-xd64.google.com (mail-io1-xd64.google.com [IPv6:2607:f8b0:4864:20::d64])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 949D99E6AD
-        for <linux-scsi@vger.kernel.org>; Thu,  6 Oct 2022 12:27:44 -0700 (PDT)
-Received: by mail-io1-xd64.google.com with SMTP id 187so2053127iov.10
-        for <linux-scsi@vger.kernel.org>; Thu, 06 Oct 2022 12:27:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=purestorage.com; s=google;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Er+HWa/JFvzG1+NiemEnZthCRt0hLUSPOoLZacm2EpI=;
-        b=MAhE+KMcgGxfJ83/bEV8D1k4MSCohozl/cRiZEi3YsBAVrMPs9w/xAExe9jRt8deG4
-         hE0+TBzZQF1UQ9659ORSEJahPII7JdlB8bxX755LkGI4mGxg/IA69HPJgtjm0YlOqqdh
-         LNrkU3daZeroRkOgdI2GGoFg46qLafIW9AhLk=
+        with ESMTP id S232117AbiJFTx6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Oct 2022 15:53:58 -0400
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C562D6E2F7
+        for <linux-scsi@vger.kernel.org>; Thu,  6 Oct 2022 12:53:56 -0700 (PDT)
+Received: by mail-pl1-f181.google.com with SMTP id h10so2666801plb.2
+        for <linux-scsi@vger.kernel.org>; Thu, 06 Oct 2022 12:53:56 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Er+HWa/JFvzG1+NiemEnZthCRt0hLUSPOoLZacm2EpI=;
-        b=Vd034zoK35tAMXU5FlZJXcyJcmBEkepC06xtalTWw4eulmqJYviPyi5suScsExrDwL
-         xqEgy2Af7FNe4X2xzoScZcjor+9NVCecSgdtnpaSdEca6H0Ax86X4LckI3vrOx7v3DRZ
-         uPQVy5zSoE7TvBXxlgzP5ifIGzH3tKFRIodMRU0LVAVSJOp4D+sHYEcuchlBm8fsiy6h
-         2fQBl35YKCFR6e0oFUmRPKKw9del2k/RyR28DlSk/6J1JhHtZMxelvq5KBwiqpZ+tMad
-         f4xGVHtkSElnUtp8ilwk9RFXZluYwHXHC6PIrpgLjIjYmUo7Ov/thom5JGfZBlGRhwIV
-         YGoA==
-X-Gm-Message-State: ACrzQf3L2Z1LKBQUes/n7Ta/gq7U2mRlHncGa3u0El58l63GVD6YhCQ7
-        ZJDAJhjBjTbY1fE+3w9BQgJ9/kNX28vMdTFEw9Hen6F57XqDeA==
-X-Google-Smtp-Source: AMsMyM5w0TOp2/hIhKE309VebJ67rt46XJ2zdxibDSVSZrtELmYW8acfmXF/+Fb57UspaV2zpaVMPZe/PwYd
-X-Received: by 2002:a05:6638:2393:b0:363:6c5d:9584 with SMTP id q19-20020a056638239300b003636c5d9584mr676965jat.232.1665084463632;
-        Thu, 06 Oct 2022 12:27:43 -0700 (PDT)
-Received: from c7-smtp.dev.purestorage.com ([208.88.159.129])
-        by smtp-relay.gmail.com with ESMTPS id h23-20020a0566380f9700b0036371eb6d14sm15776jal.57.2022.10.06.12.27.43
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 06 Oct 2022 12:27:43 -0700 (PDT)
-X-Relaying-Domain: purestorage.com
-Received: from dev-ushankar.dev.purestorage.com (dev5.dev.purestorage.com [IPv6:2620:125:9007:640:7:70:36:0])
-        by c7-smtp.dev.purestorage.com (Postfix) with ESMTP id D0BF41FED1;
-        Thu,  6 Oct 2022 13:27:42 -0600 (MDT)
-Received: by dev-ushankar.dev.purestorage.com (Postfix, from userid 1557716368)
-        id CBB0AE40391; Thu,  6 Oct 2022 13:27:42 -0600 (MDT)
-Date:   Thu, 6 Oct 2022 13:27:42 -0600
-From:   Uday Shankar <ushankar@purestorage.com>
-To:     Mike Christie <michael.christie@oracle.com>
-Cc:     linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] restrict legal sdev_state transitions via sysfs
-Message-ID: <20221006192742.GA2255620@dev-ushankar.dev.purestorage.com>
-References: <20220924000241.2967323-1-ushankar@purestorage.com>
- <b5ac4103-87dc-f3ea-a2ef-67b3ef41bf66@oracle.com>
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=4OFHm7dUAHdF320uXhivhEic4eFA9ZYKeHsLQ8JiEjk=;
+        b=QS41PBTSmssq8PxvNGyJsQQmq9hva4sS5xFxjJx5xmUpnxT8yawYT9YS8XuwRldgTz
+         oCsKdUhkwkaYsnZxb9e+kqTBPWQZfh6epF5mRNFQJwJDh5feUVyxMaXXzUFEtqMHdWXb
+         cAVD0aq47BnoiykpPCHGmZPRgS2EMqFDY0CwHT/yqlEQcY83CCB6h0cRc7JO1VsR24xo
+         gtQqBwmjbptXsbk9hFYjOdO0k2JxEoVeuKyWmOsmyCYnLLRLVl/AxbuXKwg1SW/t/UOc
+         +W2pPB3QleKBqHWcLHQib03VY28sFOEAnzZzjfRO+x4ybIqra6ZUqvri5DoJcvrddxV+
+         K5NA==
+X-Gm-Message-State: ACrzQf0niFe5Gr/G2v2n+frI/jUMqIZl4jPt7pPtqgM+4Sl+IzNuYBjc
+        5WAVImjo30ZojujZRJSjPfM=
+X-Google-Smtp-Source: AMsMyM4ScrYZZaHfXYIoMdaKgnhk+2uL2dzLs9vWOSYgGmWpeCeldJhUJv1LG75QJz3kfbioBGOVVQ==
+X-Received: by 2002:a17:902:f611:b0:179:dc1f:48a5 with SMTP id n17-20020a170902f61100b00179dc1f48a5mr1483037plg.0.1665086036060;
+        Thu, 06 Oct 2022 12:53:56 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:1d3c:9be0:da66:6729? ([2620:15c:211:201:1d3c:9be0:da66:6729])
+        by smtp.gmail.com with ESMTPSA id z188-20020a6265c5000000b005367c28fd32sm13245096pfb.185.2022.10.06.12.53.54
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 06 Oct 2022 12:53:55 -0700 (PDT)
+Message-ID: <8ec2c047-bd18-171e-616d-7e7b34d2d68e@acm.org>
+Date:   Thu, 6 Oct 2022 12:53:53 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <b5ac4103-87dc-f3ea-a2ef-67b3ef41bf66@oracle.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.13.0
+Subject: Re: [PATCH] restrict legal sdev_state transitions via sysfs
+Content-Language: en-US
+To:     Uday Shankar <ushankar@purestorage.com>, linux-scsi@vger.kernel.org
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Mike Christie <michael.christie@oracle.com>
+References: <20220924000241.2967323-1-ushankar@purestorage.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20220924000241.2967323-1-ushankar@purestorage.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Sep 29, 2022 at 09:57:19PM -0500, Mike Christie wrote:
-> On 9/23/22 7:02 PM, Uday Shankar wrote:
-> > ---
-> > Looking for feedback on the "allowed source states" list. The bug I hit
-> > is solved by prohibiting transitions out of SDEV_BLOCKED, but I think
-> > most others shouldn't be allowed either.
+On 9/23/22 17:02, Uday Shankar wrote:
+> Userspace can currently write to sysfs to transition sdev_state to
+> RUNNING or OFFLINE from any source state. This causes issues because
+> proper transitioning out of some states involves steps besides just
+> changing sdev_state, so allowing userspace to change sdev_state
+> regardless of the source state can result in inconsistencies; e.g. with
+> iscsi we can end up with sdev_state == SDEV_RUNNING while the device
+> queue is quiesced. Any task attempting IO on the device will then hang,
+> and in more recent kernels, iscsid will hang as well. More detail about
+> this bug is provided in my first attempt:
+> https://groups.google.com/g/open-iscsi/c/PNKca4HgPDs/m/CXaDkntOAQAJ
 > 
-> I think it's ok to be restrictive:
+> Signed-off-by: Uday Shankar <ushankar@purestorage.com>
+> Suggested-by: Mike Christie <michael.christie@oracle.com>
+> ---
+> Looking for feedback on the "allowed source states" list. The bug I hit
+> is solved by prohibiting transitions out of SDEV_BLOCKED, but I think
+> most others shouldn't be allowed either.
 > 
-> 1. BLOCKED is just broken. When the transport classes and scsi_lib transition
-> out of that state they do a lot more than just set the set. We are leaving
-> the kernel in mismatched state where the device state is running but the
-> block layerand transport classes are not ready for IO.
+>   drivers/scsi/scsi_sysfs.c | 8 ++++++++
+>   1 file changed, 8 insertions(+)
 > 
-> 2. CREATED does not happen. We go into RUNNING then do scsi_sysfs_add_sdev so
-> userspace should not see the CREATED state.
-> 
-> 3. I'm not 100% sure about SDEV_QUIESCE though. It looks like it has similar issues
-> as BLOCKED where scsi_device_resume will undo things it did in scsi_device_quiesce,
-> so we can't just set the state to RUNNING and expect things to work. I'm not
-> sure about the scsi_transport_spi cases.
-> 
-> It would be best for James or Hannes to comment because they know that code well.
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index 9dad2fd5297f..b38c30fe681d 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -822,6 +822,14 @@ store_state_field(struct device *dev, struct device_attribute *attr,
+>   	}
+>   
+>   	mutex_lock(&sdev->state_mutex);
+> +	switch (sdev->sdev_state) {
+> +	case SDEV_RUNNING:
+> +	case SDEV_OFFLINE:
+> +		break;
+> +	default:
+> +		mutex_unlock(&sdev->state_mutex);
+> +		return -EINVAL;
+> +	}
+>   	if (sdev->sdev_state == SDEV_RUNNING && state == SDEV_RUNNING) {
+>   		ret = 0;
+>   	} else {
 
-Adding Hannes to CC.
+The return value -EAGAIN might be more appropriate since it is not the value
+written into sysfs that is invalid but the current state that is inappropriate
+for the requested transition.
 
-> 4. The transport classes are the ones that put devs in SDEV_TRANSPORT_OFFLINE
-> and then transition them when they are ready. The block layer is at least in
-> the correct state, but the transport classes may not be ready for IO since they
-> are not expecting IO to be queued to them at that time.
-> 
-> > 
-> >  drivers/scsi/scsi_sysfs.c | 8 ++++++++
-> >  1 file changed, 8 insertions(+)
-> > 
-> > diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> > index 9dad2fd5297f..b38c30fe681d 100644
-> > --- a/drivers/scsi/scsi_sysfs.c
-> > +++ b/drivers/scsi/scsi_sysfs.c
-> > @@ -822,6 +822,14 @@ store_state_field(struct device *dev, struct device_attribute *attr,
-> >  	}
-> >  
-> >  	mutex_lock(&sdev->state_mutex);
-> > +	switch (sdev->sdev_state) {
-> > +	case SDEV_RUNNING:
-> > +	case SDEV_OFFLINE:
-> > +		break;
-> > +	default:
-> > +		mutex_unlock(&sdev->state_mutex);
-> > +		return -EINVAL;
-> > +	}
-> >  	if (sdev->sdev_state == SDEV_RUNNING && state == SDEV_RUNNING) {
-> >  		ret = 0;
-> >  	} else {
-> > 
-> > base-commit: 7f615c1b5986ff08a725ee489e838c90f8197bcd
-> 
+Thanks,
+
+Bart.
