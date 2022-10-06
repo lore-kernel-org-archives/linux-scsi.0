@@ -2,86 +2,128 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DF19C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Oct 2022 18:40:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AE9DC433F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Oct 2022 19:27:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229683AbiJFSkh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 Oct 2022 14:40:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43742 "EHLO
+        id S231586AbiJFT1q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 6 Oct 2022 15:27:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41438 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229470AbiJFSkf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Oct 2022 14:40:35 -0400
-Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE9D8357E3;
-        Thu,  6 Oct 2022 11:40:33 -0700 (PDT)
-Received: by mail-pf1-f180.google.com with SMTP id v186so2822034pfv.11;
-        Thu, 06 Oct 2022 11:40:33 -0700 (PDT)
+        with ESMTP id S229955AbiJFT1p (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Oct 2022 15:27:45 -0400
+Received: from mail-io1-xd64.google.com (mail-io1-xd64.google.com [IPv6:2607:f8b0:4864:20::d64])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 949D99E6AD
+        for <linux-scsi@vger.kernel.org>; Thu,  6 Oct 2022 12:27:44 -0700 (PDT)
+Received: by mail-io1-xd64.google.com with SMTP id 187so2053127iov.10
+        for <linux-scsi@vger.kernel.org>; Thu, 06 Oct 2022 12:27:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=purestorage.com; s=google;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=Er+HWa/JFvzG1+NiemEnZthCRt0hLUSPOoLZacm2EpI=;
+        b=MAhE+KMcgGxfJ83/bEV8D1k4MSCohozl/cRiZEi3YsBAVrMPs9w/xAExe9jRt8deG4
+         hE0+TBzZQF1UQ9659ORSEJahPII7JdlB8bxX755LkGI4mGxg/IA69HPJgtjm0YlOqqdh
+         LNrkU3daZeroRkOgdI2GGoFg46qLafIW9AhLk=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=z2pht9RoqtyP284j+C1cC7Lqj7p0xiPE6PS482Bfdnw=;
-        b=EaMiFdi95Tagr/hFleFBTrERXnt12mcZfJ1pkM5nibyPJ/SYTPQo6LrVgyyz4Kyw4f
-         r64veENn+c/AbskZGcrzfxh1gAY4tuJKWKz9BbG+7EwAzmh7mqkfL6XNcGm0JDl7MdiK
-         yx8aOKWonsA7xhPK3eEXeRhQ6enMTRmMmJg14f0wN2Wr3UY0Hzbh0aS9NdnPCkEktHlX
-         zDnRKEb2nzaQWgapJnljklHc5Z37KDZGtavqWvuYpb1f2izUADc04rqBsFDzJSBCxwbo
-         6YbF28iKIfiIZsfx+OY7a+FXpzA0iMQqsuyCL6Jpe3F31JLOdOY8ZwVtSriue+PPuH8a
-         l6qA==
-X-Gm-Message-State: ACrzQf1SQl5z73SJnGNs99IEOxtTeoI4xU2w4HgOPmQZ/5RxZPytlTVq
-        NqSKUgpd9tkJdBtOvzVZunA=
-X-Google-Smtp-Source: AMsMyM7O6ZwP1XgoQZ4RryLenvCTr4zIfNbhwRmXnxmeC6wuX+8NTfy6f3FcAAjd7qKs80T2PObciA==
-X-Received: by 2002:a62:ee17:0:b0:55b:b0d:bc9f with SMTP id e23-20020a62ee17000000b0055b0b0dbc9fmr1228763pfi.39.1665081632917;
-        Thu, 06 Oct 2022 11:40:32 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:1d3c:9be0:da66:6729? ([2620:15c:211:201:1d3c:9be0:da66:6729])
-        by smtp.gmail.com with ESMTPSA id x22-20020a170902821600b0017a0668befasm12537245pln.124.2022.10.06.11.40.31
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 06 Oct 2022 11:40:32 -0700 (PDT)
-Message-ID: <51f62009-777f-8958-8d28-b29e64bbff09@acm.org>
-Date:   Thu, 6 Oct 2022 11:40:29 -0700
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Er+HWa/JFvzG1+NiemEnZthCRt0hLUSPOoLZacm2EpI=;
+        b=Vd034zoK35tAMXU5FlZJXcyJcmBEkepC06xtalTWw4eulmqJYviPyi5suScsExrDwL
+         xqEgy2Af7FNe4X2xzoScZcjor+9NVCecSgdtnpaSdEca6H0Ax86X4LckI3vrOx7v3DRZ
+         uPQVy5zSoE7TvBXxlgzP5ifIGzH3tKFRIodMRU0LVAVSJOp4D+sHYEcuchlBm8fsiy6h
+         2fQBl35YKCFR6e0oFUmRPKKw9del2k/RyR28DlSk/6J1JhHtZMxelvq5KBwiqpZ+tMad
+         f4xGVHtkSElnUtp8ilwk9RFXZluYwHXHC6PIrpgLjIjYmUo7Ov/thom5JGfZBlGRhwIV
+         YGoA==
+X-Gm-Message-State: ACrzQf3L2Z1LKBQUes/n7Ta/gq7U2mRlHncGa3u0El58l63GVD6YhCQ7
+        ZJDAJhjBjTbY1fE+3w9BQgJ9/kNX28vMdTFEw9Hen6F57XqDeA==
+X-Google-Smtp-Source: AMsMyM5w0TOp2/hIhKE309VebJ67rt46XJ2zdxibDSVSZrtELmYW8acfmXF/+Fb57UspaV2zpaVMPZe/PwYd
+X-Received: by 2002:a05:6638:2393:b0:363:6c5d:9584 with SMTP id q19-20020a056638239300b003636c5d9584mr676965jat.232.1665084463632;
+        Thu, 06 Oct 2022 12:27:43 -0700 (PDT)
+Received: from c7-smtp.dev.purestorage.com ([208.88.159.129])
+        by smtp-relay.gmail.com with ESMTPS id h23-20020a0566380f9700b0036371eb6d14sm15776jal.57.2022.10.06.12.27.43
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 06 Oct 2022 12:27:43 -0700 (PDT)
+X-Relaying-Domain: purestorage.com
+Received: from dev-ushankar.dev.purestorage.com (dev5.dev.purestorage.com [IPv6:2620:125:9007:640:7:70:36:0])
+        by c7-smtp.dev.purestorage.com (Postfix) with ESMTP id D0BF41FED1;
+        Thu,  6 Oct 2022 13:27:42 -0600 (MDT)
+Received: by dev-ushankar.dev.purestorage.com (Postfix, from userid 1557716368)
+        id CBB0AE40391; Thu,  6 Oct 2022 13:27:42 -0600 (MDT)
+Date:   Thu, 6 Oct 2022 13:27:42 -0600
+From:   Uday Shankar <ushankar@purestorage.com>
+To:     Mike Christie <michael.christie@oracle.com>
+Cc:     linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] restrict legal sdev_state transitions via sysfs
+Message-ID: <20221006192742.GA2255620@dev-ushankar.dev.purestorage.com>
+References: <20220924000241.2967323-1-ushankar@purestorage.com>
+ <b5ac4103-87dc-f3ea-a2ef-67b3ef41bf66@oracle.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.13.0
-Subject: Re: [RFC PATCH 01/21] block: add and use init tagset helper
-Content-Language: en-US
-To:     Chaitanya Kulkarni <chaitanyak@nvidia.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-References: <20221005032257.80681-1-kch@nvidia.com>
- <20221005032257.80681-2-kch@nvidia.com>
- <6fee2d7a-7fd1-73ee-2911-87a4ed3e8769@opensource.wdc.com>
- <CAPDyKFpBpiydQn+=24CqtaH_qa3tQfN2gQSiUrHCjnLSuy4=Kg@mail.gmail.com>
- <e0ea0b0a-5077-de37-046f-62902aca93b6@acm.org>
- <a7e4fe12-64f2-3164-d675-26310ac07c9e@nvidia.com>
- <7e9ce6b2-70c8-cf85-95ab-de09090db64d@nvidia.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <7e9ce6b2-70c8-cf85-95ab-de09090db64d@nvidia.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <b5ac4103-87dc-f3ea-a2ef-67b3ef41bf66@oracle.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/6/22 11:13, Chaitanya Kulkarni wrote:
-> I will trim down the argument list with the most common arguments
-> and keep it to max 4-5 mandatory arguments identical to what we
-> have done this for blk_next_bio() and bio_alloc_bioset() [1]
-> where mandatory arguments are part of the initialization API
-> than repeating the code all the in the tree, that creates
-> maintenance work of treewide patches.
+On Thu, Sep 29, 2022 at 09:57:19PM -0500, Mike Christie wrote:
+> On 9/23/22 7:02 PM, Uday Shankar wrote:
+> > ---
+> > Looking for feedback on the "allowed source states" list. The bug I hit
+> > is solved by prohibiting transitions out of SDEV_BLOCKED, but I think
+> > most others shouldn't be allowed either.
 > 
-> Also, instead of doing tree wide change in series I'll start small
-> and gradually add more patches over time.
+> I think it's ok to be restrictive:
 > 
-> This definitely adds a more value to the code where code is not
-> repeated for mandatory arguments, which are way less than 9.
+> 1. BLOCKED is just broken. When the transport classes and scsi_lib transition
+> out of that state they do a lot more than just set the set. We are leaving
+> the kernel in mismatched state where the device state is running but the
+> block layerand transport classes are not ready for IO.
+> 
+> 2. CREATED does not happen. We go into RUNNING then do scsi_sysfs_add_sdev so
+> userspace should not see the CREATED state.
+> 
+> 3. I'm not 100% sure about SDEV_QUIESCE though. It looks like it has similar issues
+> as BLOCKED where scsi_device_resume will undo things it did in scsi_device_quiesce,
+> so we can't just set the state to RUNNING and expect things to work. I'm not
+> sure about the scsi_transport_spi cases.
+> 
+> It would be best for James or Hannes to comment because they know that code well.
 
-Hmm ... I'm not convinced that the approach outlined above will result
-in a valuable patch series. I think my objections also apply to the
-approach outlined above.
+Adding Hannes to CC.
 
-Bart.
+> 4. The transport classes are the ones that put devs in SDEV_TRANSPORT_OFFLINE
+> and then transition them when they are ready. The block layer is at least in
+> the correct state, but the transport classes may not be ready for IO since they
+> are not expecting IO to be queued to them at that time.
+> 
+> > 
+> >  drivers/scsi/scsi_sysfs.c | 8 ++++++++
+> >  1 file changed, 8 insertions(+)
+> > 
+> > diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> > index 9dad2fd5297f..b38c30fe681d 100644
+> > --- a/drivers/scsi/scsi_sysfs.c
+> > +++ b/drivers/scsi/scsi_sysfs.c
+> > @@ -822,6 +822,14 @@ store_state_field(struct device *dev, struct device_attribute *attr,
+> >  	}
+> >  
+> >  	mutex_lock(&sdev->state_mutex);
+> > +	switch (sdev->sdev_state) {
+> > +	case SDEV_RUNNING:
+> > +	case SDEV_OFFLINE:
+> > +		break;
+> > +	default:
+> > +		mutex_unlock(&sdev->state_mutex);
+> > +		return -EINVAL;
+> > +	}
+> >  	if (sdev->sdev_state == SDEV_RUNNING && state == SDEV_RUNNING) {
+> >  		ret = 0;
+> >  	} else {
+> > 
+> > base-commit: 7f615c1b5986ff08a725ee489e838c90f8197bcd
+> 
