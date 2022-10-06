@@ -2,123 +2,152 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD658C433FE
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Oct 2022 08:37:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72630C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Oct 2022 09:25:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230439AbiJFIhO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 Oct 2022 04:37:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58268 "EHLO
+        id S231391AbiJFJZZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 6 Oct 2022 05:25:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53838 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230440AbiJFIhM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Oct 2022 04:37:12 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F9EC95AD5;
-        Thu,  6 Oct 2022 01:37:09 -0700 (PDT)
-Received: from fraeml705-chm.china.huawei.com (unknown [172.18.147.226])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MjlBk1khBz6H73T;
-        Thu,  6 Oct 2022 16:35:42 +0800 (CST)
-Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml705-chm.china.huawei.com (10.206.15.54) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2375.31; Thu, 6 Oct 2022 10:37:07 +0200
-Received: from [10.126.169.169] (10.126.169.169) by
- lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Thu, 6 Oct 2022 09:37:06 +0100
-Message-ID: <9cc48b3f-5dbe-665e-d125-dffd53e930fb@huawei.com>
-Date:   Thu, 6 Oct 2022 09:37:06 +0100
+        with ESMTP id S231318AbiJFJZX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Oct 2022 05:25:23 -0400
+Received: from wout2-smtp.messagingengine.com (wout2-smtp.messagingengine.com [64.147.123.25])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 27B9C6C745;
+        Thu,  6 Oct 2022 02:25:23 -0700 (PDT)
+Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
+        by mailout.west.internal (Postfix) with ESMTP id 58EF33200945;
+        Thu,  6 Oct 2022 05:25:21 -0400 (EDT)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute5.internal (MEProxy); Thu, 06 Oct 2022 05:25:21 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:cc:content-type:date:date:feedback-id
+        :feedback-id:from:from:in-reply-to:in-reply-to:message-id
+        :mime-version:references:reply-to:sender:subject:subject:to:to
+        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
+        fm2; t=1665048320; x=1665134720; bh=PDJN5drlFIgF1wf1zolVhehgPHyW
+        o6xzy+C4FPyCMwk=; b=rX48AQn/zQ2vS6B4NwzWYDHstsYZKWy/VutXfvsOk/Lg
+        WOCNCWcm8GALu3dibJWVpx8TJPwqSn28ic+mXmzZ7jqeUGDraeYGJcuf7LSn+WCh
+        OLVg7sBktmb8GgShdsrJVYTz47Ute3nbUB1md8x69WDl+BoNMYOk9IRXEQeuymYv
+        tEMJ3e2eyXQGslV/LuV1vzKSv+Y0dU5ixJBOmyf/LL7WUMEcIbr3MWbOPzdXmxFM
+        dyBomaHbMHWtPyVFJ1sfK/iOqT4N2Qn+ukj3A55aWui/fJIbfh8GL6+w3Oa4HaaP
+        9CnJ+criHPGDuYmtmI2YXSNgTm86wL1EeaK2h35GbQ==
+X-ME-Sender: <xms:AJ8-YzUvWGapfAxgVhNQnjUi8sUYcWdrr31Zb6xHlTloKkd10TZunQ>
+    <xme:AJ8-Y7nTx5AnYXiM8djN5v2mnxuGHL-au-VIHqv082AYZ9vc9_W__PCnrgdv6Qf8j
+    GzuyOLeE-uinhqyGkE>
+X-ME-Received: <xmr:AJ8-Y_azOcHcI0GqiyAneRuhbm6X0jzUZrYFaFJI137iYhQ4rxE5jyF6_68BQW9lZqJPBOeZ6OQtZ67SvpK1pNfLffu36FeSnL4>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvfedrfeeihedgudegucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    cujfgurhepfffhvfevufgjkfhfgggtsehttdertddttddvnecuhfhrohhmpefhihhnnhcu
+    vfhhrghinhcuoehfthhhrghinheslhhinhhugidqmheikehkrdhorhhgqeenucggtffrrg
+    htthgvrhhnpeelueehleehkefgueevtdevteejkefhffekfeffffdtgfejveekgeefvdeu
+    heeuleenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
+    hfthhhrghinheslhhinhhugidqmheikehkrdhorhhg
+X-ME-Proxy: <xmx:AJ8-Y-UP7JxC0JII1qjg7eU2MdLVZChVHQIyIYdlaxqOEE1EHsjIsw>
+    <xmx:AJ8-Y9lGKmCDgTeTdoT6x_Q8lKZm4UR5rsA4Em9uKhOwO3GHf7ZmiA>
+    <xmx:AJ8-Y7e8mezkLaRf8_wXyLl1R9BmJU4Ml_Qp49exskT2qY-b9LB4cw>
+    <xmx:AJ8-YzhiItF6dHMWwRxMJ4puBMNEncBQDvJplzgFD9fxJ0YILe0tzw>
+Feedback-ID: i58a146ae:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
+ 6 Oct 2022 05:25:19 -0400 (EDT)
+Date:   Thu, 6 Oct 2022 20:25:16 +1100 (AEDT)
+From:   Finn Thain <fthain@linux-m68k.org>
+To:     Christophe Leroy <christophe.leroy@csgroup.eu>
+cc:     Michael Schmitz <schmitzmic@gmail.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] scsi: mac_scsi: Replace NO_IRQ by 0
+In-Reply-To: <f11593e75ba2e18e3b76989255cbb2e53a0213b4.1665034244.git.christophe.leroy@csgroup.eu>
+Message-ID: <5fb75ac2-678a-dd6e-2e68-7485b2d2ce5f@linux-m68k.org>
+References: <f11593e75ba2e18e3b76989255cbb2e53a0213b4.1665034244.git.christophe.leroy@csgroup.eu>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH v5 0/7] libsas and drivers: NCQ error handling
-To:     Niklas Cassel <Niklas.Cassel@wdc.com>
-CC:     "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "jinpu.wang@cloud.ionos.com" <jinpu.wang@cloud.ionos.com>,
-        "damien.lemoal@opensource.wdc.com" <damien.lemoal@opensource.wdc.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Linuxarm <linuxarm@huawei.com>,
-        yangxingui <yangxingui@huawei.com>,
-        yanaijie <yanaijie@huawei.com>
-References: <1664262298-239952-1-git-send-email-john.garry@huawei.com>
- <YzwvpUUftX6Ziurt@x1-carbon>
- <cfa52b91-db81-a179-76c2-8a61266c099d@huawei.com>
- <27148ec5-d1ae-d9a2-1b00-a4c34d2da198@huawei.com>
- <Yz33FGwd3YvQUAqT@x1-carbon>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <Yz33FGwd3YvQUAqT@x1-carbon>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.126.169.169]
-X-ClientProxiedBy: lhrpeml500002.china.huawei.com (7.191.160.78) To
- lhrpeml500003.china.huawei.com (7.191.162.67)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 05/10/2022 22:28, Niklas Cassel wrote:
-> Do you know why it fails to read the log?
-> Can you read the NCQ Command Error log using ATA16 passthrough commands?
-> 
-> sudo sg_sat_read_gplog -d --log=0x10 /dev/sdc
-> 
-> The first byte is the last NCQ tag (in hex) that failed.
+On Thu, 6 Oct 2022, Christophe Leroy wrote:
 
-Please see other reply.
-
+> NO_IRQ is used to check the return of irq_of_parse_and_map().
 > 
-> 
-> I tried your patch, and it looks good:
-
-Thanks, good to know.
-
-> 
-> [ 6656.228131] ata5.00: exception Emask 0x0 SAct 0x460000 SErr 0x0 action 0x0
-> [ 6656.252759] ata5.00: failed command: WRITE FPDMA QUEUED
-> [ 6656.271554] ata5.00: cmd 61/00:00:00:d8:8a/04:00:ce:03:00/40 tag 17 ncq dma 524288 out
->                          res 41/04:00:00:00:00/00:00:00:00:00/00 Emask 0x1 (device error)
-> [ 6656.309308] ata5.00: status: { DRDY ERR }
-> [ 6656.316403] ata5.00: error: { ABRT }
-> [ 6656.322300] ata5.00: failed command: WRITE FPDMA QUEUED
-> [ 6656.330871] ata5.00: cmd 61/00:00:00:dc:8a/04:00:ce:03:00/40 tag 18 ncq dma 524288 out
->                          res 41/04:00:00:00:00/00:00:00:00:00/00 Emask 0x1 (device error)
-> [ 6656.356295] ata5.00: status: { DRDY ERR }
-> [ 6656.362931] ata5.00: error: { ABRT }
-> [ 6656.368897] ata5.00: failed command: WRITE FPDMA QUEUED
-> [ 6656.377471] ata5.00: cmd 61/00:00:00:d4:8a/04:00:ce:03:00/40 tag 22 ncq dma 524288 out
->                          res 43/04:00:ff:d7:8a/00:00:ce:03:00/40 Emask 0x400 (NCQ error) <F>
-> [ 6656.403149] ata5.00: status: { DRDY SENSE ERR }
-> [ 6656.410624] ata5.00: error: { ABRT }
-> 
-> However, since this is a change from the existing behavior of this driver,
-> this could go as a separate patch, and does not need to delay this series.
-> 
+> On some architecture NO_IRQ is 0, on other architectures it is -1.
 > 
 
-ok, but I am not sure about this series for 6.1 since it's now, so I 
-will just wait.
+Yes. The core NCR5380 driver is used on ARM etc. where NO_IRQ is -1 as 
+well as on powerpc where it is 0.
 
+> irq_of_parse_and_map() returns 0 on error, independent of NO_IRQ.
 > 
-> I also think that we should do a similar patch for sas_ata_task_done():
+> So use 0 instead of using NO_IRQ.
 > 
-> diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-> index d35c9296f738..648d0693ceee 100644
-> --- a/drivers/scsi/libsas/sas_ata.c
-> +++ b/drivers/scsi/libsas/sas_ata.c
-> @@ -140,7 +140,7 @@ static void sas_ata_task_done(struct sas_task *task)
->                          }
->   
->                          dev->sata_dev.fis[3] = 0x04; /* status err */
-> -                       dev->sata_dev.fis[2] = ATA_ERR;
-> +                       dev->sata_dev.fis[2] = ATA_ERR | ATA_DRDY;
->                  }
->          }
-> 
-> To avoid all SAS errors from being reported as HSM errors.
 
-Yeah, I tend to agree. I can put that change in another patch.
+Sorry, I must be missing something.
 
-Thanks,
-John
+You seem to be saying that this driver could be re-used in the context of 
+openfirmware/device trees if it avoided using the NO_IRQ. Do I have that 
+right?
+
+Or are you changing NO_IRQ semantics tree-wide for some reason explained 
+somewhere else?
+
+If it is the former, shouldn't you reverse the comment in 
+arch/powerpc/include/asm/irq.h, which says the macro is to be used in the 
+way this driver (and others) use it?
+
+If it is the latter, shouldn't you address the use of NO_IRQ in the core 
+NCR5380 driver rather than just this wrapper?
+
+Moreover, wouldn't it make more sense to fix the callers of 
+irq_of_parse_and_map(), since they appear to be abusing the NO_IRQ macro?
+
+For example, drivers/ata/sata_dwc_460ex.c actually does #define NO_IRQ 0 
+and then expects irq_of_parse_and_map() will somehow use the same value to 
+mean the same thing...
+
+> Signed-off-by: Christophe Leroy <christophe.leroy@csgroup.eu>
+> ---
+>  drivers/scsi/mac_scsi.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/mac_scsi.c b/drivers/scsi/mac_scsi.c
+> index 2e511697fce3..e4df2b501e8b 100644
+> --- a/drivers/scsi/mac_scsi.c
+> +++ b/drivers/scsi/mac_scsi.c
+> @@ -478,7 +478,7 @@ static int __init mac_scsi_probe(struct platform_device *pdev)
+>  	if (irq)
+>  		instance->irq = irq->start;
+>  	else
+> -		instance->irq = NO_IRQ;
+> +		instance->irq = 0;
+>  
+>  	hostdata = shost_priv(instance);
+>  	hostdata->base = pio_mem->start;
+> @@ -495,7 +495,7 @@ static int __init mac_scsi_probe(struct platform_device *pdev)
+>  	if (error)
+>  		goto fail_init;
+>  
+> -	if (instance->irq != NO_IRQ) {
+> +	if (instance->irq) {
+>  		error = request_irq(instance->irq, macscsi_intr, IRQF_SHARED,
+>  		                    "NCR5380", instance);
+>  		if (error)
+> @@ -514,7 +514,7 @@ static int __init mac_scsi_probe(struct platform_device *pdev)
+>  	return 0;
+>  
+>  fail_host:
+> -	if (instance->irq != NO_IRQ)
+> +	if (instance->irq)
+>  		free_irq(instance->irq, instance);
+>  fail_irq:
+>  	NCR5380_exit(instance);
+> @@ -528,7 +528,7 @@ static int __exit mac_scsi_remove(struct platform_device *pdev)
+>  	struct Scsi_Host *instance = platform_get_drvdata(pdev);
+>  
+>  	scsi_remove_host(instance);
+> -	if (instance->irq != NO_IRQ)
+> +	if (instance->irq)
+>  		free_irq(instance->irq, instance);
+>  	NCR5380_exit(instance);
+>  	scsi_host_put(instance);
+> 
