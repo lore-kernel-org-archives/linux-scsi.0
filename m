@@ -2,90 +2,84 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E243C43217
-	for <linux-scsi@archiver.kernel.org>; Fri,  7 Oct 2022 18:26:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32DCAC433FE
+	for <linux-scsi@archiver.kernel.org>; Fri,  7 Oct 2022 19:17:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229688AbiJGS0e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 7 Oct 2022 14:26:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49288 "EHLO
+        id S229688AbiJGTR3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 7 Oct 2022 15:17:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43484 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229482AbiJGS0c (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Oct 2022 14:26:32 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A38AC7050;
-        Fri,  7 Oct 2022 11:26:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=IudIrA3q3WpPWuZzZUKujefONUnAfceTWjlveYaPvio=; b=y3TnHRe5LU2pfTWpYrKhFoSYbh
-        jboFN1RMi5CjIniehZGNTOJpkF2sr617jJ4vb6Ib6lSQpyC0ek2+SlWngTW1ubM41ZOvqG9t87RGe
-        LZXDSjCQvYJpbTl+VRQpi8LkTLFVyXqr+kFALUeMkSNjyvXp3VTfiu6Hin9S6c12kBhwJdLbNbYn4
-        4szHif4ftpjkLWks7RWt2NtkOf4pQQWV+FmMEugetSNijqYdLE8QwTu09Ycl6RznABM1+qPym5ADr
-        Od764RzqJQFgxId6v9nZqSWYrZBx/EX1oe/ZXXPNJJb8O2jtIyGdk61SSE07/zRW76XLArhkeRZ+1
-        ZC4+w/vg==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1ogs33-00A41Z-Ot; Fri, 07 Oct 2022 18:26:13 +0000
-Date:   Fri, 7 Oct 2022 11:26:13 -0700
-From:   Luis Chamberlain <mcgrof@kernel.org>
-To:     Chaitanya Kulkarni <kch@nvidia.com>
-Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-omap@vger.kernel.org, linux-remoteproc@vger.kernel.org,
-        linux-mmc@vger.kernel.org, linux-mtd@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
-        linux-scsi@vger.kernel.org, axboe@kernel.dk, efremov@linux.com,
-        josef@toxicpanda.com, idryomov@gmail.com,
-        dongsheng.yang@easystack.cn, haris.iqbal@ionos.com,
-        jinpu.wang@ionos.com, mst@redhat.com, jasowang@redhat.com,
-        pbonzini@redhat.com, stefanha@redhat.com, ohad@wizery.com,
-        andersson@kernel.org, baolin.wang@linux.alibaba.com,
-        ulf.hansson@linaro.org, richard@nod.at, miquel.raynal@bootlin.com,
-        vigneshr@ti.com, marcan@marcan.st, sven@svenpeter.dev,
-        alyssa@rosenzweig.io, kbusch@kernel.org, hch@lst.de,
-        sagi@grimberg.me, sth@linux.ibm.com, hoeppner@linux.ibm.com,
-        hca@linux.ibm.com, gor@linux.ibm.com, agordeev@linux.ibm.com,
-        borntraeger@linux.ibm.com, svens@linux.ibm.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, hare@suse.de, bhelgaas@google.com,
-        john.garry@huawei.com, christophe.jaillet@wanadoo.fr,
-        vaibhavgupta40@gmail.com, wsa+renesas@sang-engineering.com,
-        damien.lemoal@opensource.wdc.com, johannes.thumshirn@wdc.com,
-        bvanassche@acm.org, ming.lei@redhat.com,
-        shinichiro.kawasaki@wdc.com, vincent.fu@samsung.com,
-        christoph.boehmwalder@linbit.com, joel@jms.id.au,
-        vincent.whitchurch@axis.com, nbd@other.debian.org,
-        ceph-devel@vger.kernel.org,
-        virtualization@lists.linux-foundation.org, asahi@lists.linux.dev
-Subject: Re: [RFC PATCH 00/21] block: add and use init tagset helper
-Message-ID: <Y0BvRaVO0iUVmHgB@bombadil.infradead.org>
-References: <20221005032257.80681-1-kch@nvidia.com>
+        with ESMTP id S229453AbiJGTR2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Oct 2022 15:17:28 -0400
+Received: from mail-oi1-x231.google.com (mail-oi1-x231.google.com [IPv6:2607:f8b0:4864:20::231])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2B3B10DA
+        for <linux-scsi@vger.kernel.org>; Fri,  7 Oct 2022 12:17:27 -0700 (PDT)
+Received: by mail-oi1-x231.google.com with SMTP id m130so6595227oif.6
+        for <linux-scsi@vger.kernel.org>; Fri, 07 Oct 2022 12:17:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=2JDsqVdZnjWlaOQvu6EPe39LCBHFKQkuG1fa3tT0Gjw=;
+        b=FayXRpNYC52MB8bTFhSz9+bsYprGVX95RfpxGW5qmC9ETLZKKhPBNDgsrYpSrOLKac
+         x7J7OjkHOv2jzukOS0U+18mOEFxY76SKT3qOv1XfdOyEu1dfIvmA6dYbGzNed9AzfWSv
+         9kakobjTxkn4LVnsYDdRzVAdFCA2TQ04sYgYk=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=2JDsqVdZnjWlaOQvu6EPe39LCBHFKQkuG1fa3tT0Gjw=;
+        b=Kqbw4U8O2nr/pI3/xJ9UkqXzadML/WHiCgJDYiZloN8G1NHYH3LL+1S7Mil3JHyOtT
+         K5rKl7fCZiP4owrxUrJloLTZ1HI3Bb4Mq8ZoHKDjWBZNx/CG1gN4Sbn8lBryVmC2uegr
+         1NZ7OZ+tk9+vsnTXvhuLcbpmsaj+tk9I5znptFRZhhZcURq//O/vtpDsHTwwhfesdwxh
+         a1Im+kVcEV/8OonEgGEJ0FbnXuRKr9Jzwf0JY8UesyU6pljDIf+OkNAzLpPaemMM1cwZ
+         9K1QGqskkkH1XPXJ9yrw8BE/6aylnMu1pJXRDsKEiMNBqNmPIChrtp5Zu60qTbycuQ6X
+         50gw==
+X-Gm-Message-State: ACrzQf0P0b3nowIKEhqsisyR/qAPGVPK0+kBeZkG4pRilELx2F64H7Ot
+        DEVbkbgQ6itv/uXOSpCbAoSHKUILTRNV/w==
+X-Google-Smtp-Source: AMsMyM7w8n1p8mEA3qTtqr1/3OIE0ixqpE0y2lwiUZleE+gJ7KdNSCUSIzmxrfPvUeQugn2Ux6ieiw==
+X-Received: by 2002:a05:6808:1997:b0:34f:d372:b790 with SMTP id bj23-20020a056808199700b0034fd372b790mr3237532oib.2.1665170246195;
+        Fri, 07 Oct 2022 12:17:26 -0700 (PDT)
+Received: from mail-oa1-f52.google.com (mail-oa1-f52.google.com. [209.85.160.52])
+        by smtp.gmail.com with ESMTPSA id y21-20020a4ae715000000b00425678b9c4bsm1317917oou.0.2022.10.07.12.17.25
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 07 Oct 2022 12:17:25 -0700 (PDT)
+Received: by mail-oa1-f52.google.com with SMTP id 586e51a60fabf-132af5e5543so6582403fac.8
+        for <linux-scsi@vger.kernel.org>; Fri, 07 Oct 2022 12:17:25 -0700 (PDT)
+X-Received: by 2002:a05:6870:c888:b0:12c:7f3b:d67d with SMTP id
+ er8-20020a056870c88800b0012c7f3bd67dmr3561496oab.229.1665170244926; Fri, 07
+ Oct 2022 12:17:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20221005032257.80681-1-kch@nvidia.com>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+References: <3727e267ba5a03e021ba06e46a97f260dcccc3e7.camel@HansenPartnership.com>
+In-Reply-To: <3727e267ba5a03e021ba06e46a97f260dcccc3e7.camel@HansenPartnership.com>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Fri, 7 Oct 2022 12:17:09 -0700
+X-Gmail-Original-Message-ID: <CAHk-=whAUVVgVQWHig=rK1sw7RhjVENrqXDcKGF_mP8mmU9oFA@mail.gmail.com>
+Message-ID: <CAHk-=whAUVVgVQWHig=rK1sw7RhjVENrqXDcKGF_mP8mmU9oFA@mail.gmail.com>
+Subject: Re: [GIT PULL] first round of SCSI updates for the 6.0+ merge window
+To:     James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Oct 04, 2022 at 08:22:36PM -0700, Chaitanya Kulkarni wrote:
-> Hi,
-> 
-> Add and use the helper to initialize the common fields of the tag_set
-> such as blk_mq_ops, number of h/w queues, queue depth, command size,
-> numa_node, timeout, BLK_MQ_F_XXX flags, driver data. This initialization
-> is spread all over the block drivers. This avoids repetation of
-> inialization code of the tag set in current block drivers and any future
-> ones.
-> 
-> P.S. I'm aware of the EXPORT_SYMBOL_GPL() checkpatch warn just to make
-> get some feedback to so I can remove the RFC tag.
-> 
+On Fri, Oct 7, 2022 at 9:16 AM James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+>
+> The patch is available here:
+>
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
 
-*If* there were commonalities at init and these could be broken up into
-common groups, each having their own set of calls, then we simplify and
-can abstract these. I say this without doing a complete review of the
-removals, but if there really isn't much of commonalities I tend to
-agree with Bart that open coding this is better.
+Nope. Nothing there. That's just very old state from July.
 
-  Luis
+And since the pull request isn't even standard 'git request-pull'
+format, there's no indication of what the top commit *should* be.
+
+Please fix and re-post a proper pull request,
+
+               Linus
