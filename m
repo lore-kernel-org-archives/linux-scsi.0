@@ -2,54 +2,54 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12952C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri,  7 Oct 2022 23:07:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93DACC433FE
+	for <linux-scsi@archiver.kernel.org>; Fri,  7 Oct 2022 23:08:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229540AbiJGXHP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 7 Oct 2022 19:07:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35332 "EHLO
+        id S229547AbiJGXIF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 7 Oct 2022 19:08:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35462 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229469AbiJGXHN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Oct 2022 19:07:13 -0400
-Received: from mail-yw1-x114a.google.com (mail-yw1-x114a.google.com [IPv6:2607:f8b0:4864:20::114a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A2E5F88F9
-        for <linux-scsi@vger.kernel.org>; Fri,  7 Oct 2022 16:07:12 -0700 (PDT)
-Received: by mail-yw1-x114a.google.com with SMTP id 00721157ae682-34d188806a8so57882237b3.19
-        for <linux-scsi@vger.kernel.org>; Fri, 07 Oct 2022 16:07:12 -0700 (PDT)
+        with ESMTP id S229459AbiJGXIE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Oct 2022 19:08:04 -0400
+Received: from mail-yb1-xb4a.google.com (mail-yb1-xb4a.google.com [IPv6:2607:f8b0:4864:20::b4a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B47F5F88F9
+        for <linux-scsi@vger.kernel.org>; Fri,  7 Oct 2022 16:08:03 -0700 (PDT)
+Received: by mail-yb1-xb4a.google.com with SMTP id t8-20020a258388000000b006bfb0865043so1371298ybk.13
+        for <linux-scsi@vger.kernel.org>; Fri, 07 Oct 2022 16:08:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
         h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
          :date:message-id:reply-to;
-        bh=YJA+QKDUILUYuI63EpErW7+KuSNjI9fLtfT2e7vYlNo=;
-        b=OoioH/J1Cy3VD9tPZHJhUM/NlEfntG1JFbhwBgwGfc7lUIT2uxzlSIF5KsHBXOI5Uc
-         f4ZuW5h/sEdMYNzXorCcnb/DvgtQCxKTMCUyEveWhXV2BroibS4+AJRTmzj6287Mo4IT
-         KElTElKR/wKcr2gLdKCjxXq0DlZ1SdHbeQJOo/BJsXlSxVPM5GcZPKAH8fZWpZ9g7Itu
-         CIvq0Yl1HTr9nv1CWsKhNyqYCVgo6EtZU/TTLAQ34MhyurLMklsQYTsaYGmFNgaSzYH4
-         +LzVzZoAkFPDqeimC6gfkSA9Fli3XurXx6bId9hsgj8PL6LMn5EMcsG+3lxLAkLgyv5L
-         p3uQ==
+        bh=BRUAkgPbXDSUy8pZqqQenKuEBRZxhxn7JY7Ad7kPHQ8=;
+        b=ZdggaZj2i3uevwtZ/H/mBA+CsujtrxI85/rbNEnsI+UOD66YCkgq07bMm9IalY9AoH
+         n9+16ISh9EaKLtW9NRgFtTfpTU5KlEXZBKqlES+hxIdau6EedXbSTkdEild6q6CB57cl
+         KxxZEgM+4x+Y+maqvSsUNviTxRQ372yWrDXBVMchJ9ywAW5Z+jJyBMHA+jVnNvoExfRE
+         kxmMQG1RA1evS9l7s0VwgiLhPECeo6QI6RJDDaGYr7L/P2eThhZmkKakQ+1kAGpyhHFN
+         80eSi6KjuBuc6F9RWSAATMkgV1toEkkJlz8M5qfLTamsF2AmTw4RNmsXxdGAD4ZFt/lc
+         AYcg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=YJA+QKDUILUYuI63EpErW7+KuSNjI9fLtfT2e7vYlNo=;
-        b=f0RVam1h7lxyy9TLTxexRURXSJrb7llMgAwracbIG6WZ9heNnnaPzqhCaclAYiF9si
-         ZxVz+V7ELCXlknFD4B7ISOqxp0f6dPPS0gcc4AiRI6tlEIdZJ/yMqUNH2yoPoMKs+adf
-         2XBhRRy01bPrmGUoCLdY6Bn+GoXXiRfj7FrGPzPLhsJUlZ2xQQoZ7r3FEqY00lBdPYaa
-         hlnXQyBDnjqkU4yDOw/tYzqAwG6nxK9ESNyTuQ19C5ToJByUNCG1VZYTZ2kC4Eky/20i
-         u/bxAf7Z72BbT1R1jf9n2sL8kGOC+k0hKgmQEIS4qsRUEafzoLrMDmmTFiThe/6JauuK
-         ZzKA==
-X-Gm-Message-State: ACrzQf3s8voYes2DO3RUrga6tabR+b1XBot98vovfDWG8IjL3TxpbDMh
-        9bVg3TvGbBuCPIReAC10t00LdEpCbr1GmA==
-X-Google-Smtp-Source: AMsMyM7o5KGwh4y7/UHW5IpSzRTor8WUOnX4DwnVHofxJb3H+yYywIFhRTfVNmpQxGV88+n1mpz5uNPQgP0gAw==
+        bh=BRUAkgPbXDSUy8pZqqQenKuEBRZxhxn7JY7Ad7kPHQ8=;
+        b=eQUFQsTB8dyfp2GOGeYUBLNXF5GR+zo0ESgOHNxOKDyVfvBDnyrf64r0n8lgtZyoUW
+         yl8e5oG9/1AkUr7Z9if7HmC/ZDJuPVxa+rEkldkpsG/HQOMZN1DseYdbU5aFnydocXl7
+         xEqp8+ONVaLBBzss6Ert6lr6QeLcM0w3au0kFqyw20uqSqyiHnpeB7N2MlZmkaEcbDgX
+         jGihddQd83gEOzbZiuyjKxbTbKPlG5Wh4QESZpShWGla9FRJv8SMLMP8SExWQc26GUS5
+         C9MybmWp9SaKIeHxd/SRSblMnbd7PPxNYUC+xsDct0HUMbJ8Qq09GRvhVcZ8fR+Mn+L+
+         g1qg==
+X-Gm-Message-State: ACrzQf0YzvHWdREUlI4wSJjRV4Kupf/4NQ96dZMmgSNVrhLgIrOROcOS
+        9ZUlDVE631F2mVd98Yrqr1v5679aP4hoUQ==
+X-Google-Smtp-Source: AMsMyM4q4geKC43BIla1KUjt40xSc0TIqvi4wVXU1k0d7N/O84rFlzj4lSyo1vz+bWaPdN799kIdtODqVTzC3g==
 X-Received: from ipylypiv.svl.corp.google.com ([2620:15c:2c5:13:4341:2093:c9c3:a120])
- (user=ipylypiv job=sendgmr) by 2002:a81:8103:0:b0:345:62dd:a9a7 with SMTP id
- r3-20020a818103000000b0034562dda9a7mr6549007ywf.330.1665184031390; Fri, 07
- Oct 2022 16:07:11 -0700 (PDT)
-Date:   Fri,  7 Oct 2022 16:06:51 -0700
+ (user=ipylypiv job=sendgmr) by 2002:a81:6c7:0:b0:353:cc42:3d12 with SMTP id
+ 190-20020a8106c7000000b00353cc423d12mr6851426ywg.60.1665184083045; Fri, 07
+ Oct 2022 16:08:03 -0700 (PDT)
+Date:   Fri,  7 Oct 2022 16:07:51 -0700
 Mime-Version: 1.0
 X-Mailer: git-send-email 2.38.0.rc1.362.ged0d419d3c-goog
-Message-ID: <20221007230651.308969-1-ipylypiv@google.com>
-Subject: [PATCH] scsi: pm80xx: Display proc_name in sysfs
+Message-ID: <20221007230751.309363-1-ipylypiv@google.com>
+Subject: [PATCH] scsi: pm80xx: Remove unused reset_in_progress flag logic
 From:   Igor Pylypiv <ipylypiv@google.com>
 To:     Jack Wang <jinpu.wang@cloud.ionos.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
@@ -62,35 +62,42 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The proc_name entry in sysfs for pm80xx is "(null)" because it is
-not initialized in scsi_host_template:
-
-Before:
-host:~# cat /sys/class/scsi_host/host6/proc_name
-(null)
-
-After:
-host:~# cat /sys/class/scsi_host/host6/proc_name
-pm80xx
+The reset_in_progress flag was never set.
 
 Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
-Reviewed-by: Jolly Shah <jollys@google.com> 
+Reviewed-by: Andrew Konecki <awkonecki@google.com>
 ---
- drivers/scsi/pm8001/pm8001_init.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/pm8001/pm8001_sas.h | 1 -
+ drivers/scsi/pm8001/pm80xx_hwi.c | 4 ----
+ 2 files changed, 5 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index 2ff2fac1e403..7a7d63aa90e2 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -99,6 +99,7 @@ static void pm8001_map_queues(struct Scsi_Host *shost)
- static struct scsi_host_template pm8001_sht = {
- 	.module			= THIS_MODULE,
- 	.name			= DRV_NAME,
-+	.proc_name		= DRV_NAME,
- 	.queuecommand		= sas_queuecommand,
- 	.dma_need_drain		= ata_scsi_dma_need_drain,
- 	.target_alloc		= sas_target_alloc,
+diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
+index b08f52673889..2bbec5083106 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.h
++++ b/drivers/scsi/pm8001/pm8001_sas.h
+@@ -535,7 +535,6 @@ struct pm8001_hba_info {
+ 	bool			controller_fatal_error;
+ 	const struct firmware 	*fw_image;
+ 	struct isr_param irq_vector[PM8001_MAX_MSIX_VEC];
+-	u32			reset_in_progress;
+ 	u32			non_fatal_count;
+ 	u32			non_fatal_read_length;
+ 	u32 max_q_num;
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+index f8b8624458f7..51c9541f6f4d 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -3550,10 +3550,6 @@ static int mpi_hw_event(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 	case HW_EVENT_PHY_DOWN:
+ 		pm8001_dbg(pm8001_ha, MSG, "HW_EVENT_PHY_DOWN\n");
+ 		hw_event_phy_down(pm8001_ha, piomb);
+-		if (pm8001_ha->reset_in_progress) {
+-			pm8001_dbg(pm8001_ha, MSG, "Reset in progress\n");
+-			return 0;
+-		}
+ 		phy->phy_attached = 0;
+ 		phy->phy_state = PHY_LINK_DISABLE;
+ 		break;
 -- 
 2.38.0.rc1.362.ged0d419d3c-goog
 
