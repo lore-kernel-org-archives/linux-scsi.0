@@ -2,269 +2,98 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16817C433FE
-	for <linux-scsi@archiver.kernel.org>; Fri,  7 Oct 2022 03:44:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C2A9C433FE
+	for <linux-scsi@archiver.kernel.org>; Fri,  7 Oct 2022 13:23:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229501AbiJGDo3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 Oct 2022 23:44:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56660 "EHLO
+        id S229514AbiJGNXz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 7 Oct 2022 09:23:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45450 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229556AbiJGDo0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Oct 2022 23:44:26 -0400
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DE45C1D95
-        for <linux-scsi@vger.kernel.org>; Thu,  6 Oct 2022 20:44:23 -0700 (PDT)
-Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20221007034421epoutp02bbc56be9051da411d07e7c71fef118e6~brJlGnCGK2539225392epoutp02F
-        for <linux-scsi@vger.kernel.org>; Fri,  7 Oct 2022 03:44:21 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20221007034421epoutp02bbc56be9051da411d07e7c71fef118e6~brJlGnCGK2539225392epoutp02F
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1665114261;
-        bh=Loj4wWO6Wu0NkXkYpUmThRaJQ0m30/PbCFt7YNRtD8Y=;
-        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=Ly6HyrOD7Z1JtwKGVltbP3QHJnv3+2EE85oxAtG05iulOyNYnCAKSQviuGPxu7eFw
-         84aDIDhHflyuVbdROy0DNsgwdG0usnaat5dYfC3mp4MA8mYmolX/7k4XMTSQPG3KZ0
-         ouQ8BNp4J30N9jPdPg7skLuvUMhzcwDU+NYOT/UM=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
-        20221007034420epcas2p4db5c7c5d966140087d37cd346cf244f2~brJkhPjE91817918179epcas2p4z;
-        Fri,  7 Oct 2022 03:44:20 +0000 (GMT)
-Received: from epsmges2p4.samsung.com (unknown [182.195.36.89]) by
-        epsnrtp2.localdomain (Postfix) with ESMTP id 4MkDh439Chz4x9Pw; Fri,  7 Oct
-        2022 03:44:20 +0000 (GMT)
-X-AuditID: b6c32a48-1cffb7000000186f-66-633fa0949f8e
-Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
-        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
-        86.E7.06255.490AF336; Fri,  7 Oct 2022 12:44:20 +0900 (KST)
-Mime-Version: 1.0
-Subject: RE:(2) [PATCH v2 06/17] ufs: core: mcq: Configure resource regions
-Reply-To: daejun7.park@samsung.com
-Sender: Daejun Park <daejun7.park@samsung.com>
-From:   Daejun Park <daejun7.park@samsung.com>
-To:     Daejun Park <daejun7.park@samsung.com>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
-        "quic_nitirawa@quicinc.com" <quic_nitirawa@quicinc.com>,
-        "quic_rampraka@quicinc.com" <quic_rampraka@quicinc.com>,
-        "quic_bhaskarv@quicinc.com" <quic_bhaskarv@quicinc.com>,
-        "quic_richardp@quicinc.com" <quic_richardp@quicinc.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-CC:     "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
-        "quic_xiaosenh@quicinc.com" <quic_xiaosenh@quicinc.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "mani@kernel.org" <mani@kernel.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <20221007024138epcms2p729595abf03da8402618c4803b20a4d13@epcms2p7>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20221007034419epcms2p84f51fef929459cef230c34c1dbfbff1d@epcms2p8>
-Date:   Fri, 07 Oct 2022 12:44:19 +0900
-X-CMS-MailID: 20221007034419epcms2p84f51fef929459cef230c34c1dbfbff1d
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrBJsWRmVeSWpSXmKPExsWy7bCmhe6UBfbJBt2XOSxe/rzKZnHwYSeL
-        xbQPP5ktXh7StFj1INxi4v6z7Bbd13ewWRz4sIrRYmHHXBaLI4/fM1tMuraBzWLqi+PsFjvu
-        tzNanDoUavF9wnZ2i6uLr7I7CHhcvuLtsWlVJ5vH9/UdbB4T99R59G1ZxejxeZOcR/uBbqYA
-        9qhsm4zUxJTUIoXUvOT8lMy8dFsl7+B453hTMwNDXUNLC3MlhbzE3FRbJRefAF23zBygw5UU
-        yhJzSoFCAYnFxUr6djZF+aUlqQoZ+cUltkqpBSk5BeYFesWJucWleel6eaklVoYGBkamQIUJ
-        2RkzD65iL1ibXDH3+QLGBsZHCV2MnBwSAiYSk1fsZe9i5OIQEtjBKNG05wpzFyMHB6+AoMTf
-        HcIgNcIC3hK9mzeygthCAkoS6y/OYoeI60nceriGEcRmE9CRmH7iPtgcEYGNzBIPZ20CSzAL
-        PGWS2NcUC7GMV2JG+1MWCFtaYvvyrWA1nAJ+ElvuPmCHiGtI/FjWywxhi0rcXP2WHcZ+f2w+
-        I4QtItF67yxUjaDEg5+7oeKSErfnboKqz5f4f2U5lF0jse3APChbX+Jax0awG3gFfCXmnPoI
-        9hiLgKrEjEtvoW5zkVi2o4cN4n5tiWULX4PDhFlAU2L9Ln0QU0JAWeLILRaYrxo2/mZHZzML
-        8El0HP4LF98x7wkThK0mse7neqYJjMqzEAE9C8muWQi7FjAyr2IUSy0ozk1PLTYqMIHHbXJ+
-        7iZGcBLW8tjBOPvtB71DjEwcjIcYJTiYlUR4d+60SxbiTUmsrEotyo8vKs1JLT7EaAr05URm
-        KdHkfGAeyCuJNzSxNDAxMzM0NzI1MFcS5+2aoZUsJJCeWJKanZpakFoE08fEwSnVwKRy4bZg
-        aEBdVOqvGb2XxAR9tG0mTiw+rLjk1a24G5sZFFqSlPbm/VGaOWOzymQF/dudeSlcKXknVXhT
-        p6y79fbbspnHml7xbF3uuz0z0Foo89Luy+os67aKObffWyS5y+1OfTtnuP1jmw9Hvk6LvCDa
-        lHV0V/c2q4OcTa/LXr5YPSNgtcbuuF+S0n+qm/ZFxr03XbWJl2fnvXepMVVS/PfbWsWVbLf3
-        Z+1cnyXxdc++l9pv5zO9kFfdM+Xv+daM83Zh39czTF9WeIsnKu8fg0jHTS/L+36XrTUMdzRs
-        +ixkrSMp8PzetsL6UKOnb58mX/GrvF3Sc7RP6fpKxsPVF5dXTVlRuEfquNlHFp4tYlVKLMUZ
-        iYZazEXFiQBKavUhSwQAAA==
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20221006010745epcas2p38b37890b7e1fefb45b8fbb0e14ab0a82
-References: <20221007024138epcms2p729595abf03da8402618c4803b20a4d13@epcms2p7>
-        <271ed77a0ff46390c90fdcde71890d8cec83b8c9.1665017636.git.quic_asutoshd@quicinc.com>
-        <cover.1665017636.git.quic_asutoshd@quicinc.com>
-        <CGME20221006010745epcas2p38b37890b7e1fefb45b8fbb0e14ab0a82@epcms2p8>
+        with ESMTP id S229644AbiJGNXx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Oct 2022 09:23:53 -0400
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F33BD01BF;
+        Fri,  7 Oct 2022 06:23:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1665149032; x=1696685032;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=Trw3Ky/wAlHOsMe0Ydt3F+ofzQMskwlHAG5u+ZUCpns=;
+  b=PHJFXGoIkiv7QMWyU0GW5I20AhMUwZkC/oGy0ub/RQ1spAa+NpKYUPPb
+   sQ0gzM75czDB/w2BOvnB1v+wN7Cos/LTKk3PLXqcGdRuv/kwE3ZZ2R6Y0
+   pfOki6od1xenEZJN4H2FE7wXmTGYqAYRCsYKdXd+JNo/QBTj6fzwXMtfx
+   ghylyz5nKgPoPaK0+JOtbPTCgoOxuTvZHVELKvIzKyMAoDgyI3h6WBQim
+   IAkcdUTt73CGmg+MQso91M5SC9b68Fr/P0t6qdg3wadgdF05F+TEAAUJM
+   wZK9GqDF+qE0sntkQrG+IVdKhCrgohq8BBAR9E+BcQaJjFWayqD/JERKv
+   g==;
+X-IronPort-AV: E=Sophos;i="5.95,166,1661788800"; 
+   d="scan'208";a="213238163"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 07 Oct 2022 21:23:51 +0800
+IronPort-SDR: pLoQKAQjAwifzffBs/sn5nnu/8JwGum1FuwtbX4U06U3N/LNedWF++d6KtmRhvQrb2k74oTP31
+ B7fRe1/xRxJKEe8U4GUGWGSe9BWzyE/aBlKiWkLMqm7aWAqjJuopeeAnNBWbkyfWgTX7HTNnZj
+ WOlJ82ay80/RcKgvzdYxsUi7s3rJRfCuvW0EMXlzZyYQUuyYoVPOm7/kB3IgW95cmyAVuhHCRO
+ 40lQlAzKz48dVJGADAjil0pDSKYbv6zvJn+jnhJJrdtdO2v5g8gwg3J8sf1+l9Y125Rot2aovi
+ CevAsvGSfRhozGUzkdE1P+nQ
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 07 Oct 2022 05:38:01 -0700
+IronPort-SDR: llWtY2KT8NYGk93HadKKuMhNrbG57wcKi/6fwxK+0xLVbJBoGJyDJtXFsqxZQEsp8JIbL9RYfd
+ c6vONeZklHHcI56tu9bmhL0tlJ4l1Z7Ixjouabc21o88RMw/c1DKyWOCbS7NKU4hYO5kpLOiz5
+ hFIE+ZCtxeAeM/WdMW3rsjcrlBDkp3+GZwh95Xnp5BDC4zP3sMe0Zd7eSSC4dyYCE61btrgGQL
+ 6164/PDAG0fEZbE1WVrDrMMbKVGLKomo9/j5Js/QtFMzerGcZUc6894Qc5lyXKiYwXOtIrsayt
+ kBU=
+WDCIronportException: Internal
+Received: from unknown (HELO x1-carbon.wdc.com) ([10.225.164.69])
+  by uls-op-cesaip02.wdc.com with ESMTP; 07 Oct 2022 06:23:48 -0700
+From:   Niklas Cassel <niklas.cassel@wdc.com>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Mikael Pettersson <mikpelinux@gmail.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     john.garry@huawei.com, Niklas Cassel <niklas.cassel@wdc.com>,
+        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: [PATCH 0/4] libata: misc frozen port cleanups
+Date:   Fri,  7 Oct 2022 15:23:36 +0200
+Message-Id: <20221007132342.1590367-1-niklas.cassel@wdc.com>
+X-Mailer: git-send-email 2.37.3
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Asutosh=C2=A0Das,=0D=0A=0D=0A>Define=C2=A0the=C2=A0mcq=C2=A0resources=C2=
-=A0and=C2=A0add=C2=A0support=C2=A0to=C2=A0ioremap=0D=0A>the=C2=A0resource=
-=C2=A0regions.=0D=0A>=0D=0A>Co-developed-by:=C2=A0Can=C2=A0Guo=C2=A0<quic_c=
-ang=40quicinc.com>=0D=0A>Signed-off-by:=C2=A0Can=C2=A0Guo=C2=A0<quic_cang=
-=40quicinc.com>=0D=0A>Signed-off-by:=C2=A0Asutosh=C2=A0Das=C2=A0<quic_asuto=
-shd=40quicinc.com>=0D=0A>---=0D=0A>=C2=A0drivers/ufs/core/ufs-mcq.c=C2=A0=
-=7C=C2=A099=C2=A0++++++++++++++++++++++++++++++++++++++++++++++=0D=0A>=C2=
-=A0include/ufs/ufshcd.h=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=7C=C2=A02=
-8=C2=A0+++++++++++++=0D=0A>=C2=A02=C2=A0files=C2=A0changed,=C2=A0127=C2=A0i=
-nsertions(+)=0D=0A>=0D=0A>diff=C2=A0--git=C2=A0a/drivers/ufs/core/ufs-mcq.c=
-=C2=A0b/drivers/ufs/core/ufs-mcq.c=0D=0A>index=C2=A0659398d..7d0a37a=C2=A01=
-00644=0D=0A>---=C2=A0a/drivers/ufs/core/ufs-mcq.c=0D=0A>+++=C2=A0b/drivers/=
-ufs/core/ufs-mcq.c=0D=0A>=40=40=C2=A0-18,6=C2=A0+18,11=C2=A0=40=40=0D=0A>=
-=C2=A0=23define=C2=A0UFS_MCQ_NUM_DEV_CMD_QUEUES=C2=A01=0D=0A>=C2=A0=23defin=
-e=C2=A0UFS_MCQ_MIN_POLL_QUEUES=C2=A00=0D=0A>=C2=A0=0D=0A>+=23define=C2=A0MC=
-Q_QCFGPTR_MASK=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0GENMASK(7,=C2=
-=A00)=0D=0A>+=23define=C2=A0MCQ_QCFGPTR_UNIT=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A00x200=0D=0A>+=23define=C2=A0MCQ_SQATTR_OFFSET(c)=C2=A0=5C=
-=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0((((c)=C2=A0>>=C2=
-=A016)=C2=A0&=C2=A0MCQ_QCFGPTR_MASK)=C2=A0*=C2=A0MCQ_QCFGPTR_UNIT)=0D=0A>+=
-=23define=C2=A0MCQ_QCFG_SIZE=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A00x40=0D=0A>=C2=A0=0D=0A>=C2=A0static=C2=A0int=C2=A0rw_queue_count_set(co=
-nst=C2=A0char=C2=A0*val,=C2=A0const=C2=A0struct=C2=A0kernel_param=C2=A0*kp)=
-=0D=0A>=C2=A0=7B=0D=0A>=40=40=C2=A0-67,6=C2=A0+72,97=C2=A0=40=40=C2=A0modul=
-e_param_cb(poll_queues,=C2=A0&poll_queue_count_ops,=C2=A0&poll_queues,=C2=
-=A00644);=0D=0A>=C2=A0MODULE_PARM_DESC(poll_queues,=0D=0A>=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=22Number=C2=A0of=C2=A0poll=C2=A0queues=C2=A0used=C2=A0fo=
-r=C2=A0r/w.=C2=A0Default=C2=A0value=C2=A0is=C2=A01=22);=0D=0A>=C2=A0=0D=0A>=
-+/*=C2=A0Resources=C2=A0*/=0D=0A>+static=C2=A0const=C2=A0struct=C2=A0ufshcd=
-_res_info=C2=A0ufs_res_info=5BRES_MAX=5D=C2=A0=3D=C2=A0=7B=0D=0A>+=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=7B.name=C2=A0=3D=C2=A0=22ufs_mem=22=
-,=7D,=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=7B.name=C2=A0=
-=3D=C2=A0=22mcq=22,=7D,=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0/*=C2=A0Submission=C2=A0Queue=C2=A0DAO=C2=A0*/=0D=0A>+=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=7B.name=C2=A0=3D=C2=A0=22mcq_sqd=22,=7D,=
-=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0/*=C2=A0Submission=
-=C2=A0Queue=C2=A0Interrupt=C2=A0Status=C2=A0*/=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=7B.name=C2=A0=3D=C2=A0=22mcq_sqis=22,=7D,=0D=0A=
->+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0/*=C2=A0Completion=C2=A0Q=
-ueue=C2=A0DAO=C2=A0*/=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=7B.name=C2=A0=3D=C2=A0=22mcq_cqd=22,=7D,=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0/*=C2=A0Completion=C2=A0Queue=C2=A0Interrupt=C2=
-=A0Status=C2=A0*/=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=7B.name=C2=A0=3D=C2=A0=22mcq_cqis=22,=7D,=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0/*=C2=A0MCQ=C2=A0vendor=C2=A0specific=C2=A0*/=0D=0A=
->+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=7B.name=C2=A0=3D=C2=A0=
-=22mcq_vs=22,=7D,=0D=0A>+=7D;=0D=0A>+=0D=0A>+static=C2=A0int=C2=A0ufshcd_mc=
-q_config_resource(struct=C2=A0ufs_hba=C2=A0*hba)=0D=0A>+=7B=0D=0A>+=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0struct=C2=A0platform_device=C2=A0=
-*pdev=C2=A0=3D=C2=A0to_platform_device(hba->dev);=0D=0A>+=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0struct=C2=A0ufshcd_res_info=C2=A0*res;=0D=0A>=
-+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0struct=C2=A0resource=C2=A0=
-*res_mem,=C2=A0*res_mcq;=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0int=C2=A0i,=C2=A0ret=C2=A0=3D=C2=A00;=0D=0A>+=0D=0A>+=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0memcpy(hba->res,=C2=A0ufs_res_info,=C2=A0s=
-izeof(ufs_res_info));=0D=0A>+=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0for=C2=A0(i=C2=A0=3D=C2=A00;=C2=A0i=C2=A0<=C2=A0RES_MAX;=C2=A0i=
-++)=C2=A0=7B=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0res=C2=A0=3D=C2=A0&hba->res=5Bi=
-=5D;=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0res->resource=C2=A0=3D=C2=A0platform_get_r=
-esource_byname(pdev,=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0IORESOURCE_MEM,=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0res->name);=0D=0A>+=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0if=C2=A0(=21res->resource)=C2=A0=7B=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0dev_info(hba->dev,=C2=A0=22Resour=
-ce=C2=A0%s=C2=A0not=C2=A0provided=5Cn=22,=C2=A0res->name);=0D=0A>+=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if=C2=A0(i=C2=
-=A0=3D=3D=C2=A0RES_UFS)=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-return=C2=A0-ENOMEM;=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0continue;=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=7D=C2=A0els=
-e=C2=A0if=C2=A0(i=C2=A0=3D=3D=C2=A0RES_UFS)=C2=A0=7B=0D=0A>+=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0res_mem=C2=A0=3D=C2=
-=A0res->resource;=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0res->base=C2=A0=3D=C2=A0hba->mmio_base;=0D=0A>+=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0continue;=0D=
-=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=7D=0D=0A>+=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0res->b=
-ase=C2=A0=3D=C2=A0devm_ioremap_resource(hba->dev,=C2=A0res->resource);=0D=
-=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0if=C2=A0(IS_ERR(res->base))=C2=A0=7B=0D=0A>+=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0dev_err(h=
-ba->dev,=C2=A0=22Failed=C2=A0to=C2=A0map=C2=A0res=C2=A0%s,=C2=A0err=3D%d=5C=
-n=22,=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0res->name,=C2=A0(int)PTR_ERR(res->base)=
-);=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0res->base=C2=A0=3D=C2=A0NULL;=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0ret=C2=A0=3D=C2=A0PTR_ERR(res->base)=
-;=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0return=C2=A0ret;=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=7D=0D=0A>+=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=7D=0D=0A>+=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0/*=C2=A0MCQ=C2=A0resource=C2=A0provided=C2=A0in=
-=C2=A0DT=C2=A0*/=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0res=
-=C2=A0=3D=C2=A0&hba->res=5BRES_MCQ=5D;=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0/*=C2=A0Bail=C2=A0if=C2=A0NCQ=C2=A0resource=C2=A0is=C2=
-=A0provided=C2=A0*/=0D=0AMaybe=20MCQ?=0D=0A=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0if=C2=A0(res->base)=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0got=
-o=C2=A0out;=0D=0A>+=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-/*=C2=A0Manually=C2=A0allocate=C2=A0MCQ=C2=A0resource=C2=A0from=C2=A0ufs_me=
-m=C2=A0*/=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0res_mcq=C2=
-=A0=3D=C2=A0res->resource;=0D=0AWhy=20we=20assign=20the=20value=20to=20res_=
-mcq?=0D=0A=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0res_mcq=
-=C2=A0=3D=C2=A0devm_kzalloc(hba->dev,=C2=A0sizeof(*res_mcq),=C2=A0GFP_KERNE=
-L);=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if=C2=A0(=21res_=
-mcq)=C2=A0=7B=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0dev_err(hba->dev,=C2=A0=22Failed=
-=C2=A0to=C2=A0allocate=C2=A0MCQ=C2=A0resource=5Cn=22);=0D=0A>+=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0return=C2=A0ret;=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=7D=0D=0A>+=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0re=
-s_mcq->start=C2=A0=3D=C2=A0res_mem->start=C2=A0+=0D=0A>+=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0MCQ_SQATTR_OFFSET(=
-hba->mcq_capabilities);=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0res_mcq->end=C2=A0=3D=C2=A0res_mcq->start=C2=A0+=C2=A0hba->nr_hw_queu=
-es=C2=A0*=C2=A0MCQ_QCFG_SIZE=C2=A0-=C2=A01;=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0res_mcq->flags=C2=A0=3D=C2=A0res_mem->flags;=0D=0A>=
-+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0res_mcq->name=C2=A0=3D=C2=
-=A0=22mcq=22;=0D=0A>+=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0ret=C2=A0=3D=C2=A0insert_resource(&iomem_resource,=C2=A0res_mcq);=0D=0A>=
-+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if=C2=A0(ret)=C2=A0=7B=0D=
-=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0dev_err(hba->dev,=C2=A0=22Failed=C2=A0to=C2=A0in=
-sert=C2=A0MCQ=C2=A0resource,=C2=A0err=3D%d=5Cn=22,=C2=A0ret);=0D=0AShould=
-=20we=20free=20the=20res_mcq?=0D=0A=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0return=C2=
-=A0ret;=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=7D=0D=0A>+=
-=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0res->base=C2=A0=3D=
-=C2=A0devm_ioremap_resource(hba->dev,=C2=A0res_mcq);=0D=0A>+=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if=C2=A0(IS_ERR(res->base))=C2=A0=7B=0D=0A=
->+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0dev_err(hba->dev,=C2=A0=22MCQ=C2=A0registers=C2=A0m=
-apping=C2=A0failed,=C2=A0err=3D%d=5Cn=22,=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0(int)PTR_ERR(res->base));=0D=
-=0AShould=20we=20call=20remove_resource=20and=20free=20the=20res_mcq?=0D=0A=
-=0D=0AThanks,=0D=0ADaejun
+Hello there,
+
+This series adds a new ata_port_is_frozen() helper function,
+and makes use of it in ata and libsas.
+
+Additionally, improve ata_read_log_page() to avoid a futile
+retry while the port is frozen.
+
+Kind regards,
+Niklas
+
+
+Niklas Cassel (4):
+  ata: add ata_port_is_frozen() helper
+  ata: make use of ata_port_is_frozen() helper
+  scsi: libsas: make use of ata_port_is_frozen() helper
+  ata: libata-core: do not retry reading the log on timeout
+
+ drivers/ata/libahci.c         |  6 +++---
+ drivers/ata/libata-acpi.c     |  4 ++--
+ drivers/ata/libata-core.c     |  7 ++++---
+ drivers/ata/libata-eh.c       | 21 ++++++++++-----------
+ drivers/ata/libata-sata.c     |  2 +-
+ drivers/ata/libata-scsi.c     |  2 +-
+ drivers/ata/sata_nv.c         |  2 +-
+ drivers/ata/sata_promise.c    |  2 +-
+ drivers/ata/sata_sx4.c        |  2 +-
+ drivers/scsi/libsas/sas_ata.c |  2 +-
+ include/linux/libata.h        |  5 +++++
+ 11 files changed, 30 insertions(+), 25 deletions(-)
+
+-- 
+2.37.3
+
