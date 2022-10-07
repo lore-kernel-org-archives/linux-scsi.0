@@ -2,53 +2,53 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B3BDC4332F
-	for <linux-scsi@archiver.kernel.org>; Fri,  7 Oct 2022 02:41:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16817C433FE
+	for <linux-scsi@archiver.kernel.org>; Fri,  7 Oct 2022 03:44:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231725AbiJGClr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 Oct 2022 22:41:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51380 "EHLO
+        id S229501AbiJGDo3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 6 Oct 2022 23:44:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56660 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229679AbiJGClp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Oct 2022 22:41:45 -0400
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9770FF190A
-        for <linux-scsi@vger.kernel.org>; Thu,  6 Oct 2022 19:41:43 -0700 (PDT)
-Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20221007024140epoutp03b7b115b5150aeac9ccd243987b62b72c~bqS2NnJOs0125501255epoutp037
-        for <linux-scsi@vger.kernel.org>; Fri,  7 Oct 2022 02:41:40 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20221007024140epoutp03b7b115b5150aeac9ccd243987b62b72c~bqS2NnJOs0125501255epoutp037
+        with ESMTP id S229556AbiJGDo0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Oct 2022 23:44:26 -0400
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DE45C1D95
+        for <linux-scsi@vger.kernel.org>; Thu,  6 Oct 2022 20:44:23 -0700 (PDT)
+Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20221007034421epoutp02bbc56be9051da411d07e7c71fef118e6~brJlGnCGK2539225392epoutp02F
+        for <linux-scsi@vger.kernel.org>; Fri,  7 Oct 2022 03:44:21 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20221007034421epoutp02bbc56be9051da411d07e7c71fef118e6~brJlGnCGK2539225392epoutp02F
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1665110500;
-        bh=PygvURPnPuchsrtMHU44Ip+216Cg4wZE60z7YRgEIcM=;
+        s=mail20170921; t=1665114261;
+        bh=Loj4wWO6Wu0NkXkYpUmThRaJQ0m30/PbCFt7YNRtD8Y=;
         h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=rTOvHIurYKekRXFjHCJqgF3dzXw1GhHaD37DJDMOAfL/y0+3Pm6xs7ceCNAtjmP8D
-         SPfNO79t9bOV0eD5qYxQTllQA1Upor048weCsxeqxhozUDpsOMmnw4Zh+GOEP32THU
-         yxhCk9E9srw5C1t3+0PM6ORZf+EtZM4tqv2D0j6c=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-        epcas2p2.samsung.com (KnoxPortal) with ESMTP id
-        20221007024139epcas2p2f92b019d5300e056cf2d145c2c0a914e~bqS1ov9Zu0127401274epcas2p2J;
-        Fri,  7 Oct 2022 02:41:39 +0000 (GMT)
-Received: from epsmges2p2.samsung.com (unknown [182.195.36.98]) by
-        epsnrtp1.localdomain (Postfix) with ESMTP id 4MkCHl1fhTz4x9Q2; Fri,  7 Oct
-        2022 02:41:39 +0000 (GMT)
-X-AuditID: b6c32a46-5bdfb70000004e8a-4f-633f91e322a7
-Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
-        epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        3F.20.20106.3E19F336; Fri,  7 Oct 2022 11:41:39 +0900 (KST)
+        b=Ly6HyrOD7Z1JtwKGVltbP3QHJnv3+2EE85oxAtG05iulOyNYnCAKSQviuGPxu7eFw
+         84aDIDhHflyuVbdROy0DNsgwdG0usnaat5dYfC3mp4MA8mYmolX/7k4XMTSQPG3KZ0
+         ouQ8BNp4J30N9jPdPg7skLuvUMhzcwDU+NYOT/UM=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+        20221007034420epcas2p4db5c7c5d966140087d37cd346cf244f2~brJkhPjE91817918179epcas2p4z;
+        Fri,  7 Oct 2022 03:44:20 +0000 (GMT)
+Received: from epsmges2p4.samsung.com (unknown [182.195.36.89]) by
+        epsnrtp2.localdomain (Postfix) with ESMTP id 4MkDh439Chz4x9Pw; Fri,  7 Oct
+        2022 03:44:20 +0000 (GMT)
+X-AuditID: b6c32a48-1cffb7000000186f-66-633fa0949f8e
+Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
+        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
+        86.E7.06255.490AF336; Fri,  7 Oct 2022 12:44:20 +0900 (KST)
 Mime-Version: 1.0
-Subject: RE: [PATCH v2 06/17] ufs: core: mcq: Configure resource regions
+Subject: RE:(2) [PATCH v2 06/17] ufs: core: mcq: Configure resource regions
 Reply-To: daejun7.park@samsung.com
 Sender: Daejun Park <daejun7.park@samsung.com>
 From:   Daejun Park <daejun7.park@samsung.com>
-To:     Asutosh Das <quic_asutoshd@quicinc.com>,
+To:     Daejun Park <daejun7.park@samsung.com>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
         "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
         "quic_nitirawa@quicinc.com" <quic_nitirawa@quicinc.com>,
         "quic_rampraka@quicinc.com" <quic_rampraka@quicinc.com>,
         "quic_bhaskarv@quicinc.com" <quic_bhaskarv@quicinc.com>,
         "quic_richardp@quicinc.com" <quic_richardp@quicinc.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Daejun Park <daejun7.park@samsung.com>
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 CC:     "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
         "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
         "quic_xiaosenh@quicinc.com" <quic_xiaosenh@quicinc.com>,
@@ -58,46 +58,47 @@ CC:     "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
         "beanhuo@micron.com" <beanhuo@micron.com>
 X-Priority: 3
 X-Content-Kind-Code: NORMAL
-In-Reply-To: <271ed77a0ff46390c90fdcde71890d8cec83b8c9.1665017636.git.quic_asutoshd@quicinc.com>
+In-Reply-To: <20221007024138epcms2p729595abf03da8402618c4803b20a4d13@epcms2p7>
 X-CPGS-Detection: blocking_info_exchange
 X-Drm-Type: N,general
 X-Msg-Generator: Mail
 X-Msg-Type: PERSONAL
 X-Reply-Demand: N
-Message-ID: <20221007024138epcms2p729595abf03da8402618c4803b20a4d13@epcms2p7>
-Date:   Fri, 07 Oct 2022 11:41:38 +0900
-X-CMS-MailID: 20221007024138epcms2p729595abf03da8402618c4803b20a4d13
+Message-ID: <20221007034419epcms2p84f51fef929459cef230c34c1dbfbff1d@epcms2p8>
+Date:   Fri, 07 Oct 2022 12:44:19 +0900
+X-CMS-MailID: 20221007034419epcms2p84f51fef929459cef230c34c1dbfbff1d
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
 X-CPGSPASS: Y
 X-CPGSPASS: Y
 CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrBJsWRmVeSWpSXmKPExsWy7bCmue7jifbJBjs3cVq8/HmVzeLgw04W
-        i2kffjJbvDykabHqQbjFxP1n2S26r+9gszjwYRWjxcKOuSwWRx6/Z7aYdG0Dm8XUF8fZLXbc
-        b2e0OHUo1OL7hO3sFlcXX2V3EPC4fMXbY9OqTjaP7+s72Dwm7qnz6NuyitHj8yY5j/YD3UwB
-        7FHZNhmpiSmpRQqpecn5KZl56bZK3sHxzvGmZgaGuoaWFuZKCnmJuam2Si4+AbpumTlAhysp
-        lCXmlAKFAhKLi5X07WyK8ktLUhUy8otLbJVSC1JyCswL9IoTc4tL89L18lJLrAwNDIxMgQoT
-        sjMeT1zEWNDiWtG8ahp7A+Nc5y5GTg4JAROJvpmb2LsYuTiEBHYwSvRs2M7WxcjBwSsgKPF3
-        hzBIjbCAh8SJB59YQGwhASWJ9RdnsUPE9SRuPVzDCGKzCehITD9xH2yOiMB6Zokj37+BNTAL
-        PGWS2NcUC7GMV2JG+1MWCFtaYvvyrWDNnAIJEt0Hf0PFNSR+LOtlhrBFJW6ufssOY78/Np8R
-        whaRaL13FqpGUOLBz91QcUmJ23M3QdXnS/y/shzKrpHYdmAelK0vca1jI9guXgFfiberj7GB
-        2CwCqhIn7y5jhahxkVh+fCojxP3aEssWvmYGhQmzgKbE+l36IKaEgLLEkVssMF81bPzNjs5m
-        FuCT6Dj8Fy6+Y94TJghbTWLdz/VMExiVZyECehaSXbMQdi1gZF7FKJZaUJybnlpsVGAEj9vk
-        /NxNjOAkrOW2g3HK2w96hxiZOBgPMUpwMCuJ8O7caZcsxJuSWFmVWpQfX1Sak1p8iNEU6MuJ
-        zFKiyfnAPJBXEm9oYmlgYmZmaG5kamCuJM7bNUMrWUggPbEkNTs1tSC1CKaPiYNTqoFJxrOY
-        f85KR7GZRaEVhj0a4m6ze/o3npP8Fja/gcH0rdy37X0V29iOJk84VDo3/YOHwsrTbOxzPapY
-        Vj3sW5H9wb1rc2D6uiQfR7VgrTSLXUdb+BbvluibeHxGlkK/8AEdLtFCiUmWJ3dF/vnD9zmh
-        5lFO6FaXl1duFnln7r5pXO0seMLjREFmO1NSwvrpc3b33NDQTdx5QtruZr+jYBmvRsViL6HP
-        X3Knn/r15eMW9edn1i5qL1Gs1D5iHlx8u/3yPc+p7k3SL5Yd2xLQoJm0q3Ta6S5+D4W2pVME
-        9K+xvs/U959QdWXhZLlHOdNPzRNT0uD7ER+fUV2/4N6SeO3FETsPxUdszKlYbv/jb5ESS3FG
-        oqEWc1FxIgClb3i9SwQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrBJsWRmVeSWpSXmKPExsWy7bCmhe6UBfbJBt2XOSxe/rzKZnHwYSeL
+        xbQPP5ktXh7StFj1INxi4v6z7Bbd13ewWRz4sIrRYmHHXBaLI4/fM1tMuraBzWLqi+PsFjvu
+        tzNanDoUavF9wnZ2i6uLr7I7CHhcvuLtsWlVJ5vH9/UdbB4T99R59G1ZxejxeZOcR/uBbqYA
+        9qhsm4zUxJTUIoXUvOT8lMy8dFsl7+B453hTMwNDXUNLC3MlhbzE3FRbJRefAF23zBygw5UU
+        yhJzSoFCAYnFxUr6djZF+aUlqQoZ+cUltkqpBSk5BeYFesWJucWleel6eaklVoYGBkamQIUJ
+        2RkzD65iL1ibXDH3+QLGBsZHCV2MnBwSAiYSk1fsZe9i5OIQEtjBKNG05wpzFyMHB6+AoMTf
+        HcIgNcIC3hK9mzeygthCAkoS6y/OYoeI60nceriGEcRmE9CRmH7iPtgcEYGNzBIPZ20CSzAL
+        PGWS2NcUC7GMV2JG+1MWCFtaYvvyrWA1nAJ+ElvuPmCHiGtI/FjWywxhi0rcXP2WHcZ+f2w+
+        I4QtItF67yxUjaDEg5+7oeKSErfnboKqz5f4f2U5lF0jse3APChbX+Jax0awG3gFfCXmnPoI
+        9hiLgKrEjEtvoW5zkVi2o4cN4n5tiWULX4PDhFlAU2L9Ln0QU0JAWeLILRaYrxo2/mZHZzML
+        8El0HP4LF98x7wkThK0mse7neqYJjMqzEAE9C8muWQi7FjAyr2IUSy0ozk1PLTYqMIHHbXJ+
+        7iZGcBLW8tjBOPvtB71DjEwcjIcYJTiYlUR4d+60SxbiTUmsrEotyo8vKs1JLT7EaAr05URm
+        KdHkfGAeyCuJNzSxNDAxMzM0NzI1MFcS5+2aoZUsJJCeWJKanZpakFoE08fEwSnVwKRy4bZg
+        aEBdVOqvGb2XxAR9tG0mTiw+rLjk1a24G5sZFFqSlPbm/VGaOWOzymQF/dudeSlcKXknVXhT
+        p6y79fbbspnHml7xbF3uuz0z0Foo89Luy+os67aKObffWyS5y+1OfTtnuP1jmw9Hvk6LvCDa
+        lHV0V/c2q4OcTa/LXr5YPSNgtcbuuF+S0n+qm/ZFxr03XbWJl2fnvXepMVVS/PfbWsWVbLf3
+        Z+1cnyXxdc++l9pv5zO9kFfdM+Xv+daM83Zh39czTF9WeIsnKu8fg0jHTS/L+36XrTUMdzRs
+        +ixkrSMp8PzetsL6UKOnb58mX/GrvF3Sc7RP6fpKxsPVF5dXTVlRuEfquNlHFp4tYlVKLMUZ
+        iYZazEXFiQBKavUhSwQAAA==
 DLP-Filter: Pass
 X-CFilter-Loop: Reflected
 X-CMS-RootMailID: 20221006010745epcas2p38b37890b7e1fefb45b8fbb0e14ab0a82
-References: <271ed77a0ff46390c90fdcde71890d8cec83b8c9.1665017636.git.quic_asutoshd@quicinc.com>
+References: <20221007024138epcms2p729595abf03da8402618c4803b20a4d13@epcms2p7>
+        <271ed77a0ff46390c90fdcde71890d8cec83b8c9.1665017636.git.quic_asutoshd@quicinc.com>
         <cover.1665017636.git.quic_asutoshd@quicinc.com>
-        <CGME20221006010745epcas2p38b37890b7e1fefb45b8fbb0e14ab0a82@epcms2p7>
+        <CGME20221006010745epcas2p38b37890b7e1fefb45b8fbb0e14ab0a82@epcms2p8>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -215,5 +216,55 @@ n=22,=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
 =C2=A0res->base=C2=A0=3D=C2=A0NULL;=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
 =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
 =A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0ret=C2=A0=3D=C2=A0PTR_ERR(res->base)=
-;=0D=0AI=20think=20res->base=20has=20already=20NULL=20value.=0D=0A=0D=0ATha=
-nks,=0D=0ADaejun
+;=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0return=C2=A0ret;=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=7D=0D=0A>+=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=7D=0D=0A>+=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0/*=C2=A0MCQ=C2=A0resource=C2=A0provided=C2=A0in=
+=C2=A0DT=C2=A0*/=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0res=
+=C2=A0=3D=C2=A0&hba->res=5BRES_MCQ=5D;=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0/*=C2=A0Bail=C2=A0if=C2=A0NCQ=C2=A0resource=C2=A0is=C2=
+=A0provided=C2=A0*/=0D=0AMaybe=20MCQ?=0D=0A=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0if=C2=A0(res->base)=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0got=
+o=C2=A0out;=0D=0A>+=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+/*=C2=A0Manually=C2=A0allocate=C2=A0MCQ=C2=A0resource=C2=A0from=C2=A0ufs_me=
+m=C2=A0*/=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0res_mcq=C2=
+=A0=3D=C2=A0res->resource;=0D=0AWhy=20we=20assign=20the=20value=20to=20res_=
+mcq?=0D=0A=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0res_mcq=
+=C2=A0=3D=C2=A0devm_kzalloc(hba->dev,=C2=A0sizeof(*res_mcq),=C2=A0GFP_KERNE=
+L);=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if=C2=A0(=21res_=
+mcq)=C2=A0=7B=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0dev_err(hba->dev,=C2=A0=22Failed=
+=C2=A0to=C2=A0allocate=C2=A0MCQ=C2=A0resource=5Cn=22);=0D=0A>+=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0return=C2=A0ret;=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=7D=0D=0A>+=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0re=
+s_mcq->start=C2=A0=3D=C2=A0res_mem->start=C2=A0+=0D=0A>+=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0MCQ_SQATTR_OFFSET(=
+hba->mcq_capabilities);=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0res_mcq->end=C2=A0=3D=C2=A0res_mcq->start=C2=A0+=C2=A0hba->nr_hw_queu=
+es=C2=A0*=C2=A0MCQ_QCFG_SIZE=C2=A0-=C2=A01;=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0res_mcq->flags=C2=A0=3D=C2=A0res_mem->flags;=0D=0A>=
++=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0res_mcq->name=C2=A0=3D=C2=
+=A0=22mcq=22;=0D=0A>+=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0ret=C2=A0=3D=C2=A0insert_resource(&iomem_resource,=C2=A0res_mcq);=0D=0A>=
++=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if=C2=A0(ret)=C2=A0=7B=0D=
+=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0dev_err(hba->dev,=C2=A0=22Failed=C2=A0to=C2=A0in=
+sert=C2=A0MCQ=C2=A0resource,=C2=A0err=3D%d=5Cn=22,=C2=A0ret);=0D=0AShould=
+=20we=20free=20the=20res_mcq?=0D=0A=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0return=C2=
+=A0ret;=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=7D=0D=0A>+=
+=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0res->base=C2=A0=3D=
+=C2=A0devm_ioremap_resource(hba->dev,=C2=A0res_mcq);=0D=0A>+=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if=C2=A0(IS_ERR(res->base))=C2=A0=7B=0D=0A=
+>+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0dev_err(hba->dev,=C2=A0=22MCQ=C2=A0registers=C2=A0m=
+apping=C2=A0failed,=C2=A0err=3D%d=5Cn=22,=0D=0A>+=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0(int)PTR_ERR(res->base));=0D=
+=0AShould=20we=20call=20remove_resource=20and=20free=20the=20res_mcq?=0D=0A=
+=0D=0AThanks,=0D=0ADaejun
