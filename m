@@ -2,89 +2,74 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86507C433F5
-	for <linux-scsi@archiver.kernel.org>; Sat,  8 Oct 2022 09:15:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 434AEC433FE
+	for <linux-scsi@archiver.kernel.org>; Sun,  9 Oct 2022 06:03:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229813AbiJHJPw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 8 Oct 2022 05:15:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34090 "EHLO
+        id S229895AbiJIGDM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 9 Oct 2022 02:03:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56556 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229479AbiJHJPv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Oct 2022 05:15:51 -0400
-Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E16F450526;
-        Sat,  8 Oct 2022 02:15:50 -0700 (PDT)
-Received: by mail-pl1-x634.google.com with SMTP id n7so6515810plp.1;
-        Sat, 08 Oct 2022 02:15:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=9QRuG6Uw2j9y9wt/YE1ELKRrBpnYSjy91D1kGeKSbxU=;
-        b=f5IbGaEPqIwsAKicABoTcOEUuIvps29DIK//+bLUMriHWBywhTPTf/VbjmoQoaIRu4
-         NA9wcATwghB0LNLb3cKBZbiwAVnna2RygvLJltHB8kePO1wvfQaGtF8J1TTFQLFXYYsh
-         8F4LA7M+FvH/9IZg8LH4LwZCuGl01jDFymHnCGNbcJmcOf97YGTY4NxAB/arphlzF0q9
-         n9mSW4M6tVTArTu4OX/7+Haw+8r8UjXevapZHFmBNst5Bxc4hcm+shyZc4q/uWcarClX
-         BaDT8l5GzhgpszwwHRI/cUlqRrw2T0G41EKcomrhOAzbDtjYa1KTTIW9Fvxocxbtye/1
-         JnlA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=9QRuG6Uw2j9y9wt/YE1ELKRrBpnYSjy91D1kGeKSbxU=;
-        b=eagIBEl+tT4t0x6box1I8s3fvw5vLg3vHwA+KFGjHOMnVL1+l+YiknP8ygWMjrEB0Z
-         8wmHWxcwa7+JNyFA/S6HVxqrNTHJenDpZe3l+PMNcgE9hK8IYbAq51Cww5WtBuWGhVw0
-         xagix4UuMmzptMqf4xU0RJQ2ibXuYd4CJ2oGha+H++ckTKan5+Qp/66LT6xlYMZfdPZo
-         Qg52hnVwppc3mVfqKEKTecuQQM2Fk+1lqpEWYXmEh1GDlqeqnTSN1OLF9a0hg+mR0G4W
-         jDKey5IbhaXVWMSb5hTAZjgnRrC6W40j02W64JVxNM1DWx3lDdb2A7Zei37mZgfHPyZD
-         oriA==
-X-Gm-Message-State: ACrzQf2Q0uPilWtXSDDxu5Koe6qNhRgsLBJC33CiZv9MlpjQkxoxw8lM
-        XqgrVpnhoIA3xXO/GJ//pO4=
-X-Google-Smtp-Source: AMsMyM7MbfLVOeXiYxHvfjvUhra8RY5xKrdFerhFcjQ4v/272v1aPmB0K8sx8bT/n+prkUJozaYTkw==
-X-Received: by 2002:a17:902:d2cf:b0:17f:7b65:862f with SMTP id n15-20020a170902d2cf00b0017f7b65862fmr8672542plc.168.1665220550427;
-        Sat, 08 Oct 2022 02:15:50 -0700 (PDT)
-Received: from localhost.localdomain ([193.203.214.57])
-        by smtp.gmail.com with ESMTPSA id a11-20020a170902900b00b00179c99eb815sm2883600plp.33.2022.10.08.02.15.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 08 Oct 2022 02:15:49 -0700 (PDT)
-From:   yexingchen116@gmail.com
-X-Google-Original-From: ye.xingchen@zte.com.cn
-To:     martin.petersen@oracle.com
-Cc:     brking@us.ibm.com, jejb@linux.ibm.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, ye xingchen <ye.xingchen@zte.com.cn>
-Subject: [PATCH linux-next] scsi: ipr: replace !strcmp with sysfs_streq
-Date:   Sat,  8 Oct 2022 09:15:43 +0000
-Message-Id: <20221008091543.309401-1-ye.xingchen@zte.com.cn>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S229776AbiJIGDK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Oct 2022 02:03:10 -0400
+Received: from out30-44.freemail.mail.aliyun.com (out30-44.freemail.mail.aliyun.com [115.124.30.44])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CEC412DA93;
+        Sat,  8 Oct 2022 23:03:07 -0700 (PDT)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R141e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018045192;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=11;SR=0;TI=SMTPD_---0VRh-kKX_1665295373;
+Received: from localhost(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0VRh-kKX_1665295373)
+          by smtp.aliyun-inc.com;
+          Sun, 09 Oct 2022 14:03:04 +0800
+From:   Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+To:     skashyap@marvell.com
+Cc:     jhasan@marvell.com, GR-QLogic-Storage-Upstream@marvell.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux@armlinux.org.uk, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
+        Abaci Robot <abaci@linux.alibaba.com>
+Subject: [PATCH] scsi: qedf: Remove set but unused variable 'page'
+Date:   Sun,  9 Oct 2022 14:02:49 +0800
+Message-Id: <20221009060249.40178-1-jiapeng.chong@linux.alibaba.com>
+X-Mailer: git-send-email 2.20.1.7.g153144c
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: ye xingchen <ye.xingchen@zte.com.cn>
+The variable page is not effectively used in the function, so delete
+it.
 
-Replace the open-code with sysfs_streq().
-
-Signed-off-by: ye xingchen <ye.xingchen@zte.com.cn>
+Link: https://bugzilla.openanolis.cn/show_bug.cgi?id=2348
+Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
 ---
- drivers/scsi/ipr.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/qedf/qedf_main.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 9d01a3e3c26a..f892ff74d56a 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -3685,7 +3685,7 @@ static ssize_t ipr_store_adapter_state(struct device *dev,
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index e045c6e25090..35e16600fc63 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -2951,7 +2951,6 @@ static int qedf_alloc_bdq(struct qedf_ctx *qedf)
+ 	int i;
+ 	struct scsi_bd *pbl;
+ 	u64 *list;
+-	dma_addr_t page;
  
- 	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
- 	if (ioa_cfg->hrrq[IPR_INIT_HRRQ].ioa_is_dead &&
--	    !strncmp(buf, "online", 6)) {
-+	    sysfs_streq(buf, "online")) {
- 		for (i = 0; i < ioa_cfg->hrrq_num; i++) {
- 			spin_lock(&ioa_cfg->hrrq[i]._lock);
- 			ioa_cfg->hrrq[i].ioa_is_dead = 0;
+ 	/* Alloc dma memory for BDQ buffers */
+ 	for (i = 0; i < QEDF_BDQ_SIZE; i++) {
+@@ -3012,11 +3011,9 @@ static int qedf_alloc_bdq(struct qedf_ctx *qedf)
+ 	qedf->bdq_pbl_list_num_entries = qedf->bdq_pbl_mem_size /
+ 	    QEDF_PAGE_SIZE;
+ 	list = (u64 *)qedf->bdq_pbl_list;
+-	page = qedf->bdq_pbl_list_dma;
+ 	for (i = 0; i < qedf->bdq_pbl_list_num_entries; i++) {
+ 		*list = qedf->bdq_pbl_dma;
+ 		list++;
+-		page += QEDF_PAGE_SIZE;
+ 	}
+ 
+ 	return 0;
 -- 
-2.25.1
+2.20.1.7.g153144c
 
