@@ -2,96 +2,205 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4239C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 10 Oct 2022 12:31:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DA49C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 10 Oct 2022 20:40:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231967AbiJJMb1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 10 Oct 2022 08:31:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59526 "EHLO
+        id S229738AbiJJUkn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 10 Oct 2022 16:40:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42648 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231513AbiJJMb0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Oct 2022 08:31:26 -0400
-Received: from mail-pg1-x52e.google.com (mail-pg1-x52e.google.com [IPv6:2607:f8b0:4864:20::52e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DBE706161;
-        Mon, 10 Oct 2022 05:31:24 -0700 (PDT)
-Received: by mail-pg1-x52e.google.com with SMTP id q1so1852032pgl.11;
-        Mon, 10 Oct 2022 05:31:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=fUsv9lLV87y8Jc+WxRiT977Cv06zKT6369DMp240Xs8=;
-        b=Ekqrk1S3UTBSAeccA5NT/zag1zrwyk3nOYPRAC9tU7jrT9YA4x0solFrGL+ZHeE4Up
-         ggYaQ3AbS1JHxFcC+qtF3w/BOTo7MuuTYkKa7VyQey5hug1d3wroa6L2ljdlh523EIer
-         +37oXmm7O3Z91mUcoTaUo+X4bssSVU2iFBKhYneklQeP/Ao1pGuDIowALOkLeY0EqgXL
-         1+pkN/gCnzijAsGmwy98MstyYNULbQcxuVHnWx56zRsC1+b0Gxc9bWzOpaizRZavMdm1
-         t0jT9pMhUe53lJp49Ebl8VK2iCHC7Qv1hb8Jr+jfUsn98EZZsCFVmmd5zluQNlFafVDv
-         qz0g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=fUsv9lLV87y8Jc+WxRiT977Cv06zKT6369DMp240Xs8=;
-        b=ENa8nVOY5HiwWiF/0RoRLvMv6TdSAW773WL0QtgIptUaepfITRFk28scBvnjamuSZH
-         jCFri/yGpq8UtBGRTjgZSKnH71N9ZsCF/89+ZKlxuUWYsUCeMfZw9Kl2I0YDXZ6bhZGW
-         jRF+doONQGzhBY7oSPuVOkZJ6mTfaPvpuphwYhyKdKPm3iiDi1ZdTG9XZQQzCXN05eG9
-         BUZalp7xSx8McUwgXpoNzyxpyyYe2DZcmVJF4ZW3KnCmcVu6DwFbL5P3bcwilZ0DNaG6
-         wfCtCWmB2URS/1+aCn6BGIq9UsKW19DAAtH754kNdyW6uZ6qnt10nyFKPdyVKPD/vRBq
-         9Euw==
-X-Gm-Message-State: ACrzQf0KdTU9ThJnsz5bK2ReDnpgFQlamEUf7vylXgG8xL2r3mlLcF0g
-        gF9vxJi4Wp13Ie21ZJpxzhaIqB8rqxnAEFt5BAk=
-X-Google-Smtp-Source: AMsMyM7t8L3HrEcqldBAMJ4m/64poCAnAdWg+ND+9jX15QOd4XnduoRX7DplXu/Lv3r8flsTi5QZuPo3+0wyEwtNUJU=
-X-Received: by 2002:a63:1455:0:b0:438:e26b:ab1f with SMTP id
- 21-20020a631455000000b00438e26bab1fmr16326063pgu.183.1665405084349; Mon, 10
- Oct 2022 05:31:24 -0700 (PDT)
+        with ESMTP id S229542AbiJJUkm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Oct 2022 16:40:42 -0400
+Received: from smtp.smtpout.orange.fr (smtp-14.smtpout.orange.fr [80.12.242.14])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 094BA5C9E3
+        for <linux-scsi@vger.kernel.org>; Mon, 10 Oct 2022 13:40:40 -0700 (PDT)
+Received: from [192.168.1.18] ([86.243.100.34])
+        by smtp.orange.fr with ESMTPA
+        id hzSKonKgNBDYDhzSKobsgK; Mon, 10 Oct 2022 22:32:58 +0200
+X-ME-Helo: [192.168.1.18]
+X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
+X-ME-Date: Mon, 10 Oct 2022 22:32:58 +0200
+X-ME-IP: 86.243.100.34
+Message-ID: <8b12359f-0a70-34aa-e9fd-dc98c1075140@wanadoo.fr>
+Date:   Mon, 10 Oct 2022 22:32:56 +0200
 MIME-Version: 1.0
-References: <yq15zo86nvk.fsf@oracle.com> <20190819163546.915-1-khorenko@virtuozzo.com>
- <CADvTj4rVS-wJy1B=dgEO1AOADNYgL3XkZ01Aq=RTfPGEZC+VMA@mail.gmail.com>
- <ffdb2223-eed3-75b4-a003-4e4c96b49947@grossegger.com> <yq135kacnny.fsf@ca-mkp.ca.oracle.com>
-In-Reply-To: <yq135kacnny.fsf@ca-mkp.ca.oracle.com>
-From:   James Hilliard <james.hilliard1@gmail.com>
-Date:   Mon, 10 Oct 2022 08:31:12 -0400
-Message-ID: <CADvTj4qfPhEKy2V0crGs+Hc_fq=P5OKWFohG9QbTHK3i+GWc=Q@mail.gmail.com>
-Subject: Re: [PATCH v3 0/1] aacraid: Host adapter Adaptec 6405 constantly
- resets under high io load
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     =?UTF-8?Q?Christian_Gro=C3=9Fegger?= <christian@grossegger.com>,
-        linux-scsi@vger.kernel.org,
-        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
-        Sagar Biradar <sagar.biradar@microchip.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Konstantin Khorenko <khorenko@virtuozzo.com>,
-        Don Brace <don.brace@microchip.com>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.2.2
+Subject: Re: [PATCH] scsi: vmw_pvscsi: Fix an error handling path in
+ pvscsi_probe()
+Content-Language: fr
+To:     Dan Carpenter <dan.carpenter@oracle.com>
+Cc:     Vishal Bhakta <vbhakta@vmware.com>,
+        VMware PV-Drivers Reviewers <pv-drivers@vmware.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Cathy Avery <cavery@redhat.com>,
+        "Ewan D. Milne" <emilne@redhat.com>, linux-kernel@vger.kernel.org,
+        kernel-janitors@vger.kernel.org, Zheyu Ma <zheyuma97@gmail.com>,
+        linux-scsi@vger.kernel.org
+References: <ed31652626b0d8133e90f6888ef2b56cbc46ee57.1665297058.git.christophe.jaillet@wanadoo.fr>
+ <Y0QO3RLY+gD5i/jY@kadam>
+From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+In-Reply-To: <Y0QO3RLY+gD5i/jY@kadam>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Feb 22, 2022 at 10:41 PM Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->
->
-> Christian,
->
-> > The faulty patch (Commit: 395e5df79a9588abf) from 2017 should be
-> > repaired with Konstantin Khorenko (1):
-> >
-> >   scsi: aacraid: resurrect correct arc ctrl checks for Series-6
->
-> It would be great to get this patch resubmitted by Konstantin and acked
-> by Microchip.
+Le 10/10/2022 à 14:23, Dan Carpenter a écrit :
+> On Sun, Oct 09, 2022 at 08:31:24AM +0200, Christophe JAILLET wrote:
+>> In all paths that end to "out_release_resources_and_disable", neither
+>> pci_alloc_irq_vectors() nor request_irq() have been called yet. So, there
+>> is no point in calling pvscsi_shutdown_intr() which undoes these calls.
+>>
+>> Remove this erroneous call.
+>>
+>> This should fix the bug report in [1].
+>>
+>> [1]: https://lore.kernel.org/all/CAMhUBjnDdk7_bBzqgFhZ=xf-obJYMbsJf10wC_bsUeTzxXLK6A@mail.gmail.com/
+>>
+>> Reported-by: Zheyu Ma <zheyuma97@gmail.com>
+>> Fixes: 02f425f811ce ("scsi: vmw_pscsi: Rearrange code to avoid multiple calls to free_irq during unload")
+>> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+>> ---
+>> The Fixes: tag is maybe not optimal, the issue was there even before.
+>> But I think that this commit reference should help in case of backport
+>> (and it makes git-mail add Dan automagically in copy :) )
+> 
+> What a wonderful privilege it is to be CC'd on this...  #LOL
 
-Does the patch need to be rebased?
+Hi Dan,
 
-Based on this it looks like someone at microchip may have already reviewed:
-v3 changes:
- * introduced another wrapper to check for devices except for Series 6
-   controllers upon request from Sagar Biradar (Microchip)
+You are my idol. You deserve it. :)
 
+> 
+> It's still not right...  The pvscsi_shutdown_intr() function undoes
+> pci_alloc_irq_vectors() and request_irq().  Those things need to be
+> done separately because they can fail separately.
+> 
+> The error handling in this function is not written in mirror order
+> format so that's part of the complication.  There isn't any reason
+> for the weird out_release_resources_and_disable label if we just did
+> the error handling in mirror format.
+> 
+> 1) Move the scsi_host_put() so it mirrors the order how the host is
+>     allocated.
+> 2) Split the pvscsi_shutdown_intr() function into free_irq() and
+>     pci_free_irq_vectors().
+> 3) Do the ll_adapter_reset() after freeing the IRQs.  The reset is just
+>     writing to some registers.  It doesn't require any complicated
+>     resources to work.  Which is good because it sometimes happens before
+>     those resources were allocated.
+> 
+> This next is not something I changed, but just a comment and explanation,
+> the pvscsi_release_resources() is a magical free tons of stuff function.
+> I do not like those kinds of functions because they are prone to bugs and
+> difficult to read.  However in this case it seems to work so I have not
+> done anything to it.  If you're wondering where the pci_iomap() gets
+> unmapped it happens inside the pvscsi_release_resources() function.
+> 
+> I know it sucks to re-write patches.  If you want I can send this or if
+> you want you can send this with a Co-developed-by tag or whatever...  (I
+> don't really care).
 
->
-> Thanks!
->
-> --
-> Martin K. Petersen      Oracle Linux Engineering
+I'll have a busy week and won't have time to look at it in the coming 
+days. So please, send your updated patch.
+
+Keep the Reported-by:.
+A Co-developed-by: for me is not a must have. You did 99% of the job ;-) 
+(and thanks for doing it).
+
+CJ
+
+> 
+> regards,
+> dan carpenter
+> 
+> diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
+> index f88ecdb93a8a..f495c24fdeac 100644
+> --- a/drivers/scsi/vmw_pvscsi.c
+> +++ b/drivers/scsi/vmw_pvscsi.c
+> @@ -1396,7 +1396,7 @@ static int pvscsi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>   	if (i == DEVICE_COUNT_RESOURCE) {
+>   		printk(KERN_ERR
+>   		       "vmw_pvscsi: adapter has no suitable MMIO region\n");
+> -		goto out_release_resources_and_disable;
+> +		goto out_release_resources;
+>   	}
+>   
+>   	adapter->mmioBase = pci_iomap(pdev, i, PVSCSI_MEM_SPACE_SIZE);
+> @@ -1405,7 +1405,7 @@ static int pvscsi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>   		printk(KERN_ERR
+>   		       "vmw_pvscsi: can't iomap for BAR %d memsize %lu\n",
+>   		       i, PVSCSI_MEM_SPACE_SIZE);
+> -		goto out_release_resources_and_disable;
+> +		goto out_release_resources;
+>   	}
+>   
+>   	pci_set_master(pdev);
+> @@ -1437,7 +1437,7 @@ static int pvscsi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>   	host = scsi_host_alloc(&pvscsi_template, sizeof(struct pvscsi_adapter));
+>   	if (!host) {
+>   		printk(KERN_ERR "vmw_pvscsi: failed to allocate host\n");
+> -		goto out_release_resources_and_disable;
+> +		goto out_release_resources;
+>   	}
+>   
+>   	/*
+> @@ -1468,7 +1468,7 @@ static int pvscsi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>   	error = pvscsi_allocate_rings(adapter);
+>   	if (error) {
+>   		printk(KERN_ERR "vmw_pvscsi: unable to allocate ring memory\n");
+> -		goto out_release_resources;
+> +		goto out_put_host;
+>   	}
+>   
+>   	/*
+> @@ -1524,14 +1524,14 @@ static int pvscsi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>   	if (error) {
+>   		printk(KERN_ERR
+>   		       "vmw_pvscsi: unable to request IRQ: %d\n", error);
+> -		goto out_reset_adapter;
+> +		goto out_free_irq_vectors;
+>   	}
+>   
+>   	error = scsi_add_host(host, &pdev->dev);
+>   	if (error) {
+>   		printk(KERN_ERR
+>   		       "vmw_pvscsi: scsi_add_host failed: %d\n", error);
+> -		goto out_reset_adapter;
+> +		goto out_free_irqs;
+>   	}
+>   
+>   	dev_info(&pdev->dev, "VMware PVSCSI rev %d host #%u\n",
+> @@ -1543,21 +1543,20 @@ static int pvscsi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>   
+>   	return 0;
+>   
+> +out_free_irqs:
+> +	free_irq(pci_irq_vector(adapter->dev, 0), adapter);
+> +out_free_irq_vectors:
+> +	pci_free_irq_vectors(adapter->dev);
+>   out_reset_adapter:
+>   	ll_adapter_reset(adapter);
+> +out_put_host:
+> +	scsi_host_put(host);
+>   out_release_resources:
+> -	pvscsi_shutdown_intr(adapter);
+>   	pvscsi_release_resources(adapter);
+> -	scsi_host_put(host);
+>   out_disable_device:
+>   	pci_disable_device(pdev);
+>   
+>   	return error;
+> -
+> -out_release_resources_and_disable:
+> -	pvscsi_shutdown_intr(adapter);
+> -	pvscsi_release_resources(adapter);
+> -	goto out_disable_device;
+>   }
+>   
+>   static void __pvscsi_shutdown(struct pvscsi_adapter *adapter)
+> 
+
