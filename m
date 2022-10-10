@@ -2,248 +2,100 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 058BDC433FE
-	for <linux-scsi@archiver.kernel.org>; Sun,  9 Oct 2022 20:24:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86415C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 10 Oct 2022 05:15:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230078AbiJIUYq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 9 Oct 2022 16:24:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59794 "EHLO
+        id S230274AbiJJFPt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 10 Oct 2022 01:15:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54334 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230125AbiJIUYp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Oct 2022 16:24:45 -0400
-X-Greylist: delayed 179 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 09 Oct 2022 13:24:42 PDT
-Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [81.169.146.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8C605F92;
-        Sun,  9 Oct 2022 13:24:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1665346716;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
-    From:Subject:Sender;
-    bh=jsfljzW+YMyuvK6mAEkDcZMs8Sze5R+zKumLODmC4Qo=;
-    b=D024j9bBfZG+xEV9UYALQSkS4eb6UqesupGVRaroiSOI+6rQdAvlcUN2KBlf3FO/kZ
-    UtqdfJTBLfquRpGVnY7S1Vhqq1JjnrE6bIzWCjS4VEXRp6K4N6oZcfK+lTv18DTTTebq
-    SD2ubNQLIB6GLy22d1gorsMeLG/bu/oq7brf83YidecJukHMk/Dwp1AwRhnlnGNlyCE2
-    qgw6FhSomphithAg2wL8m7H9JxZYi9VyYAOlzGZfBmMDvLMUqOKf3yrE7nsBTuXimM+y
-    W+Tek2938Qn4aoSvnPULv0iI8J2sbpanT5GUOjRlpk883grM05WY7lXpvQK5lnJadp7j
-    B5xw==
-Authentication-Results: strato.com;
-    dkim=none
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSedrgBzPc9DUyubU4DD1QLj68UeUr1+U1h3Wv4Xa/LRChhKO/8hvJt7KzgdI0oSHjzSB"
-X-RZG-CLASS-ID: mo02
-Received: from linux.speedport.ip
-    by smtp.strato.de (RZmta 48.1.3 AUTH)
-    with ESMTPSA id z90a05y99KIadXx
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-        (Client did not present a certificate);
-    Sun, 9 Oct 2022 22:18:36 +0200 (CEST)
-From:   Bean Huo <beanhuo@iokpp.de>
-To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
-        asutoshd@codeaurora.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
-        cang@codeaurora.org, daejun7.park@samsung.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v1 2/2] scsi: ufs: core: Cleanup ufshcd_slave_alloc()
-Date:   Sun,  9 Oct 2022 22:18:09 +0200
-Message-Id: <20221009201809.495207-3-beanhuo@iokpp.de>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20221009201809.495207-1-beanhuo@iokpp.de>
-References: <20221009201809.495207-1-beanhuo@iokpp.de>
+        with ESMTP id S229546AbiJJFPs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Oct 2022 01:15:48 -0400
+Received: from mail-lf1-x130.google.com (mail-lf1-x130.google.com [IPv6:2a00:1450:4864:20::130])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 996594D4C4
+        for <linux-scsi@vger.kernel.org>; Sun,  9 Oct 2022 22:15:47 -0700 (PDT)
+Received: by mail-lf1-x130.google.com with SMTP id bu25so15020280lfb.3
+        for <linux-scsi@vger.kernel.org>; Sun, 09 Oct 2022 22:15:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ionos.com; s=google;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=C0cRKsDBJEjgfO2uO0DRlSkhYtWzbxdKd0a927CGiSM=;
+        b=afQJiT7Qw+GBxOL3YUVXRTzhZ0PJe8U9iF5O2gHMeSSbUxoLE821QkR4QanU68/CGY
+         fBn3xYy+ETI9Pdz6CnYpcOTVkbeKswM+cUbZQRWIAyEtsRh5L2gvXH31PIj83LGo20OY
+         jtzOr7rsFGaZ1vo6/4xpDw/sTUWGVrInL+0Y0kOYhNGBO3fTA2BdXWwCnqDmVN5UnTAO
+         0q79oDPrMhFOV2EabU7Gqy7FBBVwok0LyY713ZfRLTHSqNsREJ7vEuVLLpQdEh/7lzjT
+         3zjE6BUKI26EANp1MmwoxBHEOXOvfweMEJoPG/aO9623EouegAyL4cU6WTagjEY1ph4Y
+         K3BQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=C0cRKsDBJEjgfO2uO0DRlSkhYtWzbxdKd0a927CGiSM=;
+        b=A/UK9wqeCijenQJY+H9kVI1UL1Sbw5GaE7Fm3QmcCRoOBcDnhiZbCDTTq6KdF6y02i
+         1/6QP6EP20ehyGjB4XFaeH4B8Zn15N7w4T3fjD+NmL/JP/ySbs2JCRSxxCQDwDge4KIo
+         HcPdQdesMir5IoaavQAxFTDgEfIjgkL9Oxl1md7hQqrwKVYdF21DJgdeWxRpqIHaVWdq
+         xbzLspttahIx7DxFbE9r2VFd48dmYsl0+mm/2h7+dsvTOp2Fkh7F2xoBWnvdDVstxsO1
+         DodSOIU9A0sGw45WdKx23nE7BM71tshQII1tDmjjE73KBDT3rfWY5wfqjeJRoNEz686y
+         Ta2g==
+X-Gm-Message-State: ACrzQf2uvQ4ohFfcomqUmdkhBoFAmrYs3cZaxyfDf683wwVkmDABH7cW
+        rlkxDt9XnFcX5mCIgOKxonVQ8Vi8Y0ZUWFlu+DUpdg==
+X-Google-Smtp-Source: AMsMyM4gLvOCl9wsS/rGbku2Twx9arRfNBf95EUgqFrqWEjO6t8noi/yByt/BaFix4vJcDJHQk19QxI6fKR/wZ6LWaI=
+X-Received: by 2002:a05:6512:31c4:b0:4a2:696e:4302 with SMTP id
+ j4-20020a05651231c400b004a2696e4302mr6584529lfe.478.1665378945852; Sun, 09
+ Oct 2022 22:15:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20221007230651.308969-1-ipylypiv@google.com>
+In-Reply-To: <20221007230651.308969-1-ipylypiv@google.com>
+From:   Jinpu Wang <jinpu.wang@ionos.com>
+Date:   Mon, 10 Oct 2022 07:15:34 +0200
+Message-ID: <CAMGffEk0Xzr9vZ97d4Gd=Awf-yYT2VEXVr5WRYoKuuoGwSQcbQ@mail.gmail.com>
+Subject: Re: [PATCH] scsi: pm80xx: Display proc_name in sysfs
+To:     Igor Pylypiv <ipylypiv@google.com>
+Cc:     Jack Wang <jinpu.wang@ionos.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jolly Shah <jollys@google.com>,
+        Andrew Konecki <awkonecki@google.com>,
+        linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bean Huo <beanhuo@micron.com>
-
-Combine ufshcd_get_lu_power_on_wp_status() and ufshcd_set_queue_depth()
-into one single ufshcd_lu_init(), so that we only need to read the LUN
-descriptor once to replace the original twice.
-
-Signed-off-by: Bean Huo <beanhuo@micron.com>
----
- drivers/ufs/core/ufshcd.c | 153 ++++++++++++++------------------------
- 1 file changed, 56 insertions(+), 97 deletions(-)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 7c15cbc737b4..77dc5cba2b94 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -4862,100 +4862,6 @@ static int ufshcd_verify_dev_init(struct ufs_hba *hba)
- 	return err;
- }
- 
--/**
-- * ufshcd_set_queue_depth - set lun queue depth
-- * @sdev: pointer to SCSI device
-- *
-- * Read bLUQueueDepth value and activate scsi tagged command
-- * queueing. For WLUN, queue depth is set to 1. For best-effort
-- * cases (bLUQueueDepth = 0) the queue depth is set to a maximum
-- * value that host can queue.
-- */
--static void ufshcd_set_queue_depth(struct scsi_device *sdev)
--{
--	int ret = 0;
--	u8 lun_qdepth;
--	struct ufs_hba *hba;
--
--	hba = shost_priv(sdev->host);
--
--	lun_qdepth = hba->nutrs;
--	ret = ufshcd_read_unit_desc_param(hba,
--					  ufshcd_scsi_to_upiu_lun(sdev->lun),
--					  UNIT_DESC_PARAM_LU_Q_DEPTH,
--					  &lun_qdepth,
--					  sizeof(lun_qdepth));
--
--	/* Some WLUN doesn't support unit descriptor */
--	if (ret == -EOPNOTSUPP)
--		lun_qdepth = 1;
--	else if (!lun_qdepth)
--		/* eventually, we can figure out the real queue depth */
--		lun_qdepth = hba->nutrs;
--	else
--		lun_qdepth = min_t(int, lun_qdepth, hba->nutrs);
--
--	dev_dbg(hba->dev, "%s: activate tcq with queue depth %d\n",
--			__func__, lun_qdepth);
--	scsi_change_queue_depth(sdev, lun_qdepth);
--}
--
--/*
-- * ufshcd_get_lu_wp - returns the "b_lu_write_protect" from UNIT DESCRIPTOR
-- * @hba: per-adapter instance
-- * @lun: UFS device lun id
-- * @b_lu_write_protect: pointer to buffer to hold the LU's write protect info
-- *
-- * Returns 0 in case of success and b_lu_write_protect status would be returned
-- * @b_lu_write_protect parameter.
-- * Returns -ENOTSUPP if reading b_lu_write_protect is not supported.
-- * Returns -EINVAL in case of invalid parameters passed to this function.
-- */
--static int ufshcd_get_lu_wp(struct ufs_hba *hba,
--			    u8 lun,
--			    u8 *b_lu_write_protect)
--{
--	int ret;
--
--	if (!b_lu_write_protect)
--		ret = -EINVAL;
--	/*
--	 * According to UFS device spec, RPMB LU can't be write
--	 * protected so skip reading bLUWriteProtect parameter for
--	 * it. For other W-LUs, UNIT DESCRIPTOR is not available.
--	 */
--	else if (lun >= hba->dev_info.max_lu_supported)
--		ret = -ENOTSUPP;
--	else
--		ret = ufshcd_read_unit_desc_param(hba,
--					  lun,
--					  UNIT_DESC_PARAM_LU_WR_PROTECT,
--					  b_lu_write_protect,
--					  sizeof(*b_lu_write_protect));
--	return ret;
--}
--
--/**
-- * ufshcd_get_lu_power_on_wp_status - get LU's power on write protect
-- * status
-- * @hba: per-adapter instance
-- * @sdev: pointer to SCSI device
-- *
-- */
--static inline void ufshcd_get_lu_power_on_wp_status(struct ufs_hba *hba,
--						    const struct scsi_device *sdev)
--{
--	if (hba->dev_info.f_power_on_wp_en &&
--	    !hba->dev_info.is_lu_power_on_wp) {
--		u8 b_lu_write_protect;
--
--		if (!ufshcd_get_lu_wp(hba, ufshcd_scsi_to_upiu_lun(sdev->lun),
--				      &b_lu_write_protect) &&
--		    (b_lu_write_protect == UFS_LU_POWER_ON_WP))
--			hba->dev_info.is_lu_power_on_wp = true;
--	}
--}
--
- /**
-  * ufshcd_setup_links - associate link b/w device wlun and other luns
-  * @sdev: pointer to SCSI device
-@@ -4993,6 +4899,61 @@ static void ufshcd_setup_links(struct ufs_hba *hba, struct scsi_device *sdev)
- 	}
- }
- 
-+/**
-+ * ufshcd_lu_power_on_wp_init - Initialize LU's power on write protect state
-+ * @hba: per-adapter instance
-+ * @sdev: pointer to SCSI device
-+ * @b_lu_write_protect: bLUWriteProtect value read from LU descriptor
-+ */
-+static inline void ufshcd_lu_power_on_wp_init(struct ufs_hba *hba, const struct scsi_device *sdev,
-+					      u8 b_lu_write_protect)
-+{
-+	if (hba->dev_info.f_power_on_wp_en && !hba->dev_info.is_lu_power_on_wp &&
-+	    b_lu_write_protect == UFS_LU_POWER_ON_WP)
-+		hba->dev_info.is_lu_power_on_wp = true;
-+}
-+
-+static void ufshcd_lu_init(struct ufs_hba *hba, struct scsi_device *sdev)
-+{
-+	int ret;
-+	int len;
-+	u8 lun;
-+	u8 lun_qdepth;
-+	u8 *desc_buf;
-+
-+	lun_qdepth = hba->nutrs;
-+	len = hba->desc_size[QUERY_DESC_IDN_UNIT];
-+
-+	desc_buf = kmalloc(len, GFP_KERNEL);
-+	if (!desc_buf)
-+		goto set_qdepth;
-+
-+	lun_qdepth = hba->nutrs;
-+	lun = ufshcd_scsi_to_upiu_lun(sdev->lun);
-+
-+	ret = ufshcd_read_unit_desc_param(hba, lun, 0, desc_buf, len);
-+	if (ret == -EOPNOTSUPP)
-+		/* If LU doesn't support unit descriptor, its queue depth is set to 1 */
-+		lun_qdepth = 1;
-+	else if (desc_buf[UNIT_DESC_PARAM_LU_Q_DEPTH])
-+		lun_qdepth = min_t(int, desc_buf[UNIT_DESC_PARAM_LU_Q_DEPTH], hba->nutrs);
-+	/*
-+	 * According to UFS device spec, The write protection mode is only supported by normal LU,
-+	 * not supported by WLUN.
-+	 */
-+	if (!ret && lun < hba->dev_info.max_lu_supported)
-+		ufshcd_lu_power_on_wp_init(hba, sdev, desc_buf[UNIT_DESC_PARAM_LU_WR_PROTECT]);
-+
-+	kfree(desc_buf);
-+set_qdepth:
-+	/*
-+	 * For WLUNs that don't support unit descriptor, queue depth is set to 1. For LUs whose
-+	 * bLUQueueDepth == 0, the queue depth is set to a maximum value that host can queue.
-+	 */
-+	dev_dbg(hba->dev, "Set LU %x queue depth %d\n", lun, lun_qdepth);
-+	scsi_change_queue_depth(sdev, lun_qdepth);
-+}
-+
- /**
-  * ufshcd_slave_alloc - handle initial SCSI device configurations
-  * @sdev: pointer to SCSI device
-@@ -5020,9 +4981,7 @@ static int ufshcd_slave_alloc(struct scsi_device *sdev)
- 	/* WRITE_SAME command is not supported */
- 	sdev->no_write_same = 1;
- 
--	ufshcd_set_queue_depth(sdev);
--
--	ufshcd_get_lu_power_on_wp_status(hba, sdev);
-+	ufshcd_lu_init(hba, sdev);
- 
- 	ufshcd_setup_links(hba, sdev);
- 
--- 
-2.34.1
-
+On Sat, Oct 8, 2022 at 1:07 AM Igor Pylypiv <ipylypiv@google.com> wrote:
+>
+> The proc_name entry in sysfs for pm80xx is "(null)" because it is
+> not initialized in scsi_host_template:
+>
+> Before:
+> host:~# cat /sys/class/scsi_host/host6/proc_name
+> (null)
+>
+> After:
+> host:~# cat /sys/class/scsi_host/host6/proc_name
+> pm80xx
+>
+> Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
+> Reviewed-by: Jolly Shah <jollys@google.com>
+Acked-by: Jack Wang <jinpu.wang@ionos.com>
+> ---
+>  drivers/scsi/pm8001/pm8001_init.c | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+> index 2ff2fac1e403..7a7d63aa90e2 100644
+> --- a/drivers/scsi/pm8001/pm8001_init.c
+> +++ b/drivers/scsi/pm8001/pm8001_init.c
+> @@ -99,6 +99,7 @@ static void pm8001_map_queues(struct Scsi_Host *shost)
+>  static struct scsi_host_template pm8001_sht = {
+>         .module                 = THIS_MODULE,
+>         .name                   = DRV_NAME,
+> +       .proc_name              = DRV_NAME,
+>         .queuecommand           = sas_queuecommand,
+>         .dma_need_drain         = ata_scsi_dma_need_drain,
+>         .target_alloc           = sas_target_alloc,
+> --
+> 2.38.0.rc1.362.ged0d419d3c-goog
+>
