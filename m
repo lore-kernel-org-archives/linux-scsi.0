@@ -2,134 +2,94 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50D64C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Oct 2022 11:53:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E934DC433FE
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Oct 2022 16:57:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229755AbiJKLxP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 Oct 2022 07:53:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53436 "EHLO
+        id S229926AbiJKQ5O (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 Oct 2022 12:57:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229658AbiJKLxO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Oct 2022 07:53:14 -0400
-Received: from mail-vk1-xa2b.google.com (mail-vk1-xa2b.google.com [IPv6:2607:f8b0:4864:20::a2b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09C2F7F244;
-        Tue, 11 Oct 2022 04:53:13 -0700 (PDT)
-Received: by mail-vk1-xa2b.google.com with SMTP id v81so1958034vkv.5;
-        Tue, 11 Oct 2022 04:53:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=PZ2zVHMyPDDLeUBpSc6X3pmNAkcn6FVd6l1YgBoTZJ0=;
-        b=UX/sNRAB6j9gx6O7gQnV+jKQTkc5roHcuF2PetsiXVDAbDBoAajtWpiLY0sfVEch2A
-         109KhX0REWxA9xoJnAw4uKtEY5EcM5T/DGU85ZU9JunVrzlEeb+/MrzWzz/LiboaU7GH
-         QlrADeBu4c6jwcWLyATle8sFmQr7TpxfD2Kh9K5MsDBSOB8nc5oE8PPdnMMgoL86WtXT
-         12gVewiGsppK7hB9qmeDSqX8emxZlqcMR7eS52Fk3Phdax5R7bpDGwn8xJY7VfWt2vrX
-         ukGbe2YSOnBDY/plj2eG2rOH6rV4eWOcAWJivv8LX8GlnRHPvsD4BPI3Tme+0wvk05zF
-         TKWg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=PZ2zVHMyPDDLeUBpSc6X3pmNAkcn6FVd6l1YgBoTZJ0=;
-        b=HFoSV+Q2sxCqasxnB8K+ZjayXLbybUwavJJKLPYEh/46LjdIMYZqu81ABEMUevNuo1
-         oZJOuM5JohwKJctEp4iHcGp99lxBEtqmrnZ3DTQ84atLi9k5n6oZ4Z3F/67fVptYe/fH
-         LtS8cFLqJrIj+CReEGdRJIEoqV+igrhHHNGbA/84ecBhARE/oFZQHIP2hQutK8keIWHO
-         veRKCvKMFUoGEmlHeC/zz1xZ+Cch2H9oWqitn7MgIlIaRa+bXLQ6j4yfvBYr+Q09WVy6
-         o+j9a8rw6YXnzMtXaFwYoMY2/ccmgxxMHn47mZ2M6mtQ3DWkdZUYCj6c3KEzN3cJgMmH
-         Ghkw==
-X-Gm-Message-State: ACrzQf0q3TB5xfwBco8TzJF1+H1W3xSnWtpSGDcwUeaMjtDxK+JhTzDE
-        DhwgHLKxOHf+EkOYNlSho1pwRtIyNxvQs5mQOUM=
-X-Google-Smtp-Source: AMsMyM4w3iqeyvjZqwT+AW9YB36By6WV2CFThUBOcx5ZLloMvd0RfxwgCr/4ccGkbjp2IF+Tl3T35vfi79MwKNi4TJM=
-X-Received: by 2002:a1f:9b10:0:b0:3ab:4058:32e7 with SMTP id
- d16-20020a1f9b10000000b003ab405832e7mr11571981vke.15.1665489192087; Tue, 11
- Oct 2022 04:53:12 -0700 (PDT)
-MIME-Version: 1.0
-References: <20221011021653.27277-1-gaoyankaigeren@gmail.com> <DM6PR04MB6575AE77585D584652179089FC239@DM6PR04MB6575.namprd04.prod.outlook.com>
-In-Reply-To: <DM6PR04MB6575AE77585D584652179089FC239@DM6PR04MB6575.namprd04.prod.outlook.com>
-From:   =?UTF-8?B?6auY5Lil5Yev?= <gaoyankaigeren@gmail.com>
-Date:   Tue, 11 Oct 2022 19:53:01 +0800
-Message-ID: <CAFN68yVajOkV++gCp-y1+SD5VOKLgUeBhfgskrJZOX5dfGi07A@mail.gmail.com>
-Subject: Re: [PATCH] ufs: core: Disable auto h8 before ssu
-To:     Avri Altman <Avri.Altman@wdc.com>
+        with ESMTP id S229895AbiJKQ5M (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Oct 2022 12:57:12 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B9C401EC64;
+        Tue, 11 Oct 2022 09:57:09 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 19EE661123;
+        Tue, 11 Oct 2022 16:57:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 183FAC433D6;
+        Tue, 11 Oct 2022 16:57:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1665507428;
+        bh=8X8GkrgOpGGj5HDkTWUXplEGBbu7A3Pw+4BTxABEjQs=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=UjENLWIbXMigYX+aonaznQV5MvNpG6rRVnxqTaaC6bWDAvZGa/rWlQSUrhH1CvOk1
+         GaUzt2JmHGWRDGlvgKl3jr0dNiY7++R7luN/eX2GFdn+3Ge411oYot8j4arBfC/CkU
+         S9qoYl9RRj4jirrtJMKjFZ8PqVAiJp8Frtee5beTDIgIe0lp2m6f8w8bizVfopEwku
+         hc7GoajkGrfJOw2xxAUIQgZxvTbprgVB6iakyflrRWUFhBzwyqUp6DR6CjYZ5qb2YE
+         0G+wdsaRZrmN+Qf2UlQqDa55eK+XxH0UKpOslBYHRpd4xQVQbkKP3eBNkszU3IEdtp
+         fqtvuJ+HfBOTw==
+Date:   Tue, 11 Oct 2022 09:57:06 -0700
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Ten Gao <gaoyankaigeren@gmail.com>
 Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
         Bart Van Assche <bvanassche@acm.org>,
         "James E . J . Bottomley" <jejb@linux.ibm.com>,
         Bean Huo <beanhuo@micron.com>,
         Adrian Hunter <adrian.hunter@intel.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Mike Snitzer <snitzer@redhat.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/2] ufs: core: remove encrypt when no data transfer
+Message-ID: <Y0WgYlbV4RBqd+lU@sol.localdomain>
+References: <20221011072126.30802-1-gaoyankaigeren@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221011072126.30802-1-gaoyankaigeren@gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Dear Avri
-  Unisoc reports resume fail on UFS(micron FS164) during suspend/resume tes=
-t.
-  We check host inserts auto H8 enter/exit event between SSU sleep
-command and H8 enter command in runtime suspend .
-  Asfollows: SSU Sleep command --> auto H8 enter --> auto H8 exit -->
-H8 enter --> idle 2ms --> VCC off.
-  However device AQL FW can=E2=80=99t enter LPM within 2ms after second H8
-enter command.
-  FW already enter LPM after receive auto H8 enter command , Next auto
-H8 exit command will trigger FW exit from LPM, it need take over 10ms,
-and FW can=E2=80=99t enter
-  LPM again after second H8 enter command until device complete exit
-from LPM. So disable auto h8 before ssu is a reasonable solution to
-solve it.
-  Hynix also has similar request.
+On Tue, Oct 11, 2022 at 03:21:26PM +0800, Ten Gao wrote:
+> From: Ten Gao <ten.gao@unisoc.com>
+> 
+> when there is no data transmission, ufs is unnecessary to encrypt.
+> We need to adjust scsi crypto relation.
+> 
+> Signed-off-by: Ten Gao <ten.gao@unisoc.com>
+> ---
+>  drivers/ufs/core/ufshcd-crypto.h | 10 ++++++----
+>  include/ufs/ufshci.h             |  2 ++
+>  2 files changed, 8 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/ufs/core/ufshcd-crypto.h b/drivers/ufs/core/ufshcd-crypto.h
+> index 504cc841540b..5bc2a0cbdfa6 100644
+> --- a/drivers/ufs/core/ufshcd-crypto.h
+> +++ b/drivers/ufs/core/ufshcd-crypto.h
+> @@ -30,10 +30,12 @@ ufshcd_prepare_req_desc_hdr_crypto(struct ufshcd_lrb *lrbp, u32 *dword_0,
+>  				   u32 *dword_1, u32 *dword_3)
+>  {
+>  	if (lrbp->crypto_key_slot >= 0) {
+> -		*dword_0 |= UTP_REQ_DESC_CRYPTO_ENABLE_CMD;
+> -		*dword_0 |= lrbp->crypto_key_slot;
+> -		*dword_1 = lower_32_bits(lrbp->data_unit_num);
+> -		*dword_3 = upper_32_bits(lrbp->data_unit_num);
+> +		if ((*dword_0 & UTRD_DIRECTION) != UTP_NO_DATA_TRANSFER) {
+> +			*dword_0 |= UTP_REQ_DESC_CRYPTO_ENABLE_CMD;
+> +			*dword_0 |= lrbp->crypto_key_slot;
+> +			*dword_1 = lower_32_bits(lrbp->data_unit_num);
+> +			*dword_3 = upper_32_bits(lrbp->data_unit_num);
+> +		}
+>  	}
+>  }
 
-Avri Altman <Avri.Altman@wdc.com> =E4=BA=8E2022=E5=B9=B410=E6=9C=8811=E6=97=
-=A5=E5=91=A8=E4=BA=8C 15:07=E5=86=99=E9=81=93=EF=BC=9A
->
-> > From: Ten Gao <ten.gao@unisoc.com>
-> >
-> > Ensure auto h8 will not hit dme h8,and there won't be two h8 in a row a=
-fter
-> > ssu.
-> I don't think the hw should do that.
-> Can you please share on which platform/host controller did you observe th=
-is?
->
-> Thanks,
-> Avri
-> >
-> > Signed-off-by: Ten Gao <ten.gao@unisoc.com>
-> > ---
-> >  drivers/ufs/core/ufshcd.c | 10 ++++++++++
-> >  1 file changed, 10 insertions(+)
-> >
-> > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c inde=
-x
-> > a202d7d5240d..42f93648d796 100644
-> > --- a/drivers/ufs/core/ufshcd.c
-> > +++ b/drivers/ufs/core/ufshcd.c
-> > @@ -4256,6 +4256,14 @@ void ufshcd_auto_hibern8_update(struct ufs_hba
-> > *hba, u32 ahit)  }  EXPORT_SYMBOL_GPL(ufshcd_auto_hibern8_update);
-> >
-> > +void ufshcd_auto_hibern8_disable(struct ufs_hba *hba) {
-> > +       if (!ufshcd_is_auto_hibern8_supported(hba))
-> > +               return;
-> > +
-> > +       ufshcd_writel(hba, 0, REG_AUTO_HIBERNATE_IDLE_TIMER); }
-> > +
-> >  void ufshcd_auto_hibern8_enable(struct ufs_hba *hba)  {
-> >         if (!ufshcd_is_auto_hibern8_supported(hba))
-> > @@ -9036,6 +9044,8 @@ static int __ufshcd_wl_suspend(struct ufs_hba
-> > *hba, enum ufs_pm_op pm_op)
-> >         if (ret)
-> >                 goto enable_scaling;
-> >
-> > +       ufshcd_auto_hibern8_disable(hba);
-> > +
-> >         if (req_dev_pwr_mode !=3D hba->curr_dev_pwr_mode) {
-> >                 if (pm_op !=3D UFS_RUNTIME_PM)
-> >                         /* ensure that bkops is disabled */
-> > --
-> > 2.17.1
->
+This is very dangerous, as it will silently skip en/decryption.  Why was a
+keyslot assigned in the first place if the I/O doesn't need en/decryption?
+
+- Eric
