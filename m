@@ -2,105 +2,134 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52EE0C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Oct 2022 02:17:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3F75C433FE
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Oct 2022 02:22:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229764AbiJKCRD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 10 Oct 2022 22:17:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40376 "EHLO
+        id S229757AbiJKCWE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 10 Oct 2022 22:22:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48936 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229761AbiJKCRB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Oct 2022 22:17:01 -0400
-Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 924867F255;
-        Mon, 10 Oct 2022 19:17:00 -0700 (PDT)
-Received: by mail-pf1-x435.google.com with SMTP id w2so12316465pfb.0;
-        Mon, 10 Oct 2022 19:17:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=y1/wC0Eu4EgrM8qtJEAF23x7NsVa9cSmWMf+ki3Mg8k=;
-        b=jy+5aK91n/giLqv0SOzXLyieQ1E87FOO4CuFl3kpG5SCAKJthQ0uqecCaYhZV5OKgm
-         skL2pG3I7Ai14IZ/tvnx9Tv6oVACAiq7pC/hckz0+zoD8YnXN5COKHkPHjTN5Q3spXNZ
-         VGeXg7IGD21yq5zKzRXm9HVG0Y8eG9E05k4qbekLLg5YR/gIp+FZT3mdHrG6HkOlbuE8
-         SGTP7KDdHJcq0y0ui3F/LeZyOxRGxVqzKbOOT/qahsIx8CurrA2Ppypvri2yNTS7rsvF
-         9cX9Mhu9boboty+r2MbbE6pE0nlVA4S45IiXUOX1MCkxqhbJQHYBcguZdMcLBuzasTcB
-         R1ng==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=y1/wC0Eu4EgrM8qtJEAF23x7NsVa9cSmWMf+ki3Mg8k=;
-        b=X4sbhsb/YTpdVcz9ZMqa9KxYjjFsVyBW/JFJr8BYgKwlgNY5/dEygaIXsL29waOl87
-         3keBOYcfZwkzNe8pdTBehteDZCqMxj4tDtJw4N6COgWEUgDQtTGXIn9opt+SyhBdD5gF
-         3nNp3RB3cCiP3/Kd1rx0KPJyk0uL+CJR+PVO1qNeVbLnpX90oga6+/eIm+vAgwFDeZZ1
-         R188io6xVpVxexADkycFlFcStF3at16SG34cD5NKdZC8p6O23SoYTopN0+fS9w7QGvxA
-         7OKQuuedBsrpzZlLoQaJ27m/xDuXmWEHtrNS0TVKRbp7XOLFSNgKbXx7IDH4jS0BA//U
-         DvJw==
-X-Gm-Message-State: ACrzQf2Ere90GMuYk/pjCGw9NFQHC14+8u3Yoq927KIIuNlmnYxwDVDx
-        /lzCvyJ+aiXV7j1sD0AbVDU=
-X-Google-Smtp-Source: AMsMyM5AZgrCii1enUmH0t9ar+88GsxqzNJbYBP6dmx13dARsU8a7vfIG1Yloc2Ew/AaHy6/zwJtVw==
-X-Received: by 2002:a63:4383:0:b0:440:3e0d:b9ec with SMTP id q125-20020a634383000000b004403e0db9ecmr19970610pga.54.1665454619709;
-        Mon, 10 Oct 2022 19:16:59 -0700 (PDT)
-Received: from zeshkernups01.spreadtrum.com ([117.18.48.102])
-        by smtp.gmail.com with ESMTPSA id t10-20020a65408a000000b00451f4071151sm6820788pgp.65.2022.10.10.19.16.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 10 Oct 2022 19:16:59 -0700 (PDT)
-From:   Ten Gao <gaoyankaigeren@gmail.com>
-To:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Adrian Hunter <adrian.hunter@intel.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] ufs: core: Disable auto h8 before ssu
-Date:   Tue, 11 Oct 2022 10:16:53 +0800
-Message-Id: <20221011021653.27277-1-gaoyankaigeren@gmail.com>
-X-Mailer: git-send-email 2.17.1
+        with ESMTP id S229446AbiJKCWC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Oct 2022 22:22:02 -0400
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CBE4D5C9C9
+        for <linux-scsi@vger.kernel.org>; Mon, 10 Oct 2022 19:22:00 -0700 (PDT)
+Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20221011022155epoutp03ef5741388baa87f0a8928cb38cc31b48~c4mvr53Yo1951319513epoutp03o
+        for <linux-scsi@vger.kernel.org>; Tue, 11 Oct 2022 02:21:55 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20221011022155epoutp03ef5741388baa87f0a8928cb38cc31b48~c4mvr53Yo1951319513epoutp03o
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1665454915;
+        bh=Q1eCrmaO35cZuXOL9ehpifBczZ391rlrPHwGE4VqjAs=;
+        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
+        b=Ns59Fb0Bf69G5FSv5fTNrzhGLl4NxiwE3D1o2Lk1J5diE11SIWteAKmnaAMPSmerk
+         +YegkICsXxHhwwc1Nk6pIeMZmiXyiXpJ7spxYllcp+iVbVu+epMMTf9gbZ8SnLUH3L
+         YssDxSt0FxLgORDftjECh41tZ6uB1ZZlGphmwOxc=
+Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
+        20221011022154epcas2p3c7c79934c6d53390557d45d8fdf49d79~c4mu2Oq_L2218622186epcas2p3O;
+        Tue, 11 Oct 2022 02:21:54 +0000 (GMT)
+Received: from epsmges2p3.samsung.com (unknown [182.195.36.99]) by
+        epsnrtp3.localdomain (Postfix) with ESMTP id 4Mmfg56pNpz4x9Q2; Tue, 11 Oct
+        2022 02:21:53 +0000 (GMT)
+X-AuditID: b6c32a47-873ff70000002127-f9-6344d341dcc7
+Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
+        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
+        4C.7F.08487.143D4436; Tue, 11 Oct 2022 11:21:53 +0900 (KST)
+Mime-Version: 1.0
+Subject: RE: [PATCH v2 1/2] scsi: ufs: core: Remove unnecessary if statement
+Reply-To: daejun7.park@samsung.com
+Sender: Daejun Park <daejun7.park@samsung.com>
+From:   Daejun Park <daejun7.park@samsung.com>
+To:     Bean Huo <beanhuo@iokpp.de>, ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        Daejun Park <daejun7.park@samsung.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <20221010092937.520013-2-beanhuo@iokpp.de>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20221011022153epcms2p1fcbf889099bd74279ed0d9b51ff26c1b@epcms2p1>
+Date:   Tue, 11 Oct 2022 11:21:53 +0900
+X-CMS-MailID: 20221011022153epcms2p1fcbf889099bd74279ed0d9b51ff26c1b
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+CMS-TYPE: 102P
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrOJsWRmVeSWpSXmKPExsWy7bCmqa7jZZdkg5lrTS0ezNvGZrG37QS7
+        xcufV9ks7h87zWJx8GEni8W0Dz+ZLT6tX8Zq8fKQpsWqB+EWi25sY7K4vGsOm0X39R1sFsuP
+        /2OyWLr1JqPFh546B36Py1e8PS739TJ5LN7zksnjy9SXzB4TFh1g9Gg5uZ/F4/v6DjaPj09v
+        sXj0bVnF6PF5k5xH+4FupgDuqGybjNTElNQihdS85PyUzLx0WyXv4HjneFMzA0NdQ0sLcyWF
+        vMTcVFslF58AXbfMHKBHlBTKEnNKgUIBicXFSvp2NkX5pSWpChn5xSW2SqkFKTkF5gV6xYm5
+        xaV56Xp5qSVWhgYGRqZAhQnZGdMX72EseCFcsfXWO7YGxqXCXYwcHBICJhJrn6p2MXJxCAns
+        YJS4tWYXC0icV0BQ4u8OoBJODmEBH4lnvd8ZQWwhASWJ9RdnsUPE9SRuPVwDFmcT0JGYfuI+
+        O8gcEYHNLBLP1nUxgSSYBeokds/5wwZiSwjwSsxof8oCYUtLbF++FayZU8Bc4vSKh+wQcQ2J
+        H8t6mSFsUYmbq9+yw9jvj81nhLBFJFrvnYWqEZR48HM3VFxS4vbcTVD1+RL/ryyHsmskth2Y
+        B2XrS1zr2Ah2A6+Ar8TeS1vB5rAIqEp0vrkMdaeLxO77EDazgLbEsoWvmUFhwiygKbF+lz4k
+        2JQljtxigfmqYeNvdnQ2swCfRMfhv3DxHfOeMEHYahLrfq5nmsCoPAsR0LOQ7JqFsGsBI/Mq
+        RrHUguLc9NRiowJjeNQm5+duYgSnaC33HYwz3n7QO8TIxMF4iFGCg1lJhJdxvlOyEG9KYmVV
+        alF+fFFpTmrxIUZToC8nMkuJJucDs0ReSbyhiaWBiZmZobmRqYG5kjhv1wytZCGB9MSS1OzU
+        1ILUIpg+Jg5OqQam1d83b7+10zF5TvvWVXmqJwXNpZyX3lpzoErwYkvJkbInmmqn2QWezT7/
+        m3X1Nf/wRYK1O7aZ3uOYtOXUlVtTZHTqHRWslKbOkd/t/NBc1Fpv5qZ30Z77Zky4kJYeax/r
+        2CBUs+eBZXTNhz3apf7mfxUuLp8r1s7j/m3n1ye1fXd9AiWPTFNL+KZV7xJec8LFwuy/R7//
+        89ePi7Y9/1q1Tmxu2aTeks2/Vvl0mGxPsY+c1Gmecj9Kc+oH2a4Dx0Luz+jIdk2pMDAKyJNi
+        vOHvxh7J19+4zjDjieerPsGS+Ac/jlRtOrbbsHAZ184N8h/7JTsm7uLLPD9X4m+g9G6BsvmF
+        b133zr8klb6uR3q6EktxRqKhFnNRcSIAyKMnK1oEAAA=
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20221010093042epcas2p2462d3c50d81d613574332e3f39d971e1
+References: <20221010092937.520013-2-beanhuo@iokpp.de>
+        <20221010092937.520013-1-beanhuo@iokpp.de>
+        <CGME20221010093042epcas2p2462d3c50d81d613574332e3f39d971e1@epcms2p1>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Ten Gao <ten.gao@unisoc.com>
-
-Ensure auto h8 will not hit dme h8,and there won't be two h8 in a row
-after ssu.
-
-Signed-off-by: Ten Gao <ten.gao@unisoc.com>
----
- drivers/ufs/core/ufshcd.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index a202d7d5240d..42f93648d796 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -4256,6 +4256,14 @@ void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit)
- }
- EXPORT_SYMBOL_GPL(ufshcd_auto_hibern8_update);
- 
-+void ufshcd_auto_hibern8_disable(struct ufs_hba *hba)
-+{
-+	if (!ufshcd_is_auto_hibern8_supported(hba))
-+		return;
-+
-+	ufshcd_writel(hba, 0, REG_AUTO_HIBERNATE_IDLE_TIMER);
-+}
-+
- void ufshcd_auto_hibern8_enable(struct ufs_hba *hba)
- {
- 	if (!ufshcd_is_auto_hibern8_supported(hba))
-@@ -9036,6 +9044,8 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 	if (ret)
- 		goto enable_scaling;
- 
-+	ufshcd_auto_hibern8_disable(hba);
-+
- 	if (req_dev_pwr_mode != hba->curr_dev_pwr_mode) {
- 		if (pm_op != UFS_RUNTIME_PM)
- 			/* ensure that bkops is disabled */
--- 
-2.17.1
-
+Hi Bean=C2=A0Huo,=0D=0A=0D=0AI=20think=20ufs_is_valid_unit_desc_lun()=20is=
+=20also=20used=20for=20wb_buf_alloc_units_show()=20in=20ufs-sysfs.c.=0D=0AS=
+o=20just=20removing=20this=20if-checkup=C2=A0will=20make=20different=20resu=
+lt=20when=20check=20lun=20value.=0D=0A=0D=0AThanks,=0D=0ADaejun=0D=0A=0D=0A=
+>From:=C2=A0Bean=C2=A0Huo=C2=A0<beanhuo=40micron.com>=0D=0A>=0D=0A>LUs=C2=
+=A0with=C2=A0WB=C2=A0potential=C2=A0support=C2=A0are=C2=A0properly=C2=A0che=
+cked=C2=A0in=C2=A0ufshcd_wb_probe()=0D=0A>before=C2=A0calling=C2=A0ufshcd_r=
+ead_unit_desc_param(),=C2=A0so=C2=A0remove=C2=A0this=C2=A0unnecessary=0D=0A=
+>if-checkup=C2=A0in=C2=A0ufs_is_valid_unit_desc_lun()=C2=A0to=C2=A0match=C2=
+=A0its=C2=A0function=C2=A0definition.=0D=0A>=0D=0A>Signed-off-by:=C2=A0Bean=
+=C2=A0Huo=C2=A0<beanhuo=40micron.com>=0D=0A>---=0D=0A>=C2=A0drivers/ufs/cor=
+e/ufshcd-priv.h=C2=A0=7C=C2=A03=C2=A0---=0D=0A>=C2=A01=C2=A0file=C2=A0chang=
+ed,=C2=A03=C2=A0deletions(-)=0D=0A>=0D=0A>diff=C2=A0--git=C2=A0a/drivers/uf=
+s/core/ufshcd-priv.h=C2=A0b/drivers/ufs/core/ufshcd-priv.h=0D=0A>index=C2=
+=A0f68ca33f6ac7..2457b005101a=C2=A0100644=0D=0A>---=C2=A0a/drivers/ufs/core=
+/ufshcd-priv.h=0D=0A>+++=C2=A0b/drivers/ufs/core/ufshcd-priv.h=0D=0A>=40=40=
+=C2=A0-300,9=C2=A0+300,6=C2=A0=40=40=C2=A0static=C2=A0inline=C2=A0bool=C2=
+=A0ufs_is_valid_unit_desc_lun(struct=C2=A0ufs_dev_info=C2=A0*dev_info,=0D=
+=0A>=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0pr_err(=22Max=C2=A0General=C2=A0LU=C2=A0su=
+pported=C2=A0by=C2=A0UFS=C2=A0isn't=C2=A0initialized=5Cn=22);=0D=0A>=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0return=C2=A0false;=0D=0A>=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=7D=0D=0A>-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0/*=C2=A0WB=C2=A0is=C2=A0available=C2=A0only=C2=A0for=C2=A0the=
+=C2=A0logical=C2=A0unit=C2=A0from=C2=A00=C2=A0to=C2=A07=C2=A0*/=0D=0A>-=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if=C2=A0(param_offset=C2=A0=3D=
+=3D=C2=A0UNIT_DESC_PARAM_WB_BUF_ALLOC_UNITS)=0D=0A>-=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+return=C2=A0lun=C2=A0<=C2=A0UFS_UPIU_MAX_WB_LUN_ID;=0D=0A>=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0return=C2=A0lun=C2=A0=3D=3D=C2=A0UFS=
+_UPIU_RPMB_WLUN=C2=A0=7C=7C=C2=A0(lun=C2=A0<=C2=A0dev_info->max_lu_supporte=
+d);=0D=0A>=C2=A0=7D=0D=0A>=C2=A0=0D=0A>--=C2=A0=0D=0A>2.34.1
