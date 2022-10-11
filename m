@@ -2,117 +2,116 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A29B0C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Oct 2022 07:21:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAC75C433FE
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Oct 2022 09:39:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229957AbiJKHVh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 Oct 2022 03:21:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50726 "EHLO
+        id S229658AbiJKJjs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 Oct 2022 05:39:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59282 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229446AbiJKHVg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Oct 2022 03:21:36 -0400
-Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59F532871C;
-        Tue, 11 Oct 2022 00:21:35 -0700 (PDT)
-Received: by mail-pj1-x1031.google.com with SMTP id i7-20020a17090a65c700b0020ad9666a86so15200933pjs.0;
-        Tue, 11 Oct 2022 00:21:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=l6Q0KMRNTrEZQjUDQYg8rg5VFvAVxN3IpxOY5EJm1qY=;
-        b=UNWRr0whTtFYvxVPmsm9xJsR55KviCr0CubpTjQAp4UJE48q01y0JT6G2mkcC1Zxzh
-         jAf6MxfIpUSZOmcL0xBWasQtvbGrizxvtIldu3hwzvM8VhGzso63vxxNwePDB+9Hzfhe
-         6z36Bv0Zn1CECYbrCOVunkW+EdpZvPu5vkXLIeOaR5rhHlJ5B7a/98FbCy7/7iaYg0TF
-         rcdftq66WqVi3Z46devyCK6jhwu8vgE6IYsw9vAms6LrYJ8oif3oRAQYVEbgFDxpTEl9
-         /4WhoaZ1joONAV0aTLDcnyXCNS9WxzX42lnRWSv0hO5+axbqpA/NWZVWw2BgLnFdJeOO
-         IA3w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=l6Q0KMRNTrEZQjUDQYg8rg5VFvAVxN3IpxOY5EJm1qY=;
-        b=8MuHtgUNQWCex/EicQSFZy+M2CLND61qaehUgNK5AusuLsGBr9G5mpM27pHDpXarHs
-         u7zQFRVVcRA8dYTF9uBmA+gESSMvl40UjR8+LweAMucJuN9fBUI0zQLNFH63l511Dl5d
-         qZnhEA1n3miuEhd6edGLblSY/OifCeOZfbFijsb4WzGy6lj/6ErwpDJwRQZOoA7enDJX
-         1+NAOeyHnCZ/n1VQBp0+Wf6hpr6YmEWFbXUWzekf0YPjIPZM7R2AQ2DAizuJoCecKjUi
-         DIaxEkf16JYvW/1hmhFujpbyhD8TJpQJ5n+4eGDR+Py9Nr3SpzibvhvWAHeLE4XxC/7T
-         cV6Q==
-X-Gm-Message-State: ACrzQf2/7zKUop1eAvdwTZectc0OfxZAguwKM+uK3UnV/obTXuZXmIkc
-        3ibbdRJBOx6edc+UI919ImI=
-X-Google-Smtp-Source: AMsMyM4ARawYwJxQC67ePPSVUlUL0wwFaH4YYgTrgeH98DMk3GAjImNYmszlgJ92xogLtnFCKsYMCg==
-X-Received: by 2002:a17:90b:1808:b0:20d:4e7f:5f53 with SMTP id lw8-20020a17090b180800b0020d4e7f5f53mr7655217pjb.170.1665472894845;
-        Tue, 11 Oct 2022 00:21:34 -0700 (PDT)
-Received: from zeshkernups01.spreadtrum.com ([117.18.48.102])
-        by smtp.gmail.com with ESMTPSA id y16-20020a1709027c9000b0017f756563bcsm7878884pll.47.2022.10.11.00.21.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 11 Oct 2022 00:21:34 -0700 (PDT)
-From:   Ten Gao <gaoyankaigeren@gmail.com>
-To:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Adrian Hunter <adrian.hunter@intel.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Mike Snitzer <snitzer@redhat.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Eric Biggers <ebiggers@google.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 2/2] ufs: core: remove encrypt when no data transfer
-Date:   Tue, 11 Oct 2022 15:21:26 +0800
-Message-Id: <20221011072126.30802-1-gaoyankaigeren@gmail.com>
-X-Mailer: git-send-email 2.17.1
+        with ESMTP id S229489AbiJKJjl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Oct 2022 05:39:41 -0400
+Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.50])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1EB6FD48;
+        Tue, 11 Oct 2022 02:39:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1665481171;
+    s=strato-dkim-0002; d=iokpp.de;
+    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
+    From:Subject:Sender;
+    bh=J8kcX+8LtEukoC4B1GeHkHmsTDqtm+m/Kn2u/N8i2bw=;
+    b=sPXhS+iFXOWYip5w4nkcUSkJiZqYFUhrS3Pua6NlIsgjZ2wKRlpr+/i7NUMJyCVoOf
+    alY8c0Zu1ZvNxkcfEkHJvsNHrg1Xn6CA66tg5+r3WVq2inwOFrHo3uVqMgqjWBqQ7hUN
+    ck8nen0t6xk0grf1NBLCBATow2t2K8XPkefpAfEt2pJIALeIVI6Q3TaELkj9LYOifNke
+    29ZO6ggqhPBGynJ7shmCwg9IJAB/xfugzHZTqlrR0IPPqnWebmzm0qqnjLK+SIlW1rdq
+    tdJMYY0/IfVSsOqJ6GyYlapacfrOsImy6nUD/EhedTsBByfICQMLdWkBs9jZq7FUSYcG
+    ecGg==
+Authentication-Results: strato.com;
+    dkim=none
+X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSeBwhhSxarlUcu05JyILymw8y23V5/v2HsOC"
+X-RZG-CLASS-ID: mo00
+Received: from [192.168.33.110]
+    by smtp.strato.de (RZmta 48.2.0 DYNA|AUTH)
+    with ESMTPSA id zad98cy9B9dT58G
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
+        (Client did not present a certificate);
+    Tue, 11 Oct 2022 11:39:29 +0200 (CEST)
+Message-ID: <bdd72ef290b3c9d5492255358686a39a7aa3cde6.camel@iokpp.de>
+Subject: Re: [PATCH v2 1/2] scsi: ufs: core: Remove unnecessary if statement
+From:   Bean Huo <beanhuo@iokpp.de>
+To:     daejun7.park@samsung.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>
+Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date:   Tue, 11 Oct 2022 11:39:27 +0200
+In-Reply-To: <20221011022153epcms2p1fcbf889099bd74279ed0d9b51ff26c1b@epcms2p1>
+References: <20221010092937.520013-2-beanhuo@iokpp.de>
+         <20221010092937.520013-1-beanhuo@iokpp.de>
+         <CGME20221010093042epcas2p2462d3c50d81d613574332e3f39d971e1@epcms2p1>
+         <20221011022153epcms2p1fcbf889099bd74279ed0d9b51ff26c1b@epcms2p1>
+Organization: IOKPP
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu1 
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Ten Gao <ten.gao@unisoc.com>
+On Tue, 2022-10-11 at 11:21 +0900, Daejun Park wrote:
+> Hi Bean=C2=A0Huo,
+>=20
+> I think ufs_is_valid_unit_desc_lun() is also used for
+> wb_buf_alloc_units_show() in ufs-sysfs.c.
+> So just removing this if-checkup=C2=A0will make different result when
+> check lun value.
+>=20
 
-when there is no data transmission, ufs is unnecessary to encrypt.
-We need to adjust scsi crypto relation.
+Hi Daejun,
 
-Signed-off-by: Ten Gao <ten.gao@unisoc.com>
----
- drivers/ufs/core/ufshcd-crypto.h | 10 ++++++----
- include/ufs/ufshci.h             |  2 ++
- 2 files changed, 8 insertions(+), 4 deletions(-)
+Thanks for your review on the patch. Yes, I understood what you mean.
+But I don't think that's the problem. Without this patch, access on
+sysfs node "wb_shared_alloc_units" would get "invalid argument", while
+with this patch sysfs would return 00. According to the UFS
+specification:
 
-diff --git a/drivers/ufs/core/ufshcd-crypto.h b/drivers/ufs/core/ufshcd-crypto.h
-index 504cc841540b..5bc2a0cbdfa6 100644
---- a/drivers/ufs/core/ufshcd-crypto.h
-+++ b/drivers/ufs/core/ufshcd-crypto.h
-@@ -30,10 +30,12 @@ ufshcd_prepare_req_desc_hdr_crypto(struct ufshcd_lrb *lrbp, u32 *dword_0,
- 				   u32 *dword_1, u32 *dword_3)
- {
- 	if (lrbp->crypto_key_slot >= 0) {
--		*dword_0 |= UTP_REQ_DESC_CRYPTO_ENABLE_CMD;
--		*dword_0 |= lrbp->crypto_key_slot;
--		*dword_1 = lower_32_bits(lrbp->data_unit_num);
--		*dword_3 = upper_32_bits(lrbp->data_unit_num);
-+		if ((*dword_0 & UTRD_DIRECTION) != UTP_NO_DATA_TRANSFER) {
-+			*dword_0 |= UTP_REQ_DESC_CRYPTO_ENABLE_CMD;
-+			*dword_0 |= lrbp->crypto_key_slot;
-+			*dword_1 = lower_32_bits(lrbp->data_unit_num);
-+			*dword_3 = upper_32_bits(lrbp->data_unit_num);
-+		}
- 	}
- }
- 
-diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
-index f525566a0864..7dbfeecaa36c 100644
---- a/include/ufs/ufshci.h
-+++ b/include/ufs/ufshci.h
-@@ -387,6 +387,8 @@ enum {
- 	UTP_DEVICE_TO_HOST	= 0x04000000,
- };
- 
-+#define UTRD_DIRECTION	0x6000000
-+
- /* Overall command status values */
- enum utp_ocs {
- 	OCS_SUCCESS			= 0x0,
--- 
-2.17.1
+"If this value is =E2=80=980=E2=80=99, then the WriteBooster is not support=
+ed for this
+LU. The Logical unit among LU0 ~ LU7 can be configured for WriteBooster
+Buffer. Otherwise, whole WriteBooster Buffer configuration in this
+device is invalid."
+
+Per my understanding,  with this patch,  there is still no miss-
+explanation of this sysfs node. The key purpose of this patch is to
+remove any nonsense logical during the booting stage.
+
+please have a think my comments. thanks.
+
+
+Kind regards,
+Bean
+
+
+> Thanks,
+> Daejun
+>=20
+> > From:=C2=A0Bean=C2=A0Huo=C2=A0<beanhuo@micron.com>
+> >=20
+> > LUs=C2=A0with=C2=A0WB=C2=A0potential=C2=A0support=C2=A0are=C2=A0properl=
+y=C2=A0checked=C2=A0in=C2=A0ufshcd_wb_pro
+> > be()
+> > before=C2=A0calling=C2=A0ufshcd_read_unit_desc_param(),=C2=A0so=C2=A0re=
+move=C2=A0this=C2=A0unnece
+> > ssary
+> > if-
+> > checkup=C2=A0in=C2=A0ufs_is_valid_unit_desc_lun()=C2=A0to=C2=A0match=C2=
+=A0its=C2=A0function=C2=A0defin
+> > ition.
 
