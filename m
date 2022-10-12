@@ -2,135 +2,107 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B99FBC4332F
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Oct 2022 09:09:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67F1AC433FE
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Oct 2022 14:19:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229641AbiJLJJZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Oct 2022 05:09:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46216 "EHLO
+        id S229703AbiJLOTs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Oct 2022 10:19:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44136 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229492AbiJLJJY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Oct 2022 05:09:24 -0400
-Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B4E0632C;
-        Wed, 12 Oct 2022 02:09:23 -0700 (PDT)
-Received: by mail-pl1-x62b.google.com with SMTP id h10so15694062plb.2;
-        Wed, 12 Oct 2022 02:09:23 -0700 (PDT)
+        with ESMTP id S229610AbiJLOTp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Oct 2022 10:19:45 -0400
+Received: from mail-wr1-x429.google.com (mail-wr1-x429.google.com [IPv6:2a00:1450:4864:20::429])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B7E9CE3E
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Oct 2022 07:19:43 -0700 (PDT)
+Received: by mail-wr1-x429.google.com with SMTP id b4so26472817wrs.1
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Oct 2022 07:19:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=rLdPoJiwzSisIeOIqqvijJzMO8y8c5LDJmTeIyrYWCw=;
-        b=k0+AqjxmV5H1L1+MFjXbEOasiEddPlc5H3qhKHixQaYQujF7xmCcKKidQ4pmdRkYZ0
-         z7mkGfal2GffrqXJPHHxGc/QEI3rz2rtLZj7cIrTbRRsInBbyZv9KT1UDd2keSm6rfR3
-         2b2n5RGXVFArcnm34SXeMGzkXRSd16UAs6KA0fTioUcb9b13AGuLquEQjt/fsGUgiblI
-         mzaEYA54QAcTKn4xRsm75CN7MwK8Is+nbo7FOS8n2OHySjA1QkspKFG0u/G8U/As+Bxz
-         8nmdaKZXpNu56dMmUESnq/LeVb1GTv6BUu/RqQtKA6VphVcrxFPuwVLV+xfh+A54qaBi
-         uWTA==
+        d=arrikto-com.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:to:subject:user-agent:mime-version:date:message-id:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=y6WWgZlY94ZnDKH76NNPqig9UEZRbMYnfacmmfF9pZQ=;
+        b=aFPW8XHco6I1IxyYjB74Fv3u2yNXnVJpZGGpV52dEUulbqWAQzOe5UBlKgJcAhYp/X
+         1mJ5Fm/6xWIcSvAoZALWn1jVIo/cR2AGUoLhI0hbgCpwzzIX9zb9VlxLqcJocT7azk6W
+         g6pc/RSMYsXewbUOfrJrdq7LROCnPfz6T/2+PbxvZKDsO1VAN6k3vdDhk/GSq7IvzyJA
+         cIQN1GAFszfPkmO/hE+y6UC9KFViALk1Ukk9I3o/7iHboukZggluytjF/yAkjpD71w4E
+         V2ZvKkgWJZVzo4fCuDkNgCAQWNsuwcAcU9aujCNub0gCNXr24HLOI0aeDFDQaVhtv4JN
+         PbxQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=rLdPoJiwzSisIeOIqqvijJzMO8y8c5LDJmTeIyrYWCw=;
-        b=u5rd4mBdAzLZF5+Fcrifx2f0kklqh7K0efm+Wdm6scqT+hI7d+JhDNxx5eeDI63ZuD
-         5k7cDFJvjDg+ARqVZrnL5GVyLpJx4oMyke3MC5bHBK4gXXbe7u6Ku05O+eMg8CJ3uP2+
-         MreYItWC1J0Urgwf4LpEmGvW9xO+zD8ABH6BxOKkg7bt3lK0mLKI2ZWt6gWaDaD7BIJ5
-         cVFWBXw/JWaDqXvuBKutu7rmRxGkL29rPkUPGJSUR2aisqxwJqzqZvU40uwrCsMW+eSV
-         i63yWYa5XUMvOQmMJwzNv3lCuCzTt5dZqAuFFP02ehatB3XCISFEUs3W4EBF8dhgkMyL
-         3RZA==
-X-Gm-Message-State: ACrzQf3dpZrIZEWaJfOul3G3j5W+j1eM6MyDbwFAMWgKl7HBN4STCDM2
-        uKiitFxLkM18UiCCgxNIiIc=
-X-Google-Smtp-Source: AMsMyM6J7PDgFM7e3X4VbKV46Q/Hz7iJPl0wNpeWUZiFU6p3Fsn3jjOxoEnOfo7LLTaCJxzJU7DjsA==
-X-Received: by 2002:a17:902:b70c:b0:179:eb79:cf9a with SMTP id d12-20020a170902b70c00b00179eb79cf9amr28819811pls.130.1665565762775;
-        Wed, 12 Oct 2022 02:09:22 -0700 (PDT)
-Received: from xm06403pcu.spreadtrum.com ([117.18.48.102])
-        by smtp.gmail.com with ESMTPSA id z1-20020a623301000000b00562496395besm10897663pfz.170.2022.10.12.02.09.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 12 Oct 2022 02:09:22 -0700 (PDT)
-From:   zhe wang <zhewang116@gmail.com>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        beanhuo@micron.com, stanley.chu@mediatek.com,
-        adrian.hunter@intel.com
-Subject: [PATCH] scsi: ufs: core: Let delay value after LPM can be modified by vendor
-Date:   Wed, 12 Oct 2022 17:09:02 +0800
-Message-Id: <20221012090902.23237-1-zhewang116@gmail.com>
-X-Mailer: git-send-email 2.17.1
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=y6WWgZlY94ZnDKH76NNPqig9UEZRbMYnfacmmfF9pZQ=;
+        b=kyuqTnFtjUaEJMh0MnWpL2PSTK9FR0KUN68Oam2yXoYurGYzFpSjPx9Oe08QOmeoLi
+         fpjuXSw7ZHQUJ9OGuwtcghPZiiN3zfGScexQlEjTr0sRwH4HsM7SINmjY9ItELyrejoL
+         gIZexpDEECWNxjrBaufdEZDorP2pG3x0gq3lowGHOlbFn7J5Jwqd1ztsOsAGsWrKOu5J
+         kEIoUQkMknmF6Ek0r0CFDWuh5j1yZMTN24gCYmxp1yFTE7QeoeLdY63+oyJP4Z7DiMCG
+         6RjzOgK3ICLQc66A7Avx/NEtusZRNpFQqgrklR3TgiWxCLscsGOE9fISiTQzX0+g8Q8m
+         MTXg==
+X-Gm-Message-State: ACrzQf3XJ8UY0mduKwbaZX2g/V0ddbubW2isHjGeCiFrW4KdX8G/gEhK
+        wDY8N3Hzt6qb3897uPD1Oa1qGwItvnAqfQ==
+X-Google-Smtp-Source: AMsMyM5IKxFIWbYfhYlSA0w9veQ4PLRvo0ekOdHobfYf/3fVniSgu+CSSyQzjihDbGVh5VSWh4sKwQ==
+X-Received: by 2002:a17:906:cc5a:b0:78d:c3cf:6ff7 with SMTP id mm26-20020a170906cc5a00b0078dc3cf6ff7mr10242427ejb.383.1665584370870;
+        Wed, 12 Oct 2022 07:19:30 -0700 (PDT)
+Received: from [172.16.10.51] (213.16.162.108.dsl.dyn.forthnet.gr. [213.16.162.108])
+        by smtp.gmail.com with ESMTPSA id hv13-20020a17090760cd00b00782539a02absm1372212ejc.194.2022.10.12.07.19.29
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 12 Oct 2022 07:19:29 -0700 (PDT)
+Message-ID: <0f25805a-cddd-51b3-92e4-032872cbc595@arrikto.com>
+Date:   Wed, 12 Oct 2022 17:19:28 +0300
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.0
+Subject: Re: [PATCH] tcm_loop: Increase maximum request size
+To:     Bart Van Assche <bvanassche@acm.org>, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+References: <20220929115504.23806-1-ntsironis@arrikto.com>
+ <fde47e5e-119a-54ca-7cf6-5b58552ee2b3@acm.org>
+Content-Language: en-US
+From:   Nikos Tsironis <ntsironis@arrikto.com>
+In-Reply-To: <fde47e5e-119a-54ca-7cf6-5b58552ee2b3@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Zhe Wang <zhe.wang1@unisoc.com>
+On 10/3/22 00:09, Bart Van Assche wrote:
+> On 9/29/22 04:55, Nikos Tsironis wrote:
+>> Increase the maximum request size for tcm_loop, by setting sg_tablesize
+>> to SG_MAX_SEGMENTS.
+>>
+>> The current value of 256 for sg_tablesize limits the request size to
+>> PAGE_SIZE * 256, which for 4K pages is 1MiB.
+>>
+>> Signed-off-by: Nikos Tsironis <ntsironis@arrikto.com>
+>> ---
+>>   drivers/target/loopback/tcm_loop.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+>> index 4407b56aa6d1..6d7c3ebd8613 100644
+>> --- a/drivers/target/loopback/tcm_loop.c
+>> +++ b/drivers/target/loopback/tcm_loop.c
+>> @@ -308,7 +308,7 @@ static struct scsi_host_template tcm_loop_driver_template = {
+>>       .eh_device_reset_handler = tcm_loop_device_reset,
+>>       .eh_target_reset_handler = tcm_loop_target_reset,
+>>       .this_id        = -1,
+>> -    .sg_tablesize        = 256,
+>> +    .sg_tablesize        = SG_MAX_SEGMENTS,
+>>       .max_sectors        = 0xFFFF,
+>>       .dma_boundary        = PAGE_SIZE - 1,
+>>       .module            = THIS_MODULE,
+> 
+> There is more that can be improved for this driver, namely removal of the dma_boundary parameter and increasing max_sectors.
+> 
+Hi Bart,
 
-Some UFS devices require that the VCC should drop below 0.1V after
-turning off, otherwise device may not resume successfully. And
-because the power-off rate is different on different SOC platforms.
-Therefore, we hope that the delay can be modified by vendor to
-adjust the most appropriate delay value.
+Thanks for the feedback!
 
-Signed-off-by: Zhe Wang <zhe.wang1@unisoc.com>
----
- drivers/ufs/core/ufshcd.c | 11 +++++++++--
- include/ufs/ufshcd.h      |  2 ++
- 2 files changed, 11 insertions(+), 2 deletions(-)
+Should I make these changes as part of this patch, or can I leave them for a
+follow up patch?
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 7256e6c43ca6..f6350231da0e 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -89,6 +89,9 @@
- /* Polling time to wait for fDeviceInit */
- #define FDEVICEINIT_COMPL_TIMEOUT 1500 /* millisecs */
- 
-+/* Default value of turn off VCC rail: 5000us */
-+#define UFS_VCC_TURNOFF_DELAY_US 5000
-+
- #define ufshcd_toggle_vreg(_dev, _vreg, _on)				\
- 	({                                                              \
- 		int _ret;                                               \
-@@ -7784,6 +7787,9 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
- 
- 	ufs_fixup_device_setup(hba);
- 
-+	if (hba->dev_quirks & UFS_DEVICE_QUIRK_DELAY_AFTER_LPM && !hba->vcc_turnoff_delay)
-+		hba->vcc_turnoff_delay = UFS_VCC_TURNOFF_DELAY_US;
-+
- 	ufshcd_wb_probe(hba, desc_buf);
- 
- 	ufshcd_temp_notif_probe(hba, desc_buf);
-@@ -8917,8 +8923,9 @@ static void ufshcd_vreg_set_lpm(struct ufs_hba *hba)
- 	 * Some UFS devices require delay after VCC power rail is turned-off.
- 	 */
- 	if (vcc_off && hba->vreg_info.vcc &&
--		hba->dev_quirks & UFS_DEVICE_QUIRK_DELAY_AFTER_LPM)
--		usleep_range(5000, 5100);
-+		hba->dev_quirks & UFS_DEVICE_QUIRK_DELAY_AFTER_LPM &&
-+		hba->vcc_turnoff_delay)
-+		usleep_range(hba->vcc_turnoff_delay, hba->vcc_turnoff_delay + 100);
- }
- 
- #ifdef CONFIG_PM
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 9f28349ebcff..bfde3cb962fb 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -828,6 +828,7 @@ struct ufs_hba_monitor {
-  *	device
-  * @complete_put: whether or not to call ufshcd_rpm_put() from inside
-  *	ufshcd_resume_complete()
-+ * @vcc_turnoff_delay: VCC turnoff delay value.
-  */
- struct ufs_hba {
- 	void __iomem *mmio_base;
-@@ -975,6 +976,7 @@ struct ufs_hba {
- #endif
- 	u32 luns_avail;
- 	bool complete_put;
-+	u32 vcc_turnoff_delay;
- };
- 
- /* Returns true if clocks can be gated. Otherwise false */
--- 
-2.17.1
-
+Thanks,
+Nikos
