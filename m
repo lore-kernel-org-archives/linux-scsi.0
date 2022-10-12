@@ -2,111 +2,67 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BB74C4332F
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Oct 2022 14:26:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A551C4332F
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Oct 2022 16:32:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229494AbiJLO0P (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Oct 2022 10:26:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53808 "EHLO
+        id S229686AbiJLQcS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Oct 2022 12:32:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51156 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229849AbiJLOZw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Oct 2022 10:25:52 -0400
-Received: from mail-ej1-x631.google.com (mail-ej1-x631.google.com [IPv6:2a00:1450:4864:20::631])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD6D0DED0A;
-        Wed, 12 Oct 2022 07:25:32 -0700 (PDT)
-Received: by mail-ej1-x631.google.com with SMTP id b2so38358878eja.6;
-        Wed, 12 Oct 2022 07:25:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=ywo9sjefIn96Juo5BZ8AbB7AgyvrswOBWDpdFl0oFUw=;
-        b=inDUemQ0kv7qq1Bjuhh2lkZznWqTA2l4GzombHIlTwqosX0q7m3raN+ehOCSiKY8zV
-         MYCH/P8Q4Lffr/D+pepZzlg+BBMBaidVCZbLTvTQtuBMbuKIlTjo4NQ71JsbyVrj5oW8
-         AO+kuOqo7NNshnQon0px61dxJvRpqYsiQj1xR+QfQrEdnhhptJI320OH4XSB3z3pA10G
-         4Vndh/MOPaMA0IXXs28DF6bB4DzAbmQ2METRkzSLlJvfQels+kBIRQTeP+jVDT9VyANe
-         H5bFFL2EQ5Bz6wpSn7xi2pH0YmlbzXDVgiQIQon6pRA4VuLB6USC2mavOX/qbH5Gmz7o
-         Qm2w==
+        with ESMTP id S229657AbiJLQcR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Oct 2022 12:32:17 -0400
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D5E3F5BC;
+        Wed, 12 Oct 2022 09:32:17 -0700 (PDT)
+Received: by mail-pl1-f174.google.com with SMTP id i6so11666810pli.12;
+        Wed, 12 Oct 2022 09:32:17 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=ywo9sjefIn96Juo5BZ8AbB7AgyvrswOBWDpdFl0oFUw=;
-        b=gzNf4J0nIPrBPI81xnWelc/b4aQg1Zwo6ty4q9TZH0x0iRmwdDLSLuj6A9R3Ed6dqA
-         48MGQ6L5BU7wEM97vozZp0BmoaCAW5X3hcI1U0B5oQZDbfVl1GjS791LhswFzMkQipXm
-         waI+L1OOjMuZz9/52kUp3zipJSMYTPdYj4t5TipAstwlknb/LmS24LVVdmzfQSzxk6Mf
-         Gq84oqVHU9W+514joS1MyPX4uXouFYR+uHImClg8oKY7i0yCV2O3EOcHqq+JznNM926M
-         Uwh3SLZYGVkq1FcsQ02iL7WZ1Wmsmb9NJ9IaPB1gNOLRxLnB/esXQjNqt2XOLbHQmFtz
-         TVQA==
-X-Gm-Message-State: ACrzQf3FlW/jgSJopkOv4xYSwE2nESPBiuW9KOzPa5JGG6wIYMBGcJ8P
-        TqPNYVhkXLqrYzNu6DKykXM=
-X-Google-Smtp-Source: AMsMyM4QaZmdN3l/HekMZ55kLeYaK9fCFXFfR73VG+I210r0JA1I72UV+9uFu9cmuCq3k7iUjQE7yg==
-X-Received: by 2002:a17:906:cc49:b0:78d:361a:561e with SMTP id mm9-20020a170906cc4900b0078d361a561emr23706683ejb.741.1665584719253;
-        Wed, 12 Oct 2022 07:25:19 -0700 (PDT)
-Received: from linux.fritz.box (089144213149.atnat0022.highway.a1.net. [89.144.213.149])
-        by smtp.googlemail.com with ESMTPSA id kv13-20020a17090778cd00b0077b2b0563f4sm1336981ejc.173.2022.10.12.07.25.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 12 Oct 2022 07:25:18 -0700 (PDT)
-Message-ID: <bee1807b7d072b221c44ac8c2ed8064939d33696.camel@gmail.com>
-Subject: Re: [PATCH] ufs: core: Disable auto h8 before ssu
-From:   Bean Huo <huobean@gmail.com>
-To:     =?UTF-8?Q?=E9=AB=98=E4=B8=A5=E5=87=AF?= <gaoyankaigeren@gmail.com>,
-        Avri Altman <Avri.Altman@wdc.com>
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date:   Wed, 12 Oct 2022 16:25:17 +0200
-In-Reply-To: <CAFN68yVajOkV++gCp-y1+SD5VOKLgUeBhfgskrJZOX5dfGi07A@mail.gmail.com>
-References: <20221011021653.27277-1-gaoyankaigeren@gmail.com>
-         <DM6PR04MB6575AE77585D584652179089FC239@DM6PR04MB6575.namprd04.prod.outlook.com>
-         <CAFN68yVajOkV++gCp-y1+SD5VOKLgUeBhfgskrJZOX5dfGi07A@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu1 
+        h=content-transfer-encoding:in-reply-to:from:references:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=VvhbPzMxY7C+fWgQgoorwW3zKRHrUN91eusXjh+535o=;
+        b=oGL0si+4GmF/BGk0tL9ytnndlSeJHt2OfzDssSIQxvmoMoxZarQFyl+qE9qQgHEmQM
+         r9wmq2+jVKop3XRH1HpB60fjtL6kMYVd7cVRyiVNgHZdW+qWwkRAgQ+LKB3VPTlYzXTs
+         nePRKdwkGKAhukZjcUQ9LIo1yxzFsXTOGRDDlANRaBjjE/wI8KHbtwcUM+mGXoVTh0v6
+         Hn/ZIwJVKKWccGJ5e0uRLdJdAb3jhAB/Q4QzQWpK3cQlsI4L2H55BQGlNufrwBFPqaBq
+         gjT+LBsSYvXCca481SxYWs3SlWkeubr7TlMYVW2Bf7wDSjSPmE6aE9xgBv5e0XXVE8Wk
+         xsXw==
+X-Gm-Message-State: ACrzQf3MZONDuQfWbUOaZwgnyJaFZDzXmFkSClWppqoA6eSeiiGyILDy
+        6iyuPm2WjtYln+SMCjLoEdZ4/TJ2ctY=
+X-Google-Smtp-Source: AMsMyM4+iVebIJjmZjOa1UpsvFAefY+xdWIu2/33yX0tkYA9CIaSpDXd+RbZDa2ln7Bp38uY6/dddg==
+X-Received: by 2002:a17:90a:e00a:b0:209:1545:74a7 with SMTP id u10-20020a17090ae00a00b00209154574a7mr6304290pjy.72.1665592336481;
+        Wed, 12 Oct 2022 09:32:16 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:9ed4:22b3:68f8:8e6e? ([2620:15c:211:201:9ed4:22b3:68f8:8e6e])
+        by smtp.gmail.com with ESMTPSA id b8-20020a17090a7ac800b00205d70ccfeesm1649221pjl.33.2022.10.12.09.32.14
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 12 Oct 2022 09:32:15 -0700 (PDT)
+Message-ID: <3465e42e-a175-b294-ecc1-8e21a714b3f1@acm.org>
+Date:   Wed, 12 Oct 2022 09:32:13 -0700
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.13.0
+Subject: Re: [PATCH] tcm_loop: Increase maximum request size
+Content-Language: en-US
+To:     Nikos Tsironis <ntsironis@arrikto.com>, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+References: <20220929115504.23806-1-ntsironis@arrikto.com>
+ <fde47e5e-119a-54ca-7cf6-5b58552ee2b3@acm.org>
+ <0f25805a-cddd-51b3-92e4-032872cbc595@arrikto.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <0f25805a-cddd-51b3-92e4-032872cbc595@arrikto.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 2022-10-11 at 19:53 +0800, =E9=AB=98=E4=B8=A5=E5=87=AF wrote:
-> Dear Avri
-> =C2=A0 Unisoc reports resume fail on UFS(micron FS164) during
-> suspend/resume test.
-> =C2=A0 We check host inserts auto H8 enter/exit event between SSU sleep
-> command and H8 enter command in runtime suspend .
-> =C2=A0 Asfollows: SSU Sleep command --> auto H8 enter --> auto H8 exit --=
->
-> H8 enter --> idle 2ms --> VCC off.
-> =C2=A0 However device AQL FW can=E2=80=99t enter LPM within 2ms after sec=
-ond H8
-> enter command.
-> =C2=A0 FW already enter LPM after receive auto H8 enter command , Next
-> auto
-> H8 exit command will trigger FW exit from LPM, it need take over
-> 10ms,
-> and FW can=E2=80=99t enter
-> =C2=A0 LPM again after second H8 enter command until device complete exit
-> from LPM. So disable auto h8 before ssu is a reasonable solution to
-> solve it.
-> =C2=A0 Hynix also has similar request.
+On 10/12/22 07:19, Nikos Tsironis wrote:
+> Should I make these changes as part of this patch, or can I leave them for a
+> follow up patch?
 
+A (thoroughly tested) follow-up patch is probably better.
 
-Hi gaoyan,
+Thanks,
 
-The above sequence confuses me. UFSHCI has idle time before bringing
-Link into hibern8 mode, do you know what the settings are?
-
-Also, if auto-hibern8 is supported, in this case, the host-side SW
-should not send manual hibern8. If this is an issue to all UFS or
-UFSHCI, we should disable manual hibern8 if auto-hibern8 is enabled. or
-let customer to choose one of two.
-
-
-Kind regards,
-Bean
+Bart.
