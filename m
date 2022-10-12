@@ -2,190 +2,135 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE493C4332F
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Oct 2022 08:49:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B99FBC4332F
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Oct 2022 09:09:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229742AbiJLItc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Oct 2022 04:49:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55320 "EHLO
+        id S229641AbiJLJJZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Oct 2022 05:09:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46216 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229731AbiJLIt3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Oct 2022 04:49:29 -0400
-Received: from mail-vs1-xe29.google.com (mail-vs1-xe29.google.com [IPv6:2607:f8b0:4864:20::e29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D385B602F;
-        Wed, 12 Oct 2022 01:49:26 -0700 (PDT)
-Received: by mail-vs1-xe29.google.com with SMTP id h29so6419330vsq.9;
-        Wed, 12 Oct 2022 01:49:26 -0700 (PDT)
+        with ESMTP id S229492AbiJLJJY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Oct 2022 05:09:24 -0400
+Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B4E0632C;
+        Wed, 12 Oct 2022 02:09:23 -0700 (PDT)
+Received: by mail-pl1-x62b.google.com with SMTP id h10so15694062plb.2;
+        Wed, 12 Oct 2022 02:09:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
+        h=message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=OT6vm5RgNS7C4+asnNcyhYxIo19D0jl2wY3gLjkvDnk=;
-        b=DXYz02MrrRpI7kR/dn1whWhF5IKGqqVuWjIOsaP7ROb4Dr3Ddj6bnfEroAzc55pint
-         v6TekMo62ZfnsTEbJhu6KysOTtdL+5Rvc5q/je5cAdnv5imEu8Sc4rL+mXQdIkau8K5b
-         RzWw0477zcrDtPeoUbeUK7QZJLdC4Y5WmdRsl6kBivU9EQmpKdNl4+63jL+Yr5VGyOzI
-         10GrX9RQv3NEJxL/jIrGHZ8ZcZPqPiJX/n695ofvj5TgeHWXDoVTyacUF01DHzx2lv/U
-         cE5gzId7RFjrmNLw982nXTmLC3wgOlcduC+mcOA7Lm3NnKKfq4yNQMIN4eGJpBUpVfBc
-         xJgg==
+        bh=rLdPoJiwzSisIeOIqqvijJzMO8y8c5LDJmTeIyrYWCw=;
+        b=k0+AqjxmV5H1L1+MFjXbEOasiEddPlc5H3qhKHixQaYQujF7xmCcKKidQ4pmdRkYZ0
+         z7mkGfal2GffrqXJPHHxGc/QEI3rz2rtLZj7cIrTbRRsInBbyZv9KT1UDd2keSm6rfR3
+         2b2n5RGXVFArcnm34SXeMGzkXRSd16UAs6KA0fTioUcb9b13AGuLquEQjt/fsGUgiblI
+         mzaEYA54QAcTKn4xRsm75CN7MwK8Is+nbo7FOS8n2OHySjA1QkspKFG0u/G8U/As+Bxz
+         8nmdaKZXpNu56dMmUESnq/LeVb1GTv6BUu/RqQtKA6VphVcrxFPuwVLV+xfh+A54qaBi
+         uWTA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+        h=message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=OT6vm5RgNS7C4+asnNcyhYxIo19D0jl2wY3gLjkvDnk=;
-        b=wJQeUTtWCtP9U47TTwQ3KVC75At4idVGyDp8N54Wev0959scW3/AOEigDtoH6JoML0
-         fepcMhNUIV4E5YVdEPXiDEROnRlE6LNLlPzvEV1f/rXtJiToyteerpGKBUC/a5i1eCn4
-         UBuzoxnuASytlYgTySaeOL1z3b5XPDQt36GrCrMWD8BKAXZ1WgKWy374me7chiBQxnW+
-         IzkIv1jaGKDXFCyYOm0JYM2nmLj/xM29rGkmaAsKCKXvXS+empP8Cy55XGA51bXU+v2I
-         +NrLmOHQ3WhMppux+SxZ5EinN38gwbpOlWBS3DKmlv8o9xbtsZ+b+Vjn7SiTLGSL5Wn7
-         D9PA==
-X-Gm-Message-State: ACrzQf0sj8WOI3rv6DV/owFzK/QTNIucRtJkcgyps5wUAF2Dx1tsxiA1
-        qo2hcW7zeSIFgPTXS+gzsfSgIv3AysDewN8LDaE=
-X-Google-Smtp-Source: AMsMyM4G2XhGUXPUuWxGoZdSUuXYP327ZT1uONR9Taoxy/kh/cAG9dndchZslV6FSJHIacHdlE1TaLNtwUtHB4VLkKE=
-X-Received: by 2002:a67:f510:0:b0:3a7:7afe:53c0 with SMTP id
- u16-20020a67f510000000b003a77afe53c0mr6915833vsn.53.1665564566013; Wed, 12
- Oct 2022 01:49:26 -0700 (PDT)
-MIME-Version: 1.0
-References: <20221011021653.27277-1-gaoyankaigeren@gmail.com>
- <DM6PR04MB6575AE77585D584652179089FC239@DM6PR04MB6575.namprd04.prod.outlook.com>
- <CAFN68yVajOkV++gCp-y1+SD5VOKLgUeBhfgskrJZOX5dfGi07A@mail.gmail.com>
- <DM6PR04MB65756E9549E9DCDB4BCF8FF6FC229@DM6PR04MB6575.namprd04.prod.outlook.com>
- <DM6PR04MB657509954BB9AA1C22739928FC229@DM6PR04MB6575.namprd04.prod.outlook.com>
-In-Reply-To: <DM6PR04MB657509954BB9AA1C22739928FC229@DM6PR04MB6575.namprd04.prod.outlook.com>
-From:   =?UTF-8?B?6auY5Lil5Yev?= <gaoyankaigeren@gmail.com>
-Date:   Wed, 12 Oct 2022 16:49:15 +0800
-Message-ID: <CAFN68yW=r+vZn0wBDrkHeoNXajcknkQOm+5tZ=dwkg+3eLqGEg@mail.gmail.com>
-Subject: Re: [PATCH] ufs: core: Disable auto h8 before ssu
-To:     Avri Altman <Avri.Altman@wdc.com>
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        bh=rLdPoJiwzSisIeOIqqvijJzMO8y8c5LDJmTeIyrYWCw=;
+        b=u5rd4mBdAzLZF5+Fcrifx2f0kklqh7K0efm+Wdm6scqT+hI7d+JhDNxx5eeDI63ZuD
+         5k7cDFJvjDg+ARqVZrnL5GVyLpJx4oMyke3MC5bHBK4gXXbe7u6Ku05O+eMg8CJ3uP2+
+         MreYItWC1J0Urgwf4LpEmGvW9xO+zD8ABH6BxOKkg7bt3lK0mLKI2ZWt6gWaDaD7BIJ5
+         cVFWBXw/JWaDqXvuBKutu7rmRxGkL29rPkUPGJSUR2aisqxwJqzqZvU40uwrCsMW+eSV
+         i63yWYa5XUMvOQmMJwzNv3lCuCzTt5dZqAuFFP02ehatB3XCISFEUs3W4EBF8dhgkMyL
+         3RZA==
+X-Gm-Message-State: ACrzQf3dpZrIZEWaJfOul3G3j5W+j1eM6MyDbwFAMWgKl7HBN4STCDM2
+        uKiitFxLkM18UiCCgxNIiIc=
+X-Google-Smtp-Source: AMsMyM6J7PDgFM7e3X4VbKV46Q/Hz7iJPl0wNpeWUZiFU6p3Fsn3jjOxoEnOfo7LLTaCJxzJU7DjsA==
+X-Received: by 2002:a17:902:b70c:b0:179:eb79:cf9a with SMTP id d12-20020a170902b70c00b00179eb79cf9amr28819811pls.130.1665565762775;
+        Wed, 12 Oct 2022 02:09:22 -0700 (PDT)
+Received: from xm06403pcu.spreadtrum.com ([117.18.48.102])
+        by smtp.gmail.com with ESMTPSA id z1-20020a623301000000b00562496395besm10897663pfz.170.2022.10.12.02.09.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 12 Oct 2022 02:09:22 -0700 (PDT)
+From:   zhe wang <zhewang116@gmail.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        beanhuo@micron.com, stanley.chu@mediatek.com,
+        adrian.hunter@intel.com
+Subject: [PATCH] scsi: ufs: core: Let delay value after LPM can be modified by vendor
+Date:   Wed, 12 Oct 2022 17:09:02 +0800
+Message-Id: <20221012090902.23237-1-zhewang116@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Dear Avri
+From: Zhe Wang <zhe.wang1@unisoc.com>
 
-TKS for your suggestion. and adjust timimg in own vop can solve this
-problem surely.
-but I think it's more of a common patch for all platforms,
-Patch can adapt different vendors,and align to
-ufshcd_auto_hibern8_enable in __ufshcd_wl_resume.
-Not distinguishing pm_op can refer to ufshcd_auto_hibern8_enable in
-__ufshcd_wl_resume.
+Some UFS devices require that the VCC should drop below 0.1V after
+turning off, otherwise device may not resume successfully. And
+because the power-off rate is different on different SOC platforms.
+Therefore, we hope that the delay can be modified by vendor to
+adjust the most appropriate delay value.
 
-Avri Altman <Avri.Altman@wdc.com> =E4=BA=8E2022=E5=B9=B410=E6=9C=8812=E6=97=
-=A5=E5=91=A8=E4=B8=89 16:13=E5=86=99=E9=81=93=EF=BC=9A
->
-> > >
-> > > Dear Avri
-> > >   Unisoc reports resume fail on UFS(micron FS164) during suspend/resu=
-me
-> > > test.
-> > >   We check host inserts auto H8 enter/exit event between SSU sleep
-> > > command and H8 enter command in runtime suspend .
-> > >   Asfollows: SSU Sleep command --> auto H8 enter --> auto H8 exit -->
-> > > H8 enter --> idle 2ms --> VCC off.
-> > >   However device AQL FW can=E2=80=99t enter LPM within 2ms after seco=
-nd H8
-> > enter
-> > > command.
-> > >   FW already enter LPM after receive auto H8 enter command , Next aut=
-o
-> > > H8 exit command will trigger FW exit from LPM, it need take over 10ms=
-,
-> > and
-> > > FW can=E2=80=99t enter
-> > >   LPM again after second H8 enter command until device complete exit
-> > from
-> > > LPM. So disable auto h8 before ssu is a reasonable solution to solve =
-it.
-> > >   Hynix also has similar request.
-> > Is this something common to all platforms?
-> > If not, and you need your platform to disable h8 before ssu,
-> > You can implement it in your own vop - see e.g.
-> > commit 9561f58442e4 (scsi: ufs: mediatek: Support vops pre suspend to
-> > disable auto-hibern8)
-> Maybe to further clarify, I am not saying that your suggestion doesn't ma=
-ke sense.
-> It's just that you need, IMHO, to make it part of ufshcd_vops_suspend, wh=
-ich I think
-> Its ufshcd_system_suspend for every platform.
-> And you need to get an ack on that from the other platform owners (maybe =
-except
-> Stanley who is doing it already).
->
-> Btw, you are not checking the pm_op so your are disabling auto-h8 for run=
-time-suspend
-> As well.
->
-> And maybe elaborate the commit log with your explanation above - making i=
-t more clear.
->
-> Thanks,
-> Avri
-> >
-> > Thanks,
-> > Avri
-> >
-> > >
-> > > Avri Altman <Avri.Altman@wdc.com> =E4=BA=8E2022=E5=B9=B410=E6=9C=8811=
-=E6=97=A5=E5=91=A8=E4=BA=8C 15:07=E5=86=99=E9=81=93
-> > =EF=BC=9A
-> > > >
-> > > > > From: Ten Gao <ten.gao@unisoc.com>
-> > > > >
-> > > > > Ensure auto h8 will not hit dme h8,and there won't be two h8 in a
-> > > > > row after ssu.
-> > > > I don't think the hw should do that.
-> > > > Can you please share on which platform/host controller did you obse=
-rve
-> > > this?
-> > > >
-> > > > Thanks,
-> > > > Avri
-> > > > >
-> > > > > Signed-off-by: Ten Gao <ten.gao@unisoc.com>
-> > > > > ---
-> > > > >  drivers/ufs/core/ufshcd.c | 10 ++++++++++
-> > > > >  1 file changed, 10 insertions(+)
-> > > > >
-> > > > > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.=
-c
-> > > > > index
-> > > > > a202d7d5240d..42f93648d796 100644
-> > > > > --- a/drivers/ufs/core/ufshcd.c
-> > > > > +++ b/drivers/ufs/core/ufshcd.c
-> > > > > @@ -4256,6 +4256,14 @@ void ufshcd_auto_hibern8_update(struct
-> > > > > ufs_hba *hba, u32 ahit)  }
-> > > > > EXPORT_SYMBOL_GPL(ufshcd_auto_hibern8_update);
-> > > > >
-> > > > > +void ufshcd_auto_hibern8_disable(struct ufs_hba *hba) {
-> > > > > +       if (!ufshcd_is_auto_hibern8_supported(hba))
-> > > > > +               return;
-> > > > > +
-> > > > > +       ufshcd_writel(hba, 0, REG_AUTO_HIBERNATE_IDLE_TIMER); }
-> > > > > +
-> > > > >  void ufshcd_auto_hibern8_enable(struct ufs_hba *hba)  {
-> > > > >         if (!ufshcd_is_auto_hibern8_supported(hba))
-> > > > > @@ -9036,6 +9044,8 @@ static int __ufshcd_wl_suspend(struct
-> > ufs_hba
-> > > > > *hba, enum ufs_pm_op pm_op)
-> > > > >         if (ret)
-> > > > >                 goto enable_scaling;
-> > > > >
-> > > > > +       ufshcd_auto_hibern8_disable(hba);
-> > > > > +
-> > > > >         if (req_dev_pwr_mode !=3D hba->curr_dev_pwr_mode) {
-> > > > >                 if (pm_op !=3D UFS_RUNTIME_PM)
-> > > > >                         /* ensure that bkops is disabled */
-> > > > > --
-> > > > > 2.17.1
-> > > >
+Signed-off-by: Zhe Wang <zhe.wang1@unisoc.com>
+---
+ drivers/ufs/core/ufshcd.c | 11 +++++++++--
+ include/ufs/ufshcd.h      |  2 ++
+ 2 files changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 7256e6c43ca6..f6350231da0e 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -89,6 +89,9 @@
+ /* Polling time to wait for fDeviceInit */
+ #define FDEVICEINIT_COMPL_TIMEOUT 1500 /* millisecs */
+ 
++/* Default value of turn off VCC rail: 5000us */
++#define UFS_VCC_TURNOFF_DELAY_US 5000
++
+ #define ufshcd_toggle_vreg(_dev, _vreg, _on)				\
+ 	({                                                              \
+ 		int _ret;                                               \
+@@ -7784,6 +7787,9 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
+ 
+ 	ufs_fixup_device_setup(hba);
+ 
++	if (hba->dev_quirks & UFS_DEVICE_QUIRK_DELAY_AFTER_LPM && !hba->vcc_turnoff_delay)
++		hba->vcc_turnoff_delay = UFS_VCC_TURNOFF_DELAY_US;
++
+ 	ufshcd_wb_probe(hba, desc_buf);
+ 
+ 	ufshcd_temp_notif_probe(hba, desc_buf);
+@@ -8917,8 +8923,9 @@ static void ufshcd_vreg_set_lpm(struct ufs_hba *hba)
+ 	 * Some UFS devices require delay after VCC power rail is turned-off.
+ 	 */
+ 	if (vcc_off && hba->vreg_info.vcc &&
+-		hba->dev_quirks & UFS_DEVICE_QUIRK_DELAY_AFTER_LPM)
+-		usleep_range(5000, 5100);
++		hba->dev_quirks & UFS_DEVICE_QUIRK_DELAY_AFTER_LPM &&
++		hba->vcc_turnoff_delay)
++		usleep_range(hba->vcc_turnoff_delay, hba->vcc_turnoff_delay + 100);
+ }
+ 
+ #ifdef CONFIG_PM
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index 9f28349ebcff..bfde3cb962fb 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -828,6 +828,7 @@ struct ufs_hba_monitor {
+  *	device
+  * @complete_put: whether or not to call ufshcd_rpm_put() from inside
+  *	ufshcd_resume_complete()
++ * @vcc_turnoff_delay: VCC turnoff delay value.
+  */
+ struct ufs_hba {
+ 	void __iomem *mmio_base;
+@@ -975,6 +976,7 @@ struct ufs_hba {
+ #endif
+ 	u32 luns_avail;
+ 	bool complete_put;
++	u32 vcc_turnoff_delay;
+ };
+ 
+ /* Returns true if clocks can be gated. Otherwise false */
+-- 
+2.17.1
+
