@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EFECEC433FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Oct 2022 17:11:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7806BC433FE
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Oct 2022 18:03:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229517AbiJLRLX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Oct 2022 13:11:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38870 "EHLO
+        id S229490AbiJLSDa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Oct 2022 14:03:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45862 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229540AbiJLRLW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Oct 2022 13:11:22 -0400
+        with ESMTP id S229566AbiJLSD3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Oct 2022 14:03:29 -0400
 Received: from antispam1.zonit.com (antispam1.zonit.com [192.88.205.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 973E7CD5FE
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Oct 2022 10:11:21 -0700 (PDT)
-X-ASG-Debug-ID: 1665594679-18471ce6bd116c30001-ziuLRu
-Received: from atlas.zonit.com ([199.88.250.66]) by antispam1.zonit.com with ESMTP id vtj6DkMrdEEekayH for <linux-scsi@vger.kernel.org>; Wed, 12 Oct 2022 11:11:19 -0600 (MDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60731CAE7A
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Oct 2022 11:03:28 -0700 (PDT)
+X-ASG-Debug-ID: 1665597806-18471ce6bd117e80001-ziuLRu
+Received: from atlas.zonit.com ([199.88.250.66]) by antispam1.zonit.com with ESMTP id 3jcp9qhdrCPx59pH for <linux-scsi@vger.kernel.org>; Wed, 12 Oct 2022 12:03:26 -0600 (MDT)
 X-Barracuda-Envelope-From: toms@zonit.com
 X-Barracuda-Effective-Source-IP: UNKNOWN[199.88.250.66]
 X-Barracuda-Apparent-Source-IP: 199.88.250.66
 Received: from [172.30.2.121] (unknown [172.30.2.121])
-        by atlas.zonit.com (Postfix) with ESMTP id 733F73A37EE
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Oct 2022 11:11:19 -0600 (MDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 atlas.zonit.com 733F73A37EE
+        by atlas.zonit.com (Postfix) with ESMTP id E88973A3763
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Oct 2022 12:03:25 -0600 (MDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 atlas.zonit.com E88973A3763
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=zonit.com; s=atlas;
-        t=1665594679; bh=t5kGcNo1IFYW5Kfn6U6eqrFQglMQWW+CDWh/p9iq8is=;
+        t=1665597806; bh=LQWLFxKTK96WRH07hUtwD8oF4+uoCYDjCGhba1yJ+0k=;
         h=Date:From:Subject:To:From;
-        b=l43F957mKUHNDg8lA49lkTUHuxB6pxAQzi+dfBINw8sNDjgun9vENO7K4b5G8ce4m
-         PJF/zkhRGoiuIDM9ERYJG25xtdPvYkZvq1KmfUbDQB7p/7czDbzDjgHhHLeVyjqB7D
-         HBwo6Iw1xy37vS5kDQVTxqPmXFhR9w6n0gjj6leU=
-Message-ID: <2b61fe0c-b656-30a7-a5fb-e6cd5d08fde4@zonit.com>
-Date:   Wed, 12 Oct 2022 11:11:19 -0600
+        b=pFRgvYdHq0Z7/99JCHED+XGGWy5iwdRXZbhDSY7UgBwDJr3S6Sb+jmZSjs+9WCK2e
+         qDDg8I1wy7KBIuZSvby3cFUGIF7NtwPC1r6yIgqVz2gRX2UA28xqr2A0XaIrdRqXTC
+         PyMHhj/ttLFpH+9tDdHmo+TP53d+dR10fb2QAjoM=
+Message-ID: <bfee9015-d12d-89d4-d278-439baae3293b@zonit.com>
+Date:   Wed, 12 Oct 2022 12:03:25 -0600
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.3.1
@@ -68,15 +68,15 @@ Autocrypt: addr=toms@zonit.com; keydata=
  4Pt6IX7N
 Content-Type: multipart/signed; micalg=pgp-sha256;
  protocol="application/pgp-signature";
- boundary="------------tkD7ybxi7osjoeC8eFizVbW6"
+ boundary="------------wb0SoypQBXSQzq9DRIAWiAh1"
 X-Barracuda-Connect: UNKNOWN[199.88.250.66]
-X-Barracuda-Start-Time: 1665594679
+X-Barracuda-Start-Time: 1665597806
 X-Barracuda-URL: https://antispam1.zonit.com:443/cgi-mod/mark.cgi
 X-ASG-Orig-Subj: Errors with Sun StorageTek STK RAID INT (Adaptec ASR-5805) with EL
  8.6 driver?
-X-Barracuda-BRTS-Status: 1
 X-Virus-Scanned: by bsmtpd at zonit.com
 X-Barracuda-Scan-Msg-Size: 1823
+X-Barracuda-BRTS-Status: 1
 X-Barracuda-Spam-Score: 0.00
 X-Barracuda-Spam-Status: No, SCORE=0.00 using global scores of TAG_LEVEL=1000.0 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=9.0 tests=
 X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.3.101371
@@ -88,19 +88,19 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------------tkD7ybxi7osjoeC8eFizVbW6
-Content-Type: multipart/mixed; boundary="------------T44DPARkTHNh7eQ49QjA0jt2";
+--------------wb0SoypQBXSQzq9DRIAWiAh1
+Content-Type: multipart/mixed; boundary="------------0wDQ0alFyf1BqsCmOKezOjXD";
  protected-headers="v1"
 From: Tom Spettigue <toms@zonit.com>
 To: linux-scsi@vger.kernel.org
-Message-ID: <2b61fe0c-b656-30a7-a5fb-e6cd5d08fde4@zonit.com>
+Message-ID: <bfee9015-d12d-89d4-d278-439baae3293b@zonit.com>
 Subject: Errors with Sun StorageTek STK RAID INT (Adaptec ASR-5805) with EL
  8.6 driver?
 
---------------T44DPARkTHNh7eQ49QjA0jt2
-Content-Type: multipart/mixed; boundary="------------oSPdMEYxewbrqDDHWbqLA16F"
+--------------0wDQ0alFyf1BqsCmOKezOjXD
+Content-Type: multipart/mixed; boundary="------------uYEmIg1mXe4M8yb3NcuaGL5o"
 
---------------oSPdMEYxewbrqDDHWbqLA16F
+--------------uYEmIg1mXe4M8yb3NcuaGL5o
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: base64
 
@@ -137,7 +137,7 @@ bSB3aXRoIHRoZSANCmRkLWFhY3JhaWQtMS4yLjEtNy5lbDhfNi5lbHJlcG8uaXNvIGFhY3Jh
 aWQgZHJpdmVyIHRoYXQgSSdtIHVzaW5nLiA6UA0KDQpBbnkgaWRlYXM/DQoNCi0tIA0KVG9t
 IFNwZXR0aWd1ZQ0KU3RhZmYgRW5naW5lZXINCig3MjApIDQwNi01MjY5DQpab25pdCBTdHJ1
 Y3R1cmVkIFNvbHV0aW9ucw0Kd3d3Lnpvbml0LmNvbQ0KDQo=
---------------oSPdMEYxewbrqDDHWbqLA16F
+--------------uYEmIg1mXe4M8yb3NcuaGL5o
 Content-Type: application/pgp-keys; name="OpenPGP_0xF838B5B45D794B26.asc"
 Content-Disposition: attachment; filename="OpenPGP_0xF838B5B45D794B26.asc"
 Content-Description: OpenPGP public key
@@ -175,24 +175,25 @@ Atzq5pelSQ67vNTBMA20udYyKf2AcG3Xz1HV7vbwoCcNIpMUsuHA+lod4Pt6IX7N
 -----END PGP PUBLIC KEY BLOCK-----
 
 
---------------oSPdMEYxewbrqDDHWbqLA16F--
 
---------------T44DPARkTHNh7eQ49QjA0jt2--
+--------------uYEmIg1mXe4M8yb3NcuaGL5o--
 
---------------tkD7ybxi7osjoeC8eFizVbW6
+--------------0wDQ0alFyf1BqsCmOKezOjXD--
+
+--------------wb0SoypQBXSQzq9DRIAWiAh1
 Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
 Content-Description: OpenPGP digital signature
 Content-Disposition: attachment; filename="OpenPGP_signature"
 
 -----BEGIN PGP SIGNATURE-----
 
-wsB5BAABCAAjFiEES8zlx2gg0vVD5njm+Di1tF15SyYFAmNG9TcFAwAAAAAACgkQ+Di1tF15SyYW
-/Qf/da97eJyocC7KX2zPMGV03HtYiN6F7EmIgdjOPOLJM9lApXN9GqTn1hAkSbp+gPO9ZqYc+zxm
-3Lm8IU5CtJom69Cn9CZqcxJXhwBULxUd7CxELoUSAxV1iQQAdbkW2b+bfE6sODZ7dv8GjngTLmH6
-y0fccLwS91rMKBCRzYuzYwEa6b3ISNTA6AatbpHz2E+0FzL2Wiw285FZ5oH0BarFpZaq9jFwoJ5Z
-aPL37IDLKWV3k3Pl9s0Wf8v8LVM7Yez7K9jCFQhl5o+BuEVtdDrMBKN5R2XyMACdrqrMTSI8qJa9
-YfbcS270tlKq66gdOg4jmgtjG7HHafqdezBlC6kT1A==
-=t+zz
+wsB5BAABCAAjFiEES8zlx2gg0vVD5njm+Di1tF15SyYFAmNHAW0FAwAAAAAACgkQ+Di1tF15SyaY
+fgf/QhcW3ldlEjuxGkTyO0CbtyJpA1+gGpixhoSB2DdxE3ED2W7FUmEGf8PgvM25u36ORpZ8ZqAM
+ScovJ64QkRSVkovRdnnVyN/SCTWBrH2np2MkoKKqh4wvjWI/u59Wb3WONNxE+tPuAHi4qdfqcit1
+S+lemIOzrxd+H1YS+weKaN15cF+l0JDOYwiKHpU9LNzhjKVlNG13yvtFRugcPLF8UyChBnFObtjU
+2Zj7QXTornovnvHjl1osDdhBR931R6WM3EP/AKSEEc5BcFYCWYZu134gBOKvarNuughH/VQupwiR
+6n+4C5GBWqZ5/vhTceSxyyvfOeoqVydqftdwj/Nvvw==
+=A7xx
 -----END PGP SIGNATURE-----
 
---------------tkD7ybxi7osjoeC8eFizVbW6--
+--------------wb0SoypQBXSQzq9DRIAWiAh1--
