@@ -2,145 +2,107 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC54CC07E9D
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Oct 2022 21:29:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A5A6C43217
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Oct 2022 00:16:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230203AbiJLV3g convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Oct 2022 17:29:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58828 "EHLO
+        id S229888AbiJMAQs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Oct 2022 20:16:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38088 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230174AbiJLV3R (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Oct 2022 17:29:17 -0400
-Received: from eu-smtp-delivery-151.mimecast.com (eu-smtp-delivery-151.mimecast.com [185.58.86.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C6F6120EC3
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Oct 2022 14:29:08 -0700 (PDT)
-Received: from AcuMS.aculab.com (156.67.243.121 [156.67.243.121]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- uk-mta-269-WPghBqosPyeNkdeVSYELTw-1; Wed, 12 Oct 2022 22:29:04 +0100
-X-MC-Unique: WPghBqosPyeNkdeVSYELTw-1
-Received: from AcuMS.Aculab.com (10.202.163.6) by AcuMS.aculab.com
- (10.202.163.6) with Microsoft SMTP Server (TLS) id 15.0.1497.38; Wed, 12 Oct
- 2022 22:29:02 +0100
-Received: from AcuMS.Aculab.com ([::1]) by AcuMS.aculab.com ([::1]) with mapi
- id 15.00.1497.040; Wed, 12 Oct 2022 22:29:02 +0100
-From:   David Laight <David.Laight@ACULAB.COM>
-To:     'Joe Perches' <joe@perches.com>,
-        "Jason A. Donenfeld" <Jason@zx2c4.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC:     "linux-fbdev@vger.kernel.org" <linux-fbdev@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "linux-sctp@vger.kernel.org" <linux-sctp@vger.kernel.org>,
-        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
-        "linux-mtd@lists.infradead.org" <linux-mtd@lists.infradead.org>,
-        "linux-stm32@st-md-mailman.stormreply.com" 
-        <linux-stm32@st-md-mailman.stormreply.com>,
-        "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>,
-        "dev@openvswitch.org" <dev@openvswitch.org>,
-        "rds-devel@oss.oracle.com" <rds-devel@oss.oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "dccp@vger.kernel.org" <dccp@vger.kernel.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "kasan-dev@googlegroups.com" <kasan-dev@googlegroups.com>,
-        "lvs-devel@vger.kernel.org" <lvs-devel@vger.kernel.org>,
-        "SHA-cyfmac-dev-list@infineon.com" <SHA-cyfmac-dev-list@infineon.com>,
-        "coreteam@netfilter.org" <coreteam@netfilter.org>,
-        "tipc-discussion@lists.sourceforge.net" 
-        <tipc-discussion@lists.sourceforge.net>,
-        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
-        "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        "linux-actions@lists.infradead.org" 
-        <linux-actions@lists.infradead.org>,
-        "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-hams@vger.kernel.org" <linux-hams@vger.kernel.org>,
-        "ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "cake@lists.bufferbloat.net" <cake@lists.bufferbloat.net>,
-        "brcm80211-dev-list.pdl@broadcom.com" 
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-        "linux-f2fs-devel@lists.sourceforge.net" 
-        <linux-f2fs-devel@lists.sourceforge.net>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "netfilter-devel@vger.kernel.org" <netfilter-devel@vger.kernel.org>,
-        "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
-Subject: RE: [PATCH v1 3/5] treewide: use get_random_u32() when possible
-Thread-Topic: [PATCH v1 3/5] treewide: use get_random_u32() when possible
-Thread-Index: AQHY3m9QJDmwhr5XuUa4Hi/RfD23ja4LRXVg
-Date:   Wed, 12 Oct 2022 21:29:02 +0000
-Message-ID: <d45bd258e033453b85a137112e7694e1@AcuMS.aculab.com>
-References: <20221005214844.2699-1-Jason@zx2c4.com>
-         <20221005214844.2699-4-Jason@zx2c4.com>
- <f8ad3ba44d28dec1a5f7626b82c5e9c2aeefa729.camel@perches.com>
-In-Reply-To: <f8ad3ba44d28dec1a5f7626b82c5e9c2aeefa729.camel@perches.com>
-Accept-Language: en-GB, en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [10.202.205.107]
+        with ESMTP id S229832AbiJMAQk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Oct 2022 20:16:40 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08E78FE93A;
+        Wed, 12 Oct 2022 17:16:18 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id DB615616B6;
+        Thu, 13 Oct 2022 00:16:17 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3CE00C4347C;
+        Thu, 13 Oct 2022 00:16:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1665620177;
+        bh=ZFoYiT9y2/iVY1FbCrXKpOhrfl3lZzZKHp9H5oPiBIU=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=b8Z14IVL7CfZzk6Ahtqgdg8M/VOM4VZ67pRLuAzbNM6bGsCqXWxS+81l7lF9TTmRk
+         dYtSpTmHY5YC+8TWI1QbhsPPeuPH+CRhWnKaaeMUdrmicgIvxxb4wvW27GLZ5Yjc2C
+         STh/JVJQ7ZqcAGfsqTYsD1ZO59iQtFz4sDVDJ30WC4pOdV9Poeqvy34doKtCrgt4S/
+         dmwicrHUwT0Ar09MrQK5XPKFjA1tdEqB+u3Sag1Wu8B3R/chpQShphK14PQXfOk3OQ
+         q0EDanZVHL8kovQxThtywQCWT1h0jFREGIQzOhHpJ/dqR2Rluu8DX6h6w8ZwyKtdNz
+         6cc2fU4CN4tfg==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Justin Tee <justin.tee@broadcom.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.0 09/67] scsi: lpfc: Fix null ndlp ptr dereference in abnormal exit path for GFT_ID
+Date:   Wed, 12 Oct 2022 20:14:50 -0400
+Message-Id: <20221013001554.1892206-9-sashal@kernel.org>
+X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20221013001554.1892206-1-sashal@kernel.org>
+References: <20221013001554.1892206-1-sashal@kernel.org>
 MIME-Version: 1.0
-X-Mimecast-Spam-Score: 0
-X-Mimecast-Originator: aculab.com
-Content-Language: en-US
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Joe Perches
-> Sent: 12 October 2022 20:17
-> 
-> On Wed, 2022-10-05 at 23:48 +0200, Jason A. Donenfeld wrote:
-> > The prandom_u32() function has been a deprecated inline wrapper around
-> > get_random_u32() for several releases now, and compiles down to the
-> > exact same code. Replace the deprecated wrapper with a direct call to
-> > the real function.
-> []
-> > diff --git a/drivers/infiniband/hw/cxgb4/cm.c b/drivers/infiniband/hw/cxgb4/cm.c
-> []
-> > @@ -734,7 +734,7 @@ static int send_connect(struct c4iw_ep *ep)
-> >  				   &ep->com.remote_addr;
-> >  	int ret;
-> >  	enum chip_type adapter_type = ep->com.dev->rdev.lldi.adapter_type;
-> > -	u32 isn = (prandom_u32() & ~7UL) - 1;
-> > +	u32 isn = (get_random_u32() & ~7UL) - 1;
-> 
-> trivia:
-> 
-> There are somewhat odd size mismatches here.
-> 
-> I had to think a tiny bit if random() returned a value from 0 to 7
-> and was promoted to a 64 bit value then truncated to 32 bit.
-> 
-> Perhaps these would be clearer as ~7U and not ~7UL
+From: James Smart <jsmart2021@gmail.com>
 
-That makes no difference - the compiler will generate the same code.
+[ Upstream commit 59b7e210a522b836a01516c71ee85d1d92c1f075 ]
 
-The real question is WTF is the code doing?
-The '& ~7u' clears the bottom 3 bits.
-The '- 1' then sets the bottom 3 bits and decrements the
-(random) high bits.
+An error case exit from lpfc_cmpl_ct_cmd_gft_id() results in a call to
+lpfc_nlp_put() with a null pointer to a nodelist structure.
 
-So is the same as get_random_u32() | 7.
-But I bet the coder had something else in mind.
+Changed lpfc_cmpl_ct_cmd_gft_id() to initialize nodelist pointer upon
+entry.
 
-	David
+Link: https://lore.kernel.org/r/20220819011736.14141-3-jsmart2021@gmail.com
+Co-developed-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/lpfc/lpfc_ct.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+index 13dfe285493d..b555ccb5ae34 100644
+--- a/drivers/scsi/lpfc/lpfc_ct.c
++++ b/drivers/scsi/lpfc/lpfc_ct.c
+@@ -1509,7 +1509,7 @@ lpfc_cmpl_ct_cmd_gft_id(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 	struct lpfc_sli_ct_request *CTrsp;
+ 	int did;
+ 	struct lpfc_nodelist *ndlp = NULL;
+-	struct lpfc_nodelist *ns_ndlp = NULL;
++	struct lpfc_nodelist *ns_ndlp = cmdiocb->ndlp;
+ 	uint32_t fc4_data_0, fc4_data_1;
+ 	u32 ulp_status = get_job_ulpstatus(phba, rspiocb);
+ 	u32 ulp_word4 = get_job_word4(phba, rspiocb);
+@@ -1522,15 +1522,12 @@ lpfc_cmpl_ct_cmd_gft_id(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 			      ulp_status, ulp_word4, did);
+ 
+ 	/* Ignore response if link flipped after this request was made */
+-	if ((uint32_t) cmdiocb->event_tag != phba->fc_eventTag) {
++	if ((uint32_t)cmdiocb->event_tag != phba->fc_eventTag) {
+ 		lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
+ 				 "9046 Event tag mismatch. Ignoring NS rsp\n");
+ 		goto out;
+ 	}
+ 
+-	/* Preserve the nameserver node to release the reference. */
+-	ns_ndlp = cmdiocb->ndlp;
 -
-Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
-Registration No: 1397386 (Wales)
+ 	if (ulp_status == IOSTAT_SUCCESS) {
+ 		/* Good status, continue checking */
+ 		CTrsp = (struct lpfc_sli_ct_request *)outp->virt;
+-- 
+2.35.1
 
