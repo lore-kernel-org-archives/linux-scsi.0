@@ -2,128 +2,77 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A9E8C4332F
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 Oct 2022 20:31:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD8D7C433FE
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 Oct 2022 20:42:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231342AbiJNUbK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 14 Oct 2022 16:31:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47982 "EHLO
+        id S231434AbiJNUmG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 14 Oct 2022 16:42:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57232 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231497AbiJNUbB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Oct 2022 16:31:01 -0400
-Received: from mail-ed1-x533.google.com (mail-ed1-x533.google.com [IPv6:2a00:1450:4864:20::533])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63A0717074;
-        Fri, 14 Oct 2022 13:30:52 -0700 (PDT)
-Received: by mail-ed1-x533.google.com with SMTP id m15so8309436edb.13;
-        Fri, 14 Oct 2022 13:30:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=SeHanmAEnbS/igdFCXsAS08y1aN5+fY+hKTXSkNcZJc=;
-        b=UrVLZXxQVLSsmEC846qmn32XR6eHfHYMkEAu1hhhWZ36ah6QB8Oa+5y/mC4CGzAh/I
-         Ao3FmAGsI/UTh/6gNipqc3U2HNTehLtZwJu6GGAJP8KJa3IOVVnF8A8JDPGaZP6XBsx1
-         BW+Rp/THefCKglNkpvaAsVgTijdJmnhcm7t/ozPRk29GOfKv4tKyhNUicn0CwbZrcUe1
-         UbSSGddSczk6299lU9x/9HSQ7WgFIO5lJ8OItZulrwbz01csOMxIhSj2J8hhF1Axstnz
-         I1sgfk6rxN9RHkAqgcAmq7Fnl/oX3L+kJYeLtbF1cOdJ6bT1FDLbX+q5JC1fG5zcWvp4
-         nxBQ==
+        with ESMTP id S230161AbiJNUmE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Oct 2022 16:42:04 -0400
+Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F16184E6C;
+        Fri, 14 Oct 2022 13:42:03 -0700 (PDT)
+Received: by mail-pf1-f181.google.com with SMTP id 67so5929018pfz.12;
+        Fri, 14 Oct 2022 13:42:03 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=SeHanmAEnbS/igdFCXsAS08y1aN5+fY+hKTXSkNcZJc=;
-        b=VtV5ycUV0HuqZTLj9LISzrRFqBIlJCCciMc4wc6pwHK7qcPmVqDrVyuHNO1QQvW8Wo
-         LMGI3IPg7ojvBkLo8orQQGkfwozLJjoSVwuLuu5HACbXELuwquoVSFNCIvwPJOkQiRmO
-         i70dfbGszVxmx3S53ba6uRVUII/BJYPnc3OfHRLMAs2XBCGHwRv8/boTD7/+Kq92HG9u
-         jaV+g/xE7y8MpdJF3B3ZV4hrkGrfco3QS4AMtH/V6PRVmKdmReabWMsjpxe8Zbj0CteJ
-         ZSJUHwrX6ISyIZ6vKJMpRsLTeqyfHZg1jRNYQwK2AVtQtQ3gyHs22UAnjC7h670AjUa8
-         kPcg==
-X-Gm-Message-State: ACrzQf0BFZkOgr5zwbVPywKMJwC7yFxGaHbIi44Io5KwuH9Quud4Urm1
-        tfUfCoLuo0rjW8h6Q+DeXRc=
-X-Google-Smtp-Source: AMsMyM44QFiF5pV5rrf1/fnUb9Xe4ofBqaAyprdjD6kpB+qxSgbHZkO//K2qtzqiAxPFk+ELQA8Mzw==
-X-Received: by 2002:a05:6402:2489:b0:454:11de:7698 with SMTP id q9-20020a056402248900b0045411de7698mr5832069eda.214.1665779449954;
-        Fri, 14 Oct 2022 13:30:49 -0700 (PDT)
-Received: from [192.168.3.3] (p4fd591a2.dip0.t-ipconnect.de. [79.213.145.162])
-        by smtp.googlemail.com with ESMTPSA id p5-20020a170906498500b0078b83968ad4sm2065437eju.24.2022.10.14.13.30.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 Oct 2022 13:30:49 -0700 (PDT)
-Message-ID: <227f117ee9491cc9d2ae4bb2211a99ccd1dd3c21.camel@gmail.com>
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=/Ga7LxVJNGv4uAqLrSohjcAsauiHQKxDPOhkVZVpYsg=;
+        b=HsnGI/7PN4oQ7UiDa/bqnwcs3PQ/3xVbplB7+mnmskMlmSyqjR/mvZ5yUqpD6f62AP
+         LJLEd9/5uqGevDUHH/NTYpn3Gzk0fNmtrmR0wK6f83pz7SGEsL0iogztOdnOTn3/iZn2
+         iB8AcOb98s5z7nLR5cKhE156DNfLqNwmehdrU+pJM7zgdOcTDn11QL1pDZyn4GlZj/81
+         YnJd2UkUFy1/a57eyM8A/jAPSj0t+VCnXk8WdlFJKI2fbyL4NJ7KmDI1MgRlf1ysJOR8
+         Gw80LipJ0ISSh+CJ/h8IrZDVKVsPFpstRkjkbu3FayQpUzlrb6+ikzD4kUqqJLMe7rqN
+         sxDA==
+X-Gm-Message-State: ACrzQf3+/zDdWFRBtmtXOyUHSUhZmQXQ/uvZSzpXAlQ5sw6XF+NyqCx+
+        T4W4CIA91K8aT2/Aeb99xh6Gmbp40aE=
+X-Google-Smtp-Source: AMsMyM50vL9wvp5+9j+O3b4z8oO7+JOrWw6moqZ+lQIvWjKwrQMEFjnf1G26q/5ITrBySUYFuWY1pg==
+X-Received: by 2002:a63:982:0:b0:43b:e67b:988c with SMTP id 124-20020a630982000000b0043be67b988cmr6168454pgj.35.1665780122440;
+        Fri, 14 Oct 2022 13:42:02 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:7bd3:5500:b9cd:d90d? ([2620:15c:211:201:7bd3:5500:b9cd:d90d])
+        by smtp.gmail.com with ESMTPSA id n15-20020a170902e54f00b0016d4f05eb95sm2115374plf.272.2022.10.14.13.42.00
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 14 Oct 2022 13:42:01 -0700 (PDT)
+Message-ID: <ffc4250d-7446-40eb-9218-6925f44a69ff@acm.org>
+Date:   Fri, 14 Oct 2022 13:41:59 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.13.0
 Subject: Re: [PATCH v2 1/2] scsi: ufs: core: Remove unnecessary if statement
-From:   Bean Huo <huobean@gmail.com>
-To:     Bart Van Assche <bvanassche@acm.org>, alim.akhtar@samsung.com,
+Content-Language: en-US
+To:     Bean Huo <beanhuo@iokpp.de>, alim.akhtar@samsung.com,
         avri.altman@wdc.com, asutoshd@codeaurora.org, jejb@linux.ibm.com,
         martin.petersen@oracle.com, stanley.chu@mediatek.com,
         beanhuo@micron.com, tomas.winkler@intel.com, cang@codeaurora.org,
         daejun7.park@samsung.com
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Date:   Fri, 14 Oct 2022 22:30:48 +0200
-In-Reply-To: <a1cd6719-a743-fc96-e0e7-364a52b62952@acm.org>
 References: <20221010092937.520013-1-beanhuo@iokpp.de>
-         <20221010092937.520013-2-beanhuo@iokpp.de>
-         <a1cd6719-a743-fc96-e0e7-364a52b62952@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu1 
-MIME-Version: 1.0
+ <20221010092937.520013-2-beanhuo@iokpp.de>
+ <a1cd6719-a743-fc96-e0e7-364a52b62952@acm.org>
+ <d06a264c4544a23ccccd016c6797d889db526b64.camel@iokpp.de>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <d06a264c4544a23ccccd016c6797d889db526b64.camel@iokpp.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 2022-10-14 at 11:37 -0700, Bart Van Assche wrote:
-> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0pr_err("Max General LU supported by UFS isn't
-> > initialized\n");
-> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0return false;
-> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0}
-> > -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0/* WB is available only for =
-the logical unit from 0 to 7 */
-> > -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (param_offset =3D=3D UNIT=
-_DESC_PARAM_WB_BUF_ALLOC_UNITS)
-> > -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0return lun < UFS_UPIU_MAX_WB_LUN_ID;
-> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0return lun =3D=3D UFS_U=
-PIU_RPMB_WLUN || (lun < dev_info-
-> > >max_lu_supported);
-> > =C2=A0=C2=A0 }
->=20
-> Hi Bean,
->=20
-> I think the above patch reintroduces the stack overflow issue fixed
-> by
-> commit a2fca52ee640 ("scsi: ufs: WB is only available on LUN #0 to
-> #7").
->=20
-> How about reverting commit a2fca52ee640 and fixing the stack overflow
-> issue in another way than by modifying ufs_is_valid_unit_desc_lun()?
->=20
-> Thanks,
->=20
-> Bart.
+On 10/14/22 12:20, Bean Huo wrote:
+> I am working on the Advanced RPMB, and trying to seperate normal unit
+> descriptor and RPMB unit descriptor, will let you know if it is
+> possible. or if you know the solution, please let me know, thanks.
 
-Hi Bart,=20
+Hi Bean,
 
-I double-checked the changelog and the stack overflow issue was double
-fixed by your commit:
+How about setting .is_visible member of struct attribute_group in the UFS
+driver and letting that callback decide which sysfs attributes are visible
+depending on the logical unit type?
 
-commit d3d9c4570285 ("scsi: ufs: Fix memory corruption by
-ufshcd_read_desc_param()"),
+Thanks,
 
-
-For example, if the user wants to read wb_buf_alloc_units in the RPMB
-unit descriptor,
-
-parameter offset =3D 41, parameter size =3D 4,
-buff_len =3D 45;
-
-After ufshcd_query_descriptor_retry(), buff_len will be updated to 35.
-
-param_offset > buff_len, then -EINVAL will be returned.
-
-So we can safely remove this check, and if you still have concerns, I
-can verify when I get back to the office.
-
-Kind regards,
-Bean
+Bart.
