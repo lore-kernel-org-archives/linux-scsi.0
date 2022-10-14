@@ -2,129 +2,118 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96AC2C433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 Oct 2022 00:19:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7E29C4332F
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 Oct 2022 02:45:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229582AbiJNATT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 13 Oct 2022 20:19:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52998 "EHLO
+        id S229803AbiJNCpF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 13 Oct 2022 22:45:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49456 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229504AbiJNATR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Oct 2022 20:19:17 -0400
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8347718F91F
-        for <linux-scsi@vger.kernel.org>; Thu, 13 Oct 2022 17:19:10 -0700 (PDT)
-Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20221014001902epoutp04d38815758999447298c26dc8907bf27f~dx3UOi8Us3165431654epoutp04o
-        for <linux-scsi@vger.kernel.org>; Fri, 14 Oct 2022 00:19:02 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20221014001902epoutp04d38815758999447298c26dc8907bf27f~dx3UOi8Us3165431654epoutp04o
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1665706742;
-        bh=rqXAjaHpfln9gpBUX+6RlIbjUZqJtG0vecuVAC7NO8I=;
-        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=EEMAP6LXGIyD6IYED3mAxAuRvJn22QGQnJQ6WEOGViafeNMbWRAQU91prkEq5gk4z
-         17nyZITGEQXCCswj9BOBnTQwC3CWjvZKLoUEGmqAi3jHFeeO51C0OdNQ5celGPqc6C
-         aqqlFatBhkEwYgVhkF7Qi/QgQnzxH3IKZKaN96Fs=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
-        20221014001901epcas2p3c4eb7a45d1b139ed4ed1192b5de76bba~dx3TWaCAV1960119601epcas2p3t;
-        Fri, 14 Oct 2022 00:19:01 +0000 (GMT)
-Received: from epsmges2p2.samsung.com (unknown [182.195.36.100]) by
-        epsnrtp4.localdomain (Postfix) with ESMTP id 4MpRnx2P0Fz4x9Pw; Fri, 14 Oct
-        2022 00:19:01 +0000 (GMT)
-X-AuditID: b6c32a46-5bdfb70000004e8a-bf-6348aaf48d19
-Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
-        epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        33.F2.20106.4FAA8436; Fri, 14 Oct 2022 09:19:00 +0900 (KST)
-Mime-Version: 1.0
-Subject: RE: [PATCH v2 1/2] scsi: ufs: core: Remove unnecessary if statement
-Reply-To: daejun7.park@samsung.com
-Sender: Daejun Park <daejun7.park@samsung.com>
-From:   Daejun Park <daejun7.park@samsung.com>
-To:     Bean Huo <beanhuo@iokpp.de>, ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        Daejun Park <daejun7.park@samsung.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        with ESMTP id S229572AbiJNCpE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Oct 2022 22:45:04 -0400
+Received: from mail-vs1-xe30.google.com (mail-vs1-xe30.google.com [IPv6:2607:f8b0:4864:20::e30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6870422E8;
+        Thu, 13 Oct 2022 19:45:02 -0700 (PDT)
+Received: by mail-vs1-xe30.google.com with SMTP id h3so3648087vsa.4;
+        Thu, 13 Oct 2022 19:45:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=cbEsSwm1qOqlPn0HC5WClXMW5nRm6+V3m8gYZXhzjag=;
+        b=VUGv4p8kT7+JUns6CWnsUrloNXRwoXP2m1mMz+vv3hnhCkYdIrleC0h+/iKFVIboAf
+         FtJHX75hkhBR0XSsZDFwEZ95N7VMYIAXx0s3DmZIhpY5721rBiZ5LTFzmVs0XHfRL9zD
+         CRU1HUiiMt8EXryIjiC3KX+p2ZQlSJRu/0VJvJpC0Xp9OORG7kBqRibVOLCf5OIh8Xrw
+         4fvhUyCBGDQTnCdngkyLsOEoNXMIJywfz9UCF2K1tYJRmqpy7BaYyLqgEOnLFbHLOkif
+         7w3kAtIQtq5ByoSKgNRaEuberyJ7nz4LFaiIsdTXSmI17EmWuSqJxnAua7QUGgoHxGEm
+         zXSw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=cbEsSwm1qOqlPn0HC5WClXMW5nRm6+V3m8gYZXhzjag=;
+        b=2/T8SZ+5WxAgAQXFlg4uNb/AnEWvYmNbbcpgBj0JiWGyPkxvNjT9Z1K0TVWdu1uDlC
+         GhdiJUhLsHxpBPH7UH5XZMqpgY0nyPaoFn2LW/j6YTaTm4JLr9rofoLjMjlFAemSQUF8
+         2OqRcVZnZ51r5TtoT8bLr5rmO9P6lHCN9vLjKfCqtEUKdcbixPmTMA5IUngWb0eChqGb
+         2NSEatvacVzDBVrLu3sXkXwDhC8ysVvuF/xCy7bXhfBOYO71dnDI0tlbc+hDVnwcnR/v
+         kl8C8vQqFx5QYEJJF67MULRmm0MDF88BKWwG+HIfYLKNS6mxcbAdq0IAWfQVUUUqQO+u
+         W8zA==
+X-Gm-Message-State: ACrzQf3a8/13BH7s8t4FUPN2u/f4Ae3EyvzuOXGviczG50D8fie2/jlv
+        u5H6p2dGC6//uA2FNgSjT7B1wpqmkdqGMrBTiXs=
+X-Google-Smtp-Source: AMsMyM5NUbfa3Q16+pHwp3Nlwf3OP2qK/KougWek0CkvCdZbLZ4B8MzKb1oTARrSnBRPUsoUiDomUgE95yPtwCuEr+k=
+X-Received: by 2002:a67:d29b:0:b0:3a6:ead0:42a1 with SMTP id
+ z27-20020a67d29b000000b003a6ead042a1mr1590736vsi.12.1665715501797; Thu, 13
+ Oct 2022 19:45:01 -0700 (PDT)
+MIME-Version: 1.0
+References: <20221011021653.27277-1-gaoyankaigeren@gmail.com>
+ <DM6PR04MB6575AE77585D584652179089FC239@DM6PR04MB6575.namprd04.prod.outlook.com>
+ <CAFN68yVajOkV++gCp-y1+SD5VOKLgUeBhfgskrJZOX5dfGi07A@mail.gmail.com> <bee1807b7d072b221c44ac8c2ed8064939d33696.camel@gmail.com>
+In-Reply-To: <bee1807b7d072b221c44ac8c2ed8064939d33696.camel@gmail.com>
+From:   =?UTF-8?B?6auY5Lil5Yev?= <gaoyankaigeren@gmail.com>
+Date:   Fri, 14 Oct 2022 10:44:50 +0800
+Message-ID: <CAFN68yVdwrECaDvNuok_4V-54UZUJU9+dn5icaiPdj6BXEZuVA@mail.gmail.com>
+Subject: Re: [PATCH] ufs: core: Disable auto h8 before ssu
+To:     Bean Huo <huobean@gmail.com>
+Cc:     Avri Altman <Avri.Altman@wdc.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <20221010092937.520013-2-beanhuo@iokpp.de>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20221014001900epcms2p227bbd97b905dfc284028818e81781f76@epcms2p2>
-Date:   Fri, 14 Oct 2022 09:19:00 +0900
-X-CMS-MailID: 20221014001900epcms2p227bbd97b905dfc284028818e81781f76
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrOJsWRmVeSWpSXmKPExsWy7bCmue6XVR7JBh+mW1g8mLeNzWJv2wl2
-        i5c/r7JZ3D92msXi4MNOFotpH34yW3xav4zV4uUhTYtVD8ItFt3YxmRxedccNovu6zvYLJYf
-        /8dksXTrTUaLDz11Dvwel694e1zu62XyWLznJZPHl6kvmT0mLDrA6NFycj+Lx/f1HWweH5/e
-        YvHo27KK0ePzJjmP9gPdTAHcUdk2GamJKalFCql5yfkpmXnptkrewfHO8aZmBoa6hpYW5koK
-        eYm5qbZKLj4Bum6ZOUCPKCmUJeaUAoUCEouLlfTtbIryS0tSFTLyi0tslVILUnIKzAv0ihNz
-        i0vz0vXyUkusDA0MjEyBChOyM+4tXM1csIy/YtHPZpYGxjd8XYycHBICJhKPD0xnBbGFBHYw
-        SuyZIN/FyMHBKyAo8XeHMEhYWMBH4lnvd0aIEiWJ9RdnsUPE9SRuPVwDFmcT0JGYfuI+UJyL
-        Q0RgM4vEs3VdTCAJZoE6id1z/rBB7OKVmNH+lAXClpbYvnwrWDOngLnE6RUP2SHiGhI/lvUy
-        Q9iiEjdXv2WHsd8fm88IYYtItN47C1UjKPHg526ouKTE7bmboOrzJf5fWQ5l10hsOzAPytaX
-        uNaxEewGXgFfibam/WB3sgioSnQs/Qg100ViyfolUPdrSyxb+JoZFCbMApoS63fpg5gSAsoS
-        R26xwHzVsPE3OzqbWYBPouPwX7j4jnlPmCBsNYl1P9czTWBUnoUI6FlIds1C2LWAkXkVo1hq
-        QXFuemqxUYERPGqT83M3MYJTtJbbDsYpbz/oHWJk4mA8xCjBwawkwusS4pYsxJuSWFmVWpQf
-        X1Sak1p8iNEU6MuJzFKiyfnALJFXEm9oYmlgYmZmaG5kamCuJM7bNUMrWUggPbEkNTs1tSC1
-        CKaPiYNTqoHpqk3Liqo3Sx5ZXuhL/RJUk54W782cvut42cWC+d4NMoWJ957wHFD5s333tuKj
-        U4X+Z30tSbn06WaRiJ+6KuOJTzxrnJyYVIO+xsUf4Y+81lLLsYFlo2yB3KMKz0eLYzcvPXft
-        Xt+Upwvf1PIv4qnZZb7Irdx6R2K7xZo7O7dzW7zoPHi5sa5Ey9X6sfNFn/rZ1yz3LnA10L2p
-        F/Z1Ov+WvVWdr/uM7qis6E/6vv77Ipbsi+EPj81xmbfEYsXf4mkG13N3xvDfSty06mZ4wjlR
-        JZ/ZvzZ9b304rXXqPCeO89Kb+KKWZiYIHT3g/97xMdPUhcsMubrCPwRe/cs2oV38+Twj9awz
-        i/bc1auzcTmtrMRSnJFoqMVcVJwIAKNOFPtaBAAA
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20221010093042epcas2p2462d3c50d81d613574332e3f39d971e1
-References: <20221010092937.520013-2-beanhuo@iokpp.de>
-        <20221010092937.520013-1-beanhuo@iokpp.de>
-        <CGME20221010093042epcas2p2462d3c50d81d613574332e3f39d971e1@epcms2p2>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bean,
+Dear Bean
+we can choose one of two h8 for sure, and we chosed auto h8 during sys acti=
+ve.
+when ufs suspend/resume, ufshcd_link_state_transtion will send DME h8
+enter/exit always.
+that's why the above sequence show up.
+" UFSHCI has idle time before bringing Link into hibern8 mode, " I
+think  ufs put the link to h8 during the time
 
-> LUs=C2=A0with=C2=A0WB=C2=A0potential=C2=A0support=C2=A0are=C2=A0properly=
-=C2=A0checked=C2=A0in=C2=A0ufshcd_wb_probe()=0D=0A>=20before=C2=A0calling=
-=C2=A0ufshcd_read_unit_desc_param(),=C2=A0so=C2=A0remove=C2=A0this=C2=A0unn=
-ecessary=0D=0A>=20if-checkup=C2=A0in=C2=A0ufs_is_valid_unit_desc_lun()=C2=
-=A0to=C2=A0match=C2=A0its=C2=A0function=C2=A0definition.=0D=0A>=20=0D=0A>=
-=20Signed-off-by:=C2=A0Bean=C2=A0Huo=C2=A0<beanhuo=40micron.com>=0D=0A>=20-=
---=0D=0A>=20=C2=A0drivers/ufs/core/ufshcd-priv.h=C2=A0=7C=C2=A03=C2=A0---=
-=0D=0A>=20=C2=A01=C2=A0file=C2=A0changed,=C2=A03=C2=A0deletions(-)=0D=0A>=
-=20=0D=0A>=20diff=C2=A0--git=C2=A0a/drivers/ufs/core/ufshcd-priv.h=C2=A0b/d=
-rivers/ufs/core/ufshcd-priv.h=0D=0A>=20index=C2=A0f68ca33f6ac7..2457b005101=
-a=C2=A0100644=0D=0A>=20---=C2=A0a/drivers/ufs/core/ufshcd-priv.h=0D=0A>=20+=
-++=C2=A0b/drivers/ufs/core/ufshcd-priv.h=0D=0A>=20=40=40=C2=A0-300,9=C2=A0+=
-300,6=C2=A0=40=40=C2=A0static=C2=A0inline=C2=A0bool=C2=A0ufs_is_valid_unit_=
-desc_lun(struct=C2=A0ufs_dev_info=C2=A0*dev_info,=0D=0A>=20=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0pr_err(=22Max=C2=A0General=C2=A0LU=C2=A0supported=C2=A0by=C2=A0=
-UFS=C2=A0isn't=C2=A0initialized=5Cn=22);=0D=0A>=20=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0return=C2=A0false;=0D=0A>=20=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=7D=0D=0A>=20-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0/=
-*=C2=A0WB=C2=A0is=C2=A0available=C2=A0only=C2=A0for=C2=A0the=C2=A0logical=
-=C2=A0unit=C2=A0from=C2=A00=C2=A0to=C2=A07=C2=A0*/=0D=0A>=20-=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if=C2=A0(param_offset=C2=A0=3D=3D=C2=A0=
-UNIT_DESC_PARAM_WB_BUF_ALLOC_UNITS)=0D=0A=0D=0AThen,=20there=20is=20no=20re=
-quirement=20for=20=22param_offset=22=C2=A0argument.=0D=0A=0D=0AThanks,=0D=
-=0ADaejun=0D=0A
+Bean Huo <huobean@gmail.com> =E4=BA=8E2022=E5=B9=B410=E6=9C=8812=E6=97=A5=
+=E5=91=A8=E4=B8=89 22:25=E5=86=99=E9=81=93=EF=BC=9A
+>
+> On Tue, 2022-10-11 at 19:53 +0800, =E9=AB=98=E4=B8=A5=E5=87=AF wrote:
+> > Dear Avri
+> >   Unisoc reports resume fail on UFS(micron FS164) during
+> > suspend/resume test.
+> >   We check host inserts auto H8 enter/exit event between SSU sleep
+> > command and H8 enter command in runtime suspend .
+> >   Asfollows: SSU Sleep command --> auto H8 enter --> auto H8 exit -->
+> > H8 enter --> idle 2ms --> VCC off.
+> >   However device AQL FW can=E2=80=99t enter LPM within 2ms after second=
+ H8
+> > enter command.
+> >   FW already enter LPM after receive auto H8 enter command , Next
+> > auto
+> > H8 exit command will trigger FW exit from LPM, it need take over
+> > 10ms,
+> > and FW can=E2=80=99t enter
+> >   LPM again after second H8 enter command until device complete exit
+> > from LPM. So disable auto h8 before ssu is a reasonable solution to
+> > solve it.
+> >   Hynix also has similar request.
+>
+>
+> Hi gaoyan,
+>
+> The above sequence confuses me. UFSHCI has idle time before bringing
+> Link into hibern8 mode, do you know what the settings are?
+>
+> Also, if auto-hibern8 is supported, in this case, the host-side SW
+> should not send manual hibern8. If this is an issue to all UFS or
+> UFSHCI, we should disable manual hibern8 if auto-hibern8 is enabled. or
+> let customer to choose one of two.
+>
+>
+> Kind regards,
+> Bean
