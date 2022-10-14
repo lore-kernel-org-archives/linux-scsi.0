@@ -2,234 +2,111 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F7DDC4332F
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 Oct 2022 09:32:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 802DEC4332F
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 Oct 2022 10:15:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229776AbiJNJcS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 14 Oct 2022 05:32:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38934 "EHLO
+        id S229884AbiJNKPv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 14 Oct 2022 06:15:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42126 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229695AbiJNJcR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Oct 2022 05:32:17 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1C94B40C9;
-        Fri, 14 Oct 2022 02:32:12 -0700 (PDT)
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 29E8ihYI029446;
-        Fri, 14 Oct 2022 09:31:59 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=spYA4AUb7l9yzOjeKzPYUxViZ5yROYnsu6km4MrTs68=;
- b=FOomr44YzhO5e4K4DTRHYH0d3KewgebQLiySx6npL9jff4hes8uPsSs8vGbVTd33s8N2
- Ktv9zr1k/2wMy/k5y/wyTAcTSndpU8RePOFo/dmrVqufDtjiXaWnVrxeBRNQTlPliZm6
- +lsJzePW+qONkl5UvA5NnQA5zjv1Ya4nuW8abHcoWKHtTwQYunwejmkort5B8X6hbFiS
- GjRPvrPH4u8Poctm7RPeBOQ5doXd1RZAR4JjfMTmK9ChabrU87XHAQecOzbrw8rd1KLY
- VR1ZDJOpUKPhIetFVHkxFpWysvMk19ladcobCkpnnQcTN1W8wTT7Ei5y7ppRYQ/MXXeb Lw== 
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3k6qpthg4q-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 14 Oct 2022 09:31:59 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 29E9Vwpw006650
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 14 Oct 2022 09:31:58 GMT
-Received: from [10.253.11.11] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.29; Fri, 14 Oct
- 2022 02:31:54 -0700
-Message-ID: <11530912-36fd-8c69-4beb-de955eaae529@quicinc.com>
-Date:   Fri, 14 Oct 2022 17:31:52 +0800
+        with ESMTP id S229825AbiJNKPt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Oct 2022 06:15:49 -0400
+Received: from mail-vk1-xa34.google.com (mail-vk1-xa34.google.com [IPv6:2607:f8b0:4864:20::a34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8613814D8CB;
+        Fri, 14 Oct 2022 03:15:46 -0700 (PDT)
+Received: by mail-vk1-xa34.google.com with SMTP id w185so2028495vkb.7;
+        Fri, 14 Oct 2022 03:15:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=B+gKmpXKgt1tAoH04/NabLDpfsbAN80C2OC0RyjXBWk=;
+        b=MXnxk1uqshMOeR+5b0Qh5CEwJSTgTL7gpkXjyIXGG2GatnTYBTtOHxIAGFOF9BAyUG
+         qv6gRE0JJhCb0pcOfEIOKeDGIqRrlKLZGKkNeROXWOX+WRlFTssrPWia+3dOUmhWouT5
+         82Iei2Y8tuLe+5s6/fsTJ3jxH524aZA4bALwyM7wiT+ULEH/9Bh31VLjl8UUe+W8peUp
+         IjdnS5g8OJSaNv+QYfJfpuOFQqg7ElQydxmhl/9hLun/POwexJANXh0H7egTc3T8jve1
+         cE8y9bmTRzFcRC1u0Bh4sF7CNcFznTqY5Z7IDdPGBltSSPdjvORmuIYxOU0kfEwEukwQ
+         1WJQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=B+gKmpXKgt1tAoH04/NabLDpfsbAN80C2OC0RyjXBWk=;
+        b=AvxETRs8AJ1euVPyEnD3fivp2czw2qxWVrj0syRvY/0sCv6hQ3f0rRe0p833CfJROH
+         O047/r5dP0GhxpR7FlwiQ76o9XfypdEhvT6IACwuwio0UwmMfREb4hV5weY/QwEHjvgG
+         SDVtDXCrFCdzcpDYJYF8Qy4BkJFB5Xq7uAi9tK3enZNe/naPJ0ygsYQcvrZ0N6mi7vQt
+         SX479XpIURkiixZOGJ60aAhPcnhYkJksbRhh2L9C0XvYTr7f/MM7vV9J3itlSXIgU9Jr
+         iZaqx0CF4nehhOVuKVZHoFePWjbBJPcqISGCSgzRGaP+UnYGlT8n2LcR2xCIR6ni6Eas
+         gbTA==
+X-Gm-Message-State: ACrzQf16cD1TvfzlVqdFBIn8R/o56n8S/ZJzz3wfnsudSgb/g8cfAkIJ
+        TPFnLQJ9YTeVvPQdAE7z9RTMrSnXlY8gr09AGWU=
+X-Google-Smtp-Source: AMsMyM5OsuGqEt00rFFB5lGPzbqrqaJ3JJZl18t15Cr7HId5BiaURpyJvjxJSe0GkOoQygd+8LinZ5wVDlCJhuq+GUc=
+X-Received: by 2002:a1f:9bd0:0:b0:3af:163a:72f9 with SMTP id
+ d199-20020a1f9bd0000000b003af163a72f9mr2354444vke.0.1665742545064; Fri, 14
+ Oct 2022 03:15:45 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.0.3
-Subject: Re: [PATCH v2 06/17] ufs: core: mcq: Configure resource regions
-To:     Eddie Huang <eddie.huang@medaitek.com>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        <quic_nitirawa@quicinc.com>, <quic_rampraka@quicinc.com>,
-        <quic_bhaskarv@quicinc.com>, <quic_richardp@quicinc.com>,
-        <linux-scsi@vger.kernel.org>
-CC:     <linux-arm-msm@vger.kernel.org>, <quic_nguyenb@quicinc.com>,
-        <quic_xiaosenh@quicinc.com>, <bvanassche@acm.org>,
-        <avri.altman@wdc.com>, <mani@kernel.org>, <beanhuo@micron.com>
-References: <cover.1665017636.git.quic_asutoshd@quicinc.com>
- <271ed77a0ff46390c90fdcde71890d8cec83b8c9.1665017636.git.quic_asutoshd@quicinc.com>
- <5bd645ba24e1dc17343dd8d7b52fe6ea1eb6333d.camel@medaitek.com>
-Content-Language: en-US
-From:   Can Guo <quic_cang@quicinc.com>
-In-Reply-To: <5bd645ba24e1dc17343dd8d7b52fe6ea1eb6333d.camel@medaitek.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 9kSwDpF3jSIo3B4xvnJtNcTYOSQn6mkW
-X-Proofpoint-GUID: 9kSwDpF3jSIo3B4xvnJtNcTYOSQn6mkW
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2022-10-14_05,2022-10-13_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501 mlxscore=0
- impostorscore=0 adultscore=0 phishscore=0 malwarescore=0 suspectscore=0
- spamscore=0 lowpriorityscore=0 clxscore=1011 mlxlogscore=999 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2209130000
- definitions=main-2210140054
+References: <20221011021653.27277-1-gaoyankaigeren@gmail.com>
+ <DM6PR04MB6575AE77585D584652179089FC239@DM6PR04MB6575.namprd04.prod.outlook.com>
+ <CAFN68yVajOkV++gCp-y1+SD5VOKLgUeBhfgskrJZOX5dfGi07A@mail.gmail.com>
+ <bee1807b7d072b221c44ac8c2ed8064939d33696.camel@gmail.com>
+ <CAFN68yVdwrECaDvNuok_4V-54UZUJU9+dn5icaiPdj6BXEZuVA@mail.gmail.com> <8678f69aa94003b357c4c8ef42cd6ce5c7487f8d.camel@gmail.com>
+In-Reply-To: <8678f69aa94003b357c4c8ef42cd6ce5c7487f8d.camel@gmail.com>
+From:   =?UTF-8?B?6auY5Lil5Yev?= <gaoyankaigeren@gmail.com>
+Date:   Fri, 14 Oct 2022 18:15:33 +0800
+Message-ID: <CAFN68yUKXquOLqL_6oBRjfDGDT=NgQPF3cpo7bkHyJ1gNTDbZA@mail.gmail.com>
+Subject: Re: [PATCH] ufs: core: Disable auto h8 before ssu
+To:     Bean Huo <huobean@gmail.com>
+Cc:     Avri Altman <Avri.Altman@wdc.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Eddie,
+hi Bean
+Yes, This is the time from when the system enters idle to when auto h8
+is issued.
+This patch is just to ensure that there is no continuous action of
+"auto h8 exit" before dme h8 enter, it has nothing to do with idle
+time.
+The reason I want to ensure this order is because when there is an
+action of "auto h8 exit", most devices take a certain amount of time
+to get the state ready.
+Immediately after the action of "auto h8 exit" is completed and "dme
+h8 enter" is followed, the device will be abnormal.
+And I think it's more of a common patch for all platforms, Patch can
+adapt different vendors,and align to ufshcd_auto_hibern8_enable in
+__ufshcd_wl_resume.
 
-On 10/14/2022 5:08 PM, Eddie Huang wrote:
-> Hi Asutosh,
+Bean Huo <huobean@gmail.com> =E4=BA=8E2022=E5=B9=B410=E6=9C=8814=E6=97=A5=
+=E5=91=A8=E4=BA=94 13:48=E5=86=99=E9=81=93=EF=BC=9A
 >
-> On Wed, 2022-10-05 at 18:06 -0700, Asutosh Das wrote:
->> Define the mcq resources and add support to ioremap
->> the resource regions.
->>
->> Co-developed-by: Can Guo <quic_cang@quicinc.com>
->> Signed-off-by: Can Guo <quic_cang@quicinc.com>
->> Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
->> ---
->>   drivers/ufs/core/ufs-mcq.c | 99
->> ++++++++++++++++++++++++++++++++++++++++++++++
->>   include/ufs/ufshcd.h       | 28 +++++++++++++
->>   2 files changed, 127 insertions(+)
->>
->> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
->> index 659398d..7d0a37a 100644
->> --- a/drivers/ufs/core/ufs-mcq.c
->> +++ b/drivers/ufs/core/ufs-mcq.c
->> @@ -18,6 +18,11 @@
->>   #define UFS_MCQ_NUM_DEV_CMD_QUEUES 1
->>   #define UFS_MCQ_MIN_POLL_QUEUES 0
->>   
->> +#define MCQ_QCFGPTR_MASK	GENMASK(7, 0)
->> +#define MCQ_QCFGPTR_UNIT	0x200
->> +#define MCQ_SQATTR_OFFSET(c) \
->> +	((((c) >> 16) & MCQ_QCFGPTR_MASK) * MCQ_QCFGPTR_UNIT)
->> +#define MCQ_QCFG_SIZE	0x40
->>   
->>   static int rw_queue_count_set(const char *val, const struct
->> kernel_param *kp)
->>   {
->> @@ -67,6 +72,97 @@ module_param_cb(poll_queues,
->> &poll_queue_count_ops, &poll_queues, 0644);
->>   MODULE_PARM_DESC(poll_queues,
->>   		 "Number of poll queues used for r/w. Default value is
->> 1");
->>   
->> +/* Resources */
->> +static const struct ufshcd_res_info ufs_res_info[RES_MAX] = {
->> +	{.name = "ufs_mem",},
->> +	{.name = "mcq",},
->> +	/* Submission Queue DAO */
->> +	{.name = "mcq_sqd",},
->> +	/* Submission Queue Interrupt Status */
->> +	{.name = "mcq_sqis",},
->> +	/* Completion Queue DAO */
->> +	{.name = "mcq_cqd",},
->> +	/* Completion Queue Interrupt Status */
->> +	{.name = "mcq_cqis",},
->> +	/* MCQ vendor specific */
->> +	{.name = "mcq_vs",},
->> +};
->> +
->> +static int ufshcd_mcq_config_resource(struct ufs_hba *hba)
->> +{
->> +	struct platform_device *pdev = to_platform_device(hba->dev);
->> +	struct ufshcd_res_info *res;
->> +	struct resource *res_mem, *res_mcq;
->> +	int i, ret = 0;
->> +
->> +	memcpy(hba->res, ufs_res_info, sizeof(ufs_res_info));
->> +
->> +	for (i = 0; i < RES_MAX; i++) {
->> +		res = &hba->res[i];
->> +		res->resource = platform_get_resource_byname(pdev,
->> +							     IORESOURCE
->> _MEM,
->> +							     res-
->>> name);
->> +		if (!res->resource) {
->> +			dev_info(hba->dev, "Resource %s not
->> provided\n", res->name);
->> +			if (i == RES_UFS)
->> +				return -ENOMEM;
->> +			continue;
->> +		} else if (i == RES_UFS) {
->> +			res_mem = res->resource;
->> +			res->base = hba->mmio_base;
->> +			continue;
->> +		}
->> +
->> +		res->base = devm_ioremap_resource(hba->dev, res-
->>> resource);
->> +		if (IS_ERR(res->base)) {
->> +			dev_err(hba->dev, "Failed to map res %s,
->> err=%d\n",
->> +					 res->name, (int)PTR_ERR(res-
->>> base));
->> +			res->base = NULL;
->> +			ret = PTR_ERR(res->base);
->> +			return ret;
->> +		}
->> +	}
->> +
->> +	/* MCQ resource provided in DT */
->> +	res = &hba->res[RES_MCQ];
->> +	/* Bail if NCQ resource is provided */
->> +	if (res->base)
->> +		goto out;
->> +
->> +	/* Manually allocate MCQ resource from ufs_mem */
->> +	res_mcq = res->resource;
->> +	res_mcq = devm_kzalloc(hba->dev, sizeof(*res_mcq), GFP_KERNEL);
->> +	if (!res_mcq) {
->> +		dev_err(hba->dev, "Failed to allocate MCQ resource\n");
->> +		return ret;
->> +	}
->> +
->> +	res_mcq->start = res_mem->start +
->> +			 MCQ_SQATTR_OFFSET(hba->mcq_capabilities);
->> +	res_mcq->end = res_mcq->start + hba->nr_hw_queues *
->> MCQ_QCFG_SIZE - 1;
->> +	res_mcq->flags = res_mem->flags;
->> +	res_mcq->name = "mcq";
->> +
->> +	ret = insert_resource(&iomem_resource, res_mcq);
->> +	if (ret) {
->> +		dev_err(hba->dev, "Failed to insert MCQ resource,
->> err=%d\n", ret);
->> +		return ret;
->> +	}
->> +
-> Mediatek UFS hardware put MCQ SQ head/tail and SQ IS/IE together (SQ0
-> head, SQ0 tail, SQ0 IS, SQ0 IE, CQ0 head, CQ0 tail....), which means
-> mcq_sqd register range interleave with mcq_sqis. I suggest let vendor
-> customize config mcq resource function to fit vendor's register
-> assignment
-
-In your case, which is similar to ours, you can just provide the res of 
-SQD in DT, then use the
-
-ufshcd_mcq_vops_op_runtime_config() introduced in Patch #8 to configure 
-each operation
-
-and runtime pointers like we are doing in ufs_qcom_op_runtime_config(). 
-Please let us know
-
-if it is not enough for your case.
-
-
-Regards,
-
-Can Guo.
-
-
+> On Fri, 2022-10-14 at 10:44 +0800, =E9=AB=98=E4=B8=A5=E5=87=AF wrote:
+> > " UFSHCI has idle time before bringing Link into hibern8 mode, " I
+> > think  ufs put the link to h8 during the time
 >
-> Regards,
-> Eddie Huang
+>
+> no,  it is ufs controller. see the ufshci spec:
+>
+> "Auto-Hibern8 Idle Timer Value (AH8ITV): This is the timer that UFS
+> subsystem must be idle before UFS host *controller* may put UniPro link
+> into Hibernate state autonomously. The idle timer value is multiplied
+> by the indicated timer scale to yield an absolute timer value. ....
+>
+> ...
+> Any non-zero value will enable Auto-Hibernate idle timer.
+> UFS host controller shall put Unipro link out of Hibernate state when
+> the link communication is required. The mechanism to decide when the
+> Unipro link needs to become active is host controller specific
+> implementation, and is transparent to the software."
 >
 >
