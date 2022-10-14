@@ -2,135 +2,69 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C103C4332F
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 Oct 2022 21:05:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82051C43219
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 Oct 2022 21:28:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229572AbiJNVFx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 14 Oct 2022 17:05:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38864 "EHLO
+        id S229906AbiJNV2Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 14 Oct 2022 17:28:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43916 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229540AbiJNVFx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Oct 2022 17:05:53 -0400
-Received: from mail-pg1-f169.google.com (mail-pg1-f169.google.com [209.85.215.169])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0CB5A107A92;
-        Fri, 14 Oct 2022 14:05:52 -0700 (PDT)
-Received: by mail-pg1-f169.google.com with SMTP id bh13so5351616pgb.4;
-        Fri, 14 Oct 2022 14:05:52 -0700 (PDT)
+        with ESMTP id S229822AbiJNV2X (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Oct 2022 17:28:23 -0400
+Received: from mail-oa1-f54.google.com (mail-oa1-f54.google.com [209.85.160.54])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A48A8C09A5;
+        Fri, 14 Oct 2022 14:28:22 -0700 (PDT)
+Received: by mail-oa1-f54.google.com with SMTP id 586e51a60fabf-1324e7a1284so7331873fac.10;
+        Fri, 14 Oct 2022 14:28:22 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=tQdjRduw+CFfuvJK0CXPPLfls+7XGY4opgOLABTLuDY=;
-        b=N/bCA79e8FA0V8BS2HvojrA1j5xcFqCWpuphJpq60oCly8DQIGE+8bByo62uElS4v3
-         G+Acb9dpTnm7ofxdmgMxPEC7evFEq/82JqGooB/aorOO46P6r3MxXbdYRePlYwB17nFY
-         bk+NR3L3gAKh65bkBPulk70Cj4a2vRtqW2zqayZ820CgkB4CcqfKD15g5szBFEzFgVEd
-         g8LD9KKLub9emP5g5LKzzW4JBrAa5QigGnE4gODHkUZIC7kfN+8d0qJsDyjbvnfhEQ0x
-         nMoqwmmUBYXXMH5AS7K5Y6nKgl2y6w4JRoiyFG5nDeN8u48oh0W7QsubFdx55NJ1dad3
-         yxmA==
-X-Gm-Message-State: ACrzQf1+JlXFtENjJVfrbeaxHjl2bfrwKRDhNQVeSKR+vTtzCHuyV7NK
-        hpFJ/eN1EU9wfr4QUheGQeI=
-X-Google-Smtp-Source: AMsMyM4bCuI6XCq5wMjR6w97z4hRTdbmvTdxI8s4u0hHxG0adRaa+vuv0oFv8QHIcxwxXCwZLQRPcA==
-X-Received: by 2002:a63:e158:0:b0:464:8d6:8b91 with SMTP id h24-20020a63e158000000b0046408d68b91mr6064306pgk.124.1665781551376;
-        Fri, 14 Oct 2022 14:05:51 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:7bd3:5500:b9cd:d90d? ([2620:15c:211:201:7bd3:5500:b9cd:d90d])
-        by smtp.gmail.com with ESMTPSA id j5-20020a625505000000b00562019b961asm2152231pfb.188.2022.10.14.14.05.49
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 14 Oct 2022 14:05:50 -0700 (PDT)
-Message-ID: <925af9f5-b05b-1b61-c905-d19cdc54ce19@acm.org>
-Date:   Fri, 14 Oct 2022 14:05:48 -0700
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=8VDrG8gwWiSTL+8w326fUr7NJNMlWkK+uBEJMrv9dLE=;
+        b=CxBEvHGDeCwYYKxgPbafeEo3a7D3melvuYOj6ZR+IixTmUdV728vpv3lI67AxIIuW5
+         BzhGBpiphju7SgZqZl24OWmNUC4d/NhXbLgViKwIc96HcB0JfsW0OakdTS9v3Zxo8efH
+         /GORaKjnQL6nMiLQaWapBtq3taOt/Lk0O0miUlLbLtmBiaOXFrs5e65bDcHDDljP7o50
+         JaF21KFkq0oQhJBbaz8fVtwVRbN3Qfd9idBb39CbNA0vQS6vYu55ZiqB5PNkVI38Zr4t
+         f2f8Jeproc7RsCfAFlHlAkYDOfmVh7yLfRZ3DKBAvL4IzarxPa33AB2S6KFZ6dJHVZIT
+         CiCw==
+X-Gm-Message-State: ACrzQf1dcVKX+nsuqCm4p0InVLWiOCo1JhxQubk9G826gkdfmbYkWVIm
+        Hss2icqEzRZcl49kljGMXw==
+X-Google-Smtp-Source: AMsMyM7qrSv9+CDGloU5Hq3jf9lh0GGMGCkyV0sSOJsdTgoMBsbPNUaD8dDfE17wid9x0U6VhXSLbA==
+X-Received: by 2002:a05:6870:9599:b0:132:f754:4ffa with SMTP id k25-20020a056870959900b00132f7544ffamr3826502oao.266.1665782901843;
+        Fri, 14 Oct 2022 14:28:21 -0700 (PDT)
+Received: from robh_at_kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
+        by smtp.gmail.com with ESMTPSA id r6-20020a056830418600b00661b6e1eb3csm1679537otu.38.2022.10.14.14.28.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 14 Oct 2022 14:28:21 -0700 (PDT)
+Received: (nullmailer pid 2932278 invoked by uid 1000);
+        Fri, 14 Oct 2022 21:28:22 -0000
+Date:   Fri, 14 Oct 2022 16:28:22 -0500
+From:   Rob Herring <robh@kernel.org>
+To:     Matt Ranostay <mranostay@ti.com>
+Cc:     krzysztof.kozlowski+dt@linaro.org, linux-scsi@vger.kernel.org,
+        vigneshr@ti.com, devicetree@vger.kernel.org, robh+dt@kernel.org
+Subject: Re: [PATCH] dt-bindings: ufs: cdns,ufshc: add missing dma-coherent
+ field
+Message-ID: <166578290097.2932204.9966446989931384399.robh@kernel.org>
+References: <20221013194559.128643-1-mranostay@ti.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.13.0
-Subject: Re: [PATCH v2 2/2] scsi: ufs: core: Cleanup ufshcd_slave_alloc()
-Content-Language: en-US
-To:     Bean Huo <beanhuo@iokpp.de>, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, asutoshd@codeaurora.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, tomas.winkler@intel.com, cang@codeaurora.org,
-        daejun7.park@samsung.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20221010092937.520013-1-beanhuo@iokpp.de>
- <20221010092937.520013-3-beanhuo@iokpp.de>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20221010092937.520013-3-beanhuo@iokpp.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221013194559.128643-1-mranostay@ti.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/10/22 02:29, Bean Huo wrote:
-> From: Bean Huo <beanhuo@micron.com>
+On Thu, 13 Oct 2022 12:45:59 -0700, Matt Ranostay wrote:
+> Add missing dma-coherent property to schema which avoids the following warnings
 > 
-> Combine ufshcd_get_lu_power_on_wp_status() and ufshcd_set_queue_depth()
-> into one single ufshcd_lu_init(), so that we only need to read the LUN
-> descriptor once to replace the original twice.
+> ufs-wrapper@4e80000: ufs@4e84000: Unevaluated properties are not allowed ('dma-coherent' was unexpected)
+> 
+> Signed-off-by: Matt Ranostay <mranostay@ti.com>
+> ---
+>  Documentation/devicetree/bindings/ufs/cdns,ufshc.yaml | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
 
-The following part can probably be left out from the patch description 
-without reducing clarity: " to replace the original twice".
-
-> +/**
-> + * ufshcd_lu_power_on_wp_init - Initialize LU's power on write protect state
-> + * @hba: per-adapter instance
-> + * @sdev: pointer to SCSI device
-> + * @b_lu_write_protect: bLUWriteProtect value read from LU descriptor
-> + */
-> +static inline void ufshcd_lu_power_on_wp_init(struct ufs_hba *hba, const struct scsi_device *sdev,
-> +					      u8 b_lu_write_protect)
-> +{
-> +	if (hba->dev_info.f_power_on_wp_en && !hba->dev_info.is_lu_power_on_wp &&
-> +	    b_lu_write_protect == UFS_LU_POWER_ON_WP)
-> +		hba->dev_info.is_lu_power_on_wp = true;
-> +}
-
-The body of this function is only three lines long and this function is 
-only called once. Are you sure that you want a separate function instead 
-of inlining this function in its only caller?
-
-> +static void ufshcd_lu_init(struct ufs_hba *hba, struct scsi_device *sdev)
-> +{
-> +	int ret;
-> +	int len;
-> +	u8 lun;
-> +	u8 lun_qdepth;
-> +	u8 *desc_buf;
-
-Most kernel developers these days order local variable declarations from 
-longest to shortest line ("reverse Christmas tree").
-
-> +	lun_qdepth = hba->nutrs;
-> +	lun = ufshcd_scsi_to_upiu_lun(sdev->lun);
-> +	len = hba->desc_size[QUERY_DESC_IDN_UNIT];
-> +
-> +	desc_buf = kmalloc(len, GFP_KERNEL);
-> +	if (!desc_buf)
-> +		goto set_qdepth;
-> +
-> +	ret = ufshcd_read_unit_desc_param(hba, lun, 0, desc_buf, len);
-> +	if (ret == -EOPNOTSUPP)
-> +		/* If LU doesn't support unit descriptor, its queue depth is set to 1 */
-> +		lun_qdepth = 1;
-> +	else if (desc_buf[UNIT_DESC_PARAM_LU_Q_DEPTH])
-> +		lun_qdepth = min_t(int, desc_buf[UNIT_DESC_PARAM_LU_Q_DEPTH], hba->nutrs);
-
-ufshcd_read_unit_desc_param() can return fewer bytes than requested. How 
-about modifying ufshcd_read_unit_desc_param() such that it returns the 
-number of bytes that has been copied and using that return value above 
-to check whether at least UNIT_DESC_PARAM_LU_Q_DEPTH bytes have been 
-initialized in desc_buf?
-
-> +	/*
-> +	 * According to UFS device spec, The write protection mode is only supported by normal LU,
-> +	 * not supported by WLUN.
-> +	 */
-> +	if (!ret && lun < hba->dev_info.max_lu_supported)
-> +		ufshcd_lu_power_on_wp_init(hba, sdev, desc_buf[UNIT_DESC_PARAM_LU_WR_PROTECT]);
-
-Please insert an if (ret < 0) check after the 
-ufshcd_read_unit_desc_param() call and jump to the kfree() statement if 
-ret < 0 instead of checking several times whether or not ret < 0.
-
-Thanks,
-
-Bart.
+Applied, thanks!
