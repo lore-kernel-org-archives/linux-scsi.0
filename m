@@ -2,97 +2,135 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A05EC433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 Oct 2022 20:57:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C103C4332F
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 Oct 2022 21:05:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229786AbiJNU5W (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 14 Oct 2022 16:57:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43724 "EHLO
+        id S229572AbiJNVFx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 14 Oct 2022 17:05:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38864 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229540AbiJNU5U (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Oct 2022 16:57:20 -0400
-Received: from mail-ej1-x62a.google.com (mail-ej1-x62a.google.com [IPv6:2a00:1450:4864:20::62a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D0031C493A;
-        Fri, 14 Oct 2022 13:57:19 -0700 (PDT)
-Received: by mail-ej1-x62a.google.com with SMTP id fy4so12991269ejc.5;
-        Fri, 14 Oct 2022 13:57:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=gTPmzPxOnY51QoZSyHNdoQWICRe1EvMKuBtV8mL2WRk=;
-        b=Rq81klq9oTpXEBBWyMNDfG0ST2gxY3NXqahkyIdk00VLzheWDxTeNU9H3I7mh0I8Z5
-         YdditzDGZSdpJbPTDFRtca9Bvxdt10LNDEI4sTIy/tQFZFaVMm3PXrMp7pL+ySvijDWa
-         cxVsH9XsOsGMAXYlf4djn0pZH+DanJt8Y+Izue3V/F/SQn/hg276bQdJU0WK0SoJlWQV
-         Isy0wMErCkOBB5zyXx5EYNXlBbPl6tZslV2wlD8//6TfI+o25VArgYBAmHbM1ChYtc5s
-         CvTUjQ0wBahU4W2C7lW6jxqYaI2Lep3b8niCtNwlOhhOLAejvtGwxG2SmkOqQMocsR9u
-         fBEg==
+        with ESMTP id S229540AbiJNVFx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Oct 2022 17:05:53 -0400
+Received: from mail-pg1-f169.google.com (mail-pg1-f169.google.com [209.85.215.169])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0CB5A107A92;
+        Fri, 14 Oct 2022 14:05:52 -0700 (PDT)
+Received: by mail-pg1-f169.google.com with SMTP id bh13so5351616pgb.4;
+        Fri, 14 Oct 2022 14:05:52 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=gTPmzPxOnY51QoZSyHNdoQWICRe1EvMKuBtV8mL2WRk=;
-        b=GPhQGF31ZhK4wejzk7hmkDwVqYlGP33akcOAFg/lKfKy9fvA4R+q+VND2LZyPaNO+I
-         w0wjJcwNQ2YOJeK9GIJt7NIhdxVtBGiwOXSvU5qxOZXyDJT5LSXzD0mbCM+8GCUH6NPY
-         7HxwB+VehLsuXhLCLf1uIZ3okICkZI0TbPQy+Pko+HRD5OJEDTrxTW5FensecrvsL7Xo
-         +EqVufaTOQDRHAdNbOgf3R1T28eIDudiq7apRV0dWcvsYNQczcFMc+DxZMguYFRcHKIb
-         sGmUNb4tY9OBD7ovc0bM19422ivWs9zSIEA+vjaSic2mJ944984i69zAtKMq7Ec/p3uX
-         bfJA==
-X-Gm-Message-State: ACrzQf2uw1QL82i5KmC1JDV5yN7wZlqRitiLi7E3wynNXpclLfhk1A1Y
-        +h9waoZYu7G2YCKt0LP0E8U=
-X-Google-Smtp-Source: AMsMyM6aVPeke+Oypo2/VWrATxyqTprNVBWBBdzKUjApbtJmtOWUuouDnbxqNovrwKeWC+LCSg2JtA==
-X-Received: by 2002:a17:906:4795:b0:787:434f:d761 with SMTP id cw21-20020a170906479500b00787434fd761mr4858277ejc.597.1665781038088;
-        Fri, 14 Oct 2022 13:57:18 -0700 (PDT)
-Received: from [192.168.3.3] (p4fd591a2.dip0.t-ipconnect.de. [79.213.145.162])
-        by smtp.googlemail.com with ESMTPSA id p4-20020a056402074400b0045bccd8ab83sm2468909edy.1.2022.10.14.13.57.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 Oct 2022 13:57:17 -0700 (PDT)
-Message-ID: <710292d355b7b0872f178206468769a859755ce4.camel@gmail.com>
-Subject: Re: [PATCH v2 1/2] scsi: ufs: core: Remove unnecessary if statement
-From:   Bean Huo <huobean@gmail.com>
-To:     Bart Van Assche <bvanassche@acm.org>, alim.akhtar@samsung.com,
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=tQdjRduw+CFfuvJK0CXPPLfls+7XGY4opgOLABTLuDY=;
+        b=N/bCA79e8FA0V8BS2HvojrA1j5xcFqCWpuphJpq60oCly8DQIGE+8bByo62uElS4v3
+         G+Acb9dpTnm7ofxdmgMxPEC7evFEq/82JqGooB/aorOO46P6r3MxXbdYRePlYwB17nFY
+         bk+NR3L3gAKh65bkBPulk70Cj4a2vRtqW2zqayZ820CgkB4CcqfKD15g5szBFEzFgVEd
+         g8LD9KKLub9emP5g5LKzzW4JBrAa5QigGnE4gODHkUZIC7kfN+8d0qJsDyjbvnfhEQ0x
+         nMoqwmmUBYXXMH5AS7K5Y6nKgl2y6w4JRoiyFG5nDeN8u48oh0W7QsubFdx55NJ1dad3
+         yxmA==
+X-Gm-Message-State: ACrzQf1+JlXFtENjJVfrbeaxHjl2bfrwKRDhNQVeSKR+vTtzCHuyV7NK
+        hpFJ/eN1EU9wfr4QUheGQeI=
+X-Google-Smtp-Source: AMsMyM4bCuI6XCq5wMjR6w97z4hRTdbmvTdxI8s4u0hHxG0adRaa+vuv0oFv8QHIcxwxXCwZLQRPcA==
+X-Received: by 2002:a63:e158:0:b0:464:8d6:8b91 with SMTP id h24-20020a63e158000000b0046408d68b91mr6064306pgk.124.1665781551376;
+        Fri, 14 Oct 2022 14:05:51 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:7bd3:5500:b9cd:d90d? ([2620:15c:211:201:7bd3:5500:b9cd:d90d])
+        by smtp.gmail.com with ESMTPSA id j5-20020a625505000000b00562019b961asm2152231pfb.188.2022.10.14.14.05.49
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 14 Oct 2022 14:05:50 -0700 (PDT)
+Message-ID: <925af9f5-b05b-1b61-c905-d19cdc54ce19@acm.org>
+Date:   Fri, 14 Oct 2022 14:05:48 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.13.0
+Subject: Re: [PATCH v2 2/2] scsi: ufs: core: Cleanup ufshcd_slave_alloc()
+Content-Language: en-US
+To:     Bean Huo <beanhuo@iokpp.de>, alim.akhtar@samsung.com,
         avri.altman@wdc.com, asutoshd@codeaurora.org, jejb@linux.ibm.com,
         martin.petersen@oracle.com, stanley.chu@mediatek.com,
         beanhuo@micron.com, tomas.winkler@intel.com, cang@codeaurora.org,
         daejun7.park@samsung.com
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Date:   Fri, 14 Oct 2022 22:57:17 +0200
-In-Reply-To: <ffc4250d-7446-40eb-9218-6925f44a69ff@acm.org>
 References: <20221010092937.520013-1-beanhuo@iokpp.de>
-         <20221010092937.520013-2-beanhuo@iokpp.de>
-         <a1cd6719-a743-fc96-e0e7-364a52b62952@acm.org>
-         <d06a264c4544a23ccccd016c6797d889db526b64.camel@iokpp.de>
-         <ffc4250d-7446-40eb-9218-6925f44a69ff@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu1 
-MIME-Version: 1.0
+ <20221010092937.520013-3-beanhuo@iokpp.de>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20221010092937.520013-3-beanhuo@iokpp.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 2022-10-14 at 13:41 -0700, Bart Van Assche wrote:
-> On 10/14/22 12:20, Bean Huo wrote:
-> > I am working on the Advanced RPMB, and trying to seperate normal
-> > unit
-> > descriptor and RPMB unit descriptor, will let you know if it is
-> > possible. or if you know the solution, please let me know, thanks.
->=20
-> Hi Bean,
->=20
-> How about setting .is_visible member of struct attribute_group in the
-> UFS
-> driver and letting that callback decide which sysfs attributes are
-> visible
-> depending on the logical unit type?
->=20
-> Thanks,
->=20
-> Bart.
+On 10/10/22 02:29, Bean Huo wrote:
+> From: Bean Huo <beanhuo@micron.com>
+> 
+> Combine ufshcd_get_lu_power_on_wp_status() and ufshcd_set_queue_depth()
+> into one single ufshcd_lu_init(), so that we only need to read the LUN
+> descriptor once to replace the original twice.
 
-Thanks, it looks like what I expected, I'll verify it further.
+The following part can probably be left out from the patch description 
+without reducing clarity: " to replace the original twice".
 
-Kind regards,
-Bean
+> +/**
+> + * ufshcd_lu_power_on_wp_init - Initialize LU's power on write protect state
+> + * @hba: per-adapter instance
+> + * @sdev: pointer to SCSI device
+> + * @b_lu_write_protect: bLUWriteProtect value read from LU descriptor
+> + */
+> +static inline void ufshcd_lu_power_on_wp_init(struct ufs_hba *hba, const struct scsi_device *sdev,
+> +					      u8 b_lu_write_protect)
+> +{
+> +	if (hba->dev_info.f_power_on_wp_en && !hba->dev_info.is_lu_power_on_wp &&
+> +	    b_lu_write_protect == UFS_LU_POWER_ON_WP)
+> +		hba->dev_info.is_lu_power_on_wp = true;
+> +}
+
+The body of this function is only three lines long and this function is 
+only called once. Are you sure that you want a separate function instead 
+of inlining this function in its only caller?
+
+> +static void ufshcd_lu_init(struct ufs_hba *hba, struct scsi_device *sdev)
+> +{
+> +	int ret;
+> +	int len;
+> +	u8 lun;
+> +	u8 lun_qdepth;
+> +	u8 *desc_buf;
+
+Most kernel developers these days order local variable declarations from 
+longest to shortest line ("reverse Christmas tree").
+
+> +	lun_qdepth = hba->nutrs;
+> +	lun = ufshcd_scsi_to_upiu_lun(sdev->lun);
+> +	len = hba->desc_size[QUERY_DESC_IDN_UNIT];
+> +
+> +	desc_buf = kmalloc(len, GFP_KERNEL);
+> +	if (!desc_buf)
+> +		goto set_qdepth;
+> +
+> +	ret = ufshcd_read_unit_desc_param(hba, lun, 0, desc_buf, len);
+> +	if (ret == -EOPNOTSUPP)
+> +		/* If LU doesn't support unit descriptor, its queue depth is set to 1 */
+> +		lun_qdepth = 1;
+> +	else if (desc_buf[UNIT_DESC_PARAM_LU_Q_DEPTH])
+> +		lun_qdepth = min_t(int, desc_buf[UNIT_DESC_PARAM_LU_Q_DEPTH], hba->nutrs);
+
+ufshcd_read_unit_desc_param() can return fewer bytes than requested. How 
+about modifying ufshcd_read_unit_desc_param() such that it returns the 
+number of bytes that has been copied and using that return value above 
+to check whether at least UNIT_DESC_PARAM_LU_Q_DEPTH bytes have been 
+initialized in desc_buf?
+
+> +	/*
+> +	 * According to UFS device spec, The write protection mode is only supported by normal LU,
+> +	 * not supported by WLUN.
+> +	 */
+> +	if (!ret && lun < hba->dev_info.max_lu_supported)
+> +		ufshcd_lu_power_on_wp_init(hba, sdev, desc_buf[UNIT_DESC_PARAM_LU_WR_PROTECT]);
+
+Please insert an if (ret < 0) check after the 
+ufshcd_read_unit_desc_param() call and jump to the kfree() statement if 
+ret < 0 instead of checking several times whether or not ret < 0.
+
+Thanks,
+
+Bart.
