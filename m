@@ -2,88 +2,97 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C66ACC4332F
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 Oct 2022 20:45:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A05EC433FE
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 Oct 2022 20:57:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231526AbiJNUpv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 14 Oct 2022 16:45:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40268 "EHLO
+        id S229786AbiJNU5W (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 14 Oct 2022 16:57:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43724 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230392AbiJNUpt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Oct 2022 16:45:49 -0400
-Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0AC09D03AB;
-        Fri, 14 Oct 2022 13:45:46 -0700 (PDT)
-Received: by mail-pf1-f175.google.com with SMTP id y1so5964540pfr.3;
-        Fri, 14 Oct 2022 13:45:46 -0700 (PDT)
+        with ESMTP id S229540AbiJNU5U (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Oct 2022 16:57:20 -0400
+Received: from mail-ej1-x62a.google.com (mail-ej1-x62a.google.com [IPv6:2a00:1450:4864:20::62a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D0031C493A;
+        Fri, 14 Oct 2022 13:57:19 -0700 (PDT)
+Received: by mail-ej1-x62a.google.com with SMTP id fy4so12991269ejc.5;
+        Fri, 14 Oct 2022 13:57:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=gTPmzPxOnY51QoZSyHNdoQWICRe1EvMKuBtV8mL2WRk=;
+        b=Rq81klq9oTpXEBBWyMNDfG0ST2gxY3NXqahkyIdk00VLzheWDxTeNU9H3I7mh0I8Z5
+         YdditzDGZSdpJbPTDFRtca9Bvxdt10LNDEI4sTIy/tQFZFaVMm3PXrMp7pL+ySvijDWa
+         cxVsH9XsOsGMAXYlf4djn0pZH+DanJt8Y+Izue3V/F/SQn/hg276bQdJU0WK0SoJlWQV
+         Isy0wMErCkOBB5zyXx5EYNXlBbPl6tZslV2wlD8//6TfI+o25VArgYBAmHbM1ChYtc5s
+         CvTUjQ0wBahU4W2C7lW6jxqYaI2Lep3b8niCtNwlOhhOLAejvtGwxG2SmkOqQMocsR9u
+         fBEg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=V6F4cqScoAnyG62i61m4oJ0MGIQvNAp6Biva4swYu9g=;
-        b=CPR1GPSR9p8XPYplL4jnpZDVA8mVxl/7kICuPJ/Z5OC6ZVbDvEMGd9xs/YuWwFptwu
-         7SIT4YEuWo5Ev4UQYhXcag2E2jThUwZKhU+MouhdFsMFGM+UATnTXTxRp/wCkv4jY0uD
-         zGCjQu/qid5KfRdVN4BRefUsoLsosP+k3bpyIj56s481GMGQctYSlw3zGN9XScAUu4Al
-         bv+wzxPF6ywWk06xOrkDs6Z4I0uR5e8zMELDWAyyE/+PFTeC85UzK4uBjVzKCALv4qj6
-         a8N4Tzb0JdpNH4wYNtKcgLNbGhF6sItGMkxWX/830nDEbmo6htJBe/X5ZU9QTvQ4X+yS
-         7DiA==
-X-Gm-Message-State: ACrzQf2wUD/QG79wsst+Dp6/caD4XWYv4EL6OvT4nmrkLTDfgSJe1xAJ
-        5FjP7/MsEYDWJe1UtQ9++kg=
-X-Google-Smtp-Source: AMsMyM5MKBbUdqmwvx5/5F4v7bmbYZsgm3kn8yLzjJML5o9xvFokP77MQT0uLCsCIJAB97rQdw2YQQ==
-X-Received: by 2002:a63:1353:0:b0:457:3e87:7883 with SMTP id 19-20020a631353000000b004573e877883mr6039567pgt.172.1665780345440;
-        Fri, 14 Oct 2022 13:45:45 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:7bd3:5500:b9cd:d90d? ([2620:15c:211:201:7bd3:5500:b9cd:d90d])
-        by smtp.gmail.com with ESMTPSA id c12-20020a170902d48c00b0017a032d7ae4sm2147835plg.104.2022.10.14.13.45.42
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 14 Oct 2022 13:45:44 -0700 (PDT)
-Message-ID: <16bee8e7-a9ec-0847-9d89-92484b0399a0@acm.org>
-Date:   Fri, 14 Oct 2022 13:45:41 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.13.0
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=gTPmzPxOnY51QoZSyHNdoQWICRe1EvMKuBtV8mL2WRk=;
+        b=GPhQGF31ZhK4wejzk7hmkDwVqYlGP33akcOAFg/lKfKy9fvA4R+q+VND2LZyPaNO+I
+         w0wjJcwNQ2YOJeK9GIJt7NIhdxVtBGiwOXSvU5qxOZXyDJT5LSXzD0mbCM+8GCUH6NPY
+         7HxwB+VehLsuXhLCLf1uIZ3okICkZI0TbPQy+Pko+HRD5OJEDTrxTW5FensecrvsL7Xo
+         +EqVufaTOQDRHAdNbOgf3R1T28eIDudiq7apRV0dWcvsYNQczcFMc+DxZMguYFRcHKIb
+         sGmUNb4tY9OBD7ovc0bM19422ivWs9zSIEA+vjaSic2mJ944984i69zAtKMq7Ec/p3uX
+         bfJA==
+X-Gm-Message-State: ACrzQf2uw1QL82i5KmC1JDV5yN7wZlqRitiLi7E3wynNXpclLfhk1A1Y
+        +h9waoZYu7G2YCKt0LP0E8U=
+X-Google-Smtp-Source: AMsMyM6aVPeke+Oypo2/VWrATxyqTprNVBWBBdzKUjApbtJmtOWUuouDnbxqNovrwKeWC+LCSg2JtA==
+X-Received: by 2002:a17:906:4795:b0:787:434f:d761 with SMTP id cw21-20020a170906479500b00787434fd761mr4858277ejc.597.1665781038088;
+        Fri, 14 Oct 2022 13:57:18 -0700 (PDT)
+Received: from [192.168.3.3] (p4fd591a2.dip0.t-ipconnect.de. [79.213.145.162])
+        by smtp.googlemail.com with ESMTPSA id p4-20020a056402074400b0045bccd8ab83sm2468909edy.1.2022.10.14.13.57.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 14 Oct 2022 13:57:17 -0700 (PDT)
+Message-ID: <710292d355b7b0872f178206468769a859755ce4.camel@gmail.com>
 Subject: Re: [PATCH v2 1/2] scsi: ufs: core: Remove unnecessary if statement
-Content-Language: en-US
-To:     Bean Huo <huobean@gmail.com>, alim.akhtar@samsung.com,
+From:   Bean Huo <huobean@gmail.com>
+To:     Bart Van Assche <bvanassche@acm.org>, alim.akhtar@samsung.com,
         avri.altman@wdc.com, asutoshd@codeaurora.org, jejb@linux.ibm.com,
         martin.petersen@oracle.com, stanley.chu@mediatek.com,
         beanhuo@micron.com, tomas.winkler@intel.com, cang@codeaurora.org,
         daejun7.park@samsung.com
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date:   Fri, 14 Oct 2022 22:57:17 +0200
+In-Reply-To: <ffc4250d-7446-40eb-9218-6925f44a69ff@acm.org>
 References: <20221010092937.520013-1-beanhuo@iokpp.de>
- <20221010092937.520013-2-beanhuo@iokpp.de>
- <a1cd6719-a743-fc96-e0e7-364a52b62952@acm.org>
- <227f117ee9491cc9d2ae4bb2211a99ccd1dd3c21.camel@gmail.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <227f117ee9491cc9d2ae4bb2211a99ccd1dd3c21.camel@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+         <20221010092937.520013-2-beanhuo@iokpp.de>
+         <a1cd6719-a743-fc96-e0e7-364a52b62952@acm.org>
+         <d06a264c4544a23ccccd016c6797d889db526b64.camel@iokpp.de>
+         <ffc4250d-7446-40eb-9218-6925f44a69ff@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu1 
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/14/22 13:30, Bean Huo wrote:
-> I double-checked the changelog and the stack overflow issue was double
-> fixed by your commit:
-> 
-> commit d3d9c4570285 ("scsi: ufs: Fix memory corruption by
-> ufshcd_read_desc_param()"),
-> 
-> For example, if the user wants to read wb_buf_alloc_units in the RPMB
-> unit descriptor,
-> 
-> parameter offset = 41, parameter size = 4,
-> buff_len = 45;
-> 
-> After ufshcd_query_descriptor_retry(), buff_len will be updated to 35.
-> 
-> param_offset > buff_len, then -EINVAL will be returned.
-> 
-> So we can safely remove this check, and if you still have concerns, I
-> can verify when I get back to the office.
+On Fri, 2022-10-14 at 13:41 -0700, Bart Van Assche wrote:
+> On 10/14/22 12:20, Bean Huo wrote:
+> > I am working on the Advanced RPMB, and trying to seperate normal
+> > unit
+> > descriptor and RPMB unit descriptor, will let you know if it is
+> > possible. or if you know the solution, please let me know, thanks.
+>=20
+> Hi Bean,
+>=20
+> How about setting .is_visible member of struct attribute_group in the
+> UFS
+> driver and letting that callback decide which sysfs attributes are
+> visible
+> depending on the logical unit type?
+>=20
+> Thanks,
+>=20
+> Bart.
 
-Hi Bean,
+Thanks, it looks like what I expected, I'll verify it further.
 
-Thank you for having looked this up. I agree with the above.
-
-Bart.
+Kind regards,
+Bean
