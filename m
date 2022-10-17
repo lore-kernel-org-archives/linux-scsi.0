@@ -2,182 +2,99 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E756AC433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Oct 2022 16:57:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 142A1C433FE
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Oct 2022 17:11:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229926AbiJQQ5E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 Oct 2022 12:57:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45272 "EHLO
+        id S230055AbiJQRLz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 Oct 2022 13:11:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49960 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229687AbiJQQ5D (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Oct 2022 12:57:03 -0400
-Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.53])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66B7A5F23D;
-        Mon, 17 Oct 2022 09:57:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1666025812;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=3Sabb/ug9H7p9DkKJIV5v2qLEbScGY4rh4praJux+7c=;
-    b=D9TkxMcida7gF0Hc5Q87BUnm7Z3qbDz0w7I/JUTm8fRqkD10Nex4PRvg26G+lSbkO7
-    z3AvDZWravlZVFhjVXSwS8MuGVH67ChxlyZT+7YKShcM0AFYmBnFULnXCD5jjlp3dEyU
-    djd2ql91c+BvjIzkww+pfhfp1sRUggj1cZQf3TkyzFc4BaRFl34GVALP4qWyeYpqrlwp
-    ohiFc6kR0O6SY2LtflyDGlJicMNGFlooQNEK1QNd0j9oYMnUEIDrBgSPjSkJESl79wOK
-    kUXjjqhGrzTETkwCP6F+5xPnyixuGuLQwsFdQyvHmtMyaDOyQ+Td3tDIHCgDm20Pw6oa
-    RXDg==
-Authentication-Results: strato.com;
-    dkim=none
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSeBwhhSxarlUcu05JCAPyj3VPAceccYJs0uz"
-X-RZG-CLASS-ID: mo00
-Received: from [10.176.234.249]
-    by smtp.strato.de (RZmta 48.2.0 AUTH)
-    with ESMTPSA id zad98cy9HGunTIg
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-        (Client did not present a certificate);
-    Mon, 17 Oct 2022 18:56:49 +0200 (CEST)
-Message-ID: <f44cd84b206ae67e47ad101a1e85d4db40dcb680.camel@iokpp.de>
-Subject: Re: [PATCH v2 2/2] scsi: ufs: core: Cleanup ufshcd_slave_alloc()
-From:   Bean Huo <beanhuo@iokpp.de>
-To:     Bart Van Assche <bvanassche@acm.org>, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, asutoshd@codeaurora.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, tomas.winkler@intel.com, cang@codeaurora.org,
-        daejun7.park@samsung.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Date:   Mon, 17 Oct 2022 18:56:49 +0200
-In-Reply-To: <925af9f5-b05b-1b61-c905-d19cdc54ce19@acm.org>
-References: <20221010092937.520013-1-beanhuo@iokpp.de>
-         <20221010092937.520013-3-beanhuo@iokpp.de>
-         <925af9f5-b05b-1b61-c905-d19cdc54ce19@acm.org>
-Organization: IOKPP
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu1 
+        with ESMTP id S229909AbiJQRLy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Oct 2022 13:11:54 -0400
+Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A87C6FA0D
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Oct 2022 10:11:53 -0700 (PDT)
+Received: by mail-pf1-x435.google.com with SMTP id g28so11663638pfk.8
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Oct 2022 10:11:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=0tBsZ76gwc8/70eg063yamfq95Tc780KUhRC9NyQyUU=;
+        b=JfqX/tWXuWfol9Fbo7MMWPEIFekj8VCvbIam0iehMAxcW9tuJ0AW88tOYP1WRwJvVR
+         8MKwYYrzg1NOd9uiLXL/mItJH+Ryi/C3tcDrgRmOwmQTCqtVXWncmqhdarpXTD6ljyKW
+         N9Z8PbF/v6gBfq2SYCKJVrmfFcJVeDP9Vm4f0=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=0tBsZ76gwc8/70eg063yamfq95Tc780KUhRC9NyQyUU=;
+        b=1jYM+6PoXpC7cyS9FUyhr3gqpWofdX2iZgfZeIfum/8WU39wgpu3exwy5WwFpEHRlI
+         M4Qax1y5of5U6LDkvBpaNQ213Mg8wYGkakOEY+imQRi+yDSZ4isSW8+o219/doprcmj5
+         4vXp8HdMECcs6FL2UrJdbTfdEo4+DAty3Xz1qP8nbXxhQ6l933L1pwe6E4xvGqwg/jrf
+         /C2XR9ZgiMoW+B4StseMQU5obqydy6XePx0iliq1NQP9sZvoCKIpeZwAwd496c5l8HZI
+         qZfObf55/whw9uxt/NNqj6k/AeZGMS1GEC53t6i2CyE6QHAKHAJj+myauak7dQowEU98
+         ED6Q==
+X-Gm-Message-State: ACrzQf1GUL4TdcNXSUrLrzEWbfmU/Qhf+CU8WooQfhhVSfSTmAGaOE66
+        WF/Jx0il7PHNETi1nck2F2cXjAqkjTxX3Q==
+X-Google-Smtp-Source: AMsMyM74ewJl164Y2UsNgLzMWBSmVqg3OL997xAOzqDhQPpx44i3PgLUYOrFqW4PdN9S9F71YSELuQ==
+X-Received: by 2002:a63:4a53:0:b0:439:3c80:e053 with SMTP id j19-20020a634a53000000b004393c80e053mr11584993pgl.3.1666026712543;
+        Mon, 17 Oct 2022 10:11:52 -0700 (PDT)
+Received: from khazhy-linux.svl.corp.google.com ([2620:15c:2d4:203:a9cb:592c:5760:8872])
+        by smtp.gmail.com with ESMTPSA id b8-20020a17090a7ac800b00205d70ccfeesm9706025pjl.33.2022.10.17.10.11.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 17 Oct 2022 10:11:52 -0700 (PDT)
+From:   Khazhismel Kumykov <khazhy@chromium.org>
+X-Google-Original-From: Khazhismel Kumykov <khazhy@google.com>
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Gabriel Krisman Bertazi <krisman@collabora.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Khazhismel Kumykov <khazhy@google.com>
+Subject: [PATCH] scsi: fix crash in scsi_remove_host after alloc failure
+Date:   Mon, 17 Oct 2022 10:11:47 -0700
+Message-Id: <20221017171147.3300575-1-khazhy@google.com>
+X-Mailer: git-send-email 2.38.0.413.g74048e4d9e-goog
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart,
+If transport_register_device returns error, shost_gendev has already
+been cleaned up - however since we ignore the error device setup
+continues happily. We will eventually call transport_unregister_device,
+attempting to delete shost_gendev again, resulting in a crash.
 
-I took all your suggestions and will send new version patch tomorrow
-when the autotest is complete.
+It looks like when this cleanup behavior was added, iscsi was updated,
+but scsi was missed.
 
-thanks,
-Bean
+Fixes: cd7ea70bb00a ("scsi: drivers: base: Propagate errors through the transport component")
 
-On Fri, 2022-10-14 at 14:05 -0700, Bart Van Assche wrote:
-> On 10/10/22 02:29, Bean Huo wrote:
-> > From: Bean Huo <beanhuo@micron.com>
-> >=20
-> > Combine ufshcd_get_lu_power_on_wp_status() and
-> > ufshcd_set_queue_depth()
-> > into one single ufshcd_lu_init(), so that we only need to read the
-> > LUN
-> > descriptor once to replace the original twice.
->=20
-> The following part can probably be left out from the patch
-> description=20
-> without reducing clarity: " to replace the original twice".
->=20
-> > +/**
-> > + * ufshcd_lu_power_on_wp_init - Initialize LU's power on write
-> > protect state
-> > + * @hba: per-adapter instance
-> > + * @sdev: pointer to SCSI device
-> > + * @b_lu_write_protect: bLUWriteProtect value read from LU
-> > descriptor
-> > + */
-> > +static inline void ufshcd_lu_power_on_wp_init(struct ufs_hba *hba,
-> > const struct scsi_device *sdev,
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 u8
-> > b_lu_write_protect)
-> > +{
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (hba->dev_info.f_power_on=
-_wp_en && !hba-
-> > >dev_info.is_lu_power_on_wp &&
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 b_lu_writ=
-e_protect =3D=3D UFS_LU_POWER_ON_WP)
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0hba->dev_info.is_lu_power_on_wp =3D true;
-> > +}
->=20
-> The body of this function is only three lines long and this function
-> is=20
-> only called once. Are you sure that you want a separate function
-> instead=20
-> of inlining this function in its only caller?
->=20
-> > +static void ufshcd_lu_init(struct ufs_hba *hba, struct scsi_device
-> > *sdev)
-> > +{
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0int ret;
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0int len;
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0u8 lun;
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0u8 lun_qdepth;
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0u8 *desc_buf;
->=20
-> Most kernel developers these days order local variable declarations
-> from=20
-> longest to shortest line ("reverse Christmas tree").
->=20
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0lun_qdepth =3D hba->nutrs;
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0lun =3D ufshcd_scsi_to_upiu_=
-lun(sdev->lun);
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0len =3D hba->desc_size[QUERY=
-_DESC_IDN_UNIT];
-> > +
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0desc_buf =3D kmalloc(len, GF=
-P_KERNEL);
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (!desc_buf)
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0goto set_qdepth;
-> > +
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0ret =3D ufshcd_read_unit_des=
-c_param(hba, lun, 0, desc_buf,
-> > len);
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (ret =3D=3D -EOPNOTSUPP)
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0/* If LU doesn't support unit descriptor, its queue
-> > depth is set to 1 */
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0lun_qdepth =3D 1;
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0else if (desc_buf[UNIT_DESC_=
-PARAM_LU_Q_DEPTH])
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0lun_qdepth =3D min_t(int,
-> > desc_buf[UNIT_DESC_PARAM_LU_Q_DEPTH], hba->nutrs);
->=20
-> ufshcd_read_unit_desc_param() can return fewer bytes than requested.
-> How=20
-> about modifying ufshcd_read_unit_desc_param() such that it returns
-> the=20
-> number of bytes that has been copied and using that return value
-> above=20
-> to check whether at least UNIT_DESC_PARAM_LU_Q_DEPTH bytes have been=20
-> initialized in desc_buf?
->=20
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0/*
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * According to UFS device s=
-pec, The write protection mode
-> > is only supported by normal LU,
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * not supported by WLUN.
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 */
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (!ret && lun < hba->dev_i=
-nfo.max_lu_supported)
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0ufshcd_lu_power_on_wp_init(hba, sdev,
-> > desc_buf[UNIT_DESC_PARAM_LU_WR_PROTECT]);
->=20
-> Please insert an if (ret < 0) check after the=20
-> ufshcd_read_unit_desc_param() call and jump to the kfree() statement
-> if=20
-> ret < 0 instead of checking several times whether or not ret < 0.
->=20
-> Thanks,
->=20
-> Bart.
+Signed-off-by: Khazhismel Kumykov <khazhy@google.com>
+---
+ drivers/scsi/scsi_sysfs.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index c95177ca6ed2..722ab042fbd7 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1599,7 +1599,11 @@ EXPORT_SYMBOL(scsi_register_interface);
+  **/
+ int scsi_sysfs_add_host(struct Scsi_Host *shost)
+ {
+-	transport_register_device(&shost->shost_gendev);
++	int err;
++
++	err = transport_register_device(&shost->shost_gendev);
++	if (err)
++		return err;
+ 	transport_configure_device(&shost->shost_gendev);
+ 	return 0;
+ }
+-- 
+2.38.0.413.g74048e4d9e-goog
 
