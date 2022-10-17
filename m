@@ -2,35 +2,36 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3541AC433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Oct 2022 10:57:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A0A1C4332F
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Oct 2022 11:02:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230110AbiJQK5J (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 Oct 2022 06:57:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44136 "EHLO
+        id S231193AbiJQLC5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 Oct 2022 07:02:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46754 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229810AbiJQK5I (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Oct 2022 06:57:08 -0400
+        with ESMTP id S230193AbiJQLCi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Oct 2022 07:02:38 -0400
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1ABA45C95A;
-        Mon, 17 Oct 2022 03:57:06 -0700 (PDT)
-Received: from fraeml737-chm.china.huawei.com (unknown [172.18.147.226])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MrYnd2ycPz67L3d;
-        Mon, 17 Oct 2022 18:56:05 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 043C0631EB;
+        Mon, 17 Oct 2022 04:01:16 -0700 (PDT)
+Received: from fraeml702-chm.china.huawei.com (unknown [172.18.147.207])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MrYqg1GB2z688sf;
+        Mon, 17 Oct 2022 18:57:51 +0800 (CST)
 Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml737-chm.china.huawei.com (10.206.15.218) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Mon, 17 Oct 2022 12:57:03 +0200
+ fraeml702-chm.china.huawei.com (10.206.15.51) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2375.31; Mon, 17 Oct 2022 13:00:56 +0200
 Received: from [10.202.227.197] (10.202.227.197) by
  lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Mon, 17 Oct 2022 11:57:03 +0100
-Message-ID: <a798fce4-f1bd-39b0-efbe-c86434b80dd7@huawei.com>
-Date:   Mon, 17 Oct 2022 11:57:08 +0100
+ 15.1.2375.31; Mon, 17 Oct 2022 12:00:55 +0100
+Message-ID: <6319a91e-43c8-e4c9-915b-29bfe1532c02@huawei.com>
+Date:   Mon, 17 Oct 2022 12:01:00 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.6.1
-Subject: Re: [PATCH v6 1/8] scsi: libsas: Add sas_ata_device_link_abort()
+Subject: Re: [PATCH v6 4/8] scsi: hisi_sas: Modify v3 HW SATA disk error state
+ completion processing
 To:     Niklas Cassel <Niklas.Cassel@wdc.com>
 CC:     "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
         "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
@@ -41,10 +42,10 @@ CC:     "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
         "linuxarm@huawei.com" <linuxarm@huawei.com>,
         "yangxingui@huawei.com" <yangxingui@huawei.com>
 References: <1665998435-199946-1-git-send-email-john.garry@huawei.com>
- <1665998435-199946-2-git-send-email-john.garry@huawei.com>
- <Y00z68i9V/p/0tuI@x1-carbon>
+ <1665998435-199946-5-git-send-email-john.garry@huawei.com>
+ <Y00yW9PhSJWjobVC@x1-carbon>
 From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <Y00z68i9V/p/0tuI@x1-carbon>
+In-Reply-To: <Y00yW9PhSJWjobVC@x1-carbon>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [10.202.227.197]
@@ -55,22 +56,25 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 17/10/2022 11:52, Niklas Cassel wrote:
->> The SATA device FIS fields are set to indicate a device error from
->> ata_eh_analyze_tf().
+On 17/10/2022 11:45, Niklas Cassel wrote:
+> On Mon, Oct 17, 2022 at 05:20:31PM +0800, John Garry wrote:
+>> From: Xingui Yang<yangxingui@huawei.com>
 >>
->> Suggested-by: Damien Le Moal<damien.lemoal@opensource.wdc.com>
->> Suggested-by: Tested-by: Niklas Cassel<niklas.cassel@wdc.com>
-> Nit: is this perhaps a typo?
-
-Yeah, a copy and paste error.
-
-> (Since there is another Tested-by tag later in the list.)
+>> When an NCQ error occurs, the  controller will abnormally complete the I/Os
+>> that are newly delivered to disk, and bit8 in CQ dw3 will be set which
+>> indicates that the SATA disk is in error state. The current processing flow
+>> is to set ts->stat to SAS_OPEN_REJECT and then sas_ata_task_done() will
+>> set FIS stat to ATA_ERR. After analyzing the IO by ata_eh_analyze_tf(),
+>> err_mask will set to AC_ERR_HSM. If media error occurs for four times
+>> within 10 minutes and the chip rejects new I/Os for four times, NCQ will
+>> be disabled due to excessive errors, which is undesirable.
+> With patch 8/8 in this series, will it still set err_mask to AC_ERR_HSM?
+> If not, is this patch still needed with patch 8/8?
 > 
-> Checkpatch doesn't complain, so I guess no biggie,
-> but might be worth fixing if you decide to roll a v7.
 
-Sure
+I spoke to colleague Xingui Yang and he does not think that it is still 
+required. But I was leaving it in as it still looked like a sensible 
+change. I suppose I can drop it.
 
 Thanks,
 John
