@@ -2,69 +2,115 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FF4AC4332F
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Oct 2022 14:24:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44CFAC433FE
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Oct 2022 14:44:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229898AbiJQOYS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 Oct 2022 10:24:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43090 "EHLO
+        id S230413AbiJQOo4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 Oct 2022 10:44:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35526 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229452AbiJQOYQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Oct 2022 10:24:16 -0400
-Received: from mail-pg1-f173.google.com (mail-pg1-f173.google.com [209.85.215.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4892750075;
-        Mon, 17 Oct 2022 07:24:16 -0700 (PDT)
-Received: by mail-pg1-f173.google.com with SMTP id r18so10561747pgr.12;
-        Mon, 17 Oct 2022 07:24:16 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=YOWQPj7s2AYnh0bbb2ZlObjp2FI+P4uR59L0NFrNxN0=;
-        b=mJ2wsM2dXyJGtA+pMLH768i/R5ISfLq51rSmBWEcPydL03jrj8ZsGzk6XRSzFOLWCw
-         4K5rz5MGxXIQNavkpL7I1s7+H51g3bXTWUmJ1imo+wPIIXmDrutpO49Zvyl96yfQUgFS
-         r103oBHMiVtjcYMsKn48jxeLmsXA3qp5jr093mpdql8IOR0E/k1+TDvwTXJkElN04LdY
-         uYIQRy2MYGZtO4U1nUsnoqAHT8T+t8PH71/4ACX+YLICh+rYdb+p0HLl8t9TgGkdobf7
-         S2I39O4n6IxURQYt6lUuGmz0foZzniUCElrAtwzcYO+DWnyXLgl1aC3WzsvzfBzX7ODa
-         KdXg==
-X-Gm-Message-State: ACrzQf2YXIkdRTDY2T2rEvFa3wynTElq3oxQK7ZmwTsf2XR1/4KzFFfJ
-        iFHDKw18TSpSZybvwjEFnEU=
-X-Google-Smtp-Source: AMsMyM62BMZRM35vb/QAjC2I1HUzBMIGyJUnIvmlJ1E+yrG33DpbWVg6wUxyM6L4BDJDEh0x8YTnWA==
-X-Received: by 2002:a63:ed07:0:b0:442:87:3a38 with SMTP id d7-20020a63ed07000000b0044200873a38mr11146726pgi.216.1666016655753;
-        Mon, 17 Oct 2022 07:24:15 -0700 (PDT)
-Received: from [192.168.50.14] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id b14-20020a170903228e00b00176e8f85147sm6721330plh.83.2022.10.17.07.24.13
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 17 Oct 2022 07:24:14 -0700 (PDT)
-Message-ID: <8377d820-c22a-0405-a693-7872cd1961a4@acm.org>
-Date:   Mon, 17 Oct 2022 07:24:13 -0700
+        with ESMTP id S230378AbiJQOoz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Oct 2022 10:44:55 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97E2B1F60A;
+        Mon, 17 Oct 2022 07:44:53 -0700 (PDT)
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out1.suse.de (Postfix) with ESMTP id E03E933E2D;
+        Mon, 17 Oct 2022 14:44:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1666017891; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=+hCwp1KGuFl3/01j4y5Cf1ZkRiA3haQfv1blk7AuYxY=;
+        b=3KMQeJFy6O4qTKbRbrmbY+oWKEIcmkR3LrRt5Zs9AwLhqWCMHaygZ652jaw1aWBt9PskVQ
+        tPVeOo181rS78l4WY2vM/CBS2Q6ORnPKJNeeZwu8Ol4gyygH/pe+vjKIlsD4MK+pwF9cVe
+        d5HxHrjhmPwECMfP+hyjhMRZnpDawXw=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1666017891;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=+hCwp1KGuFl3/01j4y5Cf1ZkRiA3haQfv1blk7AuYxY=;
+        b=Iff5kbgFOfo1IkDYeqdWc2kshLFStRHjvCGM4UQuRYZIhgWRbUJSRsdG19MGmpGRUljm+d
+        XYnefirgThv51FBw==
+Received: from lion.mk-sys.cz (unknown [10.163.29.118])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by relay2.suse.de (Postfix) with ESMTPS id D4E302C141;
+        Mon, 17 Oct 2022 14:44:51 +0000 (UTC)
+Received: by lion.mk-sys.cz (Postfix, from userid 1000)
+        id BD1B66043B; Mon, 17 Oct 2022 16:44:51 +0200 (CEST)
+Date:   Mon, 17 Oct 2022 16:44:51 +0200
+From:   Michal Kubecek <mkubecek@suse.cz>
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc:     mpi3mr-linuxdrv.pdl@broadcom.com,
+        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: mpi3mr: add explicit dependency on
+ CONFIG_SCSI_SAS_ATTRS
+Message-ID: <20221017144451.tpqqilhpjgdcpgtu@lion.mk-sys.cz>
+References: <20221017140533.CC46F6043B@lion.mk-sys.cz>
+ <0c6f49e95cbb9e2de9501b11b1391a5fd7b132c1.camel@HansenPartnership.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.13.0
-Subject: Re: [PATCH] scsi: ufs: core: Fix typo for register name in comments
-Content-Language: en-US
-To:     keosung.park@samsung.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <CGME20221017095815epcms2p110e3421b99bb9a937620b4d065d0ed12@epcms2p1>
- <20221017095815epcms2p110e3421b99bb9a937620b4d065d0ed12@epcms2p1>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20221017095815epcms2p110e3421b99bb9a937620b4d065d0ed12@epcms2p1>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <0c6f49e95cbb9e2de9501b11b1391a5fd7b132c1.camel@HansenPartnership.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/17/22 02:58, Keoseong Park wrote:
-> Change "UTRMLCLR" to "UTMRLCLR".
-> The meaning is "UTP Task Management Request List CLear Register"
+On Mon, Oct 17, 2022 at 10:13:58AM -0400, James Bottomley wrote:
+> On Mon, 2022-10-17 at 16:05 +0200, Michal Kubecek wrote:
+> > Starting with commit 42fc9fee116f ("scsi: mpi3mr: Add helper
+> > functions to
+> > manage device's port"), kernel configured with CONFIG_SCSI_MPI3MR=m
+> > and
+> > CONFIG_SCSI_SAS_ATTRS=n fails to build because modpost cannot find
+> > symbols
+> > used in mpi3mr_transport.c:
+> > 
+> >   ERROR: modpost: "sas_port_alloc_num"
+> > [drivers/scsi/mpi3mr/mpi3mr.ko] undefined!
+> >   ERROR: modpost: "sas_remove_host" [drivers/scsi/mpi3mr/mpi3mr.ko]
+> > undefined!
+> >   ERROR: modpost: "sas_phy_alloc" [drivers/scsi/mpi3mr/mpi3mr.ko]
+> > undefined!
+> >   ERROR: modpost: "sas_phy_free" [drivers/scsi/mpi3mr/mpi3mr.ko]
+> > undefined!
+> >   ...
+> > 
+> > Add an explicit dependency of CONFIG_SCSI_MPI3MR on
+> > CONFIG_SCSI_SAS_ATTRS
+> > to prevent inconsistent configs.
+> > 
+> > Fixes: 42fc9fee116f ("scsi: mpi3mr: Add helper functions to manage
+> > device's port")
+> > Signed-off-by: Michal Kubecek <mkubecek@suse.cz>
+> > ---
+> >  drivers/scsi/mpi3mr/Kconfig | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/scsi/mpi3mr/Kconfig
+> > b/drivers/scsi/mpi3mr/Kconfig
+> > index 8997531940c2..8ada8e8d25ac 100644
+> > --- a/drivers/scsi/mpi3mr/Kconfig
+> > +++ b/drivers/scsi/mpi3mr/Kconfig
+> > @@ -2,7 +2,7 @@
+> >  
+> >  config SCSI_MPI3MR
+> >  	tristate "Broadcom MPI3 Storage Controller Device Driver"
+> > -	depends on PCI && SCSI
+> > +	depends on PCI && SCSI && SCSI_SAS_ATTRS
+> 
+> This should probably be select not depends.
+> 
+> All transport attributes are designed to be selected.  The reason is to
+> avoid people having to figure out what attributes they have to set in
+> Kconfig before they see the HBAs they're interested in.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+OK, I'll send v2 with select in a moment.
+
+Michal
