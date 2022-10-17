@@ -2,62 +2,101 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BF29C4332F
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Oct 2022 08:01:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 218F2C433FE
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Oct 2022 08:50:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229969AbiJQIBg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 Oct 2022 04:01:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49142 "EHLO
+        id S230040AbiJQIu0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 Oct 2022 04:50:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56800 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229818AbiJQIBb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Oct 2022 04:01:31 -0400
-Received: from mail.fadrush.pl (mail.fadrush.pl [54.37.225.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7BF925B51F
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Oct 2022 01:01:29 -0700 (PDT)
-Received: by mail.fadrush.pl (Postfix, from userid 1002)
-        id 43B8222741; Mon, 17 Oct 2022 08:00:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=fadrush.pl; s=mail;
-        t=1665993688; bh=bD6j9gIFU6CLTaCGl0Ow9oeIxtirvTfMeNZSfLEZQ+I=;
-        h=Date:From:To:Subject:From;
-        b=SFgMzfOif5HmpC6L5q0CB2hvbCiucmVGRqvXpLqkx8/KiooY8wz4M+lJXgfnmJ2uP
-         vCgBKBXqILrME2QOF0tw3L2nQPleNEBuax4v2faay2M4FfpkSHZ4Sdq4gebar6YcWX
-         xgQx9MwEg3Twrm5Ie3EkgNeuhUi+Jt0RERhQw9LAxFKvpB18yIv1V9JlX1NXosM6vx
-         401aR47HcFh0YWDS7F97IKw/s3jwxQZ+5DLZrqoyzxbXCPVLPhnGBn8/IGFia2MlWh
-         mmw9R09514vlavkz0DRi+6Z3EhGX079YwVxOZcm9C91/LDE7kz98yPNm2USnONFzwM
-         qYmH6ns9zJfFA==
-Received: by mail.fadrush.pl for <linux-scsi@vger.kernel.org>; Mon, 17 Oct 2022 08:00:39 GMT
-Message-ID: <20221017064500-0.1.29.mk25.0.xrurimpjd2@fadrush.pl>
-Date:   Mon, 17 Oct 2022 08:00:39 GMT
-From:   "Jakub Olejniczak" <jakub.olejniczak@fadrush.pl>
-To:     <linux-scsi@vger.kernel.org>
-Subject: =?UTF-8?Q?Zwi=C4=99kszenie_p=C5=82ynno=C5=9Bci_finansowej?=
-X-Mailer: mail.fadrush.pl
+        with ESMTP id S229996AbiJQIuY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Oct 2022 04:50:24 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77AA52CDF6;
+        Mon, 17 Oct 2022 01:50:19 -0700 (PDT)
+Received: from fraeml743-chm.china.huawei.com (unknown [172.18.147.207])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MrVwv5gM9z6J69C;
+        Mon, 17 Oct 2022 16:47:11 +0800 (CST)
+Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
+ fraeml743-chm.china.huawei.com (10.206.15.224) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Mon, 17 Oct 2022 10:50:16 +0200
+Received: from localhost.localdomain (10.69.192.58) by
+ lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Mon, 17 Oct 2022 09:50:14 +0100
+From:   John Garry <john.garry@huawei.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <jinpu.wang@cloud.ionos.com>, <damien.lemoal@opensource.wdc.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, <yangxingui@huawei.com>,
+        <niklas.cassel@wdc.com>, "John Garry" <john.garry@huawei.com>
+Subject: [PATCH v6 2/8] scsi: hisi_sas: Move slot variable definition in hisi_sas_abort_task()
+Date:   Mon, 17 Oct 2022 17:20:29 +0800
+Message-ID: <1665998435-199946-3-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
+In-Reply-To: <1665998435-199946-1-git-send-email-john.garry@huawei.com>
+References: <1665998435-199946-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ lhrpeml500003.china.huawei.com (7.191.162.67)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Dzie=C5=84 dobry,
+Each branch currently defines a slot variable independently, and it is
+neater to move it to the function head.
 
-kontaktuj=C4=99 si=C4=99 z Pa=C5=84stwem, poniewa=C5=BC chcia=C5=82bym za=
-proponowa=C4=87 wygodne rozwi=C4=85zanie, kt=C3=B3re umo=C5=BCliwi Pa=C5=84=
-stwa firmie stabilny rozw=C3=B3j.=20
+Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-Konkurencyjne otoczenie wymaga ci=C4=85g=C5=82ego ulepszania i poszerzeni=
-a oferty, co z kolei wi=C4=85=C5=BCe si=C4=99 z konieczno=C5=9Bci=C4=85 i=
-nwestowania. Brak odpowiedniego kapita=C5=82u powa=C5=BCnie ogranicza tem=
-po rozwoju firmy.
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 699b07abb6b0..8303aa5eaf25 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -1547,6 +1547,7 @@ static int hisi_sas_abort_task(struct sas_task *task)
+ 	struct hisi_sas_internal_abort_data internal_abort_data = { false };
+ 	struct domain_device *device = task->dev;
+ 	struct hisi_sas_device *sas_dev = device->lldd_dev;
++	struct hisi_sas_slot *slot = task->lldd_task;
+ 	struct hisi_hba *hisi_hba;
+ 	struct device *dev;
+ 	int rc = TMF_RESP_FUNC_FAILED;
+@@ -1560,7 +1561,6 @@ static int hisi_sas_abort_task(struct sas_task *task)
+ 
+ 	spin_lock_irqsave(&task->task_state_lock, flags);
+ 	if (task->task_state_flags & SAS_TASK_STATE_DONE) {
+-		struct hisi_sas_slot *slot = task->lldd_task;
+ 		struct hisi_sas_cq *cq;
+ 
+ 		if (slot) {
+@@ -1578,8 +1578,7 @@ static int hisi_sas_abort_task(struct sas_task *task)
+ 	task->task_state_flags |= SAS_TASK_STATE_ABORTED;
+ 	spin_unlock_irqrestore(&task->task_state_lock, flags);
+ 
+-	if (task->lldd_task && task->task_proto & SAS_PROTOCOL_SSP) {
+-		struct hisi_sas_slot *slot = task->lldd_task;
++	if (slot && task->task_proto & SAS_PROTOCOL_SSP) {
+ 		u16 tag = slot->idx;
+ 		int rc2;
+ 
+@@ -1613,9 +1612,8 @@ static int hisi_sas_abort_task(struct sas_task *task)
+ 			hisi_sas_dereg_device(hisi_hba, device);
+ 			rc = hisi_sas_softreset_ata_disk(device);
+ 		}
+-	} else if (task->lldd_task && task->task_proto & SAS_PROTOCOL_SMP) {
++	} else if (slot && task->task_proto & SAS_PROTOCOL_SMP) {
+ 		/* SMP */
+-		struct hisi_sas_slot *slot = task->lldd_task;
+ 		u32 tag = slot->idx;
+ 		struct hisi_sas_cq *cq = &hisi_hba->cq[slot->dlvry_queue];
+ 
+-- 
+2.35.3
 
-Od wielu lat z powodzeniem pomagam firmom w uzyskaniu najlepszej formy fi=
-nansowania z banku oraz UE. Mam sta=C5=82ych Klient=C3=B3w, kt=C3=B3rzy n=
-adal ch=C4=99tnie korzystaj=C4=85 z moich us=C5=82ug, a tak=C5=BCe poleca=
-j=C4=85 je innym.
-
-Czy chcieliby Pa=C5=84stwo skorzysta=C4=87 z pomocy wykwalifikowanego i d=
-o=C5=9Bwiadczonego doradcy finansowego?
-
-
-Pozdrawiam
-Jakub Olejniczak
