@@ -2,39 +2,41 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8E47C4332F
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Oct 2022 08:50:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 065A3C43217
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Oct 2022 08:50:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230091AbiJQIua (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 Oct 2022 04:50:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56832 "EHLO
+        id S230120AbiJQIuc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 Oct 2022 04:50:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56988 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230017AbiJQIuY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Oct 2022 04:50:24 -0400
+        with ESMTP id S229957AbiJQIuZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Oct 2022 04:50:25 -0400
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6B6B23EA0;
-        Mon, 17 Oct 2022 01:50:13 -0700 (PDT)
-Received: from fraeml701-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MrVzD57pQz6HJWT;
-        Mon, 17 Oct 2022 16:49:12 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56E452F65F;
+        Mon, 17 Oct 2022 01:50:22 -0700 (PDT)
+Received: from fraeml741-chm.china.huawei.com (unknown [172.18.147.206])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MrVyZ6F2zz6H7X4;
+        Mon, 17 Oct 2022 16:48:38 +0800 (CST)
 Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml701-chm.china.huawei.com (10.206.15.50) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2375.31; Mon, 17 Oct 2022 10:50:10 +0200
+ fraeml741-chm.china.huawei.com (10.206.15.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Mon, 17 Oct 2022 10:50:20 +0200
 Received: from localhost.localdomain (10.69.192.58) by
  lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Mon, 17 Oct 2022 09:50:08 +0100
+ 15.1.2375.31; Mon, 17 Oct 2022 09:50:17 +0100
 From:   John Garry <john.garry@huawei.com>
 To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
         <jinpu.wang@cloud.ionos.com>, <damien.lemoal@opensource.wdc.com>
 CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linuxarm@huawei.com>, <yangxingui@huawei.com>,
         <niklas.cassel@wdc.com>, "John Garry" <john.garry@huawei.com>
-Subject: [PATCH v6 0/8] libsas and drivers: NCQ error handling
-Date:   Mon, 17 Oct 2022 17:20:27 +0800
-Message-ID: <1665998435-199946-1-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v6 3/8] scsi: hisi_sas: Add SATA_DISK_ERR bit handling for v3 hw
+Date:   Mon, 17 Oct 2022 17:20:30 +0800
+Message-ID: <1665998435-199946-4-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
+In-Reply-To: <1665998435-199946-1-git-send-email-john.garry@huawei.com>
+References: <1665998435-199946-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [10.69.192.58]
@@ -45,78 +47,171 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-As reported in [0], the pm8001 driver NCQ error handling more or less
-duplicates what libata does in link error handling, as follows:
-- abort all commands
-- do autopsy with read log ext 10 command
-- reset the target to recover, if necessary
+From: Xingui Yang <yangxingui@huawei.com>
 
-Indeed for the hisi_sas driver we want to add similar handling for NCQ
-errors.
+When CQ header dw3 SATA_DISK_ERR is set it means this SATA disk is in error
+state and the current IPTT is invalid. An invalid IPTT does not correspond
+to any slot.
 
-This series add a new libsas API - sas_ata_device_link_abort() - to handle
-host NCQ errors, and fixes up pm8001 and hisi_sas drivers to use it.
+In this scenario, new I/Os that delivered to disk will be rejected by the
+controller and all I/Os remaining in the disk should be aborted, which we
+add here with the sas_ata_device_link_abort() call.
 
-A difference in the pm8001 driver NCQ error handling is that we send
-SATA_ABORT per-task prior to read log ext10, but I feel that this should
-not make a difference to the error handling.
+In hisi_sas_abort_task() we don't want to issue a softreset as it may
+cause info to be lost in the target disk for the ATA EH autopsy. In this
+case, just release resources - the disk won't return other I/Os normally
+after NCQ Error, so this is safe.
 
-Finally with these changes we can make the libsas task alloc/free APIs
-private, which they should always have been.
+Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas.h       |  1 +
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 18 +++++++++-
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 48 ++++++++++++++++++++++++--
+ 3 files changed, 64 insertions(+), 3 deletions(-)
 
-Based on v6.1-rc1
-
-[0] https://lore.kernel.org/linux-scsi/8fb3b093-55f0-1fab-81f4-e8519810a978@huawei.com/
-
-Changes since v5:
-- Change to set ATA_DRDY in sata dev fis for sas_ata_device_link_abort()
-  and sas_ata_task_done()
-- Add Niklas' tags (thanks!)
-- Rebase
-
-Changes since v4:
-- Add Jason's tags (thanks)
-- Rebase
-
-Changes since v3:
-- Add Damien's tags (thanks)
-- Modify hisi_sas processing as follows:
-  - use sas_task_abort() for rejected IO
-  - Modify abort task processing to issue softreset in certain circumstances
-- rebase
-
-Changes since v2:
-- Stop sending SATA_ABORT all for pm8001 handling
-- Make "reset" optional in sas_ata_device_link_abort()
-- Drop Jack's ACK
-
-John Garry (6):
-  scsi: libsas: Add sas_ata_device_link_abort()
-  scsi: hisi_sas: Move slot variable definition in hisi_sas_abort_task()
-  scsi: pm8001: Modify task abort handling for SATA task
-  scsi: pm8001: Use sas_ata_device_link_abort() to handle NCQ errors
-  scsi: libsas: Make sas_{alloc, alloc_slow, free}_task() private
-  scsi: libsas: Update SATA dev FIS in sas_ata_task_done()
-
-Xingui Yang (2):
-  scsi: hisi_sas: Add SATA_DISK_ERR bit handling for v3 hw
-  scsi: hisi_sas: Modify v3 HW SATA disk error state completion
-    processing
-
- drivers/scsi/hisi_sas/hisi_sas.h       |   1 +
- drivers/scsi/hisi_sas/hisi_sas_main.c  |  26 +++-
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  53 ++++++-
- drivers/scsi/libsas/sas_ata.c          |  19 ++-
- drivers/scsi/libsas/sas_init.c         |   3 -
- drivers/scsi/libsas/sas_internal.h     |   4 +
- drivers/scsi/pm8001/pm8001_hwi.c       | 186 ++++---------------------
- drivers/scsi/pm8001/pm8001_sas.c       |  14 +-
- drivers/scsi/pm8001/pm8001_sas.h       |   5 -
- drivers/scsi/pm8001/pm80xx_hwi.c       | 177 +++--------------------
- include/scsi/libsas.h                  |   4 -
- include/scsi/sas_ata.h                 |   6 +
- 12 files changed, 148 insertions(+), 350 deletions(-)
-
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index 9aebf4a26b13..6f8a52a1b808 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -104,6 +104,7 @@ enum {
+ enum dev_status {
+ 	HISI_SAS_DEV_INIT,
+ 	HISI_SAS_DEV_NORMAL,
++	HISI_SAS_DEV_NCQ_ERR,
+ };
+ 
+ enum {
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 8303aa5eaf25..4c37ae9eb6b6 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -1604,13 +1604,26 @@ static int hisi_sas_abort_task(struct sas_task *task)
+ 	} else if (task->task_proto & SAS_PROTOCOL_SATA ||
+ 		task->task_proto & SAS_PROTOCOL_STP) {
+ 		if (task->dev->dev_type == SAS_SATA_DEV) {
++			struct ata_queued_cmd *qc = task->uldd_task;
++
+ 			rc = hisi_sas_internal_task_abort_dev(sas_dev, false);
+ 			if (rc < 0) {
+ 				dev_err(dev, "abort task: internal abort failed\n");
+ 				goto out;
+ 			}
+ 			hisi_sas_dereg_device(hisi_hba, device);
+-			rc = hisi_sas_softreset_ata_disk(device);
++
++			/*
++			 * If an ATA internal command times out in ATA EH, it
++			 * need to execute soft reset, so check the scsicmd
++			 */
++			if ((sas_dev->dev_status == HISI_SAS_DEV_NCQ_ERR) &&
++			    qc && qc->scsicmd) {
++				hisi_sas_do_release_task(hisi_hba, task, slot);
++				rc = TMF_RESP_FUNC_COMPLETE;
++			} else {
++				rc = hisi_sas_softreset_ata_disk(device);
++			}
+ 		}
+ 	} else if (slot && task->task_proto & SAS_PROTOCOL_SMP) {
+ 		/* SMP */
+@@ -1727,6 +1740,9 @@ static int hisi_sas_I_T_nexus_reset(struct domain_device *device)
+ 	struct device *dev = hisi_hba->dev;
+ 	int rc;
+ 
++	if (sas_dev->dev_status == HISI_SAS_DEV_NCQ_ERR)
++		sas_dev->dev_status = HISI_SAS_DEV_NORMAL;
++
+ 	rc = hisi_sas_internal_task_abort_dev(sas_dev, false);
+ 	if (rc < 0) {
+ 		dev_err(dev, "I_T nexus reset: internal abort (%d)\n", rc);
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index d56b4bfd2767..0ae8a60aaf93 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -404,6 +404,11 @@
+ #define CMPLT_HDR_CMPLT_MSK		(0x3 << CMPLT_HDR_CMPLT_OFF)
+ #define CMPLT_HDR_ERROR_PHASE_OFF   2
+ #define CMPLT_HDR_ERROR_PHASE_MSK   (0xff << CMPLT_HDR_ERROR_PHASE_OFF)
++/* bit[9:2] Error Phase */
++#define ERR_PHASE_RESPONSE_FRAME_REV_STAGE_OFF	\
++					8
++#define ERR_PHASE_RESPONSE_FRAME_REV_STAGE_MSK	\
++	(0x1 << ERR_PHASE_RESPONSE_FRAME_REV_STAGE_OFF)
+ #define CMPLT_HDR_RSPNS_XFRD_OFF	10
+ #define CMPLT_HDR_RSPNS_XFRD_MSK	(0x1 << CMPLT_HDR_RSPNS_XFRD_OFF)
+ #define CMPLT_HDR_RSPNS_GOOD_OFF	11
+@@ -423,8 +428,15 @@
+ #define CMPLT_HDR_DEV_ID_OFF		16
+ #define CMPLT_HDR_DEV_ID_MSK		(0xffff << CMPLT_HDR_DEV_ID_OFF)
+ /* dw3 */
++#define CMPLT_HDR_SATA_DISK_ERR_OFF	16
++#define CMPLT_HDR_SATA_DISK_ERR_MSK	(0x1 << CMPLT_HDR_SATA_DISK_ERR_OFF)
+ #define CMPLT_HDR_IO_IN_TARGET_OFF	17
+ #define CMPLT_HDR_IO_IN_TARGET_MSK	(0x1 << CMPLT_HDR_IO_IN_TARGET_OFF)
++/* bit[23:18] ERR_FIS_ATA_STATUS */
++#define FIS_ATA_STATUS_ERR_OFF		18
++#define FIS_ATA_STATUS_ERR_MSK		(0x1 << FIS_ATA_STATUS_ERR_OFF)
++#define FIS_TYPE_SDB_OFF		31
++#define FIS_TYPE_SDB_MSK		(0x1 << FIS_TYPE_SDB_OFF)
+ 
+ /* ITCT header */
+ /* qw0 */
+@@ -2148,6 +2160,18 @@ static irqreturn_t fatal_axi_int_v3_hw(int irq_no, void *p)
+ 	return IRQ_HANDLED;
+ }
+ 
++static bool is_ncq_err_v3_hw(struct hisi_sas_complete_v3_hdr *complete_hdr)
++{
++	u32 dw0, dw3;
++
++	dw0 = le32_to_cpu(complete_hdr->dw0);
++	dw3 = le32_to_cpu(complete_hdr->dw3);
++
++	return (dw0 & ERR_PHASE_RESPONSE_FRAME_REV_STAGE_MSK) &&
++	       (dw3 & FIS_TYPE_SDB_MSK) &&
++	       (dw3 & FIS_ATA_STATUS_ERR_MSK);
++}
++
+ static bool
+ slot_err_v3_hw(struct hisi_hba *hisi_hba, struct sas_task *task,
+ 	       struct hisi_sas_slot *slot)
+@@ -2381,14 +2405,34 @@ static irqreturn_t  cq_thread_v3_hw(int irq_no, void *p)
+ 	while (rd_point != wr_point) {
+ 		struct hisi_sas_complete_v3_hdr *complete_hdr;
+ 		struct device *dev = hisi_hba->dev;
+-		u32 dw1;
++		u32 dw0, dw1, dw3;
+ 		int iptt;
+ 
+ 		complete_hdr = &complete_queue[rd_point];
++		dw0 = le32_to_cpu(complete_hdr->dw0);
+ 		dw1 = le32_to_cpu(complete_hdr->dw1);
++		dw3 = le32_to_cpu(complete_hdr->dw3);
+ 
+ 		iptt = dw1 & CMPLT_HDR_IPTT_MSK;
+-		if (likely(iptt < HISI_SAS_COMMAND_ENTRIES_V3_HW)) {
++		if (unlikely((dw0 & CMPLT_HDR_CMPLT_MSK) == 0x3) &&
++			     (dw3 & CMPLT_HDR_SATA_DISK_ERR_MSK)) {
++			int device_id = (dw1 & CMPLT_HDR_DEV_ID_MSK) >>
++					CMPLT_HDR_DEV_ID_OFF;
++			struct hisi_sas_itct *itct =
++				&hisi_hba->itct[device_id];
++			struct hisi_sas_device *sas_dev =
++				&hisi_hba->devices[device_id];
++			struct domain_device *device = sas_dev->sas_device;
++
++			dev_err(dev, "erroneous completion disk err dev id=%d sas_addr=0x%llx CQ hdr: 0x%x 0x%x 0x%x 0x%x\n",
++				device_id, itct->sas_addr, dw0, dw1,
++				complete_hdr->act, dw3);
++
++			if (is_ncq_err_v3_hw(complete_hdr))
++				sas_dev->dev_status = HISI_SAS_DEV_NCQ_ERR;
++
++			sas_ata_device_link_abort(device, true);
++		} else if (likely(iptt < HISI_SAS_COMMAND_ENTRIES_V3_HW)) {
+ 			slot = &hisi_hba->slot_info[iptt];
+ 			slot->cmplt_queue_slot = rd_point;
+ 			slot->cmplt_queue = queue;
 -- 
 2.35.3
 
