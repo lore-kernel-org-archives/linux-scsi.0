@@ -2,88 +2,86 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 640BFC4332F
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Oct 2022 15:01:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4ABC8C4332F
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Oct 2022 16:35:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231656AbiJQPA7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 Oct 2022 11:00:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53260 "EHLO
+        id S229797AbiJQQfb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 Oct 2022 12:35:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59950 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231654AbiJQO77 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Oct 2022 10:59:59 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6D46696D0;
-        Mon, 17 Oct 2022 07:57:02 -0700 (PDT)
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id C0A8134031;
-        Mon, 17 Oct 2022 14:55:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1666018517; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc;
-        bh=jTwL/T4HkHL8iKoj6Vj+ljbJU9UBePNtP7Jc/xS7RZk=;
-        b=K9GSOMhkY/1TlU8TUHxxVvr0wT6acqz9NJz4Q4N0N1Seu6yt5/Gt5t5zh6BVuDwuU5apsS
-        by/EayaSyJU4PD09AeLBtn1IZxN6tl+7NdHAb/+b/qop2ISOPz5eoWzoQn/gjseQZBVm9k
-        bVUv094GfB2Bibd5uG2aFNTuIqKHbT8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1666018517;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc;
-        bh=jTwL/T4HkHL8iKoj6Vj+ljbJU9UBePNtP7Jc/xS7RZk=;
-        b=5CbRW0u8AVRIVmzJshsqZpLnRR0qLNjEAW5RFH5B80H7Zm+bgvgE3ZBAcMFRWmBl1FJhj6
-        Z7CUGwtmuK+ACvDA==
-Received: from lion.mk-sys.cz (unknown [10.163.29.118])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by relay2.suse.de (Postfix) with ESMTPS id B370A2C141;
-        Mon, 17 Oct 2022 14:55:17 +0000 (UTC)
-Received: by lion.mk-sys.cz (Postfix, from userid 1000)
-        id 93BCB6043B; Mon, 17 Oct 2022 16:55:17 +0200 (CEST)
-From:   Michal Kubecek <mkubecek@suse.cz>
-Subject: [PATCH v2] scsi: mpi3mr: select CONFIG_SCSI_SAS_ATTRS
-To:     mpi3mr-linuxdrv.pdl@broadcom.com,
-        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        James Bottomley <James.Bottomley@HansenPartnership.com>
-Message-Id: <20221017145517.93BCB6043B@lion.mk-sys.cz>
-Date:   Mon, 17 Oct 2022 16:55:17 +0200 (CEST)
+        with ESMTP id S230096AbiJQQf3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Oct 2022 12:35:29 -0400
+Received: from mail-qk1-x72e.google.com (mail-qk1-x72e.google.com [IPv6:2607:f8b0:4864:20::72e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4177E51A21
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Oct 2022 09:35:28 -0700 (PDT)
+Received: by mail-qk1-x72e.google.com with SMTP id d13so6969630qko.5
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Oct 2022 09:35:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=A8NMre4QGtyFkZKy2qLyczfF7yFuzFP9jEXRo5AiHqI=;
+        b=HQqZXtXe27btppP5FyDjFaJml1tbQD6DEyEKyGgNebA7UGtjDI4N/X0Qbsrp2SIx46
+         f9n1WOn3i+6UgNehm0r+VVmjS5LsDysUMlNevDaZgKb6i4e91gqCAUNibah4Jao19tal
+         0dJ0+J5qmANgySL7Bo4g8H43LNTsJhWfO6ccx+VPx5A5i09eJpQu54ecRRlVs9g+0pD+
+         nuXtvQ/xGh9Td7qscNabR7Pv08gzB++jW0Rngwa1XumxjDLSO9PBCLR249DVnggfAft6
+         /On0brIaKHrnCb/N/8Hnif0+RqixKFyU4PPQfcYOwXgnyPb89EsQK3LBcd1sNMFIU7yA
+         15Bw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=A8NMre4QGtyFkZKy2qLyczfF7yFuzFP9jEXRo5AiHqI=;
+        b=GfiglJigzvyvqY7WHEk8ciinhj/cxNFC2P1dzPeWaBmZaLX42H5NZ3Ef20rqJb62qg
+         SKo6oVMnoQgAAZmMRbCNW+tg5tKl17X/B1rynuG3xX8B6jEimlqi1LPb8FO/syenIv2u
+         dY1zzEmQcHORQeCev348g9waWo74JWZrlMFGftC5QrqGc89VVh6v6Af9FAsuZEWTiY+h
+         1FINcDwSDg6AglQluCg8Kau7/tuzXIPAMO0Bjv+rUHo83iWxdEd29f5nIjYqbyJye3zR
+         Q3AFqoN5pszh+lZn4zy7S3d4N85q8RTqfsjJ6YZnvU1bpJ4ZT/dxsuotZ5xNgbp89oMO
+         EsQA==
+X-Gm-Message-State: ACrzQf1xfxoneML/tct33on0ZZf+6VoUJJ1GrszEI6bXTCXQ/1nn1bH8
+        v2f1UNhWKSG1hYElWOjd+QX/B1LuL88=
+X-Google-Smtp-Source: AMsMyM6ZutpS47cxUTV9H3d14BUNdz2eTl1gu/U1A1dJiLmpiv5TuVqmA6Dz/J6SgtSvbbtn3A+F2Q==
+X-Received: by 2002:a37:30c:0:b0:6ee:a5d0:e91f with SMTP id 12-20020a37030c000000b006eea5d0e91fmr8213885qkd.309.1666024527086;
+        Mon, 17 Oct 2022 09:35:27 -0700 (PDT)
+Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id r2-20020ae9d602000000b006ceb933a9fesm152235qkk.81.2022.10.17.09.35.25
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 17 Oct 2022 09:35:26 -0700 (PDT)
+From:   Justin Tee <justintee8345@gmail.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     jsmart2021@gmail.com, Justin Tee <justintee8345@gmail.com>,
+        Justin Tee <justin.tee@broadcom.com>
+Subject: [PATCH 1/5] lpfc: Set sli4_param's cmf option to zero when CMF is turned off
+Date:   Mon, 17 Oct 2022 09:43:19 -0700
+Message-Id: <20221017164323.14536-1-justintee8345@gmail.com>
+X-Mailer: git-send-email 2.38.0.83.gd420dda057
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Starting with commit 42fc9fee116f ("scsi: mpi3mr: Add helper functions to
-manage device's port"), kernel configured with CONFIG_SCSI_MPI3MR=m and
-CONFIG_SCSI_SAS_ATTRS=n fails to build because modpost cannot find symbols
-used in mpi3mr_transport.c:
+Add missed clearing of phba->sli4_hba.pc_sli4_params.cmf when CMF is turned
+off.
 
-  ERROR: modpost: "sas_port_alloc_num" [drivers/scsi/mpi3mr/mpi3mr.ko] undefined!
-  ERROR: modpost: "sas_remove_host" [drivers/scsi/mpi3mr/mpi3mr.ko] undefined!
-  ERROR: modpost: "sas_phy_alloc" [drivers/scsi/mpi3mr/mpi3mr.ko] undefined!
-  ERROR: modpost: "sas_phy_free" [drivers/scsi/mpi3mr/mpi3mr.ko] undefined!
-  ...
-
-Select CONFIG_SCSI_SAS_ATTRS when CONFIG_SCSI_MPI3MR is enabled to prevent
-inconsistent configs.
-
-Fixes: 42fc9fee116f ("scsi: mpi3mr: Add helper functions to manage device's port")
-Signed-off-by: Michal Kubecek <mkubecek@suse.cz>
-
-v2: use select instead of depend
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 ---
- drivers/scsi/mpi3mr/Kconfig | 1 +
+ drivers/scsi/lpfc/lpfc_sli.c | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/mpi3mr/Kconfig b/drivers/scsi/mpi3mr/Kconfig
-index 8997531940c2..f48740cd5b95 100644
---- a/drivers/scsi/mpi3mr/Kconfig
-+++ b/drivers/scsi/mpi3mr/Kconfig
-@@ -4,5 +4,6 @@ config SCSI_MPI3MR
- 	tristate "Broadcom MPI3 Storage Controller Device Driver"
- 	depends on PCI && SCSI
- 	select BLK_DEV_BSGLIB
-+	select SCSI_SAS_ATTRS
- 	help
- 	MPI3 based Storage & RAID Controllers Driver.
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 99d06dc7ddf6..768294b9bc0b 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -8354,6 +8354,7 @@ lpfc_cmf_setup(struct lpfc_hba *phba)
+ 			phba->cgn_i = NULL;
+ 			/* Ensure CGN Mode is off */
+ 			phba->cmf_active_mode = LPFC_CFG_OFF;
++			sli4_params->cmf = 0;
+ 			return 0;
+ 		}
+ 	}
 -- 
-2.38.0
+2.38.0.83.gd420dda057
 
