@@ -2,60 +2,62 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44B55C4332F
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Oct 2022 07:42:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BF29C4332F
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Oct 2022 08:01:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229939AbiJQHmU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 Oct 2022 03:42:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34572 "EHLO
+        id S229969AbiJQIBg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 Oct 2022 04:01:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49142 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229452AbiJQHmT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Oct 2022 03:42:19 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 567491DF21;
-        Mon, 17 Oct 2022 00:42:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=mtIbN1V65bhzv1gpdXAK02P2qioQeqGd9pNhnWCpaRQ=; b=koMm7eX5vkS3e2d/d8iSeoGjeP
-        kHFzb8VCCQNprtIcP/VlCpz0SV/YoiZkG2JxuNLru5Egs58Lz9dsmdShymUMFMcFgFJU0WOzj3Auf
-        1V51iUGRWTMyZfgFK4XcEGYBups6FLVYGjnG1vFtX8jowxnJ6y6wuBMp/aLlGzB035nZXA+AK65R7
-        4WWtD2h0LTsvLjmJkIbNUzWgww+AkTcO+ZGMzzitLSUWmpxHLySp/bJ2sGe4QHhFrRbWNXGCOjoFJ
-        qJLf0Jd012EdJ37+Kvt7EuDfm17iv/Yx2W15bMn8wnzT+846Jk7cVjRn1nOmS6PO2DiCTk1wBnVFt
-        j+v8K5iA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1okKlM-008XC3-69; Mon, 17 Oct 2022 07:42:16 +0000
-Date:   Mon, 17 Oct 2022 00:42:16 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Dmitry Bogdanov <d.bogdanov@yadro.com>
-Cc:     Martin Petersen <martin.petersen@oracle.com>,
-        target-devel@vger.kernel.org,
-        Mike Christie <michael.christie@oracle.com>,
-        linux-scsi@vger.kernel.org, linux@yadro.com,
-        Roman Bolshakov <r.bolshakov@yadro.com>
-Subject: Re: [PATCH v2 4/5] scsi: target: core: Add common port attributes
-Message-ID: <Y00HWKHL3gj/An8E@infradead.org>
-References: <20221006105057.30184-1-d.bogdanov@yadro.com>
- <20221006105057.30184-5-d.bogdanov@yadro.com>
+        with ESMTP id S229818AbiJQIBb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Oct 2022 04:01:31 -0400
+Received: from mail.fadrush.pl (mail.fadrush.pl [54.37.225.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7BF925B51F
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Oct 2022 01:01:29 -0700 (PDT)
+Received: by mail.fadrush.pl (Postfix, from userid 1002)
+        id 43B8222741; Mon, 17 Oct 2022 08:00:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=fadrush.pl; s=mail;
+        t=1665993688; bh=bD6j9gIFU6CLTaCGl0Ow9oeIxtirvTfMeNZSfLEZQ+I=;
+        h=Date:From:To:Subject:From;
+        b=SFgMzfOif5HmpC6L5q0CB2hvbCiucmVGRqvXpLqkx8/KiooY8wz4M+lJXgfnmJ2uP
+         vCgBKBXqILrME2QOF0tw3L2nQPleNEBuax4v2faay2M4FfpkSHZ4Sdq4gebar6YcWX
+         xgQx9MwEg3Twrm5Ie3EkgNeuhUi+Jt0RERhQw9LAxFKvpB18yIv1V9JlX1NXosM6vx
+         401aR47HcFh0YWDS7F97IKw/s3jwxQZ+5DLZrqoyzxbXCPVLPhnGBn8/IGFia2MlWh
+         mmw9R09514vlavkz0DRi+6Z3EhGX079YwVxOZcm9C91/LDE7kz98yPNm2USnONFzwM
+         qYmH6ns9zJfFA==
+Received: by mail.fadrush.pl for <linux-scsi@vger.kernel.org>; Mon, 17 Oct 2022 08:00:39 GMT
+Message-ID: <20221017064500-0.1.29.mk25.0.xrurimpjd2@fadrush.pl>
+Date:   Mon, 17 Oct 2022 08:00:39 GMT
+From:   "Jakub Olejniczak" <jakub.olejniczak@fadrush.pl>
+To:     <linux-scsi@vger.kernel.org>
+Subject: =?UTF-8?Q?Zwi=C4=99kszenie_p=C5=82ynno=C5=9Bci_finansowej?=
+X-Mailer: mail.fadrush.pl
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20221006105057.30184-5-d.bogdanov@yadro.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Oct 06, 2022 at 01:50:56PM +0300, Dmitry Bogdanov wrote:
-> From: Roman Bolshakov <r.bolshakov@yadro.com>
-> 
-> All SCSI target port attributes (tpgN/attribs/attrname) are defined and
-> implemented in fabric modules in existing implementation.
-> 
-> The change introduces a way to have common tpg attribs in configfs for
-> all fabrics without code duplication.
+Dzie=C5=84 dobry,
 
-But does it really buy you much?  There is quite a lot of boilerplate
-code vs just adding an attribute to an array in the drivers, which could
-be further simplified by having a macro for all common ones.
+kontaktuj=C4=99 si=C4=99 z Pa=C5=84stwem, poniewa=C5=BC chcia=C5=82bym za=
+proponowa=C4=87 wygodne rozwi=C4=85zanie, kt=C3=B3re umo=C5=BCliwi Pa=C5=84=
+stwa firmie stabilny rozw=C3=B3j.=20
+
+Konkurencyjne otoczenie wymaga ci=C4=85g=C5=82ego ulepszania i poszerzeni=
+a oferty, co z kolei wi=C4=85=C5=BCe si=C4=99 z konieczno=C5=9Bci=C4=85 i=
+nwestowania. Brak odpowiedniego kapita=C5=82u powa=C5=BCnie ogranicza tem=
+po rozwoju firmy.
+
+Od wielu lat z powodzeniem pomagam firmom w uzyskaniu najlepszej formy fi=
+nansowania z banku oraz UE. Mam sta=C5=82ych Klient=C3=B3w, kt=C3=B3rzy n=
+adal ch=C4=99tnie korzystaj=C4=85 z moich us=C5=82ug, a tak=C5=BCe poleca=
+j=C4=85 je innym.
+
+Czy chcieliby Pa=C5=84stwo skorzysta=C4=87 z pomocy wykwalifikowanego i d=
+o=C5=9Bwiadczonego doradcy finansowego?
+
+
+Pozdrawiam
+Jakub Olejniczak
