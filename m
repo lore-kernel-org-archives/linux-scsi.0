@@ -2,88 +2,114 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EEBE3C4332F
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Oct 2022 14:05:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AAF3C4332F
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Oct 2022 14:14:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230213AbiJQOFq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 Oct 2022 10:05:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32916 "EHLO
+        id S230223AbiJQOOG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 Oct 2022 10:14:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47522 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229939AbiJQOFo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Oct 2022 10:05:44 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4231F642E5;
-        Mon, 17 Oct 2022 07:05:41 -0700 (PDT)
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 63C8933E5B;
-        Mon, 17 Oct 2022 14:05:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1666015539; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc;
-        bh=4RoB3f0vV4gaiUdmvAQjE8R89ohmE3TBwvo8Cf6CUMw=;
-        b=q55ootJXzdR2lPOdq1dB9ZSp7j6b15mg3Lw8s3RAZ+DwJxUIeS5YYR21u3+nnKVDgzw370
-        +CTo0c7tGuamLaUM/O6/t/N4wVFUPh4c19XTlNupX99hIIGfAx9hJwnAb8MCJUXfC5A4RB
-        RhvnXxt9rc2gjmxxMwhF/YAjgG6Zsc0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1666015539;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc;
-        bh=4RoB3f0vV4gaiUdmvAQjE8R89ohmE3TBwvo8Cf6CUMw=;
-        b=Pk4p2wYEQA+ZbvQ/zK2DQi5R3rbXOCC2ktHOsJKq17zGUDlBxj7ubmmF/+Z3rov/oQmS3g
-        Po+DIOOg8qibVZCQ==
-Received: from lion.mk-sys.cz (unknown [10.163.29.118])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by relay2.suse.de (Postfix) with ESMTPS id 557A22C141;
-        Mon, 17 Oct 2022 14:05:39 +0000 (UTC)
-Received: by lion.mk-sys.cz (Postfix, from userid 1000)
-        id CC46F6043B; Mon, 17 Oct 2022 16:05:33 +0200 (CEST)
-From:   Michal Kubecek <mkubecek@suse.cz>
-Subject: [PATCH] scsi: mpi3mr: add explicit dependency on
+        with ESMTP id S229848AbiJQOOF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Oct 2022 10:14:05 -0400
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B39276525B;
+        Mon, 17 Oct 2022 07:14:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1666016041;
+        bh=YD4Pv7tW+FbXtDk5sIYlLG/ZFT1v2pzYm+qsOBhsZBI=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=HrU7zBQPP0nvPbsR2IWrc7XbPrP0tfGGFWiqaqWTXfZp1xHeAvFWPX/vQHRvjn54s
+         vtiaPaEZTq1XVB2kxQVUx8uln+lagto2dwK0QbYWzas65xhp71VWDeZil65pO+97He
+         i+FhAw/Z706sOD2hjLJBHhec1ouW/qW3bbC9lb+A=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 691041281F8A;
+        Mon, 17 Oct 2022 10:14:01 -0400 (EDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id q5psDtmI60sg; Mon, 17 Oct 2022 10:14:01 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1666016041;
+        bh=YD4Pv7tW+FbXtDk5sIYlLG/ZFT1v2pzYm+qsOBhsZBI=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=HrU7zBQPP0nvPbsR2IWrc7XbPrP0tfGGFWiqaqWTXfZp1xHeAvFWPX/vQHRvjn54s
+         vtiaPaEZTq1XVB2kxQVUx8uln+lagto2dwK0QbYWzas65xhp71VWDeZil65pO+97He
+         i+FhAw/Z706sOD2hjLJBHhec1ouW/qW3bbC9lb+A=
+Received: from [IPv6:2601:5c4:4300:c551:a71:90ff:fec2:f05b] (unknown [IPv6:2601:5c4:4300:c551:a71:90ff:fec2:f05b])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (Client did not present a certificate)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 405FE128185C;
+        Mon, 17 Oct 2022 10:14:00 -0400 (EDT)
+Message-ID: <0c6f49e95cbb9e2de9501b11b1391a5fd7b132c1.camel@HansenPartnership.com>
+Subject: Re: [PATCH] scsi: mpi3mr: add explicit dependency on
  CONFIG_SCSI_SAS_ATTRS
-To:     mpi3mr-linuxdrv.pdl@broadcom.com,
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Michal Kubecek <mkubecek@suse.cz>,
+        mpi3mr-linuxdrv.pdl@broadcom.com,
         Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
         Kashyap Desai <kashyap.desai@broadcom.com>,
         Sumit Saxena <sumit.saxena@broadcom.com>,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <20221017140533.CC46F6043B@lion.mk-sys.cz>
-Date:   Mon, 17 Oct 2022 16:05:33 +0200 (CEST)
+Date:   Mon, 17 Oct 2022 10:13:58 -0400
+In-Reply-To: <20221017140533.CC46F6043B@lion.mk-sys.cz>
+References: <20221017140533.CC46F6043B@lion.mk-sys.cz>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Starting with commit 42fc9fee116f ("scsi: mpi3mr: Add helper functions to
-manage device's port"), kernel configured with CONFIG_SCSI_MPI3MR=m and
-CONFIG_SCSI_SAS_ATTRS=n fails to build because modpost cannot find symbols
-used in mpi3mr_transport.c:
+On Mon, 2022-10-17 at 16:05 +0200, Michal Kubecek wrote:
+> Starting with commit 42fc9fee116f ("scsi: mpi3mr: Add helper
+> functions to
+> manage device's port"), kernel configured with CONFIG_SCSI_MPI3MR=m
+> and
+> CONFIG_SCSI_SAS_ATTRS=n fails to build because modpost cannot find
+> symbols
+> used in mpi3mr_transport.c:
+> 
+>   ERROR: modpost: "sas_port_alloc_num"
+> [drivers/scsi/mpi3mr/mpi3mr.ko] undefined!
+>   ERROR: modpost: "sas_remove_host" [drivers/scsi/mpi3mr/mpi3mr.ko]
+> undefined!
+>   ERROR: modpost: "sas_phy_alloc" [drivers/scsi/mpi3mr/mpi3mr.ko]
+> undefined!
+>   ERROR: modpost: "sas_phy_free" [drivers/scsi/mpi3mr/mpi3mr.ko]
+> undefined!
+>   ...
+> 
+> Add an explicit dependency of CONFIG_SCSI_MPI3MR on
+> CONFIG_SCSI_SAS_ATTRS
+> to prevent inconsistent configs.
+> 
+> Fixes: 42fc9fee116f ("scsi: mpi3mr: Add helper functions to manage
+> device's port")
+> Signed-off-by: Michal Kubecek <mkubecek@suse.cz>
+> ---
+>  drivers/scsi/mpi3mr/Kconfig | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/mpi3mr/Kconfig
+> b/drivers/scsi/mpi3mr/Kconfig
+> index 8997531940c2..8ada8e8d25ac 100644
+> --- a/drivers/scsi/mpi3mr/Kconfig
+> +++ b/drivers/scsi/mpi3mr/Kconfig
+> @@ -2,7 +2,7 @@
+>  
+>  config SCSI_MPI3MR
+>  	tristate "Broadcom MPI3 Storage Controller Device Driver"
+> -	depends on PCI && SCSI
+> +	depends on PCI && SCSI && SCSI_SAS_ATTRS
 
-  ERROR: modpost: "sas_port_alloc_num" [drivers/scsi/mpi3mr/mpi3mr.ko] undefined!
-  ERROR: modpost: "sas_remove_host" [drivers/scsi/mpi3mr/mpi3mr.ko] undefined!
-  ERROR: modpost: "sas_phy_alloc" [drivers/scsi/mpi3mr/mpi3mr.ko] undefined!
-  ERROR: modpost: "sas_phy_free" [drivers/scsi/mpi3mr/mpi3mr.ko] undefined!
-  ...
+This should probably be select not depends.
 
-Add an explicit dependency of CONFIG_SCSI_MPI3MR on CONFIG_SCSI_SAS_ATTRS
-to prevent inconsistent configs.
+All transport attributes are designed to be selected.  The reason is to
+avoid people having to figure out what attributes they have to set in
+Kconfig before they see the HBAs they're interested in.
 
-Fixes: 42fc9fee116f ("scsi: mpi3mr: Add helper functions to manage device's port")
-Signed-off-by: Michal Kubecek <mkubecek@suse.cz>
----
- drivers/scsi/mpi3mr/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+James
 
-diff --git a/drivers/scsi/mpi3mr/Kconfig b/drivers/scsi/mpi3mr/Kconfig
-index 8997531940c2..8ada8e8d25ac 100644
---- a/drivers/scsi/mpi3mr/Kconfig
-+++ b/drivers/scsi/mpi3mr/Kconfig
-@@ -2,7 +2,7 @@
- 
- config SCSI_MPI3MR
- 	tristate "Broadcom MPI3 Storage Controller Device Driver"
--	depends on PCI && SCSI
-+	depends on PCI && SCSI && SCSI_SAS_ATTRS
- 	select BLK_DEV_BSGLIB
- 	help
- 	MPI3 based Storage & RAID Controllers Driver.
--- 
-2.38.0
 
