@@ -2,590 +2,261 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C63AFC433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Oct 2022 09:01:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC261C4332F
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Oct 2022 09:27:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230491AbiJQJBy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 Oct 2022 05:01:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35106 "EHLO
+        id S230313AbiJQJ1V (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 Oct 2022 05:27:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55538 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230464AbiJQJBp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Oct 2022 05:01:45 -0400
-Received: from mail-lf1-x12f.google.com (mail-lf1-x12f.google.com [IPv6:2a00:1450:4864:20::12f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E584248FD
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Oct 2022 02:01:31 -0700 (PDT)
-Received: by mail-lf1-x12f.google.com with SMTP id r14so16495123lfm.2
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Oct 2022 02:01:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=QAeq0YiAQ31sBroOVReanPa2M5+V0IiNuQ6QjrdIdr4=;
-        b=hWgmdxHL2OYvJuFVJOLb2QXSqK/8wTURi2jUl3cBh1QogPIM2fglXgeGhKwITm8fVI
-         hbkyrJqMiPt8hakcGNXyFp97EBq5SaOcMvlspdOXoexiJYkHIAouvi20fcmoLToC30MO
-         yjPmMyuyLP07kSZI3DA6EZcP6sTp6+3PyERTrCdI3H75Fp6x4YO2dbIGgLVavadJveLd
-         nqf01ZZR8wphvd8uw3BsW0IDT/soqakajbqLCiK4Xc3rQUERveH3uXiBPFvy+MTyeHr/
-         L3jIr3EzPPR7pR1lnK3+B5sadR2L4KvCY5YJaYDiSGDfWjGY/Y89HDZmlBorhoOW84J2
-         0JiQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=QAeq0YiAQ31sBroOVReanPa2M5+V0IiNuQ6QjrdIdr4=;
-        b=CkpaRCL42N/LMiFezaWZWa5/FmOUFqvwkXgLYd4UeKF2moIBa8plJxK6uhc5UtVa2p
-         PB+/phtaDYeAxZYMkk6GMGIo1h29cizj7bCWG9z+LJTvhQcQ7SzMIHHgtP4bi1SGPPd3
-         T9bnHQ/eWSyTGmkv8Dj4d/Ft4u5Or2YtjBkZJEQSM7K71A95udTAnt6mJgKZGpWUSotM
-         UlRBIBIaPLtJwDwQa7FmLIvnO2QCQ7/ywqZsIGAfe9A6bMFcuxezR2SDTJIX0JtPc+KC
-         WX2xZ4qJ+3/P8m3Lrye+d3qtCylFtSEy1zgLQURooLaM20qCq0HMJQH7kiL4PVzopVlo
-         y1SA==
-X-Gm-Message-State: ACrzQf0L4ZTlXg+EA9i42GyVtcb3KxQ92Jlgpwj4xxd84ylReNOVJFuy
-        SOYWDIjaWOX0tLivDrLZ7NxLcHB7+1IHybMSJlSMwg==
-X-Google-Smtp-Source: AMsMyM7INawjsUggbLDaim/E1DCVyEYULmGcS8Ke7SR12ZnEakeKg0Iz27TpkOAYFvkwTTGypNqysjKk0YiP11/PpzM=
-X-Received: by 2002:a05:6512:31c4:b0:4a2:696e:4302 with SMTP id
- j4-20020a05651231c400b004a2696e4302mr3960245lfe.478.1665997288782; Mon, 17
- Oct 2022 02:01:28 -0700 (PDT)
-MIME-Version: 1.0
-References: <1665998435-199946-1-git-send-email-john.garry@huawei.com> <1665998435-199946-7-git-send-email-john.garry@huawei.com>
-In-Reply-To: <1665998435-199946-7-git-send-email-john.garry@huawei.com>
-From:   Jinpu Wang <jinpu.wang@ionos.com>
-Date:   Mon, 17 Oct 2022 11:01:17 +0200
-Message-ID: <CAMGffEka0dzrCwyFdDCTK0GnOnWfSUuvZZBA9gW1jV4NWKc40w@mail.gmail.com>
-Subject: Re: [PATCH v6 6/8] scsi: pm8001: Use sas_ata_device_link_abort() to
- handle NCQ errors
-To:     John Garry <john.garry@huawei.com>
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        jinpu.wang@ionos.com, damien.lemoal@opensource.wdc.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linuxarm@huawei.com, yangxingui@huawei.com, niklas.cassel@wdc.com
+        with ESMTP id S230371AbiJQJ1P (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Oct 2022 05:27:15 -0400
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E05D515A37;
+        Mon, 17 Oct 2022 02:27:09 -0700 (PDT)
+X-UUID: b32ff4598615471288036fbe5affdc57-20221017
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=3gdiwwP8VicLXvgcqxaNWmclhgGy7ymu62tiLxXrCGc=;
+        b=rQSrDh04Pxwf0elQeRkUG2AP7YzH6T8ecnzCiZVNeJ5DZv0fpUEkJDM4n/OgwBKkJMONC6zBExSp+5vDEwEwAh+oPY/7U/Etrl4pV1Z3/cQx2MiY5QCtriCDkQ4zaRnBJLrZamkpMOf9ppmOmC31JJL/fbQUqgnL9QZo/2R24ZY=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.11,REQID:802fa7b4-52eb-4097-b218-a75202a759b4,IP:0,U
+        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+        release,TS:0
+X-CID-META: VersionHash:39a5ff1,CLOUDID:4a4704a4-ebb2-41a8-a87c-97702aaf2e20,B
+        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
+        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
+X-UUID: b32ff4598615471288036fbe5affdc57-20221017
+Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw02.mediatek.com
+        (envelope-from <eddie.huang@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 1376876088; Mon, 17 Oct 2022 17:27:04 +0800
+Received: from mtkcas10.mediatek.inc (172.21.101.39) by
+ mtkmbs11n2.mediatek.inc (172.21.101.187) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.2.792.15; Mon, 17 Oct 2022 17:27:03 +0800
+Received: from mtksdccf07 (172.21.84.99) by mtkcas10.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Mon, 17 Oct 2022 17:27:03 +0800
+Message-ID: <83fe64628b6d44f28637a6a8ba6b21eb0848caaa.camel@mediatek.com>
+Subject: Re: Fwd: [PATCH v2 06/17] ufs: core: mcq: Configure resource regions
+From:   Eddie Huang <eddie.huang@mediatek.com>
+To:     Can Guo <quic_cang@quicinc.com>,
+        sutosh Das <quic_asutoshd@quicinc.com>,
+        <quic_nitirawa@quicinc.com>, <quic_rampraka@quicinc.com>,
+        <quic_bhaskarv@quicinc.com>, <quic_richardp@quicinc.com>,
+        <linux-scsi@vger.kernel.org>
+CC:     <linux-arm-msm@vger.kernel.org>, <quic_nguyenb@quicinc.com>,
+        <quic_xiaosenh@quicinc.com>, <bvanassche@acm.org>,
+        <avri.altman@wdc.com>, <mani@kernel.org>, <beanhuo@micron.com>,
+        <stanley.chu@mediatek.com>, <liang-yen.wang@mediatek.com>
+Date:   Mon, 17 Oct 2022 17:27:02 +0800
+In-Reply-To: <6592c7fe-0828-6bb3-17a8-9db53aac1873@quicinc.com>
+References: <11530912-36fd-8c69-4beb-de955eaae529@quicinc.com>
+         <6592c7fe-0828-6bb3-17a8-9db53aac1873@quicinc.com>
 Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Oct 17, 2022 at 10:50 AM John Garry <john.garry@huawei.com> wrote:
->
-> In commit c6b9ef5779c3 ("[SCSI] pm80xx: NCQ error handling changes") the
-> driver had support added to handle NCQ errors but much of what is done
-> in this handling is duplicated from the libata EH.
->
-> In that named commit we handle in 2x main steps:
-> a. Issue read log ext10 to examine and clear the errors
-> b. Issue SATA_ABORT all command
->
-> Indeed, in libata EH, we do similar to above:
-> a. ata_do_eh() -> ata_eh_autopsy() -> ata_eh_link_autopsy() ->
->    ata_eh_analyze_ncq_error() -> ata_eh_read_log_10h()
-> b. ata_do_eh() -> ata_eh_recover() which will issue a device soft reset
->    or hard reset
->
-> Since there is so much duplication, use sas_ata_device_link_abort() which
-> will abort all pending IOs and kick of ATA EH which will do the steps,
-> above.
->
-> However we will not follow the advisory to send the SATA_ABORT all command
-> after the autopsy in read log ext10. Indeed, in libsas EH, we already send
-> a per-task SATA_ABORT command, and this is prior to the ATA EH kicking in
-> and issuing the read log ext10 in the recovery process. I judge that this
-> is ok as the SATA_ABORT command does not actually send any protocol on the
-> link to abort IO on the other side, so would not change any state on the
-> disk (for the read log ext10 command).
->
-> Signed-off-by: John Garry <john.garry@huawei.com>
-> Tested-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> Tested-by: Niklas Cassel <niklas.cassel@wdc.com> # pm80xx
-Reuse ata helper is nice.
-Acked-by: Jack Wang <jinpu.wang@ionos.com>
-> ---
->  drivers/scsi/pm8001/pm8001_hwi.c | 171 +++----------------------------
->  drivers/scsi/pm8001/pm8001_sas.c |   6 --
->  drivers/scsi/pm8001/pm8001_sas.h |   5 -
->  drivers/scsi/pm8001/pm80xx_hwi.c | 163 ++---------------------------
->  4 files changed, 19 insertions(+), 326 deletions(-)
->
-> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-> index c0adc3a9d196..ec1a9ab61814 100644
-> --- a/drivers/scsi/pm8001/pm8001_hwi.c
-> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
-> @@ -1724,7 +1724,14 @@ void pm8001_work_fn(struct work_struct *work)
->                                 pm8001_free_dev(pm8001_dev);
->                         }
->                 }
-> -       }       break;
-> +       }
-> +       break;
-> +       case IO_XFER_ERROR_ABORTED_NCQ_MODE:
-> +       {
-> +               dev = pm8001_dev->sas_device;
-> +               sas_ata_device_link_abort(dev, false);
-> +       }
-> +       break;
->         }
->         kfree(pw);
->  }
-> @@ -1748,110 +1755,6 @@ int pm8001_handle_event(struct pm8001_hba_info *pm8001_ha, void *data,
->         return ret;
->  }
->
-> -static void pm8001_send_abort_all(struct pm8001_hba_info *pm8001_ha,
-> -               struct pm8001_device *pm8001_ha_dev)
-> -{
-> -       struct pm8001_ccb_info *ccb;
-> -       struct sas_task *task;
-> -       struct task_abort_req task_abort;
-> -       u32 opc = OPC_INB_SATA_ABORT;
-> -       int ret;
-> -
-> -       pm8001_ha_dev->id |= NCQ_ABORT_ALL_FLAG;
-> -       pm8001_ha_dev->id &= ~NCQ_READ_LOG_FLAG;
-> -
-> -       task = sas_alloc_slow_task(GFP_ATOMIC);
-> -       if (!task) {
-> -               pm8001_dbg(pm8001_ha, FAIL, "cannot allocate task\n");
-> -               return;
-> -       }
-> -
-> -       task->task_done = pm8001_task_done;
-> -
-> -       ccb = pm8001_ccb_alloc(pm8001_ha, pm8001_ha_dev, task);
-> -       if (!ccb) {
-> -               sas_free_task(task);
-> -               return;
-> -       }
-> -
-> -       memset(&task_abort, 0, sizeof(task_abort));
-> -       task_abort.abort_all = cpu_to_le32(1);
-> -       task_abort.device_id = cpu_to_le32(pm8001_ha_dev->device_id);
-> -       task_abort.tag = cpu_to_le32(ccb->ccb_tag);
-> -
-> -       ret = pm8001_mpi_build_cmd(pm8001_ha, 0, opc, &task_abort,
-> -                                  sizeof(task_abort), 0);
-> -       if (ret) {
-> -               sas_free_task(task);
-> -               pm8001_ccb_free(pm8001_ha, ccb);
-> -       }
-> -}
-> -
-> -static void pm8001_send_read_log(struct pm8001_hba_info *pm8001_ha,
-> -               struct pm8001_device *pm8001_ha_dev)
-> -{
-> -       struct sata_start_req sata_cmd;
-> -       int res;
-> -       struct pm8001_ccb_info *ccb;
-> -       struct sas_task *task = NULL;
-> -       struct host_to_dev_fis fis;
-> -       struct domain_device *dev;
-> -       u32 opc = OPC_INB_SATA_HOST_OPSTART;
-> -
-> -       task = sas_alloc_slow_task(GFP_ATOMIC);
-> -       if (!task) {
-> -               pm8001_dbg(pm8001_ha, FAIL, "cannot allocate task !!!\n");
-> -               return;
-> -       }
-> -       task->task_done = pm8001_task_done;
-> -
-> -       /*
-> -        * Allocate domain device by ourselves as libsas is not going to
-> -        * provide any.
-> -        */
-> -       dev = kzalloc(sizeof(struct domain_device), GFP_ATOMIC);
-> -       if (!dev) {
-> -               sas_free_task(task);
-> -               pm8001_dbg(pm8001_ha, FAIL,
-> -                          "Domain device cannot be allocated\n");
-> -               return;
-> -       }
-> -       task->dev = dev;
-> -       task->dev->lldd_dev = pm8001_ha_dev;
-> -
-> -       ccb = pm8001_ccb_alloc(pm8001_ha, pm8001_ha_dev, task);
-> -       if (!ccb) {
-> -               sas_free_task(task);
-> -               kfree(dev);
-> -               return;
-> -       }
-> -
-> -       pm8001_ha_dev->id |= NCQ_READ_LOG_FLAG;
-> -       pm8001_ha_dev->id |= NCQ_2ND_RLE_FLAG;
-> -
-> -       /* construct read log FIS */
-> -       memset(&fis, 0, sizeof(struct host_to_dev_fis));
-> -       fis.fis_type = 0x27;
-> -       fis.flags = 0x80;
-> -       fis.command = ATA_CMD_READ_LOG_EXT;
-> -       fis.lbal = 0x10;
-> -       fis.sector_count = 0x1;
-> -
-> -       memset(&sata_cmd, 0, sizeof(sata_cmd));
-> -       sata_cmd.tag = cpu_to_le32(ccb->ccb_tag);
-> -       sata_cmd.device_id = cpu_to_le32(pm8001_ha_dev->device_id);
-> -       sata_cmd.ncqtag_atap_dir_m = cpu_to_le32((0x1 << 7) | (0x5 << 9));
-> -       memcpy(&sata_cmd.sata_fis, &fis, sizeof(struct host_to_dev_fis));
-> -
-> -       res = pm8001_mpi_build_cmd(pm8001_ha, 0, opc, &sata_cmd,
-> -                                  sizeof(sata_cmd), 0);
-> -       if (res) {
-> -               sas_free_task(task);
-> -               pm8001_ccb_free(pm8001_ha, ccb);
-> -               kfree(dev);
-> -       }
-> -}
-> -
->  /**
->   * mpi_ssp_completion- process the event that FW response to the SSP request.
->   * @pm8001_ha: our hba card information
-> @@ -2301,8 +2204,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
->                 return;
->         }
->
-> -       if ((pm8001_dev && !(pm8001_dev->id & NCQ_READ_LOG_FLAG))
-> -               && unlikely(!t || !t->lldd_task || !t->dev)) {
-> +       if (pm8001_dev && unlikely(!t || !t->lldd_task || !t->dev)) {
->                 pm8001_dbg(pm8001_ha, FAIL, "task or dev null\n");
->                 return;
->         }
-> @@ -2360,15 +2262,6 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
->                 if (param == 0) {
->                         ts->resp = SAS_TASK_COMPLETE;
->                         ts->stat = SAS_SAM_STAT_GOOD;
-> -                       /* check if response is for SEND READ LOG */
-> -                       if (pm8001_dev &&
-> -                           (pm8001_dev->id & NCQ_READ_LOG_FLAG)) {
-> -                               pm8001_send_abort_all(pm8001_ha, pm8001_dev);
-> -                               /* Free the tag */
-> -                               pm8001_tag_free(pm8001_ha, tag);
-> -                               sas_free_task(t);
-> -                               return;
-> -                       }
->                 } else {
->                         u8 len;
->                         ts->resp = SAS_TASK_COMPLETE;
-> @@ -2666,9 +2559,10 @@ static void mpi_sata_event(struct pm8001_hba_info *pm8001_ha, void *piomb)
->         if (event == IO_XFER_ERROR_ABORTED_NCQ_MODE) {
->                 /* find device using device id */
->                 pm8001_dev = pm8001_find_dev(pm8001_ha, dev_id);
-> -               /* send read log extension */
->                 if (pm8001_dev)
-> -                       pm8001_send_read_log(pm8001_ha, pm8001_dev);
-> +                       pm8001_handle_event(pm8001_ha,
-> +                               pm8001_dev,
-> +                               IO_XFER_ERROR_ABORTED_NCQ_MODE);
->                 return;
->         }
->
-> @@ -3649,12 +3543,7 @@ int pm8001_mpi_task_abort_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
->         pm8001_ccb_task_free(pm8001_ha, ccb);
->         mb();
->
-> -       if (pm8001_dev->id & NCQ_ABORT_ALL_FLAG) {
-> -               sas_free_task(t);
-> -               pm8001_dev->id &= ~NCQ_ABORT_ALL_FLAG;
-> -       } else {
-> -               t->task_done(t);
-> -       }
-> +       t->task_done(t);
->
->         return 0;
->  }
-> @@ -4206,7 +4095,6 @@ static int pm8001_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
->         u64 phys_addr;
->         u32 ATAP = 0x0;
->         u32 dir;
-> -       unsigned long flags;
->         u32  opc = OPC_INB_SATA_HOST_OPSTART;
->
->         memset(&sata_cmd, 0, sizeof(sata_cmd));
-> @@ -4261,39 +4149,6 @@ static int pm8001_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
->                 sata_cmd.esgl = 0;
->         }
->
-> -       /* Check for read log for failed drive and return */
-> -       if (sata_cmd.sata_fis.command == 0x2f) {
-> -               if (((pm8001_ha_dev->id & NCQ_READ_LOG_FLAG) ||
-> -                       (pm8001_ha_dev->id & NCQ_ABORT_ALL_FLAG) ||
-> -                       (pm8001_ha_dev->id & NCQ_2ND_RLE_FLAG))) {
-> -                       struct task_status_struct *ts;
-> -
-> -                       pm8001_ha_dev->id &= 0xDFFFFFFF;
-> -                       ts = &task->task_status;
-> -
-> -                       spin_lock_irqsave(&task->task_state_lock, flags);
-> -                       ts->resp = SAS_TASK_COMPLETE;
-> -                       ts->stat = SAS_SAM_STAT_GOOD;
-> -                       task->task_state_flags &= ~SAS_TASK_STATE_PENDING;
-> -                       task->task_state_flags |= SAS_TASK_STATE_DONE;
-> -                       if (unlikely((task->task_state_flags &
-> -                                       SAS_TASK_STATE_ABORTED))) {
-> -                               spin_unlock_irqrestore(&task->task_state_lock,
-> -                                                       flags);
-> -                               pm8001_dbg(pm8001_ha, FAIL,
-> -                                          "task 0x%p resp 0x%x  stat 0x%x but aborted by upper layer\n",
-> -                                          task, ts->resp,
-> -                                          ts->stat);
-> -                               pm8001_ccb_task_free(pm8001_ha, ccb);
-> -                       } else {
-> -                               spin_unlock_irqrestore(&task->task_state_lock,
-> -                                                       flags);
-> -                               pm8001_ccb_task_free_done(pm8001_ha, ccb);
-> -                               return 0;
-> -                       }
-> -               }
-> -       }
-> -
->         return pm8001_mpi_build_cmd(pm8001_ha, 0, opc, &sata_cmd,
->                                     sizeof(sata_cmd), 0);
->  }
-> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-> index d5ec29f69be3..2d84ae95a1f9 100644
-> --- a/drivers/scsi/pm8001/pm8001_sas.c
-> +++ b/drivers/scsi/pm8001/pm8001_sas.c
-> @@ -687,12 +687,6 @@ int pm8001_dev_found(struct domain_device *dev)
->         return pm8001_dev_found_notify(dev);
->  }
->
-> -void pm8001_task_done(struct sas_task *task)
-> -{
-> -       del_timer(&task->slow_task->timer);
-> -       complete(&task->slow_task->completion);
-> -}
-> -
->  #define PM8001_TASK_TIMEOUT 20
->
->  /**
-> diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
-> index b08f52673889..16a753d5e8a7 100644
-> --- a/drivers/scsi/pm8001/pm8001_sas.h
-> +++ b/drivers/scsi/pm8001/pm8001_sas.h
-> @@ -579,10 +579,6 @@ struct pm8001_fw_image_header {
->  #define FLASH_UPDATE_DNLD_NOT_SUPPORTED                0x10
->  #define FLASH_UPDATE_DISABLED                  0x11
->
-> -#define        NCQ_READ_LOG_FLAG                       0x80000000
-> -#define        NCQ_ABORT_ALL_FLAG                      0x40000000
-> -#define        NCQ_2ND_RLE_FLAG                        0x20000000
-> -
->  /* Device states */
->  #define DS_OPERATIONAL                         0x01
->  #define DS_PORT_IN_RESET                       0x02
-> @@ -709,7 +705,6 @@ int pm8001_mpi_fw_flash_update_resp(struct pm8001_hba_info *pm8001_ha,
->  int pm8001_mpi_general_event(struct pm8001_hba_info *pm8001_ha, void *piomb);
->  int pm8001_mpi_task_abort_resp(struct pm8001_hba_info *pm8001_ha, void *piomb);
->  struct sas_task *pm8001_alloc_task(void);
-> -void pm8001_task_done(struct sas_task *task);
->  void pm8001_free_task(struct sas_task *task);
->  void pm8001_tag_free(struct pm8001_hba_info *pm8001_ha, u32 tag);
->  struct pm8001_device *pm8001_find_dev(struct pm8001_hba_info *pm8001_ha,
-> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-> index dd0e06983cd3..4484c498bcb6 100644
-> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
-> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-> @@ -1778,113 +1778,6 @@ pm80xx_chip_interrupt_disable(struct pm8001_hba_info *pm8001_ha, u8 vec)
->         pm80xx_chip_intx_interrupt_disable(pm8001_ha);
->  }
->
-> -static void pm80xx_send_abort_all(struct pm8001_hba_info *pm8001_ha,
-> -               struct pm8001_device *pm8001_ha_dev)
-> -{
-> -       struct pm8001_ccb_info *ccb;
-> -       struct sas_task *task;
-> -       struct task_abort_req task_abort;
-> -       u32 opc = OPC_INB_SATA_ABORT;
-> -       int ret;
-> -
-> -       pm8001_ha_dev->id |= NCQ_ABORT_ALL_FLAG;
-> -       pm8001_ha_dev->id &= ~NCQ_READ_LOG_FLAG;
-> -
-> -       task = sas_alloc_slow_task(GFP_ATOMIC);
-> -       if (!task) {
-> -               pm8001_dbg(pm8001_ha, FAIL, "cannot allocate task\n");
-> -               return;
-> -       }
-> -       task->task_done = pm8001_task_done;
-> -
-> -       ccb = pm8001_ccb_alloc(pm8001_ha, pm8001_ha_dev, task);
-> -       if (!ccb) {
-> -               sas_free_task(task);
-> -               return;
-> -       }
-> -
-> -       memset(&task_abort, 0, sizeof(task_abort));
-> -       task_abort.abort_all = cpu_to_le32(1);
-> -       task_abort.device_id = cpu_to_le32(pm8001_ha_dev->device_id);
-> -       task_abort.tag = cpu_to_le32(ccb->ccb_tag);
-> -
-> -       ret = pm8001_mpi_build_cmd(pm8001_ha, 0, opc, &task_abort,
-> -                                  sizeof(task_abort), 0);
-> -       pm8001_dbg(pm8001_ha, FAIL, "Executing abort task end\n");
-> -       if (ret) {
-> -               sas_free_task(task);
-> -               pm8001_ccb_free(pm8001_ha, ccb);
-> -       }
-> -}
-> -
-> -static void pm80xx_send_read_log(struct pm8001_hba_info *pm8001_ha,
-> -               struct pm8001_device *pm8001_ha_dev)
-> -{
-> -       struct sata_start_req sata_cmd;
-> -       int res;
-> -       struct pm8001_ccb_info *ccb;
-> -       struct sas_task *task = NULL;
-> -       struct host_to_dev_fis fis;
-> -       struct domain_device *dev;
-> -       u32 opc = OPC_INB_SATA_HOST_OPSTART;
-> -
-> -       task = sas_alloc_slow_task(GFP_ATOMIC);
-> -       if (!task) {
-> -               pm8001_dbg(pm8001_ha, FAIL, "cannot allocate task !!!\n");
-> -               return;
-> -       }
-> -       task->task_done = pm8001_task_done;
-> -
-> -       /*
-> -        * Allocate domain device by ourselves as libsas is not going to
-> -        * provide any.
-> -        */
-> -       dev = kzalloc(sizeof(struct domain_device), GFP_ATOMIC);
-> -       if (!dev) {
-> -               sas_free_task(task);
-> -               pm8001_dbg(pm8001_ha, FAIL,
-> -                          "Domain device cannot be allocated\n");
-> -               return;
-> -       }
-> -
-> -       task->dev = dev;
-> -       task->dev->lldd_dev = pm8001_ha_dev;
-> -
-> -       ccb = pm8001_ccb_alloc(pm8001_ha, pm8001_ha_dev, task);
-> -       if (!ccb) {
-> -               sas_free_task(task);
-> -               kfree(dev);
-> -               return;
-> -       }
-> -
-> -       pm8001_ha_dev->id |= NCQ_READ_LOG_FLAG;
-> -       pm8001_ha_dev->id |= NCQ_2ND_RLE_FLAG;
-> -
-> -       memset(&sata_cmd, 0, sizeof(sata_cmd));
-> -
-> -       /* construct read log FIS */
-> -       memset(&fis, 0, sizeof(struct host_to_dev_fis));
-> -       fis.fis_type = 0x27;
-> -       fis.flags = 0x80;
-> -       fis.command = ATA_CMD_READ_LOG_EXT;
-> -       fis.lbal = 0x10;
-> -       fis.sector_count = 0x1;
-> -
-> -       sata_cmd.tag = cpu_to_le32(ccb->ccb_tag);
-> -       sata_cmd.device_id = cpu_to_le32(pm8001_ha_dev->device_id);
-> -       sata_cmd.ncqtag_atap_dir_m_dad = cpu_to_le32(((0x1 << 7) | (0x5 << 9)));
-> -       memcpy(&sata_cmd.sata_fis, &fis, sizeof(struct host_to_dev_fis));
-> -
-> -       res = pm8001_mpi_build_cmd(pm8001_ha, 0, opc, &sata_cmd,
-> -                                  sizeof(sata_cmd), 0);
-> -       pm8001_dbg(pm8001_ha, FAIL, "Executing read log end\n");
-> -       if (res) {
-> -               sas_free_task(task);
-> -               pm8001_ccb_free(pm8001_ha, ccb);
-> -               kfree(dev);
-> -       }
-> -}
-> -
->  /**
->   * mpi_ssp_completion - process the event that FW response to the SSP request.
->   * @pm8001_ha: our hba card information
-> @@ -2402,11 +2295,9 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha,
->                 return;
->         }
->
-> -       if ((pm8001_dev && !(pm8001_dev->id & NCQ_READ_LOG_FLAG))
-> -               && unlikely(!t || !t->lldd_task || !t->dev)) {
-> -               pm8001_dbg(pm8001_ha, FAIL, "task or dev null\n");
-> +
-> +       if (pm8001_dev && unlikely(!t->lldd_task || !t->dev))
->                 return;
-> -       }
->
->         ts = &t->task_status;
->
-> @@ -2463,15 +2354,6 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha,
->                 if (param == 0) {
->                         ts->resp = SAS_TASK_COMPLETE;
->                         ts->stat = SAS_SAM_STAT_GOOD;
-> -                       /* check if response is for SEND READ LOG */
-> -                       if (pm8001_dev &&
-> -                           (pm8001_dev->id & NCQ_READ_LOG_FLAG)) {
-> -                               pm80xx_send_abort_all(pm8001_ha, pm8001_dev);
-> -                               /* Free the tag */
-> -                               pm8001_tag_free(pm8001_ha, tag);
-> -                               sas_free_task(t);
-> -                               return;
-> -                       }
->                 } else {
->                         u8 len;
->                         ts->resp = SAS_TASK_COMPLETE;
-> @@ -2806,9 +2688,11 @@ static void mpi_sata_event(struct pm8001_hba_info *pm8001_ha,
->         if (event == IO_XFER_ERROR_ABORTED_NCQ_MODE) {
->                 /* find device using device id */
->                 pm8001_dev = pm8001_find_dev(pm8001_ha, dev_id);
-> -               /* send read log extension */
-> +               /* send read log extension by aborting the link - libata does what we want */
->                 if (pm8001_dev)
-> -                       pm80xx_send_read_log(pm8001_ha, pm8001_dev);
-> +                       pm8001_handle_event(pm8001_ha,
-> +                               pm8001_dev,
-> +                               IO_XFER_ERROR_ABORTED_NCQ_MODE);
->                 return;
->         }
->
-> @@ -4556,7 +4440,6 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
->         u32 end_addr_high, end_addr_low;
->         u32 ATAP = 0x0;
->         u32 dir;
-> -       unsigned long flags;
->         u32 opc = OPC_INB_SATA_HOST_OPSTART;
->         memset(&sata_cmd, 0, sizeof(sata_cmd));
->
-> @@ -4735,40 +4618,6 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
->                                      (task->ata_task.atapi_packet[15] << 24)));
->         }
->
-> -       /* Check for read log for failed drive and return */
-> -       if (sata_cmd.sata_fis.command == 0x2f) {
-> -               if (pm8001_ha_dev && ((pm8001_ha_dev->id & NCQ_READ_LOG_FLAG) ||
-> -                       (pm8001_ha_dev->id & NCQ_ABORT_ALL_FLAG) ||
-> -                       (pm8001_ha_dev->id & NCQ_2ND_RLE_FLAG))) {
-> -                       struct task_status_struct *ts;
-> -
-> -                       pm8001_ha_dev->id &= 0xDFFFFFFF;
-> -                       ts = &task->task_status;
-> -
-> -                       spin_lock_irqsave(&task->task_state_lock, flags);
-> -                       ts->resp = SAS_TASK_COMPLETE;
-> -                       ts->stat = SAS_SAM_STAT_GOOD;
-> -                       task->task_state_flags &= ~SAS_TASK_STATE_PENDING;
-> -                       task->task_state_flags |= SAS_TASK_STATE_DONE;
-> -                       if (unlikely((task->task_state_flags &
-> -                                       SAS_TASK_STATE_ABORTED))) {
-> -                               spin_unlock_irqrestore(&task->task_state_lock,
-> -                                                       flags);
-> -                               pm8001_dbg(pm8001_ha, FAIL,
-> -                                          "task 0x%p resp 0x%x  stat 0x%x but aborted by upper layer\n",
-> -                                          task, ts->resp,
-> -                                          ts->stat);
-> -                               pm8001_ccb_task_free(pm8001_ha, ccb);
-> -                               return 0;
-> -                       } else {
-> -                               spin_unlock_irqrestore(&task->task_state_lock,
-> -                                                       flags);
-> -                               pm8001_ccb_task_free_done(pm8001_ha, ccb);
-> -                               atomic_dec(&pm8001_ha_dev->running_req);
-> -                               return 0;
-> -                       }
-> -               }
-> -       }
->         trace_pm80xx_request_issue(pm8001_ha->id,
->                                 ccb->device ? ccb->device->attached_phy : PM8001_MAX_PHYS,
->                                 ccb->ccb_tag, opc,
-> --
-> 2.35.3
->
+Hi Can,
+
+> Subject:	Re: [PATCH v2 06/17] ufs: core: mcq: Configure resource
+> regions
+> Date:	Fri, 14 Oct 2022 17:31:52 +0800
+> From:	Can Guo <quic_cang@quicinc.com>
+> To:	Eddie Huang <eddie.huang@medaitek.com>, Asutosh Das <
+> quic_asutoshd@quicinc.com>, quic_nitirawa@quicinc.com, 
+> quic_rampraka@quicinc.com, quic_bhaskarv@quicinc.com, 
+> quic_richardp@quicinc.com, linux-scsi@vger.kernel.org
+> CC:	linux-arm-msm@vger.kernel.org, quic_nguyenb@quicinc.com, 
+> quic_xiaosenh@quicinc.com, bvanassche@acm.org, avri.altman@wdc.com, 
+> mani@kernel.org, beanhuo@micron.com
+> 
+> 
+> Hi Eddie,
+> 
+> On 10/14/2022 5:08 PM, Eddie Huang wrote:
+> > Hi Asutosh,
+> > 
+> > On Wed, 2022-10-05 at 18:06 -0700, Asutosh Das wrote:
+> > > Define the mcq resources and add support to ioremap
+> > > the resource regions.
+> > > 
+> > > Co-developed-by: Can Guo <quic_cang@quicinc.com>
+> > > Signed-off-by: Can Guo <quic_cang@quicinc.com>
+> > > Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
+> > > ---
+> > > drivers/ufs/core/ufs-mcq.c | 99
+> > > ++++++++++++++++++++++++++++++++++++++++++++++
+> > > include/ufs/ufshcd.h | 28 +++++++++++++
+> > > 2 files changed, 127 insertions(+)
+> > > 
+> > > diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-
+> > > mcq.c
+> > > index 659398d..7d0a37a 100644
+> > > --- a/drivers/ufs/core/ufs-mcq.c
+> > > +++ b/drivers/ufs/core/ufs-mcq.c
+> > > @@ -18,6 +18,11 @@
+> > > #define UFS_MCQ_NUM_DEV_CMD_QUEUES 1
+> > > #define UFS_MCQ_MIN_POLL_QUEUES 0
+> > > +#define MCQ_QCFGPTR_MASK GENMASK(7, 0)
+> > > +#define MCQ_QCFGPTR_UNIT 0x200
+> > > +#define MCQ_SQATTR_OFFSET(c) \
+> > > + ((((c) >> 16) & MCQ_QCFGPTR_MASK) * MCQ_QCFGPTR_UNIT)
+> > > +#define MCQ_QCFG_SIZE 0x40
+> > > static int rw_queue_count_set(const char *val, const struct
+> > > kernel_param *kp)
+> > > {
+> > > @@ -67,6 +72,97 @@ module_param_cb(poll_queues,
+> > > &poll_queue_count_ops, &poll_queues, 0644);
+> > > MODULE_PARM_DESC(poll_queues,
+> > > "Number of poll queues used for r/w. Default value is
+> > > 1");
+> > > +/* Resources */
+> > > +static const struct ufshcd_res_info ufs_res_info[RES_MAX] = {
+> > > + {.name = "ufs_mem",},
+> > > + {.name = "mcq",},
+> > > + /* Submission Queue DAO */
+> > > + {.name = "mcq_sqd",},
+> > > + /* Submission Queue Interrupt Status */
+> > > + {.name = "mcq_sqis",},
+> > > + /* Completion Queue DAO */
+> > > + {.name = "mcq_cqd",},
+> > > + /* Completion Queue Interrupt Status */
+> > > + {.name = "mcq_cqis",},
+> > > + /* MCQ vendor specific */
+> > > + {.name = "mcq_vs",},
+> > > +};
+> > > +
+> > > +static int ufshcd_mcq_config_resource(struct ufs_hba *hba)
+> > > +{
+> > > + struct platform_device *pdev = to_platform_device(hba->dev);
+> > > + struct ufshcd_res_info *res;
+> > > + struct resource *res_mem, *res_mcq;
+> > > + int i, ret = 0;
+> > > +
+> > > + memcpy(hba->res, ufs_res_info, sizeof(ufs_res_info));
+> > > +
+> > > + for (i = 0; i < RES_MAX; i++) {
+> > > + res = &hba->res[i];
+> > > + res->resource = platform_get_resource_byname(pdev,
+> > > + IORESOURCE
+> > > _MEM,
+> > > + res-
+> > > > name);
+> > >  + if (!res->resource) {
+> > > + dev_info(hba->dev, "Resource %s not
+> > > provided\n", res->name);
+> > > + if (i == RES_UFS)
+> > > + return -ENOMEM;
+> > > + continue;
+> > > + } else if (i == RES_UFS) {
+> > > + res_mem = res->resource;
+> > > + res->base = hba->mmio_base;
+> > > + continue;
+> > > + }
+> > > +
+> > > + res->base = devm_ioremap_resource(hba->dev, res-
+> > > > resource);
+> > >  + if (IS_ERR(res->base)) {
+> > > + dev_err(hba->dev, "Failed to map res %s,
+> > > err=%d\n",
+> > > + res->name, (int)PTR_ERR(res-
+> > > > base));
+> > >  + res->base = NULL;
+> > > + ret = PTR_ERR(res->base);
+> > > + return ret;
+> > > + }
+> > > + }
+> > > +
+> > > + /* MCQ resource provided in DT */
+> > > + res = &hba->res[RES_MCQ];
+> > > + /* Bail if NCQ resource is provided */
+> > > + if (res->base)
+> > > + goto out;
+> > > +
+> > > + /* Manually allocate MCQ resource from ufs_mem */
+> > > + res_mcq = res->resource;
+> > > + res_mcq = devm_kzalloc(hba->dev, sizeof(*res_mcq), GFP_KERNEL);
+> > > + if (!res_mcq) {
+> > > + dev_err(hba->dev, "Failed to allocate MCQ resource\n");
+> > > + return ret;
+> > > + }
+> > > +
+> > > + res_mcq->start = res_mem->start +
+> > > + MCQ_SQATTR_OFFSET(hba->mcq_capabilities);
+> > > + res_mcq->end = res_mcq->start + hba->nr_hw_queues *
+> > > MCQ_QCFG_SIZE - 1;
+> > > + res_mcq->flags = res_mem->flags;
+> > > + res_mcq->name = "mcq";
+> > > +
+> > > + ret = insert_resource(&iomem_resource, res_mcq);
+> > > + if (ret) {
+> > > + dev_err(hba->dev, "Failed to insert MCQ resource,
+> > > err=%d\n", ret);
+> > > + return ret;
+> > > + }
+> > > +
+> >  Mediatek UFS hardware put MCQ SQ head/tail and SQ IS/IE together
+> > (SQ0
+> > head, SQ0 tail, SQ0 IS, SQ0 IE, CQ0 head, CQ0 tail....), which
+> > means
+> > mcq_sqd register range interleave with mcq_sqis. I suggest let
+> > vendor
+> > customize config mcq resource function to fit vendor's register
+> > assignment
+>  
+> In your case, which is similar to ours, you can just provide the res
+> of SQD in DT, then use the
+> 
+> ufshcd_mcq_vops_op_runtime_config() introduced in Patch #8 to
+> configure each operation
+> 
+Let me explain more detail about Mediatek UFS register assignment:
+a. 0x0 ~ 0x5FF: UFS common register
+b. 0x1600 ~   : MCQ register
+c. 0x2200: UFS common vendor specific register
+d. 0x2800: SQ/CQ head/tail pointer and interrupt status/enable register
+     0x2800 SQ0_head
+     0x2814 SQ0_IS
+     0x281C CQ0_head
+     0x2824 CQ0_IS
+
+The register location meet UFSHCI4.0 spec definition
+
+In legacy doorbell mode, need region a, c registers
+In MCQ mode, need region a, b, c, d registers
+
+As you can see, region b in the middle of region a and c. If I declare
+"mcq" in device tree, i.e.
+reg = <0, 0x11270000, 0, 0x2300>,
+      <0, 0x11271600, 0, 0x1400>;
+reg-names = "ufs_mem", "mcq";
+
+Linux kernel boot fail due to register region overlapped and
+devm_ioremap_resource() return error.
+
+If I don't declare "mcq" region in device tree, Linux kernel still boot
+fail due to ufshcd_mcq_config_resource() call devm_ioreamap_resource()
+using calculated res_mcq which is overlapped with ufs_mem.
+
+We treat UFS as a single IP, so we suggest:
+1. Map whole UFS register (include MCQ) in ufshcd_pltfrm_init()
+2. In ufshcd_mcq_config_resource() assign mcq_base address directly,
+ie,
+     hba->mcq_base = hba->mmio_base + MCQ_SQATTR_OFFSET(hba-
+>mcq_capabilities)
+3. In ufshcd_mcq_vops_op_runtime_config(), assign SQD, SQIS, CQD, CQIS
+base, offset and stride
+
+This is why I propose ufshcd_mcq_config_resource() to be customized,
+not in common code
+
+Regards,
+Eddie Huang
+
+
