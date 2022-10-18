@@ -2,55 +2,106 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE3DAC4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 Oct 2022 15:16:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3102BC433FE
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 Oct 2022 16:00:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229868AbiJRPQ4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 18 Oct 2022 11:16:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42514 "EHLO
+        id S229882AbiJRQA5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 18 Oct 2022 12:00:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60930 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229773AbiJRPQy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Oct 2022 11:16:54 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A15D586F98;
-        Tue, 18 Oct 2022 08:16:53 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id DAF44CE1E55;
-        Tue, 18 Oct 2022 15:16:51 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C047C433D6;
-        Tue, 18 Oct 2022 15:16:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666106210;
-        bh=Jojqx8JmIXM8eX+9+/gLAMgo92LjQnmaGRkIZSiWd0E=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=XPjinHnLX6amH9fmO1CVFvKAW++ZJ7bxjK1h8STCygeyFBEkM3lTNO6VdZc8No5oD
-         o4cv2fILT7O6tBsgp8+0CDpoHgk8pLVF6VtOOV0ZS9WF8cWDR63cOA9EB/YMHi2l9b
-         vHYFGplWUR5l8pGcIBoinfAkKeWm8IBXKd9trGAqmYCG88PCUZDbZIOKmiiP7ahVGJ
-         BnJqaFRIMRlV9DQnjNej1YvN5IpXK3Y48QgMsmMJAAktcwt4lfGt3NVSb7b9cH+/kp
-         ROAac6dg+n2qqjSHUiBAbl9eKe8Uk/ahT1AAPBacyPyrCfHWW/0gYADoNUtAK9JNt5
-         nmy8nDM9xskBg==
-Date:   Tue, 18 Oct 2022 09:16:46 -0600
-From:   Keith Busch <kbusch@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, Hector Martin <marcan@marcan.st>,
-        Sven Peter <sven@svenpeter.dev>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org
-Subject: Re: don't drop the queue reference in blk_mq_destroy_queue
-Message-ID: <Y07DXuShbjGx1a8x@kbusch-mbp.dhcp.thefacebook.com>
-References: <20221018135720.670094-1-hch@lst.de>
+        with ESMTP id S229717AbiJRQA4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Oct 2022 12:00:56 -0400
+Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 815B36C948;
+        Tue, 18 Oct 2022 09:00:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1666108850; x=1697644850;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=k4e1kohq0AjaS3npqA02nZrS60kNr7lx5YClMC11s2w=;
+  b=PETUI+6NuI0jFO34h56WgO0/R2tC4oeB4B04wxvG+TLkpKBy0C39oFpC
+   md8X998mjb6uF6ehvTRuOH8XrSJn2wXUBwMHmB8sAazJ6pLkPqXcQ5c+E
+   /Mk0eb/xWnLX16wULTGFR6JRTqyO/8rpWcLLWzIXEJESruhDbFRlQlfFR
+   E=;
+Received: from unknown (HELO ironmsg04-sd.qualcomm.com) ([10.53.140.144])
+  by alexa-out-sd-01.qualcomm.com with ESMTP; 18 Oct 2022 09:00:49 -0700
+X-QCInternal: smtphost
+Received: from unknown (HELO nasanex01a.na.qualcomm.com) ([10.52.223.231])
+  by ironmsg04-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Oct 2022 09:00:49 -0700
+Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
+ nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.29; Tue, 18 Oct 2022 09:00:48 -0700
+Date:   Tue, 18 Oct 2022 09:00:48 -0700
+From:   Asutosh Das <quic_asutoshd@quicinc.com>
+To:     Eddie Huang <eddie.huang@mediatek.com>
+CC:     <quic_cang@quicinc.com>, <quic_nitirawa@quicinc.com>,
+        <quic_rampraka@quicinc.com>, <quic_bhaskarv@quicinc.com>,
+        <quic_richardp@quicinc.com>, <linux-scsi@vger.kernel.org>,
+        <linux-arm-msm@vger.kernel.org>, <quic_nguyenb@quicinc.com>,
+        <quic_xiaosenh@quicinc.com>, <bvanassche@acm.org>,
+        <avri.altman@wdc.com>, <mani@kernel.org>, <beanhuo@micron.com>,
+        <stanley.chu@mediatek>, <liang-yen.wang@mediatek.com>
+Subject: Re: [PATCH v2 05/17] ufs: core: mcq: Introduce Multi Circular Queue
+Message-ID: <20221018160048.GF10252@asutoshd-linux1.qualcomm.com>
+References: <cover.1665017636.git.quic_asutoshd@quicinc.com>
+ <11ee57da1d1872f8f02aa5d94e254ee9ddf4ef7a.1665017636.git.quic_asutoshd@quicinc.com>
+ <c89473d2cf48eb92b4afbd78578cd508c481f8b6.camel@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Content-Disposition: inline
-In-Reply-To: <20221018135720.670094-1-hch@lst.de>
+In-Reply-To: <c89473d2cf48eb92b4afbd78578cd508c481f8b6.camel@mediatek.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Series looks good to me.
+On Tue, Oct 18 2022 at 22:29 -0700, Eddie Huang wrote:
+[...]
+>> ---
+>>  drivers/ufs/core/Makefile      |   2 +-
+>>  drivers/ufs/core/ufs-mcq.c     | 113
+>> +++++++++++++++++++++++++++++++++++++++++
+[...]
+>>  create mode 100644 drivers/ufs/core/ufs-mcq.c
+>>
+>
+>[...]
+>
+>>  /**
+>>   * ufshcd_probe_hba - probe hba to detect device and initialize it
+>>   * @hba: per-adapter instance
+>> @@ -8224,6 +8233,9 @@ static int ufshcd_probe_hba(struct ufs_hba
+>> *hba, bool init_dev_params)
+>>  			goto out;
+>>
+>>  		if (is_mcq_supported(hba)) {
+>> +			ret = ufshcd_config_mcq(hba);
+[...]
 
-Reviewed-by: Keith Busch <kbusch@kernel.org>
+>
+>ufshcd_probe_hba() may be called multiple times (from
+>ufshcd_async_scan() and ufshcd_host_reset_and_restore()). It is not a
+>good idea to allocate memory in ufshcd_config_mcq(). Although use
+>parameter init_dev_params to decide call ufshcd_config_mcq() or not, it
+>may cause ufshcd_host_reset_and_restore() not to configure MCQ (init
+>SQ/CQ ptr...) again.
+>
+I don't think the memory allocation can be moved prior to reading the device
+descriptor since the bQueueDepth is necessary.
+But I agree to your point that ufshcd_host_reset_and_restore() wouldn't
+reconfigure MCQ now. Thanks.
+
+>Suggest to separate configure MCQ (set hardware register) and allocate
+>memory to different function
+>
+How about I keep the memory allocation in ufshcd_probe_hba() within the
+init_dev_params check and separate out the initialization outside the check.
+That'd ensure that the configuration is done for each call to
+ufshcd_probe_hba(). I'm open to any other idea that you may have, plmk.
+>
+-asd
