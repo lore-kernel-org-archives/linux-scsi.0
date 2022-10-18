@@ -2,69 +2,91 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B482C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 Oct 2022 08:13:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34C60C4332F
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 Oct 2022 09:21:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230423AbiJRINc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 18 Oct 2022 04:13:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48252 "EHLO
+        id S229765AbiJRJVF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 18 Oct 2022 05:21:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52520 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230377AbiJRIN3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Oct 2022 04:13:29 -0400
-Received: from out30-43.freemail.mail.aliyun.com (out30-43.freemail.mail.aliyun.com [115.124.30.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88F8B8FD74;
-        Tue, 18 Oct 2022 01:13:27 -0700 (PDT)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R971e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018046051;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=6;SR=0;TI=SMTPD_---0VSTkibi_1666080759;
-Received: from localhost(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0VSTkibi_1666080759)
-          by smtp.aliyun-inc.com;
-          Tue, 18 Oct 2022 16:13:24 +0800
-From:   Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-To:     martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
-        Abaci Robot <abaci@linux.alibaba.com>
-Subject: [PATCH] target: Remove the unused function transport_lba_64_ext()
-Date:   Tue, 18 Oct 2022 16:12:35 +0800
-Message-Id: <20221018081235.124662-1-jiapeng.chong@linux.alibaba.com>
-X-Mailer: git-send-email 2.20.1.7.g153144c
+        with ESMTP id S230397AbiJRJUt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Oct 2022 05:20:49 -0400
+Received: from mail-pg1-x529.google.com (mail-pg1-x529.google.com [IPv6:2607:f8b0:4864:20::529])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0BF7AA37C;
+        Tue, 18 Oct 2022 02:20:39 -0700 (PDT)
+Received: by mail-pg1-x529.google.com with SMTP id b5so12800015pgb.6;
+        Tue, 18 Oct 2022 02:20:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=3m5oTxItBn/6lCKglYoGymxp7X2N7jqkr135BYmrYCw=;
+        b=IpfdrNyZsDPBXc/FGZOSy1FhoPRGUDzoLenXgqDEkuDqCTU1oGCZzpTh0AvqTQDtKm
+         Uj8RS//OjPHTM//LTuRe3uhckUeU5Rbrzk1wggAXvJ9DY+zs80hh5r90s7cNb9gKCCxP
+         Pt9q6a/2BRO3BBjVyJzcMBmYX/eAtPQhAN2MBXPZCW8Dx1Nyp1nf0ly9Z11rhNqEo6vz
+         ydH9iCGVh9A9sydT3fva9eLdOWv3hqvDIYi/WaYe04E/UvUBFHRyyLDBizmZlojJTLRv
+         VyjUtc9pGgzBtVFN5XMQGbW6NElGke0PxF8PhkdxFfUnl54I+bU/VS+G2Q7VR74MR992
+         OO7w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=3m5oTxItBn/6lCKglYoGymxp7X2N7jqkr135BYmrYCw=;
+        b=jQNjzWijHQ3M00ipVi35EUIlUDjRfwQQP336T68h3gmE7IxVQUg6HNbLEDUqlmzpXW
+         78jedKGHOPUPZqOtSNQGGt8ltvbV02mKaHYxjWAk4bHhPICvafBLfw6RtIPi+JM83LZ1
+         t5AFOV9k2yMwzkQ7wEQBHpxf4MvXPr0/AqcZ2UzgW3Dqm0fcBgfrijxnTKIm77ftFbiU
+         pY9hK2gGTgfonI2G57aj9XsoKReL8yPchE2n4Rl8GTBGh9QVdavEq12hWQ5t69rzeO7x
+         9LLJ2vsgQvEGH70EETDzjrSvID50ddIr5ZqAigxKWF3vNB8gQUdHpPPs3eRRAsvIKiZd
+         olIQ==
+X-Gm-Message-State: ACrzQf2t0bQxdXdVkQhnzU/xLcGhdgeAvNt/avvW7sxUpsM6b3b4jxzg
+        bXqr0Wg+3GAFCyway8TCL+wpTj539e63F9Xe
+X-Google-Smtp-Source: AMsMyM5oz9A+uCOmRVQ78bVe8vnFMBJxmzhuIz73JNHTMTfO8AOEmmTG03uabKHRAzJnR0X1Go+snQ==
+X-Received: by 2002:a63:4750:0:b0:43c:dac:9e4b with SMTP id w16-20020a634750000000b0043c0dac9e4bmr1888341pgk.300.1666084839449;
+        Tue, 18 Oct 2022 02:20:39 -0700 (PDT)
+Received: from localhost.localdomain ([43.132.141.4])
+        by smtp.gmail.com with ESMTPSA id e19-20020a170902ed9300b00173411a4385sm8182912plj.43.2022.10.18.02.20.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 18 Oct 2022 02:20:39 -0700 (PDT)
+From:   zys.zljxml@gmail.com
+To:     njavali@marvell.com
+Cc:     GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Yushan Zhou <katrinzhou@tencent.com>
+Subject: [PATCH] scsi: qla2xxx: simplify conditional
+Date:   Tue, 18 Oct 2022 17:20:27 +0800
+Message-Id: <20221018092027.264641-1-zys.zljxml@gmail.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The function transport_lba_64_ext() is defined in the target_core_sbc.c
-file, but not called elsewhere, so remove this unused function.
+From: Yushan Zhou <katrinzhou@tencent.com>
 
-drivers/target/target_core_sbc.c:276:34: warning: unused function 'transport_lba_64_ext'.
+Fix the following coccicheck warning:
+./drivers/scsi/qla2xxx/qla_target.c:1031:20-22: WARNING !A || A && B is equivalent to !A || B
 
-Link: https://bugzilla.openanolis.cn/show_bug.cgi?id=2427
-Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+Signed-off-by: Yushan Zhou <katrinzhou@tencent.com>
 ---
- drivers/target/target_core_sbc.c | 8 --------
- 1 file changed, 8 deletions(-)
+ drivers/scsi/qla2xxx/qla_target.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index 1e3216de1e04..1cd41e3834bb 100644
---- a/drivers/target/target_core_sbc.c
-+++ b/drivers/target/target_core_sbc.c
-@@ -270,14 +270,6 @@ static inline unsigned long long transport_lba_64(unsigned char *cdb)
- 	return get_unaligned_be64(&cdb[2]);
- }
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index bb754a950802..4ee89ef2ab90 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -1028,8 +1028,7 @@ void qlt_free_session_done(struct work_struct *work)
+ 		}
  
--/*
-- * For VARIABLE_LENGTH_CDB w/ 32 byte extended CDBs
-- */
--static inline unsigned long long transport_lba_64_ext(unsigned char *cdb)
--{
--	return get_unaligned_be64(&cdb[12]);
--}
--
- static sense_reason_t
- sbc_setup_write_same(struct se_cmd *cmd, unsigned char flags, struct sbc_ops *ops)
- {
+ 		if (ha->flags.edif_enabled &&
+-		    (!own || (own &&
+-			      own->iocb.u.isp24.status_subcode == ELS_PLOGI))) {
++		    (!own || (own->iocb.u.isp24.status_subcode == ELS_PLOGI))) {
+ 			sess->edif.authok = 0;
+ 			if (!ha->flags.host_shutting_down) {
+ 				ql_dbg(ql_dbg_edif, vha, 0x911e,
 -- 
-2.20.1.7.g153144c
+2.27.0
 
