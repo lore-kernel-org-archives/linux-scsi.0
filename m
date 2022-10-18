@@ -2,91 +2,84 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34C60C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 Oct 2022 09:21:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D42DAC433FE
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 Oct 2022 10:11:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229765AbiJRJVF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 18 Oct 2022 05:21:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52520 "EHLO
+        id S230256AbiJRKLY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 18 Oct 2022 06:11:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38868 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230397AbiJRJUt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Oct 2022 05:20:49 -0400
-Received: from mail-pg1-x529.google.com (mail-pg1-x529.google.com [IPv6:2607:f8b0:4864:20::529])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0BF7AA37C;
-        Tue, 18 Oct 2022 02:20:39 -0700 (PDT)
-Received: by mail-pg1-x529.google.com with SMTP id b5so12800015pgb.6;
-        Tue, 18 Oct 2022 02:20:39 -0700 (PDT)
+        with ESMTP id S230409AbiJRKLK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Oct 2022 06:11:10 -0400
+Received: from mail-ed1-x52f.google.com (mail-ed1-x52f.google.com [IPv6:2a00:1450:4864:20::52f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D84CB40F9
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Oct 2022 03:10:59 -0700 (PDT)
+Received: by mail-ed1-x52f.google.com with SMTP id z97so19705831ede.8
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Oct 2022 03:10:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=3m5oTxItBn/6lCKglYoGymxp7X2N7jqkr135BYmrYCw=;
-        b=IpfdrNyZsDPBXc/FGZOSy1FhoPRGUDzoLenXgqDEkuDqCTU1oGCZzpTh0AvqTQDtKm
-         Uj8RS//OjPHTM//LTuRe3uhckUeU5Rbrzk1wggAXvJ9DY+zs80hh5r90s7cNb9gKCCxP
-         Pt9q6a/2BRO3BBjVyJzcMBmYX/eAtPQhAN2MBXPZCW8Dx1Nyp1nf0ly9Z11rhNqEo6vz
-         ydH9iCGVh9A9sydT3fva9eLdOWv3hqvDIYi/WaYe04E/UvUBFHRyyLDBizmZlojJTLRv
-         VyjUtc9pGgzBtVFN5XMQGbW6NElGke0PxF8PhkdxFfUnl54I+bU/VS+G2Q7VR74MR992
-         OO7w==
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:to:from:subject:message-id:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=v882JkcfuJYCFF+9Ak2jZZGCdby+7XFJirBF+xvjOI8=;
+        b=SJ90RBNi6l7dmw7WdT3J90sOTkP8sVdQKl7epDFpEXC69eF5LgnDtJyYawt9phyBbl
+         FBovWT576s8YO6Hc//S/mceB8EcPpzm/eSaHAiSSdoDzYNbjmjSSLsMM0zY2rHfprzGV
+         W03jz35ymZpoRzki0MP1d1daK0HIkPcXQ4CVSvHCQXjr2xUgFfFb4uVNwLpclZNgJlT3
+         QPQtw9c+k8byaFgJ2VkdBRjKh5KvRHS+3L6cQVMLw7l0n4zI4VoqTHNdxWV8mQdDtDjb
+         HzuyJzhtfXBIcMPO+5kO9X34RkvaASoEexRvXE9+92ppCyK9HLIzeiRM/5H2Qv+XGRBr
+         Nk8g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=3m5oTxItBn/6lCKglYoGymxp7X2N7jqkr135BYmrYCw=;
-        b=jQNjzWijHQ3M00ipVi35EUIlUDjRfwQQP336T68h3gmE7IxVQUg6HNbLEDUqlmzpXW
-         78jedKGHOPUPZqOtSNQGGt8ltvbV02mKaHYxjWAk4bHhPICvafBLfw6RtIPi+JM83LZ1
-         t5AFOV9k2yMwzkQ7wEQBHpxf4MvXPr0/AqcZ2UzgW3Dqm0fcBgfrijxnTKIm77ftFbiU
-         pY9hK2gGTgfonI2G57aj9XsoKReL8yPchE2n4Rl8GTBGh9QVdavEq12hWQ5t69rzeO7x
-         9LLJ2vsgQvEGH70EETDzjrSvID50ddIr5ZqAigxKWF3vNB8gQUdHpPPs3eRRAsvIKiZd
-         olIQ==
-X-Gm-Message-State: ACrzQf2t0bQxdXdVkQhnzU/xLcGhdgeAvNt/avvW7sxUpsM6b3b4jxzg
-        bXqr0Wg+3GAFCyway8TCL+wpTj539e63F9Xe
-X-Google-Smtp-Source: AMsMyM5oz9A+uCOmRVQ78bVe8vnFMBJxmzhuIz73JNHTMTfO8AOEmmTG03uabKHRAzJnR0X1Go+snQ==
-X-Received: by 2002:a63:4750:0:b0:43c:dac:9e4b with SMTP id w16-20020a634750000000b0043c0dac9e4bmr1888341pgk.300.1666084839449;
-        Tue, 18 Oct 2022 02:20:39 -0700 (PDT)
-Received: from localhost.localdomain ([43.132.141.4])
-        by smtp.gmail.com with ESMTPSA id e19-20020a170902ed9300b00173411a4385sm8182912plj.43.2022.10.18.02.20.37
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:to:from:subject:message-id:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=v882JkcfuJYCFF+9Ak2jZZGCdby+7XFJirBF+xvjOI8=;
+        b=KuvKgOdcstJvZHgX5FsZEhUIEtK4dTPQ64z4EuxLqIuzb8Jn0aNt0E7Vw4ZjB9K/Cy
+         yXwGj7+/7gNP2WXRR8vgDUib2Y3z+xx4GWKGQvezvlbfec5uxLS0OttVcVf9UYCAWL73
+         uInLrokzSFLQBNewREw9MQM9YEwRjLj2FnBdJps0geitTN5MGd8g6793FebNhogbMzLu
+         QFn56FF/G3bMMWO2fcekdmwP0CSriXPkHS3/ls1iJM1PhoQs2zqnctpW2WUTLHHv4Hs4
+         8ALJoaT20bc3xtuZG3mfrShxBZHscnEEqnyOmnRuIIOy4sT3nsYi8mQuKIoMfJ/FGGgk
+         Ua2Q==
+X-Gm-Message-State: ACrzQf1O8njbA8FTi7H7vRxRay2pz9TMs+eeqdYsByFTEjwgokY1efC5
+        j0zT/xVNi/SB0DE0SMmMylQ=
+X-Google-Smtp-Source: AMsMyM5DeqvmZs5FM/WWBjFeurbtZDw9DU7emLP+7Vhf0VGh/LOupGS/P57zOTo9FNBXxAmffOkN5Q==
+X-Received: by 2002:a05:6402:5c9:b0:446:fb0:56bb with SMTP id n9-20020a05640205c900b004460fb056bbmr1916778edx.173.1666087856277;
+        Tue, 18 Oct 2022 03:10:56 -0700 (PDT)
+Received: from [10.176.234.249] ([137.201.254.41])
+        by smtp.googlemail.com with ESMTPSA id qu16-20020a170907111000b00780982d77d1sm7245846ejb.154.2022.10.18.03.10.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 18 Oct 2022 02:20:39 -0700 (PDT)
-From:   zys.zljxml@gmail.com
-To:     njavali@marvell.com
-Cc:     GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Yushan Zhou <katrinzhou@tencent.com>
-Subject: [PATCH] scsi: qla2xxx: simplify conditional
-Date:   Tue, 18 Oct 2022 17:20:27 +0800
-Message-Id: <20221018092027.264641-1-zys.zljxml@gmail.com>
-X-Mailer: git-send-email 2.27.0
+        Tue, 18 Oct 2022 03:10:55 -0700 (PDT)
+Message-ID: <ce7e86b3979f61877f0de7b8bd32637602f5a9ad.camel@gmail.com>
+Subject: Re: [PATCH] scsi: ufs: core: Fix the error log in
+ ufshcd_query_flag_retry()
+From:   Bean Huo <huobean@gmail.com>
+To:     d_hyun.kwon@samsung.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        cpgsproxy3 <cpgsproxy3@samsung.com>
+Date:   Tue, 18 Oct 2022 12:10:54 +0200
+In-Reply-To: <1891546521.01666080182092.JavaMail.epsvc@epcpadp4>
+References: <CGME20221017022939epcms2p669fa5e5685ef5be1d6c4d1d3e74b6c51@epcms2p6>
+         <1891546521.01666080182092.JavaMail.epsvc@epcpadp4>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu1 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Yushan Zhou <katrinzhou@tencent.com>
+On Tue, 2022-10-18 at 16:30 +0900, Dukhyun Kwon wrote:
+> In=C2=A0ufshcd_query_flag_retry()=C2=A0failed=C2=A0log
+> is=C2=A0incorrectly=C2=A0output=C2=A0as=C2=A0"ufs=C2=A0attibute"
+>=20
+> Signed-off-by:=C2=A0d_hyun.kwon=C2=A0<d_hyun.kwon@samsung.com>
 
-Fix the following coccicheck warning:
-./drivers/scsi/qla2xxx/qla_target.c:1031:20-22: WARNING !A || A && B is equivalent to !A || B
-
-Signed-off-by: Yushan Zhou <katrinzhou@tencent.com>
----
- drivers/scsi/qla2xxx/qla_target.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index bb754a950802..4ee89ef2ab90 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1028,8 +1028,7 @@ void qlt_free_session_done(struct work_struct *work)
- 		}
- 
- 		if (ha->flags.edif_enabled &&
--		    (!own || (own &&
--			      own->iocb.u.isp24.status_subcode == ELS_PLOGI))) {
-+		    (!own || (own->iocb.u.isp24.status_subcode == ELS_PLOGI))) {
- 			sess->edif.authok = 0;
- 			if (!ha->flags.host_shutting_down) {
- 				ql_dbg(ql_dbg_edif, vha, 0x911e,
--- 
-2.27.0
+Reviewed-by: Bean Huo <beanhuo@micron.com>
 
