@@ -2,95 +2,134 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A82DEC433FE
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 Oct 2022 03:52:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B706BC433FE
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 Oct 2022 05:00:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229763AbiJRDwY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 Oct 2022 23:52:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43224 "EHLO
+        id S230295AbiJRFAs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 18 Oct 2022 01:00:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59456 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229574AbiJRDwW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Oct 2022 23:52:22 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 992D81D2;
-        Mon, 17 Oct 2022 20:52:16 -0700 (PDT)
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 29HNYXqk019050;
-        Tue, 18 Oct 2022 03:52:10 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2022-7-12;
- bh=dXbOF6y7Fymm6S7gnJoAODCMCuVVw69/y7GC1AGShNs=;
- b=IYHe1LFE5b8KxNjMafWDYPrD+PxPezpPKUE11CFb/orXIfrn6pJlL98DVGNpi1hRiOPv
- UTtzSp0wpgFwY4u+Ejhy7oxFBFc9OkixdeR4HYnZBPoYh7Q2dnahVzmf5NSr6IyUKNL7
- 98Vr/a30JG9u1iBLW/x2r2Fnrqj14NdmZ6MbEVlqIm5YlBh1H3CcZaotxKAhKJQ5hWDQ
- iw4GGgYjytGZrD3P8u7yWXasT95VOyDE1U8WUaZFpzGOyKJp8hcnjJ1nV1L6rsL8cS88
- AA5TrtfhiTlbbM+eiVHHgIi9uHlDv/ESLY4vHn+3W9/DhSXdoI1rSxux1960xQuq6UnI sw== 
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3k7ndtds2s-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 18 Oct 2022 03:52:10 +0000
-Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 29I3msCr036409;
-        Tue, 18 Oct 2022 03:52:08 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3k8htff2b4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 18 Oct 2022 03:52:08 +0000
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 29I3q8fc029581;
-        Tue, 18 Oct 2022 03:52:08 GMT
-Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3k8htff2b0-1;
-        Tue, 18 Oct 2022 03:52:08 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Muneendra Kumar <muneendra.kumar@broadcom.com>,
-        James Smart <james.smart@broadcom.com>,
-        Rafael Mendonca <rafaelmendsr@gmail.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Gaurav Srivastava <gaurav.srivastava@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        James Smart <jsmart2021@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] scsi: lpfc: Fix memory leak in lpfc_create_port()
-Date:   Mon, 17 Oct 2022 23:52:06 -0400
-Message-Id: <166606442644.2366633.17731582434457392560.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.36.1
-In-Reply-To: <20220916035908.712799-1-rafaelmendsr@gmail.com>
-References: <20220916035908.712799-1-rafaelmendsr@gmail.com>
+        with ESMTP id S230016AbiJRE7r (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Oct 2022 00:59:47 -0400
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1834E6389
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Oct 2022 21:59:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1666069169; x=1697605169;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=wEzcwplt8kJCyupDcXus/05M19KXPbEFbO9P8ZHcDEM=;
+  b=l1ZEbiRKEd24adeT5j2Tc705SKdX2KYTHzxT+AKvD7SDhdGQuO+AS7tF
+   u3is/Ifct1jD7oVWm3N5nvbRNNxTfyy+xS+iOud3Gc0V0KD8DRs+opJI2
+   ndOUknL17J4hLp2BlADet7Y/bRORIUJFdZ9ELYPZOgBQV5Prww8g3/u6Y
+   v0JQ/AwyixCsJN7AuYcQ8ROGaPzcRgTBSEBhG5Y1XMiOSRKqccmsklubS
+   33grx2Zv6iVh8/ONxAG0X64WXgh0Cay9WixNNtv4MTfcTEIW0OpX69skE
+   mlnMKc9icwE6+000UhQbUHTuYSA9BYvb2L2PTnxQ+mlhDZiFi/qodqY10
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.95,193,1661788800"; 
+   d="scan'208";a="212411235"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 18 Oct 2022 12:59:25 +0800
+IronPort-SDR: xt2NuH1WaJrHXrxgO0/XuxauQQTqb91W4XmsL+UxbcHzUgagc1/BHrLPg1RwqinHPhrFjMf3i9
+ vFP/Hm4hmOnTGZ1A3RjWl48NjqjcO17j7oJDPtxHXotIoHBLqnTco1aCoYUruqYBfrTDKDKkx7
+ osI/ahoHytxVfUS/f7WvtMlRMquNwys2W5VHwgoZqz2nvfWxNW8iX6zspYSbmRTJj7CA63M1CK
+ 5m+Ziig1KLrPMtptY+vZGp246W6XqcUWrGWXtiMg3g5zrHU7Fjt62YbrriFdz8SJgeInEEi5U6
+ hHDdtOqzHOQDG0kIos69yxMI
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 17 Oct 2022 21:18:57 -0700
+IronPort-SDR: nAi37A073FFFh2ql1quwtMzAi+snLpm7W8dlANriM5l6Eu8sYeUJHHT+YZmIzcdWmPWcA3Vb/x
+ SaWgZb4YnkVqJ2QHNDLR5bJvtFBu1CkOxeF6uEuC097Jav2fJnLjkXFuQzgrnWUsX4bNHnEzIa
+ dG4LYDs7s7GA+CYRKKFkxMijyRmIlghNtHtifFsS2nZ0/1BGyNweNoYOELD/HavgaQawMJ9zKg
+ LYersUvfmQu3enIuW/WvPEu3LueZ5go1OT54uM2k0e4r55mzI8XhfZs/jVA9K33DCnOQ5JNgaM
+ IeA=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 17 Oct 2022 21:59:26 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Ms1qc5nVMz1Rwrq
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Oct 2022 21:59:24 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1666069164; x=1668661165; bh=wEzcwplt8kJCyupDcXus/05M19KXPbEFbO9
+        P8ZHcDEM=; b=Mwvfem1AuR3HwawQDMQTp1SuAm+DOQotK6oyKhYbqFD2znV1D3A
+        AG2lh5xyJvsBpEwEVGyLUKixyqX+wMEo6mhzrLk++5WG4/cRqgwQKyCweGuwB9BL
+        keoclkPIqsTcLorlKxAmt8tShaFkspge+C/TDQS32U/jK+2wfgRkrbz9hW6+ddWN
+        pm/iEmrh9PESJU7y+vYAYjOE+rrHx0OMY+3uWPgbR5h2mMttO4WvLljLxnZTLqFx
+        TzJOII2VQFAlxr4KghlzfFsrqORYSfzQXYc0AyekxCZ8rbt5kG+hebHlf4wGPjW7
+        TvfBGNPu05rzXpcgZyFP/m8kWf9q4ibwatQ==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id vlqY7Z-CBIJN for <linux-scsi@vger.kernel.org>;
+        Mon, 17 Oct 2022 21:59:24 -0700 (PDT)
+Received: from [10.225.163.121] (unknown [10.225.163.121])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Ms1qb0cj8z1RvLy;
+        Mon, 17 Oct 2022 21:59:22 -0700 (PDT)
+Message-ID: <3c638814-4a9f-6506-b556-8ad64d920daf@opensource.wdc.com>
+Date:   Tue, 18 Oct 2022 13:59:21 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2022-10-17_13,2022-10-17_02,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 phishscore=0
- suspectscore=0 spamscore=0 adultscore=0 mlxscore=0 malwarescore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2209130000 definitions=main-2210180020
-X-Proofpoint-ORIG-GUID: aJ2bWeYo6InoIuBytI8D5GRzxwEhAC-D
-X-Proofpoint-GUID: aJ2bWeYo6InoIuBytI8D5GRzxwEhAC-D
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.1
+Subject: Re: [PATCH 0/4] libata: misc frozen port cleanups
+Content-Language: en-US
+To:     Niklas Cassel <niklas.cassel@wdc.com>,
+        Mikael Pettersson <mikpelinux@gmail.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     john.garry@huawei.com, linux-ide@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+References: <20221007132342.1590367-1-niklas.cassel@wdc.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <20221007132342.1590367-1-niklas.cassel@wdc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 16 Sep 2022 00:59:07 -0300, Rafael Mendonca wrote:
-
-> Commit 5e633302ace1 ("scsi: lpfc: vmid: Add support for VMID in mailbox
-> command") introduced allocations for the VMID resources in
-> lpfc_create_port() after the call to scsi_host_alloc(). Upon failure on the
-> VMID allocations, the new code would branch to the 'out' label, which
-> returns NULL without unwinding anything, thus skipping the call to
-> scsi_host_put().
+On 10/7/22 22:23, Niklas Cassel wrote:
+> Hello there,
 > 
-> [...]
+> This series adds a new ata_port_is_frozen() helper function,
+> and makes use of it in ata and libsas.
+> 
+> Additionally, improve ata_read_log_page() to avoid a futile
+> retry while the port is frozen.
+> 
+> Kind regards,
+> Niklas
+> 
+> 
+> Niklas Cassel (4):
+>   ata: add ata_port_is_frozen() helper
+>   ata: make use of ata_port_is_frozen() helper
+>   scsi: libsas: make use of ata_port_is_frozen() helper
+>   ata: libata-core: do not retry reading the log on timeout
+> 
+>  drivers/ata/libahci.c         |  6 +++---
+>  drivers/ata/libata-acpi.c     |  4 ++--
+>  drivers/ata/libata-core.c     |  7 ++++---
+>  drivers/ata/libata-eh.c       | 21 ++++++++++-----------
+>  drivers/ata/libata-sata.c     |  2 +-
+>  drivers/ata/libata-scsi.c     |  2 +-
+>  drivers/ata/sata_nv.c         |  2 +-
+>  drivers/ata/sata_promise.c    |  2 +-
+>  drivers/ata/sata_sx4.c        |  2 +-
+>  drivers/scsi/libsas/sas_ata.c |  2 +-
+>  include/linux/libata.h        |  5 +++++
+>  11 files changed, 30 insertions(+), 25 deletions(-)
+> 
 
-Applied to 6.1/scsi-fixes, thanks!
-
-[1/1] scsi: lpfc: Fix memory leak in lpfc_create_port()
-      https://git.kernel.org/mkp/scsi/c/dc8e483f684a
+Applied to for-6.2. Thanks !
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Damien Le Moal
+Western Digital Research
+
