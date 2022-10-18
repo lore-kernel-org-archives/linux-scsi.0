@@ -2,48 +2,47 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9E77C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 Oct 2022 18:24:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4045BC4332F
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 Oct 2022 18:27:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230200AbiJRSYT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 18 Oct 2022 14:24:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43574 "EHLO
+        id S229719AbiJRS1e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 18 Oct 2022 14:27:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53964 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229918AbiJRSX4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Oct 2022 14:23:56 -0400
-Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 631F58262F;
-        Tue, 18 Oct 2022 11:23:54 -0700 (PDT)
-Received: by mail-pf1-f176.google.com with SMTP id h13so14904105pfr.7;
-        Tue, 18 Oct 2022 11:23:54 -0700 (PDT)
+        with ESMTP id S229882AbiJRS1c (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Oct 2022 14:27:32 -0400
+Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85FAC80BC0;
+        Tue, 18 Oct 2022 11:27:29 -0700 (PDT)
+Received: by mail-pf1-f170.google.com with SMTP id 3so14917779pfw.4;
+        Tue, 18 Oct 2022 11:27:29 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=xwZlsskLTT5GYX2e0o85RZ1hXTLVToD4VwKwKxi37tQ=;
-        b=b8BTNgeE0lpFa/tOzi/dn2RZEjc45RUl7nW0t70oOl2VYZH0R/kElqSylhgtJtKt1F
-         0jkOcGF2VaIbBk5EbV68OF49/jnaBrSO5Bbh0HbD4EQn2EB/LR4Jo/DjKGeOmneBP85+
-         BoRW6Doj08XDPk+nH2+agzqTsA//vpnh1Xyaf9FAf+xbDbjlh2wQr8KjUH2j9uic7sme
-         EQU+rxcef80pHSqgPM23rzi/zNJJ/RPpRHIImI9YmcxrBtR6PrrBBj5PkH2/o4B4+vtu
-         u+DvsDww5yrl7+lELic3IinttkH5fQtQOrVfjDRQ1ajlIaO4ajEnxaMbeYP+u8ilgkHG
-         YecA==
-X-Gm-Message-State: ACrzQf0D9t5C01ykNIO+iVGJKmB4ncFzIkbrm1b0PTWzpzqPtJg8FMEU
-        idhIhtXGknu5/a+AAnMO2Fw=
-X-Google-Smtp-Source: AMsMyM4PCzstgeCURld+oc9VnSIugbawgOsMP4ssutj0hm9hSDj6WnuPhRatclW/xN3bcLhkOLSKKA==
-X-Received: by 2002:a63:7e4d:0:b0:43c:8ce9:2a9f with SMTP id o13-20020a637e4d000000b0043c8ce92a9fmr3676574pgn.528.1666117433753;
-        Tue, 18 Oct 2022 11:23:53 -0700 (PDT)
+        bh=5gTnDYN+v/DnI0QsKpXa/UtAUso84QgTliR3hhbiP+U=;
+        b=GVz4twAc9DSQsaXr0zseJ2/rZGuktWxUluvHVUyyG2VOK4ee7s16gkstVb9eZbeE0s
+         5KsOyvHf5blTGy1RVCozhGPwFdfM4+MOUc3kI1biusDZ5Hfm/yd8HacAF4z/C8Qi11eI
+         GNYa9jVvFejV8pLEihAe+Y4X7ZhCccZMpt/xtn5NMNxe3cPZUab25QDLAgFCCYNANuLD
+         GADTdHXi6CQDTLKHMruAA4TgRN+LcbSDHTFJb8b/L0Cnz5j7g4rw4mNE20WCPLfJYgVA
+         BMXmKqUADKH3QHIEWHnOp/3Pz6Qv+d61231ynFxmVnJByoTOvulR1rxrb9dJM3OohK3b
+         hHSA==
+X-Gm-Message-State: ACrzQf2LebDdfJc0kashiQPSEiaDrWNROlAgPKUdxZI30R7OrhKSE8/O
+        V+ypjfcRQzsAjqEh4LPsOK0=
+X-Google-Smtp-Source: AMsMyM7JkzmG8pULqktRD7quRNIV212kjStg+eqb79LUMY1/+o+FdqhXlghGnhNlEYEby9J5P0dzPw==
+X-Received: by 2002:a05:6a00:d72:b0:562:86e9:ae55 with SMTP id n50-20020a056a000d7200b0056286e9ae55mr4282340pfv.13.1666117648764;
+        Tue, 18 Oct 2022 11:27:28 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:522b:67a3:58b:5d29? ([2620:15c:211:201:522b:67a3:58b:5d29])
-        by smtp.gmail.com with ESMTPSA id e19-20020aa79813000000b005636d8aa98dsm9911968pfl.141.2022.10.18.11.23.52
+        by smtp.gmail.com with ESMTPSA id r3-20020a17090a438300b0020ad53b5883sm8454334pjg.14.2022.10.18.11.27.26
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 18 Oct 2022 11:23:53 -0700 (PDT)
-Message-ID: <2495df25-c64c-443b-d9b1-258246a36b37@acm.org>
-Date:   Tue, 18 Oct 2022 11:23:50 -0700
+        Tue, 18 Oct 2022 11:27:28 -0700 (PDT)
+Message-ID: <9868763a-d360-db53-02b9-2d7ab9628d79@acm.org>
+Date:   Tue, 18 Oct 2022 11:27:25 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.13.0
-Subject: Re: [PATCH v3 3/3] scsi: ufs: core: Use is_visible to control UFS
- unit descriptor sysfs nodes
+Subject: Re: [PATCH v3 2/3] scsi: ufs: core: Cleanup ufshcd_slave_alloc()
 Content-Language: en-US
 To:     Bean Huo <beanhuo@iokpp.de>, alim.akhtar@samsung.com,
         avri.altman@wdc.com, asutoshd@codeaurora.org, jejb@linux.ibm.com,
@@ -52,9 +51,9 @@ To:     Bean Huo <beanhuo@iokpp.de>, alim.akhtar@samsung.com,
         daejun7.park@samsung.com, huobean@gmail.com
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 References: <20221018181627.326657-1-beanhuo@iokpp.de>
- <20221018181627.326657-4-beanhuo@iokpp.de>
+ <20221018181627.326657-3-beanhuo@iokpp.de>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20221018181627.326657-4-beanhuo@iokpp.de>
+In-Reply-To: <20221018181627.326657-3-beanhuo@iokpp.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -62,14 +61,59 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 10/18/22 11:16, Bean Huo wrote:
-> From: Bean Huo <beanhuo@micron.com>
-> 
-> UFS Boot and Device W-LUs do not have unit descriptors, and PRMB does not
-                                                               ^^^^
-                                                               RPMB?
-> support WB, we can use is_visible() to control which nodes are visible
-> and which are not.
+> +static void ufshcd_lu_init(struct ufs_hba *hba, struct scsi_device *sdev)
+> +{
+> +	u8 lun_qdepth;
+> +	u8 *desc_buf;
+> +	int ret;
+> +	int len;
+> +	u8 lun;
+> +
+> +	lun_qdepth = hba->nutrs;
+> +	lun = ufshcd_scsi_to_upiu_lun(sdev->lun);
+> +	len = hba->desc_size[QUERY_DESC_IDN_UNIT];
 
-Otherwise this patch looks good to me. Hence:
+Isn't the preferred style for kernel code to combine the above 
+declarations and assignments (but not memory allocation calls)?
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> +	desc_buf = kzalloc(len, GFP_KERNEL);
+> +	if (!desc_buf)
+> +		goto set_qdepth;
+> +
+> +	ret = ufshcd_read_unit_desc_param(hba, lun, 0, desc_buf, len);
+> +	if (ret < 0) {
+> +		if (ret == -EOPNOTSUPP)
+> +			/* If LU doesn't support unit descriptor, its queue depth is set to 1 */
+> +			lun_qdepth = 1;
+> +		kfree(desc_buf);
+> +		goto set_qdepth;
+> +	}
+> +
+> +	if (desc_buf[UNIT_DESC_PARAM_LU_Q_DEPTH])
+> +		/*
+> +		 * In per-LU queueing architecture, bLUQueueDepth will not be 0, then we will
+> +		 * use the smaller between UFSHCI CAP.NUTRS and UFS LU bLUQueueDepth
+> +		 */
+> +		lun_qdepth = min_t(int, desc_buf[UNIT_DESC_PARAM_LU_Q_DEPTH], hba->nutrs);
+
+Should a test be added that verifies that UNIT_DESC_PARAM_LU_Q_DEPTH < len?
+
+Additionally, please use braces ({}) around multi-line if-statement bodies.
+
+> +	/*
+> +	 * According to UFS device specification, the write protection mode is only supported by
+> +	 * normal LU, not supported by WLUN.
+> +	 */
+> +	if (hba->dev_info.f_power_on_wp_en && lun < hba->dev_info.max_lu_supported &&
+> +	    !hba->dev_info.is_lu_power_on_wp &&
+> +	    desc_buf[UNIT_DESC_PARAM_LU_WR_PROTECT] == UFS_LU_POWER_ON_WP)
+> +		hba->dev_info.is_lu_power_on_wp = true;
+
+Also here, should the following test be added: 
+UNIT_DESC_PARAM_LU_WR_PROTECT < len?
+
+Otherwise this patch looks good to me.
+
+Thanks,
+
+Bart.
