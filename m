@@ -2,94 +2,72 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B447C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 Oct 2022 12:05:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81ECEC43217
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 Oct 2022 13:24:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230455AbiJRME5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 18 Oct 2022 08:04:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43156 "EHLO
+        id S230288AbiJRNYG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 18 Oct 2022 09:24:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39614 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231224AbiJRME1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Oct 2022 08:04:27 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C49D7491DE;
-        Tue, 18 Oct 2022 05:03:54 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 339BA33E49;
-        Tue, 18 Oct 2022 12:03:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1666094631; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=CbRAc8FpKFKeJzh5cRw7qht0aI7mot6X3f5/v8nZvdU=;
-        b=pp7RwiJCZ9Y2sJK45odOstTjtj6tVfcML3ZyaLKfA+gELO9Kxi2vaO2YjLDWDA4PXbmVEV
-        y7X40TGqQaXrkPAhkNCZ1mg3krNoGzu8wyjs8rJdRcCNndflDzDcijmE0Kr5h9lwebJqCk
-        F4T0qYCsRwYZje1OdKo6Bd3JJEOYMQw=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1666094631;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=CbRAc8FpKFKeJzh5cRw7qht0aI7mot6X3f5/v8nZvdU=;
-        b=xmFaMAyq9kZlAlT2R1D/iOcVHGj86vhzkLVd/+qHjJ2KVVxZ5GEmgiK/4EOmGhdYfly5BQ
-        0D2PlEY8nmq5kcCQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id F28DC13480;
-        Tue, 18 Oct 2022 12:03:50 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id Z2wbOiaWTmMSZQAAMHmgww
-        (envelope-from <hare@suse.de>); Tue, 18 Oct 2022 12:03:50 +0000
-Message-ID: <7b049690-b3e8-6e45-ffef-967df77a7f48@suse.de>
-Date:   Tue, 18 Oct 2022 14:03:50 +0200
+        with ESMTP id S230407AbiJRNYF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Oct 2022 09:24:05 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D9DE3C90D5;
+        Tue, 18 Oct 2022 06:24:03 -0700 (PDT)
+Received: from fraeml702-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MsDzv0jRNz67tKy;
+        Tue, 18 Oct 2022 21:22:19 +0800 (CST)
+Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
+ fraeml702-chm.china.huawei.com (10.206.15.51) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2375.31; Tue, 18 Oct 2022 15:24:01 +0200
+Received: from [10.48.144.241] (10.48.144.241) by
+ lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Tue, 18 Oct 2022 14:24:01 +0100
+Message-ID: <046e86d2-17e1-e85d-08a1-744ef975171c@huawei.com>
+Date:   Tue, 18 Oct 2022 14:24:00 +0100
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.2
-Subject: Re: [PATCH v4 5/7] scsi: pm8001: Use sas_task_find_rq() for tagging
-Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, jinpu.wang@cloud.ionos.com,
-        damien.lemoal@wdc.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linuxarm@huawei.com, ipylypiv@google.com, changyuanl@google.com
-References: <1666091763-11023-1-git-send-email-john.garry@huawei.com>
- <1666091763-11023-6-git-send-email-john.garry@huawei.com>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <1666091763-11023-6-git-send-email-john.garry@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Niklas Cassel <Niklas.Cassel@wdc.com>,
+        Hannes Reinecke <hare@suse.de>
+From:   John Garry <john.garry@huawei.com>
+CC:     "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Xiang Chen <chenxiang66@hisilicon.com>
+Subject: libata and software reset
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.48.144.241]
+X-ClientProxiedBy: lhrpeml100001.china.huawei.com (7.191.160.183) To
+ lhrpeml500003.china.huawei.com (7.191.162.67)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/18/22 13:16, John Garry wrote:
-> The request associated with a scsi command coming from the block layer
-> has a unique tag, so use that when possible for getting a CCB.
-> 
-> Unfortunately we don't support reserved commands in the SCSI midlayer yet,
-> so in the interim continue to manage those tags internally (along with
-> tags for private commands).
-> 
-> Signed-off-by: John Garry <john.garry@huawei.com>
-> Reviewed-by: Jack Wang <jinpu.wang@ionos.com>
-> Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> ---
->   drivers/scsi/pm8001/pm8001_init.c | 12 ++++--------
->   drivers/scsi/pm8001/pm8001_sas.c  | 13 +++++++++----
->   drivers/scsi/pm8001/pm8001_sas.h  | 11 ++++++++---
->   drivers/scsi/pm8001/pm80xx_hwi.c  | 19 +++----------------
->   4 files changed, 24 insertions(+), 31 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Hi guys,
 
-Cheers,
+In the hisi_sas driver there are times in which we need to issue an ATA 
+software reset. For this we use hisi_sas_softreset_ata_disk() -> 
+sas_execute_ata_cmd() -> sas_execute_tmf(), which uses libsas "slow 
+task" mechanism to issue the command.
 
-Hannes
+I would like if libata provided such a function to issue a software 
+reset, such that we can send the command as an ATA queued command.
+
+The problem is that often when we would want to issue this software 
+reset the associated ata port is frozen, like in ATA EH, and so we 
+cannot issue ATA queued commands - internal or normal - at that time.
+
+Is there any way to solve this? Or I am just misunderstanding how and 
+when ATA queued commands can and should be used?
+
+I assume that ata_port_operations.softreset callback requires a method 
+to be able to issue the softreset directly from the driver, like 
+ahci_softreset() -> ahci_do_softreset() -> ahci_exec_polled_cmd().
+
+Thanks,
+John
