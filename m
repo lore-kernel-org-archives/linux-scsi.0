@@ -2,119 +2,158 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54D56C433FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 Oct 2022 08:24:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12308C4332F
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 Oct 2022 10:17:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229760AbiJSIYP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 Oct 2022 04:24:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58572 "EHLO
+        id S231548AbiJSKQ7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 19 Oct 2022 06:16:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49980 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229508AbiJSIYO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Oct 2022 04:24:14 -0400
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DF3C7C75D;
-        Wed, 19 Oct 2022 01:24:08 -0700 (PDT)
-Received: from dggpemm500024.china.huawei.com (unknown [172.30.72.56])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4MskGG6qDwzJn1g;
-        Wed, 19 Oct 2022 16:21:26 +0800 (CST)
-Received: from dggpemm500012.china.huawei.com (7.185.36.89) by
- dggpemm500024.china.huawei.com (7.185.36.203) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Wed, 19 Oct 2022 16:24:06 +0800
-Received: from localhost.localdomain (10.67.165.24) by
- dggpemm500012.china.huawei.com (7.185.36.89) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Wed, 19 Oct 2022 16:24:05 +0800
-From:   Xingui Yang <yangxingui@huawei.com>
-To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>, <yangxingui@huawei.com>,
-        <prime.zeng@hisilicon.com>, <kangfenglong@huawei.com>,
-        <john.garry@huawei.com>
-Subject: [PATCH] scsi: sd: Update dix config everytime sd_revalidate_disk is called
-Date:   Wed, 19 Oct 2022 08:18:25 +0000
-Message-ID: <20221019081825.20794-1-yangxingui@huawei.com>
-X-Mailer: git-send-email 2.17.1
+        with ESMTP id S231688AbiJSKQU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Oct 2022 06:16:20 -0400
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 938D4107CEA
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Oct 2022 02:57:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1666173444; x=1697709444;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=sp2+V3olAKYqj+WXfh1w+hgEwPcXhPFgM+cldgLIgKI=;
+  b=j+qTNu0eYTJ5Z4kQ/LV4BiXtuNWXtEYjfgWZxGwgEudSOupw8OBS4Tjk
+   hTXsOLj5FrsyLQbrDr/JH+4mve9cV3MIQe5ImSHgPoAbph1lUwRQhSquz
+   1cyWCIki1smB6R0Ndth8jMCxOkiP8rj2WhdSdhypJV4v8bF+lLx3L9L93
+   7+K3HPjgJthRg6ZsZ+CL/v3UQe+jc9YvVGKhcxFIpyGa1hl+jAkprwX3T
+   XSQy/8quGiV9vmdf8Cp2e+/0W+v5vcNbUl43e2PtZd7yKVLDWtKV+9j36
+   MPZuYNhu/gSBDUuqF9In/IKO2Lt2I8dvsTDaQbaT1DfxfVMoPfTzqULh1
+   g==;
+X-IronPort-AV: E=Sophos;i="5.95,195,1661788800"; 
+   d="scan'208";a="214212675"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 19 Oct 2022 17:53:23 +0800
+IronPort-SDR: sZ2Pq5wMdQZW0B84Ef+VNXRNu4Se0+d/qKBl+ksVIs2TDQ1X5oVMQGBCZ2GJvOlssx0WlyNy/K
+ Lp2OFQ98QjfuN7zhTFEx7m+07gqavacOjk6XhO36c7w2F1Vx6AopI3uNI5ad4kM77kbocuqY4e
+ /lIAm5btGjr2OEIKmj10u7hbmyhKe0TqeDFe8hCKf3dYvcQVxoeS8O+B+XngBUOB+kk9x7hJ1P
+ EcsJEYvXfIIIYRMfZj6pUHAk15hGAGbYUHzhygObUvpPjBj+BehnNzlF1fOppGDAncJpHXDMnP
+ VEJCcm201t29XHZuPBa0ASc3
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 19 Oct 2022 02:12:54 -0700
+IronPort-SDR: 2lZBlGEeCVax+UWsdTlEMUYrqGJHR4ty59CAGlLpUUTCsSeY0Nor37cGclFD4Yaa25l+EjlBIt
+ yDujKx2sUYmLnq0WJ+Ms6phuIMkp3sEnUP02CKK9O9Fiep/kDu1wQ1EuwQAaWrck40ny7uGlFm
+ uIAJoI3E4xLfG8FTkapKPRpuXS5DhDDO2nc9g8hpWOXyAURKYvIFPaWv4Twdo01/E0E6E3mfxb
+ 23cKr6lyqrI3K9Sv3ZCq+k+7hGq3IbVcV80OOuC5iUkepmd/4kYdiMa7O3bSQxb+xj66a3bkAN
+ U7w=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 19 Oct 2022 02:53:21 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MsmJJ0d5Rz1RwtC
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Oct 2022 02:53:20 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1666173199; x=1668765200; bh=sp2+V3olAKYqj+WXfh1w+hgEwPcXhPFgM+c
+        ldgLIgKI=; b=AVLZ3r/q8w1EjVpjbYk5kBfCR/8MYkGRTh26o7GV7o2uYu3/ZPW
+        bAUWNIAAwM+OUOIPFhFkZyH7K2q1z2DDp1yA1712VUg5eNy7ELZZXwPn8S4qrpCa
+        8mYEQJM+GEESyAKEEkGplopSEcqxmY+JRhVo6YX34Td/Idmvd3ClNLKNo2QmNDF1
+        OQSWx8HuI0HNxfXi/9tmrjMo8UhRYxxFHxKNMzLAWSa0BGx3ZRKW3XodbzWE503H
+        Lqa0gOBpHibz4DAgXFflSfb+I9q8MTPBgwLS0igqtDstjTQBEhvQu01sjEXxGps8
+        i4OuAW84BHzOuQw6vj4hj7cDyhkjlaMtNiQ==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id aI3V9PBtpNxV for <linux-scsi@vger.kernel.org>;
+        Wed, 19 Oct 2022 02:53:19 -0700 (PDT)
+Received: from [10.149.53.254] (washi.fujisawa.hgst.com [10.149.53.254])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MsmJG4GYDz1RvLy;
+        Wed, 19 Oct 2022 02:53:18 -0700 (PDT)
+Message-ID: <73cf04c5-3ebd-3aaa-701b-91be59ed035d@opensource.wdc.com>
+Date:   Wed, 19 Oct 2022 18:53:17 +0900
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.67.165.24]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- dggpemm500012.china.huawei.com (7.185.36.89)
-X-CFilter-Loop: Reflected
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.1
+Subject: Re: libata and software reset
+Content-Language: en-US
+To:     John Garry <john.garry@huawei.com>,
+        Niklas Cassel <Niklas.Cassel@wdc.com>,
+        Hannes Reinecke <hare@suse.de>
+Cc:     "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Xiang Chen <chenxiang66@hisilicon.com>
+References: <046e86d2-17e1-e85d-08a1-744ef975171c@huawei.com>
+ <7e8ef4b4-928f-895f-05ef-df111a052e8e@opensource.wdc.com>
+ <a5026aa0-2674-9b2d-1a0f-ed3847fa69cc@opensource.wdc.com>
+ <28c7127f-f577-9a43-2f2f-80ef89d85a0e@huawei.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <28c7127f-f577-9a43-2f2f-80ef89d85a0e@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When the host protection capabilities are 0x77 and a DIF disk is connected,
-the DIX and DIF of the disk are default enabled. Then if that DIF disk is
-reformatted as a non-DIF format, per the currently flow, the DIX is kept
-enabled which is not correct, which will cause the following errors when
-accessing the non-DIF disk:
-[root@localhost ~]# lsscsi -p
-[7:0:5:0]    disk    xxx    /dev/sdc   DIF/Type3  T10-DIF-TYPE3-CRC
-[root@localhost ~]# sg_format -F -s 512 /dev/sdc
-[root@localhost ~]# lsscsi -p
-[7:0:5:0]    disk    xxx    /dev/sdc   -          T10-DIF-TYPE3-CRC
+On 10/19/22 18:42, John Garry wrote:
+> On 19/10/2022 06:04, Damien Le Moal wrote:
+>> On 10/19/22 14:03, Damien Le Moal wrote:
+>>> On 10/18/22 22:24, John Garry wrote:
+>>>> Hi guys,
+>>>>
+>>>> In the hisi_sas driver there are times in which we need to issue an ATA
+>>>> software reset. For this we use hisi_sas_softreset_ata_disk() ->
+>>>> sas_execute_ata_cmd() -> sas_execute_tmf(), which uses libsas "slow
+>>>> task" mechanism to issue the command.
+>>> Something is wrong here... The reset command sent by that function is
+>>> for ATAPI (DEVICE RESET command). There is no device reset command for
+>>> SATA disks following the ACS standard.
+> 
+> Yeah, that looks wrong.
+> 
+>>>
+>>> So hisi_sas_softreset_ata_disk() seems totally bogus to me, unless you
+>>> have a CD/DVD drive connected to the HBA:)
+> 
+> Sure
+> 
+>>>
+>>> This is why the softreset function is a port operation defined by LLDs.
+>>> How you reset the device depends on the adapter. E.g., for AHCI, you
+>>> need to send a host2device FIS with the software reset bit set.
+> 
+> This would be quite a standard method, right?
 
-[142829.032340] hisi_sas_v3_hw 0000:b4:04.0: erroneous completion iptt=2375 task=00000000bea0970c dev id=5 direct-attached phy4 addr=51c20dbaf642a000 CQ hdr: 0x1023 0x50947 0x0 0x20000 Error info: 0x0 0x0 0x4 0x0
-[142829.073883] sas: Enter sas_scsi_recover_host busy: 1 failed: 1
-[142829.079783] sas: sas_scsi_find_task: aborting task 0x00000000bea0970c
-[142829.102342] sas: Internal abort: task to dev 51c20dbaf642a000 response: 0x0 status 0x5
-[142829.110319] sas: sas_eh_handle_sas_errors: task 0x00000000bea0970c is done
-[142829.117275] sd 7:0:5:0: [sdc] tag#2375 UNKNOWN(0x2003) Result: hostbyte=0x05 driverbyte=DRIVER_OK cmd_age=0s
-[142829.127171] sd 7:0:5:0: [sdc] tag#2375 CDB: opcode=0x2a 2a 00 00 00 00 00 00 00 08 00
-[142829.135059] I/O error, dev sdc, sector 0 op 0x1:(WRITE) flags 0x18800 phys_seg 1 prio class 2
+The TF part should be standard. Would need to dig in SATA-IO specs to
+check. How the TF/FIS should be issued/polled for is definitely
+dependent on the adapter itself I think, exactly like issuing a qc is.
 
-On the contrary, when a non-DIF disk is connected and formatted as a DIF
-disk, it is found that DIX is not enabled. Operation logs as follows:
+> 
+>> See: ahci_do_softreset() for AHCI.
+> 
+> For ahci_do_softreset(), do you just implicitly use ATA_CMD_NOP as the
+> command?
 
-[root@localhost ~]# lsscsi -p
-[7:0:2:0]    disk    xxx    /dev/sdc   -          none
-[root@localhost ~]# sg_format --format --fmtpinfo=3 --pfu=1 /dev/sdc
-[root@localhost ~]# lsscsi -p
-[7:0:2:0]    disk    xxx    /dev/sdc   DIF/Type3  none
+To be frank, it is the first time I really look at the reset code :)
+I need to read SATA-IO specs to understand why it is doing things like that.
 
-This is because dix config is only updated when the first time a disk
-is added, in this patch, we fix the issue by with changes:
-1. Remove check first_scan when call sd_config_protection().
-2. Unregister block integrity profile after DIX becomes to 0.
+> 
+> For hisi_sas, maybe ATA_CMD_DEV_RESET is silently ignored when issued
+> for a SATA disk, but having SRST set/unset still takes effect (and that
+> is how it still works). I need to check on that.
 
-Signed-off-by: Xingui Yang <yangxingui@huawei.com>
----
- drivers/scsi/sd.c     | 3 ---
- drivers/scsi/sd_dif.c | 4 +++-
- 2 files changed, 3 insertions(+), 4 deletions(-)
+Yes, it may be that having the ATA_SRST bit set causes the device to
+ignore the command field, hence you never saw any problem. Still feels
+terribly wrong to use an ATAPI command for an ATA disk. ATAPI device
+reset command code is 0x08 which is not defined as a command code in ACS.
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index eb76ba055021..3844f469b6be 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2199,9 +2199,6 @@ static void sd_config_protection(struct scsi_disk *sdkp)
- {
- 	struct scsi_device *sdp = sdkp->device;
- 
--	if (!sdkp->first_scan)
--		return;
--
- 	sd_dif_config_host(sdkp);
- 
- 	if (!sdkp->protection_type)
-diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
-index 968993ee6d5d..78db8d85f97e 100644
---- a/drivers/scsi/sd_dif.c
-+++ b/drivers/scsi/sd_dif.c
-@@ -39,8 +39,10 @@ void sd_dif_config_host(struct scsi_disk *sdkp)
- 		dif = 0; dix = 1;
- 	}
- 
--	if (!dix)
-+	if (!dix) {
-+		blk_integrity_unregister(disk);
- 		return;
-+	}
- 
- 	memset(&bi, 0, sizeof(bi));
- 
+> 
+> Thanks,
+> John
+
 -- 
-2.17.1
+Damien Le Moal
+Western Digital Research
 
