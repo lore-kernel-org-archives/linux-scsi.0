@@ -2,109 +2,117 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 629D4C4332F
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 Oct 2022 01:23:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6245EC433FE
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 Oct 2022 03:45:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229729AbiJSBX1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 18 Oct 2022 21:23:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46680 "EHLO
+        id S229722AbiJSDpl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 18 Oct 2022 23:45:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41538 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229816AbiJSBX0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Oct 2022 21:23:26 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70E43E070E
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Oct 2022 18:23:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1666142604;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=dMOprsDQUY4INvBuBGxV3T7LRHx+WHc/e/o7v3nW7u4=;
-        b=IOJfI/xgpQvy0Lbs/CE8MPgi0LXj/Zoq4vY9qkqqfxSHKBrCnkkcITIYM7ew/dgM7seJXD
-        cP3suDhHrV7fZhQ+pr9r2U7HRqcZcErtKlMzKaWVBB8RPbYhzif3IDMJfxy8R6Ppiccx+I
-        cI5jxFlZWPe7mUiZ6jbl4aQCFDUg4xI=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-457-kFCXiaauNs6sbrEKiLkEsA-1; Tue, 18 Oct 2022 21:23:13 -0400
-X-MC-Unique: kFCXiaauNs6sbrEKiLkEsA-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.rdu2.redhat.com [10.11.54.4])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id C247D884342;
-        Wed, 19 Oct 2022 01:23:12 +0000 (UTC)
-Received: from T590 (ovpn-8-20.pek2.redhat.com [10.72.8.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 281C2200B408;
-        Wed, 19 Oct 2022 01:23:06 +0000 (UTC)
-Date:   Wed, 19 Oct 2022 09:23:02 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, Hector Martin <marcan@marcan.st>,
-        Sven Peter <sven@svenpeter.dev>,
-        Keith Busch <kbusch@kernel.org>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 2/4] scsi: remove an extra queue reference
-Message-ID: <Y09Rdh0O23cvizeQ@T590>
-References: <20221018135720.670094-1-hch@lst.de>
- <20221018135720.670094-3-hch@lst.de>
- <Y09QCb5A+iL/Igoj@T590>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Y09QCb5A+iL/Igoj@T590>
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.4
+        with ESMTP id S229515AbiJSDpk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Oct 2022 23:45:40 -0400
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1AA5DEF1C
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Oct 2022 20:45:37 -0700 (PDT)
+Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20221019034532epoutp0368ccfbea7709bfefb907b1587a1c7ee4~fW6CO2aeA1439214392epoutp03K
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Oct 2022 03:45:32 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20221019034532epoutp0368ccfbea7709bfefb907b1587a1c7ee4~fW6CO2aeA1439214392epoutp03K
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1666151132;
+        bh=Pacm9DFtavfzT6lgp8j/mjNE+GV6LEgkAK7hV4ylTto=;
+        h=Subject:Reply-To:From:To:Date:References:From;
+        b=u/7hA3vlj8zB8TPn/BnrIHYbqELk3oUSxLuLRyX7Qx9hhewc/RgeBaLmqWNOuS5Vf
+         iu2j/PTXc8/BJ6CmIX58Nwncj5MHLMi2S7eacNm8XqqMYp2fCGRmDYCYUTRQ+yiwsl
+         Ihek+FcQO0363GGE4IjLDrsUX8IYakCPWBYPUS5o=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+        20221019034531epcas2p45f39b22e6759e10bede35fe50d12579b~fW6BpaAMp0518705187epcas2p40;
+        Wed, 19 Oct 2022 03:45:31 +0000 (GMT)
+Received: from epsmges2p3.samsung.com (unknown [182.195.36.100]) by
+        epsnrtp4.localdomain (Postfix) with ESMTP id 4Msc7v2fD5z4x9QF; Wed, 19 Oct
+        2022 03:45:31 +0000 (GMT)
+X-AuditID: b6c32a47-ac5b870000002127-55-634f72db120c
+Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
+        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
+        02.CD.08487.BD27F436; Wed, 19 Oct 2022 12:45:31 +0900 (KST)
+Mime-Version: 1.0
+Subject: [PATCH] scsi: ufs: core: Fix typo in comments
+Reply-To: keosung.park@samsung.com
+Sender: Keoseong Park <keosung.park@samsung.com>
+From:   Keoseong Park <keosung.park@samsung.com>
+To:     ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        Keoseong Park <keosung.park@samsung.com>,
+        "axboe@kernel.dk" <axboe@kernel.dk>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20221019034530epcms2p2b10e072bb66b3fd6cdbe0e2423c11735@epcms2p2>
+Date:   Wed, 19 Oct 2022 12:45:30 +0900
+X-CMS-MailID: 20221019034530epcms2p2b10e072bb66b3fd6cdbe0e2423c11735
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+CMS-TYPE: 102P
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrFJsWRmVeSWpSXmKPExsWy7bCmme7tIv9kg89rBC0ezNvGZvHy51U2
+        i9V3+9ksDj7sZLGY9uEns8XLQ5oWj24/Y7RYdGMbk8Xxk+8YLS7vmsNm0X19B5vF8uP/mBx4
+        PC5f8fa4fLbUY8KiA4we39d3sHl8fHqLxaNvyypGj8+b5DzaD3QzBXBEZdtkpCampBYppOYl
+        56dk5qXbKnkHxzvHm5oZGOoaWlqYKynkJeam2iq5+AToumXmAN2qpFCWmFMKFApILC5W0rez
+        KcovLUlVyMgvLrFVSi1IySkwL9ArTswtLs1L18tLLbEyNDAwMgUqTMjOmPzjHHPBJLaKf0uv
+        sjQwtrN2MXJySAiYSFxbNpmxi5GLQ0hgB6PE+12nmbsYOTh4BQQl/u4QBjGFBcwktrV7g5QL
+        CShJdC3cygxiCwsYSKybvgfMZhPQk5jy+w7YGBGBl8wSq/qfskHM55WY0f6UBcKWlti+fCsj
+        hK0h8WNZLzOELSpxc/Vbdhj7/bH5UDUiEq33zkLVCEo8+LkbKi4p0XpmK9T8fIknN/uh5tdI
+        LNj+GSquL3GtYyNYnFfAV2LKjkNgvSwCqhLbuy9C7XKReN31kwnEZhaQl9j+dg7Y68wCmhLr
+        d+mDmBICyhJHbrHAfNKw8Tc7OptZgE+i4/BfuPiOeU+YIGw1iUcLtkBDWUbi4pxzUJ94SGw/
+        spN1AqPiLEQ4z0JywyyEGxYwMq9iFEstKM5NTy02KjCGR21yfu4mRnCi1XLfwTjj7Qe9Q4xM
+        HIyHGCU4mJVEeN2++CQL8aYkVlalFuXHF5XmpBYfYjQF+n4is5Rocj4w1eeVxBuaWBqYmJkZ
+        mhuZGpgrifN2zdBKFhJITyxJzU5NLUgtgulj4uCUamCa4/E380YqW7LRVN9XTQGBx3ZoVE00
+        vjJvfrLOWsON+xr3TajeE/ysoX1ZdmGBj94W5+jpMfuvN26/J3r+xhKRQsGd4Wx1uZUL38uy
+        GsR9s/2wQIZb911hQNaXLTLzN7TuS1ItnePtca7a6Pcpgb/Vrw1UJ8zv3skYERC7oF6wtzjC
+        4uNn31LNSI7wh5PXLtLauedWg82CA5MfMoet+H3szONFlu+ZFA6Kr3OV9t1+TtvXrVsrak9h
+        t/61h7Hdkuem30wMvHSFq2sVZ0Df7Zai/IsTmzMVSuTeZ312+DN1X/teu7yGizy9Odf5bG7O
+        EIxVXuN6Tq7y2JPnqbwS4T/eH1lzecNh5ikmaxf27opWYinOSDTUYi4qTgQAvV3P1z0EAAA=
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20221019034530epcms2p2b10e072bb66b3fd6cdbe0e2423c11735
+References: <CGME20221019034530epcms2p2b10e072bb66b3fd6cdbe0e2423c11735@epcms2p2>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Oct 19, 2022 at 09:16:57AM +0800, Ming Lei wrote:
-> On Tue, Oct 18, 2022 at 03:57:18PM +0200, Christoph Hellwig wrote:
-> > Now that blk_mq_destroy_queue does not release the queue reference, there
-> > is no need for a second queue reference to be held by the scsi_device.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> >  drivers/scsi/scsi_scan.c  | 1 -
-> >  drivers/scsi/scsi_sysfs.c | 1 -
-> >  2 files changed, 2 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> > index 5d27f5196de6f..0a95fa787fdf4 100644
-> > --- a/drivers/scsi/scsi_scan.c
-> > +++ b/drivers/scsi/scsi_scan.c
-> > @@ -344,7 +344,6 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
-> >  	sdev->request_queue = q;
-> >  	q->queuedata = sdev;
-> >  	__scsi_init_queue(sdev->host, q);
-> > -	WARN_ON_ONCE(!blk_get_queue(q));
-> >  
-> >  	depth = sdev->host->cmd_per_lun ?: 1;
-> >  
-> > diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> > index 1214c6f07bc64..c95177ca6ed26 100644
-> > --- a/drivers/scsi/scsi_sysfs.c
-> > +++ b/drivers/scsi/scsi_sysfs.c
-> > @@ -1478,7 +1478,6 @@ void __scsi_remove_device(struct scsi_device *sdev)
-> >  	mutex_unlock(&sdev->state_mutex);
-> >  
-> >  	blk_mq_destroy_queue(sdev->request_queue);
-> > -	blk_put_queue(sdev->request_queue);
-> 
-> The above put is counter-pair of blk_get_queue() in scsi_alloc_sdev, and
-> the original blk_put_queue() in blk_mq_destroy_queue() is counter-pair of
-> the initial get in blk_alloc_queue().
-> 
-> Now blk_put_queue() is moved out of blk_mq_destroy_queue(), I am wondering
-> how the scsi queue lifetime can work correctly with this patch? Or is there
-> bug in current scsi code?
+Change "drity" to "dirty".
 
-oops, the above blk_put_queue() is actually added in the 1st patch, so
-this patch is fine, sorry for the noise.
+Signed-off-by: Keoseong Park <keosung.park@samsung.com>
+---
+ drivers/ufs/core/ufshpb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-
-thanks,
-Ming
+diff --git a/drivers/ufs/core/ufshpb.c b/drivers/ufs/core/ufshpb.c
+index 3d69a81c5b17..14748f2c337b 100644
+--- a/drivers/ufs/core/ufshpb.c
++++ b/drivers/ufs/core/ufshpb.c
+@@ -383,7 +383,7 @@ int ufshpb_prep(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ 	rgn = hpb->rgn_tbl + rgn_idx;
+ 	srgn = rgn->srgn_tbl + srgn_idx;
+ 
+-	/* If command type is WRITE or DISCARD, set bitmap as drity */
++	/* If command type is WRITE or DISCARD, set bitmap as dirty */
+ 	if (ufshpb_is_write_or_discard(cmd)) {
+ 		ufshpb_iterate_rgn(hpb, rgn_idx, srgn_idx, srgn_offset,
+ 				   transfer_len, true);
+-- 
+2.17.1
 
