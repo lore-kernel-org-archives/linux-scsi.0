@@ -2,64 +2,102 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AD44C433FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 Oct 2022 22:09:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65E83C43217
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 Oct 2022 22:12:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230496AbiJSWJG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 Oct 2022 18:09:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57856 "EHLO
+        id S230138AbiJSWMM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 19 Oct 2022 18:12:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39906 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231328AbiJSWJD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Oct 2022 18:09:03 -0400
-Received: from mail-vk1-f176.google.com (mail-vk1-f176.google.com [209.85.221.176])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E79531BF851
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Oct 2022 15:09:02 -0700 (PDT)
-Received: by mail-vk1-f176.google.com with SMTP id q83so8951384vkb.2
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Oct 2022 15:09:02 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=sb3+wdk6yOZSXnY/zXFqLlidblv/Ceo/qcudPSUiy/s=;
-        b=5PQ2BYUgB2+BZGVQmFnzc0TizRTXVuPbvkBalCIIc3sA0dPIoPBpLJeknWNw4Tmw7I
-         mndaqX677HKd7Nn33EKjUR6PxXX1atfJbz1BL/dmvI9mAHYeZ1cu7wjLOe1klAPByB2k
-         GOp7ECugVxrmGL/theIFRoKlX2W3UtDarwGBmqe4N54PrTaJPtb3dLSfAzBe7+bhkirr
-         p7cUlAomxsNwUE1chD1SV8lLON8JoFwdUogbowcoTF/9D4HQsK/Vc2z98Ad0ccCgNoMg
-         3BkrGinWBSZFG4FAJV+1ht6vRFLggzgj74PR8m+A1Dw1Yu/Ly0WpJe0yqgN1Y6xeGlig
-         4fLQ==
-X-Gm-Message-State: ACrzQf2ghkyjaGjihGGklpn5dC9yKPKts/9l5nh58X88bCFS735w4xYs
-        oi1ReCd5v7l5G4stU74EQDGNeVSpNWE=
-X-Google-Smtp-Source: AMsMyM7d/ui3OqA7OVV1XB6u3nLQ6wudemTR9bwL9cHTeuFtMmhkDP4ZrqbD9oDKZyPOyJ9/HtWRpw==
-X-Received: by 2002:a17:902:7b87:b0:179:ec0a:7239 with SMTP id w7-20020a1709027b8700b00179ec0a7239mr10818613pll.139.1666217330939;
-        Wed, 19 Oct 2022 15:08:50 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:8280:2606:af57:d34? ([2620:15c:211:201:8280:2606:af57:d34])
-        by smtp.gmail.com with ESMTPSA id h8-20020a056a00000800b0053ebe7ffddcsm11654516pfk.116.2022.10.19.15.08.49
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 19 Oct 2022 15:08:50 -0700 (PDT)
-Message-ID: <db52d0a1-904b-682c-fdbd-84f49952909d@acm.org>
-Date:   Wed, 19 Oct 2022 15:08:47 -0700
+        with ESMTP id S229937AbiJSWML (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Oct 2022 18:12:11 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B366E32BA8;
+        Wed, 19 Oct 2022 15:12:10 -0700 (PDT)
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 29JJrUZo023772;
+        Wed, 19 Oct 2022 22:11:54 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=date : from : to :
+ cc : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=qcppdkim1; bh=vfFOyh6SWBoMvFWibj/u0p8XDRFkB+MXC92oQyZFXS8=;
+ b=LnP2nP2npGwPE0rUvd/rNps3Y7bb3wac7717hC168LFp9WOrdGMwZmaQZ313MWJE29Kj
+ l5r8aGW/gzLWy/PFaWuSdZSCE6MeOJFwdW3+1G/thEVpERrbMtXcZdncQmlLUi0uM3kn
+ XR9JYURttsD15WZGG4CsbNqAPBRcYoyxSk3OlLszKzDftjY8hcueKlpTTT13ouXrYYcK
+ zNgPr+vUxDeVoOyf1Z2m94e89EwzXS/MYAt8dT8J2CGkFcAIi+ALgoDt9beuEErrYN9N
+ wuf9qK82i/JOyfXca47cg1XRF7SZOeX3UQ9pyftz1qLTQReKZT8WFdtbDX+Jqrg54KKP lg== 
+Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3k9w0646eu-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 19 Oct 2022 22:11:54 +0000
+Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
+        by NASANPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 29JMBr1f023030
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 19 Oct 2022 22:11:53 GMT
+Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
+ nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.29; Wed, 19 Oct 2022 15:11:52 -0700
+Date:   Wed, 19 Oct 2022 15:11:52 -0700
+From:   Asutosh Das <quic_asutoshd@quicinc.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+CC:     Eddie Huang <eddie.huang@mediatek.com>,
+        Can Guo <quic_cang@quicinc.com>, <quic_nitirawa@quicinc.com>,
+        <quic_rampraka@quicinc.com>, <quic_bhaskarv@quicinc.com>,
+        <quic_richardp@quicinc.com>, <linux-scsi@vger.kernel.org>,
+        <linux-arm-msm@vger.kernel.org>, <quic_nguyenb@quicinc.com>,
+        <quic_xiaosenh@quicinc.com>, <avri.altman@wdc.com>,
+        <mani@kernel.org>, <beanhuo@micron.com>,
+        <stanley.chu@mediatek.com>, <liang-yen.wang@mediatek.com>
+Subject: Re: Fwd: [PATCH v2 06/17] ufs: core: mcq: Configure resource regions
+Message-ID: <20221019221152.GB18511@asutoshd-linux1.qualcomm.com>
+References: <11530912-36fd-8c69-4beb-de955eaae529@quicinc.com>
+ <6592c7fe-0828-6bb3-17a8-9db53aac1873@quicinc.com>
+ <83fe64628b6d44f28637a6a8ba6b21eb0848caaa.camel@mediatek.com>
+ <20221018014754.GE10252@asutoshd-linux1.qualcomm.com>
+ <12ab65aed221dec23451e9b60c0e00a4d9ef0df2.camel@mediatek.com>
+ <20221019195040.GA18511@asutoshd-linux1.qualcomm.com>
+ <b11cb7b4-2f4a-c6a2-82a5-c4372ff23610@acm.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.13.0
-Subject: Re: [PATCH v4 20/36] scsi: Have scsi-ml retry scsi_probe_lun errors
-Content-Language: en-US
-To:     Mike Christie <michael.christie@oracle.com>, mwilck@suse.com,
-        hch@lst.de, martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        james.bottomley@hansenpartnership.com
-References: <20221016195946.7613-1-michael.christie@oracle.com>
- <20221016195946.7613-21-michael.christie@oracle.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20221016195946.7613-21-michael.christie@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Disposition: inline
+In-Reply-To: <b11cb7b4-2f4a-c6a2-82a5-c4372ff23610@acm.org>
+User-Agent: Mutt/1.5.24 (2015-08-30)
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: g_dYzOZ_h5uJI3YlK3lYlLDHepRwVBnW
+X-Proofpoint-ORIG-GUID: g_dYzOZ_h5uJI3YlK3lYlLDHepRwVBnW
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
+ definitions=2022-10-19_12,2022-10-19_04,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 suspectscore=0
+ clxscore=1015 bulkscore=0 spamscore=0 mlxlogscore=804 priorityscore=1501
+ malwarescore=0 mlxscore=0 adultscore=0 impostorscore=0 lowpriorityscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2209130000
+ definitions=main-2210190123
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/16/22 12:59, Mike Christie wrote:
-> This has scsi_probe_lun ask scsi-ml to retry UAs instead of driving them
-> itself.
+On Wed, Oct 19 2022 at 14:07 -0700, Bart Van Assche wrote:
+>On 10/19/22 12:50, Asutosh Das wrote:
+>>While adding the vops it occurred to me that it'd remain empty 
+>>because ufs-qcom
+>>doesn't need it. And I'm not sure how MTK register space is laid out.
+>>So please can you help add a vops in the next version?
+>>I can address the other comment and push the series.
+>
+>Please do not introduce new vops without adding at least one 
+>implementation of the vop in the same patch series. How about letting 
+>MediaTek add more vops as necessary in a separate patch series and 
+>focusing in this patch series on UFSHCI 4.0 compliance?
+>
+Yep, I agree, I'll push the version shortly without the vops.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+-asd
 
+>Thanks,
+>
+>Bart.
