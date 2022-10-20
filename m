@@ -2,136 +2,121 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B369C4332F
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Oct 2022 01:38:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78518C4332F
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Oct 2022 05:15:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231220AbiJTBiL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 Oct 2022 21:38:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47288 "EHLO
+        id S229862AbiJTFPZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 Oct 2022 01:15:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46140 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231366AbiJTBiK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Oct 2022 21:38:10 -0400
-Received: from mail-pl1-x632.google.com (mail-pl1-x632.google.com [IPv6:2607:f8b0:4864:20::632])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32AE11D2B54;
-        Wed, 19 Oct 2022 18:38:08 -0700 (PDT)
-Received: by mail-pl1-x632.google.com with SMTP id k9so18485454pll.11;
-        Wed, 19 Oct 2022 18:38:08 -0700 (PDT)
+        with ESMTP id S229835AbiJTFPW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Oct 2022 01:15:22 -0400
+Received: from mail-vs1-xe34.google.com (mail-vs1-xe34.google.com [IPv6:2607:f8b0:4864:20::e34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97BDAA2AAD;
+        Wed, 19 Oct 2022 22:15:20 -0700 (PDT)
+Received: by mail-vs1-xe34.google.com with SMTP id n63so131510vsc.8;
+        Wed, 19 Oct 2022 22:15:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=message-id:date:subject:cc:to:from:from:to:cc:subject:date
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=rLdPoJiwzSisIeOIqqvijJzMO8y8c5LDJmTeIyrYWCw=;
-        b=d0kjFcYjCp4ntkJkSKDRemV2XINRpyl9e3lRUf53l8xdLWMmhDgyBdaaWhqqk2SzbB
-         tIBLAEN3xQ6tweLq13fT2pUC2dMbkv9Ns0r9mV3yk/hLBPPCX2+yA/KaYOfIkN5lqK4o
-         XQ/1cp3qH2QNYb37V3oFda2shBb0eWkQzwVa6ztbJ0rB6V/JiVA77RO2IQ9yX5yL2KyT
-         p3fQrKlWJ3WgUeba435AAHJbFOnBCVHPyOc1wSULaUS7yBR0LBOau3eZMGTXAwI/oQeZ
-         FCEyBgiDI6OvcB86pqN3+t0kU77yanniFVSVNJrDyybBSnKTf9f9pzYZ1ocVZxfx3VaV
-         oyIw==
+        bh=kdG+ouZ9mtQkIdf4wHomoStwFFAJkNb2nocVArRayto=;
+        b=qcr0zMjKq3TOa3Pa8KBFhWaFdI4kIGIo3H4i9h1VOh6DkXWXvPRidfiZwbNgy2YcwU
+         zvYzEsYm6VyQUEyZXlY0ANcs4VmRGa08jsQh/Pdj5aeKrIc+Up/27YkQqaMco3BppiXV
+         sCx2ZFHlC3jjVS2Aj1yeYllAxr35/n9Px+fkYlhMPQfvVD4IkkPaUpIXTJNZ1GvFd8Bs
+         hTJo742KS+C2BRzQZIduAZYr/2IPeeWe33Qb2FfXXislrjkXx+m3YG+e39+G8lpUuymf
+         fucfDDgBtBs8AH0hFYDIzo/e4inbexX3/9to29l0yTtpaEj8uYOrd/DpsMVQHL81zS9i
+         TYBw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=rLdPoJiwzSisIeOIqqvijJzMO8y8c5LDJmTeIyrYWCw=;
-        b=3CW8++WgTE50Jb587CQsMQCkQ5b52RzLa9ZCCPzaA2PnUPYBgH6418UdWgna2y5DTh
-         YV96GjKGD0koTgsBhqBOMWTi7+stIjM3cdS7Ns2XyWx5n8MVC1Y93jbHxSOjbZz5X9zN
-         ECHyZpf9e7VSCvDlGjZBZgtXWt0Jaz7AKlXBfFufXKxTHwTOp3ZIJ46RDvzGCVXBdDyq
-         1ynvJHsVzGzVA0uAr/ipaLynGjPva0hUMnwPqjEaAyJWU63xotKKG/tw3qfxRbomwcci
-         Rv2GeSqiwnon/DdteBLlbjjMdtq88ERlisEP010sHxDM6y6QKxbrZUByuY2/FS+Hh6ku
-         iq6A==
-X-Gm-Message-State: ACrzQf2jFNtc6JQbu/s+EvzRTb7oyBD5SYXImxrcpoqLEc/AYPw45i88
-        +u7ctC77LwbBWUxWPoKY9b4=
-X-Google-Smtp-Source: AMsMyM4f/1grbFpogn5VBX32Tvl1DHQMWeI2mPxTq6OcFBhxY8QlD7USwyGlq5/NomwL6OKGX2UFRg==
-X-Received: by 2002:a17:902:da92:b0:17f:9148:9b8c with SMTP id j18-20020a170902da9200b0017f91489b8cmr11672117plx.117.1666229887660;
-        Wed, 19 Oct 2022 18:38:07 -0700 (PDT)
-Received: from xm06403pcu.spreadtrum.com ([117.18.48.102])
-        by smtp.gmail.com with ESMTPSA id z9-20020a170903018900b0017f7e0f4a4esm10238203plg.35.2022.10.19.18.38.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 19 Oct 2022 18:38:07 -0700 (PDT)
-From:   zhe wang <zhewang116@gmail.com>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        beanhuo@micron.com, stanley.chu@mediatek.com,
-        adrian.hunter@intel.com, zhe.wang1@unisoc.com,
-        zhenxiong.lai@unisoc.com, yuelin.tang@unisoc.com
-Subject: [PATCH RESEND] scsi: ufs: core: Let delay value after LPM can be modified by vendor
-Date:   Thu, 20 Oct 2022 09:35:35 +0800
-Message-Id: <20221020013535.27843-1-zhewang116@gmail.com>
-X-Mailer: git-send-email 2.17.1
+        bh=kdG+ouZ9mtQkIdf4wHomoStwFFAJkNb2nocVArRayto=;
+        b=T57W8No4yg0I7VmCY558ipfxG61XKvFyDMx3QewGN3dkvtBySHWmiUAANGDE8XI0vn
+         n+fBLU8hUEshaNEf81c75oK/bBxX+GDPWcKW31uVEG5Tn/pzBnTyQ7c4wh3z707CRt7j
+         swAPq6xIvMZQ3Y7AzIvNCT75GQES43WI1LL+HYV4hFrWDhhztk5OHAeAvf/LRaAemYGS
+         VHYWwR+8z005XH7V+rk7ijOMvYAbVteEpvWr+cVvMz/h91GmG+ql+0JBoNx9rF6tqLlj
+         50LUd6lcm34hGcvOWDt87H0PkdtWOu30qopyKHy2BzExWL0B361oWv7SLoa2zrpHVNQ1
+         8owQ==
+X-Gm-Message-State: ACrzQf0ckrb5nsXzEOn+ykPr3r5vb083iGqCrJBX503rXLRP2lYboGR3
+        xz5WT6dwn4m+TDA8xUn9o7Sa40ii0FK6aG8OTAA=
+X-Google-Smtp-Source: AMsMyM4kBXwe7Pz4GdlrpkzlBWPfvfXtoQ8udCX9lfGy33wGyMNCLOEIlDKT7YviXHxdyz9ACHbc6ge/oFrwYkneBaY=
+X-Received: by 2002:a05:6102:25b:b0:3a7:65fe:899f with SMTP id
+ a27-20020a056102025b00b003a765fe899fmr5339724vsq.12.1666242919733; Wed, 19
+ Oct 2022 22:15:19 -0700 (PDT)
+MIME-Version: 1.0
+References: <20221011021653.27277-1-gaoyankaigeren@gmail.com>
+ <DM6PR04MB6575AE77585D584652179089FC239@DM6PR04MB6575.namprd04.prod.outlook.com>
+ <CAFN68yVajOkV++gCp-y1+SD5VOKLgUeBhfgskrJZOX5dfGi07A@mail.gmail.com>
+ <bee1807b7d072b221c44ac8c2ed8064939d33696.camel@gmail.com>
+ <CAFN68yVdwrECaDvNuok_4V-54UZUJU9+dn5icaiPdj6BXEZuVA@mail.gmail.com>
+ <8678f69aa94003b357c4c8ef42cd6ce5c7487f8d.camel@gmail.com> <CAFN68yUKXquOLqL_6oBRjfDGDT=NgQPF3cpo7bkHyJ1gNTDbZA@mail.gmail.com>
+In-Reply-To: <CAFN68yUKXquOLqL_6oBRjfDGDT=NgQPF3cpo7bkHyJ1gNTDbZA@mail.gmail.com>
+From:   =?UTF-8?B?6auY5Lil5Yev?= <gaoyankaigeren@gmail.com>
+Date:   Thu, 20 Oct 2022 13:15:08 +0800
+Message-ID: <CAFN68yVLdwrJBivqjGfGd7qiGp_h8FwucBLvSH97wNiyik4nQw@mail.gmail.com>
+Subject: Re: [PATCH] ufs: core: Disable auto h8 before ssu
+To:     Bean Huo <huobean@gmail.com>
+Cc:     Avri Altman <Avri.Altman@wdc.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Zhe Wang <zhe.wang1@unisoc.com>
+Dear ALL
+Do you agree this patch? I'd like to hear your opinion about this.
 
-Some UFS devices require that the VCC should drop below 0.1V after
-turning off, otherwise device may not resume successfully. And
-because the power-off rate is different on different SOC platforms.
-Therefore, we hope that the delay can be modified by vendor to
-adjust the most appropriate delay value.
+Thanks.
 
-Signed-off-by: Zhe Wang <zhe.wang1@unisoc.com>
----
- drivers/ufs/core/ufshcd.c | 11 +++++++++--
- include/ufs/ufshcd.h      |  2 ++
- 2 files changed, 11 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 7256e6c43ca6..f6350231da0e 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -89,6 +89,9 @@
- /* Polling time to wait for fDeviceInit */
- #define FDEVICEINIT_COMPL_TIMEOUT 1500 /* millisecs */
- 
-+/* Default value of turn off VCC rail: 5000us */
-+#define UFS_VCC_TURNOFF_DELAY_US 5000
-+
- #define ufshcd_toggle_vreg(_dev, _vreg, _on)				\
- 	({                                                              \
- 		int _ret;                                               \
-@@ -7784,6 +7787,9 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
- 
- 	ufs_fixup_device_setup(hba);
- 
-+	if (hba->dev_quirks & UFS_DEVICE_QUIRK_DELAY_AFTER_LPM && !hba->vcc_turnoff_delay)
-+		hba->vcc_turnoff_delay = UFS_VCC_TURNOFF_DELAY_US;
-+
- 	ufshcd_wb_probe(hba, desc_buf);
- 
- 	ufshcd_temp_notif_probe(hba, desc_buf);
-@@ -8917,8 +8923,9 @@ static void ufshcd_vreg_set_lpm(struct ufs_hba *hba)
- 	 * Some UFS devices require delay after VCC power rail is turned-off.
- 	 */
- 	if (vcc_off && hba->vreg_info.vcc &&
--		hba->dev_quirks & UFS_DEVICE_QUIRK_DELAY_AFTER_LPM)
--		usleep_range(5000, 5100);
-+		hba->dev_quirks & UFS_DEVICE_QUIRK_DELAY_AFTER_LPM &&
-+		hba->vcc_turnoff_delay)
-+		usleep_range(hba->vcc_turnoff_delay, hba->vcc_turnoff_delay + 100);
- }
- 
- #ifdef CONFIG_PM
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 9f28349ebcff..bfde3cb962fb 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -828,6 +828,7 @@ struct ufs_hba_monitor {
-  *	device
-  * @complete_put: whether or not to call ufshcd_rpm_put() from inside
-  *	ufshcd_resume_complete()
-+ * @vcc_turnoff_delay: VCC turnoff delay value.
-  */
- struct ufs_hba {
- 	void __iomem *mmio_base;
-@@ -975,6 +976,7 @@ struct ufs_hba {
- #endif
- 	u32 luns_avail;
- 	bool complete_put;
-+	u32 vcc_turnoff_delay;
- };
- 
- /* Returns true if clocks can be gated. Otherwise false */
--- 
-2.17.1
-
+=E9=AB=98=E4=B8=A5=E5=87=AF <gaoyankaigeren@gmail.com> =E4=BA=8E2022=E5=B9=
+=B410=E6=9C=8814=E6=97=A5=E5=91=A8=E4=BA=94 18:15=E5=86=99=E9=81=93=EF=BC=
+=9A
+>
+> hi Bean
+> Yes, This is the time from when the system enters idle to when auto h8
+> is issued.
+> This patch is just to ensure that there is no continuous action of
+> "auto h8 exit" before dme h8 enter, it has nothing to do with idle
+> time.
+> The reason I want to ensure this order is because when there is an
+> action of "auto h8 exit", most devices take a certain amount of time
+> to get the state ready.
+> Immediately after the action of "auto h8 exit" is completed and "dme
+> h8 enter" is followed, the device will be abnormal.
+> And I think it's more of a common patch for all platforms, Patch can
+> adapt different vendors,and align to ufshcd_auto_hibern8_enable in
+> __ufshcd_wl_resume.
+>
+> Bean Huo <huobean@gmail.com> =E4=BA=8E2022=E5=B9=B410=E6=9C=8814=E6=97=A5=
+=E5=91=A8=E4=BA=94 13:48=E5=86=99=E9=81=93=EF=BC=9A
+> >
+> > On Fri, 2022-10-14 at 10:44 +0800, =E9=AB=98=E4=B8=A5=E5=87=AF wrote:
+> > > " UFSHCI has idle time before bringing Link into hibern8 mode, " I
+> > > think  ufs put the link to h8 during the time
+> >
+> >
+> > no,  it is ufs controller. see the ufshci spec:
+> >
+> > "Auto-Hibern8 Idle Timer Value (AH8ITV): This is the timer that UFS
+> > subsystem must be idle before UFS host *controller* may put UniPro link
+> > into Hibernate state autonomously. The idle timer value is multiplied
+> > by the indicated timer scale to yield an absolute timer value. ....
+> >
+> > ...
+> > Any non-zero value will enable Auto-Hibernate idle timer.
+> > UFS host controller shall put Unipro link out of Hibernate state when
+> > the link communication is required. The mechanism to decide when the
+> > Unipro link needs to become active is host controller specific
+> > implementation, and is transparent to the software."
+> >
+> >
