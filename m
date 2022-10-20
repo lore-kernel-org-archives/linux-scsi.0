@@ -2,41 +2,37 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 960F0C43217
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Oct 2022 18:05:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D1FAC43217
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Oct 2022 18:05:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229732AbiJTSFJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 20 Oct 2022 14:05:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59938 "EHLO
+        id S229905AbiJTSFX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 Oct 2022 14:05:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33768 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230208AbiJTSEo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Oct 2022 14:04:44 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2FFCA47F;
-        Thu, 20 Oct 2022 11:04:30 -0700 (PDT)
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 29KHYDO8014489;
-        Thu, 20 Oct 2022 18:04:18 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-type; s=qcppdkim1;
- bh=/oibhew9lzXn8nCJs8ZsY81MwvYYAKDumXgp//D9Asc=;
- b=ker1rAzdcPYqzIp5GE7uG7FOcNeRAmMwloH0VJMPVLyc77wCv/jsPmwfrJ4lor5WjMy6
- IPDDKnHaaJOwvgtsGC7v29WoVdGdhncF92eUzvfLYEeUW4o/2aUYPmuELK16JBlPTUbf
- nOKQ6o8PlJABqYiiQwtpheEWwC459ygxCgSwkjkzbTG0UqCXbVQH22ehWCQu9KTmSIvE
- hszCN22XfPe+x7jJTEgdb/+FEw11jVO1SRg7yf8knWgm9JEdhEWtCImz4tzL8XJfI6Cr
- TPKs+xKpphfcX1DhzeUKgDJxhdnzGlWeV9NFJ65wWqI5/luIyun3J5Is1NWJQtKajd2F 3w== 
-Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ka6brvxq9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 20 Oct 2022 18:04:18 +0000
-Received: from nasanex01a.na.qualcomm.com (corens_vlan604_snip.qualcomm.com [10.53.140.1])
-        by NASANPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 29KI4GNW008189
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 20 Oct 2022 18:04:17 GMT
+        with ESMTP id S230111AbiJTSFG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Oct 2022 14:05:06 -0400
+Received: from alexa-out-sd-02.qualcomm.com (alexa-out-sd-02.qualcomm.com [199.106.114.39])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 349B23881;
+        Thu, 20 Oct 2022 11:05:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1666289105; x=1697825105;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version;
+  bh=kGtPfs8nWQlTCrBnDS0pyf6RVUAdKKSo43QpwKLl6Vc=;
+  b=V5n6H+3qbx/INy/EWRp3nm0djCOcsdCZm0JKmzN+i4Sz0RfNDBNOd9eK
+   2T+mZAYhMzd5DtyVYnM1n9zlBumjFw2DHvXfVugjkwIbbL/2xPAwCqg9k
+   zkUJMT3PO95TqxcAEJrzsUxkqb5/cB0SlnjrBjwo+pE6tsinIm1fKM2Ld
+   Q=;
+Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
+  by alexa-out-sd-02.qualcomm.com with ESMTP; 20 Oct 2022 11:05:02 -0700
+X-QCInternal: smtphost
+Received: from unknown (HELO nasanex01a.na.qualcomm.com) ([10.52.223.231])
+  by ironmsg-SD-alpha.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Oct 2022 11:05:02 -0700
 Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
  nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.29; Thu, 20 Oct 2022 11:04:16 -0700
+ 15.2.986.29; Thu, 20 Oct 2022 11:05:01 -0700
 From:   Asutosh Das <quic_asutoshd@quicinc.com>
 To:     <quic_cang@quicinc.com>, <martin.petersen@oracle.com>,
         <linux-scsi@vger.kernel.org>
@@ -46,105 +42,62 @@ CC:     <quic_nguyenb@quicinc.com>, <quic_xiaosenh@quicinc.com>,
         <avri.altman@wdc.com>, <mani@kernel.org>, <beanhuo@micron.com>,
         <quic_richardp@quicinc.com>,
         "Asutosh Das" <quic_asutoshd@quicinc.com>,
-        <linux-arm-msm@vger.kernel.org>
-Subject: [PATCH v3 00/17] Add Multi Circular Queue Support 
-Date:   Thu, 20 Oct 2022 11:03:29 -0700
-Message-ID: <cover.1666288432.git.quic_asutoshd@quicinc.com>
+        <linux-arm-msm@vger.kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "open list" <linux-kernel@vger.kernel.org>
+Subject: [PATCH v3 02/17] ufs: core: Optimize duplicate code to read extended feature
+Date:   Thu, 20 Oct 2022 11:03:31 -0700
+Message-ID: <5997d1d2ceaab9baab13b8a11f6643d0d5905e19.1666288432.git.quic_asutoshd@quicinc.com>
 X-Mailer: git-send-email 2.7.4
+In-Reply-To: <cover.1666288432.git.quic_asutoshd@quicinc.com>
+References: <cover.1666288432.git.quic_asutoshd@quicinc.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [10.80.80.8]
 X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: EvsK84bvxXYfjoS2PNG5sufB1qleJM_G
-X-Proofpoint-GUID: EvsK84bvxXYfjoS2PNG5sufB1qleJM_G
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2022-10-20_09,2022-10-20_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 phishscore=0
- priorityscore=1501 bulkscore=0 malwarescore=0 mlxscore=0 spamscore=0
- suspectscore=0 clxscore=1011 mlxlogscore=999 adultscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2209130000 definitions=main-2210200108
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-UFS Multi-Circular Queue (MCQ) has been added in UFSHCI v4.0 to improve storage performance.
-The implementation uses the shared tagging mechanism so that tags are shared
-among the hardware queues. The number of hardware queues is configurable.
-This series doesn't include the ESI implementation for completion handling.
+The code to parse the extended feature is duplicated more then 2
+times in the ufs core. Replace the duplicated code with the
+function.
 
-This implementation has been verified by booting on an emulation platform.
-During testing, all low power modes were disabled and it was in HS-G1 mode.
+Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
+---
+ drivers/ufs/core/ufshcd.c | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
 
-Please take a look and let us know your thoughts.
-
-v2 -> v3:
-- Split ufshcd_config_mcq() into ufshcd_alloc_mcq() and ufshcd_config_mcq()
-- Use devm_kzalloc() in ufshcd_mcq_init()
-- Free memory and resource allocation on error paths
-- Corrected typos in code comments
-
-v1 -> v2:
-- Added a non MCQ related change to use a function to extrace ufs extended
-feature
-- Addressed Mani's comments
-- Addressed Bart's comments
-
-v1:
-- Split the changes
-- Addressed Bart's comments
-- Addressed Bean's comments
-
-* RFC versions:
-v2 -> v3:
-- Split the changes based on functionality
-- Addressed queue configuration issues
-- Faster SQE tail pointer increments
-- Addressed comments from Bart and Manivannan
-
-v1 -> v2:
-- Enabled host_tagset
-- Added queue num configuration support
-- Added one more vops to allow vendor provide the wanted MAC
-- Determine nutrs and can_queue by considering both MAC, bqueuedepth and EXT_IID support
-- Postponed MCQ initialization and scsi_add_host() to async probe
-- Used (EXT_IID, Task Tag) tuple to support up to 4096 tasks (theoretically)
-
-Asutosh Das (17):
-  ufs: core: Probe for ext_iid support
-  ufs: core: Optimize duplicate code to read extended feature
-  ufs: core: Introduce Multi-circular queue capability
-  ufs: core: Defer adding host to scsi if mcq is supported
-  ufs: core: mcq: Introduce Multi Circular Queue
-  ufs: core: mcq: Configure resource regions
-  ufs: core: mcq: Calculate queue depth
-  ufs: core: mcq: Allocate memory for mcq mode
-  ufs: core: mcq: Configure operation and runtime interface
-  ufs: core: mcq: Use shared tags for MCQ mode
-  ufs: core: Prepare ufshcd_send_command for mcq
-  ufs: core: mcq: Find hardware queue to queue request
-  ufs: core: Prepare for completion in mcq
-  ufs: mcq: Add completion support of a cqe
-  ufs: core: mcq: Add completion support in poll
-  ufs: core: mcq: Enable Multi Circular Queue
-  ufs: qcom-host: Enable multi circular queue capability
-
- drivers/ufs/core/Makefile      |   2 +-
- drivers/ufs/core/ufs-mcq.c     | 498 +++++++++++++++++++++++++++++++++++++++++
- drivers/ufs/core/ufshcd-priv.h |  84 ++++++-
- drivers/ufs/core/ufshcd.c      | 353 +++++++++++++++++++++++------
- drivers/ufs/host/ufs-qcom.c    |  49 ++++
- drivers/ufs/host/ufs-qcom.h    |   4 +
- include/ufs/ufs.h              |   6 +
- include/ufs/ufshcd.h           | 136 +++++++++++
- include/ufs/ufshci.h           |  63 ++++++
- 9 files changed, 1127 insertions(+), 68 deletions(-)
- create mode 100644 drivers/ufs/core/ufs-mcq.c
-
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 80f01d0..e2be3f4 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -7605,13 +7605,7 @@ static void ufshcd_wb_probe(struct ufs_hba *hba, const u8 *desc_buf)
+ 	     (hba->dev_quirks & UFS_DEVICE_QUIRK_SUPPORT_EXTENDED_FEATURES)))
+ 		goto wb_disabled;
+ 
+-	if (hba->desc_size[QUERY_DESC_IDN_DEVICE] <
+-	    DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP + 4)
+-		goto wb_disabled;
+-
+-	ext_ufs_feature = get_unaligned_be32(desc_buf +
+-					DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP);
+-
++	ext_ufs_feature = ufs_get_ext_ufs_feature(hba, desc_buf);
+ 	if (!(ext_ufs_feature & UFS_DEV_WRITE_BOOSTER_SUP))
+ 		goto wb_disabled;
+ 
+@@ -7665,7 +7659,7 @@ static void ufshcd_temp_notif_probe(struct ufs_hba *hba, const u8 *desc_buf)
+ 	if (!(hba->caps & UFSHCD_CAP_TEMP_NOTIF) || dev_info->wspecversion < 0x300)
+ 		return;
+ 
+-	ext_ufs_feature = get_unaligned_be32(desc_buf + DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP);
++	ext_ufs_feature = ufs_get_ext_ufs_feature(hba, desc_buf);
+ 
+ 	if (ext_ufs_feature & UFS_DEV_LOW_TEMP_NOTIF)
+ 		mask |= MASK_EE_TOO_LOW_TEMP;
 -- 
 2.7.4
 
