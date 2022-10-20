@@ -2,37 +2,37 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D1FAC43217
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Oct 2022 18:05:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55B18C43217
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Oct 2022 18:05:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229905AbiJTSFX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 20 Oct 2022 14:05:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33768 "EHLO
+        id S229836AbiJTSF0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 Oct 2022 14:05:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49082 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230111AbiJTSFG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Oct 2022 14:05:06 -0400
-Received: from alexa-out-sd-02.qualcomm.com (alexa-out-sd-02.qualcomm.com [199.106.114.39])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 349B23881;
-        Thu, 20 Oct 2022 11:05:03 -0700 (PDT)
+        with ESMTP id S229802AbiJTSFO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Oct 2022 14:05:14 -0400
+Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C08048111A;
+        Thu, 20 Oct 2022 11:05:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1666289105; x=1697825105;
+  t=1666289112; x=1697825112;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version;
-  bh=kGtPfs8nWQlTCrBnDS0pyf6RVUAdKKSo43QpwKLl6Vc=;
-  b=V5n6H+3qbx/INy/EWRp3nm0djCOcsdCZm0JKmzN+i4Sz0RfNDBNOd9eK
-   2T+mZAYhMzd5DtyVYnM1n9zlBumjFw2DHvXfVugjkwIbbL/2xPAwCqg9k
-   zkUJMT3PO95TqxcAEJrzsUxkqb5/cB0SlnjrBjwo+pE6tsinIm1fKM2Ld
-   Q=;
-Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
-  by alexa-out-sd-02.qualcomm.com with ESMTP; 20 Oct 2022 11:05:02 -0700
+  bh=60C3i8FnmTlwBmAMQf1qCwvcyt+KQjOOY6Qz3n3rThA=;
+  b=TsVQcaJdYCW+GwMH3XTBwE6XxUt3p2gDwon7ndHzrIBx4ErjV/3S+8T0
+   RPqLYRJcZVPlfXrcPR8QLTmQ7H1o0v6l0GHWnEIBE8SWmzT4q9C0ouuMA
+   0xdSdidD5jXN/g9TolfT41Bb4QUVRhqB2SWBXUS3yBVGJ2zW/6fCuheyR
+   4=;
+Received: from unknown (HELO ironmsg04-sd.qualcomm.com) ([10.53.140.144])
+  by alexa-out-sd-01.qualcomm.com with ESMTP; 20 Oct 2022 11:05:11 -0700
 X-QCInternal: smtphost
 Received: from unknown (HELO nasanex01a.na.qualcomm.com) ([10.52.223.231])
-  by ironmsg-SD-alpha.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Oct 2022 11:05:02 -0700
+  by ironmsg04-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Oct 2022 11:05:11 -0700
 Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
  nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.29; Thu, 20 Oct 2022 11:05:01 -0700
+ 15.2.986.29; Thu, 20 Oct 2022 11:05:10 -0700
 From:   Asutosh Das <quic_asutoshd@quicinc.com>
 To:     <quic_cang@quicinc.com>, <martin.petersen@oracle.com>,
         <linux-scsi@vger.kernel.org>
@@ -46,9 +46,9 @@ CC:     <quic_nguyenb@quicinc.com>, <quic_xiaosenh@quicinc.com>,
         Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "open list" <linux-kernel@vger.kernel.org>
-Subject: [PATCH v3 02/17] ufs: core: Optimize duplicate code to read extended feature
-Date:   Thu, 20 Oct 2022 11:03:31 -0700
-Message-ID: <5997d1d2ceaab9baab13b8a11f6643d0d5905e19.1666288432.git.quic_asutoshd@quicinc.com>
+Subject: [PATCH v3 04/17] ufs: core: Defer adding host to scsi if mcq is supported
+Date:   Thu, 20 Oct 2022 11:03:33 -0700
+Message-ID: <052c9049e4f3f6dc60e1254fbc67ee374f28a621.1666288432.git.quic_asutoshd@quicinc.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1666288432.git.quic_asutoshd@quicinc.com>
 References: <cover.1666288432.git.quic_asutoshd@quicinc.com>
@@ -61,43 +61,62 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The code to parse the extended feature is duplicated more then 2
-times in the ufs core. Replace the duplicated code with the
-function.
+If MCQ support is present, then enabling it would need
+reallocating tags and memory. It would also free up the
+already allocated memory in Single Doorbell Mode.
+So defer invoking scsi_add_host() until MCQ is configured.
 
+Co-developed-by: Can Guo <quic_cang@quicinc.com>
+Signed-off-by: Can Guo <quic_cang@quicinc.com>
 Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
 ---
- drivers/ufs/core/ufshcd.c | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
+ drivers/ufs/core/ufshcd.c | 19 +++++++++++++++----
+ 1 file changed, 15 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 80f01d0..e2be3f4 100644
+index 8d93797..fe4b683 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -7605,13 +7605,7 @@ static void ufshcd_wb_probe(struct ufs_hba *hba, const u8 *desc_buf)
- 	     (hba->dev_quirks & UFS_DEVICE_QUIRK_SUPPORT_EXTENDED_FEATURES)))
- 		goto wb_disabled;
+@@ -8187,6 +8187,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool init_dev_params)
+ 	int ret;
+ 	unsigned long flags;
+ 	ktime_t start = ktime_get();
++	struct Scsi_Host *host = hba->host;
  
--	if (hba->desc_size[QUERY_DESC_IDN_DEVICE] <
--	    DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP + 4)
--		goto wb_disabled;
--
--	ext_ufs_feature = get_unaligned_be32(desc_buf +
--					DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP);
--
-+	ext_ufs_feature = ufs_get_ext_ufs_feature(hba, desc_buf);
- 	if (!(ext_ufs_feature & UFS_DEV_WRITE_BOOSTER_SUP))
- 		goto wb_disabled;
+ 	hba->ufshcd_state = UFSHCD_STATE_RESET;
  
-@@ -7665,7 +7659,7 @@ static void ufshcd_temp_notif_probe(struct ufs_hba *hba, const u8 *desc_buf)
- 	if (!(hba->caps & UFSHCD_CAP_TEMP_NOTIF) || dev_info->wspecversion < 0x300)
- 		return;
+@@ -8221,6 +8222,14 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool init_dev_params)
+ 		ret = ufshcd_device_params_init(hba);
+ 		if (ret)
+ 			goto out;
++
++		if (is_mcq_supported(hba)) {
++			ret = scsi_add_host(host, hba->dev);
++			if (ret) {
++				dev_err(hba->dev, "scsi_add_host failed\n");
++				goto out;
++			}
++		}
+ 	}
  
--	ext_ufs_feature = get_unaligned_be32(desc_buf + DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP);
-+	ext_ufs_feature = ufs_get_ext_ufs_feature(hba, desc_buf);
+ 	ufshcd_tune_unipro_params(hba);
+@@ -9767,10 +9776,12 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 		hba->is_irq_enabled = true;
+ 	}
  
- 	if (ext_ufs_feature & UFS_DEV_LOW_TEMP_NOTIF)
- 		mask |= MASK_EE_TOO_LOW_TEMP;
+-	err = scsi_add_host(host, hba->dev);
+-	if (err) {
+-		dev_err(hba->dev, "scsi_add_host failed\n");
+-		goto out_disable;
++	if (!is_mcq_supported(hba)) {
++		err = scsi_add_host(host, hba->dev);
++		if (err) {
++			dev_err(hba->dev, "scsi_add_host failed\n");
++			goto out_disable;
++		}
+ 	}
+ 
+ 	hba->tmf_tag_set = (struct blk_mq_tag_set) {
 -- 
 2.7.4
 
