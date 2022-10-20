@@ -2,121 +2,96 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78518C4332F
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Oct 2022 05:15:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6608AC4332F
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Oct 2022 05:47:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229862AbiJTFPZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 20 Oct 2022 01:15:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46140 "EHLO
+        id S229875AbiJTFrE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 Oct 2022 01:47:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51116 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229835AbiJTFPW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Oct 2022 01:15:22 -0400
-Received: from mail-vs1-xe34.google.com (mail-vs1-xe34.google.com [IPv6:2607:f8b0:4864:20::e34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97BDAA2AAD;
-        Wed, 19 Oct 2022 22:15:20 -0700 (PDT)
-Received: by mail-vs1-xe34.google.com with SMTP id n63so131510vsc.8;
-        Wed, 19 Oct 2022 22:15:20 -0700 (PDT)
+        with ESMTP id S229514AbiJTFrD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Oct 2022 01:47:03 -0400
+Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E53CB159D5F;
+        Wed, 19 Oct 2022 22:46:58 -0700 (PDT)
+Received: by mail-pg1-x52c.google.com with SMTP id e129so18272363pgc.9;
+        Wed, 19 Oct 2022 22:46:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=kdG+ouZ9mtQkIdf4wHomoStwFFAJkNb2nocVArRayto=;
-        b=qcr0zMjKq3TOa3Pa8KBFhWaFdI4kIGIo3H4i9h1VOh6DkXWXvPRidfiZwbNgy2YcwU
-         zvYzEsYm6VyQUEyZXlY0ANcs4VmRGa08jsQh/Pdj5aeKrIc+Up/27YkQqaMco3BppiXV
-         sCx2ZFHlC3jjVS2Aj1yeYllAxr35/n9Px+fkYlhMPQfvVD4IkkPaUpIXTJNZ1GvFd8Bs
-         hTJo742KS+C2BRzQZIduAZYr/2IPeeWe33Qb2FfXXislrjkXx+m3YG+e39+G8lpUuymf
-         fucfDDgBtBs8AH0hFYDIzo/e4inbexX3/9to29l0yTtpaEj8uYOrd/DpsMVQHL81zS9i
-         TYBw==
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=ovO4Wn2KciXjhfhIU1Ht+t+UirFlYYyzrqGDJdPLqqI=;
+        b=Ko+4G9InvfhExZOlJfPtkMVy/D5gdhgAia6F8iPargASMfbh6TDIkDbuK6cxdw5MUI
+         6IAiGIKEEoodin9JQjbz4cFOq0loHWMlsMPs6EpJDR7+IRrAzRNDOEl9PTDKJPQpOgq1
+         cdXUH05ZeMS9Rq+xGcQ/cfjjjeOZIY4rAfNrVhIx+sUvXHZvjCaAk40IhmZzfAhFm2dt
+         uGxoHw+EOvF4C5aCq1OCafCBUUP093CdYJYYDNpab1RsU3EhQELMmAUzWjuL3aw569Mt
+         CNP/xTEjj27zgCAjwatHvaL1XRTHyKoqlSOv3EoYAASFFEP419W8tttiP7R340T0kGPo
+         ErkA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=kdG+ouZ9mtQkIdf4wHomoStwFFAJkNb2nocVArRayto=;
-        b=T57W8No4yg0I7VmCY558ipfxG61XKvFyDMx3QewGN3dkvtBySHWmiUAANGDE8XI0vn
-         n+fBLU8hUEshaNEf81c75oK/bBxX+GDPWcKW31uVEG5Tn/pzBnTyQ7c4wh3z707CRt7j
-         swAPq6xIvMZQ3Y7AzIvNCT75GQES43WI1LL+HYV4hFrWDhhztk5OHAeAvf/LRaAemYGS
-         VHYWwR+8z005XH7V+rk7ijOMvYAbVteEpvWr+cVvMz/h91GmG+ql+0JBoNx9rF6tqLlj
-         50LUd6lcm34hGcvOWDt87H0PkdtWOu30qopyKHy2BzExWL0B361oWv7SLoa2zrpHVNQ1
-         8owQ==
-X-Gm-Message-State: ACrzQf0ckrb5nsXzEOn+ykPr3r5vb083iGqCrJBX503rXLRP2lYboGR3
-        xz5WT6dwn4m+TDA8xUn9o7Sa40ii0FK6aG8OTAA=
-X-Google-Smtp-Source: AMsMyM4kBXwe7Pz4GdlrpkzlBWPfvfXtoQ8udCX9lfGy33wGyMNCLOEIlDKT7YviXHxdyz9ACHbc6ge/oFrwYkneBaY=
-X-Received: by 2002:a05:6102:25b:b0:3a7:65fe:899f with SMTP id
- a27-20020a056102025b00b003a765fe899fmr5339724vsq.12.1666242919733; Wed, 19
- Oct 2022 22:15:19 -0700 (PDT)
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=ovO4Wn2KciXjhfhIU1Ht+t+UirFlYYyzrqGDJdPLqqI=;
+        b=h21fgMfG731dh3HlLi/zj79RbzTg2hbquaoojkJFRFg0p8BPWheLTPntNIkCSA56qJ
+         S2Dsy1q81PNOMjlRNsMO+J1R+C+LCB3vZYiyRk2Xdwey3ncQLxFWJVqJwe17TP+qG1So
+         uQgiy60/AB9qkI/Tqsm0E5OSJnFtD/EMqv1GdPxXVawIDs25LMIsapWdrDyPxRWJZByj
+         +uesG5+cAHL708VubJwMGV4zxhFf5XlMczgAscYF52av2HOjdXkQtf+f2yxDsXqAePg0
+         aTRvDFL6rQu/6WPHqwbYNALBdO7/KBa5wDvgJAX1aP1/p3uuX5kyAgh3BHLsRfwfeM6s
+         eKXw==
+X-Gm-Message-State: ACrzQf3yuuKxW1ogszIlCvm1G5YVOtozK914EMXoR3cpoIzK1Rm1M45i
+        +mfXrRX63BVpx/XYB+jtbDL6PvoeIno=
+X-Google-Smtp-Source: AMsMyM7Ueen3Nu9ppQUHWRCrMntwIJPRbnc9qTy4XNKiB3UH010g2eyTQdJH2TCd9WHa7Nx8FtdFfw==
+X-Received: by 2002:a63:194b:0:b0:457:7295:8de0 with SMTP id 11-20020a63194b000000b0045772958de0mr10618087pgz.612.1666244818452;
+        Wed, 19 Oct 2022 22:46:58 -0700 (PDT)
+Received: from localhost.localdomain ([193.203.214.57])
+        by smtp.gmail.com with ESMTPSA id r16-20020a63e510000000b004308422060csm10651732pgh.69.2022.10.19.22.46.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 19 Oct 2022 22:46:57 -0700 (PDT)
+From:   cuijinpeng666@gmail.com
+X-Google-Original-From: cui.jinpeng2@zte.com.cn
+To:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc:     target-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jinpeng Cui <cui.jinpeng2@zte.com.cn>,
+        Zeal Robot <zealci@zte.com.cn>
+Subject: [PATCH linux-next] scsi: target: core: use strscpy() is more robust and safer
+Date:   Thu, 20 Oct 2022 05:46:50 +0000
+Message-Id: <20221020054650.394396-1-cui.jinpeng2@zte.com.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-References: <20221011021653.27277-1-gaoyankaigeren@gmail.com>
- <DM6PR04MB6575AE77585D584652179089FC239@DM6PR04MB6575.namprd04.prod.outlook.com>
- <CAFN68yVajOkV++gCp-y1+SD5VOKLgUeBhfgskrJZOX5dfGi07A@mail.gmail.com>
- <bee1807b7d072b221c44ac8c2ed8064939d33696.camel@gmail.com>
- <CAFN68yVdwrECaDvNuok_4V-54UZUJU9+dn5icaiPdj6BXEZuVA@mail.gmail.com>
- <8678f69aa94003b357c4c8ef42cd6ce5c7487f8d.camel@gmail.com> <CAFN68yUKXquOLqL_6oBRjfDGDT=NgQPF3cpo7bkHyJ1gNTDbZA@mail.gmail.com>
-In-Reply-To: <CAFN68yUKXquOLqL_6oBRjfDGDT=NgQPF3cpo7bkHyJ1gNTDbZA@mail.gmail.com>
-From:   =?UTF-8?B?6auY5Lil5Yev?= <gaoyankaigeren@gmail.com>
-Date:   Thu, 20 Oct 2022 13:15:08 +0800
-Message-ID: <CAFN68yVLdwrJBivqjGfGd7qiGp_h8FwucBLvSH97wNiyik4nQw@mail.gmail.com>
-Subject: Re: [PATCH] ufs: core: Disable auto h8 before ssu
-To:     Bean Huo <huobean@gmail.com>
-Cc:     Avri Altman <Avri.Altman@wdc.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Dear ALL
-Do you agree this patch? I'd like to hear your opinion about this.
+From: Jinpeng Cui <cui.jinpeng2@zte.com.cn>
 
-Thanks.
+The implementation of strscpy() is more robust and safer.
 
-=E9=AB=98=E4=B8=A5=E5=87=AF <gaoyankaigeren@gmail.com> =E4=BA=8E2022=E5=B9=
-=B410=E6=9C=8814=E6=97=A5=E5=91=A8=E4=BA=94 18:15=E5=86=99=E9=81=93=EF=BC=
-=9A
->
-> hi Bean
-> Yes, This is the time from when the system enters idle to when auto h8
-> is issued.
-> This patch is just to ensure that there is no continuous action of
-> "auto h8 exit" before dme h8 enter, it has nothing to do with idle
-> time.
-> The reason I want to ensure this order is because when there is an
-> action of "auto h8 exit", most devices take a certain amount of time
-> to get the state ready.
-> Immediately after the action of "auto h8 exit" is completed and "dme
-> h8 enter" is followed, the device will be abnormal.
-> And I think it's more of a common patch for all platforms, Patch can
-> adapt different vendors,and align to ufshcd_auto_hibern8_enable in
-> __ufshcd_wl_resume.
->
-> Bean Huo <huobean@gmail.com> =E4=BA=8E2022=E5=B9=B410=E6=9C=8814=E6=97=A5=
-=E5=91=A8=E4=BA=94 13:48=E5=86=99=E9=81=93=EF=BC=9A
-> >
-> > On Fri, 2022-10-14 at 10:44 +0800, =E9=AB=98=E4=B8=A5=E5=87=AF wrote:
-> > > " UFSHCI has idle time before bringing Link into hibern8 mode, " I
-> > > think  ufs put the link to h8 during the time
-> >
-> >
-> > no,  it is ufs controller. see the ufshci spec:
-> >
-> > "Auto-Hibern8 Idle Timer Value (AH8ITV): This is the timer that UFS
-> > subsystem must be idle before UFS host *controller* may put UniPro link
-> > into Hibernate state autonomously. The idle timer value is multiplied
-> > by the indicated timer scale to yield an absolute timer value. ....
-> >
-> > ...
-> > Any non-zero value will enable Auto-Hibernate idle timer.
-> > UFS host controller shall put Unipro link out of Hibernate state when
-> > the link communication is required. The mechanism to decide when the
-> > Unipro link needs to become active is host controller specific
-> > implementation, and is transparent to the software."
-> >
-> >
+Reported-by: Zeal Robot <zealci@zte.com.cn>
+Signed-off-by: Jinpeng Cui <cui.jinpeng2@zte.com.cn>
+---
+ drivers/target/target_core_device.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index b7f16ee8aa0e..0eec5a3217b9 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -809,10 +809,10 @@ struct se_device *target_alloc_device(struct se_hba *hba, const char *name)
+ 	xcopy_lun->lun_tpg = &xcopy_pt_tpg;
+ 
+ 	/* Preload the default INQUIRY const values */
+-	strlcpy(dev->t10_wwn.vendor, "LIO-ORG", sizeof(dev->t10_wwn.vendor));
+-	strlcpy(dev->t10_wwn.model, dev->transport->inquiry_prod,
++	strscpy(dev->t10_wwn.vendor, "LIO-ORG", sizeof(dev->t10_wwn.vendor));
++	strscpy(dev->t10_wwn.model, dev->transport->inquiry_prod,
+ 		sizeof(dev->t10_wwn.model));
+-	strlcpy(dev->t10_wwn.revision, dev->transport->inquiry_rev,
++	strscpy(dev->t10_wwn.revision, dev->transport->inquiry_rev,
+ 		sizeof(dev->t10_wwn.revision));
+ 
+ 	return dev;
+-- 
+2.25.1
+
