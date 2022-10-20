@@ -2,94 +2,136 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5F7AC433FE
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Oct 2022 01:13:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B369C4332F
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Oct 2022 01:38:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229994AbiJTBNR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 Oct 2022 21:13:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33798 "EHLO
+        id S231220AbiJTBiL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 19 Oct 2022 21:38:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47288 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229912AbiJTBNO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Oct 2022 21:13:14 -0400
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A10B7AF19D;
-        Wed, 19 Oct 2022 18:13:07 -0700 (PDT)
-X-UUID: 0fe5dc41e47847f08b84541e210c6aa5-20221020
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=IvDCujvhbE3aZo/FeMAVUwJ8JGX8m9vTb6KyE20WYMc=;
-        b=MofHsGkUTdp8zVuIcyxtUPiklJHfizh2Eu6uFJtxYtKKlXmtgoeWlmoi2hF3lf/VvXMYMlMT19bqOaIKiCb62EUxUWhrGiKgnm1eyeUI2zm6GVX3ocriieX+pOMs8bFCtkM7ccpwd9Tz3yoabFgbFieJR7QhDDahTvUETTb+urU=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.12,REQID:61494afe-e006-4fdf-8e2a-cc4a16a8744d,IP:0,U
-        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-        release,TS:0
-X-CID-META: VersionHash:62cd327,CLOUDID:f53a59a4-ebb2-41a8-a87c-97702aaf2e20,B
-        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
-X-UUID: 0fe5dc41e47847f08b84541e210c6aa5-20221020
-Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw01.mediatek.com
-        (envelope-from <eddie.huang@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1414796285; Thu, 20 Oct 2022 09:13:01 +0800
-Received: from mtkcas10.mediatek.inc (172.21.101.39) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.792.3;
- Thu, 20 Oct 2022 09:13:00 +0800
-Received: from mtksdccf07 (172.21.84.99) by mtkcas10.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 20 Oct 2022 09:13:00 +0800
-Message-ID: <f8c7d70727c1d60f3dfc0325b6ed83b937c16a5a.camel@mediatek.com>
-Subject: Re: Fwd: [PATCH v2 06/17] ufs: core: mcq: Configure resource regions
-From:   Eddie Huang <eddie.huang@mediatek.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Asutosh Das <quic_asutoshd@quicinc.com>
-CC:     Can Guo <quic_cang@quicinc.com>, <quic_nitirawa@quicinc.com>,
-        <quic_rampraka@quicinc.com>, <quic_bhaskarv@quicinc.com>,
-        <quic_richardp@quicinc.com>, <linux-scsi@vger.kernel.org>,
-        <linux-arm-msm@vger.kernel.org>, <quic_nguyenb@quicinc.com>,
-        <quic_xiaosenh@quicinc.com>, <avri.altman@wdc.com>,
-        <mani@kernel.org>, <beanhuo@micron.com>,
-        <stanley.chu@mediatek.com>, <liang-yen.wang@mediatek.com>
-Date:   Thu, 20 Oct 2022 09:13:00 +0800
-In-Reply-To: <b11cb7b4-2f4a-c6a2-82a5-c4372ff23610@acm.org>
-References: <11530912-36fd-8c69-4beb-de955eaae529@quicinc.com>
-         <6592c7fe-0828-6bb3-17a8-9db53aac1873@quicinc.com>
-         <83fe64628b6d44f28637a6a8ba6b21eb0848caaa.camel@mediatek.com>
-         <20221018014754.GE10252@asutoshd-linux1.qualcomm.com>
-         <12ab65aed221dec23451e9b60c0e00a4d9ef0df2.camel@mediatek.com>
-         <20221019195040.GA18511@asutoshd-linux1.qualcomm.com>
-         <b11cb7b4-2f4a-c6a2-82a5-c4372ff23610@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-MTK:  N
+        with ESMTP id S231366AbiJTBiK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Oct 2022 21:38:10 -0400
+Received: from mail-pl1-x632.google.com (mail-pl1-x632.google.com [IPv6:2607:f8b0:4864:20::632])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32AE11D2B54;
+        Wed, 19 Oct 2022 18:38:08 -0700 (PDT)
+Received: by mail-pl1-x632.google.com with SMTP id k9so18485454pll.11;
+        Wed, 19 Oct 2022 18:38:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=rLdPoJiwzSisIeOIqqvijJzMO8y8c5LDJmTeIyrYWCw=;
+        b=d0kjFcYjCp4ntkJkSKDRemV2XINRpyl9e3lRUf53l8xdLWMmhDgyBdaaWhqqk2SzbB
+         tIBLAEN3xQ6tweLq13fT2pUC2dMbkv9Ns0r9mV3yk/hLBPPCX2+yA/KaYOfIkN5lqK4o
+         XQ/1cp3qH2QNYb37V3oFda2shBb0eWkQzwVa6ztbJ0rB6V/JiVA77RO2IQ9yX5yL2KyT
+         p3fQrKlWJ3WgUeba435AAHJbFOnBCVHPyOc1wSULaUS7yBR0LBOau3eZMGTXAwI/oQeZ
+         FCEyBgiDI6OvcB86pqN3+t0kU77yanniFVSVNJrDyybBSnKTf9f9pzYZ1ocVZxfx3VaV
+         oyIw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=rLdPoJiwzSisIeOIqqvijJzMO8y8c5LDJmTeIyrYWCw=;
+        b=3CW8++WgTE50Jb587CQsMQCkQ5b52RzLa9ZCCPzaA2PnUPYBgH6418UdWgna2y5DTh
+         YV96GjKGD0koTgsBhqBOMWTi7+stIjM3cdS7Ns2XyWx5n8MVC1Y93jbHxSOjbZz5X9zN
+         ECHyZpf9e7VSCvDlGjZBZgtXWt0Jaz7AKlXBfFufXKxTHwTOp3ZIJ46RDvzGCVXBdDyq
+         1ynvJHsVzGzVA0uAr/ipaLynGjPva0hUMnwPqjEaAyJWU63xotKKG/tw3qfxRbomwcci
+         Rv2GeSqiwnon/DdteBLlbjjMdtq88ERlisEP010sHxDM6y6QKxbrZUByuY2/FS+Hh6ku
+         iq6A==
+X-Gm-Message-State: ACrzQf2jFNtc6JQbu/s+EvzRTb7oyBD5SYXImxrcpoqLEc/AYPw45i88
+        +u7ctC77LwbBWUxWPoKY9b4=
+X-Google-Smtp-Source: AMsMyM4f/1grbFpogn5VBX32Tvl1DHQMWeI2mPxTq6OcFBhxY8QlD7USwyGlq5/NomwL6OKGX2UFRg==
+X-Received: by 2002:a17:902:da92:b0:17f:9148:9b8c with SMTP id j18-20020a170902da9200b0017f91489b8cmr11672117plx.117.1666229887660;
+        Wed, 19 Oct 2022 18:38:07 -0700 (PDT)
+Received: from xm06403pcu.spreadtrum.com ([117.18.48.102])
+        by smtp.gmail.com with ESMTPSA id z9-20020a170903018900b0017f7e0f4a4esm10238203plg.35.2022.10.19.18.38.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 19 Oct 2022 18:38:07 -0700 (PDT)
+From:   zhe wang <zhewang116@gmail.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        beanhuo@micron.com, stanley.chu@mediatek.com,
+        adrian.hunter@intel.com, zhe.wang1@unisoc.com,
+        zhenxiong.lai@unisoc.com, yuelin.tang@unisoc.com
+Subject: [PATCH RESEND] scsi: ufs: core: Let delay value after LPM can be modified by vendor
+Date:   Thu, 20 Oct 2022 09:35:35 +0800
+Message-Id: <20221020013535.27843-1-zhewang116@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2022-10-19 at 14:06 -0700, Bart Van Assche wrote:
-> On 10/19/22 12:50, Asutosh Das wrote:
-> > While adding the vops it occurred to me that it'd remain empty
-> > because 
-> > ufs-qcom
-> > doesn't need it. And I'm not sure how MTK register space is laid
-> > out.
-> > So please can you help add a vops in the next version?
-> > I can address the other comment and push the series.
-> 
-> Please do not introduce new vops without adding at least one 
-> implementation of the vop in the same patch series. How about
-> letting 
-> MediaTek add more vops as necessary in a separate patch series and 
-> focusing in this patch series on UFSHCI 4.0 compliance?
-> 
+From: Zhe Wang <zhe.wang1@unisoc.com>
 
-I am not sure whether other SoC vendor's register definition follow
-this patch's arrangement or not. As I explain Mediatek treat UFS as a
-single IP and map whole UFS register address space one time.
-To speed up landing this series, please bypass this vops. I will send 
-a separate patch to add this vops
+Some UFS devices require that the VCC should drop below 0.1V after
+turning off, otherwise device may not resume successfully. And
+because the power-off rate is different on different SOC platforms.
+Therefore, we hope that the delay can be modified by vendor to
+adjust the most appropriate delay value.
 
-Eddie
+Signed-off-by: Zhe Wang <zhe.wang1@unisoc.com>
+---
+ drivers/ufs/core/ufshcd.c | 11 +++++++++--
+ include/ufs/ufshcd.h      |  2 ++
+ 2 files changed, 11 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 7256e6c43ca6..f6350231da0e 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -89,6 +89,9 @@
+ /* Polling time to wait for fDeviceInit */
+ #define FDEVICEINIT_COMPL_TIMEOUT 1500 /* millisecs */
+ 
++/* Default value of turn off VCC rail: 5000us */
++#define UFS_VCC_TURNOFF_DELAY_US 5000
++
+ #define ufshcd_toggle_vreg(_dev, _vreg, _on)				\
+ 	({                                                              \
+ 		int _ret;                                               \
+@@ -7784,6 +7787,9 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
+ 
+ 	ufs_fixup_device_setup(hba);
+ 
++	if (hba->dev_quirks & UFS_DEVICE_QUIRK_DELAY_AFTER_LPM && !hba->vcc_turnoff_delay)
++		hba->vcc_turnoff_delay = UFS_VCC_TURNOFF_DELAY_US;
++
+ 	ufshcd_wb_probe(hba, desc_buf);
+ 
+ 	ufshcd_temp_notif_probe(hba, desc_buf);
+@@ -8917,8 +8923,9 @@ static void ufshcd_vreg_set_lpm(struct ufs_hba *hba)
+ 	 * Some UFS devices require delay after VCC power rail is turned-off.
+ 	 */
+ 	if (vcc_off && hba->vreg_info.vcc &&
+-		hba->dev_quirks & UFS_DEVICE_QUIRK_DELAY_AFTER_LPM)
+-		usleep_range(5000, 5100);
++		hba->dev_quirks & UFS_DEVICE_QUIRK_DELAY_AFTER_LPM &&
++		hba->vcc_turnoff_delay)
++		usleep_range(hba->vcc_turnoff_delay, hba->vcc_turnoff_delay + 100);
+ }
+ 
+ #ifdef CONFIG_PM
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index 9f28349ebcff..bfde3cb962fb 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -828,6 +828,7 @@ struct ufs_hba_monitor {
+  *	device
+  * @complete_put: whether or not to call ufshcd_rpm_put() from inside
+  *	ufshcd_resume_complete()
++ * @vcc_turnoff_delay: VCC turnoff delay value.
+  */
+ struct ufs_hba {
+ 	void __iomem *mmio_base;
+@@ -975,6 +976,7 @@ struct ufs_hba {
+ #endif
+ 	u32 luns_avail;
+ 	bool complete_put;
++	u32 vcc_turnoff_delay;
+ };
+ 
+ /* Returns true if clocks can be gated. Otherwise false */
+-- 
+2.17.1
 
