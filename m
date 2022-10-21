@@ -2,95 +2,69 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68FFDC433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 Oct 2022 18:33:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF3EFC3A59D
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Oct 2022 22:51:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229904AbiJUSdp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 21 Oct 2022 14:33:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54216 "EHLO
+        id S229975AbiJUWvA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 21 Oct 2022 18:51:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36434 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229707AbiJUSdh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Oct 2022 14:33:37 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E3E7286CBA
-        for <linux-scsi@vger.kernel.org>; Fri, 21 Oct 2022 11:33:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1666377215;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=dLmiSkOFaJ+6V3LqgPTa0cZ4h6uaklJ08nilTBsNxQM=;
-        b=am6105K3H5yMse58mv6dGupvO98e+490dPT8TwomlL+iEx6QCy7MZSEbnJx3p0kaZni+74
-        Vz7b9BYRY3LhE8PaF3W+2JYLMnuUcmIDoHksfhofCRy++LTkthfIzCHYqkJSZlU65GpbQW
-        UqRaHwcmWRdfhaWEX4+poeG6sKqh5xc=
-Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com
- [209.85.208.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-570-anX6R0-bMA6fTFNn4aCL1g-1; Fri, 21 Oct 2022 14:33:34 -0400
-X-MC-Unique: anX6R0-bMA6fTFNn4aCL1g-1
-Received: by mail-ed1-f72.google.com with SMTP id s8-20020a056402520800b0045cab560d5eso3454833edd.1
-        for <linux-scsi@vger.kernel.org>; Fri, 21 Oct 2022 11:33:34 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=dLmiSkOFaJ+6V3LqgPTa0cZ4h6uaklJ08nilTBsNxQM=;
-        b=QdlGvICPleOajljwZNkWZBulDi/zMlY2biY+G9qWZAs6c2nasdtlSP2qjOb+iLueyu
-         cDowsJ+ozlLErDQD0xE0rSm00FD09D9t1kDiyvDyf0EwXExdWu1hvo2H3ACX9uA0fmiK
-         JOlJHUTOOIsyTrkBdswm8L95gwttOtF0jP5tugrjJIW3GpiHR3ib7ZR6NPFa5Z3lKqL+
-         CAMaqDnuu1eU7K2beK6xa0CeMgfJYRL/lF+4OGjIniI2PeWLMkKl0G+1UdTkEnM8a6aG
-         PAAFMRfnd3pomkOGZKMv9ePzumYM0KGAoYsgyWRjtobO0fJk+Pc/npFYa4DXCandGyd6
-         QX0A==
-X-Gm-Message-State: ACrzQf15l4x6GG1wz3sEMV3UnA4OgS5jXNoM4SaxPVsfcCDnPJbHfcxn
-        cvzyIcACUtGiAM2etcR3EoL2wW9+BM05dMFEDgqbw9XsMjJZtliVEosbbUdLaxhZVmzKdenpIle
-        aSukOADQaTPfEeeZLm9k2ZpwW/ZIdxNSdVnxEAg==
-X-Received: by 2002:a17:907:6e09:b0:78d:a326:49c6 with SMTP id sd9-20020a1709076e0900b0078da32649c6mr16637988ejc.507.1666377213473;
-        Fri, 21 Oct 2022 11:33:33 -0700 (PDT)
-X-Google-Smtp-Source: AMsMyM7NZHJKc03YC7LnDuTW7o+luE+PAom09rHSVMHty9srBMk8ve+2AMEfrLe7S9AFxjPyeW5ZCPc2NuaXhM2MKJo=
-X-Received: by 2002:a17:907:6e09:b0:78d:a326:49c6 with SMTP id
- sd9-20020a1709076e0900b0078da32649c6mr16637970ejc.507.1666377213305; Fri, 21
- Oct 2022 11:33:33 -0700 (PDT)
-MIME-Version: 1.0
-References: <Y1EQdafQlKNAsutk@T590> <Y1Ktf2jRTlPMQwJR@kbusch-mbp.dhcp.thefacebook.com>
- <Y1K5Oo7bIRlVTDnb@T590>
-In-Reply-To: <Y1K5Oo7bIRlVTDnb@T590>
-From:   David Jeffery <djeffery@redhat.com>
-Date:   Fri, 21 Oct 2022 14:33:21 -0400
-Message-ID: <CA+-xHTFp+gFVy6aKW2nj47+WY2+1vOLAE-X067C-hm4_8ngA6g@mail.gmail.com>
-Subject: Re: [Bug] double ->queue_rq() because of timeout in ->queue_rq()
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@kernel.dk>,
-        Christoph Hellwig <hch@lst.de>,
-        Bart Van Assche <bvanassche@acm.org>, stefanha@redhat.com,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        virtualization@lists.linux-foundation.org
-Content-Type: text/plain; charset="UTF-8"
+        with ESMTP id S229908AbiJUWu4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Oct 2022 18:50:56 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CEE118950B;
+        Fri, 21 Oct 2022 15:50:55 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 00F67B82D85;
+        Fri, 21 Oct 2022 22:50:54 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id C0486C433D6;
+        Fri, 21 Oct 2022 22:50:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1666392652;
+        bh=iYFAAGxpYxCh3Njk9I4j2QNNULMGHNo8YvV2czyNCl4=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=tiF7+c+hloX09SNtZl+u6o/ICCDu0G8dyOx4XvgB4Y9w/UGE3ZhMIFmXtn0m3GbZT
+         T0P/LwKHUa36VkWTwVd/hQxyuqbKdN73tYJSSqCwP6yXyQUe3T8VtenLKiFj6U9aRI
+         V/WbxpM4lAnm0K60dqWH7Dsd2zN6sqU4tfHussrs1z0ahlvtlQCEfALCV6sqZfSep1
+         P0ANQW5iAjDP4sSxapAkwi2z6Ic16ZgABhkHFJKTdLC6R6yHgJWEA4R5G+lmBZ7SJn
+         DmTMzSIKs249FGa+ZclnwnwHMOBXPetoAVjwKFkBdCLsK7sgjS9uPlzlR3fit1wxYt
+         rEb5kkgB6KDUA==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id AD6ABE270DF;
+        Fri, 21 Oct 2022 22:50:52 +0000 (UTC)
+Subject: Re: [GIT PULL] SCSI fixes for 6.0-rc1
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <5054a79b9c9672750ad68704c2d4f77ec2986d6f.camel@HansenPartnership.com>
+References: <5054a79b9c9672750ad68704c2d4f77ec2986d6f.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <5054a79b9c9672750ad68704c2d4f77ec2986d6f.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+X-PR-Tracked-Commit-Id: dc8e483f684a24cc06e1d5fa958b54db58855093
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: ed5377958cfd43a2291f25f5e88845b90b9aee3f
+Message-Id: <166639265270.28861.6589353956452632217.pr-tracker-bot@kernel.org>
+Date:   Fri, 21 Oct 2022 22:50:52 +0000
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Oct 21, 2022 at 11:22 AM Ming Lei <ming.lei@redhat.com> wrote:
->
-> On Fri, Oct 21, 2022 at 08:32:31AM -0600, Keith Busch wrote:
-> >
-> > I agree with your idea that this is a lower level driver responsibility:
-> > it should reclaim all started requests before allowing new queuing.
-> > Perhaps the block layer should also raise a clear warning if it's
-> > queueing a request that's already started.
->
-> The thing is that it is one generic issue, lots of VM drivers could be
-> affected, and it may not be easy for drivers to handle the race too.
->
+The pull request you sent on Fri, 21 Oct 2022 09:28:37 -0400:
 
-While virtual systems are a common source of the problem, fully
-preempt kernels (with or without real-time patches) can also trigger
-this condition rather simply with a poorly behaved real-time task. The
-involuntary preemption means the queue_rq call can be stopped to let
-another task run. Poorly behaving tasks claiming the CPU for longer
-than the request timeout when preempting a task in a queue_rq function
-could cause the condition on real or virtual hardware. So it's not
-just VM related drivers that are affected by the race.
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-David Jeffery
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/ed5377958cfd43a2291f25f5e88845b90b9aee3f
 
+Thank you!
+
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
