@@ -2,139 +2,80 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E32EFC4332F
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 Oct 2022 13:28:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EE66C4332F
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Oct 2022 14:32:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230146AbiJUN2r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 21 Oct 2022 09:28:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60238 "EHLO
+        id S229648AbiJUOck (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 21 Oct 2022 10:32:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54294 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230000AbiJUN2n (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Oct 2022 09:28:43 -0400
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC31B1366A2;
-        Fri, 21 Oct 2022 06:28:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1666358920;
-        bh=G2PsC9YonHQYdncfwu8+22Lzftzzm23vftY3NCjeUys=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=VdB3021SWte2YiS4DfTKx5DT2QnvonMJ1ubAygnX7V8QCM3rIfA5L7StE1OSJaym+
-         01P9Jb/vqviV1d4jFDu4WerdgzDx8Y4pVQ4ouol0PLFGm5VlfhvqcqaiV1bno7Z35t
-         oZEfCne8ri8jHduTXgjWktIgJ7fJfwA1eSHpwRe8=
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 0010E1285DD1;
-        Fri, 21 Oct 2022 09:28:39 -0400 (EDT)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id cBcpPUwfALA3; Fri, 21 Oct 2022 09:28:39 -0400 (EDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1666358919;
-        bh=G2PsC9YonHQYdncfwu8+22Lzftzzm23vftY3NCjeUys=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=ZUBaJHBx3X8SpCDOd6ctPCXOFh8/ayVT793kiNqu7HCe08zZu5g0ay1xDIY9Iyg13
-         ADD47ZNmowhFgsDVvawDXGxg8A/9VhXfOqBWAthd/uWKtL7EXrZrPwloPQ+2gutCy9
-         2tjFWREcGOmg/pH1vFuh7gXXOllVqhWrZ5cDWRrk=
-Received: from [IPv6:2601:5c4:4300:c551:a71:90ff:fec2:f05b] (unknown [IPv6:2601:5c4:4300:c551:a71:90ff:fec2:f05b])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (Client did not present a certificate)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 506B21285D90;
-        Fri, 21 Oct 2022 09:28:39 -0400 (EDT)
-Message-ID: <5054a79b9c9672750ad68704c2d4f77ec2986d6f.camel@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 6.0-rc1
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Date:   Fri, 21 Oct 2022 09:28:37 -0400
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.4 
+        with ESMTP id S229711AbiJUOci (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Oct 2022 10:32:38 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A12BE27E2E3;
+        Fri, 21 Oct 2022 07:32:37 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id D46B1B82C12;
+        Fri, 21 Oct 2022 14:32:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CBED8C433D6;
+        Fri, 21 Oct 2022 14:32:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1666362754;
+        bh=gV36/8a1mToLZ9CEhoI5MVfQ6sWGD3XIzmxBgwKLQnw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=fjf2afBnTgI4gFcVH2X6FWrrZ4CR+GncXKpns47YOaeyLuwuBb7ReGgUCQ4CyA8Vo
+         sT2Ka5SIahWmvny2ig5smx/4Y8xybtPrWVHpMxAbKZxWGsqKhJd0E16WaV/dKWX4B+
+         QIAHVU7bLmvbNWyp0FyB+4HWQw6KLUz5hFmgmi+ms0yfztRUauCHmJH08yrP6RgbEw
+         dia3jk7vE9m+Qnr/fAII793MR0QSkeJ+fMgiqSSufBKNCmiqu1z9E/WUZHLkP2W0KM
+         x2nmJ8wSqRn122Yibl4YCmYJU3WeVDKMnHLn5zAaXRaZFzgf144DB4tFQsMM53GY6F
+         xDf2GUpDEH6FA==
+Date:   Fri, 21 Oct 2022 08:32:31 -0600
+From:   Keith Busch <kbusch@kernel.org>
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        Bart Van Assche <bvanassche@acm.org>, djeffery@redhat.com,
+        stefanha@redhat.com, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org,
+        virtualization@lists.linux-foundation.org
+Subject: Re: [Bug] double ->queue_rq() because of timeout in ->queue_rq()
+Message-ID: <Y1Ktf2jRTlPMQwJR@kbusch-mbp.dhcp.thefacebook.com>
+References: <Y1EQdafQlKNAsutk@T590>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Y1EQdafQlKNAsutk@T590>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Two small changes, one in the lpfc driver and the other in the core. 
-The core change is an additional footgun guard which prevents users
-from writing the wrong state to sysfs and causing a hang.
+On Thu, Oct 20, 2022 at 05:10:13PM +0800, Ming Lei wrote:
+> @@ -1593,10 +1598,17 @@ static void blk_mq_timeout_work(struct work_struct *work)
+>  	if (!percpu_ref_tryget(&q->q_usage_counter))
+>  		return;
+>  
+> -	blk_mq_queue_tag_busy_iter(q, blk_mq_check_expired, &next);
+> +	/* Before walking tags, we must ensure any submit started before the
+> +	 * current time has finished. Since the submit uses srcu or rcu, wait
+> +	 * for a synchronization point to ensure all running submits have
+> +	 * finished
+> +	 */
+> +	blk_mq_wait_quiesce_done(q);
+> +
+> +	blk_mq_queue_tag_busy_iter(q, blk_mq_check_expired, &expired);
 
-The patch is available here:
+The blk_mq_wait_quiesce_done() will only wait for tasks that entered
+just before calling that function. It will not wait for tasks that
+entered immediately after.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+If I correctly understand the problem you're describing, the hypervisor
+may prevent any guest process from running. If so, the timeout work may
+be stalled after the quiesce, and if a queue_rq() process also stalled
+after starting quiesce_done(), then we're in the same situation you're
+trying to prevent, right?
 
-The short changelog is:
-
-Rafael Mendonca (1):
-      scsi: lpfc: Fix memory leak in lpfc_create_port()
-
-Uday Shankar (1):
-      scsi: core: Restrict legal sdev_state transitions via sysfs
-
-And the diffstat:
-
- drivers/scsi/lpfc/lpfc_init.c | 7 ++++---
- drivers/scsi/scsi_sysfs.c     | 8 ++++++++
- 2 files changed, 12 insertions(+), 3 deletions(-)
-
-With full diff below.
-
-James
-
----
-
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index b49c39569386..b535f1fd3010 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -4812,7 +4812,7 @@ lpfc_create_port(struct lpfc_hba *phba, int instance, struct device *dev)
- 	rc = lpfc_vmid_res_alloc(phba, vport);
- 
- 	if (rc)
--		goto out;
-+		goto out_put_shost;
- 
- 	/* Initialize all internally managed lists. */
- 	INIT_LIST_HEAD(&vport->fc_nodes);
-@@ -4830,16 +4830,17 @@ lpfc_create_port(struct lpfc_hba *phba, int instance, struct device *dev)
- 
- 	error = scsi_add_host_with_dma(shost, dev, &phba->pcidev->dev);
- 	if (error)
--		goto out_put_shost;
-+		goto out_free_vmid;
- 
- 	spin_lock_irq(&phba->port_list_lock);
- 	list_add_tail(&vport->listentry, &phba->port_list);
- 	spin_unlock_irq(&phba->port_list_lock);
- 	return vport;
- 
--out_put_shost:
-+out_free_vmid:
- 	kfree(vport->vmid);
- 	bitmap_free(vport->vmid_priority_range);
-+out_put_shost:
- 	scsi_host_put(shost);
- out:
- 	return NULL;
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index c95177ca6ed2..cac7c902cf70 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -828,6 +828,14 @@ store_state_field(struct device *dev, struct device_attribute *attr,
- 	}
- 
- 	mutex_lock(&sdev->state_mutex);
-+	switch (sdev->sdev_state) {
-+	case SDEV_RUNNING:
-+	case SDEV_OFFLINE:
-+		break;
-+	default:
-+		mutex_unlock(&sdev->state_mutex);
-+		return -EINVAL;
-+	}
- 	if (sdev->sdev_state == SDEV_RUNNING && state == SDEV_RUNNING) {
- 		ret = 0;
- 	} else {
-
-
+I agree with your idea that this is a lower level driver responsibility:
+it should reclaim all started requests before allowing new queuing.
+Perhaps the block layer should also raise a clear warning if it's
+queueing a request that's already started.
