@@ -2,97 +2,114 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E54D5C433FE
-	for <linux-scsi@archiver.kernel.org>; Sat, 22 Oct 2022 10:49:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B384C433FE
+	for <linux-scsi@archiver.kernel.org>; Sat, 22 Oct 2022 21:30:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230298AbiJVKta (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 22 Oct 2022 06:49:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34174 "EHLO
+        id S229907AbiJVVae (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 22 Oct 2022 17:30:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54812 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231166AbiJVKtH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Oct 2022 06:49:07 -0400
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 242CE31CB51;
-        Sat, 22 Oct 2022 03:06:07 -0700 (PDT)
-Received: from dggpemm500023.china.huawei.com (unknown [172.30.72.53])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4Mvbpz29nhzJn7x;
-        Sat, 22 Oct 2022 17:37:47 +0800 (CST)
-Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
- dggpemm500023.china.huawei.com (7.185.36.83) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Sat, 22 Oct 2022 17:40:22 +0800
-Received: from [10.174.178.220] (10.174.178.220) by
- dggpemm500017.china.huawei.com (7.185.36.178) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Sat, 22 Oct 2022 17:40:21 +0800
-Message-ID: <2adeb439-646b-ebb1-b266-c3ed4750eac2@huawei.com>
-Date:   Sat, 22 Oct 2022 17:40:21 +0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.0
-Subject: Re: [PATCH v4] scsi:iscsi: Fix multiple iscsi session unbind event
- sent to userspace
-Content-Language: en-US
-To:     Mike Christie <michael.christie@oracle.com>,
-        Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC:     Steffen Maier <maier@linux.ibm.com>, <liuzhiqiang26@huawei.com>,
-        <linfeilong@huawei.com>
-References: <20221021235754.1968981-1-haowenchao@huawei.com>
- <daa60cf0-0dde-ea2d-211a-70a9e0efc1b8@oracle.com>
-From:   Wenchao Hao <haowenchao@huawei.com>
-In-Reply-To: <daa60cf0-0dde-ea2d-211a-70a9e0efc1b8@oracle.com>
+        with ESMTP id S229744AbiJVVac (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Oct 2022 17:30:32 -0400
+Received: from mail-ed1-x52d.google.com (mail-ed1-x52d.google.com [IPv6:2a00:1450:4864:20::52d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4837431377;
+        Sat, 22 Oct 2022 14:30:30 -0700 (PDT)
+Received: by mail-ed1-x52d.google.com with SMTP id a67so18163751edf.12;
+        Sat, 22 Oct 2022 14:30:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=+hGdhRgOCzlkGtKUjyz6dck4ikAJQvjzGJB7xTbBslg=;
+        b=JNtQjpGOqnt59MtqDZi7dQWCFmvlmHe9m3yFh2Fyok5MK+ZXDTWLlwEU1NsQu4mSPr
+         Ead+0IYopERTVC+xsIIDWKLFYbYhYe4eBaS2GaiOa40R2Hgqzu12tbw43GfW9Gx6aFb8
+         9slHnfade+jRT+3eKbLEuRurK4BuywBGNELNXM49CrZ/aQR2JWV3GlK3i00GatbvNAvr
+         hYHhK73DpT54FgGEPJ5TVWVRLjgRX7PlGKYRGdMPKDakFu4zJ2IVciqUj+Iad6vwtNB6
+         +Ze2ZK0CiANg975PgcbuNxUQ2FX7KfiNmB/nV9KGm6QitjjVwQfOMBdF+nHmp930bY1q
+         yF/Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=+hGdhRgOCzlkGtKUjyz6dck4ikAJQvjzGJB7xTbBslg=;
+        b=TCva3CX9TPTO6W+MMJ+RAacEF1zukoK9+/NmURejc2CruodsahodI4m/OkLCV5RNQE
+         bLYgmn73VBsdP/MpCw1Jz7yVPEHEHtk97A/rJA2L5uMhCjBm2GhUkiLYynV52zgoW3uf
+         loUv7LB0zXW9y8XDCgbgRisIGNQFGmIFVfxvmwJUFEw3EqyB1jr8kHChfYSOqZHS9EJU
+         aXe7t3FT/Hwg7ddRwHDtS+0TWfa6rEgemYVKwzrwunVgpOGQT5TJJ61m/r1y8QEcykMj
+         4Q9g4No1UYc9hOpjvu12F/qmmg4lr79pIxwTLGSJ3X5Fw2dyVzcgUN99eeVqqqfKwzFx
+         kn2g==
+X-Gm-Message-State: ACrzQf1y9B3md3B3hqc8Meas5gDNwF/+pHCFjRgYlPvALCawdLUnvAD5
+        RzuFTJPBYPw64Tk0ifR41WY=
+X-Google-Smtp-Source: AMsMyM4FtJOwMxwlm7U+8P5D3jLJFqk7zt60mAWDgnsdb6NdYXlj6Z4t+VfmqyLjmKaSnDCuxDgnEg==
+X-Received: by 2002:a17:907:3e01:b0:730:a690:a211 with SMTP id hp1-20020a1709073e0100b00730a690a211mr21150540ejc.596.1666474228786;
+        Sat, 22 Oct 2022 14:30:28 -0700 (PDT)
+Received: from [192.168.3.3] (p5798b771.dip0.t-ipconnect.de. [87.152.183.113])
+        by smtp.googlemail.com with ESMTPSA id f13-20020a056402068d00b0045c3f6ad4c7sm4312930edy.62.2022.10.22.14.30.27
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 22 Oct 2022 14:30:28 -0700 (PDT)
+Message-ID: <3112c599b68342ced021dab4521c96aca95e5bff.camel@gmail.com>
+Subject: Re: [PATCH v3 2/3] scsi: ufs: core: Cleanup ufshcd_slave_alloc()
+From:   Bean Huo <huobean@gmail.com>
+To:     Bart Van Assche <bvanassche@acm.org>, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, asutoshd@codeaurora.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        beanhuo@micron.com, tomas.winkler@intel.com, cang@codeaurora.org,
+        daejun7.park@samsung.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date:   Sat, 22 Oct 2022 23:30:27 +0200
+In-Reply-To: <9868763a-d360-db53-02b9-2d7ab9628d79@acm.org>
+References: <20221018181627.326657-1-beanhuo@iokpp.de>
+         <20221018181627.326657-3-beanhuo@iokpp.de>
+         <9868763a-d360-db53-02b9-2d7ab9628d79@acm.org>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.178.220]
-X-ClientProxiedBy: dggpeml100008.china.huawei.com (7.185.36.48) To
- dggpemm500017.china.huawei.com (7.185.36.178)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu1 
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Tue, 2022-10-18 at 11:27 -0700, Bart Van Assche wrote:
+> Should a test be added that verifies that UNIT_DESC_PARAM_LU_Q_DEPTH
+> < len?
+>=20
+> Additionally, please use braces ({}) around multi-line if-statement
+> bodies.
+>=20
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0/*
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * According to UFS device s=
+pecification, the write
+> > protection mode is only supported by
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * normal LU, not supported =
+by WLUN.
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 */
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (hba->dev_info.f_power_on=
+_wp_en && lun < hba-
+> > >dev_info.max_lu_supported &&
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 !hba->dev=
+_info.is_lu_power_on_wp &&
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 desc_buf[=
+UNIT_DESC_PARAM_LU_WR_PROTECT] =3D=3D
+> > UFS_LU_POWER_ON_WP)
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0hba->dev_info.is_lu_power_on_wp =3D true;
+>=20
+> Also here, should the following test be added:=20
+> UNIT_DESC_PARAM_LU_WR_PROTECT < len?
+>=20
+> Otherwise this patch looks good to me.
 
-On 2022/10/22 1:24, Mike Christie wrote:
-> On 10/21/22 6:57 PM, Wenchao Hao wrote:
->> +
->>  int iscsi_session_chkready(struct iscsi_cls_session *session)
->>  {
->>  	int err;
->> @@ -1899,6 +1922,7 @@ static void __iscsi_unblock_session(struct work_struct *work)
->>  	cancel_delayed_work_sync(&session->recovery_work);
->>  	spin_lock_irqsave(&session->lock, flags);
->>  	session->state = ISCSI_SESSION_LOGGED_IN;
->> +	session->target_state = ISCSI_SESSION_TARGET_BOUND;
->>  	spin_unlock_irqrestore(&session->lock, flags);
->>  	/* start IO */
-> 
-> Hey,
-> 
-> Sorry for the late reply.
-> 
+Bart,=20
 
-It doesn't matter.
+len is already the LU descriptor size. UNIT_DESC_PARAM_LU_Q_DEPTH (0x6)
+and UNIT_DESC_PARAM_LU_WR_PROTECT(0x5) are very basic parameters in the
+LU descriptor, no matter what version of UFS is, there are these two
+parameters in the descriptor. So the return value of
+ufshcd_read_unit_desc_param() will be -EOPNOTSUPP, -EINVAL, -ENOMEM or
+0 (successful read of LU descriptor). the checkup of "< len" is not
+neccessary.
 
-> For the initial login we have not scanned the session above, so there
-> is no target yet. If iscsid is restarted at this time, then iscsid wants
-> to sync the session and also do the initial scan.
-> 
-> To handle that case and also better match the state names with the
-> session's target state we can:
-> 
-> 1. Move the above line to iscsi_user_scan_session after we have scanned
-> the target.
-> 2. Add a new state ISCSI_SESSION_TARGET_ALLOCATED to reflect we have
-> allocated the target_id, but not yet scanned.
-> .
-
-I have some wonder about the target_id like be2iscsi which allocated from 
-iscsi_sess_ida. Should not we get the target_id from iSCSI target?
-If they allocate target_id with an random value, how to handle the
-iscsi_user_scan_session which would check the session's target_id.
-
-I have no environment which deployed these iSCSI drivers like be2iscsi, so I
-can not valid my guess.
+Kind regards,
+Bean
