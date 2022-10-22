@@ -2,29 +2,29 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4341C433FE
-	for <linux-scsi@archiver.kernel.org>; Sat, 22 Oct 2022 06:31:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57978C04A95
+	for <linux-scsi@archiver.kernel.org>; Sat, 22 Oct 2022 06:33:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229996AbiJVGbu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 22 Oct 2022 02:31:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34388 "EHLO
+        id S229962AbiJVGdc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 22 Oct 2022 02:33:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35424 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229876AbiJVGbt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Oct 2022 02:31:49 -0400
-Received: from bg4.exmail.qq.com (bg4.exmail.qq.com [43.155.67.158])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08B362BABF1;
-        Fri, 21 Oct 2022 23:31:46 -0700 (PDT)
-X-QQ-mid: bizesmtp84t1666420286tlxf8fgf
+        with ESMTP id S229685AbiJVGdb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Oct 2022 02:33:31 -0400
+Received: from bg4.exmail.qq.com (bg4.exmail.qq.com [43.154.221.58])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C75D2B733A;
+        Fri, 21 Oct 2022 23:33:29 -0700 (PDT)
+X-QQ-mid: bizesmtp90t1666420395t156loke
 Received: from localhost.localdomain ( [182.148.15.254])
         by bizesmtp.qq.com (ESMTP) with 
-        id ; Sat, 22 Oct 2022 14:31:25 +0800 (CST)
+        id ; Sat, 22 Oct 2022 14:33:13 +0800 (CST)
 X-QQ-SSF: 01000000000000C0E000000A0000000
-X-QQ-FEAT: xqT8U4SkSpipKbq2G1p4GscCMGRsfbMx0WO7g86KPgBzuhXsR4plTwgtPpmio
-        e2LZmAcTRx46ZkYqeMROz2MyeFOXF02gDkLt8RWx9HcPpodNqgGHRfAfbaF+qWtVpAzzYBH
-        Druj/wLjqcvoqvp22HGjjn88Lb9YwF0QnPtrh2UGdqF2s8o1piavi8oIrcWmuD5Lwypak+B
-        2XuPjn5uFROV/RPS1+iRLqFrreq5sOuj/6IK7KeVqDUDcFGSfvNDJ/sUYmLzPNxALSODOkE
-        02oPvoMyZOAtA7Nv9FtBJNHfnsq+kFB+C1KyHg+9qelY/oFq/va2nvVo8kYXpUs9zNaUOoP
-        wjRRTUUR2YUbuZX6Z+DvlI4mvjbzmxaIj2UC97bxNsECe0IXFY=
+X-QQ-FEAT: hWIfutFPnzgDM/Y+7bTvF1MD1+GypHU/zCINYgLo+j6aWxU42xFhZM5bL3s2n
+        ipQ/s2874Q4Ylf1W4iVc5INYH0YBgZ7yy5t5ptWR4wlloLOkB5Ben+oKGwWh4n7mVoE/wXk
+        dH6oa28cUq11nm+IW6UEPiwvLI3VXdPRYaOVIVfwfr9WezKcocU+4wTZdKoyfzWjltgQtzB
+        Zi0JtIKoYGogVEToMDvK5y3wxbQS0f99TWB/DZSATMOssy/GH5dGLcb30Ks/2TrqMAgIr9D
+        eFzHW79NGW5gXnXDHm9mvSngizfjQeStEFcF2EehOWe9eI9LuYel7TZoFaTwbrc37EFz1q+
+        eo5jkh82tYUoOy8GK0wN0bt0quB1e6pTj9Is6Z8lFPcdnwjfg8=
 X-QQ-GoodBg: 0
 From:   wangjianli <wangjianli@cdjrlc.com>
 To:     artur.paszkiewicz@intel.com, jejb@linux.ibm.com,
@@ -32,8 +32,8 @@ To:     artur.paszkiewicz@intel.com, jejb@linux.ibm.com,
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         wangjianli <wangjianli@cdjrlc.com>
 Subject: [PATCH] scsi/isci: fix repeated words in comments
-Date:   Sat, 22 Oct 2022 14:31:18 +0800
-Message-Id: <20221022063118.20194-1-wangjianli@cdjrlc.com>
+Date:   Sat, 22 Oct 2022 14:33:07 +0800
+Message-Id: <20221022063307.22150-1-wangjianli@cdjrlc.com>
 X-Mailer: git-send-email 2.36.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -47,22 +47,22 @@ Delete the redundant word 'the'.
 
 Signed-off-by: wangjianli <wangjianli@cdjrlc.com>
 ---
- drivers/scsi/isci/host.h | 2 +-
+ drivers/scsi/isci/remote_node_context.h | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/isci/host.h b/drivers/scsi/isci/host.h
-index 6bc3f022630a..64e4759f25d7 100644
---- a/drivers/scsi/isci/host.h
-+++ b/drivers/scsi/isci/host.h
-@@ -244,7 +244,7 @@ enum sci_controller_states {
- 	SCIC_INITIALIZED,
- 
- 	/**
--	 * This state indicates the the controller is in the process of becoming
-+	 * This state indicates the controller is in the process of becoming
- 	 * ready (i.e. starting).  In this state no new IO operations are permitted.
- 	 * This state is entered from the INITIALIZED state.
- 	 */
+diff --git a/drivers/scsi/isci/remote_node_context.h b/drivers/scsi/isci/remote_node_context.h
+index c7ee81d01125..f22950b12b8b 100644
+--- a/drivers/scsi/isci/remote_node_context.h
++++ b/drivers/scsi/isci/remote_node_context.h
+@@ -154,7 +154,7 @@ enum sci_remote_node_context_destination_state {
+ /**
+  * struct sci_remote_node_context - This structure contains the data
+  *    associated with the remote node context object.  The remote node context
+- *    (RNC) object models the the remote device information necessary to manage
++ *    (RNC) object models the remote device information necessary to manage
+  *    the silicon RNC.
+  */
+ struct sci_remote_node_context {
 -- 
 2.36.1
 
