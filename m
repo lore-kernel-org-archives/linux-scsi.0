@@ -2,114 +2,102 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B384C433FE
-	for <linux-scsi@archiver.kernel.org>; Sat, 22 Oct 2022 21:30:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F72FC04A95
+	for <linux-scsi@archiver.kernel.org>; Sat, 22 Oct 2022 21:37:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229907AbiJVVae (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 22 Oct 2022 17:30:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54812 "EHLO
+        id S229939AbiJVVhJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 22 Oct 2022 17:37:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43396 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229744AbiJVVac (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Oct 2022 17:30:32 -0400
-Received: from mail-ed1-x52d.google.com (mail-ed1-x52d.google.com [IPv6:2a00:1450:4864:20::52d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4837431377;
-        Sat, 22 Oct 2022 14:30:30 -0700 (PDT)
-Received: by mail-ed1-x52d.google.com with SMTP id a67so18163751edf.12;
-        Sat, 22 Oct 2022 14:30:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=+hGdhRgOCzlkGtKUjyz6dck4ikAJQvjzGJB7xTbBslg=;
-        b=JNtQjpGOqnt59MtqDZi7dQWCFmvlmHe9m3yFh2Fyok5MK+ZXDTWLlwEU1NsQu4mSPr
-         Ead+0IYopERTVC+xsIIDWKLFYbYhYe4eBaS2GaiOa40R2Hgqzu12tbw43GfW9Gx6aFb8
-         9slHnfade+jRT+3eKbLEuRurK4BuywBGNELNXM49CrZ/aQR2JWV3GlK3i00GatbvNAvr
-         hYHhK73DpT54FgGEPJ5TVWVRLjgRX7PlGKYRGdMPKDakFu4zJ2IVciqUj+Iad6vwtNB6
-         +Ze2ZK0CiANg975PgcbuNxUQ2FX7KfiNmB/nV9KGm6QitjjVwQfOMBdF+nHmp930bY1q
-         yF/Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=+hGdhRgOCzlkGtKUjyz6dck4ikAJQvjzGJB7xTbBslg=;
-        b=TCva3CX9TPTO6W+MMJ+RAacEF1zukoK9+/NmURejc2CruodsahodI4m/OkLCV5RNQE
-         bLYgmn73VBsdP/MpCw1Jz7yVPEHEHtk97A/rJA2L5uMhCjBm2GhUkiLYynV52zgoW3uf
-         loUv7LB0zXW9y8XDCgbgRisIGNQFGmIFVfxvmwJUFEw3EqyB1jr8kHChfYSOqZHS9EJU
-         aXe7t3FT/Hwg7ddRwHDtS+0TWfa6rEgemYVKwzrwunVgpOGQT5TJJ61m/r1y8QEcykMj
-         4Q9g4No1UYc9hOpjvu12F/qmmg4lr79pIxwTLGSJ3X5Fw2dyVzcgUN99eeVqqqfKwzFx
-         kn2g==
-X-Gm-Message-State: ACrzQf1y9B3md3B3hqc8Meas5gDNwF/+pHCFjRgYlPvALCawdLUnvAD5
-        RzuFTJPBYPw64Tk0ifR41WY=
-X-Google-Smtp-Source: AMsMyM4FtJOwMxwlm7U+8P5D3jLJFqk7zt60mAWDgnsdb6NdYXlj6Z4t+VfmqyLjmKaSnDCuxDgnEg==
-X-Received: by 2002:a17:907:3e01:b0:730:a690:a211 with SMTP id hp1-20020a1709073e0100b00730a690a211mr21150540ejc.596.1666474228786;
-        Sat, 22 Oct 2022 14:30:28 -0700 (PDT)
-Received: from [192.168.3.3] (p5798b771.dip0.t-ipconnect.de. [87.152.183.113])
-        by smtp.googlemail.com with ESMTPSA id f13-20020a056402068d00b0045c3f6ad4c7sm4312930edy.62.2022.10.22.14.30.27
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 22 Oct 2022 14:30:28 -0700 (PDT)
-Message-ID: <3112c599b68342ced021dab4521c96aca95e5bff.camel@gmail.com>
-Subject: Re: [PATCH v3 2/3] scsi: ufs: core: Cleanup ufshcd_slave_alloc()
-From:   Bean Huo <huobean@gmail.com>
-To:     Bart Van Assche <bvanassche@acm.org>, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, asutoshd@codeaurora.org, jejb@linux.ibm.com,
+        with ESMTP id S229921AbiJVVhI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Oct 2022 17:37:08 -0400
+Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [85.215.255.81])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A7F6FA020;
+        Sat, 22 Oct 2022 14:37:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1666474620;
+    s=strato-dkim-0002; d=iokpp.de;
+    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
+    From:Subject:Sender;
+    bh=d0/HieIBh0r5Mr2qWbDo21B/n0XfJBUvPVCy24zUI7k=;
+    b=aKq4NskIMmb1g3JLYFpHG9OPBzBVsj7vVyigeDAj1kMj+Sra3jc2J9dMQi3U6tZGRX
+    VqsEP6R2l5sEOcKt0rg18OOgSK6j9L1G4HlfwxvXs+TXOZ8OSlbXj+E62rjj5wHcvTte
+    e91fgYXufN16ypBHu8JF0ABBa964DLj2vZ81rHQFC6dsS7/RfnX/rvX89WnbY3WZYvvu
+    KsAqu3dZvbwfOFeaVRWEd/SwuAPWhLRBrOlrM1hc79HNofevelC0kfIZX7zltsAAPex1
+    LLIyqAJur7wRRN0z0fppXhpf4O92MjgNzUPw8t8/Z+HtJpsZa3ri+LlhJUFfsztRW17I
+    keSQ==
+Authentication-Results: strato.com;
+    dkim=none
+X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSedrgBzPc9DUyubU4DD/R51xABQjgP5pGGXp2Dw="
+X-RZG-CLASS-ID: mo02
+Received: from linux..
+    by smtp.strato.de (RZmta 48.2.0 DYNA|AUTH)
+    with ESMTPSA id zad98cy9MLb0nUV
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
+        (Client did not present a certificate);
+    Sat, 22 Oct 2022 23:37:00 +0200 (CEST)
+From:   Bean Huo <beanhuo@iokpp.de>
+To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
+        asutoshd@codeaurora.org, jejb@linux.ibm.com,
         martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, tomas.winkler@intel.com, cang@codeaurora.org,
-        daejun7.park@samsung.com
+        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
+        cang@codeaurora.org, daejun7.park@samsung.com
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Date:   Sat, 22 Oct 2022 23:30:27 +0200
-In-Reply-To: <9868763a-d360-db53-02b9-2d7ab9628d79@acm.org>
-References: <20221018181627.326657-1-beanhuo@iokpp.de>
-         <20221018181627.326657-3-beanhuo@iokpp.de>
-         <9868763a-d360-db53-02b9-2d7ab9628d79@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu1 
+Subject: [PATCH v4 3/3] scsi: ufs: core: Use is_visible to control UFS unit descriptor sysfs nodes
+Date:   Sat, 22 Oct 2022 23:36:50 +0200
+Message-Id: <20221022213650.626766-4-beanhuo@iokpp.de>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20221022213650.626766-1-beanhuo@iokpp.de>
+References: <20221022213650.626766-1-beanhuo@iokpp.de>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 2022-10-18 at 11:27 -0700, Bart Van Assche wrote:
-> Should a test be added that verifies that UNIT_DESC_PARAM_LU_Q_DEPTH
-> < len?
->=20
-> Additionally, please use braces ({}) around multi-line if-statement
-> bodies.
->=20
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0/*
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * According to UFS device s=
-pecification, the write
-> > protection mode is only supported by
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * normal LU, not supported =
-by WLUN.
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 */
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (hba->dev_info.f_power_on=
-_wp_en && lun < hba-
-> > >dev_info.max_lu_supported &&
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 !hba->dev=
-_info.is_lu_power_on_wp &&
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 desc_buf[=
-UNIT_DESC_PARAM_LU_WR_PROTECT] =3D=3D
-> > UFS_LU_POWER_ON_WP)
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0hba->dev_info.is_lu_power_on_wp =3D true;
->=20
-> Also here, should the following test be added:=20
-> UNIT_DESC_PARAM_LU_WR_PROTECT < len?
->=20
-> Otherwise this patch looks good to me.
+From: Bean Huo <beanhuo@micron.com>
 
-Bart,=20
+UFS Boot and Device W-LUs do not have unit descriptors, and RPMB does not
+support WB, we can use is_visible() to control which nodes are visible
+and which are not.
 
-len is already the LU descriptor size. UNIT_DESC_PARAM_LU_Q_DEPTH (0x6)
-and UNIT_DESC_PARAM_LU_WR_PROTECT(0x5) are very basic parameters in the
-LU descriptor, no matter what version of UFS is, there are these two
-parameters in the descriptor. So the return value of
-ufshcd_read_unit_desc_param() will be -EOPNOTSUPP, -EINVAL, -ENOMEM or
-0 (successful read of LU descriptor). the checkup of "< len" is not
-neccessary.
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Bean Huo <beanhuo@micron.com>
+---
+ drivers/ufs/core/ufs-sysfs.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-Kind regards,
-Bean
+diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
+index eb6b278c4e79..883f0e44b54e 100644
+--- a/drivers/ufs/core/ufs-sysfs.c
++++ b/drivers/ufs/core/ufs-sysfs.c
+@@ -1285,9 +1285,27 @@ static struct attribute *ufs_sysfs_unit_descriptor[] = {
+ 	NULL,
+ };
+ 
++static umode_t ufs_unit_descriptor_is_visible(struct kobject *kobj, struct attribute *attr, int n)
++{
++	struct device *dev = container_of(kobj, struct device, kobj);
++	struct scsi_device *sdev = to_scsi_device(dev);
++	u8 lun = ufshcd_scsi_to_upiu_lun(sdev->lun);
++	umode_t mode = attr->mode;
++
++	if (lun == UFS_UPIU_BOOT_WLUN || lun == UFS_UPIU_UFS_DEVICE_WLUN)
++		/* Boot and device WLUN have no unit descriptors */
++		mode = 0;
++	if (lun == UFS_UPIU_RPMB_WLUN && attr == &dev_attr_wb_buf_alloc_units.attr)
++		mode = 0;
++
++	return mode;
++}
++
++
+ const struct attribute_group ufs_sysfs_unit_descriptor_group = {
+ 	.name = "unit_descriptor",
+ 	.attrs = ufs_sysfs_unit_descriptor,
++	.is_visible = ufs_unit_descriptor_is_visible,
+ };
+ 
+ static ssize_t dyn_cap_needed_attribute_show(struct device *dev,
+-- 
+2.34.1
+
