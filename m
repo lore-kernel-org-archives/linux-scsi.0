@@ -2,38 +2,37 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A77BC04A95
-	for <linux-scsi@archiver.kernel.org>; Sat, 22 Oct 2022 06:35:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F176BC3A59D
+	for <linux-scsi@archiver.kernel.org>; Sat, 22 Oct 2022 06:38:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230036AbiJVGfn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 22 Oct 2022 02:35:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42402 "EHLO
+        id S230064AbiJVGio (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 22 Oct 2022 02:38:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48542 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230030AbiJVGfl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Oct 2022 02:35:41 -0400
+        with ESMTP id S229796AbiJVGim (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Oct 2022 02:38:42 -0400
 Received: from bg4.exmail.qq.com (bg4.exmail.qq.com [43.154.221.58])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 21DE214D8E8;
-        Fri, 21 Oct 2022 23:35:37 -0700 (PDT)
-X-QQ-mid: bizesmtp79t1666420526t7zb03hl
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 585FF2BE893;
+        Fri, 21 Oct 2022 23:38:41 -0700 (PDT)
+X-QQ-mid: bizesmtp80t1666420709t1l2benn
 Received: from localhost.localdomain ( [182.148.15.254])
         by bizesmtp.qq.com (ESMTP) with 
-        id ; Sat, 22 Oct 2022 14:35:24 +0800 (CST)
+        id ; Sat, 22 Oct 2022 14:38:27 +0800 (CST)
 X-QQ-SSF: 01000000000000C0E000000A0000000
-X-QQ-FEAT: Ixgf2WlUekNx7vk0vlMKRBKR7mCZccBc3SmwEzgjUpdYjxd7EicmxosNeB+nJ
-        ONDhQSTfI9DMS6E23KoD/NpfyRmGVGbBCvlBkvpcMgpeC785Mu1tZ5tL97pYV330LEIt+/h
-        bj7Ro10B79QQGL3Tlmp/bSUg+NJDw3+9mcDJCUdQGfw6rrfE28W5jgK87A+dgUYV6vEXCyK
-        q1fw8G3wTN9c/h0NLWMggoNjcrvZOheCrWq6sJksdTlLHCUzyR4HIjx7HDlLcIW44I1fZXw
-        xQBG8tti9yvzJ56b0jxovOEX6kDk/vWTzuS8jPCitSA2hNMwzrFjnkKaBJS/fxQ3AcN2Qj/
-        i5W+0byNnfHK4uLIxU5k2/4Sr/xHHSe9YgRgyIK7T225D5rtqw=
+X-QQ-FEAT: 83ShfzFP0oCavCx2JPmr9qQxverkE8Uiw40nOhHNooMa3gxLH5FjPCikZFLPX
+        UxtomQtna1HGBy8/hfxhZ9eiQ2lyGDe6W7QnWs3gNUPM91FWXVYvACAvUG/YVvBl7BN214b
+        MNNQSnMOJs0g+OLU/AGHElh5+zC6v6OiilP49kCIgDTlxbUeOm87+2G1WcQcimbOX7Tiq5g
+        JQBKy3IScpWihFkGSG5j2r5a+FJXWy+Iv3CzCG2TxBh0D11zAyR5lybq9gph+ztPAhLIzva
+        8EXrZwua9LCwM4Elg8GGPyfmFXQxop9hchkJjf58gMPKnu2COhl/dOnBSMQSlBG0ZJ4PXQY
+        vWKl3xGuDiuFj+T/lzumtjaP1b1MMnX4QzLvmeWW8sqrRdOEgk=
 X-QQ-GoodBg: 0
 From:   wangjianli <wangjianli@cdjrlc.com>
-To:     anil.gurumurthy@qlogic.com, sudarsana.kalluru@qlogic.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com
+To:     hare@suse.com, jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         wangjianli <wangjianli@cdjrlc.com>
-Subject: [PATCH] scsi/bfa: fix repeated words in comments
-Date:   Sat, 22 Oct 2022 14:35:18 +0800
-Message-Id: <20221022063518.24730-1-wangjianli@cdjrlc.com>
+Subject: [PATCH] scsi/aic7xxx: fix repeated words in comments
+Date:   Sat, 22 Oct 2022 14:38:21 +0800
+Message-Id: <20221022063821.27974-1-wangjianli@cdjrlc.com>
 X-Mailer: git-send-email 2.36.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -47,22 +46,22 @@ Delete the redundant word 'the'.
 
 Signed-off-by: wangjianli <wangjianli@cdjrlc.com>
 ---
- drivers/scsi/bfa/bfa_fcs_rport.c | 2 +-
+ drivers/scsi/aic7xxx/aic7xxx_core.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/bfa/bfa_fcs_rport.c b/drivers/scsi/bfa/bfa_fcs_rport.c
-index c21aa37b8adb..dd78bea3e111 100644
---- a/drivers/scsi/bfa/bfa_fcs_rport.c
-+++ b/drivers/scsi/bfa/bfa_fcs_rport.c
-@@ -1971,7 +1971,7 @@ bfa_fcs_rport_gidpn_response(void *fcsarg, struct bfa_fcxp_s *fcxp, void *cbarg,
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/aic7xxx_core.c
+index a396f048a031..dbce720c7a9f 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_core.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
+@@ -1110,7 +1110,7 @@ ahc_handle_seqint(struct ahc_softc *ahc, u_int intstat)
+ 			hscb->control = 0;
+ 
  			/*
- 			 * Device's PID has changed. We need to cleanup
- 			 * and re-login. If there is another device with
--			 * the the newly discovered pid, send an scn notice
-+			 * the newly discovered pid, send an scn notice
- 			 * so that its new pid can be discovered.
- 			 */
- 			list_for_each(qe, &rport->port->rport_q) {
+-			 * This request sense could be because the
++			 * This request sense could be because
+ 			 * the device lost power or in some other
+ 			 * way has lost our transfer negotiations.
+ 			 * Renegotiate if appropriate.  Unit attention
 -- 
 2.36.1
 
