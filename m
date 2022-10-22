@@ -2,90 +2,97 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8823C04A95
-	for <linux-scsi@archiver.kernel.org>; Sat, 22 Oct 2022 07:26:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E54D5C433FE
+	for <linux-scsi@archiver.kernel.org>; Sat, 22 Oct 2022 10:49:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229925AbiJVH0M (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 22 Oct 2022 03:26:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59948 "EHLO
+        id S230298AbiJVKta (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 22 Oct 2022 06:49:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34174 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229742AbiJVH0J (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Oct 2022 03:26:09 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19C02FE908
-        for <linux-scsi@vger.kernel.org>; Sat, 22 Oct 2022 00:26:06 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 99D9060AB1
-        for <linux-scsi@vger.kernel.org>; Sat, 22 Oct 2022 07:26:05 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id F0FCFC433B5
-        for <linux-scsi@vger.kernel.org>; Sat, 22 Oct 2022 07:26:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666423565;
-        bh=rcY717VICBMkSvXkyIPGw0Rn/7+fAEiNbQJnoPCn6LY=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=PMShMrVWobTcatWSBLv6r1a96bPIwa2qqipKM+HU4M0+8TxV72IMuJ3H57PK2eAX7
-         3mTdNwWD8o1UPu3W3QiSX+Nb1DRxGulDphe90+2VI3n0NgTWr3Nt8dGhMx3FpD/G1b
-         trIVjjwi4NbCx5tE1lGmYBEZ1a30fHGEvqT+tT0ReD0Wn6BIQfJqfr+CBtO/V3ilan
-         5MBdJ59RPFpolvvto7c3bwV/Hr4EdEkNQOq40wI/DpxhwE/pQ6gXCZsySFSVrlMgvy
-         o4GRCJ8jbLtgdcSNv0JmHRS8tRbr+MW3fEHDldp6VZbalO5IAh//zWtyrIYaFixjqx
-         ntAkBY+Gs3BcA==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id D08C8C433E7; Sat, 22 Oct 2022 07:26:04 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 216588] RTL9210(B) falsely detected as rotational disk
-Date:   Sat, 22 Oct 2022 07:26:04 +0000
-X-Bugzilla-Reason: CC
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: None
-X-Bugzilla-Product: IO/Storage
-X-Bugzilla-Component: SCSI
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: supgesu@gmail.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: drivers_usb@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-216588-11613-BdhU6KWEtL@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-216588-11613@https.bugzilla.kernel.org/>
-References: <bug-216588-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        with ESMTP id S231166AbiJVKtH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Oct 2022 06:49:07 -0400
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 242CE31CB51;
+        Sat, 22 Oct 2022 03:06:07 -0700 (PDT)
+Received: from dggpemm500023.china.huawei.com (unknown [172.30.72.53])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4Mvbpz29nhzJn7x;
+        Sat, 22 Oct 2022 17:37:47 +0800 (CST)
+Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
+ dggpemm500023.china.huawei.com (7.185.36.83) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Sat, 22 Oct 2022 17:40:22 +0800
+Received: from [10.174.178.220] (10.174.178.220) by
+ dggpemm500017.china.huawei.com (7.185.36.178) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Sat, 22 Oct 2022 17:40:21 +0800
+Message-ID: <2adeb439-646b-ebb1-b266-c3ed4750eac2@huawei.com>
+Date:   Sat, 22 Oct 2022 17:40:21 +0800
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [PATCH v4] scsi:iscsi: Fix multiple iscsi session unbind event
+ sent to userspace
+Content-Language: en-US
+To:     Mike Christie <michael.christie@oracle.com>,
+        Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC:     Steffen Maier <maier@linux.ibm.com>, <liuzhiqiang26@huawei.com>,
+        <linfeilong@huawei.com>
+References: <20221021235754.1968981-1-haowenchao@huawei.com>
+ <daa60cf0-0dde-ea2d-211a-70a9e0efc1b8@oracle.com>
+From:   Wenchao Hao <haowenchao@huawei.com>
+In-Reply-To: <daa60cf0-0dde-ea2d-211a-70a9e0efc1b8@oracle.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.178.220]
+X-ClientProxiedBy: dggpeml100008.china.huawei.com (7.185.36.48) To
+ dggpemm500017.china.huawei.com (7.185.36.178)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D216588
 
---- Comment #4 from Elias (supgesu@gmail.com) ---
-(In reply to Martin K. Petersen from comment #3)
-> I propose you create a udev rule to override what the device firmware
-> erroneously reports.
+On 2022/10/22 1:24, Mike Christie wrote:
+> On 10/21/22 6:57 PM, Wenchao Hao wrote:
+>> +
+>>  int iscsi_session_chkready(struct iscsi_cls_session *session)
+>>  {
+>>  	int err;
+>> @@ -1899,6 +1922,7 @@ static void __iscsi_unblock_session(struct work_struct *work)
+>>  	cancel_delayed_work_sync(&session->recovery_work);
+>>  	spin_lock_irqsave(&session->lock, flags);
+>>  	session->state = ISCSI_SESSION_LOGGED_IN;
+>> +	session->target_state = ISCSI_SESSION_TARGET_BOUND;
+>>  	spin_unlock_irqrestore(&session->lock, flags);
+>>  	/* start IO */
+> 
+> Hey,
+> 
+> Sorry for the late reply.
+> 
 
-The whole point of such an adapter is to make the disk portable, which make=
-s it
-possible to quickly connect it to many different machines (where some aren't
-mine).
+It doesn't matter.
 
-Creating a udev rule on every new machine is:
-1.) annoying
-2.) not possible since I don't always have root access
+> For the initial login we have not scanned the session above, so there
+> is no target yet. If iscsid is restarted at this time, then iscsid wants
+> to sync the session and also do the initial scan.
+> 
+> To handle that case and also better match the state names with the
+> session's target state we can:
+> 
+> 1. Move the above line to iscsi_user_scan_session after we have scanned
+> the target.
+> 2. Add a new state ISCSI_SESSION_TARGET_ALLOCATED to reflect we have
+> allocated the target_id, but not yet scanned.
+> .
 
-This is only a workaround limited to own personal machines. But it would be
-much more useful if it was auto detected ootb correctly, hence this bug rep=
-ort.
+I have some wonder about the target_id like be2iscsi which allocated from 
+iscsi_sess_ida. Should not we get the target_id from iSCSI target?
+If they allocate target_id with an random value, how to handle the
+iscsi_user_scan_session which would check the session's target_id.
 
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are on the CC list for the bug.=
+I have no environment which deployed these iSCSI drivers like be2iscsi, so I
+can not valid my guess.
