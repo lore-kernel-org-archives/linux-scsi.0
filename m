@@ -2,39 +2,38 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F72FC04A95
-	for <linux-scsi@archiver.kernel.org>; Sat, 22 Oct 2022 21:37:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88A77FA3740
+	for <linux-scsi@archiver.kernel.org>; Sat, 22 Oct 2022 21:37:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229939AbiJVVhJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 22 Oct 2022 17:37:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43396 "EHLO
+        id S229948AbiJVVhK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 22 Oct 2022 17:37:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43394 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229921AbiJVVhI (ORCPT
+        with ESMTP id S229925AbiJVVhI (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Oct 2022 17:37:08 -0400
-Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [85.215.255.81])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A7F6FA020;
+Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A703FA01A;
         Sat, 22 Oct 2022 14:37:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1666474620;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1666474619;
     s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
-    From:Subject:Sender;
-    bh=d0/HieIBh0r5Mr2qWbDo21B/n0XfJBUvPVCy24zUI7k=;
-    b=aKq4NskIMmb1g3JLYFpHG9OPBzBVsj7vVyigeDAj1kMj+Sra3jc2J9dMQi3U6tZGRX
-    VqsEP6R2l5sEOcKt0rg18OOgSK6j9L1G4HlfwxvXs+TXOZ8OSlbXj+E62rjj5wHcvTte
-    e91fgYXufN16ypBHu8JF0ABBa964DLj2vZ81rHQFC6dsS7/RfnX/rvX89WnbY3WZYvvu
-    KsAqu3dZvbwfOFeaVRWEd/SwuAPWhLRBrOlrM1hc79HNofevelC0kfIZX7zltsAAPex1
-    LLIyqAJur7wRRN0z0fppXhpf4O92MjgNzUPw8t8/Z+HtJpsZa3ri+LlhJUFfsztRW17I
-    keSQ==
+    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
+    bh=pxGRSZ1v1hPpxgBZWeqPDzvMA+Ms7cKLZyQDWCA/9do=;
+    b=VTHlOE1KaaOCmxC4S5xMfIBW3vXH2JFDlwbaWCMAt+wvnGcrBYTfoc9NJJh0Oh9Mk8
+    HfBRz3Vjz3jg+zj4Mc1rN+xZsdFetY5bDMT0SprC4TWIznkABcpWJngJohADq+vr8FI2
+    fZurZlQs8J4IYgHPU07X22C3Q0fx7KGUeitv8ughV4pqEl5iIukB+O8n2QAc229cY4i+
+    45CXOKrYAUwftdK/H2scz19x/gjexJr1JZ7TU7JShCbPyBQPXtfKgXwXLuKwh0RT+k7s
+    zJx0kiw8yJyNrF6No0GbGOhn2y6R4u+KGAxgKUfzAE2Bf0F9ruGImySo4Lq3MyR6JNeg
+    l0SA==
 Authentication-Results: strato.com;
     dkim=none
 X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSedrgBzPc9DUyubU4DD/R51xABQjgP5pGGXp2Dw="
-X-RZG-CLASS-ID: mo02
+X-RZG-CLASS-ID: mo00
 Received: from linux..
     by smtp.strato.de (RZmta 48.2.0 DYNA|AUTH)
-    with ESMTPSA id zad98cy9MLb0nUV
+    with ESMTPSA id zad98cy9MLawnUS
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
         (Client did not present a certificate);
-    Sat, 22 Oct 2022 23:37:00 +0200 (CEST)
+    Sat, 22 Oct 2022 23:36:58 +0200 (CEST)
 From:   Bean Huo <beanhuo@iokpp.de>
 To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         asutoshd@codeaurora.org, jejb@linux.ibm.com,
@@ -42,12 +41,10 @@ To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
         cang@codeaurora.org, daejun7.park@samsung.com
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v4 3/3] scsi: ufs: core: Use is_visible to control UFS unit descriptor sysfs nodes
-Date:   Sat, 22 Oct 2022 23:36:50 +0200
-Message-Id: <20221022213650.626766-4-beanhuo@iokpp.de>
+Subject: [PATCH v4 0/3] Changes for ufshcd.c
+Date:   Sat, 22 Oct 2022 23:36:47 +0200
+Message-Id: <20221022213650.626766-1-beanhuo@iokpp.de>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20221022213650.626766-1-beanhuo@iokpp.de>
-References: <20221022213650.626766-1-beanhuo@iokpp.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -56,48 +53,33 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Bean Huo <beanhuo@micron.com>
 
-UFS Boot and Device W-LUs do not have unit descriptors, and RPMB does not
-support WB, we can use is_visible() to control which nodes are visible
-and which are not.
+v3--v4:
+    1. Change patch 1/3 title
+    2. Fix one typo in patch 3/3
+    3. Fix coding type issue in  patch 2/3 based on Bart's comment
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Bean Huo <beanhuo@micron.com>
----
- drivers/ufs/core/ufs-sysfs.c | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+v2--v3:
+    1. Add patch 3/3
+    2. Add remove unused parameter param_offset in patch 1/3 based on Daejun's comment
+    3. Further optimized patch 2/3 based on Bart's comment
 
-diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
-index eb6b278c4e79..883f0e44b54e 100644
---- a/drivers/ufs/core/ufs-sysfs.c
-+++ b/drivers/ufs/core/ufs-sysfs.c
-@@ -1285,9 +1285,27 @@ static struct attribute *ufs_sysfs_unit_descriptor[] = {
- 	NULL,
- };
- 
-+static umode_t ufs_unit_descriptor_is_visible(struct kobject *kobj, struct attribute *attr, int n)
-+{
-+	struct device *dev = container_of(kobj, struct device, kobj);
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	u8 lun = ufshcd_scsi_to_upiu_lun(sdev->lun);
-+	umode_t mode = attr->mode;
-+
-+	if (lun == UFS_UPIU_BOOT_WLUN || lun == UFS_UPIU_UFS_DEVICE_WLUN)
-+		/* Boot and device WLUN have no unit descriptors */
-+		mode = 0;
-+	if (lun == UFS_UPIU_RPMB_WLUN && attr == &dev_attr_wb_buf_alloc_units.attr)
-+		mode = 0;
-+
-+	return mode;
-+}
-+
-+
- const struct attribute_group ufs_sysfs_unit_descriptor_group = {
- 	.name = "unit_descriptor",
- 	.attrs = ufs_sysfs_unit_descriptor,
-+	.is_visible = ufs_unit_descriptor_is_visible,
- };
- 
- static ssize_t dyn_cap_needed_attribute_show(struct device *dev,
+v1--v2:
+    1. change in ufshcd_lu_init() in  patch 2/2:
+        1) Remove duplicate parameter initialization
+        2) Move lun parameter initialization before kmalloc()
+
+
+Bean Huo (3):
+  scsi: ufs: core: Revert "WB is only available on LUN #0 to #7"
+  scsi: ufs: core: Cleanup ufshcd_slave_alloc()
+  scsi: ufs: core: Use is_visible to control UFS unit descriptor sysfs
+    nodes
+
+ drivers/ufs/core/ufs-sysfs.c   |  21 ++++-
+ drivers/ufs/core/ufshcd-priv.h |   6 +-
+ drivers/ufs/core/ufshcd.c      | 152 ++++++++++++---------------------
+ 3 files changed, 74 insertions(+), 105 deletions(-)
+
 -- 
 2.34.1
 
