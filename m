@@ -2,123 +2,83 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1E6BFA3741
-	for <linux-scsi@archiver.kernel.org>; Sat, 22 Oct 2022 21:37:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99158C433FE
+	for <linux-scsi@archiver.kernel.org>; Sun, 23 Oct 2022 01:27:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229947AbiJVVhP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 22 Oct 2022 17:37:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43464 "EHLO
+        id S229956AbiJWB1g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 22 Oct 2022 21:27:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33206 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229958AbiJVVhN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Oct 2022 17:37:13 -0400
-Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [85.215.255.83])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C5B1FA037;
-        Sat, 22 Oct 2022 14:37:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1666474619;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
-    From:Subject:Sender;
-    bh=eWlJe8HaDj7UMQMSuvru7CEn5kVh7Q+O8gFfZxYR4ss=;
-    b=TuKubelJ4OzH/d4vDhimN6wQrEiX72oPO+ZD24Mg0nSoxjbt7ZXGVrpIxZqy0vwpyE
-    YpECa9AW6syS8j7WevAN15ck6usowCi7yvSPw6oWCKvmrgXxLu5Ur58Ns/EfrmkTqx8U
-    0NCZLV9SOEkRRHjw9HGKS6+filLYDy9F6zc2fhJczyeuocgn6pXLK6ZPW+ntBOwIi3j+
-    Z8ue8K2p8HZ03rL/8Zv3fw0usGM6WkteG4wQWVhkR/FafZ+MksdjYUo7SNJOvzLrBjJ8
-    s75F794WJ+tBVVhtxhGBA5LiNfO5mBlOhr92ZwThTI+u0zdS6JNBR/h7VODU6T1UzLaS
-    6Rmg==
-Authentication-Results: strato.com;
-    dkim=none
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSedrgBzPc9DUyubU4DD/R51xABQjgP5pGGXp2Dw="
-X-RZG-CLASS-ID: mo01
-Received: from linux..
-    by smtp.strato.de (RZmta 48.2.0 DYNA|AUTH)
-    with ESMTPSA id zad98cy9MLaxnUT
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-        (Client did not present a certificate);
-    Sat, 22 Oct 2022 23:36:59 +0200 (CEST)
-From:   Bean Huo <beanhuo@iokpp.de>
-To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
-        asutoshd@codeaurora.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
-        cang@codeaurora.org, daejun7.park@samsung.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jaegeuk Kim <jaegeuk@kernel.org>
-Subject: [PATCH v4 1/3] scsi: ufs: core: Revert "WB is only available on LUN #0 to #7"
-Date:   Sat, 22 Oct 2022 23:36:48 +0200
-Message-Id: <20221022213650.626766-2-beanhuo@iokpp.de>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20221022213650.626766-1-beanhuo@iokpp.de>
-References: <20221022213650.626766-1-beanhuo@iokpp.de>
+        with ESMTP id S229588AbiJWB1f (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Oct 2022 21:27:35 -0400
+Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7671A1FA;
+        Sat, 22 Oct 2022 18:27:33 -0700 (PDT)
+Received: by mail-pl1-f173.google.com with SMTP id io19so662102plb.8;
+        Sat, 22 Oct 2022 18:27:33 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:subject:from:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=pxn8/fWqKk5uwYUJmeV2YNZEprvktpSj+qw+5kOjvoM=;
+        b=AEOnGHiQSx0ifCur+R8hVbv6EoZmXRzrIOI1YcgnElzDlRe6TbyoNERM531m83nugM
+         DamrJiz3oVmcE4vPgMHp3DiKNQff11gK3SMkmSMdl/fOkBhvQfQxvzArKOk1rsd2XCCz
+         GVoO7PY0sWQSUo2gPRTicjheyL0Ulud3PWM0njsXFu/ZBPoTURt9rs020UqI0Fz+FBqE
+         lnbabjJXXu4zr6teBU/58+sBnAEqdthx/lNxJw2cy8zr4n7cZR/GOYQTkALr7C/cm2ry
+         zSfbYWLAbcxGEbp33zAmA9d/hN7CqD3ThH64EEJYzIM69T0HxI0/uM7CP9LFTxlvlDXY
+         gvsA==
+X-Gm-Message-State: ACrzQf3RPNKTRVJ1AA6zSrLEuVuelWzc/Oz+9plThJ9DPiut49aHuu/Y
+        iKMOt2EJmQy7kwKBDhnqepI=
+X-Google-Smtp-Source: AMsMyM6MSB9NjdfgmovwHqQUK96cfTfpitw7tk0jtz+QWDu6K7xgPFAtY6xG/ZCfPr6Q6f+esTP33g==
+X-Received: by 2002:a17:902:8544:b0:183:baae:cf8d with SMTP id d4-20020a170902854400b00183baaecf8dmr27148429plo.96.1666488451973;
+        Sat, 22 Oct 2022 18:27:31 -0700 (PDT)
+Received: from [192.168.3.219] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id ij19-20020a170902ab5300b0017f7628cbddsm17072020plb.30.2022.10.22.18.27.30
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 22 Oct 2022 18:27:31 -0700 (PDT)
+Message-ID: <85ad4508-b979-c792-e92b-01bc16260dec@acm.org>
+Date:   Sat, 22 Oct 2022 18:27:29 -0700
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.3
+From:   Bart Van Assche <bvanassche@acm.org>
+Subject: Re: Report in downstream Debian: mpt3sas broken with xen dom0 with
+ update to 5.10.149 in 5.10.y.
+To:     Salvatore Bonaccorso <carnil@debian.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
+        suganath-prabu.subramani@broadcom.com,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        MPT-FusionLinux.pdl@broadcom.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        xen-devel@lists.xenproject.org, adi@kriegisch.at,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+References: <Y1JkuKTjVYrOWbvm@eldamar.lan>
+Content-Language: en-US
+In-Reply-To: <Y1JkuKTjVYrOWbvm@eldamar.lan>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bean Huo <beanhuo@micron.com>
+On 10/21/22 02:22, Salvatore Bonaccorso wrote:
+> We got the following report in Debian after an update from 5.10.140 to
+> the current 5.10.149. Full quoting below (from
+> https://bugs.debian.org/1022126). Does this ring some bell about known
+> regressions?
 
-One newer 'commit d3d9c4570285 ("scsi: ufs: Fix memory corruption by
-ufshcd_read_desc_param()")' has properly fixed stack overflow issue,
-'commit a2fca52ee640 ("scsi: ufs: WB is only available on LUN #0 to #7")'
-is no longer required, we can revert it now.
+Only three mpt3sas changes are new in v5.10.149 compared to v5.10.140:
+$ git log --format=oneline v5.10.140..v5.10.149
+2b9aba0c5d58e141e32bb1bb4c7cd91d19f075b8 scsi: mpt3sas: Fix return value check of dma_get_required_mask()
+e7fafef9830c4a01e60f76e3860a9bef0262378d scsi: mpt3sas: Force PCIe scatterlist allocations to be within same 4 GB region
+ea10a652ad2ae2cf3eced6f632a5c98f26727057 scsi: mpt3sas: Fix use-after-free warning
 
-Cc: Jaegeuk Kim <jaegeuk@kernel.org>
-Signed-off-by: Bean Huo <beanhuo@micron.com>
----
- drivers/ufs/core/ufs-sysfs.c   | 3 +--
- drivers/ufs/core/ufshcd-priv.h | 6 +-----
- drivers/ufs/core/ufshcd.c      | 2 +-
- 3 files changed, 3 insertions(+), 8 deletions(-)
+Sreekanth and Suganath, can you help with bisecting this issue? For the
+full report, see also https://lore.kernel.org/linux-scsi/Y1JkuKTjVYrOWbvm@eldamar.lan/.
 
-diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
-index 53aea56d1de1..eb6b278c4e79 100644
---- a/drivers/ufs/core/ufs-sysfs.c
-+++ b/drivers/ufs/core/ufs-sysfs.c
-@@ -1234,8 +1234,7 @@ static ssize_t _pname##_show(struct device *dev,			\
- 	struct scsi_device *sdev = to_scsi_device(dev);			\
- 	struct ufs_hba *hba = shost_priv(sdev->host);			\
- 	u8 lun = ufshcd_scsi_to_upiu_lun(sdev->lun);			\
--	if (!ufs_is_valid_unit_desc_lun(&hba->dev_info, lun,		\
--				_duname##_DESC_PARAM##_puname))		\
-+	if (!ufs_is_valid_unit_desc_lun(&hba->dev_info, lun))		\
- 		return -EINVAL;						\
- 	return ufs_sysfs_read_desc_param(hba, QUERY_DESC_IDN_##_duname,	\
- 		lun, _duname##_DESC_PARAM##_puname, buf, _size);	\
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index f68ca33f6ac7..a9e8e1f5afe7 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -293,16 +293,12 @@ static inline int ufshcd_rpm_put(struct ufs_hba *hba)
-  * @lun: LU number to check
-  * @return: true if the lun has a matching unit descriptor, false otherwise
-  */
--static inline bool ufs_is_valid_unit_desc_lun(struct ufs_dev_info *dev_info,
--		u8 lun, u8 param_offset)
-+static inline bool ufs_is_valid_unit_desc_lun(struct ufs_dev_info *dev_info, u8 lun)
- {
- 	if (!dev_info || !dev_info->max_lu_supported) {
- 		pr_err("Max General LU supported by UFS isn't initialized\n");
- 		return false;
- 	}
--	/* WB is available only for the logical unit from 0 to 7 */
--	if (param_offset == UNIT_DESC_PARAM_WB_BUF_ALLOC_UNITS)
--		return lun < UFS_UPIU_MAX_WB_LUN_ID;
- 	return lun == UFS_UPIU_RPMB_WLUN || (lun < dev_info->max_lu_supported);
- }
- 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index c8f0fe740005..8cdba9a54870 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -3606,7 +3606,7 @@ static inline int ufshcd_read_unit_desc_param(struct ufs_hba *hba,
- 	 * Unit descriptors are only available for general purpose LUs (LUN id
- 	 * from 0 to 7) and RPMB Well known LU.
- 	 */
--	if (!ufs_is_valid_unit_desc_lun(&hba->dev_info, lun, param_offset))
-+	if (!ufs_is_valid_unit_desc_lun(&hba->dev_info, lun))
- 		return -EOPNOTSUPP;
- 
- 	return ufshcd_read_desc_param(hba, QUERY_DESC_IDN_UNIT, lun,
--- 
-2.34.1
+Thanks,
 
+Bart.
