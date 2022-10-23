@@ -2,362 +2,206 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C6CFC433FE
-	for <linux-scsi@archiver.kernel.org>; Sun, 23 Oct 2022 03:10:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A00F8C04A95
+	for <linux-scsi@archiver.kernel.org>; Sun, 23 Oct 2022 03:22:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230038AbiJWDKO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 22 Oct 2022 23:10:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49762 "EHLO
+        id S229976AbiJWDW2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 22 Oct 2022 23:22:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57148 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230024AbiJWDJQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Oct 2022 23:09:16 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07E7373C2A
-        for <linux-scsi@vger.kernel.org>; Sat, 22 Oct 2022 20:07:42 -0700 (PDT)
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 29N2tC32015615;
-        Sun, 23 Oct 2022 03:05:30 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references :
- content-transfer-encoding : content-type : mime-version; s=corp-2022-7-12;
- bh=jX5kJrGR0eQrgYNm0xW+T4IYbQSa2eltMNKAoyURwW0=;
- b=dzNxBk7js+0IpTFW+VDLX84gAl+au4iNN0TSVx1b2ExsxkBeK/Nckyl6K52w1mNk2KAA
- Qz0/c2y7KfDM9rxv3ah5daU7qGZE8g1945TxODrj1R45NkZHuYYNerUytXGi6GazbhjF
- k2/nYnMipLMtk/b1Ftp+O8SCq3R0IqqFJmLYhOP9W2r2l0jc0bGkvrUpdpyoDn8ytkDW
- 3Ayfjw++KoHSLIPDn/ZqVf2DR7ZGZvZJXDYaiCcGT/nsa2paAmWK186z6qm5Xe4RWcVv
- VK0S7mJOM1qIs05M32PrG/ZoWSFbKNoilAetx8IaDjShL2VoZ+ntajRhTLEX5SiaaTx+ oQ== 
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3kc7a2s4qr-1
+        with ESMTP id S229882AbiJWDWY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Oct 2022 23:22:24 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8C577C1E2;
+        Sat, 22 Oct 2022 20:22:23 -0700 (PDT)
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 29MKvmmV027181;
+        Sun, 23 Oct 2022 03:22:06 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2022-7-12;
+ bh=84nTQa22sKdI1n+DRAb8jtu74zSMoHc1mKYoZl3lhao=;
+ b=lgH0CtprMz9ryjRAQKFGuN6Ewxu3jGKl8bCUGa/Pr++eaHdrZKRvYMi9j0IPmxunnjfx
+ uLtfBN2kyIM3l0nX1pw40hI8Gvy/B5mbVkBeJl8s+fwWzLX89bqslRqEUqe9B0UHHIGW
+ 70Q/u2vaF9CoOpTbOhGKNQejsz0CROSSgdKnulydyLEGfRWi8scKDKpmKy8wM4IgGeew
+ RvfPxtR0HgtB6kVnNdjEHhLfLU/i1h6QohHx6Sb1Y/HfCBw5kR0w5OAmatXWmLDC9myS
+ klZ0zlzfyZ3OQqgtpRj5JjZu+DEpXLpPjQCL8V/tbWpcF0e78NV3DJ/9vX5NiD1ylgdx iA== 
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3kc741h8wf-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 23 Oct 2022 03:05:30 +0000
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 29MJW0ff032103;
-        Sun, 23 Oct 2022 03:05:29 GMT
-Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2169.outbound.protection.outlook.com [104.47.58.169])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3kc6y30aud-6
+        Sun, 23 Oct 2022 03:22:06 +0000
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 29MIS59V040416;
+        Sun, 23 Oct 2022 03:22:05 GMT
+Received: from nam02-dm3-obe.outbound.protection.outlook.com (mail-dm3nam02lp2042.outbound.protection.outlook.com [104.47.56.42])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3kc6y8h1ct-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 23 Oct 2022 03:05:29 +0000
+        Sun, 23 Oct 2022 03:22:04 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=if0zCE3MPi4urDCHI6kMHUHJozs0/A8lbzJ0jz5WI1azRjFkOdjK8sOFk9dwequeeGgVOKWZ8fIHagyHYZH1yRoaRMO17lO0I21Rddr+YlZ36C/k2r/P/gnGlkj32i+qSHaXYrDgCYqDJWuTPPkpOJQmsJgsBl+y9tnqnsWiR7ZLidcyJfmSBV6Vb9PetBE++an+yemZb/nmkiPIF9pTh1sqCi5bCrLHYgVUdtHSjNxwJ1XGtDrf9SmLI7isy74KYxk30PGa6/mqLYc2tZWGe2MsAAt1c2ikdrAw2CVQDt/G7257OrMsjU0ai96w/7SjaaDhLBW0fEd6DJYaGchq2A==
+ b=Al9vP7kH6uS+dzLk3QUWfnEhiXXU2Mc3OBimYuFgDehFtxJWlhcCj7HEijPzu+V+vbAheX/NRjzyyOniYt1sD7QEzvfI1FatRUEZaq8jYtY1HNDuVLc1gAAlZNeCu37EA3x2gsX2QKP7KEDU/pwljn1WzdBCfam3svoLymRHUoTo3tDqfaRDWZsAaI/lr2vp4wcaTwmrHJvlxHCjg8lVyxr841wSNHsaOzQYSEClDsoYvzkBRgf+k2eTKniFo2aBTK2/3Le1UOzuLWCUktbwhoytq116fmu6KTim9RkPaykp39isB790EPer8v2DkAYuR1dxFqjoCPIA2IrSbH8paw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=jX5kJrGR0eQrgYNm0xW+T4IYbQSa2eltMNKAoyURwW0=;
- b=Jck+K16HHwvKMfC5It2jJeNmHLS85PYw7McMUiVBdmmv6bUBwNk/S/oPHGGTroeTDGJmbVCASTSlXHKpCKQUs3DeADG3ziMIlKTLeS5Fi2X48Z4Xtgx0s7ssmoYv1tsVEzfb5klIMpH9Dywz8fPLmXF126uwYGnOrXrTVo8l1aBY9QuXL2AATITJFHaaaE9XqpJLgR6naYzkujK9B15GAugT9t87uuVjs9BN4awrd/OpFjFSqK3i7fq8RRm6KC33exbcCngSwja2HKGUnvTFAIJtxLMHhQ+0iFwz1xor2TDP3AZa0rRLGX6IT5xLURscGsfhp66iB+oj7ifPPs/9OA==
+ bh=84nTQa22sKdI1n+DRAb8jtu74zSMoHc1mKYoZl3lhao=;
+ b=ltNpTgLGdncNGO8TNcDQ64ejZI9HPaJQPurKB6RahsHw7AjV3KL8BeR23dgLXUSArLVxCOb1bGl2jN0OWaMaW1ngmlCAcHEAQCOP4nKHFQSvfuDdo9Ee0as087eOL0dqm0m4smvHSbN8oHH/1vZJuGATmndagBIi0vYTKIkRoMcTv4tkooJ/4OaymzhD0TcPL7jCPvsXKYiQ1GiGTN5Do3vm9oxyTz/004FUXgbyG0Z+lwTPplVeYwkz3uIXx3LXh94j0kr2fIrBQok1jI+DWxHD0LzhfpeSr+41wSq9hnnUPIFT/jdkJksmfuoTw3QzK4dhYcGGi3C2McD+kBPkWA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=jX5kJrGR0eQrgYNm0xW+T4IYbQSa2eltMNKAoyURwW0=;
- b=Tj+xR0KrDevH7KH5kGHzNf4Wmhy+jEwa53llSSPVTewq0IMB8aLUQlGH3Y9yjFyrCojvrSwlKPTgPCh+5CJnhBVEzehoFBnUR65AO4wkRB2+93r8PXneATRmwFAZBm9vGma8gK8oZVUFFNRf+6LWFPv04flYptQukY1mv3B/byI=
+ bh=84nTQa22sKdI1n+DRAb8jtu74zSMoHc1mKYoZl3lhao=;
+ b=gc+1Z91T7eH0QXgTiiluqQhZnzkwcU7kivtV1b1lFPZ8wxLjID+mVSWv5XLW2/c83SrJDhQz56bxTGpl32M0c+PFqM0+bSm9fvTrJLtcEGKfHSX9GUtemA0dhVCvehS/tu8QHJxwLcvmMg0VNSTKKG/u6jU7wcVcSj/Y3UUO76o=
 Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
- BY5PR10MB4337.namprd10.prod.outlook.com (2603:10b6:a03:201::17) with
+ BY5PR10MB4324.namprd10.prod.outlook.com (2603:10b6:a03:205::23) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5746.21; Sun, 23 Oct
- 2022 03:05:27 +0000
+ 2022 03:22:02 +0000
 Received: from DM5PR10MB1466.namprd10.prod.outlook.com
  ([fe80::19f7:e081:85b4:c5df]) by DM5PR10MB1466.namprd10.prod.outlook.com
  ([fe80::19f7:e081:85b4:c5df%7]) with mapi id 15.20.5746.021; Sun, 23 Oct 2022
- 03:05:27 +0000
+ 03:22:02 +0000
+Message-ID: <64689ca9-62eb-27e1-63df-e2e8c1a59cbb@oracle.com>
+Date:   Sat, 22 Oct 2022 22:21:59 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.3
+Subject: Re: [PATCH v4] scsi:iscsi: Fix multiple iscsi session unbind event
+ sent to userspace
+To:     Wenchao Hao <haowenchao@huawei.com>, Lee Duncan <lduncan@suse.com>,
+        Chris Leech <cleech@redhat.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Steffen Maier <maier@linux.ibm.com>, liuzhiqiang26@huawei.com,
+        linfeilong@huawei.com
+References: <20221021235754.1968981-1-haowenchao@huawei.com>
+ <daa60cf0-0dde-ea2d-211a-70a9e0efc1b8@oracle.com>
+ <2adeb439-646b-ebb1-b266-c3ed4750eac2@huawei.com>
+Content-Language: en-US
 From:   Mike Christie <michael.christie@oracle.com>
-To:     bvanassche@acm.org, mwilck@suse.com, hch@lst.de,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        james.bottomley@hansenpartnership.com
-Cc:     Mike Christie <michael.christie@oracle.com>
-Subject: [PATCH v5 35/35] scsi: Add kunit tests for scsi_check_passthrough
-Date:   Sat, 22 Oct 2022 22:04:03 -0500
-Message-Id: <20221023030403.33845-36-michael.christie@oracle.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20221023030403.33845-1-michael.christie@oracle.com>
-References: <20221023030403.33845-1-michael.christie@oracle.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: CH2PR15CA0020.namprd15.prod.outlook.com
- (2603:10b6:610:51::30) To DM5PR10MB1466.namprd10.prod.outlook.com
+In-Reply-To: <2adeb439-646b-ebb1-b266-c3ed4750eac2@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: CH0PR03CA0255.namprd03.prod.outlook.com
+ (2603:10b6:610:e5::20) To DM5PR10MB1466.namprd10.prod.outlook.com
  (2603:10b6:3:b::7)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM5PR10MB1466:EE_|BY5PR10MB4337:EE_
-X-MS-Office365-Filtering-Correlation-Id: b4bd9e0b-0044-48cd-1f24-08dab4a36094
+X-MS-TrafficTypeDiagnostic: DM5PR10MB1466:EE_|BY5PR10MB4324:EE_
+X-MS-Office365-Filtering-Correlation-Id: 7eef439d-f7a9-400f-aa28-08dab4a5c09b
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: syJMMC0Wpa2rakmxwJpd8xJEdQpWiSrm3JyfiilERQnyrzfKMZj+l4m2bv52SyMLJbOylE0mun4sDESPgb1K05hcQijlQzkFXZ/oL/SLr0OcCxXtlAwT28RZ7X+LOpxOJARuvR9Xc8DbsLtj48WWpcZ9sLTYuUIsd5aB6R25Lth1Bwf9HF9wHcdkgpEBHKSMaLicvJdeZSgbOxBois/+Ywg+r4Dw98QdRi/kLMMYxyJKDW6CEwzJm6fdlcfXhN0QOfgKMsVsei0lF6iWMP4EJDU2g8TA+3mhelhyV3SrByNMCi/opuf6DOE7sXmvn3VqQmaX9w741yl5SVj6gHDC+VhCm+NuqFwQwyX7fCCWjQp4MsOivRJgE1SSHoDi5h1m4jfVOsuwNvcwu+9hlGkZbxomlZZqDEar6Bj+rOZdq99F4U7xbLUea6zUovqeUVgj6aEc8AUvpUaMe33c7/1HoW1wDhNwRC4XNkDg5hvCyANPu5XpCAz0EkJGx3XuJoNRG3QknilrdfdOJLYYTZrmduCec4yydQZmulOVZl0fKL8NgTB5/iSIaKu3BCyg8fQFa7axNyWD/UBpBVrs7Qi7bOwKNuALh4NFtbh8iuV9vqok4vR/Mj9SKyZ4hbfseewIqXzDlq9MRzluT1V/nDzBkxHLCvacVgXeMAGxCTGJ8LnmVaEg0M02BVfqIx4W3FlSrC5JtuqU6MD9FPG+nZClXA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(346002)(376002)(366004)(136003)(39850400004)(396003)(451199015)(66946007)(8676002)(316002)(478600001)(6506007)(6486002)(6666004)(4326008)(66476007)(66556008)(107886003)(8936002)(6512007)(186003)(2906002)(86362001)(1076003)(5660300002)(2616005)(26005)(41300700001)(36756003)(83380400001)(38100700002);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: wmoGoGBNEkGqGiJncecUSImS/hWZZlhm4L2KElnnc/8GkzD4noro2X2b+3BQ4P80TRMH1m9sDwXhX/dwIRB0ZGD2ujhlG928lhfeEqx1XC2fqbethWTLnd/+hjQIM9nAMDue5rBtEEJSmCOjZHUX4X/mwXoq/mlK1EIK874ef/T4y2RI3e1lKmJaiNrYeHG+yPArgb63GnMNIWHUb1HX6umFPxz7OhDcN8wcL6LwFhd3u7YU1qBUDT4Cz+xblrDlOvDo20KJP/lZTwnGE1Sz53okNBgC4tbbDbn667G12hg5YaOLMtWbYSzuhgwdhokzss/dRatySdj9QQoxO6d+ZymnVElqOccs/mgZRMbxgUtq7EdlX5KZbTIYwQzp4SPYAw+rf+SlOdiBBW2QBYoAmQ8KFEUlSCWYClvBR6nuQGyilVTB4aodh1TgnOGiCGb1mZ7D5LQ5+tgNDaM8RXm5U82d7BWoIeIdD8Wfv5wONs43Cr3F2xahnIiOL45XWSx71nK0SdNgtbO4h8DfYfixcllD5d3t0dNnXSpgFhTQsqwiCIBq8ZqYwLxp3qvgebH9DQQ+naL1sCiYx4iVbX7LRzEyeQIJlz0opIG18UAV6RaZEntRvuTpJGXLRCxtnhNRTZNXIkoEyu03u0VsmtV/OtZOB9+wddtbNko48+1NcCHxUvfCFRS9RhvFQyKoVc5hszeSZU+muQJdJrLfGr4w2UR3XrgWoykafBopmIYWo8M9tiWGJaWGdFtnEV2NsPt9pzljYP+vZ82I5Ibua9UJDb+Pm+01OlfsdON/yetfdLk=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(376002)(346002)(396003)(366004)(39850400004)(136003)(451199015)(110136005)(5660300002)(66556008)(36756003)(2906002)(4326008)(66946007)(66476007)(8676002)(41300700001)(31696002)(86362001)(316002)(6506007)(6512007)(26005)(53546011)(38100700002)(8936002)(83380400001)(2616005)(186003)(6666004)(6486002)(478600001)(31686004)(43740500002)(45980500001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?ko/MKfimlSAP1PxRwLhTjg5jf5Zd0/f48GQIhh9IwmNjiKaIg5ZqwLEoNhhf?=
- =?us-ascii?Q?geq1/Y+pF2wqrQ/aoix4Ip9itr3vOAJVPeZ3QTUjRTr8ka9Ur6dv4SZrjcQ+?=
- =?us-ascii?Q?+RN7gHBP6o+L5QGOSNx8mzLi7L3oq7uq5K8liaNmpkJrC6q6W/R8LRgd6meV?=
- =?us-ascii?Q?/QN1OpK7XAoq/dcox5e3jeO78Qhl1gkk+WwlZR33r0RIoyKJ8L2M7g3J8QDA?=
- =?us-ascii?Q?HoC70vtLp41/pE08yF6r5cmXzv1gHY+Wkhcq32kj1lBIba3Pe1OLgN/XwxKq?=
- =?us-ascii?Q?yI+zeLdktD2zLJRaCTThtsOOV5ZU/6KKFGs9l+0ME79tIvFxJQxR/RSnSWmB?=
- =?us-ascii?Q?HGlLxLxtxWWx7j+9cCwNfDUWGFxbwe4vBZN08iU6A+iXt9D+pvQ8QBzLMUx1?=
- =?us-ascii?Q?15n3jHU5ovmgYsnKTBkfEFp5yJKUA6D5RCydB9LlluLAd84VIB8qX31oXTF9?=
- =?us-ascii?Q?VSjwSCs3kHhFbsJfIee+3F+HeECounOHqW6lBa9yO9cYKL+yVvG3E4OmUlfy?=
- =?us-ascii?Q?vZVDA298z36SV/TVFG/qgb8/H3Iy9RUcX4jQ2y6bqCST1do44gJTMj9TgJRn?=
- =?us-ascii?Q?cSH1t/x8vS2NUctMwRF8jdH6OrVWKduLh7RBzabFXUiCkriGNu6WNnQSqxxw?=
- =?us-ascii?Q?NjAXTYNSAFDz5/Z0aucjsNmluR0by14LHAk/PWuM3YEfXebMGC1RpRlioRMU?=
- =?us-ascii?Q?Nx0vZpkMPI0ppXtYNdE8YIzfl8Z/NP/I3bLiZH6Z7ZuypS6Uyi/G6HYeIIiw?=
- =?us-ascii?Q?RqSR/L0fo6hLkS+sPKZNR1JrC8y4HWT7dxLhya3GKRjJsH4V4K1vR0tK/R4y?=
- =?us-ascii?Q?uVgBLDYXMTxJiKGRiZWl8/kh4t0bsCbncictYLZ2klHFyuhf8l1unErV4UrE?=
- =?us-ascii?Q?l41KCco41TfWx66yQd+snV6FTtoV++9E9d/jAgijavJtpJFnfXt2rqYex4Vk?=
- =?us-ascii?Q?6hl9PLxX+A60GBFHR4IuE/K/D170u3MqfJyiA78oEE7/P4UepBFRSeCB50Fn?=
- =?us-ascii?Q?bb/Ya4xYi+SSWHMUaz0zqf11advYbZsdpppNs4ZW+A3+WLD72LyO08CtZI8h?=
- =?us-ascii?Q?smSKvCMwmYuMO82enI0d7QOe97ZmWMm99DiBBeSo0pNra4pjXGU2dJRTLD7f?=
- =?us-ascii?Q?IB8CSILlg2CUGPBTLL0JLQ1IXrbS5vakQgDz6b0ia6kpmKo8rDGDweMUog6M?=
- =?us-ascii?Q?1h6ZNrUV17wn1UYkC10UnFvxrBBKoM9monpDLq2/XKOPpU4xg16+JhcGPEEJ?=
- =?us-ascii?Q?AlVbV5Ts69cC5/pMglWc1qtsPIEYneX0K3UniuYMRU1P4jKG0eXfQmuVwA/q?=
- =?us-ascii?Q?HGHMu9ExsSzyxNtsikL9gmA8QnIAm+GFPxhD2eRjzK/0ZGVyVitX7pvuF1jr?=
- =?us-ascii?Q?VODN6zxmZaCyUS2ctDD95LTRkize0fhgMgLGC9nZsCXMzlRcOCdn6zqVWllR?=
- =?us-ascii?Q?GBhFfQ93LS2FFsVm+PeoAJjBWTuda0Eu389b4Y/JBOk6ya26/LXbA/DrAwNd?=
- =?us-ascii?Q?mCL+iSDH3g2n8OB3TU9BXv9btiUZpci9fgVYu6NqzoPxPIZK9WJHtHbBSl9M?=
- =?us-ascii?Q?o+35eTEh29TLBkE7ebqF/exdqp7sQ9N/H+VgHqSGn+NoR3QwNQBUJZtlOmB7?=
- =?us-ascii?Q?Kg=3D=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?U2NMN0dsaUZReS9EWmtYelZaNm1wQTNuVFA3OTNCT0VaWUJWWGVuTzR0Y1ho?=
+ =?utf-8?B?Y0psdS9pdEk5bVRRRWxXcUcrN2x6MzBvSUM2aU9ENkFKQTZkRVVFdXNEdHgx?=
+ =?utf-8?B?bjJGVmxvajFmVWlTaDF3bEJGUXRtL0xld3dIUy9rUDNtUW9nSldON2UrMjJ6?=
+ =?utf-8?B?VGljRkZrVzJpSCtCallrUVp2ampsSU1WYldva0FDWWYrdGFwaWdVRHpWaFdR?=
+ =?utf-8?B?bE0yQkhscytNRFlXcVRqUy9tL3UrWjh1c1NpR0xGd1ZQeStSUDlQb2NabGNn?=
+ =?utf-8?B?bkNZSi9Vek5LdmhzcHR1OHNGSFZpbmxPZklDOFpKQ0Y4SjJaQ05oS1NBYTM5?=
+ =?utf-8?B?SkVDRkNJSmluS25yT2MzSEZDcGJqM3BUZFJZb2VmQmZUSGRxSk8rOVArMGph?=
+ =?utf-8?B?dURvRy9jK01TOWFHSnFVOHNOdWdqZHU3c3BGVU5UWldpZzFzaVVvb1BCRTcw?=
+ =?utf-8?B?d1hDcFZ6Sm9pSGVvbDZOVkQyM1RqdVB3a1NwVHlGZVpyUnRBN2FxQXduTERX?=
+ =?utf-8?B?UU4yNWRraWFkWXlMMWJNNmRXN1B3eWFsNWk2dUFRRksrZUZoODVaR3FqOVQz?=
+ =?utf-8?B?OVpoOFFScGUwYzVTWEZ6QUdNVVRsY21FZ1lPeE5QVVZYcEVNQnU5cjRmM1lQ?=
+ =?utf-8?B?VTRpNUtRSTA0WmdHNnBzdHFrbDlPOFAzaVlPSld5Q25zNjNsUW5wRWhIK2Jm?=
+ =?utf-8?B?YlBOOU1NaS9hR3JrV2pyQ1hRR3lZb3RyQ1FRV1JqMFloSkg4TmtZU05BYW51?=
+ =?utf-8?B?QitwRXgvVzRIUUhpbkZRNEZjbVZnWVpnN0VJdTVmNzF2MFJ3bzVRazF1REVC?=
+ =?utf-8?B?bTllWFFzN2QzQWtpN0YrNmxCQ0ZFQWUrU0h2Nnh1bGlHTzZWeDQ3ZlNNR0ZP?=
+ =?utf-8?B?T3RhTFpNa2xzdWJFL1JyRzNJcTRPUSszd1hZOW4yZm9SZDNOS3dLb3BhUUUr?=
+ =?utf-8?B?MnhqMHRLektBUHJaV3lPU25NNUhTZmJzZWZucnZ0R0dja1F5QXpKWjV6dGdT?=
+ =?utf-8?B?Q1QxVXNUUDhaZzJEOU1VMW15d1VaSStlRERlV0RvZ0dGd2taY0RFRWgwQ0ZG?=
+ =?utf-8?B?TVoxQmdYQ3NIWGdnQXBaQVZMTzJSd05LZElLKzA0UkVIeHFoUVVvVDBJUlVq?=
+ =?utf-8?B?THltQzhKWnJZQ2lQZHpGVEdnRG9HKzJla1d2UUFveHhJMTVCZ2J1L3JrdS9D?=
+ =?utf-8?B?cjhhUGEySzFQaDNaandhQWxPbmdqQkVTMHI4Nm1rU3JSV3g1MmRYdjJiM2tS?=
+ =?utf-8?B?SnBnTDZIMXBmM2UvRW5LS0hKUUN5MDZ0bXZXN3R4S0JOemQ3WWorRWtKRmQ2?=
+ =?utf-8?B?SjF5NXpKWUVVMzJFeGlqMW5nV2Y5OEsxaXluM1VoSHVIRWVTU3J5ckpxeWRs?=
+ =?utf-8?B?WnViMHVOUm8vcU1vamwybTd6eWx3RTQrRVpVVy9kZGhiRGFraXhBemhxZDRH?=
+ =?utf-8?B?UXpsLzFRMFBZRjlGandNMnVVd0lCU0V6SXE0ZE5OeGRCTTJUREV4dVI2R1RJ?=
+ =?utf-8?B?R0NaTVFrbll5Y0F0WTJoTWZCWm9CVCtEcnE5ZUJ2QTV3dVJKcnkrK3AwT3VZ?=
+ =?utf-8?B?ZndWYTRZS2t5VkYwTjZwVXo2Z3RKRmxCck1wZmlib0pMWkZpZ3Awd2hqT0xy?=
+ =?utf-8?B?SUk3c3B3bjdQbSttT05uVWhhWEQ2TUExaGlBSkV4bXZQK3VGK0ZyUXhYQjg1?=
+ =?utf-8?B?WW12ZXlNWTF2cG40MHpWRlBHaHdaM21YanVMQTk2Y3o3RDdZdEFEcTVBMHI4?=
+ =?utf-8?B?eEQ1b25XbmhxRGNSVXUyeHFaM1hjQXpRcEdqRWdtVTF1bThPWWdQSnNFMmQ2?=
+ =?utf-8?B?L0J0K2JIamFUMDk2amZhWWFvemhBS1d6K01DcWRUUnUrR2lGeVcrWWNEeUNV?=
+ =?utf-8?B?SUh3YWZhTlRwMDgyR1J1SzBTVjRtUWJaVnhQM2ovbml2dDdsV3VCYlBXSUZF?=
+ =?utf-8?B?MjJOS0NUVXJ4Q3NIUk5NVzY0UzQxbE5laXByR1A4Wkk1NVY3ZnlXVXRBMmN4?=
+ =?utf-8?B?enJJS1hHWTJPMTlsbm9ydkZDK0xZNUxVTllEQ1VEcXBocG8xZWJlTk5QYUV2?=
+ =?utf-8?B?SCtoajAzNjN5NTFHaVJDQTU2Sm1oN2IrZkN5eTFoa09aMWtjZ3VXYjdtUm9N?=
+ =?utf-8?B?UG52SE1hQlduWTBaZVM3eG14RzNlQm5XNEhEcnN0Q0QzeG9QeGM0dHJnTFM2?=
+ =?utf-8?B?SFE9PQ==?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b4bd9e0b-0044-48cd-1f24-08dab4a36094
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7eef439d-f7a9-400f-aa28-08dab4a5c09b
 X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Oct 2022 03:05:02.0585
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Oct 2022 03:22:02.1470
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: qOAVuw+xh1J3BtNhwa012satT21rnL2eBUPJRm8bJt/3I2YDlESvr+Pn+0DuK50x/RDfTzxQCtdRsghZxTYajbBX0lewdtO8hp/qvviLzmQ=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR10MB4337
+X-MS-Exchange-CrossTenant-UserPrincipalName: /Km62iMzz4lh0HNJWbiLvInom7H03JWUFAmrIzFYWHTu2fwgLd7cSwDT0Gq6HNtFdQjmoAoK4tAhh9HK/Kj1GasuWnBWlmEF34p0HjMQRPw=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR10MB4324
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
  definitions=2022-10-21_04,2022-10-21_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxscore=0 phishscore=0
- mlxlogscore=999 adultscore=0 malwarescore=0 spamscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2209130000
- definitions=main-2210230018
-X-Proofpoint-GUID: CrL2aOsV4ZsXUvLzL-mtoa2858j1TaWh
-X-Proofpoint-ORIG-GUID: CrL2aOsV4ZsXUvLzL-mtoa2858j1TaWh
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0
+ mlxlogscore=999 mlxscore=0 phishscore=0 malwarescore=0 spamscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2209130000 definitions=main-2210230020
+X-Proofpoint-GUID: bMGQgHgWUrDWN1LgXgv2lbaeJMAVY4DM
+X-Proofpoint-ORIG-GUID: bMGQgHgWUrDWN1LgXgv2lbaeJMAVY4DM
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add some kunit tests for scsi_check_passthrough so we can easily make sure
-we are hitting the cases it's difficult to replicate in hardware or even
-scsi_debug.
+On 10/22/22 4:40 AM, Wenchao Hao wrote:
+> 
+> On 2022/10/22 1:24, Mike Christie wrote:
+>> On 10/21/22 6:57 PM, Wenchao Hao wrote:
+>>> +
+>>>  int iscsi_session_chkready(struct iscsi_cls_session *session)
+>>>  {
+>>>  	int err;
+>>> @@ -1899,6 +1922,7 @@ static void __iscsi_unblock_session(struct work_struct *work)
+>>>  	cancel_delayed_work_sync(&session->recovery_work);
+>>>  	spin_lock_irqsave(&session->lock, flags);
+>>>  	session->state = ISCSI_SESSION_LOGGED_IN;
+>>> +	session->target_state = ISCSI_SESSION_TARGET_BOUND;
+>>>  	spin_unlock_irqrestore(&session->lock, flags);
+>>>  	/* start IO */
+>>
+>> Hey,
+>>
+>> Sorry for the late reply.
+>>
+> 
+> It doesn't matter.
+> 
+>> For the initial login we have not scanned the session above, so there
+>> is no target yet. If iscsid is restarted at this time, then iscsid wants
+>> to sync the session and also do the initial scan.
+>>
+>> To handle that case and also better match the state names with the
+>> session's target state we can:
+>>
+>> 1. Move the above line to iscsi_user_scan_session after we have scanned
+>> the target.
+>> 2. Add a new state ISCSI_SESSION_TARGET_ALLOCATED to reflect we have
+>> allocated the target_id, but not yet scanned.
+>> .
+> 
+> I have some wonder about the target_id like be2iscsi which allocated from 
+> iscsi_sess_ida. Should not we get the target_id from iSCSI target?
+> If they allocate target_id with an random value, how to handle the
+> iscsi_user_scan_session which would check the session's target_id.
+> 
 
-Signed-off-by: Mike Christie <michael.christie@oracle.com>
----
- drivers/scsi/Kconfig           |   7 ++
- drivers/scsi/scsi_error.c      |   4 +
- drivers/scsi/scsi_error_test.c | 171 +++++++++++++++++++++++++++++++++
- 3 files changed, 182 insertions(+)
- create mode 100644 drivers/scsi/scsi_error_test.c
+For iscsi, that target id is only a number that's used on the initiator side
+to track the target. The target has no idea what it is and it's never
+sent/used/passed to the target.
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 03e71e3d5e5b..40ddbb691f08 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -67,6 +67,13 @@ config SCSI_PROC_FS
- 
- 	  If unsure say Y.
- 
-+config SCSI_KUNIT_TEST
-+	bool "KUnit tests for SCSI Mid Layer" if !KUNIT_ALL_TESTS
-+	depends on SCSI && KUNIT
-+	default KUNIT_ALL_TESTS
-+	help
-+	  Run SCSI Mid Layer's KUnit tests.
-+
- comment "SCSI support type (disk, tape, CD-ROM)"
- 	depends on SCSI
- 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 19548a1d69c0..87ab763b7b19 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -2616,3 +2616,7 @@ bool scsi_get_sense_info_fld(const u8 *sense_buffer, int sb_len,
- 	}
- }
- EXPORT_SYMBOL(scsi_get_sense_info_fld);
-+
-+#if defined(CONFIG_SCSI_KUNIT_TEST)
-+#include "scsi_error_test.c"
-+#endif
-diff --git a/drivers/scsi/scsi_error_test.c b/drivers/scsi/scsi_error_test.c
-new file mode 100644
-index 000000000000..23a2e7edc5eb
---- /dev/null
-+++ b/drivers/scsi/scsi_error_test.c
-@@ -0,0 +1,171 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * KUnit tests for scsi_error.c.
-+ *
-+ * Copyright (C) 2022, Oracle Corporation
-+ */
-+#include <kunit/test.h>
-+
-+#include <scsi/scsi_proto.h>
-+#include <scsi/scsi_cmnd.h>
-+
-+#define SCSI_TEST_ERROR_MAX_ALLOWED 3
-+
-+static void scsi_test_error_check_passthough(struct kunit *test)
-+{
-+	struct scsi_failure multiple_sense_failures[] = {
-+		{
-+			.sense = DATA_PROTECT,
-+			.asc = 0x1,
-+			.ascq = 0x1,
-+			.allowed = 0,
-+			.result = SAM_STAT_CHECK_CONDITION,
-+		},
-+		{
-+			.sense = UNIT_ATTENTION,
-+			.asc = 0x11,
-+			.ascq = 0x0,
-+			.allowed = SCSI_TEST_ERROR_MAX_ALLOWED,
-+			.result = SAM_STAT_CHECK_CONDITION,
-+		},
-+		{
-+			.sense = NOT_READY,
-+			.asc = 0x11,
-+			.ascq = 0x22,
-+			.allowed = SCSI_TEST_ERROR_MAX_ALLOWED,
-+			.result = SAM_STAT_CHECK_CONDITION,
-+		},
-+		{
-+			.sense = ABORTED_COMMAND,
-+			.asc = 0x11,
-+			.ascq = SCMD_FAILURE_ASCQ_ANY,
-+			.allowed = SCSI_TEST_ERROR_MAX_ALLOWED,
-+			.result = SAM_STAT_CHECK_CONDITION,
-+		},
-+		{
-+			.sense = HARDWARE_ERROR,
-+			.asc = SCMD_FAILURE_ASC_ANY,
-+			.allowed = SCSI_TEST_ERROR_MAX_ALLOWED,
-+			.result = SAM_STAT_CHECK_CONDITION,
-+		},
-+		{
-+			.sense = ILLEGAL_REQUEST,
-+			.asc = 0x91,
-+			.ascq = 0x36,
-+			.allowed = SCSI_TEST_ERROR_MAX_ALLOWED,
-+			.result = SAM_STAT_CHECK_CONDITION,
-+		},
-+		{},
-+	};
-+	struct scsi_failure retryable_host_failures[] = {
-+		{
-+			.result = DID_TRANSPORT_DISRUPTED << 16,
-+			.allowed = SCSI_TEST_ERROR_MAX_ALLOWED,
-+		},
-+		{
-+			.result = DID_TIME_OUT << 16,
-+			.allowed = SCSI_TEST_ERROR_MAX_ALLOWED,
-+		},
-+		{},
-+	};
-+	struct scsi_failure any_status_failures[] = {
-+		{
-+			.result = SCMD_FAILURE_STAT_ANY,
-+			.allowed = SCSI_TEST_ERROR_MAX_ALLOWED,
-+		},
-+		{},
-+	};
-+	struct scsi_failure any_sense_failures[] = {
-+		{
-+			.result = SCMD_FAILURE_SENSE_ANY,
-+			.allowed = SCSI_TEST_ERROR_MAX_ALLOWED,
-+		},
-+		{},
-+	};
-+	struct scsi_failure any_failures[] = {
-+		{
-+			.result = SCMD_FAILURE_RESULT_ANY,
-+			.allowed = SCSI_TEST_ERROR_MAX_ALLOWED,
-+		},
-+		{},
-+	};
-+	u8 sense[SCSI_SENSE_BUFFERSIZE] = {};
-+	struct scsi_cmnd sc = {
-+		.sense_buffer = sense,
-+		.failures = multiple_sense_failures,
-+	};
-+	int i;
-+
-+	/* Match end of array */
-+	scsi_build_sense(&sc, 0, ILLEGAL_REQUEST, 0x91, 0x36);
-+	KUNIT_EXPECT_EQ(test, NEEDS_RETRY, scsi_check_passthrough(&sc));
-+	/* Basic match in array */
-+	scsi_build_sense(&sc, 0, UNIT_ATTENTION, 0x11, 0x0);
-+	KUNIT_EXPECT_EQ(test, NEEDS_RETRY, scsi_check_passthrough(&sc));
-+	/* No matching sense entry */
-+	scsi_build_sense(&sc, 0, MISCOMPARE, 0x11, 0x11);
-+	KUNIT_EXPECT_EQ(test, SCSI_RETURN_NOT_HANDLED,
-+			scsi_check_passthrough(&sc));
-+	/* Match using SCMD_FAILURE_ASCQ_ANY */
-+	scsi_build_sense(&sc, 0, ABORTED_COMMAND, 0x22, 0x22);
-+	KUNIT_EXPECT_EQ(test, SCSI_RETURN_NOT_HANDLED,
-+			scsi_check_passthrough(&sc));
-+	/* Match using SCMD_FAILURE_ASC_ANY */
-+	scsi_build_sense(&sc, 0, HARDWARE_ERROR, 0x11, 0x22);
-+	KUNIT_EXPECT_EQ(test, NEEDS_RETRY, scsi_check_passthrough(&sc));
-+	/* No matching status entry */
-+	sc.result = SAM_STAT_RESERVATION_CONFLICT;
-+	KUNIT_EXPECT_EQ(test, SCSI_RETURN_NOT_HANDLED,
-+			scsi_check_passthrough(&sc));
-+
-+	/* Test hitting allowed limit */
-+	scsi_build_sense(&sc, 0, NOT_READY, 0x11, 0x22);
-+	for (i = 0; i < SCSI_TEST_ERROR_MAX_ALLOWED; i++)
-+		KUNIT_EXPECT_EQ(test, NEEDS_RETRY, scsi_check_passthrough(&sc));
-+	KUNIT_EXPECT_EQ(test, SUCCESS, scsi_check_passthrough(&sc));
-+
-+	/* Match using SCMD_FAILURE_SENSE_ANY */
-+	sc.failures = any_sense_failures;
-+	scsi_build_sense(&sc, 0, MEDIUM_ERROR, 0x11, 0x22);
-+	KUNIT_EXPECT_EQ(test, NEEDS_RETRY, scsi_check_passthrough(&sc));
-+
-+	/* reset retries so we can retest */
-+	for (i = 0; i < ARRAY_SIZE(multiple_sense_failures); i++)
-+		multiple_sense_failures[i].retries = 0;
-+
-+	/* Test no retries allowed */
-+	sc.failures = multiple_sense_failures;
-+	scsi_build_sense(&sc, 0, DATA_PROTECT, 0x1, 0x1);
-+	KUNIT_EXPECT_EQ(test, SUCCESS, scsi_check_passthrough(&sc));
-+
-+	/* No matching host byte entry */
-+	sc.failures = retryable_host_failures;
-+	sc.result = DID_NO_CONNECT << 16;
-+	KUNIT_EXPECT_EQ(test, SCSI_RETURN_NOT_HANDLED,
-+			scsi_check_passthrough(&sc));
-+	/* Matching host byte entry */
-+	sc.result = DID_TIME_OUT << 16;
-+	KUNIT_EXPECT_EQ(test, NEEDS_RETRY, scsi_check_passthrough(&sc));
-+
-+	/* Match SCMD_FAILURE_RESULT_ANY */
-+	sc.failures = any_failures;
-+	sc.result = DID_TRANSPORT_FAILFAST << 16;
-+	KUNIT_EXPECT_EQ(test, NEEDS_RETRY, scsi_check_passthrough(&sc));
-+
-+	/* Test any status handling */
-+	sc.failures = any_status_failures;
-+	sc.result = SAM_STAT_RESERVATION_CONFLICT;
-+	KUNIT_EXPECT_EQ(test, NEEDS_RETRY, scsi_check_passthrough(&sc));
-+}
-+
-+static struct kunit_case scsi_test_error_cases[] = {
-+	KUNIT_CASE(scsi_test_error_check_passthough),
-+	{},
-+};
-+
-+static struct kunit_suite scsi_test_error_suite = {
-+	.name = "scsi_error",
-+	.test_cases = scsi_test_error_cases,
-+};
-+
-+kunit_test_suite(scsi_test_error_suite);
--- 
-2.25.1
-
+For example, the qla4xxx driver uses it to lookup persistent target info it
+has stored on it's flash. The other use is that we need a unique name for
+the target in sysfs and that target id is used as part of that name.
