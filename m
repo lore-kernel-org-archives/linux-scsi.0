@@ -2,83 +2,183 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99158C433FE
-	for <linux-scsi@archiver.kernel.org>; Sun, 23 Oct 2022 01:27:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37F17C04A95
+	for <linux-scsi@archiver.kernel.org>; Sun, 23 Oct 2022 03:04:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229956AbiJWB1g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 22 Oct 2022 21:27:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33206 "EHLO
+        id S229987AbiJWDEf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 22 Oct 2022 23:04:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41988 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229588AbiJWB1f (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Oct 2022 21:27:35 -0400
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7671A1FA;
-        Sat, 22 Oct 2022 18:27:33 -0700 (PDT)
-Received: by mail-pl1-f173.google.com with SMTP id io19so662102plb.8;
-        Sat, 22 Oct 2022 18:27:33 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:subject:from:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=pxn8/fWqKk5uwYUJmeV2YNZEprvktpSj+qw+5kOjvoM=;
-        b=AEOnGHiQSx0ifCur+R8hVbv6EoZmXRzrIOI1YcgnElzDlRe6TbyoNERM531m83nugM
-         DamrJiz3oVmcE4vPgMHp3DiKNQff11gK3SMkmSMdl/fOkBhvQfQxvzArKOk1rsd2XCCz
-         GVoO7PY0sWQSUo2gPRTicjheyL0Ulud3PWM0njsXFu/ZBPoTURt9rs020UqI0Fz+FBqE
-         lnbabjJXXu4zr6teBU/58+sBnAEqdthx/lNxJw2cy8zr4n7cZR/GOYQTkALr7C/cm2ry
-         zSfbYWLAbcxGEbp33zAmA9d/hN7CqD3ThH64EEJYzIM69T0HxI0/uM7CP9LFTxlvlDXY
-         gvsA==
-X-Gm-Message-State: ACrzQf3RPNKTRVJ1AA6zSrLEuVuelWzc/Oz+9plThJ9DPiut49aHuu/Y
-        iKMOt2EJmQy7kwKBDhnqepI=
-X-Google-Smtp-Source: AMsMyM6MSB9NjdfgmovwHqQUK96cfTfpitw7tk0jtz+QWDu6K7xgPFAtY6xG/ZCfPr6Q6f+esTP33g==
-X-Received: by 2002:a17:902:8544:b0:183:baae:cf8d with SMTP id d4-20020a170902854400b00183baaecf8dmr27148429plo.96.1666488451973;
-        Sat, 22 Oct 2022 18:27:31 -0700 (PDT)
-Received: from [192.168.3.219] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id ij19-20020a170902ab5300b0017f7628cbddsm17072020plb.30.2022.10.22.18.27.30
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 22 Oct 2022 18:27:31 -0700 (PDT)
-Message-ID: <85ad4508-b979-c792-e92b-01bc16260dec@acm.org>
-Date:   Sat, 22 Oct 2022 18:27:29 -0700
+        with ESMTP id S229568AbiJWDEb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Oct 2022 23:04:31 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39475D5C
+        for <linux-scsi@vger.kernel.org>; Sat, 22 Oct 2022 20:04:24 -0700 (PDT)
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 29MCsDV1019473;
+        Sun, 23 Oct 2022 03:04:10 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
+ date : message-id : content-transfer-encoding : content-type :
+ mime-version; s=corp-2022-7-12;
+ bh=dSETb7Pis7r0DOIQQKPm98EjN7F3IhJM4wZNw3lTIRE=;
+ b=v6Ntjk7CnHU3wy/Hjx2W/RTBaT2vg8GD5iYXnbPmup4a7yv/ikutKbfyx8pfpgPVHV5z
+ OeErskW4oORSg2VWdFCDHb2CENIpnMv9TGlos8XtkPzU7xHpAMIIA4wF8I4z4GXux3OS
+ WcOWCoR6hAQw71MgbUq1olaNRCMIhDjHakizAMsH6zo8YOMnrtH88bKnTGz5utHJSKdd
+ Yq/AsL5eT2OcVHuFE03JN0ubLX0HZW70H+FvFV8JLZY1bf+mOFQQiVbtUbbW+sgCOP55
+ l5AAJEcugmRXjegbqqiCgVAPxP7spFBasAgTVDzpWjSQMZjq2+2KqzMnM5X0ICovZHHI vw== 
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3kc93918hy-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sun, 23 Oct 2022 03:04:10 +0000
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 29MKJKMd016384;
+        Sun, 23 Oct 2022 03:04:08 GMT
+Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2173.outbound.protection.outlook.com [104.47.59.173])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3kc6y90n7p-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sun, 23 Oct 2022 03:04:08 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=RjIzfZWlzLFeuhrF083z5N/LjtFsn/RZuYAdeg/bQ3LnklJOObezMM0Fcinfe2BMjrQPicG7LmvWzMF7Ch1Ex8WfRQG2YmniOZZv70pV8OzJJmPreWGGQlZ2X3xIqOo1O1NOfIvxDpO9AmM9ObgfxeSya8docO0iP6vjf+IfUktbCC+5UZd5opPMduQmrA6gGUDxBScret7HroOPtH8+c8QPEhk6yThm9WJx2KjMzGQu1jHnMBb6F1dc0tQDAUwhHypCpgblcHIYWdRjf4104XXCTqrMDrLQVUJ3GQpld/PVMZIudrXUGnrTLwNpe2eDMf/XH9wa+rHhyMlUA0xKiA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=dSETb7Pis7r0DOIQQKPm98EjN7F3IhJM4wZNw3lTIRE=;
+ b=oFnvAqFurJvz6wHakY/31qVopq4pELRsrWJCZRqa9gQbFu0jqmQY1z/VVzJtWgrMUhGIaZqADQ4EMhcpRczToPBfVLgjogGzBZs+G9qkOQJTQYdvhlMH3+z7jPdHBmGS//kz82soOdfhneWzXG/zvI7fyogQ7u6XJcpJzftNHpAE7xc4mjH4PJrN/7xlAOCQ3Ufq3FUIFLgrKrNI8fo0BI/yr9G6p66g+jvDXX1JIu/KxZxsDaegEXdzUXhlgQyz/y8jfuLXPWiTRTOKSxTOM+79WSw37rkAziKCKRYwxbg/+sGbYvkUeDl8Gm/G52/cBgBDL7OY2G83eazeXF9rIw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=dSETb7Pis7r0DOIQQKPm98EjN7F3IhJM4wZNw3lTIRE=;
+ b=IuR8sBT8g5YDQyvykBojyJWbb3cN1u2AjgB/t0hMjnRWooUBSAS4GxT9UCFtZ68pjDSmyTp+9DIbYEq7pah57QfEpqPZ2ZKuLjz0S+etFPAdXWrPdZ8hmGEiHVH2rNap9hZBUDY8fFbErRB3wTAxh5YlnD+jtxYZFDsh9CySMbc=
+Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
+ DS7PR10MB5150.namprd10.prod.outlook.com (2603:10b6:5:3a1::21) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.5746.21; Sun, 23 Oct 2022 03:04:07 +0000
+Received: from DM5PR10MB1466.namprd10.prod.outlook.com
+ ([fe80::19f7:e081:85b4:c5df]) by DM5PR10MB1466.namprd10.prod.outlook.com
+ ([fe80::19f7:e081:85b4:c5df%7]) with mapi id 15.20.5746.021; Sun, 23 Oct 2022
+ 03:04:06 +0000
+From:   Mike Christie <michael.christie@oracle.com>
+To:     bvanassche@acm.org, mwilck@suse.com, hch@lst.de,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        james.bottomley@hansenpartnership.com
+Subject: [PATCH v5 00/35] Allow scsi_execute users to control retries
+Date:   Sat, 22 Oct 2022 22:03:28 -0500
+Message-Id: <20221023030403.33845-1-michael.christie@oracle.com>
+X-Mailer: git-send-email 2.25.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: CH0PR03CA0074.namprd03.prod.outlook.com
+ (2603:10b6:610:cc::19) To DM5PR10MB1466.namprd10.prod.outlook.com
+ (2603:10b6:3:b::7)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.3
-From:   Bart Van Assche <bvanassche@acm.org>
-Subject: Re: Report in downstream Debian: mpt3sas broken with xen dom0 with
- update to 5.10.149 in 5.10.y.
-To:     Salvatore Bonaccorso <carnil@debian.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
-        suganath-prabu.subramani@broadcom.com,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        MPT-FusionLinux.pdl@broadcom.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        xen-devel@lists.xenproject.org, adi@kriegisch.at,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-References: <Y1JkuKTjVYrOWbvm@eldamar.lan>
-Content-Language: en-US
-In-Reply-To: <Y1JkuKTjVYrOWbvm@eldamar.lan>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM5PR10MB1466:EE_|DS7PR10MB5150:EE_
+X-MS-Office365-Filtering-Correlation-Id: 5a290def-9f1a-452c-957b-08dab4a33f44
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: H9JEh+dl6m9CqKutluIZbs75CRei1B4FRbAuy55H6tarGR0p+M446OJLAM+58vKgUOghGjABAhwiP8OxJ+2+ZBPGSuJ7B/2iT/DaTpjVoP5CIgo4eJQ2hsDLOK/YU2BzGTfcSRU95uPFM4bEBRgRpDeaY+6RxhTQgdJjo9Qaso2UjMz/8WI9hoG+UB1oQ1Xq4AWPtNsf+PCfJv9lmDKPp1MGUWF0mby3xZ+buAOrdnD2b0nVgTjl6Bke4INEHidUG66L5/asTq5EShnlnTGrEMQrAoYEIA1v/v8iVHeg1DZMy3JWMa7eKVmsvJMWMdmFNZFu2MeUIs9ktzrHz1HYT8yVPapOKcV+6yQKBQ2G9UesT3EphVOVM5Jmms3mOECP2cKLJYfkX/Jm1xN2C12hUkpIRyQWBgBGjwx+lsvZRsd+NwLZXGX4m+QIrRcjFyr9thuf021lFQCHV6aowGdKsFxVjIuPg90HidGlKko+vXKNRQu/hC3P6iWO1isyyWNQmg3HZ1wJbEnJO4yy1wNuKUdMU8jLBasUhw1ybrVS1vqaBMhC7d1ur4xILMro4g+Rf/gd9UcD64gmEVV3L1MLQotFPQMBezMIdYePQbTGet20suiOocJ+Hwn09ecNUySFLV1NgahNqSavGByHg/hzG7/oltPo5v0r10DS9AXaEZUOM/tkHKKW2si/inyBPdhSIWs9hXV0xXCq7YxWD1wfSw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(396003)(39860400002)(346002)(136003)(366004)(376002)(451199015)(478600001)(8676002)(36756003)(186003)(1076003)(66476007)(66556008)(86362001)(66946007)(38100700002)(41300700001)(6486002)(83380400001)(2906002)(6506007)(26005)(2616005)(316002)(6512007)(6666004)(5660300002)(8936002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?p/ceWHQA50ETbqW1cUNQ/QI49gzayUNBPoPW+Fc4DXLOzWG8RMGVSjzJLVNj?=
+ =?us-ascii?Q?EsY656JmilD88AyguT4LNTqpF0cw5aPFw8/ZlBDUhMHWIK1QKXt/f0ZtK13o?=
+ =?us-ascii?Q?cuC/ds1ZRRbTXxgHWmavBBjWRJMOSJYO3u2505HMxtjV5fF3cHA9z9hOyVV1?=
+ =?us-ascii?Q?DDM5lAMXKQtNKW8QUtqulk1CbciRlkaCYItBJG9X57D54TaziZiFGMqGLrb3?=
+ =?us-ascii?Q?1/VaOyo9Hha7w7PKRCcJwMn8s02XJPUz18E/0ZZ/Stf3Q2Dzf/dppEpAXBA+?=
+ =?us-ascii?Q?v9/VSuRP7ixsB+/u75onzQTd3ttIcdKHBdUTOuNV9/oaNg/2wspynhMdgZ8S?=
+ =?us-ascii?Q?uJ9luFbO6nRaqI5hbWDCsfSzJdEsbGk8M/70Tpvvj6qmMGOiXpGZFJKwdgmj?=
+ =?us-ascii?Q?tCLoRTClLueAmV9hqVQdhrDGjzb2gITPKnow24Z5v6Z4JSo13PDiAELBJXYg?=
+ =?us-ascii?Q?DkSzJFPsx3Xum2ZWdx2nhc9U/Yq4ntfAKheCJ7Yrwu8yN00lxWMpl/aXsrK5?=
+ =?us-ascii?Q?4N3ndis0ngEk66zUEPx1YZI9R3Kpc6eaAQRgfGuOOKvaeHQWasDeBhaO15/9?=
+ =?us-ascii?Q?/FVM80HJEDVk5izDPOtDQ8+GuN/+aoZszptzkGtw1E2IO3G6sqptPXCxo6yO?=
+ =?us-ascii?Q?h4pZscb85n5xVeiD4ufgzLwH/2moHIRIG+fNh3e4cjVnp/mBBSl/mFyjs9H+?=
+ =?us-ascii?Q?wi1pFBCZJRkTUKIioRT+vk9MJDgfog3CCiIWTIQJBa1RFMBIA0XS4p8Un6T8?=
+ =?us-ascii?Q?QO/7gi4jSKWY86ZQVuprXWdajPDZOpGe45ZMEqgdfDoFR4ThgPk4dNvu9hWr?=
+ =?us-ascii?Q?+1JrE1B/opF7j2RWpaVSeY340TeGfREfKmDayN1uvmYRrVHSiVMNdrOEbuVW?=
+ =?us-ascii?Q?emBVe1CDacqUXBIS/z8l4g467/wSn/DBYnVc9h6o/3pJgi8Tf6rCg3iRf36w?=
+ =?us-ascii?Q?0NzE6rNyzq50y+9KYGlsbstRxWCIB9wamt9XVXK92RQp+3M9jIjqz6h5pFL6?=
+ =?us-ascii?Q?AUDBmHNxG8A4+t7A+ENpwQgDld6ySmO6KsE1YrKJ8PSxm2VM1Fpm6zkfOQNY?=
+ =?us-ascii?Q?WbOtXjScO5mdu3l2PEHC4gegmShcARXCC5GNPnmw3D8+0WeudnB7ubZD5wj9?=
+ =?us-ascii?Q?goDqfIbEScr/JeGW9txgRFTZW/TsNueC4ELdJFEoNIEUHphzSq71xxjxkmrD?=
+ =?us-ascii?Q?GZLISEQxZz3/JxlNQZHPpxIkgh3z0YfBjP3Y/6jaBPeX/OePj5O332L8w34T?=
+ =?us-ascii?Q?ZnksKnKa4EZoKxxVdlbvD4se0S1m6L7jn+IMFLNCfYPpY9bnZKPWpWJfxJN+?=
+ =?us-ascii?Q?lB5/OKxBFGSc4rBOFMTWBSRWuOY/1ZGO5rlzc840O+Fx1psgB/0ezZPi6LTJ?=
+ =?us-ascii?Q?BDjQDuYJk0qxYRGtB0zvtPCQP5EVxm6QeWpeLGFIj1Oonk2cU6+ZUwS1/Njw?=
+ =?us-ascii?Q?OQxwi07g/KK5jlEcLSugIYR6/pFyG1In1mwZBaTJLV4BE9NdlOXG5PGMoKUY?=
+ =?us-ascii?Q?vwHWUZJuUXFG2QJ5eo9oDg872NCAntH/c4tMi4gMtV63BuB6c8r5ZIyFBACn?=
+ =?us-ascii?Q?EE/QXnTm5bCE5rWTYPky5za2fyMPa5UJ49ZkVih5tekAdbWWMB4Zerjf/qQw?=
+ =?us-ascii?Q?dA=3D=3D?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5a290def-9f1a-452c-957b-08dab4a33f44
+X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Oct 2022 03:04:06.5161
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: YQDjmGEdAdiFFOGCSTypHWojU2RDvFin9+NY88YXOvSbr2BPAlypXMBejMVK0JGjlc3llQCcbUUr+MTuH+n++BYHcm1MbWHpxoz7tO9FDR8=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR10MB5150
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
+ definitions=2022-10-21_04,2022-10-21_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 phishscore=0
+ spamscore=0 suspectscore=0 bulkscore=0 malwarescore=0 mlxscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2209130000 definitions=main-2210230018
+X-Proofpoint-GUID: vW_a4RB89GRGFQRd0_W7HKCHxF4ZbePZ
+X-Proofpoint-ORIG-GUID: vW_a4RB89GRGFQRd0_W7HKCHxF4ZbePZ
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/21/22 02:22, Salvatore Bonaccorso wrote:
-> We got the following report in Debian after an update from 5.10.140 to
-> the current 5.10.149. Full quoting below (from
-> https://bugs.debian.org/1022126). Does this ring some bell about known
-> regressions?
+The following patches, made over Linus's tree but also apply over Martin's
+6.2 branches, allow scsi_execute* users to control exactly which errors are
+retried, so we can reduce the sense/sshd handling they have to do.
 
-Only three mpt3sas changes are new in v5.10.149 compared to v5.10.140:
-$ git log --format=oneline v5.10.140..v5.10.149
-2b9aba0c5d58e141e32bb1bb4c7cd91d19f075b8 scsi: mpt3sas: Fix return value check of dma_get_required_mask()
-e7fafef9830c4a01e60f76e3860a9bef0262378d scsi: mpt3sas: Force PCIe scatterlist allocations to be within same 4 GB region
-ea10a652ad2ae2cf3eced6f632a5c98f26727057 scsi: mpt3sas: Fix use-after-free warning
+The patches allow scsi_execute* users to pass in an array of failures
+which they want retried and also specify how many times they want them
+retried. If we hit an error that the user did not specify then we drop
+down to the default behavior. This allows us to remove almost all the
+retry logic from scsi_execute* users. We currently cannot handle the cases
+where the callers check some state/sleep between retries.
 
-Sreekanth and Suganath, can you help with bisecting this issue? For the
-full report, see also https://lore.kernel.org/linux-scsi/Y1JkuKTjVYrOWbvm@eldamar.lan/.
+v5:
+- Fix spelling (made sure I ran checkpatch strict)
+- Drop SCMD_FAILURE_NONE
+- Rename SCMD_FAILURE_ANY
+- Fix media_not_present handling where it was being retried instead of
+failed.
+- Fix ILLEGAL_REQUEST handling in read_capacity_16 so it was not retried.
+- Fix coding style, spelling and and naming convention in kunit and added
+  more tests to handle cases like the media_not_present one where we want
+  to force failures instead of retries.
+- Drop cxlflash patch because it actually checked it's internal state before
+  performing a retry which we currently do not support.
 
-Thanks,
+v4:
+- Redefine cmd definitions if the cmd is touched.
+- Fix up coding style issues.
+- Use sam_status enum.
+- Move failures initialization to scsi_initialize_rq
+(also fixes KASAN error).
+- Add kunit test.
+- Add function comments.
 
-Bart.
+v3:
+- Use a for loop in scsi_check_passthrough
+- Fix result handling/testing.
+- Fix scsi_status_is_good handling.
+- make __scsi_exec_req take a const arg
+- Fix formatting in patch 24
+
+v2:
+- Rename scsi_prep_sense
+- Change scsi_check_passthrough's loop and added some fixes
+- Modified scsi_execute* so it uses a struct to pass in args
+ 
+
+
