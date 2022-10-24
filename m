@@ -2,99 +2,92 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92C74FA373F
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Oct 2022 19:02:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C945DFA3741
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Oct 2022 19:23:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231931AbiJXTCI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Oct 2022 15:02:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42820 "EHLO
+        id S232396AbiJXTXC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Oct 2022 15:23:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44574 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232516AbiJXTBm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Oct 2022 15:01:42 -0400
-Received: from mail-qk1-x732.google.com (mail-qk1-x732.google.com [IPv6:2607:f8b0:4864:20::732])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3595617F983
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Oct 2022 10:40:57 -0700 (PDT)
-Received: by mail-qk1-x732.google.com with SMTP id j21so6504503qkk.9
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Oct 2022 10:40:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=bmSknnfuOqNQfFnjTEwN/bDPIo8aNvNZAU8b8CJN9+A=;
-        b=KFIga3WkA0Bj1wWE8yos9W2X9CKd8tduuz5cmAhP2ca3jwpEFcmY3yBfDQBSalwbN9
-         gDGneRtvWcPtTGSxS4dBYpz02wRuTjV0TQ48+mC/E3h+eyEAqCZKipYbYoSqCtrwY+Jf
-         dOfbMoST9okqQSF5oPzKJ4DEdyKhfN4MRDB0+g1CYtFdEaoGxU05jwhgJZrQ6gvuzJCd
-         CxRCl+TXqH7pAVcYj7EuKF56sPhfz9g25H59n1xMzq/xwc9KLoeybNBSvFMFOo9AARJG
-         wDMh+stLJGOww8GudjWb2bUCjk/zuwNFuy4HONOqBsVjT5r/1fGyEd1i3heKh36oA7Oi
-         ZJ0w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=bmSknnfuOqNQfFnjTEwN/bDPIo8aNvNZAU8b8CJN9+A=;
-        b=40wWTPb+fDUGhm6tFVOWpnoUZpdBsGcREnMxPgYyeTqf3pQQAQb50sCNFi+46zD8m7
-         jRwHeM5ZofKb2UP3xJbU36YnAIZiIg9J0KSdT46CSFlO+JeTwdXbCYRANV2OPyaXq6tI
-         8/MLK5AK6foAIPhROj+KFppmezwiVPL2CapDnMTnFs3D8k9YC5Rhgm7cZle2IIBEHWJQ
-         Yx3ryjHFAbxJUt+Q0Ts0e4Z0nziPOt+1vnpGp5wcIR5iNo3j7aP/p7QEwN131rSKvqMw
-         3ImJrKESrkRwvPi8Q9AwocScG0aWRSE1H6gg9H0nL8HUD384tLBTdEYd6y3o31lbLqEp
-         DvcQ==
-X-Gm-Message-State: ACrzQf3OAK5owNbcY0Id3AD9sZLFjLVsE5UpQQngDg94ekU+8VzaIf/+
-        d3tpPj9SC6Rw1bYumpS4YTTfYYs3vzB/9A==
-X-Google-Smtp-Source: AMsMyM7lE6smdgk6Dj87yC/LLXctQnAZvj1+Cslnw0zlOjxBuSTi1Sq9+LSOPFtV0XI4qFYt21YA5g==
-X-Received: by 2002:a05:620a:4445:b0:6ee:a916:866 with SMTP id w5-20020a05620a444500b006eea9160866mr23613663qkp.240.1666632747279;
-        Mon, 24 Oct 2022 10:32:27 -0700 (PDT)
-Received: from ziepe.ca (hlfxns017vw-47-55-122-23.dhcp-dynamic.fibreop.ns.bellaliant.net. [47.55.122.23])
-        by smtp.gmail.com with ESMTPSA id b14-20020ac8540e000000b00399ad646794sm277124qtq.41.2022.10.24.10.32.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 24 Oct 2022 10:32:26 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.95)
-        (envelope-from <jgg@ziepe.ca>)
-        id 1on1JJ-00DiDr-W1;
-        Mon, 24 Oct 2022 14:32:25 -0300
-Date:   Mon, 24 Oct 2022 14:32:25 -0300
-From:   Jason Gunthorpe <jgg@ziepe.ca>
-To:     Bodo Stroesser <bostroesser@gmail.com>
-Cc:     Douglas Gilbert <dgilbert@interlog.com>,
-        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        jejb@linux.vnet.ibm.com, hare@suse.de, bvanassche@acm.org
-Subject: Re: [PATCH 1/5] sgl_alloc_order: remove 4 GiB limit
-Message-ID: <Y1bMKU5nq5DXYdbw@ziepe.ca>
-References: <20221024010244.9522-1-dgilbert@interlog.com>
- <20221024010244.9522-2-dgilbert@interlog.com>
- <Y1aDQznakNaWD8kd@ziepe.ca>
- <665f8dee-6688-60d1-5097-49f9726c38ec@gmail.com>
+        with ESMTP id S232118AbiJXTVv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Oct 2022 15:21:51 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B411D1F632;
+        Mon, 24 Oct 2022 10:57:14 -0700 (PDT)
+Received: from fraeml743-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Mx0cp01G6z6HJTD;
+        Tue, 25 Oct 2022 00:18:50 +0800 (CST)
+Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
+ fraeml743-chm.china.huawei.com (10.206.15.224) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Mon, 24 Oct 2022 18:20:08 +0200
+Received: from [10.48.145.243] (10.48.145.243) by
+ lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Mon, 24 Oct 2022 17:20:08 +0100
+Message-ID: <7345fb7f-f713-2fdf-5fce-8a0549ff3b7e@huawei.com>
+Date:   Mon, 24 Oct 2022 17:20:06 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <665f8dee-6688-60d1-5097-49f9726c38ec@gmail.com>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH v5 0/7] libsas and drivers: NCQ error handling
+To:     Niklas Cassel <Niklas.Cassel@wdc.com>
+CC:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "jinpu.wang@cloud.ionos.com" <jinpu.wang@cloud.ionos.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>,
+        yangxingui <yangxingui@huawei.com>,
+        yanaijie <yanaijie@huawei.com>
+References: <27148ec5-d1ae-d9a2-1b00-a4c34d2da198@huawei.com>
+ <Yz33FGwd3YvQUAqT@x1-carbon>
+ <5db6a7bc-dfeb-76e1-6899-7041daa934cf@opensource.wdc.com>
+ <Yz4BLTPkXqyjW4a4@x1-carbon>
+ <64ab35a7-f1ff-92ee-890e-89a5aee935a4@opensource.wdc.com>
+ <f190f19e-34b2-611c-1cf4-f8f34d12fe74@huawei.com>
+ <Yz7qD+gpmI1bdw16@x1-carbon>
+ <bc7d74dc-5aaa-1ad3-626f-df89955b1380@huawei.com>
+ <Y1aEGW2BtdIRJy7s@x1-carbon>
+ <dc61408d-8fc7-ca29-d284-0c92c2e1828c@huawei.com>
+ <Y1aOrlmp3IDMDLS1@x1-carbon>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <Y1aOrlmp3IDMDLS1@x1-carbon>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.48.145.243]
+X-ClientProxiedBy: lhrpeml500002.china.huawei.com (7.191.160.78) To
+ lhrpeml500003.china.huawei.com (7.191.162.67)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Oct 24, 2022 at 04:32:30PM +0200, Bodo Stroesser wrote:
-> > +struct scatterlist *sgl_alloc_order(size_t length, unsigned int order,
-> > +				    bool chainable, gfp_t gfp, size_t *nent_p)
-> >   {
-> >   	struct scatterlist *sgl, *sg;
-> >   	struct page *page;
-> > -	unsigned int nent, nalloc;
-> > +	size_t nent, nalloc;
-> >   	u32 elem_len;
-> > -	nent = round_up(length, PAGE_SIZE << order) >> (PAGE_SHIFT + order);
-> > -	/* Check for integer overflow */
-> > -	if (length > (nent << (PAGE_SHIFT + order)))
-> > -		return NULL;
-> > +	nent = length >> (PAGE_SHIFT + order);
-> > +	if (length % (1 << (PAGE_SHIFT + order)))
+On 24/10/2022 14:10, Niklas Cassel wrote:
+> At least on the HoneyComb LX2,
+> running with "arm-smmu.disable_bypass=0 iommu.passthrough=1" gives a working
+> system (and working pm80xx).
 > 
-> This might end up doing a modulo operation for divisor 0, if caller
-> specifies a too high order parameter, right?
+> The ACPI IOMMU code that parses the ACPI IORT RMR revision E.d node
+> was first included in kernel v6.0:
+> https://lore.kernel.org/linux-iommu/20220615101044.1972-1-shameerali.kolothum.thodi@huawei.com/
+> 
+> However, the HoneyComb edk2-platforms code has not yet been updated to add
+> a ACPI IORT RMR revision E.d node.
+> 
+> Considering that it works with "arm-smmu.disable_bypass=0 iommu.passthrough=1",
+> I assume that the ACPI IORT RMR node basically just defines a number of
+> memory regions which the IOMMU should treat as "bypass", while all other
+> memory has to be re-mapped via the IOMMU as per usual.
 
-If that happens then the first >> will be busted too and this is all
-broken..
+Hi Niklas,
 
-We assume the caller will pass a valid order paramter it seems, it is
-not userspace controlled.
+As I expected, unfortunately that did not help. Note that I actually 
+can't use passthrough on my platform due to SMMUv3 implementation bug, 
+so I just disable SMMUv3 entirely via kernel config.
 
-Jason
+I'm still betting on a memory ordering issue for me.
+
+Thanks again,
+John
