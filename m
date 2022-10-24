@@ -2,144 +2,115 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88694C67871
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Oct 2022 21:25:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FFADFA373F
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Oct 2022 22:09:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234208AbiJXVZY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Oct 2022 17:25:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41026 "EHLO
+        id S231858AbiJXWJO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Oct 2022 18:09:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60866 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234278AbiJXVZH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Oct 2022 17:25:07 -0400
-X-Greylist: delayed 5379 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 24 Oct 2022 12:31:32 PDT
-Received: from sternum.kriegisch.at (orion.kriegisch.at [83.215.238.18])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 27E342D9E7C;
-        Mon, 24 Oct 2022 12:31:28 -0700 (PDT)
-Received: from stargate.ley23.wien.funkfeuer.at ([78.41.113.217] helo=kriegisch.at)
-        by sternum.kriegisch.at with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.94.2)
-        (envelope-from <adi@kriegisch.at>)
-        id 1omyu0-0002ld-2B; Mon, 24 Oct 2022 16:58:08 +0200
-Date:   Mon, 24 Oct 2022 16:58:05 +0200
-From:   Adi Kriegisch <adi@kriegisch.at>
-To:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Salvatore Bonaccorso <carnil@debian.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        sathya.prakash@broadcom.com, suganath-prabu.subramani@broadcom.com,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
-        adi@kriegisch.at
-Subject: Re: Report in downstream Debian: mpt3sas broken with xen dom0 with
- update to 5.10.149 in 5.10.y.
-Message-ID: <20221024145805.GF23159@kriegisch.at>
-References: <Y1JkuKTjVYrOWbvm@eldamar.lan>
- <85ad4508-b979-c792-e92b-01bc16260dec@acm.org>
- <CAK=zhgr=MYn=-mrz3gKUFoXG_+EQ796bHEWSdK88o1Aqamby7g@mail.gmail.com>
+        with ESMTP id S232158AbiJXWI7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Oct 2022 18:08:59 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A13F62FF684;
+        Mon, 24 Oct 2022 13:22:51 -0700 (PDT)
+Received: from fraeml736-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MwvrX1QKbz6HJRR;
+        Mon, 24 Oct 2022 20:43:40 +0800 (CST)
+Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
+ fraeml736-chm.china.huawei.com (10.206.15.217) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Mon, 24 Oct 2022 14:44:58 +0200
+Received: from [10.48.145.243] (10.48.145.243) by
+ lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Mon, 24 Oct 2022 13:44:58 +0100
+Message-ID: <dc61408d-8fc7-ca29-d284-0c92c2e1828c@huawei.com>
+Date:   Mon, 24 Oct 2022 13:44:56 +0100
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="8GpibOaaTibBMecb"
-Content-Disposition: inline
-In-Reply-To: <CAK=zhgr=MYn=-mrz3gKUFoXG_+EQ796bHEWSdK88o1Aqamby7g@mail.gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH v5 0/7] libsas and drivers: NCQ error handling
+To:     Niklas Cassel <Niklas.Cassel@wdc.com>
+CC:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "jinpu.wang@cloud.ionos.com" <jinpu.wang@cloud.ionos.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>,
+        yangxingui <yangxingui@huawei.com>,
+        yanaijie <yanaijie@huawei.com>
+References: <YzwvpUUftX6Ziurt@x1-carbon>
+ <cfa52b91-db81-a179-76c2-8a61266c099d@huawei.com>
+ <27148ec5-d1ae-d9a2-1b00-a4c34d2da198@huawei.com>
+ <Yz33FGwd3YvQUAqT@x1-carbon>
+ <5db6a7bc-dfeb-76e1-6899-7041daa934cf@opensource.wdc.com>
+ <Yz4BLTPkXqyjW4a4@x1-carbon>
+ <64ab35a7-f1ff-92ee-890e-89a5aee935a4@opensource.wdc.com>
+ <f190f19e-34b2-611c-1cf4-f8f34d12fe74@huawei.com>
+ <Yz7qD+gpmI1bdw16@x1-carbon>
+ <bc7d74dc-5aaa-1ad3-626f-df89955b1380@huawei.com>
+ <Y1aEGW2BtdIRJy7s@x1-carbon>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <Y1aEGW2BtdIRJy7s@x1-carbon>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.48.145.243]
+X-ClientProxiedBy: lhrpeml500005.china.huawei.com (7.191.163.240) To
+ lhrpeml500003.china.huawei.com (7.191.162.67)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Hi Niklas,
 
---8GpibOaaTibBMecb
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> 
+> For the record, I tested the pm80xx driver on a HoneyComb LX2 board
+> (an arm64 board using ACPI).
+> 
+> I tried v6.1-rc1 both with and without your series in $subject.
+> 
+> I couldn't see any issues.
 
-Hi,
+ok, thanks for the effort.
 
+> 
+> 
+> What I tried:
+> -Running fio:
+> fio --name=test --filename=/dev/sdc --ioengine=io_uring --rw=randrw --direct=1 --iodepth=32 --bs=1M
+> on three different HDDs simultaneously for 15+ minutes,
+> without any errors in fio or dmesg.
+> 
+> -Creating and mounting a btrfs volume, doing a huge dd to the filesystem
+> without issues.
+> 
+> -sg_sat_read_gplog -d --log=0x10 /dev/sda
+> which successfully returned the log.
+> 
+> 
+> It is worth mentioning that this arm64 board has reserved memory regions,
+> but does not yet have a firmware that supplies a IORT RMR (reserved memory
+> regions) revision E.d node, which means that in order to get this board to
+> boot successfully, we need to supply:
+> "arm-smmu.disable_bypass=0 iommu.passthrough=1"
+> on the kernel command line.
 
-On Mon, Oct 24, 2022 at 05:26:44PM +0530, Sreekanth Reddy wrote:
-> On Sun, Oct 23, 2022 at 6:57 AM Bart Van Assche <bvanassche@acm.org> wrot=
-e:
-> >
-> > On 10/21/22 02:22, Salvatore Bonaccorso wrote:
-> > > We got the following report in Debian after an update from 5.10.140 to
-> > > the current 5.10.149. Full quoting below (from
-> > > https://bugs.debian.org/1022126). Does this ring some bell about known
-> > > regressions?
-> >
-> > Only three mpt3sas changes are new in v5.10.149 compared to v5.10.140:
-> > $ git log --format=3Doneline v5.10.140..v5.10.149
-> > 2b9aba0c5d58e141e32bb1bb4c7cd91d19f075b8 scsi: mpt3sas: Fix return valu=
-e check of dma_get_required_mask()
-> > e7fafef9830c4a01e60f76e3860a9bef0262378d scsi: mpt3sas: Force PCIe scat=
-terlist allocations to be within same 4 GB region
-> > ea10a652ad2ae2cf3eced6f632a5c98f26727057 scsi: mpt3sas: Fix use-after-f=
-ree warning
-> >
-> > Sreekanth and Suganath, can you help with bisecting this issue? For the
-> > full report, see also https://lore.kernel.org/linux-scsi/Y1JkuKTjVYrOWb=
-vm@eldamar.lan/.
->=20
-> This issue is getting observed after having the below patch changes,
-> 2b9aba0c5d58e141e32bb1bb4c7cd91d19f075b8 scsi: mpt3sas: Fix return
-> value check of dma_get_required_mask()
-reverting this patch fixed the issue for us.
-=20
-> What is happening is that on Xen hypervisor, this
-> dma_get_required_mask() API always returns a 32 bit DMA mask. I.e. It
-> says that the minimum DMA mask required to access the host memory is
-> 32 bit and hence mpt3sas driver is setting the DMA mask to 32bit. So,
-> on a 64 bit machine, if the driver set's the DMA mask to 32 bit then
-> SWIOTLB's bounce buffer comes into picture during IOs. Since these
-> bounce buffers are limited in size and hence we observe the IO hang if
-> the large IOs are issued.
-I am not sure about what is going on here but while reverting the above
-patch, I added a printk right above the if:
-  | printk("dma_get_required_mask =3D%lld\n",dma_get_required_mask(&pdev->d=
-ev));
-which always (as in booting dom0 with 2GB, 4GB, 16GB and booting bare metal
-with 256GB) returns 4294967295 (DMA_BIT_MASK(32)).
+hmmm... that's interesting. I can try again with the IOMMU turned off, 
+but, as I recall, it did not make a difference before. I think that 
+requiring reserved memory regions would totally bust the driver (if not 
+present) with IOMMU enabled. As I recall, sas 3008 card would not work 
+without RMR for us.
 
-> I am not sure whether this API's return value is correct or not in the
-> Xen environment. If it is correct then I have to modify the driver to
-> not use this API and directly set the DMA mask to 64 bit if the system
-> is a 64bit machine.
-Obviously, our server always reports a 32bit mask which works just fine in
-the bare metal case but does not in the xen dom0 case. Is there anything I
-can do to help tracking the issue down?
+It's also interesting that this LX2 board has A72 cores. For my system, 
+we have newer custom arm v8 cores with quite weak memory ordering 
+implementation. With that same system, I have detected a couple of other 
+driver memory ordering bugs which we did not see on our A72-based platforms.
 
-thanks and all the best,
-    Adi
-=20
-> Thanks,
-> Sreekanth
->=20
->=20
->=20
-> >
-> > Thanks,
-> >
-> > Bart.
+I always suspected that this issue was a memory ordering issue, but 
+since the hang so reliably occurs I ruled it out. Maybe it is...
 
-
-
---8GpibOaaTibBMecb
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEENxTTbbOruRNI5poKdER8DqmFXL8FAmNWp/UACgkQdER8DqmF
-XL8X7g/+IOpyoxnAR8DTvE8i6qUMGJWtskT+9h3q1NddPIpQapOKF/zSDg0W5uYf
-pi00CcwXueCfZXPhgp+AjLFdPI5FRYlH6Nq8kMCoaDJ2Q8KVmogUgu7q5SQqLhAc
-M0GBTLiwhdyAKXDuo0EqSGzycGzvf8QWL3gtTQnOrxSI/ChOoQGV4IMVpGi/r6Nr
-yLL/58H6E5bODj+hDBbFx5dLoiXJAOoCJZsVv9p3Y76RDbIok+HU9u6dbhg/eXrS
-2uGd7nciFlSOVSwmUoOtUaaqhCh78QmL3ZxAK0fCJ1/4yBsllMOP22ATD+Xnz5zl
-B5RSCNpT5n4i4eJfQWQzBz7uaSS+IHquryboncg1Fa4URORPg+SjZuPiJarZbq6+
-b9g3e7d7FjKcMTuUrxv0fjPyBV8IlGHZ8DSuykmwZ7p5RQ97tkuhjAH/3GBsb3Lz
-DY7vhpUwvTM5D/G3S7tQoBfL+EjlwC5XmH55olbrA2h3Ete+0SUTeqmUjw676Ak4
-NHmwzmDXmVR+YQeFNEnWNtzBzUQEYJHi1TslzWmWPDiQ+mX4LlsFy3KhUET1482O
-0HHdbtycrMZQJWW9yGuocWCavQOAoOJMfxf8WNRER1H+YJGdbh850wR7/rRUFPWz
-rX9Whv1jnnr8R5ztyiVCNUmSvLyVFwRT26K6VRxjaqg04p8Stys=
-=AvSb
------END PGP SIGNATURE-----
-
---8GpibOaaTibBMecb--
+thanks,
+John
