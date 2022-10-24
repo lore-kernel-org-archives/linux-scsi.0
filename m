@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6833C433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Oct 2022 03:25:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09B63FA373D
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Oct 2022 03:25:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230418AbiJXDZx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 23 Oct 2022 23:25:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58604 "EHLO
+        id S230462AbiJXDZ4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 23 Oct 2022 23:25:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58694 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230096AbiJXDXB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Oct 2022 23:23:01 -0400
+        with ESMTP id S230129AbiJXDXC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Oct 2022 23:23:02 -0400
 Received: from smtp.infotech.no (smtp.infotech.no [82.134.31.41])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A6CED5E655
-        for <linux-scsi@vger.kernel.org>; Sun, 23 Oct 2022 20:21:47 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 869186EF22
+        for <linux-scsi@vger.kernel.org>; Sun, 23 Oct 2022 20:21:48 -0700 (PDT)
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 0535F2041BB;
-        Mon, 24 Oct 2022 05:21:46 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTP id C75482041BD;
+        Mon, 24 Oct 2022 05:21:47 +0200 (CEST)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id KOMqKY60JUea; Mon, 24 Oct 2022 05:21:45 +0200 (CEST)
+        with ESMTP id t-r1z-NZMvEK; Mon, 24 Oct 2022 05:21:47 +0200 (CEST)
 Received: from treten.bingwo.ca (unknown [10.16.20.11])
-        by smtp.infotech.no (Postfix) with ESMTPA id BE3282041AF;
-        Mon, 24 Oct 2022 05:21:44 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTPA id 417662041AF;
+        Mon, 24 Oct 2022 05:21:46 +0200 (CEST)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
         bvanassche@acm.org
-Subject: [PATCH v25 30/44] sg: add sg_iosubmit_v3 and sg_ioreceive_v3 ioctls
-Date:   Sun, 23 Oct 2022 23:20:44 -0400
-Message-Id: <20221024032058.14077-31-dgilbert@interlog.com>
+Subject: [PATCH v25 31/44] sg: move procfs objects to avoid forward decls
+Date:   Sun, 23 Oct 2022 23:20:45 -0400
+Message-Id: <20221024032058.14077-32-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.37.3
 In-Reply-To: <20221024032058.14077-1-dgilbert@interlog.com>
 References: <20221024032058.14077-1-dgilbert@interlog.com>
@@ -40,154 +40,167 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add ioctl(SG_IOSUBMIT_V3) and ioctl(SG_IORECEIVE_V3). These ioctls
-are meant to be (almost) drop-in replacements for the write()/read()
-async version 3 interface. They only accept the version 3 interface.
-
-See the webpage at: https://sg.danny.cz/sg/sg_v40.html
-specifically the table in the section titled: "13 SG interface
-support changes".
-
-If sgv3 is a struct sg_io_hdr object, suitably configured, then
-    res = write(sg_fd, &sgv3, sizeof(sgv3));
-and
-    res = ioctl(sg_fd, SG_IOSUBMIT_V3, &sgv3);
-are equivalent. Dito for read() and ioctl(SG_IORECEIVE_V3).
+Move the procfs related file_operations and seq_operations
+definitions toward the end of the source file to minimize the
+need for forward declarations of the functions they name.
 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/sg.c      | 75 ++++++++++++++++++++++++++++++++++++++++++
- include/uapi/scsi/sg.h |  6 ++++
- 2 files changed, 81 insertions(+)
+ drivers/scsi/sg.c | 133 +++++++++++++++++++++-------------------------
+ 1 file changed, 60 insertions(+), 73 deletions(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index f680ccb9f9df..cda03d2bc674 100644
+index cda03d2bc674..735ea5d11b33 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -834,6 +834,24 @@ sg_ctl_iosubmit(struct file *filp, struct sg_fd *sfp, void __user *p)
- 	return -EPERM;
- }
+@@ -3630,79 +3630,6 @@ sg_rq_st_str(enum sg_rq_state rq_st, bool long_str)
+ #endif
  
-+static int
-+sg_ctl_iosubmit_v3(struct file *filp, struct sg_fd *sfp, void __user *p)
-+{
-+	int res;
-+	u8 hdr_store[SZ_SG_IO_V4];      /* max(v3interface, v4interface) */
-+	struct sg_io_hdr *h3p = (struct sg_io_hdr *)hdr_store;
-+	struct sg_device *sdp = sfp->parentdp;
-+
-+	res = sg_allow_if_err_recovery(sdp, (filp->f_flags & O_NONBLOCK));
-+	if (unlikely(res))
-+		return res;
-+	if (copy_from_user(h3p, p, SZ_SG_IO_HDR))
-+		return -EFAULT;
-+	if (h3p->interface_id == 'S')
-+		return sg_v3_submit(filp, sfp, h3p, false, NULL);
-+	return -EPERM;
-+}
-+
- #if IS_ENABLED(CONFIG_SG_LOG_ACTIVE)
- static void
- sg_rq_state_fail_msg(struct sg_fd *sfp, enum sg_rq_state exp_old_st,
-@@ -1153,6 +1171,7 @@ sg_receive_v3(struct sg_fd *sfp, struct sg_request *srp, size_t count,
- 	hp->sb_len_wr = srp->sense_len;
- 	hp->info = srp->rq_info;
- 	hp->resid = srp->in_resid;
-+	hp->pack_id = srp->pack_id;
- 	hp->duration = srp->duration;
- 	hp->status = rq_result & 0xff;
- 	hp->masked_status = status_byte(rq_result);
-@@ -1269,6 +1288,56 @@ sg_ctl_ioreceive(struct file *filp, struct sg_fd *sfp, void __user *p)
- 	return sg_receive_v4(sfp, srp, p, h4p);
- }
+ #if IS_ENABLED(CONFIG_SCSI_PROC_FS)     /* long, almost to end of file */
+-static int sg_proc_seq_show_int(struct seq_file *s, void *v);
+-
+-static int sg_proc_single_open_adio(struct inode *inode, struct file *filp);
+-static ssize_t sg_proc_write_adio(struct file *filp, const char __user *buffer,
+-			          size_t count, loff_t *off);
+-static const struct proc_ops adio_proc_ops = {
+-	.proc_open	= sg_proc_single_open_adio,
+-	.proc_read	= seq_read,
+-	.proc_lseek	= seq_lseek,
+-	.proc_write	= sg_proc_write_adio,
+-	.proc_release	= single_release,
+-};
+-
+-static int sg_proc_single_open_dressz(struct inode *inode, struct file *filp);
+-static ssize_t sg_proc_write_dressz(struct file *filp, 
+-		const char __user *buffer, size_t count, loff_t *off);
+-static const struct proc_ops dressz_proc_ops = {
+-	.proc_open	= sg_proc_single_open_dressz,
+-	.proc_read	= seq_read,
+-	.proc_lseek	= seq_lseek,
+-	.proc_write	= sg_proc_write_dressz,
+-	.proc_release	= single_release,
+-};
+-
+-static int sg_proc_seq_show_version(struct seq_file *s, void *v);
+-static int sg_proc_seq_show_devhdr(struct seq_file *s, void *v);
+-static int sg_proc_seq_show_dev(struct seq_file *s, void *v);
+-static void * dev_seq_start(struct seq_file *s, loff_t *pos);
+-static void * dev_seq_next(struct seq_file *s, void *v, loff_t *pos);
+-static void dev_seq_stop(struct seq_file *s, void *v);
+-static const struct seq_operations dev_seq_ops = {
+-	.start = dev_seq_start,
+-	.next  = dev_seq_next,
+-	.stop  = dev_seq_stop,
+-	.show  = sg_proc_seq_show_dev,
+-};
+-
+-static int sg_proc_seq_show_devstrs(struct seq_file *s, void *v);
+-static const struct seq_operations devstrs_seq_ops = {
+-	.start = dev_seq_start,
+-	.next  = dev_seq_next,
+-	.stop  = dev_seq_stop,
+-	.show  = sg_proc_seq_show_devstrs,
+-};
+-
+-static int sg_proc_seq_show_debug(struct seq_file *s, void *v);
+-static const struct seq_operations debug_seq_ops = {
+-	.start = dev_seq_start,
+-	.next  = dev_seq_next,
+-	.stop  = dev_seq_stop,
+-	.show  = sg_proc_seq_show_debug,
+-};
+-
+-static int
+-sg_proc_init(void)
+-{
+-#if IS_ENABLED(CONFIG_SCSI_PROC_FS)
+-	struct proc_dir_entry *p;
+-
+-	p = proc_mkdir("scsi/sg", NULL);
+-	if (!p)
+-		return 1;
+-
+-	proc_create("allow_dio", 0644, p, &adio_proc_ops);
+-	proc_create_seq("debug", 0444, p, &debug_seq_ops);
+-	proc_create("def_reserved_size", 0644, p, &dressz_proc_ops);
+-	proc_create_single("device_hdr", 0444, p, sg_proc_seq_show_devhdr);
+-	proc_create_seq("devices", 0444, p, &dev_seq_ops);
+-	proc_create_seq("device_strs", 0444, p, &devstrs_seq_ops);
+-	proc_create_single("version", 0444, p, sg_proc_seq_show_version);
+-#endif
+-	return 0;
+-}
  
-+/*
-+ * Called when ioctl(SG_IORECEIVE_V3) received. Expects a v3 interface.
-+ * Checks if O_NONBLOCK file flag given, if not checks given flags field
-+ * to see if SGV4_FLAG_IMMED is set. Either of these implies non blocking.
-+ * When non-blocking and there is no request waiting, yields EAGAIN;
-+ * otherwise it waits.
-+ */
-+static int
-+sg_ctl_ioreceive_v3(struct file *filp, struct sg_fd *sfp, void __user *p)
-+{
-+	bool busy;
-+	bool non_block = !!(filp->f_flags & O_NONBLOCK);
-+	int res;
-+	int pack_id = SG_PACK_ID_WILDCARD;
-+	u8 v3_holder[SZ_SG_IO_HDR];
-+	struct sg_io_hdr *h3p = (struct sg_io_hdr *)v3_holder;
-+	struct sg_device *sdp = sfp->parentdp;
-+	struct sg_request *srp;
-+
-+	res = sg_allow_if_err_recovery(sdp, non_block);
-+	if (unlikely(res))
-+		return res;
-+	/* Get first three 32 bit integers: guard, proto+subproto */
-+	if (copy_from_user(h3p, p, SZ_SG_IO_HDR))
-+		return -EFAULT;
-+	/* for v3: interface_id=='S' (in a 32 bit int) */
-+	if (h3p->interface_id != 'S')
-+		return -EPERM;
-+	if (h3p->flags & SGV4_FLAG_IMMED)
-+		non_block = true;	/* set by either this or O_NONBLOCK */
-+	SG_LOG(3, sfp, "%s: non_block(+IMMED)=%d\n", __func__, non_block);
-+
-+	if (test_bit(SG_FFD_FORCE_PACKID, sfp->ffd_bm))
-+		pack_id = h3p->pack_id;
-+
-+	srp = sg_find_srp_by_id(sfp, pack_id, &busy);
-+	while (!srp) {	/* nothing available so wait on packet or */
-+		if (unlikely(!busy && SG_IS_DETACHING(sdp)))
-+			return -ENODEV;
-+		if (non_block)
-+			return -EAGAIN;
-+		res = wait_event_interruptible
-+				(sfp->read_wait,
-+				 sg_get_ready_srp(sfp, &srp, pack_id, &busy));
-+		if (unlikely(res))
-+			return res;	/* signal --> -ERESTARTSYS */
-+	}
-+	return sg_receive_v3(sfp, srp, SZ_SG_IO_HDR, p);
-+}
-+
  static int
- sg_read_v1v2(void __user *buf, int count, struct sg_fd *sfp,
- 	     struct sg_request *srp)
-@@ -1809,9 +1878,15 @@ sg_ioctl_common(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
- 	case SG_IOSUBMIT:
- 		SG_LOG(3, sfp, "%s:    SG_IOSUBMIT\n", __func__);
- 		return sg_ctl_iosubmit(filp, sfp, p);
-+	case SG_IOSUBMIT_V3:
-+		SG_LOG(3, sfp, "%s:    SG_IOSUBMIT_V3\n", __func__);
-+		return sg_ctl_iosubmit_v3(filp, sfp, p);
- 	case SG_IORECEIVE:
- 		SG_LOG(3, sfp, "%s:    SG_IORECEIVE\n", __func__);
- 		return sg_ctl_ioreceive(filp, sfp, p);
-+	case SG_IORECEIVE_V3:
-+		SG_LOG(3, sfp, "%s:    SG_IORECEIVE_V3\n", __func__);
-+		return sg_ctl_ioreceive_v3(filp, sfp, p);
- 	case SG_GET_SCSI_ID:
- 		return sg_ctl_scsi_id(sdev, sfp, p);
- 	case SG_SET_FORCE_PACK_ID:
-diff --git a/include/uapi/scsi/sg.h b/include/uapi/scsi/sg.h
-index 1425b41b2d83..9060c40957f9 100644
---- a/include/uapi/scsi/sg.h
-+++ b/include/uapi/scsi/sg.h
-@@ -390,6 +390,12 @@ struct sg_header {
- /* Gives some v4 identifying info to driver, receives associated response */
- #define SG_IORECEIVE _IOWR(SG_IOCTL_MAGIC_NUM, 0x42, struct sg_io_v4)
+ sg_last_dev(void)
+@@ -4073,6 +4000,66 @@ sg_proc_seq_show_debug(struct seq_file *s, void *v)
+ 	return 0;
+ }
  
-+/* Submits a v3 interface object to driver */
-+#define SG_IOSUBMIT_V3 _IOWR(SG_IOCTL_MAGIC_NUM, 0x45, struct sg_io_hdr)
++static const struct proc_ops adio_proc_ops = {
++	.proc_open      = sg_proc_single_open_adio,
++	.proc_read      = seq_read,
++	.proc_lseek     = seq_lseek,
++	.proc_write     = sg_proc_write_adio,
++	.proc_release   = single_release,
++};
 +
-+/* Gives some v3 identifying info to driver, receives associated response */
-+#define SG_IORECEIVE_V3 _IOWR(SG_IOCTL_MAGIC_NUM, 0x46, struct sg_io_hdr)
++static const struct proc_ops dressz_proc_ops = {
++	.proc_open      = sg_proc_single_open_dressz,
++	.proc_read      = seq_read,
++	.proc_lseek     = seq_lseek,
++	.proc_write     = sg_proc_write_dressz,
++	.proc_release   = single_release,
++};
 +
- /* command queuing is always on when the v3 or v4 interface is used */
- #define SG_DEF_COMMAND_Q 0
++static const struct seq_operations dev_seq_ops = {
++	.start = dev_seq_start,
++	.next  = dev_seq_next,
++	.stop  = dev_seq_stop,
++	.show  = sg_proc_seq_show_dev,
++};
++
++static const struct seq_operations devstrs_seq_ops = {
++	.start = dev_seq_start,
++	.next  = dev_seq_next,
++	.stop  = dev_seq_stop,
++	.show  = sg_proc_seq_show_devstrs,
++};
++
++static const struct seq_operations debug_seq_ops = {
++	.start = dev_seq_start,
++	.next  = dev_seq_next,
++	.stop  = dev_seq_stop,
++	.show  = sg_proc_seq_show_debug,
++};
++
++static int
++sg_proc_init(void)
++{
++#if IS_ENABLED(CONFIG_SCSI_PROC_FS)
++	struct proc_dir_entry *p;
++
++	p = proc_mkdir("scsi/sg", NULL);
++	if (!p)
++		return 1;
++
++	proc_create("allow_dio", 0644, p, &adio_proc_ops);
++	proc_create_seq("debug", 0444, p, &debug_seq_ops);
++	proc_create("def_reserved_size", 0644, p, &dressz_proc_ops);
++	proc_create_single("device_hdr", 0444, p, sg_proc_seq_show_devhdr);
++	proc_create_seq("devices", 0444, p, &dev_seq_ops);
++	proc_create_seq("device_strs", 0444, p, &devstrs_seq_ops);
++	proc_create_single("version", 0444, p, sg_proc_seq_show_version);
++#endif
++	return 0;
++}
++
++/* remove_proc_subtree("scsi/sg", NULL) in exit_sg() does cleanup */
++
+ #endif				/* CONFIG_SCSI_PROC_FS (~400 lines back) */
  
+ module_init(init_sg);
 -- 
 2.37.3
 
