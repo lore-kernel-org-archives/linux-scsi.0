@@ -2,135 +2,74 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1316FA3741
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Oct 2022 13:31:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CFF4ECAAA1
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Oct 2022 14:41:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230337AbiJXNbP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Oct 2022 09:31:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55592 "EHLO
+        id S236342AbiJXOlN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Oct 2022 10:41:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45840 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233717AbiJXN1t (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Oct 2022 09:27:49 -0400
-Received: from mail-pg1-x534.google.com (mail-pg1-x534.google.com [IPv6:2607:f8b0:4864:20::534])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A62CA9263
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Oct 2022 05:31:38 -0700 (PDT)
-Received: by mail-pg1-x534.google.com with SMTP id q71so8545048pgq.8
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Oct 2022 05:31:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=u0tDptCglh3aCeJHm8NhQH6aRaJBh3iGlRSTZIkHGmM=;
-        b=DmtqFLxOmGWQMbYObhUv1Tvb/wkADSmrfdEgtgqpqcDpmE83P5ubITAqIBxsgQYuhV
-         eGb62gBg0FQcxRgKiaxQ+BYIiY7FHO5Tiu6plzSvgMLCbqB81tILEKh2AS4cSTCZXM/4
-         GdzP/Ze1HfY2AERTmvYQYBS5m5ZkDi9qa9JJ+ZD/ZUnTaH97gViCxd+j1/Rmy3pHq+ux
-         XbkFTvpi7KYXz/M590IbmLmsUiK/Y//a6MSHw5p8IqdK32s1HYaYVqcNw3yRH6vpnCWm
-         JadeqQ1L05eQRxUQ4d/BKKxxkNhoqzlY6n6W2goNmJH3w/lG2K0aHg0IkVuAicsowRYt
-         1Smg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=u0tDptCglh3aCeJHm8NhQH6aRaJBh3iGlRSTZIkHGmM=;
-        b=YjEbUSf69FK1c3v19/0oxBzdP2P7UrTdxVdrh4iRWXjdF3kFXEDZzMNgY1DKwJJ/j3
-         BjHkQ2xqIWLWnQKgwmI1CIXyPJd2smC1wI1xFZwBLjJY7Y7ft6e3iIJn3PO91a5yXZgu
-         iVrjV0TIhFZDidPJfWlDk5beyZXrPCysCKl8miPo0X3/E5ih7W427z1f22vGBH1W8ETC
-         +tq/N+7gLhOAchOEHuyoBaDT+QOk3g3aDCmVb4BykNrgPxlYrT7RXa5FMQTSpPWYsTa6
-         BJekih47qLTZC9Rxf9+X1K3H0tUMFLXKETl9xgocmLPBu/g2QxSITJbPYA+GjYAN02E1
-         zRqQ==
-X-Gm-Message-State: ACrzQf1xCa+K6UA8bVQDqQ66EWsFt5/C3abndcvO+EjE96Cu+C8h2Xol
-        d6gOKl9kYAGEp8DU6krQxR/VVYtZbJZkxw==
-X-Google-Smtp-Source: AMsMyM5h2t5DUR0hPXTeGR1mtm1ZDy0a3mJtPv20GtvoCzxX+YTElKDhYcgycqbYp/gfDSf2Z04wuA==
-X-Received: by 2002:a0c:9c85:0:b0:4b1:a7b6:5485 with SMTP id i5-20020a0c9c85000000b004b1a7b65485mr27438028qvf.56.1666614084863;
-        Mon, 24 Oct 2022 05:21:24 -0700 (PDT)
-Received: from ziepe.ca (hlfxns017vw-47-55-122-23.dhcp-dynamic.fibreop.ns.bellaliant.net. [47.55.122.23])
-        by smtp.gmail.com with ESMTPSA id z21-20020ac84555000000b00398df095cf5sm12613654qtn.34.2022.10.24.05.21.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 24 Oct 2022 05:21:24 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.95)
-        (envelope-from <jgg@ziepe.ca>)
-        id 1omwSJ-00DRet-HK;
-        Mon, 24 Oct 2022 09:21:23 -0300
-Date:   Mon, 24 Oct 2022 09:21:23 -0300
-From:   Jason Gunthorpe <jgg@ziepe.ca>
-To:     Douglas Gilbert <dgilbert@interlog.com>
-Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        jejb@linux.vnet.ibm.com, hare@suse.de, bvanassche@acm.org,
-        Bodo Stroesser <bostroesser@gmail.com>
-Subject: Re: [PATCH 1/5] sgl_alloc_order: remove 4 GiB limit
-Message-ID: <Y1aDQznakNaWD8kd@ziepe.ca>
-References: <20221024010244.9522-1-dgilbert@interlog.com>
- <20221024010244.9522-2-dgilbert@interlog.com>
+        with ESMTP id S232916AbiJXOkr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Oct 2022 10:40:47 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60BCE3DBFD;
+        Mon, 24 Oct 2022 06:17:32 -0700 (PDT)
+Received: from dggpemm500022.china.huawei.com (unknown [172.30.72.54])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Mwvzz6c3mzHtcr;
+        Mon, 24 Oct 2022 20:50:07 +0800 (CST)
+Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
+ dggpemm500022.china.huawei.com (7.185.36.162) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Mon, 24 Oct 2022 20:50:19 +0800
+Received: from [10.174.178.220] (10.174.178.220) by
+ dggpemm500017.china.huawei.com (7.185.36.178) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Mon, 24 Oct 2022 20:50:18 +0800
+Message-ID: <f4e4c09b-9426-eede-a83c-8c55f6dc7d2d@huawei.com>
+Date:   Mon, 24 Oct 2022 20:50:17 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20221024010244.9522-2-dgilbert@interlog.com>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [PATCH v4] scsi:iscsi: Fix multiple iscsi session unbind event
+ sent to userspace
+Content-Language: en-US
+To:     Mike Christie <michael.christie@oracle.com>,
+        Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC:     Steffen Maier <maier@linux.ibm.com>, <liuzhiqiang26@huawei.com>,
+        <linfeilong@huawei.com>
+References: <20221021235754.1968981-1-haowenchao@huawei.com>
+ <daa60cf0-0dde-ea2d-211a-70a9e0efc1b8@oracle.com>
+ <2adeb439-646b-ebb1-b266-c3ed4750eac2@huawei.com>
+ <64689ca9-62eb-27e1-63df-e2e8c1a59cbb@oracle.com>
+From:   Wenchao Hao <haowenchao@huawei.com>
+In-Reply-To: <64689ca9-62eb-27e1-63df-e2e8c1a59cbb@oracle.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.178.220]
+X-ClientProxiedBy: dggpeml500026.china.huawei.com (7.185.36.106) To
+ dggpemm500017.china.huawei.com (7.185.36.178)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, Oct 23, 2022 at 09:02:40PM -0400, Douglas Gilbert wrote:
-> This patch fixes a check done by sgl_alloc_order() before it starts
-> any allocations. The comment in the original said: "Check for integer
-> overflow" but the right hand side of the expression in the condition
-> is resolved as u32 so it can not exceed UINT32_MAX (4 GiB) which
-> means 'length' can not exceed that value.
+
+On 2022/10/23 11:21, Mike Christie wrote:
+>> I have some wonder about the target_id like be2iscsi which allocated from 
+>> iscsi_sess_ida. Should not we get the target_id from iSCSI target?
+>> If they allocate target_id with an random value, how to handle the
+>> iscsi_user_scan_session which would check the session's target_id.
+>>
+> For iscsi, that target id is only a number that's used on the initiator side
+> to track the target. The target has no idea what it is and it's never
+> sent/used/passed to the target.
 > 
-> This function may be used to replace vmalloc(unsigned long) for a
-> large allocation (e.g. a ramdisk). vmalloc has no limit at 4 GiB so
-> it seems unreasonable that sgl_alloc_order() whose length type is
-> unsigned long long should be limited to 4 GB.
-> 
-> Solutions to this issue were discussed by Jason Gunthorpe
-> <jgg@ziepe.ca> and Bodo Stroesser <bostroesser@gmail.com>. This
-> version is base on a linux-scsi post by Jason titled: "Re:
-> [PATCH v7 1/4] sgl_alloc_order: remove 4 GiB limit" dated 20220201.
+> For example, the qla4xxx driver uses it to lookup persistent target info it
+> has stored on it's flash. The other use is that we need a unique name for
+> the target in sysfs and that target id is used as part of that name.
+> .
 
-You should link to lore here..
-
-I think I prefer we just fix this so it doesn't have a problem in the
-first place - nothing needs the weird unsigned long long argument type:
-
-diff --git a/lib/scatterlist.c b/lib/scatterlist.c
-index c8c3d675845c37..c39e19fa174bca 100644
---- a/lib/scatterlist.c
-+++ b/lib/scatterlist.c
-@@ -595,19 +595,17 @@ EXPORT_SYMBOL(sg_alloc_table_from_pages_segment);
-  *
-  * Returns: A pointer to an initialized scatterlist or %NULL upon failure.
-  */
--struct scatterlist *sgl_alloc_order(unsigned long long length,
--				    unsigned int order, bool chainable,
--				    gfp_t gfp, unsigned int *nent_p)
-+struct scatterlist *sgl_alloc_order(size_t length, unsigned int order,
-+				    bool chainable, gfp_t gfp, size_t *nent_p)
- {
- 	struct scatterlist *sgl, *sg;
- 	struct page *page;
--	unsigned int nent, nalloc;
-+	size_t nent, nalloc;
- 	u32 elem_len;
- 
--	nent = round_up(length, PAGE_SIZE << order) >> (PAGE_SHIFT + order);
--	/* Check for integer overflow */
--	if (length > (nent << (PAGE_SHIFT + order)))
--		return NULL;
-+	nent = length >> (PAGE_SHIFT + order);
-+	if (length % (1 << (PAGE_SHIFT + order)))
-+		nent++;
- 	nalloc = nent;
- 	if (chainable) {
- 		/* Check for integer overflow */
-@@ -649,8 +647,7 @@ EXPORT_SYMBOL(sgl_alloc_order);
-  *
-  * Returns: A pointer to an initialized scatterlist or %NULL upon failure.
-  */
--struct scatterlist *sgl_alloc(unsigned long long length, gfp_t gfp,
--			      unsigned int *nent_p)
-+struct scatterlist *sgl_alloc(size_t length, gfp_t gfp, size_t *nent_p)
- {
- 	return sgl_alloc_order(length, 0, false, gfp, nent_p);
- }
-
-Jason
+Thanks for your answer, I would update this patch and open-iscsi's PR.
