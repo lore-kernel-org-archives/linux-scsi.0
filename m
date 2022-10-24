@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9FF6C3A59D
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Oct 2022 03:26:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8CFDC433FE
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Oct 2022 03:26:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230370AbiJXD0Q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 23 Oct 2022 23:26:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59146 "EHLO
+        id S230430AbiJXD0X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 23 Oct 2022 23:26:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59256 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230415AbiJXDYL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Oct 2022 23:24:11 -0400
+        with ESMTP id S230436AbiJXDYS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Oct 2022 23:24:18 -0400
 Received: from smtp.infotech.no (smtp.infotech.no [82.134.31.41])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E07316F268
-        for <linux-scsi@vger.kernel.org>; Sun, 23 Oct 2022 20:22:04 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9A9F67963B
+        for <linux-scsi@vger.kernel.org>; Sun, 23 Oct 2022 20:22:06 -0700 (PDT)
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 58C0A2041BB;
-        Mon, 24 Oct 2022 05:22:04 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTP id 0E47C2041BD;
+        Mon, 24 Oct 2022 05:22:06 +0200 (CEST)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id ntK0bEu3Xghc; Mon, 24 Oct 2022 05:22:04 +0200 (CEST)
+        with ESMTP id EVAOLcW3-VQf; Mon, 24 Oct 2022 05:22:05 +0200 (CEST)
 Received: from treten.bingwo.ca (unknown [10.16.20.11])
-        by smtp.infotech.no (Postfix) with ESMTPA id C264F2041AF;
-        Mon, 24 Oct 2022 05:22:02 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTPA id 844B32041AF;
+        Mon, 24 Oct 2022 05:22:04 +0200 (CEST)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
-        bvanassche@acm.org, Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH v25 42/44] sg: add statistics similar to st
-Date:   Sun, 23 Oct 2022 23:20:56 -0400
-Message-Id: <20221024032058.14077-43-dgilbert@interlog.com>
+        bvanassche@acm.org, Tony Battersby <tonyb@cybernetics.com>
+Subject: [PATCH v25 43/44] sg: rework command completion when removed device
+Date:   Sun, 23 Oct 2022 23:20:57 -0400
+Message-Id: <20221024032058.14077-44-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.37.3
 In-Reply-To: <20221024032058.14077-1-dgilbert@interlog.com>
 References: <20221024032058.14077-1-dgilbert@interlog.com>
@@ -40,432 +40,456 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Using the existing statistics gathering framework from the st
-driver, collect statistics for access via sysfs. The sysstat
-package already has a utility called tapestat for presenting
-st statistics. Its author is keen to use the existing
-tapestat code for showing sg statistics (rather than write a
-new utility).
+On advice from Tony Battersby, the author of mainline patch:
+3455607fd7be10b449f5135c00dc306b85dc0d21
+rework the logic introduced in that patch. Previously when there
+were no requests in SG_RS_AWAIT_RCV state, and IS_DETACHING() is
+true, and there was at least one request in SG_RS_INFLIGHT state
+then the passed output parameter *busy was set to true. Replace
+*busy with ERR_PTR(-ENODEV), which is returned only when
+SG_IS_DETACHING() and there are no SG_RS_AWAIT_RCV requests to
+return or SG_RS_INFLIGHT requests to wait for.
 
-In keeping with the sg driver being SCSI command agnostic, the
-"read" statistics are compiled for requests that have "data-in"
-user data while write statistics are compiled for requests that
-have "data-out" user data.
+To summarize, if IS_DETACHING() is true:
+  - don't accept any new requests on that device
+  - process all requests already in SG_RS_AWAIT_RCV state
+  - if there are any requests in SG_RS_INFLIGHT state spin
+    until they transition to SG_RS_AWAIT_RCV state or time out
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Damien Le Moal <damien.lemoal@wdc.com>
+Reported-by: Tony Battersby <tonyb@cybernetics.com>
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/sg.c | 260 ++++++++++++++++++++++++++++++++++++++++------
- 1 file changed, 228 insertions(+), 32 deletions(-)
+ drivers/scsi/sg.c | 180 +++++++++++++++++++++++++---------------------
+ 1 file changed, 97 insertions(+), 83 deletions(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 496e7a89bf8e..4bf2363d1b17 100644
+index 4bf2363d1b17..9b362583b610 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -217,7 +217,7 @@ struct sg_request {	/* active SCSI command or inactive request */
- 	int sense_len;		/* actual sense buffer length (data-in) */
- 	atomic_t rq_st;		/* request state, holds a enum sg_rq_state */
- 	u8 cmd_opcode;		/* first byte of SCSI cdb */
--	u64 start_ns;		/* starting point of command duration calc */
-+	ktime_t start_dur;	/* start time if before completion */
- 	unsigned long frq_bm[1];	/* see SG_FRQ_* defines above */
- 	u8 *sense_bp;		/* mempool alloc-ed sense buffer, as needed */
- 	struct sg_fd *parentfp;	/* pointer to owning fd, even when on fl */
-@@ -260,9 +260,11 @@ struct sg_device { /* holds the state of each scsi generic device */
- 	u32 index;		/* device index number */
- 	atomic_t open_cnt;	/* count of opens (perhaps < num(sfds) ) */
- 	unsigned long fdev_bm[1];	/* see SG_FDEV_* defines above */
-+	spinlock_t stats_lock;
- 	char name[DISK_NAME_LEN];
- 	struct cdev *cdev;
- 	struct block_device *dummy_bdev;	/* hack for REQ_POLLED */
-+	struct sg_dev_stats *statsp;
- 	struct xarray sfp_arr;
- 	struct kref d_ref;
- };
-@@ -280,6 +282,19 @@ struct sg_comm_wr_t {  /* arguments to sg_common_write() */
- 	const u8 __user *u_cmdp;
- };
- 
-+struct sg_dev_stats {	/* copied from drivers/scsi/st.h scsi_tape_stats */
-+	u64 read_byte_cnt;	/* data-in bytes */
-+	u64 write_byte_cnt;	/* data-out bytes */
-+	u64 read_cnt;		/* Count of data-in requests */
-+	u64 write_cnt;		/* Count of data-out requests */
-+	u64 other_cnt;		/* Count of non-data requests */
-+	u64 resid_cnt;		/* Count of cmds with resid_len > 0 */
-+	u64 tot_read_time;	/* time spent completing data-in requests */
-+	u64 tot_write_time;	/* time spent completing data-out requests */
-+	u64 tot_ndata_time;	/* time spent completing non-data requests */
-+	atomic_t in_flight;	/* Number of I/Os in flight */
-+};
-+
- /* tasklet or soft irq callback */
- static enum rq_end_io_ret sg_rq_end_io(struct request *rq, blk_status_t status);
- /* Declarations of other static functions used before they are defined */
-@@ -312,6 +327,8 @@ static struct sg_request *sg_mk_srp_sgat(struct sg_fd *sfp, bool first,
- static int sg_sfp_bio_poll(struct sg_fd *sfp, int loop_count);
- static int sg_srp_q_bio_poll(struct sg_request *srp, struct request_queue *q,
- 			     int loop_count);
-+static u32 sg_get_dur(struct sg_request *srp, const enum sg_rq_state *sr_stp,
-+		      bool *is_durp);
- #if IS_ENABLED(CONFIG_SCSI_LOGGING) && IS_ENABLED(CONFIG_SG_DEBUG)
- static const char *sg_rq_st_str(enum sg_rq_state rq_st, bool long_str);
- #endif
-@@ -1017,11 +1034,17 @@ sg_execute_cmd(struct sg_fd *sfp, struct sg_request *srp)
+@@ -315,8 +315,7 @@ static int sg_read_append(struct sg_request *srp, void __user *outp,
+ static void sg_remove_sgat(struct sg_request *srp);
+ static struct sg_fd *sg_add_sfp(struct sg_device *sdp);
+ static void sg_remove_sfp(struct kref *);
+-static struct sg_request *sg_find_srp_by_id(struct sg_fd *sfp, int id,
+-					    bool *busy);
++static struct sg_request *sg_find_srp_by_id(struct sg_fd *sfp, int id);
+ static struct sg_request *sg_setup_req(struct sg_comm_wr_t *cwrp,
+ 				       int dxfr_len);
+ static void sg_deact_request(struct sg_fd *sfp, struct sg_request *srp);
+@@ -457,11 +456,11 @@ sg_wait_open_event(struct sg_device *sdp, bool o_excl)
+  * Returns 0 for ok (i.e. allow), -EPROTO if sdp is NULL, otherwise -ENXIO .
+  */
+ static inline int
+-sg_allow_if_err_recovery(struct sg_device *sdp, bool non_block)
++sg_allow_if_err_recovery(struct sg_device *sdp, bool non_block, bool ioreceive)
  {
- 	bool at_head, is_v4h, sync;
- 	struct request *rqq = READ_ONCE(srp->rqq);
-+	struct sg_device *sdp = sfp->parentdp;
+ 	if (!sdp)
+ 		return -EPROTO;
+-	if (SG_IS_DETACHING(sdp))
++	if (SG_IS_DETACHING(sdp) && !ioreceive)
+ 		return -ENODEV;
+ 	if (non_block)
+ 		return 0;
+@@ -504,7 +503,7 @@ sg_open(struct inode *inode, struct file *filp)
+ 	res = scsi_autopm_get_device(sdp->device);
+ 	if (res)
+ 		goto sdp_put;
+-	res = sg_allow_if_err_recovery(sdp, non_block);
++	res = sg_allow_if_err_recovery(sdp, non_block, false);
+ 	if (res)
+ 		goto error_out;
  
- 	is_v4h = test_bit(SG_FRQ_IS_V4I, srp->frq_bm);
- 	sync = test_bit(SG_FRQ_SYNC_INVOC, srp->frq_bm);
- 	SG_LOG(3, sfp, "%s: is_v4h=%d\n", __func__, (int)is_v4h);
--	srp->start_ns = ktime_get_boottime_ns();
-+	if (sdp->statsp) {
-+		atomic_inc(&sdp->statsp->in_flight);
-+		WRITE_ONCE(srp->start_dur, ktime_get_boottime());
-+	} else {
-+		WRITE_ONCE(srp->start_dur, 0);
-+	}
- 	srp->duration = 0;
+@@ -625,7 +624,7 @@ sg_write(struct file *filp, const char __user *p, size_t count, loff_t *ppos)
+ 	sfp = filp->private_data;
+ 	sdp = sfp->parentdp;
+ 	SG_LOG(3, sfp, "%s: write(3rd arg) count=%d\n", __func__, (int)count);
+-	res = sg_allow_if_err_recovery(sdp, !!(filp->f_flags & O_NONBLOCK));
++	res = sg_allow_if_err_recovery(sdp, !!(filp->f_flags & O_NONBLOCK), false);
+ 	if (res)
+ 		return res;
+ 	if (count < SZ_SG_HEADER || count > SG_WRITE_COUNT_LIMIT)
+@@ -870,7 +869,7 @@ sg_ctl_iosubmit(struct file *filp, struct sg_fd *sfp, void __user *p)
+ 	struct sg_io_v4 *h4p = (struct sg_io_v4 *)hdr_store;
+ 	struct sg_device *sdp = sfp->parentdp;
  
- 	if (!is_v4h && srp->s_hdr3.interface_id == '\0')
-@@ -1195,11 +1218,47 @@ sg_copy_sense(struct sg_request *srp, bool v4_active)
- 	return sb_len_ret;
- }
+-	res = sg_allow_if_err_recovery(sdp, (filp->f_flags & O_NONBLOCK));
++	res = sg_allow_if_err_recovery(sdp, (filp->f_flags & O_NONBLOCK), false);
+ 	if (res)
+ 		return res;
+ 	if (copy_from_user(hdr_store, p, SZ_SG_IO_V4))
+@@ -888,7 +887,7 @@ sg_ctl_iosubmit_v3(struct file *filp, struct sg_fd *sfp, void __user *p)
+ 	struct sg_io_hdr *h3p = (struct sg_io_hdr *)hdr_store;
+ 	struct sg_device *sdp = sfp->parentdp;
  
-+static void
-+sg_do_stats(struct sg_fd *sfp, struct sg_request *srp, bool v4_active)
-+{
-+	int dir = v4_active ? srp->s_hdr4.dir : srp->s_hdr3.dxfer_direction;
-+	ktime_t kt = READ_ONCE(srp->start_dur);
-+	u64 ns = (kt > 0) ? ktime_to_ns(kt) : 0;
-+	struct sg_device *sdp = sfp->parentdp;
-+	struct sg_dev_stats *statsp = sdp->statsp;
-+
-+	if (!statsp)
-+		return;
-+	spin_lock(&sdp->stats_lock);
-+	if (dir == SG_DXFER_TO_DEV) {		/* data-out, write-like */
-+		statsp->tot_write_time += ns;
-+		++statsp->write_cnt;
-+		statsp->write_byte_cnt += srp->sgat_h.dlen;
-+	} else if (dir == SG_DXFER_FROM_DEV) {	/* data-in, read-like */
-+		statsp->tot_read_time += ns;
-+		++statsp->read_cnt;
-+		statsp->read_byte_cnt += srp->sgat_h.dlen;
-+		if (srp->in_resid > 0)
-+			++statsp->resid_cnt;
-+	} else {	/* no data transfer (e.g. TEST UNIT READY) */
-+		statsp->tot_ndata_time += ns;
-+		++statsp->other_cnt;
-+	}
-+	atomic_dec(&statsp->in_flight);
-+	spin_unlock(&sdp->stats_lock);
-+}
-+
+-	res = sg_allow_if_err_recovery(sdp, (filp->f_flags & O_NONBLOCK));
++	res = sg_allow_if_err_recovery(sdp, (filp->f_flags & O_NONBLOCK), false);
+ 	if (unlikely(res))
+ 		return res;
+ 	if (copy_from_user(h3p, p, SZ_SG_IO_HDR))
+@@ -1167,10 +1166,9 @@ sg_common_write(struct sg_comm_wr_t *cwrp)
+  * returns true (or an event like a signal (e.g. control-C) occurs).
+  */
+ static inline bool
+-sg_get_ready_srp(struct sg_fd *sfp, struct sg_request **srpp, int pack_id,
+-		 bool *busy)
++sg_get_ready_srp(struct sg_fd *sfp, struct sg_request **srpp, int pack_id)
+ {
+-	struct sg_request *srp = sg_find_srp_by_id(sfp, pack_id, busy);
++	struct sg_request *srp = sg_find_srp_by_id(sfp, pack_id);
+ 
+ 	*srpp = srp;
+ 	return !!srp;
+@@ -1367,7 +1365,6 @@ static int
+ sg_ctl_ioreceive(struct file *filp, struct sg_fd *sfp, void __user *p)
+ {
+ 	bool non_block = !!(filp->f_flags & O_NONBLOCK);
+-	bool busy;
+ 	int res, id;
+ 	int pack_id = SG_PACK_ID_WILDCARD;
+ 	u8 v4_holder[SZ_SG_IO_V4];
+@@ -1375,7 +1372,7 @@ sg_ctl_ioreceive(struct file *filp, struct sg_fd *sfp, void __user *p)
+ 	struct sg_device *sdp = sfp->parentdp;
+ 	struct sg_request *srp;
+ 
+-	res = sg_allow_if_err_recovery(sdp, non_block);
++	res = sg_allow_if_err_recovery(sdp, non_block, true);
+ 	if (res)
+ 		return res;
+ 	/* Get first three 32 bit integers: guard, proto+subproto */
+@@ -1390,19 +1387,19 @@ sg_ctl_ioreceive(struct file *filp, struct sg_fd *sfp, void __user *p)
+ 	/* read in part of v3 or v4 header for pack_id or tag based find */
+ 	id = pack_id;
+ try_again:
+-	srp = sg_find_srp_by_id(sfp, id, &busy);
+-	while (!srp) {	/* nothing available so wait on packet or */
+-		if (unlikely(!busy && SG_IS_DETACHING(sdp)))
+-			return -ENODEV;
++	srp = sg_find_srp_by_id(sfp, id);
++	if (IS_ERR(srp))
++		return PTR_ERR(srp);
++	if (!srp) {	/* nothing available so wait on packet or */
+ 		if (non_block)
+ 			return -EAGAIN;
+ 		res = wait_event_interruptible(sfp->read_wait,
+ 					       sg_get_ready_srp(sfp, &srp,
+-								id, &busy));
+-		if (unlikely(!busy && SG_IS_DETACHING(sdp)))
+-			return -ENODEV;
+-		if (res)
+-			return res;	/* signal --> -ERESTARTSYS */
++								id));
++		if (IS_ERR(srp))
++			return PTR_ERR(srp);
++		if (unlikely(!srp))
++			return res; /* signal --> -ERESTARTSYS */
+ 	}
+ 	if (test_and_set_bit(SG_FRQ_RECEIVING, srp->frq_bm)) {
+ 		cpu_relax();
+@@ -1421,7 +1418,6 @@ sg_ctl_ioreceive(struct file *filp, struct sg_fd *sfp, void __user *p)
  static int
- sg_rec_state_v3v4(struct sg_fd *sfp, struct sg_request *srp, bool v4_active)
+ sg_ctl_ioreceive_v3(struct file *filp, struct sg_fd *sfp, void __user *p)
  {
- 	u32 rq_res = srp->rq_result;
+-	bool busy;
+ 	bool non_block = !!(filp->f_flags & O_NONBLOCK);
+ 	int res;
+ 	int pack_id = SG_PACK_ID_WILDCARD;
+@@ -1430,7 +1426,7 @@ sg_ctl_ioreceive_v3(struct file *filp, struct sg_fd *sfp, void __user *p)
+ 	struct sg_device *sdp = sfp->parentdp;
+ 	struct sg_request *srp;
  
-+	if (sfp->parentdp->statsp) {
-+		const enum sg_rq_state sr_st = SG_RS_BUSY;
-+
-+		sg_do_stats(sfp, srp, v4_active);
-+		srp->duration = sg_get_dur(srp, &sr_st, NULL);
-+	}
- 	if (unlikely(srp->rq_result & 0xff)) {
- 		int sb_len_wr = sg_copy_sense(srp, v4_active);
+-	res = sg_allow_if_err_recovery(sdp, non_block);
++	res = sg_allow_if_err_recovery(sdp, non_block, true);
+ 	if (unlikely(res))
+ 		return res;
+ 	/* Get first three 32 bit integers: guard, proto+subproto */
+@@ -1446,17 +1442,19 @@ sg_ctl_ioreceive_v3(struct file *filp, struct sg_fd *sfp, void __user *p)
+ 	if (test_bit(SG_FFD_FORCE_PACKID, sfp->ffd_bm))
+ 		pack_id = h3p->pack_id;
+ try_again:
+-	srp = sg_find_srp_by_id(sfp, pack_id, &busy);
+-	while (!srp) {	/* nothing available so wait on packet or */
+-		if (unlikely(!busy && SG_IS_DETACHING(sdp)))
+-			return -ENODEV;
++	srp = sg_find_srp_by_id(sfp, pack_id);
++	if (IS_ERR(srp))
++		return PTR_ERR(srp);
++	if (!srp) {	/* nothing available so wait on packet or */
+ 		if (non_block)
+ 			return -EAGAIN;
+ 		res = wait_event_interruptible
+ 				(sfp->read_wait,
+-				 sg_get_ready_srp(sfp, &srp, pack_id, &busy));
+-		if (unlikely(res))
+-			return res;	/* signal --> -ERESTARTSYS */
++				 sg_get_ready_srp(sfp, &srp, pack_id));
++		if (IS_ERR(srp))
++			return PTR_ERR(srp);
++		if (unlikely(!srp))
++			return res; /* signal --> -ERESTARTSYS */
+ 	}
+ 	if (test_and_set_bit(SG_FRQ_RECEIVING, srp->frq_bm)) {
+ 		cpu_relax();
+@@ -1587,10 +1585,8 @@ static ssize_t
+ sg_read(struct file *filp, char __user *buf, size_t count, loff_t *ppos)
+ {
+ 	bool non_block = !!(filp->f_flags & O_NONBLOCK);
+-	bool busy;
+ 	int ret;
+ 	int req_pack_id = -1;
+-	struct sg_device *sdp;
+ 	struct sg_fd *sfp;
+ 	struct sg_request *srp;
  
-@@ -1625,49 +1684,41 @@ sg_calc_sgat_param(struct sg_device *sdp)
- 	sdp->max_sgat_sz = sz;
+@@ -1603,7 +1599,6 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t *ppos)
+ 		return ret;
+ 
+ 	sfp = filp->private_data;
+-	sdp = sfp->parentdp;
+ 	SG_LOG(3, sfp, "%s: read() count=%d\n", __func__, (int)count);
+ 
+ 	if (test_bit(SG_FFD_FORCE_PACKID, sfp->ffd_bm)) {
+@@ -1613,20 +1608,19 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t *ppos)
+ 	}
+ 
+ try_again:
+-	srp = sg_find_srp_by_id(sfp, req_pack_id, &busy);
+-	while (!srp) {	/* now wait on packet to arrive */
+-		if (unlikely(!busy && SG_IS_DETACHING(sdp)))
+-			return -ENODEV;
++	srp = sg_find_srp_by_id(sfp, req_pack_id);
++	if (IS_ERR(srp))
++		return PTR_ERR(srp);
++	if (!srp) {	/* now wait on packet to arrive */
+ 		if (non_block) /* O_NONBLOCK or v3::flags & SGV4_FLAG_IMMED */
+ 			return -EAGAIN;
+ 		ret = wait_event_interruptible(sfp->read_wait,
+-			((srp = sg_find_srp_by_id(sfp, req_pack_id, &busy)) ||
+-			(!busy && SG_IS_DETACHING(sdp))));
+-		if (unlikely(SG_IS_DETACHING(sdp)))
+-			return -ENODEV;
+-		if (ret)	/* -ERESTARTSYS as signal hit process */
+-			return ret;
+-		/* otherwise srp should be valid */
++					       sg_get_ready_srp(sfp, &srp,
++								req_pack_id));
++		if (IS_ERR(srp))
++			return PTR_ERR(srp);
++		if (unlikely(!srp))
++			return ret; /* signal --> -ERESTARTSYS */
+ 	}
+ 	if (test_and_set_bit(SG_FRQ_RECEIVING, srp->frq_bm)) {
+ 		cpu_relax();
+@@ -1740,10 +1734,9 @@ sg_fill_request_element(struct sg_fd *sfp, struct sg_request *srp,
  }
  
--static u32
--sg_calc_rq_dur(const struct sg_request *srp)
--{
--	ktime_t ts0 = ns_to_ktime(srp->start_ns);
--	ktime_t now_ts;
--	s64 diff;
--
--	if (ts0 == 0)
--		return 0;
--	if (unlikely(ts0 == S64_MAX))	/* _prior_ to issuing req */
--		return 999999999;	/* eye catching */
--	now_ts = ktime_get_boottime();
--	if (unlikely(ts0 > now_ts))
--		return 999999998;
--	/* unlikely req duration will exceed 2**32 milliseconds */
--	diff = ktime_ms_delta(now_ts, ts0);
--	return (diff > (s64)U32_MAX) ? 3999999999U : (u32)diff;
--}
--
--/* Return of U32_MAX means srp is inactive state */
- static u32
- sg_get_dur(struct sg_request *srp, const enum sg_rq_state *sr_stp,
- 	   bool *is_durp)
+ static inline bool
+-sg_rq_landed(struct sg_device *sdp, struct sg_request *srp)
++sg_rq_landed(struct sg_request *srp)
  {
- 	bool is_dur = false;
--	u32 res = U32_MAX;
-+	s64 dur_ns;
-+	ktime_t start_dur = READ_ONCE(srp->start_dur);
+-	return atomic_read_acquire(&srp->rq_st) != SG_RS_INFLIGHT ||
+-	       unlikely(SG_IS_DETACHING(sdp));
++	return atomic_read_acquire(&srp->rq_st) != SG_RS_INFLIGHT;
+ }
  
-+	if (ktime_to_ns(start_dur) <= 0) {
-+		is_dur = true;
-+		dur_ns = 0;
-+		goto fini;
-+	}
- 	switch (sr_stp ? *sr_stp : atomic_read(&srp->rq_st)) {
--	case SG_RS_INFLIGHT:
- 	case SG_RS_BUSY:
--		res = sg_calc_rq_dur(srp);
-+		if (test_bit(SG_FRQ_ISSUED, srp->frq_bm)) {
-+			dur_ns = ktime_to_ns(start_dur);
-+			is_dur = true;
-+			break;
+ /*
+@@ -1770,7 +1763,7 @@ sg_wait_event_srp(struct file *filp, struct sg_fd *sfp, void __user *p,
+ 	SG_LOG(3, sfp, "%s: about to wait_event...()\n", __func__);
+ 	/* usually will be woken up by sg_rq_end_io() callback */
+ 	res = wait_event_interruptible(sfp->read_wait,
+-				       sg_rq_landed(sdp, srp));
++				       sg_rq_landed(srp));
+ 	if (unlikely(res)) { /* -ERESTARTSYS because signal hit thread */
+ 		set_bit(SG_FRQ_IS_ORPHAN, srp->frq_bm);
+ 		/* orphans harvested when sfp->keep_orphan is false */
+@@ -1780,11 +1773,6 @@ sg_wait_event_srp(struct file *filp, struct sg_fd *sfp, void __user *p,
+ 		return res;
+ 	}
+ skip_wait:
+-	if (unlikely(SG_IS_DETACHING(sdp))) {
+-		sg_rq_chg_state_force(srp, SG_RS_INACTIVE);
+-		atomic_inc(&sfp->inactives);
+-		return -ENODEV;
+-	}
+ 	sr_st = atomic_read(&srp->rq_st);
+ 	if (unlikely(sr_st != SG_RS_AWAIT_RCV))
+ 		return -EPROTO;         /* Logic error */
+@@ -1818,7 +1806,7 @@ sg_ctl_sg_io(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
+ 
+ 	SG_LOG(3, sfp, "%s:  SG_IO%s\n", __func__,
+ 	       ((filp->f_flags & O_NONBLOCK) ? " O_NONBLOCK ignored" : ""));
+-	res = sg_allow_if_err_recovery(sdp, false);
++	res = sg_allow_if_err_recovery(sdp, false, false);
+ 	if (res)
+ 		return res;
+ 	if (get_sg_io_hdr(h3p, buf))
+@@ -2007,8 +1995,6 @@ sg_ioctl_common(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
+ 
+ 	SG_LOG(6, sfp, "%s: cmd=0x%x, O_NONBLOCK=%d\n", __func__, cmd_in,
+ 	       !!(filp->f_flags & O_NONBLOCK));
+-	if (unlikely(SG_IS_DETACHING(sdp)))
+-		return -ENODEV;
+ 	sdev = sdp->device;
+ 
+ 	switch (cmd_in) {
+@@ -2027,6 +2013,8 @@ sg_ioctl_common(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
+ 		SG_LOG(3, sfp, "%s:    SG_IORECEIVE_V3\n", __func__);
+ 		return sg_ctl_ioreceive_v3(filp, sfp, p);
+ 	case SG_GET_SCSI_ID:
++		if (unlikely(SG_IS_DETACHING(sdp)))
++			return -ENODEV;
+ 		return sg_ctl_scsi_id(sdev, sfp, p);
+ 	case SG_SET_FORCE_PACK_ID:
+ 		SG_LOG(3, sfp, "%s:    SG_SET_FORCE_PACK_ID\n", __func__);
+@@ -2158,6 +2146,8 @@ sg_ioctl_common(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
+ 		return put_user(sdev->host->hostt->emulated, ip);
+ 	case SCSI_IOCTL_SEND_COMMAND:
+ 		SG_LOG(3, sfp, "%s:    SCSI_IOCTL_SEND_COMMAND\n", __func__);
++		if (unlikely(SG_IS_DETACHING(sdp)))
++			return -ENODEV;
+ 		return scsi_ioctl(sdp->device, filp->f_mode, cmd_in, p);
+ 	case SG_SET_DEBUG:
+ 		SG_LOG(3, sfp, "%s:    SG_SET_DEBUG\n", __func__);
+@@ -2207,7 +2197,7 @@ sg_ioctl_common(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
+ 			return -EPERM;	/* don't know, so take safer approach */
+ 		break;
+ 	}
+-	result = sg_allow_if_err_recovery(sdp, filp->f_flags & O_NDELAY);
++	result = sg_allow_if_err_recovery(sdp, filp->f_flags & O_NDELAY, false);
+ 	if (unlikely(result))
+ 		return result;
+ 	return -ENOIOCTLCMD;
+@@ -2422,7 +2412,6 @@ sg_vma_fault(struct vm_fault *vmf)
+ 	struct page *page;
+ 	struct sg_scatter_hold *rsv_schp;
+ 	struct sg_request *srp;
+-	struct sg_device *sdp;
+ 	struct sg_fd *sfp;
+ 	const char *nbp = "==NULL, bad";
+ 
+@@ -2435,11 +2424,6 @@ sg_vma_fault(struct vm_fault *vmf)
+ 		pr_warn("%s: sfp%s\n", __func__, nbp);
+ 		goto out_err;
+ 	}
+-	sdp = sfp->parentdp;
+-	if (sdp && unlikely(SG_IS_DETACHING(sdp))) {
+-		SG_LOG(1, sfp, "%s: device detaching\n", __func__);
+-		goto out_err;
+-	}
+ 	srp = sfp->rsv_srp;
+ 	if (!srp) {
+ 		SG_LOG(1, sfp, "%s: srp%s\n", __func__, nbp);
+@@ -3237,8 +3221,17 @@ sg_finish_scsi_blk_rq(struct sg_request *srp)
+ 	SG_LOG(4, sfp, "%s: srp=0x%pK%s\n", __func__, srp,
+ 	       (srp->parentfp->rsv_srp == srp) ? " rsv" : "");
+ 	if (test_and_clear_bit(SG_FRQ_COUNT_ACTIVE, srp->frq_bm)) {
+-		if (atomic_dec_and_test(&sfp->submitted))
++		if (atomic_dec_and_test(&sfp->submitted)) {
+ 			clear_bit(SG_FFD_POLLED_SEEN, sfp->ffd_bm);
++
++			/*
++			 * If the device is detaching, wakeup any ioreceives in
++			 * case we just finished the last response, which would
++			 * leave nothing for them to return other than -ENODEV.
++			 */
++			if (unlikely(SG_IS_DETACHING(sfp->parentdp)))
++				wake_up_interruptible_all(&sfp->read_wait);
 +		}
-+		dur_ns = 1;
-+		break;
-+	case SG_RS_INFLIGHT:
-+		dur_ns = ktime_sub(ktime_get_boottime(), start_dur);
- 		break;
- 	case SG_RS_AWAIT_RCV:
- 	case SG_RS_INACTIVE:
--		res = srp->duration;
-+		dur_ns = ktime_to_ns(start_dur);
- 		is_dur = true;	/* completion has occurred, timing finished */
- 		break;
--	default:
--		break;
+ 		atomic_dec(&sfp->waiting);
  	}
-+fini:
- 	if (is_durp)
- 		*is_durp = is_dur;
--	return res;
-+	return ktime_to_ms(ns_to_ktime(dur_ns));
- }
  
- static void
-@@ -1678,8 +1729,6 @@ sg_fill_request_element(struct sg_fd *sfp, struct sg_request *srp,
+@@ -3410,15 +3403,14 @@ sg_read_append(struct sg_request *srp, void __user *outp, int num_xfer)
+  * If there are multiple requests outstanding, the speed of this function is
+  * important. SG_PACK_ID_WILDCARD is -1 and that case is typically the fast
+  * path. This function is only used in the non-blocking cases. Returns pointer
+- * to (first) matching sg_request or NULL. If found, sg_request state is moved
+- * from SG_RS_AWAIT_RCV to SG_RS_BUSY.
+- * The 'busy' pointer is only set to true when no requests are found in the
+- * SG_RS_AWAIT_RCV state and SG_IS_DETACHING() is true and there is at least
+- * one request in SG_RS_INFLIGHT state; in all other cases *busy is set false.
++ * to (first) matching sg_request, or NULL if the caller should wait for
++ * request completion, or an ERR_PTR if the caller should return an error
++ * without waiting for request completion. If a request is found, sg_request
++ * state is moved from SG_RS_AWAIT_RCV to SG_RS_BUSY.
+  */
  
- 	xa_lock_irqsave(&sfp->srp_arr, iflags);
- 	rip->duration = sg_get_dur(srp, NULL, NULL);
--	if (rip->duration == U32_MAX)
--		rip->duration = 0;
- 	rip->orphan = test_bit(SG_FRQ_IS_ORPHAN, srp->frq_bm);
- 	rip->sg_io_owned = test_bit(SG_FRQ_SYNC_INVOC, srp->frq_bm);
- 	rip->problem = !!(srp->rq_result & SG_ML_RESULT_MSK);
-@@ -2527,6 +2576,7 @@ sg_rq_end_io(struct request *rqq, blk_status_t status)
- 	int a_resid, slen;
- 	u32 rq_result;
- 	unsigned long iflags;
-+	ktime_t start_tm;
- 	struct scsi_cmnd *scmd = blk_mq_rq_to_pdu(rqq);
- 	struct sg_request *srp = rqq->end_io_data;
- 	struct sg_device *sdp;
-@@ -2553,7 +2603,9 @@ sg_rq_end_io(struct request *rqq, blk_status_t status)
- 
- 	SG_LOG(6, sfp, "%s: pack_id=%d, res=0x%x\n", __func__, srp->pack_id,
- 	       rq_result);
--	srp->duration = sg_calc_rq_dur(srp);
-+	start_tm = READ_ONCE(srp->start_dur);
-+	if (start_tm > 0)
-+		WRITE_ONCE(srp->start_dur, ktime_sub(ktime_get_boottime(), start_tm));
- 	if (unlikely((rq_result & SG_ML_RESULT_MSK) && slen > 0 &&
- 		     test_bit(SG_FDEV_LOG_SENSE, sdp->fdev_bm))) {
- 		u32 scsi_stat = rq_result & 0xff;
-@@ -2701,9 +2753,12 @@ sg_add_device_helper(struct scsi_device *scsidp)
- 		kfree(sdp);
- 		return ERR_PTR(error);
- 	}
-+	spin_lock_init(&sdp->stats_lock);
- 	return sdp;
- }
- 
-+static const struct attribute_group *sg_dev_groups[];
-+
- static int
- sg_add_device(struct device *cl_dev, struct class_interface *cl_intf)
+ static struct sg_request *
+-sg_find_srp_by_id(struct sg_fd *sfp, int pack_id, bool *busy)
++sg_find_srp_by_id(struct sg_fd *sfp, int pack_id)
  {
-@@ -2728,6 +2783,8 @@ sg_add_device(struct device *cl_dev, struct class_interface *cl_intf)
- 		error = PTR_ERR(sdp);
- 		goto out;
+ 	__maybe_unused bool is_bad_st = false;
+ 	__maybe_unused enum sg_rq_state bad_sr_st = SG_RS_INACTIVE;
+@@ -3432,13 +3424,12 @@ sg_find_srp_by_id(struct sg_fd *sfp, int pack_id, bool *busy)
+ 	struct sg_request *srp = NULL;
+ 	struct xarray *xafp = &sfp->srp_arr;
+ 
+-	*busy = false;
+ 	if (test_bit(SG_FFD_POLLED_SEEN, sfp->ffd_bm))
+ 		sg_sfp_bio_poll(sfp, 0);	/* LLD may have some ready to push up */
+ 	if (num_waiting < 1) {
+ 		num_waiting = atomic_read_acquire(&sfp->waiting);
+ 		if (num_waiting < 1)
+-			return NULL;
++			goto check_detach;
  	}
-+	sdp->statsp = kzalloc(sizeof(*sdp->statsp), GFP_KERNEL);
-+	/* don't worry if NULL, probably a lot of devices */
  
- 	error = cdev_add(cdev, MKDEV(SCSI_GENERIC_MAJOR, sdp->index), 1);
- 	if (error)
-@@ -2737,6 +2794,8 @@ sg_add_device(struct device *cl_dev, struct class_interface *cl_intf)
- 	if (sg_sysfs_valid) {
- 		struct device *sg_class_member;
- 
-+		if (sdp->statsp)
-+			sg_sysfs_class->dev_groups = sg_dev_groups;
- 		sg_class_member = device_create(sg_sysfs_class, cl_dev->parent,
- 						MKDEV(SCSI_GENERIC_MAJOR,
- 						      sdp->index),
-@@ -2763,6 +2822,7 @@ sg_add_device(struct device *cl_dev, struct class_interface *cl_intf)
- 	return 0;
- 
- cdev_add_err:
-+	kfree(sdp->statsp);
- 	write_lock_irqsave(&sg_index_lock, iflags);
- 	idr_remove(&sg_index_idr, sdp->index);
- 	write_unlock_irqrestore(&sg_index_lock, iflags);
-@@ -2791,6 +2851,7 @@ sg_device_destroy(struct kref *kref)
- 	 */
- 
- 	xa_destroy(&sdp->sfp_arr);
-+	kfree(sdp->statsp);
- 	write_lock_irqsave(&sg_index_lock, flags);
- 	idr_remove(&sg_index_idr, sdp->index);
- 	write_unlock_irqrestore(&sg_index_lock, flags);
-@@ -3963,6 +4024,141 @@ sg_rq_st_str(enum sg_rq_state rq_st, bool long_str)
- }
- #endif
- 
-+static ssize_t read_cnt_show(struct device *dev, struct device_attribute *attr, char *buf)
-+{
-+	struct sg_device *sdp = dev_get_drvdata(dev);
-+	struct sg_dev_stats *sp = sdp->statsp;
+ 	s_idx = (l_await_idx < 0) ? 0 : l_await_idx;
+@@ -3502,16 +3493,6 @@ sg_find_srp_by_id(struct sg_fd *sfp, int pack_id, bool *busy)
+ 		}
+ 	}
+ 	/* here if one of above loops does _not_ find a match */
+-	if (unlikely(SG_IS_DETACHING(sfp->parentdp))) {
+-		xa_for_each(xafp, idx, srp) {
+-			if (!srp)
+-				continue;
+-			if (atomic_read(&srp->rq_st) == SG_RS_INFLIGHT) {
+-				*busy = true;
+-				return NULL;
+-			}
+-		}
+-	}
+ 	if (IS_ENABLED(CONFIG_SCSI_PROC_FS)) {
+ 		if (search_for_1) {
+ 			__maybe_unused const char *cptp = "pack_id=";
+@@ -3525,6 +3506,39 @@ sg_find_srp_by_id(struct sg_fd *sfp, int pack_id, bool *busy)
+ 				       __func__, cptp, pack_id);
+ 		}
+ 	}
++check_detach:
++	if (unlikely(SG_IS_DETACHING(sfp->parentdp))) {
++		/*
++		 * The device is being removed, but we still want to allow
++		 * inflight commands to complete.  Return NULL when there are
++		 * still inflight commands that will generate responses to
++		 * receive.  Return ERR_PTR(-ENODEV) when there are no commands
++		 * left.
++		 */
++		if (atomic_read(&sfp->submitted) == 0)
++			return ERR_PTR(-ENODEV);
++		if (search_for_1) {
++			xa_for_each(xafp, idx, srp) {
++				if (srp && pack_id == srp->pack_id) {
++					switch (atomic_read(&srp->rq_st)) {
++					case SG_RS_INFLIGHT:
++					case SG_RS_AWAIT_RCV:
++						/*
++						 * Wait to return this
++						 * response.
++						 */
++						return NULL;
 +
-+	if (!sdp || !sp)
-+		return -EINVAL;
-+	return sysfs_emit(buf, "%llu\n", sp->read_cnt);
-+}
-+static DEVICE_ATTR_RO(read_cnt);
-+
-+static ssize_t read_byte_cnt_show(struct device *dev, struct device_attribute *attr, char *buf)
-+{
-+	struct sg_device *sdp = dev_get_drvdata(dev);
-+	struct sg_dev_stats *sp = sdp->statsp;
-+
-+	if (!sdp || !sp)
-+		return -EINVAL;
-+	return sysfs_emit(buf, "%llu\n", sp->read_byte_cnt);
-+}
-+static DEVICE_ATTR_RO(read_byte_cnt);
-+
-+static ssize_t read_ns_show(struct device *dev, struct device_attribute *attr, char *buf)
-+{
-+	struct sg_device *sdp = dev_get_drvdata(dev);
-+	struct sg_dev_stats *sp = sdp->statsp;
-+
-+	if (!sdp || !sp)
-+		return -EINVAL;
-+	return sysfs_emit(buf, "%llu\n", sp->tot_read_time);
-+}
-+static DEVICE_ATTR_RO(read_ns);
-+
-+static ssize_t write_cnt_show(struct device *dev, struct device_attribute *attr, char *buf)
-+{
-+	struct sg_device *sdp = dev_get_drvdata(dev);
-+	struct sg_dev_stats *sp = sdp->statsp;
-+
-+	if (!sdp || !sp)
-+		return -EINVAL;
-+	return sysfs_emit(buf, "%llu\n", sp->write_cnt);
-+}
-+static DEVICE_ATTR_RO(write_cnt);
-+
-+static ssize_t write_byte_cnt_show(struct device *dev, struct device_attribute *attr, char *buf)
-+{
-+	struct sg_device *sdp = dev_get_drvdata(dev);
-+	struct sg_dev_stats *sp = sdp->statsp;
-+
-+	if (!sdp || !sp)
-+		return -EINVAL;
-+	return sysfs_emit(buf, "%llu\n", sp->write_byte_cnt);
-+}
-+static DEVICE_ATTR_RO(write_byte_cnt);
-+
-+static ssize_t write_ns_show(struct device *dev, struct device_attribute *attr, char *buf)
-+{
-+	struct sg_device *sdp = dev_get_drvdata(dev);
-+	struct sg_dev_stats *sp = sdp->statsp;
-+
-+	if (!sdp || !sp)
-+		return -EINVAL;
-+	return sysfs_emit(buf, "%llu\n", sp->tot_write_time);
-+}
-+static DEVICE_ATTR_RO(write_ns);
-+
-+static ssize_t in_flight_show(struct device *dev, struct device_attribute *attr, char *buf)
-+{
-+	struct sg_device *sdp = dev_get_drvdata(dev);
-+	struct sg_dev_stats *sp = sdp->statsp;
-+
-+	if (!sdp || !sp)
-+		return -EINVAL;
-+	return sysfs_emit(buf, "%d\n", atomic_read(&sp->in_flight));
-+}
-+static DEVICE_ATTR_RO(in_flight);
-+
-+static ssize_t io_ns_show(struct device *dev, struct device_attribute *attr, char *buf)
-+{
-+	struct sg_device *sdp = dev_get_drvdata(dev);
-+	struct sg_dev_stats *sp = sdp->statsp;
-+
-+	if (!sdp || !sp)
-+		return -EINVAL;
-+	return sysfs_emit(buf, "%llu\n",
-+			  sp->tot_read_time + sp->tot_write_time + sp->tot_ndata_time);
-+}
-+static DEVICE_ATTR_RO(io_ns);
-+
-+static ssize_t other_cnt_show(struct device *dev, struct device_attribute *attr, char *buf)
-+{
-+	struct sg_device *sdp = dev_get_drvdata(dev);
-+	struct sg_dev_stats *sp = sdp->statsp;
-+
-+	if (!sdp || !sp)
-+		return -EINVAL;
-+	return sysfs_emit(buf, "%llu\n", sp->other_cnt);
-+}
-+static DEVICE_ATTR_RO(other_cnt);
-+
-+static ssize_t resid_cnt_show(struct device *dev, struct device_attribute *attr, char *buf)
-+{
-+	struct sg_device *sdp = dev_get_drvdata(dev);
-+	struct sg_dev_stats *sp = sdp->statsp;
-+
-+	if (!sdp || !sp)
-+		return -EINVAL;
-+	return sysfs_emit(buf, "%llu\n", sp->resid_cnt);
-+}
-+static DEVICE_ATTR_RO(resid_cnt);
-+
-+static struct attribute *sg_stats_attrs[] = {
-+	&dev_attr_read_cnt.attr,
-+	&dev_attr_read_byte_cnt.attr,
-+	&dev_attr_read_ns.attr,
-+	&dev_attr_write_cnt.attr,
-+	&dev_attr_write_byte_cnt.attr,
-+	&dev_attr_write_ns.attr,
-+	&dev_attr_in_flight.attr,
-+	&dev_attr_io_ns.attr,
-+	&dev_attr_other_cnt.attr,
-+	&dev_attr_resid_cnt.attr,
-+	NULL,
-+};
-+
-+static struct attribute_group sg_stats_group = {
-+	.name = "stats",
-+	.attrs = sg_stats_attrs,
-+};
-+
-+static const struct attribute_group *sg_dev_groups[] = {
-+	&sg_stats_group,
-+	NULL,
-+};
-+
- #if IS_ENABLED(CONFIG_SG_PROC_OR_DEBUG_FS)
- 
- #define SG_SNAPSHOT_DEV_MAX 4
++					default:
++						break;
++					}
++				}
++			}
++			/* No command matching pack_id. */
++			return ERR_PTR(-ENODEV);
++		}
++		/* else return NULL below */
++	}
+ 	return NULL;
+ good:
+ 	SG_LOG(5, sfp, "%s: %s%d found [srp=0x%pK]\n", __func__, "pack_id=",
 -- 
 2.37.3
 
