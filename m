@@ -2,115 +2,145 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96C83C67871
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Oct 2022 22:55:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93D83C67871
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Oct 2022 23:49:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231894AbiJXWzM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Oct 2022 18:55:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58562 "EHLO
+        id S230268AbiJXXtp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Oct 2022 19:49:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46262 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231877AbiJXWyr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Oct 2022 18:54:47 -0400
-Received: from mp-relay-02.fibernetics.ca (mp-relay-02.fibernetics.ca [208.85.217.137])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 883BD43320
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Oct 2022 14:16:31 -0700 (PDT)
-Received: from mailpool-fe-02.fibernetics.ca (mailpool-fe-02.fibernetics.ca [208.85.217.145])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        with ESMTP id S231260AbiJXXtP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Oct 2022 19:49:15 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2DD7D50531
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Oct 2022 15:07:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1666649161;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=t/jSO0lqWHSQcHiF6BRMSRgd7XZaU/RYEhuGiGA3W4o=;
+        b=J2vnsfNlfxlC9+0iPsIkZh3gMoNwnGLC59b/Gnr+TBuSfYrXBjneS4gE0XkwIIhX2ZU7n/
+        DBkZ2Tmcby3b9lr+5iXcWdt8dq4z1KFosVIY/UrV35KlFuGu6Os9p1aDNc68nldyWn44vE
+        d9vCSyCeKxV1HYoxfb0xiBToVNaRNvc=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-656-BD8qyXrmOD2Ly-xXM2Yriw-1; Mon, 24 Oct 2022 11:30:43 -0400
+X-MC-Unique: BD8qyXrmOD2Ly-xXM2Yriw-1
+Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mp-relay-02.fibernetics.ca (Postfix) with ESMTPS id 09B4970ECA;
-        Mon, 24 Oct 2022 19:58:24 +0000 (UTC)
-Received: from localhost (mailpool-mx-01.fibernetics.ca [208.85.217.140])
-        by mailpool-fe-02.fibernetics.ca (Postfix) with ESMTP id E399061626;
-        Mon, 24 Oct 2022 19:58:23 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at 
-Received: from mailpool-fe-02.fibernetics.ca ([208.85.217.145])
-        by localhost (mail-mx-01.fibernetics.ca [208.85.217.140]) (amavisd-new, port 10024)
-        with ESMTP id 7kBclUx6USSz; Mon, 24 Oct 2022 19:58:23 +0000 (UTC)
-Received: from [192.168.48.17] (host-45-78-203-98.dyn.295.ca [45.78.203.98])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: dgilbert@interlog.com)
-        by mail.ca.inter.net (Postfix) with ESMTPSA id D40CC61542;
-        Mon, 24 Oct 2022 19:58:22 +0000 (UTC)
-Message-ID: <9b5f5e2b-bf37-f986-469f-107eb463924b@interlog.com>
-Date:   Mon, 24 Oct 2022 15:58:22 -0400
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id BEA24811E87;
+        Mon, 24 Oct 2022 15:30:41 +0000 (UTC)
+Received: from localhost (unknown [10.39.194.177])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 28818492CA2;
+        Mon, 24 Oct 2022 15:30:40 +0000 (UTC)
+Date:   Mon, 24 Oct 2022 11:30:39 -0400
+From:   Stefan Hajnoczi <stefanha@redhat.com>
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        Bart Van Assche <bvanassche@acm.org>, djeffery@redhat.com,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        virtualization@lists.linux-foundation.org
+Subject: Re: [Bug] double ->queue_rq() because of timeout in ->queue_rq()
+Message-ID: <Y1avnzv01gevnmXz@fedora>
+References: <Y1EQdafQlKNAsutk@T590>
+ <Y1GpB6Gpm7GglwO3@fedora>
+ <Y1ICvUwglbxkqE+v@T590>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.0
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH 1/5] sgl_alloc_order: remove 4 GiB limit
-Content-Language: en-CA
-To:     Jason Gunthorpe <jgg@ziepe.ca>,
-        Bodo Stroesser <bostroesser@gmail.com>
-Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        jejb@linux.vnet.ibm.com, hare@suse.de, bvanassche@acm.org
-References: <20221024010244.9522-1-dgilbert@interlog.com>
- <20221024010244.9522-2-dgilbert@interlog.com> <Y1aDQznakNaWD8kd@ziepe.ca>
- <665f8dee-6688-60d1-5097-49f9726c38ec@gmail.com> <Y1bMKU5nq5DXYdbw@ziepe.ca>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-In-Reply-To: <Y1bMKU5nq5DXYdbw@ziepe.ca>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="p/CIZd9qse9A1PsE"
+Content-Disposition: inline
+In-Reply-To: <Y1ICvUwglbxkqE+v@T590>
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2022-10-24 13:32, Jason Gunthorpe wrote:
-> On Mon, Oct 24, 2022 at 04:32:30PM +0200, Bodo Stroesser wrote:
->>> +struct scatterlist *sgl_alloc_order(size_t length, unsigned int order,
->>> +				    bool chainable, gfp_t gfp, size_t *nent_p)
->>>    {
->>>    	struct scatterlist *sgl, *sg;
->>>    	struct page *page;
->>> -	unsigned int nent, nalloc;
->>> +	size_t nent, nalloc;
->>>    	u32 elem_len;
->>> -	nent = round_up(length, PAGE_SIZE << order) >> (PAGE_SHIFT + order);
->>> -	/* Check for integer overflow */
->>> -	if (length > (nent << (PAGE_SHIFT + order)))
->>> -		return NULL;
->>> +	nent = length >> (PAGE_SHIFT + order);
->>> +	if (length % (1 << (PAGE_SHIFT + order)))
->>
->> This might end up doing a modulo operation for divisor 0, if caller
->> specifies a too high order parameter, right?
-> 
-> If that happens then the first >> will be busted too and this is all
-> broken..
-> 
-> We assume the caller will pass a valid order paramter it seems, it is
-> not userspace controlled.
 
-Hi,
-I have been trying to remove the unstated 4 GB limit on this existing
-function, _not_ change its interface. In practice, I don't believe limiting
-'nent' to 2^32-1 (i.e. 'unsigned int') is an unreasonable restriction and
-that is checked at runtime in my patch. Since each 'entity' is at least
-PAGE_SIZE bytes, that is at least 16 TB (with order==0).
+--p/CIZd9qse9A1PsE
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-The order_too_large issue I have tried to address with a pre-condition
-(i.e. words in the description of the 'order' argument). That said, I did
-notice:
+On Fri, Oct 21, 2022 at 10:23:57AM +0800, Ming Lei wrote:
+> On Thu, Oct 20, 2022 at 04:01:11PM -0400, Stefan Hajnoczi wrote:
+> > On Thu, Oct 20, 2022 at 05:10:13PM +0800, Ming Lei wrote:
+> > > Hi,
+> > >=20
+> > > David Jeffery found one double ->queue_rq() issue, so far it can
+> > > be triggered in the following two cases:
+> > >=20
+> > > 1) scsi driver in guest kernel
+> > >=20
+> > > - the story could be long vmexit latency or long preempt latency of
+> > > vCPU pthread, then IO req is timed out before queuing the request
+> > > to hardware but after calling blk_mq_start_request() during ->queue_r=
+q(),
+> > > then timeout handler handles it by requeue, then double ->queue_rq() =
+is
+> > > caused, and kernel panic
+> > >=20
+> > > 2) burst of kernel messages from irq handler=20
+> > >=20
+> > > For 1), I think it is one reasonable case, given latency from host si=
+de
+> > > can come anytime in theory because vCPU is emulated by one normal host
+> > > pthread which can be preempted anywhere. For 2), I guess kernel messa=
+ge is
+> > > supposed to be rate limited.
+> > >=20
+> > > Firstly, is this kind of so long(30sec) random latency when running k=
+ernel
+> > > code something normal? Or do we need to take care of it? IMO, it looks
+> > > reasonable in case of VM, but our VM experts may have better idea abo=
+ut this
+> > > situation. Also the default 30sec timeout could be reduced via sysfs =
+or
+> > > drivers.
+> >=20
+> > 30 seconds is a long latency that does not occur during normal
+> > operation, but unfortunately does happen on occasion.
+>=20
+> Thanks for the confirmation!
+>=20
+> >=20
+> > I think there's an interest in understanding the root cause and solving
+> > long latencies (if possible) in the QEMU/KVM communities. We can
+> > investigate specific cases on kvm@vger.kernel.org and/or
+> > qemu-devel@nongnu.org.
+>=20
+> The issue was original reported on VMware VM, but maybe David can figure
+> out how to trigger it on QEMU/KVM.
 
-include/linux/mmzone.h :
-   #ifndef CONFIG_ARCH_FORCE_MAX_ORDER
-   #define MAX_ORDER 11
-   #else
-   #define MAX_ORDER CONFIG_ARCH_FORCE_MAX_ORDER
-   #endif
+A very basic question:
 
+The virtio_blk driver has no q->mq_ops->timeout() callback. Why does the
+block layer still enable the timeout mechanism when the driver doesn't
+implement ->timeout()?
 
-Changing the interface of sgl_alloc_order() will break these callers:
-    drivers/scsi/ipr.c
-    drivers/target/target_core_transport.c
+I saw there was some "idle" hctx logic and I guess the requests are
+resubmitted (although it wasn't obvious to me how that happens in the
+code)? Maybe that's why the timer is still used if the driver doesn't
+care about timeouts...
 
-due to change the type (and size on 64 bit machines) of the fifth argument
-(i.e. 'size_t *nent_p').
+Stefan
 
-If you want to change sgl_alloc_order()'s interface, shouldn't that be done
-in a separate patch that also fixes the breakages it would otherwise cause?
+--p/CIZd9qse9A1PsE
+Content-Type: application/pgp-signature; name="signature.asc"
 
-Doug Gilbert
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAmNWr58ACgkQnKSrs4Gr
+c8hlugf/Zm8Eno2AVQxjiXkuaB/DSkHQ20Y/6eP+D5toFYHpxDXd1VEVRNbRuM6S
+kZoO6p8BAojnvB3V1nEIXX0zEtzT7Si8rwL5vN2ygFUB8zam0H/pI/JHqFRuXdqc
+vJ606Eg3QBpQeNCH6hoN1z0uxth4LJdAAhiHFIGSFtz32vi9b/pAE1NgX6Ah74cP
+sg1Y/PXajKux/H4nm0NZnh2I89PX3Lw1pVDccbShlbNIk3+UQvXZRRkLj8YVVk6v
+TBxKmOuFMzh7iCjBRR5ruZoI+ULwodiJLYF057O8H1gMO0oGdUthqLU1YAQ8Ej0d
+t9QCP3hK5W+1RYwJfEYGBFgr31CEEQ==
+=+6cb
+-----END PGP SIGNATURE-----
+
+--p/CIZd9qse9A1PsE--
 
