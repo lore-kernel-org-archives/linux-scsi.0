@@ -2,154 +2,81 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C40C9ECAAA1
-	for <linux-scsi@archiver.kernel.org>; Sun, 23 Oct 2022 10:19:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BCC5C433FE
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Oct 2022 01:12:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230293AbiJWKTA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 23 Oct 2022 06:19:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55654 "EHLO
+        id S229905AbiJXBMB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 23 Oct 2022 21:12:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39444 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229618AbiJWKS6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Oct 2022 06:18:58 -0400
-Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 161F763D2E;
-        Sun, 23 Oct 2022 03:18:55 -0700 (PDT)
-Received: by mail-ed1-x530.google.com with SMTP id t18so5802405edt.2;
-        Sun, 23 Oct 2022 03:18:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=a49dQpt0mwa02CJjoTD0sBT5Nd7LDoy07iM+U677f/w=;
-        b=Hct0GyHQnH/Jq61huSKY2p64NSsRz3QYoM7ZFS+JQXlUe6JAjydfdvAO+2pC9JxQ9N
-         76fgONXMpbhQkpYVQ3hW6t697IrAoZVA1x0dxyPRmxwdfldIoiAC8JaMCF8C7S35k/L1
-         MUuF6wDNba/A3/e3EPXcEtaF0O9ET9cpnjzNe4zgWwP0kMvccysRZhtfZ9lpI2KdfLSw
-         iR8VAXM78sc/O7Qa4YG1mL40QxwuRzj2uDhE0BDCmKb65KBCOyreH5uo4kU1XKJoBRvl
-         6Ag9JVwNk4/BW0HqetRzZTaqal1T5NgqCJSEWfQeoO49bTwsCyu6rIRqtArO3NnidJpC
-         icQg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=a49dQpt0mwa02CJjoTD0sBT5Nd7LDoy07iM+U677f/w=;
-        b=tQOQp9rpZkjXjikGRDqtNpUQ3qsRbdpzQtNT4G7Rr65eXavxg0vNE+FnQ9QojTxisi
-         QR9/4jdAwKqafyy8SrFVVvVM5MoYZ13GldMYB5mL2NZl+xPhZICzwSBOTH4CX6L+eCAP
-         EKzDFbFadnemD2cMHtxKrowywXeMyYNWZ78eABAuVVYwDXPwGGKU5J33XBWLfWIYm+q7
-         AUXfml4rlOt2cjtenpYiPLDOSuEJ2m034wZ6HGeStg58QwBbWfiyiwHiEDvABVyO5XbP
-         KRrT+hQSS6V9rbURQg8YWEUz2T5/bj4GfPZDf4dARWl5TOvbvsX6+evIDjkSx2jaw5ky
-         VvZA==
-X-Gm-Message-State: ACrzQf2P6tck9yakXDiFqJ4DxYxkwXE7wCSAggpA3HZx7iHorGuqa6Wq
-        u5G63/ZnaKWDz4R0w5F/sutE4cbQsXdWuABuQkQ=
-X-Google-Smtp-Source: AMsMyM60JZRumSTvt9G+5ddw2RQoBxrqxN3zHp19qYYqqnoZKtmC26HArvU3HzyL4l0OOGdrAtemgD59irSBv0+O2O0=
-X-Received: by 2002:a05:6402:1e8d:b0:454:79a9:201f with SMTP id
- f13-20020a0564021e8d00b0045479a9201fmr26051157edf.176.1666520333531; Sun, 23
- Oct 2022 03:18:53 -0700 (PDT)
+        with ESMTP id S229803AbiJXBMA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Oct 2022 21:12:00 -0400
+X-Greylist: delayed 545 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 23 Oct 2022 18:11:57 PDT
+Received: from smtp.infotech.no (smtp.infotech.no [82.134.31.41])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E7AE162A52
+        for <linux-scsi@vger.kernel.org>; Sun, 23 Oct 2022 18:11:57 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id 23A7E2041CF;
+        Mon, 24 Oct 2022 03:02:53 +0200 (CEST)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id D+Nj12dIbLLf; Mon, 24 Oct 2022 03:02:47 +0200 (CEST)
+Received: from treten.bingwo.ca (host-45-78-203-98.dyn.295.ca [45.78.203.98])
+        by smtp.infotech.no (Postfix) with ESMTPA id 4A88120413D;
+        Mon, 24 Oct 2022 03:02:46 +0200 (CEST)
+From:   Douglas Gilbert <dgilbert@interlog.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
+        bvanassche@acm.org
+Subject: [PATCH 0/5] scatterlist: add operations for scsi_debug
+Date:   Sun, 23 Oct 2022 21:02:39 -0400
+Message-Id: <20221024010244.9522-1-dgilbert@interlog.com>
+X-Mailer: git-send-email 2.37.3
 MIME-Version: 1.0
-References: <20221021015217.20272-1-zhewang116@gmail.com> <DM6PR04MB6575BA226F07DC4752235C79FC2D9@DM6PR04MB6575.namprd04.prod.outlook.com>
-In-Reply-To: <DM6PR04MB6575BA226F07DC4752235C79FC2D9@DM6PR04MB6575.namprd04.prod.outlook.com>
-From:   Zhe Wang <zhewang116@gmail.com>
-Date:   Sun, 23 Oct 2022 18:18:42 +0800
-Message-ID: <CAJxzgGony0JQs07Uy1j9oNMmh+Y_rcG1u+gxAmze9TfxZCZ-OA@mail.gmail.com>
-Subject: Re: [PATCH V2] scsi: ufs: core: Let delay value after LPM can be
- modified by vendor
-To:     Avri Altman <Avri.Altman@wdc.com>
-Cc:     "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-        "zhe.wang1@unisoc.com" <zhe.wang1@unisoc.com>,
-        "zhenxiong.lai@unisoc.com" <zhenxiong.lai@unisoc.com>,
-        "yuelin.tang@unisoc.com" <yuelin.tang@unisoc.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> > From: Zhe Wang <zhe.wang1@unisoc.com>
-> >
-> > Some UFS devices require that the VCC should drop below 0.1V after
-> > turning off, otherwise device may not resume successfully. And
-> > because the power-off rate is different on different SOC platforms.
-> > Therefore, we hope that the delay can be modified by vendor to
-> > adjust the most appropriate delay value.
-> >
-> > Signed-off-by: Zhe Wang <zhe.wang1@unisoc.com>
-> > ---
-> > V1 -> V2
-> > - move turnoff_delay_us to struct ufs_vreg instead
-> > - replace usleep_range with ufshcd_delay_us
-> >
-> >  drivers/ufs/core/ufshcd.c | 9 ++++++++-
-> >  include/ufs/ufs.h         | 1 +
-> >  2 files changed, 9 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> > index 7256e6c43ca6..386ff6ed2f20 100644
-> > --- a/drivers/ufs/core/ufshcd.c
-> > +++ b/drivers/ufs/core/ufshcd.c
-> > @@ -89,6 +89,9 @@
-> >  /* Polling time to wait for fDeviceInit */
-> >  #define FDEVICEINIT_COMPL_TIMEOUT 1500 /* millisecs */
-> >
-> > +/* Default value of turn off VCC rail: 5000us */
-> > +#define UFS_VCC_TURNOFF_DELAY_US 5000
-> > +
-> >  #define ufshcd_toggle_vreg(_dev, _vreg, _on)                           \
-> >         ({                                                              \
-> >                 int _ret;                                               \
-> > @@ -7784,6 +7787,10 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
-> >
-> >         ufs_fixup_device_setup(hba);
-> >
-> > +       if (hba->dev_quirks & UFS_DEVICE_QUIRK_DELAY_AFTER_LPM &&
-> > +           !hba->vreg_info.vcc->turnoff_delay_us)
-> > +               hba->vreg_info.vcc->turnoff_delay_us =
-> > UFS_VCC_TURNOFF_DELAY_US;
-> > +
-> You answered my question to your v1 - where otherwise you are setting this value:
-> "We are still preparing and discussing our own UFS host driver code,
-> which will be uploaded once we are done."
->
-> Well until then - this isn't very useful.
->
-> Thanks,
-> Avri
->
-> >         ufshcd_wb_probe(hba, desc_buf);
-> >
-> >         ufshcd_temp_notif_probe(hba, desc_buf);
-> > @@ -8918,7 +8925,7 @@ static void ufshcd_vreg_set_lpm(struct ufs_hba *hba)
-> >          */
-> >         if (vcc_off && hba->vreg_info.vcc &&
-> >                 hba->dev_quirks & UFS_DEVICE_QUIRK_DELAY_AFTER_LPM)
-> > -               usleep_range(5000, 5100);
-> > +               ufshcd_delay_us(hba->vreg_info.vcc->turnoff_delay_us, 100);
-> >  }
-> >
-> >  #ifdef CONFIG_PM
-> > diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
-> > index 1bba3fead2ce..792335dfd70b 100644
-> > --- a/include/ufs/ufs.h
-> > +++ b/include/ufs/ufs.h
-> > @@ -569,6 +569,7 @@ struct ufs_vreg {
-> >         bool always_on;
-> >         bool enabled;
-> >         int max_uA;
-> > +       u32 turnoff_delay_us;
-> >  };
-> >
-> >  struct ufs_vreg_info {
-> > --
-> > 2.17.1
->
+The scsi_debug driver is essentially a ramdisk dressed up as a SCSI host
+with one or more SCSI devices attached. Like all low level SCSI drivers,
+the scsi_debug driver receives and provides data to the SCSI mid-level
+(and the block layer) using scatterlists whose interface is found in
+include/linux/scatterlist.h .
 
-OK, thanks for your review.
+After trying kmalloc() then vmalloc() based storage for the scsi_debug
+driver, it was found that certain SCSI commands can be optimized if
+instead one or more scatterlists is used as its backing store. The
+specific SCSI command that benefits is VERIFY(BYTCHK=1) and the
+equivalent NVMe command is COMPARE. These commands have data-out
+buffers provided by an application that are compared by the storage
+device with the LBA and count (of block) given in the command. In this
+case the sgl_equal_sgl() function can be used instead of setting up
+a temporary buffer.
 
-Thanks,
-Zhe Wang
+The implementation of the more common SCSI READ and WRITE commands are
+simplified by using the sgl_copy_sgl() function.
+
+The first patch in this series removes an undocumented 4 GB limit in
+the existing sgl_alloc_order() function.
+
+In the final patch of this series, the scsi_debug driver uses the
+new facilities in scatterlist to replace its vmalloc() backing store.
+
+Douglas Gilbert (5):
+  sgl_alloc_order: remove 4 GiB limit
+  scatterlist: add sgl_copy_sgl() function
+  scatterlist: add sgl_equal_sgl() function
+  scatterlist: add sgl_memset()
+  scsi_debug: change store from vmalloc to sgl
+
+ drivers/scsi/Kconfig        |   3 +-
+ drivers/scsi/scsi_debug.c   | 478 +++++++++++++++++++++++++-----------
+ include/linux/scatterlist.h |  33 ++-
+ lib/scatterlist.c           | 253 ++++++++++++++++---
+ 4 files changed, 596 insertions(+), 171 deletions(-)
+
+-- 
+2.37.3
+
