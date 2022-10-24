@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DF5DC3A59D
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Oct 2022 03:25:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E72FBC433FE
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Oct 2022 03:25:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230060AbiJXDZk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 23 Oct 2022 23:25:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58602 "EHLO
+        id S230270AbiJXDZp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 23 Oct 2022 23:25:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55668 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230270AbiJXDXD (ORCPT
+        with ESMTP id S230118AbiJXDXD (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Oct 2022 23:23:03 -0400
 Received: from smtp.infotech.no (smtp.infotech.no [82.134.31.41])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1792A5F227
-        for <linux-scsi@vger.kernel.org>; Sun, 23 Oct 2022 20:21:49 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C87BB6E2EC
+        for <linux-scsi@vger.kernel.org>; Sun, 23 Oct 2022 20:21:56 -0700 (PDT)
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 704272041C0;
-        Mon, 24 Oct 2022 05:21:49 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTP id 9A7D42041C0;
+        Mon, 24 Oct 2022 05:21:56 +0200 (CEST)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id d8hhtBp2FEZ0; Mon, 24 Oct 2022 05:21:49 +0200 (CEST)
+        with ESMTP id p9Zv5hqK1Q9n; Mon, 24 Oct 2022 05:21:56 +0200 (CEST)
 Received: from treten.bingwo.ca (unknown [10.16.20.11])
-        by smtp.infotech.no (Postfix) with ESMTPA id 1B5422041AF;
-        Mon, 24 Oct 2022 05:21:47 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTPA id 70BF42041AF;
+        Mon, 24 Oct 2022 05:21:55 +0200 (CEST)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
         bvanassche@acm.org
-Subject: [PATCH v25 32/44] sg: protect multiple receivers
-Date:   Sun, 23 Oct 2022 23:20:46 -0400
-Message-Id: <20221024032058.14077-33-dgilbert@interlog.com>
+Subject: [PATCH v25 37/44] sg: add mmap_sz tracking
+Date:   Sun, 23 Oct 2022 23:20:51 -0400
+Message-Id: <20221024032058.14077-38-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.37.3
 In-Reply-To: <20221024032058.14077-1-dgilbert@interlog.com>
 References: <20221024032058.14077-1-dgilbert@interlog.com>
@@ -40,219 +40,117 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-If two threads call ioctl(SG_IORECEIVE) [or read()] on the same
-file descriptor there is a potential race on the same request
-response. Use atomic bit operations to make sure only one thread
-gets each request response. [The other thread will either get
-another request response or nothing.]
+Track mmap_sz from prior mmap(2) call, per sg file descriptor. Also
+reset this value whenever munmap(2) is called. Fail SG_FLAG_MMAP_IO
+uses if mmap(2) hasn't been called or the memory associated with it
+is not large enough for the current request.
 
-Also make sfp cleanup a bit more robust and report if the
-number of submitted requests (which are decremented when
-completed) is other than the expected value of zero.
-
-In the case of sg_wait_open_event() which calls mutex_unlock on
-sdp->open_rel_lock and later calls mutex_lock on the same
-lock; this macro is needed to stop sparse complaining. In
-other cases it is a reminder to the coder (a precondition).
+Remove SG_FFD_MMAP_CALLED bit as it can be deduced from
+sfp->mmap_sz where a value of 0 implies no mmap() call active.
 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/sg.c | 53 ++++++++++++++++++++++++++++++++++-------------
- 1 file changed, 39 insertions(+), 14 deletions(-)
+ drivers/scsi/sg.c | 22 +++++++++++++---------
+ 1 file changed, 13 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 735ea5d11b33..5079a449111e 100644
+index c9eb9e842f9e..a37e1156e4c2 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -112,6 +112,7 @@ enum sg_rq_state {	/* N.B. sg_rq_state_arr assumes SG_RS_AWAIT_RCV==2 */
- #define SG_FRQ_SYNC_INVOC	2	/* synchronous (blocking) invocation */
- #define SG_FRQ_NO_US_XFER	3	/* no user space transfer of data */
- #define SG_FRQ_DEACT_ORPHAN	6	/* not keeping orphan so de-activate */
-+#define SG_FRQ_RECEIVING	7	/* guard against multiple receivers */
- 
- /* Bit positions (flags) for sg_fd::ffd_bm bitmask follow */
+@@ -124,8 +124,7 @@ enum sg_rq_state {	/* N.B. sg_rq_state_arr assumes SG_RS_AWAIT_RCV==2 */
  #define SG_FFD_FORCE_PACKID	0	/* receive only given pack_id/tag */
-@@ -374,6 +375,7 @@ sg_check_file_access(struct file *filp, const char *caller)
+ #define SG_FFD_CMD_Q		1	/* clear: only 1 active req per fd */
+ #define SG_FFD_KEEP_ORPHAN	2	/* policy for this fd */
+-#define SG_FFD_MMAP_CALLED	3	/* mmap(2) system call made on fd */
+-#define SG_FFD_Q_AT_TAIL	5	/* set: queue reqs at tail of blk q */
++#define SG_FFD_Q_AT_TAIL	3	/* set: queue reqs at tail of blk q */
  
- static int
- sg_wait_open_event(struct sg_device *sdp, bool o_excl)
-+		__must_hold(sdp->open_rel_lock)
+ /* Bit positions (flags) for sg_device::fdev_bm bitmask follow */
+ #define SG_FDEV_EXCLUDE		0	/* have fd open with O_EXCL */
+@@ -234,6 +233,7 @@ struct sg_fd {		/* holds the state of a file descriptor */
+ 	atomic_t waiting;	/* number of requests awaiting receive */
+ 	atomic_t req_cnt;	/* number of requests */
+ 	int sgat_elem_sz;	/* initialized to scatter_elem_sz */
++	int mmap_sz;		/* byte size of previous mmap() call */
+ 	unsigned long ffd_bm[1];	/* see SG_FFD_* defines above */
+ 	pid_t tid;		/* thread id when opened */
+ 	u8 next_cmd_len;	/* 0: automatic, >0: use on next write() */
+@@ -724,10 +724,14 @@ sg_write(struct file *filp, const char __user *p, size_t count, loff_t *ppos)
+ static inline int
+ sg_chk_mmap(struct sg_fd *sfp, int rq_flags, int len)
  {
- 	int res = 0;
- 
-@@ -1271,6 +1273,7 @@ sg_ctl_ioreceive(struct file *filp, struct sg_fd *sfp, void __user *p)
- 	SG_LOG(3, sfp, "%s: non_block(+IMMED)=%d\n", __func__, non_block);
- 	/* read in part of v3 or v4 header for pack_id or tag based find */
- 	id = pack_id;
-+try_again:
- 	srp = sg_find_srp_by_id(sfp, id, &busy);
- 	while (!srp) {	/* nothing available so wait on packet or */
- 		if (unlikely(!busy && SG_IS_DETACHING(sdp)))
-@@ -1285,6 +1288,10 @@ sg_ctl_ioreceive(struct file *filp, struct sg_fd *sfp, void __user *p)
- 		if (res)
- 			return res;	/* signal --> -ERESTARTSYS */
- 	}
-+	if (test_and_set_bit(SG_FRQ_RECEIVING, srp->frq_bm)) {
-+		cpu_relax();
-+		goto try_again;
-+	}
- 	return sg_receive_v4(sfp, srp, p, h4p);
- }
- 
-@@ -1322,7 +1329,7 @@ sg_ctl_ioreceive_v3(struct file *filp, struct sg_fd *sfp, void __user *p)
- 
- 	if (test_bit(SG_FFD_FORCE_PACKID, sfp->ffd_bm))
- 		pack_id = h3p->pack_id;
--
-+try_again:
- 	srp = sg_find_srp_by_id(sfp, pack_id, &busy);
- 	while (!srp) {	/* nothing available so wait on packet or */
- 		if (unlikely(!busy && SG_IS_DETACHING(sdp)))
-@@ -1335,6 +1342,10 @@ sg_ctl_ioreceive_v3(struct file *filp, struct sg_fd *sfp, void __user *p)
- 		if (unlikely(res))
- 			return res;	/* signal --> -ERESTARTSYS */
- 	}
-+	if (test_and_set_bit(SG_FRQ_RECEIVING, srp->frq_bm)) {
-+		cpu_relax();
-+		goto try_again;
-+	}
- 	return sg_receive_v3(sfp, srp, SZ_SG_IO_HDR, p);
- }
- 
-@@ -1451,7 +1462,6 @@ get_sg_io_pack_id(int *pack_id, void __user *buf, size_t count)
- 			return get_user(*pack_id, &hp->pack_id);
- 		}
- 	}
--
- 	/* no valid header was passed, so ignore the pack_id */
- 	*pack_id = -1;
++	if (unlikely(sfp->mmap_sz == 0))
++		return -EBADFD;
+ 	if (atomic_read(&sfp->submitted) > 0)
+ 		return -EBUSY;  /* already active requests on fd */
+ 	if (len > sfp->rsv_srp->sgat_h.buflen)
+ 		return -ENOMEM; /* MMAP_IO size must fit in reserve */
++	if (unlikely(len > sfp->mmap_sz))
++		return -ENOMEM; /* MMAP_IO size can't exceed mmap() size */
+ 	if (rq_flags & SG_FLAG_DIRECT_IO)
+ 		return -EINVAL; /* not both MMAP_IO and DIRECT_IO */
  	return 0;
-@@ -1486,8 +1496,9 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t *ppos)
- 			return ret;
- 	}
- 
-+try_again:
- 	srp = sg_find_srp_by_id(sfp, req_pack_id, &busy);
--	if (!srp) {		/* now wait on packet to arrive */
-+	while (!srp) {	/* now wait on packet to arrive */
- 		if (unlikely(!busy && SG_IS_DETACHING(sdp)))
- 			return -ENODEV;
- 		if (non_block) /* O_NONBLOCK or v3::flags & SGV4_FLAG_IMMED */
-@@ -1501,6 +1512,10 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t *ppos)
- 			return ret;
- 		/* otherwise srp should be valid */
- 	}
-+	if (test_and_set_bit(SG_FRQ_RECEIVING, srp->frq_bm)) {
-+		cpu_relax();
-+		goto try_again;
-+	}
- 	if (srp->s_hdr3.interface_id == '\0')
- 		ret = sg_read_v1v2(buf, (int)count, sfp, srp);
- 	else
-@@ -1720,6 +1735,7 @@ sg_ctl_sg_io(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
-  */
- static int
- sg_set_reserved_sz(struct sg_fd *sfp, int want_rsv_sz)
-+		__must_hold(sfp->f_mutex)
- {
+@@ -1751,13 +1755,12 @@ sg_set_reserved_sz(struct sg_fd *sfp, int want_rsv_sz)
  	int new_sz, blen, res;
  	unsigned long iflags;
-@@ -2908,26 +2924,27 @@ sg_finish_scsi_blk_rq(struct sg_request *srp)
- 		atomic_dec(&sfp->submitted);
- 		atomic_dec(&sfp->waiting);
- 	}
-+
-+	/* Expect blk_mq_free_request(rq) already called in sg_rq_end_io() */
-+	if (rq) {	/* blk_get_request() may have failed */
-+		srp->rq = NULL;
-+		blk_mq_free_request(rq);
-+	}
- 	if (srp->bio) {
- 		bool us_xfer = !test_bit(SG_FRQ_NO_US_XFER, srp->frq_bm);
-+		struct bio *bio = srp->bio;
+ 	struct sg_scatter_hold n_schp, o_schp;
+-	struct sg_request *srp;
++	struct sg_request *srp = sfp->rsv_srp;
+ 	struct xarray *xafp = &sfp->srp_arr;
  
--		if (us_xfer) {
--			ret = blk_rq_unmap_user(srp->bio);
-+		srp->bio = NULL;
-+		if (us_xfer && bio) {
-+			ret = blk_rq_unmap_user(bio);
- 			if (ret) {	/* -EINTR (-4) can be ignored */
- 				SG_LOG(6, sfp,
- 				       "%s: blk_rq_unmap_user() --> %d\n",
- 				       __func__, ret);
- 			}
- 		}
--		srp->bio = NULL;
--	}
--	/* In worst case READ data returned to user space by this point */
--
--	/* Expect blk_mq_free_request(rq) already called in sg_rq_end_io() */
--	if (rq) {       /* blk_get_request() may have failed */
--		srp->rq = NULL;
--		blk_mq_free_request(rq);
- 	}
-+	/* In worst case, READ data returned to user space by this point */
- }
- 
- static int
-@@ -3367,6 +3384,7 @@ sg_deact_request(struct sg_fd *sfp, struct sg_request *srp)
+-	srp = sfp->rsv_srp;
+ 	if (!srp)
+ 		return -EPROTO;
+-	if (test_bit(SG_FRQ_FOR_MMAP, srp->frq_bm))
++	if (SG_RS_ACTIVE(srp) || sfp->mmap_sz > 0)
+ 		return -EBUSY;
+ 	new_sz = min_t(int, want_rsv_sz, sfp->parentdp->max_sgat_sz);
+ 	new_sz = max_t(int, new_sz, sfp->sgat_elem_sz);
+@@ -2171,6 +2174,7 @@ sg_vma_close(struct vm_area_struct *vma)
+ 		pr_warn("%s: sfp null\n", __func__);
  		return;
- 	sbp = srp->sense_bp;
- 	srp->sense_bp = NULL;
-+	srp->frq_bm[0] = 0;
- 	sg_rq_state_chg(srp, 0, SG_RS_INACTIVE, true /* force */, __func__);
- 	/* maybe orphaned req, thus never read */
- 	if (sbp)
-@@ -3499,6 +3517,7 @@ static void
- sg_remove_sfp_usercontext(struct work_struct *work)
- {
- 	__maybe_unused int o_count;
-+	int subm;
- 	unsigned long idx, iflags;
- 	struct sg_device *sdp;
- 	struct sg_fd *sfp = container_of(work, struct sg_fd, ew_fd.work);
-@@ -3536,6 +3555,10 @@ sg_remove_sfp_usercontext(struct work_struct *work)
- 		SG_LOG(6, sfp, "%s: kfree: srp=%pK --\n", __func__, srp);
- 		kfree(srp);
  	}
-+	subm = atomic_read(&sfp->submitted);
-+	if (subm != 0)
-+		SG_LOG(1, sfp, "%s: expected submitted=0 got %d\n",
-+		       __func__, subm);
- 	xa_destroy(xafp);
- 	xa_lock_irqsave(xadp, iflags);
- 	e_sfp = __xa_erase(xadp, sfp->idx);
-@@ -3564,12 +3587,12 @@ sg_remove_sfp(struct kref *kref)
- 
- static int
- sg_idr_max_id(int id, void *p, void *data)
-+		__must_hold(sg_index_lock)
- {
- 	int *k = data;
- 
- 	if (*k < id)
- 		*k = id;
--
- 	return 0;
++	sfp->mmap_sz = 0;
+ 	kref_put(&sfp->f_ref, sg_remove_sfp); /* get in: sg_vma_open() */
  }
  
-@@ -3799,6 +3822,7 @@ sg_proc_seq_show_devstrs(struct seq_file *s, void *v)
- /* Writes debug info for one sg_request in obp buffer */
- static int
- sg_proc_debug_sreq(struct sg_request *srp, int to, char *obp, int len)
-+		__must_hold(sfp->srp_arr.xa_lock)
- {
- 	bool is_v3v4, v4, is_dur;
- 	int n = 0;
-@@ -3901,6 +3925,7 @@ sg_proc_debug_fd(struct sg_fd *fp, char *obp, int len, unsigned long idx)
- /* Writes debug info for one sg device (including its sg fds) in obp buffer */
- static int
- sg_proc_debug_sdev(struct sg_device *sdp, char *obp, int len, int *fd_counterp)
-+		__must_hold(sg_index_lock)
- {
- 	int n = 0;
- 	int my_count = 0;
+@@ -2261,7 +2265,7 @@ sg_mmap(struct file *filp, struct vm_area_struct *vma)
+ 	req_sz = vma->vm_end - vma->vm_start;
+ 	SG_LOG(3, sfp, "%s: vm_start=%pK, len=%d\n", __func__,
+ 	       (void *)vma->vm_start, (int)req_sz);
+-	if (vma->vm_pgoff) {
++	if (unlikely(vma->vm_pgoff || req_sz < SG_DEF_SECTOR_SZ)) {
+ 		res = -EINVAL; /* only an offset of 0 accepted */
+ 		goto fini;
+ 	}
+@@ -2275,7 +2279,7 @@ sg_mmap(struct file *filp, struct vm_area_struct *vma)
+ 		res = -ENOMEM;
+ 		goto fini;
+ 	}
+-	if (test_and_set_bit(SG_FFD_MMAP_CALLED, sfp->ffd_bm)) {
++	if (sfp->mmap_sz > 0) {
+ 		SG_LOG(1, sfp, "%s: multiple invocations on this fd\n",
+ 		       __func__);
+ 		res = -EADDRINUSE;
+@@ -2292,6 +2296,7 @@ sg_mmap(struct file *filp, struct vm_area_struct *vma)
+ 			goto fini;
+ 		}
+ 	}
++	sfp->mmap_sz = req_sz;
+ 	vma->vm_flags |= VM_IO | VM_DONTEXPAND | VM_DONTDUMP;
+ 	vma->vm_private_data = sfp;
+ 	vma->vm_ops = &sg_mmap_vm_ops;
+@@ -3924,8 +3929,7 @@ sg_proc_debug_fd(struct sg_fd *fp, char *obp, int len, unsigned long idx)
+ 		       (int)test_bit(SG_FFD_FORCE_PACKID, fp->ffd_bm),
+ 		       (int)test_bit(SG_FFD_KEEP_ORPHAN, fp->ffd_bm),
+ 		       fp->ffd_bm[0]);
+-	n += scnprintf(obp + n, len - n, "   mmap_called=%d\n",
+-		       test_bit(SG_FFD_MMAP_CALLED, fp->ffd_bm));
++	n += scnprintf(obp + n, len - n, "   mmap_sz=%d\n", fp->mmap_sz);
+ 	n += scnprintf(obp + n, len - n,
+ 		       "   submitted=%d waiting=%d   open thr_id=%d\n",
+ 		       atomic_read(&fp->submitted),
 -- 
 2.37.3
 
