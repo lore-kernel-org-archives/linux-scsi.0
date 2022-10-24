@@ -2,231 +2,217 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51EA1C38A2D
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Oct 2022 15:15:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A85DECAAA1
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Oct 2022 15:34:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230382AbiJXPPN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Oct 2022 11:15:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36218 "EHLO
+        id S231388AbiJXPea (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Oct 2022 11:34:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37844 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231328AbiJXPOj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Oct 2022 11:14:39 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86EABBA277;
-        Mon, 24 Oct 2022 06:52:54 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 6B2691FD8E;
-        Mon, 24 Oct 2022 12:55:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1666616152; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=doG6HZnZCoVKaGw+wo/WVrDGL+eOY9VhqR01LjBiG/k=;
-        b=HfxIHM2+JmZUl9g4XsZz67Ez89BG4CQew93Ibamd0l2IDF3ydJyH43+tX8csurg9RxBGFc
-        IW+os+DmG7gY+T3mqa/3GQt87PE+wZNr91AROX7E2pGrtKnJ0uM8O/GxEeRoCDGGolffcV
-        /5+K+/KQ9Vigv6UUppntuZaQGg/imcI=
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 1898813A79;
-        Mon, 24 Oct 2022 12:55:52 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id EEmOBFiLVmOeagAAMHmgww
-        (envelope-from <jgross@suse.com>); Mon, 24 Oct 2022 12:55:52 +0000
-Message-ID: <016732f4-d129-69bb-4b5f-82198407ee5e@suse.com>
-Date:   Mon, 24 Oct 2022 14:55:51 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.2
-Subject: Re: Report in downstream Debian: mpt3sas broken with xen dom0 with
- update to 5.10.149 in 5.10.y.
+        with ESMTP id S231418AbiJXPeO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Oct 2022 11:34:14 -0400
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B23A69525D;
+        Mon, 24 Oct 2022 07:21:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1666621285; x=1698157285;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-id:content-transfer-encoding:
+   mime-version;
+  bh=wsHBfX/ubdY9e768bhvVqCoUEwRn2o1v3S4qwOjspcA=;
+  b=j/2bp+NpQ6WYsjL/CpRS4nErJvwr40CRcnwSxOrd7bgqWIboxhxWCvD/
+   Ng3OZbnvxAwgThU/g1bQ9bFLB0oQfZZ5PSZ+Z3hQl5EtCL/eCF17sGUNw
+   AsajbezAgUntdVV+wNWmMV1D3DJ1Z5W5MNWxZYIB12f4eiF2gXZepYTjT
+   3OcmmcdM4qN9k2X9oMs7U7yNBQRrzVNw6mi7mi89JbLzGVkuHIZiYTTxc
+   VHT82n8gvqysaH92k3sEcY/TrhLkTsJrZnq9MJIDyDirNFTEF9/FPYfTo
+   ZBYhSeYEU5FnI2WA9qz0euTnpqn9WrihkGJAsbnTkJy8SawbxLWReUjsa
+   g==;
+X-IronPort-AV: E=Sophos;i="5.95,209,1661788800"; 
+   d="scan'208";a="219756499"
+Received: from mail-dm6nam11lp2175.outbound.protection.outlook.com (HELO NAM11-DM6-obe.outbound.protection.outlook.com) ([104.47.57.175])
+  by ob1.hgst.iphmx.com with ESMTP; 24 Oct 2022 21:10:11 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=HN9VjWDAZ8ErE/5JxP6VDD5gC/X5o1OTE2ZKb1z3BvHsq65ARzULERefMdFrEp2dMI9CaTwoc+nduuqUC5x3t6Z2bZg1QRLlu+4TlPSabL+CCbnrVwmM3D5nFLmZF55mQWeTuWSPQ1LLEp8CcCjTMKD22Ra5imDOZpH0VRihjMzjyn6PWM3lIou9Cq3tw5XKgEw9VyZYSBvzYy8HELgrsk7fJc9eWwU06F/ZfyFQH2SABF5QLGLS7sUKFgNncUFe+mX1V3DqP881dvFy4St0kdVpCf/x7Y2nCOnRRvc2YfWud8AkPvvcJsZ+zmHe8aGa0v2ut0757FauGiQcLuIQPw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=wsHBfX/ubdY9e768bhvVqCoUEwRn2o1v3S4qwOjspcA=;
+ b=KVw0pzbGcI+pU5HbU5Qwnu0p1KPREmfLMFC4K37TuLepUnnTVOdtGUuSXO6F1YM4V+dj4WY91dGbZMQa70OV+RS8YuQwIEwUSsmpizDWxVKUMgjtUR5fum2+Wxd9n8rfJF3/ZDxizD/Wevvld+xjKYR6Gn4xs6vp47ktpBrlbhj5zAE1Ns8ISgvnhTj7Sn93+lBzezHQOP2Ouiw39SAQw4DqlMn545ODSLPMOY+MVPXgSE6KxCcn9zOBpTeOEq9RZgNfI6Ev9CRgs5ySUDipMvx6bItRdI8hW7gmye/GYFfnVB6uHFAmN55ddKtrwn2cSIj/XC+r2YM36Pb5ML+Rcw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=wsHBfX/ubdY9e768bhvVqCoUEwRn2o1v3S4qwOjspcA=;
+ b=WfWoiyFh+oHV8E8E7kf4vjLn2x3esWeBV/oznBawkWzSGG+wOdQdGSrf55JpN1ENbOQJ2aMZL8QqFHax04XgbDlVxnEI6gRVhfuy/wvacDD2Cictcb1oVQu/uzVfEAdAv6aEo0NEKOR3DFxmK9etyddvynoRK9wCaSCNbAMi5K4=
+Received: from MN2PR04MB6272.namprd04.prod.outlook.com (2603:10b6:208:e0::27)
+ by BN7PR04MB4386.namprd04.prod.outlook.com (2603:10b6:406:fd::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5723.32; Mon, 24 Oct
+ 2022 13:10:07 +0000
+Received: from MN2PR04MB6272.namprd04.prod.outlook.com
+ ([fe80::cb5e:7ea3:2482:80f8]) by MN2PR04MB6272.namprd04.prod.outlook.com
+ ([fe80::cb5e:7ea3:2482:80f8%7]) with mapi id 15.20.5746.028; Mon, 24 Oct 2022
+ 13:10:07 +0000
+From:   Niklas Cassel <Niklas.Cassel@wdc.com>
+To:     John Garry <john.garry@huawei.com>
+CC:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "jinpu.wang@cloud.ionos.com" <jinpu.wang@cloud.ionos.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>,
+        yangxingui <yangxingui@huawei.com>,
+        yanaijie <yanaijie@huawei.com>
+Subject: Re: [PATCH v5 0/7] libsas and drivers: NCQ error handling
+Thread-Topic: [PATCH v5 0/7] libsas and drivers: NCQ error handling
+Thread-Index: AQHY1/ID0O3xyFitDU+9c+6EHqQqRa3+RKaAgAE7cQCAANLyAIAAAgSAgAAKBoCAAAiJAIAApReAgABn/oCAACBvAIAcAj2AgAAFlQCAAAcIAA==
+Date:   Mon, 24 Oct 2022 13:10:06 +0000
+Message-ID: <Y1aOrlmp3IDMDLS1@x1-carbon>
+References: <27148ec5-d1ae-d9a2-1b00-a4c34d2da198@huawei.com>
+ <Yz33FGwd3YvQUAqT@x1-carbon>
+ <5db6a7bc-dfeb-76e1-6899-7041daa934cf@opensource.wdc.com>
+ <Yz4BLTPkXqyjW4a4@x1-carbon>
+ <64ab35a7-f1ff-92ee-890e-89a5aee935a4@opensource.wdc.com>
+ <f190f19e-34b2-611c-1cf4-f8f34d12fe74@huawei.com>
+ <Yz7qD+gpmI1bdw16@x1-carbon>
+ <bc7d74dc-5aaa-1ad3-626f-df89955b1380@huawei.com>
+ <Y1aEGW2BtdIRJy7s@x1-carbon>
+ <dc61408d-8fc7-ca29-d284-0c92c2e1828c@huawei.com>
+In-Reply-To: <dc61408d-8fc7-ca29-d284-0c92c2e1828c@huawei.com>
+Accept-Language: en-US
 Content-Language: en-US
-To:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Bart Van Assche <bvanassche@acm.org>
-Cc:     Salvatore Bonaccorso <carnil@debian.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        sathya.prakash@broadcom.com, suganath-prabu.subramani@broadcom.com,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
-        adi@kriegisch.at
-References: <Y1JkuKTjVYrOWbvm@eldamar.lan>
- <85ad4508-b979-c792-e92b-01bc16260dec@acm.org>
- <CAK=zhgr=MYn=-mrz3gKUFoXG_+EQ796bHEWSdK88o1Aqamby7g@mail.gmail.com>
-From:   Juergen Gross <jgross@suse.com>
-In-Reply-To: <CAK=zhgr=MYn=-mrz3gKUFoXG_+EQ796bHEWSdK88o1Aqamby7g@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="------------S7L73GZ7QwBj4qRYR6bALgT0"
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: MN2PR04MB6272:EE_|BN7PR04MB4386:EE_
+x-ms-office365-filtering-correlation-id: cd86fa98-d7e7-4e67-7814-08dab5c11283
+wdcipoutbound: EOP-TRUE
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: 7/7WklvWJyMPUPbH7vZsXr7Zrecxms9VEGKPeVKI81MMww4W916qZYbvJ4c48ft09Dt0s74W1EWaJ0Cbd6HxQXtgjgvFpY5OU+NwyIyS4QpAHGz6tbt0QwIf2HqGtZeDC3wR4njBI/TH2EprDBe1XjL67hB9JFQtebkronk3ZPCXyCsDwH9Lo9JLh/IZy5JrMNXvVKEXcgNwTspivbts/H46V91sYBJE/f0tu+JN8YhjObmXsFlfXwl4IBlszrFeBP0nBycEIlpbaBRWEr9Mzxcj/bdb6nlNNkEl/sFgLLUijZSjpDfb8b3wDNgHNC8xFjTmRKt9TrHR+ToghfJeRdJpZ+XX8CYnOgxymz1wuIl/pjY/kOl0aESLiyEevvYAw8ULAPZphxYGa+Bzivy4t9uUf0KxHdnubf8oRs4is0XJmKqDB3XDTlpUQr4T7GgnUmQgHiZgD+QozCiG1hAogMr3f/3p3SrbA4bQh5YABIDoG0K95ehaj392H6xk/4smISXIfd7XUlpt5PvfyM0HfE4nncQs5p6huya9CeBis1kC6hzjWrRW3dA2x0QhGR333LitPkUItJqnfa00aANqZrHXIfKfC+P7zfKDc6R+QqgiNpHcGYh+Bgy+JPe3O+jHKV9YiAsGY+m+S6PtmL0CKngTsPCXm9O6vBfGPhGnOvzlUCmvNT3ZYeEA/NiyUso49nsIlRGh/9s7UL+Z5fXYerKJf0AeifKMMzfiNJZhrotjkyZVjkpLn7rLDYkZH8nkAKLUWQI1ViswmSTk5kfDl8BEk9VoeUVdEWAYx6fWWgM=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR04MB6272.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(4636009)(7916004)(39860400002)(396003)(376002)(366004)(346002)(136003)(451199015)(76116006)(41300700001)(38070700005)(83380400001)(186003)(122000001)(86362001)(38100700002)(5660300002)(8936002)(82960400001)(2906002)(64756008)(66476007)(66446008)(4326008)(8676002)(33716001)(66556008)(6506007)(91956017)(6512007)(316002)(9686003)(6486002)(66946007)(54906003)(6916009)(478600001)(966005)(26005)(71200400001);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?4i6sHYtIABwgDoVgiVSzsBbx6L9fQB73m1HXLccjBSIgcqiZEvx09YILXhQG?=
+ =?us-ascii?Q?1mxOK8/PXBngjKRoamEP1vtqqDTyrTNWkeQsjzc0YWUjafjQuqH9qWMPPhRr?=
+ =?us-ascii?Q?9Si7CXGMYSdqA0UIDPnlqN8YWBspAApWZW5cTpmkTI6IgWEbxV7dju+uluPK?=
+ =?us-ascii?Q?pO53mRs4Xo9ZmHXsBO/s/oKJ/sZvjhWhLZXMjAwhhXJ05PcoZEuXrkjnPmtO?=
+ =?us-ascii?Q?dVb+WK85I5aoN8OyNLFDtGdjGCpOMVmp53RAfIhZQyig8OyHIjY/RBmLHm54?=
+ =?us-ascii?Q?TeM9qm/WbFFqgwF50AJrGM1qT2g5A2taeipUPVEbiMdQkKOxyqiVPkQSa25z?=
+ =?us-ascii?Q?8dChKReNE7PI3vgM/xq0U8EqYB9tvlQxxpp556C1LkaD6hiR7xAc6doXW1Zp?=
+ =?us-ascii?Q?Nef5gGJItHNMUkYy6Q1Zi74FBD3GuW0EOjJHioj7qvgPdXtepwNbEjNJJIvP?=
+ =?us-ascii?Q?izuDxgt/CTztkHb0/fl7Ab6+xQrrUs6D8YP3a+MDgtE3HADaM4eeRn918RiL?=
+ =?us-ascii?Q?CuG/6RqkDzZisvt/6glajDSzWe+qEt9J11pf2xDbHQjQ0XudaA4CYM99h8L7?=
+ =?us-ascii?Q?+mghP1VyCt+BlRK35MTlniGneGk/Gb/3gaedrVXZT+QncvxDf7nt/nYj6L8j?=
+ =?us-ascii?Q?Ptrpni4dqwf1v3VVsxOuqp8jRK8aDtIrkJIeLXepptNniuxmnHslkXYH6Jl0?=
+ =?us-ascii?Q?UyuQshk7MwgxQ6SwYswiJY9RRnyuS0qmaPt3gZJYnc+fG2KiKI/B8PB5+DLg?=
+ =?us-ascii?Q?xw3e20YA2whgIGIil/6iYuSSQSTGdSnVq3wg8QrAPBrakSrA5PzBR+DcKsOp?=
+ =?us-ascii?Q?rW4tXxKYJgdYp2nbHDfKmDasaSE88vnwuqCspg+e5LtT1B1yx20DhOa+/ybo?=
+ =?us-ascii?Q?eAqAzoNoDgRHtGiVFOkaHVVpcBBqG8sQyy3dy4Y0UJmG7dwM8DLSw3RdZh/6?=
+ =?us-ascii?Q?vB1+y7i4/mmpRCnYaTsIYRPQqzA5YrZYsQxGmiVPVAjZnnBWPvs/86whw94J?=
+ =?us-ascii?Q?ud3J3/jj/VfzqtVgokkdwZXmgSvau2sc/jY8DCoM8Sa3gFoVMRlX6Y6pi/T+?=
+ =?us-ascii?Q?BTyI3Nl7fvijO7bxJHN2Z1DUm+6z0wmXQQkHNuLNKSQyDDVDihPsdpR0CKO/?=
+ =?us-ascii?Q?jpNp9/DMFCeX3LUP/T40CgDSva3kDHo34ak/gFAciu3yasUtIKJoINvYoGor?=
+ =?us-ascii?Q?fli6VzpMe2H8mZ88gDUNAlBk6PlNkI6r7uUwgo3dTAYOp8GrgG0Lkq5b1bO8?=
+ =?us-ascii?Q?7lYrZIbN+Xdz9G3+HxbOsTzwW2aMNZEZquxQA+0dv9629/jf/h1eE6aooTah?=
+ =?us-ascii?Q?tHPFx0Wi1Wkw0sRvrj0vnZORxBSjhsWiy7xSCvRYvh4XZB/HvrYdXQQu7u91?=
+ =?us-ascii?Q?jsy9nNKT1Pw+tmOw+lIyZFLUJsk+Yft/UgArlSGdVNhuwij2IF3intTrOIJH?=
+ =?us-ascii?Q?JdqlKGjq3tFrqwb//vLvu3WCT9duZuuBi+nFLaToFxqYsWRtJdlx2TanMMqV?=
+ =?us-ascii?Q?yYnVIH+zGfGkN8uhuD3zcnslCj0nY/pSiBHHkM5n1ku18AT/uxX9n2Rkx/jd?=
+ =?us-ascii?Q?Mp24xjgVpOeRJvv7h5sVsfAI7Gn7NjlugLaWHwI2oYGKRSZCbbKOavxSIa4h?=
+ =?us-ascii?Q?fg=3D=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <03BF6850DB1BB748B16996FF00074E6B@namprd04.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: MN2PR04MB6272.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: cd86fa98-d7e7-4e67-7814-08dab5c11283
+X-MS-Exchange-CrossTenant-originalarrivaltime: 24 Oct 2022 13:10:06.9955
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: WN6NgZL315J17viUOL/g+risIiQoR6FEm3Mk4FgGDj9X8O99Cn+259ATN6iYWnbO5unlgNA+ITDtJCGAaRYfMw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN7PR04MB4386
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------------S7L73GZ7QwBj4qRYR6bALgT0
-Content-Type: multipart/mixed; boundary="------------8nAfY0HuTJjjgFAPh5D6KU35";
- protected-headers="v1"
-From: Juergen Gross <jgross@suse.com>
-To: Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
- Bart Van Assche <bvanassche@acm.org>
-Cc: Salvatore Bonaccorso <carnil@debian.org>,
- "James E.J. Bottomley" <jejb@linux.ibm.com>, sathya.prakash@broadcom.com,
- suganath-prabu.subramani@broadcom.com,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
- adi@kriegisch.at
-Message-ID: <016732f4-d129-69bb-4b5f-82198407ee5e@suse.com>
-Subject: Re: Report in downstream Debian: mpt3sas broken with xen dom0 with
- update to 5.10.149 in 5.10.y.
-References: <Y1JkuKTjVYrOWbvm@eldamar.lan>
- <85ad4508-b979-c792-e92b-01bc16260dec@acm.org>
- <CAK=zhgr=MYn=-mrz3gKUFoXG_+EQ796bHEWSdK88o1Aqamby7g@mail.gmail.com>
-In-Reply-To: <CAK=zhgr=MYn=-mrz3gKUFoXG_+EQ796bHEWSdK88o1Aqamby7g@mail.gmail.com>
+On Mon, Oct 24, 2022 at 01:44:56PM +0100, John Garry wrote:
+> Hi Niklas,
+>=20
+> >=20
+> > For the record, I tested the pm80xx driver on a HoneyComb LX2 board
+> > (an arm64 board using ACPI).
+> >=20
+> > I tried v6.1-rc1 both with and without your series in $subject.
+> >=20
+> > I couldn't see any issues.
+>=20
+> ok, thanks for the effort.
+>=20
+> >=20
+> >=20
+> > What I tried:
+> > -Running fio:
+> > fio --name=3Dtest --filename=3D/dev/sdc --ioengine=3Dio_uring --rw=3Dra=
+ndrw --direct=3D1 --iodepth=3D32 --bs=3D1M
+> > on three different HDDs simultaneously for 15+ minutes,
+> > without any errors in fio or dmesg.
+> >=20
+> > -Creating and mounting a btrfs volume, doing a huge dd to the filesyste=
+m
+> > without issues.
+> >=20
+> > -sg_sat_read_gplog -d --log=3D0x10 /dev/sda
+> > which successfully returned the log.
+> >=20
+> >=20
+> > It is worth mentioning that this arm64 board has reserved memory region=
+s,
+> > but does not yet have a firmware that supplies a IORT RMR (reserved mem=
+ory
+> > regions) revision E.d node, which means that in order to get this board=
+ to
+> > boot successfully, we need to supply:
+> > "arm-smmu.disable_bypass=3D0 iommu.passthrough=3D1"
+> > on the kernel command line.
+>=20
+> hmmm... that's interesting. I can try again with the IOMMU turned off, bu=
+t,
+> as I recall, it did not make a difference before. I think that requiring
+> reserved memory regions would totally bust the driver (if not present) wi=
+th
+> IOMMU enabled. As I recall, sas 3008 card would not work without RMR for =
+us.
 
---------------8nAfY0HuTJjjgFAPh5D6KU35
-Content-Type: multipart/mixed; boundary="------------cFpTspK8fz03bLJT6EfskpoB"
+At least on the HoneyComb LX2,
+running with "arm-smmu.disable_bypass=3D0 iommu.passthrough=3D1" gives a wo=
+rking
+system (and working pm80xx).
 
---------------cFpTspK8fz03bLJT6EfskpoB
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: base64
+The ACPI IOMMU code that parses the ACPI IORT RMR revision E.d node
+was first included in kernel v6.0:
+https://lore.kernel.org/linux-iommu/20220615101044.1972-1-shameerali.koloth=
+um.thodi@huawei.com/
 
-T24gMjQuMTAuMjIgMTM6NTYsIFNyZWVrYW50aCBSZWRkeSB3cm90ZToNCj4gT24gU3VuLCBP
-Y3QgMjMsIDIwMjIgYXQgNjo1NyBBTSBCYXJ0IFZhbiBBc3NjaGUgPGJ2YW5hc3NjaGVAYWNt
-Lm9yZz4gd3JvdGU6DQo+Pg0KPj4gT24gMTAvMjEvMjIgMDI6MjIsIFNhbHZhdG9yZSBCb25h
-Y2NvcnNvIHdyb3RlOg0KPj4+IFdlIGdvdCB0aGUgZm9sbG93aW5nIHJlcG9ydCBpbiBEZWJp
-YW4gYWZ0ZXIgYW4gdXBkYXRlIGZyb20gNS4xMC4xNDAgdG8NCj4+PiB0aGUgY3VycmVudCA1
-LjEwLjE0OS4gRnVsbCBxdW90aW5nIGJlbG93IChmcm9tDQo+Pj4gaHR0cHM6Ly9idWdzLmRl
-Ymlhbi5vcmcvMTAyMjEyNikuIERvZXMgdGhpcyByaW5nIHNvbWUgYmVsbCBhYm91dCBrbm93
-bg0KPj4+IHJlZ3Jlc3Npb25zPw0KPj4NCj4+IE9ubHkgdGhyZWUgbXB0M3NhcyBjaGFuZ2Vz
-IGFyZSBuZXcgaW4gdjUuMTAuMTQ5IGNvbXBhcmVkIHRvIHY1LjEwLjE0MDoNCj4+ICQgZ2l0
-IGxvZyAtLWZvcm1hdD1vbmVsaW5lIHY1LjEwLjE0MC4udjUuMTAuMTQ5DQo+PiAyYjlhYmEw
-YzVkNThlMTQxZTMyYmIxYmI0YzdjZDkxZDE5ZjA3NWI4IHNjc2k6IG1wdDNzYXM6IEZpeCBy
-ZXR1cm4gdmFsdWUgY2hlY2sgb2YgZG1hX2dldF9yZXF1aXJlZF9tYXNrKCkNCj4+IGU3ZmFm
-ZWY5ODMwYzRhMDFlNjBmNzZlMzg2MGE5YmVmMDI2MjM3OGQgc2NzaTogbXB0M3NhczogRm9y
-Y2UgUENJZSBzY2F0dGVybGlzdCBhbGxvY2F0aW9ucyB0byBiZSB3aXRoaW4gc2FtZSA0IEdC
-IHJlZ2lvbg0KPj4gZWExMGE2NTJhZDJhZTJjZjNlY2VkNmY2MzJhNWM5OGYyNjcyNzA1NyBz
-Y3NpOiBtcHQzc2FzOiBGaXggdXNlLWFmdGVyLWZyZWUgd2FybmluZw0KPj4NCj4+IFNyZWVr
-YW50aCBhbmQgU3VnYW5hdGgsIGNhbiB5b3UgaGVscCB3aXRoIGJpc2VjdGluZyB0aGlzIGlz
-c3VlPyBGb3IgdGhlDQo+PiBmdWxsIHJlcG9ydCwgc2VlIGFsc28gaHR0cHM6Ly9sb3JlLmtl
-cm5lbC5vcmcvbGludXgtc2NzaS9ZMUprdUtUalZZck9XYnZtQGVsZGFtYXIubGFuLy4NCj4g
-DQo+IFRoaXMgaXNzdWUgaXMgZ2V0dGluZyBvYnNlcnZlZCBhZnRlciBoYXZpbmcgdGhlIGJl
-bG93IHBhdGNoIGNoYW5nZXMsDQo+IDJiOWFiYTBjNWQ1OGUxNDFlMzJiYjFiYjRjN2NkOTFk
-MTlmMDc1Yjggc2NzaTogbXB0M3NhczogRml4IHJldHVybg0KPiB2YWx1ZSBjaGVjayBvZiBk
-bWFfZ2V0X3JlcXVpcmVkX21hc2soKQ0KPiANCj4gV2hhdCBpcyBoYXBwZW5pbmcgaXMgdGhh
-dCBvbiBYZW4gaHlwZXJ2aXNvciwgdGhpcw0KPiBkbWFfZ2V0X3JlcXVpcmVkX21hc2soKSBB
-UEkgYWx3YXlzIHJldHVybnMgYSAzMiBiaXQgRE1BIG1hc2suIEkuZS4gSXQNCj4gc2F5cyB0
-aGF0IHRoZSBtaW5pbXVtIERNQSBtYXNrIHJlcXVpcmVkIHRvIGFjY2VzcyB0aGUgaG9zdCBt
-ZW1vcnkgaXMNCj4gMzIgYml0IGFuZCBoZW5jZSBtcHQzc2FzIGRyaXZlciBpcyBzZXR0aW5n
-IHRoZSBETUEgbWFzayB0byAzMmJpdC4gU28sDQo+IG9uIGEgNjQgYml0IG1hY2hpbmUsIGlm
-IHRoZSBkcml2ZXIgc2V0J3MgdGhlIERNQSBtYXNrIHRvIDMyIGJpdCB0aGVuDQo+IFNXSU9U
-TEIncyBib3VuY2UgYnVmZmVyIGNvbWVzIGludG8gcGljdHVyZSBkdXJpbmcgSU9zLiBTaW5j
-ZSB0aGVzZQ0KPiBib3VuY2UgYnVmZmVycyBhcmUgbGltaXRlZCBpbiBzaXplIGFuZCBoZW5j
-ZSB3ZSBvYnNlcnZlIHRoZSBJTyBoYW5nIGlmDQo+IHRoZSBsYXJnZSBJT3MgYXJlIGlzc3Vl
-ZC4NCj4gDQo+IEkgYW0gbm90IHN1cmUgd2hldGhlciB0aGlzIEFQSSdzIHJldHVybiB2YWx1
-ZSBpcyBjb3JyZWN0IG9yIG5vdCBpbiB0aGUNCj4gWGVuIGVudmlyb25tZW50LiBJZiBpdCBp
-cyBjb3JyZWN0IHRoZW4gSSBoYXZlIHRvIG1vZGlmeSB0aGUgZHJpdmVyIHRvDQo+IG5vdCB1
-c2UgdGhpcyBBUEkgYW5kIGRpcmVjdGx5IHNldCB0aGUgRE1BIG1hc2sgdG8gNjQgYml0IGlm
-IHRoZSBzeXN0ZW0NCj4gaXMgYSA2NGJpdCBtYWNoaW5lLg0KDQpQbGVhc2UgcmVjaGVjayB0
-aGUgYmFja3BvcnRlZCBwYXRjaCBpbiA1LjEwLnkuIEl0IGlzIF93cm9uZ18uIFRoZSBiYWNr
-cG9ydA0KaGFzOg0KDQotLS0gYS9kcml2ZXJzL3Njc2kvbXB0M3Nhcy9tcHQzc2FzX2Jhc2Uu
-Yw0KKysrIGIvZHJpdmVycy9zY3NpL21wdDNzYXMvbXB0M3Nhc19iYXNlLmMNCkBAIC0yOTkz
-LDcgKzI5OTMsNyBAQCBfYmFzZV9jb25maWdfZG1hX2FkZHJlc3Npbmcoc3RydWN0IE1QVDNT
-QVNfQURBUFRFUiAqaW9jLCANCnN0cnVjdCBwY2lfZGV2ICpwZGV2KQ0KDQogICAgICAgICBp
-ZiAoaW9jLT5pc19tY3B1X2VuZHBvaW50IHx8DQogICAgICAgICAgICAgc2l6ZW9mKGRtYV9h
-ZGRyX3QpID09IDQgfHwgaW9jLT51c2VfMzJiaXRfZG1hIHx8DQotICAgICAgICAgICBkbWFf
-Z2V0X3JlcXVpcmVkX21hc2soJnBkZXYtPmRldikgPD0gMzIpDQorICAgICAgICAgICBkbWFf
-Z2V0X3JlcXVpcmVkX21hc2soJnBkZXYtPmRldikgPD0gRE1BX0JJVF9NQVNLKDMyKSkNCiAg
-ICAgICAgICAgICAgICAgaW9jLT5kbWFfbWFzayA9IDMyOw0KICAgICAgICAgLyogU2V0IDYz
-IGJpdCBETUEgbWFzayBmb3IgYWxsIFNBUzMgYW5kIFNBUzM1IGNvbnRyb2xsZXJzICovDQog
-ICAgICAgICBlbHNlIGlmIChpb2MtPmhiYV9tcGlfdmVyc2lvbl9iZWxvbmdlZCA+IE1QSTJf
-VkVSU0lPTikNCg0KV2hpbGUgdGhlIHVwc3RyZWFtIHBhdGNoIGhhczoNCg0KKyAgICAgICBp
-ZiAoaW9jLT5pc19tY3B1X2VuZHBvaW50IHx8IHNpemVvZihkbWFfYWRkcl90KSA9PSA0IHx8
-DQorICAgICAgICAgICBkbWFfZ2V0X3JlcXVpcmVkX21hc2soJnBkZXYtPmRldikgPD0gMzIp
-IHsNCiAgICAgICAgICAgICAgICAgaW9jLT5kbWFfbWFzayA9IDMyOw0KKyAgICAgICAgICAg
-ICAgIGNvaGVyZW50X2RtYV9tYXNrID0gZG1hX21hc2sgPSBETUFfQklUX01BU0soMzIpOw0K
-DQoNCkp1ZXJnZW4NCg0K
---------------cFpTspK8fz03bLJT6EfskpoB
-Content-Type: application/pgp-keys; name="OpenPGP_0xB0DE9DD628BF132F.asc"
-Content-Disposition: attachment; filename="OpenPGP_0xB0DE9DD628BF132F.asc"
-Content-Description: OpenPGP public key
-Content-Transfer-Encoding: quoted-printable
+However, the HoneyComb edk2-platforms code has not yet been updated to add
+a ACPI IORT RMR revision E.d node.
 
------BEGIN PGP PUBLIC KEY BLOCK-----
+Considering that it works with "arm-smmu.disable_bypass=3D0 iommu.passthrou=
+gh=3D1",
+I assume that the ACPI IORT RMR node basically just defines a number of
+memory regions which the IOMMU should treat as "bypass", while all other
+memory has to be re-mapped via the IOMMU as per usual.
 
-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
-jR/i1DG86lem3iBDXzXsZDn8R38=3D
-=3D2wuH
------END PGP PUBLIC KEY BLOCK-----
 
---------------cFpTspK8fz03bLJT6EfskpoB--
-
---------------8nAfY0HuTJjjgFAPh5D6KU35--
-
---------------S7L73GZ7QwBj4qRYR6bALgT0
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature"
-
------BEGIN PGP SIGNATURE-----
-
-wsB5BAABCAAjFiEEhRJncuj2BJSl0Jf3sN6d1ii/Ey8FAmNWi1cFAwAAAAAACgkQsN6d1ii/Ey9+
-lwf/Yha8xaMGxH8Q4ckxdIAJvEQrji9rS53M62NlunVEMWVsKeUqsrmPASDUET/YhTByyi7+moWO
-DDioRZgOVuaMudP+cIwEtQ8eYvUv30uFaIOvKlFwsO2li5l50mVCAT0/5dax0+H5vXWpKsVPlZ4z
-SgcnpWUamA5goQNHUA0EoyFQpxucuiC1w7u7yBEIEVm2VmzyNrayou76j+GLEBGD+I/A9PzWHju/
-8UOSLt3jYmY6t/RXCar2Rk5qaMQqoTCPM6rynWO1Lpy30dH+hMl4+tXW2o2p5EdJBpj/maCB02KB
-W4KDn2wxmur5vSpRqI4Ha/OdjqmHe55PW1h5Mv/IFw==
-=CPv9
------END PGP SIGNATURE-----
-
---------------S7L73GZ7QwBj4qRYR6bALgT0--
+Kind regards,
+Niklas=
