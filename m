@@ -2,160 +2,106 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5B9AFA373E
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Oct 2022 10:17:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFA5AC38A2D
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Oct 2022 10:47:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232310AbiJYKR3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Oct 2022 06:17:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56424 "EHLO
+        id S232354AbiJYKrA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Oct 2022 06:47:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39468 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232242AbiJYKRF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Oct 2022 06:17:05 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3569C112AAB;
-        Tue, 25 Oct 2022 03:11:20 -0700 (PDT)
-Received: from frapeml500002.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MxSNj16HWz6HJTP;
-        Tue, 25 Oct 2022 18:09:57 +0800 (CST)
-Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- frapeml500002.china.huawei.com (7.182.85.205) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Tue, 25 Oct 2022 12:11:18 +0200
-Received: from [10.195.245.7] (10.195.245.7) by lhrpeml500003.china.huawei.com
- (7.191.162.67) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Tue, 25 Oct
- 2022 11:11:15 +0100
-Message-ID: <b02c42d9-3f3f-1d5a-29f0-13018867647b@huawei.com>
-Date:   Tue, 25 Oct 2022 11:11:14 +0100
+        with ESMTP id S232285AbiJYKq7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Oct 2022 06:46:59 -0400
+Received: from mail-ed1-x52c.google.com (mail-ed1-x52c.google.com [IPv6:2a00:1450:4864:20::52c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE1831CFD0
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Oct 2022 03:46:58 -0700 (PDT)
+Received: by mail-ed1-x52c.google.com with SMTP id x2so8311678edd.2
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Oct 2022 03:46:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:subject:from:user-agent:mime-version:date:message-id:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=Z9I9hKjxroauyjaQ+DVkkiyDN9LpQw/UgTxPKtmTkDI=;
+        b=O5XzGl21zp5Kf+UgsZYFD5f9VocNReEpilUqUfVb1GbM+dXdSwbjTTC2jnzozsKHQs
+         uQBQPRHDWaitXF1SmPgFDN7pncrL5lB5zYk/vnXrVe90nz/CgxxbO0t+dS0KCpFiqOMA
+         YMeqN2tY8OoShGmVqbbC+5jYIOfV25nvhhblHYTNuXnsxXtA5kCXO5UkB9lO5g2JpAUC
+         kGb13TSz/QhAHUU9KK+0nmZfMWrNlCRLhpC7jUJpc29YenbsO5f3g4eKsQRDpB+ZSmmX
+         MLdJNL83W7x+HbO4dsRPnxQ/GEUbmZDcIZwv1RT++WuFGd2Wy1id4dOqcRPSYKPSg9MU
+         ZIEA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:subject:from:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Z9I9hKjxroauyjaQ+DVkkiyDN9LpQw/UgTxPKtmTkDI=;
+        b=nJcarSlyV3bVrIDYyAYs4hH2EShfDrQC8V0Qp8CA/H6dzkzk/OxBwdRhdDrocFvmgw
+         wa6NUIQ7PabqcavL3g/9XF4LvhXGKV/hRZ9qaCgLF0CEGaE2+bsaxSYwEY/safqhuy0x
+         ibJpN0BER4x+LP8Mw/M92L69EbuHzjpR7er8uYMMC6NooYI1l9hWHU/G7mkDWa7MyltL
+         s+r2OdAe2ygt7l2lKvottgmMhniY3ZHQ60Na+qCP41Ias0/NLU6cphIOHVvunG7gO+p2
+         m5yTPjWOXJTiZrZGitmeilsu3Jkd+dfF13wE4bA0KdR5Ahtg0n5nvMSdVAlLxxuyuEsd
+         ediQ==
+X-Gm-Message-State: ACrzQf2/SSBNLWgAze1Ry9ba9eyHx5osTvD+y/rMzaXhFRFWujujv2GJ
+        I7nM5icgqK2a5Oj0v9YJ1nE=
+X-Google-Smtp-Source: AMsMyM517McmGsrGW6jJ9ODThMGTMVx38CCQwHGBWKZ/pJUjRoNlQCtZfudVjNiVi/LuWEV5X8gfjQ==
+X-Received: by 2002:a05:6402:28ca:b0:43b:5235:f325 with SMTP id ef10-20020a05640228ca00b0043b5235f325mr34554556edb.320.1666694817062;
+        Tue, 25 Oct 2022 03:46:57 -0700 (PDT)
+Received: from [192.168.178.40] (ip5f597b78.dynamic.kabel-deutschland.de. [95.89.123.120])
+        by smtp.gmail.com with ESMTPSA id p3-20020a056402074300b00461aaa39efbsm1441628edy.0.2022.10.25.03.46.56
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 25 Oct 2022 03:46:56 -0700 (PDT)
+Message-ID: <78357696-d9aa-71a0-8cee-0fadbc90655f@gmail.com>
+Date:   Tue, 25 Oct 2022 12:46:55 +0200
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH RFC v3 00/22] blk-mq/libata/scsi: SCSI driver tagging
- improvements Part I
-To:     <axboe@kernel.dk>, <damien.lemoal@opensource.wdc.com>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <jinpu.wang@cloud.ionos.com>, <hare@suse.de>, <bvanassche@acm.org>,
-        <hch@lst.de>, <ming.lei@redhat.com>, <niklas.cassel@wdc.com>
-CC:     <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-ide@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linuxarm@huawei.com>
-References: <1666693096-180008-1-git-send-email-john.garry@huawei.com>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <1666693096-180008-1-git-send-email-john.garry@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.2.2
+From:   Bodo Stroesser <bostroesser@gmail.com>
+Subject: Re: [PATCH 1/5] sgl_alloc_order: remove 4 GiB limit
+To:     Jason Gunthorpe <jgg@ziepe.ca>
+Cc:     Douglas Gilbert <dgilbert@interlog.com>,
+        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        jejb@linux.vnet.ibm.com, hare@suse.de, bvanassche@acm.org
+References: <20221024010244.9522-1-dgilbert@interlog.com>
+ <20221024010244.9522-2-dgilbert@interlog.com> <Y1aDQznakNaWD8kd@ziepe.ca>
+ <665f8dee-6688-60d1-5097-49f9726c38ec@gmail.com> <Y1bMKU5nq5DXYdbw@ziepe.ca>
+Content-Language: en-US
+In-Reply-To: <Y1bMKU5nq5DXYdbw@ziepe.ca>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.195.245.7]
-X-ClientProxiedBy: lhrpeml500001.china.huawei.com (7.191.163.213) To
- lhrpeml500003.china.huawei.com (7.191.162.67)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 25/10/2022 11:17, John Garry wrote:
+On 24.10.22 19:32, Jason Gunthorpe wrote:
+> On Mon, Oct 24, 2022 at 04:32:30PM +0200, Bodo Stroesser wrote:
+>>> +struct scatterlist *sgl_alloc_order(size_t length, unsigned int order,
+>>> +				    bool chainable, gfp_t gfp, size_t *nent_p)
+>>>    {
+>>>    	struct scatterlist *sgl, *sg;
+>>>    	struct page *page;
+>>> -	unsigned int nent, nalloc;
+>>> +	size_t nent, nalloc;
+>>>    	u32 elem_len;
+>>> -	nent = round_up(length, PAGE_SIZE << order) >> (PAGE_SHIFT + order);
+>>> -	/* Check for integer overflow */
+>>> -	if (length > (nent << (PAGE_SHIFT + order)))
+>>> -		return NULL;
+>>> +	nent = length >> (PAGE_SHIFT + order);
+>>> +	if (length % (1 << (PAGE_SHIFT + order)))
+>>
+>> This might end up doing a modulo operation for divisor 0, if caller
+>> specifies a too high order parameter, right?
+> 
+> If that happens then the first >> will be busted too and this is all
+> broken..
+> 
+> We assume the caller will pass a valid order paramter it seems, it is
+> not userspace controlled.
+> 
 
-Hi all,
+If a too high order is passed, alloc_pages will just return NULL, so
+in the old code sgl_alloc_order simply returns NULL. Using modulo op
+changes it to possibly crashing the system.
 
-I meant to say that this is just an update for where I got to here. I am 
-actually changing employer soon, but will continue in upstream linux 
-storage domain. So I don't want people to think that I am just throwing 
-some stuff over the wall for the community to deal with. I would still 
-like people to check this.
+Bodo
 
-Thanks,
-John
-
-> Currently SCSI low-level drivers are required to manage tags for commands
-> which do not come via the block layer - libata internal commands would be
-> an example of one of these. We want to make blk-mq manage these tags also.
-> 
-> There was some work to provide "reserved commands" support in such series
-> as https://lore.kernel.org/linux-scsi/20211125151048.103910-1-hare@suse.de/
-> 
-> This was based on allocating a request for the lifetime of the "internal"
-> command.
-> 
-> This series tries to solve that problem by not just allocating the request
-> but also sending it as a request through the block layer. Reasons to do
-> this:
-> - Normal flow of a request and also commonality for regular scsi command
->    lifetime
-> - We don't leave request and scsi_cmnd fields dangling as when we just
->    allocate and free the request for the lifetime of the "internal" command
-> - For poll mode support we can only poll in block layer, so could not send
->    internal commands on poll mode queues if we did not do this, which is a
->    problem
-> - Can get rid of duplicated code like libsas internal command timeout
->    handling
-> 
-> Series part I contains core SCSI midlayer, libata, and libsas changes to
-> queue libsas "slow" tasks as requests.
-> 
-> Series part II of this series focused on changing libata to queue internal
-> commands as requests.
-> 
-> Testing:
-> QEMU with AHCI with disk and cdrom attached, hisi_sas, pm8001.
-> 
-> Branch containing all patches is at:
-> https://github.com/hisilicon/kernel-dev/commits/private-topic-sas-6.1-block
-> 
-> v2 was here:
-> https://lore.kernel.org/linux-scsi/1654770559-101375-1-git-send-email-john.garry@huawei.com/
-> 
-> Hannes Reinecke (1):
->    scsi: core: Implement reserved command handling
-> 
-> John Garry (21):
->    blk-mq: Don't get budget for reserved requests
->    scsi: core: Add scsi_get_dev()
->    scsi: core: Add support to send reserved commands
->    scsi: core: Add support for reserved command timeout handling
->    scsi: libsas: Improve sas_ex_discover_expander() error handling
->    scsi: libsas: Notify LLDD expander found before calling sas_rphy_add()
->    scsi: scsi_transport_sas: Alloc sdev for expander
->    scsi: libsas: Add sas_alloc_slow_task_rq()
->    scsi: libsas: Add sas_queuecommand_internal()
->    scsi: libsas: Add sas_internal_timeout()
->    scsi: core: Use SCSI_SCAN_RESCAN in  __scsi_add_device()
->    scsi: scsi_transport_sas: Allocate end device target id in the rphy
->      alloc
->    ata: libata-scsi: Add ata_scsi_setup_sdev()
->    scsi: libsas: Add sas_ata_setup_device()
->    ata: libata-scsi: Allocate sdev early in port probe
->    scsi: libsas drivers: Reserve tags
->    scsi: libsas: Queue SMP commands as requests
->    scsi: libsas: Queue TMF commands as requests
->    scsi: core: Add scsi_alloc_request_hwq()
->    scsi: libsas: Queue internal abort commands as requests
->    scsi: libsas: Delete sas_task_slow.timer
-> 
->   block/blk-mq.c                         |   4 +-
->   drivers/ata/libata-eh.c                |   1 +
->   drivers/ata/libata-scsi.c              |  49 ++++++++----
->   drivers/ata/libata.h                   |   1 +
->   drivers/scsi/aic94xx/aic94xx_init.c    |   3 +
->   drivers/scsi/hisi_sas/hisi_sas_main.c  |  40 +++++-----
->   drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |   3 +
->   drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |   3 +
->   drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |   7 ++
->   drivers/scsi/hosts.c                   |  16 ++++
->   drivers/scsi/isci/init.c               |   3 +
->   drivers/scsi/libsas/sas_ata.c          |  20 +++++
->   drivers/scsi/libsas/sas_expander.c     | 101 ++++++++++++++-----------
->   drivers/scsi/libsas/sas_init.c         |  61 ++++++++++++++-
->   drivers/scsi/libsas/sas_internal.h     |   5 ++
->   drivers/scsi/libsas/sas_scsi_host.c    |  93 ++++++++++++-----------
->   drivers/scsi/mvsas/mv_init.c           |   7 ++
->   drivers/scsi/pm8001/pm8001_init.c      |   8 +-
->   drivers/scsi/scsi_error.c              |   3 +
->   drivers/scsi/scsi_lib.c                |  42 +++++++++-
->   drivers/scsi/scsi_scan.c               |  29 ++++++-
->   drivers/scsi/scsi_transport_sas.c      |  34 ++++++---
->   include/linux/libata.h                 |   2 +
->   include/scsi/libsas.h                  |   8 +-
->   include/scsi/scsi_cmnd.h               |   3 +
->   include/scsi/scsi_host.h               |  21 ++++-
->   26 files changed, 424 insertions(+), 143 deletions(-)
-> 
 
