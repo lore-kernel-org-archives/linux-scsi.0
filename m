@@ -2,230 +2,160 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C6B3FA373E
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Oct 2022 10:12:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5B9AFA373E
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Oct 2022 10:17:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232297AbiJYKMK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Oct 2022 06:12:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43428 "EHLO
+        id S232310AbiJYKR3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Oct 2022 06:17:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56424 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232171AbiJYKKt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Oct 2022 06:10:49 -0400
+        with ESMTP id S232242AbiJYKRF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Oct 2022 06:17:05 -0400
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8806013669F;
-        Tue, 25 Oct 2022 03:03:42 -0700 (PDT)
-Received: from fraeml701-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MxS9Q390vz67brF;
-        Tue, 25 Oct 2022 18:00:10 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3569C112AAB;
+        Tue, 25 Oct 2022 03:11:20 -0700 (PDT)
+Received: from frapeml500002.china.huawei.com (unknown [172.18.147.207])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MxSNj16HWz6HJTP;
+        Tue, 25 Oct 2022 18:09:57 +0800 (CST)
 Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml701-chm.china.huawei.com (10.206.15.50) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2375.31; Tue, 25 Oct 2022 12:03:40 +0200
-Received: from localhost.localdomain (10.69.192.58) by
- lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
+ frapeml500002.china.huawei.com (7.182.85.205) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Tue, 25 Oct 2022 11:03:37 +0100
-From:   John Garry <john.garry@huawei.com>
-To:     <damien.lemoal@opensource.wdc.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <hare@suse.de>, <bvanassche@acm.org>,
-        <hch@lst.de>, <ming.lei@redhat.com>, <niklas.cassel@wdc.com>
-CC:     <axboe@kernel.dk>, <jinpu.wang@cloud.ionos.com>,
-        <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-ide@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linuxarm@huawei.com>, John Garry <john.garry@huawei.com>
-Subject: [PATCH RFC v3 7/7] scsi: hisi_sas: Remove internal tag handling for reserved commands
-Date:   Tue, 25 Oct 2022 18:32:56 +0800
-Message-ID: <1666693976-181094-8-git-send-email-john.garry@huawei.com>
-X-Mailer: git-send-email 2.8.1
-In-Reply-To: <1666693976-181094-1-git-send-email-john.garry@huawei.com>
-References: <1666693976-181094-1-git-send-email-john.garry@huawei.com>
+ 15.1.2375.31; Tue, 25 Oct 2022 12:11:18 +0200
+Received: from [10.195.245.7] (10.195.245.7) by lhrpeml500003.china.huawei.com
+ (7.191.162.67) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Tue, 25 Oct
+ 2022 11:11:15 +0100
+Message-ID: <b02c42d9-3f3f-1d5a-29f0-13018867647b@huawei.com>
+Date:   Tue, 25 Oct 2022 11:11:14 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH RFC v3 00/22] blk-mq/libata/scsi: SCSI driver tagging
+ improvements Part I
+To:     <axboe@kernel.dk>, <damien.lemoal@opensource.wdc.com>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <jinpu.wang@cloud.ionos.com>, <hare@suse.de>, <bvanassche@acm.org>,
+        <hch@lst.de>, <ming.lei@redhat.com>, <niklas.cassel@wdc.com>
+CC:     <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linuxarm@huawei.com>
+References: <1666693096-180008-1-git-send-email-john.garry@huawei.com>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <1666693096-180008-1-git-send-email-john.garry@huawei.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.195.245.7]
+X-ClientProxiedBy: lhrpeml500001.china.huawei.com (7.191.163.213) To
  lhrpeml500003.china.huawei.com (7.191.162.67)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Now that any sas_task which we're sent has a request associated, we can
-use the request tag for slot IPTT.
+On 25/10/2022 11:17, John Garry wrote:
 
-However, since v2 HW has its own slot IPTT allocation scheme due to badly
-broken HW, continue to use it.
+Hi all,
 
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- drivers/scsi/hisi_sas/hisi_sas.h       |  3 -
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 82 +++++---------------------
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  9 +--
- 3 files changed, 17 insertions(+), 77 deletions(-)
+I meant to say that this is just an update for where I got to here. I am 
+actually changing employer soon, but will continue in upstream linux 
+storage domain. So I don't want people to think that I am just throwing 
+some stuff over the wall for the community to deal with. I would still 
+like people to check this.
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 6f8a52a1b808..8cd238f75066 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -39,9 +39,6 @@
- #define HISI_SAS_PM_BIT		2
- #define HISI_SAS_HW_FAULT_BIT	3
- #define HISI_SAS_MAX_COMMANDS (HISI_SAS_QUEUE_SLOTS)
--#define HISI_SAS_RESERVED_IPTT  96
--#define HISI_SAS_UNRESERVED_IPTT \
--	(HISI_SAS_MAX_COMMANDS - HISI_SAS_RESERVED_IPTT)
- 
- #define HISI_SAS_IOST_ITCT_CACHE_NUM 64
- #define HISI_SAS_IOST_ITCT_CACHE_DW_SZ 10
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 65475775c844..7f784cdacf9f 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -161,49 +161,13 @@ static void hisi_sas_slot_index_clear(struct hisi_hba *hisi_hba, int slot_idx)
- 
- static void hisi_sas_slot_index_free(struct hisi_hba *hisi_hba, int slot_idx)
- {
--	if (hisi_hba->hw->slot_index_alloc ||
--	    slot_idx >= HISI_SAS_UNRESERVED_IPTT) {
-+	if (hisi_hba->hw->slot_index_alloc) {
- 		spin_lock(&hisi_hba->lock);
- 		hisi_sas_slot_index_clear(hisi_hba, slot_idx);
- 		spin_unlock(&hisi_hba->lock);
- 	}
- }
- 
--static void hisi_sas_slot_index_set(struct hisi_hba *hisi_hba, int slot_idx)
--{
--	void *bitmap = hisi_hba->slot_index_tags;
--
--	__set_bit(slot_idx, bitmap);
--}
--
--static int hisi_sas_slot_index_alloc(struct hisi_hba *hisi_hba,
--				     struct request *rq)
--{
--	int index;
--	void *bitmap = hisi_hba->slot_index_tags;
--
--	if (rq)
--		return rq->tag + HISI_SAS_RESERVED_IPTT;
--
--	spin_lock(&hisi_hba->lock);
--	index = find_next_zero_bit(bitmap, HISI_SAS_RESERVED_IPTT,
--				   hisi_hba->last_slot_index + 1);
--	if (index >= HISI_SAS_RESERVED_IPTT) {
--		index = find_next_zero_bit(bitmap,
--				HISI_SAS_RESERVED_IPTT,
--				0);
--		if (index >= HISI_SAS_RESERVED_IPTT) {
--			spin_unlock(&hisi_hba->lock);
--			return -SAS_QUEUE_FULL;
--		}
--	}
--	hisi_sas_slot_index_set(hisi_hba, index);
--	hisi_hba->last_slot_index = index;
--	spin_unlock(&hisi_hba->lock);
--
--	return index;
--}
--
- void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
- 			     struct hisi_sas_slot *slot)
- {
-@@ -465,8 +429,10 @@ static int hisi_sas_queue_command(struct sas_task *task, gfp_t gfp_flags)
- 	struct hisi_sas_port *port;
- 	struct hisi_hba *hisi_hba;
- 	struct hisi_sas_slot *slot;
-+	unsigned int dq_index;
- 	struct request *rq;
- 	struct device *dev;
-+	u32 blk_tag;
- 	int rc;
- 
- 	if (!sas_port) {
-@@ -486,20 +452,9 @@ static int hisi_sas_queue_command(struct sas_task *task, gfp_t gfp_flags)
- 	hisi_hba = dev_to_hisi_hba(device);
- 	dev = hisi_hba->dev;
- 	rq = sas_task_find_rq(task);
--	if (rq) {
--		unsigned int dq_index;
--		u32 blk_tag;
--
--		blk_tag = blk_mq_unique_tag(rq);
--		dq_index = blk_mq_unique_tag_to_hwq(blk_tag);
--		dq = &hisi_hba->dq[dq_index];
--	} else {
--		struct Scsi_Host *shost = hisi_hba->shost;
--		struct blk_mq_queue_map *qmap = &shost->tag_set.map[HCTX_TYPE_DEFAULT];
--		int queue = qmap->mq_map[raw_smp_processor_id()];
--
--		dq = &hisi_hba->dq[queue];
--	}
-+	blk_tag = blk_mq_unique_tag(rq);
-+	dq_index = blk_mq_unique_tag_to_hwq(blk_tag);
-+	dq = &hisi_hba->dq[dq_index];
- 
- 	switch (task->task_proto) {
- 	case SAS_PROTOCOL_SSP:
-@@ -563,13 +518,13 @@ static int hisi_sas_queue_command(struct sas_task *task, gfp_t gfp_flags)
- 			goto err_out_dma_unmap;
- 	}
- 
--	if (!internal_abort && hisi_hba->hw->slot_index_alloc)
-+	if (hisi_hba->hw->slot_index_alloc) {
- 		rc = hisi_hba->hw->slot_index_alloc(hisi_hba, device);
--	else
--		rc = hisi_sas_slot_index_alloc(hisi_hba, rq);
--
--	if (rc < 0)
--		goto err_out_dif_dma_unmap;
-+		if (rc < 0)
-+			goto err_out_dif_dma_unmap;
-+	} else {
-+		rc = rq->tag;
-+	}
- 
- 	slot = &hisi_hba->slot_info[rc];
- 	slot->n_elem = n_elem;
-@@ -2434,17 +2389,8 @@ int hisi_sas_probe(struct platform_device *pdev,
- 	shost->max_lun = ~0;
- 	shost->max_channel = 1;
- 	shost->max_cmd_len = 16;
--	if (hisi_hba->hw->slot_index_alloc) {
--		shost->can_queue = HISI_SAS_MAX_COMMANDS;
--		shost->cmd_per_lun = HISI_SAS_MAX_COMMANDS;
--	} else {
--		/*
--		 * Intentionally use HISI_SAS_UNRESERVED_IPTT for .can_queue until
--		 * every sas_task we're sent has a request associated.
--		 */
--		shost->can_queue = HISI_SAS_UNRESERVED_IPTT;
--		shost->cmd_per_lun = HISI_SAS_UNRESERVED_IPTT;
--	}
-+	shost->can_queue = HISI_SAS_MAX_COMMANDS;
-+	shost->cmd_per_lun = HISI_SAS_MAX_COMMANDS;
- 
- 	sha->sas_ha_name = DRV_NAME;
- 	sha->dev = hisi_hba->dev;
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 4caf07306b24..c7963ae8ad50 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -4862,12 +4862,9 @@ hisi_sas_v3_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	shost->max_lun = ~0;
- 	shost->max_channel = 1;
- 	shost->max_cmd_len = 16;
--	/*
--	 * Intentionally use HISI_SAS_UNRESERVED_IPTT for .can_queue until
--	 * every sas_task we're sent has a request associated.
--	 */
--	shost->can_queue = HISI_SAS_UNRESERVED_IPTT;
--	shost->cmd_per_lun = HISI_SAS_UNRESERVED_IPTT;
-+
-+	shost->can_queue = HISI_SAS_MAX_COMMANDS;
-+	shost->cmd_per_lun = HISI_SAS_MAX_COMMANDS;
- 
- 	sha->sas_ha_name = DRV_NAME;
- 	sha->dev = dev;
--- 
-2.35.3
+Thanks,
+John
+
+> Currently SCSI low-level drivers are required to manage tags for commands
+> which do not come via the block layer - libata internal commands would be
+> an example of one of these. We want to make blk-mq manage these tags also.
+> 
+> There was some work to provide "reserved commands" support in such series
+> as https://lore.kernel.org/linux-scsi/20211125151048.103910-1-hare@suse.de/
+> 
+> This was based on allocating a request for the lifetime of the "internal"
+> command.
+> 
+> This series tries to solve that problem by not just allocating the request
+> but also sending it as a request through the block layer. Reasons to do
+> this:
+> - Normal flow of a request and also commonality for regular scsi command
+>    lifetime
+> - We don't leave request and scsi_cmnd fields dangling as when we just
+>    allocate and free the request for the lifetime of the "internal" command
+> - For poll mode support we can only poll in block layer, so could not send
+>    internal commands on poll mode queues if we did not do this, which is a
+>    problem
+> - Can get rid of duplicated code like libsas internal command timeout
+>    handling
+> 
+> Series part I contains core SCSI midlayer, libata, and libsas changes to
+> queue libsas "slow" tasks as requests.
+> 
+> Series part II of this series focused on changing libata to queue internal
+> commands as requests.
+> 
+> Testing:
+> QEMU with AHCI with disk and cdrom attached, hisi_sas, pm8001.
+> 
+> Branch containing all patches is at:
+> https://github.com/hisilicon/kernel-dev/commits/private-topic-sas-6.1-block
+> 
+> v2 was here:
+> https://lore.kernel.org/linux-scsi/1654770559-101375-1-git-send-email-john.garry@huawei.com/
+> 
+> Hannes Reinecke (1):
+>    scsi: core: Implement reserved command handling
+> 
+> John Garry (21):
+>    blk-mq: Don't get budget for reserved requests
+>    scsi: core: Add scsi_get_dev()
+>    scsi: core: Add support to send reserved commands
+>    scsi: core: Add support for reserved command timeout handling
+>    scsi: libsas: Improve sas_ex_discover_expander() error handling
+>    scsi: libsas: Notify LLDD expander found before calling sas_rphy_add()
+>    scsi: scsi_transport_sas: Alloc sdev for expander
+>    scsi: libsas: Add sas_alloc_slow_task_rq()
+>    scsi: libsas: Add sas_queuecommand_internal()
+>    scsi: libsas: Add sas_internal_timeout()
+>    scsi: core: Use SCSI_SCAN_RESCAN in  __scsi_add_device()
+>    scsi: scsi_transport_sas: Allocate end device target id in the rphy
+>      alloc
+>    ata: libata-scsi: Add ata_scsi_setup_sdev()
+>    scsi: libsas: Add sas_ata_setup_device()
+>    ata: libata-scsi: Allocate sdev early in port probe
+>    scsi: libsas drivers: Reserve tags
+>    scsi: libsas: Queue SMP commands as requests
+>    scsi: libsas: Queue TMF commands as requests
+>    scsi: core: Add scsi_alloc_request_hwq()
+>    scsi: libsas: Queue internal abort commands as requests
+>    scsi: libsas: Delete sas_task_slow.timer
+> 
+>   block/blk-mq.c                         |   4 +-
+>   drivers/ata/libata-eh.c                |   1 +
+>   drivers/ata/libata-scsi.c              |  49 ++++++++----
+>   drivers/ata/libata.h                   |   1 +
+>   drivers/scsi/aic94xx/aic94xx_init.c    |   3 +
+>   drivers/scsi/hisi_sas/hisi_sas_main.c  |  40 +++++-----
+>   drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |   3 +
+>   drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |   3 +
+>   drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |   7 ++
+>   drivers/scsi/hosts.c                   |  16 ++++
+>   drivers/scsi/isci/init.c               |   3 +
+>   drivers/scsi/libsas/sas_ata.c          |  20 +++++
+>   drivers/scsi/libsas/sas_expander.c     | 101 ++++++++++++++-----------
+>   drivers/scsi/libsas/sas_init.c         |  61 ++++++++++++++-
+>   drivers/scsi/libsas/sas_internal.h     |   5 ++
+>   drivers/scsi/libsas/sas_scsi_host.c    |  93 ++++++++++++-----------
+>   drivers/scsi/mvsas/mv_init.c           |   7 ++
+>   drivers/scsi/pm8001/pm8001_init.c      |   8 +-
+>   drivers/scsi/scsi_error.c              |   3 +
+>   drivers/scsi/scsi_lib.c                |  42 +++++++++-
+>   drivers/scsi/scsi_scan.c               |  29 ++++++-
+>   drivers/scsi/scsi_transport_sas.c      |  34 ++++++---
+>   include/linux/libata.h                 |   2 +
+>   include/scsi/libsas.h                  |   8 +-
+>   include/scsi/scsi_cmnd.h               |   3 +
+>   include/scsi/scsi_host.h               |  21 ++++-
+>   26 files changed, 424 insertions(+), 143 deletions(-)
+> 
 
