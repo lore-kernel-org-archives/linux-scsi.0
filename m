@@ -2,82 +2,100 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 744E0C38A2D
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Oct 2022 13:37:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9974C38A2D
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Oct 2022 14:24:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232908AbiJYNhA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Oct 2022 09:37:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34762 "EHLO
+        id S230111AbiJYOYO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Oct 2022 10:24:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53804 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231315AbiJYNgy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Oct 2022 09:36:54 -0400
-Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8EE7C171CFB;
-        Tue, 25 Oct 2022 06:36:52 -0700 (PDT)
-Received: by mail-pj1-f43.google.com with SMTP id l6so7308103pjj.0;
-        Tue, 25 Oct 2022 06:36:52 -0700 (PDT)
+        with ESMTP id S232135AbiJYOX7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Oct 2022 10:23:59 -0400
+Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D631E8C5D
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Oct 2022 07:23:58 -0700 (PDT)
+Received: by mail-pj1-x1033.google.com with SMTP id d59-20020a17090a6f4100b00213202d77e1so4904102pjk.2
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Oct 2022 07:23:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=sHFM7hSxk92IObPZe5vjZohRKRqPul0RJaS7riWUCk0=;
+        b=VIxooYOaxwZ61wqPop57waVSoQw62K9KchO4Wp0x3c75zgNLBtlXYzctK143sQY6B9
+         E0YCOoJUKy7pqGPDwJM86cc+VBMW+Of8qeUP7WqgStP83C08GuURb/GRfAIxAZcnWUL4
+         gnfHuEJ54AthJm+J/BnSaUpIFvukzEcSupHoI/t2p1ZJzZBISD+GnIrX6NZoB1a6feOq
+         WoXUJE9AdrVtQAx3ubTOL0DX1fwocYxcKOe2+UFBj01q4iXIPT0LiQFnBujKgAm8y0hY
+         4oPkaPV7vmscjbdlV2ge0Uwynwv5GwTYVKB+9nQ+rtLhJouETTVQCqzH5l2G6tnRPBJG
+         NqnA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Acu/xNd/HmZ/EXl3u9/qJoTfHx6u5hhQzvnjXM48pQ0=;
-        b=hirXNIB3fAWgNkk9D1OURfpbjLNhC/FSMDRfjSkNyT9nznuvUmy6nDQqGWSgBL78XR
-         huZ00StUfvZwpTXa5HNVXdgtJd60bs/ayK2JVqv/BKscB+0g/TDyfbXILCBOm5ZxjD+A
-         AVGnPfydbdzuq43N41hcqKwP2nvlW/IbfISdZPqxloDQx/9k1vKNGxJ5YuG7MamUvIV/
-         +XIOp9q1DMyWNSeo55BSJyrvF7ooqaNKjg9CVOBIlUSCSjLDQbFYk0qfaVCGfMWv5y5c
-         VGNfldnpfTCNF6Tcrn7FaK1adyr9v4SuQ0qzLI9RpHdYIvEhqLS4xFQv7Iy4mIt649o3
-         ey5A==
-X-Gm-Message-State: ACrzQf2j8Pp2nbzOdvt0xSfAGGUJfB9TI1wPGTmfCfL14xm4dp/7D94m
-        Jy6+Sc22zCpfb+51u0fWTISDI9QNPA0=
-X-Google-Smtp-Source: AMsMyM6wWzB+vzPHbyGyvAdru1He4hA7BRl54Pgfzx30gzgZd3AXnq7KTLElE9LnGXjWQd0by2S4HA==
-X-Received: by 2002:a17:902:7c0d:b0:178:a6ca:1dbc with SMTP id x13-20020a1709027c0d00b00178a6ca1dbcmr39102831pll.115.1666705011879;
-        Tue, 25 Oct 2022 06:36:51 -0700 (PDT)
-Received: from [192.168.51.14] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id f12-20020aa7968c000000b00560a25fae1fsm1381386pfk.206.2022.10.25.06.36.08
+        bh=sHFM7hSxk92IObPZe5vjZohRKRqPul0RJaS7riWUCk0=;
+        b=wZ2RvfDZjqwKPJ2hqYeL9EaIzkopgfnkVPCXsOjQ4rAbZWkFiAZj2e9w8QgnjXh3dX
+         TFH4yVOUuiVZo7yGM/8pDd7vicYiFXXC6BRkPki9HKL4FS6nmCJPcCLrj6ytTDzGFkZo
+         FSzOY1EnNMvf6bv8grftS10er/pWa6uZnZkjvB9uR5AEwUszyp8hsZ+Igt1i00Ulctq+
+         z98vdEqYyXPjOBptWcoC9e7Wq9hGik3gBE/09N620Rm1neKymDNiWZBxObf2fKz7Wv2A
+         3ieCZAX0rdc3NTg3vfYL9ahLQ8fwFf510splE/AeNsApPlNlc5wTqbR+P/h93e8SliTb
+         fP0w==
+X-Gm-Message-State: ACrzQf1tmQdzthqmjer3ZaBvpXemZFAU7u+nZLTP7SWt6NIKO/LJiJc3
+        qRcrDn1LLM4xXN607yBV/Cd99w==
+X-Google-Smtp-Source: AMsMyM741H7P8iGhv9Qw7LG3fWhtLsvG2uiB/1mucg/H0TheENBKEWlKAS7sZ5WnLe0/9edqqKWe1A==
+X-Received: by 2002:a17:90a:590a:b0:20a:e93e:2022 with SMTP id k10-20020a17090a590a00b0020ae93e2022mr44004197pji.141.1666707837740;
+        Tue, 25 Oct 2022 07:23:57 -0700 (PDT)
+Received: from [192.168.1.136] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id h1-20020a170902f54100b00186cf82717fsm330817plf.165.2022.10.25.07.23.56
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 25 Oct 2022 06:36:51 -0700 (PDT)
-Message-ID: <c1ea0854-5375-951e-e90f-63578aa824f3@acm.org>
-Date:   Tue, 25 Oct 2022 06:36:08 -0700
+        Tue, 25 Oct 2022 07:23:57 -0700 (PDT)
+Message-ID: <2baca1bc-cee0-9a52-3fcd-bdb812e5f512@kernel.dk>
+Date:   Tue, 25 Oct 2022 08:23:56 -0600
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.0
-Subject: Re: [PATCH v4 2/3] scsi: ufs: core: Cleanup ufshcd_slave_alloc()
+User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.3
+Subject: Re: [PATCH 1/4] blk-mq: move the call to blk_put_queue out of
+ blk_mq_destroy_queue
 Content-Language: en-US
-To:     Bean Huo <beanhuo@iokpp.de>, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, asutoshd@codeaurora.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, tomas.winkler@intel.com, cang@codeaurora.org,
-        daejun7.park@samsung.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20221022213650.626766-1-beanhuo@iokpp.de>
- <20221022213650.626766-3-beanhuo@iokpp.de>
- <1915c52f-0c76-0f90-97e9-0c27c36a9e1a@acm.org>
- <2f0141705b06339d31063c731b0511fc186364fd.camel@iokpp.de>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <2f0141705b06339d31063c731b0511fc186364fd.camel@iokpp.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Hector Martin <marcan@marcan.st>, Sven Peter <sven@svenpeter.dev>,
+        Keith Busch <kbusch@kernel.org>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org
+References: <20221018135720.670094-1-hch@lst.de>
+ <20221018135720.670094-2-hch@lst.de>
+From:   Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <20221018135720.670094-2-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/25/22 04:44, Bean Huo wrote:
-> On Mon, 2022-10-24 at 16:25 -0700, Bart Van Assche wrote:
-> If having a look at
-> 
-> scsi_change_queue_depth() {
-> 
->    depth = min_t(int, depth, scsi_device_max_queue_depth(sdev));
-> 	...
-> }
-> 
-> so the final depth per Lu is still 31.  I did test and debug, this is
-> true.
+> diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+> index 059737c1a2c19..07381673170b9 100644
+> --- a/drivers/nvme/host/core.c
+> +++ b/drivers/nvme/host/core.c
+> @@ -4847,6 +4847,7 @@ int nvme_alloc_admin_tag_set(struct nvme_ctrl *ctrl, struct blk_mq_tag_set *set,
+>  
+>  out_cleanup_admin_q:
+>  	blk_mq_destroy_queue(ctrl->fabrics_q);
+> +	blk_put_queue(ctrl->fabrics_q);
+>  out_free_tagset:
+>  	blk_mq_free_tag_set(ctrl->admin_tagset);
+>  	return ret;
+This is wrong and doesn't apply because it got fixed upstream:
 
-Hi Bean,
+commit 4739824e2d7878dcea88397a6758e31e3c5c124e
+Author: Dan Carpenter <error27@gmail.com>
+Date:   Sat Oct 15 11:25:56 2022 +0300
 
-Thanks for the clarification. I will add my Reviewed-by to this patch.
+    nvme: fix error pointer dereference in error handling
 
-Bart.
+Can you respin this series so we can get it applied?
+
+-- 
+Jens Axboe
 
