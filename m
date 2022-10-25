@@ -2,29 +2,29 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBC3AFA3742
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Oct 2022 09:50:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CC10C38A2D
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Oct 2022 09:50:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230286AbiJYJuZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Oct 2022 05:50:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34742 "EHLO
+        id S231961AbiJYJum (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Oct 2022 05:50:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33320 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231523AbiJYJtU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Oct 2022 05:49:20 -0400
+        with ESMTP id S231806AbiJYJt5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Oct 2022 05:49:57 -0400
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8AC114D1CC;
-        Tue, 25 Oct 2022 02:48:24 -0700 (PDT)
-Received: from frapeml500008.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MxRtF5LLwz67vyB;
-        Tue, 25 Oct 2022 17:47:01 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50A2615746D;
+        Tue, 25 Oct 2022 02:48:33 -0700 (PDT)
+Received: from frapeml500005.china.huawei.com (unknown [172.18.147.207])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MxRtQ3D83z6HJMX;
+        Tue, 25 Oct 2022 17:47:10 +0800 (CST)
 Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- frapeml500008.china.huawei.com (7.182.85.71) with Microsoft SMTP Server
+ frapeml500005.china.huawei.com (7.182.85.13) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Tue, 25 Oct 2022 11:48:22 +0200
+ 15.1.2375.31; Tue, 25 Oct 2022 11:48:31 +0200
 Received: from localhost.localdomain (10.69.192.58) by
  lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Tue, 25 Oct 2022 10:48:18 +0100
+ 15.1.2375.31; Tue, 25 Oct 2022 10:48:27 +0100
 From:   John Garry <john.garry@huawei.com>
 To:     <axboe@kernel.dk>, <damien.lemoal@opensource.wdc.com>,
         <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
@@ -33,9 +33,9 @@ To:     <axboe@kernel.dk>, <damien.lemoal@opensource.wdc.com>,
 CC:     <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linux-ide@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
         <linuxarm@huawei.com>, John Garry <john.garry@huawei.com>
-Subject: [PATCH RFC v3 07/22] scsi: libsas: Notify LLDD expander found before calling sas_rphy_add()
-Date:   Tue, 25 Oct 2022 18:18:01 +0800
-Message-ID: <1666693096-180008-8-git-send-email-john.garry@huawei.com>
+Subject: [PATCH RFC v3 09/22] scsi: libsas: Add sas_alloc_slow_task_rq()
+Date:   Tue, 25 Oct 2022 18:18:03 +0800
+Message-ID: <1666693096-180008-10-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1666693096-180008-1-git-send-email-john.garry@huawei.com>
 References: <1666693096-180008-1-git-send-email-john.garry@huawei.com>
@@ -49,98 +49,108 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Ensure that we notify the LLDD of the expander being found before calling
-sas_rphy_add() as this function will require the LLDD be notified when
-we alloc a scsi device for an expander.
+Add a function to add a slow task with a request associated.
+
+The next step will be to send tasks same as we do for other requests -
+through the block layer.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/libsas/sas_expander.c | 30 +++++++++++++++---------------
- 1 file changed, 15 insertions(+), 15 deletions(-)
+ drivers/scsi/libsas/sas_init.c     | 51 ++++++++++++++++++++++++++++++
+ drivers/scsi/libsas/sas_internal.h |  1 +
+ include/scsi/libsas.h              |  2 +-
+ 3 files changed, 53 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index 9e33014ec412..e7cb95683522 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -976,9 +976,12 @@ static struct domain_device *sas_ex_discover_expander(
- 					   edev->level);
- 	sas_init_dev(child);
+diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
+index f2c05ebeb72f..90e63ff5e966 100644
+--- a/drivers/scsi/libsas/sas_init.c
++++ b/drivers/scsi/libsas/sas_init.c
+@@ -56,9 +56,60 @@ struct sas_task *sas_alloc_slow_task(gfp_t flags)
+ 	return task;
+ }
  
-+	if (!sas_notify_lldd_dev_found(child))
-+		goto err_rphy_free;
++struct sas_task *sas_alloc_slow_task_rq(struct domain_device *device, gfp_t flags)
++{
++	struct sas_ha_struct *sas_ha = device->port->ha;
++	struct Scsi_Host *shost = sas_ha->core.shost;
++	struct scsi_device *sdev, *found_sdev = NULL;
++	struct scsi_cmnd *scmd;
++	struct sas_task *task;
++	struct request *rq;
 +
- 	sas_fill_in_rphy(child, rphy);
- 	if (!sas_rphy_add(rphy))
--		goto err_rphy_free;
-+		goto err_dev_gone;
- 
- 	spin_lock_irq(&parent->port->dev_list_lock);
- 	list_add_tail(&child->dev_list_node, &parent->port->dev_list);
-@@ -995,6 +998,8 @@ static struct domain_device *sas_ex_discover_expander(
- 	list_del(&child->dev_list_node);
- 	spin_unlock_irq(&parent->port->dev_list_lock);
- 	sas_rphy_remove(rphy);
-+err_dev_gone:
-+	sas_notify_lldd_dev_gone(child);
- err_rphy_free:
- 	sas_rphy_free(rphy);
- err_free_port:
-@@ -1575,32 +1580,22 @@ static int sas_discover_expander(struct domain_device *dev)
++	shost_for_each_device(sdev, shost) {
++		struct scsi_target *starget = sdev->sdev_target;
++
++		if (starget->hostdata == device) {
++			found_sdev = sdev;
++			break;
++		}
++	}
++
++	if (!found_sdev)
++		return NULL;
++
++	scsi_device_put(found_sdev);
++
++	task = sas_alloc_slow_task(flags);
++	if (!task)
++		return NULL;
++
++	task->dev = device;
++
++	rq = scsi_alloc_request(sdev->request_queue, REQ_OP_DRV_IN,
++				BLK_MQ_REQ_RESERVED | BLK_MQ_REQ_NOWAIT);
++	if (IS_ERR(rq)) {
++		sas_free_task(task);
++		return NULL;
++	}
++
++	scmd = blk_mq_rq_to_pdu(rq);
++
++	task->uldd_task = scmd;
++	rq->end_io_data = task;
++
++	return task;
++}
++
+ void sas_free_task(struct sas_task *task)
  {
- 	int res;
- 
--	res = sas_notify_lldd_dev_found(dev);
--	if (res)
--		return res;
--
- 	res = sas_ex_general(dev);
- 	if (res)
--		goto out_err;
-+		return res;
- 	res = sas_ex_manuf_info(dev);
- 	if (res)
--		goto out_err;
-+		return res;
- 
- 	res = sas_expander_discover(dev);
- 	if (res) {
- 		pr_warn("expander %016llx discovery failed(0x%x)\n",
- 			SAS_ADDR(dev->sas_addr), res);
--		goto out_err;
-+		return res;
- 	}
- 
- 	sas_check_ex_subtractive_boundary(dev);
--	res = sas_check_parent_topology(dev);
--	if (res)
--		goto out_err;
--	return 0;
--out_err:
--	sas_notify_lldd_dev_gone(dev);
--	return res;
-+	return sas_check_parent_topology(dev);
- }
- 
- static int sas_ex_level_discovery(struct asd_sas_port *port, const int level)
-@@ -1643,6 +1638,10 @@ int sas_discover_root_expander(struct domain_device *dev)
- 	int res;
- 	struct sas_expander_device *ex = rphy_to_expander_device(dev->rphy);
- 
-+	res = sas_notify_lldd_dev_found(dev);
-+	if (res)
-+		return res;
+ 	if (task) {
++		if (task->slow_task && task->uldd_task) {
++			struct scsi_cmnd *scmd = task->uldd_task;
++			struct request *rq = scsi_cmd_to_rq(scmd);
 +
- 	res = sas_rphy_add(dev->rphy);
- 	if (res)
- 		goto out_err;
-@@ -1659,6 +1658,7 @@ int sas_discover_root_expander(struct domain_device *dev)
- out_err2:
- 	sas_rphy_remove(dev->rphy);
- out_err:
-+	sas_notify_lldd_dev_gone(dev);
- 	return res;
- }
++			BUG_ON(!blk_mq_is_reserved_rq(rq));
++			blk_mq_free_request(rq);
++		}
+ 		kfree(task->slow_task);
+ 		kmem_cache_free(sas_task_cache, task);
+ 	}
+diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
+index 6cf190ade35e..f5ae4de382f7 100644
+--- a/drivers/scsi/libsas/sas_internal.h
++++ b/drivers/scsi/libsas/sas_internal.h
+@@ -54,6 +54,7 @@ void sas_free_event(struct asd_sas_event *event);
  
+ struct sas_task *sas_alloc_task(gfp_t flags);
+ struct sas_task *sas_alloc_slow_task(gfp_t flags);
++struct sas_task *sas_alloc_slow_task_rq(struct domain_device *device, gfp_t flags);
+ void sas_free_task(struct sas_task *task);
+ 
+ int  sas_register_ports(struct sas_ha_struct *sas_ha);
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index 1aee3d0ebbb2..4c4d8c91b1c1 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -648,7 +648,7 @@ static inline struct request *sas_task_find_rq(struct sas_task *task)
+ {
+ 	struct scsi_cmnd *scmd;
+ 
+-	if (task->task_proto & SAS_PROTOCOL_STP_ALL) {
++	if (!task->slow_task && task->task_proto & SAS_PROTOCOL_STP_ALL) {
+ 		struct ata_queued_cmd *qc = task->uldd_task;
+ 
+ 		scmd = qc ? qc->scsicmd : NULL;
 -- 
 2.35.3
 
