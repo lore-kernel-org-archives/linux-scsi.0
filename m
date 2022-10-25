@@ -2,126 +2,57 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CF7EC38A2D
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Oct 2022 22:25:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C071FC38A2D
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Oct 2022 22:42:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231374AbiJYWZT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Oct 2022 18:25:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60556 "EHLO
+        id S231937AbiJYWl7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Oct 2022 18:41:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34174 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230075AbiJYWZN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Oct 2022 18:25:13 -0400
-Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [85.215.255.82])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B62B25E573;
-        Tue, 25 Oct 2022 15:25:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1666736696;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
-    From:Subject:Sender;
-    bh=F+Q9lWsGLwYwprnt2SVEQBWdOSFu9C8P5456RbyUtu8=;
-    b=h5fLdsDOGp5myEJsI9ZyGs2FKKRV7pAhgD0jNzTWPX68T1t9bubwkXppPHF9k6+Zcq
-    c3aHI/nlqpNnhZfsyIXCFLjyrmgKbnZoyDhRvb7fSEsWDmWgOqF5eqOCDwlqGn8t8EfN
-    VwS0xCTBNos7i/Ak0CxBZX6m16CsUZLXLOsygsdjihSZOQpF80Er3BcT+bp2EyqHQo6c
-    WNJdKQNxgNjZBF7ONT0V3FNvNFmoZsVWI/u7SBucww1VKCe+Yxo5w0ORrWXH+YKTNqE+
-    +LaeUl9Wuo8XGeQWSwG4iKbfQAfdTr9zISpP8GMO8W1cewc3IpzgvC6fESX1Tv3wmlTR
-    szqA==
-Authentication-Results: strato.com;
-    dkim=none
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSedrgBzPc9DUyubU4DD/R51xABQjgPFtj5ophaE="
-X-RZG-CLASS-ID: mo01
-Received: from linux..
-    by smtp.strato.de (RZmta 48.2.1 DYNA|AUTH)
-    with ESMTPSA id z9cfbfy9PMOu2EB
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-        (Client did not present a certificate);
-    Wed, 26 Oct 2022 00:24:56 +0200 (CEST)
-From:   Bean Huo <beanhuo@iokpp.de>
-To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
-        asutoshd@codeaurora.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
-        cang@codeaurora.org, daejun7.park@samsung.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Arthur Simchaev <arthur.simchaev@wdc.com>
-Subject: [PATCH v5 1/3] scsi: ufs: core: Revert "WB is only available on LUN #0 to #7"
-Date:   Wed, 26 Oct 2022 00:24:28 +0200
-Message-Id: <20221025222430.277768-2-beanhuo@iokpp.de>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20221025222430.277768-1-beanhuo@iokpp.de>
-References: <20221025222430.277768-1-beanhuo@iokpp.de>
+        with ESMTP id S231693AbiJYWlz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Oct 2022 18:41:55 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96BD0D73CA;
+        Tue, 25 Oct 2022 15:41:54 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 48E4FB81F4D;
+        Tue, 25 Oct 2022 22:41:53 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 708D9C433D6;
+        Tue, 25 Oct 2022 22:41:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1666737711;
+        bh=3ReAlpbuxb1p9jUT1Tt05lQ1bFQXcNMX2FBhJvCl64U=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=CHENs7+Jm2JhwnGqKVG6LBdPWTr/zoY37HBmpX5axP8gH4//7lYRP+SI07XpMe+Ca
+         D+C2b5iwFp3jS6wY9M7rNui0VaCv79pxRRSE1Rm51kMzFUJuvUcQfXsSF841ZP7lpu
+         ys88kwX5Dn80rrnzny+sciuwoa9xxwFWymnQhvJ2s8bsH2UH6ZS/uWF2ffOy8rxhMg
+         uJ+dXnvYzzgkN+UA1k5mPdKPPoONNgo8MMI4SsB/9jnTLlN4op6rN4GANBGakjbQZ5
+         ybr0sZXx/kuN6dfeRXD/w4TpWBuY4CNTBobf5u92SrIEZWC0kPkQdB9MD5mG3ut2gh
+         e5+V9qhiJrpPw==
+Date:   Tue, 25 Oct 2022 15:41:50 -0700
+From:   Jakub Kicinski <kuba@kernel.org>
+To:     kernel test robot <lkp@intel.com>, Doug Berger <opendmb@gmail.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>, ntfs3@lists.linux.dev,
+        netdev@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-scsi@vger.kernel.org, linux-mm@kvack.org,
+        linux-mediatek@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org,
+        Florian Fainelli <f.fainelli@gmail.com>
+Subject: Re: [linux-next:master] BUILD REGRESSION
+ 89bf6e28373beef9577fa71f996a5f73a569617c
+Message-ID: <20221025154150.729bbbd0@kernel.org>
+In-Reply-To: <63581a3c.U6bx8B6mFoRe2pWN%lkp@intel.com>
+References: <63581a3c.U6bx8B6mFoRe2pWN%lkp@intel.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bean Huo <beanhuo@micron.com>
+On Wed, 26 Oct 2022 01:17:48 +0800 kernel test robot wrote:
+> drivers/net/ethernet/broadcom/genet/bcmgenet.c:1497:5-13: ERROR: invalid reference to the index variable of the iterator on line 1475
 
-A newer 'commit d3d9c4570285 ("scsi: ufs: Fix memory corruption by
-ufshcd_read_desc_param()")' has properly fixed stack overflow issue,
-'commit a2fca52ee640 ("scsi: ufs: WB is only available on LUN #0 to #7")'
-is no longer required, we can revert it now.
-
-Cc: Jaegeuk Kim <jaegeuk@kernel.org>
-Signed-off-by: Bean Huo <beanhuo@micron.com>
-Reviewed-by: Arthur Simchaev <arthur.simchaev@wdc.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufs-sysfs.c   | 3 +--
- drivers/ufs/core/ufshcd-priv.h | 6 +-----
- drivers/ufs/core/ufshcd.c      | 2 +-
- 3 files changed, 3 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
-index 53aea56d1de1..eb6b278c4e79 100644
---- a/drivers/ufs/core/ufs-sysfs.c
-+++ b/drivers/ufs/core/ufs-sysfs.c
-@@ -1234,8 +1234,7 @@ static ssize_t _pname##_show(struct device *dev,			\
- 	struct scsi_device *sdev = to_scsi_device(dev);			\
- 	struct ufs_hba *hba = shost_priv(sdev->host);			\
- 	u8 lun = ufshcd_scsi_to_upiu_lun(sdev->lun);			\
--	if (!ufs_is_valid_unit_desc_lun(&hba->dev_info, lun,		\
--				_duname##_DESC_PARAM##_puname))		\
-+	if (!ufs_is_valid_unit_desc_lun(&hba->dev_info, lun))		\
- 		return -EINVAL;						\
- 	return ufs_sysfs_read_desc_param(hba, QUERY_DESC_IDN_##_duname,	\
- 		lun, _duname##_DESC_PARAM##_puname, buf, _size);	\
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index f68ca33f6ac7..a9e8e1f5afe7 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -293,16 +293,12 @@ static inline int ufshcd_rpm_put(struct ufs_hba *hba)
-  * @lun: LU number to check
-  * @return: true if the lun has a matching unit descriptor, false otherwise
-  */
--static inline bool ufs_is_valid_unit_desc_lun(struct ufs_dev_info *dev_info,
--		u8 lun, u8 param_offset)
-+static inline bool ufs_is_valid_unit_desc_lun(struct ufs_dev_info *dev_info, u8 lun)
- {
- 	if (!dev_info || !dev_info->max_lu_supported) {
- 		pr_err("Max General LU supported by UFS isn't initialized\n");
- 		return false;
- 	}
--	/* WB is available only for the logical unit from 0 to 7 */
--	if (param_offset == UNIT_DESC_PARAM_WB_BUF_ALLOC_UNITS)
--		return lun < UFS_UPIU_MAX_WB_LUN_ID;
- 	return lun == UFS_UPIU_RPMB_WLUN || (lun < dev_info->max_lu_supported);
- }
- 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index b2203dd79e8c..e8b8b213c420 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -3605,7 +3605,7 @@ static inline int ufshcd_read_unit_desc_param(struct ufs_hba *hba,
- 	 * Unit descriptors are only available for general purpose LUs (LUN id
- 	 * from 0 to 7) and RPMB Well known LU.
- 	 */
--	if (!ufs_is_valid_unit_desc_lun(&hba->dev_info, lun, param_offset))
-+	if (!ufs_is_valid_unit_desc_lun(&hba->dev_info, lun))
- 		return -EOPNOTSUPP;
- 
- 	return ufshcd_read_desc_param(hba, QUERY_DESC_IDN_UNIT, lun,
--- 
-2.34.1
-
+CC Doug 
