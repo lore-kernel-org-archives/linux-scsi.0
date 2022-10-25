@@ -2,114 +2,87 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AABA5C38A2D
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Oct 2022 12:18:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43939C38A2D
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Oct 2022 12:19:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231447AbiJYMSt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Oct 2022 08:18:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48326 "EHLO
+        id S231476AbiJYMTT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Oct 2022 08:19:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48832 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231390AbiJYMSo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Oct 2022 08:18:44 -0400
-Received: from mail-qv1-xf36.google.com (mail-qv1-xf36.google.com [IPv6:2607:f8b0:4864:20::f36])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41716181C90
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Oct 2022 05:18:43 -0700 (PDT)
-Received: by mail-qv1-xf36.google.com with SMTP id t16so8371025qvm.9
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Oct 2022 05:18:43 -0700 (PDT)
+        with ESMTP id S231497AbiJYMTS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Oct 2022 08:19:18 -0400
+Received: from mail-qt1-x82b.google.com (mail-qt1-x82b.google.com [IPv6:2607:f8b0:4864:20::82b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2203181D9A
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Oct 2022 05:19:17 -0700 (PDT)
+Received: by mail-qt1-x82b.google.com with SMTP id g16so7341895qtu.2
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Oct 2022 05:19:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=ziepe.ca; s=google;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=oQrHD3DUmzYLl+f6cA65+ahPUoZYs9D5TtxLI2T2iBU=;
-        b=oMMfoDK6mOWdTlWfPxSApERVImAkv75CK4Cgdjmz23BvpAO2YR1mb87LFYSuqzNZ6O
-         /pIuj2KXP5qOvSW0629y90VXl6Rx8rHR9nwla72dDl4OVY4ese7gdWWoxVfRDgZ1byhh
-         +yD3g2hgUYwJhXyn8nknHx/moh8M3qU6T0ssxkyTz6kRT/MDNhpHhZ10PzLICesnq/44
-         rR2y2SknfAy+9yn/fuFS99JulPIjizryBDsHpwIPJgIEtPIhGWXms3/qdshhwF1sbxYb
-         Rmn2AqKFEzcZl006b+6RrPjZp6ber+gw6DYWG5ZKgdspY1mFRoSpnyrivmUJZeaMDc7A
-         YOjg==
+        bh=KGIEmyBbcrFhYCeupjDEHPoFpQFVvDingmDc937Z/U4=;
+        b=ZaSJ0qLzqLrztrR6stMTBOI96WL5BMwVYmFHc3p5UiTXTrEMZpRhufrv1+eEjcsyjq
+         +Fxws2uKxUPU8HCdyh47STp+o6f1gGsanbnHWRYZKRJig9Y8YiINQKyigfpEX45r9dTA
+         UDsoShVDlIWHV6S1DR37+gF0vz2hLgJLSE4+cndAslG64tW3EADbHyWP9BgVnv81DJQM
+         8bf9UtgMCtaoNwXkuSrFme6TEVmbQRtE09hP7Y4BXvS2HFnSC845PP8tWztzBzxbrxqd
+         MN1uW1bC9M67MCV0IGl9Bhr5jtvpjtSieAdwpV4ih/tE33TGHbWnjE+gcBYKXvfeMSWI
+         0h0w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=oQrHD3DUmzYLl+f6cA65+ahPUoZYs9D5TtxLI2T2iBU=;
-        b=Cp4cFuadcYGRDcCJn2CxXbrS3xQAF1KY4+v+mDlRzQ39xyaDd24OGK4iRwpCP3c+/L
-         L9WMt3kqibASL3eXvoGDozqxiqIUgDwDyTOOdoCvKIYO6N3NZYKWKbpuyD8UOGZM7EpC
-         mVy8SbP5VJi8nrEG1o/5EXPBlJLps1X18pJiD11eIkT2oblqx8sgg3dDzFHIjwDXZJZJ
-         5zwZCb3cdoeahLCBCi/Pw1XI8CNkzjkW7a2zBEkD/gaGpvia2ZLc0HNUtfPxMaVHJllD
-         sxJPQlAIsLezjrHAqG7zgqu2higCNQ0NYLLUHPl/SENI8YBRqZYCHOJPzXQFXqGTtgpd
-         C5lg==
-X-Gm-Message-State: ACrzQf3OQkxycEZ5HhCVHbYW/2nI5QOqdUYZJrSuMruZfgPjGhJnAw0+
-        F95MTcPbpeoxniyzfG90rX40Bg==
-X-Google-Smtp-Source: AMsMyM5BCiWxV5U/HxsohsYadHsdiWBhWhWYU7KxRsd0eG5OTcDBQ2j7WPtk1gxDKe3LgFsScLL/qw==
-X-Received: by 2002:ad4:5cc4:0:b0:4bb:70de:bb81 with SMTP id iu4-20020ad45cc4000000b004bb70debb81mr8360273qvb.55.1666700322327;
-        Tue, 25 Oct 2022 05:18:42 -0700 (PDT)
+        bh=KGIEmyBbcrFhYCeupjDEHPoFpQFVvDingmDc937Z/U4=;
+        b=DNO/lCmU7LnokNlhA4wXweErKtOZqsaRlLdiWlnHAzSDAZSexxnR3psI2mulv9sqaw
+         17ElPlxdfsOgPf8ia+O2yDDkhq0KjBKKu/TndcMtHDWk9IatZVNSWInjyxcDPK6aHDD7
+         TGftKSivY7H7d1bHVL5ZddT1qP1cldrxq0a9Vb4HQqkr7eRLLpvGt8S2sakDkrUVJGKp
+         rzufD00zRrB5Qf79VYQpg01Y3FUxw/0dNUbx/LNbmg8Cfx6y3Q+8rrYrzySuS8I1rPNW
+         qO2dlKek+Rr9qIOa6UyeYO2zNhBKcp3adQaof/L5Z/a2u/nKc6X3WgfEVr4XdmJ1xNoG
+         XFSg==
+X-Gm-Message-State: ACrzQf1oLhXmoFBz3zAQJvFYFZD0QBqmDbKjwdCvCtvZJVsa55sxfKS4
+        40N8rMve85saBjQ+Gs6Kx0RwgeGY6Nulrw==
+X-Google-Smtp-Source: AMsMyM4j8TkbeYL0ULIom1BNqzJMgVwezdkLiGMLJt6A7My42zqLjZ0PwqYLWbWOkRsHwHB0z3sxjA==
+X-Received: by 2002:a05:622a:43:b0:39c:eb15:c2ee with SMTP id y3-20020a05622a004300b0039ceb15c2eemr31910141qtw.331.1666700356812;
+        Tue, 25 Oct 2022 05:19:16 -0700 (PDT)
 Received: from ziepe.ca (hlfxns017vw-47-55-122-23.dhcp-dynamic.fibreop.ns.bellaliant.net. [47.55.122.23])
-        by smtp.gmail.com with ESMTPSA id j22-20020a05620a411600b006eef13ef4c8sm1940469qko.94.2022.10.25.05.18.38
+        by smtp.gmail.com with ESMTPSA id m24-20020ac86898000000b003999d25e772sm1492197qtq.71.2022.10.25.05.19.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 25 Oct 2022 05:18:39 -0700 (PDT)
+        Tue, 25 Oct 2022 05:19:14 -0700 (PDT)
 Received: from jgg by wakko with local (Exim 4.95)
         (envelope-from <jgg@ziepe.ca>)
-        id 1onItC-00EMCu-6n;
-        Tue, 25 Oct 2022 09:18:38 -0300
-Date:   Tue, 25 Oct 2022 09:18:38 -0300
+        id 1onItl-00EMDr-JR;
+        Tue, 25 Oct 2022 09:19:13 -0300
+Date:   Tue, 25 Oct 2022 09:19:13 -0300
 From:   Jason Gunthorpe <jgg@ziepe.ca>
-To:     Bodo Stroesser <bostroesser@gmail.com>
-Cc:     Douglas Gilbert <dgilbert@interlog.com>,
-        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        jejb@linux.vnet.ibm.com, hare@suse.de, bvanassche@acm.org
+To:     Douglas Gilbert <dgilbert@interlog.com>
+Cc:     Bodo Stroesser <bostroesser@gmail.com>, linux-scsi@vger.kernel.org,
+        martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
+        bvanassche@acm.org
 Subject: Re: [PATCH 1/5] sgl_alloc_order: remove 4 GiB limit
-Message-ID: <Y1fUHhJtaN4rg5SJ@ziepe.ca>
+Message-ID: <Y1fUQZdpXUTPUovP@ziepe.ca>
 References: <20221024010244.9522-1-dgilbert@interlog.com>
  <20221024010244.9522-2-dgilbert@interlog.com>
  <Y1aDQznakNaWD8kd@ziepe.ca>
  <665f8dee-6688-60d1-5097-49f9726c38ec@gmail.com>
  <Y1bMKU5nq5DXYdbw@ziepe.ca>
- <78357696-d9aa-71a0-8cee-0fadbc90655f@gmail.com>
+ <9b5f5e2b-bf37-f986-469f-107eb463924b@interlog.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <78357696-d9aa-71a0-8cee-0fadbc90655f@gmail.com>
+In-Reply-To: <9b5f5e2b-bf37-f986-469f-107eb463924b@interlog.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Oct 25, 2022 at 12:46:55PM +0200, Bodo Stroesser wrote:
-> On 24.10.22 19:32, Jason Gunthorpe wrote:
-> > On Mon, Oct 24, 2022 at 04:32:30PM +0200, Bodo Stroesser wrote:
-> > > > +struct scatterlist *sgl_alloc_order(size_t length, unsigned int order,
-> > > > +				    bool chainable, gfp_t gfp, size_t *nent_p)
-> > > >    {
-> > > >    	struct scatterlist *sgl, *sg;
-> > > >    	struct page *page;
-> > > > -	unsigned int nent, nalloc;
-> > > > +	size_t nent, nalloc;
-> > > >    	u32 elem_len;
-> > > > -	nent = round_up(length, PAGE_SIZE << order) >> (PAGE_SHIFT + order);
-> > > > -	/* Check for integer overflow */
-> > > > -	if (length > (nent << (PAGE_SHIFT + order)))
-> > > > -		return NULL;
-> > > > +	nent = length >> (PAGE_SHIFT + order);
-> > > > +	if (length % (1 << (PAGE_SHIFT + order)))
-> > > 
-> > > This might end up doing a modulo operation for divisor 0, if caller
-> > > specifies a too high order parameter, right?
-> > 
-> > If that happens then the first >> will be busted too and this is all
-> > broken..
-> > 
-> > We assume the caller will pass a valid order paramter it seems, it is
-> > not userspace controlled.
-> > 
+On Mon, Oct 24, 2022 at 03:58:22PM -0400, Douglas Gilbert wrote:
+
+> Changing the interface of sgl_alloc_order() will break these callers:
+>    drivers/scsi/ipr.c
+>    drivers/target/target_core_transport.c
 > 
-> If a too high order is passed, alloc_pages will just return NULL, so
-> in the old code sgl_alloc_order simply returns NULL. Using modulo op
-> changes it to possibly crashing the system.
+> due to change the type (and size on 64 bit machines) of the fifth argument
+> (i.e. 'size_t *nent_p').
 
-That is fine, we are not trying to protect against buggy callers
-passing a weird order 
-
-We are trying to protect against correct callers passing a large
-length because length is user controlled or something.
+Yes, you'd fold those small fixes into this patch.
 
 Jason
