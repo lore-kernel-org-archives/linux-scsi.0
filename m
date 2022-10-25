@@ -2,232 +2,104 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 123B6C38A2D
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Oct 2022 17:18:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78B5BFA373D
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Oct 2022 22:25:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232336AbiJYRSY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Oct 2022 13:18:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37436 "EHLO
+        id S232619AbiJYWZN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Oct 2022 18:25:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60152 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231645AbiJYRSY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Oct 2022 13:18:24 -0400
-Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A89F159A37;
-        Tue, 25 Oct 2022 10:18:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1666718303; x=1698254303;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=o+HzEuDfAAEoVRMr0f+9fq2bvIH6vQ0gqFpLaf4Zkdw=;
-  b=LzjbAQCh/U9D3m4WH9YidHSLA3/8VgMThlVysJrpLvbYErl/z25HNr/8
-   C5TxEw0iAbilugUTE18NYm8REBOkQ+kVhYHF/MJyXdn/sTTExtydBnMBb
-   uwe79LKIufIHBX5EWmAgO2INzAEKPUi3wp4bBh3j/hY5P3tZNxhAJbqV8
-   XCKBu3XByLQkM/hhGb8QBLMMlg+lPRXX5LNiromdAvBNpkjZUHxw0C+FS
-   Jh9E4979aT6TMQgqc2J/CL0nQ+1xja25rQfZt0I7/C96hL1wxLdZ496AF
-   ZdiMWIlu/Jq/zgqURTBVLB5Yzw0clQZLg//wrVtE3ZLkycY/W3VRkkRty
-   w==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10511"; a="287458334"
-X-IronPort-AV: E=Sophos;i="5.95,212,1661842800"; 
-   d="scan'208";a="287458334"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Oct 2022 10:18:22 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10511"; a="631707576"
-X-IronPort-AV: E=Sophos;i="5.95,212,1661842800"; 
-   d="scan'208";a="631707576"
-Received: from lkp-server02.sh.intel.com (HELO b6d29c1a0365) ([10.239.97.151])
-  by orsmga002.jf.intel.com with ESMTP; 25 Oct 2022 10:18:19 -0700
-Received: from kbuild by b6d29c1a0365 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1onNZD-0006UG-0E;
-        Tue, 25 Oct 2022 17:18:19 +0000
-Date:   Wed, 26 Oct 2022 01:17:48 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Andrew Morton <akpm@linux-foundation.org>
-Cc:     ntfs3@lists.linux.dev, netdev@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org,
-        linux-mm@kvack.org, linux-mediatek@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org,
-        Linux Memory Management List <linux-mm@kvack.org>
-Subject: [linux-next:master] BUILD REGRESSION
- 89bf6e28373beef9577fa71f996a5f73a569617c
-Message-ID: <63581a3c.U6bx8B6mFoRe2pWN%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        with ESMTP id S232617AbiJYWZG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Oct 2022 18:25:06 -0400
+Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [85.215.255.80])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A67194E1A4;
+        Tue, 25 Oct 2022 15:25:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1666736696;
+    s=strato-dkim-0002; d=iokpp.de;
+    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
+    From:Subject:Sender;
+    bh=mwFtD7LJDHgC11+f0Gx4DGs9WDF8xrFm6PuLut/yrQ0=;
+    b=iNCS6TqrUcqFcrhknK61EqtR+HPAyGQwQWIQJVVPmi/UwzTL9QL1lvuesso9RF5EuE
+    6Dmu++rRbqEE5ttDcNnN0o+CT3OzVRsoP5hvrqvsVa3R2qi6T0Kjv5JbZFztRUnRum15
+    ju7UkuTo0Wevng7wPcJUZmsRu4AtRnetB/r3By8nLMLqyGCKBDXbcWBPwv1kFmaM7tvM
+    UMQ98YuEGMP+GAzev2Yj+X4Ji/4+Mk0AO8Q+pPaZv6ileOfrUCDbEeCkE2xUn21lSg+2
+    GnmN0aHCJIwPWiS5+KlRyH2yC7BEW4GPaOrmlSySYGuIXeyc5kWIsrvAt3jdzNXU0G2d
+    McKQ==
+Authentication-Results: strato.com;
+    dkim=none
+X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSedrgBzPc9DUyubU4DD/R51xABQjgPFtj5ophaE="
+X-RZG-CLASS-ID: mo02
+Received: from linux..
+    by smtp.strato.de (RZmta 48.2.1 DYNA|AUTH)
+    with ESMTPSA id z9cfbfy9PMOu2ED
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
+        (Client did not present a certificate);
+    Wed, 26 Oct 2022 00:24:56 +0200 (CEST)
+From:   Bean Huo <beanhuo@iokpp.de>
+To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
+        asutoshd@codeaurora.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
+        cang@codeaurora.org, daejun7.park@samsung.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Arthur Simchaev <arthur.simchaev@wdc.com>
+Subject: [PATCH v5 3/3] scsi: ufs: core: Use is_visible to control UFS unit descriptor sysfs nodes
+Date:   Wed, 26 Oct 2022 00:24:30 +0200
+Message-Id: <20221025222430.277768-4-beanhuo@iokpp.de>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20221025222430.277768-1-beanhuo@iokpp.de>
+References: <20221025222430.277768-1-beanhuo@iokpp.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
-branch HEAD: 89bf6e28373beef9577fa71f996a5f73a569617c  Add linux-next specific files for 20221025
+From: Bean Huo <beanhuo@micron.com>
 
-Error/Warning reports:
+UFS Boot and Device W-LUs do not have unit descriptors, and RPMB does not
+support WB, we can use is_visible() to control which nodes are visible
+and which are not.
 
-https://lore.kernel.org/linux-mm/202210110857.9s0tXVNn-lkp@intel.com
-https://lore.kernel.org/linux-mm/202210240729.zs46Cfzo-lkp@intel.com
-https://lore.kernel.org/linux-mm/202210251946.eT92YAhG-lkp@intel.com
-https://lore.kernel.org/llvm/202210260009.9qq1JXZi-lkp@intel.com
+Signed-off-by: Bean Huo <beanhuo@micron.com>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Reviewed-by: Arthur Simchaev <arthur.simchaev@wdc.com>
+---
+ drivers/ufs/core/ufs-sysfs.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-Error/Warning: (recently discovered and may have been fixed)
-
-drivers/net/ethernet/broadcom/genet/bcmgenet.c:1497:5-13: ERROR: invalid reference to the index variable of the iterator on line 1475
-drivers/scsi/pm8001/pm8001_sas.c:996 pm8001_abort_task() warn: variable dereferenced before check 'task' (see line 986)
-
-Unverified Error/Warning (likely false positive, please contact us if interested):
-
-ERROR: modpost: "devm_ioremap" [drivers/net/ethernet/altera/altera_tse.ko] undefined!
-ERROR: modpost: "ioremap" [drivers/net/ethernet/fujitsu/fmvj18x_cs.ko] undefined!
-ERROR: modpost: "ioremap" [drivers/tty/ipwireless/ipwireless.ko] undefined!
-ERROR: modpost: "iounmap" [drivers/net/ethernet/fujitsu/fmvj18x_cs.ko] undefined!
-ERROR: modpost: "iounmap" [drivers/tty/ipwireless/ipwireless.ko] undefined!
-mm/khugepaged.c:1729:7: warning: variable 'index' is used uninitialized whenever 'if' condition is true [-Wsometimes-uninitialized]
-mm/khugepaged.c:1729:7: warning: variable 'nr' is used uninitialized whenever 'if' condition is true [-Wsometimes-uninitialized]
-
-Error/Warning ids grouped by kconfigs:
-
-gcc_recent_errors
-|-- ia64-randconfig-c033-20221025
-|   `-- drivers-net-ethernet-broadcom-genet-bcmgenet.c:ERROR:invalid-reference-to-the-index-variable-of-the-iterator-on-line
-`-- x86_64-randconfig-m001-20221024
-    `-- drivers-scsi-pm8001-pm8001_sas.c-pm8001_abort_task()-warn:variable-dereferenced-before-check-task-(see-line-)
-clang_recent_errors
-|-- arm-randconfig-r013-20221024
-|   |-- drivers-phy-mediatek-phy-mtk-hdmi-mt2701.c:warning:result-of-comparison-of-constant-with-expression-of-type-typeof-(_Generic((mask_)-char:(unsigned-char)-unsigned-char:(unsigned-char)-signed-char:(uns
-|   |-- drivers-phy-mediatek-phy-mtk-hdmi-mt8173.c:warning:result-of-comparison-of-constant-with-expression-of-type-typeof-(_Generic((mask_)-char:(unsigned-char)-unsigned-char:(unsigned-char)-signed-char:(uns
-|   |-- drivers-phy-mediatek-phy-mtk-mipi-dsi-mt8173.c:warning:result-of-comparison-of-constant-with-expression-of-type-typeof-(_Generic((mask_)-char:(unsigned-char)-unsigned-char:(unsigned-char)-signed-char:
-|   |-- drivers-phy-mediatek-phy-mtk-mipi-dsi-mt8183.c:warning:result-of-comparison-of-constant-with-expression-of-type-typeof-(_Generic((mask_)-char:(unsigned-char)-unsigned-char:(unsigned-char)-signed-char:
-|   `-- fs-ntfs3-namei.c:warning:variable-uni1-is-used-uninitialized-whenever-if-condition-is-true
-|-- arm-randconfig-r014-20221024
-|   |-- drivers-phy-mediatek-phy-mtk-hdmi-mt2701.c:warning:result-of-comparison-of-constant-with-expression-of-type-typeof-(_Generic((mask_)-char:(unsigned-char)-unsigned-char:(unsigned-char)-signed-char:(uns
-|   |-- drivers-phy-mediatek-phy-mtk-hdmi-mt8173.c:warning:result-of-comparison-of-constant-with-expression-of-type-typeof-(_Generic((mask_)-char:(unsigned-char)-unsigned-char:(unsigned-char)-signed-char:(uns
-|   |-- drivers-phy-mediatek-phy-mtk-mipi-dsi-mt8173.c:warning:result-of-comparison-of-constant-with-expression-of-type-typeof-(_Generic((mask_)-char:(unsigned-char)-unsigned-char:(unsigned-char)-signed-char:
-|   |-- drivers-phy-mediatek-phy-mtk-mipi-dsi-mt8183.c:warning:result-of-comparison-of-constant-with-expression-of-type-typeof-(_Generic((mask_)-char:(unsigned-char)-unsigned-char:(unsigned-char)-signed-char:
-|   |-- drivers-phy-mediatek-phy-mtk-tphy.c:warning:result-of-comparison-of-constant-with-expression-of-type-typeof-(_Generic((mask_)-char:(unsigned-char)-unsigned-char:(unsigned-char)-signed-char:(unsigned-c
-|   `-- fs-ntfs3-namei.c:warning:variable-uni1-is-used-uninitialized-whenever-if-condition-is-true
-|-- hexagon-randconfig-r045-20221023
-|   |-- drivers-phy-mediatek-phy-mtk-hdmi-mt2701.c:warning:result-of-comparison-of-constant-with-expression-of-type-typeof-(_Generic((mask_)-char:(unsigned-char)-unsigned-char:(unsigned-char)-signed-char:(uns
-|   |-- drivers-phy-mediatek-phy-mtk-hdmi-mt8173.c:warning:result-of-comparison-of-constant-with-expression-of-type-typeof-(_Generic((mask_)-char:(unsigned-char)-unsigned-char:(unsigned-char)-signed-char:(uns
-|   |-- drivers-phy-mediatek-phy-mtk-mipi-dsi-mt8173.c:warning:result-of-comparison-of-constant-with-expression-of-type-typeof-(_Generic((mask_)-char:(unsigned-char)-unsigned-char:(unsigned-char)-signed-char:
-|   |-- drivers-phy-mediatek-phy-mtk-mipi-dsi-mt8183.c:warning:result-of-comparison-of-constant-with-expression-of-type-typeof-(_Generic((mask_)-char:(unsigned-char)-unsigned-char:(unsigned-char)-signed-char:
-|   |-- drivers-phy-mediatek-phy-mtk-tphy.c:warning:result-of-comparison-of-constant-with-expression-of-type-typeof-(_Generic((mask_)-char:(unsigned-char)-unsigned-char:(unsigned-char)-signed-char:(unsigned-c
-|   `-- fs-ntfs3-namei.c:warning:variable-uni1-is-used-uninitialized-whenever-if-condition-is-true
-|-- i386-randconfig-a001-20221024
-|   |-- fs-ntfs3-namei.c:warning:variable-uni1-is-used-uninitialized-whenever-if-condition-is-true
-|   `-- mm-khugepaged.c:warning:variable-index-is-used-uninitialized-whenever-if-condition-is-true
-|-- mips-randconfig-r012-20221024
-|   `-- fs-ntfs3-namei.c:warning:variable-uni1-is-used-uninitialized-whenever-if-condition-is-true
-|-- powerpc-randconfig-r024-20221025
-|   `-- arch-powerpc-mm-nohash-e500.c:error:no-previous-prototype-for-function-relocate_init-Werror-Wmissing-prototypes
-|-- riscv-randconfig-r042-20221023
-|   `-- ld.lld:error:undefined-symbol:dax_holder_notify_failure
-|-- s390-randconfig-r004-20221024
-|   |-- fs-ntfs3-namei.c:warning:variable-uni1-is-used-uninitialized-whenever-if-condition-is-true
-|   |-- mm-khugepaged.c:warning:variable-index-is-used-uninitialized-whenever-if-condition-is-true
-|   `-- mm-khugepaged.c:warning:variable-nr-is-used-uninitialized-whenever-if-condition-is-true
-|-- s390-randconfig-r012-20221023
-|   `-- fs-ntfs3-namei.c:warning:variable-uni1-is-used-uninitialized-whenever-if-condition-is-true
-|-- s390-randconfig-r026-20221025
-|   `-- fs-ntfs3-namei.c:warning:variable-uni1-is-used-uninitialized-whenever-if-condition-is-true
-|-- s390-randconfig-r044-20221023
-|   `-- fs-ntfs3-namei.c:warning:variable-uni1-is-used-uninitialized-whenever-if-condition-is-true
-|-- s390-randconfig-r044-20221025
-|   |-- ERROR:devm_ioremap-drivers-net-ethernet-altera-altera_tse.ko-undefined
-|   |-- ERROR:ioremap-drivers-net-ethernet-fujitsu-fmvj18x_cs.ko-undefined
-|   |-- ERROR:ioremap-drivers-tty-ipwireless-ipwireless.ko-undefined
-|   |-- ERROR:iounmap-drivers-net-ethernet-fujitsu-fmvj18x_cs.ko-undefined
-|   `-- ERROR:iounmap-drivers-tty-ipwireless-ipwireless.ko-undefined
-|-- x86_64-randconfig-a004-20221024
-|   `-- fs-ntfs3-namei.c:warning:variable-uni1-is-used-uninitialized-whenever-if-condition-is-true
-|-- x86_64-randconfig-a005-20221024
-|   `-- fs-ntfs3-namei.c:warning:variable-uni1-is-used-uninitialized-whenever-if-condition-is-true
-|-- x86_64-randconfig-a012
-
-elapsed time: 726m
-
-configs tested: 74
-configs skipped: 2
-
-gcc tested configs:
-powerpc                           allnoconfig
-um                             i386_defconfig
-arc                                 defconfig
-um                           x86_64_defconfig
-alpha                               defconfig
-x86_64                              defconfig
-s390                                defconfig
-x86_64                           rhel-8.3-syz
-s390                             allmodconfig
-x86_64                         rhel-8.3-kunit
-x86_64                        randconfig-a013
-x86_64                           rhel-8.3-kvm
-x86_64                        randconfig-a011
-x86_64                          rhel-8.3-func
-x86_64                    rhel-8.3-kselftests
-x86_64                        randconfig-a015
-s390                             allyesconfig
-i386                                defconfig
-x86_64                               rhel-8.3
-arm                                 defconfig
-arc                  randconfig-r043-20221024
-i386                 randconfig-a014-20221024
-i386                 randconfig-a013-20221024
-riscv                randconfig-r042-20221024
-i386                 randconfig-a012-20221024
-arc                  randconfig-r043-20221023
-i386                             allyesconfig
-i386                 randconfig-a016-20221024
-x86_64                           allyesconfig
-arm                              allyesconfig
-i386                 randconfig-a011-20221024
-powerpc                       eiger_defconfig
-i386                 randconfig-a015-20221024
-sh                               allmodconfig
-m68k                             allmodconfig
-arm64                            allyesconfig
-s390                 randconfig-r044-20221024
-powerpc                      chrp32_defconfig
-sh                            migor_defconfig
-arc                              allyesconfig
-mips                             allyesconfig
-sh                      rts7751r2d1_defconfig
-csky                             alldefconfig
-powerpc                          allmodconfig
-alpha                            allyesconfig
-m68k                             allyesconfig
-sh                          lboxre2_defconfig
-powerpc                     tqm8555_defconfig
-sh                           se7712_defconfig
-
-clang tested configs:
-x86_64                        randconfig-a012
-x86_64                        randconfig-a014
-hexagon              randconfig-r041-20221024
-x86_64                        randconfig-a016
-riscv                randconfig-r042-20221023
-x86_64               randconfig-a001-20221024
-hexagon              randconfig-r045-20221024
-i386                 randconfig-a001-20221024
-x86_64               randconfig-a003-20221024
-x86_64               randconfig-a004-20221024
-s390                 randconfig-r044-20221023
-i386                 randconfig-a002-20221024
-x86_64               randconfig-a002-20221024
-x86_64               randconfig-a005-20221024
-i386                 randconfig-a005-20221024
-i386                 randconfig-a003-20221024
-hexagon              randconfig-r041-20221023
-x86_64                          rhel-8.3-rust
-powerpc                 xes_mpc85xx_defconfig
-i386                 randconfig-a004-20221024
-hexagon              randconfig-r045-20221023
-x86_64               randconfig-a006-20221024
-i386                 randconfig-a006-20221024
-powerpc                 mpc832x_mds_defconfig
-powerpc                     powernv_defconfig
-
+diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
+index eb6b278c4e79..883f0e44b54e 100644
+--- a/drivers/ufs/core/ufs-sysfs.c
++++ b/drivers/ufs/core/ufs-sysfs.c
+@@ -1285,9 +1285,27 @@ static struct attribute *ufs_sysfs_unit_descriptor[] = {
+ 	NULL,
+ };
+ 
++static umode_t ufs_unit_descriptor_is_visible(struct kobject *kobj, struct attribute *attr, int n)
++{
++	struct device *dev = container_of(kobj, struct device, kobj);
++	struct scsi_device *sdev = to_scsi_device(dev);
++	u8 lun = ufshcd_scsi_to_upiu_lun(sdev->lun);
++	umode_t mode = attr->mode;
++
++	if (lun == UFS_UPIU_BOOT_WLUN || lun == UFS_UPIU_UFS_DEVICE_WLUN)
++		/* Boot and device WLUN have no unit descriptors */
++		mode = 0;
++	if (lun == UFS_UPIU_RPMB_WLUN && attr == &dev_attr_wb_buf_alloc_units.attr)
++		mode = 0;
++
++	return mode;
++}
++
++
+ const struct attribute_group ufs_sysfs_unit_descriptor_group = {
+ 	.name = "unit_descriptor",
+ 	.attrs = ufs_sysfs_unit_descriptor,
++	.is_visible = ufs_unit_descriptor_is_visible,
+ };
+ 
+ static ssize_t dyn_cap_needed_attribute_show(struct device *dev,
 -- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+2.34.1
+
