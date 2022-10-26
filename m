@@ -2,167 +2,130 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF51FC433FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Oct 2022 13:59:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82FF3C38A2D
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Oct 2022 18:14:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230025AbiJZN7g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 26 Oct 2022 09:59:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53450 "EHLO
+        id S233987AbiJZSOV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 26 Oct 2022 14:14:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49350 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234135AbiJZN6k (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Oct 2022 09:58:40 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD52958174
-        for <linux-scsi@vger.kernel.org>; Wed, 26 Oct 2022 06:58:38 -0700 (PDT)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 29QBEFOJ025336;
-        Wed, 26 Oct 2022 13:58:37 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : content-type : mime-version; s=corp-2022-7-12;
- bh=WAesuRm0RSGric+6JUUXjm1Ub9im85aniTkBCTVME4o=;
- b=PlmYX7rGomGNXEnzG9V81nVos3AImHrIERLp+R4b52ndRrV8nPVgY4uRbldrvVZx9QBS
- OsWakPuYY0l99H088YrzQPaIs8uoYZAZUzHKWdV00RVa6j+f3A3SRG6vdlKBwzqIlm0w
- HjQmT6Q89EwnFXubNS3xAEyLLuX0UUfwb61RFPmmSgG2o8xPV+JraA7nIflE/HVs/B5t
- 9uo+A5iPombh1h7/JOmuOr3phJCWeE1B0b4A9PwdAQL/cj0YwlQHLnrh4h/LtK3gSemV
- F8PnBRs76tMcgkykTlWrSLYXP8FvJ0XutNjmi8PBcX2/QlhT3QhK/ikmsrjjrbFX/4Mc MQ== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3kc6xe5wnv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 26 Oct 2022 13:58:36 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 29QD1Ljv020945;
-        Wed, 26 Oct 2022 13:58:35 GMT
-Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2044.outbound.protection.outlook.com [104.47.66.44])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3kc6y5samc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 26 Oct 2022 13:58:35 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=fyA9H5XVMGZByFS96B+p2nUbIuPUDaTtOB17jFQgdq3kIa2nLuDs3No4MuHV0wYhtsVpoYU71QmE/zt6oVMgAfhh2pMV8llMooVR3B8WER/Sw/d1ljvHeTSVrmQzTIKaZAvhgNKygLi2BbrpSH1dzxq2hSLPEZm4Lkt7JN4HI6EbEmWouZ3lXxLVbT0cpjnFBoC3o6jjkyIYw95l081bL1KCZ+r0qf6ihfs3Vsh0HrLGnUOWJgIjX3uFIvKKkWJ622HUSvjMiWbCXazonel9TX98tR9AZCr/jrleBwrFUj+DLA6eehbSJnqhR98VnhCGT0p12HLSrpjZm1/e5IuyBw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=WAesuRm0RSGric+6JUUXjm1Ub9im85aniTkBCTVME4o=;
- b=azUUzjY/cMmR8Iub9DXyjQUbhCFteHHfCQQLo5Cuen9CK4VXJF1x6vFRCF2zJ2ES8wNELOpAwyMOKHGpzrwkbQycwm7DDk+AYj5z/XzMR7mCe+OFd1jOG8HXU1hWoAacrVRpf2kCbLCqtZux7FU9mHyVXlwEssasKAT5QSoA3p2rDhxMhyPBglxX3mn4OMOEN7hxjwGmvROZrxagEvFRi0PbiyGLMsBdQ0/Ebhky9yCAC5b6BPQX3HYu9eAuGBRO+bXyMpYEFIzkz9/yNWM0+IQASnCVLqp7Xwj2nWNRxLaFBxcylN8YbX43+6XV55EFjLYtob1eDPjHJfZT97oZ2A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=WAesuRm0RSGric+6JUUXjm1Ub9im85aniTkBCTVME4o=;
- b=oWEWSixaBPBJPkh1/TVwfLFh3hL1frmnzxnHRcgbI7ynACY5ZMgveKpWrhdn9syv+Jr9doprHBgFnOQnDQ1fVvZ1ZGiTTjIH+2D2FHK0X6T0kh9SF4t1GYeXjCPH/N90AwLS5E7FHkthu0GQ9DJuQLVy9N9hGkHw1BjVmEbzII8=
-Received: from MWHPR1001MB2365.namprd10.prod.outlook.com
- (2603:10b6:301:2d::28) by CH2PR10MB4119.namprd10.prod.outlook.com
- (2603:10b6:610:ae::7) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5746.28; Wed, 26 Oct
- 2022 13:58:33 +0000
-Received: from MWHPR1001MB2365.namprd10.prod.outlook.com
- ([fe80::1b8e:540e:10f0:9aec]) by MWHPR1001MB2365.namprd10.prod.outlook.com
- ([fe80::1b8e:540e:10f0:9aec%4]) with mapi id 15.20.5676.031; Wed, 26 Oct 2022
- 13:58:33 +0000
-Date:   Wed, 26 Oct 2022 16:58:17 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     bvanassche@acm.org
-Cc:     linux-scsi@vger.kernel.org
-Subject: [bug report] scsi: core: Release SCSI devices synchronously
-Message-ID: <Y1k8+fDG7FFOnbBG@kili>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-ClientProxiedBy: ZR0P278CA0089.CHEP278.PROD.OUTLOOK.COM
- (2603:10a6:910:22::22) To MWHPR1001MB2365.namprd10.prod.outlook.com
- (2603:10b6:301:2d::28)
+        with ESMTP id S234003AbiJZSOU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Oct 2022 14:14:20 -0400
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E440AB80F
+        for <linux-scsi@vger.kernel.org>; Wed, 26 Oct 2022 11:14:19 -0700 (PDT)
+Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 29QI8lZT005118;
+        Wed, 26 Oct 2022 18:14:13 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : mime-version : content-transfer-encoding; s=pp1;
+ bh=OYmqZvZ+irXwuSAnR/t6qV1pFq1Ay+RDfTTRuBZbi60=;
+ b=MZjNK0EyZ0FMOON0gUo/FEHNM1oxoJ97Bz6iz08hAKi6Tm31e6JFZviRrPYsT7QDtXpg
+ gM+W/12PR071d3pFnfSLfdw0esQkW7zp1uzfEzJ7LCKMdlBwCMu0usAPyWkCgiF0y6Lj
+ 5UIgi+41QcIe0I6IXy0/UWNj2/NIPEF9trWQGb3vpDOfgWLgrpc6a7KbgWXAOYwsGGBr
+ KjMr+xvC3d7t92PMGPUd44mcvVE5menilEX5dkBe1HO5OHNQ4f5KSApT70dbiMtlf1rx
+ 6odWcdrKwwpjjP1hPVBw6sYsJtBfvOqqk0mVGFLrjUWxzLYCV45J4AhKytW5y9Z3Kmf9 Lw== 
+Received: from ppma03dal.us.ibm.com (b.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.11])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3kf8uuac05-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 26 Oct 2022 18:14:13 +0000
+Received: from pps.filterd (ppma03dal.us.ibm.com [127.0.0.1])
+        by ppma03dal.us.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 29QI6Ckk032017;
+        Wed, 26 Oct 2022 18:14:12 GMT
+Received: from b03cxnp07029.gho.boulder.ibm.com (b03cxnp07029.gho.boulder.ibm.com [9.17.130.16])
+        by ppma03dal.us.ibm.com with ESMTP id 3kc85axp6d-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 26 Oct 2022 18:14:12 +0000
+Received: from smtpav01.dal12v.mail.ibm.com ([9.208.128.133])
+        by b03cxnp07029.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 29QIEA8G41091392
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 26 Oct 2022 18:14:10 GMT
+Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 27B5358061;
+        Wed, 26 Oct 2022 18:14:11 +0000 (GMT)
+Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id DB2DB5805D;
+        Wed, 26 Oct 2022 18:14:10 +0000 (GMT)
+Received: from li-6bf4d4cc-31f5-11b2-a85c-838e9310af65.ibm.com.com (unknown [9.163.43.124])
+        by smtpav01.dal12v.mail.ibm.com (Postfix) with ESMTP;
+        Wed, 26 Oct 2022 18:14:10 +0000 (GMT)
+From:   Brian King <brking@linux.vnet.ibm.com>
+To:     tyreld@linux.ibm.com
+Cc:     linuxppc-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org,
+        Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH] ibmvfc: Avoid path failures during live migration
+Date:   Wed, 26 Oct 2022 13:13:56 -0500
+Message-Id: <20221026181356.148517-1-brking@linux.vnet.ibm.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MWHPR1001MB2365:EE_|CH2PR10MB4119:EE_
-X-MS-Office365-Filtering-Correlation-Id: 66d8322f-c9aa-4e9f-2c83-08dab75a2af5
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: f8okG2Jzf7keollHXQ2x9lk0dxcsiiYSSC80nEbOcMSxIHVBYaJ3m7eamQ1M2IAqwkIajX7T3Ewm2NzNjIcHw/U5jighLsz5+8wVse9IKBkR7MbisCT8iK5Jldc/gMcLU5JXIRz8t/uE52+wiunkKvQ9SmPAfrDPdRFfDvucVCKMG3RRE6Onw2mxUTNJmqxPVJpn868XgjOwraXvHdP//pjCVheVdBngEi7+BUqHMWno9iru8ST/42QOKaVcP0eLa8xgVOa6NNgJcJxiZvF4e/BWm6svoKL8fkHWuIg6JnEmMHgNoSEe9wy3UPgxdlC4/9t8GeLE4i73Rr1FeJ+r9vXpzTL3/ITMNrK6h4hpOSnht0+Nh+dRd4bcIuNEQKXCtA5roOZ+vx87XOfvGiSALlmcAr87gtx6kyZILsWQ87fWnrs9+snCkaqAghi9hroiL7Us0QxCdOR/MBaX2/xVKgzfH6dV8Z6pnSaUPyx4SPaAobHjkskODcDujm+FxbWfEPh7Ckm0WlG85Y5qXTIa7pP+VUHBCys6GuKnihdAzbd4TjSL1tR/q9KwZ0KaNOGofrudjZpalDJY0mifgagE8sNmRARuwomc64hV4IUkT74ECX2k2QRZs1FdFYpoeHP5QmItusxO03pFDlI+/WAY7PtU9dS7QMuf6lrcItnR+D90g7gy7aCoo5xG+lf+Z1sIDM7wZjX5Yu2Hh0BczDnLYhGeAYURekMiUParO8Ttlrytck7g7SLSGL2d+nw/u+W5
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR1001MB2365.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(7916004)(376002)(346002)(136003)(39860400002)(396003)(366004)(451199015)(5660300002)(6916009)(4326008)(41300700001)(26005)(66946007)(8676002)(66476007)(6666004)(66556008)(6512007)(9686003)(316002)(6506007)(8936002)(33716001)(38100700002)(2906002)(44832011)(83380400001)(86362001)(478600001)(6486002)(186003)(67856001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?pzaplpsz1tZSZ6tNQFxtQk9ODx9Mu3uE2bGTLt0hhHl5WvZVnw+S1fLInzM3?=
- =?us-ascii?Q?5fKIvRti3RFkfwUAT11TbrgXFA8vl1Z8whvCA8bO8qVzL9WnSx4upjHMBgrG?=
- =?us-ascii?Q?1Vacj+jY2rncvgBqnyQCjIG5mLP8e/dw+Nge0cHO7ag9rvkrx6LQHABDlW63?=
- =?us-ascii?Q?R8H7zIViooWbr8601Us1+aoZU56SsomD44SmC61WZHfQae2w17zZyPYXZyXK?=
- =?us-ascii?Q?QN0MIRSkEYks+tCOuS7TfTWmTXhjF7eX+zYv0sLkNgqhMSeFhW2j8WuW2ee4?=
- =?us-ascii?Q?UKs2nxVxzCSzJIBrq7PDUDCyU7ldiHBtmTayy46fejsZePRsfaq5LKGCIE/p?=
- =?us-ascii?Q?ib9B4UTA3mVvN7h07TIFn3ywcUlsAsI4ycEvzKwT7QYgztEJa5CrBJ3dzwop?=
- =?us-ascii?Q?9zsh9CN0qe149p68JOo89QJexv/lYpL02nO+ImjosYswt95nx4gSb5P20wWu?=
- =?us-ascii?Q?rl5Ax53YRbqtCGGPuS83HiiZlANMvXDsSEu4ygp6TC5Mj3/rzmvg7F9vC699?=
- =?us-ascii?Q?Sifr4gul5VNGTiJub/OmQMoD+NdC//e4civh1c9bvW/YaIU/cpAaUZgaVWRc?=
- =?us-ascii?Q?uDtRzZ8qLliQblnltlxLHna5F7SoZvWcC5NdwjyjV6vMIJIeukh/WrmKXQAV?=
- =?us-ascii?Q?hFzWHAL25FsQmTnV0JdeN1whoOxUWCRkH8fE5QoSZ7OBTdi9XRnv0uQMs76X?=
- =?us-ascii?Q?nnuUug/0wwy2eYJ8bpM1n4SrvwiB3L5GAw3e2NklsbWZS4twsKifF2HqQCEj?=
- =?us-ascii?Q?01a0wRM8/aQ9bBVFxqhd5raBoDY+IIBYalKsgROJRSUTh+I5Exz66SEw1WrI?=
- =?us-ascii?Q?FAwcx/WlHghk7NK6OpTJTcYJ07kAIdbMJcswHRtvDuXleAN5bL1FDuKW4Vbm?=
- =?us-ascii?Q?rEimEOLlDiKsgY6W/9K14sItHPj5XBIw5YSTDcVkk67cfzkTvhgLDH2RKxV+?=
- =?us-ascii?Q?9FnyW1gXUWHZ6jTM02EnQM/xxybRCxo7H8qAHj9QNs+D12E39eqD/hAd07sN?=
- =?us-ascii?Q?2D3+36BBjLA9YiHeEpsP/aOeqgq+mG3mBW9wfPzgdHmaSeyV4AKAGZuTHOkB?=
- =?us-ascii?Q?WxlfXNtmbRpQUe1EUqYZNL+CN/xpw1SI2XT19vC8g/Rnoghyud4e7iED54We?=
- =?us-ascii?Q?9DInganX+e655wM9iH811S441b4plcIbquhXxl2VjZkZTaYpz/ZzIWyOCSQD?=
- =?us-ascii?Q?p9k5m8KRZTpLWpLSbB/79zT6+LDjm4fHt07/jkymIcv8y5QPBxMxu08kOH6B?=
- =?us-ascii?Q?TacpqAQcqXWj+bl9GwJYVkF4TKV49nK7on84tyM/HCS0HbPJsWuwIaj4I9BP?=
- =?us-ascii?Q?zlkeEwvfhSMxJzKI8qq/ectAVn13U8QzF9NuflANrzSaQ5tQibtkgaMTyCuX?=
- =?us-ascii?Q?2SwUIIMHslvngv4uPYcuRLCLXbpqJ1z3UK15aKuKX9c7k6fmIfJi1lxwUv8Q?=
- =?us-ascii?Q?NcyyJudVFVIvqlteUve75DIHr2zeNnHGwAuo4vJJdH/AUF8qz1bYSkEufIde?=
- =?us-ascii?Q?t96Zwjt8cT1mOkEgg01SYbYkL3BieVJUE18SRDtwCCrx3DCK43SoVpmxWe+F?=
- =?us-ascii?Q?8mRW/jeza2618WGQEnONfrwtYhmvlfOu1YIAPdEbwZgXtq3lboNUM66qd/+f?=
- =?us-ascii?Q?zQ=3D=3D?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 66d8322f-c9aa-4e9f-2c83-08dab75a2af5
-X-MS-Exchange-CrossTenant-AuthSource: MWHPR1001MB2365.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Oct 2022 13:58:33.2464
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: BvG3sXAzb1kUpZKp2xo7KwXgyH97gEGthkLWpQ1T8+9YCKXwGZb0qvDcNCTGRKgGBUhiczpU/EffxLdbogR1KLY6lI3a1L6QaVk8T73ot2Y=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR10MB4119
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: _BiNbAOrhfyt6SDNYhxPZCtxlEizwYpo
+X-Proofpoint-ORIG-GUID: _BiNbAOrhfyt6SDNYhxPZCtxlEizwYpo
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2022-10-26_06,2022-10-26_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=873 bulkscore=0
- suspectscore=0 malwarescore=0 phishscore=0 mlxscore=0 spamscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2209130000 definitions=main-2210260079
-X-Proofpoint-GUID: PdGm4kEW_5J6vwfPpPzHQkq792IFkwE_
-X-Proofpoint-ORIG-GUID: PdGm4kEW_5J6vwfPpPzHQkq792IFkwE_
+ definitions=2022-10-26_07,2022-10-26_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0
+ lowpriorityscore=0 bulkscore=0 impostorscore=0 adultscore=0 malwarescore=0
+ suspectscore=0 phishscore=0 mlxlogscore=999 priorityscore=1501
+ clxscore=1011 mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2209130000 definitions=main-2210260102
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello Bart Van Assche,
+This patch fixes an issue reported when performing a live
+migration when multipath is configured with a short fast
+fail timeout of 5 seconds and also to have no_path_retry
+set to fail. In this scenario, all paths would go into the
+devloss state while the ibmvfc driver went through discovery
+to log back in. On a loaded system, the discovery might
+take longer than 5 seconds, which was resulting in all paths
+being marked failed, which then resulted in a read only filesystem.
 
-The patch f93ed747e2c7: "scsi: core: Release SCSI devices
-synchronously" from Oct 14, 2022, leads to the following three Smatch
-static checker warnings:
+This patch changes the migration code in ibmvfc to
+avoid deleting rports at all in this scenario, so we
+avoid losing all paths.
 
-1) drivers/scsi/bfa/bfad_bsg.c:2551 bfad_iocmd_lunmask_reset_lunscan_mode() warn: sleeping in atomic context
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
+ drivers/scsi/ibmvscsi/ibmvfc.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
 
-bfad_iocmd_lunmask() <- disables preempt
--> bfad_iocmd_lunmask_reset_lunscan_mode()
-   -> scsi_device_put()
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index 00684e11976b..1a0c0b7289d2 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -708,8 +708,13 @@ static void ibmvfc_init_host(struct ibmvfc_host *vhost)
+ 		memset(vhost->async_crq.msgs.async, 0, PAGE_SIZE);
+ 		vhost->async_crq.cur = 0;
+ 
+-		list_for_each_entry(tgt, &vhost->targets, queue)
+-			ibmvfc_del_tgt(tgt);
++		list_for_each_entry(tgt, &vhost->targets, queue) {
++			if (vhost->client_migrated)
++				tgt->need_login = 1;
++			else
++				ibmvfc_del_tgt(tgt);
++		}
++
+ 		scsi_block_requests(vhost->host);
+ 		ibmvfc_set_host_action(vhost, IBMVFC_HOST_ACTION_INIT);
+ 		vhost->job_step = ibmvfc_npiv_login;
+@@ -3235,9 +3240,12 @@ static void ibmvfc_handle_crq(struct ibmvfc_crq *crq, struct ibmvfc_host *vhost,
+ 			/* We need to re-setup the interpartition connection */
+ 			dev_info(vhost->dev, "Partition migrated, Re-enabling adapter\n");
+ 			vhost->client_migrated = 1;
++
++			scsi_block_requests(vhost->host);
+ 			ibmvfc_purge_requests(vhost, DID_REQUEUE);
+-			ibmvfc_link_down(vhost, IBMVFC_LINK_DOWN);
++			ibmvfc_set_host_state(vhost, IBMVFC_LINK_DOWN);
+ 			ibmvfc_set_host_action(vhost, IBMVFC_HOST_ACTION_REENABLE);
++			wake_up(&vhost->work_wait_q);
+ 		} else if (crq->format == IBMVFC_PARTNER_FAILED || crq->format == IBMVFC_PARTNER_DEREGISTER) {
+ 			dev_err(vhost->dev, "Host partner adapter deregistered or failed (rc=%d)\n", crq->format);
+ 			ibmvfc_purge_requests(vhost, DID_ERROR);
+-- 
+2.31.1
 
-(This is inside the calls to bfad_reset_sdev_bflags() macro).
-
-2) drivers/scsi/device_handler/scsi_dh_alua.c:853 alua_rtpg_select_sdev() warn: sleeping in atomic context
-
-alua_rtpg_work() <- disables preempt
--> alua_rtpg_select_sdev()
-   -> scsi_device_put()
-
-3) drivers/scsi/device_handler/scsi_dh_alua.c:1013 alua_rtpg_queue() warn: sleeping in atomic context
-
-alua_check_vpd() <- disables preempt
--> alua_rtpg_queue()
-   -> scsi_device_put()
-
-Hopefully, this bug report is straight forward.  The fixes are probably
-complicated though.  :P Basically the function marked "disables preempt"
-takes a spin lock and calls the other function which calls
-scsi_device_put().
-
-regards,
-dan carpenter
