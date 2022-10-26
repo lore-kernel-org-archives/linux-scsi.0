@@ -2,90 +2,109 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B69DC38A2D
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Oct 2022 08:45:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FDE9FA373D
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Oct 2022 09:14:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233465AbiJZIpN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 26 Oct 2022 04:45:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57490 "EHLO
+        id S232783AbiJZJOp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 26 Oct 2022 05:14:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38390 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233459AbiJZIoj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Oct 2022 04:44:39 -0400
-Received: from madras.collabora.co.uk (madras.collabora.co.uk [IPv6:2a00:1098:0:82:1000:25:2eeb:e5ab])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61F22642CB
-        for <linux-scsi@vger.kernel.org>; Wed, 26 Oct 2022 01:43:00 -0700 (PDT)
-Received: from [192.168.1.100] (2-237-20-237.ip236.fastwebnet.it [2.237.20.237])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits))
-        (No client certificate requested)
-        (Authenticated sender: kholk11)
-        by madras.collabora.co.uk (Postfix) with ESMTPSA id 3D545660283E;
-        Wed, 26 Oct 2022 09:42:58 +0100 (BST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-        s=mail; t=1666773778;
-        bh=w31odjVcfeb6QfjPWe48PCOVArAFaXH4iLmTYIV0E5I=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=U1kt1+HlZCH2AipQyeOkQ0qfqxX/uIphQ0w8EmLcLbSo4SfVpUta+rtG5HnsTVPso
-         N1a+4RjXqunUnq8eaKuAQcwQjhFS1nUnDvKcycI8uwWjbIBuYNPodI1S8nwYHBkhZT
-         0qFM6C9fNHdTzLiMVRvqm9PFxJZGJRJa+o+19T4NC/w8qrjOcd9XQ2N85BCG3eUgAQ
-         ql3cjjph63Kmz9FNhTLgnZFIXcXrIK2F77KdBy3gFi0kIV1zymyq6/JQ+olcz/axa/
-         be/PreqzGqfn2gE6Y0w3Xrac1bADowt+zE4xaQStpP5Jo12RaBsMON4bCCvcAPNy7c
-         dUiSUOasd/6sw==
-Message-ID: <b22b6d17-98d6-782c-af5e-8e3d46a0277e@collabora.com>
-Date:   Wed, 26 Oct 2022 10:42:55 +0200
+        with ESMTP id S231476AbiJZJOm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Oct 2022 05:14:42 -0400
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D54A013EB2;
+        Wed, 26 Oct 2022 02:14:31 -0700 (PDT)
+X-UUID: 9180668afd1e48199418e165d170df1a-20221026
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=RoSN/0vdZNJI1BsXeQN/CB5ivpuRXHYEGS36plQjLDY=;
+        b=oVoKD3YtbAV+Ce2geY2o+8+AJruyAX25fYIr/1RaVFf4Znm2jgHdt+jL5U9TS2PzM7u/ImfZyRuUkjCHN9fBjDILQFjy9xZRyoX7csP0A0aEqRO+5w9Xkjaafh6kGbU0rC4wR3dL4/tVqvBeiBPU+ROn5b+DYicjNXjkvV7+hBU=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.12,REQID:c2c223ea-be03-4e47-8771-4066d431554f,IP:0,U
+        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+        release,TS:0
+X-CID-META: VersionHash:62cd327,CLOUDID:3686286d-89d3-4bfa-baad-dc632a24bca3,B
+        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
+        RL:1,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
+X-UUID: 9180668afd1e48199418e165d170df1a-20221026
+Received: from mtkmbs11n1.mediatek.inc [(172.21.101.185)] by mailgw01.mediatek.com
+        (envelope-from <eddie.huang@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 72722634; Wed, 26 Oct 2022 17:14:25 +0800
+Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
+ mtkmbs13n1.mediatek.inc (172.21.101.193) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.792.15; Wed, 26 Oct 2022 17:14:24 +0800
+Received: from mtksdccf07 (172.21.84.99) by mtkmbs13n1.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.2.792.15 via Frontend
+ Transport; Wed, 26 Oct 2022 17:14:24 +0800
+Message-ID: <0fdbd62925665469a3f3eff2a85bc582d5be83ea.camel@mediatek.com>
+Subject: Re: [PATCH v3 06/17] ufs: core: mcq: Configure resource regions
+From:   Eddie Huang <eddie.huang@mediatek.com>
+To:     Asutosh Das <quic_asutoshd@quicinc.com>, <quic_cang@quicinc.com>,
+        <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>
+CC:     <quic_nguyenb@quicinc.com>, <quic_xiaosenh@quicinc.com>,
+        <stanley.chu@mediatek.com>, <daejun7.park@samsung.com>,
+        <bvanassche@acm.org>, <avri.altman@wdc.com>, <mani@kernel.org>,
+        <beanhuo@micron.com>, <quic_richardp@quicinc.com>,
+        <linux-arm-msm@vger.kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        open list <linux-kernel@vger.kernel.org>
+Date:   Wed, 26 Oct 2022 17:14:24 +0800
+In-Reply-To: <b3f9b7fab4e187ad50dbf80cbd982353ad2d8130.1666288432.git.quic_asutoshd@quicinc.com>
+References: <cover.1666288432.git.quic_asutoshd@quicinc.com>
+         <b3f9b7fab4e187ad50dbf80cbd982353ad2d8130.1666288432.git.quic_asutoshd@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.3
-Subject: Re: [PATCH v1 2/2] ufs: mtk-host: Add MCQ feature
-Content-Language: en-US
-To:     Eddie Huang <eddie.huang@mediatek.com>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        bvanassche@acm.org, linux-scsi@vger.kernel.org
-Cc:     avri.altman@wdc.com, liang-yen.wang@mediatek.com,
-        linux-mediatek@lists.infradead.org, cc.chou@mediatek.com,
-        powen.kao@mediatek.com
-References: <20221026073943.22111-1-eddie.huang@mediatek.com>
- <20221026073943.22111-3-eddie.huang@mediatek.com>
-From:   AngeloGioacchino Del Regno 
-        <angelogioacchino.delregno@collabora.com>
-In-Reply-To: <20221026073943.22111-3-eddie.huang@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Il 26/10/22 09:39, Eddie Huang ha scritto:
-> Add Mediatek mcq resource and runtime configuration function
-> to support MCQ capability
+Hi Asutosh,
+
+On Thu, 2022-10-20 at 11:03 -0700, Asutosh Das wrote:
+> Define the mcq resources and add support to ioremap
+> the resource regions.
 > 
-> Signed-off-by: Eddie Huang <eddie.huang@mediatek.com>
+> Co-developed-by: Can Guo <quic_cang@quicinc.com>
+> Signed-off-by: Can Guo <quic_cang@quicinc.com>
+> Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
 > ---
->   drivers/ufs/host/ufs-mediatek.c | 37 +++++++++++++++++++++++++++++++++++++
->   drivers/ufs/host/ufs-mediatek.h |  7 +++++++
->   2 files changed, 44 insertions(+)
+>  drivers/ufs/core/ufs-mcq.c | 102
+> +++++++++++++++++++++++++++++++++++++++++++++
+>  include/ufs/ufshcd.h       |  28 +++++++++++++
+>  2 files changed, 130 insertions(+)
 > 
-> diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-> index c958279..3f5fc05 100644
-> --- a/drivers/ufs/host/ufs-mediatek.c
-> +++ b/drivers/ufs/host/ufs-mediatek.c
-
-..snip..
-
+[....]
+> 
 > +
-> +static int ufs_mtk_config_mcq_resource(struct ufs_hba *hba)
+> +static int ufshcd_mcq_config_resource(struct ufs_hba *hba)
 > +{
-> +	hba->mcq_base = hba->mmio_base +
-> +					MCQ_QUEUE_OFFSET(hba->mcq_capabilities);
+> +	struct platform_device *pdev = to_platform_device(hba->dev);
+> +	struct ufshcd_res_info *res;
+> +	struct resource *res_mem, *res_mcq;
+> +	int i, ret = 0;
+> +
+> +	memcpy(hba->res, ufs_res_info, sizeof(ufs_res_info));
+> +
+> +	for (i = 0; i < RES_MAX; i++) {
+> +		res = &hba->res[i];
+> +		res->resource = platform_get_resource_byname(pdev,
+> +							     IORESOURCE
+> _MEM,
+> +							     res-
+> >name);
+> 
 
-This seems to either be an additional usecase that should be implemented into the
-API and not in MediaTek drivers, (as in that case I believe MediaTek won't be the
-only user of such usecase)... or just a way to avoid adding the MCQ iospace to the
-UFS devicetree node.
+Please check patch[1] for mcq_config_resource vops
 
-Please clarify.
+[1] 
+https://patchwork.kernel.org/project/linux-scsi/patch/20221026073943.22111-2-eddie.huang@mediatek.com/
+ 
 
-Thanks,
-Angelo
+Eddie Huang
+
 
