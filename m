@@ -2,120 +2,255 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABB5AFA373E
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Oct 2022 20:10:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ECA8FC38A2D
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Oct 2022 22:44:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234774AbiJZUKb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 26 Oct 2022 16:10:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45446 "EHLO
+        id S233848AbiJZWoK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 26 Oct 2022 18:44:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54780 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234828AbiJZUK1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Oct 2022 16:10:27 -0400
-Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE89DFAA43;
-        Wed, 26 Oct 2022 13:10:24 -0700 (PDT)
-Received: by mail-pl1-x634.google.com with SMTP id p3so14330149pld.10;
-        Wed, 26 Oct 2022 13:10:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=HX5FXVs0tYEVxnsB10H21VSQGViE9QVJS+3ibaLV0YE=;
-        b=aO1pFCHMxZYIKOLlM2bkwmdPEcF3WO9cJAcLp8nW/40b5s1Lg9tUv4R7EYW3ogT5du
-         bfyBLTqEQntFjtOMwAglpr4IujwPOc858KE6Y1JuqsxiBmijkmnbcIe0Wlf4DddMGeEE
-         sRf7dcqiw1sPTeF95XL66BN5isWsMFMH77jJHRJeHaapefcmV/+iwZO8CMStYBTe937y
-         ZwRUUhJZDJCSOUc+Q60INEV9AVzaFj9IO/UpaQIEE6CNXQNx0HzT9YoWtYl6hBqItsps
-         cNRxYORfKCdLvwklV1NotL3k2bV7/XHG0Fk22Na9K1+impNf9VHp+WUquaSteraX9q+Y
-         eE0w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=HX5FXVs0tYEVxnsB10H21VSQGViE9QVJS+3ibaLV0YE=;
-        b=pFynftRm9ofOwNk9HuaLr1Uf2Ckzm6p5fx/UyxK8se5b5/zlhwKhP89SKMZeYR3dK1
-         vDO66MC7t6gwTqIF7bGtWtTJj1A0DHlWgwuF0jTjGh6OAEFXmaTjzbixNP2hEcD/08Cb
-         qLojfSErrpOHTCAv+uNtbJrQwjXZ2+MLqLwNmdLSmnikm4wjkDLLsNCxgOhaABbYvh3X
-         taA07V+t/7cyCstBMglqL5ZxbtBiZozuIbFlK7eOSHLYvuHpPfL+wFFy0Az7pZeEALvQ
-         DfQ2HOc0yRqOEE1YpbrDat2AYThkdeKpnAt2A9fA7DA2CohL6EzoOdTRd7qphNZtA0+V
-         OFbA==
-X-Gm-Message-State: ACrzQf3LzmjlrlcP9h8Ad8iQ/aU+QTWGT7FMVGrAioqBFFOhwjugmtPB
-        4Wcd0M5bxc1j+ej0Gh6TNCZYakrPht6JJD4nkYM=
-X-Google-Smtp-Source: AMsMyM4vJUlOcUNnKc4pc7DyNhJBsvsHuLZxaNdhqXhgbRmhx5dKzHKugsXl6DIuI1Ny9f00UQDOW9fQtBaldUhFGPU=
-X-Received: by 2002:a17:902:e552:b0:179:e795:71c5 with SMTP id
- n18-20020a170902e55200b00179e79571c5mr45471024plf.57.1666815024302; Wed, 26
- Oct 2022 13:10:24 -0700 (PDT)
+        with ESMTP id S233884AbiJZWnk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Oct 2022 18:43:40 -0400
+Received: from tarta.nabijaczleweli.xyz (unknown [139.28.40.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4147313B513;
+        Wed, 26 Oct 2022 15:43:22 -0700 (PDT)
+Received: from tarta.nabijaczleweli.xyz (unknown [192.168.1.250])
+        by tarta.nabijaczleweli.xyz (Postfix) with ESMTPSA id 877F34660;
+        Thu, 27 Oct 2022 00:43:21 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=nabijaczleweli.xyz;
+        s=202205; t=1666824201;
+        bh=mvQMiGrPqRBI4af3hBhxU3HI0eaRowKnINCh9+jrcSA=;
+        h=Date:From:Cc:Subject:References:In-Reply-To:From;
+        b=ULqGBj8SeLyN/SfR2/usj29XQun7NIgWv2xzq5RLvyiutKNOkyMD/UnZaEnL0YnNH
+         qQ3BnWA27eG3L4xDwm9AwBaH1W8X07xzXMI3jaJGvDUSdNtdJX1xy8CFYUdc8wJINV
+         1gKXWmJN0mtPxyoHNx/kEZSi6gELDrH9a4jH/H/R7ss6Ek91Otj2XP51I2sFFHGlaT
+         0WjyMQvZlkGOQpSgNpy6v7vpIFzfsXGIBzpOqBJiolDXy3pnLyAXj05lk4at9SfW3j
+         vFOw9TwO/0+W4e9hcjYRHFLlYX4ODmbEFY9g5wubbcIVAWfoWgJfiz+nv0hYD3wKkz
+         dlW5AhxFvr1KkbhKP34VgiuDWsinsOUI2qP2+Ey/+uWr8H7M6iOc0J6snFDbou8HqT
+         pYrOSm8s42ZpJTrBHuLdAR3ExbiYvw/zdAO2QSdcr2tqFWkucPCOdak4X+J4l0q5I4
+         QmeuHwUZPjDE6kW/JZB6YhA5UHnXLGDcpgdtvZPaxyTIjpel/nLwK6ezKqPucpjpdH
+         DUI6d1ZEWMvo5SvKhJCVYPlILrK7M2DkMZzVXHYPFkgCc5ohcFcaoQH++/AQMjs/la
+         N/qPsi4RzpVENHuoczo+o1twDdGyGQchsfaxzecrNdLyacGmYSQs+M182XEL28mQyB
+         P4sSVpphFltQH/3cT+YxeYp4=
+Date:   Thu, 27 Oct 2022 00:43:20 +0200
+From:   =?utf-8?B?0L3QsNCx?= <nabijaczleweli@nabijaczleweli.xyz>
+Cc:     Jonathan Corbet <corbet@lwn.net>,
+        Federico Vaga <federico.vaga@vaga.pv.it>,
+        Alex Shi <alexs@kernel.org>,
+        Yanteng Si <siyanteng@loongson.cn>,
+        Hu Haowen <src.res@email.cn>,
+        Russell King <linux@armlinux.org.uk>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jiri Slaby <jirislaby@kernel.org>, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        linux-doc-tw-discuss@lists.sourceforge.net,
+        linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org
+Subject: [PATCH 10/15] scsi: acorn: remove QUEUE_MAGIC_{FREE,USED}
+Message-ID: <f1330d4027e3d7e85d2a5cd7c5f43fed866b9ef9.1666822928.git.nabijaczleweli@nabijaczleweli.xyz>
+References: <9a453437b5c3b4b1887c1bd84455b0cc3d1c40b2.1666822928.git.nabijaczleweli@nabijaczleweli.xyz>
 MIME-Version: 1.0
-References: <yq15zo86nvk.fsf@oracle.com> <20190819163546.915-1-khorenko@virtuozzo.com>
- <CADvTj4rVS-wJy1B=dgEO1AOADNYgL3XkZ01Aq=RTfPGEZC+VMA@mail.gmail.com>
- <ffdb2223-eed3-75b4-a003-4e4c96b49947@grossegger.com> <yq135kacnny.fsf@ca-mkp.ca.oracle.com>
- <CADvTj4qfPhEKy2V0crGs+Hc_fq=P5OKWFohG9QbTHK3i+GWc=Q@mail.gmail.com> <106f384f-d9e2-905d-5ac5-fe4ffd962122@virtuozzo.com>
-In-Reply-To: <106f384f-d9e2-905d-5ac5-fe4ffd962122@virtuozzo.com>
-From:   James Hilliard <james.hilliard1@gmail.com>
-Date:   Wed, 26 Oct 2022 16:10:12 -0400
-Message-ID: <CADvTj4rd+Z8S8vwnsmn2a7BXDPBwx1iqWRmE+SbtWep=Lnr20g@mail.gmail.com>
-Subject: Re: [PATCH v3 0/1] aacraid: Host adapter Adaptec 6405 constantly
- resets under high io load
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Konstantin Khorenko <khorenko@virtuozzo.com>,
-        =?UTF-8?Q?Christian_Gro=C3=9Fegger?= <christian@grossegger.com>,
-        linux-scsi@vger.kernel.org,
-        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
-        Sagar Biradar <sagar.biradar@microchip.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Don Brace <don.brace@microchip.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="uh4qysktmizprqov"
+Content-Disposition: inline
+In-Reply-To: <9a453437b5c3b4b1887c1bd84455b0cc3d1c40b2.1666822928.git.nabijaczleweli@nabijaczleweli.xyz>
+User-Agent: NeoMutt/20220429
+To:     unlisted-recipients:; (no To-header on input)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Oct 19, 2022 at 2:03 PM Konstantin Khorenko
-<khorenko@virtuozzo.com> wrote:
->
-> On 10.10.2022 14:31, James Hilliard wrote:
-> > On Tue, Feb 22, 2022 at 10:41 PM Martin K. Petersen
-> > <martin.petersen@oracle.com> wrote:
-> >>
-> >>
-> >> Christian,
-> >>
-> >>> The faulty patch (Commit: 395e5df79a9588abf) from 2017 should be
-> >>> repaired with Konstantin Khorenko (1):
-> >>>
-> >>>    scsi: aacraid: resurrect correct arc ctrl checks for Series-6
-> >>
-> >> It would be great to get this patch resubmitted by Konstantin and acked
-> >> by Microchip.
 
-Can we merge this as is since microchip does not appear to be maintaining
-this driver any more or responding?
+--uh4qysktmizprqov
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> >
-> > Does the patch need to be rebased?
->
-> James, i have just checked - the old patch (v3) applies cleanly onto latest master branch.
->
-> > Based on this it looks like someone at microchip may have already reviewed:
-> > v3 changes:
-> >   * introduced another wrapper to check for devices except for Series 6
-> >     controllers upon request from Sagar Biradar (Microchip)
->
-> Well, back in the year 2019 i've created a bug in RedHat bugzilla
-> https://bugzilla.redhat.com/show_bug.cgi?id=1724077
-> (the bug is private, this is default for Redhat bugs)
->
-> In this bug Sagar Biradar (with the email @microchip.com) suggested me to rework the patch - i've done
-> that and sent the v3.
->
-> And nothing happened after that, but in a ~year (2020-06-19) the bug was closed with the resolution
-> NOTABUG and a comment that S6 users will find the patch useful.
->
-> i suppose S6 is so old that RedHat just does not have customers using it and Microchip company itself
-> is also not that interested in handling so old hardware issues.
->
-> Sorry, i was unable to get a final ack from Microchip,
-> i've written direct emails to the addresses which is found in the internet, tried to connect via
-> linkedin, no luck.
->
-> --
-> Konstantin Khorenko
+We have largely moved away from this approach,
+and we have better debugging instrumentation nowadays: kill it
+
+Ref: https://lore.kernel.org/linux-doc/YyMlovoskUcHLEb7@kroah.com/
+Signed-off-by: Ahelenia Ziemia=C5=84ska <nabijaczleweli@nabijaczleweli.xyz>
+---
+ Documentation/process/magic-number.rst        |  2 --
+ .../it_IT/process/magic-number.rst            |  2 --
+ .../zh_CN/process/magic-number.rst            |  2 --
+ .../zh_TW/process/magic-number.rst            |  2 --
+ drivers/scsi/arm/queue.c                      | 21 -------------------
+ 5 files changed, 29 deletions(-)
+
+diff --git a/Documentation/process/magic-number.rst b/Documentation/process=
+/magic-number.rst
+index 77a96a79c7e8..c1c68c713cbc 100644
+--- a/Documentation/process/magic-number.rst
++++ b/Documentation/process/magic-number.rst
+@@ -72,6 +72,4 @@ FASYNC_MAGIC          0x4601           fasync_struct     =
+       ``include/linux/
+ SLIP_MAGIC            0x5302           slip                     ``drivers/=
+net/slip.h``
+ HDLCDRV_MAGIC         0x5ac6e778       hdlcdrv_state            ``include/=
+linux/hdlcdrv.h``
+ CCB_MAGIC             0xf2691ad2       ccb                      ``drivers/=
+scsi/ncr53c8xx.c``
+-QUEUE_MAGIC_FREE      0xf7e1c9a3       queue_entry              ``drivers/=
+scsi/arm/queue.c``
+-QUEUE_MAGIC_USED      0xf7e1cc33       queue_entry              ``drivers/=
+scsi/arm/queue.c``
+ =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D =3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D
+diff --git a/Documentation/translations/it_IT/process/magic-number.rst b/Do=
+cumentation/translations/it_IT/process/magic-number.rst
+index ef509265a3df..5b609ca78a14 100644
+--- a/Documentation/translations/it_IT/process/magic-number.rst
++++ b/Documentation/translations/it_IT/process/magic-number.rst
+@@ -78,6 +78,4 @@ FASYNC_MAGIC          0x4601           fasync_struct     =
+       ``include/linux/
+ SLIP_MAGIC            0x5302           slip                     ``drivers/=
+net/slip.h``
+ HDLCDRV_MAGIC         0x5ac6e778       hdlcdrv_state            ``include/=
+linux/hdlcdrv.h``
+ CCB_MAGIC             0xf2691ad2       ccb                      ``drivers/=
+scsi/ncr53c8xx.c``
+-QUEUE_MAGIC_FREE      0xf7e1c9a3       queue_entry              ``drivers/=
+scsi/arm/queue.c``
+-QUEUE_MAGIC_USED      0xf7e1cc33       queue_entry              ``drivers/=
+scsi/arm/queue.c``
+ =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D =3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D
+diff --git a/Documentation/translations/zh_CN/process/magic-number.rst b/Do=
+cumentation/translations/zh_CN/process/magic-number.rst
+index 6437c408dd67..ab4d4e32b61f 100644
+--- a/Documentation/translations/zh_CN/process/magic-number.rst
++++ b/Documentation/translations/zh_CN/process/magic-number.rst
+@@ -61,6 +61,4 @@ FASYNC_MAGIC          0x4601           fasync_struct     =
+       ``include/linux/
+ SLIP_MAGIC            0x5302           slip                     ``drivers/=
+net/slip.h``
+ HDLCDRV_MAGIC         0x5ac6e778       hdlcdrv_state            ``include/=
+linux/hdlcdrv.h``
+ CCB_MAGIC             0xf2691ad2       ccb                      ``drivers/=
+scsi/ncr53c8xx.c``
+-QUEUE_MAGIC_FREE      0xf7e1c9a3       queue_entry              ``drivers/=
+scsi/arm/queue.c``
+-QUEUE_MAGIC_USED      0xf7e1cc33       queue_entry              ``drivers/=
+scsi/arm/queue.c``
+ =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D =3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D
+diff --git a/Documentation/translations/zh_TW/process/magic-number.rst b/Do=
+cumentation/translations/zh_TW/process/magic-number.rst
+index 453cc205e6c3..a6131d978189 100644
+--- a/Documentation/translations/zh_TW/process/magic-number.rst
++++ b/Documentation/translations/zh_TW/process/magic-number.rst
+@@ -64,6 +64,4 @@ FASYNC_MAGIC          0x4601           fasync_struct     =
+       ``include/linux/
+ SLIP_MAGIC            0x5302           slip                     ``drivers/=
+net/slip.h``
+ HDLCDRV_MAGIC         0x5ac6e778       hdlcdrv_state            ``include/=
+linux/hdlcdrv.h``
+ CCB_MAGIC             0xf2691ad2       ccb                      ``drivers/=
+scsi/ncr53c8xx.c``
+-QUEUE_MAGIC_FREE      0xf7e1c9a3       queue_entry              ``drivers/=
+scsi/arm/queue.c``
+-QUEUE_MAGIC_USED      0xf7e1cc33       queue_entry              ``drivers/=
+scsi/arm/queue.c``
+ =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D =3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D
+diff --git a/drivers/scsi/arm/queue.c b/drivers/scsi/arm/queue.c
+index 978df23ce188..fe7d814a73a9 100644
+--- a/drivers/scsi/arm/queue.c
++++ b/drivers/scsi/arm/queue.c
+@@ -26,27 +26,11 @@
+ #include <scsi/scsi_eh.h>
+ #include <scsi/scsi_tcq.h>
+=20
+-#define DEBUG
+-
+ typedef struct queue_entry {
+ 	struct list_head   list;
+ 	struct scsi_cmnd   *SCpnt;
+-#ifdef DEBUG
+-	unsigned long	   magic;
+-#endif
+ } QE_t;
+=20
+-#ifdef DEBUG
+-#define QUEUE_MAGIC_FREE	0xf7e1c9a3
+-#define QUEUE_MAGIC_USED	0xf7e1cc33
+-
+-#define SET_MAGIC(q,m)	((q)->magic =3D (m))
+-#define BAD_MAGIC(q,m)	((q)->magic !=3D (m))
+-#else
+-#define SET_MAGIC(q,m)	do { } while (0)
+-#define BAD_MAGIC(q,m)	(0)
+-#endif
+-
+ #include "queue.h"
+=20
+ #define NR_QE	32
+@@ -74,7 +58,6 @@ int queue_initialise (Queue_t *queue)
+ 	queue->alloc =3D q =3D kmalloc_array(nqueues, sizeof(QE_t), GFP_KERNEL);
+ 	if (q) {
+ 		for (; nqueues; q++, nqueues--) {
+-			SET_MAGIC(q, QUEUE_MAGIC_FREE);
+ 			q->SCpnt =3D NULL;
+ 			list_add(&q->list, &queue->free);
+ 		}
+@@ -119,9 +102,7 @@ int __queue_add(Queue_t *queue, struct scsi_cmnd *SCpnt=
+, int head)
+ 	list_del(l);
+=20
+ 	q =3D list_entry(l, QE_t, list);
+-	BUG_ON(BAD_MAGIC(q, QUEUE_MAGIC_FREE));
+=20
+-	SET_MAGIC(q, QUEUE_MAGIC_USED);
+ 	q->SCpnt =3D SCpnt;
+=20
+ 	if (head)
+@@ -144,9 +125,7 @@ static struct scsi_cmnd *__queue_remove(Queue_t *queue,=
+ struct list_head *ent)
+ 	 */
+ 	list_del(ent);
+ 	q =3D list_entry(ent, QE_t, list);
+-	BUG_ON(BAD_MAGIC(q, QUEUE_MAGIC_USED));
+=20
+-	SET_MAGIC(q, QUEUE_MAGIC_FREE);
+ 	list_add(ent, &queue->free);
+=20
+ 	return q->SCpnt;
+--=20
+2.30.2
+
+--uh4qysktmizprqov
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEfWlHToQCjFzAxEFjvP0LAY0mWPEFAmNZuAgACgkQvP0LAY0m
+WPFbqhAAiaN76od9eGWIW+KwFtAQK0m4SLDJt/RRj/8GHYLoWS1mTGl6LxLTcvJG
+yGNSHSAi8Z/Er3g6fQMngi9dJvvHhN33uMFxe/8rHnnz+8ZjEflua/zTRbPDpR4u
+fVX4CTaUJ5XXa4SMMlBDsKjO5MGU6j08lQiFe3Q4zsyE4SFn1YSELai+JiEDvxC5
+XiQVVpYAtsbpVFI2uo9zWPxfxZ8u3tmsJ17f4tymr9ny2roeKuG+G50G+a9K3YwL
+zZPbSNqrDdkJsd1BNkDcGDpxxjotLmsOKQOIo7g1noMPo+/TGGtpytZG6ScSqzCi
+bSSBb9rD249ce+0iYnjWcoSHDDJCvlGVTUVWH28bEqoxSpdv9skhpLJOVrI+O/re
+awvZ6dDB/LtNqfdx5gSonfyGNkspZzUYXTJnQMYsgDtuHDOPgkliRbxOJp4LSGL4
+lt+ybXIer863zMlc5xIPXtkgRn6lVtHryk2kOFAVM6c6N99GjAyqJl0PLvYOG6vf
+bSJkwYXReHQ8bCusG5cyio9hMwSiCPaJUvxpaRnzwko5VlwedVlpN+LhDVGjmHHy
+3SfGe3BNZ7UzivYRtXtxHOZH7A0EoTOb0zLtOlUiWNeXl0J1qLuL4ic7q8S3XO9z
+Y51RFJ4jv0ogeJg5Z8tWcZLp0nir93JbR4IMmdyrP3iUfm9mQwk=
+=9YLr
+-----END PGP SIGNATURE-----
+
+--uh4qysktmizprqov--
