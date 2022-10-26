@@ -2,94 +2,69 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCB95C433FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Oct 2022 10:36:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1AEBC433FE
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Oct 2022 11:03:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233371AbiJZKgR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 26 Oct 2022 06:36:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43738 "EHLO
+        id S233518AbiJZLDm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 26 Oct 2022 07:03:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40926 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233317AbiJZKgQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Oct 2022 06:36:16 -0400
-Received: from mail-lf1-x12f.google.com (mail-lf1-x12f.google.com [IPv6:2a00:1450:4864:20::12f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4D0F43E58
-        for <linux-scsi@vger.kernel.org>; Wed, 26 Oct 2022 03:36:15 -0700 (PDT)
-Received: by mail-lf1-x12f.google.com with SMTP id p8so27592336lfu.11
-        for <linux-scsi@vger.kernel.org>; Wed, 26 Oct 2022 03:36:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=f6Wz1A4CW5P5+RVQ39/cNozpWA6Bx+Md7zjb4gIkf3c=;
-        b=g8zEnq/beTWN8RH2dXBmBuLwvlw2SmWEhU3NftmPP+qUNz9DXCf6yGvqeo8+t1ws59
-         /JN55dHJqv4E+MueD1DVKO7hbvKudFvJz1Xi4DBpXYiYk5gdvEXsNPxBjzrEMlX+fNgB
-         XnpCDxGgMHs/PBBGk2HQE5zO1niWkY6NHT3PwSHjJD+t0xpgLABG61YwFn0gbKEhM07S
-         SSfVNx74D+Mc2sjJFwUVCopyAq2YEGjwE6Ybk8Qw2fukrqYhqacRu8oc8s4kweFBSJ9a
-         RnMocn1g0OH6cY73RIqV7+603ABG1xU0c39i7oZGBh910Opg7Ie1t9tr9rvHcFwlDaNp
-         Pobg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=f6Wz1A4CW5P5+RVQ39/cNozpWA6Bx+Md7zjb4gIkf3c=;
-        b=hvbzt7KkaJHYRN9W8jT2O0iMKVF7tzxWgSLjSQimbrO01yWJ8MIPFgKY6bNc6D4+/L
-         AGCha+zqAoWewyVaWpyUohOoVDFLAQ2Qb/+e92r10N2G6fJokGxZPedqpqtkMdEVwDEX
-         Yg2yBvEzkH3ON8QeWH5UbDH91JGotX2DoGc66n9S+264MiB9Uh3uB1wo2TjK+5aig7eg
-         NCOV+o5XxggZVTAg8T2NYEagveXwEpO3N73b48PXpps1sBjz8GJfAV2teBEkippVwUQL
-         HzU2GPKr6IbN01IOBpNighjsO9xY/ijnUXcP3y8nd4mCjoWVDTIr+OcSXUSeKbL6f144
-         EA/A==
-X-Gm-Message-State: ACrzQf3RFRIEykh7K6FnzlHDEdBImDg9Qo427ZSDgYBXvc4ECUuSdnZF
-        K5ooO2i6wZinAXvA++MeX0weWO6DFdUPGrksUZfASQ==
-X-Google-Smtp-Source: AMsMyM6Xt+v7OH5mRPGsrIQWb2eDOsO+EHaqXYf/ZqgeRZzS0Rw5xY/XyjgtPZsbmOEf198RtGMqdjJlCchuCQ3Q/54=
-X-Received: by 2002:a05:6512:298d:b0:4a3:371d:6cc3 with SMTP id
- du13-20020a056512298d00b004a3371d6cc3mr14788177lfb.422.1666780574194; Wed, 26
- Oct 2022 03:36:14 -0700 (PDT)
+        with ESMTP id S233496AbiJZLD0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Oct 2022 07:03:26 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 219DED03BB;
+        Wed, 26 Oct 2022 04:03:07 -0700 (PDT)
+Received: from fraeml701-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4My5TL2x07z6865q;
+        Wed, 26 Oct 2022 19:01:10 +0800 (CST)
+Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
+ fraeml701-chm.china.huawei.com (10.206.15.50) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2375.31; Wed, 26 Oct 2022 13:03:04 +0200
+Received: from localhost.localdomain (10.69.192.58) by
+ lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Wed, 26 Oct 2022 12:03:02 +0100
+From:   John Garry <john.garry@huawei.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, <chenxiang66@hisilicon.com>,
+        John Garry <john.garry@huawei.com>
+Subject: [PATCH] MAINTAINERS: Make Xiang Chen HiSilicon SAS controller driver maintainer
+Date:   Wed, 26 Oct 2022 19:33:28 +0800
+Message-ID: <1666784008-125519-1-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
 MIME-Version: 1.0
-References: <1666781764-123090-1-git-send-email-john.garry@huawei.com>
-In-Reply-To: <1666781764-123090-1-git-send-email-john.garry@huawei.com>
-From:   Jinpu Wang <jinpu.wang@ionos.com>
-Date:   Wed, 26 Oct 2022 12:36:03 +0200
-Message-ID: <CAMGffE=4YHc0ErLpLxmLQbM-AoCaMQ+1TGxG_nxoJxx-W4U01g@mail.gmail.com>
-Subject: Re: [PATCH] scsi: pm8001: Drop !task check in pm8001_abort_task()
-To:     John Garry <john.garry@huawei.com>
-Cc:     jinpu.wang@ionos.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, damien.lemoal@opensource.wdc.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ lhrpeml500003.china.huawei.com (7.191.162.67)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Oct 26, 2022 at 12:25 PM John Garry <john.garry@huawei.com> wrote:
->
-> In commit 0b639decf651 ("scsi: pm8001: Modify task abort handling for SATA
-> task"), code was introduced to dereference "task" pointer in
-> pm8001_abort_task(). However there was a pre-existing later check for
-> "!task", which spooked the kernel test robot.
->
-> Function pm8001_abort_task() should never be passed NULL for "task"
-> pointer, so remove that check. Also remove the "unlikely" hint, as this is
-> not fastpath code.
->
-> Reported-by: kernel test robot <lkp@intel.com>
-> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-> Signed-off-by: John Garry <john.garry@huawei.com>
-Acked-by: Jack Wang <jinpu.wang@ionos.com>
->
-> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-> index 2359e827c9e6..e5673c774f66 100644
-> --- a/drivers/scsi/pm8001/pm8001_sas.c
-> +++ b/drivers/scsi/pm8001/pm8001_sas.c
-> @@ -979,7 +979,7 @@ int pm8001_abort_task(struct sas_task *task)
->         u32 phy_id, port_id;
->         struct sas_task_slow slow_task;
->
-> -       if (unlikely(!task || !task->lldd_task || !task->dev))
-> +       if (!task->lldd_task || !task->dev)
->                 return TMF_RESP_FUNC_FAILED;
->
->         dev = task->dev;
-> --
-> 2.25.1
->
+I am soon leaving Huawei, so will no longer maintain this driver. However
+I will stay active in upstream linux storage domain.
+
+Xiang Chen has worked on the driver for as long as I have and has good
+knowledge of the driver, so should do a good job.
+
+Signed-off-by: John Garry <john.garry@huawei.com>
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index cf0f18502372..174de5e8d4c8 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -9290,7 +9290,7 @@ F:	Documentation/devicetree/bindings/infiniband/hisilicon-hns-roce.txt
+ F:	drivers/infiniband/hw/hns/
+ 
+ HISILICON SAS Controller
+-M:	John Garry <john.garry@huawei.com>
++M:	Xiang Chen <chenxiang66@hisilicon.com>
+ S:	Supported
+ W:	http://www.hisilicon.com
+ F:	Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
+-- 
+2.25.1
+
