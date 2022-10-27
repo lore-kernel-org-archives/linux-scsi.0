@@ -2,47 +2,48 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E85FFA3740
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Oct 2022 21:52:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BA1AECAAA1
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Oct 2022 22:02:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237130AbiJ0VwO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Oct 2022 17:52:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35260 "EHLO
+        id S234581AbiJ0WCE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Oct 2022 18:02:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54970 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237127AbiJ0VwM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Oct 2022 17:52:12 -0400
-Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8E88870B6;
-        Thu, 27 Oct 2022 14:52:07 -0700 (PDT)
-Received: by mail-pj1-f53.google.com with SMTP id pb15so2923991pjb.5;
-        Thu, 27 Oct 2022 14:52:07 -0700 (PDT)
+        with ESMTP id S234434AbiJ0WBw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Oct 2022 18:01:52 -0400
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07BC6A026D;
+        Thu, 27 Oct 2022 15:01:51 -0700 (PDT)
+Received: by mail-pf1-f173.google.com with SMTP id i3so3061775pfc.11;
+        Thu, 27 Oct 2022 15:01:51 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=X93ycM+kLxHErIWtURA8L8exeaHt9regQ5pDIAbzkS0=;
-        b=GXeMbffaMFuykrzvitrGEe2rO/secFaM5iEgWmx/dfZvy9pQCilLme3JkT08GdyxCB
-         h9vuRbs7RKRHJx+kY0mPp6s93Z7AtwgZ9s6wjuYGUK0ma7OenSRcujnawJM3qxKr6Op0
-         z/rMWyCC8CUpxLoPKp60xEZW0VXrJpGTH5WRI75o8X0n9r0/eeR7WH7tqqRmh0PkTctI
-         nFT+DFlPkEBsJxBp1jvwouEfjAx6h1cRkNOnN1EcL0XsQgzJ6zjGZaLAv16O03JbibzQ
-         +X4KZQIzbxJBF0d8eJ6JqPTt6gK+hIkNY0NdZJVre8wXL7hMTxi4lsLQRz8NlXDL9a/N
-         Edxw==
-X-Gm-Message-State: ACrzQf0oc4HgLyyPnTCgPYtr+29JGMMqfbEMZxllhdDoKyefquTQsPDO
-        auUNJ2U+zrEimUfhMAIecL4=
-X-Google-Smtp-Source: AMsMyM4/J1Mgt0PgewEVAt/TRafibQip+YEIMiITVhdtcYAPhTb/TWZOSky5J8YGz+kUFDtm6qjb9A==
-X-Received: by 2002:a17:90b:4ac5:b0:20a:de32:366b with SMTP id mh5-20020a17090b4ac500b0020ade32366bmr12307796pjb.197.1666907526977;
-        Thu, 27 Oct 2022 14:52:06 -0700 (PDT)
+        bh=Xuf2rYc4skGV/brVADA47UOE0bGVgDUQN7KLwp1HwW8=;
+        b=7T4uVmhQp+b2sCm0RWNy1Hj3WdJXv0flFD94q7W+1M5Tu4pqfSqcDzXtIBiqGJCtQ3
+         /Sr4U2Sy/c3Ju77DVPLCh8tHncmCgpglm8KlWUWQbfV0kOaTx4eqfA5JubVI7aGc5Az4
+         rympNxY7GRIETFxzG6/YIRoEQPh1NV1Ylz6h6VuAZ3Nz/CdNRhMx6VSrxslnWcECEjwu
+         xsW80CmOKMv9hNt3Y5bv1yXWIr9qLxjkUHHGfWrKZwnc67MTDTkhNVfiSkOj1BC5q3vC
+         4bxbQ4NK1faQ0x8g2MMbmXv7Zy7uanjeg6ktSMbrDoAZdIdtDQVFPTICweZRiprQdI6R
+         4XsQ==
+X-Gm-Message-State: ACrzQf1df9x2fu+EL65r28aKyHTl41Y9p5zkDorUzogQ4RSAsTjaOMqA
+        ho8nexxrCUcejbdeiCPGNJo=
+X-Google-Smtp-Source: AMsMyM63yLidIP4PV9Xc0SANp2ydp+HPviTsYt2HnMrs+WOCV8sF4IDlYE+H12U1KYsKv+/Xo3fhZg==
+X-Received: by 2002:a63:480e:0:b0:46e:b96c:4f89 with SMTP id v14-20020a63480e000000b0046eb96c4f89mr30330659pga.201.1666908110449;
+        Thu, 27 Oct 2022 15:01:50 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:bc2b:ff19:1b02:257b? ([2620:15c:211:201:bc2b:ff19:1b02:257b])
-        by smtp.gmail.com with ESMTPSA id d18-20020a17090ab31200b002005fcd2cb4sm3133963pjr.2.2022.10.27.14.52.04
+        by smtp.gmail.com with ESMTPSA id i7-20020a170902c94700b00181e55d02dcsm1675471pla.139.2022.10.27.15.01.47
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 27 Oct 2022 14:52:06 -0700 (PDT)
-Message-ID: <0fb3f8ae-5ed7-9057-0d2b-8866f36c2441@acm.org>
-Date:   Thu, 27 Oct 2022 14:52:03 -0700
+        Thu, 27 Oct 2022 15:01:49 -0700 (PDT)
+Message-ID: <8113c37b-9917-b5f2-87c8-cb76f59c69da@acm.org>
+Date:   Thu, 27 Oct 2022 15:01:46 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.3.0
-Subject: Re: [PATCH v3 07/17] ufs: core: mcq: Calculate queue depth
+Subject: Re: [PATCH v3 09/17] ufs: core: mcq: Configure operation and runtime
+ interface
 Content-Language: en-US
 To:     Asutosh Das <quic_asutoshd@quicinc.com>, quic_cang@quicinc.com,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org
@@ -56,13 +57,12 @@ Cc:     quic_nguyenb@quicinc.com, quic_xiaosenh@quicinc.com,
         Andy Gross <agross@kernel.org>,
         Bjorn Andersson <bjorn.andersson@linaro.org>,
         Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Jinyoung Choi <j-young.choi@samsung.com>,
         Kiwoong Kim <kwmad.kim@samsung.com>,
         open list <linux-kernel@vger.kernel.org>
 References: <cover.1666288432.git.quic_asutoshd@quicinc.com>
- <1987fbada1d33c04c9598614ef712e0a48fe065e.1666288432.git.quic_asutoshd@quicinc.com>
+ <84a13c45fa8edc375b3342a5b9b35fc097208bab.1666288432.git.quic_asutoshd@quicinc.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <1987fbada1d33c04c9598614ef712e0a48fe065e.1666288432.git.quic_asutoshd@quicinc.com>
+In-Reply-To: <84a13c45fa8edc375b3342a5b9b35fc097208bab.1666288432.git.quic_asutoshd@quicinc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -70,36 +70,25 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 10/20/22 11:03, Asutosh Das wrote:
-> +u32 ufshcd_mcq_decide_queue_depth(struct ufs_hba *hba)
-> +{
-> +	u32 qd, val;
-> +	int mac;
-> +
-> +	mac = ufshcd_mcq_vops_get_hba_mac(hba);
-> +	if (mac < 0) {
-> +		val = ufshcd_readl(hba, REG_UFS_MCQ_CFG);
-> +		mac = FIELD_GET(MCQ_CFG_MAC_MASK, val);
-> +	}
+> +/**
+> + * ufshcd_mcq_config_mac - Set the #Max Activ Cmds.
+> + * @hba - per adpater instance
 
-According to the UFSHCI 4.0 specification the MAC value is set by the 
-host. Can the above code read the MAC value from the host controller 
-before it has been set by the host? If so, how about leaving out the 
-code that reads the MAC value from the controller and making it 
-mandatory to implement the new get_hba_mac vop?
+adpater -> adapter
 
-> +
-> +	/*  MAC is a 0 based value. */
-> +	mac += 1;
-> +	/* max. value of bqueuedepth = 256, mac is host dependent */
+> + * @max_active_cmds - maximum # of active commands to the device at any time.
+> + *
+> + * The controller wouldn't send more than the max_active_cmds to the device at
+> + * any time.
+> + */
 
-host dependent -> defined by the host controller?
+wouldn't -> won't
 
-> +	qd = min_t(u32, mac, hba->dev_info.bqueuedepth);
-> +	if (!qd)
-> +		qd = mac;
+> +#define MCQ_CFG_n(r, i) \
+> +	((r) + MCQ_QCFG_SIZE * (i))
 
-How about using min_not_zero() instead of open-coding it?
+No need to spread this macro over two lines.
 
-Thanks,
+Otherwise this patch looks good to me.
 
 Bart.
