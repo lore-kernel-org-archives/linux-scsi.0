@@ -2,118 +2,130 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0977BC38A2D
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Oct 2022 06:20:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C808FA3741
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Oct 2022 07:51:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234005AbiJ0GUX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Oct 2022 02:20:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49210 "EHLO
+        id S234608AbiJ0HvK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Oct 2022 03:51:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52644 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233669AbiJ0GUV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Oct 2022 02:20:21 -0400
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 593FBB1DC4
-        for <linux-scsi@vger.kernel.org>; Wed, 26 Oct 2022 23:20:17 -0700 (PDT)
-Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20221027062014epoutp011b8d61e4a97349dee9fba900346192a4~h2LZLtLaF2370623706epoutp01R
-        for <linux-scsi@vger.kernel.org>; Thu, 27 Oct 2022 06:20:14 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20221027062014epoutp011b8d61e4a97349dee9fba900346192a4~h2LZLtLaF2370623706epoutp01R
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1666851614;
-        bh=IGkRXu+rgBFTc1KQKW4ydm2jeNyJRZRNOrJVbhITZu8=;
-        h=Subject:Reply-To:From:To:Date:References:From;
-        b=N0gzmqWgau1Jx+hAby2ThLrcJjoAPEzfOp1gexpfK+oGXcBiYRRk1kilvjka+p7rR
-         CrtB6WUPJNmhtsUuAECkHVul0ceoayuBvR5J+8zcsLOm9TtBfZYoGrhdf0zmVvkUqr
-         z4U0ZK7xXBw+w1VmJ/DJDeBNbNCKYilkgImHVbxg=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
-        20221027062013epcas2p1188134b5883d74e04eb2bddd2e6f7b2f~h2LYnMCbe0347403474epcas2p1Y;
-        Thu, 27 Oct 2022 06:20:13 +0000 (GMT)
-Received: from epsmges2p3.samsung.com (unknown [182.195.36.88]) by
-        epsnrtp4.localdomain (Postfix) with ESMTP id 4MybBj4QVgz4x9Pw; Thu, 27 Oct
-        2022 06:20:13 +0000 (GMT)
-X-AuditID: b6c32a47-ac5b870000002127-85-635a231d7611
-Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
-        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
-        EE.20.08487.D132A536; Thu, 27 Oct 2022 15:20:13 +0900 (KST)
-Mime-Version: 1.0
-Subject: [PATCH] scsi: ufs: core: Use 'else' in ufshcd_hba_enable()
-Reply-To: keosung.park@samsung.com
-Sender: Keoseong Park <keosung.park@samsung.com>
-From:   Keoseong Park <keosung.park@samsung.com>
-To:     ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20221027062013epcms2p7af8fbc60caaba50686233492fb3dfd93@epcms2p7>
-Date:   Thu, 27 Oct 2022 15:20:13 +0900
-X-CMS-MailID: 20221027062013epcms2p7af8fbc60caaba50686233492fb3dfd93
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrFJsWRmVeSWpSXmKPExsWy7bCmma6sclSywcbfChYnn6xhs3gwbxub
-        xcufV9ksDj7sZLGY9uEns8XLQ5oWj24/Y7To7d/KZrHoxjYmi8u75rBZdF/fwWax/Pg/Jgce
-        j8tXvD0W73nJ5DFh0QFGj+/rO9g8Pj69xeLRt2UVo8fnTXIe7Qe6mQI4orJtMlITU1KLFFLz
-        kvNTMvPSbZW8g+Od403NDAx1DS0tzJUU8hJzU22VXHwCdN0yc4COVVIoS8wpBQoFJBYXK+nb
-        2RTll5akKmTkF5fYKqUWpOQUmBfoFSfmFpfmpevlpZZYGRoYGJkCFSZkZ3xfmF+wj7Vi+Zzv
-        rA2Mm1m6GDk5JARMJPb1vQayuTiEBHYwSsw/OYG9i5GDg1dAUOLvDmEQU1jAWWLNRyaQciEB
-        JYmuhVuZQWxhAQOJddP3gNlsAnoSU37fYQQZIyLwk1ni0vvZbBDzeSVmtD+F2iUtsX35VkYI
-        W0Pix7JeZghbVOLm6rfsMPb7Y/OhakQkWu+dhaoRlHjwczdUXFKi9cxWqPn5Ek9u9kPNr5FY
-        sP0zVFxf4lrHRrA4r4CvxNdlu8HmswioSixfehhql4vEqzcvWUFsZgF5ie1v5zCD/MssoCmx
-        fpc+iCkhoCxx5BYLzCcNG3+zo7OZBfgkOg7/hYvvmPeECcJWk3i0YAsrhC0jcXHOOahPPCQm
-        XP7GNoFRcRYinGchuWEWwg0LGJlXMYqlFhTnpqcWGxUYw2M2OT93EyM40Wq572Cc8faD3iFG
-        Jg7GQ4wSHMxKIrxnb4QnC/GmJFZWpRblxxeV5qQWH2I0Bfp+IrOUaHI+MNXnlcQbmlgamJiZ
-        GZobmRqYK4nzds3QShYSSE8sSc1OTS1ILYLpY+LglGpgiuCfKS5x9vb62XHrVnssevT6uOUV
-        sQyGRFYNr+NzhJd+/WjXOXfy+/gzIXOP8rt42Fb/PiI8gaklP6D12KpTP7Wehwo3lfz0+5lr
-        t9J6jkenacpmE7eCxW9kWKey9bT5bizZKz77slHc/4689JkX6zk7ulvEc1cbWf9tWVFc++dN
-        yfVKlhmuC3JCLzOzu+ay7Fea+GxzjKCexZy5fresNsbYfeVbnGs6N6woYGdL1JTMWz80Fu4x
-        lNBLs9t1/devk6e/e7XWVYrpM95OfBda97amhnG38obj1fL7d8puye5duCbXObvR7fDtP7b5
-        VWruH+I2He57cPKO0xTDLWkSNQtvGiTZ+V/WMfnR0cykxFKckWioxVxUnAgA4hiLtT0EAAA=
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20221027062013epcms2p7af8fbc60caaba50686233492fb3dfd93
-References: <CGME20221027062013epcms2p7af8fbc60caaba50686233492fb3dfd93@epcms2p7>
+        with ESMTP id S234241AbiJ0HvJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Oct 2022 03:51:09 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20202A287D;
+        Thu, 27 Oct 2022 00:51:03 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 9178A1FDFB;
+        Thu, 27 Oct 2022 07:51:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1666857062; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=KW/ilq8EeIAm/XWevD2VqVdEVtwgp+eQrNdLBxj+VgI=;
+        b=OCmdeJxHcSlsxMdZdzBBEXBfyqcZ0GgftjK5FUv6GyZ/az5wshetS/ofhrLLDeTdMiSiIb
+        nNlTj/4aJdd+0bGEGAI21TZth7hgaVOn8+8L7OknRj7ovhmB5wns/FfIvxjpxRBSefd1HW
+        ugBcA3i40gOjaF2C4JdK2jZ6ClRyVI4=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1666857062;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=KW/ilq8EeIAm/XWevD2VqVdEVtwgp+eQrNdLBxj+VgI=;
+        b=px1TAfPvKNwPje1yeI4HyYEBfMYX9Qb31If2wK3ByrXC9j8Y5c9FlwY/GH/l1zePnVNtmn
+        I4iZ0MXJT3wohfBw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 55FB6134CA;
+        Thu, 27 Oct 2022 07:51:01 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id gTgsE2U4WmPdLgAAMHmgww
+        (envelope-from <hare@suse.de>); Thu, 27 Oct 2022 07:51:01 +0000
+Message-ID: <5db88114-559b-970a-0437-9acdacb47f8b@suse.de>
+Date:   Thu, 27 Oct 2022 09:51:00 +0200
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.2.2
+Subject: Re: [PATCH RFC v3 03/22] scsi: core: Implement reserved command
+ handling
+Content-Language: en-US
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        John Garry <john.garry@huawei.com>, axboe@kernel.dk,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        jinpu.wang@cloud.ionos.com, bvanassche@acm.org, hch@lst.de,
+        ming.lei@redhat.com, niklas.cassel@wdc.com
+Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linuxarm@huawei.com
+References: <1666693096-180008-1-git-send-email-john.garry@huawei.com>
+ <1666693096-180008-4-git-send-email-john.garry@huawei.com>
+ <cd5df8e0-03d1-8f22-0367-eb7c76bc70e7@opensource.wdc.com>
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <cd5df8e0-03d1-8f22-0367-eb7c76bc70e7@opensource.wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Convert if (!ret) { ... } if (ret) { ... } into
-if (!ret) { ... } else { ... }.
+On 10/27/22 03:18, Damien Le Moal wrote:
+> On 10/25/22 19:17, John Garry wrote:
+>> From: Hannes Reinecke <hare@suse.de>
+>>
+>> Quite some drivers are using management commands internally, which
+>> typically use the same hardware tag pool (ie they are being allocated
+>> from the same hardware resources) as the 'normal' I/O commands.
+>> These commands are set aside before allocating the block-mq tag bitmap,
+>> so they'll never show up as busy in the tag map.
+>> The block-layer, OTOH, already has 'reserved_tags' to handle precisely
+>> this situation.
+>> So this patch adds a new field 'nr_reserved_cmds' to the SCSI host
+>> template to instruct the block layer to set aside a tag space for these
+>> management commands by using reserved tags.
+>>
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> #jpg: Set tag_set->queue_depth = shost->can_queue, and not
+>> = shost->can_queue + shost->nr_reserved_cmds;
+>> Signed-off-by: John Garry <john.garry@huawei.com>
+>> ---
+>>   drivers/scsi/hosts.c     |  3 +++
+>>   drivers/scsi/scsi_lib.c  |  2 ++
+>>   include/scsi/scsi_host.h | 15 ++++++++++++++-
+>>   3 files changed, 19 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+>> index 12346e2297fd..db89afc37bc9 100644
+>> --- a/drivers/scsi/hosts.c
+>> +++ b/drivers/scsi/hosts.c
+>> @@ -489,6 +489,9 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+>>   	if (sht->virt_boundary_mask)
+>>   		shost->virt_boundary_mask = sht->virt_boundary_mask;
+>>   
+>> +	if (sht->nr_reserved_cmds)
+>> +		shost->nr_reserved_cmds = sht->nr_reserved_cmds;
+>> +
+> 
+> Nit: the if is not really necessary I think. But it does not hurt.
+> 
+Yes, we do.
+Not all HBAs are able to figure out the number of reserved commands 
+upfront; some modify that based on the PCI device used etc.
+So I'd keep it for now.
 
-Signed-off-by: Keoseong Park <keosung.park@samsung.com>
----
- drivers/ufs/core/ufshcd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Cheers,
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 7256e6c43ca6..3b794be53287 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -4670,7 +4670,7 @@ int ufshcd_hba_enable(struct ufs_hba *hba)
- 			ret = ufshcd_dme_enable(hba);
- 			if (!ret)
- 				ufshcd_vops_hce_enable_notify(hba, POST_CHANGE);
--			if (ret)
-+			else
- 				dev_err(hba->dev,
- 					"Host controller enable failed with non-hce\n");
- 		}
+Hannes
 -- 
-2.17.1
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
+Myers, Andrew McDonald, Martje Boudien Moerman
 
