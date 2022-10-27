@@ -2,74 +2,106 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56332FA3746
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Oct 2022 17:16:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99680FA3741
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Oct 2022 17:23:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236103AbiJ0RQv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Oct 2022 13:16:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35668 "EHLO
+        id S235608AbiJ0RXi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Oct 2022 13:23:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50044 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235768AbiJ0RQc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Oct 2022 13:16:32 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E804D14BB7E;
-        Thu, 27 Oct 2022 10:16:31 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id A0E47B826F9;
-        Thu, 27 Oct 2022 17:16:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51187C433D6;
-        Thu, 27 Oct 2022 17:16:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666890989;
-        bh=Zv1urG2jYQaq1bwAIZsRNHzXXofeTcjsquQZ1JK/QeA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=JGJsYnEuWS+K6DSZJyqGk9h7+UlxzI7TXzj+qO22QI7ToXiO1fVWN+j76gB8sX7Cz
-         ojM/f3uvD0/0q3cMHCrXNwuHAo34g3e5Kf4BPaNDJDFaE0ddx2xdihE+jErpS2Q0pw
-         TTflV6I2WpUCJlR3OTvSSAsfXcnW6nCASi9kpvA5yGYF2Jdvfqv37dBALCjlnKpPoK
-         Fv6Iv3G58jhDYxSiv7ItE1rsTg1yExOqftvAJ3uBAQF80p/aqpnas8l6CD9jK+IIlb
-         1m5EZNGdZIQMM1Qz5dPM0UrTRxUT2uqsGvV9pr5YKSZc+RP2yxYLxCctGqrKlCWoV3
-         LIHunXvjG0suw==
-Date:   Thu, 27 Oct 2022 11:16:25 -0600
-From:   Keith Busch <kbusch@kernel.org>
-To:     michael.christie@oracle.com
-Cc:     bvanassche@acm.org, hch@lst.de, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com,
-        linux-block@vger.kernel.org, dm-devel@redhat.com,
-        snitzer@kernel.org, axboe@kernel.dk,
-        linux-nvme@lists.infradead.org, chaitanyak@nvidia.com,
-        target-devel@vger.kernel.org
-Subject: Re: [PATCH v3 10/19] nvme: Move NVMe and Block PR types to an array
-Message-ID: <Y1q86YvRtZPBJDck@kbusch-mbp.dhcp.thefacebook.com>
-References: <20221026231945.6609-1-michael.christie@oracle.com>
- <20221026231945.6609-11-michael.christie@oracle.com>
- <Y1qhXQYOpEUk2uqF@kbusch-mbp.dhcp.thefacebook.com>
- <a74266ce-3839-5d2f-abc4-cb30045d811c@oracle.com>
- <75564e1d-3169-cd50-ea17-53ef96a3a35e@oracle.com>
+        with ESMTP id S235086AbiJ0RXh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Oct 2022 13:23:37 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A430618C421;
+        Thu, 27 Oct 2022 10:23:34 -0700 (PDT)
+Received: from fraeml745-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Myssq4ygLz67bVM;
+        Fri, 28 Oct 2022 01:21:35 +0800 (CST)
+Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
+ fraeml745-chm.china.huawei.com (10.206.15.226) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Thu, 27 Oct 2022 19:23:31 +0200
+Received: from [10.195.32.169] (10.195.32.169) by
+ lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Thu, 27 Oct 2022 18:23:30 +0100
+Message-ID: <ea0be367-a4e0-3cc2-c4c7-04d8db1714cd@huawei.com>
+Date:   Thu, 27 Oct 2022 18:23:30 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <75564e1d-3169-cd50-ea17-53ef96a3a35e@oracle.com>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH RFC v3 2/7] ata: libata-scsi: Add
+ ata_internal_queuecommand()
+To:     Hannes Reinecke <hare@suse.de>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <bvanassche@acm.org>, <hch@lst.de>, <ming.lei@redhat.com>,
+        <niklas.cassel@wdc.com>
+CC:     <axboe@kernel.dk>, <jinpu.wang@cloud.ionos.com>,
+        <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linuxarm@huawei.com>, <john.garry2@mail.dcu.ie>
+References: <1666693976-181094-1-git-send-email-john.garry@huawei.com>
+ <1666693976-181094-3-git-send-email-john.garry@huawei.com>
+ <08fdb698-0df3-7bc8-e6af-7d13cc96acfa@opensource.wdc.com>
+ <83d9dc82-ea37-4a3c-7e67-1c097f777767@huawei.com>
+ <3ef0347f-f3e2-cf08-2b27-f65a7afe82a2@suse.de>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <3ef0347f-f3e2-cf08-2b27-f65a7afe82a2@suse.de>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.195.32.169]
+X-ClientProxiedBy: lhrpeml100001.china.huawei.com (7.191.160.183) To
+ lhrpeml500003.china.huawei.com (7.191.162.67)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Oct 27, 2022 at 12:13:06PM -0500, michael.christie@oracle.com wrote:
-> Oh wait there was also a
+On 27/10/2022 14:02, Hannes Reinecke wrote:
+>>>>   /**
+>>>>    *    ata_scsi_slave_config - Set SCSI device attributes
+>>>>    *    @sdev: SCSI device to examine
+>>>> diff --git a/include/linux/libata.h b/include/linux/libata.h
+>>>> index 8938b584520f..f09c5dca16ce 100644
+>>>> --- a/include/linux/libata.h
+>>>> +++ b/include/linux/libata.h
+>>>> @@ -1141,6 +1141,8 @@ extern int ata_std_bios_param(struct 
+>>>> scsi_device *sdev,
+>>>>                     sector_t capacity, int geom[]);
+>>>>   extern void ata_scsi_unlock_native_capacity(struct scsi_device 
+>>>> *sdev);
+>>>>   extern int ata_scsi_slave_config(struct scsi_device *sdev);
+>>>> +extern int ata_internal_queuecommand(struct Scsi_Host *shost,
+>>>> +                struct scsi_cmnd *scmd);
+>>>>   extern void ata_scsi_slave_destroy(struct scsi_device *sdev);
+>>>>   extern int ata_scsi_change_queue_depth(struct scsi_device *sdev,
+>>>>                          int queue_depth);
+>>>> @@ -1391,7 +1393,8 @@ extern const struct attribute_group 
+>>>> *ata_common_sdev_groups[];
+>>>>       .slave_destroy        = ata_scsi_slave_destroy,    \
+>>>>       .bios_param        = ata_std_bios_param,        \
+>>>>       .unlock_native_capacity    = ata_scsi_unlock_native_capacity,\
+>>>> -    .max_sectors        = ATA_MAX_SECTORS_LBA48
+>>>> +    .max_sectors        = ATA_MAX_SECTORS_LBA48,\
+>>>> +    .reserved_queuecommand = ata_internal_queuecommand
+>>>>   #define ATA_SUBBASE_SHT(drv_name)                \
+>>>>       __ATA_BASE_SHT(drv_name),                \
+>>>
+>>
 > 
-> 3. The pr_types come from userspace so if it passes us 10
-> and we just do:
-> 
-> types[pr_type]
-> 
-> then we would crash due an out of bounds error.
-> 
-> Similarly I thought there could be a bad target that does the
-> same thing.
+> But that means we can't use it before the SCSI host is initialized; some 
+> HBAs require to send commands before the host can be initialized properly.
 
-Well, you'd of course have to check the boundaries before accessing if
-you were to implement this scheme. :)
+At what stage do you want to send these commands? The tags for the shost 
+are not setup until scsi_add_host() -> scsi_mq_setup_tags() is called, 
+so can't expect blk-mq to manage reserved tags before then.
 
-But considering this isn't a performance path, perhaps these kinds of
-optimizations are not worth it.
+If you are required to send commands prior to scsi_add_host(), then I 
+suppose the low-level driver still needs to manage tags until the shost 
+is ready. I guess that some very simple scheme can be used, like always 
+use tag 0, since most probe is done serially per-host. But that's not a 
+case which I have had to deal with yet.
+
+Thanks,
+John
