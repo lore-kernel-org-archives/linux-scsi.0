@@ -2,188 +2,103 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F6FCFA373D
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Oct 2022 08:11:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31C70FA373D
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Oct 2022 08:16:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234893AbiJ0ILV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Oct 2022 04:11:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44954 "EHLO
+        id S234863AbiJ0IQo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Oct 2022 04:16:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58788 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234892AbiJ0ILO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Oct 2022 04:11:14 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DFD65071F;
-        Thu, 27 Oct 2022 01:11:12 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 2A5CF228C4;
-        Thu, 27 Oct 2022 08:11:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1666858271; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Dav8/trZpl1RqcozNrS2x/LCkcv0lpz2Ke14qSzjIvQ=;
-        b=JBW1kgDneyAMd+g1LB1A+RcN3vmn8b8CWCMMAhe6BrvgQSnDIfD8OJ39gzMHt9dM4a4ZQ4
-        6GkVNNILTCTakhg04j4gYbtvgy36aJe6QLqbaPCUfJM5vr/3QMcU8BSiRLb6/Mu/nrJB8b
-        Lcx5j2RyxLY8rmXg5gYD2QHDimGQj/8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1666858271;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Dav8/trZpl1RqcozNrS2x/LCkcv0lpz2Ke14qSzjIvQ=;
-        b=6LRkxk+HVFMPqwGqpfxen+YYBGDCmXopA7ll9fhQZlt5oe0K4Ue4CZmoRRyLBs7zeWdmea
-        6DrQgWa5s9SAAHDA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 4121A134CA;
-        Thu, 27 Oct 2022 08:11:10 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id HnrtDB49WmPoOAAAMHmgww
-        (envelope-from <hare@suse.de>); Thu, 27 Oct 2022 08:11:10 +0000
-Message-ID: <d4535f4f-d9cf-30de-ce8c-9d8ee9c0decb@suse.de>
-Date:   Thu, 27 Oct 2022 10:11:09 +0200
+        with ESMTP id S233815AbiJ0IQm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Oct 2022 04:16:42 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2AF87EE09;
+        Thu, 27 Oct 2022 01:16:40 -0700 (PDT)
+Received: from fraeml713-chm.china.huawei.com (unknown [172.18.147.206])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MydlM3sYhz67DWp;
+        Thu, 27 Oct 2022 16:15:11 +0800 (CST)
+Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
+ fraeml713-chm.china.huawei.com (10.206.15.32) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Thu, 27 Oct 2022 10:16:38 +0200
+Received: from [10.195.32.169] (10.195.32.169) by
+ lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Thu, 27 Oct 2022 09:16:37 +0100
+Message-ID: <72234b96-b3b5-606c-cf82-95e6ee86550d@huawei.com>
+Date:   Thu, 27 Oct 2022 09:16:37 +0100
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.2
-Subject: Re: [PATCH RFC v3 16/22] ata: libata-scsi: Allocate sdev early in
- port probe
-Content-Language: en-US
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        John Garry <john.garry@huawei.com>, axboe@kernel.dk,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        jinpu.wang@cloud.ionos.com, bvanassche@acm.org, hch@lst.de,
-        ming.lei@redhat.com, niklas.cassel@wdc.com
-Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linuxarm@huawei.com
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH RFC v3 03/22] scsi: core: Implement reserved command
+ handling
+To:     Hannes Reinecke <hare@suse.de>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <axboe@kernel.dk>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <jinpu.wang@cloud.ionos.com>,
+        <bvanassche@acm.org>, <hch@lst.de>, <ming.lei@redhat.com>,
+        <niklas.cassel@wdc.com>
+CC:     <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linuxarm@huawei.com>
 References: <1666693096-180008-1-git-send-email-john.garry@huawei.com>
- <1666693096-180008-17-git-send-email-john.garry@huawei.com>
- <6c0a4a75-786a-c946-57f2-c511bd765bcc@opensource.wdc.com>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <6c0a4a75-786a-c946-57f2-c511bd765bcc@opensource.wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+ <1666693096-180008-4-git-send-email-john.garry@huawei.com>
+ <cd5df8e0-03d1-8f22-0367-eb7c76bc70e7@opensource.wdc.com>
+ <5db88114-559b-970a-0437-9acdacb47f8b@suse.de>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <5db88114-559b-970a-0437-9acdacb47f8b@suse.de>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.195.32.169]
+X-ClientProxiedBy: lhrpeml500006.china.huawei.com (7.191.161.198) To
+ lhrpeml500003.china.huawei.com (7.191.162.67)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/27/22 03:34, Damien Le Moal wrote:
-> On 10/25/22 19:18, John Garry wrote:
->> Currently the per-ata device sdev is allocated as part of the scsi target
->> scan, which is after the ata port probe.
+On 27/10/2022 08:51, Hannes Reinecke wrote:
+>>>
+>>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>>> #jpg: Set tag_set->queue_depth = shost->can_queue, and not
+>>> = shost->can_queue + shost->nr_reserved_cmds;
+>>> Signed-off-by: John Garry <john.garry@huawei.com>
+>>> ---
+>>>   drivers/scsi/hosts.c     |  3 +++
+>>>   drivers/scsi/scsi_lib.c  |  2 ++
+>>>   include/scsi/scsi_host.h | 15 ++++++++++++++-
+>>>   3 files changed, 19 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+>>> index 12346e2297fd..db89afc37bc9 100644
+>>> --- a/drivers/scsi/hosts.c
+>>> +++ b/drivers/scsi/hosts.c
+>>> @@ -489,6 +489,9 @@ struct Scsi_Host *scsi_host_alloc(struct 
+>>> scsi_host_template *sht, int privsize)
+>>>       if (sht->virt_boundary_mask)
+>>>           shost->virt_boundary_mask = sht->virt_boundary_mask;
+>>> +    if (sht->nr_reserved_cmds)
+>>> +        shost->nr_reserved_cmds = sht->nr_reserved_cmds;
+>>> +
 >>
->> However it is useful to have the sdev available in the port probe. As an
->> example of an advantage, if the request queue is available in the probe
->> (which it would be if the sdev is available), then it is possible to use
->> a SCSI cmnd for ATA internal commands. The benefit of this is then we can
->> put the ATA qc structure in the SCSI cmnd private data. It will also be
->> useful if we want to send ATA internal commands as requests.
+>> Nit: the if is not really necessary I think. But it does not hurt.
 >>
->> Export scsi_target_reap() so that it can be used to put the extra
->> reference we get when allocating the sdev.
->>
->> Signed-off-by: John Garry <john.garry@huawei.com>
->> ---
->>   drivers/ata/libata-eh.c   |  1 +
->>   drivers/ata/libata-scsi.c | 23 +++++++++--------------
->>   drivers/scsi/scsi_scan.c  |  1 +
->>   3 files changed, 11 insertions(+), 14 deletions(-)
->>
->> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
->> index 08e11bc312c2..1ed5b1b64792 100644
->> --- a/drivers/ata/libata-eh.c
->> +++ b/drivers/ata/libata-eh.c
->> @@ -3446,6 +3446,7 @@ static int ata_eh_schedule_probe(struct ata_device *dev)
->>   
->>   	ata_eh_detach_dev(dev);
->>   	ata_dev_init(dev);
->> +	ata_scsi_setup_sdev(dev);
->>   	ehc->did_probe_mask |= (1 << dev->devno);
->>   	ehc->i.action |= ATA_EH_RESET;
->>   	ehc->saved_xfer_mode[dev->devno] = 0;
->> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
->> index efdba852e363..476e0ef4bd29 100644
->> --- a/drivers/ata/libata-scsi.c
->> +++ b/drivers/ata/libata-scsi.c
->> @@ -1109,7 +1109,12 @@ int ata_scsi_dev_config(struct scsi_device *sdev, struct ata_device *dev)
->>   	if (dev->flags & ATA_DFLAG_TRUSTED)
->>   		sdev->security_supported = 1;
->>   
->> -	dev->sdev = sdev;
->> +	/*
->> +	 * Put extra reference which we get when allocating the starget
->> +	 * initially
->> +	 */
->> +	scsi_target_reap(scsi_target(sdev));
->> +
->>   	return 0;
->>   }
->>   
->> @@ -4289,26 +4294,16 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
->>    repeat:
->>   	ata_for_each_link(link, ap, EDGE) {
->>   		ata_for_each_dev(dev, link, ENABLED) {
->> -			struct scsi_device *sdev;
->> +			struct Scsi_Host *shost = ap->scsi_host;
->>   			int channel = 0, id = 0;
->>   
->> -			if (dev->sdev)
->> -				continue;
->> -
->>   			if (ata_is_host_link(link))
->>   				id = dev->devno;
->>   			else
->>   				channel = link->pmp;
->>   
->> -			sdev = __scsi_add_device(ap->scsi_host, channel, id, 0,
->> -						 NULL);
->> -			if (!IS_ERR(sdev)) {
->> -				dev->sdev = sdev;
->> -				ata_scsi_assign_ofnode(dev, ap);
-> 
-> Is there something equivalent to what this function does inside
-> scsi_scan_target() ? I had a quick look but did not see anything...
-> 
-Typically, the SCSI layer has two ways of scanning.
-One it the old-style serial scanning (originating in the old SCSI 
-parallel model):
-The scanning code will blindly scan _all_ devices up to max_luns, and 
-attach every device for which the scanning code returns 'OK'.
-The other one is to issue REPORT_LUNS and scan all LUNs returned there.
+> Yes, we do.
+> Not all HBAs are able to figure out the number of reserved commands 
+> upfront; some modify that based on the PCI device used etc.
+> So I'd keep it for now.
 
-Mapped to libata we would need to figure out a stable SCSI enumeration, 
-given that we have PMP and slave devices to content with.
-To my knowledge we have ATA ports, each can have either a 'master' and 
-'slave' device, _or_ it be a PMP port when it can support up to 16 
-devices, right?
-Point being, master/slave and PMP are exclusive, right?
-So we can make the master as LUN 0, and the slave as LUN 1.
-And for PMP we can use each PMP address as LUN <pmp> + 1, and keeping 
-the actual device as LUN 0.
+I think logically Damien is right as in the shost alloc 
+shost->nr_reserved_cmds is initially zero, so:
 
-I think we can figure out whether it's a master/slave device setup 
-upfront, so we should be able to set max_luns to '2' for these devices.
-For PMP-capable (or devices which _might_ be PMP capable), we could 
-emulate the REPORT LUNS command, mapping on the PMP mechanism to figure 
-out which devices are connected.
+if (sht->nr_reserved_cmds)
+        shost->nr_reserved_cmds = sht->nr_reserved_cmds;
 
-Would that work?
+is same as simply:
 
-Cheers,
+	shost->nr_reserved_cmds = sht->nr_reserved_cmds;
 
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
-Myers, Andrew McDonald, Martje Boudien Moerman
+However I am just copying the coding style.
 
+Thanks,
+John
