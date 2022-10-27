@@ -2,61 +2,58 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BB70C38A2D
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Oct 2022 02:58:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1AA8FA3740
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Oct 2022 02:58:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233826AbiJ0C6m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 26 Oct 2022 22:58:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38252 "EHLO
+        id S233968AbiJ0C6n (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 26 Oct 2022 22:58:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38258 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233707AbiJ0C6l (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Oct 2022 22:58:41 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62A20D8EEB
-        for <linux-scsi@vger.kernel.org>; Wed, 26 Oct 2022 19:58:39 -0700 (PDT)
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 29QM20DS014710;
-        Thu, 27 Oct 2022 02:58:35 GMT
+        with ESMTP id S233817AbiJ0C6m (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Oct 2022 22:58:42 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9CEAA129759;
+        Wed, 26 Oct 2022 19:58:41 -0700 (PDT)
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 29R2QpgS031689;
+        Thu, 27 Oct 2022 02:58:38 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2022-7-12;
- bh=BiOz+DthjpMAuPk63qUNvw7e/6aknYYEU4x8+qKnq4o=;
- b=1GPxIz8pDpgjfI+ObXx54dJD5qxv+0/CWRl/Y3h6myrtc1GCu78+zBKgFVYtUMFhRHAz
- L9ZsoUhciWS8frxXX8s6CJv/s0lDrb5w1DZgD24rq1uku4uab4Bp3gwOraz291rvhvri
- KPoNFqrDzP1nA76/KOUAKQVJYZPZ9pcgoHap6KPYxXML16FGHHxjBksR2Un6OQOH95hn
- aylV1rVGTip9WXrIpF+6WDijlv2kAY5k70cI7NZmnJoL8SsSiZ4GoguPvgtd2QuTiweO
- Ucc+bKk7nKGuKnZbW32E8bfBVNH9evYliv3q9F+xPzgWWoBKrBHgyTvmYBA20CzlYIwJ mA== 
+ bh=k6ZU+P8tmLjNyBSjuy6RdIh9glWRfQVzSYbPhFRsL18=;
+ b=C+IUy5tSoOe7V+FrYmtR/rNBiYglDh6WN33VyY6z0QLM2KzR/mGlvEdH9uDnJUqq09lo
+ QMlI2X/s4TmYmQ+HAYNXsFX4N/X8nzyyG0gXcRM14V+rIL3ElfplHEDvLt34qF2J9Vv6
+ 5PHYoR2QDG4OR9YVRzDkUE45XeJ/Ns96DJJTi0UD8Y//0dJcgFWA6nLmmRrqI8QYOSaR
+ 3zpx0tEDKLSN1kNzdBCdpUd/m+KsycMhXW5YVDjjjGvEmTD30qxPzGib5cLWBOBjv8l9
+ ir4gjwFdzAXE+BgaGtYKnQYKvp8D3sc6ISRsYl7D3rWxKH4Yi3DZUUWl5S9S0ZBoqjid MQ== 
 Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3kfays0t40-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3kfagv0ufu-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 27 Oct 2022 02:58:35 +0000
+        Thu, 27 Oct 2022 02:58:37 +0000
 Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 29QM21Rk006723;
-        Thu, 27 Oct 2022 02:58:34 GMT
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 29QM7d6O006671;
+        Thu, 27 Oct 2022 02:58:37 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3kfaggh3g6-1
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3kfaggh3h1-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 27 Oct 2022 02:58:34 +0000
+        Thu, 27 Oct 2022 02:58:37 +0000
 Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 29R2wWsZ007945;
-        Thu, 27 Oct 2022 02:58:34 GMT
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 29R2wWsd007945;
+        Thu, 27 Oct 2022 02:58:36 GMT
 Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3kfaggh3fk-2;
-        Thu, 27 Oct 2022 02:58:33 +0000
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3kfaggh3fk-4;
+        Thu, 27 Oct 2022 02:58:36 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Igor Pylypiv <ipylypiv@google.com>,
-        Jack Wang <jinpu.wang@cloud.ionos.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
+To:     Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jolly Shah <jollys@google.com>,
-        Andrew Konecki <awkonecki@google.com>,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] scsi: pm80xx: Remove unused reset_in_progress flag logic
-Date:   Wed, 26 Oct 2022 22:58:27 -0400
-Message-Id: <166683942541.3791741.6596091900111111737.b4-ty@oracle.com>
+        target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Abaci Robot <abaci@linux.alibaba.com>
+Subject: Re: [PATCH] target: Remove the unused function transport_lba_64_ext()
+Date:   Wed, 26 Oct 2022 22:58:29 -0400
+Message-Id: <166683942537.3791741.15158391298780922138.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.36.1
-In-Reply-To: <20221007230751.309363-1-ipylypiv@google.com>
-References: <20221007230751.309363-1-ipylypiv@google.com>
+In-Reply-To: <20221018081235.124662-1-jiapeng.chong@linux.alibaba.com>
+References: <20221018081235.124662-1-jiapeng.chong@linux.alibaba.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
@@ -67,22 +64,25 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 sp
  suspectscore=0 phishscore=0 adultscore=0 mlxscore=0 mlxlogscore=999
  bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2210170000 definitions=main-2210270015
-X-Proofpoint-ORIG-GUID: xNL4PtsnZfxd9vY2iJfLDAYn0zHRSdaZ
-X-Proofpoint-GUID: xNL4PtsnZfxd9vY2iJfLDAYn0zHRSdaZ
+X-Proofpoint-ORIG-GUID: 9mLTkERhK033oQOm3qATffU-xNMWbNqq
+X-Proofpoint-GUID: 9mLTkERhK033oQOm3qATffU-xNMWbNqq
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 7 Oct 2022 16:07:51 -0700, Igor Pylypiv wrote:
+On Tue, 18 Oct 2022 16:12:35 +0800, Jiapeng Chong wrote:
 
-> The reset_in_progress flag was never set.
+> The function transport_lba_64_ext() is defined in the target_core_sbc.c
+> file, but not called elsewhere, so remove this unused function.
+> 
+> drivers/target/target_core_sbc.c:276:34: warning: unused function 'transport_lba_64_ext'.
 > 
 > 
 
 Applied to 6.2/scsi-queue, thanks!
 
-[1/1] scsi: pm80xx: Remove unused reset_in_progress flag logic
-      https://git.kernel.org/mkp/scsi/c/5f62639dc2b6
+[1/1] target: Remove the unused function transport_lba_64_ext()
+      https://git.kernel.org/mkp/scsi/c/621a323c3a7e
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
