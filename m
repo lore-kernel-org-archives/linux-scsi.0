@@ -2,88 +2,96 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19136ECAAA1
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Oct 2022 15:10:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C4B2ECAAA1
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Oct 2022 15:21:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236402AbiJ0PKZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Oct 2022 11:10:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57198 "EHLO
+        id S236242AbiJ0PU6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Oct 2022 11:20:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35248 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236092AbiJ0PJS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Oct 2022 11:09:18 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE15918F242;
-        Thu, 27 Oct 2022 08:09:15 -0700 (PDT)
+        with ESMTP id S236245AbiJ0PUW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Oct 2022 11:20:22 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F846B1E6;
+        Thu, 27 Oct 2022 08:19:03 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7441162396;
-        Thu, 27 Oct 2022 15:09:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E5404C433D6;
-        Thu, 27 Oct 2022 15:09:14 +0000 (UTC)
-Received: from rostedt by gandalf.local.home with local (Exim 4.96)
-        (envelope-from <rostedt@goodmis.org>)
-        id 1oo4Ve-00Bvfa-0M;
-        Thu, 27 Oct 2022 11:09:30 -0400
-Message-ID: <20221027150929.939073415@goodmis.org>
-User-Agent: quilt/0.66
-Date:   Thu, 27 Oct 2022 11:05:50 -0400
-From:   Steven Rostedt <rostedt@goodmis.org>
-To:     linux-kernel@vger.kernel.org
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Subject: [RFC][PATCH v2 25/31] timers: scsi: Use del_timer_shutdown() before freeing timer
-References: <20221027150525.753064657@goodmis.org>
+        by ams.source.kernel.org (Postfix) with ESMTPS id DBB9DB826D5;
+        Thu, 27 Oct 2022 15:19:01 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 775E0C433D6;
+        Thu, 27 Oct 2022 15:18:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1666883940;
+        bh=AaMB8NCIdgfiIoB4P8i4ZrWBp77/MCyzpJ/dSGKMeOQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=jAN11w8vbxAnZj57IiVap+TOoIA8UTFnyS6l8eUYeJ0zfh7jFKqk6ghlIv0uQ74VP
+         6s+sJZw1FklPXoEaKYisv71ntr1NXakG1/ryanh2GOMtePJyEhRRCumLhESC77RuVp
+         VomokqAkfVHDHNHBSX0zXTkh9+xtmSucWj9QlDNMJ+vBxBuYfioS5k4S3qbfdXsYBp
+         XGukBNBFODPySgzjVvMq3YAlULS/RNvZM0jX30U9DuxmKqiGXKTuT/ayguaBDhmIOB
+         GkOpSl7CVoeT0NI812xMCb9/3TTPA9u16Zu0sjgAb7IJPKlh3QXTZL4qmz9p83e7RG
+         9q/Nk0QRDNidg==
+Date:   Thu, 27 Oct 2022 09:18:53 -0600
+From:   Keith Busch <kbusch@kernel.org>
+To:     Mike Christie <michael.christie@oracle.com>
+Cc:     bvanassche@acm.org, hch@lst.de, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com,
+        linux-block@vger.kernel.org, dm-devel@redhat.com,
+        snitzer@kernel.org, axboe@kernel.dk,
+        linux-nvme@lists.infradead.org, chaitanyak@nvidia.com,
+        target-devel@vger.kernel.org
+Subject: Re: [PATCH v3 10/19] nvme: Move NVMe and Block PR types to an array
+Message-ID: <Y1qhXQYOpEUk2uqF@kbusch-mbp.dhcp.thefacebook.com>
+References: <20221026231945.6609-1-michael.christie@oracle.com>
+ <20221026231945.6609-11-michael.christie@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221026231945.6609-11-michael.christie@oracle.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: "Steven Rostedt (Google)" <rostedt@goodmis.org>
+On Wed, Oct 26, 2022 at 06:19:36PM -0500, Mike Christie wrote:
+> For Reservation Report support we need to also convert from the NVMe spec
+> PR type back to the block PR definition. This moves us to an array, so in
+> the next patch we can add another helper to do the conversion without
+> having to manage 2 switches.
+> 
+> Signed-off-by: Mike Christie <michael.christie@oracle.com>
+> ---
+>  drivers/nvme/host/pr.c | 42 +++++++++++++++++++++++-------------------
+>  include/linux/nvme.h   |  9 +++++++++
+>  2 files changed, 32 insertions(+), 19 deletions(-)
+> 
+> diff --git a/drivers/nvme/host/pr.c b/drivers/nvme/host/pr.c
+> index df7eb2440c67..5c4611d15d9c 100644
+> --- a/drivers/nvme/host/pr.c
+> +++ b/drivers/nvme/host/pr.c
+> @@ -6,24 +6,28 @@
+>  
+>  #include "nvme.h"
+>  
+> -static char nvme_pr_type(enum pr_type type)
+> +static const struct {
+> +	enum nvme_pr_type	nvme_type;
+> +	enum pr_type		blk_type;
+> +} nvme_pr_types[] = {
+> +	{ NVME_PR_WRITE_EXCLUSIVE, PR_WRITE_EXCLUSIVE },
+> +	{ NVME_PR_EXCLUSIVE_ACCESS, PR_EXCLUSIVE_ACCESS },
+> +	{ NVME_PR_WRITE_EXCLUSIVE_REG_ONLY, PR_WRITE_EXCLUSIVE_REG_ONLY },
+> +	{ NVME_PR_EXCLUSIVE_ACCESS_REG_ONLY, PR_EXCLUSIVE_ACCESS_REG_ONLY },
+> +	{ NVME_PR_WRITE_EXCLUSIVE_ALL_REGS, PR_WRITE_EXCLUSIVE_ALL_REGS },
+> +	{ NVME_PR_EXCLUSIVE_ACCESS_ALL_REGS, PR_EXCLUSIVE_ACCESS_ALL_REGS },
+> +};
 
-Before a timer is freed, del_timer_shutdown() must be called.
+Wouldn't it be easier to use the block type as the array index to avoid
+the whole looped lookup?
 
-Link: https://lore.kernel.org/all/20220407161745.7d6754b3@gandalf.local.home/
+  enum nvme_pr_type types[] = {
+	.PR_WRITE_EXCLUSIVE = NVME_PR_WRITE_EXCLUSIVE,
+	.PR_EXCLUSIVE_ACCESS  = NVME_PR_EXCLUSIVE_ACCESS,
+        ...
+  };
 
-Cc: Nilesh Javali <njavali@marvell.com>
-Cc: GR-QLogic-Storage-Upstream@marvell.com
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Steven Rostedt (Google) <rostedt@goodmis.org>
----
- drivers/scsi/qla2xxx/qla_edif.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_edif.c b/drivers/scsi/qla2xxx/qla_edif.c
-index 00ccc41cef14..01fc6869b99a 100644
---- a/drivers/scsi/qla2xxx/qla_edif.c
-+++ b/drivers/scsi/qla2xxx/qla_edif.c
-@@ -416,7 +416,7 @@ static void __qla2x00_release_all_sadb(struct scsi_qla_host *vha,
- 				 */
- 				if (edif_entry->delete_sa_index !=
- 						INVALID_EDIF_SA_INDEX) {
--					del_timer(&edif_entry->timer);
-+					del_timer_shutdown(&edif_entry->timer);
- 
- 					/* build and send the aen */
- 					fcport->edif.rx_sa_set = 1;
-@@ -2799,7 +2799,7 @@ qla28xx_sa_update_iocb_entry(scsi_qla_host_t *v, struct req_que *req,
- 			    "%s: removing edif_entry %p, new sa_index: 0x%x\n",
- 			    __func__, edif_entry, pkt->sa_index);
- 			qla_edif_list_delete_sa_index(sp->fcport, edif_entry);
--			del_timer(&edif_entry->timer);
-+			del_timer_shutdown(&edif_entry->timer);
- 
- 			ql_dbg(ql_dbg_edif, vha, 0x5033,
- 			    "%s: releasing edif_entry %p, new sa_index: 0x%x\n",
--- 
-2.35.1
+?
