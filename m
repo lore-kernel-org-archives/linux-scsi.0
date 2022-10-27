@@ -2,210 +2,147 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32749C38A2D
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Oct 2022 09:51:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DECF8FA373D
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Oct 2022 09:57:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234928AbiJ0Jvk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Oct 2022 05:51:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33344 "EHLO
+        id S235164AbiJ0J5I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Oct 2022 05:57:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40834 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234802AbiJ0Jvj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Oct 2022 05:51:39 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60AFCD8EEA;
-        Thu, 27 Oct 2022 02:51:38 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 1C154221D4;
-        Thu, 27 Oct 2022 09:51:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1666864297; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=lMhDnMZsampgRMF7aSgCvQ+2ib+vll1P4/w4qqcbYrU=;
-        b=o+Xnrhc+P/dGykBrUg4YiT1fyjCP23M39/0Mkg3D08oe15WqtJQcH8B0owXI+4xf4in7bW
-        yHcMDCGpK/Uv0JCPqRURadQD9H1DEIczWzoGVVG2k3bS8Zcwpk38sfzDmRidQj184mUa3r
-        HxZihd3l9bpRPVqyNCQ8t0i/mLyI/oE=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1666864297;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=lMhDnMZsampgRMF7aSgCvQ+2ib+vll1P4/w4qqcbYrU=;
-        b=AU6KYi2aeqTWCFIX/KbgPTSH1DgsFHj4gyYq6E0qtoww9FVYCY0oGZ0CW+a5z3blUfuhgq
-        dQbMkALsGeuaBMBw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id D7BD613357;
-        Thu, 27 Oct 2022 09:51:35 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id o4zMMqdUWmM4bAAAMHmgww
-        (envelope-from <hare@suse.de>); Thu, 27 Oct 2022 09:51:35 +0000
-Message-ID: <331fffd7-b5db-9b4a-42ae-940a6b54a37f@suse.de>
-Date:   Thu, 27 Oct 2022 11:51:34 +0200
+        with ESMTP id S235157AbiJ0J4l (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Oct 2022 05:56:41 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17324E22F9;
+        Thu, 27 Oct 2022 02:56:10 -0700 (PDT)
+Received: from frapeml500008.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Mygy925qrz67M1h;
+        Thu, 27 Oct 2022 17:54:41 +0800 (CST)
+Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
+ frapeml500008.china.huawei.com (7.182.85.71) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Thu, 27 Oct 2022 11:56:08 +0200
+Received: from [10.195.32.169] (10.195.32.169) by
+ lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Thu, 27 Oct 2022 10:56:07 +0100
+Message-ID: <83d9dc82-ea37-4a3c-7e67-1c097f777767@huawei.com>
+Date:   Thu, 27 Oct 2022 10:56:07 +0100
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.2
-Subject: Re: [PATCH RFC v3 16/22] ata: libata-scsi: Allocate sdev early in
- port probe
-Content-Language: en-US
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH RFC v3 2/7] ata: libata-scsi: Add
+ ata_internal_queuecommand()
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        John Garry <john.garry@huawei.com>, axboe@kernel.dk,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        jinpu.wang@cloud.ionos.com, bvanassche@acm.org, hch@lst.de,
-        ming.lei@redhat.com, niklas.cassel@wdc.com
-Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linuxarm@huawei.com
-References: <1666693096-180008-1-git-send-email-john.garry@huawei.com>
- <1666693096-180008-17-git-send-email-john.garry@huawei.com>
- <6c0a4a75-786a-c946-57f2-c511bd765bcc@opensource.wdc.com>
- <d4535f4f-d9cf-30de-ce8c-9d8ee9c0decb@suse.de>
- <5417d401-6fb3-c1d7-58df-e24e0013cfb8@opensource.wdc.com>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <5417d401-6fb3-c1d7-58df-e24e0013cfb8@opensource.wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>, <hare@suse.de>,
+        <bvanassche@acm.org>, <hch@lst.de>, <ming.lei@redhat.com>,
+        <niklas.cassel@wdc.com>
+CC:     <axboe@kernel.dk>, <jinpu.wang@cloud.ionos.com>,
+        <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linuxarm@huawei.com>
+References: <1666693976-181094-1-git-send-email-john.garry@huawei.com>
+ <1666693976-181094-3-git-send-email-john.garry@huawei.com>
+ <08fdb698-0df3-7bc8-e6af-7d13cc96acfa@opensource.wdc.com>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <08fdb698-0df3-7bc8-e6af-7d13cc96acfa@opensource.wdc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.195.32.169]
+X-ClientProxiedBy: lhrpeml100001.china.huawei.com (7.191.160.183) To
+ lhrpeml500003.china.huawei.com (7.191.162.67)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/27/22 11:16, Damien Le Moal wrote:
-> On 10/27/22 17:11, Hannes Reinecke wrote:
->> On 10/27/22 03:34, Damien Le Moal wrote:
->>> On 10/25/22 19:18, John Garry wrote:
->>>> Currently the per-ata device sdev is allocated as part of the scsi
->>>> target
->>>> scan, which is after the ata port probe.
->>>>
->>>> However it is useful to have the sdev available in the port probe. As an
->>>> example of an advantage, if the request queue is available in the probe
->>>> (which it would be if the sdev is available), then it is possible to use
->>>> a SCSI cmnd for ATA internal commands. The benefit of this is then we
->>>> can
->>>> put the ATA qc structure in the SCSI cmnd private data. It will also be
->>>> useful if we want to send ATA internal commands as requests.
->>>>
->>>> Export scsi_target_reap() so that it can be used to put the extra
->>>> reference we get when allocating the sdev.
->>>>
->>>> Signed-off-by: John Garry <john.garry@huawei.com>
->>>> ---
->>>>    drivers/ata/libata-eh.c   |  1 +
->>>>    drivers/ata/libata-scsi.c | 23 +++++++++--------------
->>>>    drivers/scsi/scsi_scan.c  |  1 +
->>>>    3 files changed, 11 insertions(+), 14 deletions(-)
->>>>
->>>> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
->>>> index 08e11bc312c2..1ed5b1b64792 100644
->>>> --- a/drivers/ata/libata-eh.c
->>>> +++ b/drivers/ata/libata-eh.c
->>>> @@ -3446,6 +3446,7 @@ static int ata_eh_schedule_probe(struct
->>>> ata_device *dev)
->>>>          ata_eh_detach_dev(dev);
->>>>        ata_dev_init(dev);
->>>> +    ata_scsi_setup_sdev(dev);
->>>>        ehc->did_probe_mask |= (1 << dev->devno);
->>>>        ehc->i.action |= ATA_EH_RESET;
->>>>        ehc->saved_xfer_mode[dev->devno] = 0;
->>>> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
->>>> index efdba852e363..476e0ef4bd29 100644
->>>> --- a/drivers/ata/libata-scsi.c
->>>> +++ b/drivers/ata/libata-scsi.c
->>>> @@ -1109,7 +1109,12 @@ int ata_scsi_dev_config(struct scsi_device
->>>> *sdev, struct ata_device *dev)
->>>>        if (dev->flags & ATA_DFLAG_TRUSTED)
->>>>            sdev->security_supported = 1;
->>>>    -    dev->sdev = sdev;
->>>> +    /*
->>>> +     * Put extra reference which we get when allocating the starget
->>>> +     * initially
->>>> +     */
->>>> +    scsi_target_reap(scsi_target(sdev));
->>>> +
->>>>        return 0;
->>>>    }
->>>>    @@ -4289,26 +4294,16 @@ void ata_scsi_scan_host(struct ata_port
->>>> *ap, int sync)
->>>>     repeat:
->>>>        ata_for_each_link(link, ap, EDGE) {
->>>>            ata_for_each_dev(dev, link, ENABLED) {
->>>> -            struct scsi_device *sdev;
->>>> +            struct Scsi_Host *shost = ap->scsi_host;
->>>>                int channel = 0, id = 0;
->>>>    -            if (dev->sdev)
->>>> -                continue;
->>>> -
->>>>                if (ata_is_host_link(link))
->>>>                    id = dev->devno;
->>>>                else
->>>>                    channel = link->pmp;
->>>>    -            sdev = __scsi_add_device(ap->scsi_host, channel, id, 0,
->>>> -                         NULL);
->>>> -            if (!IS_ERR(sdev)) {
->>>> -                dev->sdev = sdev;
->>>> -                ata_scsi_assign_ofnode(dev, ap);
->>>
->>> Is there something equivalent to what this function does inside
->>> scsi_scan_target() ? I had a quick look but did not see anything...
->>>
->> Typically, the SCSI layer has two ways of scanning.
->> One it the old-style serial scanning (originating in the old SCSI
->> parallel model):
->> The scanning code will blindly scan _all_ devices up to max_luns, and
->> attach every device for which the scanning code returns 'OK'.
->> The other one is to issue REPORT_LUNS and scan all LUNs returned there.
+On 27/10/2022 02:45, Damien Le Moal wrote:
+> On 10/25/22 19:32, John Garry wrote:
+>> Add callback to queue reserved commands - call it "internal" as this is
+>> what libata uses.
 >>
->> Mapped to libata we would need to figure out a stable SCSI enumeration,
->> given that we have PMP and slave devices to content with.
->> To my knowledge we have ATA ports, each can have either a 'master' and
->> 'slave' device, _or_ it be a PMP port when it can support up to 16
->> devices, right?
+>> Also add it to the base ATA SHT.
+>>
+>> Signed-off-by: John Garry <john.garry@huawei.com>
+>> ---
+>>   drivers/ata/libata-scsi.c | 14 ++++++++++++++
+>>   include/linux/libata.h    |  5 ++++-
+>>   2 files changed, 18 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+>> index 30d7c90b0c35..0d6f37d80137 100644
+>> --- a/drivers/ata/libata-scsi.c
+>> +++ b/drivers/ata/libata-scsi.c
+>> @@ -1118,6 +1118,20 @@ int ata_scsi_dev_config(struct scsi_device *sdev, struct ata_device *dev)
+>>   	return 0;
+>>   }
+>>   
+>> +int ata_internal_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+>> +{
+>> +	struct ata_port *ap;
+>> +	int res;
+>> +
+>> +	ap = ata_shost_to_port(shost);
 > 
-> yes
+> You can have this initialization together with the ap declaration.
 > 
->> Point being, master/slave and PMP are exclusive, right?
+>> +	spin_lock_irq(ap->lock);
+>> +	res = ata_sas_queuecmd(scmd, ap);
+>> +	spin_unlock_irq(ap->lock);
+>> +
+>> +	return res;
+>> +}
+>> +EXPORT_SYMBOL_GPL(ata_internal_queuecommand);
 > 
-> Never heard of pmp with ide cable :)
+> I am officially lost here. Do not see why this function is needed...
+
+The general idea in this series is to send ATA internal commands as 
+requests. And this function is used as the SCSI midlayer to queue 
+reserved commands. See how it is plugged into __ATA_BASE_SHT, below.
+
+So we have this overall flow:
+
+ata_exec_internal_sg():
+  -> alloc request
+  -> blk_execute_rq_nowait()
+      ... -> scsi_queue_rq()
+		-> sht->reserved_queuecommd()
+			-> ata_internal_queuecommand()
+
+And then we have ata_internal_queuecommand() -> ata_sas_queuecmd() -> 
+ata_scsi_queue_internal() -> ata_qc_issue().
+
+Hope it makes sense.
+
+Thanks,
+John
+
 > 
-See?
-
->> So we can make the master as LUN 0, and the slave as LUN 1.
+>> +
+>>   /**
+>>    *	ata_scsi_slave_config - Set SCSI device attributes
+>>    *	@sdev: SCSI device to examine
+>> diff --git a/include/linux/libata.h b/include/linux/libata.h
+>> index 8938b584520f..f09c5dca16ce 100644
+>> --- a/include/linux/libata.h
+>> +++ b/include/linux/libata.h
+>> @@ -1141,6 +1141,8 @@ extern int ata_std_bios_param(struct scsi_device *sdev,
+>>   			      sector_t capacity, int geom[]);
+>>   extern void ata_scsi_unlock_native_capacity(struct scsi_device *sdev);
+>>   extern int ata_scsi_slave_config(struct scsi_device *sdev);
+>> +extern int ata_internal_queuecommand(struct Scsi_Host *shost,
+>> +				struct scsi_cmnd *scmd);
+>>   extern void ata_scsi_slave_destroy(struct scsi_device *sdev);
+>>   extern int ata_scsi_change_queue_depth(struct scsi_device *sdev,
+>>   				       int queue_depth);
+>> @@ -1391,7 +1393,8 @@ extern const struct attribute_group *ata_common_sdev_groups[];
+>>   	.slave_destroy		= ata_scsi_slave_destroy,	\
+>>   	.bios_param		= ata_std_bios_param,		\
+>>   	.unlock_native_capacity	= ata_scsi_unlock_native_capacity,\
+>> -	.max_sectors		= ATA_MAX_SECTORS_LBA48
+>> +	.max_sectors		= ATA_MAX_SECTORS_LBA48,\
+>> +	.reserved_queuecommand = ata_internal_queuecommand
+>>   
+>>   #define ATA_SUBBASE_SHT(drv_name)				\
+>>   	__ATA_BASE_SHT(drv_name),				\
 > 
-> Yes, but isn't that a little wrong ? That would assume that the ata port
-> is the device and the ata devices the luns of that device. But beside
-> the "link busy" stuff that needs to be dealt with, master and slave are
-> independent devices, unlike LUNs. No ?
-> Well; technically, yes.
-
-But we already enumerate the ata ports (which is typically done by the 
-hardware/PCI layer etc), and if we were try to model slave devices as 
-independent ports we would either have to insert a numbering (awkward) 
-or add a number at the en (even more awkward).
-
-And the one key takeaway from the 'multiple actuators' discussion is 
-that LUNs _are_ independent (cf all the hoops they had to jump through 
-to define a command spanning several LUNs ...)(which, incidentally, we 
-could leverage here, too ...), and the target port really only serves as 
-an enumeration thingie to address the LUNs.
-
-So we _could_ map the master device on LUN 0 and the slave device on LUN 
-1 with no loss of functionality, _but_ enable a consistent SCSI enumeration.
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
-Myers, Andrew McDonald, Martje Boudien Moerman
 
