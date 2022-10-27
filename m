@@ -2,53 +2,53 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5663C433FE
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Oct 2022 01:18:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 895EAC433FE
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Oct 2022 01:21:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233699AbiJ0BS3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 26 Oct 2022 21:18:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54860 "EHLO
+        id S233775AbiJ0BVs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 26 Oct 2022 21:21:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35976 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229949AbiJ0BS2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Oct 2022 21:18:28 -0400
+        with ESMTP id S233783AbiJ0BVr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Oct 2022 21:21:47 -0400
 Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9311558F7
-        for <linux-scsi@vger.kernel.org>; Wed, 26 Oct 2022 18:18:27 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 604C77E810
+        for <linux-scsi@vger.kernel.org>; Wed, 26 Oct 2022 18:21:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1666833507; x=1698369507;
+  t=1666833706; x=1698369706;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=j4VTz3xAsPX1ykQZALKZMRU5knt+b8ZaK/+epWQA9oU=;
-  b=FHohDeUkUzPmDv3W0InYd7UIkTv5IVIAyt6FgB8TDECQm8An6559NG20
-   G0gh9DloaeER+6hmxrtjjs/cvoAHRGSRuU++I7/AbenXqOP5g6iiB7V+C
-   FDPzX0ToLTdxkV+g31J0KaIjMHsCQ/pGEeH5wGaQjRv0/zsbd/U1QGrck
-   ShZjkfPmlIYlrhNP9INb/lz40KCBPBu8AbGxAtI2uKQL3npD4M+TS0nev
-   eBfw/2mUR8EfLCmTWj5bC2x8DYvaas8n4NHO4ZgnQniwekKPG8u2bDfmh
-   1fAwJ6gPtv9rNL8SQlOCKagOvIOeFAUKEzaBRm7XpT8Fs+dJTYucgvKWV
-   g==;
+  bh=zlWp80+yvrKZBis+PLBfQmb9XO7Jhgd5T5V32e2tV2g=;
+  b=r8AG0YFB9EICxrNnop1BG3MN7f39CQxzZvywne2V/QxUZ/BN1YjQOLSb
+   0OmGYWNFhfb3xHh+RhLp8s7rXiPqZZI8Ja0EGzjWqY07eILZDZu+ovBDJ
+   HeteJaG6swddmGQuqJpWvys1M/HfASAtYMP53HBvCupZzMCLpRpibKBkV
+   /GzDC7Tav3J+s8JUOE0H0g5ZiQZ7HVun4RuK7gxglla6fCiLQx8+eCZOe
+   BrfJZCF4wiGHMdVbMcO1RwoWqL4buHtnBLd4LYT3KDXFSCjzNVgAouhHt
+   e/Ytsp/xRpa3dDN4GnVie+wNWtYEg7oygoYdujf00YoY2ICJUL8WQqhT+
+   w==;
 X-IronPort-AV: E=Sophos;i="5.95,215,1661788800"; 
-   d="scan'208";a="214828252"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 27 Oct 2022 09:18:26 +0800
-IronPort-SDR: H+FDlM/gMEqajqsg3BA2C8+dC/0iePml+xvDvgdfXfuD2BGr8myKT9z0CyaUtHd/lDVBM3lxAL
- 1BErdermuhakV0q47j8zUiKFvClQ/TzoglB8YeWyJacxZ2UtKEPNwKmuqS39N84OUHm1XyYtLy
- DyQ8DXnQCtrWNNzxEpnY5OLA3Pp2T2rP4fBn9i8qNYi0VtNtTpn4NNd3HAiSrcapdd+gl7NBjE
- xI/Nm0KRGLovmwJhJ2OfjF3SkAJqXAEWhdBajFyKi73PBHeHz2fQvjxfuXFoLX7Zo5mr0sHRYa
- HU8k+GZAy2fgM/RW3Tl+spUt
+   d="scan'208";a="214828443"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 27 Oct 2022 09:21:45 +0800
+IronPort-SDR: djcwDp7VjTxYD401/dfOYc4H8Z7T8cN9EdTYUZQlCd9/Vp3EEwyIIqdd2aqM+ee9uYd5cJ/ME7
+ h1KWX0KocXVq+9+Gk/FqEetQ1yMyRgFe9xNlbYC87nhQHRG24Ozq109rjyyaFjQ5WzDGoApShH
+ TawPLM+J++8LmJrrPMS4ZJXhii2lEwVbYyFgu6kO06O423BNxHZStyqrFCL0ecwF8E3Rw6mv5X
+ xkuvbkx40sB4sSpRDAdTIuPSaohhgQv8zURm3bV/lvYd0oiArT9ERClKDK39e+ZM8RZFuwQ9fQ
+ 01z/4gFCoEB+CwIBebYicN9M
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 26 Oct 2022 17:32:05 -0700
-IronPort-SDR: 8W2gHAozSgca8N2HzvIvDRCbLhcIm0PMQDID7MobM0AUZnlyPAwch267XC3oBysRIFEJ2kkEpk
- rDaNllBzKeAdaberbOe8xSrrARJsOD0beFbL9v0/tkGpL4lIWsv0SosfqlfQUVAQtDVbgnbVCY
- Lo5UNhWl4M624j+hl5q1aDvOFSpgpDECKKq46KKM9RzAYk7OzIPflvl31XSTNHohbZv2BtkI5c
- JeNeHI03rn8hQdsswnUuptCinId8egMcj3YMdS67sUxWxAkuog0xDkKgaNrjI1n4RMWD12E2ws
- 2lQ=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 26 Oct 2022 17:41:06 -0700
+IronPort-SDR: adhWxQSq05lPcrX9KlbmeXUgZmVOgT655Yz8kAQIrsYaqgtqaGztoTWGVhIyLRIl+Nm+XFwsro
+ tgEMPW3FKx6Bgwn2mtR61Y7bWqTQSsjcgkVuirNBM+5M6dz6F/EfdACch4sYDMQYXz6UWvFhFZ
+ uncBL2rZQ03fbNChHowXkjJjuXVJqiqCl/NlfmFlmO7EpuC6txxwcRbEPG67LVCFA1MYsyZ4xa
+ SEVK0g4zs7sY10EQ4VOG0eeOie9FLH65U6pdxKOipz3aA0PQ3KgBJDsm95f5r5kpoHET0YcpV1
+ FX8=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 26 Oct 2022 18:18:25 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 26 Oct 2022 18:21:45 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MySVT0snmz1RWxq
-        for <linux-scsi@vger.kernel.org>; Wed, 26 Oct 2022 18:18:25 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MySZJ42Vcz1RwvL
+        for <linux-scsi@vger.kernel.org>; Wed, 26 Oct 2022 18:21:44 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,28 +56,28 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1666833503; x=1669425504; bh=j4VTz3xAsPX1ykQZALKZMRU5knt+b8ZaK/+
-        epWQA9oU=; b=AlLTfLAZlMQuunUsaVrTOL6ArW6Bwtsjjj/dCIowQnsGO3Ny7IX
-        8fETeWSg45iCdJ8qBnD5z9SzZ/rORSWbNt/6k6fIGNFSbPAqFXciPJsr2KkDWTYs
-        4CAskUPPRb9upJ55xdDt6x1lGglffoeITJ/e0Hhgpz7w6fETMh1tf5n9pmIgVc8v
-        0F2yXafbOJQOQydVy9vvvCtlzJyv7BxaoC6XYzj+DV/1MRedMmNCBjwu4SNfv/es
-        lH9AOj8pyGJ0iSrnx/dhludNfuMK6I+54MpHK7PJNM8/QKrcsZxy+6vbMoml8zi+
-        +BodTY/qmKOETxc9ZWmNtOvXjEpqOvOLMfA==
+        1666833703; x=1669425704; bh=zlWp80+yvrKZBis+PLBfQmb9XO7Jhgd5T5V
+        32e2tV2g=; b=qhjj5TKTJPjLQtNPy47LI6UCMauJm0ANFwKY9hqY9x04hBD1VmB
+        1rjjBr/gaf3vDPfXO1wKZyjYP8vhLrLFYxzZh0aprP3IAj/PL4cF2foT/2xxfsqZ
+        SXIf42BRIS/p70vF6NzwavgeUPbl58N/HMvwcCjJg5fik1K1CRXQM4YfYhl2oumD
+        CqYParN25SnEI6xYzLeMumCP5gQt85iLs7EDGQQxC6lZJstNgJZaG+6fDVMJhAHL
+        FU0rHyPnIOLcF3p/G2YZCWLcTMsysXbOqb0teSeht1qkRYHrIWz6CA4qL3LXGueV
+        f4sLhwOrTheHaPqgvUsGsnOK72ZbBl7FxNg==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id dJr0eBY6ZtVY for <linux-scsi@vger.kernel.org>;
-        Wed, 26 Oct 2022 18:18:23 -0700 (PDT)
+        with ESMTP id lVLx0JDEEi9I for <linux-scsi@vger.kernel.org>;
+        Wed, 26 Oct 2022 18:21:43 -0700 (PDT)
 Received: from [10.149.53.254] (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MySVP4qbZz1RvLy;
-        Wed, 26 Oct 2022 18:18:21 -0700 (PDT)
-Message-ID: <cd5df8e0-03d1-8f22-0367-eb7c76bc70e7@opensource.wdc.com>
-Date:   Thu, 27 Oct 2022 10:18:20 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MySZF1xJDz1RvLy;
+        Wed, 26 Oct 2022 18:21:41 -0700 (PDT)
+Message-ID: <c30e421e-9652-ebb8-9733-b286cb0f9f19@opensource.wdc.com>
+Date:   Thu, 27 Oct 2022 10:21:40 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.4.0
-Subject: Re: [PATCH RFC v3 03/22] scsi: core: Implement reserved command
- handling
+Subject: Re: [PATCH RFC v3 04/22] scsi: core: Add support to send reserved
+ commands
 Content-Language: en-US
 To:     John Garry <john.garry@huawei.com>, axboe@kernel.dk,
         jejb@linux.ibm.com, martin.petersen@oracle.com,
@@ -87,10 +87,10 @@ Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
         linuxarm@huawei.com
 References: <1666693096-180008-1-git-send-email-john.garry@huawei.com>
- <1666693096-180008-4-git-send-email-john.garry@huawei.com>
+ <1666693096-180008-5-git-send-email-john.garry@huawei.com>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <1666693096-180008-4-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1666693096-180008-5-git-send-email-john.garry@huawei.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -98,98 +98,98 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 10/25/22 19:17, John Garry wrote:
-> From: Hannes Reinecke <hare@suse.de>
+> Add a method to queue reserved commands.
 > 
-> Quite some drivers are using management commands internally, which
-> typically use the same hardware tag pool (ie they are being allocated
-> from the same hardware resources) as the 'normal' I/O commands.
-> These commands are set aside before allocating the block-mq tag bitmap,
-> so they'll never show up as busy in the tag map.
-> The block-layer, OTOH, already has 'reserved_tags' to handle precisely
-> this situation.
-> So this patch adds a new field 'nr_reserved_cmds' to the SCSI host
-> template to instruct the block layer to set aside a tag space for these
-> management commands by using reserved tags.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> #jpg: Set tag_set->queue_depth = shost->can_queue, and not
-> = shost->can_queue + shost->nr_reserved_cmds;
 > Signed-off-by: John Garry <john.garry@huawei.com>
 > ---
->  drivers/scsi/hosts.c     |  3 +++
->  drivers/scsi/scsi_lib.c  |  2 ++
->  include/scsi/scsi_host.h | 15 ++++++++++++++-
->  3 files changed, 19 insertions(+), 1 deletion(-)
+>  drivers/scsi/hosts.c     |  6 ++++++
+>  drivers/scsi/scsi_lib.c  | 25 +++++++++++++++++++++++++
+>  include/scsi/scsi_host.h |  1 +
+>  3 files changed, 32 insertions(+)
 > 
 > diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-> index 12346e2297fd..db89afc37bc9 100644
+> index db89afc37bc9..78968553089f 100644
 > --- a/drivers/scsi/hosts.c
 > +++ b/drivers/scsi/hosts.c
-> @@ -489,6 +489,9 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
->  	if (sht->virt_boundary_mask)
->  		shost->virt_boundary_mask = sht->virt_boundary_mask;
+> @@ -230,6 +230,12 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+>  		goto fail;
+>  	}
 >  
-> +	if (sht->nr_reserved_cmds)
-> +		shost->nr_reserved_cmds = sht->nr_reserved_cmds;
+> +	if (shost->nr_reserved_cmds && !sht->reserved_queuecommand) {
+> +		shost_printk(KERN_ERR, shost,
+> +			"nr_reserved_cmds set but no method to queue\n");
+> +		goto fail;
+> +	}
 > +
-
-Nit: the if is not really necessary I think. But it does not hurt.
-
->  	device_initialize(&shost->shost_gendev);
->  	dev_set_name(&shost->shost_gendev, "host%d", shost->host_no);
->  	shost->shost_gendev.bus = &scsi_bus_type;
+>  	/* Use min_t(int, ...) in case shost->can_queue exceeds SHRT_MAX */
+>  	shost->cmd_per_lun = min_t(int, shost->cmd_per_lun,
+>  				   shost->can_queue);
 > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 39d4fd124375..a8c4e7c037ae 100644
+> index a8c4e7c037ae..08015c42c326 100644
 > --- a/drivers/scsi/scsi_lib.c
 > +++ b/drivers/scsi/scsi_lib.c
-> @@ -1978,6 +1978,8 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
->  	tag_set->nr_hw_queues = shost->nr_hw_queues ? : 1;
->  	tag_set->nr_maps = shost->nr_maps ? : 1;
->  	tag_set->queue_depth = shost->can_queue;
-> +	tag_set->reserved_tags = shost->nr_reserved_cmds;
+> @@ -1428,6 +1428,16 @@ static void scsi_complete(struct request *rq)
+>  	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
+>  	enum scsi_disposition disposition;
+>  
+> +	if (blk_mq_is_reserved_rq(rq)) {
+> +		struct scsi_device *sdev = cmd->device;
+
+This variable is not really needed. You can call:
+		
+		scsi_device_unbusy(cmd->device, cmd);
+
+No ?
+
 > +
-
-Why the blank line ?
-
->  	tag_set->cmd_size = cmd_size;
->  	tag_set->numa_node = dev_to_node(shost->dma_dev);
->  	tag_set->flags = BLK_MQ_F_SHOULD_MERGE;
+> +		scsi_mq_uninit_cmd(cmd);
+> +		scsi_device_unbusy(sdev, cmd);
+> +		__blk_mq_end_request(rq, 0);
+> +
+> +		return;
+> +	}
+> +
+>  	INIT_LIST_HEAD(&cmd->eh_entry);
+>  
+>  	atomic_inc(&cmd->device->iodone_cnt);
+> @@ -1718,6 +1728,21 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+>  	blk_status_t ret;
+>  	int reason;
+>  
+> +	if (blk_mq_is_reserved_rq(req)) {
+> +		if (!(req->rq_flags & RQF_DONTPREP)) {
+> +			ret = scsi_prepare_cmd(req);
+> +			if (ret != BLK_STS_OK)
+> +				goto out_dec_host_busy;
+> +
+> +			req->rq_flags |= RQF_DONTPREP;
+> +		} else {
+> +			clear_bit(SCMD_STATE_COMPLETE, &cmd->state);
+> +		}
+> +		blk_mq_start_request(req);
+> +
+> +		return shost->hostt->reserved_queuecommand(shost, cmd);
+> +	}
+> +
+>  	WARN_ON_ONCE(cmd->budget_token < 0);
+>  
+>  	/*
 > diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-> index 750ccf126377..91678c77398e 100644
+> index 91678c77398e..a39f36aa0b0d 100644
 > --- a/include/scsi/scsi_host.h
 > +++ b/include/scsi/scsi_host.h
-> @@ -360,10 +360,17 @@ struct scsi_host_template {
->  	/*
->  	 * This determines if we will use a non-interrupt driven
->  	 * or an interrupt driven scheme.  It is set to the maximum number
-> -	 * of simultaneous commands a single hw queue in HBA will accept.
-> +	 * of simultaneous commands a single hw queue in HBA will accept
-> +	 * including reserved commands.
+> @@ -73,6 +73,7 @@ struct scsi_host_template {
+>  	 * STATUS: REQUIRED
 >  	 */
->  	int can_queue;
->  
-> +	/*
-> +	 * This determines how many commands the HBA will set aside
-> +	 * for reserved commands.
-> +	 */
-> +	int nr_reserved_cmds;
-> +
->  	/*
->  	 * In many instances, especially where disconnect / reconnect are
->  	 * supported, our host also has an ID on the SCSI bus.  If this is
-> @@ -611,6 +618,12 @@ struct Scsi_Host {
->  	 */
->  	unsigned nr_hw_queues;
->  	unsigned nr_maps;
-> +
-> +	/*
-> +	 * Number of reserved commands to allocate, if any.
-> +	 */
-> +	unsigned int nr_reserved_cmds;
-> +
->  	unsigned active_mode:2;
+>  	int (* queuecommand)(struct Scsi_Host *, struct scsi_cmnd *);
+> +	int (*reserved_queuecommand)(struct Scsi_Host *, struct scsi_cmnd *);
+
+Nit: This op name sound like something returning a bool... May be a
+straight "queue_reserved_command" name would be clearer ?
+
 >  
 >  	/*
+>  	 * The commit_rqs function is used to trigger a hardware
 
 -- 
 Damien Le Moal
