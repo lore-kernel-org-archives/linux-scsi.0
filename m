@@ -2,84 +2,130 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 355E5C38A02
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Oct 2022 09:12:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DB10C38A02
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Oct 2022 09:45:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229846AbiJ1JMl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Oct 2022 05:12:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46602 "EHLO
+        id S229685AbiJ1Jpf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Oct 2022 05:45:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57176 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229456AbiJ1JMk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Oct 2022 05:12:40 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE9F277541
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Oct 2022 02:12:39 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 80D2FB8289C
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Oct 2022 09:12:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 2878DC433B5
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Oct 2022 09:12:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666948357;
-        bh=eco52whOI45VpfbrmwHO9S3FlHk4X6Idj1Bx5hVDKvM=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=gL62dKdMzKY2eWO33pdZ8MyZdcsq/zV8apGaDnH51vILm8SFZ7UXn220GzrnBgCRL
-         HcsXBk0t3Iha/jgXpbw+l2PAqNmyZFJup/ds3/1HuWTbQlRv/lM0OxDF25IX4J51Fn
-         FO9KA3zM+AkyN9HhbjcJlLgukNR9ILXBFwLdltMy6tHYm4uxNzyPFOpxQVIDX/Ir94
-         xPPrubcq2h6BYLvpYhis+7sqTyM8l9vJ6ZySZWfNTFaMxYzQffspHKV0S8nk55JfFu
-         GcMK4Kzj66q1u84SURBU6mkVvWqRA+6bQ7xnbNtxnnM9w6LHiB59XcjE1pRWcNi52c
-         QZSsC8RlaZTeg==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 17169C433EA; Fri, 28 Oct 2022 09:12:37 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 214311] megaraid_sas - no disks detected
-Date:   Fri, 28 Oct 2022 09:12:36 +0000
-X-Bugzilla-Reason: AssignedTo
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: None
-X-Bugzilla-Product: IO/Storage
-X-Bugzilla-Component: SCSI
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: blocking
-X-Bugzilla-Who: rollopack@gmail.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: cc
-Message-ID: <bug-214311-11613-VdA66YQeXZ@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-214311-11613@https.bugzilla.kernel.org/>
-References: <bug-214311-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        with ESMTP id S229520AbiJ1Jpd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Oct 2022 05:45:33 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71A0D5AC69;
+        Fri, 28 Oct 2022 02:45:27 -0700 (PDT)
+Received: from dggpemm500020.china.huawei.com (unknown [172.30.72.54])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4MzHhl0JtKzHv2f;
+        Fri, 28 Oct 2022 17:45:11 +0800 (CST)
+Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
+ dggpemm500020.china.huawei.com (7.185.36.49) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Fri, 28 Oct 2022 17:45:25 +0800
+Received: from [10.174.178.220] (10.174.178.220) by
+ dggpemm500017.china.huawei.com (7.185.36.178) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Fri, 28 Oct 2022 17:45:25 +0800
+Message-ID: <79683c37-904e-562f-fc18-98ffda777d08@huawei.com>
+Date:   Fri, 28 Oct 2022 17:45:24 +0800
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [PATCH v5] scsi:iscsi: Fix multiple iscsi session unbind event
+ sent to userspace
+Content-Language: en-US
+To:     Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
+        "Mike Christie" <michael.christie@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC:     Steffen Maier <maier@linux.ibm.com>, <liuzhiqiang26@huawei.com>,
+        <linfeilong@huawei.com>
+References: <20221028020026.2870104-1-haowenchao@huawei.com>
+ <e6f03525-aad5-c20d-bd8c-a5647898bcf1@suse.com>
+From:   Wenchao Hao <haowenchao@huawei.com>
+In-Reply-To: <e6f03525-aad5-c20d-bd8c-a5647898bcf1@suse.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.174.178.220]
+X-ClientProxiedBy: dggpeml500019.china.huawei.com (7.185.36.137) To
+ dggpemm500017.china.huawei.com (7.185.36.178)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D214311
 
-Gabriel Rolland (rollopack@gmail.com) changed:
+On 2022/10/28 0:18, Lee Duncan wrote:
+> On 10/27/22 19:00, Wenchao Hao wrote:
+>> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+>> index cd3db9684e52..2e0d1cd6d4ea 100644
+>> --- a/drivers/scsi/scsi_transport_iscsi.c
+>> +++ b/drivers/scsi/scsi_transport_iscsi.c
+>> @@ -1676,6 +1676,30 @@ static const char *iscsi_session_state_name(int state)
+>>       return name;
+>>   }
+>>   +static struct {
+>> +    int value;
+>> +    char *name;
+>> +} iscsi_session_target_state_names[] = {
+>> +    { ISCSI_SESSION_TARGET_UNBOUND,        "UNBOUND" },
+>> +    { ISCSI_SESSION_TARGET_ALLOCATED,    "ALLOCATED" },
+>> +    { ISCSI_SESSION_TARGET_BOUND,        "BOUND" },
+>> +    { ISCSI_SESSION_TARGET_UNBINDING,    "UNBINDING" },
+>> +};
+>> +
+>> +static const char *iscsi_session_target_state_name(int state)
+>> +{
+>> +    int i;
+>> +    char *name = NULL;
+>> +
+>> +    for (i = 0; i < ARRAY_SIZE(iscsi_session_target_state_names); i++) {
+>> +        if (iscsi_session_target_state_names[i].value == state) {
+>> +            name = iscsi_session_target_state_names[i].name;
+>> +            break;
+>> +        }
+>> +    }
+>> +    return name;
+>> +}
+> 
+> It seems like it might be more efficient to use the target state as the array index, so you don't have to loop to find the name, e.g. something like:
+> 
+>> static char* iscsi_session_target_state_names[] = {
+>>     .ISCSI_SESSION_TARGET_UNBOUND = "UNBOUND",
+>>     .ISCSI_SESSION_TARGET_ALLOCATED = "ALLOCATED",
+>>     .ISCSI_SESSION_TARGET_BOUND = "BOUND",
+>>     .ISCSI_SESSION_TARGET_UNBINDING = "UNBINDING",
+>> };
+> 
+> I know there are only 4 states, and it's only used for sysfs, so not sure it matters much.
+> 
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |rollopack@gmail.com
+It's a better implement, I would update it.
 
---- Comment #7 from Gabriel Rolland (rollopack@gmail.com) ---
-Same problem with the Dell PowerEdge T140 with LSI MegaRAID SAS-3 3008=20
-[Fury] (rev 02) and linux-image-5.10.0-19-amd64 (NO UEFI)
+>> @@ -1961,6 +1987,15 @@ static void __iscsi_unbind_session(struct work_struct *work)
+>>       unsigned long flags;
+>>       unsigned int target_id;
+>>   +    spin_lock_irqsave(&session->lock, flags);
+>> +    if (session->target_state != ISCSI_SESSION_TARGET_BOUND) {
+>> +        spin_unlock_irqrestore(&session->lock, flags);
+>> +        ISCSI_DBG_TRANS_SESSION(session, "Abort unbind sesison\n");
+> 
+> It'd be nice if this said more, since debugging "Abort unbind sessions" would require finding the sources. How about "Abort unbind session: not bound", for example?
+> 
 
-No problem booting with the old 4.19.0-22-amd64 kernel
+Of course, I would updated.
 
---=20
-You may reply to this email to add a comment.
+>> @@ -264,6 +271,7 @@ struct iscsi_cls_session {
+>>        */
+>>       pid_t creator;
+>>       int state;
+>> +    int target_state;            /* session target bind state */
+>>       int sid;                /* session id */
+>>       void *dd_data;                /* LLD private data */
+>>       struct device dev;    /* sysfs transport/container device */
+> 
+> Thank you for sticking with this. It is very much appreciated.
 
-You are receiving this mail because:
-You are the assignee for the bug.=
+I should apologize for taking this issue off for a long time because of my slow response.
+
+What's more, should I add an acked-by or reviewed-by in my next patch?
