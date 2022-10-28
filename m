@@ -2,162 +2,113 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6D66ECAAA1
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Oct 2022 00:06:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6281CC38A02
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Oct 2022 05:08:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235046AbiJ1AGF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Oct 2022 20:06:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45584 "EHLO
+        id S229571AbiJ1FIU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Oct 2022 01:08:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58388 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234664AbiJ1AGC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Oct 2022 20:06:02 -0400
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A7237963A
-        for <linux-scsi@vger.kernel.org>; Thu, 27 Oct 2022 17:06:00 -0700 (PDT)
-Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20221028000557epoutp0203d6fcf585f2b5630a28bfcca25df181~iEt4ZN6dV2167521675epoutp02Y
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Oct 2022 00:05:57 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20221028000557epoutp0203d6fcf585f2b5630a28bfcca25df181~iEt4ZN6dV2167521675epoutp02Y
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1666915557;
-        bh=W4vEb0RpV7zSfH+2x6pcpo31LhO6vyzOs3ZF8z/vowk=;
-        h=Subject:Reply-To:From:To:In-Reply-To:Date:References:From;
-        b=ab6aFYlXsO3O3HjT+ChR5VyBKk+Agjo5tkKZi1d8UZov1RqpfqA1ij+gCI9YJs6Q6
-         XnShYywUhr8TO8L6MtxuFY+bIJiQJrcI5OAPqaVL13QkgHiHhEn/qJAuk5FBgcMdtL
-         G9bwt9f1irLlAcNRHEDnd65d87ANT9EsuxZ4gJWU=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-        epcas2p2.samsung.com (KnoxPortal) with ESMTP id
-        20221028000556epcas2p24fe69a712c225da2ac81bb47300eb042~iEt3whXx90981009810epcas2p29;
-        Fri, 28 Oct 2022 00:05:56 +0000 (GMT)
-Received: from epsmges2p3.samsung.com (unknown [182.195.36.97]) by
-        epsnrtp1.localdomain (Postfix) with ESMTP id 4Mz2rN1Z1Dz4x9Pp; Fri, 28 Oct
-        2022 00:05:56 +0000 (GMT)
-X-AuditID: b6c32a47-ac5b870000002127-37-635b1ce42458
-Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
-        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
-        AA.3D.08487.4EC1B536; Fri, 28 Oct 2022 09:05:56 +0900 (KST)
-Mime-Version: 1.0
-Subject: RE: [PATCH] scsi: ufs: core: Use 'else' in ufshcd_hba_enable()
-Reply-To: keosung.park@samsung.com
-Sender: Keoseong Park <keosung.park@samsung.com>
-From:   Keoseong Park <keosung.park@samsung.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <87a0d265-f9b3-dbc6-edff-396c5a354f92@acm.org>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20221028000555epcms2p7f1660c757d0af8399af64fa31bd87cb1@epcms2p7>
-Date:   Fri, 28 Oct 2022 09:05:55 +0900
-X-CMS-MailID: 20221028000555epcms2p7f1660c757d0af8399af64fa31bd87cb1
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrDJsWRmVeSWpSXmKPExsWy7bCmme4Tmehkg63fOC1OPlnDZvFg3jY2
-        i5c/r7JZHHzYyWIx7cNPZouXhzQtHt1+xmjR27+VzWLRjW1MFpd3zWGz6L6+g81i+fF/TA48
-        HpeveHss3vOSyWPCogOMHt/Xd7B5fHx6i8Wjb8sqRo/Pm+Q82g90MwVwRGXbZKQmpqQWKaTm
-        JeenZOal2yp5B8c7x5uaGRjqGlpamCsp5CXmptoqufgE6Lpl5gAdq6RQlphTChQKSCwuVtK3
-        synKLy1JVcjILy6xVUotSMkpMC/QK07MLS7NS9fLSy2xMjQwMDIFKkzIzni38AJzwS3+inXT
-        97E2MO7j6WLk5JAQMJH41nSBvYuRi0NIYAejxL+Hx1i7GDk4eAUEJf7uEAapERZwl3izaTEr
-        iC0koCTRtXArM0TcQGLd9D1gNpuAnsSU33cYQeaICHxhluh8uJ8dYgGvxIz2pywQtrTE9uVb
-        GUFsTgFriRNT/0HVaEj8WNbLDGGLStxc/ZYdxn5/bD4jhC0i0XrvLFSNoMSDn7uh4pISrWe2
-        skHY+RJPbvZD7aqRWLD9M1RcX+Jax0awOK+Ar8S1x8/BbBYBVYmfE1+wQtS4SLzpbQGrZxaQ
-        l9j+dg4zKByYBTQl1u/SBzElBJQljtxigfmqYeNvdnQ2swCfRMfhv3DxHfOeMEHYahKPFmyB
-        2iQjcXHOOeYJjEqzEAE9C8neWQh7FzAyr2IUSy0ozk1PLTYqMIbHbXJ+7iZGcLLVct/BOOPt
-        B71DjEwcjIcYJTiYlUR4z94ITxbiTUmsrEotyo8vKs1JLT7EaAr08URmKdHkfGC6zyuJNzSx
-        NDAxMzM0NzI1MFcS5+2aoZUsJJCeWJKanZpakFoE08fEwSnVwLRhX0rW71PH+Bh81uputfnz
-        4cxPe8NPSpMYk3rczLzEbtz9UPH4SGkwo8lRrpaGY61HXmYV9F0/FfTLosbnV94vFqZjxSwc
-        f+cEnjnbHp82P5DDxLH5z/svShdPpv/n2nJh086JchUTJrh/zqsPjbizWUv1xMKIrq7ZW4VV
-        CoUO8+9MDPUXfs/4a/3rpf+mnrm3vbX+nViC90J5TrP2+b9erZ550kA2xU2Ld+VH9217dM6F
-        Wyz0smZYWMPOwt64eMLqWdceNjR+nOE7i4+nbMLVsp6cxm8W+65Kmqv+kRR4e4Sd6W21g3eK
-        CEPEj/0fajbcMeITmG2vFVN8q3qCyvLtJQKeR9surpxyfonUyQ4lluKMREMt5qLiRAAizHzh
-        PwQAAA==
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20221027062013epcms2p7af8fbc60caaba50686233492fb3dfd93
-References: <87a0d265-f9b3-dbc6-edff-396c5a354f92@acm.org>
-        <20221027062013epcms2p7af8fbc60caaba50686233492fb3dfd93@epcms2p7>
-        <CGME20221027062013epcms2p7af8fbc60caaba50686233492fb3dfd93@epcms2p7>
+        with ESMTP id S229457AbiJ1FIT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Oct 2022 01:08:19 -0400
+Received: from mail-m975.mail.163.com (mail-m975.mail.163.com [123.126.97.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 157EE1B156D;
+        Thu, 27 Oct 2022 22:08:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=kt3iK
+        smMMKWgKoyXI3XPdA6XBPWW/6C1tCL/uRPd9MA=; b=AglJgsWJOGqK4TLQzKDZU
+        bb4PEmfDKj22TOMzGdnRhz/leTmXASNH5IA/Ehaz5/lc+8Z/d1+NBTyk5QLA8gaV
+        maBRVzTgthNnuguZ8A0lktughEd4DAMGcANe8Hk5b9hIQLWJPrr4YkS/3iEI+uW3
+        2XcFNQdtZOeyDLnCq/9zzY=
+Received: from localhost.localdomain (unknown [111.206.145.21])
+        by smtp5 (Coremail) with SMTP id HdxpCgCHr_CZY1tj9i5AoA--.10196S2;
+        Fri, 28 Oct 2022 13:07:37 +0800 (CST)
+From:   Zheng Wang <zyytlz.wz@163.com>
+To:     james.smart@broadcom.com
+Cc:     dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        hackerzheng666@gmail.com, alex000young@gmail.com,
+        security@kernel.org, linux-kernel@vger.kernel.org,
+        Zheng Wang <zyytlz.wz@163.com>
+Subject: [PATCH] scsi: lpfc: fix double free bug in lpfc_bsg_write_ebuf_set
+Date:   Fri, 28 Oct 2022 13:07:36 +0800
+Message-Id: <20221028050736.151185-1-zyytlz.wz@163.com>
+X-Mailer: git-send-email 2.25.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: HdxpCgCHr_CZY1tj9i5AoA--.10196S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7WrW3Zr1rGw1rKw1kZFyxXwb_yoW8ZrW8pa
+        y3C3Z7ArZrtF4IqrWDA34Yv3s3tayfXFy2kFZFg3WrWF1FvryjyF1UtF18XFWYkFyI9rZ8
+        tF4UK34UWF17Xa7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0ziLZ2hUUUUU=
+X-Originating-IP: [111.206.145.21]
+X-CM-SenderInfo: h2113zf2oz6qqrwthudrp/1tbiXBmoU1Xl4nrbGgAAsX
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart,
+When error occurs, it frees dmabuf in both lpfc_bsg_write_ebuf_set
+and lpfc_bsg_issue_mbox.
 
->On 10/26/22 23:20, Keoseong Park wrote:
->> Convert if (!ret) { ... } if (ret) { ... } into
->> if (!ret) { ... } else { ... }.
->> 
->> Signed-off-by: Keoseong Park <keosung.park@samsung.com>
->> ---
->>   drivers/ufs/core/ufshcd.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->> 
->> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
->> index 7256e6c43ca6..3b794be53287 100644
->> --- a/drivers/ufs/core/ufshcd.c
->> +++ b/drivers/ufs/core/ufshcd.c
->> @@ -4670,7 +4670,7 @@ int ufshcd_hba_enable(struct ufs_hba *hba)
->>   			ret = ufshcd_dme_enable(hba);
->>   			if (!ret)
->>   				ufshcd_vops_hce_enable_notify(hba, POST_CHANGE);
->> -			if (ret)
->> +			else
->>   				dev_err(hba->dev,
->>   					"Host controller enable failed with non-hce\n");
->>   		}
->
->If ufshcd_hba_enable() is modified it should be converted into the widely
->used "if error return" style. How about the untested patch below?
+Fix it by removing free code in lpfc_bsg_write_ebuf_set.
 
-Thanks for your feedback.
-That seems to be better.
-I will apply it to the next version.
+Reported-by: Zheng Wang <hackerzheng666@gmail.com>
+Reported-by: Zhuorao Yang <alex000young@gmail.com>
 
-Best Regards,
-Keoseong
+Fixes: 7ad20aa9d39a ("[SCSI] lpfc 8.3.24: Extend BSG infrastructure and add link diagnostics")
 
->
->diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
->index 05feec10fad3..89f8b86c3f85 100644
->--- a/drivers/ufs/core/ufshcd.c
->+++ b/drivers/ufs/core/ufshcd.c
->@@ -4668,14 +4668,16 @@ int ufshcd_hba_enable(struct ufs_hba *hba)
->  		/* enable UIC related interrupts */
->  		ufshcd_enable_intr(hba, UFSHCD_UIC_MASK);
->  		ret = ufshcd_dme_reset(hba);
->-		if (!ret) {
->-			ret = ufshcd_dme_enable(hba);
->-			if (!ret)
->-				ufshcd_vops_hce_enable_notify(hba, POST_CHANGE);
->-			if (ret)
->-				dev_err(hba->dev,
->-					"Host controller enable failed with non-hce\n");
->+		if (ret) {
->+			dev_err(hba->dev, "DME_RESET failed\n");
->+			return ret;
->+		}
->+		ret = ufshcd_dme_enable(hba);
->+		if (ret) {
->+			dev_err(hba->dev, "Enabling DME failed\n");
->+			return ret;
->  		}
->+		ufshcd_vops_hce_enable_notify(hba, POST_CHANGE);
->  	} else {
->  		ret = ufshcd_hba_execute_hce(hba);
->  	}
+Signed-off-by: Zheng Wang <zyytlz.wz@163.com>
+---
+ drivers/scsi/lpfc/lpfc_bsg.c | 17 +++--------------
+ 1 file changed, 3 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+index ac0c7ccf2eae..7362d9c1a50b 100644
+--- a/drivers/scsi/lpfc/lpfc_bsg.c
++++ b/drivers/scsi/lpfc/lpfc_bsg.c
+@@ -4439,15 +4439,13 @@ lpfc_bsg_write_ebuf_set(struct lpfc_hba *phba, struct bsg_job *job,
+ 
+ 		dd_data = kmalloc(sizeof(struct bsg_job_data), GFP_KERNEL);
+ 		if (!dd_data) {
+-			rc = -ENOMEM;
+-			goto job_error;
++			return -ENOMEM;
+ 		}
+ 
+ 		/* mailbox command structure for base driver */
+ 		pmboxq = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
+ 		if (!pmboxq) {
+-			rc = -ENOMEM;
+-			goto job_error;
++			return -ENOMEM;
+ 		}
+ 		memset(pmboxq, 0, sizeof(LPFC_MBOXQ_t));
+ 		pbuf = (uint8_t *)phba->mbox_ext_buf_ctx.mbx_dmabuf->virt;
+@@ -4480,8 +4478,7 @@ lpfc_bsg_write_ebuf_set(struct lpfc_hba *phba, struct bsg_job *job,
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_LIBDFC,
+ 				"2970 Failed to issue SLI_CONFIG ext-buffer "
+ 				"mailbox command, rc:x%x\n", rc);
+-		rc = -EPIPE;
+-		goto job_error;
++		return -EPIPE;
+ 	}
+ 
+ 	/* wait for additional external buffers */
+@@ -4489,14 +4486,6 @@ lpfc_bsg_write_ebuf_set(struct lpfc_hba *phba, struct bsg_job *job,
+ 	bsg_job_done(job, bsg_reply->result,
+ 		       bsg_reply->reply_payload_rcv_len);
+ 	return SLI_CONFIG_HANDLED;
+-
+-job_error:
+-	if (pmboxq)
+-		mempool_free(pmboxq, phba->mbox_mem_pool);
+-	lpfc_bsg_dma_page_free(phba, dmabuf);
+-	kfree(dd_data);
+-
+-	return rc;
+ }
+ 
+ /**
+-- 
+2.25.1
+
