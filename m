@@ -2,164 +2,66 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E2D3C38A02
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Oct 2022 09:51:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5EEAECAAA1
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Oct 2022 13:31:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230286AbiJ1JvD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Oct 2022 05:51:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34190 "EHLO
+        id S230504AbiJ1Nbu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Oct 2022 09:31:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56202 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229939AbiJ1JuX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Oct 2022 05:50:23 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A52F2702;
-        Fri, 28 Oct 2022 02:49:47 -0700 (PDT)
-Received: from dggpemm500022.china.huawei.com (unknown [172.30.72.56])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4MzHhK46HhzmVg3;
-        Fri, 28 Oct 2022 17:44:49 +0800 (CST)
-Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
- dggpemm500022.china.huawei.com (7.185.36.162) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Fri, 28 Oct 2022 17:49:45 +0800
-Received: from [10.174.178.220] (10.174.178.220) by
- dggpemm500017.china.huawei.com (7.185.36.178) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Fri, 28 Oct 2022 17:49:44 +0800
-Message-ID: <efa643b7-f841-19cf-87cd-40cb9eafb50a@huawei.com>
-Date:   Fri, 28 Oct 2022 17:49:44 +0800
+        with ESMTP id S230509AbiJ1NbX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Oct 2022 09:31:23 -0400
+Received: from bg4.exmail.qq.com (bg4.exmail.qq.com [43.155.67.158])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93D351D377E;
+        Fri, 28 Oct 2022 06:31:13 -0700 (PDT)
+X-QQ-mid: bizesmtp77t1666963867tb6fji77
+Received: from localhost.localdomain ( [182.148.13.81])
+        by bizesmtp.qq.com (ESMTP) with 
+        id ; Fri, 28 Oct 2022 21:31:06 +0800 (CST)
+X-QQ-SSF: 01000000000000F0J000000A0000000
+X-QQ-FEAT: 05DNj9F54DgMzRozldRd2zFpmi4hSqj4xhrQQvH8Ee/5HcLx4C4DCMQbutUYX
+        4v33FIBmkRWjIWevxdoNwOu3x8RrByn3wiSHx8J6zhh4vhwk47UWaszL3XuAedOfhU7nNxt
+        jrCPbeqaJHI2nkXCp/2jk2Ytlo3eUVq1zDg4ms7fSxXnc6rFTnp6mrk4ybmnD1MSDyniSBw
+        4IVzMtUE0N7bgt795sj8uBKYlvlYCKZXBFRQK6CvqRtwN9WK8ZBa1igckYZwAV2/MA1CghU
+        atnIFchMuBVhOz27i9q5f+8a90Rz6xkHQGrqpJGj6ezlSMy9tA1Vl2JLyS6YNtep7GhzXNE
+        0AKu4WrKxGgq9po8ttiQIPm2zcMJ690mcxAwe1K
+X-QQ-GoodBg: 0
+From:   Jilin Yuan <yuanjilin@cdjrlc.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jilin Yuan <yuanjilin@cdjrlc.com>
+Subject: [PATCH] scsi: qla2xxx: fix repeated words in comments
+Date:   Fri, 28 Oct 2022 21:30:58 +0800
+Message-Id: <20221028133058.54619-1-yuanjilin@cdjrlc.com>
+X-Mailer: git-send-email 2.36.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.0
-Subject: Re: [PATCH v5] scsi:iscsi: Fix multiple iscsi session unbind event
- sent to userspace
-Content-Language: en-US
-To:     Mike Christie <michael.christie@oracle.com>,
-        Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC:     Steffen Maier <maier@linux.ibm.com>, <liuzhiqiang26@huawei.com>,
-        <linfeilong@huawei.com>
-References: <20221028020026.2870104-1-haowenchao@huawei.com>
- <cc9faad6-223f-23b2-2fcc-4b58916d13f0@oracle.com>
-From:   Wenchao Hao <haowenchao@huawei.com>
-In-Reply-To: <cc9faad6-223f-23b2-2fcc-4b58916d13f0@oracle.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.178.220]
-X-ClientProxiedBy: dggpeml500019.china.huawei.com (7.185.36.137) To
- dggpemm500017.china.huawei.com (7.185.36.178)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: bizesmtp:cdjrlc.com:qybglogicsvr:qybglogicsvr4
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Delete the redundant word 'should'.
 
-On 2022/10/28 5:02, Mike Christie wrote:
-> On 10/27/22 9:00 PM, Wenchao Hao wrote:
->> @@ -1779,6 +1803,7 @@ static int iscsi_user_scan_session(struct device *dev, void *data)
->>  		goto user_scan_exit;
->>  	}
->>  	id = session->target_id;
->> +	session->target_state = ISCSI_SESSION_TARGET_BOUND;
->>  	spin_unlock_irqrestore(&session->lock, flags);
->>  
->>  	if (id != ISCSI_MAX_TARGET) {
->> @@ -1899,6 +1924,7 @@ static void __iscsi_unblock_session(struct work_struct *work)
->>  	cancel_delayed_work_sync(&session->recovery_work);
->>  	spin_lock_irqsave(&session->lock, flags);
->>  	session->state = ISCSI_SESSION_LOGGED_IN;
->> +	session->target_state = ISCSI_SESSION_TARGET_ALLOCATED;
-> 
-> I think there are 2 issues with setting this to ISCSI_SESSION_TARGET_ALLOCATED
-> here.
-> 
-> 1. We allocated the target_id in iscsi_add_session so it's weird to set
-> the state late above.
-> 2. We call the above function when we relogin, so it overwrites 
-> ISCSI_SESSION_TARGET_BOUND.
-> 
-> I think we can just do:
-> 
-> @@ -1785,7 +1785,12 @@ static int iscsi_user_scan_session(struct device *dev, void *data)
->  		if ((scan_data->channel == SCAN_WILD_CARD ||
->  		     scan_data->channel == 0) &&
->  		    (scan_data->id == SCAN_WILD_CARD ||
-> -		     scan_data->id == id))
-> +		     scan_data->id == id)) {
-> +
-> +			spin_lock_irqsave(&session->lock, flags);
-> +			session->target_state = ISCSI_SESSION_TARGET_SCANNED;
-> +			spin_unlock_irqsave(&session->lock, flags);
-> +
->  			scsi_scan_target(&session->dev, 0, id,
->  					 scan_data->lun, scan_data->rescan);
->  	}
-> @@ -1972,6 +1977,7 @@ static void __iscsi_unbind_session(struct work_struct *work)
->  		goto unbind_session_exit;
->  	}
->  
-> +	session->target_state = ISCSI_SESSION_TARGET_UNBINDING;
->  	target_id = session->target_id;
->  	session->target_id = ISCSI_MAX_TARGET;
->  	spin_unlock_irqrestore(&session->lock, flags);
-> @@ -1983,6 +1989,10 @@ static void __iscsi_unbind_session(struct work_struct *work)
->  		ida_free(&iscsi_sess_ida, target_id);
->  
->  unbind_session_exit:
-> +	spin_lock_irqsave(&session->lock, flags);
-> +	session->target_state = ISCSI_SESSION_TARGET_UNBOUND;
-> +	spin_unlock_irqrestore(&session->lock, flags);
-> +
->  	iscsi_session_event(session, ISCSI_KEVENT_UNBIND_SESSION);
->  	ISCSI_DBG_TRANS_SESSION(session, "Completed target removal\n");
->  }
-> @@ -2061,6 +2071,7 @@ int iscsi_add_session(struct iscsi_cls_session *session, unsigned int target_id)
->  		session->ida_used = true;
->  	} else
->  		session->target_id = target_id;
-> +	session->target_state = ISCSI_SESSION_TARGET_ID_ALLOCATED;
->  
->  	dev_set_name(&session->dev, "session%u", session->sid);
->  	err = device_add(&session->dev);
-> 
-> 
-> then in userspace we can do:
-> 
-> 1. if have conn in sysfs
-> 	if session->target_state == ISCSI_SESSION_TARGET_ID_ALLOCATED
-> 		if conn->state == ISCSI_CONN_UP
-> 			/*
-> 			 * we did the initial login and did a ISCSI_UEVENT_START_CONN
-> 			 * but crashed/restarted
-> 			 * before we were able to scan.
-> 			 */
-> 			sync session and scan session
-> 		else
-> 			/*
-> 			 * the initial login didn't happen so
-> 			 * just cleanup the kernel. Note: we could also
-> 			 * finish setting the conn up but it probably doesn't
-> 			 * come up enough to do this.
-> 			 */
-> 
-> 	else if session->target_state == ISCSI_SESSION_TARGET_SCANNED
-> 		do normal sync
-> 	else if session->target_state == ISCSI_SESSION_TARGET_REMOVING
-> 		wait for state to change to ISCSI_SESSION_TARGET_UNBOUND
-> 		or setup session/conn in userspace so we can wait for
-> 		ISCSI_KEVENT_UNBIND_SESSION then cleanup session/conn.
-> 	else if session->target_state == ISCSI_SESSION_TARGET_UNBOUND
-> 		cleanup session/conn based on their state and what's in sysfs
-> 
->    if no conn in sysfs
-> 	cleanup session
-> 
-> 
-> If we are in agreement, then you can take my code above and merge it into
-> your patch and resubmit in one patch.
-> .
+Signed-off-by: Jilin Yuan <yuanjilin@cdjrlc.com>
+---
+ drivers/scsi/qla2xxx/qla_init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks a lot for your suggestions, I just updated the PR in last night.
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index e12db95de688..7c2004be83ea 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -2482,7 +2482,7 @@ qla2x00_initialize_adapter(scsi_qla_host_t *vha)
+ 		/* NOTE: If ql2xdontresethba==1, set IDC_CTRL DONTRESET_BIT0.
+ 		 * If DONRESET_BIT0 is set, drivers should not set dev_state
+ 		 * to NEED_RESET. But if NEED_RESET is set, drivers should
+-		 * should honor the reset. */
++		 * honor the reset. */
+ 		if (ql2xdontresethba == 1)
+ 			qla8044_set_idc_dontreset(vha);
+ 	}
+-- 
+2.36.1
 
-I would update this patch according to your suggestions.
