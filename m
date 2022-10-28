@@ -2,66 +2,93 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF5B0C38A02
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Oct 2022 13:41:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BEA47FA3741
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Oct 2022 13:50:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231156AbiJ1Nld (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Oct 2022 09:41:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44582 "EHLO
+        id S229665AbiJ1Nut (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Oct 2022 09:50:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46086 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231197AbiJ1NlN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Oct 2022 09:41:13 -0400
-Received: from bg4.exmail.qq.com (bg4.exmail.qq.com [43.155.67.158])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D84E1D0DE;
-        Fri, 28 Oct 2022 06:39:43 -0700 (PDT)
-X-QQ-mid: bizesmtp85t1666964372tfffxa84
-Received: from localhost.localdomain ( [182.148.13.81])
-        by bizesmtp.qq.com (ESMTP) with 
-        id ; Fri, 28 Oct 2022 21:39:31 +0800 (CST)
-X-QQ-SSF: 01000000000000F0J000000A0000000
-X-QQ-FEAT: QdNbrVbAPlsajaQLQNBIO0e7EY+lrDavGOStFJrSmuWqoHFnq0+3ohuPz56XK
-        utdFpdxxeHaXjVQOZxuRJvtMwUXoDn1EQGat5/55zWbi/1z92fAeCVVX7KzzvtAGVT87vt8
-        lSbl/0f6H3u1KJ6zPbQ9CIMbXackQb7Lcx3Ju5f7RKqiPb6wx2aQlhYMW15XEbeg91uy0Ir
-        vaSAjJfXN9OaJWqAmaMwQY5MbErE1f1EfOKKetwEYXpe1Z78WEyW5UOUXx+QjeHAD6GyQsM
-        UCd4nHAtxKvnzH40JM4yWwZxvW1HUTKTRXJ5+d2b5clc6Xj96IQE2YqPmEzzHzLS8UZW9z5
-        nsm9Vb+1k2iU21SnEJaasqAeZFaafc012WxQSW18ahWKkoG1fMmiuUzRjxlHcYbWJomaQRu
-X-QQ-GoodBg: 0
-From:   Jilin Yuan <yuanjilin@cdjrlc.com>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jilin Yuan <yuanjilin@cdjrlc.com>
-Subject: [PATCH] scsi: mpt3sas: fix repeated words in comments
-Date:   Fri, 28 Oct 2022 21:39:25 +0800
-Message-Id: <20221028133925.62011-1-yuanjilin@cdjrlc.com>
-X-Mailer: git-send-email 2.36.1
+        with ESMTP id S229927AbiJ1NuU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Oct 2022 09:50:20 -0400
+Received: from mail-pg1-x52d.google.com (mail-pg1-x52d.google.com [IPv6:2607:f8b0:4864:20::52d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A2153EA46;
+        Fri, 28 Oct 2022 06:48:57 -0700 (PDT)
+Received: by mail-pg1-x52d.google.com with SMTP id h2so4890076pgp.4;
+        Fri, 28 Oct 2022 06:48:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=wE36S4Q5QWhpFdF46oNzWKHxmiuCfLnpzqCU+eFD2+c=;
+        b=cG4Pku9rZ0VITcSQVmtP7BMBPYsHVd6SmHjm3wGArrpOIxcqYGgw6eG5tPmqJncahT
+         3tGUiHNeRrmqc3kkMULrXFwFVoLLr5sMimq5SOnfFWY8nb82uRynQE0NtjHRqW1sAmFW
+         nM7pwNFyM/Hoiw7FMr8vKM2wTBRoHb9vz/cvDRpSF89H6h9z0bwi249J5Cpb60wRLkcn
+         F2E5lNpaLs0AtN+49DEjknt7U/baVHM/NGwoVn5gUEkU7+wYcBAMZZx9ATPS1hINIEd2
+         oGb+1SImBElSIllLMNm3Q1UBc3RQv181o+8OfmQkAxC8xqTBoQJ0pAjsUfl+Knn7L4cB
+         GRSQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=wE36S4Q5QWhpFdF46oNzWKHxmiuCfLnpzqCU+eFD2+c=;
+        b=q601H8A4aNXca1vUUV8aYd3b630qbdOV2OmlX1kjfdhwCXTGZVzQulEy+JQ+to2MCg
+         iLxLyCEK7DgRDuf2V6hYtB+u5D0X1ySuvw52bzYd2q9ZLL13Jy8Vn9u9WU+HIx35V2Z5
+         F7sQTT++zNzdpH0cDZkYh3SZiCMIuEpEczXIYYdHmGvqcostZneLJtkof7QPV7J58KvO
+         290yk87sNLQ6PzykwrMe0Owl/e3Ljl7QUaYl+nLpRyKbmF9kN8kjax9xNZPpkQNls+RH
+         /cUScGmvK6IgDjHgooFLppJtAcuMxv8v0h5rFwQZpBO/u+5bAO89sV/dSBExDE9/aX+h
+         imug==
+X-Gm-Message-State: ACrzQf2pJciQLZHq5REMVA4G2CZzBaT4nDJ/xuXe6eyx/vjWFu12hsE0
+        H+QDJWLjHWryx2ghZXeqXrc=
+X-Google-Smtp-Source: AMsMyM7Ocqtk9aKZ7TyJ4UhBbCZ4/O7u2PI6jmlN6yYJC+D8ujXagdwRZF10yINmvJfWzQPXIWYr0g==
+X-Received: by 2002:a05:6a00:1acd:b0:56b:8181:d78d with SMTP id f13-20020a056a001acd00b0056b8181d78dmr33676499pfv.50.1666964936887;
+        Fri, 28 Oct 2022 06:48:56 -0700 (PDT)
+Received: from [192.168.43.80] (subs03-180-214-233-72.three.co.id. [180.214.233.72])
+        by smtp.gmail.com with ESMTPSA id m5-20020a170902bb8500b00186a8beec78sm3096216pls.52.2022.10.28.06.48.52
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 28 Oct 2022 06:48:56 -0700 (PDT)
+Message-ID: <ca4ed45b-8183-07e0-1ebc-796241b27e18@gmail.com>
+Date:   Fri, 28 Oct 2022 20:48:51 +0700
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.0
+Subject: Re: [PATCH 10/15] scsi: acorn: remove QUEUE_MAGIC_{FREE,USED}
+Content-Language: en-US
+To:     =?UTF-8?B?0L3QsNCx?= <nabijaczleweli@nabijaczleweli.xyz>
+Cc:     Jonathan Corbet <corbet@lwn.net>,
+        Federico Vaga <federico.vaga@vaga.pv.it>,
+        Alex Shi <alexs@kernel.org>,
+        Yanteng Si <siyanteng@loongson.cn>,
+        Hu Haowen <src.res@email.cn>,
+        Russell King <linux@armlinux.org.uk>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jiri Slaby <jirislaby@kernel.org>, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        linux-doc-tw-discuss@lists.sourceforge.net,
+        linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org
+References: <9a453437b5c3b4b1887c1bd84455b0cc3d1c40b2.1666822928.git.nabijaczleweli@nabijaczleweli.xyz>
+ <f1330d4027e3d7e85d2a5cd7c5f43fed866b9ef9.1666822928.git.nabijaczleweli@nabijaczleweli.xyz>
+From:   Bagas Sanjaya <bagasdotme@gmail.com>
+In-Reply-To: <f1330d4027e3d7e85d2a5cd7c5f43fed866b9ef9.1666822928.git.nabijaczleweli@nabijaczleweli.xyz>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-QQ-SENDSIZE: 520
-Feedback-ID: bizesmtp:cdjrlc.com:qybglogicsvr:qybglogicsvr4
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Delete the redundant word 'be'.
+On 10/27/22 05:43, наб wrote:
+> We have largely moved away from this approach,
+> and we have better debugging instrumentation nowadays: kill it
+> 
 
-Signed-off-by: Jilin Yuan <yuanjilin@cdjrlc.com>
----
- drivers/scsi/mpt3sas/mpt3sas_ctl.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Same reply as [1].
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index 0d8b1e942ded..a44a44690f19 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -313,7 +313,7 @@ mpt3sas_ctl_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
-  * @event: firmware event
-  *
-  * The bitmask in ioc->event_type[] indicates which events should be
-- * be saved in the driver event_log.  This bitmask is set by application.
-+ * saved in the driver event_log.  This bitmask is set by application.
-  *
-  * Return: 1 when event should be captured, or zero means no match.
-  */
+[1]: https://lore.kernel.org/linux-doc/80c998ec-435f-158c-9b45-4e6844f7861b@gmail.com/
+
 -- 
-2.36.1
+An old man doll... just what I always wanted! - Clara
 
