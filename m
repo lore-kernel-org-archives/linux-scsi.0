@@ -2,93 +2,104 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BEA47FA3741
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Oct 2022 13:50:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BF4CC38A02
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Oct 2022 14:00:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229665AbiJ1Nut (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Oct 2022 09:50:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46086 "EHLO
+        id S230350AbiJ1OAl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Oct 2022 10:00:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39610 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229927AbiJ1NuU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Oct 2022 09:50:20 -0400
-Received: from mail-pg1-x52d.google.com (mail-pg1-x52d.google.com [IPv6:2607:f8b0:4864:20::52d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A2153EA46;
-        Fri, 28 Oct 2022 06:48:57 -0700 (PDT)
-Received: by mail-pg1-x52d.google.com with SMTP id h2so4890076pgp.4;
-        Fri, 28 Oct 2022 06:48:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=wE36S4Q5QWhpFdF46oNzWKHxmiuCfLnpzqCU+eFD2+c=;
-        b=cG4Pku9rZ0VITcSQVmtP7BMBPYsHVd6SmHjm3wGArrpOIxcqYGgw6eG5tPmqJncahT
-         3tGUiHNeRrmqc3kkMULrXFwFVoLLr5sMimq5SOnfFWY8nb82uRynQE0NtjHRqW1sAmFW
-         nM7pwNFyM/Hoiw7FMr8vKM2wTBRoHb9vz/cvDRpSF89H6h9z0bwi249J5Cpb60wRLkcn
-         F2E5lNpaLs0AtN+49DEjknt7U/baVHM/NGwoVn5gUEkU7+wYcBAMZZx9ATPS1hINIEd2
-         oGb+1SImBElSIllLMNm3Q1UBc3RQv181o+8OfmQkAxC8xqTBoQJ0pAjsUfl+Knn7L4cB
-         GRSQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=wE36S4Q5QWhpFdF46oNzWKHxmiuCfLnpzqCU+eFD2+c=;
-        b=q601H8A4aNXca1vUUV8aYd3b630qbdOV2OmlX1kjfdhwCXTGZVzQulEy+JQ+to2MCg
-         iLxLyCEK7DgRDuf2V6hYtB+u5D0X1ySuvw52bzYd2q9ZLL13Jy8Vn9u9WU+HIx35V2Z5
-         F7sQTT++zNzdpH0cDZkYh3SZiCMIuEpEczXIYYdHmGvqcostZneLJtkof7QPV7J58KvO
-         290yk87sNLQ6PzykwrMe0Owl/e3Ljl7QUaYl+nLpRyKbmF9kN8kjax9xNZPpkQNls+RH
-         /cUScGmvK6IgDjHgooFLppJtAcuMxv8v0h5rFwQZpBO/u+5bAO89sV/dSBExDE9/aX+h
-         imug==
-X-Gm-Message-State: ACrzQf2pJciQLZHq5REMVA4G2CZzBaT4nDJ/xuXe6eyx/vjWFu12hsE0
-        H+QDJWLjHWryx2ghZXeqXrc=
-X-Google-Smtp-Source: AMsMyM7Ocqtk9aKZ7TyJ4UhBbCZ4/O7u2PI6jmlN6yYJC+D8ujXagdwRZF10yINmvJfWzQPXIWYr0g==
-X-Received: by 2002:a05:6a00:1acd:b0:56b:8181:d78d with SMTP id f13-20020a056a001acd00b0056b8181d78dmr33676499pfv.50.1666964936887;
-        Fri, 28 Oct 2022 06:48:56 -0700 (PDT)
-Received: from [192.168.43.80] (subs03-180-214-233-72.three.co.id. [180.214.233.72])
-        by smtp.gmail.com with ESMTPSA id m5-20020a170902bb8500b00186a8beec78sm3096216pls.52.2022.10.28.06.48.52
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 28 Oct 2022 06:48:56 -0700 (PDT)
-Message-ID: <ca4ed45b-8183-07e0-1ebc-796241b27e18@gmail.com>
-Date:   Fri, 28 Oct 2022 20:48:51 +0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.0
-Subject: Re: [PATCH 10/15] scsi: acorn: remove QUEUE_MAGIC_{FREE,USED}
-Content-Language: en-US
-To:     =?UTF-8?B?0L3QsNCx?= <nabijaczleweli@nabijaczleweli.xyz>
-Cc:     Jonathan Corbet <corbet@lwn.net>,
-        Federico Vaga <federico.vaga@vaga.pv.it>,
-        Alex Shi <alexs@kernel.org>,
-        Yanteng Si <siyanteng@loongson.cn>,
-        Hu Haowen <src.res@email.cn>,
-        Russell King <linux@armlinux.org.uk>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        with ESMTP id S230334AbiJ1OAk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Oct 2022 10:00:40 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6359FB7F42;
+        Fri, 28 Oct 2022 07:00:39 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 000BA6289B;
+        Fri, 28 Oct 2022 14:00:38 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3EF4FC433C1;
+        Fri, 28 Oct 2022 14:00:36 +0000 (UTC)
+Date:   Fri, 28 Oct 2022 10:00:52 -0400
+From:   Steven Rostedt <rostedt@goodmis.org>
+To:     Guenter Roeck <linux@roeck-us.net>, linux-scsi@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Stephen Boyd <sboyd@kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Jiri Slaby <jirislaby@kernel.org>, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        linux-doc-tw-discuss@lists.sourceforge.net,
-        linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org
-References: <9a453437b5c3b4b1887c1bd84455b0cc3d1c40b2.1666822928.git.nabijaczleweli@nabijaczleweli.xyz>
- <f1330d4027e3d7e85d2a5cd7c5f43fed866b9ef9.1666822928.git.nabijaczleweli@nabijaczleweli.xyz>
-From:   Bagas Sanjaya <bagasdotme@gmail.com>
-In-Reply-To: <f1330d4027e3d7e85d2a5cd7c5f43fed866b9ef9.1666822928.git.nabijaczleweli@nabijaczleweli.xyz>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+        Felipe Balbi <balbi@kernel.org>,
+        Johan Hovold <johan@kernel.org>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Mathias Nyman <mathias.nyman@linux.intel.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Matthias Kaehlcke <mka@chromium.org>,
+        Michael Grzeschik <m.grzeschik@pengutronix.de>,
+        Bhuvanesh Surachari <Bhuvanesh_Surachari@mentor.com>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        linux-usb@vger.kernel.org, Lai Jiangshan <jiangshanlai@gmail.com>,
+        Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [RFC][PATCH v2 20/31] timers: usb: Use del_timer_shutdown()
+ before freeing timer
+Message-ID: <20221028100052.2e392127@gandalf.local.home>
+In-Reply-To: <20221028061422.139c54a7@gandalf.local.home>
+References: <20221027150525.753064657@goodmis.org>
+        <20221027150928.983388020@goodmis.org>
+        <4e61935b-b06b-1f2d-6c2b-79bdfd569cd6@roeck-us.net>
+        <20221028061422.139c54a7@gandalf.local.home>
+X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/27/22 05:43, наб wrote:
-> We have largely moved away from this approach,
-> and we have better debugging instrumentation nowadays: kill it
+On Fri, 28 Oct 2022 06:14:22 -0400
+Steven Rostedt <rostedt@goodmis.org> wrote:
+
+> On Thu, 27 Oct 2022 22:23:06 -0700
+> Guenter Roeck <linux@roeck-us.net> wrote:
+ > 
+> > A similar call to INIT_DELAYED_WORK() around line 1085 needs the same change.
+> > 
+> > It would be great if that can somehow be hidden in INIT_DELAYED_WORK().  
 > 
+> I agree, but the delayed work is such a special case, I'm struggling to
+> find something that works sensibly. :-/
+>
 
-Same reply as [1].
+OK, I diagnosed the issue here. The problem is that delayed work also has no
+"shutdown" method when it's done. Which means there's no generic way to
+call the work->timer shutdown method. So we have two options to handle
+delayed work timers:
 
-[1]: https://lore.kernel.org/linux-doc/80c998ec-435f-158c-9b45-4e6844f7861b@gmail.com/
+  1) Add special initialization for delayed work so that it can just go back
+     to the old checking (activating on arming, deactivating by any
+     del_timer*).
 
--- 
-An old man doll... just what I always wanted! - Clara
+  2) Implement a shutdown state for the work queues as well. There could
+     definitely be the same types of bugs as with timers, where a delayed
+     work could be pending on something that's been freed. That's probably
+     why there's a DEBUG_OBJECTS_WORK too.
 
+Ideally, I would like to have #2, but realistically, I'm going for #1 for
+now. We could always add the work queue shutdown state later if we want.
+
+The problem with timers with respect to delayed work queues, is that there's
+no place to add the "shutdown" before its no longer in use. Worse yet,
+there's code that caches descriptors that have delayed work instead of
+freeing them. (See block/blk-mq.c and drivers/scsi/scsi_lib.c with the queuelist).
+Where it just calls del_timer(), and then sends it back to the free store
+for reuse later. Perhaps we should add DEBUG_OBJECTS checking to these too?
+
+Anyway, I'll make it where the INIT_DELAYED_WORK will call
+__timer_init_work() that will set the debug state in the timer to
+TIMER_DEBUG_WORK, were it will activate and deactivate the debug object on
+add_timer() and del_timer() and hope that it's not one of the bugs we are
+hitting :-/
+
+-- Steve
