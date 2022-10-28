@@ -2,85 +2,69 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A198BFA3741
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Oct 2022 22:09:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FD4CECAAA1
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Oct 2022 22:37:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229777AbiJ1WJN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Oct 2022 18:09:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36460 "EHLO
+        id S229718AbiJ1Wh5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Oct 2022 18:37:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32904 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229571AbiJ1WIm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Oct 2022 18:08:42 -0400
-Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7628C24CCA6;
-        Fri, 28 Oct 2022 15:08:41 -0700 (PDT)
-Received: by mail-pf1-f174.google.com with SMTP id y13so5888406pfp.7;
-        Fri, 28 Oct 2022 15:08:41 -0700 (PDT)
+        with ESMTP id S229489AbiJ1Wh4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Oct 2022 18:37:56 -0400
+Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 948572475E6;
+        Fri, 28 Oct 2022 15:37:55 -0700 (PDT)
+Received: by mail-pj1-f53.google.com with SMTP id o7so2622088pjj.1;
+        Fri, 28 Oct 2022 15:37:55 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+        h=content-transfer-encoding:in-reply-to:from:references:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=vIdR8ig1omdEV7fd5WEXjnAuRKZfGz+B13uwi7OkHMs=;
-        b=A0J5WwcCwcwa5eVJumbaM9VjSbYuSB/W4rIFi8Zzadc3fyAHLJAumuRYncR2ZQxdfo
-         yupUKeeeCIKwFTMb++Oz0/phSXgO1OalS8vkOrN7uXu/snrnAEDtOGUOaFbi3+TdmpK8
-         +e4J5eUgN8/s0ugXmu7XrENsf8PnlCJjlUdKwlFSChaj25QNXf2AoYUxNRaILebjgtBk
-         cYO++/5yn13iY2L+EiOcOOl7ffHPzfZCCgQS9KIzd2AbXvfNu5vIXbAyhgucekutfahL
-         ZzUjx96yddpPdlcskErQPpWo6Zwg+D6a886gutOslqpchgkHaQuxz3MlUkvt2KxKqc3h
-         Kqug==
-X-Gm-Message-State: ACrzQf1yhO2qDAGTsRwbyUogW8latBdrhQKFImFT6QDYgIQkP35xr7bq
-        6CEuBpvaIlXHL8WQlmZb748=
-X-Google-Smtp-Source: AMsMyM7CGn68icfXshr3ltUjfrQSZfJ++ezHubkJVXBc3vBo7Ik5LqcSYDpnvn8qLoa4TtprJP6d1g==
-X-Received: by 2002:a05:6a00:1943:b0:563:8173:b46a with SMTP id s3-20020a056a00194300b005638173b46amr1569645pfk.34.1666994920926;
-        Fri, 28 Oct 2022 15:08:40 -0700 (PDT)
+        bh=lG8zamfYpBNuJEJ6N8B81NRx8AkrlU5b5N4pnBOl74A=;
+        b=6mPzvGRZPu9/BS2nRcYf35JwMklY6DSrvP03i2pU/QAdYLl6ja4rLrx+v+zf1W+m4c
+         6MXPS2msteMTB4xidvGiz3sOegcdfIsI/TfJ+t/35YnRJ7SdI/dEFYJcWi88REVfRHS3
+         kOcMKHKbVX7MumYcW4tiJl5ngT+HoOYh8ZuKxQduTI/+yE1xYPhPkPULXShfq4MzFKLS
+         vnsY3xW3FGBk3SjoAc5afLM6akx3j7hs3QvOpdCbks1hfYe/vc37AS+744UcjPwC6PHM
+         FDkrWpsbAs29U0oM9Fuz0Ttmtwbcy6Kz72j3l+zqeiS5otpPOQpfIgW6G3sS64XwrAPm
+         I48A==
+X-Gm-Message-State: ACrzQf3w6J2mnjqF+zyt8LqHLBB87LFOarNpaGqdd9a4vIKYeRN3gsLT
+        kzmghpMmO3Fd5Nmsn8Fsi1g=
+X-Google-Smtp-Source: AMsMyM5/EIfkQ8bhIr+Fgc0GMELe9gnyG6MINjp5bAvQY4GXxo61JvyNXF8SLVTDfE9kybGjloJ3nA==
+X-Received: by 2002:a17:902:9b82:b0:183:fffb:1bfe with SMTP id y2-20020a1709029b8200b00183fffb1bfemr1271832plp.173.1666996675010;
+        Fri, 28 Oct 2022 15:37:55 -0700 (PDT)
 Received: from [192.168.3.219] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id bi6-20020a170902bf0600b0017f36638010sm3464312plb.276.2022.10.28.15.08.38
+        by smtp.gmail.com with ESMTPSA id q6-20020aa79606000000b0056bc5ad4862sm3321945pfg.28.2022.10.28.15.37.53
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 28 Oct 2022 15:08:40 -0700 (PDT)
-Message-ID: <c03ac1f5-e4a4-c26a-c1f5-b4e78cae3472@acm.org>
-Date:   Fri, 28 Oct 2022 15:08:38 -0700
+        Fri, 28 Oct 2022 15:37:54 -0700 (PDT)
+Message-ID: <5e16052f-7cba-48e1-232c-4dd294ebd960@acm.org>
+Date:   Fri, 28 Oct 2022 15:37:52 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.3.3
-Subject: Re: [PATCH v3 17/17] ufs: qcom-host: Enable multi circular queue
- capability
+Subject: Re: [PATCH] scsi: ufs: core: Refactor ufshcd_hba_enable()
 Content-Language: en-US
-To:     Asutosh Das <quic_asutoshd@quicinc.com>, quic_cang@quicinc.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Cc:     quic_nguyenb@quicinc.com, quic_xiaosenh@quicinc.com,
-        stanley.chu@mediatek.com, eddie.huang@mediatek.com,
-        daejun7.park@samsung.com, avri.altman@wdc.com, mani@kernel.org,
-        beanhuo@micron.com, quic_richardp@quicinc.com,
-        linux-arm-msm@vger.kernel.org, Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <cover.1666288432.git.quic_asutoshd@quicinc.com>
- <4d21c867708a9d37e53293510d81013088d01c39.1666288432.git.quic_asutoshd@quicinc.com>
+To:     keosung.park@samsung.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <CGME20221028073553epcms2p6dc4f8bdbebdc8f96f43fc4197b3edd0c@epcms2p6>
+ <20221028073553epcms2p6dc4f8bdbebdc8f96f43fc4197b3edd0c@epcms2p6>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <4d21c867708a9d37e53293510d81013088d01c39.1666288432.git.quic_asutoshd@quicinc.com>
+In-Reply-To: <20221028073553epcms2p6dc4f8bdbebdc8f96f43fc4197b3edd0c@epcms2p6>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/20/22 11:03, Asutosh Das wrote:
-> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> index 36c40210..b740299 100644
-> --- a/drivers/ufs/host/ufs-qcom.c
-> +++ b/drivers/ufs/host/ufs-qcom.c
-> @@ -853,6 +853,7 @@ static void ufs_qcom_set_caps(struct ufs_hba *hba)
->   	hba->caps |= UFSHCD_CAP_CRYPTO;
->   	hba->caps |= UFSHCD_CAP_AGGR_POWER_COLLAPSE;
->   	hba->caps |= UFSHCD_CAP_RPM_AUTOSUSPEND;
-> +	hba->caps |= UFSHCD_CAP_MCQ_EN;
+On 10/28/22 00:35, Keoseong Park wrote:
+> Use "if error return" style in ufshcd_hba_enable().
+> No functional change.
 
-Shouldn't we have a flag that disables MCQ rather than a flag that 
-enables MCQ? Otherwise the above line will be duplicated in every single 
-host controller driver that supports MCQ.
-
-Thanks,
-
-Bart.
-
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
