@@ -2,77 +2,108 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B39FC38A02
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Oct 2022 16:38:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22360FA3742
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Oct 2022 16:51:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229456AbiJ1Qio (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Oct 2022 12:38:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45722 "EHLO
+        id S230055AbiJ1Qvm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Oct 2022 12:51:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48074 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229588AbiJ1Qin (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Oct 2022 12:38:43 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 473EE1E0994;
-        Fri, 28 Oct 2022 09:38:42 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 02694B82B82;
-        Fri, 28 Oct 2022 16:38:41 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3087C433D6;
-        Fri, 28 Oct 2022 16:38:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666975119;
-        bh=HXelviQ+MhpOhcX5RBLW3YOkJdCOHX0A2A4aYPoP8MY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Dbs2sNTixTdBY62ULqMxeRkkpymOcnd/LbZG3/XDhQF3HY55RukqG5APWzkmspOmt
-         3ZOyoo79HUEJkjwxXVRtXXVhf3rqYMRfVy+oSlvBsxCrFpuVNBM3vuDCfrid0YwHpG
-         Nyqm1GD3g0gmH7OGgGueG4EXYKk2ZkyfDklJli3DH8orwxFZui+CL/ZCq1Lug0TK/Y
-         uRUEyxPyZ1SMBfTyNSpcG428UBaIMq551VTv276oO4n5eB2nwwVP85ozJrfxtdTT3m
-         /YPO0Uei8MPnswq/ljK9+FRvQ3gxk9j4+F+sBB5+qBFHtcqqc18ZJic9QyxJqz4lnE
-         IhNegMQKpiXeA==
-Date:   Fri, 28 Oct 2022 10:38:36 -0600
-From:   Keith Busch <kbusch@kernel.org>
-To:     Mike Christie <michael.christie@oracle.com>
-Cc:     bvanassche@acm.org, hch@lst.de, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com,
-        linux-block@vger.kernel.org, dm-devel@redhat.com,
-        snitzer@kernel.org, axboe@kernel.dk,
-        linux-nvme@lists.infradead.org, chaitanyak@nvidia.com,
-        target-devel@vger.kernel.org
-Subject: Re: [PATCH v3 08/19] nvme: Move pr code to it's own file
-Message-ID: <Y1wFjHzza1QYTzdG@kbusch-mbp.dhcp.thefacebook.com>
-References: <20221026231945.6609-1-michael.christie@oracle.com>
- <20221026231945.6609-9-michael.christie@oracle.com>
- <Y1q6so/3Hx9GZmTz@kbusch-mbp.dhcp.thefacebook.com>
- <370e66bd-81d0-5451-850e-50a4172ed64f@oracle.com>
+        with ESMTP id S229964AbiJ1Qvb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Oct 2022 12:51:31 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00378190E54;
+        Fri, 28 Oct 2022 09:51:29 -0700 (PDT)
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 29SBrwPl002046;
+        Fri, 28 Oct 2022 16:51:18 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=date : from : to :
+ cc : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=qcppdkim1; bh=MWks2PIv5z1t6U2gIbqK1G/0YBGynsz7BSXDq//qxQg=;
+ b=XFnK4t3ypPDG/xQSn67H+7Orj3ovpvkYik0HnmWS/bZ1TmOJNEWw2M67C1dbzA3udlFb
+ 9WXRnMsR9+Ffs5xL1tZIzTewoJ6vB3dmw4JkarXSVklzTInxxY8w34I30gtM1cPNwNEO
+ E9M3bzYXQTVfzG1F60yS3jaRffYtDMmpwHXLkXtzhq8YaMpNc2H80F975KeuatybxljM
+ S8Q0bsqU1ikcUVFOb+COVe7laECezZLpfI413n0sIJ/sjunXaHwDD1Ycj9a2sjgsH+T0
+ dbbr5Bx/Zw4lX3xO8APH83YJ9+Y98vQU2BF0F/hX6P7Si5VySrO5JO34Gz7JfaMOS242 zQ== 
+Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3kg59ajgys-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 28 Oct 2022 16:51:17 +0000
+Received: from nasanex01a.na.qualcomm.com (corens_vlan604_snip.qualcomm.com [10.53.140.1])
+        by NASANPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 29SGpGWs023274
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 28 Oct 2022 16:51:17 GMT
+Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
+ nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.29; Fri, 28 Oct 2022 09:51:16 -0700
+Date:   Fri, 28 Oct 2022 09:51:16 -0700
+From:   Asutosh Das <quic_asutoshd@quicinc.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+CC:     <quic_cang@quicinc.com>, <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, <quic_nguyenb@quicinc.com>,
+        <quic_xiaosenh@quicinc.com>, <stanley.chu@mediatek.com>,
+        <eddie.huang@mediatek.com>, <daejun7.park@samsung.com>,
+        <avri.altman@wdc.com>, <mani@kernel.org>, <beanhuo@micron.com>,
+        <quic_richardp@quicinc.com>, <linux-arm-msm@vger.kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "open list" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3 03/17] ufs: core: Introduce Multi-circular queue
+ capability
+Message-ID: <20221028165116.GC9077@asutoshd-linux1.qualcomm.com>
+References: <cover.1666288432.git.quic_asutoshd@quicinc.com>
+ <1718196085461c37138c194c49146efa5c5503dc.1666288432.git.quic_asutoshd@quicinc.com>
+ <14a5925b-df2b-3f84-ed99-b4157c0a1b21@acm.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Content-Disposition: inline
-In-Reply-To: <370e66bd-81d0-5451-850e-50a4172ed64f@oracle.com>
+In-Reply-To: <14a5925b-df2b-3f84-ed99-b4157c0a1b21@acm.org>
+User-Agent: Mutt/1.5.24 (2015-08-30)
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: SpBA5FrS_tlYh4PC270buJIINgKO4k3Y
+X-Proofpoint-ORIG-GUID: SpBA5FrS_tlYh4PC270buJIINgKO4k3Y
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
+ definitions=2022-10-28_07,2022-10-27_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 malwarescore=0
+ clxscore=1015 mlxscore=0 suspectscore=0 mlxlogscore=999 bulkscore=0
+ priorityscore=1501 spamscore=0 impostorscore=0 phishscore=0
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2210170000 definitions=main-2210280105
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Oct 28, 2022 at 11:06:29AM -0500, Mike Christie wrote:
-> On 10/27/22 12:06 PM, Keith Busch wrote:
-> > On Wed, Oct 26, 2022 at 06:19:34PM -0500, Mike Christie wrote:
-> >> This patch moves the pr code to it's own file because I'm going to be
-> >> adding more functions and core.c is getting bigger.
-> >>
-> >> Signed-off-by: Mike Christie <michael.christie@oracle.com>
-> > 
-> > Good idea.
-> 
-> Credit goes to Chaitanya.
-> 
-> One question for you. I wasn't sure about the copyright. I saw
-> you added the pr_ops code in 2015 when you were at Intel. Do you
-> want me to add:
-> 
-> Copyright (c) 2015, Intel Corporation.
-> 
-> to the new pr.c file?
+On Thu, Oct 27 2022 at 14:10 -0700, Bart Van Assche wrote:
+>On 10/20/22 11:03, Asutosh Das wrote:
+>>+
+>>+	/*
+>>+	 * This capability allows the host controller driver to turn on/off
+>>+	 * MCQ mode. MCQ mode may be used to increase performance.
+>>+	 */
+>>+	UFSHCD_CAP_MCQ_EN				= 1 << 12,
+>>  };
+>
+>I prefer that the above flag would only be introduced after a need 
+>appears to disable MCQ, e.g. discovery of a host controller that is 
+>too broken to enable MCQ.
+>
+I think this flag is useful during chip bring-ups &/or debugs.
+Considering that this is a fairly new hardware block even though the HC supports
+MCQ there could be times to keep it disabled.
 
-I think I was just the last person to touch the code, but it was mostly
-developed elsewhere. So "no", don't bother propagating the (c).
+>Since UFSHCI 4.0 controllers must support UFSHCI 3.0, shouldn't users 
+>have a way to disable MCQ, e.g. via a kernel module parameter?
+>
+I can add a kernel module parameter to disable MCQ.
+I think adding it to host driver (e.g. ufs-qcom) would be good.
+Please let me know if you have a better place in mind.
+
+>Thanks,
+>
+>Bart.
