@@ -2,99 +2,160 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CB98FA3743
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Oct 2022 08:33:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05D55ECAAA1
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Oct 2022 09:02:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229707AbiJ1IdX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Oct 2022 04:33:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60332 "EHLO
+        id S229940AbiJ1JCz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Oct 2022 05:02:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59134 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229489AbiJ1IdX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Oct 2022 04:33:23 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 023981C491B;
-        Fri, 28 Oct 2022 01:33:22 -0700 (PDT)
-Received: from fraeml711-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MzG3Z4cxzz6864S;
-        Fri, 28 Oct 2022 16:31:22 +0800 (CST)
-Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml711-chm.china.huawei.com (10.206.15.60) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Fri, 28 Oct 2022 10:33:19 +0200
-Received: from [10.48.144.136] (10.48.144.136) by
- lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Fri, 28 Oct 2022 09:33:18 +0100
-Message-ID: <b03b37a2-35dc-5218-7279-ae68678a47ff@huawei.com>
-Date:   Fri, 28 Oct 2022 09:33:19 +0100
+        with ESMTP id S229988AbiJ1JCv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Oct 2022 05:02:51 -0400
+Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B83841C5E3C
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Oct 2022 02:02:46 -0700 (PDT)
+Received: by mail-pl1-x635.google.com with SMTP id p3so4318667pld.10
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Oct 2022 02:02:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=mime-version:message-id:date:subject:cc:to:from:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=VKTd1i0TWjwB/TbusvoKamd5GMarSi1ddEe/axvJ9A0=;
+        b=EnLiN0xIx8BRXlQDG6Cq4mb8QsUXPxUrmvGY+oTkzlUdWK2Tr/p4sTrSomNsPcOzfM
+         JyZjOulxK8W9L8fB2DEUBeMV+VeLqRtqryRO20syTzCKFnjiW8PpPj+RnjX05TgM3JwI
+         P5DKZbD85b/OPp7bfMl3z8MJh0BkfSG92PoAE=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=mime-version:message-id:date:subject:cc:to:from:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=VKTd1i0TWjwB/TbusvoKamd5GMarSi1ddEe/axvJ9A0=;
+        b=PJqNW6h/12UaJ+Rdp3srsfEuURXw8wbmneqU/YBfaafdYEhYvbclR0/7bVhnF40Uih
+         dnMAGB6KRbwHniV5XNSSTXaHtBJGkFfWhSDaF8Tp5hae/acoMf9t0MjRZjceGV3N+eWR
+         dcrtZR0ETul9RJEplXLihVfvRK4oKlu8Ngzd76zE/haLRzeRLuGzxgueeB7ZBJ7YNT4b
+         lA7z7EsJDug7p2RaH+N78tad9rJ9Td2f2kmpYo9bwhSEW8QEh7vmISVZhL5QjnFNHKMr
+         8BL8bumf3ewCSYjuhN0sbYmSU4b8bulwRbYQZkT0Qqrgyu0nbJGT+rMm0ghFyHU787Gc
+         rQOw==
+X-Gm-Message-State: ACrzQf3m9UVEsJ22DoWfLFpxoH81qmKZ6CVeHrN2tpnhN6OH66rFs3bY
+        QbrPQhkM0nw85QGd4GYVJELW8/1oHPrOgom5duXsuOOjLvp9V13KnzJZBBEYMNWtg6O/DFUrUTR
+        rJRQBOOY79OzSs75HHRB+036eO72S3iYDHPy+I2cHFNHlWNj3wj1E0aTlcvVwtd+Bg50T2kGVpb
+        K97jQcu4V2
+X-Google-Smtp-Source: AMsMyM4wztpPhE/pojgKMsHunDyNoeCgQAfAxzmOSgTOfcj6UOnp21Rx+I5y8oyA3LJpUr9r3l4zXQ==
+X-Received: by 2002:a17:903:11c8:b0:179:de93:bd7e with SMTP id q8-20020a17090311c800b00179de93bd7emr54301702plh.95.1666947765769;
+        Fri, 28 Oct 2022 02:02:45 -0700 (PDT)
+Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id a207-20020a621ad8000000b0056bd737fdf3sm2414077pfa.123.2022.10.28.02.02.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 28 Oct 2022 02:02:44 -0700 (PDT)
+From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: [PATCH 0/1] mpt3sas: Remove usage of dma_get_required_mask api
+Date:   Fri, 28 Oct 2022 14:46:54 +0530
+Message-Id: <20221028091655.17741-1-sreekanth.reddy@broadcom.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH RFC v3 2/7] ata: libata-scsi: Add
- ata_internal_queuecommand()
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>, <hare@suse.de>,
-        <bvanassche@acm.org>, <hch@lst.de>, <ming.lei@redhat.com>,
-        <niklas.cassel@wdc.com>
-CC:     <axboe@kernel.dk>, <jinpu.wang@cloud.ionos.com>,
-        <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-ide@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linuxarm@huawei.com>, <john.garry2@mail.dcu.ie>
-References: <1666693976-181094-1-git-send-email-john.garry@huawei.com>
- <1666693976-181094-3-git-send-email-john.garry@huawei.com>
- <08fdb698-0df3-7bc8-e6af-7d13cc96acfa@opensource.wdc.com>
- <83d9dc82-ea37-4a3c-7e67-1c097f777767@huawei.com>
- <9a2f30cc-d0e9-b454-d7cd-1b0bd3cf0bb9@opensource.wdc.com>
- <0e60fab5-8a76-9b7e-08cf-fb791e01ae08@huawei.com>
- <71b56949-e4d7-fd94-c44a-867080b7a4fa@opensource.wdc.com>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <71b56949-e4d7-fd94-c44a-867080b7a4fa@opensource.wdc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.48.144.136]
-X-ClientProxiedBy: lhrpeml100005.china.huawei.com (7.191.160.25) To
- lhrpeml500003.china.huawei.com (7.191.162.67)
-X-CFilter-Loop: Reflected
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="00000000000078483505ec148538"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 28/10/2022 09:07, Damien Le Moal wrote:
->> Well, yeah. So if some error happens and EH kicks in, then full queue
->> depth of requests may be allocated. I have seen this for NCQ error. So
->> this is why I make in very first patch change allow us to allocate
->> reserved request from sdev request queue even when budget is fully
->> allocated.
->>
->> Please also note that for AHCI, I make reserved depth =1, while for SAS
->> controllers it is greater. This means that in theory we could alloc > 1x
->> reserved command for SATA disk, but I don't think it matters.
-> Yes, 1 is enough. However, is 1 reserved out of 32 total, meaning that the
-> user can only use 31 tags ? or is it 32+1 reserved ? which we can do since
-> when using the reserved request, we will not use a hw tag (all reserved
-> requests will be non-ncq).
-> 
-> The 32 + 1 scheme will work. 
+--00000000000078483505ec148538
+Content-Transfer-Encoding: 8bit
 
-Yes, 32 + 1 is what we want. I now think that there is a mistake in my 
-code in this series for ahci.
+Remove the usage of dma_get_required_mask() API.
+Directly set the DMA mask to 63/64 if the system
+is a 64bit machine.
 
-So I think we need for ahci:
+Sreekanth Reddy (1):
+  mpt3sas: Remove usage of dma_get_required_mask api
 
-can_queue = 33
-nr_reserved_cmds = 1
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-while I only have can_queue = 32
+-- 
+2.27.0
 
-I need to check that again for ahci driver and AHCI SHT...
 
-> But for CDL command completion handling, we
-> will need a NCQ command to do a read log, to avoid forcing a queue drain.
-> For that to reliably work, we'll need a 31+1+1 setup...
-> 
+--00000000000078483505ec148538
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
-So is your idea to permanently reserve 1 more command from 32 commands ? 
-Or re-use 1 from 32 (and still also have 1 separate internal command)?
-
-Thanks,
-John
+MIIQdgYJKoZIhvcNAQcCoIIQZzCCEGMCAQExDzANBglghkgBZQMEAgEFADALBgkqhkiG9w0BBwGg
+gg3NMIIFDTCCA/WgAwIBAgIQeEqpED+lv77edQixNJMdADANBgkqhkiG9w0BAQsFADBMMSAwHgYD
+VQQLExdHbG9iYWxTaWduIFJvb3QgQ0EgLSBSMzETMBEGA1UEChMKR2xvYmFsU2lnbjETMBEGA1UE
+AxMKR2xvYmFsU2lnbjAeFw0yMDA5MTYwMDAwMDBaFw0yODA5MTYwMDAwMDBaMFsxCzAJBgNVBAYT
+AkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBS
+MyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA
+vbCmXCcsbZ/a0fRIQMBxp4gJnnyeneFYpEtNydrZZ+GeKSMdHiDgXD1UnRSIudKo+moQ6YlCOu4t
+rVWO/EiXfYnK7zeop26ry1RpKtogB7/O115zultAz64ydQYLe+a1e/czkALg3sgTcOOcFZTXk38e
+aqsXsipoX1vsNurqPtnC27TWsA7pk4uKXscFjkeUE8JZu9BDKaswZygxBOPBQBwrA5+20Wxlk6k1
+e6EKaaNaNZUy30q3ArEf30ZDpXyfCtiXnupjSK8WU2cK4qsEtj09JS4+mhi0CTCrCnXAzum3tgcH
+cHRg0prcSzzEUDQWoFxyuqwiwhHu3sPQNmFOMwIDAQABo4IB2jCCAdYwDgYDVR0PAQH/BAQDAgGG
+MGAGA1UdJQRZMFcGCCsGAQUFBwMCBggrBgEFBQcDBAYKKwYBBAGCNxQCAgYKKwYBBAGCNwoDBAYJ
+KwYBBAGCNxUGBgorBgEEAYI3CgMMBggrBgEFBQcDBwYIKwYBBQUHAxEwEgYDVR0TAQH/BAgwBgEB
+/wIBADAdBgNVHQ4EFgQUljPR5lgXWzR1ioFWZNW+SN6hj88wHwYDVR0jBBgwFoAUj/BLf6guRSSu
+TVD6Y5qL3uLdG7wwegYIKwYBBQUHAQEEbjBsMC0GCCsGAQUFBzABhiFodHRwOi8vb2NzcC5nbG9i
+YWxzaWduLmNvbS9yb290cjMwOwYIKwYBBQUHMAKGL2h0dHA6Ly9zZWN1cmUuZ2xvYmFsc2lnbi5j
+b20vY2FjZXJ0L3Jvb3QtcjMuY3J0MDYGA1UdHwQvMC0wK6ApoCeGJWh0dHA6Ly9jcmwuZ2xvYmFs
+c2lnbi5jb20vcm9vdC1yMy5jcmwwWgYDVR0gBFMwUTALBgkrBgEEAaAyASgwQgYKKwYBBAGgMgEo
+CjA0MDIGCCsGAQUFBwIBFiZodHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAN
+BgkqhkiG9w0BAQsFAAOCAQEAdAXk/XCnDeAOd9nNEUvWPxblOQ/5o/q6OIeTYvoEvUUi2qHUOtbf
+jBGdTptFsXXe4RgjVF9b6DuizgYfy+cILmvi5hfk3Iq8MAZsgtW+A/otQsJvK2wRatLE61RbzkX8
+9/OXEZ1zT7t/q2RiJqzpvV8NChxIj+P7WTtepPm9AIj0Keue+gS2qvzAZAY34ZZeRHgA7g5O4TPJ
+/oTd+4rgiU++wLDlcZYd/slFkaT3xg4qWDepEMjT4T1qFOQIL+ijUArYS4owpPg9NISTKa1qqKWJ
+jFoyms0d0GwOniIIbBvhI2MJ7BSY9MYtWVT5jJO3tsVHwj4cp92CSFuGwunFMzCCA18wggJHoAMC
+AQICCwQAAAAAASFYUwiiMA0GCSqGSIb3DQEBCwUAMEwxIDAeBgNVBAsTF0dsb2JhbFNpZ24gUm9v
+dCBDQSAtIFIzMRMwEQYDVQQKEwpHbG9iYWxTaWduMRMwEQYDVQQDEwpHbG9iYWxTaWduMB4XDTA5
+MDMxODEwMDAwMFoXDTI5MDMxODEwMDAwMFowTDEgMB4GA1UECxMXR2xvYmFsU2lnbiBSb290IENB
+IC0gUjMxEzARBgNVBAoTCkdsb2JhbFNpZ24xEzARBgNVBAMTCkdsb2JhbFNpZ24wggEiMA0GCSqG
+SIb3DQEBAQUAA4IBDwAwggEKAoIBAQDMJXaQeQZ4Ihb1wIO2hMoonv0FdhHFrYhy/EYCQ8eyip0E
+XyTLLkvhYIJG4VKrDIFHcGzdZNHr9SyjD4I9DCuul9e2FIYQebs7E4B3jAjhSdJqYi8fXvqWaN+J
+J5U4nwbXPsnLJlkNc96wyOkmDoMVxu9bi9IEYMpJpij2aTv2y8gokeWdimFXN6x0FNx04Druci8u
+nPvQu7/1PQDhBjPogiuuU6Y6FnOM3UEOIDrAtKeh6bJPkC4yYOlXy7kEkmho5TgmYHWyn3f/kRTv
+riBJ/K1AFUjRAjFhGV64l++td7dkmnq/X8ET75ti+w1s4FRpFqkD2m7pg5NxdsZphYIXAgMBAAGj
+QjBAMA4GA1UdDwEB/wQEAwIBBjAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBSP8Et/qC5FJK5N
+UPpjmove4t0bvDANBgkqhkiG9w0BAQsFAAOCAQEAS0DbwFCq/sgM7/eWVEVJu5YACUGssxOGhigH
+M8pr5nS5ugAtrqQK0/Xx8Q+Kv3NnSoPHRHt44K9ubG8DKY4zOUXDjuS5V2yq/BKW7FPGLeQkbLmU
+Y/vcU2hnVj6DuM81IcPJaP7O2sJTqsyQiunwXUaMld16WCgaLx3ezQA3QY/tRG3XUyiXfvNnBB4V
+14qWtNPeTCekTBtzc3b0F5nCH3oO4y0IrQocLP88q1UOD5F+NuvDV0m+4S4tfGCLw0FREyOdzvcy
+a5QBqJnnLDMfOjsl0oZAzjsshnjJYS8Uuu7bVW/fhO4FCU29KNhyztNiUGUe65KXgzHZs7XKR1g/
+XzCCBVUwggQ9oAMCAQICDB+3K5yLGfrPX2JJDDANBgkqhkiG9w0BAQsFADBbMQswCQYDVQQGEwJC
+RTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTExMC8GA1UEAxMoR2xvYmFsU2lnbiBHQ0MgUjMg
+UGVyc29uYWxTaWduIDIgQ0EgMjAyMDAeFw0yMjA5MTAwOTE1MDRaFw0yNTA5MTAwOTE1MDRaMIGU
+MQswCQYDVQQGEwJJTjESMBAGA1UECBMJS2FybmF0YWthMRIwEAYDVQQHEwlCYW5nYWxvcmUxFjAU
+BgNVBAoTDUJyb2FkY29tIEluYy4xGDAWBgNVBAMTD1NyZWVrYW50aCBSZWRkeTErMCkGCSqGSIb3
+DQEJARYcc3JlZWthbnRoLnJlZGR5QGJyb2FkY29tLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEP
+ADCCAQoCggEBAKfHWuSS7HS/Z3X455BpzG79CoaBfWr2fZFr7yoghcJInIYjYh6jeJqy113fKAfd
+SWHp+u8iD9UZt55HyL7TncZAgnsQKf+iTn88Kk3bKyBEsRjXrtV5iYmY/RLAi/IcrVBRwcxUPK6s
+iSD066exA9r0siY1cvv+jXyp5WMu+9gkNgRLQSfjEn3rzP+jn/OehrDGQYwmtj2qy32rcN7UhFqI
+vZXeqKYupAd0/kWANIYKfeXvBSrhLTL/JLyu02jrKwUQmNeV/csW4n51mmbQyz5VRjLIaM9r93rl
+EKIoHplnybLWh6glNdzUbh+wpglCjssypREDVGZjlDD7NS2Q6FUCAwEAAaOCAd0wggHZMA4GA1Ud
+DwEB/wQEAwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9zZWN1cmUu
+Z2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNydDBBBggr
+BgEFBQcwAYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJj
+YTIwMjAwTQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3
+Lmdsb2JhbHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+oDygOoY4
+aHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcmww
+JwYDVR0RBCAwHoEcc3JlZWthbnRoLnJlZGR5QGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEF
+BQcDBDAfBgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQU90fCF++yKdqz
+eSa+l3ox+Xh3bUUwDQYJKoZIhvcNAQELBQADggEBAEdSkxxx3jOPvsTAmqeChWssN7WYUZOhNQu/
++6bxE3/kn9StH6miItK87eIRsO0FFVLDJBnhWz0EGzWEliC68mV8ecDApK5douyO1VfXN8awZZ33
+i/RQS2sGbz1vIfPu54rtnwXGoUiXRaSOz0pLy/JRCFyHOj+8GKauKkyrUWiD0j1xPTJ1p8/KOyKd
+hPIHLRxnZxqpa2GjCtl3IYjKK8WbWx0NXkszaVTVRIn8e++VyiiH/yFXVyOEQxkZRQZWzTjPE9o/
+R31F09e8yABfehc+e00bSP23FKNuA8dwS29RHLpjmd+m5EtbFGD4EUANHzCSTA89S/iWNoaWteab
+v6IxggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
+MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwftyuc
+ixn6z19iSQwwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEICM3Twaqbd/yp7Z05AD9
+jTNwrxWrWAB6QrQLbJ1ddWQ0MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMTAyODA5MDI0NlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBhnnJWwnlEW6voraaBGIPxEkbPB2FsuQ1UHHhW
+vhlGjNBx+vrEzcbdKU+uuAZlb5bGtvW3nR3UywlcTNwethoAf2i5s6Sks75qdh0o0AsmzlAns2ps
+AGRhYtmedOrlAF8zh7WcMVDjfdzEXBLZYQYwADSEoxu3RAu5tboH7LSgy18L3tYPIxbWzOPULDlm
+zqxRJHRAeHdDCVZT1pR1D35XfNysb3GNkWZCGV7v9/HIRgXNapn2WiWganH8XVVhv7wbnbAtR0Lb
+6AD6i00mjIS+LUi69gL0gm8suXBKqo+VmI/T5Eh4U0LjDSl03Kj/f+Q0mzrp74/z3JGu6SzqrxO4
+--00000000000078483505ec148538--
