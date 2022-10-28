@@ -2,137 +2,90 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D52AECAAA1
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Oct 2022 07:36:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F51DC38A02
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Oct 2022 08:01:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229750AbiJ1HgB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Oct 2022 03:36:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42286 "EHLO
+        id S229618AbiJ1IBc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Oct 2022 04:01:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33948 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229648AbiJ1HgA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Oct 2022 03:36:00 -0400
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECB10A2AAE
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Oct 2022 00:35:56 -0700 (PDT)
-Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20221028073554epoutp0253e243cb26781eb06ad27af0c4550f68~iK2viw5vZ1259512595epoutp02N
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Oct 2022 07:35:54 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20221028073554epoutp0253e243cb26781eb06ad27af0c4550f68~iK2viw5vZ1259512595epoutp02N
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1666942554;
-        bh=CWUfsC0Pi4NZOcVC8baMUqkw1IwSaT37tR2xo1u6jBM=;
-        h=Subject:Reply-To:From:To:Date:References:From;
-        b=ROu4yN+SrVmhgT+wfkPTrFaPkiAgrHEAOfuLzbYZOo8BpbeThnt39iFt8XCfWGDXR
-         CXnivc9mMIZ0IY96tPFWbAr3ARumdKAbd1yV4QyK13sMFUApnedd6auoXQZeTVql5Z
-         l/Py/Xz+RlUI8poVrEDWVy9ow+apKwjsryXpKcNs=
-Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
-        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
-        20221028073554epcas2p36b80a5b9458e40611ac2596e43b5e1b5~iK2vIsDKS2879428794epcas2p3E;
-        Fri, 28 Oct 2022 07:35:54 +0000 (GMT)
-Received: from epsmges2p2.samsung.com (unknown [182.195.36.98]) by
-        epsnrtp3.localdomain (Postfix) with ESMTP id 4MzDqY4lXLz4x9Px; Fri, 28 Oct
-        2022 07:35:53 +0000 (GMT)
-X-AuditID: b6c32a46-85fff70000012ff6-a5-635b86597485
-Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
-        epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        57.53.12278.9568B536; Fri, 28 Oct 2022 16:35:53 +0900 (KST)
-Mime-Version: 1.0
-Subject: [PATCH] scsi: ufs: core: Refactor ufshcd_hba_enable()
-Reply-To: keosung.park@samsung.com
-Sender: Keoseong Park <keosung.park@samsung.com>
-From:   Keoseong Park <keosung.park@samsung.com>
-To:     ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20221028073553epcms2p6dc4f8bdbebdc8f96f43fc4197b3edd0c@epcms2p6>
-Date:   Fri, 28 Oct 2022 16:35:53 +0900
-X-CMS-MailID: 20221028073553epcms2p6dc4f8bdbebdc8f96f43fc4197b3edd0c
+        with ESMTP id S229491AbiJ1IBb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Oct 2022 04:01:31 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13B5868CF9;
+        Fri, 28 Oct 2022 01:01:30 -0700 (PDT)
+Received: from fraeml737-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MzFJr5g2kz67Y4M;
+        Fri, 28 Oct 2022 15:57:48 +0800 (CST)
+Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
+ fraeml737-chm.china.huawei.com (10.206.15.218) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Fri, 28 Oct 2022 10:01:28 +0200
+Received: from [10.48.144.136] (10.48.144.136) by
+ lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Fri, 28 Oct 2022 09:01:27 +0100
+Message-ID: <0e60fab5-8a76-9b7e-08cf-fb791e01ae08@huawei.com>
+Date:   Fri, 28 Oct 2022 09:01:28 +0100
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH RFC v3 2/7] ata: libata-scsi: Add
+ ata_internal_queuecommand()
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>, <hare@suse.de>,
+        <bvanassche@acm.org>, <hch@lst.de>, <ming.lei@redhat.com>,
+        <niklas.cassel@wdc.com>
+CC:     <axboe@kernel.dk>, <jinpu.wang@cloud.ionos.com>,
+        <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linuxarm@huawei.com>, <john.garry2@mail.dcu.ie>
+References: <1666693976-181094-1-git-send-email-john.garry@huawei.com>
+ <1666693976-181094-3-git-send-email-john.garry@huawei.com>
+ <08fdb698-0df3-7bc8-e6af-7d13cc96acfa@opensource.wdc.com>
+ <83d9dc82-ea37-4a3c-7e67-1c097f777767@huawei.com>
+ <9a2f30cc-d0e9-b454-d7cd-1b0bd3cf0bb9@opensource.wdc.com>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <9a2f30cc-d0e9-b454-d7cd-1b0bd3cf0bb9@opensource.wdc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrDJsWRmVeSWpSXmKPExsWy7bCmqW5kW3Sywaq/KhYnn6xhs3gwbxub
-        xcufV9ksDj7sZLGY9uEns8XLQ5oWj24/Y7To7d/KZrHoxjYmi8u75rBZdF/fwWax/Pg/Jgce
-        j8tXvD0W73nJ5DFh0QFGj+/rO9g8Pj69xeLRt2UVo8fnTXIe7Qe6mQI4orJtMlITU1KLFFLz
-        kvNTMvPSbZW8g+Od403NDAx1DS0tzJUU8hJzU22VXHwCdN0yc4COVVIoS8wpBQoFJBYXK+nb
-        2RTll5akKmTkF5fYKqUWpOQUmBfoFSfmFpfmpevlpZZYGRoYGJkCFSZkZyy62MFYcIuzYkr/
-        U+YGxo/sXYycHBICJhJ75/eydDFycQgJ7GCUePplB1CCg4NXQFDi7w5hkBphATuJozub2EBs
-        IQElia6FW5kh4gYS66bvAbPZBPQkpvy+wwgyR0TgJ7PEpfez2SAW8ErMaH/KAmFLS2xfvpUR
-        wtaQ+LGslxnCFpW4ufotO4z9/th8qBoRidZ7Z6FqBCUe/NwNFZeUaD2zFWp+vsSTm/1Q82sk
-        Fmz/DBXXl7jWsREszivgK9H8ZQrYfBYBVYnlWz5B1btI3J7WBRZnFpCX2P52DjPI78wCmhLr
-        d+mDmBICyhJHbrHAfNKw8Tc7OptZgE+i4/BfuPiOeU+YIGw1iUcLtrBC2DISF+ecg/rEQ+La
-        hCtsExgVZyECehaSG2Yh3LCAkXkVo1hqQXFuemqxUYERPG6T83M3MYKTrZbbDsYpbz/oHWJk
-        4mA8xCjBwawkwnv2RniyEG9KYmVValF+fFFpTmrxIUZToO8nMkuJJucD031eSbyhiaWBiZmZ
-        obmRqYG5kjhv1wytZCGB9MSS1OzU1ILUIpg+Jg5OqQam/BlPA65OEpiSM/9x9UN9fia/kqDy
-        6R+6v1w5q/fQ3C7Iz2G97sHfT4Sed76/PFUg597Rf1lS1fmvQiS2FNpUzfQS3L51a1R+ZPnK
-        onRBk1jmDRzR13h/Oq/xMWwNvHbQc+LEXzLPci7tWSTEyXzIv95gun3JkrSp5ftPV6vFznw7
-        c681gy7j9atXKtqsfm/qEfnA+j4n8taXe1IXJ1qLORUuDBFZo6Bt0L5gibvUm257nYv5ETo7
-        O6W0N2mJcy26FODGdsb884LFmyv/T1/ZbXE987+IZQ/v3dUvX/M4xG7fM+ufw9rE3vVzPB+n
-        Xfi39/rKN99qw0++WsXb3poiNPfeiva7vCfPVhxS7/zYrMRSnJFoqMVcVJwIALOnOBU/BAAA
-DLP-Filter: Pass
+X-Originating-IP: [10.48.144.136]
+X-ClientProxiedBy: lhrpeml500004.china.huawei.com (7.191.163.9) To
+ lhrpeml500003.china.huawei.com (7.191.162.67)
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20221028073553epcms2p6dc4f8bdbebdc8f96f43fc4197b3edd0c
-References: <CGME20221028073553epcms2p6dc4f8bdbebdc8f96f43fc4197b3edd0c@epcms2p6>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use "if error return" style in ufshcd_hba_enable().
-No functional change.
+On 27/10/2022 23:25, Damien Le Moal wrote:
+>> So we have this overall flow:
+>>
+>> ata_exec_internal_sg():
+>>    -> alloc request
+>>    -> blk_execute_rq_nowait()
+>>        ... -> scsi_queue_rq()
+>> 		-> sht->reserved_queuecommd()
+>> 			-> ata_internal_queuecommand()
+>>
+>> And then we have ata_internal_queuecommand() -> ata_sas_queuecmd() ->
+>> ata_scsi_queue_internal() -> ata_qc_issue().
+>>
+>> Hope it makes sense.
+> OK. Got it.
+> However, ata_exec_internal_sg() being used only from EH context with the
+> queue quiesced, will blk_execute_rq_nowait() work ? Is there an exception
+> for internal reserved tags ?
+> 
 
-Cc: Bart Van Assche <bvanassche@acm.org>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>
-Signed-off-by: Keoseong Park <keosung.park@samsung.com>
----
- drivers/ufs/core/ufshcd.c | 18 +++++++++++-------
- 1 file changed, 11 insertions(+), 7 deletions(-)
+Well, yeah. So if some error happens and EH kicks in, then full queue 
+depth of requests may be allocated. I have seen this for NCQ error. So 
+this is why I make in very first patch change allow us to allocate 
+reserved request from sdev request queue even when budget is fully 
+allocated.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index b2203dd79e8c..4288241040db 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -4665,14 +4665,18 @@ int ufshcd_hba_enable(struct ufs_hba *hba)
- 		/* enable UIC related interrupts */
- 		ufshcd_enable_intr(hba, UFSHCD_UIC_MASK);
- 		ret = ufshcd_dme_reset(hba);
--		if (!ret) {
--			ret = ufshcd_dme_enable(hba);
--			if (!ret)
--				ufshcd_vops_hce_enable_notify(hba, POST_CHANGE);
--			if (ret)
--				dev_err(hba->dev,
--					"Host controller enable failed with non-hce\n");
-+		if (ret) {
-+			dev_err(hba->dev, "DME_RESET failed\n");
-+			return ret;
- 		}
-+
-+		ret = ufshcd_dme_enable(hba);
-+		if (ret) {
-+			dev_err(hba->dev, "Enabling DME failed\n");
-+			return ret;
-+		}
-+
-+		ufshcd_vops_hce_enable_notify(hba, POST_CHANGE);
- 	} else {
- 		ret = ufshcd_hba_execute_hce(hba);
- 	}
--- 
-2.17.1
+Please also note that for AHCI, I make reserved depth =1, while for SAS 
+controllers it is greater. This means that in theory we could alloc > 1x 
+reserved command for SATA disk, but I don't think it matters.
 
+Thanks,
+John
