@@ -2,113 +2,185 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6281CC38A02
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Oct 2022 05:08:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 837B9ECAAA1
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Oct 2022 05:42:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229571AbiJ1FIU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Oct 2022 01:08:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58388 "EHLO
+        id S229799AbiJ1Fm6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Oct 2022 01:42:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39314 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229457AbiJ1FIT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Oct 2022 01:08:19 -0400
-Received: from mail-m975.mail.163.com (mail-m975.mail.163.com [123.126.97.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 157EE1B156D;
-        Thu, 27 Oct 2022 22:08:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=kt3iK
-        smMMKWgKoyXI3XPdA6XBPWW/6C1tCL/uRPd9MA=; b=AglJgsWJOGqK4TLQzKDZU
-        bb4PEmfDKj22TOMzGdnRhz/leTmXASNH5IA/Ehaz5/lc+8Z/d1+NBTyk5QLA8gaV
-        maBRVzTgthNnuguZ8A0lktughEd4DAMGcANe8Hk5b9hIQLWJPrr4YkS/3iEI+uW3
-        2XcFNQdtZOeyDLnCq/9zzY=
-Received: from localhost.localdomain (unknown [111.206.145.21])
-        by smtp5 (Coremail) with SMTP id HdxpCgCHr_CZY1tj9i5AoA--.10196S2;
-        Fri, 28 Oct 2022 13:07:37 +0800 (CST)
-From:   Zheng Wang <zyytlz.wz@163.com>
-To:     james.smart@broadcom.com
-Cc:     dick.kennedy@broadcom.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        hackerzheng666@gmail.com, alex000young@gmail.com,
-        security@kernel.org, linux-kernel@vger.kernel.org,
-        Zheng Wang <zyytlz.wz@163.com>
-Subject: [PATCH] scsi: lpfc: fix double free bug in lpfc_bsg_write_ebuf_set
-Date:   Fri, 28 Oct 2022 13:07:36 +0800
-Message-Id: <20221028050736.151185-1-zyytlz.wz@163.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S229823AbiJ1Fm5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Oct 2022 01:42:57 -0400
+Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 466E21B65F0
+        for <linux-scsi@vger.kernel.org>; Thu, 27 Oct 2022 22:42:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1666935777; x=1698471777;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=GdwkanKbAqFn033rTUyBqjVD+Ib+qXTFfFmxbpApEMw=;
+  b=g+WIHDpAccAbnAsANGTWR8QMA8vgxFIDIQ34YW+9pJfvZAjqAfv8A+nO
+   PnDL2DF0dYymhArX9PNKfbQqE20szsYF16Nfx5UK5RAAvy85lsqE4O+98
+   r5qkyzNOz9QqTMmHJfGfqFAwHYfqpxoBQvabylWL9o/z3fgb+CkSsVhXB
+   H1dCfgW2+vJ2HjxZ4bdYrTbCmQm72wmpnDPqVZCqW89m34PzbII9zwvMK
+   Hisj7i3FbrkThdwuyWsNl0SRt3YpXZUKsaiNDpITRdfBtm+QX6ZgBXLHs
+   ZqkiDMMdr+jMy0Q+l9BrXbKoVgLVt9omORNwIGoMzDNzoyghPuuN3Qigd
+   w==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10513"; a="288811231"
+X-IronPort-AV: E=Sophos;i="5.95,220,1661842800"; 
+   d="scan'208";a="288811231"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2022 22:42:56 -0700
+X-IronPort-AV: E=McAfee;i="6500,9779,10513"; a="583814295"
+X-IronPort-AV: E=Sophos;i="5.95,220,1661842800"; 
+   d="scan'208";a="583814295"
+Received: from ahunter6-mobl1.ger.corp.intel.com (HELO [10.0.2.15]) ([10.252.55.74])
+  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2022 22:42:54 -0700
+Message-ID: <dafe263d-de70-5324-653c-b55d1a6b89fa@intel.com>
+Date:   Fri, 28 Oct 2022 08:42:50 +0300
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: HdxpCgCHr_CZY1tj9i5AoA--.10196S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7WrW3Zr1rGw1rKw1kZFyxXwb_yoW8ZrW8pa
-        y3C3Z7ArZrtF4IqrWDA34Yv3s3tayfXFy2kFZFg3WrWF1FvryjyF1UtF18XFWYkFyI9rZ8
-        tF4UK34UWF17Xa7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0ziLZ2hUUUUU=
-X-Originating-IP: [111.206.145.21]
-X-CM-SenderInfo: h2113zf2oz6qqrwthudrp/1tbiXBmoU1Xl4nrbGgAAsX
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Firefox/102.0 Thunderbird/102.4.1
+Subject: Re: [PATCH] scsi: ufs: Introduce ufshcd_abort_all()
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Jinyoung Choi <j-young.choi@samsung.com>
+References: <20221027204356.1146212-1-bvanassche@acm.org>
+Content-Language: en-US
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+In-Reply-To: <20221027204356.1146212-1-bvanassche@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When error occurs, it frees dmabuf in both lpfc_bsg_write_ebuf_set
-and lpfc_bsg_issue_mbox.
+On 27/10/22 23:43, Bart Van Assche wrote:
+> Move the code for aborting all SCSI commands and TMFs into a new function.
+> This patch makes the ufshcd_err_handler() easier to read. Except for adding
+> more logging, this patch does not change any functionality.
+> 
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
-Fix it by removing free code in lpfc_bsg_write_ebuf_set.
+Comment below, otherwise:
 
-Reported-by: Zheng Wang <hackerzheng666@gmail.com>
-Reported-by: Zhuorao Yang <alex000young@gmail.com>
+Reviewed-by: Adrian Hunter <adrian.hunter@intel.com>
 
-Fixes: 7ad20aa9d39a ("[SCSI] lpfc 8.3.24: Extend BSG infrastructure and add link diagnostics")
+> ---
+>  drivers/ufs/core/ufshcd.c | 62 +++++++++++++++++++++------------------
+>  1 file changed, 34 insertions(+), 28 deletions(-)
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index ee73d7036133..05feec10fad3 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -6157,6 +6157,38 @@ static bool ufshcd_is_pwr_mode_restore_needed(struct ufs_hba *hba)
+>  	return false;
+>  }
+>  
+> +static bool ufshcd_abort_all(struct ufs_hba *hba)
+> +{
+> +	bool needs_reset = false;
+> +	unsigned int tag, ret;
 
-Signed-off-by: Zheng Wang <zyytlz.wz@163.com>
----
- drivers/scsi/lpfc/lpfc_bsg.c | 17 +++--------------
- 1 file changed, 3 insertions(+), 14 deletions(-)
+'ret' is normally 'int'
 
-diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
-index ac0c7ccf2eae..7362d9c1a50b 100644
---- a/drivers/scsi/lpfc/lpfc_bsg.c
-+++ b/drivers/scsi/lpfc/lpfc_bsg.c
-@@ -4439,15 +4439,13 @@ lpfc_bsg_write_ebuf_set(struct lpfc_hba *phba, struct bsg_job *job,
- 
- 		dd_data = kmalloc(sizeof(struct bsg_job_data), GFP_KERNEL);
- 		if (!dd_data) {
--			rc = -ENOMEM;
--			goto job_error;
-+			return -ENOMEM;
- 		}
- 
- 		/* mailbox command structure for base driver */
- 		pmboxq = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
- 		if (!pmboxq) {
--			rc = -ENOMEM;
--			goto job_error;
-+			return -ENOMEM;
- 		}
- 		memset(pmboxq, 0, sizeof(LPFC_MBOXQ_t));
- 		pbuf = (uint8_t *)phba->mbox_ext_buf_ctx.mbx_dmabuf->virt;
-@@ -4480,8 +4478,7 @@ lpfc_bsg_write_ebuf_set(struct lpfc_hba *phba, struct bsg_job *job,
- 		lpfc_printf_log(phba, KERN_ERR, LOG_LIBDFC,
- 				"2970 Failed to issue SLI_CONFIG ext-buffer "
- 				"mailbox command, rc:x%x\n", rc);
--		rc = -EPIPE;
--		goto job_error;
-+		return -EPIPE;
- 	}
- 
- 	/* wait for additional external buffers */
-@@ -4489,14 +4486,6 @@ lpfc_bsg_write_ebuf_set(struct lpfc_hba *phba, struct bsg_job *job,
- 	bsg_job_done(job, bsg_reply->result,
- 		       bsg_reply->reply_payload_rcv_len);
- 	return SLI_CONFIG_HANDLED;
--
--job_error:
--	if (pmboxq)
--		mempool_free(pmboxq, phba->mbox_mem_pool);
--	lpfc_bsg_dma_page_free(phba, dmabuf);
--	kfree(dd_data);
--
--	return rc;
- }
- 
- /**
--- 
-2.25.1
+Also we seem to use 'int' for 'tag' a lot and it would match the
+dev_err %d
+
+> +
+> +	/* Clear pending transfer requests */
+> +	for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs) {
+> +		ret = ufshcd_try_to_abort_task(hba, tag);
+> +		dev_err(hba->dev, "Aborting tag %d / CDB %#02x %s\n", tag,
+> +			hba->lrb[tag].cmd ? hba->lrb[tag].cmd->cmnd[0] : -1,
+> +			ret ? "failed" : "succeeded");
+> +		if (ret) {
+> +			needs_reset = true;
+> +			goto out;
+> +		}
+> +	}
+> +
+> +	/* Clear pending task management requests */
+> +	for_each_set_bit(tag, &hba->outstanding_tasks, hba->nutmrs) {
+> +		if (ufshcd_clear_tm_cmd(hba, tag)) {
+> +			needs_reset = true;
+> +			goto out;
+> +		}
+> +	}
+> +
+> +out:
+> +	/* Complete the requests that are cleared by s/w */
+> +	ufshcd_complete_requests(hba);
+> +
+> +	return needs_reset;
+> +}
+> +
+>  /**
+>   * ufshcd_err_handler - handle UFS errors that require s/w attention
+>   * @work: pointer to work structure
+> @@ -6168,10 +6200,7 @@ static void ufshcd_err_handler(struct work_struct *work)
+>  	unsigned long flags;
+>  	bool needs_restore;
+>  	bool needs_reset;
+> -	bool err_xfer;
+> -	bool err_tm;
+>  	int pmc_err;
+> -	int tag;
+>  
+>  	hba = container_of(work, struct ufs_hba, eh_work);
+>  
+> @@ -6200,8 +6229,6 @@ static void ufshcd_err_handler(struct work_struct *work)
+>  again:
+>  	needs_restore = false;
+>  	needs_reset = false;
+> -	err_xfer = false;
+> -	err_tm = false;
+>  
+>  	if (hba->ufshcd_state != UFSHCD_STATE_ERROR)
+>  		hba->ufshcd_state = UFSHCD_STATE_RESET;
+> @@ -6270,34 +6297,13 @@ static void ufshcd_err_handler(struct work_struct *work)
+>  	hba->silence_err_logs = true;
+>  	/* release lock as clear command might sleep */
+>  	spin_unlock_irqrestore(hba->host->host_lock, flags);
+> -	/* Clear pending transfer requests */
+> -	for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs) {
+> -		if (ufshcd_try_to_abort_task(hba, tag)) {
+> -			err_xfer = true;
+> -			goto lock_skip_pending_xfer_clear;
+> -		}
+> -		dev_err(hba->dev, "Aborted tag %d / CDB %#02x\n", tag,
+> -			hba->lrb[tag].cmd ? hba->lrb[tag].cmd->cmnd[0] : -1);
+> -	}
+>  
+> -	/* Clear pending task management requests */
+> -	for_each_set_bit(tag, &hba->outstanding_tasks, hba->nutmrs) {
+> -		if (ufshcd_clear_tm_cmd(hba, tag)) {
+> -			err_tm = true;
+> -			goto lock_skip_pending_xfer_clear;
+> -		}
+> -	}
+> -
+> -lock_skip_pending_xfer_clear:
+> -	/* Complete the requests that are cleared by s/w */
+> -	ufshcd_complete_requests(hba);
+> +	needs_reset = ufshcd_abort_all(hba);
+>  
+>  	spin_lock_irqsave(hba->host->host_lock, flags);
+>  	hba->silence_err_logs = false;
+> -	if (err_xfer || err_tm) {
+> -		needs_reset = true;
+> +	if (needs_reset)
+>  		goto do_reset;
+> -	}
+>  
+>  	/*
+>  	 * After all reqs and tasks are cleared from doorbell,
 
