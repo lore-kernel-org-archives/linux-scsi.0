@@ -2,47 +2,47 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F560FA3741
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Oct 2022 21:56:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF515FA3741
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Oct 2022 22:06:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230138AbiJ1V4Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Oct 2022 17:56:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46030 "EHLO
+        id S229695AbiJ1WGZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Oct 2022 18:06:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34588 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229766AbiJ1V4X (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Oct 2022 17:56:23 -0400
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48F0E24C102;
-        Fri, 28 Oct 2022 14:56:22 -0700 (PDT)
-Received: by mail-pl1-f170.google.com with SMTP id c24so5952138pls.9;
-        Fri, 28 Oct 2022 14:56:22 -0700 (PDT)
+        with ESMTP id S229379AbiJ1WGY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Oct 2022 18:06:24 -0400
+Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 521E924C94F;
+        Fri, 28 Oct 2022 15:06:24 -0700 (PDT)
+Received: by mail-pj1-f54.google.com with SMTP id j7so2129433pjn.5;
+        Fri, 28 Oct 2022 15:06:24 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=xRxOJs0CrcGRU71XFSlw3IgjDlkrMUlaAe5RLb6zS/w=;
-        b=LFjMsluKwrIluzDM4iHJemE7BuLWrSSvNkebQQOUC/mr8l+0uu+nYELSmELg+OCR5m
-         wSKvKHrVz/X+5/wO/Y0k78ECUjoul2bquUi33ydGNXcjiiUjgKy/Oljz2S1012Iuihqv
-         gLA2kpgyfYsx8Coci5sEG2sEd82Id22WzM6FeNS0bAICE4P7uQQbBmMG7OzjKzFA9ZJ1
-         9Q9fKxDEO5wbp0M6Al7AkH/hblqY0/ULb5hnDz1gM0uV9E5XuGIVVC9cMMqoMCndIjhc
-         qXfoeVCLo9GvjrDoH4emMUgY7a+JaZWvqx+BH2rL0CbatO1aMIqEAjzEo0YTXV5LMC9A
-         KWwA==
-X-Gm-Message-State: ACrzQf1mBMwfrLOfVF2UVgTqFMj2NCZB6aCkFJyceXV21QPcUKpm3CSr
-        uunx8yV6Gj33HKdOcnqdYaw=
-X-Google-Smtp-Source: AMsMyM4uKDLG7ECuZMK5mLyvCKvvNk+/R9jMhajRHsYGLg8JhrUI76TZDV0ixXqLWa0IeHt4xf+/CQ==
-X-Received: by 2002:a17:90b:954:b0:213:c01:b8ce with SMTP id dw20-20020a17090b095400b002130c01b8cemr18931873pjb.168.1666994181757;
-        Fri, 28 Oct 2022 14:56:21 -0700 (PDT)
+        bh=iW/fmlZo93bisFJjq8W8NGa3Xmal48CxnwVNy4n7HOY=;
+        b=LCmz69RtdM88J5fJXALvT2hxxU1pZcX7l79xLCqrTT0KoVPh+mZTz1Atw/RtmVGX+G
+         D1wae7o11DKXBrfPo2sNoZJWUYgMmn0YUBk9sI81EfGf5gA7thbCSZ55OAVgcg0M17nP
+         dXsMnpm8vXkysCsyUAn3pog8vk/XG77zp43EZ3sbujP3FU+WZm79cwxjzc8R+Ld6BWc3
+         MdkfzoiaDoeAzPTWfV0R6EEEYyczXDI0kSeTWM6CuBBRhusyCtM7lRUvuZEojL4fgHqt
+         mwaPYZSQHfs7vtl7Jq88MomvZJvDG5yqF1qjKl0wBouMGzCmsd3vV8dHQaEhySqVNa2/
+         CfZg==
+X-Gm-Message-State: ACrzQf1/jlr263OxAG5U0JDHcPYRq1AOx/70G5soLwvpYluOa2IM689M
+        A+cnNr490vFjjzg9wNGI6MQ=
+X-Google-Smtp-Source: AMsMyM4Yf6S5ROuJpbqCTPTJ/6vboqn4ww5So/e55vdq4Xftz1iMhVFm+xLjDmsOxUFgfb9XdodYxQ==
+X-Received: by 2002:a17:902:7297:b0:17f:93b5:5ecc with SMTP id d23-20020a170902729700b0017f93b55eccmr1156591pll.93.1666994756063;
+        Fri, 28 Oct 2022 15:05:56 -0700 (PDT)
 Received: from [192.168.3.219] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id l17-20020a17090aaa9100b0020a821e97fbsm3015068pjq.13.2022.10.28.14.56.19
+        by smtp.gmail.com with ESMTPSA id d8-20020a170902654800b0018693643504sm3513438pln.40.2022.10.28.15.05.53
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 28 Oct 2022 14:56:21 -0700 (PDT)
-Message-ID: <410bdf50-b7a0-9157-724b-9410f23f21e7@acm.org>
-Date:   Fri, 28 Oct 2022 14:56:18 -0700
+        Fri, 28 Oct 2022 15:05:55 -0700 (PDT)
+Message-ID: <712bf977-26c5-db5b-158a-9b3d8b0f2125@acm.org>
+Date:   Fri, 28 Oct 2022 15:05:52 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.3.3
-Subject: Re: [PATCH v3 13/17] ufs: core: Prepare for completion in mcq
+Subject: Re: [PATCH v3 14/17] ufs: mcq: Add completion support of a cqe
 Content-Language: en-US
 To:     Asutosh Das <quic_asutoshd@quicinc.com>, quic_cang@quicinc.com,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org
@@ -53,12 +53,15 @@ Cc:     quic_nguyenb@quicinc.com, quic_xiaosenh@quicinc.com,
         linux-arm-msm@vger.kernel.org,
         Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
         Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
         open list <linux-kernel@vger.kernel.org>
 References: <cover.1666288432.git.quic_asutoshd@quicinc.com>
- <200c3ff9c2f3f83fb6f04afb4c83da01e5f27f1f.1666288432.git.quic_asutoshd@quicinc.com>
+ <b93232de6c7e9bd57cdb7cd99071577ed2cea35b.1666288432.git.quic_asutoshd@quicinc.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <200c3ff9c2f3f83fb6f04afb4c83da01e5f27f1f.1666288432.git.quic_asutoshd@quicinc.com>
+In-Reply-To: <b93232de6c7e9bd57cdb7cd99071577ed2cea35b.1666288432.git.quic_asutoshd@quicinc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -66,14 +69,24 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 10/20/22 11:03, Asutosh Das wrote:
-> Modifies completion path APIs and adds completion queue
-> entry.
+> Add support for completing requests from Completion Queue.
+> Some HC support vendor specific registers that provide a
+> bit-map of all CQ's which have at least one completed CQE.
+> Add this support.
+> The MCQ specification doesn't provide the Task Tag or its
+> equivalent in the Completion Queue Entry.
+> So use an indirect method to find the Task Tag from the
+> Completion Queue Entry.
 
-Modifies -> Modify
-adds -> add
+Please change "HC" into "host controllers" since it is an uncommon 
+abbreviation.
 
-Patch descriptions should be written in the imperative mood.
+> +	int tag;
+> +
+> +	tag = ufshcd_mcq_get_tag(hba, hwq, cqe);
 
-Otherwise this patch looks good to me, hence:
+Please combine the above declaration and assignment into a single line.
+
+Otherwise this patch looks good to me. Hence:
 
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
