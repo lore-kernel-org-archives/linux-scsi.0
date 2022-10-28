@@ -2,93 +2,84 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7535C38A02
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Oct 2022 21:38:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21631FA3740
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Oct 2022 21:44:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229850AbiJ1Vit (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Oct 2022 17:38:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59084 "EHLO
+        id S230055AbiJ1Vo4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Oct 2022 17:44:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41830 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229636AbiJ1Vir (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Oct 2022 17:38:47 -0400
-Received: from wout2-smtp.messagingengine.com (wout2-smtp.messagingengine.com [64.147.123.25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5704F1E392E;
-        Fri, 28 Oct 2022 14:38:44 -0700 (PDT)
-Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
-        by mailout.west.internal (Postfix) with ESMTP id 3439F3200906;
-        Fri, 28 Oct 2022 17:38:41 -0400 (EDT)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute5.internal (MEProxy); Fri, 28 Oct 2022 17:38:41 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:date:date:feedback-id
-        :feedback-id:from:from:in-reply-to:in-reply-to:message-id
-        :mime-version:references:reply-to:sender:subject:subject:to:to
-        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-        fm3; t=1666993120; x=1667079520; bh=8Yisrc4t5YOzlKTteyDamj2L+fWA
-        0otx8SfL5TIDAj0=; b=pFDXJ4AJW615LHQ7Br/ztk4nIoBWPZZTMnx5g4HIqREo
-        PO4w+VdMgBSy5wZE4OcGed+mKMPM8lwsG+aNa/E/A+uvPImyjIDa1JVVRwaAziS0
-        yXodtmoyD+k2ClyaJlYvohB0Q3VGeNyytS7mRNLf1c+hf1o6t3yOkv8j4/iXRfhd
-        JgU4ue+RXlWcEpAB8tJC2YDaQCT4KRo7IWSkFPCP3mrVMZqF7Q3jAEZxbq5uzPC5
-        cdLWIywzRudI+vHarT94rU+1iWNKIP8R1CEO6pOiQCXae5BxXF7nm3gW0S3eAWKQ
-        Y/S8zOA5CxIMZy358SFxVmr1QcN0Eghyc8jsQ9GazQ==
-X-ME-Sender: <xms:30tcY41WGwv6s74tG6-gezR0hCrpm5GhJS2fR6F_PTEB7k4doSZBmQ>
-    <xme:30tcYzGkWKJQVLHXUZDE7D0FJqu5znBOSPpe-vSDwSRrzGw1a46acg-CuqwQYOH8x
-    ti4TG7wyMOl-I6oQhs>
-X-ME-Received: <xmr:30tcYw5HzpU5DPzQVofAfRhbA1HTqR8mrEUQndSf8Ots8eGCigJpwwgJ19ciVdoeQCm81eFv_jbOQ4naHbZjdAX1N8tSSXV2vTI>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvgedrtdejgddtudcutefuodetggdotefrodftvf
-    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
-    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
-    fjughrpeffhffvvefujgfkfhggtgesthdtredttddtvdenucfhrhhomhephfhinhhnucfv
-    hhgrihhnuceofhhthhgrihhnsehlihhnuhigqdhmieekkhdrohhrgheqnecuggftrfgrth
-    htvghrnhepleeuheelheekgfeuvedtveetjeekhfffkeeffffftdfgjeevkeegfedvueeh
-    ueelnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepfh
-    hthhgrihhnsehlihhnuhigqdhmieekkhdrohhrgh
-X-ME-Proxy: <xmx:30tcYx1BdgaH7GdbSTgiitiBg8AJbB3j7T00lmQJ-TpM7-v4bjGInA>
-    <xmx:30tcY7GL2WdztjvmAlOBAfbFt5BtHdKNZ4MAF0vjMZcvSKUlslpETQ>
-    <xmx:30tcY68cNHEf6JMNy7GymZwRqDempOpkBDIqEtqWE4ikTIMQhn1U9A>
-    <xmx:4EtcYzDJe7G7c8-CywjPGQ6ROlTFIH0-3dihDjnpZg_t0N1Wjapm1A>
-Feedback-ID: i58a146ae:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 28 Oct 2022 17:38:37 -0400 (EDT)
-Date:   Sat, 29 Oct 2022 08:38:50 +1100 (AEDT)
-From:   Finn Thain <fthain@linux-m68k.org>
-To:     Jilin Yuan <yuanjilin@cdjrlc.com>
-cc:     schmitzmic@gmail.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: NCR5380: fix repeated words in comments
-In-Reply-To: <20221028133708.60030-1-yuanjilin@cdjrlc.com>
-Message-ID: <142f436e-2534-4c00-0fb2-0f385e404856@linux-m68k.org>
-References: <20221028133708.60030-1-yuanjilin@cdjrlc.com>
+        with ESMTP id S230153AbiJ1Voh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Oct 2022 17:44:37 -0400
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5102D24CC8B;
+        Fri, 28 Oct 2022 14:44:04 -0700 (PDT)
+Received: by mail-pl1-f179.google.com with SMTP id l2so5915704pld.13;
+        Fri, 28 Oct 2022 14:44:04 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Kst96+KKew9c/RGg4G6XTf+FqUHJFIea+S6RSYWJinU=;
+        b=6csjOEhS9uDy5OlzUlTrisFXstZUMD+S7w/bdQ2ohjBxfnrkLwNiJrWRMVi58qP47C
+         jYMg/ViUZhNhytGha7sqULyPf+79r55YDLavu4yukY7AQ8l1zivoSSB/VXbv8zXUWvct
+         ZpVSgOQ1Ypeq5tQgVZ2RF1/JnjLtqa11Cp5UoLLv69NueYNQH7vf7Q66KpjVup4xHPcW
+         6Vmna47oZ7PW9yWrc4oVUpXnOT2WhuM+XuCl9rtNqYbN8Hk3os6AHBEkSzUkOGBtjC3+
+         3pJj5WbUFagNnanKfTT7oYcmQNWH7cAUqGdnzlQ+3VCwRptZG7Rl6RLYR2AenM0mHd47
+         FsAQ==
+X-Gm-Message-State: ACrzQf3itBKME5sOLMSd/iYhxwD6DmQWglwOZ+cPbLtDx2DvyOByZgW3
+        PCE1ImlWEM5O356RfZzwTzg=
+X-Google-Smtp-Source: AMsMyM7TXR6v597ftvLT7XDc73XL6FzzeQr/pMMnaxoH4ieteZdRXTyiKndoLjJFHQGtye97moui0w==
+X-Received: by 2002:a17:902:c612:b0:186:8376:208d with SMTP id r18-20020a170902c61200b001868376208dmr1073356plr.89.1666993443737;
+        Fri, 28 Oct 2022 14:44:03 -0700 (PDT)
+Received: from [192.168.3.219] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id d23-20020a170902b71700b00178b6ccc8a0sm3493911pls.51.2022.10.28.14.44.01
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 28 Oct 2022 14:44:03 -0700 (PDT)
+Message-ID: <b5082698-1dfe-ceee-b263-439a719a55c3@acm.org>
+Date:   Fri, 28 Oct 2022 14:44:01 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.3
+Subject: Re: [PATCH v3 03/17] ufs: core: Introduce Multi-circular queue
+ capability
+Content-Language: en-US
+To:     Asutosh Das <quic_asutoshd@quicinc.com>
+Cc:     quic_cang@quicinc.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, quic_nguyenb@quicinc.com,
+        quic_xiaosenh@quicinc.com, stanley.chu@mediatek.com,
+        eddie.huang@mediatek.com, daejun7.park@samsung.com,
+        avri.altman@wdc.com, mani@kernel.org, beanhuo@micron.com,
+        quic_richardp@quicinc.com, linux-arm-msm@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        open list <linux-kernel@vger.kernel.org>
+References: <cover.1666288432.git.quic_asutoshd@quicinc.com>
+ <1718196085461c37138c194c49146efa5c5503dc.1666288432.git.quic_asutoshd@quicinc.com>
+ <14a5925b-df2b-3f84-ed99-b4157c0a1b21@acm.org>
+ <20221028165116.GC9077@asutoshd-linux1.qualcomm.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20221028165116.GC9077@asutoshd-linux1.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 28 Oct 2022, Jilin Yuan wrote:
+On 10/28/22 09:51, Asutosh Das wrote:
+> On Thu, Oct 27 2022 at 14:10 -0700, Bart Van Assche wrote:
+>> Since UFSHCI 4.0 controllers must support UFSHCI 3.0, shouldn't users 
+>> have a way to disable MCQ, e.g. via a kernel module parameter?
+>>
+> I can add a kernel module parameter to disable MCQ.
+> I think adding it to host driver (e.g. ufs-qcom) would be good.
+> Please let me know if you have a better place in mind.
 
-> Delete the redundant word 'the'.
-> 
-> Signed-off-by: Jilin Yuan <yuanjilin@cdjrlc.com>
+Since this functionality is useful for all host controllers please add 
+it in the core UFS host controller driver (drivers/ufs/core/ufshcd.c).
 
-Acked-by: Finn Thain <fthain@linux-m68k.org>
+Thanks,
 
-> ---
->  drivers/scsi/NCR5380.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-> index dece7d9eb4d3..ca85bddb582b 100644
-> --- a/drivers/scsi/NCR5380.c
-> +++ b/drivers/scsi/NCR5380.c
-> @@ -858,7 +858,7 @@ static void NCR5380_dma_complete(struct Scsi_Host *instance)
->   * latency, but a bus reset will reset chip logic. Checking for parity error
->   * is unnecessary because that interrupt is never enabled. A Loss of BSY
->   * condition will clear DMA Mode. We can tell when this occurs because the
-> - * the Busy Monitor interrupt is enabled together with DMA Mode.
-> + * Busy Monitor interrupt is enabled together with DMA Mode.
->   */
->  
->  static irqreturn_t __maybe_unused NCR5380_intr(int irq, void *dev_id)
-> 
+Bart.
+
