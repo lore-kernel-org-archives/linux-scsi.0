@@ -2,185 +2,137 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 837B9ECAAA1
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Oct 2022 05:42:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D52AECAAA1
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Oct 2022 07:36:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229799AbiJ1Fm6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Oct 2022 01:42:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39314 "EHLO
+        id S229750AbiJ1HgB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Oct 2022 03:36:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42286 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229823AbiJ1Fm5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Oct 2022 01:42:57 -0400
-Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 466E21B65F0
-        for <linux-scsi@vger.kernel.org>; Thu, 27 Oct 2022 22:42:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1666935777; x=1698471777;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=GdwkanKbAqFn033rTUyBqjVD+Ib+qXTFfFmxbpApEMw=;
-  b=g+WIHDpAccAbnAsANGTWR8QMA8vgxFIDIQ34YW+9pJfvZAjqAfv8A+nO
-   PnDL2DF0dYymhArX9PNKfbQqE20szsYF16Nfx5UK5RAAvy85lsqE4O+98
-   r5qkyzNOz9QqTMmHJfGfqFAwHYfqpxoBQvabylWL9o/z3fgb+CkSsVhXB
-   H1dCfgW2+vJ2HjxZ4bdYrTbCmQm72wmpnDPqVZCqW89m34PzbII9zwvMK
-   Hisj7i3FbrkThdwuyWsNl0SRt3YpXZUKsaiNDpITRdfBtm+QX6ZgBXLHs
-   ZqkiDMMdr+jMy0Q+l9BrXbKoVgLVt9omORNwIGoMzDNzoyghPuuN3Qigd
-   w==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10513"; a="288811231"
-X-IronPort-AV: E=Sophos;i="5.95,220,1661842800"; 
-   d="scan'208";a="288811231"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2022 22:42:56 -0700
-X-IronPort-AV: E=McAfee;i="6500,9779,10513"; a="583814295"
-X-IronPort-AV: E=Sophos;i="5.95,220,1661842800"; 
-   d="scan'208";a="583814295"
-Received: from ahunter6-mobl1.ger.corp.intel.com (HELO [10.0.2.15]) ([10.252.55.74])
-  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2022 22:42:54 -0700
-Message-ID: <dafe263d-de70-5324-653c-b55d1a6b89fa@intel.com>
-Date:   Fri, 28 Oct 2022 08:42:50 +0300
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Firefox/102.0 Thunderbird/102.4.1
-Subject: Re: [PATCH] scsi: ufs: Introduce ufshcd_abort_all()
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>
-References: <20221027204356.1146212-1-bvanassche@acm.org>
-Content-Language: en-US
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-In-Reply-To: <20221027204356.1146212-1-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8
+        with ESMTP id S229648AbiJ1HgA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Oct 2022 03:36:00 -0400
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECB10A2AAE
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Oct 2022 00:35:56 -0700 (PDT)
+Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20221028073554epoutp0253e243cb26781eb06ad27af0c4550f68~iK2viw5vZ1259512595epoutp02N
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Oct 2022 07:35:54 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20221028073554epoutp0253e243cb26781eb06ad27af0c4550f68~iK2viw5vZ1259512595epoutp02N
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1666942554;
+        bh=CWUfsC0Pi4NZOcVC8baMUqkw1IwSaT37tR2xo1u6jBM=;
+        h=Subject:Reply-To:From:To:Date:References:From;
+        b=ROu4yN+SrVmhgT+wfkPTrFaPkiAgrHEAOfuLzbYZOo8BpbeThnt39iFt8XCfWGDXR
+         CXnivc9mMIZ0IY96tPFWbAr3ARumdKAbd1yV4QyK13sMFUApnedd6auoXQZeTVql5Z
+         l/Py/Xz+RlUI8poVrEDWVy9ow+apKwjsryXpKcNs=
+Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
+        20221028073554epcas2p36b80a5b9458e40611ac2596e43b5e1b5~iK2vIsDKS2879428794epcas2p3E;
+        Fri, 28 Oct 2022 07:35:54 +0000 (GMT)
+Received: from epsmges2p2.samsung.com (unknown [182.195.36.98]) by
+        epsnrtp3.localdomain (Postfix) with ESMTP id 4MzDqY4lXLz4x9Px; Fri, 28 Oct
+        2022 07:35:53 +0000 (GMT)
+X-AuditID: b6c32a46-85fff70000012ff6-a5-635b86597485
+Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
+        epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        57.53.12278.9568B536; Fri, 28 Oct 2022 16:35:53 +0900 (KST)
+Mime-Version: 1.0
+Subject: [PATCH] scsi: ufs: core: Refactor ufshcd_hba_enable()
+Reply-To: keosung.park@samsung.com
+Sender: Keoseong Park <keosung.park@samsung.com>
+From:   Keoseong Park <keosung.park@samsung.com>
+To:     ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20221028073553epcms2p6dc4f8bdbebdc8f96f43fc4197b3edd0c@epcms2p6>
+Date:   Fri, 28 Oct 2022 16:35:53 +0900
+X-CMS-MailID: 20221028073553epcms2p6dc4f8bdbebdc8f96f43fc4197b3edd0c
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+CMS-TYPE: 102P
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrDJsWRmVeSWpSXmKPExsWy7bCmqW5kW3Sywaq/KhYnn6xhs3gwbxub
+        xcufV9ksDj7sZLGY9uEns8XLQ5oWj24/Y7To7d/KZrHoxjYmi8u75rBZdF/fwWax/Pg/Jgce
+        j8tXvD0W73nJ5DFh0QFGj+/rO9g8Pj69xeLRt2UVo8fnTXIe7Qe6mQI4orJtMlITU1KLFFLz
+        kvNTMvPSbZW8g+Od403NDAx1DS0tzJUU8hJzU22VXHwCdN0yc4COVVIoS8wpBQoFJBYXK+nb
+        2RTll5akKmTkF5fYKqUWpOQUmBfoFSfmFpfmpevlpZZYGRoYGJkCFSZkZyy62MFYcIuzYkr/
+        U+YGxo/sXYycHBICJhJ75/eydDFycQgJ7GCUePplB1CCg4NXQFDi7w5hkBphATuJozub2EBs
+        IQElia6FW5kh4gYS66bvAbPZBPQkpvy+wwgyR0TgJ7PEpfez2SAW8ErMaH/KAmFLS2xfvpUR
+        wtaQ+LGslxnCFpW4ufotO4z9/th8qBoRidZ7Z6FqBCUe/NwNFZeUaD2zFWp+vsSTm/1Q82sk
+        Fmz/DBXXl7jWsREszivgK9H8ZQrYfBYBVYnlWz5B1btI3J7WBRZnFpCX2P52DjPI78wCmhLr
+        d+mDmBICyhJHbrHAfNKw8Tc7OptZgE+i4/BfuPiOeU+YIGw1iUcLtrBC2DISF+ecg/rEQ+La
+        hCtsExgVZyECehaSG2Yh3LCAkXkVo1hqQXFuemqxUYERPG6T83M3MYKTrZbbDsYpbz/oHWJk
+        4mA8xCjBwawkwnv2RniyEG9KYmVValF+fFFpTmrxIUZToO8nMkuJJucD031eSbyhiaWBiZmZ
+        obmRqYG5kjhv1wytZCGB9MSS1OzU1ILUIpg+Jg5OqQam/BlPA65OEpiSM/9x9UN9fia/kqDy
+        6R+6v1w5q/fQ3C7Iz2G97sHfT4Sed76/PFUg597Rf1lS1fmvQiS2FNpUzfQS3L51a1R+ZPnK
+        onRBk1jmDRzR13h/Oq/xMWwNvHbQc+LEXzLPci7tWSTEyXzIv95gun3JkrSp5ftPV6vFznw7
+        c681gy7j9atXKtqsfm/qEfnA+j4n8taXe1IXJ1qLORUuDBFZo6Bt0L5gibvUm257nYv5ETo7
+        O6W0N2mJcy26FODGdsb884LFmyv/T1/ZbXE987+IZQ/v3dUvX/M4xG7fM+ufw9rE3vVzPB+n
+        Xfi39/rKN99qw0++WsXb3poiNPfeiva7vCfPVhxS7/zYrMRSnJFoqMVcVJwIALOnOBU/BAAA
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20221028073553epcms2p6dc4f8bdbebdc8f96f43fc4197b3edd0c
+References: <CGME20221028073553epcms2p6dc4f8bdbebdc8f96f43fc4197b3edd0c@epcms2p6>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 27/10/22 23:43, Bart Van Assche wrote:
-> Move the code for aborting all SCSI commands and TMFs into a new function.
-> This patch makes the ufshcd_err_handler() easier to read. Except for adding
-> more logging, this patch does not change any functionality.
-> 
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Use "if error return" style in ufshcd_hba_enable().
+No functional change.
 
-Comment below, otherwise:
+Cc: Bart Van Assche <bvanassche@acm.org>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>
+Signed-off-by: Keoseong Park <keosung.park@samsung.com>
+---
+ drivers/ufs/core/ufshcd.c | 18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
 
-Reviewed-by: Adrian Hunter <adrian.hunter@intel.com>
-
-> ---
->  drivers/ufs/core/ufshcd.c | 62 +++++++++++++++++++++------------------
->  1 file changed, 34 insertions(+), 28 deletions(-)
-> 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index ee73d7036133..05feec10fad3 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -6157,6 +6157,38 @@ static bool ufshcd_is_pwr_mode_restore_needed(struct ufs_hba *hba)
->  	return false;
->  }
->  
-> +static bool ufshcd_abort_all(struct ufs_hba *hba)
-> +{
-> +	bool needs_reset = false;
-> +	unsigned int tag, ret;
-
-'ret' is normally 'int'
-
-Also we seem to use 'int' for 'tag' a lot and it would match the
-dev_err %d
-
-> +
-> +	/* Clear pending transfer requests */
-> +	for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs) {
-> +		ret = ufshcd_try_to_abort_task(hba, tag);
-> +		dev_err(hba->dev, "Aborting tag %d / CDB %#02x %s\n", tag,
-> +			hba->lrb[tag].cmd ? hba->lrb[tag].cmd->cmnd[0] : -1,
-> +			ret ? "failed" : "succeeded");
-> +		if (ret) {
-> +			needs_reset = true;
-> +			goto out;
-> +		}
-> +	}
-> +
-> +	/* Clear pending task management requests */
-> +	for_each_set_bit(tag, &hba->outstanding_tasks, hba->nutmrs) {
-> +		if (ufshcd_clear_tm_cmd(hba, tag)) {
-> +			needs_reset = true;
-> +			goto out;
-> +		}
-> +	}
-> +
-> +out:
-> +	/* Complete the requests that are cleared by s/w */
-> +	ufshcd_complete_requests(hba);
-> +
-> +	return needs_reset;
-> +}
-> +
->  /**
->   * ufshcd_err_handler - handle UFS errors that require s/w attention
->   * @work: pointer to work structure
-> @@ -6168,10 +6200,7 @@ static void ufshcd_err_handler(struct work_struct *work)
->  	unsigned long flags;
->  	bool needs_restore;
->  	bool needs_reset;
-> -	bool err_xfer;
-> -	bool err_tm;
->  	int pmc_err;
-> -	int tag;
->  
->  	hba = container_of(work, struct ufs_hba, eh_work);
->  
-> @@ -6200,8 +6229,6 @@ static void ufshcd_err_handler(struct work_struct *work)
->  again:
->  	needs_restore = false;
->  	needs_reset = false;
-> -	err_xfer = false;
-> -	err_tm = false;
->  
->  	if (hba->ufshcd_state != UFSHCD_STATE_ERROR)
->  		hba->ufshcd_state = UFSHCD_STATE_RESET;
-> @@ -6270,34 +6297,13 @@ static void ufshcd_err_handler(struct work_struct *work)
->  	hba->silence_err_logs = true;
->  	/* release lock as clear command might sleep */
->  	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> -	/* Clear pending transfer requests */
-> -	for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs) {
-> -		if (ufshcd_try_to_abort_task(hba, tag)) {
-> -			err_xfer = true;
-> -			goto lock_skip_pending_xfer_clear;
-> -		}
-> -		dev_err(hba->dev, "Aborted tag %d / CDB %#02x\n", tag,
-> -			hba->lrb[tag].cmd ? hba->lrb[tag].cmd->cmnd[0] : -1);
-> -	}
->  
-> -	/* Clear pending task management requests */
-> -	for_each_set_bit(tag, &hba->outstanding_tasks, hba->nutmrs) {
-> -		if (ufshcd_clear_tm_cmd(hba, tag)) {
-> -			err_tm = true;
-> -			goto lock_skip_pending_xfer_clear;
-> -		}
-> -	}
-> -
-> -lock_skip_pending_xfer_clear:
-> -	/* Complete the requests that are cleared by s/w */
-> -	ufshcd_complete_requests(hba);
-> +	needs_reset = ufshcd_abort_all(hba);
->  
->  	spin_lock_irqsave(hba->host->host_lock, flags);
->  	hba->silence_err_logs = false;
-> -	if (err_xfer || err_tm) {
-> -		needs_reset = true;
-> +	if (needs_reset)
->  		goto do_reset;
-> -	}
->  
->  	/*
->  	 * After all reqs and tasks are cleared from doorbell,
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index b2203dd79e8c..4288241040db 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -4665,14 +4665,18 @@ int ufshcd_hba_enable(struct ufs_hba *hba)
+ 		/* enable UIC related interrupts */
+ 		ufshcd_enable_intr(hba, UFSHCD_UIC_MASK);
+ 		ret = ufshcd_dme_reset(hba);
+-		if (!ret) {
+-			ret = ufshcd_dme_enable(hba);
+-			if (!ret)
+-				ufshcd_vops_hce_enable_notify(hba, POST_CHANGE);
+-			if (ret)
+-				dev_err(hba->dev,
+-					"Host controller enable failed with non-hce\n");
++		if (ret) {
++			dev_err(hba->dev, "DME_RESET failed\n");
++			return ret;
+ 		}
++
++		ret = ufshcd_dme_enable(hba);
++		if (ret) {
++			dev_err(hba->dev, "Enabling DME failed\n");
++			return ret;
++		}
++
++		ufshcd_vops_hce_enable_notify(hba, POST_CHANGE);
+ 	} else {
+ 		ret = ufshcd_hba_execute_hce(hba);
+ 	}
+-- 
+2.17.1
 
