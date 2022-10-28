@@ -2,83 +2,98 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05D55ECAAA1
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Oct 2022 09:02:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12780FA3741
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Oct 2022 09:02:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229940AbiJ1JCz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Oct 2022 05:02:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59134 "EHLO
+        id S229955AbiJ1JC4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Oct 2022 05:02:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58730 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229988AbiJ1JCv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Oct 2022 05:02:51 -0400
-Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B83841C5E3C
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Oct 2022 02:02:46 -0700 (PDT)
-Received: by mail-pl1-x635.google.com with SMTP id p3so4318667pld.10
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Oct 2022 02:02:46 -0700 (PDT)
+        with ESMTP id S230005AbiJ1JCw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Oct 2022 05:02:52 -0400
+Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE7831C5E2B
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Oct 2022 02:02:48 -0700 (PDT)
+Received: by mail-pl1-x62c.google.com with SMTP id p3so4318730pld.10
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Oct 2022 02:02:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=mime-version:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=VKTd1i0TWjwB/TbusvoKamd5GMarSi1ddEe/axvJ9A0=;
-        b=EnLiN0xIx8BRXlQDG6Cq4mb8QsUXPxUrmvGY+oTkzlUdWK2Tr/p4sTrSomNsPcOzfM
-         JyZjOulxK8W9L8fB2DEUBeMV+VeLqRtqryRO20syTzCKFnjiW8PpPj+RnjX05TgM3JwI
-         P5DKZbD85b/OPp7bfMl3z8MJh0BkfSG92PoAE=
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=ZAiJB9MKZCWn+RLBDfGT3Gbi18FcAmS7PVrHp03tcUw=;
+        b=RcBaNav0qBw0+VAxIQiJPlmKDX0rk4QkVI9IsZDD/pVSgI8wIzoXXa+ery0/61tHSN
+         9wHg8OH+WQ2XDPtA3IgyX+PG/CqXkMux2DapG7eRxcFJNK8iixA/VkT4OWOC4IAwxA78
+         eSLsitGdLP7ygfOG66FMKMGvt2NofPCzifkW0=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=mime-version:message-id:date:subject:cc:to:from:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=VKTd1i0TWjwB/TbusvoKamd5GMarSi1ddEe/axvJ9A0=;
-        b=PJqNW6h/12UaJ+Rdp3srsfEuURXw8wbmneqU/YBfaafdYEhYvbclR0/7bVhnF40Uih
-         dnMAGB6KRbwHniV5XNSSTXaHtBJGkFfWhSDaF8Tp5hae/acoMf9t0MjRZjceGV3N+eWR
-         dcrtZR0ETul9RJEplXLihVfvRK4oKlu8Ngzd76zE/haLRzeRLuGzxgueeB7ZBJ7YNT4b
-         lA7z7EsJDug7p2RaH+N78tad9rJ9Td2f2kmpYo9bwhSEW8QEh7vmISVZhL5QjnFNHKMr
-         8BL8bumf3ewCSYjuhN0sbYmSU4b8bulwRbYQZkT0Qqrgyu0nbJGT+rMm0ghFyHU787Gc
-         rQOw==
-X-Gm-Message-State: ACrzQf3m9UVEsJ22DoWfLFpxoH81qmKZ6CVeHrN2tpnhN6OH66rFs3bY
-        QbrPQhkM0nw85QGd4GYVJELW8/1oHPrOgom5duXsuOOjLvp9V13KnzJZBBEYMNWtg6O/DFUrUTR
-        rJRQBOOY79OzSs75HHRB+036eO72S3iYDHPy+I2cHFNHlWNj3wj1E0aTlcvVwtd+Bg50T2kGVpb
-        K97jQcu4V2
-X-Google-Smtp-Source: AMsMyM4wztpPhE/pojgKMsHunDyNoeCgQAfAxzmOSgTOfcj6UOnp21Rx+I5y8oyA3LJpUr9r3l4zXQ==
-X-Received: by 2002:a17:903:11c8:b0:179:de93:bd7e with SMTP id q8-20020a17090311c800b00179de93bd7emr54301702plh.95.1666947765769;
-        Fri, 28 Oct 2022 02:02:45 -0700 (PDT)
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=ZAiJB9MKZCWn+RLBDfGT3Gbi18FcAmS7PVrHp03tcUw=;
+        b=mGs23Xx2O91R8kbDj0RODvbDukzQUvW/n5FjZSxvEQWDRn4C6akkouy7mZGsqFNgYs
+         1Jqbc12xBxTtt0xs7W6Q0P7b155xinu5IMg2J66//ggxpa1jIAwpedazJ13UidYmiIUQ
+         dNZEb/BL/WD49ysYS0FT7B39Ad/bS5+cA3qgJbAAaY7CCVJmkXoNASgOe3ygCUj2mTyf
+         gRHJykOS0RK+AG/5s0nSywdKGJ7H54esfZ5L+T8pVVSGCQiBXN0nJqhB2w1C2B2veW04
+         slKWTHR00vVnr+ppaoTtVNc48TLuCOCjdmYbBhAJcgTtqbW6lBw7ySbZa4sskChnYBoE
+         vhgA==
+X-Gm-Message-State: ACrzQf36yiCopoxv4Hle0KmSrs6FkWw8l2UcTy/NRUaSyEuGwmvxBxNx
+        NyjMq0kkDXCs7TepHW3wgBTtuz1TjzD74jRzEuhPCZgTEWY0BW8LXPR3d0Qjibxb4QDvyUyxiBy
+        Qpipn/X2g/ejY47FIu2Ub6+Jx+rsQpOPDM3KLMS8pDnOcCHlNsrBJR2kQVqZokMQNoGDKgWegjr
+        tf+a9OJjm4
+X-Google-Smtp-Source: AMsMyM7TWiryZir443KG8SCMTLIeEiNfwrhy9/Ja1KJceM4koWkHHz1ApqHrMHn7o6tZ6MWjdtedCA==
+X-Received: by 2002:a17:90b:1c02:b0:213:17f1:50a7 with SMTP id oc2-20020a17090b1c0200b0021317f150a7mr14766128pjb.138.1666947767661;
+        Fri, 28 Oct 2022 02:02:47 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id a207-20020a621ad8000000b0056bd737fdf3sm2414077pfa.123.2022.10.28.02.02.43
+        by smtp.gmail.com with ESMTPSA id a207-20020a621ad8000000b0056bd737fdf3sm2414077pfa.123.2022.10.28.02.02.46
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 28 Oct 2022 02:02:44 -0700 (PDT)
+        Fri, 28 Oct 2022 02:02:47 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 0/1] mpt3sas: Remove usage of dma_get_required_mask api
-Date:   Fri, 28 Oct 2022 14:46:54 +0530
-Message-Id: <20221028091655.17741-1-sreekanth.reddy@broadcom.com>
+Subject: [PATCH 1/1] mpt3sas: Remove usage of dma_get_required_mask api
+Date:   Fri, 28 Oct 2022 14:46:55 +0530
+Message-Id: <20221028091655.17741-2-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20221028091655.17741-1-sreekanth.reddy@broadcom.com>
+References: <20221028091655.17741-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000078483505ec148538"
+        boundary="00000000000096267d05ec148590"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000078483505ec148538
+--00000000000096267d05ec148590
 Content-Transfer-Encoding: 8bit
 
 Remove the usage of dma_get_required_mask() API.
 Directly set the DMA mask to 63/64 if the system
 is a 64bit machine.
 
-Sreekanth Reddy (1):
-  mpt3sas: Remove usage of dma_get_required_mask api
-
+Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+---
  drivers/scsi/mpt3sas/mpt3sas_base.c | 3 +--
  1 file changed, 1 insertion(+), 2 deletions(-)
 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 4e981ccaac41..69061545d9d2 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -2992,8 +2992,7 @@ _base_config_dma_addressing(struct MPT3SAS_ADAPTER *ioc, struct pci_dev *pdev)
+ 	struct sysinfo s;
+ 	u64 coherent_dma_mask, dma_mask;
+ 
+-	if (ioc->is_mcpu_endpoint || sizeof(dma_addr_t) == 4 ||
+-	    dma_get_required_mask(&pdev->dev) <= DMA_BIT_MASK(32)) {
++	if (ioc->is_mcpu_endpoint || sizeof(dma_addr_t) == 4) {
+ 		ioc->dma_mask = 32;
+ 		coherent_dma_mask = dma_mask = DMA_BIT_MASK(32);
+ 	/* Set 63 bit DMA mask for all SAS3 and SAS35 controllers */
 -- 
 2.27.0
 
 
---00000000000078483505ec148538
+--00000000000096267d05ec148590
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -149,13 +164,13 @@ hPIHLRxnZxqpa2GjCtl3IYjKK8WbWx0NXkszaVTVRIn8e++VyiiH/yFXVyOEQxkZRQZWzTjPE9o/
 R31F09e8yABfehc+e00bSP23FKNuA8dwS29RHLpjmd+m5EtbFGD4EUANHzCSTA89S/iWNoaWteab
 v6IxggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwftyuc
-ixn6z19iSQwwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEICM3Twaqbd/yp7Z05AD9
-jTNwrxWrWAB6QrQLbJ1ddWQ0MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMTAyODA5MDI0NlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+ixn6z19iSQwwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIIc/GXFjdHtYiM6sln7T
+W2NstrFI7mrwjfAWs9LM7qpiMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMTAyODA5MDI0OFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBhnnJWwnlEW6voraaBGIPxEkbPB2FsuQ1UHHhW
-vhlGjNBx+vrEzcbdKU+uuAZlb5bGtvW3nR3UywlcTNwethoAf2i5s6Sks75qdh0o0AsmzlAns2ps
-AGRhYtmedOrlAF8zh7WcMVDjfdzEXBLZYQYwADSEoxu3RAu5tboH7LSgy18L3tYPIxbWzOPULDlm
-zqxRJHRAeHdDCVZT1pR1D35XfNysb3GNkWZCGV7v9/HIRgXNapn2WiWganH8XVVhv7wbnbAtR0Lb
-6AD6i00mjIS+LUi69gL0gm8suXBKqo+VmI/T5Eh4U0LjDSl03Kj/f+Q0mzrp74/z3JGu6SzqrxO4
---00000000000078483505ec148538--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBNo4vWijJbg2YexftCgt1kGyn1nukd1v5AnTDF
+wVovoFnRBndeMyDB7pksMl5PZNUjm6TInBaXGVCbHjBSoGBMmRg6xAKM8h2PNq8vsgMoCv376A22
+ovBInUKBBS6RBt+TagQBFnHzrueGoNk23Q7dMFb3oTazj39Xs4a9oOmEn1QaGWIj+jKNn7lg8KBY
+IJ+uT7/SMKnGLNEwXPqpOG9SQJE+bfpiIhRnLAURwOI5X+JUq8hvG4nA/Pi8ZR956lvzR+OCiULE
+h3HAtb3EJK6JrB/VOpOq1z+9AbhZcCGHsSoQ7jZzBsD53let1XowPr0ce4ZLBFlcpFqIUBxa999x
+--00000000000096267d05ec148590--
