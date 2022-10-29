@@ -2,108 +2,85 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E1F7FA3744
-	for <linux-scsi@archiver.kernel.org>; Sat, 29 Oct 2022 22:06:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F195ECAAA1
+	for <linux-scsi@archiver.kernel.org>; Sat, 29 Oct 2022 23:10:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229520AbiJ2WG0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 29 Oct 2022 18:06:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53860 "EHLO
+        id S229580AbiJ2XKw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 29 Oct 2022 19:10:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60708 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229515AbiJ2WGZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Oct 2022 18:06:25 -0400
-Received: from mail-lj1-x22c.google.com (mail-lj1-x22c.google.com [IPv6:2a00:1450:4864:20::22c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4860033845
-        for <linux-scsi@vger.kernel.org>; Sat, 29 Oct 2022 15:06:24 -0700 (PDT)
-Received: by mail-lj1-x22c.google.com with SMTP id bn35so12513728ljb.5
-        for <linux-scsi@vger.kernel.org>; Sat, 29 Oct 2022 15:06:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=UJDjGMm6I8hjAfftqkiQTNt09c2+c9FwSviLe2yp5iw=;
-        b=Py3MJJV/HlB9DftTqPNbSYJAxhgyf2Yodm2Sp8+XtgQAUPmeWMGLwXFkFGBayvEG1N
-         WWUEfzDXN7t4D3XYRcHB5Sxai/wjj/ZaZrxjmNTPqZTJufO3yFJcgQCWd/1bngDXGXl7
-         ylEmWYQdqtsX2sc3HjlCbe4X2luPbz6MtnukExb/n7XnzE0syraNgoiAUBMGZZUEBG/A
-         J0//BwTYlxBp8rTvYMms7+KGpNnKycxzTbOYzXZUtsJO9Ezpc1D7LFMdZcTuWyWO70ZE
-         Klw7OpX+ln5/+54DVWUEIDm8cXwEolQfUkAW7Vd5i7zKOyVwKaXW6eqSdlRtoMPvOUTh
-         jXxA==
+        with ESMTP id S229441AbiJ2XKv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Oct 2022 19:10:51 -0400
+Received: from mail-pg1-f181.google.com (mail-pg1-f181.google.com [209.85.215.181])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F4110286F4;
+        Sat, 29 Oct 2022 16:10:50 -0700 (PDT)
+Received: by mail-pg1-f181.google.com with SMTP id g129so7774541pgc.7;
+        Sat, 29 Oct 2022 16:10:50 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=UJDjGMm6I8hjAfftqkiQTNt09c2+c9FwSviLe2yp5iw=;
-        b=KG3a2OHypUFbTxSJBmYLdsulpCp7NL8XUydaRFRysyrdA84k+pvtFEj6BkI6kySpPX
-         WZSZWIo2lNycidQ80TmY/xMkrv777EOb+BpyKveA4tI9uokVAAQtvrmFPGEVpgosD/Rz
-         +brc80HxhhNnyThDne94sa/JufobNumFxOa8KhtAWCmD9ZwGgq3n5VPC80KI8y+Agb7C
-         i62tyv4I21fm3q4tBUy3ewWP49twE+npIHDdCPy7AlHwk8qB0Bbo60Q/aTaiK7wtCjfC
-         Pb2Bs3fpv0TGXRlnRjLhWypg1LcmgG34Fa9+2nTKfzB6hx4dW2D6T0VUmPDrdlTiEx77
-         +zrA==
-X-Gm-Message-State: ACrzQf0Y0uoVUf/fFpxnxIHiOi38tiFczA51438mX72GLEm9onGRzFnu
-        JSTp+mdbkm7W5tg7K5lMO0iMlA==
-X-Google-Smtp-Source: AMsMyM6d9zFikwHgFIh6rMjFnXd95IUDGB9ReOdNF6pduE42CdBpB+h3NUOeN+s9d+Sh4pEsV9GjGQ==
-X-Received: by 2002:a05:651c:1a0e:b0:26f:e008:a29c with SMTP id by14-20020a05651c1a0e00b0026fe008a29cmr2417615ljb.365.1667081182585;
-        Sat, 29 Oct 2022 15:06:22 -0700 (PDT)
-Received: from [10.27.10.248] ([195.165.23.90])
-        by smtp.gmail.com with ESMTPSA id v14-20020a2ea44e000000b0026e8b82eba6sm442460ljn.34.2022.10.29.15.06.21
+        bh=RKuufKUacq98coDfbHylwf70NDNDwuBrz/1iKBZ4tBg=;
+        b=jyP03bu0TOomk862KxbPtI6eGbaGJ3lIOrXdX+bAo98vJR99S7Otl3YHwyfZ+OSfAf
+         sNRc2ntxjg9IoEFIuHoXGCI5dbcafS2LhrzWyuWq78jPXm58pdeLQ2AYr5D+aUK+XM3K
+         +y9yYbiPfljDsNY0kBOGOCQdwa3zJx80zbXci2HKNCzAUkzRioqIyciFiE0vJe21DPQT
+         E3LfnrN88JM+Y1HLj7T45AvSC28uiJ/5zdtCErdo9NwX89DdUqiUusOQNUv2/iN/bpK5
+         tiamL3Y/Z770WQVFeZ+D+5TlGhXUt/G69fymAD6Lfofrv8OgbwCGMGAFPM/P3gRhvClA
+         Ec0Q==
+X-Gm-Message-State: ACrzQf3YNM+hq2+wh/WLKI1yKJAawkpSvCztEOvT2xKkxZKR7F/0lL/x
+        4+KcEKpWfic0MdXkSfJIigk=
+X-Google-Smtp-Source: AMsMyM4BQlI8gWRRmy8uCysPtCtYvOyKN/QDcSsbqVJRiZrhNYIRDCdx7rdt+cLeWGvS52yER9LZXg==
+X-Received: by 2002:a63:e218:0:b0:448:5163:478f with SMTP id q24-20020a63e218000000b004485163478fmr5846451pgh.415.1667085050358;
+        Sat, 29 Oct 2022 16:10:50 -0700 (PDT)
+Received: from [192.168.3.219] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id n4-20020a170903110400b0017534ffd491sm1781654plh.163.2022.10.29.16.10.48
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 29 Oct 2022 15:06:22 -0700 (PDT)
-Message-ID: <9c1ca51d-2202-8279-cecb-12792385b18d@linaro.org>
-Date:   Sun, 30 Oct 2022 01:06:20 +0300
+        Sat, 29 Oct 2022 16:10:49 -0700 (PDT)
+Message-ID: <fb98be99-58e9-9f09-7179-cef70b45a8dc@acm.org>
+Date:   Sat, 29 Oct 2022 16:10:47 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.3
-Subject: Re: [PATCH 12/15] scsi: ufs: ufs-qcom: Fix the Qcom register name for
- offset 0xD0
-Content-Language: en-GB
-To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        martin.petersen@oracle.com, jejb@linux.ibm.com,
-        andersson@kernel.org, vkoul@kernel.org,
-        krzysztof.kozlowski+dt@linaro.org
-Cc:     konrad.dybcio@somainline.org, robh+dt@kernel.org,
-        quic_cang@quicinc.com, linux-arm-msm@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-phy@lists.infradead.org, linux-scsi@vger.kernel.org
-References: <20221029141633.295650-1-manivannan.sadhasivam@linaro.org>
- <20221029141633.295650-13-manivannan.sadhasivam@linaro.org>
-From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-In-Reply-To: <20221029141633.295650-13-manivannan.sadhasivam@linaro.org>
+ Thunderbird/102.4.0
+Subject: Re: [PATCH 5.10/5.15] scsi: sd: Revert "scsi: sd: Remove a local
+ variable"
+Content-Language: en-US
+To:     Yu Kuai <yukuai1@huaweicloud.com>, gregkh@linuxfoundation.org,
+        stable@vger.kernel.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, hare@suse.com
+Cc:     linux-scsi@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
+References: <20221029025837.1258377-1-yukuai1@huaweicloud.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20221029025837.1258377-1-yukuai1@huaweicloud.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 29/10/2022 17:16, Manivannan Sadhasivam wrote:
-> Fix the register name used for offset 0xD0. The correct name is
-> REG_UFS_PARAM0.
-
-The vendor kernels starting from 3.10 define this register as 
-RETRY_TIMER_REG (but it is unused). I'd suggest adding a comment about 
-the older register name.
-
+On 10/28/22 19:58, Yu Kuai wrote:
+> This reverts commit 84f7a9de0602704bbec774a6c7f7c8c4994bee9c.
 > 
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> ---
->   drivers/ufs/host/ufs-qcom.h | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+> Because it introduces a problem that rq->__data_len is set to the wrong
+> value.
 > 
-> diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
-> index 6cb0776456b3..214ea50acab9 100644
-> --- a/drivers/ufs/host/ufs-qcom.h
-> +++ b/drivers/ufs/host/ufs-qcom.h
-> @@ -33,7 +33,7 @@ enum {
->   	REG_UFS_TX_SYMBOL_CLK_NS_US         = 0xC4,
->   	REG_UFS_LOCAL_PORT_ID_REG           = 0xC8,
->   	REG_UFS_PA_ERR_CODE                 = 0xCC,
-> -	REG_UFS_RETRY_TIMER_REG             = 0xD0,
-> +	REG_UFS_PARAM0                      = 0xD0,
->   	REG_UFS_PA_LINK_STARTUP_TIMER       = 0xD8,
->   	REG_UFS_CFG1                        = 0xDC,
->   	REG_UFS_CFG2                        = 0xE0,
+> before this patch:
+> 1) nr_bytes = rq->__data_len
+> 2) rq->__data_len = sdp->sector_size
+> 3) scsi_init_io()
+> 4) rq->__data_len = nr_bytes
+> 
+> after this patch:
+> 1) rq->__data_len = sdp->sector_size
+> 2) scsi_init_io()
+> 3) rq->__data_len = rq->__data_len -> __data_len is wrong
+> 
+> It will cause that io can only complete one segment each time, and the io
+> will requeue in scsi_io_completion_action(), which will cause severe
+> performance degradation.
 
--- 
-With best wishes
-Dmitry
+It's probably worth mentioning that the code affected by this patch has 
+been removed from the master branch and hence that this patch is only 
+needed for stable kernels. Anyway:
 
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
