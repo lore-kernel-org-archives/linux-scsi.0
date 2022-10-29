@@ -2,108 +2,126 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BEE2FA3741
-	for <linux-scsi@archiver.kernel.org>; Sat, 29 Oct 2022 02:36:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7631FA3745
+	for <linux-scsi@archiver.kernel.org>; Sat, 29 Oct 2022 14:16:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229728AbiJ2Cgx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Oct 2022 22:36:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44168 "EHLO
+        id S229795AbiJ2OQt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 29 Oct 2022 10:16:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38300 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229678AbiJ2Cgw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Oct 2022 22:36:52 -0400
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 259B91C114B;
-        Fri, 28 Oct 2022 19:36:50 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Mzk576889z6R5Gc;
-        Sat, 29 Oct 2022 10:34:19 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.127.227])
-        by APP4 (Coremail) with SMTP id gCh0CgCnA+a_kVxjAThyAQ--.49826S4;
-        Sat, 29 Oct 2022 10:36:48 +0800 (CST)
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-To:     gregkh@linuxfoundation.org, stable@vger.kernel.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com, hare@suse.com,
-        bvanassche@acm.org
-Cc:     linux-scsi@vger.kernel.org, yukuai3@huawei.com,
-        yukuai1@huaweicloud.com, yi.zhang@huawei.com
-Subject: [PATCH 5.10/5.15] scsi: sd: Revert "scsi: sd: Remove a local variable"
-Date:   Sat, 29 Oct 2022 10:58:37 +0800
-Message-Id: <20221029025837.1258377-1-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.31.1
+        with ESMTP id S229777AbiJ2OQp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Oct 2022 10:16:45 -0400
+Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29CAA5E66F
+        for <linux-scsi@vger.kernel.org>; Sat, 29 Oct 2022 07:16:44 -0700 (PDT)
+Received: by mail-pf1-x430.google.com with SMTP id y13so7087248pfp.7
+        for <linux-scsi@vger.kernel.org>; Sat, 29 Oct 2022 07:16:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=GQ4PiNcI1cLiE7ryjV3rS13VZXM0Dj58HsM9AOiZxhg=;
+        b=oElrO+L1rk9mNgPaQGCjkZqLOoN/67uzSPW+WcTDNV/dlPycNO8b7MS7IsMpWIqNYF
+         xUKaohiK08X2rxqOr13PkPDChzujijVPpSmqeRsCG7kud8ymS/F0+HcRTnPW6YYan+yE
+         3+cWdpU8fOsgsRZYLXIRI02fIS0y2CeZAwSxlu+5fUeu1jdfyfDoq6Caf6QXsldiT/jD
+         SzhPRlTtn1xW79PNSMOhpUNh/SJ1FAx9j4LyXvmmK5rJEIhjWxpaziqq8dBgcSbPQ+/B
+         /Ap/tPE5e76VysGg9KnP9bcX+MsEHSt5O1haM/qoj16CapP+unQWLDmi3wBOt4lNbfbq
+         5Gcw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=GQ4PiNcI1cLiE7ryjV3rS13VZXM0Dj58HsM9AOiZxhg=;
+        b=GKPJg2gsJD8rwZ1bqjBOINn8AkVOzK+pTQ8U7fGzjM+swaTexEvVh+4nIRg3EA1b3A
+         jA7SNjyImbTzwPU5tax6i4roflA14mADtiM92/LEy/P/kBsSY8ox4DWK0dtifvIEn7xa
+         mZDhjVHRvkuNkQG+ibVEAnXqszOg6aJALPulLw5B80p40r5k9PsLQRHujMgqUlHUJcfn
+         ysdl/nnJ70/OfLnrVsh5IcWu1dlOK2MNUE9yOhX6NgNohPm1enbOkgOJolqi8cz/NexV
+         EC5ij1niWQT5t/XYC8PWN2TVjIg4g9GOCnpYoviUy3tLs36QmZlYfxpP6WkfGXycF8yj
+         q6wA==
+X-Gm-Message-State: ACrzQf1818lmQj6aLlqgQhRAAiiVtfBVXRFinpovODrpsV0jbZox4I5W
+        x1H3MF/jg6yoxLgKRurJEPgV
+X-Google-Smtp-Source: AMsMyM6rJuqEreNrU5xX/uOHOar39X19G2dhV8I6IvYMk82ydVaceF1ziLNEgSrN26R2pCFJQ7ehaQ==
+X-Received: by 2002:a65:6d93:0:b0:42c:50ec:8025 with SMTP id bc19-20020a656d93000000b0042c50ec8025mr4151085pgb.62.1667053003345;
+        Sat, 29 Oct 2022 07:16:43 -0700 (PDT)
+Received: from localhost.localdomain ([117.193.208.18])
+        by smtp.gmail.com with ESMTPSA id u4-20020a170902e5c400b001866049ddb1sm1370157plf.161.2022.10.29.07.16.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 29 Oct 2022 07:16:42 -0700 (PDT)
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     martin.petersen@oracle.com, jejb@linux.ibm.com,
+        andersson@kernel.org, vkoul@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org
+Cc:     konrad.dybcio@somainline.org, robh+dt@kernel.org,
+        quic_cang@quicinc.com, linux-arm-msm@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-phy@lists.infradead.org, linux-scsi@vger.kernel.org,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Subject: [PATCH 00/15] ufs: qcom: Add HS-G4 support
+Date:   Sat, 29 Oct 2022 19:46:18 +0530
+Message-Id: <20221029141633.295650-1-manivannan.sadhasivam@linaro.org>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgCnA+a_kVxjAThyAQ--.49826S4
-X-Coremail-Antispam: 1UD129KBjvJXoW7tF1fZFyfuryfGw45ZrW5Wrg_yoW8Wry8pa
-        y8XayjyrW5JF40vwnrJF17Xas3KFW8Wry2gFW5ua45ZrW0kry5uF17KFZFva48uFZ3Jrs3
-        J3ZFqrZ5XF4DCrUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUv014x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
-        Y2ka0xkIwI1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
-        xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43
-        MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
-        0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v2
-        6r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7VUb
-        XdbUUUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+Hello,
 
-This reverts commit 84f7a9de0602704bbec774a6c7f7c8c4994bee9c.
+This series adds HS-G4 support to the Qcom UFS driver and PHY driver.
+The newer Qcom platforms support configuring the UFS controller and PHY
+in dual gears (i.e., controller/PHY can be configured to run in two gear
+speeds). This is accomplished by adding two different PHY init sequences
+to the PHY driver and the UFS driver requesting the one that's required
+based on the platform configuration.
 
-Because it introduces a problem that rq->__data_len is set to the wrong
-value.
+But this requires both the UFS controller and UFS device to agree to a
+common gear. For finding the max supported gear, a separate register is
+used for the UFS controller and devicetree is used for the UFS device.
+Based on the max gear of both, the UFS driver will decide which gear to
+use during runtime.
 
-before this patch:
-1) nr_bytes = rq->__data_len
-2) rq->__data_len = sdp->sector_size
-3) scsi_init_io()
-4) rq->__data_len = nr_bytes
+This series has been tested on Qcom RB5 development platform powered by
+SM8250 SoC that uses HS-G4.
 
-after this patch:
-1) rq->__data_len = sdp->sector_size
-2) scsi_init_io()
-3) rq->__data_len = rq->__data_len -> __data_len is wrong
+Merging Strategy:
+-----------------
 
-It will cause that io can only complete one segment each time, and the io
-will requeue in scsi_io_completion_action(), which will cause severe
-performance degradation.
+The PHY patches are expected to go through PHY tree and UFS, MAINTAINERS
+patches are expected to go through SCSI tree. Finally, the binding and
+devicetree patches can go through ARM MSM tree. There is no build dependency
+between the patches.
 
-Fixes: 84f7a9de0602 ("scsi: sd: Remove a local variable")
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- drivers/scsi/sd.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Thanks,
+Mani
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index de6640ad1943..1e887c11e83d 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1072,6 +1072,7 @@ static blk_status_t sd_setup_write_same_cmnd(struct scsi_cmnd *cmd)
- 	struct bio *bio = rq->bio;
- 	u64 lba = sectors_to_logical(sdp, blk_rq_pos(rq));
- 	u32 nr_blocks = sectors_to_logical(sdp, blk_rq_sectors(rq));
-+	unsigned int nr_bytes = blk_rq_bytes(rq);
- 	blk_status_t ret;
- 
- 	if (sdkp->device->no_write_same)
-@@ -1108,7 +1109,7 @@ static blk_status_t sd_setup_write_same_cmnd(struct scsi_cmnd *cmd)
- 	 */
- 	rq->__data_len = sdp->sector_size;
- 	ret = scsi_alloc_sgtables(cmd);
--	rq->__data_len = blk_rq_bytes(rq);
-+	rq->__data_len = nr_bytes;
- 
- 	return ret;
- }
+Manivannan Sadhasivam (15):
+  phy: qcom-qmp-ufs: Move register settings to qmp_phy_cfg_tables struct
+  phy: qcom-qmp-ufs: Add support for configuring PHY in HS Series B mode
+  phy: qcom-qmp-ufs: Add support for configuring PHY in HS G4 mode
+  phy: qcom-qmp-ufs: Add HS G4 mode support to SM8250 SoC
+  phy: qcom-qmp-ufs: Move HS Rate B register setting to tables_hs_b
+  dt-bindings: ufs: Add "max-gear" property for UFS device
+  arm64: dts: qcom: qrb5165-rb5: Add max-gear property to UFS node
+  scsi: ufs: ufs-qcom: Remove un-necessary goto statements
+  scsi: ufs: ufs-qcom: Remove un-necessary WARN_ON()
+  scsi: ufs: ufs-qcom: Use bitfields where appropriate
+  scsi: ufs: ufs-qcom: Use dev_err_probe() for printing probe error
+  scsi: ufs: ufs-qcom: Fix the Qcom register name for offset 0xD0
+  scsi: ufs: ufs-qcom: Factor out the logic finding the HS Gear
+  scsi: ufs: ufs-qcom: Add support for finding HS gear on new UFS
+    versions
+  MAINTAINERS: Add myself as the maintainer for Qcom UFS driver
+
+ .../devicetree/bindings/ufs/ufs-common.yaml   |   5 +
+ MAINTAINERS                                   |   8 +
+ arch/arm64/boot/dts/qcom/qrb5165-rb5.dts      |   1 +
+ drivers/phy/qualcomm/phy-qcom-qmp-ufs.c       | 350 +++++++++++++-----
+ drivers/ufs/host/ufs-qcom.c                   | 177 +++++----
+ drivers/ufs/host/ufs-qcom.h                   |  64 ++--
+ 6 files changed, 389 insertions(+), 216 deletions(-)
+
 -- 
-2.31.1
+2.25.1
 
