@@ -2,53 +2,53 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3912EC433FE
-	for <linux-scsi@archiver.kernel.org>; Sat, 29 Oct 2022 14:19:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5DB7C433FE
+	for <linux-scsi@archiver.kernel.org>; Sat, 29 Oct 2022 14:19:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230075AbiJ2OTP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 29 Oct 2022 10:19:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38980 "EHLO
+        id S230097AbiJ2OTc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 29 Oct 2022 10:19:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39554 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229970AbiJ2OSl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Oct 2022 10:18:41 -0400
-Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C99E25FDCF
-        for <linux-scsi@vger.kernel.org>; Sat, 29 Oct 2022 07:17:47 -0700 (PDT)
-Received: by mail-pj1-x102f.google.com with SMTP id d13-20020a17090a3b0d00b00213519dfe4aso6834348pjc.2
-        for <linux-scsi@vger.kernel.org>; Sat, 29 Oct 2022 07:17:47 -0700 (PDT)
+        with ESMTP id S229941AbiJ2OSz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Oct 2022 10:18:55 -0400
+Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 27EAD5F7F8
+        for <linux-scsi@vger.kernel.org>; Sat, 29 Oct 2022 07:17:53 -0700 (PDT)
+Received: by mail-pl1-x636.google.com with SMTP id y4so7217312plb.2
+        for <linux-scsi@vger.kernel.org>; Sat, 29 Oct 2022 07:17:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=V6Cn6AAM+ruCSUx7hOhryryIVpbAjdLGLzoffp2NaNY=;
-        b=WT8C9Z4ISqHLbq0ws3aGDgQn4ZnrIZqfE5JVaofV5V8Q/4jxd/1yyHqv+szIEQSkn/
-         riTWtO4o/TvPc6R8oZY/v+TEMjhwsi/S+LT97zFoYU9jwW+CJ7MOP9ZvNnz8MfbhHCyL
-         piUS20GmVWf83DmJTqvaoYZTSazuQFQMAC5CQkfSe818aWluRP0HEls7yLgLiIRNeLL9
-         /Go8f5VbiyicQH0qeVEfZJ+DXXaf5Hkx2G1PrhLJVIFfhxhM4heT3hANhJlELhjj0s1w
-         5rp+srjuc3fYOW+HOQkxT22kfud+zAn4bo8AVgkIBLU0D8EixcMx/N6GA83haFqO4MNN
-         LIlQ==
+        bh=v9w0057GHgoZKWtXZ1+4u/MPirSR8go5oWQPd2eE2mI=;
+        b=encU76jKBrg6lH2ISMpQ/N7b4auZ2VydelAwmgOx19RnLM1oiSnBRWcM11Xqmvc3Cg
+         EKkic2nHjmIz1GFChzZ8WjMeqZLnln+gDPxjo1o547phYbrMlpKwBLEn5PgEEKr/FZdI
+         1kZP888PIFaxLbzbKFqLGoZgFlyCuvge17GdEAxRXwUPywc8a5Z6ILYxviKf2QD4qNnD
+         UlFfrt1Kbu+I4MBrU6N2Bqian3JljYN9ydInPZj3ilaU1a+wDVzSqyJB8ICfyQja0ntX
+         1099u1qHn209NgN/wtUebb8DWjq1ilbpQpz7sxbSQqHAB3yUgmu8BuXmIIOh/h1hI0DF
+         BRSQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=V6Cn6AAM+ruCSUx7hOhryryIVpbAjdLGLzoffp2NaNY=;
-        b=24ygpcPfXcKChCAKCauTOtkoLLU1hVN5UMwMnH4ea6+O9XW5AGB3dIMXmZCkV3stsO
-         3HmaYLr2g+W+e0hDjMrjEqRBk+01LUmVSC1VKUOuwKfFmcF56r2w0kY5qi7A6YzzWO9P
-         msCuJLamowN3ARMrdFel/0cdw1FXzkJaBSg3NMoLjbvAy3J7tDxsRQrcq37Zz3I2seS9
-         +O+G4aznyrlqU8oU6jCql4PkXTum7lM/TEhob8WtcRk49+Mpe1/ULsAtPPQgt9aHXyUS
-         Nz0meYrM89Ul/OAvo0LnESYYUKUfJ4R82wltIGGgRwTxYfpZrUsyKefj5ROLOFG5KGhV
-         l6Tw==
-X-Gm-Message-State: ACrzQf3C7eoeOUvBQyKMuRAWbZy6lSJzEzj/uakR61RReol46JijOE47
-        32y31/ADLlLUU7YOuStm8eop
-X-Google-Smtp-Source: AMsMyM6BzVwQ2YhU3TiOk54m9WMzzOVEFEMcHpJCXT2JKGyLHJFwwW9gtknZ00dp5yk2PL8C5QiBJQ==
-X-Received: by 2002:a17:90a:5509:b0:213:98ab:da74 with SMTP id b9-20020a17090a550900b0021398abda74mr5056156pji.208.1667053067496;
-        Sat, 29 Oct 2022 07:17:47 -0700 (PDT)
+        bh=v9w0057GHgoZKWtXZ1+4u/MPirSR8go5oWQPd2eE2mI=;
+        b=lkVKWaForK3H26eyOL7YFJje4ahAsMMAWc4XfqU8Pgb/RSguHIeviDbp2iMhc6vsek
+         lH3F+2+8TbkLkXtBzD4UQumhUbDq4lWb9tN31nfE1PxVXzU0u+n7/mTqoBj+4ErybtIX
+         Kd/muKt8tmrNuYKedBNLtPN3OVrl+Gt2lbc1vzt44emIB5hvft6UkAzfMsxBxi1uw0/c
+         dVC2TQqkEKilVOxBSXTeqANgMuxQ2yCqzibsVzXm+7s0ynAFs2Lyh5eNQ5kV2+sto0F1
+         IRpLBRRy7Q+VmqeBWMZWNE0qVXzwbeFdscPhQATBkOPz1y68a4fVKfEpkVo5dL36TrWj
+         S9Ew==
+X-Gm-Message-State: ACrzQf1BbLTvWpE6banQG+7u+ixzUHbpbpZ+PyaiGuXrXs6SXXmEM9sk
+        rFWaW9X7OAKEFgaGJhdPnWaG
+X-Google-Smtp-Source: AMsMyM7JgKncQxD+5pXhQsXTkWwf5sEiBgn85aqK7sxksdsAEnWD9W1u57IbDiP/N0nhOGC+mz8f+w==
+X-Received: by 2002:a17:903:50b:b0:187:11e:5f1f with SMTP id jn11-20020a170903050b00b00187011e5f1fmr4643202plb.41.1667053072648;
+        Sat, 29 Oct 2022 07:17:52 -0700 (PDT)
 Received: from localhost.localdomain ([117.193.208.18])
-        by smtp.gmail.com with ESMTPSA id u4-20020a170902e5c400b001866049ddb1sm1370157plf.161.2022.10.29.07.17.42
+        by smtp.gmail.com with ESMTPSA id u4-20020a170902e5c400b001866049ddb1sm1370157plf.161.2022.10.29.07.17.47
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 29 Oct 2022 07:17:46 -0700 (PDT)
+        Sat, 29 Oct 2022 07:17:51 -0700 (PDT)
 From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To:     martin.petersen@oracle.com, jejb@linux.ibm.com,
         andersson@kernel.org, vkoul@kernel.org,
@@ -58,9 +58,9 @@ Cc:     konrad.dybcio@somainline.org, robh+dt@kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-phy@lists.infradead.org, linux-scsi@vger.kernel.org,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH 12/15] scsi: ufs: ufs-qcom: Fix the Qcom register name for offset 0xD0
-Date:   Sat, 29 Oct 2022 19:46:30 +0530
-Message-Id: <20221029141633.295650-13-manivannan.sadhasivam@linaro.org>
+Subject: [PATCH 13/15] scsi: ufs: ufs-qcom: Factor out the logic finding the HS Gear
+Date:   Sat, 29 Oct 2022 19:46:31 +0530
+Message-Id: <20221029141633.295650-14-manivannan.sadhasivam@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20221029141633.295650-1-manivannan.sadhasivam@linaro.org>
 References: <20221029141633.295650-1-manivannan.sadhasivam@linaro.org>
@@ -70,27 +70,73 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fix the register name used for offset 0xD0. The correct name is
-REG_UFS_PARAM0.
+In the preparation of adding support for new gears, let's move the
+logic that finds the gear for each platform to a new function. This helps
+with code readability and also allows the logic to be used in other places
+of the driver in future.
+
+While at it, let's make it clear that this driver only supports symmetric
+gear setting (hs_tx_gear == hs_rx_gear).
 
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- drivers/ufs/host/ufs-qcom.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/ufs/host/ufs-qcom.c | 36 +++++++++++++++++++++++-------------
+ 1 file changed, 23 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
-index 6cb0776456b3..214ea50acab9 100644
---- a/drivers/ufs/host/ufs-qcom.h
-+++ b/drivers/ufs/host/ufs-qcom.h
-@@ -33,7 +33,7 @@ enum {
- 	REG_UFS_TX_SYMBOL_CLK_NS_US         = 0xC4,
- 	REG_UFS_LOCAL_PORT_ID_REG           = 0xC8,
- 	REG_UFS_PA_ERR_CODE                 = 0xCC,
--	REG_UFS_RETRY_TIMER_REG             = 0xD0,
-+	REG_UFS_PARAM0                      = 0xD0,
- 	REG_UFS_PA_LINK_STARTUP_TIMER       = 0xD8,
- 	REG_UFS_CFG1                        = 0xDC,
- 	REG_UFS_CFG2                        = 0xE0,
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index 28ac5f0ab2bc..f952cc76919f 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -278,6 +278,26 @@ static int ufs_qcom_host_reset(struct ufs_hba *hba)
+ 	return 0;
+ }
+ 
++static u32 ufs_qcom_get_hs_gear(struct ufs_hba *hba, u32 hs_gear)
++{
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
++
++	if (host->hw_ver.major == 0x1) {
++		/*
++		 * HS-G3 operations may not reliably work on legacy QCOM
++		 * UFS host controller hardware even though capability
++		 * exchange during link startup phase may end up
++		 * negotiating maximum supported gear as G3.
++		 * Hence downgrade the maximum supported gear to HS-G2.
++		 */
++		if (hs_gear > UFS_HS_G2)
++			return UFS_HS_G2;
++	}
++
++	/* Default is HS-G3 */
++	return UFS_HS_G3;
++}
++
+ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
+ {
+ 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+@@ -692,19 +712,9 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
+ 		ufshcd_init_pwr_dev_param(&ufs_qcom_cap);
+ 		ufs_qcom_cap.hs_rate = UFS_QCOM_LIMIT_HS_RATE;
+ 
+-		if (host->hw_ver.major == 0x1) {
+-			/*
+-			 * HS-G3 operations may not reliably work on legacy QCOM
+-			 * UFS host controller hardware even though capability
+-			 * exchange during link startup phase may end up
+-			 * negotiating maximum supported gear as G3.
+-			 * Hence downgrade the maximum supported gear to HS-G2.
+-			 */
+-			if (ufs_qcom_cap.hs_tx_gear > UFS_HS_G2)
+-				ufs_qcom_cap.hs_tx_gear = UFS_HS_G2;
+-			if (ufs_qcom_cap.hs_rx_gear > UFS_HS_G2)
+-				ufs_qcom_cap.hs_rx_gear = UFS_HS_G2;
+-		}
++		/* This driver only supports symmetic gear setting i.e., hs_tx_gear == hs_rx_gear */
++		ufs_qcom_cap.hs_tx_gear = ufs_qcom_cap.hs_rx_gear = ufs_qcom_get_hs_gear(hba,
++									ufs_qcom_cap.hs_tx_gear);
+ 
+ 		ret = ufshcd_get_pwr_dev_param(&ufs_qcom_cap,
+ 					       dev_max_params,
 -- 
 2.25.1
 
