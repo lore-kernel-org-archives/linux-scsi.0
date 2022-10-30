@@ -2,85 +2,69 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F195ECAAA1
-	for <linux-scsi@archiver.kernel.org>; Sat, 29 Oct 2022 23:10:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0348FA3740
+	for <linux-scsi@archiver.kernel.org>; Sun, 30 Oct 2022 01:29:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229580AbiJ2XKw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 29 Oct 2022 19:10:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60708 "EHLO
+        id S229752AbiJ3B3x (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 29 Oct 2022 21:29:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229441AbiJ2XKv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Oct 2022 19:10:51 -0400
-Received: from mail-pg1-f181.google.com (mail-pg1-f181.google.com [209.85.215.181])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F4110286F4;
-        Sat, 29 Oct 2022 16:10:50 -0700 (PDT)
-Received: by mail-pg1-f181.google.com with SMTP id g129so7774541pgc.7;
-        Sat, 29 Oct 2022 16:10:50 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=RKuufKUacq98coDfbHylwf70NDNDwuBrz/1iKBZ4tBg=;
-        b=jyP03bu0TOomk862KxbPtI6eGbaGJ3lIOrXdX+bAo98vJR99S7Otl3YHwyfZ+OSfAf
-         sNRc2ntxjg9IoEFIuHoXGCI5dbcafS2LhrzWyuWq78jPXm58pdeLQ2AYr5D+aUK+XM3K
-         +y9yYbiPfljDsNY0kBOGOCQdwa3zJx80zbXci2HKNCzAUkzRioqIyciFiE0vJe21DPQT
-         E3LfnrN88JM+Y1HLj7T45AvSC28uiJ/5zdtCErdo9NwX89DdUqiUusOQNUv2/iN/bpK5
-         tiamL3Y/Z770WQVFeZ+D+5TlGhXUt/G69fymAD6Lfofrv8OgbwCGMGAFPM/P3gRhvClA
-         Ec0Q==
-X-Gm-Message-State: ACrzQf3YNM+hq2+wh/WLKI1yKJAawkpSvCztEOvT2xKkxZKR7F/0lL/x
-        4+KcEKpWfic0MdXkSfJIigk=
-X-Google-Smtp-Source: AMsMyM4BQlI8gWRRmy8uCysPtCtYvOyKN/QDcSsbqVJRiZrhNYIRDCdx7rdt+cLeWGvS52yER9LZXg==
-X-Received: by 2002:a63:e218:0:b0:448:5163:478f with SMTP id q24-20020a63e218000000b004485163478fmr5846451pgh.415.1667085050358;
-        Sat, 29 Oct 2022 16:10:50 -0700 (PDT)
-Received: from [192.168.3.219] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id n4-20020a170903110400b0017534ffd491sm1781654plh.163.2022.10.29.16.10.48
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 29 Oct 2022 16:10:49 -0700 (PDT)
-Message-ID: <fb98be99-58e9-9f09-7179-cef70b45a8dc@acm.org>
-Date:   Sat, 29 Oct 2022 16:10:47 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.0
-Subject: Re: [PATCH 5.10/5.15] scsi: sd: Revert "scsi: sd: Remove a local
- variable"
-Content-Language: en-US
-To:     Yu Kuai <yukuai1@huaweicloud.com>, gregkh@linuxfoundation.org,
-        stable@vger.kernel.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, hare@suse.com
-Cc:     linux-scsi@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
-References: <20221029025837.1258377-1-yukuai1@huaweicloud.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20221029025837.1258377-1-yukuai1@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S229740AbiJ3B3p (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Oct 2022 21:29:45 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56F046580;
+        Sat, 29 Oct 2022 18:29:43 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id ED5F7B80D81;
+        Sun, 30 Oct 2022 01:29:42 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id A87A7C433D6;
+        Sun, 30 Oct 2022 01:29:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1667093381;
+        bh=wW/3IjMHtkVJu+daeALn/GNz7gKs/NWGCDtcHz5V52g=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=FzyNCopZyj6RT+D4zOkkxdIuen0oDcmYV6K1jJ1CdxDPqyeOh2wdbuvOIIL0SmgKm
+         EYpLaaEoO4hsKjGu8RCq9WHard1Hien5xyUeiXpRT9La5dxKWkhfAAQlOPi27Tsmcy
+         v/qNib0FuNs39uPFTx8WdruyldeKCNM+mL+nIA+tVZr2LFBryXhpvQNsjr+/ajJmi5
+         vrphBWaBlegf5bshjQ4gppPkYg060xWeVvRsvHTnlxlpCOOw6Pz+SmfylpYYC7w0oO
+         IZYsbUCnF/K3KkOWFKZolXthEE0VZCgL8Ws7M63qfLz6rMd+peJ/FeJt2PDc0u5ukh
+         LQDExe35FW5XA==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 8F2CAC4167B;
+        Sun, 30 Oct 2022 01:29:41 +0000 (UTC)
+Subject: Re: [GIT PULL] SCSI fixes for 6.0-rc2
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <849ccec8eca62c218b36853c2be3ae288983d1e5.camel@HansenPartnership.com>
+References: <849ccec8eca62c218b36853c2be3ae288983d1e5.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <849ccec8eca62c218b36853c2be3ae288983d1e5.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+X-PR-Tracked-Commit-Id: 307539eed46395d27e0ecc0ae4d9d6e99eb15fcd
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 83633ed70c50d3a8470c7e40732efa165dcc2dc7
+Message-Id: <166709338158.23656.15378550568662499562.pr-tracker-bot@kernel.org>
+Date:   Sun, 30 Oct 2022 01:29:41 +0000
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/28/22 19:58, Yu Kuai wrote:
-> This reverts commit 84f7a9de0602704bbec774a6c7f7c8c4994bee9c.
-> 
-> Because it introduces a problem that rq->__data_len is set to the wrong
-> value.
-> 
-> before this patch:
-> 1) nr_bytes = rq->__data_len
-> 2) rq->__data_len = sdp->sector_size
-> 3) scsi_init_io()
-> 4) rq->__data_len = nr_bytes
-> 
-> after this patch:
-> 1) rq->__data_len = sdp->sector_size
-> 2) scsi_init_io()
-> 3) rq->__data_len = rq->__data_len -> __data_len is wrong
-> 
-> It will cause that io can only complete one segment each time, and the io
-> will requeue in scsi_io_completion_action(), which will cause severe
-> performance degradation.
+The pull request you sent on Fri, 28 Oct 2022 17:15:39 -0400:
 
-It's probably worth mentioning that the code affected by this patch has 
-been removed from the master branch and hence that this patch is only 
-needed for stable kernels. Anyway:
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/83633ed70c50d3a8470c7e40732efa165dcc2dc7
+
+Thank you!
+
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
