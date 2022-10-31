@@ -2,248 +2,182 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F4F2FA3744
-	for <linux-scsi@archiver.kernel.org>; Sun, 30 Oct 2022 23:06:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89927FA3740
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Oct 2022 05:59:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229696AbiJ3XGH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 30 Oct 2022 19:06:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56764 "EHLO
+        id S229505AbiJaF7R (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 31 Oct 2022 01:59:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60436 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229457AbiJ3XGG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Oct 2022 19:06:06 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5AC2095AF;
-        Sun, 30 Oct 2022 16:06:05 -0700 (PDT)
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 29UIHMHm014032;
-        Sun, 30 Oct 2022 23:05:46 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2022-7-12;
- bh=ggHLi7eJU8zRXMX4QDCCLknVU20L+y+TVNHbLt8Z+V0=;
- b=RFkX4Nh673nI4LCWNdjAMoigOrvAa5fl74uMaqd0Bb7WdbQooEgv+VI66PRAR4Sd8fCn
- pejkXNXOUttUAXNygfggdYjJ4Us0RibdukNQr9KxWUwc9/Hk1pHYXteTS+heKxdlxhL0
- NPEqLSw6yh7G/jVfDKaZMMdKBvE99Y3FUtTUE/mxQryYuCMKX95R1q7AcBQufmA6PUHo
- 8QZ3FFv2wpYqenwU66+3yy6E4NGXSBXj44mkpfS5/92qczdqZwpi0P8PD9YLHCQQ97qt
- 1XWtqn3Im5LHokq4rQB7hi2f6+21n5BbTxbpIOw5qiy77uMldj92hUYJK7gFX/DeetZ4 fg== 
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3kgvqt9yhp-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 30 Oct 2022 23:05:46 +0000
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 29UMYAhQ029388;
-        Sun, 30 Oct 2022 23:05:45 GMT
-Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2175.outbound.protection.outlook.com [104.47.56.175])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3kgtm2m4y8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 30 Oct 2022 23:05:45 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=gyO1kYEnsxmeAij0+4yWcJGxvGIt9OP2fEnKc8S4j75UJlqPQvttg5jZyqFDM5+Q5DyzzjvxOe0HLMU4zw5J1IhicdH3M63mvXp6d6h935iK8u4CkkUbExji1Si6qjePye3UUcAKSo3W8SgsfqV8wmyQud/DTWkFhDSCPALEBg7SVbbutVQZtSQ38swPeBZeJJtmREXc/UGR1EefFXEVLmbEwzH2x4ExROPoxGHKlmmYnE8dxJ7stjM7F++GDOga0XRuKnEr6K9VWONK5HD+Bevxx08xt1tAfTC/6EDmY9mf3TLlv26hIWmc1MhXRua703XyMZ3WSAtg7y6nlkU3EA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ggHLi7eJU8zRXMX4QDCCLknVU20L+y+TVNHbLt8Z+V0=;
- b=dsYLmkZqY/2NdRUTHM77EUHYUYdRZvImXylntdqPdJ5S9Gq2Ha8CzPTYU2GlUJzjwVMjpdj5S3SMMarxBucHq45CXlOkhMlxMbkFY/lNgj4L6+Bl9fBvwue4/LHFPqjy/JpVpf466BbXxEFYTVk7ls4QK+H8cmWY3p4te6tNVStl1+5kkaU0cQkLarHDCUIIniOd0tNfX8/TH6OKulYzlKv6Pulk0QS9+6Ymg7G+gjt9cf15RQvizUOzl6sogWToK5n37vKURWMFvKxY/djenEJrfgXW6gbWbDfd00rGWo6ElcE+5aq5B2N4P9velbmR1eoKP0jBKWJm69HUSzxTCg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ggHLi7eJU8zRXMX4QDCCLknVU20L+y+TVNHbLt8Z+V0=;
- b=bRf00gAZNNdFe6AeD/V80QMzu2ErpxceOo2coZZrAOOX8mhUyicu3Cw07+zGHsk+xZO5AoqbnGpmcewISQBPmCdIoidBKKv/2YwjUkcVcMrNUllVqNV4BSQqOATOCm7veYD3kNN/W4UFYvpuZPIU4YUxNThFn+IHE9HCJPqLG2w=
-Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
- SJ0PR10MB6304.namprd10.prod.outlook.com (2603:10b6:a03:478::8) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5769.15; Sun, 30 Oct 2022 23:05:38 +0000
-Received: from DM5PR10MB1466.namprd10.prod.outlook.com
- ([fe80::19f7:e081:85b4:c5df]) by DM5PR10MB1466.namprd10.prod.outlook.com
- ([fe80::19f7:e081:85b4:c5df%7]) with mapi id 15.20.5769.019; Sun, 30 Oct 2022
- 23:05:38 +0000
-Message-ID: <a7e447b5-b26e-7aa0-ab6a-3463b8497d26@oracle.com>
-Date:   Sun, 30 Oct 2022 18:05:35 -0500
+        with ESMTP id S229492AbiJaF7Q (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Oct 2022 01:59:16 -0400
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80FFAB4AC
+        for <linux-scsi@vger.kernel.org>; Sun, 30 Oct 2022 22:59:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1667195955; x=1698731955;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=vflxvR+XmHinY4eo+kW8luvLFnoJAGpWj7D2G8z6iqY=;
+  b=SFTwc1hwVzhGrBrH/hq5XDE7qt3HCUK3eKgz0vAE1gA96Vqb6CjLWfWC
+   ZiRpyIcpKBOwo/1H/TKyRXzmTixt/Ln75tQbOvs49q5aYH92NFfOJj+QE
+   Dsx2julNuh1ToDqz5sNFq05tbn9SqClWKXlV3Dmagq3nZDtVrrNcKcTf+
+   +yEubGi6iNP46/ArJP4sJ62S3LtDmFFV+BAWckUknY/iZATnBov2nbLKj
+   tgqWuLeXRRXcXNyvvWnbTmdP1rhHFSMYJSmSkht0E7/x0QMhSsfJBZ02h
+   bmufZHz/Xwm6WcgTNUkyJC5BxmSx/pfA3UrGymVwLrgGDYo45tny7TgSu
+   g==;
+X-IronPort-AV: E=Sophos;i="5.95,227,1661788800"; 
+   d="scan'208";a="327211890"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 31 Oct 2022 13:59:14 +0800
+IronPort-SDR: fow8B6y8GaJHTojh2Bb2ER9DVzlk789YugXP6xw/apknTYnhX9a+1oBEmHe2tNmEqqf6zfjUjV
+ MSWlH4l9NWOBcDdwYE+MCRwQJXvdGthOFWh3UhhYNpylIDxaf9GtWLqZDQvoQ47O77SwVSnDqf
+ YBiqCk/kUC6bZwfXn7IzKhqYaQ0wgpdnnbQMog1vhJkM20pYpuCJtMSOFeCBflaYyj1lyg5OZr
+ YqITOuXZ/ce8s4700LIA102OzABol10Hx29S0IkU1Y1g2BmafsBUY0Nqp7hUFPEN98pzcL00SC
+ OQESgJAh4XQTLXcjbU4LobrW
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Oct 2022 22:18:30 -0700
+IronPort-SDR: QHCTMcqUFfRwP42IaLwp10e9yFJgfHKGibTJ/M5lPPzQMZmmI15uxE862x6JJ01Bfy+GasvdWM
+ OednuI2MXYKeEv3cIGGr8H5cCROL8HXPtKCHRoy6/PrZERm0Bmag0sr593AsSconNf2Q3awTRt
+ 2E9xOnuxHA2INKLo/hhdvc+B2Ho1wRHD4CsBPg+im1UET5GUF7mq7oyIQ5Rsj36kXNhjKNAxQY
+ I0+3EsSLHnYFdenMDrKm+v4HdLg6vxpMUI//pQekHPjqzCQqzxCwL6qDduzQ24jXZ5gy6LfpfL
+ 7pE=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Oct 2022 22:59:15 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4N12Xd33Jxz1RWxq
+        for <linux-scsi@vger.kernel.org>; Sun, 30 Oct 2022 22:59:13 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1667195952; x=1669787953; bh=vflxvR+XmHinY4eo+kW8luvLFnoJAGpWj7D
+        2G8z6iqY=; b=ixW6Y4O5mJwOkP/wNk7ftWn6xwxRMW+qeUb/7TDih7EuLpkIHjS
+        WynJ4X8xzdH/ZQEX2I0CGWT71Z/9mD4qhXJ5FW1bm8Vxa5pT1U88iru30w6bwu4P
+        rjOn6JQW2kjIHHon2/VtZgX1U2fU3vwDkmhSwp4dhSVeJod6jSVfpgLAKv/XH2tb
+        E+Mtl5VoBAkZXZ76uxKHnVkit5JjvyBi35jdf2eWxeaLpTs4dq46dqRyJR7UYfyJ
+        nH3QMo9AGQMgv58LXMO8umBhboUm7URL5oKkKiKb1RztrlBrX8zqqrsTvFGLCFOT
+        KnkAkPfVRc4tXrS4kfbkhSPtgfdsk9ID7vQ==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id JH7GtEaz7MzI for <linux-scsi@vger.kernel.org>;
+        Sun, 30 Oct 2022 22:59:12 -0700 (PDT)
+Received: from [10.149.53.254] (washi.fujisawa.hgst.com [10.149.53.254])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4N12XY1nGYz1RvLy;
+        Sun, 30 Oct 2022 22:59:09 -0700 (PDT)
+Message-ID: <0e4994f7-f131-39b0-c876-f447b71566cd@opensource.wdc.com>
+Date:   Mon, 31 Oct 2022 14:59:07 +0900
+MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.3
-Subject: Re: [PATCH v3 12/19] block,nvme,scsi,dm: Add blk_status to pr_ops
- callouts
+ Thunderbird/102.4.0
+Subject: Re: [PATCH RFC v3 2/7] ata: libata-scsi: Add
+ ata_internal_queuecommand()
 Content-Language: en-US
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     bvanassche@acm.org, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com,
-        linux-block@vger.kernel.org, dm-devel@redhat.com,
-        snitzer@kernel.org, axboe@kernel.dk,
-        linux-nvme@lists.infradead.org, chaitanyak@nvidia.com,
-        kbusch@kernel.org, target-devel@vger.kernel.org
-References: <20221026231945.6609-1-michael.christie@oracle.com>
- <20221026231945.6609-13-michael.christie@oracle.com>
- <20221030082020.GC4774@lst.de>
-From:   Mike Christie <michael.christie@oracle.com>
-In-Reply-To: <20221030082020.GC4774@lst.de>
+To:     John Garry <john.garry@huawei.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, hare@suse.de, bvanassche@acm.org,
+        hch@lst.de, ming.lei@redhat.com, niklas.cassel@wdc.com
+Cc:     axboe@kernel.dk, jinpu.wang@cloud.ionos.com,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linuxarm@huawei.com, john.garry2@mail.dcu.ie
+References: <1666693976-181094-1-git-send-email-john.garry@huawei.com>
+ <1666693976-181094-3-git-send-email-john.garry@huawei.com>
+ <08fdb698-0df3-7bc8-e6af-7d13cc96acfa@opensource.wdc.com>
+ <83d9dc82-ea37-4a3c-7e67-1c097f777767@huawei.com>
+ <9a2f30cc-d0e9-b454-d7cd-1b0bd3cf0bb9@opensource.wdc.com>
+ <0e60fab5-8a76-9b7e-08cf-fb791e01ae08@huawei.com>
+ <71b56949-e4d7-fd94-c44a-867080b7a4fa@opensource.wdc.com>
+ <b03b37a2-35dc-5218-7279-ae68678a47ff@huawei.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <b03b37a2-35dc-5218-7279-ae68678a47ff@huawei.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: CH0PR13CA0019.namprd13.prod.outlook.com
- (2603:10b6:610:b1::24) To DM5PR10MB1466.namprd10.prod.outlook.com
- (2603:10b6:3:b::7)
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM5PR10MB1466:EE_|SJ0PR10MB6304:EE_
-X-MS-Office365-Filtering-Correlation-Id: 8916f4e5-371d-42f7-fe2d-08dabacb4270
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: e2y7Pi1MUJhEqj17Nv8PnQpaAV6EGYjGQ3M7l9b1LN6T1+2myMdwXwqIFCz4ELFWDLb8D0ntYyRO7GaZCMjtllblKWkGNxv5bjLs2L97yL6jwMgmlXXm3eX11eIIsJp+KWvSt38x7yNnh0quVZoOJUrqp41iaYahNpzkQ0G/cEYHQ00rtMsoGJnDQlkc7pmS5npEUaQvQ6+F3wnBsTHCGQaC1kNRE9cHhkd/O0j9iyp2iRCrTuYf8SNiil+tkODu7gjdqMc+lJeE6hD905nnze+fw4XY0PA9PZX6qxSRYlNsn/1/c5O9+rNriSp+AMmmkMLhCu8jAmBWPZ4pGGIzBsCPMEa5Uj726LdEuXYkqwU5lui0xeeaXLgBTvwoCIUcgZXyv5YD678jwqM39QK+MtKkeJ37Jis9+u7Z0Bmq5/NvF8+8ZXQ8qZNkYbJdeSYIGMqNuLvBiuJhh/dLvtvX6bhCvMQ12PowsEpkqnQ3amx9ITZnqwdTlpXBeOCT+0z9itWGTTLdDq9JLlM9lYUXrG2tTz4/1faT9ou8q57wc6KTKy09W7kIcWusYiC2c0jc56Zej/LLBLEp/xQlqTGRZuexL5rQgZWP1qOy0lkakLQ2o8ExQccWXRYHv2c9Vpcu+FIgT1adT0pXpzhbPfn3OsNV7mOOK7qeD4/JNytPknoPbJiiSo4Lyp1Tc1yJF9oJgPwsKbnuXIfPrlINOsKRT5zom0XugD5qAvAdSyDkxxWFTklKZPZufrZNzZ4XfnKNpilpDa/douRKvC2AmyWtKHMfjtF5D+LdTYUgsyR5bsY=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(136003)(39860400002)(366004)(396003)(376002)(346002)(451199015)(53546011)(186003)(83380400001)(31696002)(38100700002)(2616005)(86362001)(7416002)(2906002)(8936002)(6916009)(478600001)(41300700001)(6486002)(66946007)(6666004)(4326008)(6506007)(66556008)(26005)(66476007)(5660300002)(8676002)(316002)(6512007)(36756003)(31686004)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?NVVvNnBwbkpSbmhxZWUxNTZDSVdlZDlkQjVENVJYQjVuOHdCdW1McldwblVi?=
- =?utf-8?B?QUVlZmVzME9RNzBZNE5kQ2s4Z0NUUC9lKzRwREdLS2JPRS9wdDlLRlpMdHE1?=
- =?utf-8?B?bWxLV2lSU20wU3FmdGptZ09hODFOTlc2dEJWaUdpTUI1enJQcmtaYXZGT1lQ?=
- =?utf-8?B?Nm0rNkRNcVgrcS83ak9xckpld1NtM2gveDNsQitSSGlCZmVmYkN5a1R5TEdl?=
- =?utf-8?B?QkMxY1lSc0Nzc2RQU1d1WmI3NUxvdXcwTGxEdGZkVkkxenIvTHpTN1JGR1Fu?=
- =?utf-8?B?bWJvY2JRQjhEQ0N2bDh0MU1zNVQ0UGJXUDBZRGN0VnhCRzJPYnpyYTQvMXNx?=
- =?utf-8?B?S0VmRmxJQnc1Z3BHd1RZdjBUUnQ5MldCZmo0aUliZlZOQW5RK01xak1vK1Zu?=
- =?utf-8?B?WnJwZDFkQllVUGl6STloeXJkOHo3Z0FRUzYvVHRaek9qRTJDOVNva1crcUQ2?=
- =?utf-8?B?Rk15Q1dnYnNucHozYlVnL1A2MUE5QUJNU3MrNks1WWpzNCttNURkYTM2SWZv?=
- =?utf-8?B?aEJSSzVrdzF6UkdINXlrUEFsVjdWa3czMEVYZEFKZTI4OUh4QU9WYlRRZ3cz?=
- =?utf-8?B?TWxkTHpxZWFPWDZURFQ2S3YvUzI3bFJZejRNZG1wTDZPTng3QmVVWkU3TXNv?=
- =?utf-8?B?Qis5MFd2emhScHRFcHd3S2ZIUmlUWENMUzdtSXFuejgvRWRjajZOVkQ0Nzh0?=
- =?utf-8?B?T09oVzRoUEV3KzZRNitzc1lFbVpKMUxiM0VqL201a2VuNWhrRFBKWDBlUjBk?=
- =?utf-8?B?ekN2Wmp6MmYzbjZvTHVGajJkcHNRSWlEK2FUUGdvVHlGcmQyNDE1YUFHNndo?=
- =?utf-8?B?QWo5M1BjTERoemV5RXdCS2NlZW53M3J6aEN2MUk0ckVDR0xzVlBiRHA0QjdR?=
- =?utf-8?B?U3pQbTNhMXU1K2tqTCsvenJXaFdoR3h6L01rSnN4WjRkdXQwMjh2UVVnc1M0?=
- =?utf-8?B?a0o4aUZUKzFDTytwMzV3R0JiU09YcG9Wb1JxU25TbzM3dEpSc2c2Ny90Rk00?=
- =?utf-8?B?bkpsOE1UVkQvNmlucjRxZ0RWY1pTWGJSSFVmeGswY01penY1bncvMVhlTm9Y?=
- =?utf-8?B?OWJnZWF1RlZQejdUWW5BdHhLMUVuQzU3amtjS01mNC9DbEI4cjg4a0VFZlNm?=
- =?utf-8?B?OGpGNTROZCthcHl0N09pejUzd0xFQTFPSmtpSk4weDgyVGgxMnNCUURTOExt?=
- =?utf-8?B?a2w5ZHpRc3NKTUpBSWlhdjVqV3V6c3FUQnlwRnVlb3lSUjRLaTlrYlo0YXNJ?=
- =?utf-8?B?bTh3RTNDT01NSWJPandXN1JjcEpWSWVGM2hoYmJyKzN3bXJsbDVzZENrM0ZG?=
- =?utf-8?B?MmNySjk2Y2lHV1FnclQ5ZHp2R3BnOFpTSm9HUUNyeDBuTVFUVllXU2Y4cmt6?=
- =?utf-8?B?dkI2bGVXbytEYmhTY0QrQTczWE1ENzhxSlZpVU5lR2ZEdlpIWktQdGVjYTF1?=
- =?utf-8?B?QU9hQ0t0Q0hjOUhyR1hDMi9mTjdlWEhGa0hMaThSRGI1YmYrQnpQbEdoUHFU?=
- =?utf-8?B?RkVHV2dQeTVRSEhOWVhWanpwUmN3bzlEUWtMYmI4NGYraUZPdHVVYjRXeHE4?=
- =?utf-8?B?OFN5bkJoSnFHQUE1Vld3dUZ3L1JJT1c2K3hQdThMMCtMNFhSa2Jaa2FIUVhh?=
- =?utf-8?B?VXhtY1NKK0FlZkRPcUE4K1kxM1VjL2pIYlBGVklzNGZ0MTFlb1RucFZiUHNk?=
- =?utf-8?B?QzdqVGlSMTlITDg2REUxbFY2NWNqU1hKTVpyNGp0UjJkSlpxZy90S2NMRkFH?=
- =?utf-8?B?M1QraGdqR0J1OXBoeFU2RVErMVJVc1Rxb1djRDlWWVB2MjVIWmo2S081OEFz?=
- =?utf-8?B?U1FxWTVvVXJMNCsxR1FEY01TRG9uMUNBZjZXZmtqTkEyeDJObk9YNlNRZDR5?=
- =?utf-8?B?TzdXM09MT2RjM1psY0ZoeWdBS3A3ZVhlalB3cktNWjc5UEZCWkF6dzZ0aEc2?=
- =?utf-8?B?Y0UrVlA0MXBLbzJXUVhyRHlLVTJQaHZGZzk5SnVUMm1ZdHlQdVA3RVF0WWpn?=
- =?utf-8?B?RllpRDUrSk8rRWg3S0dvdzl6aGM4YUJLMUtwaDBPK1RLSmE1bUhWUm9OTHNB?=
- =?utf-8?B?blB4TS94NTc0YVFGWXNWOEU0YUVNbGRqcmE2dzF2UWtSMkxOQ3IrdGtWcGUy?=
- =?utf-8?B?T25seURxTHBGR3c3c3dlc25KVU1wcHlDU2g4Z2JwWVVCdnhCMHVId1ByOVQ3?=
- =?utf-8?B?Rmc9PQ==?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8916f4e5-371d-42f7-fe2d-08dabacb4270
-X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Oct 2022 23:05:38.3893
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 6cjQhPAd03cnEzpBZs0hbBgNjFLARBgf9R+uAA8pxdBSq7UnHoUxDCF4H0zQ9r80Wdx9Hp7T7yiU9uPWTMtYh2UzzVvl4l5fGIrMjV8tYH8=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR10MB6304
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2022-10-30_16,2022-10-27_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 spamscore=0 bulkscore=0
- suspectscore=0 phishscore=0 malwarescore=0 mlxscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2210170000
- definitions=main-2210300156
-X-Proofpoint-GUID: epqE2Bnfy914LdWn-gLTqIUUheB9EdDJ
-X-Proofpoint-ORIG-GUID: epqE2Bnfy914LdWn-gLTqIUUheB9EdDJ
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/30/22 3:20 AM, Christoph Hellwig wrote:
-> On Wed, Oct 26, 2022 at 06:19:38PM -0500, Mike Christie wrote:
->> To handle both cases and keep userspace compatibility, this patch adds a
->> blk_status_t arg to the pr_ops callouts. The lower levels will convert
->> their device specific error to the blk_status_t then the upper levels
->> can easily check that code without knowing the device type. Adding the
->> extra return value will then allow us to not break userspace which expects
->> a negative -Exyz error code if the command fails before it's sent to the
->> device or a device/driver specific value if the error is > 0.
+On 10/28/22 17:33, John Garry wrote:
+> On 28/10/2022 09:07, Damien Le Moal wrote:
+>>> Well, yeah. So if some error happens and EH kicks in, then full queue
+>>> depth of requests may be allocated. I have seen this for NCQ error. So
+>>> this is why I make in very first patch change allow us to allocate
+>>> reserved request from sdev request queue even when budget is fully
+>>> allocated.
+>>>
+>>> Please also note that for AHCI, I make reserved depth =1, while for SAS
+>>> controllers it is greater. This means that in theory we could alloc > 1x
+>>> reserved command for SATA disk, but I don't think it matters.
+>> Yes, 1 is enough. However, is 1 reserved out of 32 total, meaning that
+>> the
+>> user can only use 31 tags ? or is it 32+1 reserved ? which we can do
+>> since
+>> when using the reserved request, we will not use a hw tag (all reserved
+>> requests will be non-ncq).
+>>
+>> The 32 + 1 scheme will work. 
 > 
-> I really hate this double error return.  What -E* statuses that matter
-> can be returned without a BLK_STS_* equivalent that we couldn't convert
-> to and from?
+> Yes, 32 + 1 is what we want. I now think that there is a mistake in my
+> code in this series for ahci.
+> 
+> So I think we need for ahci:
+> 
+> can_queue = 33
 
-Hey,
+Hmm.. For ATA, can_queue should be only 32. nr_tags is going to be 33
+though as we include one tag for a reserved command. No ? (may be I
+misunderstand can_queue though).
 
-I didn't fully understand the question. The specific issue I'm hitting is
-that if a scsi/nvme device returns SAM_STAT_RESERVATION_CONFLICT/
-NVME_SC_RESERVATION_CONFLICT then in lio I need to be able to detect that
-and return SAM_STAT_RESERVATION_CONFLICT. So I only care about
--EBADE/BLK_STS_NEXUS right now. So are you asking about -EBADE?
+> nr_reserved_cmds = 1
+> 
+> while I only have can_queue = 32
 
-Do you mean I could have sd_pr_out_command return -EBADE when it gets
-a SAM_STAT_RESERVATION_CONFLICT (nvme would do the equivalent). Then in
-lio do:
+Which seems right to me.
 
-ret = ops->pr_register()
-if (ret == -EBADE)
-	return SAM_STAT_RESERVATION_CONFLICT;
+> 
+> I need to check that again for ahci driver and AHCI SHT...
+> 
+>> But for CDL command completion handling, we
+>> will need a NCQ command to do a read log, to avoid forcing a queue drain.
+>> For that to reliably work, we'll need a 31+1+1 setup...
+>>
+> 
+> So is your idea to permanently reserve 1 more command from 32 commands ?
 
-The problem I hit is that in the ioctl code I then have to do:
+Yes. Command Duration Limits has this weird case were commands may be
+failed when exceeding their duration limit with a "good status" and
+"sense data available bit" set. This case was defined to avoid the queue
+stall that happens with any NCQ error. The way to handle this without
+relying on EH (as that would also cause a queue drain) is to issue an
+NCQ read log command to fetch the "sense data for successful NCQ
+commands" log, to retrieve the sense data for the completed command and
+check if it really failed or not. So we absolutely need a reserved
+command for this, Without a reserved command, it is a nightmare to
+support (tag reuse would be another solution, but it is horrible).
 
-@@ -269,7 +270,14 @@ static int blkdev_pr_register(struct block_device *bdev,
- 
- 	if (reg.flags & ~PR_FL_IGNORE_KEY)
- 		return -EOPNOTSUPP;
--	return ops->pr_register(bdev, reg.old_key, reg.new_key, reg.flags);
-+	ret = ops->pr_register(bdev, reg.old_key, reg.new_key, reg.flags);
-+	if (ret == -EBADE) {
-+		if (bdev_is_nvme(bdev))
-+			ret = NVME_SC_RESERVATION_CONFLICT;
-+		else if (bdev_is_scsi(bdev)
-+			ret = SAM_STAT_RESERVATION_CONFLICT;
-+	}
-+	return ret;
- }
- 
+> Or re-use 1 from 32 (and still also have 1 separate internal command)?
 
-or I could convert the scsi/nvme or code to always use BLK_STS errors.
-In LIO I can easily check for BLK_STS_NEXUS like with the -EBADE example. In
-the ioctl code then for common errors I can go from BLK_STS using the
-blk_status_to_errno helper. However, for some scsi/nvme specific errors we
-would want to do:
+I am not yet 100% sure if we can treat that internal NCQ read log like
+any other read/write request... If we can, then the 1-out-of-32
+reservation would not be needed. Need to revisit all the cases we need
+to take care of (because in the middle of this CDL completion handling,
+regular NCQ errors can happen, resulting in a drive reset that could
+wreck everything as we lose the sense data for the completed requests).
 
-@@ -269,7 +270,36 @@ static int blkdev_pr_register(struct block_device *bdev,
- 
- 	if (reg.flags & ~PR_FL_IGNORE_KEY)
- 		return -EOPNOTSUPP;
--	return ops->pr_register(bdev, reg.old_key, reg.new_key, reg.flags);
-+	ret = ops->pr_register(bdev, reg.old_key, reg.new_key, reg.flags);
-+	switch (ret) {
-+	/* there could be nvme/scsi helper functions for this which would
-+	 * be the reverse of nvme_error_status/ */
-+	case BLK_STS_NEXUS:
-+		if (bdev_is_nvme(bdev))
-+			ret = NVME_SC_RESERVATION_CONFLICT;
-+		else if (bdev_is_scsi(bdev)
-+			ret = SAM_STAT_RESERVATION_CONFLICT;
-+		break;
-+	case BLK_STS_TRANSPORT:
-+		if (bdev_is_nvme(bdev))
-+			ret = NVME_SC_HOST_PATH_ERROR;
-+		else if (bdev_is_scsi(bdev)
-+			ret = DID_TRANSPORT_FAILFAST or DID_TRANSPORT_MARGINAL;
-+		break;
-+	case BLK_STS_NOTSUPP:
-+		if (bdev_is_nvme(bdev))
-+			ret = NVME_SC_BAD_ATTRIBUTES or
-+				NVME_SC_ONCS_NOT_SUPPORTED or
-+				NVME_SC_INVALID_OPCODE or
-+				NVME_SC_INVALID_FIELD or
-+				NVME_SC_INVALID_NS
-+		else if (bdev_is_scsi(bdev)
-+			ret = We don't have a way to support this in SCSI yet
-				because it would be in the sense/asc/ascq.
-+		break;
-+	default:
-+		ret = blk_status_to_errno(ret);
-+	}
-+	return ret;
- }
- 
+In any case, I think that we can deal with that extra reserved command
+on top of you current series. No need to worry about it for now I think.
+
+> 
+> Thanks,
+> John
+
+-- 
+Damien Le Moal
+Western Digital Research
+
