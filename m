@@ -2,181 +2,154 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22441FA3741
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Oct 2022 18:51:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDC33FA3743
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Oct 2022 18:52:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229686AbiJaSv0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 31 Oct 2022 14:51:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44986 "EHLO
+        id S229767AbiJaSwl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 31 Oct 2022 14:52:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46162 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229925AbiJaSvM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Oct 2022 14:51:12 -0400
-Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97F2E13EAF
-        for <linux-scsi@vger.kernel.org>; Mon, 31 Oct 2022 11:51:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1667242271; x=1698778271;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=PA5fyMqNL5/ac9cHotmIiHx2+YF92ulPlNxl6VHoWE0=;
-  b=X4lO1s1K+ixtFTSl81uhzUiseVQQu8+JkSdDyl9lWWuQCLd2xtSMwjCH
-   za+T7H62NI72N+OySJfHO/saK2v2bu3ErTNO+EwlHBqb83UyPNAt1eULc
-   TA2B1vlc8/9rtk8CItRbY1FgVv6KI7299MUeBZWQIFecbeAEjrGd8yeek
-   tUKGlXM71VSESuu+zJ1yFYw071vhGVV9wIH3sC4vp8OhosWEAf6w8QaBS
-   eV3RlAw7DWYK5I0x/2//bc4L9+meO+lqG/Li+/VKKcYzQF7P7tnyfTnQR
-   1vUQqoTYKeBDs/m3Ld7x82bVcE23bMGcgnay7GUrvId23FkxXhZVc2tcL
-   w==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10517"; a="292271314"
-X-IronPort-AV: E=Sophos;i="5.95,228,1661842800"; 
-   d="scan'208";a="292271314"
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Oct 2022 11:51:10 -0700
-X-IronPort-AV: E=McAfee;i="6500,9779,10517"; a="878838171"
-X-IronPort-AV: E=Sophos;i="5.95,228,1661842800"; 
-   d="scan'208";a="878838171"
-Received: from ahunter6-mobl1.ger.corp.intel.com (HELO [10.0.2.15]) ([10.252.47.25])
-  by fmsmga006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Oct 2022 11:51:07 -0700
-Message-ID: <1183b01f-63a8-5854-6c94-1b62c32cc280@intel.com>
-Date:   Mon, 31 Oct 2022 20:51:03 +0200
+        with ESMTP id S229599AbiJaSwk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Oct 2022 14:52:40 -0400
+Received: from mail-lf1-x12f.google.com (mail-lf1-x12f.google.com [IPv6:2a00:1450:4864:20::12f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE18713CEC
+        for <linux-scsi@vger.kernel.org>; Mon, 31 Oct 2022 11:52:38 -0700 (PDT)
+Received: by mail-lf1-x12f.google.com with SMTP id bp15so20600581lfb.13
+        for <linux-scsi@vger.kernel.org>; Mon, 31 Oct 2022 11:52:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=2m+IiXrsLStNouFmhecgJA2gSt8vjAtj7/teiT7CjBk=;
+        b=hdIf0eTW0S87ia9RbcQzP4ZT3P6rvadiOZG25jVkki0QnvwfSj0RRW/Gb6sJG3yYEU
+         9AZ7Z4nVmyYicjp7/LPMJDb5ILz+7+R+6T0paAgeMknQ4gBYf3fUIC2L21DZllRR2n1h
+         dLbPIodLPxuZ5ypSwBawN42zYR16siA+aj9pyOvPYKHd87ShCHhFAxZnzghkTMlSy9r+
+         v15m7A0HX8cNJPvR/fZyFbo8kl+1UXWRiCEWm0iuqFMIqCjso7/747ukUo9aEmGwMGML
+         C0UwPJIJs7S56ONV+Uop4COrz8s6hgqnX4qh0U0frInJYMQN+dFi+Y1f1C6C3D9PTkUr
+         MJfg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=2m+IiXrsLStNouFmhecgJA2gSt8vjAtj7/teiT7CjBk=;
+        b=kr6UxrQwlOWxpeYDVEUuEquB0PEVduCJLyy2g9CIEbEiqjf/s92mQ8lsNt5FqWFIya
+         3lTkwlVijwPTWYHC8+bMJUWVYsgih6uU9FbBR260a3Fosq2g9j73aIgr0x1uR2g5i4uc
+         uNoVTOVD2o7TMKBahEA9dCw5WedGawxFU4RgZpvA74PZ+4+Yk8FnAoHVq+cKLufZ1/2/
+         nrWeZ3swGq4uJJvV1/rLVPOOw5IgpjTgezY1ecnQwQ0GfuJm5HAvPmXsCj+bTnROYAw5
+         qM5IOJQfvIH/169VirkMcF7KkjkItxI5+1pPQ+tR934qA99Fs0VwN6g5GXxj7+opAC3y
+         QTJA==
+X-Gm-Message-State: ACrzQf2Sl0aZ43NKDx3VPsyvo8WNEXT1j9VzPz4D76EvPHxoXybfLhl7
+        44iun6V9qOBQk/Z1v9H16XuDwg==
+X-Google-Smtp-Source: AMsMyM4Q5b7LpNXMLeLpnI7m/hdrZ5ObVjNpLE+Jh9k7S1IeKWaR1G+TBQ4xfp8Zl8sY/DYXeqg87g==
+X-Received: by 2002:ac2:5922:0:b0:4af:d4e:de3f with SMTP id v2-20020ac25922000000b004af0d4ede3fmr5679455lfi.528.1667242357077;
+        Mon, 31 Oct 2022 11:52:37 -0700 (PDT)
+Received: from [10.10.15.130] ([192.130.178.91])
+        by smtp.gmail.com with ESMTPSA id q3-20020a2eb4a3000000b0026fb5525ee4sm1454768ljm.116.2022.10.31.11.52.36
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 31 Oct 2022 11:52:36 -0700 (PDT)
+Message-ID: <282de1ee-f1c5-39cf-90d7-8a10fc27c171@linaro.org>
+Date:   Mon, 31 Oct 2022 21:52:36 +0300
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Firefox/102.0 Thunderbird/102.4.1
-Subject: Re: [PATCH v2] scsi: ufs: Introduce ufshcd_abort_all()
-Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>
-References: <20221031183433.2443554-1-bvanassche@acm.org>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-In-Reply-To: <20221031183433.2443554-1-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8
+ Thunderbird/102.3.3
+Subject: Re: [PATCH 14/15] scsi: ufs: ufs-qcom: Add support for finding HS
+ gear on new UFS versions
+Content-Language: en-GB
+To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc:     martin.petersen@oracle.com, jejb@linux.ibm.com,
+        andersson@kernel.org, vkoul@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org, konrad.dybcio@somainline.org,
+        robh+dt@kernel.org, quic_cang@quicinc.com,
+        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-phy@lists.infradead.org,
+        linux-scsi@vger.kernel.org
+References: <20221029141633.295650-1-manivannan.sadhasivam@linaro.org>
+ <20221029141633.295650-15-manivannan.sadhasivam@linaro.org>
+ <cf8dcf53-f131-68f4-c6aa-d41e02ac6d5c@linaro.org>
+ <20221031145647.GC10515@thinkpad>
+From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+In-Reply-To: <20221031145647.GC10515@thinkpad>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 31/10/22 20:34, Bart Van Assche wrote:
-> Move the code for aborting all SCSI commands and TMFs into a new function.
-> This patch makes the ufshcd_err_handler() easier to read. Except for adding
-> more logging, this patch does not change any functionality.
+On 31/10/2022 17:56, Manivannan Sadhasivam wrote:
+> On Sun, Oct 30, 2022 at 12:48:21AM +0300, Dmitry Baryshkov wrote:
+>> On 29/10/2022 17:16, Manivannan Sadhasivam wrote:
+>>> Starting from UFS controller v4, Qcom supports dual gear mode (i.e., the
+>>> controller/PHY can be configured to run in two gear speeds). But that
+>>> requires an agreement between the UFS controller and the UFS device.
+>>> This commit finds the max gear supported by both controller and device
+>>> then decides which one to use.
+>>>
+>>> UFS controller's max gear can be read from the REG_UFS_PARAM0 register and
+>>> UFS device's max gear can be read from the "max-gear" devicetree property.
+>>>
+>>> The UFS PHY also needs to be configured with the decided gear using the
+>>> phy_set_mode_ext() API.
+>>>
+>>> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+>>> ---
+>>>    drivers/ufs/host/ufs-qcom.c | 35 ++++++++++++++++++++++++++++++++---
+>>>    drivers/ufs/host/ufs-qcom.h |  4 ++++
+>>>    2 files changed, 36 insertions(+), 3 deletions(-)
+>>>
+>>> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+>>> index f952cc76919f..268463e92d67 100644
+>>> --- a/drivers/ufs/host/ufs-qcom.c
+>>> +++ b/drivers/ufs/host/ufs-qcom.c
+>>> @@ -281,6 +281,9 @@ static int ufs_qcom_host_reset(struct ufs_hba *hba)
+>>>    static u32 ufs_qcom_get_hs_gear(struct ufs_hba *hba, u32 hs_gear)
+>>>    {
+>>>    	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>>> +	struct device *dev = hba->dev;
+>>> +	u32 max_gear, hcd_max_gear, reg;
+>>> +	int ret;
+>>>    	if (host->hw_ver.major == 0x1) {
+>>>    		/*
+>>> @@ -292,8 +295,33 @@ static u32 ufs_qcom_get_hs_gear(struct ufs_hba *hba, u32 hs_gear)
+>>>    		 */
+>>>    		if (hs_gear > UFS_HS_G2)
+>>>    			return UFS_HS_G2;
+>>> +	} else if (host->hw_ver.major > 0x3) {
+>>> +		/*
+>>> +		 * Starting from UFS controller v4, Qcom supports dual gear mode (i.e., the
+>>> +		 * controller/PHY can be configured to run in two gear speeds). But that
+>>> +		 * requires an agreement between the UFS controller and the device. Below
+>>> +		 * code tries to find the max gear of both and decides which gear to use.
+>>> +		 *
+>>> +		 * First get the max gear supported by the UFS device if available.
+>>> +		 * If the property is not defined in devicetree, then use the default gear.
+>>> +		 */
+>>> +		ret = of_property_read_u32(dev->of_node, "max-gear", &max_gear);
+>>> +		if (ret)
+>>> +			goto err_out;
+>>
+>> Can we detect the UFS device's max gear somehow? If not, the 'max-gear'
+>> property name doesn't sound good. Maybe calling it 'device-gear' would be
+>> better.
+>>
 > 
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> UFS device probing depends on PHY init sequence. So technically we cannot know
+> the max gear of the device without using an init sequence, but this information
+> is static and should be known to a board manufacturer. That's why I decided to
+> use this property. Another option is to use a fixed init sequence for probing
+> the device and do a re-init after knowing it's max gear but that is not
+> recommended.
+> 
+> We need "max" keyword because this property specifies the maximum gear at which
+> the device could operate and not necessarily the gear at which it operates.
+> Maybe, "max-device-gear" would make it clear.
 
-Reviewed-by: Adrian Hunter <adrian.hunter@intel.com>
+Ack, thank you for the explanation. Yes, from my opinion max-device-gear 
+is better. Let's see what Rob and Krzysztof would say.
 
-> ---
-> 
-> Changes compared to v1:
-> - changed type of 'tag' and 'ret' from 'unsigned int' into 'int'.
-> 
->  drivers/ufs/core/ufshcd.c | 62 +++++++++++++++++++++------------------
->  1 file changed, 34 insertions(+), 28 deletions(-)
-> 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index b81a218f5644..d91e1f31c66f 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -6159,6 +6159,38 @@ static bool ufshcd_is_pwr_mode_restore_needed(struct ufs_hba *hba)
->  	return false;
->  }
->  
-> +static bool ufshcd_abort_all(struct ufs_hba *hba)
-> +{
-> +	bool needs_reset = false;
-> +	int tag, ret;
-> +
-> +	/* Clear pending transfer requests */
-> +	for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs) {
-> +		ret = ufshcd_try_to_abort_task(hba, tag);
-> +		dev_err(hba->dev, "Aborting tag %d / CDB %#02x %s\n", tag,
-> +			hba->lrb[tag].cmd ? hba->lrb[tag].cmd->cmnd[0] : -1,
-> +			ret ? "failed" : "succeeded");
-> +		if (ret) {
-> +			needs_reset = true;
-> +			goto out;
-> +		}
-> +	}
-> +
-> +	/* Clear pending task management requests */
-> +	for_each_set_bit(tag, &hba->outstanding_tasks, hba->nutmrs) {
-> +		if (ufshcd_clear_tm_cmd(hba, tag)) {
-> +			needs_reset = true;
-> +			goto out;
-> +		}
-> +	}
-> +
-> +out:
-> +	/* Complete the requests that are cleared by s/w */
-> +	ufshcd_complete_requests(hba);
-> +
-> +	return needs_reset;
-> +}
-> +
->  /**
->   * ufshcd_err_handler - handle UFS errors that require s/w attention
->   * @work: pointer to work structure
-> @@ -6170,10 +6202,7 @@ static void ufshcd_err_handler(struct work_struct *work)
->  	unsigned long flags;
->  	bool needs_restore;
->  	bool needs_reset;
-> -	bool err_xfer;
-> -	bool err_tm;
->  	int pmc_err;
-> -	int tag;
->  
->  	hba = container_of(work, struct ufs_hba, eh_work);
->  
-> @@ -6202,8 +6231,6 @@ static void ufshcd_err_handler(struct work_struct *work)
->  again:
->  	needs_restore = false;
->  	needs_reset = false;
-> -	err_xfer = false;
-> -	err_tm = false;
->  
->  	if (hba->ufshcd_state != UFSHCD_STATE_ERROR)
->  		hba->ufshcd_state = UFSHCD_STATE_RESET;
-> @@ -6272,34 +6299,13 @@ static void ufshcd_err_handler(struct work_struct *work)
->  	hba->silence_err_logs = true;
->  	/* release lock as clear command might sleep */
->  	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> -	/* Clear pending transfer requests */
-> -	for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs) {
-> -		if (ufshcd_try_to_abort_task(hba, tag)) {
-> -			err_xfer = true;
-> -			goto lock_skip_pending_xfer_clear;
-> -		}
-> -		dev_err(hba->dev, "Aborted tag %d / CDB %#02x\n", tag,
-> -			hba->lrb[tag].cmd ? hba->lrb[tag].cmd->cmnd[0] : -1);
-> -	}
->  
-> -	/* Clear pending task management requests */
-> -	for_each_set_bit(tag, &hba->outstanding_tasks, hba->nutmrs) {
-> -		if (ufshcd_clear_tm_cmd(hba, tag)) {
-> -			err_tm = true;
-> -			goto lock_skip_pending_xfer_clear;
-> -		}
-> -	}
-> -
-> -lock_skip_pending_xfer_clear:
-> -	/* Complete the requests that are cleared by s/w */
-> -	ufshcd_complete_requests(hba);
-> +	needs_reset = ufshcd_abort_all(hba);
->  
->  	spin_lock_irqsave(hba->host->host_lock, flags);
->  	hba->silence_err_logs = false;
-> -	if (err_xfer || err_tm) {
-> -		needs_reset = true;
-> +	if (needs_reset)
->  		goto do_reset;
-> -	}
->  
->  	/*
->  	 * After all reqs and tasks are cleared from doorbell,
+
+-- 
+With best wishes
+Dmitry
 
