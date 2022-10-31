@@ -2,103 +2,93 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE126ECAAA1
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Oct 2022 16:05:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22B9EFA3743
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Oct 2022 16:22:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231688AbiJaQFS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 31 Oct 2022 12:05:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36588 "EHLO
+        id S231307AbiJaQWf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 31 Oct 2022 12:22:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42458 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231134AbiJaQFQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Oct 2022 12:05:16 -0400
-Received: from mail-wr1-x42f.google.com (mail-wr1-x42f.google.com [IPv6:2a00:1450:4864:20::42f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89D00E6F;
-        Mon, 31 Oct 2022 09:05:15 -0700 (PDT)
-Received: by mail-wr1-x42f.google.com with SMTP id j15so16649074wrq.3;
-        Mon, 31 Oct 2022 09:05:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=PxS8XgY58rZ4VDhvxJU0b70ZtHBRLLVJ+uq74m8Gs1k=;
-        b=hyack7EcpOyiPwyjHRIHKJLQhbUrLp0AJ0zvFdHUmhnIu1lDq9s3eCKQUGhvadB5BV
-         ciIzp2nvSz1F5UvDxW2KxqpNLj5SqNJX8SQoQpElrXCY2N7SYjwdRFl79IsJ19ekfRjv
-         /ZStuu/HNZExyVH6SclWWed1UgV/TbpIkE7i3zzXPV1aBhXwLEAqH5dJdOKp01kWmo8p
-         WamDMK/VUGacozrIBpoOkQKbb+TRLiADcsxJdlCsCX1QygqwcjaCZJG+mjEoJpvcyVWR
-         SUtyNdg2tM6VJOsFz1d4eylVu2dC1OTmnTxMY4tA6EVe6WC3zhcu+bGvf16V8CQH7NJk
-         a9GQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=PxS8XgY58rZ4VDhvxJU0b70ZtHBRLLVJ+uq74m8Gs1k=;
-        b=8NrzF1iqXem0jvKcXhOYAwmnjFP5YBzZLtGfMtVIdukqmVfU40uTqmjmJHqHhV0Tk/
-         whPa8Aa82VDWn1OaCGiyxsEL7UCID0u/jDDKIqrr2vlD1YVsu37dXJY2r5v6zWnPNN/n
-         3GYAvs6HKqb+N27wgX1wXWtOPffIi5hihdJhKyhVwn3WWNEiIvn/ozJo+FOzhWC4eCFg
-         t7ag7VWiEtYrbXtQgN1BMJGXsHdwuEQRXdYHPT37D52PpERoeXQIimrt6mLNpPBRYfvw
-         8BHA/NB48EaGKBvk5LukuVl5Xso/5oRAmeOVxIxLuRLmq41ooe/FQDwxsrQxqJBY7OaA
-         euLg==
-X-Gm-Message-State: ACrzQf1aQSiSq0DKJ6mDPainxDcmDfx8mnPM3kPgFnv8DMeIWXgW/RmG
-        8jky0x90YQ0A/SSyeOAXBYU=
-X-Google-Smtp-Source: AMsMyM64PHIVLvhZ0ao1bjSFCKEssEVa+yDVwEWtssjXxawjpYqunUVt2os8vbzvf+uoeZuASHGAeQ==
-X-Received: by 2002:adf:e288:0:b0:236:bf57:c2c6 with SMTP id v8-20020adfe288000000b00236bf57c2c6mr5719911wri.192.1667232313963;
-        Mon, 31 Oct 2022 09:05:13 -0700 (PDT)
-Received: from localhost (cpc154979-craw9-2-0-cust193.16-3.cable.virginm.net. [80.193.200.194])
-        by smtp.gmail.com with ESMTPSA id f7-20020adff987000000b0022e6178bd84sm7478829wrr.8.2022.10.31.09.05.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 31 Oct 2022 09:05:13 -0700 (PDT)
-From:   Colin Ian King <colin.i.king@gmail.com>
-To:     Khalid Aziz <khalid@gonehiking.org>,
+        with ESMTP id S230197AbiJaQWe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Oct 2022 12:22:34 -0400
+X-Greylist: delayed 536 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 31 Oct 2022 09:22:30 PDT
+Received: from mailout.easymail.ca (mailout.easymail.ca [64.68.200.34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD8A1F5AD;
+        Mon, 31 Oct 2022 09:22:30 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+        by mailout.easymail.ca (Postfix) with ESMTP id 17F9A660F6;
+        Mon, 31 Oct 2022 16:13:34 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at emo07-pco.easydns.vpn
+Received: from mailout.easymail.ca ([127.0.0.1])
+        by localhost (emo07-pco.easydns.vpn [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id 6y2a7YFjl0Ol; Mon, 31 Oct 2022 16:13:33 +0000 (UTC)
+Received: from mail.gonehiking.org (unknown [38.15.45.1])
+        by mailout.easymail.ca (Postfix) with ESMTPA id A928666047;
+        Mon, 31 Oct 2022 16:13:33 +0000 (UTC)
+Received: from [192.168.1.4] (internal [192.168.1.4])
+        by mail.gonehiking.org (Postfix) with ESMTP id DCBF63EEDD;
+        Mon, 31 Oct 2022 10:13:31 -0600 (MDT)
+Message-ID: <f3cae093-6acf-35e5-8411-789383f93337@gonehiking.org>
+Date:   Mon, 31 Oct 2022 10:13:31 -0600
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.1
+Reply-To: khalid@gonehiking.org
+Subject: Re: [PATCH] scsi: BusLogic: remove variable adapter_count
+To:     Colin Ian King <colin.i.king@gmail.com>,
         "James E . J . Bottomley" <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org
 Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: BusLogic: remove variable adapter_count
-Date:   Mon, 31 Oct 2022 16:05:12 +0000
-Message-Id: <20221031160512.872153-1-colin.i.king@gmail.com>
-X-Mailer: git-send-email 2.37.3
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+References: <20221031160512.872153-1-colin.i.king@gmail.com>
+Content-Language: en-US
+From:   Khalid Aziz <khalid@gonehiking.org>
+In-Reply-To: <20221031160512.872153-1-colin.i.king@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Variable adapter_count is just being incremented and it's never used
-anywhere else. The variable and the increment are redundant so
-remove it.
+On 10/31/22 10:05, Colin Ian King wrote:
+> Variable adapter_count is just being incremented and it's never used
+> anywhere else. The variable and the increment are redundant so
+> remove it.
+> 
+> Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
+> ---
+>   drivers/scsi/BusLogic.c | 6 ++----
+>   1 file changed, 2 insertions(+), 4 deletions(-)
 
-Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
----
- drivers/scsi/BusLogic.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+Looks good to me.
 
-diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
-index f2abffce2659..f7b7ffda1161 100644
---- a/drivers/scsi/BusLogic.c
-+++ b/drivers/scsi/BusLogic.c
-@@ -2198,7 +2198,7 @@ static int blogic_slaveconfig(struct scsi_device *dev)
- 
- static int __init blogic_init(void)
- {
--	int adapter_count = 0, drvr_optindex = 0, probeindex;
-+	int drvr_optindex = 0, probeindex;
- 	struct blogic_adapter *adapter;
- 	int ret = 0;
- 
-@@ -2368,10 +2368,8 @@ static int __init blogic_init(void)
- 					list_del(&myadapter->host_list);
- 					scsi_host_put(host);
- 					ret = -ENODEV;
--				} else {
-+				} else
- 					scsi_scan_host(host);
--					adapter_count++;
--				}
- 			}
- 		} else {
- 			/*
--- 
-2.37.3
+Acked-by: Khalid Aziz <khalid@gonehiking.org>
+
+
+> 
+> diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
+> index f2abffce2659..f7b7ffda1161 100644
+> --- a/drivers/scsi/BusLogic.c
+> +++ b/drivers/scsi/BusLogic.c
+> @@ -2198,7 +2198,7 @@ static int blogic_slaveconfig(struct scsi_device *dev)
+>   
+>   static int __init blogic_init(void)
+>   {
+> -	int adapter_count = 0, drvr_optindex = 0, probeindex;
+> +	int drvr_optindex = 0, probeindex;
+>   	struct blogic_adapter *adapter;
+>   	int ret = 0;
+>   
+> @@ -2368,10 +2368,8 @@ static int __init blogic_init(void)
+>   					list_del(&myadapter->host_list);
+>   					scsi_host_put(host);
+>   					ret = -ENODEV;
+> -				} else {
+> +				} else
+>   					scsi_scan_host(host);
+> -					adapter_count++;
+> -				}
+>   			}
+>   		} else {
+>   			/*
 
