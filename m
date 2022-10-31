@@ -2,105 +2,90 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F2EFECAAA1
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Oct 2022 22:47:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D2E7ECAAA1
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Oct 2022 22:48:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229956AbiJaWry (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 31 Oct 2022 18:47:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54894 "EHLO
+        id S230038AbiJaWsE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 31 Oct 2022 18:48:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55096 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230022AbiJaWru (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Oct 2022 18:47:50 -0400
-Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73D1F15737
-        for <linux-scsi@vger.kernel.org>; Mon, 31 Oct 2022 15:47:49 -0700 (PDT)
-Received: by mail-pj1-f47.google.com with SMTP id c15-20020a17090a1d0f00b0021365864446so11466502pjd.4
-        for <linux-scsi@vger.kernel.org>; Mon, 31 Oct 2022 15:47:49 -0700 (PDT)
+        with ESMTP id S230056AbiJaWsC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Oct 2022 18:48:02 -0400
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 044B515808
+        for <linux-scsi@vger.kernel.org>; Mon, 31 Oct 2022 15:48:00 -0700 (PDT)
+Received: by mail-pf1-f173.google.com with SMTP id v28so11756246pfi.12
+        for <linux-scsi@vger.kernel.org>; Mon, 31 Oct 2022 15:47:59 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=AGJA+sOwnLK/4cwPoFnL1ULIW3kGKI5Ced+JfTYKsKw=;
-        b=hkmA5F4eM52wiF9lFyBGGL0g7Wb4iraOCoV1T7Ur0U/JrQxavE9UZwryqrUe3XLiS7
-         nBCVYeTC49pkAMbXaW/j3jFw7lUKRgCyCuG92rkqoHyxtQgN1QFit99H8TgzOImrqtbu
-         5sgOUqxu3J5/xe9kOxy4bisvRdTd1FuoIcgEMso1enlNoqY6D+uuIKCFiQ8dmWjvO+nO
-         nb9MMSGUv4m4wLYdR8ETMOlArg7KA/Ms9TuKbXgHcxvKyA91lcDUD2nB9XPurnbEAkuz
-         qWrkSiFnYOG30ruXCQ1pDrvMvFWG+OhO9ngK5t1Ykk1ymA+oF1P618H3VNMJfrFTR6nZ
-         8uag==
-X-Gm-Message-State: ACrzQf3a62Xt6uZ66ujjlN/LLSfPGk8njRKeRlsnrHUGUFWYldolJOIJ
-        lfp9WQ036fJc6Dy+bU2ktJY=
-X-Google-Smtp-Source: AMsMyM6pcKPk2+QWppTJY0i0PcVYj8zQHsLStF8vvr39GhIypiFfmXmEIby01bAp9V5HKIcUE1qEnw==
-X-Received: by 2002:a17:902:8e84:b0:178:71f2:113c with SMTP id bg4-20020a1709028e8400b0017871f2113cmr16275312plb.79.1667256468891;
-        Mon, 31 Oct 2022 15:47:48 -0700 (PDT)
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=9z2z6QuUhBFgSsszEvohTal7ukjdCNFQmB7UO9RKT1o=;
+        b=crTu1U+mpoqBJfKwp3riOc+nXlU8nUHA7HVyM7UMfz4aZjt+5J0xGjPnvFdvYZydxl
+         uacx4ODk+4RsBmQmBn95aiq4r5qFmEeqHfFYUOQ5PI6n4J2BfP6jLduZgztLkEhkUecT
+         HhpzvZfYpVYDpt9ENtZpmxYVF1PMaVcsLQZ/WJC99Ev30I/Z+p9cuR3onJ26I9bK8YRp
+         hndVSLLafl7YuWHxwBDODE2mqvSKF/yqAYNzrN2wdgHjLy9UqcSXqPsKavO01QMWacAC
+         7XB/Aykr6rFzG0zkefxOKmAYOpdsh4BLRMrAxceRxlMFaQXSbbZ5Zy6jGBgCzEDHStsI
+         I0jg==
+X-Gm-Message-State: ACrzQf2Y0K8cgsbnziSi/PXLlQA4qFvza4eqRDYfGOxSM42uG44bq0Uf
+        izPHMK1AvFRKgyNHWVfZMYM=
+X-Google-Smtp-Source: AMsMyM4jF4BnmB/gC5SvpGJ6PLFnRMrCzBZIpjpEBBW0eHoZ4LY5QzOiI/N+Y2AUMvyvkDbQi8pVSg==
+X-Received: by 2002:aa7:91c5:0:b0:56b:e2db:5b75 with SMTP id z5-20020aa791c5000000b0056be2db5b75mr16789141pfa.73.1667256479438;
+        Mon, 31 Oct 2022 15:47:59 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:8574:e82f:b860:3ad0])
-        by smtp.gmail.com with ESMTPSA id x6-20020a626306000000b00565c8634e55sm5096019pfb.135.2022.10.31.15.47.46
+        by smtp.gmail.com with ESMTPSA id z3-20020a1709027e8300b00181e55d02dcsm4876420pla.139.2022.10.31.15.47.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 31 Oct 2022 15:47:47 -0700 (PDT)
+        Mon, 31 Oct 2022 15:47:58 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
-        Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
-        Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [PATCH 4/4] scsi: bfa: Rework bfad_reset_sdev_bflags()
-Date:   Mon, 31 Oct 2022 15:47:28 -0700
-Message-Id: <20221031224728.2607760-5-bvanassche@acm.org>
+        Douglas Gilbert <dgilbert@interlog.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Subject: [PATCH] scsi: scsi_debug: Make the READ CAPACITY response compliant with ZBC
+Date:   Mon, 31 Oct 2022 15:47:55 -0700
+Message-Id: <20221031224755.2607812-1-bvanassche@acm.org>
 X-Mailer: git-send-email 2.38.1.273.g43a17bfeac-goog
-In-Reply-To: <20221031224728.2607760-1-bvanassche@acm.org>
-References: <20221031224728.2607760-1-bvanassche@acm.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Since commit f93ed747e2c7 ("scsi: core: Release SCSI devices
-synchronously") it is no longer allowed to call scsi_device_put() from
-atomic context. Hence this patch that reworks bfad_reset_sdev_bflags()
-such that scsi_device_put() is no longer called. This patch fixes the
-following smatch warning:
+From ZBC-1:
+* RC BASIS = 0: The RETURNED LOGICAL BLOCK ADDRESS field indicates the
+  highest LBA of a contiguous range of zones that are not sequential write
+  required zones starting with the first zone.
+* RC BASIS = 1: The RETURNED LOGICAL BLOCK ADDRESS field indicates the LBA
+  of the last logical block on the logical unit.
 
-drivers/scsi/bfa/bfad_bsg.c:2551 bfad_iocmd_lunmask_reset_lunscan_mode() warn: sleeping in atomic context
+The current scsi_debug READ CAPACITY response does not comply with the above
+if there are one or more sequential write required zones. SCSI initiators
+need a way to retrieve the largest valid LBA from SCSI devices. Reporting
+the largest valid LBA if there are one or more sequential zones requires to
+set the RC BASIS field in the READ CAPACITY response to one. Hence this
+patch.
 
-bfad_iocmd_lunmask() <- disables preempt
--> bfad_iocmd_lunmask_reset_lunscan_mode()
-   -> scsi_device_put()
-
-Cc: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
-Cc: Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Douglas Gilbert <dgilbert@interlog.com>
+Cc: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Suggested-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/bfa/bfad_bsg.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/scsi/scsi_debug.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
-index 73754032e25c..79d4f7ee5bcb 100644
---- a/drivers/scsi/bfa/bfad_bsg.c
-+++ b/drivers/scsi/bfa/bfad_bsg.c
-@@ -2553,18 +2553,20 @@ static void bfad_reset_sdev_bflags(struct bfad_im_port_s *im_port,
- 	const u32 scan_flags = BLIST_NOREPORTLUN | BLIST_SPARSELUN;
- 	struct bfad_itnim_s *itnim;
- 	struct scsi_device *sdev;
-+	unsigned long flags;
- 
-+	spin_lock_irqsave(im_port->shost->host_lock, flags);
- 	list_for_each_entry(itnim, &im_port->itnim_mapped_list, list_entry) {
--		sdev = scsi_device_lookup(im_port->shost, itnim->channel,
--					  itnim->scsi_tgt_id, 0);
-+		sdev = __scsi_device_lookup(im_port->shost, itnim->channel,
-+					    itnim->scsi_tgt_id, 0);
- 		if (sdev) {
- 			if (lunmask_cfg == BFA_TRUE)
- 				sdev->sdev_bflags |= scan_flags;
- 			else
- 				sdev->sdev_bflags &= ~scan_flags;
--			scsi_device_put(sdev);
- 		}
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 697fc57bc711..fec87296cf06 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -1899,6 +1899,10 @@ static int resp_readcap16(struct scsi_cmnd *scp,
+ 			arr[14] |= 0x40;
  	}
-+	spin_unlock_irqrestore(im_port->shost->host_lock, flags);
- }
  
- /* Function to reset the LUN SCAN mode */
++	/* Set RC BASIS = 1 for host-managed devices. */
++	if (devip->zmodel == BLK_ZONED_HM)
++		arr[12] |= 1 << 4;
++
+ 	arr[15] = sdebug_lowest_aligned & 0xff;
+ 
+ 	if (have_dif_prot) {
