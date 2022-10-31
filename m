@@ -2,93 +2,82 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22B9EFA3743
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Oct 2022 16:22:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90B04ECAAA1
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Oct 2022 16:25:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231307AbiJaQWf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 31 Oct 2022 12:22:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42458 "EHLO
+        id S231523AbiJaQZd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 31 Oct 2022 12:25:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43970 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230197AbiJaQWe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Oct 2022 12:22:34 -0400
-X-Greylist: delayed 536 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 31 Oct 2022 09:22:30 PDT
-Received: from mailout.easymail.ca (mailout.easymail.ca [64.68.200.34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD8A1F5AD;
-        Mon, 31 Oct 2022 09:22:30 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-        by mailout.easymail.ca (Postfix) with ESMTP id 17F9A660F6;
-        Mon, 31 Oct 2022 16:13:34 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at emo07-pco.easydns.vpn
-Received: from mailout.easymail.ca ([127.0.0.1])
-        by localhost (emo07-pco.easydns.vpn [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 6y2a7YFjl0Ol; Mon, 31 Oct 2022 16:13:33 +0000 (UTC)
-Received: from mail.gonehiking.org (unknown [38.15.45.1])
-        by mailout.easymail.ca (Postfix) with ESMTPA id A928666047;
-        Mon, 31 Oct 2022 16:13:33 +0000 (UTC)
-Received: from [192.168.1.4] (internal [192.168.1.4])
-        by mail.gonehiking.org (Postfix) with ESMTP id DCBF63EEDD;
-        Mon, 31 Oct 2022 10:13:31 -0600 (MDT)
-Message-ID: <f3cae093-6acf-35e5-8411-789383f93337@gonehiking.org>
-Date:   Mon, 31 Oct 2022 10:13:31 -0600
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.1
-Reply-To: khalid@gonehiking.org
-Subject: Re: [PATCH] scsi: BusLogic: remove variable adapter_count
-To:     Colin Ian King <colin.i.king@gmail.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20221031160512.872153-1-colin.i.king@gmail.com>
-Content-Language: en-US
-From:   Khalid Aziz <khalid@gonehiking.org>
-In-Reply-To: <20221031160512.872153-1-colin.i.king@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S230197AbiJaQZc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Oct 2022 12:25:32 -0400
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3150610549;
+        Mon, 31 Oct 2022 09:25:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1667233531; x=1698769531;
+  h=from:to:cc:subject:date:message-id;
+  bh=8ZkqY2fkQzp7wMp62ktaXg2E2J6EJ0M2jxbxpAiqLwU=;
+  b=Cf3zsKkJHjkbifoy+toj6OTviE/YoMV6rRjrE+8iPi2HCBsutWWewCJ+
+   C/VtSiiFapSGJynkHswrL3r6zJOgWdDeZuDsfbMlVGnlAU/Oo3zMJTs9G
+   FktuROENto+mYNTmRUJkS1a7kSZqq0+fIjmnx6M4zOeIg5ULXsH9WQ8Lo
+   eEqMeZA8BT4MM9GbTTuTwgEke/INavT2kS4ZVHcV3xUWR2cl4QmzPSPO/
+   stNYh1UtVtPZ2diftHrMC8oQ8H55ekLaMoTGv9unb7s7PDpYDk87Tws4E
+   xJWPVKSR0QveiJroh5ouM9JJvfj3qHJGpxP3CDd0G3Juv57g5hVaHz/G4
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.95,228,1661788800"; 
+   d="scan'208";a="215149684"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 01 Nov 2022 00:25:30 +0800
+IronPort-SDR: De11Si936dnF+6Gupziir88gJO7WdQTuP4+70VV4hqMZgdKMp4SDNqSwgvBznJKLzPqag7mw0f
+ TOuXMTBOyjnCjw+R/YbI0r9gFxLkCLUYGpZVMc5wd55avWiOxdvjYe0CDnmXqTjVrI4oC6RMHO
+ KCGCSAIo9zuB24Ezn3Uw5+fMqNiUrRgF9dBjpEw1YbAS/bmcQJGp52f5M1MSVKXMmHpjvVVHaG
+ cbIAxAimlOD5B7LguLwaaTD2DhfmBFD21jV7ysD4Z2yjLpyxeZwSFVWNc3ADKT0jlH5mNpDdHE
+ A4QPW/vFlICyD1+1pIb/HHXI
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 31 Oct 2022 08:44:45 -0700
+IronPort-SDR: Fc8Rsal29PfocnsngXPozZTra2FILDVFI/ElPYdMpSdsUh52nSvfu3O0j8PWYY83Ar+69NIlyu
+ aLw2zzkcqS+iXqaQxyYp/lkhm446jFUX7Pa6rDRwoVWPcU1B/0rfZ9wfTiFaYvaZlaN5eKcZQI
+ z1Z3M3Jw3Oqfa06deNZfScaf6m9X/QcwJDwxLGLrdjgpCSn+CpRQs7dYAXFJDqbrepzMCBLLOv
+ kkZnQS+Qj4/44Pgcx8IVKZyPfrCus6WTP+3pAOu26WLr+jhmFjJqRLaN8kVE+pSEmEuXNX3exc
+ nMQ=
+WDCIronportException: Internal
+Received: from ilb001078.ad.shared (HELO ilb001078.sdcorp.global.sandisk.com) ([10.45.31.219])
+  by uls-op-cesaip02.wdc.com with ESMTP; 31 Oct 2022 09:25:27 -0700
+From:   Arthur Simchaev <Arthur.Simchaev@wdc.com>
+To:     martin.petersen@oracle.com
+Cc:     avri.altman@wdc.com, Avi.Shchislowski@wdc.com, beanhuo@micron.com,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>
+Subject: [PATCH 0/4] ufs: core: Always read the descriptors with max length
+Date:   Mon, 31 Oct 2022 18:25:20 +0200
+Message-Id: <1667233524-13715-1-git-send-email-Arthur.Simchaev@wdc.com>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/31/22 10:05, Colin Ian King wrote:
-> Variable adapter_count is just being incremented and it's never used
-> anywhere else. The variable and the increment are redundant so
-> remove it.
-> 
-> Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
-> ---
->   drivers/scsi/BusLogic.c | 6 ++----
->   1 file changed, 2 insertions(+), 4 deletions(-)
+Read any descriptor with a maximum size of QUERY_DESC_MAX_SIZE.
+According to the spec the device rerurns the actual size.
+Thus can improve code readability and save CPU cycles.
+While at it, cleanup few leftovers around the descriptor size parameter.
 
-Looks good to me.
+Suggested-by: Bean Huo <beanhuo@micron.com>
 
-Acked-by: Khalid Aziz <khalid@gonehiking.org>
+Arthur Simchaev (4):
+  ufs:core: Remove redundant wb check
+  ufs:core: Remove redundant desc_size variable from hba
+  ufs: core: Remove len parameter from ufshcd_set_active_icc_lvl
+  ufs: core: Remove ufshcd_map_desc_id_to_length function
 
+ drivers/ufs/core/ufs_bsg.c     |   7 +--
+ drivers/ufs/core/ufshcd-priv.h |   3 --
+ drivers/ufs/core/ufshcd.c      | 100 ++++++++++-------------------------------
+ drivers/ufs/core/ufshpb.c      |   5 +--
+ include/ufs/ufshcd.h           |   1 -
+ 5 files changed, 26 insertions(+), 90 deletions(-)
 
-> 
-> diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
-> index f2abffce2659..f7b7ffda1161 100644
-> --- a/drivers/scsi/BusLogic.c
-> +++ b/drivers/scsi/BusLogic.c
-> @@ -2198,7 +2198,7 @@ static int blogic_slaveconfig(struct scsi_device *dev)
->   
->   static int __init blogic_init(void)
->   {
-> -	int adapter_count = 0, drvr_optindex = 0, probeindex;
-> +	int drvr_optindex = 0, probeindex;
->   	struct blogic_adapter *adapter;
->   	int ret = 0;
->   
-> @@ -2368,10 +2368,8 @@ static int __init blogic_init(void)
->   					list_del(&myadapter->host_list);
->   					scsi_host_put(host);
->   					ret = -ENODEV;
-> -				} else {
-> +				} else
->   					scsi_scan_host(host);
-> -					adapter_count++;
-> -				}
->   			}
->   		} else {
->   			/*
+-- 
+2.7.4
 
