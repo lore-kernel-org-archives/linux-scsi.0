@@ -2,154 +2,110 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDC33FA3743
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Oct 2022 18:52:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45495ECAAA1
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Oct 2022 19:25:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229767AbiJaSwl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 31 Oct 2022 14:52:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46162 "EHLO
+        id S230045AbiJaTZG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 31 Oct 2022 15:25:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44118 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229599AbiJaSwk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Oct 2022 14:52:40 -0400
-Received: from mail-lf1-x12f.google.com (mail-lf1-x12f.google.com [IPv6:2a00:1450:4864:20::12f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE18713CEC
-        for <linux-scsi@vger.kernel.org>; Mon, 31 Oct 2022 11:52:38 -0700 (PDT)
-Received: by mail-lf1-x12f.google.com with SMTP id bp15so20600581lfb.13
-        for <linux-scsi@vger.kernel.org>; Mon, 31 Oct 2022 11:52:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=2m+IiXrsLStNouFmhecgJA2gSt8vjAtj7/teiT7CjBk=;
-        b=hdIf0eTW0S87ia9RbcQzP4ZT3P6rvadiOZG25jVkki0QnvwfSj0RRW/Gb6sJG3yYEU
-         9AZ7Z4nVmyYicjp7/LPMJDb5ILz+7+R+6T0paAgeMknQ4gBYf3fUIC2L21DZllRR2n1h
-         dLbPIodLPxuZ5ypSwBawN42zYR16siA+aj9pyOvPYKHd87ShCHhFAxZnzghkTMlSy9r+
-         v15m7A0HX8cNJPvR/fZyFbo8kl+1UXWRiCEWm0iuqFMIqCjso7/747ukUo9aEmGwMGML
-         C0UwPJIJs7S56ONV+Uop4COrz8s6hgqnX4qh0U0frInJYMQN+dFi+Y1f1C6C3D9PTkUr
-         MJfg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=2m+IiXrsLStNouFmhecgJA2gSt8vjAtj7/teiT7CjBk=;
-        b=kr6UxrQwlOWxpeYDVEUuEquB0PEVduCJLyy2g9CIEbEiqjf/s92mQ8lsNt5FqWFIya
-         3lTkwlVijwPTWYHC8+bMJUWVYsgih6uU9FbBR260a3Fosq2g9j73aIgr0x1uR2g5i4uc
-         uNoVTOVD2o7TMKBahEA9dCw5WedGawxFU4RgZpvA74PZ+4+Yk8FnAoHVq+cKLufZ1/2/
-         nrWeZ3swGq4uJJvV1/rLVPOOw5IgpjTgezY1ecnQwQ0GfuJm5HAvPmXsCj+bTnROYAw5
-         qM5IOJQfvIH/169VirkMcF7KkjkItxI5+1pPQ+tR934qA99Fs0VwN6g5GXxj7+opAC3y
-         QTJA==
-X-Gm-Message-State: ACrzQf2Sl0aZ43NKDx3VPsyvo8WNEXT1j9VzPz4D76EvPHxoXybfLhl7
-        44iun6V9qOBQk/Z1v9H16XuDwg==
-X-Google-Smtp-Source: AMsMyM4Q5b7LpNXMLeLpnI7m/hdrZ5ObVjNpLE+Jh9k7S1IeKWaR1G+TBQ4xfp8Zl8sY/DYXeqg87g==
-X-Received: by 2002:ac2:5922:0:b0:4af:d4e:de3f with SMTP id v2-20020ac25922000000b004af0d4ede3fmr5679455lfi.528.1667242357077;
-        Mon, 31 Oct 2022 11:52:37 -0700 (PDT)
-Received: from [10.10.15.130] ([192.130.178.91])
-        by smtp.gmail.com with ESMTPSA id q3-20020a2eb4a3000000b0026fb5525ee4sm1454768ljm.116.2022.10.31.11.52.36
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 31 Oct 2022 11:52:36 -0700 (PDT)
-Message-ID: <282de1ee-f1c5-39cf-90d7-8a10fc27c171@linaro.org>
-Date:   Mon, 31 Oct 2022 21:52:36 +0300
+        with ESMTP id S229691AbiJaTZF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Oct 2022 15:25:05 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6578D13DF1;
+        Mon, 31 Oct 2022 12:25:04 -0700 (PDT)
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 29VIsrZV003836;
+        Mon, 31 Oct 2022 19:24:37 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=date : from : to :
+ cc : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=qcppdkim1; bh=Pc5EVDHtm6VBnIfyigRm+fWGfdtfPod7VeY/RMb84xE=;
+ b=F0t1bGMh6JtUc3m13A5ca3En/svens7pzbZFwWpUCIGDUiOxTs+Oo4ZW4qDu0lqmHbFg
+ PRft0fto0ZI1KJVxEG8Q3oR/2eIlnyraKC5u+P7qVn7UJP6V02vF4plkxllhCLf5wNeh
+ ifQVOjQhUDIy9kZZLu+MZjYXGF9x5PzE9ZPCSwTymWFy8UFzCuq6DlEPq+8DNQVTMdMQ
+ 7aCNJmQBLFUBip5iWKBfjbnXqWcLdaWX9Dt/m+2EYChcPvu/B5lnPahQd5UkTPKTJz6+
+ 9ZnsMiibpD7pUtAr5hjDouXQvN7d3pwNCDIKnkCnS4n5lo8OvL8/FGNYPfrY1sTr6UJb RA== 
+Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3kj7tx2k17-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 31 Oct 2022 19:24:37 +0000
+Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
+        by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 29VJOaZD015939
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 31 Oct 2022 19:24:36 GMT
+Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
+ nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.29; Mon, 31 Oct 2022 12:24:35 -0700
+Date:   Mon, 31 Oct 2022 12:24:35 -0700
+From:   Asutosh Das <quic_asutoshd@quicinc.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+CC:     <quic_cang@quicinc.com>, <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, <quic_nguyenb@quicinc.com>,
+        <quic_xiaosenh@quicinc.com>, <stanley.chu@mediatek.com>,
+        <eddie.huang@mediatek.com>, <daejun7.park@samsung.com>,
+        <avri.altman@wdc.com>, <mani@kernel.org>, <beanhuo@micron.com>,
+        <quic_richardp@quicinc.com>, <linux-arm-msm@vger.kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Andy Gross" <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Jinyoung Choi <j-young.choi@samsung.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3 07/17] ufs: core: mcq: Calculate queue depth
+Message-ID: <20221031192435.GD9077@asutoshd-linux1.qualcomm.com>
+References: <cover.1666288432.git.quic_asutoshd@quicinc.com>
+ <1987fbada1d33c04c9598614ef712e0a48fe065e.1666288432.git.quic_asutoshd@quicinc.com>
+ <0fb3f8ae-5ed7-9057-0d2b-8866f36c2441@acm.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.3
-Subject: Re: [PATCH 14/15] scsi: ufs: ufs-qcom: Add support for finding HS
- gear on new UFS versions
-Content-Language: en-GB
-To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc:     martin.petersen@oracle.com, jejb@linux.ibm.com,
-        andersson@kernel.org, vkoul@kernel.org,
-        krzysztof.kozlowski+dt@linaro.org, konrad.dybcio@somainline.org,
-        robh+dt@kernel.org, quic_cang@quicinc.com,
-        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-phy@lists.infradead.org,
-        linux-scsi@vger.kernel.org
-References: <20221029141633.295650-1-manivannan.sadhasivam@linaro.org>
- <20221029141633.295650-15-manivannan.sadhasivam@linaro.org>
- <cf8dcf53-f131-68f4-c6aa-d41e02ac6d5c@linaro.org>
- <20221031145647.GC10515@thinkpad>
-From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-In-Reply-To: <20221031145647.GC10515@thinkpad>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Disposition: inline
+In-Reply-To: <0fb3f8ae-5ed7-9057-0d2b-8866f36c2441@acm.org>
+User-Agent: Mutt/1.5.24 (2015-08-30)
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: eoCIszkxZxLc1tUxvwMHzAOSyAR5E8eE
+X-Proofpoint-GUID: eoCIszkxZxLc1tUxvwMHzAOSyAR5E8eE
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
+ definitions=2022-10-31_20,2022-10-31_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 malwarescore=0
+ mlxlogscore=999 impostorscore=0 suspectscore=0 mlxscore=0 spamscore=0
+ adultscore=0 bulkscore=0 lowpriorityscore=0 priorityscore=1501
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2210170000 definitions=main-2210310120
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 31/10/2022 17:56, Manivannan Sadhasivam wrote:
-> On Sun, Oct 30, 2022 at 12:48:21AM +0300, Dmitry Baryshkov wrote:
->> On 29/10/2022 17:16, Manivannan Sadhasivam wrote:
->>> Starting from UFS controller v4, Qcom supports dual gear mode (i.e., the
->>> controller/PHY can be configured to run in two gear speeds). But that
->>> requires an agreement between the UFS controller and the UFS device.
->>> This commit finds the max gear supported by both controller and device
->>> then decides which one to use.
->>>
->>> UFS controller's max gear can be read from the REG_UFS_PARAM0 register and
->>> UFS device's max gear can be read from the "max-gear" devicetree property.
->>>
->>> The UFS PHY also needs to be configured with the decided gear using the
->>> phy_set_mode_ext() API.
->>>
->>> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
->>> ---
->>>    drivers/ufs/host/ufs-qcom.c | 35 ++++++++++++++++++++++++++++++++---
->>>    drivers/ufs/host/ufs-qcom.h |  4 ++++
->>>    2 files changed, 36 insertions(+), 3 deletions(-)
->>>
->>> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
->>> index f952cc76919f..268463e92d67 100644
->>> --- a/drivers/ufs/host/ufs-qcom.c
->>> +++ b/drivers/ufs/host/ufs-qcom.c
->>> @@ -281,6 +281,9 @@ static int ufs_qcom_host_reset(struct ufs_hba *hba)
->>>    static u32 ufs_qcom_get_hs_gear(struct ufs_hba *hba, u32 hs_gear)
->>>    {
->>>    	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
->>> +	struct device *dev = hba->dev;
->>> +	u32 max_gear, hcd_max_gear, reg;
->>> +	int ret;
->>>    	if (host->hw_ver.major == 0x1) {
->>>    		/*
->>> @@ -292,8 +295,33 @@ static u32 ufs_qcom_get_hs_gear(struct ufs_hba *hba, u32 hs_gear)
->>>    		 */
->>>    		if (hs_gear > UFS_HS_G2)
->>>    			return UFS_HS_G2;
->>> +	} else if (host->hw_ver.major > 0x3) {
->>> +		/*
->>> +		 * Starting from UFS controller v4, Qcom supports dual gear mode (i.e., the
->>> +		 * controller/PHY can be configured to run in two gear speeds). But that
->>> +		 * requires an agreement between the UFS controller and the device. Below
->>> +		 * code tries to find the max gear of both and decides which gear to use.
->>> +		 *
->>> +		 * First get the max gear supported by the UFS device if available.
->>> +		 * If the property is not defined in devicetree, then use the default gear.
->>> +		 */
->>> +		ret = of_property_read_u32(dev->of_node, "max-gear", &max_gear);
->>> +		if (ret)
->>> +			goto err_out;
->>
->> Can we detect the UFS device's max gear somehow? If not, the 'max-gear'
->> property name doesn't sound good. Maybe calling it 'device-gear' would be
->> better.
->>
-> 
-> UFS device probing depends on PHY init sequence. So technically we cannot know
-> the max gear of the device without using an init sequence, but this information
-> is static and should be known to a board manufacturer. That's why I decided to
-> use this property. Another option is to use a fixed init sequence for probing
-> the device and do a re-init after knowing it's max gear but that is not
-> recommended.
-> 
-> We need "max" keyword because this property specifies the maximum gear at which
-> the device could operate and not necessarily the gear at which it operates.
-> Maybe, "max-device-gear" would make it clear.
+On Thu, Oct 27 2022 at 14:52 -0700, Bart Van Assche wrote:
+>On 10/20/22 11:03, Asutosh Das wrote:
+>>+u32 ufshcd_mcq_decide_queue_depth(struct ufs_hba *hba)
+>>+{
+>>+	u32 qd, val;
+>>+	int mac;
+>>+
+>>+	mac = ufshcd_mcq_vops_get_hba_mac(hba);
+>>+	if (mac < 0) {
+>>+		val = ufshcd_readl(hba, REG_UFS_MCQ_CFG);
+>>+		mac = FIELD_GET(MCQ_CFG_MAC_MASK, val);
+>>+	}
+>
+>According to the UFSHCI 4.0 specification the MAC value is set by the 
+>host. Can the above code read the MAC value from the host controller 
+>before it has been set by the host? If so, how about leaving out the 
+>code that reads the MAC value from the controller and making it 
+>mandatory to implement the new get_hba_mac vop?
+>
+The reason it is not mandatory to define get_hba_mac vop is UFSHCI 4.0
+specification mentions that the default value of MAC is 32. So even if a vendor
+HC doesn't override the MAC, it'd be 32.
+Hence, the current code first checks for an override, and if there's none uses
+the default value defined in the HC.
 
-Ack, thank you for the explanation. Yes, from my opinion max-device-gear 
-is better. Let's see what Rob and Krzysztof would say.
-
-
--- 
-With best wishes
-Dmitry
-
+-asd
