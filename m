@@ -2,226 +2,135 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B66C1FA3741
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Oct 2022 16:26:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFCAFFA3741
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Oct 2022 18:02:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231776AbiJaQ0W (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 31 Oct 2022 12:26:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44540 "EHLO
+        id S229898AbiJaSCl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 31 Oct 2022 14:02:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41418 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231640AbiJaQ0T (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Oct 2022 12:26:19 -0400
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3721312AA4;
-        Mon, 31 Oct 2022 09:26:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1667233568; x=1698769568;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references;
-  bh=Mj7AY5j761Zq4jzbtHts5Ba1UjUflyJ/f0xmcurSyRk=;
-  b=jB07cJAj+0isllSKSN/HZg0q/Lj/FnYp4CEZRQB2EvnVjbvUFaOP9N6T
-   ZHT9mycIv2bihukDS2E1KC3IfBHHPMFFgpSTaB0BDBtSljiSk1D/5kIEo
-   XLLTLpwCt8TqlyarlrigDCVUh9PRZcsImn0xIgVgIA1yfiiu6FuefHdLw
-   H66PuGt4jlrca901Sh+/qAOO+9XKSJc+K1drbI3JTqY5XQwGFSU117BXN
-   jInZY1WS6sOGAvYbW1ufFcaYaH7ltxZBNiUGKg446H5k9QD0oeeq/czZE
-   O9S4/dOL1UATDpH1vAbTIoJ5lNPIjC66QnM/zSlqPjuBDKCjHZQgGQtSA
-   w==;
-X-IronPort-AV: E=Sophos;i="5.95,228,1661788800"; 
-   d="scan'208";a="215498933"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 01 Nov 2022 00:26:08 +0800
-IronPort-SDR: I82/3JsYSkDGXDlgnPrj9P0e54VYdxOb0gdgp9VUnXB0nW056dBB9eY2yww0JRKqw/uCpgGR8T
- llRrUhe03xExiPjsyB0IrSJenfmJiupwgI6Io8ruIjK+LmQdbneKpBkeP4vcfqOilPGacHhzgy
- PhyAqpNAQZOOX7VJdToqlhRl8Sc/ZJebPtxrMxIyU0oJJQAvSNLZ7wN8Yq04tjE2zZtI7q1NpL
- Rx4CyoSvEOSnWiBHl+b8j1A+dpqASaq0oxMoRofJxbS9d5/rbW4+6Dww2Kjvi04ns5RtScFFrb
- cI/tnxYO/7QgabQjcNde28Oc
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 31 Oct 2022 08:39:40 -0700
-IronPort-SDR: Bh0mgGwTYC/LBUKJuvZft33sv5tLX6dpjy+vB5WEwpeMilZJd0RWAt7MlogEXdXA3CRt8aBte9
- V6Ps5v+Vu7k/LF5Fo6wXtPg9/7d6WUtfb7VWZGkGE+TW7nTr8lWX0kxt0YDrrb/dasGVnaqyU2
- RDOH+XpD7CE6eS9gruYY//lUuam7VnDcnbNDywQckp6Nezfu100GumokwynL20TkK7cPsj7bdE
- 7G6uZqk/5Wign5hjhDCL92hHlwcHNdBI9qYuPBdQY3R1MIxRs9QkkODv7Uenw8qv/5XfC6abFt
- bVw=
-WDCIronportException: Internal
-Received: from ilb001078.ad.shared (HELO ilb001078.sdcorp.global.sandisk.com) ([10.45.31.219])
-  by uls-op-cesaip02.wdc.com with ESMTP; 31 Oct 2022 09:26:05 -0700
-From:   Arthur Simchaev <Arthur.Simchaev@wdc.com>
-To:     martin.petersen@oracle.com
-Cc:     avri.altman@wdc.com, Avi.Shchislowski@wdc.com, beanhuo@micron.com,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>
-Subject: [PATCH 4/4] ufs: core: Remove ufshcd_map_desc_id_to_length function
-Date:   Mon, 31 Oct 2022 18:25:24 +0200
-Message-Id: <1667233524-13715-5-git-send-email-Arthur.Simchaev@wdc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1667233524-13715-1-git-send-email-Arthur.Simchaev@wdc.com>
-References: <1667233524-13715-1-git-send-email-Arthur.Simchaev@wdc.com>
+        with ESMTP id S229742AbiJaSCj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Oct 2022 14:02:39 -0400
+Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 144A113D6F
+        for <linux-scsi@vger.kernel.org>; Mon, 31 Oct 2022 11:02:37 -0700 (PDT)
+Received: by mail-pj1-x1033.google.com with SMTP id o7so7838556pjj.1
+        for <linux-scsi@vger.kernel.org>; Mon, 31 Oct 2022 11:02:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=lUeGzsrZuppVjIQtllMBu80KGrOeXpmn2SHkGIO0dZI=;
+        b=PfJeKC0nW0q3FOQ1HV8xzNPscrseO9wqTqzlujbVfJPQuw7OoUcyI8/HA/e6PYuwT9
+         3NterFjq9Q098c76cYnNqbeUtlN+WMHXuh7lACe917zc5WAf39BIAwfLrMwS2/aQsYZD
+         B/OV3MzAXaa5x35p7F+o9zFuK0yDd5yBkAWrVkResNl6h/sBsLhwxS3rkKfV9dj8UdIC
+         DW3vG619Oo5+c4yO875QCVLCP4aDNBfHKzCERADUuVj7MvxDl+0UGwOODaIF28SjJfdf
+         1X9F3SBkWggTSH/xUQYCndFrMatu+5Rcoxkbt8VfJQLekIMJ/7qVYlfL7fC53l2wotZ3
+         LDXg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=lUeGzsrZuppVjIQtllMBu80KGrOeXpmn2SHkGIO0dZI=;
+        b=KvmMfhOeR3I8IllleVFvPamWfchoO2dmuOzhjV/hoG9l5EI0M5uA8/bW0vFCYRB4wt
+         e0PTtykcxI/k7W4RTbjnle8Bf+whzLoo97MyQCAMFXUoyrf5BB88JN+5hGVT/diqZqew
+         5RfH0nfYruVl2cTpsdQUlUhSluM4lN2kkbcsHR0Ac3PglWTqvi87WRs7meR/8/kaYXtq
+         MVPrKy1dmLNvezbup8IB/mGYxGqDM/JLQ00rw1q81brGw1/5Uaobtm5rhbVmjXOFdISX
+         7iaJ4GiszR6LZP5KLyETlwbhJMgxgiojZwsSryWr+4QnB9OsjUXfdUORnUxIwFw3Sm8k
+         3NPQ==
+X-Gm-Message-State: ACrzQf3McddHbP0BSTnqFRrBJQnCnCx97rGMLuCpTYblIIGGP8QvevFY
+        7QIc1DLYD4ImlqSV3lf91869
+X-Google-Smtp-Source: AMsMyM6KutCiKgVhfqnh64n0pNMgZINaIjYKukeENSzy9/oeepbkEm7QVIBjPIPLzso18X716IcE3g==
+X-Received: by 2002:a17:90b:153:b0:213:b853:5db1 with SMTP id em19-20020a17090b015300b00213b8535db1mr13077729pjb.168.1667239356552;
+        Mon, 31 Oct 2022 11:02:36 -0700 (PDT)
+Received: from localhost.localdomain ([117.193.209.221])
+        by smtp.gmail.com with ESMTPSA id q14-20020a170902a3ce00b00186c6d2e7e3sm4742224plb.26.2022.10.31.11.02.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 31 Oct 2022 11:02:34 -0700 (PDT)
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     martin.petersen@oracle.com, jejb@linux.ibm.com,
+        andersson@kernel.org, vkoul@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org
+Cc:     konrad.dybcio@somainline.org, robh+dt@kernel.org,
+        quic_cang@quicinc.com, linux-arm-msm@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-phy@lists.infradead.org, linux-scsi@vger.kernel.org,
+        dmitry.baryshkov@linaro.org, ahalaney@redhat.com,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Subject: [PATCH v2 00/15] ufs: qcom: Add HS-G4 support
+Date:   Mon, 31 Oct 2022 23:32:02 +0530
+Message-Id: <20221031180217.32512-1-manivannan.sadhasivam@linaro.org>
+X-Mailer: git-send-email 2.25.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-ufshcd_map_desc_id_to_length function is redundant.
-According to the spec the host can send any descriptor size, the device
-will return the actual size. Therefore always read the descriptors with
-QUERY_DESC_MAX_SIZE size
+Hello,
 
-Signed-off-by: Arthur Simchaev <Arthur.Simchaev@wdc.com>
----
- drivers/ufs/core/ufs_bsg.c     |  7 +------
- drivers/ufs/core/ufshcd-priv.h |  3 ---
- drivers/ufs/core/ufshcd.c      | 46 +++++++++++-------------------------------
- drivers/ufs/core/ufshpb.c      |  5 +----
- 4 files changed, 14 insertions(+), 47 deletions(-)
+This series adds HS-G4 support to the Qcom UFS driver and PHY driver.
+The newer Qcom platforms support configuring the UFS controller and PHY
+in dual gears (i.e., controller/PHY can be configured to run in two gear
+speeds). This is accomplished by adding two different PHY init sequences
+to the PHY driver and the UFS driver requesting the one that's required
+based on the platform configuration.
 
-diff --git a/drivers/ufs/core/ufs_bsg.c b/drivers/ufs/core/ufs_bsg.c
-index b99e3f3..dc441ac 100644
---- a/drivers/ufs/core/ufs_bsg.c
-+++ b/drivers/ufs/core/ufs_bsg.c
-@@ -16,16 +16,11 @@ static int ufs_bsg_get_query_desc_size(struct ufs_hba *hba, int *desc_len,
- 				       struct utp_upiu_query *qr)
- {
- 	int desc_size = be16_to_cpu(qr->length);
--	int desc_id = qr->idn;
- 
- 	if (desc_size <= 0)
- 		return -EINVAL;
- 
--	ufshcd_map_desc_id_to_length(hba, desc_id, desc_len);
--	if (!*desc_len)
--		return -EINVAL;
--
--	*desc_len = min_t(int, *desc_len, desc_size);
-+	*desc_len = min_t(int, QUERY_DESC_MAX_SIZE, desc_size);
- 
- 	return 0;
- }
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index a9e8e1f..c52e2f3 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -70,9 +70,6 @@ int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
- int ufshcd_hold(struct ufs_hba *hba, bool async);
- void ufshcd_release(struct ufs_hba *hba);
- 
--void ufshcd_map_desc_id_to_length(struct ufs_hba *hba, enum desc_idn desc_id,
--				  int *desc_length);
--
- int ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd);
- 
- int ufshcd_exec_raw_upiu_cmd(struct ufs_hba *hba,
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 9cc3abd..fc0695f 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -3369,20 +3369,6 @@ int ufshcd_query_descriptor_retry(struct ufs_hba *hba,
- }
- 
- /**
-- * ufshcd_map_desc_id_to_length - map descriptor IDN to its length
-- * @hba: Pointer to adapter instance
-- * @desc_id: descriptor idn value
-- * @desc_len: mapped desc length (out)
-- */
--void ufshcd_map_desc_id_to_length(struct ufs_hba *hba, enum desc_idn desc_id,
--				  int *desc_len)
--{
--	/*Always returns QUERY_DESC_MAX_SIZE*/
--	*desc_len = QUERY_DESC_MAX_SIZE;
--}
--EXPORT_SYMBOL(ufshcd_map_desc_id_to_length);
--
--/**
-  * ufshcd_read_desc_param - read the specified descriptor parameter
-  * @hba: Pointer to adapter instance
-  * @desc_id: descriptor idn value
-@@ -3402,26 +3388,13 @@ int ufshcd_read_desc_param(struct ufs_hba *hba,
- {
- 	int ret;
- 	u8 *desc_buf;
--	int buff_len;
-+	int buff_len = QUERY_DESC_MAX_SIZE;
- 	bool is_kmalloc = true;
- 
- 	/* Safety check */
- 	if (desc_id >= QUERY_DESC_IDN_MAX || !param_size)
- 		return -EINVAL;
- 
--	/* Get the length of descriptor */
--	ufshcd_map_desc_id_to_length(hba, desc_id, &buff_len);
--	if (!buff_len) {
--		dev_err(hba->dev, "%s: Failed to get desc length\n", __func__);
--		return -EINVAL;
--	}
--
--	if (param_offset >= buff_len) {
--		dev_err(hba->dev, "%s: Invalid offset 0x%x in descriptor IDN 0x%x, length 0x%x\n",
--			__func__, param_offset, desc_id, buff_len);
--		return -EINVAL;
--	}
--
- 	/* Check whether we need temp memory */
- 	if (param_offset != 0 || param_size < buff_len) {
- 		desc_buf = kzalloc(buff_len, GFP_KERNEL);
-@@ -3434,15 +3407,23 @@ int ufshcd_read_desc_param(struct ufs_hba *hba,
- 
- 	/* Request for full descriptor */
- 	ret = ufshcd_query_descriptor_retry(hba, UPIU_QUERY_OPCODE_READ_DESC,
--					desc_id, desc_index, 0,
--					desc_buf, &buff_len);
--
-+					    desc_id, desc_index, 0,
-+					    desc_buf, &buff_len);
- 	if (ret) {
- 		dev_err(hba->dev, "%s: Failed reading descriptor. desc_id %d, desc_index %d, param_offset %d, ret %d\n",
- 			__func__, desc_id, desc_index, param_offset, ret);
- 		goto out;
- 	}
- 
-+	/* Update descriptor length */
-+	buff_len = desc_buf[QUERY_DESC_LENGTH_OFFSET];
-+
-+	if (param_offset >= buff_len) {
-+		dev_err(hba->dev, "%s: Invalid offset 0x%x in descriptor IDN 0x%x, length 0x%x\n",
-+			__func__, param_offset, desc_id, buff_len);
-+		return -EINVAL;
-+	}
-+
- 	/* Sanity check */
- 	if (desc_buf[QUERY_DESC_DESC_TYPE_OFFSET] != desc_id) {
- 		dev_err(hba->dev, "%s: invalid desc_id %d in descriptor header\n",
-@@ -3451,9 +3432,6 @@ int ufshcd_read_desc_param(struct ufs_hba *hba,
- 		goto out;
- 	}
- 
--	/* Update descriptor length */
--	buff_len = desc_buf[QUERY_DESC_LENGTH_OFFSET];
--
- 	if (is_kmalloc) {
- 		/* Make sure we don't copy more data than available */
- 		if (param_offset >= buff_len)
-diff --git a/drivers/ufs/core/ufshpb.c b/drivers/ufs/core/ufshpb.c
-index 3d69a81c..053fd66 100644
---- a/drivers/ufs/core/ufshpb.c
-+++ b/drivers/ufs/core/ufshpb.c
-@@ -2382,16 +2382,13 @@ static int ufshpb_get_lu_info(struct ufs_hba *hba, int lun,
- {
- 	u16 max_active_rgns;
- 	u8 lu_enable;
--	int size;
- 	int ret;
- 	char desc_buf[QUERY_DESC_MAX_SIZE];
- 
--	ufshcd_map_desc_id_to_length(hba, QUERY_DESC_IDN_UNIT, &size);
--
- 	ufshcd_rpm_get_sync(hba);
- 	ret = ufshcd_query_descriptor_retry(hba, UPIU_QUERY_OPCODE_READ_DESC,
- 					    QUERY_DESC_IDN_UNIT, lun, 0,
--					    desc_buf, &size);
-+					    desc_buf, QUERY_DESC_MAX_SIZE);
- 	ufshcd_rpm_put_sync(hba);
- 
- 	if (ret) {
+But this requires both the UFS controller and UFS device to agree to a
+common gear. For finding the max supported gear, a separate register is
+used for the UFS controller and devicetree is used for the UFS device.
+Based on the max gear of both, the UFS driver will decide which gear to
+use during runtime.
+
+This series has been tested on Qcom RB5 development platform powered by
+SM8250 SoC that uses HS-G4.
+
+Merging Strategy:
+-----------------
+
+The PHY patches are expected to go through PHY tree and UFS, MAINTAINERS
+patches are expected to go through SCSI tree. Finally, the binding and
+devicetree patches can go through ARM MSM tree. There is no build dependency
+between the patches.
+
+Thanks,
+Mani
+
+Changes in v2:
+
+* Collected reviews from Dmitry
+* Renamed "max-gear" property to "max-device-gear"
+* Used min() for deciding which gear to use instead of open comparision
+* Added comment about the old register name
+
+Manivannan Sadhasivam (15):
+  phy: qcom-qmp-ufs: Move register settings to qmp_phy_cfg_tables struct
+  phy: qcom-qmp-ufs: Add support for configuring PHY in HS Series B mode
+  phy: qcom-qmp-ufs: Add support for configuring PHY in HS G4 mode
+  phy: qcom-qmp-ufs: Add HS G4 mode support to SM8250 SoC
+  phy: qcom-qmp-ufs: Move HS Rate B register setting to tables_hs_b
+  dt-bindings: ufs: Add "max-device-gear" property for UFS device
+  arm64: dts: qcom: qrb5165-rb5: Add max-device-gear property to UFS
+    node
+  scsi: ufs: ufs-qcom: Remove un-necessary goto statements
+  scsi: ufs: ufs-qcom: Remove un-necessary WARN_ON()
+  scsi: ufs: ufs-qcom: Use bitfields where appropriate
+  scsi: ufs: ufs-qcom: Use dev_err_probe() for printing probe error
+  scsi: ufs: ufs-qcom: Fix the Qcom register name for offset 0xD0
+  scsi: ufs: ufs-qcom: Factor out the logic finding the HS Gear
+  scsi: ufs: ufs-qcom: Add support for finding HS gear on new UFS
+    versions
+  MAINTAINERS: Add myself as the maintainer for Qcom UFS driver
+
+ .../devicetree/bindings/ufs/ufs-common.yaml   |   5 +
+ MAINTAINERS                                   |   8 +
+ arch/arm64/boot/dts/qcom/qrb5165-rb5.dts      |   1 +
+ drivers/phy/qualcomm/phy-qcom-qmp-ufs.c       | 350 +++++++++++++-----
+ drivers/ufs/host/ufs-qcom.c                   | 175 +++++----
+ drivers/ufs/host/ufs-qcom.h                   |  68 ++--
+ 6 files changed, 390 insertions(+), 217 deletions(-)
+
 -- 
-2.7.4
+2.25.1
 
