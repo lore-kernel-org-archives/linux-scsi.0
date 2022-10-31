@@ -2,112 +2,117 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CA82ECAAA1
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Oct 2022 19:42:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22DA5ECAAA1
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Oct 2022 20:03:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230008AbiJaTmV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 31 Oct 2022 15:42:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53694 "EHLO
+        id S229941AbiJaUDE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 31 Oct 2022 16:03:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33470 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229744AbiJaTmU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Oct 2022 15:42:20 -0400
-Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7105062E1;
-        Mon, 31 Oct 2022 12:42:19 -0700 (PDT)
-Received: by mail-pj1-f50.google.com with SMTP id b11so11259529pjp.2;
-        Mon, 31 Oct 2022 12:42:19 -0700 (PDT)
+        with ESMTP id S229876AbiJaUDB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Oct 2022 16:03:01 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52F2513F85
+        for <linux-scsi@vger.kernel.org>; Mon, 31 Oct 2022 13:02:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1667246526;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=GyQzSTgHMXAqR4GW328JWqSw6Ba5Dp1IwqrsJPnSvqw=;
+        b=dTDLs370P5RhdKM4hR4xhAA4bWs92Fwq+BmUlpqfNuypkZqYL3ipk8iEz5vYQcaHHZLcvW
+        9C2uttWgAlh3CnpYKGvade5cOv7ePd5d9XmfrkKe8ji7GRkpz3iY/wvEYzWk6Xa0Z0DxIe
+        JMtY3YyLm3JHW3r9EcJGzXNalcHU8z4=
+Received: from mail-ot1-f69.google.com (mail-ot1-f69.google.com
+ [209.85.210.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-248-e0ml-0gvMlOgc4vo1UAjjg-1; Mon, 31 Oct 2022 16:02:04 -0400
+X-MC-Unique: e0ml-0gvMlOgc4vo1UAjjg-1
+Received: by mail-ot1-f69.google.com with SMTP id ck9-20020a056830648900b0066c56ff7b33so1437942otb.20
+        for <linux-scsi@vger.kernel.org>; Mon, 31 Oct 2022 13:02:03 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=RTjoZlyOH3AS4ihcAHQZlL8333OqylU4fr8iC7YCBZ0=;
-        b=kAvsHJY00j9ihS4IAI0S/bf6k+WXiBVtmkFoczwJajl0YqisKMyrav/bdoncdnOdKE
-         eVJo6UVC1Y315qGuqfEf+MbxFRIrmFSwdE+EfQp56rofJynMTsrLCtD7AMJOdS2AFloJ
-         AEKRdh7bnKeLUWL+XwZQ+01O8sWAbZuhJ3oM7qrD0z5TgN65+5xtsk9Drnvh3qcVLFB2
-         eQ4n6LzPHkapfHwJnCW/Fu5kDAVmrAYmZbtF8hv56AWy3ql2eyUjwC4W5S7zdHIN+47U
-         9+reg2kP3y7hs0A+kJk4urgllonWUljwBQwM6359kmwDq+nb7+nI+BRm8xzXo82ZmX5I
-         0Hng==
-X-Gm-Message-State: ACrzQf1/FfPpTnNtNm3VTsud+ITmUiqd+fcxvOopLl/nUWkTY1NUWh/l
-        BXWQnDjMfPAtsVJYJBM3Row=
-X-Google-Smtp-Source: AMsMyM5vxUKd0Esy9pZFV9nVA0MDmjfefVBrK2BCX/7PKa0XBQFHHsien+a1DkISONMesDh33Effig==
-X-Received: by 2002:a17:90b:4a43:b0:212:fd76:be5d with SMTP id lb3-20020a17090b4a4300b00212fd76be5dmr17018495pjb.152.1667245338857;
-        Mon, 31 Oct 2022 12:42:18 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:8574:e82f:b860:3ad0? ([2620:15c:211:201:8574:e82f:b860:3ad0])
-        by smtp.gmail.com with ESMTPSA id v18-20020a170902ca9200b00186e8526790sm4790062pld.127.2022.10.31.12.42.16
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 31 Oct 2022 12:42:17 -0700 (PDT)
-Message-ID: <87a78633-5c9e-49c2-4e8a-8b1c6b21f2f0@acm.org>
-Date:   Mon, 31 Oct 2022 12:42:15 -0700
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=GyQzSTgHMXAqR4GW328JWqSw6Ba5Dp1IwqrsJPnSvqw=;
+        b=UdiC/J0q9ZlFeCmKFzoCS8zzAhhj3cQB+FGCJnuHViNDglqF1xarDijrIGR83krWQH
+         3fnJJYo5OMf9nSDciYK7eayrKZ/l7kbuo++u/H/qu1Pw/2O5IvwVTm5tQBaLA1ZsVdI2
+         ce8vEIuhjo1YDt+KZtlzbllyeQhfNxFh2XppTRZfpIxWkRp0fgmgcxHDGrdr8WG+nsHw
+         2ExwdrWcPCwBrymJYwU0RBvlvEoTUBuRi+j9jmpnB0ZS3YoisWV7Pu3RCT3cONBetGay
+         Lzl800Beg+M19Da/RhXqz3ZQTLh6NE2gBtdm23RxdJiTyyYLuE3cA48AYJ8X4hImy40A
+         rOxQ==
+X-Gm-Message-State: ACrzQf37fMslMHh1WiTA6paeF9QpKHCeNTmls0T+oqZ7my6RcA/zLwxW
+        qW//3R8hPjmwI/yIZgCfocAYDM7gCHbDkXG4VENdKB+MRQ0de/TGKuL4tl6bH8aUuSBmtiy+obK
+        LkqerRHnbQ8Ts54FIFr23cg==
+X-Received: by 2002:a05:6870:51a:b0:130:ae8d:daaf with SMTP id j26-20020a056870051a00b00130ae8ddaafmr17100862oao.103.1667246521927;
+        Mon, 31 Oct 2022 13:02:01 -0700 (PDT)
+X-Google-Smtp-Source: AMsMyM4COwYawDiGVOrrxMUqz/QkdUPpj62cIx+cSPHKLQLGQk5fYVCCWkgMetIObtdOgQWrNI5yJQ==
+X-Received: by 2002:a05:6870:51a:b0:130:ae8d:daaf with SMTP id j26-20020a056870051a00b00130ae8ddaafmr17100841oao.103.1667246521646;
+        Mon, 31 Oct 2022 13:02:01 -0700 (PDT)
+Received: from halaney-x13s ([2600:1700:1ff0:d0e0::41])
+        by smtp.gmail.com with ESMTPSA id o37-20020a05687096a500b00131c3d4d38fsm3497667oaq.39.2022.10.31.13.02.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 31 Oct 2022 13:02:01 -0700 (PDT)
+Date:   Mon, 31 Oct 2022 15:01:58 -0500
+From:   Andrew Halaney <ahalaney@redhat.com>
+To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc:     martin.petersen@oracle.com, jejb@linux.ibm.com,
+        andersson@kernel.org, vkoul@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org, konrad.dybcio@somainline.org,
+        robh+dt@kernel.org, quic_cang@quicinc.com,
+        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-phy@lists.infradead.org,
+        linux-scsi@vger.kernel.org, dmitry.baryshkov@linaro.org
+Subject: Re: [PATCH v2 09/15] scsi: ufs: ufs-qcom: Remove un-necessary
+ WARN_ON()
+Message-ID: <20221031200158.ph6f4ucbjhzw5knt@halaney-x13s>
+References: <20221031180217.32512-1-manivannan.sadhasivam@linaro.org>
+ <20221031180217.32512-10-manivannan.sadhasivam@linaro.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.0
-Subject: Re: [PATCH v3 07/17] ufs: core: mcq: Calculate queue depth
-Content-Language: en-US
-To:     Asutosh Das <quic_asutoshd@quicinc.com>
-Cc:     quic_cang@quicinc.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, quic_nguyenb@quicinc.com,
-        quic_xiaosenh@quicinc.com, stanley.chu@mediatek.com,
-        eddie.huang@mediatek.com, daejun7.park@samsung.com,
-        avri.altman@wdc.com, mani@kernel.org, beanhuo@micron.com,
-        quic_richardp@quicinc.com, linux-arm-msm@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Jinyoung Choi <j-young.choi@samsung.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <cover.1666288432.git.quic_asutoshd@quicinc.com>
- <1987fbada1d33c04c9598614ef712e0a48fe065e.1666288432.git.quic_asutoshd@quicinc.com>
- <0fb3f8ae-5ed7-9057-0d2b-8866f36c2441@acm.org>
- <20221031192435.GD9077@asutoshd-linux1.qualcomm.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20221031192435.GD9077@asutoshd-linux1.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221031180217.32512-10-manivannan.sadhasivam@linaro.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/31/22 12:24, Asutosh Das wrote:
-> On Thu, Oct 27 2022 at 14:52 -0700, Bart Van Assche wrote:
->> On 10/20/22 11:03, Asutosh Das wrote:
->>> +u32 ufshcd_mcq_decide_queue_depth(struct ufs_hba *hba)
->>> +{
->>> +    u32 qd, val;
->>> +    int mac;
->>> +
->>> +    mac = ufshcd_mcq_vops_get_hba_mac(hba);
->>> +    if (mac < 0) {
->>> +        val = ufshcd_readl(hba, REG_UFS_MCQ_CFG);
->>> +        mac = FIELD_GET(MCQ_CFG_MAC_MASK, val);
->>> +    }
->>
->> According to the UFSHCI 4.0 specification the MAC value is set by the 
->> host. Can the above code read the MAC value from the host controller 
->> before it has been set by the host? If so, how about leaving out the 
->> code that reads the MAC value from the controller and making it 
->> mandatory to implement the new get_hba_mac vop?
->>
-> The reason it is not mandatory to define get_hba_mac vop is UFSHCI 4.0
-> specification mentions that the default value of MAC is 32. So even if a 
-> vendor
-> HC doesn't override the MAC, it'd be 32.
-> Hence, the current code first checks for an override, and if there's 
-> none uses
-> the default value defined in the HC.
+On Mon, Oct 31, 2022 at 11:32:11PM +0530, Manivannan Sadhasivam wrote:
+> In the reset assert and deassert callbacks, the supplied "id" is not used
+> at all and only the hba reset is performed all the time. So there is no
+> reason to use a WARN_ON on the "id".
+> 
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
-Hi Asutosh,
+Reviewed-by: Andrew Halaney <ahalaney@redhat.com>
 
-Please ignore the value reported by the controller in the MAC field of 
-the MCQConfig register and overwrite the MAC field without reading it 
-first. It doesn't seem useful to me to read this field. I think the host 
-should decide about the queue depth no matter what the current value of 
-the MAC field is.
-
-Thanks,
-
-Bart.
+> ---
+>  drivers/ufs/host/ufs-qcom.c | 4 ----
+>  1 file changed, 4 deletions(-)
+> 
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index 7cd996ac180b..8bb0f4415f1a 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -895,8 +895,6 @@ ufs_qcom_reset_assert(struct reset_controller_dev *rcdev, unsigned long id)
+>  {
+>  	struct ufs_qcom_host *host = rcdev_to_ufs_host(rcdev);
+>  
+> -	/* Currently this code only knows about a single reset. */
+> -	WARN_ON(id);
+>  	ufs_qcom_assert_reset(host->hba);
+>  	/* provide 1ms delay to let the reset pulse propagate. */
+>  	usleep_range(1000, 1100);
+> @@ -908,8 +906,6 @@ ufs_qcom_reset_deassert(struct reset_controller_dev *rcdev, unsigned long id)
+>  {
+>  	struct ufs_qcom_host *host = rcdev_to_ufs_host(rcdev);
+>  
+> -	/* Currently this code only knows about a single reset. */
+> -	WARN_ON(id);
+>  	ufs_qcom_deassert_reset(host->hba);
+>  
+>  	/*
+> -- 
+> 2.25.1
+> 
 
