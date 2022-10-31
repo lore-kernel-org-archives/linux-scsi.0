@@ -2,53 +2,53 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E372BFA3747
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Oct 2022 18:04:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADCE6FA3746
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Oct 2022 18:04:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230071AbiJaSEQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 31 Oct 2022 14:04:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42960 "EHLO
+        id S230173AbiJaSEW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 31 Oct 2022 14:04:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41806 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230031AbiJaSDx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Oct 2022 14:03:53 -0400
-Received: from mail-pg1-x531.google.com (mail-pg1-x531.google.com [IPv6:2607:f8b0:4864:20::531])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BCA6C13E24
-        for <linux-scsi@vger.kernel.org>; Mon, 31 Oct 2022 11:03:43 -0700 (PDT)
-Received: by mail-pg1-x531.google.com with SMTP id q71so11345540pgq.8
-        for <linux-scsi@vger.kernel.org>; Mon, 31 Oct 2022 11:03:43 -0700 (PDT)
+        with ESMTP id S230248AbiJaSEE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Oct 2022 14:04:04 -0400
+Received: from mail-pg1-x533.google.com (mail-pg1-x533.google.com [IPv6:2607:f8b0:4864:20::533])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D63B210FD3
+        for <linux-scsi@vger.kernel.org>; Mon, 31 Oct 2022 11:03:58 -0700 (PDT)
+Received: by mail-pg1-x533.google.com with SMTP id 78so11335816pgb.13
+        for <linux-scsi@vger.kernel.org>; Mon, 31 Oct 2022 11:03:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=3s4pb9x6UWl8wDrCXVlNY9pvnbipHUCj9wO5Sx7YnCg=;
-        b=Aqxzg4D/i1JrHY1gvTUikcKWYvNIR6/SOWTFirfsyknenpTiNExSaqMPOO4XTOGMr0
-         WjaDMhmDlSBJFRherP07thMkDv9uP+ytT5h5rOISFFZfNOFMDV3dcQb3AOJoxziDHC+E
-         aAg446XXtI5x1pD2GSVM/M9gsGM3Q7t49dONxrBYaSSRdpHjZwMhxxv+/dKs1WM3vZmv
-         ez3Wo8Z7SEIaD4GAmyrhJwYWHha71PE38otRjY3zU9gjAae1GRWd/vgCujig7aX3uFP1
-         pDwfXQmLAJNarMjlLz7QQRiC30fJ8d0aTD4Bu3a4QfMpbHg8GU/5QC94xE889PcLnOZc
-         XWlw==
+        bh=fvt/ooOFeIQi2DBt2IsAxWGkItH8ZOWcpqthZcxorNk=;
+        b=MRr8I4HdQhqgTo0yNOhsFOhZV/I9beGFFMFSzQ5/qewYPlKyDMnTu1cb8X2l7NnkBC
+         D/vh5oh44rVIq5XLoY3RWT0n8Gi6fqUYZT5lW0Njj1f9XpMLyDdrdPuqwwQ2R+tVXHuH
+         rxtTzBVxF+smBqHDdP89u/1etqmRaIfsrmFs52mjVHwSMlzKZxKs2FD05lRsJI5kHaAB
+         RNr++j1JU/y9a5A17NMz9hWSquiIaUzWCAlVD5m9he4b57+Qk7pxB4o/e2HXwHEpWxZo
+         M8PpwHV9IJ2M9SVifRB3jUkzQNQsmWty46csc0KPf1s7FR2ayyHnP2sF/ewS4uKr1gBG
+         wY3A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=3s4pb9x6UWl8wDrCXVlNY9pvnbipHUCj9wO5Sx7YnCg=;
-        b=jv2VcisPDnxzLz7lVrMN8uyTXMs+byQGS0tRpx/SpcpsfkWdSV/xoSuEoiHLK46GcM
-         tAT46k6S4oP+hlAy5KqYgt6xjFym7Bi+U8/oVouschT+favEEkGHIYZxfqCbEzKeaME2
-         zXo36Y4kOoXGw8lTzv2zqpnxdRdvvTIHpv3K84E33Bb9YUebds8Bir20KPiXEIUluT8D
-         ubOuAGs6sKj06WZJuh6Ji7Edko9vTMjmm+64EGKC5/CAVk9neAg3S0J5TZtZ9iD97coE
-         8OWaoIziQRxmZicNa2LhB1hHqSnenuG4nyu4OAw0B+JpPiXkXu9yc/J2AsFxetEs2XRq
-         WxbA==
-X-Gm-Message-State: ACrzQf2RQDVKn+a6xiXoKo+olKNnd7Lo348eLpW+P7xqGJfXM8vPp+8c
-        aSIAhhBtWJHwRJ7Jg0npLHAT
-X-Google-Smtp-Source: AMsMyM7lyqNnH5Zv2natwI+SL8YjteI6+uttuWSF9voVktP1yk/eeh9VzW9d4o4g84anScqZQNZXeg==
-X-Received: by 2002:a63:e218:0:b0:448:5163:478f with SMTP id q24-20020a63e218000000b004485163478fmr13962942pgh.415.1667239423271;
-        Mon, 31 Oct 2022 11:03:43 -0700 (PDT)
+        bh=fvt/ooOFeIQi2DBt2IsAxWGkItH8ZOWcpqthZcxorNk=;
+        b=VzMl8aCeLwFU7sXmI+UIsZ0iIDBR2p5MuZtpX80ZRHqIGKSQxkeyvp/TLLhCDhFDSg
+         b9NAWfCmOveqpRbCgJcVlvMUHG7VeM2ysH6Qb7GXsY0EuLiO+cYdLjw0teU32ROoSh1q
+         vWaC/mhMoqQPiM3K4scf4yofUBRGlP4eylXPdFE1BRLq+aD37Wyv8XfQGgNWrKVTR+Df
+         GCEQqz4UGLWPsjKmffzvDbwqAa+n3vuWklVDDs8UpI9wYpD4uUKy6FGsAiN+jxiK6SE8
+         16U3klLwxkSPzaUgZxNgNCw73028kmI/kZzCm3loktRWp33UNImoxSYocub8W9g4Pyez
+         Yf1g==
+X-Gm-Message-State: ACrzQf3AB/w3rIWzSHt2yGa34eObLvixhugEvtHyzva6FduG+VgCjkxz
+        NHmkOP/8KGW1bg3z7gGn61re
+X-Google-Smtp-Source: AMsMyM7U31sdCQlnOqIi2pBNFs391BLTLFCHqOQ/hBImrmMpgUG5LDMLLefA9kc2/40q7k5hU0royQ==
+X-Received: by 2002:a63:f153:0:b0:46e:b0e3:547e with SMTP id o19-20020a63f153000000b0046eb0e3547emr14247127pgk.51.1667239438233;
+        Mon, 31 Oct 2022 11:03:58 -0700 (PDT)
 Received: from localhost.localdomain ([117.193.209.221])
-        by smtp.gmail.com with ESMTPSA id q14-20020a170902a3ce00b00186c6d2e7e3sm4742224plb.26.2022.10.31.11.03.37
+        by smtp.gmail.com with ESMTPSA id q14-20020a170902a3ce00b00186c6d2e7e3sm4742224plb.26.2022.10.31.11.03.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 31 Oct 2022 11:03:42 -0700 (PDT)
+        Mon, 31 Oct 2022 11:03:55 -0700 (PDT)
 From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To:     martin.petersen@oracle.com, jejb@linux.ibm.com,
         andersson@kernel.org, vkoul@kernel.org,
@@ -59,9 +59,9 @@ Cc:     konrad.dybcio@somainline.org, robh+dt@kernel.org,
         linux-phy@lists.infradead.org, linux-scsi@vger.kernel.org,
         dmitry.baryshkov@linaro.org, ahalaney@redhat.com,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v2 09/15] scsi: ufs: ufs-qcom: Remove un-necessary WARN_ON()
-Date:   Mon, 31 Oct 2022 23:32:11 +0530
-Message-Id: <20221031180217.32512-10-manivannan.sadhasivam@linaro.org>
+Subject: [PATCH v2 11/15] scsi: ufs: ufs-qcom: Use dev_err_probe() for printing probe error
+Date:   Mon, 31 Oct 2022 23:32:13 +0530
+Message-Id: <20221031180217.32512-12-manivannan.sadhasivam@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20221031180217.32512-1-manivannan.sadhasivam@linaro.org>
 References: <20221031180217.32512-1-manivannan.sadhasivam@linaro.org>
@@ -71,37 +71,29 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In the reset assert and deassert callbacks, the supplied "id" is not used
-at all and only the hba reset is performed all the time. So there is no
-reason to use a WARN_ON on the "id".
+Make use of dev_err_probe() for printing the probe error.
 
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- drivers/ufs/host/ufs-qcom.c | 4 ----
- 1 file changed, 4 deletions(-)
+ drivers/ufs/host/ufs-qcom.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 7cd996ac180b..8bb0f4415f1a 100644
+index 8bb0f4415f1a..38e2ed749d75 100644
 --- a/drivers/ufs/host/ufs-qcom.c
 +++ b/drivers/ufs/host/ufs-qcom.c
-@@ -895,8 +895,6 @@ ufs_qcom_reset_assert(struct reset_controller_dev *rcdev, unsigned long id)
- {
- 	struct ufs_qcom_host *host = rcdev_to_ufs_host(rcdev);
+@@ -1441,9 +1441,9 @@ static int ufs_qcom_probe(struct platform_device *pdev)
+ 	/* Perform generic probe */
+ 	err = ufshcd_pltfrm_init(pdev, &ufs_hba_qcom_vops);
+ 	if (err)
+-		dev_err(dev, "ufshcd_pltfrm_init() failed %d\n", err);
++		return dev_err_probe(dev, err, "ufshcd_pltfrm_init() failed\n");
  
--	/* Currently this code only knows about a single reset. */
--	WARN_ON(id);
- 	ufs_qcom_assert_reset(host->hba);
- 	/* provide 1ms delay to let the reset pulse propagate. */
- 	usleep_range(1000, 1100);
-@@ -908,8 +906,6 @@ ufs_qcom_reset_deassert(struct reset_controller_dev *rcdev, unsigned long id)
- {
- 	struct ufs_qcom_host *host = rcdev_to_ufs_host(rcdev);
+-	return err;
++	return 0;
+ }
  
--	/* Currently this code only knows about a single reset. */
--	WARN_ON(id);
- 	ufs_qcom_deassert_reset(host->hba);
- 
- 	/*
+ /**
 -- 
 2.25.1
 
