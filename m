@@ -2,89 +2,58 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62BDAC43217
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Nov 2022 18:47:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E412C43217
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Nov 2022 19:35:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230303AbiKASrX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Nov 2022 14:47:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57478 "EHLO
+        id S229589AbiKATfd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Nov 2022 15:35:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34510 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230302AbiKASrV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2022 14:47:21 -0400
-Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D93C1C435;
-        Tue,  1 Nov 2022 11:47:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1667328440; x=1698864440;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=2KZLVil44AFwc3j/NZFKMhHht0bWuCBekDUWiGR5VNs=;
-  b=IPh3M0I4yRmy6IWCOGT5GFWOEknndPolQOu1ZC8T/2eMfKR5bgi9xiLN
-   iEvnASXv3iYn1EKAFBDG0s39TiZMCg6nKTIKr/a/XpitLUcRVhZB31qWB
-   sJT4SUk1UKo9fPbrcsWgS1PGHCw4g0NK5tI2pbfXz64JF6z8fjYIkfwXY
-   o=;
-Received: from unknown (HELO ironmsg04-sd.qualcomm.com) ([10.53.140.144])
-  by alexa-out-sd-01.qualcomm.com with ESMTP; 01 Nov 2022 11:47:20 -0700
-X-QCInternal: smtphost
-Received: from unknown (HELO nasanex01a.na.qualcomm.com) ([10.52.223.231])
-  by ironmsg04-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Nov 2022 11:47:19 -0700
-Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
- nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.29; Tue, 1 Nov 2022 11:47:19 -0700
-Date:   Tue, 1 Nov 2022 11:47:19 -0700
-From:   Asutosh Das <quic_asutoshd@quicinc.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-CC:     <quic_cang@quicinc.com>, <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>, <quic_nguyenb@quicinc.com>,
-        <quic_xiaosenh@quicinc.com>, <stanley.chu@mediatek.com>,
-        <eddie.huang@mediatek.com>, <daejun7.park@samsung.com>,
-        <avri.altman@wdc.com>, <mani@kernel.org>, <beanhuo@micron.com>,
-        <quic_richardp@quicinc.com>, <linux-arm-msm@vger.kernel.org>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3 17/17] ufs: qcom-host: Enable multi circular queue
- capability
-Message-ID: <20221101184718.GG9077@asutoshd-linux1.qualcomm.com>
-References: <cover.1666288432.git.quic_asutoshd@quicinc.com>
- <4d21c867708a9d37e53293510d81013088d01c39.1666288432.git.quic_asutoshd@quicinc.com>
- <c03ac1f5-e4a4-c26a-c1f5-b4e78cae3472@acm.org>
+        with ESMTP id S229517AbiKATfc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2022 15:35:32 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 886891DDEE;
+        Tue,  1 Nov 2022 12:35:31 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 3ADEAB81F10;
+        Tue,  1 Nov 2022 19:35:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A75CC433C1;
+        Tue,  1 Nov 2022 19:35:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1667331328;
+        bh=lRcDTaMa+NMO1jJrmlNK7BqpoLcb0kk1Z/aOvAK1rsM=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=jBuDDwHVJ9WPwMF1C/RZG8ZAW9GbI9HT8iIFGJxT1LUjxKSfvKlXMTr7QTOBcNIKR
+         zsRyE/5hQY2M065gFWGXsWgWB/kyeaxudMFuypHSmZWudQLTe75o7PwH6XbzQNBCQA
+         7DJ2h1r0vwJTKRPgUGIjjTFEBgRHiLlrN8CapImU=
+Date:   Tue, 1 Nov 2022 20:36:23 +0100
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Yu Kuai <yukuai1@huaweicloud.com>
+Cc:     stable@vger.kernel.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, hare@suse.com, bvanassche@acm.org,
+        linux-scsi@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
+Subject: Re: [PATCH 5.10/5.15 v2] scsi: sd: Revert "scsi: sd: Remove a local
+ variable"
+Message-ID: <Y2F1N2s4z+EiDv5G@kroah.com>
+References: <20221101013124.2615274-1-yukuai1@huaweicloud.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <c03ac1f5-e4a4-c26a-c1f5-b4e78cae3472@acm.org>
-User-Agent: Mutt/1.5.24 (2015-08-30)
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
+In-Reply-To: <20221101013124.2615274-1-yukuai1@huaweicloud.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Oct 28 2022 at 15:08 -0700, Bart Van Assche wrote:
->On 10/20/22 11:03, Asutosh Das wrote:
->>diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
->>index 36c40210..b740299 100644
->>--- a/drivers/ufs/host/ufs-qcom.c
->>+++ b/drivers/ufs/host/ufs-qcom.c
->>@@ -853,6 +853,7 @@ static void ufs_qcom_set_caps(struct ufs_hba *hba)
->>  	hba->caps |= UFSHCD_CAP_CRYPTO;
->>  	hba->caps |= UFSHCD_CAP_AGGR_POWER_COLLAPSE;
->>  	hba->caps |= UFSHCD_CAP_RPM_AUTOSUSPEND;
->>+	hba->caps |= UFSHCD_CAP_MCQ_EN;
->
->Shouldn't we have a flag that disables MCQ rather than a flag that 
->enables MCQ? Otherwise the above line will be duplicated in every 
->single host controller driver that supports MCQ.
->
-Thanks, that makes sense.
-I will drop this change and add a cap to disable MCQ via module parameter.
+On Tue, Nov 01, 2022 at 09:31:24AM +0800, Yu Kuai wrote:
+> From: Yu Kuai <yukuai3@huawei.com>
+> 
+> This reverts commit 84f7a9de0602704bbec774a6c7f7c8c4994bee9c.
+> 
+> Because it introduces a problem that rq->__data_len is set to the wrong
+> value.
 
->Thanks,
->
->Bart.
+Now queued up, thanks.
 
--asd
+greg k-h
