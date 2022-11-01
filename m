@@ -2,103 +2,97 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95665C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Nov 2022 11:36:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71EA1FA373D
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Nov 2022 11:57:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231298AbiKALgt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Nov 2022 07:36:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45616 "EHLO
+        id S230320AbiKAL5E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Nov 2022 07:57:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48382 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231327AbiKALgL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2022 07:36:11 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A78C1D0E1;
-        Tue,  1 Nov 2022 04:31:45 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id F10A7B81CCF;
-        Tue,  1 Nov 2022 11:31:14 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A88D7C433D7;
-        Tue,  1 Nov 2022 11:31:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1667302273;
-        bh=NpTtqdMNxT1KjmVtp4h6K8oH+flM8cd/rKUZBHfnVow=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=S12QqJ70l5PVWmP3uWY6UdDPRDI/aTiZoIm/sfjTvx3vHV9uz+jMyCI6Lsr1PQt1L
-         9WkuH6q7ke4Br7Bk42ZSKD7EyOsVMR4rSG8gNI4Jorc9rbC/Jfxv47B/WKIC0NSmKE
-         uovOrEN0nDGLaw7mHqtLtxyRh0Z4eSgo34dxhSMhCrVycMks/Ti9EDgk6FQyUGwgD4
-         bepy/i7fiS1HFRE5nq/jC+6fINCl6kHcccYFtVRjPnEMM8aMplBWeNO3RsrhzEexIO
-         0CXHC+UQ3bWjFzYfwx+AZSkod/xWRwnq6uT7THm6d735fqlsb/pfQDcBF+0HkyPWAG
-         eIc5mE2yxV48Q==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Uday Shankar <ushankar@purestorage.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        Hannes Reinecke <hare@suse.de>,
+        with ESMTP id S230239AbiKAL5C (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2022 07:57:02 -0400
+Received: from mail-wr1-x42a.google.com (mail-wr1-x42a.google.com [IPv6:2a00:1450:4864:20::42a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3981C6387;
+        Tue,  1 Nov 2022 04:57:00 -0700 (PDT)
+Received: by mail-wr1-x42a.google.com with SMTP id bk15so19739265wrb.13;
+        Tue, 01 Nov 2022 04:57:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=avD7AsLYAabT4MRxA4af15kY8M1x7LqMRU8EJksJQzU=;
+        b=HcwjTt+AZwgxEXuLfGdDhzw5siB0usEMihQMMtm6COsuce+D71orrJ32ulXf+P5z6U
+         R5qPE/9LMHFAKTrGdjPQ8i0BquIGWgtCdmj1hJqmo4AaxbmNw6rtOrgFcIbuATL9zcPc
+         1VsOhsmnf4qBPor5ZtXS+SHZl/MZu5yjUJW8fUTA+4hZccSXcrtw8bMtXXLX6GGyK0Ld
+         nicXnR3INwSAyO/6Av4Tx1ERwua/HY0rclGcCSvegQa3x2BGidbZPtYP5OBhsLk3ztbT
+         s0NQBKslkRdz+mqbswM8CxFbpz3GV/RRdTjir2T1KH22PyqTKSbDO7ElT2xLsJzocd1c
+         slKQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=avD7AsLYAabT4MRxA4af15kY8M1x7LqMRU8EJksJQzU=;
+        b=LxKbbqLvYQCIk4CjYm//SpWHaiGPEydr/KEIV4zYCLVBC8iEJ0Mffx1IfTbHpwlRz2
+         KDUMkCfCYUsmyAAO82ZarRWyNU9MMiXHuyWu1KOW8jYEm3Uyy+QFuqS23twl5DgH0FXZ
+         u9EiF9DQpb8+TpCCA606bz75Z9Ruu8j8hjvicr4KuVCpHwTQoQBPI8VlhCltFGsRpCEq
+         wxr0UoP0+zjj01NCNo+keFVZAx0SCCnfTMN6Y2gENzJdtpev39H/8QOERl1sWS12Ngy1
+         QB1eBMBBCq5p7WnfnIWTyD91tqMCqvcAF7RBiQBMVPcZIlzHSHQtSJhdA5TNvY1Vyjo6
+         C79A==
+X-Gm-Message-State: ACrzQf3AKz1CwcAVVETX09Q/LkVcCUkEYY1Q67qng6DDiNW/leR91Cii
+        zyXpmelaZdkBt0LO5V4ItfU=
+X-Google-Smtp-Source: AMsMyM7jxN4kNnHN2zLJV7RTLDufU+rENl6wf+klBTWoUB9yddvnX48XNBIEc5DGZIHDP37SuFuSKg==
+X-Received: by 2002:a05:6000:381:b0:232:2e1:48e9 with SMTP id u1-20020a056000038100b0023202e148e9mr11123028wrf.166.1667303818657;
+        Tue, 01 Nov 2022 04:56:58 -0700 (PDT)
+Received: from localhost (cpc154979-craw9-2-0-cust193.16-3.cable.virginm.net. [80.193.200.194])
+        by smtp.gmail.com with ESMTPSA id x3-20020a5d4443000000b0023659925b2asm9863117wrr.51.2022.11.01.04.56.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 01 Nov 2022 04:56:58 -0700 (PDT)
+From:   Colin Ian King <colin.i.king@gmail.com>
+To:     James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 6/8] scsi: core: Restrict legal sdev_state transitions via sysfs
-Date:   Tue,  1 Nov 2022 07:30:55 -0400
-Message-Id: <20221101113059.800777-6-sashal@kernel.org>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20221101113059.800777-1-sashal@kernel.org>
-References: <20221101113059.800777-1-sashal@kernel.org>
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: lpfc: remove redundant pointer lp
+Date:   Tue,  1 Nov 2022 11:56:57 +0000
+Message-Id: <20221101115657.48267-1-colin.i.king@gmail.com>
+X-Mailer: git-send-email 2.37.3
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Uday Shankar <ushankar@purestorage.com>
+Pointer lp is being initialized and incremented but the result
+is never read. The pointer is redundant and can be removed.
 
-[ Upstream commit 2331ce6126be8864b39490e705286b66e2344aac ]
-
-Userspace can currently write to sysfs to transition sdev_state to RUNNING
-or OFFLINE from any source state. This causes issues because proper
-transitioning out of some states involves steps besides just changing
-sdev_state, so allowing userspace to change sdev_state regardless of the
-source state can result in inconsistencies; e.g. with ISCSI we can end up
-with sdev_state == SDEV_RUNNING while the device queue is quiesced. Any
-task attempting I/O on the device will then hang, and in more recent
-kernels, iscsid will hang as well.
-
-More detail about this bug is provided in my first attempt:
-
-https://groups.google.com/g/open-iscsi/c/PNKca4HgPDs/m/CXaDkntOAQAJ
-
-Link: https://lore.kernel.org/r/20220924000241.2967323-1-ushankar@purestorage.com
-Signed-off-by: Uday Shankar <ushankar@purestorage.com>
-Suggested-by: Mike Christie <michael.christie@oracle.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
 ---
- drivers/scsi/scsi_sysfs.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/scsi/lpfc/lpfc_els.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 6faf1d6451b0..530b14685fd7 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -795,6 +795,14 @@ store_state_field(struct device *dev, struct device_attribute *attr,
- 	}
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 2b03210264bb..3f13fcf75fce 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -9173,14 +9173,11 @@ lpfc_els_rcv_farpr(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
+ 		   struct lpfc_nodelist  *ndlp)
+ {
+ 	struct lpfc_dmabuf *pcmd;
+-	uint32_t *lp;
+ 	uint32_t did;
  
- 	mutex_lock(&sdev->state_mutex);
-+	switch (sdev->sdev_state) {
-+	case SDEV_RUNNING:
-+	case SDEV_OFFLINE:
-+		break;
-+	default:
-+		mutex_unlock(&sdev->state_mutex);
-+		return -EINVAL;
-+	}
- 	if (sdev->sdev_state == SDEV_RUNNING && state == SDEV_RUNNING) {
- 		ret = 0;
- 	} else {
+ 	did = get_job_els_rsp64_did(vport->phba, cmdiocb);
+ 	pcmd = cmdiocb->cmd_dmabuf;
+-	lp = (uint32_t *)pcmd->virt;
+ 
+-	lp++;
+ 	/* FARP-RSP received from DID <did> */
+ 	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
+ 			 "0600 FARP-RSP received from DID x%x\n", did);
 -- 
-2.35.1
+2.37.3
 
