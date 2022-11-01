@@ -2,101 +2,88 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23A33C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Nov 2022 16:28:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AEFEDC4332F
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Nov 2022 16:30:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229941AbiKAQ2W (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Nov 2022 12:28:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60250 "EHLO
+        id S229961AbiKAQaE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Nov 2022 12:30:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33440 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230103AbiKAQ2M (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2022 12:28:12 -0400
-Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4EB1C1CFD1
-        for <linux-scsi@vger.kernel.org>; Tue,  1 Nov 2022 09:28:08 -0700 (PDT)
-Received: by mail-pf1-f174.google.com with SMTP id i3so13899567pfc.11
-        for <linux-scsi@vger.kernel.org>; Tue, 01 Nov 2022 09:28:08 -0700 (PDT)
+        with ESMTP id S229824AbiKAQaD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2022 12:30:03 -0400
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CABA1CB2E;
+        Tue,  1 Nov 2022 09:30:03 -0700 (PDT)
+Received: by mail-pl1-f176.google.com with SMTP id k7so4321503pll.6;
+        Tue, 01 Nov 2022 09:30:03 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=qiR3B2/GfOQGokpM6bJ4gV/YmZHPPXBcn9imh5EJz3Y=;
-        b=dJKVfTcjABQzI6ghrGUL7YeCosJvh42S9Rs35nNGIf4RiWGwtM6yqw0Vrj+VhzVppr
-         8+UknqN/iscM5L/z6rzPDr4o3On6tdGz48/I4wOhFCcZeHBH7rkQUdFwLb4UsISgcyRV
-         19vlY6JjjncChsvdssb9wDn2/o7u9xnb9q4A5QcBTGNNHfFCSFOZ1hzj/qV9QRm2Wl+g
-         KtwBtQFuK/4lRo6NwvutJPODOGfHza4GpwWks+d5yRAEBF9azcFoAksGedasnw8zy2XQ
-         5Vcio7fJMMn6gKF9namWph99RXe8X5OI5fgRRkoMEgLBY0j0KN+syHCRLXwHXtp9bBc7
-         X76A==
-X-Gm-Message-State: ACrzQf14dSkl/9Q2uJ3YhVVE7H5mzVJyUEGtqlc+4WQ6SDUcrI8Vi3DY
-        LnqC9d6Vg80G+6VJ6epX9weQkgFo14k=
-X-Google-Smtp-Source: AMsMyM6Zy1JnRhubZiF17aTTdCWleX35tyu3ERDjMGTzjBkE6yTT4gEJsPAFK7OGCK1sCeFzdxsZiw==
-X-Received: by 2002:a05:6a00:1506:b0:56d:e63a:f5e7 with SMTP id q6-20020a056a00150600b0056de63af5e7mr1574252pfu.27.1667320088260;
-        Tue, 01 Nov 2022 09:28:08 -0700 (PDT)
+        bh=g2GHjD229JwzIH1zM0q8wr8h+WcU6euFtyspK/NJZCk=;
+        b=FXXiFLu6gb+JV/Ee+BzfC8boz4HQ/x6SkTq0L9o5h+233Luy+bpn8b27Of+R4nhTQu
+         votzVWOXfauA7cPHz4dQc1tzbexo3qyQ/WCLbV9TC7zUfj654L6UtY5BFKYaIPzMji2y
+         A1CeHA1sV0AI4IXUsBUaaucCd3gnbY0MfYUfqSEqwQHWs317CQhQSo3fXiljowrrRm9b
+         Q/maZbNbClv/BxBBqaZ2WrBL8jyazUtoEl7bZG74iYSmWPWz2wJD5sIqFOOLoPCJlStq
+         80h+AMXLn0mIWfFsSGIv0JWOo2KeNhfRphvs1y/I1s/2RpxwPLIUN0ddbKd3L6cHbSlm
+         aRZg==
+X-Gm-Message-State: ACrzQf0EhJg92Euw+ysj3UkNpqCDOfwdFN9JjBa09HtELOEOz/WWmvHF
+        +TaZT4TKyYCHPLAGnl733wc=
+X-Google-Smtp-Source: AMsMyM5NUmhbJYKYslY7dTDp55y9CBju7lTDRo+4rfia1Mw9t+3EfaL7U0OSsGJQADU3+yAwVK1bdA==
+X-Received: by 2002:a17:903:2284:b0:187:2989:b7ed with SMTP id b4-20020a170903228400b001872989b7edmr8591622plh.120.1667320202459;
+        Tue, 01 Nov 2022 09:30:02 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:8574:e82f:b860:3ad0? ([2620:15c:211:201:8574:e82f:b860:3ad0])
-        by smtp.gmail.com with ESMTPSA id y3-20020aa79e03000000b0056d73ef41fdsm4212990pfq.75.2022.11.01.09.28.06
+        by smtp.gmail.com with ESMTPSA id x29-20020aa7941d000000b0056bc31f4f9fsm6698486pfo.65.2022.11.01.09.30.00
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 01 Nov 2022 09:28:07 -0700 (PDT)
-Message-ID: <54e0d667-8f14-5788-c1ce-5b9d6d8a0060@acm.org>
-Date:   Tue, 1 Nov 2022 09:28:05 -0700
+        Tue, 01 Nov 2022 09:30:01 -0700 (PDT)
+Message-ID: <bb9c46b0-1c6e-2dd9-c820-9e419ee9d44f@acm.org>
+Date:   Tue, 1 Nov 2022 09:29:59 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.3.0
-Subject: Re: [PATCH] scsi: scsi_debug: Make the READ CAPACITY response
- compliant with ZBC
+Subject: Re: [PATCH v3 10/17] ufs: core: mcq: Use shared tags for MCQ mode
 Content-Language: en-US
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>
-References: <20221031224755.2607812-1-bvanassche@acm.org>
- <af9b39f5-037f-5dea-8c14-0e020e275b9a@opensource.wdc.com>
+To:     Avri Altman <Avri.Altman@wdc.com>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc:     "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
+        "quic_xiaosenh@quicinc.com" <quic_xiaosenh@quicinc.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "eddie.huang@mediatek.com" <eddie.huang@mediatek.com>,
+        "daejun7.park@samsung.com" <daejun7.park@samsung.com>,
+        "mani@kernel.org" <mani@kernel.org>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "quic_richardp@quicinc.com" <quic_richardp@quicinc.com>,
+        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        open list <linux-kernel@vger.kernel.org>
+References: <cover.1666288432.git.quic_asutoshd@quicinc.com>
+ <2fea9d4f0b8dfc2e2c82d176f0c928b0525d8110.1666288432.git.quic_asutoshd@quicinc.com>
+ <DM6PR04MB6575F436DDB2AFE5500BF0A8FC349@DM6PR04MB6575.namprd04.prod.outlook.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <af9b39f5-037f-5dea-8c14-0e020e275b9a@opensource.wdc.com>
+In-Reply-To: <DM6PR04MB6575F436DDB2AFE5500BF0A8FC349@DM6PR04MB6575.namprd04.prod.outlook.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/31/22 20:23, Damien Le Moal wrote:
-> On 11/1/22 07:47, Bart Van Assche wrote:
->> --- a/drivers/scsi/scsi_debug.c
->> +++ b/drivers/scsi/scsi_debug.c
->> @@ -1899,6 +1899,10 @@ static int resp_readcap16(struct scsi_cmnd *scp,
->>   			arr[14] |= 0x40;
->>   	}
->>   
->> +	/* Set RC BASIS = 1 for host-managed devices. */
-> 
-> No it is not necessarily set. It is up to the device vendor to choose if
-> RC_BASIS is set or not, based on the device implementation.
-> Applicability of RC = 0 or RC = 1 depends on the presence of conventional
-> zones. so:
-> 
-> 1) If there are conventional zones, then using RC_BASIS = 1 or = 0 are
-> both OK with HM devices. In the case of RC_BASIS = 0, the host can issue a
-> report zones and get the device max lba from the report header (sd_zbc.c
-> does that).
-> 2) If there are no conventional zones, then using RC_BASIS = 0 does not
-> make much sense, but nothing in the ZBC text prevent it either...
-> 
-> So we should refine this and maybe add an option to allow specifying rc
-> basis ?
-Hi Damien,
+On 10/30/22 06:06, Avri Altman wrote:
+>>   static int ufshcd_map_queues(struct Scsi_Host *shost)
+> This seems like an old version of ufshcd_map_queues - returns void now.
+> Needs rebase?
 
-If I remember correctly the conclusion from a previous conversation is 
-that setting RC BASIS = 1 for host-managed devices is what is done by 
-all SMR vendors and is always correct for host-managed devices.
+Hi Asutosh,
 
-I think the description of the my patch is correct, namely that it makes 
-the READ CAPACITY response compliant with ZBC. I did not claim that my 
-patch is the only possible approach for making the READ CAPACITY 
-response ZBC compliant.
-
-Are there any use cases for reporting RC BASIS = 0 in combination with 
-the capacity of conventional zones for host-managed devices other than 
-testing the Linux kernel ZBC code?
+Please use the for-next branch of 
+https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/ when 
+preparing SCSI patches for the next merge window.
 
 Thanks,
 
 Bart.
+
