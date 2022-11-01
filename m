@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58697FA3745
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Nov 2022 11:29:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1672CFA3743
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Nov 2022 11:32:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230302AbiKAL3p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Nov 2022 07:29:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34764 "EHLO
+        id S231208AbiKALci (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Nov 2022 07:32:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35604 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230311AbiKAL3R (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2022 07:29:17 -0400
+        with ESMTP id S230405AbiKALbU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2022 07:31:20 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B3BC6247;
-        Tue,  1 Nov 2022 04:28:35 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 787F91AF18;
+        Tue,  1 Nov 2022 04:29:56 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id CBDED6152E;
-        Tue,  1 Nov 2022 11:28:34 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 47EC0C433C1;
-        Tue,  1 Nov 2022 11:28:33 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8F642615C9;
+        Tue,  1 Nov 2022 11:29:56 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 073E5C433C1;
+        Tue,  1 Nov 2022 11:29:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1667302114;
-        bh=/d4XatDkBeJiW0pJ2RZNoRT5620x04FZ8zQKk8rwHLw=;
+        s=k20201202; t=1667302196;
+        bh=USvHquiFgiGFjM0GueEZoVxriggjzHuSZ+R9lifCgAs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=QwGnQIGjaEWhVBYrsvHeTI21Bq3tcUVmGvrBsKB2tPmDAu+KbRzQ7DeBWBHXEv9d5
-         u8gEBcciJR7Nm+Uli4YEbHaJvmLouGz69B6ZeWjs0Hvnc9KzywUbk8f2aMTTzk4iOT
-         7UGBvmEBaCwAM6o368zE4cT78JOb1jnkxkWyrVgDfyqfQjmHvjrUsgzVucMW3+GtCU
-         yo17VuzX87Bv7qeV10fUe/f5mK7QZenNcFeAuEEMix1CrSP/jVr7I2+89qMn818X0q
-         RfzvjpemyQnCZDN/zI0LUXVQ/8vz5UiIT4CJNKPsdi4xGy9Sz/OPedLInv2kXFpfJM
-         2i03YVqRpX8mg==
+        b=JEB1T0vqmUHgQr25VCGigz9sZypwcFhAVX37cb68ezyvH9RV1PRJDz3/UddlYFtXA
+         yLGH04Fphei+pMV/SevgDFvppRxprgnKP3n98BhWX4I3b0cwkUDCzamV8JAL4X4mk+
+         VlDRELQqfv0gOKmOQ/xqMH+pdwzd+FFxAK9amkz8+lFZicyJiSjwIsJxfYvgi4BwTT
+         8fHDENw/YiPoWTQF7ukh5Sfq3vhRD7DiLMj5SolHRMM1u4nsW4Brc7xQaumxR000jw
+         ow32810GG22ub50Is17aXRG9b8Re7pEq3nuLI8HJv8VeXyJPb+Mwd+GVUU6pdYdGH5
+         QsJUeRmZg+FdA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Uday Shankar <ushankar@purestorage.com>,
@@ -39,12 +39,12 @@ Cc:     Uday Shankar <ushankar@purestorage.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.0 24/34] scsi: core: Restrict legal sdev_state transitions via sysfs
-Date:   Tue,  1 Nov 2022 07:27:16 -0400
-Message-Id: <20221101112726.799368-24-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 15/19] scsi: core: Restrict legal sdev_state transitions via sysfs
+Date:   Tue,  1 Nov 2022 07:29:15 -0400
+Message-Id: <20221101112919.799868-15-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20221101112726.799368-1-sashal@kernel.org>
-References: <20221101112726.799368-1-sashal@kernel.org>
+In-Reply-To: <20221101112919.799868-1-sashal@kernel.org>
+References: <20221101112919.799868-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -81,10 +81,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 8 insertions(+)
 
 diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 5d61f58399dc..dc41d7c6b9b1 100644
+index 920aae661c5b..774864b54b97 100644
 --- a/drivers/scsi/scsi_sysfs.c
 +++ b/drivers/scsi/scsi_sysfs.c
-@@ -828,6 +828,14 @@ store_state_field(struct device *dev, struct device_attribute *attr,
+@@ -816,6 +816,14 @@ store_state_field(struct device *dev, struct device_attribute *attr,
  	}
  
  	mutex_lock(&sdev->state_mutex);
