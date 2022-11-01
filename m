@@ -2,103 +2,103 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9BCCFA373D
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Nov 2022 10:53:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58697FA3745
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Nov 2022 11:29:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230038AbiKAKxe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Nov 2022 06:53:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38190 "EHLO
+        id S230302AbiKAL3p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Nov 2022 07:29:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34764 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229993AbiKAKxa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2022 06:53:30 -0400
-Received: from mail-wr1-x42f.google.com (mail-wr1-x42f.google.com [IPv6:2a00:1450:4864:20::42f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4539318344;
-        Tue,  1 Nov 2022 03:53:29 -0700 (PDT)
-Received: by mail-wr1-x42f.google.com with SMTP id bk15so19532824wrb.13;
-        Tue, 01 Nov 2022 03:53:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=NIlPBoCtz6QpUN1X3vooStQnsHabjk5XLtDmnofRRUw=;
-        b=OKwCSadba1pnfMQqYV7dbEnIvi4mEDYO6/IstfRqsTENnU/XmV+xYWI8unuUY7nZer
-         n9fGwVtsPo5x13rHeYFyhsJNr0BuAZb6hbsYn1pDEUIlfQHNx1V9iTzqrBNPkzz1smOJ
-         9VHP5ZLWNhQdeBnFcRM1u1Dl/P10gakdq37NIBdXie1yq08+UizKwlVDK0Li4JylWRa/
-         HjOGlQr+m8mqOAksjoeCsQRPgTtayO0Qj9FPJYj2h0gD6se78wARf7hRc3D/Jz1xSzw6
-         vUs0a0fN36USCKLSCyY7MN9tkz5RRmNRu4pqmVGkHF/oETxLTHTWidYkgoyk9WR2o6Pd
-         PVCA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=NIlPBoCtz6QpUN1X3vooStQnsHabjk5XLtDmnofRRUw=;
-        b=ZaNPGajuWrAMAfcEDK21Lz6+671X176vzwgQEq6VJRtj0URlB9sPVr0O2jbrVVuM7l
-         VsXVSAynSatnukTt7fqaT3DTMD01H2uLVUATNCWJ0CguSj+eLlPLEU6677nRC1t472RT
-         HJDW4F0hjw8I4kbCHIeg7TyKDS2Up4wJzqOS8wwfahZY+r5vEeKjiaYi/k+YWbMesf3r
-         1axjg7+25OkFQ6XgqjC6Bzv4fBPIKNan82hmxY6W+5HUl+BYpLOjmVXjK/sZT4z9w5lz
-         cWqdoYfTbBwCaxVQmlLIkonepnsjQudTxQZfEVXEfiiHf1MtJsdI9EUOBLxGFKO00NwH
-         sXag==
-X-Gm-Message-State: ACrzQf0qO238TJQr5L8xdWnNkp++SThXhVM6PqEiC5eGLt+NlfpBWU7+
-        8meNMXindj2EJctXuFtm+hK+J5VBcJlY808M
-X-Google-Smtp-Source: AMsMyM50FupETc4yErSLUoojwh+tJo45E7lFTJtjgNLvmiiDWXYDII3ozE7x7RrdbkXzvSfU2hjMNg==
-X-Received: by 2002:adf:ffc2:0:b0:236:61e8:de52 with SMTP id x2-20020adfffc2000000b0023661e8de52mr11266153wrs.59.1667300007890;
-        Tue, 01 Nov 2022 03:53:27 -0700 (PDT)
-Received: from localhost (cpc154979-craw9-2-0-cust193.16-3.cable.virginm.net. [80.193.200.194])
-        by smtp.gmail.com with ESMTPSA id e9-20020a05600c4e4900b003c452678025sm9967714wmq.4.2022.11.01.03.53.27
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 01 Nov 2022 03:53:27 -0700 (PDT)
-From:   Colin Ian King <colin.i.king@gmail.com>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: target: core: Remove unused variable unit_serial_len
-Date:   Tue,  1 Nov 2022 10:53:26 +0000
-Message-Id: <20221101105326.31037-1-colin.i.king@gmail.com>
-X-Mailer: git-send-email 2.37.3
+        with ESMTP id S230311AbiKAL3R (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2022 07:29:17 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B3BC6247;
+        Tue,  1 Nov 2022 04:28:35 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id CBDED6152E;
+        Tue,  1 Nov 2022 11:28:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 47EC0C433C1;
+        Tue,  1 Nov 2022 11:28:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1667302114;
+        bh=/d4XatDkBeJiW0pJ2RZNoRT5620x04FZ8zQKk8rwHLw=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=QwGnQIGjaEWhVBYrsvHeTI21Bq3tcUVmGvrBsKB2tPmDAu+KbRzQ7DeBWBHXEv9d5
+         u8gEBcciJR7Nm+Uli4YEbHaJvmLouGz69B6ZeWjs0Hvnc9KzywUbk8f2aMTTzk4iOT
+         7UGBvmEBaCwAM6o368zE4cT78JOb1jnkxkWyrVgDfyqfQjmHvjrUsgzVucMW3+GtCU
+         yo17VuzX87Bv7qeV10fUe/f5mK7QZenNcFeAuEEMix1CrSP/jVr7I2+89qMn818X0q
+         RfzvjpemyQnCZDN/zI0LUXVQ/8vz5UiIT4CJNKPsdi4xGy9Sz/OPedLInv2kXFpfJM
+         2i03YVqRpX8mg==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Uday Shankar <ushankar@purestorage.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        Hannes Reinecke <hare@suse.de>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.0 24/34] scsi: core: Restrict legal sdev_state transitions via sysfs
+Date:   Tue,  1 Nov 2022 07:27:16 -0400
+Message-Id: <20221101112726.799368-24-sashal@kernel.org>
+X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20221101112726.799368-1-sashal@kernel.org>
+References: <20221101112726.799368-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+X-stable: review
+X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Variable unit_serial_len is just being assigned and it's never used
-anywhere else. The variable is redundant so remove it.
+From: Uday Shankar <ushankar@purestorage.com>
 
-Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
+[ Upstream commit 2331ce6126be8864b39490e705286b66e2344aac ]
+
+Userspace can currently write to sysfs to transition sdev_state to RUNNING
+or OFFLINE from any source state. This causes issues because proper
+transitioning out of some states involves steps besides just changing
+sdev_state, so allowing userspace to change sdev_state regardless of the
+source state can result in inconsistencies; e.g. with ISCSI we can end up
+with sdev_state == SDEV_RUNNING while the device queue is quiesced. Any
+task attempting I/O on the device will then hang, and in more recent
+kernels, iscsid will hang as well.
+
+More detail about this bug is provided in my first attempt:
+
+https://groups.google.com/g/open-iscsi/c/PNKca4HgPDs/m/CXaDkntOAQAJ
+
+Link: https://lore.kernel.org/r/20220924000241.2967323-1-ushankar@purestorage.com
+Signed-off-by: Uday Shankar <ushankar@purestorage.com>
+Suggested-by: Mike Christie <michael.christie@oracle.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/target_core_spc.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+ drivers/scsi/scsi_sysfs.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
-index ffe02e195733..621a460ba234 100644
---- a/drivers/target/target_core_spc.c
-+++ b/drivers/target/target_core_spc.c
-@@ -227,7 +227,7 @@ spc_emulate_evpd_83(struct se_cmd *cmd, unsigned char *buf)
- 	struct t10_alua_tg_pt_gp *tg_pt_gp;
- 	unsigned char *prod = &dev->t10_wwn.model[0];
- 	u32 prod_len;
--	u32 unit_serial_len, off = 0;
-+	u32 off = 0;
- 	u16 len = 0, id_len;
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 5d61f58399dc..dc41d7c6b9b1 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -828,6 +828,14 @@ store_state_field(struct device *dev, struct device_attribute *attr,
+ 	}
  
- 	off = 4;
-@@ -272,13 +272,9 @@ spc_emulate_evpd_83(struct se_cmd *cmd, unsigned char *buf)
- 	prod_len += strlen(prod);
- 	prod_len++; /* For : */
- 
--	if (dev->dev_flags & DF_EMULATED_VPD_UNIT_SERIAL) {
--		unit_serial_len = strlen(&dev->t10_wwn.unit_serial[0]);
--		unit_serial_len++; /* For NULL Terminator */
--
-+	if (dev->dev_flags & DF_EMULATED_VPD_UNIT_SERIAL)
- 		id_len += sprintf(&buf[off+12], "%s:%s", prod,
- 				&dev->t10_wwn.unit_serial[0]);
--	}
- 	buf[off] = 0x2; /* ASCII */
- 	buf[off+1] = 0x1; /* T10 Vendor ID */
- 	buf[off+2] = 0x0;
+ 	mutex_lock(&sdev->state_mutex);
++	switch (sdev->sdev_state) {
++	case SDEV_RUNNING:
++	case SDEV_OFFLINE:
++		break;
++	default:
++		mutex_unlock(&sdev->state_mutex);
++		return -EINVAL;
++	}
+ 	if (sdev->sdev_state == SDEV_RUNNING && state == SDEV_RUNNING) {
+ 		ret = 0;
+ 	} else {
 -- 
-2.37.3
+2.35.1
 
