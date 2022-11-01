@@ -2,109 +2,101 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF048C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Nov 2022 15:16:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23A33C433FE
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Nov 2022 16:28:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231486AbiKAPQz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Nov 2022 11:16:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36806 "EHLO
+        id S229941AbiKAQ2W (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Nov 2022 12:28:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60250 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231477AbiKAPQ1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2022 11:16:27 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CE331CFC8
-        for <linux-scsi@vger.kernel.org>; Tue,  1 Nov 2022 08:12:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1667315558;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=WhCfbrC+tKlaqwlNl94RimQiIKrtWvzi9RGBXnP5PaA=;
-        b=i2Sqz2pyCUKmYYZV76++4Gj0YRSoInD+4WSDzF4LGw9iPfTvWaONweB6Hj14UIPcGS7rhh
-        dNUrMK4Lnp7bRptbnE6Imf1APNdtFI4GHt5YX6YjxlNKW/fAj568r5fKap+q2xvWci647L
-        EqQ2DsBwKaSFFNvz9Zu+6mqHcwM/IJc=
-Received: from mail-oi1-f197.google.com (mail-oi1-f197.google.com
- [209.85.167.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-669-UL8MuJY-M_iktw78ehyagA-1; Tue, 01 Nov 2022 11:12:37 -0400
-X-MC-Unique: UL8MuJY-M_iktw78ehyagA-1
-Received: by mail-oi1-f197.google.com with SMTP id bl8-20020a056808308800b00359ea795db4so3050577oib.5
-        for <linux-scsi@vger.kernel.org>; Tue, 01 Nov 2022 08:12:36 -0700 (PDT)
+        with ESMTP id S230103AbiKAQ2M (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2022 12:28:12 -0400
+Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4EB1C1CFD1
+        for <linux-scsi@vger.kernel.org>; Tue,  1 Nov 2022 09:28:08 -0700 (PDT)
+Received: by mail-pf1-f174.google.com with SMTP id i3so13899567pfc.11
+        for <linux-scsi@vger.kernel.org>; Tue, 01 Nov 2022 09:28:08 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=WhCfbrC+tKlaqwlNl94RimQiIKrtWvzi9RGBXnP5PaA=;
-        b=Ao6nBzhqTbYCHy6DXttqkA3Rsh4o1Y8lY5frH07sKyCzahm/joG7SWBOyVA2JDWSJ5
-         kqljfuGbSnMYgndgiNoBX4DFovtvtYtZNhW8ZnLBsUjVOr8U9bEAPBGrEQqOuqRcu7ac
-         P6Is96tNY3p5QdW2z9kumQ/tFX96/larbcCmKN8igLby2yQwAqOyKHsyRukJGioVxa3z
-         vPIrFK52INKS83fdXWx2Ev8ynghe08Mf6weKsskhWwc6WoGEs+eszbm8qtwJK5jvSTPz
-         /+Hw8jRhEt7UVuGsBEK8FB25fPmmsCIvjuUnA1EFnZ8/lAd7eO7Ef3y8Y3R+fZLpRkXI
-         vQZA==
-X-Gm-Message-State: ACrzQf2dXjYEaYEGySe6xx3fGKWw3Dl0mX0UMd+aPm+9wujwjY88d+ht
-        nifVH96sdlUH4inuSsXpZrF/YTJpGoX0+O1B/lSe0zmnlRNoYbKQ+MRSMSj4qtlg63obQMy+Im1
-        d4I4pFFhOGhYegzZr4FSxdQ==
-X-Received: by 2002:a05:6830:2693:b0:661:e5be:54d with SMTP id l19-20020a056830269300b00661e5be054dmr10137061otu.365.1667315556270;
-        Tue, 01 Nov 2022 08:12:36 -0700 (PDT)
-X-Google-Smtp-Source: AMsMyM793XlwTZxCVNxIGpeJvkdANMVrjJrL3o5j79HVnLEDlz/VJyPLPzK5QdqyGPayhDWk8QyQxQ==
-X-Received: by 2002:a05:6830:2693:b0:661:e5be:54d with SMTP id l19-20020a056830269300b00661e5be054dmr10137047otu.365.1667315556035;
-        Tue, 01 Nov 2022 08:12:36 -0700 (PDT)
-Received: from halaney-x13s ([2600:1700:1ff0:d0e0::41])
-        by smtp.gmail.com with ESMTPSA id w67-20020acadf46000000b0035770fc6ca9sm3437879oig.16.2022.11.01.08.12.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 01 Nov 2022 08:12:35 -0700 (PDT)
-Date:   Tue, 1 Nov 2022 10:12:33 -0500
-From:   Andrew Halaney <ahalaney@redhat.com>
-To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc:     martin.petersen@oracle.com, jejb@linux.ibm.com,
-        andersson@kernel.org, vkoul@kernel.org,
-        krzysztof.kozlowski+dt@linaro.org, konrad.dybcio@somainline.org,
-        robh+dt@kernel.org, quic_cang@quicinc.com,
-        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-phy@lists.infradead.org,
-        linux-scsi@vger.kernel.org, dmitry.baryshkov@linaro.org
-Subject: Re: [PATCH v2 12/15] scsi: ufs: ufs-qcom: Fix the Qcom register name
- for offset 0xD0
-Message-ID: <20221101151233.gsmmdbz7htkzpbps@halaney-x13s>
-References: <20221031180217.32512-1-manivannan.sadhasivam@linaro.org>
- <20221031180217.32512-13-manivannan.sadhasivam@linaro.org>
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=qiR3B2/GfOQGokpM6bJ4gV/YmZHPPXBcn9imh5EJz3Y=;
+        b=dJKVfTcjABQzI6ghrGUL7YeCosJvh42S9Rs35nNGIf4RiWGwtM6yqw0Vrj+VhzVppr
+         8+UknqN/iscM5L/z6rzPDr4o3On6tdGz48/I4wOhFCcZeHBH7rkQUdFwLb4UsISgcyRV
+         19vlY6JjjncChsvdssb9wDn2/o7u9xnb9q4A5QcBTGNNHfFCSFOZ1hzj/qV9QRm2Wl+g
+         KtwBtQFuK/4lRo6NwvutJPODOGfHza4GpwWks+d5yRAEBF9azcFoAksGedasnw8zy2XQ
+         5Vcio7fJMMn6gKF9namWph99RXe8X5OI5fgRRkoMEgLBY0j0KN+syHCRLXwHXtp9bBc7
+         X76A==
+X-Gm-Message-State: ACrzQf14dSkl/9Q2uJ3YhVVE7H5mzVJyUEGtqlc+4WQ6SDUcrI8Vi3DY
+        LnqC9d6Vg80G+6VJ6epX9weQkgFo14k=
+X-Google-Smtp-Source: AMsMyM6Zy1JnRhubZiF17aTTdCWleX35tyu3ERDjMGTzjBkE6yTT4gEJsPAFK7OGCK1sCeFzdxsZiw==
+X-Received: by 2002:a05:6a00:1506:b0:56d:e63a:f5e7 with SMTP id q6-20020a056a00150600b0056de63af5e7mr1574252pfu.27.1667320088260;
+        Tue, 01 Nov 2022 09:28:08 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:8574:e82f:b860:3ad0? ([2620:15c:211:201:8574:e82f:b860:3ad0])
+        by smtp.gmail.com with ESMTPSA id y3-20020aa79e03000000b0056d73ef41fdsm4212990pfq.75.2022.11.01.09.28.06
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 01 Nov 2022 09:28:07 -0700 (PDT)
+Message-ID: <54e0d667-8f14-5788-c1ce-5b9d6d8a0060@acm.org>
+Date:   Tue, 1 Nov 2022 09:28:05 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20221031180217.32512-13-manivannan.sadhasivam@linaro.org>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.0
+Subject: Re: [PATCH] scsi: scsi_debug: Make the READ CAPACITY response
+ compliant with ZBC
+Content-Language: en-US
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>
+References: <20221031224755.2607812-1-bvanassche@acm.org>
+ <af9b39f5-037f-5dea-8c14-0e020e275b9a@opensource.wdc.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <af9b39f5-037f-5dea-8c14-0e020e275b9a@opensource.wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Oct 31, 2022 at 11:32:14PM +0530, Manivannan Sadhasivam wrote:
-> On newer UFS revisions, the register at offset 0xD0 is called,
-> REG_UFS_PARAM0. Since the existing register, RETRY_TIMER_REG is not used
-> anywhere, it is safe to use the new name.
+On 10/31/22 20:23, Damien Le Moal wrote:
+> On 11/1/22 07:47, Bart Van Assche wrote:
+>> --- a/drivers/scsi/scsi_debug.c
+>> +++ b/drivers/scsi/scsi_debug.c
+>> @@ -1899,6 +1899,10 @@ static int resp_readcap16(struct scsi_cmnd *scp,
+>>   			arr[14] |= 0x40;
+>>   	}
+>>   
+>> +	/* Set RC BASIS = 1 for host-managed devices. */
 > 
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-
-Reviewed-by: Andrew Halaney <ahalaney@redhat.com>
-
-> ---
->  drivers/ufs/host/ufs-qcom.h | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+> No it is not necessarily set. It is up to the device vendor to choose if
+> RC_BASIS is set or not, based on the device implementation.
+> Applicability of RC = 0 or RC = 1 depends on the presence of conventional
+> zones. so:
 > 
-> diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
-> index 9d96ac71b27f..7fe928b82753 100644
-> --- a/drivers/ufs/host/ufs-qcom.h
-> +++ b/drivers/ufs/host/ufs-qcom.h
-> @@ -33,7 +33,8 @@ enum {
->  	REG_UFS_TX_SYMBOL_CLK_NS_US         = 0xC4,
->  	REG_UFS_LOCAL_PORT_ID_REG           = 0xC8,
->  	REG_UFS_PA_ERR_CODE                 = 0xCC,
-> -	REG_UFS_RETRY_TIMER_REG             = 0xD0,
-> +	/* On older UFS revisions, this register is called "RETRY_TIMER_REG" */
-> +	REG_UFS_PARAM0                      = 0xD0,
->  	REG_UFS_PA_LINK_STARTUP_TIMER       = 0xD8,
->  	REG_UFS_CFG1                        = 0xDC,
->  	REG_UFS_CFG2                        = 0xE0,
-> -- 
-> 2.25.1
+> 1) If there are conventional zones, then using RC_BASIS = 1 or = 0 are
+> both OK with HM devices. In the case of RC_BASIS = 0, the host can issue a
+> report zones and get the device max lba from the report header (sd_zbc.c
+> does that).
+> 2) If there are no conventional zones, then using RC_BASIS = 0 does not
+> make much sense, but nothing in the ZBC text prevent it either...
 > 
+> So we should refine this and maybe add an option to allow specifying rc
+> basis ?
+Hi Damien,
 
+If I remember correctly the conclusion from a previous conversation is 
+that setting RC BASIS = 1 for host-managed devices is what is done by 
+all SMR vendors and is always correct for host-managed devices.
+
+I think the description of the my patch is correct, namely that it makes 
+the READ CAPACITY response compliant with ZBC. I did not claim that my 
+patch is the only possible approach for making the READ CAPACITY 
+response ZBC compliant.
+
+Are there any use cases for reporting RC BASIS = 0 in combination with 
+the capacity of conventional zones for host-managed devices other than 
+testing the Linux kernel ZBC code?
+
+Thanks,
+
+Bart.
