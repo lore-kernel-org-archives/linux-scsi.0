@@ -2,88 +2,108 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5BFEC433FE
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Nov 2022 10:15:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0236FFA373D
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Nov 2022 10:47:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230163AbiKAKPS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Nov 2022 06:15:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49518 "EHLO
+        id S229920AbiKAKri (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Nov 2022 06:47:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35834 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229823AbiKAKPR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2022 06:15:17 -0400
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06B1263A2;
-        Tue,  1 Nov 2022 03:15:17 -0700 (PDT)
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id B77FD68AA6; Tue,  1 Nov 2022 11:15:11 +0100 (CET)
-Date:   Tue, 1 Nov 2022 11:15:11 +0100
-From:   Christoph Hellwig <hch@lst.de>
-To:     Mike Christie <michael.christie@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>, bvanassche@acm.org,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        james.bottomley@hansenpartnership.com, linux-block@vger.kernel.org,
-        dm-devel@redhat.com, snitzer@kernel.org, axboe@kernel.dk,
-        linux-nvme@lists.infradead.org, chaitanyak@nvidia.com,
-        kbusch@kernel.org, target-devel@vger.kernel.org
-Subject: Re: [PATCH v3 12/19] block,nvme,scsi,dm: Add blk_status to pr_ops
- callouts
-Message-ID: <20221101101511.GA13304@lst.de>
-References: <20221026231945.6609-1-michael.christie@oracle.com> <20221026231945.6609-13-michael.christie@oracle.com> <20221030082020.GC4774@lst.de> <a7e447b5-b26e-7aa0-ab6a-3463b8497d26@oracle.com>
+        with ESMTP id S229531AbiKAKrh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2022 06:47:37 -0400
+Received: from mail-wm1-x32e.google.com (mail-wm1-x32e.google.com [IPv6:2a00:1450:4864:20::32e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A84B3193C7;
+        Tue,  1 Nov 2022 03:47:36 -0700 (PDT)
+Received: by mail-wm1-x32e.google.com with SMTP id a11-20020a05600c2d4b00b003cf6f5fd9f1so3448756wmg.2;
+        Tue, 01 Nov 2022 03:47:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=/FwRGP8BwKaXmW2k8HRZR6WmbigXa5hHO418FZc4xNY=;
+        b=IYUBIIujNue24apx8G7zfTr2uVehnwGWmFGKSj8tMpOF+Ijp6Kdf9CHhtWytPZNtph
+         oUfaVr7ehmUa/xfLoMVwaMttid8d2jzeGLFBo+sWcoEyLod4ByVcdLZsCiS+99SgNUXw
+         K2M1pZvnlDDCFNfyR55CQs+Co6DK1hPAwFpbxhnxeCJsCo2a+/ChoYZJq/nWAVs4X7Cv
+         fsHnMm6cKOnkecIVJQl32CFaFdBlote6ir8KIm3rHOHwvqqfUFN7dX8VMlaI+00pA1A0
+         Kx4WC5aagh0tB6PPByiVvZeZHywxkKUGikLfoJ14Bx+vQeZ66MHwDp7Lh46KjZUbi+GF
+         +Q0w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=/FwRGP8BwKaXmW2k8HRZR6WmbigXa5hHO418FZc4xNY=;
+        b=TLWer3gKsolbVbDTg4xikZX8+fOWC8xovJ5kuJ2xhSEqjGbGYYhhfcKvWwRzaDJFDm
+         iC+J2sI/ZW8Ld03+uzjWoZXD9v+vJC/tmShVILBbgjCJ+xO8iTJx9Ky1EH5A9IjDfyFm
+         /693EK3jty4nDLN9lNAlf0YezA1G/Cl1wKf/HonRh/9PLcLD9b8HyAMCmarwqyxwziy7
+         Y6lyqk+VFnb8d4pBtOqZEqv/NR8q7BeLDnu5sHAJlpL/Ut+LNxYKnotB/NLjuB2/53L9
+         bkZpH65ziYrD7JqhfPNdgoF7E1QK4O6m3LmPfntMWm0uZvN8IfgduS0LJu+oRtlNeEG7
+         /EWQ==
+X-Gm-Message-State: ACrzQf0ANDQm9mIiIAs4siwakd3XwP/pf6J1LIkhVlhfQTcYQw59o1HR
+        RywEnmGEBHloRde8vC4buwDmIL0qDfIPu1UP
+X-Google-Smtp-Source: AMsMyM5Vr5sdPnHnvs6v1i04Xc34hhFJ8JVAijUkr1z367YlFbXW/kgLoViWk7S/5mBU6BsCxGPBUQ==
+X-Received: by 2002:a1c:6a10:0:b0:3cf:699f:c03 with SMTP id f16-20020a1c6a10000000b003cf699f0c03mr9621554wmc.23.1667299655129;
+        Tue, 01 Nov 2022 03:47:35 -0700 (PDT)
+Received: from localhost (cpc154979-craw9-2-0-cust193.16-3.cable.virginm.net. [80.193.200.194])
+        by smtp.gmail.com with ESMTPSA id i4-20020a05600c354400b003cf4c1e211fsm10738270wmq.38.2022.11.01.03.47.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 01 Nov 2022 03:47:34 -0700 (PDT)
+From:   Colin Ian King <colin.i.king@gmail.com>
+To:     Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: qla2xxx: Remove unused variable found_devs
+Date:   Tue,  1 Nov 2022 10:47:33 +0000
+Message-Id: <20221101104733.30363-1-colin.i.king@gmail.com>
+X-Mailer: git-send-email 2.37.3
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <a7e447b5-b26e-7aa0-ab6a-3463b8497d26@oracle.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, Oct 30, 2022 at 06:05:35PM -0500, Mike Christie wrote:
-> The problem I hit is that in the ioctl code I then have to do:
-> 
-> @@ -269,7 +270,14 @@ static int blkdev_pr_register(struct block_device *bdev,
->  
->  	if (reg.flags & ~PR_FL_IGNORE_KEY)
->  		return -EOPNOTSUPP;
-> -	return ops->pr_register(bdev, reg.old_key, reg.new_key, reg.flags);
-> +	ret = ops->pr_register(bdev, reg.old_key, reg.new_key, reg.flags);
-> +	if (ret == -EBADE) {
-> +		if (bdev_is_nvme(bdev))
-> +			ret = NVME_SC_RESERVATION_CONFLICT;
-> +		else if (bdev_is_scsi(bdev)
-> +			ret = SAM_STAT_RESERVATION_CONFLICT;
-> +	}
-> +	return ret;
+Variable found_devs is just being incremented and it's never used
+anywhere else. The variable and the increment are redundant so
+remove it.
 
-Eww.  We should have never leaked protocol specific values out to
-userspace.  This is an original bug I introduceѕ, so all blame is on me.
+Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
+---
+ drivers/scsi/qla2xxx/qla_init.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-I suspect the right way to fix is is to keep the numeric value of
-SAM_STAT_RESERVATION_CONFLICT and give it a new constant exposed in
-the uapi header, assuming that SCSI is the thing people actually
-used the PR API for, and nvme was just an nice little add-on.
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index e12db95de688..8f737d80bce4 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -5546,7 +5546,6 @@ static int
+ qla2x00_configure_local_loop(scsi_qla_host_t *vha)
+ {
+ 	int		rval, rval2;
+-	int		found_devs;
+ 	int		found;
+ 	fc_port_t	*fcport, *new_fcport;
+ 	uint16_t	index;
+@@ -5561,7 +5560,6 @@ qla2x00_configure_local_loop(scsi_qla_host_t *vha)
+ 	if (N2N_TOPO(ha))
+ 		return qla2x00_configure_n2n_loop(vha);
+ 
+-	found_devs = 0;
+ 	new_fcport = NULL;
+ 	entries = MAX_FIBRE_DEVICES_LOOP;
+ 
+@@ -5720,8 +5718,6 @@ qla2x00_configure_local_loop(scsi_qla_host_t *vha)
+ 
+ 		/* Base iIDMA settings on HBA port speed. */
+ 		fcport->fp_speed = ha->link_data_rate;
+-
+-		found_devs++;
+ 	}
+ 
+ 	list_for_each_entry(fcport, &vha->vp_fcports, list) {
+-- 
+2.37.3
 
-Now if an errno value or blk_status_t is returned from the method
-should not matter for this fix, but in the long run I think the
-blk_status_t would be cleaner than the int used for errno, and
-that will also prevent us from returning accidental non-intended
-values.
-
-Btw, I also thing we should rename BLK_STS_NEXUS to
-BLK_STS_RESERVATION_CONFLICT (assuming s390 is ok with that), as that
-has much better documentary value.
-
-> +	case BLK_STS_TRANSPORT:
-> +		if (bdev_is_nvme(bdev))
-> +			ret = NVME_SC_HOST_PATH_ERROR;
-> +		else if (bdev_is_scsi(bdev)
-> +			ret = DID_TRANSPORT_FAILFAST or DID_TRANSPORT_MARGINAL;
-> +		break;
-
-And we'll need an uapi value for this as well.
-
-> +	case BLK_STS_NOTSUPP:
-
-and maybe this unless we can just get away with the negative errno
-value.
