@@ -2,58 +2,225 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E412C43217
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Nov 2022 19:35:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7441C43217
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Nov 2022 21:15:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229589AbiKATfd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Nov 2022 15:35:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34510 "EHLO
+        id S230132AbiKAVPF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Nov 2022 17:15:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32836 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229517AbiKATfc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2022 15:35:32 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 886891DDEE;
-        Tue,  1 Nov 2022 12:35:31 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 3ADEAB81F10;
-        Tue,  1 Nov 2022 19:35:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A75CC433C1;
-        Tue,  1 Nov 2022 19:35:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1667331328;
-        bh=lRcDTaMa+NMO1jJrmlNK7BqpoLcb0kk1Z/aOvAK1rsM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=jBuDDwHVJ9WPwMF1C/RZG8ZAW9GbI9HT8iIFGJxT1LUjxKSfvKlXMTr7QTOBcNIKR
-         zsRyE/5hQY2M065gFWGXsWgWB/kyeaxudMFuypHSmZWudQLTe75o7PwH6XbzQNBCQA
-         7DJ2h1r0vwJTKRPgUGIjjTFEBgRHiLlrN8CapImU=
-Date:   Tue, 1 Nov 2022 20:36:23 +0100
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Yu Kuai <yukuai1@huaweicloud.com>
-Cc:     stable@vger.kernel.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, hare@suse.com, bvanassche@acm.org,
-        linux-scsi@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
-Subject: Re: [PATCH 5.10/5.15 v2] scsi: sd: Revert "scsi: sd: Remove a local
- variable"
-Message-ID: <Y2F1N2s4z+EiDv5G@kroah.com>
-References: <20221101013124.2615274-1-yukuai1@huaweicloud.com>
+        with ESMTP id S230211AbiKAVO7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2022 17:14:59 -0400
+Received: from smtp.smtpout.orange.fr (smtp-15.smtpout.orange.fr [80.12.242.15])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD7D61EC51
+        for <linux-scsi@vger.kernel.org>; Tue,  1 Nov 2022 14:14:57 -0700 (PDT)
+Received: from pop-os.home ([86.243.100.34])
+        by smtp.orange.fr with ESMTPA
+        id pyanoKD2rsfCIpyb1oWfHL; Tue, 01 Nov 2022 22:14:56 +0100
+X-ME-Helo: pop-os.home
+X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
+X-ME-Date: Tue, 01 Nov 2022 22:14:56 +0100
+X-ME-IP: 86.243.100.34
+From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Subject: [PATCH 04/30] scsi: target: Use kstrtobool() instead of strtobool()
+Date:   Tue,  1 Nov 2022 22:13:52 +0100
+Message-Id: <fcddc0a53b4fc6e3c2e93592d3f61c5c63121855.1667336095.git.christophe.jaillet@wanadoo.fr>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <cover.1667336095.git.christophe.jaillet@wanadoo.fr>
+References: <cover.1667336095.git.christophe.jaillet@wanadoo.fr>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20221101013124.2615274-1-yukuai1@huaweicloud.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Nov 01, 2022 at 09:31:24AM +0800, Yu Kuai wrote:
-> From: Yu Kuai <yukuai3@huawei.com>
-> 
-> This reverts commit 84f7a9de0602704bbec774a6c7f7c8c4994bee9c.
-> 
-> Because it introduces a problem that rq->__data_len is set to the wrong
-> value.
+strtobool() is the same as kstrtobool().
+However, the latter is more used within the kernel.
 
-Now queued up, thanks.
+In order to remove strtobool() and slightly simplify kstrtox.h, switch to
+the other function name.
 
-greg k-h
+While at it, include the corresponding header file (<linux/kstrtox.h>)
+
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+This patch is part of a serie that axes all usages of strtobool().
+Each patch can be applied independently from the other ones.
+
+The last patch of the serie removes the definition of strtobool().
+
+You may not be in copy of the cover letter. So, if needed, it is available
+at [1].
+
+[1]: https://lore.kernel.org/all/cover.1667336095.git.christophe.jaillet@wanadoo.fr/
+---
+ drivers/target/target_core_configfs.c        | 29 ++++++++++----------
+ drivers/target/target_core_fabric_configfs.c |  3 +-
+ 2 files changed, 17 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index 533524299ed6..b8a5c8d6cfde 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -12,6 +12,7 @@
+  *
+  ****************************************************************************/
+ 
++#include <linux/kstrtox.h>
+ #include <linux/module.h>
+ #include <linux/moduleparam.h>
+ #include <generated/utsrelease.h>
+@@ -578,7 +579,7 @@ static ssize_t _name##_store(struct config_item *item, const char *page,	\
+ 	bool flag;							\
+ 	int ret;							\
+ 									\
+-	ret = strtobool(page, &flag);					\
++	ret = kstrtobool(page, &flag);					\
+ 	if (ret < 0)							\
+ 		return ret;						\
+ 	da->_name = flag;						\
+@@ -638,7 +639,7 @@ static ssize_t emulate_model_alias_store(struct config_item *item,
+ 		return -EINVAL;
+ 	}
+ 
+-	ret = strtobool(page, &flag);
++	ret = kstrtobool(page, &flag);
+ 	if (ret < 0)
+ 		return ret;
+ 
+@@ -660,7 +661,7 @@ static ssize_t emulate_write_cache_store(struct config_item *item,
+ 	bool flag;
+ 	int ret;
+ 
+-	ret = strtobool(page, &flag);
++	ret = kstrtobool(page, &flag);
+ 	if (ret < 0)
+ 		return ret;
+ 
+@@ -712,7 +713,7 @@ static ssize_t emulate_tas_store(struct config_item *item,
+ 	bool flag;
+ 	int ret;
+ 
+-	ret = strtobool(page, &flag);
++	ret = kstrtobool(page, &flag);
+ 	if (ret < 0)
+ 		return ret;
+ 
+@@ -737,7 +738,7 @@ static ssize_t emulate_tpu_store(struct config_item *item,
+ 	bool flag;
+ 	int ret;
+ 
+-	ret = strtobool(page, &flag);
++	ret = kstrtobool(page, &flag);
+ 	if (ret < 0)
+ 		return ret;
+ 
+@@ -767,7 +768,7 @@ static ssize_t emulate_tpws_store(struct config_item *item,
+ 	bool flag;
+ 	int ret;
+ 
+-	ret = strtobool(page, &flag);
++	ret = kstrtobool(page, &flag);
+ 	if (ret < 0)
+ 		return ret;
+ 
+@@ -866,7 +867,7 @@ static ssize_t pi_prot_format_store(struct config_item *item,
+ 	bool flag;
+ 	int ret;
+ 
+-	ret = strtobool(page, &flag);
++	ret = kstrtobool(page, &flag);
+ 	if (ret < 0)
+ 		return ret;
+ 
+@@ -903,7 +904,7 @@ static ssize_t pi_prot_verify_store(struct config_item *item,
+ 	bool flag;
+ 	int ret;
+ 
+-	ret = strtobool(page, &flag);
++	ret = kstrtobool(page, &flag);
+ 	if (ret < 0)
+ 		return ret;
+ 
+@@ -932,7 +933,7 @@ static ssize_t force_pr_aptpl_store(struct config_item *item,
+ 	bool flag;
+ 	int ret;
+ 
+-	ret = strtobool(page, &flag);
++	ret = kstrtobool(page, &flag);
+ 	if (ret < 0)
+ 		return ret;
+ 	if (da->da_dev->export_count) {
+@@ -954,7 +955,7 @@ static ssize_t emulate_rest_reord_store(struct config_item *item,
+ 	bool flag;
+ 	int ret;
+ 
+-	ret = strtobool(page, &flag);
++	ret = kstrtobool(page, &flag);
+ 	if (ret < 0)
+ 		return ret;
+ 
+@@ -977,7 +978,7 @@ static ssize_t unmap_zeroes_data_store(struct config_item *item,
+ 	bool flag;
+ 	int ret;
+ 
+-	ret = strtobool(page, &flag);
++	ret = kstrtobool(page, &flag);
+ 	if (ret < 0)
+ 		return ret;
+ 
+@@ -1126,7 +1127,7 @@ static ssize_t alua_support_store(struct config_item *item,
+ 	bool flag, oldflag;
+ 	int ret;
+ 
+-	ret = strtobool(page, &flag);
++	ret = kstrtobool(page, &flag);
+ 	if (ret < 0)
+ 		return ret;
+ 
+@@ -1165,7 +1166,7 @@ static ssize_t pgr_support_store(struct config_item *item,
+ 	bool flag, oldflag;
+ 	int ret;
+ 
+-	ret = strtobool(page, &flag);
++	ret = kstrtobool(page, &flag);
+ 	if (ret < 0)
+ 		return ret;
+ 
+@@ -1194,7 +1195,7 @@ static ssize_t emulate_rsoc_store(struct config_item *item,
+ 	bool flag;
+ 	int ret;
+ 
+-	ret = strtobool(page, &flag);
++	ret = kstrtobool(page, &flag);
+ 	if (ret < 0)
+ 		return ret;
+ 
+diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
+index 95a88f6224cd..67b18a67317a 100644
+--- a/drivers/target/target_core_fabric_configfs.c
++++ b/drivers/target/target_core_fabric_configfs.c
+@@ -11,6 +11,7 @@
+ *
+  ****************************************************************************/
+ 
++#include <linux/kstrtox.h>
+ #include <linux/module.h>
+ #include <linux/moduleparam.h>
+ #include <linux/utsname.h>
+@@ -829,7 +830,7 @@ static ssize_t target_fabric_tpg_base_enable_store(struct config_item *item,
+ 	int ret;
+ 	bool op;
+ 
+-	ret = strtobool(page, &op);
++	ret = kstrtobool(page, &op);
+ 	if (ret)
+ 		return ret;
+ 
+-- 
+2.34.1
+
