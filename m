@@ -2,92 +2,97 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EB65C4321E
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Nov 2022 19:10:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10962C433FE
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Nov 2022 19:33:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230500AbiKBTKO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Nov 2022 15:10:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37344 "EHLO
+        id S229534AbiKBTdB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Nov 2022 15:33:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51538 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231814AbiKBTJ6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Nov 2022 15:09:58 -0400
-Received: from mail-qt1-x835.google.com (mail-qt1-x835.google.com [IPv6:2607:f8b0:4864:20::835])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92138E08E
-        for <linux-scsi@vger.kernel.org>; Wed,  2 Nov 2022 12:09:53 -0700 (PDT)
-Received: by mail-qt1-x835.google.com with SMTP id hh9so11943564qtb.13
-        for <linux-scsi@vger.kernel.org>; Wed, 02 Nov 2022 12:09:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=AIkEh7BXAQ8EfVcaCpQmqvlq6Pnzwaj79KpKIFXtqKk=;
-        b=D5NqaoeFxXGLhUM1iiPWsSusfvacuFdAOm6V8ErMS9WTejX9G+7XNSYvAnzL10LFFp
-         qE4b9Fd5IJns9Y169x8pYIfvEM0CEQ7UlfQ5ml7I2wQplpGk93Og//KQ6l66s2LeF7Ng
-         0QIQG2YvDP8l4BXttaBxEtpb+R11qglLFfU3r0tAVplqVAE9m+N5E+WLMYpPROr6YABD
-         dDv1ZnUkW2HQDoRNxvZRD8RCgvwZFB7bKffmiB6fpEfwy093n055DP70XMYf0MNtGMTY
-         cM6o2zeIscCb5OKxFh15wUhs+A2kcnIS8JdGXqbvwB/gsnlxMWnSn/3rzYMoDI8YAYem
-         JlNA==
+        with ESMTP id S229487AbiKBTdA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Nov 2022 15:33:00 -0400
+Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1FA2236
+        for <linux-scsi@vger.kernel.org>; Wed,  2 Nov 2022 12:32:59 -0700 (PDT)
+Received: by mail-pj1-f47.google.com with SMTP id u8-20020a17090a5e4800b002106dcdd4a0so3084390pji.1
+        for <linux-scsi@vger.kernel.org>; Wed, 02 Nov 2022 12:32:59 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=AIkEh7BXAQ8EfVcaCpQmqvlq6Pnzwaj79KpKIFXtqKk=;
-        b=aLhM0JLevl5bbCy9bgTyqKOEZdtzhbMiKuBAifNZmpW1DDbujtxI4Cbg82NIy09N/6
-         MvkuCquOq68pRTcA2s8fyAzuQ4khLm9AKSxvYCGQlxz5FyR+VxxTXWxenfjS7M48kljC
-         S41A++3/+bZeT7bSW+SKhkPEueKyRWEqfdF8vWzMx9pyfBeunn2KhI42SAOutUDm4nbW
-         CQtWFhL7rWKIfEnk49ESP3nQJygwbIQBb89HhQ9iYEVdcDbuVdgBnrlUn268svz+6UAi
-         XwE82BTJ9oqRVQhg+TYgvaHSEqLZnHdn436dPjpfy6MEvqW6CRL0eDSnfnRKssv1K3pB
-         FPUA==
-X-Gm-Message-State: ACrzQf1GZy7u05spjrbosC5BtQGIiET+6REJQMQfY+zRD60puSk0vLtE
-        D3QCmDFXoA7ySyCAY0Cp0y8tgg==
-X-Google-Smtp-Source: AMsMyM5rtL01pS0TQ+i5UNqkH3/BIoMq0q2RjMMZmpCfyVX3jZh1yBtxA1LpksWIIs0gVwKIiDmLaA==
-X-Received: by 2002:a05:622a:407:b0:39a:836:acfe with SMTP id n7-20020a05622a040700b0039a0836acfemr20925776qtx.133.1667416192736;
-        Wed, 02 Nov 2022 12:09:52 -0700 (PDT)
-Received: from ?IPV6:2601:586:5000:570:28d9:4790:bc16:cc93? ([2601:586:5000:570:28d9:4790:bc16:cc93])
-        by smtp.gmail.com with ESMTPSA id bk20-20020a05620a1a1400b006f3e6933bacsm9098388qkb.113.2022.11.02.12.09.51
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 02 Nov 2022 12:09:52 -0700 (PDT)
-Message-ID: <1fe8fd96-7770-0bda-c970-aa38d030ff3b@linaro.org>
-Date:   Wed, 2 Nov 2022 15:09:50 -0400
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Yu/lVGrYRx8aSBdkd1DjYk4cg/Nzb/nLTDIZ9L0XV4E=;
+        b=fyMPklvzGGFRjc7ysxNX2aqyvIKiyKJmSPUQN5OCyr8XNeS5PoVH/lhqBSYEmzJeYc
+         uKJebBhIBxoVIjPfUFiqUREfdqSfWyWRZyf4OhD2ndLVec5x5hwEPTv7xwp1/D5z7DrC
+         WEA8RT/SCZjlT3GcLU/sOZrwlEnZpW6xDtigFOMkgEwpA7RpSLCo71rJ4laPqILu89KY
+         xwsyX+HWJefkR0higi9HBZB5yOYWgcDQpj8hsKcS+TnrQuyujFHsHo8MzpdcTy4x1roM
+         5dZw5WJnbwAOosNZlA7cVPdcxbTdmTywre+02LIVWMi6ztAWyi4KJJA2c9Ns5BIUnf58
+         uXtA==
+X-Gm-Message-State: ACrzQf11bq+ND1rT80TZzMmlsJ13qyaVngNUpnO/8DAKqUYlQhX4nq5M
+        0RGENY415JyBCNKQ6cexdAQ=
+X-Google-Smtp-Source: AMsMyM6BhxG/DVGRIrixSm4nFQuqGue8yNXvQ3YetlR1HlmUD7D/7AciyatckSyjNgqMHh2k2f/yEQ==
+X-Received: by 2002:a17:90b:438e:b0:213:c985:b5dd with SMTP id in14-20020a17090b438e00b00213c985b5ddmr22347272pjb.116.1667417578943;
+        Wed, 02 Nov 2022 12:32:58 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:22d3:f380:fa84:4b89])
+        by smtp.gmail.com with ESMTPSA id e18-20020a17090301d200b00177c488fea5sm8793289plh.12.2022.11.02.12.32.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 02 Nov 2022 12:32:57 -0700 (PDT)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
+        Douglas Gilbert <dgilbert@interlog.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Subject: [PATCH v3] scsi: scsi_debug: Make the READ CAPACITY response compliant with ZBC
+Date:   Wed,  2 Nov 2022 12:32:48 -0700
+Message-Id: <20221102193248.3177608-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.38.1.273.g43a17bfeac-goog
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.1
-Subject: Re: [PATCH v2 06/15] dt-bindings: ufs: Add "max-device-gear" property
- for UFS device
-Content-Language: en-US
-To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        martin.petersen@oracle.com, jejb@linux.ibm.com,
-        andersson@kernel.org, vkoul@kernel.org,
-        krzysztof.kozlowski+dt@linaro.org
-Cc:     konrad.dybcio@somainline.org, robh+dt@kernel.org,
-        quic_cang@quicinc.com, linux-arm-msm@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-phy@lists.infradead.org, linux-scsi@vger.kernel.org,
-        dmitry.baryshkov@linaro.org, ahalaney@redhat.com
-References: <20221031180217.32512-1-manivannan.sadhasivam@linaro.org>
- <20221031180217.32512-7-manivannan.sadhasivam@linaro.org>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <20221031180217.32512-7-manivannan.sadhasivam@linaro.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 31/10/2022 14:02, Manivannan Sadhasivam wrote:
-> The maximum gear supported by the UFS device can be specified using the
-> "max-device-gear" property. This allows the UFS controller to configure the
-> TX/RX gear before starting communication with the UFS device.
+From ZBC-1:
+* RC BASIS = 0: The RETURNED LOGICAL BLOCK ADDRESS field indicates the
+  highest LBA of a contiguous range of zones that are not sequential write
+  required zones starting with the first zone.
+* RC BASIS = 1: The RETURNED LOGICAL BLOCK ADDRESS field indicates the LBA
+  of the last logical block on the logical unit.
 
-This is confusing. The UFS PHY provides gear capability, so what is the
-"device" here? The attached memory? How could it report something else
-than phy?
+The current scsi_debug READ CAPACITY response does not comply with the above
+if there are one or more sequential write required zones. SCSI initiators
+need a way to retrieve the largest valid LBA from SCSI devices. Reporting
+the largest valid LBA if there are one or more sequential zones requires to
+set the RC BASIS field in the READ CAPACITY response to one. Hence this
+patch.
 
-The last sentence also suggests that you statically encode gear to avoid
-runtime negotiation.
+Cc: Douglas Gilbert <dgilbert@interlog.com>
+Cc: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Suggested-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+Changes between v2 and v3: elaborated the comment added by this patch.
 
-Best regards,
-Krzysztof
+Changes between v1 and v2: simplified this patch as suggested by Damien.
 
+ drivers/scsi/scsi_debug.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 697fc57bc711..629853662b82 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -1899,6 +1899,13 @@ static int resp_readcap16(struct scsi_cmnd *scp,
+ 			arr[14] |= 0x40;
+ 	}
+ 
++	/*
++	 * Since the scsi_debug READ CAPACITY implementation always reports the
++	 * total disk capacity, set RC BASIS = 1 for host-managed ZBC devices.
++	 */
++	if (devip->zmodel == BLK_ZONED_HM)
++		arr[12] |= 1 << 4;
++
+ 	arr[15] = sdebug_lowest_aligned & 0xff;
+ 
+ 	if (have_dif_prot) {
