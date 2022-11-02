@@ -2,616 +2,156 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 090BFC4332F
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Nov 2022 05:31:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99FAEC4332F
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Nov 2022 05:54:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230089AbiKBFbv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Nov 2022 01:31:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36202 "EHLO
+        id S229907AbiKBFyZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Nov 2022 01:54:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49428 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229988AbiKBFbl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Nov 2022 01:31:41 -0400
-Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2568627142
-        for <linux-scsi@vger.kernel.org>; Tue,  1 Nov 2022 22:31:38 -0700 (PDT)
-Received: by mail-pf1-x436.google.com with SMTP id g62so15444463pfb.10
-        for <linux-scsi@vger.kernel.org>; Tue, 01 Nov 2022 22:31:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=xiaomi-corp-partner-google-com.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=eDHE6t3UxgVbbxIruEWL1ehqThIK+KLXLQWZKh+uV0Q=;
-        b=4iAm+JQWM7i0hJ0Ytlz2hDejZRPKk89vBrqcwpvUhuIHeZrjRl20QqxE0Z6jcsW4VM
-         7yJqw4A8XhBiPB3O8h4sqVp7gboNAY7/LAAsB7EZ6TXTHTicf3qsNDEVVNRNH+s/1X6c
-         R6T72avhP46cRgd203cj+xj1oXBAVAWaOc7ySsF78wa2NEpgZ9YqDyqygYAPp0+hVNIi
-         ioVCh8TWAI/He6tjBkUNFPt0jp9BVDO38HWyICxvUBQEVu/HaokcznvEVXUpSxv5brGT
-         FmB2ve96quvc3mJuVfNOFXdPsQIG+P2ZPat0DZxWbrzlCYgaGPBHJlVEsf3wley40d1T
-         hrPg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=eDHE6t3UxgVbbxIruEWL1ehqThIK+KLXLQWZKh+uV0Q=;
-        b=kgf0nDkNCja1MFq62awyQFO7ZlHuq1uE+2ev38q7867BQJy2MOrNRGUmer1Mba2opB
-         c+eEn7UGhBS/qyt1HT+5HzB6AXWwOZlB1KzbNEMJJOFaWhBHIVS/FQs6MOgHS7cJOk1t
-         b90kS9rXEWe3Sng2tytstA0vF1JLqtt1qYMlcNvqXZFfHyKB/sw8zzhKJKfD5zsTf3ZJ
-         CRcxetFqRWhjiPZt0r+xZ5ZJqv8HXpJnVPle8hqNnJtBRImYIr+7Sz1ooniCfGcMoGXo
-         HuuHpeeCo4hwz1yy1Ykaob4le3jSpMp+UVq33Nb9PLvJCqBTddPVoWvyN91hp0m72b05
-         EAYA==
-X-Gm-Message-State: ACrzQf19GAAC/u7Q4GbzvRIPrDMfq8vcGT4x8zhsnoUYdW+JNZHN637h
-        CoJN2Q/CCbwgCc/ScLtZt8ShFXyvLb9Z7A==
-X-Google-Smtp-Source: AMsMyM47c20eDGyI561r1pO/Lp2twkNvjbITsK4SV5xNqHCgPiGJdsGTTh8UnRbQ8WSMAEEr6A8M2w==
-X-Received: by 2002:a05:6a00:994:b0:56c:fa42:4f46 with SMTP id u20-20020a056a00099400b0056cfa424f46mr23272534pfg.9.1667367097554;
-        Tue, 01 Nov 2022 22:31:37 -0700 (PDT)
-Received: from ubuntu18.mioffice.cn ([2408:8607:1b00:7:9e7b:efff:fe41:a22a])
-        by smtp.gmail.com with ESMTPSA id u10-20020a170902e80a00b00186b69157ecsm7276367plg.202.2022.11.01.22.31.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 01 Nov 2022 22:31:37 -0700 (PDT)
-From:   Jiaming Li <lijiaming3@xiaomi.corp-partner.google.com>
-To:     alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        lijiaming3 <lijiaming3@xiaomi.com>
-Subject: [RESEND PATCH 4/4] scsi:ufs:add fbo functionality
-Date:   Wed,  2 Nov 2022 13:30:58 +0800
-Message-Id: <20221102053058.21021-5-lijiaming3@xiaomi.corp-partner.google.com>
-X-Mailer: git-send-email 2.38.1
-In-Reply-To: <20221102053058.21021-1-lijiaming3@xiaomi.corp-partner.google.com>
-References: <20221102053058.21021-1-lijiaming3@xiaomi.corp-partner.google.com>
+        with ESMTP id S229547AbiKBFyX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Nov 2022 01:54:23 -0400
+Received: from NAM10-DM6-obe.outbound.protection.outlook.com (mail-dm6nam10on2042.outbound.protection.outlook.com [40.107.93.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F33AC2626;
+        Tue,  1 Nov 2022 22:54:21 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=mZxkK00xP/kLwAkqcQ6kLJDXPmgRsiB6dunOtGkxjGk5tM6s1kmpBLCi9Ys6P3V49d956wqBTYj5JPybClnIJsC271aYz4w+ZpE8y98Tl666Xoj7H+AnqrRnXvLbxFRla5V28pnsAOQzyb5ynueP17EM/UZjWIfCYd3WUQ+a26MIfeErmou9ITNSo/+rGeDo85PrmRmhpOC417tbILw3G6nztGzv+/R1I+U+S2c4AIBIrehfynmXsS9Mz3ML4A9Gdjj/awMJ/rVY4HQpqVutV/s07z0fOi7NQYLbhiyQ6JlGDtOtV4sncyGF6bY48wB8pByAJ0Of7wP8yMwpS1gO1Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=1E/kP71JXOK5+yCN8iEbSv3+5AxEYlcPeZfn8erpxkw=;
+ b=KrpM7ILV4f7uJ595gfd8SpSDbWxu6SqZ1et+QxT9cnvskVROEEvg4csDTa99DXhZCVjKRJEiFrTLoPzLYTk6qUJPRiGIuWONGAE7ehjYlkUv13SEvAqCoz32fHPbCh4TIA228y97r+zCU4qgo/e+NYo0PPd8pF6zhUN2a2U4/KLjhouWc176A9g+y3FcLfjo5kxnUY0TLWm/x1D6obihHCSSNusYKIrYO/6tgqc3ykbRSB7vXPv7Yp1phq+2FMsUD8Qm4TMph4hP8SJucgzERz95GW/EbSmBhO/Zqw39ghLZagC0/kcWd046w+WsZhcHkCHAwZAmyRa5h7b+aC0rXw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=1E/kP71JXOK5+yCN8iEbSv3+5AxEYlcPeZfn8erpxkw=;
+ b=o/Hd0IqmI/MRKqpTPadRALMRIyPsySl0Wq+LY3OVV0o1fz416ahW4REcgkcuvvP9B+DcBgktntNzFe1QH3p+tYEPNo/JUcPkDW8h6omuzaLb6+WG4I1EgyV11sz1nC0EqLQ+xvMKd76daaMUGxdmyLoV7ambMEtr6VeI+L5tRb07uV+nuLhBQWsQ72qn5uJVbRkjLMcHKhiX2rdpB0jowkTAyqZMnt6HIHf2FB0fVNhxXM9sw9/76vK6dIQG0hes4DUySGvcTiSFqQpWSSczLk7uJUk/M/1KV/1sWGoXm+GpvQ5Dqizv+oabl0NMwOhPkzDRUZLgM6rrbCD8V95+XA==
+Received: from MW2PR12MB4667.namprd12.prod.outlook.com (2603:10b6:302:12::28)
+ by DS0PR12MB7947.namprd12.prod.outlook.com (2603:10b6:8:150::17) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5769.21; Wed, 2 Nov
+ 2022 05:54:20 +0000
+Received: from MW2PR12MB4667.namprd12.prod.outlook.com
+ ([fe80::eaf1:9be8:d472:ea57]) by MW2PR12MB4667.namprd12.prod.outlook.com
+ ([fe80::eaf1:9be8:d472:ea57%7]) with mapi id 15.20.5769.021; Wed, 2 Nov 2022
+ 05:54:20 +0000
+From:   Chaitanya Kulkarni <chaitanyak@nvidia.com>
+To:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>
+Subject: Re: [PATCH 04/30] scsi: target: Use kstrtobool() instead of
+ strtobool()
+Thread-Topic: [PATCH 04/30] scsi: target: Use kstrtobool() instead of
+ strtobool()
+Thread-Index: AQHY7jgbr7eByiXbhUmTK+NFixFMIq4rIqkA
+Date:   Wed, 2 Nov 2022 05:54:20 +0000
+Message-ID: <2326193c-d522-afa3-2e68-c88bf2a6483f@nvidia.com>
+References: <cover.1667336095.git.christophe.jaillet@wanadoo.fr>
+ <fcddc0a53b4fc6e3c2e93592d3f61c5c63121855.1667336095.git.christophe.jaillet@wanadoo.fr>
+In-Reply-To: <fcddc0a53b4fc6e3c2e93592d3f61c5c63121855.1667336095.git.christophe.jaillet@wanadoo.fr>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+user-agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.9.0
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: MW2PR12MB4667:EE_|DS0PR12MB7947:EE_
+x-ms-office365-filtering-correlation-id: 3f648dd2-fe45-4864-a0d9-08dabc96afa2
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: taEZKfU7kQ8I8XP9mJY8UDcw1iNbsiYrXgM4GsGBLzFSA5K15dOsEttCiGFaXBVvIRLnQelwPVXjaP/0TdDhJGFWnS2EAzyBe+fFrfgB8T4wY4bsUTlrncHwd2igwq6HpaUwr8SdBSFkX1iXeRrQppHSsYkLFOjN8mk5nUym8VrUm9ljvNQiaZhev6EjMzeGR4hinnDbVXtNKMVjDwO+aXyl2vTdOpOyk/t6acM4tIqXJkrZyjB25b0oMtvEeYsd6xBoZdjk/iVnDbN6QTG4CdzZ6xnHCr2ooDcOFQMHk7Zo4vJBlzRsT8H7aJHA27q+c7aVLenReNn9fqBx4nYbYvPXtWwf3/nGNtV+EF0rstlLOnAhwUrYoiHZ3vgyWAdDCTJ64EIQyEnl4nXu1iMtEAvhtEUoy75H2+JHC/wNFOkkU6mIWGOrkQPJy2We+ovzZQJbx0xlpntkkUYbatMQ3858HCGHPzthiCz6QlI1SL36+O0/zma/mrStTuz2Qoy9FBXFxOm7Byc/PRtLWb9ONTC2O42P+94/jJ3VUw/fa+Otumba/XA6rRGXqDaBpwC1SKOoItf8bI4+IJjCg/BURv2weBycnvPqtgPA2QXKOoIiDcYEX6ej8ti7LkOjxcAkonJKG1oHBWBAa/LDMwHcHztD0+QsVE9ETGuIi8jNBHNdFb0DhB99ypTmIS/VArJeiYJfT2jIC8RtdyUmMs7H/3zPNqBwNDO6zQqQmBzW67kyDxhzxbqUKN8ZxPKmrQOkyNGWwmtlE4FIr1gOS9x5vd9laHkZ4pCEiUSKt2tOpeJt7akAUVO+p2sx/SZ+GPuJGHHkal/JB2eppmXu0pFNTj6FjXHAdxkFmoDXoWfCneT67O1IPhp6U7TZUjgo1O/sVi69P02SZpALsMU6EXXRc1oM8BgdOJDz18PGzjZU54Y=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW2PR12MB4667.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(4636009)(376002)(346002)(136003)(396003)(39860400002)(366004)(451199015)(86362001)(31696002)(83380400001)(38070700005)(122000001)(38100700002)(2906002)(5660300002)(8676002)(66946007)(41300700001)(76116006)(66556008)(8936002)(66476007)(66446008)(64756008)(4326008)(6506007)(6486002)(186003)(6512007)(478600001)(54906003)(110136005)(2616005)(53546011)(966005)(316002)(91956017)(31686004)(36756003)(71200400001)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?eGZML3VkMkRrN0lCWXdvdUpud2l1UStxVFowYTRoVVdZditJWTcyeldhandk?=
+ =?utf-8?B?L3ZneWR0QnFsSExvcFY5K2RVVlJ6S3MrM0pmU29jcjIydW1YSFM4VjdOWXNF?=
+ =?utf-8?B?ejVRVHBIdlNlcEhuK3pFUmFjcC8yZXhuYlVwalpGUEZLWXMyMlFGWVFFME94?=
+ =?utf-8?B?SzVLT2o1M0FrZFppdG90TzRjL1dIclNWNTdteDl3ME4zT2haaDAxbjFIYzRI?=
+ =?utf-8?B?NTdpaTFlbmx1alg1alRBNkFSeExiaHdwU3lmTWxYMEJUZERFY3J1U3VMa3lG?=
+ =?utf-8?B?Y0Evbm5BRkIzRlJZNEZsWldnZzl6Q1E4cTBKREpFaEw2dndDVk40S1hOaG5a?=
+ =?utf-8?B?UFdlN0lWY2ozYVAxNnhSdGg2TWhYazVtQU00OWw1NVdMeU40MU1UUU5qYTFY?=
+ =?utf-8?B?ZW9PMnJHY2s2MWhxbG9ScnBOb1k1RXJGM0FRUkpvSGVSVW1SZDk1UnJrbmFS?=
+ =?utf-8?B?eW9RWUxiWURIMjJXeXNhQ0o2VFhBYVo4M0hYK0J1VEhWaEkrV2F3Q1ozbVgr?=
+ =?utf-8?B?SEZGdEFTQUdQTThyMU5QdERrRjU0cGNtYkVRYXRacFJzTVlCZlpvdFpseVho?=
+ =?utf-8?B?bk5ScStlRHoyOHhmTUVYRzZ6QzhvT3UwSXJySkFKTUFheGw0Q3FGTmNFTk5O?=
+ =?utf-8?B?WEhWSWxlRmZPay9lUUJiMy92TXUyblJUOWtvMVE1TWpmRnNGa2kzdFNGK1Av?=
+ =?utf-8?B?KzY2bEs1dU1WdnhVNG9xTUhxMkFuc2gvb1R0dVZvQVZoMlF5MXVOVC9ndERO?=
+ =?utf-8?B?czJDVG1VeGRjdzFYRTRJRStESjBmZExvTGdmaDg1RXV4MGJIRzF0Y1d0NUx2?=
+ =?utf-8?B?MHJOMVB5cExZQUtJWXREWWVWczI4by9LOTF6RTBOWnhDdW1ocFBPeFRnZ0VP?=
+ =?utf-8?B?TXgxWk54WEtQVi9tNDQrRHRCa0tHcjB1bDhmTWhqZUlzYUNhNWZTblduRUNP?=
+ =?utf-8?B?cXRqR3g4ZXIxQXA1SFltclhiRHlXbTJIbUFOVVd2Yk9PdlJRbDVEQmN4YUhZ?=
+ =?utf-8?B?RGNielVtODBncXVLY2drVnFVSWRYVXdyeDRuZVAyYmllZC9kWkQrSlFwM3Ar?=
+ =?utf-8?B?SEpYcFBpUFd2eldTbUR5bzJ6STV0QmZzdFNhREUrMSt6OVRpUTk0OG42bXdo?=
+ =?utf-8?B?RkV6eldEcmxlNWJGdldwL3M2dE45dWpRYmRsVER3KzJQUTNwb3E0TzlzYXNr?=
+ =?utf-8?B?dG9TWkpNclZYNFVtK0NjZ0FHQmRId3lVL1k5eGZGRTlnTU9FM2JMcnYzaytX?=
+ =?utf-8?B?dEt1WjlaeG5kL2crZWNhVlcwWHEzVms4WGtqcGcxSTVnT3VZQVdPRGxWenlD?=
+ =?utf-8?B?ekNOUGhWcksrcTlnM0pVN1hLaVlWaGozSnA2OVhpRFhlM2o2WnUzdy9EVzdD?=
+ =?utf-8?B?K2VuVTVCc0ZTVHJpV29KWXBpWWU2ZXgzamJ2YWtiNDlKckgxWCtFQmdESXdx?=
+ =?utf-8?B?YUFhbzZhRWhnUEx3ZFFwRjFaVDJjTDlPSlE2aW9pa0t0V2dmcDVleFBDcEli?=
+ =?utf-8?B?NjE0WDhoNzFoZDRlVVJqblh5NFN2S2hPejlSbG4yL3VBNHR2WFV3RkxvL3py?=
+ =?utf-8?B?dldvTHZKell2RGlLWmlGNWViOFpwTlBqY0VOODJnNkxwc1Z4NHJ6Z0pPa01u?=
+ =?utf-8?B?UC9JTjFqSjhWN3p1czQ1OFJoRmFwUkltSWt5VDZ5a0xEZ1h6OHZSRGZIR25W?=
+ =?utf-8?B?MENMTHlma2trYmVpYXFuS0kyeWNZU2xhWG1peVlXb1UxNytUUk1jb2R4ZHZi?=
+ =?utf-8?B?Zzc3QTB5ZnZOKzhqUm1HRjk0d2U2ampSMVJWSHlZNndsWFJUOXdORWFFQmNS?=
+ =?utf-8?B?YXlWN0RiTWlZWmlpbWl2K0lQY0paYWZsQ0NMbjBZTWZPd3h3V21yR2c1QlpW?=
+ =?utf-8?B?Ly9lZ21Wa3gvTGxpdm1qdy9qc0JoQkVlVUhWVjlnRVBnMVdFb2lpdUlZaHZu?=
+ =?utf-8?B?UWhoQm5ZTldJZHZPYzhIYWtHTUdRK1hFYTdZUVdKYlpXZDA2cVYyaU5wcmNI?=
+ =?utf-8?B?T01lVE9wR2dYcnRlUEI0ZzU2bnZqaXdRQk1tVzhUNWsramNESFhTWUFuMTlq?=
+ =?utf-8?B?WkMzNnErdHBQbXdSNGEyY21TcmQ1QjZNYjVabWZBVlh1b0hyVDNNL2h4UDRL?=
+ =?utf-8?B?VUs1aE5tYlpiTzg4dkFISjMwYzIwUUhYUWNYU2d3S1k1OVUrdVRDdXBQTSs0?=
+ =?utf-8?B?ekE9PQ==?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <4BA62C73ABC83448AE84D57F7A76F09F@namprd12.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: MW2PR12MB4667.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3f648dd2-fe45-4864-a0d9-08dabc96afa2
+X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Nov 2022 05:54:20.3977
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: dFOPpmHQ44C7ISZ5tOZXAAOoIEwnmlgDFfT5JKUbwKWHaoA2ofq5hxYFQNCg6hs/M+PJ1rM6Oo2FcF+iGWJtEQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB7947
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: lijiaming3 <lijiaming3@xiaomi.com>
-
-add fbo analysis and defrag function
-
-We can send LBA info to the device as a comma separated string. Each
-adjacent pair represents a range:<open-lba>,<close-lba>.
-e.g. The LBA range of the file is 0x1234,0x3456;0x4567,0x5678
-	echo 0x1234,0x3456,0x4567,0x5678 > fbo_send_lba
-
-Then you can instrcut the device to analyzes the file info use following
-command:
-	echo 1 > fbo_operation_ctrl
-
-Use the following cmd to view the fragmentation progress status
-	cat fbo_prog_state
-
-After the value of "fbo_prog_state" changes from "1" to "2", it means
-the fragment analyzes completed, ust the following cmd to check file's
-LBA fragment state
-	cat fbo_lba_frag_state
-
-The data format follows the structure specified by spec
-	===============================
-	00  02  00  00  00  00  00  00
-	00  00  12  34  00  22  23  07
-	00  00  45  67  00  22  23  00
-	===============================
-
-The host then may instruct the device to execute optimization procedure to
-improve the regression level
-	echo 2 > fbo_operation_ctrl
-
-Use the following cmd to view the fragment optimization status, After the
-value of "fbo_prog_state" changes to "3", it means the fragment
-optimization completed
-	cat fbo_prog_state
-
-Signed-off-by: lijiaming3 <lijiaming3@xiaomi.com>
----
- Documentation/ABI/testing/sysfs-driver-ufs |  64 ++++
- drivers/ufs/core/ufsfbo.c                  | 399 +++++++++++++++++++++
- drivers/ufs/core/ufshcd.c                  |   3 +
- 3 files changed, 466 insertions(+)
-
-diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
-index 63daccbf7a8d..3792a444d0e2 100644
---- a/Documentation/ABI/testing/sysfs-driver-ufs
-+++ b/Documentation/ABI/testing/sysfs-driver-ufs
-@@ -1775,3 +1775,67 @@ Description:	This file shows the alignment requirement of UFS file-based
- 		specifications - FBO extension.
- 
- 		The file is read only.
-+
-+What:		/sys/class/scsi_device/*/device/fbo_dev_ctrl/fbo_support
-+Date:		November 2022
-+Contact:	li jiaming <lijiaming3@xiaomi.com>
-+Description:	This file shows the support state of UFS file-based optimization.
-+
-+		The file is read only.
-+
-+What:		/sys/class/scsi_device/*/device/fbo_dev_ctrl/fbo_prog_state
-+Date:		November 2022
-+Contact:	li jiaming <lijiaming3@xiaomi.com>
-+Description:	This file shows the state of UFS file-based optimization. The
-+		current driver implementation supports 5 states:
-+
-+		==  ====================================================
-+		0h   UFS FBO progress state is idle
-+		1h   UFS FBO progress state is on-going
-+		2h   UFS FBO progress state is complete analysis
-+		3h   UFS FBO progress state is complete optimization
-+		FF   UFS FBO progress state is general error
-+		==  ====================================================
-+		The file is read only.
-+
-+What:		/sys/class/scsi_device/*/device/fbo_dev_ctrl/fbo_operation_ctrl
-+Date:		November 2022
-+Contact:	li jiaming <lijiaming3@xiaomi.com>
-+Description:	This file controls the operation of UFS file-based optimization.
-+		Echo different value to this file to make device perform different funcs.
-+		The value are as follows
-+		==  ==============================================================
-+		0h   Device shall stop FBO analysis and FBO optimization operation
-+		1h   Start FBO analysis based on the current LBA range
-+		2h   Start FBO optimization based on the current LBA range
-+		==  ==============================================================
-+		The file is write only.
-+
-+What:		/sys/class/scsi_device/*/device/fbo_dev_ctrl/fbo_exe_threshold
-+Date:		November 2022
-+Contact:	li jiaming <lijiaming3@xiaomi.com>
-+Description:	This file shows and sets the execute level of UFS file-based
-+		optimization. It means the device will do optimization operation for
-+		the ranges which fragment level equal or greater than this value .The
-+		value ranges from 0x0 to 0xA.
-+
-+What:		/sys/class/scsi_device/*/device/fbo_dev_ctrl/fbo_send_lba
-+Date:		November 2022
-+Contact:	li jiaming <lijiaming3@xiaomi.com>
-+Description:	This file provides an interface for host to send LBA ranges to
-+		the device for UFS file-based optimization. First, we obtain the iNode
-+		info of the file, which can be used to find out the corresponding block
-+		address of the file, then add the offset of each partition to obtain the
-+		LBA of the file. We can send LBA info to the device as a comma separated
-+		string. Each adjacent pair represents a range:<open-lba>,<close-lba>.
-+		e.g. The LBA range of the file is 0x1234,0x3456;0x4567,0x5678
-+			echo 0x1234,0x3456,0x4567,0x5678 > fbo_send_lba
-+
-+		The file is write only.
-+
-+What:		/sys/class/scsi_device/*/device/fbo_dev_ctrl/fbo_lba_frag_state
-+Date:		November 2022
-+Contact:	li jiaming <lijiaming3@xiaomi.com>
-+Description:	This file provides an interface for host to obtain the LBA
-+		ranges fragment state sent by read buffer command of UFS file-based
-+		optimization. We should read this info when the FBO analysis is completed
-diff --git a/drivers/ufs/core/ufsfbo.c b/drivers/ufs/core/ufsfbo.c
-index 81326fd2fb3d..303b7b7f1a2c 100644
---- a/drivers/ufs/core/ufsfbo.c
-+++ b/drivers/ufs/core/ufsfbo.c
-@@ -14,6 +14,18 @@
- #include <scsi/scsi_device.h>
- #include <asm/unaligned.h>
- 
-+#define FBO_RW_BUF_HDR_SIZE 4
-+#define FBO_RW_ENTRY_SIZE 8
-+#define FBO_LBA_RANGE_LENGTH 4096
-+
-+enum UFSFBO_PROG_STATE {
-+	FBO_PROG_IDLE   = 0x0,
-+	FBO_PROG_ON_GOING   = 0x1,
-+	FBO_PROG_ANALYSIS_COMPLETE  = 0x2,
-+	FBO_PROG_OPTIMIZATION_COMPLETE  = 0x3,
-+	FBO_PROG_INTERNAL_ERR   = 0xff,
-+};
-+
- /**
-  * struct ufsfbo_dev_info - FBO device related info
-  * @fbo_version: UFS file-based optimization Version
-@@ -45,6 +57,393 @@ struct ufsfbo_ctrl {
- 	int fbo_lba_cnt;
- };
- 
-+static void ufsfbo_fill_rw_buffer(unsigned char *cdb, int size, u8 opcode)
-+{
-+	cdb[0] = opcode;
-+	cdb[1] = 0x2;
-+	cdb[2] = opcode == WRITE_BUFFER ? 0x1 : 0x2;
-+	put_unaligned_be24(size, &cdb[6]);
-+}
-+
-+static ssize_t fbo_support_show(struct device *dev,
-+				   struct device_attribute *attr, char *buf)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct ufs_hba *hba = shost_priv(sdev->host);
-+	u8 val = 0;
-+
-+	if (hba->fbo_ctrl)
-+		val = 1;
-+
-+	return sysfs_emit(buf, "%d\n", val);
-+}
-+static DEVICE_ATTR_RO(fbo_support);
-+
-+static int ufsfbo_get_fbo_prog_state(struct ufs_hba *hba, int *prog_state)
-+{
-+	int ret = 0, attr = -1;
-+
-+	down(&hba->host_sem);
-+	if (!ufshcd_is_user_access_allowed(hba)) {
-+		ret = -EBUSY;
-+		goto out;
-+	}
-+	ufshcd_rpm_get_sync(hba);
-+	ret = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
-+			QUERY_ATTR_IDN_FBO_PROG_STATE, 0, 0, &attr);
-+	ufshcd_rpm_put_sync(hba);
-+	if (ret) {
-+		pr_err("Query attr fbo prog state failed.");
-+		goto out;
-+	}
-+
-+	switch (attr) {
-+	case 0x0:
-+	case 0x1:
-+	case 0x2:
-+	case 0x3:
-+	case 0xff:
-+		*prog_state = attr;
-+		break;
-+	default:
-+		pr_info("Unknown fbo prog state attr(%d)", attr);
-+		ret = -EINVAL;
-+		break;
-+	}
-+
-+out:
-+	up(&hba->host_sem);
-+	return ret;
-+}
-+
-+static ssize_t fbo_prog_state_show(struct device *dev,
-+				   struct device_attribute *attr, char *buf)
-+{
-+	int fbo_prog_state;
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct ufs_hba *hba = shost_priv(sdev->host);
-+
-+	if (ufsfbo_get_fbo_prog_state(hba, &fbo_prog_state)) {
-+		pr_err("Get fbo prog state failed.");
-+		return -EINVAL;
-+	}
-+
-+	return sysfs_emit(buf, "%d\n", fbo_prog_state);
-+}
-+static DEVICE_ATTR_RO(fbo_prog_state);
-+
-+static ssize_t fbo_operation_ctrl_store(struct device *dev,
-+				    struct device_attribute *attr,
-+				    const char *buf, size_t count)
-+{
-+	int ret = 0;
-+	u32 val;
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct ufs_hba *hba = shost_priv(sdev->host);
-+
-+	if (kstrtouint(buf, 0, &val))
-+		return -EINVAL;
-+
-+	down(&hba->host_sem);
-+	if (!ufshcd_is_user_access_allowed(hba)) {
-+		ret = -EBUSY;
-+		goto out;
-+	}
-+
-+	ufshcd_rpm_get_sync(hba);
-+	ret = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
-+			QUERY_ATTR_IDN_FBO_CONTROL, 0, 0, &val);
-+	ufshcd_rpm_put_sync(hba);
-+
-+out:
-+	up(&hba->host_sem);
-+	return ret ? ret : count;
-+}
-+
-+static DEVICE_ATTR_WO(fbo_operation_ctrl);
-+
-+static ssize_t fbo_exe_threshold_show(struct device *dev,
-+				   struct device_attribute *attr, char *buf)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct ufs_hba *hba = shost_priv(sdev->host);
-+	struct ufsfbo_ctrl *fbo_ctrl = hba->fbo_ctrl;
-+
-+	return sysfs_emit(buf, "%d\n", fbo_ctrl->fbo_dev_info.fbo_exec_threshold);
-+}
-+
-+static int ufsfbo_set_exe_level(struct ufs_hba *hba, u32 val)
-+{
-+	int ret = 0, fbo_prog_state = 0;
-+
-+	ret = ufsfbo_get_fbo_prog_state(hba, &fbo_prog_state);
-+	if (ret) {
-+		pr_err("Get fbo prog state failed.");
-+		return -EINVAL;
-+	}
-+
-+	if (fbo_prog_state == FBO_PROG_IDLE || fbo_prog_state == FBO_PROG_ANALYSIS_COMPLETE ||
-+		fbo_prog_state == FBO_PROG_OPTIMIZATION_COMPLETE) {
-+		down(&hba->host_sem);
-+		if (!ufshcd_is_user_access_allowed(hba)) {
-+			ret = -EBUSY;
-+			goto out;
-+		}
-+		ufshcd_rpm_get_sync(hba);
-+		ret = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
-+				QUERY_ATTR_IDN_FBO_LEVEL_EXE, 0, 0, &val);
-+		ufshcd_rpm_put_sync(hba);
-+	} else {
-+		pr_err("Illegal fbo prog state");
-+		return -EINVAL;
-+	}
-+
-+out:
-+	up(&hba->host_sem);
-+	return ret;
-+}
-+
-+static ssize_t fbo_exe_threshold_store(struct device *dev,
-+				    struct device_attribute *attr,
-+				    const char *buf, size_t count)
-+{
-+	u32 val;
-+	int ret = 0;
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct ufs_hba *hba = shost_priv(sdev->host);
-+	struct ufsfbo_ctrl *fbo_ctrl = hba->fbo_ctrl;
-+
-+	if (kstrtouint(buf, 0, &val))
-+		return -EINVAL;
-+
-+	if (val < 0 || val > 10)
-+		return -EINVAL;
-+
-+	ret = ufsfbo_set_exe_level(hba, val);
-+	if (ret) {
-+		pr_err("Set exec threshold failed.");
-+		return -EINVAL;
-+	}
-+
-+	fbo_ctrl->fbo_dev_info.fbo_exec_threshold = val;
-+
-+	return ret ? ret : count;
-+}
-+
-+static DEVICE_ATTR_RW(fbo_exe_threshold);
-+
-+static int ufsfbo_issue_read_frag_level(struct scsi_device *sdev, char *buf, int para_len)
-+{
-+	int ret = 0;
-+	unsigned char cdb[10] = {};
-+	struct scsi_sense_hdr sshdr = {};
-+
-+	ufsfbo_fill_rw_buffer(cdb, para_len, READ_BUFFER);
-+
-+	ret = scsi_execute_req(sdev, cdb, DMA_FROM_DEVICE, buf, para_len,
-+			&sshdr, msecs_to_jiffies(15000), 0, NULL);
-+	if (ret)
-+		pr_err("Read Buffer failed,sense key:0x%x;asc:0x%x;ascq:0x%x",
-+			(int)sshdr.sense_key, (int)sshdr.asc, (int)sshdr.ascq);
-+
-+	return ret;
-+}
-+
-+static ssize_t fbo_lba_frag_state_show(struct device *dev,
-+					struct device_attribute *attr, char *buf)
-+{
-+	int i, ret, count = 0;
-+	int para_len = 0;
-+	int vaild_body_size = 0;
-+	char *fbo_read_buffer;
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct ufs_hba *hba = shost_priv(sdev->host);
-+	struct ufsfbo_ctrl *fbo_ctrl = hba->fbo_ctrl;
-+
-+	fbo_read_buffer = kzalloc(FBO_LBA_RANGE_LENGTH, GFP_KERNEL);
-+	if (!fbo_read_buffer)
-+		return -ENOMEM;
-+
-+	para_len = FBO_RW_BUF_HDR_SIZE + FBO_RW_ENTRY_SIZE +
-+		fbo_ctrl->fbo_lba_cnt * FBO_RW_ENTRY_SIZE;
-+
-+	ret = ufsfbo_issue_read_frag_level(sdev, fbo_read_buffer, para_len);
-+	if (ret) {
-+		pr_err("Get lba range level failed");
-+		goto out;
-+	}
-+
-+	/* we allocated 4k, but reading only the relevant ReadBuffer size */
-+	vaild_body_size = FBO_RW_ENTRY_SIZE + (fbo_ctrl->fbo_lba_cnt * FBO_RW_ENTRY_SIZE);
-+	for (i = 0; i < vaild_body_size; i++) {
-+		count += snprintf(buf + count, PAGE_SIZE - count,
-+				"%02x  ", fbo_read_buffer[i + FBO_RW_BUF_HDR_SIZE]);
-+		if (!((i + 1) % 8))
-+			count += snprintf(buf + count, PAGE_SIZE - count, "\n");
-+	}
-+out:
-+	kfree(fbo_read_buffer);
-+	return ret ? ret : count;
-+}
-+
-+static DEVICE_ATTR_RO(fbo_lba_frag_state);
-+
-+static int ufsfbo_check_lba_range_format(struct ufs_hba *hba, char *buf)
-+{
-+	char *p;
-+	int lba_pairs = 0;
-+	struct ufsfbo_ctrl *fbo_ctrl = hba->fbo_ctrl;
-+
-+	p = strstr(buf, ",");
-+	if (!p || buf[strlen(buf) - 1] == ',') {
-+		pr_err("Invalid lba range format, input lba range separated by ','");
-+		return -EINVAL;
-+	}
-+
-+	while (p) {
-+		lba_pairs++;
-+		p += 1;
-+		p = strstr(p, ",");
-+	}
-+	/*
-+	 * The input buffer is a comma delimited pairs of LBAs: open,close,
-+	 * and so on.  So there should be an even number of LBAs, and odd
-+	 * number of commas.
-+	 */
-+	if (lba_pairs % 2)
-+		lba_pairs++;
-+	else
-+		return -EINVAL;
-+
-+	if (lba_pairs / 2 > fbo_ctrl->fbo_dev_info.fbo_max_lrc)
-+		return -EINVAL;
-+
-+	fbo_ctrl->fbo_lba_cnt = lba_pairs / 2;
-+	return 0;
-+}
-+
-+static int ufsfbo_parse_lba_list(struct ufs_hba *hba, char *buf, char *lba_buf)
-+{
-+	char *lba_ptr;
-+	struct ufsfbo_ctrl *fbo_ctrl = hba->fbo_ctrl;
-+	struct ufsfbo_dev_info *fbo_dev_info = &fbo_ctrl->fbo_dev_info;
-+	u64 lba_range_tmp, start_lba, lba_len;
-+	int len_index = 1, lba_info_offset = FBO_RW_BUF_HDR_SIZE + FBO_RW_ENTRY_SIZE;
-+
-+	lba_buf[5] = fbo_ctrl->fbo_lba_cnt;
-+
-+	while ((lba_ptr = strsep(&buf, ",")) != NULL) {
-+		if (kstrtou64(lba_ptr, 16, &lba_range_tmp))
-+			return -EINVAL;
-+
-+		if (len_index % 2) {
-+			start_lba = lba_range_tmp;
-+			put_unaligned_be32(start_lba, lba_buf + lba_info_offset);
-+		} else {
-+			if (lba_range_tmp < start_lba)
-+				return -EINVAL;
-+
-+			lba_len = lba_range_tmp - start_lba + 1;
-+			if (lba_len < fbo_dev_info->fbo_min_lrs ||
-+				lba_len > fbo_dev_info->fbo_max_lrs)
-+				return -EINVAL;
-+
-+			put_unaligned_be24(lba_len, lba_buf + lba_info_offset + 4);
-+			lba_info_offset += FBO_RW_ENTRY_SIZE;
-+		}
-+		len_index++;
-+	}
-+
-+	return 0;
-+}
-+
-+static int ufsfbo_issue_lba_list_write(struct scsi_device *sdev, char *buf)
-+{
-+	int ret = 0;
-+	struct ufs_hba *hba = shost_priv(sdev->host);
-+	struct ufsfbo_ctrl *fbo_ctrl = hba->fbo_ctrl;
-+	int fbo_lba_cnt = fbo_ctrl->fbo_lba_cnt;
-+	struct scsi_sense_hdr sshdr = {};
-+	char *buf_lba;
-+	unsigned char cdb[10] = {};
-+	int para_len = FBO_RW_BUF_HDR_SIZE + FBO_RW_ENTRY_SIZE + fbo_lba_cnt * FBO_RW_ENTRY_SIZE;
-+
-+	buf_lba = kzalloc(FBO_LBA_RANGE_LENGTH, GFP_KERNEL);
-+	if (!buf_lba) {
-+		ret = -ENOMEM;
-+		return ret;
-+	}
-+
-+	ret = ufsfbo_parse_lba_list(hba, buf, buf_lba);
-+	if (ret) {
-+		pr_err("Init buf_lba fail");
-+		goto out;
-+	}
-+
-+	ufsfbo_fill_rw_buffer(cdb, para_len, WRITE_BUFFER);
-+
-+	ret = scsi_execute_req(sdev, cdb, DMA_TO_DEVICE, buf_lba, para_len,
-+			&sshdr, msecs_to_jiffies(15000), 0, NULL);
-+	if (ret)
-+		pr_err("Write Buffer failed,sense key:0x%x;asc:0x%x;ascq:0x%x",
-+			(int)sshdr.sense_key, (int)sshdr.asc, (int)sshdr.ascq);
-+
-+out:
-+	kfree(buf_lba);
-+	return ret;
-+}
-+
-+static ssize_t fbo_send_lba_store(struct device *dev,
-+				    struct device_attribute *attr,
-+				    const char *buf, size_t count)
-+{
-+	int ret = 0, fbo_prog_state = 0;
-+	char *buf_ptr;
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct ufs_hba *hba = shost_priv(sdev->host);
-+
-+	if (!buf)
-+		return -EINVAL;
-+
-+	buf_ptr = kstrdup(buf, GFP_KERNEL);
-+	if (unlikely(!buf_ptr))
-+		return -ENOMEM;
-+
-+	if (ufsfbo_check_lba_range_format(hba, buf_ptr))
-+		goto out;
-+
-+	if (ufsfbo_get_fbo_prog_state(hba, &fbo_prog_state))
-+		goto out;
-+
-+	if (fbo_prog_state == FBO_PROG_IDLE) {
-+		ret = ufsfbo_issue_lba_list_write(sdev, buf_ptr);
-+	} else {
-+		ret = -EINVAL;
-+		pr_err("Invalid fbo state");
-+	}
-+
-+out:
-+	kfree(buf_ptr);
-+	return ret ? ret : count;
-+}
-+
-+static DEVICE_ATTR_WO(fbo_send_lba);
-+
-+static struct attribute *fbo_dev_ctrl_attrs[] = {
-+	&dev_attr_fbo_support.attr,
-+	&dev_attr_fbo_prog_state.attr,
-+	&dev_attr_fbo_operation_ctrl.attr,
-+	&dev_attr_fbo_exe_threshold.attr,
-+	&dev_attr_fbo_send_lba.attr,
-+	&dev_attr_fbo_lba_frag_state.attr,
-+	NULL,
-+};
-+
-+const struct attribute_group ufs_sysfs_fbo_param_group = {
-+	.name = "fbo_dev_ctrl",
-+	.attrs = fbo_dev_ctrl_attrs,
-+};
-+
- static int ufsfbo_get_dev_info(struct ufs_hba *hba, struct ufsfbo_ctrl *fbo_ctrl)
- {
- 	int ret;
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index f769fcb72392..410263e2fada 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -8294,6 +8294,9 @@ static const struct attribute_group *ufshcd_driver_groups[] = {
- #ifdef CONFIG_SCSI_UFS_HPB
- 	&ufs_sysfs_hpb_stat_group,
- 	&ufs_sysfs_hpb_param_group,
-+#endif
-+#ifdef CONFIG_SCSI_UFS_FBO
-+	&ufs_sysfs_fbo_param_group,
- #endif
- 	NULL,
- };
--- 
-2.38.1
-
+T24gMTEvMS8yMiAxNDoxMywgQ2hyaXN0b3BoZSBKQUlMTEVUIHdyb3RlOg0KPiBzdHJ0b2Jvb2wo
+KSBpcyB0aGUgc2FtZSBhcyBrc3RydG9ib29sKCkuDQo+IEhvd2V2ZXIsIHRoZSBsYXR0ZXIgaXMg
+bW9yZSB1c2VkIHdpdGhpbiB0aGUga2VybmVsLg0KPiANCj4gSW4gb3JkZXIgdG8gcmVtb3ZlIHN0
+cnRvYm9vbCgpIGFuZCBzbGlnaHRseSBzaW1wbGlmeSBrc3RydG94LmgsIHN3aXRjaCB0bw0KPiB0
+aGUgb3RoZXIgZnVuY3Rpb24gbmFtZS4NCj4gDQo+IFdoaWxlIGF0IGl0LCBpbmNsdWRlIHRoZSBj
+b3JyZXNwb25kaW5nIGhlYWRlciBmaWxlICg8bGludXgva3N0cnRveC5oPikNCj4gDQo+IFNpZ25l
+ZC1vZmYtYnk6IENocmlzdG9waGUgSkFJTExFVCA8Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28u
+ZnI+DQo+IC0tLQ0KPiBUaGlzIHBhdGNoIGlzIHBhcnQgb2YgYSBzZXJpZSB0aGF0IGF4ZXMgYWxs
+IHVzYWdlcyBvZiBzdHJ0b2Jvb2woKS4NCj4gRWFjaCBwYXRjaCBjYW4gYmUgYXBwbGllZCBpbmRl
+cGVuZGVudGx5IGZyb20gdGhlIG90aGVyIG9uZXMuDQo+IA0KPiBUaGUgbGFzdCBwYXRjaCBvZiB0
+aGUgc2VyaWUgcmVtb3ZlcyB0aGUgZGVmaW5pdGlvbiBvZiBzdHJ0b2Jvb2woKS4NCj4gDQo+IFlv
+dSBtYXkgbm90IGJlIGluIGNvcHkgb2YgdGhlIGNvdmVyIGxldHRlci4gU28sIGlmIG5lZWRlZCwg
+aXQgaXMgYXZhaWxhYmxlDQo+IGF0IFsxXS4NCj4gDQo+IFsxXTogaHR0cHM6Ly9sb3JlLmtlcm5l
+bC5vcmcvYWxsL2NvdmVyLjE2NjczMzYwOTUuZ2l0LmNocmlzdG9waGUuamFpbGxldEB3YW5hZG9v
+LmZyLw0KPiAtLS0NCj4gICBkcml2ZXJzL3RhcmdldC90YXJnZXRfY29yZV9jb25maWdmcy5jICAg
+ICAgICB8IDI5ICsrKysrKysrKystLS0tLS0tLS0tDQo+ICAgZHJpdmVycy90YXJnZXQvdGFyZ2V0
+X2NvcmVfZmFicmljX2NvbmZpZ2ZzLmMgfCAgMyArLQ0KPiAgIDIgZmlsZXMgY2hhbmdlZCwgMTcg
+aW5zZXJ0aW9ucygrKSwgMTUgZGVsZXRpb25zKC0pDQo+IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVy
+cy90YXJnZXQvdGFyZ2V0X2NvcmVfY29uZmlnZnMuYyBiL2RyaXZlcnMvdGFyZ2V0L3RhcmdldF9j
+b3JlX2NvbmZpZ2ZzLmMNCj4gaW5kZXggNTMzNTI0Mjk5ZWQ2Li5iOGE1YzhkNmNmZGUgMTAwNjQ0
+DQo+IC0tLSBhL2RyaXZlcnMvdGFyZ2V0L3RhcmdldF9jb3JlX2NvbmZpZ2ZzLmMNCj4gKysrIGIv
+ZHJpdmVycy90YXJnZXQvdGFyZ2V0X2NvcmVfY29uZmlnZnMuYw0KPiBAQCAtMTIsNiArMTIsNyBA
+QA0KPiAgICAqDQo+ICAgICoqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq
+KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKiovDQo+ICAgDQoNCg0KDQpJIGJlbGll
+dmUgeW91IGhhdmUgdGVzdGVkIHRoaXMgcGF0Y2ggdGhvcm91Z2hseSwgd2l0aCB0aGF0LA0KDQpS
+ZXZpZXdlZC1ieTogQ2hhaXRhbnlhIEt1bGthcm5pIDxrY2hAbnZpZGlhLmNvbT4NCg0KLWNrDQoN
+Cg==
