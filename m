@@ -2,111 +2,92 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94A28C4332F
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Nov 2022 19:09:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EB65C4321E
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Nov 2022 19:10:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231550AbiKBTJE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Nov 2022 15:09:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36652 "EHLO
+        id S230500AbiKBTKO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Nov 2022 15:10:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37344 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231561AbiKBTIl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Nov 2022 15:08:41 -0400
-Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 665F662EF
-        for <linux-scsi@vger.kernel.org>; Wed,  2 Nov 2022 12:08:31 -0700 (PDT)
-Received: by mail-pf1-x435.google.com with SMTP id m6so17289533pfb.0
-        for <linux-scsi@vger.kernel.org>; Wed, 02 Nov 2022 12:08:31 -0700 (PDT)
+        with ESMTP id S231814AbiKBTJ6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Nov 2022 15:09:58 -0400
+Received: from mail-qt1-x835.google.com (mail-qt1-x835.google.com [IPv6:2607:f8b0:4864:20::835])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92138E08E
+        for <linux-scsi@vger.kernel.org>; Wed,  2 Nov 2022 12:09:53 -0700 (PDT)
+Received: by mail-qt1-x835.google.com with SMTP id hh9so11943564qtb.13
+        for <linux-scsi@vger.kernel.org>; Wed, 02 Nov 2022 12:09:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=btNV1F5raSfgVHS1/gKMO9RappBFKUG6No8ZOPbnTjE=;
-        b=WnF/CAavVaQFZ6hu1mucTiUFMFRH07YS8pP+nQhN6HJJeWng0qN/pqcGUZWF8DF3YJ
-         UKrrhCuT8pZe5efQKDQYbL4sl4O0d0Yq7dniUij9mlyoue48MfGSkAiZceOt6LH7Zyla
-         DMmq4Zy98pWpB2nYorJEhV8afi41FbMNfLd98=
+        d=linaro.org; s=google;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=AIkEh7BXAQ8EfVcaCpQmqvlq6Pnzwaj79KpKIFXtqKk=;
+        b=D5NqaoeFxXGLhUM1iiPWsSusfvacuFdAOm6V8ErMS9WTejX9G+7XNSYvAnzL10LFFp
+         qE4b9Fd5IJns9Y169x8pYIfvEM0CEQ7UlfQ5ml7I2wQplpGk93Og//KQ6l66s2LeF7Ng
+         0QIQG2YvDP8l4BXttaBxEtpb+R11qglLFfU3r0tAVplqVAE9m+N5E+WLMYpPROr6YABD
+         dDv1ZnUkW2HQDoRNxvZRD8RCgvwZFB7bKffmiB6fpEfwy093n055DP70XMYf0MNtGMTY
+         cM6o2zeIscCb5OKxFh15wUhs+A2kcnIS8JdGXqbvwB/gsnlxMWnSn/3rzYMoDI8YAYem
+         JlNA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=btNV1F5raSfgVHS1/gKMO9RappBFKUG6No8ZOPbnTjE=;
-        b=P7kjNEQkec0wBWjiknRHoJGZxyW2fo+J7s7DjaoHq77gw4j9XwnOTK4R7lSXmolAfF
-         KQXg7Tq5K5idacB2kMUeoBEmm0P+osJE4MCCHeU6/7dtR+xagUnz/Temb6pcdws0HQly
-         HmD23EiByRxuXO6NrwjeqBuEbQCZZGt7HdbayaJsHW6Xp571GNZyKEpe1MDqGmmWXj/O
-         ZuvuT+N62nIfSwHaQ+qvYql/1/rr3x8zdCPIB+svAY1bONBDrvn09VuKPkUX/MUFlnLH
-         P5wpWYn1dYZHf5UZnvWe91vWiKiLDtRbnKc01zjSwmhXWZoO0xtzjJ0PU5u3oqkZInce
-         QeaA==
-X-Gm-Message-State: ACrzQf1ul4GqQgbzCBofxmhVedPQp/pd7yrcYzgjR49m4BoH6ehwwKli
-        ixyc8fNy7SkwR8ELpseazEkgAQ==
-X-Google-Smtp-Source: AMsMyM50I03PG/OQ4Z3UbjQlDLWWsbg4/BuY9JFwssVj3kEUSn2BZVgoliMdNU8wDNVwlvCFhiI/zg==
-X-Received: by 2002:a63:501f:0:b0:46f:a711:c455 with SMTP id e31-20020a63501f000000b0046fa711c455mr18062893pgb.402.1667416111214;
-        Wed, 02 Nov 2022 12:08:31 -0700 (PDT)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id v20-20020a63f214000000b0045ff216a0casm4784265pgh.3.2022.11.02.12.08.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 02 Nov 2022 12:08:30 -0700 (PDT)
-Date:   Wed, 2 Nov 2022 12:08:30 -0700
-From:   Kees Cook <keescook@chromium.org>
-To:     Nathan Chancellor <nathan@kernel.org>
-Cc:     James Smart <james.smart@broadcom.com>,
-        Ram Vegesna <ram.vegesna@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Tom Rix <trix@redhat.com>,
-        Sami Tolvanen <samitolvanen@google.com>, llvm@lists.linux.dev,
-        linux-kernel@vger.kernel.org, patches@lists.linux.dev
-Subject: Re: [PATCH] scsi: elx: libefc: Fix second parameter type in state
- callbacks
-Message-ID: <202211021208.055D396D8E@keescook>
-References: <20221102161906.2781508-1-nathan@kernel.org>
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=AIkEh7BXAQ8EfVcaCpQmqvlq6Pnzwaj79KpKIFXtqKk=;
+        b=aLhM0JLevl5bbCy9bgTyqKOEZdtzhbMiKuBAifNZmpW1DDbujtxI4Cbg82NIy09N/6
+         MvkuCquOq68pRTcA2s8fyAzuQ4khLm9AKSxvYCGQlxz5FyR+VxxTXWxenfjS7M48kljC
+         S41A++3/+bZeT7bSW+SKhkPEueKyRWEqfdF8vWzMx9pyfBeunn2KhI42SAOutUDm4nbW
+         CQtWFhL7rWKIfEnk49ESP3nQJygwbIQBb89HhQ9iYEVdcDbuVdgBnrlUn268svz+6UAi
+         XwE82BTJ9oqRVQhg+TYgvaHSEqLZnHdn436dPjpfy6MEvqW6CRL0eDSnfnRKssv1K3pB
+         FPUA==
+X-Gm-Message-State: ACrzQf1GZy7u05spjrbosC5BtQGIiET+6REJQMQfY+zRD60puSk0vLtE
+        D3QCmDFXoA7ySyCAY0Cp0y8tgg==
+X-Google-Smtp-Source: AMsMyM5rtL01pS0TQ+i5UNqkH3/BIoMq0q2RjMMZmpCfyVX3jZh1yBtxA1LpksWIIs0gVwKIiDmLaA==
+X-Received: by 2002:a05:622a:407:b0:39a:836:acfe with SMTP id n7-20020a05622a040700b0039a0836acfemr20925776qtx.133.1667416192736;
+        Wed, 02 Nov 2022 12:09:52 -0700 (PDT)
+Received: from ?IPV6:2601:586:5000:570:28d9:4790:bc16:cc93? ([2601:586:5000:570:28d9:4790:bc16:cc93])
+        by smtp.gmail.com with ESMTPSA id bk20-20020a05620a1a1400b006f3e6933bacsm9098388qkb.113.2022.11.02.12.09.51
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 02 Nov 2022 12:09:52 -0700 (PDT)
+Message-ID: <1fe8fd96-7770-0bda-c970-aa38d030ff3b@linaro.org>
+Date:   Wed, 2 Nov 2022 15:09:50 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20221102161906.2781508-1-nathan@kernel.org>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.1
+Subject: Re: [PATCH v2 06/15] dt-bindings: ufs: Add "max-device-gear" property
+ for UFS device
+Content-Language: en-US
+To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        martin.petersen@oracle.com, jejb@linux.ibm.com,
+        andersson@kernel.org, vkoul@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org
+Cc:     konrad.dybcio@somainline.org, robh+dt@kernel.org,
+        quic_cang@quicinc.com, linux-arm-msm@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-phy@lists.infradead.org, linux-scsi@vger.kernel.org,
+        dmitry.baryshkov@linaro.org, ahalaney@redhat.com
+References: <20221031180217.32512-1-manivannan.sadhasivam@linaro.org>
+ <20221031180217.32512-7-manivannan.sadhasivam@linaro.org>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+In-Reply-To: <20221031180217.32512-7-manivannan.sadhasivam@linaro.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Nov 02, 2022 at 09:19:06AM -0700, Nathan Chancellor wrote:
-> With clang's kernel control flow integrity (kCFI, CONFIG_CFI_CLANG),
-> indirect call targets are validated against the expected function
-> pointer prototype to make sure the call target is valid to help mitigate
-> ROP attacks. If they are not identical, there is a failure at run time,
-> which manifests as either a kernel panic or thread getting killed. A
-> proposed warning in clang aims to catch these at compile time, which
-> reveals:
-> 
->   drivers/scsi/elx/libefc/efc_node.c:811:22: error: incompatible function pointer types assigning to 'void (*)(struct efc_sm_ctx *, u32, void *)' (aka 'void (*)(struct efc_sm_ctx *, unsigned int, void *)') from 'void (*)(struct efc_sm_ctx *, enum efc_sm_event, void *)' [-Werror,-Wincompatible-function-pointer-types-strict]
->                   ctx->current_state = state;
->                                     ^ ~~~~~
->   drivers/scsi/elx/libefc/efc_node.c:878:21: error: incompatible function pointer types assigning to 'void (*)(struct efc_sm_ctx *, u32, void *)' (aka 'void (*)(struct efc_sm_ctx *, unsigned int, void *)') from 'void (*)(struct efc_sm_ctx *, enum efc_sm_event, void *)' [-Werror,-Wincompatible-function-pointer-types-strict]
->           node->nodedb_state = state;
->                             ^ ~~~~~
->   drivers/scsi/elx/libefc/efc_node.c:905:6: error: incompatible function pointer types assigning to 'void (*)(struct efc_sm_ctx *, enum efc_sm_event, void *)' from 'void (*)(struct efc_sm_ctx *, u32, void *)' (aka 'void (*)(struct efc_sm_ctx *, unsigned int, void *)') [-Werror,-Wincompatible-function-pointer-types-strict]
->                   pf = node->nodedb_state;
->                     ^ ~~~~~~~~~~~~~~~~~~
-> 
->   drivers/scsi/elx/libefc/efc_device.c:455:22: error: incompatible function pointer types assigning to 'void (*)(struct efc_sm_ctx *, u32, void *)' (aka 'void (*)(struct efc_sm_ctx *, unsigned int, void *)') from 'void (struct efc_sm_ctx *, enum efc_sm_event, void *)' [-Werror,-Wincompatible-function-pointer-types-strict]
->                   node->nodedb_state = __efc_d_init;
->                                     ^ ~~~~~~~~~~~~
-> 
->   drivers/scsi/elx/libefc/efc_sm.c:41:22: error: incompatible function pointer types assigning to 'void (*)(struct efc_sm_ctx *, u32, void *)' (aka 'void (*)(struct efc_sm_ctx *, unsigned int, void *)') from 'void (*)(struct efc_sm_ctx *, enum efc_sm_event, void *)' [-Werror,-Wincompatible-function-pointer-types-strict]
->                   ctx->current_state = state;
->                                     ^ ~~~~~
-> 
-> The type of the second parameter in the prototypes of ->current_state()
-> and ->nodedb_state() ('u32') does not match the implementations, which
-> have a second parameter type of 'enum efc_sm_event'. Update the
-> prototypes to have the correct second parameter type, clearing up all
-> the warnings and CFI failures.
-> 
-> Link: https://github.com/ClangBuiltLinux/linux/issues/1750
-> Reported-by: Sami Tolvanen <samitolvanen@google.com>
-> Signed-off-by: Nathan Chancellor <nathan@kernel.org>
+On 31/10/2022 14:02, Manivannan Sadhasivam wrote:
+> The maximum gear supported by the UFS device can be specified using the
+> "max-device-gear" property. This allows the UFS controller to configure the
+> TX/RX gear before starting communication with the UFS device.
 
-Reviewed-by: Kees Cook <keescook@chromium.org>
+This is confusing. The UFS PHY provides gear capability, so what is the
+"device" here? The attached memory? How could it report something else
+than phy?
 
--- 
-Kees Cook
+The last sentence also suggests that you statically encode gear to avoid
+runtime negotiation.
+
+Best regards,
+Krzysztof
+
