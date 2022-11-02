@@ -2,96 +2,172 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8515AC43219
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Nov 2022 16:34:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6886C433FE
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Nov 2022 16:43:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231898AbiKBQeO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Nov 2022 12:34:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56908 "EHLO
+        id S231420AbiKBQn1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Nov 2022 12:43:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39884 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231181AbiKBQdo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Nov 2022 12:33:44 -0400
-Received: from mail-oo1-f54.google.com (mail-oo1-f54.google.com [209.85.161.54])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10E682CDF5;
-        Wed,  2 Nov 2022 09:29:35 -0700 (PDT)
-Received: by mail-oo1-f54.google.com with SMTP id r10-20020a4aa2ca000000b0049dd7ad4128so95115ool.13;
-        Wed, 02 Nov 2022 09:29:35 -0700 (PDT)
+        with ESMTP id S231287AbiKBQnH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Nov 2022 12:43:07 -0400
+Received: from mail-qk1-x732.google.com (mail-qk1-x732.google.com [IPv6:2607:f8b0:4864:20::732])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FF8065B2;
+        Wed,  2 Nov 2022 09:37:54 -0700 (PDT)
+Received: by mail-qk1-x732.google.com with SMTP id x18so1022984qki.4;
+        Wed, 02 Nov 2022 09:37:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=aZsM+OxUgZJot5MEYbtOs752pz+yn8WH7eG2LSoeX4o=;
+        b=X6T+RoxGCUgBYwCi6521bxPlAnAiRh6EvyCfJgfqWn37WUjE3hNoaVYtB1JVNEspvK
+         BCOIbpFyCe90k5YalZpAgqR1OnwqCm7fqnbTkPubm/P1kBxZidFdyeRsxiQ/2FbEzgFE
+         3CAWd2fkPRv7+wI9OKT5YcwTREsnsnoFURde+Ugk4NfEYjZvti2s9sLX7vM7wc+6t7Jr
+         mMp8SCz7veMtHy0CPedzIiaxj60Bb6CLzWwpqV3dh4TPJTAuPLgw4AGhVClC7VfAtAsF
+         s9pAlXig6c8ONB9u3TWT32BkGza+vWY9rutTcLo5PagXt6VCr69/6R4Cd3nHV1kDe0hT
+         Tklg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=cgD8c+pefwqTCjp2v4u0OtX3VghETalJ8uHDLcccGzQ=;
-        b=zlqlswkLUKufG+m9jLI/Fa6baHeiPPTIXVPdL4vx5qO3XIOwa4S44h2UOu5Ayqskq8
-         YYKoK94a3w0PSOoDl9Mv11g/iQsd4Y40eh7s7D2ot30Ekx9RWDFq7lCE1or9/Z1zQGYR
-         VCeKBSwAFSuTgkpc8qa1SczaElRfrfV2+l2goDIZ8iXXQvWKuSI8+IiF0y54dFhldopb
-         ZFIMFy0duNDI7qCacBtd0zQmLOjv8ZOVI9uvcpXpHdwx+SqVVqKBdcYjF/AWafXiEsns
-         3sdolsQfh2OL/3O7lcwntfJhdcdckNQ1HhEbCqETaIeqYn8Zuja/CEQFl+/ViOM91KVl
-         rp4A==
-X-Gm-Message-State: ACrzQf0+oAi2mH1D49SUADYXRqVJDs26dxR1Ww1O4K1eFEKEYY3v7fOx
-        M019vGRrXg/jjC9XDf3PZQ==
-X-Google-Smtp-Source: AMsMyM74yiL/T5nDD23UaKKVS5GHu3Kuf6izs9ibgsU02irwitzkoseK958529BgSkAtG008UvX57A==
-X-Received: by 2002:a4a:be95:0:b0:47f:73a4:9f16 with SMTP id o21-20020a4abe95000000b0047f73a49f16mr10820469oop.39.1667406574244;
-        Wed, 02 Nov 2022 09:29:34 -0700 (PDT)
-Received: from robh_at_kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
-        by smtp.gmail.com with ESMTPSA id bx12-20020a0568081b0c00b003539686cb7bsm4718234oib.53.2022.11.02.09.29.33
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 02 Nov 2022 09:29:33 -0700 (PDT)
-Received: (nullmailer pid 4003916 invoked by uid 1000);
-        Wed, 02 Nov 2022 16:29:35 -0000
-Date:   Wed, 2 Nov 2022 11:29:35 -0500
-From:   Rob Herring <robh@kernel.org>
-To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc:     martin.petersen@oracle.com, jejb@linux.ibm.com,
-        andersson@kernel.org, vkoul@kernel.org,
-        krzysztof.kozlowski+dt@linaro.org, konrad.dybcio@somainline.org,
-        quic_cang@quicinc.com, linux-arm-msm@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-phy@lists.infradead.org, linux-scsi@vger.kernel.org,
-        dmitry.baryshkov@linaro.org, ahalaney@redhat.com
-Subject: Re: [PATCH v2 06/15] dt-bindings: ufs: Add "max-device-gear"
- property for UFS device
-Message-ID: <20221102162935.GA4002811-robh@kernel.org>
-References: <20221031180217.32512-1-manivannan.sadhasivam@linaro.org>
- <20221031180217.32512-7-manivannan.sadhasivam@linaro.org>
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=aZsM+OxUgZJot5MEYbtOs752pz+yn8WH7eG2LSoeX4o=;
+        b=S6vWuI5Kt2cY/h9QdKQ/X6szw/ogC+KT3c3cRE0axtgbKU2OEOOvRlbnaCKxU5Jrwl
+         6CO9gYawg0AA7iC//cuF/0jbwfi+EleWL0MCQHlMGpHdPk7A+LcHg81H8Bv3ug2iOB8p
+         IB45+utPVd5msiFdDw3O1V9FX6b9Jqk7jmUXGQbUTckWDGQpuGNiUh0ZHLGZJ53sKHbm
+         xgtUFvXYmTJw3cnX//ZfpAkOi4ShXA2rWry+jbmOGpdcq50BBYqVgEQQJIXSuhG9Jsnf
+         Fp+uTMms6nK3ZV6F48PC4k3tDuRTN896E0ReuyBlWdzFxrSHVsiAt8RGF5AK1LY90NjI
+         zGXw==
+X-Gm-Message-State: ACrzQf0XUNZUDf1eHSFsLnExsKQAYSn6loBRlnP1yqu1ZfQeLxIq7zvZ
+        mhafJVcvnkgg0X4bZ+/HRMs=
+X-Google-Smtp-Source: AMsMyM6GXBlQ4yFw4vp0og+eNh/CoS08b0TOiY+mJpeskOwHDIo6MwZfUqqexkOncQddWy/lQgbuTg==
+X-Received: by 2002:a05:620a:41d:b0:6fa:432f:2999 with SMTP id 29-20020a05620a041d00b006fa432f2999mr8809019qkp.157.1667407073356;
+        Wed, 02 Nov 2022 09:37:53 -0700 (PDT)
+Received: from [192.168.50.208] (ip68-109-79-27.oc.oc.cox.net. [68.109.79.27])
+        by smtp.gmail.com with ESMTPSA id bq10-20020a05620a468a00b006ee77f1ecc3sm8806855qkb.31.2022.11.02.09.37.50
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 02 Nov 2022 09:37:52 -0700 (PDT)
+Message-ID: <0ce67c60-7b55-6f29-2f97-9b17c1e175c0@gmail.com>
+Date:   Wed, 2 Nov 2022 09:37:49 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20221031180217.32512-7-manivannan.sadhasivam@linaro.org>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.2
+Subject: Re: [PATCH] scsi: lpfc: fix double free bug in
+ lpfc_bsg_write_ebuf_set
+Content-Language: en-US
+To:     Zheng Wang <zyytlz.wz@163.com>, james.smart@broadcom.com
+Cc:     dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        hackerzheng666@gmail.com, alex000young@gmail.com,
+        security@kernel.org, linux-kernel@vger.kernel.org,
+        James Smart <jsmart2021@gmail.com>
+References: <20221028050736.151185-1-zyytlz.wz@163.com>
+From:   James Smart <jsmart2021@gmail.com>
+In-Reply-To: <20221028050736.151185-1-zyytlz.wz@163.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Oct 31, 2022 at 11:32:08PM +0530, Manivannan Sadhasivam wrote:
-> The maximum gear supported by the UFS device can be specified using the
-> "max-device-gear" property. This allows the UFS controller to configure the
-> TX/RX gear before starting communication with the UFS device.
+On 10/27/2022 10:07 PM, Zheng Wang wrote:
+> When error occurs, it frees dmabuf in both lpfc_bsg_write_ebuf_set
+> and lpfc_bsg_issue_mbox.
 > 
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> Fix it by removing free code in lpfc_bsg_write_ebuf_set.
+> 
+> Reported-by: Zheng Wang <hackerzheng666@gmail.com>
+> Reported-by: Zhuorao Yang <alex000young@gmail.com>
+> 
+> Fixes: 7ad20aa9d39a ("[SCSI] lpfc 8.3.24: Extend BSG infrastructure and add link diagnostics")
+> 
+> Signed-off-by: Zheng Wang <zyytlz.wz@163.com>
 > ---
->  Documentation/devicetree/bindings/ufs/ufs-common.yaml | 5 +++++
->  1 file changed, 5 insertions(+)
+>   drivers/scsi/lpfc/lpfc_bsg.c | 17 +++--------------
+>   1 file changed, 3 insertions(+), 14 deletions(-)
 > 
-> diff --git a/Documentation/devicetree/bindings/ufs/ufs-common.yaml b/Documentation/devicetree/bindings/ufs/ufs-common.yaml
-> index 47a4e9e1a775..5dcd14909ad5 100644
-> --- a/Documentation/devicetree/bindings/ufs/ufs-common.yaml
-> +++ b/Documentation/devicetree/bindings/ufs/ufs-common.yaml
-> @@ -73,6 +73,11 @@ properties:
->      description:
->        Specifies max. load that can be drawn from VCCQ2 supply.
->  
-> +  max-device-gear:
+> diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+> index ac0c7ccf2eae..7362d9c1a50b 100644
+> --- a/drivers/scsi/lpfc/lpfc_bsg.c
+> +++ b/drivers/scsi/lpfc/lpfc_bsg.c
+> @@ -4439,15 +4439,13 @@ lpfc_bsg_write_ebuf_set(struct lpfc_hba *phba, struct bsg_job *job,
+>   
+>   		dd_data = kmalloc(sizeof(struct bsg_job_data), GFP_KERNEL);
+>   		if (!dd_data) {
+> -			rc = -ENOMEM;
+> -			goto job_error;
+> +			return -ENOMEM;
+>   		}
+>   
+>   		/* mailbox command structure for base driver */
+>   		pmboxq = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
+>   		if (!pmboxq) {
+> -			rc = -ENOMEM;
+> -			goto job_error;
+> +			return -ENOMEM;
+>   		}
+>   		memset(pmboxq, 0, sizeof(LPFC_MBOXQ_t));
+>   		pbuf = (uint8_t *)phba->mbox_ext_buf_ctx.mbx_dmabuf->virt;
 
-Needs a type $ref
+Minimally, just looking at this one snippet, by returning after the 
+mempool_alloc() failure, we are leaking the dd_data memory just allocated.
 
-> +    description:
-> +      Specifies max. gear the UFS device supports.
-> +    enum: [1, 2, 3, 4, 5]
-> +
->  dependencies:
->    freq-table-hz: [ 'clocks' ]
->  
-> -- 
-> 2.25.1
-> 
-> 
+> @@ -4480,8 +4478,7 @@ lpfc_bsg_write_ebuf_set(struct lpfc_hba *phba, struct bsg_job *job,
+>   		lpfc_printf_log(phba, KERN_ERR, LOG_LIBDFC,
+>   				"2970 Failed to issue SLI_CONFIG ext-buffer "
+>   				"mailbox command, rc:x%x\n", rc);
+> -		rc = -EPIPE;
+> -		goto job_error;
+> +		return -EPIPE;
+
+and this leaks both the dd_data and pmboxq memory.
+
+>   	}
+>   
+>   	/* wait for additional external buffers */
+> @@ -4489,14 +4486,6 @@ lpfc_bsg_write_ebuf_set(struct lpfc_hba *phba, struct bsg_job *job,
+>   	bsg_job_done(job, bsg_reply->result,
+>   		       bsg_reply->reply_payload_rcv_len);
+>   	return SLI_CONFIG_HANDLED;
+> -
+> -job_error:
+> -	if (pmboxq)
+> -		mempool_free(pmboxq, phba->mbox_mem_pool);
+> -	lpfc_bsg_dma_page_free(phba, dmabuf);
+> -	kfree(dd_data);
+> -
+> -	return rc;
+>   }
+>   
+>   /**
+
+all of these errors should cause:
+   lpfc_bsg_write_ebuf_set() to return -Exxx
+   causing lpfc_bsg_handle_sli_cfg_ebuf() to return -Exxx
+   causing lpfc_bsg_handle_sli_cfg_ext() to return -Exxx
+   which causes lpfc_bsg_issue_mbox() to jump to job_done
+
+I understand the argument is that issue_mbox deletes them, but....
+
+job_done:
+   checks/frees pmboxq is allocated after the jump so it will be NULL
+   frees dmabuf - which was allocated prior to the jump; is freed
+      in freedlpfc_bsg_handle_sli_cfg_ebuf() but only in a block
+      that returns SLI_CONFIG_HANDLED, which is not the block that
+      invokes lpfc_bsg_write_ebuf_set. So it's valid to delete.
+      Note: there's a special case for SLI_CONFIG_HANDLED which skips
+      over these deletes so it's ok.
+   frees dd_data - which is allocated after the jump so it too will
+      be NULL
+
+So - the code is fine.  The SLI_CONFIG_HANDLED is a little weird, but 
+the logic is fine. If the patch were added it would leak memory.
+
+I take it this was identified by some tool ?
+
+-- james
+
+
+
