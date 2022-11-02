@@ -2,270 +2,227 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB103C433FE
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Nov 2022 10:07:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4124C433FE
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Nov 2022 10:07:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230233AbiKBKG7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Nov 2022 06:06:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35148 "EHLO
+        id S230254AbiKBKHT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Nov 2022 06:07:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35356 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229761AbiKBKG6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Nov 2022 06:06:58 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C64AF23E91;
-        Wed,  2 Nov 2022 03:06:55 -0700 (PDT)
-Received: from kwepemi500008.china.huawei.com (unknown [172.30.72.57])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4N2MxP6Dghzbc85;
-        Wed,  2 Nov 2022 18:06:49 +0800 (CST)
-Received: from localhost.localdomain (10.67.165.2) by
- kwepemi500008.china.huawei.com (7.221.188.139) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Wed, 2 Nov 2022 18:06:53 +0800
-From:   Yihang Li <liyihang9@huawei.com>
-To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
-CC:     <bvanassche@acm.org>, <john.garry@huawei.com>,
-        <chenxiang66@hisilicon.com>, <daejun7.park@samsung.com>,
-        <damien.lemoal@opensource.wdc.com>, <yanaijie@huawei.com>,
-        <duoming@zju.edu.cn>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <prime.zeng@hisilicon.com>,
-        <yangxingui@huawei.com>, <linuxarm@huawei.com>,
-        <liyihang9@huawei.com>
-Subject: [PATCH] scsi: libsas: Check and update the link rate during discovery
-Date:   Wed, 2 Nov 2022 18:05:55 +0800
-Message-ID: <20221102100555.3537275-1-liyihang9@huawei.com>
-X-Mailer: git-send-email 2.30.0
+        with ESMTP id S229676AbiKBKHR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Nov 2022 06:07:17 -0400
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 501B523E91
+        for <linux-scsi@vger.kernel.org>; Wed,  2 Nov 2022 03:07:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1667383636; x=1698919636;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=JCX4B4TGkjLJ3lQDVKPLvWo4xblaY/2CTtdZ/PqgQVk=;
+  b=VfSG+zTMBfIWKiFZCpMJREBwN4+oRaPLwsfE524BgONJTtLr6iLKCRE+
+   ODdY/KqBF8lSiyJh8GEZVOZrttFG4n9su9HI8CJ7Hjcbi4duiuCe/RL6F
+   89gLcV4/yZz1bZrjhHFGOuWa/5tZztGeshFY6FgasB0dHGQWsDXwytfnC
+   le78pgW8zuxAUcZYQEwqZjpKinyKis0jjkob6Ga46LQHU72RamotvpBJ3
+   hQSivAEyf4kNrjzhzwnwYxuCgluYbJ4vzCxPZ1XAV66Jyryz+wEkb+PVj
+   WruvuTlerB7q3iK7He+Zf0r7MqekmZXldXUt4+uAjImhAzD0xFEKm9BA3
+   g==;
+X-IronPort-AV: E=Sophos;i="5.95,232,1661788800"; 
+   d="scan'208";a="213591754"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 02 Nov 2022 18:07:15 +0800
+IronPort-SDR: p2+lV6aCzQkIOOReqhOD5iLNxhhBUrwUFcBXnLdF9iDrBCQOG/Gtwm9abQcAZU5b/O5nV9LsaE
+ J4wqmu6oa+p+W7toyKJ7LKLkSXhR17AaojerePpkchCN0wbsHIqHbjX9xNzfXf+52ziiUQf7vz
+ LpRgT+QGbs8H2v/7moyk7YgO4WGRrAWtTLQVTDbAPxxEXhvLzhMDZBIHzuNVDs3wlakqjaqyjb
+ x356lTdkMOAbPMAvbGRuYe0XBgOCzCqgXkaSf7RSZGdazFPcKf4zSHZbFSMItOdjokgqlkIyjt
+ jJlP3edw8ocFAZCqpbiYKmK2
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 02 Nov 2022 02:26:28 -0700
+IronPort-SDR: ojfz89PyJkkdhpWpZcXU6tPv5B0dIpa/3Bg/O2xusnyOYmoQH2EaOaAeF7aKxAecn28jjyVP2E
+ l2lmLhPB9a3wQb0W2HzRdH+YpxpTgIPooklINtz80IeGhRlgg3E4h52gR1O16ro8lZEfORN4sr
+ k5MWqSSpbjkCObXWU6pwJO5mU/zfOvyJJKgLQc48QfompeXdWbfdZQjhxYdS5jeRd3ZRPj6ScZ
+ q8dMwTLZCINGY2gHbONLokHSe750ciQeiM0ox5hGAg/4maH7GcNsR0AAFxwgUhzD/rxjYo+c/N
+ CnE=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 02 Nov 2022 03:07:14 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4N2Mxs4wjqz1RWy0
+        for <linux-scsi@vger.kernel.org>; Wed,  2 Nov 2022 03:07:13 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1667383632; x=1669975633; bh=JCX4B4TGkjLJ3lQDVKPLvWo4xblaY/2CTtd
+        Z/PqgQVk=; b=aJLmfK8b3OTnEGUsPon9oaWQU+LVvyVpsghSH0LStXwT6c5iLrX
+        /f7ZUwWc7439u17JVyLYGmt3tb2TrVgwCKxYrJth/8JeWnzaw+dWmHIxOu6oxjTU
+        qPjS7kODMRuGAd7PkN4L7TWdsZzuRPjZ53aYHXxVA9/5KF6L5/VtUiEyHT5+gSrf
+        qSitLo1Yz+lJ7+KqfLAWQEbrJkEm3pFJUJKaUQ0jgcL955cJxft0ksw8Gov9OdVJ
+        tcAKF26bOZdu72uGqaXe7pblnEsh784LWvOnA/rRtrNVcdQAS01v6oj1avDON/xf
+        FK0H19MGhBpgvyyt21ZAehJPSNFB6MZt/CQ==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id l5b-O1VauZlG for <linux-scsi@vger.kernel.org>;
+        Wed,  2 Nov 2022 03:07:12 -0700 (PDT)
+Received: from [10.225.163.24] (unknown [10.225.163.24])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4N2Mxm3H54z1RvTp;
+        Wed,  2 Nov 2022 03:07:07 -0700 (PDT)
+Message-ID: <ff0c2ab7-8e82-40d9-1adf-78ee12846e1f@opensource.wdc.com>
+Date:   Wed, 2 Nov 2022 19:07:06 +0900
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.67.165.2]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- kwepemi500008.china.huawei.com (7.221.188.139)
-X-CFilter-Loop: Reflected
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.0
+Subject: Re: [PATCH RFC v3 2/7] ata: libata-scsi: Add
+ ata_internal_queuecommand()
+Content-Language: en-US
+To:     John Garry <john.g.garry@oracle.com>,
+        John Garry <john.garry@huawei.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, hare@suse.de, bvanassche@acm.org,
+        hch@lst.de, ming.lei@redhat.com, niklas.cassel@wdc.com
+Cc:     axboe@kernel.dk, jinpu.wang@cloud.ionos.com,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linuxarm@huawei.com, john.garry2@mail.dcu.ie
+References: <1666693976-181094-1-git-send-email-john.garry@huawei.com>
+ <1666693976-181094-3-git-send-email-john.garry@huawei.com>
+ <08fdb698-0df3-7bc8-e6af-7d13cc96acfa@opensource.wdc.com>
+ <83d9dc82-ea37-4a3c-7e67-1c097f777767@huawei.com>
+ <9a2f30cc-d0e9-b454-d7cd-1b0bd3cf0bb9@opensource.wdc.com>
+ <0e60fab5-8a76-9b7e-08cf-fb791e01ae08@huawei.com>
+ <71b56949-e4d7-fd94-c44a-867080b7a4fa@opensource.wdc.com>
+ <b03b37a2-35dc-5218-7279-ae68678a47ff@huawei.com>
+ <0e4994f7-f131-39b0-c876-f447b71566cd@opensource.wdc.com>
+ <05cf6d61-987b-025d-b694-a58981226b97@oracle.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <05cf6d61-987b-025d-b694-a58981226b97@oracle.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-   +----------+              +----------+
-   |          |              |          |
-   |          |--- 12.0 G ---|          |--- 12.0 G --- SAS  disk
-   |initiator |              | Expander |
-   | device   |--- 12.0 G ---|          |--- 12.0 G --- SAS  disk
-   |          |              |          |
-   |          |--- 12.0 G ---|          |--- 6.0 G --- SATA disk
-   |          |              |          |
-   |      phy0|--- 12.0 G ---|          |--- 6.0 G --- SATA disk
-   |          |              |          |
-   +----------+              +----------+
+On 11/2/22 18:52, John Garry wrote:
+> Hi Damien,
+> 
+>>>>>
+>>>>> Please also note that for AHCI, I make reserved depth =1, while for SAS
+>>>>> controllers it is greater. This means that in theory we could alloc > 1x
+>>>>> reserved command for SATA disk, but I don't think it matters.
+>>>> Yes, 1 is enough. However, is 1 reserved out of 32 total, meaning that
+>>>> the
+>>>> user can only use 31 tags ? or is it 32+1 reserved ? which we can do
+>>>> since
+>>>> when using the reserved request, we will not use a hw tag (all reserved
+>>>> requests will be non-ncq).
+>>>>
+>>>> The 32 + 1 scheme will work.
+>>>
+>>> Yes, 32 + 1 is what we want. I now think that there is a mistake in my
+>>> code in this series for ahci.
+>>>
+>>> So I think we need for ahci:
+>>>
+>>> can_queue = 33 >
+>> Hmm.. For ATA, can_queue should be only 32. nr_tags is going to be 33
+>> though as we include one tag for a reserved command. No ? (may be I
+>> misunderstand can_queue though).
+> 
+> Yes, we want nr_tags=33. But according to semantics of can_queue, it 
+> includes total of regular and reserved tags. This is because tag_set 
+> depth is total of regular and reserved tags, and we subtract reserved 
+> tags from total depth in blk_mq_init_bitmaps():
+> 
+> int blk_mq_init_bitmaps(.., unsigned int queue_depth, unsigned int 
+> reserved, ..)
+> {
+> 	unsigned int depth = queue_depth - reserved;
+> 	...
+> 
+> 	if (bt_alloc(bitmap_tags, depth, round_robin, node
+> 
+> 
+> So we want a change like this as well:
+> 
+> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+> index da7ee8bec165..cbcc337055a7 100644
+> --- a/drivers/ata/ahci.h
+> +++ b/drivers/ata/ahci.h
+> @@ -390,7 +390,7 @@ extern const struct attribute_group 
+> *ahci_sdev_groups[];
+>   */
+> #define AHCI_SHT(drv_name)                                             \
+>         __ATA_BASE_SHT(drv_name),                                       \
+> -       .can_queue              = AHCI_MAX_CMDS,                        \
+> +       .can_queue              = AHCI_MAX_CMDS + 1,                    \
+>         .sg_tablesize           = AHCI_MAX_SG,                          \
+>         .dma_boundary           = AHCI_DMA_BOUNDARY,                    \
+>         .shost_groups           = ahci_shost_groups,
+> 
+> I know it seems strange, but still 32 tags will only ever be available 
+> for non-internal commands (as it is today) and 1 for ata internal command.
+> 
+>>
+>>> nr_reserved_cmds = 1
+>>>
+>>> while I only have can_queue = 32
+>>
+>> Which seems right to me.
+>>
+>>>
+>>> I need to check that again for ahci driver and AHCI SHT...
+>>>
+>>>> But for CDL command completion handling, we
+>>>> will need a NCQ command to do a read log, to avoid forcing a queue drain.
+>>>> For that to reliably work, we'll need a 31+1+1 setup...
+>>>>
+>>>
+>>> So is your idea to permanently reserve 1 more command from 32 commands ?
+>>
+>> Yes. Command Duration Limits has this weird case were commands may be
+>> failed when exceeding their duration limit with a "good status" and
+>> "sense data available bit" set. This case was defined to avoid the queue
+>> stall that happens with any NCQ error. The way to handle this without
+>> relying on EH (as that would also cause a queue drain) is to issue an
+>> NCQ read log command to fetch the "sense data for successful NCQ
+>> commands" log, to retrieve the sense data for the completed command and
+>> check if it really failed or not. So we absolutely need a reserved
+>> command for this, Without a reserved command, it is a nightmare to
+>> support (tag reuse would be another solution, but it is horrible).
+>>
+>>> Or re-use 1 from 32 (and still also have 1 separate internal command)?
+>>
+>> I am not yet 100% sure if we can treat that internal NCQ read log like
+>> any other read/write request... If we can, then the 1-out-of-32
+>> reservation would not be needed. Need to revisit all the cases we need
+>> to take care of (because in the middle of this CDL completion handling,
+>> regular NCQ errors can happen, resulting in a drive reset that could
+>> wreck everything as we lose the sense data for the completed requests).
+>>
+>> In any case, I think that we can deal with that extra reserved command
+>> on top of you current series. No need to worry about it for now I think.
+>>
+> 
+> So are you saying that you are basing current CDL support on libata 
+> internally managing this extra reserved tag (and so do not need this 
+> SCSI midlayer reserved tag support yet)?
 
-In the scenario where the expander device is connected to a wide port,
-the preceding figure shows the link topology after initialization.
-All physical PHYs negotiate connections at the rate of 12 Gbit, and
-the expander SATA PHY negotiates connections at the rate of 6 Gbit.
+Not really. For now, it is using libata EH, that is, when we need the
+internal command for the read log, we know the device is idle and no
+command is on-going. So we send a non-NCQ command which does not have a tag.
 
-We found that when the FIO was running, if phy0 was link down due to link
-instability, and the link connection was reestablished after a period of
-time. During the physical link disconnection, the physical PHY gradually
-decreases the link rate, attempts to renegotiate the link rate and
-establish the connection. This is an HW behavior. When the physical PHY
-try to re-establish the link at a link rate of 3 Gbit and the physical
-link is successfully established, the negotiated link rate is 3 Gbit.
-Like this:
+Ideally, all of this should use a real reserved tag to allow for an NCQ
+read log outside of EH, avoiding the drive queue drain.
 
-   +----------+              +----------+
-   |          |              |          |
-   |          |--- 12.0 G ---|          |--- 12.0 G --- SAS  disk
-   |initiator |              | Expander |
-   | device   |--- 12.0 G ---|          |--- 12.0 G --- SAS  disk
-   |          |              |          |
-   |          |--- 12.0 G ---|          |--- 6.0 G --- SATA disk
-   |          |              |          |
-   |      phy0|--- 3.0 G ----|          |--- 6.0 G --- SATA disk
-   |          |              |          |
-   +----------+              +----------+
+> 
+> Thanks,
+> John
 
-SATA disk which connected to expander PHY maybe reject IO request due to
-the connection setup error (OPEN_REJECT-CONNECTION RATE NOT SUPPORTED).
-The log as follows:
-
-[175712.419423] hisi_sas_v3_hw 0000:74:02.0: erroneous completion iptt=2985 task=00000000268357f1 dev id=10 exp 0x500e004aaaaaaa1f phy9 addr=500e004aaaaaaa09 CQ hdr: 0x102b 0xa0ba9 0x1000 0x20000 Error info: 0x200 0x0 0x0 0x0
-
-After analysis, it is concluded that: when one of the physical links
-connected on the wide port is re-established, the link rate of the port
-and expander device and the expander SATA PHY are not updated. As a
-result, the expander PHY attached to a SATA PHY is using link rate
-(6.0 Gbit) greater than the physical PHY link rate (3.0 Gbit).
-
-Therefore, add function sas_check_port_linkrate() to check whether the
-link rate of physical PHY which is connected to the wide port changes
-after the phy up occur, if the link rate of the newly established
-physical phy is lower than the link rate of the port, a smaller link rate
-value is transmitted to port->linkrate.
-
-Use the sas_update_linkrate_root_expander() function to update the root
-expander link rate. Traverse all expanders connected to the port, check
-and update expander PHYs that need to be updated and triggers revalidation.
-
-Signed-off-by: Yihang Li <liyihang9@huawei.com>
----
- drivers/scsi/libsas/sas_discover.c | 19 ++++++-
- drivers/scsi/libsas/sas_expander.c | 79 ++++++++++++++++++++++++++++++
- drivers/scsi/libsas/sas_internal.h |  1 +
- 3 files changed, 98 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-index 110549030bcf..57b5446a3a21 100644
---- a/drivers/scsi/libsas/sas_discover.c
-+++ b/drivers/scsi/libsas/sas_discover.c
-@@ -164,6 +164,20 @@ static int sas_get_port_device(struct asd_sas_port *port)
- 	return 0;
- }
- 
-+static void sas_check_port_linkrate(struct asd_sas_port *port)
-+{
-+	u32 link_rate = port->linkrate;
-+	struct asd_sas_phy *phy;
-+
-+	list_for_each_entry(phy, &port->phy_list, port_phy_el)
-+		link_rate = min(link_rate, phy->linkrate);
-+
-+	if (port->linkrate != link_rate) {
-+		port->linkrate = link_rate;
-+		sas_update_linkrate_root_expander(port->port_dev);
-+	}
-+}
-+
- /* ---------- Discover and Revalidate ---------- */
- 
- int sas_notify_lldd_dev_found(struct domain_device *dev)
-@@ -434,8 +448,11 @@ static void sas_discover_domain(struct work_struct *work)
- 
- 	clear_bit(DISCE_DISCOVER_DOMAIN, &port->disc.pending);
- 
--	if (port->port_dev)
-+	if (port->port_dev) {
-+		if (dev_is_expander(port->port_dev->dev_type))
-+			sas_check_port_linkrate(port);
- 		return;
-+	}
- 
- 	error = sas_get_port_device(port);
- 	if (error)
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index 5ce251830104..6f067cc6f2e2 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -1951,6 +1951,75 @@ static int sas_discover_new(struct domain_device *dev, int phy_id)
- 	return res;
- }
- 
-+static void sas_ex_update_linkrate(struct domain_device *parent)
-+{
-+	struct expander_device *ex = &parent->ex_dev;
-+	int i = 0, end = ex->num_phys;
-+
-+	for ( ; i < end; i++) {
-+		struct ex_phy *ex_phy = &ex->ex_phy[i];
-+		struct domain_device *child;
-+
-+		list_for_each_entry(child, &parent->ex_dev.children, siblings)
-+			if (SAS_ADDR(child->sas_addr) ==
-+			    SAS_ADDR(ex_phy->attached_sas_addr))
-+				break;
-+
-+		if (dev_is_sata(child)) {
-+			if (child->linkrate > parent->min_linkrate) {
-+				struct sas_phy_linkrates rates = {
-+					.maximum_linkrate = parent->min_linkrate,
-+					.minimum_linkrate = parent->min_linkrate,
-+				};
-+
-+				sas_smp_phy_control(parent, i,
-+						    PHY_FUNC_LINK_RESET, &rates);
-+				ex_phy->phy_change_count = -1;
-+			}
-+		}
-+
-+		if (dev_is_expander(child->dev_type)) {
-+			child->min_linkrate = min(parent->min_linkrate,
-+						  ex_phy->linkrate);
-+			child->max_linkrate = max(parent->max_linkrate,
-+						  ex_phy->linkrate);
-+			child->linkrate = min(ex_phy->linkrate,
-+					      child->max_linkrate);
-+			ex_phy->phy_change_count = -1;
-+		}
-+	}
-+}
-+
-+static void sas_ex_level_update(struct asd_sas_port *port, const int level)
-+{
-+	struct domain_device *dev;
-+
-+	list_for_each_entry(dev, &port->dev_list, dev_list_node) {
-+		if (dev_is_expander(dev->dev_type)) {
-+			struct sas_expander_device *ex =
-+				rphy_to_expander_device(dev->rphy);
-+
-+			if (level == ex->level)
-+				sas_ex_update_linkrate(dev);
-+		}
-+	}
-+}
-+
-+void sas_update_linkrate_root_expander(struct domain_device *dev)
-+{
-+	struct asd_sas_port *port = dev->port;
-+	struct sas_expander_device *ex = rphy_to_expander_device(dev->rphy);
-+	int level;
-+
-+	dev->linkrate = port->linkrate;
-+	dev->min_linkrate = port->linkrate;
-+	dev->max_linkrate = port->linkrate;
-+	dev->ex_dev.ex_change_count = -1;
-+
-+	for (level = ex->level; level <= port->disc.max_level; level++)
-+		sas_ex_level_update(port, level);
-+}
-+
- static bool dev_type_flutter(enum sas_device_type new, enum sas_device_type old)
- {
- 	if (old == new)
-@@ -2013,6 +2082,7 @@ static int sas_rediscover_dev(struct domain_device *dev, int phy_id,
- 	} else if (SAS_ADDR(sas_addr) == SAS_ADDR(phy->attached_sas_addr) &&
- 		   dev_type_flutter(type, phy->attached_dev_type)) {
- 		struct domain_device *ata_dev = sas_ex_to_ata(dev, phy_id);
-+		enum sas_linkrate linkrate = phy->linkrate;
- 		char *action = "";
- 
- 		sas_ex_phy_discover(dev, phy_id);
-@@ -2021,6 +2091,15 @@ static int sas_rediscover_dev(struct domain_device *dev, int phy_id,
- 			action = ", needs recovery";
- 		pr_debug("ex %016llx phy%02d broadcast flutter%s\n",
- 			 SAS_ADDR(dev->sas_addr), phy_id, action);
-+
-+		if (linkrate != phy->linkrate) {
-+			pr_debug("ex %016llx phy%d linkrate changed from %d to %d\n",
-+				 SAS_ADDR(dev->sas_addr), phy_id,
-+				 linkrate, phy->linkrate);
-+			sas_unregister_devs_sas_addr(dev, phy_id, last);
-+			phy->phy_change_count = -1;
-+			ex->ex_change_count = -1;
-+		}
- 		return res;
- 	}
- 
-diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
-index b54bcf3c9a9d..d26ef24370f6 100644
---- a/drivers/scsi/libsas/sas_internal.h
-+++ b/drivers/scsi/libsas/sas_internal.h
-@@ -48,6 +48,7 @@ int sas_show_oob_mode(enum sas_oob_mode oob_mode, char *buf);
- 
- int  sas_register_phys(struct sas_ha_struct *sas_ha);
- void sas_unregister_phys(struct sas_ha_struct *sas_ha);
-+void sas_update_linkrate_root_expander(struct domain_device *dev);
- 
- struct asd_sas_event *sas_alloc_event(struct asd_sas_phy *phy, gfp_t gfp_flags);
- void sas_free_event(struct asd_sas_event *event);
 -- 
-2.30.0
+Damien Le Moal
+Western Digital Research
 
