@@ -2,99 +2,85 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08580C4332F
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Nov 2022 14:28:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F14A2C4332F
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Nov 2022 14:30:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230487AbiKBO2C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Nov 2022 10:28:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58448 "EHLO
+        id S231492AbiKBOaF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Nov 2022 10:30:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60568 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230368AbiKBO17 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Nov 2022 10:27:59 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6AA372A266
-        for <linux-scsi@vger.kernel.org>; Wed,  2 Nov 2022 07:27:58 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 171972277E;
-        Wed,  2 Nov 2022 14:27:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1667399277; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=m0Fs2WkYiDKFaSbHwYCBqRT1CJFZikIWXf2X3QsIzLg=;
-        b=yOzdk7XfSRlWU+IzS2Tj3OUv8AXOXXBsUgAlfmtwYprwM9+XjvGfdwyc38LxFqRLW0sq0G
-        XPNk9fOJCNAcifKwqXKw81Q4zJS8PQr3JF2lRNAtwAEciBzmzdl+Qk1C9DO6vRZ3qiGSQw
-        2xByVhVe2I+w6Jeut4L7Viq4OJVTulk=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1667399277;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=m0Fs2WkYiDKFaSbHwYCBqRT1CJFZikIWXf2X3QsIzLg=;
-        b=WYmRe7zo6h2FnLsUsxwD1h+75nYjah5W0d7vog55xA62j8OJL7jP8U9KYSu/phMrW4WnaT
-        /dlli+7XVgO3+hDw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 059C213AE0;
-        Wed,  2 Nov 2022 14:27:57 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id EfivAG1+YmPrWgAAMHmgww
-        (envelope-from <hare@suse.de>); Wed, 02 Nov 2022 14:27:57 +0000
-Message-ID: <5095bafb-4a1a-5ecf-d285-975c31acd5a7@suse.de>
-Date:   Wed, 2 Nov 2022 15:27:56 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.0
-Subject: Re: [PATCH 1/4] scsi: alua: Move a scsi_device_put() call out of
- alua_check_vpd()
-Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org,
-        Dan Carpenter <dan.carpenter@oracle.com>
-References: <20221031224728.2607760-1-bvanassche@acm.org>
- <20221031224728.2607760-2-bvanassche@acm.org>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20221031224728.2607760-2-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+        with ESMTP id S229934AbiKBO3x (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Nov 2022 10:29:53 -0400
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9A202B19B;
+        Wed,  2 Nov 2022 07:29:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1667399383; x=1698935383;
+  h=from:to:cc:subject:date:message-id;
+  bh=5kjv+Eofbg6EEagVUtsebL/TmswxuzBGGl0iDd2sZaI=;
+  b=pG9IhfjdUGXQ/kxaYNXNNCTowoMJc/6SlcWoZIzX8FuHdr0x4VPpFRiq
+   Gz6Zu+InqnMsfHcnjgf0+PUs2NpQRRYDrPni8iU3dUXy0mM0iOBc4Po9W
+   vuazxSMNEKNQ/ZSemE0MdKkiWio+95pyr4qUV9LQ/dO1EZZrTdERj4ubm
+   6uH+lddcny2ITC2l4vo/bnjzFHw9v9EjAXZP8XRSV4PBzHRiCUyZGUF2a
+   CVKm6LPn7niBJbpsW0yswPOOiFV33dWbcbs0ZZqUNA5EMFg8xZVGA74BW
+   kK7vDe/OOAoETyg788IvH7/ASyLrsJtAmhufUuQHeJY/e2ysnDtHmH7Ue
+   w==;
+X-IronPort-AV: E=Sophos;i="5.95,234,1661788800"; 
+   d="scan'208";a="213607169"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 02 Nov 2022 22:29:42 +0800
+IronPort-SDR: Glrt0U51kRzVgTuIg9Q//0eWCWoMRntqizlxRbx5yGtwL+sUmPMUlVbSunUBhSguG+lNbmbp09
+ RScG+S01WZnc57VjGWcBGgQm0k/5NcD/WF3+n9Zvi5LxbSlw5smqEtZa7+/OQ0nsYPyr4INE4V
+ eGcgoS5tsAsV3wBOzxA7vDrANdDy/cagTBrNQgjSa3RkXrdby6ODrA8sOfK5/hkuAvaKi6Wj8l
+ URa1eW2b9lE3QM4X+/NPjxAIDFEu00GuUT68dLd+JcibIu3fTcnSwWOCHtVDAMtagWTMzlJvtw
+ GcE=
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 02 Nov 2022 06:48:55 -0700
+IronPort-SDR: uESj0/LdP+QqMomig9AN2xK4/BAuRV24flBO2w+o8d+h7ehzW6FX/ZKSCN5AmpyJAA1Qm+7xDb
+ PKCTiPPhLyYbzDAVjgQL91Q9Mj/EJFipeViB2Yuy4oYb9ojbPJ/bua8QvWlSPS3HXt97S2eHvC
+ fXkPtzPIVp2Y7yM2kCynTVGzxP9w7WUmibI+K+yTclW3zA0efmvSN/hKz78NqwoEbxBN6hueHt
+ pDpBmvIoyEpWVbURqGWp8+Y+oBj3LH/fVB2CJOxWCYJ0uh2jEForLKk2h+UOAT96LNHOnrwf9Q
+ uss=
+WDCIronportException: Internal
+Received: from ilb001078.ad.shared (HELO ilb001078.sdcorp.global.sandisk.com) ([10.45.31.219])
+  by uls-op-cesaip01.wdc.com with ESMTP; 02 Nov 2022 07:29:40 -0700
+From:   Arthur Simchaev <Arthur.Simchaev@wdc.com>
+To:     martin.petersen@oracle.com
+Cc:     beanhuo@micron.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>
+Subject: [PATCH v2 0/4] ufs: core: Always read the descriptors with max length
+Date:   Wed,  2 Nov 2022 16:29:09 +0200
+Message-Id: <1667399353-10228-1-git-send-email-Arthur.Simchaev@wdc.com>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/31/22 23:47, Bart Van Assche wrote:
-> This patch fixes the following smatch warning:
-> 
-> drivers/scsi/device_handler/scsi_dh_alua.c:1013 alua_rtpg_queue() warn: sleeping in atomic context
-> 
-> alua_check_vpd() <- disables preempt
-> -> alua_rtpg_queue()
->     -> scsi_device_put()
-> 
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: Dan Carpenter <dan.carpenter@oracle.com>
-> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->   drivers/scsi/device_handler/scsi_dh_alua.c | 23 ++++++++++++++--------
->   1 file changed, 15 insertions(+), 8 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+v1--v2:
+  Fix argument warning in ufshpb.c
 
-Cheers,
+Read any descriptor with a maximum size of QUERY_DESC_MAX_SIZE.
+According to the spec the device rerurns the actual size.
+Thus can improve code readability and save CPU cycles.
+While at it, cleanup few leftovers around the descriptor size parameter.
 
-Hannes
+Suggested-by: Bean Huo <beanhuo@micron.com>
+
+Arthur Simchaev (4):
+  ufs:core: Remove redundant wb check
+  ufs:core: Remove redundant desc_size variable from hba
+  ufs: core: Remove len parameter from ufshcd_set_active_icc_lvl
+  ufs: core: Remove ufshcd_map_desc_id_to_length function
+
+ drivers/ufs/core/ufs_bsg.c     |   7 +--
+ drivers/ufs/core/ufshcd-priv.h |   3 --
+ drivers/ufs/core/ufshcd.c      | 100 ++++++++++-------------------------------
+ drivers/ufs/core/ufshpb.c      |   5 +--
+ include/ufs/ufshcd.h           |   1 -
+ 5 files changed, 26 insertions(+), 90 deletions(-)
+
 -- 
-Dr. Hannes Reinecke		           Kernel Storage Architect
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
+2.7.4
 
