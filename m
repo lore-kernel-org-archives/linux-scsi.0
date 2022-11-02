@@ -2,90 +2,106 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4A03C433FE
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Nov 2022 22:47:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F408C4332F
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Nov 2022 22:48:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230196AbiKBWrr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Nov 2022 18:47:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44502 "EHLO
+        id S230409AbiKBWsE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Nov 2022 18:48:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44524 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229457AbiKBWrq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Nov 2022 18:47:46 -0400
-Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43400646E;
-        Wed,  2 Nov 2022 15:47:46 -0700 (PDT)
-Received: by mail-pj1-f42.google.com with SMTP id r61-20020a17090a43c300b00212f4e9cccdso3486136pjg.5;
-        Wed, 02 Nov 2022 15:47:46 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=o4wIJC4qmLD8sZv7FELeKq1bWLCLMI4X8kEQubd/l6g=;
-        b=l1Y1CG5rrIod/X/S+NH5kEg+D66C1vAqy6osserWaJKvfnXBQRA/jxZ6F56cbx52Og
-         6Nu7AI6FI28f2B6K3A9uIMQTJsJntRDnzD0ZeFj0/sJCunyxXUu07dZS4P9/Ry0p9ZvT
-         BYqbMPVNkV5KKkIYHh3QsZSkKLkdSUKEid3e2fpQDBFQxIoNHBxv1o54a+McmwCNU7ma
-         8U5kkxWycfmrx/at75Bf4qxurxPYaGwO2hSEPRdN0fuQsfrPL+4NOsKqreUH/TLjz2bU
-         hehOqQMXVX9LnOiyLg/w6nwXKK5+yMv5MQXzg5MjTWVRqHZexOyEyA/VGaL7dLoICe+n
-         rJow==
-X-Gm-Message-State: ACrzQf2wRTndNU5QSS98Kn+EwOE9FgAV7b8f/r+k0yjJkgiO66t+/FO/
-        4fS+7HaqTUQ7XtdykuobAwA=
-X-Google-Smtp-Source: AMsMyM7oTR2d5lchMffcmjpS1vJGXh4SAt69GYPXVjFJ2dUHdIGIroDKm3Sonab/kAsDMsRgrqXqvA==
-X-Received: by 2002:a17:902:bf08:b0:178:90fb:8cda with SMTP id bi8-20020a170902bf0800b0017890fb8cdamr26566977plb.9.1667429265258;
-        Wed, 02 Nov 2022 15:47:45 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:22d3:f380:fa84:4b89? ([2620:15c:211:201:22d3:f380:fa84:4b89])
-        by smtp.gmail.com with ESMTPSA id w22-20020a1709027b9600b0017f7628cbddsm8842988pll.30.2022.11.02.15.47.42
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 02 Nov 2022 15:47:44 -0700 (PDT)
-Message-ID: <0123db70-6217-135a-4101-0609512e723b@acm.org>
-Date:   Wed, 2 Nov 2022 15:47:41 -0700
+        with ESMTP id S229457AbiKBWsD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Nov 2022 18:48:03 -0400
+Received: from mp-relay-02.fibernetics.ca (mp-relay-02.fibernetics.ca [208.85.217.137])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89646646E
+        for <linux-scsi@vger.kernel.org>; Wed,  2 Nov 2022 15:48:02 -0700 (PDT)
+Received: from mailpool-fe-02.fibernetics.ca (mailpool-fe-02.fibernetics.ca [208.85.217.145])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mp-relay-02.fibernetics.ca (Postfix) with ESMTPS id E00A971391;
+        Wed,  2 Nov 2022 22:48:00 +0000 (UTC)
+Received: from localhost (mailpool-mx-01.fibernetics.ca [208.85.217.140])
+        by mailpool-fe-02.fibernetics.ca (Postfix) with ESMTP id CDC4160214;
+        Wed,  2 Nov 2022 22:48:00 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at 
+Received: from mailpool-fe-02.fibernetics.ca ([208.85.217.145])
+        by localhost (mail-mx-01.fibernetics.ca [208.85.217.140]) (amavisd-new, port 10024)
+        with ESMTP id sfZFwdK7_NEK; Wed,  2 Nov 2022 22:48:00 +0000 (UTC)
+Received: from [192.168.48.17] (host-45-78-203-98.dyn.295.ca [45.78.203.98])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: dgilbert@interlog.com)
+        by mail.ca.inter.net (Postfix) with ESMTPSA id 1164660211;
+        Wed,  2 Nov 2022 22:48:00 +0000 (UTC)
+Message-ID: <4a857868-0bee-5ce2-2969-af33d3ceeb19@interlog.com>
+Date:   Wed, 2 Nov 2022 18:47:59 -0400
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.0
-Subject: Re: [PATCH v3 03/19] scsi: Move sd_pr_type to header to share
-Content-Language: en-US
-To:     Mike Christie <michael.christie@oracle.com>, hch@lst.de,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        james.bottomley@hansenpartnership.com, linux-block@vger.kernel.org,
-        dm-devel@redhat.com, snitzer@kernel.org, axboe@kernel.dk,
-        linux-nvme@lists.infradead.org, chaitanyak@nvidia.com,
-        kbusch@kernel.org, target-devel@vger.kernel.org
-References: <20221026231945.6609-1-michael.christie@oracle.com>
- <20221026231945.6609-4-michael.christie@oracle.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20221026231945.6609-4-michael.christie@oracle.com>
+ Thunderbird/102.4.1
+Reply-To: dgilbert@interlog.com
+Subject: Re: [PATCH v3] scsi: scsi_debug: Make the READ CAPACITY response
+ compliant with ZBC
+Content-Language: en-CA
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+References: <20221102193248.3177608-1-bvanassche@acm.org>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+In-Reply-To: <20221102193248.3177608-1-bvanassche@acm.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/26/22 16:19, Mike Christie wrote:
-> +static inline enum scsi_pr_type block_pr_type_to_scsi(enum pr_type type)
-> +{
-> +	switch (type) {
-> +	case PR_WRITE_EXCLUSIVE:
-> +		return SCSI_PR_WRITE_EXCLUSIVE;
-> +	case PR_EXCLUSIVE_ACCESS:
-> +		return SCSI_PR_EXCLUSIVE_ACCESS;
-> +	case PR_WRITE_EXCLUSIVE_REG_ONLY:
-> +		return SCSI_PR_WRITE_EXCLUSIVE_REG_ONLY;
-> +	case PR_EXCLUSIVE_ACCESS_REG_ONLY:
-> +		return SCSI_PR_EXCLUSIVE_ACCESS_REG_ONLY;
-> +	case PR_WRITE_EXCLUSIVE_ALL_REGS:
-> +		return SCSI_PR_WRITE_EXCLUSIVE_ALL_REGS;
-> +	case PR_EXCLUSIVE_ACCESS_ALL_REGS:
-> +		return SCSI_PR_EXCLUSIVE_ACCESS_ALL_REGS;
-> +	default:
-> +		return 0;
-> +	}
-> +};
+On 2022-11-02 15:32, Bart Van Assche wrote:
+>>From ZBC-1:
+> * RC BASIS = 0: The RETURNED LOGICAL BLOCK ADDRESS field indicates the
+>    highest LBA of a contiguous range of zones that are not sequential write
+>    required zones starting with the first zone.
+> * RC BASIS = 1: The RETURNED LOGICAL BLOCK ADDRESS field indicates the LBA
+>    of the last logical block on the logical unit.
+> 
+> The current scsi_debug READ CAPACITY response does not comply with the above
+> if there are one or more sequential write required zones. SCSI initiators
+> need a way to retrieve the largest valid LBA from SCSI devices. Reporting
+> the largest valid LBA if there are one or more sequential zones requires to
+> set the RC BASIS field in the READ CAPACITY response to one. Hence this
+> patch.
+> 
+> Cc: Douglas Gilbert <dgilbert@interlog.com>
+> Cc: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> Suggested-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
-Please leave out "default: return 0;" from the switch statement and add 
-"return 0;" after the switch statement. That will make the compiler emit 
-a warning if a value is added in enum pr_type but not in the above function.
+Acked-by: Douglas Gilbert <dgilbert@interlog.com>
 
-Thanks,
-
-Bart.
+> ---
+> Changes between v2 and v3: elaborated the comment added by this patch.
+> 
+> Changes between v1 and v2: simplified this patch as suggested by Damien.
+> 
+>   drivers/scsi/scsi_debug.c | 7 +++++++
+>   1 file changed, 7 insertions(+)
+> 
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index 697fc57bc711..629853662b82 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -1899,6 +1899,13 @@ static int resp_readcap16(struct scsi_cmnd *scp,
+>   			arr[14] |= 0x40;
+>   	}
+>   
+> +	/*
+> +	 * Since the scsi_debug READ CAPACITY implementation always reports the
+> +	 * total disk capacity, set RC BASIS = 1 for host-managed ZBC devices.
+> +	 */
+> +	if (devip->zmodel == BLK_ZONED_HM)
+> +		arr[12] |= 1 << 4;
+> +
+>   	arr[15] = sdebug_lowest_aligned & 0xff;
+>   
+>   	if (have_dif_prot) {
 
