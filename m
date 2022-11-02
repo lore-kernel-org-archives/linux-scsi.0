@@ -2,195 +2,232 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D780C433FE
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Nov 2022 11:25:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9106C433FE
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Nov 2022 11:56:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230165AbiKBLZ5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Nov 2022 07:25:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58764 "EHLO
+        id S229570AbiKBL4K (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Nov 2022 07:56:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52536 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230123AbiKBLZz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Nov 2022 07:25:55 -0400
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA21D248D3
-        for <linux-scsi@vger.kernel.org>; Wed,  2 Nov 2022 04:25:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1667388354; x=1698924354;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=TMLQrUTJOuanaRsKmkyrbCftoNV6xvpScUeT6XiFWnc=;
-  b=G58nHaocEq2E4sxct/tLYfG8ICbyQ16zB9xMhgHeTe34PhR5t+gGtIfX
-   PPT/tdriUBJY829JY7A+Mff4PNQFCmE6uOtxq9veQ6dbui+RRv8R3DB3Z
-   klZUjgPeIsAdE/VXxW0FKveo/7r7ASrQGyVwec7/QhcJLFhS2Yw+kKaT5
-   i7g8FlMCjYU1G8T6yBeXY6VWV8QWqorRxj5iEp/8XA9FSjPFoYaiss+nd
-   GHexBK0L0ffBUwwxF6pLSus3WM5SHMVN0ozF0hthDcb5jJToxjedLg129
-   f/Aq1JDgDnQF0ISu8KpbpvJoyKLNszDnNA8Fnj6Q0PtcAojwgdpz1fmdT
-   g==;
-X-IronPort-AV: E=Sophos;i="5.95,232,1661788800"; 
-   d="scan'208";a="319639727"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 02 Nov 2022 19:25:52 +0800
-IronPort-SDR: BWftw9yEcoIVUpDJP0c34OqmTsiXoRojjDHX1p00oxlL6jM5DhQCnwlaInbv/OnfVXFDQn815i
- 2rgm9qsjGmRcGYQh+Gunba9uVW2A/EzPPr87DkZ4LBH3P7cweib9jui0XX+xFqxCQc2ctRZCeo
- 0hzDJq/e2QDHpucZT5BaOAHi+FTbtqm6bzZ5YDsxfyW5N9PAKkBz6PHaBWmZaKkd0VkedqOhpA
- e2bU8EIBlH1TbYw6MRRwDVW0kt1FW/VD9cQnYKwPEAswogbkyncfYK1/AoBKc/LqdJ4E7OvSHa
- 7ww=
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 02 Nov 2022 03:39:22 -0700
-IronPort-SDR: OwjrYOOIwWZ5eLOAoVSAK0oH+GRIVlGP5TUfGLfyiWG2N9seDBdk+hvREeBYGfbV7odcEfeEmS
- m0aVtWMjBugDO0MJFJbVaDEPcP3NMNrRxWgG/lomdCzEbYobzWdDK0KPhALvcAIQWMRpgRNClB
- jOGRXoDavzYEPwZN8cq8jab+SuMXY/tLXcibbXDbHoKrLw1QiAsqRywPcW0oW6lw7GS9glw5+9
- wkQ/aoInire923QNMYzfjzT+eCoX9DSXDudfe+qH+pyuXISAHh8og9hyPC0tzvKprg/hVdkdlv
- XpU=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 02 Nov 2022 04:25:53 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4N2Phc2pRvz1RWy0
-        for <linux-scsi@vger.kernel.org>; Wed,  2 Nov 2022 04:25:52 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1667388351; x=1669980352; bh=TMLQrUTJOuanaRsKmkyrbCftoNV6xvpScUe
-        T6XiFWnc=; b=aYew2A8SelUIG3VZiFoL6s/lRVQPgBIo+HmsyRGoUu0Y6KkG7Sb
-        9XZutR0OuSKauPpOo5sMP9G07TvO8PBkcAOlCYObpvNapLG6OuY3gUs9TFRxo5B1
-        +0odp1JJlrl423kOw5q0rWqkDUbZV4UZfiYfJDmPSOLFU+0Gyflr/jGZHM6koGZ/
-        Bhj8luKl8uPKKmnBnVPGuueJbnl4KDv+FQdC06qVRcizGV6/Pg8xx2gnDSxiFRBm
-        TjdzHTcydiBue4VviBC44Gs3Z6UguZFDpx5P1JGGCbvy5LBKn1RxpKyWhmmgigCE
-        RlPP4KEZMQTMqHZMbRHaz3iUlZlL2dg2/Sg==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id GKulLw4nuobw for <linux-scsi@vger.kernel.org>;
-        Wed,  2 Nov 2022 04:25:51 -0700 (PDT)
-Received: from [10.225.163.24] (unknown [10.225.163.24])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4N2PhW5sj3z1RvLy;
-        Wed,  2 Nov 2022 04:25:47 -0700 (PDT)
-Message-ID: <0de1c3fd-4be7-1690-0780-720505c3692b@opensource.wdc.com>
-Date:   Wed, 2 Nov 2022 20:25:46 +0900
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.0
-Subject: Re: [PATCH RFC v3 2/7] ata: libata-scsi: Add
- ata_internal_queuecommand()
+        with ESMTP id S229531AbiKBL4J (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Nov 2022 07:56:09 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DF8E201A3;
+        Wed,  2 Nov 2022 04:56:06 -0700 (PDT)
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 2A29wvth013761;
+        Wed, 2 Nov 2022 11:55:41 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2022-7-12;
+ bh=2V3sfaH82JIqHKaxsPx027aVW9fgLMpoHPfetr86GMI=;
+ b=rqj94sDZUKr8LQlfR++oTCcQb+9xxLDPcXrbknfENPUF3nfAmJxBsJtAamL0Ysw6KMuT
+ +clpmG/POZDxwWt9nAD5UX4uXhgP54DGw3KRjCeIHiHmHv5/CFWzuJ4fCgIkmAFsGuzv
+ mfdPGliGr46cBk/WW/w/5U2+XExzpmVfvNRZBizvkLzoxNRRvx+1SjdAFisfUceuumRh
+ L/cHHulqhFNFReUtxL9xhVbFAwgFTH31m6doKcb7/dQgPesmsWlBTlE8DaxOAh8CAMVw
+ 1E0DdLuqOy8Bu9efFVuo7xPoFS8enl4mVR8Cqy2YgNPKRcziUuBbuTc9oIZ+qBNDhmbP Ww== 
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3kgtkd91vg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 02 Nov 2022 11:55:40 +0000
+Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2A2BQT0o029721;
+        Wed, 2 Nov 2022 11:55:39 GMT
+Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2169.outbound.protection.outlook.com [104.47.58.169])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3kgtm5e078-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 02 Nov 2022 11:55:39 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Vb4C9ZLfOPAZGT1vqeZITA9wF8kN5k0RbaSZjbYinMWSwHRUgJesF+3epiVfpyj/s6JaLDKkTUcYvgDyDzjpsydDGT4+PJA6wE+2h/zsWrZnmNdx3DzEObG1lC9KVVD/H8CVq3Of0N+vKGm9LsC6fagTP0C2zYG5HVgUm6OuxMOpO4ApvGixXiuUGLLgnDuuO8ymzmHifxg//IUxcFGPZeq4PkmgkAvFLABr6AK+LAhZQRgJrgqjce82SXhYwlqMvv5J7sCBBUHvpof8zsMTVKUx7aM3Dl9GJsR8bjTL9MbSw27msPqtFXxdYgLBsLxmvN3l/SwonJPXVMLe1PJKEA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=2V3sfaH82JIqHKaxsPx027aVW9fgLMpoHPfetr86GMI=;
+ b=LmJMSCW3n6oCyfMz3l4BxNqGW6x/RT8lGPVgH01TLEnqaQvPoorUGz8Ww6Ie8vHGtIV7j69/5eCzFWh0pkJex8elTnGcvY2Bm+PIjA+H83lGrRua99nrn3p6MTWV+XiRyAzauUOnlL/wQDeviR+IkncWv/w1+AtEbomNzFsZ55+Db5ZDDipXkYszr1diedwjH26yonQGwmpdBOFRRmhdl0I4qMWu0NNTeX5/X848O3PSzDGE4WMdowMpKGWPZMUcD/bY8eD/KbslFSBRyGAhyuVAtgL1ke0VjVCGKUa6MkiJgBReGyL0zQZ6F1GquS/DPPCxP9nAYm1xp9lCirTH8Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=2V3sfaH82JIqHKaxsPx027aVW9fgLMpoHPfetr86GMI=;
+ b=liRaMAIPwv9a0Nix7xAiUexCX1+d3irMMxDmEvdL2XpU3Zh6wpY17zXHjPcmolmJ5hdyKSDnemcYP1zsFvTqSFhKdpiZOnJenXk/Tjion5ErPWhcPJCTlP8uKhQk0poGhqHpj1ITtI1QNzjrvAwBdcAojpm4ycGnIhKhdp8W9BU=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by DS7PR10MB5279.namprd10.prod.outlook.com (2603:10b6:5:3a4::5) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5769.21; Wed, 2 Nov
+ 2022 11:55:37 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::d0c4:8da4:2702:8b3b]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::d0c4:8da4:2702:8b3b%4]) with mapi id 15.20.5791.020; Wed, 2 Nov 2022
+ 11:55:37 +0000
+Message-ID: <90217102-8767-b077-2615-1a5e41b58660@oracle.com>
+Date:   Wed, 2 Nov 2022 11:55:31 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.13.1
+Subject: Re: [PATCH] scsi: libsas: Check and update the link rate during
+ discovery
 Content-Language: en-US
-To:     Hannes Reinecke <hare@suse.de>,
-        John Garry <john.g.garry@oracle.com>,
-        John Garry <john.garry@huawei.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, bvanassche@acm.org, hch@lst.de,
-        ming.lei@redhat.com, niklas.cassel@wdc.com
-Cc:     axboe@kernel.dk, jinpu.wang@cloud.ionos.com,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linuxarm@huawei.com, john.garry2@mail.dcu.ie
-References: <1666693976-181094-1-git-send-email-john.garry@huawei.com>
- <1666693976-181094-3-git-send-email-john.garry@huawei.com>
- <08fdb698-0df3-7bc8-e6af-7d13cc96acfa@opensource.wdc.com>
- <83d9dc82-ea37-4a3c-7e67-1c097f777767@huawei.com>
- <9a2f30cc-d0e9-b454-d7cd-1b0bd3cf0bb9@opensource.wdc.com>
- <0e60fab5-8a76-9b7e-08cf-fb791e01ae08@huawei.com>
- <71b56949-e4d7-fd94-c44a-867080b7a4fa@opensource.wdc.com>
- <b03b37a2-35dc-5218-7279-ae68678a47ff@huawei.com>
- <0e4994f7-f131-39b0-c876-f447b71566cd@opensource.wdc.com>
- <05cf6d61-987b-025d-b694-a58981226b97@oracle.com>
- <ff0c2ab7-8e82-40d9-1adf-78ee12846e1f@opensource.wdc.com>
- <39f9afc5-9aab-6f7c-b67a-e74e694543d4@suse.de>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <39f9afc5-9aab-6f7c-b67a-e74e694543d4@suse.de>
-Content-Type: text/plain; charset=UTF-8
+To:     Yihang Li <liyihang9@huawei.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     bvanassche@acm.org, chenxiang66@hisilicon.com,
+        daejun7.park@samsung.com, damien.lemoal@opensource.wdc.com,
+        yanaijie@huawei.com, duoming@zju.edu.cn,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        prime.zeng@hisilicon.com, yangxingui@huawei.com,
+        linuxarm@huawei.com
+References: <20221102100555.3537275-1-liyihang9@huawei.com>
+From:   John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <20221102100555.3537275-1-liyihang9@huawei.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: LO4P265CA0057.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:2af::14) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|DS7PR10MB5279:EE_
+X-MS-Office365-Filtering-Correlation-Id: 661f8b9f-fb9b-4f9b-a476-08dabcc92837
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: TsiEfPzeWsoaTJPzi2eOzqBwXa15a1sPcHolfN8X+iTkceijJrgD/nev0wJuUw6jbt2yHC9ifFQNcTSA7sCXAgYN9qGEej2bL1y1094e+YG6Kr1Q8Rt/r6U2kHSh5rs7gTcWxyEzdhe6/z3KuUJZkeGGWREB9jHVfAn3UvENBon+wtgSgjV0gFqIJBjeZh2JhCfif9qGC8/jHxvF2dhEqRFgCdDazNO/ffl1MIhJ6jGp/dGyeHAfTdWz0FKPpE7sspVU7hJRcuNW+JUIVKJsgd9cylDVayWEpEu/OdE/Gm+p7qhXDSy+wW+ywWVeHMlnz2myz0VxdDZMtoxwKhlwhLO8LdHskF5eRmVBY6C9LR9VgVG2VsL4+RPLLabT+10MinetCb9KS4ilhBxa+bWP106J/VFhum5cHzdVvZ6FxYabwuloJ/8sO6fWV6vYrq8Peyq4uFixHhyPzhlxqWhEqdYuN576qFa0eBTIQ+PPG83HSxqZ+lhs7x8yXFDjLuysXLFDgr5ROgYs2boR0XesQ9SvqC+NWbjjWobypdQbqsmYusy8Isjy3ShWTz6lqNIigv2jbQy54CyWp2Su5nswILtGifZaxw7koyH4TaTun7gn6i+DjUgey3kHiNyM/Vf72q7pd1cp+PO54bH96a0JSHo7SBhY7IJsh1lpcexKg/u4Apn5Ca+3vlIGVeBtEPlhPDEQIczxlthfOm5+Snx4xFzxRGhFoW7rr2fF3D8tUTat72994a8evdTemPsqF8GiTqd6wPu2pO2H3QDDJeqTh62XSSGAYwY6taqSIsWiAd0=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(396003)(39860400002)(376002)(346002)(136003)(366004)(451199015)(7416002)(6486002)(41300700001)(26005)(2906002)(2616005)(31686004)(15650500001)(5660300002)(186003)(6512007)(83380400001)(31696002)(316002)(66556008)(38100700002)(86362001)(478600001)(8936002)(8676002)(66946007)(6636002)(66476007)(6666004)(36756003)(4326008)(36916002)(53546011)(6506007)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?UGhzRmtxOGhXblc0S0pmcE5hMmNubGZtN3ZIc2o0MDNZWFg3M3pBR2oydlh6?=
+ =?utf-8?B?R240UzNyRjBzQlRXME1Mc2d4dDZhTmx2ZEo0azRISXVMbkZmRkxHakl6UC8y?=
+ =?utf-8?B?UkRFZCtaV2ZhTGFzbjFVM0ExTW9HS2phQloxRDBrNlF5OU5nUENrSG4yOXBS?=
+ =?utf-8?B?NGg1ZWNYR21HdTc3c1ZRWDNlaS9DRWlNZUo2MGRqenFscitvQjkyby9rcGJL?=
+ =?utf-8?B?blB6SHArbUZsaU9jWW1TN3pZaGNlT08raU5oV3BQWTJtVVNES0E4Y3h0ZUo1?=
+ =?utf-8?B?TFJ4OTJZbk8xWXJmSkxlYThnM05UeFFhcmtkREdUWklJR1B3Zlh3MGFQWTN6?=
+ =?utf-8?B?M2RBYmZObE1ZR25DV1RHSThhaG1Gb05HWng0cXRDMU5GS1B3OEl2c3lmL04z?=
+ =?utf-8?B?MURUN2NIMlZ5N2dHWE45OXpuRDgyS0lDdjJrMkxkZ2FpckVVdUhmYTlFY1RT?=
+ =?utf-8?B?UzM2L0pISmRDaVk2aGZWQjZ5RUdvWkUwOXVZWHNIQUhwVFFreHoxSGJPMVJN?=
+ =?utf-8?B?Tkh1S24wcW5iQTFxUDYyREI5N1BESHFYR2JWL0dEQzRDaGNlY0pZY2hHcnJQ?=
+ =?utf-8?B?cEgranZ0VG16UjNEdVBIQmpTWlhvaEYzM1IvWDExOGZ1VEhZeDdKeG03YTJF?=
+ =?utf-8?B?MGhoQ0hDR2VPeERORVNWRUQ0MDY1bGNTb3hGWE01RDR5QWJnb01tOS9XUHFS?=
+ =?utf-8?B?NE5Eak9pYUgvR09qNnZIT0NhcW1XcmFDNkt5VUQvZVdNYmJUdVZrdXJod1V1?=
+ =?utf-8?B?SUhkR2lGY09zdk5ZYURWMU5pNzZNOExYZ1gweEdGRWxYZjBIRWdEc3c2QW5K?=
+ =?utf-8?B?TkU2UTNrVlFrT2xBYUxpNXlBcFhoVDFabHRYVUZjci9IMGxDSGRkdlFYWGpK?=
+ =?utf-8?B?ZUQ3Ly85ZnBoYWR3TU16QTl3OWkxMGhqelpUTkJXZ3dMLzZjcUJ4QzAxUG5C?=
+ =?utf-8?B?WWhTUjRpaGZkbm4yYXV5ZEdXT09QZHY4S1Q5djZmaUxaQWIyOGxLV0RuY25B?=
+ =?utf-8?B?SjVqMzZNNmZrNjlYWnR1eG84U2FBUUd1ZnpxVllXOHhwM3RnWWJDYmZsalVh?=
+ =?utf-8?B?Qk1lSERlWHVIdFZ0TE5nZGZoQ3h2OWxaVnVmTVZoRkg0Um5yMXlUTFY4V25C?=
+ =?utf-8?B?b0RDZXFjVWFTWFJINDlaMjFicS9sbkg0YjVIRXRTaEVPMDljeG4rSkdrNmJW?=
+ =?utf-8?B?djFoZ0xGcHNVNHdEbUc2Y2JvVjh1RERidXYxdWJrRlNBdHhxRmJQOHZsd3Fl?=
+ =?utf-8?B?MDNQcG1iQm1aRlBSOFJmRWdUTE1LMEZxV3NLQm1ZREZ0WWRSdDU2K0lTSzNU?=
+ =?utf-8?B?Y3BMbVJrS3NsVmdCZUlSalZDbFU4M3I5NjIwQnpXU0dZT2Z4RWduMklGblVn?=
+ =?utf-8?B?OWIxcGsyZzNQem1lSXFtR21rMXI1RW1OZ3BLWnJjMDh1SkMyMDlmeGZvcWlY?=
+ =?utf-8?B?WGxHdi9iM1BUVS9YalhrZHRGN0ZFSGVUenZVbkM0ZVdyN0Vjb1ZZQmgzSXAv?=
+ =?utf-8?B?SFh0WVNuTm1mdDF4b294OTFLL2FKdXJHN1o2OU9Ga2Y2SEx0aU8wWFYzbkV3?=
+ =?utf-8?B?UVRUakNEb1d1WWlTNFN0YUhEejhmaExVdU5KbGpsWEZWT1JETHg3WWtwWEY4?=
+ =?utf-8?B?NGttajlndFdJdXpUaFMzV1pXbTJmRjQ3YjIwaWlFaWlqQmpPM1UyR2ZXQTFj?=
+ =?utf-8?B?Nmdlb3lJVzBUcGhZbHdFRm55WWxJdDRiYkIvZWd2NlovRUZHV0dQaXVkNy9m?=
+ =?utf-8?B?VFlYMklvU2ZFYWdVek9QZ29oM0VKM1FGSzZ0NlNraHdFNlFaQkNzT3VjZWVD?=
+ =?utf-8?B?UFhtdERVU21rQ0FuMHpmU3NOVGsraGJCV1lBb1JhWnBYcU10cjlmdnBwc3oy?=
+ =?utf-8?B?b1RldDY0a0FYM1ZXbkF3M2pDcDBJcDgyalVvZG9RTlBENkUzVFlDZVo2b0Js?=
+ =?utf-8?B?ZVFmUk5aakw0OUk3cUt0by96UEs4REVFTWl3bTRUZ29WZnJpWGh5Nm1mK253?=
+ =?utf-8?B?SVlZcWdVMVNKV1d0UjlMSTdJUlg5eG5zUkRVY1hzMnNGZTlMa0lTMS85Q3M1?=
+ =?utf-8?B?c0NWbjF5bU1IT0R4bWZSN2pyalhFZExjTzg4c2VmM1NoSEorbmpXTnVmZ21l?=
+ =?utf-8?B?TklRNHExcEZDWVhBbDRDVGo0UWREZ28xa1RFTzUzcXdlWG1QbFg0dkRKUytV?=
+ =?utf-8?B?dFE9PQ==?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 661f8b9f-fb9b-4f9b-a476-08dabcc92837
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Nov 2022 11:55:37.7561
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: j5LuqRQ72QvT4wbN2PUqAfvFOMp4kiwPnfJPMU7k2IJHE/+D75B6V964ThuwMkXDA/zBHFCVqvDP+GtWB98PRg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR10MB5279
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
+ definitions=2022-11-02_08,2022-11-02_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 spamscore=0 bulkscore=0
+ suspectscore=0 phishscore=0 malwarescore=0 mlxscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2210170000
+ definitions=main-2211020073
+X-Proofpoint-ORIG-GUID: pAiawGbnd7aPKQz70IwsUGfTNwCRVion
+X-Proofpoint-GUID: pAiawGbnd7aPKQz70IwsUGfTNwCRVion
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/2/22 20:12, Hannes Reinecke wrote:
-> On 11/2/22 11:07, Damien Le Moal wrote:
->> On 11/2/22 18:52, John Garry wrote:
->>> Hi Damien,
->>>
-> [ .. ]
->>>>> Or re-use 1 from 32 (and still also have 1 separate internal command)?
->>>>
->>>> I am not yet 100% sure if we can treat that internal NCQ read log like
->>>> any other read/write request... If we can, then the 1-out-of-32
->>>> reservation would not be needed. Need to revisit all the cases we need
->>>> to take care of (because in the middle of this CDL completion handling,
->>>> regular NCQ errors can happen, resulting in a drive reset that could
->>>> wreck everything as we lose the sense data for the completed requests).
->>>>
->>>> In any case, I think that we can deal with that extra reserved command
->>>> on top of you current series. No need to worry about it for now I think.
->>>>
->>>
->>> So are you saying that you are basing current CDL support on libata
->>> internally managing this extra reserved tag (and so do not need this
->>> SCSI midlayer reserved tag support yet)?
->>
->> Not really. For now, it is using libata EH, that is, when we need the
->> internal command for the read log, we know the device is idle and no
->> command is on-going. So we send a non-NCQ command which does not have a tag.
->>
->> Ideally, all of this should use a real reserved tag to allow for an NCQ
->> read log outside of EH, avoiding the drive queue drain.
->>
-> But with the current design you'll only get that if you reserve one 
-> precious tag.
+On 02/11/2022 10:05, Yihang Li wrote:
 
-yes, which is annoying. Back to the days where ATA max qd was 31...
+note: This is not discovery in which this erroneous condition occurs. 
+Discovery is the phase in which the device is found initially.
 
-> OTOH, we might not need that tag at all, as _if_ we get an error for a 
-> specific command the tag associated with it is necessarily free after 
-> completion, right?
+>     +----------+              +----------+
+>     |          |              |          |
+>     |          |--- 12.0 G ---|          |--- 12.0 G --- SAS  disk
+>     |initiator |              | Expander |
+>     | device   |--- 12.0 G ---|          |--- 12.0 G --- SAS  disk
+>     |          |              |          |
+>     |          |--- 12.0 G ---|          |--- 6.0 G --- SATA disk
+>     |          |              |          |
+>     |      phy0|--- 12.0 G ---|          |--- 6.0 G --- SATA disk
+>     |          |              |          |
+>     +----------+              +----------+
+> 
+> In the scenario where the expander device is connected to a wide port,
+> the preceding figure shows the link topology after initialization.
+> All physical PHYs negotiate connections at the rate of 12 Gbit, and
+> the expander SATA PHY negotiates connections at the rate of 6 Gbit.
+> 
+> We found that when the FIO was running, if phy0 was link down due to link
+> instability, and the link connection was reestablished after a period of
+> time. During the physical link disconnection, the physical PHY gradually
+> decreases the link rate, attempts to renegotiate the link rate and
+> establish the connection. This is an HW behavior. When the physical PHY
+> try to re-establish the link at a link rate of 3 Gbit and the physical
+> link is successfully established, the negotiated link rate is 3 Gbit.
+> Like this:
+> 
+>     +----------+              +----------+
+>     |          |              |          |
+>     |          |--- 12.0 G ---|          |--- 12.0 G --- SAS  disk
+>     |initiator |              | Expander |
+>     | device   |--- 12.0 G ---|          |--- 12.0 G --- SAS  disk
+>     |          |              |          |
+>     |          |--- 12.0 G ---|          |--- 6.0 G --- SATA disk
+>     |          |              |          |
+>     |      phy0|--- 3.0 G ----|          |--- 6.0 G --- SATA disk
+>     |          |              |          |
+>     +----------+              +----------+
+> 
+> SATA disk which connected to expander PHY maybe reject IO request due to
+> the connection setup error (OPEN_REJECT-CONNECTION RATE NOT SUPPORTED).
+> The log as follows:
+> 
+> [175712.419423] hisi_sas_v3_hw 0000:74:02.0: erroneous completion iptt=2985 task=00000000268357f1 dev id=10 exp 0x500e004aaaaaaa1f phy9 addr=500e004aaaaaaa09 CQ hdr: 0x102b 0xa0ba9 0x1000 0x20000 Error info: 0x200 0x0 0x0 0x0
+> 
+> After analysis, it is concluded that: when one of the physical links
+> connected on the wide port is re-established, the link rate of the port
+> and expander device and the expander SATA PHY are not updated. As a
+> result, the expander PHY attached to a SATA PHY is using link rate
+> (6.0 Gbit) greater than the physical PHY link rate (3.0 Gbit).
 
-Well, it is not really free. It is unused as far as the device is
-concerned since the command that needs to be checked completed. But not
-free yet since we need to do the read log first before being able to
-scsi-complete the command (which will free the tag). So if we use the
-regular submission path to issue the read log, we must be guaranteed that
-we can get a tag, otherwise we will deadlock. Hence the need to reserve
-one tag.
-
-
-> So we only need to find a way of 're-using' that tag, then we won't have 
-> to set aside a reserved tag and everything would be dandy...
-
-I tried that. It is very ugly... Problem is that integration with EH in
-case a real NCQ error happens when all that read-log-complete dance is
-happening is hard. And don't get me started with the need to save/restore
-the scsi command context of the command we are reusing the tag from.
-
-And given that the code is changing to use regular submission path for
-internal commands, right now, we need a reserved tag. Or a way to "borrow"
-the tag from a request that we need to check. Which means we need some
-additional api to not always try to allocate a tag.
+Please mention the SAS spec section in which min pathway is described.
 
 > 
-> Maybe we can stop processing when we receive an error (should be doing 
-> that anyway as otherwise the log might be overwritten), then we should 
-> be having a pretty good chance of getting that tag.
-
-Hmmm.... that would be no better than using EH which does stop processing
-until the internal house keeping is done.
-
-> Or, precisely, getting _any_ tag as at least one tag is free at that point.
-> Hmm?
-
-See above. Not free, but usable as far as the device is concerned since we
-have at least on command we need to check completed at the device level
-(but not yet completed from scsi/block layer point of view).
-
+> Therefore, add function sas_check_port_linkrate() to check whether the
+> link rate of physical PHY which is connected to the wide port changes
+> after the phy up occur, if the link rate of the newly established
+> physical phy is lower than the link rate of the port, a smaller link rate
+> value is transmitted to port->linkrate.
 > 
-> Cheers,
-> 
-> Hannes
+> Use the sas_update_linkrate_root_expander() function to update the root
+> expander link rate. Traverse all expanders connected to the port, check
+> and update expander PHYs that need to be updated and triggers revalidation.
 
--- 
-Damien Le Moal
-Western Digital Research
+So are you saying that you want to lower the linkrate on all pathways to 
+the SATA disk? In your example, that would be 3Gbps. If so, won't that 
+affect the end-to-end linkrate of all other devices attached (and lower 
+throughput drastically)?
+
+
 
