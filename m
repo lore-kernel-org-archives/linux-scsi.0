@@ -2,121 +2,163 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DF5AC433FE
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Nov 2022 06:11:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0B91C433FE
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Nov 2022 07:05:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229745AbiKCGLX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Nov 2022 02:11:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45920 "EHLO
+        id S230006AbiKCHFB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Nov 2022 03:05:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42144 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229591AbiKCGLW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Nov 2022 02:11:22 -0400
-Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C9AB19284;
-        Wed,  2 Nov 2022 23:11:21 -0700 (PDT)
-Received: by mail-pj1-x1034.google.com with SMTP id l22-20020a17090a3f1600b00212fbbcfb78so4268379pjc.3;
-        Wed, 02 Nov 2022 23:11:21 -0700 (PDT)
+        with ESMTP id S229708AbiKCHE7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Nov 2022 03:04:59 -0400
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0C4BAE6B;
+        Thu,  3 Nov 2022 00:04:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1667459098; x=1698995098;
+  h=from:to:subject:date:message-id:references:in-reply-to:
+   content-transfer-encoding:mime-version;
+  bh=bsB/JPexMFCej2Jr0IK6VHWS3MOO0j9a/3BGtvmo9Gs=;
+  b=PldWuF0R86cVBvUkCwZZF15LyWxPuXomFzmDp5aqhgLChN/WVw2ydLl6
+   48VenSCDO9jAHppMPxcewoNO+AqFYcTvhBv7zQpwB28Gq31RtZVLUPpri
+   VWdVZCOkkR8QtleE0VhPdVUiT4C32ikP+XnBLYUqYY6UokEgFYIGbDvZt
+   38HNxnytPtuG/UeLUyURR1JjkFvnPtYQZfYgdGuZ7EJ2F5LmibXWn/Ogd
+   T8PuOs9OC+vtCWTqCaFa4mniJB7TDYQXTUHK2wqV5hzfA3ua+9mPsaVWq
+   H1DyD/dX4Fx8LUHYomKLHKU0cVv+vdp6SFNqJSfWWNOi0cDTnJClbweGF
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.95,235,1661788800"; 
+   d="scan'208";a="215722583"
+Received: from mail-mw2nam10lp2108.outbound.protection.outlook.com (HELO NAM10-MW2-obe.outbound.protection.outlook.com) ([104.47.55.108])
+  by ob1.hgst.iphmx.com with ESMTP; 03 Nov 2022 15:04:42 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Yw78fGhp6deq0e/EC360xbkrSCG6Al7l26Fs1CD5b3KwHy/uBMD0zK6ZyqGegQqjI7ogJuhoda+HxzeG5GdbBwhN/uwnifj+JVxXa4abzz1eARdk5MziYvK1eoPpRlXm6ZHrwVpS6a36BsFuWHvgDz87Qz7H/05831XtSUPbtNPgduuRXNYlq12oGCpS8fK4qp9axrYzfgE8kTsbjBh4nlkLLS51z5fg7EPl+WjsnpUwzGDMc2L6/bB4iGhFmRpXynsrX6+CEd6wBOQqgSG4+hFuApNRCdm5KbyYHU9DwQsD1GvQSK1KKGwLUtcqE32U3Z5BZGh4R9oTE8hEjIsQzg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=bsB/JPexMFCej2Jr0IK6VHWS3MOO0j9a/3BGtvmo9Gs=;
+ b=nh2zFeh3prVM/0I/WA9ghlJn1RHjSFCDRmAEykRARz19iLK54beaqEDhn9SDUfm4eqZHVZR7aZSwcEzShjSJm3bRzEWr+bJf7OFVKmhk/r49olaeHkjU+cUSQ6M36Znf5+lVD0VDrlXqAHl4Df08LHfW5euhOHv7GQnMqbHIa05X28N8hUQ6SZMKj9k/HSB1AH/sj6urLIuJWPrgcG9R64pjPnUVZ9BjgNyPMeYWiYYi6lh4yXPbGsh2frpcSu+8VYDHBwPXflv8R04F7CQWIn+ZcaoyneEAqxKnXgfCf3pEpk5EDjc1OQEZz5aL9x4m6xpuq5814Foj/zSYWjRh9w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=eA4GksuB6rLjct23PDq9x1BawsvubA/AMzbviihYdGA=;
-        b=c0QuQ/HSeKDuNQClJY2Spr9f54KP00jrQvEBvRhIgySy2fe5rAEtZDsKlMeYCD7tVC
-         XeJJ2ab/jE9HXcQyMA26gTJcVCC8KkIeEH0dUUFeIGsu/WvDxg28RvCiOoga4XouPwJx
-         1k2xRbArCM5xVm1XyVQ8j+zQBnrf3864UYAWFdDLf5it8v5Tk2mHLFr1Gx8Ab9ELhx1n
-         +ZxXe2OW7vyjcs6sx04DanSltjxmeNpib7wvSEBriMb9ohdGvJgrXkj1cj3cKd06masu
-         AfL24GB2raa/rFMZCFIlYSSOjSMKT7TzCdcRza/u9LIthLdF1TmIXPfwMI8CBJAFCpMi
-         BzGA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=eA4GksuB6rLjct23PDq9x1BawsvubA/AMzbviihYdGA=;
-        b=zcz8UMnJvj7/yIZo3fWdTt+96QXZAkG4txHALoedTpF9nVF0DgIo322l3hj85EFoem
-         L1u0dZP0maAUObt1EwaJuNLajD7Mxlh8D2UdHUmpMxVdCL0BoHPn7pN73cEtqMaKU2cU
-         693chNJw8SLgp2s6AUajvCNWfAq4sFp6pulg9FUIhGkhBQOzQMbZ2X+5Xf2I/6vB4Iia
-         2gKgRUzo+wOrwifPbEiyJX3HLU5I3oWkZAR5SuFPIQieh0L+iH0vWRlzQmgyctZ+EWmg
-         weJuwjen7xJzCaST8QLHTn1nc5z8r+bw+yR5Z/h36ZBoW9ZY6t8xyvZ+TWQWRCW2yjeA
-         lesQ==
-X-Gm-Message-State: ACrzQf3ZSrzkOkf4zMZrbYF8DhZK5hTqBu8nI18EDi2ChXeMQnXj61dX
-        OedbX+WfG4ClLFBi+wLngeztxh33XXk8v28tosQ=
-X-Google-Smtp-Source: AMsMyM6HNtTxB5iF3SoMt8Z4Wai6/9c45Rxez5XszoUp/4BjCvKav/qJ/cvaJlAmL6ieoq9T6NZrvA==
-X-Received: by 2002:a17:902:ef4f:b0:186:6723:8da5 with SMTP id e15-20020a170902ef4f00b0018667238da5mr27956372plx.6.1667455880927;
-        Wed, 02 Nov 2022 23:11:20 -0700 (PDT)
-Received: from [10.150.3.61] ([218.150.75.42])
-        by smtp.gmail.com with ESMTPSA id o126-20020a625a84000000b0056ba6952e40sm9444589pfb.181.2022.11.02.23.11.18
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 02 Nov 2022 23:11:20 -0700 (PDT)
-Message-ID: <c5948336-19fc-ddd3-bc34-aba2d1b02302@gmail.com>
-Date:   Thu, 3 Nov 2022 15:11:16 +0900
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.2
-Subject: Re: [RESEND PATCH 0/4] Implement File-Based optimization
- functionality
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Jiaming Li <lijiaming3@xiaomi.corp-partner.google.com>,
-        alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        lijiaming3 <lijiaming3@xiaomi.com>
-References: <20221102053058.21021-1-lijiaming3@xiaomi.corp-partner.google.com>
- <Y2IuhG8nBJj0F1fd@infradead.org>
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=bsB/JPexMFCej2Jr0IK6VHWS3MOO0j9a/3BGtvmo9Gs=;
+ b=vXgKeiRQQWFNomMz0RNyAh5Gm46lOPeALS+DzvXsk0RZUbrmCKviarTxOA+CqfTQ11utxJ+ZHypEmkjiGG3LcFMuSnXi9sTQHjkn68Gr5tmOiqHIemVfhGa11r3eL3nbzGQGOoTnwWWg2VCsUpJcDPZRsJXE7W317tCxd7gOQ6g=
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
+ MWHPR04MB3757.namprd04.prod.outlook.com (2603:10b6:300:f8::16) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.5791.22; Thu, 3 Nov 2022 07:04:40 +0000
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::1afa:ab74:ef51:1e72]) by DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::1afa:ab74:ef51:1e72%3]) with mapi id 15.20.5791.022; Thu, 3 Nov 2022
+ 07:04:39 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     "keosung.park@samsung.com" <keosung.park@samsung.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "yoshihiro.shimoda.uh@renesas.com" <yoshihiro.shimoda.uh@renesas.com>,
+        "draviv@codeaurora.org" <draviv@codeaurora.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Subject: RE: [PATCH] scsi: ufs: Remove check_upiu_size() from ufshcd.h
+Thread-Topic: [PATCH] scsi: ufs: Remove check_upiu_size() from ufshcd.h
+Thread-Index: AQHY70iyVGVmoWL6BkyAgU5GWxrDoq4sxf/Q
+Date:   Thu, 3 Nov 2022 07:04:39 +0000
+Message-ID: <DM6PR04MB6575B13D4DE238F0B6721FA7FC389@DM6PR04MB6575.namprd04.prod.outlook.com>
+References: <CGME20221103055349epcms2p338f2550c2dd78d00231a83b24719a3d4@epcms2p3>
+ <20221103055349epcms2p338f2550c2dd78d00231a83b24719a3d4@epcms2p3>
+In-Reply-To: <20221103055349epcms2p338f2550c2dd78d00231a83b24719a3d4@epcms2p3>
+Accept-Language: en-US
 Content-Language: en-US
-From:   Juhyung Park <qkrwngud825@gmail.com>
-In-Reply-To: <Y2IuhG8nBJj0F1fd@infradead.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: DM6PR04MB6575:EE_|MWHPR04MB3757:EE_
+x-ms-office365-filtering-correlation-id: 7924c0cf-a90f-4f59-fdc0-08dabd69ad01
+wdcipoutbound: EOP-TRUE
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: lqjir/L+qlVmIIqV/tv+E/QWJ/lm9RpybPRPfRkPpQkIxcxsfCMj1jGA39QW0Rrx4q45VSK2n6nOTXKljSH8sXxtp1i13fsKTgHuluwDHAEFSuwc/ZT7yZ4NLPUVHIVcBO9I73t0yoYcxcG3xDC73s2Q5L2wx38DFXHkGQLH07NORQ+RlkfocKgHthjebKo4OVAlf/FG6XLgSb0YTn6SwLiZyCQKuih0MMw+NLJW4+jedstZJAk7HVArJjX5ULUJ77lajjxBw9EeQi79/Rk3V0NTduPBDavX2odtxKTxhXb8sJ/LSSTejgrLjXs+JjYwQJbBlpvbWJLzCckLMMEFMXIA1yVpwjK1JhFXwceC4IcvWdWLRzgMZZ4Nawlqt6BWgbJSBNAJ8brjZuu0PH4NqSzisSBB7Vr/i/V+oUCWgscP1bGKI2+o5Ph86T9p5KwNwTrJXatkXnpE6QKLzxvq3ntcfvdB23Jk+P8nYVj58/JZdP6+v7zIB30SecgcO81FNXKwebHI3R7ZGrnXlk3CJCKdmIGp/J1bnuUbFUB+fgJp55hdh2yrNLMDokLAn7qvBgxROox3qq1tVzZfpf5KLm5uJIQhnThj98BbevOR4PYR7V2kymdqBDe/UeL17pnYrAK8+gKPK3Lo8Plgy8IEREt0ZdAmb6ks3hAhk1hPNwvgsYbAcqLGsKLEmFxTqABXbVHQ6aTOzAbA9QMH42zZv40HGACldIawl9OClbhBNUjakaMD2S/uSzUteUWrhuWVj4QPSYgLjPxjJyFY8TedCfqaonnmvD+r6LjVcQOZo9I=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(4636009)(39860400002)(136003)(366004)(396003)(376002)(346002)(451199015)(64756008)(66446008)(66476007)(66946007)(66556008)(71200400001)(8676002)(2906002)(76116006)(83380400001)(55016003)(316002)(38070700005)(86362001)(110136005)(6506007)(122000001)(7696005)(921005)(33656002)(82960400001)(38100700002)(4744005)(5660300002)(41300700001)(7416002)(8936002)(26005)(478600001)(9686003)(52536014)(186003);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?TFpURis1VEdTVXBzdGd6c3MrbzNkcGNvUHBZRnhpcWFCNldHcDBoU3Flb0d0?=
+ =?utf-8?B?aUdHRzJ3cjVFd2gxSHIzV0ZiaGZBYUtRZ0NVYnpuc2ZUNHlzRHdPMkxvcXoz?=
+ =?utf-8?B?d1FmaDBjb0hJWFdzdmpEZlkzcmYrcFRUclF2M2pYb0syTE9ZZ0dYRDRVazh4?=
+ =?utf-8?B?Z0V5Zmd6UlAwOEFqTTNrWVJCRHZ1Ti9yY0Z0LzRrMXhxYmYyZldXU0pOWDNX?=
+ =?utf-8?B?NW1uVHkzeFZhOFF2RzNSQkpjYkI3NUJaTTNMTDRjcXhzY3ZjN0hWSzN6SHVt?=
+ =?utf-8?B?YjhBd0ZEUGpLSUdSR2JvaTFuMUV5Lzc4MEtDYVRvL0VkSU9Kd0l1T1RpTUZm?=
+ =?utf-8?B?bmwrTmRac0ZYMmlITHVTMHJPMUF1bHd6NjE3dzE1ejcrdnlsTHc1cndPZXpK?=
+ =?utf-8?B?UzZCMllMa0dDMDJYR3dEUThMV1grZnlKa1dGOWlUZlNlQ1owT3NXYmJJR3JD?=
+ =?utf-8?B?b2ZDYU5tL0ZzaE9lV1hqZVdyZERuRE9Nc2JrMnF6eGJEMXZ3V1JPZUY2OWFZ?=
+ =?utf-8?B?R1lGdXViMDc5Yjk2TXU1SktFMEFiaHQ4Z3d5WDFUWU5PQlozSDNLVnRPcFUv?=
+ =?utf-8?B?c2lZaUFCMkptVEtLbEw1WWJrWVZnVllJaWkwbXVSTXcvZnJKWVRzVTVLUEdt?=
+ =?utf-8?B?TDdyRzVIajZsbHhPOWs5eWRDTVpPZmRWa2ZVcVJDeHJJU2d5ZmI3ckJBWTdY?=
+ =?utf-8?B?ZFNVSWRYMGkvN1BCc3dMak9veEdCTFdvU0dELzBKa0hvT2F2K29IQStFclk3?=
+ =?utf-8?B?VUFwakpVYWZhQ2NGdGJEcm5Kd3VHaUJvNVA4U1RtdXByck15T29lRXRuek1l?=
+ =?utf-8?B?MVcvZ2VzMHpPdE1yZUNMNk5MZjZMNEFjRWhmYWhWdjhXbWhGQVJ0RFNJdTA0?=
+ =?utf-8?B?WUVCU0dTcDJBdmY3NVR3aU1jN3dNcmFGSEsvTHI0VE9VZWtYZjNhRmNPVDlW?=
+ =?utf-8?B?UkY0TE1hWWMxb242cTliaEtmUlhoN3NhNlQwZ1gzQ011UHBKLzVQN1piQTNK?=
+ =?utf-8?B?RGp6OUY0eDdRWFR2VGEyS2JtT0hyZVJlK2ZYblo4TWprYUJ1SmR3V0lrMTU1?=
+ =?utf-8?B?eFNVRllHY3NDK2lySjl5U0tPd3JFRGFyOHg3QTNpVXkxaFJHR2I3YVhUZlpY?=
+ =?utf-8?B?aTRydFJQTnRBRk9EeHZMbzBhQllEOHlzQVNKVVhRaW16YzMrY3A2OXZhcFE1?=
+ =?utf-8?B?YjBUTEE5L1hTVzNXY3UwZVhKWUZ2R2xjTVhhNTJWSWV6VEc3OGhLYURqLzQv?=
+ =?utf-8?B?bE9ZVjZhbFIrcUdYQnYveVV5TUFleUh1TERHUy81ZEV3QStEVGZZeGdaZ1lz?=
+ =?utf-8?B?cXBqUDQzR3RLL25GcVZGNExRNWh4RDZBWWd6Q3NTcVVuMXlRSnpLMnkvN2c4?=
+ =?utf-8?B?QmxGcENKKzU5Y1YvU05GNEV6OEozMy93ZkovUXNBYnJBTU1BNzhMbE4zSlRI?=
+ =?utf-8?B?MjZnZWJKVGdsK0JpTW16NUYySTV2SXp6bHJFWU1UNVIxOFJvM2lOUjlnV3RX?=
+ =?utf-8?B?TFBNOVhIZGlReFM1Z1VtRXpjaS9CN1g2dERrTFoxYUJ1UExTQjkwdFFxaDFi?=
+ =?utf-8?B?N1lVSzRzRkcrcUIwZ2NqZzhUWFJGUlR0Z3pBM3ZoM0JGY0FiVVJOaGpoUEFp?=
+ =?utf-8?B?OE9STTFhems2TXRFaG1YYk1nMXdCbjZhVkFzZG9lb2gyVEJWUFp3ZzBKSDFO?=
+ =?utf-8?B?U2ZTNEtmdDBDalk1UEp3T3M0UERNKzR1bjlVRzZPclk4V1o1QWdvdzVCU3dM?=
+ =?utf-8?B?Nk9nR1VsKzcvOFQ4aFpRdVhSUjFBb2E2dGMwMjFaZ2hmL1NsK3dDQkRQM3JP?=
+ =?utf-8?B?cnJHeUFsWFEzQmtQbzQ2SGEweXRZUUJ4cmxac3pYZHlBUjVGNnlzNjJrNlhm?=
+ =?utf-8?B?Ky8rYmxFUHFpT1BOKzBBLzV1MDVNMHpmd1NoOTAvVUx5eHVGWWlGdVBIbjQ3?=
+ =?utf-8?B?NFp3NFVrQ05lY3ZaWXZ3V1Q0a0QxOTNOQ0pZM29PRGd6SDVhYUtGOTJ0ZnNB?=
+ =?utf-8?B?VzFZUjJGVDg1UkpmL1FoQTMvUFhKSkVXelRlcXBLVUhCelFRcllqcHRLcGxh?=
+ =?utf-8?B?bEF1ZndZL2NsVE8xNE56cWp6bWFleTdUNEdyem9GdjhpVDVvOVpTd3lRUXBi?=
+ =?utf-8?Q?wwtvDB3+trltJk589DfhcRasV?=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7924c0cf-a90f-4f59-fdc0-08dabd69ad01
+X-MS-Exchange-CrossTenant-originalarrivaltime: 03 Nov 2022 07:04:39.7838
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 7+0LNpXCMduvFTHNUFKcAOA0Ji42vz4tBNSGmqMhhLeT0s5GZgUyuBBhel+zEFZSfpczKHmJYkdQjpjPti0y8g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR04MB3757
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/2/22 17:47, Christoph Hellwig wrote:
-> On Wed, Nov 02, 2022 at 01:30:54PM +0800, Jiaming Li wrote:
->> 1) The host let the device know of lba range(s) of interest. Those
->>     ranges are typically associated with a specific file. One can
->>     obtain it from the iNode of the file and some offset calculations.
-> 
-> This is completely and utter madness.  Files are a logic concept, that
-> is non-unique (reflinks, snapshot) and can change at any time
-> (defragmentation, GC, dedup).  Whoever came up with this scheme is on
-> crack and the it has no business being in the Linux kernel
-> 
-> NAK.
-> 
-> 
-
-Is the idea really an utter madness? Majority of regular files that may 
-be of interest from the perspective of UFS aren't reflinked or 
-snapshotted (let alone the lack of support from ext4 or f2fs).
-
-Device-side fragmentation is a real issue [1] and it makes more than 
-enough sense to defrag LBAs of interests to improve performance. This 
-was long overdue, unless the block interface itself changes somehow.
-
-The question is how to implement it correctly without creating a mess 
-with mismatched/outdated LBAs as you've mentioned, preferably through 
-file-system's integration: If the LBAs in questions are indeed 
-reflinked, how do we handle it?, If the LBAs are moved/invalidated from 
-defrag or GC, how do we make sure that UFS is up-to-date?, etc.
-
- >
- > From: lijiaming3 <lijiaming3@xiaomi.com>
- >
- > add fbo analysis and defrag function
- >
- > We can send LBA info to the device as a comma separated string. Each
- > adjacent pair represents a range:<open-lba>,<close-lba>.
- > e.g. The LBA range of the file is 0x1234,0x3456;0x4567,0x5678
- > 	echo 0x1234,0x3456,0x4567,0x5678 > fbo_send_lba
- >
-
-Like, ew. Why would we ever want *the userspace* to be able to 
-manipulate this directly?
-
-[1] 
-https://www.usenix.org/conference/atc17/technical-sessions/presentation/hahn 
-- Section 3.3: "For example, even if a file was not fragmented at all in 
-the logical space (DoFL=1), if the file had a DoFP value of 0.5, the I/O 
-throughput became only 48% of that with DoFP=0."
+PiBDb21taXQgNjgwNzhkNWNjMWE1ICgiW1NDU0ldIHVmczogU2V0IGZEZXZpY2VJbml0IGZsYWcg
+dG8gaW5pdGlhdGUgZGV2aWNlDQo+IGluaXRpYWxpemF0aW9uIikgYWRkZWQgY2hlY2tfdXBpdV9z
+aXplKCksIGJ1dCBubyBjYWxsZXIuDQpOb3IgdGhlcmUgZXZlciB3YXMuDQoNCj4gDQo+IENjOiBE
+b2xldiBSYXZpdiA8ZHJhdml2QGNvZGVhdXJvcmEub3JnPg0KPiBTaWduZWQtb2ZmLWJ5OiBLZW9z
+ZW9uZyBQYXJrIDxrZW9zdW5nLnBhcmtAc2Ftc3VuZy5jb20+DQpSZXZpZXdlZC1ieTogQXZyaSBB
+bHRtYW4gPGF2cmkuYWx0bWFuQHdkYy5jb20+DQoNCj4gLS0tDQo+ICBpbmNsdWRlL3Vmcy91ZnNo
+Y2QuaCB8IDYgLS0tLS0tDQo+ICAxIGZpbGUgY2hhbmdlZCwgNiBkZWxldGlvbnMoLSkNCj4gDQo+
+IGRpZmYgLS1naXQgYS9pbmNsdWRlL3Vmcy91ZnNoY2QuaCBiL2luY2x1ZGUvdWZzL3Vmc2hjZC5o
+IGluZGV4DQo+IDk2NTM4ZWIzYTZjMC4uNWNmODFkZmY2MGFhIDEwMDY0NA0KPiAtLS0gYS9pbmNs
+dWRlL3Vmcy91ZnNoY2QuaA0KPiArKysgYi9pbmNsdWRlL3Vmcy91ZnNoY2QuaA0KPiBAQCAtMTA3
+MiwxMiArMTA3Miw2IEBAIHZvaWQgdWZzaGNkX3VwZGF0ZV9ldnRfaGlzdChzdHJ1Y3QgdWZzX2hi
+YSAqaGJhLA0KPiB1MzIgaWQsIHUzMiB2YWwpOyAgdm9pZCB1ZnNoY2RfaGJhX3N0b3Aoc3RydWN0
+IHVmc19oYmEgKmhiYSk7ICB2b2lkDQo+IHVmc2hjZF9zY2hlZHVsZV9laF93b3JrKHN0cnVjdCB1
+ZnNfaGJhICpoYmEpOw0KPiANCj4gLXN0YXRpYyBpbmxpbmUgdm9pZCBjaGVja191cGl1X3NpemUo
+dm9pZCkgLXsNCj4gLSAgICAgICBCVUlMRF9CVUdfT04oQUxJR05FRF9VUElVX1NJWkUgPA0KPiAt
+ICAgICAgICAgICAgICAgR0VORVJBTF9VUElVX1JFUVVFU1RfU0laRSArIFFVRVJZX0RFU0NfTUFY
+X1NJWkUpOw0KPiAtfQ0KPiAtDQo+ICAvKioNCj4gICAqIHVmc2hjZF9zZXRfdmFyaWFudCAtIHNl
+dCB2YXJpYW50IHNwZWNpZmljIGRhdGEgdG8gdGhlIGhiYQ0KPiAgICogQGhiYTogcGVyIGFkYXB0
+ZXIgaW5zdGFuY2UNCj4gLS0NCj4gMi4xNy4xDQoNCg==
