@@ -2,124 +2,121 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8B84C4332F
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Nov 2022 05:55:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DF5AC433FE
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Nov 2022 06:11:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230348AbiKCFzI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Nov 2022 01:55:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36956 "EHLO
+        id S229745AbiKCGLX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Nov 2022 02:11:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45920 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230419AbiKCFya (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Nov 2022 01:54:30 -0400
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 462A81A80A
-        for <linux-scsi@vger.kernel.org>; Wed,  2 Nov 2022 22:53:53 -0700 (PDT)
-Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20221103055351epoutp03b0c197d0d33d1be21d2ab2fa28a9a417~j-VWkBkb10497704977epoutp03t
-        for <linux-scsi@vger.kernel.org>; Thu,  3 Nov 2022 05:53:51 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20221103055351epoutp03b0c197d0d33d1be21d2ab2fa28a9a417~j-VWkBkb10497704977epoutp03t
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1667454831;
-        bh=CRL1m9ZAg2bvQ2jrsxr/t17JLuW2dDtkmywMYXFsY5s=;
-        h=Subject:Reply-To:From:To:Date:References:From;
-        b=FwUOfTHG5ob0A/SLck+3E35svTp9G85jBhkxsW6ucV4+ETzKrqC+0IOyLo5CH+JaI
-         zPyh2af322SIMg4khKCyptqLzyTTYGncPl15b56QJOO0KIpzGfb0p9Cz63lODyCBgO
-         6CXnfMa8jY2znNJ1eWlozs2n+/OTsgE6D+xThm14=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
-        20221103055350epcas2p353f530c2f9dca4b8e91f309c4479b1ea~j-VWE4ySb0577605776epcas2p3F;
-        Thu,  3 Nov 2022 05:53:50 +0000 (GMT)
-Received: from epsmges2p1.samsung.com (unknown [182.195.36.99]) by
-        epsnrtp2.localdomain (Postfix) with ESMTP id 4N2tH23MXyz4x9QJ; Thu,  3 Nov
-        2022 05:53:50 +0000 (GMT)
-X-AuditID: b6c32a45-643fb7000001f07d-2b-6363576e6638
-Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
-        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
-        F6.FD.61565.E6753636; Thu,  3 Nov 2022 14:53:50 +0900 (KST)
-Mime-Version: 1.0
-Subject: [PATCH] scsi: ufs: Remove check_upiu_size() from ufshcd.h
-Reply-To: keosung.park@samsung.com
-Sender: Keoseong Park <keosung.park@samsung.com>
-From:   Keoseong Park <keosung.park@samsung.com>
-To:     "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "yoshihiro.shimoda.uh@renesas.com" <yoshihiro.shimoda.uh@renesas.com>,
-        "draviv@codeaurora.org" <draviv@codeaurora.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20221103055349epcms2p338f2550c2dd78d00231a83b24719a3d4@epcms2p3>
-Date:   Thu, 03 Nov 2022 14:53:49 +0900
-X-CMS-MailID: 20221103055349epcms2p338f2550c2dd78d00231a83b24719a3d4
+        with ESMTP id S229591AbiKCGLW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Nov 2022 02:11:22 -0400
+Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C9AB19284;
+        Wed,  2 Nov 2022 23:11:21 -0700 (PDT)
+Received: by mail-pj1-x1034.google.com with SMTP id l22-20020a17090a3f1600b00212fbbcfb78so4268379pjc.3;
+        Wed, 02 Nov 2022 23:11:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=eA4GksuB6rLjct23PDq9x1BawsvubA/AMzbviihYdGA=;
+        b=c0QuQ/HSeKDuNQClJY2Spr9f54KP00jrQvEBvRhIgySy2fe5rAEtZDsKlMeYCD7tVC
+         XeJJ2ab/jE9HXcQyMA26gTJcVCC8KkIeEH0dUUFeIGsu/WvDxg28RvCiOoga4XouPwJx
+         1k2xRbArCM5xVm1XyVQ8j+zQBnrf3864UYAWFdDLf5it8v5Tk2mHLFr1Gx8Ab9ELhx1n
+         +ZxXe2OW7vyjcs6sx04DanSltjxmeNpib7wvSEBriMb9ohdGvJgrXkj1cj3cKd06masu
+         AfL24GB2raa/rFMZCFIlYSSOjSMKT7TzCdcRza/u9LIthLdF1TmIXPfwMI8CBJAFCpMi
+         BzGA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=eA4GksuB6rLjct23PDq9x1BawsvubA/AMzbviihYdGA=;
+        b=zcz8UMnJvj7/yIZo3fWdTt+96QXZAkG4txHALoedTpF9nVF0DgIo322l3hj85EFoem
+         L1u0dZP0maAUObt1EwaJuNLajD7Mxlh8D2UdHUmpMxVdCL0BoHPn7pN73cEtqMaKU2cU
+         693chNJw8SLgp2s6AUajvCNWfAq4sFp6pulg9FUIhGkhBQOzQMbZ2X+5Xf2I/6vB4Iia
+         2gKgRUzo+wOrwifPbEiyJX3HLU5I3oWkZAR5SuFPIQieh0L+iH0vWRlzQmgyctZ+EWmg
+         weJuwjen7xJzCaST8QLHTn1nc5z8r+bw+yR5Z/h36ZBoW9ZY6t8xyvZ+TWQWRCW2yjeA
+         lesQ==
+X-Gm-Message-State: ACrzQf3ZSrzkOkf4zMZrbYF8DhZK5hTqBu8nI18EDi2ChXeMQnXj61dX
+        OedbX+WfG4ClLFBi+wLngeztxh33XXk8v28tosQ=
+X-Google-Smtp-Source: AMsMyM6HNtTxB5iF3SoMt8Z4Wai6/9c45Rxez5XszoUp/4BjCvKav/qJ/cvaJlAmL6ieoq9T6NZrvA==
+X-Received: by 2002:a17:902:ef4f:b0:186:6723:8da5 with SMTP id e15-20020a170902ef4f00b0018667238da5mr27956372plx.6.1667455880927;
+        Wed, 02 Nov 2022 23:11:20 -0700 (PDT)
+Received: from [10.150.3.61] ([218.150.75.42])
+        by smtp.gmail.com with ESMTPSA id o126-20020a625a84000000b0056ba6952e40sm9444589pfb.181.2022.11.02.23.11.18
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 02 Nov 2022 23:11:20 -0700 (PDT)
+Message-ID: <c5948336-19fc-ddd3-bc34-aba2d1b02302@gmail.com>
+Date:   Thu, 3 Nov 2022 15:11:16 +0900
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.2
+Subject: Re: [RESEND PATCH 0/4] Implement File-Based optimization
+ functionality
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Jiaming Li <lijiaming3@xiaomi.corp-partner.google.com>,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        lijiaming3 <lijiaming3@xiaomi.com>
+References: <20221102053058.21021-1-lijiaming3@xiaomi.corp-partner.google.com>
+ <Y2IuhG8nBJj0F1fd@infradead.org>
+Content-Language: en-US
+From:   Juhyung Park <qkrwngud825@gmail.com>
+In-Reply-To: <Y2IuhG8nBJj0F1fd@infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrGJsWRmVeSWpSXmKPExsWy7bCmuW5eeHKywZdmCYuTT9awWbz8eZXN
-        4uDDThaLaR9+Mlu8PKRp8ej2M0aLs2f6mSwu75rDZtF9fQebxfLj/5gslm69yWjxde9nNgce
-        j8tXvD0u9/UyeSze85LJo+XkfhaP7+s72Dw+Pr3F4vHtzEQWj74tqxg9Pm+S82g/0M0UwBWV
-        bZORmpiSWqSQmpecn5KZl26r5B0c7xxvamZgqGtoaWGupJCXmJtqq+TiE6DrlpkDdLaSQlli
-        TilQKCCxuFhJ386mKL+0JFUhI7+4xFYptSAlp8C8QK84Mbe4NC9dLy+1xMrQwMDIFKgwITtj
-        0aoe5oJJ7BUrPi1jbmBsYeti5OSQEDCRmLv/CHMXIxeHkMAORonVDw6ydDFycPAKCEr83SEM
-        UiMs4CRxdMZ7sHohASWJroVbmSHiBhLrpu8Bs9kE9CSm/L7DCDJHRGAdi8SEpwcYIRbwSsxo
-        f8oCYUtLbF++FSquIfFjWS8zhC0qcXP1W3YY+/2x+VA1IhKt985C1QhKPPi5GyouKdF6ZivU
-        A/USre9PsYMslhCYwCjReOwP1CB9iWsdG8EW8wr4Smy8tASsmUVAVeL4hqlQB7lInDv5Aaye
-        WUBeYvvbOcwgzzMLaEqs36UPYkoIKEscucUC80rDxt/s6GxmAT6JjsN/4eI75j1hgrDVJB4t
-        2MIKYctIXJxzjhlipIfEv6/RExgVZyECehaSE2YhnLCAkXkVo1hqQXFuemqxUYEhPG6T83M3
-        MYITsJbrDsbJbz/oHWJk4mA8xCjBwawkwlt/NjpZiDclsbIqtSg/vqg0J7X4EKMp0PMTmaVE
-        k/OBOSCvJN7QxNLAxMzM0NzI1MBcSZy3a4ZWspBAemJJanZqakFqEUwfEwenVANT37KuJV5J
-        c3QXtujUHZR+0xjxKeeFuswru4JH/yda/ynbEhm6+oRqknFEw84nc33L9ghbXhON+5Hl+vLD
-        iwUJtirJCkZCL3st11z92yHCk3s68vemiAQ5L9/41uXbr+ceExEtnXrvSFvFqUWChfEcXk+0
-        9Z5+kX+37cTny1tLdQrbilsPGBp8m58sdKXuZuihje4bKz2t+Cry//he/7jtyb37p05VtCo+
-        CVS+skj11MubIU4ld9sPffB8KuR38tzzFx+Eq9u8Ao0r86ZXBT82M/8p4BZ45FpYj+l0sxtf
-        Tlz6srt2dob2gld/rNWPlK012jUj+9V073lbSxM2FkzaEPl6gpf8z4ZVQgwfsv8dUWIpzkg0
-        1GIuKk4EAPSwRZJJBAAA
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20221103055349epcms2p338f2550c2dd78d00231a83b24719a3d4
-References: <CGME20221103055349epcms2p338f2550c2dd78d00231a83b24719a3d4@epcms2p3>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Commit 68078d5cc1a5 ("[SCSI] ufs: Set fDeviceInit flag to initiate
-device initialization") added check_upiu_size(), but no caller.
+On 11/2/22 17:47, Christoph Hellwig wrote:
+> On Wed, Nov 02, 2022 at 01:30:54PM +0800, Jiaming Li wrote:
+>> 1) The host let the device know of lba range(s) of interest. Those
+>>     ranges are typically associated with a specific file. One can
+>>     obtain it from the iNode of the file and some offset calculations.
+> 
+> This is completely and utter madness.  Files are a logic concept, that
+> is non-unique (reflinks, snapshot) and can change at any time
+> (defragmentation, GC, dedup).  Whoever came up with this scheme is on
+> crack and the it has no business being in the Linux kernel
+> 
+> NAK.
+> 
+> 
 
-Cc: Dolev Raviv <draviv@codeaurora.org>
-Signed-off-by: Keoseong Park <keosung.park@samsung.com>
----
- include/ufs/ufshcd.h | 6 ------
- 1 file changed, 6 deletions(-)
+Is the idea really an utter madness? Majority of regular files that may 
+be of interest from the perspective of UFS aren't reflinked or 
+snapshotted (let alone the lack of support from ext4 or f2fs).
 
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 96538eb3a6c0..5cf81dff60aa 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1072,12 +1072,6 @@ void ufshcd_update_evt_hist(struct ufs_hba *hba, u32 id, u32 val);
- void ufshcd_hba_stop(struct ufs_hba *hba);
- void ufshcd_schedule_eh_work(struct ufs_hba *hba);
- 
--static inline void check_upiu_size(void)
--{
--	BUILD_BUG_ON(ALIGNED_UPIU_SIZE <
--		GENERAL_UPIU_REQUEST_SIZE + QUERY_DESC_MAX_SIZE);
--}
--
- /**
-  * ufshcd_set_variant - set variant specific data to the hba
-  * @hba: per adapter instance
--- 
-2.17.1
+Device-side fragmentation is a real issue [1] and it makes more than 
+enough sense to defrag LBAs of interests to improve performance. This 
+was long overdue, unless the block interface itself changes somehow.
 
+The question is how to implement it correctly without creating a mess 
+with mismatched/outdated LBAs as you've mentioned, preferably through 
+file-system's integration: If the LBAs in questions are indeed 
+reflinked, how do we handle it?, If the LBAs are moved/invalidated from 
+defrag or GC, how do we make sure that UFS is up-to-date?, etc.
+
+ >
+ > From: lijiaming3 <lijiaming3@xiaomi.com>
+ >
+ > add fbo analysis and defrag function
+ >
+ > We can send LBA info to the device as a comma separated string. Each
+ > adjacent pair represents a range:<open-lba>,<close-lba>.
+ > e.g. The LBA range of the file is 0x1234,0x3456;0x4567,0x5678
+ > 	echo 0x1234,0x3456,0x4567,0x5678 > fbo_send_lba
+ >
+
+Like, ew. Why would we ever want *the userspace* to be able to 
+manipulate this directly?
+
+[1] 
+https://www.usenix.org/conference/atc17/technical-sessions/presentation/hahn 
+- Section 3.3: "For example, even if a file was not fragmented at all in 
+the logical space (DoFL=1), if the file had a DoFP value of 0.5, the I/O 
+throughput became only 48% of that with DoFP=0."
