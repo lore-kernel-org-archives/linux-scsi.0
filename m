@@ -2,144 +2,146 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F021C433FE
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Nov 2022 04:13:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46D84C4332F
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Nov 2022 05:05:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229823AbiKCENU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Nov 2022 00:13:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51982 "EHLO
+        id S230294AbiKCFFI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Nov 2022 01:05:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45140 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229830AbiKCENN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Nov 2022 00:13:13 -0400
-Received: from mail-qv1-xf2c.google.com (mail-qv1-xf2c.google.com [IPv6:2607:f8b0:4864:20::f2c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1FFB13F1A;
-        Wed,  2 Nov 2022 21:13:12 -0700 (PDT)
-Received: by mail-qv1-xf2c.google.com with SMTP id t16so397504qvm.9;
-        Wed, 02 Nov 2022 21:13:12 -0700 (PDT)
+        with ESMTP id S230017AbiKCFFG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Nov 2022 01:05:06 -0400
+Received: from mail-wr1-x432.google.com (mail-wr1-x432.google.com [IPv6:2a00:1450:4864:20::432])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BDC0C1836E;
+        Wed,  2 Nov 2022 22:05:05 -0700 (PDT)
+Received: by mail-wr1-x432.google.com with SMTP id o4so1005303wrq.6;
+        Wed, 02 Nov 2022 22:05:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=F+25QrJbrFzP445hxbERz2MlFDjVBgfsITwfv/Zbzww=;
-        b=Ck0fdPTnKcav/x3nHbHg8fjUSvMBOKipfGIyHC7Io6+DUUyJnO3ShH2fSOefd5UPo1
-         plv9fW0f3ZgR1ywrfvaCfedLakl+P7l0j8xcav9yQAG2lDkuwJRhJaYnC+4uTf8B9Sbs
-         SvIHhhJ9y0yHWX4KL+KfY65kXN+9NwFLXWV6/nJ4x+B9Kjot1R9XkD7OWWGgQiLBcocn
-         kbGvS16N3xnfa1JVIp3clTiQYOHrnb/iUO+1EzuxVdtTG8Aoaqn5bEuXXQIbNs/j0xkd
-         46ix9XU3LeauBNQuI9cauegx9TPSHRcH34K5Rx+9kIUFNulPSVCS3FCwMidJh3F+djPu
-         dwNQ==
+        h=rom:in-reply-to:content-disposition:mime-version:message-id:subject
+         :cc:to:date:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=1rISLR4fCir9Qo3kG4MmHWQffnyg0E3C9I6ZPdYWK9w=;
+        b=jDFOlwvSc4VgW9Cn1fok4tf84n1Zoc1XNswknecjG6szmDrX3himVRKGQEfehicZos
+         pQswasGK5TpH0KnL2YXgOY6LW8G4/0aguckorCvgXw7fC/xgLPkIPMpKBaXRywtqmYaf
+         ScnHmYHTaKI482GETt69Q/+q3/z78rhE6YU1Lqegc3WY5dGdraf33XB3SWWlSlFqMAD7
+         SRKQ79u4Do/7siHdUvgb3MdLxp8KDb//4ByCNctMhrCSUWuySN1T99ShB8ZiehdDGxr4
+         DDlPKBmm/x5tkl4eJyuff2eEJfSa0WYEqk22ZsZifBa2HL9SXBFQaf66MG5rAvkDJJwO
+         fbIA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=F+25QrJbrFzP445hxbERz2MlFDjVBgfsITwfv/Zbzww=;
-        b=eksX2BiqZQ2Lmpkf38LLROsggISgOq2Zw09tNWoBOeEu06c4KxXfVtDin7hXgj91uJ
-         0+U9f6PNwgMV+PQMpGpqwzwNe3xFYXNBQIl0AHF/uY86ntZwJ0GkqGUpHEQl7b5R2Zav
-         AOa/tqUUg1brUWhva7M9/RdAXtBjTEtBTid6sZz/GYEfjCXjXrodkSja1e/uTmw9mSA9
-         7TJKbGylaweh62mqzOW17WnLGYEwBRnBsaDuIXvK8nQxD3lNc6nAKfOhGtpUoFR1idyf
-         bl0H+SSkF8TUMB/HCwh549KHbBLkCPUCoufuSg6tvXd5jL6oVv7I+1l05vwv1nEpgYGe
-         cv6g==
-X-Gm-Message-State: ACrzQf0e+buhXSlMSjXjxx3H3e0s/RwHQTbLu+zdgGDKCV4xuj8QXUrk
-        Tm+DZ6n881JG+S5d3N8StXN05YIke4yQPVYGoC8=
-X-Google-Smtp-Source: AMsMyM62dWep4UxJRWKfeTJOcl6GQDKgVIgBCNwxYeko9+tLuMFIJBXzcGAM5B3maWI/O7YwCAsN3w2CIpGUxIG8934=
-X-Received: by 2002:a05:6214:3005:b0:4ad:8042:128a with SMTP id
- ke5-20020a056214300500b004ad8042128amr25151091qvb.66.1667448791800; Wed, 02
- Nov 2022 21:13:11 -0700 (PDT)
+        h=rom:in-reply-to:content-disposition:mime-version:message-id:subject
+         :cc:to:date:from:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=1rISLR4fCir9Qo3kG4MmHWQffnyg0E3C9I6ZPdYWK9w=;
+        b=coayfJWF5Sqfhr+4VopkTgh74HFkWdYc/mWbXa705vQbnlhP9SPLlkfBX56mSTbRFF
+         g06rWLTEbGb+qQ5Kbdc3bkDhF2T+BgokXGGS5Y/jygxxy8JKGjz/xppvgjy9h1m7Hj8S
+         L7F51cnfCz59micuZONcbkEajjAQiLmZTrtoZVeURUPSGfY0kmTIsUQm11z3HxaWsUC+
+         TlGtSfQsszPnb0M3eZSiU6v4VaVQSqkZ0XClEzimSgkiPNkC0PijCw+7vdN+ckoYFWWJ
+         VzAhO1bjmByZw0ZQR0AABXQ5CHPxpVFgkGaCC7HCh9kUcHaI8jwMD4CsLKiDFu8P2Hnc
+         f1Iw==
+X-Gm-Message-State: ACrzQf2UH32ckr9xfGiTAY5/v874XrBflGpkGD0G0RY2n5NY38XVlViV
+        S8Xisz/h5bJwgjkAbEQgvwE=
+X-Google-Smtp-Source: AMsMyM4UOOQbvay5N+xws8xCof0zFaHNmgxxOtRxaaz48CAHz2TdkWIxy2j2dvWMA4IKUS202c40Mg==
+X-Received: by 2002:adf:d226:0:b0:235:d9ae:1de9 with SMTP id k6-20020adfd226000000b00235d9ae1de9mr17736970wrh.599.1667451904103;
+        Wed, 02 Nov 2022 22:05:04 -0700 (PDT)
+Received: from localhost ([102.36.222.112])
+        by smtp.gmail.com with ESMTPSA id e12-20020adfe38c000000b0023655e51c14sm14241193wrm.32.2022.11.02.22.05.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 02 Nov 2022 22:05:03 -0700 (PDT)
+From:   error27@gmail.com
+Date:   Thu, 3 Nov 2022 08:04:59 +0300
+To:     oe-kbuild@lists.linux.dev, Yihang Li <liyihang9@huawei.com>,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     lkp@intel.com, oe-kbuild-all@lists.linux.dev, bvanassche@acm.org,
+        john.garry@huawei.com, chenxiang66@hisilicon.com,
+        daejun7.park@samsung.com, damien.lemoal@opensource.wdc.com,
+        yanaijie@huawei.com, duoming@zju.edu.cn,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        prime.zeng@hisilicon.com, yangxingui@huawei.com,
+        linuxarm@huawei.com, liyihang9@huawei.com
+Subject: Re: [PATCH] scsi: libsas: Check and update the link rate during
+ discovery
+Message-ID: <202211030845.FLT5UqWU-lkp@intel.com>
 MIME-Version: 1.0
-References: <20221028050736.151185-1-zyytlz.wz@163.com> <0ce67c60-7b55-6f29-2f97-9b17c1e175c0@gmail.com>
-In-Reply-To: <0ce67c60-7b55-6f29-2f97-9b17c1e175c0@gmail.com>
-From:   Zheng Hacker <hackerzheng666@gmail.com>
-Date:   Thu, 3 Nov 2022 12:12:59 +0800
-Message-ID: <CAJedcCzvkcnkntM6h3NAV6ct36RY-bKyHichQ4ecRop7wfHuhg@mail.gmail.com>
-Subject: Re: [PATCH] scsi: lpfc: fix double free bug in lpfc_bsg_write_ebuf_set
-To:     James Smart <jsmart2021@gmail.com>
-Cc:     Zheng Wang <zyytlz.wz@163.com>, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        alex000young@gmail.com, security@kernel.org,
-        linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221102100555.3537275-1-liyihang9@huawei.com>
+rom:    Dan Carpenter <error27@gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-James Smart <jsmart2021@gmail.com> =E4=BA=8E2022=E5=B9=B411=E6=9C=883=E6=97=
-=A5=E5=91=A8=E5=9B=9B 00:37=E5=86=99=E9=81=93=EF=BC=9A
+Hi Yihang,
 
-> Minimally, just looking at this one snippet, by returning after the
-> mempool_alloc() failure, we are leaking the dd_data memory just allocated=
-.
->
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-Yes, this is a bad patch.
+url:    https://github.com/intel-lab-lkp/linux/commits/Yihang-Li/scsi-libsas-Check-and-update-the-link-rate-during-discovery/20221102-180734
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20221102100555.3537275-1-liyihang9%40huawei.com
+patch subject: [PATCH] scsi: libsas: Check and update the link rate during discovery
+config: m68k-randconfig-m041-20221102
+compiler: m68k-linux-gcc (GCC) 12.1.0
 
-> > @@ -4480,8 +4478,7 @@ lpfc_bsg_write_ebuf_set(struct lpfc_hba *phba, st=
-ruct bsg_job *job,
-> >               lpfc_printf_log(phba, KERN_ERR, LOG_LIBDFC,
-> >                               "2970 Failed to issue SLI_CONFIG ext-buff=
-er "
-> >                               "mailbox command, rc:x%x\n", rc);
-> > -             rc =3D -EPIPE;
-> > -             goto job_error;
-> > +             return -EPIPE;
->
-> and this leaks both the dd_data and pmboxq memory.
+If you fix the issue, kindly add following tag where applicable
+| Reported-by: kernel test robot <lkp@intel.com>
+| Reported-by: Dan Carpenter <error27@gmail.com>
 
-So Here it is.
+New smatch warnings:
+drivers/scsi/libsas/sas_expander.c:1962 sas_ex_update_linkrate() warn: iterator used outside loop: 'child'
 
->
-> all of these errors should cause:
->    lpfc_bsg_write_ebuf_set() to return -Exxx
->    causing lpfc_bsg_handle_sli_cfg_ebuf() to return -Exxx
->    causing lpfc_bsg_handle_sli_cfg_ext() to return -Exxx
->    which causes lpfc_bsg_issue_mbox() to jump to job_done
->
+Old smatch warnings:
+drivers/scsi/libsas/sas_expander.c:253 sas_set_ex_phy() error: potential null dereference 'phy->phy'.  (sas_phy_alloc returns null)
+drivers/scsi/libsas/sas_expander.c:253 sas_set_ex_phy() error: we previously assumed 'phy->phy' could be null (see line 189)
+drivers/scsi/libsas/sas_expander.c:1974 sas_ex_update_linkrate() warn: iterator used outside loop: 'child'
 
-Hi James! Really apprecaite for your reply. I was not sure if it it a
-really issue. Sorry for the bad patch.
+vim +/child +1962 drivers/scsi/libsas/sas_expander.c
 
-> I understand the argument is that issue_mbox deletes them, but....
->
-> job_done:
->    checks/frees pmboxq is allocated after the jump so it will be NULL
->    frees dmabuf - which was allocated prior to the jump; is freed
->       in freedlpfc_bsg_handle_sli_cfg_ebuf() but only in a block
->       that returns SLI_CONFIG_HANDLED, which is not the block that
->       invokes lpfc_bsg_write_ebuf_set. So it's valid to delete.
->       Note: there's a special case for SLI_CONFIG_HANDLED which skips
->       over these deletes so it's ok.
->    frees dd_data - which is allocated after the jump so it too will
->       be NULL
+39d64046e3dfc7 Yihang Li       2022-11-02  1947  static void sas_ex_update_linkrate(struct domain_device *parent)
+39d64046e3dfc7 Yihang Li       2022-11-02  1948  {
+39d64046e3dfc7 Yihang Li       2022-11-02  1949  	struct expander_device *ex = &parent->ex_dev;
+39d64046e3dfc7 Yihang Li       2022-11-02  1950  	int i = 0, end = ex->num_phys;
+39d64046e3dfc7 Yihang Li       2022-11-02  1951  
+39d64046e3dfc7 Yihang Li       2022-11-02  1952  	for ( ; i < end; i++) {
+39d64046e3dfc7 Yihang Li       2022-11-02  1953  		struct ex_phy *ex_phy = &ex->ex_phy[i];
+39d64046e3dfc7 Yihang Li       2022-11-02  1954  		struct domain_device *child;
+39d64046e3dfc7 Yihang Li       2022-11-02  1955  
+39d64046e3dfc7 Yihang Li       2022-11-02  1956  		list_for_each_entry(child, &parent->ex_dev.children, siblings)
+                                                                                    ^^^^^
+Imagine this loop exits without finding the correct child.
 
-I understood your point. Here is a call chain :
- lpfc_bsg_issue_mbox->lpfc_bsg_handle_sli_cfg_ext->lpfc_bsg_handle_sli_cfg_=
-ebuf->lpfc_bsg_write_ebuf_set->lpfc_bsg_dma_page_free->kfree(dmabuf)
-It leads to another kfree in lpfc_bsg_mbox_cmd :
-job_done:
-    /* common exit for error or job completed inline */
-    if (pmboxq)
-        mempool_free(pmboxq, phba->mbox_mem_pool);
-    [7] lpfc_bsg_dma_page_free(phba, dmabuf);
-    kfree(dd_data);
+39d64046e3dfc7 Yihang Li       2022-11-02  1957  			if (SAS_ADDR(child->sas_addr) ==
+39d64046e3dfc7 Yihang Li       2022-11-02  1958  			    SAS_ADDR(ex_phy->attached_sas_addr))
+39d64046e3dfc7 Yihang Li       2022-11-02  1959  				break;
+39d64046e3dfc7 Yihang Li       2022-11-02  1960  
+39d64046e3dfc7 Yihang Li       2022-11-02  1961  		if (dev_is_sata(child)) {
+                                                                                ^^^^^
+That means "child" is not a valid pointer.  Not sure why the warning is
+only triggered on the line below instead of here.
 
-So the key point is whether phba->mbox_ext_buf_ctx.mboxType can be
-mbox_wr. If not, just as you illustrated, all is fine.
-It will get into SLI_CONFIG_HANDLED path and handle dmabuf as expected.
+39d64046e3dfc7 Yihang Li       2022-11-02 @1962  			if (child->linkrate > parent->min_linkrate) {
+39d64046e3dfc7 Yihang Li       2022-11-02  1963  				struct sas_phy_linkrates rates = {
+39d64046e3dfc7 Yihang Li       2022-11-02  1964  					.maximum_linkrate = parent->min_linkrate,
+39d64046e3dfc7 Yihang Li       2022-11-02  1965  					.minimum_linkrate = parent->min_linkrate,
+39d64046e3dfc7 Yihang Li       2022-11-02  1966  				};
+39d64046e3dfc7 Yihang Li       2022-11-02  1967  
+39d64046e3dfc7 Yihang Li       2022-11-02  1968  				sas_smp_phy_control(parent, i,
+39d64046e3dfc7 Yihang Li       2022-11-02  1969  						    PHY_FUNC_LINK_RESET, &rates);
+39d64046e3dfc7 Yihang Li       2022-11-02  1970  				ex_phy->phy_change_count = -1;
+39d64046e3dfc7 Yihang Li       2022-11-02  1971  			}
+39d64046e3dfc7 Yihang Li       2022-11-02  1972  		}
+39d64046e3dfc7 Yihang Li       2022-11-02  1973  
+39d64046e3dfc7 Yihang Li       2022-11-02  1974  		if (dev_is_expander(child->dev_type)) {
+39d64046e3dfc7 Yihang Li       2022-11-02  1975  			child->min_linkrate = min(parent->min_linkrate,
+39d64046e3dfc7 Yihang Li       2022-11-02  1976  						  ex_phy->linkrate);
+39d64046e3dfc7 Yihang Li       2022-11-02  1977  			child->max_linkrate = max(parent->max_linkrate,
+39d64046e3dfc7 Yihang Li       2022-11-02  1978  						  ex_phy->linkrate);
+39d64046e3dfc7 Yihang Li       2022-11-02  1979  			child->linkrate = min(ex_phy->linkrate,
+39d64046e3dfc7 Yihang Li       2022-11-02  1980  					      child->max_linkrate);
+39d64046e3dfc7 Yihang Li       2022-11-02  1981  			ex_phy->phy_change_count = -1;
+39d64046e3dfc7 Yihang Li       2022-11-02  1982  		}
+39d64046e3dfc7 Yihang Li       2022-11-02  1983  	}
+39d64046e3dfc7 Yihang Li       2022-11-02  1984  }
 
-But if not, it will have a chance to trigger a double-free bug. I
-found phda is assigned in lpfc_bsg_mbox_cmd. But I am still not sure
-about its value.
-Appreciate if you can help me to understand more about the key condition :)
-
-> So - the code is fine.  The SLI_CONFIG_HANDLED is a little weird, but
-> the logic is fine. If the patch were added it would leak memory.
->
-> I take it this was identified by some tool ?
->
-
-Yes, I found it using Codeql. I didn't have a poc to verify.
-
-Best Regards,
-Zheng Wang
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
