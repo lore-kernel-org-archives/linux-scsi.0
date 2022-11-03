@@ -2,106 +2,93 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68602C4332F
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Nov 2022 09:26:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF374C433FE
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Nov 2022 09:29:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229985AbiKCJ0l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Nov 2022 05:26:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42534 "EHLO
+        id S230381AbiKCJ3A (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Nov 2022 05:29:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47198 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230383AbiKCJZr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Nov 2022 05:25:47 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BED24E093;
-        Thu,  3 Nov 2022 02:25:40 -0700 (PDT)
-Received: from dggpemm500020.china.huawei.com (unknown [172.30.72.56])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4N2ysh0kN0zRnxF;
-        Thu,  3 Nov 2022 17:20:40 +0800 (CST)
+        with ESMTP id S230271AbiKCJ2T (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Nov 2022 05:28:19 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D07010B64;
+        Thu,  3 Nov 2022 02:27:22 -0700 (PDT)
+Received: from dggpemm500022.china.huawei.com (unknown [172.30.72.57])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4N2z1H2Q1jzmVcR;
+        Thu,  3 Nov 2022 17:27:15 +0800 (CST)
 Received: from dggpemm500013.china.huawei.com (7.185.36.172) by
- dggpemm500020.china.huawei.com (7.185.36.49) with Microsoft SMTP Server
+ dggpemm500022.china.huawei.com (7.185.36.162) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Thu, 3 Nov 2022 17:25:39 +0800
+ 15.1.2375.31; Thu, 3 Nov 2022 17:27:20 +0800
 Received: from ubuntu1804.huawei.com (10.67.175.36) by
  dggpemm500013.china.huawei.com (7.185.36.172) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Thu, 3 Nov 2022 17:25:38 +0800
+ 15.1.2375.31; Thu, 3 Nov 2022 17:27:20 +0800
 From:   Chen Zhongjin <chenzhongjin@huawei.com>
-To:     <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>
-CC:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+To:     <linux-kernel@vger.kernel.org>, <MPT-FusionLinux.pdl@broadcom.com>,
+        <linux-scsi@vger.kernel.org>
+CC:     <sathya.prakash@broadcom.com>, <sreekanth.reddy@broadcom.com>,
+        <suganath-prabu.subramani@broadcom.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <hare@suse.de>,
         <chenzhongjin@huawei.com>
-Subject: [PATCH] scsi: scsi_transport_spi: Fix unhandled errors in spi_transport_init()
-Date:   Thu, 3 Nov 2022 17:22:23 +0800
-Message-ID: <20221103092223.192181-1-chenzhongjin@huawei.com>
+Subject: [PATCH] mpt3sas: Fix leaked raid template in _mpt3sas_init()
+Date:   Thu, 3 Nov 2022 17:24:04 +0800
+Message-ID: <20221103092404.192621-1-chenzhongjin@huawei.com>
 X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [10.67.175.36]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
  dggpemm500013.china.huawei.com (7.185.36.172)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In spi_transport_init(), error return values are not handled, which can
-makes memory leak and list node leak.
+In _mpt3sas_init(), when attaching mpt2sas raid functions template and
+fails, mpt3sas template is not released.
 
-anon_transport_class_register() calls attribute_container_register()
-and add list node to attribute_container_list. If it is not unregistered
-and removed, when iterating the list in other modules, already released
-memory &spi_device_class will be accessed and cause kernel panic:
+raid_class_attach() calls attribute_container_register() and add list
+node to attribute_container_list. If it is not unregistered and removed,
+when iterating the list in other modules, already released memory
+&mpt3sas_raid_functions will be accessed and cause kernel panic:
 
-KASAN: maybe wild-memory-access in range
-[0x8febffffffeac550-0x8febffffffeac557]
-CPU: 0 PID: 381 Comm: modprobe
+BUG: unable to handle page fault for address: fffffbfff80dd520
+CPU: 0 PID: 390 Comm: modprobe
 Hardware name: QEMU Standard PC
-RIP: 0010:attribute_container_add_device+0xe2/0x320
+RIP: 0010:raid_match+0x65/0x150 [raid_class]
 ...
 Call Trace:
  <TASK>
- scsi_sysfs_add_host+0x1d/0x40
- scsi_add_host_with_dma.cold+0x73d/0x79c
- sdebug_driver_probe+0x50f/0x6f0 [scsi_debug]
+ attribute_container_add_device+0x124/0x320
+ scsi_sysfs_device_initialize+0x421/0x9b0
+ scsi_alloc_sdev+0x98b/0xcc0
+ scsi_probe_and_add_lun+0x18bf/0x29b0
  ...
 
-Add error handling in spi_transport_init() to avoid kernel panic when
-module fails to load.
+Fix it by calling raid_class_release() to release mpt3sas template in
+mpt2sas register error path.
 
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Fixes: c84b06a48c4d ("mpt3sas: Single driver module which supports both SAS 2.0 & SAS 3.0 HBAs")
 Signed-off-by: Chen Zhongjin <chenzhongjin@huawei.com>
 ---
- drivers/scsi/scsi_transport_spi.c | 17 +++++++++++++++--
- 1 file changed, 15 insertions(+), 2 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
-index f569cf0095c2..2af81118a191 100644
---- a/drivers/scsi/scsi_transport_spi.c
-+++ b/drivers/scsi/scsi_transport_spi.c
-@@ -1620,9 +1620,22 @@ static __init int spi_transport_init(void)
- 
- 	error = transport_class_register(&spi_transport_class);
- 	if (error)
--		return error;
-+		goto err_list;
- 	error = anon_transport_class_register(&spi_device_class);
--	return transport_class_register(&spi_host_class);
-+	if (error)
-+		goto err_transport;
-+	error = transport_class_register(&spi_host_class);
-+	if (error)
-+		goto err_device;
-+	return 0;
-+
-+err_device:
-+	anon_transport_class_unregister(&spi_device_class);
-+err_transport:
-+	transport_class_unregister(&spi_transport_class);
-+err_list:
-+	scsi_dev_info_remove_list(SCSI_DEVINFO_SPI);
-+	return error;
- }
- 
- static void __exit spi_transport_exit(void)
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 8e24ebcebfe5..e20929bc3766 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -12900,6 +12900,8 @@ _mpt3sas_init(void)
+ 		mpt2sas_raid_template =
+ 				raid_class_attach(&mpt2sas_raid_functions);
+ 		if (!mpt2sas_raid_template) {
++			if (hbas_to_enumerate != 1)
++				raid_class_release(mpt3sas_raid_template);
+ 			sas_release_transport(mpt3sas_transport_template);
+ 			return -ENODEV;
+ 		}
 -- 
 2.17.1
 
