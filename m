@@ -2,30 +2,67 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E994CC3A5A3
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Nov 2022 19:42:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4854CC433FE
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Nov 2022 19:57:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229742AbiKDTmT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Nov 2022 15:42:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39300 "EHLO
+        id S229562AbiKDT5E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Nov 2022 15:57:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45638 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229457AbiKDTmP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Nov 2022 15:42:15 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B63E3110D;
-        Fri,  4 Nov 2022 12:42:13 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4FDC962308;
-        Fri,  4 Nov 2022 19:42:13 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32A74C433D6;
-        Fri,  4 Nov 2022 19:42:11 +0000 (UTC)
-Date:   Fri, 4 Nov 2022 15:42:09 -0400
-From:   Steven Rostedt <rostedt@goodmis.org>
-To:     Guenter Roeck <linux@roeck-us.net>
-Cc:     linux-kernel@vger.kernel.org,
-        Linus Torvalds <torvalds@linux-foundation.org>,
+        with ESMTP id S229487AbiKDT5D (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Nov 2022 15:57:03 -0400
+Received: from mail-oi1-x22f.google.com (mail-oi1-x22f.google.com [IPv6:2607:f8b0:4864:20::22f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E33E14385E
+        for <linux-scsi@vger.kernel.org>; Fri,  4 Nov 2022 12:57:01 -0700 (PDT)
+Received: by mail-oi1-x22f.google.com with SMTP id v81so6258458oie.5
+        for <linux-scsi@vger.kernel.org>; Fri, 04 Nov 2022 12:57:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=x16jINQR4q6R4H/0ehn+NSarZW0ZiXtTfCfHHiaRLp4=;
+        b=bIdKEWgR5UZIy0TJaruQujMahMwynr4PVMnDcU4kBitHBNo7q073JbrYzG65FbHP7Y
+         mbM9hFjlLlwQAouSAl9oSuR5cXI0K/JQyyZwmKs1co0JGtwjHN72PIS9n6MKeTRWxT7Z
+         cCPuFkDzNQGR2KqOHNVW0/FBQA0CMharaPptg=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=x16jINQR4q6R4H/0ehn+NSarZW0ZiXtTfCfHHiaRLp4=;
+        b=ey3fenJ1WA6q5Z7ysHbpysz3Ao5c2oMBftndfIWhNUo+FRwbUj4oz0KT28FTdDVX8v
+         V5mimysTjRjVoL3cUJK1oxggM69oAzTPx9HvWaQnQ4YCAXwNp0gvBOiPp0bOQV/wXQfX
+         criGhitpvXH2FqVwDs/mkf1PxsZj2HQgtrZMoGS5VGveHvBGVXGBxgmJ4I4MJQHTCqc5
+         /urMYlXzsOse8nrniX+DAGfGP3BxNZzd5MDX7u0x9YwAWnOJU/92f066Mz5kVsYFVwtF
+         wmG0DercHztGmfoWRc04R+Z39fw5OxGu3bZYqkwgIR4fTyFDC18EmQRXlP3a9ezmlVoG
+         K3WQ==
+X-Gm-Message-State: ACrzQf1mup+NjCR0qp+JeNh6E4lMsgNc80/RUuz19cHKvFiE0RZ9CZ29
+        Ij8tCm1+YpUvMJ0fsN+qv4+5c4rqsgYmCA==
+X-Google-Smtp-Source: AMsMyM66mZ/NY8afsSK2xhvnWQVaNlYDzEiD9UtEAwd2bH8rGhhYkf1s0QQfGMVf2IgjnlvnDfIFNA==
+X-Received: by 2002:aca:170d:0:b0:359:dbb8:70aa with SMTP id j13-20020aca170d000000b00359dbb870aamr20435897oii.140.1667591821012;
+        Fri, 04 Nov 2022 12:57:01 -0700 (PDT)
+Received: from mail-ot1-f48.google.com (mail-ot1-f48.google.com. [209.85.210.48])
+        by smtp.gmail.com with ESMTPSA id o84-20020acaf057000000b0035485b54caesm9255oih.28.2022.11.04.12.57.00
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 04 Nov 2022 12:57:00 -0700 (PDT)
+Received: by mail-ot1-f48.google.com with SMTP id 46-20020a9d0631000000b00666823da25fso3280445otn.0
+        for <linux-scsi@vger.kernel.org>; Fri, 04 Nov 2022 12:57:00 -0700 (PDT)
+X-Received: by 2002:a0d:ef07:0:b0:373:5257:f897 with SMTP id
+ y7-20020a0def07000000b003735257f897mr16823922ywe.401.1667591459021; Fri, 04
+ Nov 2022 12:50:59 -0700 (PDT)
+MIME-Version: 1.0
+References: <20221104054053.431922658@goodmis.org> <20221104192232.GA2520396@roeck-us.net>
+ <20221104154209.21b26782@rorschach.local.home>
+In-Reply-To: <20221104154209.21b26782@rorschach.local.home>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Fri, 4 Nov 2022 12:50:42 -0700
+X-Gmail-Original-Message-ID: <CAHk-=wge9uWV2i9PR6x7va4ZbPdX5+rg7Ep1UNH_nYdd9rD-uw@mail.gmail.com>
+Message-ID: <CAHk-=wge9uWV2i9PR6x7va4ZbPdX5+rg7Ep1UNH_nYdd9rD-uw@mail.gmail.com>
+Subject: Re: [RFC][PATCH v3 00/33] timers: Use timer_shutdown*() before
+ freeing timers
+To:     Steven Rostedt <rostedt@goodmis.org>
+Cc:     Guenter Roeck <linux@roeck-us.net>, linux-kernel@vger.kernel.org,
         Thomas Gleixner <tglx@linutronix.de>,
         Stephen Boyd <sboyd@kernel.org>,
         Anna-Maria Gleixner <anna-maria@linutronix.de>,
@@ -49,64 +86,17 @@ Cc:     linux-kernel@vger.kernel.org,
         coreteam@netfilter.org, lvs-devel@vger.kernel.org,
         linux-afs@lists.infradead.org, linux-nfs@vger.kernel.org,
         tipc-discussion@lists.sourceforge.net, alsa-devel@alsa-project.org
-Subject: Re: [RFC][PATCH v3 00/33] timers: Use timer_shutdown*() before
- freeing timers
-Message-ID: <20221104154209.21b26782@rorschach.local.home>
-In-Reply-To: <20221104192232.GA2520396@roeck-us.net>
-References: <20221104054053.431922658@goodmis.org>
-        <20221104192232.GA2520396@roeck-us.net>
-X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 4 Nov 2022 12:22:32 -0700
-Guenter Roeck <linux@roeck-us.net> wrote:
+On Fri, Nov 4, 2022 at 12:42 PM Steven Rostedt <rostedt@goodmis.org> wrote:
+>
+> Linus, should I also add any patches that has already been acked by the
+> respective maintainer?
 
-> Unfortunately the renaming caused some symbol conflicts.
-> 
-> Global definition: timer_shutdown
-> 
->   File             Line
-> 0 time.c            93 static inline void timer_shutdown(struct clock_event_device *evt)
-> 1 arm_arch_timer.c 690 static __always_inline int timer_shutdown(const int access,
-> 2 timer-fttmr010.c 105 int (*timer_shutdown)(struct clock_event_device *evt);
-> 3 timer-sp804.c    158 static inline void timer_shutdown(struct clock_event_device *evt)
-> 4 timer.h          239 static inline int timer_shutdown(struct timer_list *timer)
+No, I'd prefer to keep only the ones that are 100% unambiguously not
+changing any semantics.
 
-$ git grep '\btimer_shutdown'
-arch/arm/mach-spear/time.c:static inline void timer_shutdown(struct clock_event_device *evt)
-arch/arm/mach-spear/time.c:     timer_shutdown(evt);
-arch/arm/mach-spear/time.c:     timer_shutdown(evt);
-arch/arm/mach-spear/time.c:     timer_shutdown(evt);
-drivers/clocksource/arm_arch_timer.c:static __always_inline int timer_shutdown(const int access,
-drivers/clocksource/arm_arch_timer.c:   return timer_shutdown(ARCH_TIMER_VIRT_ACCESS, clk);
-drivers/clocksource/arm_arch_timer.c:   return timer_shutdown(ARCH_TIMER_PHYS_ACCESS, clk);
-drivers/clocksource/arm_arch_timer.c:   return timer_shutdown(ARCH_TIMER_MEM_VIRT_ACCESS, clk);
-drivers/clocksource/arm_arch_timer.c:   return timer_shutdown(ARCH_TIMER_MEM_PHYS_ACCESS, clk);
-drivers/clocksource/timer-fttmr010.c:   int (*timer_shutdown)(struct clock_event_device *evt);
-drivers/clocksource/timer-fttmr010.c:   fttmr010->timer_shutdown(evt);
-drivers/clocksource/timer-fttmr010.c:   fttmr010->timer_shutdown(evt);
-drivers/clocksource/timer-fttmr010.c:   fttmr010->timer_shutdown(evt);
-drivers/clocksource/timer-fttmr010.c:           fttmr010->timer_shutdown = ast2600_timer_shutdown;
-drivers/clocksource/timer-fttmr010.c:           fttmr010->timer_shutdown = fttmr010_timer_shutdown;
-drivers/clocksource/timer-fttmr010.c:   fttmr010->clkevt.set_state_shutdown = fttmr010->timer_shutdown;
-drivers/clocksource/timer-fttmr010.c:   fttmr010->clkevt.tick_resume = fttmr010->timer_shutdown;
-drivers/clocksource/timer-sp804.c:static inline void timer_shutdown(struct clock_event_device *evt)
-drivers/clocksource/timer-sp804.c:      timer_shutdown(evt);
-drivers/clocksource/timer-sp804.c:      timer_shutdown(evt);
-
-Honestly, I think these need to be renamed, as "timer_shutdown()"
-should be specific to the timer code, and not individual timers.
-
-I'll start making a patch set that starts by renaming these timers,
-then adds the timer_shutdown() API, and finished with the trivial
-updates, and that will be a real "PATCH" (non RFC).
-
-Linus, should I also add any patches that has already been acked by the
-respective maintainer?
-
--- Steve
+              Linus
