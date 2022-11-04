@@ -2,100 +2,120 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5EF7C4332F
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Nov 2022 12:39:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D71D8C433FE
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Nov 2022 17:07:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231904AbiKDMig (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Nov 2022 08:38:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53634 "EHLO
+        id S231490AbiKDRHc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Nov 2022 13:07:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54050 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230003AbiKDMhu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Nov 2022 08:37:50 -0400
-Received: from mail-ej1-x62c.google.com (mail-ej1-x62c.google.com [IPv6:2a00:1450:4864:20::62c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 018112D771
-        for <linux-scsi@vger.kernel.org>; Fri,  4 Nov 2022 05:37:26 -0700 (PDT)
-Received: by mail-ej1-x62c.google.com with SMTP id f27so12960591eje.1
-        for <linux-scsi@vger.kernel.org>; Fri, 04 Nov 2022 05:37:25 -0700 (PDT)
+        with ESMTP id S231320AbiKDRHb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Nov 2022 13:07:31 -0400
+Received: from mail-qk1-x732.google.com (mail-qk1-x732.google.com [IPv6:2607:f8b0:4864:20::732])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 656A33E08D
+        for <linux-scsi@vger.kernel.org>; Fri,  4 Nov 2022 10:07:30 -0700 (PDT)
+Received: by mail-qk1-x732.google.com with SMTP id g10so3445856qkl.6
+        for <linux-scsi@vger.kernel.org>; Fri, 04 Nov 2022 10:07:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bjorling.me; s=google;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=GMwNYpp6IfQSczWvUkHLD5pqC9pvJcuYiA9/8H6nV4E=;
-        b=WNLlP8VNM+/KSac50oJJl3QvBf3rQ5avRCyPVI0bXJf9zcwM5KH5HNdg9lAXkHUxOq
-         N/BIvehR3jBnRjcjEZCoXcn7jk6MjjlUUFJ/eF5wtuPkJyH1OLHbi3s4uck0UtsqYubM
-         eAl+6I/okViZBIgZT9nHeg9NG97i+36i7fPDw=
+        d=linux-foundation.org; s=google;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=/jNIi3NLp/0QE0eLEgGhnlZnXslRxZtVSsauwMnJ52A=;
+        b=TyCMiI4ARMPxd18RVlEv+qm2LWR7zC104Hlivn40qb5lZJslIeDFuCNMNvjneFE/Nj
+         LFwCX5vAwmEX/R8qjGO9x9K9/hgdwoRd2q59WUqMzWoiDvISQjer+tTT1jJ7UfSLA8Vn
+         fR3VeAjk206NeR5DC2lSXJH82ZME8JVM9jplc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=GMwNYpp6IfQSczWvUkHLD5pqC9pvJcuYiA9/8H6nV4E=;
-        b=D7kTmEzaVK0d6T4OGxPVxIlSJFA8yudFxBPa+LRMaC8Jg/eRLdbqJvcwD4dqE4ra6t
-         4lgvwG3AL12aRRMK3oe/n1tkERTz9xi/wh0RddmZLl8YBWy0w69jeGIFjh3xu/AVjaEk
-         h50sLaybiF5qIbpaVAOwCYEk7hjhcwrGRUPRgeAlMzpEvsAACPTi0guPdecYCeazJFjs
-         Molxu/JfuqM29W4WivVaQZnIALGJzTdEmhdMz+X8QePseT93GJcDcnBceRQe+oREl7Ln
-         ijtqJtLfnZlmISuG4Ec3eIkccDXZ9FMtNGGMXTWuxF/32tkfpOpvWoqneyqGrznSu5Ui
-         H55w==
-X-Gm-Message-State: ACrzQf0YE1+XqXuhY8Zg9A4zpqRQ+cH38F3sljbLx0b2rqjxQdugrumv
-        LdnVUmDmB8tmgySP0vmTAYpplg==
-X-Google-Smtp-Source: AMsMyM7tKo2kktI2MVBf2Ew2/7xph1uzc1PduX34Hppt3qiG6dJm8eyCzPX9sZQxxjuZXje5oirYAg==
-X-Received: by 2002:a17:907:9495:b0:78e:1bee:5919 with SMTP id dm21-20020a170907949500b0078e1bee5919mr34149157ejc.701.1667565444385;
-        Fri, 04 Nov 2022 05:37:24 -0700 (PDT)
-Received: from [10.0.0.144] (xb932c246.cust.hiper.dk. [185.50.194.70])
-        by smtp.gmail.com with ESMTPSA id t26-20020aa7db1a000000b0045ce419ecffsm1888637eds.58.2022.11.04.05.37.23
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=/jNIi3NLp/0QE0eLEgGhnlZnXslRxZtVSsauwMnJ52A=;
+        b=Qojj/AvcOeYrYcqNPUHNqaU5qySjw00/ceU388WmflSZmDx99IodNJHbBTwv2KI78h
+         TXrtEwbygTipePLPqL5oF2cYM4wOGqY7kFpe97EN1chvTyESBEuD2EgxvVoLoORBs0eY
+         6zA/h3bobmbosSJUmqGkmOS+7URaMAKOha5LtTb9AZWwDD4NkjQ5Mast3RRwp95CgllI
+         kEvo8oZ7DXROpGcifDnNU0DWP4mCr3D8IoQOD/pvVL0to5k6MikKMW1jkN0UO1F5zdm7
+         mi1392GcdD8D2hs+iPWrOOdFzLwOQAqTJWGgVFxkpw53nDHfceGwK2xS2Dqh4/2uo7BT
+         k3og==
+X-Gm-Message-State: ACrzQf2QnsjB1iIl0fmcnR43fQ1Z4gCjfnPR84kmR2yRf3aUq+8AfE9n
+        o7+upqbyig1W+dh1BmouxbkoqyiFiLqsYw==
+X-Google-Smtp-Source: AMsMyM51WORczHbOAWQ5Jpj5sO8YoCpuy12rCkfJmUGaW1Gn9AhX/gxBnPvl0ugeOpIM4HkqIxhY7A==
+X-Received: by 2002:a05:620a:1027:b0:6f9:8ff2:7ea2 with SMTP id a7-20020a05620a102700b006f98ff27ea2mr27755826qkk.652.1667581649288;
+        Fri, 04 Nov 2022 10:07:29 -0700 (PDT)
+Received: from mail-yb1-f174.google.com (mail-yb1-f174.google.com. [209.85.219.174])
+        by smtp.gmail.com with ESMTPSA id ey21-20020a05622a4c1500b003988b3d5280sm2758865qtb.70.2022.11.04.10.07.28
+        for <linux-scsi@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 04 Nov 2022 05:37:23 -0700 (PDT)
-Message-ID: <878ea44b-9616-e7d0-661c-82eae23b1b35@bjorling.me>
-Date:   Fri, 4 Nov 2022 13:37:22 +0100
+        Fri, 04 Nov 2022 10:07:29 -0700 (PDT)
+Received: by mail-yb1-f174.google.com with SMTP id 129so6484688ybb.12
+        for <linux-scsi@vger.kernel.org>; Fri, 04 Nov 2022 10:07:28 -0700 (PDT)
+X-Received: by 2002:a81:8241:0:b0:370:5fad:47f0 with SMTP id
+ s62-20020a818241000000b003705fad47f0mr27409344ywf.441.1667581219811; Fri, 04
+ Nov 2022 10:00:19 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.2
-Subject: Re: [RESEND PATCH 0/4] Implement File-Based optimization
- functionality
-Content-Language: en-US
-To:     Juhyung Park <qkrwngud825@gmail.com>,
-        Christoph Hellwig <hch@infradead.org>
-Cc:     Jiaming Li <lijiaming3@xiaomi.corp-partner.google.com>,
-        alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        lijiaming3 <lijiaming3@xiaomi.com>
-References: <20221102053058.21021-1-lijiaming3@xiaomi.corp-partner.google.com>
- <Y2IuhG8nBJj0F1fd@infradead.org>
- <c5948336-19fc-ddd3-bc34-aba2d1b02302@gmail.com>
-From:   =?UTF-8?Q?Matias_Bj=c3=b8rling?= <m@bjorling.me>
-In-Reply-To: <c5948336-19fc-ddd3-bc34-aba2d1b02302@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20221104054053.431922658@goodmis.org>
+In-Reply-To: <20221104054053.431922658@goodmis.org>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Fri, 4 Nov 2022 10:00:03 -0700
+X-Gmail-Original-Message-ID: <CAHk-=whKE5UL+AuCC2wK8oq8D_ueSO_T7-9Acx4POouqVi8ZHg@mail.gmail.com>
+Message-ID: <CAHk-=whKE5UL+AuCC2wK8oq8D_ueSO_T7-9Acx4POouqVi8ZHg@mail.gmail.com>
+Subject: Re: [RFC][PATCH v3 00/33] timers: Use timer_shutdown*() before
+ freeing timers
+To:     Steven Rostedt <rostedt@goodmis.org>
+Cc:     linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Anna-Maria Gleixner <anna-maria@linutronix.de>,
+        Andrew Morton <akpm@linux-foundation.org>, rcu@vger.kernel.org,
+        linux-doc@vger.kernel.org, linux-s390@vger.kernel.org,
+        linux-sh@vger.kernel.org, linux-edac@vger.kernel.org,
+        cgroups@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-acpi@vger.kernel.org,
+        linux-atm-general@lists.sourceforge.net, netdev@vger.kernel.org,
+        linux-pm@vger.kernel.org, drbd-dev@lists.linbit.com,
+        linux-bluetooth@vger.kernel.org,
+        openipmi-developer@lists.sourceforge.net,
+        linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linaro-mm-sig@lists.linaro.org, intel-gfx@lists.freedesktop.org,
+        linux-input@vger.kernel.org, linux-parisc@vger.kernel.org,
+        linux-leds@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
+        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-staging@lists.linux.dev,
+        linux-ext4@vger.kernel.org, linux-nilfs@vger.kernel.org,
+        bridge@lists.linux-foundation.org, netfilter-devel@vger.kernel.org,
+        coreteam@netfilter.org, lvs-devel@vger.kernel.org,
+        linux-afs@lists.infradead.org, linux-nfs@vger.kernel.org,
+        tipc-discussion@lists.sourceforge.net, alsa-devel@alsa-project.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 03/11/2022 07.11, Juhyung Park wrote:
-...
-> 
-> Is the idea really an utter madness? Majority of regular files that may 
-> be of interest from the perspective of UFS aren't reflinked or 
-> snapshotted (let alone the lack of support from ext4 or f2fs).
-> 
-> Device-side fragmentation is a real issue [1] and it makes more than 
-> enough sense to defrag LBAs of interests to improve performance. This 
-> was long overdue, unless the block interface itself changes somehow.
+On Thu, Nov 3, 2022 at 10:48 PM Steven Rostedt <rostedt@goodmis.org> wrote:
+>
+> Ideally, I would have the first patch go into this rc cycle, which is mostly
+> non functional as it will allow the other patches to come in via the respective
+> subsystems in the next merge window.
 
-There are ongoing work with UFS to extend the block interface with 
-zones. This approach eliminates the mismatch between the device-side 
-mapping and host-side mapping and lets the host and device collaborate 
-on the data placement.
+Ack.
 
-> 
-> The question is how to implement it correctly without creating a mess 
-> with mismatched/outdated LBAs as you've mentioned, preferably through 
-> file-system's integration: If the LBAs in questions are indeed 
-> reflinked, how do we handle it?, If the LBAs are moved/invalidated from 
-> defrag or GC, how do we make sure that UFS is up-to-date?, etc.
+I also wonder if we could do the completely trivially correct
+conversions immediately.
 
-If using zoned UFS, the file-system can use zones for LBA tracking, 
-eliminating the mismatched/outdated LBA issue. f2fs already supports 
-this approach (works today with SMR HDDs and ZNS SSDs). It'll extend to 
-UFS when zone support is added/implemented.
+I'm talking about the scripted ones where it's currently a
+"del_timer_sync()", and the very next action is freeing whatever data
+structure the timer is in (possibly with something like free_irq() in
+between - my point is that there's an unconditional free that is very
+clear and unambiguous), so that there is absolutely no question about
+whether they should use "timer_shutdown_sync()" or not.
 
+IOW, things like patches 03, 17 and 31, and at least parts others in
+this series.
+
+This series clearly has several much more complex cases that need
+actual real code review, and I think it would help to have the
+completely unambiguous cases out of the way, just to get rid of noise.
+
+So I'd take that first patch, and a scripted set of "this cannot
+change any semantics" patches early.
+
+                Linus
