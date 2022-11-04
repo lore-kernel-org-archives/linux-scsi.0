@@ -2,101 +2,136 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4854CC433FE
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Nov 2022 19:57:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FFAAC433FE
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Nov 2022 19:57:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229562AbiKDT5E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Nov 2022 15:57:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45638 "EHLO
+        id S229666AbiKDT54 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Nov 2022 15:57:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45924 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229487AbiKDT5D (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Nov 2022 15:57:03 -0400
-Received: from mail-oi1-x22f.google.com (mail-oi1-x22f.google.com [IPv6:2607:f8b0:4864:20::22f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E33E14385E
-        for <linux-scsi@vger.kernel.org>; Fri,  4 Nov 2022 12:57:01 -0700 (PDT)
-Received: by mail-oi1-x22f.google.com with SMTP id v81so6258458oie.5
-        for <linux-scsi@vger.kernel.org>; Fri, 04 Nov 2022 12:57:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=x16jINQR4q6R4H/0ehn+NSarZW0ZiXtTfCfHHiaRLp4=;
-        b=bIdKEWgR5UZIy0TJaruQujMahMwynr4PVMnDcU4kBitHBNo7q073JbrYzG65FbHP7Y
-         mbM9hFjlLlwQAouSAl9oSuR5cXI0K/JQyyZwmKs1co0JGtwjHN72PIS9n6MKeTRWxT7Z
-         cCPuFkDzNQGR2KqOHNVW0/FBQA0CMharaPptg=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=x16jINQR4q6R4H/0ehn+NSarZW0ZiXtTfCfHHiaRLp4=;
-        b=ey3fenJ1WA6q5Z7ysHbpysz3Ao5c2oMBftndfIWhNUo+FRwbUj4oz0KT28FTdDVX8v
-         V5mimysTjRjVoL3cUJK1oxggM69oAzTPx9HvWaQnQ4YCAXwNp0gvBOiPp0bOQV/wXQfX
-         criGhitpvXH2FqVwDs/mkf1PxsZj2HQgtrZMoGS5VGveHvBGVXGBxgmJ4I4MJQHTCqc5
-         /urMYlXzsOse8nrniX+DAGfGP3BxNZzd5MDX7u0x9YwAWnOJU/92f066Mz5kVsYFVwtF
-         wmG0DercHztGmfoWRc04R+Z39fw5OxGu3bZYqkwgIR4fTyFDC18EmQRXlP3a9ezmlVoG
-         K3WQ==
-X-Gm-Message-State: ACrzQf1mup+NjCR0qp+JeNh6E4lMsgNc80/RUuz19cHKvFiE0RZ9CZ29
-        Ij8tCm1+YpUvMJ0fsN+qv4+5c4rqsgYmCA==
-X-Google-Smtp-Source: AMsMyM66mZ/NY8afsSK2xhvnWQVaNlYDzEiD9UtEAwd2bH8rGhhYkf1s0QQfGMVf2IgjnlvnDfIFNA==
-X-Received: by 2002:aca:170d:0:b0:359:dbb8:70aa with SMTP id j13-20020aca170d000000b00359dbb870aamr20435897oii.140.1667591821012;
-        Fri, 04 Nov 2022 12:57:01 -0700 (PDT)
-Received: from mail-ot1-f48.google.com (mail-ot1-f48.google.com. [209.85.210.48])
-        by smtp.gmail.com with ESMTPSA id o84-20020acaf057000000b0035485b54caesm9255oih.28.2022.11.04.12.57.00
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 04 Nov 2022 12:57:00 -0700 (PDT)
-Received: by mail-ot1-f48.google.com with SMTP id 46-20020a9d0631000000b00666823da25fso3280445otn.0
-        for <linux-scsi@vger.kernel.org>; Fri, 04 Nov 2022 12:57:00 -0700 (PDT)
-X-Received: by 2002:a0d:ef07:0:b0:373:5257:f897 with SMTP id
- y7-20020a0def07000000b003735257f897mr16823922ywe.401.1667591459021; Fri, 04
- Nov 2022 12:50:59 -0700 (PDT)
+        with ESMTP id S229593AbiKDT5z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Nov 2022 15:57:55 -0400
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 312BC42F61;
+        Fri,  4 Nov 2022 12:57:54 -0700 (PDT)
+Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 2A4JCgn6016497;
+        Fri, 4 Nov 2022 19:57:29 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
+ from : reply-to : to : cc : date : in-reply-to : references : content-type
+ : mime-version; s=pp1; bh=gVUMAyNfyBHsAu6j1Gg/8/sMPkogRA989Ci/S2OviWs=;
+ b=s4TpWd0iSPz9YTQZy2dfPkujDUYH6e951BDDK0AU7fYnBsxOOfYIbTR5/AKxqa5cgdFn
+ qiOX9Wf70p3b7jjLFbeu/iLD7sVe8+5F9M/5w26AOImQLJEb9Lmnvc3NysFHP9HH2OMY
+ 4vKTe2fOgCi4jaorgm4ODrFEeaOzmlu/RND45L+kdC7Mb7BHgS8nU5KcA0kjjshDoJdr
+ 3Z82AtWwUPtZGfWu+2vv4bVJ4xRpZdaTO0eSyS8SaVJk3qk4+Sa+CsEy7jxi+qjBg8Me
+ HpxiqgSnwEVZzazGciqyj90zE9hU5MUVGhUZAr1nXjDTciujUxq4naiuWyIIgqp846Q4 BA== 
+Received: from ppma03dal.us.ibm.com (b.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.11])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3kmphkvg6x-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 04 Nov 2022 19:57:29 +0000
+Received: from pps.filterd (ppma03dal.us.ibm.com [127.0.0.1])
+        by ppma03dal.us.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 2A4Jonml010275;
+        Fri, 4 Nov 2022 19:57:28 GMT
+Received: from b03cxnp08025.gho.boulder.ibm.com (b03cxnp08025.gho.boulder.ibm.com [9.17.130.17])
+        by ppma03dal.us.ibm.com with ESMTP id 3kgutb4rpm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 04 Nov 2022 19:57:28 +0000
+Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
+        by b03cxnp08025.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 2A4JvPFG19399364
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 4 Nov 2022 19:57:25 GMT
+Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 25A257805E;
+        Fri,  4 Nov 2022 20:48:04 +0000 (GMT)
+Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 272607805C;
+        Fri,  4 Nov 2022 20:48:00 +0000 (GMT)
+Received: from [IPv6:2607:fb90:18d2:c66c:f548:19c9:dbfe:c63e] (unknown [9.163.9.146])
+        by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
+        Fri,  4 Nov 2022 20:48:00 +0000 (GMT)
+Message-ID: <44fa41b4d69219b89e805d572df486c4dda77f08.camel@linux.ibm.com>
+Subject: Re: [PATCH v2 14/15] scsi: ncr53c8xx: replace CCB_MAGIC with bool
+ busy
+From:   James Bottomley <jejb@linux.ibm.com>
+Reply-To: jejb@linux.ibm.com
+To:     Ahelenia =?UTF-8?Q?Ziemia=C5=84ska?= 
+        <nabijaczleweli@nabijaczleweli.xyz>
+Cc:     Jonathan Corbet <corbet@lwn.net>,
+        Federico Vaga <federico.vaga@vaga.pv.it>,
+        Alex Shi <alexs@kernel.org>,
+        Yanteng Si <siyanteng@loongson.cn>,
+        Hu Haowen <src.res@email.cn>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jiri Slaby <jirislaby@kernel.org>, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        linux-doc-tw-discuss@lists.sourceforge.net,
+        linux-scsi@vger.kernel.org
+Date:   Fri, 04 Nov 2022 15:57:20 -0400
+In-Reply-To: <27cefe163e602f7d5b35ba2e966dccf9109798f9.1667330271.git.nabijaczleweli@nabijaczleweli.xyz>
+References: <cover.1667330271.git.nabijaczleweli@nabijaczleweli.xyz>
+         <27cefe163e602f7d5b35ba2e966dccf9109798f9.1667330271.git.nabijaczleweli@nabijaczleweli.xyz>
+Content-Type: multipart/signed; micalg="pgp-sha256";
+        protocol="application/pgp-signature"; boundary="=-etNRDRXkW8HpUsBOeo87"
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
-References: <20221104054053.431922658@goodmis.org> <20221104192232.GA2520396@roeck-us.net>
- <20221104154209.21b26782@rorschach.local.home>
-In-Reply-To: <20221104154209.21b26782@rorschach.local.home>
-From:   Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Fri, 4 Nov 2022 12:50:42 -0700
-X-Gmail-Original-Message-ID: <CAHk-=wge9uWV2i9PR6x7va4ZbPdX5+rg7Ep1UNH_nYdd9rD-uw@mail.gmail.com>
-Message-ID: <CAHk-=wge9uWV2i9PR6x7va4ZbPdX5+rg7Ep1UNH_nYdd9rD-uw@mail.gmail.com>
-Subject: Re: [RFC][PATCH v3 00/33] timers: Use timer_shutdown*() before
- freeing timers
-To:     Steven Rostedt <rostedt@goodmis.org>
-Cc:     Guenter Roeck <linux@roeck-us.net>, linux-kernel@vger.kernel.org,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Anna-Maria Gleixner <anna-maria@linutronix.de>,
-        Andrew Morton <akpm@linux-foundation.org>, rcu@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-sh@vger.kernel.org, linux-edac@vger.kernel.org,
-        cgroups@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-acpi@vger.kernel.org,
-        linux-atm-general@lists.sourceforge.net, netdev@vger.kernel.org,
-        linux-pm@vger.kernel.org, drbd-dev@lists.linbit.com,
-        linux-bluetooth@vger.kernel.org,
-        openipmi-developer@lists.sourceforge.net,
-        linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linaro-mm-sig@lists.linaro.org, intel-gfx@lists.freedesktop.org,
-        linux-input@vger.kernel.org, linux-parisc@vger.kernel.org,
-        linux-leds@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-staging@lists.linux.dev,
-        linux-ext4@vger.kernel.org, linux-nilfs@vger.kernel.org,
-        bridge@lists.linux-foundation.org, netfilter-devel@vger.kernel.org,
-        coreteam@netfilter.org, lvs-devel@vger.kernel.org,
-        linux-afs@lists.infradead.org, linux-nfs@vger.kernel.org,
-        tipc-discussion@lists.sourceforge.net, alsa-devel@alsa-project.org
-Content-Type: text/plain; charset="UTF-8"
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: Rc7532kmBAGUIV5yfNQpPZCd0DJRYcWr
+X-Proofpoint-GUID: Rc7532kmBAGUIV5yfNQpPZCd0DJRYcWr
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
+ definitions=2022-11-04_11,2022-11-03_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ adultscore=0 mlxlogscore=825 phishscore=0 spamscore=0 clxscore=1011
+ bulkscore=0 priorityscore=1501 impostorscore=0 mlxscore=0 suspectscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2210170000 definitions=main-2211040121
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Nov 4, 2022 at 12:42 PM Steven Rostedt <rostedt@goodmis.org> wrote:
->
-> Linus, should I also add any patches that has already been acked by the
-> respective maintainer?
 
-No, I'd prefer to keep only the ones that are 100% unambiguously not
-changing any semantics.
+--=-etNRDRXkW8HpUsBOeo87
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-              Linus
+On Wed, 2022-11-02 at 00:06 +0100, Ahelenia Ziemia=C5=84ska wrote:
+[...]
+> @@ -4356,7 +4347,7 @@ static int ncr_queue_command (struct ncb *np,
+> struct scsi_cmnd *cmd)
+>  	*/
+> =20
+>  	/* activate this job.  */
+> -	cp->magic		=3D CCB_MAGIC;
+> +	cp->busy		=3D true;
+> =20
+>  	/*
+>  	**	insert next CCBs into start queue.
+
+Are you sure this is just an internal magic number?  The way these old
+scripts engines used to work is that the CCB array forms a mailbox and
+the card continually scans the mailbox to see if it has any work to do.
+These magic values are often a signal to the card that the CCB array
+contains a valid entry it hasn't seen and it should work on it, so the
+card might be expecting to see this full 32 bit value.
+
+Regards,
+
+James
+
+
+--=-etNRDRXkW8HpUsBOeo87
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABMIAB0WIQTnYEDbdso9F2cI+arnQslM7pishQUCY2VuoAAKCRDnQslM7pis
+hVDrAQCv8/jATBzaYKZVhqN4ejDgR/IUcPhhQeKvZnS9ymN3xAEA6AMrn3sh6oEg
+3KGbGxi0YmbenoSmKOSTagd/aZxmYAM=
+=tuFV
+-----END PGP SIGNATURE-----
+
+--=-etNRDRXkW8HpUsBOeo87--
+
