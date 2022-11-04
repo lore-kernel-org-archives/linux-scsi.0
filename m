@@ -2,111 +2,114 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1C66C43217
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Nov 2022 18:14:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A51CC4332F
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Nov 2022 02:15:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230337AbiKCSOY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Nov 2022 14:14:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50672 "EHLO
+        id S229553AbiKDCPp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Nov 2022 22:15:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58598 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230165AbiKCSOW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Nov 2022 14:14:22 -0400
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13EBF6252;
-        Thu,  3 Nov 2022 11:14:22 -0700 (PDT)
-Received: by mail-pl1-f169.google.com with SMTP id d20so1628823plr.10;
-        Thu, 03 Nov 2022 11:14:22 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=AAumLxLnWfAM18CUZyhLKrEQTBxFDu0Nq3UHPT8n9DM=;
-        b=fiBPUBEIxIE3XElAT/zeDtSLPL9owi4Cu2Y7HwcnCiCYtBkLW0QZClAZ5lbtgvtbNZ
-         vqCp6yrCOlKTleMVslwJdnRmzs2LvwfFyd8fXls3GID7v77zPx+dts+PaYIjGCNBj55M
-         u93rLP75yHvKpwM1xfFgfGteCaLP1KFFQpbGsiOHIBABYvdrkpwYxx501CieBouqVvBP
-         X3Fdkedk1FAE3HMy+TviFA0/jWl59lJ5m7seNUkJ4zCB0g42I66Q1YadPYe1TGy+nAN8
-         CqTJ+jCxm83teJsmAHENq+E4ReFRXJNEYrA+tMJByXnp8HJrriyqmd+GAuttIjJTWCIU
-         Yixw==
-X-Gm-Message-State: ACrzQf3Vnx2PXwclG1NyzVb25I2fZadMZbHXxZdcqikYWtGBFVnE7MV1
-        4ZGxFZnXp/rKSOzp2wMi5c7APzsxG+M=
-X-Google-Smtp-Source: AMsMyM7EErA8tHxPvzrZVcpD4tDFhNKSgLTGblrV/zcW9vCOr6QKeDAhLbttK1YYZeyphS7cjxvfow==
-X-Received: by 2002:a17:90b:4d0e:b0:1f7:ae99:4d7f with SMTP id mw14-20020a17090b4d0e00b001f7ae994d7fmr49029090pjb.200.1667499261396;
-        Thu, 03 Nov 2022 11:14:21 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:881a:8a80:fdae:8683? ([2620:15c:211:201:881a:8a80:fdae:8683])
-        by smtp.gmail.com with ESMTPSA id q17-20020a17090311d100b00178b77b7e71sm958760plh.188.2022.11.03.11.14.18
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 03 Nov 2022 11:14:20 -0700 (PDT)
-Message-ID: <84af9938-81bc-7c58-2210-7da935312d6a@acm.org>
-Date:   Thu, 3 Nov 2022 11:14:17 -0700
+        with ESMTP id S229611AbiKDCPo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Nov 2022 22:15:44 -0400
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 607FC1A5
+        for <linux-scsi@vger.kernel.org>; Thu,  3 Nov 2022 19:15:43 -0700 (PDT)
+Received: from kwepemi500016.china.huawei.com (unknown [172.30.72.57])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4N3PNm10Ldz15MMQ;
+        Fri,  4 Nov 2022 10:15:36 +0800 (CST)
+Received: from huawei.com (10.175.100.227) by kwepemi500016.china.huawei.com
+ (7.221.188.220) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Fri, 4 Nov
+ 2022 10:15:41 +0800
+From:   Shang XiaoJing <shangxiaojing@huawei.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>
+CC:     <shangxiaojing@huawei.com>
+Subject: [PATCH] scsi: scsi_transport_spi: Fix page fault in spi_transport_init()
+Date:   Fri, 4 Nov 2022 10:14:30 +0800
+Message-ID: <20221104021430.25486-1-shangxiaojing@huawei.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.0
-Subject: Re: [PATCH v3 03/19] scsi: Move sd_pr_type to header to share
-Content-Language: en-US
-To:     Mike Christie <michael.christie@oracle.com>, hch@lst.de,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        james.bottomley@hansenpartnership.com, linux-block@vger.kernel.org,
-        dm-devel@redhat.com, snitzer@kernel.org, axboe@kernel.dk,
-        linux-nvme@lists.infradead.org, chaitanyak@nvidia.com,
-        kbusch@kernel.org, target-devel@vger.kernel.org
-References: <20221026231945.6609-1-michael.christie@oracle.com>
- <20221026231945.6609-4-michael.christie@oracle.com>
- <0123db70-6217-135a-4101-0609512e723b@acm.org>
- <7b8cdc82-0aca-2f41-2eed-299dacf95771@oracle.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <7b8cdc82-0aca-2f41-2eed-299dacf95771@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.175.100.227]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ kwepemi500016.china.huawei.com (7.221.188.220)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/2/22 19:13, Mike Christie wrote:
-> On 11/2/22 5:47 PM, Bart Van Assche wrote:
->> On 10/26/22 16:19, Mike Christie wrote:
->>> +static inline enum scsi_pr_type block_pr_type_to_scsi(enum pr_type type)
->>> +{
->>> +    switch (type) {
->>> +    case PR_WRITE_EXCLUSIVE:
->>> +        return SCSI_PR_WRITE_EXCLUSIVE;
->>> +    case PR_EXCLUSIVE_ACCESS:
->>> +        return SCSI_PR_EXCLUSIVE_ACCESS;
->>> +    case PR_WRITE_EXCLUSIVE_REG_ONLY:
->>> +        return SCSI_PR_WRITE_EXCLUSIVE_REG_ONLY;
->>> +    case PR_EXCLUSIVE_ACCESS_REG_ONLY:
->>> +        return SCSI_PR_EXCLUSIVE_ACCESS_REG_ONLY;
->>> +    case PR_WRITE_EXCLUSIVE_ALL_REGS:
->>> +        return SCSI_PR_WRITE_EXCLUSIVE_ALL_REGS;
->>> +    case PR_EXCLUSIVE_ACCESS_ALL_REGS:
->>> +        return SCSI_PR_EXCLUSIVE_ACCESS_ALL_REGS;
->>> +    default:
->>> +        return 0;
->>> +    }
->>> +};
->>
->> Please leave out "default: return 0;" from the switch statement and add "return 0;" after the switch statement. That will make the compiler emit a warning if a value is added in enum pr_type but not in the above function.
-> 
-> Did you want that compiler warning functionality in the future code
-> or are you asking me to do the above only if we go the switch based
-> route?
-> 
-> Chaitanya requested me to make this array based in nvme/scsi. For this
-> approach, I can add a WARN or printk warning if the pr_type passed in
-> does not match a value in the array. I don't think I can do a compiler
-> warning though.
-> 
-> I didn't care, but I think the compiler warning route might be better
-> though.
+spi_transport_init() will call transport_class_register() twice. If the
+2nd transport_class_register() failed, it won't unregister
+spi_transport_class, which will causes the failed module cannot insert
+anymore. Besides, spi_device_class is also not unregistered, which will
+causes the page fault when another module calls
+attribute_container_register().
 
-Hi Mike,
+Unregister spi_transport_class and spi_transport_class in fail path to
+prevent page fault, and the problem that cannot insert anymore.
 
-Although I do not have a strong opinion about this, keeping the switch 
-statement and moving the return statement out of the switch statement 
-has the advantage that the compiler will warn if the switch statement is 
-incomplete. I don't think that a similar warning would be emitted if the 
-switch statement would be converted into an array lookup.
+The bug is found when sym53c8xx failed in 2nd transport_class_register()
+and then insert myrb:
 
-Thanks,
+BUG: unable to handle page fault for address: fffffbfff4001e4e
+PGD 123ff2067 P4D 123ff2067 PUD 123f0e067 PMD 10d0a7067 PTE 0
+Oops: 0000 [#1] SMP KASAN PTI
+CPU: 3 PID: 20290 Comm: modprobe Tainted: G        W
+6.1.0-rc1-00180-g5d7833433b64 #253
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
+rel-1.15.0-0-g2dd4b9b3f840-prebuilt.qemu.org 04/01/2014
+RIP: 0010:attribute_container_register+0xcf/0x130
+Call Trace:
+ <TASK>
+ ? 0xffffffffa0038000
+ raid_class_attach+0x10d/0x218 [raid_class]
+ myrb_init_module+0x1c/0x1000 [myrb]
+ do_one_initcall+0xdb/0x480
+ ? trace_event_raw_event_initcall_level+0x1c0/0x1c0
+ ? rcu_read_lock_sched_held+0xa5/0xd0
+ ? rcu_read_lock_bh_held+0xc0/0xc0
+ ? __kmem_cache_alloc_node+0x3a8/0x7b0
+ ? kasan_unpoison+0x23/0x50
+ ? 0xffffffffa0038000
+ do_init_module+0x1cf/0x680
+ load_module+0x6a50/0x70a0
+ ...
+ do_syscall_64+0x3f/0x90
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
 
-Bart.
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Signed-off-by: Shang XiaoJing <shangxiaojing@huawei.com>
+---
+ drivers/scsi/scsi_transport_spi.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
+index f569cf0095c2..a0dbc5ce29c9 100644
+--- a/drivers/scsi/scsi_transport_spi.c
++++ b/drivers/scsi/scsi_transport_spi.c
+@@ -1622,7 +1622,20 @@ static __init int spi_transport_init(void)
+ 	if (error)
+ 		return error;
+ 	error = anon_transport_class_register(&spi_device_class);
+-	return transport_class_register(&spi_host_class);
++	if (error)
++		goto unregister_transport;
++
++	error = transport_class_register(&spi_host_class);
++	if (error)
++		goto unregister_device;
++
++	return 0;
++
++unregister_device:
++	anon_transport_class_unregister(&spi_device_class);
++unregister_transport:
++	transport_class_unregister(&spi_transport_class);
++	return error;
+ }
+ 
+ static void __exit spi_transport_exit(void)
+-- 
+2.17.1
+
