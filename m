@@ -2,105 +2,129 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89FF8C4332F
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Nov 2022 05:49:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA3ACC4332F
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Nov 2022 06:48:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231612AbiKDFtO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Nov 2022 01:49:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55784 "EHLO
+        id S231689AbiKDGsQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Nov 2022 02:48:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35994 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231339AbiKDFsy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Nov 2022 01:48:54 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E86B28E00;
-        Thu,  3 Nov 2022 22:48:52 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3EBBF620D9;
-        Fri,  4 Nov 2022 05:48:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B239C433C1;
-        Fri,  4 Nov 2022 05:48:50 +0000 (UTC)
-Received: from rostedt by gandalf.local.home with local (Exim 4.96)
-        (envelope-from <rostedt@goodmis.org>)
-        id 1oqpZs-0071Bq-22;
-        Fri, 04 Nov 2022 01:49:16 -0400
-Message-ID: <20221104054916.464295277@goodmis.org>
-User-Agent: quilt/0.66
-Date:   Fri, 04 Nov 2022 01:41:18 -0400
-From:   Steven Rostedt <rostedt@goodmis.org>
-To:     linux-kernel@vger.kernel.org
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Anna-Maria Gleixner <anna-maria@linutronix.de>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
+        with ESMTP id S231646AbiKDGrs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Nov 2022 02:47:48 -0400
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9A912B1B8
+        for <linux-scsi@vger.kernel.org>; Thu,  3 Nov 2022 23:47:44 -0700 (PDT)
+Received: from dggpemm500022.china.huawei.com (unknown [172.30.72.54])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4N3WML5wYbzJnSw;
+        Fri,  4 Nov 2022 14:44:46 +0800 (CST)
+Received: from dggpemm500007.china.huawei.com (7.185.36.183) by
+ dggpemm500022.china.huawei.com (7.185.36.162) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Fri, 4 Nov 2022 14:47:42 +0800
+Received: from huawei.com (10.175.103.91) by dggpemm500007.china.huawei.com
+ (7.185.36.183) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Fri, 4 Nov
+ 2022 14:47:42 +0800
+From:   Yang Yingliang <yangyingliang@huawei.com>
+To:     <linux-scsi@vger.kernel.org>
+CC:     Yang Yingliang <yangyingliang@huawei.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Subject: [RFC][PATCH v3 25/33] timers: scsi: Use timer_shutdown_sync() and timer_shutdown() before
- freeing timer
-References: <20221104054053.431922658@goodmis.org>
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH] scsi: libsas: fix error handling in sas_register_phys()
+Date:   Fri, 4 Nov 2022 14:46:08 +0800
+Message-ID: <20221104064608.1902235-1-yangyingliang@huawei.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.103.91]
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ dggpemm500007.china.huawei.com (7.185.36.183)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: "Steven Rostedt (Google)" <rostedt@goodmis.org>
+If sas_phy_alloc() returns error in sas_register_phys(), the phys that
+have been added are not deleted, so the memory of them are leaked, also,
+this leads the list of phy_attr_cont is not empty, it tiggers a BUG while
+calling sas_release_transport() in hisi_sas_exit() when removing module.
 
-Before a timer is freed, timer_shutdown_sync() must be called, or
-timer_shutdown() if it's already known that the timer is disabled.
+kernel BUG at ./include/linux/transport_class.h:92!
+CPU: 8 PID: 38014 Comm: rmmod Kdump: loaded Not tainted 6.1.0-rc1+ #176
+Hardware name: Huawei TaiShan 2280 /BC11SPCD, BIOS 1.58 10/24/2018
+pstate: 60000005 (nZCv daif -PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+pc : sas_release_transport+0x78/0x84 [scsi_transport_sas]
+lr : sas_release_transport+0x2c/0x84 [scsi_transport_sas]
+Call trace:
+ sas_release_transport+0x78/0x84 [scsi_transport_sas]
+ hisi_sas_exit+0x1c/0x9a8 [hisi_sas_main]
+ __arm64_sys_delete_module+0x19c/0x358
 
-Link: https://lore.kernel.org/all/20220407161745.7d6754b3@gandalf.local.home/
+Fix this by deleting the phys that have been added if sas_phy_alloc()
+returns error.
 
-Cc: Nilesh Javali <njavali@marvell.com>
-Cc: GR-QLogic-Storage-Upstream@marvell.com
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Steven Rostedt (Google) <rostedt@goodmis.org>
+Besides, if sas_phy_add() fails in sas_register_phys(), the phy->dev
+is not added to the klist_children of shost_gendev, so the phy can not
+be delete in sas_remove_children(), the phy and name memory allocated
+in sas_phy_alloc() are leaked.
+
+Fix this by checking and handling return value of sas_phy_add() in
+sas_register_phys(), call sas_phy_free() in the error path.
+
+Fixes: 2908d778ab3e ("[SCSI] aic94xx: new driver")
+Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
 ---
- drivers/scsi/qla2xxx/qla_edif.c | 4 ++--
- drivers/scsi/scsi_lib.c         | 1 +
- 2 files changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/libsas/sas_phy.c | 19 ++++++++++++++++---
+ 1 file changed, 16 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_edif.c b/drivers/scsi/qla2xxx/qla_edif.c
-index 00ccc41cef14..7f3a3c8673b5 100644
---- a/drivers/scsi/qla2xxx/qla_edif.c
-+++ b/drivers/scsi/qla2xxx/qla_edif.c
-@@ -416,7 +416,7 @@ static void __qla2x00_release_all_sadb(struct scsi_qla_host *vha,
- 				 */
- 				if (edif_entry->delete_sa_index !=
- 						INVALID_EDIF_SA_INDEX) {
--					del_timer(&edif_entry->timer);
-+					timer_shutdown_sync(&edif_entry->timer);
+diff --git a/drivers/scsi/libsas/sas_phy.c b/drivers/scsi/libsas/sas_phy.c
+index a0d592d11dfb..84853576eb78 100644
+--- a/drivers/scsi/libsas/sas_phy.c
++++ b/drivers/scsi/libsas/sas_phy.c
+@@ -115,6 +115,7 @@ static void sas_phye_shutdown(struct work_struct *work)
  
- 					/* build and send the aen */
- 					fcport->edif.rx_sa_set = 1;
-@@ -2799,7 +2799,7 @@ qla28xx_sa_update_iocb_entry(scsi_qla_host_t *v, struct req_que *req,
- 			    "%s: removing edif_entry %p, new sa_index: 0x%x\n",
- 			    __func__, edif_entry, pkt->sa_index);
- 			qla_edif_list_delete_sa_index(sp->fcport, edif_entry);
--			del_timer(&edif_entry->timer);
-+			timer_shutdown_sync(&edif_entry->timer);
+ int sas_register_phys(struct sas_ha_struct *sas_ha)
+ {
++	int ret;
+ 	int i;
  
- 			ql_dbg(ql_dbg_edif, vha, 0x5033,
- 			    "%s: releasing edif_entry %p, new sa_index: 0x%x\n",
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 8b89fab7c420..e6cd1efb9eca 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -558,6 +558,7 @@ static bool scsi_end_request(struct request *req, blk_status_t error,
- 	 */
- 	destroy_rcu_head(&cmd->rcu);
+ 	/* Now register the phys. */
+@@ -132,8 +133,10 @@ int sas_register_phys(struct sas_ha_struct *sas_ha)
+ 		phy->frame_rcvd_size = 0;
  
-+	timer_shutdown(&cmd->abort_work.timer);
- 	/*
- 	 * In the MQ case the command gets freed by __blk_mq_end_request,
- 	 * so we have to do all cleanup that depends on it earlier.
+ 		phy->phy = sas_phy_alloc(&sas_ha->core.shost->shost_gendev, i);
+-		if (!phy->phy)
+-			return -ENOMEM;
++		if (!phy->phy) {
++			ret = -ENOMEM;
++			goto err_out;
++		}
+ 
+ 		phy->phy->identify.initiator_port_protocols =
+ 			phy->iproto;
+@@ -146,10 +149,20 @@ int sas_register_phys(struct sas_ha_struct *sas_ha)
+ 		phy->phy->maximum_linkrate = SAS_LINK_RATE_UNKNOWN;
+ 		phy->phy->negotiated_linkrate = SAS_LINK_RATE_UNKNOWN;
+ 
+-		sas_phy_add(phy->phy);
++		ret = sas_phy_add(phy->phy);
++		if (ret) {
++			sas_phy_free(phy->phy);
++			goto err_out;
++		}
+ 	}
+ 
+ 	return 0;
++
++err_out:
++	while (i--)
++		sas_phy_delete(sas_ha->sas_phy[i]->phy);
++
++	return ret;
+ }
+ 
+ const work_func_t sas_phy_event_fns[PHY_NUM_EVENTS] = {
 -- 
-2.35.1
+2.25.1
+
