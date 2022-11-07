@@ -2,147 +2,157 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA7ACC43219
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Nov 2022 10:20:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AAE14C433FE
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Nov 2022 10:38:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231265AbiKGKUJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Nov 2022 05:20:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60502 "EHLO
+        id S231319AbiKGKiP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Nov 2022 05:38:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46358 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229638AbiKGKUI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Nov 2022 05:20:08 -0500
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8309B15814;
-        Mon,  7 Nov 2022 02:20:07 -0800 (PST)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 2CE79225A3;
-        Mon,  7 Nov 2022 10:20:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1667816406; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=31W9fG101zNzaHGLccQbFGakruspMGp88d1+Z6akzTQ=;
-        b=Mhi2thsXfu74Y69IHi0P38X6LmyNwLa+96iaD7GYWhRYdYqL8C/RP1TIt/CIduH+pjaSCj
-        T1BudNaW0s9A5E0yOMWh7HajjFriIhOTZC4r6g9sVKLji8cugmMyO/OOsak3lUb/dESHIY
-        fxMJ0eAg7QkFr7ZKrrb+b43Uo1wFPck=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1667816406;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=31W9fG101zNzaHGLccQbFGakruspMGp88d1+Z6akzTQ=;
-        b=xrwOIk9Bj4wvUajWW/U8kLaO8E9SQohK95LtOh0F8G8PQBVFfnNNxrCwhTvorWJTJjGRvR
-        Jz/rL0Pdyh39AXCg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 0D22C13AC7;
-        Mon,  7 Nov 2022 10:20:06 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id WPXKAtbbaGO1awAAMHmgww
-        (envelope-from <hare@suse.de>); Mon, 07 Nov 2022 10:20:06 +0000
-Message-ID: <f4c4b350-70da-9f28-8675-d3319217e471@suse.de>
-Date:   Mon, 7 Nov 2022 11:20:05 +0100
+        with ESMTP id S231420AbiKGKiL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Nov 2022 05:38:11 -0500
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DCFB19025
+        for <linux-scsi@vger.kernel.org>; Mon,  7 Nov 2022 02:38:10 -0800 (PST)
+Received: from dggpemm500022.china.huawei.com (unknown [172.30.72.53])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4N5SK22nd0zpW6L;
+        Mon,  7 Nov 2022 18:34:30 +0800 (CST)
+Received: from dggpemm500007.china.huawei.com (7.185.36.183) by
+ dggpemm500022.china.huawei.com (7.185.36.162) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Mon, 7 Nov 2022 18:38:08 +0800
+Received: from [10.174.178.174] (10.174.178.174) by
+ dggpemm500007.china.huawei.com (7.185.36.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Mon, 7 Nov 2022 18:38:08 +0800
+Subject: Re: [PATCH] scsi: libsas: fix error handling in sas_phy_add()
+To:     John Garry <john.g.garry@oracle.com>, <linux-scsi@vger.kernel.org>
+CC:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <yangyingliang@huawei.com>
+References: <20221105071725.2313316-1-yangyingliang@huawei.com>
+ <5ebc23f6-0043-4214-5b2b-43357f106fc7@oracle.com>
+From:   Yang Yingliang <yangyingliang@huawei.com>
+Message-ID: <1390c9b8-5e24-16de-2915-7e167eedfe7b@huawei.com>
+Date:   Mon, 7 Nov 2022 18:38:07 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
+ Thunderbird/68.7.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.0
-Content-Language: en-US
-To:     John Garry <john.g.garry@oracle.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        John Garry <john.garry@huawei.com>, axboe@kernel.dk,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        jinpu.wang@cloud.ionos.com, bvanassche@acm.org, hch@lst.de,
-        ming.lei@redhat.com, niklas.cassel@wdc.com
-Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linuxarm@huawei.com
-References: <1666693096-180008-1-git-send-email-john.garry@huawei.com>
- <1666693096-180008-17-git-send-email-john.garry@huawei.com>
- <6c0a4a75-786a-c946-57f2-c511bd765bcc@opensource.wdc.com>
- <d4535f4f-d9cf-30de-ce8c-9d8ee9c0decb@suse.de>
- <5417d401-6fb3-c1d7-58df-e24e0013cfb8@opensource.wdc.com>
- <331fffd7-b5db-9b4a-42ae-940a6b54a37f@suse.de>
- <59947ba8-d1a1-2e50-6199-f3974221f8fb@oracle.com>
-From:   Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH RFC v3 16/22] ata: libata-scsi: Allocate sdev early in
- port probe
-In-Reply-To: <59947ba8-d1a1-2e50-6199-f3974221f8fb@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <5ebc23f6-0043-4214-5b2b-43357f106fc7@oracle.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 8bit
+Content-Language: en-US
+X-Originating-IP: [10.174.178.174]
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ dggpemm500007.china.huawei.com (7.185.36.183)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/7/22 11:09, John Garry wrote:
-> 
->>>>>>    @@ -4289,26 +4294,16 @@ void ata_scsi_scan_host(struct ata_port
->>>>>> *ap, int sync)
->>>>>>     repeat:
-> 
-> I've been trying to follow this thread, below, but got a bit lost ....
-> 
->>>>>>        ata_for_each_link(link, ap, EDGE) {
->>>>>>            ata_for_each_dev(dev, link, ENABLED) {
->>>>>> -            struct scsi_device *sdev;
->>>>>> +            struct Scsi_Host *shost = ap->scsi_host;
->>>>>>                int channel = 0, id = 0;
->>>>>>    -            if (dev->sdev)
->>>>>> -                continue;
->>>>>> -
->>>>>>                if (ata_is_host_link(link))
->>>>>>                    id = dev->devno;
->>>>>>                else
->>>>>>                    channel = link->pmp;
->>>>>>    -            sdev = __scsi_add_device(ap->scsi_host, channel, 
->>>>>> id, 0,
->>>>>> -                         NULL);
->>>>>> -            if (!IS_ERR(sdev)) {
->>>>>> -                dev->sdev = sdev;
->>>>>> -                ata_scsi_assign_ofnode(dev, ap);
->>>>>
->>>>> Is there something equivalent to what this function does inside
->>>>> scsi_scan_target() ? I had a quick look but did not see anything...
->>>>>
-> 
-> So are we discussing below whether we can have fixed channel, id, lun 
-> per ATA sdev per shost? If so, I don't think it would work as libsas 
-> uses dynamic target ids per host.
-> 
-Not static. target port enumeration would still be left to the driver / 
-transport, so it can do whatever it wants here.
-Idea was to match the 'ata_port' structure to the scsi target port; 
-well, not exactly 'match' but have a 1:1 relationship between them.
-_And_ to have a defined way on how the devices are enumerated; PATA 
-drives would always have LUN 0 and LUN 1(for the slave), and everything 
-else would use REPORT LUNs. For which we need an emulation for libata, 
-but that should be trivially to implement.
+Hi,
 
-With that we would know exactly how many scsi target ports we'll have, 
-and can create them based on hardware details before probing starts.
-Whether or not a _device_ is attached to that port is being determined 
-during scanning via the 'slave_alloc' or 'slave_configure' callbacks, so 
-we still would be able to blank out any not implemented or not connected 
-ports.
-_But_ it would align better with the SCSI layer, such that we can work 
-on integrating scanning and resetting, and make things like 
-'sd_revalidate' actually work for libata.
+On 2022/11/7 17:35, John Garry wrote:
+> On 05/11/2022 07:17, Yang Yingliang wrote:
+>
+> This is not libsas.
+>
+> BTW, before I go further, note this:
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/submitting-patches.rst#n312 
+>
+Thanks for replying.
 
-And for libsas it might be worthwhile to check the 'scan_start' and 
-'scan_finished' callbacks; that seems to be the ticket here.
+Yes, it should be "scsi: scsi_transport_sas: XXX"
+>
+>> If transport_add_device() fails in sas_phy_add(), but it's not handled,
+>> it will lead kernel crash because of trying to delete not added device
+>> in transport_remove_device() called from sas_remove_host().
+>>
+>> Unable to handle kernel NULL pointer dereference at virtual address 
+>> 0000000000000108
+>> CPU: 61 PID: 42829 Comm: rmmod Kdump: loaded Tainted: G W          
+>> 6.1.0-rc1+ #173
+>> pstate: 60000005 (nZCv daif -PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+>> pc : device_del+0x54/0x3d0
+>> lr : device_del+0x37c/0x3d0
+>> Call trace:
+>>   device_del+0x54/0x3d0
+>>   attribute_container_class_device_del+0x28/0x38
+>>   transport_remove_classdev+0x6c/0x80
+>>   attribute_container_device_trigger+0x108/0x110
+>>   transport_remove_device+0x28/0x38
+>>   sas_phy_delete+0x30/0x60 [scsi_transport_sas]
+>>   do_sas_phy_delete+0x6c/0x80 [scsi_transport_sas]
+>>   device_for_each_child+0x68/0xb0
+>>   sas_remove_children+0x40/0x50 [scsi_transport_sas]
+>>   sas_remove_host+0x20/0x38 [scsi_transport_sas]
+>>   hisi_sas_remove+0x40/0x68 [hisi_sas_main]
+>>   hisi_sas_v2_remove+0x20/0x30 [hisi_sas_v2_hw]
+>>   platform_remove+0x2c/0x60
+>>
+>> Fix this by checking and handling return value of transport_add_device()
+>> in sas_phy_add(). transport_destroy_device() has been called in 
+>> sas_phy_free()
+>> in the error path, so it's no need to call it here.
+>
+> "there's no need", rather than "it's no need". And I don't know why 
+> you bother even mentioning about transport_destroy_device().
 
-Cheers,
+Because the device set up by transport_setup_device(), it should be 
+destroyed by transport_destroy_device(), so I mention this.
 
-Hannes
--- 
-Dr. Hannes Reinecke		           Kernel Storage Architect
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
+>
+>>
+>> Fixes: c7ebbbce366c ("[SCSI] SAS transport class")
+>> Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
+>> ---
+>>   drivers/scsi/scsi_transport_sas.c | 7 +++++--
+>>   1 file changed, 5 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/scsi/scsi_transport_sas.c 
+>> b/drivers/scsi/scsi_transport_sas.c
+>> index 2f88c61216ee..cb364a7c6097 100644
+>> --- a/drivers/scsi/scsi_transport_sas.c
+>> +++ b/drivers/scsi/scsi_transport_sas.c
+>> @@ -723,8 +723,11 @@ int sas_phy_add(struct sas_phy *phy)
+>>         error = device_add(&phy->dev);
+>>       if (!error) {
+>
+> personally I think that the following looks better:
+>
+> int sas_phy_add(struct sas_phy *phy)
+> {
+>     int error;
+>
+>     error = device_add(&phy->dev);
+>     if (error)
+>         return error;
+>
+>     error = transport_add_device(&phy->dev);
+>     if (error) {
+>         device_del(&phy->dev);
+>         return error;
+>     }
+>     transport_configure_device(&phy->dev);
+>
+>     return 0;
+> }
+> EXPORT_SYMBOL(sas_phy_add);
+Yes, it's looks better, but I was trying to change least this code to 
+fix this problem.
+I can send a v2 later to change these.
 
+Thanks,
+Yang
+>
+>> - transport_add_device(&phy->dev);
+>> -        transport_configure_device(&phy->dev);
+>> +        error = transport_add_device(&phy->dev);
+>> +        if (!error)
+>> +            transport_configure_device(&phy->dev);
+>> +        else
+>> +            device_del(&phy->dev);
+>>       }
+>>         return error;
+>
+>
+> .
