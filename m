@@ -2,84 +2,59 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0DF1C43217
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Nov 2022 13:29:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DEBEBC43219
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Nov 2022 14:34:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232191AbiKGN3f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Nov 2022 08:29:35 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60506 "EHLO
+        id S232432AbiKGOey (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Nov 2022 09:34:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48572 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232116AbiKGN3V (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Nov 2022 08:29:21 -0500
-Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 526FD1CB18
-        for <linux-scsi@vger.kernel.org>; Mon,  7 Nov 2022 05:29:19 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1667827759; x=1699363759;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=xM7DahlPgGKUJt/O+KuLXEt4qp75IJYtNN8R0W0xZRo=;
-  b=psuQX0O1BaXhles8JBHSO3cjUhidAv0rhRhFCTjDfBSdykAlXgGZVEsP
-   EShAQT9CahU6GMSQzsxloY6ohPNIiZ56PvXTw20J+olNuTNpqINoV2rE8
-   rlcB03MszmRFw4Ir1k9Vl41tKx0TBEP8kog0p6iEdZROJtInKrZvYaywq
-   WpHRzzrcqypM2x27FIA4NU/3dI1ynDZM5/K33Vy+lvD4AfuZO5dqgqZjM
-   I3ZZUO+1n7RFWM/jP4DTYxyjg5VkELk78wexRLkWCfVYG8Ng5QHMubAUn
-   mlWs4M7Q8bXCcY3XE84nG+MamOECo8M+leoVKb/+TkN/TJX2Gu+996+5U
-   w==;
-X-IronPort-AV: E=Sophos;i="5.96,145,1665417600"; 
-   d="scan'208";a="327766518"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 07 Nov 2022 21:29:17 +0800
-IronPort-SDR: G5DC5CpMnRiX2bn5kQRtexypZqsTda6c+jZWs6psohSfbtAeucWc5HBJLRctTCFwLdr5Vfz9Tb
- aPCaJjuHRjnr6i6agm/j0SR/7fIxPtV1DVQn42vYn5sGoc5/cJclDm3sUFzHl0eytOw0D1GWGk
- WeiAcYMlHZovPShr/B8d4i6DPRI2G6MGG6M9XmleVr693jQbnLbXwv9BiKnJMsfnhwHsahA34o
- cL7WIjWThHll2NeeZypvEFz4eAaw/iA6v4RRsRNmHOuP+pOBXLAtZv3QDgiqhz83v2toMC1xEP
- Xpc=
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 07 Nov 2022 04:42:39 -0800
-IronPort-SDR: T9FbmtVO16Jh+j3SxiRY+G11SfYOyzv1lGgVXMkaMKYADFZS3WumFxD1QkXj3/PA0Xcw9d+k7i
- Z87+h/H+WV/SzNCiT3XNzACtxL2ZPr3UCv6RUz/TC3Y5fMQ8Z5tR1TRVmEKNjnnp27O+vW7eC7
- +EYqBvZEidKDWzOexvWpRnxXIUTk+runfH8zJbYIKYFlGgJK8zDESXUe+iqqw9z1CbMIUcRvHw
- ZckcNpM9F2YqUMvQ+J6ba7Ak/HRvsLD/5DEgvxMpE+0WlP+juwJCdQCTRF23fZGgya0lkOKE0B
- 6+c=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 07 Nov 2022 05:29:18 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4N5XBj0smlz1Rx15
-        for <linux-scsi@vger.kernel.org>; Mon,  7 Nov 2022 05:29:17 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1667827755; x=1670419756; bh=xM7DahlPgGKUJt/O+KuLXEt4qp75IJYtNN8
-        R0W0xZRo=; b=uH5gDh+GokyRoYgTYtY/0yR1Ekg2vOZNR/N/dvNQqrsZG3uXFsD
-        zLag6FJGsC6aVhjU9ZYTGzERaddUPcirHtt7jK4nHNMUAMeMoVAo9emBlTUWXcEi
-        bljdM6xRi6Gt27TvEFiFzA0Zp4wVL6ZTvatNNb75bN0dUN1eCoSF0SJQyyPvGZ1/
-        mwUqsrO+tIp6eEfZG8DAR+Cv43k3j03SpGiDklCzJFUbM5ncvynm+3OSontUUosy
-        0ENB2pPV3SE5BkEApHENIdNCTOmX9oLGil3fYSf5VwrBF2rBGzJXw6HCTUKMy9lj
-        u9/q4bOQ0FiRMiZcuZvC32QOEc4SlHTfqMg==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id HEqMA6ocv2IA for <linux-scsi@vger.kernel.org>;
-        Mon,  7 Nov 2022 05:29:15 -0800 (PST)
-Received: from [10.225.163.31] (unknown [10.225.163.31])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4N5XBc5CqLz1RvLy;
-        Mon,  7 Nov 2022 05:29:12 -0800 (PST)
-Message-ID: <cfb89169-77e5-b208-62e7-4cf1c660ac7a@opensource.wdc.com>
-Date:   Mon, 7 Nov 2022 22:29:11 +0900
+        with ESMTP id S232417AbiKGOef (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Nov 2022 09:34:35 -0500
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B075B214;
+        Mon,  7 Nov 2022 06:34:33 -0800 (PST)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 6B1EE225AD;
+        Mon,  7 Nov 2022 14:34:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1667831672; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=L4Sg1qZkwEiVSC2iC9dKlGrQBQD0s8J33K2XOu5KL/0=;
+        b=N6Bkqf/c7//mK5rtoPzoC8e+qy9BdJHOSb8jcGnaB5CG5HwReYZjRblTPTmnRQxvFnaQIv
+        qDV8M41T0T6bHuMPHrfUA3nSKLPjyhKR6cEjb7mKNpSdSWrMhOfCWqP5GN9x0MhE1QmL85
+        peuBYiQOCGwswOb6zO2vwvbnISvnkxA=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1667831672;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=L4Sg1qZkwEiVSC2iC9dKlGrQBQD0s8J33K2XOu5KL/0=;
+        b=J4uiNATruM+2EzKbD+Jy+1ehg3atdTKIKxl8M5nA1CM6NlOwGjnpqIzTa8zLjwW/q50d5w
+        P0F5WEaqk5+VfiCA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 462D413AC7;
+        Mon,  7 Nov 2022 14:34:32 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id kC/TEHgXaWNCBAAAMHmgww
+        (envelope-from <hare@suse.de>); Mon, 07 Nov 2022 14:34:32 +0000
+Message-ID: <84544a8b-5884-840c-0b69-fe6c4ae18e72@suse.de>
+Date:   Mon, 7 Nov 2022 15:34:31 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.1
-Subject: Re: [PATCH RFC v3 2/7] ata: libata-scsi: Add
- ata_internal_queuecommand()
+ Thunderbird/102.4.0
 Content-Language: en-US
-To:     Hannes Reinecke <hare@suse.de>,
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         John Garry <john.g.garry@oracle.com>,
         John Garry <john.garry@huawei.com>, jejb@linux.ibm.com,
         martin.petersen@oracle.com, bvanassche@acm.org, hch@lst.de,
@@ -102,96 +77,117 @@ References: <1666693976-181094-1-git-send-email-john.garry@huawei.com>
  <39f9afc5-9aab-6f7c-b67a-e74e694543d4@suse.de>
  <0de1c3fd-4be7-1690-0780-720505c3692b@opensource.wdc.com>
  <75aea0e8-4fa4-593c-0024-3c39ac3882f3@suse.de>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <75aea0e8-4fa4-593c-0024-3c39ac3882f3@suse.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+ <cfb89169-77e5-b208-62e7-4cf1c660ac7a@opensource.wdc.com>
+From:   Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH RFC v3 2/7] ata: libata-scsi: Add
+ ata_internal_queuecommand()
+In-Reply-To: <cfb89169-77e5-b208-62e7-4cf1c660ac7a@opensource.wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/7/22 19:12, Hannes Reinecke wrote:
-> On 11/2/22 12:25, Damien Le Moal wrote:
->> On 11/2/22 20:12, Hannes Reinecke wrote:
->>> On 11/2/22 11:07, Damien Le Moal wrote:
->>>> On 11/2/22 18:52, John Garry wrote:
->>>>> Hi Damien,
->>>>>
->>> [ .. ] >> So we only need to find a way of 're-using' that tag, then we won't have
->>> to set aside a reserved tag and everything would be dandy...
->>
->> I tried that. It is very ugly... Problem is that integration with EH in
->> case a real NCQ error happens when all that read-log-complete dance is
->> happening is hard. And don't get me started with the need to save/restore
->> the scsi command context of the command we are reusing the tag from.
->>
->> And given that the code is changing to use regular submission path for
->> internal commands, right now, we need a reserved tag. Or a way to "borrow"
->> the tag from a request that we need to check. Which means we need some
->> additional api to not always try to allocate a tag.
->>
+On 11/7/22 14:29, Damien Le Moal wrote:
+> On 11/7/22 19:12, Hannes Reinecke wrote:
+>> On 11/2/22 12:25, Damien Le Moal wrote:
+>>> On 11/2/22 20:12, Hannes Reinecke wrote:
+>>>> On 11/2/22 11:07, Damien Le Moal wrote:
+>>>>> On 11/2/22 18:52, John Garry wrote:
+>>>>>> Hi Damien,
+>>>>>>
+>>>> [ .. ] >> So we only need to find a way of 're-using' that tag, then we won't have
+>>>> to set aside a reserved tag and everything would be dandy...
 >>>
->>> Maybe we can stop processing when we receive an error (should be doing
->>> that anyway as otherwise the log might be overwritten), then we should
->>> be having a pretty good chance of getting that tag.
+>>> I tried that. It is very ugly... Problem is that integration with EH in
+>>> case a real NCQ error happens when all that read-log-complete dance is
+>>> happening is hard. And don't get me started with the need to save/restore
+>>> the scsi command context of the command we are reusing the tag from.
+>>>
+>>> And given that the code is changing to use regular submission path for
+>>> internal commands, right now, we need a reserved tag. Or a way to "borrow"
+>>> the tag from a request that we need to check. Which means we need some
+>>> additional api to not always try to allocate a tag.
+>>>
+>>>>
+>>>> Maybe we can stop processing when we receive an error (should be doing
+>>>> that anyway as otherwise the log might be overwritten), then we should
+>>>> be having a pretty good chance of getting that tag.
+>>>
+>>> Hmmm.... that would be no better than using EH which does stop processing
+>>> until the internal house keeping is done.
+>>>
+>>>> Or, precisely, getting _any_ tag as at least one tag is free at that point.
+>>>> Hmm?
+>>>
+>>> See above. Not free, but usable as far as the device is concerned since we
+>>> have at least on command we need to check completed at the device level
+>>> (but not yet completed from scsi/block layer point of view).
+>>>
+>> So, having had an entire weekend pondering this issue why don't we
+>> allocate an _additional_ set of requests?
+>> After all, we had been very generous with allocating queues and requests
+>> (what with us doing a full provisioning of the requests for all queues
+>> already for the non-shared tag case).
 >>
->> Hmmm.... that would be no better than using EH which does stop processing
->> until the internal house keeping is done.
+>> Idea would be to keep the single tag bitmap, but add eg a new rq state
+>> MQ_RQ_ERROR. Once that flag is set we'll fetch the error request instead
+>> of the normal one:
 >>
->>> Or, precisely, getting _any_ tag as at least one tag is free at that point.
->>> Hmm?
+>> @@ -761,6 +763,8 @@ static inline struct request
+>> *blk_mq_tag_to_rq(struct blk_mq_tags *tags,
+>>    {
+>>           if (tag < tags->nr_tags) {
+>>                   prefetch(tags->rqs[tag]);
+>> +               if (unlikely(blk_mq_request_error(tags->rqs[tag])))
+>> +                       return tags->error_rqs[tag];
+>>                   return tags->rqs[tag];
+>>           }
 >>
->> See above. Not free, but usable as far as the device is concerned since we
->> have at least on command we need to check completed at the device level
->> (but not yet completed from scsi/block layer point of view).
+>> and, of course, we would need to provision the error request first.
 >>
-> So, having had an entire weekend pondering this issue why don't we 
-> allocate an _additional_ set of requests?
-> After all, we had been very generous with allocating queues and requests 
-> (what with us doing a full provisioning of the requests for all queues 
-> already for the non-shared tag case).
+>> Rationale here is that this will be primarily for devices with a low
+>> number of tags, so doubling the number of request isn't much of an
+>> overhead (as we'll be doing it essentially anyway in the error case as
+>> we'll have to save the original request _somewhere_), and that it would
+>> remove quite some cruft from the subsystem; look at SCSI EH trying to
+>> store the original request contents and then after EH restoring them again.
 > 
-> Idea would be to keep the single tag bitmap, but add eg a new rq state
-> MQ_RQ_ERROR. Once that flag is set we'll fetch the error request instead 
-> of the normal one:
+> Interesting idea. I like it. It is essentially a set of reserved requests
+> without reserved tags: the tag to use for these requests would be provided
+> "manually" by the user. Right ?
 > 
-> @@ -761,6 +763,8 @@ static inline struct request 
-> *blk_mq_tag_to_rq(struct blk_mq_tags *tags,
->   {
->          if (tag < tags->nr_tags) {
->                  prefetch(tags->rqs[tag]);
-> +               if (unlikely(blk_mq_request_error(tags->rqs[tag])))
-> +                       return tags->error_rqs[tag];
->                  return tags->rqs[tag];
->          }
-> 
-> and, of course, we would need to provision the error request first.
-> 
-> Rationale here is that this will be primarily for devices with a low 
-> number of tags, so doubling the number of request isn't much of an 
-> overhead (as we'll be doing it essentially anyway in the error case as 
-> we'll have to save the original request _somewhere_), and that it would 
-> remove quite some cruft from the subsystem; look at SCSI EH trying to 
-> store the original request contents and then after EH restoring them again.
+Yes. Upon failure one would be calling something like 
+'blk_mq_get_error_rq(rq)', which would set the error flag in the 
+original request, fetch the matching request from ->static_rqs, and 
+return that one.
 
-Interesting idea. I like it. It is essentially a set of reserved requests
-without reserved tags: the tag to use for these requests would be provided
-"manually" by the user. Right ?
+Just figured, we could simply enlarge 'static_rqs' to have double the 
+size; then we can easily get the appropriate request from 'static_rqs' 
+by just adding the queue size.
+Making things even easier ...
 
-That should allow simplifying any processing that needs to reuse a tag,
-and currently its request. That is, CDL, but also usb-scsi, scsi EH and
-the few scsi LLDs using scsi_eh_prep_cmnd()+scsi_eh_restore_cmnd().
-Ideally, these 2 functions could go away too.
+> That should allow simplifying any processing that needs to reuse a tag,
+> and currently its request. That is, CDL, but also usb-scsi, scsi EH and
+> the few scsi LLDs using scsi_eh_prep_cmnd()+scsi_eh_restore_cmnd().
+> Ideally, these 2 functions could go away too.
+> 
+Which was precisely the idea. We have quite some drivers/infrastructure 
+which already require a similar functionality, and basically all of them 
+cover devices with a really low tag space (32/31 in the libata NCQ case, 
+16 in the SCSI TCQ case, or even _1_ in the SCSI parallel case :-)
+So a request duplication wouldn't matter _that_ much here.
 
-> 
-> Hmm?
-> 
-> Cheers,
-> 
-> Hannes
+Drivers with a higher queue depth typically can do 'real' TMFs, where 
+you need to allocate a new tag anyway, and so the whole operation 
+doesn't apply here.
 
+Cheers,
+
+Hannes
 -- 
-Damien Le Moal
-Western Digital Research
+Dr. Hannes Reinecke		           Kernel Storage Architect
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
 
