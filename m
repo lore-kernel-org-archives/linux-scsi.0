@@ -2,134 +2,103 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3BACC4332F
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Nov 2022 16:50:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02C61C4332F
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Nov 2022 18:37:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234218AbiKHQuX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Nov 2022 11:50:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37044 "EHLO
+        id S231509AbiKHShA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Nov 2022 13:37:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49476 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234286AbiKHQuV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2022 11:50:21 -0500
-Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2EE6157B5A;
-        Tue,  8 Nov 2022 08:50:18 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1667926210;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=7c4OzQgE338JFPjKcpP/KZGKw9KzVGPVi+wsbrwESPg=;
-    b=H9qX5HGT08ageoyoTrM/5eynuJeG3sAEVlIi7FvCgDS8VD9gsoHUgQfxpGx3AYK/2b
-    xsJMTuotiETPquVvJxHcU507L7HJ4+y7TSMH2eZREDQmjeA4em5wg+DrkhXLhF1z6dBB
-    5AIUyQ6dWpRyeuxfWamda+dPINM/QPdNUB5LjPlvjeYeqfrJ++6H2a0shYYpmaTScZ01
-    bGPfx9kAdrZmVSeITfBc6lS7ffGQsqa6CrLUkEkauZTP87/07VsoG9gDg3nASP0Va1cV
-    051KDIJku4X5oJl2WiAGImQfbGjUMgp+5L9tSY54KCzwYhSZXJFo5IX2DXlH0nO2nhou
-    rUEQ==
-Authentication-Results: strato.com;
-    dkim=none
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSeBwhhSxarlUcu05JCAPyj3VPAceccYJs0uz"
-X-RZG-CLASS-ID: mo00
-Received: from blinux
-    by smtp.strato.de (RZmta 48.2.1 AUTH)
-    with ESMTPSA id z9cfbfyA8Go7p2k
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-        (Client did not present a certificate);
-    Tue, 8 Nov 2022 17:50:07 +0100 (CET)
-Message-ID: <1eda1c55fdf8292c2912c6d0adb741d8dd7f0a20.camel@iokpp.de>
-Subject: Re: [RFC PATCH v1 1/2] ufs: core: Advanced RPMB detection
-From:   Bean Huo <beanhuo@iokpp.de>
-To:     Avri Altman <Avri.Altman@wdc.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        "daejun7.park@samsung.com" <daejun7.park@samsung.com>,
-        "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
-        "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
-        "quic_xiaosenh@quicinc.com" <quic_xiaosenh@quicinc.com>,
-        "quic_richardp@quicinc.com" <quic_richardp@quicinc.com>,
-        "quic_asutoshd@quicinc.com" <quic_asutoshd@quicinc.com>,
-        "hare@suse.de" <hare@suse.de>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date:   Tue, 08 Nov 2022 17:50:06 +0100
-In-Reply-To: <DM6PR04MB6575145B168BB80F3D2910A7FC3F9@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <20221107131038.201724-1-beanhuo@iokpp.de>
-         <20221107131038.201724-2-beanhuo@iokpp.de>
-         <DM6PR04MB6575145B168BB80F3D2910A7FC3F9@DM6PR04MB6575.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.5-0ubuntu1 
+        with ESMTP id S231535AbiKHSg5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2022 13:36:57 -0500
+Received: from mail-qt1-x82c.google.com (mail-qt1-x82c.google.com [IPv6:2607:f8b0:4864:20::82c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E830E4FFBE
+        for <linux-scsi@vger.kernel.org>; Tue,  8 Nov 2022 10:36:54 -0800 (PST)
+Received: by mail-qt1-x82c.google.com with SMTP id s4so9159459qtx.6
+        for <linux-scsi@vger.kernel.org>; Tue, 08 Nov 2022 10:36:54 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=XfKGQ6tkV2EHrD93bGwJXjE+fCbML8I53FC3zQiNvIM=;
+        b=YHqvfkkRDzXUMvugbQLlDDj/wM6nksU5zQTcjaz2P7tGTqnzS3+NUQ1jXJDbKswIQY
+         cFBJlSr6Gh5wiSHu1ab17WdQb1MKOm2GzL1G4YzDd7oVRZ08ULG+hwhtQu5a3EJIsmKy
+         OaCfUcCSLpH0N9jzexxCm4q6E80yS8FElPJPE8R8RxpDRIZIX3NTY38TzSOxKwoXr5gL
+         uMiX4+JNUSMxLBUlgSs+K+AVe19W4qrxyPbsrFm4UqJmS7Ok7ED8qNTQY5JNqmHmjYbZ
+         fx0vZhGYufFaSo/XA200TYV8P9cUo3tn2tgzKilvw5rk0j2HLxEjYyUOcHmIO9z48OOo
+         qSxQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=XfKGQ6tkV2EHrD93bGwJXjE+fCbML8I53FC3zQiNvIM=;
+        b=tZfS49/9sScms+Wlnx+NqFVKEbgXUZrag7Z9TM5QhyLLgq9bMLNeZKDe2HdrSW0y00
+         91EOSirheJHSFao9ItGg2+lluaMo1D+P7ceflPF/6l9pAFuRVoZD93+vR+KCflJm0ln6
+         aU+1rvWzoSHexJam1qPOPw+5PNGNUjXKJRmuqffLYFhss7XaNk0yDM4xrBIRLfjbZd/r
+         72+aMQNtTl2XIG11benL5+plqbgT9Jq2MWFjgr/Hyqlc1jpDJPvBe215hx1/Kmw5trQ6
+         7r+jvfU7UzygDTNd3POkEg66GQpnofPtvxVduwzT/EWpbRXsh3NnwAbFoOSzT4PI79zE
+         sWMw==
+X-Gm-Message-State: ANoB5pkTmcfLXYBbC3s3DSS1V56tzUwShunNdOzWzR2JRxF9ptfOb4gc
+        aJE63x88q3AUOARMUmJh9vKfumVrXkQ=
+X-Google-Smtp-Source: AA0mqf7KprH01M+PRusa+xxKG0eT+4V2gSYNsnxj7TAqFfRJm40tDOyPUo20yWKwaRPF+mUFFn3tTA==
+X-Received: by 2002:a05:622a:8004:b0:3a5:8a36:77b6 with SMTP id jr4-20020a05622a800400b003a58a3677b6mr9538800qtb.591.1667932613800;
+        Tue, 08 Nov 2022 10:36:53 -0800 (PST)
+Received: from mail-lvn-it-01.broadcom.com ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id l21-20020a37f915000000b006fa9d101775sm9864423qkj.33.2022.11.08.10.36.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 08 Nov 2022 10:36:52 -0800 (PST)
+From:   James Smart <jsmart2021@gmail.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Colin Ian King <colin.i.king@gmail.com>
+Subject: [PATCH v2] scsi: lpfc: remove redundant pointer lp
+Date:   Tue,  8 Nov 2022 10:36:20 -0800
+Message-Id: <20221108183620.93978-1-jsmart2021@gmail.com>
+X-Mailer: git-send-email 2.35.3
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Avri, 
+From:   Colin Ian King <colin.i.king@gmail.com>
 
-thanks for your review.
+Pointer lp is being initialized and incremented but the result
+is never read. The pointer is redundant and can be removed.
 
-On Tue, 2022-11-08 at 13:40 +0000, Avri Altman wrote:
-> > From: Bean Huo <beanhuo@micron.com>
-> > 
-> > Check UFS Advanced RPMB LU enablement during ufshcd_lu_init().
-> > 
-> > Signed-off-by: Bean Huo <beanhuo@micron.com>
-> > ---
-> >  drivers/ufs/core/ufshcd.c | 4 ++++
-> >  include/ufs/ufs.h         | 3 +++
-> >  2 files changed, 7 insertions(+)
-> > 
-> > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> > index
-> > ee73d7036133..d49e7a0b82ca 100644
-> > --- a/drivers/ufs/core/ufshcd.c
-> > +++ b/drivers/ufs/core/ufshcd.c
-> > @@ -4940,6 +4940,10 @@ static void ufshcd_lu_init(struct ufs_hba
-> > *hba,
-> > struct scsi_device *sdev)
-> >             desc_buf[UNIT_DESC_PARAM_LU_WR_PROTECT] ==
-> > UFS_LU_POWER_ON_WP)
-> >                 hba->dev_info.is_lu_power_on_wp = true;
-> > 
-> > +       if (desc_buf[UNIT_DESC_PARAM_UNIT_INDEX] == UFS_RPMB_UNIT
-> > &&
-> Please remind me why do we need both UFS_RPMB_UNIT and
-> UFS_UPIU_RPMB_WLUN ?
+Once lp is removed, pcmd is not longer used. So removed pcmd as well
 
-I see. they are the same value, we should remove one, will change it in
-next version.
-> 
-> > +           desc_buf[UNIT_DESC_PARAM_RPMB_REGION_EN] & 1 << 4)
-> (1 << 4) or BIT(4) ?
-> 
-> > +                       hba->dev_info.b_advanced_rpmb_en = true;
-> > +
-> >         kfree(desc_buf);
-> >  set_qdepth:
-> >         /*
-> > diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h index
-> > 1bba3fead2ce..2e617ab87750 100644
-> > --- a/include/ufs/ufs.h
-> > +++ b/include/ufs/ufs.h
-> > @@ -199,6 +199,7 @@ enum unit_desc_param {
-> >         UNIT_DESC_PARAM_PSA_SENSITIVE           = 0x7,
-> >         UNIT_DESC_PARAM_MEM_TYPE                = 0x8,
-> >         UNIT_DESC_PARAM_DATA_RELIABILITY        = 0x9,
-> > +       UNIT_DESC_PARAM_RPMB_REGION_EN          = 0x9,
-> This is awkward.  Better to define it, or - 
-> Maybe it's time for rpmb to have its own unit descriptor - it surely
-> deserve it.
->  
+Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 
-no problem, let me think about it, will add in the next version.
+---
+lp removal by Colin left as is.
+I added the pcmd mod on top of it.
+---
+ drivers/scsi/lpfc/lpfc_els.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-
-
-
-Kind regards,
-Bean
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 2b03210264bb..9326340d4226 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -9172,15 +9172,10 @@ static int
+ lpfc_els_rcv_farpr(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
+ 		   struct lpfc_nodelist  *ndlp)
+ {
+-	struct lpfc_dmabuf *pcmd;
+-	uint32_t *lp;
+ 	uint32_t did;
+ 
+ 	did = get_job_els_rsp64_did(vport->phba, cmdiocb);
+-	pcmd = cmdiocb->cmd_dmabuf;
+-	lp = (uint32_t *)pcmd->virt;
+ 
+-	lp++;
+ 	/* FARP-RSP received from DID <did> */
+ 	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
+ 			 "0600 FARP-RSP received from DID x%x\n", did);
+-- 
+2.35.3
 
