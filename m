@@ -2,98 +2,152 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88702C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Nov 2022 19:19:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 849A7C433FE
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Nov 2022 19:28:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229727AbiKHTTk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Nov 2022 14:19:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48914 "EHLO
+        id S229682AbiKHT2p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Nov 2022 14:28:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60460 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229877AbiKHTTY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2022 14:19:24 -0500
-Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.153.233])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38F2F183A2
-        for <linux-scsi@vger.kernel.org>; Tue,  8 Nov 2022 11:19:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1667935163; x=1699471163;
-  h=subject:from:to:cc:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=etrK7gNzKG4pgZBgYQeNdTA7qgXHmbBD9QcMBl2+YXo=;
-  b=EvCjn9qbLCn35hhk05mueLV3fxyp+cd2oy1M2ZRibaEGvg7z88BOGtjT
-   WOxQevWzXIUmcRWYDWsOaiO6v2O9toadj7oMGo4W0WHiSYZW5Gdy3pUtN
-   o3Jnvy+bMi72KIjL1xvWXx/+rOFR07FUy4qN+eY9YH7rlg8ZhP4Vd0DmV
-   4MySSdsIlhh1FPp/EVsYGTkViWbkkqxgEQE9AhaDyfq1fpz9Jft55Xe5L
-   PkA0C4C/Ckgoz/CwLUr6L7QuCqA7RHE/bJgbl+Q4v4yhODVeDs2zcyv58
-   nayiIeXwjqXc2z5kMW8RYqwLRnjiQi0HkNxXz40aeAOFcnCrGCQYMpOXo
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.96,148,1665471600"; 
-   d="scan'208";a="198949055"
-Received: from unknown (HELO email.microchip.com) ([170.129.1.10])
-  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 08 Nov 2022 12:19:22 -0700
-Received: from chn-vm-ex02.mchp-main.com (10.10.85.144) by
- chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.12; Tue, 8 Nov 2022 12:19:22 -0700
-Received: from brunhilda.pdev.net (10.10.115.15) by chn-vm-ex02.mchp-main.com
- (10.10.85.144) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.12 via Frontend
- Transport; Tue, 8 Nov 2022 12:19:22 -0700
-Received: from brunhilda.pdev.net (localhost [127.0.0.1])
-        by brunhilda.pdev.net (8.15.2/8.15.2/Debian-22ubuntu3) with ESMTP id 2A8JMEl0322648;
-        Tue, 8 Nov 2022 13:22:14 -0600
-Received: (from brace@localhost)
-        by brunhilda.pdev.net (8.15.2/8.15.2/Submit) id 2A8JMEol322647;
-        Tue, 8 Nov 2022 13:22:14 -0600
-X-Authentication-Warning: brunhilda.pdev.net: brace set sender to don.brace@microchip.com using -f
-Subject: [PATCH 8/8] smartpqi: change version to 2.1.20-035
-From:   Don Brace <don.brace@microchip.com>
-To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
-        <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
-        <gerry.morong@microchip.com>, <mahesh.rajashekhara@microchip.com>,
-        <mike.mcgowen@microchip.com>, <murthy.bhat@microchip.com>,
-        <kumar.meiyappan@microchip.com>, <jeremy.reeves@microchip.com>,
-        <hch@infradead.org>, <jejb@linux.vnet.ibm.com>,
-        <joseph.szczypek@hpe.com>, <POSWALD@suse.com>
-CC:     <linux-scsi@vger.kernel.org>
-Date:   Tue, 8 Nov 2022 13:22:14 -0600
-Message-ID: <166793533417.322537.3074216622272955440.stgit@brunhilda>
-In-Reply-To: <166793527478.322537.6742384652975581503.stgit@brunhilda>
-References: <166793527478.322537.6742384652975581503.stgit@brunhilda>
-User-Agent: StGit/1.5.dev2+g9ce680a52bd9
+        with ESMTP id S229447AbiKHT2o (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2022 14:28:44 -0500
+Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [81.169.146.167])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 708F7193F8;
+        Tue,  8 Nov 2022 11:28:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1667935713;
+    s=strato-dkim-0002; d=iokpp.de;
+    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
+    From:Subject:Sender;
+    bh=XAL3s5j75Kq2jhzOQEusmr7a0Cgo2qohGoilcfq/xf4=;
+    b=cHbVnCCXWcwfxWCZlcbKF7m6KfX+30BGIYu6AlrzTHjHMRV7PKTJppFo9ZgCEfblhO
+    C3NFauFyawmgV8mwoD6BUaYnwAb2Z2eAHf+GUv8lghmCk7jvzVmJ8jCxd26GLSqPQW5V
+    I5f/zSy4AeLk4kbwfnnqVK2KKJgRPdnu3iaJejnyFxwIDPhp0zeSA/AxOmnnD2HuhZyS
+    2rT8O4VQQibM7y8aYLMyxYTEkhAIXlQ+zkA0KMCAvLYXrd3Ui9+y0pV7Rz1E2Y+b48vB
+    LoiNxyxA/V+CvwyGvcaQl73RQsY/7fV5mq7p3PlX7Ca0S4XKep6rTRd9vh4RRBMW3Pop
+    tkSg==
+Authentication-Results: strato.com;
+    dkim=none
+X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSeBwhhSxarlUcu05JCAPyj3VPAceccYJs0uz"
+X-RZG-CLASS-ID: mo00
+Received: from blinux
+    by smtp.strato.de (RZmta 48.2.1 AUTH)
+    with ESMTPSA id z9cfbfyA8JSUpIh
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
+        (Client did not present a certificate);
+    Tue, 8 Nov 2022 20:28:30 +0100 (CET)
+Message-ID: <fa3905bff8ba47b0ed45f9221dd1d033ca553179.camel@iokpp.de>
+Subject: Re: [RFC PATCH v1 2/2] ufs: core: Add advanced RPMB support in
+ ufs_bsg
+From:   Bean Huo <beanhuo@iokpp.de>
+To:     Avri Altman <Avri.Altman@wdc.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
+        "daejun7.park@samsung.com" <daejun7.park@samsung.com>,
+        "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
+        "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
+        "quic_xiaosenh@quicinc.com" <quic_xiaosenh@quicinc.com>,
+        "quic_richardp@quicinc.com" <quic_richardp@quicinc.com>,
+        "quic_asutoshd@quicinc.com" <quic_asutoshd@quicinc.com>,
+        "hare@suse.de" <hare@suse.de>
+Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date:   Tue, 08 Nov 2022 20:28:29 +0100
+In-Reply-To: <DM6PR04MB657518129522996B2B5C9640FC3F9@DM6PR04MB6575.namprd04.prod.outlook.com>
+References: <20221107131038.201724-1-beanhuo@iokpp.de>
+         <20221107131038.201724-3-beanhuo@iokpp.de>
+         <DM6PR04MB657518129522996B2B5C9640FC3F9@DM6PR04MB6575.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.5-0ubuntu1 
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
-Reviewed-by: Scott Teel <scott.teel@microchip.com>
-Reviewed-by: Gerry Morong <gerry.morong@microchip.com>
-Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
-Signed-off-by: Don Brace <don.brace@microchip.com>
----
- drivers/scsi/smartpqi/smartpqi_init.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Avri, 
+thanks for your comments and review.
 
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index fb4a33decde1..d0446d4d4465 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -33,11 +33,11 @@
- #define BUILD_TIMESTAMP
- #endif
- 
--#define DRIVER_VERSION		"2.1.18-045"
-+#define DRIVER_VERSION		"2.1.20-035"
- #define DRIVER_MAJOR		2
- #define DRIVER_MINOR		1
--#define DRIVER_RELEASE		18
--#define DRIVER_REVISION		45
-+#define DRIVER_RELEASE		20
-+#define DRIVER_REVISION		35
- 
- #define DRIVER_NAME		"Microchip SmartPQI Driver (v" \
- 				DRIVER_VERSION BUILD_TIMESTAMP ")"
+
+On Tue, 2022-11-08 at 19:09 +0000, Avri Altman wrote:
+> > Add advanced RPMB support in ufs_bsg. For these reasons, we try to
+> > implement Advanced RPMB in ufs_bsg:
+> > 1. According to the UFS specification, only one RPMB operation can
+> > be
+> > performed at any time. We can ensure this by using reserved slot
+> > and its
+> > dev_cmd sync operation protection mechanism.
+> 
+> Regardless of its technical convenience, this approach unfortunately
+> breaks the spec.
+> 
+> The spec say (please note the line numbers):
+> 
+> ".....
+> 
+> 5197 12.4.5.1 Advanced RPMB Message
+> 
+> 5198 An Advanced RPMB Message is composed of an Advanced RPMB Meta
+> Information and a MAC/KEY in
+> 
+> 5199 the EHS field in *COMMAND UPIU* and *RESPONSE UPIU*. Advanced
+> RPMB Data is delivered through
+> 
+> ....."
+
+> Moreover, in the examples that are provided, it is still expected to
+> be carried via SECURITY PROTOCOL IN and SECURITY PROTOCOL OUT,
+> 
+> See e.g. Figure 12.15 — Authenticated Data Write Flow (in Advanced
+> RPMB Mode).
+> 
+> 
+not quite get what you meant here.
+> 
+
+> 
+> Therefore, wrapping the rpmb packets in a query-request upiu and
+> query-response upiu is not allowed.
+> 
+> 
+
+no, I didn't wrap RPMB packet in query-request/response, it is inupiu_req and upiu_rsp, it is upiu command. Based on Bart's suggestion,
+we shouldn't change the current ufs_bsg structure. I think his concern
+is that if we change ufs_bsg structure, the user space tool also
+needs to change as well. 
+
+> 
+> Still, I agree that the approach you suggested, namely to rely on the
+> ufs-bsg driver, is the cleanest way to handle the advance rpmb
+> access.
+> 
+> However, IMHO, you need to do it is by adding command UPIU to the
+> ufs-bsg driver.
+> 
+> 
+
+Yes, agree with you on this point. But we still need to use reserved
+slots for RPMB or command UPIU, we don't want to affect IO requests on
+the normal path.
+
+One problem is that we didn't split the dev_manage command and the RPMB
+command in their completion handlers. I would like to change dev_man to
+passthrough or something else, and then split dev_man and RPMB,
+otherwise, they would be mixed in one dev_man completion handler. No
+technical issues here, just want to make it more readable and
+maintainable.
+
+
+
+Kind regards,
+Bean
+
+> 
+> Thanks,
+> 
+> Avri
 
