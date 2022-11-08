@@ -2,176 +2,118 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA3D5C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Nov 2022 19:09:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CE49C4332F
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Nov 2022 19:19:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229744AbiKHTJa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Nov 2022 14:09:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37614 "EHLO
+        id S229900AbiKHTTC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Nov 2022 14:19:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47302 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229751AbiKHTJ1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2022 14:09:27 -0500
-Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6777D6CA18;
-        Tue,  8 Nov 2022 11:09:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1667934563; x=1699470563;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=VMJcIQWZOT1PGcSJCIBJFjYZor/Rlfsjc4FwFg9K6ZY=;
-  b=mOVXJA3QiKOAFIcT5WSDwnYpOunLDbe5Vc+9HFd2LwNlLl20PRGpRvXp
-   iz16FPj1DCBGUBKnQ/INC1cfrNZmD9kYXzwt+qdfWOUuP1q4akzOpWNU2
-   +7tpPmaoRWGyNorkt9RYyYCebwOYPaCAPF8Jz/N7HCV9U7VTX7//PgdVU
-   tDmzK8lXY+8EJJvR8kHnKxjCT1B2WAQiYK9MfVqFSL8tgOcwIzLWvHTmE
-   CcQT1F7TD4kHUQZp0rubiYylmVqNw/oSxJDc8Ry8lthZjzm1dh6BaRWMV
-   BBzUM1vj+aAmIzReB0kQNMOirB4KGR6Sx7qnZ2aO7BciqLNoek+mE0YP4
-   g==;
-X-IronPort-AV: E=Sophos;i="5.96,148,1665417600"; 
-   d="scan'208";a="215789761"
-Received: from mail-bn8nam04lp2047.outbound.protection.outlook.com (HELO NAM04-BN8-obe.outbound.protection.outlook.com) ([104.47.74.47])
-  by ob1.hgst.iphmx.com with ESMTP; 09 Nov 2022 03:09:20 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=mxlOeEvauROfGYZ4Vv18yVyFkEUnNbxzd4JNA5gLf7PRB+nDbNselYZ07WEXIiIKg789KRLW+flMQnn2ePg767ncG/9wvhbW7hKaO9VGijKe5ugHLS8yerm4E9eN2iZrkSFds4oiKDW/ieXm9RdngGK5uoiy8CT6127qks8cW2+evXJDsn4rJuLZT7b1+SewiPCgTQL8bwsfcrPXzQSvOKdUmqJJySV2HRoYF7eD+KVNGOEi9Q70j/IvfTPGZQw5iDOs7PwMWwMt9wOm4yNYQMa+6ZQ2M+UHsv6Rp1xNegrM5cCSOsr1gSTHpMlpTgBWGf97BpvjjQQwe0uE82M5Gg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=VMJcIQWZOT1PGcSJCIBJFjYZor/Rlfsjc4FwFg9K6ZY=;
- b=RK+Bn6zd5UR3QHMKt5GoduGyAs8brlnJM8tXzUxmPyEA0G24ju2gk5zTTIfBwZJSZisyCu7zp683BoDqCUcuNIfhrXr3XDPGLUVRbbYOfNw8adxH8pCA7f5tpF2wCj0C+S0ElSLRl0pdYbX+SbYKUjj67nBrrdUZWQSkQ3QXAqqloYrgyAdtGSEbSGTU6f6HhOqEx2btHjaxOuZ83o9v4WMq/iGcEpYlIeCZXBC4wDtDZBvUCaoqEtYX2e6PyZECnR5snRtXvnE0l14S5seOMdcVlIHIokTw0B5Uf9NrAwKO5k6YGKXLnLmeynyJMZ1TFaaxE+dbDqoYkEGudTahCQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=VMJcIQWZOT1PGcSJCIBJFjYZor/Rlfsjc4FwFg9K6ZY=;
- b=gM/e5uWwarA4GrRJ1Ifls3Rqwje0lip9Px5qpmkQTHknkDr1pJtgxtEgE7vKWBxYQigBzsFFRI+lV3Akdvi8ESX1NuryDZwHTprO4jVdOs59SeB3WbpTyAiVUA95wzi0+yZgAjYUABGU6QvIK0mojDChYNfA89AFM9WQVxYm9dM=
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- BYAPR04MB4056.namprd04.prod.outlook.com (2603:10b6:a02:b4::22) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5791.25; Tue, 8 Nov 2022 19:09:18 +0000
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::1afa:ab74:ef51:1e72]) by DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::1afa:ab74:ef51:1e72%4]) with mapi id 15.20.5791.026; Tue, 8 Nov 2022
- 19:09:18 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Bean Huo <beanhuo@iokpp.de>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        "daejun7.park@samsung.com" <daejun7.park@samsung.com>,
-        "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
-        "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
-        "quic_xiaosenh@quicinc.com" <quic_xiaosenh@quicinc.com>,
-        "quic_richardp@quicinc.com" <quic_richardp@quicinc.com>,
-        "quic_asutoshd@quicinc.com" <quic_asutoshd@quicinc.com>,
-        "hare@suse.de" <hare@suse.de>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [RFC PATCH v1 2/2] ufs: core: Add advanced RPMB support in
- ufs_bsg
-Thread-Topic: [RFC PATCH v1 2/2] ufs: core: Add advanced RPMB support in
- ufs_bsg
-Thread-Index: AQHY8qptmsmbt7vqGEOmo5IvpfPIBq41YHnA
-Date:   Tue, 8 Nov 2022 19:09:17 +0000
-Message-ID: <DM6PR04MB657518129522996B2B5C9640FC3F9@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <20221107131038.201724-1-beanhuo@iokpp.de>
- <20221107131038.201724-3-beanhuo@iokpp.de>
-In-Reply-To: <20221107131038.201724-3-beanhuo@iokpp.de>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: DM6PR04MB6575:EE_|BYAPR04MB4056:EE_
-x-ms-office365-filtering-correlation-id: f78310eb-2e9f-4a73-93d2-08dac1bcbc17
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: E+Drq7K25iIirkfMtmTcVGtkgJRVHva1gT9oIxSLwH9fOpZ2cHpDEZMFfBxqg9OERLqCJfrXAW9QVUiXNxRfQhJWXit7mbbpqm6Xb9+/ZiR3Wivpq8b/uiPhIYKG+sVIcS+USG12r+hgRasMfo9/jYgnW0jZP5+yck+2kM7GbzCZ9imI6w/oocY9CFkb7B+A6ooFVweHHKUty7TJHUyqjSyvuse5/ShzT0oqsyC8CNLtGN9SbjlfAkSmeObZKAnizWQH3C1Aj5ULUbDKC/VtRj882TJnXRloF7TqXGm1eHBbyKhZsa4rA0+mEMtyukmjzOoVXFrOr7BanmS1fstROzIL/Rk2gnF2ouUEKzr6TxHhWqFHhL/RaEqs4uja9l9HfTOeRsGeJcx14CrrNoafNAwrmea8go6AJ4ZE1JBFbflrkVNGBiUb7gyLF6XXKVOV8H3FVGEcAb4g1dkZZu1NIc9xyGiNrdNpxITml/u4UERzXoyV3GzNSBpvkCRMAqq0jNDHXjPY+ENeK7mXXBMmXLVNj1/RDQhyIPH5hKlIJjN3X5CthBFm6RpOw5XJpd/F78FniFj/jAShUFCtb46m5L9OOPym1Tcft46RC1PniZhnGlUEiGDVaiJYJ4emRcxledHEy6VV/5apjLnPTl8nyCBOJ2zSwY9TnJmBCgZWP+4q/FItlSvbBH5C/30mvfV3Ihf5x53XPa9HAhLFhp6iw5KjP/76ot94HeYoXX1JgH24Gafj3xayiaurlltY0PxnDoB+zHr1sHklpFMNVfamqH/M6jGHssJcBGomep9aIWo=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(4636009)(366004)(396003)(136003)(346002)(376002)(39860400002)(451199015)(4326008)(41300700001)(8676002)(8936002)(7416002)(5660300002)(52536014)(316002)(9686003)(110136005)(26005)(6506007)(82960400001)(54906003)(186003)(2906002)(7696005)(38100700002)(71200400001)(478600001)(55016003)(66476007)(64756008)(122000001)(66946007)(66446008)(66556008)(76116006)(33656002)(86362001)(38070700005)(921005)(83380400001);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?V0NqMnZORDluSW1uWm1RRjcxU3EzSzFObGFIVGdKeHdXaUVYUEJRV1ZocU9T?=
- =?utf-8?B?WnQ4ajdpTHJjRElFejg5M2RDTmMwUkt2TTVXS3RvSjFoZFBCVmhMc2RqNGw5?=
- =?utf-8?B?RmFNSllTbzFGN041TmhXVldraENObXlEVG50ZVZOb3MwcVBXU1I0MDFPV2l6?=
- =?utf-8?B?NDVIc0V6MTVqZGM5bWozK2R5blRJS1kwOUU1OGJPZW1BS2l0TGFVQ24raCtJ?=
- =?utf-8?B?TzJKT2dFYkJHZFNOVHBWSTkyakNnQzBkUXlxL1h1aGdzQUQrejNNTXBrYzRI?=
- =?utf-8?B?UzBKUjdiSTk2UlkzT3RjWlREWlhlRVhRSlIyMGppYmNMWG4zbElZbG1BMmJC?=
- =?utf-8?B?S0pBb2VVVHlqNVlTSTlhVGx1Y1hEeThLVzlUN1RhYnRMeFNzNGNwcEdqQTB5?=
- =?utf-8?B?TUlMYWdMVnVoNzF3Vm5QaEFvRlFIYnRPSVBlQU9nTDlJMG9vZVVaeERKUWpm?=
- =?utf-8?B?WGhXWGcrZlJVR1JDNVZyenluQVFwN3lIOU44SEVabnVqY25ibC9qRW84SWkx?=
- =?utf-8?B?bUM1L0lRL2ZqVmNROWo1NjRzTlRXUjZHMWZVVG1PNTVPU0EvcDBNU3c2emhq?=
- =?utf-8?B?NHluU0QxejljRFBaNmRJaFJxMXZ5Z3ZxQ1BTUG1sUysvN0hnUFg1R1FiZHA5?=
- =?utf-8?B?Qnpqd0Rya1BLRVVaSENwQkhhckp0NjBKVXZmZWE0ekhiV2lZdTRKRXM0OE5o?=
- =?utf-8?B?VWc5aTdFbStDM3RMeXJlTWR0S3I2Tk5TeFNRQzNKVTJCT3Z0MVBYSVNBZWJQ?=
- =?utf-8?B?ZmdPRmlMSG5nNmQ5N3Y4SG5RdFN2NjVzbmhlNUx6QW1wNzRJd2hYNk9YTEdY?=
- =?utf-8?B?ZkxIc3k4UUx0M2hrSUNWZzU5bE1rRXE5dVVuN2tOK2FIYmFuMXRIcmlxQTRH?=
- =?utf-8?B?RHo1TXYzalBTcXlwRTcrUzBiemluM1dPTzFpdkpQZDdFdWN4Y2dyZDVJak5t?=
- =?utf-8?B?WFdrMFhISVV2M25rRUptTDFOU01MWnN6czgzU1F4YTBjT1YrWVhyR2wvNXZ6?=
- =?utf-8?B?YnM2YWpxNkx6TVhYTnhqcVlWL2tyN2RWTVowWDRMOTBudFpzOU92L2lEbVV6?=
- =?utf-8?B?N0ZWZ0JzTXlURjhmYWp5MDBYVEFQWGtPd0pOTldXckZmem5Tb2JhTStvOXdD?=
- =?utf-8?B?QUIzYzY2WVNiN2FPUGlYT1lickJaOFY2SUZpSTRPdFNiNUlMa2tMaXRhQWhB?=
- =?utf-8?B?MlFPU3ZlZ3gvbFB1Y1ZiMXpwM212YllJcEI4Z293VzdGVjVHWlRFRGRHMncx?=
- =?utf-8?B?SmFzdW54dld2M0FycVpIMm10ejN0bGhOMi9lM1JJN25oK2VYTTdiN1pEbitE?=
- =?utf-8?B?T0VUT1VReFcvdXRQbzhNaU1sKzVObE96MDZSaEFRRGc5WFl0TFFrYW5ibnp6?=
- =?utf-8?B?TGRYWi9yVkg2WE5wMzlCUEhCQVZEUjVjWnBCV3dwNXpnMHp1dzIrTDlvYVlh?=
- =?utf-8?B?V3UvdVloWmN5SGFZcjlHa3BwdlRpNVN6Zmx4N2Znc2FhUmxQTWIyTXBmaE5n?=
- =?utf-8?B?R2xETStjN3lSMW50SjJzTVNhbnBiVzhjUnNKQzl3RlkwdnR6RzNES1k4ZFR1?=
- =?utf-8?B?S0JJdUxwNlE0NFFZcEN6alp0WEt0UlFTZzQ0SlJvNWN1a1czZTROUmtDYU9q?=
- =?utf-8?B?SnR6aWxraW4zMG9scFFZTGM1UWdSWTdsTklkR0lINmxuYlZDYTdSSzFoejFS?=
- =?utf-8?B?VXJGb1pLa21uQUpiYjFzTHFzVVNER2dQZ0VaaFhINW8wMy8yZ1g3bmxVcC9S?=
- =?utf-8?B?MFhsYnJMcVpoTTlyZ3VzKzFYeVhlK1hKRTFZY0R5ZGs1a2dFb09wMUcvRmhO?=
- =?utf-8?B?RW9tQ1UxbWExR0VTc3BVQmpuUmdsc20yT2ZpZDRDVmRFbVZ5d25lQWxHSEg0?=
- =?utf-8?B?Y1dVcDJuYUJrekFOOUhNQ1JoL1lQN29tYmU0bS8zNWpWYzRoeDJPR2duYkI0?=
- =?utf-8?B?Si93VWNvNEZPQjU1ZHdJRDhCRk9iNGtneE9qdnJJM2I1MzFNSkxTZ3ErOHVq?=
- =?utf-8?B?aXh4ZFQ5V2lmMUw0UlZjeHpsaXV0bzNDS0xtRUJlTDZlVUliQzVtaWZtVjdM?=
- =?utf-8?B?ZjR0dXh2a01VSXJhN1ZtelpPSUwwRkdoN0tiRC94UHpieFNiS3dDQnA1QnZB?=
- =?utf-8?Q?cyWZhWcy+/cGOH64e0S2BlIfQ?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        with ESMTP id S229906AbiKHTSt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2022 14:18:49 -0500
+Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.153.233])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2347542985
+        for <linux-scsi@vger.kernel.org>; Tue,  8 Nov 2022 11:18:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
+  t=1667935123; x=1699471123;
+  h=subject:from:to:cc:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=X5+6FqdY24s99yFdGuTfWrG1kHj9HtQbdchdDvA2N+0=;
+  b=HIvRyoEC/bkbokAtDUlZkvIlOpeRPPrjYgL7PiWeyyqlWhdAqj2eczp4
+   RM1wzfOfq5ppV7NZqLcZoLCn7cPabBernl4dy+V9JeXJTSkPQ5+wfr5qa
+   Fqs/V1ecdwavOtWx4ZszKErylMZEAVKrKCsqx1RrB46ePp2zXmpgViPwW
+   xP99UZqL4m35nKVjkerJQ9jjqRbUwc8xVjKjYZqW+NL2mUv+dJHrkOn0q
+   t0Hf/tzZnmL4HLnxuGuyteGi61qRY7EyoOhNpFfNuU70CKF8cs44FKqBL
+   fm6Nz7cV7mXTIm6v1UYiVDalxy9UHYFWTpxqyWwq8kKV5HdI/g8jeCS6K
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.96,148,1665471600"; 
+   d="scan'208";a="198948980"
+Received: from unknown (HELO email.microchip.com) ([170.129.1.10])
+  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 08 Nov 2022 12:18:42 -0700
+Received: from chn-vm-ex03.mchp-main.com (10.10.85.151) by
+ chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.12; Tue, 8 Nov 2022 12:18:41 -0700
+Received: from brunhilda.pdev.net (10.10.115.15) by chn-vm-ex03.mchp-main.com
+ (10.10.85.151) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.12 via Frontend
+ Transport; Tue, 8 Nov 2022 12:18:41 -0700
+Received: from brunhilda.pdev.net (localhost [127.0.0.1])
+        by brunhilda.pdev.net (8.15.2/8.15.2/Debian-22ubuntu3) with ESMTP id 2A8JLXD1322567;
+        Tue, 8 Nov 2022 13:21:33 -0600
+Received: (from brace@localhost)
+        by brunhilda.pdev.net (8.15.2/8.15.2/Submit) id 2A8JLWIk322566;
+        Tue, 8 Nov 2022 13:21:32 -0600
+X-Authentication-Warning: brunhilda.pdev.net: brace set sender to don.brace@microchip.com using -f
+Subject: [PATCH 0/8] smartpqi updates
+From:   Don Brace <don.brace@microchip.com>
+To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
+        <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
+        <gerry.morong@microchip.com>, <mahesh.rajashekhara@microchip.com>,
+        <mike.mcgowen@microchip.com>, <murthy.bhat@microchip.com>,
+        <kumar.meiyappan@microchip.com>, <jeremy.reeves@microchip.com>,
+        <hch@infradead.org>, <jejb@linux.vnet.ibm.com>,
+        <joseph.szczypek@hpe.com>, <POSWALD@suse.com>
+CC:     <linux-scsi@vger.kernel.org>
+Date:   Tue, 8 Nov 2022 13:21:32 -0600
+Message-ID: <166793527478.322537.6742384652975581503.stgit@brunhilda>
+User-Agent: StGit/1.5.dev2+g9ce680a52bd9
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f78310eb-2e9f-4a73-93d2-08dac1bcbc17
-X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Nov 2022 19:09:17.9708
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: biUI3QOe3pz8F9vA8c+N/HwrEcyBkCkM7XHh/kHWCobY1zuRWN0TgaA1eYLYc8bfj66LrIxUqhQoaUIaEhbyaA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB4056
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-PiANCj4gQWRkIGFkdmFuY2VkIFJQTUIgc3VwcG9ydCBpbiB1ZnNfYnNnLiBGb3IgdGhlc2UgcmVh
-c29ucywgd2UgdHJ5IHRvDQo+IGltcGxlbWVudCBBZHZhbmNlZCBSUE1CIGluIHVmc19ic2c6DQo+
-IA0KPiAxLiBBY2NvcmRpbmcgdG8gdGhlIFVGUyBzcGVjaWZpY2F0aW9uLCBvbmx5IG9uZSBSUE1C
-IG9wZXJhdGlvbiBjYW4gYmUNCj4gcGVyZm9ybWVkIGF0IGFueSB0aW1lLiBXZSBjYW4gZW5zdXJl
-IHRoaXMgYnkgdXNpbmcgcmVzZXJ2ZWQgc2xvdCBhbmQgaXRzDQo+IGRldl9jbWQgc3luYyBvcGVy
-YXRpb24gcHJvdGVjdGlvbiBtZWNoYW5pc20uDQpSZWdhcmRsZXNzIG9mIGl0cyB0ZWNobmljYWwg
-Y29udmVuaWVuY2UsIHRoaXMgYXBwcm9hY2ggdW5mb3J0dW5hdGVseSBicmVha3MgdGhlIHNwZWMu
-DQpUaGUgc3BlYyBzYXkgKHBsZWFzZSBub3RlIHRoZSBsaW5lIG51bWJlcnMpOg0KIi4uLi4uDQo1
-MTk3IDEyLjQuNS4xIEFkdmFuY2VkIFJQTUIgTWVzc2FnZQ0KNTE5OCBBbiBBZHZhbmNlZCBSUE1C
-IE1lc3NhZ2UgaXMgY29tcG9zZWQgb2YgYW4gQWR2YW5jZWQgUlBNQiBNZXRhIEluZm9ybWF0aW9u
-IGFuZCBhIE1BQy9LRVkgaW4NCjUxOTkgdGhlIEVIUyBmaWVsZCBpbiAqQ09NTUFORCBVUElVKiBh
-bmQgKlJFU1BPTlNFIFVQSVUqLiBBZHZhbmNlZCBSUE1CIERhdGEgaXMgZGVsaXZlcmVkIHRocm91
-Z2gNCi4uLi4uIg0KTW9yZW92ZXIsIGluIHRoZSBleGFtcGxlcyB0aGF0IGFyZSBwcm92aWRlZCwg
-aXQgaXMgc3RpbGwgZXhwZWN0ZWQgdG8gYmUgY2FycmllZCB2aWEgU0VDVVJJVFkgUFJPVE9DT0wg
-SU4gYW5kIFNFQ1VSSVRZIFBST1RPQ09MIE9VVCwNClNlZSBlLmcuIEZpZ3VyZSAxMi4xNSDigJQg
-QXV0aGVudGljYXRlZCBEYXRhIFdyaXRlIEZsb3cgKGluIEFkdmFuY2VkIFJQTUIgTW9kZSkuDQoN
-ClRoZXJlZm9yZSwgd3JhcHBpbmcgdGhlIHJwbWIgcGFja2V0cyBpbiBhIHF1ZXJ5LXJlcXVlc3Qg
-dXBpdSBhbmQgcXVlcnktcmVzcG9uc2UgdXBpdSBpcyBub3QgYWxsb3dlZC4NCg0KU3RpbGwsIEkg
-YWdyZWUgdGhhdCB0aGUgYXBwcm9hY2ggeW91IHN1Z2dlc3RlZCwgbmFtZWx5IHRvIHJlbHkgb24g
-dGhlIHVmcy1ic2cgZHJpdmVyLCBpcyB0aGUgY2xlYW5lc3Qgd2F5IHRvIGhhbmRsZSB0aGUgYWR2
-YW5jZSBycG1iIGFjY2Vzcy4NCkhvd2V2ZXIsIElNSE8sIHlvdSBuZWVkIHRvIGRvIGl0IGlzIGJ5
-IGFkZGluZyBjb21tYW5kIFVQSVUgdG8gdGhlIHVmcy1ic2cgZHJpdmVyLg0KDQpUaGFua3MsDQpB
-dnJpDQoNCg==
+These patches are based on Martin Petersen's 6.2/scsi-queue tree
+  https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git
+  6.2/scsi-queue
+
+This set of changes consists of:
+ * Add support for host_tagset.
+   Originally proposed by Hannes Reinecke here:
+   Link: https://lore.kernel.org/linux-block/20191126131009.71726-8-hare@suse
+   At the time, we wanted to fully test multipath failover before
+   accepting his patch. There have been a few changes in our queuing layer
+   since his patch, so I'm applying it with the required updates.
+   We moved the reserved command section to the end of the command pool,
+   eliminating some math in the submission threads.
+ * Add PCI-IDs for new storage devices.
+ * Corrects maximum LUN number for multi-actuator devices. This update
+   is more cosmetic. No bugs have been filed.
+ * Change the sysfs "raid_level" entry to "N/A" for controller devices.
+ * Correct a rare kernel Oops when removing the smartpqi driver managing
+   multi-actuator devices.
+ * Add in a controller cache flush during driver removal. 
+ * Initialize our feature_section structures to 0. More of an alignment
+   with our in-house driver.
+ * Bump the driver version to 2.1.20-035
+
+---
+
+Don Brace (3):
+      smartpqi: convert to host_tagset
+      smartpqi: initialize feature section info
+      smartpqi: change version to 2.1.20-035
+
+Gilbert Wu (1):
+      smartpqi: add controller cache flush during rmmod
+
+Kevin Barnett (2):
+      smartpqi: correct max lun number
+      smartpqi: change sysfs raid_level attribute to N/A for controllers
+
+Kumar Meiyappan (1):
+      smartpqi: correct device removal for multiactuator devices
+
+Mike McGowen (1):
+      smartpqi: Add new controller PCI IDs
+
+
+ drivers/scsi/smartpqi/smartpqi.h      |   5 +-
+ drivers/scsi/smartpqi/smartpqi_init.c | 164 +++++++++++++++++++-------
+ 2 files changed, 125 insertions(+), 44 deletions(-)
+
+--
+Signature
