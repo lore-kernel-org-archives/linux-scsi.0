@@ -2,192 +2,172 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DEBEBC43219
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Nov 2022 14:34:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2F18C4332F
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Nov 2022 02:50:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232432AbiKGOey (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Nov 2022 09:34:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48572 "EHLO
+        id S232993AbiKHCup (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Nov 2022 21:50:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34134 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232417AbiKGOef (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Nov 2022 09:34:35 -0500
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B075B214;
-        Mon,  7 Nov 2022 06:34:33 -0800 (PST)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 6B1EE225AD;
-        Mon,  7 Nov 2022 14:34:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1667831672; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=L4Sg1qZkwEiVSC2iC9dKlGrQBQD0s8J33K2XOu5KL/0=;
-        b=N6Bkqf/c7//mK5rtoPzoC8e+qy9BdJHOSb8jcGnaB5CG5HwReYZjRblTPTmnRQxvFnaQIv
-        qDV8M41T0T6bHuMPHrfUA3nSKLPjyhKR6cEjb7mKNpSdSWrMhOfCWqP5GN9x0MhE1QmL85
-        peuBYiQOCGwswOb6zO2vwvbnISvnkxA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1667831672;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=L4Sg1qZkwEiVSC2iC9dKlGrQBQD0s8J33K2XOu5KL/0=;
-        b=J4uiNATruM+2EzKbD+Jy+1ehg3atdTKIKxl8M5nA1CM6NlOwGjnpqIzTa8zLjwW/q50d5w
-        P0F5WEaqk5+VfiCA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 462D413AC7;
-        Mon,  7 Nov 2022 14:34:32 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id kC/TEHgXaWNCBAAAMHmgww
-        (envelope-from <hare@suse.de>); Mon, 07 Nov 2022 14:34:32 +0000
-Message-ID: <84544a8b-5884-840c-0b69-fe6c4ae18e72@suse.de>
-Date:   Mon, 7 Nov 2022 15:34:31 +0100
+        with ESMTP id S233128AbiKHCuj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Nov 2022 21:50:39 -0500
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC4432EF2E;
+        Mon,  7 Nov 2022 18:50:37 -0800 (PST)
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 2A80Nm6O014110;
+        Tue, 8 Nov 2022 02:50:29 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2022-7-12;
+ bh=h+bnonTzNfppf7tOpTbg4GxtJfy7yH1PLBiYSB6AEP8=;
+ b=ZzOCtaGZINnYeHRJYZ7kkuXRx5Z85MS90pGBuDNCdRWS/9nQ73KcPqj/VOiKTsLDsBMH
+ IlR9qvnevpT9bMpPGcbPHsLmxBfoBsPKb499P+jNBy61GSMKMgbHd2Z+AF92ype654Ok
+ 4uiCX2SBk6Ye/Fo/cHVWP9YO7aUi7O48CisERqiWlVBQA87YS/d1D/e6wH/0a5LfBY8p
+ kCpswTlD/5GP3vpzvqaqU0mEFYgcMBrULLeNeOkstt/GxuC8k52x/gxMEjFdDranmEiC
+ nS4d2JCN0yROwca9hM+eggHVg17S6qR+9n/6twuku9vQGo/OXd8+piQXw8f1eG0MjZjz yg== 
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3kngmj5ke3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 08 Nov 2022 02:50:29 +0000
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2A801ETB030126;
+        Tue, 8 Nov 2022 02:50:28 GMT
+Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2041.outbound.protection.outlook.com [104.47.66.41])
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3kpctjx640-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 08 Nov 2022 02:50:28 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=RTDXnk35VyohQT7W/8FMG7AIj6YD5LGywsNYOzWkgcp6SB5ilGkOXYfFd9bphxCBNwq64DmwSzRx4Yo0Eb7IZP/laGR5VvM9gxyY7wZLCgK5oCqxfaiuMdxPZeOAaK5O2MNb21EIwvR+xbryxmBJqEpJ840xas63NRRItEM0OdzHfGpKDIemIs/Kd/rX0uZZj5REzM8W3G65ioF+wNnHuLZfKwuRlg1akrQtpGvqqNIDGABLEtToVQCng3I+ir5L+62aRa6ksGZWXc+HmjFRogNu4Jciar6CF8L0RiolALqUJtdcAyp/3kUNYw4EWCUy7ajRBHfTiPdy+lwHbfntNg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=h+bnonTzNfppf7tOpTbg4GxtJfy7yH1PLBiYSB6AEP8=;
+ b=iS9ZC/+iFfCttpv3hgSYIRUFIrklWQa5/dzvckUIj8tanY2Jx9JLSluDEc8zoK+66EfnTWCxPV4sceZY0WxDpxGWuu1I9htRA7t/+oV6vOd41PqeTuC97ky8RGU6pxFt81jUPuA/UibTqyQvyCoXPrz9uEQFjGQnNcZco+wGdTIBWlOO4lztajilRK7LgMIXq4cQ4PjAHFGcGtFBrmlHLQQXVutgwPg4rPTNeWoKihZBg2OQ5IgNeDwtQn/4exMXTgV8onGS/4MowsOrGUcY+KmA/xserRbkRkw+6u26HTEpc3DgHchKw0Hs2yC/TXoJgQVW1W7eKjcVgHA0w0q0Tg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=h+bnonTzNfppf7tOpTbg4GxtJfy7yH1PLBiYSB6AEP8=;
+ b=WdT9VYQCwGta9IADxFb1lfEwCfUWsgoscYusF3Yq3k2RBeSgPTaoG2HB/h9iJxGIKF2zAYxDyIZm1OPSdDbbF52xcsNX9ko1bmXvSXLltwtR4Zf60v5kOHEcwWu6PDKtSbyT1Xq1b5wq6u+cOjdujsLKiBtg4I5U/T+7zlK5ReQ=
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by PH7PR10MB5856.namprd10.prod.outlook.com (2603:10b6:510:131::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5791.25; Tue, 8 Nov
+ 2022 02:50:26 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::f77e:1a1a:38b3:8ff1]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::f77e:1a1a:38b3:8ff1%9]) with mapi id 15.20.5791.027; Tue, 8 Nov 2022
+ 02:50:26 +0000
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        Lee Duncan <leeman.duncan@gmail.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Lee Duncan <lduncan@suse.com>, Martin Wilck <mwilck@suse.com>
+Subject: Re: [PATCH] scsi: core: Add BLIST_NO_ASK_VPD_SIZE for some VDASD
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1k046kwyv.fsf@ca-mkp.ca.oracle.com>
+References: <20220928181350.9948-1-leeman.duncan@gmail.com>
+        <11a582f0-723c-95e1-0e44-0a19e1a8a9a8@acm.org>
+        <4a1da181-8a54-d2f8-6d19-d9c1982ab044@suse.de>
+Date:   Mon, 07 Nov 2022 21:50:23 -0500
+In-Reply-To: <4a1da181-8a54-d2f8-6d19-d9c1982ab044@suse.de> (Hannes Reinecke's
+        message of "Tue, 4 Oct 2022 08:00:56 +0200")
+Content-Type: text/plain
+X-ClientProxiedBy: SA9PR13CA0106.namprd13.prod.outlook.com
+ (2603:10b6:806:24::21) To PH0PR10MB4759.namprd10.prod.outlook.com
+ (2603:10b6:510:3d::12)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.0
-Content-Language: en-US
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        John Garry <john.g.garry@oracle.com>,
-        John Garry <john.garry@huawei.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, bvanassche@acm.org, hch@lst.de,
-        ming.lei@redhat.com, niklas.cassel@wdc.com
-Cc:     axboe@kernel.dk, jinpu.wang@cloud.ionos.com,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linuxarm@huawei.com, john.garry2@mail.dcu.ie
-References: <1666693976-181094-1-git-send-email-john.garry@huawei.com>
- <1666693976-181094-3-git-send-email-john.garry@huawei.com>
- <08fdb698-0df3-7bc8-e6af-7d13cc96acfa@opensource.wdc.com>
- <83d9dc82-ea37-4a3c-7e67-1c097f777767@huawei.com>
- <9a2f30cc-d0e9-b454-d7cd-1b0bd3cf0bb9@opensource.wdc.com>
- <0e60fab5-8a76-9b7e-08cf-fb791e01ae08@huawei.com>
- <71b56949-e4d7-fd94-c44a-867080b7a4fa@opensource.wdc.com>
- <b03b37a2-35dc-5218-7279-ae68678a47ff@huawei.com>
- <0e4994f7-f131-39b0-c876-f447b71566cd@opensource.wdc.com>
- <05cf6d61-987b-025d-b694-a58981226b97@oracle.com>
- <ff0c2ab7-8e82-40d9-1adf-78ee12846e1f@opensource.wdc.com>
- <39f9afc5-9aab-6f7c-b67a-e74e694543d4@suse.de>
- <0de1c3fd-4be7-1690-0780-720505c3692b@opensource.wdc.com>
- <75aea0e8-4fa4-593c-0024-3c39ac3882f3@suse.de>
- <cfb89169-77e5-b208-62e7-4cf1c660ac7a@opensource.wdc.com>
-From:   Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH RFC v3 2/7] ata: libata-scsi: Add
- ata_internal_queuecommand()
-In-Reply-To: <cfb89169-77e5-b208-62e7-4cf1c660ac7a@opensource.wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH0PR10MB4759:EE_|PH7PR10MB5856:EE_
+X-MS-Office365-Filtering-Correlation-Id: 75a0d845-13db-4a18-109d-08dac133fd4d
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: e8417L/uChIr/C31p3OAASE7ihcdcjYB640qQ6LcHurQZlcEh1IzIoE6OP0DZGbyyQU4ELWIO3XEXEOu4qfDjrM7dNQJEpRqUM34Bmxtg/AOPJCuP7qISH/Ok0+m4Gx7YJ+S855/Qj0t1QrsBxhlTo+jNN+m9pylAzV5SEkLUNnA/vTQg/yrUadOrt/UI6sIZjpcAaVXFVY6JH8ESKtBL79rHs22DbRBMYc3ULCCyK98qau5K5vUPrSv2WJi6jibw9wGPE8bcf16clTqhnmnppEtwUdUG4dSXEAuTtnMty/jivAPV1M+8g+XbkDX8gLktDtQo8uBACMUoe1XTelSTGtz89RAk8rSYbQs45oAsPi4kTTiR6OvZ38jAq6ac4FpodC4nS7yy/rglM+4UBEur6oLR/05mA4JyKajHlpu9OJsak07Zvy5gwcGWs5OCr+1I3aU7d64aE79gIfLNXvYkybQD4s+FCcqGDNMCZm8o0Di/FvRku+Cyaok8dxcO698RSsj9AOaWNTRQafTCZcJRl8+5SF7FjuFacuItDbiiIPdcz61hXXSf2PivcPLcRMIwohpIMon/3EgPmA/CtMHQDeVeJdkq4cb5zae0RSHS2I/gz+noufNSu5teJy7cmqAWnJT6/r7S4zdtu4strcfv6CIsw+DzRf/6ZIHyZHUlHxED0XG/Ii2FQZRq81Vl8qzq/OXwVnzq37+PE9O4SrOXA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(376002)(396003)(346002)(366004)(136003)(39860400002)(451199015)(186003)(2906002)(6666004)(38100700002)(6486002)(36916002)(26005)(478600001)(316002)(6916009)(54906003)(6512007)(6506007)(86362001)(66476007)(66946007)(66556008)(8676002)(4326008)(41300700001)(8936002)(4744005)(5660300002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?Sx1X/Ru2Ln2k/ldiTpX46cjkEvkySpf2LwEOlGqDhAJhSmh0IpkoltXijmJW?=
+ =?us-ascii?Q?KvTA6yaRvETgp3nsBNGhmXQgWCmNqfOtfPMDcedlyaiN1mkH9+3eCMtNtahH?=
+ =?us-ascii?Q?cTelKnHuw7L95K9NfkdHBLlNNIK/AmReEIAEwdJBnto7qfM+0wndlI1AREAZ?=
+ =?us-ascii?Q?5gHT0tIeweaLX3CA4eJk9eqLhJjurOYlsmo2iai471DHadMZPhbbPKpam5pg?=
+ =?us-ascii?Q?nkU1ITUImHWW1b2OQtOJctlazhyT9oqUuNYQd/URtt5GNcygxWQXTZHO3WUQ?=
+ =?us-ascii?Q?XtdGzhYGDLvvCQ92iOoenLNWSkgSTEp2e2cJ29CXk9ccahPsDKjIC8TiSzTZ?=
+ =?us-ascii?Q?yhZyjtESsdcI2IS5cEck9D4Le3SjjOwfzpHAoy4qx/tesfq7sw57Ie5K2LA/?=
+ =?us-ascii?Q?Ku0IFeH3RmNmn+Qxi0rOv8l7XlvLSB9Mxaw/BSPK7G5DtGw2kX8C7//8yMDe?=
+ =?us-ascii?Q?HpDKJ+1ffbeEgpevz/C6dKDoO1AamuXRhNTCs10f5vZqnhlh87ALfgefcCf+?=
+ =?us-ascii?Q?ShOJ71Oj0QKahDPejhdxM+IBwNacB8jgrUBfjqMfgYOpYtdGGJtWvF1mdfvR?=
+ =?us-ascii?Q?9eAD4ZZ+EzW0x0MHhjGDDqfUkDiSZOnaucALPd+UcsjwS7JAARQ1LxsUMHZQ?=
+ =?us-ascii?Q?JEvxe+dhjK69CI53UoV3t+C6q6gbpL0aw2SMkw3RPC8LvBlEc1jfp1NPwZ09?=
+ =?us-ascii?Q?TdL/KoHtn4zG4+SZu6p3GN8IeF1lgbKrHsuADftaIBxrX8zV5XqUcKXdqSVN?=
+ =?us-ascii?Q?WiQs8DJNaj58dn5RHv4EgHzLtU1kSYNnkvSxeLes7SV90Nm00KAc90/HpxGv?=
+ =?us-ascii?Q?KfZXGoS1nfnw2aoIm6wVfpAcmaPRP9KMk7VijFT/veYUGvd7/o9G2p/WQZia?=
+ =?us-ascii?Q?Sl0BUcJyWNqFC41p5gduHWEg5lvVNnTrdVsHEcRByM9/UG9Fgy+wxpTLhjHP?=
+ =?us-ascii?Q?lG0CdCB6cTxzxdelGQV0Fa3Y/l4VvPxitRVhhDNk4SZxuAWNTfUn9VBE9bSc?=
+ =?us-ascii?Q?V6VYj07DJnx2k97ff5ppLQuaIS77uJ0o6GgA+f5Hx+d6Egf0VMwIpOq5JvbL?=
+ =?us-ascii?Q?tdOIpP4J3hdNpMIepd6ZtFDSHOBq4fwg1sQfHjpjoc9GeyZUv2w42WjZfIdy?=
+ =?us-ascii?Q?M0osDSr9yRlIZcntGRCwoXEcAl6H7EOMBP5uraVVCbZHhHBZgufPmWDVXvkq?=
+ =?us-ascii?Q?gHgT6rLAwNmWk03+QEyj0h3IHcsuqmb/0NtPnF1IVVcJxVligTIkM6nwGv9c?=
+ =?us-ascii?Q?g43zQql7Tmc2y6CvwtiWUQH1kJCWomT77MfrUu49l2khW2jItrCepFGxRTJJ?=
+ =?us-ascii?Q?FTPCFNQ93XAEBCQ5cFw/CTNoaJDiVL4pRhdtdeGCJyKSq/6Mzt8Yb6Mzyg7q?=
+ =?us-ascii?Q?OFq6sMtJcbD2Nl6h85aHqyz2FWh6/VKd40mlnoiiUQKjHaBu4WOLBHVSV+lR?=
+ =?us-ascii?Q?88XyZ1B/iFuLHTD+K52ndfV9B9rNOGaWzpFfLhYJfBZOPWrNmMAh//Zicc/V?=
+ =?us-ascii?Q?jcwq7gjmF5VM5hfMbPl+i+lqIX5yzKWcy63VwxzBLIaODqhF++wPvq9Xrzsx?=
+ =?us-ascii?Q?/XXBqMbWWHm91K6xsXjf2zxAOMq2mKegVS6fs2R/NhlVI4RghKcr8ohNddxX?=
+ =?us-ascii?Q?wg=3D=3D?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 75a0d845-13db-4a18-109d-08dac133fd4d
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Nov 2022 02:50:26.5255
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: YiwCkx7Uf7Om21BXeOqN8hyQMhAENE/L910rHTfOXuG/Rk+wCEUWzSI0dV50w4jRmAcJfmBCnrED6Gjh9ASMs339tvnvRC0GUdnYYnsEBIY=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR10MB5856
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
+ definitions=2022-11-07_11,2022-11-07_02,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0 bulkscore=0
+ adultscore=0 mlxscore=0 suspectscore=0 malwarescore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2210170000
+ definitions=main-2211080013
+X-Proofpoint-GUID: srk9HCLfjpRDGNSX1L2J8833UDX9EFcv
+X-Proofpoint-ORIG-GUID: srk9HCLfjpRDGNSX1L2J8833UDX9EFcv
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/7/22 14:29, Damien Le Moal wrote:
-> On 11/7/22 19:12, Hannes Reinecke wrote:
->> On 11/2/22 12:25, Damien Le Moal wrote:
->>> On 11/2/22 20:12, Hannes Reinecke wrote:
->>>> On 11/2/22 11:07, Damien Le Moal wrote:
->>>>> On 11/2/22 18:52, John Garry wrote:
->>>>>> Hi Damien,
->>>>>>
->>>> [ .. ] >> So we only need to find a way of 're-using' that tag, then we won't have
->>>> to set aside a reserved tag and everything would be dandy...
->>>
->>> I tried that. It is very ugly... Problem is that integration with EH in
->>> case a real NCQ error happens when all that read-log-complete dance is
->>> happening is hard. And don't get me started with the need to save/restore
->>> the scsi command context of the command we are reusing the tag from.
->>>
->>> And given that the code is changing to use regular submission path for
->>> internal commands, right now, we need a reserved tag. Or a way to "borrow"
->>> the tag from a request that we need to check. Which means we need some
->>> additional api to not always try to allocate a tag.
->>>
->>>>
->>>> Maybe we can stop processing when we receive an error (should be doing
->>>> that anyway as otherwise the log might be overwritten), then we should
->>>> be having a pretty good chance of getting that tag.
->>>
->>> Hmmm.... that would be no better than using EH which does stop processing
->>> until the internal house keeping is done.
->>>
->>>> Or, precisely, getting _any_ tag as at least one tag is free at that point.
->>>> Hmm?
->>>
->>> See above. Not free, but usable as far as the device is concerned since we
->>> have at least on command we need to check completed at the device level
->>> (but not yet completed from scsi/block layer point of view).
->>>
->> So, having had an entire weekend pondering this issue why don't we
->> allocate an _additional_ set of requests?
->> After all, we had been very generous with allocating queues and requests
->> (what with us doing a full provisioning of the requests for all queues
->> already for the non-shared tag case).
->>
->> Idea would be to keep the single tag bitmap, but add eg a new rq state
->> MQ_RQ_ERROR. Once that flag is set we'll fetch the error request instead
->> of the normal one:
->>
->> @@ -761,6 +763,8 @@ static inline struct request
->> *blk_mq_tag_to_rq(struct blk_mq_tags *tags,
->>    {
->>           if (tag < tags->nr_tags) {
->>                   prefetch(tags->rqs[tag]);
->> +               if (unlikely(blk_mq_request_error(tags->rqs[tag])))
->> +                       return tags->error_rqs[tag];
->>                   return tags->rqs[tag];
->>           }
->>
->> and, of course, we would need to provision the error request first.
->>
->> Rationale here is that this will be primarily for devices with a low
->> number of tags, so doubling the number of request isn't much of an
->> overhead (as we'll be doing it essentially anyway in the error case as
->> we'll have to save the original request _somewhere_), and that it would
->> remove quite some cruft from the subsystem; look at SCSI EH trying to
->> store the original request contents and then after EH restoring them again.
-> 
-> Interesting idea. I like it. It is essentially a set of reserved requests
-> without reserved tags: the tag to use for these requests would be provided
-> "manually" by the user. Right ?
-> 
-Yes. Upon failure one would be calling something like 
-'blk_mq_get_error_rq(rq)', which would set the error flag in the 
-original request, fetch the matching request from ->static_rqs, and 
-return that one.
 
-Just figured, we could simply enlarge 'static_rqs' to have double the 
-size; then we can easily get the appropriate request from 'static_rqs' 
-by just adding the queue size.
-Making things even easier ...
+Hannes,
 
-> That should allow simplifying any processing that needs to reuse a tag,
-> and currently its request. That is, CDL, but also usb-scsi, scsi EH and
-> the few scsi LLDs using scsi_eh_prep_cmnd()+scsi_eh_restore_cmnd().
-> Ideally, these 2 functions could go away too.
-> 
-Which was precisely the idea. We have quite some drivers/infrastructure 
-which already require a similar functionality, and basically all of them 
-cover devices with a really low tag space (32/31 in the libata NCQ case, 
-16 in the SCSI TCQ case, or even _1_ in the SCSI parallel case :-)
-So a request duplication wouldn't matter _that_ much here.
+I have been contemplating this for a bit.
 
-Drivers with a higher queue depth typically can do 'real' TMFs, where 
-you need to allocate a new tag anyway, and so the whole operation 
-doesn't apply here.
+>> Has it been considered instead of introducing a blacklist flag to not
+>> use the reported VPD page size if the device reports that the VPD
+>> page size is zero? I am not aware of any VPD pages for which zero is
+>> a valid size.
 
-Cheers,
+That would also be my preferred approach, I think. I haven't received
+any bug reports about devices returning short VPD pages since this
+change was introduced. So I think I'd prefer falling back to a
+(hopefully small) default if a device returns a 0 page length.
 
-Hannes
+Now, my question is which VPD pages are actually supported by this
+device and how large are they?
+
+> But pre-SPC drives will ignore the VPD bit in the inquiry size. And
+> these devices do not set an additional length in the inquiry data
+
+Can you elaborate a bit on your experience with older devices? I checked
+SCSI-2 (1991) and don't see any indication this would be valid behavior
+even back then.
+
 -- 
-Dr. Hannes Reinecke		           Kernel Storage Architect
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
-
+Martin K. Petersen	Oracle Linux Engineering
