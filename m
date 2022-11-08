@@ -2,151 +2,175 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 852D6C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Nov 2022 11:34:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1738C433FE
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Nov 2022 12:37:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234048AbiKHLeM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Nov 2022 06:34:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42990 "EHLO
+        id S233631AbiKHMhj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Nov 2022 07:37:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53392 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233888AbiKHLeD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2022 06:34:03 -0500
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D08391AF3B;
-        Tue,  8 Nov 2022 03:34:01 -0800 (PST)
-Received: from kwepemi500008.china.huawei.com (unknown [172.30.72.55])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4N65b03jzhz15MR4;
-        Tue,  8 Nov 2022 19:33:48 +0800 (CST)
-Received: from [10.67.100.231] (10.67.100.231) by
- kwepemi500008.china.huawei.com (7.221.188.139) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Tue, 8 Nov 2022 19:33:59 +0800
-Subject: Re: [External] : Re: [PATCH] scsi: libsas: Check and update the link
- rate during discovery
-To:     John Garry <john.g.garry@oracle.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>
-References: <20221102100555.3537275-1-liyihang9@huawei.com>
- <90217102-8767-b077-2615-1a5e41b58660@oracle.com>
- <43f496c4-4808-bee2-5a67-93e1114f646a@huawei.com>
- <6971d59e-2a72-2812-d289-53e61121f35a@oracle.com>
-CC:     <bvanassche@acm.org>, <chenxiang66@hisilicon.com>,
-        <daejun7.park@samsung.com>, <damien.lemoal@opensource.wdc.com>,
-        <yanaijie@huawei.com>, <duoming@zju.edu.cn>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <prime.zeng@hisilicon.com>, <yangxingui@huawei.com>,
-        <linuxarm@huawei.com>, <liyihang9@huawei.com>
-From:   Yihang Li <liyihang9@huawei.com>
-Message-ID: <24916311-2a46-4673-7f79-f0bbd20b0bfe@huawei.com>
-Date:   Tue, 8 Nov 2022 19:33:58 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
- Thunderbird/45.7.1
+        with ESMTP id S234073AbiKHMhg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2022 07:37:36 -0500
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2FFC450F24;
+        Tue,  8 Nov 2022 04:37:35 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1667911055; x=1699447055;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=9qRbp1iGT2x1Nt6KNYR5tuKauk+CJClfo9ECPQFXtSw=;
+  b=MaSpkBG923n31J2+MFSV3SKvmn9sxF5estzBxhHmHWTsWaUXIUOuESR+
+   +EujzeNcnyTXMN3tZhwvQve+XV2RbdBsPTbws1ZyRhBS86qhWTa7FDHci
+   SH9/5BXTm2OM7Ew6aJv1CkuQUvXSPL8XMR9HDvfGwlJFlOzXH/6CKRWf4
+   HxfkJmONwINIaHwfyBgyXXPXXocM36dU8mBpFaaDrxauMWew7HJeuaVtU
+   pBLeJAu2T0/KLu7nyxNw2MhSrRX1SQZ5HcvKzTct/jhrNAad/lqLgdqJR
+   y7pdv+d0vYFwwAtGvgIdlqij/H8OJsuUFDbQMwrU5TOICTc4b2g6UfGf8
+   w==;
+X-IronPort-AV: E=Sophos;i="5.96,147,1665417600"; 
+   d="scan'208";a="215757204"
+Received: from mail-bn8nam12lp2172.outbound.protection.outlook.com (HELO NAM12-BN8-obe.outbound.protection.outlook.com) ([104.47.55.172])
+  by ob1.hgst.iphmx.com with ESMTP; 08 Nov 2022 20:37:33 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Hf3ucXGfPGc+2SdFH8QnOySNW5pVY1hKxAU20OQJPF232ROIu6cvYVLEvqqA9WegAx7zp7DOzmmm6wPC9lOwBGO6KdTc9CSDyQQ4Ct8FkSN6lmcKmSP7Zykd/KmZnv8+twC9IBWC0KOLtrlqh4n5POqQwfNtaTL4uJlAv/u85kGvJWCjHEYeWe84hfaTMOWNhgdgtQLD03KjlxjDDm8OX/URv0Au1RVFJh6ohsviai6DgMWcQ2nndJsEiQFWJjGTnYZPn68iv/v+ty/+0+I+vGGV8PRL2myAu+Zo+aud1VAyIjIUwozTYqxFa7zRurMPeo4tZhydsBsNUG4+Xx+/Lg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=xT3ndxGikKgbCdB08+QU9cC8xzjbEDb6TJL0BUZiik0=;
+ b=HPIL/Gx8FbP+OQFGSjcNQQbwh8RIwtRV5CO+eqGXtAfFvWqmqfDodN0bAvTXvlySAaiANmBQdu2FrkOI7C5vEqOAjG/dSl2zien3OEd4GjIzWZ5TPF9z6nsYDcLs1BWfy0s9sWvOHThvPB2dFiG2/eBvwKSRlCk0uA8Q9LkudiA8iid1H9VxAxaCvedG3l6c73C+wBz+VZ/72hfdAu6SgSv/NxArztI9mTHQpCyMIhPwHRLDAr6GrrAvi4HKxqlopn/HcJpWf2dy8nrqHKThfld4ySyEfJswdG0KgBZ2PK0D2NL+6Qnv3jsotIY8ZrMs1BGP+OPKBK78RT035kQ/KQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=xT3ndxGikKgbCdB08+QU9cC8xzjbEDb6TJL0BUZiik0=;
+ b=XpTn1QVLRTWmvxjY9AW8iUp/zH5BbxK+ftq0lXWmsf+Sub0e5l2/zw3xqaFuEjYIZFFbfolGPZ4eOCBqPLE+QMM+ASacFd7JSMlbFkb7TWYVrd19nZEDouyxKq03g45PYJQgdAykoA6noO73H2+gD8yiHrBf1Cf45dfY/Gf2YvE=
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
+ BN8PR04MB5906.namprd04.prod.outlook.com (2603:10b6:408:a7::27) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.5791.24; Tue, 8 Nov 2022 12:37:31 +0000
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::1afa:ab74:ef51:1e72]) by DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::1afa:ab74:ef51:1e72%4]) with mapi id 15.20.5791.026; Tue, 8 Nov 2022
+ 12:37:31 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     Bean Huo <beanhuo@iokpp.de>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
+        "daejun7.park@samsung.com" <daejun7.park@samsung.com>,
+        "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
+        "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
+        "quic_xiaosenh@quicinc.com" <quic_xiaosenh@quicinc.com>,
+        "quic_richardp@quicinc.com" <quic_richardp@quicinc.com>,
+        "quic_asutoshd@quicinc.com" <quic_asutoshd@quicinc.com>,
+        "hare@suse.de" <hare@suse.de>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [RFC PATCH v1 0/2] UFS Advanced RPMB
+Thread-Topic: [RFC PATCH v1 0/2] UFS Advanced RPMB
+Thread-Index: AQHY8qpuI/QP6FW+6keQsjCzPOix+q4099XQ
+Date:   Tue, 8 Nov 2022 12:37:31 +0000
+Message-ID: <DM6PR04MB6575D9DA640DE6BD0313758DFC3F9@DM6PR04MB6575.namprd04.prod.outlook.com>
+References: <20221107131038.201724-1-beanhuo@iokpp.de>
+In-Reply-To: <20221107131038.201724-1-beanhuo@iokpp.de>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: DM6PR04MB6575:EE_|BN8PR04MB5906:EE_
+x-ms-office365-filtering-correlation-id: 032db309-a53e-4c8e-8577-08dac186014e
+wdcipoutbound: EOP-TRUE
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: ec4bHS5QGyqnRu+z9z+9AKSa02/dNPQGHnQelAhSDogcLY58zQX2f8a0c6eCZMXwTtvE889Nj85LZFHdpgz6nTOE/hG+SvieVpiTAmpCoa9PGoJOlOz8b+l+vxGGsUp4l4qLfpsghPjFNVpAmiQZqisaRqg/HIo39XqG6ktOGXhTP/esmKVXtU5NTLGMtMlQSsUzfM/xQfzi6j8IgBaBTQ2NBagXwokm7TTkkuisUWFtQDYtNTkJzfUYla4yD5YoN1ipZbgspX3aIQ6btrVQq4LNr1UgkJCiPUuqCfDOf2bnATINGCHmZy5Bd5QoiTUlbrP3WJmfqrD7m+UYVPtNr3DxCwAETmHT0Jvgch7MBrPFIdlZMcvXwfEKgB2uTfaaIkL7H5shfF2qMLWO/mdJZ11uyb0jQPNEqiL6XKFH6GuvebG8tDVcP/j7owDTLYsLUPlPyGZE2udv5yXiE7bEtIZRhahS3lroZQ3F0OR40lg1UQzMWyeoRT1FsQVbw457qHxVVnme+lmx8+z483neERYK+lP7oOIkjj7Qf5T+D078c/3kxTBooBRUTHcalIcPuc3e6xFnyYNCjng5FiFOyKN4Hnyroh5ZpsXvzC75bTG0HjQqn6UbYb9c4fsV3J2Ce2IcMzsU6OmSfdkQ8ZUL5GfrJCfz9/CjCMx5md9Q0OqPwtdfP5pgJDrszDpJvjUvKmSgfVzMnslBSOmeevtuK3If873qYoiyushLb4kKcsGwBkVgcfGhJMpHs2Ij8zhdEEnruowsCY/HK4CHowDCwK+cutRmGE970dMk4GOypio=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(4636009)(396003)(366004)(136003)(346002)(376002)(39860400002)(451199015)(110136005)(54906003)(8676002)(41300700001)(66946007)(52536014)(4326008)(316002)(8936002)(5660300002)(64756008)(66446008)(7416002)(66476007)(66899015)(76116006)(55016003)(82960400001)(38100700002)(478600001)(2906002)(86362001)(6506007)(7696005)(26005)(71200400001)(9686003)(83380400001)(186003)(33656002)(122000001)(38070700005)(921005)(66556008);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?G5gEkmQxZXyrxYA1XvIQ7AuD+2yINejSvgfOcSmxYSAwVNHnZQuLAOESTXjd?=
+ =?us-ascii?Q?yIi/OQ/GNRBiI4ahZ5UUUWa+prj+PCOM29oO1hZ+uGqphWlduihsbXyk6wOr?=
+ =?us-ascii?Q?vCEo23dK2bVV3mVvvovQ3757ZpqfO7gRUntck7KAwFhxKOPKualXSy7InOq1?=
+ =?us-ascii?Q?PVJhVIYA7gKRd1t2Rp546NBXCYtVYQphmpIaxCyy9tB1jFu7rX6RofE0XTBj?=
+ =?us-ascii?Q?ZnOkqgUW9WTSlC51f5XnMqGDnE5glcFHjuasR+07a95z6JXLSUvc7Gf4+H0A?=
+ =?us-ascii?Q?cedvWIWQErP9g0ahMXhXlbrhOOolkK0GAr8VPuuNv+U6CdmGqvEST+j7E9F6?=
+ =?us-ascii?Q?RlCOtVpyI5mfV+tnC5p/7KgCUurMZAn+8n/gG3FlANuLqPiJM8iBy2QP97Ip?=
+ =?us-ascii?Q?xladHeduPkrkz4d7BW12Yr2hoWno3AOUJqQICtlKdlGxmSVORaKTxq0IuSRy?=
+ =?us-ascii?Q?gHZhQ2hZgdb7vkqp3Olbz9oSFJgU9bDlPh7J7tWS1VWwjbWeBOi3+DjV8pBX?=
+ =?us-ascii?Q?qcGni4PNYe3wVutDMH+hcBrm6H79VgmW/zSo2YpXiUWvzeJW2N3Fl0T0NjNO?=
+ =?us-ascii?Q?YNEGyArvwTPqIe7pP69O3rGMhEhvswkGwHnLKnM+Jk8VOKmcKZYMcgmy5Qab?=
+ =?us-ascii?Q?vYKJ6/b3qorx7+12kmYBFTNuu9ssr94Bk2sREuWGbC1jo8OFerZd0DazvSSA?=
+ =?us-ascii?Q?rb/eJQO1CKOrgoPQinlhaCqywbVrPWzGvddL6nHSXhbWac9tj2cW4O/+9Sdf?=
+ =?us-ascii?Q?FgpHUvpoIi7rSpgN1Rldtay2l6jQqWF4/GnxoHgRjYC6xe/znzlpVZnHeT54?=
+ =?us-ascii?Q?ydEg+BIuRrUBf5yY6UUDrE9Wn2Izun6nC9w8TSPhzC6vurICFDVykuVYX/VD?=
+ =?us-ascii?Q?qcWaCn8E2DIDlvU4y3AY2ZsT4SNLs55G6jtBrzRby5YTmH0OXiDzAbTFXB+L?=
+ =?us-ascii?Q?xfPjY5Xhx3El8ss3IOxIXH4ZpYP/B1SuW98JTN8tzdvJTCQ3CltVrIP5BCx8?=
+ =?us-ascii?Q?FEPvC5Ef6iuqlVekmCQtT0KaaquFeqv38KS+EAdWP3n8LKL41xaUQtHajX8j?=
+ =?us-ascii?Q?O1jj5WbZXDqKpEm6L6zI6yJBNjj7eBU/8znVNZdBk/NineoEqJf1SPP0CnNL?=
+ =?us-ascii?Q?A0aJhNlqfAL/9b9QwviqAORGBZjICQ2gBO0ZsBDJRcus+4Icc2VJfT1wJmi+?=
+ =?us-ascii?Q?rNNgy7+f+oLo9eMi8jjz0mqz2rDVeTXjJhjtL6nsGjElqE7+ue7TOfsLLJO+?=
+ =?us-ascii?Q?WWsqCnLpg+mPEaK8S+y+07wjtEvOW5uzaSkgqkCpNG+AnchoGz+HUxwVh6/y?=
+ =?us-ascii?Q?gEOwPSvFuf695Zji1wJRfhBCW2ocs/EkEdndmqBevSDK7fzO1dVzL3MKVvoB?=
+ =?us-ascii?Q?z4V/wkwCgNth+dknqjQf7AA6wdPutIZt1H9+SEJOWDdcmPkDBf3wyNwy8YwI?=
+ =?us-ascii?Q?PFM2Dg8T962+0E+Kw9VWtnHU9ISLolRPhyysKCKepTs28wfmX1hnGMnSHALu?=
+ =?us-ascii?Q?WuwEyiWHolxfaa1A27ptYBAb7/d+HyYFoB8KTXa5q026oCBpduByrL5r8o/K?=
+ =?us-ascii?Q?ydvzd2S/Y1I1hQeyEHcOvWnadXHhnvCFm74SVRjq?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-In-Reply-To: <6971d59e-2a72-2812-d289-53e61121f35a@oracle.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.67.100.231]
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- kwepemi500008.china.huawei.com (7.221.188.139)
-X-CFilter-Loop: Reflected
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 032db309-a53e-4c8e-8577-08dac186014e
+X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Nov 2022 12:37:31.7411
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: IH7ssQzPV5KaevfOx5+ixMvMuxr2PEuCYZWxqepTVTU7kVdgp8MoVXts6JqyKsHsbC1HHCEPeYm2Eg6MSHS+9Q==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN8PR04MB5906
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-On 2022/11/7 20:44, John Garry wrote:
-> 
->>>>
->>>> SATA disk which connected to expander PHY maybe reject IO request due to
->>>> the connection setup error (OPEN_REJECT-CONNECTION RATE NOT SUPPORTED).
->>>> The log as follows:
->>>>
->>>> [175712.419423] hisi_sas_v3_hw 0000:74:02.0: erroneous completion iptt=2985 task=00000000268357f1 dev id=10 exp 0x500e004aaaaaaa1f phy9 addr=500e004aaaaaaa09 CQ hdr: 0x102b 0xa0ba9 0x1000 0x20000 Error info: 0x200 0x0 0x0 0x0
->>>>
->>>> After analysis, it is concluded that: when one of the physical links
->>>> connected on the wide port is re-established, the link rate of the port
->>>> and expander device and the expander SATA PHY are not updated. As a
->>>> result, the expander PHY attached to a SATA PHY is using link rate
->>>> (6.0 Gbit) greater than the physical PHY link rate (3.0 Gbit).
->>>
->>> Please mention the SAS spec section in which min pathway is described.
->>
->> Do you mean the original text of the SAS spec section needs to be added here?
->>
-> 
-> I mean to at least mention the spec version and section number and title (in that spec version).
-
-ok
-
-> 
->> Like this:
->>
->> According to Serial Attached SCSI:
->> If an STP initiator port discovers a SATA device behind an STP/SATA bridge with a physical link rate greater
->> than the maximum connection rate supported by the pathway from the STP initiator port, the STP initiator port
->> should use the SMP PHY CONTROL function (see 10.4.3.10) to set the MAXIMUM PHYSICAL LINK RATE field of
->> the expander phy attached to the SATA device to the maximum connection rate supported by the pathway.
-> 
-> I think that this condition in the spec is a flaw. Or at least annoying.
-> 
->>
->>>
->>>>
->>>> Therefore, add function sas_check_port_linkrate() to check whether the
->>>> link rate of physical PHY which is connected to the wide port changes
->>>> after the phy up occur, if the link rate of the newly established
->>>> physical phy is lower than the link rate of the port, a smaller link rate
->>>> value is transmitted to port->linkrate.
->>>>
->>>> Use the sas_update_linkrate_root_expander() function to update the root
->>>> expander link rate. Traverse all expanders connected to the port, check
->>>> and update expander PHYs that need to be updated and triggers revalidation.
->>>
->>> So are you saying that you want to lower the linkrate on all pathways to the SATA disk? In your example, that would be 3Gbps. If so, won't that affect the end-to-end linkrate of all other devices attached (and lower throughput drastically)?
->>
->> Yes, this will lower performance drastically, but I consider the following two things:
->>
->> a. Ensure that all disks work properly when the issue we discussed occurs.
->>
->> b. When the user limits the linkrate to a lower level through the sysfs interface, the linkrate on all pathways to the SATA disk should be reduced.
->>
->> [root@localhost phy-5:0]# lsscsi
->> [5:0:0:0]    disk    HUAWEI   HWE32SS3008M001N 2774  /dev/sda
->> [5:0:1:0]    disk    ATA      ST4000NM0035-1V4 TN03  /dev/sdb
->> [5:0:12:0]   enclosu HUAWEI   Expander 12Gx16  131   -
->> [root@localhost phy-5:0]# cat maximum_linkrate
->> 12.0 Gbit
->> [root@localhost phy-5:0]# cat minimum_linkrate
->> 1.5 Gbit
->> [root@localhost phy-5:0]# echo 1.5 Gbit > maximum_linkrate
->> [root@localhost phy-5:0]# cat negotiated_linkrate
->> 1.5 Gbit
->> [root@localhost phy-5:0]# lsscsi
->> [5:0:0:0]    disk    HUAWEI   HWE32SS3008M001N 2774  /dev/sda
->> [5:0:12:0]   enclosu HUAWEI   Expander 12Gx16  131   -
->> [5:0:13:0]   disk    ATA      ST4000NM0035-1V4 TN03  /dev/sdb
->> [root@localhost phy-5:0]# cd ../phy-5\:0:1
->> [root@localhost phy-5:0:1]# cat negotiated_linkrate
-> 
-> So do we reset the linkrate of the SATA-attached phy, right? Could that cause the disk to be lost and found again? If so, doesn't seem useful if that disk had a filesystem mounted...
-
-Yes, the disk will be lost and found again, and I don't think of a good solution for disk with a filesystem mounted, perhaps the way you mentioned disable that phy does solve this issue.
-
-> 
->> 1.5 Gbit
->>
->>
-> 
-> I just wonder if it is better to disable that phy altogether rather than drag every other pathway down to this lower linkrate:
-> 
-> a. that would be simpler than trying to maintain this min pathway
-> b. the condition that gives rise to issue is very rare (so don't need to burden libsas with supporting it according to the spec).
-
-However, if the user decreases the linkrate through the sysfs interface, the corresponding phy is disabled, which seems to violate the user's intention.
-
-So I think the libsas layer lacks a mechanism to detect linkrate changes and reduce the linkrate of all SATA-attached phys, whether due to active or passive linkrate changes, and my patch amounts to adding this mechanism.
-
-In other words, it is better to disable the phy in abnormal scenarios. On the other hand, a new mechanism needs to be established to detect and reset the phy if the user actively changes the link rate?
+Hi,
+> In UFS 4.0, it introduced advanced RPMB, which can significantly improve
+> RPMB's command performance, enhancing its atomic operation. We don't
+> know which implementation will please everyone, mark this advanced RPMB
+> patch as RFC. Any suggestions to make the patch a master patch are welcom=
+e.
+>=20
+> Based on suggestions and feedback from Hannes Reinecke and Bart, we can
+> use job_bsg->request and job_bsg->reply to pass EHS packets without chang=
+ing
+> the BSG V4 structure and BSG core.
+Can you share the reference to this mail thread, or was it a privet discuss=
+ion?
 
 Thanks,
-Yihang
+Avri
+
+>So we push RFC patch just to start
+> Advanced RPMB mainlining
+>=20
+> Bean Huo (2):
+>   ufs: core: Advanced RPMB detection
+>   ufs: core: Add advanced RPMB support in ufs_bsg
+>=20
+>  drivers/ufs/core/ufs_bsg.c       | 115 +++++++++++++---------
+>  drivers/ufs/core/ufshcd.c        | 161 ++++++++++++++++++++++++-------
+>  include/uapi/scsi/scsi_bsg_ufs.h |  30 +++++-
+>  include/ufs/ufs.h                |   3 +
+>  include/ufs/ufshcd.h             |   5 +
+>  5 files changed, 233 insertions(+), 81 deletions(-)
+>=20
+> --
+> 2.25.1
+
