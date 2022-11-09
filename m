@@ -2,73 +2,73 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7568BC433FE
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Nov 2022 23:57:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E132EC4332F
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Nov 2022 02:43:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229794AbiKHX5Q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Nov 2022 18:57:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50918 "EHLO
+        id S229777AbiKICnv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Nov 2022 21:43:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35108 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229714AbiKHX5P (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2022 18:57:15 -0500
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E62EC60E89
-        for <linux-scsi@vger.kernel.org>; Tue,  8 Nov 2022 15:57:13 -0800 (PST)
-Received: by mail-pl1-f182.google.com with SMTP id l2so15548828pld.13
-        for <linux-scsi@vger.kernel.org>; Tue, 08 Nov 2022 15:57:13 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=KEYsrmcKqs20vMch/WIhQhq1D9Yp8ZTqB0AwfS0/PCI=;
-        b=AGY7ruuY50EW8IlT1ZpUSeYNIQCoxuv3qz2/KCI7vIO/hqYBjpIRCXz4rfP66MQXia
-         3nY66UgEjhuHceZ0V4JgVL3pvhVqUepNEVMR0te9mdhuedQDnzScnEGza7c6rjCTS1jR
-         EV4fl+L2dxLc4nyz37QTpv+APBBgGqUOHdQPJ6+TQBKSnwE61wtSP6JmoxVRsGs8kftV
-         5/WRESO+X04JOsoLF9ElbhqyZ/HWk+8ccdSUjKL1EPK69I6+gKGKEvRiyW9ZVLTT/R4u
-         pRkbxfJszZly0P01blC5F/HTvLSCRQF17j7/XblVnuqEDx76Vqy1p177cLATIp1wuUAs
-         Fb9g==
-X-Gm-Message-State: ACrzQf0dgvYIbpsuuuvi8P2eVde+zUarvOE+mFg/BaO6u/981juNqVgs
-        ekm6c+t/5uy2vau3zYwzXYA=
-X-Google-Smtp-Source: AMsMyM7lihg1jtOrAva0+X/1zZjPqHg0tiaEl3R8TTYl4QuMs9pLlW/KW6CAKY/fnfr/Rx9cVaEUAg==
-X-Received: by 2002:a17:902:e405:b0:186:b1bb:147a with SMTP id m5-20020a170902e40500b00186b1bb147amr57949647ple.19.1667951833331;
-        Tue, 08 Nov 2022 15:57:13 -0800 (PST)
-Received: from ?IPV6:2620:15c:211:201:44ad:aec5:7cab:4532? ([2620:15c:211:201:44ad:aec5:7cab:4532])
-        by smtp.gmail.com with ESMTPSA id p64-20020a625b43000000b0056bdc3f5b29sm6868496pfb.186.2022.11.08.15.57.12
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 08 Nov 2022 15:57:12 -0800 (PST)
-Message-ID: <132f8a3a-1cee-e660-4fb7-3a09ab22c10b@acm.org>
-Date:   Tue, 8 Nov 2022 15:57:10 -0800
+        with ESMTP id S229492AbiKICnu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2022 21:43:50 -0500
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 196E5FD14;
+        Tue,  8 Nov 2022 18:43:49 -0800 (PST)
+Received: from dggpemm500024.china.huawei.com (unknown [172.30.72.56])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4N6Thl1zc8zpWDb;
+        Wed,  9 Nov 2022 10:40:07 +0800 (CST)
+Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
+ dggpemm500024.china.huawei.com (7.185.36.203) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Wed, 9 Nov 2022 10:43:47 +0800
+Received: from build.huawei.com (10.175.101.6) by
+ dggpemm500017.china.huawei.com (7.185.36.178) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Wed, 9 Nov 2022 10:43:47 +0800
+From:   Wenchao Hao <haowenchao@huawei.com>
+To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Doug Gilbert <dgilbert@interlog.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Wenchao Hao <haowenchao@huawei.com>
+Subject: [RFC PATCH 0/5] scsi:scsi_debug:Add error injection for single lun
+Date:   Wed, 9 Nov 2022 10:59:45 -0500
+Message-ID: <20221109155950.3536976-1-haowenchao@huawei.com>
+X-Mailer: git-send-email 2.32.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.0
-Subject: Re: [PATCH v6 02/35] scsi: Allow passthrough to override what errors
- to retry
-Content-Language: en-US
-To:     Mike Christie <michael.christie@oracle.com>, mwilck@suse.com,
-        hch@lst.de, martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        james.bottomley@hansenpartnership.com
-References: <20221104231927.9613-1-michael.christie@oracle.com>
- <20221104231927.9613-3-michael.christie@oracle.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20221104231927.9613-3-michael.christie@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.101.6]
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ dggpemm500017.china.huawei.com (7.185.36.178)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/4/22 16:18, Mike Christie wrote:
-> +/**
-> + * scsi_check_passthrough - Determine if passthrough scsi_cmnd needs a retry.
-> + * @scmd: scsi_cmnd to check.
-> + *
-> + * Return value:
-> + *	SCSI_RETURN_NOT_HANDLED - if the caller should process the command
+The original error injection mechanism was based on scsi_host which
+could not inject fault for a single SCSI device.
 
-Should "process the command" perhaps be changed into "examine the 
-command status" since SCSI devices process SCSI commands while 
-scsi_check_passthrough() callers examine the command status? Otherwise 
-this patch looks good to me. Hence:
+This patchset provides the ability to inject errors for a single
+SCSI device. Now we supports inject timeout errors, queuecommand
+errors, and hostbyte, driverbyte, statusbyte, and sense data for
+specific SCSI Command
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+The first patch add an sysfs interface to add and inquiry single
+device's error injection info; the second patch defined how to remove
+an injection which has been added. The following 3 patches use the
+injection info and generate the related error type.
+
+Wenchao Hao (5):
+  scsi:scsi_debug: Add sysfs interface to manager single devices' error inject
+  scsi:scsi_debug: Add interface to remove injection which has been added
+  scsi:scsi_debug: make command timeout if timeout error is injected
+  scsi:scsi_debug: Return failed value for specific command's queuecommand
+  scsi:scsi_debug: fail specific scsi command with result and sense data
+
+ drivers/scsi/scsi_debug.c | 295 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 295 insertions(+)
+
+-- 
+2.35.3
+
