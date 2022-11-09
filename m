@@ -2,137 +2,104 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E13DC433FE
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Nov 2022 02:44:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D716EC4332F
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Nov 2022 02:59:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229492AbiKICoD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Nov 2022 21:44:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35156 "EHLO
+        id S230127AbiKIC7s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Nov 2022 21:59:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50972 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229951AbiKICnw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2022 21:43:52 -0500
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D53210064;
-        Tue,  8 Nov 2022 18:43:51 -0800 (PST)
-Received: from dggpemm500024.china.huawei.com (unknown [172.30.72.54])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4N6Tms09BtzRp7Z;
-        Wed,  9 Nov 2022 10:43:41 +0800 (CST)
-Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
- dggpemm500024.china.huawei.com (7.185.36.203) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Wed, 9 Nov 2022 10:43:49 +0800
-Received: from build.huawei.com (10.175.101.6) by
- dggpemm500017.china.huawei.com (7.185.36.178) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Wed, 9 Nov 2022 10:43:49 +0800
-From:   Wenchao Hao <haowenchao@huawei.com>
-To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Doug Gilbert <dgilbert@interlog.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Wenchao Hao <haowenchao@huawei.com>
-Subject: [RFC PATCH 5/5] scsi:scsi_debug: fail specific scsi command with result and sense data
-Date:   Wed, 9 Nov 2022 10:59:50 -0500
-Message-ID: <20221109155950.3536976-6-haowenchao@huawei.com>
-X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20221109155950.3536976-1-haowenchao@huawei.com>
-References: <20221109155950.3536976-1-haowenchao@huawei.com>
+        with ESMTP id S229551AbiKIC7r (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2022 21:59:47 -0500
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6330183BA
+        for <linux-scsi@vger.kernel.org>; Tue,  8 Nov 2022 18:59:45 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1667962785; x=1699498785;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=j8c+bO4eueYzHHu19Rt1BDu+PJCsJDKTZtARN12tb1E=;
+  b=Y6dBiOviPK2sp97IsRXw4orR5y2snwSWuF5PLcJKewWAnBwjhcbzpYJr
+   xQpFizZhDeBwqhcJfkrKh9psuz0MsOL/30nVzyfkOnWOr5xANOO1sVBXC
+   UN6QEGbJDbf+3G49n0D4mTHUSucE/TgSxXwAryMTWRE2NP06DmY0oI2Qj
+   WWUiXyKnlFG+ME/ZedNEjfHw7y+mpf0MHy1K00xjyFQxNY4vvYyCwaM6e
+   SQ27sKVwxbkfw3Jycs+LJWvSXPIhip5KpV2VxY8qE3uhriIJv8UK1kUiw
+   taCQ3Badx525XXYfwmLTp0yybR6kp9viAwSe5GslleskM0PzOlICja6R2
+   g==;
+X-IronPort-AV: E=Sophos;i="5.96,149,1665417600"; 
+   d="scan'208";a="220979690"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 09 Nov 2022 10:59:44 +0800
+IronPort-SDR: fUq09P8P3Cfa9g/putA+JsngTIYIS6XELbFbs2/uRWKQP6IxnlpyocJMZGHC9jnKYfSdP4fThT
+ 6g/MJcd3X2hK9z9Wwi6ZB53BZArw5LyeQlU5LDip2pzqOB9ZuFO9Aa36vqWEEtsN/oUqD52De4
+ 6sdNsCJDg3LXnvT43jSOGH+yFfwH8iTQcxniuc02XGO1YEOUeEsqH9e4UbuoEqlw6FO7KIsHAT
+ abPlUeKjnMAI+9fwQvz3+8ODlCf5X6BKj1tXXQ7vIpmtEvNsGimfXm/FigZ4poIXkB9a/jM3VH
+ F4M=
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Nov 2022 18:18:49 -0800
+IronPort-SDR: Ug4nUsDk9NbefF7XfRg/VNknLqK2qEI1rF3n20y5z9VtB1TTaMCe7xykuyNk/YHdCkN11sQa0a
+ NOUoPCRrcshA3OOjWUUjTtfGmR/sCfJkPAtDqGEgIbZDA0HNv3zIVIow1SIDVAI+LQ6BQAnyEe
+ HBNQJmioiwDayDl0Ey00qDZsJp1KFUzDvzkuU63RADuIZml6H7djr5zlvuPNUTgMl/OeSvz6XX
+ UD1N1z3VvQJKdc+4XjPUVkWzMExbmE8qT42TpHFnxWzJYMWEKwIBRmW4Us2w9M2XyKDs05NvEY
+ 618=
+WDCIronportException: Internal
+Received: from shindev.dhcp.fujisawa.hgst.com (HELO shindev.fujisawa.hgst.com) ([10.149.52.207])
+  by uls-op-cesaip01.wdc.com with ESMTP; 08 Nov 2022 18:59:44 -0800
+From:   Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+To:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Dmitry Fomichev <Dmitry.Fomichev@wdc.com>,
+        Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Subject: [PATCH 1/2] scsi: sd_zbc: do not enforce READ/WRITE (16) on host-aware devices
+Date:   Wed,  9 Nov 2022 11:59:40 +0900
+Message-Id: <20221109025941.1594612-2-shinichiro.kawasaki@wdc.com>
+X-Mailer: git-send-email 2.37.1
+In-Reply-To: <20221109025941.1594612-1-shinichiro.kawasaki@wdc.com>
+References: <20221109025941.1594612-1-shinichiro.kawasaki@wdc.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.101.6]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- dggpemm500017.china.huawei.com (7.185.36.178)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-If a fail commnd error is injected for specific scsi command, set the
-scsi command's status and sense data, then finish this scsi command.
+ZBC Zoned Block Commands specification mandates READ (16) and WRITE (16)
+commands only for host-managed zoned block devices. It does not mandate
+the commands for host-aware zoned block devices. However, current
+sd_zbc_read_zones() code assumes the commands were mandated for host-
+aware devices also and enforces the commands. If the host-aware drives
+do not support the commands, they may fail.
 
-For example, the following command would make read(0x88) command finished
-with UNC for 8 times:
+To conform to the ZBC specification and to avoid the failure, check
+device type and modify use_16_for_rw and use_10_for_rw flags only for
+host-managed zoned block devices, so that the READ (16) and WRITE (16)
+commands are not enforced on host-aware zoned block devices.
 
-  error=/sys/block/sdb/device/error_inject/error
-  echo "2 -8 0x88 0 0 0x2 0x3 0x11 0x0" >$error
-
-Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
+Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
 ---
- drivers/scsi/scsi_debug.c | 46 +++++++++++++++++++++++++++++++++++++++
- 1 file changed, 46 insertions(+)
+ drivers/scsi/sd_zbc.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 217a9e892391..06fe2914117f 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -7832,6 +7832,41 @@ static int sdebug_fail_queue_cmd(struct scsi_cmnd *cmnd)
- 	return 0;
- }
- 
-+static int sdebug_fail_cmd(struct scsi_cmnd *cmnd, int *retval,
-+			   struct sdebug_err_inject *info)
-+{
-+	struct scsi_device *sdp = cmnd->device;
-+	struct sdebug_dev_info *devip = (struct sdebug_dev_info *)sdp->hostdata;
-+	struct sdebug_err_inject *err;
-+	unsigned char *cmd = cmnd->cmnd;
-+	int ret = 0;
-+	int result;
-+
-+	if (devip == NULL)
-+		return 0;
-+
-+	list_for_each_entry(err, &devip->inject_err_list, list) {
-+		if (err->type == ERR_FAIL_CMD &&
-+		    (err->cmd == cmd[0] || err->cmd == 0xff)) {
-+			if (!err->cnt)
-+				return 0;
-+			ret = !!err->cnt;
-+			goto out_handle;
-+		}
-+	}
-+	return 0;
-+
-+out_handle:
-+	if (err->cnt < 0)
-+		err->cnt++;
-+	mk_sense_buffer(cmnd, err->sense_key, err->asc, err->asq);
-+	result = err->status_byte | err->host_byte << 16 | err->driver_byte << 24;
-+	*info = *err;
-+	*retval = schedule_resp(cmnd, devip, result, NULL, 0, 0);
-+
-+	return ret;
-+}
-+
- static int scsi_debug_queuecommand(struct Scsi_Host *shost,
- 				   struct scsi_cmnd *scp)
- {
-@@ -7852,6 +7887,7 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
- 	bool has_wlun_rl;
- 	bool inject_now;
- 	int ret = 0;
-+	struct sdebug_err_inject err;
- 
- 	scsi_set_resid(scp, 0);
- 	if (sdebug_statistics) {
-@@ -7904,6 +7940,16 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
- 		return ret;
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index bd15624c6322..4717a55dbf35 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -921,9 +921,11 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, u8 buf[SD_BUF_SIZE])
+ 		return 0;
  	}
  
-+	if (sdebug_fail_cmd(scp, &ret, &err)) {
-+		scmd_printk(KERN_INFO, scp,
-+			"fail command 0x%x with hostbyte=0x%x, "
-+			"driverbyte=0x%x, statusbyte=0x%x, "
-+			"sense_key=0x%x, asc=0x%x, asq=0x%x\n",
-+			opcode, err.host_byte, err.driver_byte,
-+			err.status_byte, err.sense_key, err.asc, err.asq);
-+		return ret;
+-	/* READ16/WRITE16 is mandatory for ZBC disks */
+-	sdkp->device->use_16_for_rw = 1;
+-	sdkp->device->use_10_for_rw = 0;
++	/* READ16/WRITE16 is mandatory for host-managed devices */
++	if (sdkp->device->type == TYPE_ZBC) {
++		sdkp->device->use_16_for_rw = 1;
++		sdkp->device->use_10_for_rw = 0;
 +	}
-+
- 	if (unlikely(inject_now && !atomic_read(&sdeb_inject_pending)))
- 		atomic_set(&sdeb_inject_pending, 1);
  
+ 	if (!blk_queue_is_zoned(q)) {
+ 		/*
 -- 
-2.35.3
+2.37.1
 
