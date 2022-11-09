@@ -2,222 +2,84 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2568C433FE
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Nov 2022 10:15:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 209B0C4332F
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Nov 2022 12:31:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230146AbiKIKPx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Nov 2022 05:15:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41254 "EHLO
+        id S229959AbiKIMbg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Nov 2022 07:31:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56494 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229556AbiKIKPw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Nov 2022 05:15:52 -0500
-Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C71D01B9DF;
-        Wed,  9 Nov 2022 02:15:50 -0800 (PST)
-Received: by mail-pl1-x634.google.com with SMTP id p12so11162639plq.4;
-        Wed, 09 Nov 2022 02:15:50 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=e4JRYwmPJ/yKuT/Y3842oeLN+ENdwd9hsXDVOH46R6Y=;
-        b=Pw/dudX+YhsZOYMv/a/ukf9SxOLho8UskZ5uwBTffvoZwf7FDwhHpXPApdV1wPgKST
-         lzS1ot5YfaZnHxpGPP+noPlFgmke8LsA0sYX6ZhMT/DY6F5JgPe/ojtcJAXsyaDfLngu
-         ZOHEf5atgwBf9qwuXJCJ5WTOfTi8i01qygvsRCcFquJEu5HHxncZDdaFz2r9ahC3CVOI
-         +AwzoHpZ7XbihbKY6fjYXVfYw31GCkhDR9Wdwnkffs7MNEgaI5O83XNqGbJa0HeCG1Ek
-         z1xsD/rv+CZVHy2f8zLKkvJxgRxL1YHPAn9VkEqPr32gwvigueqaQHtVsXwGnpNxyTRA
-         abkA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=e4JRYwmPJ/yKuT/Y3842oeLN+ENdwd9hsXDVOH46R6Y=;
-        b=PSwJfCwJ2jC836xI/NiXTbBS508U+eaZ+Qdu9O7ri7QnUhRsefyHCootSz0ezHGE8F
-         ycu7yyOn89MjJeGdvClNSR/81aaBDlWCey9/U7NWq7uhL4OtllKef6ZiPsZQ2/HOTGsp
-         8NMQeywvrYmoDQ56kR+CZp1lqxdk7m28XBDdTyAJlTD2oWOimQv1r6iNJIhevX7ClRRY
-         r04OiZ5grNZTZaU/UHjz9VblpJI//+slvsKz2h8rt9UlX61MxczrFgVCbjfow1UbyS6U
-         Ps/Anxs8lKSOLaveE9oelcRMdQrpLpiJgHKfo7+mgiDXKWbHtkCN70CvyCTlv2U8a10X
-         sS6g==
-X-Gm-Message-State: ACrzQf3K41SodpQU+jPBcVWsLf15F1N1LGcxYDaytN/g69pXpC5XPxcY
-        IPy8Y7vttIAXiTf6IWR52L4=
-X-Google-Smtp-Source: AMsMyM6OleZvmwdmKLJ+vNHk7njo0Syu+gro9Ox1M22l9VatXGA4WEUq9cn4AIbpediKMqDqEm7COA==
-X-Received: by 2002:a17:903:50b:b0:187:11e:5f1f with SMTP id jn11-20020a170903050b00b00187011e5f1fmr61540928plb.41.1667988950258;
-        Wed, 09 Nov 2022 02:15:50 -0800 (PST)
-Received: from carlis-virtual-machine.localdomain ([156.236.96.164])
-        by smtp.gmail.com with ESMTPSA id o15-20020a170902d4cf00b00180a7ff78ccsm8683746plg.126.2022.11.09.02.15.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 09 Nov 2022 02:15:49 -0800 (PST)
-From:   Xuezhi Zhang <zhangxuezhi3@gmail.com>
-To:     njavali@marvell.com, mrangankar@marvell.com,
-        GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, zhangxuezhi1@coolpad.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: qla4xxx: convert sysfs snprintf to sysfs_emit
-Date:   Wed,  9 Nov 2022 18:15:41 +0800
-Message-Id: <20221109101541.1083350-1-zhangxuezhi3@gmail.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S229551AbiKIMbf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Nov 2022 07:31:35 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 906CC1CB24;
+        Wed,  9 Nov 2022 04:31:34 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=eRzuEXN9362q/hm/FS3+aYwyK9q6wPOkykwNudQnk2w=; b=Jm3QTcZJ/2OzYib865/QJe6Jib
+        Y8zYsQaCrGdvDo5tzhK3G15u0bHeC5kQuF71N2vAYRTqMG761I9uVM0cfHGO4jOmFHzqrIK3dOIWS
+        I2mRv1F7RkQ3+0GpWH8B7IRff4kVuDkb1RSVv8sBO9acSuY37ve8hRgmYjB3WFubV2sjA9id04fe9
+        MCEJ++8s+9MJFBDDaRNZ7r6db3JKIvdeJU6sR7tts3fGa83kRFPIpZFwT+RyUeL5vSUP4MRuYw9//
+        wNBSLYMaYXq+F0gAHDo7NhJBu4eDv0uD8bDDMN6vSTCUJuZPu4tD65/njJivEd4VlsUn+y/cZZvZY
+        tA3G8VKg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1oskEk-00DPR6-Ny; Wed, 09 Nov 2022 12:31:22 +0000
+Date:   Wed, 9 Nov 2022 04:31:22 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Juhyung Park <qkrwngud825@gmail.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Jiaming Li <lijiaming3@xiaomi.corp-partner.google.com>,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        lijiaming3 <lijiaming3@xiaomi.com>
+Subject: Re: [RESEND PATCH 0/4] Implement File-Based optimization
+ functionality
+Message-ID: <Y2udmtayRau/x5AO@infradead.org>
+References: <20221102053058.21021-1-lijiaming3@xiaomi.corp-partner.google.com>
+ <Y2IuhG8nBJj0F1fd@infradead.org>
+ <c5948336-19fc-ddd3-bc34-aba2d1b02302@gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <c5948336-19fc-ddd3-bc34-aba2d1b02302@gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Xuezhi Zhang <zhangxuezhi1@coolpad.com>
+On Thu, Nov 03, 2022 at 03:11:16PM +0900, Juhyung Park wrote:
+> Is the idea really an utter madness?
 
-Follow the advice of the Documentation/filesystems/sysfs.rst
-and show() should only use sysfs_emit() or sysfs_emit_at()
-when formatting the value to be returned to user space
+Yes.
 
-Signed-off-by: Xuezhi Zhang <zhangxuezhi1@coolpad.com>
----
- drivers/scsi/qla4xxx/ql4_attr.c | 32 ++++++++++++++++----------------
- 1 file changed, 16 insertions(+), 16 deletions(-)
+> Majority of regular files that may be
+> of interest from the perspective of UFS aren't reflinked or snapshotted (let
+> alone the lack of support from ext4 or f2fs).
 
-diff --git a/drivers/scsi/qla4xxx/ql4_attr.c b/drivers/scsi/qla4xxx/ql4_attr.c
-index abfa6ef60480..773b8dbe1121 100644
---- a/drivers/scsi/qla4xxx/ql4_attr.c
-+++ b/drivers/scsi/qla4xxx/ql4_attr.c
-@@ -156,11 +156,11 @@ qla4xxx_fw_version_show(struct device *dev,
- 	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
- 
- 	if (is_qla80XX(ha))
--		return snprintf(buf, PAGE_SIZE, "%d.%02d.%02d (%x)\n",
-+		return sysfs_emit(buf, "%d.%02d.%02d (%x)\n",
- 				ha->fw_info.fw_major, ha->fw_info.fw_minor,
- 				ha->fw_info.fw_patch, ha->fw_info.fw_build);
- 	else
--		return snprintf(buf, PAGE_SIZE, "%d.%02d.%02d.%02d\n",
-+		return sysfs_emit(buf, "%d.%02d.%02d.%02d\n",
- 				ha->fw_info.fw_major, ha->fw_info.fw_minor,
- 				ha->fw_info.fw_patch, ha->fw_info.fw_build);
- }
-@@ -170,7 +170,7 @@ qla4xxx_serial_num_show(struct device *dev, struct device_attribute *attr,
- 			char *buf)
- {
- 	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
--	return snprintf(buf, PAGE_SIZE, "%s\n", ha->serial_number);
-+	return sysfs_emit(buf, "%s\n", ha->serial_number);
- }
- 
- static ssize_t
-@@ -178,7 +178,7 @@ qla4xxx_iscsi_version_show(struct device *dev, struct device_attribute *attr,
- 			   char *buf)
- {
- 	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
--	return snprintf(buf, PAGE_SIZE, "%d.%02d\n", ha->fw_info.iscsi_major,
-+	return sysfs_emit(buf, "%d.%02d\n", ha->fw_info.iscsi_major,
- 			ha->fw_info.iscsi_minor);
- }
- 
-@@ -187,7 +187,7 @@ qla4xxx_optrom_version_show(struct device *dev, struct device_attribute *attr,
- 			    char *buf)
- {
- 	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
--	return snprintf(buf, PAGE_SIZE, "%d.%02d.%02d.%02d\n",
-+	return sysfs_emit(buf, "%d.%02d.%02d.%02d\n",
- 			ha->fw_info.bootload_major, ha->fw_info.bootload_minor,
- 			ha->fw_info.bootload_patch, ha->fw_info.bootload_build);
- }
-@@ -197,7 +197,7 @@ qla4xxx_board_id_show(struct device *dev, struct device_attribute *attr,
- 		      char *buf)
- {
- 	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
--	return snprintf(buf, PAGE_SIZE, "0x%08X\n", ha->board_id);
-+	return sysfs_emit(buf, "0x%08X\n", ha->board_id);
- }
- 
- static ssize_t
-@@ -207,7 +207,7 @@ qla4xxx_fw_state_show(struct device *dev, struct device_attribute *attr,
- 	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
- 
- 	qla4xxx_get_firmware_state(ha);
--	return snprintf(buf, PAGE_SIZE, "0x%08X%8X\n", ha->firmware_state,
-+	return sysfs_emit(buf, "0x%08X%8X\n", ha->firmware_state,
- 			ha->addl_fw_state);
- }
- 
-@@ -220,7 +220,7 @@ qla4xxx_phy_port_cnt_show(struct device *dev, struct device_attribute *attr,
- 	if (is_qla40XX(ha))
- 		return -ENOSYS;
- 
--	return snprintf(buf, PAGE_SIZE, "0x%04X\n", ha->phy_port_cnt);
-+	return sysfs_emit(buf, "0x%04X\n", ha->phy_port_cnt);
- }
- 
- static ssize_t
-@@ -232,7 +232,7 @@ qla4xxx_phy_port_num_show(struct device *dev, struct device_attribute *attr,
- 	if (is_qla40XX(ha))
- 		return -ENOSYS;
- 
--	return snprintf(buf, PAGE_SIZE, "0x%04X\n", ha->phy_port_num);
-+	return sysfs_emit(buf, "0x%04X\n", ha->phy_port_num);
- }
- 
- static ssize_t
-@@ -244,7 +244,7 @@ qla4xxx_iscsi_func_cnt_show(struct device *dev, struct device_attribute *attr,
- 	if (is_qla40XX(ha))
- 		return -ENOSYS;
- 
--	return snprintf(buf, PAGE_SIZE, "0x%04X\n", ha->iscsi_pci_func_cnt);
-+	return sysfs_emit(buf, "0x%04X\n", ha->iscsi_pci_func_cnt);
- }
- 
- static ssize_t
-@@ -253,7 +253,7 @@ qla4xxx_hba_model_show(struct device *dev, struct device_attribute *attr,
- {
- 	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
- 
--	return snprintf(buf, PAGE_SIZE, "%s\n", ha->model_name);
-+	return sysfs_emit(buf, "%s\n", ha->model_name);
- }
- 
- static ssize_t
-@@ -261,7 +261,7 @@ qla4xxx_fw_timestamp_show(struct device *dev, struct device_attribute *attr,
- 			  char *buf)
- {
- 	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
--	return snprintf(buf, PAGE_SIZE, "%s %s\n", ha->fw_info.fw_build_date,
-+	return sysfs_emit(buf, "%s %s\n", ha->fw_info.fw_build_date,
- 			ha->fw_info.fw_build_time);
- }
- 
-@@ -270,7 +270,7 @@ qla4xxx_fw_build_user_show(struct device *dev, struct device_attribute *attr,
- 			   char *buf)
- {
- 	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
--	return snprintf(buf, PAGE_SIZE, "%s\n", ha->fw_info.fw_build_user);
-+	return sysfs_emit(buf, "%s\n", ha->fw_info.fw_build_user);
- }
- 
- static ssize_t
-@@ -278,7 +278,7 @@ qla4xxx_fw_ext_timestamp_show(struct device *dev, struct device_attribute *attr,
- 			      char *buf)
- {
- 	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
--	return snprintf(buf, PAGE_SIZE, "%s\n", ha->fw_info.extended_timestamp);
-+	return sysfs_emit(buf, "%s\n", ha->fw_info.extended_timestamp);
- }
- 
- static ssize_t
-@@ -300,7 +300,7 @@ qla4xxx_fw_load_src_show(struct device *dev, struct device_attribute *attr,
- 		break;
- 	}
- 
--	return snprintf(buf, PAGE_SIZE, "%s\n", load_src);
-+	return sysfs_emit(buf, "%s\n", load_src);
- }
- 
- static ssize_t
-@@ -309,7 +309,7 @@ qla4xxx_fw_uptime_show(struct device *dev, struct device_attribute *attr,
- {
- 	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
- 	qla4xxx_about_firmware(ha);
--	return snprintf(buf, PAGE_SIZE, "%u.%u secs\n", ha->fw_uptime_secs,
-+	return sysfs_emit(buf, "%u.%u secs\n", ha->fw_uptime_secs,
- 			ha->fw_uptime_msecs);
- }
- 
--- 
-2.25.1
+Linux does not require you in any way to use obsolete file systems
+desings only on any given block device.
 
+> Device-side fragmentation is a real issue [1] and it makes more than enough
+> sense to defrag LBAs of interests to improve performance. This was long
+> overdue, unless the block interface itself changes somehow.
+
+Or maybe random writes to flash aren't a good idea if you FTL sucks?
+Full blown FTLs tend to not do any extent based mappings, so
+fragmentation does not matter.  The price paid for that is much larger
+FTL tables.  If you stop pretending flash is random writable through
+saner interfaces like ZNS you automatically solve this fragmentation
+problem as well.
+
+> The question is how to implement it correctly without creating a mess with
+> mismatched/outdated LBAs as you've mentioned, preferably through
+> file-system's integration: If the LBAs in questions are indeed reflinked,
+> how do we handle it?, If the LBAs are moved/invalidated from defrag or GC,
+> how do we make sure that UFS is up-to-date?, etc.
+
+The fix is to plug the leaking abtractions in UFS.  If it wants to look
+like a random writable block device it better perform when doing that.
+And if it doesn't want to pay the prize for that it'd better expose
+an abstraction that actually fits the underlying media.  It's not like
+some of us haven't worked on that for the last decade.
