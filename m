@@ -2,25 +2,25 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 866D6C43219
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Nov 2022 02:43:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4620BC4332F
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Nov 2022 02:43:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230013AbiKICn4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Nov 2022 21:43:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35142 "EHLO
+        id S230018AbiKICn5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Nov 2022 21:43:57 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35140 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229924AbiKICnw (ORCPT
+        with ESMTP id S229926AbiKICnw (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2022 21:43:52 -0500
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC670FD14;
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA09510063;
         Tue,  8 Nov 2022 18:43:50 -0800 (PST)
-Received: from dggpemm500023.china.huawei.com (unknown [172.30.72.53])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4N6Tmn2ypkz15MTp;
-        Wed,  9 Nov 2022 10:43:37 +0800 (CST)
+Received: from dggpemm500022.china.huawei.com (unknown [172.30.72.55])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4N6TjW6sjZzHqVp;
+        Wed,  9 Nov 2022 10:40:47 +0800 (CST)
 Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
- dggpemm500023.china.huawei.com (7.185.36.83) with Microsoft SMTP Server
+ dggpemm500022.china.huawei.com (7.185.36.162) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Wed, 9 Nov 2022 10:43:49 +0800
+ 15.1.2375.31; Wed, 9 Nov 2022 10:43:48 +0800
 Received: from build.huawei.com (10.175.101.6) by
  dggpemm500017.china.huawei.com (7.185.36.178) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
@@ -31,9 +31,9 @@ To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
         Doug Gilbert <dgilbert@interlog.com>
 CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         Wenchao Hao <haowenchao@huawei.com>
-Subject: [RFC PATCH 4/5] scsi:scsi_debug: Return failed value for specific command's queuecommand
-Date:   Wed, 9 Nov 2022 10:59:49 -0500
-Message-ID: <20221109155950.3536976-5-haowenchao@huawei.com>
+Subject: [RFC PATCH 3/5] scsi:scsi_debug: make command timeout if timeout error is injected
+Date:   Wed, 9 Nov 2022 10:59:48 -0500
+Message-ID: <20221109155950.3536976-4-haowenchao@huawei.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20221109155950.3536976-1-haowenchao@huawei.com>
 References: <20221109155950.3536976-1-haowenchao@huawei.com>
@@ -48,31 +48,27 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-If a fail queuecommand error is injected for specific scsi command, just
-return the failed value rejected in queuecommand.
+If a timeout error is injected for specific scsi command, just return
+0 in queuecommand to make it timeout.
 
-We can make any scsi command's queuecommand return the value we desired,
-for example make it return SCSI_MLQUEUE_HOST_BUSY.
-
-For example the following command would make all inquiry(0x12) command's
-queuecommand return 0x1055:
-
-  echo "1 1 0x12 0x1055" >/sys/block/sdb/device/error_inject/error
+For example, the following command would inject timeout error for
+inquiry(0x12) command for 10 times:
+  echo "0 -10 0x12" >/sys/block/sdb/device/error_inject/error
 
 Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
 ---
- drivers/scsi/scsi_debug.c | 32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
+ drivers/scsi/scsi_debug.c | 30 ++++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 761e1e3bcb9a..217a9e892391 100644
+index 06e3150812fa..761e1e3bcb9a 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -7808,6 +7808,30 @@ static int sdebug_timeout_cmd(struct scsi_cmnd *cmnd)
- 	return 0;
- }
+@@ -7784,6 +7784,30 @@ const struct attribute_group *sdebug_sdev_groups[] = {
+ 	NULL
+ };
  
-+static int sdebug_fail_queue_cmd(struct scsi_cmnd *cmnd)
++static int sdebug_timeout_cmd(struct scsi_cmnd *cmnd)
 +{
 +	struct scsi_device *sdp = cmnd->device;
 +	struct sdebug_dev_info *devip = (struct sdebug_dev_info *)sdp->hostdata;
@@ -84,9 +80,9 @@ index 761e1e3bcb9a..217a9e892391 100644
 +		return 0;
 +
 +	list_for_each_entry(err, &devip->inject_err_list, list) {
-+		if (err->type == ERR_FAIL_QUEUE_CMD &&
++		if (err->type == ERR_TMOUT_CMD &&
 +		    (err->cmd == cmd[0] || err->cmd == 0xff)) {
-+			ret = err->cnt ? err->queuecmd_ret : 0;
++			ret = !!err->cnt;
 +			if (err->cnt < 0)
 +				err->cnt++;
 +			return ret;
@@ -99,23 +95,14 @@ index 761e1e3bcb9a..217a9e892391 100644
  static int scsi_debug_queuecommand(struct Scsi_Host *shost,
  				   struct scsi_cmnd *scp)
  {
-@@ -7827,6 +7851,7 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
- 	u8 opcode = cmd[0];
- 	bool has_wlun_rl;
- 	bool inject_now;
-+	int ret = 0;
- 
- 	scsi_set_resid(scp, 0);
- 	if (sdebug_statistics) {
-@@ -7872,6 +7897,13 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
- 		return 0;
+@@ -7842,6 +7866,12 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+ 		if (NULL == devip)
+ 			goto err_out;
  	}
- 
-+	ret = sdebug_fail_queue_cmd(scp);
-+	if (ret) {
-+		scmd_printk(KERN_INFO, scp, "fail queue command 0x%x with 0x%x\n",
-+				opcode, ret);
-+		return ret;
++
++	if (sdebug_timeout_cmd(scp)) {
++		scmd_printk(KERN_INFO, scp, "timeout command 0x%x\n", opcode);
++		return 0;
 +	}
 +
  	if (unlikely(inject_now && !atomic_read(&sdeb_inject_pending)))
