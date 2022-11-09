@@ -2,82 +2,77 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA147C4332F
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Nov 2022 09:28:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55907C433FE
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Nov 2022 09:29:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230253AbiKIJ20 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Nov 2022 04:28:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33648 "EHLO
+        id S229731AbiKIJ3L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Nov 2022 04:29:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34276 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230186AbiKIJ2Y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Nov 2022 04:28:24 -0500
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A285121258;
-        Wed,  9 Nov 2022 01:28:19 -0800 (PST)
+        with ESMTP id S230285AbiKIJ3H (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Nov 2022 04:29:07 -0500
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CFBBE2125C
+        for <linux-scsi@vger.kernel.org>; Wed,  9 Nov 2022 01:29:06 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1667986099; x=1699522099;
+  t=1667986146; x=1699522146;
   h=from:to:cc:subject:date:message-id:references:
    in-reply-to:content-id:content-transfer-encoding:
    mime-version;
-  bh=qTlD9WqBJ52SPA5ljhNN7Ac/zpHc49cH1/ko5CJvJEg=;
-  b=AoCKV0f2cKGDhYylpVTgoHYOhkM2okHx9V3/dmo+G2EWY2PUL0LI+23F
-   mNriex9iPSeXF7opvp9efCIJLo5oUT0vwWKWwKUQCJex1LYszPp2Ez62E
-   UXVbG0POJaVqoNC0SeYOD87SkYc+eayO0Ss6UlmqH82474OZbT/DQtIUM
-   QIO/Rq+FaSSzZUUfxyuHVurG1r9xgP8ColSWIVtyLIsjpEIGhd+0Vemtp
-   PKqkJ6jpO+G7mFlbLULm7Mv4l0+M2YdpuLvBcMGP+JIu60sP7hBC+XyiB
-   ocD08fp4bIHzN/d77BibYgTze6OC6S1pA6iQAs9OMOLHTndog6LSyriRR
-   Q==;
+  bh=YPu8jGRpLuNG1ulITjlsnpHdLUqeY7wNdh73qwooei0=;
+  b=rqKNUUcLZXvEKkdb/N6pW9hJwJJi9mC7VGRJVaLYOcpKn6MQ0csnfRKm
+   6ntJUpkDxEh3X5ZVHPsWwVvSzTB71GMDJIuh67IyoRlEpbnl9JY0b26tg
+   8FnJ56zwinRyNGNrLrXNwRKjvrUKYn1HI2oj8qyB+3+UXY6VBdsKiQIe1
+   AnNpuTt002FWJCm7YLBg3rHXNqab434n50AE2eGna2L/T929+P0FGZi9f
+   chseBM175UZaESqPKWMz8t8osTlj2HM1IRfaLwW7MyRxrhSE2/GdeC0bS
+   eezf5Dyf+Fl6kVDDOOlA6sQyCc8mGKqtzffZN2/qSyJwrV0M2LjNK4LAZ
+   g==;
 X-IronPort-AV: E=Sophos;i="5.96,150,1665417600"; 
-   d="scan'208";a="221005897"
-Received: from mail-dm6nam11lp2177.outbound.protection.outlook.com (HELO NAM11-DM6-obe.outbound.protection.outlook.com) ([104.47.57.177])
-  by ob1.hgst.iphmx.com with ESMTP; 09 Nov 2022 17:28:18 +0800
+   d="scan'208";a="216181934"
+Received: from mail-dm6nam12lp2172.outbound.protection.outlook.com (HELO NAM12-DM6-obe.outbound.protection.outlook.com) ([104.47.59.172])
+  by ob1.hgst.iphmx.com with ESMTP; 09 Nov 2022 17:29:05 +0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=iguCDOEpIWsik+9OG3EnA+ghkhpurUu9W3sfB+MLxLF+Yuf5ku/Wzu3h04Xs+Q3Seqo6NKvk3iHe9SqVXP/4KWXajpAYUTS8NNUyYWn58W+lzUZmkbI1zoGhaSB4wQDyGRdWfejYNIKl7Znaz3hZv9VkhWqYnojKx0fNsys1Nar+NIjfPUAVzSTDjbjCw7NCWjXi7XpCsiowMr4/J/sYgzyJXfBG8JUEYbSMEIB0wVUKNwUl3qJ6fDdMmJ0ncZvi8kWIgqG/06BCIhe9QbdtrEqA3+qh68exk4W7ckXdBKiuKPFiBPQoAV/HFrUe7yA05/zrksF2abIayIckXoS1Ww==
+ b=OjFv6N0yYNu7eMEMDEBlH/u83AZ8rKKBYqtY+oWEWmSoTMZntlPxuzagFqCtp83c/QByNuhWYC+i3vmh/Fd1MhbauYGVA2cQyc6P5XERzJfAHRmA4hif0nU03Ouc3MdlMEuj0LnBa6TbtSCUMQTZwPw8981IgFpMUBKMi4lvulo/iR/PLz9g1LQOW9xCkoH3u3egIRSjL3PBmYUn6ho2FVpKlvcahZTuZ8Es9fIX9qp1FowlGP7c6jA9pbFCtdwvfWsqnULozk7zJzP8kvAJqi/1p6zRpLdoSFUr3xByJjKfniQvpE4b2CjQSNdJyVWemnBiC2PoKB/Z37RXbOu/MA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Np3jCeHsjXdz1tMq4aIcisX6pNlsFy39rleIYGoACTo=;
- b=aiTF/kZsM+SRM36lkpiO6QuVg5YqXeNcDi/MoaCuM5BSjbYgYTlPX8yHgNQjzuUMytTW1Xu95ZcFbd0VJ/qImSSQmOiM1OcdQS6/I5S/PNhRgafP42xrmosYV0bYR58E+d60ZU6iNrqiM+Kydyw09wD+EB4YPJ6gwmeSZPSoUS8/7HEXnvDSKmyHGGeasCgOCijSwnPfYhF/UOIeGzRoVyhkq6+jl8Y7DWlgum7Tu1H6n/e+84B6sdKlBV15YPso8pegZfrNQwEdAufvZ+IL48vDVJzk6LjSGZyxZTp5ueL+oAhdMehQc1gVFpY08efLOMp3pbb80XSbYRA8pYO8Pg==
+ bh=4McRW1pS1ssLOYdtCjIgHM4MY1AQ6bJKD/aVH8mCXOM=;
+ b=aERowKgUl5cUt83PUZ02HZP/9bBj/dGlGeis3myXTOHt/aQT3dQKWr9Iow80oeXwUMhzY1sDU6lX9c5GWujqQeuIfbWcWCAL70Jx1w01OOTyYY01JmVhEKByhEDKBp7t+17BM1M83EdnzYjyidjoBc4hml+PWOPu3QHSXcbrwQEnhNt2nsPESZ0Y8L/ePOBQDzg0025wsYsQl+G8WiTddUEz6ZVaba1vSKIKvM2jpZw4oudy55PGDHCkbsuBMjjmW5QhGCCyReI4HWKNQ6F2WfaPXZ8A/Lb3tZEytjX/pVX8yGY9eVs2PEOfxrwrMqm/aukRfWwQLUx5YDewGt1gVQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
  header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Np3jCeHsjXdz1tMq4aIcisX6pNlsFy39rleIYGoACTo=;
- b=IIk9z+3uXYhq7VAYQ6fPMggAI69/zMY9AzF9mnlj+ur1tyqm4DN2iFfx0pd+xD1oIlZ8JD5JUK7fZiDzeyLlD7HtUFlkDpR8BWBY6hf1owBeAnmQpLsfzmfglpsmVGlhlfPSemsy535satFPpw36SGQWVk7OvfkA+uPbS+la/fU=
+ bh=4McRW1pS1ssLOYdtCjIgHM4MY1AQ6bJKD/aVH8mCXOM=;
+ b=V1e59JltFvLojFAMVCbpdSjp+tsdYqB0Dzm/3oznA2ADI2VbrPxbK0aYCer1XteJE2JO09TQzpLZnM1b9Z3eC1LNfcra7FRq9G8muCF/YZp8UyBGYyoqt8Obl1g4dI+JuCSl8L3646awZMmI2lNiKY1AiKlbjW+mIhlTUH8v6RU=
 Received: from MN2PR04MB6272.namprd04.prod.outlook.com (2603:10b6:208:e0::27)
  by SJ0PR04MB7840.namprd04.prod.outlook.com (2603:10b6:a03:3ae::11) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5791.27; Wed, 9 Nov
- 2022 09:28:13 +0000
+ 2022 09:29:01 +0000
 Received: from MN2PR04MB6272.namprd04.prod.outlook.com
  ([fe80::cb5e:7ea3:2482:80f8]) by MN2PR04MB6272.namprd04.prod.outlook.com
  ([fe80::cb5e:7ea3:2482:80f8%7]) with mapi id 15.20.5791.022; Wed, 9 Nov 2022
- 09:28:12 +0000
+ 09:29:01 +0000
 From:   Niklas Cassel <Niklas.Cassel@wdc.com>
 To:     Hannes Reinecke <hare@suse.de>
-CC:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        John Garry <john.g.garry@oracle.com>,
-        "tj@kernel.org" <tj@kernel.org>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+CC:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        James Bottomley <James.Bottomley@hansenpartnership.com>
-Subject: Re: [PATCH v2] ata: libata-core: do not issue non-internal commands
- once EH is pending
-Thread-Topic: [PATCH v2] ata: libata-core: do not issue non-internal commands
- once EH is pending
-Thread-Index: AQHY8sN+Uw8brLy8kkmVlm0qWKEegK4zr72AgAB0EoCAAEE4AIABRUEAgACFHICAACY/AA==
-Date:   Wed, 9 Nov 2022 09:28:12 +0000
-Message-ID: <Y2tyqn+VAVfL+muq@x1-carbon>
-References: <20221107161036.670237-1-niklas.cassel@wdc.com>
- <5a4fa5db-c706-5cf2-1145-bf091445d20e@oracle.com>
- <Y2mbX8MvYrF0FHaI@x1-carbon>
- <976bdcb7-cb97-9332-2bcc-5d98bc41871b@opensource.wdc.com>
- <Y2ri7EVPZb2O9iD8@x1-carbon> <c0a34e41-17ca-cbc1-cf54-9fee23b830a3@suse.de>
-In-Reply-To: <c0a34e41-17ca-cbc1-cf54-9fee23b830a3@suse.de>
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        John Garry <john.garry@oracle.com>
+Subject: Re: [PATCH] scsi_error: do not queue pointless abort workqueue
+ functions
+Thread-Topic: [PATCH] scsi_error: do not queue pointless abort workqueue
+ functions
+Thread-Index: AQHY9A+Zccbne0hZpE2K54tDabFWG642U0YA
+Date:   Wed, 9 Nov 2022 09:29:01 +0000
+Message-ID: <Y2ty3IYfKH8AY7av@x1-carbon>
+References: <20221109074754.24075-1-hare@suse.de>
+In-Reply-To: <20221109074754.24075-1-hare@suse.de>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -86,169 +81,95 @@ authentication-results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=wdc.com;
 x-ms-publictraffictype: Email
 x-ms-traffictypediagnostic: MN2PR04MB6272:EE_|SJ0PR04MB7840:EE_
-x-ms-office365-filtering-correlation-id: ade1162d-be4c-4ed5-fbf1-08dac234b905
+x-ms-office365-filtering-correlation-id: c569fbb2-5d31-4481-28ae-08dac234d652
 wdcipoutbound: EOP-TRUE
 x-ms-exchange-senderadcheck: 1
 x-ms-exchange-antispam-relay: 0
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: EXuxmPGmCBTY5wXR0/bD7y2OsZhcf4zBUx+uhrpwqNlUmggNFPNy9XagfPqQ/SHHRB0Rv+JBkQbL1vnyY0VyZ9JE5BxAqFfWGtBbly6vZfwj5Bf2YkMjbS+fYcSQrxEg9FLDDlDPNMUK7B32PTh+D6rTizPUuVFlxSMJgka19DXh0sEYwBoJiNdVnUw8hMm/VcIA9U6m/FmOkXXhlTg0YmlNdU28qbb+oB6TYE5tRtZ1GEcyTOYvDxQ+javuO5DI7/CsgfqFkra7/DoT0Ls0Bntrf4qteW7eY1Rd1KNhhiY+7+UckZ5fQHUHLFWCVsQXX5BbXUxjTR98tu379H8KbCTwKI5eRpliH+1YvryKsNQBTp2m+B4Tz/tMGXp/W/Mk4gavNdkwI0vCCKzk6vOcUzpsLC+6OTpvFMkkZiuzglzu2o2eakuumeVby38onNpi0qqS/ItU+p+AQxz9xdqJnuD7GiIa6bxSoQHbmPzBvWUIAr+SCySiFx1YUpQP7uUnhdcn8+cFHLqYCeG6s+gl+mvikZ970yGoWRfgPVVyiMThvoThh7//R0uNl5qf9XcKdvCCZBsxlSZNs7kbLAVCA/uNOjFRnOzB+QB1ScAUZo2LuraEftCdWWTD0F3l2XqTNbahOhvhi/PufMzifaJnNYNCLxiGU13CzSdqVoDOSxOQS7Lui7ZQK2j0DpwlaM5l8HUbU0vrvCSjo9YzywMsa/spdnAVowI6xVXkzzKYkn9oxTgKFytWO2o0J7NOfQG9kPfcGs11qRJ92rrCMQOPLg==
+x-microsoft-antispam-message-info: vFVZ/h8vMQfJzCTyh0NYzL9XlL9BSGHU6pvLtHmKYf2ONDb1mE0r2JehklVACa9PGhyGXn+6eY3ak2odiwZjHYi50ZybDLjWzCFan2TDP9TPIlCS1InxM+oXbwgCRqrQGxwAMf6yerM/HPUWGplCvwcM1yuAUCszjIYiQjtmBSnSflT+khGKS3StJHbKs+MkuuUpibTu2+Cw4QfHYaS8jpmPsF7OHehNdHeYIrAkO5FiKwjK9NSjwfht88wuw3jbPYaw11O9gv22oZZEX5lTa6+UAhV25GVhDtPJpscgaaTyK4TskjRNkSkJScMRtpu2/eAQYDOTWh2C7vHpirxvOaT4Cl9aF1wSAQA0kfM6zyyJNpuqmzthQzb2mtj0olwrhRQH34iolR6AJy9XNEekpHhUZtjcJvVVMNJN6mh37ZrN3tWvnAuF84r0PIDXkaeh8HX6/9v4w9x8ZBse6eJnPLp7mFt9FaLugnzEg6aiqJsM7yLkVZB0GzFULf0GydtfmGidO/sLbA1x0wCQTE2+kHB5Cq54WcPVD9kMsQ+B9YRBtwnWkiq/pMRQ8zXqH+mnb9h4AMlxfw7vEIlVGiCoLOYL5k3H6hbl7yPyjsxqG4pA1koz/NfSzIxEDiTjCDZZ4En8bezoxRDU6leOb7v1+DUGFYjT3LaFii1+/70H1TOfB/g3zE8qysOt7ajaMnqYR4PP0X8kqioJCejcuhHaDQJnyyaQ1scwK+MuKGODmX9ZiUI4PGePjPEWCyBMALPVSeFJe2jPpqyK8M9tA7veWA==
 x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR04MB6272.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(7916004)(4636009)(376002)(346002)(396003)(39860400002)(136003)(366004)(451199015)(76116006)(91956017)(316002)(66476007)(64756008)(66446008)(66556008)(6486002)(66946007)(38070700005)(478600001)(8936002)(71200400001)(4326008)(5660300002)(54906003)(6916009)(41300700001)(2906002)(83380400001)(8676002)(6506007)(122000001)(86362001)(9686003)(26005)(82960400001)(6512007)(186003)(38100700002)(33716001);DIR:OUT;SFP:1102;
 x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?z97a/vwEH2bssZz+way+8rwhEbcp+e/ihIr1ZDm37llZsnSlNn+3be8heERP?=
- =?us-ascii?Q?cm2QlJukAUOheEibU06MQXfu/JRcIFtslZ9KWlnshYWyq/O5W5DpRH+tjM0e?=
- =?us-ascii?Q?PVW89MJNRIb+fcEEOaaobsrMlOoGK6BW1ug8zONjscvhdb4OmCO1Ue5JECf4?=
- =?us-ascii?Q?scLCIwatDfREWyC03bADD1kGEub3eOdi6IDQYte+g43Tqdwf5ciSWQvbRhi0?=
- =?us-ascii?Q?yeIzFDu06dRqtf/IOlyrDzRKM9j+HBJ5KEjrEU4mr4vIGJW54irxyAQwzUiW?=
- =?us-ascii?Q?uoyqRJfkP84KrA76QuZv6xkOxsQwG3GDxdbCYAtIiDOYZa8HZlc+YZ2bS3xW?=
- =?us-ascii?Q?LOLsfjqfSloX8kvs6kmravkIqOEv8Zz21x5jOb66HljfFhLGxwGHl4ljiJ8t?=
- =?us-ascii?Q?BSwdaSyZ0pyFcpe7/x+7ujDqZud/7krQgW+bFxbqBewrxOUBSwvIPwMNi6MH?=
- =?us-ascii?Q?hYpUOZ9U7m76icfOoUeB4Fgc+bqqrZGo03JBFUksR9Du1b38FZeiwWpIXs/j?=
- =?us-ascii?Q?oaFt7S0ydmi7ISHFpn+lyDX2uJNooLrvfngCTYkC3XfbWE5qawYiO2ssCo1l?=
- =?us-ascii?Q?3qcVJNqzJH15aEuqqiq5wf8nS1f8VfrylOG8DHsQpL0eXzTvaYRdCMaW9CRl?=
- =?us-ascii?Q?Kn5vCmeuRwYC0VFfVV8Gc6468onnZX73B/by3z6O3q+M3EMRi/Q3TBcRLbBC?=
- =?us-ascii?Q?rf87S37gvky9LJc3K+I4smP+r2QsvKWAAaydZRjOyqt1sJnBJTh4Q2Y9unpY?=
- =?us-ascii?Q?x7RO+EheTb7MEHKfNVR96TyYd7CE5Ix4RhscT7tgJz2rtaMyc2HM1dv/ThVt?=
- =?us-ascii?Q?qWFUVMnbmaq81WQaiFyHLui7aA0OdMo88Fb+WufiVtqCj1kcP0hrUbt+Hzq/?=
- =?us-ascii?Q?u7GAFExEkkAkgkpAFBUowQxFT5G3LMG79M1Xsp5OEgGbUAEQ6qwRGeoBAVUZ?=
- =?us-ascii?Q?BKvTPBiO5o8HsGiTKpLG5mia8DbAguWPvfqOr/EHcBvpquWKLp9+nhWeC+L6?=
- =?us-ascii?Q?NqtiZYEc/5VFKRiTf1s0bzGWOIQ3k1Z+tUn0BNakQNllJJef95LfJ2Zu6dU4?=
- =?us-ascii?Q?t7GKOm/5t1ml/OtbArXbbB5AGNQa7kGqcVSx1K8UbDT7TLP2toXQ4JhMUv4l?=
- =?us-ascii?Q?8n4j6YD8M+MdlblHfZjIMj9TjlvP7rLpH5nsMedcccw3dg+IKWaKgzfzod2u?=
- =?us-ascii?Q?83YIOdN+9B2uldfC/Akz3/359L3MZDmaYxebhCNtbIc/0tG9FHlZmKn9k8YW?=
- =?us-ascii?Q?WyL881dEpFzKWBiD2ZenWLWDKJjAR3vFlN4mz2jpy248uRvGMPn3t/njk2Re?=
- =?us-ascii?Q?3j0euUi+/iKtdQvLxHnDcJ8Kgtipa/nU+O5+O4L0Fk34YHBRGXHCUu7CXdEj?=
- =?us-ascii?Q?bmVJn1oH83PxfsWtEw5XIsoQuZCXsbscMWbsv6wtIOxnAnGJEybiqSyOJUXD?=
- =?us-ascii?Q?npMGDjEvmtrY68EgsZSYZ14PTbTcRl5JJqxKGFI9Zir1/uHzmDacGzzZXiMd?=
- =?us-ascii?Q?kRc5SvsOFaRhxL90G2gOpe9ZhnbHi3O2RdgsqIKdOim8+XOi5oe172TYze7T?=
- =?us-ascii?Q?WboYrvuGP3nF9gfxYsBnU980WFylwOg/Wusqo6zeZBu6JrYWA8LcEHsp+bTw?=
- =?us-ascii?Q?Uw=3D=3D?=
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?TPddSA56mlBbjm3t8P2s+bYT8AyGjUjbXD62CCGDDFH+ydhEGt79fdywzsHU?=
+ =?us-ascii?Q?i4cwFOakOuwYXWIVk34OmVNupiK5DfCGl/DWJm+KKgyPs/jFYY6ijLOL2GPl?=
+ =?us-ascii?Q?v2SaJi0dnlPLEBr6/ahQPKpQIgPNL1gXmWK8WwL4oJFT8a4ofmKyzqA+vkYj?=
+ =?us-ascii?Q?z6jr2V0XhTEzpgTVUTbsqrCTE1h7V+Uijlihq7ULIm/eo+n0vGHoVY6lPbxT?=
+ =?us-ascii?Q?jnD5R9U9LdUDDbPIA1dr2WNh2rBexe4vSSFXTRb3O+5cWUupadh8a3sTXKeh?=
+ =?us-ascii?Q?ThfaJQCruQhzLJaBtBB+fDbgjCnuoS3ZuAMd0mOxSSoFGLTXZT9MUbK4e3Sn?=
+ =?us-ascii?Q?UH8lD47i/DVq+8s2otTHcdtvD+IcEAAhLPGbc6kLNd2FioT5w/LOm+VIn87m?=
+ =?us-ascii?Q?QTRWpXFWgohyAiCncLOqXjuKcdwwCuBkEoSVrLuX/AxQwkmWV/Iqb8Smo6Oa?=
+ =?us-ascii?Q?eDJSZ6eImKyXCiNwo1txKlZJEZNxYTBWqEm46elqwbiSTP7ulF8wYXF70Zp4?=
+ =?us-ascii?Q?zZNY6sSp0QZvj3gjRNoMl0RZuUH5D9bEoPDdfAxZuSdT1z1ex0zE6m9vkRyW?=
+ =?us-ascii?Q?yl9g+Fo7EXc0CZvd/265y94zx6R+g3e1dMozn/YWoNAhxnkL1PKFJ+1ju0yg?=
+ =?us-ascii?Q?COshmgkiSAV5hYdVbsCMHuNKj3sSYefPWd3l0xm6KC4bSKVl0NDPEwMZqCka?=
+ =?us-ascii?Q?3tEJNTKtVgGafvN+1WwldFgfxBuCOJGiJNsW0vTWfwZq6OIcZAqrf8nOsMEI?=
+ =?us-ascii?Q?O2l7qd+j455ZSHnwgKktwdP7YUSV178nUzgor324vGV1Vbl/s7yQrD/qEPtt?=
+ =?us-ascii?Q?MoicI1UizV7x+0oMPTPqsOIoLEJfbTx0uvknz1+MDk4QpBFncoc81V3ajn7w?=
+ =?us-ascii?Q?NrqKSNRdjiyVpf19JnAi/8X39OMUZSrW4VU0YaV+2Tjilk8SwoArFL164cZ9?=
+ =?us-ascii?Q?x7ed0B3qsuz2CaWn27WF8KNrv3VHaDA8HURTG04sVFZZrZb2PHJa4gfqyL40?=
+ =?us-ascii?Q?r87E8sQqlKwk1LTM8/WWO9IJ/gSiUfjsgnzStgbx/GJDsiF47oOw/d5c9HJq?=
+ =?us-ascii?Q?bpIdfPeO5EY2hcNc1Q69ycKkhQEdiGvIdv47QUcQxVC7S7ayyfP02VrVO3Yv?=
+ =?us-ascii?Q?02j7ezxqZugG3gIO4GUmXvnt8f36ndEMLm5smyHHvI/UB4ueKgFvJ9g3o9mu?=
+ =?us-ascii?Q?tLOsmsTpuLb2G/0vF14WXqTYUCN/L/EqadqfQS8VH1Bqj4Sr60ZHVlL4sU4V?=
+ =?us-ascii?Q?N7OEDmqf76UbDhXm8TH81ktStEQLCOgCEQUGYB2NruiXs5IgR/7QXxPziGIz?=
+ =?us-ascii?Q?7yBwGbIWdNWAwSVBcvRK2aMJXDO3wPC5VApMF3+x5ABgqfGxqv4idH8C128N?=
+ =?us-ascii?Q?5qebB3+w1voxR7gaa3nr1XxhK0gJ+CMozs/mFfbruDVpGCt6fRrY5znhicVO?=
+ =?us-ascii?Q?hNZ9zsA+iFQtCrbIfxb5d0ztH0mnO0UgB6H+I31TfeumhYfqZRKqNljb3lz0?=
+ =?us-ascii?Q?O0Q1lCp/DlmR4AkEr8oXjFgnkHporGKzCKNEQA/DX96i9rilonDFe15rX6BM?=
+ =?us-ascii?Q?z7a6+9JO6GOK/XyCvaPBxW1ZnwOWxCorA/37rkjvONBxFUpxXrwIIEOqqaeD?=
+ =?us-ascii?Q?OA=3D=3D?=
 Content-Type: text/plain; charset="us-ascii"
-Content-ID: <85DB5C363807564793C2EC5EC5C10F5A@namprd04.prod.outlook.com>
+Content-ID: <DDED97C3B442D849BF4D7E5C53BC0CDC@namprd04.prod.outlook.com>
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: wdc.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: MN2PR04MB6272.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ade1162d-be4c-4ed5-fbf1-08dac234b905
-X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Nov 2022 09:28:12.4142
+X-MS-Exchange-CrossTenant-Network-Message-Id: c569fbb2-5d31-4481-28ae-08dac234d652
+X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Nov 2022 09:29:01.5674
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: ifccT/P8CZ7jw98pFhxp6TcgtsRWdGIAJkBkhq0LRHYYef4sqVr6uoc8i4kO+201UOZDuxUuqCeSefCK9LCXHQ==
+X-MS-Exchange-CrossTenant-userprincipalname: 6LR6XlNmTZQ8UPWnWsn2CdpY6r/TlVKcjAe2Ex0yHX54awAFcIMi25iV1b0KoYRFdX0KYZYqNdcWoESDpi7Vqg==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR04MB7840
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Nov 09, 2022 at 08:11:17AM +0100, Hannes Reinecke wrote:
-> Thanks for the detailed explanation, Niklas.
+On Wed, Nov 09, 2022 at 08:47:54AM +0100, Hannes Reinecke wrote:
+> If a host template doesn't implement the .eh_abort_handler()
+> there is no point in queueing the abort workqueue function;
+> all it does is invoking SCSI EH anyway.
+> So return 'FAILED' from scsi_abort_command() if the .eh_abort_handler()
+> is not implemented and save us from having to wait for the
+> abort workqueue function to complete.
 >=20
-> However, one fundamental thing is still unresolved:
-> I've switched SCSI EH to do asynchronous aborts with commit e494f6a72839
-> ("[SCSI] improved eh timeout handler"); since then commands will be abort=
-ed
-> without invoking SCSI EH.
->=20
-> This goes _fundamentally_ against libata's .eh_strategy (as it's never
-> invoked), and as such libata _cannot_ use command aborts.
-> Which typically wouldn't matter as ATA doesn't have command aborts, and
-> realistically any error is causing the NCQ queue to be drained.
->=20
-> So SCSI EH scsi_abort_command() really shouldn't queue a workqueue item, =
-as
-> it'll never be able to do anything meaningful.
->=20
-> You need this patch:
+> Cc: Niklas Cassel <Niklas.Cassel@wdc.com>
+> Cc: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> Cc: John Garry <john.garry@oracle.com>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  drivers/scsi/scsi_error.c | 5 +++++
+>  1 file changed, 5 insertions(+)
 >=20
 > diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index be2a70c5ac6d..4fb72b73871e 100644
+> index be2a70c5ac6d..e9f9c8f52c59 100644
 > --- a/drivers/scsi/scsi_error.c
 > +++ b/drivers/scsi/scsi_error.c
 > @@ -242,6 +242,11 @@ scsi_abort_command(struct scsi_cmnd *scmd)
->                 return FAILED;
->         }
->=20
-> +       if (!hostt->eh_abort_handler) {
-> +               /* No abort handler, fail command directly */
-> +               return FAILED;
-> +       }
+>  		return FAILED;
+>  	}
+> =20
+> +	if (!shost->hostt->eh_abort_handler) {
+> +		/* No abort handler, fail command directly */
+> +		return FAILED;
+> +	}
 > +
->         spin_lock_irqsave(shost->host_lock, flags);
->         if (shost->eh_deadline !=3D -1 && !shost->last_reset)
->                 shost->last_reset =3D jiffies;
+>  	spin_lock_irqsave(shost->host_lock, flags);
+>  	if (shost->eh_deadline !=3D -1 && !shost->last_reset)
+>  		shost->last_reset =3D jiffies;
+> --=20
+> 2.35.3
 >=20
-> to avoid having libata trying to queue a (pointless) abort workqueue item=
-,
-> and get rid of the various workqueue thingies you mentioned above.
->=20
-> And it's a sensible fix anyway, will be sending it as a separate patch.
 
-Hello Hannes,
-
-This is how it looks before your patch:
-scsi_logging_level -s -E 7
-
-[   33.737069] sd 0:0:0:0: [sda] tag#0 abort scheduled
-[   33.738812] sd 0:0:0:0: [sda] tag#3 abort scheduled
-[   33.749085] sd 0:0:0:0: [sda] tag#0 aborting command
-[   33.751393] sd 0:0:0:0: [sda] tag#0 cmd abort failed
-[   33.753541] sd 0:0:0:0: [sda] tag#3 aborting command
-[   33.755565] sd 0:0:0:0: [sda] tag#3 cmd abort failed
-[   33.763051] scsi host0: Waking error handler thread
-[   33.765727] scsi host0: scsi_eh_0: waking up 0/2/2
-[   33.768815] ata1.00: exception Emask 0x0 SAct 0x9 SErr 0x0 action 0x0
-[   33.772211] ata1.00: irq_stat 0x40000000
-[   33.774187] ata1.00: failed command: WRITE FPDMA QUEUED
-[   33.776962] ata1.00: cmd 61/00:00:00:00:0f/01:00:00:00:00/40 tag 0 ncq d=
-ma 131072 out
-[   33.776962]          res 43/04:00:00:00:00/00:00:00:00:00/00 Emask 0x400=
- (NCQ error) <F>
-[   33.783598] ata1.00: status: { DRDY SENSE ERR }
-[   33.785252] ata1.00: error: { ABRT }
-[   33.791290] ata1.00: configured for UDMA/100
-[   33.792195] sd 0:0:0:0: [sda] tag#0 scsi_eh_0: flush finish cmd
-[   33.793426] sd 0:0:0:0: [sda] tag#3 scsi_eh_0: flush finish cmd
-[   33.794653] ata1: EH complete
-
-So we do get the scmd:s sent to ATA EH (strategy_handler).
-
-In scmd_eh_abort_handler(), scsi_try_to_abort_cmd() will return FAILED
-since hostt->eh_abort_handler is not implemented for libata, so
-scmd_eh_abort_handler() will do goto out; which calls scsi_eh_scmd_add().
-
-
-This is how it looks after your patch:
-scsi_logging_level -s -E 7
-
-[  223.417749] scsi host0: Waking error handler thread
-[  223.419782] scsi host0: scsi_eh_0: waking up 0/2/2
-[  223.423101] ata1.00: exception Emask 0x0 SAct 0x80002 SErr 0x0 action 0x=
-0
-[  223.425362] ata1.00: irq_stat 0x40000008
-[  223.426778] ata1.00: failed command: WRITE FPDMA QUEUED
-[  223.428925] ata1.00: cmd 61/00:08:00:00:0f/01:00:00:00:00/40 tag 1 ncq d=
-ma 131072 out
-[  223.428925]          res 43/04:00:00:00:00/00:00:00:00:00/00 Emask 0x400=
- (NCQ error) <F>
-[  223.436077] ata1.00: status: { DRDY SENSE ERR }
-[  223.438015] ata1.00: error: { ABRT }
-[  223.441179] ata1.00: Security Log not supported
-[  223.445698] ata1.00: Security Log not supported
-[  223.448475] ata1.00: configured for UDMA/100
-[  223.449790] sd 0:0:0:0: [sda] tag#1 scsi_eh_0: flush finish cmd
-[  223.451063] sd 0:0:0:0: [sda] tag#19 scsi_eh_0: flush finish cmd
-[  223.452648] ata1: EH complete
-
-So your patch looks good to me, like you said, it removes a
-a pointless queue_work().
-
-Do we perhaps want to remove the !hostt->eh_abort_handler check
-from scmd_eh_abort_handler(), now when you've moved it earlier
-(to scsi_abort_command()) ? Perhaps we need to keep it, since
-the function used for checking this, scsi_try_to_abort_cmd()
-is used in other places as well.
-
-
-Kind regards,
-Niklas=
+Tested-by: Niklas Cassel <niklas.cassel@wdc.com>=
