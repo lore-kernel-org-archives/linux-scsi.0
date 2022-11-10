@@ -2,81 +2,94 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 743CDC433FE
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Nov 2022 21:39:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A5D2C433FE
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Nov 2022 00:58:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231894AbiKIVjz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Nov 2022 16:39:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45896 "EHLO
+        id S230507AbiKJA6x (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Nov 2022 19:58:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47202 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229975AbiKIVjy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Nov 2022 16:39:54 -0500
-Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5CBC2A26D;
-        Wed,  9 Nov 2022 13:39:53 -0800 (PST)
-Received: by mail-pf1-f179.google.com with SMTP id z26so17932159pff.1;
-        Wed, 09 Nov 2022 13:39:53 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=51UKphScOkAZk/JYPQyyUdQI4rigXll8VtuS8/WSFDU=;
-        b=YsEXlJxd6/pYHeKPq8sYc2EYVpCH0jFDMjjhJ6K7Q4v8upHnhjY+gjikaiPsMxDoYC
-         boEfhElAoXGKl9B8wsNyl0o/UAwcZ6MF4uf3v+6aq7zga3197mRQCexz+hmmjcTLefX5
-         qXD3Rt8d1yxndLivB8bRvb5jrlP7JhuacAjlJYvTotYVxfPvGlyhAJvMTtRy3WwdPIgC
-         NwzZpKuN9wo20uay33DBiKinm3ETjVdPuOmcbEKIONgOlMbeBiYiw5df0VtQQedSjNbR
-         Bzxdr60GQaCuUaPP75MgGzt+Tk8SqdHbjmWUjiipO+lY/7SxcLh5xquPoGW6B27+wz1/
-         VV7Q==
-X-Gm-Message-State: ACrzQf3Yt7aw643oIP3z0zV4Btq+RewkGVjCsMfeP4nz+JYF8YhGGBaH
-        PYAEptgEeQiu7aWe2pmgo0Q=
-X-Google-Smtp-Source: AMsMyM5X6TiKoY3iecrp7/h3ctRCOf3bOkygYB/QBw3VdmC27evIrdLQykHpQh7grO8F57r8vkoPZg==
-X-Received: by 2002:a05:6a00:1582:b0:56d:4bc6:68c7 with SMTP id u2-20020a056a00158200b0056d4bc668c7mr55891573pfk.31.1668029993334;
-        Wed, 09 Nov 2022 13:39:53 -0800 (PST)
-Received: from ?IPV6:2620:15c:211:201:68b6:5dae:a00c:c3b? ([2620:15c:211:201:68b6:5dae:a00c:c3b])
-        by smtp.gmail.com with ESMTPSA id e1-20020a170902b78100b0017f7628cbddsm9596636pls.30.2022.11.09.13.39.50
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 09 Nov 2022 13:39:52 -0800 (PST)
-Message-ID: <1cb92354-ac65-6038-59ec-3f82b613cab4@acm.org>
-Date:   Wed, 9 Nov 2022 13:39:49 -0800
+        with ESMTP id S231482AbiKJA6U (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Nov 2022 19:58:20 -0500
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F18C20F56;
+        Wed,  9 Nov 2022 16:58:11 -0800 (PST)
+Received: from canpemm500002.china.huawei.com (unknown [172.30.72.56])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4N73K728lyzJnY1;
+        Thu, 10 Nov 2022 08:55:07 +0800 (CST)
+Received: from [10.169.59.127] (10.169.59.127) by
+ canpemm500002.china.huawei.com (7.192.104.244) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Thu, 10 Nov 2022 08:58:08 +0800
+Subject: Re: [PATCH 3/3] nvme: Convert NVMe errors to PT_STS errors
+To:     Mike Christie <michael.christie@oracle.com>, <kbusch@kernel.org>,
+        <axboe@fb.com>, <hch@lst.de>, <sagi@grimberg.me>,
+        <martin.petersen@oracle.com>, <jejb@linux.ibm.com>,
+        <linux-scsi@vger.kernel.org>, <linux-nvme@lists.infradead.org>,
+        <linux-block@vger.kernel.org>
+References: <20221109031106.201324-1-michael.christie@oracle.com>
+ <20221109031106.201324-4-michael.christie@oracle.com>
+ <9df9d0cf-5583-ccfd-ffd7-54432767fdfb@huawei.com>
+ <cd524e32-d154-cd67-39b0-5f153a84125a@oracle.com>
+From:   Chao Leng <lengchao@huawei.com>
+Message-ID: <6396da68-5c87-a36d-b013-2d2fe36a8d52@huawei.com>
+Date:   Thu, 10 Nov 2022 08:58:08 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.0
-Subject: Re: [PATCH v4 09/16] ufs: core: mcq: Configure operation and runtime
- interface
+In-Reply-To: <cd524e32-d154-cd67-39b0-5f153a84125a@oracle.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
-To:     Asutosh Das <quic_asutoshd@quicinc.com>, quic_cang@quicinc.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Cc:     quic_nguyenb@quicinc.com, quic_xiaosenh@quicinc.com,
-        stanley.chu@mediatek.com, eddie.huang@mediatek.com,
-        daejun7.park@samsung.com, avri.altman@wdc.com, mani@kernel.org,
-        beanhuo@micron.com, linux-arm-msm@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@somainline.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <cover.1668022680.git.quic_asutoshd@quicinc.com>
- <9d69f52798bed75f5e66176b975f105e8e625902.1668022680.git.quic_asutoshd@quicinc.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <9d69f52798bed75f5e66176b975f105e8e625902.1668022680.git.quic_asutoshd@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.169.59.127]
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ canpemm500002.china.huawei.com (7.192.104.244)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/9/22 11:41, Asutosh Das wrote:
-> Runtime and operation registers are defined per Submission
-> and Completion queue.
-> The location of these registers is not defined in the spec;
-> meaning the offsets and stride may vary for different
-> HC vendors. Establish the stride, base address and doorbell
-> address offsets from vendor host driver and program it.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+
+On 2022/11/10 1:35, Mike Christie wrote:
+> On 11/9/22 2:28 AM, Chao Leng wrote:
+>>
+>>
+>> On 2022/11/9 11:11, Mike Christie wrote:
+>>> This converts the NVMe errors we could see during PR handling to PT_STS
+>>> errors, so pr_ops callers can handle scsi and nvme errors without knowing
+>>> the device types.
+>>>
+>>> Signed-off-by: Mike Christie <michael.christie@oracle.com>
+>>> ---
+>>>    drivers/nvme/host/core.c | 42 ++++++++++++++++++++++++++++++++++++++--
+>>>    1 file changed, 40 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+>>> index dc4220600585..8f0177045a2f 100644
+>>> --- a/drivers/nvme/host/core.c
+>>> +++ b/drivers/nvme/host/core.c
+>>> @@ -2104,11 +2104,43 @@ static int nvme_send_ns_pr_command(struct nvme_ns *ns, struct nvme_command *c,
+>>>        return nvme_submit_sync_cmd(ns->queue, c, data, 16);
+>>>    }
+>>>    +static enum pr_status nvme_sc_to_pr_status(int nvme_sc)
+>>> +{
+>>> +    enum pr_status sts;
+>>> +
+>>> +    switch (nvme_sc) {
+>>> +    case NVME_SC_SUCCESS:
+>>> +        sts = PR_STS_SUCCESS;
+>>> +        break;
+>>> +    case NVME_SC_RESERVATION_CONFLICT:
+>>> +        sts = PR_STS_RESERVATION_CONFLICT;
+>>> +        break;
+>>> +    case NVME_SC_HOST_PATH_ERROR:
+>>> +        sts = PR_STS_PATH_FAILED;
+>> All path-related errors should be considered.
+> 
+> Will do. Just one question.
+> 
+> I didn't see NVME_SC_CTRL_PATH_ERROR and NVME_SC_INTERNAL_PATH_ERROR
+> being used. Are they retryable errors?
+These two types of errors depend on the implementation of the target.
+All in all, the request with path-related error should fail over to retry successfully.
