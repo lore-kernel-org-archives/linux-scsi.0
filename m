@@ -2,74 +2,107 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A9BBC433FE
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Nov 2022 17:26:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99DDAC4332F
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Nov 2022 17:44:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231224AbiKJR0l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Nov 2022 12:26:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50046 "EHLO
+        id S229958AbiKJRom (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Nov 2022 12:44:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58466 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230359AbiKJR0k (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Nov 2022 12:26:40 -0500
-Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98B0D1839A
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Nov 2022 09:26:39 -0800 (PST)
-Received: by mail-pf1-f178.google.com with SMTP id z26so2792455pff.1
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Nov 2022 09:26:39 -0800 (PST)
+        with ESMTP id S229537AbiKJRol (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Nov 2022 12:44:41 -0500
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 316202D75A;
+        Thu, 10 Nov 2022 09:44:41 -0800 (PST)
+Received: by mail-pl1-f182.google.com with SMTP id l2so2001277pld.13;
+        Thu, 10 Nov 2022 09:44:41 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:subject:from:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Vx6B5EajG2p/x0K/8Xmk6JMuVD/5gYYGT8SoTpYWf8c=;
-        b=vUalqUyQoJzkFzgl29JqXkCRtrdTy+Fdd35r1mNsZZFpFD2s3C6rjG/n/JhLZCvCQL
-         7axihw2qalgBujoNkvECgXIEdpUry9Nx+WQm95APfDGcRfO0244XflZKAK59IJzp62Zg
-         iboKHZdZq6cbvmXPHBdbriQmhiy601X6fIN82rSwrKY+rLYLmhvc643plDloFA7BqdOf
-         0I5L707GTBf9n5mTXQKZRPh73GKTkAQnEMTOyPThsIS5ov0ETPHw6bi/n3HihP7cGBz8
-         K0IttmM5Yjb7++w74nMKR95v2vk7fzABnbFQly6MVxDBIh4KWfu+boAXt3ykNkvvxvVl
-         2Niw==
-X-Gm-Message-State: ACrzQf2zzTHOrunsAVMNUuqDmloHSr0utiJMwRF9cKiQK6MoClPrPwos
-        KRZML/W7K005kkVJxe0eKxM=
-X-Google-Smtp-Source: AMsMyM6loaVx8EWCJMbnyMO4Ww/GHGKmybk8gebglLMt6zMZQtJ1c8Wuo4SDdlIy2yEU79GqUB5xDQ==
-X-Received: by 2002:a05:6a00:3490:b0:563:8011:e9e4 with SMTP id cp16-20020a056a00349000b005638011e9e4mr3053957pfb.76.1668101198930;
-        Thu, 10 Nov 2022 09:26:38 -0800 (PST)
+        bh=MwceInYzCobuvA+97AtreUei0+vT6Z12rofSZH5CYag=;
+        b=fTB0wq3SC/cCKKEe2Wjyc7h8vf52sudjZXLhxgaZjFPg9iROaj7whiWh6Yue50Qw3c
+         9SI0pw22U7e9qdefgL94fpVgN5eSjiinc7i2lmfeqZhrcPkU++lLJJhzDrUQlZ4D4z+M
+         D+Yt3Z87uQ9lbiRcRKUE6nDQGf79H11bnABa1FLY1RWMraI8x2st5GCBvm2z2a9ZB25h
+         dlFnzSDvTtb/A9t2WoYkK9SfxNrfHfBtkVn5zj9UMlQQYgpcsiI/VMJ89D2CEEiryeZd
+         7BYANN4UsBDbdxD+j0PlxBt3+cld6xYkBhmhLzOqAIvPUIsEP1qbyPTEGHGghyuu3Lcq
+         ZHfQ==
+X-Gm-Message-State: ACrzQf0iGL5xt5kb0I4V6RT6WeYufaD3nUh/rE85pqzQHj6jNwJPJdkr
+        B1UJhU/NM2z+agYCuBVurWf0LOOCZ5E=
+X-Google-Smtp-Source: AMsMyM45goJ9HglQcd7yg+Y15isFuzi+L14lDds6gq0WcCBcb3B0WjOiO9I4KB/k0a0YK6hNZ5Mo2A==
+X-Received: by 2002:a17:90a:4618:b0:214:100a:65cf with SMTP id w24-20020a17090a461800b00214100a65cfmr51674268pjg.118.1668102274562;
+        Thu, 10 Nov 2022 09:44:34 -0800 (PST)
 Received: from ?IPV6:2620:15c:211:201:2ecf:659:1c55:5? ([2620:15c:211:201:2ecf:659:1c55:5])
-        by smtp.gmail.com with ESMTPSA id h2-20020a170902f54200b0018725c2fc46sm11535526plf.303.2022.11.10.09.26.36
+        by smtp.gmail.com with ESMTPSA id e19-20020a170902ed9300b00186acb14c4asm11506491plj.67.2022.11.10.09.44.28
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 10 Nov 2022 09:26:37 -0800 (PST)
-Message-ID: <13010fb2-13df-ed0f-031f-d65fdc4738f7@acm.org>
-Date:   Thu, 10 Nov 2022 09:26:36 -0800
+        Thu, 10 Nov 2022 09:44:29 -0800 (PST)
+Message-ID: <05a91775-e4fa-4d70-8303-898339c4ea01@acm.org>
+Date:   Thu, 10 Nov 2022 09:44:27 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.3.0
-Subject: Re: [PATCH v6 03/35] scsi: Add struct for args to execution functions
-Content-Language: en-US
-To:     John Garry <john.g.garry@oracle.com>,
-        Mike Christie <michael.christie@oracle.com>, mwilck@suse.com,
-        hch@lst.de, martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        james.bottomley@hansenpartnership.com
-References: <20221104231927.9613-1-michael.christie@oracle.com>
- <20221104231927.9613-4-michael.christie@oracle.com>
- <1bd9df90-fda6-270e-e437-e1039a0a8b76@oracle.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <1bd9df90-fda6-270e-e437-e1039a0a8b76@oracle.com>
+Subject: Re: [6.1.0-rc4-next-20221109] Boot time warning
+ kernel/module/main.c:852
+To:     Sachin Sant <sachinp@linux.ibm.com>, linux-scsi@vger.kernel.org
+Cc:     linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        open list <linux-kernel@vger.kernel.org>
+References: <06C70AFA-75C5-49A7-9EB4-27AF20A80EBB@linux.ibm.com>
+Content-Language: en-US
+In-Reply-To: <06C70AFA-75C5-49A7-9EB4-27AF20A80EBB@linux.ibm.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/10/22 03:15, John Garry wrote:
-> Current method means a store (in scsi_exec_args struct), a load, a 
-> comparison, and a mov value to register whose value depends on 
-> comparison. That's most relevant on performance being a concern.
+On 11/10/22 00:01, Sachin Sant wrote:
+> While booting 6.1.0-rc4-next-20221109 next kernel on a IBM Power9 LPAR
+> following warning is seen:
+> 
+> [ 8.808868] ------------[ cut here ]------------
+> [ 8.808872] WARNING: CPU: 1 PID: 378 at kernel/module/main.c:852 module_put+0x48/0x100
+> [ 8.809024] sd 1:0:0:1: [sdc] Write cache: disabled, read cache: enabled, supports DPO and FUA
+> [ 8.809024] LR [c0000000009ee680] scsi_device_put+0x50/0x70
+> [ 8.809035] Call Trace:
+> [ 8.809038] [c000000007c37b10] [c000000007c37b50] 0xc000000007c37b50 (unreliable)
+> [ 8.809045] [c000000007c37b50] [c0000000009ee674] scsi_device_put+0x44/0x70
+> [ 8.809053] [c000000007c37b80] [c000000000a10c70] alua_rtpg_work+0x210/0x920
+> [ 8.809059] [c000000007c37c90] [c000000000182314] process_one_work+0x2b4/0x5b0
+> [ 8.809066] [c000000007c37d30] [c000000000182688] worker_thread+0x78/0x600
+> [ 8.809072] [c000000007c37dc0] [c00000000018f4f4] kthread+0x124/0x130
+> [ 8.809079] [c000000007c37e10] [c00000000000cffc] ret_from_kernel_thread+0x5c/0x64
+> [ 8.809086] Instruction dump:
+> [ 8.809090] f821ffc1 41820034 395e03c0 7c0004ac 7d205028 2c090001 3929ffff 41c00010
+> [ 8.809101] 7d20512d
+> [ 8.809101] sd 1:0:0:1: [sdc] Preferred minimum I/O size 32768 bytes
+> [ 8.809102] 40c2ffec 7c0004ac 79290fe2 <0b090000> 60000000 38210040 ebc1fff0
+> [ 8.809115] ---[ end trace 0000000000000000 ]—
+> 
+> -next-20221108 was good. Git bisect points to following
+> 
+> commit 0b25e17e9018a0ea68a9f0b4787672e8c68fa8d5
+> Date:   Mon Oct 31 15:47:25 2022 -0700
+>      scsi: alua: Move a scsi_device_put() call out of alua_check_vpd()
+> 
+> Reverting this patch gets rid of the warning.
 
-Hi John,
+Hi Sachin,
 
-Is there any code that calls scsi_execute() from a code path in which 
-performance matters?
+Thanks for the detailed report. Does the patch below help?
 
-Thanks,
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index 693cd827e138..d2cf15338724 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -1025,7 +1025,7 @@ static bool __must_check alua_rtpg_queue(struct alua_port_group *pg,
+  			kref_put(&pg->kref, release_port_group);
+  	}
 
-Bart.
+-	return true;
++	return sdev != NULL;
+  }
+
+  /*
 
