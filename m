@@ -2,96 +2,131 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A43C1C433FE
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Nov 2022 01:31:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D528C433FE
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Nov 2022 02:03:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231366AbiKJBbX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Nov 2022 20:31:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33140 "EHLO
+        id S232429AbiKJCDY convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Nov 2022 21:03:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57020 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232222AbiKJBbI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Nov 2022 20:31:08 -0500
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32D9E24945
-        for <linux-scsi@vger.kernel.org>; Wed,  9 Nov 2022 17:31:06 -0800 (PST)
-Received: from dggpemm500020.china.huawei.com (unknown [172.30.72.54])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4N746L4BdFzmVWB;
-        Thu, 10 Nov 2022 09:30:50 +0800 (CST)
-Received: from dggpemm500007.china.huawei.com (7.185.36.183) by
- dggpemm500020.china.huawei.com (7.185.36.49) with Microsoft SMTP Server
+        with ESMTP id S232406AbiKJCC4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Nov 2022 21:02:56 -0500
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8422218E01
+        for <linux-scsi@vger.kernel.org>; Wed,  9 Nov 2022 18:01:55 -0800 (PST)
+Received: from kwepemi500018.china.huawei.com (unknown [172.30.72.53])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4N74nh1fW8zHvcL;
+        Thu, 10 Nov 2022 10:01:28 +0800 (CST)
+Received: from kwepemi500016.china.huawei.com (7.221.188.220) by
+ kwepemi500018.china.huawei.com (7.221.188.213) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Thu, 10 Nov 2022 09:31:04 +0800
-Received: from [10.174.178.174] (10.174.178.174) by
- dggpemm500007.china.huawei.com (7.185.36.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Thu, 10 Nov 2022 09:31:03 +0800
-Subject: Re: [PATCH] scsi: iscsi: fix possible memory leak when
- transport_register_device() fails
+ 15.1.2375.31; Thu, 10 Nov 2022 10:01:53 +0800
+Received: from kwepemi500016.china.huawei.com ([7.221.188.220]) by
+ kwepemi500016.china.huawei.com ([7.221.188.220]) with mapi id 15.01.2375.031;
+ Thu, 10 Nov 2022 10:01:53 +0800
+From:   Zhouguanghui <zhouguanghui1@huawei.com>
 To:     Mike Christie <michael.christie@oracle.com>,
-        <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>
-CC:     <lduncan@suse.com>, <cleech@redhat.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <yangyingliang@huawei.com>
-References: <20221109092421.3111613-1-yangyingliang@huawei.com>
- <41b1cacb-94cc-ad69-11a7-b13452080389@oracle.com>
-From:   Yang Yingliang <yangyingliang@huawei.com>
-Message-ID: <d8eb4ca4-ee8e-9355-54f8-f41f405e723e@huawei.com>
-Date:   Thu, 10 Nov 2022 09:31:03 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
-MIME-Version: 1.0
-In-Reply-To: <41b1cacb-94cc-ad69-11a7-b13452080389@oracle.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+        "lduncan@suse.com" <lduncan@suse.com>,
+        "cleech@redhat.com" <cleech@redhat.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+CC:     "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Subject: Re: [-next] scsi: iscsi: fix possible memory leak in
+ iscsi_register_transport
+Thread-Topic: [-next] scsi: iscsi: fix possible memory leak in
+ iscsi_register_transport
+Thread-Index: AQHY9GqyoD3+swMknU2PtJGQGycang==
+Date:   Thu, 10 Nov 2022 02:01:53 +0000
+Message-ID: <51f33b2f00334114bbb0663a51354404@huawei.com>
+References: <20221109081917.34311-1-zhouguanghui1@huawei.com>
+ <c4b77a0f-c53d-42fa-8d42-a08a12f59667@oracle.com>
+Accept-Language: zh-CN, en-US
 Content-Language: en-US
-X-Originating-IP: [10.174.178.174]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- dggpemm500007.china.huawei.com (7.185.36.183)
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [10.174.178.109]
+Content-Type: text/plain; charset="iso-2022-jp"
+Content-Transfer-Encoding: 8BIT
+MIME-Version: 1.0
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-On 2022/11/10 2:51, Mike Christie wrote:
-> On 11/9/22 3:24 AM, Yang Yingliang wrote:
->> If transport_register_device() fails, transport_destroy_device() should
->> be called to release the memory allocated in transport_setup_device().
+On 2022/11/10 3:36, Mike Christie wrote:
+> On 11/9/22 2:19 AM, Zhou Guanghui wrote:
+>> "unreferenced object 0xffff888117908420 (size 16):
+>>    comm ""modprobe"", pid 18125, jiffies 4319017437 (age 73.039s)
+>>    hex dump (first 16 bytes):
+>>      62 65 32 69 73 63 73 69 00 84 90 17 81 88 ff ff  be2iscsi........
+>>    backtrace:
+>>      [<00000000f78a13b3>] __kmem_cache_alloc_node+0x157/0x220
+>>      [<00000000200a51a4>] __kmalloc_node_track_caller+0x44/0x1b0
+>>      [<0000000033ea4d64>] kstrdup+0x3a/0x70
+>>      [<00000000ec6d2980>] kstrdup_const+0x41/0x60
+>>      [<0000000055015f6f>] kvasprintf_const+0xf5/0x180
+>>      [<000000009dd443d2>] kobject_set_name_vargs+0x56/0x150
+>>      [<00000000f3448e98>] dev_set_name+0xab/0xe0
+>>      [<0000000080ab8992>] iscsi_register_transport+0x1f8/0x610 [scsi_transport_iscsi]
+>>      [<000000005e2c324d>] 0xffffffffc1260012
+>>      [<00000000df6e6a36>] do_one_initcall+0xcb/0x4d0
+>>      [<00000000181109df>] do_init_module+0x1ca/0x5f0
+>>      [<00000000b3c4fec8>] load_module+0x6133/0x70f0
+>>      [<00000000feb08394>] __do_sys_finit_module+0x12f/0x1c0
+>>      [<00000000ca6af44d>] do_syscall_64+0x37/0x90
+>>      [<00000000132e1a8b>] entry_SYSCALL_64_after_hwframe+0x63/0xcd"
 >>
->> Fixes: 0896b7523026 ("[SCSI] open-iscsi/linux-iscsi-5 Initiator: Transport class update for iSCSI")
->> Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
+>> If device_register() returns error in iscsi_register_transport(),
+>> the name allocated by the dev_set_name() need be freed.
+>>
+>> Fix this by calling put_device(), the name will be freed in the
+>> kobject_cleanup(), and the priv will be freed in
+>> iscsi_transport_release.
+>>
+>> Signed-off-by: Zhou Guanghui <zhouguanghui1@huawei.com>
 >> ---
->>   drivers/scsi/scsi_transport_iscsi.c | 2 ++
->>   1 file changed, 2 insertions(+)
+>>   drivers/scsi/scsi_transport_iscsi.c | 6 +++---
+>>   1 file changed, 3 insertions(+), 3 deletions(-)
 >>
 >> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
->> index cd3db9684e52..88add31a56e3 100644
+>> index cd3db9684e52..51e2c0f5e2d0 100644
 >> --- a/drivers/scsi/scsi_transport_iscsi.c
 >> +++ b/drivers/scsi/scsi_transport_iscsi.c
->> @@ -2085,6 +2085,7 @@ int iscsi_add_session(struct iscsi_cls_session *session, unsigned int target_id)
->>   	return 0;
+>> @@ -4815,7 +4815,7 @@ iscsi_register_transport(struct iscsi_transport *tt)
+>>   	dev_set_name(&priv->dev, "%s", tt->name);
+>>   	err = device_register(&priv->dev);
+>>   	if (err)
+>> -		goto free_priv;
+>> +		goto put_dev;
 >>   
->>   release_dev:
->> +	transport_destroy_device(&session->dev);
->>   	device_del(&session->dev);
->>   release_ida:
->>   	if (session->ida_used)
->> @@ -2462,6 +2463,7 @@ int iscsi_add_conn(struct iscsi_cls_conn *conn)
->>   	if (err) {
->>   		iscsi_cls_session_printk(KERN_ERR, session,
->>   					 "could not register transport's dev\n");
->> +		transport_destroy_device(&conn->dev);
->>   		device_del(&conn->dev);
->>   		return err;
-> Why doesn't transport_register_device undo what it did and call
-> transport_destroy_device? The callers like iscsi don't know what
-> was done, so it seems odd to call transport_destroy_device when
-> we got a failure.
-Yeah, it seems it's better to put the destroy() function in register(), 
-I will change
-it and send a v2.
+>>   	err = sysfs_create_group(&priv->dev.kobj, &iscsi_transport_group);
+>>   	if (err)
+>> @@ -4850,8 +4850,8 @@ iscsi_register_transport(struct iscsi_transport *tt)
+>>   unregister_dev:
+>>   	device_unregister(&priv->dev);
+>>   	return NULL;
+>> -free_priv:
+>> -	kfree(priv);
+>> +put_dev:
+>> +	put_device(&priv->dev);
+>>   	return NULL;
+>>   }
+>>   EXPORT_SYMBOL_GPL(iscsi_register_transport);
+> 
+> Reviewed-by: Mike Christie <michael.christie@oracle.com>
+> 
+> Shoot, I see the comment about using put_device in device_add.
+> I'm not sure what happened, but I made the same mistake above
+> in 4 other places.
+> 
+> Do you want to send patches for the other ones? If not, I'll do
+> it.
+> 
 
-Thanks,
-Yang
->
->
-> .
+Mike，thanks.
+
+I also found 4 other places that have the same mistake. I'll be sending 
+a patch v2 soon.
+
