@@ -2,100 +2,74 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FA17C4332F
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Nov 2022 17:08:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A9BBC433FE
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Nov 2022 17:26:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229946AbiKJRIy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Nov 2022 12:08:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37664 "EHLO
+        id S231224AbiKJR0l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Nov 2022 12:26:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50046 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231398AbiKJRIw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Nov 2022 12:08:52 -0500
-Received: from mail-ot1-f43.google.com (mail-ot1-f43.google.com [209.85.210.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3787221E0A;
-        Thu, 10 Nov 2022 09:08:50 -0800 (PST)
-Received: by mail-ot1-f43.google.com with SMTP id cb2-20020a056830618200b00661b6e5dcd8so1460028otb.8;
-        Thu, 10 Nov 2022 09:08:50 -0800 (PST)
+        with ESMTP id S230359AbiKJR0k (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Nov 2022 12:26:40 -0500
+Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98B0D1839A
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Nov 2022 09:26:39 -0800 (PST)
+Received: by mail-pf1-f178.google.com with SMTP id z26so2792455pff.1
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Nov 2022 09:26:39 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=date:subject:message-id:references:in-reply-to:cc:to:from
-         :mime-version:content-transfer-encoding:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=RK6cieWUBjU53ENasVzxcAGzPdncqeleznzBvg9eiiw=;
-        b=vOqH0mLlmwh4Vk0Smbfbs2tsKwtzykynQYqU5Myxv4xzSo8X0x5mKFWxzZZcfh7yZv
-         QC05XIBuw2RYGgcYANsCi8hLCWa52gBc/uYSccU/pxBCceRxCY5UzSK4OBnl0PprHf9j
-         iHqeIl4njZBbsZT5O3BcXczZP1t4wOkoTyF4AGmg/SZa4FN69BNEMqmlSF48SxMw3B09
-         E6jH2vN2sJg2ArMcuNmbYG8Q42jaNa6CeX/nTVrvLfgqFHO6vojGz0hi43IRG8ecbdxF
-         rJoYGMUPj9szLqwXnCS2LLUrJdnAFXa627O5mNkmc68djVqR7O9l8JOqwqArqJSN7E4x
-         HiaQ==
-X-Gm-Message-State: ACrzQf0RtChiAmrJ50E/lSKdYfUyffAzIFoRWeKtr6AFuXyIq9AFPujf
-        yaBMnSjnEyorDWzVXTMERQ==
-X-Google-Smtp-Source: AMsMyM5fVNFouRQCC5rTi6TmBh262yO91Ir5VrD5lq2Em3gv5625avkvlSP43bN6hl4Y6JPCtaeaqA==
-X-Received: by 2002:a05:6830:1656:b0:667:9a03:a8a8 with SMTP id h22-20020a056830165600b006679a03a8a8mr1564325otr.308.1668100129332;
-        Thu, 10 Nov 2022 09:08:49 -0800 (PST)
-Received: from robh_at_kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
-        by smtp.gmail.com with ESMTPSA id d74-20020a4a524d000000b0049052c66126sm6209oob.2.2022.11.10.09.08.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 10 Nov 2022 09:08:48 -0800 (PST)
-Received: (nullmailer pid 566771 invoked by uid 1000);
-        Thu, 10 Nov 2022 17:08:50 -0000
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+        h=content-transfer-encoding:in-reply-to:from:references:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Vx6B5EajG2p/x0K/8Xmk6JMuVD/5gYYGT8SoTpYWf8c=;
+        b=vUalqUyQoJzkFzgl29JqXkCRtrdTy+Fdd35r1mNsZZFpFD2s3C6rjG/n/JhLZCvCQL
+         7axihw2qalgBujoNkvECgXIEdpUry9Nx+WQm95APfDGcRfO0244XflZKAK59IJzp62Zg
+         iboKHZdZq6cbvmXPHBdbriQmhiy601X6fIN82rSwrKY+rLYLmhvc643plDloFA7BqdOf
+         0I5L707GTBf9n5mTXQKZRPh73GKTkAQnEMTOyPThsIS5ov0ETPHw6bi/n3HihP7cGBz8
+         K0IttmM5Yjb7++w74nMKR95v2vk7fzABnbFQly6MVxDBIh4KWfu+boAXt3ykNkvvxvVl
+         2Niw==
+X-Gm-Message-State: ACrzQf2zzTHOrunsAVMNUuqDmloHSr0utiJMwRF9cKiQK6MoClPrPwos
+        KRZML/W7K005kkVJxe0eKxM=
+X-Google-Smtp-Source: AMsMyM6loaVx8EWCJMbnyMO4Ww/GHGKmybk8gebglLMt6zMZQtJ1c8Wuo4SDdlIy2yEU79GqUB5xDQ==
+X-Received: by 2002:a05:6a00:3490:b0:563:8011:e9e4 with SMTP id cp16-20020a056a00349000b005638011e9e4mr3053957pfb.76.1668101198930;
+        Thu, 10 Nov 2022 09:26:38 -0800 (PST)
+Received: from ?IPV6:2620:15c:211:201:2ecf:659:1c55:5? ([2620:15c:211:201:2ecf:659:1c55:5])
+        by smtp.gmail.com with ESMTPSA id h2-20020a170902f54200b0018725c2fc46sm11535526plf.303.2022.11.10.09.26.36
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 10 Nov 2022 09:26:37 -0800 (PST)
+Message-ID: <13010fb2-13df-ed0f-031f-d65fdc4738f7@acm.org>
+Date:   Thu, 10 Nov 2022 09:26:36 -0800
 MIME-Version: 1.0
-From:   Rob Herring <robh@kernel.org>
-To:     Zhe Wang <zhewang116@gmail.com>
-Cc:     robh+dt@kernel.org, orsonzhai@gmail.com, zhenxiong.lai@unisoc.com,
-        jejb@linux.ibm.com, devicetree@vger.kernel.org,
-        alim.akhtar@samsung.com, linux-scsi@vger.kernel.org,
-        zhe.wang1@unisoc.com, avri.altman@wdc.com, yuelin.tang@unisoc.com,
-        krzysztof.kozlowski+dt@linaro.org, martin.petersen@oracle.com
-In-Reply-To: <20221110133640.30522-2-zhewang116@gmail.com>
-References: <20221110133640.30522-1-zhewang116@gmail.com>
- <20221110133640.30522-2-zhewang116@gmail.com>
-Message-Id: <166810006939.554384.11975846813296132046.robh@kernel.org>
-Subject: Re: [PATCH 1/2] dt-bindings: ufs: Add document for Unisoc UFS host controller
-Date:   Thu, 10 Nov 2022 11:08:50 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.0
+Subject: Re: [PATCH v6 03/35] scsi: Add struct for args to execution functions
+Content-Language: en-US
+To:     John Garry <john.g.garry@oracle.com>,
+        Mike Christie <michael.christie@oracle.com>, mwilck@suse.com,
+        hch@lst.de, martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        james.bottomley@hansenpartnership.com
+References: <20221104231927.9613-1-michael.christie@oracle.com>
+ <20221104231927.9613-4-michael.christie@oracle.com>
+ <1bd9df90-fda6-270e-e437-e1039a0a8b76@oracle.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <1bd9df90-fda6-270e-e437-e1039a0a8b76@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 11/10/22 03:15, John Garry wrote:
+> Current method means a store (in scsi_exec_args struct), a load, a 
+> comparison, and a mov value to register whose value depends on 
+> comparison. That's most relevant on performance being a concern.
 
-On Thu, 10 Nov 2022 21:36:39 +0800, Zhe Wang wrote:
-> From: Zhe Wang <zhe.wang1@unisoc.com>
-> 
-> Add Unisoc ums9620 ufs host controller devicetree document.
-> 
-> Signed-off-by: Zhe Wang <zhe.wang1@unisoc.com>
-> ---
->  .../devicetree/bindings/ufs/sprd,ufs.yaml     | 72 +++++++++++++++++++
->  1 file changed, 72 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/ufs/sprd,ufs.yaml
-> 
+Hi John,
 
-My bot found errors running 'make DT_CHECKER_FLAGS=-m dt_binding_check'
-on your patch (DT_CHECKER_FLAGS is new in v5.13):
+Is there any code that calls scsi_execute() from a code path in which 
+performance matters?
 
-yamllint warnings/errors:
+Thanks,
 
-dtschema/dtc warnings/errors:
-Error: Documentation/devicetree/bindings/ufs/sprd,ufs.example.dts:24.27-28 syntax error
-FATAL ERROR: Unable to parse input tree
-make[1]: *** [scripts/Makefile.lib:406: Documentation/devicetree/bindings/ufs/sprd,ufs.example.dtb] Error 1
-make[1]: *** Waiting for unfinished jobs....
-make: *** [Makefile:1492: dt_binding_check] Error 2
-
-doc reference errors (make refcheckdocs):
-
-See https://patchwork.ozlabs.org/patch/
-
-This check can fail if there are any dependencies. The base for a patch
-series is generally the most recent rc1.
-
-If you already ran 'make dt_binding_check' and didn't see the above
-error(s), then make sure 'yamllint' is installed and dt-schema is up to
-date:
-
-pip3 install dtschema --upgrade
-
-Please check and re-submit.
+Bart.
 
