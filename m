@@ -2,100 +2,87 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B17B7C433FE
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Nov 2022 09:18:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0265CC4332F
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Nov 2022 10:24:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229767AbiKJJSw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Nov 2022 04:18:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46984 "EHLO
+        id S229915AbiKJKYk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Nov 2022 05:24:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53692 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229551AbiKJJSv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Nov 2022 04:18:51 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA2AF6474;
-        Thu, 10 Nov 2022 01:18:50 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 45CD860ADC;
-        Thu, 10 Nov 2022 09:18:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 343FEC433D6;
-        Thu, 10 Nov 2022 09:18:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1668071929;
-        bh=raFns3M7wQFWcuY6eMZCQb4VQqr3DS8sTQ9I4vqxgeU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ZsuUDlkJFIcil5G1yQ+R4ps0XCdPhzHIPHQZlc+sN9ME06hiFHwkcHK6s0ZAnCALp
-         07eJPOx2a2eeFTL/8HSJDjTkoDX1XwxOqbE8aoQF25zSFho/G3xhT9TzpewjNIwzZw
-         VFOgyg/MPp+2IcdsCfAERl07O5w6oKa2mE0LMjps=
-Date:   Thu, 10 Nov 2022 10:18:46 +0100
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Yang Yingliang <yangyingliang@huawei.com>
-Cc:     open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, lduncan@suse.com, cleech@redhat.com,
-        michael.christie@oracle.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, rafael@kernel.org
-Subject: Re: [PATCH] drivers: base: transport_class: fix possible memory leak
-Message-ID: <Y2zB9ndClm2EfReK@kroah.com>
-References: <20221110034809.17258-1-yangyingliang@huawei.com>
- <Y2yzwB0IuaVS3AVq@kroah.com>
- <d509e930-779b-866e-9b1f-d58db6abfc43@huawei.com>
+        with ESMTP id S229517AbiKJKYj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Nov 2022 05:24:39 -0500
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 086E165CD;
+        Thu, 10 Nov 2022 02:24:35 -0800 (PST)
+Received: from dggpemm500021.china.huawei.com (unknown [172.30.72.56])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4N7Hsv63zFzpSsn;
+        Thu, 10 Nov 2022 18:20:51 +0800 (CST)
+Received: from dggpemm500007.china.huawei.com (7.185.36.183) by
+ dggpemm500021.china.huawei.com (7.185.36.109) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Thu, 10 Nov 2022 18:24:33 +0800
+Received: from huawei.com (10.175.103.91) by dggpemm500007.china.huawei.com
+ (7.185.36.183) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Thu, 10 Nov
+ 2022 18:24:32 +0800
+From:   Yang Yingliang <yangyingliang@huawei.com>
+To:     <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+CC:     <lduncan@suse.com>, <cleech@redhat.com>,
+        <michael.christie@oracle.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <gregkh@linuxfoundation.org>,
+        <rafael@kernel.org>, <yangyingliang@huawei.com>
+Subject: [PATCH v2] drivers: base: transport_class: fix possible memory leak
+Date:   Thu, 10 Nov 2022 18:23:07 +0800
+Message-ID: <20221110102307.3492557-1-yangyingliang@huawei.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d509e930-779b-866e-9b1f-d58db6abfc43@huawei.com>
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.103.91]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ dggpemm500007.china.huawei.com (7.185.36.183)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Nov 10, 2022 at 04:44:16PM +0800, Yang Yingliang wrote:
-> Hi Greg,
-> 
-> On 2022/11/10 16:18, Greg KH wrote:
-> > On Thu, Nov 10, 2022 at 11:48:09AM +0800, Yang Yingliang wrote:
-> > > Current some drivers(like iscsi) call transport_register_device()
-> > > failed, they don't call transport_destroy_device() to release the
-> > > memory allocated in transport_setup_device(), because they don't
-> > > know what was done, it should be internal thing to release the
-> > > resource in register function. So fix this leak by calling destroy
-> > > function inside register function.
-> > > 
-> > > Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-> > > Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
-> > > ---
-> > >   include/linux/transport_class.h | 9 ++++++++-
-> > >   1 file changed, 8 insertions(+), 1 deletion(-)
-> > > 
-> > > diff --git a/include/linux/transport_class.h b/include/linux/transport_class.h
-> > > index 63076fb835e3..f4835250bbfc 100644
-> > > --- a/include/linux/transport_class.h
-> > > +++ b/include/linux/transport_class.h
-> > > @@ -70,8 +70,15 @@ void transport_destroy_device(struct device *);
-> > >   static inline int
-> > >   transport_register_device(struct device *dev)
-> > >   {
-> > > +	int ret;
-> > > +
-> > >   	transport_setup_device(dev);
-> > > -	return transport_add_device(dev);
-> > > +	ret = transport_add_device(dev);
-> > > +	if (ret) {
-> > > +		transport_destroy_device(dev);
-> > > +	}
-> > Please use scripts/checkpatch.pl on your patches before sending them out
-> Sure, of course. :)
-> > so you don't get grumpy maintainers asking you to use
-> > scripts/checkpatch.pl on your patches :)
-> I sent a fix patch to iscsi system earlier:
-> https://patchwork.kernel.org/project/linux-scsi/patch/20221109092421.3111613-1-yangyingliang@huawei.com/
-> 
-> Mike give his point in the mail, so I send a new patch keep iscsi
-> maintainers Cced.
+Current some drivers(like iscsi) call transport_register_device()
+failed, they don't call transport_destroy_device() to release the
+memory allocated in transport_setup_device(), because they don't
+know what was done, it should be internal thing to release the
+resource in register function. So fix this leak by calling destroy
+function inside register function.
 
-That's fine, but the code you wrote here should look different as it
-does not follow our coding style rules.  That is the point I was trying
-to make.
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
+---
+v1 -> v2:
+  fix code style.
+---
+ include/linux/transport_class.h | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-thanks,
+diff --git a/include/linux/transport_class.h b/include/linux/transport_class.h
+index 63076fb835e3..2efc271a96fa 100644
+--- a/include/linux/transport_class.h
++++ b/include/linux/transport_class.h
+@@ -70,8 +70,14 @@ void transport_destroy_device(struct device *);
+ static inline int
+ transport_register_device(struct device *dev)
+ {
++	int ret;
++
+ 	transport_setup_device(dev);
+-	return transport_add_device(dev);
++	ret = transport_add_device(dev);
++	if (ret)
++		transport_destroy_device(dev);
++
++	return ret;
+ }
+ 
+ static inline void
+-- 
+2.25.1
 
-greg k-h
