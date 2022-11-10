@@ -2,150 +2,85 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07075C433FE
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Nov 2022 08:02:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4F82C433FE
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Nov 2022 08:18:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232834AbiKJICH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Nov 2022 03:02:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34304 "EHLO
+        id S232678AbiKJISR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Nov 2022 03:18:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42376 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232548AbiKJIBn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Nov 2022 03:01:43 -0500
-Received: from mx0a-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC2042E9D8;
-        Thu, 10 Nov 2022 00:01:42 -0800 (PST)
-Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 2AA6cViV000492;
-        Thu, 10 Nov 2022 08:01:34 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : content-type :
- content-transfer-encoding : mime-version : subject : message-id : date :
- cc : to; s=pp1; bh=UfS2M5BskP/u3MZdbZOc3sjFjYUZ2k9IwakRV9/QwBM=;
- b=Qy7Jxg20ogsjx2omGlC0V6AUHSb9V+teYfAXO1LY93oL+IzRU5g+umKmEzBK9NxE7kaN
- w2lL4gjonOywQ2elSCSVesHJW9eDKlQQwOFqTUre5FiKWHtxpZmcAjE6SiMph2uv3pu9
- W5zAuUuO63AsyGRjBSYjyVxsVd2omCNLqtXI4DVOwLrGIamJTKiTUcyR1SrewaDXY4su
- OU/6CiYa2t2iCnPcTLIYtBYU8aVMTWKX10TFgPXISQFGOMW80eJ9Dm5DRRzunOs+Xfgq
- lUFkDC21LageIWDv0TCRt+qYBnwV9XU4/LVh6mF9q3lZdDcL2igppniYD1tqSMyF3ZMS VQ== 
-Received: from ppma05fra.de.ibm.com (6c.4a.5195.ip4.static.sl-reverse.com [149.81.74.108])
-        by mx0b-001b2d01.pphosted.com (PPS) with ESMTPS id 3krupktjgj-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 10 Nov 2022 08:01:33 +0000
-Received: from pps.filterd (ppma05fra.de.ibm.com [127.0.0.1])
-        by ppma05fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 2AA7qifJ032580;
-        Thu, 10 Nov 2022 08:01:32 GMT
-Received: from b06cxnps3074.portsmouth.uk.ibm.com (d06relay09.portsmouth.uk.ibm.com [9.149.109.194])
-        by ppma05fra.de.ibm.com with ESMTP id 3krcbr0t95-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 10 Nov 2022 08:01:31 +0000
-Received: from d06av21.portsmouth.uk.ibm.com (d06av21.portsmouth.uk.ibm.com [9.149.105.232])
-        by b06cxnps3074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 2AA81T2j7537228
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 10 Nov 2022 08:01:29 GMT
-Received: from d06av21.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 823D952050;
-        Thu, 10 Nov 2022 08:01:29 +0000 (GMT)
-Received: from smtpclient.apple (unknown [9.109.241.54])
-        by d06av21.portsmouth.uk.ibm.com (Postfix) with ESMTP id B759D5204E;
-        Thu, 10 Nov 2022 08:01:28 +0000 (GMT)
-From:   Sachin Sant <sachinp@linux.ibm.com>
-Content-Type: text/plain;
-        charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3731.200.110.1.12\))
-Subject: [6.1.0-rc4-next-20221109] Boot time warning kernel/module/main.c:852
-Message-Id: <06C70AFA-75C5-49A7-9EB4-27AF20A80EBB@linux.ibm.com>
-Date:   Thu, 10 Nov 2022 13:31:17 +0530
-Cc:     linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-        open list <linux-kernel@vger.kernel.org>
-To:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
-X-Mailer: Apple Mail (2.3731.200.110.1.12)
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: dgJqpu82evfKmaqG3ZN2ugS6iyQKhdh3
-X-Proofpoint-GUID: dgJqpu82evfKmaqG3ZN2ugS6iyQKhdh3
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2022-11-10_05,2022-11-09_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 phishscore=0
- lowpriorityscore=0 malwarescore=0 bulkscore=0 clxscore=1011 mlxscore=0
- adultscore=0 spamscore=0 mlxlogscore=790 suspectscore=0 priorityscore=1501
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2210170000
- definitions=main-2211100056
+        with ESMTP id S232667AbiKJISQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Nov 2022 03:18:16 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D55701EAC3;
+        Thu, 10 Nov 2022 00:18:14 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 8737CB82089;
+        Thu, 10 Nov 2022 08:18:13 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BCB91C433C1;
+        Thu, 10 Nov 2022 08:18:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1668068292;
+        bh=/0karImFZlCAKADNQddiMrZVC++erl/YpQGLmQlnWDo=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=reMJtpYwUD51u3FiTUjl8H0n3SarU6+ELwTgtOo14Eijd+6kvA6YIJfhQ36ubygmQ
+         4MDGcEYuxECc/8QwH1Xz0PvlKdlKqsj9eI5IJtqSNpOmqLcKyThXH7V7o6Ok+7PLoR
+         /zLAzVo69WRuDmoqDDuyW0wFjtdsEbpMAqlgF55M=
+Date:   Thu, 10 Nov 2022 09:18:08 +0100
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Yang Yingliang <yangyingliang@huawei.com>
+Cc:     open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, lduncan@suse.com, cleech@redhat.com,
+        michael.christie@oracle.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, rafael@kernel.org
+Subject: Re: [PATCH] drivers: base: transport_class: fix possible memory leak
+Message-ID: <Y2yzwB0IuaVS3AVq@kroah.com>
+References: <20221110034809.17258-1-yangyingliang@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221110034809.17258-1-yangyingliang@huawei.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-While booting 6.1.0-rc4-next-20221109 next kernel on a IBM Power9 LPAR
-following warning is seen:
+On Thu, Nov 10, 2022 at 11:48:09AM +0800, Yang Yingliang wrote:
+> Current some drivers(like iscsi) call transport_register_device()
+> failed, they don't call transport_destroy_device() to release the
+> memory allocated in transport_setup_device(), because they don't
+> know what was done, it should be internal thing to release the
+> resource in register function. So fix this leak by calling destroy
+> function inside register function.
+> 
+> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+> Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
+> ---
+>  include/linux/transport_class.h | 9 ++++++++-
+>  1 file changed, 8 insertions(+), 1 deletion(-)
+> 
+> diff --git a/include/linux/transport_class.h b/include/linux/transport_class.h
+> index 63076fb835e3..f4835250bbfc 100644
+> --- a/include/linux/transport_class.h
+> +++ b/include/linux/transport_class.h
+> @@ -70,8 +70,15 @@ void transport_destroy_device(struct device *);
+>  static inline int
+>  transport_register_device(struct device *dev)
+>  {
+> +	int ret;
+> +
+>  	transport_setup_device(dev);
+> -	return transport_add_device(dev);
+> +	ret = transport_add_device(dev);
+> +	if (ret) {
+> +		transport_destroy_device(dev);
+> +	}
 
-[ 8.808868] ------------[ cut here ]------------
-[ 8.808872] WARNING: CPU: 1 PID: 378 at kernel/module/main.c:852 =
-module_put+0x48/0x100
-[ 8.808881] Modules linked in: sr_mod(E) cdrom(E) sd_mod(E) sg(E) =
-lpfc(E) nvmet_fc(E) nvmet(E) ibmvscsi(E) scsi_transport_srp(E) =
-ibmveth(E) nvme_fc(E) nvme(E) nvme_fabrics(E) nvme_core(E) t10_pi(E) =
-scsi_transport_fc(E) crc64_rocksoft(E) crc64(E) tg3(E) fuse(E)
-[ 8.808912] sd 1:0:0:1: [sdc] Write Protect is off
-[ 8.808913] CPU: 1 PID: 378 Comm: kworker/1:3 Tainted: G E =
-6.1.0-rc4-next-20221109 #1
-[ 8.808916] Hardware name: IBM,8375-42A POWER9 (raw) 0x4e0202 0xf000005 =
-of:IBM,FW950.01 (VL950_047) hv:phyp pSeries
-[ 8.808924] Workqueue: kaluad alua_rtpg_work
-[ 8.808931] NIP: c000000000236c18 LR: c0000000009ee680 CTR: =
-00000000007088ec
-[ 8.808936] REGS: c000000007c37870 TRAP: 0700 Tainted: G E =
-(6.1.0-rc4-next-20221109)
-[ 8.808942] MSR: 800000000282b033 <SF,VEC,VSX,EE,FP,ME,IR,DR,RI,LE> CR: =
-88002884 XER: 20040007
-[ 8.808957] CFAR: c000000000236c04 IRQMASK: 0=20
-[ 8.808957] GPR00: c0000000009ee680 c000000007c37b10 c00000000137ec00 =
-c008000001d3a500=20
-[ 8.808957] GPR04: 0000000000000000 0000000000000000 0000000000000000 =
-00000000000000ff=20
-[ 8.808957] GPR08: 0000000000000001 0000000000000001 c008000001d3a8c0 =
-c0000000029674a8=20
-[ 8.808957] GPR12: 0000000000002000 c00000000d5cf300 c00000000018f3d8 =
-c000000003ce4d00=20
-[ 8.808957] GPR16: 0000000000000000 0000000000000000 0000000000000000 =
-0000000000000000=20
-[ 8.808957] GPR20: 0000000000000000 0000000000000000 0000000000000000 =
-0000000000000000=20
-[ 8.808957] GPR24: c0000000092b0e00 0000000000000000 c00000008ee81000 =
-c0000000092b0fc0=20
-[ 8.808957] GPR28: c000000007c37c10 c000000007c37c10 c008000001d3a500 =
-c00000008ee81000=20
-[ 8.809018] NIP [c000000000236c18] module_put+0x48/0x100
-[ 8.809024] sd 1:0:0:1: [sdc] Write cache: disabled, read cache: =
-enabled, supports DPO and FUA
-[ 8.809024] LR [c0000000009ee680] scsi_device_put+0x50/0x70
-[ 8.809035] Call Trace:
-[ 8.809038] [c000000007c37b10] [c000000007c37b50] 0xc000000007c37b50 =
-(unreliable)
-[ 8.809045] [c000000007c37b50] [c0000000009ee674] =
-scsi_device_put+0x44/0x70
-[ 8.809053] [c000000007c37b80] [c000000000a10c70] =
-alua_rtpg_work+0x210/0x920
-[ 8.809059] [c000000007c37c90] [c000000000182314] =
-process_one_work+0x2b4/0x5b0
-[ 8.809066] [c000000007c37d30] [c000000000182688] =
-worker_thread+0x78/0x600
-[ 8.809072] [c000000007c37dc0] [c00000000018f4f4] kthread+0x124/0x130
-[ 8.809079] [c000000007c37e10] [c00000000000cffc] =
-ret_from_kernel_thread+0x5c/0x64
-[ 8.809086] Instruction dump:
-[ 8.809090] f821ffc1 41820034 395e03c0 7c0004ac 7d205028 2c090001 =
-3929ffff 41c00010=20
-[ 8.809101] 7d20512d=20
-[ 8.809101] sd 1:0:0:1: [sdc] Preferred minimum I/O size 32768 bytes
-[ 8.809102] 40c2ffec 7c0004ac 79290fe2 <0b090000> 60000000 38210040 =
-ebc1fff0=20
-[ 8.809115] ---[ end trace 0000000000000000 ]=E2=80=94
+Please use scripts/checkpatch.pl on your patches before sending them out
+so you don't get grumpy maintainers asking you to use
+scripts/checkpatch.pl on your patches :)
 
--next-20221108 was good. Git bisect points to following
+thanks,
 
-commit 0b25e17e9018a0ea68a9f0b4787672e8c68fa8d5
-Date:   Mon Oct 31 15:47:25 2022 -0700
-    scsi: alua: Move a scsi_device_put() call out of alua_check_vpd()
-
-Reverting this patch gets rid of the warning.
-
-- Sachin
-
+greg k-h
