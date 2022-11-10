@@ -2,85 +2,59 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4F82C433FE
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Nov 2022 08:18:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CD30C4332F
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Nov 2022 08:19:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232678AbiKJISR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Nov 2022 03:18:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42376 "EHLO
+        id S232706AbiKJITR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Nov 2022 03:19:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43182 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232667AbiKJISQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Nov 2022 03:18:16 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D55701EAC3;
-        Thu, 10 Nov 2022 00:18:14 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 8737CB82089;
-        Thu, 10 Nov 2022 08:18:13 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BCB91C433C1;
-        Thu, 10 Nov 2022 08:18:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1668068292;
-        bh=/0karImFZlCAKADNQddiMrZVC++erl/YpQGLmQlnWDo=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=reMJtpYwUD51u3FiTUjl8H0n3SarU6+ELwTgtOo14Eijd+6kvA6YIJfhQ36ubygmQ
-         4MDGcEYuxECc/8QwH1Xz0PvlKdlKqsj9eI5IJtqSNpOmqLcKyThXH7V7o6Ok+7PLoR
-         /zLAzVo69WRuDmoqDDuyW0wFjtdsEbpMAqlgF55M=
-Date:   Thu, 10 Nov 2022 09:18:08 +0100
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Yang Yingliang <yangyingliang@huawei.com>
-Cc:     open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, lduncan@suse.com, cleech@redhat.com,
-        michael.christie@oracle.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, rafael@kernel.org
-Subject: Re: [PATCH] drivers: base: transport_class: fix possible memory leak
-Message-ID: <Y2yzwB0IuaVS3AVq@kroah.com>
-References: <20221110034809.17258-1-yangyingliang@huawei.com>
+        with ESMTP id S232667AbiKJITQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Nov 2022 03:19:16 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B5E61CB1A
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Nov 2022 00:19:15 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=DAT3dq57X9oMwpbf8Tr7IdxJczkHIVmJSZ1mkR4v/ro=; b=G267cKsHn8pr092smElDeJm1po
+        xPs4oIW63wkUAzuy5V7axrM3UllTcdgO9sY5Yn4zGAhoyChnH5KT8BsuKV16UjDtDuqUQD7vKOo5x
+        GQFCT6Uwa+R6A30vj1KW84sZDDaRAoLlrnRx+0fO26iCryDhl3fZP4yNZQbulLP7YXGYvfBcNyglE
+        5lB+hslTJfofZTsyDJpZLi30FI3evfVWiqB15TMhhpLv9OFQSy5VfNoiM7M+tPHXp0H1R83GBprIu
+        amH5vVhUrDxavLDQ08vUbcPgFquV55YPtABPAj6rB6iJZ2P4eZfGNIMuy8TgESEfZj5QzYbFUnylX
+        nqO7CjsQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1ot2mI-004Feq-Kg; Thu, 10 Nov 2022 08:19:14 +0000
+Date:   Thu, 10 Nov 2022 00:19:14 -0800
+From:   "hch@infradead.org" <hch@infradead.org>
+To:     Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Cc:     "hch@infradead.org" <hch@infradead.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Dmitry Fomichev <Dmitry.Fomichev@wdc.com>
+Subject: Re: [PATCH 0/2] scsi: sd: use READ/WRITE/SYNC (16) commands per ZBC
+Message-ID: <Y2y0AhBCm+O4HoRg@infradead.org>
+References: <20221109025941.1594612-1-shinichiro.kawasaki@wdc.com>
+ <Y2ue2rZzf74/1V+U@infradead.org>
+ <20221110022009.xdfmlpdpw2kyu32x@shindev>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221110034809.17258-1-yangyingliang@huawei.com>
+In-Reply-To: <20221110022009.xdfmlpdpw2kyu32x@shindev>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Nov 10, 2022 at 11:48:09AM +0800, Yang Yingliang wrote:
-> Current some drivers(like iscsi) call transport_register_device()
-> failed, they don't call transport_destroy_device() to release the
-> memory allocated in transport_setup_device(), because they don't
-> know what was done, it should be internal thing to release the
-> resource in register function. So fix this leak by calling destroy
-> function inside register function.
-> 
-> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-> Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
-> ---
->  include/linux/transport_class.h | 9 ++++++++-
->  1 file changed, 8 insertions(+), 1 deletion(-)
-> 
-> diff --git a/include/linux/transport_class.h b/include/linux/transport_class.h
-> index 63076fb835e3..f4835250bbfc 100644
-> --- a/include/linux/transport_class.h
-> +++ b/include/linux/transport_class.h
-> @@ -70,8 +70,15 @@ void transport_destroy_device(struct device *);
->  static inline int
->  transport_register_device(struct device *dev)
->  {
-> +	int ret;
-> +
->  	transport_setup_device(dev);
-> -	return transport_add_device(dev);
-> +	ret = transport_add_device(dev);
-> +	if (ret) {
-> +		transport_destroy_device(dev);
-> +	}
+On Thu, Nov 10, 2022 at 02:20:09AM +0000, Shinichiro Kawasaki wrote:
+> My point was to make the check strictly follow the ZBC spec. But now I see that
+> it's the better to keep enforcing 16 byte commands to host-aware devices. I will
+> drop the first patch and revise the second patch to enforce SYNC 16 on both
+> host-aware and host-managed devices.
 
-Please use scripts/checkpatch.pl on your patches before sending them out
-so you don't get grumpy maintainers asking you to use
-scripts/checkpatch.pl on your patches :)
-
-thanks,
-
-greg k-h
+We don't "enforce" anything.  We just don't send the legacy commands for
+devices that are guaranteed to be modern.  What is the advantage of
+ever sending 10 bytes commands (inluding SYNCHRONIZE CACHE) to a modern
+device?
