@@ -2,113 +2,196 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51736C4332F
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Nov 2022 13:51:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C149C43217
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Nov 2022 14:28:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230051AbiKJNvC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Nov 2022 08:51:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35604 "EHLO
+        id S231340AbiKJO2x (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Nov 2022 09:28:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55288 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229759AbiKJNvB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Nov 2022 08:51:01 -0500
-Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41815CE0;
-        Thu, 10 Nov 2022 05:50:59 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1668088250;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=L6wvDDhXKUzII32ywi5QeK1Fitev1Yi4DtJi2jmWynw=;
-    b=hDDgMl/9pDYuVxCZO9yeomuGvAHvl3zMfAYDx5fB+1GHAQdkO0LiQEq76OqnTIjEmP
-    Rejwuap91u2H1z9n4QQ+QGf9FurC8QJYtRbqzQSxkDVLyWK3n13aJiDDpcNVdY+lplnJ
-    QkJw80tZO7IAXLhKXhB/JaIoaISQ7oFmtYKpSSID21kjgrA47vRnnD9tNbjvUaT08hoj
-    5f+bRRvlnNsIH5cf7/sP8SlflhXw0pMJqbm+2QAOVgZoprqm9Ff3oDdcmsPWX68NSXe6
-    KpMZMgEEEidPeOCg9y0ZGI4RmQr1kGnmYMyk2SJcEOHRt7Swd4EozU2Y1Wp4FfweqLYO
-    xVfQ==
-Authentication-Results: strato.com;
-    dkim=none
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSeBwhhSxarlUcu05JCAPyj3VPAceccYJs0uz"
-X-RZG-CLASS-ID: mo00
-Received: from blinux
-    by smtp.strato.de (RZmta 48.2.1 AUTH)
-    with ESMTPSA id z9cfbfyAADolxCp
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-        (Client did not present a certificate);
-    Thu, 10 Nov 2022 14:50:47 +0100 (CET)
-Message-ID: <95651ffcf1d00f54b72eca006355cc6591787068.camel@iokpp.de>
-Subject: Re: [RFC PATCH v1 0/2] UFS Advanced RPMB
-From:   Bean Huo <beanhuo@iokpp.de>
-To:     Avri Altman <Avri.Altman@wdc.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        "daejun7.park@samsung.com" <daejun7.park@samsung.com>,
-        "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
-        "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
-        "quic_xiaosenh@quicinc.com" <quic_xiaosenh@quicinc.com>,
-        "quic_richardp@quicinc.com" <quic_richardp@quicinc.com>,
-        "quic_asutoshd@quicinc.com" <quic_asutoshd@quicinc.com>,
-        "hare@suse.de" <hare@suse.de>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date:   Thu, 10 Nov 2022 14:50:47 +0100
-In-Reply-To: <DM6PR04MB6575F12BAAB0883DA91EFC5DFC3E9@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <20221107131038.201724-1-beanhuo@iokpp.de>
-         <DM6PR04MB6575F12BAAB0883DA91EFC5DFC3E9@DM6PR04MB6575.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.5-0ubuntu1 
+        with ESMTP id S231357AbiKJO2h (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Nov 2022 09:28:37 -0500
+Received: from mail-lf1-x129.google.com (mail-lf1-x129.google.com [IPv6:2a00:1450:4864:20::129])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1222F11802
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Nov 2022 06:28:32 -0800 (PST)
+Received: by mail-lf1-x129.google.com with SMTP id f37so3556374lfv.8
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Nov 2022 06:28:32 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=DW2ynzAX3T8hS3kgzhGkodXLMpgmtoMDTc1baAsaHJg=;
+        b=MmPRU0x93phY73/IoNE+yZ3Zp3CUZAEkKsiw9afPfa3ejvEGuzrd0ZmhFgY3bIH3SV
+         L04EZBo9d5vc8BP0ZmBrrePhS7lyQR5UJnsp4tdLx4ERLQ2knaLrFM7Tg43KxwxuqtH6
+         m6DRU/OBYZPKkrRP3ogYd8Oj1cENt1DQlNM0LLW1g3ZTNp6/k+F2RIqzz74hfxtPIlYa
+         uQ+NbFGOg45JdVFoFni/jCdXAt6epOVeiQd8V2NJqEWIHWLPYe6umT6rA0fQOM46XZWE
+         yncW/+p0w1entL63j8D6FaMAVNL9YCAUrxXjO+/G7fjjodj5mFmc6hhYncY+0HdRwDW0
+         weTw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=DW2ynzAX3T8hS3kgzhGkodXLMpgmtoMDTc1baAsaHJg=;
+        b=KJeBvGuJSuHk8D84/QVaNUkMgcMyKIhDuo/sw48momvkkiPkzZWGfdnhMzvth06fd7
+         CXjk9c0ePSzkXwE4dhndh5lvh2Zsw/W6aAJrsIdgJdB396ua4izxy/BV2O/PnMre7/xB
+         eRyvAj1cQ0/IOE+lVyTrGQyDqPrvMH7tbEJkOvnZmeiHMbcT80xboUssUjRq1rp0v5Ad
+         Q1zOwe2Tc/ZHJnXEjNBWKmY9mlapA84X1FUe5eGUcNAMGIwWT+oK1khne8NjDBGmJEC6
+         ofjMviWhIDwFJmSYDZqayVc0HsYUUWopyypUGYPE8csYJMqH8HHEYb7fOZyUWbl8EmyM
+         uZ/A==
+X-Gm-Message-State: ACrzQf0VdtteQRSEeDWwwHdMhXa4VTG9SyRQV3/ay2wIvwtR+QthGw3O
+        FsN/61p9R3NfOJ2ok2N7zYMW4g==
+X-Google-Smtp-Source: AMsMyM6a+xV9yQY2k+2bxw1rUGyzDkX/TlF9AlBJpzvLaAcRnxItthiLV6oVHjA5/0WrDnWPHq2Izw==
+X-Received: by 2002:a05:6512:25c:b0:4b1:753b:e671 with SMTP id b28-20020a056512025c00b004b1753be671mr1301918lfo.441.1668090510687;
+        Thu, 10 Nov 2022 06:28:30 -0800 (PST)
+Received: from [192.168.0.20] (088156142199.dynamic-2-waw-k-3-2-0.vectranet.pl. [88.156.142.199])
+        by smtp.gmail.com with ESMTPSA id bd10-20020a05651c168a00b0026e04cc88cfsm2762219ljb.124.2022.11.10.06.28.27
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 10 Nov 2022 06:28:28 -0800 (PST)
+Message-ID: <4bee5178-b34c-ec4b-9773-07f368064c48@linaro.org>
+Date:   Thu, 10 Nov 2022 15:28:26 +0100
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.2
+Subject: Re: [PATCH 1/2] dt-bindings: ufs: Add document for Unisoc UFS host
+ controller
+Content-Language: en-US
+To:     Zhe Wang <zhewang116@gmail.com>, martin.petersen@oracle.com,
+        jejb@linux.ibm.com, krzysztof.kozlowski+dt@linaro.org,
+        robh+dt@kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com
+Cc:     linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
+        zhe.wang1@unisoc.com, orsonzhai@gmail.com, yuelin.tang@unisoc.com,
+        zhenxiong.lai@unisoc.com
+References: <20221110133640.30522-1-zhewang116@gmail.com>
+ <20221110133640.30522-2-zhewang116@gmail.com>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+In-Reply-To: <20221110133640.30522-2-zhewang116@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 10/11/2022 14:36, Zhe Wang wrote:
+> From: Zhe Wang <zhe.wang1@unisoc.com>
+> 
+> Add Unisoc ums9620 ufs host controller devicetree document.
+> 
+> Signed-off-by: Zhe Wang <zhe.wang1@unisoc.com>
+> ---
+>  .../devicetree/bindings/ufs/sprd,ufs.yaml     | 72 +++++++++++++++++++
+>  1 file changed, 72 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/ufs/sprd,ufs.yaml
+> 
+> diff --git a/Documentation/devicetree/bindings/ufs/sprd,ufs.yaml b/Documentation/devicetree/bindings/ufs/sprd,ufs.yaml
+> new file mode 100644
+> index 000000000000..88f2c670b0a4
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ufs/sprd,ufs.yaml
 
-Avri, 
 
-Thanks for your suggetions and review
+Filename matching the compatible, so sprd,ums9620-ufs.yaml, unless you
+expect this to grow already? If so, can you post the rest?
 
-On Wed, 2022-11-09 at 08:18 +0000, Avri Altman wrote:
-> > In UFS 4.0, it introduced advanced RPMB, which can significantly
-> > improve
-> > RPMB's command performance, enhancing its atomic operation. We
-> > don't
-> > know which implementation will please everyone, mark this advanced
-> > RPMB
-> > patch as RFC. Any suggestions to make the patch a master patch are
-> > welcome.
-> > Based on suggestions and feedback from Hannes Reinecke and Bart, we
-> > can
-> > use job_bsg->request and job_bsg->reply to pass EHS packets without
-> > changing
-> > the BSG V4 structure and BSG core. So we push RFC patch just to
-> > start
-> > Advanced RPMB mainlining
-> 
-> I concur with this approach.
-> 
-> The current limitations that the new spec imposes,
-> 
-> e.g. putting confidential data in a construct that lives in the ufs-
-> driver,
-> 
-> practically gives no other alternative but ufs-bsg.
-> 
-> 
-> 
-> If no one else object, maybe you can leave out the rfc from the next
-> version.
-> 
-> 
+> @@ -0,0 +1,72 @@
+> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/ufs/sprd,ufs.yaml#
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> +
+> +title: Unisoc Universal Flash Storage (UFS) Controller
+> +
+> +maintainers:
+> +  - Zhe Wang <zhe.wang1@unisoc.com>
+> +
+> +allOf:
+> +  - $ref: ufs-common.yaml
+> +
+> +properties:
+> +  compatible:
+> +    enum:
+> +      - sprd,ums9620-ufs
+> +
+> +  clocks:
+> +    maxItems: 2
+> +
+> +  clock-names:
+> +    items:
+> +      - const: hclk
+> +      - const: hclk_source
 
-I will prepare next version, and address your all questions in the next
-version. thanks.
+Can you make these descriptive? "clk" is redundant, so basically you are
+saying name is "h" and "h_source"?
 
-Kind regards,
-Bean 
+> +
+> +  resets:
+> +    maxItems: 2
+> +
+> +  reset-names:
+> +    items:
+> +      - const: ufs_soft_rst
+> +      - const: ufsdev_soft_rst
 
+Drop "_rst" from both.
+
+> +
+> +  sprd,ufs-anly-reg-syscon:
+> +    $ref: /schemas/types.yaml#/definitions/phandle
+> +    description: phandle of syscon used to control ufs analog reg.
+
+It's a reg? Then such syntax is expected:
+https://elixir.bootlin.com/linux/v5.18-rc1/source/Documentation/devicetree/bindings/soc/samsung/exynos-usi.yaml#L42
+
+
+> +  sprd,aon-apb-syscon:
+> +    $ref: /schemas/types.yaml#/definitions/phandle
+> +    description: phandle of syscon used to control always-on reg.
+
+It's a reg? Then such syntax is expected:
+https://elixir.bootlin.com/linux/v5.18-rc1/source/Documentation/devicetree/bindings/soc/samsung/exynos-usi.yaml#L42
+
+> +
+> +required:
+> +  - compatible
+> +  - reg
+> +  - clocks
+> +  - clock-names
+> +  - resets
+> +
+> +unevaluatedProperties: false
+> +
+> +examples:
+> +  - |
+> +    ufs: ufs@22000000 {
+> +        compatible = "sprd,ums9620-ufs";
+> +        reg = <0x22000000 0x3000>;
+> +        interrupts = <GIC_SPI 159 IRQ_TYPE_LEVEL_HIGH>;
+> +        vcc-supply = <&vddemmcore>;
+> +        vdd-mphy-supply = <&vddufs1v2>;
+> +        clocks-name = "ufs_eb", "ufs_cfg_eb",
+> +            "ufs_hclk", "ufs_hclk_source";
+
+Align the lines.
+
+> +        clocks = <&apahb_gate CLK_UFS_EB>, <&apahb_gate CLK_UFS_CFG_EB>,
+> +            <&onapb_clk CLK_UFS_AON>, <&g51_pll CLK_TGPLL_256M>;
+> +        freq-table-hz = <0 0>, <0 0>, <0 0>, <0 0>;
+
+Why this is empty? What's the use of empty table?
+
+> +        reset-names = "ufs_soft_rst", "ufsdev_soft_rst";
+> +        resets = <&apahb_gate RESET_AP_AHB_UFS_SOFT_RST>,
+> +            <&aonapb_gate RESET_AON_APB_UFSDEV_SOFT_RST>;
+> +        sprd,ufs-anly-reg-syscon = <&anly_phy_g12_regs>;
+> +        sprd,aon-apb-syscon = <&aon_apb_regs>;
+> +        status = "disable";
+
+Drop status.
+
+> +    };
+
+Best regards,
+Krzysztof
 
