@@ -2,94 +2,170 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 704D6C4332F
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Nov 2022 03:38:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B802AC4332F
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Nov 2022 03:39:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232689AbiKJDiq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Nov 2022 22:38:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46666 "EHLO
+        id S232469AbiKJDjJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Nov 2022 22:39:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46932 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232469AbiKJDip (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Nov 2022 22:38:45 -0500
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE576124;
-        Wed,  9 Nov 2022 19:38:44 -0800 (PST)
-Received: from dggpemm500020.china.huawei.com (unknown [172.30.72.57])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4N76xh63KYzRp0f;
-        Thu, 10 Nov 2022 11:38:32 +0800 (CST)
-Received: from dggpemm500007.china.huawei.com (7.185.36.183) by
- dggpemm500020.china.huawei.com (7.185.36.49) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Thu, 10 Nov 2022 11:38:43 +0800
-Received: from huawei.com (10.175.103.91) by dggpemm500007.china.huawei.com
- (7.185.36.183) with Microsoft SMTP Server (version=TLS1_2,
+        with ESMTP id S232364AbiKJDjI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Nov 2022 22:39:08 -0500
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D485E2D5
+        for <linux-scsi@vger.kernel.org>; Wed,  9 Nov 2022 19:39:07 -0800 (PST)
+Received: from kwepemi500016.china.huawei.com (unknown [172.30.72.55])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4N76tq5nB3zJnZG;
+        Thu, 10 Nov 2022 11:36:03 +0800 (CST)
+Received: from huawei.com (10.175.112.208) by kwepemi500016.china.huawei.com
+ (7.221.188.220) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Thu, 10 Nov
- 2022 11:38:42 +0800
-From:   Yang Yingliang <yangyingliang@huawei.com>
-To:     <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>
-CC:     <gregkh@linuxfoundation.org>, <rafael@kernel.org>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
-Subject: [PATCH] drivers: base: transport_class: fix resource leak when transport_add_device() fails
-Date:   Thu, 10 Nov 2022 11:37:21 +0800
-Message-ID: <20221110033721.11974-1-yangyingliang@huawei.com>
-X-Mailer: git-send-email 2.25.1
+ 2022 11:39:05 +0800
+From:   Zhou Guanghui <zhouguanghui1@huawei.com>
+To:     <lduncan@suse.com>, <cleech@redhat.com>,
+        <michael.christie@oracle.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>
+CC:     <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>
+Subject: [PATCH v2] scsi: iscsi: fix possible memory leak when device_register failed
+Date:   Thu, 10 Nov 2022 03:37:29 +0000
+Message-ID: <20221110033729.1555-1-zhouguanghui1@huawei.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.103.91]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- dggpemm500007.china.huawei.com (7.185.36.183)
+Content-Type: text/plain
+X-Originating-IP: [10.175.112.208]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ kwepemi500016.china.huawei.com (7.221.188.220)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The normal call sequence of using transport class is:
+If device_register() returns error, the name allocated by the
+dev_set_name() need be freed. As described in the comment of
+device_register(), we should use put_device() to give up the
+reference in the error path.
 
-Add path:
-transport_setup_device()
-  transport_setup_classdev()  // call sas_host_setup() here
-transport_add_device()	      // if fails, need call transport_destroy_device()
-transport_configure_device()
+Fix this by calling put_device(), the name will be freed in the
+kobject_cleanup(), and this patch modified resources will be
+released by calling the corresponding callback function in the
+device_release().
 
-Remove path:
-transport_remove_device()
-  transport_remove_classdev  // call sas_host_remove() here
-transport_destroy_device()
+Signed-off-by: Zhou Guanghui <zhouguanghui1@huawei.com>
 
-If transport_add_device() fails, need call transport_destroy_device()
-to free memory, but in this case, ->remove() is not called, and the
-resources allocated in ->setup() are leaked. So fix these leaks by
-calling ->remove() in transport_add_class_device() if it returns error.
-
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
 ---
- drivers/base/transport_class.c | 4 ++++
- 1 file changed, 4 insertions(+)
+v1 -> v2:
+ add 4 other places that have the same mistake
+ suggested in: https://lore.kernel.org/linux-scsi/51f33b2f00334114bbb0663a51354404@huawei.com/T/#t
 
-diff --git a/drivers/base/transport_class.c b/drivers/base/transport_class.c
-index ccc86206e508..d0237db6236f 100644
---- a/drivers/base/transport_class.c
-+++ b/drivers/base/transport_class.c
-@@ -155,6 +155,7 @@ static int transport_add_class_device(struct attribute_container *cont,
- 				      struct device *dev,
- 				      struct device *classdev)
- {
-+	struct transport_class *tclass = class_to_transport_class(cont->class);
- 	int error = attribute_container_add_class_device(classdev);
- 	struct transport_container *tcont = 
- 		attribute_container_to_transport_container(cont);
-@@ -162,6 +163,9 @@ static int transport_add_class_device(struct attribute_container *cont,
- 	if (!error && tcont->statistics)
- 		error = sysfs_create_group(&classdev->kobj, tcont->statistics);
+ drivers/scsi/scsi_transport_iscsi.c | 31 +++++++++++++++--------------
+ 1 file changed, 16 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index cd3db9684e52..f473c002fa4d 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -231,7 +231,7 @@ iscsi_create_endpoint(int dd_size)
+ 	dev_set_name(&ep->dev, "ep-%d", id);
+ 	err = device_register(&ep->dev);
+         if (err)
+-		goto free_id;
++		goto put_dev;
  
-+	if (error && tclass->remove)
-+		tclass->remove(tcont, dev, classdev);
-+
- 	return error;
+ 	err = sysfs_create_group(&ep->dev.kobj, &iscsi_endpoint_group);
+ 	if (err)
+@@ -245,10 +245,12 @@ iscsi_create_endpoint(int dd_size)
+ 	device_unregister(&ep->dev);
+ 	return NULL;
+ 
+-free_id:
++put_dev:
+ 	mutex_lock(&iscsi_ep_idr_mutex);
+ 	idr_remove(&iscsi_ep_idr, id);
+ 	mutex_unlock(&iscsi_ep_idr_mutex);
++	put_device(&ep->dev);
++	return NULL;
+ free_ep:
+ 	kfree(ep);
+ 	return NULL;
+@@ -766,7 +768,7 @@ iscsi_create_iface(struct Scsi_Host *shost, struct iscsi_transport *transport,
+ 
+ 	err = device_register(&iface->dev);
+ 	if (err)
+-		goto free_iface;
++		goto put_dev;
+ 
+ 	err = sysfs_create_group(&iface->dev.kobj, &iscsi_iface_group);
+ 	if (err)
+@@ -780,9 +782,8 @@ iscsi_create_iface(struct Scsi_Host *shost, struct iscsi_transport *transport,
+ 	device_unregister(&iface->dev);
+ 	return NULL;
+ 
+-free_iface:
+-	put_device(iface->dev.parent);
+-	kfree(iface);
++put_dev:
++	put_device(&iface->dev);
+ 	return NULL;
  }
+ EXPORT_SYMBOL_GPL(iscsi_create_iface);
+@@ -1251,15 +1252,15 @@ iscsi_create_flashnode_sess(struct Scsi_Host *shost, int index,
  
+ 	err = device_register(&fnode_sess->dev);
+ 	if (err)
+-		goto free_fnode_sess;
++		goto put_dev;
+ 
+ 	if (dd_size)
+ 		fnode_sess->dd_data = &fnode_sess[1];
+ 
+ 	return fnode_sess;
+ 
+-free_fnode_sess:
+-	kfree(fnode_sess);
++put_dev:
++	put_device(&fnode_sess->dev);
+ 	return NULL;
+ }
+ EXPORT_SYMBOL_GPL(iscsi_create_flashnode_sess);
+@@ -1299,15 +1300,15 @@ iscsi_create_flashnode_conn(struct Scsi_Host *shost,
+ 
+ 	err = device_register(&fnode_conn->dev);
+ 	if (err)
+-		goto free_fnode_conn;
++		goto put_dev;
+ 
+ 	if (dd_size)
+ 		fnode_conn->dd_data = &fnode_conn[1];
+ 
+ 	return fnode_conn;
+ 
+-free_fnode_conn:
+-	kfree(fnode_conn);
++put_dev:
++	put_device(&fnode_conn->dev);
+ 	return NULL;
+ }
+ EXPORT_SYMBOL_GPL(iscsi_create_flashnode_conn);
+@@ -4815,7 +4816,7 @@ iscsi_register_transport(struct iscsi_transport *tt)
+ 	dev_set_name(&priv->dev, "%s", tt->name);
+ 	err = device_register(&priv->dev);
+ 	if (err)
+-		goto free_priv;
++		goto put_dev;
+ 
+ 	err = sysfs_create_group(&priv->dev.kobj, &iscsi_transport_group);
+ 	if (err)
+@@ -4850,8 +4851,8 @@ iscsi_register_transport(struct iscsi_transport *tt)
+ unregister_dev:
+ 	device_unregister(&priv->dev);
+ 	return NULL;
+-free_priv:
+-	kfree(priv);
++put_dev:
++	put_device(&priv->dev);
+ 	return NULL;
+ }
+ EXPORT_SYMBOL_GPL(iscsi_register_transport);
 -- 
-2.25.1
+2.17.1
 
