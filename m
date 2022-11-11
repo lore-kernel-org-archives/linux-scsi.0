@@ -2,83 +2,86 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 302A5C433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Nov 2022 07:44:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63BC1C433FE
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Nov 2022 07:46:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233146AbiKKHoD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Nov 2022 02:44:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60150 "EHLO
+        id S232740AbiKKHqY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Nov 2022 02:46:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32828 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232809AbiKKHoC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Nov 2022 02:44:02 -0500
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 031EA6B22E;
-        Thu, 10 Nov 2022 23:44:00 -0800 (PST)
-Received: from dggpemm500022.china.huawei.com (unknown [172.30.72.54])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4N7rL737r7z15MXT;
-        Fri, 11 Nov 2022 15:43:43 +0800 (CST)
-Received: from dggpemm500013.china.huawei.com (7.185.36.172) by
- dggpemm500022.china.huawei.com (7.185.36.162) with Microsoft SMTP Server
+        with ESMTP id S230043AbiKKHqX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Nov 2022 02:46:23 -0500
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A943177227;
+        Thu, 10 Nov 2022 23:46:22 -0800 (PST)
+Received: from dggpeml500023.china.huawei.com (unknown [172.30.72.56])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4N7rJt3LW3zbndc;
+        Fri, 11 Nov 2022 15:42:38 +0800 (CST)
+Received: from ubuntu1804.huawei.com (10.67.174.58) by
+ dggpeml500023.china.huawei.com (7.185.36.114) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Fri, 11 Nov 2022 15:43:58 +0800
-Received: from ubuntu1804.huawei.com (10.67.175.36) by
- dggpemm500013.china.huawei.com (7.185.36.172) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Fri, 11 Nov 2022 15:43:58 +0800
-From:   Chen Zhongjin <chenzhongjin@huawei.com>
-To:     <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <target-devel@vger.kernel.org>
-CC:     <james.smart@broadcom.com>, <ram.vegesna@broadcom.com>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <christophe.jaillet@wanadoo.fr>, <hare@suse.de>, <dwagner@suse.de>,
-        <chenzhongjin@huawei.com>
-Subject: [PATCH] scsi: efct: Fix possible memleak in efct_device_init()
-Date:   Fri, 11 Nov 2022 15:40:46 +0800
-Message-ID: <20221111074046.57061-1-chenzhongjin@huawei.com>
+ 15.1.2375.31; Fri, 11 Nov 2022 15:46:20 +0800
+From:   Xiu Jianfeng <xiujianfeng@huawei.com>
+To:     <james.smart@broadcom.com>, <dick.kennedy@broadcom.com>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH -next] scsi: lpfc: Use memset_startat() helper
+Date:   Fri, 11 Nov 2022 15:43:10 +0800
+Message-ID: <20221111074310.132125-1-xiujianfeng@huawei.com>
 X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
 Content-Type: text/plain
-X-Originating-IP: [10.67.175.36]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- dggpemm500013.china.huawei.com (7.185.36.172)
+X-Originating-IP: [10.67.174.58]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ dggpeml500023.china.huawei.com (7.185.36.114)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In efct_device_init(), when efct_scsi_reg_fc_transport() fails,
-efct_scsi_tgt_driver_exit() is not called to release memory for
-efct_scsi_tgt_driver_init() and causes memleak:
+User memset_startat() helper to simplify the code, no functional
+changes in this patch.
 
-unreferenced object 0xffff8881020ce000 (size 2048):
-  comm "modprobe", pid 465, jiffies 4294928222 (age 55.872s)
-  backtrace:
-    [<0000000021a1ef1b>] kmalloc_trace+0x27/0x110
-    [<000000004c3ed51c>] target_register_template+0x4fd/0x7b0 [target_core_mod]
-    [<00000000f3393296>] efct_scsi_tgt_driver_init+0x18/0x50 [efct]
-    [<00000000115de533>] 0xffffffffc0d90011
-    [<00000000d608f646>] do_one_initcall+0xd0/0x4e0
-    [<0000000067828cf1>] do_init_module+0x1cc/0x6a0
-    ...
-
-Fixes: 4df84e846624 ("scsi: elx: efct: Driver initialization routines")
-Signed-off-by: Chen Zhongjin <chenzhongjin@huawei.com>
+Signed-off-by: Xiu Jianfeng <xiujianfeng@huawei.com>
 ---
- drivers/scsi/elx/efct/efct_driver.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/lpfc/lpfc_sli.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/elx/efct/efct_driver.c b/drivers/scsi/elx/efct/efct_driver.c
-index b08fc8839808..49fd2cfed70c 100644
---- a/drivers/scsi/elx/efct/efct_driver.c
-+++ b/drivers/scsi/elx/efct/efct_driver.c
-@@ -42,6 +42,7 @@ efct_device_init(void)
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index d25afc9dde14..35c9404d5e49 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -1373,7 +1373,6 @@ static void
+ __lpfc_sli_release_iocbq_s4(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq)
+ {
+ 	struct lpfc_sglq *sglq;
+-	size_t start_clean = offsetof(struct lpfc_iocbq, wqe);
+ 	unsigned long iflag = 0;
+ 	struct lpfc_sli_ring *pring;
  
- 	rc = efct_scsi_reg_fc_transport();
- 	if (rc) {
-+		efct_scsi_tgt_driver_exit();
- 		pr_err("failed to register to FC host\n");
- 		return rc;
- 	}
+@@ -1430,7 +1429,7 @@ __lpfc_sli_release_iocbq_s4(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq)
+ 	/*
+ 	 * Clean all volatile data fields, preserve iotag and node struct.
+ 	 */
+-	memset((char *)iocbq + start_clean, 0, sizeof(*iocbq) - start_clean);
++	memset_startat(iocbq, 0, wqe);
+ 	iocbq->sli4_lxritag = NO_XRI;
+ 	iocbq->sli4_xritag = NO_XRI;
+ 	iocbq->cmd_flag &= ~(LPFC_IO_NVME | LPFC_IO_NVMET | LPFC_IO_CMF |
+@@ -1453,12 +1452,11 @@ __lpfc_sli_release_iocbq_s4(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq)
+ static void
+ __lpfc_sli_release_iocbq_s3(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq)
+ {
+-	size_t start_clean = offsetof(struct lpfc_iocbq, iocb);
+ 
+ 	/*
+ 	 * Clean all volatile data fields, preserve iotag and node struct.
+ 	 */
+-	memset((char*)iocbq + start_clean, 0, sizeof(*iocbq) - start_clean);
++	memset_startat(iocbq, 0, iocb);
+ 	iocbq->sli4_xritag = NO_XRI;
+ 	list_add_tail(&iocbq->list, &phba->lpfc_iocb_list);
+ }
 -- 
 2.17.1
 
