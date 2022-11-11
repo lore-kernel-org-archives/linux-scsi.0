@@ -2,101 +2,129 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 232F2C43217
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Nov 2022 09:33:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6FF8C4332F
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Nov 2022 09:34:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233661AbiKKJdl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Nov 2022 04:33:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51986 "EHLO
+        id S233664AbiKKJec (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Nov 2022 04:34:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52478 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233648AbiKKJdk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Nov 2022 04:33:40 -0500
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AE245FF4
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Nov 2022 01:33:39 -0800 (PST)
-Received: from dggpemm500022.china.huawei.com (unknown [172.30.72.54])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4N7tmQ6kM6zHvpy;
-        Fri, 11 Nov 2022 17:33:10 +0800 (CST)
-Received: from dggpemm500007.china.huawei.com (7.185.36.183) by
- dggpemm500022.china.huawei.com (7.185.36.162) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Fri, 11 Nov 2022 17:33:25 +0800
-Received: from huawei.com (10.175.103.91) by dggpemm500007.china.huawei.com
- (7.185.36.183) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Fri, 11 Nov
- 2022 17:33:25 +0800
-From:   Yang Yingliang <yangyingliang@huawei.com>
-To:     <linux-scsi@vger.kernel.org>
-CC:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <yangyingliang@huawei.com>
-Subject: [PATCH] scsi: scsi_transport_sas: fix error handling in sas_rphy_add()
-Date:   Fri, 11 Nov 2022 17:31:56 +0800
-Message-ID: <20221111093156.1694302-1-yangyingliang@huawei.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S233594AbiKKJeb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Nov 2022 04:34:31 -0500
+Received: from mail-ej1-x62e.google.com (mail-ej1-x62e.google.com [IPv6:2a00:1450:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B57156327;
+        Fri, 11 Nov 2022 01:34:30 -0800 (PST)
+Received: by mail-ej1-x62e.google.com with SMTP id y14so11303876ejd.9;
+        Fri, 11 Nov 2022 01:34:30 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=F1O3bjY9wxlNEQJspWtcqXuaUIVH313lCfswZjOyFmo=;
+        b=D91gVRv5exPZsksiOEYOMFtgEfz1NyipCKYsdyceerwR/yXY9cBUgnmyouUsIwkEQD
+         DabMAHBFaR+EqiHrORdmQAlnza7bi6tJnK4Q7z42yVs5kZdP5Uo/DOJyAFUpqMTNwBrz
+         Gl47UZurBbQmZgTVvXm51bIRcgpkI6HPiD3VzGW3tPMKTkBFS28/ZkrNSFsEiQ1XcsxQ
+         wTgkjlmN9HL4nhpjT8wd3JJWaTOvegvPGGu+S8KYT9kzwGS1L35DFDPaQ7dD9T0XM93s
+         QVqkuzGL6R2Nc8QyzHSBZB+rKTD3S86AVQdjTzXu2zw9BXZ6Sc1v2ZuIi6A46CvWRrK9
+         bt7A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=F1O3bjY9wxlNEQJspWtcqXuaUIVH313lCfswZjOyFmo=;
+        b=zssD7MegXoWN0+2wyriun++vDnlMWCa58BKIKbaW7KDDFox23mF+qVDjGUUQTq4xqe
+         mBLBwWp6YME0zSSMljrY7QJSvEXJheREA3fatblkVK+lCQ6tsbIGB9T/V5xejiz408Dc
+         xzvIbJnOjCyOVo3RgsscSEtZM3eqqdF9Iy2ldWTn5mEVkQ6yhvvgCeByeiHeK3edWfT5
+         lGptvTglXkZYUvbANxA0Ztxo+2TZkQlwzllP0nbtDkKy2RA5ccGxvfO3PLk8arKu8hTi
+         +dR9x9KFrY9ETWTgLQmcyNXuO2dbEWKZKaQT2tJlpeAEsz37xKAKA8IGAChAlk9bWQCP
+         +8Gw==
+X-Gm-Message-State: ANoB5plkjszCCERNVsBNX/X6JQ30Es4YCFflfSz9DjAPAS+qdFXFHkft
+        jDvCIwXsnZI4cfFKGwGDi4rP1hg8FkWx8DLD+MU=
+X-Google-Smtp-Source: AA0mqf5CBblMANBc8SQhkX+jNWhqxIdyXunf3jIQpJ9nbjPPlFLNQocbX8s018JvNDdPkmeuo49lsPGxVIXjM+ajIcc=
+X-Received: by 2002:a17:906:1d08:b0:7a9:ecc1:2bd2 with SMTP id
+ n8-20020a1709061d0800b007a9ecc12bd2mr1176222ejh.545.1668159269254; Fri, 11
+ Nov 2022 01:34:29 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.103.91]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- dggpemm500007.china.huawei.com (7.185.36.183)
-X-CFilter-Loop: Reflected
+References: <20221110133640.30522-1-zhewang116@gmail.com> <20221110133640.30522-2-zhewang116@gmail.com>
+ <4bee5178-b34c-ec4b-9773-07f368064c48@linaro.org> <CAJxzgGpAPs5+HFdq=GxR4bd_27XGLdJeTqAairCOhAf-wvj_CQ@mail.gmail.com>
+ <be044e4c-b9dc-1214-5f7d-4a4d1c2669fe@linaro.org>
+In-Reply-To: <be044e4c-b9dc-1214-5f7d-4a4d1c2669fe@linaro.org>
+From:   Zhe Wang <zhewang116@gmail.com>
+Date:   Fri, 11 Nov 2022 17:34:17 +0800
+Message-ID: <CAJxzgGpKATsfjnD7ksc_UXdzwW76trkONDzRR2UpKHW1Buxxew@mail.gmail.com>
+Subject: Re: [PATCH 1/2] dt-bindings: ufs: Add document for Unisoc UFS host controller
+To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Cc:     martin.petersen@oracle.com, jejb@linux.ibm.com,
+        krzysztof.kozlowski+dt@linaro.org, robh+dt@kernel.org,
+        alim.akhtar@samsung.com, avri.altman@wdc.com,
+        linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
+        zhe.wang1@unisoc.com, orsonzhai@gmail.com, yuelin.tang@unisoc.com,
+        zhenxiong.lai@unisoc.com, zhang.lyra@gmail.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In sas_rphy_add(), the return value of transport_add_device() is
-not checked. As a result, it causes null-ptr-deref while removing
-device, because transport_remove_device() is called to remove the
-device that was not added.
+Hi Krzysztof,
 
-Unable to handle kernel NULL pointer dereference at virtual address 0000000000000108
-pc : device_del+0x54/0x3d0
-lr : device_del+0x37c/0x3d0
-Call trace:
- device_del+0x54/0x3d0
- attribute_container_class_device_del+0x28/0x38
- transport_remove_classdev+0x6c/0x80
- attribute_container_device_trigger+0x108/0x110
- transport_remove_device+0x28/0x38
- sas_rphy_remove+0x50/0x78 [scsi_transport_sas]
- sas_port_delete+0x30/0x148 [scsi_transport_sas]
- do_sas_phy_delete+0x78/0x80 [scsi_transport_sas]
- device_for_each_child+0x68/0xb0
- sas_remove_children+0x30/0x50 [scsi_transport_sas]
- sas_rphy_remove+0x38/0x78 [scsi_transport_sas]
- sas_port_delete+0x30/0x148 [scsi_transport_sas]
- do_sas_phy_delete+0x78/0x80 [scsi_transport_sas]
- device_for_each_child+0x68/0xb0
- sas_remove_children+0x30/0x50 [scsi_transport_sas]
- sas_remove_host+0x20/0x38 [scsi_transport_sas]
- scsih_remove+0xd8/0x420 [mpt3sas]
+On Fri, Nov 11, 2022 at 3:48 PM Krzysztof Kozlowski
+<krzysztof.kozlowski@linaro.org> wrote:
+>
+> On 11/11/2022 06:34, Zhe Wang wrote:
+> >>
+> >
+> > I'll fix it.
+> >
+> >>> +        clocks =3D <&apahb_gate CLK_UFS_EB>, <&apahb_gate CLK_UFS_CF=
+G_EB>,
+> >>> +            <&onapb_clk CLK_UFS_AON>, <&g51_pll CLK_TGPLL_256M>;
+> >>> +        freq-table-hz =3D <0 0>, <0 0>, <0 0>, <0 0>;
+> >>
+> >> Why this is empty? What's the use of empty table?
+> >>
+> >
+> > freq-table-hz is used to configure the maximum frequency and minimum
+> > frequency of clk, and an empty table means that no scaling up\down
+> > operation is requiredfor the frequency of these clks.
+>
+> No, to indicate lack of scaling you skip freq-table-hz entirely, not
+> provide empty one.
+>
+>
 
-Fix this by checking and handling return value of transport_add_device()
-in sas_rphy_add().
+In the ufshcd-pltfrm.c file, the clock information is parsed by
+executing the function ufshcd_parse_clock_info, if the number of
+"freq-table-hz" is zero or if the number of "clock-names" and
+"freq-table-hz" does not match, the UFS CLK information in dts will
+not be obtained. Although we don't need to scaling freq, we also need
+the CLK information for the CLK GATE operations. So we cannot delete
+this freq-table here.
 
-Fixes: c7ebbbce366c ("[SCSI] SAS transport class")
-Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
----
- drivers/scsi/scsi_transport_sas.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+> Best regards,
+> Krzysztof
+>
 
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index 74b99f2b0b74..accc0afa8f77 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -1526,7 +1526,11 @@ int sas_rphy_add(struct sas_rphy *rphy)
- 	error = device_add(&rphy->dev);
- 	if (error)
- 		return error;
--	transport_add_device(&rphy->dev);
-+	error = transport_add_device(&rphy->dev);
-+	if (error) {
-+		device_del(&rphy->dev);
-+		return error;
-+	}
- 	transport_configure_device(&rphy->dev);
- 	if (sas_bsg_initialize(shost, rphy))
- 		printk("fail to a bsg device %s\n", dev_name(&rphy->dev));
--- 
-2.25.1
+According to the local test results just now, I would like to ask a
+question about the previous revisions.
+> > +
+> > +  sprd,ufs-anly-reg-syscon:
+> > +    $ref: /schemas/types.yaml#/definitions/phandle
+> > +    description: phandle of syscon used to control ufs analog reg.
+>
+> It's a reg? Then such syntax is expected:
+> https://elixir.bootlin.com/linux/v5.18-rc1/source/Documentation/devicetre=
+e/bindings/soc/samsung/exynos-usi.yaml#L42
+>
 
+In the syntax of this example, reg is represented by phandle and
+offset, but I only need the information of phandle in this place=EF=BC=8CSo=
+ in
+this scenario, whether my original syntax is fine=EF=BC=9F just describe th=
+e
+pandlle.
+
+Best regards,
+Zhe Wang
