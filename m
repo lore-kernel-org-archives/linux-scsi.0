@@ -2,105 +2,104 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A380AC433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Nov 2022 14:47:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11D67C433FE
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Nov 2022 15:45:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233967AbiKKOrZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Nov 2022 09:47:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53244 "EHLO
+        id S233950AbiKKPpQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Nov 2022 10:45:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57678 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233317AbiKKOqV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Nov 2022 09:46:21 -0500
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A07D6DF9B
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Nov 2022 06:46:17 -0800 (PST)
-Received: from dggpemm500023.china.huawei.com (unknown [172.30.72.57])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4N81jQ0xHbzRp68;
-        Fri, 11 Nov 2022 22:46:02 +0800 (CST)
-Received: from dggpemm500007.china.huawei.com (7.185.36.183) by
- dggpemm500023.china.huawei.com (7.185.36.83) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Fri, 11 Nov 2022 22:46:14 +0800
-Received: from huawei.com (10.175.103.91) by dggpemm500007.china.huawei.com
- (7.185.36.183) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Fri, 11 Nov
- 2022 22:46:14 +0800
-From:   Yang Yingliang <yangyingliang@huawei.com>
-To:     <linux-scsi@vger.kernel.org>
-CC:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <john.g.garry@oracle.com>, <yangyingliang@huawei.com>
-Subject: [PATCH v2] scsi: scsi_transport_sas: fix error handling in sas_rphy_add()
-Date:   Fri, 11 Nov 2022 22:44:33 +0800
-Message-ID: <20221111144433.2421680-1-yangyingliang@huawei.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S233923AbiKKPpL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Nov 2022 10:45:11 -0500
+Received: from mail-ed1-x52e.google.com (mail-ed1-x52e.google.com [IPv6:2a00:1450:4864:20::52e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0FDD4D5E3;
+        Fri, 11 Nov 2022 07:45:09 -0800 (PST)
+Received: by mail-ed1-x52e.google.com with SMTP id v17so8124009edc.8;
+        Fri, 11 Nov 2022 07:45:09 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=jIEGBYnjtBLkkhF3MQRlWI1UwDpfyFwgWu7aqDXVdLI=;
+        b=YN6ZOyaOgRTYvOKxAFMYPmNCwWfFOSUdbeniVLII4vBW+e7oZbHP+1ovegicD/Q93b
+         1MqacqdJqB16YWEeJ9jUnhfnhACuqfCJNyvzGMd0EA8ehlGJ0csPUC+Zr19bDsqxzIVo
+         QM03B927f6HpIRjcqkNCQ9cOked1uk2oCYLbvTgRK/kjUYvCcgv3fAUgvTqJvrdvYnK/
+         0k/H6CWcuuIt+c+MzUDAFhoueD7eccauawkxjAnrmarezlD6Ddz1XzMPVDVUppXcyu5d
+         7WevXb1UV+lf6fqmxtRhL68zA3BFRjZqtS4otxXSATmfpzrmwyZWb0mkh7SShtv91tBn
+         l8GA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=jIEGBYnjtBLkkhF3MQRlWI1UwDpfyFwgWu7aqDXVdLI=;
+        b=tX4iwaUC+fXxJIIv9SNeh+SaXxK6SrT8/UEVjlA+whxR5YSoPRGHJMgQW0jP7K4QCW
+         0KzmjwQuisMkm2LhI+Q9Js+a7wwDLP9iIpYAFXw/ung2MTbyJTlEAv/1wPskmaIR4hht
+         ubiQf5y6FgX2tq1FYqVu1OMNbI8jDvvAJ/x2TzlLr9jKeYW3XOBUMCNNUwHq9vFoUszl
+         nERMaKwwSe4EQC4TEnfGkxgliwt5kdKxNDWRBUzFWDtBDen/WZxBq1fiMYm5kLUoV0R1
+         cOqr1SqRPbtJrZeQS8cVypNzdZQfxPtwhx9CA2BxJmQiwPc7pDXtTdyuxpsQP/eftnIf
+         vI5A==
+X-Gm-Message-State: ANoB5plGytJ0AtHV3Fx1EWVYWDyGbg419mrMoAxI8ACDZ7ysSR9+Moea
+        OAqS5t9xn7w+EU02P8JSYXY=
+X-Google-Smtp-Source: AA0mqf7MsHhRdN7JZ5C8J2CL2kabiKK6v9/ZXFxPy2/4geGcr3vteYcWiBUz3cpkb7RegzADeBKQcw==
+X-Received: by 2002:a50:ff04:0:b0:462:709:9f7b with SMTP id a4-20020a50ff04000000b0046207099f7bmr2051431edu.263.1668181508274;
+        Fri, 11 Nov 2022 07:45:08 -0800 (PST)
+Received: from [10.176.235.173] ([137.201.254.41])
+        by smtp.gmail.com with ESMTPSA id qq18-20020a17090720d200b0078df3b4464fsm1027467ejb.19.2022.11.11.07.45.07
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 11 Nov 2022 07:45:07 -0800 (PST)
+Message-ID: <b3e92294-0aa7-edc1-115b-7552b13f9e7d@gmail.com>
+Date:   Fri, 11 Nov 2022 16:45:06 +0100
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.103.91]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- dggpemm500007.china.huawei.com (7.185.36.183)
-X-CFilter-Loop: Reflected
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.2.2
+Subject: Re: [PATCH v2 2/4] ufs: core: Remove redundant desc_size variable
+ from hba
+To:     Arthur Simchaev <Arthur.Simchaev@wdc.com>,
+        martin.petersen@oracle.com
+Cc:     beanhuo@micron.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <1667399353-10228-1-git-send-email-Arthur.Simchaev@wdc.com>
+ <1667399353-10228-3-git-send-email-Arthur.Simchaev@wdc.com>
+Content-Language: en-US
+From:   Bean Huo <huobean@gmail.com>
+In-Reply-To: <1667399353-10228-3-git-send-email-Arthur.Simchaev@wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In sas_rphy_add(), if transport_add_device() fails, the device
-is not added, the return value is not checked, it won't goto
-error path, when removing rphy in normal remove path, it causes
-null-ptr-deref, because transport_remove_device() is called to
-remove the device that was not added.
 
-Unable to handle kernel NULL pointer dereference at virtual address 0000000000000108
-pc : device_del+0x54/0x3d0
-lr : device_del+0x37c/0x3d0
-Call trace:
- device_del+0x54/0x3d0
- attribute_container_class_device_del+0x28/0x38
- transport_remove_classdev+0x6c/0x80
- attribute_container_device_trigger+0x108/0x110
- transport_remove_device+0x28/0x38
- sas_rphy_remove+0x50/0x78 [scsi_transport_sas]
- sas_port_delete+0x30/0x148 [scsi_transport_sas]
- do_sas_phy_delete+0x78/0x80 [scsi_transport_sas]
- device_for_each_child+0x68/0xb0
- sas_remove_children+0x30/0x50 [scsi_transport_sas]
- sas_rphy_remove+0x38/0x78 [scsi_transport_sas]
- sas_port_delete+0x30/0x148 [scsi_transport_sas]
- do_sas_phy_delete+0x78/0x80 [scsi_transport_sas]
- device_for_each_child+0x68/0xb0
- sas_remove_children+0x30/0x50 [scsi_transport_sas]
- sas_remove_host+0x20/0x38 [scsi_transport_sas]
- scsih_remove+0xd8/0x420 [mpt3sas]
+On 02.11.22 3:29 PM, Arthur Simchaev wrote:
+> @@ -7446,25 +7428,24 @@ static u32 ufshcd_find_max_sup_active_icc_level(struct ufs_hba *hba,
+>   static void ufshcd_set_active_icc_lvl(struct ufs_hba *hba)
+>   {
+>   	int ret;
+> -	int buff_len = hba->desc_size[QUERY_DESC_IDN_POWER];
+>   	u8 *desc_buf;
+>   	u32 icc_level;
+>   
+> -	desc_buf = kmalloc(buff_len, GFP_KERNEL);
+> +	desc_buf = kmalloc(QUERY_DESC_MAX_SIZE, GFP_KERNEL);
+>   	if (!desc_buf)
 
-Fix this by checking and handling return value of transport_add_device()
-in sas_rphy_add().
 
-Fixes: c7ebbbce366c ("[SCSI] SAS transport class")
-Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
----
-v1 -> v2:
-  Update commit message.
----
- drivers/scsi/scsi_transport_sas.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+Hi Arthur,
 
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index 74b99f2b0b74..accc0afa8f77 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -1526,7 +1526,11 @@ int sas_rphy_add(struct sas_rphy *rphy)
- 	error = device_add(&rphy->dev);
- 	if (error)
- 		return error;
--	transport_add_device(&rphy->dev);
-+	error = transport_add_device(&rphy->dev);
-+	if (error) {
-+		device_del(&rphy->dev);
-+		return error;
-+	}
- 	transport_configure_device(&rphy->dev);
- 	if (sas_bsg_initialize(shost, rphy))
- 		printk("fail to a bsg device %s\n", dev_name(&rphy->dev));
--- 
-2.25.1
+Do you think it is better to use kzalloc or kmalloc here? If item in the
+
+descriptor is not supported by the device, it will be 0x00 and then the
+
+relevant feature will be marked as disabled or not supported on the
+
+device feature checkup logic.
+
+
+Kind regards,
+
+Bean
+
+
 
