@@ -2,224 +2,182 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29DA9C4332F
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Nov 2022 05:34:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 517AAC4332F
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Nov 2022 06:22:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230198AbiKKFek (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Nov 2022 00:34:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58526 "EHLO
+        id S232746AbiKKGWF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Nov 2022 01:22:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47754 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229461AbiKKFeh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Nov 2022 00:34:37 -0500
-Received: from mail-ed1-x532.google.com (mail-ed1-x532.google.com [IPv6:2a00:1450:4864:20::532])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8E095CD03;
-        Thu, 10 Nov 2022 21:34:36 -0800 (PST)
-Received: by mail-ed1-x532.google.com with SMTP id a5so6174382edb.11;
-        Thu, 10 Nov 2022 21:34:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=npuUH7t8jZtW/7WS6lnnUhD3GHnWwrPrxxOd+6LRKUc=;
-        b=JUyU6npbpKhkqVghfVWeesBOt/qOhUiDgqqbp8mrRdCFv27wKaAFnkeHCM3Yp+3pmu
-         cDEI7RtaWI8rnBmWJWuY7qQAYNldWB6eudXK+ecy+num71p/q8CU3t0SXONq5k3+pRxZ
-         eyspoRFMUNDd+5WSY0KMR6+tPIaOMhdLjI2Tve+uQAXg8u2HYezxQrh9uqjj81mVjQb4
-         P7BQyx9vTpALI5kudise9WO7YbHAD0QxHi45Q9zEpdtsBa+qCffqA5a/+DjYOLyskdfM
-         oJITy1+duMIgWACGRdg4uZK/f6dA696CktIgbatgCIGyut2wzdH25Z8ol1sQ5kUB/tb/
-         PxYQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=npuUH7t8jZtW/7WS6lnnUhD3GHnWwrPrxxOd+6LRKUc=;
-        b=bjkrfPgcv7WdpvrcwQmHs8/MmwCLq1xSN7QpIMhnZzO49FVCljsqlGwyjNKoNgEcv9
-         HB9O/hbNMRpgTYvmrMmjtNh1KOTU6T0Xci8cMR52CtMzGZ8qj1iTJcgvDIbXc4LWDt0p
-         JqOTIkKeoEI9P8jwB/ACmJXwwcCIJIp3EUZrIkMf/5PuxM4lGNmRq8y0SDAvYALUJPQj
-         AGbRv8VD58PTzgDeuHgfMXwy8FQoCneut5hLS0Mu5QsJ/i1s6/CU3nl35V6qcq8T8SiA
-         qUAmlATHRG22aiQ4yehPvRgSd39nmFhG1jGoI9hEupA0t9vjrNHlTsVeNEQ71rPtJDZg
-         XOaQ==
-X-Gm-Message-State: ANoB5plwyuddVBhFwkTU2GyQscbUlE3HKj74szInWcetGfoxi5/kzQBh
-        UD7yja4Q/jZeC4Se3kUiG0b2r+uSBxKsjirsYKE=
-X-Google-Smtp-Source: AA0mqf7XmZ6slGPr098jHVig861NAEmq6cOQtiNhBCfhcGefQm7tsyj4UD6RNdGWhMcqw75I2fBxtvgM9fJnMZF4Sa8=
-X-Received: by 2002:aa7:c649:0:b0:463:b0de:c210 with SMTP id
- z9-20020aa7c649000000b00463b0dec210mr138855edr.10.1668144875220; Thu, 10 Nov
- 2022 21:34:35 -0800 (PST)
+        with ESMTP id S232231AbiKKGWF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Nov 2022 01:22:05 -0500
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EEB4165E5A
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Nov 2022 22:22:02 -0800 (PST)
+Received: from epcas1p1.samsung.com (unknown [182.195.41.45])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20221111062200epoutp0183986a3b0e181423be7a0a39d748809c~mc4N5QKN20066400664epoutp01Y
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Nov 2022 06:22:00 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20221111062200epoutp0183986a3b0e181423be7a0a39d748809c~mc4N5QKN20066400664epoutp01Y
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1668147720;
+        bh=QIr1dHYcDtmBCo3Pin7ZWdcXDJ3SQIMcXm90WmlaD6g=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=X3d3g5B3jy/OJQMJuY48NxyVL06kxeDq9RBgnSOxYDiytkwTnNCVrCXPVwb7nUGck
+         2KS5g2S/oRVPwNHgY3iOQtRTVlgZ4KcQIZsIbiSdxjVBDN9IJXeQYWzpg3U67mAJLv
+         qfe+66yd7U7BpRszp51akDN4SeWZGIrAmH8HfHMo=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas1p4.samsung.com (KnoxPortal) with ESMTP id
+        20221111062159epcas1p46fbb40f4fd9a01a5950fa83a86995915~mc4NYYfzh2517325173epcas1p4A;
+        Fri, 11 Nov 2022 06:21:59 +0000 (GMT)
+Received: from epsmges1p4.samsung.com (unknown [182.195.36.226]) by
+        epsnrtp2.localdomain (Postfix) with ESMTP id 4N7pWq2CGXz4x9Pv; Fri, 11 Nov
+        2022 06:21:59 +0000 (GMT)
+Received: from epcas1p2.samsung.com ( [182.195.41.46]) by
+        epsmges1p4.samsung.com (Symantec Messaging Gateway) with SMTP id
+        4E.D9.07691.70AED636; Fri, 11 Nov 2022 15:21:59 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas1p1.samsung.com (KnoxPortal) with ESMTPA id
+        20221111062158epcas1p1c3ef28f75c39a1c1dc4c473266462fc8~mc4MfA3fd0150001500epcas1p1w;
+        Fri, 11 Nov 2022 06:21:58 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20221111062158epsmtrp236e6d85cd2bba4769b83a9b6c0b9d18e~mc4MePXCE2890828908epsmtrp2v;
+        Fri, 11 Nov 2022 06:21:58 +0000 (GMT)
+X-AuditID: b6c32a38-0cdff70000021e0b-33-636dea079fac
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        D4.6E.18644.60AED636; Fri, 11 Nov 2022 15:21:58 +0900 (KST)
+Received: from localhost.localdomain (unknown [10.253.100.232]) by
+        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20221111062158epsmtip24fc99f873d7d7924953a34861f8e22a8~mc4MSueET2543325433epsmtip2O;
+        Fri, 11 Nov 2022 06:21:58 +0000 (GMT)
+From:   Chanwoo Lee <cw9316.lee@samsung.com>
+To:     alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, beanhuo@micron.com,
+        adrian.hunter@intel.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     ChanWoo Lee <cw9316.lee@samsung.com>
+Subject: [PATCH] scsi: ufs: core: Separate function name and message
+Date:   Fri, 11 Nov 2022 15:21:26 +0900
+Message-Id: <20221111062126.7307-1-cw9316.lee@samsung.com>
+X-Mailer: git-send-email 2.29.0
 MIME-Version: 1.0
-References: <20221110133640.30522-1-zhewang116@gmail.com> <20221110133640.30522-2-zhewang116@gmail.com>
- <4bee5178-b34c-ec4b-9773-07f368064c48@linaro.org>
-In-Reply-To: <4bee5178-b34c-ec4b-9773-07f368064c48@linaro.org>
-From:   Zhe Wang <zhewang116@gmail.com>
-Date:   Fri, 11 Nov 2022 13:34:24 +0800
-Message-ID: <CAJxzgGpAPs5+HFdq=GxR4bd_27XGLdJeTqAairCOhAf-wvj_CQ@mail.gmail.com>
-Subject: Re: [PATCH 1/2] dt-bindings: ufs: Add document for Unisoc UFS host controller
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Cc:     martin.petersen@oracle.com, jejb@linux.ibm.com,
-        krzysztof.kozlowski+dt@linaro.org, robh+dt@kernel.org,
-        alim.akhtar@samsung.com, avri.altman@wdc.com,
-        linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
-        zhe.wang1@unisoc.com, orsonzhai@gmail.com, yuelin.tang@unisoc.com,
-        zhenxiong.lai@unisoc.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprDJsWRmVeSWpSXmKPExsWy7bCmni77q9xkg8dXeCxOPlnDZvFg3jY2
+        i5c/r7JZHHzYyWIx7cNPZosZp9pYLRbd2MZkcXnXHDaL7us72CyWH//H5MDlcfmKt8fiPS+Z
+        PCYsOsDo8X19B5vHx6e3WDz6tqxi9Pi8Sc6j/UA3UwBHVLZNRmpiSmqRQmpecn5KZl66rZJ3
+        cLxzvKmZgaGuoaWFuZJCXmJuqq2Si0+ArltmDtCNSgpliTmlQKGAxOJiJX07m6L80pJUhYz8
+        4hJbpdSClJwCswK94sTc4tK8dL281BIrQwMDI1OgwoTsjKZNRQX9whX/zrxha2Ccwd/FyMkh
+        IWAisWriSfYuRi4OIYEdjBKH+qawQDifGCW+XfvKBlIlJPCZUWLR4kqYjifT+pkhinYxSjx/
+        /gjK+cIosXndbMYuRg4ONgEtidvHvEHiIgIPGSXWXdoANolZQEPi5Kwn7CA1wgIuElceOoGE
+        WQRUJWadXsgOYvMKWEncONbLDLFMXuLP/R5miLigxMmZT1ggxshLNG+dDbZXQuAnu8T0O5uY
+        IBpcJI5vnwrVLCzx6vgWdghbSuLzu71sEA3NjBLbvl5ignA6GCU2tr5ghKgylvj0+TPYB8wC
+        mhLrd+lDhBUldv6eywixmU/i3dceVpASCQFeiY42IYgSFYk5XefYYHZ9vPGYFcL2kDi+cx8z
+        JBRjJTacuMQ2gVF+FpJ/ZiH5ZxbC4gWMzKsYxVILinPTU4sNC0zgkZqcn7uJEZxMtSx2MM59
+        +0HvECMTB+MhRgkOZiURXm6N7GQh3pTEyqrUovz4otKc1OJDjKbAEJ7ILCWanA9M53kl8YYm
+        lgYmZkYmFsaWxmZK4rwNM7SShQTSE0tSs1NTC1KLYPqYODilGpiS2kNuTLh9tebFOt90mRls
+        /T8uPjrrwHPpfvbD+2GH8hRvzxJd8XTP/dBMnZ9djumX5fQPecZNypd49T2F17N4edi352Z7
+        qq4HsbKob/xfvG9Hx/09855bbXv14uKpEOmPd1da25lW6wtx+rD9TAp6vezz7pS1+sGLUyNv
+        7fjSMqt76p+TvD82rZoo3rnGLHDH8l9Lv8RNU3r3aerj9l0nc4U+2ee8k409lbNn836LGxW6
+        c498Y3ZlnzLtH7u0bef02EiFZwvfJBzbzGDCfnb5p8Cn4t1r5HI+PI3R5A03lXsx1cnUTf5l
+        R0yb77rcDu1WL3duhcSFkRxs5zp0dtVv6OOzn/C76azXfS7hjjuHlViKMxINtZiLihMBVkbU
+        Ey8EAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrBLMWRmVeSWpSXmKPExsWy7bCSvC7bq9xkg9sTzSxOPlnDZvFg3jY2
+        i5c/r7JZHHzYyWIx7cNPZosZp9pYLRbd2MZkcXnXHDaL7us72CyWH//H5MDlcfmKt8fiPS+Z
+        PCYsOsDo8X19B5vHx6e3WDz6tqxi9Pi8Sc6j/UA3UwBHFJdNSmpOZllqkb5dAldG06aign7h
+        in9n3rA1MM7g72Lk5JAQMJF4Mq2fuYuRi0NIYAejRNelLjaIhJTE7v3ngWwOIFtY4vDhYoia
+        T4wSGz+/YwGJswloSdw+5g1SLiLwmlHieo8jiM0soCFxctYTdpASYQEXiSsPnUDCLAKqErNO
+        L2QHsXkFrCRuHOtlhtgkL/Hnfg8zRFxQ4uTMJywQY+QlmrfOZp7AyDcLSWoWktQCRqZVjJKp
+        BcW56bnFhgVGeanlesWJucWleel6yfm5mxjBga2ltYNxz6oPeocYmTgYDzFKcDArifBya2Qn
+        C/GmJFZWpRblxxeV5qQWH2KU5mBREue90HUyXkggPbEkNTs1tSC1CCbLxMEp1cBUqKIx7W/E
+        bce7O+9ap8kW6E/mefRvIkOykJL/l9sGLB7Tp1d6TZnzd34G17ZFe7Lap62u/7beOCn6TBnn
+        tn2eXlXfV5TNCDAQ+GFZOy3YquuwUafDjphtbcbfhLObb9+RfVb58nrjhcaErKbFNv9rwuL+
+        nDdjfuz3VS3oYMsf32dTP50ujtrf9iSobO3fSEfNY9t//NYV5n37q/AdX+TPXT5sd5VuT2P4
+        57ZI6NABqY0d5V4zzybpXp6d93MWW5uhSNX9n7xu/hGWb4Lc3iSt9OupXrr78sRteacjjr1f
+        IWhQfzN1z3L7tA8vLoa7pl5u47v1SWS1Od/6tnzXufY/LitXb55fybi9YMYax0mnlFiKMxIN
+        tZiLihMB+l7FH9sCAAA=
+X-CMS-MailID: 20221111062158epcas1p1c3ef28f75c39a1c1dc4c473266462fc8
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: SVC_REQ_APPROVE
+CMS-TYPE: 101P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20221111062158epcas1p1c3ef28f75c39a1c1dc4c473266462fc8
+References: <CGME20221111062158epcas1p1c3ef28f75c39a1c1dc4c473266462fc8@epcas1p1.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Krzysztof,
+From: ChanWoo Lee <cw9316.lee@samsung.com>
 
-Thank you for your review!
+Separate the function name and message to make it easier to check the log.
+Modify messages to fit the format of others.
 
-On Thu, Nov 10, 2022 at 10:28 PM Krzysztof Kozlowski
-<krzysztof.kozlowski@linaro.org> wrote:
->
-> On 10/11/2022 14:36, Zhe Wang wrote:
-> > From: Zhe Wang <zhe.wang1@unisoc.com>
-> >
-> > Add Unisoc ums9620 ufs host controller devicetree document.
-> >
-> > Signed-off-by: Zhe Wang <zhe.wang1@unisoc.com>
-> > ---
-> >  .../devicetree/bindings/ufs/sprd,ufs.yaml     | 72 +++++++++++++++++++
-> >  1 file changed, 72 insertions(+)
-> >  create mode 100644 Documentation/devicetree/bindings/ufs/sprd,ufs.yaml
-> >
-> > diff --git a/Documentation/devicetree/bindings/ufs/sprd,ufs.yaml b/Documentation/devicetree/bindings/ufs/sprd,ufs.yaml
-> > new file mode 100644
-> > index 000000000000..88f2c670b0a4
-> > --- /dev/null
-> > +++ b/Documentation/devicetree/bindings/ufs/sprd,ufs.yaml
->
->
-> Filename matching the compatible, so sprd,ums9620-ufs.yaml, unless you
-> expect this to grow already? If so, can you post the rest?
->
+Signed-off-by: ChanWoo Lee <cw9316.lee@samsung.com>
+---
+ drivers/ufs/core/ufshcd.c | 6 +++---
+ drivers/ufs/core/ufshpb.c | 6 +++---
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-Currently only ums9620 will be uploaded, I'll fix it.
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index e389d73765fe..fdbcbcf3f9d1 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -4480,7 +4480,7 @@ static int ufshcd_complete_dev_init(struct ufs_hba *hba)
+ 		QUERY_FLAG_IDN_FDEVICEINIT, 0, NULL);
+ 	if (err) {
+ 		dev_err(hba->dev,
+-			"%s setting fDeviceInit flag failed with error %d\n",
++			"%s: setting fDeviceInit flag failed with error %d\n",
+ 			__func__, err);
+ 		goto out;
+ 	}
+@@ -4497,11 +4497,11 @@ static int ufshcd_complete_dev_init(struct ufs_hba *hba)
+ 
+ 	if (err) {
+ 		dev_err(hba->dev,
+-				"%s reading fDeviceInit flag failed with error %d\n",
++				"%s: reading fDeviceInit flag failed with error %d\n",
+ 				__func__, err);
+ 	} else if (flag_res) {
+ 		dev_err(hba->dev,
+-				"%s fDeviceInit was not cleared by the device\n",
++				"%s: fDeviceInit was not cleared by the device\n",
+ 				__func__);
+ 		err = -EBUSY;
+ 	}
+diff --git a/drivers/ufs/core/ufshpb.c b/drivers/ufs/core/ufshpb.c
+index b7f412d0f301..148017b2dfeb 100644
+--- a/drivers/ufs/core/ufshpb.c
++++ b/drivers/ufs/core/ufshpb.c
+@@ -2289,7 +2289,7 @@ static bool ufshpb_check_hpb_reset_query(struct ufs_hba *hba)
+ 	/* wait for the device to complete HPB reset query */
+ 	for (try = 0; try < HPB_RESET_REQ_RETRIES; try++) {
+ 		dev_dbg(hba->dev,
+-			"%s start flag reset polling %d times\n",
++			"%s: start flag reset polling %d times\n",
+ 			__func__, try);
+ 
+ 		/* Poll fHpbReset flag to be cleared */
+@@ -2298,7 +2298,7 @@ static bool ufshpb_check_hpb_reset_query(struct ufs_hba *hba)
+ 
+ 		if (err) {
+ 			dev_err(hba->dev,
+-				"%s reading fHpbReset flag failed with error %d\n",
++				"%s: reading fHpbReset flag failed with error %d\n",
+ 				__func__, err);
+ 			return flag_res;
+ 		}
+@@ -2310,7 +2310,7 @@ static bool ufshpb_check_hpb_reset_query(struct ufs_hba *hba)
+ 	}
+ 	if (flag_res) {
+ 		dev_err(hba->dev,
+-			"%s fHpbReset was not cleared by the device\n",
++			"%s: fHpbReset was not cleared by the device\n",
+ 			__func__);
+ 	}
+ out:
+-- 
+2.29.0
 
-> > @@ -0,0 +1,72 @@
-> > +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-> > +%YAML 1.2
-> > +---
-> > +$id: http://devicetree.org/schemas/ufs/sprd,ufs.yaml#
-> > +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> > +
-> > +title: Unisoc Universal Flash Storage (UFS) Controller
-> > +
-> > +maintainers:
-> > +  - Zhe Wang <zhe.wang1@unisoc.com>
-> > +
-> > +allOf:
-> > +  - $ref: ufs-common.yaml
-> > +
-> > +properties:
-> > +  compatible:
-> > +    enum:
-> > +      - sprd,ums9620-ufs
-> > +
-> > +  clocks:
-> > +    maxItems: 2
-> > +
-> > +  clock-names:
-> > +    items:
-> > +      - const: hclk
-> > +      - const: hclk_source
->
-> Can you make these descriptive? "clk" is redundant, so basically you are
-> saying name is "h" and "h_source"?
->
-
-I'll fix it.
-
-> > +
-> > +  resets:
-> > +    maxItems: 2
-> > +
-> > +  reset-names:
-> > +    items:
-> > +      - const: ufs_soft_rst
-> > +      - const: ufsdev_soft_rst
->
-> Drop "_rst" from both.
->
-
-Will remove this.
-
-> > +
-> > +  sprd,ufs-anly-reg-syscon:
-> > +    $ref: /schemas/types.yaml#/definitions/phandle
-> > +    description: phandle of syscon used to control ufs analog reg.
->
-> It's a reg? Then such syntax is expected:
-> https://elixir.bootlin.com/linux/v5.18-rc1/source/Documentation/devicetree/bindings/soc/samsung/exynos-usi.yaml#L42
->
->
-
-I will modify it based on this example.
-
-> > +  sprd,aon-apb-syscon:
-> > +    $ref: /schemas/types.yaml#/definitions/phandle
-> > +    description: phandle of syscon used to control always-on reg.
->
-> It's a reg? Then such syntax is expected:
-> https://elixir.bootlin.com/linux/v5.18-rc1/source/Documentation/devicetree/bindings/soc/samsung/exynos-usi.yaml#L42
->
-
-I will modify it based on this example.
-
-> > +
-> > +required:
-> > +  - compatible
-> > +  - reg
-> > +  - clocks
-> > +  - clock-names
-> > +  - resets
-> > +
-> > +unevaluatedProperties: false
-> > +
-> > +examples:
-> > +  - |
-> > +    ufs: ufs@22000000 {
-> > +        compatible = "sprd,ums9620-ufs";
-> > +        reg = <0x22000000 0x3000>;
-> > +        interrupts = <GIC_SPI 159 IRQ_TYPE_LEVEL_HIGH>;
-> > +        vcc-supply = <&vddemmcore>;
-> > +        vdd-mphy-supply = <&vddufs1v2>;
-> > +        clocks-name = "ufs_eb", "ufs_cfg_eb",
-> > +            "ufs_hclk", "ufs_hclk_source";
->
-> Align the lines.
->
-
-I'll fix it.
-
-> > +        clocks = <&apahb_gate CLK_UFS_EB>, <&apahb_gate CLK_UFS_CFG_EB>,
-> > +            <&onapb_clk CLK_UFS_AON>, <&g51_pll CLK_TGPLL_256M>;
-> > +        freq-table-hz = <0 0>, <0 0>, <0 0>, <0 0>;
->
-> Why this is empty? What's the use of empty table?
->
-
-freq-table-hz is used to configure the maximum frequency and minimum
-frequency of clk, and an empty table means that no scaling up\down
-operation is requiredfor the frequency of these clks.
-
-> > +        reset-names = "ufs_soft_rst", "ufsdev_soft_rst";
-> > +        resets = <&apahb_gate RESET_AP_AHB_UFS_SOFT_RST>,
-> > +            <&aonapb_gate RESET_AON_APB_UFSDEV_SOFT_RST>;
-> > +        sprd,ufs-anly-reg-syscon = <&anly_phy_g12_regs>;
-> > +        sprd,aon-apb-syscon = <&aon_apb_regs>;
-> > +        status = "disable";
->
-> Drop status.
->
-
-Will remove this.
-
-Best regards,
-Zhe Wang
-
-> > +    };
->
-> Best regards,
-> Krzysztof
->
