@@ -2,100 +2,101 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35B85C4332F
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Nov 2022 07:48:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 232F2C43217
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Nov 2022 09:33:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231478AbiKKHsf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Nov 2022 02:48:35 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33838 "EHLO
+        id S233661AbiKKJdl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Nov 2022 04:33:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51986 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230181AbiKKHsd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Nov 2022 02:48:33 -0500
-Received: from mail-lj1-x230.google.com (mail-lj1-x230.google.com [IPv6:2a00:1450:4864:20::230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C49271E6
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Nov 2022 23:48:29 -0800 (PST)
-Received: by mail-lj1-x230.google.com with SMTP id l8so3623431ljh.13
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Nov 2022 23:48:29 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=n8HWN8A3iYhniaZRN6US8O1FOalwIEln+CVfm1ET2ro=;
-        b=yEQ6xZWyC6zPKtmwj/7f4PzXdz3JaMwx6eePw2BVjS49meJzD4tuA8YD1sCPWmk0dv
-         l7rWHK2VZqXEiLi8Ku+Jp2CdguvAcJPmLjPaQ1L5VbZOrjzdSpS96Srw+UXHdA6Og87V
-         YbD1CnOtHgbiMD75ycTQAWZ4TOXa4HZnuJBZvf6rLq/HCM7apkC4A8YOgkrqy/3RuH1b
-         wjwlNEcriCinTsxsnWjok2awk4PeZVp9Tp7mTgZpuaiUN0p5peNJIE+toGyM93koLBEH
-         IMBQGdClyd8Rk9tBAXseH+Hve1TYOd6nD8GRDrrJVPtu9VDstEiXHLFbk4e3jhuxu4+b
-         JtPQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=n8HWN8A3iYhniaZRN6US8O1FOalwIEln+CVfm1ET2ro=;
-        b=iGrrl65l0tN4Yc7wKLLLiPwzo1/BIHLdyzbxN6VnTu5qqOZJnRDOZSQ/gbKFsaXFiK
-         zr/ja50PEJ0wxhNqLUK8YdhfqcHdiz9CmqF7aFveTR1Kw/31L/UStrOneZ7AJXUrY6em
-         F4hcQbx/K+VFIhuqjaN5sg/PmFfuab5vrOZr/WXgnOGNYx0uKTVilwiMx+ggU4jpNdoh
-         CjWkgzZDSvfWUyX1ja+60Al422gto1SwTRXy/O35TeeWCTCt8HE7g2JQDFD9Z+S46qRy
-         VbUefXMtze/VsPX4CgZP+p2FXfCZBP9FRU/E8TRFzh7sMWMzJyyXCDRyTVDBww5ie3Ox
-         wsrw==
-X-Gm-Message-State: ANoB5pklTr12sSaFNixmbgVoHJiR7krVV3JityInl1I9JgxxRv7l0eNn
-        x+QYc6PuDNlPQTpjFG91uogMEw==
-X-Google-Smtp-Source: AA0mqf5U9q5mzlpqnEPgk6WXgBU7V0i1SQ/kzdHy5cQj+qbQM8/zxTM4SS3KdIbTcr9+RNCSzzxzJQ==
-X-Received: by 2002:a05:651c:194d:b0:276:b154:9bd8 with SMTP id bs13-20020a05651c194d00b00276b1549bd8mr269717ljb.76.1668152908128;
-        Thu, 10 Nov 2022 23:48:28 -0800 (PST)
-Received: from [192.168.0.20] (088156142199.dynamic-2-waw-k-3-2-0.vectranet.pl. [88.156.142.199])
-        by smtp.gmail.com with ESMTPSA id z6-20020ac25de6000000b00492f0f66956sm195574lfq.284.2022.11.10.23.48.26
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 10 Nov 2022 23:48:27 -0800 (PST)
-Message-ID: <be044e4c-b9dc-1214-5f7d-4a4d1c2669fe@linaro.org>
-Date:   Fri, 11 Nov 2022 08:48:26 +0100
+        with ESMTP id S233648AbiKKJdk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Nov 2022 04:33:40 -0500
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AE245FF4
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Nov 2022 01:33:39 -0800 (PST)
+Received: from dggpemm500022.china.huawei.com (unknown [172.30.72.54])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4N7tmQ6kM6zHvpy;
+        Fri, 11 Nov 2022 17:33:10 +0800 (CST)
+Received: from dggpemm500007.china.huawei.com (7.185.36.183) by
+ dggpemm500022.china.huawei.com (7.185.36.162) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Fri, 11 Nov 2022 17:33:25 +0800
+Received: from huawei.com (10.175.103.91) by dggpemm500007.china.huawei.com
+ (7.185.36.183) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Fri, 11 Nov
+ 2022 17:33:25 +0800
+From:   Yang Yingliang <yangyingliang@huawei.com>
+To:     <linux-scsi@vger.kernel.org>
+CC:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <yangyingliang@huawei.com>
+Subject: [PATCH] scsi: scsi_transport_sas: fix error handling in sas_rphy_add()
+Date:   Fri, 11 Nov 2022 17:31:56 +0800
+Message-ID: <20221111093156.1694302-1-yangyingliang@huawei.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.2
-Subject: Re: [PATCH 1/2] dt-bindings: ufs: Add document for Unisoc UFS host
- controller
-To:     Zhe Wang <zhewang116@gmail.com>
-Cc:     martin.petersen@oracle.com, jejb@linux.ibm.com,
-        krzysztof.kozlowski+dt@linaro.org, robh+dt@kernel.org,
-        alim.akhtar@samsung.com, avri.altman@wdc.com,
-        linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
-        zhe.wang1@unisoc.com, orsonzhai@gmail.com, yuelin.tang@unisoc.com,
-        zhenxiong.lai@unisoc.com
-References: <20221110133640.30522-1-zhewang116@gmail.com>
- <20221110133640.30522-2-zhewang116@gmail.com>
- <4bee5178-b34c-ec4b-9773-07f368064c48@linaro.org>
- <CAJxzgGpAPs5+HFdq=GxR4bd_27XGLdJeTqAairCOhAf-wvj_CQ@mail.gmail.com>
-Content-Language: en-US
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <CAJxzgGpAPs5+HFdq=GxR4bd_27XGLdJeTqAairCOhAf-wvj_CQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.103.91]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ dggpemm500007.china.huawei.com (7.185.36.183)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/11/2022 06:34, Zhe Wang wrote:
->>
-> 
-> I'll fix it.
-> 
->>> +        clocks = <&apahb_gate CLK_UFS_EB>, <&apahb_gate CLK_UFS_CFG_EB>,
->>> +            <&onapb_clk CLK_UFS_AON>, <&g51_pll CLK_TGPLL_256M>;
->>> +        freq-table-hz = <0 0>, <0 0>, <0 0>, <0 0>;
->>
->> Why this is empty? What's the use of empty table?
->>
-> 
-> freq-table-hz is used to configure the maximum frequency and minimum
-> frequency of clk, and an empty table means that no scaling up\down
-> operation is requiredfor the frequency of these clks.
+In sas_rphy_add(), the return value of transport_add_device() is
+not checked. As a result, it causes null-ptr-deref while removing
+device, because transport_remove_device() is called to remove the
+device that was not added.
 
-No, to indicate lack of scaling you skip freq-table-hz entirely, not
-provide empty one.
+Unable to handle kernel NULL pointer dereference at virtual address 0000000000000108
+pc : device_del+0x54/0x3d0
+lr : device_del+0x37c/0x3d0
+Call trace:
+ device_del+0x54/0x3d0
+ attribute_container_class_device_del+0x28/0x38
+ transport_remove_classdev+0x6c/0x80
+ attribute_container_device_trigger+0x108/0x110
+ transport_remove_device+0x28/0x38
+ sas_rphy_remove+0x50/0x78 [scsi_transport_sas]
+ sas_port_delete+0x30/0x148 [scsi_transport_sas]
+ do_sas_phy_delete+0x78/0x80 [scsi_transport_sas]
+ device_for_each_child+0x68/0xb0
+ sas_remove_children+0x30/0x50 [scsi_transport_sas]
+ sas_rphy_remove+0x38/0x78 [scsi_transport_sas]
+ sas_port_delete+0x30/0x148 [scsi_transport_sas]
+ do_sas_phy_delete+0x78/0x80 [scsi_transport_sas]
+ device_for_each_child+0x68/0xb0
+ sas_remove_children+0x30/0x50 [scsi_transport_sas]
+ sas_remove_host+0x20/0x38 [scsi_transport_sas]
+ scsih_remove+0xd8/0x420 [mpt3sas]
 
+Fix this by checking and handling return value of transport_add_device()
+in sas_rphy_add().
 
-Best regards,
-Krzysztof
+Fixes: c7ebbbce366c ("[SCSI] SAS transport class")
+Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
+---
+ drivers/scsi/scsi_transport_sas.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+index 74b99f2b0b74..accc0afa8f77 100644
+--- a/drivers/scsi/scsi_transport_sas.c
++++ b/drivers/scsi/scsi_transport_sas.c
+@@ -1526,7 +1526,11 @@ int sas_rphy_add(struct sas_rphy *rphy)
+ 	error = device_add(&rphy->dev);
+ 	if (error)
+ 		return error;
+-	transport_add_device(&rphy->dev);
++	error = transport_add_device(&rphy->dev);
++	if (error) {
++		device_del(&rphy->dev);
++		return error;
++	}
+ 	transport_configure_device(&rphy->dev);
+ 	if (sas_bsg_initialize(shost, rphy))
+ 		printk("fail to a bsg device %s\n", dev_name(&rphy->dev));
+-- 
+2.25.1
 
