@@ -2,57 +2,57 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C130FC4332F
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Nov 2022 05:30:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29DA9C4332F
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Nov 2022 05:34:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232004AbiKKFaQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Nov 2022 00:30:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57514 "EHLO
+        id S230198AbiKKFek (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Nov 2022 00:34:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58526 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232182AbiKKFaM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Nov 2022 00:30:12 -0500
-Received: from mail-ej1-x62a.google.com (mail-ej1-x62a.google.com [IPv6:2a00:1450:4864:20::62a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C55BF13D23;
-        Thu, 10 Nov 2022 21:30:11 -0800 (PST)
-Received: by mail-ej1-x62a.google.com with SMTP id bj12so10156307ejb.13;
-        Thu, 10 Nov 2022 21:30:11 -0800 (PST)
+        with ESMTP id S229461AbiKKFeh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Nov 2022 00:34:37 -0500
+Received: from mail-ed1-x532.google.com (mail-ed1-x532.google.com [IPv6:2a00:1450:4864:20::532])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8E095CD03;
+        Thu, 10 Nov 2022 21:34:36 -0800 (PST)
+Received: by mail-ed1-x532.google.com with SMTP id a5so6174382edb.11;
+        Thu, 10 Nov 2022 21:34:36 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=Gl2gTD6fyiyvGBtgAIjqdtNWW0efyP30sJQ9sWjlCnc=;
-        b=jvJH8r5f6/8wx7qVxyeAvkPZK9h+c5JyGMFc/aTuqN1r6s79kQfYLEK4XZDUH5TD4K
-         CADwyHNpLViOz0cjscCq0kcTL3732SfDfVRBf4/pXoHd1sXtFzh95ujDQflyXh2i8Y4f
-         Z/fPLAxgTJiCkIKnEY7rjdDzLJLMEJiuIrYAhf0Vu3XquWnyqbug1sCtcmA6XMvurc9G
-         eavW2HGlKGBsnkW++mWh+bb+t2pwsOiRopmudCqGSfYabYWrobfLYHDbEglX+0cBVuW4
-         CjO6eZuLcefrYCuzKEICnFY4ZTKt1Lu3f7n9e6C+HvRpN8tTSbVu7wELX6X1tN79ZZxH
-         eeqQ==
+        bh=npuUH7t8jZtW/7WS6lnnUhD3GHnWwrPrxxOd+6LRKUc=;
+        b=JUyU6npbpKhkqVghfVWeesBOt/qOhUiDgqqbp8mrRdCFv27wKaAFnkeHCM3Yp+3pmu
+         cDEI7RtaWI8rnBmWJWuY7qQAYNldWB6eudXK+ecy+num71p/q8CU3t0SXONq5k3+pRxZ
+         eyspoRFMUNDd+5WSY0KMR6+tPIaOMhdLjI2Tve+uQAXg8u2HYezxQrh9uqjj81mVjQb4
+         P7BQyx9vTpALI5kudise9WO7YbHAD0QxHi45Q9zEpdtsBa+qCffqA5a/+DjYOLyskdfM
+         oJITy1+duMIgWACGRdg4uZK/f6dA696CktIgbatgCIGyut2wzdH25Z8ol1sQ5kUB/tb/
+         PxYQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=Gl2gTD6fyiyvGBtgAIjqdtNWW0efyP30sJQ9sWjlCnc=;
-        b=gysdRVtC0/kEuXfAY7RzGnq+lQMoBMVQCQq1PpwwFh2xpuJpkOHN9WBhIAHvyvdaTn
-         oybblS78X9yIM9c/5mIiOYPdlOz+pwOF5XDB0lDz6oWDTGkg/Q+Ky+LckbjHZzFHrjpo
-         +/1WB3TUpeppS8EbkS4EWdSr3aCi+rrCyNxKBnasl1HzxH7JWL5eo4ofLOYI7HkpBhVS
-         W2Dfa3JanAELndnu2m0SCrKm7dtVRFixi7wPK+E1nRB7qUdEvuEn5DhiJGS81riMvTpP
-         vcyxfZOWv03LJdC5ZNN4Z8cqufmCuKinsC4M3PdDzF8Ik0IXq2yjM260Lu/2xK0L8tv0
-         nuiw==
-X-Gm-Message-State: ANoB5pmv3FEU1mX3lqD8tRimx5dkBAvpOTPKoBUYO2J7UcLLS9FIPaUU
-        KmYYCadUNLOWzGW3oyfVnw605bjPSTKEpldbZNU=
-X-Google-Smtp-Source: AA0mqf6MN6hD361DOq8oM0uQvWfql6CIlg1yzGXGzljbtsZbZ6hJvoZtoNNrKnqcoTdFdiMm8Zw4HVgCaNtHgXKdenA=
-X-Received: by 2002:a17:906:1d08:b0:7a9:ecc1:2bd2 with SMTP id
- n8-20020a1709061d0800b007a9ecc12bd2mr607068ejh.545.1668144610414; Thu, 10 Nov
- 2022 21:30:10 -0800 (PST)
+        bh=npuUH7t8jZtW/7WS6lnnUhD3GHnWwrPrxxOd+6LRKUc=;
+        b=bjkrfPgcv7WdpvrcwQmHs8/MmwCLq1xSN7QpIMhnZzO49FVCljsqlGwyjNKoNgEcv9
+         HB9O/hbNMRpgTYvmrMmjtNh1KOTU6T0Xci8cMR52CtMzGZ8qj1iTJcgvDIbXc4LWDt0p
+         JqOTIkKeoEI9P8jwB/ACmJXwwcCIJIp3EUZrIkMf/5PuxM4lGNmRq8y0SDAvYALUJPQj
+         AGbRv8VD58PTzgDeuHgfMXwy8FQoCneut5hLS0Mu5QsJ/i1s6/CU3nl35V6qcq8T8SiA
+         qUAmlATHRG22aiQ4yehPvRgSd39nmFhG1jGoI9hEupA0t9vjrNHlTsVeNEQ71rPtJDZg
+         XOaQ==
+X-Gm-Message-State: ANoB5plwyuddVBhFwkTU2GyQscbUlE3HKj74szInWcetGfoxi5/kzQBh
+        UD7yja4Q/jZeC4Se3kUiG0b2r+uSBxKsjirsYKE=
+X-Google-Smtp-Source: AA0mqf7XmZ6slGPr098jHVig861NAEmq6cOQtiNhBCfhcGefQm7tsyj4UD6RNdGWhMcqw75I2fBxtvgM9fJnMZF4Sa8=
+X-Received: by 2002:aa7:c649:0:b0:463:b0de:c210 with SMTP id
+ z9-20020aa7c649000000b00463b0dec210mr138855edr.10.1668144875220; Thu, 10 Nov
+ 2022 21:34:35 -0800 (PST)
 MIME-Version: 1.0
-References: <20221110133640.30522-1-zhewang116@gmail.com> <20221110133640.30522-3-zhewang116@gmail.com>
- <2a219c34-b23c-61f0-1833-2f97aa219a4e@linaro.org>
-In-Reply-To: <2a219c34-b23c-61f0-1833-2f97aa219a4e@linaro.org>
+References: <20221110133640.30522-1-zhewang116@gmail.com> <20221110133640.30522-2-zhewang116@gmail.com>
+ <4bee5178-b34c-ec4b-9773-07f368064c48@linaro.org>
+In-Reply-To: <4bee5178-b34c-ec4b-9773-07f368064c48@linaro.org>
 From:   Zhe Wang <zhewang116@gmail.com>
-Date:   Fri, 11 Nov 2022 13:29:59 +0800
-Message-ID: <CAJxzgGoHQjJKvNwC3+R66GOn0cM3bDx5Dy0PmQGmSdTTZ18XSQ@mail.gmail.com>
-Subject: Re: [PATCH 2/2] scsi: ufs-unisoc: Add support for Unisoc UFS host controller
+Date:   Fri, 11 Nov 2022 13:34:24 +0800
+Message-ID: <CAJxzgGpAPs5+HFdq=GxR4bd_27XGLdJeTqAairCOhAf-wvj_CQ@mail.gmail.com>
+Subject: Re: [PATCH 1/2] dt-bindings: ufs: Add document for Unisoc UFS host controller
 To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 Cc:     martin.petersen@oracle.com, jejb@linux.ibm.com,
         krzysztof.kozlowski+dt@linaro.org, robh+dt@kernel.org,
@@ -69,180 +69,156 @@ Hi Krzysztof,
 
 Thank you for your review!
 
-On Thu, Nov 10, 2022 at 10:31 PM Krzysztof Kozlowski
+On Thu, Nov 10, 2022 at 10:28 PM Krzysztof Kozlowski
 <krzysztof.kozlowski@linaro.org> wrote:
 >
 > On 10/11/2022 14:36, Zhe Wang wrote:
 > > From: Zhe Wang <zhe.wang1@unisoc.com>
 > >
-> > Add driver code for Unisoc ufs host controller, along with ufs
-> > initialization.
->
-> (...)
->
-> > +
-> > +static struct platform_driver ufs_sprd_pltform = {
-> > +     .probe = ufs_sprd_probe,
-> > +     .remove = ufs_sprd_remove,
-> > +     .shutdown = ufshcd_pltfrm_shutdown,
-> > +     .driver = {
-> > +             .name = "ufshcd-sprd",
-> > +             .pm = &ufs_sprd_pm_ops,
-> > +             .of_match_table = of_match_ptr(ufs_sprd_of_match),
->
-> Drop of_match_ptr
->
-
-I'll drop this.
-
-> > +     },
-> > +};
-> > +module_platform_driver(ufs_sprd_pltform);
-> > +
-> > +MODULE_AUTHOR("Zhe Wang <zhe.wang1@unisoc.com>");
-> > +MODULE_DESCRIPTION("Unisoc UFS Host Driver");
-> > +MODULE_LICENSE("GPL v2");
-> > diff --git a/drivers/ufs/host/ufs-sprd.h b/drivers/ufs/host/ufs-sprd.h
+> > Add Unisoc ums9620 ufs host controller devicetree document.
+> >
+> > Signed-off-by: Zhe Wang <zhe.wang1@unisoc.com>
+> > ---
+> >  .../devicetree/bindings/ufs/sprd,ufs.yaml     | 72 +++++++++++++++++++
+> >  1 file changed, 72 insertions(+)
+> >  create mode 100644 Documentation/devicetree/bindings/ufs/sprd,ufs.yaml
+> >
+> > diff --git a/Documentation/devicetree/bindings/ufs/sprd,ufs.yaml b/Documentation/devicetree/bindings/ufs/sprd,ufs.yaml
 > > new file mode 100644
-> > index 000000000000..215e7483d1e8
+> > index 000000000000..88f2c670b0a4
 > > --- /dev/null
-> > +++ b/drivers/ufs/host/ufs-sprd.h
-> > @@ -0,0 +1,125 @@
-> > +/* SPDX-License-Identifier: GPL-2.0-only */
-> > +/*
-> > + * UNISOC UFS Host Controller driver
-> > + *
-> > + * Copyright (C) 2022 Unisoc, Inc.
-> > + * Author: Zhe Wang <zhe.wang1@unisoc.com>
-> > + */
-> > +
-> > +#ifndef _UFS_SPRD_H_
-> > +#define _UFS_SPRD_H_
-> > +
-> > +#define APB_UFSDEV_REG               0xCE8
-> > +#define APB_UFSDEV_REFCLK_EN 0x2
-> > +#define APB_USB31PLL_CTRL    0xCFC
-> > +#define APB_USB31PLLV_REF2MPHY       0x1
-> > +
-> > +#define SPRD_SIP_SVC_STORAGE_UFS_CRYPTO_ENABLE                               \
-> > +     ARM_SMCCC_CALL_VAL(ARM_SMCCC_FAST_CALL,                         \
-> > +                        ARM_SMCCC_SMC_32,                            \
-> > +                        ARM_SMCCC_OWNER_SIP,                         \
-> > +                        0x0301)
-> > +
-> > +enum SPRD_UFS_CLK_INDEX {
-> > +     SPRD_UFS_HCLK,
-> > +     SPRD_UFS_HCLK_SOURCE,
-> > +
-> > +     SPRD_UFS_CLK_MAX
-> > +};
-> > +
-> > +enum SPRD_UFS_RST_INDEX {
-> > +     SPRD_UFSHCI_SOFT_RST,
-> > +     SPRD_UFS_DEV_RST,
-> > +
-> > +     SPRD_UFS_RST_MAX
-> > +};
-> > +
-> > +enum SPRD_UFS_SYSCON_INDEX {
-> > +     SPRD_UFS_ANLG_REG,
-> > +     SPRD_UFS_AON_APB,
-> > +
-> > +     SPRD_UFS_SYSCON_MAX
-> > +};
-> > +
-> > +enum SPRD_UFS_VREG_INDEX {
-> > +     SPRD_UFS_VDD_MPHY,
-> > +
-> > +     SPRD_UFS_VREG_MAX
-> > +};
-> > +
-> > +struct ufs_sprd_clk {
-> > +     const char *name;
-> > +     struct clk *clk;
-> > +};
-> > +
-> > +struct ufs_sprd_rst {
-> > +     const char *name;
-> > +     struct reset_control *rc;
-> > +};
-> > +
-> > +struct ufs_sprd_syscon {
-> > +     const char *name;
-> > +     struct regmap *regmap;
-> > +};
-> > +
-> > +struct ufs_sprd_vreg {
-> > +     const char *name;
-> > +     struct regulator *vreg;
-> > +};
-> > +
-> > +struct ufs_sprd_priv {
-> > +     struct ufs_sprd_clk clki[SPRD_UFS_CLK_MAX];
-> > +     struct ufs_sprd_rst rci[SPRD_UFS_RST_MAX];
-> > +     struct ufs_sprd_syscon sysci[SPRD_UFS_SYSCON_MAX];
-> > +     struct ufs_sprd_vreg vregi[SPRD_UFS_VREG_MAX];
-> > +     const struct ufs_hba_variant_ops ufs_hba_sprd_vops;
-> > +};
-> > +
-> > +struct ufs_sprd_host {
-> > +     struct ufs_hba *hba;
-> > +     struct ufs_sprd_priv *priv;
-> > +     void __iomem *ufs_dbg_mmio;
-> > +
-> > +     enum ufs_unipro_ver unipro_ver;
-> > +};
-> > +
-> > +static inline struct ufs_sprd_priv *ufs_sprd_get_priv_data(struct ufs_hba *hba)
-> > +{
-> > +     struct ufs_sprd_host *host = ufshcd_get_variant(hba);
-> > +
-> > +     WARN_ON(!host->priv);
-> > +     return host->priv;
-> > +}
-> > +
-> > +static inline void ufs_sprd_regmap_update(struct ufs_sprd_priv *priv, unsigned int index,
-> > +             unsigned int reg, unsigned int bits,  unsigned int val)
-> > +{
-> > +     regmap_update_bits(priv->sysci[index].regmap, reg, bits, val);
-> > +}
-> > +
-> > +static inline void ufs_sprd_regmap_read(struct ufs_sprd_priv *priv, unsigned int index,
-> > +             unsigned int reg, unsigned int *val)
-> > +{
-> > +     regmap_read(priv->sysci[index].regmap, reg, val);
-> > +}
-> > +
-> > +static inline void ufs_sprd_get_unipro_ver(struct ufs_hba *hba)
-> > +{
-> > +     struct ufs_sprd_host *host = ufshcd_get_variant(hba);
-> > +
-> > +     if (ufshcd_dme_get(hba, UIC_ARG_MIB(PA_LOCALVERINFO), &host->unipro_ver))
-> > +             host->unipro_ver = 0;
-> > +}
-> > +
-> > +static inline void ufs_sprd_ctrl_uic_compl(struct ufs_hba *hba, bool enable)
-> > +{
-> > +     u32 set = ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
-> > +
-> > +     if (enable == true)
-> > +             set |= UIC_COMMAND_COMPL;
-> > +     else
-> > +             set &= ~UIC_COMMAND_COMPL;
-> > +     ufshcd_writel(hba, set, REG_INTERRUPT_ENABLE);
-> > +}
+> > +++ b/Documentation/devicetree/bindings/ufs/sprd,ufs.yaml
 >
-> Drop functions from headers. These are not stubs and your task is not to
-> micro-optimize code.
+>
+> Filename matching the compatible, so sprd,ums9620-ufs.yaml, unless you
+> expect this to grow already? If so, can you post the rest?
 >
 
-Will move these functions to c file.
+Currently only ums9620 will be uploaded, I'll fix it.
+
+> > @@ -0,0 +1,72 @@
+> > +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+> > +%YAML 1.2
+> > +---
+> > +$id: http://devicetree.org/schemas/ufs/sprd,ufs.yaml#
+> > +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> > +
+> > +title: Unisoc Universal Flash Storage (UFS) Controller
+> > +
+> > +maintainers:
+> > +  - Zhe Wang <zhe.wang1@unisoc.com>
+> > +
+> > +allOf:
+> > +  - $ref: ufs-common.yaml
+> > +
+> > +properties:
+> > +  compatible:
+> > +    enum:
+> > +      - sprd,ums9620-ufs
+> > +
+> > +  clocks:
+> > +    maxItems: 2
+> > +
+> > +  clock-names:
+> > +    items:
+> > +      - const: hclk
+> > +      - const: hclk_source
+>
+> Can you make these descriptive? "clk" is redundant, so basically you are
+> saying name is "h" and "h_source"?
+>
+
+I'll fix it.
+
+> > +
+> > +  resets:
+> > +    maxItems: 2
+> > +
+> > +  reset-names:
+> > +    items:
+> > +      - const: ufs_soft_rst
+> > +      - const: ufsdev_soft_rst
+>
+> Drop "_rst" from both.
+>
+
+Will remove this.
+
+> > +
+> > +  sprd,ufs-anly-reg-syscon:
+> > +    $ref: /schemas/types.yaml#/definitions/phandle
+> > +    description: phandle of syscon used to control ufs analog reg.
+>
+> It's a reg? Then such syntax is expected:
+> https://elixir.bootlin.com/linux/v5.18-rc1/source/Documentation/devicetree/bindings/soc/samsung/exynos-usi.yaml#L42
+>
+>
+
+I will modify it based on this example.
+
+> > +  sprd,aon-apb-syscon:
+> > +    $ref: /schemas/types.yaml#/definitions/phandle
+> > +    description: phandle of syscon used to control always-on reg.
+>
+> It's a reg? Then such syntax is expected:
+> https://elixir.bootlin.com/linux/v5.18-rc1/source/Documentation/devicetree/bindings/soc/samsung/exynos-usi.yaml#L42
+>
+
+I will modify it based on this example.
+
+> > +
+> > +required:
+> > +  - compatible
+> > +  - reg
+> > +  - clocks
+> > +  - clock-names
+> > +  - resets
+> > +
+> > +unevaluatedProperties: false
+> > +
+> > +examples:
+> > +  - |
+> > +    ufs: ufs@22000000 {
+> > +        compatible = "sprd,ums9620-ufs";
+> > +        reg = <0x22000000 0x3000>;
+> > +        interrupts = <GIC_SPI 159 IRQ_TYPE_LEVEL_HIGH>;
+> > +        vcc-supply = <&vddemmcore>;
+> > +        vdd-mphy-supply = <&vddufs1v2>;
+> > +        clocks-name = "ufs_eb", "ufs_cfg_eb",
+> > +            "ufs_hclk", "ufs_hclk_source";
+>
+> Align the lines.
+>
+
+I'll fix it.
+
+> > +        clocks = <&apahb_gate CLK_UFS_EB>, <&apahb_gate CLK_UFS_CFG_EB>,
+> > +            <&onapb_clk CLK_UFS_AON>, <&g51_pll CLK_TGPLL_256M>;
+> > +        freq-table-hz = <0 0>, <0 0>, <0 0>, <0 0>;
+>
+> Why this is empty? What's the use of empty table?
+>
+
+freq-table-hz is used to configure the maximum frequency and minimum
+frequency of clk, and an empty table means that no scaling up\down
+operation is requiredfor the frequency of these clks.
+
+> > +        reset-names = "ufs_soft_rst", "ufsdev_soft_rst";
+> > +        resets = <&apahb_gate RESET_AP_AHB_UFS_SOFT_RST>,
+> > +            <&aonapb_gate RESET_AON_APB_UFSDEV_SOFT_RST>;
+> > +        sprd,ufs-anly-reg-syscon = <&anly_phy_g12_regs>;
+> > +        sprd,aon-apb-syscon = <&aon_apb_regs>;
+> > +        status = "disable";
+>
+> Drop status.
+>
+
+Will remove this.
 
 Best regards,
 Zhe Wang
 
-> > +
-> > +#endif /* _UFS_SPRD_H_ */
+> > +    };
 >
 > Best regards,
 > Krzysztof
