@@ -2,123 +2,159 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11DBCC433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Nov 2022 10:05:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC577C4332F
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Nov 2022 10:24:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233416AbiKKKFn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Nov 2022 05:05:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47146 "EHLO
+        id S233048AbiKKKX7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Nov 2022 05:23:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60942 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233102AbiKKKFl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Nov 2022 05:05:41 -0500
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62F9C1A203;
-        Fri, 11 Nov 2022 02:05:40 -0800 (PST)
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 2AB9jdfB026728;
-        Fri, 11 Nov 2022 10:05:36 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-transfer-encoding;
- s=corp-2022-7-12; bh=r9IxkJsE3GIu/PmZ1JLTRNQDdYBAZCYJzCL6kurRVTI=;
- b=hvPt/Fz93QTt8mQ+znKdaVwdZNve48del3RynzOrzTclcI5lmrA6vNqRxnRn0MHKhyMl
- So8QEplZWFWSsf67zibh3nRtSt1RQFbPnFwb4UibOu3Q9HriQPgRBURv2WQLOum4YSVK
- ptG//bDEBajVTcHzGBGrxKZ+nuxf/X+RElkT09S0p3qAJe9/CINVYT3SLuI4bULWam0F
- oAZn4LFtTbdT9fvUk8VCPV9q/Rz0HlQlxRG3m0SYV5V12D/txtCts3i15RHwRTqRjS7v
- puNHA1AoYfaVrk9VetggPKRY1aGPiMFhF7jNZt7XaVtWeB3Z6bZFw4n7Q6OhWw/dyARw Zg== 
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3ksm1sg5f1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 11 Nov 2022 10:05:36 +0000
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2ABA3KL4038310;
-        Fri, 11 Nov 2022 10:05:35 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3kpctgdy1q-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 11 Nov 2022 10:05:35 +0000
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 2ABA3kVb040152;
-        Fri, 11 Nov 2022 10:05:35 GMT
-Received: from ca-dev112.us.oracle.com (ca-dev112.us.oracle.com [10.129.136.47])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3kpctgdy1b-1;
-        Fri, 11 Nov 2022 10:05:35 +0000
-From:   Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>
-Cc:     harshit.m.mogalapalli@oracle.com, error27@gmail.com,
-        harshit.m.mogalapalli@gmail.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Douglas Gilbert <dgilbert@interlog.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: scsi_debug: Fix a warning in resp_write_scat()
-Date:   Fri, 11 Nov 2022 02:05:25 -0800
-Message-Id: <20221111100526.1790533-1-harshit.m.mogalapalli@oracle.com>
-X-Mailer: git-send-email 2.31.1
+        with ESMTP id S233692AbiKKKXh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Nov 2022 05:23:37 -0500
+Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABF68EA4
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Nov 2022 02:22:58 -0800 (PST)
+Received: by mail-pj1-x1034.google.com with SMTP id b1-20020a17090a7ac100b00213fde52d49so4347823pjl.3
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Nov 2022 02:22:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=mime-version:message-id:date:subject:cc:to:from:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=Mxxof+Jmiy20EGQjDLp7bPE7vLo/LDdVQnFmL7UVLlc=;
+        b=LZJOghw5y0+Iq5OL4+CJUpf5mTqSQWIAmyu25R1I/STnx6FhFr6VF3UccYufCaqehG
+         MZzQBRQ3f7m2fYq0R4QwGFRBAYAPJPDq879n7WK0VMzZYUgbFt5y6JJCtbmUkgfZaFUZ
+         lcPXlZ4vYQjNb8VIF66Y15xD+QweA1dfRZRfU=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=mime-version:message-id:date:subject:cc:to:from:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=Mxxof+Jmiy20EGQjDLp7bPE7vLo/LDdVQnFmL7UVLlc=;
+        b=Aahw6ZWwTxwns9C1NghLwTneWSht6zS8Kc5pfWXRIqVDHhBwlqVrthlgnUrC0XULMi
+         3seabWyfluk0az3mBpyg+1+fXvXxhB5nAa31NDiDwdtcWdjG4J3RXRP/7TPyefnvyz2A
+         49CgGw3OZkzbnJZGHyERQDUQ8e9EypvHLbRhy8Dgg8eYvAGjTlox9ZZ/hbUyLhUvxwI+
+         1e2Y3CIhPDIm8XHywWmMH6jIt4FmqBorde/Y5RixjHyxJQMyXONkQiHxqJ5ZPzjbfhWH
+         Tz5DjBvzm6k51kcAdTCwJI0+UwHVnoo0Gv6keVcUivfbNAEajV6vUJl25oCxor3jxtkW
+         TJVA==
+X-Gm-Message-State: ANoB5pkMkrc9Cnb2Lhv4CLmGahQzMkF/A6Kj1kKZnDbXIqRcvI1LGpIu
+        JSiNDO/vfWGO2k3MesPU/M1esdf6oqQ4xoELUcQOSpXYBAcii7TFAk7Ik23C0J/kESTe9bMbzAK
+        P7o6hgGvfB8Qp880IHbQiS9Z4mleITwGiF366IF1BFWDWxMoGhIuxfNoR86i8+fYZschJ1tmpSM
+        Bg3O4fssiI
+X-Google-Smtp-Source: AA0mqf4V1PW3h9eqEOK7L3BdnepyPRsGRniSozZZs7Mba6wmj3HlIdY2b44hW92C6rmGE2h+z9SXOA==
+X-Received: by 2002:a17:90a:e64b:b0:20d:b124:33b1 with SMTP id ep11-20020a17090ae64b00b0020db12433b1mr1130340pjb.202.1668162177707;
+        Fri, 11 Nov 2022 02:22:57 -0800 (PST)
+Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id p129-20020a622987000000b0055f209690c0sm1240691pfp.50.2022.11.11.02.22.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 11 Nov 2022 02:22:56 -0800 (PST)
+From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: [PATCH 0/1] mpi3mr: Remove usage of dma_get_required_mask api
+Date:   Fri, 11 Nov 2022 15:52:45 +0530
+Message-Id: <20221111102246.19995-1-sreekanth.reddy@broadcom.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2022-11-11_05,2022-11-11_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxscore=0 spamscore=0
- bulkscore=0 suspectscore=0 adultscore=0 malwarescore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2210170000
- definitions=main-2211110067
-X-Proofpoint-ORIG-GUID: ySnVW40xYn-1dsdHGU3cCq2rqoWCQt0m
-X-Proofpoint-GUID: ySnVW40xYn-1dsdHGU3cCq2rqoWCQt0m
-To:     unlisted-recipients:; (no To-header on input)
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="0000000000000f182f05ed2f4668"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-As 'lbdof_blen' is coming from user, if the size in kzalloc()
-is >= MAX_ORDER then we hit a warning.
+--0000000000000f182f05ed2f4668
+Content-Transfer-Encoding: 8bit
 
-Call trace:
+Directly set the dma mask to 63 if the system is a 64 bit machine
+otherwise set the dma mask to 32bit.
 
-sg_ioctl
- sg_ioctl_common
-   scsi_ioctl
-    sg_scsi_ioctl
-     blk_execute_rq
-      blk_mq_sched_insert_request
-       blk_mq_run_hw_queue
-        __blk_mq_delay_run_hw_queue
-         __blk_mq_run_hw_queue
-          blk_mq_sched_dispatch_requests
-           __blk_mq_sched_dispatch_requests
-            blk_mq_dispatch_rq_list
-             scsi_queue_rq
-              scsi_dispatch_cmd
-               scsi_debug_queuecommand
-                schedule_resp
-                 resp_write_scat
+Sreekanth Reddy (1):
+  mpi3mr: Remove usage of dma_get_required_mask api
 
-If you try to allocate a memory larger than(>=) MAX_ORDER, then kmalloc()
-will definitely fail.  It creates a stack trace and messes up dmesg.
-The user controls the size here so if they specify a too large size it
-will fail.
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Add __GFP_NOWARN in order to avoid too large allocation warning.
-This is detected by static analysis using smatch.
-
-Fixes: 481b5e5c7949 ("scsi: scsi_debug: add resp_write_scat function")
-Signed-off-by: Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>
----
- drivers/scsi/scsi_debug.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 697fc57bc711..273224d29ce9 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -3778,7 +3778,7 @@ static int resp_write_scat(struct scsi_cmnd *scp,
- 		mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB, 0);
- 		return illegal_condition_result;
- 	}
--	lrdp = kzalloc(lbdof_blen, GFP_ATOMIC);
-+	lrdp = kzalloc(lbdof_blen, GFP_ATOMIC | __GFP_NOWARN);
- 	if (lrdp == NULL)
- 		return SCSI_MLQUEUE_HOST_BUSY;
- 	if (sdebug_verbose)
 -- 
-2.38.1
+2.27.0
 
+
+--0000000000000f182f05ed2f4668
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+vZXeqKYupAd0/kWANIYKfeXvBSrhLTL/JLyu02jrKwUQmNeV/csW4n51mmbQyz5VRjLIaM9r93rl
+EKIoHplnybLWh6glNdzUbh+wpglCjssypREDVGZjlDD7NS2Q6FUCAwEAAaOCAd0wggHZMA4GA1Ud
+DwEB/wQEAwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9zZWN1cmUu
+Z2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNydDBBBggr
+BgEFBQcwAYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJj
+YTIwMjAwTQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3
+Lmdsb2JhbHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+oDygOoY4
+aHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcmww
+JwYDVR0RBCAwHoEcc3JlZWthbnRoLnJlZGR5QGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEF
+BQcDBDAfBgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQU90fCF++yKdqz
+eSa+l3ox+Xh3bUUwDQYJKoZIhvcNAQELBQADggEBAEdSkxxx3jOPvsTAmqeChWssN7WYUZOhNQu/
++6bxE3/kn9StH6miItK87eIRsO0FFVLDJBnhWz0EGzWEliC68mV8ecDApK5douyO1VfXN8awZZ33
+i/RQS2sGbz1vIfPu54rtnwXGoUiXRaSOz0pLy/JRCFyHOj+8GKauKkyrUWiD0j1xPTJ1p8/KOyKd
+hPIHLRxnZxqpa2GjCtl3IYjKK8WbWx0NXkszaVTVRIn8e++VyiiH/yFXVyOEQxkZRQZWzTjPE9o/
+R31F09e8yABfehc+e00bSP23FKNuA8dwS29RHLpjmd+m5EtbFGD4EUANHzCSTA89S/iWNoaWteab
+v6IxggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
+MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwftyuc
+ixn6z19iSQwwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEINBvOQ6Z8g++U7a/lLnX
+qBANJ6jwhvzAF8Xg2SUwY48rMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMTExMTEwMjI1OFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCKkFOMjQBhHu73hMCRiWlY7JWGXfS6uVV8IfYh
+RXX2pZ8peQq8LIOZpm8grOL9MomCBN7hnjAOKNJ6Y+qZpr1kTjfbbcbaWRFCKYr5l6lFC2/R7xbB
+vco7pWFMctHlBq7FAVQKBobWI7/CUiciOLw7cvUID6B/a+Ivo8TQrhHTSrOto/9zDX52IgJBgp6M
+68xsWkV69FhFpQc75zPHhHRXqrunVZYue9Rr9rnYM9aM0qNPJw5Z9Ha2SNZpkJPWh1SQZ6XqVcye
+xdjVrFrbAcGInO9SQa9rWnuTjgf9tzlk+Z/En5NI5CxBuka86so9tiqjHIFgKjs2yMdo0PlsxnxD
+--0000000000000f182f05ed2f4668--
