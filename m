@@ -2,98 +2,115 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB979C4332F
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Nov 2022 17:09:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0786BC43217
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Nov 2022 17:30:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234294AbiKKRJN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Nov 2022 12:09:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47842 "EHLO
+        id S233714AbiKKRa5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Nov 2022 12:30:57 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34658 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234340AbiKKRIx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Nov 2022 12:08:53 -0500
-Received: from mail-wm1-x32c.google.com (mail-wm1-x32c.google.com [IPv6:2a00:1450:4864:20::32c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8B4410C5;
-        Fri, 11 Nov 2022 09:08:26 -0800 (PST)
-Received: by mail-wm1-x32c.google.com with SMTP id t4so3275247wmj.5;
-        Fri, 11 Nov 2022 09:08:26 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=2IWLrD4C46aKmQaLw0mo+60fQZJP9UtxE6QzQixWpf0=;
-        b=Rg7o/CAwJNOUBY+WgCJx82bsbnycLUEJXepv4OfsHgtFrGyVLodrTz5vwPK6SuAdgI
-         KuUyvVDND9kjb2Ri87mvmCkF0RxUiYj9RTDxJR/p09+Qq2CQVZswlyjVZC4Qlx5MTTIy
-         EXptI8ZfrzP2uj/N6IsLkJBllo7BdpvekfN3ufwaOYCNEBn7E40DdHAHBf1/yIMvcl8Z
-         3N/dEQ9QomhQRIvfinUkPGMwUTa4jKPS/HgjE3xl/4PcTeUBIWCwqqUte01lYhk60djL
-         DWHyWSqKW1HjhgtDcvjGccp3KReIzrAAzq6rGUuRnnAfrFi36x6oXzExcuksltFgiRmo
-         7wuw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=2IWLrD4C46aKmQaLw0mo+60fQZJP9UtxE6QzQixWpf0=;
-        b=j6NxtPRW2svn0bV4O6d1DbfRXGN5RVR7An2c4zBnlnhUMU8/jE1Hd0qnCzWETewh4d
-         hFQh/BP6d0c5bmGh7tu0h6J+9Ax61UcXvdmN/h8jKhE3lDKAfYI9rniw55K0t/l4liUC
-         ymXYGBDBvmeoZ3pVyHdkLCd5uiCZNl3O5FCue9utd2KW4fcKGxHMmGVsjGMGfChr9fTe
-         EMjnZiUizlejWhxYGbwr69qdoN5frzA7qTIxCckZfTKp8JE9M/ZQiENSuqHumuinb3mX
-         +H8QKIo0lyD2NsOgTNecGo1Z11Q6FXI/WIU3DSbXsINoqNlyrNEsjt2RC4S7S6fZU4U9
-         r2AA==
-X-Gm-Message-State: ANoB5pl7mr1Wc+m4Jm7LKy8TkdCRaAcJ6jyOBC4obU32g2+DRu0w1ofE
-        dYAPvwNNu47WhejPNNZEU8o=
-X-Google-Smtp-Source: AA0mqf4LJMTdCQTNJbQup7NUSrFUhZdGqyD1CMJTEdnoMr2UPl9V0WxOXCDwQkEkDM3yBCkDpIOkAw==
-X-Received: by 2002:a05:600c:3489:b0:3cf:8731:8110 with SMTP id a9-20020a05600c348900b003cf87318110mr1998435wmq.32.1668186505245;
-        Fri, 11 Nov 2022 09:08:25 -0800 (PST)
-Received: from localhost (cpc154979-craw9-2-0-cust193.16-3.cable.virginm.net. [80.193.200.194])
-        by smtp.gmail.com with ESMTPSA id f7-20020adfe907000000b0023677081f3asm2322425wrm.42.2022.11.11.09.08.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 11 Nov 2022 09:08:24 -0800 (PST)
-From:   Colin Ian King <colin.i.king@gmail.com>
-To:     Hannes Reinecke <hare@suse.de>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: libfc: remove redundant variable ev_qual
-Date:   Fri, 11 Nov 2022 17:08:24 +0000
-Message-Id: <20221111170824.558250-1-colin.i.king@gmail.com>
-X-Mailer: git-send-email 2.38.1
+        with ESMTP id S232372AbiKKRa4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Nov 2022 12:30:56 -0500
+X-Greylist: delayed 420 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 11 Nov 2022 09:30:54 PST
+Received: from mp-relay-02.fibernetics.ca (mp-relay-02.fibernetics.ca [208.85.217.137])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1EAEFAEA;
+        Fri, 11 Nov 2022 09:30:54 -0800 (PST)
+Received: from mailpool-fe-02.fibernetics.ca (mailpool-fe-02.fibernetics.ca [208.85.217.145])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mp-relay-02.fibernetics.ca (Postfix) with ESMTPS id 704576F8DD;
+        Fri, 11 Nov 2022 17:23:52 +0000 (UTC)
+Received: from localhost (mailpool-mx-01.fibernetics.ca [208.85.217.140])
+        by mailpool-fe-02.fibernetics.ca (Postfix) with ESMTP id 5789B604F8;
+        Fri, 11 Nov 2022 17:23:52 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at 
+Received: from mailpool-fe-02.fibernetics.ca ([208.85.217.145])
+        by localhost (mail-mx-01.fibernetics.ca [208.85.217.140]) (amavisd-new, port 10024)
+        with ESMTP id gs7efaBP5g_h; Fri, 11 Nov 2022 17:23:52 +0000 (UTC)
+Received: from [192.168.48.17] (host-45-78-203-98.dyn.295.ca [45.78.203.98])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: dgilbert@interlog.com)
+        by mail.ca.inter.net (Postfix) with ESMTPSA id A788D601E4;
+        Fri, 11 Nov 2022 17:23:51 +0000 (UTC)
+Message-ID: <ffef9612-00da-43d2-caad-4f71a7ef7e44@interlog.com>
+Date:   Fri, 11 Nov 2022 12:23:51 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.2
+Reply-To: dgilbert@interlog.com
+Subject: Re: [PATCH] scsi: scsi_debug: Fix a warning in resp_write_scat()
+To:     Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>
+Cc:     error27@gmail.com, harshit.m.mogalapalli@gmail.com,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20221111100526.1790533-1-harshit.m.mogalapalli@oracle.com>
+Content-Language: en-CA
+From:   Douglas Gilbert <dgilbert@interlog.com>
+In-Reply-To: <20221111100526.1790533-1-harshit.m.mogalapalli@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Variable ev_qual is being assigned and modified but the end result
-is never used. The variable is redundant and can be removed.
+On 2022-11-11 05:05, Harshit Mogalapalli wrote:
+> As 'lbdof_blen' is coming from user, if the size in kzalloc()
+> is >= MAX_ORDER then we hit a warning.
+> 
+> Call trace:
+> 
+> sg_ioctl
+>   sg_ioctl_common
+>     scsi_ioctl
+>      sg_scsi_ioctl
+>       blk_execute_rq
+>        blk_mq_sched_insert_request
+>         blk_mq_run_hw_queue
+>          __blk_mq_delay_run_hw_queue
+>           __blk_mq_run_hw_queue
+>            blk_mq_sched_dispatch_requests
+>             __blk_mq_sched_dispatch_requests
+>              blk_mq_dispatch_rq_list
+>               scsi_queue_rq
+>                scsi_dispatch_cmd
+>                 scsi_debug_queuecommand
+>                  schedule_resp
+>                   resp_write_scat
+> 
+> If you try to allocate a memory larger than(>=) MAX_ORDER, then kmalloc()
+> will definitely fail.  It creates a stack trace and messes up dmesg.
+> The user controls the size here so if they specify a too large size it
+> will fail.
+> 
+> Add __GFP_NOWARN in order to avoid too large allocation warning.
+> This is detected by static analysis using smatch.
+> 
+> Fixes: 481b5e5c7949 ("scsi: scsi_debug: add resp_write_scat function")
+> Signed-off-by: Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>
 
-Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
----
- drivers/scsi/libfc/fc_disc.c | 3 ---
- 1 file changed, 3 deletions(-)
+Acked-by: Douglas Gilbert <dgilbert@interlog.com>
 
-diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
-index 942fc60f7c21..0f32ded246d0 100644
---- a/drivers/scsi/libfc/fc_disc.c
-+++ b/drivers/scsi/libfc/fc_disc.c
-@@ -75,7 +75,6 @@ static void fc_disc_recv_rscn_req(struct fc_disc *disc, struct fc_frame *fp)
- 	struct fc_seq_els_data rjt_data;
- 	unsigned int len;
- 	int redisc = 0;
--	enum fc_els_rscn_ev_qual ev_qual;
- 	enum fc_els_rscn_addr_fmt fmt;
- 	LIST_HEAD(disc_ports);
- 	struct fc_disc_port *dp, *next;
-@@ -107,8 +106,6 @@ static void fc_disc_recv_rscn_req(struct fc_disc *disc, struct fc_frame *fp)
- 		goto reject;
- 
- 	for (pp = (void *)(rp + 1); len > 0; len -= sizeof(*pp), pp++) {
--		ev_qual = pp->rscn_page_flags >> ELS_RSCN_EV_QUAL_BIT;
--		ev_qual &= ELS_RSCN_EV_QUAL_MASK;
- 		fmt = pp->rscn_page_flags >> ELS_RSCN_ADDR_FMT_BIT;
- 		fmt &= ELS_RSCN_ADDR_FMT_MASK;
- 		/*
--- 
-2.38.1
+Thanks.
+
+> ---
+>   drivers/scsi/scsi_debug.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index 697fc57bc711..273224d29ce9 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -3778,7 +3778,7 @@ static int resp_write_scat(struct scsi_cmnd *scp,
+>   		mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB, 0);
+>   		return illegal_condition_result;
+>   	}
+> -	lrdp = kzalloc(lbdof_blen, GFP_ATOMIC);
+> +	lrdp = kzalloc(lbdof_blen, GFP_ATOMIC | __GFP_NOWARN);
+>   	if (lrdp == NULL)
+>   		return SCSI_MLQUEUE_HOST_BUSY;
+>   	if (sdebug_verbose)
 
