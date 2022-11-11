@@ -2,98 +2,179 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B1FEC433FE
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Nov 2022 22:22:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39290C43219
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Nov 2022 01:13:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231592AbiKJWWc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Nov 2022 17:22:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38652 "EHLO
+        id S231818AbiKKBNl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Nov 2022 20:13:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39088 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231396AbiKJWWT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Nov 2022 17:22:19 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3782D53EF1
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Nov 2022 14:22:14 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id D2198B823C8
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Nov 2022 22:22:12 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 83C0AC433B5
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Nov 2022 22:22:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1668118931;
-        bh=/o2nuO/xrM6A/dvftD+CG9ec2LrjQqRbmch04whpc0c=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=eknqGJ68Va7stZ1SR+tPm7wXjczwnTfFI1DWB7cZ5Ra31Y8c+c9XLd/B2Kutylb/I
-         ZAh9ZXfGgWkOq6NkeUKnTaZGmI4YZ1yt8d6HVrUT9TzClW7vNN/f9U9XV7KkGPbN0P
-         cIQVeOqteOAjZlNPwg/cNSY9s87qH3ZJoJ421qsi8sgNSms1EZiFnBBdt3uRNfVbpg
-         VR0l0I2+D4Sh39tBjYUD9MvYq0GS1iwX8oivOyL6NSqyNLeLejUiEPBd44dqYwbBcz
-         3ku5uahtEXmv70Okr3STHqAeVxsbUdoEXE1b1G6sffWUUuh7dt6m9ecvTSt+XcxsgN
-         6769DNP9bN6Fw==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 6F179C433E6; Thu, 10 Nov 2022 22:22:11 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 215943] UBSAN: array-index-out-of-bounds in
- drivers/scsi/megaraid/megaraid_sas_fp.c:103:32
-Date:   Thu, 10 Nov 2022 22:22:11 +0000
-X-Bugzilla-Reason: AssignedTo
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: None
-X-Bugzilla-Product: IO/Storage
-X-Bugzilla-Component: SCSI
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: devzero@web.de
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: cc
-Message-ID: <bug-215943-11613-ClinN3WsuA@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-215943-11613@https.bugzilla.kernel.org/>
-References: <bug-215943-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        with ESMTP id S229579AbiKKBNj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Nov 2022 20:13:39 -0500
+Received: from tarta.nabijaczleweli.xyz (unknown [139.28.40.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1F5AE224;
+        Thu, 10 Nov 2022 17:13:38 -0800 (PST)
+Received: from tarta.nabijaczleweli.xyz (unknown [192.168.1.250])
+        by tarta.nabijaczleweli.xyz (Postfix) with ESMTPSA id 82334918;
+        Fri, 11 Nov 2022 02:13:34 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=nabijaczleweli.xyz;
+        s=202211; t=1668129214;
+        bh=ilUGduLEOs7ZM1kAskrzDNpvJ7eDc5/y3SOXXESYTGw=;
+        h=Date:From:Cc:Subject:From;
+        b=FkCxNcv8DARzu4hTgKTxYybGTV0gAvdeWdPbJzoK74xOlXN0BBsjbzHIom/lDm5v8
+         GqZzlWqksD5ixxvgY+U01byxjfKa7pFMA1iWKRHBUpxmSthi1/gbfuFvdUoY1q0F7o
+         R5e/pG22z9qRUJLJIzgZOR722OrdGgSvqQJAYGp4OG3hIKUQJtNxpsvGv/Mj6VrWuY
+         JpCSgQjxGCDz/yp/ZiO3hI1dEy3YQiPHBiF6bDykixnHGfgCVGATV1JufPSTcT3OFw
+         GlJSk0G6UjO5kSWo1H7vhdmoZI29GLyOA0bbCVDZ0Jzh3GFehd5qqMFcJhuJehKZTO
+         plzAPWXELL+qg==
+Date:   Fri, 11 Nov 2022 02:13:33 +0100
+From:   Ahelenia =?utf-8?Q?Ziemia=C5=84ska?= 
+        <nabijaczleweli@nabijaczleweli.xyz>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Kees Cook <keescook@chromium.org>, coda@cs.cmu.edu,
+        codalist@coda.cs.cmu.edu, linux-arm-kernel@lists.infradead.org,
+        linux-doc-tw-discuss@lists.sourceforge.net,
+        linux-doc@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-hams@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-mips@vger.kernel.org, linux-scsi@vger.kernel.org,
+        netdev@vger.kernel.org, x86@kernel.org
+Subject: [PATCH v3 00/15] magic-number.rst funeral rites
+Message-ID: <cover.1668128257.git.nabijaczleweli@nabijaczleweli.xyz>
 MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="7w2pfo4anlfzv5kh"
+Content-Disposition: inline
+User-Agent: NeoMutt/20220429
+To:     unlisted-recipients:; (no To-header on input)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D215943
 
-Roland Kletzing (devzero@web.de) changed:
+--7w2pfo4anlfzv5kh
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |devzero@web.de
+This is a follow-up for the 18+1-patch series (
+https://lore.kernel.org/linux-kernel/8389a7b85b5c660c6891b1740b5dacc53491a4=
+1b.1663280877.git.nabijaczleweli@nabijaczleweli.xyz/
+https://lore.kernel.org/linux-kernel/20220927003727.slf4ofb7dgum6apt@tarta.=
+nabijaczleweli.xyz/
+) I sent in September, and the same reasoning applies:
 
---- Comment #9 from Roland Kletzing (devzero@web.de) ---
-is this a serious issue or only cosmetic one?=20=20
+The entire file blames back to the start of git
+(minus whitespace from the RST translation and a typo fix):
+  * there are changelog comments for March 1994 through to Linux 2.5.74
+  * struct tty_ldisc is two pointers nowadays, so naturally no magic
+  * GDA_MAGIC is defined but unused, and it's been this way
+    since start-of-git
+  * M3_CARD_MAGIC isn't defined, because
+    commit d56b9b9c464a ("[PATCH] The scheduled removal of some OSS
+    drivers") removed the entire driver in 2006
+  * CS_CARD_MAGIC likewise since
+    commit b5d425c97f7d ("more scheduled OSS driver removal") in 2007
+  * KMALLOC_MAGIC and VMALLOC_MAGIC were removed in
+    commit e38e0cfa48ac ("[ALSA] Remove kmalloc wrappers"),
+    six months after start of git
+  * SLAB_C_MAGIC has never even appeared in git
+    (removed in 2.4.0-test3pre6)
+  * &c., &c., &c.
 
-getting unsure because of  "i only noticed after the controller for some odd
-reason gave up and the kernel obviously started complaining about all my sas
-disks and not able to access them."
+magic-number.rst is a low-value historial relic at best and misleading
+cruft at worst.
 
+This latter half cleans out the remaining entries (either by recognising
+that they aren't actually magic numbers or by cutting them out entirely)
+and inters the file.
 
-i put our 3108 based megaraid controller into jbod personality mode because=
- i'm
-using the drives with proxmox/zfs (see exceprt from the manual at
-https://forum.proxmox.com/threads/megaraid-personality-mode.93857/ )=20
+amd64 allyesconfig builds; this largely touches code that would be
+exceedingly expensive to test (and largely untouched since the git
+import), but is very receptive to static analysis.
 
-when booting, i get this message, but it seems to work fine.  in raid
-personality mode, this doesn't happen.
+v2:
+  Messages restyled
+  Moved printk() in synclink_cs.c became pr_warn
+  (__func__ instead of prescribed hard function name per checkpatch.pl)
 
-should i better keep the controller in raid mode (which jbod enabled) until
-kernel the patch is in proxmox - or can/should i simply ignore this errors?
+v3:
+  7/15 no longer cleans out the header that defines NMI_MAGIC
+
+Ahelenia Ziemia=C5=84ska (15):
+  hamradio: baycom: remove BAYCOM_MAGIC
+  hamradio: yam: remove YAM_MAGIC
+  pcmcia: synclink_cs: remove MGSLPC_MAGIC
+  pcmcia: synclink_cs: remove dead paranoia_check, warn for missing line
+  coda: remove CODA_MAGIC
+  Documentation: remove PG_MAGIC (not a magic number)
+  Documentation: remove NMI_MAGIC (not a magic number)
+  MIPS: IP27: remove KV_MAGIC
+  x86/APM: remove APM_BIOS_MAGIC
+  scsi: acorn: remove QUEUE_MAGIC_{FREE,USED}
+  hdlcdrv: remove HDLCDRV_MAGIC
+  drivers: net: slip: remove SLIP_MAGIC
+  fcntl: remove FASYNC_MAGIC
+  scsi: ncr53c8xx: replace CCB_MAGIC with bool busy
+  Documentation: remove magic-number.rst
+
+ Documentation/process/index.rst               |  1 -
+ Documentation/process/magic-number.rst        | 85 -----------------
+ .../translations/it_IT/process/index.rst      |  1 -
+ .../it_IT/process/magic-number.rst            | 91 -------------------
+ .../translations/zh_CN/process/index.rst      |  1 -
+ .../zh_CN/process/magic-number.rst            | 74 ---------------
+ .../translations/zh_TW/process/index.rst      |  1 -
+ .../zh_TW/process/magic-number.rst            | 77 ----------------
+ arch/mips/include/asm/sn/klkernvars.h         |  8 +-
+ arch/mips/sgi-ip27/ip27-klnuma.c              |  1 -
+ arch/x86/kernel/apm_32.c                      |  9 +-
+ drivers/char/pcmcia/synclink_cs.c             | 79 +---------------
+ drivers/net/hamradio/baycom_epp.c             | 15 +--
+ drivers/net/hamradio/baycom_par.c             |  1 -
+ drivers/net/hamradio/baycom_ser_fdx.c         |  3 +-
+ drivers/net/hamradio/baycom_ser_hdx.c         |  3 +-
+ drivers/net/hamradio/hdlcdrv.c                |  9 +-
+ drivers/net/hamradio/yam.c                    |  8 +-
+ drivers/net/slip/slip.c                       | 11 +--
+ drivers/net/slip/slip.h                       |  4 -
+ drivers/scsi/arm/queue.c                      | 21 -----
+ drivers/scsi/ncr53c8xx.c                      | 25 ++---
+ fs/coda/cnode.c                               |  2 +-
+ fs/coda/coda_fs_i.h                           |  2 -
+ fs/coda/file.c                                |  1 -
+ fs/fcntl.c                                    |  6 --
+ include/linux/fs.h                            |  3 -
+ include/linux/hdlcdrv.h                       |  2 -
+ 28 files changed, 29 insertions(+), 515 deletions(-)
+ delete mode 100644 Documentation/process/magic-number.rst
+ delete mode 100644 Documentation/translations/it_IT/process/magic-number.r=
+st
+ delete mode 100644 Documentation/translations/zh_CN/process/magic-number.r=
+st
+ delete mode 100644 Documentation/translations/zh_TW/process/magic-number.r=
+st
 
 --=20
-You may reply to this email to add a comment.
+2.30.2
 
-You are receiving this mail because:
-You are the assignee for the bug.=
+--7w2pfo4anlfzv5kh
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEfWlHToQCjFzAxEFjvP0LAY0mWPEFAmNtoboACgkQvP0LAY0m
+WPHjGQ//cgXWRlPMxwRzQeiqfWSSphlxTEIc6X/ywh6snFW2V7S9TYAY6yO9XrML
+JOJyOiW3JE1PE9LzBhPUdURPtrqrxWQVflm8NqZZC4sUP55HkzU8yWbgbWQ7bPtC
+MIGW2cvK2LoWCeUiWvbGCG3vs2NYc7c2hJE2nSj19++1qNaJsw74Kqu1rltowy+L
+IQq43OL0DYXVd58vQ2W4EZCG34X1N7BraOLqSAmGw+s1+EtsY7E3gg3jIbKFe1Da
+CDWZfCdY1JFOcdjQCLtAik2+ksrMeMfNpQ0+7vUnv2O2rr97KG+gvUnJ3E6CpjL1
+ljn9fg9w6lwT6leEuuE4oe7Cqy92/dkIxQceotqcmdKTwRGrWc67+eUR0xYhI4uJ
+bcn2Mw3kF//TgoAe7a6F4/eKXpDFNmlmOdadc012Io5kLA3QcvuiCa2OHIEigXaf
+wDdNejyg0xTTKgj1rM03yWn3mlC8cop1PB9cBI8iDdWR6k68bVgLc3CywF3bNH5n
+dfwXhtAaa2xayfoYuKcvCujj6Gw/HEN90yULvhavmzxk0glmCQazGAdpNlDieaRk
+EPEz+tvwGh+KPRrUPoWskwIQNUc5QB4GB3fQPu648OzaNMXqYNyVCqTTzq0CVzkh
+5/syI7z1ezbcZePgLwtkLDXmEtxmMZwOaup0oM/4RhpaqBBboo4=
+=aIwC
+-----END PGP SIGNATURE-----
+
+--7w2pfo4anlfzv5kh--
