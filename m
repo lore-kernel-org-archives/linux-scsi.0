@@ -2,82 +2,98 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC577C4332F
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Nov 2022 10:24:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0B29C43217
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Nov 2022 10:24:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233048AbiKKKX7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Nov 2022 05:23:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60942 "EHLO
+        id S231895AbiKKKYA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Nov 2022 05:24:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33506 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233692AbiKKKXh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Nov 2022 05:23:37 -0500
-Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABF68EA4
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Nov 2022 02:22:58 -0800 (PST)
-Received: by mail-pj1-x1034.google.com with SMTP id b1-20020a17090a7ac100b00213fde52d49so4347823pjl.3
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Nov 2022 02:22:58 -0800 (PST)
+        with ESMTP id S233697AbiKKKXi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Nov 2022 05:23:38 -0500
+Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8877DE87
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Nov 2022 02:23:00 -0800 (PST)
+Received: by mail-pl1-x62a.google.com with SMTP id io19so3901924plb.8
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Nov 2022 02:23:00 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=mime-version:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=Mxxof+Jmiy20EGQjDLp7bPE7vLo/LDdVQnFmL7UVLlc=;
-        b=LZJOghw5y0+Iq5OL4+CJUpf5mTqSQWIAmyu25R1I/STnx6FhFr6VF3UccYufCaqehG
-         MZzQBRQ3f7m2fYq0R4QwGFRBAYAPJPDq879n7WK0VMzZYUgbFt5y6JJCtbmUkgfZaFUZ
-         lcPXlZ4vYQjNb8VIF66Y15xD+QweA1dfRZRfU=
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=RpZBtVl1j22ENGDUXFoGduHSfqERLA8RwQarsL3j48c=;
+        b=ZAScWpxE4jJiMnbH4snFRXLQ2/KdjDdEvQMxzcZ1KkX9T1HyJnBhAM6MeEszhaSPmY
+         9fR7dBfCRMBRjzHb1lqzK51/LnNTB4fLzpeTmkZlthjCkhhYLOq+6owIFUYeiOLAMHfG
+         XLmfhQvxyIyUlzbpk2Sk1krVyEvWD2dllQ8oQ=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=mime-version:message-id:date:subject:cc:to:from:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=Mxxof+Jmiy20EGQjDLp7bPE7vLo/LDdVQnFmL7UVLlc=;
-        b=Aahw6ZWwTxwns9C1NghLwTneWSht6zS8Kc5pfWXRIqVDHhBwlqVrthlgnUrC0XULMi
-         3seabWyfluk0az3mBpyg+1+fXvXxhB5nAa31NDiDwdtcWdjG4J3RXRP/7TPyefnvyz2A
-         49CgGw3OZkzbnJZGHyERQDUQ8e9EypvHLbRhy8Dgg8eYvAGjTlox9ZZ/hbUyLhUvxwI+
-         1e2Y3CIhPDIm8XHywWmMH6jIt4FmqBorde/Y5RixjHyxJQMyXONkQiHxqJ5ZPzjbfhWH
-         Tz5DjBvzm6k51kcAdTCwJI0+UwHVnoo0Gv6keVcUivfbNAEajV6vUJl25oCxor3jxtkW
-         TJVA==
-X-Gm-Message-State: ANoB5pkMkrc9Cnb2Lhv4CLmGahQzMkF/A6Kj1kKZnDbXIqRcvI1LGpIu
-        JSiNDO/vfWGO2k3MesPU/M1esdf6oqQ4xoELUcQOSpXYBAcii7TFAk7Ik23C0J/kESTe9bMbzAK
-        P7o6hgGvfB8Qp880IHbQiS9Z4mleITwGiF366IF1BFWDWxMoGhIuxfNoR86i8+fYZschJ1tmpSM
-        Bg3O4fssiI
-X-Google-Smtp-Source: AA0mqf4V1PW3h9eqEOK7L3BdnepyPRsGRniSozZZs7Mba6wmj3HlIdY2b44hW92C6rmGE2h+z9SXOA==
-X-Received: by 2002:a17:90a:e64b:b0:20d:b124:33b1 with SMTP id ep11-20020a17090ae64b00b0020db12433b1mr1130340pjb.202.1668162177707;
-        Fri, 11 Nov 2022 02:22:57 -0800 (PST)
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=RpZBtVl1j22ENGDUXFoGduHSfqERLA8RwQarsL3j48c=;
+        b=mSZ1qgjP3A6zq/z0Cs2WATAw+67x+AOOrJtUvcW+cn1iS0fX/boxIPn+csVdo9ckDr
+         TGZHUCbg87t+Q7bAxnOyZ3PrjHgE4AlzrQjVLL6pPEQ3As47DojZ9X4jl0AXJt1Cqy2F
+         EvI8p6/Zvs4niVk2qmlscY685IiRMOGTZCS2UVxRNHqsm6FRGlPIcX97tqU21zGNlOxp
+         vaMIvioKLbIhMrPzbYXKac59zdI6xelaye9/HMbfPdICOXOeThI4NK3/J3oTv3EkzTak
+         7/m5Ca/Pq3Amxkd9Q4KW9bOgoHlkJv9vL5er/EFdv+vKy6kkQ1aHogT2DPl3YDTkFMRp
+         b28w==
+X-Gm-Message-State: ANoB5pmuoevDnAH2s/H4+BlZ23nW3PT74ANK3JnFY6zBntNWAml8SWY5
+        BbQ1O2DFZhI/gimyWeSOXh+2xkKy10DVaaosMeJ7Kk/AFJR4xqeR7RT9VCDaVstqa2ACJHKVQUW
+        pXmuh9b6/WLyWh5CmFfc3k9TUBZrPFDKN7V9+c/Xn7dOLXRfTzMn3YK4aUBoIpUggLbJbyidLyu
+        Khguvl/nH3
+X-Google-Smtp-Source: AA0mqf56R3tKwYR7SHbNyQk5LYw6UmDfEl1lmFgiopRNNzD/ZfhQF/fLYzWuUMpTlDTLiYlfahAAdw==
+X-Received: by 2002:a17:90a:e57:b0:212:d2be:c821 with SMTP id p23-20020a17090a0e5700b00212d2bec821mr1231720pja.37.1668162179574;
+        Fri, 11 Nov 2022 02:22:59 -0800 (PST)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id p129-20020a622987000000b0055f209690c0sm1240691pfp.50.2022.11.11.02.22.55
+        by smtp.gmail.com with ESMTPSA id p129-20020a622987000000b0055f209690c0sm1240691pfp.50.2022.11.11.02.22.58
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 11 Nov 2022 02:22:56 -0800 (PST)
+        Fri, 11 Nov 2022 02:22:59 -0800 (PST)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 0/1] mpi3mr: Remove usage of dma_get_required_mask api
-Date:   Fri, 11 Nov 2022 15:52:45 +0530
-Message-Id: <20221111102246.19995-1-sreekanth.reddy@broadcom.com>
+Subject: [PATCH 1/1] mpi3mr: Remove usage of dma_get_required_mask api
+Date:   Fri, 11 Nov 2022 15:52:46 +0530
+Message-Id: <20221111102246.19995-2-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20221111102246.19995-1-sreekanth.reddy@broadcom.com>
+References: <20221111102246.19995-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000000f182f05ed2f4668"
+        boundary="0000000000002bc1f405ed2f462c"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000000f182f05ed2f4668
+--0000000000002bc1f405ed2f462c
 Content-Transfer-Encoding: 8bit
 
-Directly set the dma mask to 63 if the system is a 64 bit machine
-otherwise set the dma mask to 32bit.
+Remove the usage of dma_get_required_mask() API.
+Directly set the DMA mask to 63/64 if the system
+is a 64bit machine.
 
-Sreekanth Reddy (1):
-  mpi3mr: Remove usage of dma_get_required_mask api
-
+Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+---
  drivers/scsi/mpi3mr/mpi3mr_fw.c | 3 +--
  1 file changed, 1 insertion(+), 2 deletions(-)
 
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 0c4aabaefdcc..286a44506578 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -3633,8 +3633,7 @@ int mpi3mr_setup_resources(struct mpi3mr_ioc *mrioc)
+ 	int i, retval = 0, capb = 0;
+ 	u16 message_control;
+ 	u64 dma_mask = mrioc->dma_mask ? mrioc->dma_mask :
+-	    (((dma_get_required_mask(&pdev->dev) > DMA_BIT_MASK(32)) &&
+-	    (sizeof(dma_addr_t) > 4)) ? DMA_BIT_MASK(64) : DMA_BIT_MASK(32));
++	    ((sizeof(dma_addr_t) > 4) ? DMA_BIT_MASK(64) : DMA_BIT_MASK(32));
+ 
+ 	if (pci_enable_device_mem(pdev)) {
+ 		ioc_err(mrioc, "pci_enable_device_mem: failed\n");
 -- 
 2.27.0
 
 
---0000000000000f182f05ed2f4668
+--0000000000002bc1f405ed2f462c
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -148,13 +164,13 @@ hPIHLRxnZxqpa2GjCtl3IYjKK8WbWx0NXkszaVTVRIn8e++VyiiH/yFXVyOEQxkZRQZWzTjPE9o/
 R31F09e8yABfehc+e00bSP23FKNuA8dwS29RHLpjmd+m5EtbFGD4EUANHzCSTA89S/iWNoaWteab
 v6IxggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwftyuc
-ixn6z19iSQwwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEINBvOQ6Z8g++U7a/lLnX
-qBANJ6jwhvzAF8Xg2SUwY48rMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMTExMTEwMjI1OFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+ixn6z19iSQwwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIIHDtfOlT/YH+T2doQhR
+bV6uecMpdqk0QFWKPsbYIfyfMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMTExMTEwMjMwMFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCKkFOMjQBhHu73hMCRiWlY7JWGXfS6uVV8IfYh
-RXX2pZ8peQq8LIOZpm8grOL9MomCBN7hnjAOKNJ6Y+qZpr1kTjfbbcbaWRFCKYr5l6lFC2/R7xbB
-vco7pWFMctHlBq7FAVQKBobWI7/CUiciOLw7cvUID6B/a+Ivo8TQrhHTSrOto/9zDX52IgJBgp6M
-68xsWkV69FhFpQc75zPHhHRXqrunVZYue9Rr9rnYM9aM0qNPJw5Z9Ha2SNZpkJPWh1SQZ6XqVcye
-xdjVrFrbAcGInO9SQa9rWnuTjgf9tzlk+Z/En5NI5CxBuka86so9tiqjHIFgKjs2yMdo0PlsxnxD
---0000000000000f182f05ed2f4668--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCS7CIYN+2sTh+Yo/zDJ7/SIZZBSDYnKfIXGYiX
+HHOlmq7gFUGYVAULzZZ5WEYfftuN+myPkYwAUUzZ2ugOyXsvFx2mmgSO3VFoS93dFSPQw2XENkw9
+ANCBP1rh3uge3UeyiiB/n0TtgFTn4mUbuC40SYR5ZeyoTf+C9l0pIJCG7PnSRf8hMQt7jITyWXN7
+IBjAOjOSVlVGpwRu4FA2IZ9IC9GGr28ttX44w6e+gOyozvJ/9mebR2tET0NcQ6MZsOTaO3Qt+0jx
+MVbRcsjeKS8w5/uVuPuI+e9Xvg8YD85p4jBPo0v5kWraf4itepB7Bdllz6IMkdDUFit8jrlNRzHZ
+--0000000000002bc1f405ed2f462c--
