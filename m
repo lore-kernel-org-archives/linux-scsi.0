@@ -2,182 +2,145 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 517AAC4332F
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Nov 2022 06:22:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4E31C433FE
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Nov 2022 06:25:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232746AbiKKGWF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Nov 2022 01:22:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47754 "EHLO
+        id S232830AbiKKGZM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Nov 2022 01:25:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49088 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232231AbiKKGWF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Nov 2022 01:22:05 -0500
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EEB4165E5A
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Nov 2022 22:22:02 -0800 (PST)
-Received: from epcas1p1.samsung.com (unknown [182.195.41.45])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20221111062200epoutp0183986a3b0e181423be7a0a39d748809c~mc4N5QKN20066400664epoutp01Y
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Nov 2022 06:22:00 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20221111062200epoutp0183986a3b0e181423be7a0a39d748809c~mc4N5QKN20066400664epoutp01Y
+        with ESMTP id S229675AbiKKGYN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Nov 2022 01:24:13 -0500
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A388729A8
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Nov 2022 22:22:41 -0800 (PST)
+Received: from epcas1p4.samsung.com (unknown [182.195.41.48])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20221111062239epoutp037fa56d57691500eb9585a8c6e73f4a99~mc4xymGRe1546115461epoutp03W
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Nov 2022 06:22:39 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20221111062239epoutp037fa56d57691500eb9585a8c6e73f4a99~mc4xymGRe1546115461epoutp03W
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1668147720;
-        bh=QIr1dHYcDtmBCo3Pin7ZWdcXDJ3SQIMcXm90WmlaD6g=;
+        s=mail20170921; t=1668147759;
+        bh=0cd+7Lq/ft2W5HNN+7DpuSMIvfuHBZKLeits1YX9l9s=;
         h=From:To:Cc:Subject:Date:References:From;
-        b=X3d3g5B3jy/OJQMJuY48NxyVL06kxeDq9RBgnSOxYDiytkwTnNCVrCXPVwb7nUGck
-         2KS5g2S/oRVPwNHgY3iOQtRTVlgZ4KcQIZsIbiSdxjVBDN9IJXeQYWzpg3U67mAJLv
-         qfe+66yd7U7BpRszp51akDN4SeWZGIrAmH8HfHMo=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        b=STAZag/CsQrlLTzbj+ZVT1HXAgaK1fF2F+3zO99sbz9pwrjV0yZWlGCz5t8c7345G
+         +uXFz/PpytRLG+GZ72L77KbLBlD8tD057711qm/cW4/9mQdoERTmkKIatN66IffEWl
+         UbAQC8yyuIrQxRSp8drHtFMzWNP8a7wZAysAATJ0=
+Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
         epcas1p4.samsung.com (KnoxPortal) with ESMTP id
-        20221111062159epcas1p46fbb40f4fd9a01a5950fa83a86995915~mc4NYYfzh2517325173epcas1p4A;
-        Fri, 11 Nov 2022 06:21:59 +0000 (GMT)
-Received: from epsmges1p4.samsung.com (unknown [182.195.36.226]) by
-        epsnrtp2.localdomain (Postfix) with ESMTP id 4N7pWq2CGXz4x9Pv; Fri, 11 Nov
-        2022 06:21:59 +0000 (GMT)
+        20221111062238epcas1p4c98dbc13419ee5398d5ae978a8094e7e~mc4xU5nFJ1030410304epcas1p4T;
+        Fri, 11 Nov 2022 06:22:38 +0000 (GMT)
+Received: from epsmges1p5.samsung.com (unknown [182.195.36.226]) by
+        epsnrtp3.localdomain (Postfix) with ESMTP id 4N7pXZ32Tkz4x9Pw; Fri, 11 Nov
+        2022 06:22:38 +0000 (GMT)
 Received: from epcas1p2.samsung.com ( [182.195.41.46]) by
-        epsmges1p4.samsung.com (Symantec Messaging Gateway) with SMTP id
-        4E.D9.07691.70AED636; Fri, 11 Nov 2022 15:21:59 +0900 (KST)
+        epsmges1p5.samsung.com (Symantec Messaging Gateway) with SMTP id
+        E0.64.20046.E2AED636; Fri, 11 Nov 2022 15:22:38 +0900 (KST)
 Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas1p1.samsung.com (KnoxPortal) with ESMTPA id
-        20221111062158epcas1p1c3ef28f75c39a1c1dc4c473266462fc8~mc4MfA3fd0150001500epcas1p1w;
-        Fri, 11 Nov 2022 06:21:58 +0000 (GMT)
-Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epcas1p3.samsung.com (KnoxPortal) with ESMTPA id
+        20221111062238epcas1p3418881a8f028e97afbb498645704c9c5~mc4w4ZiLL2013220132epcas1p3n;
+        Fri, 11 Nov 2022 06:22:38 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
         epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20221111062158epsmtrp236e6d85cd2bba4769b83a9b6c0b9d18e~mc4MePXCE2890828908epsmtrp2v;
-        Fri, 11 Nov 2022 06:21:58 +0000 (GMT)
-X-AuditID: b6c32a38-0cdff70000021e0b-33-636dea079fac
+        20221111062238epsmtrp23f7fe336a5e0207431862d27ef00ecc2~mc4w3jC912943729437epsmtrp2L;
+        Fri, 11 Nov 2022 06:22:38 +0000 (GMT)
+X-AuditID: b6c32a39-5cdfd70000004e4e-a1-636dea2e8094
 Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        D4.6E.18644.60AED636; Fri, 11 Nov 2022 15:21:58 +0900 (KST)
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        E5.35.14392.D2AED636; Fri, 11 Nov 2022 15:22:37 +0900 (KST)
 Received: from localhost.localdomain (unknown [10.253.100.232]) by
         epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20221111062158epsmtip24fc99f873d7d7924953a34861f8e22a8~mc4MSueET2543325433epsmtip2O;
-        Fri, 11 Nov 2022 06:21:58 +0000 (GMT)
+        20221111062237epsmtip2dd0893159d27e1af28a4cfc05466a530~mc4wlV_7A2541425414epsmtip2Q;
+        Fri, 11 Nov 2022 06:22:37 +0000 (GMT)
 From:   Chanwoo Lee <cw9316.lee@samsung.com>
 To:     alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
         jejb@linux.ibm.com, martin.petersen@oracle.com, beanhuo@micron.com,
         adrian.hunter@intel.com, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org
 Cc:     ChanWoo Lee <cw9316.lee@samsung.com>
-Subject: [PATCH] scsi: ufs: core: Separate function name and message
-Date:   Fri, 11 Nov 2022 15:21:26 +0900
-Message-Id: <20221111062126.7307-1-cw9316.lee@samsung.com>
+Subject: [PATCH] scsi: ufs: core: Change the variable's(check_for_bkops)
+ type
+Date:   Fri, 11 Nov 2022 15:22:09 +0900
+Message-Id: <20221111062209.7365-1-cw9316.lee@samsung.com>
 X-Mailer: git-send-email 2.29.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprDJsWRmVeSWpSXmKPExsWy7bCmni77q9xkg8dXeCxOPlnDZvFg3jY2
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprPJsWRmVeSWpSXmKPExsWy7bCmnq7eq9xkg4uXRS1OPlnDZvFg3jY2
         i5c/r7JZHHzYyWIx7cNPZosZp9pYLRbd2MZkcXnXHDaL7us72CyWH//H5MDlcfmKt8fiPS+Z
         PCYsOsDo8X19B5vHx6e3WDz6tqxi9Pi8Sc6j/UA3UwBHVLZNRmpiSmqRQmpecn5KZl66rZJ3
         cLxzvKmZgaGuoaWFuZJCXmJuqq2Si0+ArltmDtCNSgpliTmlQKGAxOJiJX07m6L80pJUhYz8
-        4hJbpdSClJwCswK94sTc4tK8dL281BIrQwMDI1OgwoTsjKZNRQX9whX/zrxha2Ccwd/FyMkh
-        IWAisWriSfYuRi4OIYEdjBKH+qawQDifGCW+XfvKBlIlJPCZUWLR4kqYjifT+pkhinYxSjx/
-        /gjK+cIosXndbMYuRg4ONgEtidvHvEHiIgIPGSXWXdoANolZQEPi5Kwn7CA1wgIuElceOoGE
-        WQRUJWadXsgOYvMKWEncONbLDLFMXuLP/R5miLigxMmZT1ggxshLNG+dDbZXQuAnu8T0O5uY
-        IBpcJI5vnwrVLCzx6vgWdghbSuLzu71sEA3NjBLbvl5ignA6GCU2tr5ghKgylvj0+TPYB8wC
-        mhLrd+lDhBUldv6eywixmU/i3dceVpASCQFeiY42IYgSFYk5XefYYHZ9vPGYFcL2kDi+cx8z
-        JBRjJTacuMQ2gVF+FpJ/ZiH5ZxbC4gWMzKsYxVILinPTU4sNC0zgkZqcn7uJEZxMtSx2MM59
-        +0HvECMTB+MhRgkOZiURXm6N7GQh3pTEyqrUovz4otKc1OJDjKbAEJ7ILCWanA9M53kl8YYm
-        lgYmZkYmFsaWxmZK4rwNM7SShQTSE0tSs1NTC1KLYPqYODilGpiS2kNuTLh9tebFOt90mRls
-        /T8uPjrrwHPpfvbD+2GH8hRvzxJd8XTP/dBMnZ9djumX5fQPecZNypd49T2F17N4edi352Z7
-        qq4HsbKob/xfvG9Hx/09855bbXv14uKpEOmPd1da25lW6wtx+rD9TAp6vezz7pS1+sGLUyNv
-        7fjSMqt76p+TvD82rZoo3rnGLHDH8l9Lv8RNU3r3aerj9l0nc4U+2ee8k409lbNn836LGxW6
-        c498Y3ZlnzLtH7u0bef02EiFZwvfJBzbzGDCfnb5p8Cn4t1r5HI+PI3R5A03lXsx1cnUTf5l
-        R0yb77rcDu1WL3duhcSFkRxs5zp0dtVv6OOzn/C76azXfS7hjjuHlViKMxINtZiLihMBVkbU
-        Ey8EAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrBLMWRmVeSWpSXmKPExsWy7bCSvC7bq9xkg9sTzSxOPlnDZvFg3jY2
+        4hJbpdSClJwCswK94sTc4tK8dL281BIrQwMDI1OgwoTsjKbOaWwF8zkq/nw4wdTA+JSti5GT
+        Q0LARGLqgeOsXYxcHEICOxgltn34xALhfGKUmDj9PpTzjVGiedUjdpiWxhOPoFr2Mkp8mDOD
+        DcL5wigxbUYvkMPBwSagJXH7mDdIXETgIaPEuksbwBYyC2hInJz1BGySsIC/xL51ixlBbBYB
+        VYmrc/+AxXkFrCQWPpkGdaC8xJ/7PcwQcUGJkzOfsEDMkZdo3jqbGWSBhMBPdom9rzpZIBpc
+        JJ79/c8KYQtLvDq+BepsKYnP7/ayQTQ0A3369RIThNPBKLGx9QUjRJWxxKfPnxlBXmAW0JRY
+        v0sfIqwosfP3XEaIzXwS7772sIKUSAjwSnS0CUGUqEjM6TrHBrPr443HUDd4SJx90g7WKiQQ
+        K/Hn0V62CYzys5D8MwvJP7MQFi9gZF7FKJZaUJybnlpsWGAKj9fk/NxNjOCUqmW5g3H62w96
+        hxiZOBgPMUpwMCuJ8HJrZCcL8aYkVlalFuXHF5XmpBYfYjQFhvBEZinR5HxgUs8riTc0sTQw
+        MTMysTC2NDZTEudtmKGVLCSQnliSmp2aWpBaBNPHxMEp1cC03WyXZFGuk6nUrwfzZz/Jyin2
+        Z3xSFBJ88Na2hsCuMoElx+SLtSza0kOr7z5KeedvcJVrKVvJheOLDKVO5HuIR02+//CG0PaW
+        52f0tm35sT1Urk1QVXiK0+Ky9TZPD2od9lv7xtSvv1Lp6Yu99gY8uT+v83P9vKx2RJ8/qTBJ
+        VLZ5fvJ5mdxjog62Litdwn/OP/XrWOWTzAC/RuMNDgZbssTVw3bx3E35LH/KuDvyYWpO3M2N
+        d/6HKopF72w0YjJd/3HB1WeWe5L+J+Y7Xw9NOHLaVC/ww/y2fwc9JysIPLq6+Uh5gPx0vT3+
+        6gIXU3hzgrqacj8pbNENqPh75vT7tq9e4ranNBxtdPbLpiuxFGckGmoxFxUnAgB1OnyiMgQA
+        AA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrFLMWRmVeSWpSXmKPExsWy7bCSvK7uq9xkg2WXzCxOPlnDZvFg3jY2
         i5c/r7JZHHzYyWIx7cNPZosZp9pYLRbd2MZkcXnXHDaL7us72CyWH//H5MDlcfmKt8fiPS+Z
-        PCYsOsDo8X19B5vHx6e3WDz6tqxi9Pi8Sc6j/UA3UwBHFJdNSmpOZllqkb5dAldG06aign7h
-        in9n3rA1MM7g72Lk5JAQMJF4Mq2fuYuRi0NIYAejRNelLjaIhJTE7v3ngWwOIFtY4vDhYoia
-        T4wSGz+/YwGJswloSdw+5g1SLiLwmlHieo8jiM0soCFxctYTdpASYQEXiSsPnUDCLAKqErNO
-        L2QHsXkFrCRuHOtlhtgkL/Hnfg8zRFxQ4uTMJywQY+QlmrfOZp7AyDcLSWoWktQCRqZVjJKp
-        BcW56bnFhgVGeanlesWJucWleel6yfm5mxjBga2ltYNxz6oPeocYmTgYDzFKcDArifBya2Qn
-        C/GmJFZWpRblxxeV5qQWH2KU5mBREue90HUyXkggPbEkNTs1tSC1CCbLxMEp1cBUqKIx7W/E
-        bce7O+9ap8kW6E/mefRvIkOykJL/l9sGLB7Tp1d6TZnzd34G17ZFe7Lap62u/7beOCn6TBnn
-        tn2eXlXfV5TNCDAQ+GFZOy3YquuwUafDjphtbcbfhLObb9+RfVb58nrjhcaErKbFNv9rwuL+
-        nDdjfuz3VS3oYMsf32dTP50ujtrf9iSobO3fSEfNY9t//NYV5n37q/AdX+TPXT5sd5VuT2P4
-        57ZI6NABqY0d5V4zzybpXp6d93MWW5uhSNX9n7xu/hGWb4Lc3iSt9OupXrr78sRteacjjr1f
-        IWhQfzN1z3L7tA8vLoa7pl5u47v1SWS1Od/6tnzXufY/LitXb55fybi9YMYax0mnlFiKMxIN
-        tZiLihMB+l7FH9sCAAA=
-X-CMS-MailID: 20221111062158epcas1p1c3ef28f75c39a1c1dc4c473266462fc8
+        PCYsOsDo8X19B5vHx6e3WDz6tqxi9Pi8Sc6j/UA3UwBHFJdNSmpOZllqkb5dAldGU+c0toL5
+        HBV/PpxgamB8ytbFyMkhIWAi0XjiEWsXIxeHkMBuRonDrbOZIBJSErv3nwcq4gCyhSUOHy6G
+        qPnEKDHj/kYWkDibgJbE7WPeIOUiAq8ZJa73OILYzAIaEidnPWEHsYUFfCU6V69iBbFZBFQl
+        rs79AxbnFbCSWPhkGtQN8hJ/7vcwQ8QFJU7OfMICMUdeonnrbOYJjHyzkKRmIUktYGRaxSiZ
+        WlCcm55bbFhgmJdarlecmFtcmpeul5yfu4kRHNxamjsYt6/6oHeIkYmD8RCjBAezkggvt0Z2
+        shBvSmJlVWpRfnxRaU5q8SFGaQ4WJXHeC10n44UE0hNLUrNTUwtSi2CyTBycUg1MK/NetvCu
+        6v5T8ZK5faaP55k7TpnJJxKKQydPUuypn1v7xHI6yxuWGWGPtxx0aP6ymc1haVH/kcQzPaX/
+        NFt+60m8eHJY+r77pSPX6hmYS2WuyWrvdSphUbjg/nPpWg0Gfv+TmkvtFkjtaQ3KnDCl9tWd
+        w8s55RZtr2xZ9WP3pns7Tl0xU1hpoFkw+5rwPD8Wj7WXrz77Gm3xpnLHHeG5P94wnlNzuejP
+        FGu0UGpD59LkVu7GIJnQ5akhQVUzj/1cyl4pF/gpR7TyTLTrDo2f6+/nbdh/7u12ppo8zo8/
+        6hw54hJrpjVaKt7bunPNh8Tvx7zVCh59FfD8tvFByHfzr0uWnyk+lW+6rbb24GvHGiWW4oxE
+        Qy3mouJEAODxmADdAgAA
+X-CMS-MailID: 20221111062238epcas1p3418881a8f028e97afbb498645704c9c5
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: SVC_REQ_APPROVE
 CMS-TYPE: 101P
 DLP-Filter: Pass
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20221111062158epcas1p1c3ef28f75c39a1c1dc4c473266462fc8
-References: <CGME20221111062158epcas1p1c3ef28f75c39a1c1dc4c473266462fc8@epcas1p1.samsung.com>
+X-CMS-RootMailID: 20221111062238epcas1p3418881a8f028e97afbb498645704c9c5
+References: <CGME20221111062238epcas1p3418881a8f028e97afbb498645704c9c5@epcas1p3.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: ChanWoo Lee <cw9316.lee@samsung.com>
 
-Separate the function name and message to make it easier to check the log.
-Modify messages to fit the format of others.
+It only checks true and false, so it can be used as a bool type.
 
 Signed-off-by: ChanWoo Lee <cw9316.lee@samsung.com>
 ---
- drivers/ufs/core/ufshcd.c | 6 +++---
- drivers/ufs/core/ufshpb.c | 6 +++---
- 2 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/ufs/core/ufshcd.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index e389d73765fe..fdbcbcf3f9d1 100644
+index fdbcbcf3f9d1..a5b6d6eacf83 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -4480,7 +4480,7 @@ static int ufshcd_complete_dev_init(struct ufs_hba *hba)
- 		QUERY_FLAG_IDN_FDEVICEINIT, 0, NULL);
- 	if (err) {
- 		dev_err(hba->dev,
--			"%s setting fDeviceInit flag failed with error %d\n",
-+			"%s: setting fDeviceInit flag failed with error %d\n",
- 			__func__, err);
- 		goto out;
- 	}
-@@ -4497,11 +4497,11 @@ static int ufshcd_complete_dev_init(struct ufs_hba *hba)
+@@ -8825,7 +8825,7 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
  
- 	if (err) {
- 		dev_err(hba->dev,
--				"%s reading fDeviceInit flag failed with error %d\n",
-+				"%s: reading fDeviceInit flag failed with error %d\n",
- 				__func__, err);
- 	} else if (flag_res) {
- 		dev_err(hba->dev,
--				"%s fDeviceInit was not cleared by the device\n",
-+				"%s: fDeviceInit was not cleared by the device\n",
- 				__func__);
- 		err = -EBUSY;
- 	}
-diff --git a/drivers/ufs/core/ufshpb.c b/drivers/ufs/core/ufshpb.c
-index b7f412d0f301..148017b2dfeb 100644
---- a/drivers/ufs/core/ufshpb.c
-+++ b/drivers/ufs/core/ufshpb.c
-@@ -2289,7 +2289,7 @@ static bool ufshpb_check_hpb_reset_query(struct ufs_hba *hba)
- 	/* wait for the device to complete HPB reset query */
- 	for (try = 0; try < HPB_RESET_REQ_RETRIES; try++) {
- 		dev_dbg(hba->dev,
--			"%s start flag reset polling %d times\n",
-+			"%s: start flag reset polling %d times\n",
- 			__func__, try);
+ static int ufshcd_link_state_transition(struct ufs_hba *hba,
+ 					enum uic_link_state req_link_state,
+-					int check_for_bkops)
++					bool check_for_bkops)
+ {
+ 	int ret = 0;
  
- 		/* Poll fHpbReset flag to be cleared */
-@@ -2298,7 +2298,7 @@ static bool ufshpb_check_hpb_reset_query(struct ufs_hba *hba)
- 
- 		if (err) {
- 			dev_err(hba->dev,
--				"%s reading fHpbReset flag failed with error %d\n",
-+				"%s: reading fHpbReset flag failed with error %d\n",
- 				__func__, err);
- 			return flag_res;
- 		}
-@@ -2310,7 +2310,7 @@ static bool ufshpb_check_hpb_reset_query(struct ufs_hba *hba)
- 	}
- 	if (flag_res) {
- 		dev_err(hba->dev,
--			"%s fHpbReset was not cleared by the device\n",
-+			"%s: fHpbReset was not cleared by the device\n",
- 			__func__);
- 	}
- out:
+@@ -8976,7 +8976,7 @@ static void ufshcd_hba_vreg_set_hpm(struct ufs_hba *hba)
+ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ {
+ 	int ret = 0;
+-	int check_for_bkops;
++	bool check_for_bkops;
+ 	enum ufs_pm_level pm_lvl;
+ 	enum ufs_dev_pwr_mode req_dev_pwr_mode;
+ 	enum uic_link_state req_link_state;
 -- 
 2.29.0
 
