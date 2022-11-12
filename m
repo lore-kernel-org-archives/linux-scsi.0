@@ -2,82 +2,69 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A71EDC4332F
-	for <linux-scsi@archiver.kernel.org>; Sat, 12 Nov 2022 16:50:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DD73C433FE
+	for <linux-scsi@archiver.kernel.org>; Sat, 12 Nov 2022 17:42:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235000AbiKLQuq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 12 Nov 2022 11:50:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53438 "EHLO
+        id S234982AbiKLRmm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 12 Nov 2022 12:42:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36298 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232659AbiKLQup (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Nov 2022 11:50:45 -0500
-Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6BB6565AD;
-        Sat, 12 Nov 2022 08:50:44 -0800 (PST)
-Received: by mail-pj1-x102d.google.com with SMTP id h14so6909591pjv.4;
-        Sat, 12 Nov 2022 08:50:44 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=5YtIzIFXCd8ejP+if9R+vz9eE20Exyv5nPauR7eKIuE=;
-        b=FRKd65M1dUvUk2bFupd/DigeVgW/VgwGaOAYztLLuFlzxAcskSD4il2H1VfJhSJGS0
-         qO+PrstmLwBtYtmPsKxLqQ95eSKNARXfkTX14phinjyEhluyp5PX0QQLRrcrR2CZgi/7
-         l9kdgkO5CsbLtC2vP1CSECIJNPWhNv8/ZEoh7LYzdL27CqK6IKrEr3eXTJ+bmdTHZ8cU
-         QhgNxeo1prW3PlfF2cOKT52Vsxsu9Oz9L5qYgeA76yuFTwuCo+32n9hll4Eqg0KA2czb
-         CKouxmdVw5zV0LhVnE1VC/wTeh/UOGNys2oEYQHUbuLa/S5c9GjAzjtCxpsi+D5Ty0w8
-         3tdQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=5YtIzIFXCd8ejP+if9R+vz9eE20Exyv5nPauR7eKIuE=;
-        b=w3qApZtaiMn0ReUM7ech+w0tthbVKvJ+vil1aZNsiTx+sI/q9mo3Lz3bS52+CDcrgi
-         d0/YgMf8zr4wt0ze18fHuS8HXMLCEeT+LLIxZIN+hPfSyBsB6oz7AiQNBaSdOOa4HNU/
-         iQnNMCUESmWGgmQkN1MrJDva+UD88//nD/MVoY2bLeVHSwPgVgU1pDQRm+1R3DhFHuM7
-         rnPHC4SO3w1qbiodGgoRuS8nZxAgEEtkYTGeBgBLd/qGQa7bTg8ZKIQfsOGfcSMDT78v
-         x5Sz5WbA1BmOR/Aj/GxjHPfwgZTWlca+nY7GkbOHLBzMVte+PAyBtgWYWcTRqe5LVRys
-         r5ZA==
-X-Gm-Message-State: ANoB5pn9i5ZlPmOwq7SemvJzQJZa21fOty6QZ84ZKyDTOuLWjECbAn8/
-        6WQp3d/IOsYdmH/Yk0XhR8eYg2c7+vg=
-X-Google-Smtp-Source: AA0mqf6FsHvwljVx9ri2u3GHDOUK+gLojv9lJZe3XTrUeaY53rpL3qiyQk/ApJivBgmtafDHP/NsNg==
-X-Received: by 2002:a17:903:26cd:b0:17f:7ed0:2367 with SMTP id jg13-20020a17090326cd00b0017f7ed02367mr7408026plb.31.1668271843933;
-        Sat, 12 Nov 2022 08:50:43 -0800 (PST)
-Received: from [192.168.50.208] (ip68-109-79-27.oc.oc.cox.net. [68.109.79.27])
-        by smtp.gmail.com with ESMTPSA id 131-20020a621989000000b0056bc1d7816dsm3591324pfz.99.2022.11.12.08.50.42
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 12 Nov 2022 08:50:43 -0800 (PST)
-Message-ID: <c2352c27-fbff-ead4-ac22-3aebf5c600f3@gmail.com>
-Date:   Sat, 12 Nov 2022 08:50:42 -0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.2
-Subject: Re: [PATCH -next] scsi: lpfc: Use memset_startat() helper
-Content-Language: en-US
-To:     Xiu Jianfeng <xiujianfeng@huawei.com>, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20221111074310.132125-1-xiujianfeng@huawei.com>
-From:   James Smart <jsmart2021@gmail.com>
-In-Reply-To: <20221111074310.132125-1-xiujianfeng@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S234967AbiKLRml (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Nov 2022 12:42:41 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A47711A3A;
+        Sat, 12 Nov 2022 09:42:40 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3425A60D38;
+        Sat, 12 Nov 2022 17:42:40 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 97A94C433C1;
+        Sat, 12 Nov 2022 17:42:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1668274959;
+        bh=LoGoU/mN3+jE+RZnBTtTnhNpqkXse6sXyM9vcyeG/VI=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=Vg5xGRvPH0xQdnhj3wf4bR3g+wf6x5JNeKeVE30Bv/hxULdsG9yi0iAbsRN35n5Vj
+         r2oZvVRygqoI62k4WSuPE563Qa0z0uASANvAzeeGHFZZTvMBC1N4jS2v4LHZcCfh7J
+         7sAIMvgtYBIMCW8kkDPlwWa7MzQHzVEchbs1u+MxGm24fSSnwQdOqXBsZG1C61QV8d
+         WGAPQyc42FgEEt3T5T2yRvKt+JtT+gUS74HV7/RM1S+d1fjlafcLlw0q3d1pp6D5P9
+         YWQ1wlucvwRWJihsHCS9+g7Gh07lykmdVF7VfWlsLZ8vjSOT4wBAAs3GcqzEDJMUAC
+         +YqtedZaSbLZg==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 81B85E270C6;
+        Sat, 12 Nov 2022 17:42:39 +0000 (UTC)
+Subject: Re: [GIT PULL] SCSI fixes for 6.0-rc4
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <d70b92ce5eb5b50b1a0975e8b3b21b9f48809ad8.camel@HansenPartnership.com>
+References: <d70b92ce5eb5b50b1a0975e8b3b21b9f48809ad8.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <d70b92ce5eb5b50b1a0975e8b3b21b9f48809ad8.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+X-PR-Tracked-Commit-Id: ecb8c2580d37dbb641451049376d80c8afaa387f
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: fef7fd48922d11b22620e19f9c9101647bfe943d
+Message-Id: <166827495952.17539.355793184683159519.pr-tracker-bot@kernel.org>
+Date:   Sat, 12 Nov 2022 17:42:39 +0000
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/10/2022 11:43 PM, Xiu Jianfeng wrote:
-> User memset_startat() helper to simplify the code, no functional
-> changes in this patch.
-> 
-> Signed-off-by: Xiu Jianfeng <xiujianfeng@huawei.com>
+The pull request you sent on Sat, 12 Nov 2022 10:02:40 -0500:
 
-Looks good
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-Reviewed-by: James Smart <jsmart2021@gmail.com>
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/fef7fd48922d11b22620e19f9c9101647bfe943d
 
--- james
+Thank you!
 
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
