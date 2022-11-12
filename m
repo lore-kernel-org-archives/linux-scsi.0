@@ -2,182 +2,82 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 532C3C433FE
-	for <linux-scsi@archiver.kernel.org>; Sat, 12 Nov 2022 15:02:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A71EDC4332F
+	for <linux-scsi@archiver.kernel.org>; Sat, 12 Nov 2022 16:50:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234864AbiKLPCo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 12 Nov 2022 10:02:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50132 "EHLO
+        id S235000AbiKLQuq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 12 Nov 2022 11:50:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53438 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231377AbiKLPCn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Nov 2022 10:02:43 -0500
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1920D85;
-        Sat, 12 Nov 2022 07:02:42 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1668265362;
-        bh=MAQGUiCk/Jw5XkMj9qWX64lAaw+VlNgC2YDZwGFdF/4=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=xmynR6dDohIKCQw9SqClTLhGXOMwAUTOSptC1N+FS/I/cnJiRQBBxI6sCpG1DCzN/
-         14ia0S6+UpgUapJom65KxB2noubX0QfBzBc7dcurJHDfnD5INm9jVR9hIyJtp1NjvK
-         pR1u2MiSlX3/BWQeqnaDHomzTMb060KraoWsADJs=
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 44B1F1281727;
-        Sat, 12 Nov 2022 10:02:42 -0500 (EST)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id aiOV2KVLxLvY; Sat, 12 Nov 2022 10:02:42 -0500 (EST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1668265362;
-        bh=MAQGUiCk/Jw5XkMj9qWX64lAaw+VlNgC2YDZwGFdF/4=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=xmynR6dDohIKCQw9SqClTLhGXOMwAUTOSptC1N+FS/I/cnJiRQBBxI6sCpG1DCzN/
-         14ia0S6+UpgUapJom65KxB2noubX0QfBzBc7dcurJHDfnD5INm9jVR9hIyJtp1NjvK
-         pR1u2MiSlX3/BWQeqnaDHomzTMb060KraoWsADJs=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::a774])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (Client did not present a certificate)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id A94771281708;
-        Sat, 12 Nov 2022 10:02:41 -0500 (EST)
-Message-ID: <d70b92ce5eb5b50b1a0975e8b3b21b9f48809ad8.camel@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 6.0-rc4
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Date:   Sat, 12 Nov 2022 10:02:40 -0500
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
+        with ESMTP id S232659AbiKLQup (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Nov 2022 11:50:45 -0500
+Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6BB6565AD;
+        Sat, 12 Nov 2022 08:50:44 -0800 (PST)
+Received: by mail-pj1-x102d.google.com with SMTP id h14so6909591pjv.4;
+        Sat, 12 Nov 2022 08:50:44 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=5YtIzIFXCd8ejP+if9R+vz9eE20Exyv5nPauR7eKIuE=;
+        b=FRKd65M1dUvUk2bFupd/DigeVgW/VgwGaOAYztLLuFlzxAcskSD4il2H1VfJhSJGS0
+         qO+PrstmLwBtYtmPsKxLqQ95eSKNARXfkTX14phinjyEhluyp5PX0QQLRrcrR2CZgi/7
+         l9kdgkO5CsbLtC2vP1CSECIJNPWhNv8/ZEoh7LYzdL27CqK6IKrEr3eXTJ+bmdTHZ8cU
+         QhgNxeo1prW3PlfF2cOKT52Vsxsu9Oz9L5qYgeA76yuFTwuCo+32n9hll4Eqg0KA2czb
+         CKouxmdVw5zV0LhVnE1VC/wTeh/UOGNys2oEYQHUbuLa/S5c9GjAzjtCxpsi+D5Ty0w8
+         3tdQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=5YtIzIFXCd8ejP+if9R+vz9eE20Exyv5nPauR7eKIuE=;
+        b=w3qApZtaiMn0ReUM7ech+w0tthbVKvJ+vil1aZNsiTx+sI/q9mo3Lz3bS52+CDcrgi
+         d0/YgMf8zr4wt0ze18fHuS8HXMLCEeT+LLIxZIN+hPfSyBsB6oz7AiQNBaSdOOa4HNU/
+         iQnNMCUESmWGgmQkN1MrJDva+UD88//nD/MVoY2bLeVHSwPgVgU1pDQRm+1R3DhFHuM7
+         rnPHC4SO3w1qbiodGgoRuS8nZxAgEEtkYTGeBgBLd/qGQa7bTg8ZKIQfsOGfcSMDT78v
+         x5Sz5WbA1BmOR/Aj/GxjHPfwgZTWlca+nY7GkbOHLBzMVte+PAyBtgWYWcTRqe5LVRys
+         r5ZA==
+X-Gm-Message-State: ANoB5pn9i5ZlPmOwq7SemvJzQJZa21fOty6QZ84ZKyDTOuLWjECbAn8/
+        6WQp3d/IOsYdmH/Yk0XhR8eYg2c7+vg=
+X-Google-Smtp-Source: AA0mqf6FsHvwljVx9ri2u3GHDOUK+gLojv9lJZe3XTrUeaY53rpL3qiyQk/ApJivBgmtafDHP/NsNg==
+X-Received: by 2002:a17:903:26cd:b0:17f:7ed0:2367 with SMTP id jg13-20020a17090326cd00b0017f7ed02367mr7408026plb.31.1668271843933;
+        Sat, 12 Nov 2022 08:50:43 -0800 (PST)
+Received: from [192.168.50.208] (ip68-109-79-27.oc.oc.cox.net. [68.109.79.27])
+        by smtp.gmail.com with ESMTPSA id 131-20020a621989000000b0056bc1d7816dsm3591324pfz.99.2022.11.12.08.50.42
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 12 Nov 2022 08:50:43 -0800 (PST)
+Message-ID: <c2352c27-fbff-ead4-ac22-3aebf5c600f3@gmail.com>
+Date:   Sat, 12 Nov 2022 08:50:42 -0800
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.2
+Subject: Re: [PATCH -next] scsi: lpfc: Use memset_startat() helper
+Content-Language: en-US
+To:     Xiu Jianfeng <xiujianfeng@huawei.com>, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20221111074310.132125-1-xiujianfeng@huawei.com>
+From:   James Smart <jsmart2021@gmail.com>
+In-Reply-To: <20221111074310.132125-1-xiujianfeng@huawei.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Three small fixes, all in drivers.  The sas one is in an unlikely error
-leg, the debug one is to make it more standards conformant and the
-ibmvfc one is to fix a user visible bug where a failover could lose all
-paths to the device.
+On 11/10/2022 11:43 PM, Xiu Jianfeng wrote:
+> User memset_startat() helper to simplify the code, no functional
+> changes in this patch.
+> 
+> Signed-off-by: Xiu Jianfeng <xiujianfeng@huawei.com>
 
-The patch is available here:
+Looks good
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Reviewed-by: James Smart <jsmart2021@gmail.com>
 
-The short changelog is:
-
-Bart Van Assche (1):
-      scsi: scsi_debug: Make the READ CAPACITY response compliant with ZBC
-
-Brian King (1):
-      scsi: ibmvfc: Avoid path failures during live migration
-
-Yang Yingliang (1):
-      scsi: scsi_transport_sas: Fix error handling in sas_phy_add()
-
-And the diffstat:
-
- drivers/scsi/ibmvscsi/ibmvfc.c    | 14 +++++++++++---
- drivers/scsi/scsi_debug.c         |  7 +++++++
- drivers/scsi/scsi_transport_sas.c | 13 +++++++++----
- 3 files changed, 27 insertions(+), 7 deletions(-)
-
-With full diff below.
-
-James
-
----
-
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c
-b/drivers/scsi/ibmvscsi/ibmvfc.c
-index 00684e11976b..1a0c0b7289d2 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -708,8 +708,13 @@ static void ibmvfc_init_host(struct ibmvfc_host
-*vhost)
- 		memset(vhost->async_crq.msgs.async, 0, PAGE_SIZE);
- 		vhost->async_crq.cur = 0;
- 
--		list_for_each_entry(tgt, &vhost->targets, queue)
--			ibmvfc_del_tgt(tgt);
-+		list_for_each_entry(tgt, &vhost->targets, queue) {
-+			if (vhost->client_migrated)
-+				tgt->need_login = 1;
-+			else
-+				ibmvfc_del_tgt(tgt);
-+		}
-+
- 		scsi_block_requests(vhost->host);
- 		ibmvfc_set_host_action(vhost,
-IBMVFC_HOST_ACTION_INIT);
- 		vhost->job_step = ibmvfc_npiv_login;
-@@ -3235,9 +3240,12 @@ static void ibmvfc_handle_crq(struct ibmvfc_crq
-*crq, struct ibmvfc_host *vhost,
- 			/* We need to re-setup the interpartition
-connection */
- 			dev_info(vhost->dev, "Partition migrated, Re-
-enabling adapter\n");
- 			vhost->client_migrated = 1;
-+
-+			scsi_block_requests(vhost->host);
- 			ibmvfc_purge_requests(vhost, DID_REQUEUE);
--			ibmvfc_link_down(vhost, IBMVFC_LINK_DOWN);
-+			ibmvfc_set_host_state(vhost,
-IBMVFC_LINK_DOWN);
- 			ibmvfc_set_host_action(vhost,
-IBMVFC_HOST_ACTION_REENABLE);
-+			wake_up(&vhost->work_wait_q);
- 		} else if (crq->format == IBMVFC_PARTNER_FAILED ||
-crq->format == IBMVFC_PARTNER_DEREGISTER) {
- 			dev_err(vhost->dev, "Host partner adapter
-deregistered or failed (rc=%d)\n", crq->format);
- 			ibmvfc_purge_requests(vhost, DID_ERROR);
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 697fc57bc711..629853662b82 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -1899,6 +1899,13 @@ static int resp_readcap16(struct scsi_cmnd *scp,
- 			arr[14] |= 0x40;
- 	}
- 
-+	/*
-+	 * Since the scsi_debug READ CAPACITY implementation always
-reports the
-+	 * total disk capacity, set RC BASIS = 1 for host-managed ZBC
-devices.
-+	 */
-+	if (devip->zmodel == BLK_ZONED_HM)
-+		arr[12] |= 1 << 4;
-+
- 	arr[15] = sdebug_lowest_aligned & 0xff;
- 
- 	if (have_dif_prot) {
-diff --git a/drivers/scsi/scsi_transport_sas.c
-b/drivers/scsi/scsi_transport_sas.c
-index 2f88c61216ee..74b99f2b0b74 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -722,12 +722,17 @@ int sas_phy_add(struct sas_phy *phy)
- 	int error;
- 
- 	error = device_add(&phy->dev);
--	if (!error) {
--		transport_add_device(&phy->dev);
--		transport_configure_device(&phy->dev);
-+	if (error)
-+		return error;
-+
-+	error = transport_add_device(&phy->dev);
-+	if (error) {
-+		device_del(&phy->dev);
-+		return error;
- 	}
-+	transport_configure_device(&phy->dev);
- 
--	return error;
-+	return 0;
- }
- EXPORT_SYMBOL(sas_phy_add);
- 
+-- james
 
