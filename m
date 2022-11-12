@@ -2,84 +2,100 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31BEEC433FE
-	for <linux-scsi@archiver.kernel.org>; Sat, 12 Nov 2022 02:20:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77AC7C433FE
+	for <linux-scsi@archiver.kernel.org>; Sat, 12 Nov 2022 07:13:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234380AbiKLCUV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Nov 2022 21:20:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44118 "EHLO
+        id S234518AbiKLHNz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 12 Nov 2022 02:13:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52680 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233331AbiKLCUU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Nov 2022 21:20:20 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37E412F390
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Nov 2022 18:20:19 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C45B76216F
-        for <linux-scsi@vger.kernel.org>; Sat, 12 Nov 2022 02:20:18 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 33F73C4347C
-        for <linux-scsi@vger.kernel.org>; Sat, 12 Nov 2022 02:20:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1668219618;
-        bh=sBOXgqcE07HwnTH4U9x5uoaaKbFIDZpV0FxCDTUoqaY=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=ENxa9S8IcRbZgqm3Luf07ApGcQRtubKDwmhBHF0ZnBDyRXacLLGzRRUKpFXfJvgXG
-         c98AXeb0dez9mArxdx6qxRAH0uM77KOtdB8gFIvCdGKsYx0REdCIPltCrV5Tw8r0Zy
-         iNGddpB8kDU5pD5A/iPdgCD01oyOHaD5HtEexTPeV5OxNdINWbNs1QLprG1rpp61Sx
-         5JydTO3TTCwGmZ/j6QE7tZHJ2ilB1VreyppuhFTtali6OTbrFN7dI55sRd5xtzKNk3
-         T24ifSMugczVXkyngQWo7deZL1LguMQvT6HeA/Jxwn8aeCvAIV+AnG1Rc5vm1ELBCR
-         9d6XH5TNBoE4Q==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 11B9BC05FD2; Sat, 12 Nov 2022 02:20:18 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 215943] UBSAN: array-index-out-of-bounds in
- drivers/scsi/megaraid/megaraid_sas_fp.c:103:32
-Date:   Sat, 12 Nov 2022 02:20:17 +0000
-X-Bugzilla-Reason: AssignedTo
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: None
-X-Bugzilla-Product: IO/Storage
-X-Bugzilla-Component: SCSI
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: charlotte@extrahop.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-215943-11613-F0sVZJmyhJ@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-215943-11613@https.bugzilla.kernel.org/>
-References: <bug-215943-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        with ESMTP id S230043AbiKLHNy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Nov 2022 02:13:54 -0500
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B14511583B;
+        Fri, 11 Nov 2022 23:13:51 -0800 (PST)
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 2AC7BZft030768;
+        Sat, 12 Nov 2022 07:13:46 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-transfer-encoding;
+ s=corp-2022-7-12; bh=gDZ6MG+tnirLjij+RM1xUgF3hdmZdeFJrSWDvS2APYA=;
+ b=LOInsb7qXb1FpC2Phhs6Cp1jyZxX4lh98vHNv7oSfIgKMYDsKOesYjpB9/7vURyTTDns
+ Ft6ABtaDFSVKxEZu+Gktigxn5hJq4upDT531RckV2fG1OcI21clx+HG16rGJ66Cwqy8C
+ VW6dX2aueTLKiluxHVqWEGzDDGm+LQObD4H/Ta99WZwZONHKwdU3uCeSbU8fTLW1SC+S
+ 2LjbAIhGj9q5BwvSkxc0Q+/LDCv1zMxaMYmx0br7yFtESoZc7EGmAgJ8wYKWwmUj7B7q
+ hQbdBQWyvvhrQgf4GtLoPl4Rfp4kWxT42DhzfU9ancP/GF+nSEqOtkabN7dW1gWReoQ2 NQ== 
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3kt6vjr03f-8
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 12 Nov 2022 07:13:46 +0000
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2AC4S1qM038037;
+        Sat, 12 Nov 2022 07:00:44 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3kt1x25jx1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 12 Nov 2022 07:00:44 +0000
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 2AC70hSS012960;
+        Sat, 12 Nov 2022 07:00:43 GMT
+Received: from ca-dev112.us.oracle.com (ca-dev112.us.oracle.com [10.129.136.47])
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3kt1x25jwk-1;
+        Sat, 12 Nov 2022 07:00:43 +0000
+From:   Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>
+Cc:     harshit.m.mogalapalli@oracle.com, error27@gmail.com,
+        harshit.m.mogalapalli@gmail.com,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Douglas Gilbert <dgilbert@interlog.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: scsi_debug: Fix a warning in resp_verify()
+Date:   Fri, 11 Nov 2022 23:00:31 -0800
+Message-Id: <20221112070031.2121068-1-harshit.m.mogalapalli@oracle.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
+ definitions=2022-11-12_04,2022-11-11_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 phishscore=0 bulkscore=0
+ mlxlogscore=999 spamscore=0 adultscore=0 malwarescore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2210170000
+ definitions=main-2211120051
+X-Proofpoint-GUID: er5ZAZG1nXXdrbj9x89ZZyO--BBTB1dU
+X-Proofpoint-ORIG-GUID: er5ZAZG1nXXdrbj9x89ZZyO--BBTB1dU
+To:     unlisted-recipients:; (no To-header on input)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D215943
+As 'vnum' is controlled by user, so if user tries to allocate memory
+larger than(>=) MAX_ORDER, then kcalloc() will fail, it creates a stack
+trace and messes up dmesg with a warning.
 
---- Comment #10 from charlotte@extrahop.com ---
-> is this a serious issue or only cosmetic one?
+Add __GFP_NOWARN in order to avoid too large allocation warning.
+This is detected by static analysis using smatch.
 
-the original bug report is cosmetic. the linked patch set is not a function=
-al
-change, it fixes the cosmetic issue.
+Fixes: c3e2fe9222d4 ("scsi: scsi_debug: Implement VERIFY(10), add VERIFY(16)")
+Signed-off-by: Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>
+---
+ drivers/scsi/scsi_debug.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-there might be other issues in this driver (which should go in another bug i
-guess?). but if you're seeing the same backtraces then you're probably just
-having the cosmetic issue.
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 697fc57bc711..cbb9395c90c1 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -4429,7 +4429,7 @@ static int resp_verify(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	if (ret)
+ 		return ret;
+ 
+-	arr = kcalloc(lb_size, vnum, GFP_ATOMIC);
++	arr = kcalloc(lb_size, vnum, GFP_ATOMIC | __GFP_NOWARN);
+ 	if (!arr) {
+ 		mk_sense_buffer(scp, ILLEGAL_REQUEST, INSUFF_RES_ASC,
+ 				INSUFF_RES_ASCQ);
+-- 
+2.38.1
 
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are the assignee for the bug.=
