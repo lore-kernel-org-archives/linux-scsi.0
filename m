@@ -2,173 +2,78 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8100FC433FE
-	for <linux-scsi@archiver.kernel.org>; Sun, 13 Nov 2022 18:43:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CD24C43217
+	for <linux-scsi@archiver.kernel.org>; Sun, 13 Nov 2022 20:34:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235513AbiKMSnP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 13 Nov 2022 13:43:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35856 "EHLO
+        id S235481AbiKMUeB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 13 Nov 2022 15:34:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34392 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234105AbiKMSnO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Nov 2022 13:43:14 -0500
-Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E1A51007A;
-        Sun, 13 Nov 2022 10:43:13 -0800 (PST)
-Received: by mail-pf1-x42d.google.com with SMTP id b185so9135346pfb.9;
-        Sun, 13 Nov 2022 10:43:13 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=k8vSHHNv2Bg5J5FULTMMY+fgGAbq3LKBKnD5MYk+EOY=;
-        b=VnNFK5a1E1GQzM3wupjVRW3SI0Vc1BTnsUeIwaAR14C/kqQAR3NrlJSG5zLnpkTC/5
-         jknO24J2wojaDbcZuFLjOLO3OgvjRg1F/O3pGpU81MghmzgW8NDDiZs1p62Vr0vRPD0d
-         O6FoYSN1HlGPKjnlWHhWmfuHQAqydDh2mfYmGX3gUv+hiSFhkXIeQIovjRG9Pe9iP0M3
-         qe3qp0dZ6gB7saf0qEuAL9MOA/8Na6SWYO+It84mzHkdMWPLC16Lz/ASC7YaJ6M1elZY
-         OeaW0DW/F2lygR71xCRD8U5mfDJVTwALozG0sstN4IqUCDGgetK/KfWl7F0zOMFMxMB4
-         RnkQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=k8vSHHNv2Bg5J5FULTMMY+fgGAbq3LKBKnD5MYk+EOY=;
-        b=0JmbDZV1jHjbx1KnvtiAigslpCvjZEUWliGAgchEJagc4vHiO7RrjZBL3o9UgZ+tg9
-         WokmlvH4RWE8cOW4Ke6d/CoBhbPOngVuJcSdpC8/v3Oc5xBCHgLesYbDAXx+5mpmjPUh
-         ffIWI/mLt838i2wqDIney4ocExvQB61Sl63smAoPdLmA7br0jGc+7BCaYPRsJfdRaZnP
-         qKetIdLcJNDQNH7NzQ4Yeg2AN5tkPoArJhne4sZL6qcm1TbQph8N03C66NGrocTM+EH8
-         uyu72Uj2PkMpcFTIKSzr/A4hcB4wZD1DjES499Li/Za0WBQn1K5OQkTjYACq10ZhylTX
-         H7Zg==
-X-Gm-Message-State: ANoB5pmjwNX1jF2PJdhguPkSlnQ6tNXUppk+PQuXjZWqeOuLyErtRT2M
-        d97bLxzZn9zHAfak4NbMY075O1vTNd26eEWjum8=
-X-Google-Smtp-Source: AA0mqf5rHz+vA5PQaqvoliDSV5HsO18XlEPUxjK8RFVBc/k8VeAYWvIh8ol3exz4WKy3J92eKzHMUPkUG3GNbfvqs9A=
-X-Received: by 2002:aa7:96a2:0:b0:56b:f62c:4dc0 with SMTP id
- g2-20020aa796a2000000b0056bf62c4dc0mr10810717pfk.79.1668364992445; Sun, 13
- Nov 2022 10:43:12 -0800 (PST)
-MIME-Version: 1.0
-References: <yq15zo86nvk.fsf@oracle.com> <20190819163546.915-1-khorenko@virtuozzo.com>
- <CADvTj4rVS-wJy1B=dgEO1AOADNYgL3XkZ01Aq=RTfPGEZC+VMA@mail.gmail.com>
- <ffdb2223-eed3-75b4-a003-4e4c96b49947@grossegger.com> <yq135kacnny.fsf@ca-mkp.ca.oracle.com>
- <CADvTj4qfPhEKy2V0crGs+Hc_fq=P5OKWFohG9QbTHK3i+GWc=Q@mail.gmail.com>
- <106f384f-d9e2-905d-5ac5-fe4ffd962122@virtuozzo.com> <CADvTj4rd+Z8S8vwnsmn2a7BXDPBwx1iqWRmE+SbtWep=Lnr20g@mail.gmail.com>
- <BYAPR11MB36066925274C38555F20FB17FA339@BYAPR11MB3606.namprd11.prod.outlook.com>
-In-Reply-To: <BYAPR11MB36066925274C38555F20FB17FA339@BYAPR11MB3606.namprd11.prod.outlook.com>
-From:   James Hilliard <james.hilliard1@gmail.com>
-Date:   Sun, 13 Nov 2022 14:42:59 -0400
-Message-ID: <CADvTj4qH5xuK9ecEPi3Pm9t962E=nnH0oTBqWv4UPmibeASqdQ@mail.gmail.com>
-Subject: Re: [PATCH v3 0/1] aacraid: Host adapter Adaptec 6405 constantly
- resets under high io load
-To:     Sagar.Biradar@microchip.com
-Cc:     martin.petersen@oracle.com, khorenko@virtuozzo.com,
-        christian@grossegger.com, aacraid@microsemi.com,
-        Don.Brace@microchip.com, Tom.White@microchip.com,
-        linux-scsi@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S235443AbiKMUd7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Nov 2022 15:33:59 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 706BBB87D;
+        Sun, 13 Nov 2022 12:33:58 -0800 (PST)
+Message-ID: <20221113201935.776707081@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1668371635;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc; bh=7MxnopjDUQ1bdcA7I42+FS4FruEBgUMrTam7b1hHOfY=;
+        b=GD7AYqNO+9zs89yvH9A3kuIe3BFCbmfyUX9bM5DxoGC2/9W9NdipMWcwOhTl9Pifdc0yCX
+        EDhvw2y+NoWqtlUiYz9FJqPR9CQny0Z12KgZ1d5E+TGqMmHlGz7MsPwC8U14oZBCtfjm6E
+        REU/mFYEcZcwcS0BNroWm8KMYTtPidN5lfjTpV++dxwqsHCUccIX2hT1SqgjPzktYZ+lG4
+        iELCXsN4rAiDDZdNSxbOCmhU6ODxCoqh5FpA0V3jZkg/TqabJcXckbAakEpN9zUH++JIo7
+        t5Thzi4kcs9WVGg3Y1kptNIVVOv3RRInTTR/1b4TKFM82gG7b4uRm+PuDFV7Hw==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1668371635;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc; bh=7MxnopjDUQ1bdcA7I42+FS4FruEBgUMrTam7b1hHOfY=;
+        b=TOAACLZw9M5uSJ1ngz5jOUvHAmnmW+licTR7ipmgh8VxLfj/M9NIf4LtBb5fWxUDQ+jAKO
+        PNfZNRVVBs7etJCQ==
+From:   Thomas Gleixner <tglx@linutronix.de>
+To:     LKML <linux-kernel@vger.kernel.org>
+Cc:     Marc Zyngier <maz@kernel.org>, Lee Jones <lee@kernel.org>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-ide@vger.kernel.org, James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Stuart Yoder <stuyoder@gmail.com>,
+        Laurentiu Tudor <laurentiu.tudor@nxp.com>,
+        Fenghua Yu <fenghua.yu@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Vinod Koul <vkoul@kernel.org>, dmaengine@vger.kernel.org,
+        Ioana Ciornei <ioana.ciornei@nxp.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>, netdev@vger.kernel.org,
+        Simon Horman <simon.horman@corigine.com>,
+        oss-drivers@corigine.com, Roy Pledge <Roy.Pledge@nxp.com>,
+        Diana Craciun <diana.craciun@oss.nxp.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Cornelia Huck <cohuck@redhat.com>, kvm@vger.kernel.org,
+        Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
+        Robin Murphy <robin.murphy@arm.com>, iommu@lists.linux.dev
+Subject: [patch 00/10] genirq/msi: Treewide cleanup of pointless linux/msi.h includes
+Date:   Sun, 13 Nov 2022 21:33:54 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Oct 27, 2022 at 1:17 PM <Sagar.Biradar@microchip.com> wrote:
->
-> Hi James and Konstantin,
->
-> *Limiting the audience to avoid spamming*
->
-> Sorry for delayed response as I was on vacation.
-> This one got missed somehow as someone else was looking into this and is =
-no longer with the company.
->
-> I will look into this, meanwhile I wanted to check if you (or someone els=
-e you know) had a chance to test this thoroughly with the latest kernel?
-> I will get back to you with some more questions or the confirmation in a =
-day or two max.
+While working on per device MSI domains I noticed that quite some files
+include linux/msi.h just because.
 
-Did this ever get looked at?
+The top level comment in the header file clearly says:
 
-As this exact patch was merged into the vendor aacraid a while ago I'm not =
-sure
-why it wouldn't be good to merge to mainline as well.
+  Regular device drivers have no business with any of these functions....
 
-Vendor aacraid release with this patch merged:
-https://download.adaptec.com/raid/aac/linux/aacraid-linux-src-1.2.1-60001.t=
-gz
+and actually none of the drivers needs anything from msi.h.
 
->
->
-> Thanks for your patience.
-> Sagar
->
->
-> -----Original Message-----
-> From: James Hilliard <james.hilliard1@gmail.com>
-> Sent: Thursday, October 27, 2022 1:40 AM
-> To: Martin K. Petersen <martin.petersen@oracle.com>
-> Cc: Konstantin Khorenko <khorenko@virtuozzo.com>; Christian Gro=C3=9Fegge=
-r <christian@grossegger.com>; linux-scsi@vger.kernel.org; Adaptec OEM Raid =
-Solutions <aacraid@microsemi.com>; Sagar Biradar - C34249 <Sagar.Biradar@mi=
-crochip.com>; Linux Kernel Mailing List <linux-kernel@vger.kernel.org>; Don=
- Brace - C33706 <Don.Brace@microchip.com>
-> Subject: Re: [PATCH v3 0/1] aacraid: Host adapter Adaptec 6405 constantly=
- resets under high io load
->
-> EXTERNAL EMAIL: Do not click links or open attachments unless you know th=
-e content is safe
->
-> On Wed, Oct 19, 2022 at 2:03 PM Konstantin Khorenko <khorenko@virtuozzo.c=
-om> wrote:
-> >
-> > On 10.10.2022 14:31, James Hilliard wrote:
-> > > On Tue, Feb 22, 2022 at 10:41 PM Martin K. Petersen
-> > > <martin.petersen@oracle.com> wrote:
-> > >>
-> > >>
-> > >> Christian,
-> > >>
-> > >>> The faulty patch (Commit: 395e5df79a9588abf) from 2017 should be
-> > >>> repaired with Konstantin Khorenko (1):
-> > >>>
-> > >>>    scsi: aacraid: resurrect correct arc ctrl checks for Series-6
-> > >>
-> > >> It would be great to get this patch resubmitted by Konstantin and
-> > >> acked by Microchip.
->
-> Can we merge this as is since microchip does not appear to be maintaining=
- this driver any more or responding?
->
-> > >
-> > > Does the patch need to be rebased?
-> >
-> > James, i have just checked - the old patch (v3) applies cleanly onto la=
-test master branch.
-> >
-> > > Based on this it looks like someone at microchip may have already rev=
-iewed:
-> > > v3 changes:
-> > >   * introduced another wrapper to check for devices except for Series=
- 6
-> > >     controllers upon request from Sagar Biradar (Microchip)
-> >
-> > Well, back in the year 2019 i've created a bug in RedHat bugzilla
-> > https://bugzilla.redhat.com/show_bug.cgi?id=3D1724077
-> > (the bug is private, this is default for Redhat bugs)
-> >
-> > In this bug Sagar Biradar (with the email @microchip.com) suggested me
-> > to rework the patch - i've done that and sent the v3.
-> >
-> > And nothing happened after that, but in a ~year (2020-06-19) the bug
-> > was closed with the resolution NOTABUG and a comment that S6 users will=
- find the patch useful.
-> >
-> > i suppose S6 is so old that RedHat just does not have customers using
-> > it and Microchip company itself is also not that interested in handling=
- so old hardware issues.
-> >
-> > Sorry, i was unable to get a final ack from Microchip, i've written
-> > direct emails to the addresses which is found in the internet, tried
-> > to connect via linkedin, no luck.
-> >
-> > --
-> > Konstantin Khorenko
+The series is not depending on anything so the individual patches can be
+picked up by the relevant maintainers. I'll mop up the leftovers close to
+the merge window.
+
+Thanks,
+
+	tglx
