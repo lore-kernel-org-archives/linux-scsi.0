@@ -2,103 +2,181 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A6FDC433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Nov 2022 11:05:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04F2EC433FE
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Nov 2022 11:26:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236546AbiKNLF4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Nov 2022 06:05:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60574 "EHLO
+        id S236253AbiKNL03 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Nov 2022 06:26:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52652 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236536AbiKNLFz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Nov 2022 06:05:55 -0500
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D0AD14086
-        for <linux-scsi@vger.kernel.org>; Mon, 14 Nov 2022 03:05:53 -0800 (PST)
-Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4N9mgv6v5gz4f3jMF
-        for <linux-scsi@vger.kernel.org>; Mon, 14 Nov 2022 19:05:47 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.102.38])
-        by APP4 (Coremail) with SMTP id gCh0CgD3GtgOIXJjjDMLAg--.27987S4;
-        Mon, 14 Nov 2022 19:05:50 +0800 (CST)
-From:   Wei Yongjun <weiyongjun@huaweicloud.com>
-To:     Maurizio Lombardi <mlombard@redhat.com>,
-        Chad Dupuis <chad.dupuis@qlogic.com>,
-        Saurav Kashyap <skashyap@marvell.com>,
-        Javed Hasan <jhasan@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Wei Yongjun <weiyongjun1@huawei.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH] scsi: bnx2fc: Fix skb double free in bnx2fc_rcv()
-Date:   Mon, 14 Nov 2022 11:06:26 +0000
-Message-Id: <20221114110626.526643-1-weiyongjun@huaweicloud.com>
-X-Mailer: git-send-email 2.34.1
+        with ESMTP id S235973AbiKNL0M (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Nov 2022 06:26:12 -0500
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05CC7B92
+        for <linux-scsi@vger.kernel.org>; Mon, 14 Nov 2022 03:23:02 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1668424982; x=1699960982;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=UhX+lK+NBUxNnBvuyP/67fIuEYgdFxFXIQTYbix1mvI=;
+  b=NdOACHAInh1kbeFsW7yeoftERsOo6pOqsCqWzmbynbTXSv7NxT3wMA8B
+   DNV0gTUEXhIpaPuZ9q7XXNEDTqKKHK0bYeqLv7B04Q1PqqLNyYTYE9pWK
+   WNgyovoONurGQzPwcLVcvjB7UPOh2JTubb5c5wPHA98ez+6ZPRrgZYBE/
+   dfiIW5/LfZWO3ykwjTV80YXww9Bj8xggcmQq39/NdWTRN5EeIIDH1T/Dz
+   Et8K/LWuJKLPg+xdlhhjdb0zRt1HfZgIyAhyz1oU4wV5hReFlGPvR9Ghf
+   Tj1RYwzUA+n17IlZJq4mkWKzLON+P559pJR2NV22Y7g7OVS8eWaucHQUF
+   A==;
+X-IronPort-AV: E=Sophos;i="5.96,161,1665417600"; 
+   d="scan'208";a="221373410"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 14 Nov 2022 19:23:01 +0800
+IronPort-SDR: 2r1rfu65PKEDt1XXGJxQXrvIYr7rbRQTaQJej3zu2H3joQ3BQlLb8dUZLdrIxJPPBEpTDND/E6
+ 2MsukTFfQ7Brd9UAEeKwoP9SIpSgH3bj2460ZyrS0vURtLbe9E/xLoQj8i85Gt/vhuD9QJaQZG
+ P/YjGSDGfJyCQE7zqMek6bKy9kc3Om2SzC//yElhHDLe/mx1fxL7JN3F1IvyOilnBFrGiENs7Y
+ obY/Y0ps75sWtAZVccl572VAtYoLl0SKUf4uQ4W52K0Mbik3xS93kMfUIR4IdvP/bcsXsHlzua
+ FZQ=
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 14 Nov 2022 02:36:16 -0800
+IronPort-SDR: WutOMhVkpXZ0sav+EHDvynDlREaU5VFssneVAxf4dw5tyqzE/xohsw+qxh4XHvVPVI5z68BGZh
+ 7t/tqS4uElOgH1RZ2642POlNYyv0AldUiB90kOSAS206gBNbx5T1QQaDNtu8nuzc2wX0OmDoqm
+ mvAhs54MWhDuQDsYBkRFn/EoqYzoOlV2pl7JrmTTpiQQUbvwl0QmjXEbHIBPhyGkNtbHWO04Ow
+ G3aRyFgrhZreWvqdAQoIWNm8WUMQEpuZ8CwJeaiMunSwcDEIcYW6rPohY0dBu12aAfmtDauEs5
+ 6x8=
+WDCIronportException: Internal
+Received: from unknown (HELO redsun91.ssa.fujisawa.hgst.com) ([10.149.66.72])
+  by uls-op-cesaip02.wdc.com with ESMTP; 14 Nov 2022 03:23:00 -0800
+From:   Johannes Thumshirn <johannes.thumshirn@wdc.com>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org,
+        Damien Le Moal <Damien.LeMoal@opensource.wdc.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Subject: [PATCH] scsi: sd_zbc: trace zone append emulation
+Date:   Mon, 14 Nov 2022 03:22:53 -0800
+Message-Id: <278ba0682187eae377f39f2c6646706c388df17b.1668415091.git.johannes.thumshirn@wdc.com>
+X-Mailer: git-send-email 2.37.3
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgD3GtgOIXJjjDMLAg--.27987S4
-X-Coremail-Antispam: 1UD129KBjvJXoW7Zr18JryfKr4kCr45Cw43Awb_yoW8Gw43pa
-        n0gw15CF4DCw45Cr4jq3yUAr1Y9a45GryfC3s7Ja15Wa4fJ345JFnYq3W0vr4rGrWkuw47
-        trn0yFyYga1qqr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUgKb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-        xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-        0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-        6I80ewAv7VC0I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-        Cjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCj
-        c4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4
-        CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1x
-        MIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Zr0_Wr
-        1UMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBI
-        daVFxhVjvjDU0xZFpf9x07UQzVbUUUUU=
-X-CM-SenderInfo: 5zhl50pqjm3046kxt4xhlfz01xgou0bp/
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Wei Yongjun <weiyongjun1@huawei.com>
+Add tracepoints to the SCSI zone append emulation, in order to trace the
+zone start to write-pointer aligned LBA translation and the corresponding
+completion.
 
-skb_share_check() already drop the reference of skb when return
-NULL, using kfree_skb() in the error handling path lead to skb
-double free.
-
-Fix it by remve the variable tmp_skb, and return directly when
-skb_share_check() return NULL.
-
-Fixes: 01a4cc4d0cd6 ("bnx2fc: do not add shared skbs to the fcoe_rx_list")
-Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+ drivers/scsi/sd_zbc.c       |  5 +++
+ include/trace/events/scsi.h | 64 +++++++++++++++++++++++++++++++++++++
+ 2 files changed, 69 insertions(+)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index 05ddbb9bb7d8..451a58e0fd96 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -429,7 +429,6 @@ static int bnx2fc_rcv(struct sk_buff *skb, struct net_device *dev,
- 	struct fcoe_ctlr *ctlr;
- 	struct fcoe_rcv_info *fr;
- 	struct fcoe_percpu_s *bg;
--	struct sk_buff *tmp_skb;
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index bd15624c6322..956d1982c51b 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -18,6 +18,8 @@
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
  
- 	interface = container_of(ptype, struct bnx2fc_interface,
- 				 fcoe_packet_type);
-@@ -441,11 +440,9 @@ static int bnx2fc_rcv(struct sk_buff *skb, struct net_device *dev,
- 		goto err;
++#include <trace/events/scsi.h>
++
+ #include "sd.h"
+ 
+ /**
+@@ -450,6 +452,7 @@ blk_status_t sd_zbc_prepare_zone_append(struct scsi_cmnd *cmd, sector_t *lba,
+ 			break;
+ 		}
+ 
++		trace_scsi_prepare_zone_append(cmd, *lba, wp_offset);
+ 		*lba += wp_offset;
  	}
+ 	spin_unlock_irqrestore(&sdkp->zones_wp_offset_lock, flags);
+@@ -558,6 +561,8 @@ static unsigned int sd_zbc_zone_wp_update(struct scsi_cmnd *cmd,
  
--	tmp_skb = skb_share_check(skb, GFP_ATOMIC);
--	if (!tmp_skb)
--		goto err;
--
--	skb = tmp_skb;
-+	skb = skb_share_check(skb, GFP_ATOMIC);
-+	if (!skb)
-+		return -1;
+ 	switch (op) {
+ 	case REQ_OP_ZONE_APPEND:
++		trace_scsi_zone_wp_update(cmd, rq->__sector,
++				  sdkp->zones_wp_offset[zno], good_bytes);
+ 		rq->__sector += sdkp->zones_wp_offset[zno];
+ 		fallthrough;
+ 	case REQ_OP_WRITE_ZEROES:
+diff --git a/include/trace/events/scsi.h b/include/trace/events/scsi.h
+index a2c7befd451a..50d36aa417cc 100644
+--- a/include/trace/events/scsi.h
++++ b/include/trace/events/scsi.h
+@@ -327,6 +327,70 @@ TRACE_EVENT(scsi_eh_wakeup,
+ 	TP_printk("host_no=%u", __entry->host_no)
+ );
  
- 	if (unlikely(eth_hdr(skb)->h_proto != htons(ETH_P_FCOE))) {
- 		printk(KERN_ERR PFX "bnx2fc_rcv: Wrong FC type frame\n");
++TRACE_EVENT(scsi_prepare_zone_append,
++
++	    TP_PROTO(struct scsi_cmnd *cmnd, sector_t lba,
++		     unsigned int wp_offset),
++
++	    TP_ARGS(cmnd, lba, wp_offset),
++
++	    TP_STRUCT__entry(
++		     __field( unsigned int, host_no )
++		     __field( unsigned int, channel )
++		     __field( unsigned int, id )
++		     __field( unsigned int, lun )
++		     __field( sector_t, lba )
++		     __field( unsigned int, wp_offset)
++	    ),
++
++	    TP_fast_assign(
++		__entry->host_no	= cmnd->device->host->host_no;
++		__entry->channel	= cmnd->device->channel;
++		__entry->id		= cmnd->device->id;
++		__entry->lun		= cmnd->device->lun;
++		__entry->lba		= lba;
++		__entry->wp_offset	= wp_offset;
++	    ),
++
++	    TP_printk("host_no=%u, channel=%u id=%u lun=%u lba=%llu wp_offset=%u",
++		      __entry->host_no, __entry->channel, __entry->id,
++		      __entry->lun, __entry->lba, __entry->wp_offset)
++);
++
++TRACE_EVENT(scsi_zone_wp_update,
++
++	    TP_PROTO(struct scsi_cmnd *cmnd, sector_t rq_sector,
++		     unsigned int wp_offset, unsigned int good_bytes),
++
++	    TP_ARGS(cmnd, rq_sector, wp_offset, good_bytes),
++
++	    TP_STRUCT__entry(
++		     __field( unsigned int, host_no )
++		     __field( unsigned int, channel )
++		     __field( unsigned int, id )
++		     __field( unsigned int, lun )
++		     __field( sector_t, rq_sector )
++		     __field( unsigned int, wp_offset)
++		     __field( unsigned int, good_bytes)
++	    ),
++
++	    TP_fast_assign(
++		__entry->host_no	= cmnd->device->host->host_no;
++		__entry->channel	= cmnd->device->channel;
++		__entry->id		= cmnd->device->id;
++		__entry->lun		= cmnd->device->lun;
++		__entry->rq_sector	= rq_sector;
++		__entry->wp_offset	= wp_offset;
++		__entry->good_bytes	= good_bytes;
++	    ),
++
++	    TP_printk("host_no=%u, channel=%u id=%u lun=%u rq_sector=%llu" \
++		      " wp_offset=%u good_bytes=%u",
++		      __entry->host_no, __entry->channel, __entry->id,
++		      __entry->lun, __entry->rq_sector, __entry->wp_offset,
++		      __entry->good_bytes)
++);
++
+ #endif /*  _TRACE_SCSI_H */
+ 
+ /* This part must be outside protection */
 -- 
-2.34.1
+2.37.3
 
