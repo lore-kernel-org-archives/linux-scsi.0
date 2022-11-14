@@ -2,107 +2,105 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F596C433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Nov 2022 03:40:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C086C433FE
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Nov 2022 05:39:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235462AbiKNDkm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 13 Nov 2022 22:40:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59598 "EHLO
+        id S235551AbiKNFjs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Nov 2022 00:39:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54742 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235249AbiKNDkl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Nov 2022 22:40:41 -0500
-Received: from mxct.zte.com.cn (mxct.zte.com.cn [58.251.27.85])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47BC36559;
-        Sun, 13 Nov 2022 19:40:40 -0800 (PST)
-Received: from mxde.zte.com.cn (unknown [10.35.20.165])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mxct.zte.com.cn (FangMail) with ESMTPS id 4N9ZpG44z7zjn8;
-        Mon, 14 Nov 2022 11:40:38 +0800 (CST)
-Received: from mxus.zte.com.cn (unknown [10.207.168.7])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mxde.zte.com.cn (FangMail) with ESMTPS id 4N9ZpB72rKz4xD31;
-        Mon, 14 Nov 2022 11:40:34 +0800 (CST)
-Received: from mxhk.zte.com.cn (unknown [192.168.250.138])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mxus.zte.com.cn (FangMail) with ESMTPS id 4N9Zp74zSvz9tyD6;
-        Mon, 14 Nov 2022 11:40:31 +0800 (CST)
-Received: from mxct.zte.com.cn (unknown [192.168.251.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mxhk.zte.com.cn (FangMail) with ESMTPS id 4N9Zp42p3gz4xVnD;
-        Mon, 14 Nov 2022 11:40:28 +0800 (CST)
-Received: from mse-fl1.zte.com.cn (unknown [10.5.228.132])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mxct.zte.com.cn (FangMail) with ESMTPS id 4N9Zp20fR1z4y0tt;
-        Mon, 14 Nov 2022 11:40:26 +0800 (CST)
-Received: from szxlzmapp06.zte.com.cn ([10.5.230.252])
-        by mse-fl1.zte.com.cn with SMTP id 2AE3eC1t022476;
-        Mon, 14 Nov 2022 11:40:12 +0800 (+08)
-        (envelope-from yang.yang29@zte.com.cn)
-Received: from mapi (szxlzmapp04[null])
-        by mapi (Zmail) with MAPI id mid14;
-        Mon, 14 Nov 2022 11:40:13 +0800 (CST)
-Date:   Mon, 14 Nov 2022 11:40:13 +0800 (CST)
-X-Zmail-TransId: 2b066371b89d59d038a6
-X-Mailer: Zmail v1.0
-Message-ID: <202211141140133437292@zte.com.cn>
-Mime-Version: 1.0
-From:   <yang.yang29@zte.com.cn>
-To:     <martin.petersen@oracle.com>
-Cc:     <linux-scsi@vger.kernel.org>, <target-devel@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <xu.panda@zte.com.cn>,
-        <yang.yang29@zte.com.cn>
-Subject: =?UTF-8?B?W1BBVENIIGxpbnV4LW5leHRdIHNjc2k6IHRhcmdldDogVXNlIHN5c2ZzX3N0cmVxKCkgaW5zdGVhZCBvZiBzdHJuY21wKCk=?=
-Content-Type: text/plain;
-        charset="UTF-8"
-X-MAIL: mse-fl1.zte.com.cn 2AE3eC1t022476
-X-Fangmail-Gw-Spam-Type: 0
-X-FangMail-Miltered: at cgslv5.04-192.168.251.14.novalocal with ID 6371B8B5.000 by FangMail milter!
-X-FangMail-Envelope: 1668397238/4N9ZpG44z7zjn8/6371B8B5.000/10.35.20.165/[10.35.20.165]/mxde.zte.com.cn/<yang.yang29@zte.com.cn>
-X-Fangmail-Anti-Spam-Filtered: true
-X-Fangmail-MID-QID: 6371B8B5.000/4N9ZpG44z7zjn8
+        with ESMTP id S235484AbiKNFjp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Nov 2022 00:39:45 -0500
+Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F32416589;
+        Sun, 13 Nov 2022 21:39:45 -0800 (PST)
+Received: by mail-pj1-x102d.google.com with SMTP id v4-20020a17090a088400b00212cb0ed97eso9602608pjc.5;
+        Sun, 13 Nov 2022 21:39:45 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=hlwMTpTYCyZp/WYWlkzARk2edXg5YSk1kRs4+wjiJ78=;
+        b=gYJf99H6t5oshYPBHt5OZfJzTgPJyH6QKNcodLlTZdpxgJ2R8S4he+OGuEAxMsR9y5
+         ASZs+iU7f6pSl27s9vA29p5di3ZuVw+mc2c6PRgQDv+omZot903R3/7/+vlj1O5aM6Jp
+         mHqF0l66+4Bq6uq7XsXJ7JWqqhoKs0Q+2A7E2hvxDPPQP0EfMF/c0KukZNbgmZ5qkptC
+         veD0g3hTUtkdEeQq/A6HXV9DeczZsoObu5eoTogYZf9hiId88KEi1E7DM9BJRErxldQu
+         P0xmiFxjc3l+co53nOijCSljb/BQI2Rj4GP8T1VOg8S3DW1bwhJOqBrMe7fk5dCmepkn
+         YwrA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=hlwMTpTYCyZp/WYWlkzARk2edXg5YSk1kRs4+wjiJ78=;
+        b=OEY56gSW/vNRHb1PlXGHrYs0uwh36usq2MzHt8nTwOeVZdKLyStYzp+PPTE84EjxPh
+         yJPPNE46FTvKFQgBYIiWMSfOxJ1YIz1IgSgllUNkn3MYzbIEnMUVt68POHn9ziDxv8q5
+         rbeHjREpR1jyJNirR3ur+ofqlXZlmisE1s+s4qoe5vI8Nyoju4xltbXPNvpNBA29/z7v
+         799mxu+r2s5eQQw1lua4sv8tCo9X/WaXVwR2gIl2yK/5rxePkJtM07+L1XuOn5HzV8fP
+         xDQl9VU6hqeBSd+U0KWlvUcuGBeAovsLhJn2GA7V6dgO+aUNImzTGYSUkPN/PGIXVx2E
+         kP/g==
+X-Gm-Message-State: ANoB5pnFqlPy1WKRdQ5G8HMQ+ZQVDSTsIhN7WQFT1jXO0wl2tvM2YcKL
+        tYgiBpwFe2V0pMS6e0403GU=
+X-Google-Smtp-Source: AA0mqf7hpuSDaZLMZByg2bX3Oe1xjlWimmLZjjYML3nU4TBu74nnsDZ1JREyHaURZUvI0mubJ5Nf1A==
+X-Received: by 2002:a17:902:b491:b0:179:fe08:48da with SMTP id y17-20020a170902b49100b00179fe0848damr12083430plr.154.1668404384605;
+        Sun, 13 Nov 2022 21:39:44 -0800 (PST)
+Received: from [192.168.50.208] (ip68-109-79-27.oc.oc.cox.net. [68.109.79.27])
+        by smtp.gmail.com with ESMTPSA id u10-20020a170902e5ca00b0017f64ab80e5sm6272341plf.179.2022.11.13.21.39.43
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 13 Nov 2022 21:39:44 -0800 (PST)
+Message-ID: <a15fbbb9-1f1e-c368-267d-5bcad5ce41c6@gmail.com>
+Date:   Sun, 13 Nov 2022 21:39:42 -0800
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.2
+Subject: Re: [patch 03/10] scsi: lpfc: Remove linux/msi.h include
+Content-Language: en-US
+To:     Thomas Gleixner <tglx@linutronix.de>,
+        LKML <linux-kernel@vger.kernel.org>
+Cc:     Marc Zyngier <maz@kernel.org>,
+        James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+References: <20221113201935.776707081@linutronix.de>
+ <20221113202428.436270297@linutronix.de>
+From:   James Smart <jsmart2021@gmail.com>
+In-Reply-To: <20221113202428.436270297@linutronix.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Xu Panda <xu.panda@zte.com.cn>
+On 11/13/2022 12:33 PM, Thomas Gleixner wrote:
+> Nothing in this file needs anything from linux/msi.h
+> 
+> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+> Cc: James Smart <james.smart@broadcom.com>
+> Cc: Dick Kennedy <dick.kennedy@broadcom.com>
+> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> Cc: linux-scsi@vger.kernel.org
+> ---
+>   drivers/scsi/lpfc/lpfc_init.c |    1 -
+>   1 file changed, 1 deletion(-)
+> 
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -36,7 +36,6 @@
+>   #include <linux/firmware.h>
+>   #include <linux/miscdevice.h>
+>   #include <linux/percpu.h>
+> -#include <linux/msi.h>
+>   #include <linux/irq.h>
+>   #include <linux/bitops.h>
+>   #include <linux/crash_dump.h>
+> 
 
-There is a ready-to-use method to compare a retrieved from a sysfs node
-string with another string. It treats both NUL and newline-then-NUL as
-equivalent string terminations. So use it instead of manually truncating
-the line length in the strncmp() method.
+yep - agree.
 
-Signed-off-by: Xu Panda <xu.panda@zte.com.cn>
-Signed-off-by: Yang Yang <yang.yang29@zte.com>
----
- drivers/target/target_core_configfs.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Reviewed-by: James Smart <jsmart2021@gmail.com>
 
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index b8a5c8d6cfde..119711c2bc08 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -208,7 +208,7 @@ static struct config_group *target_core_register_fabric(
- 		 * mkdir(2) system calls with known TCM fabric modules.
- 		 */
-
--		if (!strncmp(name, "iscsi", 5)) {
-+		if (!sysfs_streq(name, "iscsi")) {
- 			/*
- 			 * Automatically load the LIO Target fabric module when the
- 			 * following is called:
-@@ -221,7 +221,7 @@ static struct config_group *target_core_register_fabric(
- 				         " iscsi_target_mod.ko: %d\n", ret);
- 				return ERR_PTR(-EINVAL);
- 			}
--		} else if (!strncmp(name, "loopback", 8)) {
-+		} else if (!sysfs_streq(name, "loopback")) {
- 			/*
- 			 * Automatically load the tcm_loop fabric module when the
- 			 * following is called:
--- 
-2.15.2
+-- james
