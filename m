@@ -2,53 +2,53 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8DFAC4332F
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Nov 2022 12:31:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED3DCC433FE
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Nov 2022 12:31:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238985AbiKPMba (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Nov 2022 07:31:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46956 "EHLO
+        id S238725AbiKPMbm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Nov 2022 07:31:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47054 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238422AbiKPMbA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Nov 2022 07:31:00 -0500
+        with ESMTP id S233195AbiKPMbE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Nov 2022 07:31:04 -0500
 Received: from mail-wr1-x436.google.com (mail-wr1-x436.google.com [IPv6:2a00:1450:4864:20::436])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09ABEDFA6
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Nov 2022 04:30:37 -0800 (PST)
-Received: by mail-wr1-x436.google.com with SMTP id cl5so29663249wrb.9
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Nov 2022 04:30:36 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A94EF3BB
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Nov 2022 04:30:39 -0800 (PST)
+Received: by mail-wr1-x436.google.com with SMTP id l14so29678670wrw.2
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Nov 2022 04:30:39 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=lMcRJuxeNKzK+RXQpDGGFzbRIm01UwZgF0vUOiP8QjU=;
-        b=dwW1wbGhQleITUuPQ+cN9PCikMnpSJ0Id+5N6GH/3UlXZuhKO8z14q+9Bo8vKTDlnl
-         Cmv6fgzMwChjsltijJ4ztvQx40mqjpDWyM4A7ZAR7JE26yEj5z9Ht35kKKyifAr1xibw
-         lkh3L9IhPzfdlmD6A8VULs6y8zSSEkqSuKTJ9WRQqslhWn7fNk7SFmXGGi+V4+wWgx/f
-         il4JTFMWXepV8I4AwPAl/qdYLf/+LevZGwUk0RiSrs/2S4J1B+YnHLthLGjnXL3UkOr8
-         5KOmSWtY+gNqsEWmOM+FM4qRYPDLl+TJCNA3TBQankmlyf6tspqNKdlUo9uO+E2vdEop
-         Odug==
+        bh=giz1O34wJy7wAaesQ+FF9P4d8dC3HL0qQyzf5aCfDtI=;
+        b=f629j43mafTaOsWIuSAx2miVnTB7i3LJ4zxycA8qlKgosC41Di6RVChbXNnhQ6zpLk
+         CkylExavPLU0yzIZi6p9QV5xdTc8x3OBqWRKGM3yXzkvmz/+V+OKPyag10pzQBq7FxQl
+         pzm1+iG7natxVG/vrjkQYvUlt03U8VkrZ7WtjRO8xuwsUHrhQvBwnmEp3Lf3Hqrbz8NH
+         Ie+VikfwnaeJpb/1x89S9pGE4Uo4dFXU8m+V7P36iHWnle2khpHtN4tNROZZasCtyFju
+         NzEpnyavk4UvkFFEuxuQ5XxEZ7/0NbXMrMv4V+j5jqwxq71AQiyuM8ZMuXDkEqLoIMoK
+         ClQw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=lMcRJuxeNKzK+RXQpDGGFzbRIm01UwZgF0vUOiP8QjU=;
-        b=j5f2avmcS6YrLw82f7LUWys3IJI0DC7YxlEa7BDiIPRrBbUNfDRH3bc654aEE821+k
-         YM0rLMlQLlJOqpC4DhhgP2tRDGbcj3L8VNMo0noDaykpiTR/RniRQjDOEJyKsifI4B1x
-         qhMcasrm8gszSuYnuHKJI3gy7zDfHV7mP4/CIdtynVuot0Wzwu0GI6yzbOZb4cgUa4ug
-         lqIb+jMgZWxGiblD453Iu6vGV6qc+awXBc2AcFNz0LZ2VY72291NsAYXJGi6e8BVXWNu
-         fqJ4R6h8uevlCaZKYmRmaPDFOwxTjXQnzB1ULkTSTo+NKyBktc5aNQhuIP7P31voZY1U
-         cNwA==
-X-Gm-Message-State: ANoB5pk1OpFx0a6O+2HSKvG/qJgvGUjfHcfJQPo5+ImeoL/66Pe+0LmG
-        fYFU/1egGsWx70ksmtaDGoFaFK9hpAZSEg==
-X-Google-Smtp-Source: AA0mqf5DBhXsKIbQCm1qCaVipqpcbXdM/qEx2b1qny97+D4PjfQi+7ZmK+KWk5Dq/4d9IFp7+23qqw==
-X-Received: by 2002:a5d:6e0c:0:b0:236:5abb:590a with SMTP id h12-20020a5d6e0c000000b002365abb590amr13595607wrz.700.1668601835375;
-        Wed, 16 Nov 2022 04:30:35 -0800 (PST)
+        bh=giz1O34wJy7wAaesQ+FF9P4d8dC3HL0qQyzf5aCfDtI=;
+        b=z39rQyqA9R2p/kIFx7wE30GlMWQgavLjKFvCX8srFjkemrVOYddngAfO8d0iG+f6ZW
+         jU0eO/FMCwZ0gplhKvJzKynD2LiVCc0SoEu8uMMeUD6xIqe6m9HS9tScpYo6P7bZqDhJ
+         XUPmTD3DhuMUhpyDXIwRbrW2iE4KEsB8Gyw2rJ5wf0ZqUTAwWB24rmJDpY6vGGQYF7PK
+         CnKMDU+1byXTCxzBFABVCdFv3EqAiXYQfXcQNO+3ieERQzZflM83Fx25Fj+CAwusA771
+         haZrnmoDW1jhxw2LvCnFa8r+DvBHko3/JOfosTHDag+vFLSKBRxuxHXSOLOC+OiGDolo
+         nbjA==
+X-Gm-Message-State: ANoB5pmUqcJ4e7Tp5zt4MTTkbilTtw6f7dQQzgctNRVoLp18freudhQ7
+        6g3hc1RKcK7JaWR3S6SghkOpdg==
+X-Google-Smtp-Source: AA0mqf6uMeRIj4E2S0KLJgtKri2ZHqr04fidakEuU8TfyVjypeu/CWYCHR1kRZY8YCx/wmWIwy9yyg==
+X-Received: by 2002:a05:6000:12cf:b0:236:6e75:dc37 with SMTP id l15-20020a05600012cf00b002366e75dc37mr12858672wrx.504.1668601838129;
+        Wed, 16 Nov 2022 04:30:38 -0800 (PST)
 Received: from localhost.localdomain ([94.52.112.99])
-        by smtp.gmail.com with ESMTPSA id l42-20020a05600c1d2a00b003cf4eac8e80sm2870991wms.23.2022.11.16.04.30.34
+        by smtp.gmail.com with ESMTPSA id l42-20020a05600c1d2a00b003cf4eac8e80sm2870991wms.23.2022.11.16.04.30.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 16 Nov 2022 04:30:34 -0800 (PST)
+        Wed, 16 Nov 2022 04:30:37 -0800 (PST)
 From:   Abel Vesa <abel.vesa@linaro.org>
 To:     Andy Gross <agross@kernel.org>,
         Bjorn Andersson <andersson@kernel.org>,
@@ -59,9 +59,9 @@ To:     Andy Gross <agross@kernel.org>,
 Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
-Subject: [RFC PATCH 1/3] usb: Add USB repeater generic framework
-Date:   Wed, 16 Nov 2022 14:30:17 +0200
-Message-Id: <20221116123019.2753230-2-abel.vesa@linaro.org>
+Subject: [RFC PATCH 3/3] usb: repeater: Add Qualcomm PMIC eUSB2 driver
+Date:   Wed, 16 Nov 2022 14:30:19 +0200
+Message-Id: <20221116123019.2753230-4-abel.vesa@linaro.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20221116123019.2753230-1-abel.vesa@linaro.org>
 References: <20221116123019.2753230-1-abel.vesa@linaro.org>
@@ -71,367 +71,306 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-With more SoCs moving towards eUSB2, such platforms will have to use
-a USB 2.0 compliance repeater. This repeater HW-wise usually deals with
-level shifting, but depending on the implementation it can do much more.
-So add a ganeric USB framework that would allow either a generic PHY or
-some USB host controller to control and get a repeater from a devicetree
-phandle. This framework will further be used by platform specific
-drivers to register the repeater and implement platform specific ops.
+PM8550B contains a eUSB2 repeater used for making the eUSB2 from
+SM8550 USB 2.0 compliant.
+
+Add a platform specific repeater driver. It implements ops for init,
+reset and power on/off. On init, there is a configuration table that
+needs to be written to the repeater's registers.
 
 Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
 ---
- drivers/usb/Kconfig             |   2 +
- drivers/usb/Makefile            |   2 +
- drivers/usb/repeater/Kconfig    |   9 ++
- drivers/usb/repeater/Makefile   |   6 +
- drivers/usb/repeater/repeater.c | 198 ++++++++++++++++++++++++++++++++
- include/linux/usb/repeater.h    |  78 +++++++++++++
- 6 files changed, 295 insertions(+)
- create mode 100644 drivers/usb/repeater/Kconfig
- create mode 100644 drivers/usb/repeater/Makefile
- create mode 100644 drivers/usb/repeater/repeater.c
- create mode 100644 include/linux/usb/repeater.h
+ drivers/usb/repeater/Kconfig                  |  11 +
+ drivers/usb/repeater/Makefile                 |   1 +
+ .../usb/repeater/repeater-qcom-pmic-eusb2.c   | 251 ++++++++++++++++++
+ 3 files changed, 263 insertions(+)
+ create mode 100644 drivers/usb/repeater/repeater-qcom-pmic-eusb2.c
 
-diff --git a/drivers/usb/Kconfig b/drivers/usb/Kconfig
-index a871a988829d..c9ad102a0fa9 100644
---- a/drivers/usb/Kconfig
-+++ b/drivers/usb/Kconfig
-@@ -176,6 +176,8 @@ source "drivers/usb/gadget/Kconfig"
- 
- source "drivers/usb/typec/Kconfig"
- 
-+source "drivers/usb/repeater/Kconfig"
-+
- source "drivers/usb/roles/Kconfig"
- 
- endif # USB_SUPPORT
-diff --git a/drivers/usb/Makefile b/drivers/usb/Makefile
-index a81e6ef293af..c96c66304edd 100644
---- a/drivers/usb/Makefile
-+++ b/drivers/usb/Makefile
-@@ -67,4 +67,6 @@ obj-$(CONFIG_USBIP_CORE)	+= usbip/
- 
- obj-$(CONFIG_TYPEC)		+= typec/
- 
-+obj-$(CONFIG_USB_REPEATER)	+= repeater/
-+
- obj-$(CONFIG_USB_ROLE_SWITCH)	+= roles/
 diff --git a/drivers/usb/repeater/Kconfig b/drivers/usb/repeater/Kconfig
-new file mode 100644
-index 000000000000..e12cd22c0adb
---- /dev/null
+index e12cd22c0adb..20baeb8f950c 100644
+--- a/drivers/usb/repeater/Kconfig
 +++ b/drivers/usb/repeater/Kconfig
-@@ -0,0 +1,9 @@
-+# SPDX-License-Identifier: GPL-2.0
+@@ -7,3 +7,14 @@ config USB_REPEATER
+ 	  driver to bind together and to provide the USB driver ways to perform
+ 	  set of operations with repeater for USB2 functionality using PHY and
+ 	  controller driver.
 +
-+config USB_REPEATER
-+	tristate "USB Repeater Framework"
++config QCOM_PMIC_EUSB2_REPEATER
++	tristate "USB eUSB2 Repeater driver"
++	select USB_REPEATER
 +	help
-+	  Enable this to allow the USB PHY drivers and the connected repeater
-+	  driver to bind together and to provide the USB driver ways to perform
-+	  set of operations with repeater for USB2 functionality using PHY and
-+	  controller driver.
-diff --git a/drivers/usb/repeater/Makefile b/drivers/usb/repeater/Makefile
-new file mode 100644
-index 000000000000..2d1b5f348976
---- /dev/null
-+++ b/drivers/usb/repeater/Makefile
-@@ -0,0 +1,6 @@
-+# SPDX-License-Identifier: GPL-2.0
-+#
-+# Makefile for USB repeater drivers
-+#
++	  Enable this to support the USB eUSB2 repeater on Qualcomm PMIC chips.
++	  This driver provides support to reset, initialize, power up and configure
++	  the eUSB2 repeater for USB HS/FS/LS functionality where eUSB2 repeater
++	  is used.
 +
-+obj-$(CONFIG_USB_REPEATER)		+= repeater.o
-diff --git a/drivers/usb/repeater/repeater.c b/drivers/usb/repeater/repeater.c
++	  To compile the driver as a module, choose M here.
+diff --git a/drivers/usb/repeater/Makefile b/drivers/usb/repeater/Makefile
+index 2d1b5f348976..fed128407315 100644
+--- a/drivers/usb/repeater/Makefile
++++ b/drivers/usb/repeater/Makefile
+@@ -4,3 +4,4 @@
+ #
+ 
+ obj-$(CONFIG_USB_REPEATER)		+= repeater.o
++obj-$(CONFIG_QCOM_PMIC_EUSB2_REPEATER)	+= repeater-qcom-pmic-eusb2.o
+diff --git a/drivers/usb/repeater/repeater-qcom-pmic-eusb2.c b/drivers/usb/repeater/repeater-qcom-pmic-eusb2.c
 new file mode 100644
-index 000000000000..e97a95422735
+index 000000000000..1b6d46c28da4
 --- /dev/null
-+++ b/drivers/usb/repeater/repeater.c
-@@ -0,0 +1,198 @@
++++ b/drivers/usb/repeater/repeater-qcom-pmic-eusb2.c
+@@ -0,0 +1,251 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Copyright (c) 2022, Qualcomm Innovation Center, Inc. All rights reserved.
 + * Copyright (c) 2022, Linaro Limited
 + */
 +
-+#include <linux/device.h>
-+#include <linux/list.h>
 +#include <linux/module.h>
++#include <linux/platform_device.h>
++#include <linux/regulator/consumer.h>
++#include <linux/regmap.h>
 +#include <linux/of.h>
-+#include <linux/overflow.h>
++#include <linux/of_device.h>
 +
 +#include <linux/usb/repeater.h>
 +
-+static LIST_HEAD(usb_repeater_list);
-+static DEFINE_SPINLOCK(usb_repeater_lock);
++/* eUSB2 status registers */
++#define EUSB2_RPTR_STATUS		0x08
++#define	RPTR_OK				BIT(7)
 +
-+/**
-+ * usb_put_repeater - release the USB repeater
-+ * @rptr: the repeater returned by usb_get_repeater()
-+ *
-+ * Releases a refcount the caller received from usb_get_repeater().
-+ *
-+ * For use by USB PHY drivers.
-+ */
-+void usb_put_repeater(struct usb_repeater *rptr)
-+{
-+	if (rptr) {
-+		put_device(rptr->dev);
-+		if (rptr->dev->driver && rptr->dev->driver->owner) {
-+			struct module *owner = rptr->dev->driver->owner;
++/* eUSB2 control registers */
++#define EUSB2_EN_CTL1			0x46
++#define EUSB2_RPTR_EN			BIT(7)
 +
-+			module_put(owner);
-+		}
-+	}
-+}
-+EXPORT_SYMBOL_GPL(usb_put_repeater);
++#define PHY_HOST_MODE			BIT(0)
++#define EUSB2_FORCE_EN_5		0xE8
++#define F_CLK_19P2M_EN			BIT(6)
++#define F_CLK_19P2M_EN_SHIFT		6
 +
-+static struct usb_repeater *of_usb_find_repeater(struct device_node *node)
-+{
-+	struct usb_repeater *rptr;
++#define EUSB2_FORCE_VAL_5		0xED
++#define V_CLK_19P2M_EN			BIT(6)
++#define V_CLK_19P2M_EN_SHIFT		6
 +
-+	if (!of_device_is_available(node))
-+		return ERR_PTR(-ENODEV);
++#define EUSB2_TUNE_IUSB2		0x51
++#define EUSB2_TUNE_SQUELCH_U		0x54
++#define EUSB2_TUNE_USB2_PREEM		0x57
 +
-+	list_for_each_entry(rptr, &usb_repeater_list, head) {
-+		if (node != rptr->dev->of_node)
-+			continue;
-+
-+		return rptr;
++#define QCOM_EUSB2_REPEATER_INIT_CFG(o, v)	\
++	{					\
++		.offset = o,			\
++		.val = v,			\
 +	}
 +
-+	return ERR_PTR(-EPROBE_DEFER);
-+}
++#define to_qcom_eusb2_repeater(x) \
++	container_of((x), struct qcom_eusb2_repeater, repeater)
 +
-+static void devm_usb_repeater_release(struct device *dev, void *res)
-+{
-+	struct usb_repeater *rptr = *(struct usb_repeater **)res;
-+
-+	usb_put_repeater(rptr);
-+}
-+
-+/**
-+ * devm_usb_get_repeater_by_node - find the USB repeater by device_node
-+ * @dev: device that requests this USB repeater
-+ * @node: the device_node for the USB repeater device.
-+ * @nb: a notifier_block to register with the USB repeater.
-+ *
-+ * Returns the USB repeater driver associated with the given device_node,
-+ * after getting a refcount to it, -ENODEV if there is no such repeater or
-+ * -EPROBE_DEFER if the device is not yet loaded. While at that, it
-+ * also associates the device with
-+ * the repeater using devres. On driver detach, release function is invoked
-+ * on the devres data, then, devres data is freed.
-+ *
-+ * For use by peripheral drivers for devices related to a repeater,
-+ * such as a charger.
-+ */
-+struct  usb_repeater *devm_usb_get_repeater_by_node(struct device *dev,
-+					  struct device_node *node,
-+					  struct notifier_block *nb)
-+{
-+	struct usb_repeater *rptr = ERR_PTR(-ENOMEM);
-+	struct usb_repeater *rptr_devm;
-+	unsigned long flags;
-+
-+	rptr_devm = devres_alloc(devm_usb_repeater_release,
-+					sizeof(*rptr_devm), GFP_KERNEL);
-+	if (!rptr_devm) {
-+		dev_dbg(dev, "failed to allocate memory for devres\n");
-+		goto err0;
-+	}
-+
-+	spin_lock_irqsave(&usb_repeater_lock, flags);
-+
-+	rptr = of_usb_find_repeater(node);
-+	if (IS_ERR(rptr)) {
-+		devres_free(rptr_devm);
-+		goto err0;
-+	}
-+
-+	if (!try_module_get(rptr->dev->driver->owner)) {
-+		rptr = ERR_PTR(-ENODEV);
-+		devres_free(rptr_devm);
-+		goto err0;
-+	}
-+	devres_add(dev, rptr_devm);
-+
-+	get_device(rptr->dev);
-+err0:
-+	spin_unlock_irqrestore(&usb_repeater_lock, flags);
-+
-+	return rptr;
-+}
-+EXPORT_SYMBOL_GPL(devm_usb_get_repeater_by_node);
-+
-+/**
-+ * devm_usb_get_repeater_by_phandle - find the USB repeater by phandle
-+ * @dev: device that requests this repeater
-+ * @phandle: name of the property holding the repeater phandle value
-+ * @index: the index of the repeater
-+ *
-+ * Returns the USB repeater driver associated with the given phandle value,
-+ * after getting a refcount to it, -ENODEV if there is no such repeater or
-+ * -EPROBE_DEFER if there is a phandle to the repeater, but the device is
-+ * not yet loaded. While at that, it also associates the device with
-+ * the repeater using devres. On driver detach, release function is invoked
-+ * on the devres data, then, devres data is freed.
-+ *
-+ * For use by USB PHY drivers.
-+ */
-+struct usb_repeater *devm_usb_get_repeater_by_phandle(struct device *dev,
-+	const char *phandle, u8 index)
-+{
-+	struct device_node *node;
-+	struct usb_repeater *rptr;
-+
-+	if (!dev->of_node) {
-+		dev_dbg(dev, "device does not have a device node entry\n");
-+		return ERR_PTR(-EINVAL);
-+	}
-+
-+	node = of_parse_phandle(dev->of_node, phandle, index);
-+	if (!node) {
-+		dev_dbg(dev, "failed to get %s phandle in %pOF node\n", phandle,
-+			dev->of_node);
-+		return ERR_PTR(-ENODEV);
-+	}
-+	rptr = devm_usb_get_repeater_by_node(dev, node, NULL);
-+	of_node_put(node);
-+	return rptr;
-+}
-+EXPORT_SYMBOL_GPL(devm_usb_get_repeater_by_phandle);
-+
-+/**
-+ * usb_add_repeater_dev - declare the USB repeater
-+ * @rptr: the USB repeater to be used; or NULL
-+ *
-+ * This call is exclusively for use by repeater drivers to
-+ * register the device to allow the USB phy driver to control it
-+ * via repeater specific ops.
-+ */
-+int usb_add_repeater_dev(struct usb_repeater *rptr)
-+{
-+	unsigned long flags;
-+
-+	if (!rptr->dev) {
-+		dev_err(rptr->dev, "no device provided for repeater\n");
-+		return -EINVAL;
-+	}
-+
-+	spin_lock_irqsave(&usb_repeater_lock, flags);
-+	list_add_tail(&rptr->head, &usb_repeater_list);
-+	spin_unlock_irqrestore(&usb_repeater_lock, flags);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(usb_add_repeater_dev);
-+
-+/**
-+ * usb_remove_repeater - remove the USB repeater
-+ * @rptr: the USB Repeater to be removed;
-+ *
-+ * This reverts the effects of usb_add_repeater_dev
-+ */
-+void usb_remove_repeater_dev(struct usb_repeater *rptr)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&usb_repeater_lock, flags);
-+	if (rptr)
-+		list_del(&rptr->head);
-+	spin_unlock_irqrestore(&usb_repeater_lock, flags);
-+}
-+EXPORT_SYMBOL_GPL(usb_remove_repeater_dev);
-+
-+MODULE_DESCRIPTION("USB Repeater Framework");
-+MODULE_LICENSE("GPL");
-diff --git a/include/linux/usb/repeater.h b/include/linux/usb/repeater.h
-new file mode 100644
-index 000000000000..e68e0936f1e5
---- /dev/null
-+++ b/include/linux/usb/repeater.h
-@@ -0,0 +1,78 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/*
-+ * USB Repeater defines
-+ */
-+
-+#ifndef __LINUX_USB_REPEATER_H
-+#define __LINUX_USB_REPEATER_H
-+
-+struct usb_repeater {
-+	struct device		*dev;
-+	const char		*label;
-+	unsigned int		 flags;
-+
-+	struct list_head	head;
-+	int	(*reset)(struct usb_repeater *rptr, bool assert);
-+	int	(*init)(struct usb_repeater *rptr);
-+	int	(*power_on)(struct usb_repeater *rptr);
-+	int	(*power_off)(struct usb_repeater *rptr);
++struct qcom_eusb2_repeater_init_tbl {
++	unsigned int offset;
++	unsigned int val;
 +};
 +
-+#if IS_ENABLED(CONFIG_USB_REPEATER)
-+extern struct usb_repeater *devm_usb_get_repeater_by_phandle(struct device *dev,
-+	const char *phandle, u8 index);
-+extern struct usb_repeater *devm_usb_get_repeater_by_node(struct device *dev,
-+	struct device_node *node, struct notifier_block *nb);
-+extern int usb_add_repeater_dev(struct usb_repeater *rptr);
-+extern void usb_remove_repeater_dev(struct usb_repeater *rptr);
-+#else
-+static inline struct usb_repeater *devm_usb_get_repeater_by_phandle(struct device *dev,
-+	const char *phandle, u8 index)
++struct qcom_eusb2_repeater {
++	struct usb_repeater	repeater;
++	struct regmap		*regmap;
++	u16			base;
++	struct regulator_bulk_data *vregs;
++	const struct qcom_eusb2_repeater_cfg *cfg;
++};
++
++struct qcom_eusb2_repeater_cfg {
++	const struct qcom_eusb2_repeater_init_tbl *init_tbl;
++	int init_tbl_num;
++	/* regulators to be requested */
++	const char * const *vreg_list;
++	int num_vregs;
++};
++
++static const char * const pm8550b_vreg_l[] = {
++	"vdd18", "vdd3",
++};
++
++static const struct qcom_eusb2_repeater_init_tbl pm8550b_init_tbl[] = {
++	QCOM_EUSB2_REPEATER_INIT_CFG(EUSB2_TUNE_IUSB2, 0x8),
++	QCOM_EUSB2_REPEATER_INIT_CFG(EUSB2_TUNE_SQUELCH_U, 0x3),
++	QCOM_EUSB2_REPEATER_INIT_CFG(EUSB2_TUNE_USB2_PREEM, 0x5),
++};
++
++static const struct qcom_eusb2_repeater_cfg pm8550b_eusb2_cfg = {
++	.init_tbl	= pm8550b_init_tbl,
++	.init_tbl_num	= ARRAY_SIZE(pm8550b_init_tbl),
++	.vreg_list	= pm8550b_vreg_l,
++	.num_vregs	= ARRAY_SIZE(pm8550b_vreg_l),
++};
++
++static int qcom_eusb2_repeater_init_vregs(struct qcom_eusb2_repeater *rptr)
 +{
-+	return ERR_PTR(-ENXIO);
++	int num = rptr->cfg->num_vregs;
++	struct device *dev = rptr->repeater.dev;
++	int i;
++
++	rptr->vregs = devm_kcalloc(dev, num, sizeof(*rptr->vregs), GFP_KERNEL);
++	if (!rptr->vregs)
++		return -ENOMEM;
++
++	for (i = 0; i < num; i++)
++		rptr->vregs[i].supply = rptr->cfg->vreg_list[i];
++
++	return devm_regulator_bulk_get(dev, num, rptr->vregs);
 +}
 +
-+static inline struct usb_repeater *devm_usb_get_repeater_by_node(struct device *dev,
-+	struct device_node *node, struct notifier_block *nb)
++static int qcom_eusb2_repeater_cfg_init(struct qcom_eusb2_repeater *rptr)
 +{
-+	return ERR_PTR(-ENXIO);
++	const struct qcom_eusb2_repeater_init_tbl *init_tbl = rptr->cfg->init_tbl;
++	int num = rptr->cfg->init_tbl_num;
++	int i;
++
++	for (i = 0; i < num; i++)
++		regmap_update_bits(rptr->regmap, rptr->base + init_tbl[i].offset,
++					init_tbl[i].val, init_tbl[i].val);
++	return 0;
 +}
 +
-+static inline int usb_add_repeater_dev(struct usb_repeater *rptr) { return 0; }
-+static inline void usb_remove_repeater_dev(struct usb_repeater *rptr) { }
-+
-+#endif
-+
-+static inline int usb_repeater_reset(struct usb_repeater *rptr, bool assert)
++static int qcom_eusb2_repeater_init(struct usb_repeater *r)
 +{
-+	if (rptr && rptr->reset != NULL)
-+		return rptr->reset(rptr, assert);
-+	else
++	struct qcom_eusb2_repeater *rptr = to_qcom_eusb2_repeater(r);
++	int ret = 0;
++	u32 val;
++
++	qcom_eusb2_repeater_cfg_init(rptr);
++
++	if (r->flags & PHY_HOST_MODE) {
++		/*
++		 * CM.Lx is prohibited when repeater is already into Lx state as
++		 * per eUSB 1.2 Spec. Below implement software workaround until
++		 * PHY and controller is fixing seen observation.
++		 */
++		regmap_update_bits(rptr->regmap, rptr->base + EUSB2_FORCE_EN_5,
++				F_CLK_19P2M_EN, F_CLK_19P2M_EN);
++		regmap_update_bits(rptr->regmap, rptr->base + EUSB2_FORCE_VAL_5,
++				V_CLK_19P2M_EN, V_CLK_19P2M_EN);
++	} else {
++		/*
++		 * In device mode clear host mode related workaround as there
++		 * is no repeater reset available, and enable/disable of
++		 * repeater doesn't clear previous value due to shared
++		 * regulators (say host <-> device mode switch).
++		 */
++		regmap_update_bits(rptr->regmap, rptr->base + EUSB2_FORCE_EN_5,
++				F_CLK_19P2M_EN, 0);
++		regmap_update_bits(rptr->regmap, rptr->base + EUSB2_FORCE_VAL_5,
++				V_CLK_19P2M_EN, 0);
++	}
++
++	ret = regmap_read_poll_timeout(rptr->regmap, rptr->base + EUSB2_RPTR_STATUS, val,
++					val & RPTR_OK, 10, 5);
++	if (ret)
++		dev_err(r->dev, "initialization timed-out\n");
++
++	return ret;
++}
++
++static int qcom_eusb2_repeater_reset(struct usb_repeater *r, bool assert)
++{
++	struct qcom_eusb2_repeater *rptr = to_qcom_eusb2_repeater(r);
++
++	return regmap_update_bits(rptr->regmap, rptr->base + EUSB2_EN_CTL1,
++				EUSB2_RPTR_EN, assert ? EUSB2_RPTR_EN : 0x0);
++}
++
++static int qcom_eusb2_repeater_power_on(struct usb_repeater *r)
++{
++	struct qcom_eusb2_repeater *rptr = to_qcom_eusb2_repeater(r);
++
++	return regulator_bulk_enable(rptr->cfg->num_vregs, rptr->vregs);
++}
++
++static int qcom_eusb2_repeater_power_off(struct usb_repeater *r)
++{
++	struct qcom_eusb2_repeater *rptr = to_qcom_eusb2_repeater(r);
++
++	return regulator_bulk_disable(rptr->cfg->num_vregs, rptr->vregs);
++}
++
++static int qcom_eusb2_repeater_probe(struct platform_device *pdev)
++{
++	struct qcom_eusb2_repeater *rptr;
++	struct device *dev = &pdev->dev;
++	struct device_node *node;
++	u32 res;
++	int ret;
++
++	node = dev->of_node;
++
++	rptr = devm_kzalloc(dev, sizeof(*rptr), GFP_KERNEL);
++	if (!rptr)
++		return -ENOMEM;
++
++	rptr->repeater.dev = dev;
++	dev_set_drvdata(dev, rptr);
++
++	/* Get the specific init parameters of QMP phy */
++	rptr->cfg = of_device_get_match_data(dev);
++	if (!rptr->cfg)
++		return -EINVAL;
++
++	rptr->regmap = dev_get_regmap(dev->parent, NULL);
++	if (!rptr->regmap)
++		return -ENXIO;
++
++	ret = of_property_read_u32(node, "reg", &res);
++	if (ret < 0)
++		return ret;
++
++	rptr->base = res;
++
++	ret = qcom_eusb2_repeater_init_vregs(rptr);
++	if (ret < 0) {
++		dev_err(dev, "unable to get supplies\n");
++		return ret;
++	}
++
++	rptr->repeater.init		= qcom_eusb2_repeater_init;
++	rptr->repeater.reset		= qcom_eusb2_repeater_reset;
++	rptr->repeater.power_on		= qcom_eusb2_repeater_power_on;
++	rptr->repeater.power_off	= qcom_eusb2_repeater_power_off;
++
++	return usb_add_repeater_dev(&rptr->repeater);
++}
++
++static int qcom_eusb2_repeater_remove(struct platform_device *pdev)
++{
++	struct qcom_eusb2_repeater *rptr = platform_get_drvdata(pdev);
++
++	if (!rptr)
 +		return 0;
++
++	usb_remove_repeater_dev(&rptr->repeater);
++	qcom_eusb2_repeater_power_off(&rptr->repeater);
++	return 0;
 +}
 +
-+static inline int usb_repeater_init(struct usb_repeater *rptr)
-+{
-+	if (rptr && rptr->init != NULL)
-+		return rptr->init(rptr);
-+	else
-+		return 0;
-+}
++static const struct of_device_id qcom_eusb2_repeater_id_table[] = {
++	{
++		.compatible = "qcom,pm8550b-eusb2-repeater",
++		.data = &pm8550b_eusb2_cfg,
++	},
++	{ },
++};
++MODULE_DEVICE_TABLE(of, qcom_eusb2_repeater_id_table);
 +
-+static inline int usb_repeater_power_on(struct usb_repeater *rptr)
-+{
-+	if (rptr && rptr->power_on != NULL)
-+		return rptr->power_on(rptr);
-+	else
-+		return 0;
-+}
++static struct platform_driver qcom_eusb2_repeater_driver = {
++	.probe		= qcom_eusb2_repeater_probe,
++	.remove		= qcom_eusb2_repeater_remove,
++	.driver = {
++		.name	= "qcom-pmic-eusb2-repeater",
++		.of_match_table = of_match_ptr(qcom_eusb2_repeater_id_table),
++	},
++};
 +
-+static inline int usb_repeater_power_off(struct usb_repeater *rptr)
-+{
-+	if (rptr && rptr->power_off != NULL)
-+		return rptr->power_off(rptr);
-+	else
-+		return 0;
-+}
-+
-+#endif /* __LINUX_USB_REPEATER_H */
++module_platform_driver(qcom_eusb2_repeater_driver);
++MODULE_DESCRIPTION("Qualcomm PMIC eUSB2 repeater driver");
++MODULE_LICENSE("GPL");
 -- 
 2.34.1
 
