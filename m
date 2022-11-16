@@ -2,60 +2,60 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 241B4C4332F
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Nov 2022 01:10:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1124C4332F
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Nov 2022 01:11:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231642AbiKPBKz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Nov 2022 20:10:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44864 "EHLO
+        id S231660AbiKPBLA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Nov 2022 20:11:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44892 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229961AbiKPBKy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Nov 2022 20:10:54 -0500
-Received: from mail-qk1-x733.google.com (mail-qk1-x733.google.com [IPv6:2607:f8b0:4864:20::733])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 066AC317F9
-        for <linux-scsi@vger.kernel.org>; Tue, 15 Nov 2022 17:10:54 -0800 (PST)
-Received: by mail-qk1-x733.google.com with SMTP id i9so10734473qki.10
-        for <linux-scsi@vger.kernel.org>; Tue, 15 Nov 2022 17:10:53 -0800 (PST)
+        with ESMTP id S231638AbiKPBK5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Nov 2022 20:10:57 -0500
+Received: from mail-qk1-x72f.google.com (mail-qk1-x72f.google.com [IPv6:2607:f8b0:4864:20::72f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EDB2B317FF
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Nov 2022 17:10:56 -0800 (PST)
+Received: by mail-qk1-x72f.google.com with SMTP id k2so10748527qkk.7
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Nov 2022 17:10:56 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=dXQuLH03XzUYi6+WgpNrxfrW2ANmPdXWWQXUz58Src0=;
-        b=pbVRgtdVlmQ6+ZnkkUeA+h62H1wicgMLv8OTs3EJoRp67w9M+muDcdp8mDdOKnajt+
-         BqG6UgRuoJnlfx9O3jvojS/9mNz9WbSxsiBWe0TMkOOt7bO+Lu9Ktqw2HF+7d09oRqGe
-         SJqsyrgFdKdCacc3dimrWDsUiBn2u1lmu46uEwDwCEgHOcN+pzt+ns+ttFoMa4edwjjp
-         r6aJcIUPuR8Y6BakuqgaG27pNahfFuNK1ss8RjzsMkkOP79IpVZ/zHXpswD7Wh+xVr5f
-         6ZGOoh1LDM+nX2XqIn9hJTZZWLclYt82H1w6JT6F32FwypHYlQDR5ulyAkBGkdfQjKM/
-         bY2w==
+        bh=USbEUbJbcHadAUeL/lHg6Lme0QD4ZZZ671pCyBh9AIg=;
+        b=FuRYAa/+LibKN1NRgfql/RnorZF4EEECnN/zzPo8uXtKlN+xZ5pTlWZJm1E7Ta7CgD
+         nvQLtHrUaZq8V6brhCGsv5bE5fmoOfxbdw2HK92CkxZuCVCa2qHBmSTaxcsUbDLgOwtP
+         riBPZoQ4FuyqCg5U7iQu6xwbVIJ99Akgp1sezhZUaYQQB2K4FEeVleko/YWsaBGSIgRk
+         GqAkk9NWTJlGRUxuFHIhMF6guCpyxKZBsBYjWg3sKTkx7CeaFOq/Refd4ggyeBougQkU
+         TOgIWcaTFUI3/aQaqXgI2WEdqw0N2CF0od/aYNejka197BO+GRC6q0Df6IwI2Lb4LeJG
+         jqbA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=dXQuLH03XzUYi6+WgpNrxfrW2ANmPdXWWQXUz58Src0=;
-        b=dY5RjGf4gc+YINU0T2L5Mnf4cnJYugujzBOodQXq1ZF2dEl9ymmY3/Xp0wxYxj054v
-         sCUpmrEbHAtUybHX+bCOq0YjN/L5AzZ5pNk+e93Hpp2BMhKDR2F/W5FGq7dHUssztKnZ
-         JwXW/lAoWkKk5XTTfBaUnSgPsTiyK6ZxoNv4zFyFuWVLH6L8GNCLzdlttKDHNbMxxKr3
-         3Cy4f98BXbfomua3dwhc/4rFIkizcXspZW19kgM8u0FUADGe+XIsUewFhY4YTiJjW6Ev
-         3WCZl3bxUsTQkvJ3Wrfp+NLxVm0NraANFcnJ1WTroB8XwKU8sQaSkrq5k+fldDelgDhl
-         BVIQ==
-X-Gm-Message-State: ANoB5pkiw/VbQyBDC8XPMvDxXUDOBTDbuPAgwpJyhGK6VYI3SeBMTOlw
-        sP8BIGjnC3q8t9I99WGmTi2nmzdNBYw=
-X-Google-Smtp-Source: AA0mqf7FbN6pScMCm957Qf2nw28A7eE+bi0vvsgprfvbIGoGGCu6wg1i3Eg2siX0HE6+mlpjoSZTjQ==
-X-Received: by 2002:a05:620a:1375:b0:6fa:ab2b:b78d with SMTP id d21-20020a05620a137500b006faab2bb78dmr17157557qkl.388.1668561053008;
-        Tue, 15 Nov 2022 17:10:53 -0800 (PST)
+        bh=USbEUbJbcHadAUeL/lHg6Lme0QD4ZZZ671pCyBh9AIg=;
+        b=r8dWzeHlM93ZSqdRpK93+P1Ypry4zC0drK31euy+v8V7OrnRlDBk2xsz0QWPKT7R1S
+         uGofiOUfKnqIVCKMKv5PSBFZ0F6A2hnor4DO7lJTKrAcr6BlG3WEr4JMio38tL8o6B1W
+         YLOx+SJm8hiI0GBkcu9M9/+GfRC1ygB3l+JiXb3Edwr6abIE8+wuluT411x/EOOrF7fv
+         8JKiZihjq2ges1jnu/IQ9UyyNXdMb4k8pcC5EfscXQxF2OAhxlQ15H66k963/BZ5x2lc
+         Ow+/2OdND9J4o2yCkR/deGWIIRN3/4aO1uPCiLy+fhpSRsqiRKoqbTXj5grgubOc5gQL
+         +jgw==
+X-Gm-Message-State: ANoB5pnJuzITd7fvuvLmddjQWDzSKc7lEEUJ969VA6P+2ffSpEk25ppW
+        X47SNm0Av3ewT+o7uODsH5Ul7RoiwY4=
+X-Google-Smtp-Source: AA0mqf6bsoS4O1HIlaJOo1BI7y4U66TkKEKGVN4bqWzP4tKZmAyxCBM8aFu30drbL6wZVDd0AXtvtw==
+X-Received: by 2002:a37:bb82:0:b0:6cf:4460:fdd2 with SMTP id l124-20020a37bb82000000b006cf4460fdd2mr17496905qkf.543.1668561055999;
+        Tue, 15 Nov 2022 17:10:55 -0800 (PST)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id y12-20020ac8128c000000b00399b73d06f0sm7901966qti.38.2022.11.15.17.10.52
+        by smtp.gmail.com with ESMTPSA id y12-20020ac8128c000000b00399b73d06f0sm7901966qti.38.2022.11.15.17.10.55
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 15 Nov 2022 17:10:52 -0800 (PST)
+        Tue, 15 Nov 2022 17:10:55 -0800 (PST)
 From:   Justin Tee <justintee8345@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     jsmart2021@gmail.com, Justin Tee <justintee8345@gmail.com>,
         Justin Tee <justin.tee@broadcom.com>
-Subject: [PATCH 1/6] lpfc: Fix WQ|CQ|EQ resource check
-Date:   Tue, 15 Nov 2022 17:19:16 -0800
-Message-Id: <20221116011921.105995-2-justintee8345@gmail.com>
+Subject: [PATCH 2/6] lpfc: Correct bandwidth logging during receipt of congestion sync WCQE
+Date:   Tue, 15 Nov 2022 17:19:17 -0800
+Message-Id: <20221116011921.105995-3-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20221116011921.105995-1-justintee8345@gmail.com>
 References: <20221116011921.105995-1-justintee8345@gmail.com>
@@ -65,51 +65,37 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Adapter configurations with limited EQ resources may fail to initialize.
+The lpfc_cmf_timer adjusts phba->cmf_link_byte_count periodically and
+can artifically inflate bandwidth percent.
 
-Firmware resources are queried in lpfc_sli4_read_config().  The driver
-parameters cfg_irq_chann and cfg_hdw_queue are adjusted from defaults if
-constrained by firmware resources.
+During bandwidth calculation, correct for this by setting a cap of logging
+a maximum of 100%.
 
-The minimum resource check includes a special allocation for queues such
-as ELS, MBOX, NVME LS. However the additional reservation was also
-incorrectly applied to EQ resources.
-
-Reordered WQ|CQ|EQ resource checks to apply the special allocation
-adjustment to WQ and CQ resources only.
+Bandwidth calculation is only used for display under LOG_CGN_MGMT so there
+is no expectation of impacts on performance.
 
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_init.c | 12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
+ drivers/scsi/lpfc/lpfc_sli.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index b49c39569386..a6e32ecd4151 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -10092,17 +10092,15 @@ lpfc_sli4_read_config(struct lpfc_hba *phba)
- 		qmin = phba->sli4_hba.max_cfg_param.max_wq;
- 		if (phba->sli4_hba.max_cfg_param.max_cq < qmin)
- 			qmin = phba->sli4_hba.max_cfg_param.max_cq;
--		if (phba->sli4_hba.max_cfg_param.max_eq < qmin)
--			qmin = phba->sli4_hba.max_cfg_param.max_eq;
- 		/*
--		 * Whats left after this can go toward NVME / FCP.
--		 * The minus 4 accounts for ELS, NVME LS, MBOX
--		 * plus one extra. When configured for
--		 * NVMET, FCP io channel WQs are not created.
-+		 * Reserve 4 (ELS, NVME LS, MBOX, plus one extra) and
-+		 * the remainder can be used for NVME / FCP.
- 		 */
- 		qmin -= 4;
-+		if (phba->sli4_hba.max_cfg_param.max_eq < qmin)
-+			qmin = phba->sli4_hba.max_cfg_param.max_eq;
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index d25afc9dde14..a66026432572 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -1848,6 +1848,12 @@ lpfc_cmf_sync_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 				  phba->cmf_link_byte_count);
+ 		bwpcent = div64_u64(bw * 100 + slop,
+ 				    phba->cmf_link_byte_count);
++		/* Because of bytes adjustment due to shorter timer in
++		 * lpfc_cmf_timer() the cmf_link_byte_count can be shorter and
++		 * may seem like BW is above 100%.
++		 */
++		if (bwpcent > 100)
++			bwpcent = 100;
  
--		/* Check to see if there is enough for NVME */
-+		/* Check to see if there is enough for default cfg */
- 		if ((phba->cfg_irq_chann > qmin) ||
- 		    (phba->cfg_hdw_queue > qmin)) {
- 			lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
+ 		if (phba->cmf_max_bytes_per_interval < bw &&
+ 		    bwpcent > 95)
 -- 
 2.38.0
 
