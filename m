@@ -2,103 +2,151 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62B31C4167B
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Nov 2022 15:29:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5650CC43217
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Nov 2022 17:04:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234779AbiKPP33 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Nov 2022 10:29:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47144 "EHLO
+        id S234326AbiKPREL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Nov 2022 12:04:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50218 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234591AbiKPP30 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Nov 2022 10:29:26 -0500
-Received: from mail-oa1-f47.google.com (mail-oa1-f47.google.com [209.85.160.47])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7FFC013F1B;
-        Wed, 16 Nov 2022 07:29:25 -0800 (PST)
-Received: by mail-oa1-f47.google.com with SMTP id 586e51a60fabf-13b6c1c89bdso20405831fac.13;
-        Wed, 16 Nov 2022 07:29:25 -0800 (PST)
+        with ESMTP id S234566AbiKPREF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Nov 2022 12:04:05 -0500
+Received: from mail-lj1-x234.google.com (mail-lj1-x234.google.com [IPv6:2a00:1450:4864:20::234])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4ABE24F24
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Nov 2022 09:03:55 -0800 (PST)
+Received: by mail-lj1-x234.google.com with SMTP id d3so22645044ljl.1
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Nov 2022 09:03:55 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=n2wcVN4J1tlPV+AnzZftcSxUop+5QUHzY6UpVrjVgB4=;
+        b=qSCI/Ap9+bY+OClBVM/hGbIgAW6bxfs6GLL/gFVLdw0rg+e4T5y9bro336vZFMXwWr
+         ejPJs6VxMDFRuBGn2xoWXrTUalv6MedN0AZNl0IXkUAvIk9AGllsl0dyLYjXZ7g7gRB7
+         gDaRwXl1HUK80QoVZw673BHz1azHO8rNimQhtxkJMC6FfgcewCJTMuVmtZY2dXaOEIDg
+         6AQyBOiIyu1tIb8BYrt3rNgThGagWxbj1bXhUUjO4/1g9p10usSa85nDzOiLhzpitPsK
+         /3k+9sSviOMDHkKAVN6FE4POlEPUQaKUnWc+MtUEkAKaZvIvdiCGy6dXu5K9GTg3Jc0Z
+         N7BA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=date:subject:message-id:references:in-reply-to:cc:to:from
-         :mime-version:content-transfer-encoding:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=XPzMQJE0sIInrmJgvIUaGCOnQHQglKZ2xgPC26zj0FM=;
-        b=32too+zWllgn++nYu+Vt3C6rYb3saEYWF3cK3g9hBwtPI/cyg++FJnCfHuB5/SEwf3
-         hh7d29xm0sqyEAzyP3lN/HiEgG3obn9W/5usP9YUttoD+D3XAOBzTv2MwQnXLmYBqrpp
-         d9ZWUFw1Gj3bD9ki01bhjlPiCix8xEMiT63UK0zVBXUGts2omdJsGvDBgUoM/sYeCIe1
-         9lymaLWukjOU9webVvB8Fa+qtVHhpIl+mYGhBRSE6CxPkSYzdU2ALtreI2RBwfp5gbuM
-         gCXd1BXcn6wJ08H/STlJ1Jgb8FYVzWctRxk9FDERPCJSzZdMi3CCpMKO/RJiir8o95WG
-         TGUA==
-X-Gm-Message-State: ANoB5pm+svmjRdRv6CdmyppzDh8OggOItWF0CwyrymRiaGPB/Ham+FEm
-        0s3/9Q5A6pTdrNKpwnpMwg==
-X-Google-Smtp-Source: AA0mqf5WtlQBm6tGUxpRuJD+A87MvWsxy0LPjPhNylxH3rll3lgbTL4A8p0bL4mc8zLXTg9ySeG0ag==
-X-Received: by 2002:a05:6870:b529:b0:13b:d2ae:ee0e with SMTP id v41-20020a056870b52900b0013bd2aeee0emr2039111oap.19.1668612564707;
-        Wed, 16 Nov 2022 07:29:24 -0800 (PST)
-Received: from robh_at_kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
-        by smtp.gmail.com with ESMTPSA id t37-20020a056870f22500b0013d6d924995sm8178831oao.19.2022.11.16.07.29.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 16 Nov 2022 07:29:24 -0800 (PST)
-Received: (nullmailer pid 4083494 invoked by uid 1000);
-        Wed, 16 Nov 2022 15:29:23 -0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=n2wcVN4J1tlPV+AnzZftcSxUop+5QUHzY6UpVrjVgB4=;
+        b=M1/sxPFIQ8zLshYgTTMvbtqRNPgsumKRRi3lRBhMSYEyJUUUOfDB4MfORzt74RWdHy
+         pFrUWrXA8vbWMrVGjdrrwu+ezOP8c8pD7bWpwnG3YbapWKRqD0Ams/3SKqrMq7o9NwqC
+         BgZtnTKara0Xt+EdJWsYfxEMivWKKYyO9cTmmiHycDhbJAhEMFg/AfW8YbHb2Rtofyg0
+         MROLXKzKvg/9u1erpbnoTQjqswuZ4jyyRzfRb0V+ZMIwK69PqwvHCHfyuzqJqiiAfkgw
+         fI2WGDzq7A9qGPR7FD9oVJIS3cO/gRl0qh4OziStBNEFNS/HI13bzjFnPPh9CkME+XRd
+         T/Fg==
+X-Gm-Message-State: ANoB5pnx2VChjAZCKi6jrIw8mKe3P5inOm6rU/7tOgFczUYAgbfMOtOh
+        95OVPIp9K29Qa7NEfLIpnHKtAQ==
+X-Google-Smtp-Source: AA0mqf43BimP4m8KN0QSNc/gcqbkkuIydkNRTjo8awyHvTjZCw6qIVb6HTwXZGJIOSBtyCiP0FXF6A==
+X-Received: by 2002:a2e:9941:0:b0:277:5059:82c9 with SMTP id r1-20020a2e9941000000b00277505982c9mr8606686ljj.218.1668618234274;
+        Wed, 16 Nov 2022 09:03:54 -0800 (PST)
+Received: from [192.168.0.20] (088156142067.dynamic-2-waw-k-3-2-0.vectranet.pl. [88.156.142.67])
+        by smtp.gmail.com with ESMTPSA id cf30-20020a056512281e00b00492ca820e15sm2671479lfb.270.2022.11.16.09.03.53
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 16 Nov 2022 09:03:53 -0800 (PST)
+Message-ID: <87312b40-548d-dc60-588f-3583e496dcb3@linaro.org>
+Date:   Wed, 16 Nov 2022 18:03:52 +0100
 MIME-Version: 1.0
-From:   Rob Herring <robh@kernel.org>
-To:     Abel Vesa <abel.vesa@linaro.org>
-Cc:     linux-arm-msm@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        devicetree@vger.kernel.org,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        linux-usb@vger.kernel.org,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        linux-scsi@vger.kernel.org
-In-Reply-To: <20221116123019.2753230-3-abel.vesa@linaro.org>
-References: <20221116123019.2753230-1-abel.vesa@linaro.org>
- <20221116123019.2753230-3-abel.vesa@linaro.org>
-Message-Id: <166861225059.4037759.2587193031779915176.robh@kernel.org>
-Subject: Re: [RFC PATCH 2/3] dt-bindings: usb: Add qcom,snps-eusb2-repeater schema
-Date:   Wed, 16 Nov 2022 09:29:23 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.2
+Subject: Re: [PATCH v2 1/2] dt-bindings: ufs: Add document for Unisoc UFS host
+ controller
+Content-Language: en-US
+To:     Zhe Wang <zhe.wang1@unisoc.com>, martin.petersen@oracle.com,
+        jejb@linux.ibm.com, krzysztof.kozlowski+dt@linaro.org,
+        robh+dt@kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com
+Cc:     linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
+        orsonzhai@gmail.com, yuelin.tang@unisoc.com,
+        zhenxiong.lai@unisoc.com, zhang.lyra@gmail.com
+References: <20221116133131.6809-1-zhe.wang1@unisoc.com>
+ <20221116133131.6809-2-zhe.wang1@unisoc.com>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+In-Reply-To: <20221116133131.6809-2-zhe.wang1@unisoc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-On Wed, 16 Nov 2022 14:30:18 +0200, Abel Vesa wrote:
-> Add dt-binding schema for the Qualcomm SNPS eUSB2 repeater.
+On 16/11/2022 14:31, Zhe Wang wrote:
+> Add Unisoc ums9620 ufs host controller devicetree document.
 > 
-> Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
-> ---
->  .../usb/qcom,snps-eusb2-repeater.yaml         | 43 +++++++++++++++++++
->  1 file changed, 43 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/usb/qcom,snps-eusb2-repeater.yaml
-> 
+> Signed-off-by: Zhe Wang <zhe.wang1@unisoc.com>
 
-My bot found errors running 'make DT_CHECKER_FLAGS=-m dt_binding_check'
-on your patch (DT_CHECKER_FLAGS is new in v5.13):
+Thank you for your patch. There is something to discuss/improve.
 
-yamllint warnings/errors:
+> +
+> +  clock-names:
+> +    items:
+> +      - const: ufs_eb
+> +      - const: ufs_cfg_eb
+> +      - const: ufsh
+> +      - const: ufsh_source
+> +
+> +  resets:
+> +    maxItems: 2
+> +
+> +  reset-names:
+> +    items:
+> +      - const: ufs
+> +      - const: ufsdev
 
-dtschema/dtc warnings/errors:
-/builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/usb/qcom,snps-eusb2-repeater.example.dtb: pmic@7: compatible:0: 'qcom,pm8550' is not one of ['qcom,pm6150', 'qcom,pm6150l', 'qcom,pm6350', 'qcom,pm660', 'qcom,pm660l', 'qcom,pm7250b', 'qcom,pm7325', 'qcom,pm8004', 'qcom,pm8005', 'qcom,pm8009', 'qcom,pm8019', 'qcom,pm8028', 'qcom,pm8110', 'qcom,pm8150', 'qcom,pm8150b', 'qcom,pm8150c', 'qcom,pm8150l', 'qcom,pm8226', 'qcom,pm8350', 'qcom,pm8350b', 'qcom,pm8350c', 'qcom,pm8841', 'qcom,pm8909', 'qcom,pm8916', 'qcom,pm8941', 'qcom,pm8950', 'qcom,pm8953', 'qcom,pm8994', 'qcom,pm8998', 'qcom,pma8084', 'qcom,pmd9635', 'qcom,pmi8950', 'qcom,pmi8962', 'qcom,pmi8994', 'qcom,pmi8998', 'qcom,pmk8002', 'qcom,pmk8350', 'qcom,pmm8155au', 'qcom,pmp8074', 'qcom,pmr735a', 'qcom,pmr735b', 'qcom,pms405', 'qcom,pmx55', 'qcom,pmx65', 'qcom,smb2351']
-	From schema: /builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/mfd/qcom,spmi-pmic.yaml
-/builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/usb/qcom,snps-eusb2-repeater.example.dtb: pmic@7: 'usb-repeater@fd00' does not match any of the regexes: '(.*)?(wled|leds)@[0-9a-f]+$', '^adc-tm@[0-9a-f]+$', '^adc@[0-9a-f]+$', '^audio-codec@[0-9a-f]+$', '^mpps@[0-9a-f]+$', '^rtc@[0-9a-f]+$', '^temp-alarm@[0-9a-f]+$', '^vibrator@[0-9a-f]+$', 'extcon@[0-9a-f]+$', 'gpio(s)?@[0-9a-f]+$', 'pinctrl-[0-9]+', 'pon@[0-9a-f]+$', 'pwm@[0-9a-f]+$'
-	From schema: /builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/mfd/qcom,spmi-pmic.yaml
-Documentation/devicetree/bindings/usb/qcom,snps-eusb2-repeater.example.dtb:0:0: /example-0/pmic@7: failed to match any schema with compatible: ['qcom,pm8550', 'qcom,spmi-pmic']
+Both clock names and resets are still not useful. "ufs" is the name of
+the block, so reset name of "ufs" and "ufsdev" says nothing. This is the
+dev right?
 
-doc reference errors (make refcheckdocs):
+> +
+> +  vdd-mphy-supply:
+> +    description:
+> +      Phandle to vdd-mphy supply regulator node.
+> +
+> +  sprd,ufs-anlg-syscon:
+> +    $ref: /schemas/types.yaml#/definitions/phandle
+> +    description: phandle of syscon used to control ufs analog regs.
+> +
+> +  sprd,aon-apb-syscon:
+> +    $ref: /schemas/types.yaml#/definitions/phandle
+> +    description: phandle of syscon used to control always-on regs.
+> +
+> +required:
+> +  - compatible
+> +  - reg
+> +  - clocks
+> +  - clock-names
+> +  - resets
+> +  - reset-names
+> +
+> +unevaluatedProperties: false
+> +
+> +examples:
+> +  - |
+> +    #include <dt-bindings/interrupt-controller/arm-gic.h>
+> +
+> +    ufs: ufs@22000000 {
+> +        compatible = "sprd,ums9620-ufs";
+> +        reg = <0x22000000 0x3000>;
+> +        interrupts = <GIC_SPI 159 IRQ_TYPE_LEVEL_HIGH>;
+> +        vcc-supply = <&vddemmccore>;
+> +        vdd-mphy-supply = <&vddufs1v2>;
+> +        clock-names = "ufs_eb", "ufs_cfg_eb", "ufsh", "ufsh_source";
+> +        clocks = <&apahb_gate 5>, <&apahb_gate 22>, <&aonapb_clk 52>, <&g5l_pll 12>;
 
-See https://patchwork.ozlabs.org/patch/
+First clocks, then names.
 
-This check can fail if there are any dependencies. The base for a patch
-series is generally the most recent rc1.
+> +        reset-names = "ufs", "ufsdev";
+> +        resets = <&apahb_gate 4>, <&aonapb_gate 69>;
 
-If you already ran 'make dt_binding_check' and didn't see the above
-error(s), then make sure 'yamllint' is installed and dt-schema is up to
-date:
+First resets, then names.
 
-pip3 install dtschema --upgrade
+> +        sprd,ufs-anlg-syscon = <&anlg_phy_g12_regs>;
+> +        sprd,aon-apb-syscon = <&aon_apb_regs>;
+> +    };
 
-Please check and re-submit.
+Best regards,
+Krzysztof
 
