@@ -2,60 +2,60 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1124C4332F
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Nov 2022 01:11:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5E06C433FE
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Nov 2022 01:11:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231660AbiKPBLA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Nov 2022 20:11:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44892 "EHLO
+        id S231669AbiKPBLG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Nov 2022 20:11:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44920 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231638AbiKPBK5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Nov 2022 20:10:57 -0500
-Received: from mail-qk1-x72f.google.com (mail-qk1-x72f.google.com [IPv6:2607:f8b0:4864:20::72f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EDB2B317FF
-        for <linux-scsi@vger.kernel.org>; Tue, 15 Nov 2022 17:10:56 -0800 (PST)
-Received: by mail-qk1-x72f.google.com with SMTP id k2so10748527qkk.7
-        for <linux-scsi@vger.kernel.org>; Tue, 15 Nov 2022 17:10:56 -0800 (PST)
+        with ESMTP id S231638AbiKPBLB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Nov 2022 20:11:01 -0500
+Received: from mail-qt1-x82c.google.com (mail-qt1-x82c.google.com [IPv6:2607:f8b0:4864:20::82c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31D143137B
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Nov 2022 17:11:00 -0800 (PST)
+Received: by mail-qt1-x82c.google.com with SMTP id cg5so9867077qtb.12
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Nov 2022 17:11:00 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=USbEUbJbcHadAUeL/lHg6Lme0QD4ZZZ671pCyBh9AIg=;
-        b=FuRYAa/+LibKN1NRgfql/RnorZF4EEECnN/zzPo8uXtKlN+xZ5pTlWZJm1E7Ta7CgD
-         nvQLtHrUaZq8V6brhCGsv5bE5fmoOfxbdw2HK92CkxZuCVCa2qHBmSTaxcsUbDLgOwtP
-         riBPZoQ4FuyqCg5U7iQu6xwbVIJ99Akgp1sezhZUaYQQB2K4FEeVleko/YWsaBGSIgRk
-         GqAkk9NWTJlGRUxuFHIhMF6guCpyxKZBsBYjWg3sKTkx7CeaFOq/Refd4ggyeBougQkU
-         TOgIWcaTFUI3/aQaqXgI2WEdqw0N2CF0od/aYNejka197BO+GRC6q0Df6IwI2Lb4LeJG
-         jqbA==
+        bh=5IP2zZ0ikXwU/6tqJtqLv3xaAmM7FUpKnU+9266pdAo=;
+        b=YWP+vArPap1tXdk/HQyhrjl2Oj1p/JbS1A+TMufYpIXg4ZikMgHtG/kxcC9+qxwXpO
+         56ix0CgLCuaQOTSnmmMfEWomEIqw+OyBOz7wQCt5oJHYuJOphi0EDpUer2qwCIGaPEDm
+         hUFrXpS5jk5ERFnezw4841c5tocJaH5XrkNZFPuCJUyKC5BWCrjwoThzXXElRdK9EGRZ
+         WXaFVjHYaGIk+4xg5AisfHq02xeY6sqgZMwXJtQi23ueCzXEEXyCf64gzsfsJovjHn1B
+         Dbdf5GZ8CaOphhGjIyIaWZW8AbpkHETwMiahaOk15mf1s+kfz8rla1IZ5r8rHKfQdsvM
+         CBIQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=USbEUbJbcHadAUeL/lHg6Lme0QD4ZZZ671pCyBh9AIg=;
-        b=r8dWzeHlM93ZSqdRpK93+P1Ypry4zC0drK31euy+v8V7OrnRlDBk2xsz0QWPKT7R1S
-         uGofiOUfKnqIVCKMKv5PSBFZ0F6A2hnor4DO7lJTKrAcr6BlG3WEr4JMio38tL8o6B1W
-         YLOx+SJm8hiI0GBkcu9M9/+GfRC1ygB3l+JiXb3Edwr6abIE8+wuluT411x/EOOrF7fv
-         8JKiZihjq2ges1jnu/IQ9UyyNXdMb4k8pcC5EfscXQxF2OAhxlQ15H66k963/BZ5x2lc
-         Ow+/2OdND9J4o2yCkR/deGWIIRN3/4aO1uPCiLy+fhpSRsqiRKoqbTXj5grgubOc5gQL
-         +jgw==
-X-Gm-Message-State: ANoB5pnJuzITd7fvuvLmddjQWDzSKc7lEEUJ969VA6P+2ffSpEk25ppW
-        X47SNm0Av3ewT+o7uODsH5Ul7RoiwY4=
-X-Google-Smtp-Source: AA0mqf6bsoS4O1HIlaJOo1BI7y4U66TkKEKGVN4bqWzP4tKZmAyxCBM8aFu30drbL6wZVDd0AXtvtw==
-X-Received: by 2002:a37:bb82:0:b0:6cf:4460:fdd2 with SMTP id l124-20020a37bb82000000b006cf4460fdd2mr17496905qkf.543.1668561055999;
-        Tue, 15 Nov 2022 17:10:55 -0800 (PST)
+        bh=5IP2zZ0ikXwU/6tqJtqLv3xaAmM7FUpKnU+9266pdAo=;
+        b=6XYkQiTvTw6zS51iQyfEfP7sc6iCoP5lJ4UdM16teasiOpL3WTzuIheJIgOdSLJXrj
+         QL0dQi+Z3t4JrmD1TFV8yfMSf4na88GHBblauDHDEjzzJOLnR/m8xjfCJCrphJrHwWaY
+         ZSXNzuT0E+lULkL1LLir5/e+71mvNcuo0ApurUog/TOGB0NVYGZhS2o0nlQ6TZwtIFCy
+         WKx2DIUa//F13BeP2Y1hbJ6mZu0lvh6OFuIS/1LYb+4JduGhJojsz86qUQc6L3yOaUjl
+         tJHntE+JAMEh6fNT/cmI78I50f9/B7hJpsZhZGjKHn2ou74Btr0j/4TRJ0sr/yr8+qxh
+         jLog==
+X-Gm-Message-State: ANoB5plToPbYms8cBIPZs1bsoAeQAw6UKb/vpiuJum7BEcxc9nkgCeFk
+        +KQtw9mkRd8WeQUcokm9qJaebskWoIQ=
+X-Google-Smtp-Source: AA0mqf5tHFDthV6rGCIgUdWY+KmUNAC1DD8FjsptVU4lDwdlhJXvJe/iiyYrdcV9JdYSBfKR4LNonw==
+X-Received: by 2002:a05:622a:248c:b0:3a5:6005:7db6 with SMTP id cn12-20020a05622a248c00b003a560057db6mr19066934qtb.131.1668561059267;
+        Tue, 15 Nov 2022 17:10:59 -0800 (PST)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id y12-20020ac8128c000000b00399b73d06f0sm7901966qti.38.2022.11.15.17.10.55
+        by smtp.gmail.com with ESMTPSA id y12-20020ac8128c000000b00399b73d06f0sm7901966qti.38.2022.11.15.17.10.58
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 15 Nov 2022 17:10:55 -0800 (PST)
+        Tue, 15 Nov 2022 17:10:59 -0800 (PST)
 From:   Justin Tee <justintee8345@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     jsmart2021@gmail.com, Justin Tee <justintee8345@gmail.com>,
         Justin Tee <justin.tee@broadcom.com>
-Subject: [PATCH 2/6] lpfc: Correct bandwidth logging during receipt of congestion sync WCQE
-Date:   Tue, 15 Nov 2022 17:19:17 -0800
-Message-Id: <20221116011921.105995-3-justintee8345@gmail.com>
+Subject: [PATCH 3/6] lpfc: Fix MI capability display in cmf_info sysfs attribute
+Date:   Tue, 15 Nov 2022 17:19:18 -0800
+Message-Id: <20221116011921.105995-4-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20221116011921.105995-1-justintee8345@gmail.com>
 References: <20221116011921.105995-1-justintee8345@gmail.com>
@@ -65,37 +65,67 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The lpfc_cmf_timer adjusts phba->cmf_link_byte_count periodically and
-can artifically inflate bandwidth percent.
+The dynamic mi_ver value holds the currently configured MI setting.  mi_ver
+was being displayed as part of the cmf_info sysfs attribute, when the
+output string meant to display MI capabilities instead.
 
-During bandwidth calculation, correct for this by setting a cap of logging
-a maximum of 100%.
-
-Bandwidth calculation is only used for display under LOG_CGN_MGMT so there
-is no expectation of impacts on performance.
+Add a mi_cap member in the lpfc_pc_sli4_params structure that will store
+MI capabilities during initialization so that cmf_info prints out
+capabilities instead of current configuration.
 
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/scsi/lpfc/lpfc_attr.c | 2 +-
+ drivers/scsi/lpfc/lpfc_init.c | 3 +++
+ drivers/scsi/lpfc/lpfc_sli4.h | 1 +
+ 3 files changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index d25afc9dde14..a66026432572 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -1848,6 +1848,12 @@ lpfc_cmf_sync_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 				  phba->cmf_link_byte_count);
- 		bwpcent = div64_u64(bw * 100 + slop,
- 				    phba->cmf_link_byte_count);
-+		/* Because of bytes adjustment due to shorter timer in
-+		 * lpfc_cmf_timer() the cmf_link_byte_count can be shorter and
-+		 * may seem like BW is above 100%.
-+		 */
-+		if (bwpcent > 100)
-+			bwpcent = 100;
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index 030ad1d59cbd..77e1b2911cb4 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -134,7 +134,7 @@ lpfc_cmf_info_show(struct device *dev, struct device_attribute *attr,
+ 	scnprintf(tmp, sizeof(tmp),
+ 		  "Congestion Mgmt Info: E2Eattr %d Ver %d "
+ 		  "CMF %d cnt %d\n",
+-		  phba->sli4_hba.pc_sli4_params.mi_ver,
++		  phba->sli4_hba.pc_sli4_params.mi_cap,
+ 		  cp ? cp->cgn_info_version : 0,
+ 		  phba->sli4_hba.pc_sli4_params.cmf, phba->cmf_timer_cnt);
  
- 		if (phba->cmf_max_bytes_per_interval < bw &&
- 		    bwpcent > 95)
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index a6e32ecd4151..a119c06742b8 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -699,6 +699,8 @@ lpfc_sli4_refresh_params(struct lpfc_hba *phba)
+ 		return rc;
+ 	}
+ 	mbx_sli4_parameters = &mqe->un.get_sli4_parameters.sli4_parameters;
++	phba->sli4_hba.pc_sli4_params.mi_cap =
++		bf_get(cfg_mi_ver, mbx_sli4_parameters);
+ 
+ 	/* Are we forcing MI off via module parameter? */
+ 	if (phba->cfg_enable_mi)
+@@ -13839,6 +13841,7 @@ lpfc_get_sli4_parameters(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
+ 					   mbx_sli4_parameters);
+ 	phba->sli4_hba.extents_in_use = bf_get(cfg_ext, mbx_sli4_parameters);
+ 	phba->sli4_hba.rpi_hdrs_in_use = bf_get(cfg_hdrr, mbx_sli4_parameters);
++	sli4_params->mi_cap = bf_get(cfg_mi_ver, mbx_sli4_parameters);
+ 
+ 	/* Check for Extended Pre-Registered SGL support */
+ 	phba->cfg_xpsgl = bf_get(cfg_xpsgl, mbx_sli4_parameters);
+diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+index cbb1aa1cf025..f927c2a25d54 100644
+--- a/drivers/scsi/lpfc/lpfc_sli4.h
++++ b/drivers/scsi/lpfc/lpfc_sli4.h
+@@ -556,6 +556,7 @@ struct lpfc_pc_sli4_params {
+ #define LPFC_MIB3_SUPPORT	3
+ 	uint16_t mi_value;
+ #define LPFC_DFLT_MIB_VAL	2
++	uint8_t mi_cap;
+ 	uint8_t mib_bde_cnt;
+ 	uint8_t cmf;
+ 	uint8_t cqv;
 -- 
 2.38.0
 
