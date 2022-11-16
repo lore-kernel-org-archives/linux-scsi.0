@@ -2,132 +2,105 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8948AC433FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Nov 2022 12:30:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 153F1C433FE
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Nov 2022 12:31:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233016AbiKPMaM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Nov 2022 07:30:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46984 "EHLO
+        id S236162AbiKPMbY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Nov 2022 07:31:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49080 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238959AbiKPM3q (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Nov 2022 07:29:46 -0500
-Received: from mail-ej1-x633.google.com (mail-ej1-x633.google.com [IPv6:2a00:1450:4864:20::633])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB719C26
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Nov 2022 04:29:02 -0800 (PST)
-Received: by mail-ej1-x633.google.com with SMTP id kt23so43693237ejc.7
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Nov 2022 04:29:02 -0800 (PST)
+        with ESMTP id S235900AbiKPMax (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Nov 2022 07:30:53 -0500
+Received: from mail-wr1-x430.google.com (mail-wr1-x430.google.com [IPv6:2a00:1450:4864:20::430])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 935216346
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Nov 2022 04:30:35 -0800 (PST)
+Received: by mail-wr1-x430.google.com with SMTP id g12so29444247wrs.10
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Nov 2022 04:30:35 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
-         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Xg7dVOaFDd0a/VPutRddYPoMuVIlvBiMVnsUwJAfSmM=;
-        b=Ungyqh/SYtSuUEiiQBC4ocLKvXefZa5gWgeDZSoEyHPd9uX+Tq4n/Xn8Plpo+fVsQN
-         sULodzXKU8p2tLh/5H4umzlfeylwfrIBYhgaVQOYMAW5D34afJuE/Vmve3bj3nbgyx3K
-         9VJeID3ERHJeoldPze0EOufSmP8V9yKiyXP8Dh3lB5u1Cc7jbsMD4MPtwzh6c2t3Ch7C
-         0T0Qv2Igu/L5rRQBuqtgsW+jgnZR4gFm19N/p5dZpdoDZH+Ip43uTkV0eA5RKwD+yqNV
-         8B7hNkjI8HtiUC+SmZFQnai21IMZI/Wht/RvIQ/k4A4kRyKIXkiZYngkkozHzuMoyKbo
-         Fnug==
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=AVAqY273akgzvATGouXznwiEQyYEMmvaAfQqpAHVy/Y=;
+        b=uJ5HW9NIYILUhOvOa7UHspl5xI8tEPd2J47UeR60fXCk1Rx9ISrFuEHNHoFAMf2iKb
+         sEoUkHh6hvP7JnY2GxIrK93etU3nvUi0cj21V9kV4lvctePzP9VEosOWo4aXixpdyZja
+         LGYsg9WkXhuGlBgTS4I/9iZC3IvvUzwENJ6PpB1W+DPO38dTjS6qcBpmWewax/A64oiI
+         McDoAWoPSUdGneNKp4DN1b9tX77ijPbK+0psSrF+7lBbmg3j0ro4U4LsK7I0hb8i2lx9
+         +zK/N6/BlwWt0HzYugFCVcF+FnKerMt6qnS545b5poxJO+Cl4bKqJCvlpLAOEfaUMITs
+         Rdgg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
-         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=Xg7dVOaFDd0a/VPutRddYPoMuVIlvBiMVnsUwJAfSmM=;
-        b=BkSfNv/nksGA9s0dOTpcf1T+CycMTRtWwhcX7NaYMGkNiGdJV2u0GBpZfO9qd+cHWR
-         6qHAJ5GI39v5m8mSrqsr7kjRDhbQVZDO6UwfTXEJwJg1g7xdhlELiePGNKTAqxY1FBHA
-         m1DH0dsnBLj25/80Um7sBE2gxna/2ieoIs5NtAK5DIuyCPSFLgwWBTNyHMKXE7SQvWis
-         hvOe6PMRAucuaAbJb3ELafZ3sxIP5vfQOgrNdmrSfEt9PZ6XcRYoyh9M64cb1N+9EVgF
-         niNYHkLkZM0d8+UHLfJNjlwTtyi9uTLzHVwsSc9mgsO9uvLFPb7rzEIuXJHxSu7dgLf9
-         loZA==
-X-Gm-Message-State: ANoB5pmxjMjBvV5g1G6HBGQpYYCMmJMk/sKpl64enJYUL6Z0isO4mHtc
-        9RuKd52ztTN1NfbWKbcZHN+6dw==
-X-Google-Smtp-Source: AA0mqf7qjYNJT6DAUPODOJytyXYvsHi572/YCcomACyd0Ftvk6pSCMlUafeu7D1HU5Zv9UfKrRvWkA==
-X-Received: by 2002:a17:907:2123:b0:7a2:335e:90e2 with SMTP id qo3-20020a170907212300b007a2335e90e2mr17241409ejb.712.1668601741252;
-        Wed, 16 Nov 2022 04:29:01 -0800 (PST)
-Received: from [192.168.31.208] ([194.29.137.22])
-        by smtp.gmail.com with ESMTPSA id g17-20020aa7c851000000b0046383354bf9sm7466281edt.40.2022.11.16.04.28.59
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 16 Nov 2022 04:29:00 -0800 (PST)
-Message-ID: <57b0669c-3826-dc33-36a4-2d8220da768a@linaro.org>
-Date:   Wed, 16 Nov 2022 13:28:53 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.4.2
-Subject: Re: [PATCH 1/2] ufs: host: ufs-qcom: Clear qunipro_g4_sel for HW
- version major 5
-To:     Abel Vesa <abel.vesa@linaro.org>, Andy Gross <agross@kernel.org>,
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=AVAqY273akgzvATGouXznwiEQyYEMmvaAfQqpAHVy/Y=;
+        b=DminRKRvsFfA/krL2Q0iv7iri+1j1hEW5aWhvMkqlYVVbYScbP9tJQf9WkLVA8gh2z
+         xDIYx4e/pFwFMpRAD40W31qYsY2hzJeVXkKlmUsnCrp99CZWJeQfwO0OuGF7CyZU4CHw
+         0R6xesHyB/4wve/MzJLl89nFjEogx7AiCQNuIUfbqmuG0CDjGyc20yOzFDDzdFOH76LA
+         m+EcakqJNUBiAmLrUp2MbQEjsyMkOBIRBav2ai/35Utu7ZiFgovTsHV7flxL+JOkBkp2
+         R34eO0hALTRezLvWv9G8aqNxDY0osKAbrj6S8B7FzjBDOCnKweKKW9mVWm4FQYiYdsJv
+         yLqQ==
+X-Gm-Message-State: ANoB5pmlyZXBX0cI8AM8llm/rxGtcexu9mJXEsmNTb9amO3vq1moewDb
+        0f83Kf66zeIqXEYKtowyRoUIFQ==
+X-Google-Smtp-Source: AA0mqf4/kQZ3GU5WFPOsjh4bh6I5c2w6g0ycRJDFEybYfvg8GpMlaw4KZCvYa5R2li0wvjR4hm67eA==
+X-Received: by 2002:adf:e2d1:0:b0:236:8638:121a with SMTP id d17-20020adfe2d1000000b002368638121amr12923647wrj.188.1668601834098;
+        Wed, 16 Nov 2022 04:30:34 -0800 (PST)
+Received: from localhost.localdomain ([94.52.112.99])
+        by smtp.gmail.com with ESMTPSA id l42-20020a05600c1d2a00b003cf4eac8e80sm2870991wms.23.2022.11.16.04.30.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 16 Nov 2022 04:30:33 -0800 (PST)
+From:   Abel Vesa <abel.vesa@linaro.org>
+To:     Andy Gross <agross@kernel.org>,
         Bjorn Andersson <andersson@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Rob Herring <robh+dt@kernel.org>,
         Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
 Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-References: <20221116121732.2731448-1-abel.vesa@linaro.org>
- <20221116121732.2731448-2-abel.vesa@linaro.org>
-From:   Konrad Dybcio <konrad.dybcio@linaro.org>
-In-Reply-To: <20221116121732.2731448-2-abel.vesa@linaro.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
+Subject: [RFC PATCH 0/3] usb: Add generic repeater framework and SM8550 driver
+Date:   Wed, 16 Nov 2022 14:30:16 +0200
+Message-Id: <20221116123019.2753230-1-abel.vesa@linaro.org>
+X-Mailer: git-send-email 2.34.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+This patchset adds a generic USB repeater framework to be used by
+platforms that have eUSB2 support and want to have USB 2.0 compliance.
+In such cases there is a device between the eUSB2 PHY and the actual
+connector. That device is basically a repeater and the most important
+thing it does is to level shift in both directions. Such a device needs
+to be controlled in software usually by the PHY or by the HC.
+So add a generic framework with basic ops to allow consumer drivers
+to get a phandle to it and to control it.
 
+Also add the SM8550 PMIC eUSB2 repeater which uses the generic
+framework.
 
-On 16/11/2022 13:17, Abel Vesa wrote:
-> On SM8550, depending on the Qunipro, we can run with G5 or G4.
-> For now, when the major version is 5 or above, we go with G5.
-> Therefore, we need to specifically tell UFS HC that.
-> 
-> Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
-> ---
->   drivers/ufs/host/ufs-qcom.c | 4 ++++
->   drivers/ufs/host/ufs-qcom.h | 2 ++
->   2 files changed, 6 insertions(+)
-> 
-> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> index ca60a5b0292b..72334aefe81c 100644
-> --- a/drivers/ufs/host/ufs-qcom.c
-> +++ b/drivers/ufs/host/ufs-qcom.c
-> @@ -227,6 +227,10 @@ static void ufs_qcom_select_unipro_mode(struct ufs_qcom_host *host)
->   	ufshcd_rmwl(host->hba, QUNIPRO_SEL,
->   		   ufs_qcom_cap_qunipro(host) ? QUNIPRO_SEL : 0,
->   		   REG_UFS_CFG1);
-> +
-> +	if (host->hw_ver.major == 0x05)
-> +		ufshcd_rmwl(host->hba, QUNIPRO_G4_SEL, 0, REG_UFS_CFG0);
-> +
->   	/* make sure above configuration is applied before we return */
->   	mb();
->   }
-> diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
-> index 751ded3e3531..10621055bf7f 100644
-> --- a/drivers/ufs/host/ufs-qcom.h
-> +++ b/drivers/ufs/host/ufs-qcom.h
-> @@ -36,6 +36,7 @@ enum {
->   	/* On older UFS revisions, this register is called "RETRY_TIMER_REG" */
->   	REG_UFS_PARAM0                      = 0xD0,
->   	REG_UFS_PA_LINK_STARTUP_TIMER       = 0xD8,
-> +	REG_UFS_CFG0                        = 0xD8,
-Are you sure these two should point to the same register? Maybe it 
-deserves some kind of a comment?
+Abel Vesa (3):
+  usb: Add USB repeater generic framework
+  dt-bindings: usb: Add qcom,snps-eusb2-repeater schema
+  usb: repeater: Add Qualcomm PMIC eUSB2 driver
 
-Konrad
->   	REG_UFS_CFG1                        = 0xDC,
->   	REG_UFS_CFG2                        = 0xE0,
->   	REG_UFS_HW_VERSION                  = 0xE4,
-> @@ -75,6 +76,7 @@ enum {
->   
->   /* bit definitions for REG_UFS_CFG1 register */
->   #define QUNIPRO_SEL		BIT(0)
-> +#define QUNIPRO_G4_SEL		BIT(5)
->   #define UFS_PHY_SOFT_RESET	BIT(1)
->   #define UTP_DBG_RAMS_EN		BIT(17)
->   #define TEST_BUS_EN		BIT(18)
+ .../usb/qcom,snps-eusb2-repeater.yaml         |  43 +++
+ drivers/usb/Kconfig                           |   2 +
+ drivers/usb/Makefile                          |   2 +
+ drivers/usb/repeater/Kconfig                  |  20 ++
+ drivers/usb/repeater/Makefile                 |   7 +
+ .../usb/repeater/repeater-qcom-pmic-eusb2.c   | 251 ++++++++++++++++++
+ drivers/usb/repeater/repeater.c               | 198 ++++++++++++++
+ include/linux/usb/repeater.h                  |  78 ++++++
+ 8 files changed, 601 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/usb/qcom,snps-eusb2-repeater.yaml
+ create mode 100644 drivers/usb/repeater/Kconfig
+ create mode 100644 drivers/usb/repeater/Makefile
+ create mode 100644 drivers/usb/repeater/repeater-qcom-pmic-eusb2.c
+ create mode 100644 drivers/usb/repeater/repeater.c
+ create mode 100644 include/linux/usb/repeater.h
+
+-- 
+2.34.1
+
