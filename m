@@ -2,84 +2,164 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 534BEC4332F
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Nov 2022 09:50:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1003C4332F
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Nov 2022 10:44:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230128AbiKPJuk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Nov 2022 04:50:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35430 "EHLO
+        id S233008AbiKPKoe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Nov 2022 05:44:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50910 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229463AbiKPJuj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Nov 2022 04:50:39 -0500
-X-Greylist: delayed 382 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 16 Nov 2022 01:50:37 PST
-Received: from forward106p.mail.yandex.net (forward106p.mail.yandex.net [77.88.28.109])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0109E266B;
-        Wed, 16 Nov 2022 01:50:37 -0800 (PST)
-Received: from sas2-e7f6fb703652.qloud-c.yandex.net (sas2-e7f6fb703652.qloud-c.yandex.net [IPv6:2a02:6b8:c14:4fa6:0:640:e7f6:fb70])
-        by forward106p.mail.yandex.net (Yandex) with ESMTP id 6304D2FC33E0;
-        Wed, 16 Nov 2022 12:41:52 +0300 (MSK)
-Received: by sas2-e7f6fb703652.qloud-c.yandex.net (smtp/Yandex) with ESMTPSA id 3Hc0AlxaOn-fpVKvwam;
-        Wed, 16 Nov 2022 12:41:51 +0300
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail; t=1668591711;
-        bh=NxC0GTnHZ1GOnkVDWk1bYH/JQTZsJK3+UhL5Lol/IJ4=;
-        h=Message-Id:Date:Cc:Subject:To:From;
-        b=m8kbW1UotzyT81MDCGb5fPDRmKTigL06CtgPp5k5k80ZQBJ+w26nET4PZ42vdOw5G
-         LlU10SuRHU9maAcN5WVIqL7zb+Dqfc7Z/ttBgc0+UmdBFiFyvi9qfrFHZbuQZMm+kf
-         nmS+ltiy9ws7LrVDJC3X3JEfdtS8G0DDgXlaITV4=
-Authentication-Results: sas2-e7f6fb703652.qloud-c.yandex.net; dkim=pass header.i=@yandex.ru
-From:   Peter Kosyh <pkosyh@yandex.ru>
-To:     Hannes Reinecke <hare@kernel.org>
-Cc:     Peter Kosyh <pkosyh@yandex.ru>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        lvc-project@linuxtesting.org
-Subject: [PATCH] scsi: myrs: check return value of dma_alloc_coherent() instead of using dma_mapping_error()
-Date:   Wed, 16 Nov 2022 12:41:47 +0300
-Message-Id: <20221116094147.221640-1-pkosyh@yandex.ru>
-X-Mailer: git-send-email 2.38.1
+        with ESMTP id S236947AbiKPKoQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Nov 2022 05:44:16 -0500
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3808C3206A
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Nov 2022 02:32:15 -0800 (PST)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id ED586336EA;
+        Wed, 16 Nov 2022 10:32:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1668594733; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=NBaNkBYURTW/4a3dGoiUdV3W+HkyEj2e8+74XOvQCrM=;
+        b=mm62x8p1XewJx6IrbpnA6Dc6Gncma8Jv4EEsc+nH0Qa+ZI8o72QLumMFPOpqUCaGnVkf0K
+        zYJ4nyn/6CerbTZNNfLMIcJTxQmiq/51hnbUE62chFQhFilO15BUnJRpXIdQManxhahWLn
+        eecEfbUcQ2Y+MxLxk/4oQIP7A8q0KT8=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id B1DEC13480;
+        Wed, 16 Nov 2022 10:32:13 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id ppVcKC28dGMJUgAAMHmgww
+        (envelope-from <mwilck@suse.com>); Wed, 16 Nov 2022 10:32:13 +0000
+Message-ID: <0efc9faa6dd519d1d402a08dbedd5cd7ed0de4f5.camel@suse.com>
+Subject: Re: [PATCH] scsi: alua: Fix alua_rtpg_queue()
+From:   Martin Wilck <mwilck@suse.com>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Sachin Sant <sachinp@linux.ibm.com>,
+        Hannes Reinecke <hare@suse.de>
+Date:   Wed, 16 Nov 2022 11:32:12 +0100
+In-Reply-To: <20221115224903.2325529-1-bvanassche@acm.org>
+References: <20221115224903.2325529-1-bvanassche@acm.org>
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.46.0 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-dma_alloc_coherent() may leave third parameter uninitialized. So
-it is not safe to use dma_mapping_error() without checking return
-value of dma_alloc_coherent().
+Hello Bart,
 
-Check the return value of dma_alloc_coherent() to detect
-an error.
+On Tue, 2022-11-15 at 14:49 -0800, Bart Van Assche wrote:
+> Modify alua_rtpg_queue() such that it only requests the caller to
+> drop
+> the sdev reference if necessary. This patch fixes a recently
+> introduced
+> regression.
+>=20
+> Cc: Sachin Sant <sachinp@linux.ibm.com>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Martin Wilck <mwilck@suse.com>
+> Reported-by: Sachin Sant <sachinp@linux.ibm.com>
+> Fixes: 0b25e17e9018 ("scsi: alua: Move a scsi_device_put() call out
+> of alua_check_vpd()")
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
-Found by Linux Verification Center (linuxtesting.org) with SVACE.
+Is this complexity really necessary, just for calling
+scsi_device_put()?=A00b25e17e9018 is supposed to avoid sleeping under=A0
+&h->pg_lock. Have you considered simply not calling alua_rtpg_queue()
+with this lock held? alua_rtpg_queue() accesses no data that is
+protected by=A0&h->pg_lock (which is just h->pg, AFAIU).
 
-Signed-off-by: Peter Kosyh <pkosyh@yandex.ru>
+Would it perhaps be sufficient to just make sure we keep a kref for the
+pg struct in alua_check_vpd(), like the patch below (on mkp/queue,
+meant as an alternative to 0b25e17e9018)?
+
+Regards
+Martin
+
+From 04df5933239921e7e7ac00e9ec0558124b050a51 Mon Sep 17 00:00:00 2001
+From: Martin Wilck <mwilck@suse.com>
+Date: Wed, 16 Nov 2022 11:24:58 +0100
+Subject: [PATCH] scsi: alua: alua_check_vpd: drop pg_lock before calling
+ alua_rtpg_queue
+
+Since commit f93ed747e2c7 ("scsi: core: Release SCSI devices synchronously"=
+),
+scsi_device_put() might sleep. Avoid calling it from alua_rtpg_queue()
+with the pg_lock held. The lock only pretects h->pg, anyway. To avoid
+the pg being freed under us, because of a race with another thread,
+take a temporary reference. In alua_rtpg_queue(), verify that the pg
+still belongs to the sdev being passed before actually queueing the RTPG.
+
+Signed-off-by: Martin Wilck <mwilck@suse.com>
 ---
- drivers/scsi/myrs.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 30 +++++++++++++++-------
+ 1 file changed, 21 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/myrs.c b/drivers/scsi/myrs.c
-index 7eb8c39da366..1811c1a6385b 100644
---- a/drivers/scsi/myrs.c
-+++ b/drivers/scsi/myrs.c
-@@ -498,14 +498,14 @@ static bool myrs_enable_mmio_mbox(struct myrs_hba *cs,
- 	/* Temporary dma mapping, used only in the scope of this function */
- 	mbox = dma_alloc_coherent(&pdev->dev, sizeof(union myrs_cmd_mbox),
- 				  &mbox_addr, GFP_KERNEL);
--	if (dma_mapping_error(&pdev->dev, mbox_addr))
-+	if (!mbox)
- 		return false;
- 
- 	/* These are the base addresses for the command memory mailbox array */
- 	cs->cmd_mbox_size = MYRS_MAX_CMD_MBOX * sizeof(union myrs_cmd_mbox);
- 	cmd_mbox = dma_alloc_coherent(&pdev->dev, cs->cmd_mbox_size,
- 				      &cs->cmd_mbox_addr, GFP_KERNEL);
--	if (dma_mapping_error(&pdev->dev, cs->cmd_mbox_addr)) {
-+	if (!cmd_mbox) {
- 		dev_err(&pdev->dev, "Failed to map command mailbox\n");
- 		goto out_free;
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/devi=
+ce_handler/scsi_dh_alua.c
+index 610a51538f03..905b49493e01 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -372,12 +372,13 @@ static int alua_check_vpd(struct scsi_device *sdev, s=
+truct alua_dh_data *h,
+ 	if (pg_updated)
+ 		list_add_rcu(&h->node, &pg->dh_list);
+ 	spin_unlock_irqrestore(&pg->lock, flags);
+-
+-	alua_rtpg_queue(rcu_dereference_protected(h->pg,
+-						  lockdep_is_held(&h->pg_lock)),
+-			sdev, NULL, true);
+ 	spin_unlock(&h->pg_lock);
+=20
++	if (kref_get_unless_zero(&pg->kref)) {
++		alua_rtpg_queue(pg, sdev, NULL, true);
++		kref_put(&pg->kref, release_port_group);
++	}
++
+ 	if (old_pg)
+ 		kref_put(&old_pg->kref, release_port_group);
+=20
+@@ -986,11 +987,22 @@ static bool alua_rtpg_queue(struct alua_port_group *p=
+g,
+ 		force =3D true;
  	}
--- 
-2.38.1
+ 	if (pg->rtpg_sdev =3D=3D NULL) {
+-		pg->interval =3D 0;
+-		pg->flags |=3D ALUA_PG_RUN_RTPG;
+-		kref_get(&pg->kref);
+-		pg->rtpg_sdev =3D sdev;
+-		start_queue =3D 1;
++		struct alua_dh_data *h =3D sdev->handler_data;
++		struct alua_port_group *sdev_pg =3D NULL;
++
++		if (h) {
++			rcu_read_lock();
++			sdev_pg =3D rcu_dereference(h->pg);
++			rcu_read_unlock();
++		}
++
++		if (pg =3D=3D sdev_pg) {
++			pg->flags |=3D ALUA_PG_RUN_RTPG;
++			pg->interval =3D 0;
++			kref_get(&pg->kref);
++			pg->rtpg_sdev =3D sdev;
++			start_queue =3D 1;
++		}
+ 	} else if (!(pg->flags & ALUA_PG_RUN_RTPG) && force) {
+ 		pg->flags |=3D ALUA_PG_RUN_RTPG;
+ 		/* Do not queue if the worker is already running */
+--=20
+2.38.0
+
 
