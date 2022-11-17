@@ -2,58 +2,58 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C0CCC4332F
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Nov 2022 18:30:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73F9EC43219
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Nov 2022 18:30:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240570AbiKQS35 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Nov 2022 13:29:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34930 "EHLO
+        id S240589AbiKQSaB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Nov 2022 13:30:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34764 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240560AbiKQS3p (ORCPT
+        with ESMTP id S240533AbiKQS3p (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Nov 2022 13:29:45 -0500
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 988147C470;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1E087D531;
         Thu, 17 Nov 2022 10:29:44 -0800 (PST)
 Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2AHIG5xG007355;
-        Thu, 17 Nov 2022 18:29:42 GMT
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2AHIEfqn007339;
+        Thu, 17 Nov 2022 18:29:43 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2022-7-12;
- bh=QLb8oMLNbrj4tAdesd7WUgX9pA+kOoGHMgIIq3cgPJk=;
- b=E4VWxOdm92jCyn2I0GYTOT48+ZyhcGTTvT57/5PUApP0vUjIIPyO/9F6YKGTAxjoBWXG
- 3J/xumGGfhpCYwD4aN0654if0Hj2hsvOA+duqsT7OQBooWE04afU7Iexw7NlfeJwVSeh
- I87aL6q0pnnD7q8kM6Sxpf7epwV1y7Yf2Na7xm0JOpgijP+/eYtrRi2/5csVs7JwW5af
- YyShp17+36GNyzFWG/NAqBEywn9yJ5MvkdDXpy/3vS4newIjkjV+xi5wox9HCG+myUpJ
- 8WOwEpyq4RLgryBd6sLUcyeFQWn8TiJozZKl5Rd9oSKYNqUpHfmYsNIOOD76awX6voSj xg== 
+ bh=pexBRG6B02DwG176kdgjzWsk1LpbrtqJOu7kx2u4xlo=;
+ b=GWqGnfUaFtFZEJqgooPpU10d6uKbKDBRtkEfqZm5GueuUpUqT0vyppEC8Cw+PL9Bj8X/
+ 1JT/YT1qxECvPYYQBgc16W8zcAk0++/9ql1x49hT8T9PJ796a89eIOF/LjFEgDqefvGz
+ bS1LGaNpPutq8s9ffWQNa2PZ+9PmYTUcPb7Bi8Nz4xhUkDrA2CumFUCqc7tPFkMHEY83
+ Jmru8NjSa6gkVVBLtSAPWxB4eVBKGUS8pVfft9V53DpTCqpKmNI+k093TQKAfJHXeeOI
+ nja1l2q5LNFoEY5EtEqjbpMw3rdFUT6KIYxl2hxgvyJmsTywM9KTisdW1SrM7ftb23OQ cw== 
 Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3kv3nsa6nf-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3kv3nsa6nn-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 17 Nov 2022 18:29:43 +0000
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2AHHGUnx010859;
+        Thu, 17 Nov 2022 18:29:41 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3ku3kab0mm-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
         Thu, 17 Nov 2022 18:29:41 +0000
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2AHHDn51010938;
-        Thu, 17 Nov 2022 18:29:39 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3ku3kab0k1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 17 Nov 2022 18:29:39 +0000
 Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 2AHITapB022894;
-        Thu, 17 Nov 2022 18:29:39 GMT
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 2AHITapH022894;
+        Thu, 17 Nov 2022 18:29:41 GMT
 Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3ku3kab0gb-6;
-        Thu, 17 Nov 2022 18:29:39 +0000
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3ku3kab0gb-9;
+        Thu, 17 Nov 2022 18:29:41 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        linux-scsi@vger.kernel.org, Colin Ian King <colin.i.king@gmail.com>
+To:     target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Colin Ian King <colin.i.king@gmail.com>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: csiostor: Remove unused variable n
-Date:   Thu, 17 Nov 2022 13:29:28 -0500
-Message-Id: <166870943121.1584889.7254357834650762040.b4-ty@oracle.com>
+Subject: Re: [PATCH] scsi: target: core: Remove unused variable unit_serial_len
+Date:   Thu, 17 Nov 2022 13:29:31 -0500
+Message-Id: <166870943121.1584889.10526347288138102346.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.36.1
-In-Reply-To: <20221101123235.52152-1-colin.i.king@gmail.com>
-References: <20221101123235.52152-1-colin.i.king@gmail.com>
+In-Reply-To: <20221101105326.31037-1-colin.i.king@gmail.com>
+References: <20221101105326.31037-1-colin.i.king@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
@@ -61,26 +61,26 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
  definitions=2022-11-17_06,2022-11-17_01,2022-06-22_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxscore=0 adultscore=0
- phishscore=0 malwarescore=0 suspectscore=0 mlxlogscore=997 spamscore=0
+ phishscore=0 malwarescore=0 suspectscore=0 mlxlogscore=999 spamscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2210170000
  definitions=main-2211170133
-X-Proofpoint-GUID: 8-p0Ho34slkUToO134eo8TpGUPZTyNDr
-X-Proofpoint-ORIG-GUID: 8-p0Ho34slkUToO134eo8TpGUPZTyNDr
+X-Proofpoint-GUID: XQ-akj4hUGoW5gMar1vpkpN0OgePmT_M
+X-Proofpoint-ORIG-GUID: XQ-akj4hUGoW5gMar1vpkpN0OgePmT_M
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 1 Nov 2022 12:32:35 +0000, Colin Ian King wrote:
+On Tue, 1 Nov 2022 10:53:26 +0000, Colin Ian King wrote:
 
-> Variable n is just being incremented and it's never used anywhere else. The
-> variable and the increment are redundant so remove it.
+> Variable unit_serial_len is just being assigned and it's never used
+> anywhere else. The variable is redundant so remove it.
 > 
 > 
 
 Applied to 6.2/scsi-queue, thanks!
 
-[1/1] scsi: csiostor: Remove unused variable n
-      https://git.kernel.org/mkp/scsi/c/0aa46eba2955
+[1/1] scsi: target: core: Remove unused variable unit_serial_len
+      https://git.kernel.org/mkp/scsi/c/bc81131813aa
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
