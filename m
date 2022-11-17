@@ -2,88 +2,69 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EA52C4332F
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Nov 2022 18:32:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF6E0C4332F
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Nov 2022 18:36:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238962AbiKQScQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Nov 2022 13:32:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35912 "EHLO
+        id S234940AbiKQSge (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Nov 2022 13:36:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39998 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240621AbiKQSag (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Nov 2022 13:30:36 -0500
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07BEA86A6E;
-        Thu, 17 Nov 2022 10:30:18 -0800 (PST)
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2AHHhqaF028297;
-        Thu, 17 Nov 2022 18:29:45 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2022-7-12;
- bh=JMoAY9JAgqNKqBsxlGm0L9X/81Ci47XElVkAJrmD7Co=;
- b=kvqYcuV2wkNwaOQ5GKWWnuLWjQDYhxiQo9PIY3U8ZEnTnWijyQy7AmdgUd9anOwrVQmQ
- YDZWciaTsr/rKZn3RXm2COieriSuPGe3Oa976h6PvCp52yNzJG89Pa9a9qd/RYWEIRHf
- m03tjGhoPOHV1qbhkUiqKAk/NAOo1YibCfOJ8tzmNnQY87Yw7svfxIsZ2EoHZWUzdxO5
- h3qCp52DkvdtTUGAMc0f3p0bBtF23I7Fzd9kSYp+mJIlwPd1LdBIhd+4wWIHdlaTivZz
- XPOWPJOtPAn+v/n0LizM2Y5o6gryUAddfUZtAOnYWmtAOPzLH5nm6GhdrahqXpl6LSKD Ww== 
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3kv8ykt0ve-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 17 Nov 2022 18:29:45 +0000
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2AHHGUo3010859;
-        Thu, 17 Nov 2022 18:29:43 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3ku3kab0nv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 17 Nov 2022 18:29:43 +0000
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 2AHITapL022894;
-        Thu, 17 Nov 2022 18:29:42 GMT
-Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3ku3kab0gb-11;
-        Thu, 17 Nov 2022 18:29:42 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     adrian.hunter@intel.com, bvanassche@acm.org,
-        Keoseong Park <keosung.park@samsung.com>,
-        linux-kernel@vger.kernel.org, yoshihiro.shimoda.uh@renesas.com,
-        draviv@codeaurora.org, beanhuo@micron.com,
-        stanley.chu@mediatek.com, linux-scsi@vger.kernel.org,
-        avri.altman@wdc.com
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: ufs: Remove check_upiu_size() from ufshcd.h
-Date:   Thu, 17 Nov 2022 13:29:33 -0500
-Message-Id: <166870943119.1584889.726238237744993435.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.36.1
-In-Reply-To: <20221103055349epcms2p338f2550c2dd78d00231a83b24719a3d4@epcms2p3>
-References: <CGME20221103055349epcms2p338f2550c2dd78d00231a83b24719a3d4@epcms2p3> <20221103055349epcms2p338f2550c2dd78d00231a83b24719a3d4@epcms2p3>
+        with ESMTP id S234730AbiKQSgd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Nov 2022 13:36:33 -0500
+Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED2F7F53
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Nov 2022 10:36:32 -0800 (PST)
+Received: by mail-pf1-f177.google.com with SMTP id 140so2605093pfz.6
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Nov 2022 10:36:32 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=mBeulsmFbF30F3//qWITucHyPK9On12IH79zifNr63k=;
+        b=L6f6xIr+FgnLZzXWL7t2GfA+NLryF9TLruikKU3L9HGOra65Ycb+gFZ/AQ5iJiYyuh
+         zfZXnCA5hpi8Y3xfSyDvr1VSNcz/ZFJPGzSUia3ljPFpLQfDVXHH2tniMUEH+nsfaLNW
+         bc/X11BFFlUm2RazwbZZ/yxqJMt7KRYfDefzHMt6ZbzNacMdA1GO1uAD/CHjtbIIDBz8
+         x+wWT4ZmqVPymaBO9b3TlugB7bexieepK9t1DJwc9AWoSlrdHryMlLE7oF3aq5lXkMpg
+         LQvsJ61DwzclU6dZu4Ty0THn0DFv12JQMObDhxL/+YWWbdVYrUwcRXdI43PkFwUZabuh
+         Auuw==
+X-Gm-Message-State: ANoB5pnXGx5jyxPb396rjKDXW9FOYy3Bo1k5V14KYebUeZmxRtexuyHQ
+        SJ/8F8FaXhBtQOJMhf/MaPc=
+X-Google-Smtp-Source: AA0mqf5IC0d5drpIVQ6sQVGIpo7ms1WfAZKOFui3gO3JKayffUBM26urfRSNrX9hEXE8GywoSGqQiw==
+X-Received: by 2002:a63:210d:0:b0:43c:1cb8:73ba with SMTP id h13-20020a63210d000000b0043c1cb873bamr3198743pgh.11.1668710192416;
+        Thu, 17 Nov 2022 10:36:32 -0800 (PST)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:7b21:f8f0:283b:9d21])
+        by smtp.gmail.com with ESMTPSA id z11-20020aa79e4b000000b0056c0d129edfsm1479073pfq.121.2022.11.17.10.36.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 17 Nov 2022 10:36:31 -0800 (PST)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH 0/2] Rework how the ALUA driver calls scsi_device_put()
+Date:   Thu, 17 Nov 2022 10:36:24 -0800
+Message-Id: <20221117183626.2656196-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.38.1.584.g0f3c55d4c2-goog
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2022-11-17_06,2022-11-17_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxscore=0 adultscore=0
- phishscore=0 malwarescore=0 suspectscore=0 mlxlogscore=999 spamscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2210170000
- definitions=main-2211170133
-X-Proofpoint-GUID: vzp6qa_KIDDOpWwgDK-X_tskmscgLHNP
-X-Proofpoint-ORIG-GUID: vzp6qa_KIDDOpWwgDK-X_tskmscgLHNP
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 03 Nov 2022 14:53:49 +0900, Keoseong Park wrote:
+Hi Martin,
 
-> Commit 68078d5cc1a5 ("[SCSI] ufs: Set fDeviceInit flag to initiate
-> device initialization") added check_upiu_size(), but no caller.
-> 
-> 
+This patch series reworks how the SCSI ALUA device handler calls
+scsi_device_put(). Please consider this patch series for the next merge
+window.
 
-Applied to 6.2/scsi-queue, thanks!
+Thanks,
 
-[1/1] scsi: ufs: Remove check_upiu_size() from ufshcd.h
-      https://git.kernel.org/mkp/scsi/c/3d6d7930928a
+Bart.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Bart Van Assche (2):
+  scsi: alua: Revert "Move a scsi_device_put() call out of
+    alua_check_vpd()"
+  scsi: alua: Call scsi_device_put() from non-atomic context
+
+ drivers/scsi/device_handler/scsi_dh_alua.c | 46 ++++++++++++----------
+ 1 file changed, 25 insertions(+), 21 deletions(-)
+
