@@ -2,99 +2,84 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE978C4332F
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Nov 2022 01:50:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 893C9C4332F
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Nov 2022 02:37:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234364AbiKQBul (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Nov 2022 20:50:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46110 "EHLO
+        id S238603AbiKQChZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Nov 2022 21:37:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60042 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233963AbiKQBuk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Nov 2022 20:50:40 -0500
-Received: from mxct.zte.com.cn (mxct.zte.com.cn [58.251.27.85])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 422655BD75;
-        Wed, 16 Nov 2022 17:50:39 -0800 (PST)
-Received: from mxde.zte.com.cn (unknown [10.35.20.165])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mxct.zte.com.cn (FangMail) with ESMTPS id 4NCNCx38RmzvM0;
-        Thu, 17 Nov 2022 09:50:37 +0800 (CST)
-Received: from mxus.zte.com.cn (unknown [10.207.168.8])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mxde.zte.com.cn (FangMail) with ESMTPS id 4NCNCg1rrQz64WfR;
-        Thu, 17 Nov 2022 09:50:23 +0800 (CST)
-Received: from mxhk.zte.com.cn (unknown [192.168.250.137])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mxus.zte.com.cn (FangMail) with ESMTPS id 4NCNCb5JGRzdmc16;
-        Thu, 17 Nov 2022 09:50:19 +0800 (CST)
-Received: from mse-fl2.zte.com.cn (unknown [10.5.228.133])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mxhk.zte.com.cn (FangMail) with ESMTPS id 4NCNCX3t31z8R039;
-        Thu, 17 Nov 2022 09:50:16 +0800 (CST)
-Received: from xaxapp01.zte.com.cn ([10.88.40.50])
-        by mse-fl2.zte.com.cn with SMTP id 2AH1o8FT092758;
-        Thu, 17 Nov 2022 09:50:08 +0800 (+08)
-        (envelope-from guo.ziliang@zte.com.cn)
-Received: from mapi (xaxapp03[null])
-        by mapi (Zmail) with MAPI id mid32;
-        Thu, 17 Nov 2022 09:50:09 +0800 (CST)
-Date:   Thu, 17 Nov 2022 09:50:09 +0800 (CST)
-X-Zmail-TransId: 2afb63759351fffffffff87339c3
-X-Mailer: Zmail v1.0
-Message-ID: <202211170950093878676@zte.com.cn>
-Mime-Version: 1.0
-From:   <guo.ziliang@zte.com.cn>
-To:     <target-devel@vger.kernel.org>
-Cc:     <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <guo.ziliang@zte.com.cn>
-Subject: =?UTF-8?B?W1BBVENIIGxpbnV4LW5leHRdIHNjc2k6IHRhcmdldDogVXNlIHN5c2ZzX3N0cmVxIGluc3RlYWQgb2Ygc3RybmNtcA==?=
-Content-Type: text/plain;
-        charset="UTF-8"
-X-MAIL: mse-fl2.zte.com.cn 2AH1o8FT092758
-X-Fangmail-Gw-Spam-Type: 0
-X-FangMail-Miltered: at cgslv5.04-192.168.251.14.novalocal with ID 6375936C.000 by FangMail milter!
-X-FangMail-Envelope: 1668649837/4NCNCx38RmzvM0/6375936C.000/10.35.20.165/[10.35.20.165]/mxde.zte.com.cn/<guo.ziliang@zte.com.cn>
-X-Fangmail-Anti-Spam-Filtered: true
-X-Fangmail-MID-QID: 6375936C.000/4NCNCx38RmzvM0
+        with ESMTP id S233803AbiKQChX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Nov 2022 21:37:23 -0500
+Received: from mail-m974.mail.163.com (mail-m974.mail.163.com [123.126.97.4])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B6A232EF3A;
+        Wed, 16 Nov 2022 18:37:21 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=woxW9
+        qfXbc/Rwz9N9Bvo3L2Mqtqice/69vnimc6ZZQE=; b=DXN4c8Re1I9FWGAJNfBoI
+        gzgkljQk3IX2xcw/yYf9j9YOU/sr9XZQzPBIkUHlAU4B3TqCO4naHzYdqH9Lrji+
+        92MgcyQxNC4zt+gokAMV/PG8vOGowA4XSJbh+R4+WAvSwGfJnSxxMzkV9IRrL1SS
+        qU6556GEMYO6CvHbXm6NXs=
+Received: from localhost.localdomain (unknown [36.112.3.106])
+        by smtp4 (Coremail) with SMTP id HNxpCgDXv5kmnnVjtcyRsg--.7212S4;
+        Thu, 17 Nov 2022 10:36:46 +0800 (CST)
+From:   Jianglei Nie <niejianglei2021@163.com>
+To:     james.smart@broadcom.com, dick.kennedy@broadcom.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jianglei Nie <niejianglei@gmail.com>,
+        Jianglei Nie <niejianglei2021@163.com>
+Subject: [PATCH] scsi: lpfc: Fix potential memory leak in lpfcdiag_sli3_loop_post_rxbufs()
+Date:   Thu, 17 Nov 2022 10:36:19 +0800
+Message-Id: <20221117023619.9565-1-niejianglei2021@163.com>
+X-Mailer: git-send-email 2.25.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: HNxpCgDXv5kmnnVjtcyRsg--.7212S4
+X-Coremail-Antispam: 1Uf129KBjvJXoW7Jr18ZFyrAF4kXw13XF13Arb_yoW8Jry8pF
+        WfKa47ur95tF1IgrnxG3W5XFnYqa9Yg34jkFs29ws8Wa4xuFyFgF47CryrWry8AF1xAry8
+        WrZ7KF95WFW7XwUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0ziJ3vUUUUUU=
+X-Originating-IP: [36.112.3.106]
+X-CM-SenderInfo: xqlhyxxdqjzvrlsqjii6rwjhhfrp/1tbiFR68jF5mNZwQXgAAsk
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: guo ziliang <guo.ziliang@zte.com.cn>
-There is a ready-to-use method to compare a retrieved from a sysfs node
-string with another string. It treats both NUL and newline-then-NUL as
-equivalent string terminations. So use it instead of manually truncating
-the line length in the strncmp() method.
+From: Jianglei Nie <niejianglei@gmail.com>
 
-Signed-off-by: guo ziliang <guo.ziliang@zte.com.cn>
+lpfcdiag_sli3_loop_post_rxbufs() allocates a memory chunk from "rxbuffer"
+with diag_cmd_data_alloc(). The "rxbuffer" should be freed when gets some
+error. But when the function gets some error and jump to
+"err_post_rxbufs_exit",The "rxbuffer" is not released, which will lead to
+a memory leak.
+
+We should free the "rxbuffer" with diag_cmd_data_free() in
+"err_post_rxbufs_exit" when the "rxbuffer" is not NULL.
+
+Signed-off-by: Jianglei Nie <niejianglei2021@163.com>
+Signed-off-by: Jianglei Nie <niejianglei@gmail.com>
 ---
- drivers/target/target_core_configfs.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_bsg.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index f4a220a..3b89d83 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -208,7 +208,7 @@ static struct config_group *target_core_register_fabric(
-                 * mkdir(2) system calls with known TCM fabric modules.
-                 */
+diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+index 852b025e2fec..2693def758b7 100644
+--- a/drivers/scsi/lpfc/lpfc_bsg.c
++++ b/drivers/scsi/lpfc/lpfc_bsg.c
+@@ -2989,8 +2989,11 @@ static int lpfcdiag_sli3_loop_post_rxbufs(struct lpfc_hba *phba, uint16_t rxxri,
+ err_post_rxbufs_exit:
+ 
+ 	if (rxbmp) {
+-		if (rxbmp->virt)
++		if (rxbmp->virt) {
++			if (rxbuffer != NULL)
++				diag_cmd_data_free(phba, rxbuffer);
+ 			lpfc_mbuf_free(phba, rxbmp->virt, rxbmp->phys);
++		}
+ 		kfree(rxbmp);
+ 	}
+ 
+-- 
+2.25.1
 
--               if (!strncmp(name, "iscsi", 5)) {
-+               if (sysfs_streq(name, "iscsi")) {
-                        /*
-                         * Automatically load the LIO Target fabric module when the
-                         * following is called:
-@@ -221,7 +221,7 @@ static struct config_group *target_core_register_fabric(
-                                         " iscsi_target_mod.ko: %d\n", ret);
-                                return ERR_PTR(-EINVAL);
-                        }
--               } else if (!strncmp(name, "loopback", 8)) {
-+               } else if (sysfs_streq(name, "loopback")) {
-                        /*
-                         * Automatically load the tcm_loop fabric module when the
-                         * following is called:
---
-1.8.3.1
