@@ -2,88 +2,382 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECD0BC433FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Nov 2022 22:25:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08E5CC433FE
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Nov 2022 01:40:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238422AbiKPWY6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Nov 2022 17:24:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46978 "EHLO
+        id S234238AbiKQBkQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Nov 2022 20:40:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41328 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238875AbiKPWYr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Nov 2022 17:24:47 -0500
-Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C86132BA3
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Nov 2022 14:24:45 -0800 (PST)
-Received: by mail-pl1-x62c.google.com with SMTP id k7so17754114pll.6
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Nov 2022 14:24:45 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=H0Wl4WXlZ9TtxCS/7cbCnqRMePuRd+lB/ZGpLWihPag=;
-        b=Z1e+Sc3OetTCAQVdLTOaCpJQhUAM41Z5P5Zm1uYJoWTHvOeggqH4IDrkjIc7NGsNZz
-         q8RzSMAQ6wffrTcixCdTMO8NP/R+3GqN77eQRMHUdLkjfb/Wqphq4NPG70Brt+E7SzFR
-         8XnD+jPys9D8fH40n/994uKnYFzZ1sntvg/ow=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=H0Wl4WXlZ9TtxCS/7cbCnqRMePuRd+lB/ZGpLWihPag=;
-        b=WWatfjnFWaYOOdKj6BPby4BSf7nWj7DRli3bTDDEkmfp5EUVkiyLECZRuFShyVfMSW
-         Amsi3qThlqUcPukj02AVxB994zGAQvAGikQx4SYAJZPy9STYvsxz8Y3X9Lju2HVnfEIN
-         4WQATqdJpKpoGxNe1ZTv3zruB8wlnuetddlZgSd2FV87U/dDveceVx+6EHGYXQeEPNcK
-         synQvs2tkfOw9Hj/47eXK+xDlF2NCiIIoG45k4HFk1VcMrrmfA2c+TSt20+tIeQ8lbao
-         WwyT0EsFpGwGb7gW41hdYcqcZJvjFe6lIG4O3xxxK/ZvNtHXHvhozQgwXRsDwFENp05k
-         4GlQ==
-X-Gm-Message-State: ANoB5pmxxFfxlFu8Fji76P413o0NkR8hUF6VCKtHK9RQrCGYVEmZVD5T
-        eOgwERIJE8u12vSYWCr1QtnLmw==
-X-Google-Smtp-Source: AA0mqf4rz5uYxs0pdlSPjexuCrjBLrAOCIIqlFBQmnF0VeQWmRXzPz48Qx95Oo5rNx5HXl9GQBIZjg==
-X-Received: by 2002:a17:903:2642:b0:178:b4b7:d74d with SMTP id je2-20020a170903264200b00178b4b7d74dmr10795273plb.83.1668637485474;
-        Wed, 16 Nov 2022 14:24:45 -0800 (PST)
-Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
-        by smtp.gmail.com with ESMTPSA id e6-20020a17090301c600b0017f7628cbddsm12774143plh.30.2022.11.16.14.24.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 16 Nov 2022 14:24:44 -0800 (PST)
-Date:   Wed, 16 Nov 2022 14:24:44 -0800
-From:   Kees Cook <keescook@chromium.org>
-To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Cc:     Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
-        Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-hardening@vger.kernel.org
-Subject: Re: [PATCH][next] scsi: bfa: Replace one-element array with
- flexible-array member
-Message-ID: <202211161424.A47F4BAD1@keescook>
-References: <Y3P1rEEBq7HzJygq@work>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Y3P1rEEBq7HzJygq@work>
+        with ESMTP id S231564AbiKQBkP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Nov 2022 20:40:15 -0500
+Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [63.216.63.35])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E387060372;
+        Wed, 16 Nov 2022 17:40:12 -0800 (PST)
+Received: from mse-fl2.zte.com.cn (unknown [10.5.228.133])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mxhk.zte.com.cn (FangMail) with ESMTPS id 4NCMzv2yR2z4xVnD;
+        Thu, 17 Nov 2022 09:40:11 +0800 (CST)
+Received: from xaxapp01.zte.com.cn ([10.88.40.50])
+        by mse-fl2.zte.com.cn with SMTP id 2AH1e2Rg080452;
+        Thu, 17 Nov 2022 09:40:02 +0800 (+08)
+        (envelope-from guo.ziliang@zte.com.cn)
+Received: from mapi (xaxapp03[null])
+        by mapi (Zmail) with MAPI id mid32;
+        Thu, 17 Nov 2022 09:40:03 +0800 (CST)
+Date:   Thu, 17 Nov 2022 09:40:03 +0800 (CST)
+X-Zmail-TransId: 2afb637590f33ab1ddfc
+X-Mailer: Zmail v1.0
+Message-ID: <202211170940036248332@zte.com.cn>
+Mime-Version: 1.0
+From:   <guo.ziliang@zte.com.cn>
+To:     <jejb@linux.ibm.com>
+Cc:     <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <guo.ziliang@zte.com.cn>
+Subject: =?UTF-8?B?W1BBVENIIGxpbnV4LW5leHRdIHNjc2k6IHNjc2lfZGVidWc6IHVzZSBzeXNmc19lbWl0KCkgdG8gaW5zdGVhZCBvZiBzY25wcmludGYoKQ==?=
+Content-Type: text/plain;
+        charset="UTF-8"
+X-MAIL: mse-fl2.zte.com.cn 2AH1e2Rg080452
+X-Fangmail-Gw-Spam-Type: 0
+X-FangMail-Miltered: at cgslv5.04-192.168.250.138.novalocal with ID 637590FB.000 by FangMail milter!
+X-FangMail-Envelope: 1668649211/4NCMzv2yR2z4xVnD/637590FB.000/10.5.228.133/[10.5.228.133]/mse-fl2.zte.com.cn/<guo.ziliang@zte.com.cn>
+X-Fangmail-Anti-Spam-Filtered: true
+X-Fangmail-MID-QID: 637590FB.000/4NCMzv2yR2z4xVnD
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Nov 15, 2022 at 02:25:16PM -0600, Gustavo A. R. Silva wrote:
-> One-element arrays are deprecated, and we are replacing them with flexible
-> array members instead. So, replace one-element array with flexible-array
-> member in struct fdmi_attr_s.
-> 
-> Important to mention is that doing a build before/after this patch results
-> in no binary output differences.
-> 
-> This helps with the ongoing efforts to tighten the FORTIFY_SOURCE routines
-> on memcpy() and help us make progress towards globally enabling
-> -fstrict-flex-arrays=3 [1].
-> 
-> Link: https://github.com/KSPP/linux/issues/209
-> Link: https://github.com/KSPP/linux/issues/79
-> Link: https://gcc.gnu.org/pipermail/gcc-patches/2022-October/602902.html [1]
-> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+From: guo ziliang <guo.ziliang@zte.com.cn>
+Replace the open-code with sysfs_emit() to simplify the code.
 
-Reviewed-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: guo ziliang <guo.ziliang@zte.com.cn>
+---
+ drivers/scsi/scsi_debug.c | 78 +++++++++++++++++++++++------------------------
+ 1 file changed, 38 insertions(+), 40 deletions(-)
 
--- 
-Kees Cook
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index a86db97..7bd4d2a7 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -6075,7 +6075,7 @@ static int scsi_debug_show_info(struct seq_file *m, struct Scsi_Host *host)
+
+ static ssize_t delay_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_jdelay);
++       return sysfs_emit(buf, "%d\n", sdebug_jdelay);
+ }
+ /* Returns -EBUSY if jdelay is being changed and commands are queued. The unit
+  * of delay is jiffies.
+@@ -6115,7 +6115,7 @@ static ssize_t delay_store(struct device_driver *ddp, const char *buf,
+
+ static ssize_t ndelay_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_ndelay);
++       return sysfs_emit(buf, "%d\n", sdebug_ndelay);
+ }
+ /* Returns -EBUSY if ndelay is being changed and commands are queued */
+ /* If > 0 and accepted then sdebug_jdelay is set to JDELAY_OVERRIDDEN */
+@@ -6156,7 +6156,7 @@ static ssize_t ndelay_store(struct device_driver *ddp, const char *buf,
+
+ static ssize_t opts_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "0x%x\n", sdebug_opts);
++       return sysfs_emit(buf, "0x%x\n", sdebug_opts);
+ }
+
+ static ssize_t opts_store(struct device_driver *ddp, const char *buf,
+@@ -6186,7 +6186,7 @@ static ssize_t opts_store(struct device_driver *ddp, const char *buf,
+
+ static ssize_t ptype_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_ptype);
++       return sysfs_emit(buf, "%d\n", sdebug_ptype);
+ }
+ static ssize_t ptype_store(struct device_driver *ddp, const char *buf,
+                           size_t count)
+@@ -6209,7 +6209,7 @@ static ssize_t ptype_store(struct device_driver *ddp, const char *buf,
+
+ static ssize_t dsense_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_dsense);
++       return sysfs_emit(buf, "%d\n", sdebug_dsense);
+ }
+ static ssize_t dsense_store(struct device_driver *ddp, const char *buf,
+                            size_t count)
+@@ -6226,7 +6226,7 @@ static ssize_t dsense_store(struct device_driver *ddp, const char *buf,
+
+ static ssize_t fake_rw_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_fake_rw);
++       return sysfs_emit(buf, "%d\n", sdebug_fake_rw);
+ }
+ static ssize_t fake_rw_store(struct device_driver *ddp, const char *buf,
+                             size_t count)
+@@ -6274,7 +6274,7 @@ static ssize_t fake_rw_store(struct device_driver *ddp, const char *buf,
+
+ static ssize_t no_lun_0_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_no_lun_0);
++       return sysfs_emit(buf, "%d\n", sdebug_no_lun_0);
+ }
+ static ssize_t no_lun_0_store(struct device_driver *ddp, const char *buf,
+                              size_t count)
+@@ -6291,7 +6291,7 @@ static ssize_t no_lun_0_store(struct device_driver *ddp, const char *buf,
+
+ static ssize_t num_tgts_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_num_tgts);
++       return sysfs_emit(buf, "%d\n", sdebug_num_tgts);
+ }
+ static ssize_t num_tgts_store(struct device_driver *ddp, const char *buf,
+                              size_t count)
+@@ -6309,13 +6309,13 @@ static ssize_t num_tgts_store(struct device_driver *ddp, const char *buf,
+
+ static ssize_t dev_size_mb_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_dev_size_mb);
++       return sysfs_emit(buf, "%d\n", sdebug_dev_size_mb);
+ }
+ static DRIVER_ATTR_RO(dev_size_mb);
+
+ static ssize_t per_host_store_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_per_host_store);
++       return sysfs_emit(buf, "%d\n", sdebug_per_host_store);
+ }
+
+ static ssize_t per_host_store_store(struct device_driver *ddp, const char *buf,
+@@ -6333,13 +6333,13 @@ static ssize_t per_host_store_store(struct device_driver *ddp, const char *buf,
+
+ static ssize_t num_parts_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_num_parts);
++       return sysfs_emit(buf, "%d\n", sdebug_num_parts);
+ }
+ static DRIVER_ATTR_RO(num_parts);
+
+ static ssize_t every_nth_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_every_nth);
++       return sysfs_emit(buf, "%d\n", sdebug_every_nth);
+ }
+ static ssize_t every_nth_store(struct device_driver *ddp, const char *buf,
+                               size_t count)
+@@ -6371,7 +6371,7 @@ static ssize_t every_nth_store(struct device_driver *ddp, const char *buf,
+
+ static ssize_t lun_format_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", (int)sdebug_lun_am);
++       return sysfs_emit(buf, "%d\n", (int)sdebug_lun_am);
+ }
+ static ssize_t lun_format_store(struct device_driver *ddp, const char *buf,
+                                size_t count)
+@@ -6408,7 +6408,7 @@ static ssize_t lun_format_store(struct device_driver *ddp, const char *buf,
+
+ static ssize_t max_luns_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_max_luns);
++       return sysfs_emit(buf, "%d\n", sdebug_max_luns);
+ }
+ static ssize_t max_luns_store(struct device_driver *ddp, const char *buf,
+                              size_t count)
+@@ -6447,7 +6447,7 @@ static ssize_t max_luns_store(struct device_driver *ddp, const char *buf,
+
+ static ssize_t max_queue_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_max_queue);
++       return sysfs_emit(buf, "%d\n", sdebug_max_queue);
+ }
+ /* N.B. max_queue can be changed while there are queued commands. In flight
+  * commands beyond the new max_queue will be completed. */
+@@ -6484,12 +6484,12 @@ static ssize_t max_queue_store(struct device_driver *ddp, const char *buf,
+
+ static ssize_t host_max_queue_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_host_max_queue);
++       return sysfs_emit(buf, "%d\n", sdebug_host_max_queue);
+ }
+
+ static ssize_t no_rwlock_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_no_rwlock);
++       return sysfs_emit(buf, "%d\n", sdebug_no_rwlock);
+ }
+
+ static ssize_t no_rwlock_store(struct device_driver *ddp, const char *buf, size_t count)
+@@ -6512,19 +6512,19 @@ static ssize_t no_rwlock_store(struct device_driver *ddp, const char *buf, size_
+
+ static ssize_t no_uld_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_no_uld);
++       return sysfs_emit(buf, "%d\n", sdebug_no_uld);
+ }
+ static DRIVER_ATTR_RO(no_uld);
+
+ static ssize_t scsi_level_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_scsi_level);
++       return sysfs_emit(buf, "%d\n", sdebug_scsi_level);
+ }
+ static DRIVER_ATTR_RO(scsi_level);
+
+ static ssize_t virtual_gb_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_virtual_gb);
++       return sysfs_emit(buf, "%d\n", sdebug_virtual_gb);
+ }
+ static ssize_t virtual_gb_store(struct device_driver *ddp, const char *buf,
+                                size_t count)
+@@ -6564,7 +6564,7 @@ static ssize_t virtual_gb_store(struct device_driver *ddp, const char *buf,
+ static ssize_t add_host_show(struct device_driver *ddp, char *buf)
+ {
+        /* absolute number of hosts currently active is what is shown */
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_num_hosts);
++       return sysfs_emit(buf, "%d\n", sdebug_num_hosts);
+ }
+
+ static ssize_t add_host_store(struct device_driver *ddp, const char *buf,
+@@ -6607,7 +6607,7 @@ static ssize_t add_host_store(struct device_driver *ddp, const char *buf,
+
+ static ssize_t vpd_use_hostno_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_vpd_use_hostno);
++       return sysfs_emit(buf, "%d\n", sdebug_vpd_use_hostno);
+ }
+ static ssize_t vpd_use_hostno_store(struct device_driver *ddp, const char *buf,
+                                    size_t count)
+@@ -6624,7 +6624,7 @@ static ssize_t vpd_use_hostno_store(struct device_driver *ddp, const char *buf,
+
+ static ssize_t statistics_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", (int)sdebug_statistics);
++       return sysfs_emit(buf, "%d\n", (int)sdebug_statistics);
+ }
+ static ssize_t statistics_store(struct device_driver *ddp, const char *buf,
+                                size_t count)
+@@ -6646,37 +6646,37 @@ static ssize_t statistics_store(struct device_driver *ddp, const char *buf,
+
+ static ssize_t sector_size_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%u\n", sdebug_sector_size);
++       return sysfs_emit(buf, "%u\n", sdebug_sector_size);
+ }
+ static DRIVER_ATTR_RO(sector_size);
+
+ static ssize_t submit_queues_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", submit_queues);
++       return sysfs_emit(buf, "%d\n", submit_queues);
+ }
+ static DRIVER_ATTR_RO(submit_queues);
+
+ static ssize_t dix_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_dix);
++       return sysfs_emit(buf, "%d\n", sdebug_dix);
+ }
+ static DRIVER_ATTR_RO(dix);
+
+ static ssize_t dif_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_dif);
++       return sysfs_emit(buf, "%d\n", sdebug_dif);
+ }
+ static DRIVER_ATTR_RO(dif);
+
+ static ssize_t guard_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%u\n", sdebug_guard);
++       return sysfs_emit(buf, "%u\n", sdebug_guard);
+ }
+ static DRIVER_ATTR_RO(guard);
+
+ static ssize_t ato_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_ato);
++       return sysfs_emit(buf, "%d\n", sdebug_ato);
+ }
+ static DRIVER_ATTR_RO(ato);
+
+@@ -6685,8 +6685,7 @@ static ssize_t map_show(struct device_driver *ddp, char *buf)
+        ssize_t count = 0;
+
+        if (!scsi_debug_lbp())
+-               return scnprintf(buf, PAGE_SIZE, "0-%u\n",
+-                                sdebug_store_sectors);
++               return sysfs_emit(buf, "0-%u\n", sdebug_store_sectors);
+
+        if (sdebug_fake_rw == 0 && !xa_empty(per_store_ap)) {
+                struct sdeb_store_info *sip = xa_load(per_store_ap, 0);
+@@ -6704,7 +6703,7 @@ static ssize_t map_show(struct device_driver *ddp, char *buf)
+
+ static ssize_t random_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_random);
++       return sysfs_emit(buf, "%d\n", sdebug_random);
+ }
+
+ static ssize_t random_store(struct device_driver *ddp, const char *buf,
+@@ -6722,7 +6721,7 @@ static ssize_t random_store(struct device_driver *ddp, const char *buf,
+
+ static ssize_t removable_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_removable ? 1 : 0);
++       return sysfs_emit(buf, "%d\n", sdebug_removable ? 1 : 0);
+ }
+ static ssize_t removable_store(struct device_driver *ddp, const char *buf,
+                               size_t count)
+@@ -6739,7 +6738,7 @@ static ssize_t removable_store(struct device_driver *ddp, const char *buf,
+
+ static ssize_t host_lock_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", !!sdebug_host_lock);
++       return sysfs_emit(buf, "%d\n", !!sdebug_host_lock);
+ }
+ /* N.B. sdebug_host_lock does nothing, kept for backward compatibility */
+ static ssize_t host_lock_store(struct device_driver *ddp, const char *buf,
+@@ -6757,7 +6756,7 @@ static ssize_t host_lock_store(struct device_driver *ddp, const char *buf,
+
+ static ssize_t strict_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", !!sdebug_strict);
++       return sysfs_emit(buf, "%d\n", !!sdebug_strict);
+ }
+ static ssize_t strict_store(struct device_driver *ddp, const char *buf,
+                            size_t count)
+@@ -6774,13 +6773,13 @@ static ssize_t strict_store(struct device_driver *ddp, const char *buf,
+
+ static ssize_t uuid_ctl_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", !!sdebug_uuid_ctl);
++       return sysfs_emit(buf, "%d\n", !!sdebug_uuid_ctl);
+ }
+ static DRIVER_ATTR_RO(uuid_ctl);
+
+ static ssize_t cdb_len_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_cdb_len);
++       return sysfs_emit(buf, "%d\n", sdebug_cdb_len);
+ }
+ static ssize_t cdb_len_store(struct device_driver *ddp, const char *buf,
+                             size_t count)
+@@ -6831,14 +6830,13 @@ static int sdeb_zbc_model_str(const char *cp)
+
+ static ssize_t zbc_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%s\n",
+-                        zbc_model_strs_a[sdeb_zbc_model]);
++       return sysfs_emit(buf, "%s\n", zbc_model_strs_a[sdeb_zbc_model]);
+ }
+ static DRIVER_ATTR_RO(zbc);
+
+ static ssize_t tur_ms_to_ready_show(struct device_driver *ddp, char *buf)
+ {
+-       return scnprintf(buf, PAGE_SIZE, "%d\n", sdeb_tur_ms_to_ready);
++       return sysfs_emit(buf, "%d\n", sdeb_tur_ms_to_ready);
+ }
+ static DRIVER_ATTR_RO(tur_ms_to_ready);
+
+--
+1.8.3.1
