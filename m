@@ -2,83 +2,89 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E78AC4332F
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Nov 2022 23:13:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51BB8C4332F
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Nov 2022 23:23:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234960AbiKQXNP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Nov 2022 18:13:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60648 "EHLO
+        id S240503AbiKQXX2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Nov 2022 18:23:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38086 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235103AbiKQXNL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Nov 2022 18:13:11 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54F176D493
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Nov 2022 15:13:08 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 090FEB82046
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Nov 2022 23:13:07 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id C6FF2C433D6
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Nov 2022 23:13:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1668726785;
-        bh=0M0nPyqqdcNriEoSYDCKoN2FXwEhVzQF4t6Ut75ZAMc=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=JL/9AmCZ1lHBYp1vBrFy9+C/oiQpQknoQPwv93mNKWfIXlDa1J+StT8N3VkFcVnCy
-         s4zMU5PtnVvrAwza0YoLx+Gv83fTlaakkJvCw7ZAdPM8NLgRtNIoeg9iwxUPWQ1PND
-         m4/uoMTz2TQJj//H/8EfY0ACBtbEcXrszj7gJrGX3SwsXEpcIv+H4+NxvBu3x80gWp
-         WFntMN4k4v07OvHqbrOgIG/s8+bTrSxtvB3+z28FQtMfDhh8otk4xjyBzR0lL3b2ue
-         EWCV6f30/zGGq7AkMXwJjl2ww2hsYAxFZVyYNzaQY7xBHJaBE4bfRs4thxegfe62ex
-         cvdDO92bspvhQ==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id AC486C433E9; Thu, 17 Nov 2022 23:13:05 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 216696] Linux unusable upon plugging encrypted SanDisk Extreme
- 55AE USB 3.0 SSD, causes xHCI controller crash and drops USB keyboard/mouse
-Date:   Thu, 17 Nov 2022 23:13:05 +0000
-X-Bugzilla-Reason: AssignedTo
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: None
-X-Bugzilla-Product: IO/Storage
-X-Bugzilla-Component: SCSI
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: blocking
-X-Bugzilla-Who: mario.limonciello@amd.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: cc
-Message-ID: <bug-216696-11613-0ttUf9gMKo@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-216696-11613@https.bugzilla.kernel.org/>
-References: <bug-216696-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        with ESMTP id S233865AbiKQXXP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Nov 2022 18:23:15 -0500
+Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D36274A91;
+        Thu, 17 Nov 2022 15:23:14 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1668727394; x=1700263394;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=1vf+nxtKsojFCFBBwNt1MycZfyiXZfZyH/YixPFSLlM=;
+  b=Ow/Fa2lQiysdU6TqdjWVzqTc/bhhB1C0ddbuOzZdto9UkNvNL/MEyhz/
+   HNF9mP2SoiWObyxy6HqUgwCKR5oj+6D51T3z30OqQTk/jt++0GBEZoJnL
+   aWV1I+/VdXGbs3vaggNibWN4vm/0R5OAmonPzKm2Fr/EXgahO5rOGZ5m0
+   UUkbD5rOmzZWuPkHlaa7nSEryg/Gb+uF/mC4yHtpADYTcDrFInEQwVHAM
+   KgrcJWum+5MOsJPYCOL1OwbGbbR0DO6u8N9scK7fDwu/RcpWhHEfG7EY/
+   Ko2WcTm67eV8UD4AhsYnsLrzHB2SauFnmpCm6eZbWHJzTmQ9fCG3OE/Jy
+   A==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10534"; a="292704100"
+X-IronPort-AV: E=Sophos;i="5.96,172,1665471600"; 
+   d="scan'208";a="292704100"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Nov 2022 15:23:13 -0800
+X-IronPort-AV: E=McAfee;i="6500,9779,10534"; a="969064618"
+X-IronPort-AV: E=Sophos;i="5.96,172,1665471600"; 
+   d="scan'208";a="969064618"
+Received: from cvadim-mobl1.ger.corp.intel.com (HELO box.shutemov.name) ([10.252.60.21])
+  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Nov 2022 15:23:11 -0800
+Received: by box.shutemov.name (Postfix, from userid 1000)
+        id 5FA7D109763; Fri, 18 Nov 2022 02:23:09 +0300 (+03)
+From:   "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org
+Cc:     dave.hansen@linux.intel.com, David.Laight@ACULAB.COM,
+        linux-kernel@vger.kernel.org, x86@kernel.org,
+        "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Subject: [PATCHv2] scsi: Fix get_user() in call sg_scsi_ioctl()
+Date:   Fri, 18 Nov 2022 02:23:04 +0300
+Message-Id: <20221117232304.1544-1-kirill.shutemov@linux.intel.com>
+X-Mailer: git-send-email 2.38.0
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D216696
+get_user() expects the pointer to be pointer-to-simple-variable type,
+but sic->data is array of 'unsigned char'. It violates get_user()
+contracts.
 
-Mario Limonciello (AMD) (mario.limonciello@amd.com) changed:
+Explicitly take pointer to the first element of the array. It matches
+current behaviour.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |mario.limonciello@amd.com
+This is preparation for fixing sparse warnings caused by Linear Address
+Masking patchset.
 
---- Comment #1 from Mario Limonciello (AMD) (mario.limonciello@amd.com) ---
-Considering there is a page fault, did you already experiment with iommu=3D=
-pt?
+Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+---
+ drivers/scsi/scsi_ioctl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---=20
-You may reply to this email to add a comment.
+diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
+index 2d20da55fb64..fdd47565a311 100644
+--- a/drivers/scsi/scsi_ioctl.c
++++ b/drivers/scsi/scsi_ioctl.c
+@@ -519,7 +519,7 @@ static int sg_scsi_ioctl(struct request_queue *q, fmode_t mode,
+ 		return -EFAULT;
+ 	if (in_len > PAGE_SIZE || out_len > PAGE_SIZE)
+ 		return -EINVAL;
+-	if (get_user(opcode, sic->data))
++	if (get_user(opcode, &sic->data[0]))
+ 		return -EFAULT;
+ 
+ 	bytes = max(in_len, out_len);
+-- 
+2.38.0
 
-You are receiving this mail because:
-You are the assignee for the bug.=
