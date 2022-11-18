@@ -2,96 +2,135 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7218CC433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Nov 2022 22:28:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B89FCC43219
+	for <linux-scsi@archiver.kernel.org>; Sat, 19 Nov 2022 00:24:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230299AbiKRW2s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Nov 2022 17:28:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53460 "EHLO
+        id S235244AbiKSAYV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Nov 2022 19:24:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43410 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229488AbiKRW2q (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Nov 2022 17:28:46 -0500
-Received: from out2-smtp.messagingengine.com (out2-smtp.messagingengine.com [66.111.4.26])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 456EA10A6
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Nov 2022 14:28:45 -0800 (PST)
-Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
-        by mailout.nyi.internal (Postfix) with ESMTP id AB6825C0463;
-        Fri, 18 Nov 2022 17:28:44 -0500 (EST)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute3.internal (MEProxy); Fri, 18 Nov 2022 17:28:44 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:date:date:feedback-id
-        :feedback-id:from:from:in-reply-to:in-reply-to:message-id
-        :mime-version:references:reply-to:sender:subject:subject:to:to
-        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-        fm1; t=1668810524; x=1668896924; bh=PGlGMNxfEsSdRlQmz2whXX91TCgc
-        LHymG+LAv6YWqus=; b=d2MbhRJ91UTUKAkzKA8x+XiaeGb8bIUOy1HnKDkqP3FF
-        NfsLGye7q15QqSQzZZ1envw4N90D01i42bxrd9M8idvO1rhzRuqqjFJhGxc0zn8V
-        538UJcNblYINPUhq5d5NXwNu7VnkrKkHKp92jC3l9cWuxcWnL/P57eF7wufVyqcv
-        UutPjeqJiqql1bbRxM9ItcBsDnKMT2IwEcrBc0v/7/0J5C/PoHvRtf2sCNFV5+qr
-        D96zVuFfVMPE9KenkJxTFrbXZHiOCN/1gSam0awW8jCsblp6owBl9EB09ZYdOhx4
-        2PYOpNrJ12DCYQ20tTOLOfvYiDXcbKg4CRffAs11DA==
-X-ME-Sender: <xms:Gwd4Y48duWpBvMi40xCGtxTQNx5wItq-Gjr2P8n33MFEnwYb2_Uffg>
-    <xme:Gwd4YwssKktfP9BikE-KXKvIyNvGdadxFhC3bD5cQuAvPWWMHdy-nOzeTEFQHkQPQ
-    NwrOzn4yOwtLj2AbO8>
-X-ME-Received: <xmr:Gwd4Y-D6CgCdCJG34dTAgG3CX-BPR-W935Cpe-kARjUSKrNj7UNTQgVJD_szJ376Wi6W6hfgfRWuDXeBCkY-MxM9erx1F9W7pXs>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvgedrhedtgdduieefucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepfffhvfevufgjkfhfgggtsehttdertddttddvnecuhfhrohhmpefhihhnnhcu
-    vfhhrghinhcuoehfthhhrghinheslhhinhhugidqmheikehkrdhorhhgqeenucggtffrrg
-    htthgvrhhnpeelueehleehkefgueevtdevteejkefhffekfeffffdtgfejveekgeefvdeu
-    heeuleenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
-    hfthhhrghinheslhhinhhugidqmheikehkrdhorhhg
-X-ME-Proxy: <xmx:Gwd4Y4d9da0vKH_MTHGeU594SCGKDpn3hcJ5sH4JJ2lOZ7GNWwcbYA>
-    <xmx:Gwd4Y9OAhXBCRdbhsXpRu8BbZS-iNVE40tLqdY1hJwLBW0ThJU772Q>
-    <xmx:Gwd4YykIABiUCppxvwOCkP21p-1_op6DAOHtELy4djZyl16Xh-KgdA>
-    <xmx:HAd4Yw0omqBB9RUxeBW_nci-vFlU-sTqFSvVeDysEaDOnevUDFT1PQ>
-Feedback-ID: i58a146ae:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 18 Nov 2022 17:28:42 -0500 (EST)
-Date:   Sat, 19 Nov 2022 09:29:20 +1100 (AEDT)
-From:   Finn Thain <fthain@linux-m68k.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-cc:     Chanwoo Lee <cw9316.lee@samsung.com>, stanley.chu@mediatek.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        matthias.bgg@gmail.com, linux-scsi@vger.kernel.org,
-        linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH] scsi: ufs: ufs-mediatek: Modify the return value
-In-Reply-To: <5379c0ec-8dd3-f1bf-0a08-a621c68a3b6d@acm.org>
-Message-ID: <2e713ae2-d328-5e2f-a88c-032b6b0a0b17@linux-m68k.org>
-References: <CGME20221118045326epcas1p408c9e16a58201043c9eb3c99110fab0c@epcas1p4.samsung.com> <20221118045242.2770-1-cw9316.lee@samsung.com> <db25901b-8537-ca16-aaac-0daaa636d84d@acm.org> <c561e1ca-7739-efe7-5c36-952b01634a26@linux-m68k.org>
- <5379c0ec-8dd3-f1bf-0a08-a621c68a3b6d@acm.org>
+        with ESMTP id S235353AbiKSAXk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Nov 2022 19:23:40 -0500
+Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E423B6D945
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Nov 2022 15:38:01 -0800 (PST)
+Received: by mail-pf1-f169.google.com with SMTP id b185so6285202pfb.9
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Nov 2022 15:38:01 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=BQEohHyALVpyEwD6PhgfRwALPDSkTpHuqT1fGavn2xU=;
+        b=sD2ZfTwdwlpx0Nq6RLxIrq0UAWtnMUHXym281pYeShmJQE/T3aIHpBMnPYXW21B848
+         tmUQqdYTJOCk3N6rUAGcw6yWfdiOycCs1nuhPE617Pk85qhKd2LArKwGOqHk952Ks4Bx
+         v4smeB+6u+sNOB6b42152mhQPmY82DD7syYk9pAPIRBeRCyDz5+YvJq8Y8RIdvc39vzQ
+         tNZI2z4+u+5MfwvZ/PFIGPmjCbEvDV3NaMnR6Scv9ksqCxI+H2qYUnjEV4CnWhNn71Ct
+         qzyukFPJ2drZQSyohRsoEEfFOxYhMBLEmxVaTp0tg/hcqoIMgvX+HegnipE8NjHQzDev
+         +EGA==
+X-Gm-Message-State: ANoB5pnQRe0un9Gre+CBC+I9jvGrtdhwr/4xvDQ4mvBB6oXaSze28cdZ
+        meeal6H8c/Zu2pUQy9Jq+fM=
+X-Google-Smtp-Source: AA0mqf4Hao2OHimEMs29K78u9L+knLx2BQTNpGNMaqWYpHxKNWXTLPbfKK0X+V2UtridFsH1hm+JmA==
+X-Received: by 2002:a63:1659:0:b0:46e:f23a:e9aa with SMTP id 25-20020a631659000000b0046ef23ae9aamr8400651pgw.428.1668814644296;
+        Fri, 18 Nov 2022 15:37:24 -0800 (PST)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:5392:f94c:13ff:af1a])
+        by smtp.gmail.com with ESMTPSA id f4-20020aa79684000000b00561b3ee73f6sm3829934pfk.144.2022.11.18.15.37.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 18 Nov 2022 15:37:23 -0800 (PST)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Jinyoung Choi <j-young.choi@samsung.com>
+Subject: [PATCH v2] scsi: ufs: Fix the polling implementation
+Date:   Fri, 18 Nov 2022 15:37:03 -0800
+Message-Id: <20221118233717.441298-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.38.1.584.g0f3c55d4c2-goog
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Fix the following issues in ufshcd_poll():
+- If polling succeeds, return a positive value.
+- Do not complete polling requests from interrupt context because the
+  block layer expects these requests to be completed from thread
+  context. From block/bio.c:
 
-On Fri, 18 Nov 2022, Bart Van Assche wrote:
+    If REQ_ALLOC_CACHE is set, the final put of the bio MUST be done
+    from process context, not hard/soft IRQ.
 
-> On 11/18/22 13:34, Finn Thain wrote:
-> > On Fri, 18 Nov 2022, Bart Van Assche wrote:
-> > 
-> >> There is more Linux kernel code that [...] than code that [...].
-> > 
-> > Thus mediocrity prevails.
-> 
-> Mediocrity? I don't understand the above comment. 
+Fixes: eaab9b573054 ("scsi: ufs: Implement polling support")
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
 
-I'm afraid it was poorly expressed.
+Changes compared to v1:
+- Made sure that polled requests are not completed from interrupt context.
 
-> Personally I prefer the style without !! and I don't think that it's a 
-> mediocre style.
-> 
+ drivers/ufs/core/ufshcd.c | 28 ++++++++++++++++++++++++++--
+ 1 file changed, 26 insertions(+), 2 deletions(-)
 
-My comment goes to the rationale you gave not the decision you made.
-
-Regarding the decision, it's a choice between "explicit is better than 
-implicit" and "brevity is better than redundancy". The patch opted for the 
-former, you opted for the latter. I also have an opinion, but I'm not the 
-maintainer so I'll keep it to myself.
-
-Regarding the rationale, a maintainer who merely follows the majority is 
-not actually doing code review. This will lead to mediocrity.
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 768cb49d269c..b4bf3c3bef0c 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -5344,6 +5344,26 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
+ 	}
+ }
+ 
++/* Any value that is not an existing queue number is fine for this constant. */
++enum {
++	UFSHCD_POLL_FROM_INTERRUPT_CONTEXT = -1
++};
++
++static void ufshcd_clear_polled(struct ufs_hba *hba,
++				unsigned long *completed_reqs)
++{
++	int tag;
++
++	for_each_set_bit(tag, completed_reqs, hba->nutrs) {
++		struct scsi_cmnd *cmd = hba->lrb[tag].cmd;
++
++		if (!cmd)
++			continue;
++		if (scsi_cmd_to_rq(cmd)->cmd_flags & REQ_POLLED)
++			__clear_bit(tag, completed_reqs);
++	}
++}
++
+ /*
+  * Returns > 0 if one or more commands have been completed or 0 if no
+  * requests have been completed.
+@@ -5360,13 +5380,17 @@ static int ufshcd_poll(struct Scsi_Host *shost, unsigned int queue_num)
+ 	WARN_ONCE(completed_reqs & ~hba->outstanding_reqs,
+ 		  "completed: %#lx; outstanding: %#lx\n", completed_reqs,
+ 		  hba->outstanding_reqs);
++	if (queue_num == UFSHCD_POLL_FROM_INTERRUPT_CONTEXT) {
++		/* Do not complete polled requests from interrupt context. */
++		ufshcd_clear_polled(hba, &completed_reqs);
++	}
+ 	hba->outstanding_reqs &= ~completed_reqs;
+ 	spin_unlock_irqrestore(&hba->outstanding_lock, flags);
+ 
+ 	if (completed_reqs)
+ 		__ufshcd_transfer_req_compl(hba, completed_reqs);
+ 
+-	return completed_reqs;
++	return completed_reqs != 0;
+ }
+ 
+ /**
+@@ -5397,7 +5421,7 @@ static irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
+ 	 * Ignore the ufshcd_poll() return value and return IRQ_HANDLED since we
+ 	 * do not want polling to trigger spurious interrupt complaints.
+ 	 */
+-	ufshcd_poll(hba->host, 0);
++	ufshcd_poll(hba->host, UFSHCD_POLL_FROM_INTERRUPT_CONTEXT);
+ 
+ 	return IRQ_HANDLED;
+ }
