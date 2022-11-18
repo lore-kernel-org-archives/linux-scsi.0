@@ -2,69 +2,143 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25E67C4332F
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Nov 2022 10:39:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8FFEC43217
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Nov 2022 11:10:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241266AbiKRKjh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Nov 2022 05:39:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59952 "EHLO
+        id S241792AbiKRLKG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Nov 2022 06:10:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49104 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240866AbiKRKjd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Nov 2022 05:39:33 -0500
-Received: from madras.collabora.co.uk (madras.collabora.co.uk [46.235.227.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 428543E0B3
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Nov 2022 02:39:33 -0800 (PST)
-Received: from [192.168.1.100] (2-237-20-237.ip236.fastwebnet.it [2.237.20.237])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits))
-        (No client certificate requested)
-        (Authenticated sender: kholk11)
-        by madras.collabora.co.uk (Postfix) with ESMTPSA id BA4BC6601639;
-        Fri, 18 Nov 2022 10:39:31 +0000 (GMT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-        s=mail; t=1668767972;
-        bh=oFMDujIPAAMn77bKnuEJQwag89/0lNbWafcLhGJMaPA=;
-        h=Date:Subject:To:References:From:In-Reply-To:From;
-        b=EEaC1m8BCzNf+WdXitUzWOZsPzcnRQZgLQU/YwjNXOzyq81lL1Y5lVwAtsVFddlSp
-         CwlhWiCGOFy6iLxLTtji5A/PUf/4lO5aChkkQHwEe6REqyb8P61gpDfhL2sBsTLFTG
-         mq01vaqsyS+PWjL9wKHlkjAzfj+AH3rekouO31/8w90+apC/Tk9TWRHV9j3W+nzlnP
-         6rIP4jDx9iyRyh2+O3/q9J9OgPTv6wMkbA/TONS+ub9h62dL1ZL2JAw9G8w/50vgJd
-         khlVbfdDhXaNDtOpx3euAaLEavf7pOYSAJmWVJkZA8oRqV7a6R7dqC4DbN+wEvQWni
-         JeU0X/ICqUkhA==
-Message-ID: <1d695cb4-2e29-b957-00cc-c0c39a47ff30@collabora.com>
-Date:   Fri, 18 Nov 2022 11:39:29 +0100
+        with ESMTP id S241819AbiKRLJi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Nov 2022 06:09:38 -0500
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 238149A5E0;
+        Fri, 18 Nov 2022 03:09:34 -0800 (PST)
+Received: from mail02.huawei.com (unknown [172.30.67.153])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4NDDZJ2FGCz4f3jZ3;
+        Fri, 18 Nov 2022 19:09:28 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.127.227])
+        by APP1 (Coremail) with SMTP id cCh0CgBXTq3pZ3djfEnGAg--.30577S4;
+        Fri, 18 Nov 2022 19:09:31 +0800 (CST)
+From:   Yu Kuai <yukuai1@huaweicloud.com>
+To:     ming.lei@redhat.com, jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com
+Subject: [PATCH RFC] scsi: core: remove unsed 'restarts' from scsi_device
+Date:   Fri, 18 Nov 2022 19:30:52 +0800
+Message-Id: <20221118113052.1324140-1-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.3
-Subject: Re: [PATCH] scsi: ufs: ufs-mediatek: Modify the return value
-Content-Language: en-US
-To:     Chanwoo Lee <cw9316.lee@samsung.com>, stanley.chu@mediatek.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        matthias.bgg@gmail.com, linux-scsi@vger.kernel.org,
-        linux-mediatek@lists.infradead.org
-References: <CGME20221118045326epcas1p408c9e16a58201043c9eb3c99110fab0c@epcas1p4.samsung.com>
- <20221118045242.2770-1-cw9316.lee@samsung.com>
-From:   AngeloGioacchino Del Regno 
-        <angelogioacchino.delregno@collabora.com>
-In-Reply-To: <20221118045242.2770-1-cw9316.lee@samsung.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: cCh0CgBXTq3pZ3djfEnGAg--.30577S4
+X-Coremail-Antispam: 1UD129KBjvJXoWxCF1xZrW3tFykAF45WFy5XFb_yoW5ZFWfp3
+        9IqanIyrWfWr48W3s5Xr4UXF1Yg3yj9345WFWxK34rWasFkryrAw1ktr15XFy8JrWvyF1D
+        AFsrZFWkWr4qqrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUym14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+        6F4UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
+        0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
+        jxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr
+        1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxAIw28IcxkI7VAKI48J
+        MxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwV
+        AFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv2
+        0xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4
+        v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E
+        14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x0JUdHUDUUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Il 18/11/22 05:52, Chanwoo Lee ha scritto:
-> From: ChanWoo Lee <cw9316.lee@samsung.com>
-> 
-> Change the same as the other code to return bool type.
->    91: 	return !!(host->caps & UFS_MTK_CAP_BOOST_CRYPT_ENGINE);
->    98: 	return !!(host->caps & UFS_MTK_CAP_VA09_PWR_CTRL);
->    105:	return !!(host->caps & UFS_MTK_CAP_BROKEN_VCC);
-> 
-> Signed-off-by: ChanWoo Lee <cw9316.lee@samsung.com>
-> Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+From: Yu Kuai <yukuai3@huawei.com>
 
-Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+During code review, I found that 'restarts' is not useful anymore after
+the following commits:
 
+1) commit ab3cee3762e5 ("blk-mq: In blk_mq_dispatch_rq_list() "no budget"
+is a reason to kick")
+2) commit d3b38596875d ("blk-mq: run queue no matter whether the request
+is the last request")
+3) commit 673235f91531 ("scsi: core: Fix race between handling STS_RESOURCE
+and completion")
 
+Now that if get budget ever failed, block layer will make sure to
+trigger new run queue for the hctx. Hence there is no need to run queue
+from scsi layer in this case.
+
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ drivers/scsi/scsi_lib.c    | 35 -----------------------------------
+ include/scsi/scsi_device.h |  1 -
+ 2 files changed, 36 deletions(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 56f641ba1261..f6325a0f80fb 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -507,24 +507,6 @@ static void scsi_run_queue_async(struct scsi_device *sdev)
+ 	if (scsi_target(sdev)->single_lun ||
+ 	    !list_empty(&sdev->host->starved_list)) {
+ 		kblockd_schedule_work(&sdev->requeue_work);
+-	} else {
+-		/*
+-		 * smp_mb() present in sbitmap_queue_clear() or implied in
+-		 * .end_io is for ordering writing .device_busy in
+-		 * scsi_device_unbusy() and reading sdev->restarts.
+-		 */
+-		int old = atomic_read(&sdev->restarts);
+-
+-		/*
+-		 * ->restarts has to be kept as non-zero if new budget
+-		 *  contention occurs.
+-		 *
+-		 *  No need to run queue when either another re-run
+-		 *  queue wins in updating ->restarts or a new budget
+-		 *  contention occurs.
+-		 */
+-		if (old && atomic_cmpxchg(&sdev->restarts, old, 0) == old)
+-			blk_mq_run_hw_queues(sdev->request_queue, true);
+ 	}
+ }
+ 
+@@ -1666,23 +1648,6 @@ static int scsi_mq_get_budget(struct request_queue *q)
+ 	if (token >= 0)
+ 		return token;
+ 
+-	atomic_inc(&sdev->restarts);
+-
+-	/*
+-	 * Orders atomic_inc(&sdev->restarts) and atomic_read(&sdev->device_busy).
+-	 * .restarts must be incremented before .device_busy is read because the
+-	 * code in scsi_run_queue_async() depends on the order of these operations.
+-	 */
+-	smp_mb__after_atomic();
+-
+-	/*
+-	 * If all in-flight requests originated from this LUN are completed
+-	 * before reading .device_busy, sdev->device_busy will be observed as
+-	 * zero, then blk_mq_delay_run_hw_queues() will dispatch this request
+-	 * soon. Otherwise, completion of one of these requests will observe
+-	 * the .restarts flag, and the request queue will be run for handling
+-	 * this request, see scsi_end_request().
+-	 */
+ 	if (unlikely(scsi_device_busy(sdev) == 0 &&
+ 				!scsi_device_blocked(sdev)))
+ 		blk_mq_delay_run_hw_queues(sdev->request_queue, SCSI_QUEUE_DELAY);
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 24bdbf7999ab..66345de80897 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -115,7 +115,6 @@ struct scsi_device {
+ 	struct sbitmap budget_map;
+ 	atomic_t device_blocked;	/* Device returned QUEUE_FULL. */
+ 
+-	atomic_t restarts;
+ 	spinlock_t list_lock;
+ 	struct list_head starved_entry;
+ 	unsigned short queue_depth;	/* How deep of a queue we want */
+-- 
+2.31.1
 
