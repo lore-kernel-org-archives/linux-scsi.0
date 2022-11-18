@@ -2,25 +2,25 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05FC5C433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Nov 2022 08:38:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8339FC4321E
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Nov 2022 08:38:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241053AbiKRIid (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Nov 2022 03:38:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59138 "EHLO
+        id S241410AbiKRIie (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Nov 2022 03:38:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59124 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235225AbiKRIi2 (ORCPT
+        with ESMTP id S235200AbiKRIi2 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Nov 2022 03:38:28 -0500
 Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 294EF643D;
-        Fri, 18 Nov 2022 00:38:27 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0F396323;
+        Fri, 18 Nov 2022 00:38:26 -0800 (PST)
 Received: from dggpeml500021.china.huawei.com (unknown [172.30.72.53])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4ND97b0ZZMzqSYk;
-        Fri, 18 Nov 2022 16:34:35 +0800 (CST)
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4ND97Z6pq9zqSYf;
+        Fri, 18 Nov 2022 16:34:34 +0800 (CST)
 Received: from dggpeml500019.china.huawei.com (7.185.36.137) by
  dggpeml500021.china.huawei.com (7.185.36.21) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Fri, 18 Nov 2022 16:38:19 +0800
+ 15.1.2375.31; Fri, 18 Nov 2022 16:38:18 +0800
 Received: from localhost.localdomain (10.67.165.2) by
  dggpeml500019.china.huawei.com (7.185.36.137) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
@@ -34,9 +34,9 @@ CC:     <chenxiang66@hisilicon.com>, <john.g.garry@oracle.com>,
         <yangxingui@huawei.com>, <prime.zeng@hisilicon.com>,
         <linuxarm@huawei.com>, <linux-scsi@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH for-next 4/5] scsi: hisi_sas: Fix SATA devices missing issue during I_T nexus reset
-Date:   Fri, 18 Nov 2022 16:37:13 +0800
-Message-ID: <20221118083714.4034612-5-zhanjie9@hisilicon.com>
+Subject: [PATCH for-next 2/5] Revert "scsi: hisi_sas: Don't send bcast events from HW during nexus HA reset"
+Date:   Fri, 18 Nov 2022 16:37:11 +0800
+Message-ID: <20221118083714.4034612-3-zhanjie9@hisilicon.com>
 X-Mailer: git-send-email 2.30.0
 In-Reply-To: <20221118083714.4034612-1-zhanjie9@hisilicon.com>
 References: <20221118083714.4034612-1-zhanjie9@hisilicon.com>
@@ -51,66 +51,71 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SATA devices on an expander may be removed and not be found again
-when I_T nexus reset and revalidation are processed simultaneously.
+This reverts commit f5f2a2716055ad8c0c4ff83e51d667646c6c5d8a.
 
-The issue comes from:
+This is now unnecessary to solve the SATA devices missing issue in
+hisi_sas_clear_nexus_ha(). Hence, we should not ignore bcast events during
+sas_eh_handle_sas_errors() in case of missing bcast events, unless a
+justified need is found and a mechanism to defer (but not ignore) bcast
+events in sas_eh_handle_sas_errors() is provided.
 
-- Revalidation can remove SATA devices in link reset, e.g. in
-  hisi_sas_clear_nexus_ha().
+Also, in hisi_sas_clear_nexus_ha(), there is nothing further to handle in
+"out: " other than return, so that part can be reverted.
 
-- However, hisi_sas_debug_I_T_nexus_reset() polls the state of a SATA
-  device on an expander after sending link_reset, where it calls:
-   hisi_sas_debug_I_T_nexus_reset
-    sas_ata_wait_after_reset
-     ata_wait_after_reset
-      ata_wait_ready
-       smp_ata_check_ready
-        sas_ex_phy_discover
-         sas_ex_phy_discover_helper
-          sas_set_ex_phy
-  The ex_phy's change count is updated in sas_set_ex_phy(), so SATA devices
-  after a link reset may not be found later through revalidation.
-
-A similar issue was reported in:
-commit 0f3fce5cc77e ("[SCSI] libsas: fix ata_eh clobbering ex_phys via
-smp_ata_check_ready")
-commit 87c8331fcf72 ("[SCSI] libsas: prevent domain rediscovery competing
-with ata error handling").
-
-To address this issue, in hisi_sas_debug_I_T_nexus_reset(), we now call
-smp_ata_check_ready_type() that only polls the device type while not
-updating the ex_phy's data of libsas.
-
-Fixes: 71453bd9d1bf ("scsi: hisi_sas: Use sas_ata_wait_after_reset() in IT nexus reset")
 Signed-off-by: Jie Zhan <zhanjie9@hisilicon.com>
+Reviewed-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 16 ++++------------
+ 1 file changed, 4 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 62080d0fad6f..41ba22f6c7f0 100644
+index 4527ac266bb6..62080d0fad6f 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1694,13 +1694,15 @@ static int hisi_sas_debug_I_T_nexus_reset(struct domain_device *device)
- 		return rc;
- 	}
+@@ -1812,14 +1812,12 @@ static int hisi_sas_clear_nexus_ha(struct sas_ha_struct *sas_ha)
+ 	struct hisi_hba *hisi_hba = sas_ha->lldd_ha;
+ 	HISI_SAS_DECLARE_RST_WORK_ON_STACK(r);
+ 	ASYNC_DOMAIN_EXCLUSIVE(async);
+-	int i, ret;
++	int i;
  
-+	/* Remote phy */
- 	if (rc)
- 		return rc;
+ 	queue_work(hisi_hba->wq, &r.work);
+ 	wait_for_completion(r.completion);
+-	if (!r.done) {
+-		ret = TMF_RESP_FUNC_FAILED;
+-		goto out;
+-	}
++	if (!r.done)
++		return TMF_RESP_FUNC_FAILED;
  
--	/* Remote phy */
- 	if (dev_is_sata(device)) {
--		rc = sas_ata_wait_after_reset(device,
--					HISI_SAS_WAIT_PHYUP_TIMEOUT);
-+		struct ata_link *link = &device->sata_dev.ap->link;
-+
-+		rc = ata_wait_after_reset(link, HISI_SAS_WAIT_PHYUP_TIMEOUT,
-+					  smp_ata_check_ready_type);
- 	} else {
- 		msleep(2000);
- 	}
+ 	for (i = 0; i < HISI_SAS_MAX_DEVICES; i++) {
+ 		struct hisi_sas_device *sas_dev = &hisi_hba->devices[i];
+@@ -1836,9 +1834,7 @@ static int hisi_sas_clear_nexus_ha(struct sas_ha_struct *sas_ha)
+ 	async_synchronize_full_domain(&async);
+ 	hisi_sas_release_tasks(hisi_hba);
+ 
+-	ret = TMF_RESP_FUNC_COMPLETE;
+-out:
+-	return ret;
++	return TMF_RESP_FUNC_COMPLETE;
+ }
+ 
+ static int hisi_sas_query_task(struct sas_task *task)
+@@ -1986,14 +1982,10 @@ void hisi_sas_phy_bcast(struct hisi_sas_phy *phy)
+ {
+ 	struct asd_sas_phy *sas_phy = &phy->sas_phy;
+ 	struct hisi_hba	*hisi_hba = phy->hisi_hba;
+-	struct sas_ha_struct *sha = &hisi_hba->sha;
+ 
+ 	if (test_bit(HISI_SAS_RESETTING_BIT, &hisi_hba->flags))
+ 		return;
+ 
+-	if (test_bit(SAS_HA_FROZEN, &sha->state))
+-		return;
+-
+ 	sas_notify_port_event(sas_phy, PORTE_BROADCAST_RCVD, GFP_ATOMIC);
+ }
+ EXPORT_SYMBOL_GPL(hisi_sas_phy_bcast);
 -- 
 2.30.0
 
