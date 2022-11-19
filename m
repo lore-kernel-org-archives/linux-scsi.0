@@ -2,75 +2,113 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 372E8C4332F
-	for <linux-scsi@archiver.kernel.org>; Sat, 19 Nov 2022 01:46:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0ED38C433FE
+	for <linux-scsi@archiver.kernel.org>; Sat, 19 Nov 2022 02:13:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233598AbiKSBqV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Nov 2022 20:46:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48070 "EHLO
+        id S232052AbiKSCNi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Nov 2022 21:13:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45312 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231244AbiKSBqB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Nov 2022 20:46:01 -0500
-Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12DC325F5;
-        Fri, 18 Nov 2022 17:11:42 -0800 (PST)
-Received: by mail-pl1-x635.google.com with SMTP id g10so5983733plo.11;
-        Fri, 18 Nov 2022 17:11:42 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=GWOuxOTYykRXqc3Xt2c+Su79gr+2rT37rwi5II2WE3k=;
-        b=i75zmSTkVUK/u80Lu3z79AhtG8eNZ8pEfxAvkMiqHrLdpMdkOe50zd/swsrlDTG/Ai
-         P+e4kILfZ3DVSYt2v54NM6dCv3jxcF0YAhBb3v6EYojhJh6o2UvJrtjKCW3w7Kxrw/Rz
-         LIvFeZq59LpsdLxl4tuSzPQxjcG7o5ZihzaxWM6Hlo2BGunmVSOl40X1ev6l8QqAH5na
-         2Bi2c/+LrMVjFME8r9r/11mY0Rh5ENZGTBlksq/zU0wM5vSvLTommpDV8MWR7SNKI+zw
-         krZOkVeDodOn63mOZfJ2ksJ1Mw0q0WTN/gBdfaFScm6tQs226CQLFVh+hIOcYldj5U3L
-         u4lA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=GWOuxOTYykRXqc3Xt2c+Su79gr+2rT37rwi5II2WE3k=;
-        b=lMn0VSlSEDTTqKcJ9mawFYr88DQExksIK28aoGEWk+GdBVBveYxn5qdu46y4sZ1K/l
-         imoowKwYEhsGmy0+OpA/w6fboj3Ldj57JOX67PgYiEGb9aWebP6d2hibFdMtDV+SvYjJ
-         nSoanD3SmTiWvqS1rd6wH9CO9aQbtrYBjpMTimllqjvF/89VaefcCxAcEBLzmSwGGm9H
-         aK3VpdKqC9LhMFnvKQI5Ph+6xRTb4x102fUEQVJPNo8Rsecy3ICkSne6pMq6sGIYhDOs
-         0GdY5xA7vWfuJaj81hc1b/fOlRTUTbK9sBkJI7QF0dsWr6qLs1E7bgi7gksRhSqfUp5J
-         VJ2g==
-X-Gm-Message-State: ANoB5pltzRk5LMTPTwYq/98rfAKfGe8k7C033XLfpYaOxEOIkapcttLR
-        3DQX7ZNqMsViBvE9hIZEjBYsh7hO5Mw=
-X-Google-Smtp-Source: AA0mqf6oizKt1BzAckPSYHffygIOtx1rle7D1nOjhyS5g0DMUPO/XCQjBl6VmHXzeoooOLJCts9uJg==
-X-Received: by 2002:a17:90b:1942:b0:213:2262:e3f8 with SMTP id nk2-20020a17090b194200b002132262e3f8mr16257096pjb.82.1668820301457;
-        Fri, 18 Nov 2022 17:11:41 -0800 (PST)
-Received: from [192.168.3.219] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id oe4-20020a17090b394400b00213c7cf21c0sm3429592pjb.5.2022.11.18.17.11.38
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 18 Nov 2022 17:11:39 -0800 (PST)
-Message-ID: <40bcbc23-b510-b1fa-7e07-378db4a418e8@gmail.com>
-Date:   Fri, 18 Nov 2022 17:11:38 -0800
+        with ESMTP id S233099AbiKSCMn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Nov 2022 21:12:43 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17D9B4AF11;
+        Fri, 18 Nov 2022 18:12:12 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id C4322B82675;
+        Sat, 19 Nov 2022 02:12:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D7A0C433C1;
+        Sat, 19 Nov 2022 02:12:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1668823929;
+        bh=fTsos0t8V/7ytUC0Vqd4gBJMZRDd/hQkclnB477cRzA=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=OXRAjHX0nPIDLP6+d6/0ExwsmiXmT7w4qKxzhb8ZCZ1T2RVYLrf9aBgLxc5veGn0d
+         Xod/iHfKAVKvo3RNLPaDg+U7lYXOLfb3u/ZFjloMEHHQ/Q5/5xb2P5/T/X0Ep0+nzs
+         0KJ4orvNlTKCBcnxsLTN/s1OLxFgewV8DYPPC6QostABicAIWGENnhL/EaSUlzUMUQ
+         Vc9YuyCBKlu+xzpNj/mw0JsGD2x/9d0/LBkOgihVFd0y2Q52U6kH1XhsLOsXVV5qLL
+         r+sj9Ajp3Avkaw2/SPP4FBJhNu9mCwpFlCgxcNuqC8BaqO8JpcRBdjq/zd5K7aCiCe
+         ysomRUIVLdP2Q==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Brian King <brking@linux.vnet.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, tyreld@linux.ibm.com,
+        mpe@ellerman.id.au, jejb@linux.ibm.com, linux-scsi@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org
+Subject: [PATCH AUTOSEL 6.0 23/44] scsi: ibmvfc: Avoid path failures during live migration
+Date:   Fri, 18 Nov 2022 21:11:03 -0500
+Message-Id: <20221119021124.1773699-23-sashal@kernel.org>
+X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20221119021124.1773699-1-sashal@kernel.org>
+References: <20221119021124.1773699-1-sashal@kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.2
-Subject: Re: [PATCH RFC] scsi: core: remove unsed 'restarts' from scsi_device
-Content-Language: en-US
-To:     Yu Kuai <yukuai1@huaweicloud.com>, ming.lei@redhat.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yukuai3@huawei.com, yi.zhang@huawei.com
-References: <20221118113052.1324140-1-yukuai1@huaweicloud.com>
-From:   Bart Van Assche <bart.vanassche@gmail.com>
-In-Reply-To: <20221118113052.1324140-1-yukuai1@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/18/22 03:30, Yu Kuai wrote:
-> From: Yu Kuai <yukuai3@huawei.com>
+From: Brian King <brking@linux.vnet.ibm.com>
 
-Regarding the subject: unsed -> unused?
+[ Upstream commit 62fa3ce05d5d73c5eccc40b2db493f55fecfc446 ]
+
+Fix an issue reported when performing a live migration when multipath is
+configured with a short fast fail timeout of 5 seconds and also to have
+no_path_retry set to fail. In this scenario, all paths would go into the
+devloss state while the ibmvfc driver went through discovery to log back
+in. On a loaded system, the discovery might take longer than 5 seconds,
+which was resulting in all paths being marked failed, which then resulted
+in a read only filesystem.
+
+This patch changes the migration code in ibmvfc to avoid deleting rports at
+all in this scenario, so we avoid losing all paths.
+
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+Link: https://lore.kernel.org/r/20221026181356.148517-1-brking@linux.vnet.ibm.com
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/ibmvscsi/ibmvfc.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index 00684e11976b..1a0c0b7289d2 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -708,8 +708,13 @@ static void ibmvfc_init_host(struct ibmvfc_host *vhost)
+ 		memset(vhost->async_crq.msgs.async, 0, PAGE_SIZE);
+ 		vhost->async_crq.cur = 0;
+ 
+-		list_for_each_entry(tgt, &vhost->targets, queue)
+-			ibmvfc_del_tgt(tgt);
++		list_for_each_entry(tgt, &vhost->targets, queue) {
++			if (vhost->client_migrated)
++				tgt->need_login = 1;
++			else
++				ibmvfc_del_tgt(tgt);
++		}
++
+ 		scsi_block_requests(vhost->host);
+ 		ibmvfc_set_host_action(vhost, IBMVFC_HOST_ACTION_INIT);
+ 		vhost->job_step = ibmvfc_npiv_login;
+@@ -3235,9 +3240,12 @@ static void ibmvfc_handle_crq(struct ibmvfc_crq *crq, struct ibmvfc_host *vhost,
+ 			/* We need to re-setup the interpartition connection */
+ 			dev_info(vhost->dev, "Partition migrated, Re-enabling adapter\n");
+ 			vhost->client_migrated = 1;
++
++			scsi_block_requests(vhost->host);
+ 			ibmvfc_purge_requests(vhost, DID_REQUEUE);
+-			ibmvfc_link_down(vhost, IBMVFC_LINK_DOWN);
++			ibmvfc_set_host_state(vhost, IBMVFC_LINK_DOWN);
+ 			ibmvfc_set_host_action(vhost, IBMVFC_HOST_ACTION_REENABLE);
++			wake_up(&vhost->work_wait_q);
+ 		} else if (crq->format == IBMVFC_PARTNER_FAILED || crq->format == IBMVFC_PARTNER_DEREGISTER) {
+ 			dev_err(vhost->dev, "Host partner adapter deregistered or failed (rc=%d)\n", crq->format);
+ 			ibmvfc_purge_requests(vhost, DID_ERROR);
+-- 
+2.35.1
 
