@@ -2,116 +2,123 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CF3CC4332F
-	for <linux-scsi@archiver.kernel.org>; Sat, 19 Nov 2022 07:49:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01991C4332F
+	for <linux-scsi@archiver.kernel.org>; Sat, 19 Nov 2022 08:44:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232851AbiKSHtd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 19 Nov 2022 02:49:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48932 "EHLO
+        id S232246AbiKSIoR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 19 Nov 2022 03:44:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50924 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229500AbiKSHtc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Nov 2022 02:49:32 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7670D4A056;
-        Fri, 18 Nov 2022 23:49:31 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id EFEE260B04;
-        Sat, 19 Nov 2022 07:49:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 324C3C433D6;
-        Sat, 19 Nov 2022 07:49:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1668844170;
-        bh=1iHofFxDs+k8g+czw81aPVHhnz1WiyY0BGTlSsyDFb0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ZE7grWCns5eIT52eXsP4/vCsLtIgeA/U6BgzMNPwEzpDce/RozHobnuFfX23T8qtl
-         2mzNw3AAoxbI3OYqwvIfUteCj38NRsSDmNLbn8s74yBYKIkjn3/RBJHK7dvJxBWj5Q
-         mMDRpQW0GLhkZVqBrCOWJZ0KqFJVgPSrFWxs5440VsP+woBNTbG6eqanTHqr/6tNaO
-         p+R+nySiY6kZTqBCbEavB3zFzUDeeJpcz3enBXsSOlO9MIqnjF1gLDgcHmT+NfiAfo
-         Qe6MRHuWWNh8uE/TKifzYChpL2Zj1NronlpPHJxA7S/Ec42ZuBFS++rgSgzKEK6DIl
-         cABmSp2nQGE3Q==
-Date:   Sat, 19 Nov 2022 01:49:16 -0600
-From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To:     Kees Cook <keescook@chromium.org>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        with ESMTP id S231891AbiKSIoN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Nov 2022 03:44:13 -0500
+Received: from smtp.smtpout.orange.fr (smtp-12.smtpout.orange.fr [80.12.242.12])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01A5F193E9
+        for <linux-scsi@vger.kernel.org>; Sat, 19 Nov 2022 00:44:07 -0800 (PST)
+Received: from [192.168.1.18] ([86.243.100.34])
+        by smtp.orange.fr with ESMTPA
+        id wJSEoEM2TM75kwJSEoNREC; Sat, 19 Nov 2022 09:44:05 +0100
+X-ME-Helo: [192.168.1.18]
+X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
+X-ME-Date: Sat, 19 Nov 2022 09:44:05 +0100
+X-ME-IP: 86.243.100.34
+Message-ID: <ef2881de-7843-97b5-8e0e-64c23ee168d8@wanadoo.fr>
+Date:   Sat, 19 Nov 2022 09:44:02 +0100
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.2.2
+Subject: Re: [PATCH 1/2][next] scsi: qla2xxx: Replace one-element array with
+ DECLARE_FLEX_ARRAY() helper
+Content-Language: fr
+To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         GR-QLogic-Storage-Upstream@marvell.com,
-        Nilesh Javali <njavali@marvell.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Nilesh Javali <njavali@marvell.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-hardening@vger.kernel.org
-Subject: Re: [PATCH 2/2][next] scsi: qla2xxx: Use struct_size() in code
- related to struct ct_sns_gpnft_rsp
-Message-ID: <Y3iKfHMmsm3UF23M@work>
 References: <cover.1668814746.git.gustavoars@kernel.org>
- <9bd4775fe9c88b33c3194f841a2ec2f559d58032.1668814746.git.gustavoars@kernel.org>
- <202211182309.D5AC082E3@keescook>
- <Y3iDqTPFdoUQ3a0f@work>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Y3iDqTPFdoUQ3a0f@work>
+ <faa40e6b31ecc9387ad1644bb1957aa53d7c682f.1668814746.git.gustavoars@kernel.org>
+From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+In-Reply-To: <faa40e6b31ecc9387ad1644bb1957aa53d7c682f.1668814746.git.gustavoars@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Nov 19, 2022 at 01:20:09AM -0600, Gustavo A. R. Silva wrote:
-> On Fri, Nov 18, 2022 at 11:10:44PM -0800, Kees Cook wrote:
-> > On Fri, Nov 18, 2022 at 05:47:56PM -0600, Gustavo A. R. Silva wrote:
-> > > Prefer struct_size() over open-coded versions of idiom:
-> > > 
-> > > sizeof(struct-with-flex-array) + sizeof(typeof-flex-array-elements) * count
-> > > 
-> > > where count is the max number of items the flexible array is supposed to
-> > > contain.
-> > > 
-> > > Link: https://github.com/KSPP/linux/issues/160
-> > > Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
-> > > ---
-> > >  drivers/scsi/qla2xxx/qla_gs.c | 5 ++---
-> > >  1 file changed, 2 insertions(+), 3 deletions(-)
-> > > 
-> > > diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
-> > > index 69d3bc795f90..27e1df56b0fb 100644
-> > > --- a/drivers/scsi/qla2xxx/qla_gs.c
-> > > +++ b/drivers/scsi/qla2xxx/qla_gs.c
-> > > @@ -4072,9 +4072,8 @@ int qla24xx_async_gpnft(scsi_qla_host_t *vha, u8 fc4_type, srb_t *sp)
-> > >  		}
-> > >  		sp->u.iocb_cmd.u.ctarg.req_size = GPN_FT_REQ_SIZE;
-> > >  
-> > > -		rspsz = sizeof(struct ct_sns_gpnft_rsp) +
-> > > -			(vha->hw->max_fibre_devices *
-> > > -			    sizeof(struct ct_sns_gpn_ft_data));
-> > > +		rspsz = struct_size((struct ct_sns_gpnft_rsp *)0, entries,
-> > > +				vha->hw->max_fibre_devices);
-> > 
-> > This should be able to use sp->u.iocb_cmd.u.ctarg.rsp instead of the
-> > explicit struct with a NULL. (It's just using typeof() internally, so
-> > it's okay that it isn't allocated yet.)
+Le 19/11/2022 à 00:47, Gustavo A. R. Silva a écrit :
+> One-element arrays as fake flex arrays are deprecated and we are moving
+> towards adopting C99 flexible-array members, instead. So, replace
+> one-element array declaration in struct ct_sns_gpnft_rsp, which is
+> ultimately being used inside a union:
 > 
-> mmh... yeah; and considering they're already going all the way down to
-> sp->u.iocb_cmd.u.ctarg.req_size, I think accessing sp->u.iocb_cmd.u.ctarg.rsp
-> is perfectly fine. :)
+> drivers/scsi/qla2xxx/qla_def.h:
+> 3240 struct ct_sns_gpnft_pkt {
+> 3241         union {
+> 3242                 struct ct_sns_req req;
+> 3243                 struct ct_sns_gpnft_rsp rsp;
+> 3244         } p;
+> 3245 };
+> 
+> Important to mention is that doing a build before/after this patch results
+> in no binary differences.
 
-except that... it seems sp->u.iocb_cmd.u.ctarg.rsp is a pointer to void
-and not a struct of type struct ct_sns_gpnft_rsp. :O
+Hi,
 
-drivers/scsi/qla2xxx/qla_def.h:474:
-struct ct_arg {
-        void            *iocb;
-        u16             nport_handle;
-        dma_addr_t      req_dma;
-        dma_addr_t      rsp_dma;
-        u32             req_size;
-        u32             rsp_size;
-        u32             req_allocated_size;
-        u32             rsp_allocated_size;
-        void            *req;
-        void            *rsp;
-        port_id_t       id;
-};
+even with the:
 
-I wonder if you wanted to point out something entirely different...?
+ >   		rspsz = sizeof(struct ct_sns_gpnft_rsp) +
+ > -			((vha->hw->max_fibre_devices - 1) *
+ > +			(vha->hw->max_fibre_devices *
+ >   			    sizeof(struct ct_sns_gpn_ft_data));
 
---
-Gustavo
+change ?
+
+CJ
+
+> 
+> This help us make progress towards globally enabling
+> -fstrict-flex-arrays=3 [1].
+> 
+> Link: https://github.com/KSPP/linux/issues/245
+> Link: https://github.com/KSPP/linux/issues/193
+> Link: https://gcc.gnu.org/pipermail/gcc-patches/2022-October/602902.html [1]
+> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+> ---
+>   drivers/scsi/qla2xxx/qla_def.h | 4 ++--
+>   drivers/scsi/qla2xxx/qla_gs.c  | 2 +-
+>   2 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+> index a26a373be9da..1eea977ef426 100644
+> --- a/drivers/scsi/qla2xxx/qla_def.h
+> +++ b/drivers/scsi/qla2xxx/qla_def.h
+> @@ -3151,12 +3151,12 @@ struct ct_sns_gpnft_rsp {
+>   		uint8_t vendor_unique;
+>   	};
+>   	/* Assume the largest number of targets for the union */
+> -	struct ct_sns_gpn_ft_data {
+> +	DECLARE_FLEX_ARRAY(struct ct_sns_gpn_ft_data {
+>   		u8 control_byte;
+>   		u8 port_id[3];
+>   		u32 reserved;
+>   		u8 port_name[8];
+> -	} entries[1];
+> +	}, entries);
+>   };
+>   
+>   /* CT command response */
+> diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+> index 64ab070b8716..69d3bc795f90 100644
+> --- a/drivers/scsi/qla2xxx/qla_gs.c
+> +++ b/drivers/scsi/qla2xxx/qla_gs.c
+> @@ -4073,7 +4073,7 @@ int qla24xx_async_gpnft(scsi_qla_host_t *vha, u8 fc4_type, srb_t *sp)
+>   		sp->u.iocb_cmd.u.ctarg.req_size = GPN_FT_REQ_SIZE;
+>   
+>   		rspsz = sizeof(struct ct_sns_gpnft_rsp) +
+> -			((vha->hw->max_fibre_devices - 1) *
+> +			(vha->hw->max_fibre_devices *
+>   			    sizeof(struct ct_sns_gpn_ft_data));
+>   
+>   		sp->u.iocb_cmd.u.ctarg.rsp = dma_alloc_coherent(&vha->hw->pdev->dev,
+
