@@ -2,142 +2,129 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4291CC433FE
-	for <linux-scsi@archiver.kernel.org>; Sat, 19 Nov 2022 08:56:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E495C4332F
+	for <linux-scsi@archiver.kernel.org>; Sat, 19 Nov 2022 08:59:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233499AbiKSI42 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 19 Nov 2022 03:56:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59018 "EHLO
+        id S230211AbiKSI7A (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 19 Nov 2022 03:59:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60610 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229470AbiKSI41 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Nov 2022 03:56:27 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 589B199EB2;
-        Sat, 19 Nov 2022 00:56:26 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id DBE5E6009E;
-        Sat, 19 Nov 2022 08:56:25 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 511E8C433C1;
-        Sat, 19 Nov 2022 08:56:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1668848185;
-        bh=krixhKpby3khoZS5ZrXiQOYkpJ3aUIRA96zasq5os58=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Qh0iMCLdTFFK024CYjNk1NiqC9BV6bhxUiEeq4wBDrjOZWe6BN6MNT6+Vt3pKZj61
-         j30ndvwKFCl/vFUvOwWE0R49wkiv6bQcCUiuRqJk6Kk5w1XnAJpF9VnlXk9f1dDH/2
-         Cwa3p19XwhzIC4Aaod5d7CC1jzdUQH+ovYB13y1LgKFTLga0DWfdLjoHw0qEily9He
-         kWP7izjYKaED0Zp0nODboxV6ZGlb+dysss5sU/Xo5oXZ54XhWb9EYFF2eRdq+dNbyB
-         8N0VRPcpPgwS80wRZtld6nlB5XwVF3oPm2iXOdkqvRgZyrGfmDkM1np4z07pzmDQ1Y
-         lsWqaYGDise1g==
-Date:   Sat, 19 Nov 2022 02:56:12 -0600
-From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        Nilesh Javali <njavali@marvell.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-hardening@vger.kernel.org
-Subject: Re: [PATCH 1/2][next] scsi: qla2xxx: Replace one-element array with
- DECLARE_FLEX_ARRAY() helper
-Message-ID: <Y3iaLCY68E6Stgrp@work>
-References: <cover.1668814746.git.gustavoars@kernel.org>
- <faa40e6b31ecc9387ad1644bb1957aa53d7c682f.1668814746.git.gustavoars@kernel.org>
- <ef2881de-7843-97b5-8e0e-64c23ee168d8@wanadoo.fr>
+        with ESMTP id S232177AbiKSI6y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Nov 2022 03:58:54 -0500
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13E002CDFB
+        for <linux-scsi@vger.kernel.org>; Sat, 19 Nov 2022 00:58:47 -0800 (PST)
+Received: from dggpemm500021.china.huawei.com (unknown [172.30.72.55])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4NDnXZ72LSzqSPv;
+        Sat, 19 Nov 2022 16:54:54 +0800 (CST)
+Received: from dggpemm500007.china.huawei.com (7.185.36.183) by
+ dggpemm500021.china.huawei.com (7.185.36.109) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Sat, 19 Nov 2022 16:58:45 +0800
+Received: from [10.174.178.174] (10.174.178.174) by
+ dggpemm500007.china.huawei.com (7.185.36.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Sat, 19 Nov 2022 16:58:45 +0800
+Subject: Re: [PATCH v2] scsi: scsi_transport_sas: fix error handling in
+ sas_rphy_add()
+To:     John Garry <john.g.garry@oracle.com>, <jejb@linux.ibm.com>,
+        <linux-scsi@vger.kernel.org>, Greg KH <gregkh@linuxfoundation.org>
+CC:     <martin.petersen@oracle.com>, <yangyingliang@huawei.com>
+References: <20221111144433.2421680-1-yangyingliang@huawei.com>
+ <4f1992b1a90aa9e5d143ac47eadae508a20b9f9c.camel@linux.ibm.com>
+ <45fb08d9-ebda-4c8e-23cc-49f79e5ffde8@huawei.com>
+ <9ff2a73c-bd45-c19e-3624-8816c5bac9ab@oracle.com>
+From:   Yang Yingliang <yangyingliang@huawei.com>
+Message-ID: <d6640c5d-c08c-407a-3e32-8a5bd37bd01b@huawei.com>
+Date:   Sat, 19 Nov 2022 16:58:44 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
+ Thunderbird/68.7.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
+In-Reply-To: <9ff2a73c-bd45-c19e-3624-8816c5bac9ab@oracle.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <ef2881de-7843-97b5-8e0e-64c23ee168d8@wanadoo.fr>
+Content-Language: en-US
+X-Originating-IP: [10.174.178.174]
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ dggpemm500007.china.huawei.com (7.185.36.183)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Nov 19, 2022 at 09:44:02AM +0100, Christophe JAILLET wrote:
-> Le 19/11/2022 � 00:47, Gustavo A. R. Silva a �crit�:
-> > One-element arrays as fake flex arrays are deprecated and we are moving
-> > towards adopting C99 flexible-array members, instead. So, replace
-> > one-element array declaration in struct ct_sns_gpnft_rsp, which is
-> > ultimately being used inside a union:
-> > 
-> > drivers/scsi/qla2xxx/qla_def.h:
-> > 3240 struct ct_sns_gpnft_pkt {
-> > 3241         union {
-> > 3242                 struct ct_sns_req req;
-> > 3243                 struct ct_sns_gpnft_rsp rsp;
-> > 3244         } p;
-> > 3245 };
-> > 
-> > Important to mention is that doing a build before/after this patch results
-> > in no binary differences.
-> 
-> Hi,
-> 
-> even with the:
-> 
-> >   		rspsz = sizeof(struct ct_sns_gpnft_rsp) +
-> > -			((vha->hw->max_fibre_devices - 1) *
-> > +			(vha->hw->max_fibre_devices *
-> >   			    sizeof(struct ct_sns_gpn_ft_data));
-> 
-> change ?
 
-Yep; that change compensates for the removal of the 1 in the declaration
-of entries[].
+On 2022/11/18 17:18, John Garry wrote:
+> On 18/11/2022 03:11, Yang Yingliang wrote:
+>>>>> );
+>>> There is a slight problem with doing this in that if
+>>> transport_device_add() ever fails it's likely because memory pressure
+>>> caused the allocation of the internal_container to fail. What that
+>>> means is that the visible sysfs attributes don't get added, but
+>>> otherwise the rphy is fully functional as far as the driver sees it, so
+>>> this condition doesn't have to be a fatal error which kills the device.
+>>>
+>>> There are two ways of handling this:
+>>>
+>>>     1. The above to move the condition from an ignored to a fatal 
+>>> error.
+>>>        It's so rare that we almost never see it in practice and if it
+>>>        ever happened, the machine is so low on memory that something
+>>>        else is bound to fail an allocation and kill the device anyway,
+>>>        so treating it as non-fatal likely serves no purpose.
+>>>     2. Simply to make the assumption that transport_remove_device() is
+>>>        idempotent true by adding a flag in the internal_class to 
+>>> signify
+>>>        removal is required. This would preserve current behaviour and
+>>>        have the bonus that it only requires a single patch, not one
+>>>        patch per transport class object that has this problem.
+>>>
+>>> I'd probably prefer 2. since it's way less work, but others might have
+>>> different opinions.
+>> Current some callers ignore the return value of 
+>> transport_add_device(), if it fails,
+>> it will cause null-ptr-deref in transport_remove_device().
+>>
+>> James suggested that add some check in transport_remove_device(), so 
+>> all can
+>> be fix in one patch.
+>>
+>> Do you have any suggestion for this ?
+>
+> Personally I prefer 1. However did you develop a prototype patch for 
+> how 2. would look? And how many changes are still required for 1.?
+For 1, in total, there are 8 places need be checked
+in drivers/scsi/scsi_transport_sas.c, 2 places
+in drivers/scsi/scsi_sysfs.c, 3 places
+in drivers/scsi/scsi_transport_fc.c, 2 places
+in drivers/scsi/scsi_transport_srp.c, 1 place
 
-The above piece of code is a common idiom to calculate the size for an
-allocation when a one-element array is involved. In the original code
-(vha->hw->max_fibre_devices - 1) compensates for the _extra_ size of one
-element of type struct ct_sns_gpn_ft_data in sizeof(struct ct_sns_gpnft_rsp).
+For 2, I think we can use device_is_registered() to check if add 
+operation is successful, may be like this (not test yet):
 
---
-Gustavo
+diff --git a/drivers/base/transport_class.c b/drivers/base/transport_class.c
+index ccc86206e508..ac41be7b724e 100644
+--- a/drivers/base/transport_class.c
++++ b/drivers/base/transport_class.c
+@@ -227,9 +227,11 @@ static int transport_remove_classdev(struct 
+attribute_container *cont,
+          tclass->remove(tcont, dev, classdev);
 
-> 
-> CJ
-> 
-> > 
-> > This help us make progress towards globally enabling
-> > -fstrict-flex-arrays=3 [1].
-> > 
-> > Link: https://github.com/KSPP/linux/issues/245
-> > Link: https://github.com/KSPP/linux/issues/193
-> > Link: https://gcc.gnu.org/pipermail/gcc-patches/2022-October/602902.html [1]
-> > Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
-> > ---
-> >   drivers/scsi/qla2xxx/qla_def.h | 4 ++--
-> >   drivers/scsi/qla2xxx/qla_gs.c  | 2 +-
-> >   2 files changed, 3 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-> > index a26a373be9da..1eea977ef426 100644
-> > --- a/drivers/scsi/qla2xxx/qla_def.h
-> > +++ b/drivers/scsi/qla2xxx/qla_def.h
-> > @@ -3151,12 +3151,12 @@ struct ct_sns_gpnft_rsp {
-> >   		uint8_t vendor_unique;
-> >   	};
-> >   	/* Assume the largest number of targets for the union */
-> > -	struct ct_sns_gpn_ft_data {
-> > +	DECLARE_FLEX_ARRAY(struct ct_sns_gpn_ft_data {
-> >   		u8 control_byte;
-> >   		u8 port_id[3];
-> >   		u32 reserved;
-> >   		u8 port_name[8];
-> > -	} entries[1];
-> > +	}, entries);
-> >   };
-> >   /* CT command response */
-> > diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
-> > index 64ab070b8716..69d3bc795f90 100644
-> > --- a/drivers/scsi/qla2xxx/qla_gs.c
-> > +++ b/drivers/scsi/qla2xxx/qla_gs.c
-> > @@ -4073,7 +4073,7 @@ int qla24xx_async_gpnft(scsi_qla_host_t *vha, u8 fc4_type, srb_t *sp)
-> >   		sp->u.iocb_cmd.u.ctarg.req_size = GPN_FT_REQ_SIZE;
-> >   		rspsz = sizeof(struct ct_sns_gpnft_rsp) +
-> > -			((vha->hw->max_fibre_devices - 1) *
-> > +			(vha->hw->max_fibre_devices *
-> >   			    sizeof(struct ct_sns_gpn_ft_data));
-> >   		sp->u.iocb_cmd.u.ctarg.rsp = dma_alloc_coherent(&vha->hw->pdev->dev,
-> 
+      if (tclass->remove != anon_transport_dummy_function) {
+-        if (tcont->statistics)
+-            sysfs_remove_group(&classdev->kobj, tcont->statistics);
+-        attribute_container_class_device_del(classdev);
++        if (device_is_registered(classdev)) {
++            if (tcont->statistics)
++                sysfs_remove_group(&classdev->kobj, tcont->statistics);
++            attribute_container_class_device_del(classdev);
++        }
+      }
+
+      return 0;
+
+Thanks,
+Yang
+>
+> Thanks,
+> John
+> .
