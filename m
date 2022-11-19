@@ -2,72 +2,97 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 309D5C4332F
-	for <linux-scsi@archiver.kernel.org>; Sat, 19 Nov 2022 05:57:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC54DC433FE
+	for <linux-scsi@archiver.kernel.org>; Sat, 19 Nov 2022 07:09:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231189AbiKSF5V (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 19 Nov 2022 00:57:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41946 "EHLO
+        id S232651AbiKSHJb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 19 Nov 2022 02:09:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55608 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229506AbiKSF5V (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Nov 2022 00:57:21 -0500
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D5509ACA5;
-        Fri, 18 Nov 2022 21:57:19 -0800 (PST)
-Received: from mail02.huawei.com (unknown [172.30.67.153])
-        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4NDjbY0t2tz4f3l2N;
-        Sat, 19 Nov 2022 13:57:13 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-        by APP4 (Coremail) with SMTP id gCh0CgDH69g6cHhjGoceAw--.40954S3;
-        Sat, 19 Nov 2022 13:57:16 +0800 (CST)
-Subject: Re: [PATCH RFC] scsi: core: remove unsed 'restarts' from scsi_device
-To:     Bart Van Assche <bart.vanassche@gmail.com>,
-        Yu Kuai <yukuai1@huaweicloud.com>, ming.lei@redhat.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20221118113052.1324140-1-yukuai1@huaweicloud.com>
- <40bcbc23-b510-b1fa-7e07-378db4a418e8@gmail.com>
-From:   Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <525aa483-cd16-087d-6e7f-a9a3a86b7046@huaweicloud.com>
-Date:   Sat, 19 Nov 2022 13:57:14 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        with ESMTP id S232547AbiKSHJa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Nov 2022 02:09:30 -0500
+Received: from mail-pl1-x631.google.com (mail-pl1-x631.google.com [IPv6:2607:f8b0:4864:20::631])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FFFF950DE
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Nov 2022 23:09:29 -0800 (PST)
+Received: by mail-pl1-x631.google.com with SMTP id b21so6408763plc.9
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Nov 2022 23:09:29 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=3ACiJTbXNJeqE/gxlmjEP49H2c4SghNGRkjD+ba2fsY=;
+        b=X+H4O1YxrB7WboZ+TpnIVWrX5yqtIjQX5Bgu41ubRJotRsZa2e7rzFXUbtMnVyP8MK
+         a6uxX4rQy+sJFGMuKW5X+d6EP1MKXJC0k3ccQfFy1HnD5zkD0jKI53LZSk4pI/lqE5sZ
+         tVwDkAiDVtodv4Riox1/pue3VHY5ZA+WN4N8U=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=3ACiJTbXNJeqE/gxlmjEP49H2c4SghNGRkjD+ba2fsY=;
+        b=5wMRhx1lQkD01VoJsMyK9+cKY6/i2ZSNbJpG3sLwO5BqcSXggIRMjLEzpNk92z/UCj
+         GUO0QNqTU1pIWVs6H3OEzO1LP8UpHfEOeG0TWlCl8FtnSEgS4JYwzDgP2TAO1qpPeHL+
+         X6dGCQYeKFcDfnZVALx6wv9tyO0Rio9oL9nDWNuqn50JsenV9FMcsnECX/7NpyJv4+b5
+         3U+Fp8sRz/OkSdOvcYx1h/z2/2eEiaaJ1NAYosPXhWXNHWoCbOa+gGx/iJ0zavq0biAn
+         XMwK64UmBL8omGllG7q9s5n7ZP9sY9b5TwF7WYpxIHvKPsySmMoYZ/dplWE5FyfKIBpx
+         oNhQ==
+X-Gm-Message-State: ANoB5plO/uDm44rscNR/1aVLIPyq5drYElDDsVkANNG/qX6+z7n+TsC0
+        H9cWSlSkJD27FPQNarJb/RH/ig==
+X-Google-Smtp-Source: AA0mqf5zwvmnUs0B49pK5yJ7yPu5BHkdCfLczJZ3lPalcKIdye1gPv2FogDayRYZhRw0bf6P1zAnQQ==
+X-Received: by 2002:a17:902:70c9:b0:176:a0cc:5eff with SMTP id l9-20020a17090270c900b00176a0cc5effmr2887849plt.128.1668841768770;
+        Fri, 18 Nov 2022 23:09:28 -0800 (PST)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id g9-20020a17090a4b0900b001efa9e83927sm6455386pjh.51.2022.11.18.23.09.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 18 Nov 2022 23:09:28 -0800 (PST)
+Date:   Fri, 18 Nov 2022 23:09:27 -0800
+From:   Kees Cook <keescook@chromium.org>
+To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        Nilesh Javali <njavali@marvell.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-hardening@vger.kernel.org
+Subject: Re: [PATCH 1/2][next] scsi: qla2xxx: Replace one-element array with
+ DECLARE_FLEX_ARRAY() helper
+Message-ID: <202211182309.E0127C6A0@keescook>
+References: <cover.1668814746.git.gustavoars@kernel.org>
+ <faa40e6b31ecc9387ad1644bb1957aa53d7c682f.1668814746.git.gustavoars@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <40bcbc23-b510-b1fa-7e07-378db4a418e8@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: gCh0CgDH69g6cHhjGoceAw--.40954S3
-X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
-        VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYF7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E
-        6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
-        kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8I
-        cVCY1x0267AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87
-        Iv6xkF7I0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE
-        6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72
-        CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7Mxk0
-        xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr
-        1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE
-        14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7
-        IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvE
-        x4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnU
-        UI43ZEXa7VUbXdbUUUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <faa40e6b31ecc9387ad1644bb1957aa53d7c682f.1668814746.git.gustavoars@kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
-
-在 2022/11/19 9:11, Bart Van Assche 写道:
-> On 11/18/22 03:30, Yu Kuai wrote:
->> From: Yu Kuai <yukuai3@huawei.com>
+On Fri, Nov 18, 2022 at 05:47:13PM -0600, Gustavo A. R. Silva wrote:
+> One-element arrays as fake flex arrays are deprecated and we are moving
+> towards adopting C99 flexible-array members, instead. So, replace
+> one-element array declaration in struct ct_sns_gpnft_rsp, which is
+> ultimately being used inside a union:
 > 
-> Regarding the subject: unsed -> unused?
-
-Yes, sorry for the spelling mistake.
+> drivers/scsi/qla2xxx/qla_def.h:
+> 3240 struct ct_sns_gpnft_pkt {
+> 3241         union {
+> 3242                 struct ct_sns_req req;
+> 3243                 struct ct_sns_gpnft_rsp rsp;
+> 3244         } p;
+> 3245 };
 > 
-> .
+> Important to mention is that doing a build before/after this patch results
+> in no binary differences.
 > 
+> This help us make progress towards globally enabling
+> -fstrict-flex-arrays=3 [1].
+> 
+> Link: https://github.com/KSPP/linux/issues/245
+> Link: https://github.com/KSPP/linux/issues/193
+> Link: https://gcc.gnu.org/pipermail/gcc-patches/2022-October/602902.html [1]
+> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 
+Reviewed-by: Kees Cook <keescook@chromium.org>
+
+-- 
+Kees Cook
