@@ -2,39 +2,39 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B436BC4332F
-	for <linux-scsi@archiver.kernel.org>; Sun, 20 Nov 2022 19:49:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31E57C4321E
+	for <linux-scsi@archiver.kernel.org>; Sun, 20 Nov 2022 19:49:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229770AbiKTTtz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 20 Nov 2022 14:49:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47336 "EHLO
+        id S229664AbiKTTt4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 20 Nov 2022 14:49:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47340 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229719AbiKTTtq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Nov 2022 14:49:46 -0500
-Received: from mo4-p03-ob.smtp.rzone.de (mo4-p03-ob.smtp.rzone.de [85.215.255.103])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 500362E9E0;
+        with ESMTP id S229723AbiKTTtr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Nov 2022 14:49:47 -0500
+Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [85.215.255.81])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57F3B2E9EB;
         Sun, 20 Nov 2022 11:49:43 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1668973780;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1668973779;
     s=strato-dkim-0002; d=iokpp.de;
     h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
     From:Subject:Sender;
-    bh=L6mh5zsLhuVTmCwSO3QZwUu6OHt2W2tyY93OTBilDdc=;
-    b=PQse52caKyqUMvSjhHJPtWTbad0lVnF6ql+KPCeYL2Wemv6LZr/nu3b0AllWGxTYzA
-    pCEg49jwuRFjEQoJjc6PaWwC6rs8xgGgP33K2TKtfCeBNwVLckN581KU27oMCbhxqZd2
-    3+oMTmQiHREyD/HWNn5+vOmLiQep9oIBrPFEpNmPj9uhdoUtxqkuny2zTEUoFduMaZs1
-    zOXiPisW2lkTnJxBtTBVavRwKzIF5GPjtFemIRWAGW5nkqUJWlYICwYWe7rea1twmgyB
-    xQmcWyzgLXFmNYR2mvDKuohWMMvu7zTz08CdUsiBUBljhV36dk6wUgVxlWxP1XodsRhy
-    4Wuw==
+    bh=i/hP+BNTbKHkp5aptNnxVflJu3FZ4tJ6s/JXowJobxU=;
+    b=snJKObeChR7FyjTqg8m49m67HWMiV6mcegk28USEyHpdIfy+zDkzWr2yNXFCOafEqW
+    7JZbmUNnW8Kz3kLdeGPnjkrEExZAAHDu7zwVRARGAbo+YTUDCKFAC2FRKeQ3PRjcTBYe
+    phZKnnSRrv556/7sMPDowkXy611WRgVsn5Tet595GURKufOOMVXnCVpS5Zd0izWYreWV
+    m65JgFqJJkOWBok4dr8sMA336GrCqxEW4Uk/35zkNMbEP/iNF/VzLU7LkqBI98NnkOra
+    jrml5Skw2FX15G+fomXoBH7fymPAY/pokL+b5RGQXc6ldkuVYANbIHCLdQRERaL61UyB
+    U/8g==
 Authentication-Results: strato.com;
     dkim=none
 X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSedrgBzPc9DUyubU4DD1QLj68UeUr1+U1RvWtIfZ/7Q8ZGqEBlwxF4QH61wYa9UK/y81Dg=="
-X-RZG-CLASS-ID: mo03
+X-RZG-CLASS-ID: mo02
 Received: from blinux.speedport.ip
     by smtp.strato.de (RZmta 48.2.1 AUTH)
-    with ESMTPSA id z9cfbfyAKJndWNa
+    with ESMTPSA id z9cfbfyAKJncWNX
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
         (Client did not present a certificate);
-    Sun, 20 Nov 2022 20:49:39 +0100 (CET)
+    Sun, 20 Nov 2022 20:49:38 +0100 (CET)
 From:   Bean Huo <beanhuo@iokpp.de>
 To:     alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
         martin.petersen@oracle.com, stanley.chu@mediatek.com,
@@ -43,14 +43,13 @@ To:     alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
         quic_nguyenb@quicinc.com, quic_xiaosenh@quicinc.com,
         quic_richardp@quicinc.com, quic_asutoshd@quicinc.com, hare@suse.de
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v1 5/6] ufs: core: Pass EHS length into ufshcd_prepare_req_desc_hdr()
-Date:   Sun, 20 Nov 2022 20:49:29 +0100
-Message-Id: <20221120194930.90283-6-beanhuo@iokpp.de>
+Subject: [PATCH v1 2/6] ufs: ufs_bsg: Cleanup ufs_bsg_request
+Date:   Sun, 20 Nov 2022 20:49:26 +0100
+Message-Id: <20221120194930.90283-3-beanhuo@iokpp.de>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20221120194930.90283-1-beanhuo@iokpp.de>
 References: <20221120194930.90283-1-beanhuo@iokpp.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -58,86 +57,68 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Bean Huo <beanhuo@micron.com>
 
-We need to fill in the total EHS length in UTP Transfer Request Descriptor,
-add this functionality to ufshcd_prepare_req_desc_hdr().
+Move sg_copy_from_buffer() below its associated case statement.
 
 Signed-off-by: Bean Huo <beanhuo@micron.com>
 ---
- drivers/ufs/core/ufshcd.c | 21 ++++++++++-----------
- 1 file changed, 10 insertions(+), 11 deletions(-)
+ drivers/ufs/core/ufs_bsg.c | 27 ++++++++-------------------
+ 1 file changed, 8 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 311172578fd8..2936e1e583c3 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -2508,14 +2508,15 @@ static void ufshcd_disable_intr(struct ufs_hba *hba, u32 intrs)
- }
- 
- /**
-- * ufshcd_prepare_req_desc_hdr() - Fills the requests header
-+ * ufshcd_prepare_req_desc_hdr - Fill UTP Transfer request descriptor header according to request
-  * descriptor according to request
-  * @lrbp: pointer to local reference block
-  * @upiu_flags: flags required in the header
-  * @cmd_dir: requests data direction
-+ * @ehs_length: Total EHS Length (in 32‐bytes units of all Extra Header Segments)
-  */
--static void ufshcd_prepare_req_desc_hdr(struct ufshcd_lrb *lrbp,
--			u8 *upiu_flags, enum dma_data_direction cmd_dir)
-+static void ufshcd_prepare_req_desc_hdr(struct ufshcd_lrb *lrbp, u8 *upiu_flags,
-+					enum dma_data_direction cmd_dir, int ehs_length)
- {
- 	struct utp_transfer_req_desc *req_desc = lrbp->utr_descriptor_ptr;
- 	u32 data_direction;
-@@ -2534,8 +2535,8 @@ static void ufshcd_prepare_req_desc_hdr(struct ufshcd_lrb *lrbp,
- 		*upiu_flags = UPIU_CMD_FLAGS_NONE;
+diff --git a/drivers/ufs/core/ufs_bsg.c b/drivers/ufs/core/ufs_bsg.c
+index 9ac8204f1ee6..850a0d798f63 100644
+--- a/drivers/ufs/core/ufs_bsg.c
++++ b/drivers/ufs/core/ufs_bsg.c
+@@ -90,11 +90,8 @@ static int ufs_bsg_request(struct bsg_job *job)
+ 		desc_op = bsg_request->upiu_req.qr.opcode;
+ 		ret = ufs_bsg_alloc_desc_buffer(hba, job, &desc_buff,
+ 						&desc_len, desc_op);
+-		if (ret) {
+-			ufshcd_rpm_put_sync(hba);
++		if (ret)
+ 			goto out;
+-		}
+-
+ 		fallthrough;
+ 	case UPIU_TRANSACTION_NOP_OUT:
+ 	case UPIU_TRANSACTION_TASK_REQ:
+@@ -102,9 +99,12 @@ static int ufs_bsg_request(struct bsg_job *job)
+ 					       &bsg_reply->upiu_rsp, msgcode,
+ 					       desc_buff, &desc_len, desc_op);
+ 		if (ret)
+-			dev_err(hba->dev,
+-				"exe raw upiu: error code %d\n", ret);
+-
++			dev_err(hba->dev, "exe raw upiu: error code %d\n", ret);
++		else if (desc_op == UPIU_QUERY_OPCODE_READ_DESC && desc_len)
++			bsg_reply->reply_payload_rcv_len =
++				sg_copy_from_buffer(job->request_payload.sg_list,
++						    job->request_payload.sg_cnt,
++						    desc_buff, desc_len);
+ 		break;
+ 	case UPIU_TRANSACTION_UIC_CMD:
+ 		memcpy(&uc, &bsg_request->upiu_req.uc, UIC_CMD_SIZE);
+@@ -123,20 +123,9 @@ static int ufs_bsg_request(struct bsg_job *job)
+ 		break;
  	}
  
--	dword_0 = data_direction | (lrbp->command_type
--				<< UPIU_COMMAND_TYPE_OFFSET);
-+	dword_0 = data_direction | (lrbp->command_type << UPIU_COMMAND_TYPE_OFFSET) |
-+		ehs_length << 8;
- 	if (lrbp->intr_cmd)
- 		dword_0 |= UTP_REQ_DESC_INT_CMD;
- 
-@@ -2590,8 +2591,7 @@ void ufshcd_prepare_utp_scsi_cmd_upiu(struct ufshcd_lrb *lrbp, u8 upiu_flags)
- }
- 
- /**
-- * ufshcd_prepare_utp_query_req_upiu() - fills the utp_transfer_req_desc,
-- * for query requsts
-+ * ufshcd_prepare_utp_query_req_upiu() - fill the utp_transfer_req_desc for query request
-  * @hba: UFS hba
-  * @lrbp: local reference block pointer
-  * @upiu_flags: flags
-@@ -2662,7 +2662,7 @@ static int ufshcd_compose_devman_upiu(struct ufs_hba *hba,
- 	else
- 		lrbp->command_type = UTP_CMD_TYPE_UFS_STORAGE;
- 
--	ufshcd_prepare_req_desc_hdr(lrbp, &upiu_flags, DMA_NONE);
-+	ufshcd_prepare_req_desc_hdr(lrbp, &upiu_flags, DMA_NONE, 0);
- 	if (hba->dev_cmd.type == DEV_CMD_TYPE_QUERY)
- 		ufshcd_prepare_utp_query_req_upiu(hba, lrbp, upiu_flags);
- 	else if (hba->dev_cmd.type == DEV_CMD_TYPE_NOP)
-@@ -2690,8 +2690,7 @@ static int ufshcd_comp_scsi_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- 		lrbp->command_type = UTP_CMD_TYPE_UFS_STORAGE;
- 
- 	if (likely(lrbp->cmd)) {
--		ufshcd_prepare_req_desc_hdr(lrbp, &upiu_flags,
--						lrbp->cmd->sc_data_direction);
-+		ufshcd_prepare_req_desc_hdr(lrbp, &upiu_flags, lrbp->cmd->sc_data_direction, 0);
- 		ufshcd_prepare_utp_scsi_cmd_upiu(lrbp, upiu_flags);
- 	} else {
- 		ret = -EINVAL;
-@@ -6862,7 +6861,7 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
- 	/* update the task tag in the request upiu */
- 	req_upiu->header.dword_0 |= cpu_to_be32(tag);
- 
--	ufshcd_prepare_req_desc_hdr(lrbp, &upiu_flags, DMA_NONE);
-+	ufshcd_prepare_req_desc_hdr(lrbp, &upiu_flags, DMA_NONE, 0);
- 
- 	/* just copy the upiu request as it is */
- 	memcpy(lrbp->ucd_req_ptr, req_upiu, sizeof(*lrbp->ucd_req_ptr));
++out:
+ 	ufshcd_rpm_put_sync(hba);
+-
+-	if (!desc_buff)
+-		goto out;
+-
+-	if (desc_op == UPIU_QUERY_OPCODE_READ_DESC && desc_len)
+-		bsg_reply->reply_payload_rcv_len =
+-			sg_copy_from_buffer(job->request_payload.sg_list,
+-					    job->request_payload.sg_cnt,
+-					    desc_buff, desc_len);
+-
+ 	kfree(desc_buff);
+-
+-out:
+ 	bsg_reply->result = ret;
+ 	job->reply_len = sizeof(struct ufs_bsg_reply);
+ 	/* complete the job here only if no error */
 -- 
 2.25.1
 
