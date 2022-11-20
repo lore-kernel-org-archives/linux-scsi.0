@@ -2,120 +2,113 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59B5DC43217
-	for <linux-scsi@archiver.kernel.org>; Sun, 20 Nov 2022 03:14:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66AC2C433FE
+	for <linux-scsi@archiver.kernel.org>; Sun, 20 Nov 2022 16:49:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229536AbiKTDOe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 19 Nov 2022 22:14:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53202 "EHLO
+        id S229593AbiKTQtJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 20 Nov 2022 11:49:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36894 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229455AbiKTDOd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Nov 2022 22:14:33 -0500
-Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [IPv6:2a03:a000:7:0:5054:ff:fe1c:15ff])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A6799A26D;
-        Sat, 19 Nov 2022 19:14:31 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=linux.org.uk; s=zeniv-20220401; h=Sender:Content-Type:MIME-Version:
-        Message-ID:Subject:Cc:To:From:Date:Reply-To:Content-Transfer-Encoding:
-        Content-ID:Content-Description:In-Reply-To:References;
-        bh=KMKfHSu6apMfgPIdOsoq6k6Aa8UTe85BtVoAlZrfyCo=; b=dQDm+gAL6Ya9r/NBfrRe24ehIm
-        +QVWG74pU7HAq25XAVQqTOeQX0uKd10tvkGW3my5ZPHa7xvq1HlXPpYGO2RXEtWww2K7KhBWqi+wN
-        lPg+iSKN5PqBetBVLGKBlPrs0dtg9jUyQoAcYh8VDYeCvMbIJdQbznxZRMPuD5XHD1StGyd9lsTsM
-        dTUxoPiZUcOftCTJTFOCJbhN4ZwL1jEeeiih7hHxNTzXix+HHO0uUYJjtamYtxzH6yLwJz2nKqDi1
-        TssUtkKrUg1jKAZox1VIQirYMBSnebcdLDxf8Nrv2eV182VDDHOMrfzsJJCRON4LyPSExpyvu0YZw
-        iXAfjpHQ==;
-Received: from viro by zeniv.linux.org.uk with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1owamn-005CZ0-1o;
-        Sun, 20 Nov 2022 03:14:25 +0000
-Date:   Sun, 20 Nov 2022 03:14:25 +0000
-From:   Al Viro <viro@zeniv.linux.org.uk>
-To:     linux-block@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH][RFC] fix a race between bsg_open() and bsg_unregister_queue()
-Message-ID: <Y3mbkZCESLLRMQNq@ZenIV>
+        with ESMTP id S229513AbiKTQtI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Nov 2022 11:49:08 -0500
+Received: from mail-oi1-f169.google.com (mail-oi1-f169.google.com [209.85.167.169])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E79413E1E;
+        Sun, 20 Nov 2022 08:49:07 -0800 (PST)
+Received: by mail-oi1-f169.google.com with SMTP id v81so10423594oie.5;
+        Sun, 20 Nov 2022 08:49:07 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=53uEYpSA+4eoQGytR32S8grohfFXG49rcIylHhuzFj8=;
+        b=A+B1SD5W5RHMMKs8C/Oy2sqHs1mqXFzmtAGRxcbMECE9QyAclBhVtdYMzJgMBBESnP
+         9JSKsss120EQXRQgFUmBq5HQrQNW0ELT5Iw1Wv245K6OlZUHiB1M8osgv0qBhDkdimmR
+         ZNBN0KMi5t5ogOTpd60nDYf86AxsMTAwS3w5o5RoP0OENHiinlpMyDhDbjMJsmoG/1F7
+         xzm7o+EXj8qGNYWqV07z4N0Eb8t/p+x/xkzYdhp1uNtnzE5LomuP3emLpUlv1ewYJWqH
+         TV8TyuvZdy6KmsgJNvRKxXOpZF99TqjLarNqFEP20hHXZkz7l6YDpdMVo97+wVSnztMh
+         2SUA==
+X-Gm-Message-State: ANoB5plOCDECALf4yHOa6pygdz4/v9pjxnVZ6K9Z75mTJ17qtLEhvJMx
+        uk631KIa+sz78cRbuz0z6Q==
+X-Google-Smtp-Source: AA0mqf7x6qnZPCjOM9cXRy24E90vfPYfyfopCFQ0GLp/jBjyQctgIwLUHd8hzrLRpgDhzANMJxzJBw==
+X-Received: by 2002:a05:6808:5c4:b0:35a:4aed:5904 with SMTP id d4-20020a05680805c400b0035a4aed5904mr10131960oij.198.1668962946663;
+        Sun, 20 Nov 2022 08:49:06 -0800 (PST)
+Received: from robh_at_kernel.org ([2605:ef80:80f8:5cb3:df5a:23c3:86fb:15a6])
+        by smtp.gmail.com with ESMTPSA id z12-20020a05687042cc00b0013ae39d0575sm4835620oah.15.2022.11.20.08.49.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 20 Nov 2022 08:49:06 -0800 (PST)
+Received: (nullmailer pid 3186692 invoked by uid 1000);
+        Sun, 20 Nov 2022 16:49:07 -0000
+Date:   Sun, 20 Nov 2022 10:49:07 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Zhe Wang <zhe.wang1@unisoc.com>
+Cc:     martin.petersen@oracle.com, jejb@linux.ibm.com,
+        krzysztof.kozlowski+dt@linaro.org, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, linux-scsi@vger.kernel.org,
+        devicetree@vger.kernel.org, orsonzhai@gmail.com,
+        yuelin.tang@unisoc.com, zhenxiong.lai@unisoc.com,
+        zhang.lyra@gmail.com
+Subject: Re: [PATCH v2 1/2] dt-bindings: ufs: Add document for Unisoc UFS
+ host controller
+Message-ID: <20221120164907.GA3183451-robh@kernel.org>
+References: <20221116133131.6809-1-zhe.wang1@unisoc.com>
+ <20221116133131.6809-2-zhe.wang1@unisoc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Sender: Al Viro <viro@ftp.linux.org.uk>
+In-Reply-To: <20221116133131.6809-2-zhe.wang1@unisoc.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-	Consider the following scenario:
+On Wed, Nov 16, 2022 at 09:31:30PM +0800, Zhe Wang wrote:
+> Add Unisoc ums9620 ufs host controller devicetree document.
+> 
+> Signed-off-by: Zhe Wang <zhe.wang1@unisoc.com>
+> ---
+>  .../bindings/ufs/sprd,ums9620-ufs.yaml        | 78 +++++++++++++++++++
+>  1 file changed, 78 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/ufs/sprd,ums9620-ufs.yaml
+> 
+> diff --git a/Documentation/devicetree/bindings/ufs/sprd,ums9620-ufs.yaml b/Documentation/devicetree/bindings/ufs/sprd,ums9620-ufs.yaml
+> new file mode 100644
+> index 000000000000..ce9d05be1a6b
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ufs/sprd,ums9620-ufs.yaml
+> @@ -0,0 +1,78 @@
+> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/ufs/sprd,ums9620-ufs.yaml#
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> +
+> +title: Unisoc Universal Flash Storage (UFS) Controller
+> +
+> +maintainers:
+> +  - Zhe Wang <zhe.wang1@unisoc.com>
+> +
+> +allOf:
+> +  - $ref: ufs-common.yaml
+> +
+> +properties:
+> +  compatible:
+> +    const: sprd,ums9620-ufs
+> +
+> +  reg:
+> +    maxItems: 1
+> +
+> +  clocks:
+> +    maxItems: 4
+> +
+> +  clock-names:
+> +    items:
+> +      - const: ufs_eb
+> +      - const: ufs_cfg_eb
+> +      - const: ufsh
+> +      - const: ufsh_source
 
-task A: open() on /dev/bsg/<something>
-	calls chrdev_open()
-	finds and grabs a reference to bsg_device.cdev in inode->i_cdev
-	refcount on that cdev is 2 now (1 from creation + 1 we'd just grabbed)
-	calls bsg_open().
-	fetches to_bsg_device(inode)->queue - that would be ->queue in the
-	same bsg_device instance.
-	gets preempted away and loses CPU before it gets to calling blk_get_queue().
+Sounds like a parent clock to 'ufsh'? If so, it doesn't belong in 
+'clocks'. Use the clock API to get the parent or use 
+'assigned-clock-parents'.
 
-task B: calls bsg_unregister_queue() on the same queue, which calls
-	cdev_device_del(), which makes cdev impossible to look up and
-	drops the reference to that cdev; refcount is 1 now, so nothing gets
-	freed yet.
-	caller of bsg_unregister_queue() proceeds to destroy the queue and
-	free it, allowing reuse of memory that used to contain it.
-
-task A: regains CPU
-	calls blk_get_queue() on something that no longer points to
-	a request_queue instance.  In particular, "dying" flag is no longer
-	guaranteed to be there, so we proceed to increment what we think is
-	a queue refcount, corrupting whatever lives in that memory now.
-
-Usually we'll end up with memory not reused yet, and blk_get_queue() will
-fail without buggering anything up.  Not guaranteed, though...
-
-AFAICS, the fact that request_queue freeing is RCU-delayed means that
-it can be fixed by the following:
-	* mark bsg_device on bsg_unregister_queue() as goner
-	* have bsg_open() do rcu_read_lock(), then check that flag and do
-blk_get_queue() only if the flag hadn't been set yet.  If we did not observe
-the flag after rcu_read_lock(), we know that queue have been freed yet
-- RCU delay couldn't have run out.
-
-Comments?
-
-Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
----
-diff --git a/block/bsg.c b/block/bsg.c
-index 2ab1351eb082..643641087691 100644
---- a/block/bsg.c
-+++ b/block/bsg.c
-@@ -28,6 +28,7 @@ struct bsg_device {
- 	unsigned int timeout;
- 	unsigned int reserved_size;
- 	bsg_sg_io_fn *sg_io_fn;
-+	bool goner;
- };
- 
- static inline struct bsg_device *to_bsg_device(struct inode *inode)
-@@ -71,9 +72,14 @@ static int bsg_sg_io(struct bsg_device *bd, fmode_t mode, void __user *uarg)
- 
- static int bsg_open(struct inode *inode, struct file *file)
- {
--	if (!blk_get_queue(to_bsg_device(inode)->queue))
--		return -ENXIO;
--	return 0;
-+	struct bsg_device *bd = to_bsg_device(inode);
-+	int err = 0;
-+
-+	rcu_read_lock();
-+	if (bd->goner || !blk_get_queue(bd->queue))
-+		err = -ENXIO;
-+	rcu_read_unlock();
-+	return err;
- }
- 
- static int bsg_release(struct inode *inode, struct file *file)
-@@ -175,6 +181,7 @@ static void bsg_device_release(struct device *dev)
- 
- void bsg_unregister_queue(struct bsg_device *bd)
- {
-+	bd->goner = true;
- 	if (bd->queue->kobj.sd)
- 		sysfs_remove_link(&bd->queue->kobj, "bsg");
- 	cdev_device_del(&bd->cdev, &bd->device);
+Rob
