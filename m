@@ -2,40 +2,41 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31E57C4321E
-	for <linux-scsi@archiver.kernel.org>; Sun, 20 Nov 2022 19:49:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5ABFC433FE
+	for <linux-scsi@archiver.kernel.org>; Sun, 20 Nov 2022 22:02:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229664AbiKTTt4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 20 Nov 2022 14:49:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47340 "EHLO
+        id S229767AbiKTWCw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 20 Nov 2022 17:02:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53272 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229723AbiKTTtr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Nov 2022 14:49:47 -0500
-Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [85.215.255.81])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57F3B2E9EB;
-        Sun, 20 Nov 2022 11:49:43 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1668973779;
+        with ESMTP id S229480AbiKTWCt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Nov 2022 17:02:49 -0500
+X-Greylist: delayed 175 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 20 Nov 2022 14:02:40 PST
+Received: from mo4-p05-ob.smtp.rzone.de (mo4-p05-ob.smtp.rzone.de [85.215.255.134])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C9567656;
+        Sun, 20 Nov 2022 14:02:35 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1668981575;
     s=strato-dkim-0002; d=iokpp.de;
     h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
     From:Subject:Sender;
-    bh=i/hP+BNTbKHkp5aptNnxVflJu3FZ4tJ6s/JXowJobxU=;
-    b=snJKObeChR7FyjTqg8m49m67HWMiV6mcegk28USEyHpdIfy+zDkzWr2yNXFCOafEqW
-    7JZbmUNnW8Kz3kLdeGPnjkrEExZAAHDu7zwVRARGAbo+YTUDCKFAC2FRKeQ3PRjcTBYe
-    phZKnnSRrv556/7sMPDowkXy611WRgVsn5Tet595GURKufOOMVXnCVpS5Zd0izWYreWV
-    m65JgFqJJkOWBok4dr8sMA336GrCqxEW4Uk/35zkNMbEP/iNF/VzLU7LkqBI98NnkOra
-    jrml5Skw2FX15G+fomXoBH7fymPAY/pokL+b5RGQXc6ldkuVYANbIHCLdQRERaL61UyB
-    U/8g==
+    bh=uNJzfpTqXlhAci+Y94MUZIfPpwoY6uUa/PqRLAciO9M=;
+    b=jNwgajCP9gvAPWh2waX+3rh+WVW4B7EGbezyKo/Vlib5k13t03OwUwUCRQg9XBfI9/
+    a3sMtXbkeH8xXKuINMNcJv+hIzZfeEwRJK35D5AKGaddBbUv98L/t1zl9O7OKpDe3u8D
+    wqVahmCtr8Y7oRiKadRvBKCmLyjYy3qOU0XqtMVle5FDUtmJeqv9tfZ1Od/sevGqguld
+    lt6NOYBG1/BRU8z5bXOjJVo2hw91n/WG/nYx3SJFHcL5YOChHjo9xQr6gAedjnG1rZwR
+    6JJrC8epgL+wri44j+QhpHD4RhCzG3e9LpVINNIEPL4dGk4Of1KQ92xz3vTvI+VioV3f
+    GzaA==
 Authentication-Results: strato.com;
     dkim=none
 X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSedrgBzPc9DUyubU4DD1QLj68UeUr1+U1RvWtIfZ/7Q8ZGqEBlwxF4QH61wYa9UK/y81Dg=="
-X-RZG-CLASS-ID: mo02
+X-RZG-CLASS-ID: mo05
 Received: from blinux.speedport.ip
     by smtp.strato.de (RZmta 48.2.1 AUTH)
-    with ESMTPSA id z9cfbfyAKJncWNX
+    with ESMTPSA id z9cfbfyAKLxZWa4
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
         (Client did not present a certificate);
-    Sun, 20 Nov 2022 20:49:38 +0100 (CET)
-From:   Bean Huo <beanhuo@iokpp.de>
+    Sun, 20 Nov 2022 22:59:35 +0100 (CET)
+From:   Bean Huo <beanhuo@micron.com>
 To:     alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
         martin.petersen@oracle.com, stanley.chu@mediatek.com,
         beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
@@ -43,19 +44,17 @@ To:     alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
         quic_nguyenb@quicinc.com, quic_xiaosenh@quicinc.com,
         quic_richardp@quicinc.com, quic_asutoshd@quicinc.com, hare@suse.de
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v1 2/6] ufs: ufs_bsg: Cleanup ufs_bsg_request
-Date:   Sun, 20 Nov 2022 20:49:26 +0100
-Message-Id: <20221120194930.90283-3-beanhuo@iokpp.de>
+Subject: [PATCH v2 2/6] ufs: ufs_bsg: Cleanup ufs_bsg_request
+Date:   Sun, 20 Nov 2022 22:59:22 +0100
+Message-Id: <20221120215927.104580-3-beanhuo@micron.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20221120194930.90283-1-beanhuo@iokpp.de>
-References: <20221120194930.90283-1-beanhuo@iokpp.de>
+In-Reply-To: <20221120215927.104580-1-beanhuo@micron.com>
+References: <20221120215927.104580-1-beanhuo@micron.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
-
-From: Bean Huo <beanhuo@micron.com>
 
 Move sg_copy_from_buffer() below its associated case statement.
 
