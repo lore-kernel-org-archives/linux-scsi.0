@@ -2,39 +2,39 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3DEAC433FE
-	for <linux-scsi@archiver.kernel.org>; Sun, 20 Nov 2022 19:49:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E2BEC4332F
+	for <linux-scsi@archiver.kernel.org>; Sun, 20 Nov 2022 19:49:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229746AbiKTTts (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 20 Nov 2022 14:49:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47332 "EHLO
+        id S229758AbiKTTtw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 20 Nov 2022 14:49:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47334 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229709AbiKTTtq (ORCPT
+        with ESMTP id S229715AbiKTTtq (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Nov 2022 14:49:46 -0500
-Received: from mo4-p03-ob.smtp.rzone.de (mo4-p03-ob.smtp.rzone.de [85.215.255.102])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FFDA2E9CB;
+Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [85.215.255.82])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47B862E9DD;
         Sun, 20 Nov 2022 11:49:43 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1668973779;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1668973778;
     s=strato-dkim-0002; d=iokpp.de;
     h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
     From:Subject:Sender;
-    bh=E8p70nvSesLfndCY1xjueUyWPXUe3zm6EYO0Xs9t1IM=;
-    b=qbKXNCHNXRdYe4oeC27WQZ5hSrEU1zXkl1Fyt7BrDKvVaGS+1VTQGQ+AIa4qw/Oi+L
-    6HLKIfP1ONvUkPkBP3ZFQ6WLoeyXvfgcpBimPWzZkPDOZw1hfj3lAK5JPcA+5NsGIijk
-    Ii+4blj1I3d+OuRZxL0rPi5/yPddAWY/mN6/eIljQzeitC7FqYoJwxuu8SRp9oQodv1E
-    L1VPVNpNLgZHEc5gMRVv23eSPfn1AE9mfUD7aIR0DNiijf120hskGg4EVG2jdtthbWVa
-    XYXjDHoorCFtfalJ835iMqgKTJrlEa5GvX6nUOmCTYsrC4Gj2uWcUg0lkG2YCAbkzQml
-    8i/A==
+    bh=H68GQeaf2XGUVFcEuy5695f5fl8n2LfBO8R3Gb9smTQ=;
+    b=f0DR2aydrxHEQ2aA651xdyRRj61M0+voPKclCioCmGYikSlcuy/woryMYUA6eK/oUo
+    fqNMNHg/D7L8R7YhDYfCJIsV9mj6xrQZQVjebiiMIZnURUj3HdhhIB+W6zMCJkojCOzJ
+    0ZAYKOw/I9zvtO/BfJfzo4QdfSxKyj/HM1k0pjg80eP0MPcmqi+oZQ/3mv6OH7kJ3Nzk
+    yZPdBFaCrT8yLOQAgjC3rBYDaLJXvMQo2Y5HT9nMCmshFS6dm+T54IbavGgHNpnSDOMj
+    +4np8JGD0CDETYHLEMNZ8XNO84GrCt6l+1T01Ip+btNrnY67LMKH/f7/OfbEfoFRoi3J
+    NG6w==
 Authentication-Results: strato.com;
     dkim=none
 X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSedrgBzPc9DUyubU4DD1QLj68UeUr1+U1RvWtIfZ/7Q8ZGqEBlwxF4QH61wYa9UK/y81Dg=="
-X-RZG-CLASS-ID: mo02
+X-RZG-CLASS-ID: mo01
 Received: from blinux.speedport.ip
     by smtp.strato.de (RZmta 48.2.1 AUTH)
-    with ESMTPSA id z9cfbfyAKJndWNZ
+    with ESMTPSA id z9cfbfyAKJncWNW
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
         (Client did not present a certificate);
-    Sun, 20 Nov 2022 20:49:39 +0100 (CET)
+    Sun, 20 Nov 2022 20:49:38 +0100 (CET)
 From:   Bean Huo <beanhuo@iokpp.de>
 To:     alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
         martin.petersen@oracle.com, stanley.chu@mediatek.com,
@@ -43,9 +43,9 @@ To:     alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
         quic_nguyenb@quicinc.com, quic_xiaosenh@quicinc.com,
         quic_richardp@quicinc.com, quic_asutoshd@quicinc.com, hare@suse.de
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v1 4/6] ufs: core: Advanced RPMB detection
-Date:   Sun, 20 Nov 2022 20:49:28 +0100
-Message-Id: <20221120194930.90283-5-beanhuo@iokpp.de>
+Subject: [PATCH v1 1/6] ufs: ufs_bsg: Remove unnecessary length checkup
+Date:   Sun, 20 Nov 2022 20:49:25 +0100
+Message-Id: <20221120194930.90283-2-beanhuo@iokpp.de>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20221120194930.90283-1-beanhuo@iokpp.de>
 References: <20221120194930.90283-1-beanhuo@iokpp.de>
@@ -57,73 +57,60 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Bean Huo <beanhuo@micron.com>
 
-Check UFS Advanced RPMB LU enablement during ufshcd_lu_init().
+Remove checks on job->request_len and job->reply_len because
+The following msgcode checks will rule out malicious requests.
 
 Signed-off-by: Bean Huo <beanhuo@micron.com>
 ---
- drivers/ufs/core/ufshcd.c |  6 ++++++
- include/ufs/ufs.h         | 24 ++++++++++++++++++++++++
- 2 files changed, 30 insertions(+)
+ drivers/ufs/core/ufs_bsg.c | 21 ---------------------
+ 1 file changed, 21 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 1b252e6cf93f..311172578fd8 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -4956,6 +4956,12 @@ static void ufshcd_lu_init(struct ufs_hba *hba, struct scsi_device *sdev)
- 	    desc_buf[UNIT_DESC_PARAM_LU_WR_PROTECT] == UFS_LU_POWER_ON_WP)
- 		hba->dev_info.is_lu_power_on_wp = true;
+diff --git a/drivers/ufs/core/ufs_bsg.c b/drivers/ufs/core/ufs_bsg.c
+index b99e3f3dc4ef..9ac8204f1ee6 100644
+--- a/drivers/ufs/core/ufs_bsg.c
++++ b/drivers/ufs/core/ufs_bsg.c
+@@ -30,21 +30,6 @@ static int ufs_bsg_get_query_desc_size(struct ufs_hba *hba, int *desc_len,
+ 	return 0;
+ }
  
-+	/* In case of RPMB LU, check if advanced RPMB mode is enabled */
-+	if (desc_buf[UNIT_DESC_PARAM_UNIT_INDEX] == UFS_UPIU_RPMB_WLUN &&
-+	    desc_buf[RPMB_UNIT_DESC_PARAM_REGION_EN] & BIT(4))
-+		hba->dev_info.b_advanced_rpmb_en = true;
-+
-+
- 	kfree(desc_buf);
- set_qdepth:
- 	/*
-diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
-index 1bba3fead2ce..17e401df674c 100644
---- a/include/ufs/ufs.h
-+++ b/include/ufs/ufs.h
-@@ -212,6 +212,28 @@ enum unit_desc_param {
- 	UNIT_DESC_PARAM_WB_BUF_ALLOC_UNITS	= 0x29,
- };
+-static int ufs_bsg_verify_query_size(struct ufs_hba *hba,
+-				     unsigned int request_len,
+-				     unsigned int reply_len)
+-{
+-	int min_req_len = sizeof(struct ufs_bsg_request);
+-	int min_rsp_len = sizeof(struct ufs_bsg_reply);
+-
+-	if (min_req_len > request_len || min_rsp_len > reply_len) {
+-		dev_err(hba->dev, "not enough space assigned\n");
+-		return -EINVAL;
+-	}
+-
+-	return 0;
+-}
+-
+ static int ufs_bsg_alloc_desc_buffer(struct ufs_hba *hba, struct bsg_job *job,
+ 				     uint8_t **desc_buff, int *desc_len,
+ 				     enum query_opcode desc_op)
+@@ -88,8 +73,6 @@ static int ufs_bsg_request(struct bsg_job *job)
+ 	struct ufs_bsg_request *bsg_request = job->request;
+ 	struct ufs_bsg_reply *bsg_reply = job->reply;
+ 	struct ufs_hba *hba = shost_priv(dev_to_shost(job->dev->parent));
+-	unsigned int req_len = job->request_len;
+-	unsigned int reply_len = job->reply_len;
+ 	struct uic_command uc = {};
+ 	int msgcode;
+ 	uint8_t *desc_buff = NULL;
+@@ -97,10 +80,6 @@ static int ufs_bsg_request(struct bsg_job *job)
+ 	enum query_opcode desc_op = UPIU_QUERY_OPCODE_NOP;
+ 	int ret;
  
-+/* RPMB Unit descriptor parameters offsets in bytes*/
-+enum rpmb_unit_desc_param {
-+	RPMB_UNIT_DESC_PARAM_LEN		= 0x0,
-+	RPMB_UNIT_DESC_PARAM_TYPE		= 0x1,
-+	RPMB_UNIT_DESC_PARAM_UNIT_INDEX		= 0x2,
-+	RPMB_UNIT_DESC_PARAM_LU_ENABLE		= 0x3,
-+	RPMB_UNIT_DESC_PARAM_BOOT_LUN_ID	= 0x4,
-+	RPMB_UNIT_DESC_PARAM_LU_WR_PROTECT	= 0x5,
-+	RPMB_UNIT_DESC_PARAM_LU_Q_DEPTH		= 0x6,
-+	RPMB_UNIT_DESC_PARAM_PSA_SENSITIVE	= 0x7,
-+	RPMB_UNIT_DESC_PARAM_MEM_TYPE		= 0x8,
-+	RPMB_UNIT_DESC_PARAM_REGION_EN		= 0x9,
-+	RPMB_UNIT_DESC_PARAM_LOGICAL_BLK_SIZE	= 0xA,
-+	RPMB_UNIT_DESC_PARAM_LOGICAL_BLK_COUNT	= 0xB,
-+	RPMB_UNIT_DESC_PARAM_REGION0_SIZE	= 0x13,
-+	RPMB_UNIT_DESC_PARAM_REGION1_SIZE	= 0x14,
-+	RPMB_UNIT_DESC_PARAM_REGION2_SIZE	= 0x15,
-+	RPMB_UNIT_DESC_PARAM_REGION3_SIZE	= 0x16,
-+	RPMB_UNIT_DESC_PARAM_PROVISIONING_TYPE	= 0x17,
-+	RPMB_UNIT_DESC_PARAM_PHY_MEM_RSRC_CNT	= 0x18,
-+};
-+
- /* Device descriptor parameters offsets in bytes*/
- enum device_desc_param {
- 	DEVICE_DESC_PARAM_LEN			= 0x0,
-@@ -601,6 +623,8 @@ struct ufs_dev_info {
+-	ret = ufs_bsg_verify_query_size(hba, req_len, reply_len);
+-	if (ret)
+-		goto out;
+-
+ 	bsg_reply->reply_payload_rcv_len = 0;
  
- 	bool	b_rpm_dev_flush_capable;
- 	u8	b_presrv_uspc_en;
-+
-+	bool    b_advanced_rpmb_en;
- };
- 
- /*
+ 	ufshcd_rpm_get_sync(hba);
 -- 
 2.25.1
 
