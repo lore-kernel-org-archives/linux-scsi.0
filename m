@@ -2,39 +2,38 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0032FC43219
-	for <linux-scsi@archiver.kernel.org>; Sun, 20 Nov 2022 22:22:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D44D0C43217
+	for <linux-scsi@archiver.kernel.org>; Sun, 20 Nov 2022 22:22:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229838AbiKTWWm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 20 Nov 2022 17:22:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58750 "EHLO
+        id S229842AbiKTWWn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 20 Nov 2022 17:22:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58754 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229672AbiKTWWg (ORCPT
+        with ESMTP id S229677AbiKTWWg (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Nov 2022 17:22:36 -0500
-Received: from mo4-p03-ob.smtp.rzone.de (mo4-p03-ob.smtp.rzone.de [85.215.255.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC716AE7D;
+Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [85.215.255.82])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 72090BE12;
         Sun, 20 Nov 2022 14:22:32 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1668982948;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1668982947;
     s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
-    From:Subject:Sender;
-    bh=E8p70nvSesLfndCY1xjueUyWPXUe3zm6EYO0Xs9t1IM=;
-    b=iic2hRa02Ln/L3XM5cBpNHh+3er4LOhrYnz6b4tcqyycvUgaTjj3u5wcbv6uKLsO4y
-    YoRvLWqmEDNeAoKTjnbzYttRB2kw+dGA94qlaYBrMIMTsw/u60I3OulbDxmq540u7dMA
-    5GlT49LlwTuLd5e6Pz5N92mFKc851JF9n74McOt06ZysDqioEhsdy7gz8rupttWOkMbU
-    c6xMrPBXYWmi15ebif+1vfi1SY23taDb1VPILhioNfsFPCsgZA9kOVMAd+nP5BXH2ybp
-    UBBt9iAwD2xuU3j8A3e6Z4rADa7sUhc67Vc0PeH1iHzkyIvrMMJiXuqzXqxhIJBVMNiN
-    NC1w==
+    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
+    bh=rHIWmEiOCODPVWqiYPeHv9zjayliBfKoMjHI89CGOSU=;
+    b=B8BTSLJYogGD67WP+p7TUWk+N1y5g+8q4pNLQh4zlADms0no54mmKEaPQkYkC2XOcQ
+    qZLDQEJp4fRnpCa1NPDSBawCE0az6RtIgSwXDCaCsFSMnpKr0Ap5awmlsUXl3y5lzeCf
+    Jrw9IrtXgGBt8QYpayZo2SeSg7zc+uqphTsJV3rB91/OOpiTSqnHG2qbak1+9X5d/Hkp
+    sslSlxvCko8ckgPWsyw/fjjqU3tE6rh5cCnbIlWdKU9wzLOmCwP5zDaX8gSvNPvuOh4M
+    xWHrwPQFYp6HlCcpxPQOYnU8xL1t6lydCyirBJouvmMMft7HCzN6CVejhsJyeYjLjXUT
+    +u2A==
 Authentication-Results: strato.com;
     dkim=none
 X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSedrgBzPc9DUyubU4DD1QLj68UeUr1+U1RvWtIfZ/7Q8ZGqEBlwxF4QH61wYa9UK/y81Dg=="
-X-RZG-CLASS-ID: mo03
+X-RZG-CLASS-ID: mo00
 Received: from blinux.speedport.ip
     by smtp.strato.de (RZmta 48.2.1 AUTH)
-    with ESMTPSA id z9cfbfyAKMMSWc8
+    with ESMTPSA id z9cfbfyAKMMQWc4
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
         (Client did not present a certificate);
-    Sun, 20 Nov 2022 23:22:28 +0100 (CET)
+    Sun, 20 Nov 2022 23:22:26 +0100 (CET)
 From:   Bean Huo <beanhuo@iokpp.de>
 To:     alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
         martin.petersen@oracle.com, stanley.chu@mediatek.com,
@@ -42,88 +41,45 @@ To:     alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
         daejun7.park@samsung.com, quic_cang@quicinc.com,
         quic_nguyenb@quicinc.com, quic_xiaosenh@quicinc.com,
         quic_richardp@quicinc.com, quic_asutoshd@quicinc.com, hare@suse.de
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 4/6] ufs: core: Advanced RPMB detection
-Date:   Sun, 20 Nov 2022 23:22:15 +0100
-Message-Id: <20221120222217.108492-5-beanhuo@iokpp.de>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Bean Huo <beanhuo@iokpp.de>
+Subject: [PATCH v2 0/6] UFS Advanced RPMB
+Date:   Sun, 20 Nov 2022 23:22:11 +0100
+Message-Id: <20221120222217.108492-1-beanhuo@iokpp.de>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20221120222217.108492-1-beanhuo@iokpp.de>
-References: <20221120222217.108492-1-beanhuo@iokpp.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bean Huo <beanhuo@micron.com>
+Changelog:
 
-Check UFS Advanced RPMB LU enablement during ufshcd_lu_init().
+V1 -- V2:
+    1. Added RPMB request completion handling in patch 6/6
+RFC -- V1:
+    1. Split the patch and Remove RFC
+    2. Add all 8 types of rpmb operations
+    3. Fix one EHS copy error in ufshcd_advanced_rpmb_req_handler()
+    4. Fix several issues raised by Avri in the RFC patch:
+    https://patchwork.kernel.org/project/linux-scsi/patch/20221107131038.201724-3-beanhuo@iokpp.de/#25081912
 
-Signed-off-by: Bean Huo <beanhuo@micron.com>
----
- drivers/ufs/core/ufshcd.c |  6 ++++++
- include/ufs/ufs.h         | 24 ++++++++++++++++++++++++
- 2 files changed, 30 insertions(+)
+Bean Huo (6):
+  ufs: ufs_bsg: Remove unnecessary length checkup
+  ufs: ufs_bsg: Cleanup ufs_bsg_request
+  ufs: core: Split ufshcd_map_sg
+  ufs: core: Advanced RPMB detection
+  ufs: core: Pass EHS length into ufshcd_prepare_req_desc_hdr()
+  ufs: core: Add advanced RPMB support in ufs_bsg
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 1b252e6cf93f..311172578fd8 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -4956,6 +4956,12 @@ static void ufshcd_lu_init(struct ufs_hba *hba, struct scsi_device *sdev)
- 	    desc_buf[UNIT_DESC_PARAM_LU_WR_PROTECT] == UFS_LU_POWER_ON_WP)
- 		hba->dev_info.is_lu_power_on_wp = true;
- 
-+	/* In case of RPMB LU, check if advanced RPMB mode is enabled */
-+	if (desc_buf[UNIT_DESC_PARAM_UNIT_INDEX] == UFS_UPIU_RPMB_WLUN &&
-+	    desc_buf[RPMB_UNIT_DESC_PARAM_REGION_EN] & BIT(4))
-+		hba->dev_info.b_advanced_rpmb_en = true;
-+
-+
- 	kfree(desc_buf);
- set_qdepth:
- 	/*
-diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
-index 1bba3fead2ce..17e401df674c 100644
---- a/include/ufs/ufs.h
-+++ b/include/ufs/ufs.h
-@@ -212,6 +212,28 @@ enum unit_desc_param {
- 	UNIT_DESC_PARAM_WB_BUF_ALLOC_UNITS	= 0x29,
- };
- 
-+/* RPMB Unit descriptor parameters offsets in bytes*/
-+enum rpmb_unit_desc_param {
-+	RPMB_UNIT_DESC_PARAM_LEN		= 0x0,
-+	RPMB_UNIT_DESC_PARAM_TYPE		= 0x1,
-+	RPMB_UNIT_DESC_PARAM_UNIT_INDEX		= 0x2,
-+	RPMB_UNIT_DESC_PARAM_LU_ENABLE		= 0x3,
-+	RPMB_UNIT_DESC_PARAM_BOOT_LUN_ID	= 0x4,
-+	RPMB_UNIT_DESC_PARAM_LU_WR_PROTECT	= 0x5,
-+	RPMB_UNIT_DESC_PARAM_LU_Q_DEPTH		= 0x6,
-+	RPMB_UNIT_DESC_PARAM_PSA_SENSITIVE	= 0x7,
-+	RPMB_UNIT_DESC_PARAM_MEM_TYPE		= 0x8,
-+	RPMB_UNIT_DESC_PARAM_REGION_EN		= 0x9,
-+	RPMB_UNIT_DESC_PARAM_LOGICAL_BLK_SIZE	= 0xA,
-+	RPMB_UNIT_DESC_PARAM_LOGICAL_BLK_COUNT	= 0xB,
-+	RPMB_UNIT_DESC_PARAM_REGION0_SIZE	= 0x13,
-+	RPMB_UNIT_DESC_PARAM_REGION1_SIZE	= 0x14,
-+	RPMB_UNIT_DESC_PARAM_REGION2_SIZE	= 0x15,
-+	RPMB_UNIT_DESC_PARAM_REGION3_SIZE	= 0x16,
-+	RPMB_UNIT_DESC_PARAM_PROVISIONING_TYPE	= 0x17,
-+	RPMB_UNIT_DESC_PARAM_PHY_MEM_RSRC_CNT	= 0x18,
-+};
-+
- /* Device descriptor parameters offsets in bytes*/
- enum device_desc_param {
- 	DEVICE_DESC_PARAM_LEN			= 0x0,
-@@ -601,6 +623,8 @@ struct ufs_dev_info {
- 
- 	bool	b_rpm_dev_flush_capable;
- 	u8	b_presrv_uspc_en;
-+
-+	bool    b_advanced_rpmb_en;
- };
- 
- /*
+ drivers/ufs/core/ufs_bsg.c       | 137 +++++++++++++++---------
+ drivers/ufs/core/ufshcd.c        | 176 +++++++++++++++++++++++++------
+ include/uapi/scsi/scsi_bsg_ufs.h |  46 +++++++-
+ include/ufs/ufs.h                |  29 +++++
+ include/ufs/ufshcd.h             |   6 +-
+ include/ufs/ufshci.h             |   1 +
+ 6 files changed, 315 insertions(+), 80 deletions(-)
+
 -- 
 2.25.1
 
