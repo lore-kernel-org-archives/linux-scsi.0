@@ -2,69 +2,120 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7ADC6C4332F
-	for <linux-scsi@archiver.kernel.org>; Sun, 20 Nov 2022 00:09:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59B5DC43217
+	for <linux-scsi@archiver.kernel.org>; Sun, 20 Nov 2022 03:14:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234179AbiKTAJt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 19 Nov 2022 19:09:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49158 "EHLO
+        id S229536AbiKTDOe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 19 Nov 2022 22:14:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53202 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231757AbiKTAJr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Nov 2022 19:09:47 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D083A12AF1;
-        Sat, 19 Nov 2022 16:09:46 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 8341FB80AAF;
-        Sun, 20 Nov 2022 00:09:45 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 45B4FC433C1;
-        Sun, 20 Nov 2022 00:09:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1668902984;
-        bh=wEY5QmZllUoh8oYz2Okd5Ilfw9trI6cEN4b5niSJA+A=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=dywNfTDS1upGrBExe1RAFmGfwB95DqjuE6UAnR+Z0/TqCtrfJ6luFRACh0NEc2bX5
-         Wx7N6Y81PR/PyH0Gg1BdrwLSWdMVtHoc4rNPVvBy4r71pIpNM7HHPzhxcaTE43EmzK
-         WYjS2kdmoW/TISauhAYYl+rd8lpsIHfHfZOZVrYIG0fV1MRarm2A6QdXJWJGzTM2OX
-         Q4J6nfWRHxzGiI9pApfMjyujIyWhWO5vWFQgXDU+JT9A7Q107pEon8Bge3ukFbAHKK
-         JzvtJ1EkGK3VWDSHjwdHW4m9ELSGy/KZEas+phFqK8vQ87XjB9KDzkIgbelHAHJdF9
-         ryZtunCN9dPsA==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 34832C395F6;
-        Sun, 20 Nov 2022 00:09:44 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI fixes for 6.0-rc5
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <1034ecdfe7c4c07a45b5b59f21c3be2a7c0c1642.camel@HansenPartnership.com>
-References: <1034ecdfe7c4c07a45b5b59f21c3be2a7c0c1642.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
-X-PR-Tracked-Message-Id: <1034ecdfe7c4c07a45b5b59f21c3be2a7c0c1642.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: f014165faa7b953b81dcbf18835936e5f8d01f2a
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 77c51ba552a1c4f73228766e43ae37c4101b3758
-Message-Id: <166890298420.9575.6621059630033636848.pr-tracker-bot@kernel.org>
-Date:   Sun, 20 Nov 2022 00:09:44 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        with ESMTP id S229455AbiKTDOd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Nov 2022 22:14:33 -0500
+Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [IPv6:2a03:a000:7:0:5054:ff:fe1c:15ff])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A6799A26D;
+        Sat, 19 Nov 2022 19:14:31 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=linux.org.uk; s=zeniv-20220401; h=Sender:Content-Type:MIME-Version:
+        Message-ID:Subject:Cc:To:From:Date:Reply-To:Content-Transfer-Encoding:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=KMKfHSu6apMfgPIdOsoq6k6Aa8UTe85BtVoAlZrfyCo=; b=dQDm+gAL6Ya9r/NBfrRe24ehIm
+        +QVWG74pU7HAq25XAVQqTOeQX0uKd10tvkGW3my5ZPHa7xvq1HlXPpYGO2RXEtWww2K7KhBWqi+wN
+        lPg+iSKN5PqBetBVLGKBlPrs0dtg9jUyQoAcYh8VDYeCvMbIJdQbznxZRMPuD5XHD1StGyd9lsTsM
+        dTUxoPiZUcOftCTJTFOCJbhN4ZwL1jEeeiih7hHxNTzXix+HHO0uUYJjtamYtxzH6yLwJz2nKqDi1
+        TssUtkKrUg1jKAZox1VIQirYMBSnebcdLDxf8Nrv2eV182VDDHOMrfzsJJCRON4LyPSExpyvu0YZw
+        iXAfjpHQ==;
+Received: from viro by zeniv.linux.org.uk with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1owamn-005CZ0-1o;
+        Sun, 20 Nov 2022 03:14:25 +0000
+Date:   Sun, 20 Nov 2022 03:14:25 +0000
+From:   Al Viro <viro@zeniv.linux.org.uk>
+To:     linux-block@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH][RFC] fix a race between bsg_open() and bsg_unregister_queue()
+Message-ID: <Y3mbkZCESLLRMQNq@ZenIV>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Sender: Al Viro <viro@ftp.linux.org.uk>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Sat, 19 Nov 2022 17:47:02 -0500:
+	Consider the following scenario:
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+task A: open() on /dev/bsg/<something>
+	calls chrdev_open()
+	finds and grabs a reference to bsg_device.cdev in inode->i_cdev
+	refcount on that cdev is 2 now (1 from creation + 1 we'd just grabbed)
+	calls bsg_open().
+	fetches to_bsg_device(inode)->queue - that would be ->queue in the
+	same bsg_device instance.
+	gets preempted away and loses CPU before it gets to calling blk_get_queue().
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/77c51ba552a1c4f73228766e43ae37c4101b3758
+task B: calls bsg_unregister_queue() on the same queue, which calls
+	cdev_device_del(), which makes cdev impossible to look up and
+	drops the reference to that cdev; refcount is 1 now, so nothing gets
+	freed yet.
+	caller of bsg_unregister_queue() proceeds to destroy the queue and
+	free it, allowing reuse of memory that used to contain it.
 
-Thank you!
+task A: regains CPU
+	calls blk_get_queue() on something that no longer points to
+	a request_queue instance.  In particular, "dying" flag is no longer
+	guaranteed to be there, so we proceed to increment what we think is
+	a queue refcount, corrupting whatever lives in that memory now.
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Usually we'll end up with memory not reused yet, and blk_get_queue() will
+fail without buggering anything up.  Not guaranteed, though...
+
+AFAICS, the fact that request_queue freeing is RCU-delayed means that
+it can be fixed by the following:
+	* mark bsg_device on bsg_unregister_queue() as goner
+	* have bsg_open() do rcu_read_lock(), then check that flag and do
+blk_get_queue() only if the flag hadn't been set yet.  If we did not observe
+the flag after rcu_read_lock(), we know that queue have been freed yet
+- RCU delay couldn't have run out.
+
+Comments?
+
+Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+---
+diff --git a/block/bsg.c b/block/bsg.c
+index 2ab1351eb082..643641087691 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -28,6 +28,7 @@ struct bsg_device {
+ 	unsigned int timeout;
+ 	unsigned int reserved_size;
+ 	bsg_sg_io_fn *sg_io_fn;
++	bool goner;
+ };
+ 
+ static inline struct bsg_device *to_bsg_device(struct inode *inode)
+@@ -71,9 +72,14 @@ static int bsg_sg_io(struct bsg_device *bd, fmode_t mode, void __user *uarg)
+ 
+ static int bsg_open(struct inode *inode, struct file *file)
+ {
+-	if (!blk_get_queue(to_bsg_device(inode)->queue))
+-		return -ENXIO;
+-	return 0;
++	struct bsg_device *bd = to_bsg_device(inode);
++	int err = 0;
++
++	rcu_read_lock();
++	if (bd->goner || !blk_get_queue(bd->queue))
++		err = -ENXIO;
++	rcu_read_unlock();
++	return err;
+ }
+ 
+ static int bsg_release(struct inode *inode, struct file *file)
+@@ -175,6 +181,7 @@ static void bsg_device_release(struct device *dev)
+ 
+ void bsg_unregister_queue(struct bsg_device *bd)
+ {
++	bd->goner = true;
+ 	if (bd->queue->kobj.sd)
+ 		sysfs_remove_link(&bd->queue->kobj, "bsg");
+ 	cdev_device_del(&bd->cdev, &bd->device);
