@@ -2,40 +2,38 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5ABFC433FE
-	for <linux-scsi@archiver.kernel.org>; Sun, 20 Nov 2022 22:02:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C745C4332F
+	for <linux-scsi@archiver.kernel.org>; Sun, 20 Nov 2022 22:02:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229767AbiKTWCw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 20 Nov 2022 17:02:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53272 "EHLO
+        id S229779AbiKTWCx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 20 Nov 2022 17:02:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53276 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229480AbiKTWCt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Nov 2022 17:02:49 -0500
-X-Greylist: delayed 175 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 20 Nov 2022 14:02:40 PST
-Received: from mo4-p05-ob.smtp.rzone.de (mo4-p05-ob.smtp.rzone.de [85.215.255.134])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C9567656;
-        Sun, 20 Nov 2022 14:02:35 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1668981575;
+        with ESMTP id S229750AbiKTWCu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Nov 2022 17:02:50 -0500
+Received: from mo4-p05-ob.smtp.rzone.de (mo4-p05-ob.smtp.rzone.de [85.215.255.135])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D254EB843;
+        Sun, 20 Nov 2022 14:02:41 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1668981574;
     s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
-    From:Subject:Sender;
-    bh=uNJzfpTqXlhAci+Y94MUZIfPpwoY6uUa/PqRLAciO9M=;
-    b=jNwgajCP9gvAPWh2waX+3rh+WVW4B7EGbezyKo/Vlib5k13t03OwUwUCRQg9XBfI9/
-    a3sMtXbkeH8xXKuINMNcJv+hIzZfeEwRJK35D5AKGaddBbUv98L/t1zl9O7OKpDe3u8D
-    wqVahmCtr8Y7oRiKadRvBKCmLyjYy3qOU0XqtMVle5FDUtmJeqv9tfZ1Od/sevGqguld
-    lt6NOYBG1/BRU8z5bXOjJVo2hw91n/WG/nYx3SJFHcL5YOChHjo9xQr6gAedjnG1rZwR
-    6JJrC8epgL+wri44j+QhpHD4RhCzG3e9LpVINNIEPL4dGk4Of1KQ92xz3vTvI+VioV3f
-    GzaA==
+    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
+    bh=7gKo6W2XG8PXmAvzufvOcLgOJPE7tHjQ3B2GDJ9irCg=;
+    b=jsKSIRU0H05+Lx1O+pbuXvAYS2yABMqhc2xFZP/+jyhbPcXSGshHJ2YuGSnNKiAsTS
+    u0VJ6ZdO6W2QCaImH6lJlmVDj/63MyFKzpT9NVSCRR5B+i3WsEUXahEIuTpq+UmTTXM4
+    jj4mcdCwsw6nXQwiaMcjJOBoq9IXGGE0BSUFRSEsZT30k69i5e75m7WxZ+8NnytKQOcJ
+    Ov3YTiuPnJ2nXoFPcqtBPsKLO6ZvOkLy+nL2UA6bHD1tbJImVcyiwbBQEVTZtin1yqEe
+    DJ+JiwdnGl/XoxCUc/TU7kyrd7Zox7I80+/e/F097m967AKerLLMoqng5XFezpiSdpiS
+    QBdg==
 Authentication-Results: strato.com;
     dkim=none
 X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSedrgBzPc9DUyubU4DD1QLj68UeUr1+U1RvWtIfZ/7Q8ZGqEBlwxF4QH61wYa9UK/y81Dg=="
 X-RZG-CLASS-ID: mo05
 Received: from blinux.speedport.ip
     by smtp.strato.de (RZmta 48.2.1 AUTH)
-    with ESMTPSA id z9cfbfyAKLxZWa4
+    with ESMTPSA id z9cfbfyAKLxXWa2
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
         (Client did not present a certificate);
-    Sun, 20 Nov 2022 22:59:35 +0100 (CET)
+    Sun, 20 Nov 2022 22:59:33 +0100 (CET)
 From:   Bean Huo <beanhuo@micron.com>
 To:     alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
         martin.petersen@oracle.com, stanley.chu@mediatek.com,
@@ -44,80 +42,44 @@ To:     alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
         quic_nguyenb@quicinc.com, quic_xiaosenh@quicinc.com,
         quic_richardp@quicinc.com, quic_asutoshd@quicinc.com, hare@suse.de
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 2/6] ufs: ufs_bsg: Cleanup ufs_bsg_request
-Date:   Sun, 20 Nov 2022 22:59:22 +0100
-Message-Id: <20221120215927.104580-3-beanhuo@micron.com>
+Subject: [PATCH v2 0/6] UFS Advanced RPMB
+Date:   Sun, 20 Nov 2022 22:59:20 +0100
+Message-Id: <20221120215927.104580-1-beanhuo@micron.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20221120215927.104580-1-beanhuo@micron.com>
-References: <20221120215927.104580-1-beanhuo@micron.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Move sg_copy_from_buffer() below its associated case statement.
+Changelog:
 
-Signed-off-by: Bean Huo <beanhuo@micron.com>
----
- drivers/ufs/core/ufs_bsg.c | 27 ++++++++-------------------
- 1 file changed, 8 insertions(+), 19 deletions(-)
+V1 --> V2:
+    1. Added RPMB request completion handling in patch 6/6
 
-diff --git a/drivers/ufs/core/ufs_bsg.c b/drivers/ufs/core/ufs_bsg.c
-index 9ac8204f1ee6..850a0d798f63 100644
---- a/drivers/ufs/core/ufs_bsg.c
-+++ b/drivers/ufs/core/ufs_bsg.c
-@@ -90,11 +90,8 @@ static int ufs_bsg_request(struct bsg_job *job)
- 		desc_op = bsg_request->upiu_req.qr.opcode;
- 		ret = ufs_bsg_alloc_desc_buffer(hba, job, &desc_buff,
- 						&desc_len, desc_op);
--		if (ret) {
--			ufshcd_rpm_put_sync(hba);
-+		if (ret)
- 			goto out;
--		}
--
- 		fallthrough;
- 	case UPIU_TRANSACTION_NOP_OUT:
- 	case UPIU_TRANSACTION_TASK_REQ:
-@@ -102,9 +99,12 @@ static int ufs_bsg_request(struct bsg_job *job)
- 					       &bsg_reply->upiu_rsp, msgcode,
- 					       desc_buff, &desc_len, desc_op);
- 		if (ret)
--			dev_err(hba->dev,
--				"exe raw upiu: error code %d\n", ret);
--
-+			dev_err(hba->dev, "exe raw upiu: error code %d\n", ret);
-+		else if (desc_op == UPIU_QUERY_OPCODE_READ_DESC && desc_len)
-+			bsg_reply->reply_payload_rcv_len =
-+				sg_copy_from_buffer(job->request_payload.sg_list,
-+						    job->request_payload.sg_cnt,
-+						    desc_buff, desc_len);
- 		break;
- 	case UPIU_TRANSACTION_UIC_CMD:
- 		memcpy(&uc, &bsg_request->upiu_req.uc, UIC_CMD_SIZE);
-@@ -123,20 +123,9 @@ static int ufs_bsg_request(struct bsg_job *job)
- 		break;
- 	}
- 
-+out:
- 	ufshcd_rpm_put_sync(hba);
--
--	if (!desc_buff)
--		goto out;
--
--	if (desc_op == UPIU_QUERY_OPCODE_READ_DESC && desc_len)
--		bsg_reply->reply_payload_rcv_len =
--			sg_copy_from_buffer(job->request_payload.sg_list,
--					    job->request_payload.sg_cnt,
--					    desc_buff, desc_len);
--
- 	kfree(desc_buff);
--
--out:
- 	bsg_reply->result = ret;
- 	job->reply_len = sizeof(struct ufs_bsg_reply);
- 	/* complete the job here only if no error */
+RFC --> V1:
+    1. Split the patch and Remove RFC
+    2. Add all 8 types of rpmb operations
+    3. Fix one EHS copy error in ufshcd_advanced_rpmb_req_handler()
+    4. Fix several issues raised by Avri in the RFC patch:
+    https://patchwork.kernel.org/project/linux-scsi/patch/20221107131038.201724-3-beanhuo@iokpp.de/#25081912
+
+Bean Huo (6):
+  ufs: ufs_bsg: Remove unnecessary length checkup
+  ufs: ufs_bsg: Cleanup ufs_bsg_request
+  ufs: core: Split ufshcd_map_sg
+  ufs: core: Advanced RPMB detection
+  ufs: core: Pass EHS length into ufshcd_prepare_req_desc_hdr()
+  ufs: core: Add advanced RPMB support in ufs_bsg
+
+ drivers/ufs/core/ufs_bsg.c       | 137 +++++++++++++++---------
+ drivers/ufs/core/ufshcd.c        | 176 +++++++++++++++++++++++++------
+ include/uapi/scsi/scsi_bsg_ufs.h |  46 +++++++-
+ include/ufs/ufs.h                |  29 +++++
+ include/ufs/ufshcd.h             |   6 +-
+ include/ufs/ufshci.h             |   1 +
+ 6 files changed, 315 insertions(+), 80 deletions(-)
+
 -- 
 2.25.1
 
