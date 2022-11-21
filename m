@@ -2,92 +2,70 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14F1CC433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Nov 2022 09:17:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3497CC4167E
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Nov 2022 11:17:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230164AbiKUJRq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Nov 2022 04:17:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35482 "EHLO
+        id S230143AbiKULRX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Nov 2022 06:17:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39624 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230157AbiKUJRn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Nov 2022 04:17:43 -0500
-Received: from forward103j.mail.yandex.net (forward103j.mail.yandex.net [IPv6:2a02:6b8:0:801:2::106])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C23916585;
-        Mon, 21 Nov 2022 01:17:39 -0800 (PST)
-Received: from myt5-01d0fbe499ab.qloud-c.yandex.net (myt5-01d0fbe499ab.qloud-c.yandex.net [IPv6:2a02:6b8:c12:4619:0:640:1d0:fbe4])
-        by forward103j.mail.yandex.net (Yandex) with ESMTP id EE18E10262F;
-        Mon, 21 Nov 2022 12:17:37 +0300 (MSK)
-Received: by myt5-01d0fbe499ab.qloud-c.yandex.net (smtp/Yandex) with ESMTPSA id VC22I9egno-HaVqN7lN;
-        Mon, 21 Nov 2022 12:17:37 +0300
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail; t=1669022257;
-        bh=e8HT6dD/3N27O+m0P8iRhFaXnOdkCyfzpN5zPbWNkcQ=;
-        h=Message-Id:Date:Cc:Subject:To:From;
-        b=Jv2Tr9S0pGdAQmxuripPhHsfwOMHYwg7jVY/mAPGAdsrovkumPkKvLC8aziWtlRgq
-         f/nK2QirBgHtVhBWOPRjdDxOzWnGP78yQlA+BeoGasvGRKX/INIRFZDv/7JXIA1b5/
-         MXvpTb4NuaI8e7nd2340f5vLO4Zl49pGN7op1HdE=
-Authentication-Results: myt5-01d0fbe499ab.qloud-c.yandex.net; dkim=pass header.i=@yandex.ru
-From:   Peter Kosyh <pkosyh@yandex.ru>
-To:     Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Peter Kosyh <pkosyh@yandex.ru>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, lvc-project@linuxtesting.org
-Subject: [PATCH] scsi: iscsi: check retval of sci_unsolicited_frame_control_get_header
-Date:   Mon, 21 Nov 2022 12:17:32 +0300
-Message-Id: <20221121091732.547363-1-pkosyh@yandex.ru>
-X-Mailer: git-send-email 2.38.1
+        with ESMTP id S230319AbiKULQg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Nov 2022 06:16:36 -0500
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C21FD1D646
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Nov 2022 03:12:01 -0800 (PST)
+Received: from dggpeml500025.china.huawei.com (unknown [172.30.72.54])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4NG4Nb0FPqzqSZb;
+        Mon, 21 Nov 2022 19:07:27 +0800 (CST)
+Received: from dggpeml500003.china.huawei.com (7.185.36.200) by
+ dggpeml500025.china.huawei.com (7.185.36.35) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Mon, 21 Nov 2022 19:11:20 +0800
+Received: from huawei.com (10.175.103.91) by dggpeml500003.china.huawei.com
+ (7.185.36.200) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Mon, 21 Nov
+ 2022 19:11:19 +0800
+From:   Yu Liao <liaoyu15@huawei.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>
+CC:     <liaoyu15@huawei.com>, <liwei391@huawei.com>
+Subject: [PATCH] scsi: qla2xxx: Simplify condition check in qlt_free_session_done
+Date:   Mon, 21 Nov 2022 19:09:15 +0800
+Message-ID: <20221121110915.3450528-1-liaoyu15@huawei.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.103.91]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ dggpeml500003.china.huawei.com (7.185.36.200)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-sci_unsolicited_frame_control_get_header may return error if frame_index
-is invalid. There are two calls where retval was forgotten to check.
+!A || (A && B) is equivalent to !A || B. Hence, simplify condition.
 
-Add check of retval.
-
-Found by Linux Verification Center (linuxtesting.org) with SVACE.
-
-Fixes: c72086e3c289 ("isci: merge smp request substates into primary state machine")
-Signed-off-by: Peter Kosyh <pkosyh@yandex.ru>
+Reported-by: kernel test robot <lkp@intel.com>
+Signed-off-by: Yu Liao <liaoyu15@huawei.com>
 ---
- drivers/scsi/isci/request.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_target.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
-index 6370cdbfba08..e9f442d5cb73 100644
---- a/drivers/scsi/isci/request.c
-+++ b/drivers/scsi/isci/request.c
-@@ -1712,9 +1712,11 @@ sci_io_request_frame_handler(struct isci_request *ireq,
- 		struct ssp_frame_hdr ssp_hdr;
- 		void *frame_header;
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index bb754a950802..1e3e38d35968 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -1028,8 +1028,7 @@ void qlt_free_session_done(struct work_struct *work)
+ 		}
  
--		sci_unsolicited_frame_control_get_header(&ihost->uf_control,
-+		status = sci_unsolicited_frame_control_get_header(&ihost->uf_control,
- 							      frame_index,
- 							      &frame_header);
-+		if (status != SCI_SUCCESS)
-+			return status;
- 
- 		word_cnt = sizeof(struct ssp_frame_hdr) / sizeof(u32);
- 		sci_swab32_cpy(&ssp_hdr, frame_header, word_cnt);
-@@ -1768,9 +1770,12 @@ sci_io_request_frame_handler(struct isci_request *ireq,
- 		void *frame_header, *kaddr;
- 		u8 *rsp;
- 
--		sci_unsolicited_frame_control_get_header(&ihost->uf_control,
-+		status = sci_unsolicited_frame_control_get_header(&ihost->uf_control,
- 							 frame_index,
- 							 &frame_header);
-+		if (status != SCI_SUCCESS)
-+			return status;
-+
- 		kaddr = kmap_atomic(sg_page(sg));
- 		rsp = kaddr + sg->offset;
- 		sci_swab32_cpy(rsp, frame_header, 1);
+ 		if (ha->flags.edif_enabled &&
+-		    (!own || (own &&
+-			      own->iocb.u.isp24.status_subcode == ELS_PLOGI))) {
++		    (!own || own->iocb.u.isp24.status_subcode == ELS_PLOGI)) {
+ 			sess->edif.authok = 0;
+ 			if (!ha->flags.host_shutting_down) {
+ 				ql_dbg(ql_dbg_edif, vha, 0x911e,
 -- 
-2.38.1
+2.25.1
 
