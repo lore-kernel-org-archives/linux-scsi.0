@@ -2,107 +2,91 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A295EC433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Nov 2022 15:05:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 311ABC4332F
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Nov 2022 15:46:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231927AbiKUPF1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Nov 2022 10:05:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33680 "EHLO
+        id S229848AbiKUPqj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Nov 2022 10:46:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49058 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231908AbiKUPFE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Nov 2022 10:05:04 -0500
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50E43C8462;
-        Mon, 21 Nov 2022 06:53:17 -0800 (PST)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id CE6811F8A3;
-        Mon, 21 Nov 2022 14:53:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1669042393; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=acoJFp5IMk6I2OGDsUSsh5rB6BjsYh+Mppy2CcuaTP8=;
-        b=ubrkClbfap/2YkTdJFU9ntiZxgQnojhyjjSM/KnifRuhCEH9o1iQMcoo4gCRHJIV9sJZMZ
-        OXn5+PHv7JJ3WdtzyjQKiPU81bhv+DHc8FQsBFEwV0BDJtagBJJK+b4XKEMmXRs9QRgpRJ
-        PCNCz/WW7R2TGr7klkPJYAtFbYgelXk=
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 86E2C1377F;
-        Mon, 21 Nov 2022 14:53:13 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id r41tH9mQe2NvKwAAMHmgww
-        (envelope-from <mwilck@suse.com>); Mon, 21 Nov 2022 14:53:13 +0000
-Message-ID: <41c39c52cadcaa6a34126662b953ef96177f5bba.camel@suse.com>
-Subject: Re: [PATCH] scsi: core: Add BLIST_NO_ASK_VPD_SIZE for some VDASD
-From:   Martin Wilck <mwilck@suse.com>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.de>
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Lee Duncan <leeman.duncan@gmail.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Lee Duncan <lduncan@suse.com>
-Date:   Mon, 21 Nov 2022 15:53:12 +0100
-In-Reply-To: <yq1k046kwyv.fsf@ca-mkp.ca.oracle.com>
-References: <20220928181350.9948-1-leeman.duncan@gmail.com>
-         <11a582f0-723c-95e1-0e44-0a19e1a8a9a8@acm.org>
-         <4a1da181-8a54-d2f8-6d19-d9c1982ab044@suse.de>
-         <yq1k046kwyv.fsf@ca-mkp.ca.oracle.com>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.46.0 
-MIME-Version: 1.0
+        with ESMTP id S229530AbiKUPqi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Nov 2022 10:46:38 -0500
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1137EB49;
+        Mon, 21 Nov 2022 07:46:36 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1669045597; x=1700581597;
+  h=from:to:cc:subject:date:message-id;
+  bh=4O2mVRtKtbYO8hFbw2WsR+vVqotiqPdna7qLhf5sQH8=;
+  b=PvjWNenFqQ1Zc9dk9MZD2mJqIql6DcKRVi9eomn5VMMgZb7c8Dj069tc
+   PiKVH/mVMSx3dMXYXUJTQYTmlozueZralTjJJgt2IFUvfAjo6w7rTPv91
+   FAmqX0IgL512tF6+e0ITIST5JII+7aeJQoIMVdmRqpADkMRHuiSv5JaIV
+   a49V0hy70aRgn2wVcggUkYWFW6dUq9IYF+UPWMBFQlF+NqumdHPpAAaie
+   0zG/zMkh+uOM/Z11v1h57zAiFH76aUzZxNt8oDhZ4oFJdzWNWZOm9nFZx
+   BmvBhvy9fIDIJkKgZ28w6ojFOeMnUyluTMAuyL/WiJhAuNM63eDCJoGO9
+   A==;
+X-IronPort-AV: E=Sophos;i="5.96,181,1665417600"; 
+   d="scan'208";a="215054341"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 21 Nov 2022 23:46:36 +0800
+IronPort-SDR: dL7YLiT1yEvs8ew047BaVno3VZkkyCCwp+MPYyoOjyJ/yVJr8AFhihV+4+CC3ji1PGISWHywTF
+ Q15BSvOoBrXGxj/2Z7fXnMcjlLhumiRQQrS4SzrEHBmdYQpdFlvKGS4s+RVGkeCAIyTjP/1JJW
+ CKtG6dHVrmRAEEBFYjroy2PPnkgn04IdNV8cr5EX8uEEnq2rQ0gvqA/rAjyagY3sybz1G2nilo
+ kxLvJMGH5iDLiyMiQM8vKLxesRDYknGVJnVGY00MZqkHgsvoWzV9T7PXxmdLpoOa40o+FByMgs
+ Ods=
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 21 Nov 2022 06:59:41 -0800
+IronPort-SDR: /tX3QofnQoij5DIaXYJXcIuVFWDxMpgqqo8/k5GTNUO/N+IhqAdFBavciTkoXhY4vYPGGN+xMo
+ z+Qi7Q0ePS6wQXy9CFIC2J/zQrcnkoxX4QOZIIDxExXSxOSOcszDF8C74HwcezWAODrU/89NWG
+ Iz33UAbQsqVLDchFiG8vJDmOt6EORhJIJia+lYTrZCuXdWlrhGZbRTZ/u5XUm3YOj9c1qGcUTZ
+ 6SqFua5wDYfXMfFzTb+BF708jbWHDIFUBONy0VFumNhJDZFARFjVTfX/x6atpFJvPrh0fMjxpG
+ xmY=
+WDCIronportException: Internal
+Received: from ilb001078.ad.shared (HELO ilb001078.sdcorp.global.sandisk.com) ([10.45.31.219])
+  by uls-op-cesaip02.wdc.com with ESMTP; 21 Nov 2022 07:46:35 -0800
+From:   Arthur Simchaev <Arthur.Simchaev@wdc.com>
+To:     martin.petersen@oracle.com
+Cc:     beanhuo@micron.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Arthur Simchaev <Arthur.Simchaev@wdc.com>
+Subject: [PATCH v2 0/4] ufs: core: Always read the descriptors with max length
+Date:   Mon, 21 Nov 2022 17:46:26 +0200
+Message-Id: <1669045590-26101-1-git-send-email-Arthur.Simchaev@wdc.com>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 2022-11-07 at 21:50 -0500, Martin K. Petersen wrote:
->=20
-> Hannes,
->=20
-> I have been contemplating this for a bit.
->=20
-> > > Has it been considered instead of introducing a blacklist flag to
-> > > not
-> > > use the reported VPD page size if the device reports that the VPD
-> > > page size is zero? I am not aware of any VPD pages for which zero
-> > > is
-> > > a valid size.
->=20
-> That would also be my preferred approach, I think. I haven't received
-> any bug reports about devices returning short VPD pages since this
-> change was introduced. So I think I'd prefer falling back to a
-> (hopefully small) default if a device returns a 0 page length.
->=20
-> Now, my question is which VPD pages are actually supported by this
-> device and how large are they?
+v2--v3:
+  Based on Bean's comments:
+  1)Use kzalloc instead of kmalloc in ufshcd_set_active_icc_lvl - patch 2/4
+  2)Delete  UFS_RPMB_UNIT definition - patch 2/4
+  3)Delete len description - patch 3/4
 
-I've tried to obtain an answer to this question from IBM, but they
-couldn't come up with a concrete number for the page length. Especially
-for VDASD devices, it's difficult to say, because these virtual devices
-just pass the INQUIRY down to the backing device.
+v1--v2:
+  Fix argument warning in ufshpb.c
 
-How do we proceed? Could we simply fall back to a page length of 255
-bytes (like before c92a6b5d6335) if the reported page length is zero?
+Read any descriptor with a maximum size of QUERY_DESC_MAX_SIZE.
+According to the spec the device rerurns the actual size.
+Thus can improve code readability and save CPU cycles.
+While at it, cleanup few leftovers around the descriptor size parameter.
 
-Regards,
-Martin W.
+Suggested-by: Bean Huo <beanhuo@micron.com>
 
->=20
-> > But pre-SPC drives will ignore the VPD bit in the inquiry size. And
-> > these devices do not set an additional length in the inquiry data
->=20
-> Can you elaborate a bit on your experience with older devices? I
-> checked
-> SCSI-2 (1991) and don't see any indication this would be valid
-> behavior
-> even back then.
->=20
+Arthur Simchaev (4):
+  ufs:core: Remove redundant wb check
+  ufs:core: Remove redundant desc_size variable from hba
+  ufs: core: Remove len parameter from ufshcd_set_active_icc_lvl
+  ufs: core: Remove ufshcd_map_desc_id_to_length function
+
+ drivers/ufs/core/ufs_bsg.c     |   7 +--
+ drivers/ufs/core/ufshcd-priv.h |   3 --
+ drivers/ufs/core/ufshcd.c      | 100 ++++++++++-------------------------------
+ drivers/ufs/core/ufshpb.c      |   5 +--
+ include/ufs/ufshcd.h           |   1 -
+ 5 files changed, 26 insertions(+), 90 deletions(-)
+
+-- 
+2.7.4
 
