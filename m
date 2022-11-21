@@ -2,96 +2,83 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6840C4332F
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Nov 2022 14:27:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1250FC43217
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Nov 2022 14:28:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229866AbiKUO13 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Nov 2022 09:27:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36832 "EHLO
+        id S229936AbiKUO2h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Nov 2022 09:28:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41942 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231488AbiKUO1F (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Nov 2022 09:27:05 -0500
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD516AFE5F;
-        Mon, 21 Nov 2022 06:26:58 -0800 (PST)
-Received: from dggpemm500020.china.huawei.com (unknown [172.30.72.53])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4NG8kG3ph6zqSMM;
-        Mon, 21 Nov 2022 22:23:02 +0800 (CST)
-Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
- dggpemm500020.china.huawei.com (7.185.36.49) with Microsoft SMTP Server
+        with ESMTP id S229806AbiKUO2g (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Nov 2022 09:28:36 -0500
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D7635800B;
+        Mon, 21 Nov 2022 06:28:35 -0800 (PST)
+Received: from canpemm500004.china.huawei.com (unknown [172.30.72.57])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4NG8r41wqLz15Mnk;
+        Mon, 21 Nov 2022 22:28:04 +0800 (CST)
+Received: from [10.174.179.14] (10.174.179.14) by
+ canpemm500004.china.huawei.com (7.192.104.92) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Mon, 21 Nov 2022 22:26:55 +0800
-Received: from [10.174.178.220] (10.174.178.220) by
- dggpemm500017.china.huawei.com (7.185.36.178) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Mon, 21 Nov 2022 22:26:55 +0800
-Message-ID: <731f2c97-fb3c-f2a1-22b5-059b3c3afe33@huawei.com>
-Date:   Mon, 21 Nov 2022 22:26:54 +0800
+ 15.1.2375.31; Mon, 21 Nov 2022 22:28:32 +0800
+Subject: Re:
+To:     Denis Arefev <arefev@swemel.ru>,
+        Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+CC:     Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <trufanov@swemel.ru>, <vfh@swemel.ru>
+References: <20221121111104.7186-1-arefev@swemel.ru>
+From:   Jason Yan <yanaijie@huawei.com>
+Message-ID: <7819ba3e-e434-80e7-7681-29791843c94d@huawei.com>
+Date:   Mon, 21 Nov 2022 22:28:31 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.0
-Subject: Re: [RFC PATCH 0/5] scsi:scsi_debug:Add error injection for single
- lun
+In-Reply-To: <20221121111104.7186-1-arefev@swemel.ru>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
-To:     <dgilbert@interlog.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <20221109155950.3536976-1-haowenchao@huawei.com>
- <58472d12-c1e4-59f3-bb37-a98db17ef2ba@interlog.com>
-From:   Wenchao Hao <haowenchao@huawei.com>
-In-Reply-To: <58472d12-c1e4-59f3-bb37-a98db17ef2ba@interlog.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.174.178.220]
-X-ClientProxiedBy: dggpeml500006.china.huawei.com (7.185.36.76) To
- dggpemm500017.china.huawei.com (7.185.36.178)
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.179.14]
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ canpemm500004.china.huawei.com (7.192.104.92)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2022/11/14 5:48, Douglas Gilbert wrote:
-> On 2022-11-09 10:59, Wenchao Hao wrote:
->> The original error injection mechanism was based on scsi_host which
->> could not inject fault for a single SCSI device.
->>
->> This patchset provides the ability to inject errors for a single
->> SCSI device. Now we supports inject timeout errors, queuecommand
->> errors, and hostbyte, driverbyte, statusbyte, and sense data for
->> specific SCSI Command
->>
->> The first patch add an sysfs interface to add and inquiry single
->> device's error injection info; the second patch defined how to remove
->> an injection which has been added. The following 3 patches use the
->> injection info and generate the related error type.
->>
->> Wenchao Hao (5):
->>    scsi:scsi_debug: Add sysfs interface to manager single devices' error inject
->>    scsi:scsi_debug: Add interface to remove injection which has been added
->>    scsi:scsi_debug: make command timeout if timeout error is injected
->>    scsi:scsi_debug: Return failed value for specific command's queuecommand
->>    scsi:scsi_debug: fail specific scsi command with result and sense data
->>
->>   drivers/scsi/scsi_debug.c | 295 ++++++++++++++++++++++++++++++++++++++
->>   1 file changed, 295 insertions(+)
-> 
-> Hi,
-> This patchset seems to assume all scsi_debug devices will be disk (-like) SCSI
-> devices. That leaves out other device types: tapes, enclosures, WLUNs, etc.
-> 
-> Have you considered putting these device specific additions under:
->    /sys/class/scsi_device/<hctl>/device/error_inject/
-> instead of
->    /sys/block/sdb/device/error_inject/
-> 
-> ?
-> 
-> Doug Gilbert
-> 
+You may need a real subject, not a subject text in the email.
 
-Thanks for your reply. I did not notice other device types, but the error_inject interface is
-added for scsi_device, so it is available for all types. I would update the path in patch description.
+type "git help send-email" if you don't know how to use it.
 
-Do you have other suggestions?
-
+On 2022/11/21 19:11, Denis Arefev wrote:
+> Date: Mon, 21 Nov 2022 13:29:03 +0300
+> Subject: [PATCH] scsi:bfa: Eliminated buffer overflow
+> 
+> Buffer 'cmd->adapter_hwpath' of size 32 accessed at
+> bfad_bsg.c:101:103 can overflow, since its index 'i'
+> can have value 32 that is out of range.
+> 
+> Signed-off-by: Denis Arefev <arefev@swemel.ru>
+> ---
+>   drivers/scsi/bfa/bfad_bsg.c | 4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
+> index be8dfbe13e90..78615ffc62ef 100644
+> --- a/drivers/scsi/bfa/bfad_bsg.c
+> +++ b/drivers/scsi/bfa/bfad_bsg.c
+> @@ -98,9 +98,9 @@ bfad_iocmd_ioc_get_info(struct bfad_s *bfad, void *cmd)
+>   
+>   	/* set adapter hw path */
+>   	strcpy(iocmd->adapter_hwpath, bfad->pci_name);
+> -	for (i = 0; iocmd->adapter_hwpath[i] != ':' && i < BFA_STRING_32; i++)
+> +	for (i = 0; iocmd->adapter_hwpath[i] != ':' && i < BFA_STRING_32-2; i++)
+>   		;
+> -	for (; iocmd->adapter_hwpath[++i] != ':' && i < BFA_STRING_32; )
+> +	for (; iocmd->adapter_hwpath[++i] != ':' && i < BFA_STRING_32-1; )
+>   		;
+>   	iocmd->adapter_hwpath[i] = '\0';
+>   	iocmd->status = BFA_STATUS_OK;
+> 
