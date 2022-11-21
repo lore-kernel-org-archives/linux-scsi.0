@@ -2,126 +2,143 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DC09C4332F
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Nov 2022 12:34:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 325F8C4321E
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Nov 2022 12:38:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231477AbiKUMeQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Nov 2022 07:34:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49042 "EHLO
+        id S230526AbiKUMiH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Nov 2022 07:38:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58110 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231360AbiKUMdx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Nov 2022 07:33:53 -0500
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5F18B54D4
-        for <linux-scsi@vger.kernel.org>; Mon, 21 Nov 2022 04:33:14 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1669033994; x=1700569994;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=QzEDzoGLYNBf9zycRZ1H2wdknqfe6Bf1J8TFEUmSIxo=;
-  b=a+BBWDb9xd2ONfc85DSGXHivfeKK0Caquo6nsCMgbNWrbgCAbEHInTiG
-   4b2P6hY8AMPY//AC0x4AYWXf1zOxJVuzqjg+J8rTLng9J7uw/snAJVFiB
-   pmnA8dx7PdiQM+eLIpzMzVxt+5MA89aaP/G0QZ7qKXbVAIln0hXgpfrCV
-   IQx4u4JeR958XOdrRhTq61ejamHc9Yrs9krfXlxiJRnDiTWoNJvHnmDSQ
-   UHkGzxQNSCfa5EZFpLzTE2tAhDhsc03CknJLVSfFJL6ndq3BihXQoEB0t
-   Zu9Xh18bFs9atdsuJ6HZjyVphujE6JY5Qr9u/xUQQsopf6/IOrwmM/VN+
-   w==;
-X-IronPort-AV: E=Sophos;i="5.96,181,1665417600"; 
-   d="scan'208";a="321137239"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 21 Nov 2022 20:33:13 +0800
-IronPort-SDR: UIiTBFQRAf5CZfJ8C1riZ5X8Ur8RtXZG4ItsbtR1Tt/YK5p6u3DCBJbXmnXe9nn0lo2UDImPUO
- ZrFYXIERz3RvZjQwSWxPJuWKmVABxQjhA/N3FqYvziVq+nJwE0n+Ni+zeHXmv6UuMlHqNmbdTP
- pDPs0UX+62roueIBw5GTLtFG29PEY+LnIShrJFQEzUCoEix9Nahing7Ype4rDYHmOwhMHVGLjX
- RLhMIti/GLaLUJmydePLcqYoh54qXJVSUAjakhIVBJCcTg4vrihkBgSsNjNiyox5+62T1vVkyh
- ce0=
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 21 Nov 2022 03:46:18 -0800
-IronPort-SDR: 4E4bek8pUN3bgdAToi2ypTzQSGvmx9rLIb3GxnIkSCcCXbk/5iPo7oTX6amDF5Fuu9mb5iPYK3
- CSpLwuRq6pbS47GRI6j8E7b632C244VMclLlpTDYJnSxPr9aZs2N5wrRYYx5ZXDomYGbRbDkVF
- UijnzojFAjVG5R2v9Ypc+V6Q0QUIAwGNzOr0r4zyXRU9XLjzX9jWn/r8iqORqltzVnQcOVaIkm
- TXupjY6ekMthfYPzvcOdmnLkfdGGUE2MqSXFZNX5wBmVunNX5XOkGHx038vvXx7Gn0IzZz7v6M
- mhg=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 21 Nov 2022 04:33:13 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4NG6HY0qdDz1RvTr
-        for <linux-scsi@vger.kernel.org>; Mon, 21 Nov 2022 04:33:13 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1669033992; x=1671625993; bh=QzEDzoGLYNBf9zycRZ1H2wdknqfe6Bf1J8T
-        FEUmSIxo=; b=ggxmouGIAJ4x0zjPGwvDSIlsVrkcdtC9JTLejcdl4W2FmXH9WOO
-        G8O3350RoVPlhe5FdiajXwWtuwAO3v5r8GFKycGLG+N82U4ulwWNE96ba8ZPbY9w
-        JL1tn+EJCdtD/lGj9krvr6qZlzbeCcNaMjDA3eVFRcVs03FNh/nWXwhxj/96uN6V
-        thL1nWh96+Jyl8KRQawtO3oIAIO1fBJzXoYwlVcP+Iq/t7GzbpM7JOStPtyaZHN5
-        LPolUCkNmEyxyXMkC/cJ2ccQxhwmhk5KK7ym8MWL1qBzd2tT+sN+wsqnFzviscjb
-        ewrpQlcM+6AnQX88Sr5dIgurb+54jfFd6Ew==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id fSCayNAsrUcT for <linux-scsi@vger.kernel.org>;
-        Mon, 21 Nov 2022 04:33:12 -0800 (PST)
-Received: from [10.225.163.53] (unknown [10.225.163.53])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4NG6HW6clhz1RvLy;
-        Mon, 21 Nov 2022 04:33:11 -0800 (PST)
-Message-ID: <83c29cc2-9bf4-265f-4f8a-ab83d8b6271b@opensource.wdc.com>
-Date:   Mon, 21 Nov 2022 21:33:10 +0900
+        with ESMTP id S231464AbiKUMiB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Nov 2022 07:38:01 -0500
+Received: from mail-wm1-x32f.google.com (mail-wm1-x32f.google.com [IPv6:2a00:1450:4864:20::32f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A423B54F2
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Nov 2022 04:37:58 -0800 (PST)
+Received: by mail-wm1-x32f.google.com with SMTP id 84-20020a1c0257000000b003cfe48519a6so6401038wmc.0
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Nov 2022 04:37:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=OfJ6ReGcbvudqGx5aWnlLmh808mEmKwe4YM900G8GoU=;
+        b=bhLvzu/iY7Mjd1xlH9twYzc2DCTHHIuR6cmeB16W+qrctjI2VgehKZyGjhsb0y/s9Q
+         rb5YPfiHqcjgLHbMXVp1UA7FFBV5n7zmRJIowCr2t4gxPwYHqilNJKTuooB3QAcZFDKk
+         fZPBYxMNpqfIMW4A5i2NiTps5MXN74532w65v0P6trMHqwWrfavqhd07zEWt36odoyfn
+         4ZHkqB9bGKS91KyjTFGnfRiCUkjx9qVv3VGl8kFEL6Oy+w8gJ+FQWT1UgfYoNk4Wjtj3
+         +WY+DtEaJYy5UC5YzyvXglazmcTU9wPC4nUtmeIyCSRMxit9IPjY7hrBVMj9Kwo3Wn3C
+         1kKw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=OfJ6ReGcbvudqGx5aWnlLmh808mEmKwe4YM900G8GoU=;
+        b=HAhJZlx9EZv3zsW8oqOjF+8RuSwKj/JScGmK3Xf4fBzAYINEq9MQVRfEa+rn03NbOQ
+         Uv44SHahYaqqjZjal9CNb++cAW52czcbXdm2Xiga7Jn4f6ng27lgzv4/jDofMsNMKnmp
+         RCuIJb0Bvuc0SF8VR1gQ4ERQn6of0UMU8JlUQhA3wXxmhRgoENvASVkKihV7I84pxLOh
+         Cn7YSyVPR6sPEUdegGtjjrN50Mq1z9FHpariLIAYTFx9v825AmxEI6s2hCqUCXwWzFZ0
+         cJztJKZWt0iQ6rjmp06k7qbSBL7Ou/9iz4V41VTwwVifTz1SZEn0hIDThmQ2y231nNDE
+         jotw==
+X-Gm-Message-State: ANoB5pn6Sm9gMiwdzIyLV84BEqdCROxYY0iL8ESfKS5g4VwH3cVT2KgU
+        PAP+xPTrtKuIIOGDxBL5W8JHYQ==
+X-Google-Smtp-Source: AA0mqf5JngN/dT4Kr7SbrPWvWx3miCH34ldho+VQ75xmRL5193rxCxFZa4xfx0c7V+FzhXpY/pFlwQ==
+X-Received: by 2002:a1c:7401:0:b0:3cf:934b:b7ad with SMTP id p1-20020a1c7401000000b003cf934bb7admr1734188wmc.22.1669034276591;
+        Mon, 21 Nov 2022 04:37:56 -0800 (PST)
+Received: from linaro.org ([94.52.112.99])
+        by smtp.gmail.com with ESMTPSA id e21-20020a05600c219500b003cf894dbc4fsm13496353wme.25.2022.11.21.04.37.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 21 Nov 2022 04:37:56 -0800 (PST)
+Date:   Mon, 21 Nov 2022 14:37:54 +0200
+From:   Abel Vesa <abel.vesa@linaro.org>
+To:     Konrad Dybcio <konrad.dybcio@linaro.org>
+Cc:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 1/2] ufs: host: ufs-qcom: Clear qunipro_g4_sel for HW
+ version major 5
+Message-ID: <Y3txIoDn3hFBXt0Y@linaro.org>
+References: <20221116121732.2731448-1-abel.vesa@linaro.org>
+ <20221116121732.2731448-2-abel.vesa@linaro.org>
+ <57b0669c-3826-dc33-36a4-2d8220da768a@linaro.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.0
-Subject: Re: [PATCH 2/2] scsi: core: Use SCSI_SCAN_INITIAL in
- do_scsi_scan_host()
-Content-Language: en-US
-To:     John Garry <john.g.garry@oracle.com>, martin.petersen@oracle.com,
-        jejb@linux.ibm.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20221121121725.1910795-1-john.g.garry@oracle.com>
- <20221121121725.1910795-3-john.g.garry@oracle.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <20221121121725.1910795-3-john.g.garry@oracle.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <57b0669c-3826-dc33-36a4-2d8220da768a@linaro.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/21/22 21:17, John Garry wrote:
-> Instead of using hardcoded '0' as the do_scsi_scan_host() ->
-> scsi_scan_host_selected() rescan arg, use proper macro SCSI_SCAN_INITIAL.
+On 22-11-16 13:28:53, Konrad Dybcio wrote:
 > 
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
-
-Looks good.
-
-Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-
-> ---
->  drivers/scsi/scsi_scan.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index 6cc974b382c1..920b145f80b7 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -1920,7 +1920,7 @@ static void do_scsi_scan_host(struct Scsi_Host *shost)
->  			msleep(10);
->  	} else {
->  		scsi_scan_host_selected(shost, SCAN_WILD_CARD, SCAN_WILD_CARD,
-> -				SCAN_WILD_CARD, 0);
-> +				SCAN_WILD_CARD, SCSI_SCAN_INITIAL);
->  	}
->  }
->  
+> On 16/11/2022 13:17, Abel Vesa wrote:
+> > On SM8550, depending on the Qunipro, we can run with G5 or G4.
+> > For now, when the major version is 5 or above, we go with G5.
+> > Therefore, we need to specifically tell UFS HC that.
+> > 
+> > Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
+> > ---
+> >   drivers/ufs/host/ufs-qcom.c | 4 ++++
+> >   drivers/ufs/host/ufs-qcom.h | 2 ++
+> >   2 files changed, 6 insertions(+)
+> > 
+> > diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> > index ca60a5b0292b..72334aefe81c 100644
+> > --- a/drivers/ufs/host/ufs-qcom.c
+> > +++ b/drivers/ufs/host/ufs-qcom.c
+> > @@ -227,6 +227,10 @@ static void ufs_qcom_select_unipro_mode(struct ufs_qcom_host *host)
+> >   	ufshcd_rmwl(host->hba, QUNIPRO_SEL,
+> >   		   ufs_qcom_cap_qunipro(host) ? QUNIPRO_SEL : 0,
+> >   		   REG_UFS_CFG1);
+> > +
+> > +	if (host->hw_ver.major == 0x05)
+> > +		ufshcd_rmwl(host->hba, QUNIPRO_G4_SEL, 0, REG_UFS_CFG0);
+> > +
+> >   	/* make sure above configuration is applied before we return */
+> >   	mb();
+> >   }
+> > diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
+> > index 751ded3e3531..10621055bf7f 100644
+> > --- a/drivers/ufs/host/ufs-qcom.h
+> > +++ b/drivers/ufs/host/ufs-qcom.h
+> > @@ -36,6 +36,7 @@ enum {
+> >   	/* On older UFS revisions, this register is called "RETRY_TIMER_REG" */
+> >   	REG_UFS_PARAM0                      = 0xD0,
+> >   	REG_UFS_PA_LINK_STARTUP_TIMER       = 0xD8,
+> > +	REG_UFS_CFG0                        = 0xD8,
+> Are you sure these two should point to the same register? Maybe it deserves
+> some kind of a comment?
 
--- 
-Damien Le Moal
-Western Digital Research
+The REG_UFS_PA_LINK_STARTUP_TIMER is used by non qunipro variants. (UFS
+versions below 2.x)
 
+The REG_UFS_CFG0 is used by qunipro variants. (UFS versions above 2.x).
+
+Will add a comment to the later one that would look like this:
+"/* Found on UFS versions above 2.x only */"
+
+Thanks,
+Abel
+
+> 
+> Konrad
+> >   	REG_UFS_CFG1                        = 0xDC,
+> >   	REG_UFS_CFG2                        = 0xE0,
+> >   	REG_UFS_HW_VERSION                  = 0xE4,
+> > @@ -75,6 +76,7 @@ enum {
+> >   /* bit definitions for REG_UFS_CFG1 register */
+> >   #define QUNIPRO_SEL		BIT(0)
+> > +#define QUNIPRO_G4_SEL		BIT(5)
+> >   #define UFS_PHY_SOFT_RESET	BIT(1)
+> >   #define UTP_DBG_RAMS_EN		BIT(17)
+> >   #define TEST_BUS_EN		BIT(18)
