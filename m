@@ -2,146 +2,109 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A187C433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Nov 2022 13:49:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86B05C433FE
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Nov 2022 13:58:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231177AbiKUNtB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Nov 2022 08:49:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55844 "EHLO
+        id S231621AbiKUN6p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Nov 2022 08:58:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34628 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231259AbiKUNtA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Nov 2022 08:49:00 -0500
-Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB34265B9
-        for <linux-scsi@vger.kernel.org>; Mon, 21 Nov 2022 05:48:58 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1669038538; x=1700574538;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=0hUqa2yofDnt2wYQvRQMnzUNFYvc7mDY3FHm7zqlVBc=;
-  b=RSya92E/96N/TdcNDDdh5pYvAPnpN3fgVkzGQgbbcXRR38QXPOPDqf+n
-   JAlY60o+ryWTXpgVkRFh1xofu9pOPzhGv8DR5J0gTxlpY4QWxyNBuoaMe
-   PWjkRO6VLiV4PdkeICQNpxpohOjdofM27QJYIj+nc9Oylx7fZFZauwNjv
-   UW5d4EiZ4+luJzLy2DDtlNXkNAqEsvFrHIIEAR9fxk7oFE4Wls7gKSq+z
-   9btWcNVVpSk27U4+9tbHb4oP4rwNIYQ5hUMkU+dj7H6aTUlbcEGpc2fxC
-   nrhMjcYpaYGYPu6fBhlR1EOPIuQ5W1mKkwRhzGpqyWF1eOqLPh8GfPPpT
-   Q==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10537"; a="312260379"
-X-IronPort-AV: E=Sophos;i="5.96,181,1665471600"; 
-   d="scan'208";a="312260379"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Nov 2022 05:48:58 -0800
-X-IronPort-AV: E=McAfee;i="6500,9779,10537"; a="641023960"
-X-IronPort-AV: E=Sophos;i="5.96,181,1665471600"; 
-   d="scan'208";a="641023960"
-Received: from ahunter6-mobl1.ger.corp.intel.com (HELO [10.0.2.15]) ([10.252.35.94])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Nov 2022 05:48:55 -0800
-Message-ID: <298fc637-cf7f-28ba-9e88-6e26cdb45f69@intel.com>
-Date:   Mon, 21 Nov 2022 15:48:51 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Firefox/102.0 Thunderbird/102.5.0
-Subject: Re: [PATCH v2] scsi: ufs: Fix the polling implementation
-Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        with ESMTP id S231578AbiKUN6R (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Nov 2022 08:58:17 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5FB30BF825
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Nov 2022 05:57:14 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1669039033;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ZDwjBu4RghRAGfAihvi/wXSTBbp9s9Q2lKXWhxCyRLY=;
+        b=bkPOmsZZUEPy0ywvExnX2YY9fPvl83no39+1/4A3FgMGKqSUr4yVkaZNl7x4R338gjD1aq
+        J9IKjIFN+mmwG9zh0w1JUmoVA7sEcyFIY30zU8KRpJ+IV6u/t4UIkHzvK90/vTIIRAVrCJ
+        CrU3ISXEmgvMGLgk3WKiuSspO+webm8=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-357-r7ih-rJfOeutGzbihEzMtw-1; Mon, 21 Nov 2022 08:57:10 -0500
+X-MC-Unique: r7ih-rJfOeutGzbihEzMtw-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.rdu2.redhat.com [10.11.54.4])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 2049F811E67;
+        Mon, 21 Nov 2022 13:57:08 +0000 (UTC)
+Received: from warthog.procyon.org.uk (unknown [10.33.36.14])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 14F9D2027062;
+        Mon, 21 Nov 2022 13:57:01 +0000 (UTC)
+Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
+        Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
+        Kingdom.
+        Registered in England and Wales under Company Registration No. 3798903
+From:   David Howells <dhowells@redhat.com>
+In-Reply-To: <c2ec184226acd21a191ccc1aa46a1d7e43ca7104.1669036433.git.bcodding@redhat.com>
+References: <c2ec184226acd21a191ccc1aa46a1d7e43ca7104.1669036433.git.bcodding@redhat.com> <cover.1669036433.git.bcodding@redhat.com>
+To:     Benjamin Coddington <bcodding@redhat.com>
+cc:     netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Philipp Reisner <philipp.reisner@linbit.com>,
+        Lars Ellenberg <lars.ellenberg@linbit.com>,
+        Christoph =?utf-8?Q?B=C3=B6hmwalder?= 
+        <christoph.boehmwalder@linbit.com>, Jens Axboe <axboe@kernel.dk>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Keith Busch <kbusch@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
+        Mike Christie <michael.christie@oracle.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>
-References: <20221118233717.441298-1-bvanassche@acm.org>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-In-Reply-To: <20221118233717.441298-1-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Valentina Manea <valentina.manea.m@gmail.com>,
+        Shuah Khan <shuah@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Marc Dionne <marc.dionne@auristor.com>,
+        Steve French <sfrench@samba.org>,
+        Christine Caulfield <ccaulfie@redhat.com>,
+        David Teigland <teigland@redhat.com>,
+        Mark Fasheh <mark@fasheh.com>,
+        Joel Becker <jlbec@evilplan.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Eric Van Hensbergen <ericvh@gmail.com>,
+        Latchesar Ionkov <lucho@ionkov.net>,
+        Dominique Martinet <asmadeus@codewreck.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Xiubo Li <xiubli@redhat.com>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>,
+        Chuck Lever <chuck.lever@oracle.com>,
+        Jeff Layton <jlayton@kernel.org>, drbd-dev@lists.linbit.com,
+        linux-block@vger.kernel.org, nbd@other.debian.org,
+        linux-nvme@lists.infradead.org, open-iscsi@googlegroups.com,
+        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-afs@lists.infradead.org, linux-cifs@vger.kernel.org,
+        samba-technical@lists.samba.org, cluster-devel@redhat.com,
+        ocfs2-devel@oss.oracle.com, v9fs-developer@lists.sourceforge.net,
+        ceph-devel@vger.kernel.org, linux-nfs@vger.kernel.org
+Subject: Re: [PATCH v1 2/3] Treewide: Stop corrupting socket's task_frag
+MIME-Version: 1.0
+Content-Type: text/plain
+Date:   Mon, 21 Nov 2022 13:56:59 +0000
+Message-ID: <382872.1669039019@warthog.procyon.org.uk>
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.4
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 19/11/22 01:37, Bart Van Assche wrote:
-> Fix the following issues in ufshcd_poll():
-> - If polling succeeds, return a positive value.
-> - Do not complete polling requests from interrupt context because the
->   block layer expects these requests to be completed from thread
->   context. From block/bio.c:
-> 
->     If REQ_ALLOC_CACHE is set, the final put of the bio MUST be done
->     from process context, not hard/soft IRQ.
-> 
-> Fixes: eaab9b573054 ("scsi: ufs: Implement polling support")
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
-Reviewed-by: Adrian Hunter <adrian.hunter@intel.com>
+Benjamin Coddington <bcodding@redhat.com> wrote:
 
-> ---
-> 
-> Changes compared to v1:
-> - Made sure that polled requests are not completed from interrupt context.
-> 
->  drivers/ufs/core/ufshcd.c | 28 ++++++++++++++++++++++++++--
->  1 file changed, 26 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 768cb49d269c..b4bf3c3bef0c 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -5344,6 +5344,26 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
->  	}
->  }
->  
-> +/* Any value that is not an existing queue number is fine for this constant. */
-> +enum {
-> +	UFSHCD_POLL_FROM_INTERRUPT_CONTEXT = -1
-> +};
-> +
-> +static void ufshcd_clear_polled(struct ufs_hba *hba,
-> +				unsigned long *completed_reqs)
-> +{
-> +	int tag;
-> +
-> +	for_each_set_bit(tag, completed_reqs, hba->nutrs) {
-> +		struct scsi_cmnd *cmd = hba->lrb[tag].cmd;
-> +
-> +		if (!cmd)
-> +			continue;
-> +		if (scsi_cmd_to_rq(cmd)->cmd_flags & REQ_POLLED)
-> +			__clear_bit(tag, completed_reqs);
-> +	}
-> +}
-> +
->  /*
->   * Returns > 0 if one or more commands have been completed or 0 if no
->   * requests have been completed.
-> @@ -5360,13 +5380,17 @@ static int ufshcd_poll(struct Scsi_Host *shost, unsigned int queue_num)
->  	WARN_ONCE(completed_reqs & ~hba->outstanding_reqs,
->  		  "completed: %#lx; outstanding: %#lx\n", completed_reqs,
->  		  hba->outstanding_reqs);
-> +	if (queue_num == UFSHCD_POLL_FROM_INTERRUPT_CONTEXT) {
-> +		/* Do not complete polled requests from interrupt context. */
-> +		ufshcd_clear_polled(hba, &completed_reqs);
-> +	}
->  	hba->outstanding_reqs &= ~completed_reqs;
->  	spin_unlock_irqrestore(&hba->outstanding_lock, flags);
->  
->  	if (completed_reqs)
->  		__ufshcd_transfer_req_compl(hba, completed_reqs);
->  
-> -	return completed_reqs;
-> +	return completed_reqs != 0;
->  }
->  
->  /**
-> @@ -5397,7 +5421,7 @@ static irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
->  	 * Ignore the ufshcd_poll() return value and return IRQ_HANDLED since we
->  	 * do not want polling to trigger spurious interrupt complaints.
->  	 */
-> -	ufshcd_poll(hba->host, 0);
-> +	ufshcd_poll(hba->host, UFSHCD_POLL_FROM_INTERRUPT_CONTEXT);
->  
->  	return IRQ_HANDLED;
->  }
+> Since moving to memalloc_nofs_save/restore, SUNRPC has stopped setting the
+> GFP_NOIO flag on sk_allocation which the networking system uses to decide
+> when it is safe to use current->task_frag.
+
+Um, what's task_frag?
+
+David
 
