@@ -2,82 +2,107 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99F4EC433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Nov 2022 14:39:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A295EC433FE
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Nov 2022 15:05:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231781AbiKUOjQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Nov 2022 09:39:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49432 "EHLO
+        id S231927AbiKUPF1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Nov 2022 10:05:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33680 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231690AbiKUOiN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Nov 2022 09:38:13 -0500
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42CF1AEBD8;
-        Mon, 21 Nov 2022 06:38:12 -0800 (PST)
-Received: from dggpemm500024.china.huawei.com (unknown [172.30.72.54])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4NG9355XMGzmVn8;
-        Mon, 21 Nov 2022 22:37:37 +0800 (CST)
-Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
- dggpemm500024.china.huawei.com (7.185.36.203) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Mon, 21 Nov 2022 22:38:06 +0800
-Received: from [10.174.178.220] (10.174.178.220) by
- dggpemm500017.china.huawei.com (7.185.36.178) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Mon, 21 Nov 2022 22:38:06 +0800
-Message-ID: <3c7d52c7-6839-241e-c25e-05492bfdf115@huawei.com>
-Date:   Mon, 21 Nov 2022 22:38:05 +0800
+        with ESMTP id S231908AbiKUPFE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Nov 2022 10:05:04 -0500
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50E43C8462;
+        Mon, 21 Nov 2022 06:53:17 -0800 (PST)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id CE6811F8A3;
+        Mon, 21 Nov 2022 14:53:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1669042393; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=acoJFp5IMk6I2OGDsUSsh5rB6BjsYh+Mppy2CcuaTP8=;
+        b=ubrkClbfap/2YkTdJFU9ntiZxgQnojhyjjSM/KnifRuhCEH9o1iQMcoo4gCRHJIV9sJZMZ
+        OXn5+PHv7JJ3WdtzyjQKiPU81bhv+DHc8FQsBFEwV0BDJtagBJJK+b4XKEMmXRs9QRgpRJ
+        PCNCz/WW7R2TGr7klkPJYAtFbYgelXk=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 86E2C1377F;
+        Mon, 21 Nov 2022 14:53:13 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id r41tH9mQe2NvKwAAMHmgww
+        (envelope-from <mwilck@suse.com>); Mon, 21 Nov 2022 14:53:13 +0000
+Message-ID: <41c39c52cadcaa6a34126662b953ef96177f5bba.camel@suse.com>
+Subject: Re: [PATCH] scsi: core: Add BLIST_NO_ASK_VPD_SIZE for some VDASD
+From:   Martin Wilck <mwilck@suse.com>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hannes Reinecke <hare@suse.de>
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        Lee Duncan <leeman.duncan@gmail.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Lee Duncan <lduncan@suse.com>
+Date:   Mon, 21 Nov 2022 15:53:12 +0100
+In-Reply-To: <yq1k046kwyv.fsf@ca-mkp.ca.oracle.com>
+References: <20220928181350.9948-1-leeman.duncan@gmail.com>
+         <11a582f0-723c-95e1-0e44-0a19e1a8a9a8@acm.org>
+         <4a1da181-8a54-d2f8-6d19-d9c1982ab044@suse.de>
+         <yq1k046kwyv.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.46.0 
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.0
-Subject: Re: [PATCH v2 0/2] Fix scsi device's iodone_cnt mismatch with
- iorequest_cnt
-Content-Language: en-US
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC:     Steffen Maier <maier@linux.ibm.com>
-References: <20221021235638.1968832-1-haowenchao@huawei.com>
-From:   Wenchao Hao <haowenchao@huawei.com>
-In-Reply-To: <20221021235638.1968832-1-haowenchao@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.178.220]
-X-ClientProxiedBy: dggpeml500014.china.huawei.com (7.185.36.63) To
- dggpemm500017.china.huawei.com (7.185.36.178)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2022/10/22 7:56, Wenchao Hao wrote:
-> Following scenario would make scsi_device's iodone_cnt mismatch with
-> iorequest_cnt even if there is no request on this device any more.
-> 
-> 1. request timeout happened. If we do not retry the timeouted command,
->    this command would be finished in scsi_finish_command() which would
->    not increase the iodone_cnt; if the timeouted command is retried,
->    another increasement for iorequest_cnt would be performed, the
->    command might add iorequest_cnt for multiple times but iodone_cnt
->    only once. Increase iodone_cnt in scsi_timeout() can handle this
->    scenario.
-> 
-> 2. scsi_dispatch_cmd() failed, while the iorequest_cnt has already been
->    increased. If scsi_dispatch_cmd() failed, the request would be
->    requeued, then another iorequest_cnt would be added. So we should not
->    increase iorequest_cnt if dispatch command failed
-> 
-> V2:
-> - Add description about why we can add iodone_cnt in scsi_timeout()
-> - Do not increase iorequest_cnt if dispatch command failed
-> 
-> Wenchao Hao (2):
->   scsi: increase scsi device's iodone_cnt in scsi_timeout()
->   scsi: donot increase scsi_device's iorequest_cnt if dispatch failed
-> 
->  drivers/scsi/scsi_error.c | 1 +
->  drivers/scsi/scsi_lib.c   | 3 +--
->  2 files changed, 2 insertions(+), 2 deletions(-)
-> 
+On Mon, 2022-11-07 at 21:50 -0500, Martin K. Petersen wrote:
+>=20
+> Hannes,
+>=20
+> I have been contemplating this for a bit.
+>=20
+> > > Has it been considered instead of introducing a blacklist flag to
+> > > not
+> > > use the reported VPD page size if the device reports that the VPD
+> > > page size is zero? I am not aware of any VPD pages for which zero
+> > > is
+> > > a valid size.
+>=20
+> That would also be my preferred approach, I think. I haven't received
+> any bug reports about devices returning short VPD pages since this
+> change was introduced. So I think I'd prefer falling back to a
+> (hopefully small) default if a device returns a 0 page length.
+>=20
+> Now, my question is which VPD pages are actually supported by this
+> device and how large are they?
 
-Hi Martin, these two count is useful for us, would like take a look?
+I've tried to obtain an answer to this question from IBM, but they
+couldn't come up with a concrete number for the page length. Especially
+for VDASD devices, it's difficult to say, because these virtual devices
+just pass the INQUIRY down to the backing device.
+
+How do we proceed? Could we simply fall back to a page length of 255
+bytes (like before c92a6b5d6335) if the reported page length is zero?
+
+Regards,
+Martin W.
+
+>=20
+> > But pre-SPC drives will ignore the VPD bit in the inquiry size. And
+> > these devices do not set an additional length in the inquiry data
+>=20
+> Can you elaborate a bit on your experience with older devices? I
+> checked
+> SCSI-2 (1991) and don't see any indication this would be valid
+> behavior
+> even back then.
+>=20
 
