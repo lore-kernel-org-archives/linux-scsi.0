@@ -2,116 +2,135 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC7E3C4332F
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Nov 2022 19:20:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E286C43219
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Nov 2022 21:41:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231318AbiKUTUb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Nov 2022 14:20:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50270 "EHLO
+        id S231819AbiKUVlX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Nov 2022 16:41:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59102 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230236AbiKUTUb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Nov 2022 14:20:31 -0500
-Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A318511A
-        for <linux-scsi@vger.kernel.org>; Mon, 21 Nov 2022 11:20:30 -0800 (PST)
-Received: by mail-pj1-f45.google.com with SMTP id l22-20020a17090a3f1600b00212fbbcfb78so15145703pjc.3
-        for <linux-scsi@vger.kernel.org>; Mon, 21 Nov 2022 11:20:30 -0800 (PST)
+        with ESMTP id S231723AbiKUVlS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Nov 2022 16:41:18 -0500
+Received: from mail-io1-xd34.google.com (mail-io1-xd34.google.com [IPv6:2607:f8b0:4864:20::d34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88826D32AC
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Nov 2022 13:41:01 -0800 (PST)
+Received: by mail-io1-xd34.google.com with SMTP id n188so9621281iof.8
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Nov 2022 13:41:01 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linuxfoundation.org; s=google;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=0+xfYS/683CuEX8Moz7DN5D+iq5a+HRddPc04OAxt08=;
+        b=Tmrax2HtLx9acijQh4ktOiCFNspYBm9czQO9vC+hgh16yhXiq5RyvSKc/8X48Yn6bo
+         htTajxPPiW0Lsmr5jl6ZJh1+6V/m5ChitgOSpS6KBQ7ll5X5P1skZcbsej2h/DApNnIq
+         u0xC1JtTdPPMF5q+wPkS1LuhqaXUemqkmRceA=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:to
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=lFl6W+hJWN2bBrYpxjrjqhS8rEn7D4qA6sOkPbKFAnk=;
-        b=NZptR4a4sn4bYLwUiqUiqq0TUhJTkceCsK6ZAP/kE3jy8q5TaLp6s4tZII3SaDCT1u
-         j8I/oZqVBWBOvER6v7wHMi7dhsUKxulL/SFBZb7U9X3m/P8BHttuY6jWN9osPUE7QGgj
-         eTsFsjfAxTloUu81zo4VZlKg9RU1+FSjPtI1MyFqqpuzhlu5U/YRJLXwjvRe88hKzkK+
-         ZRv4bO1z3bzTPR2upgEJy4RXIasY7LJzVkHkwNCD0ajvkPa4M8JkZcT3vZcNK9Uadm36
-         QXobjFj3nAnsvx0XavvRYFklFve5xlMkrSDVHJAL/tVY26AOZ/qaGQymPF+RxeaHEzPT
-         OCpA==
-X-Gm-Message-State: ANoB5pm0VdG9LIad0joLXU33NVFEyMTV1o8kW6woUGjVYRpTWnXo1/TB
-        Xg1/1VPVY/k5yLNmd3gdvhg=
-X-Google-Smtp-Source: AA0mqf7mssBevcyEoi7qDQBmDzSoUMpnQItLUjvd39bg3ZFkO02GqAAEYvbYar7IOPBTgdxWhfdFmg==
-X-Received: by 2002:a17:902:b407:b0:186:9c25:7ef0 with SMTP id x7-20020a170902b40700b001869c257ef0mr12999580plr.164.1669058430008;
-        Mon, 21 Nov 2022 11:20:30 -0800 (PST)
-Received: from ?IPV6:2620:15c:211:201:545d:bfd:7b53:8e94? ([2620:15c:211:201:545d:bfd:7b53:8e94])
-        by smtp.gmail.com with ESMTPSA id y15-20020aa79aef000000b00565cbad9616sm9034114pfp.6.2022.11.21.11.20.28
+        bh=0+xfYS/683CuEX8Moz7DN5D+iq5a+HRddPc04OAxt08=;
+        b=zQ2Fz8uhySq6/7ru5OFhC0h8oi1cLI45JloZUwHtYZ7prZxvldnLjq7ZIKmacYtmXc
+         /8KCfEBwGYLdUi4X0xsEWgMFgeluCkbN43W5AvKccZUmjPx+v67q7TdOm6ADFPN4f4Xf
+         ootp7BbXJkU44UQeMokStkWRRAzVJrnI+7HnMiTaxb48lBTMoWhzlrJuxBwJsT3yGO/6
+         6VmaopQJk9ELKju7CdR/0RlieXmnLnbG25Iv/VAjAY+ftot+zD8dBV3RS44MTZZE2i0V
+         QPeU1VwYaRl4QJ/AutCQPDhZZEi0/58D+9vXmtsg2mcC8oXOclBD8UF7nR8zgDgM2GW1
+         CKbg==
+X-Gm-Message-State: ANoB5pnA94H0X46lLf1CWenWjN4kJYICHdFKvKOvz16pafIaOKFuLRDp
+        sHLsqPg2wLTyv2LnGwomoYN9zA==
+X-Google-Smtp-Source: AA0mqf4lOq6werVuvT/Ru0/037+ZZBKwQ9dV2Uvyt9oiXBE03aeSGMACS9M8fMwvTL7wgcvnDkeJPA==
+X-Received: by 2002:a05:6638:3786:b0:363:b82d:d510 with SMTP id w6-20020a056638378600b00363b82dd510mr9070708jal.112.1669066860689;
+        Mon, 21 Nov 2022 13:41:00 -0800 (PST)
+Received: from [192.168.1.128] ([38.15.45.1])
+        by smtp.gmail.com with ESMTPSA id w11-20020a056638024b00b0037609ad8485sm4704611jaq.69.2022.11.21.13.40.57
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 21 Nov 2022 11:20:29 -0800 (PST)
-Message-ID: <daa50593-d7a4-ce50-fda1-662c3ee89252@acm.org>
-Date:   Mon, 21 Nov 2022 11:20:27 -0800
+        Mon, 21 Nov 2022 13:40:59 -0800 (PST)
+Message-ID: <4585e331-03ad-959f-e715-29af15f63712@linuxfoundation.org>
+Date:   Mon, 21 Nov 2022 14:40:56 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.0
-Subject: Re: [PATCH] scsi: ufs: ufs-mediatek: Remove unnecessary return code
+ Thunderbird/102.4.2
+Subject: Re: [PATCH v1 2/3] Treewide: Stop corrupting socket's task_frag
 Content-Language: en-US
-To:     Chanwoo Lee <cw9316.lee@samsung.com>, stanley.chu@mediatek.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        matthias.bgg@gmail.com, linux-scsi@vger.kernel.org,
-        linux-mediatek@lists.infradead.org
-References: <CGME20221121003431epcas1p1429429bf4bc1670c7b82b3889c017049@epcas1p1.samsung.com>
- <20221121003338.11034-1-cw9316.lee@samsung.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20221121003338.11034-1-cw9316.lee@samsung.com>
+To:     Benjamin Coddington <bcodding@redhat.com>,
+        David Howells <dhowells@redhat.com>
+Cc:     netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Philipp Reisner <philipp.reisner@linbit.com>,
+        Lars Ellenberg <lars.ellenberg@linbit.com>,
+        =?UTF-8?Q?Christoph_B=c3=b6hmwalder?= 
+        <christoph.boehmwalder@linbit.com>, Jens Axboe <axboe@kernel.dk>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Keith Busch <kbusch@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Valentina Manea <valentina.manea.m@gmail.com>,
+        Shuah Khan <shuah@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Marc Dionne <marc.dionne@auristor.com>,
+        Steve French <sfrench@samba.org>,
+        Christine Caulfield <ccaulfie@redhat.com>,
+        David Teigland <teigland@redhat.com>,
+        Mark Fasheh <mark@fasheh.com>,
+        Joel Becker <jlbec@evilplan.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Eric Van Hensbergen <ericvh@gmail.com>,
+        Latchesar Ionkov <lucho@ionkov.net>,
+        Dominique Martinet <asmadeus@codewreck.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Xiubo Li <xiubli@redhat.com>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>,
+        Chuck Lever <chuck.lever@oracle.com>,
+        Jeff Layton <jlayton@kernel.org>, drbd-dev@lists.linbit.com,
+        linux-block@vger.kernel.org, nbd@other.debian.org,
+        linux-nvme@lists.infradead.org, open-iscsi@googlegroups.com,
+        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-afs@lists.infradead.org, linux-cifs@vger.kernel.org,
+        samba-technical@lists.samba.org, cluster-devel@redhat.com,
+        ocfs2-devel@oss.oracle.com, v9fs-developer@lists.sourceforge.net,
+        ceph-devel@vger.kernel.org, linux-nfs@vger.kernel.org,
+        Shuah Khan <skhan@linuxfoundation.org>
+References: <c2ec184226acd21a191ccc1aa46a1d7e43ca7104.1669036433.git.bcodding@redhat.com>
+ <cover.1669036433.git.bcodding@redhat.com>
+ <382872.1669039019@warthog.procyon.org.uk>
+ <51B5418D-34FB-4E87-B87A-6C3FCDF8B21C@redhat.com>
+From:   Shuah Khan <skhan@linuxfoundation.org>
+In-Reply-To: <51B5418D-34FB-4E87-B87A-6C3FCDF8B21C@redhat.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/20/22 16:33, Chanwoo Lee wrote:
-> From: ChanWoo Lee <cw9316.lee@samsung.com>
+On 11/21/22 07:34, Benjamin Coddington wrote:
+> On 21 Nov 2022, at 8:56, David Howells wrote:
 > 
-> Modify to remove unnecessary 'return 0' code.
+>> Benjamin Coddington <bcodding@redhat.com> wrote:
+>>
+>>> Since moving to memalloc_nofs_save/restore, SUNRPC has stopped setting the
+>>> GFP_NOIO flag on sk_allocation which the networking system uses to decide
+>>> when it is safe to use current->task_frag.
+>>
+>> Um, what's task_frag?
 > 
-> Signed-off-by: ChanWoo Lee <cw9316.lee@samsung.com>
-> ---
->   drivers/ufs/host/ufs-mediatek.c | 11 ++++-------
->   1 file changed, 4 insertions(+), 7 deletions(-)
+> Its a per-task page_frag used to coalesce small writes for networking -- see:
 > 
-> diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-> index ef5816d82326..21d9b047539f 100644
-> --- a/drivers/ufs/host/ufs-mediatek.c
-> +++ b/drivers/ufs/host/ufs-mediatek.c
-> @@ -1095,7 +1095,7 @@ static void ufs_mtk_setup_clk_gating(struct ufs_hba *hba)
->   	}
->   }
->   
-> -static int ufs_mtk_post_link(struct ufs_hba *hba)
-> +static void ufs_mtk_post_link(struct ufs_hba *hba)
->   {
->   	/* enable unipro clock gating feature */
->   	ufs_mtk_cfg_unipro_cg(hba, true);
-> @@ -1106,8 +1106,6 @@ static int ufs_mtk_post_link(struct ufs_hba *hba)
->   			FIELD_PREP(UFSHCI_AHIBERN8_SCALE_MASK, 3);
->   
->   	ufs_mtk_setup_clk_gating(hba);
-> -
-> -	return 0;
->   }
->   
->   static int ufs_mtk_link_startup_notify(struct ufs_hba *hba,
-> @@ -1120,7 +1118,7 @@ static int ufs_mtk_link_startup_notify(struct ufs_hba *hba,
->   		ret = ufs_mtk_pre_link(hba);
->   		break;
->   	case POST_CHANGE:
-> -		ret = ufs_mtk_post_link(hba);
-> +		ufs_mtk_post_link(hba);
->   		break;
->   	default:
->   		ret = -EINVAL;
-> @@ -1272,9 +1270,8 @@ static int ufs_mtk_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
->   	struct arm_smccc_res res;
->   
->   	if (status == PRE_CHANGE) {
-> -		if (!ufshcd_is_auto_hibern8_supported(hba))
-> -			return 0;
-> -		ufs_mtk_auto_hibern8_disable(hba);
-> +		if (ufshcd_is_auto_hibern8_supported(hba))
-> +			ufs_mtk_auto_hibern8_disable(hba);
->   		return 0;
->   	}
+> 5640f7685831 net: use a per task frag allocator
+> 
+> Ben
+> 
+> 
 
-The last hunk is not related to the other hunks and hence probably 
-should have been a separate patch. Anyway:
+I am not seeing this in the mainline. Where can find this commit?
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+thanks,
+-- Shuah
