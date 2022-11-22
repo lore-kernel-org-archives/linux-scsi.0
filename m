@@ -2,79 +2,95 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7DD7C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Nov 2022 22:10:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFD59C4332F
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Nov 2022 22:26:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234070AbiKVWKJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Nov 2022 17:10:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53762 "EHLO
+        id S234893AbiKVW01 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Nov 2022 17:26:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33754 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231773AbiKVWKH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Nov 2022 17:10:07 -0500
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BAD1EDFEB
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Nov 2022 14:10:06 -0800 (PST)
-Received: by mail-pl1-f181.google.com with SMTP id j12so14964328plj.5
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Nov 2022 14:10:06 -0800 (PST)
+        with ESMTP id S234549AbiKVW0Z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Nov 2022 17:26:25 -0500
+Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11F8579E2B
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Nov 2022 14:26:25 -0800 (PST)
+Received: by mail-pf1-f172.google.com with SMTP id z26so15682729pff.1
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Nov 2022 14:26:25 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=GpUWncPrkxRED0kjUWwnWz/YMW6WZIYUdOW7J8ThgLI=;
-        b=lKhDooy4Hok5SqZ3on1b/G6D6RkM9D/eewysbuy7vcrW7nIHC+x93JguGCMY2AdLC7
-         ZvaqFSq0dlXlvAeArs7naA6OGTRcwI9f0qyi8VmhCbxEDjdx+JXbK1a73YXlRyBXsIHn
-         FIVHTcresCaSQbPu/awlyDMKAPhPKFopU2TcYA5JAfZaLpmQxMWBewMdTk6Aj4uZSi4G
-         OFBbhe4pVgD2JIqaufvNRi/9FRrTw6Mi39JVthgSWeu7EPYaKRwxZGavdazkcRbJmP+o
-         ushznoNbaBhFDvuNyM5rbSi8UzE45hPI9rcByJLxwyIm65Q9EE6EIWVn5x4LoWteNqoD
-         Z6IA==
-X-Gm-Message-State: ANoB5pn9Olj4UwNZ24ThM5pnFj2AR5Rm8Y3v56C/9RsRTg/2jMWT4pnr
-        TaQzP2r5FnqMk1VxK/s/WUw=
-X-Google-Smtp-Source: AA0mqf42a/dsJwts89Ff4JJTje96PCBXKGKjfQF9HwFefN1sDA4jmooLNYFLCGo4w745iNSeypfShA==
-X-Received: by 2002:a17:903:26cb:b0:188:8dc6:4eae with SMTP id jg11-20020a17090326cb00b001888dc64eaemr18678263plb.2.1669155006008;
-        Tue, 22 Nov 2022 14:10:06 -0800 (PST)
-Received: from ?IPV6:2620:15c:211:201:3c88:9479:e09c:9acb? ([2620:15c:211:201:3c88:9479:e09c:9acb])
-        by smtp.gmail.com with ESMTPSA id g28-20020aa79f1c000000b0056da2bf607csm10974742pfr.214.2022.11.22.14.10.03
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 22 Nov 2022 14:10:05 -0800 (PST)
-Message-ID: <f9798da3-b7b6-fc89-7a45-5682c15fcd0b@acm.org>
-Date:   Tue, 22 Nov 2022 14:10:02 -0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.0
-Subject: Re: [PATCH v3 4/5] scsi: ufs: Add suspend/resume SCSI command
- processing support
-Content-Language: en-US
-To:     Avri Altman <Avri.Altman@wdc.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Keoseong Park <keosung.park@samsung.com>
-References: <20221108233339.412808-1-bvanassche@acm.org>
- <20221108233339.412808-5-bvanassche@acm.org>
- <DM6PR04MB6575C7BA448A45E6A386EF46FC019@DM6PR04MB6575.namprd04.prod.outlook.com>
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=YV+ncF2FD7uDlkKIUjkVd4ircf+uuGyUCcUB1Dxg0Dg=;
+        b=ea0HqLK7Q+QnKNMQzq9dthDkWnXvLHhvcMd1wiHGjgbatwUBRCR0U7PglxgC+JZLcb
+         //WuH3630qC6eP81fcpfHzRo27DBqQgWbpqlV/eJoO4Je3RMf9//1crk6vn3yPGmVAef
+         B2/0NvIUNUSCsJix+ZFAUSUGxxSwxBGiOvLy4adjSUYrvA0KTX8DBmikAy6WmMCjDjc+
+         rQXmUlGUBWRzjaQGXLs2C8ZtK3qzg9LcC+oKTekW/NXBWzaHo5cMRHRNyqRb1cGhxy0b
+         SN4d+uOCiorTsAis2VmjGncSQikGWZF3303wiyFPi0cALinHbTD+53p45lUmjtouHDRD
+         YkPg==
+X-Gm-Message-State: ANoB5pkGC/3hKXK8CYuF3pMm3vg2Vh8qcBHVIZzZYeWcfa4JTpaNjyJS
+        SaYF5W04RLo7KhwayS5RMpw=
+X-Google-Smtp-Source: AA0mqf6ReZrGp6ADR1ucgjMKRBPPkjmZODDIR9RVNIp5dgEecXcePH/7A7RMj+3dfCWUbTSMGXjoyw==
+X-Received: by 2002:a63:470e:0:b0:440:69bc:c972 with SMTP id u14-20020a63470e000000b0044069bcc972mr5138764pga.86.1669155984467;
+        Tue, 22 Nov 2022 14:26:24 -0800 (PST)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:3c88:9479:e09c:9acb])
+        by smtp.gmail.com with ESMTPSA id cp5-20020a170902e78500b00172973d3cd9sm12539551plb.55.2022.11.22.14.26.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 22 Nov 2022 14:26:23 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <DM6PR04MB6575C7BA448A45E6A386EF46FC019@DM6PR04MB6575.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v4 0/5] Prepare for upstreaming Pixel 6 and 7 UFS support
+Date:   Tue, 22 Nov 2022 14:26:12 -0800
+Message-Id: <20221122222617.3449081-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.38.1.584.g0f3c55d4c2-goog
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/10/22 03:07, Avri Altman wrote:
-> I guess that you are planning to upstream the code that uses it [ ... ]
+Hi Martin,
 
-The code that uses these functions will be sent upstream by Linaro. 
-Linaro has been asked to do the majority of the work of upstreaming the 
-Pixel 6 kernel code. My goal with this patch series is to minimize the 
-differences between the AOSP UFS code and the upstream UFS code.
+The Exynos UFS controller requires that SCSI command processing is suspended
+while reprogramming encryption keys. This UFS controller is used in e.g. Google
+Pixel 6 and 7 phones and also in Tesla cars. The patches in this series are a
+first step towards integrating support in the upstream kernel for the UFS
+controller in the Pixel 6 and 7. Please consider these patches for the next
+merge window.
+
+Note: instructions for downloading the Pixel kernel source code are available
+at https://source.android.com/setup/build/building-kernels.
 
 Thanks,
 
 Bart.
+
+Changes compared to v3:
+- Changed SCSI_UFS_VARIABLE_SG_ENTRY_SIZE from user-selectable into selected
+  only if needed.
+
+Changes compared to v2:
+- Addressed more review comments from Avri.
+
+Changes compared to v1:
+- Addressed Avri's review comments.
+- Added patch "Allow UFS host drivers to override the sg entry size".
+
+Bart Van Assche (4):
+  scsi: ufs: Reduce the clock scaling latency
+  scsi: ufs: Move a clock scaling check
+  scsi: ufs: Pass the clock scaling timeout as an argument
+  scsi: ufs: Add suspend/resume SCSI command processing support
+
+Eric Biggers (1):
+  scsi: ufs: Allow UFS host drivers to override the sg entry size
+
+ drivers/ufs/core/ufshcd.c | 89 +++++++++++++++++++++++++++------------
+ drivers/ufs/host/Kconfig  |  4 ++
+ include/ufs/ufshcd.h      | 33 +++++++++++++++
+ include/ufs/ufshci.h      |  9 +++-
+ 4 files changed, 106 insertions(+), 29 deletions(-)
+
