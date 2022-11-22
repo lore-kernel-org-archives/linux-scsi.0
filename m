@@ -2,244 +2,244 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56416C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Nov 2022 07:52:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC93BC4332F
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Nov 2022 08:14:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232647AbiKVHwD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Nov 2022 02:52:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33176 "EHLO
+        id S232707AbiKVIO5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Nov 2022 03:14:57 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50706 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232590AbiKVHvu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Nov 2022 02:51:50 -0500
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 440DF3206C;
-        Mon, 21 Nov 2022 23:51:49 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1669103509; x=1700639509;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=OFXNyNojgzVrUneexpTCAdap6Jy8WrMIebBWli596SI=;
-  b=J0MB4cLdxuHuUvKIoG6GVN6zBTxpoJQ7PRaB9jnhgGflNiYBuu9BQ8ba
-   WU49qxcDudyPYm6Q/vKdJkhcrKG5Ezoi4YSNXJLEZCS3NuiSNqtkDLutH
-   i93yxmO8fbTR988cuLy5dPCpMYyUZgoP7tTsp1g0A+gTYwk9CJnVDF66Z
-   QwQazH8Ow8hkwVp4e7fCyyzVnHBtd+a3BfdGQiPHin6CVy+arDbIlOc0R
-   ZDzLHrUkKxFIMG7eVqrxYuIw7+WLnvkGwBnSpqiHVq5gDMJ31cgCFyRn0
-   kG/GMexmhEciYQDbRJgzBQBSVVJJ6fdOsbhj/B7HaZzuM/iKJnm0JrdFB
-   w==;
-X-IronPort-AV: E=Sophos;i="5.96,183,1665417600"; 
-   d="scan'208";a="215119529"
-Received: from mail-dm6nam12lp2174.outbound.protection.outlook.com (HELO NAM12-DM6-obe.outbound.protection.outlook.com) ([104.47.59.174])
-  by ob1.hgst.iphmx.com with ESMTP; 22 Nov 2022 15:51:47 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=mpMKdigOeZ6NKSWHsODp1D7l9Q2bdB1DqX4KdLe/0CU6EJzckquMxpSW+CV+5gWou2QzqrkwiIrd/D/H9ENtWuSmk1maG1EFiQXfsErQm6TC+9lUQusJgLxQhaHJzUQhuPJB10SUtWhJ0kDKo/0YT1f2gRJAtRFYId5GxTGAZoP1mgizbJqPH9gS1+PmM5LJEGt/7Z26EMSbXaUOaOxnRNqTkxA+AmqygfEpxGg1dGvEFqUlBei/GY8KD1Bu/dDzS0iiA5Oy8kstr84R69oFMBCaQ+iYRr1qYsGplPs40N1R4lDqShZCh+CUVUHdhzAhjPJUlhFw0HJLHvVikNIqRg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=wXy/9VWtJcZMKAummnLpgP0RHYybJJPe9vhEV47WSYA=;
- b=RN1Sfyl1SKb66s17V60aQu8G3uEtb7Gm8D0EvCVwaP5jESl3vUZUbHHidqG+9uv0MNzMeN/QbTHXrTQAKawSq6QqdNzfZ+tRC91q9Ajr0MO+Z47Pnb5L0wZgSVuhW2ogxu5KNZLOLqG8bWnRE6/WOhFsjZj/Byaj5DvFXezULNE4Pq2vsc0ot4lnCveLqT0vRXCbKeUZYibX1Bs536w4zYOu0SFKbSByZL8+1oXhcwUtCQx2ZRBjVQ9ARgnyT+NFM7MjPD8GaaoJO9WjvuR5XCpCqaQ2GtDHVzwhzAaiqvn22BUgOvxSRuGDHbiFirsMJG+t2WwvvSD0S14RRn0HXw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=wXy/9VWtJcZMKAummnLpgP0RHYybJJPe9vhEV47WSYA=;
- b=v7edfaqRrLReS3VyBB1lrfQ3n1Us6pAUR2J60MsjNlwEaSE+pv/eJ7VkadG5Zc/thbsuOatIBTeBETVu9sSeqfr3F5wH/TtwBhD3+UoagdDzxigLzJBs81C6OS91Nd9A9quSdS2V5kz2VKdtq2fpQPPoaL0a74MCa3+rlI5GkaA=
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- BYAPR04MB4086.namprd04.prod.outlook.com (2603:10b6:a02:aa::25) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5834.15; Tue, 22 Nov 2022 07:51:43 +0000
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::1afa:ab74:ef51:1e72]) by DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::1afa:ab74:ef51:1e72%3]) with mapi id 15.20.5834.015; Tue, 22 Nov 2022
- 07:51:43 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Bean Huo <beanhuo@iokpp.de>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        "daejun7.park@samsung.com" <daejun7.park@samsung.com>,
-        "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
-        "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
-        "quic_xiaosenh@quicinc.com" <quic_xiaosenh@quicinc.com>,
-        "quic_richardp@quicinc.com" <quic_richardp@quicinc.com>,
-        "quic_asutoshd@quicinc.com" <quic_asutoshd@quicinc.com>,
-        "hare@suse.de" <hare@suse.de>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v2 2/6] ufs: ufs_bsg: Cleanup ufs_bsg_request
-Thread-Topic: [PATCH v2 2/6] ufs: ufs_bsg: Cleanup ufs_bsg_request
-Thread-Index: AQHY/S6maCN3xUC9iU6nCajbprM+ka5Kk+Ug
-Date:   Tue, 22 Nov 2022 07:51:43 +0000
-Message-ID: <DM6PR04MB657526124CB8A463C1093CB4FC0D9@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <20221120222217.108492-1-beanhuo@iokpp.de>
- <20221120222217.108492-3-beanhuo@iokpp.de>
-In-Reply-To: <20221120222217.108492-3-beanhuo@iokpp.de>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: DM6PR04MB6575:EE_|BYAPR04MB4086:EE_
-x-ms-office365-filtering-correlation-id: c40e9c0b-4940-40b0-399c-08dacc5e65f3
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 7j6tuVr8YEUDw28ooeOGlnyyMXvT1D0ntSFBCbmla2reJ8ncbeB+oWSWIBJuCEIhie6lQ/DLyT6r1LOrLuAHG0ASUpaqKSx3eJd5jWB4JCLU4hxcks9Mtbg23FfVy8/If/EcMpkKfEx5Q+n+oAjzAR6igDTMC6eYN3+DJykdS7CVgoLTu5fWx7EItzbnSw/JpUZbM09LVqzgtMlB5Bseyu0Gohb7KGqwqs/n1X4Wbix3eRhd0OYjxG4S5QDBj8A4DzCxs9ZRICwkQUBz7bKYE5dA1TpamcZoiiSY0vSsy07suJtNnFHK/7iNWY58yHyi+P3K2FvM1L1O5nfA3z3Zmh2JpnWPbQyQueurwClIPO1xzBNJ2GHIhUpZx5i7+qlfduQde0t47qvnWIzIqXbbVUlpSDhQSEOppbsLKNjTOqYMSGIt/7UWyH1yKpxotko0nEnwIFs4U6ZjAHVI8J2h/U4vpttndTD1rOjenn2BScDAYVa1YzFcwqdR0EnZxY5x8ITHCG1BwlgFk52AuAmNe9tBwgDOcbVj3/wWdGl0b0CHy5gHiSE8Q5KsP2zxu4BtFtQC4Q7gf32NuQfaUVuzDJpbOykHVwiYLgPKuqJ2xe7x+3iedRW+FSn2E1dcXdIukkOaPRLzzi5QcM2mzmY/BxACc6La9EKWwgLXGHfuTh1qy8mKrwhoH4milDGgkxid0sX0qnAre9TBf+kfMpGWpRxfPsrAdg8qsjiSBhg6ARU=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(4636009)(136003)(346002)(366004)(376002)(39860400002)(396003)(451199015)(83380400001)(2906002)(33656002)(66946007)(66446008)(66556008)(66476007)(76116006)(55016003)(41300700001)(86362001)(64756008)(82960400001)(38100700002)(122000001)(7696005)(6506007)(54906003)(921005)(38070700005)(110136005)(8936002)(186003)(5660300002)(7416002)(8676002)(4326008)(52536014)(26005)(9686003)(316002)(71200400001)(478600001);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?fgVLpggNP5cimifSRST/Wp6qrc7ZJf2kBHXT2ncTgs+ORfyjnUqRpUQpdKnd?=
- =?us-ascii?Q?7rFvngpgxyRKzqYnm6ocX8K+avelZxiWkqCJpb0SGH8jOGwwrVcCWR6qzkro?=
- =?us-ascii?Q?MUVSShVqOHBoH9QME8c6dN9mlk3S0bcgtN4ZTVIK0COlJODVkjowRRDJKeLD?=
- =?us-ascii?Q?sm5AKSHfKOkj3FJEzAm77BHUMnvS6EO7tszbASFW13sSXCaZk9ePg7Q2wB/3?=
- =?us-ascii?Q?w+6FioDVqm0AVNxFUY1xZgf0qnkTwQ72QKRNQLPfK87fNIygk8/K/s2I6DwX?=
- =?us-ascii?Q?PHTjggCgjzStmQtg0cJeW9C3fB391Tf3Toael9dSokrvscQFjrSe6eeuaDRg?=
- =?us-ascii?Q?ZUKOBE34M9T+ukbQUkRITilQPW25thmR/84RINg3JPk6Gs5g6lNNux5W9Xw8?=
- =?us-ascii?Q?brEgsLT4tp1JpOHRUrZ8BrmvX1k5r/syU+wu1u2i9agyXY5xavsQ4Qz8rJ3e?=
- =?us-ascii?Q?/TrZ8R+KcDrPu5MpaEF5/+N8K8JLxvm+kkKw+cefR5Hs1oDhs4iUbTdcw/4O?=
- =?us-ascii?Q?GM5I2oJjO6DoXsTUgU97r85HMSjbOP1mHZO+FOjZL8GQDylUErd12cRE578e?=
- =?us-ascii?Q?iCZJ8ENwJ+QipMqwM8EEy7fGnISgla0FLxH7jdezXDblebzVNjUWQ2pvbuVP?=
- =?us-ascii?Q?yeixG7b6j0CItBACJnyoMeP3qeh6/zi1ziBFk3R7eiKOJN0/lzproO8exUKs?=
- =?us-ascii?Q?Ch7BA8aAXlQPSJ/bAoEL6Ity40SXMmbq/hwhLib2s1v2KhrI0cX1viuMIG7m?=
- =?us-ascii?Q?ge04OuL3pifET2jn9o1w1eLZoTxQirc+4SGs3lUlPVofqZo/1PkXXxSCQw3K?=
- =?us-ascii?Q?I+FxiRgseGOZAwmlCBrA9e7dW1JmELoM6GUfLRfkfMofJOqSASYjnyroFP+A?=
- =?us-ascii?Q?Eepco31XZNxB5Q81j43z8WKEqimByHeFcCJoaV3sDM0YYGzarpNzze+F34BJ?=
- =?us-ascii?Q?yGXAZQWy3owMe9n8OMlJWBNzOBx9iUGjO88EeP7KeKUDJle7OZB4FIicDp71?=
- =?us-ascii?Q?vcS36EFQ0Yq7Wd4CFBSSuTfHfztzThRJVK8GfP1asjwGIaNiv3cHTJu9jpEz?=
- =?us-ascii?Q?3yTq9IvaR1GySfPUC5RrTrD+yHufgtAihHqPreyFuQNLxQLpSO9hw0j+ypOq?=
- =?us-ascii?Q?jL6ovLRsMg9MmAIxEfftOvWvxtmNQsCENEfbIhGh62hltQtDQRi5Jp/62JPu?=
- =?us-ascii?Q?XHPQ9/HFU/7RpH7rhi2D+wi/uqx7HNMtJThaJ74KEWrYoY8DFzcr+WCO6tHA?=
- =?us-ascii?Q?vScwLDBMQa+lj2f19qzMhfdRuscY0vSp17/zp5rlzJMLUbTmkdQMTLPuV6Uy?=
- =?us-ascii?Q?or4e+fGvrsQurJOhFWAd4yzvzTZwcIcfRgMj153Df/O0uhP1khf5S2U3FOs2?=
- =?us-ascii?Q?s+R+5oWQxqOJ+j1slbc55QDu/C5GcIHWaaax+ieMLv25AkNA4CmejwIur6Rz?=
- =?us-ascii?Q?8EnYzld//GrnwDjLEGYhBhumw/+VX3WlEyAASW37VJ+xreq9HZ9fK3itp3z8?=
- =?us-ascii?Q?9lOxMUMEHqoFBW+ZaOCUiON3In2uFr/ELw05uC0PXxHH8i9rc2xMpO8cWvHk?=
- =?us-ascii?Q?VumGX4HYKTqOPwH0MAvk0G/INRY9uuF5mYg6u5ae?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S232333AbiKVIO4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Nov 2022 03:14:56 -0500
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F29402183B;
+        Tue, 22 Nov 2022 00:14:53 -0800 (PST)
+Received: from dggpemm500024.china.huawei.com (unknown [172.30.72.54])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4NGcVP5Kjbz15Mqx;
+        Tue, 22 Nov 2022 16:14:21 +0800 (CST)
+Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
+ dggpemm500024.china.huawei.com (7.185.36.203) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Tue, 22 Nov 2022 16:14:51 +0800
+Received: from build.huawei.com (10.175.101.6) by
+ dggpemm500017.china.huawei.com (7.185.36.178) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Tue, 22 Nov 2022 16:14:50 +0800
+From:   Wenchao Hao <haowenchao@huawei.com>
+To:     Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
+        "Mike Christie" <michael.christie@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>
+CC:     <linux-kernel@vger.kernel.org>, <liuzhiqiang26@huawei.com>,
+        <linfeilong@huawei.com>, Wenchao Hao <haowenchao@huawei.com>
+Subject: [PATCH] scsi:iscsi: Record session's startup mode in kernel
+Date:   Tue, 22 Nov 2022 21:30:41 +0000
+Message-ID: <20221122213040.4128105-1-haowenchao@huawei.com>
+X-Mailer: git-send-email 2.32.0
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: =?us-ascii?Q?+K3vHAx8zg0ULVXdea/g6/5zHR64jzGTaufoGcIyNr7IK47eMLKfxL5F219L?=
- =?us-ascii?Q?u9MvgRD12+xw7tDIGlwB/fOS45r/qCUTOTshrZLvl4PRRnhZ7seHVMrFfhGe?=
- =?us-ascii?Q?KKDwSxpvw8GPbV4bZouRaN+YWeZoHRlJLk1Lt7bfxZKzPBE4cX9Bj7jSt5Du?=
- =?us-ascii?Q?LWjK9ocKwiY+FV0Vc1zl8u3hmUtfdSeBv17usnYXdRQQGehoXoIxuHXVnvbU?=
- =?us-ascii?Q?rYYDeRvbagxoKNDcku1p2NdWAYARRjxa3VWL4Cw2YW3taWqir4kUfNFtJpqd?=
- =?us-ascii?Q?DPTWcxaovnc3bMBSm81NWPipx7TjqzqQZxfMg/70XS+Cl0SrY9+xMoLPyf9f?=
- =?us-ascii?Q?bRrYkSbu4kN0nU15AO0u4kJB26g2biO2dWZ9CI5xii6Sc31X8RhEtHT4kFOD?=
- =?us-ascii?Q?qz2xzHJdr5QeYSfE9CId8dys/cAaPWynXYv8H/3PKQCW0MAOB5S/kNfEM8mh?=
- =?us-ascii?Q?Vo5LUcFK3RcU2Msoy8y/4pWMlzOq+sxzuk53GDqAn4F+gd8kzYE4fufk0AwI?=
- =?us-ascii?Q?tiaLFukYAOZaIc3sM2pj8MIm4J1Fj/bvI98/7UHEt/N7KEnym+wIH1cA7QAz?=
- =?us-ascii?Q?N2g/FoiLu9jINtl5Tv9nn2XjF9hH9ikHDllZjvTLzLofaNlzAHVyLlX6I8J/?=
- =?us-ascii?Q?798oAZEb6KIRNSHbaWogigU+rWD+OTsO9f5vJVPx66iXEAbNAcQKhHlVbVms?=
- =?us-ascii?Q?iObMaa+mHm4/CMlyim2Eo43EK83LbTMkIW1tpgJXc/s6JAdZHQHQMOB97ovM?=
- =?us-ascii?Q?yULWLeNnUK0KH3KA0iViM9nV6jqEj+tauYv0zlCcSB8B/CSPD639OORWd7MC?=
- =?us-ascii?Q?pErjJeVM620UEK0VJXRWhbakdqnvwdwAfyP36VAYEp5yckMncOBbqkhUOHLS?=
- =?us-ascii?Q?46jVkQhEtwRBDxZC8MTouTnPnWAACzfmdEocLhAE2y+dK/HAHMu6VsBUqeVl?=
- =?us-ascii?Q?j9DRUgiRqey5Hp30qKx3xo4ExVSHkM68OLRwveKMUo9K329eGG7V6zIFPp3S?=
- =?us-ascii?Q?YDOsTQoZQqd5qvVXHFhdM0dEqi0esLCqI5oP285rGqt745WNswR76jR7ktlV?=
- =?us-ascii?Q?N5+SRgzqqju7M0OzVttmAjMr7KdvX27JJY9tVvCyHM8vIqJe6ouz8yruy390?=
- =?us-ascii?Q?MR5Zkq+HEaxd28/szRwkwTJzZPVggUFij5gOKSSntHybGIt9LoJjPJtq+e31?=
- =?us-ascii?Q?r6nhcFn5WKh0SnXEK4XX/9vUIV2AfFvObxf1akKEp5sVNARqUfYjCpSdrimU?=
- =?us-ascii?Q?Jo1qeRFdwu/z+BDGpxFZEIu+4HGxCkHShGwJ/Foy/w=3D=3D?=
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c40e9c0b-4940-40b0-399c-08dacc5e65f3
-X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Nov 2022 07:51:43.4995
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: rRsXpF43Ca9haFPM7DcyGbNdcz+JDYamxC2/a/op74PoCSARppBXmUZTVGvXrOlEu8YfCWOLZ9rgdfS4QbqYgA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB4086
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.101.6]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ dggpemm500017.china.huawei.com (7.185.36.178)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->=20
-> From: Bean Huo <beanhuo@micron.com>
->=20
-> Move sg_copy_from_buffer() below its associated case statement.
->=20
-> Signed-off-by: Bean Huo <beanhuo@micron.com>
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
+There are 3 iscsi session's startup mode which are onboot, manual and
+automatic. We can boot from iSCSI disks with help of dracut's service
+in initrd, which would set node's startup mode to onboot, then create
+iSCSI sessions.
 
-> ---
->  drivers/ufs/core/ufs_bsg.c | 27 ++++++++-------------------
->  1 file changed, 8 insertions(+), 19 deletions(-)
->=20
-> diff --git a/drivers/ufs/core/ufs_bsg.c b/drivers/ufs/core/ufs_bsg.c inde=
-x
-> 9ac8204f1ee6..850a0d798f63 100644
-> --- a/drivers/ufs/core/ufs_bsg.c
-> +++ b/drivers/ufs/core/ufs_bsg.c
-> @@ -90,11 +90,8 @@ static int ufs_bsg_request(struct bsg_job *job)
->                 desc_op =3D bsg_request->upiu_req.qr.opcode;
->                 ret =3D ufs_bsg_alloc_desc_buffer(hba, job, &desc_buff,
->                                                 &desc_len, desc_op);
-> -               if (ret) {
-> -                       ufshcd_rpm_put_sync(hba);
-> +               if (ret)
->                         goto out;
-> -               }
-> -
->                 fallthrough;
->         case UPIU_TRANSACTION_NOP_OUT:
->         case UPIU_TRANSACTION_TASK_REQ:
-> @@ -102,9 +99,12 @@ static int ufs_bsg_request(struct bsg_job *job)
->                                                &bsg_reply->upiu_rsp, msgc=
-ode,
->                                                desc_buff, &desc_len, desc=
-_op);
->                 if (ret)
-> -                       dev_err(hba->dev,
-> -                               "exe raw upiu: error code %d\n", ret);
-> -
-> +                       dev_err(hba->dev, "exe raw upiu: error code %d\n"=
-, ret);
-> +               else if (desc_op =3D=3D UPIU_QUERY_OPCODE_READ_DESC && de=
-sc_len)
-> +                       bsg_reply->reply_payload_rcv_len =3D
-> +                               sg_copy_from_buffer(job->request_payload.=
-sg_list,
-> +                                                   job->request_payload.=
-sg_cnt,
-> +                                                   desc_buff,
-> + desc_len);
->                 break;
->         case UPIU_TRANSACTION_UIC_CMD:
->                 memcpy(&uc, &bsg_request->upiu_req.uc, UIC_CMD_SIZE); @@ =
--
-> 123,20 +123,9 @@ static int ufs_bsg_request(struct bsg_job *job)
->                 break;
->         }
->=20
-> +out:
->         ufshcd_rpm_put_sync(hba);
-> -
-> -       if (!desc_buff)
-> -               goto out;
-> -
-> -       if (desc_op =3D=3D UPIU_QUERY_OPCODE_READ_DESC && desc_len)
-> -               bsg_reply->reply_payload_rcv_len =3D
-> -                       sg_copy_from_buffer(job->request_payload.sg_list,
-> -                                           job->request_payload.sg_cnt,
-> -                                           desc_buff, desc_len);
-> -
->         kfree(desc_buff);
-> -
-> -out:
->         bsg_reply->result =3D ret;
->         job->reply_len =3D sizeof(struct ufs_bsg_reply);
->         /* complete the job here only if no error */
-> --
-> 2.25.1
+While the configure of onboot mode is recorded in file of initrd stage
+and would be lost when switch to rootfs. Even if we update the startup
+mode to onboot by hand after switch to rootfs, it is possible that the
+configure would be covered by another discovery command.
+
+root would be mounted on iSCSI disks when boot from iSCSI disks, if the
+sessions is logged out, the related disks would be removed, which would
+cause the whole system halt.
+
+So we need record session's start up mode in kernel and check this
+mode before logout this session.
+
+Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
+---
+ drivers/infiniband/ulp/iser/iscsi_iser.c | 1 +
+ drivers/scsi/be2iscsi/be_iscsi.c         | 1 +
+ drivers/scsi/bnx2i/bnx2i_iscsi.c         | 1 +
+ drivers/scsi/cxgbi/libcxgbi.c            | 1 +
+ drivers/scsi/iscsi_tcp.c                 | 1 +
+ drivers/scsi/libiscsi.c                  | 5 +++++
+ drivers/scsi/qedi/qedi_iscsi.c           | 1 +
+ drivers/scsi/qla4xxx/ql4_os.c            | 1 +
+ drivers/scsi/scsi_transport_iscsi.c      | 4 ++++
+ include/scsi/iscsi_if.h                  | 1 +
+ include/scsi/libiscsi.h                  | 1 +
+ 11 files changed, 18 insertions(+)
+
+diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
+index 620ae5b2d80d..778c023673ea 100644
+--- a/drivers/infiniband/ulp/iser/iscsi_iser.c
++++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
+@@ -947,6 +947,7 @@ static umode_t iser_attr_is_visible(int param_type, int param)
+ 		case ISCSI_PARAM_IFACE_NAME:
+ 		case ISCSI_PARAM_INITIATOR_NAME:
+ 		case ISCSI_PARAM_DISCOVERY_SESS:
++		case ISCSI_PARAM_NODE_STARTUP:
+ 			return S_IRUGO;
+ 		default:
+ 			return 0;
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+index 8aeaddc93b16..a21a4d9ab8b8 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.c
++++ b/drivers/scsi/be2iscsi/be_iscsi.c
+@@ -1401,6 +1401,7 @@ umode_t beiscsi_attr_is_visible(int param_type, int param)
+ 		case ISCSI_PARAM_LU_RESET_TMO:
+ 		case ISCSI_PARAM_IFACE_NAME:
+ 		case ISCSI_PARAM_INITIATOR_NAME:
++		case ISCSI_PARAM_NODE_STARTUP:
+ 			return S_IRUGO;
+ 		default:
+ 			return 0;
+diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+index a3c800e04a2e..d1fb06d8a92e 100644
+--- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
++++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+@@ -2237,6 +2237,7 @@ static umode_t bnx2i_attr_is_visible(int param_type, int param)
+ 		case ISCSI_PARAM_BOOT_ROOT:
+ 		case ISCSI_PARAM_BOOT_NIC:
+ 		case ISCSI_PARAM_BOOT_TARGET:
++		case ISCSI_PARAM_NODE_STARTUP:
+ 			return S_IRUGO;
+ 		default:
+ 			return 0;
+diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
+index af281e271f88..111b2ac78964 100644
+--- a/drivers/scsi/cxgbi/libcxgbi.c
++++ b/drivers/scsi/cxgbi/libcxgbi.c
+@@ -3063,6 +3063,7 @@ umode_t cxgbi_attr_is_visible(int param_type, int param)
+ 		case ISCSI_PARAM_TGT_RESET_TMO:
+ 		case ISCSI_PARAM_IFACE_NAME:
+ 		case ISCSI_PARAM_INITIATOR_NAME:
++		case ISCSI_PARAM_NODE_STARTUP:
+ 			return S_IRUGO;
+ 		default:
+ 			return 0;
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index 5fb1f364e815..47a73fb3e4b0 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -1036,6 +1036,7 @@ static umode_t iscsi_sw_tcp_attr_is_visible(int param_type, int param)
+ 		case ISCSI_PARAM_TGT_RESET_TMO:
+ 		case ISCSI_PARAM_IFACE_NAME:
+ 		case ISCSI_PARAM_INITIATOR_NAME:
++		case ISCSI_PARAM_NODE_STARTUP:
+ 			return S_IRUGO;
+ 		default:
+ 			return 0;
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index d95f4bcdeb2e..1f2b0a9a029e 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -3576,6 +3576,8 @@ int iscsi_set_param(struct iscsi_cls_conn *cls_conn,
+ 		break;
+ 	case ISCSI_PARAM_LOCAL_IPADDR:
+ 		return iscsi_switch_str_param(&conn->local_ipaddr, buf);
++	case ISCSI_PARAM_NODE_STARTUP:
++		return iscsi_switch_str_param(&session->node_startup, buf);
+ 	default:
+ 		return -ENOSYS;
+ 	}
+@@ -3712,6 +3714,9 @@ int iscsi_session_get_param(struct iscsi_cls_session *cls_session,
+ 		else
+ 			len = sysfs_emit(buf, "\n");
+ 		break;
++	case ISCSI_PARAM_NODE_STARTUP:
++		len = sysfs_emit(buf, "%s\n", session->node_startup);
++		break;
+ 	default:
+ 		return -ENOSYS;
+ 	}
+diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
+index 31ec429104e2..b947a5bca380 100644
+--- a/drivers/scsi/qedi/qedi_iscsi.c
++++ b/drivers/scsi/qedi/qedi_iscsi.c
+@@ -1437,6 +1437,7 @@ static umode_t qedi_attr_is_visible(int param_type, int param)
+ 		case ISCSI_PARAM_BOOT_ROOT:
+ 		case ISCSI_PARAM_BOOT_NIC:
+ 		case ISCSI_PARAM_BOOT_TARGET:
++		case ISCSI_PARAM_NODE_STARTUP:
+ 			return 0444;
+ 		default:
+ 			return 0;
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 9e849f6b0d0f..1cb7c6dbe9d3 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -468,6 +468,7 @@ static umode_t qla4_attr_is_visible(int param_type, int param)
+ 		case ISCSI_PARAM_DISCOVERY_PARENT_IDX:
+ 		case ISCSI_PARAM_DISCOVERY_PARENT_TYPE:
+ 		case ISCSI_PARAM_LOCAL_IPADDR:
++		case ISCSI_PARAM_NODE_STARTUP:
+ 			return S_IRUGO;
+ 		default:
+ 			return 0;
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index c3fe5ecfee59..39c14d2a8aad 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -4367,6 +4367,7 @@ iscsi_session_attr(tsid, ISCSI_PARAM_TSID, 0);
+ iscsi_session_attr(def_taskmgmt_tmo, ISCSI_PARAM_DEF_TASKMGMT_TMO, 0);
+ iscsi_session_attr(discovery_parent_idx, ISCSI_PARAM_DISCOVERY_PARENT_IDX, 0);
+ iscsi_session_attr(discovery_parent_type, ISCSI_PARAM_DISCOVERY_PARENT_TYPE, 0);
++iscsi_session_attr(node_startup, ISCSI_PARAM_NODE_STARTUP, 0);
+ 
+ static ssize_t
+ show_priv_session_state(struct device *dev, struct device_attribute *attr,
+@@ -4488,6 +4489,7 @@ static struct attribute *iscsi_session_attrs[] = {
+ 	&dev_attr_sess_def_taskmgmt_tmo.attr,
+ 	&dev_attr_sess_discovery_parent_idx.attr,
+ 	&dev_attr_sess_discovery_parent_type.attr,
++	&dev_attr_sess_node_startup.attr,
+ 	NULL,
+ };
+ 
+@@ -4587,6 +4589,8 @@ static umode_t iscsi_session_attr_is_visible(struct kobject *kobj,
+ 		return S_IRUGO;
+ 	else if (attr == &dev_attr_priv_sess_target_id.attr)
+ 		return S_IRUGO;
++	else if (attr == &dev_attr_sess_node_startup.attr)
++		param = ISCSI_PARAM_NODE_STARTUP;
+ 	else {
+ 		WARN_ONCE(1, "Invalid session attr");
+ 		return 0;
+diff --git a/include/scsi/iscsi_if.h b/include/scsi/iscsi_if.h
+index 5225a23f2d0e..e46e69c1fd02 100644
+--- a/include/scsi/iscsi_if.h
++++ b/include/scsi/iscsi_if.h
+@@ -610,6 +610,7 @@ enum iscsi_param {
+ 	ISCSI_PARAM_DISCOVERY_PARENT_IDX,
+ 	ISCSI_PARAM_DISCOVERY_PARENT_TYPE,
+ 	ISCSI_PARAM_LOCAL_IPADDR,
++	ISCSI_PARAM_NODE_STARTUP,
+ 	/* must always be last */
+ 	ISCSI_PARAM_MAX,
+ };
+diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
+index 654cc3918c94..af4ccdcc1140 100644
+--- a/include/scsi/libiscsi.h
++++ b/include/scsi/libiscsi.h
+@@ -327,6 +327,7 @@ struct iscsi_session {
+ 	char			*boot_target;
+ 	char			*portal_type;
+ 	char			*discovery_parent_type;
++	char			*node_startup;
+ 	uint16_t		discovery_parent_idx;
+ 	uint16_t		def_taskmgmt_tmo;
+ 	uint16_t		tsid;
+-- 
+2.35.3
 
