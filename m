@@ -2,104 +2,111 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B7C7C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Nov 2022 17:29:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F6EFC4332F
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Nov 2022 17:48:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233701AbiKVR30 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Nov 2022 12:29:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46520 "EHLO
+        id S234609AbiKVRr7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Nov 2022 12:47:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59130 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231842AbiKVR3Z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Nov 2022 12:29:25 -0500
-Received: from mail-ej1-x62d.google.com (mail-ej1-x62d.google.com [IPv6:2a00:1450:4864:20::62d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 27A6B76158;
-        Tue, 22 Nov 2022 09:29:24 -0800 (PST)
-Received: by mail-ej1-x62d.google.com with SMTP id i10so37352783ejg.6;
-        Tue, 22 Nov 2022 09:29:24 -0800 (PST)
+        with ESMTP id S234527AbiKVRqq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Nov 2022 12:46:46 -0500
+Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 626B485140;
+        Tue, 22 Nov 2022 09:45:22 -0800 (PST)
+Received: by mail-ed1-x530.google.com with SMTP id s12so21648046edd.5;
+        Tue, 22 Nov 2022 09:45:22 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=g60GIv7bqoFLDqB4xsxYyMezGWJmQQ9+7qMuSM+/H/0=;
-        b=W69sl1tdcAYXAsJwTLMIp71G7BaVY9ZcCnGrGlXMFZQeWnI94TdJa1OzcJqsEyw8K/
-         e6athJBfF+Nm8vJYG4KgbN6BCqWuLobVLqlsx+szLaJIpwOV5ogKvJCVpObqlaHZoKwA
-         okuuVU7GV1ULwXzHiQtsYSoHJtfodCgsHktqvd6XP7DfPQqtdOwWHKHDhTs1WVD5rtLG
-         2eqGV+iQ8HMnmaSMEcBeS9bGDdaYsGn1/dX+/TqDxDyYys7ITGRQafS0HplcV4H24bCf
-         p7psY1xV3H3w5h/GDBNnyHeSsCJlR1foWeYpUwhEOZ7Vr9ycT565kTaDDDRXY4plypls
-         Zr1w==
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=1kvyvrTAV03KH98x7yl5DC5qgb1BxRhc/RtXT1WiA70=;
+        b=pIuZMaX2Jd4Bw2gypcQR7WA13ZnhbEqJYrk++MybA3dC0e4Itx/IJ12B2i6PyRZFc0
+         p2+fswIc+6CFcrfqV0VZtglngibHruTu2tr0dV8XOfJMwpZrlXKZsq5YsSyhSZ+onlum
+         4g6YbScJJnhf2c0N/+9AQcLkxGqcKf2Ghg1NnkCiT6P5fcCS5mYLZ0aZltwv50ahhXxs
+         6ueqPQDgNfiuR/Spxn6y2PAcOpaikjL1Wxcqqe9TyBj1ab5uK10etMDz3IYxgVqXrh6f
+         nBQATcXE4ZzyeN2m4NQYOGdasJgZgWhO9VWX1qKH5P11FxhbGzVRV0JSIZLkewURwfuH
+         z+5A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=g60GIv7bqoFLDqB4xsxYyMezGWJmQQ9+7qMuSM+/H/0=;
-        b=haXYVwWcY3bBkwxhsQ+yelTHRd5l6uTtCiRazX0mb8mEFWtmPmtxGAfWQhX/3aYcVm
-         YtVe59pOpQZLyQOmqIvs+LuyUIPGBgzlfowtcwTBxnPuSeQA85Pe5jKzZ6i6lHQO9unU
-         2BmvhTYugI7yqCg/ytdIRWXXRTXnlLFjVx/L7yGpjwca7JNarL3YLo82v77l9KgoF3hl
-         Yro7YPR5Jt3EoFljZs05Lxw2gTeeoeQtknwe0KMvB5CjbwNLBso+rZmzQg/8yyW8VM9h
-         lsqM1347j0rFfJNtP1dhGxEtr7VN3f5PXK3WDdoi+Zkgs1SQeFFggHDRRSsqiCEz4wrA
-         Apfw==
-X-Gm-Message-State: ANoB5pnZxAWjF+cUsRY52aaKBYOzSE4xD3TU4YQzxfBPK/kzgp2IHb6i
-        OjV+DS1pvLGNevvprSffg8F1uIJ0cs1Nx9SzafQ=
-X-Google-Smtp-Source: AA0mqf5d0TDB1i5YEGHsP04BQvzxLd3EV4zfcUIqaiVB8JR3e+tinO5QxuEjzMFt84ihIWGQqujx1l0zmgujMXiPWwU=
-X-Received: by 2002:a17:906:44a:b0:7ae:e67c:6c4c with SMTP id
- e10-20020a170906044a00b007aee67c6c4cmr19861350eja.375.1669138162627; Tue, 22
- Nov 2022 09:29:22 -0800 (PST)
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=1kvyvrTAV03KH98x7yl5DC5qgb1BxRhc/RtXT1WiA70=;
+        b=6MAtMccgG58HiLJdx51URsSi+CS5b6CA9BJBArPcydyPNo7sGqAIY79Xr4a+UYVf8D
+         Xi6pMOEauECyHO/EObrTm1OjipyMw3CWVtkwk0lYY1aY2Bi19+maszYtIjwMmhdeNZNr
+         XMvoXdJz8zNAo7V7kBNfwqQOeCSJ2FhViOnJ6Im2HDuJxzFVxsqv10D3TiCnBLlygo8r
+         z3OFTUUQ7FOMaBc5hjXH3mW8WBm4mFykqWuluYMblHY7wrn818Eb+D4UCBOb+KYcgW92
+         zc7ylrbEdBbUyPuAEBm4uV5ex2OS/UxhMNLb9z5S7E+fYv2tzRA5pNcB8Igrv/9k+AGD
+         Q5VA==
+X-Gm-Message-State: ANoB5pmrGENhQRbuRUAPIX3Ek/AYgeioUIjBMT9FJLV47UhNEI3jxF1o
+        Dgrv7CKDxXlQJ1OmR6qPkgC+Um3M10HJoX/GPzU=
+X-Google-Smtp-Source: AA0mqf6dJW3ChCPPweQE2YWTi2TVUhpIDsuR+7bEvATh41AM5qFCSfIyeMkCvx2USRII3EWwgspuxz9BH4JnzRKuvtM=
+X-Received: by 2002:a05:6402:4a:b0:461:aa10:cb0c with SMTP id
+ f10-20020a056402004a00b00461aa10cb0cmr22258618edu.383.1669139121338; Tue, 22
+ Nov 2022 09:45:21 -0800 (PST)
 MIME-Version: 1.0
-References: <20221108014414.3510940-1-haowenchao@huawei.com>
- <ad54a5dc-b18f-e0e6-4391-1214e5729562@oracle.com> <89692b2b-90f7-e8e8-fa77-f14dbe996b72@huawei.com>
- <418c7f6f-0bc3-45bb-2abf-e866df6f4b62@oracle.com>
-In-Reply-To: <418c7f6f-0bc3-45bb-2abf-e866df6f4b62@oracle.com>
+References: <20221122213040.4128105-1-haowenchao@huawei.com> <11003745-2b2d-30cf-bf87-798f5175ae09@oracle.com>
+In-Reply-To: <11003745-2b2d-30cf-bf87-798f5175ae09@oracle.com>
 From:   Wenchao Hao <haowenchao22@gmail.com>
-Date:   Wed, 23 Nov 2022 01:29:10 +0800
-Message-ID: <CAOptpSO6=sUPUwgj1og8088djiNA=Bw9um0p024L=0Gb=-ja5w@mail.gmail.com>
-Subject: Re: [PATCH v6] scsi:iscsi: Fix multiple iscsi session unbind event
- sent to userspace
+Date:   Wed, 23 Nov 2022 01:45:08 +0800
+Message-ID: <CAOptpSO23ex6p=AOvjC1h1xc1ZxznLt211hufVrrS8NDVbHjrw@mail.gmail.com>
+Subject: Re: [PATCH] scsi:iscsi: Record session's startup mode in kernel
 To:     Mike Christie <michael.christie@oracle.com>
 Cc:     Wenchao Hao <haowenchao@huawei.com>, Lee Duncan <lduncan@suse.com>,
         Chris Leech <cleech@redhat.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
         open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linfeilong@huawei.com
+        linux-kernel@vger.kernel.org, liuzhiqiang26@huawei.com,
+        linfeilong@huawei.com
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Nov 23, 2022 at 1:04 AM Mike Christie
+On Wed, Nov 23, 2022 at 1:27 AM Mike Christie
 <michael.christie@oracle.com> wrote:
 >
-> On 11/21/22 8:17 AM, Wenchao Hao wrote:
-> > And the function looks like following after change:
+> On 11/22/22 3:30 PM, Wenchao Hao wrote:
+> > There are 3 iscsi session's startup mode which are onboot, manual and
+> > automatic. We can boot from iSCSI disks with help of dracut's service
+> > in initrd, which would set node's startup mode to onboot, then create
+> > iSCSI sessions.
 > >
-> > static void __iscsi_unbind_session(struct work_struct *work)
-> > {
-> >       struct iscsi_cls_session *session =
-> >                       container_of(work, struct iscsi_cls_session,
-> >                                    unbind_work);
-> >       struct Scsi_Host *shost = iscsi_session_to_shost(session);
-> >       struct iscsi_cls_host *ihost = shost->shost_data;
-> >       unsigned long flags;
-> >       unsigned int target_id;
+> > While the configure of onboot mode is recorded in file of initrd stage
+> > and would be lost when switch to rootfs. Even if we update the startup
+> > mode to onboot by hand after switch to rootfs, it is possible that the
+> > configure would be covered by another discovery command.
 > >
-> >       ISCSI_DBG_TRANS_SESSION(session, "Unbinding session\n");
-> >
-> >       /* Prevent new scans and make sure scanning is not in progress */
-> >       mutex_lock(&ihost->mutex);
-> >       spin_lock_irqsave(&session->lock, flags);
-> >       if (session->target_state != ISCSI_SESSION_TARGET_SCANNED) {
+> > root would be mounted on iSCSI disks when boot from iSCSI disks, if the
+> > sessions is logged out, the related disks would be removed, which would
+> > cause the whole system halt.
 >
-> What was the reason for not checking for ALLOCATED and freeing the ida
-> in that case?
+> The userspace tools check for this already don't they? Running iscsiadm
+> on the root disk returns a failure and message about it being in use.
 >
 
-target_state would be in "ALLOCATED" state if iscsid died after add
-session successfully.
-When iscsid restarted, if the session's target_state is "ALLOCATED",
-it should scan
-the session and the target_state would switch to "SCANNED".
+It seems we did not check.
 
-So I think we would not call in __iscsi_unbind_session() with
-session's target_state
-is ALLOCATED.
+> Userspace can check the session's disks and see if they are mounted and
+> what they are being used for.
+
+It's hard to check if iSCSI disk is in used. If iSCSI disk is used to
+build multipath device mapper,
+, and lvm is built on these dm devices, the root is mounted on these
+lvm devices, like following:
+
+sde                                       8:64   0   60G  0 disk
+=E2=94=94=E2=94=80360014051a174917ce514486bca53b324 253:4    0   60G  0 mpa=
+th
+  =E2=94=9C=E2=94=80lvm-root                     253:0    0 38.3G  0 lvm   =
+/
+  =E2=94=9C=E2=94=80lvm-swap                   253:1    0  2.1G  0 lvm   [S=
+WAP]
+  =E2=94=94=E2=94=80lvm-home                  253:2    0 18.7G  0 lvm   /ho=
+me
+
+It's too coupling to check these dm devices.
