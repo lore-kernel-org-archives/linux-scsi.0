@@ -2,128 +2,69 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34B7EC43217
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Nov 2022 01:04:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDCABC4332F
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Nov 2022 01:59:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231924AbiKVBE1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Nov 2022 20:04:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44796 "EHLO
+        id S232312AbiKVB7y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Nov 2022 20:59:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58892 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231948AbiKVBEZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Nov 2022 20:04:25 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4AD615FF5;
-        Mon, 21 Nov 2022 17:04:24 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1301E6151A;
-        Tue, 22 Nov 2022 01:04:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F617C43155;
-        Tue, 22 Nov 2022 01:04:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1669079063;
-        bh=wpD5zzzo6w7p3WOWI5WdmBr7p4BboEaBNwhD+AKKK+A=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PK1gNZVJ0kcEPvGy8l9MHsEaFYI4887MGYxjwddokCvV+5CR0pd79fl0p1glOCGRn
-         0UZ933OfAr+4Gq4dPyQQ4ggYYy7ccvWAq7u3GjOOQ7+zHHDtLvQye8pH8M+W0mlL9y
-         sPKNHqGeUQX6wHnzugWH1EkLj7EBiasEKdjqPfB+3Mn6fRhazpJViEPEdVXvGMH8Mp
-         8V3kgK6niSFEXIPG0ggFZbhKEYuigziC8Lr+NN51KI8fNT4wMU7AyIBoB+ybCdNHHm
-         eL1fFHymyVCC6ufBOz1XhfkVZUFfGDaG9XQKwLeKE7dV3bVxproQTa3yKrUxKkYe2e
-         wEDKHMa+wadsw==
-Received: by paulmck-ThinkPad-P17-Gen-1.home (Postfix, from userid 1000)
-        id 8788A5C1523; Mon, 21 Nov 2022 17:04:22 -0800 (PST)
-From:   "Paul E. McKenney" <paulmck@kernel.org>
-To:     rcu@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org, kernel-team@meta.com,
-        rostedt@goodmis.org, Uladzislau Rezki <urezki@gmail.com>,
-        Joel Fernandes <joel@joelfernandes.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org,
-        "Paul E . McKenney" <paulmck@kernel.org>
-Subject: [PATCH v2 rcu 12/16] scsi/scsi_error: Use call_rcu_flush() instead of call_rcu()
-Date:   Mon, 21 Nov 2022 17:04:17 -0800
-Message-Id: <20221122010421.3799681-12-paulmck@kernel.org>
-X-Mailer: git-send-email 2.31.1.189.g2e36527f23
-In-Reply-To: <20221122010408.GA3799268@paulmck-ThinkPad-P17-Gen-1>
-References: <20221122010408.GA3799268@paulmck-ThinkPad-P17-Gen-1>
+        with ESMTP id S232168AbiKVB7v (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Nov 2022 20:59:51 -0500
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EFAF6C6897
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Nov 2022 17:59:50 -0800 (PST)
+Received: from dggpeml500024.china.huawei.com (unknown [172.30.72.54])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4NGS9j19ZDzRpb6;
+        Tue, 22 Nov 2022 09:59:21 +0800 (CST)
+Received: from huawei.com (10.175.112.208) by dggpeml500024.china.huawei.com
+ (7.185.36.10) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Tue, 22 Nov
+ 2022 09:59:48 +0800
+From:   Yuan Can <yuancan@huawei.com>
+To:     <don.brace@microchip.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <ming.lei@redhat.com>,
+        <storagedev@microchip.com>, <linux-scsi@vger.kernel.org>
+CC:     <yuancan@huawei.com>
+Subject: [PATCH] scsi: hpsa: Fix possible memory leak in hpsa_init_one()
+Date:   Tue, 22 Nov 2022 01:57:51 +0000
+Message-ID: <20221122015751.87284-1-yuancan@huawei.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.175.112.208]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ dggpeml500024.china.huawei.com (7.185.36.10)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Uladzislau Rezki <urezki@gmail.com>
+The hpda_alloc_ctlr_info() allocates h and its field reply_map, however in
+hpsa_init_one(), if alloc_percpu() failed, the hpsa_init_one() jumps to
+clean1 directly, which frees h and leaks the h->reply_map.
+Fix by calling hpda_free_ctlr_info() to release h->replay_map and h
+instead free h directly.
 
-Earlier commits in this series allow battery-powered systems to build
-their kernels with the default-disabled CONFIG_RCU_LAZY=y Kconfig option.
-This Kconfig option causes call_rcu() to delay its callbacks in order
-to batch them.  This means that a given RCU grace period covers more
-callbacks, thus reducing the number of grace periods, in turn reducing
-the amount of energy consumed, which increases battery lifetime which
-can be a very good thing.  This is not a subtle effect: In some important
-use cases, the battery lifetime is increased by more than 10%.
-
-This CONFIG_RCU_LAZY=y option is available only for CPUs that offload
-callbacks, for example, CPUs mentioned in the rcu_nocbs kernel boot
-parameter passed to kernels built with CONFIG_RCU_NOCB_CPU=y.
-
-Delaying callbacks is normally not a problem because most callbacks do
-nothing but free memory.  If the system is short on memory, a shrinker
-will kick all currently queued lazy callbacks out of their laziness,
-thus freeing their memory in short order.  Similarly, the rcu_barrier()
-function, which blocks until all currently queued callbacks are invoked,
-will also kick lazy callbacks, thus enabling rcu_barrier() to complete
-in a timely manner.
-
-However, there are some cases where laziness is not a good option.
-For example, synchronize_rcu() invokes call_rcu(), and blocks until
-the newly queued callback is invoked.  It would not be a good for
-synchronize_rcu() to block for ten seconds, even on an idle system.
-Therefore, synchronize_rcu() invokes call_rcu_flush() instead of
-call_rcu().  The arrival of a non-lazy call_rcu_flush() callback on a
-given CPU kicks any lazy callbacks that might be already queued on that
-CPU.  After all, if there is going to be a grace period, all callbacks
-might as well get full benefit from it.
-
-Yes, this could be done the other way around by creating a
-call_rcu_lazy(), but earlier experience with this approach and
-feedback at the 2022 Linux Plumbers Conference shifted the approach
-to call_rcu() being lazy with call_rcu_flush() for the few places
-where laziness is inappropriate.
-
-And another call_rcu() instance that cannot be lazy is the one in the
-scsi_eh_scmd_add() function.  Leaving this instance lazy results in
-unacceptably slow boot times.
-
-Therefore, make scsi_eh_scmd_add() use call_rcu_flush() in order to
-revert to the old behavior.
-
-Tested-by: Joel Fernandes (Google) <joel@joelfernandes.org>
-Signed-off-by: Uladzislau Rezki <urezki@gmail.com>
-Signed-off-by: Joel Fernandes (Google) <joel@joelfernandes.org>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: <linux-scsi@vger.kernel.org>
-Signed-off-by: Paul E. McKenney <paulmck@kernel.org>
+Fixes: 8b834bff1b73 ("scsi: hpsa: fix selection of reply queue")
+Signed-off-by: Yuan Can <yuancan@huawei.com>
 ---
- drivers/scsi/scsi_error.c | 2 +-
+ drivers/scsi/hpsa.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 6995c89792300..634672e67c81f 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -312,7 +312,7 @@ void scsi_eh_scmd_add(struct scsi_cmnd *scmd)
- 	 * Ensure that all tasks observe the host state change before the
- 	 * host_failed change.
- 	 */
--	call_rcu(&scmd->rcu, scsi_eh_inc_host_failed);
-+	call_rcu_flush(&scmd->rcu, scsi_eh_inc_host_failed);
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index f8e832b1bc46..e5cbc97a5ea4 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -8925,7 +8925,7 @@ static int hpsa_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		destroy_workqueue(h->monitor_ctlr_wq);
+ 		h->monitor_ctlr_wq = NULL;
+ 	}
+-	kfree(h);
++	hpda_free_ctlr_info(h);
+ 	return rc;
  }
  
- /**
 -- 
-2.31.1.189.g2e36527f23
+2.17.1
 
