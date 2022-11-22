@@ -2,66 +2,154 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2746FC43217
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Nov 2022 12:56:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42663C4332F
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Nov 2022 14:24:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232647AbiKVM4L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Nov 2022 07:56:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59410 "EHLO
+        id S233239AbiKVOYn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Nov 2022 09:24:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44184 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233775AbiKVMzy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Nov 2022 07:55:54 -0500
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD4C061BA8
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Nov 2022 04:55:53 -0800 (PST)
-Received: from dggpemm500024.china.huawei.com (unknown [172.30.72.53])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4NGkkX2fvhzHw0q;
-        Tue, 22 Nov 2022 20:55:16 +0800 (CST)
-Received: from huawei.com (10.67.175.31) by dggpemm500024.china.huawei.com
- (7.185.36.203) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Tue, 22 Nov
- 2022 20:55:52 +0800
-From:   GUO Zihua <guozihua@huawei.com>
-To:     <njavali@marvell.com>, <GR-QLogic-Storage-Upstream@marvell.com>
-CC:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>
-Subject: [PATCH] scsi: qla2xxx: Fix a typo in qla2x00_probe_one
-Date:   Tue, 22 Nov 2022 20:52:46 +0800
-Message-ID: <20221122125246.45065-1-guozihua@huawei.com>
-X-Mailer: git-send-email 2.17.1
+        with ESMTP id S231808AbiKVOYl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Nov 2022 09:24:41 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B97CABC36
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Nov 2022 06:23:47 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1669127026;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=geVsTAOXAFmfC1p8NU5oUZW9hh2dqn+X7qlWo6CR96Y=;
+        b=QD9HNhfwpjcZAyrcVDtGcyvcJC1Jt05Njs2nDDlxTHOvhswfgrgNAdHBiLEZ9+1+paIjfS
+        xvMFD3qCbJf6A6xMlIn0VpgRM8BByfNqUyTTD/aKI8613kGDOh1+aFjPHhlm3ubdqQY76a
+        4fjNNftK21PKnaEPXhuRK9+8oDaXYTo=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-583-clNrV_glOTiRpOT7AptSQA-1; Tue, 22 Nov 2022 09:23:45 -0500
+X-MC-Unique: clNrV_glOTiRpOT7AptSQA-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id E5F22101A52A;
+        Tue, 22 Nov 2022 14:23:42 +0000 (UTC)
+Received: from [172.16.176.1] (unknown [10.22.50.6])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id E09D61121325;
+        Tue, 22 Nov 2022 14:23:33 +0000 (UTC)
+From:   Benjamin Coddington <bcodding@redhat.com>
+To:     Shuah Khan <skhan@linuxfoundation.org>
+Cc:     David Howells <dhowells@redhat.com>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Philipp Reisner <philipp.reisner@linbit.com>,
+        Lars Ellenberg <lars.ellenberg@linbit.com>,
+        =?utf-8?q?Christoph_B=C3=B6hmwalder?= 
+        <christoph.boehmwalder@linbit.com>, Jens Axboe <axboe@kernel.dk>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Keith Busch <kbusch@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Valentina Manea <valentina.manea.m@gmail.com>,
+        Shuah Khan <shuah@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Marc Dionne <marc.dionne@auristor.com>,
+        Steve French <sfrench@samba.org>,
+        Christine Caulfield <ccaulfie@redhat.com>,
+        David Teigland <teigland@redhat.com>,
+        Mark Fasheh <mark@fasheh.com>,
+        Joel Becker <jlbec@evilplan.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Eric Van Hensbergen <ericvh@gmail.com>,
+        Latchesar Ionkov <lucho@ionkov.net>,
+        Dominique Martinet <asmadeus@codewreck.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Xiubo Li <xiubli@redhat.com>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>,
+        Chuck Lever <chuck.lever@oracle.com>,
+        Jeff Layton <jlayton@kernel.org>, drbd-dev@lists.linbit.com,
+        linux-block@vger.kernel.org, nbd@other.debian.org,
+        linux-nvme@lists.infradead.org, open-iscsi@googlegroups.com,
+        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-afs@lists.infradead.org, linux-cifs@vger.kernel.org,
+        samba-technical@lists.samba.org, cluster-devel@redhat.com,
+        ocfs2-devel@oss.oracle.com, v9fs-developer@lists.sourceforge.net,
+        ceph-devel@vger.kernel.org, linux-nfs@vger.kernel.org
+Subject: Re: [PATCH v1 2/3] Treewide: Stop corrupting socket's task_frag
+Date:   Tue, 22 Nov 2022 09:23:29 -0500
+Message-ID: <C3E8B434-BAEE-42A8-85AF-3B676C65B2A6@redhat.com>
+In-Reply-To: <96114bec-1df7-0dcb-ec99-4f907587658d@linuxfoundation.org>
+References: <c2ec184226acd21a191ccc1aa46a1d7e43ca7104.1669036433.git.bcodding@redhat.com>
+ <cover.1669036433.git.bcodding@redhat.com>
+ <382872.1669039019@warthog.procyon.org.uk>
+ <51B5418D-34FB-4E87-B87A-6C3FCDF8B21C@redhat.com>
+ <4585e331-03ad-959f-e715-29af15f63712@linuxfoundation.org>
+ <26d98c8f-372b-b9c8-c29f-096cddaff149@linuxfoundation.org>
+ <A860595D-5BAB-461B-B449-8975C0424311@redhat.com>
+ <96114bec-1df7-0dcb-ec99-4f907587658d@linuxfoundation.org>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-Originating-IP: [10.67.175.31]
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- dggpemm500024.china.huawei.com (7.185.36.203)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: quoted-printable
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.3
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-What's the point unmapping ha->nx_pcibase when it does not exist.
-In fact, the original judgement causes ha->nx_pcibase to NOT be unmapped
-during error handling.
+On 21 Nov 2022, at 17:32, Shuah Khan wrote:
 
-Fixes: 0a63ad12e3ef ("[SCSI] qla2xxx: Dont clear drv active on iospace config failure.")
-Signed-off-by: GUO Zihua <guozihua@huawei.com>
----
- drivers/scsi/qla2xxx/qla_os.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> On 11/21/22 15:01, Benjamin Coddington wrote:
+>> On 21 Nov 2022, at 16:43, Shuah Khan wrote:
+>>
+>>> On 11/21/22 14:40, Shuah Khan wrote:
+>>>> On 11/21/22 07:34, Benjamin Coddington wrote:
+>>>>> On 21 Nov 2022, at 8:56, David Howells wrote:
+>>>>>
+>>>>>> Benjamin Coddington <bcodding@redhat.com> wrote:
+>>>>>>
+>>>>>>> Since moving to memalloc_nofs_save/restore, SUNRPC has stopped se=
+tting the
+>>>>>>> GFP_NOIO flag on sk_allocation which the networking system uses t=
+o decide
+>>>>>>> when it is safe to use current->task_frag.
+>>>>>>
+>>>>>> Um, what's task_frag?
+>>>>>
+>>>>> Its a per-task page_frag used to coalesce small writes for networki=
+ng -- see:
+>>>>>
+>>>>> 5640f7685831 net: use a per task frag allocator
+>>>>>
+>>>>> Ben
+>>>>>
+>>>>>
+>>>>
+>>>> I am not seeing this in the mainline. Where can find this commit?
+>>>>
+>>>
+>>> Okay. I see this commit in the mainline. However, I don't see the
+>>> sk_use_task_frag in mainline.
+>>
+>> sk_use_task_frag is in patch 1/3 in this posting.
+>>
+>> https://lore.kernel.org/netdev/26d98c8f-372b-b9c8-c29f-096cddaff149@li=
+nuxfoundation.org/T/#m3271959c4cf8dcff1c0c6ba023b2b3821d9e7e99
+>>
+>
+> Aha. I don't have 1/3 in my Inbox - I think it would make
+> sense to cc people on the first patch so we can understand
+> the premise for the change.
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 2c85f3cce726..6dc370671470 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -3625,7 +3625,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 
- iospace_config_failed:
- 	if (IS_P3P_TYPE(ha)) {
--		if (!ha->nx_pcibase)
-+		if (ha->nx_pcibase)
- 			iounmap((device_reg_t *)ha->nx_pcibase);
- 		if (!ql2xdbwr)
- 			iounmap((device_reg_t *)ha->nxdb_wr_ptr);
--- 
-2.17.1
+Yeah, I can do that if it goes to another version, I was just trying to b=
+e
+considerate of all the noise this sort of posting generates.
+
+Ben
 
