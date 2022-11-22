@@ -2,130 +2,167 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0B96C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Nov 2022 14:29:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03178C43219
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Nov 2022 15:06:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233733AbiKVO3H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Nov 2022 09:29:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48294 "EHLO
+        id S232852AbiKVPGI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Nov 2022 10:06:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54428 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232744AbiKVO3B (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Nov 2022 09:29:01 -0500
-Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2138.outbound.protection.outlook.com [40.107.94.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A16A63178;
-        Tue, 22 Nov 2022 06:29:00 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=TVO5EiD11WQPItQWBm1kEG72FXkBo8C+Sl/3C6vlZ9zHVfUBZasNm9n8dVqMJFjUoQmAayqYbKJyrSBxaHD6fHaFkwqUAhWIrvMpA+kurIV8Hfvvy/BxURT6+T57XBxPuAt1AmnRomtMRaJpHXmR9DGsOUsgBjTukanTP3Z7eGRBAm30H19zmqjvjjood3U5EhcNwXTqkdeMlfOW9IunbaXRsmqGHNcosSUWFH3sQU48pLQGbSBO1g6kOKcaSTTTrR2VUWJuQiexjsGQJvYQ4QLtV/rERVPlByWmFmRntWRyg84vFk54fD4DORNoAxYuaaK84oHsWrm/9xquwUDozg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=UO+/7uCdeOyNqk4favGQodR5qt+8Ovwsuj8MiIu8y+I=;
- b=A4qVIsqv3lUE1v8HvoZsz0t/XVOlPso0cnz3Wt5B9dVBfA/0X+sTdhj4TKlsdZo/bi3Z8l2bjaFFxetwgM1gSenpq7oy37y9Xydi24sh9OfBwSFGZ6Y6cjXFrFjiF1WYxCpBku0uxo0rBFdcEHBnwP37F1FPcNDlM3FLzqecptOj2aALEri6un4q7lsJ0dI216aiXc8SUvRsz+k61i171ETAm8YXkUZ4JIngMEt1hT68ha3HaVMRcA3t5yXGkuh65kgqSFQW35/bmN/EN2ok8BztUtiVc9OlG88X0/TqRRqK2rKMxf1XgHOkh+ob5HOQxQKu0/6M9jXL/lmo3mas7w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=chelsio.com; dmarc=pass action=none header.from=chelsio.com;
- dkim=pass header.d=chelsio.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=chelsio.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=UO+/7uCdeOyNqk4favGQodR5qt+8Ovwsuj8MiIu8y+I=;
- b=H/3wqww6oN9fu9RN7DLgrMYUmbVfvbqc7sZyFj182QbxJx63Io4nKtsUaCEyLsMlC7Veg5fEYP9cM71jEgxjiwr4GdWr2r5w9Z/LMi4Kz8GWhfot8njQXhl+Lq91K5IiFJhvUeZiKi0xEX8dYALpAYY7nuARlOG5pscD3Z8isLA=
-Received: from BN9PR12MB5324.namprd12.prod.outlook.com (2603:10b6:408:105::15)
- by DM6PR12MB4090.namprd12.prod.outlook.com (2603:10b6:5:217::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5834.15; Tue, 22 Nov
- 2022 14:28:58 +0000
-Received: from BN9PR12MB5324.namprd12.prod.outlook.com
- ([fe80::8728:282c:9d7f:6a9f]) by BN9PR12MB5324.namprd12.prod.outlook.com
- ([fe80::8728:282c:9d7f:6a9f%7]) with mapi id 15.20.5834.015; Tue, 22 Nov 2022
- 14:28:58 +0000
-From:   Varun Prakash <varun@chelsio.com>
-To:     Daniil Tatianin <d-tatianin@yandex-team.ru>
-CC:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        Lee Duncan <lduncan@suse.com>,
-        Nilesh Javali <njavali@marvell.com>, Wu Bo <wubo40@huawei.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "lvc-project@linuxtesting.org" <lvc-project@linuxtesting.org>,
-        "yc-core@yandex-team.ru" <yc-core@yandex-team.ru>
-Subject: RE: [PATCH v2] cxgbi: move cxgbi_ddp_set_one_ppod to cxgb_ppm and
- remove its duplicate
-Thread-Topic: [PATCH v2] cxgbi: move cxgbi_ddp_set_one_ppod to cxgb_ppm and
- remove its duplicate
-Thread-Index: AQHY/Yd0U868INJv8EmLrpp5ykEXY65LAP7A
-Date:   Tue, 22 Nov 2022 14:28:58 +0000
-Message-ID: <BN9PR12MB532492F05C65D378ABF1DB5FBC0D9@BN9PR12MB5324.namprd12.prod.outlook.com>
-References: <20221121083904.3824782-1-d-tatianin@yandex-team.ru>
-In-Reply-To: <20221121083904.3824782-1-d-tatianin@yandex-team.ru>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=chelsio.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: BN9PR12MB5324:EE_|DM6PR12MB4090:EE_
-x-ms-office365-filtering-correlation-id: ee39c979-5c17-4c1d-fcf9-08dacc95e486
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: U6eOjMZxuhRU2h+6TMYEDSCEi14gV3aj2qkC/1PSO62lpXaJKFMxZTUZFrNmU6p2Gm3kDQNK+SNDNEMeeNgV7cNx+BystKLO7diT1tyfvWwVtd1+8NEnC0QeUcwNT6JRLoPV2HUbFY3tCtD2r5dyv5hXS/SvczA6D4iW28VZTBfg/YUjSikgBQ5AKU10AkoYri+sRDzLeK4DiXRiL4TzjAhNg3P4+DRF8beISmiMTW80us1usWvwzCwM7qYTQxwvv1mUmIrSQJP5VCgrfDsLn+r2VDV7iXHHBrmacd02XiIi3jkm4WFl7ozxvQ2LieGsJZJLrqwAO7JCo9t3iyfXi2lG/1pExiI8s2CFsruO6wS5KuoQsYkNnAVPIRSFvSFzj7IHh9tH0+RqNB0M2rcmAjDhEX4D3JGQVuIc9ScFbqN9hCV6AJDZj5Ev0tywfr/+1sr9GKyWG8ozqA748R4WC4D01DweS1Ae2mWKzQw/klU61E6cnGbC4ZM3F9/rUtuOWTmWo12YbynJU3gV0TksginFJzAfv3Nvz7CcdIbrRQ0JgOmEO3OYgrFWY4OU6wfdzs85SmiQB4K0NZG6TPICfCHUp0QOw1H6VNfHBX4Ny1NKPejrBuIlqYk6cO0MSz2Xav6K9phxOpYmtrEVCos589r7tqonkkMgy4st/+bg2a4Cb8XbVo9SKC4AWvafEMFd
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN9PR12MB5324.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(366004)(346002)(39830400003)(376002)(136003)(396003)(451199015)(66556008)(66446008)(9686003)(8676002)(76116006)(316002)(64756008)(66476007)(7696005)(66946007)(54906003)(4326008)(41300700001)(26005)(6916009)(55016003)(71200400001)(6506007)(52536014)(33656002)(4744005)(2906002)(38100700002)(122000001)(8936002)(186003)(478600001)(7416002)(38070700005)(5660300002)(86362001);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?xbQo91HqTjmPptLqAv2/qCjGBKEe51QnyCqzyyQ9GK8O9BCZfbcg5Gzecw+1?=
- =?us-ascii?Q?6g6prGi8m5ywrRWVf04yni1bM+6k+o/jgGdq5Ls8fSiO+ShnTNe6QoW4bO1p?=
- =?us-ascii?Q?rDxbk3DSUl0VS+pK4OPIlQYYlNeCBTxaLyaPsllYLQ3PVGMtTXntlVXkCAKD?=
- =?us-ascii?Q?e5tsi6QatEBZ5OA+xe2prd2FsqaD1y4zwXEZPh5L+dBK0ETYUFYQYnjWXPhS?=
- =?us-ascii?Q?juIHN7ZskfdMy8xcEvnhb1HcbcJgnS69xbIggQmUlqIrxFkVyihpEZWltvb5?=
- =?us-ascii?Q?pYuj/Wd3EOi+A5gyTgEOV+7mUEmI5srkcv41iH0C8gJWTxbyAKRpdJwiz4/B?=
- =?us-ascii?Q?fp1WGN6MSQLwSX46kPCykfQXg4kk1XvTJYC6KAorw87y6vKVo1u7j1efkxSD?=
- =?us-ascii?Q?ee9AcwZ3DqAGidzURNfs7f+++xpgwtJgf1GJ4azS66wvefyjBqqAdmIL4WwZ?=
- =?us-ascii?Q?BybxV88OWXifxCmmb1f0mPNf1fgaevE8BhGyAcChlRCmvTC+1FhO65jKzk7V?=
- =?us-ascii?Q?5nhiO8a/WfQJVBX46WoEQqlqbymh02hxejyK7D8pA6jJzc7zA2QESXC7m0Zu?=
- =?us-ascii?Q?tU+W6BQs8Gtk1aQ8xmUk7qGJ93SXNhyHp4apDdb4BOsOhfRtlRlQUJfEC/fh?=
- =?us-ascii?Q?vPOGuui5N2cv6I3QRVBMOQ+ETXnq7USUi+uOkUnKebYBoqoxIHlMxgF6v+kg?=
- =?us-ascii?Q?kadvAr+Xvsma36MUl2WIXVJxgmvE1fu8B8ldaI+rBCnuRfeX3xWMhjcvpz6t?=
- =?us-ascii?Q?ONUxE4Hod0EKRRRZXF/RC+7omPAUg4PS2kGMvkjMA+6EB682hJ0VFYW1uvLw?=
- =?us-ascii?Q?NDfWx3hrSew9jrgDHLdgc6AeDMCOuZAfRfEqf0XdvM7xeOkZFHr9pcjxIDHx?=
- =?us-ascii?Q?bzsPmau8EFeGpmEOz20QoSlAr2i1b2+8ET8V1gmsT4fOan2YHJXA8VHjJglq?=
- =?us-ascii?Q?/55IrRHCgxLGel9evpCGh0fjxuOoNtoGc/8cn6fCvxgeJuvS+/74ud0RxMxs?=
- =?us-ascii?Q?NMtmgzOvkrpyhIsqamZYy1IXnW19XJrovcmX3EB6pG4R5AhuFb65/Htwu6dt?=
- =?us-ascii?Q?tkNYnFE9oI/I7uYgZJWWhUn4jyKt/ap2ixaLR7v5A/VjCBnQfqDjEbnAqCEN?=
- =?us-ascii?Q?tdGdQZF7vmPcWKMWDRE2VvJCFWSm4uxeFwGEwBJemNCEDP6vBnT0qqhZQKPJ?=
- =?us-ascii?Q?O74XjILgu5Jw3Bwtmq954UnJdBzOgaWnSnU02SEDlq1mTbkmNF4vrC6XPtiA?=
- =?us-ascii?Q?4JH3wMzjiky6K8kk3XVTPbBTA4TKor7+kR9lMYBdwuRB9nLpBr0HCkgRjvr/?=
- =?us-ascii?Q?XYKL7dtezuZyOq3jGSmAy7Vb1+tiKJ2anaL+Xr0eCinzwljmNZW3jWBhVsF0?=
- =?us-ascii?Q?H3Tq+9gVjvy+D5PAPi7ack5PTUgekvYUQvLYKhmeDgnwa3mA/dLau98tAHsm?=
- =?us-ascii?Q?NDQk4B/e4VnyGzLlFZZWhGFxfByorlcS7hiA4hRoTbpfy0jRIJFebQ2cXFdE?=
- =?us-ascii?Q?SvuBaaDMSQwyY6EWR3uSBMsJ/w1V4ySxLnFMgh2ulI7Lv6WkdJNpUg0SUySh?=
- =?us-ascii?Q?FjCw4m8TfSMwX1n1jbhLi4NNpLxDJabD6Tye0nk0?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S233703AbiKVPGH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Nov 2022 10:06:07 -0500
+Received: from mail-pg1-x52f.google.com (mail-pg1-x52f.google.com [IPv6:2607:f8b0:4864:20::52f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4216FD112
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Nov 2022 07:06:06 -0800 (PST)
+Received: by mail-pg1-x52f.google.com with SMTP id v3so14311880pgh.4
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Nov 2022 07:06:06 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=KFm/hQzp85f9PkuPkdfd/PZMWkQMCDrrQWUl2fEW03w=;
+        b=LNABZeRJscon/VHkVveJ+lRDsjpGyOiP9IOwSqUmzdQKKCR9YcvxcJDwYKXoQ31puT
+         1HqnkQrRZ/k+3TSJjAgBQ+Kr38QRdX+vbD6LLNCI4Rm1RvfZc5Z5vyUACqBpPu6rIRLx
+         t1GdVd7Fk8spxfx32ehpulaunieqgpV/uNMX7QABg6IveP4V2P3HH3odTGTN9wqWK6VZ
+         A4hS2GeaolVs6tDiYvsBXUu7E2cey22hii5xm78bilr9FXr7EO8qryDnZYSSc35X1Z9Y
+         8PQchihQYpWbWxOsbrC6xgoiwPI0pxmnMZSkMshttOyJ7AVkTteMKSdJBxceEsC4VpbH
+         ToWg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=KFm/hQzp85f9PkuPkdfd/PZMWkQMCDrrQWUl2fEW03w=;
+        b=13ByEgKitK4Y4IoZXHOXKHWX99m2r1Y/IA9y/hYJ4XOafe1u5NsVhldXsQRutEV5xz
+         ZUzsFO4xK/EmX8VNEvGoJ3OzX9rEPP3IcbdI/M6pfJ3zK/HgxnTV5guIaY/mEqIl5jRI
+         elzNpsu9+0x4v/P6n+Km0AuWbkIsxxph3QNegKvaHqP//f1OuHOhu6tEmaNRnmC1k8md
+         tWJHksxWnI4t0OFFR2aOCvoZTdmq86UDZ9UKZs/Kg9zJEe6HaE9Aa1tr2DATv/H6e76k
+         Yea1fBWN/2TRTFhnTI5ezuttl+EMHqhIdbU9rTINkLQTgJlImyuMsWZOwgK4+JiYNKKb
+         fNpA==
+X-Gm-Message-State: ANoB5pnPxsdP7QhQnmPv/Ui3/7iRFG4kIbRJaQmJbV/Tem8DwqNbWy1r
+        3LwuJLhE979ISY4F7X53PsXP
+X-Google-Smtp-Source: AA0mqf5GjmHRR2cgKROAhBGQlpp08yLh0IhPhYqC84bGzFy5Jw1en3ayBeCra6H6haMqnZOZo68kzg==
+X-Received: by 2002:a63:e44:0:b0:475:2f61:bbc3 with SMTP id 4-20020a630e44000000b004752f61bbc3mr5548600pgo.435.1669129565476;
+        Tue, 22 Nov 2022 07:06:05 -0800 (PST)
+Received: from thinkpad ([59.92.98.84])
+        by smtp.gmail.com with ESMTPSA id b15-20020a1709027e0f00b001869394a372sm12022018plm.201.2022.11.22.07.05.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 22 Nov 2022 07:06:04 -0800 (PST)
+Date:   Tue, 22 Nov 2022 20:35:55 +0530
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     Abel Vesa <abel.vesa@linaro.org>
+Cc:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 1/2] ufs: host: ufs-qcom: Clear qunipro_g4_sel for HW
+ version major 5
+Message-ID: <20221122150555.GE157542@thinkpad>
+References: <20221116121732.2731448-1-abel.vesa@linaro.org>
+ <20221116121732.2731448-2-abel.vesa@linaro.org>
 MIME-Version: 1.0
-X-OriginatorOrg: chelsio.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BN9PR12MB5324.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ee39c979-5c17-4c1d-fcf9-08dacc95e486
-X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Nov 2022 14:28:58.1966
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 065db76d-a7ae-4c60-b78a-501e8fc17095
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: BwR0/gWFy4zSlovQ+JWjxWpfYKV8k/cDRYdwtE9DKdu1zy3yPKVtgS76CEvJ2Uplu4ySbjl1PHpjbhOSzcZo/A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB4090
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20221116121732.2731448-2-abel.vesa@linaro.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->cxgbit and libcxgbi both used the exact same function but with slightly
->different names, and a missing NULL check in one case. Move the function
->to libcxgb/libcxgb_ppm.c and nuke the duplicate.
->
->This also renames the function to cxgbi_ppm_set_one_ppod so that it
->matches the rest of the functions in cxgb_ppm.
->
->Signed-off-by: Daniil Tatianin <d-tatianin@yandex-team.ru>
->---
+On Wed, Nov 16, 2022 at 02:17:31PM +0200, Abel Vesa wrote:
+> On SM8550, depending on the Qunipro, we can run with G5 or G4.
+> For now, when the major version is 5 or above, we go with G5.
+> Therefore, we need to specifically tell UFS HC that.
+> 
+> Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
+> ---
+>  drivers/ufs/host/ufs-qcom.c | 4 ++++
+>  drivers/ufs/host/ufs-qcom.h | 2 ++
+>  2 files changed, 6 insertions(+)
+> 
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index ca60a5b0292b..72334aefe81c 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -227,6 +227,10 @@ static void ufs_qcom_select_unipro_mode(struct ufs_qcom_host *host)
+>  	ufshcd_rmwl(host->hba, QUNIPRO_SEL,
+>  		   ufs_qcom_cap_qunipro(host) ? QUNIPRO_SEL : 0,
+>  		   REG_UFS_CFG1);
+> +
+> +	if (host->hw_ver.major == 0x05)
+> +		ufshcd_rmwl(host->hba, QUNIPRO_G4_SEL, 0, REG_UFS_CFG0);
 
-Acked-by: Varun Prakash <varun@chelsio.com>
+So this means, G5 will be used all the time even if the UFS device doesn't
+support it (ie., G4 device), which is not ideal.
+
+Since you have already based this series on my UFS gear 4 series, you should
+resend this on top of my next version that I'm about to submit. There I have
+proposed reinitializing the UFS device after switching to max gear supported by
+both controller and device.
+
+Based on that information, you could do:
+
+```
+	if (host->hw_ver.major == 0x05) {
+		if (host->hs_hear == UFS_HS_G5)
+			ufshcd_rmwl(host->hba, QUNIPRO_G4_SEL, 0, REG_UFS_CFG0);
+		else
+			ufshcd_rmwl(host->hba, QUNIPRO_G4_SEL, 1, REG_UFS_CFG0);
+	}
+```
+
+By this way, if the device doesn't support G5, G4 will be used.
+
+Btw, please use a valid definition instead of 0/1 above.
+
+> +
+>  	/* make sure above configuration is applied before we return */
+>  	mb();
+>  }
+> diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
+> index 751ded3e3531..10621055bf7f 100644
+> --- a/drivers/ufs/host/ufs-qcom.h
+> +++ b/drivers/ufs/host/ufs-qcom.h
+> @@ -36,6 +36,7 @@ enum {
+>  	/* On older UFS revisions, this register is called "RETRY_TIMER_REG" */
+>  	REG_UFS_PARAM0                      = 0xD0,
+>  	REG_UFS_PA_LINK_STARTUP_TIMER       = 0xD8,
+> +	REG_UFS_CFG0                        = 0xD8,
+
+Hmm, so what is the offset of REG_UFS_PA_LINK_STARTUP_TIMER?
+
+>  	REG_UFS_CFG1                        = 0xDC,
+>  	REG_UFS_CFG2                        = 0xE0,
+>  	REG_UFS_HW_VERSION                  = 0xE4,
+> @@ -75,6 +76,7 @@ enum {
+>  
+>  /* bit definitions for REG_UFS_CFG1 register */
+>  #define QUNIPRO_SEL		BIT(0)
+> +#define QUNIPRO_G4_SEL		BIT(5)
+
+Since this bit belongs to CFG0 register, it should be added separately and not
+with CFG1 definitions.
+
+Thanks,
+Mani
+
+>  #define UFS_PHY_SOFT_RESET	BIT(1)
+>  #define UTP_DBG_RAMS_EN		BIT(17)
+>  #define TEST_BUS_EN		BIT(18)
+> -- 
+> 2.34.1
+> 
+
+-- 
+மணிவண்ணன் சதாசிவம்
