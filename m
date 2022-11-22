@@ -2,113 +2,128 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24766C4332F
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Nov 2022 22:57:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34B7EC43217
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Nov 2022 01:04:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229991AbiKUW45 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Nov 2022 17:56:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52340 "EHLO
+        id S231924AbiKVBE1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Nov 2022 20:04:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44796 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231908AbiKUW4z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Nov 2022 17:56:55 -0500
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20B7FC72C1
-        for <linux-scsi@vger.kernel.org>; Mon, 21 Nov 2022 14:56:55 -0800 (PST)
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2ALLkZjc018627;
-        Mon, 21 Nov 2022 22:56:41 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=date : from : to :
- cc : subject : message-id : references : mime-version : content-type :
- content-transfer-encoding : in-reply-to; s=qcppdkim1;
- bh=IYAnO8QbxlBww+tJ/vWakdGZf2wNKn4qaiFtYCl3Sw4=;
- b=ehPtCxFGVQRdBkM73j+KRbEk47TrI19LFMFANJCIcAL69HsLq2AJhc5+hIj9yCk6YQwV
- VmDzVwgsgbePr+R/1d5sgIrZuREPHOXd/r3jHdG1D7330y5tmnJAtqPQCKHzwOjdT3b0
- YB2Snhf/YW97KcZ2BgHjGVH/K8k+xxMRHYQDqEMl2Veb6gJIf5hb+vKyiuOFRkCSxAmv
- AV4SJsifOIBxuXvAGXA/PgR1O1dFOoLP1joOhec1DcFjcabrock+WDgvNu+2rDPKVYwQ
- 35TMiwYqWxBYkGuTTV3MuSv5mFsKfQpged013hS3gyOjJpSzyQSfiwC5//KjVgWNh4AH 1g== 
-Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3kxreanxb4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 21 Nov 2022 22:56:41 +0000
-Received: from nasanex01a.na.qualcomm.com (corens_vlan604_snip.qualcomm.com [10.53.140.1])
-        by NASANPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 2ALMue3P028733
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 21 Nov 2022 22:56:40 GMT
-Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
- nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.36; Mon, 21 Nov 2022 14:56:40 -0800
-Date:   Mon, 21 Nov 2022 14:56:34 -0800
-From:   Asutosh Das <quic_asutoshd@quicinc.com>
-To:     Powen Kao =?utf-8?B?KOmrmOS8r+aWhyk=?= <Powen.Kao@mediatek.com>
-CC:     Bart Van Assche <bvanassche@acm.org>,
-        Stanley Chu =?utf-8?B?KOacseWOn+mZnik=?= 
-        <stanley.chu@mediatek.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        Peter Wang =?utf-8?B?KOeOi+S/oeWPiyk=?= 
-        <peter.wang@mediatek.com>,
-        Naomi Chu =?utf-8?B?KOacseipoOeUsCk=?= <Naomi.Chu@mediatek.com>,
-        Alice Chao =?utf-8?B?KOi2meePruWdhyk=?= 
-        <Alice.Chao@mediatek.com>, <linux-scsi@vger.kernel.org>,
-        <mani@kernel.org>, <quic_cang@quicinc.com>
-Subject: Re: 52a518019c causes issue with Qualcomm UFSHC
-Message-ID: <20221121225634.GA20677@asutoshd-linux1.qualcomm.com>
-References: <20221115014804.GA24294@asutoshd-linux1.qualcomm.com>
- <KL1PR03MB5836A982CAE0FE411743BF7283069@KL1PR03MB5836.apcprd03.prod.outlook.com>
- <20221117174634.GA12056@asutoshd-linux1.qualcomm.com>
- <584b6f9a-c4f9-8ecc-98d9-216923d85ddf@acm.org>
- <20221118191058.GA28646@asutoshd-linux1.qualcomm.com>
- <TYZPR03MB5825B4D5259FA22CCC876E7783089@TYZPR03MB5825.apcprd03.prod.outlook.com>
+        with ESMTP id S231948AbiKVBEZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Nov 2022 20:04:25 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4AD615FF5;
+        Mon, 21 Nov 2022 17:04:24 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1301E6151A;
+        Tue, 22 Nov 2022 01:04:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F617C43155;
+        Tue, 22 Nov 2022 01:04:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1669079063;
+        bh=wpD5zzzo6w7p3WOWI5WdmBr7p4BboEaBNwhD+AKKK+A=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=PK1gNZVJ0kcEPvGy8l9MHsEaFYI4887MGYxjwddokCvV+5CR0pd79fl0p1glOCGRn
+         0UZ933OfAr+4Gq4dPyQQ4ggYYy7ccvWAq7u3GjOOQ7+zHHDtLvQye8pH8M+W0mlL9y
+         sPKNHqGeUQX6wHnzugWH1EkLj7EBiasEKdjqPfB+3Mn6fRhazpJViEPEdVXvGMH8Mp
+         8V3kgK6niSFEXIPG0ggFZbhKEYuigziC8Lr+NN51KI8fNT4wMU7AyIBoB+ybCdNHHm
+         eL1fFHymyVCC6ufBOz1XhfkVZUFfGDaG9XQKwLeKE7dV3bVxproQTa3yKrUxKkYe2e
+         wEDKHMa+wadsw==
+Received: by paulmck-ThinkPad-P17-Gen-1.home (Postfix, from userid 1000)
+        id 8788A5C1523; Mon, 21 Nov 2022 17:04:22 -0800 (PST)
+From:   "Paul E. McKenney" <paulmck@kernel.org>
+To:     rcu@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org, kernel-team@meta.com,
+        rostedt@goodmis.org, Uladzislau Rezki <urezki@gmail.com>,
+        Joel Fernandes <joel@joelfernandes.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org,
+        "Paul E . McKenney" <paulmck@kernel.org>
+Subject: [PATCH v2 rcu 12/16] scsi/scsi_error: Use call_rcu_flush() instead of call_rcu()
+Date:   Mon, 21 Nov 2022 17:04:17 -0800
+Message-Id: <20221122010421.3799681-12-paulmck@kernel.org>
+X-Mailer: git-send-email 2.31.1.189.g2e36527f23
+In-Reply-To: <20221122010408.GA3799268@paulmck-ThinkPad-P17-Gen-1>
+References: <20221122010408.GA3799268@paulmck-ThinkPad-P17-Gen-1>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <TYZPR03MB5825B4D5259FA22CCC876E7783089@TYZPR03MB5825.apcprd03.prod.outlook.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: AwPgryfTnbawRyP0xP-3w3N-vp70Jvoc
-X-Proofpoint-ORIG-GUID: AwPgryfTnbawRyP0xP-3w3N-vp70Jvoc
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2022-11-21_18,2022-11-18_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 clxscore=1015
- suspectscore=0 bulkscore=0 priorityscore=1501 mlxlogscore=943 spamscore=0
- phishscore=0 adultscore=0 impostorscore=0 malwarescore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2210170000 definitions=main-2211210171
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Nov 19 2022 at 20:16 -0800, Powen Kao (高伯文) wrote:
->Hi Asutosh,
->
->
->
->Reverting the patch doesn't sound feasible on MTK platform ☹
->
->
->
->>>I don't think invoking a clock scaling notification during
->
->>>ufshcd_host_reset_and_restore() sounds right to me.
->
->But the point is that driver has the right to know that the clk is scaled no matter where ufshcd_scale_clks() is invoked, no?
->
->
->
->Do you mind applying this patch on qcom driver to check on host status before further operation?
+From: Uladzislau Rezki <urezki@gmail.com>
 
-+ Mani, linux-scsi
+Earlier commits in this series allow battery-powered systems to build
+their kernels with the default-disabled CONFIG_RCU_LAZY=y Kconfig option.
+This Kconfig option causes call_rcu() to delay its callbacks in order
+to batch them.  This means that a given RCU grace period covers more
+callbacks, thus reducing the number of grace periods, in turn reducing
+the amount of energy consumed, which increases battery lifetime which
+can be a very good thing.  This is not a subtle effect: In some important
+use cases, the battery lifetime is increased by more than 10%.
 
-Hello Powen
-Thanks for the change. I will think of something to work-around the issue.
-However, I would like to point out that a change that breaks an existing driver
-must be fixed or reverted, not the other way around.
+This CONFIG_RCU_LAZY=y option is available only for CPUs that offload
+callbacks, for example, CPUs mentioned in the rcu_nocbs kernel boot
+parameter passed to kernels built with CONFIG_RCU_NOCB_CPU=y.
 
--asd
+Delaying callbacks is normally not a problem because most callbacks do
+nothing but free memory.  If the system is short on memory, a shrinker
+will kick all currently queued lazy callbacks out of their laziness,
+thus freeing their memory in short order.  Similarly, the rcu_barrier()
+function, which blocks until all currently queued callbacks are invoked,
+will also kick lazy callbacks, thus enabling rcu_barrier() to complete
+in a timely manner.
+
+However, there are some cases where laziness is not a good option.
+For example, synchronize_rcu() invokes call_rcu(), and blocks until
+the newly queued callback is invoked.  It would not be a good for
+synchronize_rcu() to block for ten seconds, even on an idle system.
+Therefore, synchronize_rcu() invokes call_rcu_flush() instead of
+call_rcu().  The arrival of a non-lazy call_rcu_flush() callback on a
+given CPU kicks any lazy callbacks that might be already queued on that
+CPU.  After all, if there is going to be a grace period, all callbacks
+might as well get full benefit from it.
+
+Yes, this could be done the other way around by creating a
+call_rcu_lazy(), but earlier experience with this approach and
+feedback at the 2022 Linux Plumbers Conference shifted the approach
+to call_rcu() being lazy with call_rcu_flush() for the few places
+where laziness is inappropriate.
+
+And another call_rcu() instance that cannot be lazy is the one in the
+scsi_eh_scmd_add() function.  Leaving this instance lazy results in
+unacceptably slow boot times.
+
+Therefore, make scsi_eh_scmd_add() use call_rcu_flush() in order to
+revert to the old behavior.
+
+Tested-by: Joel Fernandes (Google) <joel@joelfernandes.org>
+Signed-off-by: Uladzislau Rezki <urezki@gmail.com>
+Signed-off-by: Joel Fernandes (Google) <joel@joelfernandes.org>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: <linux-scsi@vger.kernel.org>
+Signed-off-by: Paul E. McKenney <paulmck@kernel.org>
+---
+ drivers/scsi/scsi_error.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 6995c89792300..634672e67c81f 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -312,7 +312,7 @@ void scsi_eh_scmd_add(struct scsi_cmnd *scmd)
+ 	 * Ensure that all tasks observe the host state change before the
+ 	 * host_failed change.
+ 	 */
+-	call_rcu(&scmd->rcu, scsi_eh_inc_host_failed);
++	call_rcu_flush(&scmd->rcu, scsi_eh_inc_host_failed);
+ }
+ 
+ /**
+-- 
+2.31.1.189.g2e36527f23
 
