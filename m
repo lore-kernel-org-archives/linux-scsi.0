@@ -2,196 +2,360 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBC55C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Nov 2022 09:11:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6AB0C433FE
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Nov 2022 09:16:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233243AbiKVJLk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Nov 2022 04:11:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44314 "EHLO
+        id S232715AbiKVJQs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Nov 2022 04:16:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50008 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233216AbiKVJL3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Nov 2022 04:11:29 -0500
-Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 505883E080;
-        Tue, 22 Nov 2022 01:11:28 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1669108288; x=1700644288;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=ws82VtXZjRbSgry0N+HZRJh/aYKU3y+8h+QjPRjLH/0=;
-  b=ht4v/T2viKv+FdU8HJUIk7UtUlcHjvto28nRjZ1a+eKSgcY2bMIKZF6Q
-   7hwnfgao+Ntbbx5QJeq/1hwVq8MSg1yzT7xPdeGe6kmR8UkBuJSC164nv
-   5rMwrQGBKFbfgX9Vck2LpLiOZ5lrn3xggVYiLQ73G0uztwSlpvxMexdlC
-   iZ2/VgqUS3IV5w+GkfBPnANxH2ndb4TOquT/dbMKWyCNryekDCWS5J4FG
-   elTylgiDj2ON9QWqHL1EAfjf73y1JMfQXsESEirB/rDRbdZJ69NpPbbKL
-   2OPOBq6sNzAc/upVCoz9nlgnIqrfqsTkfgw23ylN5/2V5eCVCwwnAlYgK
-   w==;
-X-IronPort-AV: E=Sophos;i="5.96,183,1665417600"; 
-   d="scan'208";a="328979075"
-Received: from mail-dm6nam10lp2102.outbound.protection.outlook.com (HELO NAM10-DM6-obe.outbound.protection.outlook.com) ([104.47.58.102])
-  by ob1.hgst.iphmx.com with ESMTP; 22 Nov 2022 17:11:26 +0800
+        with ESMTP id S232410AbiKVJQp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Nov 2022 04:16:45 -0500
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DD0DC3C
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Nov 2022 01:16:43 -0800 (PST)
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2AM8snKS015886;
+        Tue, 22 Nov 2022 09:16:34 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
+ subject : to : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2022-7-12;
+ bh=No9nGaZnS0sRWHy8YG+xlVrbPSAwlfGsZrODEbgFpAM=;
+ b=h7QL7f8SO5vDN5isfzjR6UfG6/mIWJza/YgImT4t5hE/v90h2dWst906qc4aRK0HgIZ9
+ hxGENOqVEbvaMrc4GHghKzISWhxY2aR5/tSeGJ+ShkDrc4N2pnbwGaePdI8sf4SpwW9A
+ 7QbYgOiCcVl3yhJ+hHs18G0h46tndxxJhco3Vl9YguKl5FxP9EI2Iqk2q2TlDZ09LSJl
+ WmBwSFj6+fKyZYS+hLEM82kIhN/D52vTfagL8CeB1w5AwtFPrK+aUq7XZkQ6f5kuAzgJ
+ TqqF4fFWo9XP6hg1PzBXni6bG0x6XALyLQCoMq7VX9CZ1E7e0NGCPQ1nWHWAcbyt2eM1 mQ== 
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3m0gas1nfc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 22 Nov 2022 09:16:34 +0000
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2AM8UaK4038880;
+        Tue, 22 Nov 2022 09:16:33 GMT
+Received: from nam04-dm6-obe.outbound.protection.outlook.com (mail-dm6nam04lp2042.outbound.protection.outlook.com [104.47.73.42])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3kxnk51wn4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 22 Nov 2022 09:16:33 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ddNUsScUn+UrF2ovjskX/KyhwygmhRvotIvAGN+/F9Z0qZnnjyqV1O19YGs/oAfGTpuDe9+PBTCcqYVkffvcW2rP4aIjSCqu9z8XMsukibvl6jCq1u14BQgIOqGbD/XVWChrK1MYC2MAzGnQyL3ElYgqvWLs6xwp1eB+9aiA5XG7/Xa3T4W71eXpa4MH9yWG5bFeVCb3OWFdEW5ll9ZJTs/fXSgSSUB7JtfRCgfc3570xlpHZvYmoQymCcCaHubSVJ7Q9X7A4ttDgQ4qW/5dV6vCBVxoDWCCY05Z0GSR4l64RCBnIY4XUIaOKPWDmI/GPXE1YWasEi6rUGA1stWiRw==
+ b=aiNjZgQQMsvnPI3dVd5MP1jtO6+3GIDtEAvkhXRg+flss/LS2zGxIcTe7iigk/QQE5i47+v4lfx/QmO1ONFWnBohGzKPfOWiWgbwJrkVq2gItFxR6dJUeN/YD7GXR+42kO1/P+rOJFCYpYWCHebaAZwLa5MXRjabgGYBhxlyE7wuK5c4T9yee+KAUwv5dsSTcqv8iB2sALNaVtll8bKvMffvDreViq5zCOwfnHmx6zY+M+qSMOtZRi945Ebs6aH3oj9zDOiZr/BqB4uhGUz7SOL82bxeld8q/vIVFBlcDQ4qShLJbDf8McUa8jz23xu+U8sM6IODK46dBaXLrLM6pQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=YsbBIErCBOnc6VI+9Zoui17xzaGwwFys4lrkAKIDyn4=;
- b=bc2Jp+i7CgKRfq9Fpl7EU8EKxNapq5ON3RGpCn9g+QnnVNpsZhypw0l+3o9OThqz1mXwOXJavT+5TMWoJJ2sbCXYReXcbJJRbpUVf6ZhMNzc3TKorIsbFYbEI6TSoYNVFinc53j0hDwIjTx84e1VHULa+x3FAz+7bvKu51hklhTM2RXhfFbzjHSYOB3HV9356nJzSIECyLLzYtUQTA5FuL0IQWLbRDlAG5kkoC10ylnQ9hQpwLobV96a4sNuDiOy9Ypi+gJjW83nhZkKUayVDDnAdK0YBh/UXpQBLUyLD4IhFr9nSGfV28QkXmwD/4lH4Jciwrn2NEB5V/DE/m1ApQ==
+ bh=No9nGaZnS0sRWHy8YG+xlVrbPSAwlfGsZrODEbgFpAM=;
+ b=bo9oKzY1tgukKnS8APDe8EEf5zYCHsFmNbG0SnysIKwGLZ0vltFMDpUNxvut2tGLRtsYuRLx+pAYp7eQEDHuUhwLR44jO++LYE3keqOo/4k8YP3GACmJ8IigO4NMC2zq1PBdP6LZxZvn7Sp9egr7VwTYbDP7ClIcPkg/KmWyWs21H9zQaEa4LokcZsAIDuzA/jdU7DxY6CMGUUsn5ng25zkgCg1wIzwH6/7X9w0/UAedOdtaliViob7A3Jvye1JHcmC5l+0Ng+8n+qa2UjMzgI0XoRoHmN6oAemi18gQXC9WpuJcYevNMxahAeJpgA1JiZ4V941vU/gzUVtQ+7QMEA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=YsbBIErCBOnc6VI+9Zoui17xzaGwwFys4lrkAKIDyn4=;
- b=ERnZ1Lan+3EChHxYrvUlZ4wgQu2AcZWwS0KyP1mrV9YSjIpGYUmhhU8Z7VipY3lEmoeIsJvrgtMMqplJ8R7aPnGTwrlCw3TAui9bweCg6VGBMrMBWTMH9KRpnwA5BlQZ7sjdtykHlOnRRP3iXEi/6Nh1MODpXFH+zZXWfMYW1rI=
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- MN2PR04MB6749.namprd04.prod.outlook.com (2603:10b6:208:19e::9) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5834.9; Tue, 22 Nov 2022 09:11:23 +0000
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::1afa:ab74:ef51:1e72]) by DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::1afa:ab74:ef51:1e72%3]) with mapi id 15.20.5834.015; Tue, 22 Nov 2022
- 09:11:22 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Bean Huo <beanhuo@iokpp.de>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        "daejun7.park@samsung.com" <daejun7.park@samsung.com>,
-        "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
-        "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
-        "quic_xiaosenh@quicinc.com" <quic_xiaosenh@quicinc.com>,
-        "quic_richardp@quicinc.com" <quic_richardp@quicinc.com>,
-        "quic_asutoshd@quicinc.com" <quic_asutoshd@quicinc.com>,
-        "hare@suse.de" <hare@suse.de>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v2 4/6] ufs: core: Advanced RPMB detection
-Thread-Topic: [PATCH v2 4/6] ufs: core: Advanced RPMB detection
-Thread-Index: AQHY/S6iEuB/JGeCyUWBz4Z1Mwdk3q5KqNYQ
-Date:   Tue, 22 Nov 2022 09:11:22 +0000
-Message-ID: <DM6PR04MB65756FCBE16EE778DBF86D2CFC0D9@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <20221120222217.108492-1-beanhuo@iokpp.de>
- <20221120222217.108492-5-beanhuo@iokpp.de>
-In-Reply-To: <20221120222217.108492-5-beanhuo@iokpp.de>
-Accept-Language: en-US
+ bh=No9nGaZnS0sRWHy8YG+xlVrbPSAwlfGsZrODEbgFpAM=;
+ b=eqkBw7mzNxvqlsp+t1/ZupuM0e1CYMxf7jDc4gTWtoUn77CqJnxBubnm7upX3g839xSFeT79qTQOIYIhcz8wOm5jxgKrjeuW84gmaw0hXPBKLOR/W/boip4x4dKNynJOj2lC7oKlKbntYE/Q1+NJJB4NDYEmd9HC+mDzEPZHFR4=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by PH7PR10MB7009.namprd10.prod.outlook.com (2603:10b6:510:270::5) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5834.15; Tue, 22 Nov
+ 2022 09:16:31 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::5984:a376:6e91:ac0d]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::5984:a376:6e91:ac0d%9]) with mapi id 15.20.5834.015; Tue, 22 Nov 2022
+ 09:16:31 +0000
+Message-ID: <f89a2bba-3988-1080-8c9b-bbf7bec3961c@oracle.com>
+Date:   Tue, 22 Nov 2022 09:16:27 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.5.0
+Subject: Re: [PATCH 01/15] scsi: Add struct for args to execution functions
+To:     Mike Christie <michael.christie@oracle.com>, bvanassche@acm.org,
+        mwilck@suse.com, hch@lst.de, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com
+References: <20221122033934.33797-1-michael.christie@oracle.com>
+ <20221122033934.33797-2-michael.christie@oracle.com>
 Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: DM6PR04MB6575:EE_|MN2PR04MB6749:EE_
-x-ms-office365-filtering-correlation-id: 10705ac0-e9be-4a81-b3f0-08dacc69869e
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: hcT/HmlU9eJ9r2NTkDah7dRkrxcCHvy6eCxs9BhD5crikO6dJxQNh5mwOCACEzrL3QAaNuzCClmnrVkFohm3K5D/gIyPI3tiyRureNHQ+ho8PDclwoS+6ce19MI7rsxbOTpCzsdqMOWh75LKxIXGSUE9YiTKFVXoW/x6U4U2eO+ZpAxsoz4le0dg1XCkcvhSPi1a+eRl4i5Ed+QwWHrXzDjCeKnDC/xyFaThAC/4GLjN3oUP+11b8c4UGLhT2rhQGb0ZoIDp2Do++7SPxmNqJ5STbT2W/x/dDLQUzBEP0169JwVsM3XXspZbdOu0zg6xFj20j9wZF6MO209BEt1T8LSvlsqFzxQWCcPz7sgMEwPhG4PHjpH3bkK3YMx1JLbkfHOQFp0Tp5OHAXzwRKY8RkQ67WacLuZaabKnyRg0JcVFzuBTS1vLyBPQWaSh7NQWB662yAxYt4iWhnstc04jGAZ4AO1J7qmxRrNwNpF5qd6w/bzMMmvUJj+fcAYbQqUTiNtoVJNZYP45S7jhkwNU26QE45onquG5tYrX+hIfYwlEBSf2JfmOyEJpqQEw4nGrQuFpq1r9yUX5Ssm8gEb4iKGsxCjAGdPbxVZK9qxluvfcQxDurom/d0ZErw/IlQW/jB5Oa4MRhjRhPTR/9F1qcLsZ5Qh9ne+E3Q+9ASLDpJIIIWYV8J8S6uEkKflaEoeXyN3o3aMenUUI+ToKDmEDX1YT9bib5dNLyAAK0qyeTAw=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(4636009)(136003)(396003)(39860400002)(346002)(366004)(376002)(451199015)(2906002)(66476007)(64756008)(41300700001)(76116006)(66556008)(66946007)(66446008)(86362001)(82960400001)(33656002)(55016003)(38070700005)(110136005)(54906003)(7696005)(4326008)(122000001)(6506007)(5660300002)(921005)(38100700002)(71200400001)(8936002)(8676002)(4744005)(52536014)(478600001)(26005)(7416002)(316002)(186003)(9686003);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?1ivVU4mUKlmlI6ei3Fi+k2YgXFOB//XQLs8STxH0xb5/xcujsSAPrkkRUPcu?=
- =?us-ascii?Q?NiDVgkxHV7JHhtZYLs5MHQx/PvN+yA8q1C38RUuQ3CcaNcJPVFcn+pd1DkfK?=
- =?us-ascii?Q?1Rzia7+4LpBHp5m8p5qk12W+DGBvpDmvL0miiF2YBRQJDf8peuL//vdM+FLg?=
- =?us-ascii?Q?gPM2DAasacMnrO3GkJ+jjphp9WObuwCr9WuNcTynbT0KRQmJ6KgVoi3m4B5P?=
- =?us-ascii?Q?7EVUg1icMkGaFgkJJ3r6HxqInvCQmnESmxmW/L0VV9nFxQ2GzGltQtGXQ/iZ?=
- =?us-ascii?Q?5mZK87m4IkNkifmVE6ZQz74wXP8AcnEEfJiNQqhwP0WaSw4ruO9jk4DgVSp8?=
- =?us-ascii?Q?O3jJiBWQIBlysANj9/NyINBw3EkQ5X2Np78mOaVAwGjRUSo0QiVWPXa3/uLe?=
- =?us-ascii?Q?+4A3YfRDEeq808Wx7SCLtUquL9oN5eTHFrZvGRl71dY5deF7pXcTIoVtMBSG?=
- =?us-ascii?Q?ynHoR8tTOGrDOwp9SI5H24Y69ZCjeJl3UCUyrT/IB3vPLcGHE4S428cmj0VA?=
- =?us-ascii?Q?8h1BJTJ9+y0fQBNKp8eIChpN629WNCjctZZP0+tFLoApIDiNp6B6xsQTIyxm?=
- =?us-ascii?Q?uDuGgcRnrwW2ivNhZXxIQGJSFnVq7Sf2GessIwOpw96GFkuENHtG1dDOpDgM?=
- =?us-ascii?Q?NkOcUEUycPQPNDpCGMZ5wDCi0P50CIxPB/vrhedJTg0qIzjpkYzkX3y4N2hB?=
- =?us-ascii?Q?kBTlbPoPbEf/nqGJR2c3zDgVBKJ5etfcDwDkuEJ3pW8PZOw4HKikYBrcxqNN?=
- =?us-ascii?Q?uEaCOZ/ac1Wel7t7NfppWyu6Qj03VVGTv22Z8Pid4ba6cw2L4Xkbn/edQ+G4?=
- =?us-ascii?Q?DqyzleVyXyi57s64v0fq2CNcByROi8ykLihPQY4fhwjgGycespUy3MVASlDN?=
- =?us-ascii?Q?0hpZ6u1xFVT8HxTQhpw3JWNsap0DZZIGM1l2nLooZrRUNDTKO7KRH9jzB/vz?=
- =?us-ascii?Q?tbTcsvBgr+bGy9sbXNMYXzWf3FxKjVSb+mkaZCKCWfF6kMUtCq3I6bPtm3dB?=
- =?us-ascii?Q?gYCuvxehFNfSTlT+VfjAi9IuLEA2UAj//3DZiMXpccNUIsti2J5YoXP4cOIH?=
- =?us-ascii?Q?6q/YfScvFogINntl7wIa5wyhMHRyVr2kgBx6xMONd5gYJUQifHxL1wlHox0X?=
- =?us-ascii?Q?MHG1Va2/hr3h1rMFUWQBBZvBoYznWu+fE91mwi+1hecyYbO7NSO/WMv3MwZi?=
- =?us-ascii?Q?IUA125PN+VZnp0Nn/Cy02iwsX9mcNtnSj2yNuugysHEf3qoIGPbmglBeyYEV?=
- =?us-ascii?Q?8SgNviB8OE0vphvOFNrKMZShAFAgmwbGZI+iXqcq4HzgfnCe1fDS691YhmhK?=
- =?us-ascii?Q?AKjLP6M6T1lktGvgtkOIOLps42dUk4w4h9ptgc91CNjUVh8HM7hLJ3+li9pj?=
- =?us-ascii?Q?6bfuhisWblXdR8b8AZiYtWOqMbv0V80fphD0yAQkTlleDeN7G3txczg8sful?=
- =?us-ascii?Q?zseM1bSPa7NkMpRz6LGRGApPcBTjjT0iK7opv8/CZPAQyeiGWE9kfgr21e0z?=
- =?us-ascii?Q?74B9bsFdfvp6zzS6IDsfhVUN4lNb9ZXHwPYiuKJ0HbbKA7Qc4yMsmAX7Zmhf?=
- =?us-ascii?Q?xq606EGBG7vfNt9oeSTy3gVetX3/dWzJ1/2AgKnk?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+From:   John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <20221122033934.33797-2-michael.christie@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: LO2P265CA0491.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:13a::16) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|PH7PR10MB7009:EE_
+X-MS-Office365-Filtering-Correlation-Id: 053120fb-f1ba-4d2d-0939-08dacc6a3e3c
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: hBKlJfECojfcYbK/yebRuPsKyRbhoTvGVDKjyLrFpfoacXt++PcPQFPYPXn0o6Xk/o2fr5wO6cPEIJXdrrjoKZhrWvQGTObvg3e0dl/LP1iF+B6XXIQ8Xcq5zSKksCiFqk4+gGF8kjNep2oDs6woo2RZ92zgb4ELP9NnpKpYpR1pE17bHLYbUdryrXzERzWzBZ4/7bqg6h8ErG2zvdJiKuvsDYUp1jV44ipHQWh/Zg3i3+QfmJUufLxfXrR/+9IBPZb4+alyraNopEEwiKomTR6NTyfk5iJkF55dDowWzIsB58EhShJ0Gptg0zSmDEFBB4TJwu5RuYl6cS1FyFFECC+8hfsglkfRE3ziXVHqD2Z2kxGlJwFQHEtWB1Dc6QYt41JI8PuUU1vl0jORn3CFw3acfS28dmq/TcljQS43TG9bI6mwbEwVBY6fyfNaCmEq5ZXcCvbJpvl55K4q8rwi6F34oUar2h4OotI5yJ2WobMk678RHI1bAUpKRhbaGvIMo+yaunj3xVVf6tnlT38xDjyBA0RsZfqSOSRwE3vWQySn4lEu6rMYHJ9YhxG2PoOI6PQxjH5xSzkhBc0cCW2ueBpf2SBsvM5nQUB5jDaJGD2G3eYvu4hVGpEdy7wBH+B8roSd0geTviimYl0gpfoDLrAzQOBJ4XMYHhAnUDqc4Iof0lDeJnpjHv8ARhUQ7DbJf2rQ7QegspqmWw98H2+0joyzP74EsBsQ7foHxXRzTxo=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(366004)(39860400002)(136003)(346002)(396003)(376002)(451199015)(31686004)(8936002)(8676002)(6506007)(6512007)(53546011)(26005)(66556008)(41300700001)(36756003)(2906002)(6666004)(66946007)(38100700002)(86362001)(5660300002)(31696002)(316002)(6486002)(36916002)(478600001)(66476007)(2616005)(186003)(83380400001)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?a2hTYlRpWFZYNlFQR3VQNSs4VTdJNFpkNDI5V3BRbm9CSzRIdlkvZTc5R29H?=
+ =?utf-8?B?VEFJRjlGQ3p3MWxhbkZ4VmgwWEZPQWNDVVhsNmptS2NHMy85eHdIRTYwaU1O?=
+ =?utf-8?B?UjU1ZGlKUGp3SUJ1ZVo0OXZIQXpXVUdOQkp4MUYzRkxjWlJXTW81ZXhxeE9n?=
+ =?utf-8?B?dnhteXlkY0VQclJmSkpSVkZCZTdleHdqazJIVklPZUQ2eGdUWEVXdWxWbG5J?=
+ =?utf-8?B?Y2U4THVlRjZJV2dNck9tWmNxRUhJdmhSemIxYUdLd1FtTzAwTFFZbVFOcGxP?=
+ =?utf-8?B?QldPdE9mVGRSNzByQTNPZ0oyb1BWbHNNMjFTUjU3Q2ZUdXJ2RUk3QlpYS1RB?=
+ =?utf-8?B?Y2duVWVTUWVXVURybVBEbzltaWc3eGZFdU9jQmtCSXVqdWY5UUZUckdJT1dJ?=
+ =?utf-8?B?OTk3amg3NEhNek1uUVdYb0E0SFg3YXVzTFdITlI4WlpLWlZqQ1VTc0dvdmVz?=
+ =?utf-8?B?Tnd5Q25iWFE1TitHblB3MVhVRXdqUk5rR2tUNW1HQjd3aENIK2UydTBhSkwv?=
+ =?utf-8?B?SWJqYnpyVkxYUityakJ0YVIvUjBTSzM1T3R2M0wwRGtoTm9CQ0VWcVo3NmRX?=
+ =?utf-8?B?bUhjWklwd08vWEw2bHFMMDBrOTlLTTFkM1oya2RPdzlJRkZLdVZqUkZVck5O?=
+ =?utf-8?B?ZW9uSWdwTFNmMUpMVjVLSjhFeHFOOElIazhSN0lSdjJRYzRvdEg1WG9yUk50?=
+ =?utf-8?B?cENma29qUnlJUEFySTFsb3ZVeEo3NXJjQTV2ZDF6ZldERzd2VWdHckZWRXE5?=
+ =?utf-8?B?U1ZjV05pLzVaNWVQSnNMUEF3Y3JyZUZPNVVoMnJSUzR2NVVncldKS3NHZ0Yy?=
+ =?utf-8?B?UlJGMVlHa3N3STc3UGJJMzRSUk42VXcva3RSN3MzZG5ib0EwNDZ3VWpENENW?=
+ =?utf-8?B?OUNzR0l4TFdibXE3b0toaHA4ZUZKRTNDeCs3RU91Yk9IVDZvVVNGUXc0R090?=
+ =?utf-8?B?YVYwQmRrTk10cWF0RitaNy9HTWVjY1ROMWNMZGJ2cnk4YnpOU3FRMm5uSUZQ?=
+ =?utf-8?B?d21Ed3VHWGw3RzREdEVoa1NHd2VJczJ1NTdsRmJJa25pbUw3UkY3bElwL3JH?=
+ =?utf-8?B?akJnTDFBZ01ZOGU4S1g3bWN5andwR3gydmRJR0VXY2VHQUZDK2ZTaXFtMWpB?=
+ =?utf-8?B?a0tGZ2NBTnBSaFhQbkFQaE5JOVRvZG9sdWNCM2RTa2kyNTFsYWlmMGo3OXBh?=
+ =?utf-8?B?SUFOUk5FS3M1cFJqMTJxVFVBZitvWW5abDBnNCthRzhRdm5xWWxlaU5mem9o?=
+ =?utf-8?B?MWM2U3Z3elo3UDNOZ05FY3NsT1hzSUFkbjd1VlVHczY3UWxSTmN6cDJYcXQx?=
+ =?utf-8?B?TDZXeXRsZzJJb3I5aEU4VmVYRlRmWnFGV0htN0hXMnpDRnhIbnZnWXQyVE5I?=
+ =?utf-8?B?TkVHbUhSR2FTZnVSNDA1TFN3TUIveVpwYnVubTR2aUJyYXp0bFcyb1FLUU5n?=
+ =?utf-8?B?TGRpL04yZFBSa2NTQXhxVXJOalNsU0srT0NuL3l5dEhvMlphMFJhZVFTcnl1?=
+ =?utf-8?B?NEhiYlhrczlDOWZqekNCdW9XTG9PZm9YN1VCaVhlY1lhMlZRSGhQUXYxcU1V?=
+ =?utf-8?B?UnE2M1lTRE0vRU1GQ0ZxNFNkMXBveFVnY0wzc21vSHpvNEMycDl4Ykt4RGRp?=
+ =?utf-8?B?ZnJWWUpFWGR3eCtkS1BlaWJjMDBVNlhBUEFLWjFxNDgxRXkzK2FneEtMd3A4?=
+ =?utf-8?B?YUJIMHIwRS9wZVZXYTU2NnhOaEw3YWhvdEY0SmVlYTZ5dVJudzF6VGdmU2dG?=
+ =?utf-8?B?b3lzTDlKYTdTNklBUWpubkRuNHFiZTJTSGpZcXhkL2dqbjUwbHRXcW5ZeTk0?=
+ =?utf-8?B?RjdtYzI3WDIxQml3US96VjJtQ1FlMjJrVHJrNXlXQ21pOFdOeXFWZm9aeFIy?=
+ =?utf-8?B?TVpEZG9NblI3dVBsSWpQdVhROElNRGZManhaaklqcXR0OGlyZ0gyWHhVakJv?=
+ =?utf-8?B?a21Lc2pBbmtYS25TWDBpTFFIQjNUUU5UY05nS0IvazI2R2lBa3kxM3o5YzN1?=
+ =?utf-8?B?Z3p3RHJ3Q0M1d0tZdjBMNkN4NUlqTndJcDV5ZTRhZkMwQ1BrK2kxQWhYdnQv?=
+ =?utf-8?B?MGhjQVN4TTZNQkNtcnpGZmIreXBneEUxUE9ydjdKRm9SZkhGMWhraFNBQnpu?=
+ =?utf-8?B?WXRNQi9BbjNnazRxREZ1U3hXWm1oMmROSERxZXdCYmZnbUhKVnV1NUJpRVZy?=
+ =?utf-8?B?VGc9PQ==?=
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: =?us-ascii?Q?JtgR49w937oa04CQrc5TTsAZtoG7n3Q7vRmAV8B4MyT+HQo4qmY8VZIkrEml?=
- =?us-ascii?Q?OGxg2uI2ufmDc+JntxERHxGb7C9RR9gxZ80DW22xp2AIl5OZkQQh1mEtw9W6?=
- =?us-ascii?Q?n3qXDZ1YANevrgUHshxaFV+9HTye/CVKNiYsUN00JEJRLsKHldmsThK8SVTJ?=
- =?us-ascii?Q?AdaAKR+Azdk8pkmKd6taQ6gaHj4Q/5EwO5NNZI7n1cyK3aGbGB9nVpIbf6Ru?=
- =?us-ascii?Q?hAJKMjDhtjjUSu8IQorUR9U9AB4rQupi+ddD3Pyd/iMg3fBQbDN6vD3MrSZN?=
- =?us-ascii?Q?FA2dBBqWfqUjG6UTQF1ZFkfcdecZRBffrUOHcrEYfLnh9DDDCoMvQO6aH1cx?=
- =?us-ascii?Q?IRxgv8NSb5q723Ha/xcgR+HAl6NcldcdnK6Zj2YrEpo93xeQNjdDgvbt4+2T?=
- =?us-ascii?Q?Rc8zkJrQ3aZNufVVo3ugLV6EvrEVRPTCbCC4e0qebmSH9HKLuky9ogVypQnI?=
- =?us-ascii?Q?9iLOUCIXt6UhmpI8aHlLUni5ODEXehlOcH3o284bWOd16g/ttozC0iJAiW3C?=
- =?us-ascii?Q?Fltwmx8V8HL1JNnD18L8MYnyscwBbYR/mBPEMnVy08dl7V5LfABNVipzvJ3n?=
- =?us-ascii?Q?byP65sdYUfC2Rzc4CQfR12MEM4D+mOesJIfXOTUi1ZDcRmHIFFl6Fx8RQPAy?=
- =?us-ascii?Q?tlwLbyU2g6dfHN7qCiXmppS4vzlcP/ZV+Ys5sdWCdmhYXGIJfTm5SrU42mcZ?=
- =?us-ascii?Q?TQu6FLNKmROSTlf8MZZtZ4We8vAr1citapS+WM16NblJeZP8yTsAkmV/dWxC?=
- =?us-ascii?Q?QhYAHJIUV6Gaq5KgYT++lzI+22IWW1UTcWMp9kjPgYp5DXbb5+a4maY7hZBe?=
- =?us-ascii?Q?bK0NF6XUeF2GYe0Cmc+bUITTPh5kTCmscMBYE4weUjizQJ2eeRNq7Y69dZqN?=
- =?us-ascii?Q?hpBt0pe23n15Rao9iFjdgHkdUGFUh3hAPV3DD2onkRaXSG7TLpz9mg1/zGEA?=
- =?us-ascii?Q?q6Tdmgt1a6Q9SYZurAl3n/+fWfXQO1Nj6xhu8+is1vCf7uleU7CDneOCBinN?=
- =?us-ascii?Q?ZJPsFTJtIdn54Ff7/PpgIpWbDem3P1bEwF52ADIYY7ntQ4vOWYpX6NqYGaFc?=
- =?us-ascii?Q?6qroTlXYW2CgOksUeBWzXfZEYyX8j/0n/RaMGiwYZ21Llhkk3danxv6GW+oe?=
- =?us-ascii?Q?zTurIRARpUx/D7RGZ1VrJoLERUODu3W2PqcgmAEXFeuD5jjvCiF1/BKOrxDr?=
- =?us-ascii?Q?xALhPw2RKYNPjg4aFcY03XPbrLsTWtZxXtATsSh7NOmyIZ3S7MgA3Im3Chtl?=
- =?us-ascii?Q?GtQnAK/3pWweWQnb1GgLTY9PWTVrLRplC+mFDr7NBg=3D=3D?=
-X-OriginatorOrg: wdc.com
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: u/92NKOJS0h2dIoEK3PMDqvbAiYNPTE2Pys3f1aMf0AaO035RdMtF8SxotKzqsuuuwfS4ql+V5Ul5vdGAIH6OHDnbFAMSFhPId0jzyKZXITlLGW95nm+sfhWEJaZiu5C6fs11380F4hzqriu+Azgj6cHeiX2s9EslPMiW+aaz6phpemIJcqVQj/qtCQcO3Hb4VBGjUcOZWrvC6wpGRQ8A+NcnvLWP5MjH0jSw3/rlSu2V0uoFdan9+p8nS35Y1vqLmxU8HVbLL13DsX8tUw+hp6iq9ePiOVwxPJ2/A+Gie/b3RDWtLmsjb5N9tcWFpBAz8JXQ+uJ5DZn1yiIUToB7QXVTo2sTqnO3ic82T/HRoxGwdhx8bRpIc7iicAYOYqKhD91DQ61Y0peFVoAvMW2BmR19Yu4vnPCcbHRP+N8LoMh4Hr4bKRbe5yYQQhlZqAaB8UnuxsP426bQk7G4K0fBEKlHuuwgpMb6G8AP1+XRofcAhSsFKNfHeEmKUGUiz2u/RzNTdRipW3khgIormzMwO6D2aOa2iLikrm1D03owZLPPE3tq8600JWxrkWTZU0THXLCkVPB8xvRVbdikQiuHkIM/DEvufTHj4XO5ezaarWy9tthjjSROsQZaehA8D9z/lMlZh108i/pZhQMVQrn26PQNiA8dHnenEZuXhA/EqgRobBJxZM3a07Sz/wlWPPqIBed/gkW92SIA4k+Ynj2XymDTP3wJ/Ea3AP7anI7qlz/ReXj8+2vlwJSw8k3VYrcPbLia41kp8M2sIzX7QD/DjlkzLYbwJB1zbQwkskcTiG7gLb/Q1E/mYUFquFbCy+D35FJZzURLqQkmk2VSJ1p5koWi11aMYhf+ecBP9gJTuzhziWa1DZTwFJQ50dcw2jb
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 053120fb-f1ba-4d2d-0939-08dacc6a3e3c
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 10705ac0-e9be-4a81-b3f0-08dacc69869e
-X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Nov 2022 09:11:22.8057
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Nov 2022 09:16:31.0630
  (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: juoDzYpDndtvA3f8nrY4acdGCyIE34z3IZNk+zxqd64M5/SM8NnMn0Lo0kXQMSUdGBWru0ypXdtG4wpl+rON+Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR04MB6749
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: I9E9+tgbqpgRoWgoDRiUF6nmfVPaRJ+uPW1rB+0lYunJhXbcTqyQM/m1PZGySOxs1cJqEDn7bl+Ej+bsLDr93Q==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR10MB7009
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
+ definitions=2022-11-22_04,2022-11-18_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0 suspectscore=0
+ malwarescore=0 spamscore=0 bulkscore=0 mlxlogscore=999 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2210170000
+ definitions=main-2211220068
+X-Proofpoint-GUID: Bva-DxqzXgy5zxZyYBp6GZ-962KBXtBF
+X-Proofpoint-ORIG-GUID: Bva-DxqzXgy5zxZyYBp6GZ-962KBXtBF
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> From: Bean Huo <beanhuo@micron.com>
->=20
-> Check UFS Advanced RPMB LU enablement during ufshcd_lu_init().
->=20
-> Signed-off-by: Bean Huo <beanhuo@micron.com>
+On 22/11/2022 03:39, Mike Christie wrote:
+> This begins to move the SCSI execution functions to use a struct for
+> passing in optional args. This patch adds the new struct, temporarily
+> converts scsi_execute and scsi_execute_req and adds a new helper
+> scsi_execute_cmd.
+> 
+> The next patches will convert scsi_execute and scsi_execute_req users to
+> scsi_execute_cmd then remove scsi_execute and scsi_execute_req.
+> 
+> Signed-off-by: Mike Christie <michael.christie@oracle.com>
 > ---
->  drivers/ufs/core/ufshcd.c |  6 ++++++
->  include/ufs/ufs.h         | 24 ++++++++++++++++++++++++
->  2 files changed, 30 insertions(+)
->=20
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c index
-> 1b252e6cf93f..311172578fd8 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -4956,6 +4956,12 @@ static void ufshcd_lu_init(struct ufs_hba *hba,
-> struct scsi_device *sdev)
->             desc_buf[UNIT_DESC_PARAM_LU_WR_PROTECT] =3D=3D
-> UFS_LU_POWER_ON_WP)
->                 hba->dev_info.is_lu_power_on_wp =3D true;
->=20
-> +       /* In case of RPMB LU, check if advanced RPMB mode is enabled */
-> +       if (desc_buf[UNIT_DESC_PARAM_UNIT_INDEX] =3D=3D
-> UFS_UPIU_RPMB_WLUN &&
-> +           desc_buf[RPMB_UNIT_DESC_PARAM_REGION_EN] & BIT(4))
-If instead you use bit 10 in dExtendedUFSFeaturesSupport,
-You wouldn't need to add the rpmb unit descriptor, just the appropriate bit=
-.
+>   drivers/scsi/scsi_lib.c    | 50 ++++++++++++++-----------------
+>   include/scsi/scsi_device.h | 61 +++++++++++++++++++++++++++++---------
+>   2 files changed, 69 insertions(+), 42 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index ec890865abae..327eb2df5583 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -185,39 +185,31 @@ void scsi_queue_insert(struct scsi_cmnd *cmd, int reason)
+>   	__scsi_queue_insert(cmd, reason, true);
+>   }
+>   
+> -
+>   /**
+> - * __scsi_execute - insert request and wait for the result
+> - * @sdev:	scsi device
+> + * __scsi_execute_cmd - insert request and wait for the result
+> + * @sdev:	scsi_device
+>    * @cmd:	scsi command
+> - * @data_direction: data direction
+> + * @opf:	block layer request cmd_flags
+>    * @buffer:	data buffer
+>    * @bufflen:	len of buffer
+> - * @sense:	optional sense buffer
+> - * @sshdr:	optional decoded sense header
+>    * @timeout:	request timeout in HZ
+>    * @retries:	number of times to retry request
+> - * @flags:	flags for ->cmd_flags
+> - * @rq_flags:	flags for ->rq_flags
+> - * @resid:	optional residual length
+> + * @args:	Optional args. See struct definition for field descriptions
+>    *
+>    * Returns the scsi_cmnd result field if a command was executed, or a negative
+>    * Linux error code if we didn't get that far.
+>    */
+> -int __scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+> -		 int data_direction, void *buffer, unsigned bufflen,
+> -		 unsigned char *sense, struct scsi_sense_hdr *sshdr,
+> -		 int timeout, int retries, blk_opf_t flags,
+> -		 req_flags_t rq_flags, int *resid)
+> +int __scsi_execute_cmd(struct scsi_device *sdev, const unsigned char *cmd,
+> +		       blk_opf_t opf, void *buffer, unsigned int bufflen,
+> +		       int timeout, int retries,
+> +		       const struct scsi_exec_args *args)
+
+I suppose that you could alternatively continue to pass a struct instead 
+of a struct pointer, so no need for the checks for args being NULL. As I 
+see, all the direct callers of __scsi_execute_cmd() pass NULL anyway, so 
+another macro in scsi_device.h could make it concise to implement.
+
+>   {
+>   	struct request *req;
+>   	struct scsi_cmnd *scmd;
+>   	int ret;
+>   
+> -	req = scsi_alloc_request(sdev->request_queue,
+> -			data_direction == DMA_TO_DEVICE ?
+> -			REQ_OP_DRV_OUT : REQ_OP_DRV_IN,
+> -			rq_flags & RQF_PM ? BLK_MQ_REQ_PM : 0);
+> +	req = scsi_alloc_request(sdev->request_queue, opf,
+> +				 args ? args->req_flags : 0);
+>   	if (IS_ERR(req))
+>   		return PTR_ERR(req);
+>   
+> @@ -232,8 +224,6 @@ int __scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+>   	memcpy(scmd->cmnd, cmd, scmd->cmd_len);
+>   	scmd->allowed = retries;
+>   	req->timeout = timeout;
+> -	req->cmd_flags |= flags;
+> -	req->rq_flags |= rq_flags | RQF_QUIET;
+
+Are we accidentally losing RQF_QUIET? Or does it matter?
+
+The rest looks good, IMHO.
 
 Thanks,
-Avri
+John
+
+>   
+>   	/*
+>   	 * head injection *required* here otherwise quiesce won't work
+> @@ -249,20 +239,24 @@ int __scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+>   	if (unlikely(scmd->resid_len > 0 && scmd->resid_len <= bufflen))
+>   		memset(buffer + bufflen - scmd->resid_len, 0, scmd->resid_len);
+>   
+> -	if (resid)
+> -		*resid = scmd->resid_len;
+> -	if (sense && scmd->sense_len)
+> -		memcpy(sense, scmd->sense_buffer, SCSI_SENSE_BUFFERSIZE);
+> -	if (sshdr)
+> -		scsi_normalize_sense(scmd->sense_buffer, scmd->sense_len,
+> -				     sshdr);
+> +	if (args) {
+> +		if (args->resid)
+> +			*args->resid = scmd->resid_len;
+> +		if (args->sense && scmd->sense_len)
+> +			memcpy(args->sense, scmd->sense_buffer,
+> +			       SCSI_SENSE_BUFFERSIZE);
+> +		if (args->sshdr)
+> +			scsi_normalize_sense(scmd->sense_buffer,
+> +					     scmd->sense_len, args->sshdr);
+> +	}
+> +
+>   	ret = scmd->result;
+>    out:
+>   	blk_mq_free_request(req);
+>   
+>   	return ret;
+>   }
+> -EXPORT_SYMBOL(__scsi_execute);
+> +EXPORT_SYMBOL(__scsi_execute_cmd);
+>   
+>   /*
+>    * Wake up the error handler if necessary. Avoid as follows that the error
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index 24bdbf7999ab..578f344e330d 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -454,28 +454,61 @@ extern const char *scsi_device_state_name(enum scsi_device_state);
+>   extern int scsi_is_sdev_device(const struct device *);
+>   extern int scsi_is_target_device(const struct device *);
+>   extern void scsi_sanitize_inquiry_string(unsigned char *s, int len);
+> -extern int __scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+> -			int data_direction, void *buffer, unsigned bufflen,
+> -			unsigned char *sense, struct scsi_sense_hdr *sshdr,
+> -			int timeout, int retries, blk_opf_t flags,
+> -			req_flags_t rq_flags, int *resid);
+> +
+> +/* Optional arguments to __scsi_execute_cmd */
+> +struct scsi_exec_args {
+> +	unsigned char *sense;		/* sense buffer */
+> +	unsigned int sense_len;		/* sense buffer len */
+> +	struct scsi_sense_hdr *sshdr;	/* decoded sense header */
+> +	blk_mq_req_flags_t req_flags;	/* BLK_MQ_REQ flags */
+> +	int *resid;			/* residual length */
+> +};
+> +
+> +int __scsi_execute_cmd(struct scsi_device *sdev, const unsigned char *cmd,
+> +		       blk_opf_t opf, void *buffer, unsigned int bufflen,
+> +		       int timeout, int retries,
+> +		       const struct scsi_exec_args *args);
+> +
+>   /* Make sure any sense buffer is the correct size. */
+> -#define scsi_execute(sdev, cmd, data_direction, buffer, bufflen, sense,	\
+> -		     sshdr, timeout, retries, flags, rq_flags, resid)	\
+> +#define scsi_execute_cmd(sdev, cmd, opf, buffer, bufflen, timeout,	\
+> +			 retries, args)					\
+>   ({									\
+> -	BUILD_BUG_ON((sense) != NULL &&					\
+> -		     sizeof(sense) != SCSI_SENSE_BUFFERSIZE);		\
+> -	__scsi_execute(sdev, cmd, data_direction, buffer, bufflen,	\
+> -		       sense, sshdr, timeout, retries, flags, rq_flags,	\
+> -		       resid);						\
+> +	BUILD_BUG_ON(args.sense &&					\
+> +		     args.sense_len != SCSI_SENSE_BUFFERSIZE);		\
+> +	__scsi_execute_cmd(sdev, cmd, opf, buffer, bufflen, timeout,	\
+> +			   retries, &args);				\
+>   })
+> +
+> +/* Make sure any sense buffer is the correct size. */
+> +#define scsi_execute(_sdev, _cmd, _data_dir, _buffer, _bufflen, _sense,	\
+> +		     _sshdr, _timeout, _retries, _flags, _rq_flags,	\
+> +		     _resid)						\
+> +({									\
+> +	BUILD_BUG_ON((_sense) != NULL &&				\
+> +		     sizeof(_sense) != SCSI_SENSE_BUFFERSIZE);		\
+> +	__scsi_execute_cmd(_sdev, _cmd, (_data_dir == DMA_TO_DEVICE ?	\
+> +			   REQ_OP_DRV_OUT : REQ_OP_DRV_IN) | _flags,	\
+> +			   _buffer, _bufflen, _timeout, _retries,	\
+> +			   &((struct scsi_exec_args) {			\
+> +				.sense = _sense,			\
+> +				.sshdr = _sshdr,			\
+> +				.req_flags = _rq_flags & RQF_PM  ?	\
+> +						BLK_MQ_REQ_PM : 0,	\
+> +				.resid = _resid, }));			\
+> +})
+> +
+>   static inline int scsi_execute_req(struct scsi_device *sdev,
+>   	const unsigned char *cmd, int data_direction, void *buffer,
+>   	unsigned bufflen, struct scsi_sense_hdr *sshdr, int timeout,
+>   	int retries, int *resid)
+>   {
+> -	return scsi_execute(sdev, cmd, data_direction, buffer,
+> -		bufflen, NULL, sshdr, timeout, retries,  0, 0, resid);
+> +	return __scsi_execute_cmd(sdev, cmd,
+> +				  data_direction == DMA_TO_DEVICE ?
+> +				  REQ_OP_DRV_OUT : REQ_OP_DRV_IN, buffer,
+> +				  bufflen, timeout, retries,
+> +				  &(struct scsi_exec_args) {
+> +					.sshdr = sshdr,
+> +					.resid = resid });
+>   }
+>   extern void sdev_disable_disk_events(struct scsi_device *sdev);
+>   extern void sdev_enable_disk_events(struct scsi_device *sdev);
 
