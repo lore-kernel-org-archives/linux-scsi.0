@@ -2,167 +2,162 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03178C43219
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Nov 2022 15:06:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92F04C4332F
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Nov 2022 15:44:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232852AbiKVPGI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Nov 2022 10:06:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54428 "EHLO
+        id S233996AbiKVPop (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Nov 2022 10:44:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53100 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233703AbiKVPGH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Nov 2022 10:06:07 -0500
-Received: from mail-pg1-x52f.google.com (mail-pg1-x52f.google.com [IPv6:2607:f8b0:4864:20::52f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4216FD112
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Nov 2022 07:06:06 -0800 (PST)
-Received: by mail-pg1-x52f.google.com with SMTP id v3so14311880pgh.4
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Nov 2022 07:06:06 -0800 (PST)
+        with ESMTP id S233970AbiKVPom (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Nov 2022 10:44:42 -0500
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4837F6EB5A
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Nov 2022 07:44:41 -0800 (PST)
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2AMF4vHb005954;
+        Tue, 22 Nov 2022 15:44:29 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
+ subject : to : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2022-7-12;
+ bh=CehOzNUb9g3odlf+hTxs6tQP8Zgr0KaXtXYKdCBXCeA=;
+ b=gPu8iuio/wVrvpsE318ohM3gc4swRd0U6V6d18xn6FoTLtAAa5/TK1EsXQ4FGwPvYdEP
+ YAJlVd7qhcIDC8/qDfmLbQqClXok2reLRA1D7a1qaREmTrB1Zv6I4MLCsn3UdCNm+CKq
+ 9K0d6H2BtdN7+/PjI/FdDo7HNZCQGnFBgklqKnlYSa/fvy/3iCDCG/ZdIkI+/UrG5h6p
+ y7ejeo2VYEDAYLdmy5fhPQbJdq+Y1+lRHHqBIgUDP8pEDVbjIwC85PefrLSivWkCLHXA
+ bwUCU7mQMEqwdWTnleJLsCB/A7z0hla8WL7VQHOjgCt4jtgFFnnRWnVN3keoaW3MNS8H hg== 
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3kxrfb0m16-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 22 Nov 2022 15:44:28 +0000
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2AMEMfXr028896;
+        Tue, 22 Nov 2022 15:44:28 GMT
+Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2169.outbound.protection.outlook.com [104.47.58.169])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3kxnkbbnuk-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 22 Nov 2022 15:44:27 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=bzqlbwZhngUkxyuobvrvrREpvxAOFYOLBblNqqkZyhdu08HyHJpNSXGSI2c37OG81LGTTuYFZk4bPKccUtKsXOORNVvd4zhY195/jGyCYEENeypsxp741zuJV3338l4MueqbrQ5D1BXSs/aBrS06WwvFQm3FFHRtLnylqoN73u77ANqmoW/TAiYUFzm40VToyw5BwsAC72mbnQPU1GdJ1e/FiPBUbps+8GdlAJ3UlpDsM2s7qfdQ3H3GVrEAlGvOeOhw10PKfQkqFY0v64bxsdDOZU12ZyNzUVTNJ7XqlQnuUyZmEGeylgqa2RaxtFx67z/JHC+NOYLhU3/MM2Orcw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=CehOzNUb9g3odlf+hTxs6tQP8Zgr0KaXtXYKdCBXCeA=;
+ b=QS6Bs2N+TR0t0ibJuI+UCAzT14Frfaak7oZdM8t2+Z7VdeA4TSeCztTzDr//h8tjUoe5oYcSfg4zJPWT/c/qu6KHhsRqK1oWcU9N7EARnInPYk6nAfqVW+J8mcL2KZbbSxaWmponAFR2ME8cDFQPpG3JepIR4jRfraW7nkzG85l+qzY81XjEpB/rC1MAThKtqOhHBm6ewlfgZbNUb/4x6CMqN7jezoS1E9WPtvCkkCakC0Xw+qGAr0fQQeAapRbKA9H76qfUO1EmgopnAzHo8B/ZncziVAnEuXASUSgTOxZPM8OvJMWPZl3mpgn+rwtsYCUPY2yH0nZxIz4PAVRBng==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=KFm/hQzp85f9PkuPkdfd/PZMWkQMCDrrQWUl2fEW03w=;
-        b=LNABZeRJscon/VHkVveJ+lRDsjpGyOiP9IOwSqUmzdQKKCR9YcvxcJDwYKXoQ31puT
-         1HqnkQrRZ/k+3TSJjAgBQ+Kr38QRdX+vbD6LLNCI4Rm1RvfZc5Z5vyUACqBpPu6rIRLx
-         t1GdVd7Fk8spxfx32ehpulaunieqgpV/uNMX7QABg6IveP4V2P3HH3odTGTN9wqWK6VZ
-         A4hS2GeaolVs6tDiYvsBXUu7E2cey22hii5xm78bilr9FXr7EO8qryDnZYSSc35X1Z9Y
-         8PQchihQYpWbWxOsbrC6xgoiwPI0pxmnMZSkMshttOyJ7AVkTteMKSdJBxceEsC4VpbH
-         ToWg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=KFm/hQzp85f9PkuPkdfd/PZMWkQMCDrrQWUl2fEW03w=;
-        b=13ByEgKitK4Y4IoZXHOXKHWX99m2r1Y/IA9y/hYJ4XOafe1u5NsVhldXsQRutEV5xz
-         ZUzsFO4xK/EmX8VNEvGoJ3OzX9rEPP3IcbdI/M6pfJ3zK/HgxnTV5guIaY/mEqIl5jRI
-         elzNpsu9+0x4v/P6n+Km0AuWbkIsxxph3QNegKvaHqP//f1OuHOhu6tEmaNRnmC1k8md
-         tWJHksxWnI4t0OFFR2aOCvoZTdmq86UDZ9UKZs/Kg9zJEe6HaE9Aa1tr2DATv/H6e76k
-         Yea1fBWN/2TRTFhnTI5ezuttl+EMHqhIdbU9rTINkLQTgJlImyuMsWZOwgK4+JiYNKKb
-         fNpA==
-X-Gm-Message-State: ANoB5pnPxsdP7QhQnmPv/Ui3/7iRFG4kIbRJaQmJbV/Tem8DwqNbWy1r
-        3LwuJLhE979ISY4F7X53PsXP
-X-Google-Smtp-Source: AA0mqf5GjmHRR2cgKROAhBGQlpp08yLh0IhPhYqC84bGzFy5Jw1en3ayBeCra6H6haMqnZOZo68kzg==
-X-Received: by 2002:a63:e44:0:b0:475:2f61:bbc3 with SMTP id 4-20020a630e44000000b004752f61bbc3mr5548600pgo.435.1669129565476;
-        Tue, 22 Nov 2022 07:06:05 -0800 (PST)
-Received: from thinkpad ([59.92.98.84])
-        by smtp.gmail.com with ESMTPSA id b15-20020a1709027e0f00b001869394a372sm12022018plm.201.2022.11.22.07.05.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 22 Nov 2022 07:06:04 -0800 (PST)
-Date:   Tue, 22 Nov 2022 20:35:55 +0530
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     Abel Vesa <abel.vesa@linaro.org>
-Cc:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 1/2] ufs: host: ufs-qcom: Clear qunipro_g4_sel for HW
- version major 5
-Message-ID: <20221122150555.GE157542@thinkpad>
-References: <20221116121732.2731448-1-abel.vesa@linaro.org>
- <20221116121732.2731448-2-abel.vesa@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=CehOzNUb9g3odlf+hTxs6tQP8Zgr0KaXtXYKdCBXCeA=;
+ b=SVNo+G1iDYgqeob/wAPxvNPO8FmRIX+rLc8LhgcikYdzwUIz7c/0j4VdsP3d3mAZ5xgdyXCL8LkT1yjRoHxUAX8T3dkd+So+uNeNaW8Zlponc1EM8Y7GXYy/QBHJS5DiWBIQnjy7h8jEBmpUFMRUfmpTRpcZeaK4LvdwQeftBNc=
+Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
+ BN0PR10MB5382.namprd10.prod.outlook.com (2603:10b6:408:117::9) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.5834.15; Tue, 22 Nov 2022 15:44:26 +0000
+Received: from DM5PR10MB1466.namprd10.prod.outlook.com
+ ([fe80::19f7:e081:85b4:c5df]) by DM5PR10MB1466.namprd10.prod.outlook.com
+ ([fe80::19f7:e081:85b4:c5df%7]) with mapi id 15.20.5834.015; Tue, 22 Nov 2022
+ 15:44:26 +0000
+Message-ID: <a5ee5271-5236-3af4-c8ca-531534a69d4d@oracle.com>
+Date:   Tue, 22 Nov 2022 09:44:24 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.5.0
+Subject: Re: [PATCH 01/15] scsi: Add struct for args to execution functions
+Content-Language: en-US
+To:     John Garry <john.g.garry@oracle.com>, bvanassche@acm.org,
+        mwilck@suse.com, hch@lst.de, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com
+References: <20221122033934.33797-1-michael.christie@oracle.com>
+ <20221122033934.33797-2-michael.christie@oracle.com>
+ <f89a2bba-3988-1080-8c9b-bbf7bec3961c@oracle.com>
+From:   Mike Christie <michael.christie@oracle.com>
+In-Reply-To: <f89a2bba-3988-1080-8c9b-bbf7bec3961c@oracle.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20221116121732.2731448-2-abel.vesa@linaro.org>
+X-ClientProxiedBy: CH0PR04CA0023.namprd04.prod.outlook.com
+ (2603:10b6:610:76::28) To DM5PR10MB1466.namprd10.prod.outlook.com
+ (2603:10b6:3:b::7)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM5PR10MB1466:EE_|BN0PR10MB5382:EE_
+X-MS-Office365-Filtering-Correlation-Id: 61a69c65-ac75-4824-4877-08dacca06f84
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 5YNQGpf9MdQtQBGoE7Gp5E6d2NvIgewOR32sPqHsxNcKd2gpVhXeEfqID3Yfu0TUBmx61kQNbHpIeTstCVEpNl07RFDDIoH/tT4uYbiqwN4ZTDICi3guSIpGYKEV/tCQy/s7mg/rerSMWIkmrSREOioo/yH8Q1frocU5TNdLjlFZOn74LycHeKYptR/sq/qV7VzRojjAMmYtaNDWRNGkr6juoV3hS/QN7/sC4LYVioYBnkCTKBtFClTx0XtrWO5pZvi9G/ltncrlrwV8wRArSvDcTu65OuCCf3o69ZxJMW4lzI3oEr9QRSVxlIgWs713yT6vVH8tdh88CI16zFTlslSOUrBL0YyOcIJtQjCy6lNJZmDTGeSri4+v9wl1SqxHb9Jw2yM4jygQ2E9G5uuBDBLHWBSv4DpFnh/oAGp+p6JISPBo5cuqQtBXlHlxmCzIgA1AoKaocMofmqP9LYoUjnDzB0JMonLdwd1tbwL+VueaHozSkTzlgGkAXY5z8/iPfEOvjdlMY84S2r/7WSPpkBQs1KpPRJ/wCNn9w9nqgVgn9OT2StC+dnuvpWYk3BPakFjcgzyLSzR9qSN0cuk9I/qYCGso+BGgQE3IQIfOIroB+FcRrkzCx39eD3DGzgw3PsMdt2K16pbdE7rlC8m2bxGUX55/vItqHBn8Q+Qyw8sGeswIWg2+Vzdnp/aHAMgi0bwnhbZdtM14e5SIH9W+ZjCuen6V3XEw3NCjsvINx/k=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(136003)(396003)(39860400002)(346002)(376002)(366004)(451199015)(6512007)(186003)(2616005)(53546011)(2906002)(38100700002)(5660300002)(26005)(6506007)(66556008)(6486002)(8676002)(478600001)(66946007)(316002)(8936002)(41300700001)(66476007)(558084003)(36756003)(86362001)(31696002)(31686004)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?TTFIeXRXd1ZGVko2enQybFZSRENsYzNjaW9GUDIwakJzenErM2lnTHJTTXky?=
+ =?utf-8?B?Umoyem9rR0FidXphd2RhNnExRmwzQW0rQ3ViOUVONUNoazRMY09LREJBQ1Zw?=
+ =?utf-8?B?bndFaDh6enJMQUREWGtoSVNjbVl4bVRiOG9wd1lMUEZEVEpaWnFSZzlqSnNo?=
+ =?utf-8?B?VEdwelloQ1kxODlUalFpenAzZTdwRjZGZ05SUDdHdWRSenpadzRhelZaWjVT?=
+ =?utf-8?B?RzYvRFhKbTNNOXZtaFc2T0dMNFRzRExFd2g5WlZDZmtjc2UwdEtpWFB4UWRK?=
+ =?utf-8?B?MFNUc0hPSVRuUk5vVjNQZlE1QkZreEQ5VHp5WFdCMGNJOUFCQWFmUDBKZkQz?=
+ =?utf-8?B?SG5kdzMzeHMyc0hDZkJESTNLS3A3b3pnRUFaN0NxSUZIeHJUSFMxaStZKzlm?=
+ =?utf-8?B?V2RYZ3dZTk1ZS0lCb1VocFJ4TnRSRDcrcm1ObWVNNVM4MUVUaWF2SU83cjdw?=
+ =?utf-8?B?RFRHQkNwR1NNcC9iNXRobEhSajhLeEtuSWl3U2tBc0pQQ0MwbTBXSVhTckpT?=
+ =?utf-8?B?SmNnY3NJMG1TQ0UxNlBRbjFZVkFFbUpwOEJOVmtScHBPclVNQjdTNWoybjF2?=
+ =?utf-8?B?QVgxUEJ4RER3VkpraDYvdnFkZmtqYW5sWXlaT3BHY2xpY1ZHLzQ4ZGxpS05y?=
+ =?utf-8?B?dTlxM01XcmdpamdjbnBUNXNiRG9OUnZETnZkRjFuQVFXZVN5YkNCY2lSZUxv?=
+ =?utf-8?B?S2hkV2FSdEFYTnhZbzZOeHVobGpHbEV2TmNPaEc4MkFuUVdIVEwzbFAwVDdt?=
+ =?utf-8?B?alpvdkdjaGF2TjBLeDJPUnh6bEh6dElYSzAwWWx2Q1gzd2VMZWFwMmtIMjlk?=
+ =?utf-8?B?NklrOXhhOUF0blg1SC9xTWR5SkpNOXdZTVFrWUkzenRHMERCV2Y1NEIrem1N?=
+ =?utf-8?B?RTRCT2psaTlVdFc4RFZLVU9YNXV6anFxRWhjSUkyQXE3SWt0WU5TcWRkS2xu?=
+ =?utf-8?B?YUFqSWswZmdtam95V2dJZmhRN3dhcXdrM1Z1RURONE1DTDZUcmRJM0duNDc4?=
+ =?utf-8?B?d01KYU9XRTIyd2xzZnVYZHZ2d3ZNVEFDYjk2b1Faa0krYUVCenQxNDdGWG50?=
+ =?utf-8?B?K2pjNURDT1BZRUw3T01DMVNxQUg1Njl5RW05c3hYVndGQ3krK2hKQkFFS2JS?=
+ =?utf-8?B?aXYxS3FRMmlQY2hYV0tUQmk5eEZWMlN4ZEREREU3RWRScFN0dnI4RmEwazJ6?=
+ =?utf-8?B?QmlLVUlCemZia0RTekJJemxhQmZYWWhTOTFEdmRIdms0Sm1kYll4OW9OSFVr?=
+ =?utf-8?B?c3RkT3R5L2ZDOGhLMWhaejBiNXVzM0RCa3FjMEc0c0FUSmVqQU53V29HU0x2?=
+ =?utf-8?B?NG1qR25GSjl6NmZsaFVZMzZTdXFuQTdmSGVPWm80bHNBWTdUVWdKa2pqYk53?=
+ =?utf-8?B?cFNUU0dLMCtMNTR2UVpsTjAyR2dVZVZ1TjZVRnFialFNc0p1dmQzRHZVODdP?=
+ =?utf-8?B?NlBYU05NckxkQ3lQWEJCWUJnN2pVY0t3eTIxcHVRY3VXNjZLOGFwajV5ZVhv?=
+ =?utf-8?B?cEpxZUJDeS9URnZacGhHNGJXNnl4Z3pVWDNMYnFwNzlJRHA3bXdUTzh5NVcw?=
+ =?utf-8?B?Qmt0ekVIWDB3ZTQ0Unp2bWc0bVA2cldyK3o4MGRPYWUvSi9CWXlpQm1JalpH?=
+ =?utf-8?B?ZDJOR2ZodHVYdzh0ZGdWRUxGb1kwaURBeklMSGdYL0MxMituczZNdGNYRmF2?=
+ =?utf-8?B?dk1pY1VCbnNJSXIxMU0zZk9hcGdWVFBWQm1QOEc0TW1nc09CLzlQZUpFN0o3?=
+ =?utf-8?B?M2hLbCt3MGxFbXl6Z2FRdWZIODM1WWx1ZHA0cktLQUJZQVY2ZC80UDF3ZHd3?=
+ =?utf-8?B?K3psZzViSHd0MHFkNk1SanZ1QmhsT0M1T3pTM1ljQWdNaGszcWxFdjBFdU1G?=
+ =?utf-8?B?S05PcGlNc3RwbWZDNXVXalZha3Q4eGs1dWJGOHZTZTlkNW4wUFNsN1hsVDAw?=
+ =?utf-8?B?dzVRSWtwaXJGWEhKd05MajBiNXU4VXFmZDVlN09OOXBzaUg5MDliUFhPNjJn?=
+ =?utf-8?B?dWZQUTJaeGJzZG1OVmxhVURvMURMQUJBaTFWcEFtSkZwdjlDZ1RGZGxuUkhV?=
+ =?utf-8?B?VlM5VUVZYmFOdzdrdkR2RHNMekdiK1JpWE1UbXJJSjV3cko5bWUrTE92Wlcx?=
+ =?utf-8?B?TVp1MVBQQ1dpMkYrN2p0UElRZHdqeWxJdFNBaEloY2YzQlh2WU1GSVlacVV6?=
+ =?utf-8?B?L1E9PQ==?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: zs/JK/85ec8guHpzKpi0pHtGVzdtxyN+hb9JHaHY/NQB8yTGcdj67rQnXDU4rTxEKBaJb/sYsiQzSgwMZ43Kxv6MQCAaYdbLzhKKDF4tnOwR5sDDlM8oGpKcLd8YSu6Y4Ip1YKN5dAd+6umcIMuNwfMRG7s+z0QgbStjOXIrvWxuCEdCbKuBOTERDK3bpN0spJDNZf1k+ThoN4x6iZU1EMLSPtXPZeLvKlbQTEXAN/RRwpuRdWxzKW4cjIUhn2xEAX0x3Uy4riQrFaoEwfK6RdFBcp7uHE+SPfG3pl9vR/UKUJTStPRj7Onf/T8t7PmderU3Qzfuaw1rZ/t11R9qJwSXbknyRa9KaGhdhdm1/BJSXCyubZOMFWPo7pup1P3577rsn07eDY2auw9naxl0Na7rZAQvPHEscexJ+nRZMkH9I0g/xJesg4GeMhg9Fsin0c/a/FrpPxMKYh8nsanqDU1G2eW41u9FsYJg77a9lWgrBkgMtSpawkkDAYBuOBNkdEIK+E74EiOznLYV43veMTEjsa9dLSlJ4mgAN9iNRV3DRT+Z/1jXACJ76mlyr7vsRYj496y33VQwUUVZicSOH5GXL8JCPKRUsAh+0siIk8pO+9Cu/Bv+w+1KNC/oJ/vHGKN1zY/TDRRxadyHn/gYUztZP8OEDvPNPEifFdn2wUbRBcS2abV/QWatWeaTMubxDRq19IPJYyhQxKKZH1Hzs5Yv2oZIop4ztgs3PD/Y/10ZJm4FCPIim+A4UDvNl/78k1LY8g/0Q+XDKp5qIkiwaQsTbAECazOAo4lE537koke1cWotm6YcYbr/uHnysjgYy1+WaYJ1h3SJ/6sqL5VhIv2xwgrSWKy5Yc/BCk5RdTTfLBoQ7VmPaLKFGgG0CmTc
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 61a69c65-ac75-4824-4877-08dacca06f84
+X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Nov 2022 15:44:26.5682
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 11kL/USfrh7WaZDOgXyLO8r/+6pfi0qJ2BQJncpR/1+S9/IulDRnX3kD3jyHFeEaeEXqv53KewZ1k51fQs1/BtblcoRclmEI0EcK/6TeAZU=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN0PR10MB5382
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
+ definitions=2022-11-22_09,2022-11-18_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 phishscore=0
+ adultscore=0 suspectscore=0 spamscore=0 mlxlogscore=999 mlxscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2210170000 definitions=main-2211220118
+X-Proofpoint-GUID: 1-C71_kQ1y1z9l2VE9FJTqRekgcHneYK
+X-Proofpoint-ORIG-GUID: 1-C71_kQ1y1z9l2VE9FJTqRekgcHneYK
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Nov 16, 2022 at 02:17:31PM +0200, Abel Vesa wrote:
-> On SM8550, depending on the Qunipro, we can run with G5 or G4.
-> For now, when the major version is 5 or above, we go with G5.
-> Therefore, we need to specifically tell UFS HC that.
+On 11/22/22 3:16 AM, John Garry wrote:
+>>
+>> -    req->rq_flags |= rq_flags | RQF_QUIET;
 > 
-> Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
-> ---
->  drivers/ufs/host/ufs-qcom.c | 4 ++++
->  drivers/ufs/host/ufs-qcom.h | 2 ++
->  2 files changed, 6 insertions(+)
-> 
-> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> index ca60a5b0292b..72334aefe81c 100644
-> --- a/drivers/ufs/host/ufs-qcom.c
-> +++ b/drivers/ufs/host/ufs-qcom.c
-> @@ -227,6 +227,10 @@ static void ufs_qcom_select_unipro_mode(struct ufs_qcom_host *host)
->  	ufshcd_rmwl(host->hba, QUNIPRO_SEL,
->  		   ufs_qcom_cap_qunipro(host) ? QUNIPRO_SEL : 0,
->  		   REG_UFS_CFG1);
-> +
-> +	if (host->hw_ver.major == 0x05)
-> +		ufshcd_rmwl(host->hba, QUNIPRO_G4_SEL, 0, REG_UFS_CFG0);
-
-So this means, G5 will be used all the time even if the UFS device doesn't
-support it (ie., G4 device), which is not ideal.
-
-Since you have already based this series on my UFS gear 4 series, you should
-resend this on top of my next version that I'm about to submit. There I have
-proposed reinitializing the UFS device after switching to max gear supported by
-both controller and device.
-
-Based on that information, you could do:
-
-```
-	if (host->hw_ver.major == 0x05) {
-		if (host->hs_hear == UFS_HS_G5)
-			ufshcd_rmwl(host->hba, QUNIPRO_G4_SEL, 0, REG_UFS_CFG0);
-		else
-			ufshcd_rmwl(host->hba, QUNIPRO_G4_SEL, 1, REG_UFS_CFG0);
-	}
-```
-
-By this way, if the device doesn't support G5, G4 will be used.
-
-Btw, please use a valid definition instead of 0/1 above.
-
-> +
->  	/* make sure above configuration is applied before we return */
->  	mb();
->  }
-> diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
-> index 751ded3e3531..10621055bf7f 100644
-> --- a/drivers/ufs/host/ufs-qcom.h
-> +++ b/drivers/ufs/host/ufs-qcom.h
-> @@ -36,6 +36,7 @@ enum {
->  	/* On older UFS revisions, this register is called "RETRY_TIMER_REG" */
->  	REG_UFS_PARAM0                      = 0xD0,
->  	REG_UFS_PA_LINK_STARTUP_TIMER       = 0xD8,
-> +	REG_UFS_CFG0                        = 0xD8,
-
-Hmm, so what is the offset of REG_UFS_PA_LINK_STARTUP_TIMER?
-
->  	REG_UFS_CFG1                        = 0xDC,
->  	REG_UFS_CFG2                        = 0xE0,
->  	REG_UFS_HW_VERSION                  = 0xE4,
-> @@ -75,6 +76,7 @@ enum {
->  
->  /* bit definitions for REG_UFS_CFG1 register */
->  #define QUNIPRO_SEL		BIT(0)
-> +#define QUNIPRO_G4_SEL		BIT(5)
-
-Since this bit belongs to CFG0 register, it should be added separately and not
-with CFG1 definitions.
-
-Thanks,
-Mani
-
->  #define UFS_PHY_SOFT_RESET	BIT(1)
->  #define UTP_DBG_RAMS_EN		BIT(17)
->  #define TEST_BUS_EN		BIT(18)
-> -- 
-> 2.34.1
+> Are we accidentally losing RQF_QUIET? Or does it matter?
 > 
 
--- 
-மணிவண்ணன் சதாசிவம்
+That was a mistake. Will fix.
+
