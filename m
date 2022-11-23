@@ -2,42 +2,42 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7785C433FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Nov 2022 04:16:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6261CC4332F
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Nov 2022 04:17:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235806AbiKWEQS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Nov 2022 23:16:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39832 "EHLO
+        id S235854AbiKWERV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Nov 2022 23:17:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39844 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235797AbiKWEPB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Nov 2022 23:15:01 -0500
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 503FAEC7B4;
-        Tue, 22 Nov 2022 20:13:48 -0800 (PST)
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2AN3h7e9019238;
-        Wed, 23 Nov 2022 04:13:36 GMT
+        with ESMTP id S235842AbiKWEQR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Nov 2022 23:16:17 -0500
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5863C65851;
+        Tue, 22 Nov 2022 20:14:08 -0800 (PST)
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2AN41QTx003102;
+        Wed, 23 Nov 2022 04:13:55 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type; s=qcppdkim1;
- bh=Ppi3ZMDES52TM3GiMrgdksfGjMTlAl4dTTkIyYEYsSw=;
- b=Rl6bnxr5lXTFMxk/BVZV2VftPduO0qMfqj3oE+2ULpZQuuR3F7zI1b6ctsJTHC/YzTZ9
- +wdrTjfDosklpGSfuD85AUYA3VG5ZkfzOrG8IP/j+hSTlobCxNd2mJ5pS/XixnMzdwU2
- E8L1LduV4jLsrdAtyeznFqb3Usx0C02o5SEOlzA/EYN6sCbkocpKr4/I/p/N98CX/EZ4
- OFkeEEhzPE3xMRjNQY1mvLWeZMKzqDJjHyjG7xhe83BmiQ/uWrkxTA64X2dCgWfzUzmN
- YFLB4Q3ZVtMugQPLWKEaER6AW9mQRwqu7OGZZnUupX5ddx79/djhbXjobqpr5NlKawML PA== 
+ bh=9QVbqsPje9Z9jisXsPpnHlBsyyw6eNTeCJyYrnIxHc0=;
+ b=ABR+oaToRIwDeYYd3hdACsYv44DA39M9gTr63K6QsFOODwpkMO2I6bjx9/Bjk0crvNp6
+ jwRFwuGxENvoJydh55H3dql5cZnxxIpkY4RaPFzRAFT+YXfFj5BMpe3T5os68bPI22DR
+ eC2hGoggv5wlMwIO+3+qn5Ibt36ukhc16zntyHMo1Ot03PibKqqyZ2sWGG4Ukq+BBRYK
+ Z7GglRvWHWdMPJ504IOPuWaeuiPCVsckW8xJ00o5TIRmy+JuZ6qlAEJFojJh+Lmbah+p
+ JwlAqLIsarXaGlw0IyOamLRkphkXOEHMls2JrevHfvbnAfph2zinjHriIc8MS1w+Qrz0 5w== 
 Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3m0twqac4h-1
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3m0ptsu8vp-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 23 Nov 2022 04:13:36 +0000
+        Wed, 23 Nov 2022 04:13:55 +0000
 Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
-        by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 2AN4DZnu032159
+        by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 2AN4Ds1V000736
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 23 Nov 2022 04:13:35 GMT
+        Wed, 23 Nov 2022 04:13:54 GMT
 Received: from asutoshd-linux1.qualcomm.com (10.80.80.8) by
  nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.36; Tue, 22 Nov 2022 20:13:35 -0800
+ 15.2.986.36; Tue, 22 Nov 2022 20:13:54 -0800
 From:   Asutosh Das <quic_asutoshd@quicinc.com>
 To:     <quic_cang@quicinc.com>, <martin.petersen@oracle.com>,
         <linux-scsi@vger.kernel.org>
@@ -49,12 +49,12 @@ CC:     <quic_nguyenb@quicinc.com>, <quic_xiaosenh@quicinc.com>,
         <linux-arm-msm@vger.kernel.org>,
         Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Arthur Simchaev <Arthur.Simchaev@wdc.com>,
         Jinyoung Choi <j-young.choi@samsung.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
         open list <linux-kernel@vger.kernel.org>
-Subject: [PATCH v5 11/16] ufs: core: Prepare ufshcd_send_command for mcq
-Date:   Tue, 22 Nov 2022 20:10:24 -0800
-Message-ID: <833a8c6578d861bccbb2ccdb158bb4c732a6f596.1669176158.git.quic_asutoshd@quicinc.com>
+Subject: [PATCH v5 13/16] ufs: core: Prepare for completion in mcq
+Date:   Tue, 22 Nov 2022 20:10:26 -0800
+Message-ID: <d076c0b5bfa9c34eed9038d36677853ea042bb78.1669176158.git.quic_asutoshd@quicinc.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1669176158.git.quic_asutoshd@quicinc.com>
 References: <cover.1669176158.git.quic_asutoshd@quicinc.com>
@@ -65,183 +65,181 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nasanex01a.na.qualcomm.com (10.52.223.231)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: VDovTgRgstRy3-z12ZHAu0godFxt7b3a
-X-Proofpoint-ORIG-GUID: VDovTgRgstRy3-z12ZHAu0godFxt7b3a
+X-Proofpoint-GUID: OHL1jxVtX0Xf-EWmER34eFSJp5HZRy-Y
+X-Proofpoint-ORIG-GUID: OHL1jxVtX0Xf-EWmER34eFSJp5HZRy-Y
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
  definitions=2022-11-23_01,2022-11-18_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015
- lowpriorityscore=0 mlxlogscore=999 spamscore=0 impostorscore=0
- adultscore=0 mlxscore=0 malwarescore=0 suspectscore=0 bulkscore=0
- phishscore=0 priorityscore=1501 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2210170000 definitions=main-2211230030
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
+ mlxlogscore=999 suspectscore=0 mlxscore=0 priorityscore=1501 spamscore=0
+ phishscore=0 clxscore=1015 bulkscore=0 adultscore=0 malwarescore=0
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2210170000 definitions=main-2211230030
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add support to send commands using multiple submission
-queues in MCQ mode.
-Modify the functions that use ufshcd_send_command().
+Modify completion path APIs and add completion queue
+entry.
 
 Co-developed-by: Can Guo <quic_cang@quicinc.com>
 Signed-off-by: Can Guo <quic_cang@quicinc.com>
 Signed-off-by: Asutosh Das <quic_asutoshd@quicinc.com>
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ufs/core/ufs-mcq.c     |  1 +
- drivers/ufs/core/ufshcd-priv.h | 10 ++++++++++
- drivers/ufs/core/ufshcd.c      | 36 ++++++++++++++++++++++++++----------
- include/ufs/ufshcd.h           |  5 +++++
- 4 files changed, 42 insertions(+), 10 deletions(-)
+ drivers/ufs/core/ufshcd-priv.h |  2 ++
+ drivers/ufs/core/ufshcd.c      | 80 ++++++++++++++++++++++++++----------------
+ 2 files changed, 51 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index e4ddb90..7179f86 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -405,6 +405,7 @@ int ufshcd_mcq_init(struct ufs_hba *hba)
- 	for (i = 0; i < hba->nr_hw_queues; i++) {
- 		hwq = &hba->uhq[i];
- 		hwq->max_entries = hba->nutrs;
-+		spin_lock_init(&hwq->sq_lock);
- 	}
- 
- 	/* The very first HW queue serves device commands */
 diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index 08963e1..5616047 100644
+index 14df7ce..6453449 100644
 --- a/drivers/ufs/core/ufshcd-priv.h
 +++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -324,4 +324,14 @@ static inline bool ufs_is_valid_unit_desc_lun(struct ufs_dev_info *dev_info, u8
- 	return lun == UFS_UPIU_RPMB_WLUN || (lun < dev_info->max_lu_supported);
- }
- 
-+static inline void ufshcd_inc_sq_tail(struct ufs_hw_queue *q)
-+{
-+	u32 mask = q->max_entries - 1;
-+	u32 val;
-+
-+	q->sq_tail_slot = (q->sq_tail_slot + 1) & mask;
-+	val = q->sq_tail_slot * sizeof(struct utp_transfer_req_desc);
-+	writel(val, q->mcq_sq_tail);
-+}
-+
- #endif /* _UFSHCD_PRIV_H_ */
+@@ -61,6 +61,8 @@ int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,
+ int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
+ 	enum flag_idn idn, u8 index, bool *flag_res);
+ void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit);
++void ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
++			  struct cq_entry *cqe);
+ int ufshcd_mcq_init(struct ufs_hba *hba);
+ int ufshcd_mcq_decide_queue_depth(struct ufs_hba *hba);
+ int ufshcd_mcq_memory_alloc(struct ufs_hba *hba);
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index d61e99f..93a9e38 100644
+index 52c0386..f16d02c 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -2182,9 +2182,11 @@ static void ufshcd_update_monitor(struct ufs_hba *hba, const struct ufshcd_lrb *
-  * ufshcd_send_command - Send SCSI or device management commands
-  * @hba: per adapter instance
-  * @task_tag: Task tag of the command
-+ * @hwq: pointer to hardware queue instance
+@@ -784,12 +784,17 @@ static inline bool ufshcd_is_device_present(struct ufs_hba *hba)
+ /**
+  * ufshcd_get_tr_ocs - Get the UTRD Overall Command Status
+  * @lrbp: pointer to local command reference block
++ * @cqe: pointer to the completion queue entry
+  *
+  * This function is used to get the OCS field from UTRD
+  * Returns the OCS field in the UTRD
   */
- static inline
--void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
-+void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag,
-+			 struct ufs_hw_queue *hwq)
+-static enum utp_ocs ufshcd_get_tr_ocs(struct ufshcd_lrb *lrbp)
++static enum utp_ocs ufshcd_get_tr_ocs(struct ufshcd_lrb *lrbp,
++				      struct cq_entry *cqe)
  {
- 	struct ufshcd_lrb *lrbp = &hba->lrb[task_tag];
- 	unsigned long flags;
-@@ -2198,12 +2200,24 @@ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
- 	if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
- 		ufshcd_start_monitor(hba, lrbp);
- 
--	spin_lock_irqsave(&hba->outstanding_lock, flags);
--	if (hba->vops && hba->vops->setup_xfer_req)
--		hba->vops->setup_xfer_req(hba, task_tag, !!lrbp->cmd);
--	__set_bit(task_tag, &hba->outstanding_reqs);
--	ufshcd_writel(hba, 1 << task_tag, REG_UTP_TRANSFER_REQ_DOOR_BELL);
--	spin_unlock_irqrestore(&hba->outstanding_lock, flags);
-+	if (is_mcq_enabled(hba)) {
-+		int utrd_size = sizeof(struct utp_transfer_req_desc);
++	if (cqe)
++		return le32_to_cpu(cqe->status) & MASK_OCS;
 +
-+		spin_lock(&hwq->sq_lock);
-+		memcpy(hwq->sqe_base_addr + (hwq->sq_tail_slot * utrd_size),
-+		       lrbp->utr_descriptor_ptr, utrd_size);
-+		ufshcd_inc_sq_tail(hwq);
-+		spin_unlock(&hwq->sq_lock);
-+	} else {
-+		spin_lock_irqsave(&hba->outstanding_lock, flags);
-+		if (hba->vops && hba->vops->setup_xfer_req)
-+			hba->vops->setup_xfer_req(hba, lrbp->task_tag,
-+						  !!lrbp->cmd);
-+		__set_bit(lrbp->task_tag, &hba->outstanding_reqs);
-+		ufshcd_writel(hba, 1 << lrbp->task_tag,
-+			      REG_UTP_TRANSFER_REQ_DOOR_BELL);
-+		spin_unlock_irqrestore(&hba->outstanding_lock, flags);
-+	}
+ 	return le32_to_cpu(lrbp->utr_descriptor_ptr->header.dword_2) & MASK_OCS;
+ }
+ 
+@@ -3048,7 +3053,7 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
+ 		 * not trigger any race conditions.
+ 		 */
+ 		hba->dev_cmd.complete = NULL;
+-		err = ufshcd_get_tr_ocs(lrbp);
++		err = ufshcd_get_tr_ocs(lrbp, hba->dev_cmd.cqe);
+ 		if (!err)
+ 			err = ufshcd_dev_cmd_completion(hba, lrbp);
+ 	} else {
+@@ -5214,18 +5219,20 @@ ufshcd_scsi_cmd_status(struct ufshcd_lrb *lrbp, int scsi_status)
+  * ufshcd_transfer_rsp_status - Get overall status of the response
+  * @hba: per adapter instance
+  * @lrbp: pointer to local reference block of completed command
++ * @cqe: pointer to the completion queue entry
+  *
+  * Returns result of the command to notify SCSI midlayer
+  */
+ static inline int
+-ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
++ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
++			   struct cq_entry *cqe)
+ {
+ 	int result = 0;
+ 	int scsi_status;
+ 	enum utp_ocs ocs;
+ 
+ 	/* overall command status of utrd */
+-	ocs = ufshcd_get_tr_ocs(lrbp);
++	ocs = ufshcd_get_tr_ocs(lrbp, cqe);
+ 
+ 	if (hba->quirks & UFSHCD_QUIRK_BROKEN_OCS_FATAL_ERROR) {
+ 		if (be32_to_cpu(lrbp->ucd_rsp_ptr->header.dword_1) &
+@@ -5390,42 +5397,53 @@ static void ufshcd_release_scsi_cmd(struct ufs_hba *hba,
  }
  
  /**
-@@ -2822,6 +2836,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 	int tag = scsi_cmd_to_rq(cmd)->tag;
- 	struct ufshcd_lrb *lrbp;
- 	int err = 0;
-+	struct ufs_hw_queue *hwq = NULL;
- 
- 	WARN_ONCE(tag < 0 || tag >= hba->nutrs, "Invalid tag %d\n", tag);
- 
-@@ -2906,7 +2921,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 		goto out;
- 	}
- 
--	ufshcd_send_command(hba, tag);
-+	ufshcd_send_command(hba, tag, hwq);
- 
- out:
- 	rcu_read_unlock();
-@@ -3101,10 +3116,11 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
- 		goto out;
- 
- 	hba->dev_cmd.complete = &wait;
-+	hba->dev_cmd.cqe = NULL;
- 
- 	ufshcd_add_query_upiu_trace(hba, UFS_QUERY_SEND, lrbp->ucd_req_ptr);
- 
--	ufshcd_send_command(hba, tag);
-+	ufshcd_send_command(hba, tag, hba->dev_cmd_queue);
- 	err = ufshcd_wait_for_dev_cmd(hba, lrbp, timeout);
- 	ufshcd_add_query_upiu_trace(hba, err ? UFS_QUERY_ERR : UFS_QUERY_COMP,
- 				    (struct utp_upiu_req *)lrbp->ucd_rsp_ptr);
-@@ -6926,7 +6942,7 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
- 
- 	ufshcd_add_query_upiu_trace(hba, UFS_QUERY_SEND, lrbp->ucd_req_ptr);
- 
--	ufshcd_send_command(hba, tag);
-+	ufshcd_send_command(hba, tag, hba->dev_cmd_queue);
- 	/*
- 	 * ignore the returning value here - ufshcd_check_query_response is
- 	 * bound to fail since dev_cmd.query and dev_cmd.type were left empty.
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 76972fc..853c525 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -222,6 +222,7 @@ struct ufs_dev_cmd {
- 	struct mutex lock;
- 	struct completion *complete;
- 	struct ufs_query query;
-+	struct cq_entry *cqe;
- };
- 
- /**
-@@ -1061,6 +1062,8 @@ struct ufs_hba {
-  * @cqe_dma_addr: completion queue dma address
-  * @max_entries: max number of slots in this hardware queue
-  * @id: hardware queue ID
-+ * @sq_tp_slot: current slot to which SQ tail pointer is pointing
-+ * @sq_lock: serialize submission queue access
+- * __ufshcd_transfer_req_compl - handle SCSI and query command completion
++ * ufshcd_compl_one_cqe - handle a completion queue entry
+  * @hba: per adapter instance
+- * @completed_reqs: bitmask that indicates which requests to complete
++ * @task_tag: the task tag of the request to be completed
++ * @cqe: pointer to the completion queue entry
   */
- struct ufs_hw_queue {
- 	void __iomem *mcq_sq_head;
-@@ -1074,6 +1077,8 @@ struct ufs_hw_queue {
- 	dma_addr_t cqe_dma_addr;
- 	u32 max_entries;
- 	u32 id;
-+	u32 sq_tail_slot;
-+	spinlock_t sq_lock;
- };
+-static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
+-					unsigned long completed_reqs)
++void ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
++			  struct cq_entry *cqe)
+ {
+ 	struct ufshcd_lrb *lrbp;
+ 	struct scsi_cmnd *cmd;
+-	int index;
+-
+-	for_each_set_bit(index, &completed_reqs, hba->nutrs) {
+-		lrbp = &hba->lrb[index];
+-		lrbp->compl_time_stamp = ktime_get();
+-		lrbp->compl_time_stamp_local_clock = local_clock();
+-		cmd = lrbp->cmd;
+-		if (cmd) {
+-			if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
+-				ufshcd_update_monitor(hba, lrbp);
+-			ufshcd_add_command_trace(hba, index, UFS_CMD_COMP);
+-			cmd->result = ufshcd_transfer_rsp_status(hba, lrbp);
+-			ufshcd_release_scsi_cmd(hba, lrbp);
+-			/* Do not touch lrbp after scsi done */
+-			scsi_done(cmd);
+-		} else if (lrbp->command_type == UTP_CMD_TYPE_DEV_MANAGE ||
+-			lrbp->command_type == UTP_CMD_TYPE_UFS_STORAGE) {
+-			if (hba->dev_cmd.complete) {
+-				ufshcd_add_command_trace(hba, index,
+-							 UFS_DEV_COMP);
+-				complete(hba->dev_cmd.complete);
+-				ufshcd_clk_scaling_update_busy(hba);
+-			}
++
++	lrbp = &hba->lrb[task_tag];
++	lrbp->compl_time_stamp = ktime_get();
++	cmd = lrbp->cmd;
++	if (cmd) {
++		if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
++			ufshcd_update_monitor(hba, lrbp);
++		ufshcd_add_command_trace(hba, task_tag, UFS_CMD_COMP);
++		cmd->result = ufshcd_transfer_rsp_status(hba, lrbp, cqe);
++		ufshcd_release_scsi_cmd(hba, lrbp);
++		/* Do not touch lrbp after scsi done */
++		scsi_done(cmd);
++	} else if (lrbp->command_type == UTP_CMD_TYPE_DEV_MANAGE ||
++		   lrbp->command_type == UTP_CMD_TYPE_UFS_STORAGE) {
++		if (hba->dev_cmd.complete) {
++			hba->dev_cmd.cqe = cqe;
++			ufshcd_add_command_trace(hba, task_tag, UFS_DEV_COMP);
++			complete(hba->dev_cmd.complete);
++			ufshcd_clk_scaling_update_busy(hba);
+ 		}
+ 	}
+ }
  
- static inline bool is_mcq_enabled(struct ufs_hba *hba)
++/**
++ * __ufshcd_transfer_req_compl - handle SCSI and query command completion
++ * @hba: per adapter instance
++ * @completed_reqs: bitmask that indicates which requests to complete
++ */
++static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
++					unsigned long completed_reqs)
++{
++	int tag;
++
++	for_each_set_bit(tag, &completed_reqs, hba->nutrs)
++		ufshcd_compl_one_cqe(hba, tag, NULL);
++}
++
+ /*
+  * Returns > 0 if one or more commands have been completed or 0 if no
+  * requests have been completed.
 -- 
 2.7.4
 
