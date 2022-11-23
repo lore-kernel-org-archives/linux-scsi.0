@@ -2,51 +2,51 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81623C43217
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Nov 2022 17:10:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47084C4332F
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Nov 2022 17:18:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238900AbiKWRK4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Nov 2022 12:10:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32928 "EHLO
+        id S237768AbiKWRS1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Nov 2022 12:18:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38400 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239120AbiKWRKs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Nov 2022 12:10:48 -0500
-Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [81.169.146.165])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25E1EA1A7;
-        Wed, 23 Nov 2022 09:10:46 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1669223444;
+        with ESMTP id S237787AbiKWRSR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Nov 2022 12:18:17 -0500
+Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.53])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41E802D1D9;
+        Wed, 23 Nov 2022 09:18:13 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1669223891;
     s=strato-dkim-0002; d=iokpp.de;
     h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
     From:Subject:Sender;
-    bh=rAeJ0mNLA1M808k59HqXpV7NVyn7t1Z67neJ6CI5ivk=;
-    b=V34Tz24QgTa8KNLKKk6j+/J4Hq+xd1nNPA+FYjGagkP06636BDL9sQTCdpxN3upkt+
-    QuOtEeYKNbctjKrVOlWg9dxbulYLGIQQ5+kIq/FNAUOi7QyxTHyUHXfSePdROlChEnNK
-    6WjTgmS/HEqYh/GOgA/Zl5QMq022m+hvPNXfRwteNav0eckNTQPJJd8f55woBF3Nsh2r
-    9mwQIJb+VdMK+YRo5Fsc66GIT25mKkbCdaNDS2Qza0TPBPy4caOZGaGDCzmSRh4kYsGF
-    g8SjniJ2K3tF2B61fDTQfCT5j4JQCigmTA7iQijWTevTy4jkHaE2vaO3BtkKduX5SCul
-    //8w==
+    bh=R0UeZqgN1W/KRuMkfNtu6clTRSc+cnm48BfzbzHViQ4=;
+    b=ocdqGLd+yA5M3ntml67/sAnrOr//K+8+oHf4ldTOkbKssIxeaLkCiJBzW+UG2Ij3o5
+    6veCdyuJVfLc0xlZtLqgHxdo6/dzHAdoaV7RnMzRO5mSbe0vD3cgXwD8ssdSFCCx5W+h
+    pL9I5DwJO6H/miHcQNtzCf199IHvMX6udRq0vUB8gwIDY9jku4KHVU/wa+jQSSV8+k8l
+    p2fdPbXaq6uzaCTv/m7Ry7hc+/NFc6qT/hKryU7pmL0/5MCLHG5S5ucvKoVoAjCg80hJ
+    qC/QGdufHzO46ZV+BPhCELZEOGAX4I38a6KlXH7Iju297wPTw/DKuI2MXOZ52cR2kw8R
+    +ofQ==
 Authentication-Results: strato.com;
     dkim=none
 X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSeBwhhSxarlUcu05JCAPyj3VPAceccYJs0uz"
 X-RZG-CLASS-ID: mo00
 Received: from blinux
     by smtp.strato.de (RZmta 48.2.1 AUTH)
-    with ESMTPSA id z9cfbfyANHAhnIP
+    with ESMTPSA id z9cfbfyANHIAnJX
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
         (Client did not present a certificate);
-    Wed, 23 Nov 2022 18:10:43 +0100 (CET)
-Message-ID: <9b83887215e8f80626b9424c50d60306a1cc24aa.camel@iokpp.de>
-Subject: Re: [PATCH v3 2/4] ufs: core: Remove redundant desc_size variable
- from hba
+    Wed, 23 Nov 2022 18:18:10 +0100 (CET)
+Message-ID: <e0d77da04feaa39addf679df9d0964ed180cd06a.camel@iokpp.de>
+Subject: Re: [PATCH v3 3/4] ufs: core: Remove len parameter from
+ ufshcd_set_active_icc_lvl
 From:   Bean Huo <beanhuo@iokpp.de>
 To:     Arthur Simchaev <Arthur.Simchaev@wdc.com>,
         martin.petersen@oracle.com
 Cc:     beanhuo@micron.com, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Date:   Wed, 23 Nov 2022 18:10:42 +0100
-In-Reply-To: <1669045590-26101-3-git-send-email-Arthur.Simchaev@wdc.com>
+Date:   Wed, 23 Nov 2022 18:18:10 +0100
+In-Reply-To: <1669045590-26101-4-git-send-email-Arthur.Simchaev@wdc.com>
 References: <1669045590-26101-1-git-send-email-Arthur.Simchaev@wdc.com>
-         <1669045590-26101-3-git-send-email-Arthur.Simchaev@wdc.com>
+         <1669045590-26101-4-git-send-email-Arthur.Simchaev@wdc.com>
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.36.5-0ubuntu1 
 MIME-Version: 1.0
@@ -56,27 +56,38 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On Mon, 2022-11-21 at 17:46 +0200, Arthur Simchaev wrote:
-> @ -7945,18 +7926,16 @@ static void ufshcd_clear_dbg_ufs_stats(struct
-> ufs_hba *hba)
+> len argument is not used anymore in ufshcd_set_active_icc_lvl
+> function.
 > 
->  static int ufshcd_device_geo_params_init(struct ufs_hba *hba)
+> Signed-off-by: Arthur Simchaev <Arthur.Simchaev@wdc.com>
+> ---
+>  drivers/ufs/core/ufshcd.c | 6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
 > 
->  {
-> 
->         int err;
-> 
-> -       size_t buff_len;
-> 
->         u8 *desc_buf;
-> 
->  
-> 
-> -       buff_len = hba->desc_size[QUERY_DESC_IDN_GEOMETRY];
-> 
-> -       desc_buf = kmalloc(buff_len, GFP_KERNEL);
-> 
-> +       desc_buf = kmalloc(QUERY_DESC_MAX_SIZE, GFP_KERNEL);
-here also should be kzalloc?
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 7456aa2..604348f 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -7391,12 +7391,11 @@ static u32 ufshcd_get_max_icc_level(int
+> sup_curr_uA, u32 start_scan,
+>   * In case regulators are not initialized we'll return 0
+>   * @hba: per-adapter instance
+>   * @desc_buf: power descriptor buffer to extract ICC levels from.
+> - * @len: length of desc_buff
+>   *
+>   * Returns calculated ICC level
+>   */
+>  static u32 ufshcd_find_max_sup_active_icc_level(struct ufs_hba *hba,
+> -						const u8 *desc_buf, int
+> len)
+> +						const u8 *desc_buf)
+
+
+The Linux kernel already deprecates the 80 character per line coding
+style, so you could keep one line here after removing len.
+
 
 Reviewed-by: Bean Huo <beanhuo@micron.com>
+
+
 
