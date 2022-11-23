@@ -2,96 +2,86 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2409C3A59F
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Nov 2022 17:39:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B511DC4332F
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Nov 2022 18:32:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238924AbiKWRjH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Nov 2022 12:39:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58550 "EHLO
+        id S238832AbiKWScQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Nov 2022 13:32:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59854 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238503AbiKWRjF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Nov 2022 12:39:05 -0500
-Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5014898DA;
-        Wed, 23 Nov 2022 09:39:04 -0800 (PST)
-Received: by mail-ed1-x530.google.com with SMTP id s5so25794170edc.12;
-        Wed, 23 Nov 2022 09:39:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=kY1l32BjvmTEjJLwJuMtTS3l+ptPCvj6BygkCcwmqdA=;
-        b=FydYzUivVhWzTDIFaXUTJQlHJ+RXRHhbd6TAM7hKoDPhbDMhxSutKnKJaDNkrCJ6mq
-         SxKqG+Gm/HYNo2YpWD6E/QayLjEaU8UIyiUtcWtXcEYxQtPVWfMG36DpDy4zGHvaVzmw
-         IK2GD3H1OTOOy4ApHBk3lACJbLztCIFu0URTfjBl/Y0Yj4YMLQsf59VSVF9wqc4DM0Je
-         IGWpws3Muv7yQA5dDP7nmP7+KjMRuWfaZ8+JVQ9nyiqK2TolF8US0sJ1HS9OLWIKrW23
-         KIIMW1Vfwg3Gloq166cQI1vFdUK0uOgR+JSwsYkpJz9W6VCnm2tOpxUjmvgCJo1N75Xz
-         Gu5A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=kY1l32BjvmTEjJLwJuMtTS3l+ptPCvj6BygkCcwmqdA=;
-        b=tCGFNg4DymVx3e5431XPcTbXO/aqqFCEVe8SziXBn/ly5/C6EeEElxbSWB61OWJI+a
-         u1osQ9tP9VQV9SavDDs8wD52URBJO7atn2i36QNt5IjIkxwAka8DfVt0g30mJ7e/4BjB
-         Lieh8GauiI54aIXguYWTQyAfLaWZxz5FnpUwxnk0TS8WVdH4nC6V/gGcXHX+0Gx5928s
-         LiO8EKdJuBqO5tcFDniW1zfz0X8oZLyamLJe+tPv/0URqHJOBQXRs6reoqzr3P9EfLGu
-         ebxBQvdJjOeICHLWltDQvuZj3Kl4OBKplrjqS7JUkh49nPyalGdEadDxkXRhXFYzOi3s
-         7SvA==
-X-Gm-Message-State: ANoB5pkB0X2x4BPrvQXH8b0oEEzBZvB/dvTj3luyd/XlFDH3va6x7LIW
-        B4zXk727JosnVfWAbv/h70O4u2UEUHzXeDcfoH0=
-X-Google-Smtp-Source: AA0mqf45GjSHrPoTrfxcuwQC8LmpekL9dlSnJfrFJnQjoraO9pYapCJIbdfySrra661SWHZQzcVWPogwQrjzWuyLeIU=
-X-Received: by 2002:a05:6402:10c4:b0:467:7827:232 with SMTP id
- p4-20020a05640210c400b0046778270232mr27594712edu.268.1669225143120; Wed, 23
- Nov 2022 09:39:03 -0800 (PST)
+        with ESMTP id S239813AbiKWSb6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Nov 2022 13:31:58 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB741CB69C;
+        Wed, 23 Nov 2022 10:31:35 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9E3AC61E69;
+        Wed, 23 Nov 2022 18:31:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C22FEC433C1;
+        Wed, 23 Nov 2022 18:31:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1669228294;
+        bh=K+Iq1u99ln+hWt6sHmpc/POIaayidRC/UWiGVIGIdPo=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=JWnz1fYtlQovd9Sfe2d4PpK7jSZeCJaljf/94LGXGqteXYfT08QpviBEtK9bQhwqw
+         SQ9+2Iv5n6HXH0auYSojq8L/BgP65EZpmw8ZONZcsId5WEopaI/a8UiBfid7flzF+R
+         xv4dXbjWBTHAC+ODl1jg+IZMWJB178FFxFe7H+qvKlTdfehFfSVZAo9tcMRoV9I2Ks
+         xo0zS8Hpi7OndVwilZP33AGfYc5NpkNZdCAAokI94jWLe+gZ8vnRjEgBCSWBAAZQo6
+         mjClvOwG52kLWL5eFaNooFlPP/hVZ3PZ9LJN9qeY90+G8JknHoGI1YmY6K6VTUEFm1
+         +Gki26dGDBEIQ==
+Date:   Wed, 23 Nov 2022 18:31:32 +0000
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc:     martin.petersen@oracle.com, jejb@linux.ibm.com,
+        andersson@kernel.org, vkoul@kernel.org, quic_cang@quicinc.com,
+        quic_asutoshd@quicinc.com, linux-arm-msm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-phy@lists.infradead.org,
+        linux-scsi@vger.kernel.org, dmitry.baryshkov@linaro.org,
+        ahalaney@redhat.com, abel.vesa@linaro.org
+Subject: Re: [PATCH v3 20/20] MAINTAINERS: Add myself as the maintainer for
+ Qcom UFS driver
+Message-ID: <Y35nBIIRmu3w9C1C@gmail.com>
+References: <20221123074826.95369-1-manivannan.sadhasivam@linaro.org>
+ <20221123074826.95369-21-manivannan.sadhasivam@linaro.org>
 MIME-Version: 1.0
-References: <20221122213040.4128105-1-haowenchao@huawei.com>
- <4d21f806-6653-5457-918c-563a3032d128@suse.com> <00f11c61-a53f-c48a-017f-4c06055ea708@huawei.com>
- <717da158-5a7e-b478-61d3-3753b0b00e01@oracle.com>
-In-Reply-To: <717da158-5a7e-b478-61d3-3753b0b00e01@oracle.com>
-From:   Wenchao Hao <haowenchao22@gmail.com>
-Date:   Thu, 24 Nov 2022 01:38:51 +0800
-Message-ID: <CAOptpSMO5+Orp20S=WD-SezVOBEwJyKJSMjaCENN+4jXMX2X-A@mail.gmail.com>
-Subject: Re: [PATCH] scsi:iscsi: Record session's startup mode in kernel
-To:     Mike Christie <michael.christie@oracle.com>
-Cc:     Wenchao Hao <haowenchao@huawei.com>, Lee Duncan <lduncan@suse.com>,
-        Chris Leech <cleech@redhat.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, liuzhiqiang26@huawei.com,
-        linfeilong@huawei.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221123074826.95369-21-manivannan.sadhasivam@linaro.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Nov 24, 2022 at 1:29 AM Mike Christie
-<michael.christie@oracle.com> wrote:
->
-> On 11/22/22 10:41 PM, Wenchao Hao wrote:
-> > Sorry I did not highlight the key points. The root reason we need to record
-> > node_startup mode in kernel is userspace's node_startup mode is unreliable in
-> > some scenarios:
-> >
-> > 1. iscsi node and session is created in initrd, the configure files of these
-> >    nodes would be lost after we switch to rootfs
-> > 2. someone do iscsiadm -m discovery but did not specify the operation mode,
-> >    the iscsi node's node_startup would be updated to which specified in iscsid.conf
-> > 3. someone do iscsiadm -m node -o update to update nodes' configure
-> >
-> > What's more, it seems "iscsiadm/iscsid" only refuse to logout of an ONBOOT
-> > session when logout is specificed by "--logoutall". We still can logout an
-> > ONBOOT session with "iscsiadm -m node -u comamnd".
->
-> logout_by_startup does go by the startup setting, but I think you missed the
-> session_in_use related code. It checks the mounts and holders already. Just
-> change it for whatever you need. I think your lvm use case should be covered
-> by the holder check. If not, add it.
+On Wed, Nov 23, 2022 at 01:18:26PM +0530, Manivannan Sadhasivam wrote:
+> Qcom UFS driver has been left un-maintained till now. I'd like to step
+> up to maintain the driver and its binding.
+> 
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> ---
+>  MAINTAINERS | 8 ++++++++
+>  1 file changed, 8 insertions(+)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index cf0f18502372..149fd6daf52b 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -21097,6 +21097,14 @@ L:	linux-mediatek@lists.infradead.org (moderated for non-subscribers)
+>  S:	Maintained
+>  F:	drivers/ufs/host/ufs-mediatek*
+>  
+> +UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER QUALCOMM HOOKS
+> +M:	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> +L:	linux-arm-msm@vger.kernel.org
+> +L:	linux-scsi@vger.kernel.org
+> +S:	Maintained
+> +F:	Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> +F:	drivers/ufs/host/ufs-qcom.c
 
-I did not enable the iscsid.safe_logout in iscsid.conf, so the session
-still could be logged out.
-If tested with iscsid.safe_logout set to "Yes", the issue is solved.
+Thanks for volunteering to maintain this driver!
 
-Thanks a lot
+What about ufs-qcom.h and ufs-qcom-ice.c?  Those are part of this driver too.
+
+The pattern drivers/ufs/host/ufs-qcom* would cover all these files.
+
+- Eric
