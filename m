@@ -2,185 +2,83 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8225AC4332F
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Nov 2022 12:49:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12F31C433FE
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Nov 2022 13:34:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237958AbiKWMtc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Nov 2022 07:49:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33786 "EHLO
+        id S238749AbiKWNeS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Nov 2022 08:34:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40302 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238083AbiKWMso (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Nov 2022 07:48:44 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C63BD769E3;
-        Wed, 23 Nov 2022 04:43:35 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id BFD5DB81F3A;
-        Wed, 23 Nov 2022 12:43:33 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6752AC433D6;
-        Wed, 23 Nov 2022 12:43:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1669207412;
-        bh=HadPS6m+pVrsJNuaQ3ZS4WSXZB7phsZTAMFfdRfLCSc=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=VxzwcrkP0vrWa5dqIRL5b5pJt4pec8cHE0EMbIyNrARuOUtPoJwGZTgKGKGzRB084
-         24jodreRFsYw80PWFBQJEit3W0u0KzIECdfosE7EDDxBLfA5+C73PqpMtdcN7iXJIh
-         +ZPvTlYORWB+lxj5D+Mj2g9YO61ine6r+fkKJ2f3rDnER4SXn/DAnH0zc7xJCZtJ8C
-         DaXpqzU79n/TbVteJM4y7Vu4bSm+0Uxbdtn1CUO1z5dCPNtiD/hzCp6OVJtLt2mFpj
-         JUBLrg9Qq4eLN5/7b72/E8JWACYTp32ppMHs4d5VoQDhEh95E6Fzln64jybONwhuNx
-         XHmoQezmGCFOw==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Zhou Guanghui <zhouguanghui1@huawei.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, lduncan@suse.com,
-        cleech@redhat.com, jejb@linux.ibm.com, open-iscsi@googlegroups.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 28/31] scsi: iscsi: Fix possible memory leak when device_register() failed
-Date:   Wed, 23 Nov 2022 07:42:29 -0500
-Message-Id: <20221123124234.265396-28-sashal@kernel.org>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20221123124234.265396-1-sashal@kernel.org>
-References: <20221123124234.265396-1-sashal@kernel.org>
+        with ESMTP id S238912AbiKWNcZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Nov 2022 08:32:25 -0500
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0D0BDF74
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Nov 2022 05:18:03 -0800 (PST)
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out1.suse.de (Postfix) with ESMTP id 3CD8B21BE4;
+        Wed, 23 Nov 2022 13:18:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1669209482; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=1qtmFEjC7Gau5nXTNg6c3cXB1dSp0ynM79TxpoBXrnM=;
+        b=b/NU4xSi6mSjQNZcNT4Hu+28B2gn9l4EmyElvOPXfwJCTqpJCSfgfiG+G9wYJV5/BBJnwH
+        Unb0iphlaHOq0kcCdWWp+9fHRtkXks2R/N3YrCrQ3msMZBLwvxrBPy32wclZL++2Y3a4+2
+        BasTsFYUBJgk0NxBj8XG/0Ve4Vn9H10=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1669209482;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=1qtmFEjC7Gau5nXTNg6c3cXB1dSp0ynM79TxpoBXrnM=;
+        b=NfNCF46GCwjRsQKIHSvrrizcp9k/JiEUHUebom7iaY8iD+V4ukeMNo5pVS5+/bEV/upGSG
+        bxUyHX3cR5GnMMAg==
+Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
+        by relay2.suse.de (Postfix) with ESMTP id 352FB2C142;
+        Wed, 23 Nov 2022 13:18:02 +0000 (UTC)
+Received: by adalid.arch.suse.de (Postfix, from userid 16045)
+        id 220EC51AE33A; Wed, 23 Nov 2022 14:18:02 +0100 (CET)
+From:   Hannes Reinecke <hare@suse.de>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] scsi: do not put scsi_common in a separate module
+Date:   Wed, 23 Nov 2022 14:18:01 +0100
+Message-Id: <20221123131801.4409-1-hare@suse.de>
+X-Mailer: git-send-email 2.35.3
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Zhou Guanghui <zhouguanghui1@huawei.com>
+scsi_common.ko is a tiny module which is not shared with anything,
+so include it in scsi_mod.ko like the rest of the files.
 
-[ Upstream commit f014165faa7b953b81dcbf18835936e5f8d01f2a ]
-
-If device_register() returns error, the name allocated by the
-dev_set_name() need be freed. As described in the comment of
-device_register(), we should use put_device() to give up the reference in
-the error path.
-
-Fix this by calling put_device(), the name will be freed in the
-kobject_cleanup(), and this patch modified resources will be released by
-calling the corresponding callback function in the device_release().
-
-Signed-off-by: Zhou Guanghui <zhouguanghui1@huawei.com>
-Link: https://lore.kernel.org/r/20221110033729.1555-1-zhouguanghui1@huawei.com
-Reviewed-by: Mike Christie <michael.christie@oracle.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/scsi_transport_iscsi.c | 31 +++++++++++++++--------------
- 1 file changed, 16 insertions(+), 15 deletions(-)
+ drivers/scsi/Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index f46ae5391758..cc39cbef9d7f 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -232,7 +232,7 @@ iscsi_create_endpoint(int dd_size)
- 	dev_set_name(&ep->dev, "ep-%d", id);
- 	err = device_register(&ep->dev);
-         if (err)
--		goto free_id;
-+		goto put_dev;
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index f055bfd54a68..d9f5f27246b1 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -20,7 +20,6 @@ CFLAGS_aha152x.o =   -DAHA152X_STAT -DAUTOCONF
+ obj-$(CONFIG_PCMCIA)		+= pcmcia/
  
- 	err = sysfs_create_group(&ep->dev.kobj, &iscsi_endpoint_group);
- 	if (err)
-@@ -246,10 +246,12 @@ iscsi_create_endpoint(int dd_size)
- 	device_unregister(&ep->dev);
- 	return NULL;
+ obj-$(CONFIG_SCSI)		+= scsi_mod.o
+-obj-$(CONFIG_SCSI_COMMON)	+= scsi_common.o
  
--free_id:
-+put_dev:
- 	mutex_lock(&iscsi_ep_idr_mutex);
- 	idr_remove(&iscsi_ep_idr, id);
- 	mutex_unlock(&iscsi_ep_idr_mutex);
-+	put_device(&ep->dev);
-+	return NULL;
- free_ep:
- 	kfree(ep);
- 	return NULL;
-@@ -767,7 +769,7 @@ iscsi_create_iface(struct Scsi_Host *shost, struct iscsi_transport *transport,
+ obj-$(CONFIG_RAID_ATTRS)	+= raid_class.o
  
- 	err = device_register(&iface->dev);
- 	if (err)
--		goto free_iface;
-+		goto put_dev;
+@@ -167,6 +166,7 @@ scsi_mod-y			+= scsi_trace.o scsi_logging.o
+ scsi_mod-$(CONFIG_PM)		+= scsi_pm.o
+ scsi_mod-$(CONFIG_SCSI_DH)	+= scsi_dh.o
+ scsi_mod-$(CONFIG_BLK_DEV_BSG)	+= scsi_bsg.o
++scsi_mod-$(CONFIG_SCSI_COMMON)	+= scsi_common.o
  
- 	err = sysfs_create_group(&iface->dev.kobj, &iscsi_iface_group);
- 	if (err)
-@@ -781,9 +783,8 @@ iscsi_create_iface(struct Scsi_Host *shost, struct iscsi_transport *transport,
- 	device_unregister(&iface->dev);
- 	return NULL;
+ hv_storvsc-y			:= storvsc_drv.o
  
--free_iface:
--	put_device(iface->dev.parent);
--	kfree(iface);
-+put_dev:
-+	put_device(&iface->dev);
- 	return NULL;
- }
- EXPORT_SYMBOL_GPL(iscsi_create_iface);
-@@ -1252,15 +1253,15 @@ iscsi_create_flashnode_sess(struct Scsi_Host *shost, int index,
- 
- 	err = device_register(&fnode_sess->dev);
- 	if (err)
--		goto free_fnode_sess;
-+		goto put_dev;
- 
- 	if (dd_size)
- 		fnode_sess->dd_data = &fnode_sess[1];
- 
- 	return fnode_sess;
- 
--free_fnode_sess:
--	kfree(fnode_sess);
-+put_dev:
-+	put_device(&fnode_sess->dev);
- 	return NULL;
- }
- EXPORT_SYMBOL_GPL(iscsi_create_flashnode_sess);
-@@ -1300,15 +1301,15 @@ iscsi_create_flashnode_conn(struct Scsi_Host *shost,
- 
- 	err = device_register(&fnode_conn->dev);
- 	if (err)
--		goto free_fnode_conn;
-+		goto put_dev;
- 
- 	if (dd_size)
- 		fnode_conn->dd_data = &fnode_conn[1];
- 
- 	return fnode_conn;
- 
--free_fnode_conn:
--	kfree(fnode_conn);
-+put_dev:
-+	put_device(&fnode_conn->dev);
- 	return NULL;
- }
- EXPORT_SYMBOL_GPL(iscsi_create_flashnode_conn);
-@@ -4838,7 +4839,7 @@ iscsi_register_transport(struct iscsi_transport *tt)
- 	dev_set_name(&priv->dev, "%s", tt->name);
- 	err = device_register(&priv->dev);
- 	if (err)
--		goto free_priv;
-+		goto put_dev;
- 
- 	err = sysfs_create_group(&priv->dev.kobj, &iscsi_transport_group);
- 	if (err)
-@@ -4873,8 +4874,8 @@ iscsi_register_transport(struct iscsi_transport *tt)
- unregister_dev:
- 	device_unregister(&priv->dev);
- 	return NULL;
--free_priv:
--	kfree(priv);
-+put_dev:
-+	put_device(&priv->dev);
- 	return NULL;
- }
- EXPORT_SYMBOL_GPL(iscsi_register_transport);
 -- 
-2.35.1
+2.35.3
 
