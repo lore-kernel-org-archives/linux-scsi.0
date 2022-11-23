@@ -2,114 +2,96 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92499C433FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Nov 2022 17:32:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2409C3A59F
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Nov 2022 17:39:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238764AbiKWRcD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Nov 2022 12:32:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50074 "EHLO
+        id S238924AbiKWRjH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Nov 2022 12:39:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58550 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239249AbiKWRbj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Nov 2022 12:31:39 -0500
-Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.50])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 371068E2B9;
-        Wed, 23 Nov 2022 09:31:24 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1669224682;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=0nhAiOB5tBSBigTMtkx6J+G6Cq310y66dwYZRw1qDCM=;
-    b=k9ARrRX6ewfCD8yG2SUCle3o1TGEIRg+8jZ/FM6W0DLgPWYpGVUcNleji6EGpB6BTh
-    aRBVBYW7Ta1KdC0bouoDUQkKHCd4zOJQJ66S+0Y6mGx3az7J26W2puG3ibs8OUt2dyVQ
-    YYY9ufBNDOcV/ob/mHRqrHEV60xji12JcEiT31fEAOtVl+z+9uWEEKy+XbF+Ag2BoIop
-    xEtbXdtYB1C/YgZ0hPq+ocfBSfpvBVKCdvWMV4ZDcybarPLjOd55xXDLi9HUwVwmNmwT
-    FQ3GFr3w9rj3VQVR/+WUUeGuAxMgly6FXIKeBkCDS+h82q1Az1yDfFeWRuMo6HkVV6Cd
-    0pcw==
-Authentication-Results: strato.com;
-    dkim=none
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSeBwhhSxarlUcu05JCAPyj3VPAceccYJs0uz"
-X-RZG-CLASS-ID: mo00
-Received: from blinux
-    by smtp.strato.de (RZmta 48.2.1 AUTH)
-    with ESMTPSA id z9cfbfyANHVLnLS
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-        (Client did not present a certificate);
-    Wed, 23 Nov 2022 18:31:21 +0100 (CET)
-Message-ID: <67f8930848d9c6b73f225a55920de29623db9bdd.camel@iokpp.de>
-Subject: Re: [PATCH v3 4/4] ufs: core: Remove ufshcd_map_desc_id_to_length
- function
-From:   Bean Huo <beanhuo@iokpp.de>
-To:     Arthur Simchaev <Arthur.Simchaev@wdc.com>,
-        martin.petersen@oracle.com
-Cc:     beanhuo@micron.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date:   Wed, 23 Nov 2022 18:31:20 +0100
-In-Reply-To: <1669045590-26101-5-git-send-email-Arthur.Simchaev@wdc.com>
-References: <1669045590-26101-1-git-send-email-Arthur.Simchaev@wdc.com>
-         <1669045590-26101-5-git-send-email-Arthur.Simchaev@wdc.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.5-0ubuntu1 
+        with ESMTP id S238503AbiKWRjF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Nov 2022 12:39:05 -0500
+Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5014898DA;
+        Wed, 23 Nov 2022 09:39:04 -0800 (PST)
+Received: by mail-ed1-x530.google.com with SMTP id s5so25794170edc.12;
+        Wed, 23 Nov 2022 09:39:04 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=kY1l32BjvmTEjJLwJuMtTS3l+ptPCvj6BygkCcwmqdA=;
+        b=FydYzUivVhWzTDIFaXUTJQlHJ+RXRHhbd6TAM7hKoDPhbDMhxSutKnKJaDNkrCJ6mq
+         SxKqG+Gm/HYNo2YpWD6E/QayLjEaU8UIyiUtcWtXcEYxQtPVWfMG36DpDy4zGHvaVzmw
+         IK2GD3H1OTOOy4ApHBk3lACJbLztCIFu0URTfjBl/Y0Yj4YMLQsf59VSVF9wqc4DM0Je
+         IGWpws3Muv7yQA5dDP7nmP7+KjMRuWfaZ8+JVQ9nyiqK2TolF8US0sJ1HS9OLWIKrW23
+         KIIMW1Vfwg3Gloq166cQI1vFdUK0uOgR+JSwsYkpJz9W6VCnm2tOpxUjmvgCJo1N75Xz
+         Gu5A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=kY1l32BjvmTEjJLwJuMtTS3l+ptPCvj6BygkCcwmqdA=;
+        b=tCGFNg4DymVx3e5431XPcTbXO/aqqFCEVe8SziXBn/ly5/C6EeEElxbSWB61OWJI+a
+         u1osQ9tP9VQV9SavDDs8wD52URBJO7atn2i36QNt5IjIkxwAka8DfVt0g30mJ7e/4BjB
+         Lieh8GauiI54aIXguYWTQyAfLaWZxz5FnpUwxnk0TS8WVdH4nC6V/gGcXHX+0Gx5928s
+         LiO8EKdJuBqO5tcFDniW1zfz0X8oZLyamLJe+tPv/0URqHJOBQXRs6reoqzr3P9EfLGu
+         ebxBQvdJjOeICHLWltDQvuZj3Kl4OBKplrjqS7JUkh49nPyalGdEadDxkXRhXFYzOi3s
+         7SvA==
+X-Gm-Message-State: ANoB5pkB0X2x4BPrvQXH8b0oEEzBZvB/dvTj3luyd/XlFDH3va6x7LIW
+        B4zXk727JosnVfWAbv/h70O4u2UEUHzXeDcfoH0=
+X-Google-Smtp-Source: AA0mqf45GjSHrPoTrfxcuwQC8LmpekL9dlSnJfrFJnQjoraO9pYapCJIbdfySrra661SWHZQzcVWPogwQrjzWuyLeIU=
+X-Received: by 2002:a05:6402:10c4:b0:467:7827:232 with SMTP id
+ p4-20020a05640210c400b0046778270232mr27594712edu.268.1669225143120; Wed, 23
+ Nov 2022 09:39:03 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+References: <20221122213040.4128105-1-haowenchao@huawei.com>
+ <4d21f806-6653-5457-918c-563a3032d128@suse.com> <00f11c61-a53f-c48a-017f-4c06055ea708@huawei.com>
+ <717da158-5a7e-b478-61d3-3753b0b00e01@oracle.com>
+In-Reply-To: <717da158-5a7e-b478-61d3-3753b0b00e01@oracle.com>
+From:   Wenchao Hao <haowenchao22@gmail.com>
+Date:   Thu, 24 Nov 2022 01:38:51 +0800
+Message-ID: <CAOptpSMO5+Orp20S=WD-SezVOBEwJyKJSMjaCENN+4jXMX2X-A@mail.gmail.com>
+Subject: Re: [PATCH] scsi:iscsi: Record session's startup mode in kernel
+To:     Mike Christie <michael.christie@oracle.com>
+Cc:     Wenchao Hao <haowenchao@huawei.com>, Lee Duncan <lduncan@suse.com>,
+        Chris Leech <cleech@redhat.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, liuzhiqiang26@huawei.com,
+        linfeilong@huawei.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 2022-11-21 at 17:46 +0200, Arthur Simchaev wrote:
-............
-> -	if (param_offset >= buff_len) {
-> -		dev_err(hba->dev, "%s: Invalid offset 0x%x in
-> descriptor IDN 0x%x, length 0x%x\n",
-> -			__func__, param_offset, desc_id, buff_len);
-> -		return -EINVAL;
-> -	}
-> -
->  	/* Check whether we need temp memory */
->  	if (param_offset != 0 || param_size < buff_len) {
->  		desc_buf = kzalloc(buff_len, GFP_KERNEL);
-> @@ -3434,15 +3407,23 @@ int ufshcd_read_desc_param(struct ufs_hba
-> *hba,
->  
->  	/* Request for full descriptor */
->  	ret = ufshcd_query_descriptor_retry(hba,
-> UPIU_QUERY_OPCODE_READ_DESC,
-> -					desc_id, desc_index, 0,
-> -					desc_buf, &buff_len);
-> -
-> +					    desc_id, desc_index, 0,
-> +					    desc_buf, &buff_len);
->  	if (ret) {
->  		dev_err(hba->dev, "%s: Failed reading descriptor.
-> desc_id %d, desc_index %d, param_offset %d, ret %d\n",
->  			__func__, desc_id, desc_index, param_offset,
-> ret);
->  		goto out;
->  	}
->  
-> +	/* Update descriptor length */
-> +	buff_len = desc_buf[QUERY_DESC_LENGTH_OFFSET];
-> +
-> +	if (param_offset >= buff_len) {
-> +		dev_err(hba->dev, "%s: Invalid offset 0x%x in
-> descriptor IDN 0x%x, length 0x%x\n",
-> +			__func__, param_offset, desc_id, buff_len);
-> +		return -EINVAL;
-> +	}
-> +
+On Thu, Nov 24, 2022 at 1:29 AM Mike Christie
+<michael.christie@oracle.com> wrote:
+>
+> On 11/22/22 10:41 PM, Wenchao Hao wrote:
+> > Sorry I did not highlight the key points. The root reason we need to record
+> > node_startup mode in kernel is userspace's node_startup mode is unreliable in
+> > some scenarios:
+> >
+> > 1. iscsi node and session is created in initrd, the configure files of these
+> >    nodes would be lost after we switch to rootfs
+> > 2. someone do iscsiadm -m discovery but did not specify the operation mode,
+> >    the iscsi node's node_startup would be updated to which specified in iscsid.conf
+> > 3. someone do iscsiadm -m node -o update to update nodes' configure
+> >
+> > What's more, it seems "iscsiadm/iscsid" only refuse to logout of an ONBOOT
+> > session when logout is specificed by "--logoutall". We still can logout an
+> > ONBOOT session with "iscsiadm -m node -u comamnd".
+>
+> logout_by_startup does go by the startup setting, but I think you missed the
+> session_in_use related code. It checks the mounts and holders already. Just
+> change it for whatever you need. I think your lvm use case should be covered
+> by the holder check. If not, add it.
 
-a little bit concerned here, but understood your point that you want to
-anyway read descriptor, then check if param_offset is a valid input. I
-think, there is no problem. 
+I did not enable the iscsid.safe_logout in iscsid.conf, so the session
+still could be logged out.
+If tested with iscsid.safe_logout set to "Yes", the issue is solved.
 
-All in all, this series is a very nice cleanup, we removed all
-unnecessary if-state, and complicated rules, making code more readable
-than before.
-
-Reviewed-by: Bean Huo <beanhuo@micron.com>
-
-
-Thanks,
-Bean
-
-
-
+Thanks a lot
