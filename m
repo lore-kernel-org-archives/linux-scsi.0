@@ -2,41 +2,211 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B318BC433FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Nov 2022 13:34:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB8ECC4167D
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Nov 2022 14:23:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238765AbiKWNev (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Nov 2022 08:34:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40872 "EHLO
+        id S236380AbiKWOXV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Nov 2022 09:23:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45292 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238433AbiKWNdL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Nov 2022 08:33:11 -0500
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F30BD5800D
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Nov 2022 05:20:17 -0800 (PST)
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 09E6B68CFE; Wed, 23 Nov 2022 14:20:13 +0100 (CET)
-Date:   Wed, 23 Nov 2022 14:20:12 +0100
-From:   Christoph Hellwig <hch@lst.de>
-To:     Hannes Reinecke <hare@suse.de>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] scsi: do not put scsi_common in a separate module
-Message-ID: <20221123132012.GA32386@lst.de>
-References: <20221123131801.4409-1-hare@suse.de>
+        with ESMTP id S238807AbiKWOWZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Nov 2022 09:22:25 -0500
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C2B07AF5F;
+        Wed, 23 Nov 2022 06:21:51 -0800 (PST)
+Received: from dggpemm500021.china.huawei.com (unknown [172.30.72.55])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4NHNbD276FzHw6Z;
+        Wed, 23 Nov 2022 22:21:12 +0800 (CST)
+Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
+ dggpemm500021.china.huawei.com (7.185.36.109) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Wed, 23 Nov 2022 22:21:49 +0800
+Received: from [10.174.178.220] (10.174.178.220) by
+ dggpemm500017.china.huawei.com (7.185.36.178) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Wed, 23 Nov 2022 22:21:48 +0800
+Message-ID: <3a2ba8f0-3a86-36cf-cafd-969298594830@huawei.com>
+Date:   Wed, 23 Nov 2022 22:21:47 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20221123131801.4409-1-hare@suse.de>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [PATCH v6] scsi:iscsi: Fix multiple iscsi session unbind event
+ sent to userspace
+Content-Language: en-US
+To:     Mike Christie <michael.christie@oracle.com>,
+        Wenchao Hao <haowenchao22@gmail.com>
+CC:     Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linfeilong@huawei.com>
+References: <20221108014414.3510940-1-haowenchao@huawei.com>
+ <ad54a5dc-b18f-e0e6-4391-1214e5729562@oracle.com>
+ <89692b2b-90f7-e8e8-fa77-f14dbe996b72@huawei.com>
+ <418c7f6f-0bc3-45bb-2abf-e866df6f4b62@oracle.com>
+ <CAOptpSO6=sUPUwgj1og8088djiNA=Bw9um0p024L=0Gb=-ja5w@mail.gmail.com>
+ <856ccad2-19a4-32b4-b41f-5a230a55ee30@oracle.com>
+From:   Wenchao Hao <haowenchao@huawei.com>
+In-Reply-To: <856ccad2-19a4-32b4-b41f-5a230a55ee30@oracle.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.178.220]
+X-ClientProxiedBy: dggpeml500005.china.huawei.com (7.185.36.59) To
+ dggpemm500017.china.huawei.com (7.185.36.178)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Nov 23, 2022 at 02:18:01PM +0100, Hannes Reinecke wrote:
-> scsi_common.ko is a tiny module which is not shared with anything,
-> so include it in scsi_mod.ko like the rest of the files.
+On 2022/11/23 2:15, Mike Christie wrote:
+> On 11/22/22 11:29 AM, Wenchao Hao wrote:
+>> On Wed, Nov 23, 2022 at 1:04 AM Mike Christie
+>> <michael.christie@oracle.com> wrote:
+>>>
+>>> On 11/21/22 8:17 AM, Wenchao Hao wrote:
+>>>> And the function looks like following after change:
+>>>>
+>>>> static void __iscsi_unbind_session(struct work_struct *work)
+>>>> {
+>>>>       struct iscsi_cls_session *session =
+>>>>                       container_of(work, struct iscsi_cls_session,
+>>>>                                    unbind_work);
+>>>>       struct Scsi_Host *shost = iscsi_session_to_shost(session);
+>>>>       struct iscsi_cls_host *ihost = shost->shost_data;
+>>>>       unsigned long flags;
+>>>>       unsigned int target_id;
+>>>>
+>>>>       ISCSI_DBG_TRANS_SESSION(session, "Unbinding session\n");
+>>>>
+>>>>       /* Prevent new scans and make sure scanning is not in progress */
+>>>>       mutex_lock(&ihost->mutex);
+>>>>       spin_lock_irqsave(&session->lock, flags);
+>>>>       if (session->target_state != ISCSI_SESSION_TARGET_SCANNED) {
+>>>
+>>> What was the reason for not checking for ALLOCATED and freeing the ida
+>>> in that case?
+>>>
+>>
+>> target_state would be in "ALLOCATED" state if iscsid died after add
+>> session successfully.
+>> When iscsid restarted, if the session's target_state is "ALLOCATED",
+>> it should scan
+>> the session and the target_state would switch to "SCANNED".
+>>
+>> So I think we would not call in __iscsi_unbind_session() with
+>> session's target_state
+>> is ALLOCATED.
+> 
+> Makes sense for the normal case.
+> 
+> The only issue is when __iscsi_unbind_session is called via
+> iscsi_remove_session for the cases where userspace didn't do
+> the  UNBIND event. Some tools don't do unbind or open-iscsi
+> sometimes doesn't if the session is down. We will leak the ida,
+> so you need some code to handle that.
+> 
+> .
 
-It is shared between the scsi initiator and target code.
+Sorry, I did not take this condition in consideration. I would change
+the __iscsi_unbind_session as following:
+
+1. do not check if target_id is ISCSI_MAX_TARGET
+2. define remove_target and default set to true, if target_state is ALLOCATED, then set
+   it to false and continue the unbind flow; else if target_state not SCANNED, just return.
+3. set target_state to ISCSI_SESSION_TARGET_UNBOUND after is sent to avoid potential race condition.
+
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index cd3db9684e52..9264c75ad9ea 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -1960,31 +1960,40 @@ static void __iscsi_unbind_session(struct work_struct *work)
+        struct iscsi_cls_host *ihost = shost->shost_data;
+        unsigned long flags;
+        unsigned int target_id;
++       bool remove_target = true;
+ 
+        ISCSI_DBG_TRANS_SESSION(session, "Unbinding session\n");
+ 
+        /* Prevent new scans and make sure scanning is not in progress */
+        mutex_lock(&ihost->mutex);
+        spin_lock_irqsave(&session->lock, flags);
+-       if (session->target_id == ISCSI_MAX_TARGET) {
++       if (session->target_state == ISCSI_SESSION_TARGET_ALLOCATED) {
++               remove_target = false;
++       } else if (session->target_state != ISCSI_SESSION_TARGET_SCANNED) {
+                spin_unlock_irqrestore(&session->lock, flags);
+                mutex_unlock(&ihost->mutex);
+-               goto unbind_session_exit;
++               ISCSI_DBG_TRANS_SESSION(session, "Skipping target unbinding: Session is unbound/unbinding.\n");
++               return;
+        }
+ 
++       session->target_state = ISCSI_SESSION_TARGET_UNBINDING;
+        target_id = session->target_id;
+        session->target_id = ISCSI_MAX_TARGET;
+        spin_unlock_irqrestore(&session->lock, flags);
+        mutex_unlock(&ihost->mutex);
+ 
+-       scsi_remove_target(&session->dev);
++       if (remove_target)
++               scsi_remove_target(&session->dev);
+ 
+        if (session->ida_used)
+                ida_free(&iscsi_sess_ida, target_id);
+ 
+-unbind_session_exit:
+        iscsi_session_event(session, ISCSI_KEVENT_UNBIND_SESSION);
+        ISCSI_DBG_TRANS_SESSION(session, "Completed target removal\n");
++
++       spin_lock_irqsave(&session->lock, flags);
++       session->target_state = ISCSI_SESSION_TARGET_UNBOUND;
++       spin_unlock_irqrestore(&session->lock, flags);
+ }
+
+And the function would be:
+
+static void __iscsi_unbind_session(struct work_struct *work)
+{
+	struct iscsi_cls_session *session =
+			container_of(work, struct iscsi_cls_session,
+				     unbind_work);
+	struct Scsi_Host *shost = iscsi_session_to_shost(session);
+	struct iscsi_cls_host *ihost = shost->shost_data;
+	unsigned long flags;
+	unsigned int target_id;
+	bool remove_target = true;
+
+	ISCSI_DBG_TRANS_SESSION(session, "Unbinding session\n");
+
+	/* Prevent new scans and make sure scanning is not in progress */
+	mutex_lock(&ihost->mutex);
+	spin_lock_irqsave(&session->lock, flags);
+	if (session->target_state == ISCSI_SESSION_TARGET_ALLOCATED) {
+		remove_target = false;
+	} else if (session->target_state != ISCSI_SESSION_TARGET_SCANNED) {
+		spin_unlock_irqrestore(&session->lock, flags);
+		mutex_unlock(&ihost->mutex);
+		ISCSI_DBG_TRANS_SESSION(session, "Skipping target unbinding: Session is unbound/unbinding.\n");
+		return;
+	}
+
+	session->target_state = ISCSI_SESSION_TARGET_UNBINDING;
+	target_id = session->target_id;
+	session->target_id = ISCSI_MAX_TARGET;
+	spin_unlock_irqrestore(&session->lock, flags);
+	mutex_unlock(&ihost->mutex);
+
+	if (remove_target)
+		scsi_remove_target(&session->dev);
+
+	if (session->ida_used)
+		ida_free(&iscsi_sess_ida, target_id);
+
+	iscsi_session_event(session, ISCSI_KEVENT_UNBIND_SESSION);
+	ISCSI_DBG_TRANS_SESSION(session, "Completed target removal\n");
+
+	spin_lock_irqsave(&session->lock, flags);
+	session->target_state = ISCSI_SESSION_TARGET_UNBOUND;
+	spin_unlock_irqrestore(&session->lock, flags);
+}
+
