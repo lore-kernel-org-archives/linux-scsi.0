@@ -2,41 +2,41 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6428AC433FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Nov 2022 20:58:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B91E4C3A59F
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Nov 2022 20:58:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235362AbiKWU6Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Nov 2022 15:58:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52750 "EHLO
+        id S235150AbiKWU61 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Nov 2022 15:58:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52502 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239354AbiKWU6S (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Nov 2022 15:58:18 -0500
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B7EB140DC;
-        Wed, 23 Nov 2022 12:58:17 -0800 (PST)
-Received: by mail-pl1-f181.google.com with SMTP id 4so17747258pli.0;
-        Wed, 23 Nov 2022 12:58:17 -0800 (PST)
+        with ESMTP id S239253AbiKWU6K (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Nov 2022 15:58:10 -0500
+Received: from mail-pg1-f182.google.com (mail-pg1-f182.google.com [209.85.215.182])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48BF9F02D;
+        Wed, 23 Nov 2022 12:58:09 -0800 (PST)
+Received: by mail-pg1-f182.google.com with SMTP id q71so17748137pgq.8;
+        Wed, 23 Nov 2022 12:58:09 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=RFVPNR8S50CoEUmmic/+TdXIVTdXYTFAywePSuWS/vg=;
-        b=uggAH6eiYpVqABs5toRVcVUFtTu5sejgLcGLGSOPOvrd7C3jPoiGdKTx/vMN0tV4d+
-         /AvArV8h0V9pM2YOYOsNS8AqDVo1ausneXo+s/LedLg4mvnz3zDUMU+oR1bDFccgavs8
-         5d8GIZUULX+1QLnrc6e6cQWEVdnaY7l1j8NMWP5ITRrhXzIJtNFL9oNv8lS7qBqnatZO
-         HQFYk+2R9FZKCDJRwbLF3vkr06gP/Pck5lT5PUyoTtfYksh4sdOtGowWUyqKynhQiYF4
-         3g9QaftxiJhxLzZKGpe65DaA+Wn+f3gwioH3H2XbJC6L1fDTL/z0awHF1MBMZSQdrt8L
-         eC2g==
-X-Gm-Message-State: ANoB5pnei9wxPWqHaj7Efihin7QLeehVBjes/IF+zhI64ppZ52ke7MOF
-        SkKxt9kQce99hHgqLmZwDndGjs7v1Lc=
-X-Google-Smtp-Source: AA0mqf5yS+Nq0J4bdlyuZeBTsZ9+CAHVtHH1wpeSDUq/JdzeDl/ju/41d+RC1SbhEDycEC1J6Tyt+w==
-X-Received: by 2002:a17:902:b101:b0:188:abb9:288 with SMTP id q1-20020a170902b10100b00188abb90288mr12659090plr.123.1669237096711;
-        Wed, 23 Nov 2022 12:58:16 -0800 (PST)
+        bh=u/TsybekEubKHyQUK6eV+iAAL5xeGQVyeA/isuI9nLY=;
+        b=ZRZKWSimsv5E2sYWVuUZN4D72PHIe/e/qHesajpFfxBy7kQCkrMKVswlk9n1g8Tl2k
+         fPjS1L+BwUf6hnsfwfiXWmmk6XVz/KNx+yWdtv301m4Xxuy2yX378ZW2S/ACTHgN4o3f
+         BEpGUNCOz7iIhc6gdiYrmR2jqU5i77U22+E3T1jU+BW4EE4eCMrDJByYoJcIkTUp9Vja
+         q7DxsdOm9ndLA6CvBVWOxLcYMU75mPVmLNRh+374XuhJ8aKlvxQeC8giNpCc29lWUi5n
+         i8dPbo4tizcTLkSXizWqG6C7684OgTIC53uYz09JlVZylF1hzmMrWSass/Wq+DlL45Bc
+         rDLg==
+X-Gm-Message-State: ANoB5png55PXzce7bauq2c79kS2pnOld+aFl5RoKR1QWnT+/QpEXJJI3
+        tLg++03rdxjQXn6ZQkS9gYE=
+X-Google-Smtp-Source: AA0mqf7APCgI6nlqyOOHzYLhP4ztkxEwCdOPlgdjAeFusBIRXA2M/Bh3idKagRwBuc0kgMu5j1+AVg==
+X-Received: by 2002:a63:dd43:0:b0:45c:5a74:9a92 with SMTP id g3-20020a63dd43000000b0045c5a749a92mr9452347pgj.473.1669237088627;
+        Wed, 23 Nov 2022 12:58:08 -0800 (PST)
 Received: from bvanassche-glaptop2.roam.corp.google.com ([2601:642:4c02:686d:4311:4764:eee7:ac6d])
-        by smtp.gmail.com with ESMTPSA id i89-20020a17090a3de200b0020b2082e0acsm1858809pjc.0.2022.11.23.12.58.14
+        by smtp.gmail.com with ESMTPSA id i89-20020a17090a3de200b0020b2082e0acsm1858809pjc.0.2022.11.23.12.58.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 23 Nov 2022 12:58:15 -0800 (PST)
+        Wed, 23 Nov 2022 12:58:07 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
@@ -44,11 +44,10 @@ Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
         Adrian Hunter <adrian.hunter@intel.com>,
         Avri Altman <avri.altman@wdc.com>,
         Bart Van Assche <bvanassche@acm.org>,
-        Doug Gilbert <dgilbert@interlog.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH v2 7/8] scsi_debug: Support configuring the maximum segment size
-Date:   Wed, 23 Nov 2022 12:57:39 -0800
-Message-Id: <20221123205740.463185-8-bvanassche@acm.org>
+        Ming Lei <ming.lei@redhat.com>, Keith Busch <kbusch@kernel.org>
+Subject: [PATCH v2 3/8] block: Support submitting passthrough requests with small segments
+Date:   Wed, 23 Nov 2022 12:57:35 -0800
+Message-Id: <20221123205740.463185-4-bvanassche@acm.org>
 X-Mailer: git-send-email 2.38.1.584.g0f3c55d4c2-goog
 In-Reply-To: <20221123205740.463185-1-bvanassche@acm.org>
 References: <20221123205740.463185-1-bvanassche@acm.org>
@@ -58,42 +57,72 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add a kernel module parameter for configuring the maximum segment size.
-This patch enables testing SCSI support for segments smaller than the
-page size.
+If the segment size is smaller than the page size there may be multiple
+segments per bvec even if a bvec only contains a single page. Hence this
+patch.
 
-Cc: Doug Gilbert <dgilbert@interlog.com>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Ming Lei <ming.lei@redhat.com>
+Cc: Keith Busch <kbusch@kernel.org>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi_debug.c | 3 +++
- 1 file changed, 3 insertions(+)
+ block/blk-map.c | 16 +++++++++++++++-
+ block/blk.h     | 11 +++++++++++
+ 2 files changed, 26 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index bebda917b138..ea8f762c55c3 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -770,6 +770,7 @@ static int sdebug_sector_size = DEF_SECTOR_SIZE;
- static int sdeb_tur_ms_to_ready = DEF_TUR_MS_TO_READY;
- static int sdebug_virtual_gb = DEF_VIRTUAL_GB;
- static int sdebug_vpd_use_hostno = DEF_VPD_USE_HOSTNO;
-+static unsigned int sdebug_max_segment_size = -1U;
- static unsigned int sdebug_lbpu = DEF_LBPU;
- static unsigned int sdebug_lbpws = DEF_LBPWS;
- static unsigned int sdebug_lbpws10 = DEF_LBPWS10;
-@@ -5851,6 +5852,7 @@ module_param_named(ndelay, sdebug_ndelay, int, S_IRUGO | S_IWUSR);
- module_param_named(no_lun_0, sdebug_no_lun_0, int, S_IRUGO | S_IWUSR);
- module_param_named(no_rwlock, sdebug_no_rwlock, bool, S_IRUGO | S_IWUSR);
- module_param_named(no_uld, sdebug_no_uld, int, S_IRUGO);
-+module_param_named(max_segment_size, sdebug_max_segment_size, uint, S_IRUGO);
- module_param_named(num_parts, sdebug_num_parts, int, S_IRUGO);
- module_param_named(num_tgts, sdebug_num_tgts, int, S_IRUGO | S_IWUSR);
- module_param_named(opt_blks, sdebug_opt_blks, int, S_IRUGO);
-@@ -7815,6 +7817,7 @@ static int sdebug_driver_probe(struct device *dev)
+diff --git a/block/blk-map.c b/block/blk-map.c
+index 19940c978c73..d2d6ee098514 100644
+--- a/block/blk-map.c
++++ b/block/blk-map.c
+@@ -524,6 +524,20 @@ static struct bio *bio_copy_kern(struct request_queue *q, void *data,
+ 	return ERR_PTR(-ENOMEM);
+ }
  
- 	sdebug_driver_template.can_queue = sdebug_max_queue;
- 	sdebug_driver_template.cmd_per_lun = sdebug_max_queue;
-+	sdebug_driver_template.max_segment_size = sdebug_max_segment_size;
- 	if (!sdebug_clustering)
- 		sdebug_driver_template.dma_boundary = PAGE_SIZE - 1;
++#ifdef CONFIG_BLK_SUB_PAGE_SEGMENTS
++/* Number of DMA segments required to transfer @bytes data. */
++unsigned int blk_segments(const struct queue_limits *limits, unsigned int bytes)
++{
++	const unsigned int mss = limits->max_segment_size;
++
++	if (bytes <= mss)
++		return 1;
++	if (is_power_of_2(mss))
++		return round_up(bytes, mss) >> ilog2(mss);
++	return (bytes + mss - 1) / mss;
++}
++#endif
++
+ /*
+  * Append a bio to a passthrough request.  Only works if the bio can be merged
+  * into the request based on the driver constraints.
+@@ -535,7 +549,7 @@ int blk_rq_append_bio(struct request *rq, struct bio *bio)
+ 	unsigned int nr_segs = 0;
  
+ 	bio_for_each_bvec(bv, bio, iter)
+-		nr_segs++;
++		nr_segs += blk_segments(&rq->q->limits, bv.bv_len);
+ 
+ 	if (!rq->bio) {
+ 		blk_rq_bio_prep(rq, bio, nr_segs);
+diff --git a/block/blk.h b/block/blk.h
+index 5929559acd71..fb486eff3eef 100644
+--- a/block/blk.h
++++ b/block/blk.h
+@@ -80,6 +80,17 @@ struct bio_vec *bvec_alloc(mempool_t *pool, unsigned short *nr_vecs,
+ 		gfp_t gfp_mask);
+ void bvec_free(mempool_t *pool, struct bio_vec *bv, unsigned short nr_vecs);
+ 
++#ifdef CONFIG_BLK_SUB_PAGE_SEGMENTS
++unsigned int blk_segments(const struct queue_limits *limits,
++			  unsigned int bytes);
++#else
++static inline unsigned int blk_segments(const struct queue_limits *limits,
++					unsigned int bytes)
++{
++	return 1;
++}
++#endif
++
+ static inline bool biovec_phys_mergeable(struct request_queue *q,
+ 		struct bio_vec *vec1, struct bio_vec *vec2)
+ {
