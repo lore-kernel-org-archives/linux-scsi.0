@@ -2,101 +2,84 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A797DC433FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Nov 2022 07:52:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08954C433FE
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Nov 2022 08:15:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236437AbiKWHwu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Nov 2022 02:52:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54314 "EHLO
+        id S236352AbiKWIPp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Nov 2022 03:15:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52244 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236342AbiKWHvk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Nov 2022 02:51:40 -0500
-Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1177BFC701
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Nov 2022 23:50:34 -0800 (PST)
-Received: by mail-pj1-x1034.google.com with SMTP id g5so112438pjd.4
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Nov 2022 23:50:34 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=6pljquG0hkdcBPdXIDtkq1v6aN8iyQB1w4S/2qg/cek=;
-        b=riPHLLSPLvU4P+d6u9OTtrSXJONvT4DAWehSTt8MlAkRICfZiHBToxi4kDEWfviIsZ
-         h4GppwDuuDtXzzjSle39EzY+sWR9P2DfAoziF1MiznuN458awUnLiX/RsQVdSjhwa9Ms
-         N7ygqjsasMBdsGnhMbFuz8KQKDG3sgS/nb0h0LVdwiKMu8JgiDY8oI8doDST/Z72ZCYT
-         tOmvkb6tOyXbn1sYrt5J6aXGX7NYMQ5KuIDCIMqYJRE/bssq6GURpxVq7JGlg2buknlK
-         VWlCBZ2geenSJVXVHz6jVyyq2m82Ua+nFlNCMkC42mjSdkzzVQp3p4YoKphWcZ+5LkHO
-         vXWg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=6pljquG0hkdcBPdXIDtkq1v6aN8iyQB1w4S/2qg/cek=;
-        b=FCK4ibpFEvcF8yf3lCv5xsnHO7AKkhg0nmNpKAw38l5R6n8FoXb+5/IrLGcSPSDYdn
-         ewZeE+Ks0D7lNrZVA7J3WEdYaH1NARwGMdsAoLYSYGkZ6Np8ACzC0tYuZd2R/4RtvH9S
-         5ZUgjlz6mtPY9tgq3oCwjWInu2tkdJgsBNzDvdidp1JpRvy7YlXnt8JFN+eKfwkZiesQ
-         TsFm1d8ft3fMaqG7REaD6dukoIKTJDL7pqzNsnC1Ft9Iu0gndS6XTXsl7vSysR61jwLd
-         kUYyj3YfxPdI/DNoRgb/wAJC2PJgASnsuBBGv+SZ95QYVep8T3ggWfePwY3E9HvZgEFc
-         8lkg==
-X-Gm-Message-State: ANoB5plweeZcJFs30Tn6eeh4cjY67AZem2ZG2UbtJhnNnmJvTCc6jloO
-        UQ8Vy5eMAQVKP3FZJEEN3Mox
-X-Google-Smtp-Source: AA0mqf4oJohuIJiFaMQ1NxpUqgruyQRg1aKK4w0wEW+uEmRdgL4uVGadHWpYVlHujlCe+RkwM2jNBQ==
-X-Received: by 2002:a17:90a:307:b0:213:ff80:b37f with SMTP id 7-20020a17090a030700b00213ff80b37fmr35775172pje.118.1669189833465;
-        Tue, 22 Nov 2022 23:50:33 -0800 (PST)
-Received: from localhost.localdomain ([117.202.191.0])
-        by smtp.gmail.com with ESMTPSA id s16-20020a170902a51000b001869f2120a5sm13334059plq.34.2022.11.22.23.50.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 22 Nov 2022 23:50:32 -0800 (PST)
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     martin.petersen@oracle.com, jejb@linux.ibm.com,
-        andersson@kernel.org, vkoul@kernel.org
-Cc:     quic_cang@quicinc.com, quic_asutoshd@quicinc.com,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-phy@lists.infradead.org, linux-scsi@vger.kernel.org,
-        dmitry.baryshkov@linaro.org, ahalaney@redhat.com,
-        abel.vesa@linaro.org,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v3 20/20] MAINTAINERS: Add myself as the maintainer for Qcom UFS driver
-Date:   Wed, 23 Nov 2022 13:18:26 +0530
-Message-Id: <20221123074826.95369-21-manivannan.sadhasivam@linaro.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20221123074826.95369-1-manivannan.sadhasivam@linaro.org>
-References: <20221123074826.95369-1-manivannan.sadhasivam@linaro.org>
+        with ESMTP id S235969AbiKWIPo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Nov 2022 03:15:44 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A173EF1D86
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Nov 2022 00:14:45 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1669191284;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=/cZO6BqqZk5h3pMcPNSrH00FRFbHJFSGQsjMEqcCLiw=;
+        b=Iq8vqSDyq6vxSP5Gk8JF4a0/uhqBh2rLTzj6GbEMCZIvagGxky/RPHjmOe4yR8tH9cVvmG
+        Y+ZTa6onUuxMEy2HDsaXRxvFHpPDQvssU9T58G5szcUDYX6l1349r/6QFpmgBgGdCVZhLD
+        ll8qc81Qu/2TquVz2d7WsLGyW8Opsoc=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-552-o3eExf0wNzGzl2S-ENd0SA-1; Wed, 23 Nov 2022 03:14:38 -0500
+X-MC-Unique: o3eExf0wNzGzl2S-ENd0SA-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.rdu2.redhat.com [10.11.54.4])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id AF971833A09;
+        Wed, 23 Nov 2022 08:14:37 +0000 (UTC)
+Received: from T590 (ovpn-8-16.pek2.redhat.com [10.72.8.16])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 66C1B2024CBE;
+        Wed, 23 Nov 2022 08:14:31 +0000 (UTC)
+Date:   Wed, 23 Nov 2022 16:14:26 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Yuan Can <yuancan@huawei.com>
+Cc:     don.brace@microchip.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, storagedev@microchip.com,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] scsi: hpsa: Fix possible memory leak in hpsa_init_one()
+Message-ID: <Y33WYvis1sHr29zU@T590>
+References: <20221122015751.87284-1-yuancan@huawei.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221122015751.87284-1-yuancan@huawei.com>
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.4
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Qcom UFS driver has been left un-maintained till now. I'd like to step
-up to maintain the driver and its binding.
+On Tue, Nov 22, 2022 at 01:57:51AM +0000, Yuan Can wrote:
+> The hpda_alloc_ctlr_info() allocates h and its field reply_map, however in
+> hpsa_init_one(), if alloc_percpu() failed, the hpsa_init_one() jumps to
+> clean1 directly, which frees h and leaks the h->reply_map.
+> Fix by calling hpda_free_ctlr_info() to release h->replay_map and h
+> instead free h directly.
+> 
+> Fixes: 8b834bff1b73 ("scsi: hpsa: fix selection of reply queue")
+> Signed-off-by: Yuan Can <yuancan@huawei.com>
+> ---
+>  drivers/scsi/hpsa.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index f8e832b1bc46..e5cbc97a5ea4 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -8925,7 +8925,7 @@ static int hpsa_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>  		destroy_workqueue(h->monitor_ctlr_wq);
+>  		h->monitor_ctlr_wq = NULL;
+>  	}
+> -	kfree(h);
+> +	hpda_free_ctlr_info(h);
 
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
- MAINTAINERS | 8 ++++++++
- 1 file changed, 8 insertions(+)
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index cf0f18502372..149fd6daf52b 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -21097,6 +21097,14 @@ L:	linux-mediatek@lists.infradead.org (moderated for non-subscribers)
- S:	Maintained
- F:	drivers/ufs/host/ufs-mediatek*
- 
-+UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER QUALCOMM HOOKS
-+M:	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-+L:	linux-arm-msm@vger.kernel.org
-+L:	linux-scsi@vger.kernel.org
-+S:	Maintained
-+F:	Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-+F:	drivers/ufs/host/ufs-qcom.c
-+
- UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER RENESAS HOOKS
- M:	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
- L:	linux-renesas-soc@vger.kernel.org
--- 
-2.25.1
+Thanks,
+Ming
 
