@@ -2,38 +2,38 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61105C433FE
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Nov 2022 09:26:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25E8DC433FE
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Nov 2022 09:31:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229507AbiKXJ01 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Nov 2022 04:26:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37020 "EHLO
+        id S229853AbiKXJb6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Nov 2022 04:31:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43360 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229541AbiKXJ0Y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Nov 2022 04:26:24 -0500
+        with ESMTP id S229755AbiKXJb4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Nov 2022 04:31:56 -0500
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6AF6311605A;
-        Thu, 24 Nov 2022 01:26:23 -0800 (PST)
-Received: from fraeml742-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4NHsxL6xqQz6HJTS;
-        Thu, 24 Nov 2022 17:23:34 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11ED911E714;
+        Thu, 24 Nov 2022 01:31:55 -0800 (PST)
+Received: from frapeml100006.china.huawei.com (unknown [172.18.147.207])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4NHt3l18nJz6HJbZ;
+        Thu, 24 Nov 2022 17:29:07 +0800 (CST)
 Received: from lhrpeml500004.china.huawei.com (7.191.163.9) by
- fraeml742-chm.china.huawei.com (10.206.15.223) with Microsoft SMTP Server
+ frapeml100006.china.huawei.com (7.182.85.201) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Thu, 24 Nov 2022 10:26:21 +0100
+ 15.1.2375.31; Thu, 24 Nov 2022 10:31:53 +0100
 Received: from mscphis00759.huawei.com (10.123.66.134) by
  lhrpeml500004.china.huawei.com (7.191.163.9) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Thu, 24 Nov 2022 09:26:20 +0000
+ 15.1.2375.31; Thu, 24 Nov 2022 09:31:52 +0000
 From:   Konstantin Meskhidze <konstantin.meskhidze@huawei.com>
 To:     <jejb@linux.ibm.com>
 CC:     <martin.petersen@oracle.com>, <damien.lemoal@wdc.com>,
-        <john.garry@huawei.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <yusongping@huawei.com>,
-        <hukeping@huawei.com>, <artem.kuzin@huawei.com>
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <yusongping@huawei.com>, <hukeping@huawei.com>,
+        <artem.kuzin@huawei.com>
 Subject: [PATCH] scsi:aic94xx: Fix self assignment
-Date:   Thu, 24 Nov 2022 17:26:05 +0800
-Message-ID: <20221124092605.1677082-1-konstantin.meskhidze@huawei.com>
+Date:   Thu, 24 Nov 2022 17:31:41 +0800
+Message-ID: <20221124093141.1677633-1-konstantin.meskhidze@huawei.com>
 X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
