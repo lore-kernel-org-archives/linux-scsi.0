@@ -2,81 +2,112 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC815C4321E
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Nov 2022 14:43:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDC7FC433FE
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Nov 2022 16:21:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229653AbiKXOn6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Nov 2022 09:43:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47198 "EHLO
+        id S229675AbiKXQVq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Nov 2022 11:21:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56462 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229508AbiKXOn5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Nov 2022 09:43:57 -0500
-Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.50])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9BB727DCAC;
-        Thu, 24 Nov 2022 06:43:55 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1669301029;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=9mSSiDtptJsFoTSp7lizv54G2RctLeBZ81+WxQ164hE=;
-    b=UV2zHPK31IW4LXVPLeWIwAdh9qWWjLww8Pk/ASScWONpfibUDcTMALR89ieUugcSAe
-    TV0QAuLpYbtKf7Cq7ZaMuC14nNWXFdCPWamsodvThkdBkrTfCp5dNwm1s+50Uo4zpU70
-    j0smVd8OT4PZu8JV+ajuNEpssULrD9duJH0K23cogPfHkCqSm2tl6Ivnko7BxnJ4WOb3
-    UzxtIRgCyg1cLbNwO+IUEpIqdc8gTbPT3kBH6cnIOpxV3oHc3LmES5XVqCFEeAfI5DCd
-    x/uNn0KeBp3QAqS7JDfGZGpJcj4U3FSBrE7+nR1Y57mu3+gSWCKdlAlOXl3FQvKm6xcc
-    /4Kw==
-Authentication-Results: strato.com;
-    dkim=none
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSeBwhhSxarlUcu05JCAPyj3VPAceccYJs0uz"
-X-RZG-CLASS-ID: mo00
-Received: from blinux
-    by smtp.strato.de (RZmta 48.2.1 AUTH)
-    with ESMTPSA id z9cfbfyAOEhlrR5
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-        (Client did not present a certificate);
-    Thu, 24 Nov 2022 15:43:47 +0100 (CET)
-Message-ID: <dc9fab4e390d63f4f48eba5fcef0fc3d27086b7d.camel@iokpp.de>
-Subject: Re: [PATCH v2 3/6] ufs: core: Split ufshcd_map_sg
-From:   Bean Huo <beanhuo@iokpp.de>
-To:     Avri Altman <Avri.Altman@wdc.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        "daejun7.park@samsung.com" <daejun7.park@samsung.com>,
-        "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
-        "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
-        "quic_xiaosenh@quicinc.com" <quic_xiaosenh@quicinc.com>,
-        "quic_richardp@quicinc.com" <quic_richardp@quicinc.com>,
-        "quic_asutoshd@quicinc.com" <quic_asutoshd@quicinc.com>,
-        "hare@suse.de" <hare@suse.de>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date:   Thu, 24 Nov 2022 15:43:46 +0100
-In-Reply-To: <DM6PR04MB65756D4E5DEAAA95FCA24784FC0D9@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <20221120222217.108492-1-beanhuo@iokpp.de>
-         <20221120222217.108492-4-beanhuo@iokpp.de>
-         <DM6PR04MB65756D4E5DEAAA95FCA24784FC0D9@DM6PR04MB6575.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.5-0ubuntu1 
+        with ESMTP id S229495AbiKXQVp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Nov 2022 11:21:45 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 774E816F0E1;
+        Thu, 24 Nov 2022 08:21:43 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        Content-Type:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
+        Message-ID:Sender:Reply-To:Content-ID:Content-Description;
+        bh=FGjzuXAIl+wHDnB9X06Lj741Z1ohvCHZzEDHufjgoPA=; b=TdfHq33K0iHRvayUCiTchGcsns
+        dQfP4CvpGuk/CioBXk1AvcvjsZKIR9oDbLWGmTqtFpddFjkzn3MFNF4PcC5eoFzmZJ1kRqTzqVtKd
+        JzIN0cDJLD47KiZTybbsOGWD2ysOHOKZEJhy6VSWSL8JoDlNj/LWJc3pucDObBYSYW2nvphz7A1sM
+        08Bqpeb9DePDC3PcLqU715jUKJAtHYeHToklPMDaWYBJknUQ5PNrkxtRgLNwvCyQ1L54Srj6Zyo1G
+        5s5eqQ5MphEj0WnAEWaGgJzyR6zDnBrlNJeeJf6UC7MHQXmHwu5S9kjEMNuj6lIiVuJrzW3+71cG0
+        ZMitPOWQ==;
+Received: from [2601:1c2:d80:3110::a2e7]
+        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1oyEyn-00A3Ox-N0; Thu, 24 Nov 2022 16:21:37 +0000
+Message-ID: <387ebede-048b-203c-ffe7-7f0ff2014d3c@infradead.org>
+Date:   Thu, 24 Nov 2022 08:21:35 -0800
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.5.0
+Subject: Re: [PATCH] scsi: megaraid_sas: fix some spelling mistakes in comment
+Content-Language: en-US
+To:     Yu Zhe <yuzhe@nfschina.com>, kashyap.desai@broadcom.com,
+        sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        liqiong@nfschina.com
+References: <20221124092514.32032-1-yuzhe@nfschina.com>
+From:   Randy Dunlap <rdunlap@infradead.org>
+In-Reply-To: <20221124092514.32032-1-yuzhe@nfschina.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 2022-11-22 at 08:15 +0000, Avri Altman wrote:
-> > +
-> > +       cmd = lrbp->cmd;
-> > +       sg_segments = scsi_dma_map(cmd);
+Hi--
+
+These changes all look good.
+One small nit below:
+
+On 11/24/22 01:25, Yu Zhe wrote:
+> Fix typos in comment.
 > 
-> Maybe initialize in declaration?
+> Signed-off-by: Yu Zhe <yuzhe@nfschina.com>
+> ---
+>  drivers/scsi/megaraid/megaraid_sas_fusion.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> index 6650f8c8e9b0..c53c29a0a018 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> @@ -80,7 +80,7 @@ static void megasas_fusion_crash_dump(struct megasas_instance *instance);
+>   * @ocr_context:			If called from OCR context this will
+>   *					be set to 1, else 0
+>   *
+> - * This function initates a chip reset followed by a wait for controller to
+> + * This function initiates a chip reset followed by a wait for controller to
+>   * transition to ready state.
+>   * During this, driver will block all access to PCI config space from userspace
+>   */
+> @@ -334,7 +334,7 @@ megasas_fire_cmd_fusion(struct megasas_instance *instance,
+>   *
+>   * This function is only for fusion controllers.
+>   * Update host can queue, if firmware downgrade max supported firmware commands.
+> - * Firmware upgrade case will be skiped because underlying firmware has
+> + * Firmware upgrade case will be skipped because underlying firmware has
+>   * more resource than exposed to the OS.
+>   *
+>   */
+> @@ -2588,7 +2588,7 @@ static void megasas_stream_detect(struct megasas_instance *instance,
+>  			if ((io_info->ldStartBlock != current_sd->next_seq_lba)	&&
+>  			    ((!io_info->isRead) || (!is_read_ahead)))
+>  				/*
+> -				 * Once the API availible we need to change this.
+> +				 * Once the API available we need to change this.
 
-yes, agree, will change it in the next version
+				 * Once the API is available we need to change this.
 
-Kind regards,
-Bean
+>  				 * At this point we are not allowing any gap
+>  				 */
+>  				continue;
+> @@ -4650,7 +4650,7 @@ megasas_issue_tm(struct megasas_instance *instance, u16 device_handle,
+>  }
+>  
+>  /*
+> - * megasas_fusion_smid_lookup : Look for fusion command correpspodning to SCSI
+> + * megasas_fusion_smid_lookup : Look for fusion command corresponding to SCSI
+>   * @instance: per adapter struct
+>   *
+>   * Return Non Zero index, if SMID found in outstanding commands
 
+Reviewed-by: Randy Dunlap <rdunlap@infradead.org>
+
+Thanks.
+-- 
+~Randy
