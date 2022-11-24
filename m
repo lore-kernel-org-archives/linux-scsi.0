@@ -2,244 +2,173 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A26DC4332F
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Nov 2022 01:40:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57715C4332F
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Nov 2022 03:28:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229883AbiKXBkd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Nov 2022 20:40:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39792 "EHLO
+        id S229675AbiKXD2P (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Nov 2022 22:28:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45820 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229505AbiKXBkc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Nov 2022 20:40:32 -0500
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7DEFD02D1
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Nov 2022 17:40:30 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1669254029; x=1700790029;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=h8Ap5RoCVoF9g4JVuQUMI49lLYWEvYz81WaaV6s2ssQ=;
-  b=eBfXMsRhW+VQYNx/NiEcIeLeeZhuSMZEcqMD2NEQndFG125VXwndCXPb
-   NKYOXTjOwhsdPj406JKON71atyc1qcy2BVWXOYrQF3j8ODeVYGEV8bJIc
-   lK5jNSAyA+0LnIXd3zoRMroi0QxYbQUuFCOiQAb4Qy5m1NyZAwcEOIL5m
-   cJzkD8sD1Qb2MdPUPDDZRArJh4E/hFiIBYsmlycXBZfqOI0o9euo0eWIK
-   /lIeJ8X51tF7f31fPR+758ZaecW5uTr3MX3rOWYCwu7G5kBNqCfHMSK77
-   LqKm+BNiuwUmcIDyWoMZgZ0plYDBwPFWGjh5TUblDKyFSPSTxZ8n6SaAe
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.96,189,1665417600"; 
-   d="scan'208";a="217345683"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 24 Nov 2022 09:40:29 +0800
-IronPort-SDR: Gn6P0LYc+pBKpl/wjBnXwTyq/pMM72Wm9Dk8apIzp4UWioPeBSHpfS6HK/4hxUoWzgJr/6RWSx
- Mdqyv+c0NHQYehGve9C9xzQwE+RRY48Ca93Ml+ZqQOB3mmmY8AxUuqQjMirdJNYUOrSlzVBfEa
- zEcmOAn3BUA6qoTm/c34DcnH8IMlJUfifEsz/7N6/7pCQnb7Uqas+Wntknl+99i1xRKDf787ex
- J6uKj/iSIJUx4rtCaWxN5HVX3vOgANqFBcHVRv+m6cXMNJCsz9/W+1AtiT4CipdBMCcQQb0NFK
- fOw=
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 23 Nov 2022 16:59:16 -0800
-IronPort-SDR: mGZ3PrIelblht05oTWNnR98IODvxWVM8ABIJa9TUrLt/Vk9bgXkl7NRflH2FnHQSehg5nTv+qP
- 4/kcpb0HSzOnhUhdZW/me91szfAlRiLKPbgs0xOJU8bjrsYGNmskGOlU/jvYBjiQved/5ML7L4
- VOWSrYRsIPVZ5d6NT0LR35i+w7//heV1ATGsEi4tPHQzzHOpLrUYdoK2Mvts6hOx5c4A35AYi/
- QK7GOiVRsVeKgR05Jvo5fi15d1SBywMfk+41+XjxsGuImF220BS/es0doBiqIo+WEk7bvpjl6a
- D2U=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 23 Nov 2022 17:40:30 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4NHgg15S1tz1Rwrq
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Nov 2022 17:40:29 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1669254028; x=1671846029; bh=h8Ap5RoCVoF9g4JVuQUMI49lLYWEvYz81Wa
-        aV6s2ssQ=; b=W4xyKMm02RrKrtqP+Yg90HJSHpu2Oms0fIyo4EofvsUr2CaGB/O
-        wLU5xKdB8AOsi0q0GMBEtEpJnRwaq7d6ieAiUnJXYgtCkB5cjpa4FFTETudMPmMi
-        oN7Jgx9keH31vGLk2HY45x1ojJnU+AxcDcydiDk3Ys7BtNl98tEObzJZdi2xqKWb
-        sqJwuO/6qKCk85RNcBitI5Csjp9DLwvL0VaEcdcFHE9KLwKs6TmOMW5hvCwDFy59
-        tXAQ3uc1I2VmTWIViyPDRswpzYU0dV5hSJ84QytcYe71ljAscJ60x9RkDZWIY7aj
-        cSIhuWM6Fey8Eqf5temoYvzZJQHxSiXUCKA==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id 6bHds08ee3yc for <linux-scsi@vger.kernel.org>;
-        Wed, 23 Nov 2022 17:40:28 -0800 (PST)
-Received: from [10.225.163.55] (unknown [10.225.163.55])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4NHgfz22DKz1RvLy;
-        Wed, 23 Nov 2022 17:40:27 -0800 (PST)
-Message-ID: <32feb681-e858-1a0c-b91d-3f0d85615a6d@opensource.wdc.com>
-Date:   Thu, 24 Nov 2022 10:40:25 +0900
+        with ESMTP id S229838AbiKXD2K (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Nov 2022 22:28:10 -0500
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B24E31F80;
+        Wed, 23 Nov 2022 19:28:04 -0800 (PST)
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2AO2iKDo028162;
+        Thu, 24 Nov 2022 03:27:50 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2022-7-12;
+ bh=Z1BdZ7X7hAt/rW0J4UDpLrJTXkhEOYZad21hXJI6TUY=;
+ b=sOOfQ/zpGsRIxcSwWWSraLP9BLrhjOgvUGmkrxvhrV3bgMiG/SEubJoWGXkH5VdMzI0f
+ +Haq2jrQBAd7P9LICFli6Igj5blFCTZ2cG6wA9TNIriJeDLLW9iuz4S9ZJX0+W6GH/Hv
+ /SEhvcJqN3mwyxwl+4xUi6DImV+gJdjJjGvFGQuF2IQ1xK5fda+frhPE9xEitiDLLbxL
+ LP/UkTj3gHP8Pu6yD6vuKPCFqCsf1EfK63N/Kem4oBaNyYo+b/P+Bpbq+5X0zb1TZICA
+ z4CG3g4Hkoef4ccL+s+4ESfE+M6Le6iPAePjieBRKb2EuKTA/JF76O8bQUBTqt1TSWgk DQ== 
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3m1p5fhgu9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 24 Nov 2022 03:27:50 +0000
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2AO0I1UF010837;
+        Thu, 24 Nov 2022 03:27:49 GMT
+Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2170.outbound.protection.outlook.com [104.47.56.170])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3kxnkdxxc5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 24 Nov 2022 03:27:49 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=KZsD9Xvqy4PwID7Q7nHsE66yLNj7ajn0kE2mmQCTtJe3qqR52IQJVayPWXaS4nTsCTjLfkDXS7pt/6tVdtkLSUcUYQhFELiiBiO1ASicKzpzYND5ZI2DUAh5J4jytFnicOrW9Hj2yoz+EtpNyPbGH5IeabittBwGsHL+LBt78T7UeDDjIGWSDMYzCHprAu17Mo9PwzoB0bMa2EqOMvKcrElf/iUIgBe0Xl+RudZiT31JK/FeLPROvJ0awke9Wow7L6rhauQZaBvXYhvhK4ACEFO8+eue4Pu2uL0jUVF3nqBOdMquSBos63Lh9pDUWJjJ++WWbkSn1KS2P+4vKRIEsg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Z1BdZ7X7hAt/rW0J4UDpLrJTXkhEOYZad21hXJI6TUY=;
+ b=e3jM9l2nVcMc0J78hlTAJbsp9d/Jw7t7vtt2bbIlkwi5V4n53p1y84SOnHSjrJwGjTFXj/2LRBEaHwQsRV8ZiWWHQXP9MozSC3UHj47HfF3/DMUJTu8YDdchfffVTWE/ZQc4TT8l7J2Qim2AD78qNO7uCPAROyFHdeA6TeTzc/KR1vuRnltdubgKN21nER8C5fGIyl3pVbTkENmw5RovtjrMr/YGBcwnXnMSBDmerK1Kno+YSTTsRoxZ3pf/IMv2Pm3xRsI32UOPEEHYjGpgafqK0Se+thvcINb48PaIgftNo7UM0CynzeVN3MlBFP2y4NOtjbI6bTR7aTyLgqSfyg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Z1BdZ7X7hAt/rW0J4UDpLrJTXkhEOYZad21hXJI6TUY=;
+ b=p/rfJ3B04kxacoAqEDhOyJDwKABRFPfesRLUDWL/zJRanJ3XSfFgRNGHz3iFAEshpeWx9B4m/ZpH+0dgycat9reVjdyWlo7fZLFe/2+OblzF+fVK4CcRVsIprNL7vHX/ENyG1l6mCCsyb6tMXN54dvL6mlhgersxJ2RePXPnhsM=
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by PH7PR10MB6553.namprd10.prod.outlook.com (2603:10b6:510:204::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5857.18; Thu, 24 Nov
+ 2022 03:27:47 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::b32e:78d8:ef63:470a]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::b32e:78d8:ef63:470a%8]) with mapi id 15.20.5857.019; Thu, 24 Nov 2022
+ 03:27:47 +0000
+To:     Wenchao Hao <haowenchao@huawei.com>
+Cc:     Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
+        "Mike Christie" <michael.christie@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <liuzhiqiang26@huawei.com>,
+        <linfeilong@huawei.com>
+Subject: Re: [PATCH] scsi:iscsi: rename iscsi_set_param to iscsi_if_set_param
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1bkoxt4k5.fsf@ca-mkp.ca.oracle.com>
+References: <20221122181105.4123935-1-haowenchao@huawei.com>
+Date:   Wed, 23 Nov 2022 22:27:45 -0500
+In-Reply-To: <20221122181105.4123935-1-haowenchao@huawei.com> (Wenchao Hao's
+        message of "Tue, 22 Nov 2022 18:11:05 +0000")
+Content-Type: text/plain
+X-ClientProxiedBy: SN6PR05CA0030.namprd05.prod.outlook.com
+ (2603:10b6:805:de::43) To PH0PR10MB4759.namprd10.prod.outlook.com
+ (2603:10b6:510:3d::12)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.0
-Subject: Re: [PATCH v2 8/8] null_blk: Support configuring the maximum segment
- size
-Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        Chaitanya Kulkarni <kch@nvidia.com>
-References: <20221123205740.463185-1-bvanassche@acm.org>
- <20221123205740.463185-9-bvanassche@acm.org>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <20221123205740.463185-9-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH0PR10MB4759:EE_|PH7PR10MB6553:EE_
+X-MS-Office365-Filtering-Correlation-Id: 62b42cf2-a0fe-44b0-33bc-08dacdcbdb73
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 2Dac/yHYfRdktVb9OZLG7lJ32YT4Zben/t1zxu1+IQCxyDz2zxqugPNQ4Ayx/OEKrDSekdv8JXgcbo7/PRT6uAULfvNw6Qh/qPu2XHQe5BfUQWkpKzxQ7xr1FBbC3NdkLI5HDSBVT6cqsrWGHWuBkjE+WPPXtUFlDJHIxycTcSPQH9+RhOiYAhvnQNge+AltAtZ2/TL0mcJ3ANw9db4FFmVi4/RGOoJaCNqDxzq/a8fcAnVRrJUzL+hJI+9rjt4vPpNnNI4yFHCbcAJI4Vhw2bS1sneoNgvyme5vb+fzByiss4iZ5dyDl4rLl2kcrzrlMjJ3ORHIyCq2kny1LAifl9K8yQMdVZU813ejVSoP0ONRzPO1+yOA9ZRyzRaa5/2ys4MELNzRKAHAsrARj0Lmb6YbIrhukPfunndfVdzuzmRtv6A8kUVdc6fiTP+cfcRfAQIVzBPGGxAkqi2QKXB1MG6Pnm6k3Co1fMGChPqcLbkWQ8xgDAoOInxOwwPZg3ZUjl4CS45/x39jd+fyQYLI2DnIqM1n7aARWHYkqrjKajF8q3p+/LZlv9C1H45vGFaulXUC8UXSAXFJyHqJ2D/rQqSlRgz3Q7V2ZT5ncJVYTTZSQV3cufqRnFwLo1bruOe5wbAEze0UUTRkoP8b/db72A==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(136003)(39860400002)(366004)(376002)(396003)(346002)(451199015)(66946007)(8676002)(66476007)(5660300002)(186003)(66556008)(478600001)(4326008)(6486002)(38100700002)(41300700001)(86362001)(558084003)(316002)(6916009)(8936002)(54906003)(2906002)(26005)(6512007)(6506007)(36916002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?1hoEysorudcAJ/3IFkeKg6IJE5XSGP0Ow2QreFdp9Tr74D7pwX4nJz1N8nf6?=
+ =?us-ascii?Q?/rdId8nTMgGOzsTSxKaQ60sciRn/A67Uo1b2pGjDzgrZfaEHI4wZyp2QI+UY?=
+ =?us-ascii?Q?QrfnkFldwZgh9ltEc1BZxKkMpJvlCMnKxNmVR2/T9tbOG0giWiVGOHORlmUS?=
+ =?us-ascii?Q?NHZ5IwVDiHYEhNqtGnIuTMF/JafgxLH88sc7OOhFFWijTZJMdjRJA5ioKcTh?=
+ =?us-ascii?Q?9cdF3SLAE2fXRlv0PMqdLpxaix2r0k9RZsgxxAtdmuKwQz4DBNYbckISAZXO?=
+ =?us-ascii?Q?MczKXSbKb14mSSVkxuBS2+Fb//RRfY2KylsBt1KdThpxCmnKnXE/j0k+VHt+?=
+ =?us-ascii?Q?os66X2/9kSDv8pRNrvijPQRT9PKBT2K+j5ZQa+JrFgE9ZPMBrgH/jlumLLb1?=
+ =?us-ascii?Q?V2HCwUgYTS1b7GwfuHdiforYu0fH5AJaje2zmiVgUccR5Xti4bZuAyUSvFQO?=
+ =?us-ascii?Q?S5tTVSSAPe+KehZ9NCsGCfYdQYPyOLJKqowULNXiix3OE3gu22a0neJN2uZc?=
+ =?us-ascii?Q?wdNHPBOb/ura2Ui552ns3dJWO7BmLAGgOGxXfk2Y75gijQAKV9kjchTP9CET?=
+ =?us-ascii?Q?9Vhj0hTnnIoXD2xFEp9AyEr33M8+JVHUC1TClW4wmcLE9I8WFoHkgNo1bnq7?=
+ =?us-ascii?Q?XXYubHwt/r1ox7yBUb9r7fWL54O6gcQMxIQtz8FKumtl3/2e+gaBDkfvgz0B?=
+ =?us-ascii?Q?8XKP0VDJirhcTh/ExG7Qb+1bTiML5NJqdgim54p7xVMmoyA0pzLkBdFsXDSG?=
+ =?us-ascii?Q?yHGoF5mdo58U1ntGpH1zXn6xYzqwISN5rCT2FJbSTeAj9CszqB9G6nJbg1KD?=
+ =?us-ascii?Q?qmcfGKupKq3vuGig+d2hWPF30JIObr/1aP76cH34eJ2paarzSXJ72hQwq3D7?=
+ =?us-ascii?Q?5N6jDrWohdi6LqRLkIMApU1/MMPN5gzsiyZ4kZVYcr2syTTW60RAeSv1Ndzf?=
+ =?us-ascii?Q?ufY3gIdBlQP8BVjZgBFJhgs0aVchthoPgizsCU5BzYsh/FWOX5nKjgx6vmv6?=
+ =?us-ascii?Q?9nloX+NenwFz4WVg9ntslW1ttJ7Pgc0FEL/VL9eOV9nB1G3zrgGzPpkfIeR7?=
+ =?us-ascii?Q?C0tVjxFE52+1dVO6rWI6IJyMhhcfMrX0X4KsT/jIf4dWCn0Wf41ggaCBjTIj?=
+ =?us-ascii?Q?eQKf812VHAF9TIw+UyPNGgmOKvG6/TvctNedBS6yIrAS992yxZMsOm6d5cyP?=
+ =?us-ascii?Q?/bEPVhtHpcCsT1uQyFakLp8ycNxNyAJHRYVUfw39R9KJTwpGGfpYm0NtRQZw?=
+ =?us-ascii?Q?09Pj+rUF9Sj7dyfsh5XFy3oCilUHsFI65teWH4t3Q3LkIc/VX5cNWy1OWKbn?=
+ =?us-ascii?Q?59c+2hQypJVAxZB7F9XuH1JQoyGMUj/WRTa5qk3cUhSAe5nW/yVJFQGhw9J5?=
+ =?us-ascii?Q?sOHHal+YbTOnOj5xWtyIm7iIKxu2c+ITTpM3xFcKP26rjVUiQ3xlV9Wkim8f?=
+ =?us-ascii?Q?B1H6BkrI4S55VJqDhmtIKzXLj3U/+a6lHfuNorqBIfKL2ZUe32R7MmiR+sPC?=
+ =?us-ascii?Q?V6yBdsIE6ZNZ7YQJVrpqBi3z9jhTqi9xFQbXllIxAwNX9PxCWzWRNqK2r2IP?=
+ =?us-ascii?Q?i07k1xQj8YA39Bco9VSxPGBLPk+WAp8Ov1T6Qd8tlYJOQ9ywz4zL4Mp2mZhv?=
+ =?us-ascii?Q?5w=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: =?us-ascii?Q?nF6X1eTwXKElpSNMXdJhiE/bshg4p2Z8YMLgjnvDih0pL52nIwKYmJ39HnRw?=
+ =?us-ascii?Q?yL4ovicZM6m74xbhqBL+9E/0hHfj2/h7YM9nhTen7PthWfiEjEdS3gnWuQ1u?=
+ =?us-ascii?Q?ugouY4UgiwKmK1Ggm6mvUMyEuLgwOQXqG393uSAHR1PR2SsULp3lLtkhiGgO?=
+ =?us-ascii?Q?5OdkWFHEX4pn8vwENrA/I3a7DOtzFfKtMhTT7dDEtirAbdrLHQIzCmWnrIpj?=
+ =?us-ascii?Q?o/4vcOFVOjHlRYmYF//06/qMlyO8dvdWeqyaePa9XSPDLmwKjQjLLLq+5VKy?=
+ =?us-ascii?Q?foUjpNTOrTuhjAdf/wjX1vMIyea23nV3gmoFpWC+gddQ2R90dzzVtClg6hkw?=
+ =?us-ascii?Q?c8CHB4LIS3c2d8OQF1of8ZJ+JgfzTgNE5qkt9yXfC+CDkrcrEb5DOrUOoB/e?=
+ =?us-ascii?Q?OKR3DrpimvblXEzLjQRzKViKDLoe65ZKsmxspeickpTiqxACcPQMDVe7dS9/?=
+ =?us-ascii?Q?B9pyCbWnoR/S+s6r2sE62rN3lamYKCv7LM4Luo3uyX/CBRXqRYxTxU4v5cxy?=
+ =?us-ascii?Q?NNcQQj/rIa62TZq3HTx5oVRHurtt+rDgBpHZXp2KNbW6/qSWMSRfwf/Yf0ow?=
+ =?us-ascii?Q?F6XNitRrPoaFK9E5R1PSDOwozc+qcR7XVXD0KEfe2tTv5dsMY2qUxCMc3eQp?=
+ =?us-ascii?Q?uLL99E14rRE7Oj0PacG6uFrtawvHFiewtnwW33FFU7+tibN+O2fERxTuMQL1?=
+ =?us-ascii?Q?M83aUpjfcKjF/pq2Gz7bcW5iLv7FcmRUCPmjPDOHDd+WF0DBG4ec7j5i3o7l?=
+ =?us-ascii?Q?itW/KPmkuqKnDYA7cBOYjwijuJ0dDG4WfdzMdB9/c4CPgLbU96Sfj+gwTeJJ?=
+ =?us-ascii?Q?qlWzg2od0KjM3ogxVLfvEFOzVSwgA2+Y3EbuUo3Tb2wOTMpIoNE6vSBOGniz?=
+ =?us-ascii?Q?SynxqL630GcQSBh2LIIKiJNm7fjhnqTEo4I1K3ayYsLzZnWGBDhzWEaWubJM?=
+ =?us-ascii?Q?H/r15UE608Z2rGyCb8QyiLmF5SijdhyCpS66CbFGQlnSJ+g3AW4tNs4VrjVW?=
+ =?us-ascii?Q?MY5KVSk5nlB5iHIlsg4P7Xre+Q=3D=3D?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 62b42cf2-a0fe-44b0-33bc-08dacdcbdb73
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Nov 2022 03:27:47.2973
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: CP/ocI5krsJdzLMiqGBCL+u9OUKMFyECIlc00TJHb/T2w+1jItroUeLb8fabh82FpUGoAVZB6QchIz0As4cqc5oYEAGlllVEu7YA58G2nfA=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR10MB6553
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
+ definitions=2022-11-24_02,2022-11-23_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 bulkscore=0 phishscore=0
+ adultscore=0 suspectscore=0 mlxscore=0 mlxlogscore=901 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2210170000
+ definitions=main-2211240025
+X-Proofpoint-ORIG-GUID: dBnXe2n1SilzqkojtScbfGKoFWNNCxPi
+X-Proofpoint-GUID: dBnXe2n1SilzqkojtScbfGKoFWNNCxPi
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/24/22 05:57, Bart Van Assche wrote:
-> Add support for configuring the maximum segment size.
-> 
-> Add support for segments smaller than the page size.
-> 
-> This patch enables testing segments smaller than the page size with a
-> driver that does not call blk_rq_map_sg().
-> 
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Ming Lei <ming.lei@redhat.com>
-> Cc: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> Cc: Chaitanya Kulkarni <kch@nvidia.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->  drivers/block/null_blk/main.c     | 20 +++++++++++++++++---
->  drivers/block/null_blk/null_blk.h |  1 +
->  2 files changed, 18 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/block/null_blk/main.c b/drivers/block/null_blk/main.c
-> index 1f154f92f4c2..bc811ab52c4a 100644
-> --- a/drivers/block/null_blk/main.c
-> +++ b/drivers/block/null_blk/main.c
-> @@ -157,6 +157,10 @@ static int g_max_sectors;
->  module_param_named(max_sectors, g_max_sectors, int, 0444);
->  MODULE_PARM_DESC(max_sectors, "Maximum size of a command (in 512B sectors)");
->  
-> +static unsigned int g_max_segment_size = 1UL << 31;
 
-1UL is unsigned long be this var is unsigned int. Why not simply use
-UINT_MAX here ? You prefer the 2GB value ? If yes, then may be at least
-change that to "1U << 31", no ?
+Wenchao,
 
-> +module_param_named(max_segment_size, g_max_segment_size, int, 0444);
-> +MODULE_PARM_DESC(max_segment_size, "Maximum size of a segment in bytes");
-> +
->  static unsigned int nr_devices = 1;
->  module_param(nr_devices, uint, 0444);
->  MODULE_PARM_DESC(nr_devices, "Number of devices to register");
-> @@ -409,6 +413,7 @@ NULLB_DEVICE_ATTR(home_node, uint, NULL);
->  NULLB_DEVICE_ATTR(queue_mode, uint, NULL);
->  NULLB_DEVICE_ATTR(blocksize, uint, NULL);
->  NULLB_DEVICE_ATTR(max_sectors, uint, NULL);
-> +NULLB_DEVICE_ATTR(max_segment_size, uint, NULL);
->  NULLB_DEVICE_ATTR(irqmode, uint, NULL);
->  NULLB_DEVICE_ATTR(hw_queue_depth, uint, NULL);
->  NULLB_DEVICE_ATTR(index, uint, NULL);
-> @@ -532,6 +537,7 @@ static struct configfs_attribute *nullb_device_attrs[] = {
->  	&nullb_device_attr_queue_mode,
->  	&nullb_device_attr_blocksize,
->  	&nullb_device_attr_max_sectors,
-> +	&nullb_device_attr_max_segment_size,
->  	&nullb_device_attr_irqmode,
->  	&nullb_device_attr_hw_queue_depth,
->  	&nullb_device_attr_index,
-> @@ -610,7 +616,8 @@ static ssize_t memb_group_features_show(struct config_item *item, char *page)
->  	return snprintf(page, PAGE_SIZE,
->  			"badblocks,blocking,blocksize,cache_size,"
->  			"completion_nsec,discard,home_node,hw_queue_depth,"
-> -			"irqmode,max_sectors,mbps,memory_backed,no_sched,"
-> +			"irqmode,max_sectors,max_segment_size,mbps,"
-> +			"memory_backed,no_sched,"
->  			"poll_queues,power,queue_mode,shared_tag_bitmap,size,"
->  			"submit_queues,use_per_node_hctx,virt_boundary,zoned,"
->  			"zone_capacity,zone_max_active,zone_max_open,"
-> @@ -673,6 +680,7 @@ static struct nullb_device *null_alloc_dev(void)
->  	dev->queue_mode = g_queue_mode;
->  	dev->blocksize = g_bs;
->  	dev->max_sectors = g_max_sectors;
-> +	dev->max_segment_size = g_max_segment_size;
->  	dev->irqmode = g_irqmode;
->  	dev->hw_queue_depth = g_hw_queue_depth;
->  	dev->blocking = g_blocking;
-> @@ -1214,6 +1222,8 @@ static int null_transfer(struct nullb *nullb, struct page *page,
->  	unsigned int valid_len = len;
->  	int err = 0;
->  
-> +	WARN_ONCE(len > dev->max_segment_size, "%u > %u\n", len,
-> +		  dev->max_segment_size);
->  	if (!is_write) {
->  		if (dev->zoned)
->  			valid_len = null_zone_valid_read_len(nullb,
-> @@ -1249,7 +1259,8 @@ static int null_handle_rq(struct nullb_cmd *cmd)
->  
->  	spin_lock_irq(&nullb->lock);
->  	rq_for_each_segment(bvec, rq, iter) {
-> -		len = bvec.bv_len;
-> +		len = min(bvec.bv_len, nullb->dev->max_segment_size);
-> +		bvec.bv_len = len;
->  		err = null_transfer(nullb, bvec.bv_page, len, bvec.bv_offset,
->  				     op_is_write(req_op(rq)), sector,
->  				     rq->cmd_flags & REQ_FUA);
-> @@ -1276,7 +1287,8 @@ static int null_handle_bio(struct nullb_cmd *cmd)
->  
->  	spin_lock_irq(&nullb->lock);
->  	bio_for_each_segment(bvec, bio, iter) {
-> -		len = bvec.bv_len;
-> +		len = min(bvec.bv_len, nullb->dev->max_segment_size);
-> +		bvec.bv_len = len;
->  		err = null_transfer(nullb, bvec.bv_page, len, bvec.bv_offset,
->  				     op_is_write(bio_op(bio)), sector,
->  				     bio->bi_opf & REQ_FUA);
-> @@ -2088,6 +2100,7 @@ static int null_add_dev(struct nullb_device *dev)
->  	nullb->q->queuedata = nullb;
->  	blk_queue_flag_set(QUEUE_FLAG_NONROT, nullb->q);
->  	blk_queue_flag_clear(QUEUE_FLAG_ADD_RANDOM, nullb->q);
-> +	blk_queue_flag_set(QUEUE_FLAG_SUB_PAGE_SEGMENTS, nullb->q);
->  
->  	mutex_lock(&lock);
->  	rv = ida_simple_get(&nullb_indexes, 0, 0, GFP_KERNEL);
-> @@ -2106,6 +2119,7 @@ static int null_add_dev(struct nullb_device *dev)
->  	dev->max_sectors = min_t(unsigned int, dev->max_sectors,
->  				 BLK_DEF_MAX_SECTORS);
->  	blk_queue_max_hw_sectors(nullb->q, dev->max_sectors);
-> +	blk_queue_max_segment_size(nullb->q, dev->max_segment_size);
+> There are two iscsi_set_param() functions individually defined in
+> libiscsi.c and scsi_transport_iscsi.c which is confused.
 
-Should we keep the ability to use the kernel default value as the default
-here ?
-E.g.
-
-	if (dev->max_segment_size)
-		blk_queue_max_segment_size(nullb->q,
-				dev->max_segment_size);
-
-If yes, then g_max_segment_size initial value should be 0, meaning "kernel
-default".
-
->  
->  	if (dev->virt_boundary)
->  		blk_queue_virt_boundary(nullb->q, PAGE_SIZE - 1);
-> diff --git a/drivers/block/null_blk/null_blk.h b/drivers/block/null_blk/null_blk.h
-> index 94ff68052b1e..6784ee9f5fda 100644
-> --- a/drivers/block/null_blk/null_blk.h
-> +++ b/drivers/block/null_blk/null_blk.h
-> @@ -102,6 +102,7 @@ struct nullb_device {
->  	unsigned int queue_mode; /* block interface */
->  	unsigned int blocksize; /* block size */
->  	unsigned int max_sectors; /* Max sectors per command */
-> +	unsigned int max_segment_size; /* Max size of a single DMA segment. */
->  	unsigned int irqmode; /* IRQ completion handler */
->  	unsigned int hw_queue_depth; /* queue depth */
->  	unsigned int index; /* index of the disk, only valid with a disk */
+Applied to 6.2/scsi-staging, thanks!
 
 -- 
-Damien Le Moal
-Western Digital Research
-
+Martin K. Petersen	Oracle Linux Engineering
