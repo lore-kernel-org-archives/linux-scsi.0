@@ -2,228 +2,592 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82A1DC4332F
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Nov 2022 12:34:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 108CFC4332F
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Nov 2022 12:41:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229897AbiKYMeV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 25 Nov 2022 07:34:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60022 "EHLO
+        id S230125AbiKYMlH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 25 Nov 2022 07:41:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35482 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229570AbiKYMeU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Nov 2022 07:34:20 -0500
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2AEAC2A268;
-        Fri, 25 Nov 2022 04:34:20 -0800 (PST)
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2APBsAx3003810;
-        Fri, 25 Nov 2022 12:34:01 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : to : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2022-7-12;
- bh=qj6q9TmonqasG6ob/ZRWb4NtPkWP7fZjZXcpAMtZqz8=;
- b=RTpEL9DcDB1e/eFxB5+8a/ICb8JVJP4S0OByDMtUitN9Co4aCpOqVbpmd6QyFZDNR6NZ
- TheJDuwIAh5klYNYtKEKqws8BYx/feE8Dv92OO86SVXMrLpFYyUipVEc1oFTseMkiv+x
- mrTvokdHUO2gKQ/KPTbpZCdUJshRo928mpRQPfQL5x+3YHBTQR1UHXpDrDOO45QKuwrl
- 6kc9DkhHhk1/syxMhaflTv0fC1yO2u8ZwsiBjdchaGDTjtsHbiNybrb9LC4amozggQCu
- B3EayqP5UBAfu3Pt03PvtKybDTGJ7HZIQicEEQuVJkYeiJiCHa+mY5uLA3yD6b2E3ojv CA== 
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3m1p5fmkkn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 25 Nov 2022 12:34:01 +0000
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2APAlLgb001614;
-        Fri, 25 Nov 2022 12:34:00 GMT
-Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2104.outbound.protection.outlook.com [104.47.70.104])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3kxnk8u6st-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 25 Nov 2022 12:34:00 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=jWWwmJiAhEJc4n1gquVIJ0ggpG/pv2wUsEVp+d6ZuBZ6xjTZiPAgateQsZ9HgGJi/vCE2/4575YhWHbhzcxbXQ+K1QqZhuo+V+GC+dqB7O2hi8HpE4pPN6lT+yqxBNVTk+iTe4P2ZPeIRf4RmTUzse6dZo0v6l/JpPXDryuFqbji2wFufYy9tWlhfwjcmK52iFcgmYUD0HVKDH03il7Dpt+0P+vKymDaMc4h0tvA7R2t45ebJJ9iTwTrYOPoHisAYwXWbO0qziKyyzCFt3fFXV1t8rYBA7hNT4FNPT03K/Y7j3CWaFRLcYIjTXry6nRgDpnBYi94QjtxuhOC66YeIw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=qj6q9TmonqasG6ob/ZRWb4NtPkWP7fZjZXcpAMtZqz8=;
- b=MX0kH7u0jddvrbwfH1etgCdZ31iId3qpvHHVTEH2HKu/hOf0/b7O6gMKfOZxiJqizEQMBTyuuVO4NrybiSTZtJhH2sXN89EOngTn3eIIIccrn68UkK56FPMA0cU3RHGV5qR6cJJ9OK9q4Qx6spGTQrNGXiz5MwmMisuWt/Ibai/c+rJFd0KUmA33tDLaK9gTQhJr16i7M4ahZXuxKUZcUSDTf6clljCOEdTkjFlw1o5dqeH/mC6tdID2OCko2k8fJE690emCUA8ESmaeQR29bWDDtPFaTO/Bw/nJFWq/X3kjV9YBF0T2Q9vmqO8LqvsEPA5dyECf0iHlEvQ9u7crcw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+        with ESMTP id S230208AbiKYMkn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Nov 2022 07:40:43 -0500
+Received: from mail-yw1-x1136.google.com (mail-yw1-x1136.google.com [IPv6:2607:f8b0:4864:20::1136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A5B1265A
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Nov 2022 04:40:21 -0800 (PST)
+Received: by mail-yw1-x1136.google.com with SMTP id 00721157ae682-36cbcda2157so40169047b3.11
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Nov 2022 04:40:21 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qj6q9TmonqasG6ob/ZRWb4NtPkWP7fZjZXcpAMtZqz8=;
- b=HbDggDVEce5MKh2D+b4YSY+f/ut+8QqO3bCcsnFiSU1iFIKFLc98qICtqSIy1f61O9QCcqybuZuHCDeNaSHzHSPDjbg0ALUPobyAcV2nbWG1siNrCatTV6iojkvjy8h5+YothLJ2o+ryhum4T/+iy1aE7i5dSQMLDIjWjhq2P4o=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by PH7PR10MB6673.namprd10.prod.outlook.com (2603:10b6:510:20b::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5857.20; Fri, 25 Nov
- 2022 12:33:58 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::5984:a376:6e91:ac0d]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::5984:a376:6e91:ac0d%8]) with mapi id 15.20.5857.020; Fri, 25 Nov 2022
- 12:33:58 +0000
-Message-ID: <e11cdb17-053c-390c-9c48-36790eb70cc5@oracle.com>
-Date:   Fri, 25 Nov 2022 12:33:52 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.0
-Subject: Re: Why is MEGASAS_SAS_QD set to 256?
-To:     Yu Kuai <yukuai1@huaweicloud.com>, kashyap.desai@broadcom.com,
-        sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        linux-block <linux-block@vger.kernel.org>,
-        "yukuai (C)" <yukuai3@huawei.com>,
-        "zhangyi (F)" <yi.zhang@huawei.com>
-References: <1c4d66ca-fe1a-3d1a-d7f9-4981d2fc9eb1@huaweicloud.com>
-Content-Language: en-US
-From:   John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <1c4d66ca-fe1a-3d1a-d7f9-4981d2fc9eb1@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: AS4P195CA0001.EURP195.PROD.OUTLOOK.COM
- (2603:10a6:20b:5e2::8) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+        d=linaro.org; s=google;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=LJvvaRVnW9ZgCdHIVKF2PrQVDqoqC87Jwai48Lir2hs=;
+        b=O2TrOcSoMSPPNFrvlY93xaeJbIgs/oQ9H/+Gb7jZBIWNMmgJiDe0/Lj3gZID0IIOzA
+         SnuSB80yT9Uh9zjHp1xTAuj8lj9pj+UvQOZTA3ULws0gHmOsMiFYjBQzTXQlyBx/Mfn2
+         gw927LDXJhNTC4UH8QsmmJqyeUP4Gu1tQ0ShFI30ekR3VyWGXkKBdOzRClBf8wOyUsY6
+         O4C9ywDZCaHhrsfG1P8VPx0U9g2sF6nWT+koRQkdFRLQOvCHyjhj60UauuXJE2nibkA1
+         hfysOZN85vAkRRiV79XxuC7lksRPQldOhXY9Lc1iLWcbqwgjskx5OFIWQJTYXyMh9KCM
+         PRRA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=LJvvaRVnW9ZgCdHIVKF2PrQVDqoqC87Jwai48Lir2hs=;
+        b=uZLaQYjplCwzCVdWKC+uAKAglwjcXc+5jrQJivBMP5mPhm88P24h2M/8dFJdcvcqto
+         wR23QuIL1MnMxWqnXpSRxHImG1FLcupVw52s+Jo9hWRwXkbu3JoskPRCFHvRGV6eWAie
+         fh4mEHQjQwTLmh+uolMbshXRCgnpy+SyI6DM/EeB+tYnYb7C1oc+KoM9O+AwSnAGO4Yq
+         VwBdR5WXAd9Ry2LnGiPOQZkCdxlZRcgitVJKD8H50n+wgGaj96ErsxQ2Q/arYwFGZazL
+         Of0uow8mBUPHAAN6kQpkHBCuYzQKfTYIMxMWEq7u8ts5CibVffCC9kOAb+7pfYieMuCg
+         Nepw==
+X-Gm-Message-State: ANoB5pkPhrFP9+XZYg7OdR5uP7ZLyNJ3Et0wnaB6j+zLXdzcC7qbqNCp
+        PPUBAb7U/h/hhwiwQgz992EPQl+Lh4KqkuFrQ8D/Xg==
+X-Google-Smtp-Source: AA0mqf6wqlrhFuxCJsFnMqo1XalNys4dk7skiW0xrMU30Zsm37eAFw1t09Kpc0OW/Yg848bZ5UL7IVLAuiNWTZI9ayU=
+X-Received: by 2002:a81:92c1:0:b0:3bc:d289:f4b6 with SMTP id
+ j184-20020a8192c1000000b003bcd289f4b6mr865960ywg.417.1669380020560; Fri, 25
+ Nov 2022 04:40:20 -0800 (PST)
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|PH7PR10MB6673:EE_
-X-MS-Office365-Filtering-Correlation-Id: d7df8916-e2b2-4ba7-ca55-08dacee152da
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 1fRsLyqEi56h5tADhHIikdTPfCM597NJ+AvZSe7dtX4V/irE+Mb6soOhsbtMs031rQLphqKtBrj35ETG1iXWEhlHNYJEoTfVuDReoCUc3H0ueBbHah8E1I+9+crMamomTrZA5Td2+3kgu9Dp9fuBa/CCIF/A+Zd21sqMcym7UxA4vzlklGui/BPyrdk3lSH+ZrPsBxzlWY9qQLCxUOvo9NQSigdYEb4Sz6N+A4SQp7JzZSM2i4nCly8r+AAFldSl3FUtBbgYzmtF2+1oNszFSa++z/N1J5X7pWf1M9nqY+oC8tmejEDIjn3MTCgUtOe33i6Y1J4m8kW/Qa3+b4p8gz8HkaBYINHXYnSaBfY3UJi/5eUcdy8z8Vv0Uw1xTuqdUD4noU8HtPiHaB6vu0u606hYGuCAwccbZuI/dHphOLjbeZpdY7wckp9FKeScWZCWkdhGdod1myd1Tt/4jTsjiFYivsULpnu15AkjRFhQ/EUc/HBkjc6yGDmR66T4EBZZYeF1r0YRW252OQLaM/6oCjYvQZSuJt2Un7HcMTFCOVxQC6/gyIMJPlg5+q/nWmIqC8f4YD6gg7y6PMdpNlqlvrMO+yRk2s3C+yGERGB+yKla9uODF7a7JBjk3ca2nt0Tk7TbCjj5hk5HsuLm4rs96s/R1K7llU7ZDHbGWZp1Xv52kj8kwlhVsPdkGcYQPwePRd1YoIfcGBH3pLWQBZzNEgaKQnVX/m9OGfZkKqtT257Quczg7+WwBL1UW4cHFafvmAYsCLHN2f7ZTi7PmGJsug==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(396003)(136003)(39860400002)(346002)(376002)(366004)(451199015)(2616005)(41300700001)(186003)(31696002)(86362001)(8936002)(7416002)(36756003)(83380400001)(5660300002)(110136005)(36916002)(6486002)(966005)(316002)(38100700002)(6512007)(921005)(8676002)(66556008)(66946007)(478600001)(53546011)(6666004)(6506007)(66476007)(26005)(2906002)(31686004)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?bmZ3R2kxazJma1M1UDhnNVpLMW83N01WN0UwK0FYOVdkRjk5dld0WDNNb3FC?=
- =?utf-8?B?THd2OExxZ0IxY3lQQkRhRXJuZHVBRjU4YVY2N0VmWWVpYkJwQ2tCWFR6RmZ5?=
- =?utf-8?B?QzZONW9WOGdrTTAzcEVTQlZqUlFvMWduTWdUQ2R1YTBvNFlZcVZFZWlON3Rt?=
- =?utf-8?B?TUo2VGRuZWVPc3loaVRDNy8wMVcvaXNPVnFBUVVvYkVvWHZyUFZ1K3lRWGxM?=
- =?utf-8?B?UFZiWEl5VXJHQzU0a2p4RnQ5K2FhQlJmMEI1M0RMWjFDTFFCOUtEOVRLZWly?=
- =?utf-8?B?OUJvakE5RkRuODRTV0FaSFBZSzczbDB3NFZSVEUxanBJcXJ4aGRRekt3eUpH?=
- =?utf-8?B?SDdTL2Rwb1ZZUGQ2U1dPWS80bzVOSWd6R09kQkRJV2pkRTNxZ0Z0aFJDMlRy?=
- =?utf-8?B?WkJJY0d2VnQvVW5wN3ZRME9nTW5OL283b0N3VTAySGtGdXhSWDA3c2JRVHhz?=
- =?utf-8?B?RzhMT2hwYXkvZEpLeXEvYmNuRm10WVZUL1BibXQ2Nlc5ZTJkSlVIUUNCYVRq?=
- =?utf-8?B?Q3hJRWNaOStqa3FndlJoVWVyYStSMk5zdzFNTzNDOUx0L2FxODBOd0xZZnQy?=
- =?utf-8?B?SEg5YkplNzR1SklsSXo1MEFhYVY5VWtrTW9EZmdwcEQvdmRSWFlWUXBrSDlI?=
- =?utf-8?B?V0cxZW8wU2d4U2hqZjV6dmlCMnpNMGZ5UVVvTzZpWSs3c0FCOCtIc0pDempi?=
- =?utf-8?B?MTBPSldNMGhMOHRQSkUrOXFud2MwRllpaHZ3VTlNc3Y4a3FBeE1hdnFIVUFW?=
- =?utf-8?B?c3dkWGYwRk5UZ1hGS01BRFpiL2haa05LZUtuUzM0elBFeG5Na2N3NFA2eUdo?=
- =?utf-8?B?dmJYTXl5TlR1bmhPM3M2dDQ4SkxoQjdOaEkrZGYzSlNYRFB2bVRlTVdxYVNy?=
- =?utf-8?B?OGxycXp4VEh0ZVcwYVJXWjBpQ0s1di9uVVJpS3M4eDlXOFRYWTNrcGZjd2FZ?=
- =?utf-8?B?ZVh5SEd1QlNlS3ZpZGRZdVpXVmxUM0t4S3JZN3g1WUZSbStZSE9MWlFxam5h?=
- =?utf-8?B?UWhBeVl0bVFwZXU1OW0vTHJZVVY5ckhwOXBuSEVvSHRXZVZidXptM0JtZjNZ?=
- =?utf-8?B?TWNJNnpkV2s0QjAyS3RIeVVSNWNpSTNVWndGUW5ZQVBEcUViRURmU3phZjJt?=
- =?utf-8?B?RXpBSHN2a1JJMDRoQVdOOGxJRm0xMjVOTlI0NUxoYmVkRW1Ea2F5dmRVQjhk?=
- =?utf-8?B?MUYrZUJhTHZnVkJyTnFQNkpTMzV0TmpBTCtVRDJOdE53YWh4MUxEcjA3QXJR?=
- =?utf-8?B?S3c4dVd1NEhINTRYa2hjU090Qkg5aE9UeW9QNUFZMWxBaWZTeVhIazVwQU5G?=
- =?utf-8?B?RXJVUm5OK3E2a1dxcmJmeE82UVVmUnQzREtveG8zb2xxc2JsRkZVU3NSS2tL?=
- =?utf-8?B?TkVvUG81RHJmcW56WTVya1piOXRsZ2xXR1dleEsxWHZDclRaWHFyblJLVTYw?=
- =?utf-8?B?MGJReGFjYlFINm9IOW1GVFNMUDkrQlVpeFRZN2VTeVVFbStTTm5aYUlwQ0sy?=
- =?utf-8?B?azZLUmZEWnI1SjBnbjIzbGlmbythQTdhbjdQM3QzUWtSbzZLZXUzSU1zZFJv?=
- =?utf-8?B?TGpLU1MwakFUQTMzcVNPOXpwVDhLeFQzRlM2SStOeGdlNEkyY2JpbmlGMURH?=
- =?utf-8?B?Sndwc2Fzc0xySUx2RWZya0RxN0tEM0paZXIrMjdtZmcxZUFsQWk4WDdHVDI4?=
- =?utf-8?B?Q0xaQllXTXBqa0hyRytrQTFtYitlSklaMnBnUys2dVhsZDJaVFVEUHU2NU9n?=
- =?utf-8?B?dUw1RW5JRTBxa2RTK0pXcUZ5Z3ZsWFZWeDdOZHd3d3dieWJzZmwxK0V5ZVI1?=
- =?utf-8?B?MkNjeXNSZFpNNHVXZjMyUnl6WU4xeUJiN2pFdzFkV05GeW9pSTlOZ0JYcnVL?=
- =?utf-8?B?T1NiUjR4b1g1QW1rMkxNUHBoSnRUU1phQTBuK3MxaGdpNUZVbXZhN3hjZDha?=
- =?utf-8?B?L3FiN1NGNmNBWkF2L01iZEZUai9MRmhFTW91UVlpaHNxTFVCSDBTSU1KMkZo?=
- =?utf-8?B?NDRFbTJJQk44NDhndDdKbFYzdnA2MHpUcURTTGRWb1dJNmxFT2prVUs3RGlM?=
- =?utf-8?B?akZlQThvMkhGbDQ3MEtFYy9WYnVrWWlXNWJvWlI0bXJDR0RzaWdlVVg4RWl5?=
- =?utf-8?Q?yLrEJuDPmH+Qr3o0qhZjEnyK9?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: =?utf-8?B?eWVkdTlsTXNnTGFvalZwbzdRdGpISHFuNnRxbWRNc244Q05oMEdYd05Yb2Vw?=
- =?utf-8?B?ZXFoT3hjby9uYlY2bHczazJuTFpnVGhQeGtHV3Z4MzlwNHptWVhKdVJiMWNM?=
- =?utf-8?B?WU9RTm1GeUF3WkVPSHJ2ZkFzOGxsZ3ZLejJkQU80cnFtV0t2ZWJKWGdZRGlJ?=
- =?utf-8?B?a29Yb1pSYkpsVzJOU3AvbzdvRWlBeWRJQngwU0lHbFk1QmtQTStxUnNrSldK?=
- =?utf-8?B?WFlBS21TVysrZ2FrWVhLMjR0UzNrT3o4a1BRT2phVWQ3Wm0vQVlkWjFROHh5?=
- =?utf-8?B?OXZWM3FUakhlOFYvL0MyT3ZDaHFLU2dnY2lPUUVBWjNETzJvK3FGOHorZjQ1?=
- =?utf-8?B?c3hnNUd0Y3Y0NkZTYlkyRk51SVBWWERFRGlRWHAzTTkwejZkclp2NjNuaUJK?=
- =?utf-8?B?UWhNblFwdUMxZitJUCtpUUR5cjNVNEZBTTcwWGRzWWtTaUpINVpaREVvVGV5?=
- =?utf-8?B?NVN1K09NRVZOQ1JBZmRjbjlPcXlNRkgyWk1QeTM3eFFYTDRSK3c5RDRYdU9o?=
- =?utf-8?B?WnJ3S2FKd1hrcTI1UW82QUphczBKZ3lTK0xyZWJGTTFlNDlwVXhJcElqaEt2?=
- =?utf-8?B?UUpMSHpFaWNLaUFNWndSMEJ4OGZvS0hlQUtvSEJ1WFR4OGJVenFMUS90VUZG?=
- =?utf-8?B?RE0wZGppT0hnaUdXcXNjSEJIVyt3OGFScUhIT3ZxYkZoeG5uZFVZczJ2eHJh?=
- =?utf-8?B?WUpjOHRWRDNDZ0JpcmdJVGVuckswNFhOYVM3N0ZRd0NMWkljZWVWV3J2RHFY?=
- =?utf-8?B?Z0RDMVZ6Ui95NXpzN1JMSEFSWDB6c3IvdmNlc2d2clZXR2NIdjRGelA4VG5M?=
- =?utf-8?B?MUdwUkcvU1ZwOGJZcE5hRlRuNDJNVzF6anJRdXR1K3BEVW1hUi82eDhpTGxq?=
- =?utf-8?B?NzZmelNxekR0ZGhqajN2K3ZHdi91ZnRTbHd6YVc5ZDlEVWt3eUVjNlA1aWZ2?=
- =?utf-8?B?MjhrUk15bWhkTVdISmU4UkZKUWREdnZCK0MrdG1xenV3QTAxNTg2OUFxUXdW?=
- =?utf-8?B?SXltWWQwZk9nMUpmVklqTHJqSWU1OVZXMjNkQkxRY2p2ZEZWNFFiN2xOa24w?=
- =?utf-8?B?NHBMTGMwWndkVUtTOVhnaG51eElwTElVcys4MzZOM2ZGbXlFNFZLSStyKzFr?=
- =?utf-8?B?a3kzQnM3WFcwMWpYWG9ZUW1MbWlZK2FubWlNMzgrUU5YSzZSbW1ncUF2VHBL?=
- =?utf-8?B?MXRGQTZaK3c3bmRvMmd2SWlUTHViQll4aXQxYTdxMXRralpsbnVmenltVk04?=
- =?utf-8?B?TmcrZ3Ria0NGWGFMUG5nN3B5V2NsbHNIdkNWeW9aZGxtWEdRNGN1d3BYeW0y?=
- =?utf-8?B?L2ZRQVZ0aVptOEY1dktWdzl6dGVQaUowK1hwK1JWMEdqQzYwVm9MU2RZV084?=
- =?utf-8?B?WHJyTWNXQVZCZE9oVFRnVnc1OXIzdURoS0tzZVRYMUNYM3dpM1lDZVFnY0Vt?=
- =?utf-8?B?TGtoRTQ2M0c4YXFlVWZGUCtKOStsZ09GclN6c3pwcXZLOWtZczNpb1ZhYlFE?=
- =?utf-8?Q?BDJl2rh36mNvDd1EZWqTxC5jZ58?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d7df8916-e2b2-4ba7-ca55-08dacee152da
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Nov 2022 12:33:58.1567
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 9SVU/JweD1uzcINl8y5hZjGyYbh5xejNKf9a9IrqWCe26MH949d1cRDfDmi6baTfK4ZS//ftJnx3FoOXyHr5pg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR10MB6673
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2022-11-25_04,2022-11-25_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 phishscore=0
- suspectscore=0 bulkscore=0 mlxscore=0 spamscore=0 adultscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2210170000 definitions=main-2211250098
-X-Proofpoint-ORIG-GUID: _aY8PmhiNV1bfdMhVLsPxnhwgPJti1pz
-X-Proofpoint-GUID: _aY8PmhiNV1bfdMhVLsPxnhwgPJti1pz
+References: <20221123122523.1332370-1-gregkh@linuxfoundation.org>
+ <20221123122523.1332370-2-gregkh@linuxfoundation.org> <20221125115529.05af1513@sal.lan>
+In-Reply-To: <20221125115529.05af1513@sal.lan>
+From:   Sumit Semwal <sumit.semwal@linaro.org>
+Date:   Fri, 25 Nov 2022 18:10:09 +0530
+Message-ID: <CAO_48GGrxs9=BUu3FH5FcgSkbJnrFaLn=TC+54W76DxePfD7iA@mail.gmail.com>
+Subject: Re: [PATCH 2/5] driver core: make struct class.devnode() take a const *
+To:     Mauro Carvalho Chehab <mchehab@kernel.org>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-kernel@vger.kernel.org, Fenghua Yu <fenghua.yu@intel.com>,
+        Reinette Chatre <reinette.chatre@intel.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>,
+        Jens Axboe <axboe@kernel.dk>,
+        Justin Sanders <justin@coraid.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Benjamin Gaignard <benjamin.gaignard@collabora.com>,
+        Liam Mark <lmark@codeaurora.org>,
+        Laura Abbott <labbott@redhat.com>,
+        Brian Starkey <Brian.Starkey@arm.com>,
+        John Stultz <jstultz@google.com>,
+        =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+        Maxime Ripard <mripard@kernel.org>,
+        Thomas Zimmermann <tzimmermann@suse.de>,
+        David Airlie <airlied@gmail.com>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Leon Romanovsky <leon@kernel.org>,
+        Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Sean Young <sean@mess.org>,
+        Frank Haverkamp <haver@linux.ibm.com>,
+        Jiri Slaby <jirislaby@kernel.org>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Cornelia Huck <cohuck@redhat.com>,
+        Kees Cook <keescook@chromium.org>,
+        Anton Vorontsov <anton@enomsg.org>,
+        Colin Cross <ccross@android.com>,
+        Tony Luck <tony.luck@intel.com>,
+        Jaroslav Kysela <perex@perex.cz>,
+        Takashi Iwai <tiwai@suse.com>,
+        Hans Verkuil <hverkuil-cisco@xs4all.nl>,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+        Xie Yongji <xieyongji@bytedance.com>,
+        Gautam Dawar <gautam.dawar@xilinx.com>,
+        Dan Carpenter <error27@gmail.com>, Eli Cohen <elic@nvidia.com>,
+        Parav Pandit <parav@nvidia.com>,
+        Maxime Coquelin <maxime.coquelin@redhat.com>,
+        alsa-devel@alsa-project.org, dri-devel@lists.freedesktop.org,
+        kvm@vger.kernel.org, linaro-mm-sig@lists.linaro.org,
+        linux-block@vger.kernel.org, linux-input@vger.kernel.org,
+        linux-media@vger.kernel.org, linux-rdma@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+        virtualization@lists.linux-foundation.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 24/11/2022 03:45, Yu Kuai wrote:
-> Hi,
-> 
-> While upgrading kernel from 4.19 to 5.10, I found that fio 1 thread 4k
-> sequential io performance is dropped(160Mib -> 100 Mib), root cause is
-> that queue_depth is changed from 64 to 256.
-> 
-> commit 6e73550670ed1c07779706bb6cf61b99c871fc42
-> scsi: megaraid_sas: Update optimal queue depth for SAS and NVMe devices
-> 
-> diff --git a/drivers/scsi/megaraid/megaraid_sas.h 
-> b/drivers/scsi/megaraid/megaraid_sas.h
-> index bd8184072bed..ddfbe6f6667a 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas.h
-> +++ b/drivers/scsi/megaraid/megaraid_sas.h
-> @@ -2233,9 +2233,9 @@ enum MR_PD_TYPE {
-> 
->   /* JBOD Queue depth definitions */
->   #define MEGASAS_SATA_QD        32
-> -#define MEGASAS_SAS_QD 64
-> +#define MEGASAS_SAS_QD 256
->   #define MEGASAS_DEFAULT_PD_QD  64
-> -#define MEGASAS_NVME_QD                32
-> +#define MEGASAS_NVME_QD        64
-> 
-> 
-> And with the default nr_requests 256, 256 queue_depth will make the
-> elevator has no effect, specifically io can't be merged in this test
-> case. Hence it doesn't make sense to me to set default queue_depth to
-> 256.
-> 
-> Is there any reason why MEGASAS_SAS_QD is changed to 64?
-> 
-> Thanks,
-> Kuai
-> 
+Hello Greg,
 
-Which type of drive do you use?
+On Fri, 25 Nov 2022 at 17:25, Mauro Carvalho Chehab <mchehab@kernel.org> wr=
+ote:
+>
+> Em Wed, 23 Nov 2022 13:25:20 +0100
+> Greg Kroah-Hartman <gregkh@linuxfoundation.org> escreveu:
+>
+> > The devnode() in struct class should not be modifying the device that i=
+s
+> > passed into it, so mark it as a const * and propagate the function
+> > signature changes out into all relevant subsystems that use this
+> > callback.
+>
+> Acked-by: Mauro Carvalho Chehab <mchehab@kernel.org>
+> >
+Please feel free to add my
+Acked-by: Sumit Semwal <sumit.semwal@linaro.org>
+for the dma-buf portion.
 
-JFYI, in case missed, there was this discussion on SCSI queue depth a 
-while ago:
-https://lore.kernel.org/linux-scsi/4b50f067-a368-2197-c331-a8c981f5cd02@huawei.com/
+Best,
+Sumit.
+> > Cc: Fenghua Yu <fenghua.yu@intel.com>
+> > Cc: Reinette Chatre <reinette.chatre@intel.com>
+> > Cc: Thomas Gleixner <tglx@linutronix.de>
+> > Cc: Ingo Molnar <mingo@redhat.com>
+> > Cc: Borislav Petkov <bp@alien8.de>
+> > Cc: Dave Hansen <dave.hansen@linux.intel.com>
+> > Cc: x86@kernel.org
+> > Cc: "H. Peter Anvin" <hpa@zytor.com>
+> > Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> > Cc: Jens Axboe <axboe@kernel.dk>
+> > Cc: Justin Sanders <justin@coraid.com>
+> > Cc: Arnd Bergmann <arnd@arndb.de>
+> > Cc: Sumit Semwal <sumit.semwal@linaro.org>
+> > Cc: Benjamin Gaignard <benjamin.gaignard@collabora.com>
+> > Cc: Liam Mark <lmark@codeaurora.org>
+> > Cc: Laura Abbott <labbott@redhat.com>
+> > Cc: Brian Starkey <Brian.Starkey@arm.com>
+> > Cc: John Stultz <jstultz@google.com>
+> > Cc: "Christian K=C3=B6nig" <christian.koenig@amd.com>
+> > Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+> > Cc: Maxime Ripard <mripard@kernel.org>
+> > Cc: Thomas Zimmermann <tzimmermann@suse.de>
+> > Cc: David Airlie <airlied@gmail.com>
+> > Cc: Daniel Vetter <daniel@ffwll.ch>
+> > Cc: Jason Gunthorpe <jgg@ziepe.ca>
+> > Cc: Leon Romanovsky <leon@kernel.org>
+> > Cc: Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>
+> > Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+> > Cc: Mauro Carvalho Chehab <mchehab@kernel.org>
+> > Cc: Sean Young <sean@mess.org>
+> > Cc: Frank Haverkamp <haver@linux.ibm.com>
+> > Cc: Jiri Slaby <jirislaby@kernel.org>
+> > Cc: "Michael S. Tsirkin" <mst@redhat.com>
+> > Cc: Jason Wang <jasowang@redhat.com>
+> > Cc: Alex Williamson <alex.williamson@redhat.com>
+> > Cc: Cornelia Huck <cohuck@redhat.com>
+> > Cc: Kees Cook <keescook@chromium.org>
+> > Cc: Anton Vorontsov <anton@enomsg.org>
+> > Cc: Colin Cross <ccross@android.com>
+> > Cc: Tony Luck <tony.luck@intel.com>
+> > Cc: Jaroslav Kysela <perex@perex.cz>
+> > Cc: Takashi Iwai <tiwai@suse.com>
+> > Cc: Hans Verkuil <hverkuil-cisco@xs4all.nl>
+> > Cc: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+> > Cc: Xie Yongji <xieyongji@bytedance.com>
+> > Cc: Gautam Dawar <gautam.dawar@xilinx.com>
+> > Cc: Dan Carpenter <error27@gmail.com>
+> > Cc: Eli Cohen <elic@nvidia.com>
+> > Cc: Parav Pandit <parav@nvidia.com>
+> > Cc: Maxime Coquelin <maxime.coquelin@redhat.com>
+> > Cc: alsa-devel@alsa-project.org
+> > Cc: dri-devel@lists.freedesktop.org
+> > Cc: kvm@vger.kernel.org
+> > Cc: linaro-mm-sig@lists.linaro.org
+> > Cc: linux-block@vger.kernel.org
+> > Cc: linux-input@vger.kernel.org
+> > Cc: linux-kernel@vger.kernel.org
+> > Cc: linux-media@vger.kernel.org
+> > Cc: linux-rdma@vger.kernel.org
+> > Cc: linux-scsi@vger.kernel.org
+> > Cc: linux-usb@vger.kernel.org
+> > Cc: virtualization@lists.linux-foundation.org
+> > Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> > ---
+> >  arch/x86/kernel/cpu/resctrl/pseudo_lock.c  | 4 ++--
+> >  arch/x86/kernel/cpuid.c                    | 2 +-
+> >  arch/x86/kernel/msr.c                      | 2 +-
+> >  block/bsg.c                                | 2 +-
+> >  drivers/block/aoe/aoechr.c                 | 2 +-
+> >  drivers/char/mem.c                         | 2 +-
+> >  drivers/char/misc.c                        | 4 ++--
+> >  drivers/dma-buf/dma-heap.c                 | 2 +-
+> >  drivers/gpu/drm/drm_sysfs.c                | 2 +-
+> >  drivers/infiniband/core/user_mad.c         | 2 +-
+> >  drivers/infiniband/core/uverbs_main.c      | 2 +-
+> >  drivers/infiniband/hw/hfi1/device.c        | 4 ++--
+> >  drivers/input/input.c                      | 2 +-
+> >  drivers/media/dvb-core/dvbdev.c            | 4 ++--
+> >  drivers/media/pci/ddbridge/ddbridge-core.c | 4 ++--
+> >  drivers/media/rc/rc-main.c                 | 2 +-
+> >  drivers/misc/genwqe/card_base.c            | 2 +-
+> >  drivers/tty/tty_io.c                       | 2 +-
+> >  drivers/usb/core/file.c                    | 2 +-
+> >  drivers/vdpa/vdpa_user/vduse_dev.c         | 2 +-
+> >  drivers/vfio/vfio_main.c                   | 2 +-
+> >  fs/pstore/pmsg.c                           | 2 +-
+> >  include/linux/device/class.h               | 2 +-
+> >  sound/sound_core.c                         | 2 +-
+> >  24 files changed, 29 insertions(+), 29 deletions(-)
+> >
+> > diff --git a/arch/x86/kernel/cpu/resctrl/pseudo_lock.c b/arch/x86/kerne=
+l/cpu/resctrl/pseudo_lock.c
+> > index d961ae3ed96e..4e4231a58f38 100644
+> > --- a/arch/x86/kernel/cpu/resctrl/pseudo_lock.c
+> > +++ b/arch/x86/kernel/cpu/resctrl/pseudo_lock.c
+> > @@ -1560,9 +1560,9 @@ static const struct file_operations pseudo_lock_d=
+ev_fops =3D {
+> >       .mmap =3D         pseudo_lock_dev_mmap,
+> >  };
+> >
+> > -static char *pseudo_lock_devnode(struct device *dev, umode_t *mode)
+> > +static char *pseudo_lock_devnode(const struct device *dev, umode_t *mo=
+de)
+> >  {
+> > -     struct rdtgroup *rdtgrp;
+> > +     const struct rdtgroup *rdtgrp;
+> >
+> >       rdtgrp =3D dev_get_drvdata(dev);
+> >       if (mode)
+> > diff --git a/arch/x86/kernel/cpuid.c b/arch/x86/kernel/cpuid.c
+> > index 6f7b8cc1bc9f..621ba9c0f17a 100644
+> > --- a/arch/x86/kernel/cpuid.c
+> > +++ b/arch/x86/kernel/cpuid.c
+> > @@ -139,7 +139,7 @@ static int cpuid_device_destroy(unsigned int cpu)
+> >       return 0;
+> >  }
+> >
+> > -static char *cpuid_devnode(struct device *dev, umode_t *mode)
+> > +static char *cpuid_devnode(const struct device *dev, umode_t *mode)
+> >  {
+> >       return kasprintf(GFP_KERNEL, "cpu/%u/cpuid", MINOR(dev->devt));
+> >  }
+> > diff --git a/arch/x86/kernel/msr.c b/arch/x86/kernel/msr.c
+> > index ed8ac6bcbafb..708751311786 100644
+> > --- a/arch/x86/kernel/msr.c
+> > +++ b/arch/x86/kernel/msr.c
+> > @@ -250,7 +250,7 @@ static int msr_device_destroy(unsigned int cpu)
+> >       return 0;
+> >  }
+> >
+> > -static char *msr_devnode(struct device *dev, umode_t *mode)
+> > +static char *msr_devnode(const struct device *dev, umode_t *mode)
+> >  {
+> >       return kasprintf(GFP_KERNEL, "cpu/%u/msr", MINOR(dev->devt));
+> >  }
+> > diff --git a/block/bsg.c b/block/bsg.c
+> > index 2ab1351eb082..08046bd9207d 100644
+> > --- a/block/bsg.c
+> > +++ b/block/bsg.c
+> > @@ -232,7 +232,7 @@ struct bsg_device *bsg_register_queue(struct reques=
+t_queue *q,
+> >  }
+> >  EXPORT_SYMBOL_GPL(bsg_register_queue);
+> >
+> > -static char *bsg_devnode(struct device *dev, umode_t *mode)
+> > +static char *bsg_devnode(const struct device *dev, umode_t *mode)
+> >  {
+> >       return kasprintf(GFP_KERNEL, "bsg/%s", dev_name(dev));
+> >  }
+> > diff --git a/drivers/block/aoe/aoechr.c b/drivers/block/aoe/aoechr.c
+> > index 8eea2529da20..7a368c90467d 100644
+> > --- a/drivers/block/aoe/aoechr.c
+> > +++ b/drivers/block/aoe/aoechr.c
+> > @@ -273,7 +273,7 @@ static const struct file_operations aoe_fops =3D {
+> >       .llseek =3D noop_llseek,
+> >  };
+> >
+> > -static char *aoe_devnode(struct device *dev, umode_t *mode)
+> > +static char *aoe_devnode(const struct device *dev, umode_t *mode)
+> >  {
+> >       return kasprintf(GFP_KERNEL, "etherd/%s", dev_name(dev));
+> >  }
+> > diff --git a/drivers/char/mem.c b/drivers/char/mem.c
+> > index 5611d127363e..83bf2a4dcb57 100644
+> > --- a/drivers/char/mem.c
+> > +++ b/drivers/char/mem.c
+> > @@ -746,7 +746,7 @@ static const struct file_operations memory_fops =3D=
+ {
+> >       .llseek =3D noop_llseek,
+> >  };
+> >
+> > -static char *mem_devnode(struct device *dev, umode_t *mode)
+> > +static char *mem_devnode(const struct device *dev, umode_t *mode)
+> >  {
+> >       if (mode && devlist[MINOR(dev->devt)].mode)
+> >               *mode =3D devlist[MINOR(dev->devt)].mode;
+> > diff --git a/drivers/char/misc.c b/drivers/char/misc.c
+> > index cba19bfdc44d..88c6995b9a3d 100644
+> > --- a/drivers/char/misc.c
+> > +++ b/drivers/char/misc.c
+> > @@ -254,9 +254,9 @@ void misc_deregister(struct miscdevice *misc)
+> >  }
+> >  EXPORT_SYMBOL(misc_deregister);
+> >
+> > -static char *misc_devnode(struct device *dev, umode_t *mode)
+> > +static char *misc_devnode(const struct device *dev, umode_t *mode)
+> >  {
+> > -     struct miscdevice *c =3D dev_get_drvdata(dev);
+> > +     const struct miscdevice *c =3D dev_get_drvdata(dev);
+> >
+> >       if (mode && c->mode)
+> >               *mode =3D c->mode;
+> > diff --git a/drivers/dma-buf/dma-heap.c b/drivers/dma-buf/dma-heap.c
+> > index 8f5848aa144f..4d7150791315 100644
+> > --- a/drivers/dma-buf/dma-heap.c
+> > +++ b/drivers/dma-buf/dma-heap.c
+> > @@ -299,7 +299,7 @@ struct dma_heap *dma_heap_add(const struct dma_heap=
+_export_info *exp_info)
+> >       return err_ret;
+> >  }
+> >
+> > -static char *dma_heap_devnode(struct device *dev, umode_t *mode)
+> > +static char *dma_heap_devnode(const struct device *dev, umode_t *mode)
+> >  {
+> >       return kasprintf(GFP_KERNEL, "dma_heap/%s", dev_name(dev));
+> >  }
+> > diff --git a/drivers/gpu/drm/drm_sysfs.c b/drivers/gpu/drm/drm_sysfs.c
+> > index 430e00b16eec..14bf156b3f1b 100644
+> > --- a/drivers/gpu/drm/drm_sysfs.c
+> > +++ b/drivers/gpu/drm/drm_sysfs.c
+> > @@ -90,7 +90,7 @@ static void drm_sysfs_acpi_register(void) { }
+> >  static void drm_sysfs_acpi_unregister(void) { }
+> >  #endif
+> >
+> > -static char *drm_devnode(struct device *dev, umode_t *mode)
+> > +static char *drm_devnode(const struct device *dev, umode_t *mode)
+> >  {
+> >       return kasprintf(GFP_KERNEL, "dri/%s", dev_name(dev));
+> >  }
+> > diff --git a/drivers/infiniband/core/user_mad.c b/drivers/infiniband/co=
+re/user_mad.c
+> > index 98cb594cd9a6..f83954180a33 100644
+> > --- a/drivers/infiniband/core/user_mad.c
+> > +++ b/drivers/infiniband/core/user_mad.c
+> > @@ -1224,7 +1224,7 @@ static struct attribute *umad_class_dev_attrs[] =
+=3D {
+> >  };
+> >  ATTRIBUTE_GROUPS(umad_class_dev);
+> >
+> > -static char *umad_devnode(struct device *dev, umode_t *mode)
+> > +static char *umad_devnode(const struct device *dev, umode_t *mode)
+> >  {
+> >       return kasprintf(GFP_KERNEL, "infiniband/%s", dev_name(dev));
+> >  }
+> > diff --git a/drivers/infiniband/core/uverbs_main.c b/drivers/infiniband=
+/core/uverbs_main.c
+> > index d54434088727..bdb179a09d77 100644
+> > --- a/drivers/infiniband/core/uverbs_main.c
+> > +++ b/drivers/infiniband/core/uverbs_main.c
+> > @@ -1237,7 +1237,7 @@ static void ib_uverbs_remove_one(struct ib_device=
+ *device, void *client_data)
+> >       put_device(&uverbs_dev->dev);
+> >  }
+> >
+> > -static char *uverbs_devnode(struct device *dev, umode_t *mode)
+> > +static char *uverbs_devnode(const struct device *dev, umode_t *mode)
+> >  {
+> >       if (mode)
+> >               *mode =3D 0666;
+> > diff --git a/drivers/infiniband/hw/hfi1/device.c b/drivers/infiniband/h=
+w/hfi1/device.c
+> > index 8ceff7141baf..1f4496032170 100644
+> > --- a/drivers/infiniband/hw/hfi1/device.c
+> > +++ b/drivers/infiniband/hw/hfi1/device.c
+> > @@ -72,7 +72,7 @@ const char *class_name(void)
+> >       return hfi1_class_name;
+> >  }
+> >
+> > -static char *hfi1_devnode(struct device *dev, umode_t *mode)
+> > +static char *hfi1_devnode(const struct device *dev, umode_t *mode)
+> >  {
+> >       if (mode)
+> >               *mode =3D 0600;
+> > @@ -85,7 +85,7 @@ static const char *class_name_user(void)
+> >       return hfi1_class_name_user;
+> >  }
+> >
+> > -static char *hfi1_user_devnode(struct device *dev, umode_t *mode)
+> > +static char *hfi1_user_devnode(const struct device *dev, umode_t *mode=
+)
+> >  {
+> >       if (mode)
+> >               *mode =3D 0666;
+> > diff --git a/drivers/input/input.c b/drivers/input/input.c
+> > index ebb2b7f0f8ff..50597165dc54 100644
+> > --- a/drivers/input/input.c
+> > +++ b/drivers/input/input.c
+> > @@ -1913,7 +1913,7 @@ static const struct device_type input_dev_type =
+=3D {
+> >  #endif
+> >  };
+> >
+> > -static char *input_devnode(struct device *dev, umode_t *mode)
+> > +static char *input_devnode(const struct device *dev, umode_t *mode)
+> >  {
+> >       return kasprintf(GFP_KERNEL, "input/%s", dev_name(dev));
+> >  }
+> > diff --git a/drivers/media/dvb-core/dvbdev.c b/drivers/media/dvb-core/d=
+vbdev.c
+> > index 6ef18bab9648..e73f5240cc2c 100644
+> > --- a/drivers/media/dvb-core/dvbdev.c
+> > +++ b/drivers/media/dvb-core/dvbdev.c
+> > @@ -1018,9 +1018,9 @@ static int dvb_uevent(const struct device *dev, s=
+truct kobj_uevent_env *env)
+> >       return 0;
+> >  }
+> >
+> > -static char *dvb_devnode(struct device *dev, umode_t *mode)
+> > +static char *dvb_devnode(const struct device *dev, umode_t *mode)
+> >  {
+> > -     struct dvb_device *dvbdev =3D dev_get_drvdata(dev);
+> > +     const struct dvb_device *dvbdev =3D dev_get_drvdata(dev);
+> >
+> >       return kasprintf(GFP_KERNEL, "dvb/adapter%d/%s%d",
+> >               dvbdev->adapter->num, dnames[dvbdev->type], dvbdev->id);
+> > diff --git a/drivers/media/pci/ddbridge/ddbridge-core.c b/drivers/media=
+/pci/ddbridge/ddbridge-core.c
+> > index fe833f39698a..ee8087f29b2c 100644
+> > --- a/drivers/media/pci/ddbridge/ddbridge-core.c
+> > +++ b/drivers/media/pci/ddbridge/ddbridge-core.c
+> > @@ -2716,9 +2716,9 @@ static const struct file_operations ddb_fops =3D =
+{
+> >       .release        =3D ddb_release,
+> >  };
+> >
+> > -static char *ddb_devnode(struct device *device, umode_t *mode)
+> > +static char *ddb_devnode(const struct device *device, umode_t *mode)
+> >  {
+> > -     struct ddb *dev =3D dev_get_drvdata(device);
+> > +     const struct ddb *dev =3D dev_get_drvdata(device);
+> >
+> >       return kasprintf(GFP_KERNEL, "ddbridge/card%d", dev->nr);
+> >  }
+> > diff --git a/drivers/media/rc/rc-main.c b/drivers/media/rc/rc-main.c
+> > index eba0cd30e314..527d9324742b 100644
+> > --- a/drivers/media/rc/rc-main.c
+> > +++ b/drivers/media/rc/rc-main.c
+> > @@ -1017,7 +1017,7 @@ static void ir_close(struct input_dev *idev)
+> >  }
+> >
+> >  /* class for /sys/class/rc */
+> > -static char *rc_devnode(struct device *dev, umode_t *mode)
+> > +static char *rc_devnode(const struct device *dev, umode_t *mode)
+> >  {
+> >       return kasprintf(GFP_KERNEL, "rc/%s", dev_name(dev));
+> >  }
+> > diff --git a/drivers/misc/genwqe/card_base.c b/drivers/misc/genwqe/card=
+_base.c
+> > index 693981891870..0f00687f72d4 100644
+> > --- a/drivers/misc/genwqe/card_base.c
+> > +++ b/drivers/misc/genwqe/card_base.c
+> > @@ -1349,7 +1349,7 @@ static struct pci_driver genwqe_driver =3D {
+> >   * Default mode should be rw for everybody. Do not change default
+> >   * device name.
+> >   */
+> > -static char *genwqe_devnode(struct device *dev, umode_t *mode)
+> > +static char *genwqe_devnode(const struct device *dev, umode_t *mode)
+> >  {
+> >       if (mode)
+> >               *mode =3D 0666;
+> > diff --git a/drivers/tty/tty_io.c b/drivers/tty/tty_io.c
+> > index de06c3c2ff70..aad8171f6c21 100644
+> > --- a/drivers/tty/tty_io.c
+> > +++ b/drivers/tty/tty_io.c
+> > @@ -3494,7 +3494,7 @@ void tty_default_fops(struct file_operations *fop=
+s)
+> >       *fops =3D tty_fops;
+> >  }
+> >
+> > -static char *tty_devnode(struct device *dev, umode_t *mode)
+> > +static char *tty_devnode(const struct device *dev, umode_t *mode)
+> >  {
+> >       if (!mode)
+> >               return NULL;
+> > diff --git a/drivers/usb/core/file.c b/drivers/usb/core/file.c
+> > index 558890ada0e5..da7d88e069e6 100644
+> > --- a/drivers/usb/core/file.c
+> > +++ b/drivers/usb/core/file.c
+> > @@ -62,7 +62,7 @@ static struct usb_class {
+> >       struct class *class;
+> >  } *usb_class;
+> >
+> > -static char *usb_devnode(struct device *dev, umode_t *mode)
+> > +static char *usb_devnode(const struct device *dev, umode_t *mode)
+> >  {
+> >       struct usb_class_driver *drv;
+> >
+> > diff --git a/drivers/vdpa/vdpa_user/vduse_dev.c b/drivers/vdpa/vdpa_use=
+r/vduse_dev.c
+> > index 35dceee3ed56..0dd3c1f291da 100644
+> > --- a/drivers/vdpa/vdpa_user/vduse_dev.c
+> > +++ b/drivers/vdpa/vdpa_user/vduse_dev.c
+> > @@ -1656,7 +1656,7 @@ static const struct file_operations vduse_ctrl_fo=
+ps =3D {
+> >       .llseek         =3D noop_llseek,
+> >  };
+> >
+> > -static char *vduse_devnode(struct device *dev, umode_t *mode)
+> > +static char *vduse_devnode(const struct device *dev, umode_t *mode)
+> >  {
+> >       return kasprintf(GFP_KERNEL, "vduse/%s", dev_name(dev));
+> >  }
+> > diff --git a/drivers/vfio/vfio_main.c b/drivers/vfio/vfio_main.c
+> > index 6e8804fe0095..5bf4b3454918 100644
+> > --- a/drivers/vfio/vfio_main.c
+> > +++ b/drivers/vfio/vfio_main.c
+> > @@ -1812,7 +1812,7 @@ EXPORT_SYMBOL(vfio_set_irqs_validate_and_prepare)=
+;
+> >  /*
+> >   * Module/class support
+> >   */
+> > -static char *vfio_devnode(struct device *dev, umode_t *mode)
+> > +static char *vfio_devnode(const struct device *dev, umode_t *mode)
+> >  {
+> >       return kasprintf(GFP_KERNEL, "vfio/%s", dev_name(dev));
+> >  }
+> > diff --git a/fs/pstore/pmsg.c b/fs/pstore/pmsg.c
+> > index d8542ec2f38c..b31c9c72d90b 100644
+> > --- a/fs/pstore/pmsg.c
+> > +++ b/fs/pstore/pmsg.c
+> > @@ -46,7 +46,7 @@ static int pmsg_major;
+> >  #undef pr_fmt
+> >  #define pr_fmt(fmt) PMSG_NAME ": " fmt
+> >
+> > -static char *pmsg_devnode(struct device *dev, umode_t *mode)
+> > +static char *pmsg_devnode(const struct device *dev, umode_t *mode)
+> >  {
+> >       if (mode)
+> >               *mode =3D 0220;
+> > diff --git a/include/linux/device/class.h b/include/linux/device/class.=
+h
+> > index 94b1107258e5..42cc3fb44a84 100644
+> > --- a/include/linux/device/class.h
+> > +++ b/include/linux/device/class.h
+> > @@ -60,7 +60,7 @@ struct class {
+> >       struct kobject                  *dev_kobj;
+> >
+> >       int (*dev_uevent)(const struct device *dev, struct kobj_uevent_en=
+v *env);
+> > -     char *(*devnode)(struct device *dev, umode_t *mode);
+> > +     char *(*devnode)(const struct device *dev, umode_t *mode);
+> >
+> >       void (*class_release)(struct class *class);
+> >       void (*dev_release)(struct device *dev);
+> > diff --git a/sound/sound_core.c b/sound/sound_core.c
+> > index 3332fe321737..3e7dd6fcb7cf 100644
+> > --- a/sound/sound_core.c
+> > +++ b/sound/sound_core.c
+> > @@ -30,7 +30,7 @@ MODULE_DESCRIPTION("Core sound module");
+> >  MODULE_AUTHOR("Alan Cox");
+> >  MODULE_LICENSE("GPL");
+> >
+> > -static char *sound_devnode(struct device *dev, umode_t *mode)
+> > +static char *sound_devnode(const struct device *dev, umode_t *mode)
+> >  {
+> >       if (MAJOR(dev->devt) =3D=3D SOUND_MAJOR)
+> >               return NULL;
 
-Thanks,
-John
 
+
+--=20
+Thanks and regards,
+
+Sumit Semwal (he / him)
+Tech Lead - LCG, Vertical Technologies
+Linaro.org =E2=94=82 Open source software for ARM SoCs
