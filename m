@@ -2,73 +2,74 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC0E7C4332F
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Nov 2022 07:53:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56CE9C4167B
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Nov 2022 09:27:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229774AbiKYHxI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 25 Nov 2022 02:53:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44266 "EHLO
+        id S229609AbiKYJ1X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 25 Nov 2022 04:27:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42572 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229771AbiKYHxH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Nov 2022 02:53:07 -0500
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CAA12F661
-        for <linux-scsi@vger.kernel.org>; Thu, 24 Nov 2022 23:53:06 -0800 (PST)
-Received: from kwepemi500016.china.huawei.com (unknown [172.30.72.53])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4NJRsj5gR3zHw8q;
-        Fri, 25 Nov 2022 15:52:25 +0800 (CST)
-Received: from huawei.com (10.175.100.227) by kwepemi500016.china.huawei.com
- (7.221.188.220) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Fri, 25 Nov
- 2022 15:53:03 +0800
-From:   Shang XiaoJing <shangxiaojing@huawei.com>
-To:     <linuxdrivers@attotech.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <JBottomley@Parallels.com>,
-        <linux-scsi@vger.kernel.org>
-CC:     <shangxiaojing@huawei.com>
-Subject: [PATCH] scsi: esas2r: Fix missing pci_disable_device() in esas2r_probe()
-Date:   Fri, 25 Nov 2022 15:51:15 +0800
-Message-ID: <20221125075115.27390-1-shangxiaojing@huawei.com>
-X-Mailer: git-send-email 2.17.1
+        with ESMTP id S229686AbiKYJ1U (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Nov 2022 04:27:20 -0500
+Received: from smtp.smtpout.orange.fr (smtp-27.smtpout.orange.fr [80.12.242.27])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C19532AC55
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Nov 2022 01:27:18 -0800 (PST)
+Received: from pop-os.home ([86.243.100.34])
+        by smtp.orange.fr with ESMTPA
+        id yUzKo4Eiu1SdMyUzKoWrLE; Fri, 25 Nov 2022 10:27:16 +0100
+X-ME-Helo: pop-os.home
+X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
+X-ME-Date: Fri, 25 Nov 2022 10:27:16 +0100
+X-ME-IP: 86.243.100.34
+From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To:     James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH] scsi: lpfc: Remove a useless variable
+Date:   Fri, 25 Nov 2022 10:27:13 +0100
+Message-Id: <0fa467c115ad75ba28959c909751abf2bfd2a30a.1669368420.git.christophe.jaillet@wanadoo.fr>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.175.100.227]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- kwepemi500016.china.huawei.com (7.221.188.220)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add missing pci_disable_device() in fail path of scsi_host_alloc() and
-scsi_add_host().
+There is no point in using 'error' here. All other paths use 'rc'.
+So use it here as well and remove the 'error' variable.
 
-Fixes: 26780d9e12ed ("[SCSI] esas2r: ATTO Technology ExpressSAS 6G SAS/SATA RAID Adapter Driver")
-Signed-off-by: Shang XiaoJing <shangxiaojing@huawei.com>
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 ---
- drivers/scsi/esas2r/esas2r_main.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/lpfc/lpfc_init.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
-index 7a4eadad23d7..9e06a6e2da48 100644
---- a/drivers/scsi/esas2r/esas2r_main.c
-+++ b/drivers/scsi/esas2r/esas2r_main.c
-@@ -388,6 +388,7 @@ static int esas2r_probe(struct pci_dev *pcid,
- 	host = scsi_host_alloc(&driver_template, host_alloc_size);
- 	if (host == NULL) {
- 		esas2r_log(ESAS2R_LOG_CRIT, "scsi_host_alloc() FAIL");
-+		pci_disable_device(pcid);
- 		return -ENODEV;
- 	}
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 25ba20e42825..6e85af92fb01 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -4700,7 +4700,6 @@ lpfc_create_port(struct lpfc_hba *phba, int instance, struct device *dev)
+ 	struct lpfc_vport *vport;
+ 	struct Scsi_Host  *shost = NULL;
+ 	struct scsi_host_template *template;
+-	int error = 0;
+ 	int i;
+ 	uint64_t wwn;
+ 	bool use_no_reset_hba = false;
+@@ -4829,8 +4828,8 @@ lpfc_create_port(struct lpfc_hba *phba, int instance, struct device *dev)
+ 	if (phba->sli3_options & LPFC_SLI3_BG_ENABLED)
+ 		lpfc_setup_bg(phba, shost);
  
-@@ -459,6 +460,7 @@ static int esas2r_probe(struct pci_dev *pcid,
- 			       pcid);
+-	error = scsi_add_host_with_dma(shost, dev, &phba->pcidev->dev);
+-	if (error)
++	rc = scsi_add_host_with_dma(shost, dev, &phba->pcidev->dev);
++	if (rc)
+ 		goto out_free_vmid;
  
- 		pci_set_drvdata(pcid, NULL);
-+		pci_disable_device(pcid);
- 
- 		return -ENODEV;
- 	}
+ 	spin_lock_irq(&phba->port_list_lock);
 -- 
-2.17.1
+2.34.1
 
